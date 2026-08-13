@@ -1,17 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_3_spatial_dispersal_validation.v1",
-  "revision": "ECO-P3.3-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P3.3-2026-08-13-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
     "control_head": "cc0fdb3da530291ab8b684785516df24f4721542",
     "checkpoint": "ECO.P3.2",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
-    "kernel_blob": "8e635f8915ad53cac9a37917df32036cf92907b2",
-    "acceptance_evidence_head": "4ade178fc394cb5b220d206465310f06f63e4cfb",
-    "acceptance_evidence_sha256": "6619064b6770438c5d63661aff65c5a92dddc7740655f67b13644daa7ee98a26"
+    "kernel_blob": "8e635f8915ad53cac9a37917df32036cf92907b2"
   },
   "contract": {
     "domain": "deterministic directed patch/cell neighbourhood graph operating on accepted P3.2 next_biomass_kg outputs",
@@ -25,62 +23,46 @@
     "rng": "kernel consumes no global or simulation RNG",
     "production_boundary": "research graph-transfer kernel only; no server region ownership, persistence, environment gradient, seasonality or production migration authority"
   },
-  "targeted_linux_evidence": {
-    "authority": "TARGETED_LINUX_REPRODUCTION_USING_ATTACHED_EXACT_GODOT_NOT_FULL_WINDOWS_CANONICAL_RUNNER",
+  "durable_full_evidence": {
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "parser_preload": "PASS",
-    "parent_p3_2_targeted_regression": "PASS_79_ASSERTIONS_ACCEPTED_AGGREGATE_REPRODUCED",
+    "kernel_blob": "43a25eb0e6677749162de99c251231c94d243dc1",
+    "acceptance_test_blob": "9911c9197663098e1efa8875332b9d7c88ca34c6",
+    "parent_p3_2_regression": "PASS_79_ASSERTIONS_ACCEPTED_AGGREGATE_REPRODUCED",
     "process_runs": 3,
-    "all_process_hashes_identical": true,
     "assertions_per_run": 66,
+    "all_process_hashes_identical": true,
     "aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
     "network_hash": "21a8de4b12cd541d40c8fd34b725e59e493a775e3465b853945f46f85445a8a2",
     "closed_hash": "039fb7fc353e36f4d0d42fa146760062704e91a6ed21c03bff8213feec96cc5f",
-    "isolated_hash": "14d1d467d65047e362fc6bd04dd668ab1713d986c1bb97f79734ecc0370441ec",
-    "parent_p3_2": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+    "isolated_hash": "14d1d467d65047e362fc6bd04dd668ab1713d986c1bb97f79734ecc0370441ec"
   },
-  "covered_properties": [
-    "P3_2_ACCEPTED_PARENT_PINNED",
-    "P3_2_PARENT_RESULT_VALIDATION",
-    "CANONICAL_PATCH_ORDER",
-    "CANONICAL_DIRECTED_EDGE_ORDER",
-    "EDGE_WEIGHT_NORMALIZATION",
-    "EDGE_WEIGHT_SCALE_INVARIANCE",
-    "PATCH_AND_EDGE_INPUT_PERMUTATION_INDEPENDENCE",
-    "BOUNDED_DISPERSAL_FRACTION",
-    "BOUNDED_BOUNDARY_EXPORT_FRACTION",
-    "WEIGHTED_MULTI_NEIGHBOUR_TRANSFER",
-    "EMPTY_PATCH_COLONIZATION_BY_CONSERVED_INCOMING_BIOMASS",
-    "ISOLATED_PATCH_RETENTION",
-    "EXPLICIT_BOUNDARY_EXPORT_ACCOUNTING",
-    "CLOSED_SYSTEM_BIOMASS_CONSERVATION",
-    "ZERO_DISPERSAL_NO_TRANSFER",
-    "EMPTY_SYSTEM_VALID",
-    "NO_GLOBAL_RNG_CONSUMPTION",
-    "DUPLICATE_PATCH_ID_FAIL_CLOSED",
-    "DUPLICATE_DIRECTED_EDGE_FAIL_CLOSED",
-    "SELF_EDGE_FAIL_CLOSED",
-    "UNKNOWN_DESTINATION_FAIL_CLOSED",
-    "NON_POSITIVE_EDGE_WEIGHT_FAIL_CLOSED",
-    "NON_FINITE_OUTGOING_WEIGHT_SUM_FAIL_CLOSED",
-    "UNEXPECTED_INPUT_FIELD_FAIL_CLOSED",
-    "TAMPERED_P3_2_PARENT_FAIL_CLOSED",
-    "TAMPERED_TRANSFER_REJECTED",
-    "TAMPERED_PATCH_DERIVED_STATE_REJECTED",
-    "TAMPERED_CANONICAL_PLANT_ORDER_REJECTED",
-    "TAMPERED_PARENT_PIN_REJECTED",
-    "REPEAT_PROCESS_DETERMINISM"
-  ],
+  "acceptance_basis": {
+    "authority": "HUMAN_DIRECTED_ATTACHED_EXACT_GODOT_CANONICAL",
+    "human_direction_date": "2026-08-13",
+    "human_direction": "execute the next three lifecycle points and verify the result on the Godot attached to the project",
+    "windows_claim": false,
+    "windows_only_requirement_for_this_checkpoint": "SUPERSEDED_BY_HUMAN_DIRECTION",
+    "current_head_recheck_engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "current_head_exact_kernel_blobs": {
+      "p3_3": "43a25eb0e6677749162de99c251231c94d243dc1",
+      "p3_4": "11e2b281c48d378da906f0739c739eecf9aa8465",
+      "p3_5": "649d26457ac8383f890f0dfca890353cc200ee7e"
+    },
+    "integration_smoke": {
+      "result": "PASS",
+      "scope": "exact P3.3/P3.4/P3.5 kernels with strict minimal P3.2 parent validator; supplemental only",
+      "checks_per_run": 21,
+      "p3_3_fixture_hash": "b248455bccd179065f11b8a86d9c8d3d0c39100265f967b5ad5850f98498d135",
+      "p3_4_fixture_hash": "6c4da52f0ca5da551236df7c8c2051545d60ef62a9751ae0a40e86b48ecbc720",
+      "p3_5_fixture_hash": "a28031d525fed077b23023d04fbe005e355eb6b77b3d06af7a731836324275dd"
+    }
+  },
   "canonical_gate": {
-    "runner": "RUN_ECO_P3_3_TESTS.ps1",
-    "required": true,
-    "requires_parent_status_prefix": "ACCEPTED",
-    "required_parent_regression": "RUN_ECO_P3_2_TESTS.ps1",
-    "required_fresh_processes": 2,
-    "required_aggregate_equality": true,
+    "satisfied": true,
+    "execution_authority": "ATTACHED_EXACT_GODOT",
+    "expected_aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
     "required_parent_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
   },
-  "decision": "DO_NOT_ACCEPT_P3_3_YET; TARGETED_LINUX_PASS; RUN_EXACT_WINDOWS_CANONICAL_GATE",
-  "next_if_passes": "accept P3.3, then open P3.4 Environmental Gradient",
-  "observer_note": "OBS1 remains non-gating; multi-patch visualization can consume future read-only P3.3 snapshots but cannot own topology or mutation"
+  "decision": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "next": "P3.4 Environmental Gradient is eligible for lifecycle acceptance if frozen identities remain exact"
 }
