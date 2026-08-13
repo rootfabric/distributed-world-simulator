@@ -10,6 +10,7 @@ var _requested_hand_asset_profile_ref := ""
 var _active_hand_asset_profile_id := ""
 var _active_hand_asset_profile_path := ""
 var _hand_asset_profile_error := ""
+var _hand_asset_profile_fallback_active := false
 var _hand_asset_registry_report: Dictionary = {}
 
 
@@ -32,31 +33,31 @@ func _setup_first_person_embodiment() -> void:
 		fpe_setup_result = _failure("FPE_BASE_PRESENTATION_NOT_READY")
 		return
 
-	grab_authority_bridge = S10GrabBridgeType.new()
-	grab_authority_bridge.setup(Callable(), true)
-
-	var source_skeleton: Skeleton3D = null
-	if base_lab.layered_rig_adapter != null and base_lab.layered_rig_adapter.has_method("resolve_pose_skeleton"):
-		var skeleton_value: Variant = base_lab.layered_rig_adapter.call("resolve_pose_skeleton", base_lab.avatar)
-		if skeleton_value is Skeleton3D:
-			source_skeleton = skeleton_value as Skeleton3D
-
 	var registry = HandAssetRegistryType.new()
 	var registry_load: Dictionary = registry.load_directory()
 	if not bool(registry_load.get("success", false)):
 		_hand_asset_profile_error = String(registry_load.get("error_code", "FPE_HAND_PROFILE_REGISTRY_LOAD_FAILED"))
-		fpe_setup_result = registry_load
+		_hand_asset_profile_fallback_active = true
+		super._setup_first_person_embodiment()
 		return
 	_hand_asset_registry_report = registry.create_report()
 	var resolved: Dictionary = registry.resolve(_requested_hand_asset_profile_ref)
 	if not bool(resolved.get("success", false)):
 		_hand_asset_profile_error = String(resolved.get("error_code", "FPE_HAND_PROFILE_RESOLVE_FAILED"))
-		fpe_setup_result = resolved
+		_hand_asset_profile_fallback_active = true
+		super._setup_first_person_embodiment()
 		return
 	var resolved_details := Dictionary(resolved.get("details", {}))
 	var profile := Dictionary(resolved_details.get("profile", {})).duplicate(true)
 	_active_hand_asset_profile_path = String(resolved_details.get("profile_path", ""))
 	_active_hand_asset_profile_id = String(profile.get("profile_id", ""))
+
+	var readiness_error := _profile_runtime_readiness_error(profile)
+	if not readiness_error.is_empty():
+		_hand_asset_profile_error = readiness_error
+		_hand_asset_profile_fallback_active = true
+		super._setup_first_person_embodiment()
+		return
 
 	var candidate = ProfiledTwoHandFirstPersonType.new()
 	candidate.name = "ProfiledHandAssetTwoHandFirstPersonEmbodiment"
@@ -68,8 +69,18 @@ func _setup_first_person_embodiment() -> void:
 		)
 		if not bool(configure_result.get("success", false)):
 			_hand_asset_profile_error = String(configure_result.get("error_code", "FPE_HAND_PROFILE_CONFIGURE_FAILED"))
-			fpe_setup_result = configure_result
+			_hand_asset_profile_fallback_active = true
+			candidate.free()
+			super._setup_first_person_embodiment()
 			return
+
+	grab_authority_bridge = S10GrabBridgeType.new()
+	grab_authority_bridge.setup(Callable(), true)
+	var source_skeleton: Skeleton3D = null
+	if base_lab.layered_rig_adapter != null and base_lab.layered_rig_adapter.has_method("resolve_pose_skeleton"):
+		var skeleton_value: Variant = base_lab.layered_rig_adapter.call("resolve_pose_skeleton", base_lab.avatar)
+		if skeleton_value is Skeleton3D:
+			source_skeleton = skeleton_value as Skeleton3D
 
 	first_person_embodiment = candidate
 	base_lab.player.add_child(first_person_embodiment)
@@ -85,7 +96,12 @@ func _setup_first_person_embodiment() -> void:
 	)
 	if not bool(fpe_setup_result.get("success", false)):
 		_hand_asset_profile_error = String(fpe_setup_result.get("error_code", "FPE_HAND_PROFILE_RUNTIME_SETUP_FAILED"))
-		push_error("FPE profiled hand asset setup failed: %s" % JSON.stringify(fpe_setup_result))
+		_hand_asset_profile_fallback_active = true
+		if first_person_embodiment.get_parent() != null:
+			first_person_embodiment.get_parent().remove_child(first_person_embodiment)
+		first_person_embodiment.free()
+		first_person_embodiment = null
+		super._setup_first_person_embodiment()
 		return
 	if first_person_embodiment.interaction_raycast != null:
 		first_person_embodiment.interaction_raycast.add_exception(base_lab.player)
@@ -107,6 +123,7 @@ func get_hand_asset_profile_composition_report() -> Dictionary:
 		"profile_id": _active_hand_asset_profile_id,
 		"profile_path": _active_hand_asset_profile_path,
 		"error_code": _hand_asset_profile_error,
+		"fallback_active": _hand_asset_profile_fallback_active,
 		"registry": _hand_asset_registry_report.duplicate(true),
 		"profile_config": profile_report,
 		"left_mode": String(s6.get("left_mode", "UNAVAILABLE")),
@@ -131,12 +148,31 @@ func _refresh_status() -> void:
 		return
 	var report := get_hand_asset_profile_composition_report()
 	var error_code := String(report.get("error_code", ""))
-	fpe_status_label.text += "\nhand profile: %s | L:%s R:%s%s" % [
+	var fallback_suffix := " | fallback:DEFAULT" if bool(report.get("fallback_active", false)) else ""
+	fpe_status_label.text += "\nhand profile: %s | L:%s R:%s%s%s" % [
 		String(report.get("profile_id", "DEFAULT")) if bool(report.get("requested", false)) else "DEFAULT",
 		String(report.get("left_mode", "UNAVAILABLE")),
 		String(report.get("right_mode", "UNAVAILABLE")),
+		fallback_suffix,
 		" | error:%s" % error_code if not error_code.is_empty() else "",
 	]
+
+
+func _profile_runtime_readiness_error(profile: Dictionary) -> String:
+	var asset := Dictionary(profile.get("asset", {}))
+	var scene_path := String(asset.get("scene_path", "")).strip_edges()
+	if scene_path.is_empty() or not ResourceLoader.exists(scene_path, "PackedScene"):
+		return "FPE_HAND_PROFILE_ASSET_SCENE_NOT_IMPORTED"
+	var selection := Dictionary(profile.get("selection", {}))
+	if bool(selection.get("inspection_required_before_runtime", false)):
+		return "FPE_HAND_PROFILE_INSPECTION_PENDING"
+	var retarget := Dictionary(profile.get("retarget", {}))
+	var rest_policy := String(retarget.get("rest_space_policy", "")).strip_edges().to_upper()
+	if rest_policy == "INSPECT_REQUIRED" or rest_policy.is_empty():
+		return "FPE_HAND_PROFILE_REST_SPACE_NOT_CALIBRATED"
+	if Dictionary(retarget.get("bone_map", {})).is_empty():
+		return "FPE_HAND_PROFILE_BONE_MAP_REQUIRED"
+	return ""
 
 
 func _find_requested_hand_asset_profile_ref() -> String:
