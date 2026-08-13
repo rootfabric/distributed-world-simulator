@@ -8,6 +8,7 @@ const PROVIDER_PROCEDURAL := "PROCEDURAL"
 const PROVIDER_INSPECT_ONLY := "INSPECT_ONLY"
 const REST_CANONICAL_COMPATIBLE := "CANONICAL_COMPATIBLE_BIND_SPACE"
 const REST_INSPECT_REQUIRED := "INSPECT_REQUIRED"
+const REST_AUTO_CANONICAL_REBIND := "AUTO_CANONICAL_REBIND"
 
 const ALLOWED_PROVIDERS: Array[String] = [
 	PROVIDER_SKINNED_NAMED_BIND,
@@ -21,6 +22,11 @@ const ALLOWED_LAYOUTS: Array[String] = [
 	"PAIRED_SINGLE_MESH",
 	"BOTH_COMPATIBLE",
 	"AUTO_INSPECT",
+]
+const ALLOWED_REST_POLICIES: Array[String] = [
+	REST_CANONICAL_COMPATIBLE,
+	REST_INSPECT_REQUIRED,
+	REST_AUTO_CANONICAL_REBIND,
 ]
 
 
@@ -85,11 +91,14 @@ static func validate(profile: Dictionary) -> Dictionary:
 			return _failure("FPE_HAND_PROFILE_RETARGET_REQUIRED")
 		var retarget := Dictionary(retarget_value)
 		var policy := String(retarget.get("rest_space_policy", "")).strip_edges().to_upper()
-		if policy.is_empty():
-			return _failure("FPE_HAND_PROFILE_REST_POLICY_REQUIRED")
+		if policy not in ALLOWED_REST_POLICIES:
+			return _failure("FPE_HAND_PROFILE_REST_POLICY_UNSUPPORTED", {"rest_space_policy": policy})
 		var bone_map_value: Variant = retarget.get("bone_map", {})
 		if not bone_map_value is Dictionary:
 			return _failure("FPE_HAND_PROFILE_BONE_MAP_INVALID")
+		var by_hand_value: Variant = retarget.get("bone_map_by_hand", {})
+		if not by_hand_value is Dictionary:
+			return _failure("FPE_HAND_PROFILE_BONE_MAP_BY_HAND_INVALID")
 	return _success({"profile_id": profile_id, "provider": provider, "hand_layout": layout})
 
 
@@ -97,6 +106,12 @@ static func create_report(profile: Dictionary, profile_path: String = "") -> Dic
 	var asset := Dictionary(profile.get("asset", {}))
 	var license_data := Dictionary(profile.get("license", {}))
 	var retarget := Dictionary(profile.get("retarget", {}))
+	var common_map := Dictionary(retarget.get("bone_map", {}))
+	var by_hand := Dictionary(retarget.get("bone_map_by_hand", {}))
+	var per_hand_counts := {
+		"left": Dictionary(by_hand.get("left", {})).size(),
+		"right": Dictionary(by_hand.get("right", {})).size(),
+	}
 	return {
 		"schema": "planet_simulator.fpe_hand_asset_profile_report.v1",
 		"profile_id": String(profile.get("profile_id", "")),
@@ -109,7 +124,9 @@ static func create_report(profile: Dictionary, profile_path: String = "") -> Dic
 		"source_url": String(license_data.get("source_url", "")),
 		"license_spdx": String(license_data.get("spdx", "")),
 		"rest_space_policy": String(retarget.get("rest_space_policy", "")),
-		"bone_map_count": Dictionary(retarget.get("bone_map", {})).size(),
+		"bone_map_count": common_map.size(),
+		"bone_map_by_hand_count": per_hand_counts,
+		"bone_map_total_count": common_map.size() + int(per_hand_counts.left) + int(per_hand_counts.right),
 		"portable": true,
 		"presentation_only": true,
 		"owns_item_state": false,
