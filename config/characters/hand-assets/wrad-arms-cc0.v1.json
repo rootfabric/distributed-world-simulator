@@ -2,7 +2,7 @@
   "schema": "planet_simulator.fpe_hand_asset_profile.v1",
   "profile_id": "wrad-arms-cc0",
   "display_name": "WRAD ARMS (wriks)",
-  "status": "IMPORTED_INSPECTED_NATIVE_SKELETON_PROBE_READY",
+  "status": "IMPORTED_INSPECTED_NATIVE_CALIBRATION_PROBE_READY",
   "provider": "SKINNED_NAMED_BIND",
   "hand_layout": "PAIRED_SINGLE_MESH",
   "license": {
@@ -103,20 +103,63 @@
       },
       "target_anchor": "Palm",
       "target_scale_reference": "MiddleProximal",
-      "uniform_scale_multiplier": 1.0
+      "uniform_scale_multiplier": 1.0,
+      "orientation_mode": "PRESERVE_SOURCE_BASIS"
     },
     "native_pose_driver": {
       "preserve_source_skin": true,
       "preserve_source_bind_poses": true,
       "preserve_source_rest_hierarchy": true,
       "drive_finger_pose_deltas_only": true,
-      "local_rest_basis_conversion": true
+      "local_rest_basis_conversion": false,
+      "axis_calibrated_semantic_pose": true
     },
-    "notes": "WRAD remains in its source-native Skeleton3D/Skin bind space. Runtime splits the paired mesh by .l/.r weight ownership, aligns the whole native rig by wrist, and converts canonical finger pose deltas into each source bone local rest basis. No canonical Skin bind-pose rebuild is performed."
+    "native_pose_calibration": {
+      "mode": "AUTO_CHAIN_PALM_V1",
+      "default": {
+        "curl_sign": 1.0,
+        "curl_scale": 0.65,
+        "opposition_sign": 1.0,
+        "opposition_scale": 0.55,
+        "max_abs_curl_deg": 90.0,
+        "max_abs_opposition_deg": 45.0,
+        "base_rotation_degrees": [0.0, 0.0, 0.0]
+      },
+      "by_hand": {
+        "left": {},
+        "right": {}
+      },
+      "by_finger": {
+        "thumb": {
+          "curl_scale": 0.50,
+          "opposition_scale": 0.45,
+          "max_abs_curl_deg": 70.0,
+          "max_abs_opposition_deg": 40.0
+        },
+        "index": {},
+        "middle": {},
+        "ring": {},
+        "pinky": {}
+      },
+      "by_bone": {}
+    },
+    "notes": "WRAD stays in its source-native Skeleton3D/Skin bind space. Open pose leaves native finger pose rotations at source rest. Semantic curl/opposition are projected onto axes inferred from the source finger chains and palm plane, then may be overridden per hand/finger/bone in this profile."
   },
   "presentation": {
     "position": [0.0, 0.0, 0.0],
     "rotation_degrees": [0.0, 0.0, 0.0],
-    "scale": [1.0, 1.0, 1.0]
+    "scale": [1.0, 1.0, 1.0],
+    "by_hand": {
+      "left": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation_degrees": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "right": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation_degrees": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      }
+    }
   }
 }
