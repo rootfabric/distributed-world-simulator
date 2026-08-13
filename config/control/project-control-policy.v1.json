@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.project_control_policy.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
   "operational_frontier_source": "config/control/project-program-registry.v1.json",
   "legacy_global_active_frontiers_policy": "GLOBAL-P0-R2 active_frontiers fields are advisory legacy state until the next global architecture revision; PC0 registry is authoritative for fast-moving operational frontier state.",
@@ -61,11 +61,70 @@
   },
   "global_health_semantics": {
     "default_program_gate": "BLOCKING",
-    "non_blocking_roles": ["RESEARCH_DESIGN_FRONTIER"],
+    "non_blocking_roles": [
+      "RESEARCH_DESIGN_FRONTIER"
+    ],
     "registry_override_field": "blocks_global_progress",
     "advisory_behavior": "Keep full local health/findings visible, but do not raise project-wide overall_health from that program alone.",
     "promotion_boundary": "A research/design frontier becomes subject to normal blocking merge/dependency/review gates when it is explicitly promoted toward canonical or runtime scope.",
     "directional_exception": "A research producer that touches paths watched by a blocking consumer can still make that blocking consumer YELLOW/RED; only findings whose consumer is advisory are excluded from directional overall_health."
+  },
+  "passport_architecture_compatibility": {
+    "mode": "EXPLICIT_PER_PROGRAM_HISTORICAL_ALLOWLIST",
+    "central_registry_field": "historical_passport_architecture_revisions",
+    "historical_identity_registry_field": "historical_passport_identities",
+    "exact_canonical_revision_always_allowed": true,
+    "historical_revision_requires_explicit_main_registry_declaration": true,
+    "historical_identity_required_for_mismatch": true,
+    "historical_identity_required_fields": [
+      "program",
+      "branch",
+      "passport_path",
+      "architecture_revision",
+      "pinned_head_sha",
+      "passport_blob_sha"
+    ],
+    "historical_mismatch_requires": [
+      "revision_allowlist",
+      "exact_immutable_identity_match"
+    ],
+    "missing_or_malformed_allowlist_fails_closed": true,
+    "missing_or_malformed_historical_identity_fails_closed": true,
+    "historical_allowlist_is_provenance_only": true,
+    "new_or_refreshed_post_promotion_frontiers_must_use_canonical_revision": true,
+    "rule": "A Branch Passport whose architecture_revision differs from the canonical registry remains RED unless the main-owned policy explicitly names both historical registry fields, the exact historical revision is allowlisted for the audited program, and exactly one historical_passport_identities record matches the exact program, branch, passport_path, historical architecture revision, observed remote branch head, and observed passport blob SHA. Revision allowlist membership alone never authorizes a mismatch. Missing, malformed, moved, copied, refreshed, or ambiguous identity evidence fails closed. No role, stage, blocker, status, or branch-name heuristic may grant compatibility."
+  },
+  "passport_ownership_compatibility": {
+    "mode": "EXPLICIT_PER_PROGRAM_HISTORICAL_OWNERSHIP_TRANSITIONS",
+    "central_registry_field": "historical_passport_ownership_transitions",
+    "architecture_compatibility_prerequisite": "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
+    "historical_canonical_ownership_source": {
+      "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+      "commit_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+      "path": "config/control/architecture-ownership.v1.json",
+      "blob_sha": "0cebf594ac7900292318d7533e4439cc7f3764d6"
+    },
+    "required_transition_fields": [
+      "program",
+      "architecture_revision",
+      "foundation",
+      "historical_owner",
+      "canonical_owner"
+    ],
+    "forbidden_compatibility_heuristics": [
+      "role",
+      "current_stage",
+      "stage_status",
+      "health_declared",
+      "blockers",
+      "branch_name_pattern"
+    ],
+    "missing_or_malformed_policy_fails_closed": true,
+    "missing_or_malformed_transition_fails_closed": true,
+    "duplicate_matching_transition_fails_closed": true,
+    "wildcard_transition_forbidden": true,
+    "new_or_refreshed_frontiers_must_not_use_historical_ownership_compatibility": true,
+    "rule": "Historical foundation ownership conflicts may be filtered only after exact immutable historical architecture identity compatibility is already proven, and only when exactly one per-program, per-foundation transition matches the historical passport claim, the pinned canonical R2 ownership source, and the current canonical ownership owner. Missing, malformed, wildcard, duplicated, moved, copied, refreshed, or non-exact evidence fails closed. No role, stage, status, blocker, or branch-name heuristic grants ownership compatibility."
   },
   "branch_lifecycle": [
     "PLANNED",

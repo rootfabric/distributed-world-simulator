@@ -24,6 +24,8 @@ jobs:
         run: |
           python3 -m py_compile \
             scripts/control/project_control.py \
+            scripts/control/project_control_architecture_compat.py \
+            scripts/control/project_control_core.py \
             scripts/control/project_control_directional_watch.py
           python3 - <<'PY'
           import json
@@ -54,6 +56,13 @@ jobs:
                   raise SystemExit(f"Expected JSON object: {path}")
               print(f"JSON OK: {path}")
           PY
+
+      - name: Run architecture and ownership passport compatibility regression
+        run: |
+          python3 -m unittest \
+            tests.harness.test_project_control_architecture_compatibility \
+            tests.harness.test_project_control_historical_ownership_compatibility \
+            tests.harness.test_project_control_proposed_r3_ownership_projection
 
       - name: Run PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
