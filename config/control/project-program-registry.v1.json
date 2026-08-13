@@ -229,8 +229,8 @@
     "NX": {
       "program": "NX",
       "program_name": "Network / Realtime",
-      "branch": "feature/h0-2-nx-c1-owner-authority-r3",
-      "passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+      "branch": "feature/nx-m7-owner-authority-convergence",
+      "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
       "short_description": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence implementation under exact runtime verification.",
