@@ -7,12 +7,12 @@ const P2_7 = preload("res://scripts/research/ecology/plant_lineage_divergence_ex
 
 func _init() -> void:
 	var parent := P2_7.run()
-	_require(not parent.is_empty(), "P2_7_PARENT_EMPTY")
-	_require(String(parent.get("aggregate_hash", "")) == Experiment.ACCEPTED_P2_7_HASH, "P2_7_PARENT_HASH_MISMATCH")
+	if not _require(not parent.is_empty(), "P2_7_PARENT_EMPTY"): return
+	if not _require(String(parent.get("aggregate_hash", "")) == Experiment.ACCEPTED_P2_7_HASH, "P2_7_PARENT_HASH_MISMATCH"): return
 	print("ECO.EVO1-P2.8 stage=P2_7_PARENT_OK hash=%s" % String(parent.get("aggregate_hash", "")))
 
 	var fixture := Experiment._fixture(parent)
-	_require(not fixture.is_empty(), "FIXTURE_EMPTY")
+	if not _require(not fixture.is_empty(), "FIXTURE_EMPTY"): return
 	print("ECO.EVO1-P2.8 stage=FIXTURE_OK")
 
 	var baseline := Biogeography.simulate(
@@ -23,30 +23,30 @@ func _init() -> void:
 		fixture["transport_schedule"],
 		fixture["disturbance_schedule"]
 	)
-	_require(not baseline.is_empty(), "P2_6_BASELINE_EMPTY")
+	if not _require(not baseline.is_empty(), "P2_6_BASELINE_EMPTY"): return
 	var expected_result_hash := String(baseline.get("result_hash", ""))
 	var expected_state_hash := Persistence.value_hash(baseline.get("final_states", {}))
 	var expected_diagnostics_hash := Persistence.value_hash(parent)
-	_require(expected_result_hash.length() == 64, "P2_6_BASELINE_HASH_INVALID")
-	_require(expected_state_hash.length() == 64, "P2_6_FINAL_STATE_HASH_INVALID")
-	_require(expected_diagnostics_hash.length() == 64, "P2_7_DIAGNOSTICS_HASH_INVALID")
+	if not _require(expected_result_hash.length() == 64, "P2_6_BASELINE_HASH_INVALID"): return
+	if not _require(expected_state_hash.length() == 64, "P2_6_FINAL_STATE_HASH_INVALID"): return
+	if not _require(expected_diagnostics_hash.length() == 64, "P2_7_DIAGNOSTICS_HASH_INVALID"): return
 	print("ECO.EVO1-P2.8 stage=BASELINE_OK result=%s state=%s diagnostics=%s" % [expected_result_hash, expected_state_hash, expected_diagnostics_hash])
 
 	var uninterrupted := Persistence.create_world(
 		fixture["initial_patch_states"], fixture["strategies"], Experiment.YEARS,
 		fixture["source_patch_ids"], fixture["transport_schedule"], fixture["disturbance_schedule"], parent
 	)
-	_require(not uninterrupted.is_empty(), "CREATE_WORLD_UNINTERRUPTED_EMPTY")
-	_require(Persistence.validate_world(uninterrupted), "CREATE_WORLD_UNINTERRUPTED_INVALID")
+	if not _require(not uninterrupted.is_empty(), "CREATE_WORLD_UNINTERRUPTED_EMPTY"): return
+	if not _require(Persistence.validate_world(uninterrupted), "CREATE_WORLD_UNINTERRUPTED_INVALID"): return
 	print("ECO.EVO1-P2.8 stage=CREATE_WORLD_OK world=%s" % Persistence.world_hash(uninterrupted))
 
 	uninterrupted = Persistence.advance_to(uninterrupted, Experiment.YEARS)
-	_require(not uninterrupted.is_empty(), "ADVANCE_UNINTERRUPTED_TO_30_EMPTY")
+	if not _require(not uninterrupted.is_empty(), "ADVANCE_UNINTERRUPTED_TO_30_EMPTY"): return
 	var uninterrupted_result := Persistence.to_biogeography_result(uninterrupted)
-	_require(not uninterrupted_result.is_empty(), "UNINTERRUPTED_RESULT_EMPTY")
+	if not _require(not uninterrupted_result.is_empty(), "UNINTERRUPTED_RESULT_EMPTY"): return
 	var uninterrupted_hash := String(uninterrupted_result.get("result_hash", ""))
 	print("ECO.EVO1-P2.8 stage=UNINTERRUPTED_OK baseline=%s stateful=%s" % [expected_result_hash, uninterrupted_hash])
-	_require(uninterrupted_hash == expected_result_hash, "UNINTERRUPTED_P2_6_HASH_MISMATCH")
+	if not _require(uninterrupted_hash == expected_result_hash, "UNINTERRUPTED_P2_6_HASH_MISMATCH"): return
 
 	var evidence_context := {
 		"accepted_p2_7_aggregate_hash": Experiment.ACCEPTED_P2_7_HASH,
@@ -61,9 +61,9 @@ func _init() -> void:
 		fixture["initial_patch_states"], fixture["strategies"], Experiment.YEARS,
 		fixture["source_patch_ids"], fixture["transport_schedule"], fixture["disturbance_schedule"], parent
 	)
-	_require(not restarted.is_empty(), "CREATE_WORLD_RESTART_EMPTY")
+	if not _require(not restarted.is_empty(), "CREATE_WORLD_RESTART_EMPTY"): return
 	restarted = Persistence.advance_to(restarted, Experiment.CUT_A_YEAR)
-	_require(not restarted.is_empty(), "ADVANCE_TO_CUT_A_EMPTY")
+	if not _require(not restarted.is_empty(), "ADVANCE_TO_CUT_A_EMPTY"): return
 	print("ECO.EVO1-P2.8 stage=CUT_A_STATE_OK year=%d world=%s" % [int(restarted.get("current_year", -1)), Persistence.world_hash(restarted)])
 
 	var checkpoint_a := Persistence.serialize_checkpoint(restarted, evidence_context)
@@ -71,50 +71,54 @@ func _init() -> void:
 		_audit_value(restarted, "world")
 		_audit_value(evidence_context, "evidence")
 		_fail("SERIALIZE_CHECKPOINT_A_EMPTY")
+		return
 	print("ECO.EVO1-P2.8 stage=SERIALIZE_A_OK bytes=%d" % checkpoint_a.to_utf8_buffer().size())
 	var checkpoint_a_document := Persistence.deserialize_checkpoint(checkpoint_a)
 	if checkpoint_a_document.is_empty():
 		_debug_decode(checkpoint_a, restarted, evidence_context, "A")
 		_fail("DESERIALIZE_CHECKPOINT_A_EMPTY")
+		return
 	print("ECO.EVO1-P2.8 stage=DESERIALIZE_A_OK checkpoint=%s" % String(checkpoint_a_document.get("checkpoint_hash", "")))
 
 	var after_a: Dictionary = checkpoint_a_document["world"]
 	after_a = Persistence.advance_to(after_a, Experiment.CUT_B_YEAR)
-	_require(not after_a.is_empty(), "ADVANCE_TO_CUT_B_EMPTY")
+	if not _require(not after_a.is_empty(), "ADVANCE_TO_CUT_B_EMPTY"): return
 	print("ECO.EVO1-P2.8 stage=CUT_B_STATE_OK year=%d world=%s" % [int(after_a.get("current_year", -1)), Persistence.world_hash(after_a)])
 	var checkpoint_b := Persistence.serialize_checkpoint(after_a, evidence_context)
 	if checkpoint_b.is_empty():
 		_audit_value(after_a, "world_b")
 		_fail("SERIALIZE_CHECKPOINT_B_EMPTY")
+		return
 	var checkpoint_b_document := Persistence.deserialize_checkpoint(checkpoint_b)
 	if checkpoint_b_document.is_empty():
 		_debug_decode(checkpoint_b, after_a, evidence_context, "B")
 		_fail("DESERIALIZE_CHECKPOINT_B_EMPTY")
+		return
 	print("ECO.EVO1-P2.8 stage=DESERIALIZE_B_OK checkpoint=%s" % String(checkpoint_b_document.get("checkpoint_hash", "")))
 
 	var after_b: Dictionary = checkpoint_b_document["world"]
 	after_b = Persistence.advance_to(after_b, Experiment.YEARS)
-	_require(not after_b.is_empty(), "ADVANCE_AFTER_CUT_B_TO_30_EMPTY")
+	if not _require(not after_b.is_empty(), "ADVANCE_AFTER_CUT_B_TO_30_EMPTY"): return
 	var restarted_result := Persistence.to_biogeography_result(after_b)
-	_require(not restarted_result.is_empty(), "RESTARTED_RESULT_EMPTY")
+	if not _require(not restarted_result.is_empty(), "RESTARTED_RESULT_EMPTY"): return
 	var restarted_hash := String(restarted_result.get("result_hash", ""))
 	print("ECO.EVO1-P2.8 stage=RESTARTED_OK baseline=%s resumed=%s" % [expected_result_hash, restarted_hash])
-	_require(restarted_hash == expected_result_hash, "RESTARTED_P2_6_HASH_MISMATCH")
-	_require(Persistence.value_hash(restarted_result.get("final_states", {})) == expected_state_hash, "RESTARTED_FINAL_STATE_HASH_MISMATCH")
-	_require(Persistence.value_hash(after_b.get("lineage_diagnostics", {})) == expected_diagnostics_hash, "RESTARTED_DIAGNOSTICS_HASH_MISMATCH")
+	if not _require(restarted_hash == expected_result_hash, "RESTARTED_P2_6_HASH_MISMATCH"): return
+	if not _require(Persistence.value_hash(restarted_result.get("final_states", {})) == expected_state_hash, "RESTARTED_FINAL_STATE_HASH_MISMATCH"): return
+	if not _require(Persistence.value_hash(after_b.get("lineage_diagnostics", {})) == expected_diagnostics_hash, "RESTARTED_DIAGNOSTICS_HASH_MISMATCH"): return
 
 	print("ECO.EVO1-P2.8 Failure Stage Probe: PASS baseline=%s resumed=%s" % [expected_result_hash, restarted_hash])
 	quit(0)
 
-func _require(condition: bool, stage: String) -> void:
-	if not condition:
-		_fail(stage)
+func _require(condition: bool, stage: String) -> bool:
+	if condition:
+		return true
+	_fail(stage)
+	return false
 
 func _fail(stage: String) -> void:
-	var message := "ECO.EVO1-P2.8 FAILURE_STAGE=" + stage
-	push_error(message)
+	push_error("ECO.EVO1-P2.8 FAILURE_STAGE=" + stage)
 	quit(1)
-	assert(false, message)
 
 func _debug_decode(text: String, original_world: Dictionary, evidence: Dictionary, label: String) -> void:
 	var parsed = JSON.parse_string(text)
