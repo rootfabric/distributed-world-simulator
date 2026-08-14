@@ -4,7 +4,6 @@ const RemotePlayerPresenterScript = preload(
 	"res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd"
 )
 
-const POSITION_INTERPOLATION_SPEED := 12.0
 const VISUAL_VERTICAL_OFFSET_M := -0.85
 const PLANAR_EPSILON := 0.000001
 
@@ -21,17 +20,16 @@ func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> 
 		return {"success": false, "error_code": "EARTH_POSITION_MAPPER_REQUIRED"}
 	_map_position = map_position
 	_delegate = RemotePlayerPresenterScript.new()
-	# The delegate updates yaw before this wrapper maps the interpolated planar
-	# position onto the curved Earth surface.
+	# The reusable presenter owns server-tick buffering/interpolation. Run it
+	# first; this wrapper consumes its sampled planar position afterwards.
 	_delegate.process_priority = -1
 	add_child(_delegate)
 	var result: Dictionary = _delegate.setup(record, snapshot)
 	if not bool(result.get("success", false)):
 		return result
-	_target_planar_position = _record_planar_position(record)
-	_presented_planar_position = _target_planar_position
-	_apply_delegate_visual_offset()
+	_capture_delegate_positions()
 	_apply_earth_position(_presented_planar_position)
+	_apply_delegate_visual_offset()
 	set_process(true)
 	return {"success": true, "error_code": ""}
 
@@ -41,7 +39,10 @@ func apply_replica(record: Dictionary, snapshot: Dictionary) -> Dictionary:
 		return {"success": false, "error_code": "EARTH_REMOTE_NOT_READY"}
 	var result: Dictionary = _delegate.apply_replica(record, false, snapshot)
 	if bool(result.get("success", false)):
-		_target_planar_position = _record_planar_position(record)
+		_target_planar_position = Vector2(
+			_delegate.target_position.x,
+			_delegate.target_position.z
+		)
 	return result
 
 
@@ -51,41 +52,45 @@ func set_local_planar_position(value: Vector2) -> void:
 		_apply_earth_position(_presented_planar_position)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _delegate == null:
 		return
-	var weight := 1.0 - exp(-POSITION_INTERPOLATION_SPEED * maxf(delta, 0.0))
-	_presented_planar_position = _presented_planar_position.lerp(
-		_target_planar_position,
-		clampf(weight, 0.0, 1.0)
-	)
+	# RemotePlayerPresenter has already sampled RemoteSnapshotInterpolator during
+	# its earlier process priority. Read that authoritative derived sample before
+	# replacing the delegate translation with the local visual body offset.
+	_capture_delegate_positions()
 	_apply_earth_position(_presented_planar_position)
-	# Translation belongs to this Earth wrapper. The reusable presenter remains
-	# responsible only for its derived visual state and yaw interpolation.
 	_apply_delegate_visual_offset()
+
+
+func _capture_delegate_positions() -> void:
+	if _delegate == null:
+		return
+	_presented_planar_position = Vector2(
+		_delegate.position.x,
+		_delegate.position.z
+	)
+	_target_planar_position = Vector2(
+		_delegate.target_position.x,
+		_delegate.target_position.z
+	)
 
 
 func _apply_delegate_visual_offset() -> void:
 	if _delegate != null:
-		# The Earth mapper places an observer at eye height. Lower only the remote
-		# capsule visual so its feet touch the generated terrain.
+		# The Earth mapper places the observer origin at eye height. Lower only the
+		# remote capsule visual so its feet sit on the generated terrain.
 		_delegate.position = Vector3(0.0, VISUAL_VERTICAL_OFFSET_M, 0.0)
-
-
-func _record_planar_position(record: Dictionary) -> Vector2:
-	var planar: Dictionary = record.get("position", {})
-	return Vector2(
-		float(planar.get("x", 0.0)),
-		float(planar.get("z", 0.0))
-	)
 
 
 func _apply_earth_position(planar_position: Vector2) -> void:
 	var remote_position: Vector3 = _map_position.call(
-		planar_position.x, planar_position.y
+		planar_position.x,
+		planar_position.y
 	)
 	var local_position: Vector3 = _map_position.call(
-		_local_planar_position.x, _local_planar_position.y
+		_local_planar_position.x,
+		_local_planar_position.y
 	)
 	earth_mapped_position = remote_position
 	position = remote_position - local_position
@@ -106,6 +111,14 @@ func _apply_surface_orientation(world_position: Vector3) -> void:
 
 func get_report() -> Dictionary:
 	var report: Dictionary = _delegate.get_report() if _delegate != null else {}
+	# The delegate node itself is intentionally recentered under this wrapper,
+	# so expose its logical interpolated planar position rather than that local
+	# visual offset in the public derived-presentation report.
+	report["position"] = [
+		_presented_planar_position.x,
+		0.0,
+		_presented_planar_position.y,
+	]
 	report["earth_mapped_position"] = [
 		earth_mapped_position.x,
 		earth_mapped_position.y,
