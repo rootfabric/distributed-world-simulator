@@ -9,7 +9,7 @@ diff --git a/scripts/app/earth_app.gd b/scripts/app/earth_app.gd
  
  
  func register_runtime_commands(registry, owner_id: String) -> void:
-@@ -393,12 +394,34 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+@@ -393,10 +394,34 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
  
  func _on_m3_construction_updated(bundle: Dictionary) -> void:
  	if construction_presentation == null or bundle.is_empty():
