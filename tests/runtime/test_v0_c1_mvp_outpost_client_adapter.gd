@@ -18,7 +18,7 @@ class FakeRuntime extends RefCounted:
 		"permission_epoch": 1,
 		"next_sequence": 0,
 	}
-	var bundle: Dictionary = BundleScript.create(0, [], [])
+	var bundle: Dictionary = {}
 	var captured_command: Dictionary = {}
 	var captured_operation_id := ""
 
@@ -36,6 +36,7 @@ class FakeRuntime extends RefCounted:
 
 func _init() -> void:
 	var runtime = FakeRuntime.new()
+	runtime.bundle = BundleScript.create(0, [], [])
 	var adapter = AdapterScript.new()
 	_assert(bool(adapter.setup(runtime).get("success", false)), "adapter setup")
 	var initial: Dictionary = adapter.get_status()
