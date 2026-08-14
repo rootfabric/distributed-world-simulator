@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_5_region_ownership_validation.v1",
-  "revision": "ECO-P4.5-2026-08-14-R1-PREACCEPTANCE-CANDIDATE",
+  "revision": "ECO-P4.5-2026-08-14-R2-PREACCEPTANCE-CANDIDATE-RUNNER-HARDENED",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_P4_4_ACCEPTANCE_AND_FULL_CHAIN_GATE_PENDING",
   "scope": "DETERMINISTIC_REGION_OWNERSHIP_FENCING_AND_SERVER_HANDOFF_ONLY",
@@ -11,12 +11,19 @@
     "current_status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_PENDING",
     "kernel_blob": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
     "acceptance_test_blob": "2385b035082834aaae1eb91e25aa798c26ca40dc",
-    "runner_blob": "7dc69caf556f36ac4e282acb5713f3d072e63ad5"
+    "runner_blob": "9a616d9250330ee7e17c85e1ac7dab86c8773558"
   },
   "candidate_blobs": {
     "kernel": "2a4083fb9d4b55f8c16421c4f3555c19a952711f",
     "acceptance_test": "041e7e81588f59b54bac76d7cd9ad558d054b0de",
-    "runner": "4e469b60745c199dea580b601dfcabaf6ee13610"
+    "runner": "f8f986e796f5a06b752ed365adc4c3a493086697"
+  },
+  "runner_hardening": {
+    "semantic_change": false,
+    "kernel_or_test_changed": false,
+    "direct_parent_regression": "P4.5 runner executes committed P4.4 acceptance test directly after P4.4 lifecycle acceptance instead of recursively replaying older parent runners",
+    "process_timeout_seconds": 300,
+    "timeout_behavior": "fail closed and terminate Godot process tree"
   },
   "contract": {
     "ownership_identity": "canonical owner state binds P4.4 snapshot hash, region id, owner server id and monotonic integer ownership_epoch",
