@@ -110,6 +110,27 @@ function Invoke-ImportPreflight {
     }
 }
 
+function Stop-SessionProcesses {
+    param([int]$ServerPid, [int[]]$ClientPids)
+    foreach ($PidToStop in @($ClientPids) + @($ServerPid)) {
+        if (Test-ProcessAlive $PidToStop) {
+            Stop-Process -Id $PidToStop -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Get-SpawnDistance {
+    param($ServerState)
+    $Players = @($ServerState.snapshot.players)
+    $A = $Players | Where-Object { $_.logical_player_id -eq "a" } | Select-Object -First 1
+    $B = $Players | Where-Object { $_.logical_player_id -eq "b" } | Select-Object -First 1
+    if ($null -eq $A -or $null -eq $B) { return -1.0 }
+    $Dx = [double]$A.position.x - [double]$B.position.x
+    $Dy = [double]$A.position.y - [double]$B.position.y
+    $Dz = [double]$A.position.z - [double]$B.position.z
+    return [Math]::Sqrt($Dx * $Dx + $Dy * $Dy + $Dz * $Dz)
+}
+
 if (Test-Path $ActiveSessionPath) {
     $Existing = Get-Content $ActiveSessionPath -Raw | ConvertFrom-Json
     $Running = @($Existing.server_pid) + @($Existing.client_pids) | Where-Object {
@@ -135,14 +156,14 @@ New-Item -ItemType Directory -Force -Path $RunRoot,$Profiles | Out-Null
 $NetworkSessionToken = "session-id/v0-local-$($RunId.ToLowerInvariant())"
 
 if (-not $SkipImport) {
-    Write-Host "[1/4] Importing/checking project with $Version ..." -ForegroundColor Cyan
+    Write-Host "[1/5] Importing/checking project with $Version ..." -ForegroundColor Cyan
     Invoke-ImportPreflight `
         -Executable $Godot `
         -ProfileRoot (Join-Path $Profiles "preflight") `
         -LogFile (Join-Path $RunRoot "preflight.log")
 }
 
-Write-Host "[2/4] Starting dedicated Earth server ..." -ForegroundColor Cyan
+Write-Host "[2/5] Starting dedicated Earth server ..." -ForegroundColor Cyan
 $ServerResult = Join-Path $RunRoot "server.json"
 $ServerLog = Join-Path $RunRoot "server.log"
 $ServerArgs = @(
@@ -175,7 +196,7 @@ if ($null -eq $ServerState -or $ServerState.state -ne "READY") {
     throw "V0 dedicated server did not become READY. See $ServerLog"
 }
 
-Write-Host "[3/4] Starting Client A and Client B ..." -ForegroundColor Cyan
+Write-Host "[3/5] Starting Client A and Client B ..." -ForegroundColor Cyan
 $ClientPids = @()
 $ClientDefinitions = @(
     @{ id = "a"; x = 20;  y = 80 },
@@ -206,14 +227,36 @@ foreach ($ClientDefinition in $ClientDefinitions) {
     Start-Sleep -Milliseconds 500
 }
 
-Start-Sleep -Seconds 2
-foreach ($ProcessId in $ClientPids) {
-    if (-not (Test-ProcessAlive $ProcessId)) {
-        foreach ($PidToStop in $ClientPids + @($Server.Id)) {
-            if (Test-ProcessAlive $PidToStop) { Stop-Process -Id $PidToStop -Force -ErrorAction SilentlyContinue }
+Write-Host "[4/5] Waiting until the server confirms both players joined ..." -ForegroundColor Cyan
+$JoinDeadline = [DateTime]::UtcNow.AddSeconds(45)
+$TwoPlayerState = $null
+while ([DateTime]::UtcNow -lt $JoinDeadline) {
+    if (-not (Test-ProcessAlive $Server.Id)) { break }
+    $DeadClient = $ClientPids | Where-Object { -not (Test-ProcessAlive ([int]$_)) } | Select-Object -First 1
+    if ($null -ne $DeadClient) { break }
+    if (Test-Path $ServerResult) {
+        try { $CandidateState = Get-Content $ServerResult -Raw | ConvertFrom-Json }
+        catch { $CandidateState = $null }
+        if ($null -ne $CandidateState -and $CandidateState.state -eq "FAILED") { break }
+        if ($null -ne $CandidateState -and [int]$CandidateState.connected_peer_count -eq 2) {
+            $JoinedPlayers = @($CandidateState.peer_to_player.PSObject.Properties | ForEach-Object { [string]$_.Value })
+            if ($JoinedPlayers -contains "a" -and $JoinedPlayers -contains "b") {
+                $TwoPlayerState = $CandidateState
+                break
+            }
         }
-        throw "A graphical V0 client exited during startup. See logs in $RunRoot"
     }
+    Start-Sleep -Milliseconds 100
+}
+if ($null -eq $TwoPlayerState) {
+    Stop-SessionProcesses -ServerPid $Server.Id -ClientPids $ClientPids
+    throw "Server did not confirm both Client A and Client B within 45 seconds. See $ServerLog and client logs in $RunRoot"
+}
+
+$SpawnDistance = Get-SpawnDistance -ServerState $TwoPlayerState
+if ($SpawnDistance -lt 0.0 -or $SpawnDistance -gt 12.0) {
+    Stop-SessionProcesses -ServerPid $Server.Id -ClientPids $ClientPids
+    throw "Two players joined, but spawn distance is not suitable for local inspection: $SpawnDistance m. See $ServerResult"
 }
 
 $Session = [ordered]@{
@@ -229,6 +272,8 @@ $Session = [ordered]@{
     server_pid = $Server.Id
     client_pids = $ClientPids
     client_ids = @("a","b")
+    connected_peer_count = [int]$TwoPlayerState.connected_peer_count
+    spawn_distance_m = $SpawnDistance
     world_id = "earth"
     network_mode = "SERVER_PREDICTED"
     network_session_token = $NetworkSessionToken
@@ -237,8 +282,10 @@ $Session = [ordered]@{
 $Session | ConvertTo-Json -Depth 6 | Set-Content -Path $ActiveSessionPath -Encoding UTF8
 $Session | ConvertTo-Json -Depth 6 | Set-Content -Path (Join-Path $RunRoot "session.json") -Encoding UTF8
 
-Write-Host "[4/4] TWO_PLAYER_PLAYABLE_BUILD is running." -ForegroundColor Green
+Write-Host "[5/5] TWO_PLAYER_PLAYABLE_BUILD is running." -ForegroundColor Green
 Write-Host ""
+Write-Host "Server confirmed: connected_peer_count=2; players=a,b"
+Write-Host ("Authoritative spawn distance: {0:N2} m" -f $SpawnDistance)
 Write-Host "Client A: left window, player 'a'"
 Write-Host "Client B: right window, player 'b'"
 Write-Host "World: Earth / same server $ServerAddress`:$Port"
@@ -250,7 +297,7 @@ Write-Host "  1. Click Client A, move with WASD, then look at Client B."
 Write-Host "  2. Client B must show A in the new position."
 Write-Host "  3. Move B with WASD, then look at Client A."
 Write-Host "  4. Client A must show B in the new position."
-Write-Host "  5. A and B should start close together on the same Earth surface patch."
+Write-Host "  5. A and B must remain on the same Earth surface patch."
 Write-Host ""
 Write-Host "Controls: click viewport to capture mouse; WASD move; Shift run; Space jump; Tab releases/captures mouse when inventory is unavailable."
 Write-Host "Stop everything: .\STOP_V0_LOCAL_TWO_PLAYER.ps1"
