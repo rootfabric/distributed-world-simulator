@@ -36,6 +36,8 @@ func _init() -> void:
 		"connected": true,
 		"position": {"x": 10.0, "y": 0.0, "z": 4.0},
 		"velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+		"inventory": [],
+		"last_input_sequence": 0,
 		"state_revision": 1,
 		"orientation_yaw": 0.0,
 		"flashlight_enabled": false,
