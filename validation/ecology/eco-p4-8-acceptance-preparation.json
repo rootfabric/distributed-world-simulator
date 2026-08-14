@@ -1,0 +1,34 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_8_acceptance_preparation.v1",
+  "revision": "ECO-P4.8-2026-08-14-R1-PREPARATION",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "PREPARATION_READY_P4_7_CANONICAL_SOAK_PENDING",
+  "scope": "P4_FINAL_ACCEPTANCE_CONTROL_MANIFEST_ONLY",
+  "accepted_validation_chain": {
+    "p4_1": "9a18978a4206452d58d32eb3ec49e2effdff26f6",
+    "p4_2": "730452dc2bcd8fe58e758197e0209e6bc38b540c",
+    "p4_3": "1236fdefcf490838bbe69431588d5878b7949f2c",
+    "p4_4": "9f540c402506b1494d8ac69ca6a81a76696bab2f",
+    "p4_5": "a02f1547c1beea5a49d500304b58ab8c763334ca",
+    "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
+  },
+  "p4_7_gate": {
+    "status": "CANDIDATE_CANONICAL_RUNNER_READY_EXACT_COMMITTED_A_B_PENDING",
+    "validation_blob": "a4cae8c944ab658dab05cf2ed3d3215e746883b6",
+    "runner_blob": "da41c2760f0802c0a669e1f4a1d0ad90254c054e",
+    "soak_test_blob": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
+    "required_before_finalization": ["exact committed A/B PASS", "byte-identical logs", "soak_hash frozen", "final_interest_hash frozen", "P4.7 lifecycle acceptance"]
+  },
+  "candidate_blobs": {
+    "preacceptance_runner": "ae2378da746d60bd967f1f910ea196175652fd57"
+  },
+  "contract": {
+    "control_only": true,
+    "adds_runtime_semantics": false,
+    "requires_all_p4_1_through_p4_7_accepted": true,
+    "cannot_accept_p4_7_by_implication": true,
+    "cannot_accept_p4_without_frozen_p4_7_soak_identity": true,
+    "final_action_after_p4_7": "replace preparation pins with accepted P4.7 validation/hash identities, run final manifest gate, then write one P4 lifecycle acceptance commit"
+  },
+  "decision": "P4_8_PREPARED; RUN_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
+}
