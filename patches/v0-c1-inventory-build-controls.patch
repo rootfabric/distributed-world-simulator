@@ -1,0 +1,164 @@
+diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
+--- a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
++++ b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
+@@ -4,6 +4,7 @@ const Bridge = preload("res://scripts/runtime/networked_gameplay/m5/m5_inventory_ui_bridge.gd")
+ const InteractionProfileLoader = preload("res://scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd")
+ const ContainerPanelScene = preload("res://scenes/ui/inventory/container_panel.tscn")
+ const HotbarPanelScene = preload("res://scenes/ui/inventory/hotbar_panel.tscn")
++const MvpOutpostClientAdapter = preload("res://scripts/runtime/networked_gameplay/m3/m3_mvp_outpost_client_adapter.gd")
+ 
+ const SCHEMA := "planet_simulator.m5_networked_inventory_shell.v1"
+ const DEFAULT_PROFILE_ID := "seven_days_like"
+@@ -18,6 +19,8 @@ var status_label: Label
+ var drop_selected_button: Button
+ var close_container_button: Button
+ var activate_selected_button: Button
++var build_next_stage_button: Button
++var construction_status_label: Label
+ var active_profile
+ var _inventory_visible := false
+ var _configured := false
+@@ -31,6 +34,9 @@ var _cursor_begin_count := 0
+ var _cursor_place_count := 0
+ var _last_command_result: Dictionary = {}
++var _network_runtime
++var _outpost_adapter
++var _construction_pending := false
+ 
+ 
+ func setup(runtime, logical_player_id: String) -> Dictionary:
+@@ -49,10 +55,18 @@ func setup(runtime, logical_player_id: String) -> Dictionary:
+ 		bridge.queue_free()
+ 		bridge = null
+ 		return profile_result
++	_network_runtime = runtime
++	_outpost_adapter = MvpOutpostClientAdapter.new()
++	var outpost_setup: Dictionary = _outpost_adapter.setup(runtime)
++	if not bool(outpost_setup.get("success", false)):
++		_outpost_adapter = null
+ 	_build_ui()
+ 	bridge.view_updated.connect(_on_view_updated)
+ 	bridge.command_completed.connect(_on_command_completed)
++	if runtime != null and runtime.has_signal("construction_updated"):
++		if not runtime.construction_updated.is_connected(_on_construction_updated):
++			runtime.construction_updated.connect(_on_construction_updated)
+ 	_configured = true
+ 	_on_view_updated(bridge.build_view())
++	_refresh_construction_status()
+ 	return _success({"interaction_profile": String(active_profile.profile_id)})
+@@ -111,6 +125,11 @@ func get_report() -> Dictionary:
+ 		"cursor_active": bridge.has_cursor() if bridge != null else false,
+ 		"cursor": bridge.get_cursor() if bridge != null else {},
+ 		"last_command_result": _last_command_result.duplicate(true),
++		"construction": (
++			_outpost_adapter.get_status()
++			if _outpost_adapter != null
++			else {"ready": false}
++		),
+ 		"bridge": bridge.get_report() if bridge != null else {},
+ 		"player_model": player_panel.current_model.duplicate(true) if player_panel != null else {},
+ 		"external_model": external_panel.current_model.duplicate(true) if external_panel != null else {},
+@@ -244,7 +263,7 @@ func _build_ui() -> void:
+ 	inventory_window.add_child(outer)
+ 	var title := Label.new()
+-	title.text = "СЕТЕВОЙ ИНВЕНТАРЬ · M5 GRAPHICAL ACCEPTANCE"
++	title.text = "ИНВЕНТАРЬ · V0"
+ 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ 	outer.add_child(title)
+@@ -277,6 +296,23 @@ func _build_ui() -> void:
+ 	player_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 	columns.add_child(player_panel)
+ 	external_panel = ContainerPanelScene.instantiate()
+@@ -284,6 +320,23 @@ func _build_ui() -> void:
+ 	external_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 	columns.add_child(external_panel)
+ 
++	var construction_actions := HBoxContainer.new()
++	construction_actions.add_theme_constant_override("separation", 8)
++	outer.add_child(construction_actions)
++	var construction_title := Label.new()
++	construction_title.text = "СТРОЙКА"
++	construction_title.custom_minimum_size = Vector2(90.0, 0.0)
++	construction_actions.add_child(construction_title)
++	build_next_stage_button = Button.new()
++	build_next_stage_button.text = "Построить следующий этап"
++	build_next_stage_button.focus_mode = Control.FOCUS_NONE
++	build_next_stage_button.pressed.connect(_on_build_next_stage_pressed)
++	construction_actions.add_child(build_next_stage_button)
++	construction_status_label = Label.new()
++	construction_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	construction_status_label.text = "Ожидание Construction replica…"
++	construction_actions.add_child(construction_status_label)
++
+ 	var actions := HBoxContainer.new()
+ 	actions.add_theme_constant_override("separation", 8)
+ 	outer.add_child(actions)
+@@ -337,6 +390,7 @@ func _on_view_updated(view: Dictionary) -> void:
+ 	]
+ 	close_container_button.disabled = String(view.get("external_container_id", "")).is_empty()
+ 	_render_count += 1
++	_refresh_construction_status()
++
++
++func _on_construction_updated(_bundle: Dictionary) -> void:
++	_construction_pending = false
++	_refresh_construction_status()
++
++
++func _on_build_next_stage_pressed() -> void:
++	if _outpost_adapter == null or _construction_pending:
++		return
++	var before: Dictionary = _outpost_adapter.get_status()
++	if not bool(before.get("ready", false)) or bool(before.get("complete", false)):
++		_refresh_construction_status()
++		return
++	_construction_pending = true
++	_refresh_construction_status()
++	var result: Dictionary = _outpost_adapter.build_next_stage_blocking()
++	_last_command_result = result.duplicate(true)
++	if not bool(result.get("success", false)):
++		_construction_pending = false
++		_last_error_code = String(result.get("error_code", "V0_OUTPOST_BUILD_REJECTED"))
++		if construction_status_label != null:
++			construction_status_label.text = "Ошибка стройки: %s" % _last_error_code
++		_refresh_construction_status(false)
++		return
++	var after: Dictionary = _outpost_adapter.get_status()
++	if int(after.get("completed_stage_count", 0)) > int(before.get("completed_stage_count", 0)):
++		_construction_pending = false
++		_refresh_construction_status()
++	elif construction_status_label != null:
++		construction_status_label.text = "Команда принята сервером · ожидаем репликацию…"
++
++
++func _refresh_construction_status(overwrite_error: bool = true) -> void:
++	if build_next_stage_button == null or construction_status_label == null:
++		return
++	if _outpost_adapter == null:
++		build_next_stage_button.disabled = true
++		construction_status_label.text = "Construction runtime недоступен"
++		return
++	var status: Dictionary = _outpost_adapter.get_status()
++	if not bool(status.get("ready", false)):
++		build_next_stage_button.disabled = true
++		construction_status_label.text = "Ожидание Construction session…"
++		return
++	if bool(status.get("complete", false)):
++		build_next_stage_button.disabled = true
++		build_next_stage_button.text = "База построена"
++		construction_status_label.text = "3/3 · фундамент + стены + крыша"
++		return
++	var stage_index := int(status.get("next_stage_index", 0))
++	var stage_label := String(status.get("next_stage_label", "этап"))
++	build_next_stage_button.disabled = _construction_pending
++	build_next_stage_button.text = "Построить: %s" % stage_label
++	if _construction_pending:
++		construction_status_label.text = "Отправка этапа %d/3…" % (stage_index + 1)
++	elif overwrite_error:
++		construction_status_label.text = "%d/3 готово · следующий: %s" % [
++			int(status.get("completed_stage_count", 0)),
++			stage_label,
++		]
+ 
+ 
+ func _on_drop_requested(
