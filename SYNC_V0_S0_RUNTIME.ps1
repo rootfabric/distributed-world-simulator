@@ -20,7 +20,8 @@ $DirectFiles = @(
     "scripts/actors/earth/earth_explorer.gd",
     "scripts/ui/planetary_overlay.gd",
     "scripts/network/realtime/realtime_channel_policy.gd",
-    "patches/v0-s0-nx4-transport-direct.patch"
+    "patches/v0-s0-nx4-transport-direct.patch",
+    "patches/v0-launcher-marker-gate-fix.patch"
 )
 $PatchTargets = @(
     "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
@@ -61,10 +62,23 @@ if ($LASTEXITCODE -ne 0) {
     throw "ENet/NX4 patch does not match the current clean transport/runtime files. Nothing was applied to those two files."
 }
 
+$LauncherPatchPath = Join-Path $ProjectRoot "patches\v0-launcher-marker-gate-fix.patch"
+Write-Host "[V0-S0] Checking launcher source-gate patch..."
+& git apply --check -- $LauncherPatchPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Launcher source-gate patch does not match RUN_V0_MVP.ps1."
+}
+
 Write-Host "[V0-S0] Applying ENet/NX4 patch..."
 & git apply -- $PatchPath
 if ($LASTEXITCODE -ne 0) {
     throw "ENet/NX4 patch application failed."
+}
+
+Write-Host "[V0-S0] Applying launcher source-gate correction..."
+& git apply -- $LauncherPatchPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Launcher source-gate patch application failed."
 }
 
 & git diff --check
@@ -99,6 +113,7 @@ Write-Host "  camera       : scalar surface yaw/pitch; roll-free rebuild"
 Write-Host "  movement     : NX4 prediction remains active"
 Write-Host "  transport    : ENet unreliable ordered + application sequencing"
 Write-Host "  timeout      : no false CONNECT_TIMEOUT after real disconnect"
+Write-Host "  launcher     : refuses stale/partial V0 source trees"
 Write-Host ""
 & git diff --stat
 Write-Host ""
