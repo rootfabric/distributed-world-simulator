@@ -198,6 +198,51 @@ B receives matching collision
 no client-private construction mesh truth
 ```
 
+### V0-C2A — Canonical Earth Surface Anchoring
+
+Обязательный spatial integration gate, найденный при ручном C2 runtime test.
+Construction topology и C22/C24 proxy остаются прежними, но world placement
+construct не может зависеть от player/camera/spectator state.
+
+Bounded V0 rule:
+
+```text
+stable Earth-fixed surface anchor
+        +
+current Earth render origin / frame basis
+        ↓
+derived presentation Transform3D
+```
+
+Не разрешено использовать observer planar position, eye height или spectator
+translation как canonical construct placement. Перемещение observer меняет только
+локальный render transform; anchor остаётся неизменным.
+
+Текущий fixed MVP outpost детерминированно получает Earth surface anchor из
+канонической M3 planar позиции. Целевая promotion без изменения C22/C24 path:
+
+```text
+root Item
+→ WORLD(entity_id)
+→ WorldEntity
+→ SpatialRef(frame_id = earth.fixed)
+→ тот же presentation projector
+```
+
+Detailed contract и acceptance:
+`docs/plans/V0_C2A_CANONICAL_EARTH_SURFACE_ANCHORING_RU.md`.
+
+V0-C2A acceptance:
+
+```text
+foundation remains seated on terrain
+walking/jumping never mutates world anchor
+detached spectator does not carry the construct
+terrain and construct recede together
+A and B agree on one Earth-fixed location
+Construction revision/checksum do not change from observer movement
+```
+
 ### V0-C3 — Inventory ↔ Construction Resource Convergence
 
 Убрать MVP-only in-memory resource separation там, где она используется только
@@ -303,6 +348,7 @@ B0
 → I2
 → C1
 → C2
+→ C2A
 → C3
 → R1
 → A1
@@ -332,6 +378,7 @@ canonical inventory/hotbar
 world item/container loop
 canonical Construction outpost
 C22/C24 visual + collision convergence
+Earth-fixed construct anchoring independent of observer/spectator
 reconnect same live world
 no duplicate Item/Construction/Character truth
 integrated runner
