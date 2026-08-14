@@ -6,11 +6,13 @@ $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
 $ExpectedParentP43 = "4bdfd994a27ef15ff4010643e35f4652a0a2f3fdb2d3fcfa6b86b816b14cca62"
 $ExpectedP43KernelBlob = "ed76af9537c09ca013eb1a1367d3c854b1438df3"
 $ExpectedP43ValidationBlob = "1236fdefcf490838bbe69431588d5878b7949f2c"
+$ExpectedP43TestBlob = "6aac302cff629a5e71b7ecd2f93f3973d437aa3f"
 $ExpectedKernelBlob = "2f4d7809a84d4f6d23a3f113c23b359f0803d564"
 $ExpectedTestBlob = "2385b035082834aaae1eb91e25aa798c26ca40dc"
 $ExpectedAggregate = "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2"
 $ExpectedSnapshot = "c6ee61dc4250fcd22b762902ff35354957c884c8b1818aed8209fe4f6c829006"
 $ExpectedResumedCatchup = "cc2a4815e1eae75b879ea52d8ba404880c69344928f953e8aaa38bd062b1ce3a"
+$GodotTimeoutSeconds = 300
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
@@ -37,33 +39,48 @@ function Assert-Blob([string]$Path, [string]$Expected) {
 }
 Assert-Blob "scripts/ecology/production/ecology_offline_catchup_v1.gd" $ExpectedP43KernelBlob
 Assert-Blob "validation/ecology/eco-p4-3-offline-catchup-validation.json" $ExpectedP43ValidationBlob
+Assert-Blob "tests/ecology/production/eco_p4_3_offline_catchup_acceptance.gd" $ExpectedP43TestBlob
 Assert-Blob "scripts/ecology/production/ecology_region_persistence_v1.gd" $ExpectedKernelBlob
 Assert-Blob "tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd" $ExpectedTestBlob
 
-Write-Host "=== ECO P4.4 parser/preload preflight ==="
-$check = & $GodotPath --headless --path $RootDir --check-only --script res://tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd 2>&1
-$checkExit = $LASTEXITCODE
-$check | ForEach-Object { Write-Host $_ }
-if ($checkExit -ne 0) { throw "P4.4 parser/preload preflight failed" }
-if (($check -join "`n") -match '(?m)^ERROR:') { throw "P4.4 parser/preload emitted Godot ERROR output" }
-
-Write-Host "=== ECO P4.3 accepted parent regression ==="
-& (Join-Path $RootDir "RUN_ECO_P4_3_TESTS.ps1") -GodotPath $GodotPath
-if ($LASTEXITCODE -ne 0) { throw "P4.3 accepted parent regression failed" }
-
-function Invoke-P44([string]$Label) {
+function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly = $false) {
     Write-Host "=== $Label ==="
-    $output = & $GodotPath --headless --path $RootDir --script res://tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd 2>&1
-    $exitCode = $LASTEXITCODE
-    $output | ForEach-Object { Write-Host $_ }
-    $joined = ($output -join "`n")
-    if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
-    if ($joined -match '(?m)^ERROR:') { throw "$Label emitted Godot ERROR output despite zero exit code" }
-    return $joined
+    $stdoutPath = [System.IO.Path]::GetTempFileName()
+    $stderrPath = [System.IO.Path]::GetTempFileName()
+    try {
+        $arguments = @("--headless", "--path", $RootDir)
+        if ($CheckOnly) { $arguments += "--check-only" }
+        $arguments += @("--script", $ScriptPath)
+        $process = Start-Process -FilePath $GodotPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        if (-not $process.WaitForExit($GodotTimeoutSeconds * 1000)) {
+            try { & taskkill.exe /PID $process.Id /T /F 2>&1 | Out-Null } catch { }
+            throw "$Label timed out after $GodotTimeoutSeconds seconds; Godot process tree terminated"
+        }
+        $process.WaitForExit()
+        $stdoutText = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
+        $stderrText = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+        if (-not [string]::IsNullOrEmpty($stdoutText)) { Write-Host $stdoutText.TrimEnd() }
+        if (-not [string]::IsNullOrEmpty($stderrText)) { Write-Host $stderrText.TrimEnd() }
+        $joined = ($stdoutText + $stderrText).Trim()
+        if ($process.ExitCode -ne 0) { throw "$Label failed with exit code $($process.ExitCode)" }
+        if ($joined -match '(?m)^ERROR:') { throw "$Label emitted Godot ERROR output despite zero exit code" }
+        return $joined
+    }
+    finally {
+        Remove-Item -LiteralPath $stdoutPath,$stderrPath -Force -ErrorAction SilentlyContinue
+    }
 }
 
-$runA = Invoke-P44 "ECO P4.4 production persistence A"
-$runB = Invoke-P44 "ECO P4.4 production persistence fresh process B"
+$null = Invoke-GodotTimed "ECO P4.4 parser/preload preflight" "res://tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd" $true
+
+$parentRun = Invoke-GodotTimed "ECO P4.3 accepted parent regression (direct committed test)" "res://tests/ecology/production/eco_p4_3_offline_catchup_acceptance.gd"
+$parentAggregate = [regex]::Match($parentRun, 'aggregate_hash=([0-9a-f]{64})')
+if (-not $parentAggregate.Success -or $parentAggregate.Groups[1].Value -ne $ExpectedParentP43) {
+    throw "P4.3 direct parent regression aggregate mismatch"
+}
+
+$runA = Invoke-GodotTimed "ECO P4.4 production persistence A" "res://tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd"
+$runB = Invoke-GodotTimed "ECO P4.4 production persistence fresh process B" "res://tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd"
 if ($runA -ne $runB) { throw "P4.4 fresh-process logs are not byte-identical" }
 
 $aggregate = [regex]::Match($runA, 'aggregate_hash=([0-9a-f]{64})')
