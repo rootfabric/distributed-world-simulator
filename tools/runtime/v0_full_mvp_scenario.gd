@@ -82,12 +82,17 @@ func _run() -> void:
 	summary["final_mode"] = _final_mode
 	summary["driver"] = _driver_path
 	summary["driver_is_canonical"] = _driver_path == DEFAULT_DRIVER
-	summary["final_checkpoint_eligible"] = (
+	summary["scenario_final_conditions_satisfied"] = (
 		_final_mode
 		and _driver_path == DEFAULT_DRIVER
 		and String(summary.get("aggregate_state", "")) == Acceptance.STATE_PASS
 		and bool(summary.get("final_soak_duration_satisfied", false))
 	)
+	# Scenario evidence is deliberately non-authoritative for checkpoint eligibility.
+	# Only RUN_V0_FULL_MVP_TEST.ps1 may combine scenario evidence with refreshed Git
+	# provenance and emit final_checkpoint_eligible=true in the runner summary.
+	summary["checkpoint_authority"] = "RUNNER_ONLY"
+	summary["runner_provenance_required"] = true
 	_write_summary(summary)
 	print("V0 full MVP aggregate: %s | PASS=%d FAIL=%d DEPENDENCY_PENDING=%d NOT_IMPLEMENTED=%d" % [
 		summary.get("aggregate_state", Acceptance.STATE_FAIL),
