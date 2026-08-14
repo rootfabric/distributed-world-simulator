@@ -45,29 +45,45 @@ Assert-Blob "tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd"
 
 function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly = $false) {
     Write-Host "=== $Label ==="
-    $stdoutPath = [System.IO.Path]::GetTempFileName()
-    $stderrPath = [System.IO.Path]::GetTempFileName()
+    $process = $null
     try {
-        $arguments = @("--headless", "--path", $RootDir)
-        if ($CheckOnly) { $arguments += "--check-only" }
-        $arguments += @("--script", $ScriptPath)
-        $process = Start-Process -FilePath $GodotPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        $argumentText = "--headless --path `"$RootDir`""
+        if ($CheckOnly) { $argumentText += " --check-only" }
+        $argumentText += " --script `"$ScriptPath`""
+
+        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $startInfo.FileName = $GodotPath
+        $startInfo.Arguments = $argumentText
+        $startInfo.UseShellExecute = $false
+        $startInfo.CreateNoWindow = $true
+        $startInfo.RedirectStandardOutput = $true
+        $startInfo.RedirectStandardError = $true
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $startInfo
+        if (-not $process.Start()) { throw "$Label failed to start Godot" }
+
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
         if (-not $process.WaitForExit($GodotTimeoutSeconds * 1000)) {
             try { & taskkill.exe /PID $process.Id /T /F 2>&1 | Out-Null } catch { }
+            try { $process.WaitForExit() } catch { }
             throw "$Label timed out after $GodotTimeoutSeconds seconds; Godot process tree terminated"
         }
         $process.WaitForExit()
-        $stdoutText = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
-        $stderrText = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+
+        $stdoutText = [string]$stdoutTask.Result
+        $stderrText = [string]$stderrTask.Result
         if (-not [string]::IsNullOrEmpty($stdoutText)) { Write-Host $stdoutText.TrimEnd() }
         if (-not [string]::IsNullOrEmpty($stderrText)) { Write-Host $stderrText.TrimEnd() }
         $joined = ($stdoutText + $stderrText).Trim()
-        if ($process.ExitCode -ne 0) { throw "$Label failed with exit code $($process.ExitCode)" }
+        $exitCode = [int]$process.ExitCode
+        if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
         if ($joined -match '(?m)^ERROR:') { throw "$Label emitted Godot ERROR output despite zero exit code" }
         return $joined
     }
     finally {
-        Remove-Item -LiteralPath $stdoutPath,$stderrPath -Force -ErrorAction SilentlyContinue
+        if ($null -ne $process) { $process.Dispose() }
     }
 }
 
