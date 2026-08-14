@@ -7,6 +7,7 @@ const NetworkConditionProfileScript = preload("res://scripts/network/conditions/
 const NetworkConditionProfileStoreScript = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
 
 const SCHEMA: String = "planet_simulator.launch_options.v1"
+const NETWORK_MVP_RUNTIME_SENTINEL: String = "user://v0-s1-network-mvp-runtime.json"
 
 
 static func defaults() -> Dictionary:
@@ -37,6 +38,7 @@ static func defaults() -> Dictionary:
 		"m5_phase": 0,
 		"m6_result_file": "",
 		"m6_persistence_root": "",
+		"network_mvp": false,
 		"network_playground": false,
 		"m7_result_file": "",
 		"network_debug": false,
@@ -66,6 +68,9 @@ static func parse(arguments) -> Dictionary:
 			continue
 		if argument == "--print-runtime-descriptor":
 			options["print_runtime_descriptor"] = true
+			continue
+		if argument == "--network-mvp":
+			options["network_mvp"] = true
 			continue
 		if argument == "--network-playground":
 			options["network_playground"] = true
@@ -133,6 +138,8 @@ static func parse(arguments) -> Dictionary:
 				options["m6_result_file"] = value
 			"m6-persistence-root":
 				options["m6_persistence_root"] = value
+			"network-mvp":
+				options["network_mvp"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"network-playground":
 				options["network_playground"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"m7-result-file":
@@ -232,6 +239,24 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 			errors.append("Launch option server_port is invalid")
 	if role == RuntimeRoleScript.GAME_CLIENT and String(options.get("player_identity", "")).strip_edges().is_empty():
 		errors.append("Launch option player_identity cannot be empty")
+
+	if bool(options.get("network_mvp", false)):
+		if role not in [RuntimeRoleScript.GAME_CLIENT, RuntimeRoleScript.DEDICATED_SERVER]:
+			errors.append("Network MVP requires game-client or dedicated-server role")
+		if bool(options.get("network_playground", false)):
+			errors.append("Network MVP and network playground modes are mutually exclusive")
+		if String(options.get("world", "")).strip_edges().is_empty():
+			options["world"] = "earth"
+		elif String(options.get("world", "")) != "earth":
+			errors.append("Network MVP requires --world=earth")
+		# simulator_app currently selects the accepted M3 transport when an M3
+		# result path is present. Use a private sentinel only as the composition
+		# selector; phase remains zero, therefore no acceptance driver starts.
+		# This keeps the human MVP launch explicit without altering network
+		# protocol/authority contracts in this bounded fix.
+		if String(options.get("m3_result_file", "")).strip_edges().is_empty():
+			options["m3_result_file"] = NETWORK_MVP_RUNTIME_SENTINEL
+
 	if bool(options.get("network_playground", false)):
 		if role not in [RuntimeRoleScript.GAME_CLIENT, RuntimeRoleScript.DEDICATED_SERVER]:
 			errors.append("Network playground requires game-client or dedicated-server role")
