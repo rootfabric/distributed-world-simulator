@@ -12,7 +12,7 @@ diff --git a/scripts/actors/earth/earth_explorer.gd b/scripts/actors/earth/earth
  
  
  func setup(
-@@ -93,7 +97,13 @@ func deactivate() -> void:
+@@ -93,7 +97,12 @@ func deactivate() -> void:
  
  
  func set_network_replica_mode(enabled: bool) -> void:
@@ -25,7 +25,7 @@ diff --git a/scripts/actors/earth/earth_explorer.gd b/scripts/actors/earth/earth
  	# The server owns spectator translation while attached, but presentation is
  	# still local. Keep mouse-look enabled so a graphical network client remains
  	# an interactive observer instead of becoming a static camera.
-@@ -166,11 +176,16 @@ func apply_network_replica_pose(
+@@ -166,11 +176,18 @@ func apply_network_replica_pose(
  	reference_frame_id = earth_frame_id
  	frame_position = earth_world.get_surface_point(direction) + direction * altitude_m
  	var target_surface_orientation: Basis = _surface_orientation(direction)
@@ -49,7 +49,7 @@ diff --git a/scripts/actors/earth/earth_explorer.gd b/scripts/actors/earth/earth
  	linear_velocity_mps = Vector3.ZERO
  	angular_velocity_rps = Vector3.ZERO
  	global_transform = Transform3D(orientation, Vector3.ZERO)
-@@ -313,31 +328,64 @@ func _unhandled_input(event: InputEvent) -> void:
+@@ -313,36 +328,63 @@ func _unhandled_input(event: InputEvent) -> void:
  
  
  func _apply_surface_locked_mouse_look(yaw_delta: float, pitch_delta: float) -> void:
