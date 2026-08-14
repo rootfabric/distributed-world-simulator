@@ -269,17 +269,9 @@ class SoakTracker:
 
 	var _samples: Array[Dictionary] = []
 	var _failure_codes: Array[String] = []
-	var _pending_declined := false
-	var _reliable_queue_declined := false
 
 	func observe(sample: Dictionary) -> void:
 		var copy := sample.duplicate(true)
-		if not _samples.is_empty():
-			var previous: Dictionary = _samples[-1]
-			if int(copy.get("pending_operations", 0)) < int(previous.get("pending_operations", 0)):
-				_pending_declined = true
-			if int(copy.get("reliable_queue_depth", 0)) < int(previous.get("reliable_queue_depth", 0)):
-				_reliable_queue_declined = true
 		_samples.append(copy)
 		if not bool(copy.get("process_alive", true)):
 			_add_failure("PROCESS_EXIT")
@@ -300,10 +292,10 @@ class SoakTracker:
 			var first: Dictionary = _samples[0]
 			var last: Dictionary = _samples[-1]
 			var pending_growth := int(last.get("pending_operations", 0)) - int(first.get("pending_operations", 0))
-			if pending_growth > 32 and not _pending_declined:
+			if pending_growth > 32:
 				_add_failure("UNBOUNDED_PENDING_OPERATION_GROWTH")
 			var reliable_growth := int(last.get("reliable_queue_depth", 0)) - int(first.get("reliable_queue_depth", 0))
-			if reliable_growth > 32 and not _reliable_queue_declined:
+			if reliable_growth > 32:
 				_add_failure("UNBOUNDED_RELIABLE_QUEUE_GROWTH")
 		if not _failure_codes.is_empty():
 			return {

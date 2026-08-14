@@ -25,6 +25,10 @@ func _run() -> void:
 	_result_file = String(parsed["options"].get("result_file", ""))
 	_driver_path = String(parsed["options"].get("driver", DEFAULT_DRIVER))
 	_integration_base = String(parsed["options"].get("integration_base", ""))
+	if not _is_lower_hex_40(_integration_base):
+		push_error("V0 full MVP scenario requires --integration-base=<40-char lowercase commit SHA>")
+		quit(1)
+		return
 	_soak_seconds = int(parsed["options"].get("soak_seconds", Acceptance.DEFAULT_DEV_SOAK_SECONDS))
 	_run_id = String(parsed["options"].get("run_id", ""))
 
@@ -180,3 +184,12 @@ func _parse_args(arguments: PackedStringArray) -> Dictionary:
 			_:
 				errors.append("Unknown argument: --%s" % key)
 	return {"success": errors.is_empty(), "options": options, "errors": errors}
+
+
+func _is_lower_hex_40(value: String) -> bool:
+	if value.length() != 40 or value != value.to_lower():
+		return false
+	for character in value:
+		if String(character) not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]:
+			return false
+	return true

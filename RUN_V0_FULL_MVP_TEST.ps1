@@ -105,7 +105,7 @@ function Invoke-GodotEvidence {
     }
 
     $Text = $Output -join "`n"
-    $MarkerFailure = $Text -cmatch "(: FAIL|SCRIPT ERROR:|Parse Error:|Compile Error:|FATAL:|CRASH:)"
+    $MarkerFailure = $Text -cmatch "(?m)^(?!PASS:)[^`r`n]*: FAIL(?::|\s|$)|SCRIPT ERROR:|Parse Error:|Compile Error:|FATAL:|CRASH:"
     $Result = "PASS"
     if ($ExitCode -ne 0 -or $MarkerFailure) {
         if ($AllowIncomplete -and -not $MarkerFailure -and $ExitCode -in @(2,3)) {
