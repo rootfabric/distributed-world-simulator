@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
+  "revision": "ECO-P4.7-2026-08-14-R1-PREACCEPTANCE-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "PREACCEPTANCE_CANDIDATE_COMMITTED_RUN_PENDING_P4_6_ACCEPTANCE_PENDING",
+  "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P4.6",
+    "status_required_for_canonical_gate": "ACCEPTED*",
+    "current_status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_REAL_COMMITTED_INTEGRATION_GATE_READY",
+    "kernel_blob": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
+    "fixture_blob": "dc55b886c057e2ccd8f454658b6be58d579642e1",
+    "real_integration_blob": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
+    "runner_blob": "2a903df63715d6f383ec2f4d4b58ead55af121ae"
+  },
+  "candidate_blobs": {
+    "soak_test": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
+    "preacceptance_runner": "20e480c772538fc690d2a3edcda7402eb9111354"
+  },
+  "scenario": {
+    "regions": 8,
+    "cycles": 12,
+    "save_load_operations_expected": 96,
+    "client_updates_expected": 96,
+    "interest_projections_expected": 12,
+    "restart_cycles": [3, 7, 11],
+    "handoff_rule": "deterministic rotating server handoff when (cycle + region_index) mod 3 == 0",
+    "catchup_batch_rule": "bounded 1..4 steps per cycle with deterministic 1.0/1.5/2.0 elapsed-time increments",
+    "max_remaining_due_steps_bound": 8,
+    "processing_order_crosscheck": "forward and reverse region iteration must converge to identical final soak and interest hashes"
+  },
+  "covered_properties": [
+    "FIXED_REGION_CARDINALITY",
+    "BOUNDED_CATCHUP_DEBT",
+    "EVERY_CYCLE_P4_4_SAVE_LOAD",
+    "P4_5_CAS_SNAPSHOT_COMMIT",
+    "REPEATED_P4_5_HANDOFF_FENCING",
+    "P4_4_RESTART_TO_P4_5_IDENTITY_RECONSTRUCTION",
+    "P4_6_MONOTONIC_CLIENT_CACHE",
+    "P4_6_INTEREST_CANONICALIZATION",
+    "MISSING_INTEREST_EXPLICIT",
+    "PROCESSING_ORDER_INDEPENDENCE",
+    "FRESH_PROCESS_DETERMINISM",
+    "GLOBAL_RNG_NOT_CONSUMED"
+  ],
+  "boundary": {
+    "not_a_scheduler": true,
+    "not_runtime_authority": true,
+    "not_network_transport": true,
+    "not_wall_clock_soak": true,
+    "purpose": "accelerated deterministic integration stress before a later production-duration soak"
+  },
+  "gate": {
+    "preacceptance_runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
+    "timeout_seconds_per_process": 600,
+    "hash_policy": "first exact committed A/B run discovers soak_hash and final_interest_hash; freeze only after P4.6 acceptance and lifecycle promotion",
+    "status": "READY_AFTER_COMMIT_FOR_NONCANONICAL_PREACCEPTANCE_RUN"
+  },
+  "decision": "IMPLEMENT_P4_7_PREACCEPTANCE_HARNESS; DO_NOT_ACCEPT_P4_7_OR_OPEN_P4_8_UNTIL_P4_6_ACCEPTS_AND_P4_7_CANONICAL_GATE_PASSES"
+}
