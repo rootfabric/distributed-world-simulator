@@ -9,6 +9,7 @@ const ROLL_SPEED: float = 1.35
 const MIN_SPEED: float = 1.0
 const MAX_SPEED: float = 250_000_000.0
 const SPACE_CAMERA_FAR_M: float = 900_000_000.0
+const NETWORK_SURFACE_PITCH_LIMIT_RAD: float = 1.48352986419518 # 85 degrees
 
 var earth_world
 var celestial_system
@@ -24,6 +25,9 @@ var orientation := Basis.IDENTITY
 var linear_velocity_mps: Vector3 = Vector3.ZERO
 var angular_velocity_rps: Vector3 = Vector3.ZERO
 var network_replica_mode: bool = false
+var _network_surface_yaw: float = 0.0
+var _network_surface_pitch: float = 0.0
+var _network_surface_view_initialized: bool = false
 
 
 func setup(
@@ -98,7 +102,12 @@ func deactivate() -> void:
 
 
 func set_network_replica_mode(enabled: bool) -> void:
+	var was_enabled: bool = network_replica_mode
 	network_replica_mode = enabled
+	if enabled and not was_enabled:
+		_sync_network_surface_view_from_orientation()
+	elif not enabled:
+		_network_surface_view_initialized = false
 	# The server owns spectator translation while attached, but presentation is
 	# still local. Keep mouse-look enabled so a graphical network client remains
 	# an interactive observer instead of becoming a static camera.
@@ -153,16 +162,12 @@ func apply_network_replica_pose(
 	# update_for_view path owns streaming and recentering.
 	var direction: Vector3 = direction_value.normalized()
 	var earth_frame_id: String = celestial_system.get_body_fixed_frame_id("earth")
-	# Preserve local camera yaw/pitch across authoritative position snapshots.
-	# Replacing orientation with _surface_orientation(direction) on every packet
-	# made the network client appear frozen because all local mouse-look was
-	# immediately overwritten by the next server snapshot.
 	var local_view_orientation := Basis.IDENTITY
 	var preserve_local_view: bool = (
 		reference_frame_id == earth_frame_id
 		and frame_position.length_squared() > 1.0
 	)
-	if preserve_local_view:
+	if preserve_local_view and not (network_replica_mode and _network_surface_view_initialized):
 		var previous_direction: Vector3 = frame_position.normalized()
 		local_view_orientation = (
 			_surface_orientation(previous_direction).inverse() * orientation
@@ -170,11 +175,18 @@ func apply_network_replica_pose(
 	reference_frame_id = earth_frame_id
 	frame_position = earth_world.get_surface_point(direction) + direction * altitude_m
 	var target_surface_orientation: Basis = _surface_orientation(direction)
-	orientation = (
-		(target_surface_orientation * local_view_orientation).orthonormalized()
-		if preserve_local_view
-		else target_surface_orientation
-	)
+	if network_replica_mode and _network_surface_view_initialized:
+		orientation = _compose_network_surface_view(
+			direction,
+			_network_surface_yaw,
+			_network_surface_pitch
+		)
+	else:
+		orientation = (
+			(target_surface_orientation * local_view_orientation).orthonormalized()
+			if preserve_local_view
+			else target_surface_orientation
+		)
 	linear_velocity_mps = Vector3.ZERO
 	angular_velocity_rps = Vector3.ZERO
 	global_transform = Transform3D(orientation, Vector3.ZERO)
@@ -184,6 +196,8 @@ func apply_network_replica_pose(
 
 
 func get_surface_relative_yaw() -> float:
+	if network_replica_mode and _network_surface_view_initialized:
+		return _network_surface_yaw
 	# M3 movement is simulated in a flat server-owned tangent plane. Convert the
 	# local camera's Earth-relative heading back into that plane so WASD remains
 	# aligned with what the player sees while the authoritative state stays 2D.
@@ -216,6 +230,8 @@ func set_reference_frame(target_frame_id: String, preserve_world_state: bool = t
 		linear_velocity_mps = SpatialRefScript.get_linear_velocity(converted)
 		angular_velocity_rps = SpatialRefScript.get_angular_velocity(converted)
 	reference_frame_id = target_frame_id
+	if network_replica_mode:
+		_sync_network_surface_view_from_orientation()
 	global_transform = Transform3D(orientation, Vector3.ZERO)
 	reset_physics_interpolation()
 	return true
@@ -274,9 +290,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var yaw_delta: float = -event.relative.x * MOUSE_SENSITIVITY
 		var pitch_delta: float = -event.relative.y * MOUSE_SENSITIVITY
-		orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
-		orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
-		orientation = orientation.orthonormalized()
+		if network_replica_mode:
+			_apply_network_surface_mouse_look(yaw_delta, pitch_delta)
+		else:
+			orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
+			orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
+			orientation = orientation.orthonormalized()
 		global_transform = Transform3D(orientation, Vector3.ZERO)
 	if event is InputEventMouseButton and event.pressed and not network_replica_mode:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -287,7 +306,77 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
+func _apply_network_surface_mouse_look(yaw_delta: float, pitch_delta: float) -> void:
+	if frame_position.length_squared() < 1.0:
+		return
+	if not _network_surface_view_initialized:
+		_sync_network_surface_view_from_orientation()
+	if not _network_surface_view_initialized:
+		return
+	_network_surface_yaw = wrapf(_network_surface_yaw + yaw_delta, -PI, PI)
+	_network_surface_pitch = clampf(
+		_network_surface_pitch + pitch_delta,
+		-NETWORK_SURFACE_PITCH_LIMIT_RAD,
+		NETWORK_SURFACE_PITCH_LIMIT_RAD
+	)
+	orientation = _compose_network_surface_view(
+		frame_position.normalized(),
+		_network_surface_yaw,
+		_network_surface_pitch
+	)
+
+
+func _sync_network_surface_view_from_orientation() -> void:
+	if frame_position.length_squared() < 1.0:
+		_network_surface_yaw = 0.0
+		_network_surface_pitch = 0.0
+		_network_surface_view_initialized = false
+		return
+	var surface_basis: Basis = _surface_orientation(frame_position.normalized())
+	var local_basis: Basis = (surface_basis.inverse() * orientation).orthonormalized()
+	var local_forward: Vector3 = (-local_basis.z).normalized()
+	_network_surface_pitch = clampf(
+		asin(clampf(local_forward.y, -1.0, 1.0)),
+		-NETWORK_SURFACE_PITCH_LIMIT_RAD,
+		NETWORK_SURFACE_PITCH_LIMIT_RAD
+	)
+	var horizontal_forward := Vector3(local_forward.x, 0.0, local_forward.z)
+	if horizontal_forward.length_squared() < 0.000001:
+		horizontal_forward = Vector3(0.0, 0.0, -1.0)
+	horizontal_forward = horizontal_forward.normalized()
+	_network_surface_yaw = atan2(horizontal_forward.x, -horizontal_forward.z)
+	_network_surface_view_initialized = true
+
+
+func _compose_network_surface_view(
+	direction: Vector3,
+	yaw: float,
+	pitch: float
+) -> Basis:
+	var surface_up: Vector3 = direction.normalized()
+	var base_forward: Vector3 = (-_surface_orientation(surface_up).z).normalized()
+	var horizontal_forward: Vector3 = (Basis(surface_up, yaw) * base_forward).normalized()
+	var right: Vector3 = horizontal_forward.cross(surface_up).normalized()
+	var forward: Vector3 = (
+		horizontal_forward * cos(pitch)
+		+ surface_up * sin(pitch)
+	).normalized()
+	var camera_up: Vector3 = right.cross(forward).normalized()
+	return Basis(right, camera_up, -forward).orthonormalized()
+
+
 func level_to_horizon() -> void:
+	if network_replica_mode and frame_position.length_squared() > 1.0:
+		if not _network_surface_view_initialized:
+			_sync_network_surface_view_from_orientation()
+		if _network_surface_view_initialized:
+			_network_surface_pitch = 0.0
+			orientation = _compose_network_surface_view(
+				frame_position.normalized(),
+				_network_surface_yaw,
+				0.0
+			)
+			return
 	if celestial_system == null:
 		return
 	var nearest_body_id: String = get_nearest_body_id()
@@ -334,6 +423,8 @@ func look_at_body(body_id: String) -> void:
 	right = right.normalized()
 	var corrected_up: Vector3 = right.cross(forward).normalized()
 	orientation = Basis(right, corrected_up, -forward).orthonormalized()
+	if network_replica_mode:
+		_sync_network_surface_view_from_orientation()
 	global_transform = Transform3D(orientation, Vector3.ZERO)
 
 
