@@ -1,0 +1,160 @@
++		_mvp_inventory_body.text = "Инвентарь игрока %s ещё не создан" % player_id
++		return
++	var inventory: Dictionary = inventory_value
++	var items_by_id := _get_mvp_items_by_id()
++	var lines := PackedStringArray()
++	lines.append("Игрок: %s    Ревизия: %d" % [
++		player_id,
++		int(_m4_item_graph_snapshot.get("revision", -1)),
++	])
++	lines.append("")
++	lines.append("ПРЕДМЕТЫ")
++	var inventory_items_value = inventory.get("inventory", [])
++	var inventory_items: Array = (
++		inventory_items_value if inventory_items_value is Array else []
++	)
++	if inventory_items.is_empty():
++		lines.append("  — пусто —")
++	else:
++		for item_id_value in inventory_items:
++			lines.append("  • %s" % _mvp_item_display_line(
++				String(item_id_value), items_by_id
++			))
++	lines.append("")
++	lines.append("ХОТБАР")
++	var hotbar_value = inventory.get("hotbar", [])
++	var hotbar: Array = hotbar_value if hotbar_value is Array else []
++	var selected_index := int(inventory.get("selected_hotbar_index", 0))
++	for index in range(maxi(hotbar.size(), 10)):
++		var item_id := String(hotbar[index]) if index < hotbar.size() else ""
++		var marker := ">" if index == selected_index else " "
++		var label := "—"
++		if not item_id.is_empty():
++			label = _mvp_item_display_line(item_id, items_by_id)
++		lines.append("%s [%d] %s" % [marker, (index + 1) % 10, label])
++	_mvp_inventory_body.text = "\n".join(lines)
++
++
++func _get_mvp_items_by_id() -> Dictionary:
++	var result: Dictionary = {}
++	var items_value = _m4_item_graph_snapshot.get("items", [])
++	if not items_value is Array:
++		return result
++	for item_value in items_value:
++		if not item_value is Dictionary:
++			continue
++		var item: Dictionary = item_value
++		var item_id := String(item.get("item_id", ""))
++		if not item_id.is_empty():
++			result[item_id] = item
++	return result
++
++
++func _get_mvp_selected_hotbar_item_id() -> String:
++	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
++		return ""
++	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
++	var inventories_value = _m4_item_graph_snapshot.get("inventories", {})
++	if not inventories_value is Dictionary:
++		return ""
++	var inventory_value = Dictionary(inventories_value).get(player_id, {})
++	if not inventory_value is Dictionary:
++		return ""
++	var inventory: Dictionary = inventory_value
++	var hotbar_value = inventory.get("hotbar", [])
++	if not hotbar_value is Array:
++		return ""
++	var hotbar: Array = hotbar_value
++	var selected_index := int(inventory.get("selected_hotbar_index", 0))
++	if selected_index < 0 or selected_index >= hotbar.size():
++		return ""
++	return String(hotbar[selected_index])
++
++
++func _mvp_item_display_line(item_id: String, items_by_id: Dictionary) -> String:
++	if not items_by_id.has(item_id):
++		return item_id
++	var item: Dictionary = items_by_id[item_id]
++	var definition_id := String(item.get("definition_id", ""))
++	var display_name := definition_id
++	match definition_id:
++		"item/beacon":
++			display_name = "Маяк"
++		"item/mount-base":
++			display_name = "Основание маяка"
++		"item/battery":
++			display_name = "Батарея"
++		"item/ore":
++			display_name = "Руда"
++		"item/crate":
++			display_name = "Контейнер"
++	return "%s ×%d" % [display_name, int(item.get("quantity", 1))]
++
++
++func _set_mvp_inventory_status_from_result(result: Dictionary, success_text: String) -> void:
++	if _mvp_inventory_status == null:
++		return
++	_mvp_inventory_status.text = (
++		success_text
++		if bool(result.get("success", false))
++		else "Ошибка: %s" % String(result.get("error_code", result.get("output", "UNKNOWN")))
++	)
++
++
++func _mvp_command_result(result: Dictionary, success_text: String) -> Dictionary:
++	if bool(result.get("success", false)):
++		return {"success": true, "output": success_text, "details": result}
++	return {
++		"success": false,
++		"output": "Ошибка Item Graph: %s" % String(
++			result.get("error_code", result.get("output", "UNKNOWN"))
++		),
++		"details": result,
++	}
++
++
+ func create_m3_graphical_client_report() -> Dictionary:
+ 	var report: Dictionary = super.create_m3_graphical_client_report()
+ 	report["presentation_mode"] = (
+@@ -223,4 +696,11 @@
+ 		_mvp_surface_anchor_direction.y,
+ 		_mvp_surface_anchor_direction.z,
+ 	]
++	report["inventory_visible"] = _mvp_inventory_visible
++	report["spectator_enabled"] = _mvp_spectator_enabled
++	report["spectator_body_visible"] = (
++		_mvp_local_body != null
++		and is_instance_valid(_mvp_local_body)
++		and _mvp_local_body.visible
++	)
+ 	return report
+ diff --git a/scripts/app/simulator_app.gd b/scripts/app/simulator_app.gd
+--- a/scripts/app/simulator_app.gd
++++ b/scripts/app/simulator_app.gd
+@@ -384,9 +384,12 @@ func _unhandled_input(event: InputEvent) -> void:
+ 		if _execute_first_available_command(hotkey_commands):
+ 			get_viewport().set_input_as_handled()
+ 			return
+-		var command_line: String = get_inventory_hotbar_command_for_key(event.physical_keycode)
++		var gameplay_keycode: int = (
++			event.physical_keycode if event.physical_keycode != 0 else event.keycode
++		)
++		var command_line: String = get_inventory_hotbar_command_for_key(gameplay_keycode)
+ 		if command_line.is_empty():
+-			match event.physical_keycode:
++			match gameplay_keycode:
+ 				KEY_TAB:
+ 					command_line = "inventory.toggle" if command_registry.has_command("inventory.toggle") else "input.mouse.toggle"
+ 				KEY_E:
+ diff --git a/scripts/runtime/networked_gameplay/networked_gameplay_service.gd b/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
+--- a/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
++++ b/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
+@@ -946,7 +946,7 @@ func _create_item_authority_context(logical_player_id: String) -> Dictionary:
+ 
+ 
+ func _spawn_position(logical_player_id: String) -> Dictionary:
+-	return {"x": -2.0 if logical_player_id == "a" else 2.0, "y": 0.0, "z": 0.0}
++	return {"x": -5.0 if logical_player_id == "a" else 5.0, "y": 0.0, "z": 0.0}
+ 
+ 
+ func _advance() -> void:
