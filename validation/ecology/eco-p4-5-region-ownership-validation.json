@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_5_region_ownership_validation.v1",
-  "revision": "ECO-P4.5-2026-08-14-R3-PREACCEPTANCE-CANDIDATE-RUNNER-PROCESS-FIX",
+  "revision": "ECO-P4.5-2026-08-14-R4-FULL-CHAIN-GATE-READY",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_P4_4_ACCEPTANCE_AND_FULL_CHAIN_GATE_PENDING",
+  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_READY",
   "scope": "DETERMINISTIC_REGION_OWNERSHIP_FENCING_AND_SERVER_HANDOFF_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.4",
     "status_required_for_canonical_gate": "ACCEPTED*",
     "expected_aggregate_hash": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
-    "current_status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_PENDING",
+    "current_status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN",
     "kernel_blob": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
     "acceptance_test_blob": "2385b035082834aaae1eb91e25aa798c26ca40dc",
     "runner_blob": "88d02dfcf6cf63b065a35eec6202dd5b0a04dee9"
@@ -21,18 +21,17 @@
   "runner_hardening": {
     "semantic_change": false,
     "kernel_or_test_changed": false,
-    "direct_parent_regression": "P4.5 runner executes committed P4.4 acceptance test directly after P4.4 lifecycle acceptance instead of recursively replaying older parent runners",
+    "direct_parent_regression": "P4.5 runner executes committed P4.4 acceptance test directly after P4.4 lifecycle acceptance",
     "process_api": "System.Diagnostics.Process with asynchronous stdout/stderr draining and exit code read after timed WaitForExit",
     "process_timeout_seconds": 300,
-    "timeout_behavior": "fail closed and terminate Godot process tree",
-    "reason": "avoid the Windows PowerShell Start-Process null ExitCode failure observed in the P4.4 gate"
+    "timeout_behavior": "fail closed and terminate Godot process tree"
   },
   "contract": {
     "ownership_identity": "canonical owner state binds P4.4 snapshot hash, region id, owner server id and monotonic integer ownership_epoch",
     "fencing": "ownership_epoch increments exactly once per accepted handoff; old owner/epoch/hash claims fail against the new canonical state",
     "cas_mutation": "snapshot mutation requires exact owner server, epoch, ownership hash and current snapshot hash; successful mutation keeps epoch but rotates ownership_hash",
     "handoff_prepare": "prepare_handoff is deterministic and read-only, carries the exact current P4.4 snapshot and binds the exact source ownership hash",
-    "handoff_accept": "accept_handoff is compare-and-swap against current source ownership, increments epoch by one and preserves snapshot bytes/identity",
+    "handoff_accept": "accept_handoff is compare-and-swap against current source ownership, increments epoch by one and preserves snapshot identity",
     "replay": "a handoff package cannot be applied twice and becomes stale if the source snapshot changes after preparation",
     "continuity": "advance-before-handoff and handoff-before-advance converge to the same ownership identity when the same canonical future P4.4 snapshot is committed",
     "identity_scope": "no wall clock, lease duration, network address or process-local object id enters canonical ownership hashes",
@@ -41,8 +40,6 @@
   },
   "targeted_exact_attached_godot_evidence": {
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "kernel_parser_preload": "PASS",
-    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
     "fresh_process_runs": 3,
     "assertions_per_run": 52,
     "all_process_logs_byte_identical": true,
@@ -52,7 +49,7 @@
     "handoff_hash": "3d9e94ffddc7f9cf3f6e765c08b620a2bf3436b751fbadcedb694fe5c9e2624c",
     "target_ownership_hash": "b7d0edb5c943dbe0f1ba62066dd94c5a5d84eff82177897174ba37f984b734c4",
     "parent_p4_4": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
-    "boundary_note": "targeted runtime uses a minimal deterministic P4.4 snapshot validator stub with the frozen real P4.4 snapshot hash; this proves P4.5 ownership semantics but is not full-chain lifecycle acceptance evidence"
+    "boundary_note": "targeted runtime proves P4.5 ownership semantics; canonical acceptance still requires the committed full-chain runner"
   },
   "full_chain_expected": {
     "acceptance_test_assertions": 60,
@@ -61,8 +58,8 @@
     "handoff_hash": "3d9e94ffddc7f9cf3f6e765c08b620a2bf3436b751fbadcedb694fe5c9e2624c",
     "target_ownership_hash": "b7d0edb5c943dbe0f1ba62066dd94c5a5d84eff82177897174ba37f984b734c4",
     "parent_p4_4": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
-    "status": "BLOCKED_UNTIL_P4_4_ACCEPTED_THEN_RUN_COMMITTED_FULL_CHAIN"
+    "status": "READY_RUN_COMMITTED_FULL_CHAIN"
   },
   "covered_properties": ["P4_4_PARENT_AGGREGATE_PINNED", "OWNER_SERVER_ID_HASHED", "MONOTONIC_FENCING_EPOCH", "EXACT_AUTHORITY_CLAIM", "CAS_SNAPSHOT_COMMIT", "READ_ONLY_HANDOFF_PREPARE", "EXACT_SNAPSHOT_HANDOFF", "STALE_SOURCE_FENCED", "HANDOFF_REPLAY_REJECTED", "STALE_PREPARED_HANDOFF_REJECTED", "HANDOFF_CONTINUITY_CONVERGENCE", "MULTI_HANDOFF_EPOCH_CHAIN", "NESTED_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
-  "decision": "IMPLEMENT_P4_5_PREACCEPTANCE_CANDIDATE; DO_NOT_ACCEPT OR OPEN P4_6 UNTIL P4_4 ACCEPTED AND P4_5 FULL_CHAIN GATE PASSES"
+  "decision": "RUN_P4_5_COMMITTED_FULL_CHAIN; DO_NOT_ACCEPT_OR_OPEN_P4_6_CANONICALLY_UNTIL_PASS"
 }
