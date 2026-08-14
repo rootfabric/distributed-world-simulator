@@ -1,0 +1,105 @@
+diff --git a/scripts/app/earth_mvp_app.gd b/scripts/app/earth_mvp_app.gd
+index 33377d5..d9f7462 100644
+--- a/scripts/app/earth_mvp_app.gd
++++ b/scripts/app/earth_mvp_app.gd
+@@ -4,11 +4,12 @@ var _mvp_local_body: MeshInstance3D
+ 
+ 
+ func attach_m3_multiplayer_client(runtime) -> Dictionary:
+-	_mvp_prediction_enabled = (
+-		runtime != null
+-		and runtime.has_method("advance_local_prediction")
+-		and runtime.has_signal("prediction_updated")
+-	)
++	# V0 currently prioritizes a stable playable control loop over NX4 transport
++	# tuning. The unreliable INPUT path is deferred under V0-NET-001; use the
++	# already-existing reliable M3 MOVE command until that network issue is
++	# addressed independently. Authoritative snapshots remain the presentation
++	# source, so this does not create client authority.
++	_mvp_prediction_enabled = false
+ 	_mvp_authoritative_seed_applied = false
+ 	_mvp_prediction_updates = 0
+ 	_mvp_prediction_failures = 0
+@@ -27,8 +28,13 @@ func _apply_m3_network_input(delta: float) -> void:
+ 		and m3_multiplayer_client_runtime.is_automated_acceptance()
+ 	):
+ 		return
+-	if not _mvp_prediction_enabled:
+-		super._apply_m3_network_input(delta)
++
++	# V0 movement intentionally uses the existing reliable M3 MOVE command while
++	# V0-NET-001 tracks the unreliable INPUT path separately. Keep the historical
++	# 20 Hz command cadence so this change does not turn movement into reliable
++	# per-render-frame traffic.
++	_m3_input_accumulator += maxf(delta, 0.0)
++	if _m3_input_accumulator < 0.05:
+ 		return
+ 
+ 	var input_vector: Vector2 = Input.get_vector(
+@@ -37,31 +43,43 @@ func _apply_m3_network_input(delta: float) -> void:
+ 		"move_forward",
+ 		"move_back"
+ 	)
+-	var intent := {
+-		"move_x": input_vector.x,
+-		"move_z": -input_vector.y,
+-		"look_yaw": earth_explorer.get_surface_relative_yaw(),
+-		"look_pitch": 0.0,
+-		"jump_pressed": Input.is_action_just_pressed("move_up"),
+-		"sprint": Input.is_action_pressed("boost"),
+-		"delta_seconds": maxf(delta, 0.000001),
+-	}
+-	var advanced: Dictionary = m3_multiplayer_client_runtime.advance_local_prediction(
+-		intent,
+-		delta
+-	)
+-	if not bool(advanced.get("success", false)):
+-		_mvp_prediction_failures += 1
++	if input_vector.length_squared() < 0.000001:
++		# Do not accumulate a large displacement while the player is idle.
++		_m3_input_accumulator = 0.0
+ 		return
+ 
+-	# Real M3 emits prediction_updated. Keep the return-value path as a bounded
+-	# compatibility fallback for deterministic test doubles and future adapters.
+-	if not _mvp_prediction_signal_connected:
+-		var details: Dictionary = Dictionary(advanced.get("details", {}))
+-		var presentation_value = details.get("presentation_state", {})
+-		if presentation_value is Dictionary and not Dictionary(presentation_value).is_empty():
+-			_apply_mvp_presentation_record(Dictionary(presentation_value))
+-			_mvp_prediction_updates += 1
++	var step: float = minf(_m3_input_accumulator, 0.1)
++	_m3_input_accumulator = 0.0
++	var speed: float = 11.0 if Input.is_action_pressed("boost") else 6.0
++	var yaw: float = (
++		earth_explorer.get_surface_relative_yaw()
++		if earth_explorer != null
++		else 0.0
++	)
++
++	# Server plane convention is +X right / -Z forward at yaw == 0.
++	# Convert camera-local WASD into that server-owned plane:
++	#   W @   0 deg -> -Z
++	#   W @ +90 deg -> +X
++	var right_strength: float = input_vector.x
++	var forward_strength: float = -input_vector.y
++	var cos_yaw: float = cos(yaw)
++	var sin_yaw: float = sin(yaw)
++	var world_x: float = (
++		right_strength * cos_yaw
++		+ forward_strength * sin_yaw
++	)
++	var world_z: float = (
++		right_strength * sin_yaw
++		- forward_strength * cos_yaw
++	)
++
++	var moved: Dictionary = m3_multiplayer_client_runtime.move_nonblocking(
++		world_x * speed * step,
++		world_z * speed * step
++	)
++	if not bool(moved.get("success", false)):
++		_mvp_prediction_failures += 1
+ 
+ 
+ func _submit_mvp_neutral_input() -> void:
