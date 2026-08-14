@@ -1,7 +1,7 @@
 diff --git a/scripts/ui/inventory/item_cell.gd b/scripts/ui/inventory/item_cell.gd
 --- a/scripts/ui/inventory/item_cell.gd
 +++ b/scripts/ui/inventory/item_cell.gd
-@@ -75,9 +75,12 @@ func _gui_input(event: InputEvent) -> void:
+@@ -75,10 +75,15 @@ func _gui_input(event: InputEvent) -> void:
  				var press_action := String(press_binding.get("action", ""))
  				if (
  					_is_seven_days_style()
