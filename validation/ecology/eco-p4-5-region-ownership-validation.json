@@ -1,65 +1,44 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_5_region_ownership_validation.v1",
-  "revision": "ECO-P4.5-2026-08-14-R4-FULL-CHAIN-GATE-READY",
+  "revision": "ECO-P4.5-2026-08-14-R5-ACCEPTED-WINDOWS-FULL-CHAIN",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_READY",
+  "status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN",
   "scope": "DETERMINISTIC_REGION_OWNERSHIP_FENCING_AND_SERVER_HANDOFF_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.4",
     "status_required_for_canonical_gate": "ACCEPTED*",
-    "expected_aggregate_hash": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
+    "accepted_aggregate_hash": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
     "current_status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN",
     "kernel_blob": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
     "acceptance_test_blob": "2385b035082834aaae1eb91e25aa798c26ca40dc",
     "runner_blob": "88d02dfcf6cf63b065a35eec6202dd5b0a04dee9"
   },
-  "candidate_blobs": {
+  "accepted_blobs": {
     "kernel": "2a4083fb9d4b55f8c16421c4f3555c19a952711f",
     "acceptance_test": "041e7e81588f59b54bac76d7cd9ad558d054b0de",
     "runner": "b712fb2ac1bda03dffdbaff4eee435f60cf236d5"
   },
-  "runner_hardening": {
-    "semantic_change": false,
-    "kernel_or_test_changed": false,
-    "direct_parent_regression": "P4.5 runner executes committed P4.4 acceptance test directly after P4.4 lifecycle acceptance",
-    "process_api": "System.Diagnostics.Process with asynchronous stdout/stderr draining and exit code read after timed WaitForExit",
-    "process_timeout_seconds": 300,
-    "timeout_behavior": "fail closed and terminate Godot process tree"
-  },
-  "contract": {
-    "ownership_identity": "canonical owner state binds P4.4 snapshot hash, region id, owner server id and monotonic integer ownership_epoch",
-    "fencing": "ownership_epoch increments exactly once per accepted handoff; old owner/epoch/hash claims fail against the new canonical state",
-    "cas_mutation": "snapshot mutation requires exact owner server, epoch, ownership hash and current snapshot hash; successful mutation keeps epoch but rotates ownership_hash",
-    "handoff_prepare": "prepare_handoff is deterministic and read-only, carries the exact current P4.4 snapshot and binds the exact source ownership hash",
-    "handoff_accept": "accept_handoff is compare-and-swap against current source ownership, increments epoch by one and preserves snapshot identity",
-    "replay": "a handoff package cannot be applied twice and becomes stale if the source snapshot changes after preparation",
-    "continuity": "advance-before-handoff and handoff-before-advance converge to the same ownership identity when the same canonical future P4.4 snapshot is committed",
-    "identity_scope": "no wall clock, lease duration, network address or process-local object id enters canonical ownership hashes",
-    "rng": "no global RNG consumption",
-    "not_authorized": ["distributed consensus", "lease timeout policy", "network transport", "client authority", "P4.6 interest/read replication", "P4.7 scheduler/soak policy"]
-  },
-  "targeted_exact_attached_godot_evidence": {
+  "acceptance_evidence": {
+    "host": "Windows exact local checkout",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "fresh_process_runs": 3,
-    "assertions_per_run": 52,
-    "all_process_logs_byte_identical": true,
-    "fresh_process_log_sha256": "15ed9204b5da0ca95594c8f018f07a12385e237cbfc5404aff1a013e2628afaf",
+    "runner": "RUN_ECO_P4_5_TESTS.ps1",
+    "parent_regression": {
+      "checkpoint": "ECO.P4.4",
+      "assertions": 52,
+      "aggregate_hash": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
+      "snapshot_hash": "c6ee61dc4250fcd22b762902ff35354957c884c8b1818aed8209fe4f6c829006",
+      "file_sha256": "b600642b817aec7c6afdb8f10d85ba15d660f569dedf30d4b9d91ecc1b214fd8",
+      "resumed_catchup_hash": "cc2a4815e1eae75b879ea52d8ba404880c69344928f953e8aaa38bd062b1ce3a"
+    },
+    "fresh_process_runs": 2,
+    "assertions_per_run": 60,
+    "fresh_process_logs_byte_identical": true,
     "aggregate_hash": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419",
     "source_ownership_hash": "f89f476285a40fdf0fe0f79557001f536fff4df2c8da9085cd5ecffce314d1de",
     "handoff_hash": "3d9e94ffddc7f9cf3f6e765c08b620a2bf3436b751fbadcedb694fe5c9e2624c",
     "target_ownership_hash": "b7d0edb5c943dbe0f1ba62066dd94c5a5d84eff82177897174ba37f984b734c4",
     "parent_p4_4": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
-    "boundary_note": "targeted runtime proves P4.5 ownership semantics; canonical acceptance still requires the committed full-chain runner"
+    "result": "PASS"
   },
-  "full_chain_expected": {
-    "acceptance_test_assertions": 60,
-    "aggregate_hash": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419",
-    "source_ownership_hash": "f89f476285a40fdf0fe0f79557001f536fff4df2c8da9085cd5ecffce314d1de",
-    "handoff_hash": "3d9e94ffddc7f9cf3f6e765c08b620a2bf3436b751fbadcedb694fe5c9e2624c",
-    "target_ownership_hash": "b7d0edb5c943dbe0f1ba62066dd94c5a5d84eff82177897174ba37f984b734c4",
-    "parent_p4_4": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
-    "status": "READY_RUN_COMMITTED_FULL_CHAIN"
-  },
-  "covered_properties": ["P4_4_PARENT_AGGREGATE_PINNED", "OWNER_SERVER_ID_HASHED", "MONOTONIC_FENCING_EPOCH", "EXACT_AUTHORITY_CLAIM", "CAS_SNAPSHOT_COMMIT", "READ_ONLY_HANDOFF_PREPARE", "EXACT_SNAPSHOT_HANDOFF", "STALE_SOURCE_FENCED", "HANDOFF_REPLAY_REJECTED", "STALE_PREPARED_HANDOFF_REJECTED", "HANDOFF_CONTINUITY_CONVERGENCE", "MULTI_HANDOFF_EPOCH_CHAIN", "NESTED_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
-  "decision": "RUN_P4_5_COMMITTED_FULL_CHAIN; DO_NOT_ACCEPT_OR_OPEN_P4_6_CANONICALLY_UNTIL_PASS"
+  "decision": "ACCEPT_P4_5; OPEN_P4_6_CANONICAL_FULL_CHAIN_GATE; P4_7_MAY_PROCEED_PREACCEPTANCE_ONLY"
 }
