@@ -1,0 +1,161 @@
++		if _mvp_spectator_enabled and earth_explorer != null:
++			earth_explorer.set_physics_process(true)
++
++
++func _set_mvp_spectator_enabled(enabled: bool) -> void:
++	if earth_explorer == null or _mvp_spectator_enabled == enabled:
++		return
++	if enabled:
++		_set_mvp_inventory_visible(false)
++		_submit_mvp_neutral_input()
++		_mvp_spectator_saved_speed = earth_explorer.movement_speed
++		_mvp_spectator_saved_orientation = earth_explorer.orientation
++		_mvp_spectator_enabled = true
++		earth_explorer.movement_speed = MVP_SPECTATOR_SPEED_MPS
++		earth_explorer.set_network_replica_mode(false)
++		_ensure_mvp_local_body()
++		_mvp_local_body.visible = true
++		_update_mvp_local_body_visual()
++		_sync_remote_presenter_origins()
++		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
++		return
++
++	_mvp_spectator_enabled = false
++	earth_explorer.movement_speed = _mvp_spectator_saved_speed
++	earth_explorer.set_network_replica_mode(true)
++	if not _mvp_latest_local_record.is_empty():
++		_apply_mvp_presentation_record(_mvp_latest_local_record)
++	else:
++		var direction := _map_m3_position_to_earth_direction(
++			_m3_local_planar_position.x,
++			_m3_local_planar_position.y
++		)
++		earth_explorer.apply_network_replica_pose(
++			direction,
++			MVP_SURFACE_EYE_ALTITUDE_M + _mvp_local_vertical_offset_m
++		)
++	earth_explorer.orientation = _mvp_spectator_saved_orientation.orthonormalized()
++	earth_explorer.global_transform = Transform3D(earth_explorer.orientation, Vector3.ZERO)
++	earth_explorer.reset_physics_interpolation()
++	if _mvp_local_body != null:
++		_mvp_local_body.visible = false
++	_sync_remote_presenter_origins()
++	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
++
++
++func _ensure_mvp_local_body() -> void:
++	if _mvp_local_body != null and is_instance_valid(_mvp_local_body):
++		return
++	_mvp_local_body = MeshInstance3D.new()
++	_mvp_local_body.name = "LocalPlayerBodySpectatorVisual"
++	var capsule := CapsuleMesh.new()
++	capsule.radius = 0.35
++	capsule.height = 1.8
++	_mvp_local_body.mesh = capsule
++	_mvp_local_body.visible = false
++	add_child(_mvp_local_body)
++
++
++func _update_mvp_local_body_visual() -> void:
++	if _mvp_local_body == null or not is_instance_valid(_mvp_local_body):
++		return
++	_mvp_local_body.visible = _mvp_spectator_enabled
++	if not _mvp_spectator_enabled or earth_world == null or earth_explorer == null:
++		return
++	var direction := _map_m3_position_to_earth_direction(
++		_m3_local_planar_position.x,
++		_m3_local_planar_position.y
++	)
++	var body_world := (
++		_map_m3_position_to_earth_world(
++			_m3_local_planar_position.x,
++			_m3_local_planar_position.y
++		)
++		+ direction * (
++			_mvp_local_vertical_offset_m + MVP_LOCAL_BODY_VISUAL_OFFSET_M
++		)
++	)
++	_mvp_local_body.position = body_world - earth_explorer.get_frame_position()
++	var east := Vector3.UP.cross(direction)
++	if east.length_squared() < 0.000001:
++		east = Vector3.RIGHT.cross(direction)
++	east = east.normalized()
++	var north := direction.cross(east).normalized()
++	_mvp_local_body.basis = Basis(east, direction, -north).orthonormalized()
++
++
++func _ensure_mvp_inventory_ui() -> void:
++	if _mvp_inventory_root != null and is_instance_valid(_mvp_inventory_root):
++		return
++	var layer := CanvasLayer.new()
++	layer.name = "MvpInventoryLayer"
++	layer.layer = 50
++	add_child(layer)
++
++	_mvp_inventory_root = Control.new()
++	_mvp_inventory_root.name = "MvpInventoryRoot"
++	_mvp_inventory_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	_mvp_inventory_root.mouse_filter = Control.MOUSE_FILTER_STOP
++	_mvp_inventory_root.visible = false
++	layer.add_child(_mvp_inventory_root)
++
++	var center := CenterContainer.new()
++	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	_mvp_inventory_root.add_child(center)
++
++	var panel := PanelContainer.new()
++	panel.custom_minimum_size = Vector2(680.0, 460.0)
++	center.add_child(panel)
++
++	var margin := MarginContainer.new()
++	margin.add_theme_constant_override("margin_left", 22)
++	margin.add_theme_constant_override("margin_top", 18)
++	margin.add_theme_constant_override("margin_right", 22)
++	margin.add_theme_constant_override("margin_bottom", 18)
++	panel.add_child(margin)
++
++	var column := VBoxContainer.new()
++	column.add_theme_constant_override("separation", 12)
++	margin.add_child(column)
++
++	var title := Label.new()
++	title.text = "ИНВЕНТАРЬ — NETWORK MVP"
++	title.add_theme_font_size_override("font_size", 24)
++	column.add_child(title)
++
++	_mvp_inventory_body = Label.new()
++	_mvp_inventory_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	_mvp_inventory_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
++	column.add_child(_mvp_inventory_body)
++
++	_mvp_inventory_status = Label.new()
++	_mvp_inventory_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	_mvp_inventory_status.text = "Tab — закрыть · 1–0 — выбрать слот · G — выбросить выбранный предмет"
++	column.add_child(_mvp_inventory_status)
++
++
++func _refresh_mvp_inventory_snapshot_from_runtime() -> void:
++	if (
++		m3_multiplayer_client_runtime != null
++		and m3_multiplayer_client_runtime.has_method("get_item_graph_snapshot")
++	):
++		var snapshot = m3_multiplayer_client_runtime.get_item_graph_snapshot()
++		if snapshot is Dictionary and not Dictionary(snapshot).is_empty():
++			super._on_m4_item_graph_updated(Dictionary(snapshot))
++	_refresh_mvp_inventory_ui()
++
++
++func _refresh_mvp_inventory_ui() -> void:
++	if _mvp_inventory_body == null:
++		return
++	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
++		_mvp_inventory_body.text = "Ожидание сетевого Item Graph…"
++		return
++	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
++	var inventories_value = _m4_item_graph_snapshot.get("inventories", {})
++	if not inventories_value is Dictionary:
++		_mvp_inventory_body.text = "Item Graph не содержит inventories"
++		return
++	var inventories: Dictionary = inventories_value
++	var inventory_value = inventories.get(player_id, {})
++	if not inventory_value is Dictionary:
