@@ -250,6 +250,11 @@ func _physics_process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not active:
 		return
+	if network_replica_mode and event.is_action_pressed("level_horizon"):
+		level_to_horizon()
+		global_transform = Transform3D(orientation, Vector3.ZERO)
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var yaw_delta: float = -event.relative.x * MOUSE_SENSITIVITY
 		var pitch_delta: float = -event.relative.y * MOUSE_SENSITIVITY
