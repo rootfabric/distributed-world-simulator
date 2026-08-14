@@ -6,10 +6,11 @@ $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
 $ExpectedP46KernelBlob = "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1"
 $ExpectedP46FixtureBlob = "dc55b886c057e2ccd8f454658b6be58d579642e1"
 $ExpectedP46IntegrationBlob = "1924202c9ba98ccc5e867529fda1d328b9d746ce"
-$ExpectedP46RunnerBlob = "2a903df63715d6f383ec2f4d4b58ead55af121ae"
+$ExpectedP46RunnerBlob = "bd65dd9df5b964f0c930814e97c160520033adc2"
 $ExpectedSoakTestBlob = "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2"
 $ExpectedParentP45 = "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419"
 $GodotTimeoutSeconds = 600
+$HeartbeatSeconds = 10
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
@@ -26,7 +27,7 @@ $p46Status = [string]$p46Validation.status
 if (-not ($p46Status.StartsWith("CANDIDATE", [System.StringComparison]::Ordinal) -or $p46Status.StartsWith("ACCEPTED", [System.StringComparison]::Ordinal))) {
     throw "P4.6 is not a valid pre-acceptance parent: status=$p46Status"
 }
-if ([string]$p46Validation.parent.expected_aggregate_hash -ne $ExpectedParentP45 -and [string]$p46Validation.parent.accepted_aggregate_hash -ne $ExpectedParentP45) {
+if ([string]$p46Validation.parent.accepted_aggregate_hash -ne $ExpectedParentP45 -and [string]$p46Validation.parent.expected_aggregate_hash -ne $ExpectedParentP45) {
     throw "P4.6 parent P4.5 aggregate mismatch"
 }
 
@@ -44,6 +45,7 @@ Assert-Blob "tests/ecology/production/eco_p4_7_production_integration_soak.gd" $
 function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly = $false) {
     Write-Host "=== $Label ==="
     $process = $null
+    $stopwatch = $null
     try {
         $argumentText = "--headless --path `"$RootDir`""
         if ($CheckOnly) { $argumentText += " --check-only" }
@@ -60,12 +62,22 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
         if (-not $process.Start()) { throw "$Label failed to start Godot" }
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit($GodotTimeoutSeconds * 1000)) {
-            try { & taskkill.exe /PID $process.Id /T /F 2>&1 | Out-Null } catch { }
-            try { $process.WaitForExit() } catch { }
-            throw "$Label timed out after $GodotTimeoutSeconds seconds; Godot process tree terminated"
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $nextHeartbeat = $HeartbeatSeconds
+        while (-not $process.WaitForExit(1000)) {
+            $elapsed = [int][Math]::Floor($stopwatch.Elapsed.TotalSeconds)
+            if ($elapsed -ge $nextHeartbeat) {
+                Write-Host ("... {0} still running ({1}s elapsed)" -f $Label, $elapsed)
+                $nextHeartbeat += $HeartbeatSeconds
+            }
+            if ($stopwatch.Elapsed.TotalSeconds -ge $GodotTimeoutSeconds) {
+                try { & taskkill.exe /PID $process.Id /T /F 2>&1 | Out-Null } catch { }
+                try { $process.WaitForExit() } catch { }
+                throw "$Label timed out after $GodotTimeoutSeconds seconds; Godot process tree terminated"
+            }
         }
         $process.WaitForExit()
+        $stopwatch.Stop()
         $stdoutText = [string]$stdoutTask.Result
         $stderrText = [string]$stderrTask.Result
         if (-not [string]::IsNullOrEmpty($stdoutText)) { Write-Host $stdoutText.TrimEnd() }
@@ -77,6 +89,7 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
         return $joined
     }
     finally {
+        if ($null -ne $stopwatch -and $stopwatch.IsRunning) { $stopwatch.Stop() }
         if ($null -ne $process) { $process.Dispose() }
     }
 }

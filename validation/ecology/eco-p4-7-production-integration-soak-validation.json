@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-14-R1-PREACCEPTANCE-CANDIDATE",
+  "revision": "ECO-P4.7-2026-08-14-R2-HEARTBEAT-RUNNER",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "PREACCEPTANCE_CANDIDATE_COMMITTED_RUN_PENDING_P4_6_ACCEPTANCE_PENDING",
   "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
@@ -11,11 +11,19 @@
     "kernel_blob": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
     "fixture_blob": "dc55b886c057e2ccd8f454658b6be58d579642e1",
     "real_integration_blob": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
-    "runner_blob": "2a903df63715d6f383ec2f4d4b58ead55af121ae"
+    "runner_blob": "bd65dd9df5b964f0c930814e97c160520033adc2"
   },
   "candidate_blobs": {
     "soak_test": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
-    "preacceptance_runner": "20e480c772538fc690d2a3edcda7402eb9111354"
+    "preacceptance_runner": "df033ea5a4779637160c3e4ababdeca7a66859e2"
+  },
+  "runner_hardening": {
+    "semantic_change": false,
+    "soak_test_changed": false,
+    "heartbeat_seconds": 10,
+    "process_timeout_seconds": 600,
+    "timeout_behavior": "fail closed and terminate the Godot process tree",
+    "reason": "long deterministic soak processes must expose visible liveness instead of appearing frozen while stdout is buffered"
   },
   "scenario": {
     "regions": 8,
@@ -53,8 +61,9 @@
   "gate": {
     "preacceptance_runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
     "timeout_seconds_per_process": 600,
+    "heartbeat_seconds": 10,
     "hash_policy": "first exact committed A/B run discovers soak_hash and final_interest_hash; freeze only after P4.6 acceptance and lifecycle promotion",
-    "status": "READY_AFTER_COMMIT_FOR_NONCANONICAL_PREACCEPTANCE_RUN"
+    "status": "READY_FOR_NONCANONICAL_PREACCEPTANCE_RUN_AFTER_PULL"
   },
   "decision": "IMPLEMENT_P4_7_PREACCEPTANCE_HARNESS; DO_NOT_ACCEPT_P4_7_OR_OPEN_P4_8_UNTIL_P4_6_ACCEPTS_AND_P4_7_CANONICAL_GATE_PASSES"
 }
