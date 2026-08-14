@@ -15,6 +15,7 @@ var _mvp_prediction_signal_connected := false
 var _mvp_authoritative_seed_applied := false
 var _mvp_prediction_updates := 0
 var _mvp_prediction_failures := 0
+var _mvp_local_vertical_offset_m := 0.0
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
@@ -26,6 +27,7 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_mvp_authoritative_seed_applied = false
 	_mvp_prediction_updates = 0
 	_mvp_prediction_failures = 0
+	_mvp_local_vertical_offset_m = 0.0
 	_prepare_mvp_surface_anchor()
 
 	var result: Dictionary = super.attach_m3_multiplayer_client(runtime)
@@ -109,6 +111,7 @@ func _apply_mvp_presentation_record(record: Dictionary) -> void:
 	var planar_z := float(position.get("z", 0.0))
 	var vertical_offset := maxf(float(position.get("y", 0.0)), 0.0)
 	_m3_local_planar_position = Vector2(planar_x, planar_z)
+	_mvp_local_vertical_offset_m = vertical_offset
 	var mapped_direction: Vector3 = _map_m3_position_to_earth_direction(
 		planar_x,
 		planar_z
@@ -123,8 +126,11 @@ func _apply_mvp_presentation_record(record: Dictionary) -> void:
 func _sync_remote_presenter_origins() -> void:
 	for logical_id_value in _m3_remote_presenters.keys():
 		var presenter = _m3_remote_presenters.get(logical_id_value)
-		if presenter != null and is_instance_valid(presenter):
-			presenter.set_local_planar_position(_m3_local_planar_position)
+		if presenter == null or not is_instance_valid(presenter):
+			continue
+		presenter.set_local_planar_position(_m3_local_planar_position)
+		if presenter.has_method("set_local_vertical_offset"):
+			presenter.set_local_vertical_offset(_mvp_local_vertical_offset_m)
 
 
 func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:
@@ -211,6 +217,7 @@ func create_m3_graphical_client_report() -> Dictionary:
 	report["prediction_failures"] = _mvp_prediction_failures
 	report["playable_surface_biome"] = _mvp_surface_biome
 	report["playable_surface_eye_altitude_m"] = MVP_SURFACE_EYE_ALTITUDE_M
+	report["playable_surface_vertical_offset_m"] = _mvp_local_vertical_offset_m
 	report["playable_surface_anchor_direction"] = [
 		_mvp_surface_anchor_direction.x,
 		_mvp_surface_anchor_direction.y,
