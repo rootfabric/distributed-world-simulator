@@ -128,7 +128,7 @@
 +		and _mvp_local_body.visible
 +	)
  	return report
- diff --git a/scripts/app/simulator_app.gd b/scripts/app/simulator_app.gd
+diff --git a/scripts/app/simulator_app.gd b/scripts/app/simulator_app.gd
 --- a/scripts/app/simulator_app.gd
 +++ b/scripts/app/simulator_app.gd
 @@ -384,9 +384,12 @@ func _unhandled_input(event: InputEvent) -> void:
@@ -146,7 +146,7 @@
  				KEY_TAB:
  					command_line = "inventory.toggle" if command_registry.has_command("inventory.toggle") else "input.mouse.toggle"
  				KEY_E:
- diff --git a/scripts/runtime/networked_gameplay/networked_gameplay_service.gd b/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
+diff --git a/scripts/runtime/networked_gameplay/networked_gameplay_service.gd b/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
 --- a/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
 +++ b/scripts/runtime/networked_gameplay/networked_gameplay_service.gd
 @@ -946,7 +946,7 @@ func _create_item_authority_context(logical_player_id: String) -> Dictionary:
