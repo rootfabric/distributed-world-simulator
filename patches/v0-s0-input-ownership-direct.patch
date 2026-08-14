@@ -1,14 +1,14 @@
 diff --git a/scripts/app/earth_mvp_app.gd b/scripts/app/earth_mvp_app.gd
 --- a/scripts/app/earth_mvp_app.gd
 +++ b/scripts/app/earth_mvp_app.gd
-@@ -23,6 +23,7 @@ var _mvp_inventory_visible := false
+@@ -23,5 +23,6 @@ var _mvp_inventory_visible := false
  var _mvp_inventory_shell
  var _mvp_inventory_setup_error := ""
 +var _mvp_input_owner := "GAMEPLAY"
  
  var _mvp_spectator_enabled := false
  var _mvp_spectator_saved_speed := 900.0
-@@ -400,8 +401,25 @@ func _set_mvp_inventory_visible(visible: bool) -> void:
+@@ -400,8 +401,24 @@ func _set_mvp_inventory_visible(visible: bool) -> void:
  	if visible:
  		_submit_mvp_neutral_input()
  	_mvp_inventory_shell.set_inventory_visible(visible)
