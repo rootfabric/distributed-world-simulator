@@ -57,9 +57,10 @@ func show_shared_space_mode(
 		if earth_only
 		else celestial_system.to_body_local(space_position, "moon")
 	)
-	var earth_surface_distance: float = celestial_system.get_surface_distance(
-		"earth",
-		space_position
+	var earth_surface_distance: float = (
+		earth_world.get_altitude(earth_local)
+		if earth_only
+		else celestial_system.get_surface_distance("earth", space_position)
 	)
 	var moon_surface_distance: float = (
 		0.0
@@ -131,7 +132,7 @@ func show_shared_space_mode(
 		else "ЕДИНОЕ ПРОСТРАНСТВО: ЗЕМЛЯ + ЛУНА"
 	)
 	var distance_description: String = (
-		"До поверхности Земли %.1f км"
+		"До процедурной поверхности Земли %.3f км"
 		% (earth_surface_distance / 1000.0)
 		if earth_only
 		else "До поверхности: Луна %.1f км | Земля %.1f км | центры %.1f км" % [
@@ -140,23 +141,32 @@ func show_shared_space_mode(
 			distance_m / 1000.0,
 		]
 	)
+	var coordinate_description: String = _coordinate_description(
+		earth_world,
+		explorer,
+		earth_local,
+		space_position,
+		earth_only
+	)
+	var controls_description: String = (
+		"WASD — движение через сервер | мышь — обзор | H — горизонт"
+		if explorer.has_method("is_network_replica_mode") and explorer.is_network_replica_mode()
+		else "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+	)
 	label.text = (
 		"%s\n"
 		+ "%s\n"
-		+ "Скорость %.1f м/с | координаты: [%.1f, %.1f, %.1f] км\n"
+		+ "%s\n"
 		+ "%s\n"
 		+ "%s\n"
 		+ "%s\n"
 		+ "Патч Земли: min %.1f м | max %.1f м | перепад %.1f м | geom-склон max %.1f°\n"
 		+ "~ — консоль | earth.teleport.biome <name> | space.teleport.body <id>\n"
-		+ "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+		+ "%s"
 	) % [
 		world_title,
 		body_description,
-		explorer.get_movement_speed(),
-		space_position.x / 1000.0,
-		space_position.y / 1000.0,
-		space_position.z / 1000.0,
+		coordinate_description,
 		distance_description,
 		local_description,
 		atmosphere_description,
@@ -164,6 +174,47 @@ func show_shared_space_mode(
 		float(statistics.get("maximum_elevation_m", 0.0)),
 		float(statistics.get("relief_range_m", 0.0)),
 		float(statistics.get("maximum_geometric_slope_deg", 0.0)),
+		controls_description,
+	]
+
+
+func _coordinate_description(
+	earth_world,
+	explorer,
+	earth_local: Vector3,
+	space_position: Vector3,
+	earth_only: bool
+) -> String:
+	var network_replica: bool = (
+		explorer.has_method("is_network_replica_mode")
+		and explorer.is_network_replica_mode()
+	)
+	if earth_only:
+		var spawn_direction: Vector3 = earth_world.get_canonical_spawn_direction()
+		var spawn_altitude: float = earth_world.get_canonical_spawn_altitude_m()
+		var spawn_position: Vector3 = (
+			earth_world.get_surface_point(spawn_direction)
+			+ spawn_direction * spawn_altitude
+		)
+		var east: Vector3 = Vector3.UP.cross(spawn_direction)
+		if east.length_squared() < 0.000001:
+			east = Vector3.RIGHT.cross(spawn_direction)
+		east = east.normalized()
+		var north: Vector3 = spawn_direction.cross(east).normalized()
+		var offset: Vector3 = earth_local - spawn_position
+		var local_x: float = offset.dot(east)
+		var local_z: float = offset.dot(north)
+		return "%s | MVP локально X/Z: %.2f / %.2f м | frame %s" % [
+			"СЕТЬ: authoritative replica" if network_replica else "ЛОКАЛЬНЫЙ observer",
+			local_x,
+			local_z,
+			String(explorer.get_reference_frame_id()),
+		]
+	return "Скорость %.1f м/с | root координаты: [%.1f, %.1f, %.1f] км" % [
+		explorer.get_movement_speed(),
+		space_position.x / 1000.0,
+		space_position.y / 1000.0,
+		space_position.z / 1000.0,
 	]
 
 
