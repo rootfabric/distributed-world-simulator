@@ -1,0 +1,57 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_4_production_persistence_validation.v1",
+  "revision": "ECO-P4.4-2026-08-14-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_PENDING",
+  "scope": "PRODUCTION_OWNED_REGION_PERSISTENCE_SCHEMA_AND_RESTART_RESTORE_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P4.3",
+    "status_required": "ACCEPTED*",
+    "accepted_aggregate_hash": "4bdfd994a27ef15ff4010643e35f4652a0a2f3fdb2d3fcfa6b86b816b14cca62",
+    "kernel_blob": "ed76af9537c09ca013eb1a1367d3c854b1438df3",
+    "validation_blob_after_acceptance": "1236fdefcf490838bbe69431588d5878b7949f2c"
+  },
+  "candidate_blobs": {
+    "kernel": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
+    "acceptance_test": "2385b035082834aaae1eb91e25aa798c26ca40dc",
+    "runner": "7dc69caf556f36ac4e282acb5713f3d072e63ad5"
+  },
+  "contract": {
+    "production_ownership": "P4.4 defines the first production-owned ecology region snapshot envelope; P3.8 checkpoint bytes remain research/reference ancestry only",
+    "snapshot_identity": "snapshot_hash binds accepted P4.3 parent, region id, clock/catch-up/region hashes, ecology generation and explicit observed horizon",
+    "serialization": "validated snapshots serialize to deterministic typed bytes using a fixed magic header, format_version, payload SHA-256, payload byte count and snapshot hash",
+    "restore": "deserialization restores the exact typed P4.3 catch-up state and therefore exact RegionState/Clock identities without reading wall clock",
+    "restart_continuity": "pending backlog and fractional observed horizon survive serialize/load/restore and converge to the same accepted P4.3 state as uninterrupted advancement",
+    "integrity": "wrong magic, unsupported format version, size mismatch, checksum mismatch, trailing/truncated bytes, nested tamper and derived-field tamper fail closed",
+    "migration_boundary": "P4.4 is production format version 1; current-format migration is identity, and no fictional migration from P3.8 or unknown versions is authorized",
+    "file_io": "save_file/load_file own production snapshot bytes, file SHA reporting and exact snapshot restoration",
+    "rng": "no global RNG consumption",
+    "not_authorized": ["implicit wall-clock ownership", "region/server ownership or handoff", "network replication", "client authority", "P4.5 ownership transfer semantics"]
+  },
+  "targeted_exact_attached_godot_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "fresh_process_runs": 3,
+    "assertions_per_run": 45,
+    "all_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "9a85c1703469ffa5d0cdf2fd8535082ebe4da37aedafbc689745ea9647d4d64a",
+    "targeted_aggregate_hash": "3967ac8f07ec44d48a8f6b8580afbf9f4f3c25cff9a07931fece0dc7d7184c33",
+    "targeted_snapshot_hash": "49b65f80bb33115ee0280b759b1da0176f3756989a7d623a9f95aa02d003fa25",
+    "targeted_file_sha256": "d9ba432abc3253c918e459fb0f2747970ca375cc60696872b7b10329aa5fae43",
+    "targeted_resumed_catchup_hash": "fe1b7911ef74d3e39224311ab1dffb17d69efe23c3959cc13f9732f69297af18",
+    "parent_p4_3": "4bdfd994a27ef15ff4010643e35f4652a0a2f3fdb2d3fcfa6b86b816b14cca62",
+    "boundary_note": "targeted runtime uses the deterministic P3 persistence stub only to exercise P4.1/P4.2/P4.3/P4.4 interfaces; it is not lifecycle acceptance evidence"
+  },
+  "full_chain_expected": {
+    "acceptance_test_assertions": 52,
+    "aggregate_hash": "4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2",
+    "snapshot_hash": "c6ee61dc4250fcd22b762902ff35354957c884c8b1818aed8209fe4f6c829006",
+    "resumed_catchup_hash": "cc2a4815e1eae75b879ea52d8ba404880c69344928f953e8aaa38bd062b1ce3a",
+    "parent_p4_3": "4bdfd994a27ef15ff4010643e35f4652a0a2f3fdb2d3fcfa6b86b816b14cca62",
+    "file_sha_policy": "must be a 64-hex SHA-256 and fresh-process output must be byte-identical; kernel/test blob pins freeze the exact codec implementation",
+    "status": "PENDING_COMMITTED_FULL_CHAIN_RUN"
+  },
+  "covered_properties": ["P4_3_ACCEPTED_PARENT_PINNED", "FIRST_PRODUCTION_STORAGE_SCHEMA", "DETERMINISTIC_TYPED_SERIALIZATION", "PAYLOAD_SHA256_INTEGRITY", "EXACT_TYPED_RESTORE", "PENDING_BACKLOG_RESTART_CONTINUITY", "FRACTIONAL_HORIZON_RESTART_CONTINUITY", "P3_8_RESEARCH_BYTES_REJECTED", "UNKNOWN_FORMATS_FAIL_CLOSED", "CURRENT_FORMAT_IDENTITY_MIGRATION", "FILE_SAVE_LOAD_ROUNDTRIP", "NESTED_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
+  "decision": "IMPLEMENT_P4_4_CANDIDATE; RUN_FULL_ACCEPTANCE_ON_COMMITTED_REMOTE_PACKAGE; DO_NOT_OPEN_P4_5_BEFORE_P4_4_ACCEPTANCE"
+}
