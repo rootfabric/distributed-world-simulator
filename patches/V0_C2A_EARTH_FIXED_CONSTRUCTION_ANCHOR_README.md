@@ -1,18 +1,24 @@
 # V0-C2A Earth-fixed Construction Anchor — delivery
 
-## Delivery branch
+## Primary delivery branch
+
+`agent/v0-s1-inventory-convergence`
+
+The C2A work was prepared from the exact previous delivery head:
+
+`ab6e79b83cc94977fcf55ecd863467f4ddc37ad1`
+
+A temporary preparation branch also exists:
 
 `agent/v0-c2a-earth-fixed-construction-anchor`
 
-Parent delivery head at fork:
-
-`ab6e79b83cc94977fcf55ecd863467f4ddc37ad1`
+Use the primary delivery branch for local patch retrieval.
 
 ## Patch
 
 `patches/v0-c2a-earth-fixed-construction-anchor.patch`
 
-The patch is intentionally based on the current local C2 state **after** `v0-c2-earth-construction-observer-frame.patch` was applied. It replaces that observer-owned transform semantics.
+The patch is intentionally based on the current local C2 state **after** `v0-c2-earth-construction-observer-frame.patch` was applied. It replaces that observer-owned transform semantics rather than stacking another offset correction on top of it.
 
 ## What changes
 
@@ -38,10 +44,16 @@ Exact engine used:
 
 `Godot 4.7.1.stable.double.custom_build.a13da4feb`
 
-Result:
+Focused invariant test:
 
 ```text
 V0-C2A Earth surface render projector: PASS (10 assertions)
+```
+
+Construction presentation parse/setup check:
+
+```text
+C2A presentation parse/setup: PASS
 ```
 
 Patch reconstruction checks:
@@ -58,7 +70,7 @@ PowerShell:
 ```powershell
 cd C:\distributed-world-simulator
 git fetch origin
-git restore --source=origin/agent/v0-c2a-earth-fixed-construction-anchor --worktree -- patches/v0-c2a-earth-fixed-construction-anchor.patch
+git restore --source=origin/agent/v0-s1-inventory-convergence --worktree -- patches/v0-c2a-earth-fixed-construction-anchor.patch
 git apply --check .\patches\v0-c2a-earth-fixed-construction-anchor.patch
 git apply .\patches\v0-c2a-earth-fixed-construction-anchor.patch
 git diff --check
