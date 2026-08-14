@@ -17,8 +17,7 @@ if (-not (Test-Path (Join-Path $ProjectRoot ".git"))) {
 $DeliveryRef = "origin/agent/v0-s1-inventory-convergence"
 $DeliveryFiles = @(
     "patches/v0-s0-nx4-transport-direct.patch",
-    "patches/v0-s0-input-ownership-direct.patch",
-    "patches/v0-launcher-marker-gate-fix.patch"
+    "patches/v0-s0-input-ownership-direct.patch"
 )
 $DirectProductionFiles = @(
     "RUN_V0_MVP.ps1",
@@ -26,10 +25,22 @@ $DirectProductionFiles = @(
     "scripts/ui/planetary_overlay.gd",
     "scripts/network/realtime/realtime_channel_policy.gd"
 )
-$CleanPatchTargets = @(
+$NxPatchTargets = @(
     "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
     "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"
 )
+
+function Test-Marker {
+    param(
+        [string]$RelativePath,
+        [string]$Text
+    )
+    $Path = Join-Path $ProjectRoot $RelativePath
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    return [bool](Select-String -Path $Path -SimpleMatch $Text -Quiet)
+}
 
 Write-Host "[V0-S0] Fetching delivery ref..." -ForegroundColor Cyan
 & git fetch origin
@@ -37,38 +48,25 @@ if ($LASTEXITCODE -ne 0) {
     throw "git fetch origin failed."
 }
 
-# Fetch delivery artifacts first. They are not production source and may safely
-# replace stale copies from earlier V0 installer attempts.
+# Delivery artifacts are not production source. Always refresh them so stale
+# V1/V2/V3 copies cannot affect this sync.
 $ArtifactRestoreArgs = @("restore", "--source=$DeliveryRef", "--worktree", "--") + $DeliveryFiles
 & git @ArtifactRestoreArgs
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to restore V0-S0 delivery artifacts from $DeliveryRef."
 }
 
-# Camera/HUD/policy and the two network runtime targets are owned by this
-# stabilization slice. Refuse to overwrite unrelated local edits there.
-foreach ($Path in @($DirectProductionFiles + $CleanPatchTargets)) {
-    if ($Path -eq "RUN_V0_MVP.ps1") {
-        continue
-    }
-    & git diff --quiet -- $Path
-    if ($LASTEXITCODE -eq 1) {
-        throw "Local modifications exist in stabilization-owned file: $Path. Refusing to overwrite it."
-    }
-    if ($LASTEXITCODE -gt 1) {
-        throw "Unable to inspect local diff for: $Path"
-    }
-}
+$NxTransportInstalled = Test-Marker `
+    "scripts/network/transports/v2/enet_multi_peer_transport_port.gd" `
+    "TRANSFER_MODE_UNRELIABLE_ORDERED"
+$DisconnectGuardInstalled = Test-Marker `
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd" `
+    "disconnected_this_poll"
 
-$NxPatchPath = Join-Path $ProjectRoot "patches\v0-s0-nx4-transport-direct.patch"
-$InputPatchPath = Join-Path $ProjectRoot "patches\v0-s0-input-ownership-direct.patch"
-$LauncherPatchPath = Join-Path $ProjectRoot "patches\v0-launcher-marker-gate-fix.patch"
-
-Write-Host "[V0-S0] Prechecking ENet/NX4 patch against clean local runtime..."
-& git apply --check -- $NxPatchPath
-if ($LASTEXITCODE -ne 0) {
-    throw "ENet/NX4 patch does not match the current transport/runtime files. Production files were not changed."
+if ($NxTransportInstalled -xor $DisconnectGuardInstalled) {
+    throw "Partial ENet/NX4 stabilization detected. Refusing to stack another patch over an inconsistent network runtime."
 }
+$NxAlreadyApplied = $NxTransportInstalled -and $DisconnectGuardInstalled
 
 $EarthMvpPath = Join-Path $ProjectRoot "scripts\app\earth_mvp_app.gd"
 $InventoryShellPath = Join-Path $ProjectRoot "scripts\ui\inventory\networked\m5_networked_inventory_shell.gd"
@@ -76,6 +74,31 @@ $InputOwnershipAlreadyApplied = (
     (Select-String -Path $EarthMvpPath -SimpleMatch '_mvp_input_owner' -Quiet) -and
     -not (Select-String -Path $InventoryShellPath -SimpleMatch 'Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if value else Input.MOUSE_MODE_CAPTURED' -Quiet)
 )
+
+$NxPatchPath = Join-Path $ProjectRoot "patches\v0-s0-nx4-transport-direct.patch"
+$InputPatchPath = Join-Path $ProjectRoot "patches\v0-s0-input-ownership-direct.patch"
+
+if ($NxAlreadyApplied) {
+    Write-Host "[V0-S0] ENet/NX4 stabilization already installed; skipping its patch."
+}
+else {
+    foreach ($Path in $NxPatchTargets) {
+        & git diff --quiet -- $Path
+        if ($LASTEXITCODE -eq 1) {
+            throw "Local modifications exist in network stabilization target: $Path. Refusing to patch it."
+        }
+        if ($LASTEXITCODE -gt 1) {
+            throw "Unable to inspect local diff for: $Path"
+        }
+    }
+
+    Write-Host "[V0-S0] Prechecking ENet/NX4 patch..."
+    & git apply --check -- $NxPatchPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "ENet/NX4 patch does not match the current clean transport/runtime files."
+    }
+}
+
 if ($InputOwnershipAlreadyApplied) {
     Write-Host "[V0-S0] Input ownership already installed; skipping its patch."
 }
@@ -83,27 +106,26 @@ else {
     Write-Host "[V0-S0] Prechecking input-ownership patch against local convergence files..."
     & git apply --check -- $InputPatchPath
     if ($LASTEXITCODE -ne 0) {
-        throw "Input-ownership patch does not match the current local MVP/inventory convergence files. Production files were not changed."
+        throw "Input-ownership patch does not match the current local MVP/inventory convergence files."
     }
 }
 
-Write-Host "[V0-S0] Installing direct camera/HUD/policy/launcher sources..."
+# These four files are the direct V0-S0 presentation/policy delivery. Restore
+# them exactly from the delivery branch. This is intentionally idempotent and
+# also completes a previous sync that stopped after this step.
+Write-Host "[V0-S0] Synchronizing camera/HUD/policy/launcher sources..."
 $DirectRestoreArgs = @("restore", "--source=$DeliveryRef", "--worktree", "--") + $DirectProductionFiles
 & git @DirectRestoreArgs
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to restore direct V0-S0 production source set from $DeliveryRef."
 }
 
-Write-Host "[V0-S0] Checking launcher source-gate correction..."
-& git apply --check -- $LauncherPatchPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Launcher source-gate patch does not match the delivered RUN_V0_MVP.ps1."
-}
-
-Write-Host "[V0-S0] Applying ENet/NX4 patch..."
-& git apply -- $NxPatchPath
-if ($LASTEXITCODE -ne 0) {
-    throw "ENet/NX4 patch application failed."
+if (-not $NxAlreadyApplied) {
+    Write-Host "[V0-S0] Applying ENet/NX4 patch..."
+    & git apply -- $NxPatchPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "ENet/NX4 patch application failed."
+    }
 }
 
 if (-not $InputOwnershipAlreadyApplied) {
@@ -112,12 +134,6 @@ if (-not $InputOwnershipAlreadyApplied) {
     if ($LASTEXITCODE -ne 0) {
         throw "Input-ownership patch application failed."
     }
-}
-
-Write-Host "[V0-S0] Applying launcher source-gate correction..."
-& git apply -- $LauncherPatchPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Launcher source-gate patch application failed."
 }
 
 & git diff --check
@@ -132,12 +148,12 @@ $Markers = @(
     @{ Path = "scripts/network/transports/v2/enet_multi_peer_transport_port.gd"; Text = "TRANSFER_MODE_UNRELIABLE_ORDERED"; Name = "ENet mapping" },
     @{ Path = "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"; Text = "disconnected_this_poll"; Name = "disconnect guard" },
     @{ Path = "scripts/app/earth_mvp_app.gd"; Text = "advance_local_prediction"; Name = "NX4 prediction" },
-    @{ Path = "scripts/app/earth_mvp_app.gd"; Text = "_mvp_input_owner"; Name = "input ownership" }
+    @{ Path = "scripts/app/earth_mvp_app.gd"; Text = "_mvp_input_owner"; Name = "input ownership" },
+    @{ Path = "RUN_V0_MVP.ps1"; Text = "Assert-V0StabilizedSource"; Name = "launcher source gate" }
 )
 
 foreach ($Marker in $Markers) {
-    $Found = Select-String -Path (Join-Path $ProjectRoot $Marker.Path) -SimpleMatch $Marker.Text -Quiet
-    if (-not $Found) {
+    if (-not (Test-Marker $Marker.Path $Marker.Text)) {
         throw "Required V0-S0 marker missing after sync: $($Marker.Name) [$($Marker.Path)]"
     }
 }
