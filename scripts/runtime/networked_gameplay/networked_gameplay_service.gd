@@ -378,8 +378,9 @@ func simulate_fixed_movement_tick(
 ) -> Dictionary:
 	if not _configured or not _fixed_tick_authority:
 		return _failure("FIXED_TICK_AUTHORITY_NOT_ENABLED")
-	if not _playable_sandbox:
-		return _failure("MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX")
+	# Fixed-tick simulation is controlled by the explicit authority capability.
+	# playable_sandbox remains a separate gameplay/content policy used by the
+	# legacy direct MOVEMENT_INTENT path and sandbox Item Graph semantics.
 	var owner_check: Dictionary = _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
 	if not bool(owner_check.get("success", false)):
 		return owner_check

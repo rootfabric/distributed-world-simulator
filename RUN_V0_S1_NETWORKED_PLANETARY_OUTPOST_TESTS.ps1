@@ -14,6 +14,7 @@ if (-not $Godot) {
 $Tests = @(
     "res://tests/runtime/test_launch_options.gd",
     "res://tests/runtime/test_v0_s1_mvp_launch_options.gd",
+    "res://tests/runtime/test_v0_s1_mvp_fixed_tick_movement.gd",
     "res://tests/runtime/test_mvp_procedural_planet_spawn.gd",
     "res://tests/runtime/test_mvp_earth_outpost_authority.gd",
     "res://tests/runtime/test_mvp_m3_construction_replication_bridge.gd",
