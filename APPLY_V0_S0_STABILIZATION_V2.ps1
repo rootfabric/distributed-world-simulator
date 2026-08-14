@@ -8,10 +8,12 @@ $MainPayloadPath = Join-Path $PSScriptRoot "patches\v0-s0-stabilize-controls-net
 $CameraPatchPath = Join-Path $PSScriptRoot "patches\v0-s0-camera-followup-post-hud.patch"
 $OverlayPatchPath = Join-Path $PSScriptRoot "patches\v0-s0-overlay-followup-post-hud.patch"
 $ExpectedMainPatchSha256 = "aa7e6160e91982d6f85015037dd98dd5f1de7b18b1f59d6a517493f688087c7f"
-$ExpectedCameraPatchSha256 = "2a69db208b31910e3a52291af0a225789aee97c47789b73a3feb533c3d674088"
-$ExpectedOverlayPatchSha256 = "5d53b36d86d024fdb011ac554fd3c76f96823de38937327b588e680e868bb460"
+$ExpectedCameraBlobSha = "1cd9efa484b2e37ad5aa1f7ada8156c00e912840"
+$ExpectedOverlayBlobSha = "5350a0f13c58434d5fbb4371ff390a0d4cd76eaa"
 $CameraPath = "scripts/actors/earth/earth_explorer.gd"
 $OverlayPath = "scripts/ui/planetary_overlay.gd"
+$CameraPatchRepoPath = "patches/v0-s0-camera-followup-post-hud.patch"
+$OverlayPatchRepoPath = "patches/v0-s0-overlay-followup-post-hud.patch"
 
 function Get-Sha256Hex {
     param([byte[]]$Bytes)
@@ -24,11 +26,16 @@ function Get-Sha256Hex {
     }
 }
 
-function Get-NormalizedTextBytes {
-    param([string]$Path)
-    $Text = Get-Content -Path $Path -Raw
-    $Normalized = $Text -replace "`r`n", "`n"
-    return [Text.Encoding]::UTF8.GetBytes($Normalized)
+function Get-GitNormalizedBlobSha {
+    param(
+        [string]$RepoPath,
+        [string]$WorkingPath
+    )
+    $Result = & git hash-object "--path=$RepoPath" -- $WorkingPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "git hash-object failed for $RepoPath"
+    }
+    return ([string]$Result).Trim().ToLowerInvariant()
 }
 
 if (-not (Test-Path (Join-Path $PSScriptRoot ".git"))) {
@@ -62,16 +69,16 @@ if ($ActualMainSha -ne $ExpectedMainPatchSha256) {
     throw "V0-S0 main payload checksum mismatch: $ActualMainSha"
 }
 
-$CameraPatchBytes = Get-NormalizedTextBytes $CameraPatchPath
-$ActualCameraSha = Get-Sha256Hex $CameraPatchBytes
-if ($ActualCameraSha -ne $ExpectedCameraPatchSha256) {
-    throw "V0-S0 camera payload checksum mismatch: $ActualCameraSha"
+# Text patch files are validated through Git's own clean-filter normalization.
+# This is stable across Windows core.autocrlf and does not decode/re-encode UTF-8
+# through Windows PowerShell 5.1 before hashing or applying the patch.
+$ActualCameraBlobSha = Get-GitNormalizedBlobSha $CameraPatchRepoPath $CameraPatchPath
+if ($ActualCameraBlobSha -ne $ExpectedCameraBlobSha) {
+    throw "V0-S0 camera payload Git blob mismatch: $ActualCameraBlobSha"
 }
-
-$OverlayPatchBytes = Get-NormalizedTextBytes $OverlayPatchPath
-$ActualOverlaySha = Get-Sha256Hex $OverlayPatchBytes
-if ($ActualOverlaySha -ne $ExpectedOverlayPatchSha256) {
-    throw "V0-S0 overlay payload checksum mismatch: $ActualOverlaySha"
+$ActualOverlayBlobSha = Get-GitNormalizedBlobSha $OverlayPatchRepoPath $OverlayPatchPath
+if ($ActualOverlayBlobSha -ne $ExpectedOverlayBlobSha) {
+    throw "V0-S0 overlay payload Git blob mismatch: $ActualOverlayBlobSha"
 }
 
 $CameraSource = Get-Content -Path (Join-Path $PSScriptRoot $CameraPath) -Raw
@@ -87,11 +94,7 @@ if ($OverlaySource.Contains("var _content: VBoxContainer") -and $OverlaySource.C
 }
 
 $MainPatchPath = Join-Path $env:TEMP "v0-s0-stabilize-controls-network-v2-main.patch"
-$NormalizedCameraPath = Join-Path $env:TEMP "v0-s0-stabilize-controls-network-v2-camera.patch"
-$NormalizedOverlayPath = Join-Path $env:TEMP "v0-s0-stabilize-controls-network-v2-overlay.patch"
 [IO.File]::WriteAllBytes($MainPatchPath, $MainPatchBytes)
-[IO.File]::WriteAllBytes($NormalizedCameraPath, $CameraPatchBytes)
-[IO.File]::WriteAllBytes($NormalizedOverlayPath, $OverlayPatchBytes)
 
 $ExcludeArgs = @()
 if ($CameraHasPriorHudLayer) {
@@ -115,7 +118,7 @@ try {
 
     if ($CameraHasPriorHudLayer) {
         Write-Host "[V0-S0/V2] Checking rebased camera follow-up..."
-        & git apply --check -- $NormalizedCameraPath
+        & git apply --check -- $CameraPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw "Camera follow-up does not match current earth_explorer.gd. Nothing was changed."
         }
@@ -123,7 +126,7 @@ try {
 
     if ($OverlayHasPriorHudLayer) {
         Write-Host "[V0-S0/V2] Checking rebased overlay follow-up..."
-        & git apply --check -- $NormalizedOverlayPath
+        & git apply --check -- $OverlayPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw "Overlay follow-up does not match current planetary_overlay.gd. Nothing was changed."
         }
@@ -138,7 +141,7 @@ try {
 
     if ($CameraHasPriorHudLayer) {
         Write-Host "[V0-S0/V2] Applying rebased camera stabilization..."
-        & git apply -- $NormalizedCameraPath
+        & git apply -- $CameraPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw "Camera stabilization apply failed."
         }
@@ -146,7 +149,7 @@ try {
 
     if ($OverlayHasPriorHudLayer) {
         Write-Host "[V0-S0/V2] Applying rebased overlay stabilization..."
-        & git apply -- $NormalizedOverlayPath
+        & git apply -- $OverlayPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw "Overlay stabilization apply failed."
         }
@@ -159,8 +162,6 @@ try {
 }
 finally {
     Remove-Item $MainPatchPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $NormalizedCameraPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $NormalizedOverlayPath -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host ""
