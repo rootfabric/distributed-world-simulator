@@ -1,0 +1,46 @@
+diff --git a/scripts/app/earth_app.gd b/scripts/app/earth_app.gd
+--- a/scripts/app/earth_app.gd
++++ b/scripts/app/earth_app.gd
+@@ -159,6 +159,7 @@ func _process(delta: float) -> void:
+ 			visible_body_ids
+ 		)
+ 	_apply_m3_network_input(delta)
++	_update_construction_observer_frame()
+ 
+ 
+ func register_runtime_commands(registry, owner_id: String) -> void:
+@@ -393,12 +394,34 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+ 
+ func _on_m3_construction_updated(bundle: Dictionary) -> void:
+ 	if construction_presentation == null or bundle.is_empty():
+ 		return
++	_update_construction_observer_frame()
+ 	var accepted: Dictionary = construction_presentation.apply_authoritative_bundle(bundle)
+ 	if not bool(accepted.get("success", false)):
+ 		last_diagnostic_path = String(accepted.get("error_code", "EARTH_CONSTRUCTION_BUNDLE_REJECTED"))
+ 
+ 
++func _update_construction_observer_frame() -> void:
++	if (
++		construction_presentation == null
++		or earth_explorer == null
++		or not construction_presentation.has_method("set_observer_tangent_frame")
++	):
++		return
++	var frame_position: Vector3 = earth_explorer.get_frame_position()
++	if frame_position.length_squared() < 1.0:
++		return
++	var up := frame_position.normalized()
++	var east := Vector3.UP.cross(up)
++	if east.length_squared() < 0.000001:
++		east = Vector3.RIGHT.cross(up)
++	east = east.normalized()
++	var north := up.cross(east).normalized()
++	var tangent_basis := Basis(east, up, -north).orthonormalized()
++	construction_presentation.set_observer_tangent_frame(
++		tangent_basis,
++		_m3_local_planar_position
++	)
++
++
+ func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:
