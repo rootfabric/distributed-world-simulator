@@ -10,8 +10,11 @@ const PLANAR_EPSILON := 0.000001
 var _delegate
 var _map_position: Callable
 var _local_planar_position := Vector2.ZERO
+var _local_vertical_offset_m := 0.0
 var _presented_planar_position := Vector2.ZERO
+var _presented_vertical_offset_m := 0.0
 var _target_planar_position := Vector2.ZERO
+var _target_vertical_offset_m := 0.0
 var earth_mapped_position := Vector3.ZERO
 
 
@@ -28,7 +31,7 @@ func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> 
 	if not bool(result.get("success", false)):
 		return result
 	_capture_delegate_positions()
-	_apply_earth_position(_presented_planar_position)
+	_apply_earth_position()
 	_apply_delegate_visual_offset()
 	set_process(true)
 	return {"success": true, "error_code": ""}
@@ -43,13 +46,20 @@ func apply_replica(record: Dictionary, snapshot: Dictionary) -> Dictionary:
 			_delegate.target_position.x,
 			_delegate.target_position.z
 		)
+		_target_vertical_offset_m = maxf(_delegate.target_position.y, 0.0)
 	return result
 
 
 func set_local_planar_position(value: Vector2) -> void:
 	_local_planar_position = value
 	if _delegate != null:
-		_apply_earth_position(_presented_planar_position)
+		_apply_earth_position()
+
+
+func set_local_vertical_offset(value: float) -> void:
+	_local_vertical_offset_m = maxf(value, 0.0)
+	if _delegate != null:
+		_apply_earth_position()
 
 
 func _process(_delta: float) -> void:
@@ -59,7 +69,7 @@ func _process(_delta: float) -> void:
 	# its earlier process priority. Read that authoritative derived sample before
 	# replacing the delegate translation with the local visual body offset.
 	_capture_delegate_positions()
-	_apply_earth_position(_presented_planar_position)
+	_apply_earth_position()
 	_apply_delegate_visual_offset()
 
 
@@ -70,10 +80,12 @@ func _capture_delegate_positions() -> void:
 		_delegate.position.x,
 		_delegate.position.z
 	)
+	_presented_vertical_offset_m = maxf(_delegate.position.y, 0.0)
 	_target_planar_position = Vector2(
 		_delegate.target_position.x,
 		_delegate.target_position.z
 	)
+	_target_vertical_offset_m = maxf(_delegate.target_position.y, 0.0)
 
 
 func _apply_delegate_visual_offset() -> void:
@@ -83,15 +95,21 @@ func _apply_delegate_visual_offset() -> void:
 		_delegate.position = Vector3(0.0, VISUAL_VERTICAL_OFFSET_M, 0.0)
 
 
-func _apply_earth_position(planar_position: Vector2) -> void:
-	var remote_position: Vector3 = _map_position.call(
-		planar_position.x,
-		planar_position.y
+func _apply_earth_position() -> void:
+	var remote_base: Vector3 = _map_position.call(
+		_presented_planar_position.x,
+		_presented_planar_position.y
 	)
-	var local_position: Vector3 = _map_position.call(
+	var local_base: Vector3 = _map_position.call(
 		_local_planar_position.x,
 		_local_planar_position.y
 	)
+	var remote_position := remote_base
+	if remote_base.length_squared() > PLANAR_EPSILON:
+		remote_position += remote_base.normalized() * _presented_vertical_offset_m
+	var local_position := local_base
+	if local_base.length_squared() > PLANAR_EPSILON:
+		local_position += local_base.normalized() * _local_vertical_offset_m
 	earth_mapped_position = remote_position
 	position = remote_position - local_position
 	_apply_surface_orientation(remote_position)
@@ -116,7 +134,7 @@ func get_report() -> Dictionary:
 	# visual offset in the public derived-presentation report.
 	report["position"] = [
 		_presented_planar_position.x,
-		0.0,
+		_presented_vertical_offset_m,
 		_presented_planar_position.y,
 	]
 	report["earth_mapped_position"] = [
@@ -132,6 +150,9 @@ func get_report() -> Dictionary:
 		_target_planar_position.x,
 		_target_planar_position.y,
 	]
+	report["earth_vertical_presented_m"] = _presented_vertical_offset_m
+	report["earth_vertical_target_m"] = _target_vertical_offset_m
+	report["earth_local_vertical_offset_m"] = _local_vertical_offset_m
 	report["earth_visual_vertical_offset_m"] = VISUAL_VERTICAL_OFFSET_M
 	report["input_authority"] = false
 	return report
