@@ -70,6 +70,11 @@ function Save-SessionState {
         [string]$StartedUtc
     )
 
+    $ServerProcessId = 0
+    if ($null -ne $ServerProcess) {
+        $ServerProcessId = $ServerProcess.Id
+    }
+
     $State = [ordered]@{
         schema = "distributed_world_simulator.v0_mvp_launcher.v1"
         started_utc = $StartedUtc
@@ -81,7 +86,7 @@ function Save-SessionState {
         godot_client_exe = $GodotGuiExe
         log_directory = $LogDirectory
         server = [ordered]@{
-            pid = if ($null -ne $ServerProcess) { $ServerProcess.Id } else { 0 }
+            pid = $ServerProcessId
             log = Join-Path $LogDirectory "server.log"
         }
         clients = @($ClientRecords)
@@ -173,10 +178,8 @@ if (Test-Path $StatePath) {
                 Stop-ManagedSession
             }
             else {
-                throw (
-                    "A V0 session is already running (PIDs: {0}). " +
-                    "Use .\RUN_V0_MVP.ps1 -Stop or add -Restart."
-                ) -f ($RunningPids -join ", ")
+                $RunningText = $RunningPids -join ", "
+                throw "A V0 session is already running (PIDs: $RunningText). Use .\RUN_V0_MVP.ps1 -Stop or add -Restart."
             }
         }
         else {
