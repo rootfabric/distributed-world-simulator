@@ -225,10 +225,17 @@ func _build_ui() -> void:
 	root_control = Control.new()
 	root_control.name = "M5NetworkedInventoryRoot"
 	root_control.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# This node is only a full-screen layout host. Leaving the default STOP
+	# filter here consumes MouseMotion across the whole viewport even while the
+	# inventory window is hidden, so EarthExplorer never receives gameplay
+	# mouse-look in _unhandled_input(). Child controls keep their own filters and
+	# remain interactive when the inventory window is visible.
+	root_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root_control)
 
 	inventory_window = PanelContainer.new()
 	inventory_window.name = "M5NetworkedInventoryWindow"
+	inventory_window.mouse_filter = Control.MOUSE_FILTER_STOP
 	inventory_window.set_anchors_preset(Control.PRESET_CENTER)
 	inventory_window.offset_left = -600.0
 	inventory_window.offset_top = -330.0

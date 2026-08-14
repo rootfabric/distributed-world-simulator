@@ -944,7 +944,7 @@ func _create_item_authority_context(logical_player_id: String) -> Dictionary:
 
 
 func _spawn_position(logical_player_id: String) -> Dictionary:
-	return {"x": -2.0 if logical_player_id == "a" else 2.0, "y": 0.0, "z": 0.0}
+	return {"x": -5.0 if logical_player_id == "a" else 5.0, "y": 0.0, "z": 0.0}
 
 
 func _advance() -> void:
