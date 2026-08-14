@@ -24,6 +24,12 @@ const RemotePlayerPresenterScript = preload(
 const ConstructionPresentationScript = preload(
 	"res://scripts/app/earth_construction_presentation.gd"
 )
+const EarthSurfaceRenderProjectorScript = preload(
+	"res://scripts/app/earth_surface_render_projector.gd"
+)
+
+const MVP_OUTPOST_PLANAR_POSITION := Vector2(0.0, -12.0)
+const MVP_OUTPOST_FOUNDATION_HALF_HEIGHT_M := 0.25
 
 var simulator_app
 var simulation_clock
@@ -63,6 +69,9 @@ var _m4_item_snapshot_updates: int = 0
 var _m4_item_commands: int = 0
 var _m4_item_rejections: int = 0
 var construction_presentation
+var _construction_surface_anchor := Transform3D.IDENTITY
+var _construction_surface_anchor_ready := false
+var _construction_render_transform_updates := 0
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -184,6 +193,7 @@ func _process(delta: float) -> void:
 			visible_body_ids
 		)
 	_apply_m3_network_input(delta)
+	_update_construction_render_transform()
 
 
 func register_runtime_commands(registry, owner_id: String) -> void:
@@ -398,9 +408,48 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
 func _on_m3_construction_updated(bundle: Dictionary) -> void:
 	if construction_presentation == null or bundle.is_empty():
 		return
+	_update_construction_render_transform()
 	var accepted: Dictionary = construction_presentation.apply_authoritative_bundle(bundle)
 	if not bool(accepted.get("success", false)):
 		last_diagnostic_path = String(accepted.get("error_code", "EARTH_CONSTRUCTION_BUNDLE_REJECTED"))
+
+
+func _update_construction_render_transform() -> void:
+	if (
+		construction_presentation == null
+		or earth_world == null
+		or not _m3_attached
+		or not construction_presentation.has_method("set_derived_render_transform")
+	):
+		return
+	if not _construction_surface_anchor_ready:
+		_resolve_construction_surface_anchor()
+	if not _construction_surface_anchor_ready:
+		return
+	var projected: Transform3D = EarthSurfaceRenderProjectorScript.project_anchor(
+		_construction_surface_anchor,
+		earth_world.get_render_origin(),
+		earth_world.basis
+	)
+	construction_presentation.set_derived_render_transform(projected)
+	_construction_render_transform_updates += 1
+
+
+func _resolve_construction_surface_anchor() -> void:
+	if earth_world == null:
+		return
+	var direction: Vector3 = _map_m3_position_to_earth_direction(
+		MVP_OUTPOST_PLANAR_POSITION.x,
+		MVP_OUTPOST_PLANAR_POSITION.y
+	)
+	if direction.length_squared() < 0.5:
+		return
+	var surface_point: Vector3 = earth_world.get_surface_point(direction)
+	_construction_surface_anchor = EarthSurfaceRenderProjectorScript.create_surface_anchor(
+		surface_point,
+		MVP_OUTPOST_FOUNDATION_HALF_HEIGHT_M
+	)
+	_construction_surface_anchor_ready = true
 
 
 func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:
@@ -489,6 +538,13 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"m4_item_commands": _m4_item_commands,
 		"m4_item_rejections": _m4_item_rejections,
 		"construction_presentation": construction_presentation.get_report() if construction_presentation != null else {},
+		"construction_surface_anchor_ready": _construction_surface_anchor_ready,
+		"construction_surface_anchor_world": (
+			_vector_to_array(_construction_surface_anchor.origin)
+			if _construction_surface_anchor_ready
+			else []
+		),
+		"construction_render_transform_updates": _construction_render_transform_updates,
 		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
 		"direct_authority_references": 0,
 	}
