@@ -1,0 +1,21 @@
+diff --git a/scripts/ui/inventory/item_cell.gd b/scripts/ui/inventory/item_cell.gd
+--- a/scripts/ui/inventory/item_cell.gd
++++ b/scripts/ui/inventory/item_cell.gd
+@@ -75,9 +75,12 @@ func _gui_input(event: InputEvent) -> void:
+ 				var press_action := String(press_binding.get("action", ""))
+ 				if (
+ 					_is_seven_days_style()
+-					and not _cursor_carry_active
+-					and not item_id.is_empty()
+ 					and press_action in ["CARRY_ALL_OR_PLACE_ALL", "CARRY_HALF_OR_PLACE_ONE"]
++					and (
++						_cursor_carry_active
++						or not item_id.is_empty()
++					)
+ 				):
++					# 7DTD click-carry is atomic on press for both pickup and placement.
++					# Deferring placement to release lets ContainerPanel's background
++					# release cancel the cursor before an empty target is committed.
+ 					_press_actions_emitted[mouse_event.button_index] = true
+ 					_handle_click_binding(press_binding, mouse_event.button_index, "PRESS", mouse_event.position)
+ 					accept_event()
