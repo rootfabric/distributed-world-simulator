@@ -8,6 +8,7 @@ var _driver_path := DEFAULT_DRIVER
 var _integration_base := ""
 var _soak_seconds := Acceptance.DEFAULT_DEV_SOAK_SECONDS
 var _run_id := ""
+var _final_mode := false
 var _results: Array = []
 var _driver
 
@@ -25,12 +26,21 @@ func _run() -> void:
 	_result_file = String(parsed["options"].get("result_file", ""))
 	_driver_path = String(parsed["options"].get("driver", DEFAULT_DRIVER))
 	_integration_base = String(parsed["options"].get("integration_base", ""))
+	_soak_seconds = int(parsed["options"].get("soak_seconds", Acceptance.DEFAULT_DEV_SOAK_SECONDS))
+	_run_id = String(parsed["options"].get("run_id", ""))
+	_final_mode = bool(parsed["options"].get("final_mode", false))
 	if not _is_lower_hex_40(_integration_base):
 		push_error("V0 full MVP scenario requires --integration-base=<40-char lowercase commit SHA>")
 		quit(1)
 		return
-	_soak_seconds = int(parsed["options"].get("soak_seconds", Acceptance.DEFAULT_DEV_SOAK_SECONDS))
-	_run_id = String(parsed["options"].get("run_id", ""))
+	if _final_mode and _driver_path != DEFAULT_DRIVER:
+		push_error("V0 final mode rejects driver override; canonical driver is fixed to %s" % DEFAULT_DRIVER)
+		quit(1)
+		return
+	if _final_mode and _soak_seconds < Acceptance.FINAL_SOAK_SECONDS:
+		push_error("V0 final mode requires --soak-seconds >= %d" % Acceptance.FINAL_SOAK_SECONDS)
+		quit(1)
+		return
 
 	var driver_script = load(_driver_path)
 	if driver_script == null:
@@ -43,6 +53,8 @@ func _run() -> void:
 		"soak_seconds": _soak_seconds,
 		"run_id": _run_id,
 		"result_file": _result_file,
+		"final_mode": _final_mode,
+		"driver_is_canonical": _driver_path == DEFAULT_DRIVER,
 	}
 	if _driver.has_method("setup"):
 		var setup_value = _driver.call("setup", context)
@@ -67,6 +79,15 @@ func _run() -> void:
 			)
 
 	var summary := Acceptance.build_summary(_results, _integration_base, _soak_seconds, _run_id)
+	summary["final_mode"] = _final_mode
+	summary["driver"] = _driver_path
+	summary["driver_is_canonical"] = _driver_path == DEFAULT_DRIVER
+	summary["final_checkpoint_eligible"] = (
+		_final_mode
+		and _driver_path == DEFAULT_DRIVER
+		and String(summary.get("aggregate_state", "")) == Acceptance.STATE_PASS
+		and bool(summary.get("final_soak_duration_satisfied", false))
+	)
 	_write_summary(summary)
 	print("V0 full MVP aggregate: %s | PASS=%d FAIL=%d DEPENDENCY_PENDING=%d NOT_IMPLEMENTED=%d" % [
 		summary.get("aggregate_state", Acceptance.STATE_FAIL),
@@ -96,7 +117,9 @@ func _run_phase(phase: Dictionary, context: Dictionary) -> Dictionary:
 			"DRIVER_RUN_PHASE_NOT_IMPLEMENTED",
 			{"driver": _driver_path}
 		)
+	var start_ticks_msec := Time.get_ticks_msec()
 	var value = _driver.call("run_phase", phase.duplicate(true), context.duplicate(true))
+	var end_ticks_msec := Time.get_ticks_msec()
 	if not value is Dictionary:
 		return Acceptance.phase_result(
 			phase,
@@ -112,27 +135,58 @@ func _run_phase(phase: Dictionary, context: Dictionary) -> Dictionary:
 			"DRIVER_PHASE_ID_MISMATCH",
 			{"driver_result": result}
 		)
-	var normalized := Acceptance.phase_result(
-		phase,
-		String(result.get("state", Acceptance.STATE_FAIL)),
-		String(result.get("reason", "")),
-		Dictionary(result.get("evidence", {}))
-	)
-	if (
-		int(phase.get("id", 0)) == 35
-		and String(normalized.get("state", "")) == Acceptance.STATE_PASS
-		and _soak_seconds < Acceptance.FINAL_SOAK_SECONDS
-	):
-		return Acceptance.phase_result(
-			phase,
-			Acceptance.STATE_DEPENDENCY_PENDING,
-			"SOAK_DURATION_BELOW_FINAL_REQUIREMENT",
-			{
-				"requested_seconds": _soak_seconds,
-				"required_seconds": Acceptance.FINAL_SOAK_SECONDS,
-			}
-		)
-	return normalized
+	var state := String(result.get("state", Acceptance.STATE_FAIL))
+	var reason := String(result.get("reason", ""))
+	var evidence := Dictionary(result.get("evidence", {})).duplicate(true)
+	if int(phase.get("id", 0)) == 35:
+		return _normalize_soak_phase(phase, state, reason, evidence, start_ticks_msec, end_ticks_msec)
+	return Acceptance.phase_result(phase, state, reason, evidence)
+
+
+func _normalize_soak_phase(
+	phase: Dictionary,
+	state: String,
+	reason: String,
+	evidence: Dictionary,
+	start_ticks_msec: int,
+	end_ticks_msec: int
+) -> Dictionary:
+	if evidence.has("elapsed_seconds"):
+		evidence["driver_reported_elapsed_seconds"] = evidence.get("elapsed_seconds")
+		evidence.erase("elapsed_seconds")
+	for key in ["trusted_start_ticks_msec", "trusted_end_ticks_msec", "trusted_elapsed_seconds", "trusted_sample_count", "trusted_soak_result"]:
+		evidence.erase(key)
+	var elapsed_seconds := float(end_ticks_msec - start_ticks_msec) / 1000.0
+	var samples: Array = []
+	var samples_value = evidence.get("observation_samples", [])
+	if samples_value is Array:
+		samples = Array(samples_value)
+	evidence["trusted_start_ticks_msec"] = start_ticks_msec
+	evidence["trusted_end_ticks_msec"] = end_ticks_msec
+	evidence["trusted_elapsed_seconds"] = elapsed_seconds
+	evidence["trusted_sample_count"] = samples.size()
+	var tracker := Acceptance.SoakTracker.new()
+	for sample_value in samples:
+		if sample_value is Dictionary:
+			tracker.observe(Dictionary(sample_value))
+	var tracker_result: Dictionary = tracker.finish(elapsed_seconds, Acceptance.FINAL_SOAK_SECONDS)
+	evidence["trusted_soak_result"] = tracker_result
+	if state.strip_edges().to_upper() == Acceptance.STATE_PASS:
+		if _soak_seconds < Acceptance.FINAL_SOAK_SECONDS:
+			return Acceptance.phase_result(
+				phase,
+				Acceptance.STATE_DEPENDENCY_PENDING,
+				"SOAK_REQUEST_BELOW_FINAL_REQUIREMENT",
+				evidence
+			)
+		if String(tracker_result.get("state", "")) != Acceptance.STATE_PASS:
+			return Acceptance.phase_result(
+				phase,
+				String(tracker_result.get("state", Acceptance.STATE_FAIL)),
+				String(tracker_result.get("error_code", "V0_SOAK_FAILED")),
+				evidence
+			)
+	return Acceptance.phase_result(phase, state, reason, evidence)
 
 
 func _write_summary(summary: Dictionary) -> void:
@@ -155,6 +209,7 @@ func _parse_args(arguments: PackedStringArray) -> Dictionary:
 		"integration_base": "",
 		"soak_seconds": Acceptance.DEFAULT_DEV_SOAK_SECONDS,
 		"run_id": "",
+		"final_mode": false,
 	}
 	var errors: Array[String] = []
 	for argument_value in arguments:
@@ -176,6 +231,11 @@ func _parse_args(arguments: PackedStringArray) -> Dictionary:
 				options["integration_base"] = value
 			"run-id":
 				options["run_id"] = value
+			"final":
+				if value not in ["true", "false"]:
+					errors.append("--final must be true or false")
+				else:
+					options["final_mode"] = value == "true"
 			"soak-seconds":
 				if not value.is_valid_int() or value.to_int() < 1:
 					errors.append("--soak-seconds must be a positive integer")

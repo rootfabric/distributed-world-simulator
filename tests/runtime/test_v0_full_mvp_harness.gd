@@ -9,6 +9,8 @@ var failures: Array[String] = []
 func _init() -> void:
 	_test_phase_spec()
 	_test_state_aggregation()
+	_test_result_set_integrity()
+	_test_pass_evidence_contract()
 	_test_spawn_spacing()
 	_test_player_convergence()
 	_test_item_graph_convergence()
@@ -34,23 +36,64 @@ func _test_phase_spec() -> void:
 
 
 func _test_state_aggregation() -> void:
-	var phase := Acceptance.phases()[0]
-	var all_pass: Array = [Acceptance.phase_result(phase, Acceptance.STATE_PASS)]
-	_assert(Acceptance.aggregate_state(all_pass) == Acceptance.STATE_PASS, "all PASS aggregates to PASS")
+	var all_pass := _valid_pass_results()
+	_assert(Acceptance.aggregate_state(all_pass) == Acceptance.STATE_PASS, "37 evidence-valid PASS phases aggregate to PASS")
 	var pending := all_pass.duplicate(true)
-	pending.append(Acceptance.phase_result(phase, Acceptance.STATE_DEPENDENCY_PENDING, "dependency"))
+	pending[0] = Acceptance.phase_result(Acceptance.phases()[0], Acceptance.STATE_DEPENDENCY_PENDING, "dependency")
 	_assert(Acceptance.aggregate_state(pending) == Acceptance.STATE_DEPENDENCY_PENDING, "dependency pending prevents green aggregate")
 	var not_implemented := all_pass.duplicate(true)
-	not_implemented.append(Acceptance.phase_result(phase, Acceptance.STATE_NOT_IMPLEMENTED, "not implemented"))
+	not_implemented[0] = Acceptance.phase_result(Acceptance.phases()[0], Acceptance.STATE_NOT_IMPLEMENTED, "not implemented")
 	_assert(Acceptance.aggregate_state(not_implemented) == Acceptance.STATE_NOT_IMPLEMENTED, "not implemented prevents green aggregate")
-	var failed := pending.duplicate(true)
-	failed.append(Acceptance.phase_result(phase, Acceptance.STATE_FAIL, "failure"))
+	var failed := all_pass.duplicate(true)
+	failed[0] = Acceptance.phase_result(Acceptance.phases()[0], Acceptance.STATE_FAIL, "failure")
 	_assert(Acceptance.aggregate_state(failed) == Acceptance.STATE_FAIL, "failure state has aggregate precedence")
 	var summary := Acceptance.build_summary(all_pass, "integration/base/sha", 30, "unit")
 	_assert(String(summary.get("integration_base", "")) == "integration/base/sha", "machine evidence records integration base separately")
-	_assert(not summary.has("integration_head"), "machine evidence does not mislabel worker HEAD as integration base")
-	var invalid := Acceptance.phase_result(phase, "SKIP")
+	_assert(bool(summary.get("result_set_integrity", {}).get("success", false)), "summary records result-set integrity")
+	_assert(bool(summary.get("final_soak_duration_satisfied", false)), "summary derives final soak satisfaction from trusted evidence, not requested duration")
+	var invalid := Acceptance.phase_result(Acceptance.phases()[0], "SKIP")
 	_assert(String(invalid.get("state", "")) == Acceptance.STATE_FAIL, "unsupported SKIP cannot silently enter evidence")
+
+
+func _test_result_set_integrity() -> void:
+	var valid := _valid_pass_results()
+	var missing := valid.duplicate(true)
+	missing.remove_at(10)
+	_assert(Acceptance.aggregate_state(missing) == Acceptance.STATE_FAIL, "missing required phase makes aggregate FAIL")
+	_assert(not bool(Acceptance.validate_result_set(missing).get("success", true)), "missing phase fails result-set integrity")
+	var duplicate := valid.duplicate(true)
+	duplicate[10] = duplicate[9].duplicate(true)
+	_assert(Acceptance.aggregate_state(duplicate) == Acceptance.STATE_FAIL, "duplicate phase makes aggregate FAIL")
+	_assert(not bool(Acceptance.validate_result_set(duplicate).get("success", true)), "duplicate phase fails result-set integrity")
+	var unexpected := valid.duplicate(true)
+	unexpected[-1]["id"] = 99
+	unexpected[-1]["code"] = "99"
+	_assert(Acceptance.aggregate_state(unexpected) == Acceptance.STATE_FAIL, "unexpected phase cannot be credited")
+
+
+func _test_pass_evidence_contract() -> void:
+	var empty := Acceptance.phase_result(Acceptance.phases()[0], Acceptance.STATE_PASS, "", {})
+	_assert(String(empty.get("state", "")) == Acceptance.STATE_FAIL, "PASS with evidence={} becomes FAIL")
+	var raw_false_green: Array = []
+	for phase in Acceptance.phases():
+		raw_false_green.append({
+			"id": phase["id"],
+			"code": phase["code"],
+			"name": phase["name"],
+			"dependency": phase["dependency"],
+			"state": Acceptance.STATE_PASS,
+			"reason": "",
+			"evidence": {},
+		})
+	_assert(Acceptance.aggregate_state(raw_false_green) == Acceptance.STATE_FAIL, "raw 37-phase PASS with empty evidence cannot manufacture green")
+	var graph_evidence := _valid_evidence_for_phase(10)
+	graph_evidence["item_graph"].erase("checksum")
+	var invalid_graph := Acceptance.phase_result(Acceptance.phases()[9], Acceptance.STATE_PASS, "", graph_evidence)
+	_assert(String(invalid_graph.get("state", "")) == Acceptance.STATE_FAIL, "canonical Item Graph PASS requires checksum")
+	var final_evidence := _valid_evidence_for_phase(37)
+	final_evidence["assertion_failures"] = 1
+	var invalid_final := Acceptance.phase_result(Acceptance.phases()[36], Acceptance.STATE_PASS, "", final_evidence)
+	_assert(String(invalid_final.get("state", "")) == Acceptance.STATE_FAIL, "nonzero final assertion counter rejects PASS")
 
 
 func _test_spawn_spacing() -> void:
@@ -124,34 +167,102 @@ func _test_soak_guard() -> void:
 	var short_tracker := Acceptance.SoakTracker.new()
 	short_tracker.observe(_healthy_sample(0, 0))
 	short_tracker.observe(_healthy_sample(0, 0))
-	var short_result: Dictionary = short_tracker.finish(30)
+	var short_result: Dictionary = short_tracker.finish(30.0)
 	_assert(String(short_result.get("state", "")) == Acceptance.STATE_DEPENDENCY_PENDING, "short development soak cannot claim final PASS")
 	var override_tracker := Acceptance.SoakTracker.new()
 	override_tracker.observe(_healthy_sample(0, 0))
-	var override_result: Dictionary = override_tracker.finish(30, 30)
+	override_tracker.observe(_healthy_sample(0, 0))
+	var override_result: Dictionary = override_tracker.finish(30.0, 30)
 	_assert(String(override_result.get("state", "")) == Acceptance.STATE_DEPENDENCY_PENDING, "caller cannot lower the final 30-minute soak minimum")
 	var final_tracker := Acceptance.SoakTracker.new()
 	final_tracker.observe(_healthy_sample(2, 3))
 	final_tracker.observe(_healthy_sample(1, 2))
-	var final_result: Dictionary = final_tracker.finish(Acceptance.FINAL_SOAK_SECONDS)
-	_assert(String(final_result.get("state", "")) == Acceptance.STATE_PASS, "healthy 30-minute evidence can satisfy soak contract")
+	var final_result: Dictionary = final_tracker.finish(float(Acceptance.FINAL_SOAK_SECONDS))
+	_assert(String(final_result.get("state", "")) == Acceptance.STATE_PASS, "healthy trusted 30-minute elapsed value can satisfy soak contract")
 	var growth_tracker := Acceptance.SoakTracker.new()
 	growth_tracker.observe(_healthy_sample(0, 0))
 	growth_tracker.observe(_healthy_sample(50, 55))
 	growth_tracker.observe(_healthy_sample(49, 54))
-	var growth_result: Dictionary = growth_tracker.finish(Acceptance.FINAL_SOAK_SECONDS)
+	var growth_result: Dictionary = growth_tracker.finish(float(Acceptance.FINAL_SOAK_SECONDS))
 	_assert(String(growth_result.get("state", "")) == Acceptance.STATE_FAIL, "persistent net pending/queue growth fails soak despite a small dip")
 	var burst_tracker := Acceptance.SoakTracker.new()
 	burst_tracker.observe(_healthy_sample(0, 0))
 	burst_tracker.observe(_healthy_sample(50, 55))
 	burst_tracker.observe(_healthy_sample(0, 0))
-	var burst_result: Dictionary = burst_tracker.finish(Acceptance.FINAL_SOAK_SECONDS)
+	var burst_result: Dictionary = burst_tracker.finish(float(Acceptance.FINAL_SOAK_SECONDS))
 	_assert(String(burst_result.get("state", "")) == Acceptance.STATE_PASS, "bounded queue burst that returns to baseline is allowed")
 	var crash_tracker := Acceptance.SoakTracker.new()
 	var crash := _healthy_sample(0, 0)
 	crash["process_alive"] = false
 	crash_tracker.observe(crash)
-	_assert(String(crash_tracker.finish(Acceptance.FINAL_SOAK_SECONDS).get("state", "")) == Acceptance.STATE_FAIL, "process exit fails soak")
+	crash_tracker.observe(_healthy_sample(0, 0))
+	_assert(String(crash_tracker.finish(float(Acceptance.FINAL_SOAK_SECONDS)).get("state", "")) == Acceptance.STATE_FAIL, "process exit fails soak")
+
+
+func _valid_pass_results() -> Array:
+	var results: Array = []
+	for phase in Acceptance.phases():
+		results.append(Acceptance.phase_result(phase, Acceptance.STATE_PASS, "", _valid_evidence_for_phase(int(phase["id"]))))
+	return results
+
+
+func _valid_evidence_for_phase(id: int) -> Dictionary:
+	var graph := _evidence_item_graph()
+	var world_item := {"item_id": "item/world/ore/1", "state": "WORLD"}
+	var player_a := _player_record()
+	player_a["logical_player_id"] = "a"
+	player_a["player_entity_id"] = "player/a"
+	var player_b := _player_record()
+	var container := {"container_id": "container/shared/crate/1", "state": "OPEN", "revision": 7}
+	var construction := {"server_generation": 4, "checksum": "construction/checksum/4"}
+	var before := {"position": {"x": 0.0, "y": 0.0, "z": 0.0}}
+	var after := {"position": {"x": 1.0, "y": 0.0, "z": 0.0}}
+	match id:
+		1:
+			return {"server": {"process_id": 101, "alive": true}}
+		2:
+			return {"client_a": {"process_id": 102, "alive": true, "session_id": "session/a/1"}}
+		3:
+			return {"client_b": {"process_id": 103, "alive": true, "session_id": "session/b/1"}}
+		4, 5:
+			return {"player_a": player_a, "player_b": player_b}
+		6, 7, 8, 9:
+			return {"player_entity_id": "player/a" if id in [6, 9] else "player/b", "authoritative_before": before, "authoritative_after": after, "rendered_before": before, "rendered_after": after}
+		10:
+			return {"item_graph": graph, "world_item": world_item}
+		11, 12, 13, 14, 15:
+			return {"item_graph": graph, "world_item": world_item, "player_inventory": {"container_id": "player/a", "revision": 5}, "convergence": true}
+		16, 17, 18, 19:
+			return {"item_graph": graph, "container": container, "convergence": true}
+		20:
+			return {"item_graph": graph, "player_inventory": {"container_id": "player/a", "revision": 6}}
+		21, 22, 23, 24, 25:
+			return {"construction": construction, "convergence": true}
+		26:
+			return {"client_b_session": {"session_id": "session/b/1", "connected": false}, "ownership_epoch": 2}
+		27:
+			return {"player_a": player_a, "continuation_check": true}
+		28:
+			return {"item_graph": graph, "world_item": world_item}
+		29:
+			return {"session_before": {"session_id": "session/b/1", "connected": false}, "session_after": {"session_id": "session/b/2", "connected": true}, "ownership_epoch_before": 2, "ownership_epoch_after": 3}
+		30:
+			return {"player_a": player_a, "player_b": player_b, "convergence": true}
+		31:
+			return {"item_graph_authority": graph, "item_graph_client_b": graph.duplicate(true), "convergence": true}
+		32:
+			return {"world_item_authority": world_item, "world_item_client_b": world_item.duplicate(true), "convergence": true}
+		33:
+			return {"container_authority": container, "container_client_b": container.duplicate(true), "convergence": true}
+		34:
+			return {"construction_authority": construction, "construction_client_b": construction.duplicate(true), "convergence": true}
+		35:
+			return {"observation_samples": [_healthy_sample(0, 0), _healthy_sample(0, 0)], "checks": {"convergence": true, "reconnect": true}, "trusted_start_ticks_msec": 100, "trusted_end_ticks_msec": 1800100, "trusted_elapsed_seconds": 1800.0, "trusted_sample_count": 2}
+		36:
+			return {"processes": [{"process_id": 101}, {"process_id": 102}, {"process_id": 103}], "shutdown_clean": true}
+		37:
+			return {"error_count": 0, "assertion_failures": 0, "process_exit_failures": 0, "leak_count": 0}
+	return {}
 
 
 func _player_record() -> Dictionary:
@@ -190,6 +301,10 @@ func _item_graph() -> Dictionary:
 			},
 		],
 	}
+
+
+func _evidence_item_graph() -> Dictionary:
+	return {"graph_id": "item-graph/canonical", "revision": 12, "checksum": "a".repeat(64)}
 
 
 func _healthy_sample(pending: int, reliable_queue: int) -> Dictionary:

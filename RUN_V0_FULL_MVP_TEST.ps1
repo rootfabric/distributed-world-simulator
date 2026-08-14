@@ -13,7 +13,20 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $FinalSoakSeconds = 1800
+$CanonicalDriver = "res://tests/runtime/v0/v0_current_mvp_driver.gd"
+$CanonicalIntegrationBranch = "feature/v0-s1-networked-planetary-outpost-mvp"
+$CanonicalRemoteIntegrationRef = "refs/remotes/origin/$CanonicalIntegrationBranch"
+$LocalIntegrationRef = "refs/heads/$CanonicalIntegrationBranch"
+$DriverOverrideUsed = $PSBoundParameters.ContainsKey("Driver")
+$DeclaredIntegrationBase = $IntegrationBase.Trim().ToLowerInvariant()
+
+. (Join-Path $Root "tools/testing/v0_integration_provenance.ps1")
+
 if ($Final) {
+    if ($DriverOverrideUsed) {
+        throw "Final V0 acceptance rejects -Driver override; the canonical live V0 driver is fixed by the harness."
+    }
+    $Driver = $CanonicalDriver
     if (-not $PSBoundParameters.ContainsKey("SoakSeconds")) {
         $SoakSeconds = $FinalSoakSeconds
     }
@@ -131,31 +144,57 @@ function Invoke-GodotEvidence {
 function Write-RunnerSummary {
     param(
         [string]$OverallState,
-        [string]$WorkerHead,
-        [string]$ResolvedIntegrationBase,
+        [string]$CandidateHead,
+        [string]$ResolvedIntegrationRef,
+        [string]$IntegrationRefHead,
+        [string]$ComputedMergeBase,
+        [string]$DeclaredBase,
+        [string]$ProvenanceResult,
         [string]$GodotVersion,
         [object]$ScenarioSummary
+    )
+
+    $FinalCheckpointEligible = [bool](
+        $Final `
+        -and -not $DriverOverrideUsed `
+        -and $Driver -eq $CanonicalDriver `
+        -and $ProvenanceResult -eq "PASS" `
+        -and $OverallState -eq "PASS" `
+        -and $null -ne $ScenarioSummary `
+        -and [bool]$ScenarioSummary.final_checkpoint_eligible
     )
 
     $Payload = [ordered]@{
         schema = "distributed_world_simulator.v0_full_mvp_runner.v1"
         run_id = $RunId
         overall_state = $OverallState
-        worker_head = $WorkerHead
-        integration_base = $ResolvedIntegrationBase
+        candidate_head = $CandidateHead
+        worker_head = $CandidateHead
+        integration_ref = $ResolvedIntegrationRef
+        integration_ref_head = $IntegrationRefHead
+        computed_merge_base = $ComputedMergeBase
+        declared_integration_base = $DeclaredBase
+        integration_base = $ComputedMergeBase
+        provenance_result = $ProvenanceResult
         godot_version = $GodotVersion
         final_mode = [bool]$Final
-        soak_seconds = $SoakSeconds
+        final_checkpoint_eligible = $FinalCheckpointEligible
+        soak_seconds_requested = $SoakSeconds
         required_final_soak_seconds = $FinalSoakSeconds
         driver = $Driver
+        driver_override_used = $DriverOverrideUsed
+        driver_is_canonical = $Driver -eq $CanonicalDriver
         scenario = $ScenarioSummary
         executions = @($Evidence)
     }
-    $Payload | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 $RunnerSummaryPath
+    $Payload | ConvertTo-Json -Depth 30 | Set-Content -Encoding UTF8 $RunnerSummaryPath
 }
 
-$WorkerHead = ""
-$ResolvedIntegrationBase = ""
+$CandidateHead = ""
+$ResolvedIntegrationRef = ""
+$IntegrationRefHead = ""
+$ComputedMergeBase = ""
+$ProvenanceResult = "FAIL"
 $GodotVersion = ""
 $OverallState = "FAIL"
 $ScenarioSummary = $null
@@ -163,45 +202,47 @@ $ExitCode = 1
 
 try {
     $GodotVersion = (& $Godot --version 2>&1 | Out-String).Trim()
-    $WorkerHead = (& git -C $Root rev-parse HEAD 2>&1 | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0 -or $WorkerHead -notmatch "^[0-9a-f]{40}$") {
-        throw "Could not determine exact worker git HEAD for V0 evidence."
+    $CandidateHead = (& git -C $Root rev-parse HEAD 2>&1 | Out-String).Trim().ToLowerInvariant()
+    if ($LASTEXITCODE -ne 0 -or $CandidateHead -notmatch "^[0-9a-f]{40}$") {
+        throw "Could not determine exact candidate git HEAD for V0 evidence."
     }
 
-    if ($IntegrationBase) {
-        if ($IntegrationBase -notmatch "^[0-9a-f]{40}$") {
-            throw "IntegrationBase must be an exact 40-character commit SHA."
-        }
-        & git -C $Root cat-file -e "$IntegrationBase^{commit}" 2>$null
+    if ($Final) {
+        $FetchSpec = "+refs/heads/${CanonicalIntegrationBranch}:${CanonicalRemoteIntegrationRef}"
+        $FetchOutput = (& git -C $Root fetch --no-tags origin $FetchSpec 2>&1 | Out-String).Trim()
         if ($LASTEXITCODE -ne 0) {
-            throw "IntegrationBase commit does not exist in the checkout: $IntegrationBase"
+            throw "Final V0 acceptance could not refresh canonical integration ref $CanonicalIntegrationBranch. git fetch: $FetchOutput"
         }
-        $ResolvedIntegrationBase = $IntegrationBase.ToLowerInvariant()
+        $ResolvedIntegrationRef = $CanonicalRemoteIntegrationRef
     }
     else {
-        $IntegrationRefs = @(
-            "origin/feature/v0-s1-networked-planetary-outpost-mvp",
-            "feature/v0-s1-networked-planetary-outpost-mvp"
-        )
-        foreach ($IntegrationRef in $IntegrationRefs) {
-            & git -C $Root rev-parse --verify "$IntegrationRef^{commit}" *> $null
-            if ($LASTEXITCODE -ne 0) {
-                continue
-            }
-            $CandidateBase = (& git -C $Root merge-base $WorkerHead $IntegrationRef 2>&1 | Out-String).Trim()
-            if ($LASTEXITCODE -eq 0 -and $CandidateBase -match "^[0-9a-f]{40}$") {
-                $ResolvedIntegrationBase = $CandidateBase
+        foreach ($IntegrationRefCandidate in @($CanonicalRemoteIntegrationRef, $LocalIntegrationRef)) {
+            & git -C $Root rev-parse --verify "$IntegrationRefCandidate^{commit}" *> $null
+            if ($LASTEXITCODE -eq 0) {
+                $ResolvedIntegrationRef = $IntegrationRefCandidate
                 break
             }
         }
-        if (-not $ResolvedIntegrationBase) {
-            throw "Could not determine integration base. Fetch the V0 integration ref or pass -IntegrationBase <40-char SHA>."
+        if (-not $ResolvedIntegrationRef) {
+            throw "Could not resolve current V0 integration ref. Fetch origin/$CanonicalIntegrationBranch before running the harness."
         }
     }
 
+    $Provenance = Resolve-V0IntegrationProvenance `
+        -Root $Root `
+        -CandidateHead $CandidateHead `
+        -IntegrationRef $ResolvedIntegrationRef `
+        -DeclaredIntegrationBase $DeclaredIntegrationBase
+    $IntegrationRefHead = [string]$Provenance.integration_ref_head
+    $ComputedMergeBase = [string]$Provenance.computed_merge_base
+    $ProvenanceResult = [string]$Provenance.provenance_result
+
     $GodotVersion | Set-Content -Encoding UTF8 (Join-Path $LogRoot "godot-version.txt")
-    $WorkerHead | Set-Content -Encoding UTF8 (Join-Path $LogRoot "worker-head.txt")
-    $ResolvedIntegrationBase | Set-Content -Encoding UTF8 (Join-Path $LogRoot "integration-base.txt")
+    $CandidateHead | Set-Content -Encoding UTF8 (Join-Path $LogRoot "candidate-head.txt")
+    $ResolvedIntegrationRef | Set-Content -Encoding UTF8 (Join-Path $LogRoot "integration-ref.txt")
+    $IntegrationRefHead | Set-Content -Encoding UTF8 (Join-Path $LogRoot "integration-ref-head.txt")
+    $ComputedMergeBase | Set-Content -Encoding UTF8 (Join-Path $LogRoot "computed-merge-base.txt")
+    $DeclaredIntegrationBase | Set-Content -Encoding UTF8 (Join-Path $LogRoot "declared-integration-base.txt")
 
     $EditorImport = Invoke-GodotEvidence `
         -Name "editor-import" `
@@ -215,6 +256,7 @@ try {
     else {
         $Prerequisites = @(
             @{ name = "test_v0_full_mvp_harness"; path = "res://tests/runtime/test_v0_full_mvp_harness.gd" },
+            @{ name = "test_v0_full_mvp_adversarial"; path = "res://tests/runtime/test_v0_full_mvp_adversarial.gd" },
             @{ name = "test_v0_s1_mvp_launch_options"; path = "res://tests/runtime/test_v0_s1_mvp_launch_options.gd" },
             @{ name = "test_v0_s1_mvp_fixed_tick_movement"; path = "res://tests/runtime/test_v0_s1_mvp_fixed_tick_movement.gd" },
             @{ name = "test_m4_canonical_shared_gameplay_contracts"; path = "res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd" },
@@ -236,14 +278,16 @@ try {
             }
         }
 
+        $FinalArgument = if ($Final) { "true" } else { "false" }
         $ScenarioArgs = @(
             "--headless","--path",$Root,
             "--script","res://tools/runtime/v0_full_mvp_scenario.gd","--",
             "--driver=$Driver",
             "--result-file=$ScenarioSummaryPath",
             "--soak-seconds=$SoakSeconds",
-            "--integration-base=$ResolvedIntegrationBase",
-            "--run-id=$RunId"
+            "--integration-base=$ComputedMergeBase",
+            "--run-id=$RunId",
+            "--final=$FinalArgument"
         )
         $ScenarioRecord = Invoke-GodotEvidence `
             -Name "v0-full-mvp-scenario" `
@@ -290,8 +334,12 @@ catch {
 finally {
     Write-RunnerSummary `
         -OverallState $OverallState `
-        -WorkerHead $WorkerHead `
-        -ResolvedIntegrationBase $ResolvedIntegrationBase `
+        -CandidateHead $CandidateHead `
+        -ResolvedIntegrationRef $ResolvedIntegrationRef `
+        -IntegrationRefHead $IntegrationRefHead `
+        -ComputedMergeBase $ComputedMergeBase `
+        -DeclaredBase $DeclaredIntegrationBase `
+        -ProvenanceResult $ProvenanceResult `
         -GodotVersion $GodotVersion `
         -ScenarioSummary $ScenarioSummary
 
