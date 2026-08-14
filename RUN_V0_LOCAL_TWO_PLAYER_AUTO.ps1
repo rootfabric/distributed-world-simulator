@@ -21,13 +21,17 @@ function Test-UdpPortAvailable {
 
     $Socket = $null
     try {
-        $Socket = New-Object System.Net.Sockets.Socket(
+        $Socket = New-Object System.Net.Sockets.Socket -ArgumentList @(
             [System.Net.Sockets.AddressFamily]::InterNetwork,
             [System.Net.Sockets.SocketType]::Dgram,
             [System.Net.Sockets.ProtocolType]::Udp
         )
         $Socket.ExclusiveAddressUse = $true
-        $Socket.Bind((New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, $Port)))
+        $EndPoint = New-Object System.Net.IPEndPoint -ArgumentList @(
+            [System.Net.IPAddress]::Any,
+            $Port
+        )
+        $Socket.Bind($EndPoint)
         return $true
     }
     catch {
