@@ -183,6 +183,22 @@ func apply_network_replica_pose(
 	set_network_replica_mode(true)
 
 
+func get_surface_relative_yaw() -> float:
+	# M3 movement is simulated in a flat server-owned tangent plane. Convert the
+	# local camera's Earth-relative heading back into that plane so WASD remains
+	# aligned with what the player sees while the authoritative state stays 2D.
+	if frame_position.length_squared() < 1.0:
+		return 0.0
+	var surface_basis: Basis = _surface_orientation(frame_position.normalized())
+	var local_basis: Basis = (surface_basis.inverse() * orientation).orthonormalized()
+	var local_forward: Vector3 = -local_basis.z
+	local_forward.y = 0.0
+	if local_forward.length_squared() < 0.000001:
+		return 0.0
+	local_forward = local_forward.normalized()
+	return atan2(local_forward.x, -local_forward.z)
+
+
 func set_reference_frame(target_frame_id: String, preserve_world_state: bool = true) -> bool:
 	if celestial_system == null or not celestial_system.has_frame(target_frame_id):
 		return false
