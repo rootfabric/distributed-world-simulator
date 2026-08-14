@@ -20,7 +20,14 @@ diff --git a/scripts/network/transports/v2/enet_multi_peer_transport_port.gd b/s
 diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 --- a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 +++ b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
-@@ -251,2 +251,2 @@ func _process(_delta: float) -> void:
+@@ -207,2 +207,3 @@ func _process(_delta: float) -> void:
+ 	var process_started_us: int = Time.get_ticks_usec()
++	var disconnected_this_poll: bool = false
+ 	_telemetry.increment("client_process_iterations")
+@@ -249,4 +250,5 @@ func _process(_delta: float) -> void:
+ 			_write_report("DISCONNECTED", false)
+ 			server_disconnected.emit(get_report())
 -	if not _joined and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
-+	if not _joined and _server_disconnects == 0 and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
++			disconnected_this_poll = true
++	if not _joined and _server_disconnects == 0 and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
  		_fail_connection("M3_CLIENT_CONNECT_TIMEOUT")
