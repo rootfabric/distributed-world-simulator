@@ -33,7 +33,7 @@ diff --git a/scripts/app/earth_mvp_app.gd b/scripts/app/earth_mvp_app.gd
 +
 +
  func _set_mvp_spectator_enabled(enabled: bool) -> void:
- diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
+diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
 --- a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
 +++ b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
 @@ -64,7 +64,6 @@ func set_inventory_visible(value: bool) -> void:
