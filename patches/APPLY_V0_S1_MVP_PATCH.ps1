@@ -33,7 +33,7 @@ function Read-GitBlobBytes([string]$ObjectSpec) {
         if ($process.ExitCode -ne 0) {
             throw "git cat-file failed for ${ObjectSpec}: $stderr"
         }
-        return $memory.ToArray()
+        return ,$memory.ToArray()
     }
     finally {
         $memory.Dispose()
@@ -56,7 +56,7 @@ if ($currentHead -ne $ExpectedBase) {
 }
 
 Write-Host "Fetching corrected text patch..."
-git fetch origin agent/v0-s1-mvp-tab-spawn-spectator
+git fetch origin
 if ($LASTEXITCODE -ne 0) {
     throw "git fetch failed."
 }
@@ -72,7 +72,7 @@ try {
         foreach ($partPath in $PatchParts) {
             $objectSpec = "${PatchBranch}:$partPath"
             Write-Host "Reading $partPath"
-            $bytes = Read-GitBlobBytes $objectSpec
+            [byte[]]$bytes = Read-GitBlobBytes $objectSpec
             $output.Write($bytes, 0, $bytes.Length)
         }
     }
