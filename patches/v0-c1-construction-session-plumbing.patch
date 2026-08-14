@@ -1,7 +1,7 @@
 diff --git a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd b/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
 --- a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
 +++ b/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
-@@ -45,12 +45,16 @@ func connect_player(logical_player_id: String, ownership_epoch: int, last_seen_event_index: int = -1) -> Dictionary:
+@@ -45,11 +45,16 @@ func connect_player(logical_player_id: String, ownership_epoch: int, last_seen_event_index: int = -1) -> Dictionary:
  		"permission_epoch": int(session.get("permission_epoch", 0)),
  		"ownership_epoch": ownership_epoch,
  	}
@@ -22,7 +22,7 @@ diff --git a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_b
 diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 --- a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 +++ b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
-@@ -103,6 +103,7 @@ var _prediction_reconcile_failures: int = 0
+@@ -103,5 +103,6 @@ var _prediction_reconcile_failures: int = 0
  var _prediction_updates_emitted: int = 0
  var _construction_replica
 +var _construction_session: Dictionary = {}
@@ -47,7 +47,7 @@ diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_n
  	var bundle_value = payload.get("state_bundle", {})
  	if not bundle_value is Dictionary:
  		_construction_rejections += 1
-@@ -947,6 +952,7 @@ func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
+@@ -947,5 +952,6 @@ func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
  	return _failure("M3_CONSTRUCTION_COMMAND_TIMEOUT")
  
  func get_construction_bundle() -> Dictionary: return _construction_replica.get_bundle() if _construction_replica != null else {}
