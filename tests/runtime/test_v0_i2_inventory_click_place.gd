@@ -2,6 +2,7 @@ extends SceneTree
 
 const CellScript = preload("res://scripts/ui/inventory/item_cell.gd")
 const ProfileLoaderScript = preload("res://scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd")
+const ShellScript = preload("res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd")
 
 var assertions := 0
 var failures: Array[String] = []
@@ -12,6 +13,7 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_assert(ShellScript != null, "network inventory shell parses")
 	var loader = ProfileLoaderScript.new()
 	var resolved: Dictionary = loader.resolve_profile("seven_days_like")
 	_assert(bool(resolved.get("success", false)), "seven-days profile resolves")
