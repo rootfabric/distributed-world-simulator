@@ -55,6 +55,68 @@ function Start-MvpProcess {
     }
 }
 
+function Get-MvpLogTail {
+    param(
+        [string]$Path,
+        [int]$Lines = 50
+    )
+    if (-not (Test-Path $Path)) {
+        return "<log file not created>"
+    }
+    return (Get-Content -Path $Path -Tail $Lines -ErrorAction SilentlyContinue | Out-String).Trim()
+}
+
+function Wait-MvpLogEvent {
+    param(
+        [object]$Entry,
+        [string]$EventName,
+        [int]$TimeoutSeconds
+    )
+
+    $Deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    while ([DateTime]::UtcNow -lt $Deadline) {
+        if ($Entry.Process.HasExited) {
+            $StdoutTail = Get-MvpLogTail -Path $Entry.Stdout
+            $StderrTail = Get-MvpLogTail -Path $Entry.Stderr
+            throw "$($Entry.Name) exited before $EventName. ExitCode=$($Entry.Process.ExitCode)`nSTDOUT:`n$StdoutTail`nSTDERR:`n$StderrTail"
+        }
+        if (Test-Path $Entry.Stdout) {
+            $Match = Select-String `
+                -Path $Entry.Stdout `
+                -Pattern $EventName `
+                -SimpleMatch `
+                -Quiet `
+                -ErrorAction SilentlyContinue
+            if ($Match) {
+                Write-Host "$($Entry.Name): $EventName" -ForegroundColor Green
+                return
+            }
+        }
+        Start-Sleep -Milliseconds 250
+    }
+
+    $StdoutTail = Get-MvpLogTail -Path $Entry.Stdout
+    $StderrTail = Get-MvpLogTail -Path $Entry.Stderr
+    throw "$($Entry.Name) did not reach $EventName in ${TimeoutSeconds}s.`nSTDOUT:`n$StdoutTail`nSTDERR:`n$StderrTail"
+}
+
+function Stop-MvpProcesses {
+    param([object[]]$Entries)
+    foreach ($Entry in $Entries) {
+        if ($null -eq $Entry -or $null -eq $Entry.Process) {
+            continue
+        }
+        try {
+            if (-not $Entry.Process.HasExited) {
+                Stop-Process -Id $Entry.Pid -Force -ErrorAction SilentlyContinue
+            }
+        }
+        catch {
+            # Best-effort cleanup after a failed local launch.
+        }
+    }
+}
+
 $CommonNetworkArgs = @(
     "--world=earth",
     "--network-mvp",
@@ -75,22 +137,33 @@ $ServerArgs = @(
 ) + $CommonNetworkArgs
 
 $Processes = @()
-$Processes += Start-MvpProcess -Name "server" -Arguments $ServerArgs
-Start-Sleep -Seconds 2
+try {
+    $Server = Start-MvpProcess -Name "server" -Arguments $ServerArgs
+    $Processes += $Server
+    Wait-MvpLogEvent -Entry $Server -EventName "SERVER_READY" -TimeoutSeconds 20
 
-$ClientIds = @("a", "b")
-for ($Index = 0; $Index -lt $ClientCount; $Index++) {
-    $ClientId = $ClientIds[$Index]
-    $ClientArgs = @(
-        "--path", $Root,
-        "--",
-        "--role=game-client",
-        "--node-id=v0-s1-mvp-client-$ClientId",
-        "--player-identity=$ClientId",
-        "--network-debug-stay-open"
-    ) + $CommonNetworkArgs
-    $Processes += Start-MvpProcess -Name "client-$ClientId" -Arguments $ClientArgs
-    Start-Sleep -Milliseconds 500
+    $ClientIds = @("a", "b")
+    for ($Index = 0; $Index -lt $ClientCount; $Index++) {
+        $ClientId = $ClientIds[$Index]
+        $ClientArgs = @(
+            "--path", $Root,
+            "--",
+            "--role=game-client",
+            "--node-id=v0-s1-mvp-client-$ClientId",
+            "--player-identity=$ClientId",
+            "--network-debug-stay-open"
+        ) + $CommonNetworkArgs
+        $Client = Start-MvpProcess -Name "client-$ClientId" -Arguments $ClientArgs
+        $Processes += $Client
+        Wait-MvpLogEvent -Entry $Client -EventName "CLIENT_READY" -TimeoutSeconds 45
+    }
+}
+catch {
+    Write-Host ""
+    Write-Host "V0-S1 MVP startup failed. Processes from this run will be stopped." -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Stop-MvpProcesses -Entries $Processes
+    throw
 }
 
 $PidFile = Join-Path $LogRoot "processes.json"
@@ -107,7 +180,7 @@ $LatestFile = Join-Path $Root "artifacts\mvp-local\LATEST.txt"
 $LogRoot | Set-Content -Encoding UTF8 $LatestFile
 
 Write-Host ""
-Write-Host "V0-S1 MVP started." -ForegroundColor Green
+Write-Host "V0-S1 MVP is live." -ForegroundColor Green
 Write-Host "Godot: $GodotVersion"
 Write-Host "Git HEAD: $GitHead"
 Write-Host "Logs: $LogRoot"
