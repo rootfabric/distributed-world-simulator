@@ -109,6 +109,24 @@ func _init() -> void:
 	_assert(bool(SnapshotEnvelopeScript.validate(snapshot_round_trip).get("success", false)), "Normalized entity snapshot is invalid")
 	_assert(String(snapshot_round_trip.get("spatial_ref", {}).get("frame_id", "")) == "body/moon/fixed", "Snapshot lost reference frame")
 	_assert(SnapshotEnvelopeScript.snapshot_hash(snapshot) == SnapshotEnvelopeScript.snapshot_hash(snapshot_round_trip), "Snapshot hash changes across JSON numeric normalization")
+	var precise_snapshot: Dictionary = SnapshotEnvelopeScript.create(
+		"snapshot/precise", "entity/precise", "item_graph", 0, "sim-01", 4, 500,
+		spatial_ref,
+		{},
+		{},
+		{"item_graph": {"angular_velocity_rps": [
+			8.284792331608526e-139,
+			-1.463830972361493e-139,
+			1.0420334405029283e-138,
+		]}}
+	)
+	var precise_wire_value = JSON.parse_string(JSON.stringify(precise_snapshot, "", true, true))
+	_assert(precise_wire_value is Dictionary, "High-precision snapshot did not survive JSON transport")
+	_assert(
+		precise_wire_value is Dictionary
+		and bool(SnapshotEnvelopeScript.validate(Dictionary(precise_wire_value)).get("success", false)),
+		"High-precision snapshot checksum changed across JSON transport"
+	)
 	var bad_snapshot: Dictionary = snapshot.duplicate(true)
 	bad_snapshot["spatial_ref"] = {}
 	_assert(_error_code(SnapshotEnvelopeScript.validate(bad_snapshot)) == "INVALID_SPATIAL_REF", "Invalid SpatialRef was accepted")
