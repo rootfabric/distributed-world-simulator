@@ -17,7 +17,11 @@ func _process(delta: float) -> void:
 	# boundary. The inherited NX6 process sends JOIN with the same value; this
 	# assignment makes the composed adapter explicitly preserve that contract.
 	if _handshake_verified and not _join_sent and not _transport_session_id.is_empty():
-		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
+		_join_operation_id = Support.transport_bound_operation_id(
+			_logical_player_id,
+			"join",
+			_transport_session_id
+		)
 	super._process(delta)
 
 
@@ -40,6 +44,13 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	_last_error_code = ""
 	if not bool(accepted.get("details", {}).get("replay", false)):
 		_snapshot_updates += 1
+
+	# This adapter owns snapshot acceptance only to implement gap recovery. Keep
+	# the NX4 side effects from the inherited implementation as well: otherwise
+	# a full authoritative snapshot would update the replica store while leaving
+	# client prediction on an obsolete baseline.
+	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
+	_prune_acknowledged_inputs()
 	replica_updated.emit(_replica.get_snapshot())
 
 
