@@ -2,6 +2,11 @@ extends CanvasLayer
 
 var panel: PanelContainer
 var label: Label
+var minimize_button: Button
+var close_button: Button
+var _content: VBoxContainer
+var _minimized: bool = true
+var _overlay_visible: bool = false
 
 
 func setup() -> void:
@@ -9,7 +14,8 @@ func setup() -> void:
 	panel = PanelContainer.new()
 	panel.name = "PlanetaryArchitecturePanel"
 	panel.position = Vector2(18.0, 18.0)
-	panel.custom_minimum_size = Vector2(620.0, 0.0)
+	panel.custom_minimum_size = Vector2(260.0, 0.0)
+	panel.visible = false
 	add_child(panel)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.015, 0.022, 0.035, 0.90)
@@ -21,11 +27,78 @@ func setup() -> void:
 	style.content_margin_top = 10.0
 	style.content_margin_bottom = 10.0
 	panel.add_theme_stylebox_override("panel", style)
+
+	_content = VBoxContainer.new()
+	_content.add_theme_constant_override("separation", 6)
+	panel.add_child(_content)
+
+	var header := HBoxContainer.new()
+	header.mouse_filter = Control.MOUSE_FILTER_PASS
+	_content.add_child(header)
+
+	var title := Label.new()
+	title.text = "MVP DEBUG"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.add_theme_font_size_override("font_size", 13)
+	header.add_child(title)
+
+	minimize_button = Button.new()
+	minimize_button.text = "□"
+	minimize_button.tooltip_text = "Свернуть/развернуть debug HUD"
+	minimize_button.focus_mode = Control.FOCUS_NONE
+	minimize_button.custom_minimum_size = Vector2(34.0, 26.0)
+	minimize_button.pressed.connect(_toggle_minimized)
+	header.add_child(minimize_button)
+
+	close_button = Button.new()
+	close_button.text = "×"
+	close_button.tooltip_text = "Скрыть debug HUD (F1 — показать)"
+	close_button.focus_mode = Control.FOCUS_NONE
+	close_button.custom_minimum_size = Vector2(34.0, 26.0)
+	close_button.pressed.connect(_hide_overlay)
+	header.add_child(close_button)
+
 	label = Label.new()
 	label.name = "PlanetaryArchitectureLabel"
 	label.add_theme_font_size_override("font_size", 15)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	panel.add_child(label)
+	label.visible = false
+	_content.add_child(label)
+	set_process_input(true)
+
+
+func _toggle_minimized() -> void:
+	_set_minimized(not _minimized)
+
+
+func _set_minimized(value: bool) -> void:
+	_minimized = value
+	if label != null:
+		label.visible = not value
+	if panel != null:
+		panel.custom_minimum_size = Vector2(260.0, 0.0) if value else Vector2(620.0, 0.0)
+	if minimize_button != null:
+		minimize_button.text = "□" if value else "—"
+
+
+func _hide_overlay() -> void:
+	_overlay_visible = false
+	if panel != null:
+		panel.visible = false
+
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	if key_event.keycode != KEY_F1 and key_event.physical_keycode != KEY_F1:
+		return
+	_overlay_visible = not _overlay_visible
+	if panel != null:
+		panel.visible = _overlay_visible
+	get_viewport().set_input_as_handled()
 
 
 func show_moon_mode(distance_m: float) -> void:
@@ -149,9 +222,9 @@ func show_shared_space_mode(
 		earth_only
 	)
 	var controls_description: String = (
-		"WASD — движение через сервер | мышь — обзор | H — горизонт"
+		"WASD — движение | мышь — обзор | H — горизонт | F1 — debug HUD"
 		if explorer.has_method("is_network_replica_mode") and explorer.is_network_replica_mode()
-		else "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+		else "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт | F1 — debug HUD"
 	)
 	label.text = (
 		"%s\n"
