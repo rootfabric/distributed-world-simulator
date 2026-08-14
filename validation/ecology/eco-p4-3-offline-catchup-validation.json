@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_3_offline_catchup_validation.v1",
-  "revision": "ECO-P4.3-2026-08-14-R1-CANDIDATE",
+  "revision": "ECO-P4.3-2026-08-14-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN",
   "scope": "DETERMINISTIC_BOUNDED_OFFLINE_CATCH_UP_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.2",
@@ -11,7 +11,7 @@
     "kernel_blob": "e6a1336059fdfa16143df0957206cc78b0f86bff",
     "validation_blob_after_acceptance": "730452dc2bcd8fe58e758197e0209e6bc38b540c"
   },
-  "candidate_blobs": {
+  "accepted_blobs": {
     "kernel": "ed76af9537c09ca013eb1a1367d3c854b1438df3",
     "acceptance_test": "6aac302cff629a5e71b7ecd2f93f3973d437aa3f",
     "runner": "569c35720b8859f53d400bc828ae42c25922e0d1"
@@ -28,27 +28,23 @@
     "rng": "no global RNG consumption",
     "not_authorized": ["wall-clock ownership", "production persistence", "storage schema/migration", "region/server ownership or handoff", "network replication", "client authority"]
   },
-  "targeted_exact_attached_godot_evidence": {
+  "acceptance_evidence": {
+    "source_head_with_candidate_package": "81f93cb245eeb34ffccd4266a19c1b0b3b741b3b",
+    "execution_platform": "Windows PowerShell",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "kernel_parser_preload": "PASS",
-    "fresh_process_runs": 3,
-    "assertions_per_run": 34,
-    "all_process_logs_byte_identical": true,
-    "fresh_process_log_sha256": "ed5b69dade7accabef494ca5ed8aa80ef8f29e2bc8482e2d3a540514d7e0771e",
-    "targeted_aggregate_hash": "30e34db2b5d9a0f87b3b43420058cf63baa6b6b531c6ea232b9ffb6176929e02",
-    "targeted_catchup_hash": "e399db6ae5d8f3715ca6592e739b63780263b23b646edb7bc8002fbf7e85a146",
-    "targeted_region_hash": "6fcd95f10c5ebd2094ff41beb30912bb7c7fea5afd59c7d59d715d81ecaf11e0",
-    "parent_p4_2": "607884ed9ce2d398fb225928f03f423f4fd2ae4198c12d066aa74c6ce421a42e",
-    "boundary_note": "targeted runtime uses a deterministic P3 persistence stub only to exercise P4.1/P4.2/P4.3 interfaces; it is not lifecycle acceptance evidence"
-  },
-  "full_chain_expected": {
-    "acceptance_test_assertions": 67,
+    "parser_preload": "PASS",
+    "p4_1_parent_regression": "PASS (52 assertions) x2 fresh processes",
+    "p4_2_parent_regression": "PASS (66 assertions) x2 fresh processes",
+    "p4_3_fresh_process_runs": 2,
+    "p4_3_assertions_per_run": 67,
+    "p4_3_fresh_process_logs_identical_by_runner": true,
     "aggregate_hash": "4bdfd994a27ef15ff4010643e35f4652a0a2f3fdb2d3fcfa6b86b816b14cca62",
     "catchup_hash": "cc2a4815e1eae75b879ea52d8ba404880c69344928f953e8aaa38bd062b1ce3a",
     "generation_5_region_hash": "fbc2072e388b2c9b02ff5755815821391bcf23b97cab35a5a8b1452bc4e5999c",
     "parent_p4_2": "607884ed9ce2d398fb225928f03f423f4fd2ae4198c12d066aa74c6ce421a42e",
-    "status": "PENDING_COMMITTED_FULL_CHAIN_RUN"
+    "runner_final_marker": "ECO.P4.3 candidate automated gates: PASS",
+    "evidence_source": "user-executed committed runner after git pull --ff-only reported Already up to date"
   },
-  "covered_properties": ["P4_2_ACCEPTED_PARENT_PINNED", "EXPLICIT_OBSERVED_HORIZON", "NO_OS_TIME_DEPENDENCY", "BOUNDED_STAGED_ADVANCEMENT", "LARGE_BACKLOG_REPRESENTABLE", "FRACTIONAL_REMAINDER_PRESERVED", "BATCH_PARTITION_INVARIANCE", "MONOTONIC_HORIZON", "DERIVED_DEBT_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
-  "decision": "IMPLEMENT_P4_3_CANDIDATE; RUN_FULL_ACCEPTANCE_ON_COMMITTED_REMOTE_PACKAGE; DO_NOT_OPEN_P4_4_BEFORE_P4_3_ACCEPTANCE"
+  "covered_properties": ["P4_2_ACCEPTED_PARENT_PINNED", "EXPLICIT_OBSERVED_HORIZON", "NO_OS_TIME_DEPENDENCY", "BOUNDED_STAGED_ADVANCEMENT", "LARGE_BACKLOG_REPRESENTABLE", "FRACTIONAL_REMAINDER_PRESERVED", "BATCH_PARTITION_INVARIANCE", "MONOTONIC_HORIZON", "DERIVED_DEBT_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED", "FULL_COMMITTED_CHAIN_WINDOWS_PASS"],
+  "decision": "ACCEPT_P4_3; OPEN_P4_4_PRODUCTION_PERSISTENCE"
 }
