@@ -66,12 +66,23 @@ func _run() -> void:
 	root.add_child(client)
 	var attached: Dictionary = earth.attach_m3_multiplayer_client(client)
 	_assert(bool(attached.get("success", false)), "M3 client attached to Earth spectator")
+	_assert(not earth.earth_explorer.is_physics_processing(), "authoritative replica owns translation physics")
+	_assert(earth.earth_explorer.is_processing_unhandled_input(), "network spectator keeps local mouse-look input")
+
 	var initial: Vector3 = earth.earth_explorer.get_frame_position()
+	var initial_orientation: Basis = earth.earth_explorer.orientation
+	var local_yaw := Basis(initial_orientation.y.normalized(), 0.25)
+	earth.earth_explorer.orientation = (local_yaw * initial_orientation).orthonormalized()
+	earth.earth_explorer.global_transform = Transform3D(earth.earth_explorer.orientation, Vector3.ZERO)
+	var looked_forward: Vector3 = (-earth.earth_explorer.orientation.z).normalized()
+
 	client.snapshot = _snapshot(12.0, -8.0, true)
 	client.replica_updated.emit(client.get_snapshot())
 	await process_frame
 	var moved: Vector3 = earth.earth_explorer.get_frame_position()
 	_assert(moved.distance_to(initial) > 1.0, "authoritative M3 x/z moves Earth spectator")
+	var after_snapshot_forward: Vector3 = (-earth.earth_explorer.orientation.z).normalized()
+	_assert(after_snapshot_forward.dot(looked_forward) > 0.99, "authoritative snapshot preserves local camera look")
 	var altitude: float = earth.earth_world.get_canonical_spawn_altitude_m()
 	_assert(absf(earth.earth_world.get_altitude(moved) - altitude) < 0.1, "mapped spectator retains canonical altitude")
 	var report: Dictionary = earth.create_m3_graphical_client_report()
