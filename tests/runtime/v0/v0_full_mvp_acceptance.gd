@@ -119,14 +119,14 @@ static func state_counts(results: Array) -> Dictionary:
 
 static func build_summary(
 	results: Array,
-	integration_head: String,
+	integration_base: String,
 	soak_seconds: int,
 	run_id: String = ""
 ) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"run_id": run_id,
-		"integration_head": integration_head,
+		"integration_base": integration_base,
 		"aggregate_state": aggregate_state(results),
 		"counts": state_counts(results),
 		"required_phase_count": phases().size(),
@@ -293,6 +293,7 @@ class SoakTracker:
 			_add_failure("PERSISTENT_STATE_DIVERGENCE")
 
 	func finish(elapsed_seconds: int, required_seconds: int = FINAL_SOAK_SECONDS) -> Dictionary:
+		var enforced_required_seconds := maxi(required_seconds, FINAL_SOAK_SECONDS)
 		if _samples.is_empty():
 			_add_failure("SOAK_NO_SAMPLES")
 		else:
@@ -311,14 +312,15 @@ class SoakTracker:
 				"error_code": "V0_SOAK_FAILED",
 				"details": {"failure_codes": _failure_codes.duplicate(), "sample_count": _samples.size()},
 			}
-		if elapsed_seconds < required_seconds:
+		if elapsed_seconds < enforced_required_seconds:
 			return {
 				"state": STATE_DEPENDENCY_PENDING,
 				"success": false,
 				"error_code": "SOAK_DURATION_BELOW_FINAL_REQUIREMENT",
 				"details": {
 					"elapsed_seconds": elapsed_seconds,
-					"required_seconds": required_seconds,
+					"configured_required_seconds": required_seconds,
+					"required_seconds": enforced_required_seconds,
 					"sample_count": _samples.size(),
 				},
 			}
@@ -328,7 +330,8 @@ class SoakTracker:
 			"error_code": "",
 			"details": {
 				"elapsed_seconds": elapsed_seconds,
-				"required_seconds": required_seconds,
+				"configured_required_seconds": required_seconds,
+				"required_seconds": enforced_required_seconds,
 				"sample_count": _samples.size(),
 			},
 		}

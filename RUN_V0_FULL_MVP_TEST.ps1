@@ -4,7 +4,9 @@ param(
 
     [switch]$Final,
 
-    [string]$Driver = "res://tests/runtime/v0/v0_current_mvp_driver.gd"
+    [string]$Driver = "res://tests/runtime/v0/v0_current_mvp_driver.gd",
+
+    [string]$IntegrationBase = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -129,7 +131,8 @@ function Invoke-GodotEvidence {
 function Write-RunnerSummary {
     param(
         [string]$OverallState,
-        [string]$GitHead,
+        [string]$WorkerHead,
+        [string]$ResolvedIntegrationBase,
         [string]$GodotVersion,
         [object]$ScenarioSummary
     )
@@ -138,7 +141,8 @@ function Write-RunnerSummary {
         schema = "distributed_world_simulator.v0_full_mvp_runner.v1"
         run_id = $RunId
         overall_state = $OverallState
-        git_head = $GitHead
+        worker_head = $WorkerHead
+        integration_base = $ResolvedIntegrationBase
         godot_version = $GodotVersion
         final_mode = [bool]$Final
         soak_seconds = $SoakSeconds
@@ -150,7 +154,8 @@ function Write-RunnerSummary {
     $Payload | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 $RunnerSummaryPath
 }
 
-$GitHead = ""
+$WorkerHead = ""
+$ResolvedIntegrationBase = ""
 $GodotVersion = ""
 $OverallState = "FAIL"
 $ScenarioSummary = $null
@@ -158,12 +163,45 @@ $ExitCode = 1
 
 try {
     $GodotVersion = (& $Godot --version 2>&1 | Out-String).Trim()
-    $GitHead = (& git -C $Root rev-parse HEAD 2>&1 | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0 -or $GitHead -notmatch "^[0-9a-f]{40}$") {
-        throw "Could not determine exact git HEAD for V0 evidence."
+    $WorkerHead = (& git -C $Root rev-parse HEAD 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $WorkerHead -notmatch "^[0-9a-f]{40}$") {
+        throw "Could not determine exact worker git HEAD for V0 evidence."
     }
+
+    if ($IntegrationBase) {
+        if ($IntegrationBase -notmatch "^[0-9a-f]{40}$") {
+            throw "IntegrationBase must be an exact 40-character commit SHA."
+        }
+        & git -C $Root cat-file -e "$IntegrationBase^{commit}" 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "IntegrationBase commit does not exist in the checkout: $IntegrationBase"
+        }
+        $ResolvedIntegrationBase = $IntegrationBase.ToLowerInvariant()
+    }
+    else {
+        $IntegrationRefs = @(
+            "origin/feature/v0-s1-networked-planetary-outpost-mvp",
+            "feature/v0-s1-networked-planetary-outpost-mvp"
+        )
+        foreach ($IntegrationRef in $IntegrationRefs) {
+            & git -C $Root rev-parse --verify "$IntegrationRef^{commit}" *> $null
+            if ($LASTEXITCODE -ne 0) {
+                continue
+            }
+            $CandidateBase = (& git -C $Root merge-base $WorkerHead $IntegrationRef 2>&1 | Out-String).Trim()
+            if ($LASTEXITCODE -eq 0 -and $CandidateBase -match "^[0-9a-f]{40}$") {
+                $ResolvedIntegrationBase = $CandidateBase
+                break
+            }
+        }
+        if (-not $ResolvedIntegrationBase) {
+            throw "Could not determine integration base. Fetch the V0 integration ref or pass -IntegrationBase <40-char SHA>."
+        }
+    }
+
     $GodotVersion | Set-Content -Encoding UTF8 (Join-Path $LogRoot "godot-version.txt")
-    $GitHead | Set-Content -Encoding UTF8 (Join-Path $LogRoot "git-head.txt")
+    $WorkerHead | Set-Content -Encoding UTF8 (Join-Path $LogRoot "worker-head.txt")
+    $ResolvedIntegrationBase | Set-Content -Encoding UTF8 (Join-Path $LogRoot "integration-base.txt")
 
     $EditorImport = Invoke-GodotEvidence `
         -Name "editor-import" `
@@ -204,7 +242,7 @@ try {
             "--driver=$Driver",
             "--result-file=$ScenarioSummaryPath",
             "--soak-seconds=$SoakSeconds",
-            "--integration-head=$GitHead",
+            "--integration-base=$ResolvedIntegrationBase",
             "--run-id=$RunId"
         )
         $ScenarioRecord = Invoke-GodotEvidence `
@@ -245,14 +283,15 @@ try {
     }
 }
 catch {
-    Write-Error $_
+    Write-Warning $_
     $OverallState = "FAIL"
     $ExitCode = 1
 }
 finally {
     Write-RunnerSummary `
         -OverallState $OverallState `
-        -GitHead $GitHead `
+        -WorkerHead $WorkerHead `
+        -ResolvedIntegrationBase $ResolvedIntegrationBase `
         -GodotVersion $GodotVersion `
         -ScenarioSummary $ScenarioSummary
 

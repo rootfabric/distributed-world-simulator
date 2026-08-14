@@ -5,7 +5,7 @@ const DEFAULT_DRIVER := "res://tests/runtime/v0/v0_current_mvp_driver.gd"
 
 var _result_file := ""
 var _driver_path := DEFAULT_DRIVER
-var _integration_head := ""
+var _integration_base := ""
 var _soak_seconds := Acceptance.DEFAULT_DEV_SOAK_SECONDS
 var _run_id := ""
 var _results: Array = []
@@ -24,7 +24,7 @@ func _run() -> void:
 		return
 	_result_file = String(parsed["options"].get("result_file", ""))
 	_driver_path = String(parsed["options"].get("driver", DEFAULT_DRIVER))
-	_integration_head = String(parsed["options"].get("integration_head", ""))
+	_integration_base = String(parsed["options"].get("integration_base", ""))
 	_soak_seconds = int(parsed["options"].get("soak_seconds", Acceptance.DEFAULT_DEV_SOAK_SECONDS))
 	_run_id = String(parsed["options"].get("run_id", ""))
 
@@ -35,7 +35,7 @@ func _run() -> void:
 		return
 	_driver = driver_script.new()
 	var context := {
-		"integration_head": _integration_head,
+		"integration_base": _integration_base,
 		"soak_seconds": _soak_seconds,
 		"run_id": _run_id,
 		"result_file": _result_file,
@@ -62,7 +62,7 @@ func _run() -> void:
 				{"driver_result": shutdown_value}
 			)
 
-	var summary := Acceptance.build_summary(_results, _integration_head, _soak_seconds, _run_id)
+	var summary := Acceptance.build_summary(_results, _integration_base, _soak_seconds, _run_id)
 	_write_summary(summary)
 	print("V0 full MVP aggregate: %s | PASS=%d FAIL=%d DEPENDENCY_PENDING=%d NOT_IMPLEMENTED=%d" % [
 		summary.get("aggregate_state", Acceptance.STATE_FAIL),
@@ -148,7 +148,7 @@ func _parse_args(arguments: PackedStringArray) -> Dictionary:
 	var options := {
 		"result_file": "",
 		"driver": DEFAULT_DRIVER,
-		"integration_head": "",
+		"integration_base": "",
 		"soak_seconds": Acceptance.DEFAULT_DEV_SOAK_SECONDS,
 		"run_id": "",
 	}
@@ -168,8 +168,8 @@ func _parse_args(arguments: PackedStringArray) -> Dictionary:
 				options["result_file"] = value
 			"driver":
 				options["driver"] = value
-			"integration-head":
-				options["integration_head"] = value
+			"integration-base":
+				options["integration_base"] = value
 			"run-id":
 				options["run_id"] = value
 			"soak-seconds":
