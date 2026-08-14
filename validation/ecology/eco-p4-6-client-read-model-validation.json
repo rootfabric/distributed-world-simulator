@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_6_client_read_model_validation.v1",
+  "revision": "ECO-P4.6-2026-08-14-R1-PREACCEPTANCE-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_P4_5_ACCEPTANCE_AND_FULL_CHAIN_INTEGRATION_PENDING",
+  "scope": "READ_ONLY_INTEREST_SELECTION_CLIENT_SUMMARY_AND_MONOTONIC_READ_CACHE_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P4.5",
+    "status_required_for_canonical_gate": "ACCEPTED*",
+    "expected_aggregate_hash": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419",
+    "current_status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_READY",
+    "kernel_blob": "2a4083fb9d4b55f8c16421c4f3555c19a952711f",
+    "acceptance_test_blob": "041e7e81588f59b54bac76d7cd9ad558d054b0de",
+    "runner_blob": "b712fb2ac1bda03dffdbaff4eee435f60cf236d5"
+  },
+  "candidate_blobs": {
+    "kernel": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
+    "acceptance_test": "9cde3960a37010a15d00c3d8c3c736943c59e7ba",
+    "runner": "0ef2cf0ba87e7ad3560e9d3220e0d94777df8391"
+  },
+  "contract": {
+    "server_read_projection": "P4.6 derives bounded client summaries only from a validated P4.5 ownership state; canonical ecology remains server-owned",
+    "summary_identity": "summary_hash binds region, owner/epoch source cursor, source snapshot/ownership hashes, ecology generation/time cursor, backlog state and canonical lineage biomass summary",
+    "lineage_projection": "P3.7 community biomass is aggregated by lineage id, sorted canonically and reduced to total/dominant lineage without exposing mutable canonical state",
+    "interest": "requested region ids are canonicalized as sorted unique ids; duplicate authoritative states fail closed; missing requested regions remain explicit",
+    "read_cache": "client read updates are monotonic by ownership epoch, ecology generation and observed horizon; stale epochs/generations/times and equal-cursor conflicts fail closed",
+    "mutation_isolation": "all returned summaries/projections are detached values and there is no API that commits client data back to P4.5 ownership",
+    "identity_scope": "network transport timing, client frame rate, process identity and packet order are excluded from canonical read hashes",
+    "rng": "no global RNG consumption",
+    "not_authorized": ["client canonical mutation", "network RPC transport", "interest subscription ownership", "P4.7 scheduling or soak policy", "P4.5 acceptance by implication"]
+  },
+  "targeted_exact_attached_godot_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parent_boundary": "exact P4.5 kernel with minimal deterministic P4.4 validator boundary",
+    "fresh_process_runs": 3,
+    "adapter_assertions_per_run": 35,
+    "adapter_logs_byte_identical": true,
+    "adapter_log_sha256": "456b85e506d75cab4e957dcf9a1e31371a7bd8e8aa021cef2311100e9e4ed343",
+    "adapter_aggregate_hash": "861e1e7d9f6b14cd33ffdfeb382cd6b6a5340fb19438767d4cf2de5a60ebf459",
+    "adapter_summary_hash": "bbc6391ec84061bf62b26c1c06cf7fdcc61eb0633d33d1a19cdfb37614a1459b",
+    "adapter_interest_hash": "da44554dc20c29a3266c454b3af6a29b2f1963d805b29d3b816f4fba03865298",
+    "unit_fresh_process_runs": 3,
+    "unit_assertions_per_run": 24,
+    "unit_logs_byte_identical": true,
+    "unit_log_sha256": "c274eb3a0345c49d8063f22ed3dd3cfc9d0bd8a552412425c2075699725d4fa8",
+    "unit_aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
+    "unit_summary_hash": "9b3270edcb178dcb681de63223c0d5f5c8c851d90856f94d660e76c125b4521f",
+    "unit_interest_hash": "875fce66118cc2810755549e3663d92575b4942e8a42dd00bd710c2acdc57864",
+    "parent_p4_5": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419"
+  },
+  "committed_gate": {
+    "runner_policy": "after P4.5 acceptance, run the direct committed P4.5 acceptance test once, then P4.6 unit A/B under bounded 300-second process timeouts",
+    "expected_unit_aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
+    "expected_unit_summary_hash": "9b3270edcb178dcb681de63223c0d5f5c8c851d90856f94d660e76c125b4521f",
+    "expected_unit_interest_hash": "875fce66118cc2810755549e3663d92575b4942e8a42dd00bd710c2acdc57864",
+    "integration_requirement": "before P4.6 lifecycle acceptance, execute one additional committed real-P4.5 ownership-to-read-model integration probe and freeze its hashes",
+    "status": "BLOCKED_UNTIL_P4_5_ACCEPTED"
+  },
+  "decision": "IMPLEMENT_P4_6_PREACCEPTANCE_CANDIDATE; DO_NOT_ACCEPT_OR_OPEN_P4_7_UNTIL_P4_5_ACCEPTED_AND_P4_6_COMMITTED_GATES_PASS"
+}
