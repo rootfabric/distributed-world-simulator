@@ -1,29 +1,24 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-14-R2-HEARTBEAT-RUNNER",
+  "revision": "ECO-P4.7-2026-08-14-R3-CANONICAL-GATE-OPEN",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "PREACCEPTANCE_CANDIDATE_COMMITTED_RUN_PENDING_P4_6_ACCEPTANCE_PENDING",
+  "status": "CANDIDATE_CANONICAL_SOAK_GATE_OPEN",
   "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.6",
     "status_required_for_canonical_gate": "ACCEPTED*",
-    "current_status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_REAL_COMMITTED_INTEGRATION_GATE_READY",
+    "current_status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION",
+    "unit_aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
+    "real_integration_hash": "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf",
     "kernel_blob": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
     "fixture_blob": "dc55b886c057e2ccd8f454658b6be58d579642e1",
     "real_integration_blob": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
-    "runner_blob": "bd65dd9df5b964f0c930814e97c160520033adc2"
+    "runner_blob": "bd65dd9df5b964f0c930814e97c160520033adc2",
+    "validation_blob_after_acceptance": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
   },
   "candidate_blobs": {
     "soak_test": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
     "preacceptance_runner": "df033ea5a4779637160c3e4ababdeca7a66859e2"
-  },
-  "runner_hardening": {
-    "semantic_change": false,
-    "soak_test_changed": false,
-    "heartbeat_seconds": 10,
-    "process_timeout_seconds": 600,
-    "timeout_behavior": "fail closed and terminate the Godot process tree",
-    "reason": "long deterministic soak processes must expose visible liveness instead of appearing frozen while stdout is buffered"
   },
   "scenario": {
     "regions": 8,
@@ -56,14 +51,12 @@
     "not_runtime_authority": true,
     "not_network_transport": true,
     "not_wall_clock_soak": true,
-    "purpose": "accelerated deterministic integration stress before a later production-duration soak"
+    "purpose": "accelerated deterministic integration stress before final P4 acceptance"
   },
   "gate": {
-    "preacceptance_runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
-    "timeout_seconds_per_process": 600,
-    "heartbeat_seconds": 10,
-    "hash_policy": "first exact committed A/B run discovers soak_hash and final_interest_hash; freeze only after P4.6 acceptance and lifecycle promotion",
-    "status": "READY_FOR_NONCANONICAL_PREACCEPTANCE_RUN_AFTER_PULL"
+    "next_action": "publish canonical bounded P4.7 runner pinned to accepted P4.6 validation and exact soak test blob",
+    "hash_policy": "canonical exact committed A/B run must produce byte-identical logs; first accepted run freezes soak_hash and final_interest_hash",
+    "status": "CANONICAL_RUNNER_PUBLICATION_AUTHORIZED"
   },
-  "decision": "IMPLEMENT_P4_7_PREACCEPTANCE_HARNESS; DO_NOT_ACCEPT_P4_7_OR_OPEN_P4_8_UNTIL_P4_6_ACCEPTS_AND_P4_7_CANONICAL_GATE_PASSES"
+  "decision": "OPEN_P4_7_CANONICAL_SOAK_GATE; DO_NOT_ACCEPT_P4_7_OR_P4_8_UNTIL_EXACT_COMMITTED_A_B_PASS"
 }
