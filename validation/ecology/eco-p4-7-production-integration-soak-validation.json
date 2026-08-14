@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-14-R3-CANONICAL-GATE-OPEN",
+  "revision": "ECO-P4.7-2026-08-14-R4-CANONICAL-RUNNER-READY",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_CANONICAL_SOAK_GATE_OPEN",
+  "status": "CANDIDATE_CANONICAL_RUNNER_READY_EXACT_COMMITTED_A_B_PENDING",
   "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.6",
@@ -18,11 +18,12 @@
   },
   "candidate_blobs": {
     "soak_test": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
-    "preacceptance_runner": "df033ea5a4779637160c3e4ababdeca7a66859e2"
+    "canonical_runner_legacy_filename": "da41c2760f0802c0a669e1f4a1d0ad90254c054e"
   },
   "scenario": {
     "regions": 8,
     "cycles": 12,
+    "handoff_operations_expected": 32,
     "save_load_operations_expected": 96,
     "client_updates_expected": 96,
     "interest_projections_expected": 12,
@@ -33,11 +34,14 @@
     "processing_order_crosscheck": "forward and reverse region iteration must converge to identical final soak and interest hashes"
   },
   "covered_properties": [
+    "P4_6_ACCEPTED_VALIDATION_PINNED",
+    "P4_6_ACCEPTED_UNIT_AND_REAL_INTEGRATION_HASHES_PINNED",
     "FIXED_REGION_CARDINALITY",
     "BOUNDED_CATCHUP_DEBT",
     "EVERY_CYCLE_P4_4_SAVE_LOAD",
     "P4_5_CAS_SNAPSHOT_COMMIT",
     "REPEATED_P4_5_HANDOFF_FENCING",
+    "EXACT_HANDOFF_COUNT",
     "P4_4_RESTART_TO_P4_5_IDENTITY_RECONSTRUCTION",
     "P4_6_MONOTONIC_CLIENT_CACHE",
     "P4_6_INTEREST_CANONICALIZATION",
@@ -54,9 +58,12 @@
     "purpose": "accelerated deterministic integration stress before final P4 acceptance"
   },
   "gate": {
-    "next_action": "publish canonical bounded P4.7 runner pinned to accepted P4.6 validation and exact soak test blob",
-    "hash_policy": "canonical exact committed A/B run must produce byte-identical logs; first accepted run freezes soak_hash and final_interest_hash",
-    "status": "CANONICAL_RUNNER_PUBLICATION_AUTHORIZED"
+    "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
+    "runner_name_note": "legacy filename retained for local compatibility; semantics are canonical after R4",
+    "heartbeat_seconds": 10,
+    "timeout_seconds_per_process": 600,
+    "hash_policy": "exact committed A/B must be byte-identical; successful first canonical run freezes soak_hash and final_interest_hash in lifecycle acceptance evidence",
+    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN"
   },
-  "decision": "OPEN_P4_7_CANONICAL_SOAK_GATE; DO_NOT_ACCEPT_P4_7_OR_P4_8_UNTIL_EXACT_COMMITTED_A_B_PASS"
+  "decision": "RUN_P4_7_CANONICAL_SOAK; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND_OPEN_P4_8"
 }
