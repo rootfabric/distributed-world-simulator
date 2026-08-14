@@ -19,7 +19,8 @@ param(
     [int]$ClientLaunchDelayMs = 1000,
 
     [switch]$Stop,
-    [switch]$Restart
+    [switch]$Restart,
+    [switch]$AllowUnstabilized
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,12 +63,100 @@ function Get-PlayerIdentity {
     return "p$($Index + 1)"
 }
 
+function Get-GitText {
+    param([string[]]$Arguments)
+    $Value = & git -C $ProjectRoot @Arguments 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        return "unknown"
+    }
+    return ([string]($Value -join "`n")).Trim()
+}
+
+function Test-SourceMarker {
+    param(
+        [string]$RelativePath,
+        [string]$Marker
+    )
+    $Path = Join-Path $ProjectRoot $RelativePath
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    return $null -ne (Select-String -Path $Path -SimpleMatch $Marker -Quiet)
+}
+
+function Assert-V0StabilizedSource {
+    $Checks = @(
+        [ordered]@{
+            path = "scripts\actors\earth\earth_explorer.gd"
+            marker = "_network_surface_view_initialized"
+            name = "surface-locked camera"
+        },
+        [ordered]@{
+            path = "scripts\ui\planetary_overlay.gd"
+            marker = "_overlay_visible: bool = false"
+            name = "hidden debug HUD"
+        },
+        [ordered]@{
+            path = "scripts\network\realtime\realtime_channel_policy.gd"
+            marker = "ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1"
+            name = "ordered realtime policy"
+        },
+        [ordered]@{
+            path = "scripts\network\transports\v2\enet_multi_peer_transport_port.gd"
+            marker = "TRANSFER_MODE_UNRELIABLE_ORDERED"
+            name = "ordered ENet transport"
+        },
+        [ordered]@{
+            path = "scripts\runtime\networked_gameplay\m3\m3_graphical_client_runtime_nx6.gd"
+            marker = "disconnected_this_poll"
+            name = "disconnect timeout guard"
+        },
+        [ordered]@{
+            path = "scripts\app\earth_mvp_app.gd"
+            marker = "advance_local_prediction"
+            name = "NX4 predicted movement"
+        }
+    )
+
+    $Missing = @()
+    foreach ($Check in $Checks) {
+        if (-not (Test-SourceMarker $Check.path $Check.marker)) {
+            $Missing += "$($Check.name) [$($Check.path)]"
+        }
+    }
+
+    $Branch = Get-GitText @("branch", "--show-current")
+    $Head = Get-GitText @("rev-parse", "--short=12", "HEAD")
+    Write-Host "[V0] Source     : $Branch @ $Head"
+
+    if ($Missing.Count -gt 0) {
+        Write-Warning "[V0] Stabilization markers missing:"
+        foreach ($Item in $Missing) {
+            Write-Warning "  - $Item"
+        }
+        if (-not $AllowUnstabilized) {
+            throw "Refusing to launch a stale/partial V0 checkout. Synchronize the V0-S0 source set first, or use -AllowUnstabilized only for deliberate legacy diagnostics."
+        }
+        Write-Warning "[V0] -AllowUnstabilized was supplied; continuing with a non-checkpoint source tree."
+    }
+    else {
+        Write-Host "[V0] Source gate: V0-S0 markers present." -ForegroundColor Green
+    }
+
+    return [ordered]@{
+        branch = $Branch
+        head = $Head
+        stabilized = ($Missing.Count -eq 0)
+    }
+}
+
 function Save-SessionState {
     param(
         $ServerProcess,
         [array]$ClientRecords,
         [string]$LogDirectory,
-        [string]$StartedUtc
+        [string]$StartedUtc,
+        $SourceIdentity
     )
 
     $ServerProcessId = 0
@@ -76,9 +165,10 @@ function Save-SessionState {
     }
 
     $State = [ordered]@{
-        schema = "distributed_world_simulator.v0_mvp_launcher.v1"
+        schema = "distributed_world_simulator.v0_mvp_launcher.v2"
         started_utc = $StartedUtc
         project_root = $ProjectRoot
+        source = $SourceIdentity
         server_address = $ServerAddress
         port = $Port
         world = $World
@@ -188,6 +278,7 @@ if (Test-Path $StatePath) {
     }
 }
 
+$SourceIdentity = Assert-V0StabilizedSource
 $SessionId = Get-Date -Format "yyyyMMdd-HHmmss"
 $StartedUtc = (Get-Date).ToUniversalTime().ToString("o")
 $LogDirectory = Join-Path $LauncherRoot "logs\$SessionId"
@@ -221,7 +312,7 @@ try {
         -WindowStyle Hidden `
         -PassThru
     $SpawnedProcesses += $ServerProcess
-    Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc
+    Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc $SourceIdentity
 
     $Deadline = (Get-Date).AddSeconds($ServerReadyTimeoutSeconds)
     $ServerReady = $false
@@ -290,7 +381,7 @@ try {
                 log = $ClientLog
             }
             $ClientRecords += $ClientRecord
-            Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc
+            Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc $SourceIdentity
 
             if ($ClientLaunchDelayMs -gt 0 -and $Index -lt ($Clients - 1)) {
                 Start-Sleep -Milliseconds $ClientLaunchDelayMs
