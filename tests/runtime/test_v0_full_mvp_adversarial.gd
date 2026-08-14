@@ -75,7 +75,10 @@ func _test_default_driver_fail_closed() -> void:
 	_assert(int(run.get("exit_code", 0)) != 0, "H: default dependency-pending driver remains nonzero")
 	var summary := _read_summary(path)
 	_assert(String(summary.get("aggregate_state", "")) == Acceptance.STATE_DEPENDENCY_PENDING, "H: default driver remains DEPENDENCY_PENDING")
-	_assert(not bool(summary.get("final_checkpoint_eligible", true)), "H: default pending run is not final-checkpoint eligible")
+	_assert(not summary.has("final_checkpoint_eligible"), "I: scenario summary cannot claim final checkpoint eligibility")
+	_assert(String(summary.get("checkpoint_authority", "")) == "RUNNER_ONLY", "I: scenario declares trusted runner as checkpoint authority")
+	_assert(bool(summary.get("runner_provenance_required", false)), "I: scenario requires runner-side Git provenance")
+	_assert(not bool(summary.get("scenario_final_conditions_satisfied", true)), "I: pending scenario does not satisfy final scenario conditions")
 
 
 func _run_scenario(user_arguments: Array[String]) -> Dictionary:
