@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_4_production_persistence_validation.v1",
-  "revision": "ECO-P4.4-2026-08-14-R1-CANDIDATE",
+  "revision": "ECO-P4.4-2026-08-14-R2-CANDIDATE-RUNNER-HARDENED",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "CANDIDATE_TARGETED_EXACT_ATTACHED_GODOT_PASS_FULL_CHAIN_GATE_PENDING",
   "scope": "PRODUCTION_OWNED_REGION_PERSISTENCE_SCHEMA_AND_RESTART_RESTORE_ONLY",
@@ -14,7 +14,16 @@
   "candidate_blobs": {
     "kernel": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
     "acceptance_test": "2385b035082834aaae1eb91e25aa798c26ca40dc",
-    "runner": "7dc69caf556f36ac4e282acb5713f3d072e63ad5"
+    "runner": "9a616d9250330ee7e17c85e1ac7dab86c8773558"
+  },
+  "runner_hardening": {
+    "reason": "Windows full-chain execution could stall inside recursively nested P4.3 -> P4.2 -> P4.1 runner execution after P4.2 fresh-process launch",
+    "semantic_change": false,
+    "kernel_or_test_changed": false,
+    "direct_parent_regression": "P4.4 runner now executes the committed P4.3 acceptance test directly and verifies the accepted aggregate instead of recursively invoking all ancestor runners",
+    "process_timeout_seconds": 300,
+    "timeout_behavior": "fail closed and terminate the Godot process tree with taskkill",
+    "expected_effect": "bounded gate runtime without weakening P4.3 semantic parent regression"
   },
   "contract": {
     "production_ownership": "P4.4 defines the first production-owned ecology region snapshot envelope; P3.8 checkpoint bytes remain research/reference ancestry only",
@@ -53,5 +62,5 @@
     "status": "PENDING_COMMITTED_FULL_CHAIN_RUN"
   },
   "covered_properties": ["P4_3_ACCEPTED_PARENT_PINNED", "FIRST_PRODUCTION_STORAGE_SCHEMA", "DETERMINISTIC_TYPED_SERIALIZATION", "PAYLOAD_SHA256_INTEGRITY", "EXACT_TYPED_RESTORE", "PENDING_BACKLOG_RESTART_CONTINUITY", "FRACTIONAL_HORIZON_RESTART_CONTINUITY", "P3_8_RESEARCH_BYTES_REJECTED", "UNKNOWN_FORMATS_FAIL_CLOSED", "CURRENT_FORMAT_IDENTITY_MIGRATION", "FILE_SAVE_LOAD_ROUNDTRIP", "NESTED_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
-  "decision": "IMPLEMENT_P4_4_CANDIDATE; RUN_FULL_ACCEPTANCE_ON_COMMITTED_REMOTE_PACKAGE; DO_NOT_OPEN_P4_5_BEFORE_P4_4_ACCEPTANCE"
+  "decision": "RUN_BOUNDED_FULL_ACCEPTANCE_ON_COMMITTED_REMOTE_PACKAGE; P4_5_PREACCEPTANCE_CANDIDATE_MAY_EXIST_BUT_CANNOT_BE_ACCEPTED_UNTIL_P4_4_ACCEPTS"
 }
