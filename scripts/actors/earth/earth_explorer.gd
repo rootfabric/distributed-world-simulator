@@ -99,10 +99,11 @@ func deactivate() -> void:
 
 func set_network_replica_mode(enabled: bool) -> void:
 	network_replica_mode = enabled
-	# Network snapshots own the spectator pose while attached.  The camera stays
-	# active so a graphical client remains a usable observer.
+	# The server owns spectator translation while attached, but presentation is
+	# still local. Keep mouse-look enabled so a graphical network client remains
+	# an interactive observer instead of becoming a static camera.
 	set_physics_process(active and not enabled)
-	set_process_unhandled_input(active and not enabled)
+	set_process_unhandled_input(active)
 
 
 func is_network_replica_mode() -> bool:
@@ -146,14 +147,34 @@ func apply_network_replica_pose(
 ) -> void:
 	if celestial_system == null or earth_world == null:
 		return
-	# Replica snapshots arrive at the normal M3 cadence.  Do not use the
-	# teleport path here: it eagerly rebuilds a terrain region and would turn
-	# every snapshot into a multi-second render stall.  EarthWorld's ordinary
+	# Replica snapshots arrive at the normal M3 cadence. Do not use the teleport
+	# path here: it eagerly rebuilds a terrain region and would turn every
+	# snapshot into a multi-second render stall. EarthWorld's ordinary
 	# update_for_view path owns streaming and recentering.
 	var direction: Vector3 = direction_value.normalized()
-	reference_frame_id = celestial_system.get_body_fixed_frame_id("earth")
+	var earth_frame_id: String = celestial_system.get_body_fixed_frame_id("earth")
+	# Preserve local camera yaw/pitch across authoritative position snapshots.
+	# Replacing orientation with _surface_orientation(direction) on every packet
+	# made the network client appear frozen because all local mouse-look was
+	# immediately overwritten by the next server snapshot.
+	var local_view_orientation := Basis.IDENTITY
+	var preserve_local_view: bool = (
+		reference_frame_id == earth_frame_id
+		and frame_position.length_squared() > 1.0
+	)
+	if preserve_local_view:
+		var previous_direction: Vector3 = frame_position.normalized()
+		local_view_orientation = (
+			_surface_orientation(previous_direction).inverse() * orientation
+		).orthonormalized()
+	reference_frame_id = earth_frame_id
 	frame_position = earth_world.get_surface_point(direction) + direction * altitude_m
-	orientation = _surface_orientation(direction)
+	var target_surface_orientation: Basis = _surface_orientation(direction)
+	orientation = (
+		(target_surface_orientation * local_view_orientation).orthonormalized()
+		if preserve_local_view
+		else target_surface_orientation
+	)
 	linear_velocity_mps = Vector3.ZERO
 	angular_velocity_rps = Vector3.ZERO
 	global_transform = Transform3D(orientation, Vector3.ZERO)
@@ -236,7 +257,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
 		orientation = orientation.orthonormalized()
 		global_transform = Transform3D(orientation, Vector3.ZERO)
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed and not network_replica_mode:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			movement_speed = clampf(movement_speed * 2.0, MIN_SPEED, MAX_SPEED)
 			get_viewport().set_input_as_handled()
