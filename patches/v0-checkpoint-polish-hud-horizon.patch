@@ -1,0 +1,143 @@
+diff --git a/scripts/ui/planetary_overlay.gd b/scripts/ui/planetary_overlay.gd
+index 905e92e..1111111 100644
+--- a/scripts/ui/planetary_overlay.gd
++++ b/scripts/ui/planetary_overlay.gd
+@@ -1,7 +1,11 @@
+ extends CanvasLayer
+ 
+ var panel: PanelContainer
+ var label: Label
++var minimize_button: Button
++var _minimized := false
++var _overlay_visible := true
+ 
+ 
+ func setup() -> void:
+@@ -18,12 +22,53 @@ func setup() -> void:
+ 	style.content_margin_top = 10.0
+ 	style.content_margin_bottom = 10.0
+ 	panel.add_theme_stylebox_override("panel", style)
++
++	var content := VBoxContainer.new()
++	content.add_theme_constant_override("separation", 6)
++	panel.add_child(content)
++
++	var header := HBoxContainer.new()
++	header.mouse_filter = Control.MOUSE_FILTER_PASS
++	content.add_child(header)
++
++	var title := Label.new()
++	title.text = "MVP DEBUG"
++	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	title.add_theme_font_size_override("font_size", 13)
++	header.add_child(title)
++
++	minimize_button = Button.new()
++	minimize_button.text = "—"
++	minimize_button.tooltip_text = "Свернуть/развернуть debug HUD (F1 — скрыть/показать)"
++	minimize_button.focus_mode = Control.FOCUS_NONE
++	minimize_button.custom_minimum_size = Vector2(34.0, 26.0)
++	minimize_button.pressed.connect(_toggle_minimized)
++	header.add_child(minimize_button)
++
+ 	label = Label.new()
+ 	label.name = "PlanetaryArchitectureLabel"
+ 	label.add_theme_font_size_override("font_size", 15)
+ 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	panel.add_child(label)
++	content.add_child(label)
++	set_process_unhandled_input(true)
++
++
++func _toggle_minimized() -> void:
++	_set_minimized(not _minimized)
++
++
++func _set_minimized(value: bool) -> void:
++	_minimized = value
++	if label != null:
++		label.visible = not value
++	if panel != null:
++		panel.custom_minimum_size = Vector2(260.0, 0.0) if value else Vector2(620.0, 0.0)
++	if minimize_button != null:
++		minimize_button.text = "□" if value else "—"
++
++
++func _unhandled_input(event: InputEvent) -> void:
++	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
++		_overlay_visible = not _overlay_visible
++		if panel != null:
++			panel.visible = _overlay_visible
++		get_viewport().set_input_as_handled()
+ 
+ 
+ func show_moon_mode(distance_m: float) -> void:
+@@ -151,7 +196,7 @@ func show_shared_space_mode(
+ 	)
+ 	var controls_description: String = (
+-		"WASD — движение через сервер | мышь — обзор | H — горизонт"
++		"WASD — движение через сервер | мышь — обзор | H — горизонт | F1 — debug HUD"
+ 		if explorer.has_method("is_network_replica_mode") and explorer.is_network_replica_mode()
+ 		else "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+ 	)
+diff --git a/scripts/actors/earth/earth_explorer.gd b/scripts/actors/earth/earth_explorer.gd
+index d5a5d06..2222222 100644
+--- a/scripts/actors/earth/earth_explorer.gd
++++ b/scripts/actors/earth/earth_explorer.gd
+@@ -257,13 +257,52 @@ func _unhandled_input(event: InputEvent) -> void:
+ 		return
+ 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+ 		var yaw_delta: float = -event.relative.x * MOUSE_SENSITIVITY
+ 		var pitch_delta: float = -event.relative.y * MOUSE_SENSITIVITY
+-		orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
+-		orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
+-		orientation = orientation.orthonormalized()
++		if network_replica_mode:
++			_apply_surface_locked_mouse_look(yaw_delta, pitch_delta)
++		else:
++			orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
++			orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
++			orientation = orientation.orthonormalized()
+ 		global_transform = Transform3D(orientation, Vector3.ZERO)
+ 	if event is InputEventMouseButton and event.pressed and not network_replica_mode:
+ 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+@@ -274,6 +313,43 @@ func _unhandled_input(event: InputEvent) -> void:
+ 			get_viewport().set_input_as_handled()
+ 
+ 
++func _apply_surface_locked_mouse_look(yaw_delta: float, pitch_delta: float) -> void:
++	# A networked surface player must not accumulate roll from repeated yaw/pitch
++	# rotations. Keep yaw around the local planetary normal, derive pitch from the
++	# forward vector, then rebuild a roll-free camera basis every mouse event.
++	if frame_position.length_squared() < 1.0:
++		orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
++		orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
++		orientation = orientation.orthonormalized()
++		return
++
++	var surface_up: Vector3 = frame_position.normalized()
++	var current_forward: Vector3 = (-orientation.z).normalized()
++	var current_pitch: float = asin(clampf(current_forward.dot(surface_up), -0.9999, 0.9999))
++	var horizontal_forward: Vector3 = current_forward - surface_up * current_forward.dot(surface_up)
++	if horizontal_forward.length_squared() < 0.000001:
++		horizontal_forward = -_surface_orientation(surface_up).z
++	horizontal_forward = horizontal_forward.normalized()
++	horizontal_forward = (Basis(surface_up, yaw_delta) * horizontal_forward).normalized()
++
++	var target_pitch: float = clampf(
++		current_pitch + pitch_delta,
++		deg_to_rad(-89.0),
++		deg_to_rad(89.0)
++	)
++	var right: Vector3 = horizontal_forward.cross(surface_up).normalized()
++	var forward: Vector3 = (
++		horizontal_forward * cos(target_pitch)
++		+ surface_up * sin(target_pitch)
++	).normalized()
++	var camera_up: Vector3 = right.cross(forward).normalized()
++	orientation = Basis(right, camera_up, -forward).orthonormalized()
++
++
+ func level_to_horizon() -> void:
+ 	if celestial_system == null:
+ 		return
