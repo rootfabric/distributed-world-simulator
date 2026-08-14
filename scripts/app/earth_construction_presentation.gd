@@ -168,7 +168,7 @@ func _world_rotation_array() -> Array:
 
 
 func _update_runtime_transform() -> void:
-	if _controller == null or _last_construct_id.is_empty():
+	if _controller == null or _last_construct_id != MVP_OUTPOST_CONSTRUCT_ID:
 		return
 	var runtime = _controller.get_runtime(_observer_id, _last_construct_id)
 	if runtime == null or not is_instance_valid(runtime):
