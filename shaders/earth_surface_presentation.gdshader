@@ -53,33 +53,33 @@ void fragment() {
 		EMISSION = COLOR.rgb;
 		ROUGHNESS = 1.0;
 		SPECULAR = 0.0;
-		return;
+	} else {
+		float macro = value_noise_3d(surface_local_position * macro_scale);
+		float detail = value_noise_3d(
+			surface_local_position * detail_scale + vec3(17.3, 3.7, 29.1)
+		);
+		float dry_patch = value_noise_3d(
+			surface_local_position * (macro_scale * 0.43) + vec3(41.7, 11.2, 7.4)
+		);
+
+		vec3 base = COLOR.rgb;
+		float macro_modulation = mix(
+			1.0 - macro_strength,
+			1.0 + macro_strength * 0.55,
+			macro
+		);
+		float detail_modulation = 1.0 + (detail - 0.5) * 2.0 * detail_strength;
+		vec3 color = base * macro_modulation * detail_modulation;
+
+		// Rare, very soft dry patches break up large grassland expanses without
+		// introducing a new biome/material truth.
+		float dry_amount = smoothstep(0.72, 0.91, dry_patch) * dry_patch_strength;
+		vec3 dry_tint = color * vec3(1.03, 0.90, 0.72);
+		color = mix(color, dry_tint, dry_amount);
+
+		ALBEDO = clamp(color, vec3(0.0), vec3(1.0));
+		EMISSION = vec3(0.0);
+		ROUGHNESS = clamp(ground_roughness + (detail - 0.5) * 0.035, 0.0, 1.0);
+		SPECULAR = 0.12;
 	}
-
-	float macro = value_noise_3d(surface_local_position * macro_scale);
-	float detail = value_noise_3d(
-		surface_local_position * detail_scale + vec3(17.3, 3.7, 29.1)
-	);
-	float dry_patch = value_noise_3d(
-		surface_local_position * (macro_scale * 0.43) + vec3(41.7, 11.2, 7.4)
-	);
-
-	vec3 base = COLOR.rgb;
-	float macro_modulation = mix(
-		1.0 - macro_strength,
-		1.0 + macro_strength * 0.55,
-		macro
-	);
-	float detail_modulation = 1.0 + (detail - 0.5) * 2.0 * detail_strength;
-	vec3 color = base * macro_modulation * detail_modulation;
-
-	// Rare, very soft dry patches break up large grassland expanses without
-	// introducing a new biome/material truth.
-	float dry_amount = smoothstep(0.72, 0.91, dry_patch) * dry_patch_strength;
-	vec3 dry_tint = color * vec3(1.03, 0.90, 0.72);
-	color = mix(color, dry_tint, dry_amount);
-
-	ALBEDO = clamp(color, vec3(0.0), vec3(1.0));
-	ROUGHNESS = clamp(ground_roughness + (detail - 0.5) * 0.035, 0.0, 1.0);
-	SPECULAR = 0.12;
 }
