@@ -19,7 +19,7 @@ diff --git a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_b
  		"events": Array(connected.get("events", [])).duplicate(true),
  	})
  
- diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
+diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 --- a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 +++ b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
 @@ -103,6 +103,7 @@ var _prediction_reconcile_failures: int = 0
