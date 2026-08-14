@@ -1,6 +1,6 @@
 # ECO P4 — Production Ecology Integration Roadmap
 
-Статус: `ACTIVE / P4.1-P4.6 ACCEPTED / P4.7 CANONICAL SOAK GATE OPEN / P4.8 PREPARATION ONLY`.
+Статус: `ACTIVE / P4.1-P4.6 ACCEPTED / P4.7 CANONICAL RUNNER READY / P4.8 PREPARATION READY`.
 
 Parent: `P3 RESEARCH ROUTE COMPLETE / P3.1..P3.8 ACCEPTED`.
 
@@ -12,8 +12,8 @@ Parent: `P3 RESEARCH ROUTE COMPLETE / P3.1..P3.8 ACCEPTED`.
 4. P4.4 Production Persistence — **ACCEPTED exact Windows full committed chain**.
 5. P4.5 Region Ownership / Server Handoff — **ACCEPTED exact Windows full committed chain**.
 6. P4.6 Interest + Client Read Model — **ACCEPTED exact Windows committed unit + real P4.5 integration**.
-7. P4.7 Production Integration Soak — **CANONICAL GATE OPEN; accelerated deterministic harness committed; exact committed A/B soak pending**.
-8. P4.8 P4 Acceptance — **PREPARATION MAY PROCEED; acceptance CLOSED until P4.7 accepts**.
+7. P4.7 Production Integration Soak — **CANONICAL RUNNER READY; exact committed A/B soak pending**.
+8. P4.8 P4 Acceptance — **PREPARATION READY; final acceptance blocked until P4.7 lifecycle acceptance**.
 
 ## Current lifecycle
 
@@ -24,14 +24,14 @@ P4.3 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN.
 P4.4 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN.
 P4.5 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN.
 P4.6 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION.
-P4.7 = CANDIDATE_CANONICAL_SOAK_GATE_OPEN.
-P4.8 = PREPARATION_ONLY / NOT ACCEPTED.
+P4.7 = CANDIDATE_CANONICAL_RUNNER_READY_EXACT_COMMITTED_A_B_PENDING.
+P4.8 = PREPARATION_READY_P4_7_CANONICAL_SOAK_PENDING.
 
 Accepted P4.4 aggregate: `4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2`.
 Accepted P4.5 aggregate: `c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419`.
 Accepted P4.6 unit aggregate: `88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2`.
 Accepted P4.6 real integration: `f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf`.
 
-P4.7 remains an accelerated deterministic integration soak, not a production scheduler or wall-clock service. It stresses eight regions across twelve cycles with bounded catch-up, repeated production persistence round-trips, ownership CAS/handoffs/restarts, client read-cache updates and interest projection. Forward and reverse processing orders must converge to identical final identities.
+P4.7 canonical runner retains the legacy filename `RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1` for compatibility, but its R4 semantics are canonical: accepted P4.6 validation is exact-pinned; eight regions × twelve cycles must yield 32 handoffs, 96 production persistence round-trips, 96 client updates, 12 interest projections and catch-up debt no greater than 8. Forward and reverse processing order must converge to identical final identities, and fresh-process A/B logs must be byte-identical.
 
-P4.8 may prepare a final acceptance manifest and closure runner, but it must remain fail-closed until P4.7 has an exact committed soak PASS and lifecycle acceptance.
+P4.8 preparation is already committed as a fail-closed control manifest. It verifies exact accepted validation blobs P4.1–P4.6 and exact canonical-ready P4.7 surfaces. It cannot accept P4.7 or P4 by implication. After P4.7 PASS, only its frozen soak identities, lifecycle acceptance and one final manifest promotion remain.
