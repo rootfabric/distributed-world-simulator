@@ -1,6 +1,8 @@
 extends Node3D
 
 # Derived C22/C24 presentation only. Canonical Construction state remains server-owned.
+# Spatial authority also stays outside this adapter: Earth runtime supplies a derived
+# floating-origin transform from a stable Earth-fixed anchor.
 const ControllerScript = preload("res://scripts/construction/proxies/construction_proxy_streaming_controller.gd")
 const BundleScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd")
 const RuntimeRequestScript = preload("res://scripts/construction/runtime_projection/construction_runtime_projection_request.gd")
@@ -8,8 +10,6 @@ const CompileRequestScript = preload("res://scripts/construction/proxies/constru
 const InterestRequestScript = preload("res://scripts/construction/proxies/construction_proxy_interest_request.gd")
 
 const MVP_OUTPOST_CONSTRUCT_ID := "construct/mvp/earth-outpost"
-const MVP_OUTPOST_PLANAR_POSITION := Vector2(0.0, -12.0)
-const MVP_EYE_HEIGHT_M := 1.75
 const MVP_AUTHORITY_EPOCH := 1
 
 var _controller
@@ -19,8 +19,8 @@ var _last_construct_id := ""
 var _last_checksum := ""
 var _last_detail_mode := ""
 var _authoritative_bundle: Dictionary = {}
-var _observer_tangent_basis := Basis.IDENTITY
-var _observer_planar_position := Vector2.ZERO
+var _derived_render_transform := Transform3D.IDENTITY
+var _render_transform_updates := 0
 var _projection_updates := 0
 var _projection_failures := 0
 
@@ -36,9 +36,12 @@ func setup(observer_id: String) -> Dictionary:
 	return _success()
 
 
-func set_observer_tangent_frame(tangent_basis: Basis, planar_position: Vector2) -> void:
-	_observer_tangent_basis = tangent_basis.orthonormalized()
-	_observer_planar_position = planar_position
+func set_derived_render_transform(value: Transform3D) -> void:
+	_derived_render_transform = Transform3D(
+		value.basis.orthonormalized(),
+		value.origin
+	)
+	_render_transform_updates += 1
 	_update_runtime_transform()
 
 
@@ -127,8 +130,9 @@ func apply_authoritative_bundle(bundle: Dictionary) -> Dictionary:
 
 
 func get_report() -> Dictionary:
+	var rotation := Quaternion(_derived_render_transform.basis).normalized()
 	return {
-		"schema": "planet_simulator.earth_construction_presentation.v1",
+		"schema": "planet_simulator.earth_construction_presentation.v2",
 		"observer_id": _observer_id,
 		"construct_id": _last_construct_id,
 		"source_checksum": _last_checksum,
@@ -137,7 +141,14 @@ func get_report() -> Dictionary:
 		"authoritative_bundle_generation": int(_authoritative_bundle.get("server_generation", -1)),
 		"projection_updates": _projection_updates,
 		"projection_failures": _projection_failures,
-		"observer_planar_position": [_observer_planar_position.x, _observer_planar_position.y],
+		"render_transform_updates": _render_transform_updates,
+		"derived_render_origin": [
+			_derived_render_transform.origin.x,
+			_derived_render_transform.origin.y,
+			_derived_render_transform.origin.z,
+		],
+		"derived_render_rotation_xyzw": [rotation.x, rotation.y, rotation.z, rotation.w],
+		"spatial_authority": "EXTERNAL_EARTH_FIXED_ANCHOR",
 		"direct_authority_references": 0,
 	}
 
@@ -149,33 +160,24 @@ func _find_mvp_outpost_snapshot(bundle: Dictionary) -> Dictionary:
 	return {}
 
 
-func _relative_outpost_local() -> Vector3:
-	return Vector3(
-		MVP_OUTPOST_PLANAR_POSITION.x - _observer_planar_position.x,
-		-MVP_EYE_HEIGHT_M,
-		MVP_OUTPOST_PLANAR_POSITION.y - _observer_planar_position.y
-	)
-
-
 func _world_origin_array() -> Array:
-	var value: Vector3 = _observer_tangent_basis * _relative_outpost_local()
+	var value: Vector3 = _derived_render_transform.origin
 	return [value.x, value.y, value.z]
 
 
 func _world_rotation_array() -> Array:
-	var value := Quaternion(_observer_tangent_basis).normalized()
+	var value := Quaternion(_derived_render_transform.basis).normalized()
 	return [value.x, value.y, value.z, value.w]
 
 
 func _update_runtime_transform() -> void:
-	if _controller == null or _last_construct_id != MVP_OUTPOST_CONSTRUCT_ID:
+	if _controller == null or _last_construct_id.is_empty():
 		return
 	var runtime = _controller.get_runtime(_observer_id, _last_construct_id)
 	if runtime == null or not is_instance_valid(runtime):
 		return
-	var origin: Vector3 = _observer_tangent_basis * _relative_outpost_local()
-	runtime.position = origin
-	runtime.quaternion = Quaternion(_observer_tangent_basis).normalized()
+	runtime.position = _derived_render_transform.origin
+	runtime.quaternion = Quaternion(_derived_render_transform.basis).normalized()
 
 
 func _success(details: Dictionary = {}) -> Dictionary:
