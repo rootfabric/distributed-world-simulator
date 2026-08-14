@@ -1,0 +1,53 @@
+diff --git a/scripts/network/realtime/realtime_channel_policy.gd b/scripts/network/realtime/realtime_channel_policy.gd
+--- a/scripts/network/realtime/realtime_channel_policy.gd
++++ b/scripts/network/realtime/realtime_channel_policy.gd
+@@ -2,7 +2,7 @@ extends RefCounted
+ 
+ const SCHEMA: String = "planet_simulator.realtime_channel_policy.v1"
+ const ENET_CHANNEL_COUNT: int = 6
+-const UNRELIABLE_TRANSPORT_MAPPING: String = "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1"
++const UNRELIABLE_TRANSPORT_MAPPING: String = "ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1"
+ const REALTIME_COALESCING_POLICY: String = "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1"
+ 
+ const CONTROL: String = "CONTROL"
+diff --git a/scripts/network/transports/v2/enet_multi_peer_transport_port.gd b/scripts/network/transports/v2/enet_multi_peer_transport_port.gd
+--- a/scripts/network/transports/v2/enet_multi_peer_transport_port.gd
++++ b/scripts/network/transports/v2/enet_multi_peer_transport_port.gd
+@@ -371,7 +371,12 @@ func _channel_index(channel: String) -> int:
+ 
+ 
+ func _transfer_mode(delivery_mode: String) -> int:
+-	return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if delivery_mode == "UNRELIABLE_SEQUENCED" else MultiplayerPeer.TRANSFER_MODE_RELIABLE
++	# The application still performs latest-wins sequencing, but ENet should not
++	# deliver older realtime packets after newer packets on the same physical
++	# channel. Godot's UNRELIABLE_ORDERED mode is the intended transport mapping
++	# for continuously changing movement/snapshot state.
++	return (
++		MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
++		if delivery_mode == "UNRELIABLE_SEQUENCED"
++		else MultiplayerPeer.TRANSFER_MODE_RELIABLE
++	)
+ 
+ 
+ func _validate_endpoint(endpoint: Dictionary) -> Dictionary:
+diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
+--- a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
++++ b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
+@@ -205,6 +205,7 @@ func _process(_delta: float) -> void:
+ 	if not _configured or _boundary == null: return
+ 	var process_started_us: int = Time.get_ticks_usec()
++	var disconnected_this_poll: bool = false
+ 	_telemetry.increment("client_process_iterations")
+ 	var polled: Dictionary = _boundary.poll_events(128)
+ 	if not bool(polled.get("success", false)):
+@@ -246,10 +247,11 @@ func _process(_delta: float) -> void:
+ 			_joined = false
+ 			_debug_event("SERVER_DISCONNECTED", event)
+ 			_write_report("DISCONNECTED", false)
+ 			server_disconnected.emit(get_report())
+-	if not _joined and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
++			disconnected_this_poll = true
++	if not _joined and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+ 		_fail_connection("M3_CLIENT_CONNECT_TIMEOUT")
+ 	_flush_pending_input_batch(false)
+ 	_update_runtime_telemetry()
