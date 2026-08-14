@@ -1,0 +1,46 @@
+diff --git a/scripts/app/earth_mvp_app.gd b/scripts/app/earth_mvp_app.gd
+--- a/scripts/app/earth_mvp_app.gd
++++ b/scripts/app/earth_mvp_app.gd
+@@ -23,6 +23,7 @@ var _mvp_inventory_visible := false
+ var _mvp_inventory_shell
+ var _mvp_inventory_setup_error := ""
++var _mvp_input_owner := "GAMEPLAY"
+ 
+ var _mvp_spectator_enabled := false
+ var _mvp_spectator_saved_speed := 900.0
+@@ -400,8 +401,25 @@ func _set_mvp_inventory_visible(visible: bool) -> void:
+ 	if visible:
+ 		_submit_mvp_neutral_input()
+ 	_mvp_inventory_shell.set_inventory_visible(visible)
++	_sync_mvp_input_ownership()
+ 	if _mvp_spectator_enabled and earth_explorer != null:
+ 		earth_explorer.set_physics_process(not visible)
+ 
+ 
++func _sync_mvp_input_ownership() -> void:
++	# Earth MVP is the single owner of global mouse capture. Child UI layers may
++	# expose visibility, but must not independently switch Input.mouse_mode.
++	_mvp_input_owner = (
++		"INVENTORY"
++		if _mvp_inventory_visible
++		else ("SPECTATOR" if _mvp_spectator_enabled else "GAMEPLAY")
++	)
++	Input.mouse_mode = (
++		Input.MOUSE_MODE_VISIBLE
++		if _mvp_input_owner == "INVENTORY"
++		else Input.MOUSE_MODE_CAPTURED
++	)
++
++
+ func _set_mvp_spectator_enabled(enabled: bool) -> void:
+ diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
+--- a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
++++ b/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd
+@@ -64,7 +64,6 @@ func set_inventory_visible(value: bool) -> void:
+ 	_inventory_visible = value
+ 	if inventory_window != null:
+ 		inventory_window.visible = value
+-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if value else Input.MOUSE_MODE_CAPTURED
+ 
+ 
+ func is_inventory_visible() -> bool:
