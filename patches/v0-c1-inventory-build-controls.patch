@@ -18,20 +18,18 @@ diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/sc
  var active_profile
  var _inventory_visible := false
  var _configured := false
-@@ -31,6 +34,9 @@ var _cursor_begin_count := 0
+@@ -31,6 +34,8 @@ var _cursor_begin_count := 0
  var _cursor_place_count := 0
  var _last_command_result: Dictionary = {}
-+var _network_runtime
 +var _outpost_adapter
 +var _construction_pending := false
  
  
  func setup(runtime, logical_player_id: String) -> Dictionary:
-@@ -49,10 +55,18 @@ func setup(runtime, logical_player_id: String) -> Dictionary:
+@@ -49,10 +54,17 @@ func setup(runtime, logical_player_id: String) -> Dictionary:
  		bridge.queue_free()
  		bridge = null
  		return profile_result
-+	_network_runtime = runtime
 +	_outpost_adapter = MvpOutpostClientAdapter.new()
 +	var outpost_setup: Dictionary = _outpost_adapter.setup(runtime)
 +	if not bool(outpost_setup.get("success", false)):
@@ -46,7 +44,7 @@ diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/sc
  	_on_view_updated(bridge.build_view())
 +	_refresh_construction_status()
  	return _success({"interaction_profile": String(active_profile.profile_id)})
-@@ -111,6 +125,11 @@ func get_report() -> Dictionary:
+@@ -111,6 +123,11 @@ func get_report() -> Dictionary:
  		"cursor_active": bridge.has_cursor() if bridge != null else false,
  		"cursor": bridge.get_cursor() if bridge != null else {},
  		"last_command_result": _last_command_result.duplicate(true),
@@ -58,18 +56,14 @@ diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/sc
  		"bridge": bridge.get_report() if bridge != null else {},
  		"player_model": player_panel.current_model.duplicate(true) if player_panel != null else {},
  		"external_model": external_panel.current_model.duplicate(true) if external_panel != null else {},
-@@ -244,7 +263,7 @@ func _build_ui() -> void:
+@@ -244,7 +261,7 @@ func _build_ui() -> void:
  	inventory_window.add_child(outer)
  	var title := Label.new()
 -	title.text = "СЕТЕВОЙ ИНВЕНТАРЬ · M5 GRAPHICAL ACCEPTANCE"
 +	title.text = "ИНВЕНТАРЬ · V0"
  	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  	outer.add_child(title)
-@@ -277,6 +296,23 @@ func _build_ui() -> void:
- 	player_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
- 	columns.add_child(player_panel)
- 	external_panel = ContainerPanelScene.instantiate()
-@@ -284,6 +320,23 @@ func _build_ui() -> void:
+@@ -284,6 +301,23 @@ func _build_ui() -> void:
  	external_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  	columns.add_child(external_panel)
  
@@ -93,7 +87,7 @@ diff --git a/scripts/ui/inventory/networked/m5_networked_inventory_shell.gd b/sc
  	var actions := HBoxContainer.new()
  	actions.add_theme_constant_override("separation", 8)
  	outer.add_child(actions)
-@@ -337,6 +390,7 @@ func _on_view_updated(view: Dictionary) -> void:
+@@ -337,6 +371,78 @@ func _on_view_updated(view: Dictionary) -> void:
  	]
  	close_container_button.disabled = String(view.get("external_container_id", "")).is_empty()
  	_render_count += 1
