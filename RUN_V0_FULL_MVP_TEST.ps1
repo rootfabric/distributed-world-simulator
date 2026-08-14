@@ -161,7 +161,9 @@ function Write-RunnerSummary {
         -and $ProvenanceResult -eq "PASS" `
         -and $OverallState -eq "PASS" `
         -and $null -ne $ScenarioSummary `
-        -and [bool]$ScenarioSummary.final_checkpoint_eligible
+        -and [bool]$ScenarioSummary.scenario_final_conditions_satisfied `
+        -and ([string]$ScenarioSummary.checkpoint_authority) -eq "RUNNER_ONLY" `
+        -and [bool]$ScenarioSummary.runner_provenance_required
     )
 
     $Payload = [ordered]@{
