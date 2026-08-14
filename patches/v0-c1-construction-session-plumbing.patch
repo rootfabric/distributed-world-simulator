@@ -1,0 +1,56 @@
+diff --git a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd b/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
+--- a/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
++++ b/scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd
+@@ -45,12 +45,16 @@ func connect_player(logical_player_id: String, ownership_epoch: int, last_seen_event_index: int = -1) -> Dictionary:
+ 		"permission_epoch": int(session.get("permission_epoch", 0)),
+ 		"ownership_epoch": ownership_epoch,
+ 	}
++	var snapshot_packet: Dictionary = _snapshot_packet(
++		Dictionary(connected.get("state_bundle", {})),
++		int(connected.get("last_event_index", -1))
++	)
++	snapshot_packet["client_session"] = session.duplicate(true)
+ 	return _success({
+ 		"client_id": client_id,
+ 		"session": session,
+ 		"reconnect": bool(connected.get("reconnect", false)),
+-		"snapshot": _snapshot_packet(Dictionary(connected.get("state_bundle", {})), int(connected.get("last_event_index", -1))),
++		"snapshot": snapshot_packet,
+ 		"events": Array(connected.get("events", [])).duplicate(true),
+ 	})
+ 
+ diff --git a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
+--- a/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
++++ b/scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd
+@@ -103,6 +103,7 @@ var _prediction_reconcile_failures: int = 0
+ var _prediction_updates_emitted: int = 0
+ var _construction_replica
++var _construction_session: Dictionary = {}
+ var _construction_snapshot_updates := 0
+ var _construction_event_updates := 0
+ var _construction_rejections := 0
+@@ -145,6 +146,7 @@ func setup(config: Dictionary) -> Dictionary:
+ 	_compact_snapshot_clock_updates = 0
+ 	_prediction_reconciler = ClientPredictionReconciler.new()
+ 	_construction_replica = ConstructionReplica.new()
++	_construction_session.clear()
+ 	_construction_snapshot_updates = 0
+ 	_construction_event_updates = 0
+ 	_construction_rejections = 0
+@@ -898,6 +900,9 @@ func _accept_construction_snapshot(payload: Dictionary) -> void:
+ 		_construction_rejections += 1
+ 		_last_error_code = "CONSTRUCTION_REPLICA_NOT_READY"
+ 		return
++	var session_value = payload.get("client_session", {})
++	if session_value is Dictionary:
++		_construction_session = Dictionary(session_value).duplicate(true)
+ 	var bundle_value = payload.get("state_bundle", {})
+ 	if not bundle_value is Dictionary:
+ 		_construction_rejections += 1
+@@ -947,6 +952,7 @@ func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
+ 	return _failure("M3_CONSTRUCTION_COMMAND_TIMEOUT")
+ 
+ func get_construction_bundle() -> Dictionary: return _construction_replica.get_bundle() if _construction_replica != null else {}
++func get_construction_session() -> Dictionary: return _construction_session.duplicate(true)
+ 
+ func request_graceful_leave(timeout_ms: int = 2500) -> Dictionary:
