@@ -87,11 +87,9 @@ foreach ($Marker in $S0Markers) {
     Assert-Marker $Marker.Path $Marker.Text $Marker.Name
 }
 
-# Refresh delivery artifacts and new direct source/tests first. Patches are not
-# production state; replacing stale copies from previous attempts is safe.
-$RestoreArtifacts = @("restore", "--source=$DeliveryRef", "--worktree", "--") + $PatchFiles + @(
-    "SYNC_V0_I2_C1_RUNTIME.ps1"
-)
+# Refresh only delivery patches. The caller explicitly restores this script
+# before execution; a running PowerShell script must never rewrite itself.
+$RestoreArtifacts = @("restore", "--source=$DeliveryRef", "--worktree", "--") + $PatchFiles
 & git @RestoreArtifacts
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to restore V0-I2/C1 delivery artifacts."
