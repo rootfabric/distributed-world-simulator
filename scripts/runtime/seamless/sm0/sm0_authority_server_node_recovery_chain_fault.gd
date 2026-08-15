@@ -64,6 +64,18 @@ func _h43_is_source_setup_replay(transfer_id: String) -> bool:
 	)
 
 
+func _h43_is_current_retired_source_transfer(transfer_id: String) -> bool:
+	return (
+		not transfer_id.is_empty()
+		and not _source_transfer.is_empty()
+		and String(_source_transfer.get("transfer_id", "")) == transfer_id
+		and String(_source_transfer.get("stage", "")) == "COMMIT_SENT"
+		and _recovery_last_phase == "SOURCE_RETIRED"
+		and _recovery_last_transfer_id == transfer_id
+		and String(_directory.get("owner_authority_id", "")) != _authority_id
+	)
+
+
 func _h43_emit_crash_point(stage: String, transfer_id: String) -> void:
 	var key := "%s|%s" % [stage, transfer_id]
 	if _h43_crash_keys.has(key):
@@ -117,13 +129,7 @@ func _send_source_commit() -> void:
 		super._send_source_commit()
 		return
 
-	if (
-		transfer_id.is_empty()
-		or String(_source_transfer.get("stage", "")) != "COMMIT_SENT"
-		or _recovery_last_phase != "SOURCE_RETIRED"
-		or _recovery_last_transfer_id != transfer_id
-		or String(_directory.get("owner_authority_id", "")) == _authority_id
-	):
+	if not _h43_is_current_retired_source_transfer(transfer_id):
 		super._send_source_commit()
 		return
 
@@ -188,6 +194,20 @@ func _handle_client_activate(request_id: String, payload: Dictionary, remote_ip:
 
 
 func _send_gameplay(host: String, port: int, message_type: String, payload: Dictionary, request_id: String = "") -> void:
+	if (
+		_h43_fault_profile == FAULT_PROFILE_H43_RECOVERY_CHAIN_V1
+		and message_type == "HANDOFF_REDIRECT"
+	):
+		var redirect_transfer_id := String(payload.get("transfer_id", "")).strip_edges()
+		if _h43_is_current_retired_source_transfer(redirect_transfer_id):
+			# The redirect emitted from recovery setup belongs to replay of the old T
+			# and must pass. A fresh/new T is held together with COMMIT at PREPARED.
+			if _h43_is_source_setup_replay(redirect_transfer_id):
+				super._send_gameplay(host, port, message_type, payload, request_id)
+				return
+			_h43_emit_send_suppressed(H43_STAGE_PREPARED, message_type, redirect_transfer_id, request_id)
+			return
+
 	if (
 		_h43_fault_profile == FAULT_PROFILE_H43_RECOVERY_CHAIN_V1
 		and _h43_boot_restored
