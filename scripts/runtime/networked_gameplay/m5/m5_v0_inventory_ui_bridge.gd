@@ -212,12 +212,8 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 
 
 func _merge_compatible_stacks_for_sort(container_id: String) -> Dictionary:
-	var merged_count := 0
-	var guard := 0
-	while true:
-		guard += 1
-		if guard > 2048:
-			return _failure("SORT_STACK_MERGE_LIMIT", {"container_id": container_id})
+	var merged_count: int = 0
+	for _iteration in range(2048):
 		var model: Dictionary = _model_for_container(container_id)
 		if model.is_empty():
 			return _failure("SORT_CONTAINER_NOT_VISIBLE", {"container_id": container_id})
@@ -226,7 +222,7 @@ func _merge_compatible_stacks_for_sort(container_id: String) -> Dictionary:
 			return _success({"container_id": container_id, "merged": merged_count})
 		var source: Dictionary = Dictionary(candidate.get("source", {}))
 		var target: Dictionary = Dictionary(candidate.get("target", {}))
-		var amount := int(candidate.get("quantity", 0))
+		var amount: int = int(candidate.get("quantity", 0))
 		if amount < 1:
 			return _failure("SORT_STACK_MERGE_INVALID")
 		var merge: Dictionary = submit_ui_action_blocking("transfer", {
@@ -242,6 +238,7 @@ func _merge_compatible_stacks_for_sort(container_id: String) -> Dictionary:
 		if not bool(merge.get("success", false)):
 			return merge
 		merged_count += 1
+	return _failure("SORT_STACK_MERGE_LIMIT", {"container_id": container_id})
 
 
 func _find_sort_merge_candidate(model: Dictionary) -> Dictionary:
