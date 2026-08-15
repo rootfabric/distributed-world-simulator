@@ -111,10 +111,10 @@ foreach ($Test in $Tests) {
 }
 
 $ClockPurityLog = Join-Path $ArtifactRoot "tests_runtime_test_v0_p1_canonical_clock_purity.gd.log"
-$ClockPuritySummary = "V0-P1 canonical clock purity: 40 assertions, 0 failures"
+$ClockPuritySummary = "V0-P1 canonical clock purity: 45 assertions, 0 failures"
 if (-not (Select-String -Path $ClockPurityLog -SimpleMatch $ClockPuritySummary -Quiet)) {
     Get-Content $ClockPurityLog -Tail 160 -ErrorAction SilentlyContinue
-    throw "V0-P1 canonical clock purity did not produce the required 40/0 summary."
+    throw "V0-P1 canonical clock purity did not produce the required 45/0 summary."
 }
 
 Write-Host ""
