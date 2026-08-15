@@ -1,6 +1,6 @@
 extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd"
 
-# Deterministic transport-fault layer for SM0-H1.
+# Deterministic fault layer for SM0 hardening.
 # It is activated only by an explicit fault_profile and leaves the healthy V2
 # path unchanged when the normal server process is launched without a profile.
 #
@@ -9,19 +9,31 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd"
 # - duplicate the first PREPARED, exercising source idempotence;
 # - delay the first COMMIT by 350 ms so the 200 ms retry overtakes it;
 # - drop the first successful COMMITTED, forcing target replay/ack recovery.
+#
+# h2-target-crash-before-prepared-v1 is a process-crash test hook. The target
+# records a deterministic crash point and suppresses its first successful
+# PREPARED response. The external H2 supervisor then force-kills that target
+# process and restarts a healthy target on the same ports. Because source
+# authority has not committed yet, the source remains frozen and retries PREPARE.
 
 const FAULT_PROFILE_TRANSPORT_CHAOS_V1 := "transport-chaos-v1"
+const FAULT_PROFILE_H2_TARGET_CRASH_BEFORE_PREPARED_V1 := "h2-target-crash-before-prepared-v1"
 const COMMIT_DELAY_MS := 350
 
 var _fault_profile := ""
 var _fault_applied: Dictionary = {}
 var _fault_delayed_control: Array = []
 var _fault_pending_shutdown: Dictionary = {}
+var _h2_crash_point_emitted := false
 
 
 func setup(config: Dictionary) -> Dictionary:
 	_fault_profile = String(config.get("fault_profile", "")).strip_edges()
-	if not _fault_profile.is_empty() and _fault_profile != FAULT_PROFILE_TRANSPORT_CHAOS_V1:
+	if _fault_profile not in [
+		"",
+		FAULT_PROFILE_TRANSPORT_CHAOS_V1,
+		FAULT_PROFILE_H2_TARGET_CRASH_BEFORE_PREPARED_V1,
+	]:
 		return _failure("SM0_UNKNOWN_FAULT_PROFILE", {"fault_profile": _fault_profile})
 	var result: Dictionary = super.setup(config)
 	if bool(result.get("success", false)) and not _fault_profile.is_empty():
@@ -53,6 +65,24 @@ func _shutdown(exit_code: int, reason: String) -> void:
 
 
 func _send_control(message_type: String, payload: Dictionary, request_id: String = "") -> void:
+	if _fault_profile == FAULT_PROFILE_H2_TARGET_CRASH_BEFORE_PREPARED_V1:
+		if message_type == "PLAYER_HANDOFF_PREPARED" and bool(payload.get("success", false)):
+			if not _h2_crash_point_emitted:
+				_h2_crash_point_emitted = true
+				_event("SM0_H2_CRASH_POINT", {
+					"fault_profile": _fault_profile,
+					"crash_point": "TARGET_BEFORE_PREPARED_ACK",
+					"message_type": message_type,
+					"transfer_id": String(payload.get("transfer_id", "")),
+					"request_id": request_id,
+				})
+			# Keep suppressing successful PREPARED while this doomed process is alive.
+			# The external H2 supervisor must be the only thing that advances this
+			# crash point by force-killing the process and starting a healthy target.
+			return
+		super._send_control(message_type, payload, request_id)
+		return
+
 	if _fault_profile != FAULT_PROFILE_TRANSPORT_CHAOS_V1:
 		super._send_control(message_type, payload, request_id)
 		return
