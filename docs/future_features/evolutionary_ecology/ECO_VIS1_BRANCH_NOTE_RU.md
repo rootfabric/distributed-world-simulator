@@ -1,0 +1,1 @@
+Temporary staging note for VIS1 branch split. This file is carried only into feature/eco-vis1-visual-proving-ground and the source ECO/P4 branch will be restored to its frozen head.
