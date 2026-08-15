@@ -1,0 +1,83 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/eco-p4-production-convergence-prep-r1",
+  "program": "ECO",
+  "role": "CONVERGENCE_PREPARATION_FRONTIER",
+  "short_description": "Fresh-main control-only preparation for reviewing and later porting accepted ECO P4 capabilities without merging the diverged research lineage or duplicating canonical authority/persistence foundations.",
+  "purpose": "Preserve exact P4 branch evidence, classify each P4 surface against canonical R3 ownership, define the minimal dependency closure, and prepare an independently reviewable handoff before any runtime transfer.",
+  "north_star_doc": "docs/control/ECO_P4_PRODUCTION_CONVERGENCE_PREPARATION_RU.md",
+  "current_stage": "ECO P4 Current-Main Convergence Preparation / Independent Review Packet",
+  "stage_status": "CONTROL_ONLY_PREPARED_RUNTIME_TRANSFER_BLOCKED_PENDING_INDEPENDENT_REVIEW_AND_CRITICAL_DISPATCH",
+  "progress_note": "Fresh branch created from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 generation 79. P4 branch lifecycle evidence is preserved by exact blobs/hashes. No runtime file has been copied. P4.4 persistence and P4.5 ownership/handoff intersect canonical R3 durability/authority ownership and therefore require CRITICAL review/human decision before any runtime port.",
+  "last_accepted_checkpoint": "SOURCE: ECO P4 branch lifecycle evidence complete on feature/eco-evolutionary-ecology; not main-promoted",
+  "next_stage": "Independent review of the convergence preparation. If PASS and the single runtime-worker slot is free, main/Director must declare and dispatch a CRITICAL fresh-main ECO production convergence Work Order before copying runtime files.",
+  "owned_paths": [
+    "config/control/branches/control__eco-p4-production-convergence-prep-r1.v1.json",
+    "docs/control/ECO_P4_PRODUCTION_CONVERGENCE_PREPARATION_RU.md",
+    "validation/ecology/eco-p4-production-convergence-preparation.json"
+  ],
+  "watched_paths": [
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/**",
+    "scripts/ecology/production/**",
+    "scripts/research/ecology/**",
+    "scripts/network/**",
+    "scripts/simulation/**"
+  ],
+  "critical_watched_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/**",
+    "scripts/simulation/**"
+  ],
+  "runtime_paths": [],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE_CONTROL_ONLY",
+    "source_p4_runtime": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "source_p4_final_manifest": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
+    "control_preparation": "PENDING_FINAL_HEAD"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "ECOLOGY_DOMAIN_STATE_SEMANTICS",
+      "claimed_owner": "ECO",
+      "scope": "Ecology-specific state/read-model semantics only; no authority, durability, world query, lifecycle or work-budget ownership claimed."
+    }
+  ],
+  "execution_modes": ["CONTROL_ONLY"],
+  "execution_invariant": "NO_RUNTIME_TRANSFER_BEFORE_INDEPENDENT_REVIEW_PLUS_MAIN_OWNED_CRITICAL_WORK_ORDER_DISPATCH",
+  "forbidden_foundation_ownership": [
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_QUERY_FABRIC",
+    "WORLD_LIFECYCLE_FABRIC",
+    "WORLD_WORK_BUDGET",
+    "NETWORK_REPLICATION_POLICY",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_TRANSACTION_MODEL"
+  ],
+  "blockers": [
+    "INDEPENDENT_REVIEW_OF_BRANCH_LOCAL_P4_EVIDENCE_AND_PORTABILITY_MAP_REQUIRED",
+    "MAIN_OWNED_ECO_PRODUCTION_CHECKPOINT_OR_WORK_ORDER_NOT_DECLARED",
+    "SINGLE_RUNTIME_WORKER_SLOT_MUST_BE_FREE",
+    "CRITICAL_HUMAN_ARCHITECTURE_DECISION_REQUIRED_BEFORE_P4_4_OR_P4_5_RUNTIME_PORT",
+    "CANONICAL_WQ_MAT_LIFE_WB_ADAPTER_CONTRACTS_MUST_BE_RESOLVED_FOR_PRODUCTION_ECO"
+  ],
+  "health_declared": "GREEN_CONTROL_PREPARATION_WITH_EXPLICIT_CRITICAL_RUNTIME_BLOCKERS",
+  "cross_branch_overlap_enabled": false,
+  "planned_cross_tracks": [
+    {
+      "id": "ECO.P4.CONV.REVIEW",
+      "status": "READY_FOR_INDEPENDENT_REVIEW",
+      "goal": "Review exact P4 evidence, dependency closure and ownership-safe portability classification."
+    },
+    {
+      "id": "ECO.P4.CONV.RUNTIME",
+      "status": "BLOCKED",
+      "goal": "Fresh-main minimal runtime capability transfer after CRITICAL authorization and single-worker slot availability."
+    }
+  ]
+}
