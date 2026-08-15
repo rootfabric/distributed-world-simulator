@@ -55,7 +55,7 @@ The result is accepted only when:
 - tracked checkout state remains clean;
 - logs contain no parser/script/runtime failure markers.
 
-## Windows exact-head execution record
+## Windows exact-head execution record R1
 
 Exact validation HEAD `903bd1e0753bb4fe5612a791537b2dd51bec969b` was executed on Windows with Godot `4.7.1.stable.double.custom_build.a13da4feb`.
 
@@ -70,7 +70,7 @@ Observed ordering from the same server process:
 ~9532 ms  PEER_DISCONNECTED for early actor-A transport
 ```
 
-### Repair Map
+### Repair Map R1
 
 **Root cause:** the validation harness treated transport-level `SERVER_READY` as the complete Earth application readiness boundary. For `--world=earth`, synchronous world initialization continues for several seconds after that marker. A fast headless M3 client can therefore connect while the dedicated server is not polling the transport often enough to complete the handshake/session path.
 
@@ -84,6 +84,37 @@ Repair implementation commit:
 
 ```text
 c33ac086ba00627a0ae4aa0369ea760baa71cffb
+```
+
+## Windows exact-head execution record R2
+
+Exact validation HEAD `a445543443d1666eae27a777e54cf5e7c7c5c864` was rerun on Windows with the same Godot build and `-SkipP1Preflight`, because the same checkout had already proved the full P1 preflight GREEN.
+
+R1 was confirmed repaired: the gate printed `SERVER_READY`, `earth_runtime_ready`, and dedicated-server lifecycle readiness before actor A was launched. A then connected and was disconnected about 0.7 seconds later.
+
+### Repair Map R2
+
+**Root cause:** the validation process client called the production M3 runtime directly with `playable_sandbox=true` but omitted `world_id`.
+
+`NetworkRuntimeIdentity.create_fingerprint()` defaults an omitted world to `playground` when `playable_sandbox=true`. The real `--network-mvp` composition explicitly passes `world_id=earth`. Therefore the validation client advertised a `playground` compatibility fingerprint while the production server advertised `earth`, and the compatibility handshake correctly disconnected it.
+
+A second validation defect made this opaque: the process client listened to `connection_failed` but not `server_disconnected`, so a handshake/transport disconnect could leave no terminal result JSON and the parent eventually reported only `actor A reaches ready state` timeout.
+
+**Files:** `tools/runtime/v0_p1_live_reconnect_client.gd` only for code; this evidence document records the failure/correction.
+
+**Correction:**
+
+- set `world_id="earth"` in direct M3 client setup;
+- keep `playable_sandbox=true` because P1 product bootstrap maps `--network-mvp` to the inherited playable-sandbox M3 capability;
+- use normal product client mode `automated_acceptance=false`;
+- enable debug logging for reconnect evidence;
+- listen to `server_disconnected` and fail fast with the runtime report;
+- guard terminal result emission so a shutdown/disconnect cannot overwrite the first failure.
+
+Repair implementation commit:
+
+```text
+e27cef98da2ddbd89e853ffb56cbd0bf3fc9d5ff
 ```
 
 A fresh exact-head Windows real-UDP run is required after the validation branch advances.
