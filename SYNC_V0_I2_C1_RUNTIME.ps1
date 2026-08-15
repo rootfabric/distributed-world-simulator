@@ -149,9 +149,14 @@ elseif (-not $LegacyObserverFrameInstalled) {
 }
 
 # Earth construction presentation is stabilization-owned and was clean before
-# this slice. Refuse to overwrite an unrelated local edit there.
+# this slice. Refuse to overwrite an unrelated local edit there. A newer C2A
+# fixed-anchor presentation is also accepted and must not be downgraded.
 $PresentationPath = "scripts/app/earth_construction_presentation.gd"
-if (-not (Test-Marker $PresentationPath "MVP_OUTPOST_PLANAR_POSITION")) {
+$PresentationContractInstalled = (
+    (Test-Marker $PresentationPath "MVP_OUTPOST_CONSTRUCT_ID") -and
+    (Test-Marker $PresentationPath "func set_derived_render_transform")
+)
+if (-not $PresentationContractInstalled) {
     & git diff --quiet -- $PresentationPath
     if ($LASTEXITCODE -eq 1) {
         throw "Local modifications exist in $PresentationPath; refusing to overwrite them."
@@ -196,7 +201,8 @@ $FinalMarkers = @(
     @{ Path = "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"; Text = "func get_construction_session()"; Name = "client construction session" },
     @{ Path = "scripts/runtime/networked_gameplay/m3/m3_mvp_outpost_client_adapter.gd"; Text = "func build_next_stage_blocking()"; Name = "outpost client adapter" },
     @{ Path = "scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"; Text = "MvpOutpostClientAdapter"; Name = "inventory build controls" },
-    @{ Path = "scripts/app/earth_construction_presentation.gd"; Text = "MVP_OUTPOST_PLANAR_POSITION"; Name = "C22/C24 outpost projection" }
+    @{ Path = "scripts/app/earth_construction_presentation.gd"; Text = "MVP_OUTPOST_CONSTRUCT_ID"; Name = "C22/C24 outpost projection" },
+    @{ Path = "scripts/app/earth_construction_presentation.gd"; Text = "func set_derived_render_transform"; Name = "derived Construction render transform" }
 )
 foreach ($Marker in $FinalMarkers) {
     Assert-Marker $Marker.Path $Marker.Text $Marker.Name
