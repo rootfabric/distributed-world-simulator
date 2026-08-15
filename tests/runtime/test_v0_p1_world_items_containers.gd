@@ -135,7 +135,7 @@ func _run() -> void:
 	_assert(_ok(runtime_a.interact_world_item(BEACON_ID)), "player A can pick dropped beacon again")
 	_assert(_ok(runtime_a.open_external_container(CONTAINER_ID)), "player A reopens crate before reconnect")
 	_assert(_ok(runtime_a.transfer_item(BEACON_ID, -1, CONTAINER_ID)), "beacon is canonical inside crate before reconnect")
-	var reconnect_snapshot := canonical.create_snapshot()
+	var reconnect_snapshot: Dictionary = canonical.create_snapshot()
 	var reconnect_world := Node3D.new()
 	reconnect_world.name = "ReconnectWorldA"
 	host.add_child(reconnect_world)
