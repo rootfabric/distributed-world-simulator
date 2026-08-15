@@ -11,6 +11,7 @@
     "primary": "NETWORK_AND_AUTHORITY_CORRECTNESS",
     "smooth_visual_transition_required": false,
     "presentation_polish_deferred_until_after_correctness": true,
+    "automated_evidence_required_for_acceptance": true,
     "allowed_initial_artifacts": [
       "VISIBLE_HANDOFF_FREEZE",
       "VISIBLE_POSITION_CORRECTION",
@@ -125,6 +126,7 @@
   },
   "automated_test_evidence": {
     "required_plan": "docs/plans/V0_SM0_AUTOMATED_HANDOFF_TEST_AND_EVIDENCE_RU.md",
+    "checkpoint_blocker": true,
     "runner": "RUN_V0_SM0_ACCEPTANCE.ps1",
     "log_analyzer": "ANALYZE_V0_SM0_LOGS.ps1",
     "developer_handoffs": 4,
