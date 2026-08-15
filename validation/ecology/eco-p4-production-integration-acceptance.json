@@ -1,0 +1,61 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_acceptance_manifest.v1",
+  "revision": "ECO-P4-2026-08-15-R1-BRANCH-LIFECYCLE-COMPLETE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_BRANCH_LIFECYCLE_EVIDENCE_COMPLETE",
+  "scope": "P4_PRODUCTION_ECOLOGY_INTEGRATION_P4_1_THROUGH_P4_8",
+  "accepted_validation_blobs": {
+    "p4_1": "9a18978a4206452d58d32eb3ec49e2effdff26f6",
+    "p4_2": "730452dc2bcd8fe58e758197e0209e6bc38b540c",
+    "p4_3": "1236fdefcf490838bbe69431588d5878b7949f2c",
+    "p4_4": "9f540c402506b1494d8ac69ca6a81a76696bab2f",
+    "p4_5": "a02f1547c1beea5a49d500304b58ab8c763334ca",
+    "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc",
+    "p4_7": "747d1406971bc69bd81b6d149481da00d65d5a47",
+    "p4_8": "af886544d92970a061d47c29b76888fefbb66da6"
+  },
+  "runtime_evidence": {
+    "p4_7_tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p4_7_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
+    "p4_7_runner_blob": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4",
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "fresh_process_a_b_byte_identical": true,
+    "assertions_per_run": 242,
+    "counts": {
+      "regions": 8,
+      "cycles": 12,
+      "ecology_generation_steps": 8,
+      "handoffs": 4,
+      "save_loads": 12,
+      "client_updates": 12,
+      "interest_projections": 14,
+      "restarts": 3,
+      "max_remaining_due_steps": 0
+    }
+  },
+  "final_control_gate": {
+    "p4_8_tested_head": "186c6d164b0bf17fc17e91a23136663edbe1c06d",
+    "runner_blob": "fa91e68f877551d0d08cea38382543ab23b9c4ac",
+    "result": "PASS",
+    "success_marker": "ECO.P4.8 FINAL GATES: PASS",
+    "godot_invoked": false
+  },
+  "manifest_hash": {
+    "algorithm": "sha256",
+    "canonicalization": "UTF-8 JSON; sort_keys=true; separators=(',', ':'); fields are schema, p4_8_tested_head, accepted_validation_blobs p4_1..p4_7, p4_8_runner_blob, p4_7_test_blob, p4_7_runner_blob, frozen_soak_hash, frozen_final_interest_hash",
+    "value": "02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06"
+  },
+  "boundaries": {
+    "accelerated_deterministic_soak_not_wall_clock_soak": true,
+    "production_runtime_changed_by_p4_8_or_finalization": false,
+    "project_godot_changed_by_finalization": false,
+    "branch_reports_execution_facts": true,
+    "global_main_acceptance_claimed": false,
+    "runtime_merge_claimed": false,
+    "main_owned_promotion_required": true,
+    "human_runtime_merge_gate_required": true
+  },
+  "decision": "P4_BRANCH_LIFECYCLE_COMPLETE; EVIDENCE_READY_FOR_INDEPENDENT_REVIEW_AND_MAIN_OWNED_PROMOTION"
+}
