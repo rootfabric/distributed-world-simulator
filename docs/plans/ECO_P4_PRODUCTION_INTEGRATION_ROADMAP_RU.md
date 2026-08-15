@@ -35,3 +35,23 @@ Accepted P4.6 real integration: `f8191c46658f345e54c85c61b29059939bbf9c7decda289
 P4.7 canonical runner retains the legacy filename `RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1` for compatibility, but its R4 semantics are canonical: accepted P4.6 validation is exact-pinned; eight regions × twelve cycles must yield 32 handoffs, 96 production persistence round-trips, 96 client updates, 12 interest projections and catch-up debt no greater than 8. Forward and reverse processing order must converge to identical final identities, and fresh-process A/B logs must be byte-identical.
 
 P4.8 preparation is already committed as a fail-closed control manifest. It verifies exact accepted validation blobs P4.1–P4.6 and exact canonical-ready P4.7 surfaces. It cannot accept P4.7 or P4 by implication. After P4.7 PASS, only its frozen soak identities, lifecycle acceptance and one final manifest promotion remain.
+
+## Repository-local test workflow
+
+Canonical local entrypoint:
+
+```text
+RUN_ECO_TEST_WORKFLOW.ps1
+```
+
+Standard current-frontier suite:
+
+```powershell
+.\RUN_ECO_TEST_WORKFLOW.ps1 -Suite current -GodotPath $Godot
+```
+
+`current` executes P4.7 canonical soak and P4.8 fail-closed preparation. `accepted` runs P4.4-P4.6 regression gates; `full` runs P4.4-P4.8.
+
+The entrypoint resolves repository root from its own file location and `git rev-parse --show-toplevel`; no ECO test contract depends on a fixed checkout path. Current documented local checkout is `C:\distributed-world-simulator\distributed-world-simulator\`, but moving the checkout again must not require test changes.
+
+GitHub workflow `/.github/workflows/eco-production-tests.yml` invokes the same entrypoint on a Windows self-hosted runner with the exact double Godot. Detailed local/CI instructions are in `docs/control/ECO_TEST_WORKFLOW_RU.md`.
