@@ -110,6 +110,7 @@
     "target_standby_creates_player": false,
     "smoothness_hard_gate_required": false,
     "automated_handoffs_final": 20,
+    "automated_round_trips_final": 10,
     "normal_v0_launcher_regression_required": true,
     "clean_shutdown_required": true,
     "unexpected_error_count": 0,
@@ -128,6 +129,7 @@
     "log_analyzer": "ANALYZE_V0_SM0_LOGS.ps1",
     "developer_handoffs": 4,
     "final_handoffs": 20,
+    "final_round_trips": 10,
     "deterministic_client_driver_required": true,
     "os_keyboard_emulation_as_primary_driver_forbidden": true,
     "real_multi_process_network_required": true,
@@ -164,7 +166,7 @@
       "TARGET_ACCEPTED_MOVEMENT_BEFORE_COMMIT",
       "DUPLICATE_ACTIVE_PLAYER_ENTITY",
       "CLIENT_PROCESS_RESTART",
-      "CROSSING_TIMEOUT"
+      "HANDOFF_TIMEOUT"
     ],
     "warning_token_alone_is_failure": false,
     "logs_retained_on_failure": true,
