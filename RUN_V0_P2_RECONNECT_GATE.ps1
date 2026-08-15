@@ -26,20 +26,25 @@ Write-Host "[V0-P2 shared-state] Project: $ProjectRoot"
 Write-Host "[V0-P2 shared-state] HEAD:    $Head"
 Write-Host "[V0-P2 shared-state] Godot:   $GodotExe"
 
-if (-not $SkipP2Preflight) {
-    Write-Host ""
-    Write-Host "=== V0-P2 automated preflight ===" -ForegroundColor Cyan
-    & (Join-Path $ProjectRoot "RUN_V0_P2_TESTS.ps1") -GodotExe $GodotExe -ExpectedHead $Head
-    if ($LASTEXITCODE -ne 0) { throw "V0-P2 automated preflight failed before live shared-state gate." }
-    if (git -C $ProjectRoot status --porcelain) { throw "V0-P2 automated preflight changed tracked checkout state." }
-}
-
-Write-Host ""
-Write-Host "=== V0-P2 live shared-state convergence ===" -ForegroundColor Cyan
 $HadBreakpointRuntimeDisabled = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
 $PreviousBreakpointRuntimeDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
+$GateExit = -1
 try {
+    # Disable the diagnostic MCP bridge for the complete headless validation
+    # boundary, including nested P1/P2 preflight Godot processes. This makes the
+    # gate safe to run while the graphical MVP owns the canonical bridge port.
     $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+
+    if (-not $SkipP2Preflight) {
+        Write-Host ""
+        Write-Host "=== V0-P2 automated preflight ===" -ForegroundColor Cyan
+        & (Join-Path $ProjectRoot "RUN_V0_P2_TESTS.ps1") -GodotExe $GodotExe -ExpectedHead $Head
+        if ($LASTEXITCODE -ne 0) { throw "V0-P2 automated preflight failed before live shared-state gate." }
+        if (git -C $ProjectRoot status --porcelain) { throw "V0-P2 automated preflight changed tracked checkout state." }
+    }
+
+    Write-Host ""
+    Write-Host "=== V0-P2 live shared-state convergence ===" -ForegroundColor Cyan
     & $GodotExe `
         --headless `
         --path $ProjectRoot `
