@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития
 
-Статус: `ACTIVE / VIS1 PRIORITY / RESEARCH_PRESENTATION`.
+Статус: `ACTIVE / VIS1.0 IMPLEMENTED CANDIDATE / WINDOWS VISUAL CHECK PENDING`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -19,7 +19,11 @@ accepted ECO research + PH5 derived presentation
         ↓
 P4 branch lifecycle COMPLETE
         ↓
-ECO.VIS1 Visual Ecology Proving Ground       ← PRIORITY NOW
+ECO.VIS1.0 bounded lab terrain + operator camera  ← IMPLEMENTED CANDIDATE
+        ↓ Windows automated + human graphical check
+ECO.VIS1.1 Environment Provider
+        ↓
+ECO.VIS1.2-VIS1.8 visual + numerical ecology
         ↓
 ECO.VIS2 Causal Landscape Experiment
         ↓
@@ -29,6 +33,38 @@ ECO.XFER-VIS Real World Surface Adapter
 ```
 
 `control/eco-p4-production-convergence-prep-r1` / PR #108 сохраняется как готовая карта будущего production convergence. Она не отменена, но не является ближайшей практической целью.
+
+## Текущее состояние VIS1.0
+
+Реализован первый запускаемый полигон:
+
+- deterministic lab terrain `500 x 500 m`;
+- `64 x 64` mesh cells;
+- лабораторный relief без biome semantics;
+- WASD fly-camera, Q/E vertical movement, Shift boost, mouse look;
+- camera bounds + minimum terrain clearance;
+- четыре corner markers + central marker;
+- HUD: camera position, terrain height, clearance;
+- isolated automated runner;
+- isolated graphical launcher без gameplay/MCP autoloads.
+
+Exact implementation head:
+
+`246b55d4c7c6fb1547d16de1ab872e3799e81286`.
+
+Supplementary attached-engine result:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+parser preflight PASS
+ECO.VIS1.0 headless scene smoke: PASS (21 assertions)
+```
+
+Это не self-acceptance. До VIS1.0 acceptance остаются exact Windows automated gate и human graphical observation.
+
+Checkpoint:
+
+`docs/checkpoints/ECO_VIS1_0_VISUAL_PROVING_GROUND_CANDIDATE_RU.md`.
 
 ## Почему VIS1 сейчас важнее
 
@@ -77,15 +113,15 @@ Ecology consumer не должна зависеть от того, какой pr
 ### VIS1 steps
 
 ```text
-VIS1.0  Lab scene + terrain + camera/operator movement
-VIS1.1  EcoEnvironmentProvider + LabEnvironmentProvider
-VIS1.2  spatial ecology snapshot projection
-VIS1.3  accepted PH5 materialization on polygon
-VIS1.4  time controls + same-seed restart
-VIS1.5  numerical dashboard + time-series capture
-VIS1.6  diagnostic overlays
-VIS1.7  disturbances + event log
-VIS1.8  0->200 year comparative acceptance experiment
+VIS1.0  Lab scene + terrain + camera/operator movement   IMPLEMENTED CANDIDATE
+VIS1.1  EcoEnvironmentProvider + LabEnvironmentProvider WAIT VIS1.0 CONFIRMATION
+VIS1.2  spatial ecology snapshot projection             PLANNED
+VIS1.3  accepted PH5 materialization on polygon         PLANNED
+VIS1.4  time controls + same-seed restart               PLANNED
+VIS1.5  numerical dashboard + time-series capture       PLANNED
+VIS1.6  diagnostic overlays                             PLANNED
+VIS1.7  disturbances + event log                        PLANNED
+VIS1.8  0->200 year comparative acceptance experiment  PLANNED
 ```
 
 ## Что смотрим визуально
