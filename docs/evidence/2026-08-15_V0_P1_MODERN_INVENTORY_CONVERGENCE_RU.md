@@ -163,6 +163,41 @@ Regression expectation:
 
 The exact-head Windows preflight must report all focused assertions and contain zero `SCRIPT ERROR:` lines; only then may the graphical server + two-client smoke test begin.
 
+## Finding R3 — joined player is absent from canonical Item Graph inventory until first item command
+
+Observed graphical state on exact head `13f34d666afb7509eb99efdce1625657baf7923d`:
+
+- modern InventoryScreen is selected correctly;
+- M3 dedicated server is configured with `playable_sandbox=true`;
+- the player inventory is empty immediately after join even though the canonical sandbox already defines starter stacks in `_seed_sandbox_player()`.
+
+Root cause:
+
+`NetworkedGameplayService.handle_join_command()` creates/updates the multiplayer player record but does not call `CanonicalMultiplayerItemGraph.ensure_player(logical_player_id)`. The Item Graph therefore has no inventory record for a newly joined player until a later canonical item command happens to call `execute()`, which internally ensures the player. The starter seed exists and is canonical, but the join boundary never materializes it.
+
+Files:
+
+- `scripts/runtime/networked_gameplay/networked_gameplay_service.gd`;
+- `tests/runtime/test_v0_p1_world_items_containers.gd`.
+
+Exact correction:
+
+- after the authoritative player record is upserted during join, call the existing idempotent canonical `ensure_player(logical_player_id)` before publishing join state;
+- do not create any client bootstrap command, UI-owned seed, second Item Graph, or direct inventory mutation;
+- keep `_seed_sandbox_player()` as the sole sandbox starter-item definition;
+- rely on `ensure_player()` idempotence so reconnect preserves the existing inventory and never issues starter items twice.
+
+Regression test:
+
+- configure `NetworkedGameplayService` with `playable_sandbox=true`;
+- join player A and assert the canonical Item Graph immediately contains A's inventory plus the existing starter beacon/mount-base/battery stacks and hotbar bindings;
+- leave and rejoin A with a new transport session;
+- assert identical starter item identities/quantities and identical canonical item count after reconnect, proving no reseed/duplication.
+
+Why this is the canonical boundary:
+
+The server already owns both multiplayer join authority and the canonical M4 Item Graph. Materializing the canonical inventory at successful join makes the two server-owned domains converge at the ownership boundary. Triggering seed from M5/UI would make correctness depend on presentation startup and would be rejected as a layering workaround.
+
 ## Required acceptance state
 
 Implementation may be proposed only as a candidate. `IMPLEMENTER CANNOT SELF-ACCEPT`; Windows graphical evidence and independent review remain required before product-frontier merge.
