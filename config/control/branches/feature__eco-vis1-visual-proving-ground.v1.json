@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/eco-vis1-visual-proving-ground",
+  "program": "ECO",
+  "role": "RESEARCH_PRESENTATION_FRONTIER",
+  "short_description": "Priority visual and numerical proving ground for observing accepted ecology behavior before porting the same provider/presentation boundaries into the simulator.",
+  "purpose": "Make ecology behavior inspectable in space and accelerated time through a bounded causal landscape, PH5-derived vegetation presentation, numerical diagnostics, overlays, repeatable disturbances and same-seed replay.",
+  "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md",
+  "current_stage": "ECO.VIS1 / Visual Ecology Proving Ground",
+  "stage_status": "PRIORITY_NEXT_PLANNED_RESEARCH_PRESENTATION",
+  "progress_note": "P4 branch lifecycle remains frozen complete at f0e16195f1331f238bbacab2768e5d72ec01d1a3. The immediate ECO priority is now visual/numerical validation on a lab polygon. Production convergence PR #108 remains preparation-only and is intentionally downstream of VIS1/VIS2 observations.",
+  "last_accepted_checkpoint": "ECO P4 branch lifecycle evidence complete; PH5 multi-scale derived presentation accepted",
+  "next_stage": "Implement VIS1.0-VIS1.3: bounded lab terrain, portable EcoEnvironmentProvider boundary, spatial ecology projection and existing PH5 materialization; then add time controls, diagnostics, overlays and disturbances.",
+  "owned_paths": [
+    "docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md",
+    "config/control/branches/feature__eco-vis1-visual-proving-ground.v1.json",
+    "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
+    "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+    "scenes/labs/ecology/**",
+    "scripts/labs/ecology/**",
+    "scripts/research/ecology/**",
+    "tests/research/ecology/**"
+  ],
+  "watched_paths": [
+    "scripts/ecology/production/**",
+    "scripts/simulation/**",
+    "scripts/network/**",
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "critical_watched_paths": [
+    "scripts/ecology/production/ecology_region_persistence_v1.gd",
+    "scripts/ecology/production/ecology_region_ownership_v1.gd",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "runtime_paths": [],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE_RESEARCH_PRESENTATION_PLANNING",
+    "source_p4_final": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
+    "vis1": "PLANNED"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "ECOLOGY_RESEARCH_MODEL",
+      "claimed_owner": "ECO",
+      "scope": "Ecology semantics and derived laboratory diagnostics/presentation only."
+    }
+  ],
+  "execution_modes": ["INCUBATE_FAST", "LOCAL_ACTIVE", "VISUAL_DIAGNOSTIC"],
+  "execution_invariant": "VISUALIZATION_AND_DIAGNOSTICS_ARE_DERIVED_AND_MUST_NOT_MUTATE_ECOLOGY_TRUTH",
+  "forbidden_foundation_ownership": [
+    "GEOLOGY_OR_TERRAIN_TRUTH",
+    "PERSISTENCE_DURABILITY",
+    "AUTHORITY_FOUNDATION",
+    "CROSS_SERVER_AUTHORITY",
+    "WORLD_QUERY_FABRIC",
+    "WORLD_LIFECYCLE_FABRIC",
+    "WORLD_WORK_BUDGET",
+    "NETWORK_REPLICATION_POLICY",
+    "MATERIAL_ONTOLOGY",
+    "CANONICAL_BIOME_TABLE",
+    "PRESENTATION_MESH_AS_TRUTH"
+  ],
+  "blockers": [],
+  "health_declared": "GREEN_PRIORITY_RESEARCH_PRESENTATION",
+  "cross_branch_overlap_enabled": false,
+  "planned_cross_tracks": [
+    {"id":"ECO.VIS1","status":"PRIORITY_NEXT","goal":"Visual + numerical ecology proving ground"},
+    {"id":"ECO.VIS2","status":"AFTER_VIS1","goal":"Causal landscape experiment with richer fields/history"},
+    {"id":"ECO.XFER-VIS","status":"AFTER_VIS2","goal":"Replace lab provider with real simulator surface provider"},
+    {"id":"ECO.P4.CONV","status":"PREPARATION_READY_DEFERRED_BEHIND_VISUAL_VALIDATION","goal":"Production convergence after visual/numerical model validation"}
+  ]
+}
