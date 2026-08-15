@@ -1,0 +1,118 @@
+param(
+    [string]$GodotPath = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+)
+
+$ErrorActionPreference = "Stop"
+$ExpectedGodotVersion = "4.7.1.stable.double.custom_build.a13da4feb"
+$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("dws-eco-vis1-0-" + [Guid]::NewGuid().ToString("N"))
+
+function ConvertTo-ProcessArgument {
+    param([string]$Value)
+    return '"' + $Value.Replace('"', '\"') + '"'
+}
+
+function Invoke-GodotProcess {
+    param(
+        [string[]]$Arguments,
+        [string]$Label
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $GodotPath
+    $psi.Arguments = (($Arguments | ForEach-Object { ConvertTo-ProcessArgument $_ }) -join " ")
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $psi
+    if (-not $process.Start()) {
+        throw "$Label failed to start Godot"
+    }
+    $stdout = $process.StandardOutput.ReadToEnd()
+    $stderr = $process.StandardError.ReadToEnd()
+    $process.WaitForExit()
+    $exitCode = $process.ExitCode
+    $combined = ($stdout + [Environment]::NewLine + $stderr).Trim()
+    if ($combined) {
+        Write-Host $combined
+    }
+    if ($exitCode -ne 0) {
+        throw "$Label failed with exit code $exitCode"
+    }
+    if ($combined -match '(?m)^SCRIPT ERROR:' -or $combined -match '(?m)^ERROR:') {
+        throw "$Label emitted Godot error output despite zero exit code"
+    }
+    return $combined
+}
+
+try {
+    if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
+        throw "Godot executable not found: $GodotPath"
+    }
+
+    Write-Host "=== ECO VIS1.0 isolated headless gate ==="
+    Write-Host "repo_root=$RepoRoot"
+    Write-Host "godot=$GodotPath"
+
+    $versionOutput = Invoke-GodotProcess -Arguments @("--version") -Label "ECO VIS1.0 Godot version check"
+    if ($versionOutput -notmatch [Regex]::Escape($ExpectedGodotVersion)) {
+        throw "ECO VIS1.0 requires exact Godot $ExpectedGodotVersion"
+    }
+    Write-Host "ECO.VIS1.0 exact Godot identity: PASS"
+
+    New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $TempRoot "scripts\labs\ecology") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $TempRoot "scenes\labs\ecology") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $TempRoot "tests\research\ecology") -Force | Out-Null
+
+    $projectConfig = @"
+[application]
+config/name="ECO VIS1.0 Isolated Gate"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+"@
+    Set-Content -LiteralPath (Join-Path $TempRoot "project.godot") -Value $projectConfig -Encoding UTF8
+
+    $copies = @(
+        @("scripts\labs\ecology\eco_vis1_0_visual_proving_ground.gd", "scripts\labs\ecology\eco_vis1_0_visual_proving_ground.gd"),
+        @("scenes\labs\ecology\eco_vis1_0_visual_proving_ground.tscn", "scenes\labs\ecology\eco_vis1_0_visual_proving_ground.tscn"),
+        @("tests\research\ecology\test_eco_vis1_0_visual_proving_ground.gd", "tests\research\ecology\test_eco_vis1_0_visual_proving_ground.gd")
+    )
+    foreach ($pair in $copies) {
+        $source = Join-Path $RepoRoot $pair[0]
+        $target = Join-Path $TempRoot $pair[1]
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "ECO VIS1.0 required file missing: $source"
+        }
+        Copy-Item -LiteralPath $source -Destination $target -Force
+    }
+    Write-Host "ECO.VIS1.0 isolated project without gameplay/MCP autoloads: PASS"
+
+    Invoke-GodotProcess `
+        -Arguments @("--headless", "--path", $TempRoot, "--check-only", "--script", "res://tests/research/ecology/test_eco_vis1_0_visual_proving_ground.gd") `
+        -Label "ECO VIS1.0 parser preflight" | Out-Null
+    Write-Host "ECO.VIS1.0 parser preflight: PASS"
+
+    $smokeOutput = Invoke-GodotProcess `
+        -Arguments @("--headless", "--path", $TempRoot, "--script", "res://tests/research/ecology/test_eco_vis1_0_visual_proving_ground.gd") `
+        -Label "ECO VIS1.0 headless scene smoke"
+    if ($smokeOutput -notmatch 'ECO\.VIS1\.0 headless scene smoke: PASS') {
+        throw "ECO VIS1.0 PASS marker missing"
+    }
+
+    Write-Host "ECO.VIS1.0 automated gate: PASS"
+}
+finally {
+    if (Test-Path -LiteralPath $TempRoot) {
+        Remove-Item -LiteralPath $TempRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
