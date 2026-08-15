@@ -10,13 +10,14 @@
   "north_star_doc": "docs/control/ECO_P4_PRODUCTION_CONVERGENCE_PREPARATION_RU.md",
   "current_stage": "ECO P4 Current-Main Convergence Preparation / Independent Review Packet",
   "stage_status": "CONTROL_ONLY_PREPARED_RUNTIME_TRANSFER_BLOCKED_PENDING_INDEPENDENT_REVIEW_AND_CRITICAL_DISPATCH",
-  "progress_note": "Fresh branch created from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 generation 79. P4 branch lifecycle evidence is preserved by exact blobs/hashes. No runtime file has been copied. P4.4 persistence and P4.5 ownership/handoff intersect canonical R3 durability/authority ownership and therefore require CRITICAL review/human decision before any runtime port.",
+  "progress_note": "Fresh branch created from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 generation 79. P4 branch lifecycle evidence is preserved by exact blobs/hashes. No runtime file has been copied. P4.4 persistence and P4.5 ownership/handoff intersect canonical R3 durability/authority ownership and therefore require CRITICAL review/human decision before any runtime port. Control preparation implementation head is 169d0187f287239264730332efb80c1a3e42ead3.",
   "last_accepted_checkpoint": "SOURCE: ECO P4 branch lifecycle evidence complete on feature/eco-evolutionary-ecology; not main-promoted",
   "next_stage": "Independent review of the convergence preparation. If PASS and the single runtime-worker slot is free, main/Director must declare and dispatch a CRITICAL fresh-main ECO production convergence Work Order before copying runtime files.",
   "owned_paths": [
     "config/control/branches/control__eco-p4-production-convergence-prep-r1.v1.json",
     "docs/control/ECO_P4_PRODUCTION_CONVERGENCE_PREPARATION_RU.md",
-    "validation/ecology/eco-p4-production-convergence-preparation.json"
+    "validation/ecology/eco-p4-production-convergence-preparation.json",
+    "artifacts/control-eco-p4-production-convergence-prep-r1/evidence-map.json"
   ],
   "watched_paths": [
     "config/architecture/**",
@@ -38,7 +39,7 @@
     "runtime": "NOT_APPLICABLE_CONTROL_ONLY",
     "source_p4_runtime": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
     "source_p4_final_manifest": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
-    "control_preparation": "PENDING_FINAL_HEAD"
+    "control_preparation": "169d0187f287239264730332efb80c1a3e42ead3"
   },
   "ownership_claims": [
     {
