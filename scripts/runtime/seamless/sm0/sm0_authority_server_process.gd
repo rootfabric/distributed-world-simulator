@@ -6,11 +6,14 @@ const RecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_autho
 const RecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_fault.gd")
 const ActiveRecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_active_recovery.gd")
 const ActiveRecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_active_recovery_fault.gd")
+const TransactionRecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_recovery.gd")
+const TransactionFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 const H2_2_RECOVERY_FAULT_PROFILE := "h2-target-crash-after-commit-persist-v1"
 const H2_3_RECOVERY_FAULT_PROFILE := "h2-source-crash-after-retire-persist-v1"
 const H2_4_ACTIVE_RECOVERY_FAULT_PROFILE := "h2-active-owner-crash-after-move-persist-v1"
+const H3_3_TRANSACTION_FAULT_PROFILE := "h3-inflight-dual-outage-after-source-retire-v1"
 
 
 func _init() -> void:
@@ -25,7 +28,9 @@ func _init() -> void:
 	var recovery_dir := String(options.get("recovery-dir", "")).strip_edges()
 	var active_recovery_text := String(options.get("active-owner-recovery", "0")).strip_edges().to_lower()
 	var active_owner_recovery := active_recovery_text in ["1", "true", "yes"]
-	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s" % [
+	var transaction_recovery_text := String(options.get("transaction-recovery", "0")).strip_edges().to_lower()
+	var transaction_recovery := transaction_recovery_text in ["1", "true", "yes"]
+	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s transaction_recovery=%s" % [
 		authority_id,
 		zone_id,
 		String(options.get("gameplay-port", "24580")),
@@ -34,14 +39,19 @@ func _init() -> void:
 		fault_profile if not fault_profile.is_empty() else "none",
 		recovery_dir if not recovery_dir.is_empty() else "none",
 		active_owner_recovery,
+		transaction_recovery,
 	])
 	var server
-	if fault_profile == H2_4_ACTIVE_RECOVERY_FAULT_PROFILE:
+	if fault_profile == H3_3_TRANSACTION_FAULT_PROFILE:
+		server = TransactionFaultServerNode.new()
+	elif fault_profile == H2_4_ACTIVE_RECOVERY_FAULT_PROFILE:
 		server = ActiveRecoveryFaultServerNode.new()
 	elif fault_profile in [H2_2_RECOVERY_FAULT_PROFILE, H2_3_RECOVERY_FAULT_PROFILE]:
 		server = RecoveryFaultServerNode.new()
 	elif not fault_profile.is_empty():
 		server = FaultServerNode.new()
+	elif transaction_recovery:
+		server = TransactionRecoveryServerNode.new()
 	elif active_owner_recovery:
 		server = ActiveRecoveryServerNode.new()
 	elif not recovery_dir.is_empty():
@@ -70,11 +80,12 @@ func _init() -> void:
 		push_error("SM0 server setup failed: %s" % result)
 		quit(2)
 		return
-	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s" % [
+	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s transaction_recovery=%s" % [
 		authority_id,
 		fault_profile if not fault_profile.is_empty() else "none",
 		recovery_dir if not recovery_dir.is_empty() else "none",
 		active_owner_recovery,
+		transaction_recovery,
 	])
 
 
