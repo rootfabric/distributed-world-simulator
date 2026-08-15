@@ -1,10 +1,11 @@
 {
   "schema": "distributed_world_simulator.eco_vis1_0_visual_proving_ground_validation.v1",
-  "revision": "ECO-VIS1.0-2026-08-15-R1",
+  "revision": "ECO-VIS1.0-2026-08-15-R2-MOVEMENT-SMOKE",
   "status": "IMPLEMENTED_CANDIDATE_WINDOWS_AUTOMATED_AND_GRAPHICAL_CHECK_PENDING",
   "branch": "feature/eco-vis1-visual-proving-ground",
   "source_p4_frozen_head": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
   "implementation_head": "246b55d4c7c6fb1547d16de1ab872e3799e81286",
+  "test_hardening_head": "fcff82aab6c8b0fc3fcbb6957bb05efcc4870b18",
   "scope": "VIS1.0 only: bounded deterministic 500x500m laboratory terrain, operator fly camera, reference markers and position/ground-height HUD. No ecology provider, plant simulation, PH5 materialization, persistence or authority changes.",
   "files": {
     "controller": {
@@ -17,7 +18,7 @@
     },
     "headless_smoke": {
       "path": "tests/research/ecology/test_eco_vis1_0_visual_proving_ground.gd",
-      "blob": "90a431dd7295ef9af21604c683654278b38b6a9a"
+      "blob": "c71a7672477e84257e5f9a8f4d514fa5c743b15a"
     },
     "automated_runner": {
       "path": "RUN_ECO_VIS1_0_TESTS.ps1",
@@ -51,7 +52,10 @@
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "parser_preflight": "PASS",
     "headless_scene_smoke": "PASS",
-    "assertions": 21,
+    "assertions": 24,
+    "movement_input_verified": true,
+    "polygon_bounds_clamp_verified": true,
+    "terrain_clearance_clamp_verified": true,
     "note": "Supplementary parser/runtime evidence over the same VIS1.0 scene/controller/test contents. It is not canonical Windows graphical acceptance and does not self-accept VIS1.0."
   },
   "pending_gates": [
