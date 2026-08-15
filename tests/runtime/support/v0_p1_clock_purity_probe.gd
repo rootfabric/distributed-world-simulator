@@ -4,8 +4,9 @@ extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_
 # normalization in create_snapshot(). This models the P2 pure-read boundary and
 # lets P1 tests prove that successful commands already publish complete slot
 # identity and that rejected commands do not rely on lazy normalization.
-
-const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+#
+# Utils is inherited from canonical_multiplayer_item_graph_service_base.gd.
+# Do not redeclare it here: Godot rejects duplicate inherited members.
 
 
 func create_snapshot() -> Dictionary:
