@@ -25,7 +25,7 @@ var _manifest_hash := "sm0-two-zone-v1"
 
 var _gameplay_socket: PacketPeerUDP
 var _control_socket: PacketPeerUDP
-var _authority
+var _authority: Authority
 var _directory: Dictionary = {}
 var _peer_synced := false
 var _directory_ready_logged := false
