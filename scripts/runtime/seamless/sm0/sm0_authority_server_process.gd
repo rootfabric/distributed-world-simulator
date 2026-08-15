@@ -8,6 +8,7 @@ const ActiveRecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0
 const ActiveRecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_active_recovery_fault.gd")
 const TransactionRecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_recovery.gd")
 const TransactionFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault.gd")
+const TransactionMixedFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault_mixed.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 const H2_2_RECOVERY_FAULT_PROFILE := "h2-target-crash-after-commit-persist-v1"
@@ -46,12 +47,13 @@ func _init() -> void:
 		transaction_recovery,
 	])
 	var server
-	if fault_profile in [
+	if fault_profile == H4_2_TRANSACTION_FAULT_PROFILE:
+		server = TransactionMixedFaultServerNode.new()
+	elif fault_profile in [
 		H3_3_TRANSACTION_FAULT_PROFILE,
 		H3_4_TRANSACTION_FAULT_PROFILE,
 		H3_5_TRANSACTION_FAULT_PROFILE,
 		H4_1_TRANSACTION_FAULT_PROFILE,
-		H4_2_TRANSACTION_FAULT_PROFILE,
 	]:
 		server = TransactionFaultServerNode.new()
 	elif fault_profile == H2_4_ACTIVE_RECOVERY_FAULT_PROFILE:
