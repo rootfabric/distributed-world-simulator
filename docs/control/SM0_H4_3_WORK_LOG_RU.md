@@ -1,6 +1,6 @@
 # SM0 H4.3 — work log
 
-Статус: **IMPLEMENTED / WINDOWS RUNTIME DEFAULT PENDING**.
+Статус: **FIX1 IMPLEMENTED / WINDOWS RUNTIME DEFAULT RE-RUN PENDING**.
 
 Scope: branch-local experimental `feature/sm0-two-authority-seamless-handoff-lab`.
 
@@ -131,9 +131,48 @@ FINAL:
 
 PowerShell runner сразу использует constructor-created generic Lists и `.ToArray()` для summary, чтобы не повторять H4.1 generic-list binder defect. Stage assertions синхронизируются по exact H4.3 crash/suppression markers перед чтением durable evidence.
 
+### 7. First Windows runtime finding — PREPARED fault ordering
+
+Первый DEFAULT запуск выполнен на exact candidate:
+
+`af5541f2d983cf9870a213c1644810fa416780e7`
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+До live H4.3 campaign прошли:
+
+- compile-smoke 9 scripts;
+- handoff import 22 assertions;
+- healthy SM0 acceptance 2/2;
+- contracts 15 assertions;
+- H4.3 compile checks;
+- TARGET_PREPARED recovery regression 32 assertions;
+- ACTIVE_OWNER recovery regression 41 assertions;
+- SOURCE_RETIRED recovery regression 37 assertions.
+
+Live campaign запустил A, B и один client, после чего runner ожидал первый `SM0_H43_CRASH_POINT(PREPARED)` и не получал его.
+
+Root cause установлен в test-only H4.3 fault orchestration: override `_send_source_commit()` проверял `_recovery_last_phase == SOURCE_RETIRED` до вызова parent recovery method, хотя именно parent `_send_source_commit()` выполняет canonical `_ensure_source_retire_persisted()` перед отправкой COMMIT. В результате первый fresh вызов видел ещё пустую durable phase, уходил в `super._send_source_commit()`, и COMMIT мог выйти в сеть вместо PREPARED fault.
+
+Repair commit:
+
+`9ffa0d9eb19d354bbf8d6b68bba7e9346188418d`
+
+Исправление не меняет production recovery algorithm. H4.3 fault node теперь для fresh source сначала явно вызывает существующий canonical `_ensure_source_retire_persisted(transfer_id)`, проверяет успех write-before-fault, и только после этого suppress-ит COMMIT и создаёт PREPARED crash point. Exact recovery-setup replay старого T по-прежнему bypass-ит fault и проходит через parent replay path.
+
+Новый invariant test-only слоя при failure durability:
+
+`SM0_H43_SOURCE_RETIRE_PERSIST_FAILED`.
+
 ## Static workflow
 
 Project Control run #600 для commit `0cdf1c937bee3df4a0a5cbaa61b31043eea04761`:
+
+**SUCCESS**.
+
+Project Control run #601 для progress HEAD `af5541f2d983cf9870a213c1644810fa416780e7`:
 
 **SUCCESS**.
 
@@ -141,11 +180,7 @@ Project Control run #600 для commit `0cdf1c937bee3df4a0a5cbaa61b31043eea04761
 
 ## Следующий gate
 
-Запустить DEFAULT на Windows exact custom Godot:
-
-`4.7.1.stable.double.custom_build.a13da4feb`
-
-и потребовать:
+Повторить DEFAULT на Windows exact custom Godot после runtime-discovered FIX1 и потребовать:
 
 ```text
 SM0-H4.3 recovery-of-recovery same-transfer campaign: PASS
