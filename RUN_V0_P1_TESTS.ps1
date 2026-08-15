@@ -38,7 +38,7 @@ function Assert-LogClean {
     param([string]$LogPath, [string]$Stage)
     foreach ($Pattern in $FatalPatterns) {
         if (Select-String -Path $LogPath -SimpleMatch $Pattern -Quiet) {
-            Write-Host "[V0-P1] Fatal compiler/startup error during $Stage:" -ForegroundColor Red
+            Write-Host "[V0-P1] Fatal compiler/startup error during ${Stage}:" -ForegroundColor Red
             Get-Content $LogPath -Tail 140
             throw "V0-P1 $Stage is not parser-clean. See $LogPath"
         }
