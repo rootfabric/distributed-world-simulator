@@ -8,6 +8,7 @@ const BATTERY_ID := "item/player/a/battery"
 const BEACON_STACK_ID := "item/player/a/beacons"
 const CONTAINER_ID := "container/shared/crate/1"
 const MOUNT_ID := "mount/shared/socket/1"
+const PLAYER_INVENTORY_CAPACITY := 32
 
 var assertions: int = 0
 var failures: Array[String] = []
@@ -24,6 +25,8 @@ func _run() -> void:
 	_test_detach_publishes_slot_before_pure_snapshot()
 	_test_rejected_transfer_does_not_normalize()
 	_test_invalid_hotbar_transfer_is_rejection_pure()
+	_test_hotbar_replacement_publishes_displaced_slot_before_pure_snapshot()
+	_test_full_backpack_hotbar_transfer_rejects_before_world_mutation()
 	_finish()
 
 
@@ -231,6 +234,80 @@ func _test_invalid_hotbar_transfer_is_rejection_pure() -> void:
 	_assert(String(_item_location(after, BATTERY_ID).get("kind", "")) == "CONTAINER", "invalid hotbar rejection preserves container membership")
 
 
+func _test_hotbar_replacement_publishes_displaced_slot_before_pure_snapshot() -> void:
+	var graph = _new_graph("hotbar-replace")
+	var before := graph.create_snapshot()
+	var battery_slot := int(_item_location(before, BATTERY_ID).get("slot_index", -1))
+	_assert(battery_slot >= 0, "hotbar replacement source battery starts slot-backed")
+	_assert(_hotbar_item(before, "a", 0) == BEACON_STACK_ID, "hotbar replacement target starts with beacon stack")
+	_assert(int(_item_location(before, BEACON_STACK_ID).get("slot_index", -1)) < 0, "starter hotbar beacon is intentionally slotless while assigned")
+	var assigned := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/hotbar/replace",
+		"inventory.assign_hotbar",
+		{"item_id": BATTERY_ID, "slot_index": 0}
+	)
+	_assert(_ok(assigned), "occupied hotbar replacement succeeds canonically")
+	var details: Dictionary = Dictionary(assigned.get("details", {}))
+	_assert(String(details.get("displaced_item_id", "")) == BEACON_STACK_ID, "hotbar replacement reports displaced canonical identity")
+	var snapshot: Dictionary = assigned.get("snapshot", {})
+	_assert(_hotbar_item(snapshot, "a", 0) == BATTERY_ID, "assigned battery owns requested hotbar slot before pure snapshot")
+	_assert(int(_item_location(snapshot, BATTERY_ID).get("slot_index", -1)) < 0, "assigned hotbar battery releases ordinary backpack slot identity")
+	var displaced_location := _item_location(snapshot, BEACON_STACK_ID)
+	_assert(String(displaced_location.get("kind", "")) == "INVENTORY", "displaced hotbar beacon remains canonical inventory item")
+	_assert(String(displaced_location.get("player_id", "")) == "a", "displaced hotbar beacon preserves canonical owner")
+	_assert(int(displaced_location.get("slot_index", -1)) == battery_slot, "displaced hotbar beacon receives freed canonical backpack slot before pure snapshot")
+
+
+func _test_full_backpack_hotbar_transfer_rejects_before_world_mutation() -> void:
+	var graph = _new_graph("hotbar-full-reject")
+	_fill_all_backpack_slots(graph, "a")
+	var before := graph.create_snapshot()
+	_assert(graph._first_free_inventory_slot("a") < 0, "full-backpack hotbar fixture has no free ordinary inventory slot")
+	_assert(String(_item_location(before, BEACON_ID).get("kind", "")) == "WORLD", "full-backpack source beacon starts in WORLD")
+	_assert(_hotbar_item(before, "a", 0) == BEACON_STACK_ID, "full-backpack target hotbar slot starts occupied")
+	var rejected := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/hotbar/full-rejected",
+		"item.transfer",
+		{
+			"item_id": BEACON_ID,
+			"quantity": -1,
+			"target_container_id": "hotbar/a",
+			"target_slot_index": 0,
+			"target_item_id": "",
+		}
+	)
+	_assert(String(rejected.get("error_code", "")) == "CONTAINER_FULL", "full-backpack hotbar displacement rejects before source mutation")
+	var after := graph.create_snapshot()
+	_assert(int(after.get("revision", -2)) == int(before.get("revision", -1)), "full-backpack hotbar rejection preserves revision")
+	_assert(int(after.get("tick", -2)) == int(before.get("tick", -1)), "full-backpack hotbar rejection preserves tick")
+	_assert(String(after.get("checksum", "changed")) == String(before.get("checksum", "")), "full-backpack hotbar rejection preserves canonical checksum")
+	_assert(String(_item_location(after, BEACON_ID).get("kind", "")) == "WORLD", "full-backpack hotbar rejection leaves source beacon in WORLD")
+	_assert(_hotbar_item(after, "a", 0) == BEACON_STACK_ID, "full-backpack hotbar rejection preserves displaced target assignment")
+
+
+func _fill_all_backpack_slots(graph, player_id: String) -> void:
+	for slot_index in range(PLAYER_INVENTORY_CAPACITY):
+		if not String(graph._inventory_slot_occupant(player_id, slot_index)).is_empty():
+			continue
+		var filler_id := "item/test/hotbar-filler/%d" % slot_index
+		graph._items[filler_id] = {
+			"item_id": filler_id,
+			"definition_id": "item/test-filler",
+			"quantity": 1,
+			"location": {
+				"kind": "INVENTORY",
+				"player_id": player_id,
+				"slot_index": slot_index,
+			},
+			"mounted": false,
+		}
+		graph._add_to_inventory(player_id, filler_id)
+
+
 func _pickup_context() -> Dictionary:
 	return _look_context(Vector3(0.0, 0.4, 0.0), Vector3(1.2, 0.4, -3.4))
 
@@ -258,6 +335,16 @@ func _item_location(snapshot: Dictionary, item_id: String) -> Dictionary:
 		if item_value is Dictionary and String(item_value.get("item_id", "")) == item_id:
 			return Dictionary(item_value.get("location", {})).duplicate(true)
 	return {}
+
+
+func _hotbar_item(snapshot: Dictionary, player_id: String, slot_index: int) -> String:
+	var inventories: Dictionary = Dictionary(snapshot.get("inventories", {}))
+	if not inventories.has(player_id):
+		return ""
+	var hotbar: Array = Array(Dictionary(inventories[player_id]).get("hotbar", []))
+	if slot_index < 0 or slot_index >= hotbar.size():
+		return ""
+	return String(hotbar[slot_index])
 
 
 func _vector_dto(value: Vector3) -> Dictionary:
