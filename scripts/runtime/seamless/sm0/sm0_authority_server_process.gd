@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd")
+const ServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 
