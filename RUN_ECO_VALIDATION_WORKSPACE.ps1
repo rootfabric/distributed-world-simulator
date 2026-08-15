@@ -13,12 +13,34 @@ if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     $GodotPath = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 }
 
-function Invoke-Git([string]$Repo, [string[]]$Arguments) {
-    $output = & git -C $Repo @Arguments 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "git -C `"$Repo`" $($Arguments -join ' ') failed:`n$($output -join [Environment]::NewLine)"
+# Windows PowerShell 5.1 can surface native stderr as NativeCommandError when
+# $ErrorActionPreference is Stop, even if the native process exits with code 0.
+# Git writes normal progress messages (for example "From https://...") to stderr.
+# Run Git with Continue locally, capture both streams, and decide success strictly
+# from the native exit code.
+function Invoke-NativeGit([string[]]$Arguments) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $rawOutput = @()
+    $exitCode = -1
+    try {
+        $ErrorActionPreference = "Continue"
+        $rawOutput = @(& git @Arguments 2>&1)
+        $exitCode = $LASTEXITCODE
     }
-    return @($output)
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    $output = @($rawOutput | ForEach-Object { $_.ToString() })
+    if ($exitCode -ne 0) {
+        throw "git $($Arguments -join ' ') failed with exit code $exitCode:`n$($output -join [Environment]::NewLine)"
+    }
+    return $output
+}
+
+function Invoke-Git([string]$Repo, [string[]]$Arguments) {
+    $gitArguments = @("-C", $Repo) + $Arguments
+    return @(Invoke-NativeGit -Arguments $gitArguments)
 }
 
 if (-not (Test-Path -LiteralPath $SourceRepo -PathType Container)) {
@@ -47,9 +69,15 @@ if (-not (Test-Path -LiteralPath $ValidationRepo -PathType Container)) {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
     Write-Host "Creating dedicated validation clone..."
-    $cloneOutput = & git clone --branch $Branch --single-branch $originUrl $ValidationRepo 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unable to create validation clone:`n$($cloneOutput -join [Environment]::NewLine)"
+    $cloneOutput = Invoke-NativeGit -Arguments @(
+        "clone",
+        "--branch", $Branch,
+        "--single-branch",
+        $originUrl,
+        $ValidationRepo
+    )
+    if ($cloneOutput.Count -gt 0) {
+        $cloneOutput | ForEach-Object { Write-Host $_ }
     }
 }
 
@@ -73,6 +101,7 @@ if ($currentBranch -ne $Branch) {
 $localHead = (Invoke-Git $validationRoot @("rev-parse", "HEAD") | Select-Object -First 1).Trim()
 $remoteHead = (Invoke-Git $validationRoot @("rev-parse", "origin/$Branch") | Select-Object -First 1).Trim()
 if ($localHead -ne $remoteHead) {
+    Write-Host "Synchronizing validation workspace: $localHead -> $remoteHead"
     $null = Invoke-Git $validationRoot @("reset", "--hard", "origin/$Branch")
 }
 
