@@ -19,6 +19,8 @@ New-Item -ItemType Directory -Force -Path $ArtifactRoot | Out-Null
 $ProjectHashBefore = (Get-FileHash -Path $ProjectFile -Algorithm SHA256).Hash
 $FatalPatterns = @(
     "SCRIPT ERROR:",
+    "Parse Error:",
+    "Compile Error:",
     "Failed to instantiate an autoload",
     "Resource file not found: res://",
     "Failed to load script"
@@ -99,12 +101,20 @@ $Tests = @(
     "res://tests/runtime/test_v0_p1_earth_wiring.gd",
     "res://tests/runtime/test_v0_p1_modern_network_inventory.gd",
     "res://tests/runtime/test_v0_p1_inventory_r5_parity.gd",
+    "res://tests/runtime/test_v0_p1_canonical_clock_purity.gd",
     "res://tests/runtime/test_v0_p1_world_items_containers.gd",
     "res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
     "res://tests/runtime/test_v0_s1_mvp_launch_options.gd"
 )
 foreach ($Test in $Tests) {
     Invoke-GodotScriptTest -TestPath $Test
+}
+
+$ClockPurityLog = Join-Path $ArtifactRoot "tests_runtime_test_v0_p1_canonical_clock_purity.gd.log"
+$ClockPuritySummary = "V0-P1 canonical clock purity: 66 assertions, 0 failures"
+if (-not (Select-String -Path $ClockPurityLog -SimpleMatch $ClockPuritySummary -Quiet)) {
+    Get-Content $ClockPurityLog -Tail 160 -ErrorAction SilentlyContinue
+    throw "V0-P1 canonical clock purity did not produce the required 66/0 summary."
 }
 
 Write-Host ""
