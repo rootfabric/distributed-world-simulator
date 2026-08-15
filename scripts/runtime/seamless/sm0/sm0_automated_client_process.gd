@@ -17,6 +17,7 @@ func _init() -> void:
 		"handoffs": int(options.get("handoffs", "4")),
 		"timeout_ms": int(options.get("timeout-ms", "60000")),
 		"result_file": String(options.get("result-file", "")),
+		"post_handoff_settle_steps": int(options.get("post-handoff-settle-steps", "0")),
 	})
 	if not bool(result.get("success", false)):
 		push_error("SM0 client setup failed: %s" % result)
