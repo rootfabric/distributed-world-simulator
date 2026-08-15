@@ -43,6 +43,23 @@ function Invoke-Git([string]$Repo, [string[]]$Arguments) {
     return @(Invoke-NativeGit -Arguments $gitArguments)
 }
 
+function Assert-PowerShellParse([string]$Path) {
+    $tokens = $null
+    $parseErrors = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile(
+        $Path,
+        [ref]$tokens,
+        [ref]$parseErrors
+    )
+    if ($null -ne $parseErrors -and $parseErrors.Count -gt 0) {
+        $details = @($parseErrors | ForEach-Object {
+            "line=$($_.Extent.StartLineNumber) column=$($_.Extent.StartColumnNumber) message=$($_.Message)"
+        })
+        throw "POWERSHELL_PARSE_FAIL: path=$Path`n$($details -join [Environment]::NewLine)"
+    }
+    Write-Host "PowerShell parser preflight: PASS path=$Path"
+}
+
 if (-not (Test-Path -LiteralPath $SourceRepo -PathType Container)) {
     throw "Source repository directory not found: $SourceRepo"
 }
@@ -114,6 +131,7 @@ $workflow = Join-Path $validationRoot "RUN_ECO_TEST_WORKFLOW.ps1"
 if (-not (Test-Path -LiteralPath $workflow -PathType Leaf)) {
     throw "Repository-local ECO workflow missing at exact remote head: $workflow"
 }
+Assert-PowerShellParse -Path $workflow
 
 Write-Host "validation_head=$finalHead"
 Write-Host "Validation workspace synchronized exactly; source checkout was not modified."
