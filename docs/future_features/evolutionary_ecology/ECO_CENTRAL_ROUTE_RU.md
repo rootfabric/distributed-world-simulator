@@ -52,13 +52,19 @@ Exact implementation head:
 
 `246b55d4c7c6fb1547d16de1ab872e3799e81286`.
 
+Movement-smoke hardening head:
+
+`fcff82aab6c8b0fc3fcbb6957bb05efcc4870b18`.
+
 Supplementary attached-engine result:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 parser preflight PASS
-ECO.VIS1.0 headless scene smoke: PASS (21 assertions)
+ECO.VIS1.0 headless scene smoke: PASS (24 assertions)
 ```
+
+Smoke включает real `W` input, движение камеры, polygon-bounds clamping и terrain-clearance clamping.
 
 Это не self-acceptance. До VIS1.0 acceptance остаются exact Windows automated gate и human graphical observation.
 
