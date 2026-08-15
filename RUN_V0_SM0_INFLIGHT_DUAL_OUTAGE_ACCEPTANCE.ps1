@@ -325,7 +325,7 @@ try {
         throw "A snapshot is not SOURCE_RETIRED for the crash transfer."
     }
     if ([string]$ASnapshot.directory.owner_authority_id -ne "authority/sm0/b") { throw "A durable directory does not point to B." }
-    $ASource = [Dictionary]$ASnapshot.source_transfer
+    $ASource = $ASnapshot.source_transfer
     if ([string]$ASource.transfer_id -ne $TransferId -or [string]$ASource.stage -ne "COMMIT_SENT") {
         throw "A durable source metadata cannot resume COMMIT."
     }
@@ -336,9 +336,10 @@ try {
         throw "B snapshot is not TARGET_PREPARED for the crash transfer."
     }
     if ([string]$BSnapshot.directory.owner_authority_id -ne "authority/sm0/a") { throw "B prepared snapshot advanced directory before COMMIT." }
-    $BPreparedMap = [Dictionary]$BSnapshot.prepared_transfers
-    if (-not $BPreparedMap.Contains($TransferId)) { throw "B durable prepared map lost crash transfer." }
-    $BPackage = [Dictionary]$BPreparedMap[$TransferId]
+    $BPreparedMap = $BSnapshot.prepared_transfers
+    $BPackageProperty = $BPreparedMap.PSObject.Properties[$TransferId]
+    if ($null -eq $BPackageProperty) { throw "B durable prepared map lost crash transfer." }
+    $BPackage = $BPackageProperty.Value
     if ([string]$BPackage.transfer_id -ne $TransferId -or [string]$BPackage.target_authority_id -ne "authority/sm0/b") {
         throw "B durable prepared package route is invalid."
     }
