@@ -26,6 +26,7 @@ var assertions := 0
 var failed := false
 
 func _init() -> void:
+	_progress("start")
 	seed(424242)
 	var rng_expected := [randi(), randi(), randi()]
 	seed(424242)
@@ -44,8 +45,10 @@ func _init() -> void:
 	_check(String(result.get("forward_interest_hash", "")) == String(result.get("reverse_interest_hash", "")), "full interest projection independent of authoritative input order")
 
 	if failed:
+		_progress("failed")
 		quit(1)
 		return
+	_progress("complete")
 	print("ECO.P4.7 Bounded Rotating Production Integration Soak: PASS (%d assertions)" % assertions)
 	print("soak_hash=" + String(result["soak_hash"]))
 	print("final_interest_hash=" + String(result["forward_interest_hash"]))
@@ -62,6 +65,7 @@ func _init() -> void:
 	quit(0)
 
 func _run_soak() -> Dictionary:
+	_progress("initialize base P3.8 state")
 	var p3_initial := Persistence.initialize(Fixture.initial_p3_7_result())
 	_check(not p3_initial.is_empty(), "base P3.8 state initializes")
 	var ownerships: Array = []
@@ -70,6 +74,7 @@ func _run_soak() -> Dictionary:
 	var ecology_generation_steps := 0
 
 	for index in range(REGION_COUNT):
+		_progress("initialize region %d/%d" % [index + 1, REGION_COUNT])
 		var region_id := "planet-01:soak_%02d" % index
 		var region := RegionState.create_region_state(region_id, ORIGIN_WORLD_TIME, p3_initial)
 		_check(not region.is_empty(), "initial region creates")
@@ -101,6 +106,7 @@ func _run_soak() -> Dictionary:
 
 	for cycle in range(CYCLE_COUNT):
 		var index := cycle % REGION_COUNT
+		_progress("cycle %d/%d active_region=%02d" % [cycle + 1, CYCLE_COUNT, index])
 		var owner: Dictionary = ownerships[index]
 		var snapshot: Dictionary = Dictionary(owner["snapshot"])
 		var catchup := ProductionPersistence.restore_catchup_state(snapshot)
@@ -173,12 +179,14 @@ func _run_soak() -> Dictionary:
 		if index % 2 == 0:
 			requested.append("planet-01:soak_%02d" % index)
 
+	_progress("full fanout forward")
 	var forward_interest := ReadModel.project_interest(ownerships, requested)
 	_check(not forward_interest.is_empty(), "final full-fanout interest projection builds")
 	_check(int(forward_interest["summary_count"]) == REGION_COUNT, "final interest summary count bounded")
 	_check(int(forward_interest["missing_count"]) == 2, "final interest missing count exact")
 	interest_projection_count += 1
 
+	_progress("full fanout reverse")
 	var reversed_ownerships := ownerships.duplicate(true)
 	reversed_ownerships.reverse()
 	var reverse_interest := ReadModel.project_interest(reversed_ownerships, requested)
@@ -186,6 +194,7 @@ func _run_soak() -> Dictionary:
 	_check(String(reverse_interest["interest_hash"]) == String(forward_interest["interest_hash"]), "full interest identity independent of authoritative input order")
 	interest_projection_count += 1
 
+	_progress("canonicalize final identities")
 	var final_entries := []
 	for owner_value in ownerships:
 		var owner: Dictionary = owner_value
@@ -231,6 +240,17 @@ func _run_soak() -> Dictionary:
 		"max_remaining_due_steps": max_remaining_due_steps,
 		"final_region_count": ownerships.size(),
 	}
+
+func _progress(message: String) -> void:
+	var path := OS.get_environment("ECO_P4_7_PROGRESS_FILE")
+	if path.is_empty():
+		return
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(message)
+	file.flush()
+	file.close()
 
 func _check(condition: bool, message: String) -> void:
 	assertions += 1
