@@ -1,5 +1,8 @@
 extends SceneTree
 
+const NetworkedGameplayService = preload(
+	"res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
+)
 const CanonicalItemGraph = preload(
 	"res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
 )
@@ -25,6 +28,8 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_test_join_materializes_seeded_inventory()
+
 	canonical = CanonicalItemGraph.new()
 	_assert(
 		_ok(canonical.setup("authority/v0-p1", 1, {"playable_sandbox": true})),
@@ -178,6 +183,79 @@ func _run() -> void:
 	runtime_b.clear_presentations()
 	host.queue_free()
 	_finish()
+
+
+func _test_join_materializes_seeded_inventory() -> void:
+	var service = NetworkedGameplayService.new()
+	_assert(
+		_ok(service.setup(
+			"authority/v0-p1/join-seed",
+			1,
+			0,
+			{
+				"profile": NetworkedGameplayService.PROFILE_MULTIPLAYER_CORE,
+				"topology_adapter": "ENET",
+				"region_id": "region/v0-p1/join-seed",
+				"playable_sandbox": true,
+			}
+		)),
+		"network gameplay sandbox configures for join seed"
+	)
+	var first_session := "transport-session/v0-p1/a/seed-1"
+	var second_session := "transport-session/v0-p1/a/seed-2"
+	_assert(
+		_ok(service.join("a", first_session, "operation/v0-p1/a/join-seed-1")),
+		"player A join succeeds for canonical starter inventory"
+	)
+	var snapshot: Dictionary = service.create_canonical_item_graph_snapshot()
+	_assert(bool(snapshot.get("playable_sandbox", false)), "join seed uses playable sandbox canonical Item Graph")
+	var inventories: Dictionary = Dictionary(snapshot.get("inventories", {}))
+	_assert(inventories.has("a"), "join materializes canonical player A inventory")
+	var inventory: Dictionary = Dictionary(inventories.get("a", {}))
+	var starter_ids: Array = Array(inventory.get("inventory", [])).duplicate()
+	_assert(starter_ids.size() == 3, "join materializes all canonical starter stacks")
+	_assert(
+		int(_item_by_id(snapshot, "item/player/a/beacons").get("quantity", 0)) == 3,
+		"starter beacon stack is canonical"
+	)
+	_assert(
+		int(_item_by_id(snapshot, "item/player/a/mount-bases").get("quantity", 0)) == 3,
+		"starter mount-base stack is canonical"
+	)
+	_assert(
+		int(_item_by_id(snapshot, "item/player/a/battery").get("quantity", 0)) == 1,
+		"starter battery is canonical"
+	)
+	var hotbar: Array = Array(inventory.get("hotbar", []))
+	_assert(
+		hotbar.size() == 10
+		and String(hotbar[0]) == "item/player/a/beacons"
+		and String(hotbar[1]) == "item/player/a/mount-bases",
+		"starter hotbar is canonical"
+	)
+	var item_count_before := Array(snapshot.get("items", [])).size()
+	var starter_ids_before := starter_ids.duplicate()
+	_assert(
+		_ok(service.leave("a", first_session, "operation/v0-p1/a/leave-seed-1")),
+		"player A leaves before seed reconnect"
+	)
+	_assert(
+		_ok(service.join("a", second_session, "operation/v0-p1/a/join-seed-2")),
+		"player A rejoins for seed idempotence"
+	)
+	var reconnect_snapshot: Dictionary = service.create_canonical_item_graph_snapshot()
+	var reconnect_inventory: Dictionary = Dictionary(
+		Dictionary(reconnect_snapshot.get("inventories", {})).get("a", {})
+	)
+	_assert(
+		Array(reconnect_inventory.get("inventory", [])) == starter_ids_before,
+		"reconnect preserves the same canonical starter identities"
+	)
+	_assert(
+		Array(reconnect_snapshot.get("items", [])).size() == item_count_before,
+		"reconnect does not duplicate canonical starter items"
+	)
+	service.shutdown()
 
 
 func _submit_canonical(
