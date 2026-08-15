@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_8_acceptance_preparation.v1",
-  "revision": "ECO-P4.8-2026-08-15-R4-P4-7-BOUNDED-ROTATING-REPINNED",
+  "revision": "ECO-P4.8-2026-08-15-R5-P4-7-OBSERVABLE-BOUNDED-REPINNED",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "PREPARATION_READY_P4_7_CANONICAL_SOAK_PENDING",
   "scope": "P4_FINAL_ACCEPTANCE_CONTROL_MANIFEST_ONLY",
@@ -14,9 +14,9 @@
   },
   "p4_7_gate": {
     "status": "CANDIDATE_BOUNDED_ROTATING_CANONICAL_RUNNER_EXACT_COMMITTED_A_B_PENDING",
-    "validation_blob": "c53f01650bb73d13308590231bd20e57c3a21b3d",
-    "runner_blob": "243ae60935a50e03bfb88efad4d1c22088541aca",
-    "soak_test_blob": "35ec48936f53b924a462d5cbf0b55036d6eec51d",
+    "validation_blob": "8d1f96f34cf5b4095323ac5d1a99d8053280a255",
+    "runner_blob": "5d44dead6bf9bcb5f921e3baf4852acc54adff2c",
+    "soak_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
     "regions": 8,
     "cycles": 12,
     "handoff_operations_expected": 4,
@@ -25,12 +25,13 @@
     "client_updates_expected": 12,
     "interest_projections_expected": 14,
     "restart_operations_expected": 3,
+    "heartbeat_includes_internal_phase": true,
     "required_before_finalization": ["exact committed A/B PASS", "byte-identical logs", "soak_hash frozen", "final_interest_hash frozen", "ecology_generation_steps=8", "full eight-region fanout order identity", "P4.7 lifecycle acceptance"]
   },
   "candidate_blobs": {
-    "preacceptance_runner": "ed8b619515d2a2976934fadad6ef18124299eea9"
+    "preacceptance_runner": "c5a8d45c02977928aa1f6e406c2c40bf3da52e89"
   },
-  "repair_note": "After a second exact-Windows 600s timeout, P4.7 was redesigned as a bounded rotating composition soak: eight authoritative regions and twelve cycles remain, but exactly one region performs the expensive full persistence/CAS/read integration path per cycle. Full eight-region interest fanout is still executed twice with opposite authoritative input order. No accepted runtime kernel changed and the timeout was not increased.",
+  "repair_note": "After two exact-Windows 600s timeouts, P4.7 is now a bounded rotating composition soak. Eight authoritative regions and twelve cycles remain; one rotating region performs the expensive full persistence/CAS/read path per cycle, full eight-region fanout still runs twice, and heartbeat reports the internal phase from a non-canonical temporary progress file. No accepted runtime kernel changed and timeout remains 600 seconds.",
   "contract": {
     "control_only": true,
     "adds_runtime_semantics": false,
@@ -39,5 +40,5 @@
     "cannot_accept_p4_without_frozen_p4_7_soak_identity": true,
     "final_action_after_p4_7": "replace preparation pins with accepted P4.7 validation/hash identities, run final manifest gate, then write one P4 lifecycle acceptance commit"
   },
-  "decision": "P4_8_PREPARED; RERUN_BOUNDED_ROTATING_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
+  "decision": "P4_8_PREPARED; RERUN_OBSERVABLE_BOUNDED_ROTATING_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
 }
