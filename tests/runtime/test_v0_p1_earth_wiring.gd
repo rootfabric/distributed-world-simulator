@@ -14,22 +14,23 @@ var failures: Array[String] = []
 
 
 class FakeEarthWorld:
-	extends RefCounted
+	extends Node3D
 	var render_origin := Vector3.ZERO
+	var radius_m := 100.0
 
 	func get_surface_point(direction: Vector3) -> Vector3:
-		return direction.normalized() * 100.0
+		return direction.normalized() * radius_m
 
-	func world_to_render(world_position: Vector3) -> Vector3:
-		return world_position - render_origin
+	func get_render_origin() -> Vector3:
+		return render_origin
 
 	func get_canonical_spawn_direction() -> Vector3:
-		return Vector3.UP
+		return Vector3(0.3, 0.9, 0.2).normalized()
 
 
 func _init() -> void:
 	_test_runtime_compiles_and_is_routed()
-	_test_projector_tracks_moving_render_origin()
+	_test_projector_matches_mvp_axes_and_reference_frame()
 	_test_interaction_target_is_non_blocking_area()
 	_finish()
 
@@ -57,30 +58,57 @@ func _test_runtime_compiles_and_is_routed() -> void:
 	_assert(earth_runtime == P1_RUNTIME_PATH, "Earth catalog routes network MVP through V0-P1 runtime")
 
 
-func _test_projector_tracks_moving_render_origin() -> void:
+func _test_projector_matches_mvp_axes_and_reference_frame() -> void:
 	var earth := FakeEarthWorld.new()
+	get_root().add_child(earth)
+	var anchor := earth.get_canonical_spawn_direction()
 	var projector = EarthItemSpatialProjector.new()
 	_assert(
-		bool(projector.setup(earth, Vector3.UP).get("success", false)),
+		bool(projector.setup(earth, anchor).get("success", false)),
 		"Earth item spatial projector configures"
 	)
 	var canonical := Transform3D(Basis.IDENTITY, Vector3(2.0, 1.0, -3.0))
 	var first: Dictionary = projector.project_transform(canonical)
 	_assert(bool(first.get("success", false)), "projector resolves canonical tangent transform")
-	var first_value = first.get("details", {}).get("transform")
+	var first_details: Dictionary = first.get("details", {})
+	var first_value = first_details.get("transform")
 	_assert(typeof(first_value) == TYPE_TRANSFORM3D, "projector returns render Transform3D")
+
+	var east := Vector3.UP.cross(anchor).normalized()
+	var north := anchor.cross(east).normalized()
+	var expected_direction := (
+		earth.get_surface_point(anchor)
+		+ east * canonical.origin.x
+		- north * canonical.origin.z
+	).normalized()
+	var actual_direction: Vector3 = first_details.get("surface_direction", Vector3.ZERO)
+	_assert(
+		actual_direction.distance_to(expected_direction) < 0.000001,
+		"projector uses the same +X east / -Z north convention as Earth MVP"
+	)
+
+	var world_position: Vector3 = first_details.get("world_position", Vector3.ZERO)
 	var render_shift := Vector3(11.0, -7.0, 5.0)
+	var frame_basis := Basis(Vector3.UP, deg_to_rad(37.0))
 	earth.render_origin = render_shift
+	earth.basis = frame_basis
 	var second: Dictionary = projector.project_transform(canonical)
-	_assert(bool(second.get("success", false)), "projector resolves after render-origin movement")
+	_assert(bool(second.get("success", false)), "projector resolves after render-origin/reference-frame movement")
 	var second_value = second.get("details", {}).get("transform")
 	_assert(typeof(second_value) == TYPE_TRANSFORM3D, "second projection remains Transform3D")
-	if typeof(first_value) == TYPE_TRANSFORM3D and typeof(second_value) == TYPE_TRANSFORM3D:
-		var first_transform: Transform3D = first_value
+	if typeof(second_value) == TYPE_TRANSFORM3D:
 		var second_transform: Transform3D = second_value
-		var expected: Vector3 = first_transform.origin - render_shift
-		var actual: Vector3 = second_transform.origin
-		_assert(actual.distance_to(expected) < 0.0001, "moving render origin changes presentation only, not canonical transform")
+		var expected_render_position := frame_basis * (world_position - render_shift)
+		_assert(
+			second_transform.origin.distance_to(expected_render_position) < 0.0001,
+			"render origin and reference-frame basis affect presentation only"
+		)
+	var second_world_position: Vector3 = second.get("details", {}).get("world_position", Vector3.ZERO)
+	_assert(
+		second_world_position.distance_to(world_position) < 0.000001,
+		"canonical Earth-fixed item position is invariant across presentation frame changes"
+	)
+	earth.queue_free()
 
 
 func _test_interaction_target_is_non_blocking_area() -> void:
