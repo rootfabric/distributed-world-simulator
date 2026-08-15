@@ -29,14 +29,16 @@ function Assert-Marker {
     }
 }
 
-function Test-ValidGodotUidSidecar {
+function Test-ValidGeneratedGodotUidSidecar {
     param(
         [string]$RelativeUidPath,
-        [hashtable]$AllowedUidSources
+        [hashtable]$AllowedRecoverySources
     )
+
     if (-not $RelativeUidPath.EndsWith(".uid", [System.StringComparison]::OrdinalIgnoreCase)) {
         return $false
     }
+
     $SourcePath = $RelativeUidPath.Substring(0, $RelativeUidPath.Length - 4).Replace("\", "/")
     if (-not (
         $SourcePath.EndsWith(".gd", [System.StringComparison]::OrdinalIgnoreCase) -or
@@ -44,13 +46,21 @@ function Test-ValidGodotUidSidecar {
     )) {
         return $false
     }
-    if (-not $AllowedUidSources.ContainsKey($SourcePath)) {
-        return $false
-    }
 
     $FullSourcePath = Join-Path $Root $SourcePath
     $FullUidPath = Join-Path $Root $RelativeUidPath
     if (-not (Test-Path $FullSourcePath) -or -not (Test-Path $FullUidPath)) {
+        return $false
+    }
+
+    # A generated sidecar is admissible when its source is either already part
+    # of the repository or is one of the explicitly allowed new recovery files.
+    # This matches the project's deterministic UID policy without hard-coding
+    # every script Godot happens to import in this checkout.
+    & git ls-files --error-unmatch -- $SourcePath 2>$null | Out-Null
+    $SourceTracked = ($LASTEXITCODE -eq 0)
+    $SourceAllowedRecovery = $AllowedRecoverySources.ContainsKey($SourcePath)
+    if (-not ($SourceTracked -or $SourceAllowedRecovery)) {
         return $false
     }
 
@@ -108,42 +118,46 @@ $AllowedPaths = @(
 $Allowed = @{}
 foreach ($Path in $AllowedPaths) { $Allowed[$Path.Replace("\", "/")] = $true }
 
-# Godot 4.7 creates deterministic UID sidecars for script/shader resources during
-# editor import. Freeze only the sidecars belonging to this exact playable surface;
-# do not admit arbitrary project-wide UID churn.
-$AllowedUidSources = @{}
-foreach ($Path in $AllowedPaths) {
-    $Normalized = $Path.Replace("\", "/")
-    if ($Normalized.EndsWith(".gd", [System.StringComparison]::OrdinalIgnoreCase)) {
-        $AllowedUidSources[$Normalized] = $true
-    }
-}
-$AllowedUidSources["shaders/earth_surface_presentation.gdshader"] = $true
-
 $Changed = @()
-$UidSidecars = @()
+$GeneratedUidSidecars = @()
 foreach ($Line in (& git status --porcelain=v1 --untracked-files=all)) {
     if ([string]::IsNullOrWhiteSpace($Line)) { continue }
+
+    $StatusCode = $Line.Substring(0, 2)
     $Path = $Line.Substring(3).Trim().Replace("\", "/")
     if ($Path.Contains(" -> ")) { $Path = $Path.Split(" -> ")[-1].Trim() }
 
     $AllowedChange = $Allowed.ContainsKey($Path)
-    if (-not $AllowedChange -and (Test-ValidGodotUidSidecar $Path $AllowedUidSources)) {
-        $AllowedChange = $true
-        $UidSidecars += $Path
+
+    if (-not $AllowedChange -and $Path.EndsWith(".uid", [System.StringComparison]::OrdinalIgnoreCase)) {
+        # Existing canonical UID identity must never be rewritten implicitly.
+        # Only newly generated, previously untracked sidecars may be absorbed.
+        if ($StatusCode -ne "??") {
+            throw "Existing tracked Godot UID sidecar changed: $Path [$StatusCode]. Refusing to freeze an identity rewrite."
+        }
+
+        if (Test-ValidGeneratedGodotUidSidecar $Path $Allowed) {
+            $AllowedChange = $true
+            $GeneratedUidSidecars += $Path
+        }
     }
+
     if (-not $AllowedChange) {
         throw "Unexpected local change outside the recovered playable allowlist: $Path. Refusing to freeze."
     }
     $Changed += $Path
 }
+
 $Changed = @($Changed | Sort-Object -Unique)
-$UidSidecars = @($UidSidecars | Sort-Object -Unique)
+$GeneratedUidSidecars = @($GeneratedUidSidecars | Sort-Object -Unique)
 if ($Changed.Count -eq 0) {
     throw "No materialized recovery changes are present. Run and validate RUN_V0_RECOVERED_PLAYABLE.ps1 before freezing."
 }
-if ($UidSidecars.Count -gt 0) {
-    Write-Host ("[FREEZE] Including {0} validated Godot UID sidecar(s) for playable script/shader resources." -f $UidSidecars.Count) -ForegroundColor DarkGray
+if ($GeneratedUidSidecars.Count -gt 0) {
+    Write-Host ("[FREEZE] Including {0} newly generated deterministic Godot UID sidecar(s)." -f $GeneratedUidSidecars.Count) -ForegroundColor DarkGray
+    foreach ($UidPath in $GeneratedUidSidecars) {
+        Write-Host "  + $UidPath" -ForegroundColor DarkGray
+    }
 }
 
 Write-Host "[FREEZE 2/5] Fetching durable product frontier..." -ForegroundColor Cyan
