@@ -53,6 +53,40 @@ func _run() -> void:
 		_finish()
 		return
 
+	# SERVER_READY is the transport/listener boundary. Earth initialization keeps
+	# doing synchronous world work after that marker, so launching a headless M3
+	# client here can open an ENet session while the server cannot poll it yet.
+	# Gate clients on the fully initialized application + lifecycle boundary.
+	var earth_runtime_ready := _wait_log_marker(
+		server_pid,
+		server_log,
+		"\"event\":\"earth_runtime_ready\"",
+		READY_TIMEOUT_MS
+	)
+	_assert(earth_runtime_ready, "V0-P1 reconnect Earth runtime reports earth_runtime_ready")
+	if not earth_runtime_ready:
+		_finish()
+		return
+	var lifecycle_ready := _wait_log_marker(
+		server_pid,
+		server_log,
+		"\"event\":\"node_ready\"",
+		READY_TIMEOUT_MS
+	)
+	var dedicated_role_ready := _wait_log_marker(
+		server_pid,
+		server_log,
+		"\"runtime_role\":\"dedicated-server\"",
+		READY_TIMEOUT_MS
+	)
+	_assert(
+		lifecycle_ready and dedicated_role_ready,
+		"V0-P1 reconnect dedicated-server lifecycle is fully ready before clients"
+	)
+	if not lifecycle_ready or not dedicated_role_ready:
+		_finish()
+		return
+
 	var actor_pid := _spawn_client(
 		executable,
 		project_root,
