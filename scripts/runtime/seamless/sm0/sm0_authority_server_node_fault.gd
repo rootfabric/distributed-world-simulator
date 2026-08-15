@@ -16,6 +16,7 @@ const COMMIT_DELAY_MS := 350
 var _fault_profile := ""
 var _fault_applied: Dictionary = {}
 var _fault_delayed_control: Array = []
+var _fault_pending_shutdown: Dictionary = {}
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -30,7 +31,25 @@ func setup(config: Dictionary) -> Dictionary:
 
 func _process(delta: float) -> void:
 	_flush_delayed_control()
+	if not _fault_pending_shutdown.is_empty() and _fault_delayed_control.is_empty():
+		var pending: Dictionary = _fault_pending_shutdown.duplicate(true)
+		_fault_pending_shutdown.clear()
+		super._shutdown(int(pending.get("exit_code", 0)), String(pending.get("reason", "fault-drain")))
+		return
 	super._process(delta)
+
+
+func _shutdown(exit_code: int, reason: String) -> void:
+	if _fault_profile == FAULT_PROFILE_TRANSPORT_CHAOS_V1 and not _fault_delayed_control.is_empty():
+		if _fault_pending_shutdown.is_empty():
+			_fault_pending_shutdown = {"exit_code": exit_code, "reason": reason}
+			_event("SM0_FAULT_SHUTDOWN_DEFERRED", {
+				"fault_profile": _fault_profile,
+				"pending_delayed_control": _fault_delayed_control.size(),
+				"reason": reason,
+			})
+		return
+	super._shutdown(exit_code, reason)
 
 
 func _send_control(message_type: String, payload: Dictionary, request_id: String = "") -> void:
