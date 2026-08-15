@@ -1,138 +1,98 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-15-R9-ISOLATED-HEADLESS-PROJECT",
+  "revision": "ECO-P4.7-2026-08-15-R10-ACCEPTED-EXACT-WINDOWS-ISOLATED-A-B",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_BOUNDED_ROTATING_ISOLATED_HEADLESS_CANONICAL_RUNNER_EXACT_COMMITTED_A_B_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_ISOLATED_HEADLESS_BOUNDED_ROTATING_A_B",
   "scope": "BOUNDED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.6",
-    "status_required_for_canonical_gate": "ACCEPTED*",
-    "current_status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION",
+    "status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION",
+    "validation_blob": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc",
     "unit_aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
-    "real_integration_hash": "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf",
-    "kernel_blob": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
-    "fixture_blob": "dc55b886c057e2ccd8f454658b6be58d579642e1",
-    "real_integration_blob": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
-    "runner_blob": "bd65dd9df5b964f0c930814e97c160520033adc2",
-    "validation_blob_after_acceptance": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
+    "real_integration_hash": "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf"
   },
-  "candidate_blobs": {
-    "soak_test": "49821079787479212feb78a10a4703bc52ba89b3",
-    "canonical_runner_legacy_filename": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4"
-  },
-  "repair_evidence": {
-    "r5_type_repair": {
-      "failed_exact_windows_head": "cd7808661d105332a23d3f435caa3f4db535a6b7",
-      "failure": "GDScript parser could not infer target_server from an untyped constant Array index",
-      "correction": "SERVERS is Array[String] and server rotation locals are explicitly typed"
-    },
-    "r6_first_timeout_repair": {
-      "failed_exact_windows_head": "8bd7134ebe5bc90871b03ce2e2df212bc7a2943b",
-      "failure": "full 8x12 forward/reverse scenario exceeded 600 seconds",
-      "correction": "bounded deep ecology generations to one real generation per region while keeping the original 96 full region-cycle integration operations"
-    },
-    "r7_second_timeout_repair": {
-      "failed_exact_windows_head": "ee8e3f09173cd10c921d8c90ed50ffe5a29592b3",
-      "failure": "scenario still exceeded 600 seconds after deep ecology generation count was reduced to eight",
-      "root_cause_from_production_call_graph": "cost is dominated by repeated recursive canonical validation and deep duplication/serialization across P4.4/P4.5/P4.6",
-      "correction": "retain eight authoritative regions and twelve cycles but mutate one rotating active region per cycle; retain full persistence/CAS/handoff/restart/read-model composition and final eight-region fanout order crosscheck",
-      "timeout_increased": false,
-      "production_runtime_changed": false,
-      "accepted_ancestors_changed": false
-    },
-    "r8_observability": {
-      "reason": "two prior 600-second runs exposed only an external heartbeat and did not identify the internal ecology phase",
-      "correction": "the test writes a non-canonical phase string to an environment-provided temporary file and the PowerShell runner reports that phase on each 10-second heartbeat",
-      "canonical_hashes_include_progress_data": false,
-      "stdout_determinism_affected": false
-    },
-    "r9_isolated_headless_project": {
-      "exact_windows_head_before_repair": "6e7c6e47186ac5dbccb18ec17997d34f7cf06524",
-      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-      "scenario_result_before_runner_rejection": "PASS_242_ASSERTIONS",
-      "provisional_soak_hash_not_frozen": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
-      "provisional_final_interest_hash_not_frozen": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
-      "provisional_counts": {
-        "handoffs": 4,
-        "ecology_generation_steps": 8,
-        "save_loads": 12,
-        "client_updates": 12,
-        "interest_projections": 14,
-        "restarts": 3,
-        "max_remaining_due_steps": 0,
-        "regions": 8,
-        "cycles": 12
-      },
-      "runner_rejection": "after script quit(0), project startup emitted Resource file not found: res:// and Failed to instantiate an autoload, can't load from path: .",
-      "project_godot_blob": "4ea9705806cb0e7ab3e638f562762833dbe75907",
-      "autoload": "BreakpointRuntimeBridge=*uid://cpjc0o64cgs1",
-      "runtime_bridge_uid_sidecar_blob": "03dc8cfd3d2de69ef9e36c0f2b94a56b7d6012e8",
-      "root_cause_boundary": "the clean validation clone launches the repository project configuration while the ecology script itself does not require gameplay or Breakpoint MCP autoloads; the unrelated project-level UID autoload generated post-test ERROR output",
-      "correction": "run exact scripts/tests resources through NTFS junctions from a temporary minimal Godot project with no gameplay/MCP autoloads; keep unexpected Godot ERROR output fail-closed",
-      "ignored_error_allowlist_added": false,
-      "project_godot_changed": false,
-      "production_runtime_changed": false,
-      "canonical_a_b_still_required": true
-    }
+  "accepted_candidate": {
+    "tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "soak_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
+    "runner_blob": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4",
+    "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
+    "runner_filename_note": "legacy PREACCEPTANCE filename retained; the executed semantics are canonical",
+    "headless_project_policy": "temporary minimal Godot project; scripts/tests are junctions to exact validation checkout; no gameplay or Breakpoint MCP autoloads",
+    "unexpected_godot_error_policy": "FAIL"
   },
   "scenario": {
     "regions": 8,
     "cycles": 12,
-    "mutation_policy": "one rotating active region per cycle; every region remains authoritative and participates in final fanout",
+    "mutation_policy": "one rotating active region per cycle; all eight authoritative regions participate in final fanout",
     "ecology_step_interval_world_time": 10.0,
-    "ecology_generation_steps_expected": 8,
-    "handoff_operations_expected": 4,
-    "save_load_operations_expected": 12,
-    "client_updates_expected": 12,
-    "interest_projections_expected": 14,
-    "restart_operations_expected": 3,
+    "ecology_generation_steps": 8,
+    "handoff_operations": 4,
+    "save_load_operations": 12,
+    "client_updates": 12,
+    "interest_projections": 14,
+    "restart_operations": 3,
     "restart_cycles": [3, 7, 11],
-    "active_interest_policy": "each cycle projects only the active ownership plus one explicit missing region and duplicate request canonicalization",
-    "full_fanout_policy": "after all cycles project all eight regions plus two missing ids twice, once with forward authoritative array order and once reversed; interest hashes must match",
-    "max_remaining_due_steps_bound": 1,
-    "fresh_process_crosscheck": "fresh process A and B logs must be byte-identical",
-    "headless_project_policy": "temporary minimal Godot project; scripts and tests are NTFS junctions to the exact committed validation checkout; no gameplay/MCP autoload"
+    "max_remaining_due_steps": 0,
+    "full_fanout_policy": "all eight regions plus two missing ids projected with forward and reversed authoritative ownership-array order; interest identity equal"
   },
-  "covered_properties": [
-    "P4_6_ACCEPTED_VALIDATION_PINNED",
-    "P4_6_ACCEPTED_UNIT_AND_REAL_INTEGRATION_HASHES_PINNED",
-    "EIGHT_AUTHORITATIVE_REGIONS_RETAINED",
-    "TWELVE_ROTATING_INTEGRATION_CYCLES",
-    "REAL_ECOLOGY_ADVANCE_PER_REGION",
-    "BOUNDED_CATCHUP_DEBT",
-    "P4_4_SERIALIZE_DESERIALIZE_ON_EVERY_ACTIVE_CYCLE",
-    "P4_5_CAS_SNAPSHOT_COMMIT_ON_EVERY_ACTIVE_CYCLE",
-    "P4_5_REPEATED_HANDOFF_FENCING",
-    "P4_4_RESTART_TO_P4_5_IDENTITY_RECONSTRUCTION",
-    "P4_6_MONOTONIC_CLIENT_CACHE",
-    "P4_6_ACTIVE_INTEREST_CANONICALIZATION",
-    "P4_6_FULL_EIGHT_REGION_FANOUT",
-    "MISSING_INTEREST_EXPLICIT",
-    "AUTHORITATIVE_INPUT_ORDER_INDEPENDENCE",
-    "FRESH_PROCESS_DETERMINISM",
-    "GLOBAL_RNG_NOT_CONSUMED",
-    "INTERNAL_PHASE_HEARTBEAT",
-    "HEADLESS_TEST_PROJECT_ISOLATED_FROM_UNRELATED_AUTOLOADS",
-    "UNEXPECTED_GODOT_ERRORS_STILL_FAIL_CLOSED"
-  ],
+  "acceptance_evidence": {
+    "parser_preload_preflight": "PASS",
+    "run_a": {
+      "result": "PASS",
+      "assertions": 242,
+      "soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+      "final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
+    },
+    "run_b": {
+      "result": "PASS",
+      "assertions": 242,
+      "soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+      "final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
+    },
+    "fresh_process_logs_byte_identical": true,
+    "canonical_automated_gates": "PASS",
+    "workflow_stage_p4_7": "PASS",
+    "p4_8_preparation_stage_after_p4_7": "PASS",
+    "workflow_suite_current": "PASS",
+    "validation_workspace": "PASS",
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "counts": {
+      "handoffs": 4,
+      "ecology_generation_steps": 8,
+      "save_loads": 12,
+      "client_updates": 12,
+      "interest_projections": 14,
+      "restarts": 3,
+      "max_remaining_due_steps": 0,
+      "regions": 8,
+      "cycles": 12
+    },
+    "legacy_output_label_note": "the test prints parent_p4_6=c966... but that value is ReadModel.PARENT_P4_5_AGGREGATE, i.e. the accepted P4.5 aggregate; it is not a P4.6 aggregate identity"
+  },
+  "repair_history": {
+    "r5": "fixed Godot 4.7.1 Array[String] type inference in the soak test",
+    "r6": "bounded deep ecology generations after first 600s timeout without increasing timeout",
+    "r7": "reworked 96 recursive full-region mutations into bounded rotating composition after second 600s timeout",
+    "r8": "added non-canonical internal phase heartbeat",
+    "r9": "isolated headless test project from unrelated project-level UID autoload errors without allowlisting ERROR output"
+  },
   "boundary": {
     "not_a_scheduler": true,
     "not_runtime_authority": true,
     "not_network_transport": true,
     "not_wall_clock_soak": true,
+    "accelerated_deterministic_soak": true,
     "does_not_replace_lower_layer_acceptance": true,
-    "does_not_mutate_project_godot": true,
-    "purpose": "bounded composition stress across already-accepted P4.4/P4.5/P4.6 surfaces without unrelated project startup/autoload effects"
+    "production_runtime_changed_by_acceptance": false,
+    "project_godot_changed_by_acceptance": false
   },
   "gate": {
-    "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
-    "runner_name_note": "legacy filename retained for local compatibility; semantics are canonical",
-    "heartbeat_seconds": 10,
-    "heartbeat_includes_internal_phase": true,
+    "status": "ACCEPTED",
     "timeout_seconds_per_process": 600,
-    "unexpected_godot_error_policy": "FAIL",
-    "hash_policy": "exact committed isolated-project A/B must be byte-identical; successful canonical run freezes soak_hash and final_interest_hash in lifecycle acceptance evidence",
-    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN_AFTER_HEADLESS_PROJECT_ISOLATION"
+    "heartbeat_seconds": 10,
+    "hash_policy": "frozen from exact committed Windows fresh-process A/B byte-identical PASS"
   },
-  "decision": "RERUN_P4_7_ISOLATED_HEADLESS_CANONICAL_SOAK_ON_EXACT_WINDOWS_GODOT; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND_FINALIZE_P4_8"
+  "decision": "P4_7_ACCEPTED; OPEN_P4_8_FINAL_MANIFEST_GATE"
 }
