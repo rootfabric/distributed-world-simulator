@@ -10,9 +10,9 @@ $ExpectedValidationBlobs = [ordered]@{
     "validation/ecology/eco-p4-5-region-ownership-validation.json" = "a02f1547c1beea5a49d500304b58ab8c763334ca"
     "validation/ecology/eco-p4-6-client-read-model-validation.json" = "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
 }
-$ExpectedP47ValidationBlob = "a4cae8c944ab658dab05cf2ed3d3215e746883b6"
-$ExpectedP47RunnerBlob = "da41c2760f0802c0a669e1f4a1d0ad90254c054e"
-$ExpectedP47Status = "CANDIDATE_CANONICAL_RUNNER_READY_EXACT_COMMITTED_A_B_PENDING"
+$ExpectedP47ValidationBlob = "16aa231173164414e8fab7349a61e2d78029ab9e"
+$ExpectedP47RunnerBlob = "f6806edf25a7e466eb7f0ea3c2f8e31b0f768216"
+$ExpectedP47Status = "CANDIDATE_CANONICAL_RUNNER_READY_TYPE_REPAIR_EXACT_COMMITTED_A_B_PENDING"
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
