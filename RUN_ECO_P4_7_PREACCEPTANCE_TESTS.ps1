@@ -10,7 +10,7 @@ $ExpectedP46IntegrationBlob = "1924202c9ba98ccc5e867529fda1d328b9d746ce"
 $ExpectedP46RunnerBlob = "bd65dd9df5b964f0c930814e97c160520033adc2"
 $ExpectedP46UnitAggregate = "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2"
 $ExpectedP46IntegrationHash = "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf"
-$ExpectedSoakTestBlob = "35ec48936f53b924a462d5cbf0b55036d6eec51d"
+$ExpectedSoakTestBlob = "49821079787479212feb78a10a4703bc52ba89b3"
 $ExpectedRegions = 8
 $ExpectedCycles = 12
 $ExpectedHandoffs = 4
@@ -60,7 +60,12 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
     Write-Host "=== $Label ==="
     $process = $null
     $stopwatch = $null
+    $progressPath = [System.IO.Path]::Combine(
+        [System.IO.Path]::GetTempPath(),
+        ("dws-eco-p47-{0}.txt" -f [Guid]::NewGuid().ToString("N"))
+    )
     try {
+        Set-Content -LiteralPath $progressPath -Value "starting" -Encoding ASCII
         $argumentText = "--headless --path `"$RootDir`""
         if ($CheckOnly) { $argumentText += " --check-only" }
         $argumentText += " --script `"$ScriptPath`""
@@ -71,6 +76,7 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
         $startInfo.CreateNoWindow = $true
         $startInfo.RedirectStandardOutput = $true
         $startInfo.RedirectStandardError = $true
+        $startInfo.EnvironmentVariables["ECO_P4_7_PROGRESS_FILE"] = $progressPath
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $startInfo
         if (-not $process.Start()) { throw "$Label failed to start Godot" }
@@ -81,7 +87,19 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
         while (-not $process.WaitForExit(1000)) {
             $elapsed = [int][Math]::Floor($stopwatch.Elapsed.TotalSeconds)
             if ($elapsed -ge $nextHeartbeat) {
-                Write-Host ("... {0} still running ({1}s elapsed)" -f $Label, $elapsed)
+                $phase = ""
+                try {
+                    if (Test-Path -LiteralPath $progressPath -PathType Leaf) {
+                        $phase = (Get-Content -LiteralPath $progressPath -Raw -ErrorAction Stop).Trim()
+                    }
+                }
+                catch { }
+                if ([string]::IsNullOrWhiteSpace($phase)) {
+                    Write-Host ("... {0} still running ({1}s elapsed)" -f $Label, $elapsed)
+                }
+                else {
+                    Write-Host ("... {0} still running ({1}s elapsed) phase={2}" -f $Label, $elapsed, $phase)
+                }
                 $nextHeartbeat += $HeartbeatSeconds
             }
             if ($stopwatch.Elapsed.TotalSeconds -ge $GodotTimeoutSeconds) {
@@ -105,6 +123,7 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
     finally {
         if ($null -ne $stopwatch -and $stopwatch.IsRunning) { $stopwatch.Stop() }
         if ($null -ne $process) { $process.Dispose() }
+        try { Remove-Item -LiteralPath $progressPath -Force -ErrorAction SilentlyContinue } catch { }
     }
 }
 
