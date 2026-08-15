@@ -12,6 +12,7 @@ var _recovery_last_phase := ""
 var _recovery_last_transfer_id := ""
 var _recovery_restored := false
 var _recovery_persisted_commits: Dictionary = {}
+var _recovery_persisted_source_retires: Dictionary = {}
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -50,6 +51,24 @@ func _send_control(message_type: String, payload: Dictionary, request_id: String
 	super._send_control(message_type, payload, request_id)
 
 
+func _send_source_commit() -> void:
+	if not _recovery_root.is_empty() and not _source_transfer.is_empty():
+		var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
+		if (
+			not transfer_id.is_empty()
+			and String(_source_transfer.get("stage", "")) == "COMMIT_SENT"
+			and String(_directory.get("owner_authority_id", "")) != _authority_id
+		):
+			var persisted := _ensure_source_retire_persisted(transfer_id)
+			if not bool(persisted.get("success", false)):
+				_invariant("SM0_RECOVERY_SOURCE_RETIRE_PERSIST_BEFORE_COMMIT_FAILED", {
+					"transfer_id": transfer_id,
+					"cause": persisted,
+				})
+				return
+	super._send_source_commit()
+
+
 func _handle_client_activate(request_id: String, payload: Dictionary, remote_ip: String, remote_port: int) -> void:
 	var transfer_id := String(payload.get("transfer_id", "")).strip_edges()
 	if _committed_transfers.has(transfer_id):
@@ -85,12 +104,40 @@ func _commit_source_transfer() -> void:
 		and String(_source_transfer.get("stage", "")) == "COMMIT_SENT"
 		and String(_directory.get("owner_authority_id", "")) != _authority_id
 	):
-		var persisted := _persist_recovery_snapshot("SOURCE_RETIRED", transfer_id)
+		var persisted := _ensure_source_retire_persisted(transfer_id)
 		if not bool(persisted.get("success", false)):
 			_invariant("SM0_RECOVERY_SOURCE_RETIRE_PERSIST_FAILED", {
 				"transfer_id": transfer_id,
 				"cause": persisted,
 			})
+
+
+func _ensure_source_retire_persisted(transfer_id: String) -> Dictionary:
+	if _recovery_root.is_empty():
+		return _success({"persistence": "disabled"})
+	if (
+		transfer_id.is_empty()
+		or _source_transfer.is_empty()
+		or String(_source_transfer.get("transfer_id", "")) != transfer_id
+		or String(_source_transfer.get("stage", "")) != "COMMIT_SENT"
+		or String(_directory.get("owner_authority_id", "")) == _authority_id
+	):
+		return _failure("SM0_RECOVERY_SOURCE_RETIRED_TRANSFER_REQUIRED", {"transfer_id": transfer_id})
+	if _recovery_persisted_source_retires.has(transfer_id):
+		return _success({
+			"generation": int(_recovery_persisted_source_retires[transfer_id]),
+			"replay": true,
+		})
+	var persisted := _persist_recovery_snapshot("SOURCE_RETIRED", transfer_id)
+	if bool(persisted.get("success", false)):
+		var generation := int(persisted.get("details", {}).get("generation", _recovery_generation))
+		_recovery_persisted_source_retires[transfer_id] = generation
+		_event("SM0_SOURCE_RETIRED_DURABLE", {
+			"generation": generation,
+			"transfer_id": transfer_id,
+			"directory": _directory,
+		})
+	return persisted
 
 
 func _ensure_target_commit_persisted(transfer_id: String) -> Dictionary:
@@ -371,6 +418,7 @@ func _apply_recovery_snapshot(snapshot: Dictionary, path: String) -> Dictionary:
 	_prepared_transfers = Dictionary(snapshot.get("prepared_transfers", {})).duplicate(true)
 	_committed_transfers.clear()
 	_recovery_persisted_commits.clear()
+	_recovery_persisted_source_retires.clear()
 	var canonical_player: Dictionary = _authority.get_player("a")
 	for transfer_id_value in Dictionary(snapshot.get("committed_transfers", {})).keys():
 		var transfer_id := String(transfer_id_value)
@@ -413,6 +461,7 @@ func _apply_recovery_snapshot(snapshot: Dictionary, path: String) -> Dictionary:
 			"client_redirect_acked": false,
 		}
 		_frozen_transfer_id = source_transfer_id
+		_recovery_persisted_source_retires[source_transfer_id] = int(snapshot.get("generation", 0))
 
 	_recovery_generation = int(snapshot.get("generation", 0))
 	_recovery_last_phase = phase
