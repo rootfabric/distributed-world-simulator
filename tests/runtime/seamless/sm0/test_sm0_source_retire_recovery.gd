@@ -53,6 +53,30 @@ func _init() -> void:
 	var retired_player: Dictionary = first._authority.get_player("a")
 	_expect(not bool(retired_player.get("connected", true)), "canonical source player is retired")
 	_expect(String(first._source_transfer.get("stage", "")) == "COMMIT_SENT", "pending source transfer is commit stage")
+	_expect(
+		first._is_retired_source_pending_move(
+			{"logical_player_id": "a", "session_id": session},
+			"127.0.0.1",
+			29780
+		),
+		"late move from exact retired source client is held as handoff pending"
+	)
+	_expect(
+		not first._is_retired_source_pending_move(
+			{"logical_player_id": "a", "session_id": session},
+			"127.0.0.1",
+			29781
+		),
+		"late move from unrelated endpoint is not treated as pending handoff"
+	)
+	_expect(
+		not first._is_retired_source_pending_move(
+			{"logical_player_id": "b", "session_id": session},
+			"127.0.0.1",
+			29780
+		),
+		"late move for unrelated logical player is not treated as pending handoff"
+	)
 	var snapshot_path := _recovery_root.path_join("authority-a").path_join("recovery-00000001.json")
 	_expect(FileAccess.file_exists(snapshot_path), "source recovery snapshot exists")
 	var snapshot := _read_json(snapshot_path)
@@ -86,6 +110,22 @@ func _init() -> void:
 	_expect(not bool(recovered_player.get("connected", true)), "recovered canonical player remains disconnected")
 	_expect(String(recovered_player.get("transport_session_id", "")) == "", "recovery does not resurrect source session")
 	_expect(String(recovered._directory.get("owner_authority_id", "")) == Contracts.AUTHORITY_B, "recovered directory still targets peer")
+	_expect(
+		recovered._is_retired_source_pending_move(
+			{"logical_player_id": "a", "session_id": session},
+			"127.0.0.1",
+			29780
+		),
+		"restored source still holds exact late client move as handoff pending"
+	)
+	_expect(
+		not recovered._is_retired_source_pending_move(
+			{"logical_player_id": "a", "session_id": session},
+			"127.0.0.2",
+			29780
+		),
+		"restored source does not classify foreign endpoint as pending handoff"
+	)
 
 	recovered._shutdown(0, "test-source-recovered")
 	root.remove_child(recovered)
