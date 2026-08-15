@@ -10,8 +10,8 @@ $ExpectedValidationBlobs = [ordered]@{
     "validation/ecology/eco-p4-5-region-ownership-validation.json" = "a02f1547c1beea5a49d500304b58ab8c763334ca"
     "validation/ecology/eco-p4-6-client-read-model-validation.json" = "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
 }
-$ExpectedP47ValidationBlob = "c53f01650bb73d13308590231bd20e57c3a21b3d"
-$ExpectedP47RunnerBlob = "243ae60935a50e03bfb88efad4d1c22088541aca"
+$ExpectedP47ValidationBlob = "8d1f96f34cf5b4095323ac5d1a99d8053280a255"
+$ExpectedP47RunnerBlob = "5d44dead6bf9bcb5f921e3baf4852acc54adff2c"
 $ExpectedP47Status = "CANDIDATE_BOUNDED_ROTATING_CANONICAL_RUNNER_EXACT_COMMITTED_A_B_PENDING"
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
@@ -40,6 +40,6 @@ if ([string]$p47.status -ne $ExpectedP47Status) {
 }
 
 Write-Host "ECO.P4.8 acceptance preparation ancestors P4.1-P4.6: PASS"
-Write-Host "ECO.P4.8 P4.7 bounded rotating canonical runner readiness: PASS"
+Write-Host "ECO.P4.8 P4.7 bounded rotating observable canonical runner readiness: PASS"
 Write-Host "ECO.P4.8 acceptance remains BLOCKED until P4.7 exact committed A/B soak accepts"
 Write-Host "ECO.P4.8 PRE-ACCEPTANCE preparation gates: PASS"
