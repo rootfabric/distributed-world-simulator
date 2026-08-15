@@ -702,10 +702,10 @@ func validate_replay_state(value: Dictionary) -> Dictionary:
 	var item_result := item_validator.validate_replay_state(Dictionary(value.get("item_graph_replay", {})))
 	if not bool(item_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_ITEM_REPLAY", {"cause": item_result})
-	var safe := Utils.canonicalize(value, "$.networked_gameplay_replay")
+	var safe := Utils.canonicalize(value, "$.networked_gameplay_replay_state")
 	if not bool(safe.get("success", false)):
 		return _failure("GAMEPLAY_REPLAY_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
-	return _success({"operation_count": value.get("service_operation_ledger", {}).size()})
+	return _success()
 
 
 func has_durable_replay_operation(operation_id: String) -> bool:
