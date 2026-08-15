@@ -168,6 +168,8 @@ func handle_join_command(command: Dictionary) -> Dictionary:
 		record["connected"] = true
 		record["state_revision"] = int(record.get("state_revision", 0)) + 1
 	_players.upsert(record)
+	if _canonical_multiplayer_items != null:
+		_canonical_multiplayer_items.ensure_player(logical_player_id)
 	_advance()
 	var delta := _create_delta(before_revision, "PLAYER_JOINED", record, {})
 	var result := _success({"replay": false, "player": record.duplicate(true), "delta": delta, "snapshot": create_snapshot()})
@@ -700,10 +702,10 @@ func validate_replay_state(value: Dictionary) -> Dictionary:
 	var item_result := item_validator.validate_replay_state(Dictionary(value.get("item_graph_replay", {})))
 	if not bool(item_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_ITEM_REPLAY", {"cause": item_result})
-	var safe := Utils.canonicalize(value, "$.networked_gameplay_replay_state")
+	var safe := Utils.canonicalize(value, "$.networked_gameplay_replay")
 	if not bool(safe.get("success", false)):
 		return _failure("GAMEPLAY_REPLAY_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
-	return _success()
+	return _success({"operation_count": value.get("service_operation_ledger", {}).size()})
 
 
 func has_durable_replay_operation(operation_id: String) -> bool:
