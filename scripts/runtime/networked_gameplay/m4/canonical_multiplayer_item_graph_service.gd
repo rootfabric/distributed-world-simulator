@@ -122,6 +122,38 @@ func _split(player_id: String, item_id: String, quantity: int) -> Dictionary:
 	})
 
 
+func _detach(player_id: String, mount_id: String, authority_context: Dictionary = {}) -> Dictionary:
+	if not _mounts.has(mount_id):
+		return _failure("MOUNT_NOT_FOUND")
+	var mount: Dictionary = _mounts[mount_id]
+	var mount_spatial := _validate_mount_interaction(mount, authority_context)
+	if not bool(mount_spatial.get("success", false)):
+		return mount_spatial
+	var item_id := String(mount.get("item_id", ""))
+	if item_id.is_empty():
+		return _failure("MOUNT_EMPTY")
+	var item: Dictionary = _items[item_id]
+	if String(item.get("location", {}).get("owner_player_id", "")) != player_id:
+		return _failure("PLAYER_PERMISSION_DENIED")
+	var resolved_slot := _first_free_inventory_slot(player_id)
+	if resolved_slot < 0:
+		return _failure("CONTAINER_FULL")
+	mount["item_id"] = ""
+	_mounts[mount_id] = mount
+	item["location"] = {
+		"kind": "INVENTORY",
+		"player_id": player_id,
+		"slot_index": resolved_slot,
+	}
+	item["mounted"] = false
+	_items[item_id] = item
+	_add_to_inventory(player_id, item_id)
+	return _success({
+		"item_id": item_id,
+		"target_slot_index": resolved_slot,
+	})
+
+
 func _transfer(
 	player_id: String,
 	item_id: String,
@@ -161,6 +193,8 @@ func _transfer(
 	if normalized_target == "inventory/%s" % player_id:
 		return _transfer_to_inventory_slot(player_id, item_id, amount, target_slot_index)
 	if normalized_target == "hotbar/%s" % player_id:
+		if target_slot_index < 0 or target_slot_index >= _hotbar_size():
+			return _failure("INVALID_HOTBAR_INDEX")
 		return super._transfer(player_id, item_id, quantity, target_container_id, target_slot_index, target_item_id)
 	if normalized_target.begins_with("container/"):
 		return _transfer_to_container_slot(player_id, item_id, amount, normalized_target, target_slot_index)
