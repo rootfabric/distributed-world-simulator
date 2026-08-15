@@ -33,9 +33,9 @@ if ($LASTEXITCODE -ne 0) {
     throw "Unable to stop previous managed V0 session."
 }
 
-Write-Host "[RECOVERY 2/5] Restoring historical V0-I1 prerequisite stack..." -ForegroundColor Cyan
+Write-Host "[RECOVERY 2/5] Restoring V0-I1 inventory prerequisite stack without the obsolete movement fallback..." -ForegroundColor Cyan
 Write-Host "  - cumulative Tab/spawn/spectator + M5 inventory convergence"
-Write-Host "  - reliable camera-relative SERVER_PREDICTED movement fallback"
+Write-Host "  - NX4 predicted camera-relative movement preserved"
 Write-Host "  - gameplay mouse-capture fix"
 & $SyncI1
 if ($LASTEXITCODE -ne 0) {
@@ -56,7 +56,7 @@ Write-Host "[RECOVERY 4/5] Restoring the proven local I2/C1 playable composition
 Write-Host "  - 7DTD inventory click/place fix"
 Write-Host "  - Construction session plumbing"
 Write-Host "  - Inventory build controls"
-Write-Host "  - Earth Construction observer frame"
+Write-Host "  - Earth-fixed Construction presentation"
 & $SyncI2C1 -GodotExe $GodotExe
 if ($LASTEXITCODE -ne 0) {
     throw "V0 I2/C1 recovery sync or focused validation failed."
