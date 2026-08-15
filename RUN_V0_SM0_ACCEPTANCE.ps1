@@ -16,7 +16,7 @@ param(
     [int]$TimeoutSeconds = 120
 )
 
-$Runner = Join-Path $PSScriptRoot "RUN_V0_SM0_ACCEPTANCE_R1.ps1"
+$Runner = Join-Path $PSScriptRoot "RUN_V0_SM0_ACCEPTANCE_R2.ps1"
 if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) {
     throw "Hardened SM0 runner is missing: $Runner"
 }
