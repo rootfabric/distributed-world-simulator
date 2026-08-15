@@ -1,1 +1,0 @@
-VIS1 staging marker. This commit will become the root of feature/eco-vis1-visual-proving-ground; the accepted source branch is restored to f0e16195f1331f238bbacab2768e5d72ec01d1a3 after the branch is created.
