@@ -76,6 +76,8 @@ foreach ($ScriptPath in @(
     "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_active_recovery.gd",
     "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_active_recovery_fault.gd",
     "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd",
+    "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd",
+    "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd",
     "res://tests/runtime/seamless/sm0/test_sm0_active_owner_recovery.gd"
 )) { Invoke-H25CompileCheck $ScriptPath }
 
@@ -170,7 +172,7 @@ try {
     foreach ($Port in @(24580,24581,24680,24681,24780)) {
         if (-not (Test-H25PortFree $Port)) { throw "UDP port $Port is already in use." }
     }
-    Write-H25Log "SM0-H2.5 start HEAD=$Head handoffs=$Handoffs profile=$CrashProfile crash_authority=authority/sm0/b"
+    Write-H25Log "SM0-H2.5 start HEAD=$Head handoffs=$Handoffs profile=$CrashProfile crash_authority=authority/sm0/b settle_steps=1"
     $A = Start-H25Godot "server-a" $ALog @(
         "--authority-id=authority/sm0/a","--zone-id=zone/earth/sm0/west",
         "--gameplay-port=24580","--control-port=24680","--peer-control-port=24681","--stop-file=$StopFile",
@@ -196,7 +198,8 @@ try {
 
     $C = Start-H25Client @(
         "--server-host=127.0.0.1","--server-a-port=24580","--server-b-port=24581","--client-port=24780",
-        "--handoffs=$Handoffs","--timeout-ms=$($TimeoutSeconds*1000)","--result-file=$CResult"
+        "--handoffs=$Handoffs","--timeout-ms=$($TimeoutSeconds*1000)","--result-file=$CResult",
+        "--post-handoff-settle-steps=1"
     )
     $State.processes += [ordered]@{role="client";pid=$C.Id}
     $State | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $StatePath -Encoding UTF8
@@ -221,13 +224,15 @@ try {
     $CrashOwnership = [int]$Crash[0].ownership_epoch
     $CrashX = [double]$Crash[0].position.x
     if ($CrashGeneration -lt 1 -or $CrashSequence -lt 1) { throw "Invalid target-owner crash evidence generation=$CrashGeneration sequence=$CrashSequence" }
+    if ($CrashX -le 0.0) { throw "H2.5 crash point is not inside B EAST zone: x=$CrashX" }
     if (@($B1BeforeCrash | Where-Object { $_.event -eq "SM0_TARGET_ACTIVATED" }).Count -lt 1) { throw "Authority B crash occurred before target activation." }
+    if (@($B1BeforeCrash | Where-Object { $_.event -eq "SM0_HANDOFF_BEGIN" }).Count -ne 0) { throw "Authority B began B -> A handoff before H2.5 active-owner crash." }
     if (@($B1BeforeCrash | Where-Object { $_.event -eq "SM0_RECOVERY_SNAPSHOT_PERSISTED" -and $_.phase -eq "ACTIVE_OWNER" -and [int]$_.generation -eq $CrashGeneration }).Count -ne 1) {
         throw "Exact B ACTIVE_OWNER generation was not persisted before crash marker."
     }
     $CrossingsAtCrash = @(Get-H25Events $CLog | Where-Object { $_.event -eq "SM0_CROSSING_COMPLETED" })
-    if ($CrossingsAtCrash.Count -lt 1 -or [string]$CrossingsAtCrash[0].authority_id -ne "authority/sm0/b") {
-        throw "B crash point was observed without a completed A -> B handoff."
+    if ($CrossingsAtCrash.Count -ne 1 -or [string]$CrossingsAtCrash[0].authority_id -ne "authority/sm0/b") {
+        throw "H2.5 requires exactly one completed A -> B crossing before active-owner crash."
     }
 
     $SnapshotPath = Join-Path (Join-Path $RecoveryRoot "authority-b") ("recovery-{0:d8}.json" -f $CrashGeneration)
@@ -244,7 +249,7 @@ try {
     if ([int]$DurablePlayer[0].last_input_sequence -ne $CrashSequence -or [Math]::Abs([double]$DurablePlayer[0].position.x - $CrashX) -gt 0.000001) { throw "B durable movement does not match crash marker." }
 
     $CrashPid = $B1.Id
-    Write-H25Log "A -> B handoff completed; durable B move observed generation=$CrashGeneration sequence=$CrashSequence x=$CrashX; force-killing B PID=$CrashPid before MOVE_ACK"
+    Write-H25Log "A -> B handoff completed; interior EAST move durable generation=$CrashGeneration sequence=$CrashSequence x=$CrashX; force-killing B PID=$CrashPid before MOVE_ACK"
     Stop-Process -Id $CrashPid -Force -ErrorAction Stop
     try { $null = $B1.WaitForExit(5000) } catch {}
     if (Test-H25Alive $CrashPid) { throw "Target active owner B PID=$CrashPid survived forced crash." }
@@ -310,7 +315,7 @@ try {
         crash_authority_id="authority/sm0/b"; crash_point="ACTIVE_OWNER_AFTER_MOVE_PERSIST_BEFORE_ACK";
         crossings_before_crash=$CrossingsAtCrash.Count; crash_generation=$CrashGeneration; crash_input_sequence=$CrashSequence;
         crash_position_x=$CrashX; crashed_owner_pid=$CrashPid; restarted_owner_pid=$B2.Id;
-        directory_authority_epoch=[int]$Snapshot.directory.authority_epoch;
+        crash_inside_target_zone=$true; directory_authority_epoch=[int]$Snapshot.directory.authority_epoch;
         previous_ownership_epoch=$CrashOwnership; recovered_ownership_epoch=[int]$FirstRebound.ownership_epoch;
         handoffs_completed=[int]$Result.handoffs_completed; identity_changes=[int]$Result.identity_changes;
         recovery_snapshot=$SnapshotPath; logs=$LogDir
