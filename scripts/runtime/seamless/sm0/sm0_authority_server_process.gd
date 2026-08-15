@@ -9,6 +9,7 @@ const ActiveRecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm
 const TransactionRecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_recovery.gd")
 const TransactionFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault.gd")
 const TransactionMixedFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault_mixed.gd")
+const RecoveryChainFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_chain_fault.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 const H2_2_RECOVERY_FAULT_PROFILE := "h2-target-crash-after-commit-persist-v1"
@@ -19,6 +20,7 @@ const H3_4_TRANSACTION_FAULT_PROFILE := "h3-commit-decision-dual-outage-v1"
 const H3_5_TRANSACTION_FAULT_PROFILE := "h3-activation-dual-outage-before-ack-v1"
 const H4_1_TRANSACTION_FAULT_PROFILE := "h4-repeated-activation-dual-outage-v1"
 const H4_2_TRANSACTION_FAULT_PROFILE := "h4-mixed-boundary-dual-outage-v1"
+const H4_3_RECOVERY_CHAIN_FAULT_PROFILE := "h4-recovery-of-recovery-same-transfer-v1"
 
 
 func _init() -> void:
@@ -47,7 +49,9 @@ func _init() -> void:
 		transaction_recovery,
 	])
 	var server
-	if fault_profile == H4_2_TRANSACTION_FAULT_PROFILE:
+	if fault_profile == H4_3_RECOVERY_CHAIN_FAULT_PROFILE:
+		server = RecoveryChainFaultServerNode.new()
+	elif fault_profile == H4_2_TRANSACTION_FAULT_PROFILE:
 		server = TransactionMixedFaultServerNode.new()
 	elif fault_profile in [
 		H3_3_TRANSACTION_FAULT_PROFILE,
