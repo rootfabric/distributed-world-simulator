@@ -91,6 +91,12 @@ func _run() -> void:
 		"legacy world and mount compatibility surfaces are not product-visible"
 	)
 	_assert(
+		shell.get_node_or_null(
+			"M5ModernNetworkedInventoryRoot/NetworkCarryPreview"
+		) != null,
+		"network shell restores the current cursor carry preview surface"
+	)
+	_assert(
 		shell.has_method("_on_interaction_requested")
 		and shell.has_method("_submit"),
 		"modern presentation inherits the existing M5 canonical command path"
@@ -109,6 +115,10 @@ func _run() -> void:
 		int(report.get("authority_references", -1)) == 0
 		and int(report.get("domain_references", -1)) == 0,
 		"modern presentation introduces no inventory authority/domain owner"
+	)
+	_assert(
+		not bool(report.get("cursor_preview_visible", true)),
+		"cursor preview is presentation-only and inactive without M5 cursor state"
 	)
 
 	shell.free()
