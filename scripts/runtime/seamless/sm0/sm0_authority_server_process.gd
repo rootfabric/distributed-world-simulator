@@ -12,6 +12,13 @@ func _init() -> void:
 		authority_id = Contracts.AUTHORITY_A
 	if zone_id.is_empty():
 		zone_id = Contracts.ZONE_A if authority_id == Contracts.AUTHORITY_A else Contracts.ZONE_B
+	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s" % [
+		authority_id,
+		zone_id,
+		String(options.get("gameplay-port", "24580")),
+		String(options.get("control-port", "24680")),
+		String(options.get("peer-control-port", "24681")),
+	])
 	var server := ServerNode.new()
 	server.name = "Sm0AuthorityServer"
 	root.add_child(server)
@@ -29,8 +36,11 @@ func _init() -> void:
 		"manifest_hash": String(options.get("manifest-hash", "sm0-two-zone-v1")),
 	})
 	if not bool(result.get("success", false)):
+		print("[SM0_BOOT] setup_failed=%s" % JSON.stringify(result, "", false, true))
 		push_error("SM0 server setup failed: %s" % result)
 		quit(2)
+		return
+	print("[SM0_BOOT] setup_success authority=%s" % authority_id)
 
 
 func _on_finished(exit_code: int) -> void:
