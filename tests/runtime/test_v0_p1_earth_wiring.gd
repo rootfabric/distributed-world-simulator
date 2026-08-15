@@ -1,6 +1,6 @@
 extends SceneTree
 
-const P1_RUNTIME_PATH := "res://scripts/app/earth_p1_app.gd"
+const P1_RUNTIME_PATH := "res://scripts/app/earth_p1_modern_inventory_app.gd"
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const EarthItemSpatialProjector = preload(
 	"res://scripts/runtime/networked_gameplay/i2s/earth_item_spatial_projector.gd"
@@ -44,6 +44,7 @@ func _test_runtime_compiles_and_is_routed() -> void:
 		_assert(runtime.has_method("attach_m3_multiplayer_client"), "P1 runtime preserves M3 client attach contract")
 		_assert(runtime.has_method("_command_i2s_player_interact"), "P1 runtime exposes canonical player interaction handler")
 		_assert(runtime.has_method("create_m3_graphical_client_report"), "P1 runtime extends graphical report contract")
+		_assert(runtime.has_method("_ensure_mvp_inventory_shell"), "P1 runtime owns the modern inventory convergence boundary")
 		runtime.free()
 
 	var catalog_text := FileAccess.get_file_as_string(WORLD_CATALOG_PATH)
@@ -55,7 +56,7 @@ func _test_runtime_compiles_and_is_routed() -> void:
 			if world_value is Dictionary and String(world_value.get("id", "")) == "earth":
 				earth_runtime = String(world_value.get("runtime_script", ""))
 				break
-	_assert(earth_runtime == P1_RUNTIME_PATH, "Earth catalog routes network MVP through V0-P1 runtime")
+	_assert(earth_runtime == P1_RUNTIME_PATH, "Earth catalog routes network MVP through V0-P1 modern inventory runtime")
 
 
 func _test_projector_matches_mvp_axes_and_reference_frame() -> void:
