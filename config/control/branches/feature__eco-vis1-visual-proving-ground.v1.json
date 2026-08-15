@@ -10,7 +10,7 @@
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md",
   "current_stage": "ECO.VIS1.0 / Bounded Lab Scene + Operator Camera",
   "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_AUTOMATED_AND_GRAPHICAL_CHECK_PENDING",
-  "progress_note": "VIS1.0 is implemented as an isolated 500x500m deterministic lab terrain with fly camera, bounds/ground clamping, reference markers and coordinate/ground-height HUD. Exact attached Linux Godot 4.7.1 double parser + headless scene smoke passed 21 assertions. No production runtime/ecology truth changed. Windows automated and human graphical checks remain required before VIS1.0 acceptance.",
+  "progress_note": "VIS1.0 is implemented as an isolated 500x500m deterministic lab terrain with fly camera, bounds/ground clamping, reference markers and coordinate/ground-height HUD. Exact attached Linux Godot 4.7.1 double parser + hardened headless scene smoke passed 24 assertions, including W-key movement and boundary/terrain clearance clamps. No production runtime/ecology truth changed. Windows automated and human graphical checks remain required before VIS1.0 acceptance.",
   "last_accepted_checkpoint": "ECO P4 branch lifecycle evidence complete; PH5 multi-scale derived presentation accepted",
   "next_stage": "Run VIS1.0 exact-Windows automated gate and human graphical observation. On PASS, freeze VIS1.0 and begin VIS1.1 EcoEnvironmentProvider + LabEnvironmentProvider.",
   "owned_paths": [
@@ -46,6 +46,7 @@
     "runtime": "NOT_APPLICABLE_RESEARCH_PRESENTATION_LAB",
     "source_p4_final": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
     "vis1_0_implementation": "246b55d4c7c6fb1547d16de1ab872e3799e81286",
+    "vis1_0_test_hardening": "fcff82aab6c8b0fc3fcbb6957bb05efcc4870b18",
     "vis1_0_windows": "PENDING",
     "vis1_0_graphical": "PENDING_HUMAN"
   },
