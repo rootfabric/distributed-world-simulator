@@ -142,7 +142,7 @@ func _update_r5_sort_actions() -> void:
 	if _player_sort_button == null or _external_sort_button == null:
 		return
 	var seven_days := active_profile != null and String(active_profile.ui_style) == "SEVEN_DAYS"
-	var cursor_active := bridge != null and bridge.has_cursor()
+	var cursor_active: bool = bridge != null and bool(bridge.has_cursor())
 	var view: Dictionary = bridge.get_last_view() if bridge != null else {}
 	var external: Dictionary = Dictionary(view.get("external", {}))
 	_player_sort_button.visible = _inventory_visible and seven_days
