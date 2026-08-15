@@ -1,39 +1,45 @@
-# ECO P4.8 — P4 Acceptance Preparation
+# ECO P4.8 — Final P4 Acceptance Manifest
 
-Статус: `PREPARATION_READY / P4.7 ISOLATED BOUNDED ROTATING CANONICAL SOAK PENDING`.
+Статус: `FINAL_MANIFEST_GATE_READY / P4.7 ACCEPTED`.
 
-P4.8 не добавляет runtime-семантики. Это final control manifest поверх принятых P4.1–P4.6 и будущего принятого P4.7.
+P4.8 не добавляет runtime-семантики. Это финальный control manifest поверх уже принятых P4.1–P4.7.
 
-## Уже зафиксировано
-
-- exact accepted validation blobs P4.1–P4.6;
-- exact P4.7 R9 validation, runner и soak-test blobs;
-- fail-closed pre-acceptance runner `RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1`;
-- обязательные P4.7 counts: 8 regions, 12 cycles, 8 ecology generation steps, 4 handoffs, 12 persistence round-trips, 12 client updates, 14 interest projections, 3 restart reconstructions;
-- full 8-region fanout order-identity check;
-- internal non-canonical phase heartbeat;
-- headless ecology execution через временный minimal Godot project без gameplay/MCP autoloads;
-- strict policy: неожиданный Godot `ERROR:` остаётся FAIL;
-- запрет принимать P4.7 по импликации из P4.8;
-- запрет принимать P4 без frozen `soak_hash` и `final_interest_hash`.
-
-Текущие P4.7 R9 pins:
+## P4.7 accepted identity
 
 ```text
-soak test  = 49821079787479212feb78a10a4703bc52ba89b3
+validation = 747d1406971bc69bd81b6d149481da00d65d5a47
 runner     = 2bd6e1da8951238ff36b61e9ca5813a125e0dcd4
-validation = 8e4c2fdf3da60eb662a91456392620fb10ffb3e9
+soak test  = 49821079787479212feb78a10a4703bc52ba89b3
+tested HEAD = cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c
+Godot      = 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-На предыдущем R8 exact-Windows run сам scenario прошёл 242 assertions и дал provisional identities, но они не frozen, потому что fresh-process B не был выполнен из-за unrelated project autoload startup errors. R9 устраняет эту внешнюю зависимость без изменения `project.godot` и production runtime.
+Frozen P4.7 hashes:
 
-## Остаточный путь
+```text
+soak_hash           = d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe
+final_interest_hash = 62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e
+```
 
-1. Прогнать exact committed R9 P4.7 isolated-project A/B soak.
-2. Зафиксировать byte-identical output, `soak_hash`, `final_interest_hash`, exact counts и debt bound.
-3. Сделать отдельный P4.7 lifecycle acceptance commit.
-4. Перепривязать P4.8 final manifest к accepted P4.7 validation/hash identities.
-5. Выполнить final manifest gate.
-6. Только после этого записать P4 aggregate acceptance lifecycle commit.
+P4.7 A/B passed with byte-identical logs, 242 assertions per process, exact counts and zero remaining catch-up debt.
 
-P4.8 не является scheduler, runtime authority, network transport или gameplay integration layer.
+## Final gate
+
+`RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1` keeps its legacy filename but is now the **final manifest gate**. It does not rerun the P4.7 soak. It verifies:
+
+- exact accepted validation blobs P4.1–P4.7;
+- exact P4.7 runner/test blobs;
+- exact tested HEAD and Godot identity recorded in durable evidence;
+- frozen `soak_hash` and `final_interest_hash`;
+- byte-identical A/B evidence;
+- exact P4.7 counts: 8 regions, 12 cycles, 8 ecology generation steps, 4 handoffs, 12 save/load operations, 12 client updates, 14 interest projections, 3 restarts, debt 0.
+
+Expected success marker:
+
+```text
+ECO.P4.8 FINAL GATES: PASS
+```
+
+Only after this manifest gate passes may the final P4 lifecycle acceptance checkpoint be written.
+
+Boundary: P4.7 is an accelerated deterministic integration soak, not a wall-clock production-duration soak. P4.8 is control-only and is not a scheduler, runtime authority, network transport, or gameplay implementation.
