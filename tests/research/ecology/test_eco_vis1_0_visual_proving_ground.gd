@@ -58,6 +58,25 @@ func _run() -> void:
 	if camera != null:
 		_expect(camera.is_current(), "operator camera is current")
 		_expect(camera.position.y > float(lab.call("sample_terrain_height", camera.position.x, camera.position.z)), "operator camera starts above terrain")
+		var camera_start: Vector3 = camera.position
+		var press_w := InputEventKey.new()
+		press_w.keycode = KEY_W
+		press_w.physical_keycode = KEY_W
+		press_w.pressed = true
+		Input.parse_input_event(press_w)
+		await process_frame
+		var release_w := InputEventKey.new()
+		release_w.keycode = KEY_W
+		release_w.physical_keycode = KEY_W
+		release_w.pressed = false
+		Input.parse_input_event(release_w)
+		await process_frame
+		_expect(camera.position.distance_to(camera_start) > 0.0001, "W key moves operator camera")
+		camera.position = Vector3(1000.0, -500.0, -1000.0)
+		lab.call("_clamp_camera_to_lab")
+		var clamped: Vector3 = camera.position
+		_expect(abs(clamped.x) < 250.0 and abs(clamped.z) < 250.0, "camera clamps to polygon bounds")
+		_expect(clamped.y >= float(lab.call("sample_terrain_height", clamped.x, clamped.z)) + 1.49, "camera clamps above terrain")
 
 	var markers := lab.get_node_or_null("ReferenceMarkers") as Node3D
 	_expect(markers != null, "reference marker root exists")
