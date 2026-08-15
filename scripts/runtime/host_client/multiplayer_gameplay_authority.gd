@@ -27,4 +27,32 @@ func get_report() -> Dictionary:
 	report["schema"] = SCHEMA
 	return report
 func create_targeted_command_result(message_id: String, operation_id: String, result: Dictionary) -> Dictionary: return _service.create_targeted_command_result(message_id, operation_id, result)
+
+# SM0 recovery consumes the existing canonical gameplay durability contract.
+# These methods intentionally remain thin pass-throughs so this wrapper never
+# becomes a second persistence owner.
+func export_durable_state() -> Dictionary:
+	return _service.export_durable_state() if _service != null else {}
+
+func restore_durable_state(value: Dictionary) -> Dictionary:
+	return _service.restore_durable_state(value) if _service != null else _not_ready()
+
+func validate_durable_state(value: Dictionary) -> Dictionary:
+	return _service.validate_durable_state(value) if _service != null else _not_ready()
+
+func export_replay_state() -> Dictionary:
+	return _service.export_replay_state() if _service != null else {}
+
+func restore_replay_state(value: Dictionary) -> Dictionary:
+	return _service.restore_replay_state(value) if _service != null else _not_ready()
+
+func validate_replay_state(value: Dictionary) -> Dictionary:
+	return _service.validate_replay_state(value) if _service != null else _not_ready()
+
+func get_recovery_report() -> Dictionary:
+	return _service.get_recovery_report() if _service != null else {}
+
 func get_networked_gameplay_service_for_tests(): return _service
+
+func _not_ready() -> Dictionary:
+	return {"success": false, "error_code": "MULTIPLAYER_GAMEPLAY_AUTHORITY_NOT_READY", "details": {}}
