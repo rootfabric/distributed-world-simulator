@@ -107,9 +107,15 @@ $ClientSessionInstalled = Test-Marker `
 $BuildControlsInstalled = Test-Marker `
     "scripts/ui/inventory/networked/m5_networked_inventory_shell.gd" `
     "MvpOutpostClientAdapter"
-$ObserverFrameInstalled = Test-Marker `
+$LegacyObserverFrameInstalled = Test-Marker `
     "scripts/app/earth_app.gd" `
     "func _update_construction_observer_frame()"
+$EarthFixedAnchorInstalled = (
+    (Test-Marker "scripts/app/earth_app.gd" "func _update_construction_render_transform()") -and
+    (Test-Marker "scripts/app/earth_app.gd" "EarthSurfaceRenderProjectorScript.project_anchor") -and
+    (Test-Marker "scripts/app/earth_construction_presentation.gd" "func set_derived_render_transform")
+)
+$ConstructionFrameInstalled = $LegacyObserverFrameInstalled -or $EarthFixedAnchorInstalled
 
 if ($BridgeSessionInstalled -xor $ClientSessionInstalled) {
     throw "Partial construction-session plumbing detected. Refusing to stack over inconsistent M3 state."
@@ -134,7 +140,10 @@ if (-not $BuildControlsInstalled) {
     Write-Host "[V0-I2/C1] Prechecking inventory construction controls..."
     Invoke-GitApplyCheck $ControlsPatch
 }
-if (-not $ObserverFrameInstalled) {
+if ($EarthFixedAnchorInstalled) {
+    Write-Host "[V0-I2/C1] Earth-fixed Construction anchor already installed; legacy observer-frame patch is superseded."
+}
+elseif (-not $LegacyObserverFrameInstalled) {
     Write-Host "[V0-I2/C1] Prechecking Earth construction observer frame..."
     Invoke-GitApplyCheck $ObserverPatch
 }
@@ -171,7 +180,7 @@ if (-not $BuildControlsInstalled) {
     Write-Host "[V0-C1] Applying inventory build controls..."
     Invoke-GitApply $ControlsPatch
 }
-if (-not $ObserverFrameInstalled) {
+if (-not $ConstructionFrameInstalled) {
     Write-Host "[V0-C2] Applying Earth observer-frame integration..."
     Invoke-GitApply $ObserverPatch
 }
@@ -187,11 +196,22 @@ $FinalMarkers = @(
     @{ Path = "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"; Text = "func get_construction_session()"; Name = "client construction session" },
     @{ Path = "scripts/runtime/networked_gameplay/m3/m3_mvp_outpost_client_adapter.gd"; Text = "func build_next_stage_blocking()"; Name = "outpost client adapter" },
     @{ Path = "scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"; Text = "MvpOutpostClientAdapter"; Name = "inventory build controls" },
-    @{ Path = "scripts/app/earth_construction_presentation.gd"; Text = "MVP_OUTPOST_PLANAR_POSITION"; Name = "C22/C24 outpost projection" },
-    @{ Path = "scripts/app/earth_app.gd"; Text = "func _update_construction_observer_frame()"; Name = "Earth observer frame" }
+    @{ Path = "scripts/app/earth_construction_presentation.gd"; Text = "MVP_OUTPOST_PLANAR_POSITION"; Name = "C22/C24 outpost projection" }
 )
 foreach ($Marker in $FinalMarkers) {
     Assert-Marker $Marker.Path $Marker.Text $Marker.Name
+}
+
+$FinalLegacyObserver = Test-Marker `
+    "scripts/app/earth_app.gd" `
+    "func _update_construction_observer_frame()"
+$FinalEarthFixedAnchor = (
+    (Test-Marker "scripts/app/earth_app.gd" "func _update_construction_render_transform()") -and
+    (Test-Marker "scripts/app/earth_app.gd" "EarthSurfaceRenderProjectorScript.project_anchor") -and
+    (Test-Marker "scripts/app/earth_construction_presentation.gd" "func set_derived_render_transform")
+)
+if (-not ($FinalLegacyObserver -or $FinalEarthFixedAnchor)) {
+    throw "Required Construction Earth-frame projection is missing after sync."
 }
 
 if (-not (Test-Path $GodotExe)) {
@@ -223,8 +243,16 @@ foreach ($TestScript in $FocusedTests) {
     }
 }
 
-$Branch = (& git branch --show-current).Trim()
-$Head = (& git rev-parse --short=12 HEAD).Trim()
+$BranchRaw = & git branch --show-current
+$Branch = "(detached HEAD)"
+if ($null -ne $BranchRaw) {
+    $CandidateBranch = ([string]$BranchRaw).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($CandidateBranch)) {
+        $Branch = $CandidateBranch
+    }
+}
+$HeadRaw = & git rev-parse --short=12 HEAD
+$Head = ([string]$HeadRaw).Trim()
 Write-Host ""
 Write-Host "[V0-I2/C1] PASS - inventory interaction and MVP outpost construction are installed." -ForegroundColor Green
 Write-Host "  local branch : $Branch"
@@ -233,6 +261,7 @@ Write-Host "  inventory    : world -> cursor -> empty inventory slot now commits
 Write-Host "  construction : canonical 3-stage outpost commands exposed in inventory"
 Write-Host "  replication  : construction session + events remain server authoritative"
 Write-Host "  presentation : canonical outpost bundle feeds C22/C24 mesh projection"
+Write-Host "  earth frame  : $(if ($FinalEarthFixedAnchor) { 'C2A fixed Earth anchor' } else { 'legacy observer tangent frame' })"
 Write-Host ""
 & git diff --stat
 Write-Host ""
