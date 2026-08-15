@@ -126,6 +126,7 @@ func _persist_recovery_snapshot(phase: String, transfer_id: String) -> Dictionar
 		"transfer_id": transfer_id,
 		"directory": _directory.duplicate(true),
 		"transfer_counter": _transfer_counter,
+		"source_transfer": _export_source_transfer_metadata(phase),
 		"prepared_transfers": _prepared_transfers.duplicate(true),
 		"committed_transfers": _export_committed_metadata(),
 		"gameplay_state": gameplay_state,
@@ -239,12 +240,15 @@ func _validate_recovery_snapshot(value: Dictionary) -> Dictionary:
 		return _failure("SM0_RECOVERY_AUTHORITY_MISMATCH")
 	if int(value.get("generation", 0)) < 1:
 		return _failure("SM0_RECOVERY_GENERATION_INVALID")
-	if String(value.get("phase", "")) not in ["TARGET_COMMITTED", "SOURCE_RETIRED"]:
+	var phase := String(value.get("phase", ""))
+	if phase not in ["TARGET_COMMITTED", "SOURCE_RETIRED"]:
 		return _failure("SM0_RECOVERY_PHASE_INVALID")
 	var directory: Dictionary = Dictionary(value.get("directory", {}))
 	var directory_check := Contracts.validate_directory(directory)
 	if not bool(directory_check.get("success", false)):
 		return _failure("SM0_RECOVERY_DIRECTORY_INVALID", {"cause": directory_check})
+	if typeof(value.get("source_transfer", {})) != TYPE_DICTIONARY:
+		return _failure("SM0_RECOVERY_SOURCE_TRANSFER_INVALID")
 	if typeof(value.get("prepared_transfers")) != TYPE_DICTIONARY or typeof(value.get("committed_transfers")) != TYPE_DICTIONARY:
 		return _failure("SM0_RECOVERY_TRANSFER_MAP_INVALID")
 	if typeof(value.get("gameplay_state")) != TYPE_DICTIONARY or typeof(value.get("gameplay_replay_state")) != TYPE_DICTIONARY:
@@ -255,6 +259,19 @@ func _validate_recovery_snapshot(value: Dictionary) -> Dictionary:
 	var replay_check := _authority.validate_replay_state(Dictionary(value.get("gameplay_replay_state", {})))
 	if not bool(replay_check.get("success", false)):
 		return _failure("SM0_RECOVERY_REPLAY_STATE_INVALID", {"cause": replay_check})
+
+	var source_transfer: Dictionary = Dictionary(value.get("source_transfer", {}))
+	if phase == "SOURCE_RETIRED":
+		var source_check := _validate_source_transfer_metadata(
+			source_transfer,
+			String(value.get("transfer_id", "")),
+			directory,
+			Dictionary(value.get("gameplay_state", {}))
+		)
+		if not bool(source_check.get("success", false)):
+			return source_check
+	elif not source_transfer.is_empty():
+		return _failure("SM0_RECOVERY_TARGET_SNAPSHOT_HAS_SOURCE_TRANSFER")
 
 	for transfer_id_value in Dictionary(value.get("prepared_transfers", {})).keys():
 		var transfer_id := String(transfer_id_value)
@@ -293,6 +310,51 @@ func _validate_recovery_snapshot(value: Dictionary) -> Dictionary:
 	checksum_payload.erase("checksum")
 	if expected_checksum.is_empty() or expected_checksum != RecoveryUtils.payload_hash(checksum_payload):
 		return _failure("SM0_RECOVERY_CHECKSUM_MISMATCH")
+	return _success()
+
+
+func _validate_source_transfer_metadata(value: Dictionary, transfer_id: String, directory: Dictionary, gameplay_state: Dictionary) -> Dictionary:
+	if value.is_empty() or transfer_id.is_empty():
+		return _failure("SM0_RECOVERY_SOURCE_TRANSFER_REQUIRED")
+	if String(value.get("transfer_id", "")) != transfer_id or String(value.get("stage", "")) != "COMMIT_SENT":
+		return _failure("SM0_RECOVERY_SOURCE_TRANSFER_STAGE_INVALID", {"transfer_id": transfer_id})
+	var package: Dictionary = Dictionary(value.get("package", {}))
+	var package_check := Contracts.validate_handoff_package(package)
+	if not bool(package_check.get("success", false)):
+		return _failure("SM0_RECOVERY_SOURCE_PACKAGE_INVALID", {"cause": package_check})
+	if (
+		String(package.get("transfer_id", "")) != transfer_id
+		or String(package.get("source_authority_id", "")) != _authority_id
+		or String(package.get("target_authority_id", "")) != _peer_authority_id
+		or String(directory.get("owner_authority_id", "")) != _peer_authority_id
+		or int(directory.get("authority_epoch", 0)) != int(package.get("target_authority_epoch", 0))
+		or int(directory.get("revision", 0)) != int(package.get("directory_revision", 0)) + 1
+	):
+		return _failure("SM0_RECOVERY_SOURCE_ROUTE_INVALID", {"transfer_id": transfer_id})
+	var client_ip := String(value.get("client_ip", "")).strip_edges()
+	var client_port := int(value.get("client_port", 0))
+	if client_ip.is_empty() or client_port < 1 or client_port > 65535:
+		return _failure("SM0_RECOVERY_SOURCE_CLIENT_ENDPOINT_INVALID", {"transfer_id": transfer_id})
+	if bool(value.get("target_committed", true)) or bool(value.get("client_redirect_acked", true)):
+		return _failure("SM0_RECOVERY_SOURCE_ACK_STATE_INVALID", {"transfer_id": transfer_id})
+	var durable_players: Array = Array(Dictionary(gameplay_state.get("players", {})).get("players", []))
+	var found_player := false
+	for record_value in durable_players:
+		if not record_value is Dictionary:
+			continue
+		var record: Dictionary = Dictionary(record_value)
+		if String(record.get("logical_player_id", "")) != "a":
+			continue
+		found_player = true
+		if (
+			String(record.get("player_entity_id", "")) != String(package.get("player_entity_id", ""))
+			or bool(record.get("connected", true))
+			or not String(record.get("transport_session_id", "")).is_empty()
+		):
+			return _failure("SM0_RECOVERY_SOURCE_PLAYER_NOT_RETIRED", {"transfer_id": transfer_id})
+		break
+	if not found_player:
+		return _failure("SM0_RECOVERY_SOURCE_PLAYER_MISSING", {"transfer_id": transfer_id})
 	return _success()
 
 
@@ -335,8 +397,25 @@ func _apply_recovery_snapshot(snapshot: Dictionary, path: String) -> Dictionary:
 	_active_client_port = 0
 	_frozen_transfer_id = ""
 	_source_transfer.clear()
+	var phase := String(snapshot.get("phase", ""))
+	if phase == "SOURCE_RETIRED":
+		var source_metadata: Dictionary = Dictionary(snapshot.get("source_transfer", {}))
+		var source_transfer_id := String(source_metadata.get("transfer_id", ""))
+		_source_transfer = {
+			"transfer_id": source_transfer_id,
+			"package": Dictionary(source_metadata.get("package", {})).duplicate(true),
+			"stage": "COMMIT_SENT",
+			"last_send_ms": 0,
+			"retries": 0,
+			"client_ip": String(source_metadata.get("client_ip", "")),
+			"client_port": int(source_metadata.get("client_port", 0)),
+			"target_committed": false,
+			"client_redirect_acked": false,
+		}
+		_frozen_transfer_id = source_transfer_id
+
 	_recovery_generation = int(snapshot.get("generation", 0))
-	_recovery_last_phase = String(snapshot.get("phase", ""))
+	_recovery_last_phase = phase
 	_recovery_last_transfer_id = String(snapshot.get("transfer_id", ""))
 	_recovery_restored = true
 	_event("SM0_RECOVERY_RESTORED", {
@@ -348,6 +427,13 @@ func _apply_recovery_snapshot(snapshot: Dictionary, path: String) -> Dictionary:
 		"gameplay_checksum": String(Dictionary(snapshot.get("gameplay_state", {})).get("checksum", "")),
 		"replay_checksum": String(Dictionary(snapshot.get("gameplay_replay_state", {})).get("checksum", "")),
 	})
+	if phase == "SOURCE_RETIRED":
+		_event("SM0_RECOVERY_SOURCE_TRANSFER_RESUMED", {
+			"generation": _recovery_generation,
+			"transfer_id": _recovery_last_transfer_id,
+			"stage": String(_source_transfer.get("stage", "")),
+			"directory": _directory,
+		})
 	return _success({"restored": true, "generation": _recovery_generation, "path": path})
 
 
@@ -391,6 +477,20 @@ func _rebind_committed_session(transfer_id: String) -> Dictionary:
 		"player_entity_id": String(player.get("player_entity_id", "")),
 	})
 	return _success({"player": player})
+
+
+func _export_source_transfer_metadata(phase: String) -> Dictionary:
+	if phase != "SOURCE_RETIRED" or _source_transfer.is_empty():
+		return {}
+	return {
+		"transfer_id": String(_source_transfer.get("transfer_id", "")),
+		"package": Dictionary(_source_transfer.get("package", {})).duplicate(true),
+		"stage": String(_source_transfer.get("stage", "")),
+		"client_ip": String(_source_transfer.get("client_ip", "")),
+		"client_port": int(_source_transfer.get("client_port", 0)),
+		"target_committed": bool(_source_transfer.get("target_committed", false)),
+		"client_redirect_acked": bool(_source_transfer.get("client_redirect_acked", false)),
+	}
 
 
 func _export_committed_metadata() -> Dictionary:
