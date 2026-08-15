@@ -50,6 +50,30 @@ foreach ($RelativeUid in $UidBefore) {
     $UidBeforeSet[[string]$RelativeUid] = $true
 }
 
+function Invoke-Sm0CompileCheck {
+    param([string]$ScriptPath)
+
+    Write-Host "[SM0] Compile check: $ScriptPath"
+    $HadDisabled = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
+    $PreviousDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        & $GodotExe `
+            --headless `
+            --path $ProjectRoot `
+            --check-only `
+            --script $ScriptPath
+        $CompileExit = $LASTEXITCODE
+    }
+    finally {
+        if ($HadDisabled) { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousDisabled }
+        else { Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
+    }
+    if ($CompileExit -ne 0) {
+        throw "SM0 compile check failed: $ScriptPath (exit $CompileExit)"
+    }
+}
+
 $Forward = @{
     Handoffs = $Handoffs
     ProjectRoot = $ProjectRoot
@@ -62,6 +86,19 @@ if ($Restart) { $Forward["Restart"] = $true }
 
 $InnerExit = 1
 try {
+    $CompileScripts = @(
+        "res://scripts/runtime/seamless/sm0/sm0_contracts.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd"
+    )
+    foreach ($CompileScript in $CompileScripts) {
+        Invoke-Sm0CompileCheck -ScriptPath $CompileScript
+    }
+    Write-Host "[SM0] Compile-smoke PASS ($($CompileScripts.Count) scripts)."
+
     & $InnerRunner @Forward
     $InnerExit = $LASTEXITCODE
 }
