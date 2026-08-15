@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-15-R5-GDSCRIPT-TYPE-REPAIR",
+  "revision": "ECO-P4.7-2026-08-15-R6-BOUNDED-DEEP-ADVANCE-REPAIR",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_CANONICAL_RUNNER_READY_TYPE_REPAIR_EXACT_COMMITTED_A_B_PENDING",
+  "status": "CANDIDATE_CANONICAL_RUNNER_READY_TIMEOUT_REPAIR_EXACT_COMMITTED_A_B_PENDING",
   "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.6",
@@ -17,28 +17,40 @@
     "validation_blob_after_acceptance": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
   },
   "candidate_blobs": {
-    "soak_test": "9c2093e43417603bb1283e918dd511f6597f667f",
-    "canonical_runner_legacy_filename": "f6806edf25a7e466eb7f0ea3c2f8e31b0f768216"
+    "soak_test": "09437267571cbb2b323c1ca37cd7209b9362bd7f",
+    "canonical_runner_legacy_filename": "6f83d416777d914873011adb2a84dbebcd6639a8"
   },
   "repair_evidence": {
-    "failed_exact_windows_head_before_repair": "cd7808661d105332a23d3f435caa3f4db535a6b7",
-    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "failure": "GDScript parser could not infer target_server from an untyped constant Array index at eco_p4_7_production_integration_soak.gd:117",
-    "root_cause": "SERVERS was inferred as an untyped Array, so indexing produced Variant and var target_server := ... had no statically inferable type",
-    "correction": "declare SERVERS as Array[String] and explicitly type current_server_index:int and target_server:String",
-    "production_runtime_changed": false,
-    "accepted_ancestors_changed": false
+    "type_repair": {
+      "failed_exact_windows_head_before_repair": "cd7808661d105332a23d3f435caa3f4db535a6b7",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "failure": "GDScript parser could not infer target_server from an untyped constant Array index",
+      "correction": "SERVERS is Array[String] and target_server/current_server_index are explicitly typed"
+    },
+    "timeout_repair": {
+      "failed_exact_windows_head_before_repair": "8bd7134ebe5bc90871b03ce2e2df212bc7a2943b",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "failure": "canonical production soak A exceeded the 600 second hard timeout",
+      "root_cause_from_code_path": "the soak used a 1.0 world-time ecology clock while each due generation calls Persistence.advance -> Coexistence.step; the 8x12 forward/reverse scenario therefore repeated expensive deep P3.8 evolution on most cycles",
+      "correction": "retain 8 regions, 12 cycles, 96 persistence operations, 32 handoffs, 96 client updates and forward/reverse convergence, but use a 10.0 world-time ecology interval and require exactly one real deep ecology generation per region",
+      "expected_deep_ecology_generation_steps_per_order": 8,
+      "production_runtime_changed": false,
+      "accepted_ancestors_changed": false,
+      "timeout_increased": false
+    }
   },
   "scenario": {
     "regions": 8,
     "cycles": 12,
+    "ecology_step_interval_world_time": 10.0,
+    "ecology_generation_steps_expected": 8,
     "handoff_operations_expected": 32,
     "save_load_operations_expected": 96,
     "client_updates_expected": 96,
     "interest_projections_expected": 12,
     "restart_cycles": [3, 7, 11],
     "handoff_rule": "deterministic rotating server handoff when (cycle + region_index) mod 3 == 0",
-    "catchup_batch_rule": "bounded 1..4 steps per cycle with deterministic 1.0/1.5/2.0 elapsed-time increments",
+    "catchup_batch_rule": "bounded 1..4 steps per cycle with deterministic 1.0/1.5/2.0 elapsed-time increments; the 10.0 interval bounds expensive P3.8 stepping while still forcing one real generation per region",
     "max_remaining_due_steps_bound": 8,
     "processing_order_crosscheck": "forward and reverse region iteration must converge to identical final soak and interest hashes"
   },
@@ -46,6 +58,8 @@
     "P4_6_ACCEPTED_VALIDATION_PINNED",
     "P4_6_ACCEPTED_UNIT_AND_REAL_INTEGRATION_HASHES_PINNED",
     "FIXED_REGION_CARDINALITY",
+    "BOUNDED_DEEP_ECOLOGY_ADVANCES",
+    "REAL_ECOLOGY_ADVANCE_PER_REGION",
     "BOUNDED_CATCHUP_DEBT",
     "EVERY_CYCLE_P4_4_SAVE_LOAD",
     "P4_5_CAS_SNAPSHOT_COMMIT",
@@ -72,7 +86,7 @@
     "heartbeat_seconds": 10,
     "timeout_seconds_per_process": 600,
     "hash_policy": "exact committed A/B must be byte-identical; successful first canonical run freezes soak_hash and final_interest_hash in lifecycle acceptance evidence",
-    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN_AFTER_TYPE_REPAIR"
+    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN_AFTER_TIMEOUT_REPAIR"
   },
-  "decision": "RERUN_P4_7_CANONICAL_SOAK_ON_EXACT_WINDOWS_GODOT; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND_OPEN_P4_8"
+  "decision": "RERUN_P4_7_CANONICAL_SOAK_ON_EXACT_WINDOWS_GODOT; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND OPEN_P4_8_FINALIZATION"
 }
