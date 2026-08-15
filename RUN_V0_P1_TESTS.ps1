@@ -98,6 +98,7 @@ Assert-ProjectStable -Stage "imported UID contract"
 $Tests = @(
     "res://tests/runtime/test_v0_p1_earth_wiring.gd",
     "res://tests/runtime/test_v0_p1_modern_network_inventory.gd",
+    "res://tests/runtime/test_v0_p1_inventory_r5_parity.gd",
     "res://tests/runtime/test_v0_p1_world_items_containers.gd",
     "res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
     "res://tests/runtime/test_v0_s1_mvp_launch_options.gd"

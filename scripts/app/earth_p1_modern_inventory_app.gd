@@ -1,7 +1,7 @@
 extends "res://scripts/app/earth_p1_app.gd"
 
 const ModernM5NetworkedInventoryShellScript = preload(
-	"res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell.gd"
+	"res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell_r5.gd"
 )
 
 
@@ -38,7 +38,7 @@ func _ensure_mvp_inventory_shell(runtime) -> Dictionary:
 		"success": true,
 		"error_code": "",
 		"details": {
-			"ui": "M5_MODERN_NETWORKED_INVENTORY_SCREEN",
+			"ui": "M5_MODERN_NETWORKED_INVENTORY_SCREEN_R5",
 			"bridge": "M5_INVENTORY_UI_BRIDGE",
 			"canonical_truth": "SERVER_M4_ITEM_GRAPH",
 		},
