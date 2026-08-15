@@ -10,10 +10,11 @@ $ExpectedP46IntegrationBlob = "1924202c9ba98ccc5e867529fda1d328b9d746ce"
 $ExpectedP46RunnerBlob = "bd65dd9df5b964f0c930814e97c160520033adc2"
 $ExpectedP46UnitAggregate = "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2"
 $ExpectedP46IntegrationHash = "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf"
-$ExpectedSoakTestBlob = "9c2093e43417603bb1283e918dd511f6597f667f"
+$ExpectedSoakTestBlob = "09437267571cbb2b323c1ca37cd7209b9362bd7f"
 $ExpectedRegions = 8
 $ExpectedCycles = 12
 $ExpectedHandoffs = 32
+$ExpectedEcologyGenerationSteps = 8
 $ExpectedSaveLoads = 96
 $ExpectedClientUpdates = 96
 $ExpectedInterestProjections = 12
@@ -120,18 +121,20 @@ if ($runA -notmatch 'ECO\.P4\.7 Accelerated Production Integration Soak: PASS') 
 $soak = [regex]::Match($runA, 'soak_hash=([0-9a-f]{64})')
 $interest = [regex]::Match($runA, 'final_interest_hash=([0-9a-f]{64})')
 $handoffs = [regex]::Match($runA, 'handoff_count=([0-9]+)')
+$ecologySteps = [regex]::Match($runA, 'ecology_generation_steps=([0-9]+)')
 $saves = [regex]::Match($runA, 'save_load_count=([0-9]+)')
 $updates = [regex]::Match($runA, 'client_update_count=([0-9]+)')
 $projections = [regex]::Match($runA, 'interest_projection_count=([0-9]+)')
 $debt = [regex]::Match($runA, 'max_remaining_due_steps=([0-9]+)')
 $regions = [regex]::Match($runA, 'region_count=([0-9]+)')
 $cycles = [regex]::Match($runA, 'cycles=([0-9]+)')
-foreach ($match in @($soak,$interest,$handoffs,$saves,$updates,$projections,$debt,$regions,$cycles)) {
+foreach ($match in @($soak,$interest,$handoffs,$ecologySteps,$saves,$updates,$projections,$debt,$regions,$cycles)) {
     if (-not $match.Success) { throw "Unable to parse P4.7 canonical soak output" }
 }
 if ([int]$regions.Groups[1].Value -ne $ExpectedRegions) { throw "P4.7 region count mismatch" }
 if ([int]$cycles.Groups[1].Value -ne $ExpectedCycles) { throw "P4.7 cycle count mismatch" }
 if ([int]$handoffs.Groups[1].Value -ne $ExpectedHandoffs) { throw "P4.7 handoff count mismatch" }
+if ([int]$ecologySteps.Groups[1].Value -ne $ExpectedEcologyGenerationSteps) { throw "P4.7 deep ecology generation count mismatch" }
 if ([int]$saves.Groups[1].Value -ne $ExpectedSaveLoads) { throw "P4.7 save/load count mismatch" }
 if ([int]$updates.Groups[1].Value -ne $ExpectedClientUpdates) { throw "P4.7 client update count mismatch" }
 if ([int]$projections.Groups[1].Value -ne $ExpectedInterestProjections) { throw "P4.7 interest projection count mismatch" }
@@ -142,6 +145,7 @@ Write-Host "ECO.P4.7 canonical production soak fresh-process determinism: PASS"
 Write-Host "ECO.P4.7 soak_hash=$($soak.Groups[1].Value)"
 Write-Host "ECO.P4.7 final_interest_hash=$($interest.Groups[1].Value)"
 Write-Host "ECO.P4.7 handoff_count=$($handoffs.Groups[1].Value)"
+Write-Host "ECO.P4.7 ecology_generation_steps=$($ecologySteps.Groups[1].Value)"
 Write-Host "ECO.P4.7 save_load_count=$($saves.Groups[1].Value)"
 Write-Host "ECO.P4.7 client_update_count=$($updates.Groups[1].Value)"
 Write-Host "ECO.P4.7 interest_projection_count=$($projections.Groups[1].Value)"
