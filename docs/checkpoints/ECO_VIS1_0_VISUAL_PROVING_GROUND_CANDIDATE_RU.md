@@ -26,6 +26,7 @@ VIS1.0 создаёт отдельный лабораторный полигон
 branch = feature/eco-vis1-visual-proving-ground
 source frozen P4 = f0e16195f1331f238bbacab2768e5d72ec01d1a3
 VIS1.0 implementation head = 246b55d4c7c6fb1547d16de1ab872e3799e81286
+movement smoke hardening = fcff82aab6c8b0fc3fcbb6957bb05efcc4870b18
 ```
 
 Ключевые blobs:
@@ -33,7 +34,7 @@ VIS1.0 implementation head = 246b55d4c7c6fb1547d16de1ab872e3799e81286
 ```text
 controller = a507ebbc25d3ff6d23bc4f2a95c3ec1ab79cfe74
 scene      = e8e00a7c8ad6531ef9829289edb7958479f5295c
-smoke      = 90a431dd7295ef9af21604c683654278b38b6a9a
+smoke      = c71a7672477e84257e5f9a8f4d514fa5c743b15a
 runner     = a7306e4c5374d9904e81c24fb8d9bc4dbf9c9ad7
 ```
 
@@ -48,8 +49,10 @@ Validation:
 ```text
 Godot = 4.7.1.stable.double.custom_build.a13da4feb
 parser preflight = PASS
-ECO.VIS1.0 headless scene smoke: PASS (21 assertions)
+ECO.VIS1.0 headless scene smoke: PASS (24 assertions)
 ```
+
+Smoke дополнительно проверяет реальный `W` key input через `Input.parse_input_event`, движение камеры, clamping по границам полигона и минимальную высоту над terrain.
 
 Это дополнительное доказательство parser/runtime корректности, но не Windows graphical acceptance.
 
@@ -79,7 +82,7 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 ECO.VIS1.0 exact Godot identity: PASS
 ECO.VIS1.0 isolated project without gameplay/MCP autoloads: PASS
 ECO.VIS1.0 parser preflight: PASS
-ECO.VIS1.0 headless scene smoke: PASS (21 assertions)
+ECO.VIS1.0 headless scene smoke: PASS (24 assertions)
 ECO.VIS1.0 automated gate: PASS
 ```
 
