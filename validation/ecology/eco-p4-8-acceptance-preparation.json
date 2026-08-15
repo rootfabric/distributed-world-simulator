@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_8_acceptance_preparation.v1",
-  "revision": "ECO-P4.8-2026-08-15-R2-P4-7-TYPE-REPAIR-REPinned",
+  "revision": "ECO-P4.8-2026-08-15-R3-P4-7-TIMEOUT-REPAIR-REPINNED",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "PREPARATION_READY_P4_7_CANONICAL_SOAK_PENDING",
   "scope": "P4_FINAL_ACCEPTANCE_CONTROL_MANIFEST_ONLY",
@@ -13,16 +13,17 @@
     "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
   },
   "p4_7_gate": {
-    "status": "CANDIDATE_CANONICAL_RUNNER_READY_TYPE_REPAIR_EXACT_COMMITTED_A_B_PENDING",
-    "validation_blob": "16aa231173164414e8fab7349a61e2d78029ab9e",
-    "runner_blob": "f6806edf25a7e466eb7f0ea3c2f8e31b0f768216",
-    "soak_test_blob": "9c2093e43417603bb1283e918dd511f6597f667f",
-    "required_before_finalization": ["exact committed A/B PASS", "byte-identical logs", "soak_hash frozen", "final_interest_hash frozen", "P4.7 lifecycle acceptance"]
+    "status": "CANDIDATE_CANONICAL_RUNNER_READY_TIMEOUT_REPAIR_EXACT_COMMITTED_A_B_PENDING",
+    "validation_blob": "9180772a1df03df84cdf63ddc900678d8dafa65f",
+    "runner_blob": "6f83d416777d914873011adb2a84dbebcd6639a8",
+    "soak_test_blob": "09437267571cbb2b323c1ca37cd7209b9362bd7f",
+    "ecology_generation_steps_expected": 8,
+    "required_before_finalization": ["exact committed A/B PASS", "byte-identical logs", "soak_hash frozen", "final_interest_hash frozen", "ecology_generation_steps=8", "P4.7 lifecycle acceptance"]
   },
   "candidate_blobs": {
-    "preacceptance_runner": "b954ddaa95e1af7da0bc356107dbd4e9a2dfc3d1"
+    "preacceptance_runner": "bd5981d8947b213becbf19530b74150efdcda0f9"
   },
-  "repair_note": "P4.7 GDScript type inference repair changed only the soak acceptance test and control pins; no accepted runtime kernel changed.",
+  "repair_note": "P4.7 timeout repair bounds expensive deep P3.8 stepping while preserving 8x12 integration operations, handoffs, persistence, client updates and forward/reverse convergence; no accepted runtime kernel changed.",
   "contract": {
     "control_only": true,
     "adds_runtime_semantics": false,
@@ -31,5 +32,5 @@
     "cannot_accept_p4_without_frozen_p4_7_soak_identity": true,
     "final_action_after_p4_7": "replace preparation pins with accepted P4.7 validation/hash identities, run final manifest gate, then write one P4 lifecycle acceptance commit"
   },
-  "decision": "P4_8_PREPARED; RERUN_REPAIRED_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
+  "decision": "P4_8_PREPARED; RERUN_TIMEOUT_REPAIRED_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
 }
