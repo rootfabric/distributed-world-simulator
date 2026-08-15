@@ -1,0 +1,117 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_convergence_preparation.v1",
+  "revision": "ECO-P4-CONV-PREP-2026-08-15-R1",
+  "branch": "control/eco-p4-production-convergence-prep-r1",
+  "status": "PREPARED_CONTROL_ONLY_RUNTIME_TRANSFER_NOT_AUTHORIZED",
+  "base": {
+    "branch": "main",
+    "sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+    "registry_generation": 79,
+    "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "control_plane_revision": "PC0-2026-08-10-R1",
+    "post_r3_pc0": "NON_RED_ALREADY_CANONICALIZED"
+  },
+  "source_evidence": {
+    "branch": "feature/eco-evolutionary-ecology",
+    "final_head": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
+    "branch_lifecycle_manifest_blob": "fa0c1b3540f1efe1a8509a7551542e12fb353bcd",
+    "branch_lifecycle_manifest_hash": "02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06",
+    "p4_7_validation_blob": "747d1406971bc69bd81b6d149481da00d65d5a47",
+    "p4_8_validation_blob": "af886544d92970a061d47c29b76888fefbb66da6",
+    "p4_7_tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "p4_8_tested_head": "186c6d164b0bf17fc17e91a23136663edbe1c06d",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
+  },
+  "source_topology": {
+    "source_ahead_of_main": 594,
+    "source_behind_main": 220,
+    "merge_base": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
+    "direct_whole_branch_merge_allowed": false,
+    "reason": "Long accepted lineage is materially diverged; current architecture requires fresh-main convergence and minimal capability transfer."
+  },
+  "source_passport_mismatch": {
+    "source_passport_blob": "0424374e88f053070b72e1bcfc579915d0b9955f",
+    "source_passport_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "source_passport_role": "RESEARCH_DESIGN_FRONTIER",
+    "source_runtime_paths": [],
+    "finding": "P4 branch-local production evidence is technically useful but does not itself authorize production foundation ownership under canonical R3.",
+    "forbidden_foundation_intersections": [
+      "AUTHORITY_FOUNDATION",
+      "PERSISTENCE_DURABILITY",
+      "WORLD_QUERY_FABRIC",
+      "WORLD_LIFECYCLE_FABRIC",
+      "WORLD_WORK_BUDGET",
+      "NETWORK_REPLICATION_POLICY"
+    ]
+  },
+  "transfer_candidate": {
+    "dependency_closure_hash": "0764c06f6f15ba1b92a0cacb58ecc168a7513c82d210d9ad14cefc239fc3ef8c",
+    "production_kernels": {
+      "scripts/ecology/production/ecology_region_state_v1.gd": "b651d208abd17050367fed4541c92f58de0f3c3f",
+      "scripts/ecology/production/ecology_clock_v1.gd": "e6a1336059fdfa16143df0957206cc78b0f86bff",
+      "scripts/ecology/production/ecology_offline_catchup_v1.gd": "ed76af9537c09ca013eb1a1367d3c854b1438df3",
+      "scripts/ecology/production/ecology_region_persistence_v1.gd": "2f4d7809a84d4f6d23a3f113c23b359f0803d564",
+      "scripts/ecology/production/ecology_region_ownership_v1.gd": "2a4083fb9d4b55f8c16421c4f3555c19a952711f",
+      "scripts/ecology/production/ecology_client_read_model_v1.gd": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1"
+    },
+    "research_dependency_closure": {
+      "scripts/research/ecology/plant_resource_competition_v1.gd": "c667569b40775a1a1898d7b911a610ca5795f380",
+      "scripts/research/ecology/plant_density_carrying_capacity_v1.gd": "8e635f8915ad53cac9a37917df32036cf92907b2",
+      "scripts/research/ecology/plant_spatial_dispersal_v1.gd": "43a25eb0e6677749162de99c251231c94d243dc1",
+      "scripts/research/ecology/plant_environmental_gradient_v1.gd": "11e2b281c48d378da906f0739c739eecf9aa8465",
+      "scripts/research/ecology/plant_seasonal_world_v1.gd": "649d26457ac8383f890f0dfca890353cc200ee7e",
+      "scripts/research/ecology/plant_disturbance_succession_v1.gd": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+      "scripts/research/ecology/plant_multi_niche_coexistence_v1.gd": "7379c422f2d3f5723a2bfff8b46790f9cce30ddc",
+      "scripts/research/ecology/plant_ecosystem_persistence_v1.gd": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e"
+    },
+    "acceptance_tests": {
+      "tests/ecology/production/eco_p4_1_region_state_acceptance.gd": "f1d607a08c2c3f35f5a582557adcd3e2b9a60ab3",
+      "tests/ecology/production/eco_p4_2_deterministic_clock_acceptance.gd": "2ac25dbdd2644b72ddbfe14db3c35434bfaac7c7",
+      "tests/ecology/production/eco_p4_3_offline_catchup_acceptance.gd": "6aac302cff629a5e71b7ecd2f93f3973d437aa3f",
+      "tests/ecology/production/eco_p4_4_region_persistence_acceptance.gd": "2385b035082834aaae1eb91e25aa798c26ca40dc",
+      "tests/ecology/production/eco_p4_5_region_ownership_acceptance.gd": "041e7e81588f59b54bac76d7cd9ad558d054b0de",
+      "tests/ecology/production/eco_p4_6_client_read_model_acceptance.gd": "9cde3960a37010a15d00c3d8c3c736943c59e7ba",
+      "tests/ecology/production/eco_p4_6_real_integration_acceptance.gd": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
+      "tests/ecology/production/eco_p4_7_production_integration_soak.gd": "49821079787479212feb78a10a4703bc52ba89b3",
+      "tests/ecology/production/support/eco_p4_fixture_v1.gd": "dc55b886c057e2ccd8f454658b6be58d579642e1"
+    }
+  },
+  "portability_classification": {
+    "P4_1_REGION_STATE": "PORT_CANDIDATE_ECOLOGY_DOMAIN_STATE_ONLY",
+    "P4_2_DETERMINISTIC_CLOCK": "PORT_CANDIDATE_DOMAIN_TIME_ADAPTER_REQUIRED",
+    "P4_3_OFFLINE_CATCHUP": "PORT_CANDIDATE_WORLD_WORK_BUDGET_AND_LIFECYCLE_ADAPTER_REQUIRED",
+    "P4_4_REGION_PERSISTENCE": "DO_NOT_PORT_AS_DURABILITY_OWNER; REUSE_CODEC_ONLY_BEHIND_CANONICAL_R3_M0_MW_PERSISTENCE",
+    "P4_5_REGION_OWNERSHIP_HANDOFF": "DO_NOT_PORT_AS_AUTHORITY_OWNER; MAP_OR_REPLACE_WITH_CANONICAL_AUTHORITY_LEASE_EPOCH_ROUTING",
+    "P4_6_CLIENT_READ_MODEL": "PORT_CANDIDATE_DERIVED_READ_MODEL_ONLY; NO_CANONICAL_TRUTH",
+    "P4_7_SOAK": "PORT_AS_REGRESSION_EVIDENCE_AFTER_ADAPTER_REWRITE"
+  },
+  "runtime_transfer_risk": {
+    "class": "CRITICAL",
+    "triggers": [
+      "ARCHITECTURE_OWNERSHIP_INTERSECTION",
+      "PERSISTENCE_CHANGE",
+      "AUTHORITY_CHANGE",
+      "CROSS_SERVER_AUTHORITY_CHANGE",
+      "PUBLIC_CONTRACT_CHANGE"
+    ],
+    "required_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"]
+  },
+  "current_runtime_concurrency": {
+    "h0_2_max_autonomous_runtime_workers": 1,
+    "runtime_transfer_dispatch_now": false,
+    "reason": "Current Harness single-runtime-worker ceiling must not be violated by ECO convergence while NX/V0 runtime work is active."
+  },
+  "blockers": [
+    "INDEPENDENT_REVIEW_OF_BRANCH_LOCAL_P4_EVIDENCE_AND_PORTABILITY_MAP_REQUIRED",
+    "MAIN_OWNED_ECO_PRODUCTION_CHECKPOINT_OR_WORK_ORDER_NOT_DECLARED",
+    "SINGLE_RUNTIME_WORKER_SLOT_MUST_BE_FREE",
+    "CRITICAL_HUMAN_ARCHITECTURE_DECISION_REQUIRED_BEFORE_P4_4_OR_P4_5_RUNTIME_PORT",
+    "CANONICAL_WQ_MAT_LIFE_WB_ADAPTER_CONTRACTS_MUST_BE_RESOLVED_FOR_PRODUCTION_ECO"
+  ],
+  "next_authorized_action": "INDEPENDENT_REVIEW_CONTROL_ONLY; THEN PROPOSE MAIN_OWNED CRITICAL CONVERGENCE WORK ORDER. NO RUNTIME FILE COPY YET.",
+  "production_runtime_changed": false,
+  "main_registry_changed": false,
+  "decision": "PREPARATION_COMPLETE_READY_FOR_INDEPENDENT_REVIEW"
+}
