@@ -10,29 +10,15 @@ $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectFile = Join-Path $ProjectRoot "project.godot"
 $ArtifactRoot = Join-Path $ProjectRoot "artifacts\runtime\v0-p2-first-slice"
 
-if (-not (Test-Path -LiteralPath $GodotExe)) {
-    throw "Godot executable not found: $GodotExe"
-}
-if (-not (Test-Path -LiteralPath $ProjectFile)) {
-    throw "Godot project file not found: $ProjectFile"
-}
-
+if (-not (Test-Path -LiteralPath $GodotExe)) { throw "Godot executable not found: $GodotExe" }
+if (-not (Test-Path -LiteralPath $ProjectFile)) { throw "Godot project file not found: $ProjectFile" }
 $ActualHead = (& git -C $ProjectRoot rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($ActualHead)) {
-    throw "Unable to resolve repository HEAD."
-}
-if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and $ActualHead -ne $ExpectedHead) {
-    throw "V0-P2 exact-head mismatch. Expected $ExpectedHead, got $ActualHead"
-}
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($ActualHead)) { throw "Unable to resolve repository HEAD." }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and $ActualHead -ne $ExpectedHead) { throw "V0-P2 exact-head mismatch. Expected $ExpectedHead, got $ActualHead" }
 
 New-Item -ItemType Directory -Force -Path $ArtifactRoot | Out-Null
 $ProjectHashBefore = (Get-FileHash -Path $ProjectFile -Algorithm SHA256).Hash
-$FatalPatterns = @(
-    "SCRIPT ERROR:",
-    "Failed to instantiate an autoload",
-    "Resource file not found: res://",
-    "Failed to load script"
-)
+$FatalPatterns = @("SCRIPT ERROR:", "Failed to instantiate an autoload", "Resource file not found: res://", "Failed to load script")
 
 function Assert-ProjectStable {
     param([string]$Stage)
@@ -43,7 +29,6 @@ function Assert-ProjectStable {
         throw "V0-P2 verification mutated tracked project.godot during $Stage."
     }
 }
-
 function Assert-LogClean {
     param([string]$LogPath, [string]$Stage)
     foreach ($Pattern in $FatalPatterns) {
@@ -54,6 +39,19 @@ function Assert-LogClean {
         }
     }
 }
+function Invoke-P2Test {
+    param([string]$TestPath, [string]$LogName)
+    $LogPath = Join-Path $ArtifactRoot $LogName
+    Write-Host ""
+    Write-Host "=== $TestPath ===" -ForegroundColor Cyan
+    & $GodotExe --headless --path $ProjectRoot --log-file $LogPath --script $TestPath
+    if ($LASTEXITCODE -ne 0) {
+        Get-Content $LogPath -Tail 220 -ErrorAction SilentlyContinue
+        throw "V0-P2 test failed: $TestPath (exit $LASTEXITCODE)"
+    }
+    Assert-LogClean -LogPath $LogPath -Stage $TestPath
+    Assert-ProjectStable -Stage $TestPath
+}
 
 Write-Host "[V0-P2] Project: $ProjectRoot"
 Write-Host "[V0-P2] HEAD:    $ActualHead"
@@ -63,9 +61,7 @@ if (-not $SkipP1Preflight) {
     Write-Host ""
     Write-Host "=== EXISTING V0-P1 REGRESSION ===" -ForegroundColor Cyan
     & (Join-Path $ProjectRoot "RUN_V0_P1_TESTS.ps1") -GodotExe $GodotExe
-    if ($LASTEXITCODE -ne 0) {
-        throw "Existing V0-P1 regression failed (exit $LASTEXITCODE)."
-    }
+    if ($LASTEXITCODE -ne 0) { throw "Existing V0-P1 regression failed (exit $LASTEXITCODE)." }
     Assert-ProjectStable -Stage "V0-P1 regression"
 }
 else {
@@ -81,25 +77,11 @@ else {
     Assert-ProjectStable -Stage "focused import"
 }
 
-Write-Host ""
-Write-Host "=== V0-P2 ITEM GRAPH RESTORE PURITY ===" -ForegroundColor Cyan
-$FocusedLog = Join-Path $ArtifactRoot "item-graph-restore-purity.log"
-& $GodotExe `
-    --headless `
-    --path $ProjectRoot `
-    --log-file $FocusedLog `
-    --script res://tests/runtime/test_v0_p2_item_graph_restore_purity.gd
-if ($LASTEXITCODE -ne 0) {
-    Get-Content $FocusedLog -Tail 220 -ErrorAction SilentlyContinue
-    throw "V0-P2 focused restore-purity test failed (exit $LASTEXITCODE)."
-}
-Assert-LogClean -LogPath $FocusedLog -Stage "restore-purity focused test"
-Assert-ProjectStable -Stage "restore-purity focused test"
+Invoke-P2Test -TestPath "res://tests/runtime/test_v0_p2_item_graph_restore_purity.gd" -LogName "item-graph-restore-purity.log"
+Invoke-P2Test -TestPath "res://tests/runtime/test_v0_p2_canonical_state_fingerprint.gd" -LogName "canonical-state-fingerprint.log"
 
 $Status = @(& git -C $ProjectRoot status --short --untracked-files=all)
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to inspect repository cleanliness after V0-P2 verification."
-}
+if ($LASTEXITCODE -ne 0) { throw "Unable to inspect repository cleanliness after V0-P2 verification." }
 if ($Status.Count -gt 0) {
     Write-Host "[V0-P2] Checkout is not clean after verification:" -ForegroundColor Red
     $Status | ForEach-Object { Write-Host $_ }
@@ -108,6 +90,6 @@ if ($Status.Count -gt 0) {
 
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green
-Write-Host "V0-P2 FIRST SLICE AUTOMATED GREEN" -ForegroundColor Green
+Write-Host "V0-P2 AUTOMATED GREEN" -ForegroundColor Green
 Write-Host $ActualHead -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
