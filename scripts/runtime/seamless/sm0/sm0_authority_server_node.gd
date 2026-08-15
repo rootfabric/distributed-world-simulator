@@ -161,7 +161,7 @@ func _handle_client_join(request_id: String, payload: Dictionary, remote_ip: Str
 	if logical_id != "a" or session_id.is_empty():
 		_send_gameplay(remote_ip, remote_port, "SM0_ERROR", {"error_code": "SM0_INVALID_JOIN"}, request_id)
 		return
-	var join := _authority.join(logical_id, session_id, "operation/sm0/%s/join/%s" % [_authority_id.get_slice("/", 2), request_id.sha256_text().left(12)])
+	var join: Dictionary = _authority.join(logical_id, session_id, "operation/sm0/%s/join/%s" % [_authority_id.get_slice("/", 2), request_id.sha256_text().left(12)])
 	if not bool(join.get("success", false)):
 		_send_gameplay(remote_ip, remote_port, "SM0_ERROR", {"error_code": String(join.get("error_code", "SM0_JOIN_FAILED"))}, request_id)
 		return
@@ -195,7 +195,7 @@ func _handle_client_move(request_id: String, payload: Dictionary, remote_ip: Str
 	if session_id != _active_session_id or remote_ip != _active_client_ip or remote_port != _active_client_port:
 		_send_gameplay(remote_ip, remote_port, "SM0_ERROR", {"error_code": "SM0_STALE_CLIENT_SESSION"}, request_id)
 		return
-	var result := _authority.move_player(
+	var result: Dictionary = _authority.move_player(
 		"a",
 		session_id,
 		int(payload.get("ownership_epoch", 0)),
@@ -385,7 +385,7 @@ func _commit_source_transfer() -> void:
 	var target_epoch := int(package.get("target_authority_epoch", 0))
 	var next_revision := int(_directory.get("revision", 0)) + 1
 	_directory = Contracts.create_directory(_peer_authority_id, target_epoch, next_revision)
-	var leave := _authority.leave("a", _active_session_id, "operation/sm0/%s/leave/%s" % [_authority_id.get_slice("/", 2), transfer_id.sha256_text().left(12)])
+	var leave: Dictionary = _authority.leave("a", _active_session_id, "operation/sm0/%s/leave/%s" % [_authority_id.get_slice("/", 2), transfer_id.sha256_text().left(12)])
 	if not bool(leave.get("success", false)):
 		_invariant("SM0_SOURCE_RETIRE_FAILED", {"transfer_id": transfer_id, "cause": leave})
 		return
@@ -435,7 +435,7 @@ func _handle_handoff_commit(request_id: String, payload: Dictionary) -> void:
 
 func _activate_imported_player(package: Dictionary) -> Dictionary:
 	var target_session := "transport-session/sm0/a/%s/epoch/%d" % [_authority_id.get_slice("/", 2), int(package.get("target_authority_epoch", 0))]
-	var join := _authority.join("a", target_session, "operation/sm0/%s/import-join/%s" % [_authority_id.get_slice("/", 2), String(package.get("transfer_id", "")).sha256_text().left(12)])
+	var join: Dictionary = _authority.join("a", target_session, "operation/sm0/%s/import-join/%s" % [_authority_id.get_slice("/", 2), String(package.get("transfer_id", "")).sha256_text().left(12)])
 	if not bool(join.get("success", false)):
 		return _failure("SM0_TARGET_JOIN_FAILED", {"cause": join})
 	var current: Dictionary = Dictionary(join.get("details", {}).get("player", {}))
@@ -446,7 +446,7 @@ func _activate_imported_player(package: Dictionary) -> Dictionary:
 	if absf(delta_x) > 10.0 or absf(delta_z) > 10.0:
 		return _failure("SM0_TARGET_IMPORT_DELTA_TOO_LARGE", {"delta_x": delta_x, "delta_z": delta_z})
 	var imported_sequence := maxi(int(package.get("last_input_sequence", 0)), int(current.get("last_input_sequence", 0)) + 1)
-	var moved := _authority.move_player(
+	var moved: Dictionary = _authority.move_player(
 		"a", target_session, int(current.get("ownership_epoch", 0)), imported_sequence,
 		delta_x, delta_z,
 		"operation/sm0/%s/import-move/%s" % [_authority_id.get_slice("/", 2), String(package.get("transfer_id", "")).sha256_text().left(12)]
