@@ -128,6 +128,41 @@ Regression tests:
 - modern scene/toolbar/profile/inspector wiring;
 - existing canonical Item Graph and multiplayer regressions.
 
+## Finding R2 — focused modern-inventory test ran before Control ready lifecycle
+
+Observed exact head:
+
+`fa653128796d767109810fb1b182368932359140`
+
+Observed Windows result:
+
+- `V0-P1 modern network inventory: 25 assertions, 0 failures`;
+- the same log contained `SCRIPT ERROR` from `InventoryContainerPanel.set_interaction_profile()` and `InventoryHotbarPanel._apply_compact_hotbar_style()` because `@onready` children such as `grid` / labels were still `null`;
+- `RUN_V0_P1_TESTS.ps1` correctly rejected the run as not parser/startup-clean.
+
+Root cause:
+
+`test_v0_p1_modern_network_inventory.gd` called `_run()` synchronously from `SceneTree._init()` and then invoked the shell's internal `_build_ui()` before the test-created shell and its nested Control scenes had completed a normal SceneTree ready cycle. Production Earth wiring first adds the shell to the live tree and then calls `setup()`, so the test lifecycle did not match the runtime lifecycle.
+
+Files:
+
+- `tests/runtime/test_v0_p1_modern_network_inventory.gd` only.
+
+Exact correction:
+
+- defer the focused test body out of `SceneTree._init()`;
+- wait one process frame after adding the shell before invoking the isolated UI build;
+- assert that the shell is inside the tree and node-ready before building the modern composition;
+- keep `RUN_V0_P1_TESTS.ps1` fatal `SCRIPT ERROR` scanning unchanged.
+
+Why production is not changed for R2:
+
+The reproduced stack is caused by the test's premature direct call of internal `_build_ui()`. There is no evidence in this failure that the real `earth_p1_modern_inventory_app.gd -> add_child(shell) -> shell.setup()` path performs the same premature call. Changing production to mask a test-only lifecycle violation would weaken the boundary instead of repairing the harness.
+
+Regression expectation:
+
+The exact-head Windows preflight must report all focused assertions and contain zero `SCRIPT ERROR:` lines; only then may the graphical server + two-client smoke test begin.
+
 ## Required acceptance state
 
 Implementation may be proposed only as a candidate. `IMPLEMENTER CANNOT SELF-ACCEPT`; Windows graphical evidence and independent review remain required before product-frontier merge.
