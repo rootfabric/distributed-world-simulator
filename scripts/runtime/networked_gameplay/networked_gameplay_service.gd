@@ -168,6 +168,8 @@ func handle_join_command(command: Dictionary) -> Dictionary:
 		record["connected"] = true
 		record["state_revision"] = int(record.get("state_revision", 0)) + 1
 	_players.upsert(record)
+	if _canonical_multiplayer_items != null:
+		_canonical_multiplayer_items.ensure_player(logical_player_id)
 	_advance()
 	var delta := _create_delta(before_revision, "PLAYER_JOINED", record, {})
 	var result := _success({"replay": false, "player": record.duplicate(true), "delta": delta, "snapshot": create_snapshot()})

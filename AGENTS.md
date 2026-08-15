@@ -24,6 +24,12 @@ nearest scoped AGENTS.md / local guidance if present
 relevant validation/checkpoint evidence
 ```
 
+For any Windows local development, worktree, runtime, MCP or verification action, also read:
+
+```text
+docs/control/WINDOWS_LOCAL_WORKSPACE_RU.md
+```
+
 If any historical/local prose conflicts with the main-owned registry, PC0, harness policy or architecture ownership, the central main-owned control state wins.
 
 ## Hard rules
@@ -78,6 +84,35 @@ NO autonomous runtime worker before H0.0
 H0.1 C22 only after H0.0
 ```
 
+## Windows local workspace
+
+The Windows filesystem contract is defined by `docs/control/WINDOWS_LOCAL_WORKSPACE_RU.md` and is mandatory for local Windows work.
+
+Canonical locations:
+
+```text
+workspace root:
+C:\distributed-world-simulator\
+
+central checkout:
+C:\distributed-world-simulator\distributed-world-simulator\
+
+Godot tools only:
+C:\Godot\godot\bin\
+
+console executable:
+C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+
+GUI executable:
+C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
+```
+
+All new task worktrees, clean verification worktrees and temporary project checkouts on Windows MUST be direct children of `C:\distributed-world-simulator\`. Do not create repository worktrees under `C:\Godot\`; that tree is reserved for Godot tooling.
+
+Historical examples using `C:\Godot\lunar-world-double-godot` or `C:\Godot\v0-*` are stale and MUST be translated to the canonical workspace contract before execution.
+
+Repository launchers and test scripts should derive the active project root from the checkout/worktree they are executed from. A fixed Godot executable path is allowed; a fixed repository checkout path in reusable launchers is not.
+
 ## Language and commits
 
 - Project documentation and user-facing development reports: Russian.
@@ -87,4 +122,4 @@ H0.1 C22 only after H0.0
 
 ## Godot runtime / MCP
 
-If work requires launching Godot, runtime input, screenshots or runtime logs, read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
+If work requires launching Godot, runtime input, screenshots or runtime logs, read `docs/control/WINDOWS_LOCAL_WORKSPACE_RU.md` first on Windows, then read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. The Windows workspace contract owns filesystem locations and supersedes historical repository-path examples in older prose. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
