@@ -1,10 +1,10 @@
-# ECO P4.8 — Final P4 Acceptance Manifest
+# ECO P4.8 — Final P4 Acceptance Manifest — ACCEPTED
 
-Статус: `FINAL_MANIFEST_GATE_READY / P4.7 ACCEPTED`.
+Статус: `ACCEPTED_EXACT_WINDOWS_FINAL_MANIFEST_GATE`.
 
 P4.8 не добавляет runtime-семантики. Это финальный control manifest поверх уже принятых P4.1–P4.7.
 
-## P4.7 accepted identity
+## Accepted P4.7 identity
 
 ```text
 validation = 747d1406971bc69bd81b6d149481da00d65d5a47
@@ -21,25 +21,57 @@ soak_hash           = d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff850
 final_interest_hash = 62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e
 ```
 
-P4.7 A/B passed with byte-identical logs, 242 assertions per process, exact counts and zero remaining catch-up debt.
+P4.7 A/B прошли с byte-identical logs, 242 assertions на процесс, exact counts и zero remaining catch-up debt.
 
-## Final gate
+## Accepted final gate
 
-`RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1` keeps its legacy filename but is now the **final manifest gate**. It does not rerun the P4.7 soak. It verifies:
-
-- exact accepted validation blobs P4.1–P4.7;
-- exact P4.7 runner/test blobs;
-- exact tested HEAD and Godot identity recorded in durable evidence;
-- frozen `soak_hash` and `final_interest_hash`;
-- byte-identical A/B evidence;
-- exact P4.7 counts: 8 regions, 12 cycles, 8 ecology generation steps, 4 handoffs, 12 save/load operations, 12 client updates, 14 interest projections, 3 restarts, debt 0.
-
-Expected success marker:
+Final manifest gate выполнен внешним verifier run на exact checkout:
 
 ```text
-ECO.P4.8 FINAL GATES: PASS
+HEAD   = 186c6d164b0bf17fc17e91a23136663edbe1c06d
+runner = RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1
+blob   = fa91e68f877551d0d08cea38382543ab23b9c4ac
 ```
 
-Only after this manifest gate passes may the final P4 lifecycle acceptance checkpoint be written.
+Observed output:
 
-Boundary: P4.7 is an accelerated deterministic integration soak, not a wall-clock production-duration soak. P4.8 is control-only and is not a scheduler, runtime authority, network transport, or gameplay implementation.
+```text
+ECO.P4.8 accepted ancestors P4.1-P4.6: PASS
+ECO.P4.8 accepted P4.7 exact identities: PASS
+ECO.P4.8 P4.7 frozen soak_hash=d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe
+ECO.P4.8 P4.7 frozen final_interest_hash=62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e
+ECO.P4.8 final manifest gate: PASS
+ECO.P4.8 FINAL GATES: PASS
+ECO WORKFLOW STAGE p4.8: PASS
+ECO repository-local test workflow: PASS
+ECO isolated validation workspace: PASS
+```
+
+Accepted validation:
+
+```text
+validation/ecology/eco-p4-8-acceptance-preparation.json
+blob = af886544d92970a061d47c29b76888fefbb66da6
+```
+
+## P4 lifecycle manifest
+
+Branch lifecycle completion is recorded in:
+
+```text
+validation/ecology/eco-p4-production-integration-acceptance.json
+blob = fa0c1b3540f1efe1a8509a7551542e12fb353bcd
+manifest_hash = 02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06
+```
+
+Checkpoint:
+
+```text
+docs/checkpoints/ECO_P4_PRODUCTION_INTEGRATION_BRANCH_LIFECYCLE_COMPLETE_RU.md
+```
+
+## Boundary
+
+P4.7 — accelerated deterministic integration soak, не wall-clock production-duration soak. P4.8 — control-only gate; Godot повторно не запускался и runtime code не менялся.
+
+По project-control правилам это завершает **branch-local P4 lifecycle evidence**, но не является автоматической global/main acceptance. `main` владеет project state; independent review/main-owned promotion и human runtime merge gate остаются отдельными действиями.
