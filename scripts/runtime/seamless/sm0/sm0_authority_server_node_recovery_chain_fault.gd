@@ -129,6 +129,25 @@ func _send_source_commit() -> void:
 		super._send_source_commit()
 		return
 
+	# Parent recovery normally makes SOURCE_RETIRED durable inside its own
+	# _send_source_commit() before sending COMMIT. H4.3 must stop before that
+	# network send, so reproduce only the canonical durability step here first.
+	# Without this ordering the first fresh call sees no durable phase yet and
+	# falls through to parent, allowing COMMIT to escape and never creating the
+	# PREPARED crash point.
+	if (
+		not transfer_id.is_empty()
+		and String(_source_transfer.get("stage", "")) == "COMMIT_SENT"
+		and String(_directory.get("owner_authority_id", "")) != _authority_id
+	):
+		var persisted := _ensure_source_retire_persisted(transfer_id)
+		if not bool(persisted.get("success", false)):
+			_invariant("SM0_H43_SOURCE_RETIRE_PERSIST_FAILED", {
+				"transfer_id": transfer_id,
+				"cause": persisted,
+			})
+			return
+
 	if not _h43_is_current_retired_source_transfer(transfer_id):
 		super._send_source_commit()
 		return
