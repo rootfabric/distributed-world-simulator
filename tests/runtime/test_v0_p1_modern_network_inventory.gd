@@ -9,13 +9,21 @@ var failures: Array[String] = []
 
 
 func _init() -> void:
-	_run()
+	# This component-level test must not construct Control scenes from
+	# SceneTree._init(). The production Earth path first places the shell in the
+	# live tree and then calls setup(), so wait for a normal ready cycle before
+	# invoking the isolated presentation build.
+	call_deferred("_run")
 
 
 func _run() -> void:
 	var shell = ModernNetworkedInventoryShell.new()
 	shell.name = "ModernNetworkedInventoryTest"
 	get_root().add_child(shell)
+	await process_frame
+
+	_assert(shell.is_inside_tree(), "modern network shell is inside the SceneTree")
+	_assert(shell.is_node_ready(), "modern network shell completed its ready lifecycle before UI build")
 
 	var profile_result: Dictionary = shell._load_interaction_profile()
 	_assert(
