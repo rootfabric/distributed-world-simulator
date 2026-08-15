@@ -34,20 +34,40 @@ function Invoke-ProjectPreflight {
     New-Item -ItemType Directory -Force -Path $PreflightRoot | Out-Null
     $BootstrapLog = Join-Path $PreflightRoot "bootstrap.log"
     $VerifyLog = Join-Path $PreflightRoot "verify.log"
+    $UidContractLog = Join-Path $PreflightRoot "uid-contract.log"
+    $ProjectFile = Join-Path $Root "project.godot"
+
+    if (-not (Test-Path $ProjectFile)) {
+        throw "Godot project file not found: $ProjectFile"
+    }
+    $ProjectHashBefore = (Get-FileHash -Path $ProjectFile -Algorithm SHA256).Hash
+
+    function Assert-ProjectSettingsStable {
+        param([string]$Stage)
+        $ProjectHashAfter = (Get-FileHash -Path $ProjectFile -Algorithm SHA256).Hash
+        if ($ProjectHashAfter -ne $ProjectHashBefore) {
+            Write-Host "[V0] project.godot changed during $Stage; editor/plugin import must be source-stable." -ForegroundColor Red
+            & git -C $Root diff -- project.godot
+            throw "Godot preflight mutated tracked project.godot during $Stage. Refusing to launch."
+        }
+    }
 
     Write-Host "[V0] Preparing Godot UID/script-class cache for this checkout..." -ForegroundColor Cyan
-    & $GodotExe --headless --editor --path $Root --log-file $BootstrapLog --quit-after 1
+    # --import waits for the filesystem scan/import pipeline to finish before exit.
+    # Using --quit-after 1 aborted the scan thread and could hide first-pass errors.
+    & $GodotExe --headless --editor --path $Root --log-file $BootstrapLog --import
     if ($LASTEXITCODE -ne 0) {
         throw "Godot project metadata bootstrap failed. See $BootstrapLog"
     }
+    Assert-ProjectSettingsStable -Stage "bootstrap import"
 
-    # A clean worktree has no tracked .godot cache. Run a second editor pass so
-    # UID autoloads and class_name dependencies are verified after the cache was
-    # populated by the bootstrap pass.
-    & $GodotExe --headless --editor --path $Root --log-file $VerifyLog --quit-after 1
+    # A clean worktree has no tracked .godot cache. Run a second completed import
+    # pass so UID and class_name dependencies are verified against the populated cache.
+    & $GodotExe --headless --editor --path $Root --log-file $VerifyLog --import
     if ($LASTEXITCODE -ne 0) {
         throw "Godot project preflight failed. See $VerifyLog"
     }
+    Assert-ProjectSettingsStable -Stage "verification import"
 
     $FatalPatterns = @(
         "SCRIPT ERROR:",
@@ -55,14 +75,33 @@ function Invoke-ProjectPreflight {
         "Resource file not found: res://",
         "Failed to load script"
     )
-    foreach ($Pattern in $FatalPatterns) {
-        if (Select-String -Path $VerifyLog -SimpleMatch $Pattern -Quiet) {
-            Write-Host "[V0] Project preflight detected a fatal startup/compiler error:" -ForegroundColor Red
-            Get-Content $VerifyLog -Tail 120
-            throw "Recovered V0 checkout is not parser-clean after metadata bootstrap. See $VerifyLog"
+    foreach ($LogPath in @($BootstrapLog, $VerifyLog)) {
+        foreach ($Pattern in $FatalPatterns) {
+            if (Select-String -Path $LogPath -SimpleMatch $Pattern -Quiet) {
+                Write-Host "[V0] Project preflight detected a fatal startup/compiler error:" -ForegroundColor Red
+                Get-Content $LogPath -Tail 120
+                throw "Recovered V0 checkout is not parser-clean after metadata bootstrap. See $LogPath"
+            }
         }
     }
-    Write-Host "[V0] Project preflight: parser/autoload cache ready." -ForegroundColor Green
+
+    # The source contract is intentionally cold-checkout safe. After the two import
+    # passes above, require the stronger UID->path resolution assertions as well.
+    & $GodotExe `
+        --headless `
+        --path $Root `
+        --log-file $UidContractLog `
+        --script res://tests/runtime/test_int0_project_uid_contracts.gd `
+        -- `
+        --require-imported-uids
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[V0] Imported UID contract failed:" -ForegroundColor Red
+        Get-Content $UidContractLog -Tail 120
+        throw "Godot imported UID contract failed after metadata bootstrap. See $UidContractLog"
+    }
+    Assert-ProjectSettingsStable -Stage "imported UID contract"
+
+    Write-Host "[V0] Project preflight: parser/autoload cache, UID contracts, and project settings are stable." -ForegroundColor Green
 }
 
 function Test-UdpPortAvailable {

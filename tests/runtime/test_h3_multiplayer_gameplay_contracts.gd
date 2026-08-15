@@ -130,7 +130,26 @@ func _test_replica_projection() -> void:
 	same_revision_mutation.players[0].position.z = 123.0
 	same_revision_mutation.erase("checksum")
 	same_revision_mutation["checksum"] = Utils.payload_hash(same_revision_mutation)
-	_assert(_error(replica.accept_snapshot(same_revision_mutation)) == "MULTIPLAYER_SAME_REVISION_MUTATION", "replica rejects same-revision mutation")
+	_assert(_error(replica.accept_snapshot(same_revision_mutation)) == "MULTIPLAYER_SAME_REVISION_MUTATION", "replica rejects semantic same-revision mutation")
+
+	var clock_forward := replica.get_snapshot()
+	clock_forward["server_tick"] = int(clock_forward.get("server_tick", 0)) + 10
+	clock_forward.erase("checksum")
+	clock_forward["checksum"] = Utils.payload_hash(clock_forward)
+	var clock_forward_result := replica.accept_snapshot(clock_forward)
+	_assert(_ok(clock_forward_result) and bool(clock_forward_result.details.replay) and bool(clock_forward_result.details.clock_update), "replica accepts same-revision forward clock-only snapshot")
+	_assert(int(replica.get_snapshot().get("server_tick", -1)) == int(clock_forward.get("server_tick", -2)), "forward clock-only snapshot advances replica clock")
+
+	var clock_stale := replica.get_snapshot()
+	clock_stale["server_tick"] = int(clock_stale.get("server_tick", 0)) - 5
+	clock_stale.erase("checksum")
+	clock_stale["checksum"] = Utils.payload_hash(clock_stale)
+	var clock_stale_result := replica.accept_snapshot(clock_stale)
+	_assert(_ok(clock_stale_result) and bool(clock_stale_result.details.replay) and bool(clock_stale_result.details.stale), "replica ignores same-revision stale clock-only snapshot")
+	_assert(int(replica.get_snapshot().get("server_tick", -1)) == int(clock_forward.get("server_tick", -2)), "stale clock-only snapshot cannot roll replica clock back")
+	_assert(int(replica.get_report().get("clock_only_snapshot_updates", 0)) == 1, "forward clock-only snapshot is observable")
+	_assert(int(replica.get_report().get("stale_clock_only_snapshots", 0)) == 1, "stale clock-only snapshot is observable")
+
 	var rollback := authority.create_snapshot().duplicate(true)
 	rollback.revision = 0
 	rollback.erase("checksum")
