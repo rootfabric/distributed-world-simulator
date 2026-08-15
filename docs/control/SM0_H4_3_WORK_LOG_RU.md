@@ -1,6 +1,6 @@
 # SM0 H4.3 — work log
 
-Статус: **FIX1 IMPLEMENTED / WINDOWS RUNTIME DEFAULT RE-RUN PENDING**.
+Статус: **WINDOWS RUNTIME DEFAULT PASS / FINAL PENDING**.
 
 Scope: branch-local experimental `feature/sm0-two-authority-seamless-handoff-lab`.
 
@@ -15,6 +15,14 @@ H4.3 начат от H4.2 evidence HEAD:
 H4.2 tested runtime SHA:
 
 `3e95dd881e55784bfe15a9901e7d1fe9bac143f9`
+
+Текущий exact H4.3 DEFAULT-tested candidate:
+
+`1126ec53ddf036389d2d11aa5211147b5cd7e320`
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
 
 ## Динамика реализации
 
@@ -80,12 +88,7 @@ Commit:
 
 Если подавлять только COMMIT, client может уйти на target до canonical target commit, и PREPARED boundary перестаёт быть чистым.
 
-Исправление: fresh Stage PREPARED подавляет одновременно:
-
-- `PLAYER_HANDOFF_COMMIT`;
-- `HANDOFF_REDIRECT`.
-
-Exact recovery-setup replay старого transfer пропускает оба сообщения.
+Исправление: fresh Stage PREPARED подавляет одновременно `PLAYER_HANDOFF_COMMIT` и `HANDOFF_REDIRECT`. Exact recovery-setup replay старого transfer пропускает оба сообщения.
 
 ### 6. Acceptance runner
 
@@ -97,100 +100,101 @@ File:
 
 `RUN_V0_SM0_RECOVERY_OF_RECOVERY_ACCEPTANCE.ps1`
 
-Runner проверяет fail-closed:
+Runner fail-closed проверяет один transfer id через все три outage одной chain, один client PID, durable PREPARED/COMMITTED/ACTIVE_OWNER pairs, строгий рост target recovery generation, exact SOURCE_RETIRED non-writer source state, ровно один canonical target import, отсутствие duplicate canonical import, отсутствие `SM0_COMMIT_WITHOUT_PREPARE`, отсутствие invariant violation, exactly-one crossing после terminal restore, contiguous directory epoch, identity changes = 0 и zero-authority interval при каждом outage.
 
-- один transfer id через все три outage одной chain;
-- один client PID;
-- PREPARED durable pair;
-- COMMITTED durable pair;
-- ACTIVE_OWNER durable pair;
-- строгий рост target recovery generation;
-- source остаётся exact `SOURCE_RETIRED` non-writer;
-- canonical target import ровно один после PREPARED recovery;
-- отсутствие duplicate canonical import после COMMITTED/ACTIVE recovery;
-- отсутствие `SM0_COMMIT_WITHOUT_PREPARE`;
-- отсутствие invariant violation;
-- exactly-one crossing после terminal ACTIVE_OWNER restore;
-- contiguous directory epoch;
-- identity changes = 0;
-- zero-authority interval при каждом outage.
+DEFAULT: 1 chain, A -> B, 3 outages, expected final directory epoch 2.
 
-DEFAULT:
-
-- 1 chain;
-- 1 handoff A -> B;
-- 3 total outages;
-- expected final directory epoch 2.
-
-FINAL:
-
-- 2 chains в одной client session;
-- A -> B, затем B -> A;
-- 6 total outages;
-- expected final directory epoch 3.
-
-PowerShell runner сразу использует constructor-created generic Lists и `.ToArray()` для summary, чтобы не повторять H4.1 generic-list binder defect. Stage assertions синхронизируются по exact H4.3 crash/suppression markers перед чтением durable evidence.
+FINAL: 2 chains в одной client session, A -> B затем B -> A, 6 outages, expected final directory epoch 3.
 
 ### 7. First Windows runtime finding — PREPARED fault ordering
 
-Первый DEFAULT запуск выполнен на exact candidate:
+Первый DEFAULT запуск на candidate `af5541f2d983cf9870a213c1644810fa416780e7` дошёл до live H4.3 campaign, после чего не получил первый `SM0_H43_CRASH_POINT(PREPARED)`.
 
-`af5541f2d983cf9870a213c1644810fa416780e7`
-
-Exact Godot:
-
-`4.7.1.stable.double.custom_build.a13da4feb`
-
-До live H4.3 campaign прошли:
-
-- compile-smoke 9 scripts;
-- handoff import 22 assertions;
-- healthy SM0 acceptance 2/2;
-- contracts 15 assertions;
-- H4.3 compile checks;
-- TARGET_PREPARED recovery regression 32 assertions;
-- ACTIVE_OWNER recovery regression 41 assertions;
-- SOURCE_RETIRED recovery regression 37 assertions.
-
-Live campaign запустил A, B и один client, после чего runner ожидал первый `SM0_H43_CRASH_POINT(PREPARED)` и не получал его.
-
-Root cause установлен в test-only H4.3 fault orchestration: override `_send_source_commit()` проверял `_recovery_last_phase == SOURCE_RETIRED` до вызова parent recovery method, хотя именно parent `_send_source_commit()` выполняет canonical `_ensure_source_retire_persisted()` перед отправкой COMMIT. В результате первый fresh вызов видел ещё пустую durable phase, уходил в `super._send_source_commit()`, и COMMIT мог выйти в сеть вместо PREPARED fault.
+Root cause установлен в test-only H4.3 fault orchestration: override `_send_source_commit()` проверял `_recovery_last_phase == SOURCE_RETIRED` до вызова parent recovery method, хотя именно parent path выполняет canonical `_ensure_source_retire_persisted()` перед отправкой COMMIT. Первый fresh вызов видел ещё пустую durable phase и мог пропустить COMMIT вместо PREPARED fault.
 
 Repair commit:
 
 `9ffa0d9eb19d354bbf8d6b68bba7e9346188418d`
 
-Исправление не меняет production recovery algorithm. H4.3 fault node теперь для fresh source сначала явно вызывает существующий canonical `_ensure_source_retire_persisted(transfer_id)`, проверяет успех write-before-fault, и только после этого suppress-ит COMMIT и создаёт PREPARED crash point. Exact recovery-setup replay старого T по-прежнему bypass-ит fault и проходит через parent replay path.
+H4.3 fault node теперь для fresh source сначала вызывает существующий canonical `_ensure_source_retire_persisted(transfer_id)`, fail-closed проверяет durability, затем suppress-ит COMMIT и создаёт PREPARED crash point. Production recovery algorithm не изменён. Exact recovery-setup replay старого T по-прежнему bypass-ит fault.
 
-Новый invariant test-only слоя при failure durability:
+Test-only invariant при failure durability:
 
 `SM0_H43_SOURCE_RETIRE_PERSIST_FAILED`.
 
+### 8. Windows DEFAULT runtime PASS after FIX1
+
+Дата локального runtime: 2026-08-16.
+
+Exact tested HEAD:
+
+`1126ec53ddf036389d2d11aa5211147b5cd7e320`
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+Preflight PASS:
+
+- compile-smoke: 9 scripts;
+- handoff import: 22 assertions;
+- healthy SM0 acceptance: 2/2;
+- contracts: 15 assertions;
+- TARGET_PREPARED recovery regression: 32 assertions;
+- ACTIVE_OWNER recovery regression: 41 assertions;
+- SOURCE_RETIRED recovery regression: 37 assertions.
+
+Live DEFAULT campaign:
+
+- initial A PID `27556`;
+- initial B PID `18296`;
+- one unchanged client PID `26228`;
+- exact transfer `handoff/sm0/a/2/1`;
+- outage 1/3 PREPARED: target B `TARGET_PREPARED generation=1`, source A `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
+- outage 2/3 COMMITTED: same transfer, target B `TARGET_COMMITTED generation=2`, source A still `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
+- outage 3/3 ACTIVE: same transfer, target B `ACTIVE_OWNER generation=3`, source A still `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
+- после terminal ACTIVE_OWNER restore crossing #1 завершён ровно один раз;
+- log analyzer: PASS, handoffs `1/1`, events `118`;
+- final directory epoch: `2`;
+- identity changes: `0`.
+
+Логи:
+
+`C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-025910`
+
+H4.3 summary:
+
+`C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-025910\h43-summary.json`
+
+Runtime verdict для DEFAULT: **PASS как branch-local experimental evidence**. Это ещё не H4.3 FINAL acceptance.
+
 ## Static workflow
 
-Project Control run #600 для commit `0cdf1c937bee3df4a0a5cbaa61b31043eea04761`:
+Project Control run #600 для commit `0cdf1c937bee3df4a0a5cbaa61b31043eea04761`: **SUCCESS**.
 
-**SUCCESS**.
+Project Control run #601 для progress HEAD `af5541f2d983cf9870a213c1644810fa416780e7`: **SUCCESS**.
 
-Project Control run #601 для progress HEAD `af5541f2d983cf9870a213c1644810fa416780e7`:
-
-**SUCCESS**.
-
-Это static/control evidence. Godot runtime acceptance ещё не объявлена.
+Project Control run #604 для exact DEFAULT-tested candidate `1126ec53ddf036389d2d11aa5211147b5cd7e320`: **SUCCESS**.
 
 ## Следующий gate
 
-Повторить DEFAULT на Windows exact custom Godot после runtime-discovered FIX1 и потребовать:
+Не менять runtime candidate. Выполнить FINAL на exact tested SHA:
+
+`1126ec53ddf036389d2d11aa5211147b5cd7e320`
+
+Потребовать:
 
 ```text
 SM0-H4.3 recovery-of-recovery same-transfer campaign: PASS
-chains 1/1
-outages 3/3
-handoffs 1/1
-final directory epoch 2
+chains 2/2
+outages 6/6
+handoffs 2/2
+final directory epoch 3
 identity changes 0
 ```
 
-После DEFAULT PASS — без изменения runtime candidate выполнить FINAL 2 chains / 6 outages. После FINAL PASS записать отдельный H4.3 runtime evidence document.
+Дополнительно обе chain должны использовать по одному unique transfer, каждая — один и тот же transfer через PREPARED -> COMMITTED -> ACTIVE, target sequence B,A, а один client process должен пережить все шесть simultaneous dual-authority outages.
+
+После FINAL PASS записать отдельный H4.3 runtime evidence document.
 
 Следующий визуальный checkpoint после H4.3: P2 Graphical Recovery Lab.
