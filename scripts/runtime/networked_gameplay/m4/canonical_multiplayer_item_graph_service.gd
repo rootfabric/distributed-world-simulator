@@ -1,9 +1,10 @@
 extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd"
 
-# V0-P1 R6 canonical slot adapter.
+# V0-P1 R7 canonical slot adapter.
 # The inherited M4 service remains the sole Item Graph owner. Membership arrays
 # remain durable/backward-compatible; location.slot_index is authoritative slot
-# identity. R6 adds atomic occupied-slot swap without creating another Item Graph.
+# identity. R7 makes existing-player/rejection paths mutation-free and ensures
+# inventory-producing successful mutations publish complete slot identity.
 
 const PLAYER_INVENTORY_CAPACITY := 32
 
@@ -16,9 +17,10 @@ func ensure_player(logical_player_id: String) -> void:
 		return
 	var existed := _inventories.has(player_id)
 	super.ensure_player(player_id)
-	if _inventories.has(player_id):
-		_normalize_player_inventory_slots(player_id)
 	if not existed and _inventories.has(player_id):
+		# First materialization is the only runtime compatibility-normalization
+		# boundary in P1. It is published by the same revision/tick advance below.
+		_normalize_player_inventory_slots(player_id)
 		_revision += 1
 		_tick += 1
 		_player_materializations += 1
@@ -59,6 +61,65 @@ func get_player_materialization_report() -> Dictionary:
 func create_snapshot() -> Dictionary:
 	_normalize_slot_locations()
 	return super.create_snapshot()
+
+
+func _pickup(player_id: String, item_id: String, authority_context: Dictionary = {}) -> Dictionary:
+	if not _items.has(item_id):
+		return _failure("ITEM_NOT_FOUND")
+	var item: Dictionary = _items[item_id]
+	if String(item.get("location", {}).get("kind", "")) != "WORLD":
+		return _failure("ITEM_ALREADY_CLAIMED")
+	var spatial_check := _validate_world_item_interaction(item, authority_context, SANDBOX_PICKUP_RANGE_M)
+	if not bool(spatial_check.get("success", false)):
+		return spatial_check
+	var resolved_slot := _first_free_inventory_slot(player_id)
+	if resolved_slot < 0:
+		return _failure("CONTAINER_FULL")
+	item["location"] = {
+		"kind": "INVENTORY",
+		"player_id": player_id,
+		"slot_index": resolved_slot,
+	}
+	_items[item_id] = item
+	_add_to_inventory(player_id, item_id)
+	return _success({
+		"item_id": item_id,
+		"winner_player_id": player_id,
+		"target_slot_index": resolved_slot,
+		"spatially_validated": _sandbox_mode,
+	})
+
+
+func _split(player_id: String, item_id: String, quantity: int) -> Dictionary:
+	var access := _owned_item(player_id, item_id)
+	if not bool(access.get("success", false)):
+		return access
+	var item: Dictionary = _items[item_id]
+	var source_quantity := int(item.get("quantity", 1))
+	if quantity < 1 or quantity >= source_quantity:
+		return _failure("INVALID_SPLIT_QUANTITY")
+	var resolved_slot := _first_free_inventory_slot(player_id)
+	if resolved_slot < 0:
+		return _failure("CONTAINER_FULL")
+	item["quantity"] = source_quantity - quantity
+	_items[item_id] = item
+	var new_item_id := "%s/split/%d" % [item_id, _revision + 1]
+	_items[new_item_id] = {
+		"item_id": new_item_id,
+		"definition_id": item["definition_id"],
+		"quantity": quantity,
+		"location": {
+			"kind": "INVENTORY",
+			"player_id": player_id,
+			"slot_index": resolved_slot,
+		},
+		"mounted": false,
+	}
+	_add_to_inventory(player_id, new_item_id)
+	return _success({
+		"item_id": new_item_id,
+		"target_slot_index": resolved_slot,
+	})
 
 
 func _transfer(
@@ -120,7 +181,6 @@ func _swap_with_occupied_target(
 		return _failure("SWAP_HOTBAR_UNSUPPORTED")
 	if not _items.has(item_id) or not _items.has(target_item_id):
 		return _failure("ITEM_NOT_FOUND")
-	_normalize_slot_locations()
 	var source: Dictionary = _items[item_id]
 	var target: Dictionary = _items[target_item_id]
 	var source_quantity := int(source.get("quantity", 1))
@@ -261,7 +321,6 @@ func _normalize_location_owner(location: Dictionary) -> void:
 
 func _transfer_to_inventory_slot(player_id: String, item_id: String, amount: int, target_slot_index: int) -> Dictionary:
 	ensure_player(player_id)
-	_normalize_player_inventory_slots(player_id)
 	var item: Dictionary = _items[item_id]
 	var location: Dictionary = Dictionary(item.get("location", {})).duplicate(true)
 	var kind := String(location.get("kind", ""))
@@ -297,7 +356,6 @@ func _transfer_to_inventory_slot(player_id: String, item_id: String, amount: int
 	_add_to_inventory(player_id, moved_item_id)
 	if moved_item_id == item_id:
 		_clear_hotbar_assignment(player_id, moved_item_id)
-	_normalize_player_inventory_slots(player_id)
 	return _success({"item_id": moved_item_id, "container_id": "inventory/%s" % player_id, "quantity": amount, "moved_quantity": amount, "target_slot_index": resolved_slot})
 
 
@@ -306,7 +364,6 @@ func _transfer_to_container_slot(player_id: String, item_id: String, amount: int
 		return _failure("CONTAINER_NOT_FOUND")
 	if String(_open_containers.get(player_id, "")) != container_id:
 		return _failure("TARGET_CONTAINER_ACCESS_DENIED")
-	_normalize_container_slots(container_id)
 	var item: Dictionary = _items[item_id]
 	var location: Dictionary = Dictionary(item.get("location", {})).duplicate(true)
 	if String(location.get("kind", "")) == "MOUNT":
@@ -315,7 +372,6 @@ func _transfer_to_container_slot(player_id: String, item_id: String, amount: int
 		var source_container_id := String(location.get("container_id", ""))
 		if String(_open_containers.get(player_id, "")) != source_container_id:
 			return _failure("SOURCE_CONTAINER_ACCESS_DENIED")
-		_normalize_container_slots(source_container_id)
 	var container: Dictionary = _containers[container_id]
 	var capacity := int(container.get("capacity", 0))
 	if capacity < 1:
@@ -347,7 +403,6 @@ func _transfer_to_container_slot(player_id: String, item_id: String, amount: int
 	var moved: Dictionary = _items[moved_item_id]
 	moved["location"] = {"kind": "CONTAINER", "container_id": container_id, "slot_index": resolved_slot}
 	_items[moved_item_id] = moved
-	_normalize_container_slots(container_id)
 	return _success({"item_id": moved_item_id, "container_id": container_id, "quantity": amount, "moved_quantity": amount, "target_slot_index": resolved_slot})
 
 
