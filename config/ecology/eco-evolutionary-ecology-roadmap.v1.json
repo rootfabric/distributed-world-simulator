@@ -1,76 +1,87 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R53-2026-08-13",
+  "revision": "ECO-R54-2026-08-15-VIS1-PRIORITY",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_REPAIRED_CANDIDATE",
+  "branch": "feature/eco-vis1-visual-proving-ground",
+  "status": "RESEARCH_PRESENTATION_VIS1_PRIORITY",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_checkpoint": "ECO.EVO1/P2.8",
-  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / Repaired Candidate / Exact Windows Canonical Rerun",
-  "last_accepted_step": "ECO.EVO1/P2.7 Lineage Divergence / Speciation Candidate Diagnostics",
-  "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
-  "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
+  "vis1_plan_doc": "docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md",
+  "current_checkpoint": "ECO.VIS1",
+  "current_step": "Visual Ecology Proving Ground / visual + numerical inspection before simulator port",
+  "last_accepted_step": "ECO P4 branch lifecycle complete + PH5 derived multi-scale presentation accepted",
+  "mission": "Make the existing causal ecology observable in a bounded landscape through derived vegetation, accelerated time, numerical diagnostics and disturbances; only then port the same environment/provider boundary into the simulator.",
+  "priority_order": [
+    "ECO.VIS1 Visual Ecology Proving Ground",
+    "ECO.VIS2 Causal Landscape Experiment",
+    "ECO.XFER-VIS Real World Surface Adapter",
+    "Production convergence inside simulator after visual/numerical validation"
+  ],
+  "execution_modes": ["INCUBATE_FAST", "LOCAL_ACTIVE", "VISUAL_DIAGNOSTIC"],
   "accepted_summary": [
     "ECO.P1 ACCEPTED",
-    "ECO.PH0..PH5-S4 ACCEPTED",
+    "ECO.PH0..PH5-S4 ACCEPTED / DERIVED PRESENTATION COMPLETE",
     "ECO.CONV0-A ACCEPTED",
-    "ECO.CAL1-A..F ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.CAL1-F ROBUST_UNITY_CALIBRATION",
-    "ECO.EVO1/P2.1 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.2 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.3 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.4 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.5 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.6 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.7 ACCEPTED_EXACT_WINDOWS_CANONICAL"
+    "ECO.CAL1-A..F ACCEPTED",
+    "ECO.EVO1 evidence preserved in source lineage",
+    "ECO.P3.1..P3.8 ACCEPTED",
+    "ECO.P4.1..P4.8 BRANCH LIFECYCLE COMPLETE"
   ],
-  "accepted_evidence": {
-    "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
-    "p2_1_aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
-    "p2_2_aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86",
-    "p2_3_aggregate_hash": "15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e",
-    "p2_4_aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97",
-    "p2_5_aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
-    "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
-    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
+  "p4_frozen_evidence": {
+    "source_final_head": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
+    "p4_lifecycle_manifest_blob": "fa0c1b3540f1efe1a8509a7551542e12fb353bcd",
+    "p4_lifecycle_manifest_hash": "02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06",
+    "p4_7_tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "p4_7_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "p4_7_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
   },
-  "candidate_evidence": {
-    "p2_8_implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
-    "p2_8_original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
-    "p2_8_codec_repair_commit": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
-    "p2_8_codec_preflight_commit": "31fd42a503875247cc758b36d7915a99a6a72698",
-    "p2_8_fail_fast_runner_commit": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-    "p2_8_finding": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
-    "p2_8_checkpoint": "docs/checkpoints/ECO_EVO1_P2_8_DETERMINISTIC_SAVE_RESTART_PLANT_WORLD_CANDIDATE_RU.md",
-    "p2_8_validation": "validation/ecology/eco-evo1-p2-8-save-restart-validation.json",
-    "p2_8_runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
-    "p2_8_truth": "typed deterministic research checkpoint of complete regional plant-world state with absolute-year continuation, double cut 14/18, P2.6 result-hash equivalence and persisted P2.7 diagnostic evidence",
-    "supplementary_attached_engine": "same Godot 4.7.1 double engine commit confirms int->float JSON erasure before repair and three deterministic repaired two-cut fresh-process probes",
-    "exact_windows_status": "RERUN_PENDING"
-  },
-  "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
-  "EVO1": {
-    "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_8_REPAIRED_CANDIDATE",
-    "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
+  "VIS1": {
+    "name": "Visual Ecology Proving Ground",
+    "status": "PRIORITY_NEXT",
+    "goal": "Observe with eyes and numbers how ecology changes a causal landscape over accelerated time before deeper production integration.",
+    "acceptance": [
+      "bounded polygon can be inspected interactively",
+      "same ecology truth is visible through PH5-derived plants and numerical diagnostics",
+      "0->200 year accelerated experiment is practical",
+      "different continuous environment zones yield explainable different outcomes without biome/species tables",
+      "disturbance/recovery is visible and measurable",
+      "same seed + same event log reproduces ecology hashes",
+      "diagnostic overlays expose environment/population/lineage/biomass state",
+      "presentation never mutates ecology truth"
+    ],
     "steps": [
-      {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
-      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"ACCEPTED"},
-      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"ACCEPTED"},
-      {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"ACCEPTED"},
-      {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
-      {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
-      {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"REPAIRED_CANDIDATE_EXACT_WINDOWS_RERUN_PENDING"}
+      {"id":"VIS1.0","name":"Lab scene + bounded terrain + operator camera/movement","status":"NEXT"},
+      {"id":"VIS1.1","name":"EcoEnvironmentProvider + LabEnvironmentProvider","status":"PLANNED"},
+      {"id":"VIS1.2","name":"Spatial ecology snapshot projection","status":"PLANNED"},
+      {"id":"VIS1.3","name":"Existing PH5 materialization on polygon","status":"PLANNED"},
+      {"id":"VIS1.4","name":"Accelerated time + same-seed restart","status":"PLANNED"},
+      {"id":"VIS1.5","name":"Numerical dashboard + time series","status":"PLANNED"},
+      {"id":"VIS1.6","name":"Diagnostic overlays","status":"PLANNED"},
+      {"id":"VIS1.7","name":"Disturbance actions + event log","status":"PLANNED"},
+      {"id":"VIS1.8","name":"0->200 year comparative acceptance experiment","status":"PLANNED"}
     ]
   },
-  "EVO2": {"status":"BLOCKED_BY_EVO1_P2_8_ACCEPTANCE"},
-  "EVO3": {"status":"AFTER_PLANT_WORLD_PROOF"},
-  "EVO4": {"status":"AFTER_EVO2_EVO3_FOUNDATIONS"},
-  "XFER": {"XFER0":{"status":"DESIGN_DURING_EVO"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
-  "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
-  "PRES": {"status":"LOW_PRIORITY"},
-  "production_blockers": ["P2_8_EXACT_WINDOWS_ACCEPTANCE_REQUIRED_FOR_EVO1_CLOSURE","EVO2_REQUIRES_EVO1_P2_8_ACCEPTANCE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
+  "VIS2": {
+    "name": "Causal Landscape Experiment",
+    "status": "AFTER_VIS1",
+    "goal": "Use richer terrain/water/resource/season/history fields and compare emergent communities across seeds."
+  },
+  "XFER_VIS": {
+    "name": "Real World Surface Adapter",
+    "status": "AFTER_VIS2",
+    "goal": "Replace LabEnvironmentProvider with a simulator WorldEnvironmentProvider on one real approximately 1x1 km surface region while keeping ecology consumer semantics unchanged."
+  },
+  "production_convergence": {
+    "status": "PREPARATION_READY_BUT_DEFERRED_BEHIND_VIS1_VIS2",
+    "preparation_pr": 108,
+    "rule": "Do not discard convergence preparation. Use its P4 portability/ownership map when XFER-VIS begins, especially for persistence and authority boundaries."
+  },
+  "forbidden_shortcuts": [
+    "NO_HARDCODED_CANONICAL_BIOME_SPECIES_TABLES",
+    "NO_SECOND_PRESENTATION_TRUTH",
+    "NO_LAB_PERSISTENCE_AS_PRODUCTION_DURABILITY",
+    "NO_LAB_OWNERSHIP_AS_PRODUCTION_AUTHORITY",
+    "NO_TERRAIN_GEOMETRY_AS_ECOLOGY_TRUTH"
+  ]
 }
