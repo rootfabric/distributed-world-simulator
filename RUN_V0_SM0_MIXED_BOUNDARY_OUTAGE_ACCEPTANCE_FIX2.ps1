@@ -35,19 +35,20 @@ if (-not (Test-Path -LiteralPath $SourceRunner -PathType Leaf)) {
 # identity, and recovery assertions remain unchanged.
 $Original = Get-Content -LiteralPath $SourceRunner -Raw -ErrorAction Stop
 $Needle = '        Wait-H42Marker $CrashLog (''"boundary":"'' + $Boundary + ''"'') $CrashProcess 50'
-$Replacement = @'
-        Wait-H42Marker $CrashLog '"event":"SM0_H4_MIXED_CRASH_POINT"' $CrashProcess 50
-        if ($Boundary -eq "INFLIGHT_RETIRE") {
-            Wait-H42Marker $SourceLog '"message_type":"PLAYER_HANDOFF_COMMIT"' $SourceProcess 20
-        }
-        elseif ($Boundary -eq "COMMIT_DECISION") {
-            Wait-H42Marker $TargetLog '"message_type":"PLAYER_HANDOFF_COMMITTED"' $TargetProcess 20
-            Wait-H42Marker $SourceLog '"message_type":"HANDOFF_REDIRECT"' $SourceProcess 20
-        }
-        elseif ($Boundary -eq "ACTIVATION") {
-            Wait-H42Marker $TargetLog '"message_type":"ACTIVATE_ACK"' $TargetProcess 20
-        }
-'@.TrimEnd()
+$ReplacementLines = @(
+    '        Wait-H42Marker $CrashLog ''"event":"SM0_H4_MIXED_CRASH_POINT"'' $CrashProcess 50',
+    '        if ($Boundary -eq "INFLIGHT_RETIRE") {',
+    '            Wait-H42Marker $SourceLog ''"message_type":"PLAYER_HANDOFF_COMMIT"'' $SourceProcess 20',
+    '        }',
+    '        elseif ($Boundary -eq "COMMIT_DECISION") {',
+    '            Wait-H42Marker $TargetLog ''"message_type":"PLAYER_HANDOFF_COMMITTED"'' $TargetProcess 20',
+    '            Wait-H42Marker $SourceLog ''"message_type":"HANDOFF_REDIRECT"'' $SourceProcess 20',
+    '        }',
+    '        elseif ($Boundary -eq "ACTIVATION") {',
+    '            Wait-H42Marker $TargetLog ''"message_type":"ACTIVATE_ACK"'' $TargetProcess 20',
+    '        }'
+)
+$Replacement = $ReplacementLines -join [Environment]::NewLine
 
 $Matches = ([regex]::Matches($Original, [regex]::Escape($Needle))).Count
 if ($Matches -ne 1) {
