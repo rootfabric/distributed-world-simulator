@@ -2,7 +2,7 @@ extends SceneTree
 
 const HealthyServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd")
 const FaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_fault.gd")
-const RecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery.gd")
+const RecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_resume.gd")
 const RecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_fault.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
