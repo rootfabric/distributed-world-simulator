@@ -51,7 +51,7 @@
       "presentation never mutates ecology truth"
     ],
     "steps": [
-      {"id":"VIS1.0","name":"Lab scene + bounded terrain + operator camera/movement","status":"IMPLEMENTED_CANDIDATE_WINDOWS_GRAPHICAL_PENDING","implementation_head":"246b55d4c7c6fb1547d16de1ab872e3799e81286","supplementary_exact_engine_smoke":"PASS_21_ASSERTIONS"},
+      {"id":"VIS1.0","name":"Lab scene + bounded terrain + operator camera/movement","status":"IMPLEMENTED_CANDIDATE_WINDOWS_GRAPHICAL_PENDING","implementation_head":"246b55d4c7c6fb1547d16de1ab872e3799e81286","test_hardening_head":"fcff82aab6c8b0fc3fcbb6957bb05efcc4870b18","supplementary_exact_engine_smoke":"PASS_24_ASSERTIONS"},
       {"id":"VIS1.1","name":"EcoEnvironmentProvider + LabEnvironmentProvider","status":"WAIT_VIS1_0_CONFIRMATION"},
       {"id":"VIS1.2","name":"Spatial ecology snapshot projection","status":"PLANNED"},
       {"id":"VIS1.3","name":"Existing PH5 materialization on polygon","status":"PLANNED"},
