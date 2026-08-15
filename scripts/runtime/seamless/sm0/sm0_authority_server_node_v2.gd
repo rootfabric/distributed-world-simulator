@@ -4,7 +4,65 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd"
 # - redirect ACK and target COMMIT ACK may arrive in either order;
 # - source keeps retrying COMMIT until target confirms it;
 # - delayed duplicate PREPARE remains an exact replay even after directory advance;
-# - duplicate PREPARED after source already committed is ignored.
+# - duplicate PREPARED after source already committed is ignored;
+# - target import preserves trusted source motion state instead of treating
+#   relocation-to-boundary as ordinary movement.
+
+
+func _activate_imported_player(package: Dictionary) -> Dictionary:
+	var target_session := "transport-session/sm0/a/%s/epoch/%d" % [
+		_authority_id.get_slice("/", 2),
+		int(package.get("target_authority_epoch", 0)),
+	]
+	var transfer_id := String(package.get("transfer_id", ""))
+	var join: Dictionary = _authority.join(
+		"a",
+		target_session,
+		"operation/sm0/%s/import-join/%s" % [
+			_authority_id.get_slice("/", 2),
+			transfer_id.sha256_text().left(12),
+		]
+	)
+	if not bool(join.get("success", false)):
+		return _failure("SM0_TARGET_JOIN_FAILED", {"cause": join})
+	var current: Dictionary = Dictionary(join.get("details", {}).get("player", {}))
+	var source_position: Dictionary = Dictionary(package.get("position", {}))
+	var current_position: Dictionary = Dictionary(current.get("position", {}))
+	var delta_x := float(source_position.get("x", 0.0)) - float(current_position.get("x", 0.0))
+	var delta_z := float(source_position.get("z", 0.0)) - float(current_position.get("z", 0.0))
+	if absf(delta_x) > 10.0 or absf(delta_z) > 10.0:
+		return _failure("SM0_TARGET_IMPORT_DELTA_TOO_LARGE", {
+			"delta_x": delta_x,
+			"delta_z": delta_z,
+		})
+
+	var imported: Dictionary = _authority.import_handoff_player_state(
+		"a",
+		target_session,
+		int(current.get("ownership_epoch", 0)),
+		{
+			"player_entity_id": String(package.get("player_entity_id", "")),
+			"position": source_position.duplicate(true),
+			"velocity": Dictionary(package.get("velocity", {})).duplicate(true),
+			"orientation_yaw": float(package.get("orientation_yaw", 0.0)),
+			"last_input_sequence": int(package.get("last_input_sequence", 0)),
+			"source_state_revision": int(package.get("state_revision", 0)),
+		},
+		"operation/sm0/%s/import-state/%s" % [
+			_authority_id.get_slice("/", 2),
+			transfer_id.sha256_text().left(12),
+		]
+	)
+	if not bool(imported.get("success", false)):
+		return _failure("SM0_TARGET_IMPORT_STATE_FAILED", {"cause": imported})
+	var player: Dictionary = Dictionary(imported.get("details", {}).get("player", {}))
+	if String(player.get("player_entity_id", "")) != String(package.get("player_entity_id", "")):
+		return _failure("SM0_TARGET_IMPORT_PLAYER_ID_CHANGED")
+	_active_session_id = target_session
+	_active_client_ip = ""
+	_active_client_port = 0
+	_frozen_transfer_id = ""
+	return _success({"session_id": target_session, "player": player})
 
 
 func _handle_handoff_prepare(request_id: String, payload: Dictionary) -> void:
