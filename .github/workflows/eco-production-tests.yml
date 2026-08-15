@@ -1,0 +1,64 @@
+name: ECO Production Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: ECO test suite
+        required: true
+        default: current
+        type: choice
+        options:
+          - current
+          - accepted
+          - full
+          - p4.4
+          - p4.5
+          - p4.6
+          - p4.7
+          - p4.8
+
+concurrency:
+  group: eco-production-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  eco-production-tests:
+    name: ECO ${{ inputs.suite }}
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found. Configure repository variable DWS_GODOT_DOUBLE_BIN or install it at: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run repository-local ECO workflow
+        run: |
+          .\RUN_ECO_TEST_WORKFLOW.ps1 `
+            -Suite "${{ inputs.suite }}" `
+            -GodotPath "${{ steps.godot.outputs.path }}"
