@@ -1,1 +1,0 @@
-VIS1 split ready at b7cd9bb6ceabf5ce26c114260ee8702ef86b3f85. Create feature/eco-vis1-visual-proving-ground from this lineage, then restore feature/eco-evolutionary-ecology to f0e16195f1331f238bbacab2768e5d72ec01d1a3.
