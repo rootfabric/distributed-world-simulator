@@ -98,7 +98,6 @@ func _init() -> void:
 	_expect(String(committed_player.get("player_entity_id", "")) == "player/a", "player identity preserved through restored commit")
 	_expect(int(committed_player.get("last_input_sequence", -1)) == 11, "handoff input sequence preserved through restored commit")
 	_expect(absf(float(Dictionary(committed_player.get("velocity", {})).get("x", 0.0)) - 0.25) < 0.000001, "handoff velocity preserved through restored commit")
-	_expect(not _has_error_event(recovered, "SM0_COMMIT_WITHOUT_PREPARE"), "restored commit did not fail as commit-without-prepare")
 
 	recovered._shutdown(0, "test-target-committed")
 	root.remove_child(recovered)
@@ -140,13 +139,6 @@ func _read_json(path: String) -> Dictionary:
 		_expect(false, "recovery snapshot JSON invalid")
 		return {}
 	return Dictionary(decoded)
-
-
-func _has_error_event(_node, _error_code: String) -> bool:
-	# Protocol rejection would leave the transfer uncommitted and is already
-	# asserted above. Keep this helper explicit so the regression documents the
-	# forbidden failure class without depending on console log capture internals.
-	return false
 
 
 func _cleanup_recovery() -> void:
