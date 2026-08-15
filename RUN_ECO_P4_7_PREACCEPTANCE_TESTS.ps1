@@ -22,6 +22,7 @@ $ExpectedRestarts = 3
 $MaxRemainingDueSteps = 1
 $GodotTimeoutSeconds = 600
 $HeartbeatSeconds = 10
+$GodotProjectRoot = $null
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
@@ -35,6 +36,52 @@ function Assert-Blob([string]$Path, [string]$Expected) {
     $actual = (& git -C $RootDir hash-object $Path).Trim()
     if ($LASTEXITCODE -ne 0) { throw "Unable to hash $Path" }
     if ($actual -ne $Expected) { throw "BLOB_MISMATCH: path=$Path expected=$Expected actual=$actual" }
+}
+
+function New-IsolatedGodotProject() {
+    $projectRoot = [System.IO.Path]::Combine(
+        [System.IO.Path]::GetTempPath(),
+        ("dws-eco-p47-project-{0}" -f [Guid]::NewGuid().ToString("N"))
+    )
+    New-Item -ItemType Directory -Path $projectRoot -Force | Out-Null
+
+    foreach ($name in @("scripts", "tests")) {
+        $target = Join-Path $RootDir $name
+        if (-not (Test-Path -LiteralPath $target -PathType Container)) {
+            throw "Required ECO resource directory missing: $target"
+        }
+        $link = Join-Path $projectRoot $name
+        New-Item -ItemType Junction -Path $link -Target $target | Out-Null
+        if (-not (Test-Path -LiteralPath $link -PathType Container)) {
+            throw "Unable to create ECO isolated project junction: $link -> $target"
+        }
+    }
+
+    $projectConfig = @'
+config_version=5
+
+[application]
+config/name="DWS ECO P4.7 Isolated Test"
+config/features=PackedStringArray("4.7", "Double Precision")
+
+[debug]
+gdscript/warnings/treat_warnings_as_errors=false
+'@
+    Set-Content -LiteralPath (Join-Path $projectRoot "project.godot") -Value $projectConfig -Encoding ASCII
+    return $projectRoot
+}
+
+function Remove-IsolatedGodotProject([string]$ProjectRoot) {
+    if ([string]::IsNullOrWhiteSpace($ProjectRoot) -or -not (Test-Path -LiteralPath $ProjectRoot -PathType Container)) {
+        return
+    }
+    foreach ($name in @("scripts", "tests")) {
+        $link = Join-Path $ProjectRoot $name
+        if (Test-Path -LiteralPath $link) {
+            try { & cmd.exe /c rmdir `"$link`" 2>&1 | Out-Null } catch { }
+        }
+    }
+    try { Remove-Item -LiteralPath $ProjectRoot -Recurse -Force -ErrorAction SilentlyContinue } catch { }
 }
 
 Assert-Blob "validation/ecology/eco-p4-6-client-read-model-validation.json" $ExpectedP46ValidationBlob
@@ -58,6 +105,9 @@ if ([string]$p46Validation.acceptance_evidence.real_integration.integration_hash
 
 function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly = $false) {
     Write-Host "=== $Label ==="
+    if ([string]::IsNullOrWhiteSpace($GodotProjectRoot) -or -not (Test-Path -LiteralPath $GodotProjectRoot -PathType Container)) {
+        throw "Isolated Godot test project is unavailable"
+    }
     $process = $null
     $stopwatch = $null
     $progressPath = [System.IO.Path]::Combine(
@@ -66,12 +116,13 @@ function Invoke-GodotTimed([string]$Label, [string]$ScriptPath, [bool]$CheckOnly
     )
     try {
         Set-Content -LiteralPath $progressPath -Value "starting" -Encoding ASCII
-        $argumentText = "--headless --path `"$RootDir`""
+        $argumentText = "--headless --path `"$GodotProjectRoot`""
         if ($CheckOnly) { $argumentText += " --check-only" }
         $argumentText += " --script `"$ScriptPath`""
         $startInfo = New-Object System.Diagnostics.ProcessStartInfo
         $startInfo.FileName = $GodotPath
         $startInfo.Arguments = $argumentText
+        $startInfo.WorkingDirectory = $GodotProjectRoot
         $startInfo.UseShellExecute = $false
         $startInfo.CreateNoWindow = $true
         $startInfo.RedirectStandardOutput = $true
@@ -132,45 +183,53 @@ Write-Host "ECO.P4.6 accepted parent identity: PASS"
 Write-Host "ECO.P4.6 accepted unit aggregate=$ExpectedP46UnitAggregate"
 Write-Host "ECO.P4.6 accepted integration hash=$ExpectedP46IntegrationHash"
 
-$null = Invoke-GodotTimed "ECO P4.7 bounded rotating soak parser/preload preflight" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd" $true
-$runA = Invoke-GodotTimed "ECO P4.7 bounded rotating production soak A" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd"
-$runB = Invoke-GodotTimed "ECO P4.7 bounded rotating production soak fresh process B" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd"
-if ($runA -ne $runB) { throw "P4.7 soak fresh-process logs are not byte-identical" }
-if ($runA -notmatch 'ECO\.P4\.7 Bounded Rotating Production Integration Soak: PASS') { throw "P4.7 bounded rotating soak did not report PASS" }
+$GodotProjectRoot = New-IsolatedGodotProject
+Write-Host "ECO.P4.7 isolated headless Godot project: PASS"
+Write-Host "ECO.P4.7 isolated project has no gameplay/MCP autoloads"
+try {
+    $null = Invoke-GodotTimed "ECO P4.7 bounded rotating soak parser/preload preflight" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd" $true
+    $runA = Invoke-GodotTimed "ECO P4.7 bounded rotating production soak A" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd"
+    $runB = Invoke-GodotTimed "ECO P4.7 bounded rotating production soak fresh process B" "res://tests/ecology/production/eco_p4_7_production_integration_soak.gd"
+    if ($runA -ne $runB) { throw "P4.7 soak fresh-process logs are not byte-identical" }
+    if ($runA -notmatch 'ECO\.P4\.7 Bounded Rotating Production Integration Soak: PASS') { throw "P4.7 bounded rotating soak did not report PASS" }
 
-$soak = [regex]::Match($runA, 'soak_hash=([0-9a-f]{64})')
-$interest = [regex]::Match($runA, 'final_interest_hash=([0-9a-f]{64})')
-$handoffs = [regex]::Match($runA, 'handoff_count=([0-9]+)')
-$ecologySteps = [regex]::Match($runA, 'ecology_generation_steps=([0-9]+)')
-$saves = [regex]::Match($runA, 'save_load_count=([0-9]+)')
-$updates = [regex]::Match($runA, 'client_update_count=([0-9]+)')
-$projections = [regex]::Match($runA, 'interest_projection_count=([0-9]+)')
-$restarts = [regex]::Match($runA, 'restart_count=([0-9]+)')
-$debt = [regex]::Match($runA, 'max_remaining_due_steps=([0-9]+)')
-$regions = [regex]::Match($runA, 'region_count=([0-9]+)')
-$cycles = [regex]::Match($runA, 'cycles=([0-9]+)')
-foreach ($match in @($soak,$interest,$handoffs,$ecologySteps,$saves,$updates,$projections,$restarts,$debt,$regions,$cycles)) {
-    if (-not $match.Success) { throw "Unable to parse P4.7 bounded rotating soak output" }
+    $soak = [regex]::Match($runA, 'soak_hash=([0-9a-f]{64})')
+    $interest = [regex]::Match($runA, 'final_interest_hash=([0-9a-f]{64})')
+    $handoffs = [regex]::Match($runA, 'handoff_count=([0-9]+)')
+    $ecologySteps = [regex]::Match($runA, 'ecology_generation_steps=([0-9]+)')
+    $saves = [regex]::Match($runA, 'save_load_count=([0-9]+)')
+    $updates = [regex]::Match($runA, 'client_update_count=([0-9]+)')
+    $projections = [regex]::Match($runA, 'interest_projection_count=([0-9]+)')
+    $restarts = [regex]::Match($runA, 'restart_count=([0-9]+)')
+    $debt = [regex]::Match($runA, 'max_remaining_due_steps=([0-9]+)')
+    $regions = [regex]::Match($runA, 'region_count=([0-9]+)')
+    $cycles = [regex]::Match($runA, 'cycles=([0-9]+)')
+    foreach ($match in @($soak,$interest,$handoffs,$ecologySteps,$saves,$updates,$projections,$restarts,$debt,$regions,$cycles)) {
+        if (-not $match.Success) { throw "Unable to parse P4.7 bounded rotating soak output" }
+    }
+    if ([int]$regions.Groups[1].Value -ne $ExpectedRegions) { throw "P4.7 region count mismatch" }
+    if ([int]$cycles.Groups[1].Value -ne $ExpectedCycles) { throw "P4.7 cycle count mismatch" }
+    if ([int]$handoffs.Groups[1].Value -ne $ExpectedHandoffs) { throw "P4.7 handoff count mismatch" }
+    if ([int]$ecologySteps.Groups[1].Value -ne $ExpectedEcologyGenerationSteps) { throw "P4.7 deep ecology generation count mismatch" }
+    if ([int]$saves.Groups[1].Value -ne $ExpectedSaveLoads) { throw "P4.7 save/load count mismatch" }
+    if ([int]$updates.Groups[1].Value -ne $ExpectedClientUpdates) { throw "P4.7 client update count mismatch" }
+    if ([int]$projections.Groups[1].Value -ne $ExpectedInterestProjections) { throw "P4.7 interest projection count mismatch" }
+    if ([int]$restarts.Groups[1].Value -ne $ExpectedRestarts) { throw "P4.7 restart count mismatch" }
+    if ([int]$debt.Groups[1].Value -gt $MaxRemainingDueSteps) { throw "P4.7 catch-up debt exceeded bound" }
+
+    Write-Host "ECO.P4.6 accepted parent identity: PASS"
+    Write-Host "ECO.P4.7 bounded rotating production soak fresh-process determinism: PASS"
+    Write-Host "ECO.P4.7 soak_hash=$($soak.Groups[1].Value)"
+    Write-Host "ECO.P4.7 final_interest_hash=$($interest.Groups[1].Value)"
+    Write-Host "ECO.P4.7 handoff_count=$($handoffs.Groups[1].Value)"
+    Write-Host "ECO.P4.7 ecology_generation_steps=$($ecologySteps.Groups[1].Value)"
+    Write-Host "ECO.P4.7 save_load_count=$($saves.Groups[1].Value)"
+    Write-Host "ECO.P4.7 client_update_count=$($updates.Groups[1].Value)"
+    Write-Host "ECO.P4.7 interest_projection_count=$($projections.Groups[1].Value)"
+    Write-Host "ECO.P4.7 restart_count=$($restarts.Groups[1].Value)"
+    Write-Host "ECO.P4.7 max_remaining_due_steps=$($debt.Groups[1].Value)"
+    Write-Host "ECO.P4.7 canonical automated gates: PASS"
 }
-if ([int]$regions.Groups[1].Value -ne $ExpectedRegions) { throw "P4.7 region count mismatch" }
-if ([int]$cycles.Groups[1].Value -ne $ExpectedCycles) { throw "P4.7 cycle count mismatch" }
-if ([int]$handoffs.Groups[1].Value -ne $ExpectedHandoffs) { throw "P4.7 handoff count mismatch" }
-if ([int]$ecologySteps.Groups[1].Value -ne $ExpectedEcologyGenerationSteps) { throw "P4.7 deep ecology generation count mismatch" }
-if ([int]$saves.Groups[1].Value -ne $ExpectedSaveLoads) { throw "P4.7 save/load count mismatch" }
-if ([int]$updates.Groups[1].Value -ne $ExpectedClientUpdates) { throw "P4.7 client update count mismatch" }
-if ([int]$projections.Groups[1].Value -ne $ExpectedInterestProjections) { throw "P4.7 interest projection count mismatch" }
-if ([int]$restarts.Groups[1].Value -ne $ExpectedRestarts) { throw "P4.7 restart count mismatch" }
-if ([int]$debt.Groups[1].Value -gt $MaxRemainingDueSteps) { throw "P4.7 catch-up debt exceeded bound" }
-
-Write-Host "ECO.P4.6 accepted parent identity: PASS"
-Write-Host "ECO.P4.7 bounded rotating production soak fresh-process determinism: PASS"
-Write-Host "ECO.P4.7 soak_hash=$($soak.Groups[1].Value)"
-Write-Host "ECO.P4.7 final_interest_hash=$($interest.Groups[1].Value)"
-Write-Host "ECO.P4.7 handoff_count=$($handoffs.Groups[1].Value)"
-Write-Host "ECO.P4.7 ecology_generation_steps=$($ecologySteps.Groups[1].Value)"
-Write-Host "ECO.P4.7 save_load_count=$($saves.Groups[1].Value)"
-Write-Host "ECO.P4.7 client_update_count=$($updates.Groups[1].Value)"
-Write-Host "ECO.P4.7 interest_projection_count=$($projections.Groups[1].Value)"
-Write-Host "ECO.P4.7 restart_count=$($restarts.Groups[1].Value)"
-Write-Host "ECO.P4.7 max_remaining_due_steps=$($debt.Groups[1].Value)"
-Write-Host "ECO.P4.7 canonical automated gates: PASS"
+finally {
+    Remove-IsolatedGodotProject $GodotProjectRoot
+}
