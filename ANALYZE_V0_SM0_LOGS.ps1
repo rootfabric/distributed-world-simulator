@@ -31,7 +31,8 @@ $Events = New-Object System.Collections.Generic.List[object]
 foreach ($Path in $RequiredLogs) {
     $Lines = Get-Content -LiteralPath $Path -ErrorAction Stop
     foreach ($Line in $Lines) {
-        if ($Line -match '^\[SM0_EVENT\]\s+(\{.*\})\s*$') {
+        # Godot may prepend engine/log metadata. Do not require SM0_EVENT at column 1.
+        if ($Line -match '\[SM0_EVENT\]\s+(\{.*\})\s*$') {
             try {
                 $Event = $Matches[1] | ConvertFrom-Json
                 Add-Member -InputObject $Event -NotePropertyName source_log -NotePropertyValue ([IO.Path]::GetFileName($Path)) -Force
@@ -45,7 +46,7 @@ foreach ($Path in $RequiredLogs) {
 
     $BadText = Select-String -LiteralPath $Path -Pattern @(
         'SCRIPT ERROR',
-        '^ERROR:',
+        'ERROR:',
         'SM0_INVARIANT_VIOLATION'
     ) -ErrorAction SilentlyContinue
     foreach ($Match in @($BadText)) {
@@ -163,8 +164,9 @@ $Summary = [ordered]@{
 $SummaryPath = Join-Path $LogDirectory "summary.json"
 $Summary | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $SummaryPath -Encoding UTF8
 
+$ResultColor = if ($Failures.Count -eq 0) { "Green" } else { "Red" }
 Write-Host ""
-Write-Host "SM0 log analysis: $($Summary.result)" -ForegroundColor $(if ($Failures.Count -eq 0) { "Green" } else { "Red" })
+Write-Host "SM0 log analysis: $($Summary.result)" -ForegroundColor $ResultColor
 Write-Host "  handoffs : $($Crossings.Count) / $ExpectedHandoffs"
 Write-Host "  events   : $($Events.Count)"
 Write-Host "  summary  : $SummaryPath"
