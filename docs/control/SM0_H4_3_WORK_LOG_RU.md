@@ -1,6 +1,6 @@
 # SM0 H4.3 — work log
 
-Статус: **WINDOWS RUNTIME DEFAULT PASS / FINAL PENDING**.
+Статус: **WINDOWS RUNTIME DEFAULT + FINAL PASS / EVIDENCE RECORDED**.
 
 Scope: branch-local experimental `feature/sm0-two-authority-seamless-handoff-lab`.
 
@@ -16,13 +16,17 @@ H4.2 tested runtime SHA:
 
 `3e95dd881e55784bfe15a9901e7d1fe9bac143f9`
 
-Текущий exact H4.3 DEFAULT-tested candidate:
+Exact H4.3 DEFAULT + FINAL tested candidate:
 
 `1126ec53ddf036389d2d11aa5211147b5cd7e320`
 
 Exact Godot:
 
 `4.7.1.stable.double.custom_build.a13da4feb`
+
+Runtime evidence:
+
+`docs/control/SM0_H4_3_RECOVERY_OF_RECOVERY_RUNTIME_EVIDENCE_RU.md`
 
 ## Динамика реализации
 
@@ -130,43 +134,53 @@ Exact tested HEAD:
 
 `1126ec53ddf036389d2d11aa5211147b5cd7e320`
 
-Exact Godot:
+One unchanged client PID `26228` пережил exact transfer `handoff/sm0/a/2/1` через:
 
-`4.7.1.stable.double.custom_build.a13da4feb`
+- target B `TARGET_PREPARED generation=1`, source A `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
+- target B `TARGET_COMMITTED generation=2`, тот же source durable generation `12`, kill gap `0 ms`;
+- target B `ACTIVE_OWNER generation=3`, тот же source durable generation `12`, kill gap `0 ms`;
+- terminal restore и crossing #1 ровно один раз.
 
-Preflight PASS:
+Analyzer: PASS, handoffs `1/1`, events `118`, final directory epoch `2`, identity changes `0`.
 
-- compile-smoke: 9 scripts;
-- handoff import: 22 assertions;
-- healthy SM0 acceptance: 2/2;
-- contracts: 15 assertions;
-- TARGET_PREPARED recovery regression: 32 assertions;
-- ACTIVE_OWNER recovery regression: 41 assertions;
-- SOURCE_RETIRED recovery regression: 37 assertions.
-
-Live DEFAULT campaign:
-
-- initial A PID `27556`;
-- initial B PID `18296`;
-- one unchanged client PID `26228`;
-- exact transfer `handoff/sm0/a/2/1`;
-- outage 1/3 PREPARED: target B `TARGET_PREPARED generation=1`, source A `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
-- outage 2/3 COMMITTED: same transfer, target B `TARGET_COMMITTED generation=2`, source A still `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
-- outage 3/3 ACTIVE: same transfer, target B `ACTIVE_OWNER generation=3`, source A still `SOURCE_RETIRED generation=12`, kill gap `0 ms`;
-- после terminal ACTIVE_OWNER restore crossing #1 завершён ровно один раз;
-- log analyzer: PASS, handoffs `1/1`, events `118`;
-- final directory epoch: `2`;
-- identity changes: `0`.
-
-Логи:
+Logs:
 
 `C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-025910`
 
+### 9. Windows FINAL runtime PASS
+
+Дата локального runtime: 2026-08-16.
+
+Exact tested HEAD остался тем же:
+
+`1126ec53ddf036389d2d11aa5211147b5cd7e320`
+
+Same client PID:
+
+`27184`
+
+Chain 1 A -> B использовала один exact transfer `handoff/sm0/a/2/1` через target generations `PREPARED=1`, `COMMITTED=2`, `ACTIVE=3`, source A оставался `SOURCE_RETIRED generation=12`; все три kill gap `0 ms`; crossing #1 завершён ровно один раз.
+
+Chain 2 B -> A использовала один exact transfer `handoff/sm0/b/3/1` через target generations `PREPARED=13`, `COMMITTED=14`, `ACTIVE=15`, source B оставался `SOURCE_RETIRED generation=6`; все три kill gap `0 ms`; crossing #2 завершён ровно один раз.
+
+FINAL facts:
+
+- chains `2/2`;
+- outages `6/6`;
+- 12 induced authority process deaths;
+- handoffs `2/2`;
+- analyzer PASS, events `199`;
+- final directory epoch `3`;
+- identity changes `0`;
+- один client process пережил весь campaign.
+
+Logs:
+
+`C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-030158`
+
 H4.3 summary:
 
-`C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-025910\h43-summary.json`
-
-Runtime verdict для DEFAULT: **PASS как branch-local experimental evidence**. Это ещё не H4.3 FINAL acceptance.
+`C:\Users\root\AppData\Local\DistributedWorldSimulator\SM0SeamlessH43\logs\20260816-030158\h43-summary.json`
 
 ## Static workflow
 
@@ -174,27 +188,12 @@ Project Control run #600 для commit `0cdf1c937bee3df4a0a5cbaa61b31043eea04761
 
 Project Control run #601 для progress HEAD `af5541f2d983cf9870a213c1644810fa416780e7`: **SUCCESS**.
 
-Project Control run #604 для exact DEFAULT-tested candidate `1126ec53ddf036389d2d11aa5211147b5cd7e320`: **SUCCESS**.
+Project Control run #604 для exact runtime candidate `1126ec53ddf036389d2d11aa5211147b5cd7e320`: **SUCCESS**.
 
-## Следующий gate
+## H4.3 verdict
 
-Не менять runtime candidate. Выполнить FINAL на exact tested SHA:
+H4.3 закрыт как **branch-local experimental runtime evidence** на exact tested SHA `1126ec53ddf036389d2d11aa5211147b5cd7e320`.
 
-`1126ec53ddf036389d2d11aa5211147b5cd7e320`
+Evidence commit после runtime находится поверх tested candidate только в docs history; он не меняет смысл exact tested runtime SHA.
 
-Потребовать:
-
-```text
-SM0-H4.3 recovery-of-recovery same-transfer campaign: PASS
-chains 2/2
-outages 6/6
-handoffs 2/2
-final directory epoch 3
-identity changes 0
-```
-
-Дополнительно обе chain должны использовать по одному unique transfer, каждая — один и тот же transfer через PREPARED -> COMMITTED -> ACTIVE, target sequence B,A, а один client process должен пережить все шесть simultaneous dual-authority outages.
-
-После FINAL PASS записать отдельный H4.3 runtime evidence document.
-
-Следующий визуальный checkpoint после H4.3: P2 Graphical Recovery Lab.
+Следующий visual checkpoint: **P2 Graphical Recovery Lab** — визуализация authority ownership, durable recovery phase, process outage/restart и same-transfer recovery без объявления production/global acceptance.
