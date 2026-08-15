@@ -9,6 +9,36 @@
 
 > SM0 is an isolated seamless-world research/product-integration lab. It must not replace or destabilize the normal single-server V0 path. All SM0 behavior is opt-in through a dedicated launcher/mode.
 
+## 0. Priority and evidence rule
+
+The first SM0 checkpoint is **correctness-first, not smoothness-first**.
+
+A visible pause, short freeze, coarse prediction correction or presentation jump during the first A -> B / B -> A handoff is acceptable while the networking/authority protocol is being proven.
+
+The first checkpoint MUST prioritize:
+
+```text
+stable logical_player_id
+stable player_entity_id
+exactly one active writer
+authority epoch fencing
+correct source freeze / target prepare / commit / activate ordering
+input-sequence continuity
+server A/B agreement on directory ownership
+real multi-process network path
+zero unexpected ERROR / invariant violations
+```
+
+Initial handoff duration and position-gap numbers are **diagnostic telemetry only**, not hard acceptance thresholds. Smoothness, ghosts, overlap interpolation and latency hiding are post-correctness work.
+
+Automated testing and evidence are mandatory from the start. The authoritative test/evidence plan is:
+
+```text
+docs/plans/V0_SM0_AUTOMATED_HANDOFF_TEST_AND_EVIDENCE_RU.md
+```
+
+The final SM0 checkpoint must be reproducible from machine-readable logs and `summary.json`; manual visual observation alone is not acceptance evidence.
+
 ## 1. Observable result
 
 One command starts:
@@ -59,7 +89,8 @@ SM0 does NOT claim:
 - distributed Matter mutation;
 - crash-tolerant consensus;
 - invisible handoff under real WAN conditions;
-- orbital/reference-frame handoff.
+- orbital/reference-frame handoff;
+- smooth/imperceptible first handoff.
 
 It is a two-server localhost lab that establishes the correct contracts and runtime seams.
 
@@ -437,6 +468,8 @@ Acceptance:
 - target epoch must be > source epoch;
 - checksum mutation rejected.
 
+Required tests are written in the same change, not after implementation.
+
 No graphical runtime changes yet.
 
 ### SM0.2 — Two server processes + control synchronization
@@ -463,7 +496,8 @@ Acceptance:
 - both servers stay alive;
 - both agree on zone manifest/directory checksum;
 - heartbeat/peer disconnect is visible and fail-closed;
-- no graphical client required yet.
+- no graphical client required yet;
+- logs/session directory already follows the SM0 evidence contract.
 
 ### SM0.3 — Player authority export/import gate
 
@@ -482,7 +516,7 @@ retire_source_player_authority()
 
 Do not fork movement code.
 
-Acceptance in headless process test:
+Acceptance in a real multi-process headless test:
 
 - player starts active only on A;
 - PREPARE creates no active writer on B;
@@ -493,7 +527,8 @@ Acceptance in headless process test:
 - identity/transform/velocity preserved;
 - abort before commit restores A;
 - duplicate commit is idempotent;
-- stale source epoch is rejected.
+- stale source epoch is rejected;
+- structured handoff events can be correlated by transfer_id.
 
 ### SM0.4 — Client dual-route / standby connection
 
@@ -508,10 +543,11 @@ Required changes to current M3 client should be minimal and opt-in:
 
 Acceptance:
 
-- one graphical client can keep A active while B route is warm;
+- one client can keep A active while B route is warm;
 - target standby has no player entity;
 - invalid/stale ticket rejected;
-- closing standby route does not affect active gameplay.
+- closing standby route does not affect active gameplay;
+- same process/PID is used across activation.
 
 ### SM0.5 — Automatic boundary detection and one-way A -> B handoff
 
@@ -521,7 +557,7 @@ Sequence:
 
 ```text
 spawn 20 m inside Zone A
-walk toward boundary
+automated client driver sends normal EAST movement intent
 warm B within 10 m
 prepare within 2 m
 cross 0 m
@@ -531,24 +567,25 @@ continue walking in Zone B
 
 Acceptance:
 
-- same client PID/window;
+- same client PID/process;
 - same logical/player entity IDs;
 - authority epoch +1;
 - no duplicate player on either server;
-- no authoritative position rollback across boundary;
+- no authoritative ownership rollback across boundary;
 - no manual reconnect command;
-- no reconnect/spawn screen;
-- both servers remain healthy.
+- both servers remain healthy;
+- no unexpected ERROR / persistent network error code.
 
-Initial localhost transition budget:
+SM0.5 does **not** fail only because the first handoff contains a visible freeze or coarse position correction. The following remain diagnostic-only during the correctness phase:
 
 ```text
-handoff control duration < 500 ms
-canonical position discontinuity < 0.50 m
-no input loss beyond bounded handoff freeze
+total_handoff_ms
+position_gap_m
+prediction correction size
+visible transition quality
 ```
 
-The budget is diagnostic for SM0, not a production SLA.
+They must be logged so later smoothness work has a baseline.
 
 ### SM0.6 — Reverse B -> A + player inventory continuity
 
@@ -593,13 +630,15 @@ Required behavior:
 - no split-brain;
 - no duplicate player entity.
 
-Repeat:
+Final automated correctness run:
 
 ```text
-20 automated A <-> B crossings
+10 round trips = 20 authority handoffs
 ```
 
 No persistent error code, no increasing pending operations, no duplicate identity, no process restart.
+
+The automated runner/analyzer and exact evidence rules are mandatory per `V0_SM0_AUTOMATED_HANDOFF_TEST_AND_EVIDENCE_RU.md`.
 
 ## 12. Proposed source layout
 
@@ -615,15 +654,19 @@ scripts/runtime/seamless/sm0/
   sm0_server_control_link.gd
   sm0_player_authority_adapter.gd
   sm0_seamless_client_router.gd
+  sm0_automated_crossing_driver.gd
 
 tests/runtime/seamless/sm0/
   test_sm0_zone_directory.gd
   test_sm0_handoff_contracts.gd
+  test_sm0_handoff_state_machine.gd
   test_sm0_player_authority_handoff.gd
   test_sm0_two_server_process.gd
   test_sm0_graphical_boundary_crossing.gd
 
 RUN_V0_SM0_SEAMLESS.ps1
+RUN_V0_SM0_ACCEPTANCE.ps1
+ANALYZE_V0_SM0_LOGS.ps1
 config/seamless/sm0-two-authority-handoff-lab.v1.json
 ```
 
@@ -639,15 +682,33 @@ scripts/runtime/networked_gameplay/networked_gameplay_service.gd
 
 Any broader replacement of current network/movement/Item Graph foundations requires stopping and re-scoping the lab.
 
-## 13. Launch contract
+## 13. Launch and automated-test contract
 
-Target developer command:
+Target developer launcher:
 
 ```powershell
 .\RUN_V0_SM0_SEAMLESS.ps1 -Restart
 ```
 
-Expected output:
+Target automated correctness runner:
+
+```powershell
+.\RUN_V0_SM0_ACCEPTANCE.ps1 -Crossings 4 -Restart
+```
+
+Final checkpoint runner:
+
+```powershell
+.\RUN_V0_SM0_ACCEPTANCE.ps1 -Final -Restart
+```
+
+Graphical confirmation:
+
+```powershell
+.\RUN_V0_SM0_ACCEPTANCE.ps1 -Final -Graphical -Restart
+```
+
+Expected launcher output includes:
 
 ```text
 [SM0] Server A READY  gameplay 24580 control 24680 zone west
@@ -655,11 +716,12 @@ Expected output:
 [SM0] Authority peers synchronized
 [SM0] Directory revision 1 / checksum ...
 [SM0] Client a started -> ACTIVE A / WARM B available
+[SM0] Logs -> <exact session directory>
 ```
 
 Session state must record both server PIDs and client PID so `-Stop` is deterministic.
 
-## 14. Telemetry required before graphical acceptance
+## 14. Telemetry and evidence required before acceptance
 
 Per handoff:
 
@@ -688,7 +750,23 @@ Invariant telemetry:
 source_active_writer_count + target_active_writer_count <= 1
 ```
 
-During ACTIVE steady state exactly one must be `1`.
+During steady ACTIVE state exactly one must be `1`.
+
+Every run must produce:
+
+```text
+server-a.log
+server-b.log
+client.log
+control.jsonl
+handoffs.jsonl
+harness.log
+summary.json
+```
+
+The analyzer must correlate all handoff phases by `transfer_id` and fail on missing/out-of-order mandatory phases, identity changes, epoch regressions, directory divergence, double writers, stale-source acceptance, process restart/crash, unexpected runtime ERROR or persistent network error code.
+
+Plain `WARNING` text alone is not a failure unless explicitly classified by the test contract.
 
 ## 15. Final SM0 checkpoint acceptance
 
@@ -700,25 +778,41 @@ SM0 is complete only when all are true:
 [ ] two independent dedicated server processes launch
 [ ] two static Earth-fixed zones have distinct owners
 [ ] servers validate each other's build/protocol/zone manifest
-[ ] one graphical client launches once
-[ ] client crosses A -> B without process restart
-[ ] client crosses B -> A without process restart
+[ ] one real client process launches once
+[ ] deterministic driver crosses A -> B through the normal client network/input path
+[ ] deterministic driver crosses B -> A through the normal client network/input path
 [ ] logical_player_id unchanged
 [ ] player_entity_id unchanged
 [ ] authority_epoch increments on each handoff
 [ ] never two active player writers
 [ ] target standby never creates a second player
-[ ] canonical transform/velocity continuity within lab budget
+[ ] source rejects stale mutation after commit
+[ ] target does not mutate player before commit
 [ ] NX4 movement resumes on target
-[ ] bounded player inventory fingerprint survives round trip
+[ ] bounded player inventory fingerprint survives round trip when SM0.6 is enabled
 [ ] duplicate/stale transfer messages are replay-safe/fail-closed
 [ ] pre-commit failure safely aborts to source
 [ ] post-commit retry cannot reactivate source
-[ ] 20 automated crossings PASS
+[ ] 20 automated authority handoffs PASS
+[ ] headless real-process network test PASS
+[ ] graphical confirmation PASS
 [ ] clean shutdown of client + both servers
 [ ] no unexpected ERROR / persistent last_error_code
+[ ] summary.json reports zero invariant violations
+[ ] exact session logs are retained and analyzer can be re-run independently
 [ ] git tree remains clean after launcher/preflight
 ```
+
+Not required for first SM0 correctness acceptance:
+
+```text
+[ ] imperceptible visual handoff
+[ ] production-grade latency budget
+[ ] ghost overlap
+[ ] prediction smoothing across authority boundary
+```
+
+Those become the next optimization track after correctness is stable.
 
 ## 16. What comes after SM0
 
@@ -728,6 +822,7 @@ Recommended continuation:
 
 ```text
 SM0 two-authority player handoff lab
+  -> SM0-P polish: smoothness / ghost overlap / lower latency
   -> SM1 border ghosts / overlap interest
   -> SM2 stateful world-items/containers across zone boundary
   -> SM3 handoff recovery after source/target process failure
@@ -747,4 +842,4 @@ planet -> deep-space region
 station interior -> exterior space
 ```
 
-The SM0 success criterion is not scale. It is proving that changing the server process does not change the identity of the player or the continuity of the canonical world.
+The SM0 success criterion is not visual polish or scale. It is proving with reproducible automated evidence that changing the authoritative server process does not change the identity of the player, does not create a second writer, and does not corrupt the canonical world/network state.
