@@ -158,8 +158,28 @@ foreach ($Marker in $Markers) {
     }
 }
 
-$Branch = (& git branch --show-current).Trim()
-$Head = (& git rev-parse --short=12 HEAD).Trim()
+# `git branch --show-current` intentionally produces no output in a detached
+# checkout. PowerShell represents that as $null, so calling .Trim() directly
+# used to turn a successful S0 sync into InvokeMethodOnNull. A detached checkout
+# is valid for this recovery harness; normalize it to an explicit diagnostic.
+$BranchOutput = @(& git branch --show-current)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to inspect current git branch after V0-S0 sync."
+}
+$Branch = (($BranchOutput -join "`n").Trim())
+if ([string]::IsNullOrWhiteSpace($Branch)) {
+    $Branch = "(detached HEAD)"
+}
+
+$HeadOutput = @(& git rev-parse --short=12 HEAD)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to resolve current HEAD after V0-S0 sync."
+}
+$Head = (($HeadOutput -join "`n").Trim())
+if ([string]::IsNullOrWhiteSpace($Head)) {
+    throw "git rev-parse returned an empty HEAD after V0-S0 sync."
+}
+
 Write-Host ""
 Write-Host "[V0-S0] PASS - runtime stabilization source set is installed." -ForegroundColor Green
 Write-Host "  local branch : $Branch"
