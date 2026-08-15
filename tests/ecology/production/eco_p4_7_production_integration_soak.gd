@@ -12,7 +12,7 @@ const ReadModel = preload("res://scripts/ecology/production/ecology_client_read_
 const REGION_COUNT := 8
 const CYCLE_COUNT := 12
 const ORIGIN_WORLD_TIME := 100.0
-const SERVERS := ["server-a", "server-b", "server-c"]
+const SERVERS: Array[String] = ["server-a", "server-b", "server-c"]
 
 var assertions := 0
 var failed := false
@@ -113,8 +113,8 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 			owner = committed
 
 			if ((cycle + index) % 3) == 0:
-				var current_server_index := SERVERS.find(String(owner["owner_server_id"]))
-				var target_server := SERVERS[(current_server_index + 1) % SERVERS.size()]
+				var current_server_index: int = SERVERS.find(String(owner["owner_server_id"]))
+				var target_server: String = SERVERS[(current_server_index + 1) % SERVERS.size()]
 				var handoff := Ownership.prepare_handoff(owner, target_server)
 				_check(bool(Ownership.validate_handoff(handoff, owner).get("success", false)), "soak handoff validates")
 				owner = Ownership.accept_handoff(owner, handoff, target_server)
