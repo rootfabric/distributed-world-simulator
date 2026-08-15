@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_8_acceptance_preparation.v1",
-  "revision": "ECO-P4.8-2026-08-15-R6-P4-7-ISOLATED-HEADLESS-REPINNED",
+  "revision": "ECO-P4.8-2026-08-15-R7-FINAL-MANIFEST-GATE-READY",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "PREPARATION_READY_P4_7_CANONICAL_SOAK_PENDING",
+  "status": "FINAL_MANIFEST_GATE_READY_P4_7_ACCEPTED",
   "scope": "P4_FINAL_ACCEPTANCE_CONTROL_MANIFEST_ONLY",
   "accepted_validation_chain": {
     "p4_1": "9a18978a4206452d58d32eb3ec49e2effdff26f6",
@@ -10,37 +10,47 @@
     "p4_3": "1236fdefcf490838bbe69431588d5878b7949f2c",
     "p4_4": "9f540c402506b1494d8ac69ca6a81a76696bab2f",
     "p4_5": "a02f1547c1beea5a49d500304b58ab8c763334ca",
-    "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
+    "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc",
+    "p4_7": "747d1406971bc69bd81b6d149481da00d65d5a47"
   },
-  "p4_7_gate": {
-    "status": "CANDIDATE_BOUNDED_ROTATING_ISOLATED_HEADLESS_CANONICAL_RUNNER_EXACT_COMMITTED_A_B_PENDING",
-    "validation_blob": "8e4c2fdf3da60eb662a91456392620fb10ffb3e9",
+  "p4_7_acceptance": {
+    "status": "ACCEPTED_EXACT_WINDOWS_ISOLATED_HEADLESS_BOUNDED_ROTATING_A_B",
+    "tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "runner_blob": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4",
     "soak_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
-    "regions": 8,
-    "cycles": 12,
-    "handoff_operations_expected": 4,
-    "ecology_generation_steps_expected": 8,
-    "save_load_operations_expected": 12,
-    "client_updates_expected": 12,
-    "interest_projections_expected": 14,
-    "restart_operations_expected": 3,
-    "heartbeat_includes_internal_phase": true,
-    "isolated_headless_project": true,
-    "unexpected_godot_error_policy": "FAIL",
-    "required_before_finalization": ["exact committed isolated-project A/B PASS", "byte-identical logs", "soak_hash frozen", "final_interest_hash frozen", "ecology_generation_steps=8", "full eight-region fanout order identity", "P4.7 lifecycle acceptance"]
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "fresh_process_logs_byte_identical": true,
+    "counts": {
+      "regions": 8,
+      "cycles": 12,
+      "ecology_generation_steps": 8,
+      "handoffs": 4,
+      "save_loads": 12,
+      "client_updates": 12,
+      "interest_projections": 14,
+      "restarts": 3,
+      "max_remaining_due_steps": 0
+    }
   },
   "candidate_blobs": {
-    "preacceptance_runner": "e63780b7eef676c2a6739db7536eb4df3624f8bd"
+    "final_manifest_runner_legacy_filename": "fa91e68f877551d0d08cea38382543ab23b9c4ac"
   },
-  "repair_note": "R9 isolates the P4.7 headless Godot test from the repository gameplay/MCP autoload configuration. The exact committed scripts/tests are exposed to a temporary minimal Godot project through NTFS junctions. No ERROR allowlist was added, project.godot is not mutated, no accepted runtime kernel changed, and canonical A/B evidence is still required.",
   "contract": {
     "control_only": true,
     "adds_runtime_semantics": false,
     "requires_all_p4_1_through_p4_7_accepted": true,
-    "cannot_accept_p4_7_by_implication": true,
-    "cannot_accept_p4_without_frozen_p4_7_soak_identity": true,
-    "final_action_after_p4_7": "replace preparation pins with accepted P4.7 validation/hash identities, run final manifest gate, then write one P4 lifecycle acceptance commit"
+    "reruns_p4_7_soak": false,
+    "verifies_exact_accepted_p4_7_blobs_and_frozen_hashes": true,
+    "final_gate_must_pass_before_p4_lifecycle_acceptance": true,
+    "wall_clock_soak_claimed": false
   },
-  "decision": "P4_8_PREPARED; RERUN_ISOLATED_HEADLESS_P4_7_CANONICAL_SOAK_NEXT; DO_NOT_ACCEPT_P4_UNTIL_P4_7_ACCEPTS"
+  "gate": {
+    "runner": "RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1",
+    "runner_filename_note": "legacy filename retained; semantics promoted to final manifest gate",
+    "status": "READY",
+    "expected_success_marker": "ECO.P4.8 FINAL GATES: PASS"
+  },
+  "decision": "RUN_P4_8_FINAL_MANIFEST_ONLY; ON_PASS_WRITE_P4_FINAL_ACCEPTANCE"
 }
