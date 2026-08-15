@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.eco_vis1_0_visual_proving_ground_validation.v1",
+  "revision": "ECO-VIS1.0-2026-08-15-R1",
+  "status": "IMPLEMENTED_CANDIDATE_WINDOWS_AUTOMATED_AND_GRAPHICAL_CHECK_PENDING",
+  "branch": "feature/eco-vis1-visual-proving-ground",
+  "source_p4_frozen_head": "f0e16195f1331f238bbacab2768e5d72ec01d1a3",
+  "implementation_head": "246b55d4c7c6fb1547d16de1ab872e3799e81286",
+  "scope": "VIS1.0 only: bounded deterministic 500x500m laboratory terrain, operator fly camera, reference markers and position/ground-height HUD. No ecology provider, plant simulation, PH5 materialization, persistence or authority changes.",
+  "files": {
+    "controller": {
+      "path": "scripts/labs/ecology/eco_vis1_0_visual_proving_ground.gd",
+      "blob": "a507ebbc25d3ff6d23bc4f2a95c3ec1ab79cfe74"
+    },
+    "scene": {
+      "path": "scenes/labs/ecology/eco_vis1_0_visual_proving_ground.tscn",
+      "blob": "e8e00a7c8ad6531ef9829289edb7958479f5295c"
+    },
+    "headless_smoke": {
+      "path": "tests/research/ecology/test_eco_vis1_0_visual_proving_ground.gd",
+      "blob": "90a431dd7295ef9af21604c683654278b38b6a9a"
+    },
+    "automated_runner": {
+      "path": "RUN_ECO_VIS1_0_TESTS.ps1",
+      "blob": "a7306e4c5374d9904e81c24fb8d9bc4dbf9c9ad7"
+    },
+    "graphical_launcher": {
+      "path": "RUN_ECO_VIS1_0_LAB.ps1",
+      "commit": "246b55d4c7c6fb1547d16de1ab872e3799e81286"
+    }
+  },
+  "terrain_contract": {
+    "extent_m": [500.0, 500.0],
+    "grid_cells_per_axis": 64,
+    "height_source": "deterministic analytic lab-only relief",
+    "canonical_terrain_truth": false,
+    "biome_table": false,
+    "reference_markers": 5
+  },
+  "operator_contract": {
+    "movement": "WASD",
+    "vertical": "Q/E",
+    "boost": "Shift",
+    "look": "captured mouse",
+    "mouse_capture_toggle": "Escape",
+    "reset": "Home",
+    "bounds_clamped": true,
+    "ground_clearance_clamped": true
+  },
+  "supplementary_exact_engine_probe": {
+    "platform": "Linux container / attached project Godot build",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preflight": "PASS",
+    "headless_scene_smoke": "PASS",
+    "assertions": 21,
+    "note": "Supplementary parser/runtime evidence over the same VIS1.0 scene/controller/test contents. It is not canonical Windows graphical acceptance and does not self-accept VIS1.0."
+  },
+  "pending_gates": [
+    "RUN_ECO_VIS1_0_TESTS_PS1_ON_EXACT_WINDOWS_GODOT",
+    "HUMAN_GRAPHICAL_OBSERVATION_OF_TERRAIN_AND_CAMERA",
+    "CONFIRM_OPERATOR_CONTROLS_USABLE",
+    "CONFIRM_NO_VISUAL_STARTUP_ERRORS"
+  ],
+  "ownership": {
+    "canonical_ecology_truth_changed": false,
+    "production_runtime_changed": false,
+    "terrain_truth_claimed": false,
+    "persistence_changed": false,
+    "authority_changed": false,
+    "network_changed": false
+  },
+  "next_on_pass": "VIS1.1 EcoEnvironmentProvider + LabEnvironmentProvider"
+}
