@@ -358,7 +358,7 @@ try {
     $C.Refresh()
     if ($C.HasExited) { throw "Client exited during H3.3 zero-authority interval." }
     Wait-H33Ports @(24580,24581,24680,24681)
-    Write-H33Log "In-flight total outage established transfer=$TransferId: A SOURCE_RETIRED gen=$AGeneration, B TARGET_PREPARED gen=$BGeneration, A PID=$A1Pid and B PID=$B1Pid dead, gap=${KillRequestGapMs}ms, client PID=$($C.Id) alive."
+    Write-H33Log "In-flight total outage established transfer=${TransferId}: A SOURCE_RETIRED gen=$AGeneration, B TARGET_PREPARED gen=$BGeneration, A PID=$A1Pid and B PID=$B1Pid dead, gap=${KillRequestGapMs}ms, client PID=$($C.Id) alive."
 
     # Restore target first so source immediate-resume COMMIT has a listening peer.
     $B2 = Start-H33Godot "server-b-recovered-prepared" $B2Log @(
