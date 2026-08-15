@@ -384,11 +384,12 @@ func _commit_source_transfer() -> void:
 	var package: Dictionary = Dictionary(_source_transfer.get("package", {}))
 	var target_epoch := int(package.get("target_authority_epoch", 0))
 	var next_revision := int(_directory.get("revision", 0)) + 1
-	_directory = Contracts.create_directory(_peer_authority_id, target_epoch, next_revision)
+	var next_directory: Dictionary = Contracts.create_directory(_peer_authority_id, target_epoch, next_revision)
 	var leave: Dictionary = _authority.leave("a", _active_session_id, "operation/sm0/%s/leave/%s" % [_authority_id.get_slice("/", 2), transfer_id.sha256_text().left(12)])
 	if not bool(leave.get("success", false)):
 		_invariant("SM0_SOURCE_RETIRE_FAILED", {"transfer_id": transfer_id, "cause": leave})
 		return
+	_directory = next_directory
 	_event("SM0_DIRECTORY_COMMITTED", {"transfer_id": transfer_id, "directory": _directory})
 	_event("SM0_SOURCE_RETIRED", {"transfer_id": transfer_id, "directory": _directory})
 	_source_transfer["stage"] = "COMMIT_SENT"
@@ -418,11 +419,12 @@ func _handle_handoff_commit(request_id: String, payload: Dictionary) -> void:
 	if int(directory.get("authority_epoch", 0)) != int(package.get("target_authority_epoch", 0)):
 		_send_control("PLAYER_HANDOFF_COMMITTED", {"success": false, "error_code": "SM0_COMMIT_EPOCH_MISMATCH", "transfer_id": transfer_id}, request_id)
 		return
-	_directory = directory.duplicate(true)
+	var next_directory: Dictionary = directory.duplicate(true)
 	var activated := _activate_imported_player(package)
 	if not bool(activated.get("success", false)):
 		_send_control("PLAYER_HANDOFF_COMMITTED", {"success": false, "error_code": String(activated.get("error_code", "SM0_TARGET_IMPORT_FAILED")), "transfer_id": transfer_id}, request_id)
 		return
+	_directory = next_directory
 	_committed_transfers[transfer_id] = {
 		"package": package.duplicate(true),
 		"session_id": String(activated.get("details", {}).get("session_id", "")),
