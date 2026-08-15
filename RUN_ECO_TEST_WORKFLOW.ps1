@@ -41,6 +41,23 @@ $suites = @{
     "p4.8"     = @("p4.8")
 }
 
+function Assert-PowerShellParse([string]$Path) {
+    $tokens = $null
+    $parseErrors = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile(
+        $Path,
+        [ref]$tokens,
+        [ref]$parseErrors
+    )
+    if ($null -ne $parseErrors -and $parseErrors.Count -gt 0) {
+        $details = @($parseErrors | ForEach-Object {
+            "line=$($_.Extent.StartLineNumber) column=$($_.Extent.StartColumnNumber) message=$($_.Message)"
+        })
+        throw "POWERSHELL_PARSE_FAIL: path=$Path`n$($details -join [Environment]::NewLine)"
+    }
+    Write-Host "PowerShell parser preflight: PASS path=$Path"
+}
+
 $selected = @($suites[$Suite])
 $needsGodot = $false
 foreach ($stage in $selected) {
@@ -72,14 +89,23 @@ if ($status) {
     Write-Host "WARNING: working tree is not clean; tests still run against current files"
 }
 
+# Parse all selected stage runners before starting any runtime work. This is
+# intentionally evaluated by the current Windows PowerShell host so PS 5.1
+# incompatibilities fail before expensive Godot processes start.
+foreach ($stage in $selected) {
+    $entry = $definitions[$stage]
+    $runner = Join-Path $gitFull ([string]$entry.Path)
+    if (-not (Test-Path -LiteralPath $runner -PathType Leaf)) {
+        throw "Workflow stage runner missing: stage=$stage path=$runner"
+    }
+    Assert-PowerShellParse -Path $runner
+}
+
 Push-Location $gitFull
 try {
     foreach ($stage in $selected) {
         $entry = $definitions[$stage]
         $runner = Join-Path $gitFull ([string]$entry.Path)
-        if (-not (Test-Path -LiteralPath $runner -PathType Leaf)) {
-            throw "Workflow stage runner missing: stage=$stage path=$runner"
-        }
 
         Write-Host ""
         Write-Host "================================================================"
@@ -97,7 +123,7 @@ try {
         if ($LASTEXITCODE -ne 0) {
             throw "ECO workflow stage failed: stage=$stage exit_code=$LASTEXITCODE"
         }
-        Write-Host "ECO WORKFLOW STAGE $stage: PASS"
+        Write-Host "ECO WORKFLOW STAGE ${stage}: PASS"
     }
 }
 finally {
