@@ -2,11 +2,11 @@ extends "res://scripts/labs/ecology/eco_vis1_3_ph5_population_materialization.gd
 
 const VIS1_4_STAGE := "ECO.VIS1.4"
 const REPRESENTED_KG_PER_VISUAL_INSTANCE := 0.22
-const MAX_VISUAL_INSTANCES_PER_POPULATION := 24
+const VIS14_MAX_VISUAL_INSTANCES_PER_POPULATION := 24
 const PATCH_FIELD_RADIUS_M := 21.5
 const CLUSTER_RADIUS_M := 5.5
-const PLANT_SCALE_MIN := 1.85
-const PLANT_SCALE_MAX := 2.80
+const VIS14_PLANT_SCALE_MIN := 1.85
+const VIS14_PLANT_SCALE_MAX := 2.80
 const NEAR_LOD_END_M := 110.0
 const MID_LOD_BEGIN_M := 75.0
 const MID_LOD_END_M := 240.0
@@ -226,7 +226,7 @@ func _build_vis1_4_population_field() -> void:
 			var visual_count := clampi(
 				int(ceil(biomass_kg / REPRESENTED_KG_PER_VISUAL_INSTANCE)),
 				1,
-				MAX_VISUAL_INSTANCES_PER_POPULATION
+				VIS14_MAX_VISUAL_INSTANCES_PER_POPULATION
 			)
 			var cluster_count := clampi(int(ceil(sqrt(float(visual_count)) / 1.7)), 1, 3)
 			var cluster_anchors := _cluster_anchors(patch_id, population_id, population_index, cluster_count)
@@ -326,9 +326,9 @@ func _apply_clustered_transform(
 	var local_ground := sample_terrain_height(world_x, world_z) - patch_center.y
 	instance.position = Vector3(local_xz.x, local_ground + 0.24, local_xz.y)
 	instance.rotation.y = TAU * _unit(key + "/yaw")
-	var base_scale := PLANT_SCALE_MIN + sqrt(maxf(represented_biomass_kg, 0.001)) * 1.05
+	var base_scale := VIS14_PLANT_SCALE_MIN + sqrt(maxf(represented_biomass_kg, 0.001)) * 1.05
 	var variation := lerpf(0.86, 1.16, _unit(key + "/scale"))
-	var scale_factor := clampf(base_scale * variation, PLANT_SCALE_MIN, PLANT_SCALE_MAX)
+	var scale_factor := clampf(base_scale * variation, VIS14_PLANT_SCALE_MIN, VIS14_PLANT_SCALE_MAX)
 	instance.scale = Vector3.ONE * scale_factor
 
 
