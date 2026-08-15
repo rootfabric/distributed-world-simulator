@@ -1,8 +1,11 @@
 extends RefCounted
 
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const PlayerSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
+const ConstructionBundle = preload("res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd")
 
 const SCHEMA := "planet_simulator.v0_canonical_state_fingerprint.v1"
+const ITEM_GRAPH_SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1"
 
 
 static func create(
@@ -14,15 +17,24 @@ static func create(
 	var normalized_world := world_id.strip_edges().to_lower()
 	if normalized_world.is_empty():
 		return _failure("V0_FINGERPRINT_WORLD_REQUIRED")
+	var gameplay_validation := PlayerSnapshot.validate_legacy(gameplay_snapshot)
+	if not bool(gameplay_validation.get("success", false)):
+		return _failure("V0_FINGERPRINT_GAMEPLAY_SNAPSHOT_INVALID")
+	var construction_validation := ConstructionBundle.validate(construction_bundle)
+	if not bool(construction_validation.get("success", false)):
+		return _failure("V0_FINGERPRINT_CONSTRUCTION_INVALID")
+	if String(item_graph_snapshot.get("schema", "")) != ITEM_GRAPH_SCHEMA:
+		return _failure("V0_FINGERPRINT_ITEM_GRAPH_SCHEMA_INVALID")
+	var item_checksum := String(item_graph_snapshot.get("checksum", ""))
+	var item_payload := item_graph_snapshot.duplicate(true)
+	item_payload.erase("checksum")
+	if item_checksum.length() != 64 or item_checksum != Utils.payload_hash(item_payload):
+		return _failure("V0_FINGERPRINT_ITEM_GRAPH_CHECKSUM_INVALID")
+
 	var players_value = gameplay_snapshot.get("players", [])
 	if not players_value is Array:
 		return _failure("V0_FINGERPRINT_PLAYERS_REQUIRED")
-	var item_checksum := String(item_graph_snapshot.get("checksum", ""))
-	if item_checksum.length() != 64:
-		return _failure("V0_FINGERPRINT_ITEM_GRAPH_REQUIRED")
 	var construction_checksum := String(construction_bundle.get("checksum", ""))
-	if construction_checksum.length() != 64:
-		return _failure("V0_FINGERPRINT_CONSTRUCTION_REQUIRED")
 	var item_revision := int(item_graph_snapshot.get("revision", -1))
 	var item_tick := int(item_graph_snapshot.get("tick", -1))
 	var construction_generation := int(construction_bundle.get("server_generation", -1))
@@ -48,13 +60,7 @@ static func create(
 		):
 			return _failure("V0_FINGERPRINT_PLAYER_INVALID")
 		var position: Dictionary = position_value
-		for axis in ["x", "y", "z"]:
-			var component = position.get(axis)
-			if typeof(component) not in [TYPE_INT, TYPE_FLOAT] or is_nan(float(component)) or is_inf(float(component)):
-				return _failure("V0_FINGERPRINT_PLAYER_POSITION_INVALID")
 		var yaw_value = player.get("orientation_yaw", 0.0)
-		if typeof(yaw_value) not in [TYPE_INT, TYPE_FLOAT] or is_nan(float(yaw_value)) or is_inf(float(yaw_value)):
-			return _failure("V0_FINGERPRINT_PLAYER_ORIENTATION_INVALID")
 		players.append({
 			"logical_player_id": logical_player_id,
 			"player_entity_id": player_entity_id,
@@ -100,10 +106,7 @@ static func create(
 	return {
 		"success": true,
 		"error_code": "",
-		"details": {
-			"fingerprint": fingerprint,
-			"checksum": checksum,
-		},
+		"details": {"fingerprint": fingerprint, "checksum": checksum},
 	}
 
 
