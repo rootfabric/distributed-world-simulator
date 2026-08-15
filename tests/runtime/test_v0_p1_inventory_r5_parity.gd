@@ -66,6 +66,12 @@ func _test_canonical_slot_move_and_projection() -> void:
 	)
 	var durable: Dictionary = service.export_durable_state()
 	var restored = ItemGraph.new()
+	var restored_setup: Dictionary = restored.setup(
+		"authority/r5-restore",
+		2,
+		{"playable_sandbox": true}
+	)
+	_assert(bool(restored_setup.get("success", false)), "restore fixture configures with sandbox hotbar contract")
 	var restore: Dictionary = restored.restore_durable_state(durable)
 	_assert(bool(restore.get("success", false)), "slot-aware canonical state restores durably")
 	var restored_item := _find_item(restored.create_snapshot(), battery_id)
