@@ -23,7 +23,7 @@ var _h41_crash_point_emitted := false
 var _h41_activate_ack_suppressed_logged := false
 var _h42_crash_point_emitted := false
 var _h42_send_suppressed_logged := false
-var _h42_restored_source_transfer_id := ""
+var _h42_setup_complete := false
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -38,17 +38,15 @@ func setup(config: Dictionary) -> Dictionary:
 		return _failure("SM0_UNKNOWN_TRANSACTION_FAULT_PROFILE", {"fault_profile": _transaction_fault_profile})
 	if String(config.get("recovery_dir", "")).strip_edges().is_empty():
 		return _failure("SM0_TRANSACTION_FAULT_RECOVERY_DIR_REQUIRED")
+	_h42_setup_complete = false
 	var result: Dictionary = super.setup(config)
+	_h42_setup_complete = true
 	if bool(result.get("success", false)):
-		if (
-			_transaction_fault_profile == FAULT_PROFILE_H4_MIXED_BOUNDARY_DUAL_OUTAGE_V1
-			and _recovery_restored
-			and _recovery_last_phase == "SOURCE_RETIRED"
-		):
-			_h42_restored_source_transfer_id = _recovery_last_transfer_id
 		_event("SM0_FAULT_PROFILE_ENABLED", {
 			"fault_profile": _transaction_fault_profile,
-			"restored_source_transfer_id": _h42_restored_source_transfer_id,
+			"recovery_restored": _recovery_restored,
+			"recovery_phase": _recovery_last_phase,
+			"recovery_transfer_id": _recovery_last_transfer_id,
 		})
 	return result
 
@@ -68,11 +66,14 @@ func _h42_current_boundary() -> String:
 	return _h42_boundary_for_epoch(int(_directory.get("authority_epoch", 0)))
 
 
-func _h42_is_restored_source_replay(transfer_id: String) -> bool:
+func _h42_is_setup_source_replay(transfer_id: String) -> bool:
 	return (
-		not transfer_id.is_empty()
-		and not _h42_restored_source_transfer_id.is_empty()
-		and transfer_id == _h42_restored_source_transfer_id
+		_transaction_fault_profile == FAULT_PROFILE_H4_MIXED_BOUNDARY_DUAL_OUTAGE_V1
+		and not _h42_setup_complete
+		and _recovery_restored
+		and _recovery_last_phase == "SOURCE_RETIRED"
+		and not transfer_id.is_empty()
+		and _recovery_last_transfer_id == transfer_id
 	)
 
 
@@ -140,7 +141,7 @@ func _commit_source_transfer() -> void:
 	):
 		return
 	var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
-	if _h42_is_restored_source_replay(transfer_id):
+	if _h42_is_setup_source_replay(transfer_id):
 		return
 	if (
 		transfer_id.is_empty()
@@ -355,7 +356,7 @@ func _send_source_commit() -> void:
 		and _h42_current_boundary() == H42_BOUNDARY_INFLIGHT_RETIRE
 	):
 		var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
-		if _h42_is_restored_source_replay(transfer_id):
+		if _h42_is_setup_source_replay(transfer_id):
 			super._send_source_commit()
 			return
 		_h42_emit_send_suppressed(H42_BOUNDARY_INFLIGHT_RETIRE, "PLAYER_HANDOFF_COMMIT", transfer_id)
@@ -369,7 +370,7 @@ func _send_client_redirect() -> void:
 		var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
 		var boundary := _h42_current_boundary()
 		if boundary in [H42_BOUNDARY_INFLIGHT_RETIRE, H42_BOUNDARY_COMMIT_DECISION]:
-			if _h42_is_restored_source_replay(transfer_id):
+			if _h42_is_setup_source_replay(transfer_id):
 				super._send_client_redirect()
 				return
 			_h42_emit_send_suppressed(boundary, "HANDOFF_REDIRECT", transfer_id)
