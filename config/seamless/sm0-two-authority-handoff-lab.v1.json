@@ -7,6 +7,26 @@
   "base_sha": "d66378b98b69756fab6c2a93b80b74db9ccd1980",
   "runtime_tested_ancestor_sha": "7f4177b32ce76191aecea60f2f8963c1b0ffd02e",
   "world_id": "earth",
+  "first_checkpoint_priority": {
+    "primary": "NETWORK_AND_AUTHORITY_CORRECTNESS",
+    "smooth_visual_transition_required": false,
+    "presentation_polish_deferred_until_after_correctness": true,
+    "allowed_initial_artifacts": [
+      "VISIBLE_HANDOFF_FREEZE",
+      "VISIBLE_POSITION_CORRECTION",
+      "NO_GHOST_OVERLAP",
+      "NO_PRODUCTION_LATENCY_HIDING"
+    ],
+    "never_allowed": [
+      "PLAYER_IDENTITY_CHANGE",
+      "DOUBLE_ACTIVE_WRITER",
+      "NON_MONOTONIC_AUTHORITY_EPOCH",
+      "SOURCE_MUTATION_AFTER_COMMIT",
+      "TARGET_MUTATION_BEFORE_COMMIT",
+      "CLIENT_PROCESS_RESTART_AS_HANDOFF",
+      "UNEXPECTED_RUNTIME_ERROR"
+    ]
+  },
   "topology": {
     "server_count": 2,
     "graphical_client_count": 1,
@@ -60,7 +80,10 @@
     "last_processed_input_sequence"
   ],
   "deferred_until_later_sm0_stage": [
-    "player_owned_inventory_snapshot_transfer"
+    "player_owned_inventory_snapshot_transfer",
+    "GHOST_OVERLAP_PRESENTATION",
+    "SEAMLESS_VISUAL_BLEND",
+    "PRODUCTION_HANDOFF_LATENCY_OPTIMIZATION"
   ],
   "explicit_non_goals": [
     "N3_ACCEPTANCE",
@@ -85,12 +108,67 @@
     "authority_epoch_monotonic": true,
     "max_active_player_writers": 1,
     "target_standby_creates_player": false,
-    "max_localhost_handoff_ms": 500,
-    "max_position_gap_m": 0.5,
-    "automated_round_trip_crossings": 20,
+    "smoothness_hard_gate_required": false,
+    "automated_handoffs_final": 20,
     "normal_v0_launcher_regression_required": true,
     "clean_shutdown_required": true,
-    "unexpected_error_count": 0
+    "unexpected_error_count": 0,
+    "invariant_violation_count": 0,
+    "stale_source_mutation_accepts": 0
+  },
+  "diagnostic_only_initial_targets": {
+    "target_localhost_handoff_ms": 500,
+    "target_position_gap_m": 0.5,
+    "hard_gate": false,
+    "must_be_recorded": true
+  },
+  "automated_test_evidence": {
+    "required_plan": "docs/plans/V0_SM0_AUTOMATED_HANDOFF_TEST_AND_EVIDENCE_RU.md",
+    "runner": "RUN_V0_SM0_ACCEPTANCE.ps1",
+    "log_analyzer": "ANALYZE_V0_SM0_LOGS.ps1",
+    "developer_handoffs": 4,
+    "final_handoffs": 20,
+    "deterministic_client_driver_required": true,
+    "os_keyboard_emulation_as_primary_driver_forbidden": true,
+    "real_multi_process_network_required": true,
+    "graphical_confirmation_required_after_headless_network_pass": true,
+    "structured_jsonl_required": true,
+    "correlation_key": "transfer_id",
+    "required_log_files": [
+      "server-a.log",
+      "server-b.log",
+      "client.log",
+      "control.jsonl",
+      "handoffs.jsonl",
+      "harness.log",
+      "summary.json"
+    ],
+    "hard_fail_patterns": [
+      "ERROR:",
+      "SCRIPT ERROR",
+      "CRASH",
+      "ASSERTION FAILED",
+      "SM0_INVARIANT_VIOLATION",
+      "MULTIPLAYER_SAME_REVISION_MUTATION"
+    ],
+    "hard_fail_semantics": [
+      "MISSING_SERVER_READY",
+      "MISSING_PEER_SYNCED",
+      "MISSING_DIRECTORY_READY",
+      "MISSING_HANDOFF_PHASE",
+      "NON_MONOTONIC_AUTHORITY_EPOCH",
+      "DIRECTORY_DIVERGENCE",
+      "PLAYER_IDENTITY_CHANGE",
+      "MORE_THAN_ONE_ACTIVE_WRITER",
+      "SOURCE_ACCEPTED_MOVEMENT_AFTER_COMMIT",
+      "TARGET_ACCEPTED_MOVEMENT_BEFORE_COMMIT",
+      "DUPLICATE_ACTIVE_PLAYER_ENTITY",
+      "CLIENT_PROCESS_RESTART",
+      "CROSSING_TIMEOUT"
+    ],
+    "warning_token_alone_is_failure": false,
+    "logs_retained_on_failure": true,
+    "summary_schema": "distributed_world_simulator.sm0_acceptance_result.v1"
   },
   "semantic_donors": [
     {
