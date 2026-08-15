@@ -1,7 +1,7 @@
 extends SceneTree
 
 const ModernNetworkedInventoryShell = preload(
-	"res://scripts/ui/inventory/networked/m5_modern_networked_inventory_shell.gd"
+	"res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell.gd"
 )
 
 var assertions := 0
@@ -33,7 +33,7 @@ func _run() -> void:
 	var header = screen.get_node("Margin/Main/Header")
 	_assert(
 		String(header.text).contains("ПРОФИЛИ УПРАВЛЕНИЯ ПРЕДМЕТАМИ"),
-		"modern inventory header replaces the legacy V0 shell title"
+		"modern inventory scene retains the current component header"
 	)
 	_assert(
 		not String(header.text).contains("ИНВЕНТАРЬ · V0"),
@@ -55,6 +55,21 @@ func _run() -> void:
 	_assert(
 		profile_option.item_count >= 3,
 		"network shell exposes the existing inventory interaction profiles"
+	)
+	var sort_option: OptionButton = screen.get_node("%SortOption")
+	_assert(
+		sort_option.item_count >= 7,
+		"network shell preserves the complete modern sort option set"
+	)
+	_assert(
+		not screen.get_node("Margin/Main/Header").visible
+		and not screen.get_node("%SearchEdit").visible
+		and not screen.get_node("%SortOption").visible,
+		"default 7 Days profile applies the latest compact visual composition"
+	)
+	_assert(
+		screen.get_node("%InteractionProfileOption").visible,
+		"profile selector remains visible in the 7 Days composition"
 	)
 	_assert(
 		shell.active_profile != null
@@ -82,8 +97,8 @@ func _run() -> void:
 	)
 	var report: Dictionary = shell.get_report()
 	_assert(
-		String(report.get("ui_variant", "")) == "MODERN_INVENTORY_SCREEN",
-		"report identifies the modern inventory composition"
+		String(report.get("ui_variant", "")) == "V0_MODERN_INVENTORY_SCREEN",
+		"report identifies the V0 modern inventory composition"
 	)
 	_assert(
 		String(report.get("canonical_mutation_boundary", ""))

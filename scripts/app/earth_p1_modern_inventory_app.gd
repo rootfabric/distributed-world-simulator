@@ -1,7 +1,7 @@
 extends "res://scripts/app/earth_p1_app.gd"
 
 const ModernM5NetworkedInventoryShellScript = preload(
-	"res://scripts/ui/inventory/networked/m5_modern_networked_inventory_shell.gd"
+	"res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell.gd"
 )
 
 
