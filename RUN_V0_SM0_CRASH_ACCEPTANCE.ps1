@@ -84,14 +84,14 @@ $CLog = Join-Path $LogDir "client.log"
 $CResult = Join-Path $LogDir "client-result.json"
 $StopFile = Join-Path $LogDir "stop.flag"
 $SummaryPath = Join-Path $LogDir "h2-summary.json"
-function H([string]$M) { $L = "[{0}] {1}" -f (Get-Date -Format "HH:mm:ss.fff"), $M; Write-Host $L; Add-Content -LiteralPath $HarnessLog -Value $L -Encoding UTF8 }
+function Write-H2Log([string]$M) { $L = "[{0}] {1}" -f (Get-Date -Format "HH:mm:ss.fff"), $M; Write-Host $L; Add-Content -LiteralPath $HarnessLog -Value $L -Encoding UTF8 }
 
 function Start-Godot([string]$Role, [string]$Log, [string[]]$UserArgs) {
     $Args = @("--headless", "--path", (Q $ProjectRoot), "--log-file", (Q $Log), "--script", "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd", "--") + $UserArgs
     $Old = $env:BREAKPOINT_RUNTIME_DISABLED; $Had = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
     try { $env:BREAKPOINT_RUNTIME_DISABLED = "1"; $P = Start-Process -FilePath $GodotExe -ArgumentList $Args -WorkingDirectory $ProjectRoot -WindowStyle Hidden -PassThru }
     finally { if ($Had) { $env:BREAKPOINT_RUNTIME_DISABLED = $Old } else { Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue } }
-    H "$Role started PID=$($P.Id) log=$Log"
+    Write-H2Log "$Role started PID=$($P.Id) log=$Log"
     return $P
 }
 function Start-Client([string[]]$UserArgs) {
@@ -99,7 +99,7 @@ function Start-Client([string[]]$UserArgs) {
     $Old = $env:BREAKPOINT_RUNTIME_DISABLED; $Had = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
     try { $env:BREAKPOINT_RUNTIME_DISABLED = "1"; $P = Start-Process -FilePath $GodotExe -ArgumentList $Args -WorkingDirectory $ProjectRoot -WindowStyle Hidden -PassThru }
     finally { if ($Had) { $env:BREAKPOINT_RUNTIME_DISABLED = $Old } else { Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue } }
-    H "client started PID=$($P.Id) log=$CLog"
+    Write-H2Log "client started PID=$($P.Id) log=$CLog"
     return $P
 }
 function Wait-Marker([string]$Path, [string]$Marker, [System.Diagnostics.Process]$P, [int]$Seconds) {
@@ -122,7 +122,7 @@ function Events([string]$Path) {
 $A = $null; $B1 = $null; $B2 = $null; $C = $null; $Exit = 1
 try {
     foreach ($P in @(24580,24581,24680,24681,24780)) { if (-not (Port-Free $P)) { throw "UDP port $P is already in use." } }
-    H "SM0-H2.1 start HEAD=$Head handoffs=$Handoffs profile=$CrashProfile"
+    Write-H2Log "SM0-H2.1 start HEAD=$Head handoffs=$Handoffs profile=$CrashProfile"
     $A = Start-Godot "server-a" $ALog @("--authority-id=authority/sm0/a","--zone-id=zone/earth/sm0/west","--gameplay-port=24580","--control-port=24680","--peer-control-port=24681","--stop-file=$StopFile")
     $B1 = Start-Godot "server-b-crash-target" $B1Log @("--authority-id=authority/sm0/b","--zone-id=zone/earth/sm0/east","--gameplay-port=24581","--control-port=24681","--peer-control-port=24680","--stop-file=$StopFile","--fault-profile=$CrashProfile")
     $State = [ordered]@{ schema="distributed_world_simulator.sm0_h2_launcher_state.v1"; project_root=$ProjectRoot; git_head=$Head; log_directory=$LogDir; processes=@([ordered]@{role="server-a";pid=$A.Id},[ordered]@{role="server-b-crash-target";pid=$B1.Id}) }
@@ -144,7 +144,7 @@ try {
     }
     if (-not $Seen) { throw "H2 crash point was not observed." }
 
-    $CrashPid = $B1.Id; H "Crash point observed; force-killing target PID=$CrashPid"
+    $CrashPid = $B1.Id; Write-H2Log "Crash point observed; force-killing target PID=$CrashPid"
     Stop-Process -Id $CrashPid -Force -ErrorAction Stop
     try { $B1.WaitForExit(5000) } catch {}
     if (Alive $CrashPid) { throw "Target PID=$CrashPid survived forced crash." }
@@ -154,7 +154,7 @@ try {
     $State.processes += [ordered]@{role="server-b-restarted";pid=$B2.Id}; $State | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $StatePath -Encoding UTF8
     Wait-Marker $B2Log '"event":"SM0_SERVER_READY"' $B2 20
     Wait-Marker $B2Log '"event":"SM0_AUTHORITY_PEER_SYNCED"' $B2 20
-    H "Restarted target synchronized; waiting for convergence."
+    Write-H2Log "Restarted target synchronized; waiting for convergence."
 
     $D = (Get-Date).AddSeconds($TimeoutSeconds + 10)
     while (-not $C.HasExited -and (Get-Date) -lt $D) {
