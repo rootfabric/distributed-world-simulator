@@ -3,10 +3,11 @@ extends SceneTree
 const ClockProbe = preload(
 	"res://tests/runtime/support/v0_p1_clock_purity_probe.gd"
 )
-
 const BEACON_ID := "item/shared/beacon/1"
 const BATTERY_ID := "item/player/a/battery"
 const BEACON_STACK_ID := "item/player/a/beacons"
+const CONTAINER_ID := "container/shared/crate/1"
+const MOUNT_ID := "mount/shared/socket/1"
 
 var assertions: int = 0
 var failures: Array[String] = []
@@ -20,7 +21,9 @@ func _run() -> void:
 	_test_existing_player_ensure_is_mutation_free()
 	_test_pickup_publishes_slot_before_pure_snapshot()
 	_test_split_publishes_slot_before_pure_snapshot()
+	_test_detach_publishes_slot_before_pure_snapshot()
 	_test_rejected_transfer_does_not_normalize()
+	_test_invalid_hotbar_transfer_is_rejection_pure()
 	_finish()
 
 
@@ -122,6 +125,35 @@ func _test_split_publishes_slot_before_pure_snapshot() -> void:
 	_assert(String(after.get("checksum", "changed")) == before_checksum, "rejected split preserves canonical checksum")
 
 
+func _test_detach_publishes_slot_before_pure_snapshot() -> void:
+	var graph = _new_graph("detach")
+	var mounted := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/mount/1",
+		"item.mount",
+		{"item_id": BEACON_STACK_ID, "mount_id": MOUNT_ID},
+		_mount_context()
+	)
+	_assert(_ok(mounted), "mount succeeds before detach regression")
+	var mounted_item_id := String(Dictionary(mounted.get("details", {})).get("item_id", ""))
+	_assert(not mounted_item_id.is_empty(), "mount returns canonical mounted identity")
+	var detached := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/detach/1",
+		"item.detach",
+		{"mount_id": MOUNT_ID},
+		_mount_context()
+	)
+	_assert(_ok(detached), "detach succeeds through canonical execute")
+	var snapshot: Dictionary = detached.get("snapshot", {})
+	var location := _item_location(snapshot, mounted_item_id)
+	_assert(String(location.get("kind", "")) == "INVENTORY", "detach output returns to canonical inventory")
+	_assert(String(location.get("player_id", "")) == "a", "detach output preserves canonical owner")
+	_assert(int(location.get("slot_index", -1)) >= 0, "detach publishes slot_index before pure snapshot")
+
+
 func _test_rejected_transfer_does_not_normalize() -> void:
 	var graph = _new_graph("transfer-reject")
 	var battery: Dictionary = Dictionary(graph._items[BATTERY_ID]).duplicate(true)
@@ -150,9 +182,68 @@ func _test_rejected_transfer_does_not_normalize() -> void:
 	_assert(String(after.get("checksum", "changed")) == String(before.get("checksum", "")), "rejected transfer does not normalize slotless canonical state")
 
 
+func _test_invalid_hotbar_transfer_is_rejection_pure() -> void:
+	var graph = _new_graph("hotbar-reject")
+	var opened := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/hotbar/open",
+		"container.open",
+		{"container_id": CONTAINER_ID},
+		_crate_context()
+	)
+	_assert(_ok(opened), "crate opens before hotbar rejection regression")
+	var moved := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/hotbar/container",
+		"item.transfer",
+		{
+			"item_id": BATTERY_ID,
+			"quantity": -1,
+			"target_container_id": CONTAINER_ID,
+			"target_slot_index": 0,
+			"target_item_id": "",
+		}
+	)
+	_assert(_ok(moved), "battery moves canonically into crate before invalid hotbar transfer")
+	var before := graph.create_snapshot()
+	var before_location := _item_location(before, BATTERY_ID)
+	_assert(String(before_location.get("kind", "")) == "CONTAINER", "battery is canonical container item before rejected hotbar transfer")
+	var rejected := graph.execute(
+		"a",
+		1,
+		"operation/v0-p1/clock/hotbar/rejected",
+		"item.transfer",
+		{
+			"item_id": BATTERY_ID,
+			"quantity": -1,
+			"target_container_id": "hotbar/a",
+			"target_slot_index": 99,
+			"target_item_id": "",
+		}
+	)
+	_assert(String(rejected.get("error_code", "")) == "INVALID_HOTBAR_INDEX", "invalid hotbar transfer is rejected before mutation")
+	var after := graph.create_snapshot()
+	_assert(int(after.get("revision", -2)) == int(before.get("revision", -1)), "invalid hotbar rejection preserves revision")
+	_assert(int(after.get("tick", -2)) == int(before.get("tick", -1)), "invalid hotbar rejection preserves tick")
+	_assert(String(after.get("checksum", "changed")) == String(before.get("checksum", "")), "invalid hotbar rejection preserves canonical checksum")
+	_assert(String(_item_location(after, BATTERY_ID).get("kind", "")) == "CONTAINER", "invalid hotbar rejection preserves container membership")
+
+
 func _pickup_context() -> Dictionary:
-	var player_position := Vector3(0.0, 0.4, 0.0)
-	var target := Vector3(1.2, 0.4, -3.4)
+	return _look_context(Vector3(0.0, 0.4, 0.0), Vector3(1.2, 0.4, -3.4))
+
+
+func _crate_context() -> Dictionary:
+	return _look_context(Vector3(0.0, 0.4, 0.0), Vector3(3.0, 0.8, -2.0))
+
+
+func _mount_context() -> Dictionary:
+	return _look_context(Vector3(0.0, 0.4, -1.0), Vector3(0.0, 0.17, -5.0))
+
+
+func _look_context(player_position: Vector3, target: Vector3) -> Dictionary:
 	var view := (target - player_position).normalized()
 	return {
 		"player_position": _vector_dto(player_position),
