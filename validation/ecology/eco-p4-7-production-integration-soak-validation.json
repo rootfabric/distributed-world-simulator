@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-15-R7-BOUNDED-ROTATING-INTEGRATION-REPAIR",
+  "revision": "ECO-P4.7-2026-08-15-R8-BOUNDED-ROTATING-OBSERVABLE",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "CANDIDATE_BOUNDED_ROTATING_CANONICAL_RUNNER_EXACT_COMMITTED_A_B_PENDING",
   "scope": "BOUNDED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
@@ -17,8 +17,8 @@
     "validation_blob_after_acceptance": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
   },
   "candidate_blobs": {
-    "soak_test": "35ec48936f53b924a462d5cbf0b55036d6eec51d",
-    "canonical_runner_legacy_filename": "243ae60935a50e03bfb88efad4d1c22088541aca"
+    "soak_test": "49821079787479212feb78a10a4703bc52ba89b3",
+    "canonical_runner_legacy_filename": "5d44dead6bf9bcb5f921e3baf4852acc54adff2c"
   },
   "repair_evidence": {
     "r5_type_repair": {
@@ -39,6 +39,12 @@
       "timeout_increased": false,
       "production_runtime_changed": false,
       "accepted_ancestors_changed": false
+    },
+    "r8_observability": {
+      "reason": "two prior 600-second runs exposed only an external heartbeat and did not identify the internal ecology phase",
+      "correction": "the test writes a non-canonical phase string to an environment-provided temporary file and the PowerShell runner reports that phase on each 10-second heartbeat",
+      "canonical_hashes_include_progress_data": false,
+      "stdout_determinism_affected": false
     }
   },
   "scenario": {
@@ -75,7 +81,8 @@
     "MISSING_INTEREST_EXPLICIT",
     "AUTHORITATIVE_INPUT_ORDER_INDEPENDENCE",
     "FRESH_PROCESS_DETERMINISM",
-    "GLOBAL_RNG_NOT_CONSUMED"
+    "GLOBAL_RNG_NOT_CONSUMED",
+    "INTERNAL_PHASE_HEARTBEAT"
   ],
   "boundary": {
     "not_a_scheduler": true,
@@ -89,6 +96,7 @@
     "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
     "runner_name_note": "legacy filename retained for local compatibility; semantics are canonical",
     "heartbeat_seconds": 10,
+    "heartbeat_includes_internal_phase": true,
     "timeout_seconds_per_process": 600,
     "hash_policy": "exact committed A/B must be byte-identical; successful first canonical run freezes soak_hash and final_interest_hash in lifecycle acceptance evidence",
     "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN_AFTER_BOUNDED_ROTATING_REPAIR"
