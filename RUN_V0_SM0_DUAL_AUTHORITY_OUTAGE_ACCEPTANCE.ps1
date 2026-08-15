@@ -406,7 +406,7 @@ try {
     if ($KillRequestGapMs -gt 500) { throw "Dual-authority kill request gap exceeded 500 ms: $KillRequestGapMs" }
     try { $null = $B1.WaitForExit(5000) } catch {}
     try { $null = $A1.WaitForExit(5000) } catch {}
-    if (Test-H32Alive $A1Pid -or Test-H32Alive $B1Pid) { throw "At least one authority survived forced total outage." }
+    if ((Test-H32Alive $A1Pid) -or (Test-H32Alive $B1Pid)) { throw "At least one authority survived forced total outage." }
     $C.Refresh()
     if ($C.HasExited) { throw "Client exited during total-outage interval before server restart." }
     Wait-H32Ports @(24580,24581,24680,24681)
