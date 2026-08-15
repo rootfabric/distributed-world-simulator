@@ -455,11 +455,19 @@ catch {
 Write-Host ""
 Write-Host "[V0] Session started successfully." -ForegroundColor Green
 Write-Host "[V0] Server PID : $($ServerProcess.Id)"
-Write-Host "[V0] Runtime MCP: $RuntimeBridgeOwner" -ForegroundColor DarkGray
+if ($CallerRuntimeBridgeDisabled) {
+    Write-Host "[V0] Runtime MCP: disabled by BREAKPOINT_RUNTIME_DISABLED" -ForegroundColor DarkGray
+}
+else {
+    Write-Host "[V0] Runtime MCP: $RuntimeBridgeOwner" -ForegroundColor DarkGray
+}
 if ($ClientRecords.Count -gt 0) {
     Write-Host "[V0] Clients    : $($ClientRecords.Count)"
     foreach ($ClientRecord in $ClientRecords) {
-        $BridgeSuffix = " +runtime-mcp" if [bool]$ClientRecord.runtime_bridge else ""
+        $BridgeSuffix = ""
+        if ([bool]$ClientRecord.runtime_bridge) {
+            $BridgeSuffix = " +runtime-mcp"
+        }
         Write-Host "       $($ClientRecord.identity) -> PID $($ClientRecord.pid)$BridgeSuffix"
     }
 }
