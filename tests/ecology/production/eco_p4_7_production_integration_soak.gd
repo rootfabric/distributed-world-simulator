@@ -12,6 +12,8 @@ const ReadModel = preload("res://scripts/ecology/production/ecology_client_read_
 const REGION_COUNT := 8
 const CYCLE_COUNT := 12
 const ORIGIN_WORLD_TIME := 100.0
+const ECOLOGY_STEP_INTERVAL := 10.0
+const EXPECTED_ECOLOGY_GENERATION_STEPS := REGION_COUNT
 const SERVERS: Array[String] = ["server-a", "server-b", "server-c"]
 
 var assertions := 0
@@ -30,6 +32,8 @@ func _init() -> void:
 	_check(String(forward.get("soak_hash", "")) == String(reverse.get("soak_hash", "")), "region processing order converges to identical soak hash")
 	_check(String(forward.get("final_interest_hash", "")) == String(reverse.get("final_interest_hash", "")), "region processing order converges to identical interest projection")
 	_check(int(forward.get("handoff_count", -1)) == int(reverse.get("handoff_count", -2)), "handoff count order-independent")
+	_check(int(forward.get("ecology_generation_steps", -1)) == int(reverse.get("ecology_generation_steps", -2)), "deep ecology generation count order-independent")
+	_check(int(forward.get("ecology_generation_steps", -1)) == EXPECTED_ECOLOGY_GENERATION_STEPS, "every region executes exactly one real ecology generation")
 	_check(int(forward.get("save_load_count", -1)) == REGION_COUNT * CYCLE_COUNT, "every region persists each cycle")
 	_check(int(forward.get("client_update_count", -1)) == REGION_COUNT * CYCLE_COUNT, "every region updates client cache each cycle")
 	_check(int(forward.get("interest_projection_count", -1)) == CYCLE_COUNT, "one bounded interest projection per cycle")
@@ -43,6 +47,7 @@ func _init() -> void:
 	print("soak_hash=" + String(forward["soak_hash"]))
 	print("final_interest_hash=" + String(forward["final_interest_hash"]))
 	print("handoff_count=" + str(forward["handoff_count"]))
+	print("ecology_generation_steps=" + str(forward["ecology_generation_steps"]))
 	print("save_load_count=" + str(forward["save_load_count"]))
 	print("client_update_count=" + str(forward["client_update_count"]))
 	print("interest_projection_count=" + str(forward["interest_projection_count"]))
@@ -61,7 +66,7 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 		var region_id := "planet-01:soak_%02d" % index
 		var region := RegionState.create_region_state(region_id, ORIGIN_WORLD_TIME, p3_initial)
 		_check(bool(RegionState.validate_region_state(region).get("success", false)), "initial region validates")
-		var clock := EcologyClock.create_clock(region, 1.0)
+		var clock := EcologyClock.create_clock(region, ECOLOGY_STEP_INTERVAL)
 		var initial_target := ORIGIN_WORLD_TIME + 0.25 + float(index) * 0.05
 		var catchup := OfflineCatchup.create(region, initial_target, clock)
 		catchup = OfflineCatchup.advance_batch(catchup, 10)
@@ -76,6 +81,7 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 		client_cache[region_id] = summary
 
 	var handoff_count := 0
+	var ecology_generation_steps := 0
 	var save_load_count := 0
 	var client_update_count := 0
 	var interest_projection_count := 0
@@ -96,9 +102,14 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 			_check(bool(OfflineCatchup.validate_state(catchup).get("success", false)), "cycle restore catch-up validates")
 			var elapsed := 1.0 + 0.5 * float((cycle + index) % 3)
 			catchup = OfflineCatchup.extend_elapsed(catchup, elapsed)
+			var before_generation := int(Dictionary(catchup["region_state"])["ecology_generation"])
 			var batch_limit := 1 + ((cycle * 2 + index) % 4)
 			catchup = OfflineCatchup.advance_batch(catchup, batch_limit)
 			_check(bool(OfflineCatchup.validate_state(catchup).get("success", false)), "bounded batch catch-up validates")
+			var after_generation := int(Dictionary(catchup["region_state"])["ecology_generation"])
+			var generation_delta := after_generation - before_generation
+			_check(generation_delta >= 0 and generation_delta <= 1, "bounded soak advances at most one deep ecology generation per region-cycle")
+			ecology_generation_steps += generation_delta
 			max_remaining_due_steps = max(max_remaining_due_steps, int(catchup["remaining_due_steps"]))
 
 			var next_snapshot := ProductionPersistence.create_snapshot(catchup)
@@ -169,9 +180,11 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 	var canonical := [
 		REGION_COUNT,
 		CYCLE_COUNT,
+		ECOLOGY_STEP_INTERVAL,
 		final_entries,
 		String(final_interest.get("interest_hash", "")),
 		handoff_count,
+		ecology_generation_steps,
 		save_load_count,
 		client_update_count,
 		interest_projection_count,
@@ -181,6 +194,7 @@ func _run_soak(reverse_order: bool) -> Dictionary:
 		"soak_hash": JSON.stringify(canonical).sha256_text(),
 		"final_interest_hash": String(final_interest.get("interest_hash", "")),
 		"handoff_count": handoff_count,
+		"ecology_generation_steps": ecology_generation_steps,
 		"save_load_count": save_load_count,
 		"client_update_count": client_update_count,
 		"interest_projection_count": interest_projection_count,
