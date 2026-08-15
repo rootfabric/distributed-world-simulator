@@ -3,6 +3,7 @@ extends SceneTree
 const Authority = preload("res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd")
 
 var _assertions := 0
+var _failed := false
 
 
 func _init() -> void:
@@ -71,6 +72,10 @@ func _init() -> void:
 	_expect(not bool(stale.get("success", false)), "stale sequence rejected")
 	_expect(String(stale.get("error_code", "")) == "STALE_HANDOFF_INPUT_SEQUENCE", "stale sequence error is precise")
 
+	if _failed:
+		print("SM0 handoff import: FAIL (%d assertions)" % _assertions)
+		quit(1)
+		return
 	print("SM0 handoff import: PASS (%d assertions)" % _assertions)
 	quit(0)
 
@@ -83,8 +88,8 @@ func _expect(condition: bool, message: String) -> void:
 	_assertions += 1
 	if condition:
 		return
+	_failed = true
 	push_error("SM0 handoff import assertion failed: %s" % message)
-	quit(1)
 
 
 func _expect_close(actual: float, expected: float, message: String) -> void:
