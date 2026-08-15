@@ -15,8 +15,11 @@ function ConvertTo-ProcessArgument {
 function Invoke-GodotProcess {
     param(
         [string[]]$Arguments,
-        [string]$Label
+        [string]$Label,
+        [int]$TimeoutSeconds = 120
     )
+
+    Write-Host ">> $Label"
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $GodotPath
@@ -28,24 +31,56 @@ function Invoke-GodotProcess {
 
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $psi
-    if (-not $process.Start()) {
-        throw "$Label failed to start Godot"
-    }
 
-    $stdout = $process.StandardOutput.ReadToEnd()
-    $stderr = $process.StandardError.ReadToEnd()
-    $process.WaitForExit()
-    $combined = ($stdout + [Environment]::NewLine + $stderr).Trim()
-    if ($combined) {
-        Write-Host $combined
+    try {
+        if (-not $process.Start()) {
+            throw "$Label failed to start Godot"
+        }
+
+        # Drain both redirected streams concurrently. Reading stdout to EOF before
+        # stderr can deadlock if Godot fills the stderr pipe on Windows.
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+
+        $timeoutMilliseconds = $TimeoutSeconds * 1000
+        if (-not $process.WaitForExit($timeoutMilliseconds)) {
+            try {
+                $process.Kill()
+            }
+            catch {
+                Write-Warning "$Label timed out and Kill() also reported: $($_.Exception.Message)"
+            }
+            $process.WaitForExit()
+
+            $stdout = $stdoutTask.Result
+            $stderr = $stderrTask.Result
+            $combined = ($stdout + [Environment]::NewLine + $stderr).Trim()
+            if ($combined) {
+                Write-Host $combined
+            }
+            throw "$Label timed out after $TimeoutSeconds seconds"
+        }
+
+        # Parameterless WaitForExit ensures asynchronous stream reads are fully drained.
+        $process.WaitForExit()
+        $stdout = $stdoutTask.Result
+        $stderr = $stderrTask.Result
+        $combined = ($stdout + [Environment]::NewLine + $stderr).Trim()
+
+        if ($combined) {
+            Write-Host $combined
+        }
+        if ($process.ExitCode -ne 0) {
+            throw "$Label failed with exit code $($process.ExitCode)"
+        }
+        if ($combined -match '(?m)^SCRIPT ERROR:' -or $combined -match '(?m)^ERROR:') {
+            throw "$Label emitted Godot error output despite zero exit code"
+        }
+        return $combined
     }
-    if ($process.ExitCode -ne 0) {
-        throw "$Label failed with exit code $($process.ExitCode)"
+    finally {
+        $process.Dispose()
     }
-    if ($combined -match '(?m)^SCRIPT ERROR:' -or $combined -match '(?m)^ERROR:') {
-        throw "$Label emitted Godot error output despite zero exit code"
-    }
-    return $combined
 }
 
 try {
