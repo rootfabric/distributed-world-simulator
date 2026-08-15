@@ -1,0 +1,102 @@
+{
+  "schema": "distributed_world_simulator.sm0_two_authority_handoff_lab.v1",
+  "checkpoint": "V0-SM0-TWO-AUTHORITY-SEAMLESS-HANDOFF-LAB",
+  "status": "PLANNED_IMPLEMENTATION_NOT_STARTED",
+  "branch": "feature/sm0-two-authority-seamless-handoff-lab",
+  "base_branch": "feature/v0-playable-product-frontier",
+  "base_sha": "d66378b98b69756fab6c2a93b80b74db9ccd1980",
+  "runtime_tested_ancestor_sha": "7f4177b32ce76191aecea60f2f8963c1b0ffd02e",
+  "world_id": "earth",
+  "topology": {
+    "server_count": 2,
+    "graphical_client_count": 1,
+    "directory_mode": "SERVER_A_EMBEDDED_LAB_LEADER",
+    "server_a": {
+      "authority_id": "authority/sm0/a",
+      "zone_id": "zone/earth/sm0/west",
+      "gameplay_host": "127.0.0.1",
+      "gameplay_port": 24580,
+      "control_host": "127.0.0.1",
+      "control_port": 24680
+    },
+    "server_b": {
+      "authority_id": "authority/sm0/b",
+      "zone_id": "zone/earth/sm0/east",
+      "gameplay_host": "127.0.0.1",
+      "gameplay_port": 24581,
+      "control_host": "127.0.0.1",
+      "control_port": 24681
+    }
+  },
+  "zone_rule": {
+    "frame": "EARTH_LOCAL_ENU_AT_CANONICAL_MVP_SPAWN",
+    "canonical_boundary_east_offset_m": 0.0,
+    "zone_a_rule": "east_offset_m < 0",
+    "zone_b_rule": "east_offset_m >= 0",
+    "diagnostic_extent_east_m": [-100.0, 100.0],
+    "diagnostic_extent_north_m": [-100.0, 100.0],
+    "warm_route_distance_m": 10.0,
+    "prepare_distance_m": 2.0
+  },
+  "handoff_protocol": {
+    "mode": "FREEZE_PREPARE_COMMIT_ACTIVATE",
+    "single_active_player_writer": true,
+    "authority_epoch_increment_required": true,
+    "stable_logical_player_id": true,
+    "stable_player_entity_id": true,
+    "target_shadow_prepare": true,
+    "pre_commit_abort_compensation": true,
+    "post_commit_source_reactivation_forbidden": true,
+    "replay_safe_transfer_id": true,
+    "target_standby_connection_without_normal_join": true,
+    "client_process_restart_allowed": false
+  },
+  "required_state_continuity": [
+    "logical_player_id",
+    "player_entity_id",
+    "canonical_transform",
+    "velocity",
+    "movement_mode",
+    "last_processed_input_sequence"
+  ],
+  "deferred_until_later_sm0_stage": [
+    "player_owned_inventory_snapshot_transfer"
+  ],
+  "explicit_non_goals": [
+    "N3_ACCEPTANCE",
+    "N4_ACCEPTANCE",
+    "N5_ACCEPTANCE",
+    "N6_ACCEPTANCE",
+    "NATS_REQUIRED",
+    "JETSTREAM_REQUIRED",
+    "DYNAMIC_ZONE_BALANCING",
+    "CROSS_ZONE_CONSTRUCTION",
+    "CROSS_ZONE_WORLD_ITEM_TRANSACTION",
+    "DISTRIBUTED_MATTER_MUTATION",
+    "ORBITAL_HANDOFF"
+  ],
+  "acceptance": {
+    "two_dedicated_server_processes": true,
+    "one_graphical_client_process": true,
+    "a_to_b_handoff": true,
+    "b_to_a_handoff": true,
+    "same_logical_player_id": true,
+    "same_player_entity_id": true,
+    "authority_epoch_monotonic": true,
+    "max_active_player_writers": 1,
+    "target_standby_creates_player": false,
+    "max_localhost_handoff_ms": 500,
+    "max_position_gap_m": 0.5,
+    "automated_round_trip_crossings": 20,
+    "normal_v0_launcher_regression_required": true,
+    "clean_shutdown_required": true,
+    "unexpected_error_count": 0
+  },
+  "semantic_donors": [
+    {
+      "branch": "feature/mw8-regional-authority-handoff",
+      "commit": "2da7c91ad31fab887a4bcb9669e993958e339c48",
+      "reuse": "handoff invariants only; no wholesale merge"
+    }
+  ]
+}
