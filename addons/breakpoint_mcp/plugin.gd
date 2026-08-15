@@ -20,6 +20,7 @@ const RUNTIME_SCRIPT := "res://addons/breakpoint_mcp/runtime_bridge.gd"
 var _server: Node = null
 var _dock: Control = null
 var _selection: EditorSelection = null
+var _owns_runtime_autoload: bool = false
 
 
 func _enter_tree() -> void:
@@ -34,9 +35,12 @@ func _enter_tree() -> void:
 	dock.set_server(_server)
 	add_control_to_dock(DOCK_SLOT_RIGHT_UL, dock)
 	_dock = dock
-	# Inject the runtime bridge into every run of the project so the runtime_*
-	# tools work as soon as the game starts. Removed cleanly on disable.
-	add_autoload_singleton(RUNTIME_AUTOLOAD, RUNTIME_SCRIPT)
+	# A project may deliberately track the runtime bridge in project.godot. In that
+	# case the plugin must NOT re-register it: EditorPlugin.add_autoload_singleton()
+	# rewrites ProjectSettings and can canonicalize a stable res:// entry to uid://
+	# during editor/import startup. Only own and later remove an autoload that this
+	# plugin actually had to create for a project that did not already declare it.
+	_ensure_runtime_autoload()
 	# D3: emit resources/updated triggers. Selection + edited scene are reflected
 	# in godot://editor-state; the edited tree in godot://scene-tree.
 	_selection = EditorInterface.get_selection()
@@ -60,7 +64,9 @@ func _exit_tree() -> void:
 	_selection = null
 	if scene_changed.is_connected(_on_scene_changed):
 		scene_changed.disconnect(_on_scene_changed)
-	remove_autoload_singleton(RUNTIME_AUTOLOAD)
+	if _owns_runtime_autoload:
+		remove_autoload_singleton(RUNTIME_AUTOLOAD)
+		_owns_runtime_autoload = false
 	if _server:
 		_server.shutdown()
 		_server.queue_free()
@@ -68,6 +74,15 @@ func _exit_tree() -> void:
 	# Don't leave the agent latched paused once the plugin (and its dock) are gone.
 	PauseLatch.set_paused(false)
 	print("[breakpoint_mcp] plugin disabled")
+
+
+func _ensure_runtime_autoload() -> void:
+	_owns_runtime_autoload = false
+	var setting_name := "autoload/%s" % RUNTIME_AUTOLOAD
+	if ProjectSettings.has_setting(setting_name):
+		return
+	add_autoload_singleton(RUNTIME_AUTOLOAD, RUNTIME_SCRIPT)
+	_owns_runtime_autoload = true
 
 
 ## D3: the editor selection changed — godot://editor-state reflects the selection.

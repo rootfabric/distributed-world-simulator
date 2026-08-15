@@ -18,6 +18,9 @@ param(
     [ValidateRange(0, 10000)]
     [int]$ClientLaunchDelayMs = 1000,
 
+    [ValidateSet("client-a", "server", "none")]
+    [string]$RuntimeBridgeOwner = "client-a",
+
     [switch]$Stop,
     [switch]$Restart,
     [switch]$AllowUnstabilized
@@ -41,6 +44,12 @@ $LauncherRoot = Join-Path $LocalAppData "DistributedWorldSimulator\V0MvpLauncher
 $StatePath = Join-Path $LauncherRoot "session.json"
 New-Item -ItemType Directory -Force -Path $LauncherRoot | Out-Null
 
+$CallerRuntimeBridgeDisabled = $false
+if (Test-Path Env:BREAKPOINT_RUNTIME_DISABLED) {
+    $CallerRuntimeBridgeDisabledValue = ([string]$env:BREAKPOINT_RUNTIME_DISABLED).Trim().ToLowerInvariant()
+    $CallerRuntimeBridgeDisabled = $CallerRuntimeBridgeDisabledValue -in @("1", "true", "yes", "on")
+}
+
 function Test-ProcessAlive {
     param([int]$ProcessId)
     if ($ProcessId -lt 1) {
@@ -61,6 +70,54 @@ function Get-PlayerIdentity {
         return ([char](97 + $Index)).ToString()
     }
     return "p$($Index + 1)"
+}
+
+function Start-V0ChildProcess {
+    param(
+        [string]$FilePath,
+        [array]$ArgumentList,
+        [string]$WorkingDirectory,
+        [bool]$EnableRuntimeBridge,
+        [switch]$Hidden
+    )
+
+    # Windows PowerShell 5.1 Start-Process has no -Environment parameter. Temporarily
+    # set the parent process environment only for child creation, then restore it.
+    # Every V0 process inherits the same autoload, so exactly one selected process may
+    # own the fixed BreakpointRuntimeBridge loopback port (9081 by default).
+    $HadDisabledValue = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
+    $PreviousDisabledValue = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        $ResolvedEnableRuntimeBridge = $EnableRuntimeBridge -and -not $CallerRuntimeBridgeDisabled
+        if ($ResolvedEnableRuntimeBridge) {
+            Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        }
+
+        if ($Hidden) {
+            return Start-Process `
+                -FilePath $FilePath `
+                -ArgumentList $ArgumentList `
+                -WorkingDirectory $WorkingDirectory `
+                -WindowStyle Hidden `
+                -PassThru
+        }
+        return Start-Process `
+            -FilePath $FilePath `
+            -ArgumentList $ArgumentList `
+            -WorkingDirectory $WorkingDirectory `
+            -PassThru
+    }
+    finally {
+        if ($HadDisabledValue) {
+            $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousDisabledValue
+        }
+        else {
+            Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 function Get-GitText {
@@ -174,6 +231,7 @@ function Save-SessionState {
         world = $World
         godot_server_exe = $GodotExe
         godot_client_exe = $GodotGuiExe
+        runtime_bridge_owner = $RuntimeBridgeOwner
         log_directory = $LogDirectory
         server = [ordered]@{
             pid = $ServerProcessId
@@ -304,13 +362,14 @@ try {
         "--network-debug-stay-open"
     )
 
+    $ServerRuntimeBridgeEnabled = ($RuntimeBridgeOwner -eq "server")
     Write-Host "[V0] Starting dedicated server on $ServerAddress`:$Port..."
-    $ServerProcess = Start-Process `
+    $ServerProcess = Start-V0ChildProcess `
         -FilePath $GodotExe `
         -ArgumentList $ServerArgs `
         -WorkingDirectory $ProjectRoot `
-        -WindowStyle Hidden `
-        -PassThru
+        -EnableRuntimeBridge $ServerRuntimeBridgeEnabled `
+        -Hidden
     $SpawnedProcesses += $ServerProcess
     Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc $SourceIdentity
 
@@ -357,28 +416,21 @@ try {
                 "--network-debug-stay-open"
             )
 
+            $ClientRuntimeBridgeEnabled = ($RuntimeBridgeOwner -eq "client-a" -and $Identity -eq "a")
             Write-Host "[V0] Starting client $Identity..."
-            if ($GodotGuiExe -eq $GodotExe) {
-                $ClientProcess = Start-Process `
-                    -FilePath $GodotGuiExe `
-                    -ArgumentList $ClientArgs `
-                    -WorkingDirectory $ProjectRoot `
-                    -WindowStyle Hidden `
-                    -PassThru
-            }
-            else {
-                $ClientProcess = Start-Process `
-                    -FilePath $GodotGuiExe `
-                    -ArgumentList $ClientArgs `
-                    -WorkingDirectory $ProjectRoot `
-                    -PassThru
-            }
+            $ClientProcess = Start-V0ChildProcess `
+                -FilePath $GodotGuiExe `
+                -ArgumentList $ClientArgs `
+                -WorkingDirectory $ProjectRoot `
+                -EnableRuntimeBridge $ClientRuntimeBridgeEnabled `
+                -Hidden:($GodotGuiExe -eq $GodotExe)
 
             $SpawnedProcesses += $ClientProcess
             $ClientRecord = [ordered]@{
                 identity = $Identity
                 pid = $ClientProcess.Id
                 log = $ClientLog
+                runtime_bridge = $ClientRuntimeBridgeEnabled -and -not $CallerRuntimeBridgeDisabled
             }
             $ClientRecords += $ClientRecord
             Save-SessionState $ServerProcess $ClientRecords $LogDirectory $StartedUtc $SourceIdentity
@@ -403,10 +455,20 @@ catch {
 Write-Host ""
 Write-Host "[V0] Session started successfully." -ForegroundColor Green
 Write-Host "[V0] Server PID : $($ServerProcess.Id)"
+if ($CallerRuntimeBridgeDisabled) {
+    Write-Host "[V0] Runtime MCP: disabled by BREAKPOINT_RUNTIME_DISABLED" -ForegroundColor DarkGray
+}
+else {
+    Write-Host "[V0] Runtime MCP: $RuntimeBridgeOwner" -ForegroundColor DarkGray
+}
 if ($ClientRecords.Count -gt 0) {
     Write-Host "[V0] Clients    : $($ClientRecords.Count)"
     foreach ($ClientRecord in $ClientRecords) {
-        Write-Host "       $($ClientRecord.identity) -> PID $($ClientRecord.pid)"
+        $BridgeSuffix = ""
+        if ([bool]$ClientRecord.runtime_bridge) {
+            $BridgeSuffix = " +runtime-mcp"
+        }
+        Write-Host "       $($ClientRecord.identity) -> PID $($ClientRecord.pid)$BridgeSuffix"
     }
 }
 else {

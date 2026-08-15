@@ -1,6 +1,7 @@
 extends SceneTree
 
 const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
+const MVP_LAUNCHER_PATH := "res://RUN_V0_MVP.ps1"
 
 var failures: Array[String] = []
 var assertions: int = 0
@@ -57,6 +58,8 @@ func _init() -> void:
 	]))
 	_assert(not bool(mixed_modes.get("success", true)), "network MVP rejects mixed playground mode")
 
+	_test_runtime_bridge_process_isolation()
+
 	if failures.is_empty():
 		print("V0-S1 MVP launch options: PASS (%d assertions)" % assertions)
 		quit(0)
@@ -65,6 +68,33 @@ func _init() -> void:
 		push_error(failure)
 	print("V0-S1 MVP launch options: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
+
+
+func _test_runtime_bridge_process_isolation() -> void:
+	_assert(FileAccess.file_exists(MVP_LAUNCHER_PATH), "V0 launcher source exists")
+	if not FileAccess.file_exists(MVP_LAUNCHER_PATH):
+		return
+	var launcher := FileAccess.get_file_as_string(MVP_LAUNCHER_PATH)
+	_assert(
+		launcher.contains('[ValidateSet("client-a", "server", "none")]'),
+		"launcher exposes one explicit runtime bridge owner"
+	)
+	_assert(
+		launcher.contains('[string]$RuntimeBridgeOwner = "client-a"'),
+		"client A is the default MCP-managed runtime"
+	)
+	_assert(
+		launcher.contains('BREAKPOINT_RUNTIME_DISABLED'),
+		"launcher isolates runtime bridge ownership through child environment"
+	)
+	_assert(
+		launcher.contains('$ServerRuntimeBridgeEnabled = ($RuntimeBridgeOwner -eq "server")'),
+		"dedicated server does not own runtime bridge by default"
+	)
+	_assert(
+		launcher.contains('$ClientRuntimeBridgeEnabled = ($RuntimeBridgeOwner -eq "client-a" -and $Identity -eq "a")'),
+		"only client A owns the default runtime bridge port"
+	)
 
 
 func _assert(condition: bool, message: String) -> void:
