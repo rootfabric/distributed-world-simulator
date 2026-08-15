@@ -1,6 +1,7 @@
 extends SceneTree
 
 const SCENE_PATH := "res://scenes/labs/ecology/eco_vis1_4_population_visual_field.tscn"
+const VIS14_SCRIPT = preload("res://scripts/labs/ecology/eco_vis1_4_population_visual_field.gd")
 const PATCHES := ["A", "B", "C"]
 const EXPECTED_PLANTS := 53
 const EXPECTED_BIOMASS_KG := 11.0
@@ -20,6 +21,11 @@ func _run() -> void:
 	_expect(lab != null, "scene instantiates")
 	if lab == null:
 		_finish(); return
+	_expect(lab.get_script() == VIS14_SCRIPT, "VIS1.4 script is attached")
+	if lab.get_script() != VIS14_SCRIPT:
+		lab.free()
+		_finish()
+		return
 	get_root().add_child(lab)
 	await process_frame
 	await process_frame
