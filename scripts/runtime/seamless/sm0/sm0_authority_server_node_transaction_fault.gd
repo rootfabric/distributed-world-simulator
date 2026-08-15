@@ -3,6 +3,7 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transactio
 const FAULT_PROFILE_H3_INFLIGHT_DUAL_OUTAGE_V1 := "h3-inflight-dual-outage-after-source-retire-v1"
 const FAULT_PROFILE_H3_COMMIT_DECISION_DUAL_OUTAGE_V1 := "h3-commit-decision-dual-outage-v1"
 const FAULT_PROFILE_H3_ACTIVATION_DUAL_OUTAGE_V1 := "h3-activation-dual-outage-before-ack-v1"
+const FAULT_PROFILE_H4_REPEATED_ACTIVATION_DUAL_OUTAGE_V1 := "h4-repeated-activation-dual-outage-v1"
 
 var _transaction_fault_profile := ""
 var _h33_crash_point_emitted := false
@@ -13,6 +14,8 @@ var _h34_committed_ack_suppressed_logged := false
 var _h34_redirect_suppressed_logged := false
 var _h35_crash_point_emitted := false
 var _h35_activate_ack_suppressed_logged := false
+var _h41_crash_point_emitted := false
+var _h41_activate_ack_suppressed_logged := false
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -21,6 +24,7 @@ func setup(config: Dictionary) -> Dictionary:
 		FAULT_PROFILE_H3_INFLIGHT_DUAL_OUTAGE_V1,
 		FAULT_PROFILE_H3_COMMIT_DECISION_DUAL_OUTAGE_V1,
 		FAULT_PROFILE_H3_ACTIVATION_DUAL_OUTAGE_V1,
+		FAULT_PROFILE_H4_REPEATED_ACTIVATION_DUAL_OUTAGE_V1,
 	]:
 		return _failure("SM0_UNKNOWN_TRANSACTION_FAULT_PROFILE", {"fault_profile": _transaction_fault_profile})
 	if String(config.get("recovery_dir", "")).strip_edges().is_empty():
@@ -138,6 +142,57 @@ func _send_gameplay(host: String, port: int, message_type: String, payload: Dict
 				"recovery_generation": _recovery_generation,
 			})
 		return
+
+	if (
+		_transaction_fault_profile == FAULT_PROFILE_H4_REPEATED_ACTIVATION_DUAL_OUTAGE_V1
+		and message_type == "ACTIVATE_ACK"
+	):
+		# A replayed activation against a restored ACTIVE_OWNER must complete the
+		# previous outage. Only a fresh activation is allowed to arm the next one.
+		if not _active_recovery_metadata.is_empty():
+			super._send_gameplay(host, port, message_type, payload, request_id)
+			return
+		var transfer_id := String(payload.get("transfer_id", "")).strip_edges()
+		var persisted := _ensure_active_owner_persisted_for_ack(host, port, message_type, payload)
+		if not bool(persisted.get("success", false)):
+			_invariant("SM0_H4_ACTIVE_OWNER_PERSIST_BEFORE_ACTIVATE_ACK_FAILED", {
+				"transfer_id": transfer_id,
+				"request_id": request_id,
+				"cause": persisted,
+			})
+			return
+		if _recovery_last_phase != ACTIVE_OWNER_PHASE:
+			_invariant("SM0_H4_ACTIVE_OWNER_PHASE_REQUIRED", {
+				"transfer_id": transfer_id,
+				"phase": _recovery_last_phase,
+			})
+			return
+		if not _h41_crash_point_emitted:
+			_h41_crash_point_emitted = true
+			var player: Dictionary = _authority.get_player("a")
+			_event("SM0_H4_CRASH_POINT", {
+				"fault_profile": _transaction_fault_profile,
+				"crash_point": "REPEATED_DUAL_OUTAGE_AFTER_ACTIVE_OWNER_PERSIST_BEFORE_ACTIVATE_ACK",
+				"transfer_id": transfer_id,
+				"recovery_generation": _recovery_generation,
+				"recovery_phase": _recovery_last_phase,
+				"target_authority_id": _authority_id,
+				"directory": _directory,
+				"ownership_epoch": int(player.get("ownership_epoch", 0)),
+				"last_input_sequence": int(player.get("last_input_sequence", 0)),
+			})
+		if not _h41_activate_ack_suppressed_logged:
+			_h41_activate_ack_suppressed_logged = true
+			_event("SM0_H4_TARGET_SEND_SUPPRESSED", {
+				"fault_profile": _transaction_fault_profile,
+				"message_type": "ACTIVATE_ACK",
+				"transfer_id": transfer_id,
+				"request_id": request_id,
+				"target_authority_id": _authority_id,
+				"recovery_generation": _recovery_generation,
+			})
+		return
+
 	super._send_gameplay(host, port, message_type, payload, request_id)
 
 
