@@ -7,6 +7,7 @@ const RecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 const H2_2_RECOVERY_FAULT_PROFILE := "h2-target-crash-after-commit-persist-v1"
+const H2_3_RECOVERY_FAULT_PROFILE := "h2-source-crash-after-retire-persist-v1"
 
 
 func _init() -> void:
@@ -29,7 +30,7 @@ func _init() -> void:
 		recovery_dir if not recovery_dir.is_empty() else "none",
 	])
 	var server
-	if fault_profile == H2_2_RECOVERY_FAULT_PROFILE:
+	if fault_profile in [H2_2_RECOVERY_FAULT_PROFILE, H2_3_RECOVERY_FAULT_PROFILE]:
 		server = RecoveryFaultServerNode.new()
 	elif not fault_profile.is_empty():
 		server = FaultServerNode.new()
