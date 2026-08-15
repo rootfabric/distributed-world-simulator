@@ -22,6 +22,7 @@ var previous_ownership_epoch := 0
 var client
 var assertions := 0
 var failures: Array[String] = []
+var _terminal := false
 
 
 func _init() -> void:
@@ -42,6 +43,7 @@ func _start() -> void:
 	root.add_child(client)
 	client.session_ready.connect(_on_ready)
 	client.connection_failed.connect(_on_failed)
+	client.server_disconnected.connect(_on_server_disconnected)
 	var logical_player_id := "a" if mode == "actor" else "b"
 	var configured: Dictionary = client.setup({
 		"host": host,
@@ -49,8 +51,10 @@ func _start() -> void:
 		"logical_player_id": logical_player_id,
 		"connect_timeout_ms": COMMAND_TIMEOUT_MS,
 		"command_timeout_ms": 10000,
-		"automated_acceptance": true,
+		"automated_acceptance": false,
 		"playable_sandbox": true,
+		"world_id": "earth",
+		"debug_logging": true,
 	})
 	_assert(bool(configured.get("success", false)), "V0-P1 reconnect client configured")
 	if not bool(configured.get("success", false)):
@@ -63,6 +67,12 @@ func _on_ready(_runtime) -> void:
 
 func _on_failed(error_code: String, details: Dictionary) -> void:
 	_fail(error_code, details)
+
+
+func _on_server_disconnected(report: Dictionary) -> void:
+	_fail("V0_P1_RECONNECT_SERVER_DISCONNECTED", {
+		"runtime_report": report.duplicate(true),
+	})
 
 
 func _run() -> void:
@@ -378,11 +388,17 @@ func _player_position(record: Dictionary) -> Vector3:
 
 
 func _complete(state: String, details: Dictionary) -> void:
+	if _terminal:
+		return
+	_terminal = true
 	_write(state, failures.is_empty(), details)
 	_shutdown(0 if failures.is_empty() else 1)
 
 
 func _fail(error_code: String, details: Dictionary = {}) -> void:
+	if _terminal:
+		return
+	_terminal = true
 	failures.append(error_code)
 	_write("FAILED", false, {"error_code": error_code, "cause": details.duplicate(true)})
 	_shutdown(1)
