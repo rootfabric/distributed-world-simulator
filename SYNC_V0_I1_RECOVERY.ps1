@@ -79,18 +79,28 @@ try {
             Write-Host "[V0-I1 1/3] Inventory convergence already present; reusing it." -ForegroundColor DarkGray
         }
 
-        $HasMovement = (
+        # The historical reliable MOVE patch was a temporary V0-NET-001 fallback.
+        # Do NOT install it in the recovered product frontier: S0 now restores the
+        # ordered ENet/NX4 transport that the fallback predated. Mixing that 20 Hz
+        # fallback with the newer surface-yaw camera causes both visible snapping
+        # and a second, incompatible camera-yaw -> X/Z conversion.
+        $LegacyMovementFallback = (
             (Test-TextMarker $EarthMvp "V0-NET-001") -and
             (Test-TextMarker $EarthMvp "move_nonblocking")
         )
-        if (-not $HasMovement) {
-            Write-Host "[V0-I1 2/3] Restoring reliable camera-relative movement fallback..." -ForegroundColor Cyan
-            $MovementPatch = Join-Path $TempDir "v0-i1-movement-reliable-camera-relative.patch"
-            Export-GitPath "$DeliveryRef`:patches/v0-i1-movement-reliable-camera-relative.patch" $MovementPatch
-            Apply-PatchFile $MovementPatch "Historical V0-I1 movement recovery patch"
-        } else {
-            Write-Host "[V0-I1 2/3] Movement recovery already present; reusing it." -ForegroundColor DarkGray
+        if ($LegacyMovementFallback) {
+            throw "Legacy V0-NET-001 reliable movement fallback is already present. Reset this recovery worktree to the published recovery HEAD before running again."
         }
+
+        $HasNx4Movement = (
+            (Test-TextMarker $EarthMvp 'runtime.has_method("advance_local_prediction")') -and
+            (Test-TextMarker $EarthMvp "m3_multiplayer_client_runtime.advance_local_prediction") -and
+            (Test-TextMarker $EarthMvp '"look_yaw": earth_explorer.get_surface_relative_yaw()')
+        )
+        if (-not $HasNx4Movement) {
+            throw "NX4 predicted Earth movement is missing after cumulative I1 recovery. Refusing to install the obsolete reliable MOVE fallback."
+        }
+        Write-Host "[V0-I1 2/3] Keeping NX4 predicted camera-relative movement; legacy reliable MOVE fallback is intentionally NOT installed." -ForegroundColor Cyan
 
         $HasMouseCapture = (
             (Test-TextMarker $InventoryShell "root_control.mouse_filter = Control.MOUSE_FILTER_IGNORE") -and
@@ -112,7 +122,8 @@ try {
 
         foreach ($Check in @(
             @{ Path = $EarthMvp; Marker = "_mvp_inventory_shell"; Name = "inventory convergence" },
-            @{ Path = $EarthMvp; Marker = "move_nonblocking"; Name = "reliable movement recovery" },
+            @{ Path = $EarthMvp; Marker = "m3_multiplayer_client_runtime.advance_local_prediction"; Name = "NX4 predicted movement" },
+            @{ Path = $EarthMvp; Marker = '"look_yaw": earth_explorer.get_surface_relative_yaw()'; Name = "surface-yaw movement convention" },
             @{ Path = $InventoryShell; Marker = "root_control.mouse_filter = Control.MOUSE_FILTER_IGNORE"; Name = "mouse-capture recovery" }
         )) {
             if (-not (Test-TextMarker $Check.Path $Check.Marker)) {
@@ -120,7 +131,7 @@ try {
             }
         }
 
-        Write-Host "[V0-I1] Historical prerequisite stack is present." -ForegroundColor Green
+        Write-Host "[V0-I1] Inventory convergence is present and NX4 predicted movement is preserved." -ForegroundColor Green
     } finally {
         if (Test-Path $TempDir) { Remove-Item -Recurse -Force $TempDir }
     }
