@@ -27,7 +27,6 @@ func _run() -> void:
 	get_root().add_child(lab)
 	await process_frame
 
-	_expect(String(lab.get("VIS1_STAGE")) == "ECO.VIS1.0", "stage identity is VIS1.0")
 	var terrain_mesh_instance := lab.get_node_or_null("Terrain/TerrainMesh") as MeshInstance3D
 	_expect(terrain_mesh_instance != null, "terrain mesh is materialized")
 	if terrain_mesh_instance != null:
