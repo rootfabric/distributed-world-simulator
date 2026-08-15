@@ -10,6 +10,7 @@ const RETRY_INTERVAL_MS := 200
 var _server_host := "127.0.0.1"
 var _server_a_port := 24580
 var _server_b_port := 24581
+var _client_port := 24780
 var _handoffs_requested := 4
 var _timeout_ms := 60000
 var _result_file := ""
@@ -32,6 +33,7 @@ var _started_ms := 0
 var _last_move_ms := 0
 var _outstanding: Dictionary = {}
 var _pending_transfer: Dictionary = {}
+var _completed_transfers: Dictionary = {}
 var _last_player: Dictionary = {}
 var _identity_changes := 0
 var _errors: Array[String] = []
@@ -41,16 +43,31 @@ func setup(config: Dictionary) -> Dictionary:
 	_server_host = String(config.get("server_host", "127.0.0.1")).strip_edges()
 	_server_a_port = int(config.get("server_a_port", 24580))
 	_server_b_port = int(config.get("server_b_port", 24581))
+	_client_port = int(config.get("client_port", 24780))
 	_handoffs_requested = int(config.get("handoffs", 4))
 	_timeout_ms = int(config.get("timeout_ms", 60000))
 	_result_file = String(config.get("result_file", "")).strip_edges()
-	if _server_host.is_empty() or _server_a_port < 1 or _server_b_port < 1 or _handoffs_requested < 1 or _timeout_ms < 1000:
+	if (
+		_server_host.is_empty()
+		or _server_a_port < 1
+		or _server_b_port < 1
+		or _client_port < 1
+		or _handoffs_requested < 1
+		or _timeout_ms < 1000
+	):
 		return _failure("SM0_INVALID_CLIENT_CONFIGURATION")
+
+	_socket = PacketPeerUDP.new()
+	var bind_result := _socket.bind(_client_port, "127.0.0.1")
+	if bind_result != OK:
+		return _failure("SM0_CLIENT_BIND_FAILED", {"error": bind_result, "client_port": _client_port})
+
 	_started_ms = Time.get_ticks_msec()
 	_current_server_port = _server_a_port
 	_session_id = "transport-session/sm0/client/a/initial/%d" % OS.get_process_id()
-	if not _connect_to(_current_server_port):
-		return _failure("SM0_CLIENT_SOCKET_CONNECT_FAILED")
+	if not _select_server(_current_server_port):
+		_socket.close()
+		return _failure("SM0_CLIENT_SERVER_ROUTE_FAILED")
 	_state = "JOINING"
 	_send_join()
 	set_process(true)
@@ -58,6 +75,7 @@ func setup(config: Dictionary) -> Dictionary:
 		"handoffs_requested": _handoffs_requested,
 		"server_a_port": _server_a_port,
 		"server_b_port": _server_b_port,
+		"client_port": _client_port,
 	})
 	return _success()
 
@@ -66,7 +84,10 @@ func _process(_delta: float) -> void:
 	_poll_packets()
 	var now := Time.get_ticks_msec()
 	if now - _started_ms > _timeout_ms:
-		_fail("SM0_CLIENT_ACCEPTANCE_TIMEOUT", {"state": _state, "handoffs_completed": _handoffs_completed})
+		_fail("SM0_CLIENT_ACCEPTANCE_TIMEOUT", {
+			"state": _state,
+			"handoffs_completed": _handoffs_completed,
+		})
 		return
 	_retry_outstanding(now)
 	if _state == "ACTIVE" and _outstanding.is_empty() and now - _last_move_ms >= MOVE_INTERVAL_MS:
@@ -74,26 +95,29 @@ func _process(_delta: float) -> void:
 		_send_next_move()
 
 
-func _connect_to(port: int) -> bool:
-	if _socket != null:
-		_socket.close()
-	_socket = PacketPeerUDP.new()
-	return _socket.connect_to_host(_server_host, port) == OK
+func _select_server(port: int) -> bool:
+	if _socket == null or port < 1:
+		return false
+	_current_server_port = port
+	return _socket.set_dest_address(_server_host, port) == OK
 
 
 func _poll_packets() -> void:
 	if _socket == null:
 		return
 	while _socket.get_available_packet_count() > 0:
-		var message := Contracts.decode_message(_socket.get_packet())
+		var packet := _socket.get_packet()
+		var remote_ip := _socket.get_packet_ip()
+		var remote_port := _socket.get_packet_port()
+		var message := Contracts.decode_message(packet)
 		var validation := Contracts.validate_message(message)
 		if not bool(validation.get("success", false)):
 			_fail(String(validation.get("error_code", "SM0_CLIENT_INVALID_PACKET")), {})
 			return
-		_handle_message(message)
+		_handle_message(message, remote_ip, remote_port)
 
 
-func _handle_message(message: Dictionary) -> void:
+func _handle_message(message: Dictionary, remote_ip: String, remote_port: int) -> void:
 	var message_type := String(message.get("type", ""))
 	var request_id := String(message.get("request_id", ""))
 	var payload: Dictionary = Dictionary(message.get("payload", {}))
@@ -103,7 +127,7 @@ func _handle_message(message: Dictionary) -> void:
 		"MOVE_ACK":
 			_handle_move_ack(request_id, payload)
 		"HANDOFF_REDIRECT":
-			_handle_redirect(payload)
+			_handle_redirect(payload, remote_ip, remote_port)
 		"ACTIVATE_ACK":
 			_handle_activate_ack(request_id, payload)
 		"SM0_ERROR":
@@ -184,11 +208,24 @@ func _handle_move_ack(request_id: String, payload: Dictionary) -> void:
 	_state = "ACTIVE"
 
 
-func _handle_redirect(payload: Dictionary) -> void:
+func _handle_redirect(payload: Dictionary, remote_ip: String, remote_port: int) -> void:
 	var transfer_id := String(payload.get("transfer_id", ""))
 	if transfer_id.is_empty():
 		_fail("SM0_CLIENT_REDIRECT_TRANSFER_ID_REQUIRED", payload)
 		return
+
+	# A source may retry the redirect after the client has already activated the
+	# target. Re-ACK that exact transfer without changing the active route.
+	if _completed_transfers.has(transfer_id):
+		_send_redirect_ack(remote_ip, remote_port, transfer_id)
+		return
+	if (
+		_state == "ACTIVATING"
+		and transfer_id == String(_pending_transfer.get("transfer_id", ""))
+	):
+		_send_redirect_ack(remote_ip, remote_port, transfer_id)
+		return
+
 	var target_authority := String(payload.get("target_authority_id", ""))
 	var expected_target := Contracts.peer_authority(_current_authority_id)
 	if target_authority != expected_target:
@@ -196,20 +233,19 @@ func _handle_redirect(payload: Dictionary) -> void:
 		return
 	var target_epoch := int(payload.get("authority_epoch", 0))
 	if target_epoch != _directory_epoch + 1:
-		if not (_state == "ACTIVATING" and transfer_id == String(_pending_transfer.get("transfer_id", "")) and target_epoch == int(_pending_transfer.get("authority_epoch", 0))):
-			_fail("SM0_CLIENT_REDIRECT_EPOCH_MISMATCH", payload)
-			return
-	if _state == "ACTIVATING" and transfer_id == String(_pending_transfer.get("transfer_id", "")):
+		_fail("SM0_CLIENT_REDIRECT_EPOCH_MISMATCH", payload)
 		return
 	var player_entity_id := String(payload.get("player_entity_id", ""))
 	if not _player_entity_id.is_empty() and player_entity_id != _player_entity_id:
 		_identity_changes += 1
 		_fail("SM0_CLIENT_REDIRECT_PLAYER_ID_CHANGED", payload)
 		return
-	var ack := Contracts.create_message("CLIENT_REDIRECT_ACK", {"transfer_id": transfer_id}, "redirect-ack/%s" % transfer_id.sha256_text().left(12))
-	_send_message(ack)
+
+	_send_redirect_ack(remote_ip, remote_port, transfer_id)
 	_pending_transfer = {
 		"transfer_id": transfer_id,
+		"source_ip": remote_ip,
+		"source_port": remote_port,
 		"target_authority_id": target_authority,
 		"target_zone_id": String(payload.get("target_zone_id", "")),
 		"authority_epoch": target_epoch,
@@ -217,12 +253,20 @@ func _handle_redirect(payload: Dictionary) -> void:
 	}
 	_clear_outstanding()
 	_state = "ACTIVATING"
-	_current_server_port = int(_pending_transfer.get("target_port", 0))
-	if not _connect_to(_current_server_port):
-		_fail("SM0_CLIENT_TARGET_CONNECT_FAILED", _pending_transfer)
+	if not _select_server(int(_pending_transfer.get("target_port", 0))):
+		_fail("SM0_CLIENT_TARGET_ROUTE_FAILED", _pending_transfer)
 		return
 	_event("SM0_CLIENT_ROUTE_SWITCHING", _pending_transfer)
 	_send_activate()
+
+
+func _send_redirect_ack(host: String, port: int, transfer_id: String) -> void:
+	var ack := Contracts.create_message(
+		"CLIENT_REDIRECT_ACK",
+		{"transfer_id": transfer_id},
+		"redirect-ack/%s" % transfer_id.sha256_text().left(12)
+	)
+	_send_message_to(host, port, ack)
 
 
 func _send_activate() -> void:
@@ -267,6 +311,7 @@ func _handle_activate_ack(request_id: String, payload: Dictionary) -> void:
 	_handoffs_completed += 1
 	if _handoffs_completed % 2 == 0:
 		_round_trips_completed += 1
+	_completed_transfers[transfer_id] = true
 	_event("SM0_CROSSING_COMPLETED", {
 		"handoff_index": _handoffs_completed,
 		"transfer_id": transfer_id,
@@ -283,10 +328,13 @@ func _handle_activate_ack(request_id: String, payload: Dictionary) -> void:
 
 
 func _handle_error(request_id: String, payload: Dictionary) -> void:
+	# Old-source errors may arrive after a route switch. Only the response to the
+	# currently outstanding request can fail the current client state.
+	if not _matches_outstanding(request_id):
+		return
 	var error_code := String(payload.get("error_code", "SM0_REMOTE_ERROR"))
 	if _state == "ACTIVATING" and error_code == "SM0_TARGET_NOT_COMMITTED":
-		if _matches_outstanding(request_id):
-			_outstanding["last_send_ms"] = 0
+		_outstanding["last_send_ms"] = 0
 		return
 	_fail(error_code, payload)
 
@@ -326,6 +374,16 @@ func _send_message(message: Dictionary) -> void:
 	_socket.put_packet(Contracts.encode_message(message))
 
 
+func _send_message_to(host: String, port: int, message: Dictionary) -> void:
+	if _socket == null or host.is_empty() or port < 1:
+		return
+	var restore_port := _current_server_port
+	if _socket.set_dest_address(host, port) != OK:
+		return
+	_socket.put_packet(Contracts.encode_message(message))
+	_socket.set_dest_address(_server_host, restore_port)
+
+
 func _capture_identity(player: Dictionary) -> bool:
 	var logical_id := String(player.get("logical_player_id", ""))
 	var entity_id := String(player.get("player_entity_id", ""))
@@ -336,7 +394,10 @@ func _capture_identity(player: Dictionary) -> bool:
 		_player_entity_id = entity_id
 	elif entity_id != _player_entity_id:
 		_identity_changes += 1
-		_fail("SM0_CLIENT_PLAYER_ENTITY_CHANGED", {"expected": _player_entity_id, "actual": entity_id})
+		_fail("SM0_CLIENT_PLAYER_ENTITY_CHANGED", {
+			"expected": _player_entity_id,
+			"actual": entity_id,
+		})
 		return false
 	return true
 
@@ -359,6 +420,7 @@ func _finish_pass() -> void:
 		"final_zone_id": _current_zone_id,
 		"final_input_sequence": _input_sequence,
 		"process_id": OS.get_process_id(),
+		"client_port": _client_port,
 		"errors": _errors.duplicate(),
 	}
 	_write_result(summary)
@@ -374,7 +436,10 @@ func _fail(error_code: String, details: Dictionary) -> void:
 		return
 	_state = "FAILED"
 	_errors.append(error_code)
-	_event("SM0_INVARIANT_VIOLATION", {"error_code": error_code, "details": details})
+	_event("SM0_INVARIANT_VIOLATION", {
+		"error_code": error_code,
+		"details": details,
+	})
 	var summary := {
 		"schema": "distributed_world_simulator.sm0_client_result.v1",
 		"result": "FAIL",
@@ -389,6 +454,7 @@ func _fail(error_code: String, details: Dictionary) -> void:
 		"final_authority_id": _current_authority_id,
 		"final_input_sequence": _input_sequence,
 		"process_id": OS.get_process_id(),
+		"client_port": _client_port,
 		"errors": _errors.duplicate(),
 	}
 	_write_result(summary)
