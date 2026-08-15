@@ -6,7 +6,45 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd"
 # - delayed duplicate PREPARE remains an exact replay even after directory advance;
 # - duplicate PREPARED after source already committed is ignored;
 # - target import preserves trusted source motion state instead of treating
-#   relocation-to-boundary as ordinary movement.
+#   relocation-to-boundary as ordinary movement;
+# - an exact late MOVE from the client of a retired-but-pending source transfer
+#   remains a non-fatal handoff-pending response while ownership stays retired.
+
+
+func _handle_client_move(request_id: String, payload: Dictionary, remote_ip: String, remote_port: int) -> void:
+	if _is_retired_source_pending_move(payload, remote_ip, remote_port):
+		_event("SM0_SOURCE_LATE_MOVE_HELD", {
+			"transfer_id": String(_source_transfer.get("transfer_id", "")),
+			"request_id": request_id,
+			"directory": _directory,
+		})
+		_send_gameplay(remote_ip, remote_port, "MOVE_ACK", {
+			"accepted": false,
+			"error_code": "SM0_PLAYER_FROZEN_FOR_HANDOFF",
+			"handoff_pending": true,
+			"transfer_id": String(_source_transfer.get("transfer_id", "")),
+			"directory": _directory,
+		}, request_id)
+		return
+	super._handle_client_move(request_id, payload, remote_ip, remote_port)
+
+
+func _is_retired_source_pending_move(payload: Dictionary, remote_ip: String, remote_port: int) -> bool:
+	if _source_transfer.is_empty() or _frozen_transfer_id.is_empty():
+		return false
+	if String(_directory.get("owner_authority_id", "")) == _authority_id:
+		return false
+	var transfer_id := String(_source_transfer.get("transfer_id", ""))
+	if transfer_id.is_empty() or transfer_id != _frozen_transfer_id:
+		return false
+	if String(_source_transfer.get("stage", "")) not in ["COMMIT_SENT", "AWAIT_CLIENT_REDIRECT_ACK"]:
+		return false
+	if String(payload.get("logical_player_id", "")) != "a":
+		return false
+	return (
+		remote_ip == String(_source_transfer.get("client_ip", ""))
+		and remote_port == int(_source_transfer.get("client_port", 0))
+	)
 
 
 func _activate_imported_player(package: Dictionary) -> Dictionary:
