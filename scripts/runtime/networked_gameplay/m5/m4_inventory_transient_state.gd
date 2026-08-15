@@ -37,8 +37,26 @@ func begin_cursor_carry(
 ) -> Dictionary:
 	if not _cursor.is_empty():
 		return _failure("CURSOR_ALREADY_ACTIVE")
+	return replace_cursor_carry(
+		item_id,
+		quantity,
+		source_container_id,
+		source_slot_index,
+		base_revision
+	)
+
+
+func replace_cursor_carry(
+	item_id: String,
+	quantity: int,
+	source_container_id: String,
+	source_slot_index: int,
+	base_revision: int
+) -> Dictionary:
 	if item_id.strip_edges().is_empty() or quantity < 1:
 		return _failure("INVALID_CURSOR_CARRY")
+	if source_container_id.strip_edges().is_empty() or source_slot_index < 0:
+		return _failure("INVALID_CURSOR_SOURCE")
 	_cursor = {
 		"item_id": item_id,
 		"quantity": quantity,
@@ -48,6 +66,32 @@ func begin_cursor_carry(
 		"canonical_mutation": false,
 	}
 	return _success({"cursor": _cursor.duplicate(true)})
+
+
+func replace_cursor_after_operation(
+	operation_id: String,
+	item_id: String,
+	quantity: int,
+	source_container_id: String,
+	source_slot_index: int,
+	base_revision: int
+) -> Dictionary:
+	var replaced := replace_cursor_carry(
+		item_id,
+		quantity,
+		source_container_id,
+		source_slot_index,
+		base_revision
+	)
+	if not bool(replaced.get("success", false)):
+		return replaced
+	var normalized_operation_id := operation_id.strip_edges()
+	if _pending.has(normalized_operation_id):
+		var record: Dictionary = _pending[normalized_operation_id]
+		if String(record.get("status", "")) == "SUCCEEDED":
+			record["preserve_cursor"] = true
+			_pending[normalized_operation_id] = record
+	return replaced
 
 
 func cancel_cursor() -> Dictionary:
@@ -88,8 +132,9 @@ func accept_command_result(result: Dictionary) -> Dictionary:
 	_pending[operation_id] = record
 	_result_history.append(record.duplicate(true))
 	if not succeeded:
+		# Rejection means authority consumed nothing. Keep the presentation-only
+		# carry so the user can choose another target or cancel explicitly.
 		_pending.erase(operation_id)
-		_cursor.clear()
 	return _success({"status": record["status"], "operation_id": operation_id})
 
 

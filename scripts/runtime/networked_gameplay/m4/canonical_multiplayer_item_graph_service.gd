@@ -1,9 +1,9 @@
 extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd"
 
-# V0-P1 R5 canonical slot adapter.
+# V0-P1 R6 canonical slot adapter.
 # The inherited M4 service remains the sole Item Graph owner. Membership arrays
 # remain durable/backward-compatible; location.slot_index is authoritative slot
-# identity. Adapted from accepted M7 slot-aware transfers to P1's 32-slot bag.
+# identity. R6 adds atomic occupied-slot swap without creating another Item Graph.
 
 const PLAYER_INVENTORY_CAPACITY := 32
 
@@ -82,8 +82,21 @@ func _transfer(
 	var normalized_target := target_container_id.strip_edges()
 	if normalized_target.is_empty():
 		return _failure("TARGET_CONTAINER_REQUIRED")
-	if not target_item_id.strip_edges().is_empty():
-		return _transfer_to_stack(player_id, item_id, amount, target_item_id.strip_edges())
+	var normalized_target_item := target_item_id.strip_edges()
+	if not normalized_target_item.is_empty():
+		if not _items.has(normalized_target_item):
+			return _failure("ITEM_NOT_FOUND")
+		var target: Dictionary = _items[normalized_target_item]
+		if String(source.get("definition_id", "")) == String(target.get("definition_id", "")):
+			return _transfer_to_stack(player_id, item_id, amount, normalized_target_item)
+		return _swap_with_occupied_target(
+			player_id,
+			item_id,
+			amount,
+			normalized_target,
+			target_slot_index,
+			normalized_target_item
+		)
 	if normalized_target == "inventory/%s" % player_id:
 		return _transfer_to_inventory_slot(player_id, item_id, amount, target_slot_index)
 	if normalized_target == "hotbar/%s" % player_id:
@@ -91,6 +104,159 @@ func _transfer(
 	if normalized_target.begins_with("container/"):
 		return _transfer_to_container_slot(player_id, item_id, amount, normalized_target, target_slot_index)
 	return _failure("UNSUPPORTED_TRANSFER_TARGET")
+
+
+func _swap_with_occupied_target(
+	player_id: String,
+	item_id: String,
+	amount: int,
+	target_container_id: String,
+	target_slot_index: int,
+	target_item_id: String
+) -> Dictionary:
+	if target_slot_index < 0:
+		return _failure("SWAP_TARGET_SLOT_REQUIRED")
+	if target_container_id == "hotbar/%s" % player_id:
+		return _failure("SWAP_HOTBAR_UNSUPPORTED")
+	if not _items.has(item_id) or not _items.has(target_item_id):
+		return _failure("ITEM_NOT_FOUND")
+	_normalize_slot_locations()
+	var source: Dictionary = _items[item_id]
+	var target: Dictionary = _items[target_item_id]
+	var source_quantity := int(source.get("quantity", 1))
+	if amount != source_quantity:
+		return {
+			"success": false,
+			"error_code": "SWAP_REQUIRES_FULL_STACK",
+			"details": {
+				"requested_quantity": amount,
+				"source_quantity": source_quantity,
+			},
+		}
+	var target_access := _accessible_item(player_id, target_item_id)
+	if not bool(target_access.get("success", false)):
+		return target_access
+	if _is_hotbar_assigned(player_id, item_id) or _is_hotbar_assigned(player_id, target_item_id):
+		return _failure("SWAP_HOTBAR_UNSUPPORTED")
+	var source_location: Dictionary = Dictionary(source.get("location", {})).duplicate(true)
+	var target_location: Dictionary = Dictionary(target.get("location", {})).duplicate(true)
+	if not _is_swap_location_accessible(player_id, source_location):
+		return _failure("SWAP_SOURCE_NOT_SLOT_BACKED")
+	if not _is_swap_location_accessible(player_id, target_location):
+		return _failure("SWAP_TARGET_NOT_SLOT_BACKED")
+	if int(source_location.get("slot_index", -1)) < 0:
+		return _failure("SWAP_SOURCE_SLOT_REQUIRED")
+	if not _location_matches_target(
+		player_id,
+		target_location,
+		target_container_id,
+		target_slot_index
+	):
+		return {
+			"success": false,
+			"error_code": "SWAP_TARGET_MISMATCH",
+			"details": {
+				"target_item_id": target_item_id,
+				"target_container_id": target_container_id,
+				"target_slot_index": target_slot_index,
+			},
+		}
+	var source_container_id := _location_container_id(source_location)
+	var target_owner_id := _location_container_id(target_location)
+	if source_container_id.is_empty() or target_owner_id.is_empty():
+		return _failure("SWAP_LOCATION_INVALID")
+	if source_container_id != target_owner_id:
+		_remove_from_source(item_id, source_location)
+		_remove_from_source(target_item_id, target_location)
+		_add_to_location_membership(item_id, target_location)
+		_add_to_location_membership(target_item_id, source_location)
+	source["location"] = target_location.duplicate(true)
+	target["location"] = source_location.duplicate(true)
+	_items[item_id] = source
+	_items[target_item_id] = target
+	_normalize_location_owner(source_location)
+	if target_owner_id != source_container_id:
+		_normalize_location_owner(target_location)
+	return _success({
+		"item_id": item_id,
+		"placed_item_id": item_id,
+		"swapped": true,
+		"moved_quantity": amount,
+		"target_container_id": target_container_id,
+		"target_slot_index": target_slot_index,
+		"displaced_item_id": target_item_id,
+		"displaced_quantity": int(target.get("quantity", 1)),
+		"displaced_container_id": source_container_id,
+		"displaced_slot_index": int(source_location.get("slot_index", -1)),
+	})
+
+
+func _is_swap_location_accessible(player_id: String, location: Dictionary) -> bool:
+	match String(location.get("kind", "")):
+		"INVENTORY":
+			return String(location.get("player_id", "")) == player_id
+		"CONTAINER":
+			var container_id := String(location.get("container_id", ""))
+			return (
+				_containers.has(container_id)
+				and String(_open_containers.get(player_id, "")) == container_id
+			)
+	return false
+
+
+func _location_matches_target(
+	player_id: String,
+	location: Dictionary,
+	target_container_id: String,
+	target_slot_index: int
+) -> bool:
+	if int(location.get("slot_index", -1)) != target_slot_index:
+		return false
+	if target_container_id == "inventory/%s" % player_id:
+		return (
+			String(location.get("kind", "")) == "INVENTORY"
+			and String(location.get("player_id", "")) == player_id
+		)
+	if target_container_id.begins_with("container/"):
+		return (
+			String(location.get("kind", "")) == "CONTAINER"
+			and String(location.get("container_id", "")) == target_container_id
+		)
+	return false
+
+
+func _location_container_id(location: Dictionary) -> String:
+	match String(location.get("kind", "")):
+		"INVENTORY":
+			var owner_player_id := String(location.get("player_id", ""))
+			return "inventory/%s" % owner_player_id if not owner_player_id.is_empty() else ""
+		"CONTAINER":
+			return String(location.get("container_id", ""))
+	return ""
+
+
+func _add_to_location_membership(item_id: String, location: Dictionary) -> void:
+	match String(location.get("kind", "")):
+		"INVENTORY":
+			_add_to_inventory(String(location.get("player_id", "")), item_id)
+		"CONTAINER":
+			var container_id := String(location.get("container_id", ""))
+			if not _containers.has(container_id):
+				return
+			var container: Dictionary = _containers[container_id]
+			var slots: Array = Array(container.get("slots", [])).duplicate()
+			if item_id not in slots:
+				slots.append(item_id)
+			container["slots"] = slots
+			_containers[container_id] = container
+
+
+func _normalize_location_owner(location: Dictionary) -> void:
+	match String(location.get("kind", "")):
+		"INVENTORY":
+			_normalize_player_inventory_slots(String(location.get("player_id", "")))
+		"CONTAINER":
+			_normalize_container_slots(String(location.get("container_id", "")))
 
 
 func _transfer_to_inventory_slot(player_id: String, item_id: String, amount: int, target_slot_index: int) -> Dictionary:

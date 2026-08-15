@@ -11,8 +11,8 @@ const P1TransientState = preload(
 )
 
 # P1 keeps the accepted M5 bridge boundary but swaps only its derived projection
-# to canonical slot_index and adds two UI transactions: confirmed cursor drop
-# and serial authoritative sort. Neither path mutates Item Graph locally.
+# to canonical slot_index. R6 also preserves the displaced item as transient
+# cursor state after an authoritative atomic swap and restores rev6 merge->sort.
 
 
 func setup(runtime, logical_player_id: String) -> Dictionary:
@@ -41,11 +41,53 @@ func setup(runtime, logical_player_id: String) -> Dictionary:
 	_configured = true
 	var initial_value = _runtime.call("get_item_graph_snapshot")
 	if initial_value is Dictionary and not Dictionary(initial_value).is_empty():
-		var accepted := _accept_snapshot(Dictionary(initial_value))
+		var accepted: Dictionary = _accept_snapshot(Dictionary(initial_value))
 		if not bool(accepted.get("success", false)):
 			stop()
 			return accepted
 	return _success({"ready": not _projection.get_snapshot().is_empty()})
+
+
+func place_cursor_blocking(
+	target_container_id: String,
+	target_slot_index: int = -1,
+	target_item_id: String = "",
+	quantity_mode: String = "ALL",
+	operation_id: String = ""
+) -> Dictionary:
+	var result: Dictionary = super.place_cursor_blocking(
+		target_container_id,
+		target_slot_index,
+		target_item_id,
+		quantity_mode,
+		operation_id
+	)
+	if not bool(result.get("success", false)):
+		return result
+	var canonical_details: Dictionary = _canonical_command_details(result)
+	if not bool(canonical_details.get("swapped", false)):
+		return result
+	var displaced_item_id := String(canonical_details.get("displaced_item_id", ""))
+	var displaced_quantity := int(canonical_details.get("displaced_quantity", 0))
+	var displaced_container_id := String(canonical_details.get("displaced_container_id", ""))
+	var displaced_slot_index := int(canonical_details.get("displaced_slot_index", -1))
+	var replacement: Dictionary = _transient.replace_cursor_after_operation(
+		String(result.get("operation_id", "")),
+		displaced_item_id,
+		displaced_quantity,
+		displaced_container_id,
+		displaced_slot_index,
+		int(_projection.get_report().get("revision", -1))
+	)
+	if not bool(replacement.get("success", false)):
+		result["transient_error_code"] = String(
+			replacement.get("error_code", "SWAP_CURSOR_REPLACEMENT_FAILED")
+		)
+		return result
+	result["cursor_swapped"] = true
+	result["canonical_details"] = canonical_details.duplicate(true)
+	_refresh_view()
+	return result
 
 
 func drop_cursor_blocking(quantity_mode: String = "ALL", operation_id: String = "") -> Dictionary:
@@ -59,7 +101,7 @@ func drop_cursor_blocking(quantity_mode: String = "ALL", operation_id: String = 
 		return _failure("INVALID_CURSOR_CARRY")
 	var drop_quantity := 1 if quantity_mode.strip_edges().to_upper() == "ONE" else cursor_quantity
 	var remaining_quantity := maxi(0, cursor_quantity - drop_quantity)
-	var result := submit_ui_action_blocking("drop", {
+	var result: Dictionary = submit_ui_action_blocking("drop", {
 		"item_id": String(cursor.get("item_id", "")),
 		"quantity": drop_quantity,
 		"source_container_id": String(cursor.get("source_container_id", "")),
@@ -77,9 +119,14 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 		return _failure("M5_UI_BRIDGE_NOT_CONFIGURED")
 	if has_cursor():
 		return _failure("SORT_CURSOR_ACTIVE")
-	var model := _model_for_container(container_id)
-	if model.is_empty():
+	var initial_model: Dictionary = _model_for_container(container_id)
+	if initial_model.is_empty():
 		return _failure("SORT_CONTAINER_NOT_VISIBLE", {"container_id": container_id})
+	var merge_result: Dictionary = _merge_compatible_stacks_for_sort(container_id)
+	if not bool(merge_result.get("success", false)):
+		return merge_result
+	var merged_count := int(merge_result.get("details", {}).get("merged", 0))
+	var model: Dictionary = _model_for_container(container_id)
 	var slot_count := int(model.get("slot_count", 0))
 	if slot_count < 1:
 		return _failure("SORT_CONTAINER_EMPTY")
@@ -100,7 +147,12 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 		metadata[item_id] = cell.duplicate(true)
 		desired.append(item_id)
 	if desired.size() < 2:
-		return _success({"container_id": container_id, "moved": 0, "already_sorted": true})
+		return _success({
+			"container_id": container_id,
+			"moved": 0,
+			"merged": merged_count,
+			"already_sorted": true,
+		})
 	desired.sort_custom(func(a: String, b: String) -> bool:
 		var ca: Dictionary = metadata[a]
 		var cb: Dictionary = metadata[b]
@@ -127,7 +179,7 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 			var temp_slot := occupancy.find("")
 			if temp_slot < 0:
 				return _failure("SORT_REQUIRES_FREE_SLOT", {"container_id": container_id})
-			var displaced_move := _move_for_sort(
+			var displaced_move: Dictionary = _move_for_sort(
 				displaced_id,
 				container_id,
 				target_slot,
@@ -139,7 +191,7 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 			occupancy[temp_slot] = displaced_id
 			occupancy[target_slot] = ""
 			moved_count += 1
-		var desired_move := _move_for_sort(
+		var desired_move: Dictionary = _move_for_sort(
 			desired_id,
 			container_id,
 			desired_slot,
@@ -151,7 +203,93 @@ func sort_container_blocking(container_id: String) -> Dictionary:
 		occupancy[target_slot] = desired_id
 		occupancy[desired_slot] = ""
 		moved_count += 1
-	return _success({"container_id": container_id, "moved": moved_count, "already_sorted": moved_count == 0})
+	return _success({
+		"container_id": container_id,
+		"moved": moved_count,
+		"merged": merged_count,
+		"already_sorted": moved_count == 0,
+	})
+
+
+func _merge_compatible_stacks_for_sort(container_id: String) -> Dictionary:
+	var merged_count := 0
+	var guard := 0
+	while true:
+		guard += 1
+		if guard > 2048:
+			return _failure("SORT_STACK_MERGE_LIMIT", {"container_id": container_id})
+		var model: Dictionary = _model_for_container(container_id)
+		if model.is_empty():
+			return _failure("SORT_CONTAINER_NOT_VISIBLE", {"container_id": container_id})
+		var candidate: Dictionary = _find_sort_merge_candidate(model)
+		if candidate.is_empty():
+			return _success({"container_id": container_id, "merged": merged_count})
+		var source: Dictionary = Dictionary(candidate.get("source", {}))
+		var target: Dictionary = Dictionary(candidate.get("target", {}))
+		var amount := int(candidate.get("quantity", 0))
+		if amount < 1:
+			return _failure("SORT_STACK_MERGE_INVALID")
+		var merge: Dictionary = submit_ui_action_blocking("transfer", {
+			"item_id": String(source.get("item_id", "")),
+			"quantity": amount,
+			"source_quantity": int(source.get("quantity", amount)),
+			"source_container_id": container_id,
+			"source_slot_index": int(source.get("source_slot_index", -1)),
+			"target_container_id": container_id,
+			"target_slot_index": int(target.get("source_slot_index", -1)),
+			"target_item_id": String(target.get("item_id", "")),
+		})
+		if not bool(merge.get("success", false)):
+			return merge
+		merged_count += 1
+
+
+func _find_sort_merge_candidate(model: Dictionary) -> Dictionary:
+	var cells: Array = Array(model.get("cells", []))
+	for target_index in range(cells.size()):
+		if not cells[target_index] is Dictionary:
+			continue
+		var target: Dictionary = cells[target_index]
+		var target_item_id := String(target.get("item_id", ""))
+		var definition_id := String(target.get("definition_id", ""))
+		var max_stack := int(target.get("max_stack", 1))
+		var target_quantity := int(target.get("quantity", 0))
+		if (
+			target_item_id.is_empty()
+			or definition_id.is_empty()
+			or max_stack <= 1
+			or target_quantity >= max_stack
+		):
+			continue
+		for source_index in range(target_index + 1, cells.size()):
+			if not cells[source_index] is Dictionary:
+				continue
+			var source: Dictionary = cells[source_index]
+			if (
+				String(source.get("item_id", "")).is_empty()
+				or String(source.get("definition_id", "")) != definition_id
+			):
+				continue
+			var source_quantity := int(source.get("quantity", 0))
+			var moved := mini(max_stack - target_quantity, source_quantity)
+			if moved > 0:
+				return {
+					"source": source.duplicate(true),
+					"target": target.duplicate(true),
+					"quantity": moved,
+				}
+	return {}
+
+
+func _canonical_command_details(result: Dictionary) -> Dictionary:
+	var outer_details: Dictionary = Dictionary(result.get("details", {}))
+	var wire_result_value = outer_details.get("result", {})
+	if wire_result_value is Dictionary:
+		var wire_result: Dictionary = Dictionary(wire_result_value)
+		var wire_details_value = wire_result.get("details", {})
+		if wire_details_value is Dictionary:
+			return Dictionary(wire_details_value).duplicate(true)
+	return outer_details.duplicate(true)
 
 
 func _move_for_sort(
