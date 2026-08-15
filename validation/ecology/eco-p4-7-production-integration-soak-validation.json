@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
-  "revision": "ECO-P4.7-2026-08-14-R4-CANONICAL-RUNNER-READY",
+  "revision": "ECO-P4.7-2026-08-15-R5-GDSCRIPT-TYPE-REPAIR",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_CANONICAL_RUNNER_READY_EXACT_COMMITTED_A_B_PENDING",
+  "status": "CANDIDATE_CANONICAL_RUNNER_READY_TYPE_REPAIR_EXACT_COMMITTED_A_B_PENDING",
   "scope": "ACCELERATED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.6",
@@ -17,8 +17,17 @@
     "validation_blob_after_acceptance": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc"
   },
   "candidate_blobs": {
-    "soak_test": "2a996a58a72d3f9d6e8a81851d8a8e0abaa3ffd2",
-    "canonical_runner_legacy_filename": "da41c2760f0802c0a669e1f4a1d0ad90254c054e"
+    "soak_test": "9c2093e43417603bb1283e918dd511f6597f667f",
+    "canonical_runner_legacy_filename": "f6806edf25a7e466eb7f0ea3c2f8e31b0f768216"
+  },
+  "repair_evidence": {
+    "failed_exact_windows_head_before_repair": "cd7808661d105332a23d3f435caa3f4db535a6b7",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "failure": "GDScript parser could not infer target_server from an untyped constant Array index at eco_p4_7_production_integration_soak.gd:117",
+    "root_cause": "SERVERS was inferred as an untyped Array, so indexing produced Variant and var target_server := ... had no statically inferable type",
+    "correction": "declare SERVERS as Array[String] and explicitly type current_server_index:int and target_server:String",
+    "production_runtime_changed": false,
+    "accepted_ancestors_changed": false
   },
   "scenario": {
     "regions": 8,
@@ -59,11 +68,11 @@
   },
   "gate": {
     "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
-    "runner_name_note": "legacy filename retained for local compatibility; semantics are canonical after R4",
+    "runner_name_note": "legacy filename retained for local compatibility; semantics are canonical",
     "heartbeat_seconds": 10,
     "timeout_seconds_per_process": 600,
     "hash_policy": "exact committed A/B must be byte-identical; successful first canonical run freezes soak_hash and final_interest_hash in lifecycle acceptance evidence",
-    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN"
+    "status": "READY_FOR_EXACT_COMMITTED_CANONICAL_RUN_AFTER_TYPE_REPAIR"
   },
-  "decision": "RUN_P4_7_CANONICAL_SOAK; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND_OPEN_P4_8"
+  "decision": "RERUN_P4_7_CANONICAL_SOAK_ON_EXACT_WINDOWS_GODOT; FREEZE_HASHES_ON_PASS; THEN_ACCEPT_P4_7_AND_OPEN_P4_8"
 }
