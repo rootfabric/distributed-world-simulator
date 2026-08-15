@@ -20,6 +20,7 @@ $ErrorActionPreference = "Stop"
 
 $CanonicalWorkspaceRoot = "C:\distributed-world-simulator"
 $CanonicalCentralCheckout = "C:\distributed-world-simulator\distributed-world-simulator"
+$ClientPort = 24780
 
 if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
     $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -195,6 +196,7 @@ Write-Harness "project root: $ProjectRoot"
 Write-Harness "git HEAD: $GitHead"
 Write-Harness "Godot: $GodotExe"
 Write-Harness "handoffs: $Handoffs"
+Write-Harness "stable client UDP port: $ClientPort"
 
 $Processes = @()
 $ServerA = $null
@@ -277,6 +279,7 @@ try {
             "--server-host=127.0.0.1",
             "--server-a-port=24580",
             "--server-b-port=24581",
+            "--client-port=$ClientPort",
             "--handoffs=$Handoffs",
             "--timeout-ms=$ClientTimeoutMs",
             "--result-file=$ClientResult"
@@ -346,8 +349,10 @@ finally {
     Remove-Item -LiteralPath $StatePath -Force -ErrorAction SilentlyContinue
 }
 
+$ResultText = if ($ExitCode -eq 0) { "PASS" } else { "FAIL" }
+$ResultColor = if ($ExitCode -eq 0) { "Green" } else { "Red" }
 Write-Host ""
-Write-Host "[SM0] Result : $(if ($ExitCode -eq 0) { 'PASS' } else { 'FAIL' })" -ForegroundColor $(if ($ExitCode -eq 0) { 'Green' } else { 'Red' })
+Write-Host "[SM0] Result : $ResultText" -ForegroundColor $ResultColor
 Write-Host "[SM0] HEAD   : $GitHead"
 Write-Host "[SM0] Root   : $ProjectRoot"
 Write-Host "[SM0] Logs   : $LogDirectory"
