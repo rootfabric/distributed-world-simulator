@@ -1,15 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R54-2026-08-15-VIS1-PRIORITY",
+  "revision": "ECO-R55-2026-08-15-VIS1-0-CANDIDATE",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-vis1-visual-proving-ground",
-  "status": "RESEARCH_PRESENTATION_VIS1_PRIORITY",
+  "status": "RESEARCH_PRESENTATION_VIS1_0_IMPLEMENTED_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "vis1_plan_doc": "docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md",
-  "current_checkpoint": "ECO.VIS1",
-  "current_step": "Visual Ecology Proving Ground / visual + numerical inspection before simulator port",
+  "current_checkpoint": "ECO.VIS1.0",
+  "current_step": "Bounded lab scene + terrain + operator camera / exact Windows automated and human graphical check pending",
   "last_accepted_step": "ECO P4 branch lifecycle complete + PH5 derived multi-scale presentation accepted",
   "mission": "Make the existing causal ecology observable in a bounded landscape through derived vegetation, accelerated time, numerical diagnostics and disturbances; only then port the same environment/provider boundary into the simulator.",
   "priority_order": [
@@ -38,7 +38,7 @@
   },
   "VIS1": {
     "name": "Visual Ecology Proving Ground",
-    "status": "PRIORITY_NEXT",
+    "status": "ACTIVE_VIS1_0_CANDIDATE",
     "goal": "Observe with eyes and numbers how ecology changes a causal landscape over accelerated time before deeper production integration.",
     "acceptance": [
       "bounded polygon can be inspected interactively",
@@ -51,8 +51,8 @@
       "presentation never mutates ecology truth"
     ],
     "steps": [
-      {"id":"VIS1.0","name":"Lab scene + bounded terrain + operator camera/movement","status":"NEXT"},
-      {"id":"VIS1.1","name":"EcoEnvironmentProvider + LabEnvironmentProvider","status":"PLANNED"},
+      {"id":"VIS1.0","name":"Lab scene + bounded terrain + operator camera/movement","status":"IMPLEMENTED_CANDIDATE_WINDOWS_GRAPHICAL_PENDING","implementation_head":"246b55d4c7c6fb1547d16de1ab872e3799e81286","supplementary_exact_engine_smoke":"PASS_21_ASSERTIONS"},
+      {"id":"VIS1.1","name":"EcoEnvironmentProvider + LabEnvironmentProvider","status":"WAIT_VIS1_0_CONFIRMATION"},
       {"id":"VIS1.2","name":"Spatial ecology snapshot projection","status":"PLANNED"},
       {"id":"VIS1.3","name":"Existing PH5 materialization on polygon","status":"PLANNED"},
       {"id":"VIS1.4","name":"Accelerated time + same-seed restart","status":"PLANNED"},
