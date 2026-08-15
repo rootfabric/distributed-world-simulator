@@ -1,6 +1,6 @@
 # ECO P4 — Production Ecology Integration Roadmap
 
-Статус: `ACTIVE / P4.1-P4.7 ACCEPTED / P4.8 FINAL MANIFEST GATE READY`.
+Статус: `P4.1-P4.8 ACCEPTED ON BRANCH / P4 BRANCH LIFECYCLE EVIDENCE COMPLETE / MAIN PROMOTION PENDING`.
 
 Parent: `P3 RESEARCH ROUTE COMPLETE / P3.1..P3.8 ACCEPTED`.
 
@@ -13,32 +13,37 @@ Parent: `P3 RESEARCH ROUTE COMPLETE / P3.1..P3.8 ACCEPTED`.
 5. P4.5 Region Ownership / Server Handoff — **ACCEPTED exact Windows full committed chain**.
 6. P4.6 Interest + Client Read Model — **ACCEPTED exact Windows committed unit + real P4.5 integration**.
 7. P4.7 Production Integration Soak — **ACCEPTED exact Windows isolated headless fresh-process A/B**.
-8. P4.8 P4 Acceptance — **FINAL MANIFEST GATE READY**.
+8. P4.8 Final P4 Acceptance Manifest — **ACCEPTED exact Windows control-only final manifest gate**.
 
-## Current lifecycle
+## Branch lifecycle result
 
 ```text
-P3.8 = ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL
-P4.1 = ACCEPTED_EXACT_ATTACHED_GODOT_FULL_COMMITTED_CHAIN
-P4.2 = ACCEPTED_EXACT_ATTACHED_GODOT_REMOTE_BLOBS_MATCH
-P4.3 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN
-P4.4 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN
-P4.5 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN
-P4.6 = ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION
+P4.1 = ACCEPTED
+P4.2 = ACCEPTED
+P4.3 = ACCEPTED
+P4.4 = ACCEPTED
+P4.5 = ACCEPTED
+P4.6 = ACCEPTED
 P4.7 = ACCEPTED_EXACT_WINDOWS_ISOLATED_HEADLESS_BOUNDED_ROTATING_A_B
-P4.8 = FINAL_MANIFEST_GATE_READY_P4_7_ACCEPTED
+P4.8 = ACCEPTED_EXACT_WINDOWS_FINAL_MANIFEST_GATE
+P4 branch lifecycle evidence = COMPLETE
 ```
 
-Accepted identities already frozen:
+Final lifecycle evidence:
 
 ```text
-P4.4 aggregate        = 4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2
-P4.5 aggregate        = c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419
-P4.6 unit aggregate   = 88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2
-P4.6 real integration = f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf
-P4.7 soak_hash        = d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe
-P4.7 interest_hash    = 62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e
+validation/ecology/eco-p4-production-integration-acceptance.json
+blob = fa0c1b3540f1efe1a8509a7551542e12fb353bcd
+manifest_hash = 02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06
 ```
+
+Checkpoint:
+
+```text
+docs/checkpoints/ECO_P4_PRODUCTION_INTEGRATION_BRANCH_LIFECYCLE_COMPLETE_RU.md
+```
+
+## Frozen runtime evidence
 
 P4.7 exact tested HEAD:
 
@@ -52,7 +57,18 @@ Godot:
 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-P4.7 accepted composition contract:
+Frozen identities:
+
+```text
+P4.4 aggregate        = 4960096ae214a3b5f33a6c2507d0edb26348a0820b3469afc42eb92bdc62c1e2
+P4.5 aggregate        = c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419
+P4.6 unit aggregate   = 88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2
+P4.6 real integration = f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf
+P4.7 soak_hash        = d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe
+P4.7 interest_hash    = 62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e
+```
+
+Accepted P4.7 bounded composition contract:
 
 ```text
 8 authoritative regions
@@ -70,34 +86,56 @@ max remaining catch-up debt = 0
 242 assertions per process
 ```
 
-The P4.7 runner uses a temporary minimal Godot project so unrelated gameplay/Breakpoint MCP autoloads cannot contaminate the ecology gate. `project.godot` and production runtime were not changed; unexpected Godot `ERROR:` still fails the gate.
+P4.7 uses a temporary minimal Godot project so unrelated gameplay/Breakpoint MCP autoloads do not contaminate the ecology gate. `project.godot` and production runtime were not changed; unexpected Godot `ERROR:` remains fail-closed.
 
-P4.7 remains an accelerated deterministic bounded integration soak, **not** a wall-clock production-duration soak.
+P4.7 is an accelerated deterministic bounded integration soak, **not** a wall-clock production-duration soak.
 
-## P4.8 final gate
+## Final P4.8 evidence
 
-`RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1` retains its legacy filename but is now the final manifest gate. It does not rerun P4.7. It verifies exact accepted validation blobs P4.1-P4.7, exact P4.7 test/runner identities, tested HEAD/Godot, frozen hashes, byte-identical A/B evidence and all exact counts.
+Final control-only gate ran on:
 
-Expected success marker:
+```text
+HEAD = 186c6d164b0bf17fc17e91a23136663edbe1c06d
+runner blob = fa91e68f877551d0d08cea38382543ab23b9c4ac
+```
+
+Observed final marker:
 
 ```text
 ECO.P4.8 FINAL GATES: PASS
 ```
 
-After that single control-only gate passes, write the final P4 lifecycle acceptance checkpoint and mark P4 complete.
+Accepted P4.8 validation:
+
+```text
+validation/ecology/eco-p4-8-acceptance-preparation.json
+blob = af886544d92970a061d47c29b76888fefbb66da6
+```
+
+## Next control boundary
+
+P4 implementation/lifecycle work on this branch is complete. Do not extend P4 merely to keep the branch active.
+
+Next step:
+
+```text
+branch-local P4 evidence complete
+        ↓
+independent review / evidence freshness check
+        ↓
+main-owned promotion / convergence decision
+        ↓
+human runtime merge gate where applicable
+```
+
+Per project control, this branch reports execution facts. It does **not** make `main` globally declare P4 accepted by itself.
 
 ## Repository-local workflow
 
-Canonical local entrypoint:
+Canonical entrypoint remains:
 
 ```text
 RUN_ECO_TEST_WORKFLOW.ps1
 ```
 
-For the next action only, use:
-
-```powershell
-.\RUN_ECO_TEST_WORKFLOW.ps1 -Suite p4.8
-```
-
-`p4.8` does not require Godot and does not rerun the accepted P4.7 soak. If the source checkout diverged from remote, `RUN_ECO_VALIDATION_WORKSPACE.ps1 -Suite p4.8` runs the gate in the dedicated clean validation clone.
+The accepted P4.7/P4.8 evidence is durable and should not be regenerated merely to continue documentation or promotion work unless a reviewed/runtime surface changes and invalidates freshness.
