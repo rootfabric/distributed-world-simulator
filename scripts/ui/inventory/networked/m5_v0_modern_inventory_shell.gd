@@ -2,21 +2,56 @@ extends "res://scripts/ui/inventory/networked/m5_modern_networked_inventory_shel
 
 const V0_UI_VARIANT := "V0_MODERN_INVENTORY_SCREEN"
 
+var _network_carry_preview: PanelContainer
+var _network_carry_icon: TextureRect
+var _network_carry_quantity: Label
+var _cursor_preview_texture: Texture2D
+var _cursor_preview_name := ""
+
 
 func _build_ui() -> void:
 	super._build_ui()
 	_restore_complete_sort_options()
+	_setup_network_carry_preview()
 	_apply_v0_profile_visual_style()
 
 
 func _on_view_updated(view: Dictionary) -> void:
 	super._on_view_updated(view)
 	_apply_v0_profile_visual_style()
+	_update_network_carry_preview()
 
 
 func _on_modern_profile_selected(index: int) -> void:
 	super._on_modern_profile_selected(index)
 	_apply_v0_profile_visual_style()
+	_update_network_carry_preview()
+
+
+func _on_interaction_requested(action_id: String, payload: Dictionary) -> void:
+	var starting_cursor: bool = (
+		bridge != null
+		and not bridge.has_cursor()
+		and not String(payload.get("item_id", "")).is_empty()
+	)
+	if starting_cursor:
+		_cursor_preview_texture = payload.get("icon_texture") as Texture2D
+		_cursor_preview_name = String(payload.get("display_name", "Предмет"))
+	super._on_interaction_requested(action_id, payload)
+	_update_network_carry_preview()
+
+
+func set_inventory_visible(value: bool) -> void:
+	super.set_inventory_visible(value)
+	_update_network_carry_preview()
+
+
+func _process(_delta: float) -> void:
+	if _network_carry_preview == null or not _network_carry_preview.visible:
+		return
+	_network_carry_preview.position = (
+		get_viewport().get_mouse_position() + Vector2(18.0, 18.0)
+	)
 
 
 func get_report() -> Dictionary:
@@ -26,6 +61,9 @@ func get_report() -> Dictionary:
 		String(active_profile.ui_style)
 		if active_profile != null
 		else ""
+	)
+	report["cursor_preview_visible"] = (
+		_network_carry_preview != null and _network_carry_preview.visible
 	)
 	return report
 
@@ -125,3 +163,103 @@ func _apply_v0_window_style(seven_days_style: bool) -> void:
 		style.set_border_width_all(2)
 		style.set_corner_radius_all(10)
 	inventory_window.add_theme_stylebox_override("panel", style)
+	_apply_network_carry_style(seven_days_style)
+
+
+func _setup_network_carry_preview() -> void:
+	_network_carry_preview = PanelContainer.new()
+	_network_carry_preview.name = "NetworkCarryPreview"
+	_network_carry_preview.visible = false
+	_network_carry_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_network_carry_preview.top_level = true
+	_network_carry_preview.z_as_relative = false
+	_network_carry_preview.z_index = 4095
+	_network_carry_preview.custom_minimum_size = Vector2(56.0, 56.0)
+
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_network_carry_preview.add_child(row)
+
+	_network_carry_icon = TextureRect.new()
+	_network_carry_icon.custom_minimum_size = Vector2(48.0, 48.0)
+	_network_carry_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_network_carry_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_network_carry_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(_network_carry_icon)
+
+	_network_carry_quantity = Label.new()
+	_network_carry_quantity.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_network_carry_quantity.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_network_carry_quantity.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_network_carry_quantity.add_theme_font_size_override("font_size", 18)
+	_network_carry_quantity.add_theme_color_override("font_color", Color.WHITE)
+	_network_carry_quantity.add_theme_color_override(
+		"font_outline_color",
+		Color(0.03, 0.03, 0.03, 1.0)
+	)
+	_network_carry_quantity.add_theme_constant_override("outline_size", 4)
+	_network_carry_quantity.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_network_carry_icon.add_child(_network_carry_quantity)
+
+	root_control.add_child(_network_carry_preview)
+	_apply_network_carry_style(
+		active_profile != null and String(active_profile.ui_style) == "SEVEN_DAYS"
+	)
+
+
+func _apply_network_carry_style(seven_days_style: bool) -> void:
+	if _network_carry_preview == null:
+		return
+	var style := StyleBoxFlat.new()
+	style.bg_color = (
+		Color.TRANSPARENT
+		if seven_days_style
+		else Color(0.08, 0.08, 0.07, 0.92)
+	)
+	style.border_color = (
+		Color.TRANSPARENT
+		if seven_days_style
+		else Color(0.45, 0.82, 1.0, 1.0)
+	)
+	style.set_border_width_all(0 if seven_days_style else 2)
+	style.set_corner_radius_all(2 if seven_days_style else 6)
+	style.content_margin_left = 4.0 if seven_days_style else 6.0
+	style.content_margin_top = 4.0 if seven_days_style else 5.0
+	style.content_margin_right = 4.0 if seven_days_style else 6.0
+	style.content_margin_bottom = 4.0 if seven_days_style else 5.0
+	_network_carry_preview.add_theme_stylebox_override("panel", style)
+
+
+func _update_network_carry_preview() -> void:
+	if _network_carry_preview == null:
+		return
+	var active: bool = (
+		inventory_window != null
+		and inventory_window.visible
+		and bridge != null
+		and bridge.has_cursor()
+	)
+	_network_carry_preview.visible = active
+	if not active:
+		_network_carry_icon.texture = null
+		_network_carry_quantity.text = ""
+		if bridge == null or not bridge.has_cursor():
+			_cursor_preview_texture = null
+			_cursor_preview_name = ""
+		return
+
+	var cursor: Dictionary = bridge.get_cursor()
+	var item_id := String(cursor.get("item_id", ""))
+	if _cursor_preview_texture == null:
+		var cell: Dictionary = bridge.find_cell(item_id)
+		if not cell.is_empty():
+			_cursor_preview_texture = _icon_for_cell(cell)
+			_cursor_preview_name = String(cell.get("display_name", "Предмет"))
+	_network_carry_icon.texture = _cursor_preview_texture
+	var quantity := maxi(1, int(cursor.get("quantity", 1)))
+	_network_carry_quantity.text = str(quantity) if quantity > 1 else ""
+	_network_carry_preview.tooltip_text = (
+		"%s ×%d" % [_cursor_preview_name, quantity]
+		if not _cursor_preview_name.is_empty()
+		else ""
+	)
