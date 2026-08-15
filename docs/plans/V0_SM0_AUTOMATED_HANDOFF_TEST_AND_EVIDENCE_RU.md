@@ -35,7 +35,7 @@ both servers remain alive and synchronized
 no unexpected ERROR or persistent network error code
 ```
 
-Плавность становится отдельным post-correctness этапом только после стабильного 20-crossing test.
+Плавность становится отдельным post-correctness этапом только после стабильного 20-handoff test.
 
 ## 2. Что считать PASS и что не считать PASS
 
@@ -230,8 +230,8 @@ Timeout используется только как fail-closed guard.
 Минимальные параметры:
 
 ```text
--Crossings 4       # быстрый developer gate
--Final             # 20 crossings
+-Handoffs 4        # быстрый developer gate
+-Final             # 20 handoffs
 -Graphical         # T3 graphical process test
 -FaultCase <name>  # отдельный fault scenario
 -Restart
@@ -241,7 +241,7 @@ Timeout используется только как fail-closed guard.
 ### Developer gate
 
 ```powershell
-.\RUN_V0_SM0_ACCEPTANCE.ps1 -Crossings 4 -Restart
+.\RUN_V0_SM0_ACCEPTANCE.ps1 -Handoffs 4 -Restart
 ```
 
 ### Final checkpoint gate
@@ -250,14 +250,11 @@ Timeout используется только как fail-closed guard.
 .\RUN_V0_SM0_ACCEPTANCE.ps1 -Final -Restart
 ```
 
-`-Final` означает минимум:
+`-Final` означает:
 
 ```text
-20 handoffs total или более строгий эквивалент,
-в manifest checkpoint используется A<->B repeated crossing target.
+10 round-trips = 20 authority handoffs.
 ```
-
-Рекомендуемый финальный сценарий — 10 round-trips = 20 authority handoffs.
 
 ### Graphical confirmation
 
@@ -368,7 +365,7 @@ HARNESS: CROSSING_COMPLETED
 После каждого commit analyzer должен иметь снимок:
 
 ```text
-crossing_index
+handoff_index
 transfer_id
 logical_player_id
 player_entity_id
@@ -447,7 +444,7 @@ source accepted movement after commit
 target accepted movement before commit
 duplicate active player entity
 client process restarted during a run
-crossing timeout
+handoff timeout
 ```
 
 Не надо просто grep-ать слово `WARNING`: warnings классифицируются отдельно и не являются FAIL без явного denylist/invariant impact.
@@ -461,8 +458,8 @@ crossing timeout
   "schema": "distributed_world_simulator.sm0_acceptance_result.v1",
   "session_id": "...",
   "result": "PASS",
-  "crossings_requested": 20,
-  "crossings_completed": 20,
+  "handoffs_requested": 20,
+  "handoffs_completed": 20,
   "round_trips_completed": 10,
   "server_a_exit_code": 0,
   "server_b_exit_code": 0,
@@ -502,7 +499,7 @@ Runner должен быть пригоден для локального зап
 
 ## 13. Fault tests
 
-Fault tests выполняются отдельно от happy-path 20 crossings, чтобы причина сбоя была однозначной.
+Fault tests выполняются отдельно от happy-path 20 handoffs, чтобы причина сбоя была однозначной.
 
 Минимальный набор:
 
