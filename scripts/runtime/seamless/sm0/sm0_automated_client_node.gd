@@ -14,6 +14,7 @@ var _client_port := 24780
 var _handoffs_requested := 4
 var _timeout_ms := 60000
 var _result_file := ""
+var _post_handoff_settle_steps := 0
 
 var _socket: PacketPeerUDP
 var _state := "INIT"
@@ -31,6 +32,7 @@ var _handoffs_completed := 0
 var _round_trips_completed := 0
 var _started_ms := 0
 var _last_move_ms := 0
+var _settle_steps_remaining := 0
 var _outstanding: Dictionary = {}
 var _pending_transfer: Dictionary = {}
 var _completed_transfers: Dictionary = {}
@@ -47,6 +49,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_handoffs_requested = int(config.get("handoffs", 4))
 	_timeout_ms = int(config.get("timeout_ms", 60000))
 	_result_file = String(config.get("result_file", "")).strip_edges()
+	_post_handoff_settle_steps = int(config.get("post_handoff_settle_steps", 0))
 	if (
 		_server_host.is_empty()
 		or _server_a_port < 1
@@ -54,6 +57,8 @@ func setup(config: Dictionary) -> Dictionary:
 		or _client_port < 1
 		or _handoffs_requested < 1
 		or _timeout_ms < 1000
+		or _post_handoff_settle_steps < 0
+		or _post_handoff_settle_steps > 16
 	):
 		return _failure("SM0_INVALID_CLIENT_CONFIGURATION")
 
@@ -76,6 +81,7 @@ func setup(config: Dictionary) -> Dictionary:
 		"server_a_port": _server_a_port,
 		"server_b_port": _server_b_port,
 		"client_port": _client_port,
+		"post_handoff_settle_steps": _post_handoff_settle_steps,
 	})
 	return _success()
 
@@ -176,7 +182,7 @@ func _send_join() -> void:
 
 func _send_next_move() -> void:
 	_input_sequence += 1
-	var delta_x := 0.5 if _current_authority_id == Contracts.AUTHORITY_A else -0.5
+	var delta_x := _next_delta_x()
 	var request_id := "move/%d" % _input_sequence
 	var message := Contracts.create_message("CLIENT_MOVE", {
 		"logical_player_id": _logical_player_id,
@@ -188,6 +194,12 @@ func _send_next_move() -> void:
 	}, request_id)
 	_set_outstanding("MOVE", request_id, message)
 	_send_message(message)
+
+
+func _next_delta_x() -> float:
+	if _settle_steps_remaining > 0:
+		return -0.5 if _current_authority_id == Contracts.AUTHORITY_A else 0.5
+	return 0.5 if _current_authority_id == Contracts.AUTHORITY_A else -0.5
 
 
 func _handle_move_ack(request_id: String, payload: Dictionary) -> void:
@@ -205,6 +217,12 @@ func _handle_move_ack(request_id: String, payload: Dictionary) -> void:
 	if not _capture_identity(_last_player):
 		return
 	_ownership_epoch = int(_last_player.get("ownership_epoch", _ownership_epoch))
+	if _settle_steps_remaining > 0:
+		_settle_steps_remaining -= 1
+		_event("SM0_CLIENT_SETTLE_STEP_COMPLETED", {
+			"remaining": _settle_steps_remaining,
+			"player": _last_player,
+		})
 	_state = "ACTIVE"
 
 
@@ -324,6 +342,7 @@ func _handle_activate_ack(request_id: String, payload: Dictionary) -> void:
 	if _handoffs_completed >= _handoffs_requested:
 		_finish_pass()
 		return
+	_settle_steps_remaining = _post_handoff_settle_steps
 	_state = "ACTIVE"
 
 
