@@ -16,6 +16,7 @@ const H2_4_ACTIVE_RECOVERY_FAULT_PROFILE := "h2-active-owner-crash-after-move-pe
 const H3_3_TRANSACTION_FAULT_PROFILE := "h3-inflight-dual-outage-after-source-retire-v1"
 const H3_4_TRANSACTION_FAULT_PROFILE := "h3-commit-decision-dual-outage-v1"
 const H3_5_TRANSACTION_FAULT_PROFILE := "h3-activation-dual-outage-before-ack-v1"
+const H4_1_TRANSACTION_FAULT_PROFILE := "h4-repeated-activation-dual-outage-v1"
 
 
 func _init() -> void:
@@ -48,6 +49,7 @@ func _init() -> void:
 		H3_3_TRANSACTION_FAULT_PROFILE,
 		H3_4_TRANSACTION_FAULT_PROFILE,
 		H3_5_TRANSACTION_FAULT_PROFILE,
+		H4_1_TRANSACTION_FAULT_PROFILE,
 	]:
 		server = TransactionFaultServerNode.new()
 	elif fault_profile == H2_4_ACTIVE_RECOVERY_FAULT_PROFILE:
