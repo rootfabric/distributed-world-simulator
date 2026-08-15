@@ -16,6 +16,7 @@ var _h43_fault_profile := ""
 var _h43_boot_restored := false
 var _h43_boot_phase := ""
 var _h43_boot_transfer_id := ""
+var _h43_setup_complete := false
 var _h43_crash_keys: Dictionary = {}
 var _h43_suppressed_send_keys: Dictionary = {}
 var _h43_deferred_activate_keys: Dictionary = {}
@@ -28,15 +29,20 @@ func setup(config: Dictionary) -> Dictionary:
 	if String(config.get("recovery_dir", "")).strip_edges().is_empty():
 		return _failure("SM0_H43_RECOVERY_DIR_REQUIRED")
 
-	# Source-side recovery_resume may send COMMIT/redirect inside super.setup().
-	# Those overrides therefore use the live _recovery_restored fields directly.
+	# Source recovery_resume can send COMMIT/redirect from inside super.setup().
+	# Keep an explicit setup window so only the exact restored SOURCE_RETIRED
+	# transfer bypasses Stage 1. A later fresh transfer in this same recovered
+	# process must still be faulted.
+	_h43_setup_complete = false
 	var result: Dictionary = super.setup(config)
 	if not bool(result.get("success", false)):
+		_h43_setup_complete = true
 		return result
 
 	_h43_boot_restored = _recovery_restored
 	_h43_boot_phase = _recovery_last_phase
 	_h43_boot_transfer_id = _recovery_last_transfer_id
+	_h43_setup_complete = true
 	_event("SM0_H43_PROFILE_ENABLED", {
 		"fault_profile": _h43_fault_profile,
 		"boot_restored": _h43_boot_restored,
@@ -46,6 +52,16 @@ func setup(config: Dictionary) -> Dictionary:
 		"authority_id": _authority_id,
 	})
 	return result
+
+
+func _h43_is_source_setup_replay(transfer_id: String) -> bool:
+	return (
+		not _h43_setup_complete
+		and _recovery_restored
+		and _recovery_last_phase == "SOURCE_RETIRED"
+		and not transfer_id.is_empty()
+		and _recovery_last_transfer_id == transfer_id
+	)
 
 
 func _h43_emit_crash_point(stage: String, transfer_id: String) -> void:
@@ -89,17 +105,18 @@ func _send_source_commit() -> void:
 		super._send_source_commit()
 		return
 
-	# Only the fresh source process creates Stage 1. Every restored SOURCE_RETIRED
-	# process must replay COMMIT so the same transaction can advance to the next
-	# durable target phase.
-	if _recovery_restored:
-		super._send_source_commit()
-		return
-
 	if _source_transfer.is_empty():
 		super._send_source_commit()
 		return
 	var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
+
+	# Only the exact SOURCE_RETIRED replay issued from recovery setup is allowed
+	# through un-faulted. After setup, even a recovered process can later become
+	# source of a new handoff; that new T must create Stage 1 normally.
+	if _h43_is_source_setup_replay(transfer_id):
+		super._send_source_commit()
+		return
+
 	if (
 		transfer_id.is_empty()
 		or String(_source_transfer.get("stage", "")) != "COMMIT_SENT"
