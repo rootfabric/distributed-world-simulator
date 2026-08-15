@@ -372,7 +372,14 @@ func _channel_index(channel: String) -> int:
 
 
 func _transfer_mode(delivery_mode: String) -> int:
-	return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if delivery_mode == "UNRELIABLE_SEQUENCED" else MultiplayerPeer.TRANSFER_MODE_RELIABLE
+	# Keep application-level latest-wins sequencing, but map the physical ENet
+	# stream to ordered unreliable delivery so stale movement/snapshot packets
+	# cannot overtake newer packets on the same realtime channel.
+	return (
+		MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
+		if delivery_mode == "UNRELIABLE_SEQUENCED"
+		else MultiplayerPeer.TRANSFER_MODE_RELIABLE
+	)
 
 
 func _validate_endpoint(endpoint: Dictionary) -> Dictionary:

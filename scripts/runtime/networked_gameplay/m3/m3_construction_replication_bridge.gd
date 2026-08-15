@@ -44,11 +44,16 @@ func connect_player(logical_player_id: String, ownership_epoch: int, last_seen_e
 		"permission_epoch": int(session.get("permission_epoch", 0)),
 		"ownership_epoch": ownership_epoch,
 	}
+	var snapshot_packet: Dictionary = _snapshot_packet(
+		Dictionary(connected.get("state_bundle", {})),
+		int(connected.get("last_event_index", -1))
+	)
+	snapshot_packet["client_session"] = session.duplicate(true)
 	return _success({
 		"client_id": client_id,
 		"session": session,
 		"reconnect": bool(connected.get("reconnect", false)),
-		"snapshot": _snapshot_packet(Dictionary(connected.get("state_bundle", {})), int(connected.get("last_event_index", -1))),
+		"snapshot": snapshot_packet,
 		"events": Array(connected.get("events", [])).duplicate(true),
 	})
 

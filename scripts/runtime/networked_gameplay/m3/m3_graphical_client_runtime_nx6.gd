@@ -109,6 +109,7 @@ var _prediction_advance_failures: int = 0
 var _prediction_reconcile_failures: int = 0
 var _prediction_updates_emitted: int = 0
 var _construction_replica
+var _construction_session: Dictionary = {}
 var _construction_snapshot_updates := 0
 var _construction_event_updates := 0
 var _construction_rejections := 0
@@ -153,6 +154,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_compact_snapshot_clock_updates = 0
 	_prediction_reconciler = ClientPredictionReconciler.new()
 	_construction_replica = ConstructionReplica.new()
+	_construction_session.clear()
 	_construction_snapshot_updates = 0
 	_construction_event_updates = 0
 	_construction_rejections = 0
@@ -205,6 +207,7 @@ func setup(config: Dictionary) -> Dictionary:
 func _process(_delta: float) -> void:
 	if not _configured or _boundary == null: return
 	var process_started_us: int = Time.get_ticks_usec()
+	var disconnected_this_poll: bool = false
 	_telemetry.increment("client_process_iterations")
 	var polled: Dictionary = _boundary.poll_events(128)
 	if not bool(polled.get("success", false)):
@@ -248,7 +251,8 @@ func _process(_delta: float) -> void:
 			_debug_event("SERVER_DISCONNECTED", event)
 			_write_report("DISCONNECTED", false)
 			server_disconnected.emit(get_report())
-	if not _joined and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+			disconnected_this_poll = true
+	if not _joined and _server_disconnects == 0 and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
 		_fail_connection("M3_CLIENT_CONNECT_TIMEOUT")
 	_flush_pending_input_batch(false)
 	_update_runtime_telemetry()
@@ -911,6 +915,9 @@ func _accept_construction_snapshot(payload: Dictionary) -> void:
 		_construction_rejections += 1
 		_last_error_code = "CONSTRUCTION_REPLICA_NOT_READY"
 		return
+	var session_value = payload.get("client_session", {})
+	if session_value is Dictionary:
+		_construction_session = Dictionary(session_value).duplicate(true)
 	var bundle_value = payload.get("state_bundle", {})
 	if not bundle_value is Dictionary:
 		_construction_rejections += 1
@@ -958,6 +965,7 @@ func execute_construction_command_blocking(command: Dictionary, operation_id: St
 	return _failure("M3_CONSTRUCTION_COMMAND_TIMEOUT")
 
 func get_construction_bundle() -> Dictionary: return _construction_replica.get_bundle() if _construction_replica != null else {}
+func get_construction_session() -> Dictionary: return _construction_session.duplicate(true)
 
 func request_graceful_leave(timeout_ms: int = 2500) -> Dictionary:
 	if not _joined: return _success({"already_left": true})

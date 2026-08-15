@@ -385,9 +385,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _execute_first_available_command(hotkey_commands):
 			get_viewport().set_input_as_handled()
 			return
-		var command_line: String = get_inventory_hotbar_command_for_key(event.physical_keycode)
+		var gameplay_keycode: int = (
+			event.physical_keycode if event.physical_keycode != 0 else event.keycode
+		)
+		var command_line: String = get_inventory_hotbar_command_for_key(gameplay_keycode)
 		if command_line.is_empty():
-			match event.physical_keycode:
+			match gameplay_keycode:
 				KEY_TAB:
 					command_line = "inventory.toggle" if command_registry.has_command("inventory.toggle") else "input.mouse.toggle"
 				KEY_E:
