@@ -13,6 +13,7 @@ func _init() -> void:
 		"server_host": String(options.get("server-host", "127.0.0.1")),
 		"server_a_port": int(options.get("server-a-port", "24580")),
 		"server_b_port": int(options.get("server-b-port", "24581")),
+		"client_port": int(options.get("client-port", "24780")),
 		"handoffs": int(options.get("handoffs", "4")),
 		"timeout_ms": int(options.get("timeout-ms", "60000")),
 		"result_file": String(options.get("result-file", "")),
