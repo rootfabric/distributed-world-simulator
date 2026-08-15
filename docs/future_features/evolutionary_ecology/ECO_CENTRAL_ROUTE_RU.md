@@ -1,196 +1,231 @@
-# ECO — Центральный маршрут развития ветки
+# ECO — Центральный маршрут развития
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 REPAIRED CANDIDATE / EXACT WINDOWS RERUN`.
+Статус: `ACTIVE / VIS1 PRIORITY / RESEARCH_PRESENTATION`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
+
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
-## Accepted foundation
+Visual proving ground plan: `docs/future_features/evolutionary_ecology/ECO_VIS1_VISUAL_PROVING_GROUND_PLAN_RU.md`.
+
+## Решение о текущем приоритете
+
+После закрытия branch-local P4 следующая практическая задача ECO — **сначала увидеть и измерить результат модели**, а не немедленно продолжать production integration.
+
+Текущий маршрут:
 
 ```text
-ECO.P1                    ACCEPTED
-ECO.PH0..PH5-S4           ACCEPTED
-ECO.CONV0-A               ACCEPTED
-ECO.CAL1-A..F             ACCEPTED
-CAL1-F                    ROBUST_UNITY_CALIBRATION
-ECO.EVO1 / P2.1           ACCEPTED
-ECO.EVO1 / P2.2           ACCEPTED
-ECO.EVO1 / P2.3           ACCEPTED
-ECO.EVO1 / P2.4           ACCEPTED
-ECO.EVO1 / P2.5           ACCEPTED
-ECO.EVO1 / P2.6           ACCEPTED
-ECO.EVO1 / P2.7           ACCEPTED
+accepted ECO research + PH5 derived presentation
+        ↓
+P4 branch lifecycle COMPLETE
+        ↓
+ECO.VIS1 Visual Ecology Proving Ground       ← PRIORITY NOW
+        ↓
+ECO.VIS2 Causal Landscape Experiment
+        ↓
+ECO.XFER-VIS Real World Surface Adapter
+        ↓
+дальнейшая production integration уже на поверхности simulator
 ```
 
-Canonical hashes:
+`control/eco-p4-production-convergence-prep-r1` / PR #108 сохраняется как готовая карта будущего production convergence. Она не отменена, но не является ближайшей практической целью.
+
+## Почему VIS1 сейчас важнее
+
+Модель уже содержит достаточно причинной ecology-логики и derived plant presentation, чтобы следующий риск был не «нам не хватает ещё одной формулы», а «мы плохо видим, что модель реально делает в пространстве и во времени».
+
+VIS1 должен дать два синхронных представления одной ecology truth:
 
 ```text
-CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
-P2.1    cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6
-P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
-P2.3    15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e
-P2.4    78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97
-P2.5    292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696
-P2.6    3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c
-P2.7    7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe
+canonical/research ecology state
+       ├── numerical diagnostics
+       └── derived PH5 visual presentation
 ```
 
-## Current route
+Числа и картинка должны объяснять друг друга.
+
+## VIS1 — ближайший этап
+
+Первый полигон — bounded landscape примерно `500 x 500 m`, расширяемый до `1 x 1 km` без смены contracts.
+
+Он не содержит canonical biome map. Вместо неё используются continuous causal fields:
+
+- temperature;
+- moisture;
+- light;
+- nutrients;
+- altitude;
+- slope;
+- water availability/distance;
+- seasonal inputs;
+- disturbance state/history.
+
+Разные участки должны отличаться только причинами среды и истории. Названия вроде «лес», «луг», «болото» допустимы только как human observation результата.
+
+### Переносимая граница
 
 ```text
-EVO0 / CAL1 COMPLETE
-   ↓
-P2.1 Seed Dispersal Kernel ACCEPTED
-   ↓
-P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
-   ↓
-P2.3 Local Population Turnover + Succession ACCEPTED
-   ↓
-P2.4 Patch Colonization / Isolation / Migration ACCEPTED
-   ↓
-P2.5 Disturbance + Recovery ACCEPTED
-   ↓
-P2.6 Long-Horizon Biogeography ACCEPTED
-   ↓
-P2.7 Lineage Divergence / Speciation Candidate Diagnostics ACCEPTED
-   ↓
-P2.8 Deterministic Save/Restart Plant World Proof
-   ├─ original candidate 8cd4c440... → exact Windows FAIL
-   ├─ finding P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE
-   ├─ codec repair dc910baa...
-   ├─ codec preflight 31fd42a...
-   └─ fail-fast runner 8d5de417... ← CURRENT REPAIRED CANDIDATE
-        ↓ exact Windows PASS required
-EVO1 COMPLETE
-   ↓
-post-EVO1 route resolution: EVO2 + XFER0
+EcoEnvironmentProvider.sample(position) -> EnvironmentSample
 ```
 
-## What the exact Windows log proved
+VIS1 использует `LabEnvironmentProvider`.
 
-The first P2.8 candidate run used Godot `4.7.1.stable.double.custom_build.a13da4feb`.
+Позже XFER-VIS заменяет его на `WorldEnvironmentProvider`, который читает реальную поверхность, воду, климат, material/resource projections и world history.
 
-Before P2.8 execution it repeated the full accepted parent chain. P2.1 through P2.7 all passed again with their accepted hashes. P2.7 again produced:
+Ecology consumer не должна зависеть от того, какой provider используется.
 
-`7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe`.
-
-P2.8 parser/preload also passed. The first P2.8 assertion then failed:
+### VIS1 steps
 
 ```text
-ECO.EVO1-P2.8 assertion failed: experiment result exists
+VIS1.0  Lab scene + terrain + camera/operator movement
+VIS1.1  EcoEnvironmentProvider + LabEnvironmentProvider
+VIS1.2  spatial ecology snapshot projection
+VIS1.3  accepted PH5 materialization on polygon
+VIS1.4  time controls + same-seed restart
+VIS1.5  numerical dashboard + time-series capture
+VIS1.6  diagnostic overlays
+VIS1.7  disturbances + event log
+VIS1.8  0->200 year comparative acceptance experiment
 ```
 
-Thus the failure was isolated to `Experiment.run()` and was not a regression in P2.7-or-earlier ecology.
+## Что смотрим визуально
 
-## Root cause
+Нас интересуют не финальные красивые assets, а причинно читаемые различия:
 
-Original P2.8 typed JSON handled `Vector2`, `Rect2`, `StringName` and packed strings explicitly, but emitted integer Variant values as ordinary JSON numbers.
+- высота/форма растений;
+- canopy/branch/foliage differences;
+- плотность и biomass;
+- локальная адаптация к environment;
+- расселение;
+- succession;
+- coexistence/competitive displacement;
+- disturbance/recovery;
+- долгосрочное пространственное разделение communities.
 
-Direct execution on the project-attached Godot Linux double build with the same engine commit proved:
+PH5 остаётся derived presentation. Mesh/LOD никогда не становятся ecology truth.
+
+## Что смотрим в числах
+
+Для selected patch/region и для всего полигона нужны минимум:
+
+- simulation year / generation;
+- environment sample;
+- population/cohort count;
+- lineage count;
+- total biomass;
+- biomass by lineage;
+- dominant share;
+- recruitment/establishment/turnover, где доступны;
+- resource pressure;
+- coexistence/diversity diagnostics;
+- disturbance/recovery progress;
+- deterministic ecology/result hash.
+
+Нужны временные ряды, чтобы видеть не только итог, но и путь к нему.
+
+## Ускоренное время
+
+Обязательные controls:
 
 ```text
-before JSON: int -> TYPE_INT
-JSON.parse_string: same numeric value -> TYPE_FLOAT
+PAUSE
+1x
+10x
+100x
+1000x
++1 year
++10 years
++100 years
 ```
 
-P2.8 canonical hashing intentionally distinguishes:
+Целевой операторский эксперимент — увидеть примерно `0 -> 200` игровых лет за минуты.
+
+Ускоренный stepping обязан сохранять те же ecology semantics, что эквивалентный deterministic progression.
+
+## Diagnostic overlays
 
 ```text
-TYPE_INT   -> I...
-TYPE_FLOAT -> F...
+NORMAL
+MOISTURE
+TEMPERATURE
+NUTRIENTS
+LIGHT
+WATER_AVAILABILITY
+BIOMASS
+POPULATION_DENSITY
+LINEAGE
+AGE/SUCCESSION
+FITNESS/SUITABILITY
+DISTURBANCE/RECOVERY
 ```
 
-Therefore a newly serialized checkpoint could change `current_year`, `seed_count`, counters and other integer truth from TYPE_INT to TYPE_FLOAT during parse, causing its own `world_hash` / `checkpoint_hash` verification to fail closed.
+Overlay — derived read-only диагностика.
 
-Finding:
+## Controlled disturbances
 
-`P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE`.
+VIS1 должен позволять применять bounded лабораторные события:
 
-## Repair
+- fire;
+- drought;
+- flood;
+- cold/warm period;
+- nutrient enrichment/depletion;
+- local vegetation clearing.
 
-`dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1` changes only the P2.8 persistence codec:
+Каждое событие записывается в deterministic event log с областью, силой и временем.
+
+## VIS1 acceptance
+
+VIS1 проходит, когда можно в одной operator session:
+
+1. ходить/летать камерой над полигоном;
+2. видеть vegetation и числовую ecology одного состояния;
+3. ускорять время и видеть изменение community;
+4. вызвать disturbance и проследить recovery/succession;
+5. сравнить разные causal zones без biome/species table;
+6. перезапустить same seed + same event log и получить те же ecology hashes;
+7. переключать environment/ecology overlays;
+8. подтвердить, что presentation не меняет ecology truth.
+
+## VIS2
+
+VIS2 делает landscape менее лабораторным:
+
+- richer relief;
+- drainage/water;
+- continuous soil/resource fields;
+- altitude-temperature coupling;
+- slope/exposure;
+- seasons;
+- spatial disturbance history;
+- multiple-seed comparison.
+
+Главный вопрос VIS2: возникают ли устойчиво разные сообщества сами из environment + history.
+
+## XFER-VIS
+
+После VIS1/VIS2 переносим не «демо», а интерфейс:
 
 ```text
-TYPE_INT
-  -> typed Int JSON wrapper
-  -> int(value) during decode
+LabTerrain + LabEnvironmentProvider
+              ↓
+Real simulator surface + WorldEnvironmentProvider
 ```
 
-Diff from original candidate for the semantic repair itself is one P2.8 file, `+5/-1`. No accepted P2.7-or-earlier source and no runtime path changed.
+Первая production-like цель — один реальный surface region около `1 x 1 km`, не вся планета.
 
-`31fd42a503875247cc758b36d7915a99a6a72698` adds a dedicated checkpoint codec regression. It verifies nested integer/float types, `Vector2`, `Rect2`, `PackedStringArray` and exact canonical value hash across JSON round-trip.
+На этом этапе уже используются ограничения из PR #108: ECO не создаёт вторую persistence, authority, World Query, lifecycle/work-budget или network truth.
 
-`8d5de417f83ac257ee3bc1ae40c02847ac82de82` moves that regression before the long parent chain in the P2.8 runner.
+## Ownership / non-goals
 
-## Supplementary same-engine verification
+VIS track не владеет:
 
-The attached Linux binary reports the exact same engine source revision:
+- terrain/geology truth;
+- production persistence durability;
+- server/cross-server authority;
+- World Query;
+- lifecycle/work-budget foundations;
+- material ontology;
+- network replication policy.
 
-`4.7.1.stable.double.custom_build.a13da4feb`.
-
-On it, repaired codec probe reproduced the same canonical hash before and after JSON round-trip:
-
-`563208df7930f3ca9e341076c9dbe23f71c59d559f9206d615b164fb981cbab1`.
-
-A two-cut representative checkpoint flow was then run in three fresh Godot processes. Every run produced:
-
-```text
-cut A year 14
-checkpoint A = e10eed0d6979e4f0f3ed605a3d1a53c8688d3638fc5dc8aa586fe124c6724e41
-
-cut B year 18
-checkpoint B = 52fe07c45258cef3f90e03aaed65d1e5ad35bad8be77defb3ad1de01848845e4
-
-final year = 30
-P2.7 evidence preserved = true
-tamper rejected = true
-```
-
-This is supplementary evidence, not a substitute for exact Windows canonical acceptance.
-
-## P2.8 final proof still required
-
-P2.8 must still establish the full semantic equality:
-
-```text
-P2.6-equivalent baseline result_hash
-  == stateful uninterrupted result_hash
-  == save14/restore/save18/restore result_hash
-```
-
-plus exact final cohort state, persisted P2.7 diagnostics, conservation and fresh-process disk restore A/B.
-
-## Exact Windows rerun
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_EVO1_P2_8_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner is now fail-fast:
-
-```text
-parser/preload preflight
-P2.8 checkpoint codec preflight
-accepted P2.7 full regression
-P2.8 acceptance / disk checkpoint creation
-fresh process replay A
-fresh process replay B
-aggregate + P2.6 result equality
-```
-
-Until exact Windows PASS:
-
-```text
-P2.8 = REPAIRED_CANDIDATE
-P2.8 != ACCEPTED
-EVO1 != COMPLETE
-EVO2 = BLOCKED
-```
-
-Current resolver: `RERUN EVO1/P2.8 EXACT WINDOWS AFTER CHECKPOINT CODEC REPAIR`.
+Полигон нужен для исследования, объяснимости и presentation feedback. Production port начинается только после того, как результат ECO нас устраивает визуально и численно.
