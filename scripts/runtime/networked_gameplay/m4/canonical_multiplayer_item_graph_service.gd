@@ -193,12 +193,108 @@ func _transfer(
 	if normalized_target == "inventory/%s" % player_id:
 		return _transfer_to_inventory_slot(player_id, item_id, amount, target_slot_index)
 	if normalized_target == "hotbar/%s" % player_id:
-		if target_slot_index < 0 or target_slot_index >= _hotbar_size():
-			return _failure("INVALID_HOTBAR_INDEX")
-		return super._transfer(player_id, item_id, quantity, target_container_id, target_slot_index, target_item_id)
+		return _transfer_to_hotbar_slot(player_id, item_id, amount, target_slot_index)
 	if normalized_target.begins_with("container/"):
 		return _transfer_to_container_slot(player_id, item_id, amount, normalized_target, target_slot_index)
 	return _failure("UNSUPPORTED_TRANSFER_TARGET")
+
+
+func _assign_hotbar(player_id: String, item_id: String, slot_index: int) -> Dictionary:
+	if slot_index < 0 or slot_index >= _hotbar_size():
+		return _failure("INVALID_HOTBAR_INDEX")
+	var access := _owned_item(player_id, item_id)
+	if not bool(access.get("success", false)):
+		return access
+	var plan := _hotbar_assignment_plan(player_id, item_id, slot_index)
+	if not bool(plan.get("success", false)):
+		return plan
+	return _commit_hotbar_assignment(player_id, item_id, slot_index, Dictionary(plan.get("details", {})))
+
+
+func _transfer_to_hotbar_slot(player_id: String, item_id: String, amount: int, target_slot_index: int) -> Dictionary:
+	if target_slot_index < 0 or target_slot_index >= _hotbar_size():
+		return _failure("INVALID_HOTBAR_INDEX")
+	var source: Dictionary = _items[item_id]
+	var source_quantity := int(source.get("quantity", 1))
+	if amount != source_quantity:
+		return _failure("HOTBAR_ASSIGNMENT_REQUIRES_WHOLE_ITEM")
+	var location: Dictionary = Dictionary(source.get("location", {})).duplicate(true)
+	var kind := String(location.get("kind", ""))
+	if kind != "WORLD" and (kind != "INVENTORY" or String(location.get("player_id", "")) != player_id):
+		return _failure("PLAYER_PERMISSION_DENIED")
+	var plan := _hotbar_assignment_plan(player_id, item_id, target_slot_index)
+	if not bool(plan.get("success", false)):
+		return plan
+	if kind == "WORLD":
+		source["location"] = {"kind": "INVENTORY", "player_id": player_id}
+		_items[item_id] = source
+		_add_to_inventory(player_id, item_id)
+	return _commit_hotbar_assignment(player_id, item_id, target_slot_index, Dictionary(plan.get("details", {})))
+
+
+func _hotbar_assignment_plan(player_id: String, item_id: String, slot_index: int) -> Dictionary:
+	if not _inventories.has(player_id):
+		return _failure("PLAYER_PERMISSION_DENIED")
+	var inventory: Dictionary = _inventories[player_id]
+	var hotbar: Array = Array(inventory.get("hotbar", [])).duplicate()
+	while hotbar.size() < _hotbar_size():
+		hotbar.append("")
+	var displaced_item_id := String(hotbar[slot_index])
+	var displaced_slot_index := -1
+	if not displaced_item_id.is_empty() and displaced_item_id != item_id:
+		if not _items.has(displaced_item_id):
+			return _failure("ITEM_NOT_FOUND")
+		var displaced_access := _owned_item(player_id, displaced_item_id)
+		if not bool(displaced_access.get("success", false)):
+			return displaced_access
+		displaced_slot_index = _first_free_inventory_slot(player_id, item_id)
+		if displaced_slot_index < 0:
+			return _failure("CONTAINER_FULL")
+	return _success({
+		"displaced_item_id": displaced_item_id if displaced_item_id != item_id else "",
+		"displaced_slot_index": displaced_slot_index,
+	})
+
+
+func _commit_hotbar_assignment(
+	player_id: String,
+	item_id: String,
+	slot_index: int,
+	plan: Dictionary
+) -> Dictionary:
+	var inventory: Dictionary = _inventories[player_id]
+	var hotbar: Array = Array(inventory.get("hotbar", [])).duplicate()
+	while hotbar.size() < _hotbar_size():
+		hotbar.append("")
+	for index in range(hotbar.size()):
+		if String(hotbar[index]) == item_id:
+			hotbar[index] = ""
+	var displaced_item_id := String(plan.get("displaced_item_id", ""))
+	var displaced_slot_index := int(plan.get("displaced_slot_index", -1))
+	if not displaced_item_id.is_empty():
+		var displaced: Dictionary = _items[displaced_item_id]
+		displaced["location"] = {
+			"kind": "INVENTORY",
+			"player_id": player_id,
+			"slot_index": displaced_slot_index,
+		}
+		_items[displaced_item_id] = displaced
+	var assigned: Dictionary = _items[item_id]
+	var assigned_location: Dictionary = Dictionary(assigned.get("location", {})).duplicate(true)
+	assigned_location["kind"] = "INVENTORY"
+	assigned_location["player_id"] = player_id
+	assigned_location.erase("slot_index")
+	assigned["location"] = assigned_location
+	_items[item_id] = assigned
+	hotbar[slot_index] = item_id
+	inventory["hotbar"] = hotbar
+	_inventories[player_id] = inventory
+	return _success({
+		"item_id": item_id,
+		"slot_index": slot_index,
+		"displaced_item_id": displaced_item_id,
+		"displaced_slot_index": displaced_slot_index,
+	})
 
 
 func _swap_with_occupied_target(
