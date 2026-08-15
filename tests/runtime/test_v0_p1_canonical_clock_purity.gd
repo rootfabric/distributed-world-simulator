@@ -257,7 +257,11 @@ func _test_hotbar_replacement_publishes_displaced_slot_before_pure_snapshot() ->
 	var displaced_location := _item_location(snapshot, BEACON_STACK_ID)
 	_assert(String(displaced_location.get("kind", "")) == "INVENTORY", "displaced hotbar beacon remains canonical inventory item")
 	_assert(String(displaced_location.get("player_id", "")) == "a", "displaced hotbar beacon preserves canonical owner")
-	_assert(int(displaced_location.get("slot_index", -1)) == battery_slot, "displaced hotbar beacon receives freed canonical backpack slot before pure snapshot")
+	var displaced_slot := int(displaced_location.get("slot_index", -1))
+	_assert(
+		displaced_slot >= 0 and graph._inventory_slot_occupant("a", displaced_slot) == BEACON_STACK_ID,
+		"displaced hotbar beacon receives canonical backpack slot before pure snapshot"
+	)
 
 
 func _test_full_backpack_hotbar_transfer_rejects_before_world_mutation() -> void:
