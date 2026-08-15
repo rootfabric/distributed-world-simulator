@@ -74,6 +74,29 @@ function Invoke-Sm0CompileCheck {
     }
 }
 
+function Invoke-Sm0ScriptTest {
+    param([string]$ScriptPath, [string]$Label)
+
+    Write-Host "[SM0] Running $Label..."
+    $HadDisabled = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
+    $PreviousDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        & $GodotExe `
+            --headless `
+            --path $ProjectRoot `
+            --script $ScriptPath
+        $TestExit = $LASTEXITCODE
+    }
+    finally {
+        if ($HadDisabled) { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousDisabled }
+        else { Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
+    }
+    if ($TestExit -ne 0) {
+        throw "SM0 $Label failed: $ScriptPath (exit $TestExit)"
+    }
+}
+
 $Forward = @{
     Handoffs = $Handoffs
     ProjectRoot = $ProjectRoot
@@ -87,17 +110,24 @@ if ($Restart) { $Forward["Restart"] = $true }
 $InnerExit = 1
 try {
     $CompileScripts = @(
+        "res://scripts/runtime/networked_gameplay/multiplayer_gameplay_authority_service.gd",
+        "res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd",
         "res://scripts/runtime/seamless/sm0/sm0_contracts.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd",
-        "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd"
+        "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd",
+        "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd"
     )
     foreach ($CompileScript in $CompileScripts) {
         Invoke-Sm0CompileCheck -ScriptPath $CompileScript
     }
     Write-Host "[SM0] Compile-smoke PASS ($($CompileScripts.Count) scripts)."
+
+    Invoke-Sm0ScriptTest `
+        -ScriptPath "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd" `
+        -Label "handoff motion import regression"
 
     & $InnerRunner @Forward
     $InnerExit = $LASTEXITCODE
