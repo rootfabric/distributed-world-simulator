@@ -1,659 +1,398 @@
-# V0 Critical Path Acceleration Proposal — Networked Planetary Outpost First
+# V0 Critical Path Acceleration — P0→P4 Product-Lineage Refresh
 
-**Status:** `CONTROL PROPOSAL / NOT CANONICAL UNTIL MAIN ACCEPTANCE`  
+**Status:** `GENERATION-80 CONTROL REFRESH CANDIDATE / NOT CANONICAL UNTIL MAIN ACCEPTANCE`  
 **Repository:** `rootfabric/distributed-world-simulator`  
-**Proposal base:** `main @ 09714b6f2681e3b5cf3f2f9e28416cf9a7378304`  
-**Architecture:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation at base:** `79`  
-**Date:** `2026-08-13`
+**PR:** `#98`  
+**Original control base:** `main @ 09714b6f2681e3b5cf3f2f9e28416cf9a7378304`  
+**Architecture:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`
 
----
+## 1. Почему исходный вариант PR #98 устарел
 
-## 1. Product checkpoint
+Исходный generation-80 proposal решал правильную проблему: V0 не должен ждать H0.3 и NX.C1, если один bounded product worker может использовать существующий `SERVER_PREDICTED` runtime.
 
-Первый V0 checkpoint должен быть не subsystem-lab и не offline demo.
-
-Он должен доказать минимальный живой сетевой мир:
+После его создания реальный product train ушёл вперёд:
 
 ```text
-procedural planet
-      +
-network server
-      +
-2 clients
-      +
-playable characters
-      +
-network-visible movement
-      +
-canonical Construction commit
-      +
-replicated small outpost
-      +
-reconnect / persistent world state
+P0 playable frontier
+→ P1 world items / containers
+→ P2 reconnectable shared state
+→ P3 resource mining
+→ P3.1 visual interaction repair
+→ P4 preparation
 ```
 
-Machine checkpoint to add:
+Поэтому два исходных предположения стали вредными:
+
+1. новый V0 runtime Work Order обязан начинаться byte-for-byte от `exact current main`;
+2. после первого outpost checkpoint следующим продуктовым направлением должен быть Ship-0.
+
+Первое заставляет выбрасывать уже проверенную композицию P0-P3. Второе уводит critical path от замыкания базового gameplay loop.
+
+## 2. Что сохраняется из старого proposal
+
+Следующие правила остаются правильными и обязательными:
 
 ```text
-V0_S1_NETWORKED_PLANETARY_OUTPOST
+SERVER_PREDICTED remains valid V0 baseline
+H0.2 / NX.C1 is not a blanket V0 prerequisite
+pre-H0.3 total runtime mutation workers <= 1
+verification/review-only work may coexist with one mutation worker
+V0 cannot invent private network/authority foundations
+network foundation change fails closed to NX
 ```
 
-Короткая продуктовая формулировка:
+Refresh не ослабляет NX acceptance и не разрешает несколько runtime workers.
 
-> Два клиента подключаются к одному серверу и одной процедурной планете. У каждого есть персонаж. Игроки видят движение друг друга. Игрок строит небольшой объект через canonical Construction path, второй клиент видит тот же результат. После reconnect canonical world state не расходится.
+## 3. Новая модель: main owns control, product lineage owns continuation input
 
-Это первый checkpoint, после которого проект можно оценивать как настоящий интегрированный симулятор, а не только как набор принятых foundations.
-
----
-
-## 2. Почему network не должен автоматически ждать H0.2/NX.C1 acceptance
-
-H0.2/NX.C1 уже имеет bounded source implementation:
+Нужно различать две вещи:
 
 ```text
-implementation head:
-1814ca72c9569ea2aa7e3d1dd4a69eb790888908
+CONTROL / PROJECT EPOCH
+  anchored to exact canonical main
 
-lifecycle head:
-d1a4466775a6e08192179dfc9af397eafbf574c0
+RUNTIME PRODUCT EXECUTION BASE
+  exact V0 lineage head declared by main-owned control
 ```
 
-Но NX.C1 runtime/source acceptance ещё не доказана.
+`MAIN DECLARES PROJECT STATE` не означает `EVERY PRODUCT BRANCH MUST RESTART FROM MAIN BYTES`.
 
-При этом текущая canonical network runtime уже имеет существующий default locomotion profile:
+Main может объявить точную проверенную product lineage как execution input, сохраняя за собой:
+
+- право разрешить или запретить продолжение;
+- architecture ownership;
+- checkpoint/risk/review rules;
+- mutation-worker ceiling;
+- human merge gates.
+
+## 4. Текущий main-declared P4 execution base
+
+Для generation-80 refresh exact product input фиксируется как:
 
 ```text
-SERVER_PREDICTED
+branch:
+repair/v0-p3-visual-interaction-r1
+
+sha:
+ef3ad5f0afc433802d639171d938e4720b3a46ec
 ```
 
-Новый профиль:
+Почему не `main`:
+
+- current main не содержит текущую P0-P3 product composition;
+- P1/P2/P3 уже проходили реальный Windows/Godot runtime train;
+- mining P3.1 реально проверен оператором;
+- P4 preparation уже построена именно на этом exact head.
+
+Почему не PR #117 head:
 
 ```text
-OWNER_AUTHORITATIVE_VALIDATED
+11819f6dd1ea3728382a04737d30a5300de622f7
 ```
 
-остаётся opt-in и не должен становиться обязательной зависимостью первого V0 только потому, что его verification идёт сейчас.
+#117 является отдельным HIGH-risk replica repair и пока не должен silently enter P4 before independent acceptance. Он остаётся отдельным review/verification gate перед финальной replication/soak confidence.
 
-Поэтому V0-S1 использует сначала существующий canonical network behavior из current main.
+Execution-base declaration **не является P3 acceptance**.
+
+## 5. Фактическое состояние P0-P4
+
+### P0
+
+Validated playable frontier already proves:
+
+- procedural Earth;
+- dedicated server;
+- clients A/B;
+- playable movement;
+- canonical inventory composition;
+- authoritative Construction presentation/replication.
+
+### P1
+
+PR #103 current head:
 
 ```text
-V0-S1 network baseline = current canonical SERVER_PREDICTED path
-
-OWNER_AUTHORITATIVE_VALIDATED
-  = optional experimental axis only after its exact runtime predicates allow it
+f7ab0a8b91394724b66e3f4ee387de3441a676ca
 ```
 
-Это сохраняет HIGH-risk NX.C1 gate без превращения его в глобальный waterfall.
+World items, pickup/drop, external containers and modern canonical inventory composition are present. Fresh P1 review is PASS.
 
----
+### P2
 
-## 3. Execution topology
-
-Целевой route:
+PR #109 exact candidate:
 
 ```text
-                                  ┌─ H0.2 / NX.C1 runtime verification
-                                  │          ↓
-                                  │     H0_2_PASS + NX SOURCE_ACCEPTED
-                                  │          ↓
-R3 + post-R3 PC0 ─────────────────┼─> H0.3 (>1 mutation workers)
-        │                         │
-        │                         └─ optional OWNER_AUTHORITATIVE_VALIDATED axis
-        │
-        └─> V0-S1 NETWORKED PLANETARY OUTPOST
-                    ↓
-                 V0-S2
-              LANDED SHIP-0
-                    ↓
-                 V0-S3+
-           movable ship / space / handoff
+92e3e197e11156d6c36a58a3b4a4f447397c99d7
 ```
 
-H0.3 не является gameplay/network capability. До его acceptance сохраняется:
+Status at refresh:
 
 ```text
-simultaneous autonomous runtime IMPLEMENTATION workers <= 1
+Windows exact-head GREEN
+Reviewer PASS
+Verifier PASS
+Director verdict pending
 ```
 
-Verification/review-only activity на уже реализованной NX branch не считается вторым mutation worker.
+### P3
 
-Если NX снова входит в non-trivial FIX/runtime mutation, Director обязан сериализовать её с V0 mutation work.
-
----
-
-## 4. Preconditions V0-S1
-
-Обязательны:
+Base mining candidate:
 
 ```text
-H0_1_PASS
-C22_MAIN_INTEGRATED
-GLOBAL_P0_R3_CANONICAL
-POST_R3_STANDARD_PC0_NON_RED
-POST_R3_DIRECTIONAL_PC0_NON_RED
-CANONICAL_MAIN_KNOWN
-NO_GLOBAL_PROJECT_RED
-PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1
-CANONICAL_NETWORK_RUNTIME_PRESENT
+f27a60279c8ad61d47ebe3fad81b6898679c660f
 ```
 
-Не являются обязательными precondition:
+P3.1 interaction repair:
 
 ```text
-H0_2_PASS
-NX_SOURCE_ACCEPTED
-OWNER_AUTHORITATIVE_VALIDATED_ACCEPTED
-H0_3_SCHEDULER_ACCEPTED
-NX_C1_RUNTIME_MERGED
+ef3ad5f0afc433802d639171d938e4720b3a46ec
 ```
 
-V0-S1 должен стартовать от exact then-current canonical main.
+Operator evidence demonstrated real mining and second-client depletion visibility.
 
-Нельзя создавать его как продолжение длинной legacy branch lineage.
+### P4
 
----
-
-## 5. Bounded runtime scope
-
-V0-S1 должен **собрать**, а не переизобрести существующие owners.
+Current branch:
 
 ```text
-canonical procedural planetary surface
-            +
-existing dedicated/listen server runtime
-            +
-existing client connection/session path
-            +
-canonical Character/Player runtime
-            +
-current canonical locomotion/replication profile
-            +
-existing Construction placement/commit truth
-            +
-C22 representation/runtime path
-            +
-existing persistence/recovery where already canonical
+feature/v0-p4-construction-real-resources
 ```
 
-Главная задача V0 implementation branch — composition/glue, launch mode, scenario fixtures и missing bounded adapters.
-
-Она не получает права создавать private terrain/network/construction/player truth.
-
----
-
-## 6. Exact user scenario
-
-Acceptance runtime должен механически или операторски пройти один и тот же сценарий.
-
-### Start
-
-1. Запустить dedicated server V0-S1.
-2. Сервер создаёт/загружает одну canonical procedural planet/world instance.
-3. Подключить Client A.
-4. Подключить Client B.
-5. Оба клиента оказываются на одной планете в одной world/session identity.
-
-### Character
-
-6. У Client A есть playable character.
-7. У Client B есть playable character.
-8. A видит B.
-9. B видит A.
-10. A двигается — B получает корректное remote movement.
-11. B двигается — A получает корректное remote movement.
-12. Нет постоянного teleport/jitter loop, duplicate character bodies или divergent player identities.
-
-### Construction
-
-13. Client A входит в существующий Construction placement flow.
-14. A ставит foundation/floor/wall или другой минимальный набор существующих building pieces.
-15. Commit проходит через canonical server/Construction path.
-16. Сервер принимает одну canonical construct mutation.
-17. Client A видит подтверждённую постройку.
-18. Client B получает тот же construct/revision и видит ту же постройку.
-19. После replication нет private client-only building truth.
-20. Client B может подойти к построенному объекту и наблюдать/коллидировать с тем же canonical result.
-
-Минимальный outpost:
+Refresh input head:
 
 ```text
-1 foundation/floor
-+ 2-4 walls or equivalent existing pieces
-+ optional roof only if already cheap to compose
+c20310cf804374ab515fd7a363b6471c2b933ac0
 ```
 
-Checkpoint не требует развитой строительной игры. Нужен только доказанный cross-client canonical construct.
+Already durable:
 
-### Reconnect
+- HIGH-risk Work Order #118;
+- source/risk Repair Map;
+- exact-consume RED contract;
+- exact P4.1 three-file patch prepared;
+- no production/runtime mutation yet because generation-80 activation is not canonical.
 
-21. Отключить Client B.
-22. Client A остаётся в мире.
-23. Подключить B снова с корректной session/player identity policy.
-24. B снова видит существующий outpost без его повторного создания.
-25. B видит актуальное положение/состояние A по canonical network path.
+## 6. Current product checkpoint
 
-### Restart evidence
-
-Если canonical persistence path этого runtime уже поддерживает server restart для construction/world state:
-
-26. Завершить server runtime.
-27. Запустить тот же world/session persistence fixture снова.
-28. Проверить восстановление outpost.
-
-Если текущая production persistence boundary ещё не обещает именно этот restart contract для данного Construction path, server-restart persistence фиксируется как следующий bounded checkpoint, а **reconnect persistence внутри живого server world остаётся обязательным для V0-S1**.
-
-### Soak
-
-29. Выполнить минимум 30 минут двухклиентного bounded soak:
+Generation-80 refresh activates:
 
 ```text
-movement
-construction observation
-approach/leave area
-reconnect at least once
-normal camera/gameplay use
+V0_P4_REAL_RESOURCE_CONSTRUCTION
 ```
 
-30. Не должно быть unbounded queue growth, repeated authority rejection loop, duplicate construct identity или canonical state corruption.
-
----
-
-## 7. Required predicates
-
-Checkpoint predicates:
+Target loop:
 
 ```text
-V0_S1_EXACT_CURRENT_MAIN_BASE
-V0_S1_RISK_CLASSIFIED_HIGH
-V0_S1_DESIGN_BRIEF_READY
-V0_S1_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS
-
-V0_S1_SERVER_BOOT_PASS
-V0_S1_PROCEDURAL_PLANET_PASS
-V0_S1_TWO_CLIENT_JOIN_SAME_WORLD_PASS
-V0_S1_TWO_PLAYABLE_CHARACTERS_PASS
-V0_S1_REMOTE_CHARACTER_VISIBILITY_PASS
-V0_S1_BIDIRECTIONAL_MOVEMENT_REPLICATION_PASS
-
-V0_S1_CONSTRUCTION_PLACEMENT_PASS
-V0_S1_CANONICAL_CONSTRUCTION_COMMIT_PASS
-V0_S1_SECOND_CLIENT_CONSTRUCTION_REPLICATION_PASS
-V0_S1_NO_CLIENT_PRIVATE_CONSTRUCTION_TRUTH_PASS
-V0_S1_CONSTRUCTION_COLLISION_CONVERGENCE_PASS
-
-V0_S1_RECONNECT_SAME_WORLD_PASS
-V0_S1_RECONNECT_CONSTRUCTION_STATE_PASS
-V0_S1_30_MIN_TWO_CLIENT_SOAK_PASS
-
-V0_S1_NO_DUPLICATE_CANONICAL_TRUTH_PASS
-FULL_WORLD_CORE_REGRESSION_PASS
-POST_BUILD_CRITIQUE_COMPLETED
-EVIDENCE_MAP_COMPLETE
-INDEPENDENT_REVIEWER_PASS
-INDEPENDENT_VERIFIER_PASS
-REVIEW_HEAD_EXACT_AND_FRESH
-TESTED_HEADS_EXACT_AND_FRESH
-STANDARD_PC0_NON_RED
-DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS
-CRITICAL_CROSS_BRANCH_OVERLAP_ZERO
-HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED
-DRAFT_PR_OPEN
-V0_S1_CHECKPOINT_PROPOSED
+resource.mine
+→ canonical item/ore
+→ player inventory
+→ build intent
+→ deterministic server allocation
+→ atomic resource debit + Construction commit
+→ A/B publication
+→ reconnect convergence
 ```
 
-Risk floor = `HIGH`, потому что checkpoint доказывает networked canonical mutation/composition даже если production patch в основном состоит из adapters/scene glue.
+## 7. P4 technical sequence
 
-Human runtime merge gate остаётся отдельным от checkpoint proposal по существующей Harness policy.
+### P4.1 — exact stack consumption
 
----
-
-## 8. Network policy for V0-S1
-
-### Required baseline
-
-V0-S1 использует уже присутствующий на canonical main network path.
-
-Не требуется для первого PASS:
+Repair exactly three existing Construction surfaces:
 
 ```text
-new protocol message family
-new authority foundation
-cross-server authority
-server handoff
-new ownership registry
-OWNER_AUTHORITATIVE_VALIDATED profile
+construction_build_plan.gd
+construction_stage_transaction_planner.gd
+construction_item_mutation.gd
 ```
 
-### NX.C1 optional axis
-
-После exact NX.C1 focused/runtime evidence один и тот же V0-S1 scenario должен стать особенно полезным A/B fixture:
+Required behavior:
 
 ```text
-Profile A:
-SERVER_PREDICTED
-
-Profile B:
-OWNER_AUTHORITATIVE_VALIDATED
+requested > available  -> reject
+requested < available  -> UPDATE remaining quantity
+requested == available -> DELETE exhausted stack
 ```
 
-Но Profile B не может считаться PASS только потому, что V0 работает на Profile A.
+Existing adapters already support `DELETE`; no adapter/M0 redesign is required for P4.1.
 
-NX.C1 сохраняет собственные обязательные predicates:
+### P4.2 — deterministic server allocator
 
 ```text
-OWNER_AUTHORITY_FOCUSED_PASS
-PHYSICS_PRESENTATION_SINGLE_WRITER_PASS
-ITEM_ROLLBACK_PICKUP_DROP_PASS
-CLIENT_TICK_FUZZ_PASS_IF_TOUCHED
-FULL_WORLD_CORE_REGRESSION_PASS
-TWO_CLIENT_PASS
-IMPAIRED_NETWORK_PASS
-RECONNECT_OWNERSHIP_EPOCH_PASS
-POST_BUILD_CRITIQUE_COMPLETED
-EVIDENCE_MAP_COMPLETE
-INDEPENDENT_REVIEWER_PASS
-REVIEW_HEAD_EXACT_AND_FRESH
-TESTED_HEADS_EXACT_AND_FRESH
-STANDARD_PC0_NON_RED
-DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS
-CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS
+logical_player_id resolved server-side
+eligible definition_id == item/ore
+requesting player's canonical inventory only
+stable order = (slot_index, item_id)
+multi-stack allocation supported
+client item IDs are never trusted
 ```
 
----
+### P4.3 — live M4 Construction transaction port
 
-## 9. Fail-closed boundary
+Construction must mutate the same canonical M4 Item Graph that P3 mining writes.
 
-V0 branch не имеет права «починить сеть у себя», если для сценария нужен новый authority/network contract.
-
-Если current canonical `SERVER_PREDICTED` path не способен закрыть V0-S1 без изменения:
+Forbidden:
 
 ```text
-network protocol
-locomotion authority semantics
-ownership epoch semantics
-reconciliation contract
-canonical Character ownership
+M4 -> mutable copied ItemRegistry
+second Item Graph
+shadow material balance
 ```
 
-то результат:
+### P4.4 — composition ordering
+
+Construction gateway must receive the already-created canonical M4 owner through a bounded factory/composition repair rather than late unsafe binding or duplicate state.
+
+### P4.5 — publication
+
+Successful atomic outcome publishes:
 
 ```text
-V0_S1_BLOCKED_REQUIRES_NX
+Item Graph delta/full fallback
++
+Construction event/snapshot
 ```
 
-и конкретный defect/requirement переводится в H0.2/NX work.
+Failure publishes neither success mutation.
 
-Запрещено:
+### P4.6+ hardening
+
+- duplicate exact-once;
+- same operation ID / different payload conflict;
+- shortfall mutation-free;
+- ownership isolation;
+- source changed/removed before commit;
+- fault-injection rollback;
+- revision/tick purity;
+- A/B replication;
+- reconnect convergence.
+
+## 8. Acceptance debt is not hidden
+
+Current inherited debt:
 
 ```text
-private V0 network protocol
-private V0 movement authority
-client-authoritative Construction truth
-V0-only ownership epoch
-special-case duplicate player registry
+P2 Director verdict pending
+P3 aggregate Reviewer / Verifier / Director pending
+PR #117 independent HIGH-risk routing pending
 ```
 
-Это позволяет использовать V0 как integration detector без превращения его в новый foundation owner.
-
----
-
-## 10. Construction authority boundary
-
-Construction результат считается принятым только после canonical commit path.
-
-Допустимая client presentation:
+Generation-80 refresh applies this policy:
 
 ```text
-ghost / preview
-pending presentation
+bounded P4 implementation
+  MAY continue after activation + post-main PC0 + Director dispatch
+
+P4 checkpoint acceptance / stable V0 baseline
+  MUST wait for applicable inherited acceptance debt
 ```
 
-Canonical result:
+This is deliberate. Otherwise governance lag would repeatedly stop implementation even when exact product behavior is already demonstrated; conversely, simply declaring the debt irrelevant would make review meaningless.
 
-```text
-server accepted mutation
-    -> canonical construct revision
-    -> replicated representation to A and B
-```
+## 9. Worker concurrency
 
-Недопустимо:
-
-```text
-A locally creates permanent building
-B receives presentation-only RPC
-server has no matching canonical construct revision
-```
-
-V0-S1 обязан доказать именно shared canonical construct, а не визуальную синхронизацию двух клиентов.
-
----
-
-## 11. Forbidden ownership / non-goals
-
-V0-S1 — composition consumer и не владеет:
-
-```text
-ITEM_IDENTITY_AND_GRAPH
-CONSTRUCTION_TRUTH
-PERSISTENCE_DURABILITY
-NETWORK_REPLICATION_POLICY
-AUTHORITY_FOUNDATION
-CHARACTER_IDENTITY
-WORLD_QUERY_FABRIC
-WORLD_TRANSACTION_MODEL
-SPATIAL_DOMAIN_FABRIC
-MATERIAL_ONTOLOGY
-WORLD_WORK_BUDGET
-DEVELOPMENT_HARNESS
-```
-
-Не входят в checkpoint:
-
-```text
-ship
-ship flight
-orbit
-planet <-> space transition
-server handoff
-multi-server world
-terrain deformation
-advanced ecology
-AI population
-complex inventory loop
-fabrication
-combat
-large 100k/1M construction scale
-new material ontology
-```
-
-Это намеренно маленькая вертикаль.
-
----
-
-## 12. H0.3 boundary
-
-H0.3 остаётся development scheduler checkpoint.
-
-```text
-H0.3 = safe >1 concurrent autonomous runtime mutation workers
-H0.3 != network gameplay feature
-H0.3 != prerequisite for one V0 runtime branch
-```
-
-До H0.3:
+Before H0.3:
 
 ```text
 runtime mutation workers <= 1
 ```
 
-Разрешено одновременно:
+Recommended current slot owner:
 
 ```text
-1 V0 implementation worker
-+
-NX verification/review-only activity
+P4
 ```
 
-Не разрешено одновременно:
+May coexist:
 
 ```text
-V0 runtime mutation
-+
-NX non-trivial runtime FIX mutation
+P2/P3/#117/NX/SM0 review-only or verification-only work
 ```
 
-Director обязан сериализовать второй случай.
-
----
-
-## 13. Next slices
-
-После V0-S1:
-
-### V0-S2 — Networked Landed Ship-0
+Must serialize:
 
 ```text
-same networked planet
-+ same two-client baseline
-+ landed persistent ship/large construct
-+ enter/exit interior
-+ cargo/container only if existing canonical path composes cheaply
+P4 mutation + NX non-trivial mutation
+P4 mutation + SM0 non-trivial mutation
 ```
 
-Не требует flight.
+## 10. Product order after P4
 
-### V0-S3 — Movable Ship
+The product train is now:
 
 ```text
-ship movement
-player inside moving reference frame
-network ownership policy
-reconciliation
-persistence
+P4 real-resource Construction
+→ P5 equipment/tools
+→ P6 persistent shared outpost
+→ P7 bounded terrain mutation
+→ P8 first mobile construct / ship
 ```
 
-### V0-S4 — Planet <-> Space
+P6 means:
 
 ```text
-reference-frame transition
-planet departure
-space travel baseline
-landing
+join
+→ mine
+→ move items through inventory/container
+→ build outpost
+→ disconnect/reconnect
+→ continue same world
+→ 5 clean E2E repeats
+→ 30-minute two-client soak
 ```
 
-### Later
+This is the stable V0 playable baseline target.
+
+## 11. Что не должно блокировать P4/P6
+
+Unless a concrete scenario proves otherwise:
 
 ```text
-server handoff
-multi-zone
-large populations
-ECO production integration
+H0.3 multi-worker scheduler
+NX.C1 OWNER_AUTHORITATIVE_VALIDATED acceptance
+SM0 production handoff integration
 terrain deformation
+full Matter stack
+ECO production
+large structural simulation
+ship flight / orbital transition
+advanced economy/crafting
 ```
 
----
+## 12. Что происходит после merge generation-80 refresh
 
-## 14. Atomic control activation change-set
+PR #98 merge itself does not immediately authorize blind mutation on an old branch.
 
-Этот proposal сам по себе ещё не меняет canonical machine route.
-
-Activation должна быть одним согласованным control change-set от exact then-current main.
-
-Обязательные файлы:
+Required sequence:
 
 ```text
-docs/plans/H_PRIMARY_EXECUTION_ROADMAP_RU.md
-  replace generic H0.3-before-any-V0 waterfall
-  declare V0-S1 NETWORKED PLANETARY OUTPOST
-  keep NX.C1 independent acceptance lane
-
-docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
-  expose V0-S1 as first product runtime checkpoint
-  show canonical SERVER_PREDICTED baseline
-
-config/control/project-program-registry.v1.json
-  bump registry generation
-  update stale R3/H0.2 facts
-  replace global V0_RUNTIME_START <- H0_3 block
-  add V0_S1_NETWORKED_PLANETARY_OUTPOST transition
-  register fail-closed V0_S1_BLOCKED_REQUIRES_NX boundary
-
-config/control/harness/project-goals.v1.json
-  add V0_S1_NETWORKED_PLANETARY_OUTPOST product goal
-
-config/control/harness/checkpoint-catalog.v1.json
-  add machine checkpoint and exact predicates from this document
-
-config/control/harness/scheduler-policy.v1.json
-  preserve pre-H0.3 mutation worker ceiling = 1
-  permit NX verification-only alongside V0 implementation
-  forbid V0 + NX simultaneous mutation workers
-
-scripts/harness/checkpoint_planner.py
-  support V0_S1_NETWORKED_PLANETARY_OUTPOST
-
-tests/harness/test_v0_s1_networked_checkpoint_contract.py
-  prove dependencies, non-dependencies, concurrency and fail-closed NX boundary
+merge generation-80 control to main
+        ↓
+fetch exact new main
+        ↓
+post-main standard PC0
+        +
+post-main directional PC0
+        ↓
+fresh P4 epoch/base dependency audit
+        ↓
+CONTINUE existing P4 branch
+or
+REFRESH_REQUIRED bounded capability transfer
+        ↓
+Director dispatch
+        ↓
+P4.1 RED -> GREEN
 ```
 
-No gameplay/runtime implementation belongs in this routing activation commit.
+Thus the refresh removes the stale instruction without removing the safety check that main movement can invalidate dependencies.
 
----
-
-## 15. Machine assertions for routing patch
-
-Control implementation must mechanically prove:
+## 13. Final rule
 
 ```text
-V0_S1 requires R3 + post-R3 PC0 + C22
-V0_S1 requires canonical network runtime presence
-V0_S1 does NOT require H0_2_PASS
-V0_S1 does NOT require NX_SOURCE_ACCEPTED
-V0_S1 does NOT require H0_3_SCHEDULER_ACCEPTED
-V0_S1 defaults to canonical SERVER_PREDICTED network path
-V0_S1 cannot introduce new network/authority foundation
-V0_S1 fails closed to NX if authority/protocol changes become necessary
-pre-H0.3 mutation worker ceiling == 1
-NX verification-only + one V0 mutation worker is allowed
-NX FIX mutation + V0 mutation simultaneously is forbidden
-NX.C1 acceptance predicates remain unchanged
-no architecture ownership changes
-no global foundation introduced
-no runtime/gameplay files changed by routing patch
-Project Control NON_RED
+MAIN OWNS AUTHORIZATION
+EXACT PRODUCT LINEAGE MAY OWN CONTINUATION INPUT
+ACCEPTANCE DEBT REMAINS VISIBLE
+ONE MUTATION WORKER UNTIL H0.3
+P4/P6 BEFORE TERRAIN OR SHIPS
+NO DUPLICATE TRUTH
 ```
-
----
-
-## 16. Immediate execution after activation
-
-После принятия control route:
-
-```text
-1. create fresh V0-S1 branch from exact then-current main
-2. inventory existing planet/server/player/construction entry points
-3. compose minimal server launch + V0 world fixture
-4. get Client A + Client B into same procedural world
-5. prove remote character movement
-6. wire canonical network Construction commit/replication
-7. prove shared outpost
-8. reconnect B
-9. run 30 min two-client soak
-10. full regression + evidence + independent review
-11. propose V0_S1_NETWORKED_PLANETARY_OUTPOST
-```
-
-Параллельно H0.2/NX.C1 продолжает exact runtime verification.
-
-Если новый owner-authoritative profile становится готов, этот же V0-S1 scenario используется как реальный A/B network composition fixture вместо создания отдельного искусственного demo.
-
----
-
-## 17. Product meaning of PASS
-
-`V0_S1_NETWORKED_PLANETARY_OUTPOST PASS` означает:
-
-> У проекта есть одна реально запускаемая процедурная планета, сервер, минимум два сетевых игрока и shared canonical строительство. Игроки могут находиться в одном мире, видеть друг друга и построить общий маленький outpost без расхождения canonical state.
-
-Именно после этого имеет смысл быстро наращивать Ship-0, ресурсы, ECO, AI, terrain mutation и более сложную сеть внутри уже существующего живого simulator world.
