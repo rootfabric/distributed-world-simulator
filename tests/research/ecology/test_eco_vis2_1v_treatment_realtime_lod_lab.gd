@@ -23,7 +23,9 @@ func _run() -> void:
 	await process_frame
 
 	var renderer = scene.get("_vis18r_renderer") as RefCounted
+	var treatment_runner := scene.get_vis21_treatment_runner() as Node
 	_check(renderer != null and renderer.get_script() == LODRenderer, "custom realtime LOD renderer installed")
+	_check(is_instance_valid(treatment_runner) and treatment_runner.get_parent() == scene, "Treatment data runner owned by VIS2.1-V scene")
 	_check(String(scene.get_vis21v_state().get("stage", "")) == "ECO.VIS2.1-V", "VIS2.1-V stage")
 
 	var treatment_result: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0)
@@ -93,14 +95,16 @@ func _run() -> void:
 	_check(String(state.get("common_random_seed_hash", "")).length() == 64, "causal CRN retained")
 
 	# Clear preview nodes first, then free the owning scene. The VIS2.1-V lab's
-	# _exit_tree() must release every renderer-owned mesh/material reference even while
-	# this test deliberately keeps a local renderer RefCounted alive for inspection.
+	# _exit_tree() must release renderer resources and explicitly free the dynamically
+	# attached Treatment data runner. The test deliberately keeps raw references to
+	# both so lifecycle correctness is asserted before process shutdown.
 	if renderer != null:
 		renderer.call("clear_preview")
 	await process_frame
 	await process_frame
 	if is_instance_valid(scene):
 		scene.free()
+	_check(not is_instance_valid(treatment_runner), "Treatment data runner freed on scene exit")
 	_check(
 		renderer != null
 		and renderer.get("_mid_mesh") == null
@@ -114,6 +118,7 @@ func _run() -> void:
 		and renderer.get("death_material") == null,
 		"renderer resources released on scene exit"
 	)
+	treatment_runner = null
 	renderer = null
 	nodes_by_id.clear()
 
