@@ -105,9 +105,8 @@ renderer/rendering_method.mobile="gl_compatibility"
         -TimeoutSeconds 240 | Out-Null
     Write-Host "ECO.VIS2.1-V parser preflight: PASS"
 
-    Write-Host "ECO.VIS2.1-V leak diagnostics: --verbose enabled for the smoke; any remaining leak must identify concrete instance/resource ownership."
     $output = Invoke-GodotProcess `
-        -Arguments @("--verbose", "--headless", "--path", $TempRoot, "--script", "res://tests/research/ecology/test_eco_vis2_1v_treatment_realtime_lod_lab.gd") `
+        -Arguments @("--headless", "--path", $TempRoot, "--script", "res://tests/research/ecology/test_eco_vis2_1v_treatment_realtime_lod_lab.gd") `
         -Label "ECO VIS2.1-V Treatment realtime LOD smoke" `
         -TimeoutSeconds 300 `
         -PassMarker 'ECO\.VIS2\.1-V Treatment realtime LOD: PASS'
