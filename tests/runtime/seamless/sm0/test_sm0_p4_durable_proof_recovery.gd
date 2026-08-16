@@ -84,17 +84,35 @@ func _test_durable_proof_survives_live_ttl() -> void:
 	_assert(bool(restored.get("success", false)), "proof restores after simulated target restart")
 	_assert(recovered.proof_count() == 1, "proof remains available more than one live TTL after ACK")
 	_assert(not recovered.has_live_reservation(prewarm_id), "no live reservation exists before FAST_COMMIT rehydration")
-	recovered.invoke_fast_commit(Dictionary(fixture.payload))
-	_assert(recovered.last_fast_commit_success(), "exact FAST_COMMIT rehydrates from durable proof")
-	_assert(recovered.last_fast_commit_error().is_empty(), "durable-proof recovery has no error")
-	_assert(recovered.fake_activation_count == 1, "durable-proof recovery imports exactly once")
-	_assert(recovered.has_committed_transfer(transfer_id), "recovered FAST_COMMIT becomes committed target truth")
-	_assert(not recovered.has_live_reservation(prewarm_id), "rehydrated reservation is consumed by successful commit")
-	_assert(recovered.proof_count() == 0, "successful FAST_COMMIT durably consumes prewarm proof")
 
+	# Simulate the critical disk-failure window: the target imports and records an
+	# in-memory committed transfer, but canonical TARGET_COMMITTED durability does
+	# not complete. The durable PREWARM proof must survive this return path so an
+	# exact retry/restart still has a recovery fence.
+	recovered.pretend_target_commit_durable = false
 	recovered.invoke_fast_commit(Dictionary(fixture.payload))
-	_assert(recovered.last_fast_commit_success(), "exact post-recovery FAST_COMMIT replay is ACKed")
-	_assert(recovered.fake_activation_count == 1, "exact replay does not import a second time")
+	_assert(recovered.last_fast_commit_success(), "FAST_COMMIT reaches in-memory target commit before simulated durability failure")
+	_assert(recovered.last_fast_commit_error().is_empty(), "synthetic in-memory commit has no protocol validation error")
+	_assert(recovered.fake_activation_count == 1, "in-memory target import happens exactly once")
+	_assert(recovered.has_committed_transfer(transfer_id), "in-memory committed transfer exists before canonical durability")
+	_assert(not recovered.has_live_reservation(prewarm_id), "rehydrated live reservation is consumed by in-memory commit")
+	_assert(recovered.proof_count() == 1, "proof is retained while canonical TARGET_COMMITTED durability is missing")
+
+	# The exact retry represents canonical persistence becoming available again.
+	# It must not import the player again; once the inherited recovery ledger says
+	# the target commit is durable, proof cleanup is finally legal.
+	recovered.pretend_target_commit_durable = true
+	recovered.invoke_fast_commit(Dictionary(fixture.payload))
+	_assert(recovered.last_fast_commit_success(), "exact retry completes target durability")
+	_assert(recovered.fake_activation_count == 1, "durability retry does not import a second time")
+	_assert(recovered.proof_count() == 0, "proof is consumed only after canonical target commit is durable")
+
+	# Once both commit and proof cleanup are durable, ordinary exact replay still
+	# ACKs without reconstructing player truth.
+	recovered.invoke_fast_commit(Dictionary(fixture.payload))
+	_assert(recovered.last_fast_commit_success(), "exact post-durability FAST_COMMIT replay is ACKed")
+	_assert(recovered.fake_activation_count == 1, "post-durability replay does not import a second time")
+
 	var conflicting_replay: Dictionary = Dictionary(fixture.payload).duplicate(true)
 	conflicting_replay["prewarm_checksum"] = "conflicting-replay-checksum"
 	recovered.invoke_fast_commit(conflicting_replay)
