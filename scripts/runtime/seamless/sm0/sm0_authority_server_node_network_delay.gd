@@ -1,8 +1,8 @@
-extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd"
+extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd"
 
 # SM0-P3.1 branch-local transport shaper.
 # It delays UDP egress only. Authority mutation/order remains inherited from the
-# healthy V2 server. No packet is intentionally lost, duplicated or reordered.
+# healthy server. No packet is intentionally lost, duplicated or reordered.
 
 const NetContracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 const NETWORK_PROFILE := "p31-controlled-latency-v1"
