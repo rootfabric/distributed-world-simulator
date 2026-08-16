@@ -10,6 +10,7 @@ const TransactionRecoveryServerNode = preload("res://scripts/runtime/seamless/sm
 const TransactionFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault.gd")
 const TransactionMixedFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_transaction_fault_mixed.gd")
 const RecoveryChainFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_chain_fault.gd")
+const RecoveryPerformanceServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_performance.gd")
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 
 const H2_2_RECOVERY_FAULT_PROFILE := "h2-target-crash-after-commit-persist-v1"
@@ -21,6 +22,7 @@ const H3_5_TRANSACTION_FAULT_PROFILE := "h3-activation-dual-outage-before-ack-v1
 const H4_1_TRANSACTION_FAULT_PROFILE := "h4-repeated-activation-dual-outage-v1"
 const H4_2_TRANSACTION_FAULT_PROFILE := "h4-mixed-boundary-dual-outage-v1"
 const H4_3_RECOVERY_CHAIN_FAULT_PROFILE := "h4-recovery-of-recovery-same-transfer-v1"
+const P2_1_RECOVERY_PERFORMANCE_PROFILE := "p21"
 
 
 func _init() -> void:
@@ -33,11 +35,12 @@ func _init() -> void:
 		zone_id = Contracts.ZONE_A if authority_id == Contracts.AUTHORITY_A else Contracts.ZONE_B
 	var fault_profile := String(options.get("fault-profile", OS.get_environment("SM0_FAULT_PROFILE"))).strip_edges()
 	var recovery_dir := String(options.get("recovery-dir", "")).strip_edges()
+	var recovery_performance := String(options.get("recovery-performance", "")).strip_edges().to_lower()
 	var active_recovery_text := String(options.get("active-owner-recovery", "0")).strip_edges().to_lower()
 	var active_owner_recovery := active_recovery_text in ["1", "true", "yes"]
 	var transaction_recovery_text := String(options.get("transaction-recovery", "0")).strip_edges().to_lower()
 	var transaction_recovery := transaction_recovery_text in ["1", "true", "yes"]
-	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s transaction_recovery=%s" % [
+	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s" % [
 		authority_id,
 		zone_id,
 		String(options.get("gameplay-port", "24580")),
@@ -45,11 +48,14 @@ func _init() -> void:
 		String(options.get("peer-control-port", "24681")),
 		fault_profile if not fault_profile.is_empty() else "none",
 		recovery_dir if not recovery_dir.is_empty() else "none",
+		recovery_performance if not recovery_performance.is_empty() else "none",
 		active_owner_recovery,
 		transaction_recovery,
 	])
 	var server
-	if fault_profile == H4_3_RECOVERY_CHAIN_FAULT_PROFILE:
+	if fault_profile == H4_3_RECOVERY_CHAIN_FAULT_PROFILE and recovery_performance == P2_1_RECOVERY_PERFORMANCE_PROFILE:
+		server = RecoveryPerformanceServerNode.new()
+	elif fault_profile == H4_3_RECOVERY_CHAIN_FAULT_PROFILE:
 		server = RecoveryChainFaultServerNode.new()
 	elif fault_profile == H4_2_TRANSACTION_FAULT_PROFILE:
 		server = TransactionMixedFaultServerNode.new()
@@ -90,16 +96,18 @@ func _init() -> void:
 		"manifest_hash": String(options.get("manifest-hash", "sm0-two-zone-v1")),
 		"fault_profile": fault_profile,
 		"recovery_dir": recovery_dir,
+		"recovery_performance": recovery_performance,
 	})
 	if not bool(result.get("success", false)):
 		print("[SM0_BOOT] setup_failed=%s" % JSON.stringify(result, "", false, true))
 		push_error("SM0 server setup failed: %s" % result)
 		quit(2)
 		return
-	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s active_owner_recovery=%s transaction_recovery=%s" % [
+	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s" % [
 		authority_id,
 		fault_profile if not fault_profile.is_empty() else "none",
 		recovery_dir if not recovery_dir.is_empty() else "none",
+		recovery_performance if not recovery_performance.is_empty() else "none",
 		active_owner_recovery,
 		transaction_recovery,
 	])
