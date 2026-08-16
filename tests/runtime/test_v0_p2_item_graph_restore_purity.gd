@@ -20,6 +20,7 @@ func _init() -> void:
 	_test_snapshot_and_export_are_pure()
 	_test_legacy_slotless_restore_migrates_once()
 	_test_current_restore_preserves_clock()
+	_test_restore_validation_uses_incoming_mode()
 	_test_generic_v0_bootstrap()
 	_finish()
 
@@ -70,15 +71,11 @@ func _test_legacy_slotless_restore_migrates_once() -> void:
 
 	var restored_graph = CanonicalItemGraph.new()
 	_assert(
-		bool(restored_graph.setup("authority/v0-p2/legacy-target", 1, {"playable_sandbox": true}).get("success", false)),
-		"legacy restore target configures before recovery"
-	)
-	_assert(
 		bool(restored_graph.validate_durable_state(fixture).get("success", false)),
-		"legacy slotless durable fixture remains valid input"
+		"fresh target validates legacy sandbox durable state from incoming mode"
 	)
 	var restored: Dictionary = restored_graph.restore_durable_state(fixture)
-	_assert(bool(restored.get("success", false)), "legacy slotless durable state restores")
+	_assert(bool(restored.get("success", false)), "fresh target restores legacy slotless durable state")
 	if not bool(restored.get("success", false)):
 		return
 	var migration: Dictionary = Dictionary(
@@ -105,6 +102,10 @@ func _test_legacy_slotless_restore_migrates_once() -> void:
 	)
 
 	var migrated: Dictionary = restored_graph.create_snapshot()
+	_assert(
+		bool(migrated.get("playable_sandbox", false)),
+		"fresh legacy restore applies playable sandbox mode from durable state"
+	)
 	_assert(
 		_item_slot_index(migrated, PLAYER_BATTERY_ID) == 2,
 		"legacy player inventory receives deterministic battery slot 2"
@@ -159,11 +160,11 @@ func _test_current_restore_preserves_clock() -> void:
 
 	var restored_graph = CanonicalItemGraph.new()
 	_assert(
-		bool(restored_graph.setup("authority/v0-p2/current-target", 1, {"playable_sandbox": true}).get("success", false)),
-		"current-format restore target configures"
+		bool(restored_graph.validate_durable_state(current).get("success", false)),
+		"fresh target validates current sandbox durable state from incoming mode"
 	)
 	var restored: Dictionary = restored_graph.restore_durable_state(current)
-	_assert(bool(restored.get("success", false)), "current slot-aware durable state restores")
+	_assert(bool(restored.get("success", false)), "fresh target restores current slot-aware durable state")
 	if not bool(restored.get("success", false)):
 		return
 	var migration: Dictionary = Dictionary(
@@ -182,8 +183,46 @@ func _test_current_restore_preserves_clock() -> void:
 	)
 	var restored_snapshot: Dictionary = restored_graph.create_snapshot()
 	_assert(
+		bool(restored_snapshot.get("playable_sandbox", false)),
+		"fresh current restore applies playable sandbox mode from durable state"
+	)
+	_assert(
 		String(restored_snapshot.get("checksum", "")) == String(stored_snapshot.get("checksum", "")),
 		"current slot-aware restore preserves canonical snapshot checksum"
+	)
+
+
+func _test_restore_validation_uses_incoming_mode() -> void:
+	var source = CanonicalItemGraph.new()
+	_assert(
+		bool(source.setup("authority/v0-p2/mode-source", 1, {"playable_sandbox": true}).get("success", false)),
+		"mode-independence source graph configures"
+	)
+	source.ensure_player("a")
+	var current: Dictionary = source.export_durable_state()
+	_assert(not current.is_empty(), "mode-independence durable state exports")
+	if current.is_empty():
+		return
+
+	var mismatched_target = CanonicalItemGraph.new()
+	_assert(
+		bool(mismatched_target.setup("authority/v0-p2/mismatched-target", 1, {"playable_sandbox": false}).get("success", false)),
+		"mismatched restore target configures non-sandbox"
+	)
+	_assert(
+		bool(mismatched_target.validate_durable_state(current).get("success", false)),
+		"durable validation ignores prior target mode and uses incoming sandbox mode"
+	)
+	var restored: Dictionary = mismatched_target.restore_durable_state(current)
+	_assert(bool(restored.get("success", false)), "sandbox durable state restores over mismatched prior target mode")
+	if not bool(restored.get("success", false)):
+		return
+	var expected_snapshot: Dictionary = Dictionary(current.get("snapshot", {}))
+	var actual_snapshot: Dictionary = mismatched_target.create_snapshot()
+	_assert(
+		bool(actual_snapshot.get("playable_sandbox", false))
+		and String(actual_snapshot.get("checksum", "")) == String(expected_snapshot.get("checksum", "")),
+		"incoming durable mode and canonical checksum replace mismatched target configuration"
 	)
 
 
