@@ -1,4 +1,4 @@
-extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd"
+extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure.gd"
 
 # SM0-P3.1 branch-local transport shaper.
 # It delays UDP egress only. Authority mutation/order remains inherited from the
