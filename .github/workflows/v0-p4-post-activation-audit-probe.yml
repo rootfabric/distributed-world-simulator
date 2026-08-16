@@ -1,4 +1,4 @@
-name: V0 P4 Atomic Repair Publisher Probe
+name: V0 P4 In-Progress Harness Probe
 
 on:
   pull_request:
@@ -7,106 +7,77 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact dispatched P4 parent
+      - name: Checkout exact current P4 execution
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: feature/v0-p4-construction-real-resources
 
-      - name: Verify exact authorized parent
-        shell: bash
+      - name: Verify current P4 execution head
         run: |
           ACTUAL="$(git rev-parse HEAD)"
-          echo "P4_AUTHORIZED_PARENT=$ACTUAL"
-          test "$ACTUAL" = "d7641c0900772ecae4b324ecf04d6233a7bde4c6"
+          echo "P4_EXECUTION_HEAD=$ACTUAL"
+          test "$ACTUAL" = "86a51c5396b3e78944e174ac2c2cb35e5b6b2990"
+          git merge-base --is-ancestor 9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1 "$ACTUAL"
+          git merge-base --is-ancestor 52e8ad56f4a3cbbea36448fe7b269d41799188d8 "$ACTUAL"
           test -z "$(git status --porcelain)"
-          git merge-base --is-ancestor bc907d019900b158b26a2736be423ecaff07ecd3 "$ACTUAL"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
-      - name: Apply exact validated P4.1 repair
-        shell: python
+      - name: Overlay canonical-main Harness contracts only
         run: |
+          while IFS= read -r f; do
+            case "$f" in config/control/harness/executions/*) continue ;; esac
+            mkdir -p "$(dirname "$f")"
+            git show "origin/main:$f" > "$f"
+          done < <(git ls-tree -r --name-only origin/main -- config/control/harness)
+          while IFS= read -r f; do
+            mkdir -p "$(dirname "$f")"
+            git show "origin/main:$f" > "$f"
+          done < <(git ls-tree -r --name-only origin/main -- scripts/harness | grep '\.py$')
+          git show origin/main:config/control/project-program-registry.v1.json > config/control/project-program-registry.v1.json
+          git show origin/main:config/control/project-control-policy.v1.json > config/control/project-control-policy.v1.json
+          git show origin/main:config/control/architecture-ownership.v1.json > config/control/architecture-ownership.v1.json
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Reduce and plan current P4 execution
+        run: |
+          python3 - <<'PY'
+          import json, sys
           from pathlib import Path
-
           root = Path.cwd()
-
-          path = root / 'scripts/construction/build/construction_build_plan.gd'
-          text = path.read_text(encoding='utf-8')
-          old = '\t\t\tif int(material_totals[item_id]) >= int(source["quantity"]):\n\t\t\t\treturn _failure("BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK")'
-          new = '\t\t\tif int(material_totals[item_id]) > int(source["quantity"]):\n\t\t\t\treturn _failure("BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK")'
-          assert text.count(old) == 1
-          path.write_text(text.replace(old, new), encoding='utf-8')
-
-          path = root / 'scripts/construction/build/construction_stage_transaction_planner.gd'
-          text = path.read_text(encoding='utf-8')
-          old = '''\t\tvar after: Dictionary = before.duplicate(true)\n\t\tafter["quantity"] = int(before["quantity"]) - int(allocation["quantity"])\n\t\tafter["revision"] = int(before["revision"]) + 1\n\t\tmutations.append(ItemMutationScript.create(\n\t\t\tItemMutationScript.OP_UPDATE,\n\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\titem_id,\n\t\t\tbefore,\n\t\t\tafter\n\t\t))'''
-          new = '''\t\tvar remaining: int = int(before["quantity"]) - int(allocation["quantity"])\n\t\tif remaining < 0:\n\t\t\treturn _failure("CONSTRUCTION_BUILD_STAGE_MATERIAL_SHORTFALL")\n\t\tif remaining == 0:\n\t\t\tmutations.append(ItemMutationScript.create(\n\t\t\t\tItemMutationScript.OP_DELETE,\n\t\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\t\titem_id,\n\t\t\t\tbefore,\n\t\t\t\t{}\n\t\t\t))\n\t\telse:\n\t\t\tvar after: Dictionary = before.duplicate(true)\n\t\t\tafter["quantity"] = remaining\n\t\t\tafter["revision"] = int(before["revision"]) + 1\n\t\t\tmutations.append(ItemMutationScript.create(\n\t\t\t\tItemMutationScript.OP_UPDATE,\n\t\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\t\titem_id,\n\t\t\t\tbefore,\n\t\t\t\tafter\n\t\t\t))'''
-          assert text.count(old) == 1
-          path.write_text(text.replace(old, new), encoding='utf-8')
-
-          path = root / 'scripts/construction/item_graph/construction_item_mutation.gd'
-          text = path.read_text(encoding='utf-8')
-          old = '''\t\t\telif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:\n\t\t\t\tif String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:\n\t\t\t\t\treturn _failure("FABRICATION_INPUT_NOT_RESERVED")\n\t\t\telse:\n\t\t\t\treturn _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")'''
-          new = '''\t\t\telif purpose == PURPOSE_CONSUME_MATERIAL:\n\t\t\t\tif String(before["relation"].get("kind", "")) in [ProjectionScript.ATTACHMENT, ProjectionScript.DESTROYED]:\n\t\t\t\t\treturn _failure("CONSUME_MATERIAL_SOURCE_NOT_TRANSFERABLE")\n\t\t\telif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:\n\t\t\t\tif String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:\n\t\t\t\t\treturn _failure("FABRICATION_INPUT_NOT_RESERVED")\n\t\t\telse:\n\t\t\t\treturn _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")'''
-          assert text.count(old) == 1
-          path.write_text(text.replace(old, new), encoding='utf-8')
-
-          path = root / 'RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1'
-          text = path.read_text(encoding='utf-8')
-          assert text.count('ConvertFrom-Json -Depth 100') == 4
-          path.write_text(text.replace('ConvertFrom-Json -Depth 100', 'ConvertFrom-Json'), encoding='utf-8')
-
-      - name: Verify exact repair scope
-        shell: bash
-        run: |
-          git diff --check
-          mapfile -t FILES < <(git diff --name-only | sort)
-          printf '%s\n' "${FILES[@]}"
-          EXPECTED=(
-            RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1
-            scripts/construction/build/construction_build_plan.gd
-            scripts/construction/build/construction_stage_transaction_planner.gd
-            scripts/construction/item_graph/construction_item_mutation.gd
-          )
-          mapfile -t EXPECTED_SORTED < <(printf '%s\n' "${EXPECTED[@]}" | sort)
-          test "$(printf '%s\n' "${FILES[@]}")" = "$(printf '%s\n' "${EXPECTED_SORTED[@]}")"
-          grep -F 'if int(material_totals[item_id]) > int(source["quantity"]):' scripts/construction/build/construction_build_plan.gd
-          grep -F 'ItemMutationScript.OP_DELETE' scripts/construction/build/construction_stage_transaction_planner.gd
-          grep -F 'elif purpose == PURPOSE_CONSUME_MATERIAL:' scripts/construction/item_graph/construction_item_mutation.gd
-          ! grep -F 'ConvertFrom-Json -Depth 100' RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1
-
-      - name: Commit and fast-forward P4 branch
-        shell: bash
-        run: |
-          git config user.name 'root'
-          git config user.email 'yglamazdin@gmail.com'
-          git add \
-            RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 \
-            scripts/construction/build/construction_build_plan.gd \
-            scripts/construction/build/construction_stage_transaction_planner.gd \
-            scripts/construction/item_graph/construction_item_mutation.gd
-          git commit -m 'fix(v0-p4): allow exact material exhaustion atomically'
-          CANDIDATE="$(git rev-parse HEAD)"
-          echo "P4_CANDIDATE_HEAD=$CANDIDATE" | tee /tmp/p4-candidate-head.txt
-          git push origin HEAD:feature/v0-p4-construction-real-resources
-
-      - name: Export exact committed candidate
-        shell: bash
-        run: |
-          git archive --format=tar.gz --prefix=dws-p4/ HEAD -o /tmp/dws-p4-candidate-source.tar.gz
-          sha256sum /tmp/dws-p4-candidate-source.tar.gz | tee /tmp/dws-p4-candidate-source.sha256
-
-      - name: Upload candidate source and head
-        uses: actions/upload-artifact@v4
-        with:
-          name: v0-p4-p4-1-candidate-source
-          path: |
-            /tmp/dws-p4-candidate-source.tar.gz
-            /tmp/dws-p4-candidate-source.sha256
-            /tmp/p4-candidate-head.txt
-          if-no-files-found: error
+          sys.path.insert(0, str(root / 'scripts'))
+          from harness.state_builder import build_state
+          from harness.checkpoint_planner import build_plan
+          from harness.contracts import ContractBundle
+          execution = root / 'config/control/harness/executions/E2026-08-17-V0-P4-R1'
+          state = build_state(root, execution)
+          bundle = ContractBundle.load(root)
+          plan = build_plan({
+              'checkpoint_catalog': bundle.contracts['checkpoint_catalog'],
+              'scheduler_policy': bundle.contracts['scheduler_policy'],
+          }, state['active_work_order'], state['reduced_work_order'])
+          assert state['reduced_work_order']['state'] == 'IN_PROGRESS', state['reduced_work_order']
+          assert state['reduced_work_order']['snapshot_matches_authoritative_state'] is True
+          assert state['repository']['event_subject_head_sha'] == '9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1'
+          assert state['repository']['event_ledger_head_sha'] == '52e8ad56f4a3cbbea36448fe7b269d41799188d8'
+          assert state['findings'] == [], state['findings']
+          assert plan['selected_checkpoint'] == 'V0_P4_REAL_RESOURCE_CONSTRUCTION'
+          assert plan['autonomous_runtime_workers'] == 1, plan
+          assert plan['v0_p4_gate']['runtime_mutation'] == 'AUTHORIZED_BY_DISPATCH', plan
+          print(json.dumps({
+              'execution_head': state['repository']['current_branch_head_sha'],
+              'event_subject_head': state['repository']['event_subject_head_sha'],
+              'event_ledger_head': state['repository']['event_ledger_head_sha'],
+              'state': state['reduced_work_order']['state'],
+              'snapshot_matches': state['reduced_work_order']['snapshot_matches_authoritative_state'],
+              'runtime_mutation': plan['v0_p4_gate']['runtime_mutation'],
+              'workers': plan['autonomous_runtime_workers'],
+              'findings': state['findings'],
+          }, indent=2, sort_keys=True))
+          PY
