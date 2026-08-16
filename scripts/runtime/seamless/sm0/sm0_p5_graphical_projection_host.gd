@@ -9,6 +9,10 @@ const P5Server = preload("res://scripts/runtime/seamless/sm0/sm0_p5_projection_s
 const VIEW_MESSAGE := "P5_PROJECTION_VIEW"
 const VIEW_PUBLISH_INTERVAL_MS := 100
 const STOP_POLL_INTERVAL_MS := 250
+const DEMO_MOVE_INTERVAL_MS := 180
+const DEMO_MOVE_STEP_M := 0.18
+const DEMO_INNER_LIMIT_M := 2.25
+const DEMO_OUTER_LIMIT_M := 5.25
 
 var _authority_id := ""
 var _zone_id := ""
@@ -23,6 +27,10 @@ var _last_publish_ms := 0
 var _last_stop_poll_ms := 0
 var _last_remote_checksum := ""
 var _last_remote_present := false
+var _demo_motion := false
+var _demo_direction := 0.0
+var _last_demo_move_ms := 0
+var _demo_move_count := 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -32,6 +40,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_view_host = String(config.get("view_host", "127.0.0.1")).strip_edges()
 	_view_port = int(config.get("view_port", 0))
 	_stop_file = String(config.get("stop_file", "")).strip_edges()
+	_demo_motion = bool(config.get("demo_motion", false))
+	_demo_direction = 1.0 if _authority_id == Contracts.AUTHORITY_A else -1.0
 	if (
 		_authority_id not in [Contracts.AUTHORITY_A, Contracts.AUTHORITY_B]
 		or Contracts.authority_for_zone(_zone_id) != _authority_id
@@ -58,19 +68,70 @@ func setup(config: Dictionary) -> Dictionary:
 
 	_view_socket = PacketPeerUDP.new()
 	set_process(true)
-	_event("SM0_P5_GRAPHICAL_HOST_READY", {"view_port": _view_port, "command_channel": false})
+	_event("SM0_P5_GRAPHICAL_HOST_READY", {
+		"view_port": _view_port,
+		"command_channel": false,
+		"demo_motion": _demo_motion,
+	})
 	_publish_view(true)
 	return _success()
 
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec()
+	if _demo_motion and now - _last_demo_move_ms >= DEMO_MOVE_INTERVAL_MS:
+		_last_demo_move_ms = now
+		_apply_demo_move()
 	if now - _last_publish_ms >= VIEW_PUBLISH_INTERVAL_MS:
 		_publish_view(false)
 	if not _stop_file.is_empty() and now - _last_stop_poll_ms >= STOP_POLL_INTERVAL_MS:
 		_last_stop_poll_ms = now
 		if FileAccess.file_exists(_stop_file):
 			shutdown(0, "stop-file")
+
+
+func _apply_demo_move() -> Dictionary:
+	if _server == null:
+		return _failure("SM0_P5_GRAPHICAL_HOST_NOT_READY")
+	var status: Dictionary = _server.status_for_tests()
+	var player: Dictionary = Dictionary(status.get("canonical_player", {}))
+	var position: Dictionary = Dictionary(player.get("position", {}))
+	if player.is_empty() or position.is_empty():
+		return _failure("SM0_P5_GRAPHICAL_HOST_LOCAL_PLAYER_MISSING")
+	var before_x := float(position.get("x", 0.0))
+	if _authority_id == Contracts.AUTHORITY_A:
+		if before_x >= -DEMO_INNER_LIMIT_M:
+			_demo_direction = -1.0
+		elif before_x <= -DEMO_OUTER_LIMIT_M:
+			_demo_direction = 1.0
+	else:
+		if before_x <= DEMO_INNER_LIMIT_M:
+			_demo_direction = 1.0
+		elif before_x >= DEMO_OUTER_LIMIT_M:
+			_demo_direction = -1.0
+	var moved: Dictionary = _server.apply_move_for_tests({
+		"logical_player_id": _local_player_id,
+		"delta_x": _demo_direction * DEMO_MOVE_STEP_M,
+		"delta_z": 0.0,
+	})
+	if not bool(moved.get("success", false)):
+		_event("SM0_P5_GRAPHICAL_DEMO_MOVE_FAILED", {
+			"logical_player_id": _local_player_id,
+			"cause": moved,
+		})
+		return moved
+	_demo_move_count += 1
+	var after: Dictionary = Dictionary(_server.status_for_tests().get("canonical_player", {}))
+	var after_position: Dictionary = Dictionary(after.get("position", {}))
+	if _demo_move_count == 1:
+		_event("SM0_P5_GRAPHICAL_DEMO_MOVED", {
+			"logical_player_id": _local_player_id,
+			"move_count": _demo_move_count,
+			"from_x": before_x,
+			"to_x": float(after_position.get("x", before_x)),
+			"state_revision": int(after.get("state_revision", 0)),
+		})
+	return moved
 
 
 func _publish_view(force_event: bool) -> Dictionary:
@@ -119,10 +180,16 @@ func apply_move_for_tests(payload: Dictionary) -> Dictionary:
 	return _server.apply_move_for_tests(payload) if _server != null else _failure("SM0_P5_GRAPHICAL_HOST_NOT_READY")
 
 
+func demo_move_now_for_tests() -> Dictionary:
+	return _apply_demo_move()
+
+
 func status_for_tests() -> Dictionary:
 	var status: Dictionary = _server.status_for_tests() if _server != null else {}
 	status["view_sequence"] = _view_sequence
 	status["command_channel"] = false
+	status["demo_motion"] = _demo_motion
+	status["demo_move_count"] = _demo_move_count
 	return status
 
 

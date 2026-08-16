@@ -24,6 +24,7 @@ func _init() -> void:
 		"view_host": String(options.get("view-host", "127.0.0.1")),
 		"view_port": int(options.get("view-port", "25990")),
 		"stop_file": String(options.get("stop-file", "")),
+		"demo_motion": String(options.get("demo-motion", "false")).strip_edges().to_lower() in ["1", "true", "yes", "on"],
 	})
 	if not bool(result.get("success", false)):
 		print("[SM0_P5_GRAPHICAL_HOST_BOOT] setup_failed=%s" % JSON.stringify(result, "", false, true))

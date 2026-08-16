@@ -48,10 +48,10 @@ foreach ($Port in $Ports) {
 
 $Scripts = @(
     "res://scripts/runtime/seamless/sm0/sm0_p5_projection_view_contract.gd",
-    "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host.gd",
-    "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host_process.gd",
     "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_observer.gd",
     "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_process.gd",
+    "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host.gd",
+    "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host_process.gd",
     "res://tests/runtime/seamless/sm0/test_sm0_p5_graphical_projections.gd"
 )
 foreach ($ScriptPath in $Scripts) {
@@ -98,7 +98,22 @@ function Start-SM0Process {
     )
     $Args += $UserArgs
     $WindowStyle = if ($Headless) { "Hidden" } else { "Normal" }
-    $Process = Start-Process -FilePath $Exe -ArgumentList $Args -WorkingDirectory $ProjectRoot -WindowStyle $WindowStyle -PassThru
+    $PreviousBreakpointRuntimeDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        # Multi-process SM0 acceptance must not let every Godot process compete
+        # for the breakpoint_mcp runtime bridge's single loopback TCP port 9081.
+        # runtime_bridge.gd explicitly supports this environment escape hatch.
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        $Process = Start-Process -FilePath $Exe -ArgumentList $Args -WorkingDirectory $ProjectRoot -WindowStyle $WindowStyle -PassThru
+    }
+    finally {
+        if ($null -eq $PreviousBreakpointRuntimeDisabled) {
+            Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpointRuntimeDisabled
+        }
+    }
     Write-Host "[SM0-P5.1] $Label PID=$($Process.Id) log=$LogFile"
     return $Process
 }
@@ -139,13 +154,15 @@ try {
     $ServerA = Start-SM0Process -Label "server-a" -Exe $GodotExe -Headless:$true `
         -Script "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host_process.gd" -LogFile $LogServerA -UserArgs @(
             "--authority-id=authority/sm0/a", "--zone-id=zone/earth/sm0/west", "--local-player-id=a",
-            "--control-port=25980", "--peer-control-port=25981", "--view-port=25990", "--stop-file=$StopFile"
+            "--control-port=25980", "--peer-control-port=25981", "--view-port=25990", "--stop-file=$StopFile",
+            "--demo-motion=true"
         )
     $Processes.Add($ServerA)
     $ServerB = Start-SM0Process -Label "server-b" -Exe $GodotExe -Headless:$true `
         -Script "res://scripts/runtime/seamless/sm0/sm0_p5_graphical_projection_host_process.gd" -LogFile $LogServerB -UserArgs @(
             "--authority-id=authority/sm0/b", "--zone-id=zone/earth/sm0/east", "--local-player-id=b",
-            "--control-port=25981", "--peer-control-port=25980", "--view-port=25991", "--stop-file=$StopFile"
+            "--control-port=25981", "--peer-control-port=25980", "--view-port=25991", "--stop-file=$StopFile",
+            "--demo-motion=true"
         )
     $Processes.Add($ServerB)
 
@@ -155,6 +172,12 @@ try {
     Wait-LogMarker $LogObserverB '"event":"SM0_P5_GRAPHICAL_LOCAL_VISIBLE"' $ObserverB 15 "observer-b"
     Wait-LogMarker $LogObserverA '"event":"SM0_P5_GRAPHICAL_REMOTE_VISIBLE"' $ObserverA 15 "observer-a"
     Wait-LogMarker $LogObserverB '"event":"SM0_P5_GRAPHICAL_REMOTE_VISIBLE"' $ObserverB 15 "observer-b"
+    Wait-LogMarker $LogServerA '"event":"SM0_P5_GRAPHICAL_DEMO_MOVED"' $ServerA 15 "server-a"
+    Wait-LogMarker $LogServerB '"event":"SM0_P5_GRAPHICAL_DEMO_MOVED"' $ServerB 15 "server-b"
+    Wait-LogMarker $LogObserverA '"event":"SM0_P5_GRAPHICAL_LOCAL_MOVED"' $ObserverA 15 "observer-a"
+    Wait-LogMarker $LogObserverA '"event":"SM0_P5_GRAPHICAL_REMOTE_MOVED"' $ObserverA 15 "observer-a"
+    Wait-LogMarker $LogObserverB '"event":"SM0_P5_GRAPHICAL_LOCAL_MOVED"' $ObserverB 15 "observer-b"
+    Wait-LogMarker $LogObserverB '"event":"SM0_P5_GRAPHICAL_REMOTE_MOVED"' $ObserverB 15 "observer-b"
 
     if (-not (Select-String -LiteralPath $LogObserverA -SimpleMatch '"logical_player_id":"b"' -Quiet)) { throw "Observer A did not render remote player b." }
     if (-not (Select-String -LiteralPath $LogObserverB -SimpleMatch '"logical_player_id":"a"' -Quiet)) { throw "Observer B did not render remote player a." }
@@ -167,7 +190,8 @@ try {
     }
 
     if ($Visual) {
-        Write-Host "[SM0-P5.1] Visual proof is live for $VisualHoldSeconds seconds: WHITE=local derived view, GREEN=remote read-only projection."
+        Write-Host "[SM0-P5.1] Visual proof is live for $VisualHoldSeconds seconds: WHITE=local derived view, GREEN=remote read-only projection; canonical hosts move automatically."
+        Write-Host "[SM0-P5.1] The graphical observer windows remain read-only by design; keyboard input is not a command channel in P5.1."
         Start-Sleep -Seconds $VisualHoldSeconds
     }
 
@@ -200,6 +224,7 @@ Write-Host "  HEAD       : $GitHead"
 Write-Host "  observer A : local player/a + remote read-only player/b"
 Write-Host "  observer B : local player/b + remote read-only player/a"
 Write-Host "  observers  : writer_count=0 / command_channel=false"
+Write-Host "  motion     : canonical A/B auto-motion observed locally and through remote projections"
 Write-Host "  servers    : one canonical writer each"
 Write-Host "  P4 handoff : unchanged"
 Write-Host "  P6 pivot   : NOT implemented"

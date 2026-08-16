@@ -29,6 +29,8 @@ var _local_target := Vector3.ZERO
 var _remote_target := Vector3.ZERO
 var _local_visible_logged := false
 var _remote_visible_logged := false
+var _local_motion_logged := false
+var _remote_motion_logged := false
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -96,15 +98,17 @@ func accept_view_for_tests(view: Dictionary) -> Dictionary:
 		if checksum != _last_view_checksum:
 			return _view_rejected("SM0_P5_GRAPHICAL_SAME_SEQUENCE_MUTATION")
 		return _success({"replay": true})
+	var previous_local_position: Dictionary = Dictionary(_local_view.get("position", {})).duplicate(true)
+	var previous_remote_position: Dictionary = Dictionary(_remote_view.get("position", {})).duplicate(true)
 	_last_view_sequence = sequence
 	_last_view_checksum = checksum
 	_local_view = Dictionary(view.get("local_player", {})).duplicate(true)
 	_remote_view = Dictionary(view.get("remote_projection", {})).duplicate(true)
-	_update_presentations()
+	_update_presentations(previous_local_position, previous_remote_position)
 	return _success({"view_sequence": sequence})
 
 
-func _update_presentations() -> void:
+func _update_presentations(previous_local_position: Dictionary = {}, previous_remote_position: Dictionary = {}) -> void:
 	var local_position := Dictionary(_local_view.get("position", {}))
 	_local_target = _to_view_position(local_position)
 	_local_avatar.visible = not _local_view.is_empty()
@@ -115,16 +119,45 @@ func _update_presentations() -> void:
 			"owner_authority_id": String(_local_view.get("owner_authority_id", "")),
 			"derived_view": true,
 		})
+	if (
+		_local_avatar.visible
+		and not _local_motion_logged
+		and not previous_local_position.is_empty()
+		and local_position != previous_local_position
+	):
+		_local_motion_logged = true
+		_event("SM0_P5_GRAPHICAL_LOCAL_MOVED", {
+			"logical_player_id": String(_local_view.get("logical_player_id", "")),
+			"from_x": float(previous_local_position.get("x", 0.0)),
+			"to_x": float(local_position.get("x", 0.0)),
+			"state_revision": int(_local_view.get("state_revision", 0)),
+			"derived_view": true,
+		})
 	if _remote_view.is_empty():
 		_remote_avatar.visible = false
 	else:
-		_remote_target = _to_view_position(Dictionary(_remote_view.get("position", {})))
+		var remote_position: Dictionary = Dictionary(_remote_view.get("position", {}))
+		_remote_target = _to_view_position(remote_position)
 		_remote_avatar.visible = true
 		if not _remote_visible_logged:
 			_remote_visible_logged = true
 			_event("SM0_P5_GRAPHICAL_REMOTE_VISIBLE", {
 				"logical_player_id": String(_remote_view.get("logical_player_id", "")),
 				"owner_authority_id": String(_remote_view.get("owner_authority_id", "")),
+				"read_only": bool(_remote_view.get("read_only", false)),
+				"command_channel": false,
+			})
+		if (
+			not _remote_motion_logged
+			and not previous_remote_position.is_empty()
+			and remote_position != previous_remote_position
+		):
+			_remote_motion_logged = true
+			_event("SM0_P5_GRAPHICAL_REMOTE_MOVED", {
+				"logical_player_id": String(_remote_view.get("logical_player_id", "")),
+				"from_x": float(previous_remote_position.get("x", 0.0)),
+				"to_x": float(remote_position.get("x", 0.0)),
+				"state_revision": int(_remote_view.get("state_revision", 0)),
 				"read_only": bool(_remote_view.get("read_only", false)),
 				"command_channel": false,
 			})
@@ -141,6 +174,8 @@ func status_for_tests() -> Dictionary:
 		"remote_read_only": bool(_remote_view.get("read_only", false)),
 		"command_channel": false,
 		"view_sequence": _last_view_sequence,
+		"local_motion_observed": _local_motion_logged,
+		"remote_motion_observed": _remote_motion_logged,
 		"local_position": Dictionary(_local_view.get("position", {})).duplicate(true),
 		"remote_position": Dictionary(_remote_view.get("position", {})).duplicate(true),
 	}
