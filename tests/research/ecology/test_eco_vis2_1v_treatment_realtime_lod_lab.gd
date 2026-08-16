@@ -92,24 +92,31 @@ func _run() -> void:
 	_check(int(lod.get("live_proxy_count", 0)) == int(lod.get("mid_tier_count", -1)) and int(lod.get("live_proxy_count", 0)) == int(lod.get("far_tier_count", -1)), "LOD tiers track turnover proxy population")
 	_check(String(state.get("common_random_seed_hash", "")).length() == 64, "causal CRN retained")
 
-	# The renderer is RefCounted and owns its mesh/material resources. This smoke keeps
-	# an explicit local renderer reference for introspection, so release that final
-	# reference before quit; otherwise Godot correctly reports the renderer resources
-	# as still in use even though the scene itself has already been queue_free()'d.
+	# Complete renderer/scene teardown before process shutdown. In particular, do not
+	# call quit() from this coroutine while its local scene/geometry references are
+	# still on the execution stack: let _run() return first and quit from _finish().
 	if renderer != null:
 		renderer.call("clear_preview")
 	await process_frame
-	scene.queue_free()
 	await process_frame
+	if is_instance_valid(scene):
+		scene.free()
 	renderer = null
 	nodes_by_id.clear()
-	await process_frame
-	if _failures == 0:
+
+	var exit_code := 0 if _failures == 0 else 1
+	if exit_code == 0:
 		print("ECO.VIS2.1-V Treatment realtime LOD: PASS (%d assertions)" % _assertions)
-		quit(0)
 	else:
 		push_error("ECO.VIS2.1-V Treatment realtime LOD: FAIL assertions=%d failures=%d" % [_assertions, _failures])
-		quit(1)
+	call_deferred("_finish", exit_code)
+
+
+func _finish(exit_code: int) -> void:
+	# _run() has returned, so all of its temporary object/resource references are gone.
+	await process_frame
+	await process_frame
+	quit(exit_code)
 
 
 func _check(ok: bool, label: String) -> void:
