@@ -118,12 +118,17 @@ try {
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_fault.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_network_delay.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_process_p4_fault.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd",
         "res://scripts/runtime/seamless/sm0/sm0_manual_client_node.gd",
+        "res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_server.gd",
+        "res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_client.gd",
+        "res://tests/runtime/seamless/sm0/sm0_p4_join_probe_process.gd",
         "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd",
         "res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd"
     )
