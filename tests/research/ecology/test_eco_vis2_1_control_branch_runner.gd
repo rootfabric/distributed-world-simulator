@@ -79,6 +79,7 @@ func _run() -> void:
 	for generation in range(FORK_GENERATION, TARGET_GENERATION + 1):
 		var point_a: Dictionary = runner_a.trace_point(generation)
 		var point_b: Dictionary = runner_b.trace_point(generation)
+		_check(runner_a.generation_map(generation) == runner_b.generation_map(generation), "generation map G%d deterministic" % generation)
 		_check(not point_a.is_empty(), "trace point G%d exists" % generation)
 		_check(String(point_a.get("field_hash", "")) == String(point_b.get("field_hash", "")), "field hash G%d deterministic" % generation)
 		_check(absf(float(point_a.get("represented_biomass_kg", 0.0)) - BIOMASS_KG) < 0.000001, "represented biomass G%d remains 11.000 kg" % generation)
