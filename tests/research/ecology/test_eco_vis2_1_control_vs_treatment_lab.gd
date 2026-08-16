@@ -1,6 +1,7 @@
 extends SceneTree
 
 const TraceContract = preload("res://scripts/labs/ecology/eco_vis2_1_branch_trace_contract.gd")
+const TraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_1_trace_adapter.gd")
 const ComparisonModel = preload("res://scripts/labs/ecology/eco_vis2_1_comparison_model.gd")
 const ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experiment_model.gd")
 const VIS21_Scene = preload("res://scenes/labs/ecology/eco_vis2_1_control_vs_treatment_lab.tscn")
@@ -12,14 +13,17 @@ const LONG_SMOKE_GENERATION := 80
 var _assertions := 0
 var _failures := 0
 
+
 func _initialize() -> void:
 	call_deferred("_run")
+
 
 func _run() -> void:
 	var scene := VIS21_Scene.instantiate()
 	get_root().add_child(scene)
 	await process_frame
 	await process_frame
+
 	scene.set_realtime_turnover_generation(FORK_GENERATION)
 	await process_frame
 	var source_model := scene.get("_vis18r_model") as RefCounted
@@ -28,7 +32,9 @@ func _run() -> void:
 		return
 	var source_fork_map: Dictionary = Dictionary(source_model.call("generation_map", FORK_GENERATION)).duplicate(true)
 	var source_fork_map_before := source_fork_map.duplicate(true)
+	var source_history_before: Array = scene.get_continuous_history().duplicate(true)
 	var canonical_environment_before: Dictionary = scene.get_spatial_snapshot().duplicate(true)
+
 	var fork_result: Dictionary = scene.begin_paired_experiment()
 	_require(bool(fork_result.get("success", false)), "paired fork configures")
 	if not bool(fork_result.get("success", false)):
@@ -51,13 +57,16 @@ func _run() -> void:
 	_check(String(fork_control.get("field_hash", "")) == String(fork_treatment.get("field_hash", "")), "05 canonical fork field hashes equal")
 	_check(String(fork_control.get("environment_revision", "")) == String(fork_treatment.get("environment_revision", "")), "06 fork environment revisions equal")
 	_check(_all_numeric_deltas_zero(fork_pair), "07 all comparator deltas at fork are zero")
+
 	var root := String(state.get("common_random_seed_hash", ""))
 	_check(_is_lower_sha256(root), "08 CONTROL common root is 64 lower-case hex")
 	_check(root == control.common_random_seed_hash() and root == treatment.common_random_seed_hash(), "09 TREATMENT common root exactly equals CONTROL root")
+
 	var restart_result: Dictionary = scene.restart_paired_from_fork()
 	_check(bool(restart_result.get("success", false)) and String(restart_result.get("common_random_seed_hash", "")) == root, "10 common root survives restart")
 	var switch_at_fork: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0)
 	_check(bool(switch_at_fork.get("success", false)) and treatment.common_random_seed_hash() == root and control.common_random_seed_hash() == root, "11 treatment switch does not alter common root")
+
 	traces = scene.get_vis21_canonical_traces()
 	fork_treatment = Dictionary(Array(traces.get("treatment", []))[0])
 	_check(String(fork_treatment.get("experiment_id", "")) == ExperimentModel.PROFILE_BASELINE, "12 treatment at fork is BASELINE")
@@ -70,6 +79,7 @@ func _run() -> void:
 	var c_n1: Dictionary = Dictionary(Array(traces.get("control", []))[-1])
 	_check(String(c_n1.get("experiment_id", "")) == "BASELINE" and String(control.baseline_environment_sample_at(0.0, 0.0).get("checksum", "")) == String(baseline_probe.get("checksum", "")), "14 CONTROL remains BASELINE")
 	_check(scene.get_spatial_snapshot() == canonical_environment_before, "15 canonical VIS1.2 environment remains untouched")
+
 	var horizon_target := FORK_GENERATION + DIVERGENCE_HORIZON
 	var horizon_result: Dictionary = scene.advance_paired_to(horizon_target)
 	_require(bool(horizon_result.get("success", false)), "advance to causal horizon")
@@ -77,6 +87,7 @@ func _run() -> void:
 		return
 	var horizon_summary: Dictionary = scene.get_vis21_comparison_summary()
 	_check(_has_causal_divergence(Array(horizon_summary.get("points", [])), FORK_GENERATION), "16 strong DROUGHT produces measurable divergence by N+12")
+
 	var first_replay_traces: Dictionary = scene.get_vis21_canonical_traces()
 	var replay_control: Array = Array(first_replay_traces.get("control", [])).duplicate(true)
 	var replay_treatment: Array = Array(first_replay_traces.get("treatment", [])).duplicate(true)
@@ -84,14 +95,18 @@ func _run() -> void:
 	scene.advance_paired_to(horizon_target)
 	var second_replay_traces: Dictionary = scene.get_vis21_canonical_traces()
 	_check(Array(second_replay_traces.get("control", [])) == replay_control and Array(second_replay_traces.get("treatment", [])) == replay_treatment, "17 same fork/root/experiment reproduces exact paired trace")
-	var control_before_switch: Dictionary = control.generation_map(horizon_target)
-	var treatment_before_switch: Dictionary = treatment.generation_map(horizon_target)
-	var switch_result: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0)
+
 	var switched_target := horizon_target + 4
 	scene.advance_paired_to(switched_target)
-	var control_after_switch_prefix: Dictionary = control.generation_map(horizon_target)
-	var treatment_after_switch: Dictionary = treatment.generation_map(switched_target)
-	_check(bool(switch_result.get("success", false)) and control_after_switch_prefix == control_before_switch and treatment_after_switch != treatment_before_switch, "18 treatment switch changes treatment future and never CONTROL")
+	var control_future_before_switch: Dictionary = control.generation_map(switched_target)
+	var drought_future_before_switch: Dictionary = treatment.generation_map(switched_target)
+	scene.set_realtime_turnover_generation(horizon_target)
+	var switch_result: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0)
+	scene.advance_paired_to(switched_target)
+	var control_future_after_switch: Dictionary = control.generation_map(switched_target)
+	var flood_future_after_switch: Dictionary = treatment.generation_map(switched_target)
+	_check(bool(switch_result.get("success", false)) and control_future_after_switch == control_future_before_switch and flood_future_after_switch != drought_future_before_switch, "18 treatment switch changes same-generation TREATMENT future and never CONTROL")
+
 	traces = scene.get_vis21_canonical_traces()
 	control_trace = traces.get("control", [])
 	treatment_trace = traces.get("treatment", [])
@@ -102,20 +117,26 @@ func _run() -> void:
 	_check(typeof(Dictionary(control_trace[-1]).get("environment_revision")) == TYPE_STRING and typeof(Dictionary(treatment_trace[-1]).get("environment_revision")) == TYPE_STRING, "20 environment_revision is String on both sides")
 	var integrated_compare: Dictionary = ComparisonModel.summarize(control_trace, treatment_trace, FORK_GENERATION, true)
 	_check(bool(integrated_compare.get("success", false)), "21 Comparator accepts integrated canonical traces")
+
 	var corrupted_hash_treatment := treatment_trace.duplicate(true)
 	var corrupted_hash_point: Dictionary = Dictionary(corrupted_hash_treatment[0]).duplicate(true)
 	corrupted_hash_point["field_hash"] = "corrupted-fork".sha256_text()
 	corrupted_hash_treatment[0] = corrupted_hash_point
-	_check(not bool(ComparisonModel.summarize(control_trace, corrupted_hash_treatment, FORK_GENERATION, true).get("success", true)), "22 Comparator rejects corrupted fork field hash")
+	var corrupted_hash_result: Dictionary = ComparisonModel.summarize(control_trace, corrupted_hash_treatment, FORK_GENERATION, true)
+	_check(not bool(corrupted_hash_result.get("success", true)), "22 Comparator rejects corrupted fork field hash")
+
 	var corrupted_revision_treatment := treatment_trace.duplicate(true)
 	var corrupted_revision_point: Dictionary = Dictionary(corrupted_revision_treatment[0]).duplicate(true)
 	corrupted_revision_point["environment_revision"] = "CORRUPTED_ENV_REV"
 	corrupted_revision_treatment[0] = corrupted_revision_point
-	_check(not bool(ComparisonModel.summarize(control_trace, corrupted_revision_treatment, FORK_GENERATION, true).get("success", true)), "23 Comparator rejects corrupted fork environment revision")
+	var corrupted_revision_result: Dictionary = ComparisonModel.summarize(control_trace, corrupted_revision_treatment, FORK_GENERATION, true)
+	_check(not bool(corrupted_revision_result.get("success", true)), "23 Comparator rejects corrupted fork environment revision")
+
 	state = scene.get_vis21_state()
 	_check(bool(state.get("control_data_only", false)) and int(state.get("progressive_ph5_count", -1)) == 0, "24 CONTROL does not create/render PH5 world")
 	_check(int(state.get("visible_population_fields", 0)) == 1, "25 exactly one visible realtime population field exists")
 	_check(int(state.get("whole_field_ph5_rebuilds", -1)) == 0, "26 whole-field PH5 turnover rebuild remains zero")
+
 	var controls_label := scene.get("_controls_label") as Label
 	_check(controls_label != null and "WASD move" in controls_label.text, "27 spectator WASD controls remain active")
 	var panel := scene.get("_vis21_panel") as Control
@@ -131,6 +152,7 @@ func _run() -> void:
 	var before_generation := int(scene.get_vis21_state().get("paired_generation", -1))
 	var playback_result: Dictionary = scene.advance_paired_to(before_generation + 1)
 	_check(bool(playback_result.get("success", false)) and int(scene.get_vis21_state().get("paired_generation", -1)) == before_generation + 1 and camera != null, "30 paired playback advances without blocking camera/input")
+
 	scene.queue_free()
 	await process_frame
 
@@ -158,6 +180,7 @@ func _run() -> void:
 	_check(int(smoke_state.get("comparison_point_count", 0)) <= 64 and bool(smoke.get_vis21_comparison_summary().get("success", false)), "32 comparison series remains <=64 and valid")
 	var smoke_nodes_at_end := get_node_count()
 	_check(smoke_nodes_at_end <= smoke_nodes_at_fork + 512 and int(smoke_state.get("whole_field_ph5_rebuilds", -1)) == 0 and _biomass_contract_valid(smoke_control) and _biomass_contract_valid(smoke_treatment), "33 no unbounded SceneTree growth; no PH5 rebuild; canonical biomass stays valid")
+
 	smoke.queue_free()
 	await process_frame
 	if _failures == 0 and _assertions == 33:
@@ -167,8 +190,17 @@ func _run() -> void:
 		push_error("ECO.VIS2.1 integration: FAIL assertions=%d failures=%d" % [_assertions, _failures])
 		quit(1)
 
+
 func _all_numeric_deltas_zero(point: Dictionary) -> bool:
-	return int(point.get("delta_population", 0)) == 0 and int(point.get("delta_deaths", 0)) == 0 and int(point.get("delta_survivors", 0)) == 0 and absf(float(point.get("delta_mean_fitness", 0.0))) <= 0.000000001 and int(point.get("delta_unique_genomes", 0)) == 0 and absf(float(point.get("delta_alpha_share", 0.0))) <= 0.000000001
+	return (
+		int(point.get("delta_population", 0)) == 0
+		and int(point.get("delta_deaths", 0)) == 0
+		and int(point.get("delta_survivors", 0)) == 0
+		and absf(float(point.get("delta_mean_fitness", 0.0))) <= 0.000000001
+		and int(point.get("delta_unique_genomes", 0)) == 0
+		and absf(float(point.get("delta_alpha_share", 0.0))) <= 0.000000001
+	)
+
 
 func _has_causal_divergence(points: Array, fork_generation: int) -> bool:
 	for point_variant in points:
@@ -176,9 +208,17 @@ func _has_causal_divergence(points: Array, fork_generation: int) -> bool:
 		var generation := int(point.get("generation", -1))
 		if generation <= fork_generation or generation > fork_generation + DIVERGENCE_HORIZON:
 			continue
-		if int(point.get("delta_population", 0)) != 0 or int(point.get("delta_deaths", 0)) != 0 or int(point.get("delta_survivors", 0)) != 0 or absf(float(point.get("delta_mean_fitness", 0.0))) > 0.000000001 or int(point.get("delta_unique_genomes", 0)) != 0 or absf(float(point.get("delta_alpha_share", 0.0))) > 0.000000001:
+		if (
+			int(point.get("delta_population", 0)) != 0
+			or int(point.get("delta_deaths", 0)) != 0
+			or int(point.get("delta_survivors", 0)) != 0
+			or absf(float(point.get("delta_mean_fitness", 0.0))) > 0.000000001
+			or int(point.get("delta_unique_genomes", 0)) != 0
+			or absf(float(point.get("delta_alpha_share", 0.0))) > 0.000000001
+		):
 			return true
 	return false
+
 
 func _is_lower_sha256(value: String) -> bool:
 	if value.length() != 64:
@@ -189,14 +229,17 @@ func _is_lower_sha256(value: String) -> bool:
 			return false
 	return true
 
+
 func _biomass_contract_valid(trace: Array) -> bool:
 	if trace.is_empty():
 		return false
 	for point_variant in trace:
-		var biomass := float(Dictionary(point_variant).get("represented_biomass_kg", -1.0))
+		var point: Dictionary = point_variant
+		var biomass := float(point.get("represented_biomass_kg", -1.0))
 		if not is_finite(biomass) or biomass < 0.0:
 			return false
 	return true
+
 
 func _check(condition: bool, label: String) -> void:
 	_assertions += 1
@@ -204,6 +247,7 @@ func _check(condition: bool, label: String) -> void:
 		return
 	_failures += 1
 	push_error("ECO.VIS2.1 assertion failed: %s" % label)
+
 
 func _require(condition: bool, label: String) -> void:
 	if condition:
