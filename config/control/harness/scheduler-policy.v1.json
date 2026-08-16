@@ -40,6 +40,24 @@
       "product_execution_base_is_not_automatic_checkpoint_acceptance": true
     }
   },
+  "pre_h0_3_runtime_mutation_lease": {
+    "effective_registry_generation": 80,
+    "capacity": 1,
+    "holder_program": "V0",
+    "holder_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "holder_branch": "feature/v0-p4-construction-real-resources",
+    "state": "RESERVED_PENDING_DIRECTOR_DISPATCH",
+    "mutating_states": [
+      "DISPATCHED",
+      "IN_PROGRESS"
+    ],
+    "implementation_complete_releases_worker": true,
+    "initial_dispatch_requires_director": true,
+    "holder_initial_dispatch_requires_authoritative_epoch_audit": true,
+    "non_holder_dispatch_forbidden": true,
+    "release_requires_main_owned_control_update": true,
+    "reason": "Generation-80 reserves the single pre-H0.3 runtime-mutation slot for bounded V0-P4. H0.2/NX and SM0 may continue review/verification-only work, but a new non-trivial mutation dispatch must wait until main-owned control releases or reassigns this lease."
+  },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,
