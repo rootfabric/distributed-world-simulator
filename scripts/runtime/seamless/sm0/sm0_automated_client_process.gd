@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ClientNode = preload("res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd")
+const ClientNode = preload("res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd")
 
 
 func _init() -> void:
