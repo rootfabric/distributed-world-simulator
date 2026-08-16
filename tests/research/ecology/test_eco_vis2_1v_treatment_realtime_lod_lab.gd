@@ -92,15 +92,28 @@ func _run() -> void:
 	_check(int(lod.get("live_proxy_count", 0)) == int(lod.get("mid_tier_count", -1)) and int(lod.get("live_proxy_count", 0)) == int(lod.get("far_tier_count", -1)), "LOD tiers track turnover proxy population")
 	_check(String(state.get("common_random_seed_hash", "")).length() == 64, "causal CRN retained")
 
-	# Complete renderer/scene teardown before process shutdown. In particular, do not
-	# call quit() from this coroutine while its local scene/geometry references are
-	# still on the execution stack: let _run() return first and quit from _finish().
+	# Clear preview nodes first, then free the owning scene. The VIS2.1-V lab's
+	# _exit_tree() must release every renderer-owned mesh/material reference even while
+	# this test deliberately keeps a local renderer RefCounted alive for inspection.
 	if renderer != null:
 		renderer.call("clear_preview")
 	await process_frame
 	await process_frame
 	if is_instance_valid(scene):
 		scene.free()
+	_check(
+		renderer != null
+		and renderer.get("_mid_mesh") == null
+		and renderer.get("_far_mesh") == null
+		and renderer.get("trunk_mesh") == null
+		and renderer.get("canopy_mesh") == null
+		and renderer.get("marker_mesh") == null
+		and renderer.get("death_mesh") == null
+		and renderer.get("trunk_material") == null
+		and renderer.get("birth_material") == null
+		and renderer.get("death_material") == null,
+		"renderer resources released on scene exit"
+	)
 	renderer = null
 	nodes_by_id.clear()
 
@@ -113,7 +126,6 @@ func _run() -> void:
 
 
 func _finish(exit_code: int) -> void:
-	# _run() has returned, so all of its temporary object/resource references are gone.
 	await process_frame
 	await process_frame
 	quit(exit_code)

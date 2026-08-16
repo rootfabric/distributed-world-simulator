@@ -5,18 +5,24 @@ const VIS21V_RealtimeLODRenderer = preload("res://scripts/labs/ecology/eco_vis2_
 const VIS21V_STAGE := "ECO.VIS2.1-V"
 const VIS21V_MODE := "TREATMENT_REALTIME_DISTANCE_LOD"
 
-var _vis21v_renderer = null
-
 
 func _ready() -> void:
 	_vis18r_renderer = VIS21V_RealtimeLODRenderer.new()
-	_vis21v_renderer = _vis18r_renderer
 	super._ready()
 	if is_instance_valid(_controls_label):
 		_controls_label.text = _controls_label.text.replace("I VIS2.0 panel", "I source panel (pre-fork only)")
 		_controls_label.text += "\nVIS2.1-V: Treatment uses camera-distance realtime LOD (near/mid/far); CONTROL remains data-only and no whole-field PH5 rebuild is introduced."
 	_update_vis18r_title()
 	_update_status()
+
+
+func _exit_tree() -> void:
+	# VIS2.1-V owns the replacement realtime renderer. Release its mesh/material
+	# resources before the scene disappears so editor/headless shutdown does not depend
+	# on RefCounted destruction order.
+	if _vis18r_renderer != null and _vis18r_renderer.has_method("release_resources"):
+		_vis18r_renderer.call("release_resources")
+	_vis18r_renderer = null
 
 
 func begin_paired_experiment() -> Dictionary:
@@ -40,8 +46,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func get_vis21v_state() -> Dictionary:
 	var state := get_vis21_state()
 	var lod := {}
-	if _vis21v_renderer != null:
-		lod = Dictionary(_vis21v_renderer.call("lod_summary"))
+	if _vis18r_renderer != null:
+		lod = Dictionary(_vis18r_renderer.call("lod_summary"))
 	state["stage"] = VIS21V_STAGE
 	state["mode"] = VIS21V_MODE
 	state["realtime_lod"] = lod.duplicate(true)
@@ -82,8 +88,8 @@ func _update_status() -> void:
 	if status == null:
 		return
 	var lod := {}
-	if _vis21v_renderer != null:
-		lod = Dictionary(_vis21v_renderer.call("lod_summary"))
+	if _vis18r_renderer != null:
+		lod = Dictionary(_vis18r_renderer.call("lod_summary"))
 	status.text += "\nVIS2.1-V realtime Treatment LOD=%s | near<=%.0fm mid=%.0f..%.0fm far>=%.0fm | tiers=%d/%d/%d" % [
 		"ACTIVE" if bool(lod.get("enabled", false)) else "READY",
 		float(lod.get("near_lod_end_m", 110.0)),

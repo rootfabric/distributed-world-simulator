@@ -75,6 +75,25 @@ func lod_summary() -> Dictionary:
 	}
 
 
+func release_resources() -> void:
+	# Runtime-owned renderer resources must not survive the lab scene. The inherited
+	# renderer is RefCounted, so explicitly clear all strong resource references at
+	# scene exit instead of relying on process-shutdown refcount ordering.
+	animations.clear()
+	nodes_by_id.clear()
+	preview_root = null
+	event_root = null
+	_mid_mesh = null
+	_far_mesh = null
+	trunk_mesh = null
+	canopy_mesh = null
+	marker_mesh = null
+	death_mesh = null
+	trunk_material = null
+	birth_material = null
+	death_material = null
+
+
 func _ensure_lod_resources() -> void:
 	if _mid_mesh == null:
 		_mid_mesh = SphereMesh.new()
