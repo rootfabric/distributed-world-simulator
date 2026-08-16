@@ -63,7 +63,7 @@ Experiment panel показывает baseline→experimental probe для moist
 
 Directional light получает слабый presentation cue для активного сценария. Это только визуальная подсказка и не является источником ecology truth.
 
-VIS1.9 observatory продолжает показывать динамику популяции, поэтому эффект вмешательства можно наблюдать по population size, births/deaths, mean fitness, diversity и alpha/beta composition.
+VIS1.9 Observatory продолжает показывать динамику популяции, поэтому эффект вмешательства можно наблюдать по population size, births/deaths, mean fitness, diversity и alpha/beta composition.
 
 ## Инварианты
 
@@ -75,4 +75,32 @@ VIS1.9 observatory продолжает показывать динамику п
 - одинаковый сценарий/intensity от G0 должен давать deterministic trajectory;
 - experiment panel не перехватывает spectator mouse.
 
-Статус: IMPLEMENTED_CANDIDATE до Windows exact gate и graphical experiment confirmation.
+## Windows exact validation
+
+Пользовательская проверка на Windows выполнена на exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+Integrated gate:
+
+- VIS1.8B regression smoke: PASS (51 assertions);
+- VIS1.9 regression smoke: PASS (29 assertions);
+- VIS2.0 experiment smoke: PASS (33 assertions);
+- VIS2.0 automated gate: PASS.
+
+Графический runtime также подтвержден. Длительный continuous run дошел как минимум до `G240` при активном `FLOOD 95%`. До этого в том же экспериментальном запуске выполнялись `DROUGHT 75%`, затем изменение intensity до `85%` и `95%`, после чего выполнено вмешательство `FLOOD 95%`.
+
+Наблюдаемые runtime признаки на G240:
+
+- continuous population evolution остается отзывчивым;
+- observatory графики обновляются во время эксперимента;
+- experiment panel показывает intervention history;
+- population turnover продолжается (`births=7`, `deaths=10`, `survivors=46` в показанном transition);
+- `rolling_cache=33/33`, `history=64/64` остаются bounded;
+- `PH5_turnover_rebuilds=0` сохраняется;
+- progressive PH5 и spectator controls не деградировали;
+- experiment EnvironmentSample отражает активный flood forcing (`moisture≈0.94`, `flood≈0.93` в показанном probe) без изменения canonical VIS1.2 truth.
+
+Вывод: VIS2.0 подтвержден как рабочий Windows runtime checkpoint для управляемых environmental interventions и долгого наблюдения эволюционной реакции.
+
+Статус: WINDOWS_RUNTIME_VALIDATED_CANDIDATE. Глобальное принятие программы ecology/VIS этим checkpoint не объявляется.
