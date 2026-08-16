@@ -43,9 +43,7 @@
       "last_accepted_checkpoint": "G8 Full Acceptance",
       "next_stage": "Keep G8 frozen. G9 remains off the V0 critical path and may start only after MAT0 canonical material identity.",
       "health_declared": "GREEN",
-      "blockers": [
-        "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"
-      ],
+      "blockers": ["G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"],
       "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
       "historical_passport_identities": [{
         "program": "G",
@@ -115,7 +113,7 @@
         "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
         "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
         "pinned_head_sha": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
-        "passport_blob_sha": "a6c3094e72ce8a8bce886fbcf894eb7a57a4b7"
+        "passport_blob_sha": "a6c3094e72ce8a8bce3557b6db8366747a6d0f12"
       }],
       "historical_passport_ownership_transitions": [{
         "program": "T",
