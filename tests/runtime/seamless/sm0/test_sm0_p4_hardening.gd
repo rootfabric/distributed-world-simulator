@@ -15,6 +15,7 @@ func _init() -> void:
 	_test_fast_commit_replay_handler()
 	_test_single_reservation_slot()
 	_test_join_admission_fences()
+	_test_completed_source_tombstone_ignores_newer_unrelated_snapshot()
 	_test_reservation_conflict_handler()
 	_test_redirect_fingerprint()
 	_test_redirect_replay_handler()
@@ -107,6 +108,53 @@ func _test_join_admission_fences() -> void:
 	server.invoke_join({"logical_player_id": "a", "session_id": "session/reconnect"})
 	_assert(server.last_gameplay_error() == "SM0_P4_JOIN_REQUIRES_COMMITTED_ACTIVATION", "HELLO-advanced target cannot generic-JOIN before transfer commit")
 	server.free()
+
+
+func _test_completed_source_tombstone_ignores_newer_unrelated_snapshot() -> void:
+	var server = P4TestServer.new()
+	var transfer_id := "handoff/sm0/a/2/tombstone"
+	var recovery_dir := ProjectSettings.globalize_path(
+		"user://sm0-p4-tombstone-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	)
+	var make_error := DirAccess.make_dir_recursive_absolute(recovery_dir)
+	_assert(make_error == OK, "tombstone regression recovery directory is created")
+	if make_error != OK:
+		server.free()
+		return
+
+	server.configure_admission_fixture(
+		Contracts.AUTHORITY_A,
+		Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2),
+		true
+	)
+	server._recovery_authority_dir = recovery_dir
+	server._recovery_restored = true
+	server._recovery_last_phase = "SOURCE_RETIRED"
+	server._source_transfer = {"transfer_id": transfer_id}
+	server._frozen_transfer_id = transfer_id
+	server._p4_state_generation = 0
+	server._p4_source_fast.clear()
+
+	var completed := server._p4_persist_state("SOURCE_FAST_COMPLETE", transfer_id)
+	_assert(bool(completed.get("success", false)), "completed source side evidence persists")
+	var unrelated := server._p4_persist_state("PREWARM_RESERVED", "prewarm/sm0/b/3/reverse")
+	_assert(bool(unrelated.get("success", false)), "newer unrelated reverse-prewarm side state persists")
+
+	var global_latest := server._p4_latest_valid_side_snapshot()
+	var global_snapshot: Dictionary = Dictionary(global_latest.get("details", {}).get("snapshot", {}))
+	_assert(
+		String(global_snapshot.get("phase", "")) == "PREWARM_RESERVED",
+		"fixture proves unrelated reverse-prewarm is globally newer than source completion"
+	)
+
+	var tombstone := server._p4_apply_completed_source_tombstone()
+	_assert(
+		bool(tombstone.get("success", false)) and bool(Dictionary(tombstone.get("details", {})).get("applied", false)),
+		"completed source tombstone uses transfer-scoped evidence despite newer unrelated side state"
+	)
+	_assert(server._source_transfer.is_empty(), "completed source transfer is cleared by transfer-scoped tombstone")
+	server.free()
+	_cleanup_directory(recovery_dir)
 
 
 func _test_reservation_conflict_handler() -> void:
@@ -236,6 +284,20 @@ func _make_a_to_b_prewarm(prewarm_id: String) -> Dictionary:
 		1,
 		3000
 	)
+
+
+func _cleanup_directory(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var name := dir.get_next()
+	while not name.is_empty():
+		if not dir.current_is_dir():
+			DirAccess.remove_absolute(path.path_join(name))
+		name = dir.get_next()
+	dir.list_dir_end()
+	DirAccess.remove_absolute(path)
 
 
 func _assert(condition: bool, label: String) -> void:
