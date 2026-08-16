@@ -1,5 +1,6 @@
 extends SceneTree
 
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const CanonicalItemGraph = preload(
 	"res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
 )
@@ -113,7 +114,19 @@ func _test_mine_replay_and_rejection_purity() -> void:
 	var before_resource: Dictionary = service.create_snapshot()
 	var before_item: Dictionary = graph.create_snapshot()
 	var operation_id := "operation/v0-p3/domain/mine-1"
-	var payload := {"resource_node_id": NODE_ID, "requested_units": 1}
+	var wire_payload_result: Dictionary = NetworkUtils.json_round_trip({
+		"resource_node_id": NODE_ID,
+		"requested_units": 1,
+	})
+	_assert(
+		bool(wire_payload_result.get("success", false))
+		and wire_payload_result.get("value") is Dictionary,
+		"resource.mine payload survives canonical JSON round trip"
+	)
+	if not bool(wire_payload_result.get("success", false)) or not wire_payload_result.get("value") is Dictionary:
+		return
+	var payload: Dictionary = Dictionary(wire_payload_result.get("value", {})).duplicate(true)
+	_assert(NetworkUtils.is_json_integer(payload.get("requested_units")), "wire-round-tripped requested_units remains canonical JSON integer")
 	var mined: Dictionary = service.mine("a", operation_id, payload, player_position)
 	_assert(bool(mined.get("success", false)), "one-unit resource.mine succeeds in range")
 	if not bool(mined.get("success", false)):
