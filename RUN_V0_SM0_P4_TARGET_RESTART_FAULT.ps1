@@ -73,7 +73,6 @@ $LogDirectory = Join-Path $LocalAppData "DistributedWorldSimulator\SM0P4Fault\$R
 $RecoveryRoot = Join-Path $LocalAppData "DistributedWorldSimulator\SM0P4Recovery\fault-$RunId"
 New-Item -ItemType Directory -Force -Path $LogDirectory, $RecoveryRoot | Out-Null
 
-$ImportLog = Join-Path $LogDirectory "import.log"
 $ServerAPreLog = Join-Path $LogDirectory "server-a.pre-restart.log"
 $ServerAPostLog = Join-Path $LogDirectory "server-a.post-restart.log"
 $ServerACombinedLog = Join-Path $LogDirectory "server-a.log"
@@ -222,9 +221,7 @@ try {
     Write-Harness "P4 closure fault gate start HEAD=$GitHead"
     Write-Harness "recovery root=$RecoveryRoot"
     Write-Harness "live prewarm ttl=$LivePrewarmTtlMs ms; post-crash hold=$PostCrashHoldMs ms"
-    Write-Harness "Importing Godot metadata."
-    & $GodotExe --headless --editor --path $ProjectRoot --log-file $ImportLog --import
-    if ($LASTEXITCODE -ne 0) { throw "Godot import failed. See $ImportLog" }
+    Write-Harness "Skipping editor import; this fault gate is script-only and validates every participating script with --check-only."
 
     foreach ($ScriptPath in @(
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd",
