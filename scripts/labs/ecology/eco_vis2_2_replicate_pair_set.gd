@@ -32,7 +32,7 @@ func configure_from_fork(
 	intensity: float = 1.0
 ) -> Dictionary:
 	_clear_pairs()
-	_configured = false
+	_clear_configuration_state()
 
 	if fork_generation < 0 or fork_generation_map.is_empty():
 		return _failure("INVALID_FORK")
@@ -414,7 +414,7 @@ func _clear_configuration_state() -> void:
 
 func _exit_tree() -> void:
 	_clear_pairs()
-	_configured = false
+	_clear_configuration_state()
 
 
 static func _is_valid_seed_hash(value: String) -> bool:
