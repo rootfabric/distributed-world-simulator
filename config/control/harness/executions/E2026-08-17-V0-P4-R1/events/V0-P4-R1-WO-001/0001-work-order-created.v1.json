@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0001",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-16T16:43:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "47ff18cf603bbf98bb67f7f62962e050f8606542",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/audits/V0-P4-POST-ACTIVATION-CONTINUE-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/work-orders/V0-P4-R1-WO-001.v1.json"
+  ],
+  "summary": "Generation-80 P4 runtime Work Order created in PLANNED state. Authoritative CONTINUE audit is already committed; runtime mutation remains forbidden until the next separate Director dispatch event."
+}
