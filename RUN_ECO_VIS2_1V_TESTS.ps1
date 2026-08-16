@@ -47,6 +47,24 @@ function Invoke-GodotProcess {
         if ($combined -match '(?m)^SCRIPT ERROR:' -or $combined -match '(?m)^ERROR:' -or $combined -match '(?i)Parse Error') {
             throw "$Label emitted Godot error output despite zero exit code"
         }
+
+        # Godot can report shutdown ownership/resource leaks as WARNING while still
+        # returning exit code 0. Keep this check independent of --verbose so a
+        # future harness change cannot silently turn a leaking smoke green again.
+        $leakPatterns = @(
+            '(?im)ObjectDB instance(?:s)?\s+(?:was|were)\s+leaked at exit',
+            '(?im)^Leaked instance:',
+            '(?im)^Resource still in use:',
+            '(?im)resources? still in use at exit',
+            '(?im)^Orphan StringName:',
+            '(?im)^StringName:\s+\d+\s+unclaimed string names at exit\.?$'
+        )
+        foreach ($leakPattern in $leakPatterns) {
+            if ($combined -match $leakPattern) {
+                throw "$Label emitted Godot shutdown leak diagnostics despite zero exit code"
+            }
+        }
+
         if ($PassMarker -and $combined -notmatch $PassMarker) { throw "$Label PASS marker missing: $PassMarker" }
         return $combined
     }
@@ -105,8 +123,9 @@ renderer/rendering_method.mobile="gl_compatibility"
         -TimeoutSeconds 240 | Out-Null
     Write-Host "ECO.VIS2.1-V parser preflight: PASS"
 
+    Write-Host "ECO.VIS2.1-V shutdown leak gate: STRICT (explicit leak signatures + verbose smoke)"
     $output = Invoke-GodotProcess `
-        -Arguments @("--headless", "--path", $TempRoot, "--script", "res://tests/research/ecology/test_eco_vis2_1v_treatment_realtime_lod_lab.gd") `
+        -Arguments @("--verbose", "--headless", "--path", $TempRoot, "--script", "res://tests/research/ecology/test_eco_vis2_1v_treatment_realtime_lod_lab.gd") `
         -Label "ECO VIS2.1-V Treatment realtime LOD smoke" `
         -TimeoutSeconds 300 `
         -PassMarker 'ECO\.VIS2\.1-V Treatment realtime LOD: PASS'
