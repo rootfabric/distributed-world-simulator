@@ -3,6 +3,7 @@ extends SceneTree
 const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 const P4Server = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure.gd")
 const P4Client = preload("res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd")
+const P4TestServer = preload("res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_server.gd")
 
 var _assertions := 0
 var _failures: Array[String] = []
@@ -11,6 +12,8 @@ var _failures: Array[String] = []
 func _init() -> void:
 	_test_fast_commit_fingerprint()
 	_test_single_reservation_slot()
+	_test_join_admission_fences()
+	_test_reservation_conflict_handler()
 	_test_redirect_fingerprint()
 	_finish()
 
@@ -81,32 +84,8 @@ func _test_fast_commit_fingerprint() -> void:
 
 func _test_single_reservation_slot() -> void:
 	var server = P4Server.new()
-	var first := Contracts.create_handoff_prewarm(
-		"prewarm/sm0/a/2/one",
-		"a",
-		"player/a",
-		Contracts.AUTHORITY_A,
-		Contracts.AUTHORITY_B,
-		Contracts.ZONE_A,
-		Contracts.ZONE_B,
-		1,
-		2,
-		1,
-		3000
-	)
-	var second_same_epoch := Contracts.create_handoff_prewarm(
-		"prewarm/sm0/a/2/two",
-		"a",
-		"player/a",
-		Contracts.AUTHORITY_A,
-		Contracts.AUTHORITY_B,
-		Contracts.ZONE_A,
-		Contracts.ZONE_B,
-		1,
-		2,
-		1,
-		3000
-	)
+	var first := _make_a_to_b_prewarm("prewarm/sm0/a/2/one")
+	var second_same_epoch := _make_a_to_b_prewarm("prewarm/sm0/a/2/two")
 	_assert(String(first.get("prewarm_id", "")) != String(second_same_epoch.get("prewarm_id", "")), "fixture uses distinct prewarm ids")
 	_assert(server._p4_same_reservation_slot(first, second_same_epoch), "distinct ids for same player/source-target epoch conflict in one reservation slot")
 	var next_epoch := Contracts.create_handoff_prewarm(
@@ -123,6 +102,41 @@ func _test_single_reservation_slot() -> void:
 		3000
 	)
 	_assert(not server._p4_same_reservation_slot(first, next_epoch), "next authority epoch uses a different reservation slot")
+	server.free()
+
+
+func _test_join_admission_fences() -> void:
+	var server = P4TestServer.new()
+	server.configure_admission_fixture(
+		Contracts.AUTHORITY_A,
+		Contracts.create_directory(Contracts.AUTHORITY_A, 1, 1),
+		false
+	)
+	server.invoke_join({"logical_player_id": "a", "session_id": "session/reconnect"})
+	_assert(server.last_gameplay_error() == "SM0_P4_JOIN_REQUIRES_PEER_SYNC", "restarted bootstrap authority cannot JOIN before peer synchronization")
+
+	server.configure_admission_fixture(
+		Contracts.AUTHORITY_B,
+		Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2),
+		true
+	)
+	server.invoke_join({"logical_player_id": "a", "session_id": "session/reconnect"})
+	_assert(server.last_gameplay_error() == "SM0_P4_JOIN_REQUIRES_COMMITTED_ACTIVATION", "HELLO-advanced target cannot generic-JOIN before transfer commit")
+	server.free()
+
+
+func _test_reservation_conflict_handler() -> void:
+	var server = P4TestServer.new()
+	server.configure_admission_fixture(
+		Contracts.AUTHORITY_B,
+		Contracts.create_directory(Contracts.AUTHORITY_A, 1, 1),
+		true
+	)
+	var first := _make_a_to_b_prewarm("prewarm/sm0/a/2/one")
+	var second := _make_a_to_b_prewarm("prewarm/sm0/a/2/two")
+	server.install_reservation(first, Time.get_ticks_msec() + 3000)
+	server.invoke_prewarm(second)
+	_assert(server.last_control_error() == "SM0_HANDOFF_PREWARM_PLAYER_EPOCH_CONFLICT", "second live reservation for same player/epoch is rejected")
 	server.free()
 
 
@@ -163,6 +177,22 @@ func _test_redirect_fingerprint() -> void:
 	var wrong_epoch_check: Dictionary = client._p4_validate_redirect_payload(wrong_epoch)
 	_assert(not bool(wrong_epoch_check.get("success", false)), "redirect epoch inconsistent with directory is rejected before replay ACK")
 	client.free()
+
+
+func _make_a_to_b_prewarm(prewarm_id: String) -> Dictionary:
+	return Contracts.create_handoff_prewarm(
+		prewarm_id,
+		"a",
+		"player/a",
+		Contracts.AUTHORITY_A,
+		Contracts.AUTHORITY_B,
+		Contracts.ZONE_A,
+		Contracts.ZONE_B,
+		1,
+		2,
+		1,
+		3000
+	)
 
 
 func _assert(condition: bool, label: String) -> void:
