@@ -23,7 +23,7 @@
       "id": "earth",
       "display_name": "Земля",
       "description": "Процедурная Земля с атмосферой без отображения Луны.",
-      "runtime_script": "res://scripts/app/earth_p1_modern_inventory_app.gd",
+      "runtime_script": "res://scripts/app/earth_p3_resource_mining_app.gd",
       "tags": [
         "planet",
         "procedural",
