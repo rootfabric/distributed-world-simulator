@@ -1,6 +1,8 @@
 extends Node3D
 
 const ManualClient = preload("res://scripts/runtime/seamless/sm0/sm0_manual_client_node.gd")
+const NetworkManualClient = preload("res://scripts/runtime/seamless/sm0/sm0_manual_client_network_delay.gd")
+const P3_1_NETWORK_PROFILE := "p31-controlled-latency-v1"
 
 const ACTION_LEFT := "sm0_move_left"
 const ACTION_RIGHT := "sm0_move_right"
@@ -25,11 +27,12 @@ func _ready() -> void:
 	if _smoke_mode:
 		_status.text = "SM0-P1 visual smoke"
 		return
-	_client = ManualClient.new()
+	var options := _parse_user_args()
+	var network_profile := String(options.get("network-profile", "")).strip_edges().to_lower()
+	_client = NetworkManualClient.new() if network_profile == P3_1_NETWORK_PROFILE else ManualClient.new()
 	_client.name = "ManualClient"
 	add_child(_client)
 	_client.finished.connect(_on_client_finished)
-	var options := _parse_user_args()
 	var setup_result: Dictionary = _client.setup({
 		"server_host": String(options.get("server-host", "127.0.0.1")),
 		"server_a_port": int(options.get("server-a-port", 24580)),
@@ -38,9 +41,18 @@ func _ready() -> void:
 		"handoffs": 1000000,
 		"timeout_ms": 86400000,
 		"result_file": "",
+		"network_profile": network_profile,
+		"network_latency_ms": int(options.get("network-latency-ms", 0)),
+		"network_jitter_ms": int(options.get("network-jitter-ms", 0)),
+		"network_seed": int(options.get("network-seed", 431)),
 	})
 	if not bool(setup_result.get("success", false)):
 		_status.text = "CLIENT SETUP FAILED: %s" % String(setup_result.get("error_code", "unknown"))
+	elif network_profile == P3_1_NETWORK_PROFILE:
+		_status.text = "P3.1 WAN SHAPER: %d ms one-way +/- %d ms · A/D cross · close window to measure" % [
+			int(options.get("network-latency-ms", 0)),
+			int(options.get("network-jitter-ms", 0)),
+		]
 
 
 func _process(delta: float) -> void:
