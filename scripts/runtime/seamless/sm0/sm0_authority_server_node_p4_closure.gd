@@ -164,6 +164,19 @@ func _handle_p4_fast_commit(request_id: String, payload: Dictionary) -> void:
 	if _committed_transfers.has(transfer_id) and _p4_durable_prewarm_proofs.has(prewarm_id):
 		var committed: Dictionary = Dictionary(_committed_transfers[transfer_id])
 		if String(committed.get("prewarm_id", "")) == prewarm_id:
+			# The P4 side fingerprint is persisted before recovery.gd attempts the
+			# canonical TARGET_COMMITTED snapshot. Because _send_control is void, a
+			# canonical persistence failure returns through the parent call without
+			# an ACK but would otherwise look like an in-memory commit here. Keep the
+			# PREWARM proof until the inherited recovery ledger confirms the target
+			# commit is durable; the next exact FAST_COMMIT retry can then complete it.
+			if not _recovery_persisted_commits.has(transfer_id):
+				_event("SM0_P4_PREWARM_PROOF_RETAINED_UNTIL_TARGET_DURABLE", {
+					"prewarm_id": prewarm_id,
+					"transfer_id": transfer_id,
+					"directory": _directory,
+				})
+				return
 			var previous_proofs := _p4_durable_prewarm_proofs.duplicate(true)
 			_p4_durable_prewarm_proofs.erase(prewarm_id)
 			var persisted := _p4_persist_proofs("FAST_COMMITTED", prewarm_id)
