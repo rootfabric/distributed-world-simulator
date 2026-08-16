@@ -8,7 +8,7 @@ const ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experimen
 const STAGE := "ECO.VIS2.2-B-PAIR-TRACE-ADAPTER"
 
 
-static func build_generation_inputs(pair_set: Node, generation: int, treatment_experiment_id: String) -> Dictionary:
+static func build_generation_inputs(pair_set, generation: int, treatment_experiment_id: String) -> Dictionary:
 	if pair_set == null:
 		return _failure("PAIR_SET_REQUIRED")
 	if generation < int(pair_set.fork_generation()):
