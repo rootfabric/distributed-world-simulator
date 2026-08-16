@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_exact_consume_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1",
+  "authorized_parent": "d7641c0900772ecae4b324ecf04d6233a7bde4c6",
+  "director_dispatch_event_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+  "audit_evidence_commit": "a56a06481f2ee6534100aec11886d1958f7dd0de",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "pre_fix": {
+    "source_head": "d7641c0900772ecae4b324ecf04d6233a7bde4c6",
+    "import_exit_code": 0,
+    "test_exit_code": 1,
+    "summary": "V0-P4 exact-consume contract: FAIL (3 failures, 9 assertions)",
+    "failures": [
+      "BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK rejects exact exhaustion",
+      "stage planner cannot produce exact-consume transaction because the BuildPlan rejects exhaustion",
+      "DELETE + CONSUME_MATERIAL rejected as INVALID_DELETE_ITEM_MUTATION_PURPOSE"
+    ],
+    "project_godot_hash_stable": true
+  },
+  "post_fix": {
+    "source_archive_sha256": "4a300d724ddedb8035f5ec6277f743e1b775501cd5eb1f1fc4179be9b3aa28a0",
+    "import_exit_code": 0,
+    "test_exit_code": 0,
+    "summary": "V0-P4 exact-consume contract: PASS (12 assertions)",
+    "fatal_parser_or_startup_markers": 0,
+    "project_godot_hash_stable": true
+  },
+  "production_files_changed": [
+    "scripts/construction/build/construction_build_plan.gd",
+    "scripts/construction/build/construction_stage_transaction_planner.gd",
+    "scripts/construction/item_graph/construction_item_mutation.gd"
+  ],
+  "control_runner_compatibility_file_changed": "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1",
+  "runtime_scope": "P4.1 exact-consume only",
+  "claim": "V0_P4_EXACT_CONSUME_GREEN",
+  "does_not_claim": [
+    "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS",
+    "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}
