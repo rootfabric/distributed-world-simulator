@@ -1,8 +1,11 @@
-extends "res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
+extends "res://scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd"
 
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const ResourceMiningService = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_service.gd"
+)
+const ResourceMiningSnapshot = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
 )
 const EarthResourceSpatialResolver = preload(
 	"res://scripts/runtime/networked_gameplay/p3/earth_resource_spatial_resolver.gd"
@@ -73,23 +76,7 @@ func create_resource_mining_snapshot() -> Dictionary:
 
 
 func validate_resource_mining_snapshot(snapshot: Dictionary) -> Dictionary:
-	if _resource_mining != null:
-		return _resource_mining.validate_durable_state({
-			"schema": ResourceMiningService.DURABLE_SCHEMA,
-			"snapshot": snapshot,
-			"checksum": NetworkUtils.payload_hash({
-				"schema": ResourceMiningService.DURABLE_SCHEMA,
-				"snapshot": snapshot,
-			}),
-		})
-	var validator = ResourceMiningService.new()
-	var durable := {
-		"schema": ResourceMiningService.DURABLE_SCHEMA,
-		"snapshot": snapshot,
-		"checksum": "",
-	}
-	durable = NetworkUtils.finalize_json_checksum(durable)
-	return validator.validate_durable_state(durable)
+	return ResourceMiningSnapshot.validate(snapshot)
 
 
 func export_durable_state() -> Dictionary:
@@ -141,8 +128,9 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 		if not bool(resource_result.get("success", false)):
 			return _failure("GAMEPLAY_RESOURCE_RECOVERY_FAILED", {"cause": resource_result})
 	var details: Dictionary = Dictionary(restored.get("details", {})).duplicate(true)
-	details["resource_mining_generation"] = int(create_resource_mining_snapshot().get("generation", 0))
-	details["resource_mining_checksum"] = String(create_resource_mining_snapshot().get("checksum", ""))
+	var resource_snapshot := create_resource_mining_snapshot()
+	details["resource_mining_generation"] = int(resource_snapshot.get("generation", 0))
+	details["resource_mining_checksum"] = String(resource_snapshot.get("checksum", ""))
 	details["resource_mining_migrated_from_p2"] = migrated_from_p2
 	restored["details"] = details
 	return restored
