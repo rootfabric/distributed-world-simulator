@@ -14,11 +14,11 @@ Repaired и independently reviewed P1:
 
 `f7ab0a8b91394724b66e3f4ee387de3441a676ca`
 
-Текущий P2 replay candidate:
+Текущий P2 R8 repair candidate:
 
-`5c35f7bc32ba2d03fa9b72f603e6bf4ec1313189`
+`92e3e197e11156d6c36a58a3b4a4f447397c99d7`
 
-Эта preparation-ветка создана от exact P2 candidate. P2 остаётся HIGH-risk candidate и ещё проходит independent Reviewer / Verifier / Director routing. Поэтому данный checkpoint **не имеет права менять production runtime** и не является началом mining implementation.
+Эта preparation-ветка re-anchored поверх exact P2 R8 candidate без force-push и без production runtime mutation. P2 остаётся HIGH-risk candidate и ещё проходит independent Reviewer / Verifier / Director routing. Поэтому данный checkpoint **не имеет права менять production runtime** и не является началом mining implementation.
 
 ## 2. Цель P3
 
@@ -205,4 +205,4 @@ Preparation checkpoint: MEDIUM, потому что он фиксирует бу
 
 Первый production P3 resource/mining slice: HIGH до отдельной классификации, потому что он будет связывать новый canonical depletion state с M4 Item Graph и multiplayer/reconnect semantics.
 
-Production P3 activation разрешается только после того, как текущий P2 candidate завершит требуемый acceptance routing и Director определит допустимую runtime base/frontier. До этого `scripts/runtime` и production Construction/Item Graph в P3 preparation не меняются.
+Production P3 activation разрешается только после того, как текущий P2 R8 candidate завершит требуемый acceptance routing и Director определит допустимую runtime base/frontier. До этого `scripts/runtime` и production Construction/Item Graph в P3 preparation не меняются.

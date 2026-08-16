@@ -8,7 +8,11 @@ extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_
 # happens exactly once after a successful durable restore and is revisioned.
 
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const BaseItemGraphValidator = preload(
+	"res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd"
+)
 const CURRENT_SNAPSHOT_SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1"
+const DURABLE_VALIDATION_AUTHORITY_ID := "authority/v0-p2/durable-validation"
 
 
 func create_snapshot() -> Dictionary:
@@ -28,6 +32,22 @@ func create_snapshot() -> Dictionary:
 		body["playable_sandbox"] = true
 	body["checksum"] = NetworkUtils.payload_hash(body)
 	return body
+
+
+func validate_durable_state(value: Dictionary) -> Dictionary:
+	var snapshot_value = value.get("snapshot", null)
+	if not snapshot_value is Dictionary:
+		return super.validate_durable_state(value)
+	var snapshot: Dictionary = snapshot_value
+	var validator = BaseItemGraphValidator.new()
+	var setup_result: Dictionary = validator.setup(
+		DURABLE_VALIDATION_AUTHORITY_ID,
+		1,
+		{"playable_sandbox": bool(snapshot.get("playable_sandbox", false))}
+	)
+	if not bool(setup_result.get("success", false)):
+		return _failure("ITEM_GRAPH_DURABLE_VALIDATION_CONTEXT_FAILED")
+	return validator.validate_durable_state(value)
 
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
