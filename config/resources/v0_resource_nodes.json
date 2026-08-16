@@ -1,0 +1,18 @@
+{
+  "schema": "planet_simulator.resource_node_catalog.v1",
+  "nodes": [
+    {
+      "resource_node_id": "resource/earth/ore-demo/1",
+      "resource_definition_id": "resource/ore",
+      "output_definition_id": "item/ore",
+      "initial_units": 8,
+      "unit_item_quantity": 1,
+      "spatial": {
+        "frame": "earth-fixed",
+        "latitude_deg": 45.0,
+        "longitude_deg": 25.0001,
+        "altitude_m": 450.0
+      }
+    }
+  ]
+}
