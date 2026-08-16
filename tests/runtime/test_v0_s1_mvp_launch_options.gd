@@ -6,6 +6,7 @@ const CanonicalItemGraph = preload(
 )
 const MVP_LAUNCHER_PATH := "res://RUN_V0_MVP.ps1"
 const MAIN_SCENE_PATH := "res://main.tscn"
+const V0_BOOTSTRAP_PATH := "res://scripts/app/v0_simulator_app.gd"
 const V0_P1_BOOTSTRAP_PATH := "res://scripts/app/v0_p1_simulator_app.gd"
 
 var failures: Array[String] = []
@@ -64,7 +65,7 @@ func _init() -> void:
 	]))
 	_assert(not bool(mixed_modes.get("success", true)), "network MVP rejects mixed playground mode")
 
-	_test_p1_product_composition_bridge()
+	_test_v0_product_composition_bridge()
 	_test_item_graph_player_materialization_clock()
 	_test_runtime_bridge_process_isolation()
 
@@ -78,24 +79,30 @@ func _init() -> void:
 	quit(1)
 
 
-func _test_p1_product_composition_bridge() -> void:
+func _test_v0_product_composition_bridge() -> void:
 	_assert(FileAccess.file_exists(MAIN_SCENE_PATH), "main scene source exists")
-	_assert(FileAccess.file_exists(V0_P1_BOOTSTRAP_PATH), "V0-P1 product bootstrap source exists")
-	if not FileAccess.file_exists(MAIN_SCENE_PATH) or not FileAccess.file_exists(V0_P1_BOOTSTRAP_PATH):
+	_assert(FileAccess.file_exists(V0_BOOTSTRAP_PATH), "generic V0 product bootstrap source exists")
+	_assert(FileAccess.file_exists(V0_P1_BOOTSTRAP_PATH), "historical V0-P1 bootstrap remains available")
+	if not FileAccess.file_exists(MAIN_SCENE_PATH) or not FileAccess.file_exists(V0_BOOTSTRAP_PATH):
 		return
 	var main_scene := FileAccess.get_file_as_string(MAIN_SCENE_PATH)
-	var bootstrap := FileAccess.get_file_as_string(V0_P1_BOOTSTRAP_PATH)
+	var bootstrap := FileAccess.get_file_as_string(V0_BOOTSTRAP_PATH)
 	_assert(
-		main_scene.contains("res://scripts/app/v0_p1_simulator_app.gd"),
-		"main scene routes through bounded V0-P1 product bootstrap"
+		main_scene.contains("res://scripts/app/v0_simulator_app.gd")
+		and not main_scene.contains("res://scripts/app/v0_p1_simulator_app.gd"),
+		"main scene routes through generic V0 product bootstrap"
 	)
 	_assert(
 		bootstrap.contains('bool(options.get("network_mvp", false))'),
-		"V0-P1 bootstrap detects the validated network MVP product mode"
+		"generic V0 bootstrap detects the validated network MVP product mode"
+	)
+	_assert(
+		bootstrap.contains('launch_option_errors.is_empty()'),
+		"generic V0 bootstrap enables capability only after launch-option validation"
 	)
 	_assert(
 		bootstrap.contains('options["network_playground"] = true'),
-		"network MVP enables the inherited playable-sandbox capability before M3 setup"
+		"network MVP preserves the inherited playable-sandbox capability before M3 setup"
 	)
 
 
