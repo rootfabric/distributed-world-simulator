@@ -2,9 +2,9 @@
 
 Дата: 2026-08-16
 
-Статус: **WINDOWS_RUNTIME_AND_GRAPHICAL_VALIDATED_CANDIDATE**
+Статус: **WINDOWS_RUNTIME_AND_GRAPHICAL_VALIDATED_CANDIDATE — REVIEW_BLOCKER_REPAIRED, FRESH_REVIEW_REQUIRED**
 
-Не merge. Не self-accept. Этот checkpoint фиксирует exact Windows runtime evidence и пользовательскую graphical confirmation; fresh independent review остаётся следующим gate.
+Не merge. Не self-accept. Этот checkpoint фиксирует exact Windows runtime evidence, graphical confirmation, первый независимый review FAIL и его harness-only repair. Fresh independent re-review остаётся обязательным следующим gate.
 
 ## 1. Exact topology
 
@@ -32,13 +32,19 @@ Latest topology/lifecycle production repair:
 
 `d55c05d704b25d310ea0232e4af063bb1afeb767` — `fix(eco): avoid inherited VIS2.1 script-state leak`
 
-Exact Windows-runtime-validated code-under-test:
+Previous clean automated candidate before independent review:
 
 `4aa46bb784e4daaf846d0c33ee8d8155f7195e86` — `test(eco): retire VIS2.1-V verbose leak diagnostics`
 
-`4aa46bb...` is one harness-only commit after `d55c05d...`; it removes temporary `--verbose` leak diagnostics from `RUN_ECO_VIS2_1V_TESTS.ps1` and does not change runtime semantics.
+Independent review correctly found that `4aa46bb...` weakened zero-exit shutdown-leak detection because Godot may emit an ObjectDB leak only as a `WARNING` without `--verbose`.
 
-The later documentation commits are intentionally checkpoint-only and are not themselves code-under-test SHAs.
+Exact current Windows-runtime-validated code-under-test after the review blocker repair:
+
+`e26e4da3fdfacc42219d9a55a07d56c9bbff494a` — `test(eco): fail closed on VIS2.1-V shutdown leaks`
+
+`e26e4da...` is harness-only relative to the reviewed runtime candidate: it changes only `RUN_ECO_VIS2_1V_TESTS.ps1`. No production, scene, renderer, CONTROL/TREATMENT, CRN, comparator or causal simulation code changes were made for this repair.
+
+Later documentation commits are intentionally checkpoint-only and are not themselves code-under-test SHAs.
 
 ## 2. Goal
 
@@ -102,44 +108,67 @@ Relevant repair chain:
 
 The final VIS2.1-V script owns cleanup of the dynamically attached Treatment runner and replacement realtime renderer in `_exit_tree()`.
 
-The temporary verbose leak diagnostics were then retired in:
+The topology repair was reproduced locally against the project-provided exact Godot `4.7.1.stable.double.custom_build.a13da4feb`: the bad inherited-script-state topology reproduced an orphan Node/RefCounted shutdown profile, while the direct VIS2.0 scene topology exited cleanly.
 
-`4aa46bb784e4daaf846d0c33ee8d8155f7195e86`
+## 7. First independent review and blocking finding
 
-without weakening parser/error/PASS-marker enforcement.
+The first fresh independent review returned `FAIL` with one blocker in the acceptance harness, not in production VIS2.1-V architecture.
 
-The final topology repair was also reproduced and checked locally against the project-provided exact Godot `4.7.1.stable.double.custom_build.a13da4feb`; the bad inherited-script-state topology reproduced an orphan Node/RefCounted shutdown profile, while the direct VIS2.0 scene topology exited cleanly.
+Finding:
 
-## 7. Test contract
+- `4aa46bb...` had removed `--verbose` from the final smoke;
+- `Invoke-GodotProcess()` still rejected non-zero exit, `SCRIPT ERROR:`, `ERROR:` and `Parse Error`, but had no explicit shutdown-leak signatures;
+- exact Godot can return exit code `0` and emit only `WARNING: 1 ObjectDB instance was leaked at exit ...` for an orphan Node when not using `--verbose`;
+- therefore a new shutdown leak plus a valid PASS marker could have been accepted as green.
 
-`RUN_ECO_VIS2_1V_TESTS.ps1` first executes the full validated VIS2.1 causal/boundedness gate and then creates an isolated ecology project for VIS2.1-V.
+The reviewer independently reproduced this on exact engine `4.7.1.stable.double.custom_build.a13da4feb` and correctly treated it as a formal-acceptance blocker.
 
-It verifies, among other things:
+The review's production conclusions were otherwise positive: presentation-only LOD, single Treatment world, data-only Control, unchanged CRN/causality, bounded VIS2.1 caches/comparison, fork+1 Treatment semantics and the `d55c05d...` scene-topology repair were found architecturally sound.
 
-- exact custom Godot identity;
-- isolated ecology dependency graph;
-- parser preflight;
-- custom LOD renderer installed;
-- paired fork operation;
-- VIS2.0 source panel hidden after fork;
-- near/mid/far thresholds;
-- all three tiers on live Treatment proxies;
-- camera movement does not alter canonical simulation traces;
-- paired progression continues;
-- CONTROL remains data-only;
-- visible population field count remains one;
-- progressive/whole-field PH5 remains absent after fork;
-- LOD tiers follow turnover population;
-- common CRN root is preserved;
-- Treatment runner and VIS2.1-V-owned presentation resources tear down cleanly.
+The original `FAIL` remains valid historical evidence and is not retroactively converted to PASS.
 
-The runner keeps timeout/kill behavior, redirected stdout/stderr, zero-exit Godot error scanning and explicit PASS-marker checking.
+## 8. Acceptance-harness repair
 
-## 8. Exact Windows automated validation — 2026-08-16
+Repair commit:
 
-Windows worktree executed exact candidate:
+`e26e4da3fdfacc42219d9a55a07d56c9bbff494a` — `test(eco): fail closed on VIS2.1-V shutdown leaks`
 
-`4aa46bb784e4daaf846d0c33ee8d8155f7195e86`
+Scope:
+
+- exactly one changed file relative to the prior reviewed HEAD: `RUN_ECO_VIS2_1V_TESTS.ps1`;
+- no production/runtime code changed.
+
+The repair adds explicit fail-closed patterns independent of verbosity for:
+
+- `ObjectDB instance was leaked at exit`;
+- `ObjectDB instances were leaked at exit`;
+- `Leaked instance:`;
+- `Resource still in use:`;
+- `resource/resources still in use at exit`;
+- `Orphan StringName:`;
+- `StringName: N unclaimed string names at exit`.
+
+The final VIS2.1-V smoke also runs with `--verbose` again.
+
+Existing enforcement remains:
+
+- exact Godot identity;
+- timeout/kill;
+- redirected stdout/stderr;
+- non-zero exit rejection;
+- zero-exit `SCRIPT ERROR:` rejection;
+- zero-exit `ERROR:` rejection;
+- `Parse Error` rejection;
+- explicit PASS marker requirement;
+- isolated temp project/dependency graph.
+
+The blocker path was also reproduced locally with the project-provided exact Godot: a deliberate orphan Node with exit code `0` and a valid PASS marker emits the non-verbose ObjectDB leak warning, and the new explicit pattern matches it; with `--verbose`, `Leaked instance:`/`ERROR:` provides an additional independent rejection path.
+
+## 9. Exact Windows automated validation after repair — 2026-08-17
+
+Windows worktree executed exact repaired candidate:
+
+`e26e4da3fdfacc42219d9a55a07d56c9bbff494a`
 
 with exact engine:
 
@@ -147,6 +176,7 @@ with exact engine:
 
 Observed gate results:
 
+- ECO.VIS2.1-V exact Godot identity: PASS;
 - ECO.VIS2.1 exact Godot identity: PASS;
 - ECO.VIS2.1 isolated dependency graph: PASS;
 - ECO.VIS2.1 parser preflight: PASS;
@@ -162,14 +192,15 @@ Observed gate results:
 - VIS2.1 isolated gate: PASS — 7 scripts + parser preflight;
 - VIS2.1-V isolated ecology dependency graph: PASS;
 - VIS2.1-V parser preflight: PASS;
+- shutdown leak gate: `STRICT (explicit leak signatures + verbose smoke)`;
 - VIS2.1-V Treatment realtime LOD smoke: PASS — 25 assertions;
 - VIS2.1-V automated gate: PASS.
 
-The final clean run emitted no reported Godot `ERROR`, `SCRIPT ERROR`, parser failure, leaked-instance diagnostic, `ObjectDB` leak, or `Resource still in use` diagnostic.
+The strict verbose smoke ended cleanly. No reported `ObjectDB ... leaked`, `Leaked instance:`, `Resource still in use`, `Orphan StringName`, `ERROR:`, `SCRIPT ERROR:` or parse failure occurred.
 
-The same topology repair had already passed once at `d55c05d...` with verbose diagnostics enabled; `4aa46bb...` repeated the complete gate after removing the temporary diagnostic verbosity.
+This is the current exact automated acceptance evidence.
 
-## 9. Windows graphical validation — 2026-08-16
+## 10. Windows graphical validation — 2026-08-16
 
 The isolated graphical launcher `RUN_ECO_VIS2_1V_LAB.ps1` was launched successfully on Windows and the user confirmed the client/lab is working.
 
@@ -189,42 +220,34 @@ Captured paired runtime state from the graphical session:
 - thresholds displayed: `near<=110m mid=75..240m far>=190m`;
 - tier accounting displayed: `55/55/55` for near/mid/far tier nodes.
 
-The screenshot visibly shows:
+The screenshot visibly shows one rendered Treatment ecology field, active VIS2.1 CONTROL vs TREATMENT charts, non-zero post-fork deltas, data-only CONTROL declaration and realtime Treatment LOD ACTIVE.
 
-- one rendered Treatment ecology field;
-- active VIS2.1 CONTROL vs TREATMENT comparison charts;
-- non-zero post-fork causal deltas;
-- data-only CONTROL declaration in the HUD;
-- realtime Treatment LOD declared ACTIVE;
-- paired evolution continuing at G73 after fork G31;
-- no second rendered CONTROL plant field.
+The graphical evidence predates the harness-only `e26e4da...` repair. It does not need rerun because that repair changes only the PowerShell acceptance harness and no presentation/runtime files.
 
-The user explicitly reported that the client started and everything works. This graphical evidence is treated as confirmation of the intended VIS2.1-V presentation path. A single screenshot is not used as sole proof of every distance transition or causal invariant; those are additionally covered by the automated 25-assertion VIS2.1-V contract and inherited VIS2.1 regression gate.
+A single screenshot is not used as sole proof of every distance transition or causal invariant; those are additionally covered by the automated VIS2.1-V contract and inherited VIS2.1 regression gate.
 
-## 10. Current conclusion
+## 11. Current conclusion
 
-VIS2.1-V is now a **Windows-runtime-and-graphical-validated candidate**.
+VIS2.1-V is a **Windows-runtime-and-graphical-validated candidate with the first-review harness blocker repaired**.
 
-The prior lifecycle/topology leak is not reproduced on the exact final code-under-test, all inherited VIS2.1 causal/deterministic/boundedness regressions remain green, and the graphical lab operates in paired Treatment realtime-LOD mode with one visible ecology field.
+The production architecture remains unchanged since the first independent review. The exact repaired harness candidate `e26e4da...` has passed the complete Windows gate with strict explicit shutdown-leak detection plus verbose smoke.
 
-This is not an independent acceptance and not authorization to merge.
+This is not yet formal independent acceptance, not authorization to merge, and not permission to skip fresh review.
 
-## 11. Next gate
+## 12. Next gate
 
-Hand the exact candidate and this checkpoint to a fresh READ-ONLY independent reviewer.
+Run a fresh READ-ONLY independent R1 review on the exact current branch and repaired code-under-test.
 
-The reviewer must specifically re-check:
+The reviewer must specifically verify:
 
-- scope/topology from validated VIS2.1 base through VIS2.1-V;
-- presentation-only nature of LOD;
-- CONTROL remains data-only;
-- exactly one visible ecology population;
-- no whole-field PH5 rebuild after fork;
-- camera movement cannot mutate canonical traces;
-- common CRN and Treatment causal semantics remain unchanged;
-- bounded VIS2.1 caches/comparison remain inherited and green;
-- shutdown/resource lifecycle repair and the derived-scene topology fix;
-- strict runner behavior and exact-engine evidence;
-- graphical evidence without overclaiming what one screenshot proves.
+- branch freshness and exact SHAs;
+- the previous `FAIL` finding is understood and not erased;
+- `e26e4da...` is harness-only and fixes the identified failure mode;
+- explicit shutdown-leak signatures are sufficient and not accidentally overbroad/underbroad;
+- `--verbose` is restored for the final smoke;
+- existing error/PASS-marker/timeout/isolation checks remain intact;
+- exact Windows evidence on `e26e4da...` is clean;
+- no production/runtime files changed as part of this review repair;
+- prior production conclusions (LOD presentation-only, one Treatment field, Control data-only, CRN/fork/boundedness/topology invariants) remain valid because runtime code is unchanged.
 
 Do not modify production, tests or documentation during that review. Do not merge or self-accept.
