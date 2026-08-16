@@ -34,6 +34,9 @@ func _test_durable_proof_survives_live_ttl() -> void:
 	_assert(bool(persisted.get("success", false)), "durable proof persists to recovery journal")
 	writer.free()
 
+	# Recovery intentionally clears transport sessions, so canonical player truth
+	# may exist with connected=false. Any such record must fence an old proof just
+	# as strongly as a connected player; transport liveness is not ownership truth.
 	var stale_target = ProofTestServer.new()
 	configured = stale_target.configure_proof_fixture(_recovery_root, source_directory)
 	_assert(bool(configured.get("success", false)), "stale-target fixture configures")
@@ -41,11 +44,11 @@ func _test_durable_proof_survives_live_ttl() -> void:
 	_assert(bool(restored.get("success", false)), "durable proof restores after process-local reservation loss")
 	_assert(stale_target.proof_count() == 1, "restored proof count is one")
 	_assert(not stale_target.has_live_reservation(prewarm_id), "restart begins without a live reservation")
-	stale_target.force_target_active = true
+	stale_target.force_target_player_truth = true
 	stale_target.invoke_fast_commit(Dictionary(fixture.payload))
-	_assert(not stale_target.last_fast_commit_success(), "old proof cannot overwrite active canonical target truth")
-	_assert(stale_target.last_fast_commit_error() == "SM0_P4_FAST_DURABLE_PROOF_TARGET_ALREADY_ACTIVE", "active-target proof rejection is classified")
-	_assert(stale_target.fake_activation_count == 0, "active-target rejection occurs before import")
+	_assert(not stale_target.last_fast_commit_success(), "old proof cannot overwrite recovered canonical target truth")
+	_assert(stale_target.last_fast_commit_error() == "SM0_P4_FAST_DURABLE_PROOF_TARGET_ALREADY_ACTIVE", "existing-target-truth proof rejection is classified")
+	_assert(stale_target.fake_activation_count == 0, "existing canonical truth rejects proof before import")
 	stale_target.free()
 
 	var bad_checksum = ProofTestServer.new()
