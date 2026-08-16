@@ -3,6 +3,7 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure
 var captured_fast_committed: Array[Dictionary] = []
 var fake_activation_count := 0
 var force_target_player_truth := false
+var pretend_target_commit_durable := true
 
 
 func configure_proof_fixture(recovery_root: String, directory: Dictionary) -> Dictionary:
@@ -91,6 +92,8 @@ func _activate_imported_player(package: Dictionary) -> Dictionary:
 
 
 func _send_p4_fast_committed(_request_id: String, transfer_id: String, success: bool, error_code: String) -> void:
+	if success and pretend_target_commit_durable:
+		_recovery_persisted_commits[transfer_id] = 1
 	captured_fast_committed.append({
 		"transfer_id": transfer_id,
 		"success": success,
