@@ -1,6 +1,7 @@
 extends SceneTree
 
 const HealthyServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd")
+const P4HardenedServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd")
 const FaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_fault.gd")
 const RecoveryServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_resume.gd")
 const RecoveryFaultServerNode = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_fault.gd")
@@ -45,6 +46,7 @@ func _init() -> void:
 	var transaction_recovery_text := String(options.get("transaction-recovery", "0")).strip_edges().to_lower()
 	var transaction_recovery := transaction_recovery_text in ["1", "true", "yes"]
 	var network_profile := String(options.get("network-profile", "")).strip_edges().to_lower()
+	var p4_fast := OS.get_environment("SM0_P4_FAST_HANDOFF").strip_edges().to_lower() in ["1", "true", "yes", "on"]
 	if not network_profile.is_empty() and network_profile != P3_1_NETWORK_PROFILE:
 		push_error("Unsupported SM0 network profile: %s" % network_profile)
 		quit(2)
@@ -62,7 +64,7 @@ func _init() -> void:
 		push_error("SM0 P3.1 network shaping cannot be combined with fault/recovery profiles.")
 		quit(2)
 		return
-	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s network_profile=%s" % [
+	print("[SM0_BOOT] authority=%s zone=%s gameplay_port=%s control_port=%s peer_control_port=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s network_profile=%s p4_fast=%s" % [
 		authority_id,
 		zone_id,
 		String(options.get("gameplay-port", "24580")),
@@ -74,6 +76,7 @@ func _init() -> void:
 		active_owner_recovery,
 		transaction_recovery,
 		network_profile if not network_profile.is_empty() else "none",
+		p4_fast,
 	])
 	var server
 	if fault_profile == H4_3_RECOVERY_CHAIN_FAULT_PROFILE and recovery_performance == P2_2_RECOVERY_PERFORMANCE_PROFILE:
@@ -103,6 +106,8 @@ func _init() -> void:
 		server = TransactionRecoveryServerNode.new()
 	elif active_owner_recovery:
 		server = ActiveRecoveryServerNode.new()
+	elif p4_fast:
+		server = P4HardenedServerNode.new()
 	elif not recovery_dir.is_empty():
 		server = RecoveryServerNode.new()
 	else:
@@ -134,14 +139,15 @@ func _init() -> void:
 		push_error("SM0 server setup failed: %s" % result)
 		quit(2)
 		return
-	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s network_profile=%s" % [
+	print("[SM0_BOOT] setup_success authority=%s fault_profile=%s recovery_dir=%s recovery_performance=%s active_owner_recovery=%s transaction_recovery=%s network_profile=%s p4_fast=%s" % [
 		authority_id,
 		fault_profile if not fault_profile.is_empty() else "none",
-		recovery_dir if not recovery_dir.is_empty() else "none",
+		recovery_dir if not recovery_dir.is_empty() else (OS.get_environment("SM0_P4_RECOVERY_DIR") if p4_fast else "none"),
 		recovery_performance if not recovery_performance.is_empty() else "none",
 		active_owner_recovery,
 		transaction_recovery,
 		network_profile if not network_profile.is_empty() else "none",
+		p4_fast,
 	])
 
 
