@@ -17,9 +17,17 @@ if (-not (Test-Path -LiteralPath $SourceRunner -PathType Leaf)) {
     throw "SM0-P3.1 FINAL matrix source runner not found: $SourceRunner"
 }
 
-$HostExecutable = (Get-Process -Id $PID).Path
+$HostExecutable = if ([string]$PSVersionTable.PSEdition -eq "Core") {
+    Join-Path $PSHOME "pwsh.exe"
+}
+else {
+    Join-Path $PSHOME "powershell.exe"
+}
+if (-not (Test-Path -LiteralPath $HostExecutable -PathType Leaf)) {
+    $HostExecutable = (Get-Process -Id $PID).Path
+}
 if ([string]::IsNullOrWhiteSpace($HostExecutable) -or -not (Test-Path -LiteralPath $HostExecutable -PathType Leaf)) {
-    throw "SM0-P3.1 FINAL matrix cannot resolve the current PowerShell executable."
+    throw "SM0-P3.1 FINAL matrix cannot resolve a child PowerShell executable."
 }
 
 $LocalAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
@@ -191,7 +199,7 @@ Write-Host "SM0-P3.1 FINAL controlled WAN latency matrix: OBJECTIVE PASS" -Foreg
 Write-Host "  HEAD    : $Head"
 Write-Host "  samples : $RequireHandoffs handoffs/profile x $($Profiles.Count) profiles"
 foreach ($Result in $Results) {
-    Write-Host ("  {0,-6}: one-way={1,2}ms RTT={2,3}ms jitter=+/-{3,2}ms | p50={4,6:N0}ms p95={5,6:N0}ms | phases={6:N0}+{7:N0}ms | A->B={8:N0} B->A={9:N0}ms" -f $Result.label, $Result.one_way_latency_ms, $Result.configured_rtt_ms, $Result.jitter_ms, $Result.p50_ms, $Result.p95_ms, $Result.trigger_to_redirect_p50_ms, $Result.redirect_to_activate_p50_ms, $Result.a_to_b_p50_ms, $Result.b_to_a_p50_ms)
+    Write-Host ("  {0,-6}: one-way={1,2}ms RTT={2,3}ms jitter=+/-{3,2}ms | p50={4,6:N0}ms p95={5,6:N0}ms | phases={6:N0}+{7:N0}ms | A->B={8:N0}ms B->A={9:N0}ms" -f $Result.label, $Result.one_way_latency_ms, $Result.configured_rtt_ms, $Result.jitter_ms, $Result.p50_ms, $Result.p95_ms, $Result.trigger_to_redirect_p50_ms, $Result.redirect_to_activate_p50_ms, $Result.a_to_b_p50_ms, $Result.b_to_a_p50_ms)
 }
 Write-Host "  summary : $MatrixSummaryPath"
 Write-Host ""
