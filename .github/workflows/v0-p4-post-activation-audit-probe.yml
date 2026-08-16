@@ -38,10 +38,10 @@ jobs:
             mkdir -p "$(dirname "$f")"
             git show "origin/main:$f" > "$f"
           done < <(git ls-tree -r --name-only origin/main -- config/control/harness)
-          for f in scripts/harness/*.py; do
-            name="${f#scripts/harness/}"
-            git show "origin/main:scripts/harness/$name" > "$f"
-          done
+          while IFS= read -r f; do
+            mkdir -p "$(dirname "$f")"
+            git show "origin/main:$f" > "$f"
+          done < <(git ls-tree -r --name-only origin/main -- scripts/harness | grep '\.py$')
           git show origin/main:config/control/project-program-registry.v1.json > config/control/project-program-registry.v1.json
           git show origin/main:config/control/project-control-policy.v1.json > config/control/project-control-policy.v1.json
           git show origin/main:config/control/architecture-ownership.v1.json > config/control/architecture-ownership.v1.json
