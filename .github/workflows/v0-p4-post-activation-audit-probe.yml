@@ -1,4 +1,4 @@
-name: V0 P4 Post-Activation Audit Probe
+name: V0 P4 Dispatch Authorization Probe
 
 on:
   pull_request:
@@ -10,58 +10,86 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  dispatch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact P4 audit subject
+      - name: Checkout current P4 execution ledger
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: 47ff18cf603bbf98bb67f7f62962e050f8606542
+          ref: feature/v0-p4-construction-real-resources
 
-      - name: Verify exact P4 checkout
-        shell: bash
-        run: |
-          test "$(git rev-parse HEAD)" = "47ff18cf603bbf98bb67f7f62962e050f8606542"
-          test -z "$(git status --porcelain)"
-
-      - name: Fetch all branch refs
-        shell: bash
+      - name: Fetch current refs
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
-      - name: Install pinned harness dependency
-        shell: bash
+      - name: Verify P4 dispatch lineage
+        run: |
+          test "$(git branch --show-current)" = "feature/v0-p4-construction-real-resources"
+          git merge-base --is-ancestor 47ff18cf603bbf98bb67f7f62962e050f8606542 HEAD
+          git merge-base --is-ancestor a56a06481f2ee6534100aec11886d1958f7dd0de bc907d019900b158b26a2736be423ecaff07ecd3
+          test "$(git log --diff-filter=A -1 --format=%H -- config/control/harness/executions/E2026-08-17-V0-P4-R1/events/V0-P4-R1-WO-001/0002-director-dispatched.v1.json)" = "bc907d019900b158b26a2736be423ecaff07ecd3"
+
+      - name: Overlay canonical-main Harness contracts only
+        run: |
+          while IFS= read -r f; do
+            case "$f" in
+              config/control/harness/executions/*) continue ;;
+            esac
+            mkdir -p "$(dirname "$f")"
+            git show "origin/main:$f" > "$f"
+          done < <(git ls-tree -r --name-only origin/main -- config/control/harness)
+          for f in scripts/harness/*.py; do
+            name="${f#scripts/harness/}"
+            git show "origin/main:scripts/harness/$name" > "$f"
+          done
+          git show origin/main:config/control/project-program-registry.v1.json > config/control/project-program-registry.v1.json
+          git show origin/main:config/control/project-control-policy.v1.json > config/control/project-control-policy.v1.json
+          git show origin/main:config/control/architecture-ownership.v1.json > config/control/architecture-ownership.v1.json
+
+      - name: Install pinned Harness dependency
         run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
 
-      - name: Run authoritative P4 post-activation audit under PowerShell 7
-        shell: pwsh
+      - name: Reduce execution and prove runtime authorization
         run: |
-          ./RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 `
-            -ExpectedHead 47ff18cf603bbf98bb67f7f62962e050f8606542 `
-            -PythonExe python3 `
-            -AuditOutputPath artifacts/control/v0-p4-post-activation/epoch-base-audit.json
-
-      - name: Validate authoritative audit artifact
-        shell: python
-        run: |
+          python3 - <<'PY'
           import json
+          import sys
           from pathlib import Path
-          p = Path('artifacts/control/v0-p4-post-activation/epoch-base-audit.json')
-          data = json.loads(p.read_text(encoding='utf-8-sig'))
-          assert data['decision'] == 'CONTINUE', data
-          assert data['authoritative_for_dispatch'] is True, data
-          assert data['refs_fetch_performed'] is True, data
-          assert data['p4_head'] == '47ff18cf603bbf98bb67f7f62962e050f8606542', data
-          assert data['canonical_main_head'] == '5999d935e8d5b496100ced66283d8762d3403675', data
-          assert int(data['registry_generation']) >= 80, data
-          assert data['production_runtime_mutation_present'] is False, data
-          assert data['director_dispatch_still_required'] is True, data
-          print(json.dumps(data, indent=2, sort_keys=True))
 
-      - name: Upload audit evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: v0-p4-post-activation-audit-probe
-          path: artifacts/control/v0-p4-post-activation/epoch-base-audit.json
-          if-no-files-found: warn
+          root = Path.cwd()
+          sys.path.insert(0, str(root / 'scripts'))
+          from harness.state_builder import build_state
+          from harness.checkpoint_planner import build_plan
+          from harness.contracts import ContractBundle
+
+          execution = root / 'config/control/harness/executions/E2026-08-17-V0-P4-R1'
+          state = build_state(root, execution)
+          bundle = ContractBundle.load(root)
+          contracts = {
+              'checkpoint_catalog': bundle.contracts['checkpoint_catalog'],
+              'scheduler_policy': bundle.contracts['scheduler_policy'],
+          }
+          plan = build_plan(contracts, state['active_work_order'], state['reduced_work_order'])
+
+          assert state['reduced_work_order']['state'] == 'DISPATCHED', state['reduced_work_order']
+          assert state['reduced_work_order']['snapshot_matches_authoritative_state'] is True
+          assert state['epoch']['registry_generation'] == 80
+          assert state['epoch']['validation']['action'] == 'CONTINUE', state['epoch']['validation']
+          assert 'WORK_ORDER_BRANCH_NOT_CHECKED_OUT' not in state['findings'], state['findings']
+          assert plan['selected_checkpoint'] == 'V0_P4_REAL_RESOURCE_CONSTRUCTION', plan
+          assert plan['mode'] == 'SINGLE_HIGH_RISK_PRODUCT_SLICE', plan
+          assert plan['autonomous_runtime_workers'] == 1, plan
+          assert plan['v0_p4_gate']['runtime_mutation'] == 'AUTHORIZED_BY_DISPATCH', plan
+          assert plan['next_action'] == 'BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION', plan
+          print(json.dumps({
+              'p4_branch_head': state['repository']['current_branch_head_sha'],
+              'event_subject_head': state['repository']['event_subject_head_sha'],
+              'event_ledger_head': state['repository']['event_ledger_head_sha'],
+              'origin_main': state['repository']['origin_main_head_sha'],
+              'reduced_state': state['reduced_work_order']['state'],
+              'runtime_mutation': plan['v0_p4_gate']['runtime_mutation'],
+              'runtime_workers': plan['autonomous_runtime_workers'],
+              'next_action': plan['next_action'],
+              'findings': state['findings'],
+          }, indent=2, sort_keys=True))
+          PY
