@@ -12,10 +12,20 @@ jobs:
   control:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout exact event subject
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact checkout
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+          echo "PROJECT_CONTROL_EXPECTED_HEAD=$EXPECTED_SHA"
+          echo "PROJECT_CONTROL_ACTUAL_HEAD=$ACTUAL_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
 
       - name: Fetch all branch refs
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
@@ -35,14 +45,15 @@ jobs:
           print(f"PINNED DEPENDENCY OK: jsonschema=={actual}")
           PY
 
-      - name: Validate control candidate syntax
+      - name: Validate control candidate syntax and generation
         run: |
           python3 -m py_compile \
             scripts/control/project_control.py \
             scripts/control/project_control_architecture_compat.py \
             scripts/control/project_control_core.py \
             scripts/control/project_control_directional_watch.py \
-            scripts/harness/checkpoint_planner.py
+            scripts/harness/checkpoint_planner.py \
+            scripts/harness/event_reducer.py
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -71,6 +82,11 @@ jobs:
               if not isinstance(value, dict):
                   raise SystemExit(f"Expected JSON object: {path}")
               print(f"JSON OK: {path}")
+
+          registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text(encoding="utf-8"))
+          if registry.get("registry_generation") != 80:
+              raise SystemExit(f"GENERATION80_CANDIDATE_REQUIRED:{registry.get('registry_generation')}")
+          print("CANDIDATE REGISTRY GENERATION OK: 80")
           PY
 
       - name: Run architecture and ownership passport compatibility regression
@@ -83,13 +99,16 @@ jobs:
       - name: Run H0.2 machine checkpoint regression
         run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
 
-      - name: Run V0-S1 networked checkpoint regression
+      - name: Run V0 product checkpoint regression
         run: python3 -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
 
-      - name: Run PC0 auditor
+      - name: Run generation-80 authorization safety regression
+        run: python3 -m unittest tests.harness.test_v0_generation80_safety_guards
+
+      - name: Run canonical-main PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
 
-      - name: Run PC0 directional watch auditor
+      - name: Run canonical-main PC0 directional watch auditor
         run: python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
 
       - name: Upload control reports
