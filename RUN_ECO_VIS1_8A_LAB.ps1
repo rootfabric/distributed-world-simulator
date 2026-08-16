@@ -5,18 +5,23 @@ param(
 $ErrorActionPreference = "Stop"
 $ExpectedGodotVersion = "4.7.1.stable.double.custom_build.a13da4feb"
 $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("dws-eco-vis1-8a-lab-" + [Guid]::NewGuid().ToString("N"))
+$TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("dws-eco-vis1-8a-r1-lab-" + [Guid]::NewGuid().ToString("N"))
 
 try {
-    if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) { throw "Godot executable not found: $GodotPath" }
+    if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
+        throw "Godot executable not found: $GodotPath"
+    }
+
     $versionOutput = (& $GodotPath --version 2>&1 | Out-String).Trim()
     Write-Host $versionOutput
-    if ($versionOutput -notmatch [Regex]::Escape($ExpectedGodotVersion)) { throw "ECO VIS1.8A requires exact Godot $ExpectedGodotVersion" }
+    if ($versionOutput -notmatch [Regex]::Escape($ExpectedGodotVersion)) {
+        throw "ECO VIS1.8A-R1 requires exact Godot $ExpectedGodotVersion"
+    }
 
     $projectConfig = @"
 [application]
-config/name="ECO VIS1.8A Population Turnover Field"
-run/main_scene="res://scenes/labs/ecology/eco_vis1_8a_population_turnover_field.tscn"
+config/name="ECO VIS1.8A-R1 Realtime Population Turnover"
+run/main_scene="res://scenes/labs/ecology/eco_vis1_8a_realtime_turnover_field.tscn"
 [display]
 window/size/viewport_width=1440
 window/size/viewport_height=900
@@ -26,6 +31,7 @@ window/size/window_height_override=900
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 "@
+
     New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $TempRoot "project.godot") -Value $projectConfig -Encoding UTF8
 
@@ -44,7 +50,9 @@ renderer/rendering_method.mobile="gl_compatibility"
         "scripts\labs\ecology\eco_vis1_7_temporal_evolution_bridge.gd",
         "scripts\labs\ecology\eco_vis1_7_temporal_evolution_field.gd",
         "scripts\labs\ecology\eco_vis1_8a_turnover_bridge.gd",
-        "scripts\labs\ecology\eco_vis1_8a_population_turnover_field.gd",
+        "scripts\labs\ecology\eco_vis1_8a_realtime_turnover_model.gd",
+        "scripts\labs\ecology\eco_vis1_8a_realtime_proxy_renderer.gd",
+        "scripts\labs\ecology\eco_vis1_8a_realtime_turnover_field.gd",
         "scripts\research\ecology\environment_sample_v1.gd",
         "scripts\research\ecology\plant_resource_competition_v1.gd",
         "scripts\research\ecology\plant_density_carrying_capacity_v1.gd",
@@ -64,32 +72,38 @@ renderer/rendering_method.mobile="gl_compatibility"
         "scripts\research\ecology\plant_render_description_v1.gd",
         "scripts\research\ecology\plant_render_description_probes_v1.gd",
         "scripts\research\ecology\plant_3d_materializer_v1.gd",
-        "scenes\labs\ecology\eco_vis1_8a_population_turnover_field.tscn"
+        "scenes\labs\ecology\eco_vis1_8a_realtime_turnover_field.tscn"
     )
+
     foreach ($relative in $copies) {
         $source = Join-Path $RepoRoot $relative
         $target = Join-Path $TempRoot $relative
-        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "ECO VIS1.8A required file missing: $source" }
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "ECO VIS1.8A-R1 required file missing: $source"
+        }
         $targetDir = Split-Path -Parent $target
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
         Copy-Item -LiteralPath $source -Destination $target -Force
     }
 
-    Write-Host "=== ECO VIS1.8A Population Turnover Field ==="
+    Write-Host "=== ECO VIS1.8A-R1 Realtime Population Turnover ==="
     Write-Host "polygon=500x500m environment_seed=73191"
-    Write-Host "source=read-only VIS1.2 spatial snapshot + VIS1.6 genome/lineage machinery"
-    Write-Host "turnover=fitness-ranked survival + mortality + parent-linked recruitment"
-    Write-Host "recruitment=PlantMutationLineageKernel inheritance + patch-local dispersal"
-    Write-Host "representative_count_and_placement=dynamic per generation"
-    Write-Host "represented_biomass=conserved against VIS1.2 source biomass"
+    Write-Host "generation0=detailed PH5 baseline"
+    Write-Host "turnover generations=lightweight realtime tree proxies derived from the same turnover/genome/environment records"
+    Write-Host "whole-field PH5 rebuild during turnover=DISABLED"
+    Write-Host "Space interval=1.15s; births grow in; deaths shrink out; camera/input keep processing"
+    Write-Host "represented_biomass remains conserved against read-only VIS1.2 source biomass"
     Write-Host "canonical_population_truth=OFF canonical_timeline_truth=OFF"
-    Write-Host "yellow base marker=new recruit in current generation; red ground marker=death location from current transition"
     Write-Host "controls=WASD move | Q/E down/up | Shift boost | mouse look | Esc release/capture | Home reset | Left/Right generation | Space play/pause | R generation 0 | F1-F5 diagnostics"
     Write-Host "Close the Godot window to return to PowerShell."
 
-    $process = Start-Process -FilePath $GodotPath -ArgumentList @("--path", $TempRoot, "res://scenes/labs/ecology/eco_vis1_8a_population_turnover_field.tscn") -PassThru -Wait
-    if ($process.ExitCode -ne 0) { throw "ECO VIS1.8A graphical lab exited with code $($process.ExitCode)" }
+    $process = Start-Process -FilePath $GodotPath -ArgumentList @("--path", $TempRoot, "res://scenes/labs/ecology/eco_vis1_8a_realtime_turnover_field.tscn") -PassThru -Wait
+    if ($process.ExitCode -ne 0) {
+        throw "ECO VIS1.8A-R1 graphical lab exited with code $($process.ExitCode)"
+    }
 }
 finally {
-    if (Test-Path -LiteralPath $TempRoot) { Remove-Item -LiteralPath $TempRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    if (Test-Path -LiteralPath $TempRoot) {
+        Remove-Item -LiteralPath $TempRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }

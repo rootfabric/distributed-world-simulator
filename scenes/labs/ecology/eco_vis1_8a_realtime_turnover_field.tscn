@@ -1,0 +1,52 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_vis1_8a_realtime_turnover_field.gd" id="1_vis18r"]
+
+[sub_resource type="Environment" id="Environment_vis18r"]
+background_mode = 1
+background_color = Color(0.055, 0.075, 0.09, 1)
+background_energy_multiplier = 0.8
+ambient_light_source = 3
+ambient_light_color = Color(0.45, 0.5, 0.52, 1)
+ambient_light_energy = 0.65
+
+[node name="EcoVIS18ARealtimeTurnoverField" type="Node3D"]
+script = ExtResource("1_vis18r")
+
+[node name="Terrain" type="Node3D" parent="."]
+[node name="ReferenceMarkers" type="Node3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+fov = 72.0
+near = 0.1
+far = 2000.0
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -35, 0)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 800.0
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_vis18r")
+[node name="HUD" type="CanvasLayer" parent="."]
+[node name="Margin" type="MarginContainer" parent="HUD"]
+offset_left = 18.0
+offset_top = 18.0
+offset_right = 1420.0
+offset_bottom = 455.0
+[node name="Panel" type="PanelContainer" parent="HUD/Margin"]
+layout_mode = 2
+[node name="VBox" type="VBoxContainer" parent="HUD/Margin/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+[node name="Title" type="Label" parent="HUD/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "ECO.VIS1.8A-R1 — Realtime Population Turnover"
+[node name="Status" type="Label" parent="HUD/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "building realtime turnover field..."
+[node name="Controls" type="Label" parent="HUD/Margin/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "WASD move | Q/E down/up | Shift boost | mouse look | Left/Right generation | Space play/pause | R generation 0 | F1-F5 diagnostics"
