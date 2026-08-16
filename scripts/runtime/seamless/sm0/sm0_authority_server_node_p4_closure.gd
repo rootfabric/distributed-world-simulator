@@ -247,7 +247,11 @@ func _p4_apply_completed_source_tombstone() -> Dictionary:
 	var transfer_id := String(_source_transfer.get("transfer_id", ""))
 	if transfer_id.is_empty():
 		return _success({"applied": false})
-	var latest := _p4_latest_valid_side_snapshot()
+	# Later P4 side-state may belong to a different transfer slot (for example,
+	# the target can immediately prewarm the reverse crossing after this transfer
+	# completes at the boundary). Tombstoning must therefore use the newest valid
+	# evidence for this exact transfer, not the newest P4 snapshot globally.
+	var latest := _p4_latest_valid_side_snapshot(transfer_id)
 	if not bool(latest.get("success", false)):
 		return latest
 	var snapshot: Dictionary = Dictionary(latest.get("details", {}).get("snapshot", {}))
@@ -271,7 +275,7 @@ func _p4_apply_completed_source_tombstone() -> Dictionary:
 	return _success({"applied": true, "transfer_id": transfer_id})
 
 
-func _p4_latest_valid_side_snapshot() -> Dictionary:
+func _p4_latest_valid_side_snapshot(subject_id: String = "") -> Dictionary:
 	var dir := DirAccess.open(_recovery_authority_dir)
 	if dir == null:
 		return _failure("SM0_P4_TOMBSTONE_DIRECTORY_OPEN_FAILED", {"path": _recovery_authority_dir})
@@ -300,7 +304,13 @@ func _p4_latest_valid_side_snapshot() -> Dictionary:
 		var validation := _p4_validate_state_snapshot(snapshot)
 		if not bool(validation.get("success", false)):
 			continue
+		if not subject_id.is_empty() and String(snapshot.get("subject_id", "")) != subject_id:
+			continue
 		return _success({"snapshot": snapshot, "path": path})
+	# With a subject filter, absence of matching completion evidence is a safe
+	# no-op: canonical SOURCE_RETIRED remains fenced and must not be guessed away.
+	if not subject_id.is_empty():
+		return _success({"snapshot": {}})
 	return _failure("SM0_P4_TOMBSTONE_NO_VALID_SIDE_SNAPSHOT")
 
 
