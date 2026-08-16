@@ -10,7 +10,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from harness.checkpoint_planner import build_plan
 
-CHECKPOINT = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
+P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+S1 = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
 
 
@@ -18,7 +19,7 @@ def load_json(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
 
 
-class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
+class V0ProductCheckpointContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.catalog = load_json("config/control/harness/checkpoint-catalog.v1.json")
         self.scheduler = load_json("config/control/harness/scheduler-policy.v1.json")
@@ -29,150 +30,137 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
             "scheduler_policy": self.scheduler,
         }
 
-    def test_checkpoint_exists_as_high_risk_product_checkpoint(self):
-        checkpoint = self.catalog["checkpoints"][CHECKPOINT]
+    def test_p4_is_current_high_risk_product_checkpoint(self):
+        checkpoint = self.catalog["checkpoints"][P4]
         self.assertEqual("PROJECT", checkpoint["kind"])
         self.assertEqual("V0", checkpoint["program"])
         self.assertEqual("HIGH", checkpoint["default_risk_floor"])
-        self.assertEqual("V0_S1_PASS", checkpoint["success_state"])
+        self.assertEqual("V0_P4_PASS", checkpoint["success_state"])
         self.assertEqual("SERVER_PREDICTED", checkpoint["network_baseline"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", checkpoint["blocked_state_if_network_foundation_change_required"])
+        self.assertEqual("V0_BLOCKED_REQUIRES_NX", checkpoint["blocked_state_if_network_foundation_change_required"])
         self.assertEqual("RUNTIME_FEATURE_MERGE", checkpoint["human_gate_after"])
 
-    def test_checkpoint_requires_r3_c22_pc0_and_network_runtime_not_nx_c1_acceptance(self):
-        checkpoint = self.catalog["checkpoints"][CHECKPOINT]
+    def test_p4_uses_main_declared_product_execution_base_not_bare_main(self):
+        checkpoint = self.catalog["checkpoints"][P4]
         preconditions = set(checkpoint["preconditions"])
-        non_preconditions = set(checkpoint["non_preconditions"])
-        expected_preconditions = {
-            "H0_1_PASS",
-            "C22_MAIN_INTEGRATED",
-            "GLOBAL_P0_R3_CANONICAL",
-            "POST_R3_STANDARD_PC0_NON_RED",
-            "POST_R3_DIRECTIONAL_PC0_NON_RED",
-            "CANONICAL_MAIN_KNOWN",
-            "NO_GLOBAL_PROJECT_RED",
-            "CANONICAL_NETWORK_RUNTIME_PRESENT",
-            "PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1",
-        }
-        self.assertTrue(expected_preconditions.issubset(preconditions), sorted(expected_preconditions - preconditions))
-        self.assertIn("H0_2_PASS", non_preconditions)
-        self.assertIn("NX_SOURCE_ACCEPTED", non_preconditions)
-        self.assertIn("H0_3_SCHEDULER_ACCEPTED", non_preconditions)
-        self.assertIn("OWNER_AUTHORITATIVE_VALIDATED_ACCEPTED", non_preconditions)
-        self.assertNotIn("H0_2_PASS", preconditions)
-        self.assertNotIn("NX_SOURCE_ACCEPTED", preconditions)
+        self.assertIn("MAIN_DECLARED_V0_PRODUCT_EXECUTION_BASE_PRESENT", preconditions)
+        self.assertIn("V0_P4_EXECUTION_BASE_DESCENDS_FROM_PLAYABLE_FRONTIER", preconditions)
+        self.assertNotIn("V0_P4_EXACT_CURRENT_MAIN_BASE", checkpoint["required_predicates"])
+        self.assertIn("V0_P4_MAIN_DECLARED_PRODUCT_EXECUTION_BASE", checkpoint["required_predicates"])
 
-    def test_required_predicates_cover_planet_two_clients_movement_construction_reconnect_and_soak(self):
-        required = set(self.catalog["checkpoints"][CHECKPOINT]["required_predicates"])
+        rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        self.assertTrue(rules["requires_main_declared_product_execution_base"])
+        self.assertTrue(rules["control_epoch_remains_anchored_to_current_main"])
+        self.assertTrue(rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"])
+        self.assertTrue(rules["product_execution_base_is_not_automatic_checkpoint_acceptance"])
+
+    def test_prior_acceptance_debt_does_not_block_bounded_implementation_but_blocks_acceptance(self):
+        checkpoint = self.catalog["checkpoints"][P4]
+        non_preconditions = set(checkpoint["non_preconditions_for_bounded_implementation"])
+        self.assertIn("P2_DIRECTOR_CHECKPOINT_VERDICT_COMPLETE", non_preconditions)
+        self.assertIn("P3_AGGREGATE_ACCEPTANCE_COMPLETE", non_preconditions)
+        self.assertIn("P3_REPLICA_REPAIR_ACCEPTED", non_preconditions)
+        self.assertIn("V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED", checkpoint["required_predicates"])
+
+        rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        self.assertTrue(rules["bounded_implementation_may_proceed_with_prior_acceptance_debt"])
+        self.assertTrue(rules["checkpoint_acceptance_requires_prior_acceptance_debt_resolved"])
+
+    def test_p4_required_predicates_cover_real_resource_atomicity_and_replication(self):
+        required = set(self.catalog["checkpoints"][P4]["required_predicates"])
         expected = {
-            "V0_S1_SERVER_BOOT_PASS",
-            "V0_S1_PROCEDURAL_PLANET_PASS",
-            "V0_S1_TWO_CLIENT_JOIN_SAME_WORLD_PASS",
-            "V0_S1_TWO_PLAYABLE_CHARACTERS_PASS",
-            "V0_S1_REMOTE_CHARACTER_VISIBILITY_PASS",
-            "V0_S1_BIDIRECTIONAL_MOVEMENT_REPLICATION_PASS",
-            "V0_S1_CANONICAL_CONSTRUCTION_COMMIT_PASS",
-            "V0_S1_SECOND_CLIENT_CONSTRUCTION_REPLICATION_PASS",
-            "V0_S1_NO_CLIENT_PRIVATE_CONSTRUCTION_TRUTH_PASS",
-            "V0_S1_RECONNECT_SAME_WORLD_PASS",
-            "V0_S1_RECONNECT_CONSTRUCTION_STATE_PASS",
-            "V0_S1_30_MIN_TWO_CLIENT_SOAK_PASS",
-            "V0_S1_NETWORK_BASELINE_SERVER_PREDICTED_PASS",
-            "V0_S1_FAIL_CLOSED_TO_NX_IF_AUTHORITY_CHANGE_REQUIRED",
-            "FULL_WORLD_CORE_REGRESSION_PASS",
+            "V0_P4_EXACT_CONSUME_RED_REPRODUCED",
+            "V0_P4_EXACT_CONSUME_GREEN",
+            "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS",
+            "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+            "V0_P4_ATOMIC_ITEM_GRAPH_AND_CONSTRUCTION_COMMIT_PASS",
+            "V0_P4_INSUFFICIENT_RESOURCES_MUTATION_FREE_PASS",
+            "V0_P4_DUPLICATE_EXACT_ONCE_PASS",
+            "V0_P4_OPERATION_ID_CONFLICT_PASS",
+            "V0_P4_FAULT_INJECTION_ROLLBACK_PASS",
+            "V0_P4_FOREIGN_PLAYER_OWNERSHIP_ISOLATION_PASS",
+            "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS",
+            "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+            "V0_P4_RECONNECT_CONVERGENCE_PASS",
+            "V0_P4_NO_SECOND_ITEM_GRAPH_OR_PERSISTENCE_OWNER_PASS",
+            "V0_P4_FAIL_CLOSED_TO_NX_IF_NETWORK_FOUNDATION_CHANGE_REQUIRED",
+            "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED",
             "INDEPENDENT_REVIEWER_PASS",
             "INDEPENDENT_VERIFIER_PASS",
-            "STANDARD_PC0_NON_RED",
-            "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
-            "V0_S1_CHECKPOINT_PROPOSED",
+            "V0_P4_CHECKPOINT_PROPOSED",
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_declares_v0_product_lane_without_replacing_h0_2_pilot(self):
+    def test_goal_graph_matches_actual_p0_p8_product_order(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
-        self.assertEqual(CHECKPOINT, goals["V0_S1_PRODUCT"]["target_checkpoint"])
-        self.assertIn("C22_MAIN_INTEGRATED", goals["V0_S1_PRODUCT"]["depends_on"])
+        self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
+        sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
+        self.assertEqual(
+            [
+                "V0_P0_PLAYABLE_FRONTIER",
+                "V0_P1_WORLD_ITEMS_CONTAINERS",
+                "V0_P2_RECONNECTABLE_SHARED_STATE",
+                "V0_P3_RESOURCE_MINING",
+                "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+                "V0_P5_EQUIPMENT_TOOLS",
+                "V0_P6_PERSISTENT_SHARED_OUTPOST",
+                "V0_P7_BOUNDED_TERRAIN_MUTATION",
+                "V0_P8_FIRST_MOBILE_CONSTRUCT",
+            ],
+            sequence,
+        )
+        self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
+        self.assertIn(P4, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
-        self.assertIn(CHECKPOINT, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
 
-    def test_registry_generation_80_activates_scenario_gate_without_weakening_nx(self):
+    def test_registry_generation_80_declares_exact_product_lineage_without_false_acceptance(self):
         self.assertEqual(80, self.registry["registry_generation"])
-        self.assertIn("V0", self.registry["programs"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
-        self.assertEqual("ELIGIBLE_FOR_FRESH_EXACT_MAIN_HIGH_RISK_WORK_ORDER", v0["stage_status"])
+        self.assertEqual("feature/v0-p4-construction-real-resources", v0["branch"])
+        execution = v0["product_execution_base"]
+        self.assertEqual("repair/v0-p3-visual-interaction-r1", execution["branch"])
+        self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", execution["sha"])
+        self.assertFalse(execution["declares_checkpoint_acceptance"])
+        self.assertIn("P2_DIRECTOR_VERDICT_PENDING", v0["acceptance_debt"])
+        self.assertIn("P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING", v0["acceptance_debt"])
 
-        transitions = {
-            item["stage"]: item["blocked_by"]
-            for item in self.registry["global_blocked_transitions"]
-        }
-        self.assertNotIn("V0 RUNTIME START", transitions)
-        self.assertIn("V0-S1 NETWORKED PLANETARY OUTPOST START", transitions)
-        self.assertNotIn("H0_3_SCHEDULER_ACCEPTED", transitions["V0-S1 NETWORKED PLANETARY OUTPOST START"])
-        self.assertEqual("H0_3_SCHEDULER_ACCEPTED_REQUIRED", transitions["MULTI_RUNTIME_IMPLEMENTATION_WORKERS"])
-        self.assertIn("CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED", transitions["NX.C1 SOURCE ACCEPTANCE"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", transitions["V0-S1 NETWORK FOUNDATION OR AUTHORITY CHANGE"])
-
-    def test_pre_h0_3_concurrency_is_one_mutation_worker_and_verification_can_coexist(self):
+    def test_pre_h0_3_concurrency_is_one_mutation_worker(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
         self.assertEqual(1, concurrency["pre_h0_3_total_autonomous_runtime_mutation_workers"])
-        self.assertEqual(1, concurrency["v0_s1_max_autonomous_runtime_mutation_workers"])
+        self.assertEqual(1, concurrency["v0_product_max_autonomous_runtime_mutation_workers"])
         self.assertTrue(concurrency["verification_review_only_may_wait_in_parallel_with_one_runtime_mutation_worker"])
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
-        self.assertTrue(rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"])
-        self.assertTrue(rules["v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden"])
+        self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
 
-    def test_v0_planner_waits_for_dispatch_then_allocates_exactly_one_mutation_worker(self):
-        work_order = {"goal_checkpoint": CHECKPOINT}
+    def test_p4_planner_waits_for_dispatch_then_allocates_one_mutation_worker(self):
+        work_order = {"goal_checkpoint": P4}
         planned = {
             "completed_predicates": [],
-            "work_order_id": "V0-S1-WO-TEST",
+            "work_order_id": "V0-P4-WO-TEST",
             "state": "PLANNED",
         }
         plan = build_plan(self.contracts, work_order, planned)
         self.assertEqual("PLANNING_ONLY", plan["mode"])
         self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("SERVER_PREDICTED", plan["v0_s1_gate"]["network_baseline"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["v0_s1_gate"]["network_foundation_change_fails_closed_to"])
-        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["v0_s1_gate"]["runtime_mutation"])
+        self.assertEqual("MAIN_DECLARED_V0_PRODUCT_LINEAGE", plan["v0_p4_gate"]["runtime_execution_base"])
+        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
+        self.assertTrue(plan["v0_p4_gate"]["bounded_implementation_may_proceed_with_prior_acceptance_debt"])
 
         dispatched = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
-            "work_order_id": "V0-S1-WO-TEST",
+            "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
         plan = build_plan(self.contracts, work_order, dispatched)
         self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", plan["mode"])
         self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_s1_gate"]["runtime_mutation"])
-        self.assertEqual("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION", plan["next_action"])
+        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
+        self.assertEqual("BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION", plan["next_action"])
         self.assertIn("SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER", plan["stop_gates"])
 
-    def test_verifying_releases_mutation_slot_for_both_v0_and_h0_2(self):
-        v0_work_order = {"goal_checkpoint": CHECKPOINT}
-        v0_verifying = {
-            "completed_predicates": ["V0_S1_SERVER_BOOT_PASS"],
-            "work_order_id": "V0-S1-WO-TEST",
-            "state": "VERIFYING",
-        }
-        v0_plan = build_plan(self.contracts, v0_work_order, v0_verifying)
-        self.assertEqual("PRODUCT_RUNTIME_VERIFICATION", v0_plan["mode"])
-        self.assertEqual(0, v0_plan["autonomous_runtime_workers"])
-        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", v0_plan["v0_s1_gate"]["runtime_mutation"])
-
-        h0_2_work_order = {"goal_checkpoint": H0_2}
-        h0_2_verifying = {
-            "completed_predicates": ["PROJECT_EPOCH_CREATED"],
-            "work_order_id": "H0-2-WO-TEST",
-            "state": "VERIFYING",
-        }
-        h0_2_plan = build_plan(self.contracts, h0_2_work_order, h0_2_verifying)
-        self.assertEqual("HIGH_RISK_RUNTIME_VERIFICATION", h0_2_plan["mode"])
-        self.assertEqual(0, h0_2_plan["autonomous_runtime_workers"])
-        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", h0_2_plan["nx_c1_gate"]["runtime_mutation"])
-
-    def test_nx_c1_acceptance_contract_is_still_strict(self):
+    def test_nx_c1_acceptance_contract_remains_strict(self):
         required = set(self.catalog["checkpoints"][H0_2]["required_predicates"])
         expected = {
             "OWNER_AUTHORITY_FOCUSED_PASS",
@@ -187,6 +175,7 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
             "NX_CHECKPOINT_PROPOSED",
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
+        self.assertIn(S1, self.catalog["checkpoints"])
 
 
 if __name__ == "__main__":
