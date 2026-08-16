@@ -8,18 +8,20 @@
   "short_description": "P4 real-resource Construction integration: consume P3-mined canonical M4 ore through one atomic Construction transaction boundary.",
   "purpose": "Close the first real V0 economy loop without introducing a second Item Graph, client-owned affordability truth, or a second persistence/transaction authority.",
   "expected_outcome": "A server-authoritative build stage consumes the requesting player's real P3-produced item/ore exactly once and atomically with Construction state, then replicates and reconstructs the converged result on reconnect.",
-  "current_stage": "V0-P4.1 EXACT-CONSUME PATCH PREPARED",
-  "stage_status": "IMPLEMENTATION_READY_RUNTIME_MUTATION_BLOCKED",
-  "progress_note": "The exact-consume root cause is closed at design/source-audit level and an exact three-file production patch is durable in docs/evidence/2026-08-16_V0_P4_P4_1_EXACT_CONSUME_PATCH_PREPARED_RU.md. In-memory and authoritative adapters already support DELETE, so P4.1 needs no adapter/M0 redesign. Canonical main remains generation 79 and V0 activation PR #98 is still open, therefore the production patch is intentionally unapplied pending activation, post-main PC0 and fresh epoch/base audit.",
+  "current_stage": "V0-P4 POST-ACTIVATION EPOCH AUDIT GATE PREPARED",
+  "stage_status": "IMPLEMENTATION_READY_RUNTIME_MUTATION_BLOCKED_PENDING_CONTROL_ACCEPTANCE",
+  "progress_note": "P4.1 exact-consume root cause and three-file production repair are prepared but intentionally unapplied. The new RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 now machine-checks generation-80 activation, main-declared exact P3.1 execution base, ancestry, PR #117 exclusion, pre-dispatch no-runtime-diff scope, updated V0 machine regression and exact-main standard/directional PC0. Canonical main remains generation 79 and PR #98 still awaits fresh post-refresh independent review/main acceptance, so the audit cannot yet return CONTINUE and runtime mutation remains blocked.",
   "last_accepted_checkpoint": "STACKED_INPUT_ONLY: P3.1 demonstrated head ef3ad5f0afc433802d639171d938e4720b3a46ec; no P4 acceptance claim",
-  "next_stage": "After canonical V0 activation and NON_RED post-main control audit: execute the existing RED contract on the fresh authorized base, apply the prepared three-file P4.1 exact-consume patch, drive RED->GREEN, then continue with deterministic allocator and live-M4 Construction transaction port.",
+  "next_stage": "After generation-80 control is canonical on main, run RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 on the exact P4 HEAD. Only audit decision CONTINUE plus separate Director dispatch permits executing the existing P4.1 RED contract, applying the prepared three-file exact-consume repair and driving RED->GREEN; then continue with deterministic allocator and live-M4 Construction transaction port.",
   "parent_branch_or_checkpoint": "repair/v0-p3-visual-interaction-r1 @ ef3ad5f0afc433802d639171d938e4720b3a46ec",
   "base_commit": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
   "dependencies": [
-    "V0 canonical runtime activation on main (PR #98 or reviewed successor)",
+    "V0 generation-80 P0-P4 control activation on main (PR #98 or reviewed successor)",
+    "fresh post-refresh independent review of generation-80 control candidate",
     "post-main standard Project Control NON_RED",
     "post-main directional Project Control NON_RED for critical hits",
-    "fresh epoch/base dependency audit",
+    "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT decision CONTINUE",
+    "separate Director dispatch before production/runtime mutation",
     "P3 canonical item/ore output semantics",
     "existing Construction transaction/replay contracts"
   ],
@@ -52,8 +54,21 @@
   "validation_paths": [
     "tests/construction/test_v0_p4_real_resource_exact_consume_contract.gd",
     "RUN_V0_P4_EXACT_CONSUME_CONTRACT.ps1",
-    "docs/evidence/2026-08-16_V0_P4_P4_1_EXACT_CONSUME_PATCH_PREPARED_RU.md"
+    "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1",
+    "docs/evidence/2026-08-16_V0_P4_P4_1_EXACT_CONSUME_PATCH_PREPARED_RU.md",
+    "docs/evidence/2026-08-16_V0_P4_POST_ACTIVATION_EPOCH_AUDIT_GATE_RU.md"
   ],
+  "pre_dispatch_audit_gate": {
+    "runner": "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1",
+    "required_decision": "CONTINUE",
+    "minimum_registry_generation": 80,
+    "declared_product_execution_base_branch": "repair/v0-p3-visual-interaction-r1",
+    "declared_product_execution_base_sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
+    "excluded_repair_sha": "11819f6dd1ea3728382a04737d30a5300de622f7",
+    "requires_standard_pc0_non_red": true,
+    "requires_directional_pc0_non_red": true,
+    "requires_director_dispatch_after_continue": true
+  },
   "tested_heads": {
     "runtime": "",
     "focused": "",
@@ -73,9 +88,10 @@
     "NETWORK_AUTHORITY_MODEL"
   ],
   "blockers": [
-    "CANONICAL_MAIN_V0_RUNTIME_ACTIVATION_PENDING",
-    "POST_ACTIVATION_PROJECT_CONTROL_REQUIRED",
-    "FRESH_EPOCH_BASE_AUDIT_REQUIRED_BEFORE_RUNTIME_MUTATION",
+    "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
+    "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
+    "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
+    "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
     "PR_117_EXPLICITLY_EXCLUDED_PENDING_INDEPENDENT_ACCEPTANCE"
   ],
   "health_declared": "YELLOW",
