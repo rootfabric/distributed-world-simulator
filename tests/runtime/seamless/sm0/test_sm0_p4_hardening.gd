@@ -11,6 +11,7 @@ var _failures: Array[String] = []
 
 func _init() -> void:
 	_test_fast_commit_fingerprint()
+	_test_fast_commit_replay_handler()
 	_test_single_reservation_slot()
 	_test_join_admission_fences()
 	_test_reservation_conflict_handler()
@@ -20,48 +21,8 @@ func _init() -> void:
 
 func _test_fast_commit_fingerprint() -> void:
 	var server = P4Server.new()
-	var directory := Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2)
-	var player := {
-		"logical_player_id": "a",
-		"player_entity_id": "player/a",
-		"ownership_epoch": 1,
-		"position": {"x": 0.0, "y": 0.0, "z": 0.0},
-		"velocity": {"x": 0.5, "y": 0.0, "z": 0.0},
-		"orientation_yaw": 0.0,
-		"last_input_sequence": 10,
-		"state_revision": 4,
-	}
-	var package := Contracts.create_handoff_package(
-		"handoff/sm0/a/2/test",
-		player,
-		Contracts.AUTHORITY_A,
-		Contracts.AUTHORITY_B,
-		Contracts.ZONE_A,
-		Contracts.ZONE_B,
-		1,
-		2,
-		1
-	)
-	var prewarm := Contracts.create_handoff_prewarm(
-		"prewarm/sm0/a/2/test",
-		"a",
-		"player/a",
-		Contracts.AUTHORITY_A,
-		Contracts.AUTHORITY_B,
-		Contracts.ZONE_A,
-		Contracts.ZONE_B,
-		1,
-		2,
-		1,
-		3000
-	)
-	var payload := {
-		"transfer_id": String(package.get("transfer_id", "")),
-		"package": package.duplicate(true),
-		"directory": directory.duplicate(true),
-		"prewarm_id": String(prewarm.get("prewarm_id", "")),
-		"prewarm_checksum": String(prewarm.get("checksum", "")),
-	}
+	var fixture := _make_fast_fixture()
+	var payload: Dictionary = fixture.payload
 	var fingerprint := server._p4_fast_fingerprint_from_payload(payload)
 	_assert(not fingerprint.is_empty(), "FAST_COMMIT fingerprint exists")
 	var same := payload.duplicate(true)
@@ -70,15 +31,36 @@ func _test_fast_commit_fingerprint() -> void:
 	wrong_prewarm_checksum["prewarm_checksum"] = "conflicting-prewarm-checksum"
 	_assert(server._p4_fast_fingerprint_from_payload(wrong_prewarm_checksum) != fingerprint, "prewarm checksum participates in FAST_COMMIT replay identity")
 	var wrong_package := payload.duplicate(true)
-	var package_copy: Dictionary = package.duplicate(true)
+	var package_copy: Dictionary = Dictionary(fixture.package).duplicate(true)
 	package_copy["checksum"] = "conflicting-package-checksum"
 	wrong_package["package"] = package_copy
 	_assert(server._p4_fast_fingerprint_from_payload(wrong_package) != fingerprint, "package checksum participates in FAST_COMMIT replay identity")
 	var wrong_directory := payload.duplicate(true)
-	var directory_copy: Dictionary = directory.duplicate(true)
+	var directory_copy: Dictionary = Dictionary(fixture.directory).duplicate(true)
 	directory_copy["checksum"] = "conflicting-directory-checksum"
 	wrong_directory["directory"] = directory_copy
 	_assert(server._p4_fast_fingerprint_from_payload(wrong_directory) != fingerprint, "directory checksum participates in FAST_COMMIT replay identity")
+	server.free()
+
+
+func _test_fast_commit_replay_handler() -> void:
+	var server = P4TestServer.new()
+	var fixture := _make_fast_fixture()
+	server.configure_admission_fixture(Contracts.AUTHORITY_B, Dictionary(fixture.directory), true)
+	server.install_committed_fast_transfer(
+		Dictionary(fixture.package),
+		Dictionary(fixture.directory),
+		Dictionary(fixture.prewarm)
+	)
+	server.invoke_fast_commit(Dictionary(fixture.payload))
+	_assert(server.last_fast_commit_success(), "exact committed FAST_COMMIT replay is ACKed")
+	_assert(server.last_fast_commit_error().is_empty(), "exact committed FAST_COMMIT replay has no error")
+
+	var conflicting: Dictionary = Dictionary(fixture.payload).duplicate(true)
+	conflicting["prewarm_checksum"] = "conflicting-prewarm-checksum"
+	server.invoke_fast_commit(conflicting)
+	_assert(not server.last_fast_commit_success(), "same transfer id with changed prewarm checksum is not ACKed")
+	_assert(server.last_fast_commit_error() == "SM0_P4_FAST_COMMIT_CONFLICT", "changed prewarm checksum is classified as FAST_COMMIT conflict")
 	server.free()
 
 
@@ -177,6 +159,44 @@ func _test_redirect_fingerprint() -> void:
 	var wrong_epoch_check: Dictionary = client._p4_validate_redirect_payload(wrong_epoch)
 	_assert(not bool(wrong_epoch_check.get("success", false)), "redirect epoch inconsistent with directory is rejected before replay ACK")
 	client.free()
+
+
+func _make_fast_fixture() -> Dictionary:
+	var directory := Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2)
+	var player := {
+		"logical_player_id": "a",
+		"player_entity_id": "player/a",
+		"ownership_epoch": 1,
+		"position": {"x": 0.0, "y": 0.0, "z": 0.0},
+		"velocity": {"x": 0.5, "y": 0.0, "z": 0.0},
+		"orientation_yaw": 0.0,
+		"last_input_sequence": 10,
+		"state_revision": 4,
+	}
+	var package := Contracts.create_handoff_package(
+		"handoff/sm0/a/2/test",
+		player,
+		Contracts.AUTHORITY_A,
+		Contracts.AUTHORITY_B,
+		Contracts.ZONE_A,
+		Contracts.ZONE_B,
+		1,
+		2,
+		1
+	)
+	var prewarm := _make_a_to_b_prewarm("prewarm/sm0/a/2/test")
+	return {
+		"directory": directory,
+		"package": package,
+		"prewarm": prewarm,
+		"payload": {
+			"transfer_id": String(package.get("transfer_id", "")),
+			"package": package.duplicate(true),
+			"directory": directory.duplicate(true),
+			"prewarm_id": String(prewarm.get("prewarm_id", "")),
+			"prewarm_checksum": String(prewarm.get("checksum", "")),
+		},
+	}
 
 
 func _make_a_to_b_prewarm(prewarm_id: String) -> Dictionary:
