@@ -198,6 +198,8 @@ for ($Index = 0; $Index -lt $ExpectedIdentities.Count; $Index++) {
     $Identity = [string]$Client.identity
     $ClientPid = [int]$Client.pid
     if ($Identity -ne $ExpectedIdentities[$Index]) {
+        # Use -f instead of "$Index:" interpolation: Windows PowerShell 5.1 parses
+        # a variable immediately followed by ':' as a drive-qualified reference.
         throw ("Unexpected client identity at index {0}: '{1}'." -f $Index, $Identity)
     }
     if (-not (Test-ProcessAlive $ClientPid)) {
