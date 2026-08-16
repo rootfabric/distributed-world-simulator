@@ -5,12 +5,12 @@ const VIS21V_RealtimeLODRenderer = preload("res://scripts/labs/ecology/eco_vis2_
 const VIS21V_STAGE := "ECO.VIS2.1-V"
 const VIS21V_MODE := "TREATMENT_REALTIME_DISTANCE_LOD"
 
-var _vis21v_renderer: RefCounted
+var _vis21v_renderer = null
 
 
 func _ready() -> void:
-	_vis21v_renderer = VIS21V_RealtimeLODRenderer.new()
-	_vis18r_renderer = _vis21v_renderer
+	_vis18r_renderer = VIS21V_RealtimeLODRenderer.new()
+	_vis21v_renderer = _vis18r_renderer
 	super._ready()
 	if is_instance_valid(_controls_label):
 		_controls_label.text = _controls_label.text.replace("I VIS2.0 panel", "I source panel (pre-fork only)")
