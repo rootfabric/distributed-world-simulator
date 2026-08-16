@@ -1,4 +1,4 @@
-name: V0 P4 Exact Source Export Probe
+name: V0 P4 Atomic Repair Publisher Probe
 
 on:
   pull_request:
@@ -7,39 +7,106 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  export:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact current P4 branch
+      - name: Checkout exact dispatched P4 parent
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: feature/v0-p4-construction-real-resources
 
-      - name: Verify exact exported head and dispatch ancestry
+      - name: Verify exact authorized parent
         shell: bash
         run: |
           ACTUAL="$(git rev-parse HEAD)"
-          echo "P4_EXPORTED_HEAD=$ACTUAL"
+          echo "P4_AUTHORIZED_PARENT=$ACTUAL"
           test "$ACTUAL" = "d7641c0900772ecae4b324ecf04d6233a7bde4c6"
           test -z "$(git status --porcelain)"
-          git merge-base --is-ancestor 47ff18cf603bbf98bb67f7f62962e050f8606542 "$ACTUAL"
           git merge-base --is-ancestor bc907d019900b158b26a2736be423ecaff07ecd3 "$ACTUAL"
 
-      - name: Export tracked source tree
+      - name: Apply exact validated P4.1 repair
+        shell: python
+        run: |
+          from pathlib import Path
+
+          root = Path.cwd()
+
+          path = root / 'scripts/construction/build/construction_build_plan.gd'
+          text = path.read_text(encoding='utf-8')
+          old = '\t\t\tif int(material_totals[item_id]) >= int(source["quantity"]):\n\t\t\t\treturn _failure("BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK")'
+          new = '\t\t\tif int(material_totals[item_id]) > int(source["quantity"]):\n\t\t\t\treturn _failure("BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK")'
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, new), encoding='utf-8')
+
+          path = root / 'scripts/construction/build/construction_stage_transaction_planner.gd'
+          text = path.read_text(encoding='utf-8')
+          old = '''\t\tvar after: Dictionary = before.duplicate(true)\n\t\tafter["quantity"] = int(before["quantity"]) - int(allocation["quantity"])\n\t\tafter["revision"] = int(before["revision"]) + 1\n\t\tmutations.append(ItemMutationScript.create(\n\t\t\tItemMutationScript.OP_UPDATE,\n\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\titem_id,\n\t\t\tbefore,\n\t\t\tafter\n\t\t))'''
+          new = '''\t\tvar remaining: int = int(before["quantity"]) - int(allocation["quantity"])\n\t\tif remaining < 0:\n\t\t\treturn _failure("CONSTRUCTION_BUILD_STAGE_MATERIAL_SHORTFALL")\n\t\tif remaining == 0:\n\t\t\tmutations.append(ItemMutationScript.create(\n\t\t\t\tItemMutationScript.OP_DELETE,\n\t\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\t\titem_id,\n\t\t\t\tbefore,\n\t\t\t\t{}\n\t\t\t))\n\t\telse:\n\t\t\tvar after: Dictionary = before.duplicate(true)\n\t\t\tafter["quantity"] = remaining\n\t\t\tafter["revision"] = int(before["revision"]) + 1\n\t\t\tmutations.append(ItemMutationScript.create(\n\t\t\t\tItemMutationScript.OP_UPDATE,\n\t\t\t\tItemMutationScript.PURPOSE_CONSUME_MATERIAL,\n\t\t\t\titem_id,\n\t\t\t\tbefore,\n\t\t\t\tafter\n\t\t\t))'''
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, new), encoding='utf-8')
+
+          path = root / 'scripts/construction/item_graph/construction_item_mutation.gd'
+          text = path.read_text(encoding='utf-8')
+          old = '''\t\t\telif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:\n\t\t\t\tif String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:\n\t\t\t\t\treturn _failure("FABRICATION_INPUT_NOT_RESERVED")\n\t\t\telse:\n\t\t\t\treturn _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")'''
+          new = '''\t\t\telif purpose == PURPOSE_CONSUME_MATERIAL:\n\t\t\t\tif String(before["relation"].get("kind", "")) in [ProjectionScript.ATTACHMENT, ProjectionScript.DESTROYED]:\n\t\t\t\t\treturn _failure("CONSUME_MATERIAL_SOURCE_NOT_TRANSFERABLE")\n\t\t\telif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:\n\t\t\t\tif String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:\n\t\t\t\t\treturn _failure("FABRICATION_INPUT_NOT_RESERVED")\n\t\t\telse:\n\t\t\t\treturn _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")'''
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, new), encoding='utf-8')
+
+          path = root / 'RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1'
+          text = path.read_text(encoding='utf-8')
+          assert text.count('ConvertFrom-Json -Depth 100') == 4
+          path.write_text(text.replace('ConvertFrom-Json -Depth 100', 'ConvertFrom-Json'), encoding='utf-8')
+
+      - name: Verify exact repair scope
         shell: bash
         run: |
-          git archive --format=tar.gz --prefix=dws-p4/ HEAD -o /tmp/dws-p4-source.tar.gz
-          sha256sum /tmp/dws-p4-source.tar.gz | tee /tmp/dws-p4-source.sha256
+          git diff --check
+          mapfile -t FILES < <(git diff --name-only | sort)
+          printf '%s\n' "${FILES[@]}"
+          EXPECTED=(
+            RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1
+            scripts/construction/build/construction_build_plan.gd
+            scripts/construction/build/construction_stage_transaction_planner.gd
+            scripts/construction/item_graph/construction_item_mutation.gd
+          )
+          mapfile -t EXPECTED_SORTED < <(printf '%s\n' "${EXPECTED[@]}" | sort)
+          test "$(printf '%s\n' "${FILES[@]}")" = "$(printf '%s\n' "${EXPECTED_SORTED[@]}")"
+          grep -F 'if int(material_totals[item_id]) > int(source["quantity"]):' scripts/construction/build/construction_build_plan.gd
+          grep -F 'ItemMutationScript.OP_DELETE' scripts/construction/build/construction_stage_transaction_planner.gd
+          grep -F 'elif purpose == PURPOSE_CONSUME_MATERIAL:' scripts/construction/item_graph/construction_item_mutation.gd
+          ! grep -F 'ConvertFrom-Json -Depth 100' RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1
 
-      - name: Upload exact source archive
+      - name: Commit and fast-forward P4 branch
+        shell: bash
+        run: |
+          git config user.name 'root'
+          git config user.email 'yglamazdin@gmail.com'
+          git add \
+            RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 \
+            scripts/construction/build/construction_build_plan.gd \
+            scripts/construction/build/construction_stage_transaction_planner.gd \
+            scripts/construction/item_graph/construction_item_mutation.gd
+          git commit -m 'fix(v0-p4): allow exact material exhaustion atomically'
+          CANDIDATE="$(git rev-parse HEAD)"
+          echo "P4_CANDIDATE_HEAD=$CANDIDATE" | tee /tmp/p4-candidate-head.txt
+          git push origin HEAD:feature/v0-p4-construction-real-resources
+
+      - name: Export exact committed candidate
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=dws-p4/ HEAD -o /tmp/dws-p4-candidate-source.tar.gz
+          sha256sum /tmp/dws-p4-candidate-source.tar.gz | tee /tmp/dws-p4-candidate-source.sha256
+
+      - name: Upload candidate source and head
         uses: actions/upload-artifact@v4
         with:
-          name: v0-p4-exact-source-d7641c09
+          name: v0-p4-p4-1-candidate-source
           path: |
-            /tmp/dws-p4-source.tar.gz
-            /tmp/dws-p4-source.sha256
+            /tmp/dws-p4-candidate-source.tar.gz
+            /tmp/dws-p4-candidate-source.sha256
+            /tmp/p4-candidate-head.txt
           if-no-files-found: error
