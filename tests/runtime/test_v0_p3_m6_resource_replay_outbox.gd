@@ -93,8 +93,6 @@ func _test_m6_outbox_round_trip_with_resource_replay() -> void:
 	_assert(resource_records.has(mine_operation), "serialized M6 gameplay replay contains outer resource.mine operation")
 
 	var durable: Dictionary = service.export_durable_state()
-	var resource_before: Dictionary = service.create_resource_mining_snapshot()
-	var item_before: Dictionary = service.create_canonical_item_graph_snapshot()
 	var output_item_id := String(mined.get("details", {}).get("output_item_id", ""))
 
 	var restored = P3GameplayService.new()
@@ -104,13 +102,15 @@ func _test_m6_outbox_round_trip_with_resource_replay() -> void:
 		return
 	var restored_outbox = M6ReplayOutbox.new()
 	_assert(bool(restored_outbox.setup(restored).get("success", false)), "fresh M6 outbox configures after P3 durable restore")
+	var restored_resource_before_load: Dictionary = restored.create_resource_mining_snapshot()
+	var restored_item_before_load: Dictionary = restored.create_canonical_item_graph_snapshot()
 	var loaded: Dictionary = restored_outbox.load_dict(outbox_state)
 	_assert(bool(loaded.get("success", false)), "fresh M6 outbox restores resource replay aggregate")
 	if not bool(loaded.get("success", false)):
 		return
 	_assert(restored.has_durable_replay_operation(mine_operation), "fresh P3 gameplay service exposes restored resource replay operation")
-	_assert(restored.create_resource_mining_snapshot() == resource_before, "M6 replay load does not alter canonical resource state")
-	_assert(restored.create_canonical_item_graph_snapshot() == item_before, "M6 replay load does not alter canonical Item Graph state")
+	_assert(restored.create_resource_mining_snapshot() == restored_resource_before_load, "M6 replay load does not alter canonical resource state")
+	_assert(restored.create_canonical_item_graph_snapshot() == restored_item_before_load, "M6 replay load does not alter canonical Item Graph state")
 
 	var previous_player: Dictionary = restored.get_player(PLAYER_ID)
 	var previous_epoch := int(previous_player.get("ownership_epoch", 0))
