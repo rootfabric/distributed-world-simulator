@@ -45,7 +45,7 @@ function Get-GitJsonAtRef {
     param([string]$Ref, [string]$Path)
     $Raw = Invoke-Git show "$Ref`:$Path"
     try {
-        return $Raw | ConvertFrom-Json -Depth 100
+        return $Raw | ConvertFrom-Json
     } catch {
         throw "Invalid JSON at $Ref`:$Path : $($_.Exception.Message)"
     }
@@ -134,7 +134,7 @@ if ($LASTEXITCODE -eq 0 -and (Test-GitAncestor $ExcludedRepairSha $ActualHead)) 
     throw "V0_P4_AUDIT_EXCLUDED_PR117_IMPORTED"
 }
 
-$Passport = Get-Content -LiteralPath (Join-Path $ProjectRoot $PassportPath) -Raw | ConvertFrom-Json -Depth 100
+$Passport = Get-Content -LiteralPath (Join-Path $ProjectRoot $PassportPath) -Raw | ConvertFrom-Json
 Assert-Equal ([string]$Passport.base_commit).ToLowerInvariant() $ExpectedProductBaseSha.ToLowerInvariant() "V0_P4_AUDIT_PASSPORT_BASE_MISMATCH"
 Assert-Equal ([string]$Passport.branch) "feature/v0-p4-construction-real-resources" "V0_P4_AUDIT_PASSPORT_BRANCH_MISMATCH"
 Assert-True (@($Passport.runtime_paths).Count -eq 0) "V0_P4_AUDIT_RUNTIME_PATHS_ALREADY_DECLARED"
@@ -170,7 +170,7 @@ try {
 
             & $PythonExe scripts/control/project_control.py --no-fetch --no-fail-on-red
             if ($LASTEXITCODE -ne 0) { throw "V0_P4_AUDIT_STANDARD_PC0_EXECUTION_FAILED" }
-            $StandardReport = Get-Content -LiteralPath (Join-Path $ControlWorktree "artifacts\control\project-control-report.json") -Raw | ConvertFrom-Json -Depth 100
+            $StandardReport = Get-Content -LiteralPath (Join-Path $ControlWorktree "artifacts\control\project-control-report.json") -Raw | ConvertFrom-Json
             $StandardHealth = [string]$StandardReport.overall_health
             Assert-Equal ([string]$StandardReport.main_head).ToLowerInvariant() $MainSha.ToLowerInvariant() "V0_P4_AUDIT_STANDARD_PC0_MAIN_HEAD_MISMATCH"
             Assert-True ([int]$StandardReport.registry_generation -ge $MinimumRegistryGeneration) "V0_P4_AUDIT_STANDARD_PC0_OLD_GENERATION"
@@ -178,7 +178,7 @@ try {
 
             & $PythonExe scripts/control/project_control_directional_watch.py --no-fail-on-red
             if ($LASTEXITCODE -ne 0) { throw "V0_P4_AUDIT_DIRECTIONAL_PC0_EXECUTION_FAILED" }
-            $DirectionalReport = Get-Content -LiteralPath (Join-Path $ControlWorktree "artifacts\control\directional-watch-report.json") -Raw | ConvertFrom-Json -Depth 100
+            $DirectionalReport = Get-Content -LiteralPath (Join-Path $ControlWorktree "artifacts\control\directional-watch-report.json") -Raw | ConvertFrom-Json
             $DirectionalHealth = [string]$DirectionalReport.overall_health
             Assert-True ([int]$DirectionalReport.registry_generation -ge $MinimumRegistryGeneration) "V0_P4_AUDIT_DIRECTIONAL_PC0_OLD_GENERATION"
             Assert-True ($DirectionalHealth -ne "RED") "V0_P4_AUDIT_DIRECTIONAL_PC0_RED"
