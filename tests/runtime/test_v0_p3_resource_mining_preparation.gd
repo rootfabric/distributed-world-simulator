@@ -54,7 +54,9 @@ func _run() -> void:
 	_assert(bool(success.get("atomic_resource_and_item_publication_required", false)), "resource decrement and Item Graph output must publish atomically")
 
 	var rejections: Array = fixture.get("rejections", [])
-	_assert(_rejection_codes(rejections) == ["INVALID_MINING_QUANTITY", "RESOURCE_DEPLETED", "RESOURCE_NOT_FOUND", "RESOURCE_OUT_OF_RANGE", "RESOURCE_OUTPUT_REJECTED"], "minimum P3 rejection taxonomy is frozen")
+	var rejection_codes: Array[String] = _rejection_codes(rejections)
+	var expected_rejection_codes: Array[String] = ["INVALID_MINING_QUANTITY", "RESOURCE_DEPLETED", "RESOURCE_NOT_FOUND", "RESOURCE_OUT_OF_RANGE", "RESOURCE_OUTPUT_REJECTED"]
+	_assert(rejection_codes.size() == expected_rejection_codes.size() and _contains_all(Array(rejection_codes), expected_rejection_codes), "minimum P3 rejection taxonomy is frozen")
 	_assert(_all_rejections_mutation_free(rejections), "all frozen preflight rejections are mutation-free")
 
 	var seams: Dictionary = fixture.get("source_seams", {})
