@@ -205,21 +205,22 @@ func _p4_validate_durable_proof_for_fast_commit(payload: Dictionary) -> Dictiona
 	if not _p4_target_directory_allows_fast_commit(prewarm, directory):
 		return _failure("SM0_P4_FAST_DURABLE_PROOF_STALE_DIRECTORY")
 
-	# If this target already has connected canonical gameplay truth but does not
-	# know this transfer as committed, an old proof must never overwrite it. This
-	# distinguishes valid HELLO-before-FAST_COMMIT recovery (directory may already
-	# point here, but no player exists yet) from a stale proof after another path
-	# has already established target truth.
-	if _p4_target_has_connected_player():
+	# A recovered canonical player record is still canonical truth even while its
+	# transport session is intentionally disconnected. An old durable PREWARM
+	# proof must never overwrite any existing canonical player record unless this
+	# transfer is already in _committed_transfers (handled before proof recovery).
+	# The valid target-restart recovery snapshot taken at PREWARM_RESERVED has no
+	# target player record, so this stronger fence does not block the intended path.
+	if _p4_target_has_player_truth():
 		return _failure("SM0_P4_FAST_DURABLE_PROOF_TARGET_ALREADY_ACTIVE")
 	return _success()
 
 
-func _p4_target_has_connected_player() -> bool:
+func _p4_target_has_player_truth() -> bool:
 	if _authority == null:
 		return false
 	var player: Dictionary = _authority.get_player("a")
-	return not player.is_empty() and bool(player.get("connected", false))
+	return not player.is_empty()
 
 
 func _p4_apply_completed_source_tombstone() -> Dictionary:
@@ -425,7 +426,7 @@ func _p4_prune_superseded_proofs() -> Dictionary:
 				current_owner == target_authority
 				and current_epoch == target_epoch
 				and current_revision == source_revision + 1
-				and _p4_target_has_connected_player()
+				and _p4_target_has_player_truth()
 			)
 		)
 		if superseded:
