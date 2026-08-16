@@ -6,7 +6,7 @@ const VIS16 = preload("res://scripts/labs/ecology/eco_vis1_6_lineage_genome_brid
 const DevelopmentContract = preload("res://scripts/research/ecology/plant_development_contract_v1.gd")
 const EnvironmentDevelopment = preload("res://scripts/research/ecology/plant_environment_coupled_development_v1.gd")
 const RenderDescription = preload("res://scripts/research/ecology/plant_render_description_v1.gd")
-const Materializer3D = preload("res://scripts/research/ecology/plant_3d_materializer_v1.gd")
+const VIS19_Materializer3D = preload("res://scripts/research/ecology/plant_3d_materializer_v1.gd")
 
 const VIS1_9_STAGE := "ECO.VIS1.9"
 const VIS19_MODE := "EVOLUTION_OBSERVATORY_PROGRESSIVE_DETAIL"
@@ -236,7 +236,7 @@ func _build_vis19_progressive_detail(record: Dictionary) -> void:
 	var description := RenderDescription.build(Dictionary(phenotype.get("growth_graph", {})))
 	if description.is_empty():
 		return
-	var materialization := Materializer3D.build(description, _ph5_profile)
+	var materialization := VIS19_Materializer3D.build(description, _ph5_profile)
 	if materialization.is_empty():
 		return
 
