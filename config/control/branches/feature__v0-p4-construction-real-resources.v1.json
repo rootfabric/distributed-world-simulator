@@ -10,9 +10,9 @@
   "expected_outcome": "A server-authoritative build stage consumes the requesting player's real P3-produced item/ore exactly once and atomically with Construction state, then replicates and reconstructs the converged result on reconnect.",
   "current_stage": "V0-P4 POST-ACTIVATION EPOCH AUDIT GATE PREPARED",
   "stage_status": "IMPLEMENTATION_READY_RUNTIME_MUTATION_BLOCKED_PENDING_CONTROL_ACCEPTANCE",
-  "progress_note": "P4.1 exact-consume root cause and three-file production repair are prepared but intentionally unapplied. The new RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 now machine-checks generation-80 activation, main-declared exact P3.1 execution base, ancestry, PR #117 exclusion, pre-dispatch no-runtime-diff scope, updated V0 machine regression and exact-main standard/directional PC0. Canonical main remains generation 79 and PR #98 still awaits fresh post-refresh independent review/main acceptance, so the audit cannot yet return CONTINUE and runtime mutation remains blocked.",
+  "progress_note": "P4.1 exact-consume root cause and three-file production repair remain intentionally unapplied. The post-activation audit now fails closed when branch refs are not freshly fetched, records refs_fetch_performed and authoritative_for_dispatch, requires the generation-80 global mutation lease to point to P4, and can authorize a later dispatch only through a committed CONTINUE artifact tied to exact P4/main heads. Runtime mutation remains blocked until generation-80 main acceptance, fresh post-main PC0, authoritative audit evidence and Director dispatch.",
   "last_accepted_checkpoint": "STACKED_INPUT_ONLY: P3.1 demonstrated head ef3ad5f0afc433802d639171d938e4720b3a46ec; no P4 acceptance claim",
-  "next_stage": "After generation-80 control is canonical on main, run RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 on the exact P4 HEAD. Only audit decision CONTINUE plus separate Director dispatch permits executing the existing P4.1 RED contract, applying the prepared three-file exact-consume repair and driving RED->GREEN; then continue with deterministic allocator and live-M4 Construction transaction port.",
+  "next_stage": "After generation-80 control is canonical on main, fetch fresh refs and run RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 on the exact P4 HEAD with full post-main PC0. Commit only a CONTINUE artifact with authoritative_for_dispatch=true; then a separate Director initial dispatch may execute P4.1 RED->GREEN, followed by deterministic allocator and live-M4 Construction transaction port.",
   "parent_branch_or_checkpoint": "repair/v0-p3-visual-interaction-r1 @ ef3ad5f0afc433802d639171d938e4720b3a46ec",
   "base_commit": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
   "dependencies": [
@@ -20,8 +20,10 @@
     "fresh post-refresh independent review of generation-80 control candidate",
     "post-main standard Project Control NON_RED",
     "post-main directional Project Control NON_RED for critical hits",
-    "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT decision CONTINUE",
-    "separate Director dispatch before production/runtime mutation",
+    "fresh branch-ref fetch inside RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT",
+    "committed authoritative RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT CONTINUE artifact bound to exact P4/main heads",
+    "generation-80 global pre-H0.3 mutation lease held by V0-P4",
+    "separate Director initial dispatch before production/runtime mutation",
     "P3 canonical item/ore output semantics",
     "existing Construction transaction/replay contracts"
   ],
@@ -61,12 +63,16 @@
   "pre_dispatch_audit_gate": {
     "runner": "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1",
     "required_decision": "CONTINUE",
+    "requires_refs_fetch_performed": true,
+    "requires_authoritative_for_dispatch": true,
+    "requires_committed_audit_evidence": true,
     "minimum_registry_generation": 80,
     "declared_product_execution_base_branch": "repair/v0-p3-visual-interaction-r1",
     "declared_product_execution_base_sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
     "excluded_repair_sha": "11819f6dd1ea3728382a04737d30a5300de622f7",
     "requires_standard_pc0_non_red": true,
     "requires_directional_pc0_non_red": true,
+    "requires_global_mutation_lease_holder": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "requires_director_dispatch_after_continue": true
   },
   "tested_heads": {
@@ -89,6 +95,7 @@
     "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
     "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
     "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
+    "AUTHORITATIVE_AUDIT_EVIDENCE_COMMIT_REQUIRED",
     "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
     "PR_117_EXPLICITLY_EXCLUDED_PENDING_INDEPENDENT_ACCEPTANCE"
   ],
