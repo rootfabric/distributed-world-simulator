@@ -88,11 +88,32 @@ def build_plan(
             "stop_gates": ["NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", "NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"],
         }
 
-    if current == "V0_S1_NETWORKED_PLANETARY_OUTPOST":
+    if current in {"V0_S1_NETWORKED_PLANETARY_OUTPOST", "V0_P4_REAL_RESOURCE_CONSTRUCTION"}:
         active = state in _ACTIVE_TRAIN_STATES
         mutating = state in _MUTATION_SLOT_STATES
         parallel = scheduler["parallel_product_checkpoints"]
         rules = parallel["rules"]
+        gate_name = "v0_p4_gate" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "v0_s1_gate"
+        begin_action = "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION"
+        verify_action = "VERIFY_V0_P4_EXACT_HEAD" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "VERIFY_V0_S1_EXACT_HEAD"
+        dispatch_action = "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH"
+        gate = {
+            "requested_checkpoint": current,
+            "risk_floor": "HIGH",
+            "network_baseline": "SERVER_PREDICTED",
+            "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
+            "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
+            "control_epoch_anchor": "CURRENT_MAIN",
+            "runtime_execution_base": "MAIN_DECLARED_V0_PRODUCT_LINEAGE",
+            "requires_main_declared_product_execution_base": rules["requires_main_declared_product_execution_base"],
+            "stacked_product_lineage_allowed": rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"],
+            "bounded_implementation_may_proceed_with_prior_acceptance_debt": rules["bounded_implementation_may_proceed_with_prior_acceptance_debt"],
+            "checkpoint_acceptance_requires_prior_acceptance_debt_resolved": rules["checkpoint_acceptance_requires_prior_acceptance_debt_resolved"],
+            "pre_h0_3_total_mutation_workers_max": rules["pre_h0_3_total_runtime_mutation_workers_max"],
+            "nx_verification_review_only_may_coexist": rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"],
+            "v0_plus_nx_or_sm0_fix_mutation_forbidden": rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"],
+            "network_foundation_change_fails_closed_to": rules["v0_network_foundation_change_fails_closed_to"],
+        }
         return {
             "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
             "selected_checkpoint": current,
@@ -101,23 +122,15 @@ def build_plan(
             "active_work_order": reduced["work_order_id"],
             "satisfied_predicates": [item for item in required if item in satisfied],
             "unsatisfied_predicates": [item for item in required if item not in satisfied],
-            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["v0_s1_max_autonomous_runtime_mutation_workers"]),
-            "v0_s1_gate": {
-                "requested_checkpoint": "V0_S1_NETWORKED_PLANETARY_OUTPOST",
-                "risk_floor": "HIGH",
-                "network_baseline": "SERVER_PREDICTED",
-                "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
-                "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
-                "pre_h0_3_total_mutation_workers_max": rules["pre_h0_3_total_runtime_mutation_workers_max"],
-                "nx_verification_review_only_may_coexist": rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"],
-                "v0_plus_nx_fix_mutation_forbidden": rules["v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden"],
-                "network_foundation_change_fails_closed_to": rules["v0_network_foundation_change_fails_closed_to"],
-            },
-            "next_action": "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION" if mutating else ("VERIFY_V0_S1_EXACT_HEAD" if active else "ISSUE_EXACT_MAIN_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH"),
+            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["v0_product_max_autonomous_runtime_mutation_workers"]),
+            gate_name: gate,
+            "next_action": begin_action if mutating else (verify_action if active else dispatch_action),
             "stop_gates": [
                 "V0_RUNTIME_MUTATION_BEFORE_DISPATCH",
                 "PRIVATE_V0_NETWORK_AUTHORITY",
                 "PRIVATE_V0_CONSTRUCTION_TRUTH",
+                "PRIVATE_V0_ITEM_GRAPH",
+                "PRIVATE_V0_PERSISTENCE_OWNER",
                 "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
                 "SHIP_FLIGHT",
                 "SERVER_HANDOFF",
