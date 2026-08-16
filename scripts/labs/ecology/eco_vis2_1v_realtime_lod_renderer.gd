@@ -1,6 +1,6 @@
 extends "res://scripts/labs/ecology/eco_vis1_8a_realtime_proxy_renderer.gd"
 
-const STAGE := "ECO.VIS2.1-V"
+const VIS21V_STAGE := "ECO.VIS2.1-V"
 const PROFILE_ID := "TREATMENT_REALTIME_NEAR_MID_FAR"
 const NEAR_LOD_END_M := 110.0
 const MID_LOD_BEGIN_M := 75.0
@@ -61,7 +61,7 @@ func lod_summary() -> Dictionary:
 		if node.get_node_or_null("FarCanopy") != null:
 			far_tier_count += 1
 	return {
-		"stage": STAGE,
+		"stage": VIS21V_STAGE,
 		"profile_id": PROFILE_ID,
 		"enabled": true,
 		"live_proxy_count": live_proxy_count,
