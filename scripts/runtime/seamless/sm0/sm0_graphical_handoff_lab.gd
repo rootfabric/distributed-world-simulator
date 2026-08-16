@@ -18,6 +18,8 @@ var _status: Label
 var _target_position := Vector3(-1.0, 0.75, 0.0)
 var _smoke_mode := false
 var _smoke_frames := 0
+var _auto_quit_handoffs := 0
+var _auto_quit_requested := false
 
 
 func _ready() -> void:
@@ -28,6 +30,9 @@ func _ready() -> void:
 		_status.text = "SM0-P1 visual smoke"
 		return
 	var options := _parse_user_args()
+	var auto_quit_text := OS.get_environment("SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS").strip_edges()
+	if not auto_quit_text.is_empty():
+		_auto_quit_handoffs = maxi(0, int(auto_quit_text))
 	var network_profile := String(options.get("network-profile", "")).strip_edges().to_lower()
 	_client = NetworkManualClient.new() if network_profile == P3_1_NETWORK_PROFILE else ManualClient.new()
 	_client.name = "ManualClient"
@@ -49,10 +54,17 @@ func _ready() -> void:
 	if not bool(setup_result.get("success", false)):
 		_status.text = "CLIENT SETUP FAILED: %s" % String(setup_result.get("error_code", "unknown"))
 	elif network_profile == P3_1_NETWORK_PROFILE:
-		_status.text = "P3.1 WAN SHAPER: %d ms one-way +/- %d ms · A/D cross · close window to measure" % [
-			int(options.get("network-latency-ms", 0)),
-			int(options.get("network-jitter-ms", 0)),
-		]
+		if _auto_quit_handoffs > 0:
+			_status.text = "P4 WAN MATRIX: %d ms one-way +/- %d ms · A/D cross · auto-close at %d confirmed handoffs" % [
+				int(options.get("network-latency-ms", 0)),
+				int(options.get("network-jitter-ms", 0)),
+				_auto_quit_handoffs,
+			]
+		else:
+			_status.text = "P3.1 WAN SHAPER: %d ms one-way +/- %d ms · A/D cross · close window to measure" % [
+				int(options.get("network-latency-ms", 0)),
+				int(options.get("network-jitter-ms", 0)),
+			]
 
 
 func _process(delta: float) -> void:
@@ -77,6 +89,12 @@ func _process(delta: float) -> void:
 		)
 	_avatar.position = _avatar.position.lerp(_target_position, clampf(delta * 12.0, 0.0, 1.0))
 	_update_hud(view)
+	if _auto_quit_handoffs > 0 and not _auto_quit_requested:
+		var completed := int(view.get("handoffs_completed", 0))
+		if completed >= _auto_quit_handoffs:
+			_auto_quit_requested = true
+			print("SM0-P4 WAN matrix auto-close: reached %d confirmed handoffs." % completed)
+			get_tree().quit(0)
 
 
 func _configure_input() -> void:
