@@ -79,6 +79,21 @@ func _test_resource_state_is_inside_gameplay_aggregate() -> void:
 	_assert(bool(service.validate_durable_state(durable).get("success", false)), "P3 gameplay aggregate durable state validates")
 	_assert(bool(service.validate_replay_state(replay_state).get("success", false)), "P3 gameplay aggregate replay state validates")
 	_assert(service.has_durable_replay_operation(mine_operation), "aggregate replay lookup includes resource mining operations")
+	var stored_resource_state: Dictionary = Dictionary(durable.get("resource_mining", {}))
+	var stored_resource_snapshot: Dictionary = Dictionary(stored_resource_state.get("snapshot", {}))
+	var stored_item_state: Dictionary = Dictionary(durable.get("canonical_item_graph", {}))
+	var stored_item_snapshot: Dictionary = Dictionary(stored_item_state.get("snapshot", {}))
+	_assert(
+		String(stored_resource_snapshot.get("checksum", "")) == String(after_resource.get("checksum", ""))
+		and int(stored_resource_snapshot.get("generation", -1)) == int(after_resource.get("generation", -2)),
+		"durable export preserves canonical resource checksum and generation across JSON normalization"
+	)
+	_assert(
+		String(stored_item_snapshot.get("checksum", "")) == String(after_item.get("checksum", ""))
+		and int(stored_item_snapshot.get("revision", -1)) == int(after_item.get("revision", -2))
+		and int(stored_item_snapshot.get("tick", -1)) == int(after_item.get("tick", -2)),
+		"durable export preserves canonical Item Graph checksum and clock across JSON normalization"
+	)
 
 	var tampered := durable.duplicate(true)
 	var tampered_resource: Dictionary = Dictionary(tampered.get("resource_mining", {})).duplicate(true)
@@ -125,8 +140,21 @@ func _test_resource_state_is_inside_gameplay_aggregate() -> void:
 	_assert(bool(restored_replay.get("success", false)), "fresh aggregate restores P3 replay state")
 	if not bool(restored_replay.get("success", false)):
 		return
-	_assert(restored.create_resource_mining_snapshot() == after_resource, "fresh aggregate reconstructs exact canonical resource snapshot")
-	_assert(restored.create_canonical_item_graph_snapshot() == after_item, "fresh aggregate reconstructs exact canonical Item Graph snapshot")
+	var restored_resource: Dictionary = restored.create_resource_mining_snapshot()
+	var restored_item: Dictionary = restored.create_canonical_item_graph_snapshot()
+	_assert(
+		String(restored_resource.get("checksum", "")) == String(stored_resource_snapshot.get("checksum", ""))
+		and int(restored_resource.get("generation", -1)) == int(stored_resource_snapshot.get("generation", -2))
+		and int(_resource_node(restored_resource, NODE_ID).get("remaining_units", -1)) == 7,
+		"fresh aggregate reconstructs exact durable resource checksum/generation and depleted node"
+	)
+	_assert(
+		String(restored_item.get("checksum", "")) == String(stored_item_snapshot.get("checksum", ""))
+		and int(restored_item.get("revision", -1)) == int(stored_item_snapshot.get("revision", -2))
+		and int(restored_item.get("tick", -1)) == int(stored_item_snapshot.get("tick", -2))
+		and not _find_item(restored_item, output_item_id).is_empty(),
+		"fresh aggregate reconstructs exact durable Item Graph checksum/clock and mined output"
+	)
 	_assert(restored.has_durable_replay_operation(mine_operation), "fresh aggregate restores resource replay lookup")
 
 	var session_b := "transport-session/v0-p3/a/2"
