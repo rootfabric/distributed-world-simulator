@@ -23,6 +23,7 @@ const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const P3_APP_PATH := "res://scripts/app/earth_p3_resource_mining_app.gd"
 const M3_SERVER_PATH := "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
 const M3_CLIENT_PATH := "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
+const LIVE_MINING_CLIENT_PATH := "res://tools/runtime/v0_p3_live_mining_client.gd"
 const NODE_ID := "resource/earth/ore-demo/1"
 
 var assertions := 0
@@ -80,8 +81,10 @@ func _test_resource_delta_round_trip() -> void:
 func _test_m3_adapters_expose_resource_contract() -> void:
 	var server_script = load(M3_SERVER_PATH)
 	var client_script = load(M3_CLIENT_PATH)
+	var live_client_script = load(LIVE_MINING_CLIENT_PATH)
 	_assert(server_script != null and server_script.can_instantiate(), "P3 M3 dedicated-server adapter loads")
 	_assert(client_script != null and client_script.can_instantiate(), "P3 M3 graphical-client adapter loads")
+	_assert(live_client_script != null and live_client_script.can_instantiate(), "P3 live mining client inheritance chain parses before UDP gate")
 	if server_script != null and server_script.can_instantiate():
 		var server = server_script.new()
 		_assert(server.has_method("_handle_resource_command"), "P3 M3 server exposes bounded resource command handler")
