@@ -4,6 +4,7 @@ import copy
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -17,11 +18,14 @@ from harness.event_reducer import load_guard_context, reduce_events
 P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
 P4_BRANCH = "feature/v0-p4-construction-real-resources"
 P4_RUNNER = "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1"
+P4_TEST_HEAD = "a" * 40
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
 HISTORICAL_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-12-H0-1-R8"
 HISTORICAL_WORK_ORDER = HISTORICAL_EXECUTION / "work-orders/H0-1-R8-C22-WO-001.v1.json"
 HISTORICAL_EVENTS = HISTORICAL_EXECUTION / "events/H0-1-R8-C22-WO-001"
 HISTORICAL_TRANSITION = HISTORICAL_EXECUTION / "transition-table.v1.json"
+HISTORICAL_CREATED = HISTORICAL_EVENTS / "0001-work-order-created.v1.json"
+HISTORICAL_DISPATCHED = HISTORICAL_EVENTS / "0002-dispatched-after-prebuild-pass.v1.json"
 
 
 def load_json(path: str) -> dict:
@@ -30,6 +34,22 @@ def load_json(path: str) -> dict:
 
 def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+
+def git_in(root: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return completed.stdout.strip()
+
+
+def write_json(path: Path, value: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
 class Generation80SafetyGuardTests(unittest.TestCase):
@@ -42,6 +62,109 @@ class Generation80SafetyGuardTests(unittest.TestCase):
             "checkpoint_catalog": self.catalog,
             "scheduler_policy": self.scheduler,
         }
+
+    def _init_provenance_repo(self, root: Path) -> str:
+        git_in(root, "init", "-q")
+        git_in(root, "config", "user.email", "harness@example.invalid")
+        git_in(root, "config", "user.name", "Harness Test")
+        (root / "seed.txt").write_text("seed\n", encoding="utf-8")
+        git_in(root, "add", "seed.txt")
+        git_in(root, "commit", "-qm", "seed")
+        main_sha = git_in(root, "rev-parse", "HEAD")
+        git_in(root, "update-ref", "refs/remotes/origin/main", main_sha)
+        return main_sha
+
+    def _p4_provenance_fixture(self, root: Path, audit_timing: str) -> tuple[dict, list[dict], dict, dict]:
+        main_sha = self._init_provenance_repo(root)
+        execution = root / "config/control/harness/executions/E2026-08-17-V0-P4-PROVENANCE"
+        audit_path = execution / "audits/p4-authoritative-audit.v1.json"
+        audit_relative = audit_path.relative_to(root).as_posix()
+        event_dir = execution / "events/V0-P4-PROVENANCE-WO-001"
+        created_path = event_dir / "0001-work-order-created.v1.json"
+        dispatched_path = event_dir / "0002-director-dispatched.v1.json"
+
+        write_json(execution / "project-epoch.v1.json", {"registry_generation": 80})
+
+        created = copy.deepcopy(read_json(HISTORICAL_CREATED))
+        created.update(
+            {
+                "event_id": "E2026-08-17-V0-P4-PROVENANCE-0001",
+                "project_epoch": "E2026-08-17-V0-P4-PROVENANCE",
+                "work_order_id": "V0-P4-PROVENANCE-WO-001",
+                "sequence": 1,
+                "event_type": "WORK_ORDER_CREATED",
+                "work_state": "PLANNED",
+                "actor": "DIRECTOR",
+                "branch": P4_BRANCH,
+                "head_sha": P4_TEST_HEAD,
+                "predicate": "V0_P4_PROVENANCE_WORK_ORDER_CREATED",
+                "command": "CREATE_TEST_WORK_ORDER",
+                "exit_code": 0,
+                "evidence_paths": ["seed.txt"],
+                "summary": "Synthetic generation-80 P4 provenance fixture.",
+            }
+        )
+        dispatched = copy.deepcopy(read_json(HISTORICAL_DISPATCHED))
+        dispatched.update(
+            {
+                "event_id": "E2026-08-17-V0-P4-PROVENANCE-0002",
+                "project_epoch": "E2026-08-17-V0-P4-PROVENANCE",
+                "work_order_id": "V0-P4-PROVENANCE-WO-001",
+                "sequence": 2,
+                "event_type": "DISPATCHED",
+                "work_state": "DISPATCHED",
+                "actor": "DIRECTOR",
+                "branch": P4_BRANCH,
+                "head_sha": P4_TEST_HEAD,
+                "predicate": "V0_P4_PROVENANCE_DIRECTOR_DISPATCHED",
+                "command": "DIRECTOR_DISPATCH_AFTER_COMMITTED_AUDIT",
+                "exit_code": 0,
+                "evidence_paths": [audit_relative],
+                "summary": "Synthetic Director dispatch referencing authoritative P4 audit.",
+            }
+        )
+        audit = {
+            "schema": "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1",
+            "decision": "CONTINUE",
+            "authoritative_for_dispatch": True,
+            "refs_fetch_performed": True,
+            "checkpoint": P4,
+            "p4_head": P4_TEST_HEAD,
+            "canonical_main_head": main_sha,
+            "registry_generation": 80,
+            "production_runtime_mutation_present": False,
+            "director_dispatch_still_required": True,
+        }
+
+        if audit_timing == "before":
+            write_json(audit_path, audit)
+            git_in(root, "add", audit_relative)
+            git_in(root, "commit", "-qm", "commit authoritative audit before dispatch")
+
+        write_json(created_path, created)
+        write_json(dispatched_path, dispatched)
+        git_in(root, "add", created_path.relative_to(root).as_posix(), dispatched_path.relative_to(root).as_posix())
+        git_in(root, "commit", "-qm", "commit Director dispatch event")
+
+        if audit_timing == "uncommitted":
+            write_json(audit_path, audit)
+        elif audit_timing == "after":
+            write_json(audit_path, audit)
+            git_in(root, "add", audit_relative)
+            git_in(root, "commit", "-qm", "commit audit too late")
+        elif audit_timing != "before":
+            raise AssertionError(f"unknown audit timing: {audit_timing}")
+
+        work_order = {
+            "work_order_id": "V0-P4-PROVENANCE-WO-001",
+            "project_epoch": "E2026-08-17-V0-P4-PROVENANCE",
+            "branch": P4_BRANCH,
+            "goal_checkpoint": P4,
+            "state": "DISPATCHED",
+        }
+        transition = read_json(HISTORICAL_TRANSITION)
+        context = load_guard_context(root, execution)
+        return work_order, [created, dispatched], transition, context
 
     def test_generation80_reserves_one_global_mutation_lease_for_p4(self):
         self.assertEqual(80, self.registry["registry_generation"])
@@ -114,6 +237,25 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         self.assertIn("authoritative_for_dispatch = $AuthoritativeForDispatch", runner)
         self.assertIn('$AuthoritativeForDispatch = $Decision -eq "CONTINUE"', runner)
         self.assertNotIn('decision = if ($SkipPostMainProjectControl) { "BASE_READY_PC0_NOT_RUN" } else { "CONTINUE" }', runner)
+
+    def test_p4_dispatch_rejects_uncommitted_audit_even_when_worktree_loader_can_see_it(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "uncommitted")
+            self.assertTrue(any(item.get("schema") == "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1" for item in context["documents"].values()))
+            with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
+                reduce_events(self.bundle, work_order, events, transition, context)
+
+    def test_p4_dispatch_rejects_audit_committed_after_dispatch_event(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "after")
+            with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
+                reduce_events(self.bundle, work_order, events, transition, context)
+
+    def test_p4_dispatch_accepts_audit_committed_before_dispatch_event(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "before")
+            reduced = reduce_events(self.bundle, work_order, events, transition, context)
+            self.assertEqual("DISPATCHED", reduced["state"])
 
     def test_registry_pin_and_required_docs_track_current_p4_head(self):
         remote_head = git("rev-parse", "--verify", f"origin/{P4_BRANCH}")
