@@ -110,6 +110,14 @@ Therefore a new H0.2/NX, SM0 or other non-P4 mutation dispatch fails closed whil
 
 Reassigning or releasing the lease requires a main-owned control update; branch-local state cannot self-authorize a second mutation lane.
 
+## Independent FAIL repair status
+
+The independent review of PR #98 head `4f758d07c5e9af3e3acda48cccccc3275230d045` returned FAIL and identified five blocking/stale issues: synthetic merge-ref CI instead of exact-head CI, `SkipFetch` authorization, unguarded initial dispatch, non-enforced global mutation ceiling, and stale P4 prep SHAs in prose.
+
+All five are repaired in the current candidate. The exact-head Project Control run `31956455248` checks out and verifies exact candidate HEAD `d2db8e741eea93d1281f25b57c3e9ce71dae1fc9`; architecture compatibility (64), H0.2 (8), V0 product (10), and generation-80 safety (6) regressions all pass. Standard/directional PC0 intentionally continue to audit current canonical `origin/main` generation 79 until generation-80 is actually merged.
+
+The repaired exact candidate still requires a fresh independent re-review before main acceptance.
+
 ## Current P4 target
 
 ```text
