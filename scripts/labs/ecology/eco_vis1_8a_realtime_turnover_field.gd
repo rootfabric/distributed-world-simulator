@@ -26,6 +26,22 @@ var _vis18r_last_apply_ms := 0.0
 var _vis18r_ph5_rebuilds_during_turnover := 0
 
 
+func _vis18r_stage_label() -> String:
+	return VIS1_8A_R1_STAGE
+
+
+func _vis18r_mode_label() -> String:
+	return VIS18R_MODE
+
+
+func _vis18r_max_generation() -> int:
+	return TimelineBridge.MAX_GENERATION
+
+
+func _vis18r_play_interval_seconds() -> float:
+	return VIS18R_PLAY_INTERVAL_SECONDS
+
+
 func _ready() -> void:
 	# VIS1.7 is already proven responsive, so keep one detailed PH5 baseline only.
 	_vis17_generation = 0
@@ -50,10 +66,10 @@ func _process(delta: float) -> void:
 	if not _vis18r_playing:
 		return
 	_vis18r_play_accumulator += delta
-	if _vis18r_play_accumulator < VIS18R_PLAY_INTERVAL_SECONDS:
+	if _vis18r_play_accumulator < _vis18r_play_interval_seconds():
 		return
 	_vis18r_play_accumulator = 0.0
-	if _vis18r_generation >= TimelineBridge.MAX_GENERATION:
+	if _vis18r_generation >= _vis18r_max_generation():
 		_vis18r_playing = false
 		_update_vis18r_title()
 		_update_status()
@@ -92,7 +108,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func set_realtime_turnover_generation(generation: int) -> void:
-	var clamped := clampi(generation, 0, TimelineBridge.MAX_GENERATION)
+	var clamped := clampi(generation, 0, _vis18r_max_generation())
 	if clamped == _vis18r_generation and _vis18r_field_hash.length() == 64:
 		_update_vis18r_title()
 		_update_status()
@@ -114,12 +130,12 @@ func get_evolution_generation() -> int:
 
 func get_realtime_turnover_state() -> Dictionary:
 	return {
-		"stage": VIS1_8A_R1_STAGE,
-		"mode": VIS18R_MODE,
+		"stage": _vis18r_stage_label(),
+		"mode": _vis18r_mode_label(),
 		"generation": _vis18r_generation,
-		"max_generation": TimelineBridge.MAX_GENERATION,
+		"max_generation": _vis18r_max_generation(),
 		"playing": _vis18r_playing,
-		"play_interval_seconds": VIS18R_PLAY_INTERVAL_SECONDS,
+		"play_interval_seconds": _vis18r_play_interval_seconds(),
 		"founder_count": _vis18r_model.founder_count,
 		"visual_count": _vis18r_current_visual_count,
 		"birth_count": _vis18r_current_births,
@@ -190,8 +206,8 @@ func _apply_generation_zero_summary(generation_map: Dictionary) -> void:
 	_vis18r_current_deaths = 0
 	_vis18r_current_survivors = 0
 	_vis18r_represented_biomass_kg = 0.0
-	var field_tokens := PackedStringArray([VIS1_8A_R1_STAGE, "generation=0"])
-	var turnover_tokens := PackedStringArray([VIS1_8A_R1_STAGE, "turnover=0"])
+	var field_tokens := PackedStringArray([_vis18r_stage_label(), "generation=0"])
+	var turnover_tokens := PackedStringArray([_vis18r_stage_label(), "turnover=0"])
 	var keys := generation_map.keys()
 	keys.sort()
 	for key_variant in keys:
@@ -219,8 +235,8 @@ func _update_vis18r_title() -> void:
 		return
 	var play_label := "PLAY" if _vis18r_playing else "PAUSE"
 	var presentation := "PH5" if _vis18r_generation == 0 else "REALTIME"
-	title.text = "ECO.VIS1.8A-R1 — %s G%d — reps=%d +%d/-%d — %s" % [
-		play_label, _vis18r_generation, _vis18r_current_visual_count,
+	title.text = "%s — %s G%d — reps=%d +%d/-%d — %s" % [
+		_vis18r_stage_label(), play_label, _vis18r_generation, _vis18r_current_visual_count,
 		_vis18r_current_births, _vis18r_current_deaths, presentation,
 	]
 
@@ -231,8 +247,8 @@ func _update_status() -> void:
 	if status == null:
 		return
 	var hash_preview := _vis18r_field_hash.substr(0, 12) if _vis18r_field_hash.length() == 64 else "pending"
-	status.text += "\nVIS1.8A-R1=ACTIVE generation=%d/%d %s | reps=%d founders=%d births=%d deaths=%d survivors=%d | cumulative +%d/-%d" % [
-		_vis18r_generation, TimelineBridge.MAX_GENERATION, "PLAY" if _vis18r_playing else "PAUSE",
+	status.text += "\n%s=ACTIVE generation=%d/%d %s | reps=%d founders=%d births=%d deaths=%d survivors=%d | cumulative +%d/-%d" % [
+		_vis18r_stage_label(), _vis18r_generation, _vis18r_max_generation(), "PLAY" if _vis18r_playing else "PAUSE",
 		_vis18r_current_visual_count, _vis18r_model.founder_count, _vis18r_current_births,
 		_vis18r_current_deaths, _vis18r_current_survivors, _vis18r_cumulative_births, _vis18r_cumulative_deaths,
 	]
