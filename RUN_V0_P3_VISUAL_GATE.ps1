@@ -198,7 +198,7 @@ for ($Index = 0; $Index -lt $ExpectedIdentities.Count; $Index++) {
     $Identity = [string]$Client.identity
     $ClientPid = [int]$Client.pid
     if ($Identity -ne $ExpectedIdentities[$Index]) {
-        throw "Unexpected client identity at index $Index: '$Identity'."
+        throw ("Unexpected client identity at index {0}: '{1}'." -f $Index, $Identity)
     }
     if (-not (Test-ProcessAlive $ClientPid)) {
         throw "Graphical client $Identity is not alive after launch (PID $ClientPid)."
