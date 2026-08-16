@@ -35,6 +35,7 @@ func _init() -> void:
 	_test_resource_delta_round_trip()
 	_test_m3_adapters_expose_resource_contract()
 	_test_earth_product_routes_through_p3_presentation()
+	_test_resource_focus_conflict_policy()
 	_test_resource_target_reuses_existing_interaction_layer()
 	_finish()
 
@@ -105,6 +106,8 @@ func _test_earth_product_routes_through_p3_presentation() -> void:
 		var runtime = runtime_script.new()
 		_assert(runtime.has_method("attach_m3_multiplayer_client"), "P3 Earth runtime preserves M3 attach contract")
 		_assert(runtime.has_method("_mine_p3_resource"), "P3 Earth runtime routes interaction to resource.mine")
+		_assert(runtime.has_method("_resolve_i2s_focus_target"), "P3 Earth runtime owns mixed world/resource focus resolution")
+		_assert(runtime.has_method("_p3_interaction_focus_score"), "P3 Earth runtime exposes deterministic focus scoring seam")
 		_assert(runtime.has_method("create_m3_graphical_client_report"), "P3 Earth runtime extends graphical report contract")
 		runtime.free()
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(WORLD_CATALOG_PATH))
@@ -116,6 +119,54 @@ func _test_earth_product_routes_through_p3_presentation() -> void:
 				earth_runtime = String(world_value.get("runtime_script", ""))
 				break
 	_assert(earth_runtime == P3_APP_PATH, "Earth product catalog routes through P3 resource-mining adapter")
+
+
+func _test_resource_focus_conflict_policy() -> void:
+	var runtime_script = load(P3_APP_PATH)
+	if runtime_script == null or not runtime_script.can_instantiate():
+		_assert(false, "P3 focus policy runtime parses")
+		return
+	var runtime = runtime_script.new()
+	var ordinary := Node3D.new()
+	ordinary.position = Vector3(0.0, 0.0, -2.0)
+	var resource := Node3D.new()
+	resource.position = Vector3(0.05, 0.0, -2.5)
+	var origin := Vector3.ZERO
+	var forward := Vector3(0.0, 0.0, -1.0)
+	var ordinary_score: float = runtime._p3_interaction_focus_score(
+		origin,
+		forward,
+		ordinary,
+		false
+	)
+	var resource_score: float = runtime._p3_interaction_focus_score(
+		origin,
+		forward,
+		resource,
+		true
+	)
+	_assert(resource_score > ordinary_score, "near-tie focus prefers mining resource over overlapping ordinary world item")
+
+	resource.position = Vector3(0.8, 0.0, -2.5)
+	var off_axis_resource_score: float = runtime._p3_interaction_focus_score(
+		origin,
+		forward,
+		resource,
+		true
+	)
+	_assert(ordinary_score > off_axis_resource_score, "clear aim at ordinary item/container is not hijacked by resource priority")
+
+	resource.position = Vector3(0.0, 0.0, -5.5)
+	var out_of_range_score: float = runtime._p3_interaction_focus_score(
+		origin,
+		forward,
+		resource,
+		true
+	)
+	_assert(out_of_range_score == -INF, "resource focus cannot bypass canonical five-meter interaction range")
+	ordinary.free()
+	resource.free()
+	runtime.free()
 
 
 func _test_resource_target_reuses_existing_interaction_layer() -> void:
