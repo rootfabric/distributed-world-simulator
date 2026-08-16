@@ -159,8 +159,15 @@ func _run() -> void:
 	s = smoke.get_vis21_state(); trs = smoke.get_vis21_canonical_traces(); sct = trs.get("control", []); stt = trs.get("treatment", [])
 	_check(int(s.get("comparison_rebuild_input_count", 999)) <= WINDOW and int(s.get("comparison_point_count", 999)) <= WINDOW, "53 comparison bounded G220")
 	_check(int(s.get("control_cached_generation_count", 999)) <= WINDOW and int(s.get("treatment_cached_generation_count", 999)) <= WINDOW and int(s.get("control_oldest_cached_generation", -1)) > FORK and int(s.get("treatment_oldest_cached_generation", -1)) > FORK, "54 caches bounded G220")
-	_check(int(Dictionary(sct[0]).get("generation", -1)) == FORK and int(Dictionary(stt[0]).get("generation", -1)) == FORK and int(Dictionary(sct[-1]).get("generation", -1)) == LATER and get_node_count() <= nodes0 + 512, "55 fork/latest/node growth")
-	_check(_biomass(sct) and _biomass(stt) and bool(s.get("control_data_only", false)) and int(s.get("visible_population_fields", 0)) == 1 and int(s.get("whole_field_ph5_rebuilds", -1)) == 0 and String(s.get("common_random_seed_hash", "")) == sroot, "56 long-run invariants")
+	_check(int(Dictionary(sct[0]).get("generation", -1)) == FORK and int(Dictionary(stt[0]).get("generation", -1)) == FORK and int(Dictionary(sct[-1]).get("generation", -1)) == LATER and int(Dictionary(stt[-1]).get("generation", -1)) == LATER, "55 fork/latest G220")
+	var realtime_renderer := smoke.get("_vis18r_renderer") as RefCounted
+	_require(realtime_renderer != null, "realtime renderer")
+	if realtime_renderer == null: return
+	realtime_renderer.call("advance_animations", 2.0)
+	await process_frame
+	await process_frame
+	_check(get_node_count() <= nodes0 + 512, "56 settled node growth")
+	_check(_biomass(sct) and _biomass(stt) and bool(s.get("control_data_only", false)) and int(s.get("visible_population_fields", 0)) == 1 and int(s.get("whole_field_ph5_rebuilds", -1)) == 0 and String(s.get("common_random_seed_hash", "")) == sroot, "57 long-run invariants")
 	smoke.queue_free(); await process_frame
 	if _failures == 0:
 		print("ECO.VIS2.1 control-vs-treatment integration: PASS (%d assertions); long smoke G20..G220 with rolling eviction PASS" % _assertions)
