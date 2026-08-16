@@ -20,6 +20,12 @@ if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) {
 $LocalAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 if ([string]::IsNullOrWhiteSpace($LocalAppData)) { $LocalAppData = $env:TEMP }
 $MatrixRoot = Join-Path $LocalAppData "DistributedWorldSimulator\SM0GraphicalLab\matrix"
+$RecoveryRootBase = Join-Path $LocalAppData "DistributedWorldSimulator\SM0P4Recovery"
+$RecoveryRunId = "wan-{0}-{1}-{2}" -f (Get-Date -Format "yyyyMMdd-HHmmssfff"), $PID, ([guid]::NewGuid().ToString("N").Substring(0, 8))
+$RecoveryRoot = Join-Path $RecoveryRootBase $RecoveryRunId
+if (-not $Stop) {
+    New-Item -ItemType Directory -Force -Path $RecoveryRoot | Out-Null
+}
 $BeforeMatrixDirs = @{}
 if (Test-Path -LiteralPath $MatrixRoot -PathType Container) {
     foreach ($Dir in Get-ChildItem -LiteralPath $MatrixRoot -Directory -ErrorAction SilentlyContinue) {
@@ -29,16 +35,20 @@ if (Test-Path -LiteralPath $MatrixRoot -PathType Container) {
 
 $HadP4 = Test-Path Env:SM0_P4_FAST_HANDOFF
 $PreviousP4 = $env:SM0_P4_FAST_HANDOFF
+$HadP4Recovery = Test-Path Env:SM0_P4_RECOVERY_DIR
+$PreviousP4Recovery = $env:SM0_P4_RECOVERY_DIR
 $HadAutoQuit = Test-Path Env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS
 $PreviousAutoQuit = $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS
 $ExitCode = 1
 try {
     $env:SM0_P4_FAST_HANDOFF = "1"
+    $env:SM0_P4_RECOVERY_DIR = $RecoveryRoot
     if (-not $Stop) {
         $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS = [string]$RequireHandoffs
     }
     Write-Host "[SM0-P4] Prewarmed fast handoff ENABLED for WAN matrix." -ForegroundColor Cyan
     if (-not $Stop) {
+        Write-Host "[SM0-P4] Durable protocol recovery root: $RecoveryRoot" -ForegroundColor DarkCyan
         Write-Host "[SM0-P4] Each WAN profile will close automatically after $RequireHandoffs confirmed handoffs." -ForegroundColor Cyan
         Write-Host "[SM0-P4] Keep crossing with A/D until the window closes by itself; do not close it manually." -ForegroundColor Cyan
     }
@@ -48,6 +58,8 @@ try {
 finally {
     if ($HadP4) { $env:SM0_P4_FAST_HANDOFF = $PreviousP4 }
     else { Remove-Item Env:SM0_P4_FAST_HANDOFF -ErrorAction SilentlyContinue }
+    if ($HadP4Recovery) { $env:SM0_P4_RECOVERY_DIR = $PreviousP4Recovery }
+    else { Remove-Item Env:SM0_P4_RECOVERY_DIR -ErrorAction SilentlyContinue }
     if ($HadAutoQuit) { $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS = $PreviousAutoQuit }
     else { Remove-Item Env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS -ErrorAction SilentlyContinue }
 }
@@ -100,6 +112,9 @@ foreach ($Profile in @($Matrix.profiles)) {
         if (-not (Select-String -LiteralPath $Path -SimpleMatch '"event":"SM0_P4_MODE"' -Quiet -ErrorAction SilentlyContinue)) {
             throw "SM0-P4 mode marker missing for $($Profile.label): $Path"
         }
+        if (-not (Select-String -LiteralPath $Path -SimpleMatch '"event":"SM0_P4_HARDENING_READY"' -Quiet -ErrorAction SilentlyContinue)) {
+            throw "SM0-P4 hardening marker missing for $($Profile.label): $Path"
+        }
     }
 
     $FastA = Get-P4FastTransferIds $ServerALog
@@ -138,7 +153,8 @@ $Evidence = [ordered]@{
     schema = "distributed_world_simulator.sm0_p4_fast_evidence_summary.v1"
     git_head = [string]$Matrix.git_head
     result = "PASS"
-    rule = "Every client-measured handoff in every WAN profile has a matching SM0_P4_FAST_COMMIT_ACCEPTED server event."
+    rule = "Every client-measured handoff in every WAN profile has a matching SM0_P4_FAST_COMMIT_ACCEPTED server event and aggregate A+B writer audit passed in the child matrix runner."
+    recovery_root = $RecoveryRoot
     profiles = @($EvidenceProfiles)
     source_matrix = $MatrixSummaryPath
 }
@@ -149,5 +165,6 @@ Write-Host "SM0-P4 controlled WAN matrix fast-path evidence: PASS" -ForegroundCo
 foreach ($Profile in $EvidenceProfiles) {
     Write-Host ("  {0,-6}: measured={1} P4-fast-evidenced={2}" -f $Profile.label, $Profile.measured_transfer_count, $Profile.p4_fast_transfer_count)
 }
+Write-Host "  recovery: $RecoveryRoot"
 Write-Host "  evidence: $EvidencePath"
 exit 0
