@@ -4,10 +4,10 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-16T13:32:00Z",
+  "updated_at_utc": "2026-08-16T14:50:00Z",
   "control_checkpoint": "V0 generation-80 P0-P4 product-lineage activation refresh candidate; P4 is the next bounded product mutation lane while inherited P2/P3 acceptance debt remains explicit",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. The V0 product train has advanced through P0 playable composition, P1 world items/containers, P2 reconnectable shared state and P3/P3.1 mining. Generation-80 now declares exact P3.1 product lineage ef3ad5f... as the runtime execution input for bounded P4 continuation while current main remains the control/epoch anchor. P2/P3 acceptance debt is not waived and blocks final P4/V0 acceptance, not bounded implementation. SERVER_PREDICTED remains the V0 network baseline; H0.2/NX.C1 remains independent; pre-H0.3 runtime mutation workers remain <= 1.",
+  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. The V0 product train has advanced through P0 playable composition, P1 world items/containers, P2 reconnectable shared state and P3/P3.1 mining. Generation-80 declares exact P3.1 product lineage ef3ad5f... as the runtime execution input for bounded P4 continuation while current main remains the control/epoch anchor. P4 is registered as a passport-backed active frontier so post-main standard/directional PC0 audits its branch-local facts. P2/P3 acceptance debt is not waived and blocks final P4/V0 acceptance, not bounded implementation. SERVER_PREDICTED remains the V0 network baseline; H0.2/NX.C1 remains independent; pre-H0.3 runtime mutation workers remain <= 1.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -240,17 +240,17 @@
       "program": "V0",
       "program_name": "Playable Vertical Slice",
       "branch": "feature/v0-p4-construction-real-resources",
-      "passport_path": "",
-      "requires_passport": false,
+      "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
+      "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Current product-facing train from the validated playable frontier through world items, reconnect and mining into atomic real-resource Construction.",
       "purpose": "Close the persistent shared-outpost gameplay loop without replacing proven product composition or creating duplicate Item Graph, Construction, persistence or network authority.",
       "expected_outcome": "P4 proves mine -> canonical item/ore -> deterministic server allocation -> atomic Item Graph debit + Construction commit -> A/B replication -> reconnect convergence; P5/P6 then turn that into a repeatable persistent outpost baseline.",
-      "current_stage": "V0-P4 Exact-Consume Patch Prepared / Generation-80 Activation Refresh",
-      "stage_status": "P4_IMPLEMENTATION_READY_PENDING_GENERATION80_MAIN_ACTIVATION_POST_MAIN_AUDIT_AND_DIRECTOR_DISPATCH",
-      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch c20310cf... contains only prebuild/test/evidence work and a prepared exact-consume production patch; no P4 runtime mutation has occurred. Generation-80 refresh declares P3.1 ef3ad5f... as the exact runtime execution input while keeping main as control/epoch owner. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance, but is no longer a blanket stop on bounded implementation after activation and dispatch. The P4 branch passport remains branch-local durable execution memory and is not mirrored as a required central-registry file.",
+      "current_stage": "V0-P4 POST-ACTIVATION EPOCH AUDIT GATE PREPARED",
+      "stage_status": "IMPLEMENTATION_READY_RUNTIME_MUTATION_BLOCKED_PENDING_CONTROL_ACCEPTANCE",
+      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch 91dea163... remains pre-runtime and now has an auditable branch passport plus the post-activation epoch/base gate; the prepared exact-consume production patch is still unapplied. Generation-80 declares P3.1 ef3ad5f... as the exact runtime execution input while keeping main as control/epoch owner. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance, but is not a blanket stop on bounded implementation after activation, audit and dispatch.",
       "last_accepted_checkpoint": "No P4 acceptance claim. Product execution evidence: P1 review PASS; P2 Windows GREEN + Reviewer/Verifier PASS with Director pending; P3 mining Windows GREEN and P3.1 operator-demonstrated.",
-      "next_stage": "After generation-80 control acceptance into main: run post-main standard/directional PC0, fresh P4 epoch/base dependency audit, then Director dispatch. If CONTINUE, execute P4.1 exact-consume RED->GREEN on the existing P4 branch, then allocator, live-M4 transaction port, composition/publication, rollback, ownership, A/B and reconnect gates.",
+      "next_stage": "After generation-80 control acceptance into main: run post-main standard/directional PC0 and RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1; only CONTINUE plus separate Director dispatch permits P4.1 exact-consume RED->GREEN, then allocator, live-M4 transaction port, composition/publication, rollback, ownership, A/B and reconnect gates.",
       "product_execution_base": {
         "branch": "repair/v0-p3-visual-interaction-r1",
         "sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
@@ -261,11 +261,11 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p4-construction-real-resources",
-        "head_at_refresh_input": "c20310cf804374ab515fd7a363b6471c2b933ac0",
+        "head_at_refresh_input": "91dea163092ec8ba3dc6f91274a5842ded89459a",
         "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
         "work_order_issue": 118,
         "runtime_mutation_present": false,
-        "next_code_step": "P4.1 exact-consume three-file repair after activation/audit/dispatch"
+        "next_code_step": "Run post-activation audit after generation-80 merge; P4.1 exact-consume three-file repair only after CONTINUE + Director dispatch"
       },
       "acceptance_debt": [
         "P2_DIRECTOR_VERDICT_PENDING",
@@ -273,10 +273,10 @@
         "P3_REPLICA_REPAIR_PR_117_INDEPENDENT_HIGH_RISK_ROUTING_PENDING"
       ],
       "implementation_blockers": [
-        "GENERATION80_CONTROL_NOT_YET_CANONICAL_ON_MAIN",
-        "POST_ACTIVATION_STANDARD_AND_DIRECTIONAL_PC0_REQUIRED",
-        "FRESH_P4_EPOCH_BASE_DEPENDENCY_AUDIT_REQUIRED",
-        "P4_DIRECTOR_DISPATCH_REQUIRED",
+        "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
+        "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
+        "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
+        "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
         "PRE_H0_3_TOTAL_RUNTIME_MUTATION_WORKERS_MUST_BE_LE_1"
       ],
       "acceptance_blockers": [
@@ -286,8 +286,11 @@
       ],
       "health_declared": "YELLOW",
       "blockers": [
-        "GENERATION80_CONTROL_NOT_YET_CANONICAL_ON_MAIN",
-        "POST_ACTIVATION_PC0_AND_FRESH_EPOCH_AUDIT_REQUIRED_BEFORE_P4_RUNTIME_MUTATION"
+        "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
+        "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
+        "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
+        "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
+        "PR_117_EXPLICITLY_EXCLUDED_PENDING_INDEPENDENT_ACCEPTANCE"
       ]
     },
     "MATTER": {
