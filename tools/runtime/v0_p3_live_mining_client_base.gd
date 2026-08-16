@@ -172,7 +172,7 @@ func _run_before_p3() -> void:
 	var resource: Dictionary = client.get_resource_mining_snapshot()
 	var item: Dictionary = client.get_item_graph_snapshot()
 	_assert(int(_resource_node(resource, RESOURCE_NODE_ID).get("remaining_units", -1)) == 8, "B initial session sees eight ore units")
-	_assert(_mined_output_ids(item).is_empty(), "B initial session sees no P3 mined server-output ore")
+	_assert(_mined_output_ids(item).is_empty(), "B initial session sees no mined server-output ore")
 	_assert(bool(client.get_player("a").get("connected", false)), "B initial session observes A connected")
 	var report: Dictionary = client.get_report()
 	_assert_runtime_healthy(report, "P3 B initial")
@@ -196,8 +196,9 @@ func _run_after_p3() -> void:
 	var resource_converged := await _wait_resource_state(
 		func(snapshot: Dictionary) -> bool:
 			return (
-				String(snapshot.get("checksum", "")) == expected_resource_checksum
+				String(snapshot.get("checksum", "")).length() == 64
 				and int(snapshot.get("generation", -1)) == expected_resource_generation
+				and String(snapshot.get("checksum", "")) == expected_resource_checksum
 				and int(_resource_node(snapshot, RESOURCE_NODE_ID).get("remaining_units", -1)) == 7
 			),
 		15000
