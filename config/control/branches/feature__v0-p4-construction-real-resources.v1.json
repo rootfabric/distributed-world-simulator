@@ -1,0 +1,82 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P4 real-resource Construction integration: consume P3-mined canonical M4 ore through one atomic Construction transaction boundary.",
+  "purpose": "Close the first real V0 economy loop without introducing a second Item Graph, client-owned affordability truth, or a second persistence/transaction authority.",
+  "expected_outcome": "A server-authoritative build stage consumes the requesting player's real P3-produced item/ore exactly once and atomically with Construction state, then replicates and reconstructs the converged result on reconnect.",
+  "current_stage": "V0-P4 PREBUILD / RED CONTRACT",
+  "stage_status": "PREBUILD_ACTIVE_RUNTIME_MUTATION_BLOCKED",
+  "progress_note": "Risk/Repair Map and exact-consume RED contract are durable. Canonical main remains generation 79 at initial dispatch while V0 generation-80 activation PR #98 is not canonical; production/runtime mutation is blocked pending activation, post-main PC0 and epoch/base audit.",
+  "last_accepted_checkpoint": "STACKED_INPUT_ONLY: P3.1 demonstrated head ef3ad5f0afc433802d639171d938e4720b3a46ec; no P4 acceptance claim",
+  "next_stage": "After canonical V0 activation and NON_RED post-main control audit: P4.1 exact-consume repair, then deterministic allocator and live-M4 Construction transaction port.",
+  "parent_branch_or_checkpoint": "repair/v0-p3-visual-interaction-r1 @ ef3ad5f0afc433802d639171d938e4720b3a46ec",
+  "base_commit": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
+  "dependencies": [
+    "V0 canonical runtime activation on main (PR #98 or reviewed successor)",
+    "post-main standard Project Control NON_RED",
+    "post-main directional Project Control NON_RED for critical hits",
+    "fresh epoch/base dependency audit",
+    "P3 canonical item/ore output semantics",
+    "existing Construction transaction/replay contracts"
+  ],
+  "owned_paths": [
+    "docs/evidence/2026-08-16_V0_P4_*",
+    "docs/checkpoints/2026-08-16_V0_P4_*",
+    "tests/construction/test_v0_p4_*",
+    "RUN_V0_P4_*",
+    "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
+  ],
+  "watched_paths": [
+    "scripts/construction/build/construction_build_plan.gd",
+    "scripts/construction/build/construction_stage_transaction_planner.gd",
+    "scripts/construction/item_graph/construction_item_mutation.gd",
+    "scripts/construction/item_graph/construction_item_graph_transaction_port.gd",
+    "scripts/construction/mvp/mvp_earth_outpost_authority.gd",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p3/networked_gameplay_service_p3.gd",
+    "scripts/runtime/networked_gameplay/m3/**",
+    "scripts/app/simulator_app.gd"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/construction/authoritative/**",
+    "scripts/construction/item_graph/**",
+    "scripts/persistence/**",
+    "scripts/network/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/construction/test_v0_p4_real_resource_exact_consume_contract.gd",
+    "RUN_V0_P4_EXACT_CONSUME_CONTRACT.ps1"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [
+    "P4 owns only bounded V0 composition/allocation integration; canonical M4 Item Graph ownership remains unchanged and Construction State ownership remains unchanged."
+  ],
+  "forbidden_foundation_ownership": [
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_TRANSACTION_MODEL",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_WORK_BUDGET",
+    "CANONICAL_ITEM_GRAPH_OWNERSHIP",
+    "NETWORK_AUTHORITY_MODEL"
+  ],
+  "blockers": [
+    "CANONICAL_MAIN_V0_RUNTIME_ACTIVATION_PENDING",
+    "POST_ACTIVATION_PROJECT_CONTROL_REQUIRED",
+    "FRESH_EPOCH_BASE_AUDIT_REQUIRED_BEFORE_RUNTIME_MUTATION",
+    "PR_117_EXPLICITLY_EXCLUDED_PENDING_INDEPENDENT_ACCEPTANCE"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
