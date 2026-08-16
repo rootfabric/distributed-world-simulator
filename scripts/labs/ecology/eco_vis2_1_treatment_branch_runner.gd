@@ -27,7 +27,7 @@ var _trace_cache: Dictionary = {}
 var _experiment_schedule: Array[Dictionary] = []
 var _current_generation := -1
 var _sample_generation := -1
-var _source_snapshot_hash := ""
+var _common_random_seed_hash := ""
 
 
 func configure_from_fork(
@@ -35,8 +35,16 @@ func configure_from_fork(
 	fork_generation_map: Dictionary,
 	fork_history: Array,
 	experiment_id: String,
-	intensity: float
+	intensity: float,
+	common_random_seed_hash: String = ""
 ) -> Dictionary:
+	if common_random_seed_hash.is_empty():
+		_clear_configuration()
+		return {"success": false, "reason": "COMMON_RANDOM_SEED_REQUIRED"}
+	if not _is_valid_common_random_seed_hash(common_random_seed_hash):
+		_clear_configuration()
+		return {"success": false, "reason": "INVALID_COMMON_RANDOM_SEED"}
+
 	var normalized_experiment := ExperimentModel.normalize_profile(experiment_id)
 	if fork_generation < 0 or fork_generation_map.is_empty():
 		return {"success": false, "reason": "INVALID_FORK"}
@@ -50,10 +58,7 @@ func configure_from_fork(
 	_fork_generation = fork_generation
 	_fork_generation_map = normalized_map.duplicate(true)
 	_fork_history = _history_through_fork(fork_history, fork_generation)
-	_source_snapshot_hash = _resolve_source_snapshot_hash(fork_generation_map, fork_history)
-	if _source_snapshot_hash.length() != 64:
-		_clear_configuration()
-		return {"success": false, "reason": "INVALID_SEED_SCHEDULE"}
+	_common_random_seed_hash = common_random_seed_hash
 
 	_experiment_schedule = [{
 		"effective_generation": fork_generation + 1,
@@ -67,7 +72,7 @@ func configure_from_fork(
 		"stage": STAGE,
 		"branch_id": BRANCH_ID,
 		"fork_generation": _fork_generation,
-		"source_snapshot_hash": _source_snapshot_hash,
+		"common_random_seed_hash": _common_random_seed_hash,
 		"experiment_id": normalized_experiment,
 		"intensity": ExperimentModel.normalize_intensity(normalized_experiment, intensity),
 	}
@@ -149,6 +154,10 @@ func restart_from_fork() -> Dictionary:
 	return {"success": true, "generation": _current_generation}
 
 
+func common_random_seed_hash() -> String:
+	return _common_random_seed_hash
+
+
 func set_experiment(experiment_id: String, intensity: float) -> Dictionary:
 	if not _configured:
 		return {"success": false, "reason": "NOT_CONFIGURED"}
@@ -227,7 +236,7 @@ func _advance_generation(previous_map: Dictionary, generation: int) -> Dictionar
 			int(previous_state.get("base_count", 0)),
 			float(previous_state.get("source_biomass_kg", 0.0)),
 			generation,
-			_source_snapshot_hash,
+			_common_random_seed_hash,
 			String(previous_state.get("patch_id", "")),
 			String(previous_state.get("population_id", "")),
 			Vector2(previous_state.get("patch_center", Vector2.ZERO))
@@ -367,65 +376,14 @@ func _history_through_fork(source: Array, fork_generation: int) -> Array[Diction
 	return result
 
 
-func _resolve_source_snapshot_hash(fork_map_source: Dictionary, history_source: Array) -> String:
-	for metadata_key in ["source_snapshot_hash", "snapshot_hash", "_source_snapshot_hash"]:
-		var direct := String(fork_map_source.get(metadata_key, ""))
-		if direct.length() == 64:
-			return direct
-	for state_variant in fork_map_source.values():
-		if typeof(state_variant) != TYPE_DICTIONARY:
-			continue
-		var state: Dictionary = state_variant
-		for metadata_key in ["source_snapshot_hash", "snapshot_hash"]:
-			var state_hash := String(state.get(metadata_key, ""))
-			if state_hash.length() == 64:
-				return state_hash
-	for point_variant in history_source:
-		if typeof(point_variant) != TYPE_DICTIONARY:
-			continue
-		var point: Dictionary = point_variant
-		for metadata_key in ["source_snapshot_hash", "snapshot_hash"]:
-			var history_hash := String(point.get(metadata_key, ""))
-			if history_hash.length() == 64:
-				return history_hash
-	return _fork_state_seed_hash(_fork_generation, _population_map_only(fork_map_source))
-
-
-func _fork_state_seed_hash(fork_generation: int, fork_map_value: Dictionary) -> String:
-	# CRN seed derivation intentionally contains only common fork-state data.
-	var tokens := PackedStringArray(["fork-generation=%d" % fork_generation])
-	var keys := fork_map_value.keys()
-	keys.sort()
-	for key_variant in keys:
-		var state: Dictionary = fork_map_value[key_variant]
-		tokens.append("population|%s|%s|base=%d|biomass=%.9f|center=%.9f,%.9f" % [
-			String(state.get("patch_id", "")),
-			String(state.get("population_id", "")),
-			int(state.get("base_count", 0)),
-			float(state.get("source_biomass_kg", 0.0)),
-			Vector2(state.get("patch_center", Vector2.ZERO)).x,
-			Vector2(state.get("patch_center", Vector2.ZERO)).y,
-		])
-		var records: Array = Array(state.get("records", [])).duplicate(true)
-		records.sort_custom(func(a, b): return String(Dictionary(a).get("stable_id", "")) < String(Dictionary(b).get("stable_id", "")))
-		for record_variant in records:
-			if typeof(record_variant) != TYPE_DICTIONARY:
-				continue
-			var record: Dictionary = record_variant
-			var genome: Dictionary = record.get("genome", {})
-			var lineage: Dictionary = record.get("lineage", {})
-			tokens.append("record|%s|%s|%.9f|%.9f|g=%d|age=%d|fitness=%.9f|genome=%s|lineage=%s" % [
-				String(record.get("stable_id", "")),
-				String(record.get("parent_stable_id", "")),
-				float(record.get("world_x", 0.0)),
-				float(record.get("world_z", 0.0)),
-				int(record.get("birth_generation", 0)),
-				int(record.get("age_generations", 0)),
-				float(record.get("current_fitness", 0.0)),
-				String(genome.get("checksum", var_to_str(genome).sha256_text())),
-				String(lineage.get("checksum", var_to_str(lineage).sha256_text())),
-			])
-	return "\n".join(tokens).sha256_text()
+func _is_valid_common_random_seed_hash(value: String) -> bool:
+	if value.length() != 64:
+		return false
+	for index in range(value.length()):
+		var code := value.unicode_at(index)
+		if not ((code >= 48 and code <= 57) or (code >= 97 and code <= 102)):
+			return false
+	return true
 
 
 func _truncate_future_after(generation: int) -> void:
@@ -447,4 +405,4 @@ func _clear_configuration() -> void:
 	_experiment_schedule.clear()
 	_current_generation = -1
 	_sample_generation = -1
-	_source_snapshot_hash = ""
+	_common_random_seed_hash = ""

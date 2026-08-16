@@ -9,6 +9,7 @@ const EnvironmentSample = preload("res://scripts/research/ecology/environment_sa
 
 const FORK_GENERATION := 4
 const TARGET_GENERATION := 12
+const COMMON_RANDOM_SEED_HASH := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 var _assertions := 0
 var _failures := 0
@@ -31,11 +32,27 @@ func _run() -> void:
 	}
 	var canonical_before := canonical_truth.duplicate(true)
 
-	var drought := TreatmentRunner.new()
-	var configured: Dictionary = drought.configure_from_fork(
+	var missing_root := TreatmentRunner.new()
+	var missing_result := missing_root.configure_from_fork(
 		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85
 	)
+	_expect(not bool(missing_result.get("success", true)), "missing common random seed root is rejected")
+	_expect(String(missing_result.get("reason", "")) == "COMMON_RANDOM_SEED_REQUIRED", "missing root has precise rejection code")
+
+	var invalid_root := TreatmentRunner.new()
+	var invalid_result := invalid_root.configure_from_fork(
+		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85, "A".repeat(64)
+	)
+	_expect(not bool(invalid_result.get("success", true)), "non-lower-case SHA-256 root is rejected")
+	_expect(String(invalid_result.get("reason", "")) == "INVALID_COMMON_RANDOM_SEED", "invalid root has precise rejection code")
+
+	var drought := TreatmentRunner.new()
+	var configured: Dictionary = drought.configure_from_fork(
+		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH
+	)
 	_expect(bool(configured.get("success", false)), "treatment runner configures from external fork")
+	_expect(String(configured.get("common_random_seed_hash", "")) == COMMON_RANDOM_SEED_HASH, "configure result returns supplied common root unchanged")
+	_expect(drought.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "read-only accessor returns supplied common root unchanged")
 	_expect(drought.generation_map(FORK_GENERATION) == fork_map, "fork generation map is unchanged")
 	_expect(drought.trace_point(FORK_GENERATION) == fork_history[-1], "supplied fork trace point is preserved byte-for-byte by value")
 
@@ -60,16 +77,49 @@ func _run() -> void:
 
 	var drought_repeat := TreatmentRunner.new()
 	var repeated_config: Dictionary = drought_repeat.configure_from_fork(
-		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85
+		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH
 	)
 	_expect(bool(repeated_config.get("success", false)), "repeat treatment configures")
+	_expect(drought_repeat.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "repeat treatment keeps same common root")
 	_expect(bool(drought_repeat.advance_to(TARGET_GENERATION).get("success", false)), "repeat treatment advances")
-	_expect(drought_repeat.trace() == drought.trace(), "same fork + experiment + intensity is deterministic")
+	_expect(drought_repeat.trace() == drought.trace(), "same fork + common root + experiment + intensity is deterministic")
 	_expect(drought_repeat.generation_map(TARGET_GENERATION) == drought.generation_map(TARGET_GENERATION), "deterministic replay reproduces exact population state")
+
+	var labelled_map_a := _with_branch_label(fork_map, "ARBITRARY_BRANCH_A")
+	var labelled_map_b := _with_branch_label(fork_map, "ARBITRARY_BRANCH_B")
+	var labelled_history_a := _history_with_branch_label(fork_history, "ARBITRARY_BRANCH_A")
+	var labelled_history_b := _history_with_branch_label(fork_history, "ARBITRARY_BRANCH_B")
+	var labelled_a := TreatmentRunner.new()
+	var labelled_b := TreatmentRunner.new()
+	_expect(bool(labelled_a.configure_from_fork(FORK_GENERATION, labelled_map_a, labelled_history_a, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH).get("success", false)), "arbitrary branch label A configures")
+	_expect(bool(labelled_b.configure_from_fork(FORK_GENERATION, labelled_map_b, labelled_history_b, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH).get("success", false)), "arbitrary branch label B configures")
+	_expect(bool(labelled_a.advance_to(TARGET_GENERATION).get("success", false)), "branch label A advances")
+	_expect(bool(labelled_b.advance_to(TARGET_GENERATION).get("success", false)), "branch label B advances")
+	_expect(labelled_a.common_random_seed_hash() == labelled_b.common_random_seed_hash(), "arbitrary branch labels cannot change common random root")
+	_expect(labelled_a.generation_map(TARGET_GENERATION) == labelled_b.generation_map(TARGET_GENERATION), "arbitrary branch labels cannot influence post-fork randomness")
+
+	var snapshot_metadata_map := fork_map.duplicate(true)
+	snapshot_metadata_map["source_snapshot_hash"] = "a".repeat(64)
+	var source_snapshot_runner := TreatmentRunner.new()
+	_expect(bool(source_snapshot_runner.configure_from_fork(FORK_GENERATION, snapshot_metadata_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH).get("success", false)), "fork with source_snapshot_hash metadata configures")
+	_expect(source_snapshot_runner.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "source_snapshot_hash metadata cannot override supplied common root")
+	_expect(bool(source_snapshot_runner.advance_to(TARGET_GENERATION).get("success", false)), "source_snapshot_hash metadata fixture advances")
+	_expect(source_snapshot_runner.generation_map(TARGET_GENERATION) == drought.generation_map(TARGET_GENERATION), "source_snapshot_hash metadata cannot alter random schedule")
+
+	var snapshot_history := fork_history.duplicate(true)
+	for point in snapshot_history:
+		point["snapshot_hash"] = "b".repeat(64)
+	var history_snapshot_runner := TreatmentRunner.new()
+	_expect(bool(history_snapshot_runner.configure_from_fork(FORK_GENERATION, fork_map, snapshot_history, ExperimentModel.PROFILE_DROUGHT, 0.85, COMMON_RANDOM_SEED_HASH).get("success", false)), "history with snapshot_hash metadata configures")
+	_expect(history_snapshot_runner.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "history snapshot_hash cannot override supplied common root")
+	_expect(bool(history_snapshot_runner.advance_to(TARGET_GENERATION).get("success", false)), "history snapshot_hash metadata fixture advances")
+	_expect(history_snapshot_runner.generation_map(TARGET_GENERATION) == drought.generation_map(TARGET_GENERATION), "history snapshot_hash metadata cannot alter random schedule")
 
 	var trace_before_restart := drought.trace()
 	var map_before_restart := drought.generation_map(TARGET_GENERATION)
+	var root_before_restart := drought.common_random_seed_hash()
 	_expect(bool(drought.restart_from_fork().get("success", false)), "restart returns to fork")
+	_expect(drought.common_random_seed_hash() == root_before_restart, "restart from fork preserves exact common root")
 	_expect(drought.generation_map(FORK_GENERATION) == fork_map, "restart restores exact fork state")
 	_expect(bool(drought.advance_to(TARGET_GENERATION).get("success", false)), "restart advances again")
 	_expect(drought.trace() == trace_before_restart, "restart from fork reproduces treatment trace")
@@ -77,28 +127,34 @@ func _run() -> void:
 
 	var drought_low := TreatmentRunner.new()
 	var low_config: Dictionary = drought_low.configure_from_fork(
-		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.35
+		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.35, COMMON_RANDOM_SEED_HASH
 	)
 	var low_sample := drought_low.sample_environment_for_generation(FORK_GENERATION + 1, 31.0, -17.0)
+	_expect(bool(low_config.get("success", false)), "different intensity treatment configures with same common root")
+	_expect(drought_low.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "intensity cannot alter supplied common root")
 	_expect(String(low_sample.get("environment_revision", "")) != String(drought_at_next.get("environment_revision", "")), "different intensity changes environment revision")
 	_expect(String(low_sample.get("checksum", "")) != String(drought_at_next.get("checksum", "")), "different intensity changes environment checksum")
 
 	var flood := TreatmentRunner.new()
 	var flood_config: Dictionary = flood.configure_from_fork(
-		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_FLOOD, 0.85
+		FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_FLOOD, 0.85, COMMON_RANDOM_SEED_HASH
 	)
 	_expect(bool(flood_config.get("success", false)), "flood treatment configures")
+	_expect(flood.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "experiment ID cannot alter supplied common root")
 	var flood_sample := flood.sample_environment_for_generation(FORK_GENERATION + 1, 31.0, -17.0)
 	_expect(bool(EnvironmentSample.validate(flood_sample).get("success", false)), "flood EnvironmentSample remains valid")
 	_expect(String(flood_sample.get("environment_revision", "")) != String(drought_at_next.get("environment_revision", "")), "different experiment changes environment revision")
 	_expect(String(flood_sample.get("checksum", "")) != String(drought_at_next.get("checksum", "")), "different experiment changes environment checksum")
 
-	_expect(String(configured.get("source_snapshot_hash", "")) == String(low_config.get("source_snapshot_hash", "")), "intensity is absent from CRN seed derivation")
-	_expect(String(configured.get("source_snapshot_hash", "")) == String(flood_config.get("source_snapshot_hash", "")), "experiment ID is absent from CRN seed derivation")
+	_expect(String(configured.get("common_random_seed_hash", "")) == String(low_config.get("common_random_seed_hash", "")), "intensity is absent from common random root")
+	_expect(String(configured.get("common_random_seed_hash", "")) == String(flood_config.get("common_random_seed_hash", "")), "experiment ID is absent from common random root")
 	var turnover_source := FileAccess.get_file_as_string("res://scripts/labs/ecology/eco_vis1_8a_turnover_bridge.gd").to_lower()
 	_expect(not turnover_source.contains("branch_id"), "VIS1.8A RNG kernel has no branch ID input")
 	_expect(not turnover_source.contains("experiment_id"), "VIS1.8A RNG kernel has no experiment ID input")
 	_expect(not turnover_source.contains("treatment"), "VIS1.8A RNG kernel has no treatment label")
+	var treatment_source := FileAccess.get_file_as_string("res://scripts/labs/ecology/eco_vis2_1_treatment_branch_runner.gd")
+	_expect(not treatment_source.contains("_resolve_source_snapshot_hash"), "treatment runner has no snapshot-hash seed resolver")
+	_expect(not treatment_source.contains("_fork_state_seed_hash"), "treatment runner has no silent fork-state seed fallback")
 
 	_expect(bool(flood.advance_to(TARGET_GENERATION).get("success", false)), "flood trajectory advances from same fork")
 	var trajectories_diverged := false
@@ -112,23 +168,48 @@ func _run() -> void:
 	_expect(drought.generation_map(TARGET_GENERATION) != flood.generation_map(TARGET_GENERATION), "drought and flood produce different post-fork population states")
 
 	var branch_edit := TreatmentRunner.new()
-	_expect(bool(branch_edit.configure_from_fork(FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.70).get("success", false)), "branch edit fixture configures")
+	_expect(bool(branch_edit.configure_from_fork(FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 0.70, COMMON_RANDOM_SEED_HASH).get("success", false)), "branch edit fixture configures")
 	_expect(bool(branch_edit.advance_to(7).get("success", false)), "branch edit reaches local point")
 	var generation_seven := branch_edit.generation_map(7)
+	var root_before_edit := branch_edit.common_random_seed_hash()
 	var edit_result := branch_edit.set_experiment(ExperimentModel.PROFILE_SHADE, 0.60)
 	_expect(bool(edit_result.get("success", false)), "experiment can change after advancing")
+	_expect(branch_edit.common_random_seed_hash() == root_before_edit, "experiment change preserves exact common root")
 	_expect(int(edit_result.get("effective_generation", -1)) == 8, "changed experiment starts only after current local point")
 	_expect(branch_edit.generation_map(7) == generation_seven, "changing experiment does not rewrite current treatment past")
 	_expect(bool(branch_edit.advance_to(9).get("success", false)), "edited treatment future advances")
+	_expect(branch_edit.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "edited future keeps same common root for turnover")
 	_expect(String(branch_edit.trace_point(7).get("experiment_id", "")) == ExperimentModel.PROFILE_DROUGHT, "old treatment remains on preserved past")
 	_expect(String(branch_edit.trace_point(8).get("experiment_id", "")) == ExperimentModel.PROFILE_SHADE, "new treatment starts on next generation")
 	var edited_trace := branch_edit.trace()
 	_expect(bool(branch_edit.restart_from_fork().get("success", false)), "edited branch can restart")
+	_expect(branch_edit.common_random_seed_hash() == COMMON_RANDOM_SEED_HASH, "edited restart preserves exact common root")
 	_expect(bool(branch_edit.advance_to(9).get("success", false)), "edited branch replays after restart")
 	_expect(branch_edit.trace() == edited_trace, "restart replays piecewise treatment schedule deterministically")
 
-	print("ECO.VIS2.1-T treatment branch runner: PASS (%d assertions)" % _assertions if _failures == 0 else "ECO.VIS2.1-T treatment branch runner: FAIL (%d assertions, %d failures)" % [_assertions, _failures])
+	for runner in [fixture_runner, missing_root, invalid_root, drought, drought_repeat, labelled_a, labelled_b, source_snapshot_runner, history_snapshot_runner, drought_low, flood, branch_edit]:
+		runner.free()
+
+	print("ECO.VIS2.1-T treatment branch runner R1: PASS (%d assertions)" % _assertions if _failures == 0 else "ECO.VIS2.1-T treatment branch runner R1: FAIL (%d assertions, %d failures)" % [_assertions, _failures])
 	quit(0 if _failures == 0 else 1)
+
+
+func _with_branch_label(source: Dictionary, label: String) -> Dictionary:
+	var result := source.duplicate(true)
+	result["branch_id"] = label
+	for key_variant in source.keys():
+		var state_variant = result.get(key_variant)
+		if typeof(state_variant) == TYPE_DICTIONARY and Dictionary(state_variant).has("records"):
+			var state: Dictionary = state_variant
+			state["branch_id"] = label
+	return result
+
+
+func _history_with_branch_label(source: Array[Dictionary], label: String) -> Array[Dictionary]:
+	var result := source.duplicate(true)
+	for point in result:
+		point["branch_id"] = label
+	return result
 
 
 func _make_fork_map(environment_source: Node) -> Dictionary:
