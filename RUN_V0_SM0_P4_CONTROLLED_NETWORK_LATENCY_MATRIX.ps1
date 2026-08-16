@@ -29,16 +29,27 @@ if (Test-Path -LiteralPath $MatrixRoot -PathType Container) {
 
 $HadP4 = Test-Path Env:SM0_P4_FAST_HANDOFF
 $PreviousP4 = $env:SM0_P4_FAST_HANDOFF
+$HadAutoQuit = Test-Path Env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS
+$PreviousAutoQuit = $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS
 $ExitCode = 1
 try {
     $env:SM0_P4_FAST_HANDOFF = "1"
+    if (-not $Stop) {
+        $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS = [string]$RequireHandoffs
+    }
     Write-Host "[SM0-P4] Prewarmed fast handoff ENABLED for WAN matrix." -ForegroundColor Cyan
+    if (-not $Stop) {
+        Write-Host "[SM0-P4] Each WAN profile will close automatically after $RequireHandoffs confirmed handoffs." -ForegroundColor Cyan
+        Write-Host "[SM0-P4] Keep crossing with A/D until the window closes by itself; do not close it manually." -ForegroundColor Cyan
+    }
     & $Runner @PSBoundParameters
     $ExitCode = $LASTEXITCODE
 }
 finally {
     if ($HadP4) { $env:SM0_P4_FAST_HANDOFF = $PreviousP4 }
     else { Remove-Item Env:SM0_P4_FAST_HANDOFF -ErrorAction SilentlyContinue }
+    if ($HadAutoQuit) { $env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS = $PreviousAutoQuit }
+    else { Remove-Item Env:SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS -ErrorAction SilentlyContinue }
 }
 
 if ($ExitCode -ne 0 -or $Stop) {
