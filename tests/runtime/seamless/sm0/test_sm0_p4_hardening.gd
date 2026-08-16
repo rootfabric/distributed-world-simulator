@@ -4,6 +4,7 @@ const Contracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 const P4Server = preload("res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure.gd")
 const P4Client = preload("res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd")
 const P4TestServer = preload("res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_server.gd")
+const P4TestClient = preload("res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_client.gd")
 
 var _assertions := 0
 var _failures: Array[String] = []
@@ -16,6 +17,7 @@ func _init() -> void:
 	_test_join_admission_fences()
 	_test_reservation_conflict_handler()
 	_test_redirect_fingerprint()
+	_test_redirect_replay_handler()
 	_finish()
 
 
@@ -124,17 +126,7 @@ func _test_reservation_conflict_handler() -> void:
 
 func _test_redirect_fingerprint() -> void:
 	var client = P4Client.new()
-	var directory := Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2)
-	var redirect := {
-		"transfer_id": "handoff/sm0/a/2/test",
-		"target_authority_id": Contracts.AUTHORITY_B,
-		"target_zone_id": Contracts.ZONE_B,
-		"target_host": "127.0.0.1",
-		"target_port": 24581,
-		"authority_epoch": 2,
-		"player_entity_id": "player/a",
-		"directory": directory.duplicate(true),
-	}
+	var redirect := _make_redirect_fixture()
 	var base_check: Dictionary = client._p4_validate_redirect_payload(redirect)
 	_assert(bool(base_check.get("success", false)), "valid redirect produces replay fingerprint")
 	var fingerprint := String(Dictionary(base_check.get("details", {})).get("fingerprint", ""))
@@ -158,6 +150,24 @@ func _test_redirect_fingerprint() -> void:
 	wrong_epoch["authority_epoch"] = 3
 	var wrong_epoch_check: Dictionary = client._p4_validate_redirect_payload(wrong_epoch)
 	_assert(not bool(wrong_epoch_check.get("success", false)), "redirect epoch inconsistent with directory is rejected before replay ACK")
+	client.free()
+
+
+func _test_redirect_replay_handler() -> void:
+	var client = P4TestClient.new()
+	var redirect := _make_redirect_fixture()
+	var installed: Dictionary = client.install_completed_redirect(redirect)
+	_assert(bool(installed.get("success", false)), "completed redirect replay fixture installs")
+
+	client.invoke_redirect(redirect)
+	_assert(client.captured_redirect_acks.size() == 1, "exact completed REDIRECT replay is ACKed")
+	_assert(client.last_failure_code().is_empty(), "exact completed REDIRECT replay does not fail client")
+
+	var conflicting := redirect.duplicate(true)
+	conflicting["target_port"] = 24582
+	client.invoke_redirect(conflicting)
+	_assert(client.captured_redirect_acks.is_empty(), "same transfer id with changed REDIRECT route is not ACKed")
+	_assert(client.last_failure_code() == "SM0_CLIENT_REDIRECT_REPLAY_CONFLICT", "same transfer id with changed REDIRECT route fails closed")
 	client.free()
 
 
@@ -196,6 +206,19 @@ func _make_fast_fixture() -> Dictionary:
 			"prewarm_id": String(prewarm.get("prewarm_id", "")),
 			"prewarm_checksum": String(prewarm.get("checksum", "")),
 		},
+	}
+
+
+func _make_redirect_fixture() -> Dictionary:
+	return {
+		"transfer_id": "handoff/sm0/a/2/test",
+		"target_authority_id": Contracts.AUTHORITY_B,
+		"target_zone_id": Contracts.ZONE_B,
+		"target_host": "127.0.0.1",
+		"target_port": 24581,
+		"authority_epoch": 2,
+		"player_entity_id": "player/a",
+		"directory": Contracts.create_directory(Contracts.AUTHORITY_B, 2, 2),
 	}
 
 
