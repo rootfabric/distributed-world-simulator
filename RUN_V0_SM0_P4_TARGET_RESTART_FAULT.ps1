@@ -4,7 +4,8 @@ param(
     [switch]$AllowDirty,
     [string]$ProjectRoot = "",
     [string]$GodotExe = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe",
-    [ValidateRange(20, 300)][int]$TimeoutSeconds = 90
+    [ValidateRange(20, 300)][int]$TimeoutSeconds = 90,
+    [ValidateRange(3500, 15000)][int]$PostCrashHoldMs = 4000
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,6 +14,11 @@ $GameplayPorts = @(24580, 24581)
 $ControlPorts = @(24680, 24681)
 $ClientPort = 24780
 $JoinProbePort = 24782
+$LivePrewarmTtlMs = 3000
+
+if ($PostCrashHoldMs -le $LivePrewarmTtlMs) {
+    throw "PostCrashHoldMs must be greater than the P4 live PREWARM TTL ($LivePrewarmTtlMs ms)."
+}
 
 if ([string]::IsNullOrWhiteSpace($ProjectRoot)) { $ProjectRoot = $PSScriptRoot }
 $ProjectRoot = [IO.Path]::GetFullPath($ProjectRoot)
@@ -215,6 +221,7 @@ try {
 
     Write-Harness "P4 closure fault gate start HEAD=$GitHead"
     Write-Harness "recovery root=$RecoveryRoot"
+    Write-Harness "live prewarm ttl=$LivePrewarmTtlMs ms; post-crash hold=$PostCrashHoldMs ms"
     Write-Harness "Importing Godot metadata."
     & $GodotExe --headless --editor --path $ProjectRoot --log-file $ImportLog --import
     if ($LASTEXITCODE -ne 0) { throw "Godot import failed. See $ImportLog" }
@@ -227,8 +234,10 @@ try {
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd",
         "res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_server.gd",
         "res://tests/runtime/seamless/sm0/sm0_p4_hardening_test_client.gd",
+        "res://tests/runtime/seamless/sm0/sm0_p4_durable_proof_test_server.gd",
         "res://tests/runtime/seamless/sm0/sm0_p4_join_probe_process.gd",
-        "res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd"
+        "res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd",
+        "res://tests/runtime/seamless/sm0/test_sm0_p4_durable_proof_recovery.gd"
     )) {
         Write-Harness "Compile check $ScriptPath"
         & $GodotExe --headless --path $ProjectRoot --check-only --script $ScriptPath
@@ -236,6 +245,8 @@ try {
     }
     & $GodotExe --headless --path $ProjectRoot --script res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd
     if ($LASTEXITCODE -ne 0) { throw "P4 hardening focused tests failed." }
+    & $GodotExe --headless --path $ProjectRoot --script res://tests/runtime/seamless/sm0/test_sm0_p4_durable_proof_recovery.gd
+    if ($LASTEXITCODE -ne 0) { throw "P4 durable proof recovery focused tests failed." }
 
     & (Join-Path $ProjectRoot "TEST_V0_SM0_P4_GLOBAL_WRITER_ANALYZER.ps1") -ProjectRoot $ProjectRoot
     if ($LASTEXITCODE -ne 0) { throw "Aggregate writer analyzer self-test failed." }
@@ -291,7 +302,19 @@ try {
     # pre-retirement incarnation fallback.
     Wait-LogMarker $ServerAPreLog '"event":"SM0_SOURCE_RETIRED"' $ServerAPre 10 "server-a"
     Wait-LogMarker $ServerAPreLog '"event":"SM0_P4_FAST_HANDOFF_BEGIN"' $ServerAPre 10 "server-a"
-    Write-Harness "Source A is retired; restart now exercises PREWARMED -> restart -> FAST_COMMIT recovery."
+    Write-Harness "Source A is retired. Keeping B down beyond the $LivePrewarmTtlMs ms live PREWARM TTL."
+
+    # The target must stay physically down longer than the live reservation TTL.
+    # If the restart later succeeds without SM0_P4_PREWARM_REHYDRATED_FROM_DURABLE_PROOF,
+    # this harness must fail: restoring a still-live reservation is not sufficient
+    # evidence for the durable-proof closure.
+    Start-Sleep -Milliseconds $PostCrashHoldMs
+    Assert-ProcessAlive $ServerAPre "server-a-during-post-crash-hold"
+    $ServerBPre.Refresh()
+    if (-not $ServerBPre.HasExited) {
+        throw "Fault target B unexpectedly became alive during post-crash TTL hold."
+    }
+    Write-Harness "Post-crash hold complete ($PostCrashHoldMs ms > $LivePrewarmTtlMs ms TTL); restarting B now requires durable proof rehydration."
 
     Wait-PortAvailable 24581 5
     Wait-PortAvailable 24681 5
@@ -306,8 +329,10 @@ try {
     $Processes.Add($ServerBPost)
 
     Wait-LogMarker $ServerBPostLog '"event":"SM0_P4_STATE_RESTORED"' $ServerBPost 20 "server-b-restarted"
+    Wait-LogMarker $ServerBPostLog '"event":"SM0_P4_PREWARM_PROOFS_RESTORED"' $ServerBPost 20 "server-b-restarted"
+    Wait-LogMarker $ServerBPostLog '"event":"SM0_P4_PREWARM_REHYDRATED_FROM_DURABLE_PROOF"' $ServerBPost 20 "server-b-restarted"
     Wait-LogMarker $ServerBPostLog '"event":"SM0_P4_FAST_COMMIT_ACCEPTED"' $ServerBPost 20 "server-b-restarted"
-    Write-Harness "Restarted target restored durable reservation and accepted FAST_COMMIT."
+    Write-Harness "Restarted target restored durable proof, rehydrated an expired live reservation and accepted FAST_COMMIT."
 
     $ClientDeadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $ClientDeadline) {
@@ -410,6 +435,15 @@ try {
         }
     }
 
+    foreach ($RequiredProofMarker in @(
+        '"event":"SM0_P4_PREWARM_PROOFS_RESTORED"',
+        '"event":"SM0_P4_PREWARM_REHYDRATED_FROM_DURABLE_PROOF"'
+    )) {
+        if (-not (Select-String -LiteralPath $ServerBPostLog -SimpleMatch $RequiredProofMarker -Quiet -ErrorAction SilentlyContinue)) {
+            throw "Target restart did not exercise required durable-proof marker: $RequiredProofMarker"
+        }
+    }
+
     $Analyzer = Join-Path $ProjectRoot "ANALYZE_V0_SM0_LOGS.ps1"
     & $Analyzer -LogDirectory $LogDirectory -ExpectedHandoffs 1
     if ($LASTEXITCODE -ne 0) { throw "Base SM0 analyzer failed after target restart/reconnect recovery." }
@@ -426,18 +460,22 @@ try {
     }
 
     $Evidence = [ordered]@{
-        schema = "distributed_world_simulator.sm0_p4_closure_fault_evidence.v1"
+        schema = "distributed_world_simulator.sm0_p4_closure_fault_evidence.v2"
         result = "PASS"
         git_head = $GitHead
-        target_restart_fault = "PREWARMED -> target process exit -> SOURCE_RETIRED -> target restart -> FAST_COMMIT"
+        target_restart_fault = "PREWARMED -> target process exit -> SOURCE_RETIRED -> hold beyond live TTL -> target restart -> durable proof rehydrate -> FAST_COMMIT"
         restart_reconnect_fault = "completed fast handoff -> retired source restart -> immediate CLIENT_JOIN probe"
         expected_fault_exit_code = 86
+        live_prewarm_ttl_ms = $LivePrewarmTtlMs
+        post_crash_hold_ms = $PostCrashHoldMs
         handoffs_completed = 1
         p4_fast_handoffs = 1
         legacy_handoffs = 0
         identity_changes = [int]$Result.identity_changes
         max_aggregate_writer_count = [int]$WriterAudit.max_aggregate_writer_count
-        target_reservation_restored = $true
+        target_live_reservation_restored = $false
+        target_durable_proof_restored = $true
+        target_reservation_rehydrated_from_proof = $true
         source_completion_tombstone_applied = $true
         restart_reconnect_probe = "PASS"
         restart_reconnect_result_code = [string]$ProbeResult.result_code
@@ -485,7 +523,8 @@ Write-Host ""
 if ($ExitCode -eq 0) {
     Write-Host "SM0-P4 closure fault gate: PASS" -ForegroundColor Green
     Write-Host "  HEAD       : $GitHead"
-    Write-Host "  target     : PREWARMED -> target exit -> SOURCE_RETIRED -> target restart -> FAST_COMMIT"
+    Write-Host "  target     : PREWARMED -> exit -> SOURCE_RETIRED -> hold > TTL -> proof rehydrate -> FAST_COMMIT"
+    Write-Host "  hold       : $PostCrashHoldMs ms (live TTL $LivePrewarmTtlMs ms)"
     Write-Host "  reconnect  : retired A restart -> fresh JOIN rejected"
     Write-Host "  P4 fast    : 1"
     Write-Host "  legacy     : 0"
