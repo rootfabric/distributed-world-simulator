@@ -34,8 +34,15 @@ function Invoke-P21Godot([string[]]$Arguments) {
     $PreviousDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
     try {
         $env:BREAKPOINT_RUNTIME_DISABLED = "1"
-        & $GodotExe @Arguments
-        return $LASTEXITCODE
+        # Native stdout is data in the PowerShell success pipeline. If we invoke
+        # Godot directly and then `return $LASTEXITCODE`, callers receive both
+        # the banner/output and the numeric exit code. That makes a successful
+        # `0` compare as a non-zero composite value. Capture and replay output
+        # to the host so the function's only pipeline result is the integer exit.
+        $Output = @(& $GodotExe @Arguments 2>&1)
+        $Exit = [int]$LASTEXITCODE
+        foreach ($Line in $Output) { Write-Host $Line }
+        return $Exit
     }
     finally {
         if ($HadDisabled) { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousDisabled }
