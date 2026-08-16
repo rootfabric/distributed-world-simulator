@@ -196,9 +196,8 @@ func _run_after_p3() -> void:
 	var resource_converged := await _wait_resource_state(
 		func(snapshot: Dictionary) -> bool:
 			return (
-				String(snapshot.get("checksum", "")).length() == 64
+				String(snapshot.get("checksum", "")) == expected_resource_checksum
 				and int(snapshot.get("generation", -1)) == expected_resource_generation
-				and String(snapshot.get("checksum", "")) == expected_resource_checksum
 				and int(_resource_node(snapshot, RESOURCE_NODE_ID).get("remaining_units", -1)) == 7
 			),
 		15000
