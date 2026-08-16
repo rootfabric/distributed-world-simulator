@@ -9,6 +9,7 @@ var _failures: Array[String] = []
 func _init() -> void:
 	_test_directory()
 	_test_handoff_package()
+	_test_handoff_prewarm()
 	_test_wire_message()
 	_finish()
 
@@ -61,6 +62,45 @@ func _test_handoff_package() -> void:
 	bad_identity["checksum"] = ""
 	bad_identity = _refinalize(bad_identity)
 	_assert(_error(Contracts.validate_handoff_package(bad_identity)) == "SM0_HANDOFF_PLAYER_IDENTITY_MISMATCH", "identity mutation rejected")
+
+
+func _test_handoff_prewarm() -> void:
+	var prewarm := Contracts.create_handoff_prewarm(
+		"prewarm/sm0/a/2/1",
+		"a",
+		"player/a",
+		Contracts.AUTHORITY_A,
+		Contracts.AUTHORITY_B,
+		Contracts.ZONE_A,
+		Contracts.ZONE_B,
+		1,
+		2,
+		1,
+		3000
+	)
+	_assert(_ok(Contracts.validate_handoff_prewarm(prewarm)), "P4 prewarm validates")
+	_assert(not prewarm.has("position"), "P4 prewarm contains no position")
+	_assert(not prewarm.has("velocity"), "P4 prewarm contains no velocity")
+	_assert(not prewarm.has("state_revision"), "P4 prewarm contains no player revision")
+	_assert(not prewarm.has("session_id"), "P4 prewarm contains no session state")
+	var tampered := prewarm.duplicate(true)
+	tampered["ttl_ms"] = 2999
+	_assert(_error(Contracts.validate_handoff_prewarm(tampered)) == "SM0_HANDOFF_PREWARM_CHECKSUM_MISMATCH", "tampered P4 prewarm rejected")
+	var too_short := prewarm.duplicate(true)
+	too_short["ttl_ms"] = Contracts.HANDOFF_PREWARM_TTL_MIN_MS - 1
+	too_short["checksum"] = ""
+	too_short = _refinalize(too_short)
+	_assert(_error(Contracts.validate_handoff_prewarm(too_short)) == "SM0_HANDOFF_PREWARM_TTL_INVALID", "too-short P4 TTL rejected")
+	var leaked_state := prewarm.duplicate(true)
+	leaked_state["position"] = {"x": -0.1, "y": 0.0, "z": 0.0}
+	leaked_state["checksum"] = ""
+	leaked_state = _refinalize(leaked_state)
+	_assert(_error(Contracts.validate_handoff_prewarm(leaked_state)) == "SM0_HANDOFF_PREWARM_MUTABLE_STATE_FORBIDDEN", "mutable player state in P4 prewarm rejected")
+	var wrong_epoch := prewarm.duplicate(true)
+	wrong_epoch["target_authority_epoch"] = 3
+	wrong_epoch["checksum"] = ""
+	wrong_epoch = _refinalize(wrong_epoch)
+	_assert(_error(Contracts.validate_handoff_prewarm(wrong_epoch)) == "SM0_HANDOFF_PREWARM_AUTHORITY_EPOCH_INVALID", "P4 epoch jump rejected")
 
 
 func _test_wire_message() -> void:
