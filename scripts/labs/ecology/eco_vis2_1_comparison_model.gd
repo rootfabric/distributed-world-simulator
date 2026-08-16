@@ -30,7 +30,6 @@ const INTEGER_KEYS := [
 	"unique_genomes",
 	"alpha_count",
 	"beta_count",
-	"environment_revision",
 ]
 
 static func summarize(control_trace: Array, treatment_trace: Array, fork_generation: int, strict: bool = true) -> Dictionary:
@@ -68,7 +67,7 @@ static func summarize(control_trace: Array, treatment_trace: Array, fork_generat
 		var control_point: Dictionary = control_by_generation[generation]
 		var treatment_point: Dictionary = treatment_by_generation[generation]
 		var paired := _pair_point(control_point, treatment_point)
-		if generation <= fork_generation and not _has_zero_deltas(paired):
+		if generation <= fork_generation and not _has_pre_fork_identity(paired):
 			return _failure(
 				"PRE_FORK_DIVERGENCE",
 				"control and treatment diverge at generation %d; divergence is only allowed after fork generation %d" % [generation, fork_generation]
@@ -103,7 +102,7 @@ static func compute_summary_hash(points: Array[Dictionary], fork_generation: int
 	var tokens := PackedStringArray([STAGE, MODE, "fork=%d" % fork_generation, "strict=%d" % int(strict)])
 	for point in points:
 		tokens.append(
-			"G%d|cb=%s|tb=%s|ce=%s|te=%s|cp=%d|tp=%d|dp=%d|cbirth=%d|tbirth=%d|dbirth=%d|cdeath=%d|tdeath=%d|ddeath=%d|csurv=%d|tsurv=%d|dsurv=%d|cf=%.12f|tf=%.12f|df=%.12f|cu=%d|tu=%d|du=%d|ca=%.12f|ta=%.12f|da=%.12f|cz=%.12f|tz=%.12f|dz=%.12f|cfh=%s|tfh=%s|cer=%d|ter=%d" % [
+			"G%d|cb=%s|tb=%s|ce=%s|te=%s|cp=%d|tp=%d|dp=%d|cbirth=%d|tbirth=%d|dbirth=%d|cdeath=%d|tdeath=%d|ddeath=%d|csurv=%d|tsurv=%d|dsurv=%d|cf=%.12f|tf=%.12f|df=%.12f|cu=%d|tu=%d|du=%d|ca=%.12f|ta=%.12f|da=%.12f|cz=%.12f|tz=%.12f|dz=%.12f|cfh=%s|tfh=%s|cer=%s|ter=%s" % [
 				int(point.get("generation", 0)),
 				String(point.get("control_branch_id", "")),
 				String(point.get("treatment_branch_id", "")),
@@ -135,8 +134,8 @@ static func compute_summary_hash(points: Array[Dictionary], fork_generation: int
 				float(point.get("delta_beta_share", 0.0)),
 				String(point.get("control_field_hash", "")),
 				String(point.get("treatment_field_hash", "")),
-				int(point.get("control_environment_revision", 0)),
-				int(point.get("treatment_environment_revision", 0)),
+				String(point.get("control_environment_revision", "")),
+				String(point.get("treatment_environment_revision", "")),
 			]
 		)
 	return "\n".join(tokens).sha256_text()
@@ -173,8 +172,8 @@ static func _validate_point(point: Dictionary, trace_name: String, index: int) -
 			return _failure("MALFORMED_TRACE_POINT", "%s trace point %d field %s must be an int" % [trace_name, index, key])
 		if int(point[key]) < 0:
 			return _failure("MALFORMED_TRACE_POINT", "%s trace point %d field %s must be non-negative" % [trace_name, index, key])
-	for key in ["branch_id", "experiment_id", "field_hash"]:
-		if typeof(point[key]) != TYPE_STRING or String(point[key]).is_empty():
+	for key in ["branch_id", "experiment_id", "field_hash", "environment_revision"]:
+		if typeof(point[key]) != TYPE_STRING or String(point[key]).strip_edges().is_empty():
 			return _failure("MALFORMED_TRACE_POINT", "%s trace point %d field %s must be a non-empty String" % [trace_name, index, key])
 	for key in ["mean_fitness", "represented_biomass_kg"]:
 		var value_variant = point[key]
@@ -200,7 +199,7 @@ static func _canonical_point(point: Dictionary) -> Dictionary:
 		"beta_count": int(point["beta_count"]),
 		"represented_biomass_kg": float(point["represented_biomass_kg"]),
 		"field_hash": String(point["field_hash"]),
-		"environment_revision": int(point["environment_revision"]),
+		"environment_revision": String(point["environment_revision"]),
 	}
 
 static func _pair_point(control: Dictionary, treatment: Dictionary) -> Dictionary:
@@ -252,8 +251,8 @@ static func _pair_point(control: Dictionary, treatment: Dictionary) -> Dictionar
 		"treatment_represented_biomass_kg": float(treatment["represented_biomass_kg"]),
 		"control_field_hash": String(control["field_hash"]),
 		"treatment_field_hash": String(treatment["field_hash"]),
-		"control_environment_revision": int(control["environment_revision"]),
-		"treatment_environment_revision": int(treatment["environment_revision"]),
+		"control_environment_revision": String(control["environment_revision"]),
+		"treatment_environment_revision": String(treatment["environment_revision"]),
 		"metrics": {
 			"population": population,
 			"births": births,
@@ -295,6 +294,13 @@ static func _share(numerator: int, other: int) -> float:
 	if total <= 0:
 		return 0.0
 	return float(numerator) / float(total)
+
+static func _has_pre_fork_identity(point: Dictionary) -> bool:
+	return (
+		_has_zero_deltas(point)
+		and String(point.get("control_field_hash", "")) == String(point.get("treatment_field_hash", ""))
+		and String(point.get("control_environment_revision", "")) == String(point.get("treatment_environment_revision", ""))
+	)
 
 static func _has_zero_deltas(point: Dictionary) -> bool:
 	return (

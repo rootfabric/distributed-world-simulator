@@ -19,6 +19,11 @@ func _run() -> void:
 	_check(int(summary.get("source_pair_count", -1)) == 5, "shared generations paired exactly")
 
 	var points: Array = summary.get("points", [])
+	var g10 := _point_for_generation(points, 10)
+	_check(typeof(g10.get("control_environment_revision")) == TYPE_STRING, "control environment revision preserved as String")
+	_check(typeof(g10.get("treatment_environment_revision")) == TYPE_STRING, "treatment environment revision preserved as String")
+	_check(String(g10.get("control_environment_revision", "")) == "ENV-R2", "String environment revision accepted")
+	_check(String(g10.get("treatment_environment_revision", "")) == "ENV-R2", "treatment String environment revision accepted")
 	for point_variant in points:
 		var point: Dictionary = point_variant
 		if int(point.get("generation", -1)) <= 10:
@@ -54,8 +59,8 @@ func _run() -> void:
 	var long_control: Array = []
 	var long_treatment: Array = []
 	for generation in range(80):
-		long_control.append(_trace_point(generation, "control", "BASELINE", 100 + generation, 20, 10, 90, 0.75, 8, 60, 40, 1000.0 + generation, 1))
-		long_treatment.append(_trace_point(generation, "treatment", "BASELINE", 100 + generation, 20, 10, 90, 0.75, 8, 60, 40, 1000.0 + generation, 1))
+		long_control.append(_trace_point(generation, "control", "BASELINE", 100 + generation, 20, 10, 90, 0.75, 8, 60, 40, 1000.0 + generation, "ENV-R1"))
+		long_treatment.append(_trace_point(generation, "treatment", "BASELINE", 100 + generation, 20, 10, 90, 0.75, 8, 60, 40, 1000.0 + generation, "ENV-R1"))
 	var bounded := ComparisonModel.summarize(long_control, long_treatment, 79, true)
 	_check(bool(bounded.get("success", false)), "bounded fixture succeeds")
 	_check(int(bounded.get("source_pair_count", -1)) == 80, "all source pairs validated")
@@ -98,6 +103,52 @@ func _run() -> void:
 	_check(bool(non_strict.get("success", false)), "non-strict mode compares shared generations")
 	_check(int(non_strict.get("source_pair_count", -1)) == 4, "non-strict mode pairs intersection only")
 
+	var integer_environment_control := control.duplicate(true)
+	var integer_environment_point: Dictionary = Dictionary(integer_environment_control[0]).duplicate(true)
+	integer_environment_point["environment_revision"] = 2
+	integer_environment_control[0] = integer_environment_point
+	var integer_environment_result := ComparisonModel.summarize(integer_environment_control, treatment, 10, true)
+	_check(not bool(integer_environment_result.get("success", true)), "integer environment revision rejected")
+	_check(String(integer_environment_result.get("error_code", "")) == "MALFORMED_TRACE_POINT", "integer environment revision rejection code")
+
+	var fork_revision_treatment := treatment.duplicate(true)
+	var fork_revision_point: Dictionary = Dictionary(fork_revision_treatment[2]).duplicate(true)
+	fork_revision_point["environment_revision"] = "ENV-FORK-DIVERGED"
+	fork_revision_treatment[2] = fork_revision_point
+	var fork_revision_result := ComparisonModel.summarize(control, fork_revision_treatment, 10, true)
+	_check(not bool(fork_revision_result.get("success", true)), "different environment revisions at fork rejected")
+	_check(String(fork_revision_result.get("error_code", "")) == "PRE_FORK_DIVERGENCE", "fork environment revision causal rejection code")
+
+	var fork_hash_treatment := treatment.duplicate(true)
+	var fork_hash_point: Dictionary = Dictionary(fork_hash_treatment[2]).duplicate(true)
+	fork_hash_point["field_hash"] = "fork-field-divergence".sha256_text()
+	fork_hash_treatment[2] = fork_hash_point
+	var fork_hash_result := ComparisonModel.summarize(control, fork_hash_treatment, 10, true)
+	_check(not bool(fork_hash_result.get("success", true)), "different field hashes at fork rejected")
+	_check(String(fork_hash_result.get("error_code", "")) == "PRE_FORK_DIVERGENCE", "fork field hash causal rejection code")
+
+	var pre_fork_hash_treatment := treatment.duplicate(true)
+	var pre_fork_hash_point: Dictionary = Dictionary(pre_fork_hash_treatment[1]).duplicate(true)
+	pre_fork_hash_point["field_hash"] = "pre-fork-field-divergence".sha256_text()
+	pre_fork_hash_treatment[1] = pre_fork_hash_point
+	var pre_fork_hash_result := ComparisonModel.summarize(control, pre_fork_hash_treatment, 10, true)
+	_check(not bool(pre_fork_hash_result.get("success", true)), "different field hashes before fork rejected")
+	_check(String(pre_fork_hash_result.get("error_code", "")) == "PRE_FORK_DIVERGENCE", "pre-fork field hash causal rejection code")
+
+	var post_fork_hash_treatment := control.duplicate(true)
+	var post_fork_hash_point: Dictionary = Dictionary(post_fork_hash_treatment[3]).duplicate(true)
+	post_fork_hash_point["field_hash"] = "post-fork-field-divergence".sha256_text()
+	post_fork_hash_treatment[3] = post_fork_hash_point
+	var post_fork_hash_result := ComparisonModel.summarize(control, post_fork_hash_treatment, 10, true)
+	_check(bool(post_fork_hash_result.get("success", false)), "different field hashes at fork+1 allowed")
+
+	var post_fork_revision_treatment := control.duplicate(true)
+	var post_fork_revision_point: Dictionary = Dictionary(post_fork_revision_treatment[3]).duplicate(true)
+	post_fork_revision_point["environment_revision"] = "ENV-POST-FORK-DIVERGED"
+	post_fork_revision_treatment[3] = post_fork_revision_point
+	var post_fork_revision_result := ComparisonModel.summarize(control, post_fork_revision_treatment, 10, true)
+	_check(bool(post_fork_revision_result.get("success", false)), "different environment revisions at fork+1 allowed")
+
 	var divergent_treatment := treatment.duplicate(true)
 	var divergent_point: Dictionary = Dictionary(divergent_treatment[1]).duplicate(true)
 	divergent_point["visual_count"] = int(divergent_point["visual_count"]) + 1
@@ -129,22 +180,22 @@ func _run() -> void:
 
 func _fixture_traces() -> Dictionary:
 	var control: Array = [
-		_trace_point(8, "control", "BASELINE", 100, 20, 10, 90, 0.80, 10, 60, 40, 1000.0, 2),
-		_trace_point(9, "control", "BASELINE", 105, 18, 13, 92, 0.81, 11, 63, 42, 1040.0, 2),
-		_trace_point(10, "control", "BASELINE", 110, 20, 15, 95, 0.82, 12, 66, 44, 1080.0, 2),
-		_trace_point(11, "control", "BASELINE", 112, 18, 16, 96, 0.83, 12, 60, 40, 1100.0, 2),
-		_trace_point(12, "control", "BASELINE", 115, 20, 17, 98, 0.84, 13, 60, 40, 1120.0, 2),
+		_trace_point(8, "control", "BASELINE", 100, 20, 10, 90, 0.80, 10, 60, 40, 1000.0, "ENV-R2"),
+		_trace_point(9, "control", "BASELINE", 105, 18, 13, 92, 0.81, 11, 63, 42, 1040.0, "ENV-R2"),
+		_trace_point(10, "control", "BASELINE", 110, 20, 15, 95, 0.82, 12, 66, 44, 1080.0, "ENV-R2"),
+		_trace_point(11, "control", "BASELINE", 112, 18, 16, 96, 0.83, 12, 60, 40, 1100.0, "ENV-R2"),
+		_trace_point(12, "control", "BASELINE", 115, 20, 17, 98, 0.84, 13, 60, 40, 1120.0, "ENV-R2"),
 	]
 	var treatment: Array = [
-		_trace_point(8, "treatment", "BASELINE", 100, 20, 10, 90, 0.80, 10, 60, 40, 1000.0, 2),
-		_trace_point(9, "treatment", "BASELINE", 105, 18, 13, 92, 0.81, 11, 63, 42, 1040.0, 2),
-		_trace_point(10, "treatment", "BASELINE", 110, 20, 15, 95, 0.82, 12, 66, 44, 1080.0, 2),
-		_trace_point(11, "treatment", "DROUGHT", 100, 12, 22, 88, 0.75, 11, 40, 60, 930.0, 3),
-		_trace_point(12, "treatment", "DROUGHT", 92, 8, 30, 75, 0.70, 10, 30, 70, 850.0, 4),
+		_trace_point(8, "treatment", "BASELINE", 100, 20, 10, 90, 0.80, 10, 60, 40, 1000.0, "ENV-R2"),
+		_trace_point(9, "treatment", "BASELINE", 105, 18, 13, 92, 0.81, 11, 63, 42, 1040.0, "ENV-R2"),
+		_trace_point(10, "treatment", "BASELINE", 110, 20, 15, 95, 0.82, 12, 66, 44, 1080.0, "ENV-R2"),
+		_trace_point(11, "treatment", "DROUGHT", 100, 12, 22, 88, 0.75, 11, 40, 60, 930.0, "ENV-R3"),
+		_trace_point(12, "treatment", "DROUGHT", 92, 8, 30, 75, 0.70, 10, 30, 70, 850.0, "ENV-R4"),
 	]
 	return {"control": control, "treatment": treatment}
 
-func _trace_point(generation: int, branch_id: String, experiment_id: String, visual_count: int, birth_count: int, death_count: int, survivor_count: int, mean_fitness: float, unique_genomes: int, alpha_count: int, beta_count: int, represented_biomass_kg: float, environment_revision: int) -> Dictionary:
+func _trace_point(generation: int, branch_id: String, experiment_id: String, visual_count: int, birth_count: int, death_count: int, survivor_count: int, mean_fitness: float, unique_genomes: int, alpha_count: int, beta_count: int, represented_biomass_kg: float, environment_revision: String) -> Dictionary:
 	return {
 		"generation": generation,
 		"branch_id": branch_id,
@@ -158,7 +209,7 @@ func _trace_point(generation: int, branch_id: String, experiment_id: String, vis
 		"alpha_count": alpha_count,
 		"beta_count": beta_count,
 		"represented_biomass_kg": represented_biomass_kg,
-		"field_hash": ("%d:%d:%d:%d:%d:%.12f:%d:%d:%d:%.12f:%d" % [generation, visual_count, birth_count, death_count, survivor_count, mean_fitness, unique_genomes, alpha_count, beta_count, represented_biomass_kg, environment_revision]).sha256_text(),
+		"field_hash": ("%d:%d:%d:%d:%d:%.12f:%d:%d:%d:%.12f:%s" % [generation, visual_count, birth_count, death_count, survivor_count, mean_fitness, unique_genomes, alpha_count, beta_count, represented_biomass_kg, environment_revision]).sha256_text(),
 		"environment_revision": environment_revision,
 	}
 
