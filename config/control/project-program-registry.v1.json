@@ -46,19 +46,15 @@
       "blockers": [
         "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"
       ],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "G",
-          "branch": "feature/g8-geomorphology",
-          "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "d7d7160b89878ba44204688686ad837bf6664d70",
-          "passport_blob_sha": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "G",
+        "branch": "feature/g8-geomorphology",
+        "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "d7d7160b89878ba44204688686ad837bf6664d70",
+        "passport_blob_sha": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
+      }]
     },
     "ECO": {
       "program": "ECO",
@@ -85,19 +81,15 @@
         "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION",
         "PRODUCTION_ECO_REQUIRES_CANONICAL_WORLD_WORK_BUDGET"
       ],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "ECO",
-          "branch": "feature/eco-evolutionary-ecology",
-          "passport_path": "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "2cf7b9e1b56a6a3716481754a2ec1c42c20ba445",
-          "passport_blob_sha": "0424374e88f053070b72e1bcfc579915d0b9955f"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "ECO",
+        "branch": "feature/eco-evolutionary-ecology",
+        "passport_path": "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "2cf7b9e1b56a6a3716481754a2ec1c42c20ba445",
+        "passport_blob_sha": "0424374e88f053070b72e1bcfc579915d0b9955f"
+      }]
     },
     "T": {
       "program": "T",
@@ -116,35 +108,28 @@
       "next_stage": "Keep T1B frozen. T2.0 is off the V0 critical path and still waits post-R3 control plus TS0.4 ceiling evidence and PC0 convergence.",
       "health_declared": "GREEN",
       "blockers": [],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "T",
-          "branch": "feature/t1b-composition-failure-recovery",
-          "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
-          "passport_blob_sha": "a6c3094e72ce8a8bce3557b6db8366747a6d0f12"
-        }
-      ],
-      "historical_passport_ownership_transitions": [
-        {
-          "program": "T",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "foundation": "WORLD_QUERY_FABRIC",
-          "historical_owner": "P1_FUTURE",
-          "canonical_owner": "WQ"
-        },
-        {
-          "program": "T",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "foundation": "WORLD_TRANSACTION_MODEL",
-          "historical_owner": "P0",
-          "canonical_owner": "WT"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "T",
+        "branch": "feature/t1b-composition-failure-recovery",
+        "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
+        "passport_blob_sha": "a6c3094e72ce8a8bce886fbcf894eb7a57a4b7"
+      }],
+      "historical_passport_ownership_transitions": [{
+        "program": "T",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "foundation": "WORLD_QUERY_FABRIC",
+        "historical_owner": "P1_FUTURE",
+        "canonical_owner": "WQ"
+      }, {
+        "program": "T",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "foundation": "WORLD_TRANSACTION_MODEL",
+        "historical_owner": "P0",
+        "canonical_owner": "WT"
+      }]
     },
     "TS": {
       "program": "TS",
@@ -181,19 +166,15 @@
       "next_stage": "Keep CH9.6 frozen. Any later Character runtime stage requires a fresh canonical declaration; preserve CH->NX as a future dependency revalidation gate.",
       "health_declared": "YELLOW",
       "blockers": [],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "CH",
-          "branch": "feature/ch9-6-playable-network-equipment-lab",
-          "passport_path": "config/control/branches/feature__ch9-6-playable-network-equipment-lab.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "59cd5f311adcb5b327634ce00a93e0ee044470db",
-          "passport_blob_sha": "68138e7ca9b790ab58fa0e1692d2476200926a9e"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "CH",
+        "branch": "feature/ch9-6-playable-network-equipment-lab",
+        "passport_path": "config/control/branches/feature__ch9-6-playable-network-equipment-lab.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "59cd5f311adcb5b327634ce00a93e0ee044470db",
+        "passport_blob_sha": "68138e7ca9b790ab58fa0e1692d2476200926a9e"
+      }]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -212,19 +193,15 @@
       "next_stage": "Continue only when new gameplay/system evidence appears",
       "health_declared": "GREEN",
       "blockers": [],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "DOCTRINE",
-          "branch": "feature/world-building-doctrine",
-          "passport_path": "config/control/branches/feature__world-building-doctrine.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "ae060dfe260d726f3a750a53d2802e0d87f8725f",
-          "passport_blob_sha": "c8e4f1212b789bbf407819cb606ae801cad3726d"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "DOCTRINE",
+        "branch": "feature/world-building-doctrine",
+        "passport_path": "config/control/branches/feature__world-building-doctrine.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "ae060dfe260d726f3a750a53d2802e0d87f8725f",
+        "passport_blob_sha": "c8e4f1212b789bbf407819cb606ae801cad3726d"
+      }]
     },
     "NX": {
       "program": "NX",
@@ -251,33 +228,29 @@
         "POST_BUILD_INDEPENDENT_REVIEW_REQUIRED",
         "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE"
       ],
-      "historical_passport_architecture_revisions": [
-        "GLOBAL-P0-2026-08-10-R2"
-      ],
-      "historical_passport_identities": [
-        {
-          "program": "NX",
-          "branch": "feature/nx-m7-owner-authority-convergence",
-          "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
-          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-          "pinned_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
-          "passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4"
-        }
-      ]
+      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
+      "historical_passport_identities": [{
+        "program": "NX",
+        "branch": "feature/nx-m7-owner-authority-convergence",
+        "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "pinned_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
+        "passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4"
+      }]
     },
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
       "branch": "feature/v0-p4-construction-real-resources",
-      "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
-      "requires_passport": true,
+      "passport_path": "",
+      "requires_passport": false,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Current product-facing train from the validated playable frontier through world items, reconnect and mining into atomic real-resource Construction.",
       "purpose": "Close the persistent shared-outpost gameplay loop without replacing proven product composition or creating duplicate Item Graph, Construction, persistence or network authority.",
       "expected_outcome": "P4 proves mine -> canonical item/ore -> deterministic server allocation -> atomic Item Graph debit + Construction commit -> A/B replication -> reconnect convergence; P5/P6 then turn that into a repeatable persistent outpost baseline.",
       "current_stage": "V0-P4 Exact-Consume Patch Prepared / Generation-80 Activation Refresh",
       "stage_status": "P4_IMPLEMENTATION_READY_PENDING_GENERATION80_MAIN_ACTIVATION_POST_MAIN_AUDIT_AND_DIRECTOR_DISPATCH",
-      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch c20310cf... contains only prebuild/test/evidence work and a prepared exact-consume production patch; no P4 runtime mutation has occurred. Generation-80 refresh declares P3.1 ef3ad5f... as the exact runtime execution input while keeping main as control/epoch owner. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance, but is no longer a blanket stop on bounded implementation after activation and dispatch.",
+      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch c20310cf... contains only prebuild/test/evidence work and a prepared exact-consume production patch; no P4 runtime mutation has occurred. Generation-80 refresh declares P3.1 ef3ad5f... as the exact runtime execution input while keeping main as control/epoch owner. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance, but is no longer a blanket stop on bounded implementation after activation and dispatch. The P4 branch passport remains branch-local durable execution memory and is not mirrored as a required central-registry file.",
       "last_accepted_checkpoint": "No P4 acceptance claim. Product execution evidence: P1 review PASS; P2 Windows GREEN + Reviewer/Verifier PASS with Director pending; P3 mining Windows GREEN and P3.1 operator-demonstrated.",
       "next_stage": "After generation-80 control acceptance into main: run post-main standard/directional PC0, fresh P4 epoch/base dependency audit, then Director dispatch. If CONTINUE, execute P4.1 exact-consume RED->GREEN on the existing P4 branch, then allocator, live-M4 transaction port, composition/publication, rollback, ownership, A/B and reconnect gates.",
       "product_execution_base": {
@@ -291,6 +264,7 @@
       "prebuild_state": {
         "branch": "feature/v0-p4-construction-real-resources",
         "head_at_refresh_input": "c20310cf804374ab515fd7a363b6471c2b933ac0",
+        "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
         "work_order_issue": 118,
         "runtime_mutation_present": false,
         "next_code_step": "P4.1 exact-consume three-file repair after activation/audit/dispatch"
@@ -411,54 +385,18 @@
     ]
   },
   "global_blocked_transitions": [
-    {
-      "stage": "NX.C1 SOURCE ACCEPTANCE",
-      "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"
-    },
-    {
-      "stage": "H0.3 IMPLEMENTATION",
-      "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"
-    },
-    {
-      "stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS",
-      "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"
-    },
-    {
-      "stage": "V0-P4 RUNTIME MUTATION START",
-      "blocked_by": "GENERATION80_MAIN_INTEGRATION_PLUS_POST_MAIN_PC0_PLUS_MAIN_DECLARED_PRODUCT_EXECUTION_BASE_PLUS_FRESH_P4_EPOCH_BASE_AUDIT_PLUS_DIRECTOR_DISPATCH_PLUS_PRE_H0_3_TOTAL_MUTATION_WORKERS_LE_1_REQUIRED"
-    },
-    {
-      "stage": "V0-P4 CHECKPOINT ACCEPTANCE",
-      "blocked_by": "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_PLUS_EXACT_HEAD_P4_RUNTIME_REGRESSION_REVIEW_VERIFIER_DIRECTOR_REQUIRED"
-    },
-    {
-      "stage": "V0 NETWORK FOUNDATION OR AUTHORITY CHANGE",
-      "blocked_by": "V0_BLOCKED_REQUIRES_NX"
-    },
-    {
-      "stage": "V0 OWNER_AUTHORITATIVE_VALIDATED AXIS",
-      "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_PLUS_REQUIRED_NX_MAIN_INTEGRATION"
-    },
-    {
-      "stage": "V0 PR #117 REPLICA REPAIR INTEGRATION",
-      "blocked_by": "INDEPENDENT_HIGH_RISK_REVIEW_VERIFIER_DIRECTOR_ROUTING_REQUIRED"
-    },
-    {
-      "stage": "G9 START",
-      "blocked_by": "MAT0_REQUIRED"
-    },
-    {
-      "stage": "TS0.4 START",
-      "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"
-    },
-    {
-      "stage": "T2.0 START",
-      "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
-    },
-    {
-      "stage": "CH NEXT RUNTIME STAGE",
-      "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"
-    }
+    {"stage": "NX.C1 SOURCE ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
+    {"stage": "H0.3 IMPLEMENTATION", "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"},
+    {"stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS", "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"},
+    {"stage": "V0-P4 RUNTIME MUTATION START", "blocked_by": "GENERATION80_MAIN_INTEGRATION_PLUS_POST_MAIN_PC0_PLUS_MAIN_DECLARED_PRODUCT_EXECUTION_BASE_PLUS_FRESH_P4_EPOCH_BASE_AUDIT_PLUS_DIRECTOR_DISPATCH_PLUS_PRE_H0_3_TOTAL_MUTATION_WORKERS_LE_1_REQUIRED"},
+    {"stage": "V0-P4 CHECKPOINT ACCEPTANCE", "blocked_by": "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_PLUS_EXACT_HEAD_P4_RUNTIME_REGRESSION_REVIEW_VERIFIER_DIRECTOR_REQUIRED"},
+    {"stage": "V0 NETWORK FOUNDATION OR AUTHORITY CHANGE", "blocked_by": "V0_BLOCKED_REQUIRES_NX"},
+    {"stage": "V0 OWNER_AUTHORITATIVE_VALIDATED AXIS", "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_PLUS_REQUIRED_NX_MAIN_INTEGRATION"},
+    {"stage": "V0 PR #117 REPLICA REPAIR INTEGRATION", "blocked_by": "INDEPENDENT_HIGH_RISK_REVIEW_VERIFIER_DIRECTOR_ROUTING_REQUIRED"},
+    {"stage": "G9 START", "blocked_by": "MAT0_REQUIRED"},
+    {"stage": "TS0.4 START", "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"},
+    {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
+    {"stage": "CH NEXT RUNTIME STAGE", "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"}
   ],
   "audit_triggers": [
     "ANY_MAJOR_CHECKPOINT_ACCEPTED",
