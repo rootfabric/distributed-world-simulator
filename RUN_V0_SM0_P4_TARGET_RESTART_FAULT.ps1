@@ -349,6 +349,16 @@ try {
         throw "Recovered client result invalid: $($Result | ConvertTo-Json -Compress)"
     }
 
+    # Client PASS proves the target-side handoff completed, but it does not prove
+    # that retired source A has already processed both completion signals and
+    # durably written its P4 SOURCE_FAST_COMPLETE side journal. Killing A before
+    # that marker creates a different crash-before-source-completion window and
+    # makes the later tombstone expectation invalid. This closure gate exercises
+    # restart *after* durable completion; the earlier crash window belongs to the
+    # broader crash/fault matrix.
+    Wait-LogMarker $ServerAPreLog '"phase":"SOURCE_FAST_COMPLETE"' $ServerAPre 20 "server-a-source-completion"
+    Write-Harness "Source A durably recorded SOURCE_FAST_COMPLETE; completed-fast tombstone restart precondition satisfied."
+
     # Physical restart + reconnect probe. B is now the canonical writer. Kill A
     # only, restart it from the same recovery root and immediately send a fresh
     # CLIENT_JOIN to A. A must never manufacture writer truth from stale
@@ -461,7 +471,7 @@ try {
         result = "PASS"
         git_head = $GitHead
         target_restart_fault = "PREWARMED -> target process exit -> SOURCE_RETIRED -> hold beyond live TTL -> target restart -> durable proof rehydrate -> FAST_COMMIT"
-        restart_reconnect_fault = "completed fast handoff -> retired source restart -> immediate CLIENT_JOIN probe"
+        restart_reconnect_fault = "durable SOURCE_FAST_COMPLETE -> retired source restart -> immediate CLIENT_JOIN probe"
         expected_fault_exit_code = 86
         live_prewarm_ttl_ms = $LivePrewarmTtlMs
         post_crash_hold_ms = $PostCrashHoldMs
@@ -473,6 +483,7 @@ try {
         target_live_reservation_restored = $false
         target_durable_proof_restored = $true
         target_reservation_rehydrated_from_proof = $true
+        source_completion_durable_before_restart = $true
         source_completion_tombstone_applied = $true
         restart_reconnect_probe = "PASS"
         restart_reconnect_result_code = [string]$ProbeResult.result_code
