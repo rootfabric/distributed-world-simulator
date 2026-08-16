@@ -4,10 +4,10 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-13T10:50:00Z",
-  "control_checkpoint": "V0-S1 networked planetary outpost route activation candidate on canonical R3; H0.2/NX.C1 verification continues independently",
+  "updated_at_utc": "2026-08-16T13:32:00Z",
+  "control_checkpoint": "V0 generation-80 P0-P4 product-lineage activation refresh candidate; P4 is the next bounded product mutation lane while inherited P2/P3 acceptance debt remains explicit",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. H0.2/NX.C1 bounded source implementation exists and remains runtime-verification/source-acceptance pending. V0_S1_NETWORKED_PLANETARY_OUTPOST is the first product checkpoint and may start from exact current main using the canonical SERVER_PREDICTED network path with one pre-H0.3 runtime mutation worker; unfinished OWNER_AUTHORITATIVE_VALIDATED acceptance is not a blanket V0-S1 prerequisite.",
+  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. The V0 product train has advanced through P0 playable composition, P1 world items/containers, P2 reconnectable shared state and P3/P3.1 mining. Generation-80 now declares exact P3.1 product lineage ef3ad5f... as the runtime execution input for bounded P4 continuation while current main remains the control/epoch anchor. P2/P3 acceptance debt is not waived and blocks final P4/V0 acceptance, not bounded implementation. SERVER_PREDICTED remains the V0 network baseline; H0.2/NX.C1 remains independent; pre-H0.3 runtime mutation workers remain <= 1.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -17,13 +17,13 @@
       "requires_passport": false,
       "role": "CONTROL_INFRASTRUCTURE",
       "short_description": "Restart-safe checkpoint-driven development control with risk routing, evidence review and human-exception compression.",
-      "purpose": "Move runtime capabilities between declared checkpoints from exact current main without treating commit volume as progress.",
-      "expected_outcome": "H0.2/NX.C1 continues exact runtime verification while the first bounded V0 product checkpoint may execute under the same pre-H0.3 single-mutation-worker ceiling.",
-      "current_stage": "H0.2 NX.C1 Verification + V0-S1 Product Route Activation",
-      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_S1_ROUTE_DECLARED",
-      "progress_note": "Canonical R3 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2/NX.C1 bounded source implementation exists on PR #97 and remains exact Godot/runtime verification pending. V0-S1 is declared separately as a HIGH-risk product composition checkpoint using current canonical SERVER_PREDICTED networking; verification/review-only H0.2 work does not consume a mutation slot, but any NX FIX mutation must serialize with V0 mutation before H0.3.",
+      "purpose": "Keep main as the project-state/authorization owner while allowing an explicitly main-declared exact product lineage to serve as a bounded runtime continuation input when restarting from bare main would discard demonstrated composition.",
+      "expected_outcome": "H0.2/NX.C1 continues exact verification independently while V0-P4 may become the one pre-H0.3 product mutation lane after generation-80 integration, post-main PC0, fresh epoch/base audit and Director dispatch.",
+      "current_stage": "H0.2 NX.C1 Verification + V0 P0-P4 Activation Refresh",
+      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_P4_ROUTE_REFRESH_CANDIDATE",
+      "progress_note": "Canonical R3 and mandatory post-R3 standard/directional Project Control are NON_RED. V0 runtime evidence has advanced beyond the original S1 planning point. Generation-80 refresh separates the current-main control anchor from the main-declared V0 product execution base, preserves the one-mutation-worker ceiling, and keeps prior acceptance debt visible instead of turning it into a blanket implementation stop.",
       "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + GLOBAL-P0 R3 canonical + post-R3 Project Control NON_RED",
-      "next_stage": "Keep H0.2 verification exact and independent. Activate a fresh exact-current-main V0_S1_NETWORKED_PLANETARY_OUTPOST Work Order only when the pre-H0.3 total runtime mutation-worker count is <= 1.",
+      "next_stage": "Accept generation-80 refresh only after fresh independent review and Project Control. After main moves, run post-main PC0 + fresh P4 epoch/base dependency audit; then Director may dispatch bounded P4 continuation if the audit returns CONTINUE.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -160,7 +160,7 @@
       "stage_status": "C22_MAIN_INTEGRATED_FROZEN",
       "progress_note": "Whole PR #90 was merged normally as eefd75fa. Accepted implementation provenance is retained; post-C22 and post-R3 standard/directional Project Control are NON_RED. The source convergence branch is retired as canonical runtime authority and remains historical evidence only.",
       "last_accepted_checkpoint": "C22 MAIN_INTEGRATED @ eefd75fa3badec10c6e7db959e2a3992dba30f0e",
-      "next_stage": "Keep C22 canonical and consume it from V0-S1. TS0.4 remains outside the V0-S1 critical path.",
+      "next_stage": "Keep C22 canonical and consume it through V0-P4 real-resource Construction. TS0.4 remains outside the P4/P6 critical path.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -238,7 +238,7 @@
       "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED only after exact Godot runtime evidence, full/two-client/impaired/reconnect validation, independent review/verifier and fresh CH->NX dependency revalidation.",
       "current_stage": "H0.2 / NX.C1 Source Implemented — Runtime Verification Pending",
       "stage_status": "IMPLEMENTED_WAITING_EXACT_GODOT_RUNTIME_VERIFICATION",
-      "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0-S1 prerequisite; V0-S1 uses current canonical SERVER_PREDICTED networking unless a required authority change is proven.",
+      "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0-P4/P6 prerequisite; V0 continues on SERVER_PREDICTED unless a concrete foundation change is proven necessary.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; H0.2 pre-build authorization PASS; bounded NX.C1 source implementation present but not source-accepted",
       "next_stage": "Run exact Godot focused validation, full world/core, two-client, impaired-network and reconnect/ownership-epoch validation; then post-build independent review/verifier and fresh CH->NX revalidation before any H0_2_PASS / NX SOURCE_ACCEPTED proposal.",
       "health_declared": "YELLOW",
@@ -268,22 +268,54 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "",
-      "passport_path": "",
-      "requires_passport": false,
+      "branch": "feature/v0-p4-construction-real-resources",
+      "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
+      "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "First product-facing integrated simulator checkpoints consuming canonical world, character, network and Construction foundations without owning duplicate truth.",
-      "purpose": "Prove a real networked procedural-world user scenario early, then grow through landed ship, movable ship and planet-space transition slices.",
-      "expected_outcome": "V0_S1_NETWORKED_PLANETARY_OUTPOST proves one procedural planet, one server, two playable clients, mutually visible movement, one shared canonical Construction outpost, reconnect continuity and a 30-minute two-client soak.",
-      "current_stage": "V0-S1 Networked Planetary Outpost Route Declared",
-      "stage_status": "ELIGIBLE_FOR_FRESH_EXACT_MAIN_HIGH_RISK_WORK_ORDER",
-      "progress_note": "V0-S1 is a composition consumer and uses the canonical current-main SERVER_PREDICTED network baseline. It does not require H0_2_PASS, NX SOURCE_ACCEPTED, H0_3_SCHEDULER_ACCEPTED or OWNER_AUTHORITATIVE_VALIDATED acceptance. If the scenario requires protocol/authority/reconciliation/Character ownership changes, V0 fails closed as V0_S1_BLOCKED_REQUIRES_NX rather than creating private network truth.",
-      "last_accepted_checkpoint": "V0 route machine contract declared; no V0 runtime acceptance claimed",
-      "next_stage": "Issue one explicit HIGH-risk V0_S1_NETWORKED_PLANETARY_OUTPOST Work Order from exact current main and execute the bounded server + procedural planet + two clients + canonical Construction scenario.",
-      "health_declared": "GREEN",
-      "blockers": [
-        "EXPLICIT_V0_S1_WORK_ORDER_REQUIRED",
+      "short_description": "Current product-facing train from the validated playable frontier through world items, reconnect and mining into atomic real-resource Construction.",
+      "purpose": "Close the persistent shared-outpost gameplay loop without replacing proven product composition or creating duplicate Item Graph, Construction, persistence or network authority.",
+      "expected_outcome": "P4 proves mine -> canonical item/ore -> deterministic server allocation -> atomic Item Graph debit + Construction commit -> A/B replication -> reconnect convergence; P5/P6 then turn that into a repeatable persistent outpost baseline.",
+      "current_stage": "V0-P4 Exact-Consume Patch Prepared / Generation-80 Activation Refresh",
+      "stage_status": "P4_IMPLEMENTATION_READY_PENDING_GENERATION80_MAIN_ACTIVATION_POST_MAIN_AUDIT_AND_DIRECTOR_DISPATCH",
+      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch c20310cf... contains only prebuild/test/evidence work and a prepared exact-consume production patch; no P4 runtime mutation has occurred. Generation-80 refresh declares P3.1 ef3ad5f... as the exact runtime execution input while keeping main as control/epoch owner. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance, but is no longer a blanket stop on bounded implementation after activation and dispatch.",
+      "last_accepted_checkpoint": "No P4 acceptance claim. Product execution evidence: P1 review PASS; P2 Windows GREEN + Reviewer/Verifier PASS with Director pending; P3 mining Windows GREEN and P3.1 operator-demonstrated.",
+      "next_stage": "After generation-80 control acceptance into main: run post-main standard/directional PC0, fresh P4 epoch/base dependency audit, then Director dispatch. If CONTINUE, execute P4.1 exact-consume RED->GREEN on the existing P4 branch, then allocator, live-M4 transaction port, composition/publication, rollback, ownership, A/B and reconnect gates.",
+      "product_execution_base": {
+        "branch": "repair/v0-p3-visual-interaction-r1",
+        "sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
+        "playable_frontier_ancestor": "feature/v0-playable-product-frontier",
+        "declared_by_control_generation": 80,
+        "declares_checkpoint_acceptance": false,
+        "reason": "Preserve the demonstrated P0-P3 product composition as the P4 input instead of forcing a reconstruction from bare main. PR #117 is deliberately excluded pending independent HIGH-risk acceptance."
+      },
+      "prebuild_state": {
+        "branch": "feature/v0-p4-construction-real-resources",
+        "head_at_refresh_input": "c20310cf804374ab515fd7a363b6471c2b933ac0",
+        "work_order_issue": 118,
+        "runtime_mutation_present": false,
+        "next_code_step": "P4.1 exact-consume three-file repair after activation/audit/dispatch"
+      },
+      "acceptance_debt": [
+        "P2_DIRECTOR_VERDICT_PENDING",
+        "P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING",
+        "P3_REPLICA_REPAIR_PR_117_INDEPENDENT_HIGH_RISK_ROUTING_PENDING"
+      ],
+      "implementation_blockers": [
+        "GENERATION80_CONTROL_NOT_YET_CANONICAL_ON_MAIN",
+        "POST_ACTIVATION_STANDARD_AND_DIRECTIONAL_PC0_REQUIRED",
+        "FRESH_P4_EPOCH_BASE_DEPENDENCY_AUDIT_REQUIRED",
+        "P4_DIRECTOR_DISPATCH_REQUIRED",
         "PRE_H0_3_TOTAL_RUNTIME_MUTATION_WORKERS_MUST_BE_LE_1"
+      ],
+      "acceptance_blockers": [
+        "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_REQUIRED",
+        "P4_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
+        "P4_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
+      ],
+      "health_declared": "YELLOW",
+      "blockers": [
+        "GENERATION80_CONTROL_NOT_YET_CANONICAL_ON_MAIN",
+        "POST_ACTIVATION_PC0_AND_FRESH_EPOCH_AUDIT_REQUIRED_BEFORE_P4_RUNTIME_MUTATION"
       ]
     },
     "MATTER": {
@@ -324,12 +356,13 @@
     }
   },
   "convergence_order": {
-    "principle": "Branches report facts; main declares project state; the auditor checks consistency; runtime work moves only between declared checkpoints from exact current main.",
+    "principle": "Branches report facts; main declares project state and exact product execution inputs; the auditor checks consistency; bounded runtime work moves only between declared checkpoints under the one-mutation-worker ceiling before H0.3.",
     "now_parallel": [
+      "Generation-80 V0 P0-P4 control refresh review/validation",
+      "P2/P3/PR #117 acceptance routing and review/verification-only work",
       "H0.2/NX.C1 exact runtime verification and review-only lifecycle work",
-      "V0-S1 Networked Planetary Outpost may execute with one runtime mutation worker",
       "ECO research/design-only work",
-      "H0.3 preparation only until H0_2_PASS + NX SOURCE_ACCEPTED"
+      "SM0 review/verification-only work while P4 owns the mutation slot after activation"
     ],
     "harness_train": [
       "H0_0_SCAFFOLD_READY canonical",
@@ -343,13 +376,15 @@
     "construction_train": [
       "C22 MAIN_INTEGRATED",
       "GLOBAL-P0 R3 + post-R3 PC0 NON_RED",
-      "V0-S1 consumes canonical Construction",
+      "V0-P4 consumes canonical Construction + canonical M4 Item Graph",
+      "V0-P6 persistent shared-outpost baseline",
       "TS0.4 1M Research Ceiling remains separate",
       "PC0 convergence with T",
       "T2.0"
     ],
     "network_train": [
-      "canonical SERVER_PREDICTED baseline available for V0-S1",
+      "canonical SERVER_PREDICTED baseline available for V0-P4/P6",
+      "PR #117 same-revision replica repair remains separate pending HIGH-risk routing",
       "fresh H0.2/NX.C1 OWNER_AUTHORITATIVE_VALIDATED verification",
       "HIGH-risk owner-authority transfer",
       "CH->NX dependency revalidation",
@@ -357,15 +392,21 @@
       "NX SOURCE_ACCEPTED"
     ],
     "v0_train": [
-      "V0_S1_NETWORKED_PLANETARY_OUTPOST",
-      "V0_S2_NETWORKED_LANDED_SHIP_0",
-      "V0_S3_MOVABLE_SHIP",
-      "V0_S4_PLANET_SPACE_TRANSITION"
+      "V0_P0_PLAYABLE_FRONTIER",
+      "V0_P1_WORLD_ITEMS_CONTAINERS",
+      "V0_P2_RECONNECTABLE_SHARED_STATE",
+      "V0_P3_RESOURCE_MINING",
+      "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "V0_P5_EQUIPMENT_TOOLS",
+      "V0_P6_PERSISTENT_SHARED_OUTPOST",
+      "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "V0_P8_FIRST_MOBILE_CONSTRUCT"
     ],
     "architecture_train": [
       "GLOBAL-P0 R3 canonical promotion",
       "mandatory post-R3 PC0 NON_RED",
-      "V0-S1 and H0.2 verification are scenario-gated parallel lanes",
+      "generation-80 main-owned product execution-base policy",
+      "one V0 mutation lane plus independent review/verification lanes before H0.3",
       "then next declared runtime checkpoint"
     ]
   },
@@ -383,16 +424,24 @@
       "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"
     },
     {
-      "stage": "V0-S1 NETWORKED PLANETARY OUTPOST START",
-      "blocked_by": "EXACT_CURRENT_MAIN_PLUS_EXPLICIT_HIGH_RISK_WORK_ORDER_PLUS_R3_POST_R3_PC0_C22_CANONICAL_NETWORK_RUNTIME_PLUS_PRE_H0_3_TOTAL_MUTATION_WORKERS_LE_1_REQUIRED"
+      "stage": "V0-P4 RUNTIME MUTATION START",
+      "blocked_by": "GENERATION80_MAIN_INTEGRATION_PLUS_POST_MAIN_PC0_PLUS_MAIN_DECLARED_PRODUCT_EXECUTION_BASE_PLUS_FRESH_P4_EPOCH_BASE_AUDIT_PLUS_DIRECTOR_DISPATCH_PLUS_PRE_H0_3_TOTAL_MUTATION_WORKERS_LE_1_REQUIRED"
     },
     {
-      "stage": "V0-S1 NETWORK FOUNDATION OR AUTHORITY CHANGE",
-      "blocked_by": "V0_S1_BLOCKED_REQUIRES_NX"
+      "stage": "V0-P4 CHECKPOINT ACCEPTANCE",
+      "blocked_by": "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_PLUS_EXACT_HEAD_P4_RUNTIME_REGRESSION_REVIEW_VERIFIER_DIRECTOR_REQUIRED"
     },
     {
-      "stage": "V0-S1 OWNER_AUTHORITATIVE_VALIDATED AXIS",
+      "stage": "V0 NETWORK FOUNDATION OR AUTHORITY CHANGE",
+      "blocked_by": "V0_BLOCKED_REQUIRES_NX"
+    },
+    {
+      "stage": "V0 OWNER_AUTHORITATIVE_VALIDATED AXIS",
       "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_PLUS_REQUIRED_NX_MAIN_INTEGRATION"
+    },
+    {
+      "stage": "V0 PR #117 REPLICA REPAIR INTEGRATION",
+      "blocked_by": "INDEPENDENT_HIGH_RISK_REVIEW_VERIFIER_DIRECTOR_ROUTING_REQUIRED"
     },
     {
       "stage": "G9 START",
