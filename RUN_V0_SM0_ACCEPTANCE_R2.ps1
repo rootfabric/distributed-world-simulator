@@ -115,10 +115,17 @@ try {
         "res://scripts/runtime/seamless/sm0/sm0_contracts.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_v2.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_hardened.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_network_delay.gd",
         "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd",
         "res://scripts/runtime/seamless/sm0/sm0_automated_client_process.gd",
-        "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd"
+        "res://scripts/runtime/seamless/sm0/sm0_manual_client_node.gd",
+        "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd",
+        "res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd"
     )
     foreach ($CompileScript in $CompileScripts) {
         Invoke-Sm0CompileCheck -ScriptPath $CompileScript
@@ -128,6 +135,10 @@ try {
     Invoke-Sm0ScriptTest `
         -ScriptPath "res://tests/runtime/seamless/sm0/test_sm0_handoff_import.gd" `
         -Label "handoff motion import regression"
+
+    Invoke-Sm0ScriptTest `
+        -ScriptPath "res://tests/runtime/seamless/sm0/test_sm0_p4_hardening.gd" `
+        -Label "P4 hardening replay/fence regression"
 
     & $InnerRunner @Forward
     $InnerExit = $LASTEXITCODE
