@@ -34,6 +34,15 @@ $LocalAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalA
 if ([string]::IsNullOrWhiteSpace($LocalAppData)) { $LocalAppData = $env:TEMP }
 $LogsRoot = Join-Path $LocalAppData "DistributedWorldSimulator\SM0GraphicalLab\logs"
 $MatrixRoot = Join-Path $LocalAppData "DistributedWorldSimulator\SM0GraphicalLab\matrix"
+$P4Enabled = $env:SM0_P4_FAST_HANDOFF -and $env:SM0_P4_FAST_HANDOFF.Trim().ToLowerInvariant() -in @("1", "true", "yes", "on")
+$P4RecoveryBase = [string]$env:SM0_P4_RECOVERY_DIR
+if ($P4Enabled -and [string]::IsNullOrWhiteSpace($P4RecoveryBase) -and -not $Stop) {
+    throw "SM0-P4 WAN matrix requires SM0_P4_RECOVERY_DIR so every profile can receive isolated durable protocol state."
+}
+$GlobalWriterAnalyzer = Join-Path $ProjectRoot "ANALYZE_V0_SM0_P4_GLOBAL_WRITERS.ps1"
+if ($P4Enabled -and -not (Test-Path -LiteralPath $GlobalWriterAnalyzer -PathType Leaf)) {
+    throw "SM0-P4 aggregate writer analyzer is missing: $GlobalWriterAnalyzer"
+}
 
 if ($Stop) {
     $StopArgs = @(
@@ -121,8 +130,20 @@ foreach ($Profile in $Profiles) {
     if ($Restart) { $ChildArgs += "-Restart" }
     if ($AllowDirty) { $ChildArgs += "-AllowDirty" }
 
-    & $HostExecutable @ChildArgs
-    $ChildExit = $LASTEXITCODE
+    $PreviousRecovery = [string]$env:SM0_P4_RECOVERY_DIR
+    try {
+        if ($P4Enabled) {
+            $ProfileRecovery = Join-Path $P4RecoveryBase $Label
+            New-Item -ItemType Directory -Force -Path $ProfileRecovery | Out-Null
+            $env:SM0_P4_RECOVERY_DIR = $ProfileRecovery
+            Write-Host "[SM0-P4] Profile recovery isolation: $ProfileRecovery" -ForegroundColor DarkCyan
+        }
+        & $HostExecutable @ChildArgs
+        $ChildExit = $LASTEXITCODE
+    }
+    finally {
+        if ($P4Enabled) { $env:SM0_P4_RECOVERY_DIR = $PreviousRecovery }
+    }
     if ($ChildExit -ne 0) {
         throw "SM0-P3.1 FINAL matrix profile $Label failed with exit code $ChildExit."
     }
@@ -140,6 +161,12 @@ foreach ($Profile in $Profiles) {
     }
     if ([int]$Summary.statistics.sample_count -lt $RequireHandoffs) {
         throw "SM0-P3.1 FINAL matrix profile $Label has insufficient samples: $($Summary.statistics.sample_count)."
+    }
+    if ($P4Enabled) {
+        & $GlobalWriterAnalyzer -LogDirectory (Split-Path -Parent $SummaryPath)
+        if ($LASTEXITCODE -ne 0) {
+            throw "SM0-P4 aggregate writer audit failed for WAN profile $Label."
+        }
     }
 
     $ConfiguredRttMs = $LatencyMs * 2
