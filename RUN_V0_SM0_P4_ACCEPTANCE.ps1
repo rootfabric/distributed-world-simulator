@@ -51,6 +51,10 @@ if (Test-Path -LiteralPath $LogsRoot -PathType Container) {
     }
 }
 
+$Forward = @{}
+foreach ($Key in $PSBoundParameters.Keys) { $Forward[$Key] = $PSBoundParameters[$Key] }
+$Forward["ProjectRoot"] = $ProjectRoot
+
 $HadP4 = Test-Path Env:SM0_P4_FAST_HANDOFF
 $PreviousP4 = $env:SM0_P4_FAST_HANDOFF
 $HadP4Recovery = Test-Path Env:SM0_P4_RECOVERY_DIR
@@ -63,7 +67,7 @@ try {
     if (-not $Stop) {
         Write-Host "[SM0-P4] Durable protocol recovery: $RecoveryRoot" -ForegroundColor DarkCyan
     }
-    & $Runner @PSBoundParameters -ProjectRoot $ProjectRoot
+    & $Runner @Forward
     $ExitCode = $LASTEXITCODE
 }
 finally {
