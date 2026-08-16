@@ -10,6 +10,11 @@ const ResourceMiningTarget = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_target.gd"
 )
 
+# Resource targets share the canonical P1 interaction layer with ordinary world
+# items. A small priority bonus only breaks near-ties inside the same aim cone;
+# a clearly aimed ordinary item/container remains selectable.
+const P3_RESOURCE_FOCUS_PRIORITY_BONUS := 0.02
+
 var _p3_resource_snapshot: Dictionary = {}
 var _p3_resource_resolver
 var _p3_resource_targets: Dictionary = {}
@@ -78,6 +83,93 @@ func prepare_for_unload() -> void:
 	_p3_resource_snapshot.clear()
 	_p3_resource_resolver = null
 	super.prepare_for_unload()
+
+
+# P1's fallback only knows about canonical world-item presentations. P3 adds a
+# second presentation family on the same collision layer, so resolve the union
+# here rather than allowing a nearby restored/persisted world item to make the
+# resource node practically unreachable.
+func _resolve_i2s_focus_target():
+	if earth_explorer == null:
+		return null
+	var camera := earth_explorer.get_camera() as Camera3D
+	if camera == null:
+		return null
+	var origin := camera.global_position
+	var forward := -camera.global_basis.z.normalized()
+	var candidates: Dictionary = {}
+
+	var query := PhysicsRayQueryParameters3D.create(
+		origin,
+		origin + forward * I2S_INTERACTION_RANGE_M
+	)
+	query.collision_mask = I2S_INTERACTION_COLLISION_LAYER
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		var collider = hit.get("collider")
+		if (
+			collider != null
+			and is_instance_valid(collider)
+			and collider.is_in_group(&"world_interactable")
+		):
+			candidates[collider.get_instance_id()] = collider
+
+	if _i2s_world_runtime != null and is_instance_valid(_i2s_world_runtime):
+		for item_id in _i2s_world_runtime.get_presentation_item_ids():
+			var target = _i2s_world_runtime.get_presentation(item_id)
+			if target != null and is_instance_valid(target):
+				candidates[target.get_instance_id()] = target
+	for resource_target_value in _p3_resource_targets.values():
+		if resource_target_value != null and is_instance_valid(resource_target_value):
+			candidates[resource_target_value.get_instance_id()] = resource_target_value
+
+	var best_target = null
+	var best_score := -INF
+	for target_value in candidates.values():
+		var target = target_value
+		var score := _p3_interaction_focus_score(
+			origin,
+			forward,
+			target,
+			_is_p3_resource_focus_target(target)
+		)
+		if score > best_score:
+			best_score = score
+			best_target = target
+	return best_target
+
+
+func _p3_interaction_focus_score(
+	origin: Vector3,
+	forward: Vector3,
+	target,
+	resource_priority: bool
+) -> float:
+	if target == null or not is_instance_valid(target) or not target is Node3D:
+		return -INF
+	var offset: Vector3 = target.global_position - origin
+	var distance := offset.length()
+	if distance <= 0.001 or distance > I2S_INTERACTION_RANGE_M:
+		return -INF
+	var alignment := forward.normalized().dot(offset / distance)
+	if alignment < I2S_FOCUS_DOT_MIN:
+		return -INF
+	return (
+		alignment
+		- distance * 0.002
+		+ (P3_RESOURCE_FOCUS_PRIORITY_BONUS if resource_priority else 0.0)
+	)
+
+
+func _is_p3_resource_focus_target(target) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	for resource_target_value in _p3_resource_targets.values():
+		if resource_target_value == target:
+			return true
+	return false
 
 
 func _on_p3_resource_mining_updated(snapshot: Dictionary) -> void:
