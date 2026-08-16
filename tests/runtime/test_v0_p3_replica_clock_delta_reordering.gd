@@ -29,11 +29,11 @@ func _init() -> void:
 
 func _test_exact_same_revision_delta_replay() -> void:
 	var replica = ReplicaStore.new()
-	var player := _player(1.0, 2, 1)
-	var target := _snapshot(2, 100, player)
+	var player: Dictionary = _player(1.0, 2, 1)
+	var target: Dictionary = _snapshot(2, 100, player)
 	_assert(_ok(replica.accept_snapshot(target)), "baseline snapshot is accepted")
-	var delta := _delta(1, 2, 100, player, String(target.get("checksum", "")))
-	var accepted := replica.accept_delta(delta)
+	var delta: Dictionary = _delta(1, 2, 100, player, String(target.get("checksum", "")))
+	var accepted: Dictionary = replica.accept_delta(delta)
 	_assert(_ok(accepted), "exact same-revision delta is accepted as replay")
 	_assert(bool(accepted.get("details", {}).get("replay", false)), "exact delta reports replay")
 	_assert(not bool(accepted.get("details", {}).get("clock_update", true)), "exact replay does not report clock update")
@@ -42,26 +42,26 @@ func _test_exact_same_revision_delta_replay() -> void:
 
 func _test_stale_delta_after_clock_only_snapshot_is_safe() -> void:
 	var replica = ReplicaStore.new()
-	var player := _player(1.0, 2, 1)
-	var mutation_target := _snapshot(2, 100, player)
+	var player: Dictionary = _player(1.0, 2, 1)
+	var mutation_target: Dictionary = _snapshot(2, 100, player)
 	_assert(_ok(replica.accept_snapshot(mutation_target)), "stale-delta baseline is accepted")
-	var later_clock := _snapshot(2, 105, player)
-	var clock_accept := replica.accept_snapshot(later_clock)
+	var later_clock: Dictionary = _snapshot(2, 105, player)
+	var clock_accept: Dictionary = replica.accept_snapshot(later_clock)
 	_assert(_ok(clock_accept), "same gameplay at a newer server tick is accepted")
 	_assert(bool(clock_accept.get("details", {}).get("clock_update", false)), "newer snapshot reports clock-only update")
-	var delayed_delta := _delta(
+	var delayed_delta: Dictionary = _delta(
 		1,
 		2,
 		100,
 		player,
 		String(mutation_target.get("checksum", ""))
 	)
-	var accepted := replica.accept_delta(delayed_delta)
+	var accepted: Dictionary = replica.accept_delta(delayed_delta)
 	_assert(_ok(accepted), "delayed delta for identical gameplay state is accepted")
 	_assert(bool(accepted.get("details", {}).get("replay", false)), "delayed delta reports replay")
 	_assert(bool(accepted.get("details", {}).get("stale", false)), "delayed delta is classified as stale clock-only")
 	_assert(not bool(accepted.get("details", {}).get("clock_update", true)), "stale delta does not move the clock backwards")
-	var current := replica.get_snapshot()
+	var current: Dictionary = replica.get_snapshot()
 	_assert(int(current.get("server_tick", -1)) == 105, "stale delta preserves newer replica tick")
 	_assert(String(current.get("checksum", "")) == String(later_clock.get("checksum", "")), "stale delta preserves newer replica checksum")
 	_assert(int(replica.get_report().get("stale_clock_only_deltas", 0)) == 1, "stale clock-only delta is reported")
@@ -69,22 +69,22 @@ func _test_stale_delta_after_clock_only_snapshot_is_safe() -> void:
 
 func _test_newer_same_revision_delta_advances_only_clock() -> void:
 	var replica = ReplicaStore.new()
-	var player := _player(1.0, 2, 1)
-	var current := _snapshot(2, 100, player)
+	var player: Dictionary = _player(1.0, 2, 1)
+	var current: Dictionary = _snapshot(2, 100, player)
 	_assert(_ok(replica.accept_snapshot(current)), "newer-delta baseline is accepted")
-	var later_target := _snapshot(2, 105, player)
-	var later_delta := _delta(
+	var later_target: Dictionary = _snapshot(2, 105, player)
+	var later_delta: Dictionary = _delta(
 		1,
 		2,
 		105,
 		player,
 		String(later_target.get("checksum", ""))
 	)
-	var accepted := replica.accept_delta(later_delta)
+	var accepted: Dictionary = replica.accept_delta(later_delta)
 	_assert(_ok(accepted), "same-revision delta with identical gameplay and newer tick is accepted")
 	_assert(bool(accepted.get("details", {}).get("clock_update", false)), "newer same-revision delta reports clock update")
 	_assert(not bool(accepted.get("details", {}).get("stale", true)), "newer same-revision delta is not stale")
-	var after := replica.get_snapshot()
+	var after: Dictionary = replica.get_snapshot()
 	_assert(int(after.get("revision", -1)) == 2, "clock-only delta preserves gameplay revision")
 	_assert(int(after.get("server_tick", -1)) == 105, "clock-only delta advances server tick")
 	_assert(String(after.get("checksum", "")) == String(later_target.get("checksum", "")), "clock-only delta adopts reconstructed target checksum")
@@ -94,50 +94,50 @@ func _test_newer_same_revision_delta_advances_only_clock() -> void:
 
 func _test_true_same_revision_gameplay_mutation_still_rejects() -> void:
 	var replica = ReplicaStore.new()
-	var current_player := _player(1.0, 2, 1)
-	var current := _snapshot(2, 105, current_player)
+	var current_player: Dictionary = _player(1.0, 2, 1)
+	var current: Dictionary = _snapshot(2, 105, current_player)
 	_assert(_ok(replica.accept_snapshot(current)), "mutation-fence baseline is accepted")
-	var divergent_player := _player(2.0, 3, 2)
-	var divergent_target := _snapshot(2, 105, divergent_player)
-	var divergent_delta := _delta(
+	var divergent_player: Dictionary = _player(2.0, 3, 2)
+	var divergent_target: Dictionary = _snapshot(2, 105, divergent_player)
+	var divergent_delta: Dictionary = _delta(
 		1,
 		2,
 		105,
 		divergent_player,
 		String(divergent_target.get("checksum", ""))
 	)
-	var rejected := replica.accept_delta(divergent_delta)
+	var rejected: Dictionary = replica.accept_delta(divergent_delta)
 	_assert(not _ok(rejected), "same revision with changed gameplay state is rejected")
 	_assert(String(rejected.get("error_code", "")) == "MULTIPLAYER_SAME_REVISION_MUTATION", "real same-revision mutation keeps exact fence")
-	var after := replica.get_snapshot()
+	var after: Dictionary = replica.get_snapshot()
 	_assert(String(after.get("checksum", "")) == String(current.get("checksum", "")), "rejected same-revision mutation leaves replica unchanged")
 
 
 func _test_delta_base_mismatch_still_rejects() -> void:
 	var replica = ReplicaStore.new()
-	var current_player := _player(1.0, 2, 1)
-	var current := _snapshot(2, 100, current_player)
+	var current_player: Dictionary = _player(1.0, 2, 1)
+	var current: Dictionary = _snapshot(2, 100, current_player)
 	_assert(_ok(replica.accept_snapshot(current)), "base-mismatch baseline is accepted")
-	var future_player := _player(4.0, 4, 3)
-	var future_target := _snapshot(4, 110, future_player)
-	var future_delta := _delta(
+	var future_player: Dictionary = _player(4.0, 4, 3)
+	var future_target: Dictionary = _snapshot(4, 110, future_player)
+	var future_delta: Dictionary = _delta(
 		3,
 		4,
 		110,
 		future_player,
 		String(future_target.get("checksum", ""))
 	)
-	var rejected := replica.accept_delta(future_delta)
+	var rejected: Dictionary = replica.accept_delta(future_delta)
 	_assert(not _ok(rejected), "delta with missing base revision is rejected")
 	_assert(String(rejected.get("error_code", "")) == "MULTIPLAYER_DELTA_BASE_MISMATCH", "delta-base mismatch fence remains unchanged")
 
 
 func _test_snapshot_revision_rollback_still_rejects() -> void:
 	var replica = ReplicaStore.new()
-	var current_player := _player(1.0, 2, 1)
+	var current_player: Dictionary = _player(1.0, 2, 1)
 	_assert(_ok(replica.accept_snapshot(_snapshot(2, 100, current_player))), "rollback baseline is accepted")
-	var old_player := _player(0.0, 1, 0)
-	var rejected := replica.accept_snapshot(_snapshot(1, 90, old_player))
+	var old_player: Dictionary = _player(0.0, 1, 0)
+	var rejected: Dictionary = replica.accept_snapshot(_snapshot(1, 90, old_player))
 	_assert(not _ok(rejected), "older gameplay revision is rejected")
 	_assert(String(rejected.get("error_code", "")) == "MULTIPLAYER_REVISION_ROLLBACK", "snapshot rollback fence remains unchanged")
 
