@@ -4,7 +4,11 @@ const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd
 
 const DIRECTORY_SCHEMA := "distributed_world_simulator.sm0_directory.v1"
 const HANDOFF_PACKAGE_SCHEMA := "distributed_world_simulator.sm0_player_handoff_package.v1"
+const HANDOFF_PREWARM_SCHEMA := "distributed_world_simulator.sm0_player_handoff_prewarm.v1"
 const MESSAGE_SCHEMA := "distributed_world_simulator.sm0_wire_message.v1"
+
+const HANDOFF_PREWARM_TTL_MIN_MS := 250
+const HANDOFF_PREWARM_TTL_MAX_MS := 10000
 
 const AUTHORITY_A := "authority/sm0/a"
 const AUTHORITY_B := "authority/sm0/b"
@@ -125,6 +129,77 @@ static func validate_handoff_package(value: Dictionary) -> Dictionary:
 		return _failure("SM0_HANDOFF_PLAYER_REVISION_INVALID")
 	if String(value.get("checksum", "")) != _checksum(value):
 		return _failure("SM0_HANDOFF_PACKAGE_CHECKSUM_MISMATCH")
+	return _success()
+
+
+static func create_handoff_prewarm(
+	prewarm_id: String,
+	logical_player_id: String,
+	player_entity_id: String,
+	source_authority_id: String,
+	target_authority_id: String,
+	source_zone_id: String,
+	target_zone_id: String,
+	source_authority_epoch: int,
+	target_authority_epoch: int,
+	source_directory_revision: int,
+	ttl_ms: int
+) -> Dictionary:
+	return Utils.finalize_json_checksum({
+		"schema": HANDOFF_PREWARM_SCHEMA,
+		"prewarm_id": prewarm_id,
+		"logical_player_id": logical_player_id,
+		"player_entity_id": player_entity_id,
+		"source_authority_id": source_authority_id,
+		"target_authority_id": target_authority_id,
+		"source_zone_id": source_zone_id,
+		"target_zone_id": target_zone_id,
+		"source_authority_epoch": source_authority_epoch,
+		"target_authority_epoch": target_authority_epoch,
+		"source_directory_revision": source_directory_revision,
+		"ttl_ms": ttl_ms,
+		"checksum": "",
+	})
+
+
+static func validate_handoff_prewarm(value: Dictionary) -> Dictionary:
+	if String(value.get("schema", "")) != HANDOFF_PREWARM_SCHEMA:
+		return _failure("SM0_INVALID_HANDOFF_PREWARM_SCHEMA")
+	if String(value.get("prewarm_id", "")).strip_edges().is_empty():
+		return _failure("SM0_HANDOFF_PREWARM_ID_REQUIRED")
+	if String(value.get("logical_player_id", "")) != "a" or String(value.get("player_entity_id", "")) != "player/a":
+		return _failure("SM0_HANDOFF_PREWARM_PLAYER_IDENTITY_MISMATCH")
+	var source_authority := String(value.get("source_authority_id", ""))
+	var target_authority := String(value.get("target_authority_id", ""))
+	if source_authority not in [AUTHORITY_A, AUTHORITY_B] or target_authority != peer_authority(source_authority):
+		return _failure("SM0_HANDOFF_PREWARM_AUTHORITY_ROUTE_INVALID")
+	var source_zone := String(value.get("source_zone_id", ""))
+	var target_zone := String(value.get("target_zone_id", ""))
+	if authority_for_zone(source_zone) != source_authority or authority_for_zone(target_zone) != target_authority:
+		return _failure("SM0_HANDOFF_PREWARM_ZONE_ROUTE_INVALID")
+	var source_epoch := int(value.get("source_authority_epoch", 0))
+	var target_epoch := int(value.get("target_authority_epoch", 0))
+	if source_epoch < 1 or target_epoch != source_epoch + 1:
+		return _failure("SM0_HANDOFF_PREWARM_AUTHORITY_EPOCH_INVALID")
+	if int(value.get("source_directory_revision", 0)) < 1:
+		return _failure("SM0_HANDOFF_PREWARM_DIRECTORY_REVISION_INVALID")
+	var ttl_ms := int(value.get("ttl_ms", 0))
+	if ttl_ms < HANDOFF_PREWARM_TTL_MIN_MS or ttl_ms > HANDOFF_PREWARM_TTL_MAX_MS:
+		return _failure("SM0_HANDOFF_PREWARM_TTL_INVALID")
+	for forbidden_key in [
+		"position",
+		"velocity",
+		"orientation_yaw",
+		"last_input_sequence",
+		"state_revision",
+		"source_player_ownership_epoch",
+		"ownership_epoch",
+		"session_id",
+	]:
+		if value.has(forbidden_key):
+			return _failure("SM0_HANDOFF_PREWARM_MUTABLE_STATE_FORBIDDEN", {"field": forbidden_key})
+	if String(value.get("checksum", "")) != _checksum(value):
+		return _failure("SM0_HANDOFF_PREWARM_CHECKSUM_MISMATCH")
 	return _success()
 
 
