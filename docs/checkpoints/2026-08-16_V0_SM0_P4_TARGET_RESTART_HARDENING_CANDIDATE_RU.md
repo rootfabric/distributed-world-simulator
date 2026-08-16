@@ -44,20 +44,20 @@ feature/sm0-two-authority-seamless-handoff-lab
 - identity_changes = 0;
 - objective WAN PASS.
 
-Exact P4 restart-hardening code/evidence HEAD после усиления physical fault gate:
+Текущий P4 restart-hardening **code/test evidence HEAD**:
 
 ```text
-be0e4a245f03875cb093334f33e6dcc8fac8a29b
+a6f76e4cfbb48099b3dbe781bc771f3b1bec4a03
 ```
 
-Project Control на этом code/evidence HEAD:
+Project Control на этом code/test HEAD:
 
 ```text
-run #732
+run #739
 SUCCESS
 ```
 
-Последующие commit только этого checkpoint/PR handoff не должны считаться новым runtime implementation boundary.
+Последующий commit этого checkpoint является documentation-only и не должен подменять runtime implementation boundary.
 
 Project Control не является Godot runtime acceptance.
 
@@ -83,7 +83,9 @@ target PREWARMED ACK
 - exact replay identity FAST_COMMIT/COMMITTED;
 - client REDIRECT replay identity;
 - single reservation per player/source-target epoch;
-- restart/reconnect escape paths.
+- restart/reconnect escape paths;
+- recovery semantics при disconnected, но уже существующей canonical truth;
+- durability ordering между in-memory target import и durable `TARGET_COMMITTED`.
 
 ## 3. Реализованный bounded hardening
 
@@ -91,7 +93,7 @@ Repair намеренно переиспользует существующий 
 
 ### 3.1 Durable target PREWARM reservation
 
-Успешная target reservation должна быть записана до success PREWARM ACK.
+Успешная target reservation записывается до success PREWARM ACK.
 
 Runtime использует тот же recovery root, что и существующий SM0 recovery layer.
 
@@ -120,11 +122,63 @@ Proof не содержит mutable player state и сам по себе не с
 - valid committed directory;
 - package/prewarm route + identity + epoch match;
 - target directory state compatible;
-- target ещё не содержит активную canonical player truth.
+- target ещё не содержит canonical player truth.
 
 FAST_COMMIT без ранее durably ACKed proof не может создать reservation.
 
-### 3.3 Source-retire recovery
+### 3.3 Recovered disconnected player truth — hard fence
+
+Во время canonical recovery transport session намеренно очищается, поэтому восстановленный player record может быть:
+
+```text
+connected = false
+transport_session_id = ""
+```
+
+Это всё равно canonical gameplay truth.
+
+Предыдущий вариант proof guard проверял только `connected=true`, что оставляло stale-proof escape после durable target recovery.
+
+На code/test HEAD `a6f76e4...` guard усилен:
+
+```text
+любое существование canonical player record
+=> old durable PREWARM proof не может импортировать player заново
+```
+
+Исключение не требуется для intended target-restart path: snapshot `PREWARM_RESERVED` не содержит target player truth до финального FAST_COMMIT.
+
+### 3.4 Proof cleanup только после durable TARGET_COMMITTED
+
+Ещё один найденный durability race:
+
+```text
+FAST_COMMIT validates
+-> target player imported in memory
+-> _committed_transfers populated
+-> canonical TARGET_COMMITTED disk persistence fails
+-> ACK не уходит
+```
+
+Ранее closure мог после возврата из parent call увидеть in-memory `_committed_transfers` и удалить durable PREWARM proof, хотя canonical commit ещё не был durable.
+
+Это исправлено.
+
+Proof теперь можно consume только если inherited recovery ledger подтверждает:
+
+```text
+_recovery_persisted_commits.has(transfer_id)
+```
+
+При отсутствии canonical durability proof сохраняется и emitting marker:
+
+```text
+SM0_P4_PREWARM_PROOF_RETAINED_UNTIL_TARGET_DURABLE
+```
+
+Следующий exact FAST_COMMIT retry может завершить canonical persistence без второго player import; только после этого proof cleanup разрешён.
+
+### 3.5 Source-retire recovery
 
 P4 fast source state связывается с существующим canonical `SOURCE_RETIRED` recovery snapshot.
 
@@ -132,7 +186,7 @@ P4 fast source state связывается с существующим canonica
 
 После полностью завершённого fast handoff side-journal пишет completed tombstone; более поздний restart source не должен resurrect старый pending transfer.
 
-### 3.4 Peer incarnation
+### 3.6 Peer incarnation
 
 HELLO/HELLO_ACK в P4 несут process incarnation id.
 
@@ -140,14 +194,14 @@ HELLO/HELLO_ACK в P4 несут process incarnation id.
 
 После source retirement writer не resurrect; recovery идёт через durable target proof.
 
-### 3.5 JOIN admission
+### 3.7 JOIN admission
 
 P4 generic CLIENT_JOIN запрещён:
 
 - до peer synchronization;
 - на post-bootstrap owner, если canonical truth должна появиться только через committed activation.
 
-Единственное bootstrap исключение остаётся:
+Единственное bootstrap исключение:
 
 ```text
 authority A
@@ -156,7 +210,7 @@ authority_epoch = 1
 directory revision = 1
 ```
 
-### 3.6 Replay identity
+### 3.8 Replay identity
 
 FAST_COMMIT / COMMITTED binding включает:
 
@@ -173,23 +227,17 @@ Exact duplicate разрешён как replay.
 
 Client completed REDIRECT replay также связан с route / target / epoch / player identity / directory fingerprint.
 
-### 3.7 Global writer evidence
+### 3.9 Global writer evidence
 
-Добавлен отдельный aggregate A+B writer analyzer.
-
-Он проверяет не только каждый server локально, но и максимум:
+Отдельный aggregate A+B writer analyzer проверяет:
 
 ```text
 writer_count(A) + writer_count(B) <= 1
 ```
 
-Есть негативный self-test анализатора, который обязан поймать synthetic A=1 + B=1 overlap.
+Есть негативный self-test, который обязан поймать synthetic A=1 + B=1 overlap.
 
-## 4. Durable-proof regression
-
-После hardening review был найден дополнительный evidence gap:
-
-первый physical target-restart harness перезапускал B достаточно быстро, чтобы восстановить ещё живую 3-second reservation. Такой run не доказывал новую семантику proof после истечения live TTL.
+## 4. Durable-proof focused regression
 
 Добавлены:
 
@@ -199,17 +247,19 @@ tests/runtime/seamless/sm0/test_sm0_p4_durable_proof_recovery.gd
 RUN_V0_SM0_P4_DURABLE_PROOF_RECOVERY.ps1
 ```
 
-Focused regression обязан доказать:
+Regression на `a6f76e4...` обязан доказать:
 
 1. durable proof переживает потерю process-local live reservation;
 2. proof остаётся usable после времени > одного live TTL;
-3. active target canonical truth блокирует proof import;
+3. существующая canonical target truth блокирует proof import даже если transport disconnected;
 4. changed prewarm checksum блокируется;
 5. directory drift блокируется;
-6. exact FAST_COMMIT rehydrates reservation и commits один раз;
-7. успешный commit consumes proof;
-8. exact post-recovery replay ACKed;
-9. conflicting replay rejected.
+6. exact FAST_COMMIT rehydrates reservation;
+7. simulated in-memory target commit **без** canonical durability не удаляет proof;
+8. exact retry завершает durability без второго import;
+9. proof consumes только после durable `TARGET_COMMITTED`;
+10. exact post-durability replay ACKed;
+11. conflicting replay rejected.
 
 Этот тест пока не считается Windows PASS до выполнения exact-head Godot run.
 
@@ -221,7 +271,7 @@ Focused regression обязан доказать:
 RUN_V0_SM0_P4_TARGET_RESTART_FAULT.ps1
 ```
 
-На `be0e4a245f...` runner усилен так, что старый shortcut больше невозможен.
+Runner исключает старый shortcut через ещё живую reservation.
 
 Default:
 
@@ -249,7 +299,7 @@ PREWARM ACK durable
 
 PASS невозможен только на основании восстановления live reservation: runner требует оба proof-specific marker.
 
-Fault evidence schema повышена до:
+Fault evidence schema:
 
 ```text
 distributed_world_simulator.sm0_p4_closure_fault_evidence.v2
@@ -279,7 +329,7 @@ Runner дополнительно выполняет:
 
 ## 6. Что ещё не доказано
 
-На current hardening candidate нельзя переносить runtime PASS с `5f3f967...`, потому что authority/recovery protocol изменился.
+Runtime PASS с `5f3f967...` нельзя переносить на `a6f76e4...`: authority/recovery protocol изменился.
 
 Обязательны fresh exact-head Windows runs.
 
@@ -299,7 +349,7 @@ git status --short
 .\RUN_V0_SM0_P4_CONTROLLED_NETWORK_LATENCY_MATRIX.ps1 -Restart -RequireHandoffs 10
 ```
 
-После `git rev-parse HEAD` SHA должен совпадать с актуальным remote branch HEAD. Runtime evidence следует записывать отдельно от documentation-only commit boundary.
+После `git rev-parse HEAD` SHA должен совпадать с актуальным remote branch HEAD. Если branch HEAD отличается от `a6f76e4...` только documentation-only commit этого checkpoint, runtime implementation boundary остаётся `a6f76e4...`; в evidence необходимо записать и checked-out HEAD, и implementation HEAD.
 
 ## 7. Почему WAN matrix нужно повторить
 
@@ -335,7 +385,7 @@ P4 можно закрыть только после:
 
 ```text
 focused hardening regression PASS
-focused durable-proof-after-TTL regression PASS
+focused durable-proof-after-TTL + target-durability regression PASS
 physical target-restart-after-TTL recovery PASS
 restart/reconnect admission PASS
 aggregate A+B writer PASS
