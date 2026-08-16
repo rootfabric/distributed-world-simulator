@@ -74,9 +74,7 @@
     "focused": "",
     "full_regression": ""
   },
-  "ownership_claims": [
-    "P4 owns only bounded V0 composition/allocation integration; canonical M4 Item Graph ownership remains unchanged and Construction State ownership remains unchanged."
-  ],
+  "ownership_claims": [],
   "forbidden_foundation_ownership": [
     "SPATIAL_DOMAIN_FABRIC",
     "MATERIAL_ONTOLOGY",
