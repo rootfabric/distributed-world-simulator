@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -13,10 +14,16 @@ from harness.checkpoint_planner import build_plan
 P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
 S1 = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
+P4_BRANCH = "feature/v0-p4-construction-real-resources"
+P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 
 
 def load_json(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
+
+
+def git(*args: str) -> str:
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
 class V0ProductCheckpointContractTests(unittest.TestCase):
@@ -117,13 +124,34 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(80, self.registry["registry_generation"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
-        self.assertEqual("feature/v0-p4-construction-real-resources", v0["branch"])
+        self.assertEqual(P4_BRANCH, v0["branch"])
+        self.assertTrue(v0["requires_passport"])
+        self.assertEqual(P4_PASSPORT, v0["passport_path"])
+        self.assertEqual(P4_PASSPORT, v0["prebuild_state"]["passport_path"])
         execution = v0["product_execution_base"]
         self.assertEqual("repair/v0-p3-visual-interaction-r1", execution["branch"])
         self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", execution["sha"])
         self.assertFalse(execution["declares_checkpoint_acceptance"])
         self.assertIn("P2_DIRECTOR_VERDICT_PENDING", v0["acceptance_debt"])
         self.assertIn("P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING", v0["acceptance_debt"])
+
+    def test_registry_pins_current_auditable_p4_passport(self):
+        v0 = self.registry["programs"]["V0"]
+        remote_ref = f"origin/{P4_BRANCH}"
+        remote_head = git("rev-parse", "--verify", remote_ref)
+        self.assertEqual(v0["prebuild_state"]["head_at_refresh_input"], remote_head)
+
+        passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
+        self.assertEqual("distributed_world_simulator.branch_passport.v1", passport["schema"])
+        self.assertEqual(P4_BRANCH, passport["branch"])
+        self.assertEqual("V0", passport["program"])
+        self.assertEqual(v0["role"], passport["role"])
+        self.assertEqual(v0["current_stage"], passport["current_stage"])
+        self.assertEqual(v0["stage_status"], passport["stage_status"])
+        self.assertEqual(v0["blockers"], passport["blockers"])
+        self.assertEqual(v0["health_declared"], passport["health_declared"])
+        self.assertEqual([], passport["ownership_claims"])
+        self.assertEqual([], passport["runtime_paths"])
 
     def test_pre_h0_3_concurrency_is_one_mutation_worker(self):
         concurrency = self.scheduler["concurrency"]
