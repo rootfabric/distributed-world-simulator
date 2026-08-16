@@ -21,6 +21,19 @@ $Runner = Join-Path $PSScriptRoot "RUN_V0_SM0_ACCEPTANCE.ps1"
 if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) {
     throw "SM0 acceptance runner is missing: $Runner"
 }
+$WriterAnalyzerSelfTest = Join-Path $PSScriptRoot "TEST_V0_SM0_P4_GLOBAL_WRITER_ANALYZER.ps1"
+if (-not (Test-Path -LiteralPath $WriterAnalyzerSelfTest -PathType Leaf)) {
+    throw "SM0-P4 aggregate writer analyzer self-test is missing: $WriterAnalyzerSelfTest"
+}
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) { $ProjectRoot = $PSScriptRoot }
+$ProjectRoot = [IO.Path]::GetFullPath($ProjectRoot)
+
+if (-not $Stop) {
+    & $WriterAnalyzerSelfTest -ProjectRoot $ProjectRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "SM0-P4 aggregate writer analyzer failed its positive/negative self-test."
+    }
+}
 
 $LocalAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 if ([string]::IsNullOrWhiteSpace($LocalAppData)) { $LocalAppData = $env:TEMP }
@@ -50,7 +63,7 @@ try {
     if (-not $Stop) {
         Write-Host "[SM0-P4] Durable protocol recovery: $RecoveryRoot" -ForegroundColor DarkCyan
     }
-    & $Runner @PSBoundParameters
+    & $Runner @PSBoundParameters -ProjectRoot $ProjectRoot
     $ExitCode = $LASTEXITCODE
 }
 finally {
@@ -104,7 +117,7 @@ Write-Host ""
 Write-Host "SM0-P4 acceptance fast-path evidence: PASS" -ForegroundColor Green
 Write-Host "  P4 fast : $($Summary.p4_fast_handoffs) / $Expected"
 Write-Host "  legacy  : $($Summary.legacy_handoffs)"
-Write-Host "  writers : aggregate A+B PASS"
+Write-Host "  writers : aggregate A+B PASS + negative self-test PASS"
 Write-Host "  recovery: $RecoveryRoot"
 Write-Host "  summary : $SummaryPath"
 exit 0
