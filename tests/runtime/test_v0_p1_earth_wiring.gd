@@ -1,6 +1,7 @@
 extends SceneTree
 
 const P1_RUNTIME_PATH := "res://scripts/app/earth_p1_modern_inventory_app.gd"
+const CURRENT_EARTH_RUNTIME_PATH := "res://scripts/app/earth_p3_resource_mining_app.gd"
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const EarthItemSpatialProjector = preload(
 	"res://scripts/runtime/networked_gameplay/i2s/earth_item_spatial_projector.gd"
@@ -56,7 +57,10 @@ func _test_runtime_compiles_and_is_routed() -> void:
 			if world_value is Dictionary and String(world_value.get("id", "")) == "earth":
 				earth_runtime = String(world_value.get("runtime_script", ""))
 				break
-	_assert(earth_runtime == P1_RUNTIME_PATH, "Earth catalog routes network MVP through V0-P1 modern inventory runtime")
+	_assert(
+		earth_runtime == CURRENT_EARTH_RUNTIME_PATH,
+		"Earth product routing may advance to P3 while the inherited P1 runtime contract remains directly testable"
+	)
 
 
 func _test_projector_matches_mvp_axes_and_reference_frame() -> void:
