@@ -44,18 +44,20 @@ feature/sm0-two-authority-seamless-handoff-lab
 - identity_changes = 0;
 - objective WAN PASS.
 
-Текущий hardening candidate HEAD на момент создания checkpoint:
+Exact P4 restart-hardening code/evidence HEAD после усиления physical fault gate:
 
 ```text
-53c7a5bb665fd1697c9ee5d277fa9b130e38451e
+be0e4a245f03875cb093334f33e6dcc8fac8a29b
 ```
 
-Project Control:
+Project Control на этом code/evidence HEAD:
 
 ```text
-run #730
+run #732
 SUCCESS
 ```
+
+Последующие commit только этого checkpoint/PR handoff не должны считаться новым runtime implementation boundary.
 
 Project Control не является Godot runtime acceptance.
 
@@ -74,7 +76,7 @@ target PREWARMED ACK
 
 Старое поведение было fail-closed и не создавало split brain, но handoff терял progress после того, как source writer уже был retired.
 
-Независимый критический разбор также потребовал усилить:
+Критический разбор также потребовал усилить:
 
 - aggregate A+B writer evidence;
 - generic CLIENT_JOIN admission после restart/HELLO;
@@ -183,11 +185,11 @@ writer_count(A) + writer_count(B) <= 1
 
 Есть негативный self-test анализатора, который обязан поймать synthetic A=1 + B=1 overlap.
 
-## 4. Новый durable-proof regression
+## 4. Durable-proof regression
 
-После hardening review обнаружен дополнительный evidence gap:
+После hardening review был найден дополнительный evidence gap:
 
-старый physical target-restart harness перезапускал B достаточно быстро, чтобы восстановить ещё живую 3-second reservation. Это не доказывало новую семантику proof после истечения live TTL.
+первый physical target-restart harness перезапускал B достаточно быстро, чтобы восстановить ещё живую 3-second reservation. Такой run не доказывал новую семантику proof после истечения live TTL.
 
 Добавлены:
 
@@ -209,9 +211,9 @@ Focused regression обязан доказать:
 8. exact post-recovery replay ACKed;
 9. conflicting replay rejected.
 
-Этот тест пока не считается PASS до выполнения exact-head Windows Godot run.
+Этот тест пока не считается Windows PASS до выполнения exact-head Godot run.
 
-## 5. Physical target-restart harness
+## 5. Physical target-restart-after-TTL gate
 
 Основной fault runner:
 
@@ -219,26 +221,65 @@ Focused regression обязан доказать:
 RUN_V0_SM0_P4_TARGET_RESTART_FAULT.ps1
 ```
 
-Должен физически доказать ordering:
+На `be0e4a245f...` runner усилен так, что старый shortcut больше невозможен.
+
+Default:
+
+```text
+live PREWARM TTL = 3000 ms
+PostCrashHoldMs = 4000 ms
+```
+
+Минимально разрешённый `PostCrashHoldMs` — 3500 ms.
+
+Обязательный physical ordering:
 
 ```text
 PREWARM ACK durable
--> target B exits
--> B remains down
+-> target B exits with code 86
 -> source A crosses
 -> SOURCE_RETIRED
+-> B remains physically down > live PREWARM TTL
 -> target B restarts from same recovery root
--> FAST_COMMIT accepted
+-> SM0_P4_PREWARM_PROOFS_RESTORED
+-> SM0_P4_PREWARM_REHYDRATED_FROM_DURABLE_PROOF
+-> SM0_P4_FAST_COMMIT_ACCEPTED
 -> client activates
+```
+
+PASS невозможен только на основании восстановления live reservation: runner требует оба proof-specific marker.
+
+Fault evidence schema повышена до:
+
+```text
+distributed_world_simulator.sm0_p4_closure_fault_evidence.v2
+```
+
+и записывает:
+
+```text
+live_prewarm_ttl_ms
+post_crash_hold_ms
+target_live_reservation_restored = false
+target_durable_proof_restored = true
+target_reservation_rehydrated_from_proof = true
 ```
 
 Также runner перезапускает retired source A после completed handoff и немедленно делает fresh CLIENT_JOIN probe.
 
 Restarted stale A не должен принять JOIN или стать writer.
 
+Runner дополнительно выполняет:
+
+- focused P4 hardening test;
+- focused durable-proof test;
+- aggregate writer analyzer negative self-test;
+- final base SM0 analyzer;
+- final aggregate A+B writer analyzer.
+
 ## 6. Что ещё не доказано
 
-На current hardening candidate пока нельзя переносить runtime PASS с `5f3f967...`, потому что authority/recovery protocol изменился.
+На current hardening candidate нельзя переносить runtime PASS с `5f3f967...`, потому что authority/recovery protocol изменился.
 
 Обязательны fresh exact-head Windows runs.
 
@@ -248,7 +289,6 @@ Restarted stale A не должен принять JOIN или стать writer
 git fetch origin
 git merge --ff-only origin/feature/sm0-two-authority-seamless-handoff-lab
 git rev-parse HEAD
-
 git status --short
 
 .\RUN_V0_SM0_P4_DURABLE_PROOF_RECOVERY.ps1
@@ -259,7 +299,7 @@ git status --short
 .\RUN_V0_SM0_P4_CONTROLLED_NETWORK_LATENCY_MATRIX.ps1 -Restart -RequireHandoffs 10
 ```
 
-После `git rev-parse HEAD` SHA должен совпадать с актуальным remote HEAD, который будет указан в PR после всех documentation-only commits.
+После `git rev-parse HEAD` SHA должен совпадать с актуальным remote branch HEAD. Runtime evidence следует записывать отдельно от documentation-only commit boundary.
 
 ## 7. Почему WAN matrix нужно повторить
 
@@ -296,7 +336,7 @@ P4 можно закрыть только после:
 ```text
 focused hardening regression PASS
 focused durable-proof-after-TTL regression PASS
-physical target-restart recovery PASS
+physical target-restart-after-TTL recovery PASS
 restart/reconnect admission PASS
 aggregate A+B writer PASS
 P4 short PASS
