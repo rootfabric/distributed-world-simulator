@@ -19,27 +19,32 @@
       "H0_2_NX_C1_HIGH_RISK_PILOT"
     ],
     "current_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-    "reason": "H0.2 remains the active Harness pilot and keeps all HIGH-risk acceptance predicates. Product V0-S1 is declared separately as a parallel eligible checkpoint and does not replace or self-accept H0.2."
+    "reason": "H0.2 remains the active Harness pilot and keeps all HIGH-risk acceptance predicates. Product V0 is a separately declared composition lane; review/verification-only NX activity may coexist, but non-trivial NX mutation must serialize with the single V0 mutation lane before H0.3."
   },
   "parallel_product_checkpoints": {
     "enabled": true,
     "checkpoints": [
-      "V0_S1_NETWORKED_PLANETARY_OUTPOST"
+      "V0_P4_REAL_RESOURCE_CONSTRUCTION"
     ],
     "rules": {
       "requires_explicit_work_order": true,
-      "requires_exact_current_main": true,
+      "requires_main_declared_product_execution_base": true,
+      "control_epoch_remains_anchored_to_current_main": true,
+      "runtime_branch_may_continue_from_main_declared_stacked_product_lineage": true,
+      "bounded_implementation_may_proceed_with_prior_acceptance_debt": true,
+      "checkpoint_acceptance_requires_prior_acceptance_debt_resolved": true,
       "pre_h0_3_total_runtime_mutation_workers_max": 1,
       "verification_or_review_only_work_does_not_consume_mutation_worker_slot": true,
-      "v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden": true,
-      "v0_network_foundation_change_fails_closed_to": "V0_S1_BLOCKED_REQUIRES_NX"
+      "v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden": true,
+      "v0_network_foundation_change_fails_closed_to": "V0_BLOCKED_REQUIRES_NX",
+      "product_execution_base_is_not_automatic_checkpoint_acceptance": true
     }
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,
     "h0_2_max_autonomous_runtime_workers": 1,
-    "v0_s1_max_autonomous_runtime_mutation_workers": 1,
+    "v0_product_max_autonomous_runtime_mutation_workers": 1,
     "pre_h0_3_total_autonomous_runtime_mutation_workers": 1,
     "human_observation_orders_may_wait_in_parallel": true,
     "verification_review_only_may_wait_in_parallel_with_one_runtime_mutation_worker": true,
@@ -51,6 +56,7 @@
     "architecture_or_ownership_question": "DIRECTOR_OR_HUMAN",
     "unexpected_scope_expansion": "STOP_AND_REPLAN",
     "critical_pc0_red": "STOP_PROGRAM",
-    "v0_requires_network_protocol_or_authority_change": "BLOCK_V0_AND_ROUTE_TO_NX"
+    "v0_requires_network_protocol_or_authority_change": "BLOCK_V0_AND_ROUTE_TO_NX",
+    "v0_requires_second_item_graph_or_persistence_owner": "STOP_AND_REPLAN"
   }
 }
