@@ -2,9 +2,9 @@
 
 Дата: 2026-08-16
 
-Статус: **WINDOWS_RUNTIME_VALIDATED_CANDIDATE**
+Статус: **WINDOWS_RUNTIME_AND_GRAPHICAL_VALIDATED_CANDIDATE**
 
-Не merge. Не self-accept. Этот checkpoint фиксирует exact Windows runtime evidence; fresh independent review и отдельная graphical LOD confirmation остаются следующими gates.
+Не merge. Не self-accept. Этот checkpoint фиксирует exact Windows runtime evidence и пользовательскую graphical confirmation; fresh independent review остаётся следующим gate.
 
 ## 1. Exact topology
 
@@ -38,7 +38,7 @@ Exact Windows-runtime-validated code-under-test:
 
 `4aa46bb...` is one harness-only commit after `d55c05d...`; it removes temporary `--verbose` leak diagnostics from `RUN_ECO_VIS2_1V_TESTS.ps1` and does not change runtime semantics.
 
-The documentation commit containing this checkpoint is intentionally checkpoint-only and is not itself the code-under-test SHA.
+The later documentation commits are intentionally checkpoint-only and are not themselves code-under-test SHAs.
 
 ## 2. Goal
 
@@ -108,6 +108,8 @@ The temporary verbose leak diagnostics were then retired in:
 
 without weakening parser/error/PASS-marker enforcement.
 
+The final topology repair was also reproduced and checked locally against the project-provided exact Godot `4.7.1.stable.double.custom_build.a13da4feb`; the bad inherited-script-state topology reproduced an orphan Node/RefCounted shutdown profile, while the direct VIS2.0 scene topology exited cleanly.
+
 ## 7. Test contract
 
 `RUN_ECO_VIS2_1V_TESTS.ps1` first executes the full validated VIS2.1 causal/boundedness gate and then creates an isolated ecology project for VIS2.1-V.
@@ -133,7 +135,7 @@ It verifies, among other things:
 
 The runner keeps timeout/kill behavior, redirected stdout/stderr, zero-exit Godot error scanning and explicit PASS-marker checking.
 
-## 8. Exact Windows validation — 2026-08-16
+## 8. Exact Windows automated validation — 2026-08-16
 
 Windows worktree executed exact candidate:
 
@@ -167,29 +169,62 @@ The final clean run emitted no reported Godot `ERROR`, `SCRIPT ERROR`, parser fa
 
 The same topology repair had already passed once at `d55c05d...` with verbose diagnostics enabled; `4aa46bb...` repeated the complete gate after removing the temporary diagnostic verbosity.
 
-## 9. Current conclusion
+## 9. Windows graphical validation — 2026-08-16
 
-VIS2.1-V is now a **Windows-runtime-validated candidate** for its automated contract.
+The isolated graphical launcher `RUN_ECO_VIS2_1V_LAB.ps1` was launched successfully on Windows and the user confirmed the client/lab is working.
 
-The prior lifecycle/topology leak is not reproduced on the exact final code-under-test, while all inherited VIS2.1 causal, deterministic and boundedness regressions remain green.
+Captured paired runtime state from the graphical session:
+
+- stage: `ECO.VIS2.1-V`;
+- playback: `PLAY`;
+- fork generation: `G31`;
+- paired generation: `G73`;
+- Treatment profile: `DROUGHT 100%`;
+- visible Treatment reps: `55`;
+- CONTROL: `reps=56 fitness=0.915 genomes=56`;
+- TREATMENT: `reps=55 fitness=0.892 genomes=55`;
+- DELTA: `population=-1 fitness=-0.0231 genomes=-1 deaths=+1 alpha_share=+0.0094`;
+- visible fields: `1`;
+- Treatment LOD status: `ACTIVE`;
+- thresholds displayed: `near<=110m mid=75..240m far>=190m`;
+- tier accounting displayed: `55/55/55` for near/mid/far tier nodes.
+
+The screenshot visibly shows:
+
+- one rendered Treatment ecology field;
+- active VIS2.1 CONTROL vs TREATMENT comparison charts;
+- non-zero post-fork causal deltas;
+- data-only CONTROL declaration in the HUD;
+- realtime Treatment LOD declared ACTIVE;
+- paired evolution continuing at G73 after fork G31;
+- no second rendered CONTROL plant field.
+
+The user explicitly reported that the client started and everything works. This graphical evidence is treated as confirmation of the intended VIS2.1-V presentation path. A single screenshot is not used as sole proof of every distance transition or causal invariant; those are additionally covered by the automated 25-assertion VIS2.1-V contract and inherited VIS2.1 regression gate.
+
+## 10. Current conclusion
+
+VIS2.1-V is now a **Windows-runtime-and-graphical-validated candidate**.
+
+The prior lifecycle/topology leak is not reproduced on the exact final code-under-test, all inherited VIS2.1 causal/deterministic/boundedness regressions remain green, and the graphical lab operates in paired Treatment realtime-LOD mode with one visible ecology field.
 
 This is not an independent acceptance and not authorization to merge.
 
-## 10. Next gate
+## 11. Next gate
 
-Run the isolated graphical launcher:
+Hand the exact candidate and this checkpoint to a fresh READ-ONLY independent reviewer.
 
-`RUN_ECO_VIS2_1V_LAB.ps1`
+The reviewer must specifically re-check:
 
-and visually confirm actual camera-distance transitions on the Treatment population:
-
-- close camera: readable NEAR trunk/canopy;
-- middle distance: simplified MID proxies;
-- far distance: cheaper FAR proxies;
-- transitions do not create a second ecology population;
+- scope/topology from validated VIS2.1 base through VIS2.1-V;
+- presentation-only nature of LOD;
 - CONTROL remains data-only;
-- comparison values and causal progression are unchanged by camera movement;
-- no stale VIS2.0 baseline panel appears after fork;
-- no shutdown errors after closing the window.
+- exactly one visible ecology population;
+- no whole-field PH5 rebuild after fork;
+- camera movement cannot mutate canonical traces;
+- common CRN and Treatment causal semantics remain unchanged;
+- bounded VIS2.1 caches/comparison remain inherited and green;
+- shutdown/resource lifecycle repair and the derived-scene topology fix;
+- strict runner behavior and exact-engine evidence;
+- graphical evidence without overclaiming what one screenshot proves.
 
-After graphical confirmation, hand the exact candidate and this checkpoint to a fresh READ-ONLY independent reviewer. Do not modify, merge or self-accept during that review.
+Do not modify production, tests or documentation during that review. Do not merge or self-accept.
