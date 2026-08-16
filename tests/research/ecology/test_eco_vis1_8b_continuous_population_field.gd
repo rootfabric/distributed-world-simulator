@@ -16,6 +16,45 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_check(scene.get_script() == ContinuousFieldScript, "VIS1.8B scene script attached")
+
+	var hud_paths := [
+		"HUD/Margin",
+		"HUD/Margin/Panel",
+		"HUD/Margin/Panel/VBox",
+		"HUD/Margin/Panel/VBox/Title",
+		"HUD/Margin/Panel/VBox/Status",
+		"HUD/Margin/Panel/VBox/Controls",
+	]
+	for path_variant in hud_paths:
+		var control := scene.get_node_or_null(String(path_variant)) as Control
+		_check(control != null, "HUD control exists: %s" % String(path_variant))
+		if control != null:
+			_check(control.mouse_filter == Control.MOUSE_FILTER_IGNORE, "HUD is mouse passthrough: %s" % String(path_variant))
+
+	var camera := scene.get_node_or_null("Camera3D") as Camera3D
+	_check(camera != null, "operator camera exists")
+	if camera != null:
+		scene.call("_set_mouse_capture", true)
+		var rotation_before := camera.rotation
+		var motion := InputEventMouseMotion.new()
+		motion.position = Vector2(720.0, 450.0)
+		motion.global_position = motion.position
+		motion.relative = Vector2(64.0, -24.0)
+		get_root().push_input(motion)
+		await process_frame
+		_check(not camera.rotation.is_equal_approx(rotation_before), "captured mouse look rotates camera through HUD center")
+
+		scene.call("_set_mouse_capture", false)
+		var released_rotation := camera.rotation
+		var released_motion := InputEventMouseMotion.new()
+		released_motion.position = Vector2(720.0, 450.0)
+		released_motion.global_position = released_motion.position
+		released_motion.relative = Vector2(48.0, 18.0)
+		get_root().push_input(released_motion)
+		await process_frame
+		_check(camera.rotation.is_equal_approx(released_rotation), "released mouse does not rotate camera")
+	print("ECO.VIS1.8B smoke progress: spectator_mouse_checked")
+
 	var initial: Dictionary = scene.get_realtime_turnover_state()
 	_check(String(initial.get("stage", "")) == "ECO.VIS1.8B", "stage")
 	_check(String(initial.get("mode", "")) == "CONTINUOUS_ROLLING_TURNOVER_PLAYBACK", "mode")
