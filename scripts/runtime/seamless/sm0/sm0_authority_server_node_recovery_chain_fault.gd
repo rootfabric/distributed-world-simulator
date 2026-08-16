@@ -30,9 +30,10 @@ func setup(config: Dictionary) -> Dictionary:
 		return _failure("SM0_H43_RECOVERY_DIR_REQUIRED")
 
 	# Source recovery_resume can send COMMIT/redirect from inside super.setup().
-	# Keep an explicit setup window so only the exact restored SOURCE_RETIRED
-	# transfer bypasses Stage 1. A later fresh transfer in this same recovered
-	# process must still be faulted.
+	# Keep an explicit setup window so the exact restored SOURCE_RETIRED transfer
+	# can replay immediately. After setup, boot metadata keeps that same transfer
+	# retryable as well: UDP replay may be lost while the target process is still
+	# binding its socket. A later fresh transfer has a different T and is faulted.
 	_h43_setup_complete = false
 	var result: Dictionary = super.setup(config)
 	if not bool(result.get("success", false)):
@@ -54,12 +55,27 @@ func setup(config: Dictionary) -> Dictionary:
 	return result
 
 
-func _h43_is_source_setup_replay(transfer_id: String) -> bool:
+func _h43_is_source_recovery_replay(transfer_id: String) -> bool:
+	if transfer_id.is_empty():
+		return false
+	# During super.setup(), the child boot metadata is not populated yet. The
+	# recovery layer has already restored the exact SOURCE_RETIRED T, so allow
+	# its immediate COMMIT/redirect replay.
+	if not _h43_setup_complete:
+		return (
+			_recovery_restored
+			and _recovery_last_phase == "SOURCE_RETIRED"
+			and _recovery_last_transfer_id == transfer_id
+		)
+	# After setup, keep only that exact boot-restored T replayable. This is
+	# necessary because UDP replay can be sent before the peer has finished
+	# binding; the normal 200 ms source retry must not be reclassified as a fresh
+	# PREPARED fault. A later/new transfer id still goes through Stage 1.
 	return (
-		not _h43_setup_complete
-		and _recovery_restored
+		_h43_boot_restored
+		and _h43_boot_phase == "SOURCE_RETIRED"
+		and _h43_boot_transfer_id == transfer_id
 		and _recovery_last_phase == "SOURCE_RETIRED"
-		and not transfer_id.is_empty()
 		and _recovery_last_transfer_id == transfer_id
 	)
 
@@ -122,10 +138,10 @@ func _send_source_commit() -> void:
 		return
 	var transfer_id := String(_source_transfer.get("transfer_id", "")).strip_edges()
 
-	# Only the exact SOURCE_RETIRED replay issued from recovery setup is allowed
-	# through un-faulted. After setup, even a recovered process can later become
-	# source of a new handoff; that new T must create Stage 1 normally.
-	if _h43_is_source_setup_replay(transfer_id):
+	# The exact SOURCE_RETIRED transfer restored at boot is recovery replay, not
+	# a fresh Stage-1 transfer. Keep both its immediate send and later UDP retry
+	# attempts un-faulted. A later fresh T in this process still faults normally.
+	if _h43_is_source_recovery_replay(transfer_id):
 		super._send_source_commit()
 		return
 
@@ -219,9 +235,10 @@ func _send_gameplay(host: String, port: int, message_type: String, payload: Dict
 	):
 		var redirect_transfer_id := String(payload.get("transfer_id", "")).strip_edges()
 		if _h43_is_current_retired_source_transfer(redirect_transfer_id):
-			# The redirect emitted from recovery setup belongs to replay of the old T
-			# and must pass. A fresh/new T is held together with COMMIT at PREPARED.
-			if _h43_is_source_setup_replay(redirect_transfer_id):
+			# Every send for the exact SOURCE_RETIRED boot replay belongs to the old T
+			# and must pass, including a retry after the first UDP datagram was lost.
+			# A fresh/new T is held together with COMMIT at PREPARED.
+			if _h43_is_source_recovery_replay(redirect_transfer_id):
 				super._send_gameplay(host, port, message_type, payload, request_id)
 				return
 			_h43_emit_send_suppressed(H43_STAGE_PREPARED, message_type, redirect_transfer_id, request_id)
