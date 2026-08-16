@@ -7,6 +7,7 @@ param(
     [string]$ExcludedRepairSha = "11819f6dd1ea3728382a04737d30a5300de622f7",
     [int]$MinimumRegistryGeneration = 80,
     [string]$PythonExe = "python",
+    [string]$AuditOutputPath = "",
     [switch]$SkipFetch,
     [switch]$SkipPostMainProjectControl
 )
@@ -16,7 +17,14 @@ $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PassportPath = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 $Checkpoint = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
 $ArtifactRoot = Join-Path $ProjectRoot "artifacts\control\v0-p4-post-activation"
-$AuditJson = Join-Path $ArtifactRoot "epoch-base-audit.json"
+$DefaultAuditJson = Join-Path $ArtifactRoot "epoch-base-audit.json"
+$AuditJson = if ([string]::IsNullOrWhiteSpace($AuditOutputPath)) {
+    $DefaultAuditJson
+} elseif ([System.IO.Path]::IsPathRooted($AuditOutputPath)) {
+    $AuditOutputPath
+} else {
+    Join-Path $ProjectRoot $AuditOutputPath
+}
 
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
@@ -69,10 +77,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot ".git"))) {
     throw "V0_P4_AUDIT_NOT_GIT_CHECKOUT"
 }
 
+$RefsFetchPerformed = $false
 if (-not $SkipFetch) {
     Write-Host "[V0-P4 audit] Fetching current branch refs..."
     & git -C $ProjectRoot fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
     if ($LASTEXITCODE -ne 0) { throw "V0_P4_AUDIT_FETCH_FAILED" }
+    $RefsFetchPerformed = $true
+} else {
+    Write-Host "[V0-P4 audit] Fetch skipped: result will be non-authorizing." -ForegroundColor Yellow
 }
 
 $ActualHead = Invoke-Git rev-parse HEAD
@@ -106,6 +118,11 @@ Assert-True (@($Scheduler.parallel_product_checkpoints.checkpoints) -contains $C
 Assert-Equal ([bool]$Scheduler.parallel_product_checkpoints.rules.requires_main_declared_product_execution_base) $true "V0_P4_AUDIT_MAIN_DECLARED_BASE_RULE_MISSING"
 Assert-Equal ([bool]$Scheduler.parallel_product_checkpoints.rules.product_execution_base_is_not_automatic_checkpoint_acceptance) $true "V0_P4_AUDIT_FALSE_ACCEPTANCE_GUARD_MISSING"
 Assert-Equal ([int]$Scheduler.concurrency.pre_h0_3_total_autonomous_runtime_mutation_workers) 1 "V0_P4_AUDIT_MUTATION_WORKER_LIMIT_CHANGED"
+$Lease = $Scheduler.pre_h0_3_runtime_mutation_lease
+Assert-True ($null -ne $Lease) "V0_P4_AUDIT_GLOBAL_MUTATION_LEASE_MISSING"
+Assert-Equal ([int]$Lease.capacity) 1 "V0_P4_AUDIT_GLOBAL_MUTATION_LEASE_CAPACITY_CHANGED"
+Assert-Equal ([string]$Lease.holder_checkpoint) $Checkpoint "V0_P4_AUDIT_GLOBAL_MUTATION_LEASE_HOLDER_MISMATCH"
+Assert-Equal ([string]$Lease.holder_branch) "feature/v0-p4-construction-real-resources" "V0_P4_AUDIT_GLOBAL_MUTATION_LEASE_BRANCH_MISMATCH"
 
 $ExpectedBaseRef = "origin/$ExpectedProductBaseBranch"
 $ExpectedBaseRefSha = Invoke-Git rev-parse $ExpectedBaseRef
@@ -148,7 +165,7 @@ try {
 
         Push-Location $ControlWorktree
         try {
-            & $PythonExe -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
+            & $PythonExe -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract tests.harness.test_v0_generation80_safety_guards
             if ($LASTEXITCODE -ne 0) { throw "V0_P4_AUDIT_MAIN_V0_MACHINE_REGRESSION_RED" }
 
             & $PythonExe scripts/control/project_control.py --no-fetch --no-fail-on-red
@@ -176,10 +193,23 @@ try {
     }
 }
 
-New-Item -ItemType Directory -Force -Path $ArtifactRoot | Out-Null
+$Decision = if (-not $RefsFetchPerformed) {
+    "BASE_READY_REFS_NOT_REFRESHED"
+} elseif ($SkipPostMainProjectControl) {
+    "BASE_READY_PC0_NOT_RUN"
+} else {
+    "CONTINUE"
+}
+$AuthoritativeForDispatch = $Decision -eq "CONTINUE"
+$AuditDirectory = Split-Path -Parent $AuditJson
+if (-not [string]::IsNullOrWhiteSpace($AuditDirectory)) {
+    New-Item -ItemType Directory -Force -Path $AuditDirectory | Out-Null
+}
 $Result = [ordered]@{
     schema = "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1"
-    decision = if ($SkipPostMainProjectControl) { "BASE_READY_PC0_NOT_RUN" } else { "CONTINUE" }
+    decision = $Decision
+    authoritative_for_dispatch = $AuthoritativeForDispatch
+    refs_fetch_performed = $RefsFetchPerformed
     p4_head = $ActualHead
     canonical_main_head = $MainSha
     registry_generation = [int]$Registry.registry_generation
@@ -196,17 +226,29 @@ $Result = [ordered]@{
 $Result | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $AuditJson -Encoding UTF8
 
 Write-Host ""
-if ($SkipPostMainProjectControl) {
-    Write-Host "V0-P4 post-activation base audit: BASE_READY_PC0_NOT_RUN" -ForegroundColor Yellow
-} else {
-    Write-Host "V0-P4 post-activation epoch/base audit: CONTINUE" -ForegroundColor Green
+switch ($Decision) {
+    "BASE_READY_REFS_NOT_REFRESHED" {
+        Write-Host "V0-P4 post-activation base audit: BASE_READY_REFS_NOT_REFRESHED" -ForegroundColor Yellow
+    }
+    "BASE_READY_PC0_NOT_RUN" {
+        Write-Host "V0-P4 post-activation base audit: BASE_READY_PC0_NOT_RUN" -ForegroundColor Yellow
+    }
+    default {
+        Write-Host "V0-P4 post-activation epoch/base audit: CONTINUE" -ForegroundColor Green
+    }
 }
 Write-Host "  P4 HEAD:             $ActualHead"
 Write-Host "  canonical main:      $MainSha"
 Write-Host "  registry generation: $($Registry.registry_generation)"
 Write-Host "  product base:        $ExpectedProductBaseSha"
+Write-Host "  refs fetched:        $RefsFetchPerformed"
 Write-Host "  standard PC0:        $StandardHealth"
 Write-Host "  directional PC0:     $DirectionalHealth"
 Write-Host "  report:              $AuditJson"
 Write-Host ""
+if ($AuthoritativeForDispatch) {
+    Write-Host "Audit is authoritative for a separate Director dispatch when this JSON is committed and referenced by that dispatch event." -ForegroundColor Green
+} else {
+    Write-Host "Audit is diagnostic only and MUST NOT authorize runtime mutation." -ForegroundColor Yellow
+}
 Write-Host "Director dispatch remains required before any P4 production/runtime mutation." -ForegroundColor Yellow
