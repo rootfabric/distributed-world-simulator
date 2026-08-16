@@ -93,7 +93,7 @@ P4.1 runtime mutation
 
 `-SkipFetch` is diagnostic only and yields `BASE_READY_REFS_NOT_REFRESHED`; it cannot authorize dispatch. Skipping post-main PC0 yields `BASE_READY_PC0_NOT_RUN`; it cannot authorize dispatch.
 
-The Harness reducer machine-guards initial `PLANNED -> DISPATCHED`: actor must be `DIRECTOR`. For generation 80, P4 dispatch also requires the committed authoritative audit artifact tied to exact P4/main heads.
+The Harness reducer machine-guards initial `PLANNED -> DISPATCHED`: actor must be `DIRECTOR`. For generation 80, P4 dispatch requires an authoritative audit JSON that is already present in Git before the immutable dispatch-event add commit. Untracked audit JSON, audit first added with the dispatch event, or audit committed later cannot authorize runtime mutation.
 
 ## Global pre-H0.3 mutation lease
 
@@ -114,9 +114,9 @@ Reassigning or releasing the lease requires a main-owned control update; branch-
 
 The independent review of PR #98 head `4f758d07c5e9af3e3acda48cccccc3275230d045` returned FAIL and identified five blocking/stale issues: synthetic merge-ref CI instead of exact-head CI, `SkipFetch` authorization, unguarded initial dispatch, non-enforced global mutation ceiling, and stale P4 prep SHAs in prose.
 
-All five are repaired in the current candidate. The exact-head Project Control run `31956455248` checks out and verifies exact candidate HEAD `d2db8e741eea93d1281f25b57c3e9ce71dae1fc9`; architecture compatibility (64), H0.2 (8), V0 product (10), and generation-80 safety (6) regressions all pass. Standard/directional PC0 intentionally continue to audit current canonical `origin/main` generation 79 until generation-80 is actually merged.
+The later exact-head run `31956719594` validated the previous repaired baseline `49fe31f71821384cd7835e18fe062c1dfcf1c54c`. A subsequent independent re-review found one remaining provenance defect: the reducer could still consume an authoritative-looking P4 audit from the working tree without proving that the audit had been committed before Director dispatch. The current repair hardens that boundary by reading qualifying P4 audit evidence from the parent Git tree of the immutable dispatch-event add commit. Current candidate HEAD and its required exact-head Project Control run are recorded in PR #98 metadata/Actions rather than self-pinned in this document.
 
-The repaired exact candidate still requires a fresh independent re-review before main acceptance.
+Any candidate newer than the historical baseline above requires its own exact-head Project Control success and fresh independent re-review before main acceptance.
 
 ## Current P4 target
 
@@ -171,7 +171,7 @@ second persistence/durability owner
 second Construction truth
 cross-server authority transfer
 second pre-H0.3 runtime mutation worker
-P4 dispatch without fresh authoritative audit evidence
+P4 dispatch without fresh authoritative audit evidence already committed before dispatch
 non-Director initial dispatch
 ```
 
