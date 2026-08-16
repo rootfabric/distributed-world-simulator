@@ -143,10 +143,10 @@ foreach ($Sample in $Samples) {
         throw "SM0-P3 handoff #$Index route is not continuous: previous target=$PreviousTarget source=$Source."
     }
     if ($IdentityChanges -ne 0 -or $PlayerId -ne "player/a") {
-        throw "SM0-P3 identity invariant failed at handoff #$Index: player=$PlayerId identity_changes=$IdentityChanges."
+        throw "SM0-P3 identity invariant failed at handoff #${Index}: player=$PlayerId identity_changes=$IdentityChanges."
     }
     if ($Total -lt 0 -or $Redirect -lt 0 -or $Activate -lt 0 -or [Math]::Abs(($Redirect + $Activate) - $Total) -gt 2.0) {
-        throw "SM0-P3 latency accounting failed at handoff #$Index: total=$Total redirect=$Redirect activate=$Activate."
+        throw "SM0-P3 latency accounting failed at handoff #${Index}: total=$Total redirect=$Redirect activate=$Activate."
     }
     if ([Math]::Abs($Speed - 0.25) -gt 0.001) {
         throw "SM0-P3 handoff #$Index changed canonical movement step magnitude: speed=$Speed."
