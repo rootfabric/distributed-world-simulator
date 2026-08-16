@@ -87,14 +87,130 @@ def _lease_applies(bundle: ContractBundle, context: dict[str, Any] | None) -> tu
     return generation >= effective, lease
 
 
+def _git_output(root: Path, *args: str) -> tuple[int, str]:
+    completed = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return completed.returncode, completed.stdout.strip()
+
+
+def _context_relative_path(context: dict[str, Any], path: Path) -> str:
+    root = context["root"].resolve()
+    try:
+        return path.resolve().relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_PATH_ESCAPES_REPOSITORY") from exc
+
+
+def _dispatch_event_add_commit(event: dict[str, Any], context: dict[str, Any] | None) -> str:
+    """Prove the Director dispatch event itself is an immutable committed ledger entry."""
+    if context is None:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_CONTEXT_REQUIRED")
+    root = context["root"].resolve()
+    event_dir = context["execution_dir"] / "events" / event["work_order_id"]
+    _context_relative_path(context, event_dir)
+    if not event_dir.is_dir():
+        raise ContractValidationError("GUARDED_P4_DISPATCH_EVENT_DIRECTORY_REQUIRED")
+
+    matches: list[str] = []
+    for path in sorted(event_dir.rglob("*.json")):
+        relative = _context_relative_path(context, path)
+        code, dirty = _git_output(root, "status", "--porcelain", "--", relative)
+        if code != 0 or dirty:
+            continue
+        code, history = _git_output(root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            continue
+        code, add_commit = _git_output(root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        if code != 0 or len(add_commit) != 40 or add_commit != commits[0]:
+            continue
+        code, current_head = _git_output(root, "rev-parse", "HEAD")
+        if code != 0 or len(current_head) != 40:
+            continue
+        code, _ = _git_output(root, "merge-base", "--is-ancestor", add_commit, current_head)
+        if code != 0:
+            continue
+        code, raw = _git_output(root, "show", f"{add_commit}:{relative}")
+        if code != 0:
+            continue
+        try:
+            historical = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if historical == event:
+            matches.append(add_commit)
+
+    if len(matches) != 1:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_EVENT_COMMIT_PROVENANCE_REQUIRED")
+    return matches[0]
+
+
+def _committed_p4_audit_documents(
+    event: dict[str, Any],
+    context: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    """Read P4 audit evidence only from Git state that predates the dispatch event commit.
+
+    The audit must already exist in the parent tree of the commit that adds the
+    immutable Director dispatch event. Therefore an untracked audit, an audit
+    first added in the dispatch commit, or an audit committed later cannot
+    authorize runtime mutation. Current working-tree JSON is intentionally not
+    trusted for this gate.
+    """
+    if context is None:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_CONTEXT_REQUIRED")
+    root = context["root"].resolve()
+    dispatch_commit = _dispatch_event_add_commit(event, context)
+    code, parent_commit = _git_output(root, "rev-parse", "--verify", f"{dispatch_commit}^")
+    if code != 0 or len(parent_commit) != 40:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_PARENT_COMMIT_REQUIRED")
+
+    execution_relative = _context_relative_path(context, context["execution_dir"]).rstrip("/")
+    audit_prefix = f"{execution_relative}/audits/"
+    committed: list[dict[str, Any]] = []
+    for raw_path in event.get("evidence_paths", []):
+        normalized = raw_path.replace("\\", "/")
+        if not normalized.startswith(audit_prefix) or not normalized.endswith(".json"):
+            continue
+
+        # The dispatch commit may not smuggle in or rewrite the audit it cites.
+        code, changed = _git_output(
+            root,
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            dispatch_commit,
+            "--",
+            normalized,
+        )
+        if code != 0 or changed:
+            continue
+
+        code, raw = _git_output(root, "show", f"{parent_commit}:{normalized}")
+        if code != 0:
+            continue
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            committed.append(value)
+    return committed
+
+
 def _authoritative_p4_audit_present(
     work_order: dict[str, Any],
     event: dict[str, Any],
-    documents: list[dict[str, Any]],
     context: dict[str, Any] | None,
 ) -> bool:
     current_main = _current_main_sha(context)
-    for item in documents:
+    for item in _committed_p4_audit_documents(event, context):
         if item.get("schema") != _P4_AUDIT_SCHEMA:
             continue
         if item.get("decision") != "CONTINUE":
@@ -145,7 +261,7 @@ def _enforce_initial_dispatch(
     if checkpoint == holder_checkpoint and holder_branch and branch != holder_branch:
         raise ContractValidationError(f"GLOBAL_MUTATION_SLOT_BRANCH_MISMATCH:{holder_branch}")
     if checkpoint == _P4_CHECKPOINT and lease.get("holder_initial_dispatch_requires_authoritative_epoch_audit") is True:
-        if not _authoritative_p4_audit_present(work_order, event, documents, context):
+        if not _authoritative_p4_audit_present(work_order, event, context):
             raise ContractValidationError("GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED")
 
 
