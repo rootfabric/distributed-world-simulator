@@ -13,6 +13,8 @@ var _replays := 0
 var _superseded_deltas := 0
 var _clock_only_snapshot_updates := 0
 var _stale_clock_only_snapshots := 0
+var _clock_only_delta_updates := 0
+var _stale_clock_only_deltas := 0
 
 
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
@@ -61,10 +63,39 @@ func accept_delta(delta: Dictionary) -> Dictionary:
 	var base_revision := int(delta.get("base_revision", -1))
 	var target_revision := int(delta.get("target_revision", -1))
 	if target_revision == current_revision:
-		if String(delta.get("target_checksum", "")) != String(_snapshot.get("checksum", "")):
-			return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
-		_replays += 1
-		return _success({"replay": true, "superseded": false})
+		var target_checksum := String(delta.get("target_checksum", ""))
+		if target_checksum == String(_snapshot.get("checksum", "")):
+			_replays += 1
+			return _success({
+				"replay": true,
+				"superseded": false,
+				"clock_update": false,
+				"stale": false,
+			})
+		if _same_revision_delta_matches_current_state(delta):
+			var current_tick := int(_snapshot.get("server_tick", -1))
+			var incoming_tick := int(delta.get("server_tick", -1))
+			if incoming_tick > current_tick:
+				_snapshot["server_tick"] = incoming_tick
+				_snapshot["checksum"] = target_checksum
+				_replays += 1
+				_clock_only_delta_updates += 1
+				return _success({
+					"replay": true,
+					"superseded": false,
+					"clock_update": true,
+					"stale": false,
+				})
+			if incoming_tick < current_tick:
+				_replays += 1
+				_stale_clock_only_deltas += 1
+				return _success({
+					"replay": true,
+					"superseded": false,
+					"clock_update": false,
+					"stale": true,
+				})
+		return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
 	if target_revision < current_revision:
 		_replays += 1
 		_superseded_deltas += 1
@@ -133,6 +164,8 @@ func get_report() -> Dictionary:
 		"superseded_deltas": _superseded_deltas,
 		"clock_only_snapshot_updates": _clock_only_snapshot_updates,
 		"stale_clock_only_snapshots": _stale_clock_only_snapshots,
+		"clock_only_delta_updates": _clock_only_delta_updates,
+		"stale_clock_only_deltas": _stale_clock_only_deltas,
 		"direct_authority_references": 0,
 		"direct_domain_references": 0,
 	}
@@ -145,6 +178,13 @@ func _same_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool
 		current_state.erase(key)
 		incoming_state.erase(key)
 	return current_state == incoming_state
+
+
+func _same_revision_delta_matches_current_state(delta: Dictionary) -> bool:
+	var candidate: Dictionary = _snapshot.duplicate(true)
+	candidate["server_tick"] = int(delta.get("server_tick", -1))
+	candidate.erase("checksum")
+	return Utils.payload_hash(candidate) == String(delta.get("target_checksum", ""))
 
 
 func _success(details: Dictionary = {}) -> Dictionary:
