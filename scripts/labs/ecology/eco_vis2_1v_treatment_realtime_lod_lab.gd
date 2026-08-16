@@ -17,7 +17,17 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	# VIS2.1-V owns the replacement realtime renderer. Release its mesh/material
+	# VIS2.1-V owns the dynamically attached Treatment data runner inherited from
+	# VIS2.1. Free that child explicitly while this scene is still alive. Godot's
+	# verbose shutdown diagnostics otherwise show the detached TreatmentRunner plus
+	# its LabEnvironmentProvider/RealtimeModel RefCounted dependencies surviving the
+	# derived-scene teardown.
+	if is_instance_valid(_vis21_treatment):
+		var treatment_runner: Node = _vis21_treatment
+		_vis21_treatment = null
+		treatment_runner.free()
+
+	# VIS2.1-V also owns the replacement realtime renderer. Release its mesh/material
 	# resources before the scene disappears so editor/headless shutdown does not depend
 	# on RefCounted destruction order.
 	if _vis18r_renderer != null and _vis18r_renderer.has_method("release_resources"):
