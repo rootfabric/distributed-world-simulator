@@ -8,6 +8,8 @@ const VIS20_Scene = preload("res://scenes/labs/ecology/eco_vis2_0_evolution_expe
 
 const FORK_GENERATION := 6
 const TARGET_GENERATION := 12
+const BOUNDED_TARGET_GENERATION := 86
+const BRANCH_CACHE_WINDOW := 64
 const BIOMASS_KG := 11.0
 
 var _assertions := 0
@@ -103,6 +105,20 @@ func _run() -> void:
 	_check(bool(replay.get("success", false)), "restart replay advances")
 	_check(runner_a.generation_map(TARGET_GENERATION) == final_map, "restart replay generation map is deterministic")
 	_check(runner_a.trace() == final_trace, "restart replay trace is deterministic")
+
+	var bounded_advance := runner_a.advance_to(BOUNDED_TARGET_GENERATION)
+	_check(bool(bounded_advance.get("success", false)), "CONTROL reaches boundedness target")
+	var bounded_floor := BOUNDED_TARGET_GENERATION - BRANCH_CACHE_WINDOW + 1
+	var replay_probe_generation := bounded_floor + 7
+	var replay_probe_map := runner_a.generation_map(replay_probe_generation)
+	var root_before_prune := runner_a.common_random_seed_hash()
+	var prune_result := runner_a.prune_before(bounded_floor)
+	_check(bool(prune_result.get("success", false)), "CONTROL prune_before succeeds")
+	_check(runner_a.cached_generation_count() <= BRANCH_CACHE_WINDOW and runner_a.cached_trace_point_count() <= BRANCH_CACHE_WINDOW, "CONTROL real generation and trace caches are bounded")
+	_check(runner_a.oldest_cached_generation() == bounded_floor and runner_a.generation_map(FORK_GENERATION) == fork_map_before, "CONTROL evicts rolling fork cache but immutable fork remains accessible")
+	_check(runner_a.common_random_seed_hash() == root_before_prune, "CONTROL prune cannot alter CRN root")
+	_check(bool(runner_a.restart_from_fork().get("success", false)) and runner_a.generation_map(FORK_GENERATION) == fork_map_before, "CONTROL restart works after fork cache eviction")
+	_check(bool(runner_a.advance_to(replay_probe_generation).get("success", false)) and runner_a.generation_map(replay_probe_generation) == replay_probe_map, "CONTROL deterministic replay survives rolling eviction")
 
 	_check(fork_map == fork_map_before, "advance/restart never mutate supplied fork map")
 	_check(fork_history == fork_history_before, "advance/restart never mutate supplied fork history")

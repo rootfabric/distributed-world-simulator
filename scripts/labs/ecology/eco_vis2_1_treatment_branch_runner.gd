@@ -106,6 +106,8 @@ func advance_to(target_generation: int) -> Dictionary:
 func generation_map(generation: int) -> Dictionary:
 	if not _configured or generation < _fork_generation:
 		return {}
+	if generation == _fork_generation:
+		return _fork_generation_map.duplicate(true)
 	if generation > _current_generation:
 		var result := advance_to(generation)
 		if not bool(result.get("success", false)):
@@ -130,11 +132,80 @@ func trace() -> Array[Dictionary]:
 func trace_point(generation: int) -> Dictionary:
 	if not _configured:
 		return {}
+	if generation == _fork_generation and not _trace_cache.has(generation):
+		return _fork_trace_point()
 	if generation > _current_generation:
 		var result := advance_to(generation)
 		if not bool(result.get("success", false)):
 			return {}
 	return Dictionary(_trace_cache.get(generation, {})).duplicate(true)
+
+
+func prune_before(min_generation: int) -> Dictionary:
+	if not _configured:
+		return {"success": false, "reason": "NOT_CONFIGURED"}
+	var effective_min := maxi(_fork_generation, min_generation)
+	if _current_generation >= _fork_generation:
+		effective_min = mini(effective_min, _current_generation)
+	for generation_variant in _generation_cache.keys():
+		if int(generation_variant) < effective_min:
+			_generation_cache.erase(generation_variant)
+	for generation_variant in _trace_cache.keys():
+		if int(generation_variant) < effective_min:
+			_trace_cache.erase(generation_variant)
+	return {
+		"success": true,
+		"min_generation": effective_min,
+		"cached_generation_count": cached_generation_count(),
+		"cached_trace_point_count": cached_trace_point_count(),
+		"oldest_cached_generation": oldest_cached_generation(),
+		"current_generation": _current_generation,
+	}
+
+
+func cached_generation_count() -> int:
+	return _generation_cache.size()
+
+
+func oldest_cached_generation() -> int:
+	if _generation_cache.is_empty():
+		return -1
+	var oldest := 2147483647
+	for generation_variant in _generation_cache.keys():
+		oldest = mini(oldest, int(generation_variant))
+	return oldest
+
+
+func cached_trace_point_count() -> int:
+	return _trace_cache.size()
+
+
+func is_generation_cached(generation: int) -> bool:
+	return _generation_cache.has(generation)
+
+
+func rewind_to_cached_generation(generation: int) -> Dictionary:
+	if not _configured:
+		return {"success": false, "reason": "NOT_CONFIGURED"}
+	if generation == _fork_generation:
+		return restart_from_fork()
+	if generation < _fork_generation:
+		return {"success": false, "reason": "BEFORE_FORK"}
+	if not _generation_cache.has(generation):
+		return {"success": false, "reason": "GENERATION_NOT_CACHED", "generation": generation}
+	var root_before := _common_random_seed_hash
+	_truncate_future_after(generation)
+	_current_generation = generation
+	_sample_generation = generation
+	if _common_random_seed_hash != root_before:
+		return {"success": false, "reason": "COMMON_RANDOM_SEED_CHANGED"}
+	return {
+		"success": true,
+		"generation": generation,
+		"common_random_seed_hash": _common_random_seed_hash,
+		"cached_generation_count": cached_generation_count(),
+		"oldest_cached_generation": oldest_cached_generation(),
+	}
 
 
 func restart_from_fork() -> Dictionary:
@@ -204,8 +275,6 @@ func sample_environment_for_generation(generation: int, world_x: float, world_z:
 
 
 func sample_terrain_height(world_x: float, world_z: float) -> float:
-	# Exact VIS1.0 proving-ground height function. Keeping this runner headless avoids
-	# instantiating the visual lab while preserving the VIS1.1 environment input.
 	var nx := clampf(world_x / 250.0, -1.0, 1.0)
 	var nz := clampf(world_z / 250.0, -1.0, 1.0)
 	var rolling := 7.5 * sin(nx * PI * 1.65) * cos(nz * PI * 1.35)
@@ -374,6 +443,13 @@ func _history_through_fork(source: Array, fork_generation: int) -> Array[Diction
 	for generation_variant in generations:
 		result.append(Dictionary(by_generation[generation_variant]).duplicate(true))
 	return result
+
+
+func _fork_trace_point() -> Dictionary:
+	for point in _fork_history:
+		if int(point.get("generation", -1)) == _fork_generation:
+			return point.duplicate(true)
+	return _make_trace_point(_fork_generation, _fork_generation_map)
 
 
 func _is_valid_common_random_seed_hash(value: String) -> bool:

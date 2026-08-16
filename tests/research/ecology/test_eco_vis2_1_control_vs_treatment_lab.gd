@@ -1,256 +1,201 @@
 extends SceneTree
 
 const TraceContract = preload("res://scripts/labs/ecology/eco_vis2_1_branch_trace_contract.gd")
-const TraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_1_trace_adapter.gd")
 const ComparisonModel = preload("res://scripts/labs/ecology/eco_vis2_1_comparison_model.gd")
 const ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experiment_model.gd")
-const VIS21_Scene = preload("res://scenes/labs/ecology/eco_vis2_1_control_vs_treatment_lab.tscn")
+const VIS21Scene = preload("res://scenes/labs/ecology/eco_vis2_1_control_vs_treatment_lab.tscn")
 
-const FORK_GENERATION := 20
-const DIVERGENCE_HORIZON := 12
-const LONG_SMOKE_GENERATION := 80
+const FORK := 20
+const HORIZON := 32
+const EVICT := 140
+const LATER := 220
+const WINDOW := 64
 
 var _assertions := 0
 var _failures := 0
 
-
 func _initialize() -> void:
 	call_deferred("_run")
 
-
 func _run() -> void:
-	var scene := VIS21_Scene.instantiate()
+	var scene = VIS21Scene.instantiate()
 	get_root().add_child(scene)
 	await process_frame
 	await process_frame
-
-	scene.set_realtime_turnover_generation(FORK_GENERATION)
+	scene.set_realtime_turnover_generation(FORK)
 	await process_frame
-	var source_model := scene.get("_vis18r_model") as RefCounted
-	_require(source_model != null, "source model available")
-	if source_model == null:
-		return
-	var source_fork_map: Dictionary = Dictionary(source_model.call("generation_map", FORK_GENERATION)).duplicate(true)
-	var source_fork_map_before := source_fork_map.duplicate(true)
-	var source_history_before: Array = scene.get_continuous_history().duplicate(true)
-	var canonical_environment_before: Dictionary = scene.get_spatial_snapshot().duplicate(true)
-
+	var source = scene.get("_vis18r_model") as RefCounted
+	_require(source != null, "source model")
+	if source == null: return
+	var fork_map: Dictionary = Dictionary(source.call("generation_map", FORK)).duplicate(true)
+	var fork_before := fork_map.duplicate(true)
+	var spatial_before: Dictionary = scene.get_spatial_snapshot().duplicate(true)
 	var fork_result: Dictionary = scene.begin_paired_experiment()
-	_require(bool(fork_result.get("success", false)), "paired fork configures")
-	if not bool(fork_result.get("success", false)):
-		return
+	_require(bool(fork_result.get("success", false)), "fork")
+	if not bool(fork_result.get("success", false)): return
+	var c = scene.get_vis21_control_runner()
+	var t = scene.get_vis21_treatment_runner()
 	var state: Dictionary = scene.get_vis21_state()
-	var control = scene.get_vis21_control_runner()
-	var treatment = scene.get_vis21_treatment_runner()
 	var traces: Dictionary = scene.get_vis21_canonical_traces()
-	var control_trace: Array = traces.get("control", [])
-	var treatment_trace: Array = traces.get("treatment", [])
-	var fork_control: Dictionary = control_trace[0]
-	var fork_treatment: Dictionary = treatment_trace[0]
-	var fork_summary: Dictionary = scene.get_vis21_comparison_summary()
-	var fork_pair: Dictionary = Dictionary(Array(fork_summary.get("points", []))[0])
+	var ct: Array = traces.get("control", [])
+	var tt: Array = traces.get("treatment", [])
+	var summary: Dictionary = scene.get_vis21_comparison_summary()
+	var fp: Dictionary = Dictionary(Array(summary.get("points", []))[0])
 
-	_check(not source_fork_map.is_empty() and int(state.get("fork_generation", -1)) == FORK_GENERATION, "01 fork map captured exactly once")
-	_check(source_fork_map == source_fork_map_before and scene.get("_vis21_fork_map") == source_fork_map_before, "02 input fork map remains immutable")
-	_check(control.generation_map(FORK_GENERATION) == source_fork_map_before, "03 CONTROL map at fork equals common map")
-	_check(treatment.generation_map(FORK_GENERATION) == source_fork_map_before, "04 TREATMENT map at fork equals common map")
-	_check(String(fork_control.get("field_hash", "")) == String(fork_treatment.get("field_hash", "")), "05 canonical fork field hashes equal")
-	_check(String(fork_control.get("environment_revision", "")) == String(fork_treatment.get("environment_revision", "")), "06 fork environment revisions equal")
-	_check(_all_numeric_deltas_zero(fork_pair), "07 all comparator deltas at fork are zero")
-
+	_check(not fork_map.is_empty() and int(state.get("fork_generation", -1)) == FORK, "01 fork captured")
+	_check(fork_map == fork_before and scene.get("_vis21_fork_map") == fork_before, "02 fork immutable")
+	_check(c.generation_map(FORK) == fork_before, "03 control fork map")
+	_check(t.generation_map(FORK) == fork_before, "04 treatment fork map")
+	_check(String(Dictionary(ct[0]).get("field_hash", "")) == String(Dictionary(tt[0]).get("field_hash", "")), "05 fork hashes")
+	_check(String(Dictionary(ct[0]).get("environment_revision", "")) == String(Dictionary(tt[0]).get("environment_revision", "")), "06 fork environment")
+	_check(_zero(fp), "07 fork deltas")
 	var root := String(state.get("common_random_seed_hash", ""))
-	_check(_is_lower_sha256(root), "08 CONTROL common root is 64 lower-case hex")
-	_check(root == control.common_random_seed_hash() and root == treatment.common_random_seed_hash(), "09 TREATMENT common root exactly equals CONTROL root")
-
-	var restart_result: Dictionary = scene.restart_paired_from_fork()
-	_check(bool(restart_result.get("success", false)) and String(restart_result.get("common_random_seed_hash", "")) == root, "10 common root survives restart")
-	var switch_at_fork: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0)
-	_check(bool(switch_at_fork.get("success", false)) and treatment.common_random_seed_hash() == root and control.common_random_seed_hash() == root, "11 treatment switch does not alter common root")
-
+	_check(_sha(root), "08 root format")
+	_check(root == c.common_random_seed_hash() and root == t.common_random_seed_hash(), "09 common root")
+	var restart: Dictionary = scene.restart_paired_from_fork()
+	_check(bool(restart.get("success", false)) and String(restart.get("common_random_seed_hash", "")) == root, "10 restart root")
+	var sw0: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0)
+	_check(bool(sw0.get("success", false)) and c.common_random_seed_hash() == root and t.common_random_seed_hash() == root, "11 switch root")
 	traces = scene.get_vis21_canonical_traces()
-	fork_treatment = Dictionary(Array(traces.get("treatment", []))[0])
-	_check(String(fork_treatment.get("experiment_id", "")) == ExperimentModel.PROFILE_BASELINE, "12 treatment at fork is BASELINE")
-	var baseline_probe: Dictionary = control.baseline_environment_sample_at(0.0, 0.0)
-	var treatment_fork_probe: Dictionary = treatment.sample_environment_for_generation(FORK_GENERATION, 0.0, 0.0)
-	var treatment_next_probe: Dictionary = treatment.sample_environment_for_generation(FORK_GENERATION + 1, 0.0, 0.0)
-	_check(String(treatment_fork_probe.get("checksum", "")) == String(baseline_probe.get("checksum", "")) and String(treatment_next_probe.get("checksum", "")) != String(baseline_probe.get("checksum", "")), "13 treatment forcing starts at N+1")
-	scene.advance_paired_to(FORK_GENERATION + 1)
+	_check(String(Dictionary(Array(traces.get("treatment", []))[0]).get("experiment_id", "")) == ExperimentModel.PROFILE_BASELINE, "12 fork baseline")
+	var base: Dictionary = c.baseline_environment_sample_at(0.0, 0.0)
+	var env_n: Dictionary = t.sample_environment_for_generation(FORK, 0.0, 0.0)
+	var env_n1: Dictionary = t.sample_environment_for_generation(FORK + 1, 0.0, 0.0)
+	_check(String(env_n.get("checksum", "")) == String(base.get("checksum", "")) and String(env_n1.get("checksum", "")) != String(base.get("checksum", "")), "13 intervention boundary")
+	scene.advance_paired_to(FORK + 1)
 	traces = scene.get_vis21_canonical_traces()
-	var c_n1: Dictionary = Dictionary(Array(traces.get("control", []))[-1])
-	_check(String(c_n1.get("experiment_id", "")) == "BASELINE" and String(control.baseline_environment_sample_at(0.0, 0.0).get("checksum", "")) == String(baseline_probe.get("checksum", "")), "14 CONTROL remains BASELINE")
-	_check(scene.get_spatial_snapshot() == canonical_environment_before, "15 canonical VIS1.2 environment remains untouched")
-
-	var horizon_target := FORK_GENERATION + DIVERGENCE_HORIZON
-	var horizon_result: Dictionary = scene.advance_paired_to(horizon_target)
-	_require(bool(horizon_result.get("success", false)), "advance to causal horizon")
-	if not bool(horizon_result.get("success", false)):
-		return
-	var horizon_summary: Dictionary = scene.get_vis21_comparison_summary()
-	_check(_has_causal_divergence(Array(horizon_summary.get("points", [])), FORK_GENERATION), "16 strong DROUGHT produces measurable divergence by N+12")
-
-	var first_replay_traces: Dictionary = scene.get_vis21_canonical_traces()
-	var replay_control: Array = Array(first_replay_traces.get("control", [])).duplicate(true)
-	var replay_treatment: Array = Array(first_replay_traces.get("treatment", [])).duplicate(true)
+	_check(String(Dictionary(Array(traces.get("control", []))[-1]).get("experiment_id", "")) == ExperimentModel.PROFILE_BASELINE, "14 control baseline")
+	_check(scene.get_spatial_snapshot() == spatial_before, "15 canonical environment untouched")
+	_require(bool(scene.advance_paired_to(HORIZON).get("success", false)), "horizon")
+	summary = scene.get_vis21_comparison_summary()
+	_check(_diverged(Array(summary.get("points", []))), "16 divergence by N+12")
+	var replay_a: Dictionary = scene.get_vis21_canonical_traces()
 	scene.restart_paired_from_fork()
-	scene.advance_paired_to(horizon_target)
-	var second_replay_traces: Dictionary = scene.get_vis21_canonical_traces()
-	_check(Array(second_replay_traces.get("control", [])) == replay_control and Array(second_replay_traces.get("treatment", [])) == replay_treatment, "17 same fork/root/experiment reproduces exact paired trace")
-
-	var switched_target := horizon_target + 4
-	scene.advance_paired_to(switched_target)
-	var control_future_before_switch: Dictionary = control.generation_map(switched_target)
-	var drought_future_before_switch: Dictionary = treatment.generation_map(switched_target)
-	scene.set_realtime_turnover_generation(horizon_target)
-	var switch_result: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0)
-	scene.advance_paired_to(switched_target)
-	var control_future_after_switch: Dictionary = control.generation_map(switched_target)
-	var flood_future_after_switch: Dictionary = treatment.generation_map(switched_target)
-	_check(bool(switch_result.get("success", false)) and control_future_after_switch == control_future_before_switch and flood_future_after_switch != drought_future_before_switch, "18 treatment switch changes same-generation TREATMENT future and never CONTROL")
-
+	scene.advance_paired_to(HORIZON)
+	var replay_b: Dictionary = scene.get_vis21_canonical_traces()
+	_check(replay_a == replay_b, "17 exact replay")
+	var target := HORIZON + 4
+	scene.advance_paired_to(target)
+	var c_before: Dictionary = c.generation_map(target)
+	var t_before: Dictionary = t.generation_map(target)
+	scene.set_realtime_turnover_generation(HORIZON)
+	var sw: Dictionary = scene.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0)
+	scene.advance_paired_to(target)
+	_check(bool(sw.get("success", false)) and c.generation_map(target) == c_before and t.generation_map(target) != t_before, "18 treatment-only future")
 	traces = scene.get_vis21_canonical_traces()
-	control_trace = traces.get("control", [])
-	treatment_trace = traces.get("treatment", [])
-	var latest_generation := int(Dictionary(control_trace[-1]).get("generation", -1))
-	var latest_control_map: Dictionary = control.generation_map(latest_generation)
-	var latest_treatment_map: Dictionary = treatment.generation_map(latest_generation)
-	_check(String(Dictionary(control_trace[-1]).get("field_hash", "")) == TraceContract.compute_field_hash(latest_generation, latest_control_map) and String(Dictionary(treatment_trace[-1]).get("field_hash", "")) == TraceContract.compute_field_hash(latest_generation, latest_treatment_map), "19 both canonical sides use TraceContract.compute_field_hash")
-	_check(typeof(Dictionary(control_trace[-1]).get("environment_revision")) == TYPE_STRING and typeof(Dictionary(treatment_trace[-1]).get("environment_revision")) == TYPE_STRING, "20 environment_revision is String on both sides")
-	var integrated_compare: Dictionary = ComparisonModel.summarize(control_trace, treatment_trace, FORK_GENERATION, true)
-	_check(bool(integrated_compare.get("success", false)), "21 Comparator accepts integrated canonical traces")
-
-	var corrupted_hash_treatment := treatment_trace.duplicate(true)
-	var corrupted_hash_point: Dictionary = Dictionary(corrupted_hash_treatment[0]).duplicate(true)
-	corrupted_hash_point["field_hash"] = "corrupted-fork".sha256_text()
-	corrupted_hash_treatment[0] = corrupted_hash_point
-	var corrupted_hash_result: Dictionary = ComparisonModel.summarize(control_trace, corrupted_hash_treatment, FORK_GENERATION, true)
-	_check(not bool(corrupted_hash_result.get("success", true)), "22 Comparator rejects corrupted fork field hash")
-
-	var corrupted_revision_treatment := treatment_trace.duplicate(true)
-	var corrupted_revision_point: Dictionary = Dictionary(corrupted_revision_treatment[0]).duplicate(true)
-	corrupted_revision_point["environment_revision"] = "CORRUPTED_ENV_REV"
-	corrupted_revision_treatment[0] = corrupted_revision_point
-	var corrupted_revision_result: Dictionary = ComparisonModel.summarize(control_trace, corrupted_revision_treatment, FORK_GENERATION, true)
-	_check(not bool(corrupted_revision_result.get("success", true)), "23 Comparator rejects corrupted fork environment revision")
-
+	ct = traces.get("control", []); tt = traces.get("treatment", [])
+	var g := int(Dictionary(ct[-1]).get("generation", -1))
+	_check(String(Dictionary(ct[-1]).get("field_hash", "")) == TraceContract.compute_field_hash(g, c.generation_map(g)) and String(Dictionary(tt[-1]).get("field_hash", "")) == TraceContract.compute_field_hash(g, t.generation_map(g)), "19 canonical field hash")
+	_check(typeof(Dictionary(ct[-1]).get("environment_revision")) == TYPE_STRING and typeof(Dictionary(tt[-1]).get("environment_revision")) == TYPE_STRING, "20 revisions are strings")
+	_check(bool(ComparisonModel.summarize(ct, tt, FORK, true).get("success", false)), "21 comparator accepts")
+	var bad_hash := tt.duplicate(true); var bh: Dictionary = Dictionary(bad_hash[0]).duplicate(true); bh["field_hash"] = "bad".sha256_text(); bad_hash[0] = bh
+	_check(not bool(ComparisonModel.summarize(ct, bad_hash, FORK, true).get("success", true)), "22 bad fork hash rejected")
+	var bad_env := tt.duplicate(true); var be: Dictionary = Dictionary(bad_env[0]).duplicate(true); be["environment_revision"] = "BAD"; bad_env[0] = be
+	_check(not bool(ComparisonModel.summarize(ct, bad_env, FORK, true).get("success", true)), "23 bad fork env rejected")
 	state = scene.get_vis21_state()
-	_check(bool(state.get("control_data_only", false)) and int(state.get("progressive_ph5_count", -1)) == 0, "24 CONTROL does not create/render PH5 world")
-	_check(int(state.get("visible_population_fields", 0)) == 1, "25 exactly one visible realtime population field exists")
-	_check(int(state.get("whole_field_ph5_rebuilds", -1)) == 0, "26 whole-field PH5 turnover rebuild remains zero")
-
-	var controls_label := scene.get("_controls_label") as Label
-	_check(controls_label != null and "WASD move" in controls_label.text, "27 spectator WASD controls remain active")
+	_check(bool(state.get("control_data_only", false)) and int(state.get("progressive_ph5_count", -1)) == 0, "24 control data-only no PH5")
+	_check(int(state.get("visible_population_fields", 0)) == 1, "25 one visible field")
+	_check(int(state.get("whole_field_ph5_rebuilds", -1)) == 0, "26 no whole-field PH5")
+	var controls := scene.get("_controls_label") as Label
+	_check(controls != null and "WASD move" in controls.text, "27 WASD spectator controls")
 	var panel := scene.get("_vis21_panel") as Control
 	var camera := scene.get("_camera") as Camera3D
-	var before_rotation := camera.rotation if camera != null else Vector3.ZERO
-	var mouse_event := InputEventMouseMotion.new()
-	mouse_event.relative = Vector2(12.0, -7.0)
-	scene._unhandled_input(mouse_event)
-	await process_frame
-	var mouse_changed := camera != null and camera.rotation != before_rotation
-	_check(mouse_changed or (controls_label != null and "mouse look" in controls_label.text), "28 spectator captured mouse-look remains operational with comparison panel")
-	_check(panel != null and panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "29 comparison panel is MOUSE_FILTER_IGNORE")
-	var before_generation := int(scene.get_vis21_state().get("paired_generation", -1))
-	var playback_result: Dictionary = scene.advance_paired_to(before_generation + 1)
-	_check(bool(playback_result.get("success", false)) and int(scene.get_vis21_state().get("paired_generation", -1)) == before_generation + 1 and camera != null, "30 paired playback advances without blocking camera/input")
+	_require(panel != null and camera != null, "panel/camera")
+	if panel == null or camera == null: return
+	scene._set_mouse_capture(true)
+	var rb := camera.rotation
+	var m := InputEventMouseMotion.new(); var p := panel.global_position + Vector2(24, 24); m.position = p; m.global_position = p; m.relative = Vector2(18, -11)
+	get_root().push_input(m); await process_frame
+	_check(camera.rotation != rb, "28 captured mouse rotates")
+	_check(panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "29 panel ignores mouse")
+	var pg := int(scene.get_vis21_state().get("paired_generation", -1))
+	_check(bool(scene.advance_paired_to(pg + 1).get("success", false)) and int(scene.get_vis21_state().get("paired_generation", -1)) == pg + 1, "30 playback advances")
+	scene._set_mouse_capture(false)
+	rb = camera.rotation; m = InputEventMouseMotion.new(); m.position = p; m.global_position = p; m.relative = Vector2(-15, 9); get_root().push_input(m); await process_frame
+	_check(camera.rotation == rb, "31 released mouse stable")
+	state = scene.get_vis21_state()
+	_check(int(state.get("comparison_point_count", 999)) <= WINDOW and int(state.get("comparison_rebuild_input_count", 999)) <= WINDOW, "32 comparison bounded")
+	_check(bool(state.get("treatment_runner_in_tree", false)) and t.get_parent() == scene and t.name == "VIS21TreatmentDataRunner" and t.get_child_count() == 0, "33 treatment lifecycle/data-only")
+	scene.queue_free(); await process_frame
+	_require(not is_instance_valid(t), "treatment freed with scene")
 
-	scene.queue_free()
-	await process_frame
-
-	var smoke := VIS21_Scene.instantiate()
-	get_root().add_child(smoke)
-	await process_frame
-	await process_frame
-	smoke.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0)
-	smoke.set_realtime_turnover_generation(FORK_GENERATION)
-	await process_frame
-	var smoke_nodes_at_fork := get_node_count()
-	var smoke_fork: Dictionary = smoke.begin_paired_experiment()
-	_require(bool(smoke_fork.get("success", false)), "long-smoke fork")
-	if not bool(smoke_fork.get("success", false)):
-		return
-	var smoke_advance: Dictionary = smoke.advance_paired_to(LONG_SMOKE_GENERATION)
-	_require(bool(smoke_advance.get("success", false)), "long smoke reaches G80")
-	if not bool(smoke_advance.get("success", false)):
-		return
-	var smoke_state: Dictionary = smoke.get_vis21_state()
-	var smoke_traces: Dictionary = smoke.get_vis21_canonical_traces()
-	var smoke_control: Array = smoke_traces.get("control", [])
-	var smoke_treatment: Array = smoke_traces.get("treatment", [])
-	_check(smoke_control.size() <= 64 and smoke_treatment.size() <= 64 and String(smoke_state.get("common_random_seed_hash", "")) == String(smoke_fork.get("common_random_seed_hash", "")), "31 branch histories/caches remain bounded over G20..G80 and CRN root stays stable")
-	_check(int(smoke_state.get("comparison_point_count", 0)) <= 64 and bool(smoke.get_vis21_comparison_summary().get("success", false)), "32 comparison series remains <=64 and valid")
-	var smoke_nodes_at_end := get_node_count()
-	_check(smoke_nodes_at_end <= smoke_nodes_at_fork + 512 and int(smoke_state.get("whole_field_ph5_rebuilds", -1)) == 0 and _biomass_contract_valid(smoke_control) and _biomass_contract_valid(smoke_treatment), "33 no unbounded SceneTree growth; no PH5 rebuild; canonical biomass stays valid")
-
-	smoke.queue_free()
-	await process_frame
-	if _failures == 0 and _assertions == 33:
-		print("ECO.VIS2.1 control-vs-treatment integration: PASS (33 assertions); long smoke G20..G80 PASS")
+	var smoke = VIS21Scene.instantiate(); get_root().add_child(smoke); await process_frame; await process_frame
+	smoke.set_treatment(ExperimentModel.PROFILE_DROUGHT, 1.0); smoke.set_realtime_turnover_generation(FORK); await process_frame
+	var nodes0 := get_node_count()
+	var sf: Dictionary = smoke.begin_paired_experiment(); _require(bool(sf.get("success", false)), "smoke fork")
+	if not bool(sf.get("success", false)): return
+	var sc = smoke.get_vis21_control_runner(); var st = smoke.get_vis21_treatment_runner(); var sroot := String(sf.get("common_random_seed_hash", ""))
+	smoke.advance_paired_to(HORIZON)
+	var early: Dictionary = smoke.get_vis21_canonical_traces().duplicate(true)
+	_require(bool(smoke.advance_paired_to(EVICT).get("success", false)), "G140")
+	var s: Dictionary = smoke.get_vis21_state(); var trs: Dictionary = smoke.get_vis21_canonical_traces(); var sct: Array = trs.get("control", []); var stt: Array = trs.get("treatment", []); var oldest := EVICT - WINDOW + 1
+	_check(int(s.get("control_cached_generation_count", 999)) <= WINDOW and int(s.get("treatment_cached_generation_count", 999)) <= WINDOW, "34 generation caches bounded")
+	_check(int(s.get("control_cached_trace_point_count", 999)) <= WINDOW and int(s.get("treatment_cached_trace_point_count", 999)) <= WINDOW, "35 trace caches bounded")
+	_check(int(s.get("control_oldest_cached_generation", -1)) == oldest and int(s.get("treatment_oldest_cached_generation", -1)) == oldest and oldest > FORK, "36 real eviction")
+	_check(int(s.get("oldest_paired_rewind_generation", -1)) == oldest, "37 oldest paired rewind")
+	_check(sc.generation_map(FORK) == smoke.get("_vis21_fork_map") and st.generation_map(FORK) == smoke.get("_vis21_fork_map"), "38 fork reconstructable")
+	_check(sct.size() <= WINDOW and stt.size() <= WINDOW and int(s.get("comparison_rebuild_input_count", 999)) <= WINDOW, "39 O(window) comparison")
+	_check(int(Dictionary(sct[0]).get("generation", -1)) == FORK and int(Dictionary(stt[0]).get("generation", -1)) == FORK, "40 fork permanently retained")
+	_check(int(Dictionary(sct[-1]).get("generation", -1)) == EVICT and int(Dictionary(stt[-1]).get("generation", -1)) == EVICT, "41 latest G140")
+	_check(String(s.get("common_random_seed_hash", "")) == sroot and sc.common_random_seed_hash() == sroot and st.common_random_seed_hash() == sroot, "42 CRN survives eviction")
+	_check(int(s.get("comparison_point_count", 999)) <= WINDOW and bool(smoke.get_vis21_comparison_summary().get("success", false)), "43 comparator valid after eviction")
+	_check(bool(s.get("control_data_only", false)) and int(s.get("visible_population_fields", 0)) == 1 and int(s.get("whole_field_ph5_rebuilds", -1)) == 0, "44 presentation architecture")
+	_check(_biomass(sct) and _biomass(stt), "45 biomass at G140")
+	smoke.set_realtime_turnover_generation(FORK)
+	_check(int(smoke.get_vis21_state().get("paired_generation", -1)) == oldest, "46 rewind clamps")
+	smoke.set_realtime_turnover_generation(120)
+	var cf: Dictionary = sc.generation_map(EVICT); var tf: Dictionary = st.generation_map(EVICT)
+	var csw: Dictionary = smoke.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0); s = smoke.get_vis21_state()
+	_check(bool(csw.get("success", false)) and int(s.get("simulated_generation", -1)) == 120 and int(s.get("treatment_oldest_cached_generation", -1)) > FORK, "47 cached local branch")
+	_check(not st.is_generation_cached(EVICT), "48 treatment future erased")
+	_check(sc.generation_map(EVICT) == cf and sc.common_random_seed_hash() == sroot and st.common_random_seed_hash() == sroot, "49 control/root untouched")
+	_require(bool(smoke.advance_paired_to(EVICT).get("success", false)), "rebranch G140")
+	_check(sc.generation_map(EVICT) == cf and st.generation_map(EVICT) != tf, "50 treatment recomputed only")
+	var rr: Dictionary = smoke.restart_paired_from_fork()
+	_check(bool(rr.get("success", false)) and int(rr.get("generation", -1)) == FORK and String(rr.get("common_random_seed_hash", "")) == sroot, "51 restart after eviction")
+	_require(bool(smoke.advance_paired_to(HORIZON).get("success", false)), "replay G32")
+	_check(smoke.get_vis21_canonical_traces() == early, "52 replay after eviction exact")
+	_require(bool(smoke.advance_paired_to(LATER).get("success", false)), "G220")
+	s = smoke.get_vis21_state(); trs = smoke.get_vis21_canonical_traces(); sct = trs.get("control", []); stt = trs.get("treatment", [])
+	_check(int(s.get("comparison_rebuild_input_count", 999)) <= WINDOW and int(s.get("comparison_point_count", 999)) <= WINDOW, "53 comparison bounded G220")
+	_check(int(s.get("control_cached_generation_count", 999)) <= WINDOW and int(s.get("treatment_cached_generation_count", 999)) <= WINDOW and int(s.get("control_oldest_cached_generation", -1)) > FORK and int(s.get("treatment_oldest_cached_generation", -1)) > FORK, "54 caches bounded G220")
+	_check(int(Dictionary(sct[0]).get("generation", -1)) == FORK and int(Dictionary(stt[0]).get("generation", -1)) == FORK and int(Dictionary(sct[-1]).get("generation", -1)) == LATER and get_node_count() <= nodes0 + 512, "55 fork/latest/node growth")
+	_check(_biomass(sct) and _biomass(stt) and bool(s.get("control_data_only", false)) and int(s.get("visible_population_fields", 0)) == 1 and int(s.get("whole_field_ph5_rebuilds", -1)) == 0 and String(s.get("common_random_seed_hash", "")) == sroot, "56 long-run invariants")
+	smoke.queue_free(); await process_frame
+	if _failures == 0:
+		print("ECO.VIS2.1 control-vs-treatment integration: PASS (%d assertions); long smoke G20..G220 with rolling eviction PASS" % _assertions)
 		quit(0)
 	else:
-		push_error("ECO.VIS2.1 integration: FAIL assertions=%d failures=%d" % [_assertions, _failures])
-		quit(1)
+		push_error("ECO.VIS2.1 integration: FAIL assertions=%d failures=%d" % [_assertions, _failures]); quit(1)
 
+func _zero(p: Dictionary) -> bool:
+	return int(p.get("delta_population", 0)) == 0 and int(p.get("delta_deaths", 0)) == 0 and int(p.get("delta_survivors", 0)) == 0 and absf(float(p.get("delta_mean_fitness", 0.0))) <= 1e-9 and int(p.get("delta_unique_genomes", 0)) == 0 and absf(float(p.get("delta_alpha_share", 0.0))) <= 1e-9
 
-func _all_numeric_deltas_zero(point: Dictionary) -> bool:
-	return (
-		int(point.get("delta_population", 0)) == 0
-		and int(point.get("delta_deaths", 0)) == 0
-		and int(point.get("delta_survivors", 0)) == 0
-		and absf(float(point.get("delta_mean_fitness", 0.0))) <= 0.000000001
-		and int(point.get("delta_unique_genomes", 0)) == 0
-		and absf(float(point.get("delta_alpha_share", 0.0))) <= 0.000000001
-	)
-
-
-func _has_causal_divergence(points: Array, fork_generation: int) -> bool:
-	for point_variant in points:
-		var point: Dictionary = point_variant
-		var generation := int(point.get("generation", -1))
-		if generation <= fork_generation or generation > fork_generation + DIVERGENCE_HORIZON:
-			continue
-		if (
-			int(point.get("delta_population", 0)) != 0
-			or int(point.get("delta_deaths", 0)) != 0
-			or int(point.get("delta_survivors", 0)) != 0
-			or absf(float(point.get("delta_mean_fitness", 0.0))) > 0.000000001
-			or int(point.get("delta_unique_genomes", 0)) != 0
-			or absf(float(point.get("delta_alpha_share", 0.0))) > 0.000000001
-		):
-			return true
+func _diverged(points: Array) -> bool:
+	for v in points:
+		var p: Dictionary = v; var g := int(p.get("generation", -1))
+		if g > FORK and g <= HORIZON and (int(p.get("delta_population", 0)) != 0 or int(p.get("delta_deaths", 0)) != 0 or int(p.get("delta_survivors", 0)) != 0 or absf(float(p.get("delta_mean_fitness", 0.0))) > 1e-9 or int(p.get("delta_unique_genomes", 0)) != 0 or absf(float(p.get("delta_alpha_share", 0.0))) > 1e-9): return true
 	return false
 
-
-func _is_lower_sha256(value: String) -> bool:
-	if value.length() != 64:
-		return false
-	for index in range(value.length()):
-		var code := value.unicode_at(index)
-		if not ((code >= 48 and code <= 57) or (code >= 97 and code <= 102)):
-			return false
+func _sha(v: String) -> bool:
+	if v.length() != 64: return false
+	for i in range(v.length()):
+		var c := v.unicode_at(i)
+		if not ((c >= 48 and c <= 57) or (c >= 97 and c <= 102)): return false
 	return true
 
-
-func _biomass_contract_valid(trace: Array) -> bool:
-	if trace.is_empty():
-		return false
-	for point_variant in trace:
-		var point: Dictionary = point_variant
-		var biomass := float(point.get("represented_biomass_kg", -1.0))
-		if not is_finite(biomass) or biomass < 0.0:
-			return false
+func _biomass(trace: Array) -> bool:
+	if trace.is_empty(): return false
+	for v in trace:
+		var b := float(Dictionary(v).get("represented_biomass_kg", -1.0))
+		if not is_finite(b) or b < 0.0: return false
 	return true
 
-
-func _check(condition: bool, label: String) -> void:
+func _check(ok: bool, label: String) -> void:
 	_assertions += 1
-	if condition:
-		return
-	_failures += 1
-	push_error("ECO.VIS2.1 assertion failed: %s" % label)
+	if not ok:
+		_failures += 1; push_error("ECO.VIS2.1 assertion failed: %s" % label)
 
-
-func _require(condition: bool, label: String) -> void:
-	if condition:
-		return
-	push_error("ECO.VIS2.1 setup failure: %s" % label)
-	quit(1)
+func _require(ok: bool, label: String) -> void:
+	if not ok:
+		push_error("ECO.VIS2.1 setup failure: %s" % label); quit(1)

@@ -118,6 +118,8 @@ func advance_to(target_generation: int) -> Dictionary:
 func generation_map(generation: int) -> Dictionary:
 	if not _configured:
 		return {}
+	if generation == _fork_generation:
+		return _fork_generation_map.duplicate(true)
 	return Dictionary(_generation_cache.get(generation, {})).duplicate(true)
 
 
@@ -132,6 +134,47 @@ func trace_point(generation: int) -> Dictionary:
 	return {}
 
 
+func prune_before(min_generation: int) -> Dictionary:
+	if not _configured:
+		return _failure("not_configured")
+	var effective_min := maxi(_fork_generation, min_generation)
+	if _max_generation >= _fork_generation:
+		effective_min = mini(effective_min, _max_generation)
+	for generation_variant in _generation_cache.keys():
+		if int(generation_variant) < effective_min:
+			_generation_cache.erase(generation_variant)
+	var retained_trace: Array[Dictionary] = []
+	for point in _trace_points:
+		if int(point.get("generation", -1)) >= effective_min:
+			retained_trace.append(point.duplicate(true))
+	_trace_points = retained_trace
+	return {
+		"success": true,
+		"min_generation": effective_min,
+		"cached_generation_count": cached_generation_count(),
+		"cached_trace_point_count": cached_trace_point_count(),
+		"oldest_cached_generation": oldest_cached_generation(),
+		"max_generation": _max_generation,
+	}
+
+
+func cached_generation_count() -> int:
+	return _generation_cache.size()
+
+
+func oldest_cached_generation() -> int:
+	if _generation_cache.is_empty():
+		return -1
+	var oldest := 2147483647
+	for generation_variant in _generation_cache.keys():
+		oldest = mini(oldest, int(generation_variant))
+	return oldest
+
+
+func cached_trace_point_count() -> int:
+	return _trace_points.size()
+
+
 func restart_from_fork() -> Dictionary:
 	if not _configured:
 		return _failure("not_configured")
@@ -139,7 +182,7 @@ func restart_from_fork() -> Dictionary:
 	_trace_points.clear()
 	_generation_cache[_fork_generation] = _fork_generation_map.duplicate(true)
 	_max_generation = _fork_generation
-	var point := _summarize_generation(_fork_generation, _generation_cache[_fork_generation])
+	var point := _summarize_generation(_fork_generation, _fork_generation_map)
 	if point.is_empty():
 		_generation_cache.clear()
 		_max_generation = -1
@@ -272,7 +315,6 @@ func _validate_generation_map(generation_map_value: Dictionary) -> Dictionary:
 
 
 static func _sample_terrain_height(x: float, z: float) -> float:
-	# Exact VIS1.0 terrain function. Keeping it pure avoids creating a scene node inside this RefCounted runner.
 	var nx: float = clamp(x / TERRAIN_HALF_M, -1.0, 1.0)
 	var nz: float = clamp(z / TERRAIN_HALF_M, -1.0, 1.0)
 	var rolling: float = 7.5 * sin(nx * PI * 1.65) * cos(nz * PI * 1.35)

@@ -9,6 +9,8 @@ const EnvironmentSample = preload("res://scripts/research/ecology/environment_sa
 
 const FORK_GENERATION := 4
 const TARGET_GENERATION := 12
+const BOUNDED_TARGET_GENERATION := 80
+const BRANCH_CACHE_WINDOW := 64
 const COMMON_RANDOM_SEED_HASH := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 var _assertions := 0
@@ -187,7 +189,28 @@ func _run() -> void:
 	_expect(bool(branch_edit.advance_to(9).get("success", false)), "edited branch replays after restart")
 	_expect(branch_edit.trace() == edited_trace, "restart replays piecewise treatment schedule deterministically")
 
-	for runner in [fixture_runner, missing_root, invalid_root, drought, drought_repeat, labelled_a, labelled_b, source_snapshot_runner, history_snapshot_runner, drought_low, flood, branch_edit]:
+	var bounded := TreatmentRunner.new()
+	_expect(bool(bounded.configure_from_fork(FORK_GENERATION, fork_map, fork_history, ExperimentModel.PROFILE_DROUGHT, 1.0, COMMON_RANDOM_SEED_HASH).get("success", false)), "bounded Treatment fixture configures")
+	_expect(bool(bounded.advance_to(BOUNDED_TARGET_GENERATION).get("success", false)), "bounded Treatment reaches long target")
+	var bounded_floor := BOUNDED_TARGET_GENERATION - BRANCH_CACHE_WINDOW + 1
+	var rewind_generation := 40
+	var rewind_map_before := bounded.generation_map(rewind_generation)
+	var future_map_before := bounded.generation_map(BOUNDED_TARGET_GENERATION)
+	var same_generation_future_before := bounded.generation_map(rewind_generation + 4)
+	var bounded_root := bounded.common_random_seed_hash()
+	var bounded_prune := bounded.prune_before(bounded_floor)
+	_expect(bool(bounded_prune.get("success", false)) and bounded.cached_generation_count() <= BRANCH_CACHE_WINDOW and bounded.cached_trace_point_count() <= BRANCH_CACHE_WINDOW, "Treatment real generation/trace caches prune to 64")
+	_expect(bounded.oldest_cached_generation() == bounded_floor and bounded.generation_map(FORK_GENERATION) == fork_map, "Treatment rolling cache evicts fork while immutable fork map remains accessible")
+	_expect(bounded.common_random_seed_hash() == bounded_root, "Treatment prune cannot alter CRN root")
+	var rewind_result := bounded.rewind_to_cached_generation(rewind_generation)
+	_expect(bool(rewind_result.get("success", false)) and bounded.generation_map(rewind_generation) == rewind_map_before and not bounded.is_generation_cached(BOUNDED_TARGET_GENERATION), "Treatment bounded rewind keeps requested cached generation and erases future")
+	_expect(bounded.common_random_seed_hash() == bounded_root and int(rewind_result.get("generation", -1)) == rewind_generation, "Treatment bounded rewind preserves exact CRN root/current generation")
+	var bounded_edit := bounded.set_experiment(ExperimentModel.PROFILE_FLOOD, 1.0)
+	_expect(bool(bounded_edit.get("success", false)) and int(bounded_edit.get("effective_generation", -1)) == rewind_generation + 1, "Treatment edit after cached rewind starts at generation+1")
+	_expect(bool(bounded.advance_to(rewind_generation + 4).get("success", false)) and bounded.generation_map(rewind_generation) == rewind_map_before and bounded.generation_map(rewind_generation + 4) != same_generation_future_before, "Treatment recomputes same-generation post-rewind future")
+	_expect(bool(bounded.restart_from_fork().get("success", false)) and bounded.generation_map(FORK_GENERATION) == fork_map and bounded.common_random_seed_hash() == bounded_root, "Treatment restart from immutable fork works after eviction")
+
+	for runner in [fixture_runner, missing_root, invalid_root, drought, drought_repeat, labelled_a, labelled_b, source_snapshot_runner, history_snapshot_runner, drought_low, flood, branch_edit, bounded]:
 		runner.free()
 
 	print("ECO.VIS2.1-T treatment branch runner R1: PASS (%d assertions)" % _assertions if _failures == 0 else "ECO.VIS2.1-T treatment branch runner R1: FAIL (%d assertions, %d failures)" % [_assertions, _failures])
