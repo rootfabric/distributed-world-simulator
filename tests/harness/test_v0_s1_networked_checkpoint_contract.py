@@ -152,18 +152,34 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(v0["health_declared"], passport["health_declared"])
         self.assertEqual([], passport["ownership_claims"])
         self.assertEqual([], passport["runtime_paths"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_refs_fetch_performed"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_authoritative_for_dispatch"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_committed_audit_evidence"])
 
-    def test_pre_h0_3_concurrency_is_one_mutation_worker(self):
+        for relative in (
+            "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+            "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
+        ):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn(remote_head, text)
+            self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
+
+    def test_pre_h0_3_concurrency_is_one_main_owned_mutation_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(1, concurrency["pre_h0_3_total_autonomous_runtime_mutation_workers"])
         self.assertEqual(1, concurrency["v0_product_max_autonomous_runtime_mutation_workers"])
         self.assertTrue(concurrency["verification_review_only_may_wait_in_parallel_with_one_runtime_mutation_worker"])
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
         self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
+        self.assertEqual(1, lease["capacity"])
+        self.assertEqual(P4, lease["holder_checkpoint"])
+        self.assertEqual(P4_BRANCH, lease["holder_branch"])
+        self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
-    def test_p4_planner_waits_for_dispatch_then_allocates_one_mutation_worker(self):
-        work_order = {"goal_checkpoint": P4}
+    def test_p4_planner_waits_for_dispatch_then_allocates_and_releases_single_worker(self):
+        work_order = {"goal_checkpoint": P4, "branch": P4_BRANCH}
         planned = {
             "completed_predicates": [],
             "work_order_id": "V0-P4-WO-TEST",
@@ -187,6 +203,12 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
         self.assertEqual("BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION", plan["next_action"])
         self.assertIn("SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER", plan["stop_gates"])
+
+        implemented = dict(dispatched, state="IMPLEMENTED")
+        plan = build_plan(self.contracts, work_order, implemented)
+        self.assertEqual("PRODUCT_RUNTIME_VERIFICATION", plan["mode"])
+        self.assertEqual(0, plan["autonomous_runtime_workers"])
+        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", plan["v0_p4_gate"]["runtime_mutation"])
 
     def test_nx_c1_acceptance_contract_remains_strict(self):
         required = set(self.catalog["checkpoints"][H0_2]["required_predicates"])
