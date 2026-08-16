@@ -12,6 +12,7 @@ $ImportLog = Join-Path $ArtifactRoot "import.log"
 $PrepLog = Join-Path $ArtifactRoot "preparation.log"
 $DomainLog = Join-Path $ArtifactRoot "domain.log"
 $AggregateLog = Join-Path $ArtifactRoot "aggregate-recovery.log"
+$M6ReplayLog = Join-Path $ArtifactRoot "m6-resource-replay.log"
 $WireLog = Join-Path $ArtifactRoot "wire-wiring.log"
 
 if (-not (Test-Path -LiteralPath $GodotExe)) { throw "Godot executable not found: $GodotExe" }
@@ -88,6 +89,7 @@ Assert-ProjectStable -Stage "import"
 Invoke-GodotTest -Script "res://tests/runtime/test_v0_p3_resource_mining_preparation.gd" -Log $PrepLog -RequiredMarker "V0-P3 resource/mining preparation:"
 Invoke-GodotTest -Script "res://tests/runtime/test_v0_p3_resource_mining_domain.gd" -Log $DomainLog -RequiredMarker "V0-P3 resource/mining domain:"
 Invoke-GodotTest -Script "res://tests/runtime/test_v0_p3_resource_mining_aggregate_recovery.gd" -Log $AggregateLog -RequiredMarker "V0-P3 aggregate resource recovery:"
+Invoke-GodotTest -Script "res://tests/runtime/test_v0_p3_m6_resource_replay_outbox.gd" -Log $M6ReplayLog -RequiredMarker "V0-P3 M6 resource replay:"
 Invoke-GodotTest -Script "res://tests/runtime/test_v0_p3_resource_mining_wire_and_wiring.gd" -Log $WireLog -RequiredMarker "V0-P3 resource/mining wire+wiring:"
 
 if (git -C $ProjectRoot status --porcelain) {
@@ -96,5 +98,5 @@ if (git -C $ProjectRoot status --porcelain) {
 }
 
 Write-Host ""
-Write-Host "V0-P3 RESOURCE/MINING DOMAIN + AGGREGATE + WIRE/WIRING GREEN" -ForegroundColor Green
+Write-Host "V0-P3 RESOURCE/MINING DOMAIN + AGGREGATE + M6 REPLAY + WIRE/WIRING GREEN" -ForegroundColor Green
 Write-Host "[V0-P3 domain] EXACT HEAD GREEN: $ActualHead" -ForegroundColor Green
