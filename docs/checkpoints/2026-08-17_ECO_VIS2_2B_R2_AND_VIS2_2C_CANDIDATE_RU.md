@@ -164,9 +164,11 @@ VIS2.2-C isolated panel parser:
 
 `PASS`
 
-VIS2.2-C headless panel runtime/draw probe:
+VIS2.2-C full focused panel runtime/draw test:
 
-`ECO.VIS2.2-C observatory panel: PASS (26 assertions)`
+`ECO.VIS2.2-C observatory panel: PASS (42 assertions)`
+
+The focused C run verifies presentation-state extraction, selected-replicate switching, aggregate-hash invariance, source-data immutability, invalid-selection fencing, malformed/unbounded-summary rejection, deep-copy output behavior, resize/redraw stability and clean panel teardown.
 
 Strict output scan after shutdown found none of:
 
