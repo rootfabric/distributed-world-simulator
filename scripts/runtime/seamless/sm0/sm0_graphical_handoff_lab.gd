@@ -33,6 +33,12 @@ func _ready() -> void:
 	var auto_quit_text := OS.get_environment("SM0_P4_MATRIX_AUTO_QUIT_HANDOFFS").strip_edges()
 	if not auto_quit_text.is_empty():
 		_auto_quit_handoffs = maxi(0, int(auto_quit_text))
+	if _auto_quit_handoffs > 0:
+		# P4 matrix runs must not be able to accidentally produce a false short
+		# sample because the window receives a close request before the requested
+		# number of confirmed crossings. Explicit get_tree().quit() below remains
+		# authoritative for the matrix completion path.
+		get_tree().auto_accept_quit = false
 	var network_profile := String(options.get("network-profile", "")).strip_edges().to_lower()
 	_client = NetworkManualClient.new() if network_profile == P3_1_NETWORK_PROFILE else ManualClient.new()
 	_client.name = "ManualClient"
@@ -95,6 +101,22 @@ func _process(delta: float) -> void:
 			_auto_quit_requested = true
 			print("SM0-P4 WAN matrix auto-close: reached %d confirmed handoffs." % completed)
 			get_tree().quit(0)
+
+
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_CLOSE_REQUEST or _auto_quit_handoffs <= 0:
+		return
+	var completed := 0
+	if _client != null:
+		var view: Dictionary = _client.get_view_state()
+		completed = int(view.get("handoffs_completed", 0))
+	if completed >= _auto_quit_handoffs:
+		print("SM0-P4 WAN matrix close request accepted: reached %d/%d confirmed handoffs." % [completed, _auto_quit_handoffs])
+		get_tree().quit(0)
+		return
+	print("SM0-P4 WAN matrix close request ignored: only %d/%d confirmed handoffs." % [completed, _auto_quit_handoffs])
+	if _status != null:
+		_status.text = "P4 WAN MATRIX: close ignored at %d/%d · keep crossing A/D until automatic completion" % [completed, _auto_quit_handoffs]
 
 
 func _configure_input() -> void:
