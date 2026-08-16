@@ -1,0 +1,67 @@
+name: V0 P4 Post-Activation Audit Probe
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v0-p4-post-activation-audit-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact P4 audit subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: 47ff18cf603bbf98bb67f7f62962e050f8606542
+
+      - name: Verify exact P4 checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "47ff18cf603bbf98bb67f7f62962e050f8606542"
+          test -z "$(git status --porcelain)"
+
+      - name: Fetch all branch refs
+        shell: bash
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+
+      - name: Install pinned harness dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Run authoritative P4 post-activation audit under PowerShell 7
+        shell: pwsh
+        run: |
+          ./RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1 `
+            -ExpectedHead 47ff18cf603bbf98bb67f7f62962e050f8606542 `
+            -PythonExe python3 `
+            -AuditOutputPath artifacts/control/v0-p4-post-activation/epoch-base-audit.json
+
+      - name: Validate authoritative audit artifact
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path('artifacts/control/v0-p4-post-activation/epoch-base-audit.json')
+          data = json.loads(p.read_text(encoding='utf-8-sig'))
+          assert data['decision'] == 'CONTINUE', data
+          assert data['authoritative_for_dispatch'] is True, data
+          assert data['refs_fetch_performed'] is True, data
+          assert data['p4_head'] == '47ff18cf603bbf98bb67f7f62962e050f8606542', data
+          assert data['canonical_main_head'] == '5999d935e8d5b496100ced66283d8762d3403675', data
+          assert int(data['registry_generation']) >= 80, data
+          assert data['production_runtime_mutation_present'] is False, data
+          assert data['director_dispatch_still_required'] is True, data
+          print(json.dumps(data, indent=2, sort_keys=True))
+
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p4-post-activation-audit-probe
+          path: artifacts/control/v0-p4-post-activation/epoch-base-audit.json
+          if-no-files-found: warn
