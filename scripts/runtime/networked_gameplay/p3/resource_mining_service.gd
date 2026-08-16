@@ -77,7 +77,7 @@ func mine(
 		return replay
 	if payload.size() != 2 or not payload.has("resource_node_id") or not payload.has("requested_units"):
 		return _record_result(op, fingerprint, _failure("INVALID_RESOURCE_COMMAND"))
-	if typeof(payload.get("resource_node_id")) != TYPE_STRING or typeof(payload.get("requested_units")) != TYPE_INT:
+	if typeof(payload.get("resource_node_id")) != TYPE_STRING or not Utils.is_json_integer(payload.get("requested_units")):
 		return _record_result(op, fingerprint, _failure("INVALID_MINING_QUANTITY"))
 	var node_id := String(payload.get("resource_node_id", "")).strip_edges().to_lower()
 	var requested_units := int(payload.get("requested_units", 0))
