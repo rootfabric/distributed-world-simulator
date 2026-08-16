@@ -1,4 +1,4 @@
-extends "res://scripts/runtime/seamless/sm0/sm0_automated_client_node.gd"
+extends "res://scripts/runtime/seamless/sm0/sm0_automated_client_node_p4_hardened.gd"
 
 const ManualContracts = preload("res://scripts/runtime/seamless/sm0/sm0_contracts.gd")
 const MANUAL_MOVE_STEP := 0.25
