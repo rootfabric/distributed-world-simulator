@@ -4,6 +4,10 @@ param(
     [switch]$Restart,
     [switch]$AllowDirty,
     [ValidateRange(0, 1000)][int]$RequireHandoffs = 0,
+    [string]$NetworkProfile = "",
+    [ValidateRange(0, 10000)][int]$NetworkLatencyMs = 0,
+    [ValidateRange(0, 5000)][int]$NetworkJitterMs = 0,
+    [int]$NetworkSeed = 431,
     [string]$ProjectRoot = "",
     [string]$GodotConsole = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe",
     [string]$GodotGraphical = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe"
@@ -14,6 +18,16 @@ if ([string]::IsNullOrWhiteSpace($ProjectRoot)) { $ProjectRoot = $PSScriptRoot }
 $ProjectRoot = [IO.Path]::GetFullPath($ProjectRoot)
 if (-not $ProjectRoot.StartsWith("C:\distributed-world-simulator", [StringComparison]::OrdinalIgnoreCase)) {
     throw "SM0-P1 must run under C:\distributed-world-simulator. Current: $ProjectRoot"
+}
+
+$P31NetworkProfile = "p31-controlled-latency-v1"
+if (-not [string]::IsNullOrWhiteSpace($NetworkProfile)) {
+    if ($NetworkProfile -ne $P31NetworkProfile) { throw "Unsupported SM0 graphical network profile: $NetworkProfile" }
+    if ($NetworkLatencyMs -lt 1) { throw "SM0-P3.1 network profile requires NetworkLatencyMs >= 1." }
+    if ($NetworkJitterMs -gt $NetworkLatencyMs) { throw "SM0-P3.1 NetworkJitterMs cannot exceed NetworkLatencyMs." }
+}
+elseif ($NetworkLatencyMs -ne 0 -or $NetworkJitterMs -ne 0) {
+    throw "Network latency/jitter parameters require -NetworkProfile $P31NetworkProfile."
 }
 
 $LocalAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
@@ -91,10 +105,18 @@ if ($VersionText -ne $ExpectedVersion) { throw "Unexpected Godot console version
 $GraphicalVersionText = (& $GodotGraphical --version | Select-Object -First 1).Trim()
 if ($GraphicalVersionText -ne $ExpectedVersion) { throw "Unexpected Godot graphical version: $GraphicalVersionText" }
 
-foreach ($ScriptPath in @(
+$CompileScripts = @(
     "res://scripts/runtime/seamless/sm0/sm0_manual_client_node.gd",
     "res://scripts/runtime/seamless/sm0/sm0_graphical_handoff_lab.gd"
-)) {
+)
+if ($NetworkProfile -eq $P31NetworkProfile) {
+    $CompileScripts += @(
+        "res://scripts/runtime/seamless/sm0/sm0_manual_client_network_delay.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_network_delay.gd",
+        "res://scripts/runtime/seamless/sm0/sm0_authority_server_process.gd"
+    )
+}
+foreach ($ScriptPath in $CompileScripts) {
     Write-Host "[SM0-P1] Compile check: $ScriptPath"
     $CompileExit = Invoke-Sm0P1Godot @("--headless", "--path", $ProjectRoot, "--check-only", "--script", $ScriptPath)
     if ($CompileExit -ne 0) { throw "SM0-P1 compile check failed: $ScriptPath (exit $CompileExit)" }
@@ -160,17 +182,29 @@ function Start-Sm0Authority([string]$Role, [string]$LogPath, [string[]]$UserArgs
     return $Process
 }
 
+$NetworkArgs = @()
+if ($NetworkProfile -eq $P31NetworkProfile) {
+    $NetworkArgs = @(
+        "--network-profile=$NetworkProfile",
+        "--network-latency-ms=$NetworkLatencyMs",
+        "--network-jitter-ms=$NetworkJitterMs",
+        "--network-seed=$NetworkSeed"
+    )
+}
+
 try {
-    $ServerA = Start-Sm0Authority "server-a" $ServerALog @(
+    $ServerAArgs = @(
         "--authority-id=authority/sm0/a", "--zone-id=zone/earth/sm0/west",
         "--gameplay-port=24580", "--control-port=24680", "--peer-control-port=24681",
         "--stop-file=$StopFile"
-    )
-    $ServerB = Start-Sm0Authority "server-b" $ServerBLog @(
+    ) + $NetworkArgs
+    $ServerBArgs = @(
         "--authority-id=authority/sm0/b", "--zone-id=zone/earth/sm0/east",
         "--gameplay-port=24581", "--control-port=24681", "--peer-control-port=24680",
         "--stop-file=$StopFile"
-    )
+    ) + $NetworkArgs
+    $ServerA = Start-Sm0Authority "server-a" $ServerALog $ServerAArgs
+    $ServerB = Start-Sm0Authority "server-b" $ServerBLog $ServerBArgs
 
     Wait-Sm0Marker $ServerALog '"event":"SM0_AUTHORITY_PEER_SYNCED"' $ServerA 20
     Wait-Sm0Marker $ServerBLog '"event":"SM0_AUTHORITY_PEER_SYNCED"' $ServerB 20
@@ -181,6 +215,9 @@ try {
         "res://scenes/testing/sm0_graphical_handoff_lab.tscn", "--",
         "--server-host=127.0.0.1", "--server-a-port=24580", "--server-b-port=24581", "--client-port=24780"
     )
+    if ($NetworkProfile -eq $P31NetworkProfile) {
+        $ClientArguments += $NetworkArgs
+    }
     $Client = Start-Process -FilePath $GodotGraphical -ArgumentList $ClientArguments -WorkingDirectory $ProjectRoot -PassThru
 
     $Session = [ordered]@{
@@ -189,6 +226,10 @@ try {
         project_root = $ProjectRoot
         log_directory = $LogDir
         stop_file = $StopFile
+        network_profile = $NetworkProfile
+        network_latency_ms = $NetworkLatencyMs
+        network_jitter_ms = $NetworkJitterMs
+        network_seed = $NetworkSeed
         processes = @(
             [ordered]@{ role = "server-a"; pid = $ServerA.Id },
             [ordered]@{ role = "server-b"; pid = $ServerB.Id },
@@ -202,6 +243,9 @@ try {
     Write-Host "  A / D : cross WEST <-> EAST authority boundary"
     Write-Host "  W / S : move along the boundary"
     Write-Host "  HUD   : authority, zone, state, epochs, player identity, handoff count"
+    if ($NetworkProfile -eq $P31NetworkProfile) {
+        Write-Host "  NET   : $NetworkProfile one-way=${NetworkLatencyMs}ms jitter=+/-${NetworkJitterMs}ms seed=$NetworkSeed" -ForegroundColor Yellow
+    }
     Write-Host "  Close the Godot window to stop both authority servers."
     Write-Host "  HEAD  : $Head"
     Write-Host "  logs  : $LogDir"
