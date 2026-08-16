@@ -65,6 +65,7 @@ $DirectoryReady = @(Get-Sm0Events "SM0_DIRECTORY_READY")
 $Crossings = @(Get-Sm0Events "SM0_CROSSING_COMPLETED")
 $Acceptance = @(Get-Sm0Events "SM0_ACCEPTANCE_RESULT")
 $Violations = @(Get-Sm0Events "SM0_INVARIANT_VIOLATION")
+$P4FastAccepted = @(Get-Sm0Events "SM0_P4_FAST_COMMIT_ACCEPTED")
 
 if ($ServerReady.Count -lt 2) { $Failures.Add("Expected 2 SM0_SERVER_READY events, got $($ServerReady.Count)") }
 if ($PeerSynced.Count -lt 2) { $Failures.Add("Expected both authority peers synchronized, got $($PeerSynced.Count) events") }
@@ -112,22 +113,54 @@ foreach ($Crossing in @($Crossings | Sort-Object { [int]$_.handoff_index })) {
 }
 
 $TransferIds = @($Crossings | ForEach-Object { [string]$_.transfer_id } | Where-Object { $_ } | Select-Object -Unique)
-$RequiredTransferPhases = @(
+$CommonTransferPhases = @(
     "SM0_SOURCE_FROZEN",
-    "SM0_HANDOFF_PREPARED",
     "SM0_DIRECTORY_COMMITTED",
     "SM0_SOURCE_RETIRED",
     "SM0_TARGET_AUTHORITY_COMMITTED",
     "SM0_TARGET_ACTIVATED"
 )
+$FastTransferCount = 0
+$LegacyTransferCount = 0
 
 foreach ($TransferId in $TransferIds) {
     $TransferEvents = @($Events | Where-Object { [string]$_.transfer_id -eq $TransferId })
-    foreach ($Phase in $RequiredTransferPhases) {
+    foreach ($Phase in $CommonTransferPhases) {
         if (@($TransferEvents | Where-Object { $_.event -eq $Phase }).Count -lt 1) {
             $Failures.Add("Transfer $TransferId is missing phase $Phase")
         }
     }
+
+    $FastBegin = @($TransferEvents | Where-Object { $_.event -eq "SM0_P4_FAST_HANDOFF_BEGIN" })
+    $FastCommit = @($TransferEvents | Where-Object { $_.event -eq "SM0_P4_FAST_COMMIT_ACCEPTED" })
+    if ($FastBegin.Count -gt 0 -or $FastCommit.Count -gt 0) {
+        $FastTransferCount += 1
+        if ($FastBegin.Count -lt 1) {
+            $Failures.Add("Fast transfer $TransferId is missing SM0_P4_FAST_HANDOFF_BEGIN")
+        }
+        if ($FastCommit.Count -lt 1) {
+            $Failures.Add("Fast transfer $TransferId is missing SM0_P4_FAST_COMMIT_ACCEPTED")
+        }
+        if ($FastBegin.Count -gt 0) {
+            $PrewarmId = [string]$FastBegin[0].prewarm_id
+            if ([string]::IsNullOrWhiteSpace($PrewarmId)) {
+                $Failures.Add("Fast transfer $TransferId has no prewarm_id")
+            }
+            else {
+                $Reserved = @($Events | Where-Object { $_.event -eq "SM0_P4_PREWARM_RESERVED" -and [string]$_.prewarm_id -eq $PrewarmId })
+                $Acked = @($Events | Where-Object { $_.event -eq "SM0_P4_PREWARMED" -and [string]$_.prewarm_id -eq $PrewarmId })
+                if ($Reserved.Count -lt 1) { $Failures.Add("Fast transfer $TransferId has no target reservation evidence for $PrewarmId") }
+                if ($Acked.Count -lt 1) { $Failures.Add("Fast transfer $TransferId has no source prewarm ACK evidence for $PrewarmId") }
+            }
+        }
+    }
+    else {
+        $LegacyTransferCount += 1
+        if (@($TransferEvents | Where-Object { $_.event -eq "SM0_HANDOFF_PREPARED" }).Count -lt 1) {
+            $Failures.Add("Legacy transfer $TransferId is missing phase SM0_HANDOFF_PREPARED")
+        }
+    }
+
     $BadWriters = @($TransferEvents | Where-Object { $_.writer_count -ne $null -and [int]$_.writer_count -gt 1 })
     if ($BadWriters.Count -gt 0) {
         $Failures.Add("Transfer $TransferId observed writer_count > 1")
@@ -135,7 +168,20 @@ foreach ($TransferId in $TransferIds) {
 }
 
 $ControlEvents = @($Events | Where-Object {
-    $_.event -in @("SM0_SERVER_READY", "SM0_AUTHORITY_PEER_SYNCED", "SM0_DIRECTORY_READY", "SM0_DIRECTORY_CONVERGED", "SM0_DIRECTORY_COMMITTED")
+    $_.event -in @(
+        "SM0_SERVER_READY",
+        "SM0_AUTHORITY_PEER_SYNCED",
+        "SM0_DIRECTORY_READY",
+        "SM0_DIRECTORY_CONVERGED",
+        "SM0_DIRECTORY_COMMITTED",
+        "SM0_P4_MODE",
+        "SM0_P4_PREWARM_SENT",
+        "SM0_P4_PREWARM_RESERVED",
+        "SM0_P4_PREWARMED",
+        "SM0_P4_PREWARM_REJECTED",
+        "SM0_P4_PREWARM_CANCELLED",
+        "SM0_P4_PREWARM_EXPIRED"
+    )
 })
 $HandoffEvents = @($Events | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.transfer_id) })
 
@@ -158,6 +204,9 @@ $Summary = [ordered]@{
     authority_epoch_start = 1
     authority_epoch_end = if ($null -ne $ClientResult) { [int]$ClientResult.authority_epoch_end } else { 0 }
     final_authority_id = if ($null -ne $ClientResult) { [string]$ClientResult.final_authority_id } else { "" }
+    p4_fast_handoffs = $FastTransferCount
+    legacy_handoffs = $LegacyTransferCount
+    p4_fast_commit_events = $P4FastAccepted.Count
     failures = @($Failures)
 }
 
@@ -168,6 +217,8 @@ $ResultColor = if ($Failures.Count -eq 0) { "Green" } else { "Red" }
 Write-Host ""
 Write-Host "SM0 log analysis: $($Summary.result)" -ForegroundColor $ResultColor
 Write-Host "  handoffs : $($Crossings.Count) / $ExpectedHandoffs"
+Write-Host "  P4 fast  : $FastTransferCount"
+Write-Host "  legacy   : $LegacyTransferCount"
 Write-Host "  events   : $($Events.Count)"
 Write-Host "  summary  : $SummaryPath"
 Write-Host "  handoffs : $HandoffsPath"
