@@ -75,10 +75,10 @@ func accept_delta(delta: Dictionary) -> Dictionary:
 		if _same_revision_delta_matches_current_state(delta):
 			var current_tick := int(_snapshot.get("server_tick", -1))
 			var incoming_tick := int(delta.get("server_tick", -1))
-			_replays += 1
 			if incoming_tick > current_tick:
 				_snapshot["server_tick"] = incoming_tick
 				_snapshot["checksum"] = target_checksum
+				_replays += 1
 				_clock_only_delta_updates += 1
 				return _success({
 					"replay": true,
@@ -87,6 +87,7 @@ func accept_delta(delta: Dictionary) -> Dictionary:
 					"stale": false,
 				})
 			if incoming_tick < current_tick:
+				_replays += 1
 				_stale_clock_only_deltas += 1
 				return _success({
 					"replay": true,
