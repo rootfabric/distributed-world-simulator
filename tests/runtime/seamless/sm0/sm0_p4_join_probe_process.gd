@@ -33,34 +33,35 @@ func _init() -> void:
 	_send_join()
 
 
-func _process(_delta: float) -> void:
+func _process(_delta: float) -> bool:
 	if _done:
-		return
+		return false
 	while _socket != null and _socket.get_available_packet_count() > 0:
 		var message := Contracts.decode_message(_socket.get_packet())
 		var validation := Contracts.validate_message(message)
 		if not bool(validation.get("success", false)):
 			_finish(false, "SM0_P4_JOIN_PROBE_INVALID_RESPONSE", {"cause": validation})
-			return
+			return false
 		if String(message.get("request_id", "")) != _request_id:
 			continue
 		var message_type := String(message.get("type", ""))
 		var payload: Dictionary = Dictionary(message.get("payload", {}))
 		if message_type == "JOIN_ACK":
 			_finish(false, "SM0_P4_RESTART_RECONNECT_JOIN_UNEXPECTEDLY_ACCEPTED", payload)
-			return
+			return false
 		if message_type == "SM0_ERROR":
 			var error_code := String(payload.get("error_code", ""))
 			if error_code in ["SM0_P4_JOIN_REQUIRES_PEER_SYNC", "SM0_AUTHORITY_NOT_ACTIVE"]:
 				_finish(true, error_code, payload)
-				return
+				return false
 			_finish(false, "SM0_P4_JOIN_PROBE_UNEXPECTED_REJECTION", {"remote_error_code": error_code, "payload": payload})
-			return
+			return false
 	if Time.get_ticks_msec() - _started_ms >= _timeout_ms:
 		_finish(false, "SM0_P4_JOIN_PROBE_TIMEOUT", {})
-		return
+		return false
 	if (Time.get_ticks_msec() - _started_ms) % 250 < 20:
 		_send_join()
+	return false
 
 
 func _send_join() -> void:
