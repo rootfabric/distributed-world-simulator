@@ -3,7 +3,7 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_recovery_p
 # SM0-P2.2: branch-local bounded handoff/recovery replay experiment.
 #
 # P2.1 already bounds movement replay records and recovery-file history. P2.2
-# additionally bounds historical SM0 service-operation replay and target-side
+# additionally bounds historical SM0 service/ownership replay and target-side
 # transfer maps before each durable recovery snapshot. The current transfer and
 # the latest durable movement replay remain protected.
 
@@ -45,12 +45,16 @@ func _persist_recovery_snapshot(phase: String, transfer_id: String) -> Dictionar
 	var replay_compaction := _p22_compact_service_replay_history()
 	if not bool(replay_compaction.get("success", false)):
 		return replay_compaction
+	var ownership_compaction := _p22_compact_ownership_replay_history()
+	if not bool(ownership_compaction.get("success", false)):
+		return ownership_compaction
 
 	var result: Dictionary = super._persist_recovery_snapshot(phase, transfer_id)
 	if not bool(result.get("success", false)):
 		return result
 
 	var replay_details: Dictionary = Dictionary(replay_compaction.get("details", {}))
+	var ownership_details: Dictionary = Dictionary(ownership_compaction.get("details", {}))
 	var transfer_details: Dictionary = Dictionary(transfer_compaction.get("details", {}))
 	_event("SM0_P22_BOUNDED_REPLAY_PROFILE", {
 		"phase": phase,
@@ -59,7 +63,11 @@ func _persist_recovery_snapshot(phase: String, transfer_id: String) -> Dictionar
 		"service_operations_before": int(replay_details.get("before", 0)),
 		"service_operations_after": int(replay_details.get("after", 0)),
 		"service_operations_removed": int(replay_details.get("removed", 0)),
-		"retained_operation_classes": int(replay_details.get("retained_classes", 0)),
+		"service_operation_classes": int(replay_details.get("retained_classes", 0)),
+		"ownership_operations_before": int(ownership_details.get("before", 0)),
+		"ownership_operations_after": int(ownership_details.get("after", 0)),
+		"ownership_operations_removed": int(ownership_details.get("removed", 0)),
+		"ownership_operation_classes": int(ownership_details.get("retained_classes", 0)),
 		"prepared_transfers_before": int(transfer_details.get("prepared_before", 0)),
 		"prepared_transfers_after": int(transfer_details.get("prepared_after", 0)),
 		"committed_transfers_before": int(transfer_details.get("committed_before", 0)),
@@ -77,10 +85,39 @@ func _p22_compact_service_replay_history() -> Dictionary:
 	var ledger_value = gameplay_service.get("_operation_ledger")
 	if not ledger_value is Dictionary:
 		return _failure("SM0_P22_REPLAY_LEDGER_NOT_AVAILABLE")
-	var ledger: Dictionary = Dictionary(ledger_value)
+	var compacted := _p22_compact_ledger(Dictionary(ledger_value))
+	if not bool(compacted.get("success", false)):
+		return compacted
+	gameplay_service.set("_operation_ledger", Dictionary(compacted.get("details", {}).get("ledger", {})))
+	var details: Dictionary = Dictionary(compacted.get("details", {})).duplicate(true)
+	details.erase("ledger")
+	return _success(details)
+
+
+func _p22_compact_ownership_replay_history() -> Dictionary:
+	var gameplay_service = _authority.get_networked_gameplay_service_for_tests()
+	if gameplay_service == null:
+		return _failure("SM0_P22_GAMEPLAY_SERVICE_NOT_AVAILABLE")
+	var ownership = gameplay_service.get("_ownership")
+	if ownership == null:
+		return _failure("SM0_P22_OWNERSHIP_SERVICE_NOT_AVAILABLE")
+	var ledger_value = ownership.get("_operation_ledger")
+	if not ledger_value is Dictionary:
+		return _failure("SM0_P22_OWNERSHIP_REPLAY_LEDGER_NOT_AVAILABLE")
+	var compacted := _p22_compact_ledger(Dictionary(ledger_value))
+	if not bool(compacted.get("success", false)):
+		return compacted
+	ownership.set("_operation_ledger", Dictionary(compacted.get("details", {}).get("ledger", {})))
+	var details: Dictionary = Dictionary(compacted.get("details", {})).duplicate(true)
+	details.erase("ledger")
+	return _success(details)
+
+
+func _p22_compact_ledger(ledger: Dictionary) -> Dictionary:
 	var before := ledger.size()
 	if before <= 1:
 		return _success({
+			"ledger": ledger.duplicate(true),
 			"before": before,
 			"after": before,
 			"removed": 0,
@@ -88,9 +125,9 @@ func _p22_compact_service_replay_history() -> Dictionary:
 		})
 
 	# Keep every non-SM0 record untouched. For SM0 records retain the strongest
-	# (highest player state revision, then lexical operation id) record per
-	# operation class. Movement is one dedicated class, preserving the exact
-	# latest durable movement replay required by active-owner recovery.
+	# (highest canonical player/ownership revision, then lexical operation id)
+	# record per operation class. Movement is one dedicated class, preserving the
+	# exact latest durable movement replay required by active-owner recovery.
 	var keep_by_class: Dictionary = {}
 	var non_sm0: Dictionary = {}
 	for operation_id_value in ledger.keys():
@@ -131,8 +168,8 @@ func _p22_compact_service_replay_history() -> Dictionary:
 		var kept: Dictionary = Dictionary(keep_by_class[class_value])
 		compacted[String(kept.get("operation_id", ""))] = Dictionary(kept.get("entry", {})).duplicate(true)
 
-	gameplay_service.set("_operation_ledger", compacted)
 	return _success({
+		"ledger": compacted,
 		"before": before,
 		"after": compacted.size(),
 		"removed": maxi(0, before - compacted.size()),
@@ -154,7 +191,13 @@ func _p22_operation_score(entry: Dictionary) -> int:
 	var details: Dictionary = Dictionary(result.get("details", {}))
 	var player: Dictionary = Dictionary(details.get("player", {}))
 	if not player.is_empty():
-		return int(player.get("state_revision", -1))
+		if player.has("state_revision"):
+			return int(player.get("state_revision", -1)) * 1000000 + int(player.get("last_input_sequence", 0))
+		if player.has("ownership_epoch"):
+			return int(player.get("ownership_epoch", -1)) * 1000000 + maxi(
+				int(player.get("joined_tick", 0)),
+				int(player.get("left_tick", 0))
+			)
 	var snapshot: Dictionary = Dictionary(details.get("snapshot", {}))
 	if not snapshot.is_empty():
 		return int(snapshot.get("revision", -1))
