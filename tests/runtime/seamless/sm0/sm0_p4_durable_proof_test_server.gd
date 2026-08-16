@@ -2,7 +2,7 @@ extends "res://scripts/runtime/seamless/sm0/sm0_authority_server_node_p4_closure
 
 var captured_fast_committed: Array[Dictionary] = []
 var fake_activation_count := 0
-var force_target_active := false
+var force_target_player_truth := false
 
 
 func configure_proof_fixture(recovery_root: String, directory: Dictionary) -> Dictionary:
@@ -68,10 +68,8 @@ func last_fast_commit_error() -> String:
 	return String(captured_fast_committed[-1].get("error_code", ""))
 
 
-func _p4_target_has_connected_player() -> bool:
-	if force_target_active:
-		return true
-	return false
+func _p4_target_has_player_truth() -> bool:
+	return force_target_player_truth
 
 
 func _activate_imported_player(package: Dictionary) -> Dictionary:
