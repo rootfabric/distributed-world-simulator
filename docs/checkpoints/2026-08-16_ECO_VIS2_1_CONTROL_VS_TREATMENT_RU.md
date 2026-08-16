@@ -1,265 +1,278 @@
-# ECO VIS2.1 — CONTROL vs TREATMENT — интеграционный checkpoint
+# ECO VIS2.1 — CONTROL vs TREATMENT — integration checkpoint R2
 
 Дата: 2026-08-16
 
 Статус: **IMPLEMENTED_CANDIDATE**
 
-Независимая проверка и Windows graphical confirmation ещё обязательны. Этот checkpoint не является self-accept и не означает глобальное принятие VIS2.1.
+Не merge. Не self-accept. Независимый review, полный exact-engine gate на полном checkout и Windows graphical confirmation остаются обязательными.
 
 ## 1. Точные входы
 
-Validated VIS2.0 base:
+Validated common base:
 
 `94c46c9d4475a0d0671690c1e75b4d9334983c81`
 
-CONTROL:
+CONTROL authoritative input:
 
-- branch: `feature/eco-vis2-1-control-branch`
-- exact HEAD: `529e61863d99ab5ca17aad11201cc54a5ce28e69`
-- source commits: `b524b6759203ac8a0cbe886fbcf894eb7a57a4b7`, `529e61863d99ab5ca17aad11201cc54a5ce28e69`
+`529e61863d99ab5ca17aad11201cc54a5ce28e69`
 
-TREATMENT R1:
+TREATMENT R1 authoritative input:
 
-- branch: `feature/eco-vis2-1-treatment-branch`
-- exact HEAD: `f5b22d2250a13cb0eaa640e991ca989d3b9301e3`
-- source commits: `5ea9dd5ff083cd8f150e0b7a41284d172fd1ad10`, `f5b22d2250a13cb0eaa640e991ca989d3b9301e3`
+`f5b22d2250a13cb0eaa640e991ca989d3b9301e3`
 
-COMPARATOR R1:
+COMPARATOR R1 authoritative input:
 
-- branch: `feature/eco-vis2-1-comparator`
-- exact HEAD: `59c2537509ca4cf0a5ec7f4fc20bcdcb8fce30d1`
-- source commits: `40b29f83e2bf9a910504980ef343eec55424f055`, `59c2537509ca4cf0a5ec7f4fc20bcdcb8fce30d1`
+`59c2537509ca4cf0a5ec7f4fc20bcdcb8fce30d1`
 
 Integration branch:
 
 `feature/eco-vis2-1-control-vs-treatment`
 
-Validated implementation/code-under-test HEAD before this documentation-only checkpoint commit:
+R2 previous HEAD:
 
-`0a0c95d780724a70c5dc18508191577a966abb69`
+`4a55d8496b2982ed3323b0a5b751219723e3567b`
 
-## 2. Source-of-truth / topology
+R2 code-under-test commit:
 
-До интеграции через GitHub App проверено:
+`c16f439b319a524f27ea33ca308c5b8c40c7eeb3` — `fix(eco): bound VIS2.1 paired integration`
 
-- все четыре заданных exact SHA существуют;
-- remote refs всех трёх worker branches указывают на заявленные exact HEAD;
-- каждый worker HEAD находится ровно на 2 commits ahead / 0 behind базы;
-- merge-base каждого worker HEAD — точно `94c46c9d4475a0d0671690c1e75b4d9334983c81`;
-- worker ownership соответствует заданию;
-- пересечений worker-owned файлов нет.
+Worker commits не переимпортировались. Causal semantics, common-root derivation и Comparator implementation не перерабатывались.
 
-После интеграции implementation HEAD `0a0c95d...` остаётся `ahead` от той же exact base, `behind_by=0`, merge-base не изменён.
+## 2. Сохранённые causal invariants
 
-## 3. Импорт worker commits
-
-CONTROL сохранён в ancestry без переписывания:
-
-- `b524b6759203ac8a0cbe886fbcf894eb7a57a4b7`
-- `529e61863d99ab5ca17aad11201cc54a5ce28e69`
-
-Из-за отсутствия обычного Git checkout в текущем runtime TREATMENT и COMPARATOR перенесены через GitHub Git-object API как отдельные эквивалентные commits с сохранёнными исходными blob-ами и `cherry picked from` provenance:
-
-- source `5ea9dd5ff083cd8f150e0b7a41284d172fd1ad10` -> integration `b705feb30b0de7d64b5541a30dbefaf4a1ddd471`;
-- source `f5b22d2250a13cb0eaa640e991ca989d3b9301e3` -> integration `0512dc2c1422680ac2c2f4abbba2d98174a4b36e`;
-- source `40b29f83e2bf9a910504980ef343eec55424f055` -> integration `157a4f4bd17332d9a92bf416bca3c7b9020272c5`;
-- source `59c2537509ca4cf0a5ec7f4fc20bcdcb8fce30d1` -> integration `c1241f480b775e16d7857dc52df8f0fa1ad85314`.
-
-Конфликтов при импорте не было. Worker-owned production/test files после импорта интеграционным кодом не изменялись.
-
-## 4. Интеграционные commits
-
-Основная интеграция:
-
-`ce355578ccff37f93312977eec46a6b6b6633ec0` — `feat(eco): integrate VIS2.1 control vs treatment lab`
-
-Integration repair:
-
-`0a0c95d780724a70c5dc18508191577a966abb69` — `fix(eco): harden VIS2.1 paired presentation and causal switch gate`
-
-Repair затрагивает только integration-owned scene/test. Причины:
-
-1. VIS1.9 parent processing при paused paired-mode мог накапливать progressive PH5; добавлен scene-level paired guard, который в paired-mode обнуляет progressive-detail accumulator и очищает progressive detail, не создавая второй ecology world.
-2. causal-switch assertion усилен: DROUGHT и FLOOD теперь сравниваются на одном и том же будущем generation после rewind/switch; одновременно проверяется неизменность CONTROL future.
-
-## 5. Common random numbers
-
-Common CRN root вычисляется ровно один раз через CONTROL:
+Common CRN root по-прежнему выводится только CONTROL через:
 
 `ControlRunner.derive_common_random_seed_hash(fork_generation, common_fork_generation_map)`
 
-CONTROL derivation использует canonical fork field hash:
+с canonical fork hash:
 
 `TraceContract.compute_field_hash(fork_generation, common_fork_generation_map)`
 
-и domain `ECO.VIS2.1/COMMON_RANDOM_NUMBERS`.
+Treatment получает этот же root явно. Branch id, experiment id, intensity и VIS2.0 snapshot hash не salt-ят RNG.
 
-После `ControlRunner.configure_from_fork(...)` интеграция проверяет, что accessor CONTROL возвращает тот же derived root. TREATMENT получает именно этот root как явный аргумент `configure_from_fork(...)`; после конфигурации обязательно проверяется точное равенство CONTROL/TREATMENT root.
+На fork generation N:
 
-`VIS2.0 snapshot_hash`, branch id, experiment id и intensity не используются для derivation/salting common root.
+- CONTROL map == immutable common fork map;
+- TREATMENT map == immutable common fork map;
+- Treatment environment == BASELINE;
+- canonical field hashes равны;
+- environment revisions равны;
+- numeric Comparator deltas равны 0.
 
-## 6. Fork semantics
+Treatment forcing начинается только с N+1.
 
-На `F` текущий BASELINE generation N останавливается и один раз снимаются deep copies:
+## 3. R2 bounded branch caches
 
-- common generation map;
-- common recent history.
+Добавлена интеграционная политика:
 
-На N:
+`VIS21_BRANCH_CACHE_WINDOW := 64`
 
-- CONTROL map == common fork map;
-- TREATMENT map == common fork map;
-- TREATMENT environment остаётся BASELINE;
-- canonical field hashes совпадают;
-- environment revisions совпадают;
-- Comparator deltas равны нулю.
+После успешного forward simulation до G рассчитывается:
 
-Treatment intervention начинает действовать только с `N+1`.
+`floor = max(fork_generation, G - VIS21_BRANCH_CACHE_WINDOW + 1)`
 
-`R` в paired-mode означает restart from common fork. `Left` ограничен диапазоном уже существующих paired generations. `Right` продвигает пару. `Space` переключает paired play/pause.
+и оба runner-а pruning-уются до rolling window.
 
-Treatment controls в VIS2.1:
+CONTROL получил минимальный bounded API:
 
-- `2` — DROUGHT;
-- `3` — FLOOD;
-- `4` — NUTRIENT_PULSE;
-- `5` — SHADE;
-- `-` / `+` — intensity Treatment only;
-- `F` — fork текущего BASELINE generation.
+- `prune_before(min_generation)`;
+- `cached_generation_count()`;
+- `oldest_cached_generation()`;
+- `cached_trace_point_count()`.
 
-До fork родительский VIS2.0 world принудительно остаётся BASELINE; выбор будущего Treatment не изменяет pre-fork environment.
+TREATMENT получил эквивалентный API плюс:
 
-## 7. Canonical trace normalization
+- `is_generation_cached(generation)` — read-only cache probe;
+- `rewind_to_cached_generation(generation)` — bounded rewind без replay от fork.
 
-Добавлен единый adapter:
+Immutable `_fork_generation_map`, `_fork_history` и common CRN root pruning не изменяет. `generation_map(fork_generation)` возвращает отдельно сохранённый immutable fork map даже после физического eviction fork из rolling `_generation_cache`. `restart_from_fork()` заново строит runtime cache от этого immutable fork state.
 
-`scripts/labs/ecology/eco_vis2_1_trace_adapter.gd`
+Пример для fork G20 / current G140: rolling cache содержит примерно G77..G140, то есть 64 generation maps, но G20 всё ещё доступен для causal fork identity и restart.
 
-Он одинаково строит CONTROL и TREATMENT point из generation map и явно переданных branch/experiment/environment identifiers.
+## 4. Rewind и Treatment rebranch
 
-Из generation map вычисляются:
+Visible Left rewind clamp-ится к:
 
-- `visual_count`;
-- `birth_count`;
-- `death_count`;
-- `survivor_count`;
-- `mean_fitness`;
-- `unique_genomes`;
-- `alpha_count`;
-- `beta_count`;
-- `represented_biomass_kg`.
+`oldest_paired_rewind_generation = max(control_oldest_cached_generation, treatment_oldest_cached_generation)`
 
-Field hash для обеих сторон вычисляется только:
+и не запускает replay от original fork.
 
-`TraceContract.compute_field_hash(generation, generation_map)`
+Если Treatment меняется после rewind внутри rolling window:
 
-и затем вызывается `TraceContract.create_point(...)`.
+1. `TreatmentRunner.rewind_to_cached_generation(visible_generation)`;
+2. Treatment future после visible generation удаляется;
+3. `set_experiment(...)` ставит intervention effective at visible generation + 1;
+4. CONTROL не rewind-ится и его уже рассчитанный baseline future может быть переиспользован;
+5. CRN root остаётся неизменным.
 
-Raw CONTROL/TREATMENT traces не подаются непосредственно в Comparator. Paired canonical traces строятся начиная с fork generation и только через latest generation, вычисленный обеими ветками.
+Это устраняет прежний O(total-history) путь restart-from-fork + replay до текущей rewind position.
 
-## 8. Rendering architecture
+## 5. Bounded canonical comparison
 
-Архитектура: две симуляционные ветки, один rendered ecology world.
+Raw worker traces по-прежнему не передаются Comparator. Для обеих сторон canonical points строятся через единый `eco_vis2_1_trace_adapter.gd`, field hash — только через `TraceContract.compute_field_hash()`.
 
-- CONTROL — только data-only runner, PH5/renderer для него не создаётся.
-- TREATMENT — единственный visible post-fork branch.
-- Existing realtime proxy renderer получает `TreatmentRunner.generation_map(G)`.
-- Visible field environment sampling в paired-mode делегируется TreatmentRunner для отображаемого generation.
-- Whole-field PH5 turnover rebuild не добавлен.
-- Progressive VIS1.9 PH5 в paired-mode очищается/не накапливается через `PairedProgressivePH5Guard`.
-- Comparison panel остаётся `MOUSE_FILTER_IGNORE`.
+R2 comparison rebuild больше не итерирует `fork_generation .. simulated_generation`.
 
-## 9. Автоматический gate, реализованный в candidate
+Input всегда состоит из:
 
-`RUN_ECO_VIS2_1_TESTS.ps1` проверяет exact engine identity и запускает в порядке:
+- immutable canonical fork point;
+- до 63 последних post-fork paired points, доступных в rolling cache.
 
-1. CONTROL worker regression;
-2. TREATMENT R1 worker regression;
-3. COMPARATOR R1 regression;
-4. VIS1.8B regression;
-5. VIS1.9 regression;
-6. VIS2.0 regression;
-7. integrated VIS2.1 regression.
+Поэтому `comparison_rebuild_input_count <= 64` и rebuild имеет O(64) shape независимо от полной длины эксперимента.
 
-Integrated test содержит ровно **33 `_check` assertions**, соответствующих секциям COMMON FORK, CRN, INTERVENTION BOUNDARY, CAUSAL DIVERGENCE, TRACE, PERFORMANCE/PRESENTATION и BOUNDEDNESS. Дополнительно используются setup guards, которые аварийно завершают test при невозможности создать требуемую исходную сцену/ветку.
+Например G140 / fork G20:
 
-Long-smoke в этом test: fork `G20`, CONTROL=BASELINE, TREATMENT=DROUGHT 100%, advance through `G80`.
+- G20;
+- G78..G140;
+- всего 64 points.
 
-## 10. Exact Godot identity / parser preflight
+Fork point сохраняется навсегда в canonical comparison input, поэтому Comparator продолжает при каждом rebuild проверять fork field-hash identity, environment-revision identity и нулевые causal deltas даже после eviction fork из runner caches.
 
-Локально из предоставленного engine archive реально запущен:
+## 6. TreatmentRunner lifecycle / rendering
+
+`TreatmentRunner` остаётся data-only Node, но теперь является child VIS2.1 lab scene с диагностическим именем:
+
+`VIS21TreatmentDataRunner`
+
+У него нет visual children, PH5 tree или второго ecology world. При `queue_free()` lab scene runner освобождается вместе с ней.
+
+CONTROL остаётся `RefCounted` data-only runner.
+
+Post-fork rendering architecture остаётся:
+
+- CONTROL — data-only;
+- TREATMENT — единственный visible realtime population;
+- progressive VIS1.9 PH5 в paired mode отключён/очищается;
+- whole-field PH5 turnover rebuild == 0;
+- comparison panel == `MOUSE_FILTER_IGNORE`.
+
+## 7. R2 spectator regression
+
+Integrated test больше не использует текстовый fallback для mouse-look.
+
+Проверяется routed input:
+
+1. `_set_mouse_capture(true)`;
+2. `InputEventMouseMotion` с координатой внутри comparison panel и non-zero `relative`;
+3. `get_root().push_input(motion)`;
+4. после frame camera rotation обязана измениться;
+5. `_set_mouse_capture(false)`;
+6. второй routed MouseMotion не должен менять camera rotation.
+
+Это одновременно проверяет real captured spectator mouse и mouse transparency comparison panel.
+
+## 8. Hardened RUN_ECO_VIS2_1_TESTS.ps1
+
+Gate переписан по isolated VIS2.0 pattern.
+
+Для каждого Godot process используется `System.Diagnostics.ProcessStartInfo`:
+
+- `UseShellExecute = false`;
+- `RedirectStandardOutput = true`;
+- `RedirectStandardError = true`;
+- `ReadToEndAsync()` для обоих streams;
+- timeout 240 s для обычных regressions;
+- timeout 300 s для integrated long smoke;
+- process Kill при timeout.
+
+Gate rejects:
+
+- non-zero exit code;
+- zero-exit output с `^SCRIPT ERROR:`;
+- zero-exit output с `^ERROR:`;
+- `Parse Error`;
+- отсутствие ожидаемого PASS marker.
+
+Перед runtime regressions запускается `--check-only` parser preflight integrated preload graph.
+
+Gate создаёт temporary isolated Godot project, копирует только требуемый VIS/ecology dependency graph, worker/integration scripts, scenes и tests и удаляет temp project в `finally`.
+
+Ожидаемые PASS markers проверяются отдельно для:
+
+1. CONTROL runner;
+2. TREATMENT R1 runner;
+3. Comparator R1;
+4. VIS1.8B;
+5. VIS1.9;
+6. VIS2.0;
+7. VIS2.1 integrated.
+
+## 9. Integrated assertions / long smoke
+
+R2 integrated test содержит **56 `_check` assertions**. Предыдущие 33 causal/presentation semantics сохранены и добавлены реальные проверки:
+
+- runner cache counts;
+- runner trace-cache counts;
+- physical rolling eviction;
+- oldest paired rewind generation;
+- bounded comparison input;
+- permanent fork point retention;
+- actual routed captured mouse;
+- released-mouse stability;
+- TreatmentRunner SceneTree lifecycle;
+- cached Treatment rewind/rebranch без replay от fork;
+- CONTROL future reuse;
+- restart after eviction;
+- deterministic G20..G32 replay after eviction;
+- G140 and G220 boundedness/performance shape.
+
+Long smoke теперь идёт fork G20 -> G140 и далее G220, поэтому rolling eviction гарантированно должен произойти.
+
+На G140/G220 test требует branch generation caches <=64, raw runner trace caches <=64, oldest cached generation > fork, comparison input <=64, canonical fork G20 присутствует, latest generation присутствует, same CRN root сохраняется, CONTROL остаётся data-only, visible population field один, whole-field PH5 rebuild == 0, biomass contracts валидны, SceneTree growth ограничен.
+
+## 10. Exact engine и фактически выполненная validation в agent environment
+
+Фактически запущенный engine:
 
 `Godot 4.7.1.stable.double.custom_build.a13da4feb`
 
-Parser-preflight integration-owned GDScript/scene выполнен этим exact engine в минимальном локальном project с API-совместимыми заглушками отсутствующих repository dependencies.
+В текущем agent environment выполнено:
 
-Результат parser-preflight:
+- exact-Godot `--check-only` integrated R2 script/preload surface на локальном API-compatible stub graph — PASS, exit 0;
+- exact-Godot `--check-only` изменённого CONTROL regression script на stub graph — PASS, exit 0;
+- exact-Godot `--check-only` изменённого TREATMENT regression script на stub graph — PASS, exit 0;
+- отдельный exact-Godot synthetic bounded-API runtime smoke на реальных R2 CONTROL/TREATMENT runner scripts с simulation/environment stubs — PASS: G20->G140, pruning до 64 maps (G77..G140), cached Treatment rewind, future eviction, CRN stability, rebranch, restart from fork и replay G32.
 
-- exact Godot identity: PASS;
-- `Parse Error`: 0;
-- `SCRIPT ERROR`: 0;
-- integrated `_check` count: 33;
-- same-generation DROUGHT->FLOOD switch assertion присутствует;
-- paired progressive-PH5 guard присутствует.
+Synthetic/stubbed runs подтверждают parser/API/bounded-cache mechanics, но **не считаются полноценными ecology regression PASS**.
 
-Это **только parser/syntax preflight**, не runtime regression и не замена запуску на полном repository checkout.
+## 11. Неисполненные official runtime gates в текущей среде
 
-## 11. Runtime regression status в текущей среде
+Полного repository checkout по-прежнему нет. Runtime не может разрешить `github.com` для обычного clone/raw download; GitHub App предоставляет repository object API, но не монтирует полный checkout в execution filesystem. Локального PowerShell/pwsh также нет.
 
-Текущий Linux execution environment не содержит checkout `rootfabric/distributed-world-simulator`; обычный `git clone`/`git ls-remote` не может разрешить `github.com`. Подключённый GitHub App даёт object/API read-write access, но archive endpoint через connector не предоставил локальные bytes checkout.
+Поэтому здесь не заявляются PASS и фактически не были выполнены на полном real ecology graph:
 
-Поэтому в этой среде **не были фактически выполнены** и не помечаются PASS:
-
-- CONTROL worker exact-engine regression — NOT EXECUTED;
-- TREATMENT R1 worker exact-engine regression — NOT EXECUTED;
-- COMPARATOR R1 exact-engine regression — NOT EXECUTED;
+- CONTROL runner official regression — NOT EXECUTED;
+- TREATMENT R1 official regression — NOT EXECUTED;
+- Comparator R1 official regression — NOT EXECUTED;
 - VIS1.8B regression — NOT EXECUTED;
 - VIS1.9 regression — NOT EXECUTED;
 - VIS2.0 regression — NOT EXECUTED;
-- integrated 33-assertion VIS2.1 runtime gate — NOT EXECUTED;
-- full G20->G80 long-smoke — NOT EXECUTED.
+- VIS2.1 integrated 56-assertion real-graph runtime — NOT EXECUTED;
+- real-graph long smoke G20..G220 — NOT EXECUTED;
+- Windows graphical confirmation — PENDING.
 
-Никакие runtime PASS/count/performance цифры для этих запусков не выдумывались.
+`RUN_ECO_VIS2_1_TESTS.ps1` подготовлен именно для запуска этих gates на Windows exact worktree и не принимает exit code без PASS marker/error scan.
 
-## 12. Boundedness note
+## 12. R2 changed files
 
-Canonical comparison series ограничена 64 points. Для заданного long-smoke `G20..G80` paired interval содержит 61 generation и укладывается в это окно.
+R2 code commit изменяет только разрешённые 7 code/test/gate files:
 
-Worker generation caches по реализации сохраняют вычисленные fork-to-current generations; полноценное подтверждение boundedness semantics и отсутствия роста за пределами acceptance horizon должно быть сделано exact-engine runtime gate/independent review. Этот checkpoint не заявляет доказанную unlimited-duration boundedness.
+- `RUN_ECO_VIS2_1_TESTS.ps1`;
+- `scripts/labs/ecology/eco_vis2_1_control_branch_runner.gd`;
+- `scripts/labs/ecology/eco_vis2_1_treatment_branch_runner.gd`;
+- `scripts/labs/ecology/eco_vis2_1_control_vs_treatment_lab.gd`;
+- `tests/research/ecology/test_eco_vis2_1_control_branch_runner.gd`;
+- `tests/research/ecology/test_eco_vis2_1_treatment_branch_runner.gd`;
+- `tests/research/ecology/test_eco_vis2_1_control_vs_treatment_lab.gd`.
 
-## 13. Windows validation
+Этот checkpoint document является восьмым разрешённым R2 file.
 
-Validated base `94c46c9d...` является указанным Windows-runtime-validated VIS2.0 checkpoint.
+Comparator files и VIS2.0/earlier validated files R2 не изменяет.
 
-VIS2.1 candidate `0a0c95d...` в этой сессии на Windows не запускался.
-
-Windows graphical confirmation: **PENDING**.
-
-## 14. Changed files
-
-Worker-owned imported files:
-
-- `scripts/labs/ecology/eco_vis2_1_branch_trace_contract.gd`
-- `scripts/labs/ecology/eco_vis2_1_control_branch_runner.gd`
-- `tests/research/ecology/test_eco_vis2_1_control_branch_runner.gd`
-- `scripts/labs/ecology/eco_vis2_1_treatment_branch_runner.gd`
-- `tests/research/ecology/test_eco_vis2_1_treatment_branch_runner.gd`
-- `scripts/labs/ecology/eco_vis2_1_comparison_model.gd`
-- `scripts/labs/ecology/eco_vis2_1_comparison_panel.gd`
-- `tests/research/ecology/test_eco_vis2_1_comparison_model.gd`
-
-Integration-owned files:
-
-- `scripts/labs/ecology/eco_vis2_1_trace_adapter.gd`
-- `scripts/labs/ecology/eco_vis2_1_control_vs_treatment_lab.gd`
-- `scenes/labs/ecology/eco_vis2_1_control_vs_treatment_lab.tscn`
-- `tests/research/ecology/test_eco_vis2_1_control_vs_treatment_lab.gd`
-- `RUN_ECO_VIS2_1_TESTS.ps1`
-- `RUN_ECO_VIS2_1_LAB.ps1`
-- `docs/checkpoints/2026-08-16_ECO_VIS2_1_CONTROL_VS_TREATMENT_RU.md`
-
-## 15. Итоговый статус
+## 13. Итог
 
 **IMPLEMENTED_CANDIDATE**
 
-Не merge. Не self-accept. Следующий обязательный шаг — полный exact-engine gate на полном checkout, затем независимый review и Windows graphical confirmation.
+R2 устраняет известные integration-quality defects boundedness, O(total-history) comparison rebuilding, weak cache assertions, weak process gating, mouse regression и Treatment Node lifecycle, не меняя causal contract.
+
+Следующий обязательный шаг: полный `RUN_ECO_VIS2_1_TESTS.ps1` на exact Windows worktree, затем независимый review и graphical confirmation. До этого VIS2.1 не считается accepted.
