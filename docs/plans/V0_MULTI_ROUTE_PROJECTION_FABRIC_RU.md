@@ -7,6 +7,8 @@
 **Связанный product gate:** `V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`  
 **Будущий product checkpoint:** `V0_SM1_SEAMLESS_PRODUCT_INTEGRATION`
 
+> Обязательный companion для иерархических стендов: `MRPF_HIERARCHICAL_PROJECTION_STANDS_RU.md` (`MRPF-H0..H7`). Он описывает parallel research track `SPACE -> EARTH -> SURFACE -> BASE + MOON`, representation replacement, upward HLOD delegation и nested authority/presentation transitions. MRPF-P и MRPF-H могут развиваться параллельно до V0 P6 и сходятся как donor evidence перед V0-SM1.
+
 ## 0. Зачем этот документ
 
 Этот документ фиксирует следующий архитектурный шаг после SM0: клиент больше не должен мыслиться как объект, подключённый ровно к одному игровому серверу или к жёстко заданной паре `primary/secondary`.
@@ -478,549 +480,497 @@ ProjectionManifest {
 Source descriptor содержит минимум:
 
 ```text
-source_authority_id
-projection_publisher_id
+authority_id / publisher_id
 server_instance_id
 endpoint
-source_authority_epoch
-scope_chain
-representation_classes
-role_hint
-quality_ceiling
-bandwidth_hint
-projection_grant
-expires_at
+source_epoch
+spatial scope / coverage
+representation classes
+max_allowed_lod
+priority
+expiry
+projection grant/ticket
 ```
 
-Manifest может быть построен специализированным Interest/Route Resolver поверх Directory/SD/AUTHORITY данных.
+Manifest является hint/authorization для projection topology, но не canonical world truth.
 
-Active gameplay server не обязан быть data relay. Его роль в security/control может ограничиваться подтверждением observer position/identity или выдачей/co-sign signed grant.
+Stale manifest/revision должен fail closed.
 
 ---
 
-## 9. Security: ProjectionGrant
+## 9. Security / anti-wallhack boundary
 
-Нельзя позволять клиенту запросить arbitrary region и использовать projection fabric как wallhack.
+Наличие physical endpoint не означает право подписаться на любое содержимое сервера.
 
-Projection source принимает subscription только с валидным grant:
+Projection source обязан проверять `ProjectionGrant`.
+
+Grant должен связывать минимум:
 
 ```text
-ProjectionGrant {
-    session/principal
-    player_entity_id
-    allowed spatial scope / observer anchor
-    allowed representation classes
-    max quality
-    max radius / policy envelope
-    authority/topology revision
-    expiry
-    signature/token
-}
+principal/session
+player_entity_id
+observer authority/session proof
+allowed spatial scope
+allowed representation classes
+max LOD / detail
+expiry
+topology/route revision
 ```
 
-Клиент управляет transport lifecycle, но не определяет единолично, что ему разрешено видеть.
+Клиент может управлять transport lifecycle, но не может сам объявить:
 
-При stale/forged grant source отвечает fail-closed и не выдаёт canonical/private state.
+```text
+"покажи мне всех players на планете"
+```
+
+`LOCAL_DYNAMIC` особенно жёстко ограничивается server-approved interest.
 
 ---
 
-## 10. Projection stream contract
+## 10. Command routing при direct projection
 
-Каждый stream обязан быть source-bound:
+Наличие direct projection route не даёт write capability.
 
-```text
-source_authority_id
-source_authority_epoch
-projection_publisher_id
-projection_sequence
-manifest/subscription revision
-checksum/hash
-representation class
-presentation_only = true
-canonical_write_allowed = false
-```
-
-Per-source fencing:
+Для foreign object:
 
 ```text
-epoch rollback -> reject
-sequence rollback -> reject
-same sequence + different checksum -> reject
-exact replay -> idempotent
-source dropout -> degrade/remove only that source
+projection says owner_authority_id = C
 ```
 
-Ни одна projection не может быть использована как доказательство canonical mutation ownership.
+Возможные command paths:
+
+```text
+Client -> active B -> C
+```
+
+или в будущем:
+
+```text
+Client -> C with owner-scoped capability/ticket
+```
+
+Но canonical decision всегда делает actual owner.
+
+Для cross-authority transfer (pickup, inventory transfer, Construction/material ownership) клиент никогда не является transaction coordinator. Server-to-server coordination остаётся обязательной.
 
 ---
 
-## 11. LOD, progressive representation и cache
+## 11. Projection source fan-out / server cost
 
-Переиспользовать принципы RL3, MW7, NX interest, а не создавать отдельный SM-only renderer/network stack.
+Direct projection убирает relay B, но source C всё ещё может обслуживать множество observers.
 
-Для тяжёлых представлений предпочтительны content-addressed artifacts:
+Требуется shared projection generation:
 
 ```text
-macro proxy
+canonical C state
     ↓
-coarse mesh
+build reusable projection/representation once per compatible tier
     ↓
-simplified mesh
+encode/cache
     ↓
-fine representation
+fan-out to subscribers
 ```
 
-Клиент может иметь artifact cache. Если hash совпадает, source передаёт только manifest/activation metadata.
+Не пересобирать одинаковый coarse artifact отдельно на каждого клиента.
 
-Особенно важно для:
-
-```text
-mountains
-planet shell
-Moon mesh/texture proxy
-large castle HLOD
-large construction silhouette
-```
-
-Очень далёкие почти статические объекты не требуют high-rate stream.
-
-Пример Moon:
+Update classes:
 
 ```text
-cached celestial artifact
-+ low-rate transform/ephemeris
-+ rare representation revision invalidation
+near dynamic   -> high Hz
+medium dynamic -> lower Hz
+far landmark   -> low Hz / event-driven
+terrain macro  -> cache + invalidation
+celestial      -> mostly cache + very low-rate transform
 ```
 
 ---
 
-## 12. Interaction с foreign projection
+## 12. Связь с существующими foundations
 
-Projection read-only не означает, что объект нельзя интерактивно использовать.
+MRPF не создаёт второй network/interest/LOD stack.
 
-### 12.1 Простое intent routing
-
-Если клиент уже напрямую соединён с owner source:
+Обязательные donors/owners:
 
 ```text
-Client -> owner authority: INTERACT intent
+SM0 P10/P11
+    multi-source presentation + fencing + fault evidence
+
+NX5
+    remote interpolation path
+
+NX8
+    shared interest/replication budget direction
+
+MW7
+    regional subscription / projection sequence concepts
+
+RL3
+    representation-aware coarse->fine streaming / cache
+
+S0 / SD
+    spatial hierarchy / WorldAddress semantics
+
+AUTHORITY
+    writer lease/epoch; presentation never owns canonical truth
 ```
 
-Owner проверяет:
-
-```text
-session/grant
-actor identity
-current actor authority proof
-range/visibility
-object revision
-permissions
-operation replay
-```
-
-### 12.2 Cross-authority mutation/transfer
-
-Client никогда не координирует canonical transaction.
-
-Например pickup foreign item:
-
-```text
-Client -> item owner: PICKUP intent
-item owner <-> player/item target authority: canonical transaction
-commit once
-client receives result/projection update
-```
-
-Для сложных Item/Construction/Matter transfer server-to-server coordination остаётся обязательным.
+Если требуется новый global network foundation, V0/MRPF должен route change в NX/main architecture control, а не создавать private foundation.
 
 ---
 
-## 13. Server orchestration / кто знает соседей
+## 13. Экспериментальная лестница MRPF-P0..P6
 
-Не строить permanent full mesh `N^2`.
+### P0 — Contract Freeze
 
-Directory/Topology plane хранит/разрешает:
+Зафиксировать DTO/инварианты:
 
 ```text
-authority_region_id
-parent/child scope relation
-adjacent/overlap-interest relation
-current server_instance_id
-endpoint
-authority_epoch
-lease/topology revision
-health / draining / provisioning state
-projection capabilities
+ClientConnectionSet
+AuthorityRoute
+ProjectionManifest
+ProjectionSourceDescriptor
+ProjectionGrant
+ProjectionSubscription
+ProjectionFrame
+RepresentationClass
+RouteRole
 ```
 
-Server открывает peer control relationship только при необходимости:
+Focused tests:
+
+- exactly one ACTIVE route;
+- arbitrary number of projection routes in model;
+- duplicate route/source rejection;
+- stale manifest rejection;
+- forged/expired grant rejection;
+- projection cannot request mutation capability;
+- deterministic route-role pivot state machine.
+
+### P1 — Direct N-Source Fan-In
+
+Processes:
 
 ```text
-handoff candidate
-cross-authority interaction
-derived summary exchange
-required projection aggregation
-recovery
+A projection source
+B active authority + projection source
+C projection source
+Moon/Macro source
+Client composer
 ```
 
-Client projection data path может при этом идти напрямую к source publisher.
-
-Для future on-demand region provisioning:
+Доказать:
 
 ```text
-interest predicts target region
--> control plane provisions worker
--> worker bootstraps deterministic baseline + durable mutations
--> publishes projection capability
--> client opens PROJECTION route
--> route upgrades to WARM
--> only after PREPARED may authority pivot occur
+client receives A/B/C/Moon directly
+B does not relay A/C/Moon payload
+one client presentation view
+per-source epoch/sequence/checksum fencing
+one-source dropout isolated
+```
+
+Collect bytes/packets per source to prove data path.
+
+### P2 — Earth / Sub-Earth Hierarchy
+
+Topology:
+
+```text
+EARTH-MACRO publisher
+└── SUB-EARTH-314 simulation authority
+```
+
+Client:
+
+```text
+SUB-EARTH-314 ACTIVE
+EARTH-MACRO PROJECTION
+NEIGHBOR optional PROJECTION
+```
+
+Scene/evidence should show simultaneously:
+
+```text
+near terrain from SUB-EARTH
+far mountain from EARTH
+far landmark coarse projection
+```
+
+Доказать, что parent representation does not imply parent write authority.
+
+### P3 — Multi-Scale Visibility / Moon
+
+Deterministic candidate set includes:
+
+```text
+Moon ~384400 km
+player 50 km
+castle 10 km
+mountain skyline
+near local player
+```
+
+Policy должна получить ожидаемую inclusion/exclusion при разных screen-error/bandwidth budgets.
+
+Дополнительно проверить:
+
+```text
+coarse -> fine progressive replacement
+cache reuse
+horizon/occlusion
+budget degradation
+```
+
+### P4 — Projection -> Warm -> Active Pivot
+
+Topology initially:
+
+```text
+A ACTIVE
+B PROJECTION
+C PROJECTION
+```
+
+Player moves toward B:
+
+```text
+B PROJECTION -> WARM
+```
+
+Handoff:
+
+```text
+A ACTIVE -> DRAIN
+B WARM -> ACTIVE
+```
+
+Hard gate:
+
+```text
+no new transport connection required at crossing if B route already exists
+same logical/player identity
+exactly one writer
+input sequence continuous
+A may remain PROJECTION/DRAIN after pivot
+```
+
+### P5 — Directory / Manifest / Grants / Churn
+
+Separate resolver process.
+
+Check:
+
+```text
+manifest add/remove source
+revision replacement
+source health
+projection grant expiry/renewal
+connection budget
+route close/reopen
+stale endpoint/server_instance fencing
+```
+
+Client не должен открывать unauthorized source даже если endpoint известен.
+
+### P6 — Integrated Multi-Server Stand
+
+Минимум real processes:
+
+```text
+1 Directory / Interest Resolver
+2 SUB-EARTH-A
+3 SUB-EARTH-B
+4 EARTH-MACRO
+5 MOON / CELESTIAL publisher
+6 CLIENT
+```
+
+Scenario:
+
+```text
+client ACTIVE on A
+Earth macro + Moon + B projections active
+far mountain visible
+far castle coarse visible
+50-km player hidden
+Moon visible
+move toward B
+B PROJECTION -> WARM
+A ACTIVE -> DRAIN
+B WARM -> ACTIVE
+no reconnect / no new player identity
+drop EARTH-MACRO -> local gameplay continues
+drop MOON -> only Moon projection degrades/disappears
+restore manifest/source -> projection recovers
+```
+
+Acceptance:
+
+```text
+exactly one ACTIVE authority through entire scenario
+no canonical mutation from projections
+no relay of foreign view payload through active authority
+bounded route count under policy
+projection dropout isolation
+source sequence/epoch fencing
+stable player identity
+zero split-brain
+```
+
+After deterministic pass:
+
+```text
+>= 30 minute soak
+repeated A<->B pivots
+projection source churn
+manifest revision churn
+no unbounded queue/memory/route growth
 ```
 
 ---
 
-## 14. Parent/child authority и macro projection
+## 14. Отдельный future extension: on-demand authority provisioning
 
-Spatial hierarchy может быть:
-
-```text
-Earth macro scope
-└── region 314 child authority
-    └── optional city/ship nested authority
-```
-
-Canonical writable scopes не должны реально перекрываться.
-
-Но presentation scopes могут перекрываться:
+После generic MRPF correctness возможен следующий research slice:
 
 ```text
-EARTH-MACRO publishes derived horizon for whole Earth
-SUB-EARTH-314 publishes detailed local region
+landing prediction
+    ↓
+region has no running compute
+    ↓
+provision target server
+    ↓
+deterministic baseline generation
+    ↓
+load sparse mutations
+    ↓
+Projection route becomes available
+    ↓
+PROJECTION -> WARM -> ACTIVE
 ```
 
-Composer обязан знать representation priority/source binding и исключать duplicate presentation identity.
+Это не должно входить в первый P0..P6, чтобы не смешивать routing/presentation correctness с orchestration/bootstrap.
 
-Правило:
+Нужны отдельные contracts:
 
 ```text
-OVERLAPPING PRESENTATION IS ALLOWED
-OVERLAPPING CANONICAL WRITE OWNERSHIP IS NOT
+AuthorityRegionId stable
+ServerInstanceId disposable
+provisioning lifecycle
+region bootstrap request/result
+generator/content revisions
+mutation checkpoint
+lease only after PREPARED
+failure before retirement keeps source writer
 ```
-
-Если macro representation включает child-owned construct/terrain summary, это только derived artifact, построенный из accepted baseline/durable summary/revision, а не второй canonical store.
 
 ---
 
-## 15. Experimental stand до product V0 P6
+## 15. Что означает "server Earth"
 
-Рекомендуется открыть отдельный research branch после формального freeze/closure SM0.
+Не фиксировать физическую архитектуру как:
 
-Рекомендуемое имя:
+```text
+one planet == one permanent server
+```
+
+Логические identities:
+
+```text
+Earth planetary/macro domain
+Earth surface authority regions
+```
+
+отделены от physical server instances.
+
+Сегодня стенд может иметь один EARTH-MACRO process и один SUB-EARTH process. Позже Earth surface region может мигрировать или provisioning'иться на другом worker без изменения WorldAddress/region identity.
+
+---
+
+## 16. План параллельной разработки до V0 P6
+
+MRPF разрешён как отдельный research track, пока основной V0 идёт:
+
+```text
+V0:
+P4 -> P5 -> P6
+
+parallel:
+MRPF P0 -> P1 -> P2 -> P3 -> P4 -> P5 -> P6
+```
+
+Не нужно блокировать V0 P4/P5 этим экспериментом.
+
+Предпочтительно к моменту product P6 иметь:
+
+```text
+MRPF-P6 accepted research evidence
+```
+
+Тогда post-P6 V0-SM1 переносит proven capability вместо одновременного исследования transport topology.
+
+Если MRPF не завершён к P6, post-P6 gate обязан включить недостающие MRPF acceptance slices или оформить explicit human defer.
+
+Research branch рекомендуемо:
 
 ```text
 research/mrpf-multi-route-projection-fabric
 ```
 
-Base выбирается отдельным Work Order. Допустим donor-based research base от frozen SM0 evidence, но **не** превращать этот branch в product V0 base.
+или Harness-generated equivalent.
 
-Checkpoint IDs должны иметь префикс `MRPF_`, чтобы не путать их с product `V0_P0..P8` и historical `SM0_P*`.
-
-### MRPF-P0 — Contract Freeze
-
-Доказать детерминированными unit/model tests:
-
-```text
-ClientConnectionSet generic N routes
-role state machine
-exactly-one-active invariant
-ProjectionManifest
-ProjectionGrant
-ProjectionSourceDescriptor
-projection epoch/sequence/hash fencing
-representation class policy
-```
-
-Никакой production V0 mutation.
-
-### MRPF-P1 — Direct N-Source Fan-In
-
-Real processes:
-
-```text
-Authority/Projection A
-Authority/Projection B
-Authority/Projection C
-Celestial/Macro D
-Client composer
-```
-
-B является ACTIVE, A/C/D — PROJECTION.
-
-Проверить:
-
-```text
-client receives all sources directly
-B does not relay A/C/D payload
-one-source dropout isolated
-per-source sequence/hash fencing
-all foreign data read-only
-connection registry has no hard-coded pair assumption
-```
-
-### MRPF-P2 — Hierarchical Earth / Sub-Earth Composition
-
-Топология:
-
-```text
-EARTH-MACRO
-└── SUB-EARTH-314 ACTIVE
-+ NEIGHBOR-315 PROJECTION
-```
-
-Сцена:
-
-```text
-local player/ground from SUB-EARTH
-far mountains from EARTH-MACRO
-far castle/landmark from macro or neighbor source
-neighbor dynamic state only when policy permits
-```
-
-Проверить отсутствие duplicate presentation identity и отсутствие parent write authority над child canonical scope.
-
-### MRPF-P3 — Multi-Scale Visibility / Moon Case
-
-Добавить Moon projection source и policy fixtures.
-
-Обязательный сценарий:
-
-```text
-Moon ~384 400 km -> INCLUDED as CELESTIAL_BODY coarse representation
-player 50 km     -> EXCLUDED as LOCAL_DYNAMIC
-mountain skyline -> INCLUDED as TERRAIN_MACRO
-castle 10 km     -> INCLUDED/EXCLUDED according to angular/landmark policy
-```
-
-Проверить:
-
-```text
-angular-size threshold
-representation class
-horizon/occlusion flag
-screen-error budget
-bandwidth priority
-cache reuse
-LOD coarse->fine
-```
-
-### MRPF-P4 — Projection -> Warm -> Active Pivot
-
-Target C уже подключён как PROJECTION до crossing.
-
-Проверить:
-
-```text
-C PROJECTION -> WARM -> ACTIVE
-B ACTIVE -> DRAIN -> PROJECTION/DISCONNECTED
-no new player identity
-no required transport reconnect at pivot
-one active authority at every observable state
-input sequence continuity
-projection identity continuity
-```
-
-### MRPF-P5 — Orchestrated Discovery / Grants / Churn
-
-Отдельный resolver/directory process выдаёт manifests.
-
-Проверить:
-
-```text
-client does not scan arbitrary endpoints
-signed/validated projection grants
-manifest revision replacement
-source added/removed as observer moves
-server restart changes server_instance_id but not stable authority_region identity
-stale endpoint/epoch fails closed
-no permanent N^2 server mesh
-connection budget closes low-value source
-```
-
-### MRPF-P6 — Integrated Multi-Scale Multi-Server Stand
-
-Минимум distinct processes:
-
-```text
-Directory / Interest Resolver
-SUB-EARTH-A authority+projection
-SUB-EARTH-B neighbor/target authority+projection
-EARTH-MACRO projection publisher
-MOON projection publisher
-real client/composer
-```
-
-Опционально отдельный observer/second client.
-
-Integrated scenario:
-
-```text
-1. client ACTIVE on SUB-EARTH-A
-2. client concurrently receives EARTH-MACRO + MOON + neighbor projections
-3. local player/near items stay A-authoritative
-4. far mountain is visible from EARTH-MACRO
-5. far castle uses coarse landmark representation
-6. 50-km remote player is not visible by default policy
-7. Moon remains visible by celestial policy
-8. client moves toward B
-9. existing B projection route becomes WARM
-10. A -> B authority pivot occurs without transport reconnect
-11. A becomes DRAIN/PROJECTION
-12. all identities/epochs remain fenced
-13. drop EARTH-MACRO: local authority continues
-14. drop MOON: only Moon representation degrades/disappears
-15. drop unrelated neighbor: active gameplay remains live
-16. restore source / manifest revision and recover projection
-```
-
-P6 acceptance минимум:
-
-```text
-exactly one active player writer
-zero duplicate canonical entity IDs
-zero projection->canonical promotion
-zero ungranted projection leak
-zero source sequence/epoch rollback accepted
-all source dropouts isolated
-no active-server relay required for macro/Moon payload
-role pivot reuses preexisting target route
-client connection count determined by budget/policy, not pair hard-code
-all processes exit cleanly
-machine-readable summary
-```
-
-Рекомендуемый soak после deterministic acceptance:
-
-```text
->= 30 minutes
-multiple manifest revisions
-repeated A <-> B pivots
-projection source churn
-bounded memory/connection count
-no queue growth
-```
+Нельзя продолжать frozen SM0 branch как runtime carrier этой новой архитектуры.
 
 ---
 
-## 16. Что MRPF-P6 НЕ доказывает
+## 17. Convergence в V0-SM1
 
-Не заявлять автоматически:
+После product P6:
 
 ```text
-production World Directory
-production arbitrary planetary sharding
-dynamic split/merge balancing
-on-demand cloud/Kubernetes provisioning
-full anti-cheat/security hardening
-WAN-ready bandwidth targets
-all celestial bodies
-all Construction HLOD
-all terrain/matter streaming
+accepted V0 P6
++
+accepted/frozen SM0 donor
++
+MRPF donor evidence
++
+current NX/authority foundation
+    ↓
+fresh V0-SM1 convergence branch
 ```
 
-MRPF-P6 доказывает форму client/server topology и projection semantics.
+V0-SM1 использует real:
 
-On-demand compute provisioning должен идти отдельным следующим research/runtime checkpoint после этой основы.
+```text
+player
+Item Graph
+mining
+Construction/outpost
+reconnect/persistence
+graphical client
+```
+
+и переносит MRPF contracts в production-owned systems.
+
+Не cherry-pick synthetic research truth как новую canonical foundation.
 
 ---
 
-## 17. Связь с product V0 P6 -> V0-SM1
-
-Желаемая последовательность:
+## 18. Final architecture rules
 
 ```text
-NOW:
-    SM0 closure/freeze
-    MRPF research may proceed in parallel with V0 P4/P5/P6
-
-PRODUCT:
-    V0 P4 -> P5 -> P6 accepted
-             +
-    SM0 accepted donor
-             +
-    MRPF-P6 accepted donor OR explicit decision to include its missing gates in V0-SM1
-             ↓
-    V0-SM1 seamless product integration
-             ↓
-    P7 terrain
-    P8 ship
-```
-
-Future V0-SM1 должен переносить contracts/semantics, а не research fixture truth.
-
----
-
-## 18. Что переносить в V0-SM1
-
-Переносим:
-
-```text
-generic N-route ClientConnectionSet
-exactly-one-active route invariant
-PROJECTION/WARM/ACTIVE/DRAIN role pivot
-direct source projection subscriptions
-ProjectionManifest/Grant semantics
-multi-scale representation classes
-per-source epoch/sequence/checksum fencing
-hierarchical parent/macro + child detailed composition
-bandwidth/connection/LOD budget
-source dropout isolation
-content-addressed representation cache
-```
-
-Не переносим как production owners:
-
-```text
-MRPF synthetic directory
-MRPF fixture-specific source registry
-MRPF synthetic Earth/Moon objects
-MRPF test authority store
-MRPF private persistence
-```
-
----
-
-## 19. Donor alignment
-
-Этот план должен переиспользовать существующие accepted/reviewed идеи:
-
-```text
-SM0 P10          multi-authority view composition
-SM0 P6/P7        projection pivot / N-authority routing donors
-MW7              regional interest projection
-RL3              representation-aware coarse-to-fine network streaming + cache
-NX                transport/interest/budget ownership
-SD/AUTHORITY      spatial address vs authority lease separation
-G                 deterministic procedural baseline
-LIFE              active/dormant lifecycle
-```
-
-Нельзя создавать private альтернативу этим owners без main/NX architecture decision.
-
----
-
-## 20. Final architecture rule
-
-```text
-THE CLIENT PRESENTATION WORLD MAY BE COMPOSED FROM MANY SERVERS
-THE CLIENT CAN KEEP N ROUTES, BUT POLICY BOUNDS REAL CONNECTIONS
-EXACTLY ONE ROUTE OWNS CANONICAL PLAYER AUTHORITY
-PROJECTION ROUTES ARE READ-ONLY DERIVED SOURCES
-DIRECT PROJECTION IS PREFERRED OVER ACTIVE-SERVER RELAY
-DISTANCE ALONE DOES NOT DEFINE VISIBILITY
-MOON CAN BE VISIBLE WHILE A FAR PLAYER IS NOT
-HIERARCHICAL MACRO SOURCES PREVENT HUNDREDS OF CONNECTIONS
-PROJECTION PUBLISHER != CANONICAL SIMULATION OWNER
-OVERLAPPING PRESENTATION IS ALLOWED; OVERLAPPING WRITERS ARE NOT
-TARGET PROJECTION ROUTE SHOULD BE PROMOTABLE TO WARM/ACTIVE WITHOUT RECONNECT
-MRPF-P0..P6 SHOULD DE-RISK THIS BEFORE PRODUCT V0-SM1
+CLIENT ROUTES ARE A GENERIC SET, NOT PRIMARY+SECONDARY FIELDS
+EXACTLY ONE ACTIVE PLAYER AUTHORITY
+PROJECTION ROUTES ARE READ-ONLY
+PROJECTION PAYLOAD SHOULD NORMALLY FLOW DIRECT SOURCE -> CLIENT
+ACTIVE AUTHORITY IS NOT THE DEFAULT VISUAL RELAY
+DIRECT CONNECTION DOES NOT GRANT VISIBILITY RIGHTS
+PROJECTION GRANTS ARE SERVER-CONTROLLED
+DISTANCE ALONE DOES NOT DEFINE INTEREST
+CELESTIAL / LANDMARK / TERRAIN / DYNAMIC USE DIFFERENT POLICIES
+N ROUTES ARE POLICY-BOUNDED, NOT PROTOCOL-HARDCODED
+FAR WORLD USES AGGREGATE/MACRO PUBLISHERS INSTEAD OF HUNDREDS OF CONNECTIONS
+SIMULATION AUTHORITY != PROJECTION PUBLISHER
+REPRESENTATION != CANONICAL TRUTH
+SERVER INSTANCE IS DISPOSABLE; WORLD/REGION IDENTITY IS NOT
+MRPF MAY RUN BEFORE P6; PRODUCT SEAMLESS ACTIVATES AFTER P6
 ```
