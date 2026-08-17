@@ -139,7 +139,13 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         v0 = self.registry["programs"]["V0"]
         remote_ref = f"origin/{P4_BRANCH}"
         remote_head = git("rev-parse", "--verify", remote_ref)
-        self.assertEqual(v0["prebuild_state"]["head_at_refresh_input"], remote_head)
+        prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
+
+        # `prebuild_state` is an immutable dispatch/input snapshot, not a promise
+        # that the active implementation branch can never advance. Once P4 is
+        # dispatched and implemented, the current branch head must descend from
+        # the frozen prebuild subject rather than equal it byte-for-byte.
+        git("merge-base", "--is-ancestor", prebuild_head, remote_head)
 
         passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
         self.assertEqual("distributed_world_simulator.branch_passport.v1", passport["schema"])
@@ -161,7 +167,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
         ):
             text = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn(remote_head, text)
+            self.assertIn(prebuild_head, text)
             self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
 
     def test_pre_h0_3_concurrency_is_one_main_owned_mutation_lease(self):

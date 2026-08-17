@@ -135,6 +135,17 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         if watched_level not in directional.HEALTH_RANK or critical_level not in directional.HEALTH_RANK:
             raise AssertionError("invalid directional health policy")
 
+        clearance_path = ROOT / directional.CLEARANCE_REGISTRY_PATH
+        clearances: list[dict] = []
+        if clearance_path.exists():
+            clearance_document = json.loads(clearance_path.read_text(encoding="utf-8"))
+            if (
+                clearance_document.get("schema") == directional.CLEARANCE_REGISTRY_SCHEMA
+                and clearance_document.get("authority") == "MAIN_OWNED_ONLY"
+                and isinstance(clearance_document.get("clearances"), list)
+            ):
+                clearances = [item for item in clearance_document["clearances"] if isinstance(item, dict)]
+
         overall = "GREEN"
         for producer in scopes:
             if not producer["producer_enabled"] or not producer["changed_files"]:
@@ -157,8 +168,20 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
                 ]
                 if not bool(consumer.get("blocks_global_progress", True)):
                     continue
-                if critical_hits and directional.HEALTH_RANK[critical_level] > directional.HEALTH_RANK[overall]:
-                    overall = critical_level
+                if critical_hits:
+                    all_hits = sorted(set(critical_hits + watched_hits))
+                    accepted, _ = directional.resolve_critical_clearance(
+                        clearances,
+                        producer,
+                        consumer,
+                        critical_hits,
+                        all_hits,
+                        directional.git_object_sha,
+                        directional.is_ancestor,
+                    )
+                    effective_level = watched_level if accepted is not None else critical_level
+                    if directional.HEALTH_RANK[effective_level] > directional.HEALTH_RANK[overall]:
+                        overall = effective_level
                 if watched_hits and directional.HEALTH_RANK[watched_level] > directional.HEALTH_RANK[overall]:
                     overall = watched_level
         return overall

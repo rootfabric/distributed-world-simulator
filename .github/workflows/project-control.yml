@@ -51,6 +51,7 @@ jobs:
             scripts/control/project_control.py \
             scripts/control/project_control_architecture_compat.py \
             scripts/control/project_control_core.py \
+            scripts/control/directional_watch_clearance.py \
             scripts/control/project_control_directional_watch.py \
             scripts/harness/checkpoint_planner.py \
             scripts/harness/event_reducer.py
@@ -62,6 +63,7 @@ jobs:
               Path("config/control/project-control-policy.v1.json"),
               Path("config/control/project-program-registry.v1.json"),
               Path("config/control/architecture-ownership.v1.json"),
+              Path("config/control/directional-watch-clearances.v1.json"),
               Path("config/architecture/global-program-roadmap.v1.json"),
               Path("config/control/harness/project-goals.v1.json"),
               Path("config/control/harness/checkpoint-catalog.v1.json"),
@@ -103,7 +105,10 @@ jobs:
         run: python3 -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
 
       - name: Run generation-80 authorization safety regression
-        run: python3 -m unittest tests.harness.test_v0_generation80_safety_guards
+        run: |
+          python3 -m unittest \
+            tests.harness.test_v0_generation80_safety_guards \
+            tests.harness.test_project_control_directional_clearance
 
       - name: Run canonical-main PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
