@@ -257,16 +257,22 @@ class Generation80SafetyGuardTests(unittest.TestCase):
             reduced = reduce_events(self.bundle, work_order, events, transition, context)
             self.assertEqual("DISPATCHED", reduced["state"])
 
-    def test_registry_pin_and_required_docs_track_current_p4_head(self):
+    def test_registry_pin_and_required_docs_track_frozen_p4_prebuild_subject(self):
         remote_head = git("rev-parse", "--verify", f"origin/{P4_BRANCH}")
         v0 = self.registry["programs"]["V0"]
-        self.assertEqual(remote_head, v0["prebuild_state"]["head_at_refresh_input"])
+        prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
+
+        # Generation-80 freezes the pre-dispatch subject for provenance. The
+        # implementation branch is expected to advance after Director dispatch,
+        # but it must continue to descend from that frozen subject.
+        git("merge-base", "--is-ancestor", prebuild_head, remote_head)
+
         for relative in (
             "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
             "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
         ):
             text = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn(remote_head, text, relative)
+            self.assertIn(prebuild_head, text, relative)
             self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text, relative)
 
 
