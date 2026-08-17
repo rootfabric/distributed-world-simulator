@@ -6,7 +6,7 @@ param(
     [ValidateRange(120, 10000)]
     [int]$SoakIterations = 120,
 
-    [ValidateRange(180, 900)]
+    [ValidateRange(180, 600)]
     [int]$TimeoutSeconds = 240,
 
     [switch]$AllowDirty
