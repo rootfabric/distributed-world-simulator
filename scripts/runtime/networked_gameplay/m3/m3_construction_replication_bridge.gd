@@ -82,12 +82,21 @@ func submit_player_command(logical_player_id: String, command: Dictionary) -> Di
 	var result: Dictionary = _gateway.submit(command, "", {"logical_player_id": logical_player_id})
 	if not bool(result.get("success", false)):
 		return result
+	# Once the canonical gateway reports success the domain mutation may already
+	# be committed. Publication derivation must therefore fail over to a full
+	# authoritative snapshot instead of converting that commit into a rejection.
+	var event_packet: Dictionary = {}
+	var event_fallback_required := false
 	var event_value = result.get("event", {})
-	if not event_value is Dictionary or not bool(EventScript.validate(Dictionary(event_value)).get("success", false)):
-		return _failure("M3_CONSTRUCTION_GATEWAY_EVENT_REQUIRED")
+	if event_value is Dictionary and bool(EventScript.validate(Dictionary(event_value)).get("success", false)):
+		event_packet = {"type": EVENT_TYPE, "event": Dictionary(event_value).duplicate(true)}
+	else:
+		event_fallback_required = true
 	return _success({
 		"result": result.duplicate(true),
-		"event_packet": {"type": EVENT_TYPE, "event": Dictionary(event_value).duplicate(true)},
+		"event_packet": event_packet,
+		"event_fallback_required": event_fallback_required,
+		"snapshot_packet": get_snapshot_packet(),
 	})
 
 

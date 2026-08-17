@@ -18,6 +18,10 @@ var _resource_delta_build_failures := 0
 var _resource_resync_requests := 0
 var _v0_p4_composition_report: Dictionary = {}
 var _v0_p4_legacy_prebind_ignored := false
+var _v0_p4_publication_batches := 0
+var _v0_p4_item_snapshot_fallbacks := 0
+var _v0_p4_construction_snapshot_fallbacks := 0
+var _v0_p4_replay_publications_suppressed := 0
 
 
 func set_construction_bridge(bridge) -> Dictionary:
@@ -140,6 +144,124 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 		and String(_peer_to_session.get(peer_id, "")) == session_id
 	):
 		_send_resource_snapshot(peer_id, "PLAYER_JOINED")
+
+
+func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("STALE_TRANSPORT_SESSION"))
+		return
+	if _construction_bridge == null:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("M3_CONSTRUCTION_NOT_ENABLED"))
+		return
+	var command_value = payload.get("command", {})
+	if not command_value is Dictionary:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
+		return
+	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var submitted: Dictionary = _construction_bridge.submit_player_command(logical_id, Dictionary(command_value))
+	if not bool(submitted.get("success", false)):
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", submitted)
+		_rejections += 1
+		return
+
+	var gateway_result: Dictionary = Dictionary(submitted.get("details", {}).get("result", {}))
+	var replay := bool(gateway_result.get("replay", false))
+	if replay:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", submitted)
+		_v0_p4_replay_publications_suppressed += 1
+		_write_report("READY", false)
+		return
+
+	# The cross-domain commit has succeeded at this point. From here onward all
+	# failures are replication failures and must recover with authoritative
+	# snapshots; they must never turn the committed build into a rejection.
+	var after_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var item_delta: Dictionary = {}
+	var item_snapshot_fallback_required := false
+	var item_delta_result: Dictionary = CanonicalItemGraphDelta.create(
+		before_item_snapshot,
+		after_item_snapshot
+	)
+	if not bool(item_delta_result.get("success", false)):
+		item_snapshot_fallback_required = true
+		_item_graph_delta_build_failures += 1
+		_v0_p4_item_snapshot_fallbacks += 1
+		_last_error_code = "V0_P4_CONSTRUCTION_ITEM_DELTA_BUILD_FAILED"
+	else:
+		item_delta = Dictionary(item_delta_result.get("details", {}).get("delta", {})).duplicate(true)
+
+	var submitted_details: Dictionary = Dictionary(submitted.get("details", {}))
+	var event_packet: Dictionary = Dictionary(submitted_details.get("event_packet", {})).duplicate(true)
+	var construction_snapshot: Dictionary = Dictionary(submitted_details.get("snapshot_packet", {})).duplicate(true)
+	var construction_snapshot_fallback_required := bool(
+		submitted_details.get("event_fallback_required", false)
+	) or event_packet.is_empty()
+	if construction_snapshot_fallback_required:
+		_v0_p4_construction_snapshot_fallbacks += 1
+		_last_error_code = "V0_P4_CONSTRUCTION_EVENT_BUILD_FAILED"
+
+	var result_sent := _send_result(
+		peer_id,
+		operation_id,
+		"CONSTRUCTION_COMMAND",
+		submitted,
+		{} if item_snapshot_fallback_required else item_delta
+	)
+	if item_snapshot_fallback_required:
+		_broadcast_item_snapshot("V0_P4_CONSTRUCTION_ITEM_DELTA_FALLBACK")
+	else:
+		_broadcast_item_delta(item_delta, peer_id, "construction.build")
+
+	if construction_snapshot_fallback_required:
+		if construction_snapshot.is_empty() and _construction_bridge.has_method("get_snapshot_packet"):
+			construction_snapshot = _construction_bridge.get_snapshot_packet()
+		_broadcast_v0_p4_construction_snapshot(
+			construction_snapshot,
+			"V0_P4_CONSTRUCTION_EVENT_FALLBACK"
+		)
+	else:
+		_broadcast_v0_p4_construction_event(event_packet)
+
+	_v0_p4_publication_batches += 1
+	_capture_two_connected_checksum()
+	if result_sent:
+		_mark_operation_delivered(operation_id)
+	_write_report("READY", false)
+
+
+func _broadcast_v0_p4_construction_event(event_packet: Dictionary) -> void:
+	if event_packet.is_empty():
+		return
+	for peer_id_value in _peer_to_player.keys():
+		if _send_on_channel(
+			String(peer_id_value),
+			"CONSTRUCTION_EVENT",
+			event_packet,
+			RealtimeChannelPolicy.RESYNC,
+			"RELIABLE_ORDERED"
+		):
+			_broadcasts += 1
+			_construction_events_published += 1
+
+
+func _broadcast_v0_p4_construction_snapshot(snapshot_packet: Dictionary, reason: String) -> void:
+	if snapshot_packet.is_empty():
+		_last_error_code = "V0_P4_CONSTRUCTION_SNAPSHOT_FALLBACK_MISSING"
+		return
+	var payload := snapshot_packet.duplicate(true)
+	payload["reason"] = reason
+	for peer_id_value in _peer_to_player.keys():
+		if _send_on_channel(
+			String(peer_id_value),
+			"CONSTRUCTION_SNAPSHOT",
+			payload,
+			RealtimeChannelPolicy.RESYNC,
+			"RELIABLE_ORDERED"
+		):
+			_broadcasts += 1
+			_construction_snapshots_published += 1
 
 
 func _handle_resource_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -305,4 +427,10 @@ func get_report() -> Dictionary:
 		),
 	}
 	report["v0_p4_live_composition"] = _v0_p4_composition_report.duplicate(true)
+	report["v0_p4_post_commit_publication"] = {
+		"publication_batches": _v0_p4_publication_batches,
+		"item_snapshot_fallbacks": _v0_p4_item_snapshot_fallbacks,
+		"construction_snapshot_fallbacks": _v0_p4_construction_snapshot_fallbacks,
+		"replay_publications_suppressed": _v0_p4_replay_publications_suppressed,
+	}
 	return report
