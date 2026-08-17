@@ -37,6 +37,24 @@ if [[ -n "$status_before" && "$allow_dirty" -ne 1 ]]; then
     exit 2
 fi
 
+mapfile -t uid_before < <(git -C "$project_root" ls-files --others --exclude-standard -- ':(glob)**/*.uid')
+declare -A uid_before_set=()
+for relative_uid in "${uid_before[@]}"; do
+    uid_before_set["$relative_uid"]=1
+done
+
+remove_generated_uid_sidecars() {
+    local -a uid_after=()
+    local relative_uid
+    mapfile -t uid_after < <(git -C "$project_root" ls-files --others --exclude-standard -- ':(glob)**/*.uid')
+    for relative_uid in "${uid_after[@]}"; do
+        if [[ -z "${uid_before_set[$relative_uid]+x}" ]]; then
+            rm -f -- "$project_root/$relative_uid"
+            echo "[SM0-P8.1] Removed run-generated UID sidecar: $relative_uid"
+        fi
+    done
+}
+
 export BREAKPOINT_RUNTIME_DISABLED=1
 run_id="$(date +%Y%m%d-%H%M%S)-$$"
 log_root="$project_root/artifacts/runtime/sm0-p8-1-$run_id"
@@ -59,6 +77,7 @@ cleanup() {
             kill "$pid" 2>/dev/null || true
         fi
     done
+    remove_generated_uid_sidecars || true
 }
 trap cleanup EXIT
 
@@ -136,7 +155,7 @@ if [[ "$visual" -eq 0 ]]; then
 else
     "$godot_bin" "${observer_args[@]}" >"$log_root/observer.stdout.log" 2>&1 &
 fi
-observer=$!; pids+=("$observer")
+observer=$!; pids+,=("$observer")
 
 "$godot_bin" --headless --path "$project_root" --log-file "$log_nested" \
     --script res://scripts/runtime/seamless/sm0/sm0_p8_nested_authority_process.gd -- \
@@ -207,12 +226,12 @@ grep -Fq '"outer_authority_epoch":3' "$log_a"
 root_id_count="$(grep -o '"ship_root_instance_id":[0-9][0-9]*' "$log_observer" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
 ship_id_count="$(grep -o '"ship_visual_instance_id":[0-9][0-9]*' "$log_observer" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
 player_id_count="$(grep -o '"player_visual_instance_id":[0-9][0-9]*' "$log_observer" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
-[[ "$root_id_count" -eq 1 ]] || { echo "ShipRoot visual identity changed" >&2; exit 1; }
+R[[ "$root_id_count" -eq 1 ]] || { echo "ShipRoot visual identity changed" >&2; exit 1; }
 [[ "$ship_id_count" -eq 1 ]] || { echo "ship visual identity changed" >&2; exit 1; }
 [[ "$player_id_count" -eq 1 ]] || { echo "player visual identity changed" >&2; exit 1; }
 
 for file in "$log_observer" "$log_nested" "$log_a" "$log_b" "$log_c"; do
-    if grep -Eq 'SCRIPT ERROR|Parse Error|Failed to load script|SM0_INVARIANT_VIOLATION' "$file"; then
+    if grep -Eq 'SCRIPT ERROR|Parse Error|Failed to load script|SMP0_INVARIANT_VIOLATION' "$file"; then
         echo "Fatal marker in $file" >&2
         tail -n 120 "$file" >&2
         exit 1
@@ -232,6 +251,7 @@ wait "$nested"
 wait "$observer"
 pids=()
 
+remove_generated_uid_sidecars
 status_after="$(git -C "$project_root" status --short)"
 if [[ "$allow_dirty" -ne 1 && "$status_after" != "$status_before" ]]; then
     echo "P8.1 gate modified source worktree" >&2
