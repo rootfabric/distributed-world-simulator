@@ -1,0 +1,89 @@
+name: V0 P4 Final Harness State Probe
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-final-harness-state
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact P4 with canonical main-owned Harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_P4_HEAD="da1c8825429af53095240943de663ada9a6549fc"
+          EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
+
+          git fetch origin main feature/v0-p4-construction-real-resources
+          git checkout -B feature/v0-p4-construction-real-resources origin/feature/v0-p4-construction-real-resources
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "P4_HEAD=$ACTUAL_HEAD"
+          test "$ACTUAL_HEAD" = "$EXPECTED_P4_HEAD"
+
+          while IFS= read -r path; do
+            case "$path" in
+              config/control/harness/executions/*) continue ;;
+            esac
+            mkdir -p "$(dirname "$path")"
+            git show "origin/main:$path" > "$path"
+          done < <(git ls-tree -r --name-only origin/main -- scripts/harness config/control/harness)
+
+          for path in \
+            config/control/project-program-registry.v1.json \
+            config/control/project-control-policy.v1.json \
+            config/control/architecture-ownership.v1.json; do
+            if git cat-file -e "origin/main:$path" 2>/dev/null; then
+              mkdir -p "$(dirname "$path")"
+              git show "origin/main:$path" > "$path"
+            fi
+          done
+
+          python -m pip install --disable-pip-version-check -q -r scripts/harness/requirements.txt
+          export PYTHONPATH="$PWD/scripts"
+          export PYTHONUTF8=1
+
+          python -m harness.cli status --root "$PWD" --execution "$EXECUTION" | tee /tmp/p4-status.log
+          tail -n 1 /tmp/p4-status.log > /tmp/p4-status.json
+
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/p4-status.json', encoding='utf-8'))
+          reduced=p.get('reduced_work_order', {})
+          active=p.get('active_work_order', {})
+          required=active.get('required_predicates', [])
+          completed=reduced.get('completed_predicates', [])
+          if not isinstance(completed, list):
+              completed=[]
+          missing=[x for x in required if x not in completed]
+          out={
+              'ok': p.get('ok'),
+              'state': reduced.get('state'),
+              'last_completed_predicate': reduced.get('last_completed_predicate'),
+              'open_blocker': reduced.get('open_blocker'),
+              'snapshot_matches_authoritative_state': p.get('snapshot_matches_authoritative_state'),
+              'current_branch_head_sha': p.get('repository',{}).get('current_branch_head_sha'),
+              'implementation_head_sha': p.get('repository',{}).get('implementation_head_sha'),
+              'review': p.get('review'),
+              'human_attention': p.get('human_attention'),
+              'verification_commands': p.get('verification_commands'),
+              'required_predicate_count': len(required),
+              'completed_predicate_count': len(completed),
+              'missing_required_predicates': missing,
+          }
+          print('P4_FINAL_HARNESS_SUMMARY=' + json.dumps(out, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Verify probe did not mutate P4 execution ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain -- config/control/harness/executions/E2026-08-17-V0-P4-R1)"
