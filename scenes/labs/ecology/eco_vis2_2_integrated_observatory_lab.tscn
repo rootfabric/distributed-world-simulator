@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/labs/ecology/eco_vis2_2_integrated_observatory_lab_r1.gd" id="2_script"]
 
 [sub_resource type="GDScript" id="GDScript_vis22d_guard"]
-script/source = "extends Node\n\nfunc _process(_delta: float) -> void:\n\tvar lab := get_parent()\n\tif not bool(lab.get(\"_vis22d_active\")):\n\t\treturn\n\tlab.set(\"_vis19_detail_accumulator\", 0.0)\n\tlab.call(\"_clear_vis19_progressive_detail\")\n"
+script/source = "extends Node\n\nfunc _process(_delta: float) -> void:\n\tvar lab := get_parent()\n\tif lab.get(\"_vis22d_active\") != true:\n\t\treturn\n\tlab.set(\"_vis19_detail_accumulator\", 0.0)\n\tlab.call(\"_clear_vis19_progressive_detail\")\n"
 
 [node name="EcoVIS22DIntegratedObservatory" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
