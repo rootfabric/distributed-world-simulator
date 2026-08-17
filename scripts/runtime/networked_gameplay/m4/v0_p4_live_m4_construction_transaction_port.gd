@@ -4,6 +4,7 @@ const NetworkUtils = preload("res://scripts/network/contracts/network_contract_u
 const ProjectionScript = preload("res://scripts/construction/item_graph/construction_item_projection.gd")
 const ItemMutationScript = preload("res://scripts/construction/item_graph/construction_item_mutation.gd")
 const PlanScript = preload("res://scripts/construction/item_graph/construction_item_transaction_plan.gd")
+const ItemRelationsScript = preload("res://scripts/items/domain/item_relations.gd")
 
 const R1_DEFINITION_ID := "item/ore"
 const R1_CONSTRUCTION_DEFINITION_ID := "ore"
@@ -301,6 +302,7 @@ func _build_construction_bridge_plan(
 	local_item_mutations: Array,
 	allocation_checksum: String
 ) -> Dictionary:
+	var authoritative_local_mutations: Array = _authoritative_local_mutations(local_item_mutations)
 	var bridge_identity := NetworkUtils.payload_hash({
 		"source_plan_checksum": String(source_plan.get("checksum", "")),
 		"allocation_checksum": allocation_checksum,
@@ -310,13 +312,40 @@ func _build_construction_bridge_plan(
 		String(source_plan.get("operation_id", "")),
 		String(source_plan.get("command_type", "")),
 		Dictionary(source_plan.get("construct_mutation", {})),
-		local_item_mutations,
+		authoritative_local_mutations,
 		Array(source_plan.get("invariants", []))
 	)
 	var validation: Dictionary = PlanScript.validate(bridge_plan)
 	if not bool(validation.get("success", false)):
 		return _failure("P4_CONSTRUCTION_BRIDGE_PLAN_INVALID", {"cause": validation})
 	return _success({"bridge_plan": bridge_plan})
+
+
+func _authoritative_local_mutations(local_item_mutations: Array) -> Array:
+	var result: Array = []
+	for mutation_value in local_item_mutations:
+		var mutation: Dictionary = Dictionary(mutation_value).duplicate(true)
+		if (
+			String(mutation.get("operation_kind", "")) == ItemMutationScript.OP_CREATE
+			and String(mutation.get("purpose", "")) == ItemMutationScript.PURPOSE_CREATE_ROOT
+		):
+			var after: Dictionary = Dictionary(mutation.get("after_projection", {})).duplicate(true)
+			var relation: Dictionary = Dictionary(after.get("relation", {}))
+			if (
+				String(relation.get("kind", "")) == ProjectionScript.WORLD
+				and String(relation.get("entity_id", "")).is_empty()
+				and not relation.has("spatial_ref")
+			):
+				after["relation"] = ItemRelationsScript.world()
+				mutation = ItemMutationScript.create(
+					ItemMutationScript.OP_CREATE,
+					ItemMutationScript.PURPOSE_CREATE_ROOT,
+					String(mutation.get("item_instance_id", "")),
+					{},
+					after
+				)
+		result.append(mutation)
+	return result
 
 
 func _rollback(

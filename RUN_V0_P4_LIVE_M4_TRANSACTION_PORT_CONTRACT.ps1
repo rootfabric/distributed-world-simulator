@@ -88,6 +88,7 @@ Assert-LogClean -Path $ImportLog -Stage "import"
 Assert-ProjectStable -Stage "import"
 
 Invoke-GodotContract -Name "p4-3-live-m4" -Script "res://tests/construction/test_v0_p4_live_m4_transaction_port.gd" -Summary "V0-P4 live M4 transaction port: PASS (70 assertions)"
+Invoke-GodotContract -Name "p4-3-authoritative-m0" -Script "res://tests/construction/test_v0_p4_live_m4_authoritative_transaction_port.gd" -Summary "V0-P4 authoritative live M4 transaction port: PASS (37 assertions)"
 Invoke-GodotContract -Name "p4-2-allocator" -Script "res://tests/construction/test_v0_p4_deterministic_server_allocator.gd" -Summary "V0-P4 deterministic allocator: PASS (50 assertions)"
 Invoke-GodotContract -Name "p4-1-exact-consume" -Script "res://tests/construction/test_v0_p4_real_resource_exact_consume_contract.gd" -Summary "V0-P4 exact-consume contract: PASS (12 assertions)"
 Invoke-GodotContract -Name "m4-canonical" -Script "res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd" -Summary "M4 canonical shared gameplay contracts: 26 assertions, 0 failures"
