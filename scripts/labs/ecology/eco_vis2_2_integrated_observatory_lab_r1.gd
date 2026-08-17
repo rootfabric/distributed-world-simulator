@@ -37,7 +37,7 @@ func _ready() -> void:
 	if is_instance_valid(_vis21_panel):
 		_vis21_panel.visible = false
 	if is_instance_valid(_controls_label):
-		_controls_label.text = "WASD move | Q/E down/up | Shift boost | mouse look | F fork replicated experiment | Right next | Space play/pause | R restart | [/] select replicate | 2/3/4/5 treatment | -/+ intensity\nVIS2.2-D: one selected Treatment is visible; every Control and nonselected Treatment remains data-only."
+		_controls_label.text = "WASD move | Q/E down/up | Shift boost | mouse look | F fork replicated experiment | Left rewind | Right next | Space play/pause | R restart | [/] select replicate | 2/3/4/5 treatment | -/+ intensity\nVIS2.2-D: one selected Treatment is visible; every Control and nonselected Treatment remains data-only."
 	_update_vis18r_title()
 	_update_status()
 
@@ -92,7 +92,12 @@ func _unhandled_input(event: InputEvent) -> void:
 						return
 			else:
 				match key_event.keycode:
-					KEY_F, KEY_I, KEY_LEFT:
+					KEY_F, KEY_I:
+						get_viewport().set_input_as_handled()
+						return
+					KEY_LEFT:
+						_vis18r_playing = false
+						rewind_replicated_to(_vis22d_generation - 1)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_RIGHT:
@@ -253,6 +258,55 @@ func advance_replicated_to(target_generation: int) -> Dictionary:
 		"generation": _vis22d_generation,
 		"advanced": _vis22d_generation - start_generation,
 		"aggregate_series_hash": String(_vis22d_aggregate.series_hash()),
+	}
+
+
+func rewind_replicated_to(target_generation: int) -> Dictionary:
+	if not _vis22d_active or not is_instance_valid(_vis22d_pair_set) or _vis22d_aggregate == null:
+		return {"success": false, "reason": "NOT_ACTIVE"}
+	if target_generation > _vis22d_generation:
+		return {"success": false, "reason": "FORWARD_REWIND_NOT_SUPPORTED"}
+	var common_floor := int(_vis22d_pair_set.common_oldest_cached_generation())
+	var aggregate_floor := int(_vis22d_aggregate.oldest_generation())
+	if common_floor < 0 or aggregate_floor < 0:
+		return {"success": false, "reason": "CACHE_FLOOR_UNAVAILABLE"}
+	if aggregate_floor != common_floor:
+		return {
+			"success": false,
+			"reason": "CACHE_FLOOR_MISMATCH",
+			"pair_floor": common_floor,
+			"aggregate_floor": aggregate_floor,
+		}
+
+	var roots_before: Array[String] = _vis22d_pair_set.replicate_roots()
+	var requested_generation := target_generation
+	var rewind_result: Dictionary = _vis22d_pair_set.rewind_to_cached_generation(requested_generation)
+	if not bool(rewind_result.get("success", false)):
+		return {"success": false, "reason": "PAIR_REWIND_FAILED", "detail": rewind_result}
+	var effective_generation := int(rewind_result.get("generation", -1))
+	var truncate_result: Dictionary = _vis22d_aggregate.truncate_after(effective_generation)
+	if not bool(truncate_result.get("success", false)):
+		return {"success": false, "reason": "AGGREGATE_TRUNCATE_FAILED", "detail": truncate_result}
+	if _vis22d_pair_set.replicate_roots() != roots_before:
+		return {"success": false, "reason": "ROOTS_CHANGED_ON_REWIND"}
+
+	_vis18r_playing = false
+	_vis22d_generation = effective_generation
+	_vis18r_generation = effective_generation
+	_vis18r_play_accumulator = 0.0
+	_clear_vis19_progressive_detail()
+	_refresh_panel()
+	_render_selected_generation()
+	_update_vis18r_title()
+	_update_status()
+	return {
+		"success": true,
+		"requested_generation": requested_generation,
+		"generation": effective_generation,
+		"clamped": bool(rewind_result.get("clamped", effective_generation != requested_generation)),
+		"common_oldest_cached_generation": common_floor,
+		"aggregate_series_hash": String(_vis22d_aggregate.series_hash()),
+		"replicate_roots": roots_before,
 	}
 
 
@@ -502,6 +556,6 @@ func _update_status() -> void:
 		status.text += "\nVIS2.2-D=READY replicates=%d | F forks replicated causal state; one Treatment becomes visible." % _vis22d_replicate_count
 		return
 	var hash := String(_vis22d_aggregate.series_hash()) if _vis22d_aggregate != null else ""
-	status.text += "\nVIS2.2-D n=%d selected=R%d aggregate=%s | visible_fields=1 | Control+nonselected Treatment=data-only | [/] presentation-only" % [
+	status.text += "\nVIS2.2-D n=%d selected=R%d aggregate=%s | visible_fields=1 | Control+nonselected Treatment=data-only | Left=bounded rewind | [/] presentation-only" % [
 		_vis22d_replicate_count, _vis22d_selected_replicate, hash.left(10)
 	]
