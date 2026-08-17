@@ -206,7 +206,7 @@ try {
         -Label "P8.1.1 stationary passenger continuity"
 
     $BaselineStarted = Get-Date
-    $BaselineRunner = Join-Path $ProjectRoot "RUN_V0_SM0_ACCEPTANCE.ps1"
+    $BaselineRunner = Join-Path $ProjectRoot "RUN_V0_SM0_ACCEPTANCE_R2.ps1"
     $BaselineArgs = @(
         "-Final",
         "-Restart",
