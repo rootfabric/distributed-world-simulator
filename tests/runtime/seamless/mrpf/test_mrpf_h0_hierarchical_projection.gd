@@ -1,0 +1,151 @@
+extends SceneTree
+
+const Contract = preload("res://scripts/runtime/seamless/mrpf/mrpf_h0_projection_contract.gd")
+const Composer = preload("res://scripts/runtime/seamless/mrpf/mrpf_h0_hierarchical_composer.gd")
+
+const EXPECTED_ASSERTIONS := 71
+var _assertions := 0
+var _failed := false
+
+func _init() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	var space := _rep("rep/earth/space", "earth", "space", 1, "CELESTIAL_BODY", 0, "earth/full", "earth/full", "SPACE", "hash-space-r1")
+	var earth := _rep("rep/earth/macro", "earth", "earth", 1, "PLANETARY_LAYER", 1, "earth/full", "earth/full", "EARTH", "hash-earth-r1")
+	var surface := _rep("rep/earth/surface314", "earth", "surface/314", 1, "TERRAIN_MACRO", 2, "earth/full", "earth/full", "SURFACE", "hash-surface-r1")
+	var base := _rep("rep/earth/base17", "earth", "base/17", 1, "REGIONAL_LANDMARK", 3, "earth/full", "earth/full", "BASE", "hash-base-r1")
+	for value in [space, earth, surface, base]:
+		_check_success(Contract.validate(value), "valid representation")
+		_check(value.get("presentation_only") == true, "representation presentation only")
+		_check(value.get("canonical_write_allowed") == false, "representation cannot write canonical")
+
+	var bad_level := space.duplicate(true)
+	bad_level["domain_level"] = "GALAXY"
+	bad_level["checksum"] = Contract.checksum(bad_level)
+	_check_error(Contract.validate(bad_level), "MRPF_H0_DOMAIN_LEVEL_INVALID", "unknown level rejected")
+	var bad_checksum := space.duplicate(true)
+	bad_checksum["content_hash"] = "mutated"
+	_check_error(Contract.validate(bad_checksum), "MRPF_H0_CHECKSUM_MISMATCH", "checksum mutation rejected")
+
+	var composer = Composer.new()
+	_check_success(composer.accept_representation(space), "accept space")
+	_check(_selected_id(composer) == "rep/earth/space", "SPACE selected initially")
+	_check_success(composer.accept_representation(earth), "accept earth")
+	_check(_selected_id(composer) == "rep/earth/macro", "EARTH replaces SPACE")
+	_check_success(composer.accept_representation(surface), "accept surface")
+	_check(_selected_id(composer) == "rep/earth/surface314", "SURFACE replaces EARTH")
+	_check_success(composer.accept_representation(base), "accept base")
+	_check(_selected_id(composer) == "rep/earth/base17", "BASE replaces SURFACE")
+	_check(composer.representation_count() == 4, "coarse candidates retained for fallback")
+
+	var composed := composer.compose_view()
+	_check_success(composed, "composition succeeds")
+	var details: Dictionary = Dictionary(composed.get("details", {}))
+	_check(details.get("presentation_only") == true, "view presentation only")
+	_check(details.get("canonical_state_generated") == false, "view generates no canonical state")
+	_check(String(details.get("view_hash", "")).length() == 64, "view hash emitted")
+	_check(_selected_subject(composer) == "earth", "subject identity stable")
+	_check(not composer.has_method("apply_canonical_mutation"), "composer exposes no canonical mutation API")
+	_check_error(composer.reject_presentation_mutation("earth", "materialize"), "MRPF_H0_PRESENTATION_READ_ONLY", "mutation rejected")
+
+	var replay := composer.accept_representation(base)
+	_check_success(replay, "exact replay accepted")
+	_check(bool(Dictionary(replay.get("details", {})).get("replay", false)), "exact replay marked")
+
+	var stale := _rep("rep/earth/base17", "earth", "base/17", 0, "REGIONAL_LANDMARK", 3, "earth/full", "earth/full", "BASE", "hash-base-r0")
+	_check_error(Contract.validate(stale), "MRPF_H0_SOURCE_REVISION_INVALID", "zero revision invalid")
+	var newer := _rep("rep/earth/base17", "earth", "base/17", 2, "REGIONAL_LANDMARK", 3, "earth/full", "earth/full", "BASE", "hash-base-r2")
+	_check_success(composer.accept_representation(newer), "higher revision accepted")
+	_check(_selected_id(composer) == "rep/earth/base17", "new base revision selected")
+	_check_error(composer.accept_representation(base), "MRPF_H0_SOURCE_REVISION_STALE", "stale revision rejected")
+	var mutated_same := _rep("rep/earth/base17", "earth", "base/17", 2, "REGIONAL_LANDMARK", 3, "earth/full", "earth/full", "BASE", "hash-base-r2-mutated")
+	_check_error(composer.accept_representation(mutated_same), "MRPF_H0_SAME_REVISION_MUTATION", "same revision mutation rejected")
+
+	_check_error(composer.remove_representation("rep/earth/base17", 1), "MRPF_H0_REMOVE_REVISION_MISMATCH", "remove revision fenced")
+	_check_success(composer.remove_representation("rep/earth/base17", 2), "remove base")
+	_check(_selected_id(composer) == "rep/earth/surface314", "BASE removal reveals SURFACE")
+	_check_success(composer.remove_representation("rep/earth/surface314", 1), "remove surface")
+	_check(_selected_id(composer) == "rep/earth/macro", "SURFACE removal reveals EARTH")
+	_check_success(composer.remove_representation("rep/earth/macro", 1), "remove earth")
+	_check(_selected_id(composer) == "rep/earth/space", "EARTH removal reveals SPACE")
+
+	var unrelated := _rep("rep/moon/space", "moon", "space", 1, "CELESTIAL_BODY", 0, "moon/full", "moon/full", "SPACE", "hash-moon-r1")
+	_check_success(composer.accept_representation(unrelated), "unrelated Moon group accepted")
+	var multi := composer.compose_view()
+	_check_success(multi, "multi group composition")
+	var multi_details: Dictionary = Dictionary(multi.get("details", {}))
+	_check(Array(multi_details.get("representations", [])).size() == 2, "unrelated groups compose simultaneously")
+	_check(_has_subject(multi_details, "earth"), "Earth remains present")
+	_check(_has_subject(multi_details, "moon"), "Moon present independently")
+
+	var mismatch := _rep("rep/earth/bad-coverage", "earth", "earth", 2, "PLANETARY_LAYER", 1, "earth/other", "earth/full", "EARTH", "hash-mismatch")
+	_check_error(composer.accept_representation(mismatch), "MRPF_H0_REPLACEMENT_GROUP_CONTRACT_MISMATCH", "replacement group coverage mismatch rejected")
+
+	var order_a = Composer.new()
+	var order_b = Composer.new()
+	var deterministic_values := [space, earth, surface, base, unrelated]
+	for value in deterministic_values:
+		_check_success(order_a.accept_representation(value), "order A accepts")
+	var reversed := deterministic_values.duplicate()
+	reversed.reverse()
+	for value in reversed:
+		_check_success(order_b.accept_representation(value), "order B accepts")
+	var hash_a := String(Dictionary(order_a.compose_view().get("details", {})).get("view_hash", ""))
+	var hash_b := String(Dictionary(order_b.compose_view().get("details", {})).get("view_hash", ""))
+	_check(hash_a == hash_b, "same inputs produce same view hash regardless insertion order")
+	_check(_selected_id(order_a, "earth/full") == "rep/earth/base17", "deterministic Earth winner")
+	_check(_selected_id(order_a, "moon/full") == "rep/moon/space", "deterministic Moon winner")
+
+	_finish()
+
+func _rep(id: String, subject: String, source: String, revision: int, klass: String, lod: int, coverage: String, group: String, level: String, content_hash: String) -> Dictionary:
+	return Contract.create_representation(id, subject, source, "authority/%s" % source, "publisher/%s" % source, revision, klass, lod, coverage, "frame/solar", content_hash, 0, group, level)
+
+func _selected_id(composer, group_id: String = "earth/full") -> String:
+	var result: Dictionary = composer.compose_view()
+	if not bool(result.get("success", false)):
+		return ""
+	for raw in Array(Dictionary(result.get("details", {})).get("representations", [])):
+		var value: Dictionary = Dictionary(raw)
+		if String(value.get("replacement_group_id", "")) == group_id:
+			return String(value.get("representation_id", ""))
+	return ""
+
+func _selected_subject(composer) -> String:
+	var result: Dictionary = composer.compose_view()
+	for raw in Array(Dictionary(result.get("details", {})).get("representations", [])):
+		var value: Dictionary = Dictionary(raw)
+		if String(value.get("replacement_group_id", "")) == "earth/full":
+			return String(value.get("canonical_subject_id", ""))
+	return ""
+
+func _has_subject(details: Dictionary, subject: String) -> bool:
+	for raw in Array(details.get("representations", [])):
+		if String(Dictionary(raw).get("canonical_subject_id", "")) == subject:
+			return true
+	return false
+
+func _check_success(result: Dictionary, label: String) -> void:
+	_check(bool(result.get("success", false)), label + " success")
+
+func _check_error(result: Dictionary, code: String, label: String) -> void:
+	_check(not bool(result.get("success", false)), label + " fails")
+	_check(String(result.get("error_code", "")) == code, label + " error code")
+
+func _check(condition: bool, label: String) -> void:
+	_assertions += 1
+	if not condition:
+		_failed = true
+		push_error("MRPF H0 assertion failed: %s" % label)
+
+func _finish() -> void:
+	if _assertions != EXPECTED_ASSERTIONS:
+		_failed = true
+		push_error("MRPF H0 assertion count mismatch: expected %d got %d" % [EXPECTED_ASSERTIONS, _assertions])
+	if _failed:
+		print("MRPF H0 hierarchical projection contracts: FAIL (%d assertions)" % _assertions)
+		quit(1)
+	else:
+		print("MRPF H0 hierarchical projection contracts: PASS (%d assertions)" % _assertions)
+		quit(0)
