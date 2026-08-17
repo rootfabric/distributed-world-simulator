@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0017",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 17,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:17Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "V0_P4_FAULT_INJECTION_ROLLBACK_PASS",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-3-R1-AUTHORITATIVE-M0-GREEN-001.v1.json", "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"],
+  "summary": "P4.3 fault-injection validation proves rollback-safe pre-commit failures restore canonical M4 durable/replay state and Construction state; unsupported post-M0 fault modes are rejected before mutation rather than pretending a rollback is possible."
+}

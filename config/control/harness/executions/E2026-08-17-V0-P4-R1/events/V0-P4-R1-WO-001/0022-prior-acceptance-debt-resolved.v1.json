@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0022",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 22,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:22Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"],
+  "summary": "Prior world/core regression debt tracked in issue #121 was repaired in exact PR #122 candidate 2e7955773d2a91113fb31d6053de00c6c140af61, independently reviewed PASS, and merged into the P4 closure branch as b21f6658fb57e30b9a47e1275038f224fc89de4f. The merge tree is identical to the reviewed/tested repair candidate (compare files=[])."
+}

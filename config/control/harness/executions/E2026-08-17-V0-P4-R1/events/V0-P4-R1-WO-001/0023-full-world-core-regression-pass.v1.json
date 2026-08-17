@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0023",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 23,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:23Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "FULL_WORLD_CORE_REGRESSION_PASS",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"],
+  "summary": "Fresh local project-Godot closure sweep passed 202/202 historical curated tests plus 34/34 automatically discovered overlays, for 236/236 standalone tests, followed by main-scene --run-tests=all PASS with zero failure records. project.godot SHA256 remained unchanged; the tested repair tree is identical to the merged P4 closure tree."
+}

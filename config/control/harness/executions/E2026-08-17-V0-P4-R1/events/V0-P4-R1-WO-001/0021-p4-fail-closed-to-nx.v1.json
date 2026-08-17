@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0021",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 21,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:21Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "V0_P4_FAIL_CLOSED_TO_NX_IF_NETWORK_FOUNDATION_CHANGE_REQUIRED",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"],
+  "summary": "The Work Order network-foundation stop condition was never crossed: P4 completed on existing M3/M4 SERVER_PREDICTED contracts and required no NX-owned protocol, authority, reconciliation, or transport foundation mutation. Any such requirement would have blocked P4 and been routed to NX."
+}

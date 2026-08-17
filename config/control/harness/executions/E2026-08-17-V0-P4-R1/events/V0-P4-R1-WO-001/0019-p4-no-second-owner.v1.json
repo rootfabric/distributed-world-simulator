@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0019",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 19,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:19Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "V0_P4_NO_SECOND_ITEM_GRAPH_OR_PERSISTENCE_OWNER_PASS",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-3-R1-AUTHORITATIVE-M0-GREEN-001.v1.json", "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-4-LIVE-MVP-COMPOSITION-GREEN-001.v1.json", "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"],
+  "summary": "Architecture and live composition evidence prove P4 debits the same canonical M4 Item Graph used by P3 and reuses the existing Construction/M0/persistence owners. Construction state never becomes a second ore truth and no resource_balance or new persistence owner was introduced."
+}

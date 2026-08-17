@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0025",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 25,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T12:06:25Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "fa13bf38d299facfd75381aecee221356f460519",
+  "predicate": "EVIDENCE_MAP_COMPLETE",
+  "evidence_paths": ["config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json", "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-EVIDENCE-MAP-001.v1.json"],
+  "summary": "A schema-valid Harness Evidence Map and supplemental detailed closure map are committed. They enumerate exact tested heads, canonical owners/surfaces, focused and full-regression results, PC0 status, residual risks, and the remaining independent Reviewer/Verifier evidence gaps. The map itself does not self-accept the checkpoint."
+}
