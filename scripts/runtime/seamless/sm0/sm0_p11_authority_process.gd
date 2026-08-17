@@ -159,9 +159,9 @@ func _retire_source(request_id: String, payload: Dictionary) -> Dictionary:
 		return _wire(request_id, false, "SM0_P11_PROCESS_SOURCE_PHASE_INVALID", {})
 	var aggregate_id := String(op.get("aggregate_id", ""))
 	var record: Dictionary = Dictionary(_aggregates.get(aggregate_id, {}))
-	if not bool(record.get("active_writer", false) or not bool(record.get("frozen", false)):
+	if not bool(record.get("active_writer", false)) or not bool(record.get("frozen", false)):
 		return _wire(request_id, false, "SM0_P11_PROCESS_SOURCE_RETIRE_INVARIANT", {})
-	var token := Contract.retirement_token(operation_id, aggregate_id, String(op.get("identity_id", "")), _authority_id, String(op.get("target_authority_id", ""), int(op.get("source_epoch", 0)), int(op.get("target_epoch", 0))
+	var token := Contract.retirement_token(operation_id, aggregate_id, String(op.get("identity_id", "")), _authority_id, String(op.get("target_authority_id", "")), int(op.get("source_epoch", 0)), int(op.get("target_epoch", 0)))
 	record["active_writer"] = false
 	record["frozen"] = true
 	_aggregates[aggregate_id] = record
