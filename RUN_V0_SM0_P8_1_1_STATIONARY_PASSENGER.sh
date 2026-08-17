@@ -111,6 +111,7 @@ echo "[SM0-P8.1.1] HEAD : $head_sha"
 echo "[SM0-P8.1.1] Logs : $log_root"
 
 for script in \
+  res://scripts/runtime/seamless/sm0/sm0_p8_moving_island_observer.gd \
   res://scripts/runtime/seamless/sm0/sm0_p8_nested_authority_process.gd \
   res://tests/runtime/seamless/sm0/test_sm0_p8_1_1_stationary_passenger.gd
 do
@@ -174,7 +175,7 @@ c=$!; pids+=("$c")
   --script res://scripts/runtime/seamless/sm0/sm0_p8_moving_island_outer_process.gd -- \
   --authority-id=authority/sm0/a --listen-port=26620 \
   --neighbor-b-port=26621 --anchor-port=26623 --initial-writer=true \
-  --initial-x=-1.0 --velocity-x=0.8 --velocity-z=0.1 --angular-velocity-yaw=0.2 \
+  --initial-x=-1.0 --velocity-x=0.8 --velocity-z=0.1 --angular-velocity-yaw=0.05 \
   --auto-start-target=authority/sm0/c --start-file="$start_file" --stop-file="$stop_file" \
   >"$log_root/a.stdout.log" 2>&1 &
 a=$!; pids+=("$a")
@@ -195,6 +196,7 @@ wait_marker "$a_log" '"event":"SM0_P8_TRANSFER_COMPLETED"' A-complete "$a"
 wait_marker "$a_log" '"event":"SM0_P8_TARGET_COMMITTED"' A-return "$a"
 wait_marker "$c_log" '"event":"SM0_P8_TRANSFER_COMPLETED"' C-complete "$c"
 wait_marker "$observer_log" '"outer_authority_epoch":3' observer-final "$observer"
+wait_marker "$observer_log" '"event":"SM0_P8_VISUAL_RENDER_SAMPLE"' observer-render-sample "$observer"
 
 if [[ "$visual" -eq 1 ]]; then
   proof_hold_seconds="$visual_hold_seconds"
@@ -211,6 +213,7 @@ frame_count="$(grep -Fc '"event":"SM0_P8_NESTED_FRAME"' "$nested_log" || true)"
 b_forwards="$(grep -Fc '"event":"SM0_P8_ROUTE_FORWARDED"' "$b_log" || true)"
 nested_changes="$(grep -Fc '"event":"SM0_P8_OUTER_OWNER_CHANGED"' "$nested_log" || true)"
 observer_changes="$(grep -Fc '"event":"SM0_P8_VISUAL_OUTER_OWNER_CHANGED"' "$observer_log" || true)"
+render_sample_count="$(grep -Fc '"event":"SM0_P8_VISUAL_RENDER_SAMPLE"' "$observer_log" || true)"
 
 local_position_variants="$(
   grep '"event":"SM0_P8_NESTED_FRAME"' "$nested_log" \
@@ -227,12 +230,37 @@ ship_position_variants="$(
     | grep -oE '"ship_world_position":\{[^}]+\}' \
     | sort -u | wc -l | tr -d ' '
 )"
+rendered_player_world_variants="$(
+  grep '"event":"SM0_P8_VISUAL_RENDER_SAMPLE"' "$observer_log" \
+    | grep -oE '"rendered_player_world_position":\{[^}]+\}' \
+    | sort -u | wc -l | tr -d ' '
+)"
+rendered_marker_world_variants="$(
+  grep '"event":"SM0_P8_VISUAL_RENDER_SAMPLE"' "$observer_log" \
+    | grep -oE '"rendered_deck_marker_world_position":\{[^}]+\}' \
+    | sort -u | wc -l | tr -d ' '
+)"
+max_marker_error="$(
+  grep '"event":"SM0_P8_VISUAL_RENDER_SAMPLE"' "$observer_log" \
+    | grep -oE '"player_marker_xz_error":[0-9.eE+-]+' \
+    | cut -d: -f2 \
+    | sort -g \
+    | tail -n 1
+)"
 
 [[ "$moved_count" -eq 0 ]] || { echo "stationary passenger moved $moved_count times" >&2; exit 1; }
 [[ "$frame_count" -ge 5 ]] || { echo "only $frame_count nested frames observed" >&2; exit 1; }
 [[ "$local_position_variants" -eq 1 ]] || { echo "player local position changed ($local_position_variants variants)" >&2; exit 1; }
 [[ "$input_sequence_variants" -eq 1 ]] || { echo "player input sequence changed ($input_sequence_variants variants)" >&2; exit 1; }
-[[ "$ship_position_variants" -ge 2 ]] || { echo "ShipRoot did not demonstrate world motion" >&2; exit 1; }
+[[ "$ship_position_variants" -ge 2 ]] || { echo "ShipRoot did not demonstrate authority world motion" >&2; exit 1; }
+[[ "$render_sample_count" -ge 5 ]] || { echo "only $render_sample_count render-space samples observed" >&2; exit 1; }
+[[ "$rendered_player_world_variants" -ge 2 ]] || { echo "rendered player did not move in world space" >&2; exit 1; }
+[[ "$rendered_marker_world_variants" -ge 2 ]] || { echo "deck reference marker did not move in world space" >&2; exit 1; }
+[[ -n "$max_marker_error" ]] || { echo "render marker error telemetry missing" >&2; exit 1; }
+awk -v error="$max_marker_error" 'BEGIN { exit !(error <= 0.00001) }' || {
+  echo "player detached from deck reference marker: max XZ error=$max_marker_error" >&2
+  exit 1
+}
 [[ "$b_forwards" -ge 8 ]] || { echo "B forwarded only $b_forwards phases" >&2; exit 1; }
 [[ "$nested_changes" -ge 2 ]] || { echo "nested saw only $nested_changes owner changes" >&2; exit 1; }
 [[ "$observer_changes" -ge 2 ]] || { echo "observer saw only $observer_changes owner changes" >&2; exit 1; }
@@ -243,7 +271,8 @@ grep -Fq '"inner_authority_epoch":1' "$nested_log"
 root_ids="$(grep -o '"ship_root_instance_id":[0-9][0-9]*' "$observer_log" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
 ship_ids="$(grep -o '"ship_visual_instance_id":[0-9][0-9]*' "$observer_log" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
 player_ids="$(grep -o '"player_visual_instance_id":[0-9][0-9]*' "$observer_log" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
-[[ "$root_ids" -eq 1 && "$ship_ids" -eq 1 && "$player_ids" -eq 1 ]] || {
+marker_ids="$(grep -o '"deck_marker_instance_id":[0-9][0-9]*' "$observer_log" | cut -d: -f2 | sort -u | wc -l | tr -d ' ')"
+[[ "$root_ids" -eq 1 && "$ship_ids" -eq 1 && "$player_ids" -eq 1 && "$marker_ids" -eq 1 ]] || {
   echo "visual identity changed" >&2
   exit 1
 }
@@ -272,13 +301,17 @@ trap - EXIT
 
 echo
 echo "SM0-P8.1.1 stationary-passenger reference-frame proof: PASS"
-echo "  HEAD       : $head_sha"
-echo "  focused    : P8 96 + P8.1 33 + P8.1.1 14 assertions"
-echo "  local move : 0 SM0_P8_NESTED_PLAYER_MOVED events"
-echo "  local pos  : 1 variant across $frame_count nested frames"
-echo "  input seq  : 1 variant"
-echo "  ShipRoot   : $ship_position_variants world-position variants"
-echo "  authority  : A -> C -> A / B forwarded $b_forwards phases"
-echo "  identities : ShipRoot + ship + player persistent"
-echo "  visual     : $visual"
-echo "  logs       : $log_root"
+echo "  HEAD        : $head_sha"
+echo "  focused     : P8 96 + P8.1 33 + P8.1.1 14 assertions"
+echo "  local move  : 0 SM0_P8_NESTED_PLAYER_MOVED events"
+echo "  local pos   : 1 variant across $frame_count nested frames"
+echo "  input seq   : 1 variant"
+echo "  ShipRoot    : $ship_position_variants authority world-position variants"
+echo "  render      : $render_sample_count samples"
+echo "  player world: $rendered_player_world_variants render-position variants"
+echo "  deck marker : $rendered_marker_world_variants render-position variants"
+echo "  coupling    : max player/deck-marker XZ error=$max_marker_error"
+echo "  authority   : A -> C -> A / B forwarded $b_forwards phases"
+echo "  identities  : ShipRoot + ship + player + deck marker persistent"
+echo "  visual      : $visual"
+echo "  logs        : $log_root"
