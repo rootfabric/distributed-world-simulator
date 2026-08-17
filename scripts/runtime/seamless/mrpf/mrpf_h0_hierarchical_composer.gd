@@ -20,6 +20,8 @@ func accept_representation(value: Dictionary) -> Dictionary:
 		return _failure("MRPF_H0_REPLACEMENT_GROUP_CONTRACT_MISMATCH")
 	if _representations.has(representation_id):
 		var previous: Dictionary = Dictionary(_representations[representation_id])
+		if _identity_binding(previous) != _identity_binding(value):
+			return _failure("MRPF_H0_REPRESENTATION_IDENTITY_REBIND")
 		var previous_revision := int(previous.get("source_revision", 0))
 		var next_revision := int(value.get("source_revision", 0))
 		if next_revision < previous_revision:
@@ -78,6 +80,20 @@ func reject_presentation_mutation(canonical_subject_id: String, operation: Strin
 
 func representation_count() -> int:
 	return _representations.size()
+
+func _identity_binding(value: Dictionary) -> Array:
+	return [
+		String(value.get("canonical_subject_id", "")),
+		String(value.get("source_domain_id", "")),
+		String(value.get("source_authority_id", "")),
+		String(value.get("publisher_id", "")),
+		String(value.get("representation_class", "")),
+		int(value.get("lod_level", -1)),
+		String(value.get("coverage_scope", "")),
+		String(value.get("reference_frame_id", "")),
+		String(value.get("replacement_group_id", "")),
+		String(value.get("domain_level", "")),
+	]
 
 func _candidate_before(a_raw, b_raw) -> bool:
 	var a: Dictionary = Dictionary(a_raw)

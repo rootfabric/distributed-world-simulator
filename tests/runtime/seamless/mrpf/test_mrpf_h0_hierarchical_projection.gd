@@ -3,7 +3,7 @@ extends SceneTree
 const Contract = preload("res://scripts/runtime/seamless/mrpf/mrpf_h0_projection_contract.gd")
 const Composer = preload("res://scripts/runtime/seamless/mrpf/mrpf_h0_hierarchical_composer.gd")
 
-const EXPECTED_ASSERTIONS := 71
+const EXPECTED_ASSERTIONS := 74
 var _assertions := 0
 var _failed := false
 
@@ -61,6 +61,10 @@ func _run() -> void:
 	_check_error(composer.accept_representation(base), "MRPF_H0_SOURCE_REVISION_STALE", "stale revision rejected")
 	var mutated_same := _rep("rep/earth/base17", "earth", "base/17", 2, "REGIONAL_LANDMARK", 3, "earth/full", "earth/full", "BASE", "hash-base-r2-mutated")
 	_check_error(composer.accept_representation(mutated_same), "MRPF_H0_SAME_REVISION_MUTATION", "same revision mutation rejected")
+
+	var rebound := Contract.create_representation("rep/earth/base17", "earth", "forged/base", "authority/forged", "publisher/forged", 3, "REGIONAL_LANDMARK", 3, "earth/full", "frame/solar", "hash-forged-r3", 0, "earth/full", "BASE")
+	_check_error(composer.accept_representation(rebound), "MRPF_H0_REPRESENTATION_IDENTITY_REBIND", "higher revision identity rebind rejected")
+	_check(_selected_id(composer) == "rep/earth/base17", "rebind rejection preserves current representation")
 
 	_check_error(composer.remove_representation("rep/earth/base17", 1), "MRPF_H0_REMOVE_REVISION_MISMATCH", "remove revision fenced")
 	_check_success(composer.remove_representation("rep/earth/base17", 2), "remove base")
