@@ -7,6 +7,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 godot_bin="${1:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
 artifacts="$repo_root/artifacts/runtime/eco-vis2-2d-ubuntu"
 temp_root="$(mktemp -d /tmp/dws-eco-vis2-2d-XXXXXXXX)"
+timeout_bin="$(command -v timeout || true)"
 
 cleanup() {
     rm -rf "$temp_root"
@@ -22,7 +23,40 @@ fail_if_diagnostics() {
         grep -Ein \
 '(^SCRIPT ERROR:|^ERROR:|Parse Error|ObjectDB instances? (was|were) leaked at exit|Leaked instance:|[0-9]+ RID(s| allocations)? of type .* (was|were) leaked|Resource still in use:|resources? still in use at exit|Orphan StringName:|StringName: [0-9]+ unclaimed string names at exit|^WARNING:.*(leak|leaked|leaks|leaking|still in use))' \
             "$log_file" || true
-        exit 1
+        return 1
+    fi
+}
+
+run_godot() {
+    local label="$1"
+    local timeout_seconds="$2"
+    local log_file="$3"
+    local pass_marker="$4"
+    shift 4
+
+    echo ">> $label"
+    local result=0
+    if "$timeout_bin" --foreground --signal=TERM --kill-after=10s "${timeout_seconds}s" \
+        env BREAKPOINT_RUNTIME_DISABLED=1 "$godot_bin" "$@" 2>&1 | tee "$log_file"; then
+        result=0
+    else
+        result=${PIPESTATUS[0]}
+    fi
+
+    if [ "$result" -eq 124 ] || [ "$result" -eq 137 ]; then
+        echo "$label timed out after ${timeout_seconds}s"
+        return 1
+    fi
+    if [ "$result" -ne 0 ]; then
+        echo "$label failed with exit code $result"
+        return "$result"
+    fi
+    fail_if_diagnostics "$log_file" || return 1
+    if [ -n "$pass_marker" ]; then
+        grep -Fq "$pass_marker" "$log_file" || {
+            echo "$label PASS marker missing: $pass_marker"
+            return 1
+        }
     fi
 }
 
@@ -31,6 +65,11 @@ mkdir -p "$artifacts"
 echo "=== ECO VIS2.2-D Ubuntu focused gate ==="
 echo "repo_root=$repo_root"
 echo "godot=$godot_bin"
+
+[ -n "$timeout_bin" ] || {
+    echo "GNU timeout command is required"
+    exit 1
+}
 
 test -x "$godot_bin" || {
     echo "Godot executable not found or not executable: $godot_bin"
@@ -73,49 +112,28 @@ cp \
 
 echo "ECO.VIS2.2-D isolated ecology dependency graph: PASS"
 
-echo ">> ECO VIS2.2-D parser preflight"
-if BREAKPOINT_RUNTIME_DISABLED=1 "$godot_bin" \
+run_godot \
+    "ECO VIS2.2-D parser preflight" \
+    300 \
+    "$artifacts/parser.log" \
+    "" \
     --headless \
     --path "$temp_root" \
     --check-only \
-    --script res://tests/research/ecology/test_eco_vis2_2_integrated_observatory_lab.gd \
-    2>&1 | tee "$artifacts/parser.log"; then
-    parser_result=0
-else
-    parser_result=${PIPESTATUS[0]}
-fi
+    --script res://tests/research/ecology/test_eco_vis2_2_integrated_observatory_lab.gd
 
-if [ "$parser_result" -ne 0 ]; then
-    echo "ECO.VIS2.2-D parser preflight failed with exit code $parser_result"
-    exit "$parser_result"
-fi
-fail_if_diagnostics "$artifacts/parser.log"
 echo "ECO.VIS2.2-D parser preflight: PASS"
+echo "ECO.VIS2.2-D shutdown leak gate: STRICT (ObjectDB + RID + resources + StringName + verbose smoke + timeout)"
 
-echo "ECO.VIS2.2-D shutdown leak gate: STRICT (ObjectDB + RID + resources + StringName + verbose smoke)"
-echo ">> ECO VIS2.2-D integrated observatory smoke"
-if BREAKPOINT_RUNTIME_DISABLED=1 "$godot_bin" \
+run_godot \
+    "ECO VIS2.2-D integrated observatory smoke" \
+    900 \
+    "$artifacts/runtime.log" \
+    "ECO.VIS2.2-D integrated observatory lab: PASS" \
     --verbose \
     --headless \
     --path "$temp_root" \
-    --script res://tests/research/ecology/test_eco_vis2_2_integrated_observatory_lab.gd \
-    2>&1 | tee "$artifacts/runtime.log"; then
-    runtime_result=0
-else
-    runtime_result=${PIPESTATUS[0]}
-fi
-
-if [ "$runtime_result" -ne 0 ]; then
-    echo "ECO.VIS2.2-D runtime smoke failed with exit code $runtime_result"
-    exit "$runtime_result"
-fi
-
-fail_if_diagnostics "$artifacts/runtime.log"
-
-grep -q 'ECO.VIS2.2-D integrated observatory lab: PASS' "$artifacts/runtime.log" || {
-    echo "ECO.VIS2.2-D PASS marker missing"
-    exit 1
-}
+    --script res://tests/research/ecology/test_eco_vis2_2_integrated_observatory_lab.gd
 
 echo "ECO.VIS2.2-D Ubuntu focused gate: PASS"
 echo "parser_log=$artifacts/parser.log"
