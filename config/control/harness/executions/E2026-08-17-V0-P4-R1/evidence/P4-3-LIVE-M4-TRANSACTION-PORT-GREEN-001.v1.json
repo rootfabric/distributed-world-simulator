@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_live_m4_transaction_port_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "92bd5a4f7537f020d8a63c7809e2abe8c9acc77b",
+  "candidate_parent": "c37d8779a92df568c0819dc573f8f2572c97a44d",
+  "candidate_tree": "34cc1e618861f36915983e8dd7d20d7e5ed0f74d",
+  "audit_evidence_commit": "a56a06481f2ee6534100aec11886d1958f7dd0de",
+  "director_dispatch_event_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+  "audited_main_head_at_dispatch": "5999d935e8d5b496100ced66283d8762d3403675",
+  "project_control_run": 31994017007,
+  "project_control_conclusion": "SUCCESS",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+  "validation": {
+    "import_exit_code": 0,
+    "p4_3_live_m4_transaction_port": "PASS (70 assertions)",
+    "p4_1_exact_consume": "PASS (12 assertions)",
+    "m4_canonical_shared_gameplay": "26 assertions, 0 failures",
+    "p3_resource_mining_domain": "79 assertions, 0 failures",
+    "c3_build_plan_contracts": "PASS (80 assertions)",
+    "fatal_parser_compile_startup_markers": 0,
+    "project_godot_hash_stable": true,
+    "p4_2_allocator_note": "P4.3 uses the exact P4.2 allocator production blob already validated at 50 assertions; the final local P4.3 source bundle did not contain the standalone P4.2 test file, so that standalone test was not re-run in this local P4.3 invocation. The committed exact-head runner includes it for operator execution."
+  },
+  "tested_blob_shas": {
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd": "e650ca7a23af04a2fe7572b448b890982672a7b4",
+    "scripts/runtime/networked_gameplay/m4/v0_p4_live_m4_construction_transaction_port.gd": "9ba6f62ecde7715ea33695699ff6e6b01defb289",
+    "tests/construction/test_v0_p4_live_m4_transaction_port.gd": "c3fedd4a84bb946fc9e8f31cb084388e4b0f7d27",
+    "RUN_V0_P4_LIVE_M4_TRANSACTION_PORT_CONTRACT.ps1": "e69b20587759c83a6bb75c4b15e383e4ef69e7d4"
+  },
+  "proved_invariants": [
+    "SAME_CANONICAL_M4_OBJECT_IDENTITY",
+    "NO_M4_ORE_COPY_IN_CONSTRUCTION_ADAPTER",
+    "SERVER_ONLY_CONSTRUCTION_CONSUME_NOT_CLIENT_EXECUTABLE",
+    "ALLOCATOR_SNAPSHOT_TOCTOU_REJECTS_BEFORE_MUTATION",
+    "PARTIAL_M4_DEBIT",
+    "EXACT_M4_DEBIT_DELETES_STACK",
+    "CONSTRUCTION_FAILURE_RESTORES_M4_DURABLE_AND_REPLAY_STATE",
+    "POST_M4_INJECTED_FAILURE_RESTORES_BOTH_DOMAINS",
+    "DUPLICATE_OPERATION_EXACT_ONCE",
+    "OPERATION_ID_PAYLOAD_CONFLICT_REJECTED",
+    "FOREIGN_PLAYER_ALLOCATION_REBIND_REJECTED"
+  ],
+  "projection_boundary": {
+    "canonical_m4_definition": "item/ore",
+    "construction_material_token": "ore",
+    "claim": "The token translation is derived projection only; canonical M4 item identity and definition remain unchanged."
+  },
+  "recovery_history": {
+    "p4_branch_tree_neutral_recovery_base": "b0e2c9c8784736bf24ef19fa9a37930dbcc7065c",
+    "p4_branch_tree_neutral_recovery_head": "c37d8779a92df568c0819dc573f8f2572c97a44d",
+    "p4_branch_recovery_compare_files_empty": true,
+    "main_accidental_temp_recovery_head": "ab530c907c5e9cae7d492a2dbfaa06c1a0e40917",
+    "main_tree_equivalent_pre_recovery_head": "7f0a2326027d1c1aca9f1329a34c19e8977b2d72",
+    "main_recovery_compare_files_empty": true
+  },
+  "claim": "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+  "does_not_claim": [
+    "V0_P4_LIVE_MVP_COMPOSITION_WIRED",
+    "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS",
+    "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS",
+    "V0_P4_CRASH_DURABLE_GLOBAL_MULTI_OWNER_2PC_FOUNDATION",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}
