@@ -19,11 +19,13 @@ P0 playable frontier
 → P4 real-resource Construction
 → P5 equipment/tools
 → P6 persistent shared outpost
+→ POST-P6 SEAMLESS INSERTION GATE
+→ V0-SM1 seamless product integration
 → P7 bounded terrain mutation
 → P8 first mobile construct / ship
 ```
 
-P6 is the first stable V0 baseline target. Ship-first routing is superseded.
+P6 is the first stable V0 baseline target **and the planned seamless insertion point**. Ship-first routing is superseded. `V0-SM1` is not an eligible Harness checkpoint yet; it is activated by a fresh main-owned control update after P6 acceptance using exact then-current P6/main/SM0/NX boundaries. See `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`.
 
 ## 2. Main owns control; exact product lineage may be continuation input
 
@@ -252,6 +254,8 @@ SERVER_PREDICTED
 
 H0.2/NX.C1 `OWNER_AUTHORITATIVE_VALIDATED` remains a separate lane. If P4 discovers a real need for protocol ownership, authority model, reconciliation or Character-ownership changes, V0 fails closed to `V0_BLOCKED_REQUIRES_NX`.
 
+The same ownership rule applies to the future post-P6 seamless insertion. SM0 is a capability donor, not permission for V0 to create a private network foundation. If V0-SM1 needs new protocol/global authority/reconciliation ownership, activation stops and routes the foundation change through NX/main control.
+
 ## 11. Exact post-merge sequence
 
 ```text
@@ -295,9 +299,23 @@ P4 real-resource Construction
    → disconnect/reconnect
    → 5 clean E2E repeats
    → 30-minute two-client soak
+→ POST-P6 SEAMLESS INSERTION GATE
+   → do not auto-dispatch P7
+   → resolve exact accepted P6 / canonical main / frozen SM0 / current NX boundaries
+   → register and human-authorize V0_SM1_SEAMLESS_PRODUCT_INTEGRATION
+→ V0-SM1
+   → real graphical V0 client crosses A <-> B without identity reset
+   → canonical inventory/item continuity
+   → mining/Construction/outpost continuity
+   → multi-authority presentation convergence
+   → reconnect + fault/soak
 → P7 bounded terrain
 → P8 first mobile construct/ship
 ```
+
+P6 remains the first stable playable V0 baseline. It is now also the **mandatory decision/activation point for seamless integration before P7**, as defined by `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`.
+
+`V0_SM1_SEAMLESS_PRODUCT_INTEGRATION` is intentionally not pre-registered today as an eligible Harness checkpoint. At P6 acceptance the Director must create a fresh main-owned control update using exact then-current heads. A human/main decision may explicitly defer the gate, but that decision must be durable; silence does not authorize P6 -> P7.
 
 ## 13. Final rule
 
@@ -310,5 +328,9 @@ ONE MAIN-OWNED MUTATION LEASE UNTIL H0.3
 IMPLEMENTED RELEASES THE MUTATION WORKER
 ACCEPTANCE DEBT REMAINS VISIBLE
 P4/P6 BEFORE TERRAIN OR SHIPS
+P6 TRIGGERS THE POST-P6 SEAMLESS INSERTION GATE
+DO NOT AUTO-ADVANCE P6 -> P7
+SM0 IS A CAPABILITY DONOR, NOT THE FUTURE V0 BASE
+V0-SM1 STARTS FROM THEN-CURRENT ACCEPTED V0/P6
 NO DUPLICATE TRUTH
 ```

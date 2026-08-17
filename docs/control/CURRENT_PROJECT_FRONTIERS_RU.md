@@ -153,11 +153,19 @@ P4 real-resource Construction
    mine → inventory/container → build → reconnect
    → 5 clean E2E repeats
    → 30-minute two-client soak
+→ POST-P6 SEAMLESS INSERTION GATE
+   DO NOT auto-dispatch P7
+   read docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md
+   resolve exact P6/main/SM0/NX boundaries
+   register/authorize V0_SM1_SEAMLESS_PRODUCT_INTEGRATION from then-current accepted V0 baseline
+→ V0-SM1 real graphical two-authority product integration
 → P7 bounded terrain mutation
 → P8 first mobile construct / ship
 ```
 
-P6 is the stable playable V0 baseline. Terrain deformation, server handoff, full Matter integration, ECO production and advanced ships are not prerequisites for P4/P6 unless a concrete machine gate proves otherwise.
+P6 is the stable playable single-server V0 baseline **and the planned seamless insertion point**. After P6 acceptance, P7 is no longer an automatic next runtime checkpoint: a Director/agent must first execute the post-P6 seamless decision/activation gate defined in `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`. SM0 is a capability/evidence donor; a future V0-SM1 must branch from the then-current accepted V0/P6 baseline rather than from the historical SM0 branch.
+
+Terrain deformation, production server handoff, full Matter integration, ECO production and advanced ships are not prerequisites for P4/P6 unless a concrete machine gate proves otherwise. Production-quality arbitrary-many-server seamlessness is not claimed by the planned first V0-SM1 slice.
 
 ## Fail-closed boundaries
 
@@ -169,7 +177,8 @@ new network authority/reconciliation model
 second Item Graph owner
 second persistence/durability owner
 second Construction truth
-cross-server authority transfer
+cross-server authority transfer before the post-P6 seamless gate is explicitly activated
+P7 dispatch after P6 without durable V0-SM1 activation/defer decision
 second pre-H0.3 runtime mutation worker
 P4 dispatch without fresh authoritative audit evidence already committed before dispatch
 non-Director initial dispatch
