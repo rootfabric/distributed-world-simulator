@@ -69,6 +69,69 @@ function Wait-LogMarker {
     throw "Timeout waiting for '$Marker' from $Label. See $Path"
 }
 
+function Assert-P9AuthorityExitedCleanly {
+    param(
+        [System.Diagnostics.Process]$Process,
+        [string]$LogFile,
+        [string]$Label
+    )
+
+    if (-not $Process.WaitForExit(5000)) {
+        throw "P9 authority process $($Label) PID=$($Process.Id) did not shut down."
+    }
+
+    try { $Process.Refresh() } catch {}
+
+    # Windows PowerShell 5.1 can occasionally leave ExitCode unavailable on a
+    # Start-Process -PassThru object after redirected child shutdown. Prefer the
+    # OS exit code when it is exposed, but do not turn a successful Godot exit
+    # into a false RED solely because PowerShell returned $null.
+    $ExitCode = $null
+    try {
+        $ExitCodeProperty = $Process.PSObject.Properties["ExitCode"]
+        if ($null -ne $ExitCodeProperty) {
+            $ExitCode = $ExitCodeProperty.Value
+        }
+    }
+    catch {
+        $ExitCode = $null
+    }
+
+    if ($null -ne $ExitCode) {
+        if ([int]$ExitCode -ne 0) {
+            throw "P9 authority process $($Label) PID=$($Process.Id) exited code=$ExitCode."
+        }
+        return
+    }
+
+    # The authority process emits this structured event immediately before
+    # quit(_exit_code). Requiring both process termination above and an explicit
+    # exit_code=0 marker keeps the fallback fail-closed.
+    $ExitLines = @()
+    if (Test-Path -LiteralPath $LogFile -PathType Leaf) {
+        $ExitLines = @(
+            Select-String -LiteralPath $LogFile -SimpleMatch '"event":"SM0_P9_PROCESS_EXIT"' -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.Line }
+        )
+    }
+    if ($ExitLines.Count -lt 1) {
+        throw "P9 authority process $($Label) PID=$($Process.Id) terminated, but PowerShell exposed no ExitCode and SM0_P9_PROCESS_EXIT is missing. See $LogFile"
+    }
+
+    $CleanStructuredExit = $false
+    foreach ($Line in $ExitLines) {
+        if ($Line -match '"exit_code"\s*:\s*0(?:\s*[,}])') {
+            $CleanStructuredExit = $true
+            break
+        }
+    }
+    if (-not $CleanStructuredExit) {
+        throw "P9 authority process $($Label) PID=$($Process.Id) terminated without a structured exit_code=0. See $LogFile"
+    }
+
+    Write-Host "[SM0-P9] $($Label) PID=$($Process.Id): PowerShell ExitCode unavailable; verified SM0_P9_PROCESS_EXIT exit_code=0."
+}
+
 try {
     Write-Host "[SM0-P9] HEAD : $((& git -C $ProjectRoot rev-parse HEAD).Trim())"
     Write-Host "[SM0-P9] Logs : $LogRoot"
@@ -118,10 +181,9 @@ try {
     $ScenarioOutput | Tee-Object -FilePath $ScenarioLog | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0 -or -not (($ScenarioOutput -join "`n") -match 'SM0 P9 process-isolated boundary: PASS \(55 assertions\)')) { throw "P9 process-isolated boundary scenario failed." }
 
-    foreach ($Process in @($A,$C,$Ship)) {
-        if (-not $Process.WaitForExit(5000)) { throw "P9 authority process PID=$($Process.Id) did not shut down." }
-        if ($Process.ExitCode -ne 0) { throw "P9 authority process PID=$($Process.Id) exited code=$($Process.ExitCode)." }
-    }
+    Assert-P9AuthorityExitedCleanly $A $LogA "world A"
+    Assert-P9AuthorityExitedCleanly $C $LogC "world C"
+    Assert-P9AuthorityExitedCleanly $Ship $LogShip "ship"
     $Processes.Clear()
 
     foreach ($Path in @($LogA,$LogC,$LogShip,$ScenarioLog)) {
