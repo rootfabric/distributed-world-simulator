@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_live_m4_transaction_port_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "696c4e0e9c24d6f73f470cab31a397fe1e6c2ce9",
+  "candidate_parent": "bf89f334b9030ae96f805cd4e5bc3d6a864b4b85",
+  "candidate_tree": "ad29032eb65c9f47d0f732c26dfeb935109ee9b3",
+  "supersedes_candidate_head": "92bd5a4f7537f020d8a63c7809e2abe8c9acc77b",
+  "supersedes_event_id": "V0-P4-R1-EVENT-0005",
+  "superseded_reason": {
+    "error_code": "AUTHORITATIVE_ITEM_MUTATIONS_REJECTED",
+    "cause": "INVALID_ITEM_SPATIAL_REF",
+    "explanation": "The initial in-memory P4.3 contract did not exercise the production AuthoritativeConstructionItemGraphAdapter. Its root CREATE used the legacy Construction WORLD relation without the spatial_ref required by production ItemRegistry v2."
+  },
+  "repair": {
+    "description": "Bridge-local Construction root CREATE is projected through the existing canonical ItemRelations.world() relation before entering the authoritative adapter. The source Construction transaction plan and canonical M4 item identity/state remain unchanged.",
+    "production_blob": "bc1fe0445f1e82f64344deec593142e2af8ac1f1",
+    "authoritative_m0_test_blob": "c282f3d14d028747455fa9d3ae4b72d80987a0bd",
+    "authoritative_m0_test_uid_blob": "2080d91ffaea73a6109cb53e23d0450de3e51826",
+    "exact_head_runner_blob": "bfbdd7eeda8cde34b8dfb93f529797301c792af0"
+  },
+  "audit_evidence_commit": "a56a06481f2ee6534100aec11886d1958f7dd0de",
+  "director_dispatch_event_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+  "audited_main_head_at_dispatch": "5999d935e8d5b496100ced66283d8762d3403675",
+  "project_control_run": 31995021902,
+  "project_control_conclusion": "SUCCESS",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+  "validation": {
+    "import_exit_code": 0,
+    "p4_3_generic_live_m4_transaction_port": "PASS (70 assertions)",
+    "p4_3_authoritative_adapter_m0": "PASS (37 assertions)",
+    "p4_1_exact_consume": "PASS (12 assertions)",
+    "m4_canonical_shared_gameplay": "26 assertions, 0 failures",
+    "p3_resource_mining_domain": "79 assertions, 0 failures",
+    "c3_build_plan_contracts": "PASS (80 assertions)",
+    "fatal_parser_compile_startup_markers": 0,
+    "project_godot_hash_stable": true,
+    "p4_2_allocator": "The exact P4.2 allocator production blob remains unchanged from its previously validated 50-assertion candidate; the committed exact-head P4.3 runner includes the standalone P4.2 contract."
+  },
+  "authoritative_m0_invariants": [
+    "SAME_CANONICAL_M4_OBJECT_IDENTITY",
+    "AUTHORITATIVE_CONSTRUCTION_ADAPTER_ACCEPTS_ROOT_SPATIAL_PROJECTION",
+    "ACCEPTED_TRANSACTION_ADVANCES_M0_GENERATION_EXACTLY_ONCE",
+    "M4_ORE_NEVER_COPIED_INTO_AUTHORITATIVE_CONSTRUCTION_ITEM_REGISTRY",
+    "EXACT_M4_EXHAUSTION_DELETES_STACK",
+    "PARTIAL_M4_CONSUMPTION_DECREMENTS_STACK",
+    "EXACT_REPLAY_MUTATES_NEITHER_M4_NOR_CONSTRUCTION_NOR_M0_GENERATION",
+    "AUTHORITATIVE_BEFORE_COMMIT_FAILURE_RESTORES_M4_DURABLE_STATE",
+    "AUTHORITATIVE_BEFORE_COMMIT_FAILURE_RESTORES_M4_REPLAY_LEDGER",
+    "AUTHORITATIVE_BEFORE_COMMIT_FAILURE_RESTORES_CONSTRUCTION_STATE",
+    "AUTHORITATIVE_BEFORE_COMMIT_FAILURE_DOES_NOT_ADVANCE_M0_GENERATION",
+    "UNSAFE_POST_M0_FAILURE_MODE_FAILS_CLOSED_BEFORE_MUTATION"
+  ],
+  "claim": "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+  "does_not_claim": [
+    "V0_P4_LIVE_MVP_COMPOSITION_WIRED",
+    "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS",
+    "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS",
+    "V0_P4_CRASH_DURABLE_GLOBAL_MULTI_OWNER_2PC_FOUNDATION",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}
