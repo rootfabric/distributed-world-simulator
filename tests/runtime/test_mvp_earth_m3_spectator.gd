@@ -1,6 +1,7 @@
 extends SceneTree
 
 const EarthAppScript = preload("res://scripts/app/earth_mvp_app.gd")
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 var failures: Array[String] = []
 var assertions: int = 0
@@ -8,6 +9,7 @@ var assertions: int = 0
 
 class FakeM3Client:
 	extends Node
+	const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 	signal replica_updated(snapshot: Dictionary)
 	signal item_graph_updated(snapshot: Dictionary)
@@ -16,6 +18,7 @@ class FakeM3Client:
 		presentation_state: Dictionary,
 		report: Dictionary
 	)
+	signal construction_updated(bundle: Dictionary)
 
 	var snapshot: Dictionary = {}
 	var item_graph_snapshot: Dictionary = {}
@@ -30,6 +33,15 @@ class FakeM3Client:
 
 	func get_item_graph_snapshot() -> Dictionary:
 		return item_graph_snapshot.duplicate(true)
+
+	func get_construction_session() -> Dictionary:
+		return {}
+
+	func get_construction_bundle() -> Dictionary:
+		return {}
+
+	func execute_construction_command_blocking(_command: Dictionary) -> Dictionary:
+		return {"success": false, "error_code": "TEST_CONSTRUCTION_NOT_CONFIGURED"}
 
 	func move_blocking(x: float, z: float) -> Dictionary:
 		moves.append(Vector2(x, z))
@@ -69,6 +81,10 @@ class FakeM3Client:
 		command_type: String, _payload: Dictionary, _operation_id: String = ""
 	) -> Dictionary:
 		item_graph_snapshot["revision"] = int(item_graph_snapshot.get("revision", 0)) + 1
+		item_graph_snapshot["tick"] = int(item_graph_snapshot.get("tick", 0)) + 1
+		var canonical := item_graph_snapshot.duplicate(true)
+		canonical.erase("checksum")
+		item_graph_snapshot["checksum"] = Utils.payload_hash(canonical)
 		item_graph_updated.emit(get_item_graph_snapshot())
 		return {
 			"success": command_type == "item.pickup",
@@ -95,7 +111,7 @@ func _run() -> void:
 
 	var client := FakeM3Client.new()
 	client.snapshot = _snapshot(0.0, 0.0, true)
-	client.item_graph_snapshot = {"revision": 0, "checksum": "earth-item-0"}
+	client.item_graph_snapshot = _item_graph_snapshot(0)
 	root.add_child(client)
 	var attached: Dictionary = earth.attach_m3_multiplayer_client(client)
 	_assert(bool(attached.get("success", false)), "M3 client attached to playable Earth MVP")
@@ -110,7 +126,11 @@ func _run() -> void:
 		earth.earth_explorer.orientation,
 		Vector3.ZERO
 	)
-	var looked_forward: Vector3 = (-earth.earth_explorer.orientation.z).normalized()
+	# Network-replica presentation preserves the cached Earth-relative view.
+	# The old fixture changed orientation directly but never synchronized that
+	# cache, so it did not model a real local mouse-look update.
+	earth.earth_explorer._sync_network_surface_view_from_orientation()
+	var looked_yaw: float = earth.earth_explorer.get_surface_relative_yaw()
 
 	# Raw authoritative snapshots reconcile the NX4 runtime but must not snap the
 	# Earth presentation after the initial seed.
@@ -132,10 +152,10 @@ func _run() -> void:
 	await process_frame
 	var moved: Vector3 = earth.earth_explorer.get_frame_position()
 	_assert(moved.distance_to(initial) > 1.0, "NX4 presentation state moves Earth player")
-	var after_prediction_forward: Vector3 = (-earth.earth_explorer.orientation.z).normalized()
+	var after_prediction_yaw: float = earth.earth_explorer.get_surface_relative_yaw()
 	_assert(
-		after_prediction_forward.dot(looked_forward) > 0.99,
-		"predicted Earth movement preserves local camera look"
+		absf(wrapf(after_prediction_yaw - looked_yaw, -PI, PI)) < 0.001,
+		"predicted Earth movement preserves Earth-relative camera look"
 	)
 
 	var report: Dictionary = earth.create_m3_graphical_client_report()
@@ -209,6 +229,36 @@ func _run() -> void:
 		failures.size(),
 	])
 	quit(0 if failures.is_empty() else 1)
+
+
+func _item_graph_snapshot(revision: int) -> Dictionary:
+	var snapshot := {
+		"schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+		"authority_owner_id": "authority/test/earth-m3",
+		"authority_epoch": 1,
+		"revision": revision,
+		"tick": revision,
+		"items": [],
+		"inventories": {
+			"a": {
+				"inventory": [],
+				"hotbar": ["", "", "", "", "", "", "", ""],
+				"selected_hotbar_index": 0,
+			},
+		},
+		"containers": [],
+		"mounts": [],
+		"open_containers": {},
+		"checksum": "",
+	}
+	snapshot["checksum"] = _snapshot_checksum(snapshot)
+	return snapshot
+
+
+func _snapshot_checksum(snapshot: Dictionary) -> String:
+	var canonical := snapshot.duplicate(true)
+	canonical.erase("checksum")
+	return NetworkUtils.payload_hash(canonical)
 
 
 func _snapshot(x: float, z: float, remote_connected: bool) -> Dictionary:

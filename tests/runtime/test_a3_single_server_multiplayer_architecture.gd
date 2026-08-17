@@ -82,7 +82,14 @@ func _test_source_freeze(manifest: Dictionary) -> void:
 		if contract_value is Dictionary:
 			paths.append(String(contract_value.get("path", "")))
 	for path in paths:
-		sources[path] = _read("res://%s" % path)
+		var resource_path := "res://%s" % path
+		if path in [
+			Auditor.PRODUCTION_SERVICE_PATH,
+			"scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+		]:
+			sources[path] = _read_script_inheritance(resource_path)
+		else:
+			sources[path] = _read(resource_path)
 	var audit: Dictionary = Auditor.audit_sources(sources)
 	_assert(bool(audit.get("success", false)), "A3 source audit failed: %s" % [audit.get("failures", [])])
 	_assert(int(audit.get("details", {}).get("contracts", 0)) == 11, "A3 source audit contract count mismatch")
@@ -224,6 +231,20 @@ func _index_by_id(values: Array) -> Dictionary:
 		if value is Dictionary:
 			result[String(value.get("id", ""))] = value
 	return result
+
+
+func _read_script_inheritance(path: String) -> String:
+	var script = load(path)
+	var sources: Array[String] = []
+	var visited: Dictionary = {}
+	while script != null:
+		var resource_path := String(script.resource_path)
+		if resource_path.is_empty() or visited.has(resource_path):
+			break
+		visited[resource_path] = true
+		sources.append(_read(resource_path))
+		script = script.get_base_script()
+	return "\n".join(sources)
 
 
 func _load_json(path: String) -> Dictionary:

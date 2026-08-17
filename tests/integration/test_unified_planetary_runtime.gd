@@ -11,9 +11,8 @@ func _init() -> void:
 	if main_scene is PackedScene:
 		var simulator = main_scene.instantiate()
 		_assert(
-			String(simulator.get_script().resource_path)
-			== "res://scripts/app/simulator_app.gd",
-			"main.tscn must use the common SimulatorApp shell."
+			_script_descends_from(simulator.get_script(), "res://scripts/app/simulator_app.gd"),
+			"main.tscn must use the common SimulatorApp shell through its active overlay chain."
 		)
 		_assert(simulator.has_method("load_world"), "World loading contract is missing.")
 		_assert(simulator.has_method("execute_command"), "Command execution contract is missing.")
@@ -38,3 +37,12 @@ func _init() -> void:
 func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _script_descends_from(script: Script, expected_path: String) -> bool:
+	var current: Script = script
+	while current != null:
+		if String(current.resource_path) == expected_path:
+			return true
+		current = current.get_base_script()
+	return false

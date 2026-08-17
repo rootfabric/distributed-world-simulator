@@ -510,18 +510,32 @@ try {
         Sort-Object -Unique
 
     $Summary.discovered_test_count = $DiscoveredTests.Count
-    $MissingFromRunner = @($DiscoveredTests | Where-Object { $_ -notin $Tests })
     $MissingFromProject = @($Tests | Where-Object { $_ -notin $DiscoveredTests })
-    if ($MissingFromRunner.Count -gt 0 -or $MissingFromProject.Count -gt 0) {
+    if ($MissingFromProject.Count -gt 0) {
         $CoverageMessage = @(
-            "Regression runner coverage mismatch."
-            "Missing from runner: $($MissingFromRunner -join ', ')"
+            "Regression runner references tests that are missing from the project."
             "Missing from project: $($MissingFromProject -join ', ')"
         ) -join [Environment]::NewLine
         Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 1 -DurationSeconds 0.0 -Target $CoverageMessage
         throw $CoverageMessage
     }
-    Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 0 -DurationSeconds 0.0 -Target "$($Tests.Count) tests"
+
+    # Keep the historically curated core order, but never allow newly-added
+    # standalone tests to sit outside the world/core gate merely because the
+    # static list was not hand-edited in the same change. Newly discovered
+    # tests are appended deterministically after the canonical ordered list.
+    $DiscoveredAdditions = @($DiscoveredTests | Where-Object { $_ -notin $Tests })
+    if ($DiscoveredAdditions.Count -gt 0) {
+        $Tests += @($DiscoveredAdditions | Sort-Object -Unique)
+    }
+    $Summary.declared_test_count = $Tests.Count
+    $UncoveredTests = @($DiscoveredTests | Where-Object { $_ -notin $Tests })
+    if ($UncoveredTests.Count -gt 0) {
+        $CoverageMessage = "Regression runner failed to include discovered tests: $($UncoveredTests -join ', ')"
+        Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 1 -DurationSeconds 0.0 -Target $CoverageMessage
+        throw $CoverageMessage
+    }
+    Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 0 -DurationSeconds 0.0 -Target "$($Tests.Count) tests; appended $($DiscoveredAdditions.Count) discovered overlays"
 
     Invoke-GodotStep `
         -Name "editor_import_parse" `

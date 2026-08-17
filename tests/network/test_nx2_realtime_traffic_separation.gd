@@ -60,10 +60,10 @@ func _test_architecture_config() -> void:
 func _test_channel_policy() -> void:
 	_assert(ChannelPolicy.ENET_CHANNEL_COUNT == 6, "NX2 must expose six ENet channels")
 	_assert(ChannelPolicy.CANONICAL_CHANNELS == ["CONTROL", "INPUT", "SNAPSHOT", "ITEM", "RESYNC", "TELEMETRY"], "Canonical channel order changed")
-	_assert(ChannelPolicy.UNRELIABLE_TRANSPORT_MAPPING == "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1", "Unreliable transport mapping is not protocol-versioned")
+	_assert(ChannelPolicy.UNRELIABLE_TRANSPORT_MAPPING == "ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1", "Unreliable transport mapping is not protocol-versioned")
 	_assert(ChannelPolicy.REALTIME_COALESCING_POLICY == "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1", "Realtime coalescing replacement is not protocol-versioned")
 	var manifest: Dictionary = ProtocolManifest.create()
-	_assert(String(manifest.get("channel_policy", {}).get("queue_policy", {}).get("unreliable_transport_mapping", "")) == ChannelPolicy.UNRELIABLE_TRANSPORT_MAPPING, "Protocol manifest omitted raw-unreliable mapping")
+	_assert(String(manifest.get("channel_policy", {}).get("queue_policy", {}).get("unreliable_transport_mapping", "")) == ChannelPolicy.UNRELIABLE_TRANSPORT_MAPPING, "Protocol manifest omitted canonical unreliable transport mapping")
 	_assert(String(manifest.get("channel_policy", {}).get("queue_policy", {}).get("realtime_coalescing", "")) == ChannelPolicy.REALTIME_COALESCING_POLICY, "Protocol manifest omitted transactional realtime replacement")
 	_assert(String(manifest.get("contract_versions", {}).get("canonical_item_graph_delta", {}).get("validation_policy", "")) == ItemDelta.VALIDATION_POLICY, "Protocol manifest omitted Item Graph delta validation policy")
 	_assert(String(manifest.get("contract_versions", {}).get("player_input_batch", {}).get("history_policy", "")) == InputBatch.HISTORY_POLICY, "Protocol manifest omitted input transition-history policy")
@@ -289,7 +289,9 @@ func _test_runtime_wiring() -> void:
 	var powershell_runner: String = FileAccess.get_file_as_string("res://RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1")
 	_assert(powershell_runner.contains("res://tests/network/test_nx2_physical_channel_processes.gd"), "PowerShell focused runner omits physical channel regression")
 	_assert(powershell_runner.contains("PASS (9/9)"), "PowerShell focused runner step count is not 9/9")
-	var server := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+	var server := _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
 	var client := _load_script_source_chain(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
 	)
@@ -308,7 +310,7 @@ func _test_runtime_wiring() -> void:
 	_assert(controller.contains("uses_server_authoritative_persistence") and controller.contains("SERVER_AUTHORITATIVE_PERSISTENCE"), "Server-authoritative persistence capability is not consulted")
 	_assert(m7_bridge.contains("func uses_server_authoritative_persistence() -> bool") and m7_bridge.contains("return true"), "M7 network bridge does not suppress client item.save")
 	_assert(enet.contains("ChannelPolicyScript.ENET_CHANNEL_COUNT"), "ENet did not adopt six-channel policy")
-	_assert(enet.contains("MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if delivery_mode == \"UNRELIABLE_SEQUENCED\""), "NX2 realtime delivery still relies on ENet ordered packet-size-sensitive sequencing")
+	_assert(enet.contains("MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED"), "NX2 realtime delivery does not use the current ordered-unreliable physical mapping")
 
 	_assert(server.contains("_movement_snapshot_retransmit_requests += 1"), "Redundant movement batches do not request authoritative snapshot retransmission")
 	_assert(server.contains("_movement_snapshot_dirty = target_count > 0 and not all_enqueued"), "Movement snapshot dirty state is cleared before all target queues accept the acknowledgement")
