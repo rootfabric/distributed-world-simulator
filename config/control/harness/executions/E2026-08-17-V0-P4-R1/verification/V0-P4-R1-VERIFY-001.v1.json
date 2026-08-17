@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "verified_head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "verifier": "GPT-5.6-SOL-FRESH-FINAL-VERIFIER-001",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-17T13:58:05Z",
+  "environment": "Independent repository source/history and retained Godot 4.7.1 stable double custom-build evidence plus GitHub Project Control; no new Godot runtime execution was claimed by the Verifier.",
+  "commands": [
+    "inspect exact P4 implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "inspect recovery carrier lineage 44d735764fd370126f0a6398a918418a58009199 -> 87f582da01a841e5c0140b9f4e27b062767eb921 -> 0d7ae16b48e12f9d524ab16c2c329ced7d0fb05d",
+    "inspect P4.1-P4.7 retained focused and real-ENet evidence",
+    "inspect canonical ownership and PR #117 ancestry exclusion",
+    "inspect PR #122 regression closure and 236/236 plus main-scene evidence",
+    "inspect Reviewer PASS and Directional Watch RED disposition"
+  ],
+  "results": {
+    "p4_verification": "PASS",
+    "reviewer_gate": "PASS",
+    "carrier_head": "0d7ae16b48e12f9d524ab16c2c329ced7d0fb05d",
+    "implementation_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "directional_pc0": "RED",
+    "directional_clearance_required": true,
+    "checkpoint_proposal_allowed": false
+  },
+  "summary": "Independent final verification PASSes the exact P4 implementation/evidence target. Canonical ownership, real ENet convergence/reconnect evidence, regression closure and recovery provenance were independently inspected. The existing V0 -> NX CRITICAL_WATCH_HIT is technically classified as a legitimate P4 M4 extension rather than a network-foundation violation, but this technical conclusion is not formal control clearance: Directional Watch remains RED and checkpoint proposal/merge remain blocked."
+}
