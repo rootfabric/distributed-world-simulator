@@ -79,7 +79,7 @@ func submit_player_command(logical_player_id: String, command: Dictionary) -> Di
 	var player: Dictionary = _players[logical_player_id]
 	if String(command.get("client_id", "")) != String(player["client_id"]) or String(command.get("session_id", "")) != String(player["session_id"]) or int(command.get("session_epoch", -1)) != int(player["session_epoch"]):
 		return _failure("M3_CONSTRUCTION_COMMAND_OWNERSHIP_MISMATCH")
-	var result: Dictionary = _gateway.submit(command)
+	var result: Dictionary = _gateway.submit(command, "", {"logical_player_id": logical_player_id})
 	if not bool(result.get("success", false)):
 		return result
 	var event_value = result.get("event", {})

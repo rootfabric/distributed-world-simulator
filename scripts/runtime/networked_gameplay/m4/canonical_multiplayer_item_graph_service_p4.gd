@@ -1,4 +1,4 @@
-extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd"
 
 # V0-P4 server-only material consumption seam.
 #

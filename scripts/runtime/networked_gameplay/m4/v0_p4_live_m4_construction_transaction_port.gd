@@ -78,6 +78,42 @@ func get_operation_result(operation_id: String) -> Dictionary:
 	return _construction_adapter.get_operation_result(operation_id) if _configured else {}
 
 
+func get_generation() -> int:
+	if not _configured:
+		return 0
+	var state: Dictionary = _construction_adapter.export_state()
+	return int(state.get("server_tick", 0))
+
+
+func has_terminal_operation(operation_id: String) -> bool:
+	return _configured and not operation_id.is_empty() and not get_operation_result(operation_id).is_empty()
+
+
+func export_state() -> Dictionary:
+	if not _configured:
+		return {"generation": 0, "items": [], "constructs": []}
+	var state: Dictionary = _construction_adapter.export_state()
+	var projections: Array = []
+	for item_value in Dictionary(state.get("item_registry", {})).get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var projection_result: Dictionary = ProjectionScript.from_item_instance_dict(Dictionary(item_value))
+		if bool(projection_result.get("success", false)):
+			projections.append(Dictionary(projection_result.get("projection", {})).duplicate(true))
+	projections.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return String(left.get("item_instance_id", "")) < String(right.get("item_instance_id", ""))
+	)
+	var constructs: Array = Array(Dictionary(state.get("construct_store", {})).get("constructs", [])).duplicate(true)
+	constructs.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return String(left.get("construct_id", "")) < String(right.get("construct_id", ""))
+	)
+	return {
+		"generation": int(state.get("server_tick", 0)),
+		"items": projections,
+		"constructs": constructs,
+	}
+
+
 func apply_live_plan(
 	transaction_plan: Dictionary,
 	allocation_result: Dictionary,

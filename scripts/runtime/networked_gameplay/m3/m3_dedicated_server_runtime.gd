@@ -3,6 +3,12 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 const ResourceMiningDelta = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
 )
+const V0P4EarthOutpostAuthority = preload(
+	"res://scripts/construction/mvp/v0_p4_mvp_earth_outpost_authority.gd"
+)
+const V0P4ConstructionBridge = preload(
+	"res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd"
+)
 
 var _resource_commands := 0
 var _resource_rejections := 0
@@ -10,6 +16,106 @@ var _resource_deltas_published := 0
 var _resource_snapshots_published := 0
 var _resource_delta_build_failures := 0
 var _resource_resync_requests := 0
+var _v0_p4_composition_report: Dictionary = {}
+var _v0_p4_legacy_prebind_ignored := false
+
+
+func set_construction_bridge(bridge) -> Dictionary:
+	# Compatibility quarantine for the legacy SimulatorApp Earth prebind.
+	# P4.4 must bind Construction only after the canonical gameplay service has
+	# been set up/recovered, so the old fixture bridge is validated but never
+	# installed as the live M3 bridge. The real P4 bridge is created below in
+	# _setup_v0_p4_live_composition() before transport start.
+	if _configured:
+		return _failure("M3_CONSTRUCTION_BRIDGE_MUST_BE_SET_BEFORE_SETUP")
+	if bridge == null or not bridge.has_method("connect_player") or not bridge.has_method("submit_player_command"):
+		return _failure("M3_CONSTRUCTION_BRIDGE_INVALID")
+	_v0_p4_legacy_prebind_ignored = true
+	return _success({"deferred_to_v0_p4_live_composition": true})
+
+
+func _setup_v0_p4_live_composition(config: Dictionary) -> Dictionary:
+	_v0_p4_composition_report = {
+		"enabled": false,
+		"bound_before_clients": false,
+		"single_item_graph_identity": false,
+		"fixture_material_truth_present": false,
+	}
+	var world_id := String(config.get("world_id", "")).strip_edges().to_lower()
+	if world_id != "earth":
+		return _success({"v0_p4_construction": _v0_p4_composition_report.duplicate(true)})
+	if not bool(config.get("enable_v0_p4_construction", true)):
+		return _success({"v0_p4_construction": _v0_p4_composition_report.duplicate(true)})
+	if _construction_bridge != null:
+		return _failure("V0_P4_CONSTRUCTION_BRIDGE_ALREADY_BOUND")
+	if _service == null or not _service.has_method("get_canonical_item_graph_port"):
+		return _failure("V0_P4_CANONICAL_GAMEPLAY_SERVICE_REQUIRED")
+	var canonical_item_graph = _service.get_canonical_item_graph_port()
+	if canonical_item_graph == null:
+		return _failure("V0_P4_CANONICAL_ITEM_GRAPH_REQUIRED")
+	if (
+		not canonical_item_graph.has_method("preflight_server_construction_consume")
+		or not canonical_item_graph.has_method("apply_server_construction_consume")
+	):
+		return _failure("V0_P4_CANONICAL_ITEM_GRAPH_NOT_CONSTRUCTION_CAPABLE")
+	var repository_root := String(config.get("construction_repository_root", "")).strip_edges()
+	if repository_root.is_empty():
+		var persistence_root := String(config.get("persistence_root", "")).strip_edges()
+		if not persistence_root.is_empty():
+			repository_root = "%s/v0-p4-construction-m0" % persistence_root
+		else:
+			repository_root = "user://v0-p4-construction/runtime-%d-%d" % [
+				OS.get_process_id(),
+				get_instance_id(),
+			]
+	var authority_result: Dictionary = V0P4EarthOutpostAuthority.create_gateway(
+		canonical_item_graph,
+		_authority_owner_id,
+		_authority_epoch,
+		repository_root
+	)
+	if not bool(authority_result.get("success", false)):
+		return authority_result
+	var details: Dictionary = Dictionary(authority_result.get("details", {}))
+	if not bool(details.get("single_item_graph_identity", false)):
+		return _failure("V0_P4_CANONICAL_ITEM_GRAPH_IDENTITY_MISMATCH")
+	if bool(details.get("fixture_material_truth_present", true)):
+		return _failure("V0_P4_FIXTURE_MATERIAL_TRUTH_FORBIDDEN")
+	var construction_bridge = V0P4ConstructionBridge.new()
+	var bridge_setup: Dictionary = construction_bridge.setup(details.get("gateway"))
+	if not bool(bridge_setup.get("success", false)):
+		return bridge_setup
+	_construction_bridge = construction_bridge
+	_v0_p4_composition_report = {
+		"enabled": true,
+		"bound_before_clients": true,
+		"single_item_graph_identity": true,
+		"fixture_material_truth_present": false,
+		"legacy_prebind_ignored": _v0_p4_legacy_prebind_ignored,
+		"repository_root": repository_root,
+		"construct_id": String(details.get("construct_id", "")),
+		"build_plan_id": String(details.get("build_plan_id", "")),
+		"p4_construction_consume_ready": true,
+		"resource_mining_bound_to_same_service": (
+			_service.has_method("get_resource_mining_port")
+			and _service.get_resource_mining_port() != null
+		),
+	}
+	return _success({"v0_p4_construction": _v0_p4_composition_report.duplicate(true)})
+
+
+func _setup_network_condition_simulator(config: Dictionary) -> Dictionary:
+	# P4.4 reuses the existing M3 setup seam that already runs after M6 recovery
+	# and before Boundary.start_server(). This keeps Construction bound to the
+	# recovered canonical M4 owner without changing the generic P2 runtime.
+	var composition: Dictionary = _setup_v0_p4_live_composition(config)
+	if not bool(composition.get("success", false)):
+		return composition
+	return super._setup_network_condition_simulator(config)
+
+
+func get_v0_p4_composition_report() -> Dictionary:
+	return _v0_p4_composition_report.duplicate(true)
 
 
 func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -198,4 +304,5 @@ func get_report() -> Dictionary:
 			else {}
 		),
 	}
+	report["v0_p4_live_composition"] = _v0_p4_composition_report.duplicate(true)
 	return report

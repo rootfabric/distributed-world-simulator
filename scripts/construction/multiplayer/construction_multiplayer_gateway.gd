@@ -37,7 +37,7 @@ func acknowledge(session_id: String, session_epoch: int, event_index: int) -> Di
 	if event_index >= _events.size(): return ParametricUtils.failure("CONSTRUCTION_MULTIPLAYER_EVENT_ACK_OUT_OF_RANGE")
 	return _sessions.acknowledge(session_id, session_epoch, event_index)
 
-func submit(command: Dictionary, failure_point: String = "") -> Dictionary:
+func submit(command: Dictionary, failure_point: String = "", trusted_context: Dictionary = {}) -> Dictionary:
 	var checked := CommandScript.validate(command); if not bool(checked.get("success", false)): return checked
 	var command_id := String(command["command_id"]); var command_checksum := String(command["checksum"])
 	if _terminal_commands.has(command_id):
@@ -56,7 +56,7 @@ func submit(command: Dictionary, failure_point: String = "") -> Dictionary:
 		var current: Dictionary = _executor.get_construct_snapshot(String(command["construct_id"]))
 		var current_checksum := String(current.get("checksum", ""))
 		if String(command["expected_construct_checksum"]) != current_checksum: return _terminal_rejection(command, ParametricUtils.failure("CONSTRUCTION_MULTIPLAYER_CONSTRUCT_PRECONDITION_MISMATCH"))
-	var executed: Dictionary = _executor.execute(command)
+	var executed: Dictionary = _executor.execute(command, trusted_context)
 	if not bool(executed.get("success", false)): return _terminal_rejection(command, executed)
 	if failure_point == FAILURE_AFTER_EXECUTION_BEFORE_EVENT: return ParametricUtils.failure("INJECTED_CONSTRUCTION_MULTIPLAYER_GATEWAY_FAILURE_AFTER_EXECUTION")
 	if not failure_point.is_empty(): return ParametricUtils.failure("UNKNOWN_CONSTRUCTION_MULTIPLAYER_GATEWAY_FAILURE_POINT")
