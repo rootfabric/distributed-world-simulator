@@ -2,7 +2,7 @@
 
 Дата открытия: 2026-08-17
 
-Статус: **OPEN / DESIGN FROZEN FOR FIRST IMPLEMENTATION SLICE**
+Статус: **OPEN / FINAL ACCEPTANCE REPAIR IN PROGRESS**
 
 Exact base:
 
@@ -158,6 +158,8 @@ Changing Treatment profile/intensity after rewind:
 - preserves every replicate root;
 - does not replay from the original fork if the current generation is still cached.
 
+Integrated D rewind must also truncate aggregate future to the same effective generation, refresh the observatory and rematerialize only the selected Treatment field.
+
 ## 9. Root observability
 
 Expose enough state for tests/review to prove:
@@ -187,12 +189,13 @@ The existing VIS2.1 comparison remains useful for the selected replicate, but th
 
 ## 11. Controls
 
-Provisional controls:
+Controls:
 
 ```text
 F          create replicated fork
 Space      play/pause
-Left/Right shared paired generation
+Left       bounded rewind; clamp to common cache floor
+Right      next shared paired generation
 R          restart all replicates from immutable fork
 [ / ]      previous/next visible Treatment replicate
 2          DROUGHT
@@ -217,20 +220,39 @@ The VIS2.1-V derived-scene leak investigation is now a permanent regression less
 
 ## 13. Acceptance harness
 
-`RUN_ECO_VIS2_2_TESTS.ps1` must first run the full independently accepted VIS2.1-V gate.
+Canonical VIS2.2 acceptance platform for this research stage is Ubuntu/Linux native using the exact double-precision engine identity:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+Canonical entrypoint:
+
+`RUN_ECO_VIS2_2_TESTS.sh`
+
+It must execute the full lineage in one isolated project:
+
+```text
+accepted VIS2.1/VIS2.1-V regression chain
+    -> VIS2.2-A
+    -> VIS2.2-B R2 canonical aggregate
+    -> VIS2.2-C
+    -> VIS2.2-D
+```
 
 VIS2.2-specific gate must fail closed on:
 
 - exact Godot mismatch;
 - parser/runtime errors;
-- timeout;
+- non-zero process exit;
+- timeout/forced kill;
 - missing PASS marker;
 - ObjectDB leak;
 - RID leak;
 - resource/cache leak;
 - StringName leak.
 
-Use the accepted VIS2.1-V shutdown matcher rather than inventing a weaker parallel implementation.
+Use the accepted VIS2.1-V shutdown semantics rather than inventing a weaker parallel implementation.
+
+Previous Windows validation remains useful historical/supplementary evidence, but Windows is not a hard closure requirement for VIS2.2 after the explicit platform decision to use native Ubuntu/Linux exact-engine validation.
 
 ## 14. First implementation split
 
@@ -254,6 +276,8 @@ Pure RefCounted model:
 - stores <=64 aggregate points;
 - no SceneTree and no simulation.
 
+The only active B acceptance path is R2. Superseded B/B-R1 executable tests remain available through Git history/evidence, not the active test tree.
+
 ### VIS2.2-C — Observatory Panel
 
 Presentation-only aggregate charts and selected-replicate status.
@@ -264,8 +288,9 @@ Presentation-only aggregate charts and selected-replicate status.
 - reuse VIS2.1-V LOD;
 - all other runners data-only;
 - routed spectator input;
+- bounded Left rewind composed with aggregate truncation;
 - clean lifecycle;
-- Windows automated + graphical validation.
+- Ubuntu/Linux automated + graphical validation on the exact double build.
 
 ## 15. Hard acceptance invariants
 
@@ -276,21 +301,21 @@ VIS2.2 cannot close unless tests prove all of the following:
 3. Deterministically distinct roots across replicate indexes.
 4. Fork generation structurally identical across every branch.
 5. Treatment begins only at fork+1.
-6. Camera/visible-replicate selection cannot mutate traces.
+6. Camera/visible-replicate selection cannot mutate traces/state maps.
 7. Exactly one visible ecology field.
 8. All Control and unselected Treatment replicates are data-only.
 9. Per-runner caches <=64.
-10. Aggregate history <=64.
+10. Aggregate history <=64 with true rolling eviction.
 11. Rewind clamps to common cache floor.
 12. Rebranch does not replay from fork when cached state is available.
-13. Restart after eviction exactly reproduces deterministic results.
+13. Restart after eviction exactly reproduces deterministic results for the restarted configuration.
 14. Aggregate output is deterministic across identical runs.
 15. Selected-replicate changes leave aggregate hashes unchanged.
 16. Whole-field PH5 rebuild remains zero after fork.
 17. No ObjectDB/RID/resource/StringName shutdown leak.
-18. Exact Godot 4.7.1 double Windows gate passes.
-19. Graphical lab shows one Treatment world plus aggregate replicated-effect observatory.
-20. Fresh independent review returns PASS.
+18. Exact Godot `4.7.1.stable.double.custom_build.a13da4feb` native Ubuntu/Linux full gate passes.
+19. Graphical lab shows one Treatment world plus aggregate replicated-effect observatory, including bounded rewind behavior.
+20. Fresh independent review on the exact tested evidence HEAD returns PASS.
 
 ## 16. Boundary
 
