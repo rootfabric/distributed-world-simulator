@@ -58,14 +58,14 @@
   "focused_validation": "PASS",
   "full_regression": "PASS",
   "pc0": "NON_RED",
-  "directional_pc0": "NON_RED",
+  "directional_pc0": "RED",
   "production_diff_summary": "P4 extends the existing single-owner canonical M4/Construction path only. Exact exhaustion is represented as DELETE + CONSUME_MATERIAL; requesting-player ore is allocated deterministically; the same live M4 instance is debited with the existing Construction authority/M0 commit; successful commits publish Item Graph and Construction changes with full-snapshot fallback. No new Item Graph, Construction, persistence, resource-balance or network authority owner was introduced.",
   "remaining_risks": [
     "P4 proves a bounded canonical ore economy loop, not a general multi-resource crafting framework.",
     "Full-snapshot publication fallback is correctness-first and may be expensive under later scale targets.",
     "The validated M4 + Construction/M0 atomic sequence is intentionally narrow and is not a general distributed transaction framework.",
     "Fresh independent Reviewer PASS is recorded; fresh Verifier PASS remains mandatory before checkpoint proposal.",
-    "The existing V0 -> NX CRITICAL_WATCH_HIT on canonical_multiplayer_item_graph_service.gd must be formally resolved or cleared before checkpoint proposal or merge; the Reviewer found no NX-foundation mutation."
+    "Current exact-carrier PC0 Directional Watch is RED with V0 -> NX CRITICAL_WATCH_HIT on canonical_multiplayer_item_graph_service.gd. Independent review found no NX-foundation mutation; formal resolution or accepted clearance is required before checkpoint proposal or merge."
   ],
   "required_fixes": [],
   "rank_up_moves": [
