@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_deterministic_allocator_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "64379ae4c5b980481755a94607e3f7e800489561",
+  "candidate_parent": "86a51c5396b3e78944e174ac2c2cb35e5b6b2990",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "validation_source": {
+    "base_exact_git_archive_head": "9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1",
+    "base_exact_git_archive_sha256": "4a300d724ddedb8035f5ec6277f743e1b775501cd5eb1f1fc4179be9b3aa28a0",
+    "base_to_candidate_commit_count": 4,
+    "base_to_candidate_changed_files": 8,
+    "intermediate_non_p4_2_changes_are_control_only": true,
+    "p4_2_commit_changed_files": 5,
+    "p4_2_blob_identity_verified": true,
+    "allocator_git_blob_sha": "5954d2f077aa8ae02c8729c2322086ddf4fcedf2",
+    "allocator_test_git_blob_sha": "528a5efaadbc3edbd8396cee79a4cd856cc96322",
+    "runner_git_blob_sha": "a7aa64719ef6b59fd8f8b16348a7425cd65a8409"
+  },
+  "runtime_behavior": {
+    "definition_id": "item/ore",
+    "allocation_owner": "SERVER_DERIVED_READ_ONLY",
+    "source_truth": "CANONICAL_M4_ITEM_GRAPH_SNAPSHOT",
+    "eligible_scope": "REQUESTING_PLAYER_INVENTORY_ONLY",
+    "stable_order": ["slot_index", "item_id"],
+    "supports_multi_stack": true,
+    "foreign_player_items_excluded": true,
+    "hotbar_without_inventory_slot_excluded": true,
+    "insufficient_resources_mutation_free": true,
+    "returns_snapshot_revision_tick_checksum": true,
+    "returns_allocation_checksum": true,
+    "creates_new_item_graph_owner": false,
+    "mutates_item_graph": false
+  },
+  "validation": {
+    "import_exit_code": 0,
+    "allocator_exit_code": 0,
+    "allocator_summary": "V0-P4 deterministic allocator: PASS (50 assertions)",
+    "p4_1_exact_consume_exit_code": 0,
+    "p4_1_exact_consume_summary": "V0-P4 exact-consume contract: PASS (12 assertions)",
+    "m4_regression_exit_code": 0,
+    "m4_regression_summary": "M4 canonical shared gameplay contracts: 26 assertions, 0 failures",
+    "p3_regression_exit_code": 0,
+    "p3_regression_summary": "V0-P3 resource/mining domain: 79 assertions, 0 failures",
+    "fatal_parser_or_compile_markers": 0,
+    "project_godot_sha256_before": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+    "project_godot_sha256_after": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649"
+  },
+  "production_files_changed": [
+    "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd"
+  ],
+  "validation_files_changed": [
+    "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd.uid",
+    "tests/construction/test_v0_p4_deterministic_server_allocator.gd",
+    "tests/construction/test_v0_p4_deterministic_server_allocator.gd.uid",
+    "RUN_V0_P4_ALLOCATOR_CONTRACT.ps1"
+  ],
+  "claim": "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS",
+  "does_not_claim": [
+    "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+    "V0_P4_ATOMIC_ITEM_GRAPH_AND_CONSTRUCTION_COMMIT_PASS",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}

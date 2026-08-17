@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0004",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 4,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T03:49:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "64379ae4c5b980481755a94607e3f7e800489561",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-2-DETERMINISTIC-ALLOCATOR-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS",
+  "summary": "P4.2 deterministic requesting-player material allocator committed and validated with project Godot 4.7.1 double. It derives item/ore allocations from the canonical M4 snapshot in stable slot_index then item_id order, excludes foreign/hotbar-only items, is mutation-free on allocation/insufficient paths, and leaves the Work Order IN_PROGRESS for the live M4 Construction transaction port."
+}
