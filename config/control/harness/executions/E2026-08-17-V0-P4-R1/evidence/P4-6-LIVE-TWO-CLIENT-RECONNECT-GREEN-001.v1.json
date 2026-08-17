@@ -1,0 +1,79 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_live_two_client_reconnect_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "candidate_parent": "fff8d86d3e112338d23e4c63e0b4cdc2172b57b7",
+  "candidate_tree": "a30039411f7a2949916377849bd9e0103fae8a2f",
+  "production_runtime_changed": false,
+  "project_control_run": 32016291649,
+  "project_control_conclusion": "SUCCESS",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+  "source_export": {
+    "exact_runtime_source_head": "fff8d86d3e112338d23e4c63e0b4cdc2172b57b7",
+    "workflow_run": 32014692842,
+    "artifact_id": 9283049597,
+    "artifact_digest": "sha256:65012359968db0cec9fee07abaf492f630bac42878f87e1a635efc000acdc738"
+  },
+  "tested_blobs": {
+    "exact_head_runner": "d32c6f67a5671d9d273f2ce7a3352d98dda16a6a",
+    "process_orchestrator": "e2ef54b23d14717efa5edb2dc3ca36257712304d",
+    "process_orchestrator_uid": "6a02d6c57de0a043e0331d21f7ec8b3546ee9e15",
+    "live_reconnect_client": "b66151c4603a095a957f461fa2292a5df3502455",
+    "live_reconnect_client_uid": "ba7cf44690bd53733be2ee960489ca075e9e8c7f"
+  },
+  "validation": {
+    "import_exit_code": 0,
+    "p4_6_live_two_client_reconnect": "46 assertions, 0 failures",
+    "p4_5_post_commit_publication_fallback": "PASS (54 assertions)",
+    "p4_4_live_mvp_composition_ordering": "PASS (62 assertions)",
+    "p4_3_generic_live_m4_transaction_port": "PASS (70 assertions)",
+    "p4_3_authoritative_adapter_m0": "PASS (37 assertions)",
+    "p4_2_deterministic_allocator": "PASS (50 assertions)",
+    "p4_1_exact_consume": "PASS (12 assertions)",
+    "p3_live_resource_mining_convergence": "43 assertions, 0 failures",
+    "m4_canonical_shared_gameplay": "26 assertions, 0 failures",
+    "m3_construction_replication_bridge": "PASS (25 assertions)",
+    "v0_c1_client_adapter": "PASS (12 assertions)",
+    "fatal_parser_compile_startup_markers": 0,
+    "project_godot_hash_stable": true
+  },
+  "e2e_sequence": [
+    "A_AND_B_JOIN_OVER_REAL_ENET",
+    "A_MINES_2_AND_BUILDS_FOUNDATION",
+    "A_AND_B_CONVERGE_RESOURCE_ITEM_CONSTRUCTION",
+    "A_MINES_4_AND_BUILDS_SHELL",
+    "A_AND_B_CONVERGE_RESOURCE_ITEM_CONSTRUCTION",
+    "A_MINES_2_AND_BUILDS_ROOF",
+    "A_AND_B_CONVERGE_OPERATIONAL_OUTPOST_WITH_ZERO_ORE",
+    "B_CANONICAL_LEAVE",
+    "A_OBSERVES_B_DISCONNECTED_WITHOUT_CANONICAL_MUTATION",
+    "B_RECONNECTS_WITH_NEW_TRANSPORT_SESSION_AND_HIGHER_OWNERSHIP_EPOCH",
+    "B_RECONSTRUCTS_EXACT_FINAL_RESOURCE_ITEM_AND_CONSTRUCTION_STATE",
+    "A_AND_RECONNECTED_B_FINAL_CHECKSUMS_CONVERGE"
+  ],
+  "invariants": [
+    "REAL_ENET_TWO_CLIENT_CONCURRENT_SESSION",
+    "EACH_BUILD_STAGE_CONSUMES_CANONICAL_P3_MINED_ORE",
+    "B_RECEIVES_EACH_STAGE_RESOURCE_ITEM_AND_CONSTRUCTION_PUBLICATION",
+    "A_B_CHECKSUMS_CONVERGE_AFTER_EACH_STAGE",
+    "RECONNECT_ITSELF_MUTATES_NO_CANONICAL_RESOURCE_ITEM_OR_CONSTRUCTION_STATE",
+    "RECONNECT_PRESERVES_CANONICAL_PLAYER_ENTITY",
+    "RECONNECT_ROTATES_TRANSPORT_SESSION",
+    "RECONNECT_ADVANCES_OWNERSHIP_EPOCH",
+    "NO_PRODUCTION_RUNTIME_PATCH_REQUIRED_BEYOND_P4_5"
+  ],
+  "claims": [
+    "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS"
+  ],
+  "does_not_claim": [
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}

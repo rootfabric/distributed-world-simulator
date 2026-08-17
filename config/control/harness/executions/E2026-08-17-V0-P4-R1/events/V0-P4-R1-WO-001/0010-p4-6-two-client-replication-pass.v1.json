@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0010",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 10,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T09:40:39Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-6-LIVE-TWO-CLIENT-RECONNECT-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+  "summary": "P4.6 process-level validation proves two simultaneous real ENet clients converge after each live P3 mine -> P4 build stage. A mines canonical ore costs 2/4/2 and builds foundation/shell/roof; after every accepted stage A and B agree on ResourceMining checksum/generation, Item Graph checksum/revision and Construction checksum/generation/progress. The test-only candidate changes no production runtime files. Project Control 32016291649 is SUCCESS. Work remains IN_PROGRESS for repeated E2E/full regressions/evidence map and fresh independent review/verification."
+}
