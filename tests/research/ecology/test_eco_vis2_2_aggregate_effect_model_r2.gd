@@ -6,6 +6,7 @@ const PairTraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_2_pair_tra
 const ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experiment_model.gd")
 const VIS20Scene = preload("res://scenes/labs/ecology/eco_vis2_0_evolution_experiment_lab.tscn")
 
+const SYNTH_FORK := 10
 const REAL_FORK := 20
 const REAL_TARGET := 36
 const REAL_REBRANCH_TARGET := 50
@@ -20,8 +21,35 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_test_aggregate_window_and_floor()
+	if _failures > 0:
+		_finish()
+		return
 	await _test_real_pair_set_with_canonical_adapter()
 	_finish()
+
+
+func _test_aggregate_window_and_floor() -> void:
+	var bounded := AggregateModel.new()
+	_require_result(bounded.configure(SYNTH_FORK, REPLICATES), "bounded aggregate configures")
+	for generation in range(SYNTH_FORK, SYNTH_FORK + 71):
+		var append_result := bounded.append_generation(_synthetic_pairs(generation, generation % 2 == 0))
+		_require_result(append_result, "bounded aggregate append G%d" % generation)
+		if _failures > 0:
+			return
+	_check(bounded.point_count() == AggregateModel.SERIES_WINDOW, "aggregate history is exactly bounded to 64")
+	_check(bounded.oldest_generation() == SYNTH_FORK + 7, "aggregate rolling eviction advances oldest generation")
+	_check(bounded.latest_generation() == SYNTH_FORK + 70, "aggregate rolling eviction retains latest generation")
+	var before_invalid := bounded.points()
+	var hash_before_invalid := bounded.series_hash()
+	var invalid := bounded.truncate_after(bounded.oldest_generation() - 1)
+	_check(not bool(invalid.get("success", true)), "truncate below aggregate floor is rejected")
+	_check(String(invalid.get("reason", "")) == "GENERATION_BEFORE_AGGREGATE_CACHE", "truncate below floor reports exact reason")
+	_check(bounded.points() == before_invalid, "invalid truncate cannot mutate aggregate points")
+	_check(bounded.series_hash() == hash_before_invalid, "invalid truncate cannot mutate aggregate hash")
+	var floor := bounded.oldest_generation()
+	_require_result(bounded.truncate_after(floor), "truncate at aggregate floor succeeds")
+	_check(bounded.point_count() == 1 and bounded.latest_generation() == floor, "truncate at floor retains exact floor point")
 
 
 func _test_real_pair_set_with_canonical_adapter() -> void:
@@ -154,7 +182,9 @@ func _test_real_pair_set_with_canonical_adapter() -> void:
 		control_future.append(pair_set.control_generation_map(replicate_index, REAL_REBRANCH_TARGET))
 
 	var rewind_generation := REAL_REBRANCH_TARGET - 10
-	_require_result(pair_set.rewind_to_cached_generation(rewind_generation), "cached Treatment rewind")
+	var rewind_result: Dictionary = pair_set.rewind_to_cached_generation(rewind_generation)
+	_require_result(rewind_result, "cached Treatment rewind")
+	_check(not bool(rewind_result.get("clamped", true)), "in-cache rewind does not clamp")
 	_require_result(replay.truncate_after(rewind_generation), "aggregate truncates at rewind")
 	_require_result(pair_set.set_treatment(ExperimentModel.PROFILE_FLOOD, 1.0), "Treatment rebranches to FLOOD")
 	if _failures > 0:
@@ -183,6 +213,51 @@ func _test_real_pair_set_with_canonical_adapter() -> void:
 	_cleanup(pair_set, scene)
 	await process_frame
 	await process_frame
+
+
+func _synthetic_pairs(generation: int, reverse_order: bool) -> Array[Dictionary]:
+	var population_deltas := [-4, 0, 2, 6]
+	var fitness_deltas := [-0.2, -0.1, 0.1, 0.4]
+	var indices := [0, 1, 2, 3]
+	if reverse_order:
+		indices.reverse()
+	var result: Array[Dictionary] = []
+	for index_variant in indices:
+		var replicate_index := int(index_variant)
+		var at_fork := generation == SYNTH_FORK
+		var control_population := 20 + replicate_index
+		var population_delta := 0 if at_fork else int(population_deltas[replicate_index])
+		var control_fitness := 0.4 + 0.05 * float(replicate_index)
+		var fitness_delta := 0.0 if at_fork else float(fitness_deltas[replicate_index])
+		var common_field := ("fork|R%d" % replicate_index).sha256_text()
+		var control_field := common_field if at_fork else ("control|G%d|R%d" % [generation, replicate_index]).sha256_text()
+		var treatment_field := common_field if at_fork else ("treatment|G%d|R%d" % [generation, replicate_index]).sha256_text()
+		result.append({
+			"replicate_index": replicate_index,
+			"root": ("VIS22BR2|root=%d" % replicate_index).sha256_text(),
+			"control": _trace_point(generation, "CONTROL", ExperimentModel.PROFILE_BASELINE, control_population, control_fitness, control_field, "ENV-BASE"),
+			"treatment": _trace_point(generation, "TREATMENT", ExperimentModel.PROFILE_BASELINE if at_fork else ExperimentModel.PROFILE_DROUGHT, control_population + population_delta, control_fitness + fitness_delta, treatment_field, "ENV-BASE" if at_fork else "ENV-DROUGHT"),
+		})
+	return result
+
+
+func _trace_point(generation: int, branch_id: String, experiment_id: String, population: int, fitness: float, field_hash: String, environment_revision: String) -> Dictionary:
+	return {
+		"generation": generation,
+		"branch_id": branch_id,
+		"experiment_id": experiment_id,
+		"visual_count": population,
+		"birth_count": 3,
+		"death_count": 2,
+		"survivor_count": population,
+		"mean_fitness": fitness,
+		"unique_genomes": population,
+		"alpha_count": int(population / 2),
+		"beta_count": population - int(population / 2),
+		"represented_biomass_kg": 11.0,
+		"field_hash": field_hash,
+		"environment_revision": environment_revision,
+	}
 
 
 func _cleanup(pair_set: Node, scene: Node) -> void:
