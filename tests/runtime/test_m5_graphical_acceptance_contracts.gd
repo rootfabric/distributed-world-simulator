@@ -97,7 +97,7 @@ func _test_source_and_runners(manifest: Dictionary) -> void:
 		_assert(not path.is_empty(), "M5 evidence path missing: %s" % key)
 		_assert(FileAccess.file_exists("res://%s" % path), "M5 evidence file missing: %s" % path)
 	var app := _read("res://scripts/app/simulator_app.gd")
-	var m3_client := _read("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var m3_client := _read_script_inheritance("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 	_assert(m3_client.contains("Support.transport_bound_operation_id(_logical_player_id, \"join\", _transport_session_id)"), "M5 reconnect JOIN is not bound to transport session identity")
 	_assert(not m3_client.contains("operation/m3/%s/join/%d"), "M5 reconnect JOIN still depends on process-local ticks")
 	_assert(app.contains("v16.10.6-architecture-a3-single-server-multiplayer"), "Simulator A3 checkpoint is stale")
@@ -117,6 +117,20 @@ func _contains_fragment(values: Array, fragment: String) -> bool:
 		if String(value).contains(fragment):
 			return true
 	return false
+
+
+func _read_script_inheritance(path: String) -> String:
+	var script = load(path)
+	var sources: Array[String] = []
+	var visited: Dictionary = {}
+	while script != null:
+		var resource_path := String(script.resource_path)
+		if resource_path.is_empty() or visited.has(resource_path):
+			break
+		visited[resource_path] = true
+		sources.append(_read(resource_path))
+		script = script.get_base_script()
+	return "\n".join(sources)
 
 func _load_json(path: String) -> Dictionary:
 	var parsed = JSON.parse_string(_read(path))

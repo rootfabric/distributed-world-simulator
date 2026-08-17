@@ -44,7 +44,7 @@ func _init() -> void:
 	var initial_view: Dictionary = projection.build_screen("a")
 	_assert(bool(initial_view.get("success", false)), "projection builds screen model")
 	_assert(String(initial_view.get("schema", "")) == M4Projection.VIEW_SCHEMA, "projection view schema")
-	_assert(int(initial_view.get("canonical_revision", -1)) == 0, "initial projection revision")
+	_assert(int(initial_view.get("canonical_revision", -1)) == int(initial.get("revision", -2)), "initial projection revision matches canonical snapshot")
 	_assert(int(initial_view.get("player", {}).get("slot_count", 0)) == M4Projection.PLAYER_CAPACITY, "player inventory capacity")
 	_assert(int(initial_view.get("hotbar", {}).get("slot_count", 0)) == M4Projection.HOTBAR_CAPACITY, "hotbar capacity")
 	_assert(Array(initial_view.get("world_items", [])).size() == 3, "world items projected")
