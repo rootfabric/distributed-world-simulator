@@ -8,21 +8,56 @@ godot_bin="${1:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.edito
 artifacts="$repo_root/artifacts/runtime/eco-vis2-2-full-ubuntu"
 temp_root="$(mktemp -d /tmp/dws-eco-vis2-2-full-XXXXXXXX)"
 timeout_bin="$(command -v timeout || true)"
+diagnostic_regex='(^SCRIPT ERROR:|^ERROR:|Parse Error|ObjectDB instances?[[:space:]]+(was|were)[[:space:]]+leaked at exit|^[[:space:]]*(WARNING:|ERROR:)?[[:space:]]*[0-9]+[[:space:]]+RID(s|[[:space:]]+allocations)?[[:space:]]+of[[:space:]]+type.*(was|were)[[:space:]]+leaked([[:space:]]+at[[:space:]]+exit)?\.?[[:space:]]*$|^Leaked([[:space:]]|$)|^Resource still in use:|resources? still in use at exit|^Orphan StringName:|^StringName:[[:space:]]+[0-9]+[[:space:]]+unclaimed string names at exit\.?$|^WARNING:.*(leak|leaked|leaks|leaking|still in use))'
 
 cleanup() {
     rm -rf "$temp_root"
 }
 trap cleanup EXIT
 
+matches_diagnostics() {
+    local text="$1"
+    grep -Eiq "$diagnostic_regex" <<< "$text"
+}
+
+assert_diagnostics_matcher_coverage() {
+    local leaking_fixtures=(
+        'WARNING: 1 ObjectDB instance was leaked at exit (run with `--verbose` for details).'
+        'WARNING: 1 RID of type "CanvasItem" was leaked.'
+        'WARNING: 2 RIDs of type "Texture" were leaked.'
+        "ERROR: 3 RID allocations of type 'Example' were leaked at exit."
+        'WARNING: 1 framebuffer cache instance(s) still in use.'
+        'WARNING: 1 uniform set cache instance(s) still in use.'
+        'Leaked instance: Node:123'
+        'Resource still in use: res://example.gd (GDScript)'
+        'Orphan StringName: example (static: 0, total: 1)'
+        'StringName: 1 unclaimed string names at exit.'
+    )
+    local benign_fixtures=(
+        'ECO.VIS2.2 full Ubuntu acceptance gate: PASS'
+        'WARNING: Started the engine as `root`/superuser. This is a security risk.'
+    )
+    local fixture
+    for fixture in "${leaking_fixtures[@]}"; do
+        if ! matches_diagnostics "$fixture"; then
+            echo "ECO.VIS2.2 shutdown matcher missed fixture: $fixture"
+            return 1
+        fi
+    done
+    for fixture in "${benign_fixtures[@]}"; do
+        if matches_diagnostics "$fixture"; then
+            echo "ECO.VIS2.2 shutdown matcher false-positive fixture: $fixture"
+            return 1
+        fi
+    done
+    echo "ECO.VIS2.2 shutdown leak matcher coverage: PASS"
+}
+
 fail_if_diagnostics() {
     local log_file="$1"
-    if grep -Eiq \
-'(^SCRIPT ERROR:|^ERROR:|Parse Error|ObjectDB instances? (was|were) leaked at exit|Leaked instance:|[0-9]+ RID(s| allocations)? of type .* (was|were) leaked|Resource still in use:|resources? still in use at exit|Orphan StringName:|StringName: [0-9]+ unclaimed string names at exit|^WARNING:.*(leak|leaked|leaks|leaking|still in use))' \
-        "$log_file"; then
+    if grep -Eiq "$diagnostic_regex" "$log_file"; then
         echo "Strict Godot diagnostics gate: FAIL ($log_file)"
-        grep -Ein \
-'(^SCRIPT ERROR:|^ERROR:|Parse Error|ObjectDB instances? (was|were) leaked at exit|Leaked instance:|[0-9]+ RID(s| allocations)? of type .* (was|were) leaked|Resource still in use:|resources? still in use at exit|Orphan StringName:|StringName: [0-9]+ unclaimed string names at exit|^WARNING:.*(leak|leaked|leaks|leaking|still in use))' \
-            "$log_file" || true
+        grep -Ein "$diagnostic_regex" "$log_file" || true
         return 1
     fi
 }
@@ -86,6 +121,7 @@ echo "$version"
     exit 1
 }
 echo "ECO.VIS2.2 exact Godot identity: PASS"
+assert_diagnostics_matcher_coverage
 
 superseded_paths=(
     "RUN_ECO_VIS2_2B_TESTS.ps1"
