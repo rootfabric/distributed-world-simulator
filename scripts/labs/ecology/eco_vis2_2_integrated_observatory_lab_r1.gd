@@ -1,18 +1,18 @@
 extends "res://scripts/labs/ecology/eco_vis2_1v_treatment_realtime_lod_lab.gd"
 
-const PairSet = preload("res://scripts/labs/ecology/eco_vis2_2_replicate_pair_set.gd")
-const AggregateModel = preload("res://scripts/labs/ecology/eco_vis2_2_aggregate_effect_model.gd")
-const PairTraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_2_pair_trace_adapter.gd")
-const ObservatoryPanel = preload("res://scripts/labs/ecology/eco_vis2_2_observatory_panel.gd")
-const TraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_1_trace_adapter.gd")
-const TreatmentRunner = preload("res://scripts/labs/ecology/eco_vis2_1_treatment_branch_runner.gd")
-const ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experiment_model.gd")
+const VIS22D_PairSet = preload("res://scripts/labs/ecology/eco_vis2_2_replicate_pair_set.gd")
+const VIS22D_AggregateModel = preload("res://scripts/labs/ecology/eco_vis2_2_aggregate_effect_model.gd")
+const VIS22D_PairTraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_2_pair_trace_adapter.gd")
+const VIS22D_ObservatoryPanel = preload("res://scripts/labs/ecology/eco_vis2_2_observatory_panel.gd")
+const VIS22D_TraceAdapter = preload("res://scripts/labs/ecology/eco_vis2_1_trace_adapter.gd")
+const VIS22D_TreatmentRunner = preload("res://scripts/labs/ecology/eco_vis2_1_treatment_branch_runner.gd")
+const VIS22D_ExperimentModel = preload("res://scripts/labs/ecology/eco_vis2_0_experiment_model.gd")
 
 const VIS22D_STAGE := "ECO.VIS2.2-D"
 const VIS22D_MODE := "INTEGRATED_REPLICATED_CAUSAL_OBSERVATORY"
-const DEFAULT_REPLICATE_COUNT := 8
-const MIN_REPLICATE_COUNT := 2
-const MAX_REPLICATE_COUNT := 16
+const VIS22D_DEFAULT_REPLICATE_COUNT := 8
+const VIS22D_MIN_REPLICATE_COUNT := 2
+const VIS22D_MAX_REPLICATE_COUNT := 16
 
 var _vis22d_active := false
 var _vis22d_pair_set: Node = null
@@ -22,8 +22,8 @@ var _vis22d_panel: Control = null
 var _vis22d_fork_generation := -1
 var _vis22d_generation := -1
 var _vis22d_selected_replicate := 0
-var _vis22d_replicate_count := DEFAULT_REPLICATE_COUNT
-var _vis22d_treatment_profile := ExperimentModel.PROFILE_DROUGHT
+var _vis22d_replicate_count := VIS22D_DEFAULT_REPLICATE_COUNT
+var _vis22d_treatment_profile := VIS22D_ExperimentModel.PROFILE_DROUGHT
 var _vis22d_treatment_intensity := 1.0
 var _vis22d_last_selected_field_hash := ""
 
@@ -75,19 +75,19 @@ func _unhandled_input(event: InputEvent) -> void:
 						get_viewport().set_input_as_handled()
 						return
 					KEY_2:
-						set_replicated_treatment(ExperimentModel.PROFILE_DROUGHT, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_DROUGHT, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_3:
-						set_replicated_treatment(ExperimentModel.PROFILE_FLOOD, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_FLOOD, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_4:
-						set_replicated_treatment(ExperimentModel.PROFILE_NUTRIENT, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_NUTRIENT, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_5:
-						set_replicated_treatment(ExperimentModel.PROFILE_SHADE, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_SHADE, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 			else:
@@ -121,19 +121,19 @@ func _unhandled_input(event: InputEvent) -> void:
 						get_viewport().set_input_as_handled()
 						return
 					KEY_2:
-						set_replicated_treatment(ExperimentModel.PROFILE_DROUGHT, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_DROUGHT, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_3:
-						set_replicated_treatment(ExperimentModel.PROFILE_FLOOD, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_FLOOD, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_4:
-						set_replicated_treatment(ExperimentModel.PROFILE_NUTRIENT, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_NUTRIENT, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_5:
-						set_replicated_treatment(ExperimentModel.PROFILE_SHADE, _vis22d_treatment_intensity)
+						set_replicated_treatment(VIS22D_ExperimentModel.PROFILE_SHADE, _vis22d_treatment_intensity)
 						get_viewport().set_input_as_handled()
 						return
 					KEY_MINUS:
@@ -150,7 +150,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func set_replicate_count_for_next_fork(replicate_count: int) -> bool:
 	if _vis22d_active:
 		return false
-	if replicate_count < MIN_REPLICATE_COUNT or replicate_count > MAX_REPLICATE_COUNT:
+	if replicate_count < VIS22D_MIN_REPLICATE_COUNT or replicate_count > VIS22D_MAX_REPLICATE_COUNT:
 		return false
 	_vis22d_replicate_count = replicate_count
 	_update_status()
@@ -160,7 +160,7 @@ func set_replicate_count_for_next_fork(replicate_count: int) -> bool:
 func begin_replicated_experiment() -> Dictionary:
 	if _vis22d_active:
 		return {"success": true, "fork_generation": _vis22d_fork_generation}
-	if _vis20_profile != ExperimentModel.PROFILE_BASELINE:
+	if _vis20_profile != VIS22D_ExperimentModel.PROFILE_BASELINE:
 		return {"success": false, "reason": "SOURCE_NOT_BASELINE"}
 	_vis18r_playing = false
 	var source_model := _vis18r_model as RefCounted
@@ -176,7 +176,7 @@ func begin_replicated_experiment() -> Dictionary:
 			fork_history.append(Dictionary(point_variant).duplicate(true))
 
 	_release_pair_set()
-	_vis22d_pair_set = PairSet.new()
+	_vis22d_pair_set = VIS22D_PairSet.new()
 	_vis22d_pair_set.name = "VIS22DReplicatePairSet"
 	add_child(_vis22d_pair_set)
 	var configured: Dictionary = _vis22d_pair_set.configure_from_fork(
@@ -187,7 +187,7 @@ func begin_replicated_experiment() -> Dictionary:
 		_release_pair_set()
 		return {"success": false, "reason": "PAIR_SET_CONFIGURE_FAILED", "detail": configured}
 
-	_vis22d_aggregate = AggregateModel.new()
+	_vis22d_aggregate = VIS22D_AggregateModel.new()
 	var aggregate_config: Dictionary = _vis22d_aggregate.configure(fork_generation, _vis22d_replicate_count)
 	if not bool(aggregate_config.get("success", false)):
 		_release_pair_set()
@@ -286,10 +286,10 @@ func select_replicate(replicate_index: int) -> Dictionary:
 
 
 func set_replicated_treatment(profile: String, intensity: float) -> Dictionary:
-	var normalized_profile := ExperimentModel.normalize_profile(profile)
-	if normalized_profile not in TreatmentRunner.TREATMENT_PROFILES:
+	var normalized_profile := VIS22D_ExperimentModel.normalize_profile(profile)
+	if normalized_profile not in VIS22D_TreatmentRunner.TREATMENT_PROFILES:
 		return {"success": false, "reason": "INVALID_TREATMENT_EXPERIMENT"}
-	var normalized_intensity := ExperimentModel.normalize_intensity(normalized_profile, intensity)
+	var normalized_intensity := VIS22D_ExperimentModel.normalize_intensity(normalized_profile, intensity)
 	_vis22d_treatment_profile = normalized_profile
 	_vis22d_treatment_intensity = normalized_intensity
 	_vis21_treatment_profile = normalized_profile
@@ -314,7 +314,7 @@ func restart_replicated_from_fork() -> Dictionary:
 		return restart_result
 	if _vis22d_pair_set.replicate_roots() != roots_before:
 		return {"success": false, "reason": "ROOTS_CHANGED_ON_RESTART"}
-	_vis22d_aggregate = AggregateModel.new()
+	_vis22d_aggregate = VIS22D_AggregateModel.new()
 	var config: Dictionary = _vis22d_aggregate.configure(_vis22d_fork_generation, _vis22d_replicate_count)
 	if not bool(config.get("success", false)):
 		return config
@@ -350,7 +350,7 @@ func sample_environment_context_at(world_x: float, world_z: float) -> Dictionary
 		return super.sample_environment_context_at(world_x, world_z)
 	var result := super.sample_environment_context_at(world_x, world_z)
 	result["environment"] = sample_environment_at(world_x, world_z)
-	result["experiment_profile"] = ExperimentModel.PROFILE_BASELINE if _vis22d_generation <= _vis22d_fork_generation else _vis22d_treatment_profile
+	result["experiment_profile"] = VIS22D_ExperimentModel.PROFILE_BASELINE if _vis22d_generation <= _vis22d_fork_generation else _vis22d_treatment_profile
 	result["experiment_intensity"] = 0.0 if _vis22d_generation <= _vis22d_fork_generation else _vis22d_treatment_intensity
 	result["replicate_index"] = _vis22d_selected_replicate
 	return result
@@ -398,7 +398,7 @@ func get_vis22d_state() -> Dictionary:
 
 
 func _append_aggregate_generation(generation: int) -> Dictionary:
-	var inputs := PairTraceAdapter.build_generation_inputs(_vis22d_pair_set, generation, _vis22d_treatment_profile)
+	var inputs := VIS22D_PairTraceAdapter.build_generation_inputs(_vis22d_pair_set, generation, _vis22d_treatment_profile)
 	if not bool(inputs.get("success", false)):
 		return {"success": false, "reason": "CANONICAL_INPUT_FAILED", "generation": generation, "detail": inputs}
 	var result: Dictionary = _vis22d_aggregate.append_generation(inputs.get("pairs", []))
@@ -424,9 +424,9 @@ func _render_selected_generation() -> void:
 	var environment_revision := ""
 	if treatment != null:
 		environment_revision = String(treatment.sample_environment_for_generation(_vis22d_generation, 0.0, 0.0).get("environment_revision", ""))
-	var experiment_id := ExperimentModel.PROFILE_BASELINE if _vis22d_generation <= _vis22d_fork_generation else _vis22d_treatment_profile
-	var point := TraceAdapter.from_generation_map(
-		_vis22d_generation, generation_map, TreatmentRunner.BRANCH_ID, experiment_id, environment_revision
+	var experiment_id := VIS22D_ExperimentModel.PROFILE_BASELINE if _vis22d_generation <= _vis22d_fork_generation else _vis22d_treatment_profile
+	var point := VIS22D_TraceAdapter.from_generation_map(
+		_vis22d_generation, generation_map, VIS22D_TreatmentRunner.BRANCH_ID, experiment_id, environment_revision
 	)
 	_vis22d_last_selected_field_hash = String(point.get("field_hash", ""))
 	_vis18r_field_hash = _vis22d_last_selected_field_hash
@@ -439,7 +439,7 @@ func _create_panel_if_needed() -> void:
 	_vis22d_panel_layer.name = "VIS22DObservatoryLayer"
 	_vis22d_panel_layer.layer = 24
 	add_child(_vis22d_panel_layer)
-	_vis22d_panel = ObservatoryPanel.new()
+	_vis22d_panel = VIS22D_ObservatoryPanel.new()
 	_vis22d_panel.name = "ReplicatedCausalObservatory"
 	_vis22d_panel.position = Vector2(840.0, 72.0)
 	_vis22d_panel.size = Vector2(570.0, 410.0)
