@@ -81,8 +81,8 @@ func _run() -> void:
 	_check(int(state3.get("ship_visual_instance_id", 0)) == ship_id, "ship visual persists across owner pivot")
 	_check(int(state3.get("player_visual_instance_id", 0)) == player_id, "player visual persists across owner pivot")
 
-	var mutation := view3.duplicate(true)
-	mutation["checksum"] = "same-sequence-mutation"
+	var mutation_player := _player(-4.1, 0.0, 0.9, 3)
+	var mutation := Contract.create_view(3, anchor2, 1, mutation_player)
 	var mutation_result: Dictionary = _observer.accept_view_for_tests(mutation)
 	_check(not bool(mutation_result.get("success", true)), "same-sequence mutation still rejected")
 	_check(String(mutation_result.get("error_code", "")) == "SM0_P8_VIEW_SAME_SEQUENCE_MUTATION", "same-sequence mutation error preserved")
