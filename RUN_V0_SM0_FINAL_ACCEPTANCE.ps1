@@ -107,8 +107,24 @@ function Invoke-ChildPowerShellGate {
 
     Write-Host "[SM0-FINAL] Running $Label..."
     $CommandArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $RunnerPath) + $Arguments
-    $Output = @(& powershell.exe @CommandArgs 2>&1)
-    $ExitCode = $LASTEXITCODE
+
+    # Windows PowerShell 5.1 surfaces native stderr from a child powershell.exe
+    # invocation as a non-terminating NativeCommandError. Godot can legitimately
+    # emit metadata-import warnings on stderr while returning exit code 0. Capture
+    # both streams without letting ErrorActionPreference=Stop convert that warning
+    # into a false FINAL-gate failure; the child exit code and explicit PASS marker
+    # remain the authoritative gate.
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $CapturedOutput = @(& powershell.exe @CommandArgs 2>&1)
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+    }
+
+    $Output = @($CapturedOutput | ForEach-Object { [string]$_ })
     $Output | Tee-Object -FilePath (Join-Path $LogRoot $LogName) | ForEach-Object { Write-Host $_ }
 
     if ($ExitCode -ne 0) {
