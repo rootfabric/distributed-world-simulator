@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_post_commit_publication_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "3454ac2558a3df35f1d1f80fcb886e4a301615a4",
+  "candidate_parent": "eea1aecc60b3702cda10c5a2161ff2709d16c476",
+  "candidate_tree": "a8c235ade2292e823177b02d4cf72e6bd533a7c7",
+  "tree_equivalent_pre_recovery_head": "e600e453f0874290cdca879c872062a3ea9a96a6",
+  "audit_evidence_commit": "a56a06481f2ee6534100aec11886d1958f7dd0de",
+  "director_dispatch_event_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+  "audited_main_head_at_dispatch": "5999d935e8d5b496100ced66283d8762d3403675",
+  "project_control_run": 32000694207,
+  "project_control_conclusion": "SUCCESS",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+  "runtime_diff": {
+    "commit_count": 1,
+    "changed_file_count": 5,
+    "network_protocol_changed": false,
+    "new_authority_owner_introduced": false
+  },
+  "tested_blobs": {
+    "m3_current_runtime": "131d343fb259e1a9eca5fdfaab815c6347c2cf6f",
+    "construction_replication_bridge": "d0b9852c4381cb03f2f59fe46fbd25a8de349419",
+    "focused_p4_5_test": "d3bfcfa71e858bc5790dfa3cbf4baa9e5450f0e3",
+    "focused_p4_5_test_uid": "48f4e665a78a5cb92158786d8b92b24be1de6b5e",
+    "exact_head_runner": "a1e743d58cb37feece0db3b9d880b1cecc36fafc"
+  },
+  "validation": {
+    "import_exit_code": 0,
+    "p4_5_post_commit_publication_fallback": "PASS (54 assertions)",
+    "p4_4_live_mvp_composition_ordering": "PASS (62 assertions)",
+    "p4_3_generic_live_m4_transaction_port": "PASS (70 assertions)",
+    "p4_3_authoritative_adapter_m0": "PASS (37 assertions)",
+    "p4_2_deterministic_allocator": "PASS (50 assertions)",
+    "p4_1_exact_consume": "PASS (12 assertions)",
+    "m4_canonical_shared_gameplay": "26 assertions, 0 failures",
+    "p3_resource_mining_domain": "79 assertions, 0 failures",
+    "p3_live_resource_mining_convergence": "43 assertions, 0 failures",
+    "m3_construction_replication_bridge": "PASS (25 assertions)",
+    "v0_c1_client_adapter": "PASS (12 assertions)",
+    "fatal_parser_compile_startup_markers": 0,
+    "project_godot_hash_stable": true
+  },
+  "publication_invariants": [
+    "ACCEPTED_CONSTRUCTION_COMMIT_IS_NEVER_CONVERTED_TO_REJECTION_BY_POST_COMMIT_PUBLICATION_DERIVATION",
+    "INITIATING_PEER_RECEIVES_CANONICAL_ITEM_GRAPH_DELTA_EXACTLY_ONCE_IN_COMMAND_RESULT",
+    "REMOTE_CONNECTED_PEERS_RECEIVE_THE_SAME_CANONICAL_ITEM_GRAPH_DELTA_EXACTLY_ONCE",
+    "CONNECTED_PEERS_RECEIVE_THE_ACCEPTED_CONSTRUCTION_EVENT_EXACTLY_ONCE",
+    "ITEM_GRAPH_DELTA_DERIVATION_FAILURE_FALLS_BACK_TO_AUTHORITATIVE_FULL_ITEM_GRAPH_SNAPSHOT",
+    "CONSTRUCTION_EVENT_DERIVATION_FAILURE_FALLS_BACK_TO_AUTHORITATIVE_CONSTRUCTION_SNAPSHOT",
+    "SNAPSHOT_FALLBACK_OCCURS_AFTER_THE_REAL_ACCEPTED_COMMIT_AND_PRESERVES_COMMITTED_STATE",
+    "EXACT_REPLAY_SUPPRESSES_ITEM_DELTA_CONSTRUCTION_EVENT_AND_SNAPSHOT_REPUBLICATION",
+    "CLIENT_REPLICAS_CONVERGE_TO_AUTHORITATIVE_ITEM_GRAPH_AND_CONSTRUCTION_CHECKSUMS_IN_NORMAL_PUBLICATION_PATH",
+    "NO_SECOND_ITEM_GRAPH_RESOURCE_LEDGER_OR_CLIENT_AUTHORITY_IS_INTRODUCED"
+  ],
+  "recovery_history": {
+    "accidental_temp_create_commit": "08f090311d0aacdd0ca65c8a8f2b34b3a9fe80e5",
+    "temp_delete_recovery_commit": "eea1aecc60b3702cda10c5a2161ff2709d16c476",
+    "comparison_base": "e600e453f0874290cdca879c872062a3ea9a96a6",
+    "comparison_head": "eea1aecc60b3702cda10c5a2161ff2709d16c476",
+    "comparison_changed_files": 0,
+    "tree_neutral": true
+  },
+  "known_adjacent_observation": {
+    "test": "tests/runtime/test_v0_p3_resource_mining_wire_and_wiring.gd",
+    "status": "PRE_EXISTING_OUT_OF_SCOPE_RED",
+    "failures": [
+      "near-tie focus prefers mining resource over overlapping ordinary world item",
+      "clear aim at ordinary item/container is not hijacked by resource priority"
+    ],
+    "context": "The old focus-policy fixture also calls Node3D global_transform outside SceneTree. The independent live P3 resource/mining convergence regression passes 43 assertions with zero failures. P4.5 does not modify this presentation/focus policy."
+  },
+  "claim": "V0_P4_POST_COMMIT_PUBLICATION_FALLBACK_PASS",
+  "does_not_claim": [
+    "V0_P4_REAL_ENET_TWO_CLIENT_BUILD_CONVERGENCE_PASS",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS",
+    "V0_P4_REPEATED_END_TO_END_PASS",
+    "V0_P4_EVIDENCE_MAP_COMPLETE",
+    "V0_P4_INDEPENDENT_REVIEWER_PASS",
+    "V0_P4_INDEPENDENT_VERIFIER_PASS",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}
