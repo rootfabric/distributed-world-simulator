@@ -64,16 +64,18 @@
     "P4 proves a bounded canonical ore economy loop, not a general multi-resource crafting framework.",
     "Full-snapshot publication fallback is correctness-first and may be expensive under later scale targets.",
     "The validated M4 + Construction/M0 atomic sequence is intentionally narrow and is not a general distributed transaction framework.",
-    "Final checkpoint acceptance still requires fresh independent P4 Reviewer and Verifier gates on the exact implementation head."
+    "Fresh independent Reviewer PASS is recorded; fresh Verifier PASS remains mandatory before checkpoint proposal.",
+    "The existing V0 -> NX CRITICAL_WATCH_HIT on canonical_multiplayer_item_graph_service.gd must be formally resolved or cleared before checkpoint proposal or merge; the Reviewer found no NX-foundation mutation."
   ],
   "required_fixes": [],
   "rank_up_moves": [
     "After formal P4 acceptance, continue the product sequence to P5 rather than expanding P4 scope.",
-    "Future CI may shard the now-complete 236-test world/core gate while preserving fail-closed test discovery."
+    "Future CI may shard the now-complete 236-test world/core gate while preserving fail-closed test discovery.",
+    "Before checkpoint proposal or merge, formally resolve or record an accepted clearance for the existing V0 -> NX CRITICAL_WATCH_HIT on scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd; independent review found no NX-foundation mutation, but the directional control predicate must not remain unresolved at checkpoint time."
   ],
   "evidence_gaps": [
-    "Fresh independent final P4 Reviewer verdict on exact implementation head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d with the recovery-carrier closure evidence inspected.",
-    "Fresh independent final P4 Verifier verdict after Reviewer PASS."
+    "Fresh independent final P4 Verifier verdict after Reviewer PASS.",
+    "Formal checkpoint-time disposition of the existing V0 -> NX CRITICAL_WATCH_HIT."
   ],
-  "review_verdict": "INSUFFICIENT_EVIDENCE"
+  "review_verdict": "PASS"
 }
