@@ -4,7 +4,7 @@
   "program": "V0",
   "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
   "risk_class": "HIGH",
-  "evidence_head_sha": "4692694a842f3d137f2e0c5a3bca06647530d337",
+  "evidence_head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "intent": "Close the first real V0 economy loop by consuming canonical ore produced by live P3 mining through the existing single-owner M4 Item Graph and Construction transaction boundaries, then prove publication, two-client convergence and reconnect without adding duplicate truth or changing the SERVER_PREDICTED network foundation.",
   "root_cause_or_reason": "Before P4, Construction could advance without proving and exactly consuming the canonical ore produced by P3. Exact stack exhaustion was rejected, live M4 material allocation/transaction wiring was absent, and post-commit publication did not replicate the Item Graph debit alongside Construction progress.",
   "changed_surfaces": [
@@ -64,7 +64,7 @@
     "P4 proves a bounded canonical ore economy loop, not a general multi-resource crafting framework.",
     "Full-snapshot publication fallback is correctness-first and may be expensive under later scale targets.",
     "The validated M4 + Construction/M0 atomic sequence is intentionally narrow and is not a general distributed transaction framework.",
-    "Final checkpoint acceptance still requires fresh independent P4 Reviewer and Verifier gates on the exact closure head."
+    "Final checkpoint acceptance still requires fresh independent P4 Reviewer and Verifier gates on the exact implementation head."
   ],
   "required_fixes": [],
   "rank_up_moves": [
@@ -72,8 +72,8 @@
     "Future CI may shard the now-complete 236-test world/core gate while preserving fail-closed test discovery."
   ],
   "evidence_gaps": [
-    "Fresh independent final P4 Reviewer verdict on the exact closure head.",
-    "Fresh independent final P4 Verifier verdict on the exact closure head after Reviewer PASS."
+    "Fresh independent final P4 Reviewer verdict on exact implementation head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d with the recovery-carrier closure evidence inspected.",
+    "Fresh independent final P4 Verifier verdict after Reviewer PASS."
   ],
   "review_verdict": "INSUFFICIENT_EVIDENCE"
 }
