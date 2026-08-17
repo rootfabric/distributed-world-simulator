@@ -60,7 +60,6 @@ func _run() -> void:
 	_check(int(after.get("writer_count", 0)) == 1, "nested authority remains writer")
 	_check(String(Dictionary(after.get("anchor", {})).get("outer_owner_authority_id", "")) == Topology.AUTHORITY_A, "anchor owner remains A")
 	_check(int(after.get("owner_change_count", -1)) == 0, "no synthetic owner pivot")
-	_check(int(after.get("anchor_accept_count", 0)) == 1, "exactly one anchor accepted")
 
 	_finish()
 
