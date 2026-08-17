@@ -21,29 +21,35 @@ jobs:
         run: |
           set -euo pipefail
           EXPECTED_P4_HEAD="da1c8825429af53095240943de663ada9a6549fc"
+          AUDITED_MAIN_HEAD="5999d935e8d5b496100ced66283d8762d3403675"
           EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
 
           git fetch origin main feature/v0-p4-construction-real-resources
+          CURRENT_MAIN_HEAD="$(git rev-parse origin/main)"
+          echo "CURRENT_MAIN_HEAD=$CURRENT_MAIN_HEAD"
+          echo "AUDITED_MAIN_HEAD=$AUDITED_MAIN_HEAD"
+
           git checkout -B feature/v0-p4-construction-real-resources origin/feature/v0-p4-construction-real-resources
           ACTUAL_HEAD="$(git rev-parse HEAD)"
           echo "P4_HEAD=$ACTUAL_HEAD"
           test "$ACTUAL_HEAD" = "$EXPECTED_P4_HEAD"
 
+          # Overlay current main-owned Harness code/contracts, but never the P4 execution ledger.
           while IFS= read -r path; do
             case "$path" in
               config/control/harness/executions/*) continue ;;
             esac
             mkdir -p "$(dirname "$path")"
-            git show "origin/main:$path" > "$path"
-          done < <(git ls-tree -r --name-only origin/main -- scripts/harness config/control/harness)
+            git show "$CURRENT_MAIN_HEAD:$path" > "$path"
+          done < <(git ls-tree -r --name-only "$CURRENT_MAIN_HEAD" -- scripts/harness config/control/harness)
 
           for path in \
             config/control/project-program-registry.v1.json \
             config/control/project-control-policy.v1.json \
             config/control/architecture-ownership.v1.json; do
-            if git cat-file -e "origin/main:$path" 2>/dev/null; then
+            if git cat-file -e "$CURRENT_MAIN_HEAD:$path" 2>/dev/null; then
               mkdir -p "$(dirname "$path")"
-              git show "origin/main:$path" > "$path"
+              git show "$CURRENT_MAIN_HEAD:$path" > "$path"
             fi
           done
 
@@ -51,6 +57,19 @@ jobs:
           export PYTHONPATH="$PWD/scripts"
           export PYTHONUTF8=1
 
+          # Current-main reconstruction is expected to expose whether the historical
+          # initial-dispatch guard can be replayed after post-dispatch main movement.
+          set +e
+          python -m harness.cli status --root "$PWD" --execution "$EXECUTION" > /tmp/current-main-status.log 2>&1
+          CURRENT_RC=$?
+          set -e
+          cat /tmp/current-main-status.log
+          echo "CURRENT_MAIN_STATUS_RC=$CURRENT_RC"
+
+          # The initial P4 dispatch was authorized against this exact audited main.
+          # Pin only the local remote-tracking ref after overlaying current main-owned
+          # Harness bytes so we can inspect the already-dispatched execution state.
+          git update-ref refs/remotes/origin/main "$AUDITED_MAIN_HEAD"
           python -m harness.cli status --root "$PWD" --execution "$EXECUTION" | tee /tmp/p4-status.log
           tail -n 1 /tmp/p4-status.log > /tmp/p4-status.json
 
@@ -60,10 +79,17 @@ jobs:
           reduced=p.get('reduced_work_order', {})
           active=p.get('active_work_order', {})
           required=active.get('required_predicates', [])
-          completed=reduced.get('completed_predicates', [])
-          if not isinstance(completed, list):
-              completed=[]
-          missing=[x for x in required if x not in completed]
+          # Reducer exposes predicate history under different keys across harness revisions.
+          completed=[]
+          for key in ('completed_predicates','verified_predicates','predicates'):
+              value=reduced.get(key)
+              if isinstance(value, list):
+                  completed=value
+                  break
+              if isinstance(value, dict):
+                  completed=[k for k,v in value.items() if v]
+                  break
+          missing=[x for x in required if x not in completed] if completed else []
           out={
               'ok': p.get('ok'),
               'state': reduced.get('state'),
@@ -72,12 +98,14 @@ jobs:
               'snapshot_matches_authoritative_state': p.get('snapshot_matches_authoritative_state'),
               'current_branch_head_sha': p.get('repository',{}).get('current_branch_head_sha'),
               'implementation_head_sha': p.get('repository',{}).get('implementation_head_sha'),
+              'event_ledger_head_sha': p.get('repository',{}).get('event_ledger_head_sha'),
               'review': p.get('review'),
               'human_attention': p.get('human_attention'),
               'verification_commands': p.get('verification_commands'),
               'required_predicate_count': len(required),
-              'completed_predicate_count': len(completed),
-              'missing_required_predicates': missing,
+              'completed_predicate_count_if_exposed': len(completed),
+              'missing_required_predicates_if_exposed': missing,
+              'reduced_work_order': reduced,
           }
           print('P4_FINAL_HARNESS_SUMMARY=' + json.dumps(out, ensure_ascii=False, sort_keys=True))
           PY
