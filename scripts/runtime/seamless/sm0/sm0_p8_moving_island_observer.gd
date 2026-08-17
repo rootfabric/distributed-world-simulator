@@ -6,10 +6,12 @@ const Contract = preload("res://scripts/runtime/seamless/sm0/sm0_p8_moving_islan
 const Topology = preload("res://scripts/runtime/seamless/sm0/sm0_p7_three_authority_topology.gd")
 
 const STOP_POLL_INTERVAL_MS := 100
+const RENDER_SAMPLE_INTERVAL_MS := 100
 const DEFAULT_VISUAL_RESPONSE_HZ := 14.0
 const MIN_VISUAL_RESPONSE_HZ := 1.0
 const MAX_VISUAL_RESPONSE_HZ := 60.0
 const PLAYER_DECK_OFFSET_Y := 0.75
+const DECK_MARKER_OFFSET_Y := 0.43
 
 var _listen_host := "127.0.0.1"
 var _listen_port := 0
@@ -17,6 +19,7 @@ var _stop_file := ""
 var _visual_response_hz := DEFAULT_VISUAL_RESPONSE_HZ
 var _socket: PacketPeerUDP
 var _last_stop_poll_ms := 0
+var _last_render_sample_ms := 0
 var _last_view: Dictionary = {}
 var _frame_count := 0
 var _owner_change_count := 0
@@ -25,15 +28,19 @@ var _reject_count := 0
 var _ship_root: Node3D
 var _ship: MeshInstance3D
 var _player: MeshInstance3D
+var _deck_marker: MeshInstance3D
 var _ship_root_instance_id := 0
 var _ship_visual_instance_id := 0
 var _player_visual_instance_id := 0
+var _deck_marker_instance_id := 0
 var _label: Label
 
 var _visual_initialized := false
+var _reference_marker_initialized := false
 var _target_ship_position := Vector3.ZERO
 var _target_ship_yaw := 0.0
 var _target_player_local_position := Vector3.ZERO
+var _reference_marker_local_position := Vector3.ZERO
 
 func setup(config: Dictionary) -> Dictionary:
 	_listen_host = String(config.get("listen_host", "127.0.0.1")).strip_edges()
@@ -56,6 +63,7 @@ func setup(config: Dictionary) -> Dictionary:
 		"ship_root_instance_id": _ship_root_instance_id,
 		"ship_visual_instance_id": _ship_visual_instance_id,
 		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
 	})
 	return _success()
 
@@ -74,6 +82,21 @@ func _build_scene() -> void:
 	_ship.material_override = ship_material
 	_ship_root.add_child(_ship)
 
+	_deck_marker = MeshInstance3D.new()
+	_deck_marker.name = "PersistentPassengerDeckReference"
+	var marker_mesh := CylinderMesh.new()
+	marker_mesh.top_radius = 0.45
+	marker_mesh.bottom_radius = 0.45
+	marker_mesh.height = 0.04
+	_deck_marker.mesh = marker_mesh
+	var marker_material := StandardMaterial3D.new()
+	marker_material.albedo_color = Color(0.1, 0.75, 1.0)
+	marker_material.emission_enabled = true
+	marker_material.emission = Color(0.05, 0.35, 0.8)
+	marker_material.emission_energy_multiplier = 1.5
+	_deck_marker.material_override = marker_material
+	_ship_root.add_child(_deck_marker)
+
 	_player = MeshInstance3D.new()
 	_player.name = "PersistentPlayerA"
 	var player_mesh := CapsuleMesh.new()
@@ -88,6 +111,7 @@ func _build_scene() -> void:
 	_ship_root_instance_id = _ship_root.get_instance_id()
 	_ship_visual_instance_id = _ship.get_instance_id()
 	_player_visual_instance_id = _player.get_instance_id()
+	_deck_marker_instance_id = _deck_marker.get_instance_id()
 
 	var camera := Camera3D.new()
 	camera.position = Vector3(0.0, 10.0, 18.0)
@@ -107,6 +131,9 @@ func _process(delta: float) -> void:
 	_poll_socket()
 	_update_visuals(maxf(delta, 0.0))
 	var now := Time.get_ticks_msec()
+	if now - _last_render_sample_ms >= RENDER_SAMPLE_INTERVAL_MS:
+		_last_render_sample_ms = now
+		_emit_render_sample()
 	if not _stop_file.is_empty() and now - _last_stop_poll_ms >= STOP_POLL_INTERVAL_MS:
 		_last_stop_poll_ms = now
 		if FileAccess.file_exists(_stop_file):
@@ -159,13 +186,14 @@ func _accept_view(view: Dictionary) -> Dictionary:
 			"ship_root_instance_id": _ship_root_instance_id,
 			"ship_visual_instance_id": _ship_visual_instance_id,
 			"player_visual_instance_id": _player_visual_instance_id,
+			"deck_marker_instance_id": _deck_marker_instance_id,
 		})
 	_apply_view(view)
 	_event("SM0_P8_VISUAL_FRAME", {
 		"view_sequence": int(view.get("view_sequence", 0)),
 		"outer_owner_authority_id": owner,
 		"outer_authority_id": owner,
-			"outer_authority_epoch": int(anchor.get("outer_authority_epoch", 0)),
+		"outer_authority_epoch": int(anchor.get("outer_authority_epoch", 0)),
 		"ship_simulation_tick": int(anchor.get("simulation_tick", 0)),
 		"ship_world_position": anchor.get("world_position", {}),
 		"ship_linear_velocity": anchor.get("linear_velocity", {}),
@@ -173,17 +201,18 @@ func _accept_view(view: Dictionary) -> Dictionary:
 		"player_local_position": Dictionary(view.get("player", {})).get("position", {}),
 		"player_world_position": view.get("player_world_position", {}),
 		"inner_authority_id": String(view.get("inner_authority_id", "")),
-			"inner_authority_epoch": int(view.get("inner_authority_epoch", 0)),
+		"inner_authority_epoch": int(view.get("inner_authority_epoch", 0)),
 		"reference_frame_parented": true,
 		"ship_root_instance_id": _ship_root_instance_id,
 		"ship_visual_instance_id": _ship_visual_instance_id,
 		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
 		"command_channel": false,
 	})
 	return _success({"replay": false})
 
 func _apply_view(view: Dictionary) -> void:
-	if _ship_root == null or _ship == null or _player == null:
+	if _ship_root == null or _ship == null or _player == null or _deck_marker == null:
 		return
 	var anchor := Dictionary(view.get("anchor", {}))
 	var wp := Dictionary(anchor.get("world_position", {}))
@@ -193,6 +222,10 @@ func _apply_view(view: Dictionary) -> void:
 	_target_ship_position = _dict_to_vec3(wp)
 	_target_ship_yaw = float(anchor.get("world_yaw", 0.0))
 	_target_player_local_position = _dict_to_vec3(local_position)
+	if not _reference_marker_initialized:
+		_reference_marker_initialized = true
+		_reference_marker_local_position = _target_player_local_position
+		_deck_marker.position = _reference_marker_local_position + Vector3(0.0, DECK_MARKER_OFFSET_Y, 0.0)
 	if not _visual_initialized:
 		_visual_initialized = true
 		_snap_visual_to_target()
@@ -202,13 +235,14 @@ func _apply_view(view: Dictionary) -> void:
 		material.albedo_color = Color(1.0, 1.0, 1.0) if String(anchor.get("outer_owner_authority_id", "")) == Topology.AUTHORITY_A else Color(0.2, 0.9, 0.35)
 
 	if _label != null:
-		_label.text = "P8.1 Nested Reference Frame\nOuter: %s epoch %d\nInner: %s epoch %d\nShip tick: %d\nFrame: ShipRoot / player local %s\nplayer/a remains nested" % [
+		_label.text = "P8.1 Nested Reference Frame\nOuter: %s epoch %d\nInner: %s epoch %d\nShip tick: %d\nFrame: ShipRoot / player local %s\nDeck ref: fixed local %s\nplayer/a remains nested" % [
 			String(anchor.get("outer_owner_authority_id", "")),
 			int(anchor.get("outer_authority_epoch", 0)),
 			String(view.get("inner_authority_id", "")),
 			int(view.get("inner_authority_epoch", 0)),
 			int(anchor.get("simulation_tick", 0)),
 			str(_target_player_local_position),
+			str(_reference_marker_local_position),
 		]
 
 func _update_visuals(delta: float) -> void:
@@ -229,40 +263,72 @@ func _snap_visual_to_target() -> void:
 	_ship_root.rotation.y = -_target_ship_yaw
 	_player.position = _target_player_local_position + Vector3(0.0, PLAYER_DECK_OFFSET_Y, 0.0)
 
+func _emit_render_sample() -> void:
+	if not _visual_initialized or not _reference_marker_initialized:
+		return
+	if _ship_root == null or _player == null or _deck_marker == null:
+		return
+	var player_world := _player.global_position
+	var marker_world := _deck_marker.global_position
+	var dx := player_world.x - marker_world.x
+	var dz := player_world.z - marker_world.z
+	_event("SM0_P8_VISUAL_RENDER_SAMPLE", {
+		"rendered_ship_root_world_position": _vec3_to_dict(_ship_root.global_position),
+		"rendered_player_world_position": _vec3_to_dict(player_world),
+		"rendered_deck_marker_world_position": _vec3_to_dict(marker_world),
+		"rendered_player_local_position": _vec3_to_dict(_player.position - Vector3(0.0, PLAYER_DECK_OFFSET_Y, 0.0)),
+		"deck_marker_reference_local_position": _vec3_to_dict(_reference_marker_local_position),
+		"player_marker_xz_error": sqrt(dx * dx + dz * dz),
+		"ship_root_instance_id": _ship_root_instance_id,
+		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
+	})
+
 func status_for_tests() -> Dictionary:
 	var ship_parent_id := 0
 	var player_parent_id := 0
+	var marker_parent_id := 0
 	if _ship != null and _ship.get_parent() != null:
 		ship_parent_id = _ship.get_parent().get_instance_id()
 	if _player != null and _player.get_parent() != null:
 		player_parent_id = _player.get_parent().get_instance_id()
+	if _deck_marker != null and _deck_marker.get_parent() != null:
+		marker_parent_id = _deck_marker.get_parent().get_instance_id()
 	var rendered_player_local := Vector3.ZERO
 	var rendered_player_world := Vector3.ZERO
 	var rendered_ship_world := Vector3.ZERO
+	var rendered_marker_world := Vector3.ZERO
 	if _player != null:
 		rendered_player_local = _player.position - Vector3(0.0, PLAYER_DECK_OFFSET_Y, 0.0)
 		rendered_player_world = _player.global_position
 	if _ship_root != null:
 		rendered_ship_world = _ship_root.global_position
+	if _deck_marker != null:
+		rendered_marker_world = _deck_marker.global_position
 	return {
 		"writer_count": 0,
 		"command_channel": false,
 		"frame_count": _frame_count,
 		"owner_change_count": _owner_change_count,
 		"reject_count": _reject_count,
-		"reference_frame_parented": ship_parent_id == _ship_root_instance_id and player_parent_id == _ship_root_instance_id and _ship_root_instance_id > 0,
+		"reference_frame_parented": ship_parent_id == _ship_root_instance_id and player_parent_id == _ship_root_instance_id and marker_parent_id == _ship_root_instance_id and _ship_root_instance_id > 0,
 		"ship_root_instance_id": _ship_root_instance_id,
 		"ship_parent_instance_id": ship_parent_id,
 		"player_parent_instance_id": player_parent_id,
+		"marker_parent_instance_id": marker_parent_id,
 		"ship_visual_instance_id": _ship_visual_instance_id,
 		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
 		"visual_initialized": _visual_initialized,
+		"reference_marker_initialized": _reference_marker_initialized,
 		"visual_response_hz": _visual_response_hz,
 		"rendered_ship_world_position": _vec3_to_dict(rendered_ship_world),
 		"target_ship_world_position": _vec3_to_dict(_target_ship_position),
 		"rendered_player_local_position": _vec3_to_dict(rendered_player_local),
 		"target_player_local_position": _vec3_to_dict(_target_player_local_position),
+		"reference_marker_local_position": _vec3_to_dict(_reference_marker_local_position),
 		"rendered_player_world_position": _vec3_to_dict(rendered_player_world),
+		"rendered_deck_marker_world_position": _vec3_to_dict(rendered_marker_world),
 		"last_view": _last_view.duplicate(true),
 	}
 
@@ -273,6 +339,7 @@ func shutdown(exit_code: int, reason: String) -> void:
 		"ship_root_instance_id": _ship_root_instance_id,
 		"ship_visual_instance_id": _ship_visual_instance_id,
 		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
 	})
 	if _socket != null:
 		_socket.close()
@@ -287,6 +354,7 @@ func _reject(error_code: String, view: Dictionary) -> Dictionary:
 		"ship_root_instance_id": _ship_root_instance_id,
 		"ship_visual_instance_id": _ship_visual_instance_id,
 		"player_visual_instance_id": _player_visual_instance_id,
+		"deck_marker_instance_id": _deck_marker_instance_id,
 	})
 	return _failure(error_code)
 
