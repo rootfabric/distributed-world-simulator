@@ -87,4 +87,6 @@ H0.1 C22 only after H0.0
 
 ## Godot runtime / MCP
 
-If work requires launching Godot, runtime input, screenshots or runtime logs, read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
+Before giving a human local launch/test command on Windows or Ubuntu, read `docs/GODOT_LOCAL_TESTING_RU.md` and use its canonical workspace layout, double-Godot paths, fresh-worktree import rule and OS-specific command form.
+
+If work requires autonomous Godot launch, runtime input, screenshots or runtime logs, also read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
