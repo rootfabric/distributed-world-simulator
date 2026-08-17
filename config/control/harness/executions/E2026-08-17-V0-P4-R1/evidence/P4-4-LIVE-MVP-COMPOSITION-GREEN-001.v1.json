@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_live_mvp_composition_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "candidate_head": "756428bb6e28db3cdc14454aaf1dd0e88237450c",
+  "candidate_parent": "a7c5cbce0fabd76b075f251c0b6ffcd0a98578a6",
+  "candidate_tree": "59d75884a6dff9ccc8b81257f96a2cbcccb63652",
+  "audit_evidence_commit": "a56a06481f2ee6534100aec11886d1958f7dd0de",
+  "director_dispatch_event_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+  "audited_main_head_at_dispatch": "5999d935e8d5b496100ced66283d8762d3403675",
+  "project_control_run": 31998256763,
+  "project_control_conclusion": "SUCCESS",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+  "runtime_diff": {
+    "commit_count": 1,
+    "changed_file_count": 17,
+    "simulator_app_changed": false,
+    "generic_m3_p2_runtime_changed": false,
+    "network_protocol_changed": false
+  },
+  "tested_blobs": {
+    "exact_head_runner": "c1c32876d0838b57d40a7a9df52cf1bf0006fbfe",
+    "focused_p4_4_test": "8bb4bb7960c6ac07788c423a27e6a047b36ec3cc",
+    "m3_current_runtime": "b6a46efaac8324c4fe2580cb0e0b4505a10e9b43",
+    "live_m4_transaction_port": "d47fffe67340f68e4a0767f8d8897ced1446a1a1",
+    "live_m4_build_process": "142413d887505a5ba8f7c4f00e0d641ce7f824e1",
+    "live_earth_outpost_authority": "0f0c41767fcfe57fa22f24335e1a162b19e67f27",
+    "stable_canonical_m4_alias": "39302d2c9365ecda13480d2f4a848fc20023fa7a"
+  },
+  "validation": {
+    "import_exit_code": 0,
+    "p4_4_live_mvp_composition_ordering": "PASS (62 assertions)",
+    "p4_3_generic_live_m4_transaction_port": "PASS (70 assertions)",
+    "p4_3_authoritative_adapter_m0": "PASS (37 assertions)",
+    "p4_2_deterministic_allocator": "PASS (50 assertions)",
+    "p4_1_exact_consume": "PASS (12 assertions)",
+    "m4_canonical_shared_gameplay": "26 assertions, 0 failures",
+    "p3_resource_mining_domain": "79 assertions, 0 failures",
+    "c12_multiplayer_construction_integration": "PASS (71 assertions)",
+    "c3_build_plan_contracts": "PASS (80 assertions)",
+    "m3_construction_replication_bridge": "PASS (25 assertions)",
+    "v0_c1_client_adapter": "PASS (12 assertions)",
+    "fatal_parser_compile_startup_markers": 0,
+    "project_godot_hash_stable": true
+  },
+  "composition_invariants": [
+    "ONE_CANONICAL_M4_OBJECT_OWNS_P3_OUTPUT_AND_P4_CONSUME",
+    "CANONICAL_M4_SETUP_AND_RECOVERY_PRECEDE_LIVE_CONSTRUCTION_BINDING",
+    "LIVE_CONSTRUCTION_BINDING_PRECEDES_TRANSPORT_START_SERVER",
+    "LEGACY_FIXTURE_PREBIND_IS_QUARANTINED_AND_NOT_INSTALLED_AS_LIVE_BRIDGE",
+    "LIVE_CONSTRUCTION_HAS_NO_FIXTURE_MATERIAL_TRUTH",
+    "TRUSTED_LOGICAL_PLAYER_ID_COMES_FROM_SERVER_PEER_MAPPING",
+    "P4_ALLOCATOR_AND_P4_TRANSACTION_PORT_BIND_THE_EXACT_SAME_M4_OBJECT",
+    "BUILD_WITHOUT_MINED_ORE_REJECTS_WITHOUT_MUTATION",
+    "CANONICAL_NODE_EIGHT_ORE_SUPPORTS_COMPLETE_2_4_2_OUTPOST_RECIPE",
+    "MINE_8_THEN_BUILD_FOUNDATION_SHELL_ROOF_REACHES_OPERATIONAL",
+    "FINAL_CANONICAL_ORE_QUANTITY_IS_ZERO_AND_RESOURCE_NODE_IS_DEPLETED",
+    "CONSTRUCTION_STATE_BUNDLE_NEVER_COPIES_M4_ORE_OR_LEGACY_FASTENERS",
+    "EXACT_REPLAY_CANNOT_DOUBLE_CONSUME_M4_ORE",
+    "NO_NEW_NETWORK_PROTOCOL_OR_AUTHORITY_FOUNDATION"
+  ],
+  "claim": "V0_P4_LIVE_MVP_COMPOSITION_ORDERING_PASS",
+  "does_not_claim": [
+    "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS",
+    "V0_P4_PUBLICATION_FALLBACK_PASS",
+    "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS",
+    "V0_P4_CRASH_DURABLE_GLOBAL_MULTI_OWNER_2PC_FOUNDATION",
+    "V0_P4_CHECKPOINT_ACCEPTED"
+  ]
+}

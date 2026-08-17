@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0007",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 7,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T05:34:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "756428bb6e28db3cdc14454aaf1dd0e88237450c",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-4-LIVE-MVP-COMPOSITION-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_LIVE_MVP_COMPOSITION_ORDERING_PASS",
+  "summary": "P4.4 live MVP composition is committed on exact runtime head 756428bb. The current M3 Earth runtime quarantines the legacy fixture prebind, then after canonical M4 setup/recovery and before transport start binds a P4 authority to the exact same M4 object used by P3 mining. The live recipe consumes the single canonical 8-unit ore node as 2 foundation + 4 shell + 2 roof, reaches OPERATIONAL with ore and node both exhausted, copies no ore/fastener truth into Construction state, and preserves exact replay without double consumption. Project Control 31998256763 is SUCCESS. Work remains IN_PROGRESS for P4.5 publication/fallback, two-client replication and reconnect convergence."
+}
