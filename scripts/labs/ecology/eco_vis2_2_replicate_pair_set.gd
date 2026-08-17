@@ -173,30 +173,32 @@ func advance_to(target_generation: int) -> Dictionary:
 func rewind_to_cached_generation(generation: int) -> Dictionary:
 	if not _configured:
 		return _failure("NOT_CONFIGURED")
-	if generation < _fork_generation:
-		return _failure("BEFORE_FORK")
 	if generation > _current_generation:
 		return _failure("GENERATION_AFTER_CURSOR")
 	var common_floor := common_oldest_cached_generation()
-	if common_floor < 0 or generation < common_floor:
-		return _failure("GENERATION_NOT_IN_COMMON_CACHE")
+	if common_floor < 0:
+		return _failure("COMMON_CACHE_FLOOR_UNAVAILABLE")
+	var requested_generation := generation
+	var effective_generation := maxi(_fork_generation, maxi(common_floor, requested_generation))
 
 	for pair in _replicate_pairs:
 		var replicate_index := int(pair.get("replicate_index", -1))
 		var treatment = pair.get("treatment")
-		if generation != _fork_generation and not treatment.is_generation_cached(generation):
+		if effective_generation != _fork_generation and not treatment.is_generation_cached(effective_generation):
 			return _failure("TREATMENT_GENERATION_NOT_CACHED", replicate_index)
 		var root_before := String(pair.get("root", ""))
-		var rewind_result: Dictionary = treatment.rewind_to_cached_generation(generation)
+		var rewind_result: Dictionary = treatment.rewind_to_cached_generation(effective_generation)
 		if not bool(rewind_result.get("success", false)):
 			return _failure("TREATMENT_REWIND_FAILED", replicate_index)
 		if treatment.common_random_seed_hash() != root_before:
 			return _failure("REPLICATE_ROOT_CHANGED", replicate_index)
 
-	_current_generation = generation
+	_current_generation = effective_generation
 	return {
 		"success": true,
+		"requested_generation": requested_generation,
 		"generation": _current_generation,
+		"clamped": _current_generation != requested_generation,
 		"common_oldest_cached_generation": common_oldest_cached_generation(),
 	}
 
