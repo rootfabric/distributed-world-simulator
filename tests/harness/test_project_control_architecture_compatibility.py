@@ -410,7 +410,8 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
         policy["architecture_revision"] = R3
         ownership["architecture_revision"] = R3
 
-        seen = set()
+        seen_historical = set()
+        seen_canonical = set()
         for key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION:
             central = registry["programs"][key]
             branch = str(central["branch"])
@@ -418,7 +419,12 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
             branch_ref = pc._core.remote_ref(branch)
             passport = pc._core.load_branch_json(branch_ref, path)
             self.assertIsNotNone(passport, (key, branch, path))
-            self.assertEqual(R2, passport.get("architecture_revision"), key)
+            current_revision = passport.get("architecture_revision")
+            self.assertIn(current_revision, (R2, R3), key)
+            if current_revision == R3:
+                seen_canonical.add(key)
+                continue
+
             head = pc._core.git("rev-parse", branch_ref, allow_fail=True)
             blob = pc._core.git("rev-parse", f"{branch_ref}:{path}", allow_fail=True)
             self.assertRegex(head, r"^[0-9a-f]{40}$")
@@ -434,12 +440,15 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
                     "passport_blob_sha": blob,
                 }
             ]
-            seen.add(key)
-        self.assertEqual(LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, seen)
+            seen_historical.add(key)
+        self.assertEqual(
+            LEGACY_R2_PROGRAMS_AT_R3_PROMOTION,
+            seen_historical | seen_canonical,
+        )
         return registry, policy, ownership
 
     # X
-    def test_x_six_historical_r2_passports_require_revision_and_exact_identity(self):
+    def test_x_historical_r2_and_refreshed_r3_passports_use_correct_compatibility_mode(self):
         live = self._synthetic_r3_inputs()
         if live is None:
             registry, passports = self._synthetic_fallback_six()
@@ -462,17 +471,23 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
 
         registry, policy, ownership = live
         results = []
-        seen_legacy = set()
+        seen_historical = set()
+        seen_canonical = set()
         for key, central in registry["programs"].items():
             if not isinstance(central, dict):
                 continue
             branch = str(central.get("branch", ""))
             passport_path = str(central.get("passport_path", ""))
+            passport_revision = None
             if branch and passport_path:
                 passport = pc._core.load_branch_json(pc._core.remote_ref(branch), passport_path)
-                if passport and passport.get("architecture_revision") == R2:
-                    self.assertIn(key, LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, (key, branch, passport_path))
-                    seen_legacy.add(key)
+                if passport:
+                    passport_revision = passport.get("architecture_revision")
+                    if passport_revision == R2:
+                        self.assertIn(key, LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, (key, branch, passport_path))
+                        seen_historical.add(key)
+                    elif passport_revision == R3 and key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION:
+                        seen_canonical.add(key)
             result = pc.audit_program(key, central, registry, policy, ownership)
             results.append(result)
             if key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION and result.get("passport_loaded"):
@@ -480,13 +495,21 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
                     any(f.get("code") == "ARCHITECTURE_REVISION_MISMATCH" for f in result.get("findings", [])),
                     (key, result.get("findings")),
                 )
+                expected_mode = (
+                    "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED"
+                    if passport_revision == R2
+                    else "EXACT_CANONICAL_REVISION"
+                )
                 self.assertEqual(
-                    "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
+                    expected_mode,
                     result.get("architecture_compatibility", {}).get("mode"),
                     key,
                 )
 
-        self.assertEqual(LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, seen_legacy)
+        self.assertEqual(
+            LEGACY_R2_PROGRAMS_AT_R3_PROMOTION,
+            seen_historical | seen_canonical,
+        )
         blocking_health = "GREEN"
         for result in results:
             if not result.get("blocks_global_progress", True):
