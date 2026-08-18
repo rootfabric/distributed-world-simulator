@@ -1,0 +1,150 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_3_frozen_catalog_transfer_validation.v1",
+  "revision": "ECO-EVO2-E2.3-2026-08-18-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "base_head": "6e5207bcdf9bce096726a4fe9d72f14e635c437f",
+  "candidate_head": "6eb9c75ec3da82a9792b36a8e6c203a50a488883",
+  "status": "CANDIDATE_IMPLEMENTED_EXACT_PARSER_PASS_FULL_BEHAVIORAL_RUNNER_PENDING",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "e2_2_validation": "validation/ecology/eco-evo2-e2-2-evolution-bake-export-validation.json",
+    "e2_2_status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION",
+    "e2_2_accepted_aggregate_hash": "56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce",
+    "e2_2_accepted_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "e2_2_accepted_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "p2_6_accepted_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_frozen_catalog_transfer_v1.gd",
+    "git_blob_sha": "1077b1892c4a537d95d6e50fbfa3b9a251c85369",
+    "schema": "distributed_world_simulator.ecology.evo2_frozen_catalog_transfer.v1",
+    "target_schema": "distributed_world_simulator.ecology.evo2_frozen_catalog_transfer.v1.target",
+    "version": "1.0.0",
+    "evolution_enabled": false,
+    "canonical_species_declared": false,
+    "production_authority_claimed": false,
+    "max_years": 60,
+    "max_target_patches": 8,
+    "source_port_id": "eco-evo2-transfer/source-port"
+  },
+  "contract": {
+    "input": "exact accepted E2.2 bake export plus a typed hidden target environment/patch carrier; no target species list and no mutation callback exist in the transfer API",
+    "frozen_catalog": "all accepted E2.2 SpeciesCatalog entries are converted unchanged into research strategies keyed by research_species_id and inoculated only at a neutral source port",
+    "target_initial_state": "all target patches begin with zero adults and zero seed-bank cohorts",
+    "hidden_target_gate": "every target patch_id and exact EnvironmentSample checksum must be absent from all E2.2 bake geography/ecology evidence",
+    "solver_reuse": "accepted P2.6 plant_long_horizon_biogeography_v1.gd is called directly; dispersal, establishment, resource competition, turnover and succession remain inherited mechanics",
+    "hard_freeze": "evolution/mutation kernels, adaptive genome mutation, lineage creation, target-aware rebake, biome lookup and target species tables are absent from the API and executable source",
+    "valid_no_colonization": "a fully executed target that remains unreachable is VALID_NO_COLONIZATION rather than an execution error",
+    "integrity": "validate_result independently reruns deterministic transfer from the exact frozen bake and target and requires exact result equality",
+    "source_mutation": "frozen bake/catalog and target inputs are duplicated or read-only and must remain unchanged",
+    "rng": "no global RNG may be consumed by the transfer wrapper or accepted deterministic mechanics"
+  },
+  "paired_causal_fixture": {
+    "target_environment_revision": "eco-evo2-e2-3-hidden-target",
+    "same_environment_checksum_between_controls": true,
+    "reachable_patch_id": "target/e23-reachable",
+    "reachable_bounds": "Rect2(1.01, -80.0, 100.0, 160.0)",
+    "isolated_patch_id": "target/e23-isolated",
+    "isolated_bounds": "Rect2(500.0, -80.0, 100.0, 160.0)",
+    "years": 30,
+    "purpose": "prove that equal suitability does not fabricate population truth and that causal geographic reachability changes colonization outcome"
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_3_frozen_catalog_transfer_acceptance.gd",
+    "git_blob_sha": "80e0d6ee5b6626af961f54f4d34678680126041e",
+    "assertions_defined": 59,
+    "runner": "RUN_ECO_EVO2_E2_3_TESTS.ps1",
+    "runner_git_blob_sha": "6a906d5a553e58388d43190f646594e94f69edfa"
+  },
+  "exact_attached_godot_parser_evidence": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "implementation_exact_blob_identity": true,
+    "acceptance_test_exact_blob_identity": true,
+    "implementation_parser_exit": 0,
+    "acceptance_test_parser_exit": 0,
+    "implementation_parser_error_lines": 0,
+    "acceptance_test_parser_error_lines": 0,
+    "implementation_parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "acceptance_test_parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "behavioral_assertions_executed": false,
+    "fresh_process_behavioral_runs": 0,
+    "canonical_output_hashes_frozen": false
+  },
+  "static_boundary_evidence": {
+    "transfer_api": "static func transfer(bake_export: Dictionary, target: Dictionary)",
+    "mutation_kernel_reference_present": false,
+    "biome_reference_present": false,
+    "species_table_reference_present": false,
+    "direct_p2_6_biogeography_reuse": true,
+    "hard_evolution_false_constant_present": true,
+    "typed_target_validation_present": true,
+    "target_patch_bound_present": true
+  },
+  "closed_during_implementation": [
+    {
+      "id": "E2_3_VALIDATION_001_RECURSIVE_TARGET_VALIDATOR",
+      "finding": "an early create_target form called validate_target while validate_target rebuilt through create_target, creating a recursive validation path",
+      "repair": "create_target now performs one-way canonical construction and hashing; validate_target independently rebuilds once and exact-compares",
+      "status": "CLOSED_BEFORE_CANDIDATE_FREEZE"
+    },
+    {
+      "id": "E2_3_VALIDATION_002_MALFORMED_TARGET_TYPE_BOUNDARY",
+      "finding": "target validation needed explicit Variant-type checks before Array/int conversions",
+      "repair": "validate_target now rejects non-string target_id/hash, non-array patches/schedule and non-int years before rebuilding; target patch count is bounded to 8",
+      "status": "CLOSED_BEFORE_CANDIDATE_FREEZE"
+    }
+  ],
+  "required_properties": [
+    "E2_2_ACCEPTED_PARENT_PINNED",
+    "EXACT_FROZEN_BAKE_AND_CATALOG_PINNED",
+    "TARGET_PATCH_IDS_ABSENT_FROM_BAKE_PROVENANCE",
+    "TARGET_ENVIRONMENT_CHECKSUMS_ABSENT_FROM_BAKE_PROVENANCE",
+    "ALL_CATALOG_ENTRIES_INOCULATED_WITHOUT_TARGET_FILTERING",
+    "TARGET_STARTS_WITH_ZERO_POPULATION_AND_ZERO_SEED_BANK",
+    "EVOLUTION_AND_MUTATION_HARD_DISABLED",
+    "NO_TARGET_SPECIES_LIST_API",
+    "NO_BIOME_TO_SPECIES_LOOKUP",
+    "DIRECT_ACCEPTED_P2_6_SOLVER_REUSE",
+    "REACHABLE_EQUAL_SUITABILITY_TARGET_CAN_COLONIZE",
+    "UNREACHABLE_EQUAL_SUITABILITY_TARGET_CAN_VALIDLY_NOT_COLONIZE",
+    "REACHABILITY_CHANGES_CAUSAL_OUTCOME",
+    "SUCCESSFUL_ESTABLISHMENT_EXPOSED_AS_RECRUITMENT_COLONIZATION_EVENT",
+    "POPULATION_EVENTS_USE_FROZEN_RESEARCH_SPECIES_IDS",
+    "RESOURCE_COMPETITION_CAN_CHANGE_COMPOSITION",
+    "FROZEN_BAKE_AND_TARGET_NOT_MUTATED",
+    "NO_GLOBAL_RNG_CONSUMPTION",
+    "INPUT_ORDER_CANONICALIZATION",
+    "MALFORMED_OR_TAMPERED_TARGET_FAILS_CLOSED",
+    "TAMPERED_BAKE_OR_CATALOG_FAILS_CLOSED",
+    "REHASHED_RESULT_TAMPER_REJECTED_BY_REPLAY",
+    "SAME_AND_FRESH_PROCESS_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base_head": "6e5207bcdf9bce096726a4fe9d72f14e635c437f",
+    "candidate_head": "6eb9c75ec3da82a9792b36a8e6c203a50a488883",
+    "commits": 7,
+    "changed_files": 3,
+    "changed_paths": [
+      "RUN_ECO_EVO2_E2_3_TESTS.ps1",
+      "scripts/research/ecology/plant_frozen_catalog_transfer_v1.gd",
+      "tests/research/ecology/eco_evo2_e2_3_frozen_catalog_transfer_acceptance.gd"
+    ],
+    "runtime_or_production_paths_modified": false,
+    "accepted_e2_2_sources_modified": false,
+    "accepted_p2_6_sources_modified": false
+  },
+  "known_boundary": {
+    "full_repository_dependency_carrier_available_in_execution_container": false,
+    "powershell_branch_runner_executed": false,
+    "behavioral_acceptance_executed": false,
+    "exact_parser_preload_executed": true,
+    "e2_2_fixture_is_synthetic_contract_fixture": true,
+    "real_evolution_bake_producer_integration_proven": false,
+    "independent_reviewer_claimed": false,
+    "production_authority_claimed": false,
+    "e2_4_authorized": false
+  },
+  "decision": "KEEP_E2_3_AS_NON_SELF_ACCEPTED_CANDIDATE_UNTIL_FULL_BEHAVIORAL_RUNNER_OR_EQUIVALENT_FRESH_VERIFICATION",
+  "next": "Fresh/canonical behavioral verification of ECO.EVO2 E2.3 on exact executable blobs. If green, freeze E2.3 and open E2.4 Environment Generalization Matrix."
+}
