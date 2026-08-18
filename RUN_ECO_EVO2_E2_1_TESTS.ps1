@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ExpectedBranch = "feature/eco-evolutionary-ecology"
 $ExpectedParentP27 = "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
+$ExpectedParentP38 = "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0"
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
@@ -16,18 +17,35 @@ if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
     throw "Godot binary not found: $GodotPath"
 }
 
-$ParentValidationPath = Join-Path $RootDir "validation/ecology/eco-p3-8-deterministic-ecosystem-persistence-validation.json"
-if (-not (Test-Path -LiteralPath $ParentValidationPath -PathType Leaf)) {
-    throw "P3.8 validation file not found: $ParentValidationPath"
+$P38ValidationPath = Join-Path $RootDir "validation/ecology/eco-p3-8-deterministic-ecosystem-persistence-validation.json"
+if (-not (Test-Path -LiteralPath $P38ValidationPath -PathType Leaf)) {
+    throw "P3.8 validation file not found: $P38ValidationPath"
 }
-$parentValidation = Get-Content -LiteralPath $ParentValidationPath -Raw | ConvertFrom-Json
-$parentStatus = [string]$parentValidation.status
-if (-not $parentStatus.StartsWith("ACCEPTED", [System.StringComparison]::Ordinal)) {
-    throw "P3.8 parent is not ACCEPTED: status=$parentStatus"
+$p38Validation = Get-Content -LiteralPath $P38ValidationPath -Raw | ConvertFrom-Json
+$p38Status = [string]$p38Validation.status
+$p38Aggregate = [string]$p38Validation.acceptance.aggregate_hash
+if (-not $p38Status.StartsWith("ACCEPTED", [System.StringComparison]::Ordinal)) {
+    throw "P3.8 parent is not ACCEPTED: status=$p38Status"
 }
-$parentP27 = [string]$parentValidation.frozen_full_exact_godot_evidence.parent_p3_7
-if ($parentP27 -ne $ExpectedParentP27) {
-    throw "P3.8 ancestry does not pin expected accepted P2.7/P3.7 lineage evidence: expected=$ExpectedParentP27 actual=$parentP27"
+if ($p38Aggregate -ne $ExpectedParentP38) {
+    throw "P3.8 accepted aggregate mismatch: expected=$ExpectedParentP38 actual=$p38Aggregate"
+}
+
+$P27ValidationPath = Join-Path $RootDir "validation/ecology/eco-evo1-p2-7-lineage-divergence-validation.json"
+if (-not (Test-Path -LiteralPath $P27ValidationPath -PathType Leaf)) {
+    throw "P2.7 lineage validation file not found: $P27ValidationPath"
+}
+$p27Validation = Get-Content -LiteralPath $P27ValidationPath -Raw | ConvertFrom-Json
+$p27Status = [string]$p27Validation.status
+$p27Aggregate = [string]$p27Validation.exact_windows.aggregate_hash
+if (-not $p27Status.StartsWith("ACCEPTED", [System.StringComparison]::Ordinal)) {
+    throw "P2.7 lineage evidence is not ACCEPTED: status=$p27Status"
+}
+if ($p27Aggregate -ne $ExpectedParentP27) {
+    throw "P2.7 lineage aggregate mismatch: expected=$ExpectedParentP27 actual=$p27Aggregate"
+}
+if ([bool]$p27Validation.truth.canonical_species_declared) {
+    throw "P2.7 lineage evidence unexpectedly declares canonical species"
 }
 
 function Invoke-Godot([string]$Label) {
@@ -80,9 +98,11 @@ if ($aggregateA.Groups[1].Value -ne $aggregateB.Groups[1].Value) {
     throw "E2.1 fresh-process aggregate mismatch"
 }
 if ($parent.Groups[1].Value -ne $ExpectedParentP27) {
-    throw "E2.1 parent identity mismatch"
+    throw "E2.1 lineage parent identity mismatch"
 }
 
+Write-Host "ECO.EVO2 E2.1 P3.8 ecosystem parent gate: PASS"
+Write-Host "ECO.EVO2 E2.1 P2.7 lineage evidence gate: PASS"
 Write-Host "ECO.EVO2 E2.1 parser/preload: PASS"
 Write-Host "ECO.EVO2 E2.1 fresh-process determinism: PASS"
 Write-Host "ECO.EVO2 E2.1 aggregate_hash=$($aggregateA.Groups[1].Value)"
@@ -90,4 +110,5 @@ Write-Host "ECO.EVO2 E2.1 single_catalog_hash=$($single.Groups[1].Value)"
 Write-Host "ECO.EVO2 E2.1 multi_catalog_hash=$($multi.Groups[1].Value)"
 Write-Host "ECO.EVO2 E2.1 alpha_research_species_id=$($species.Groups[1].Value)"
 Write-Host "ECO.EVO2 E2.1 parent_p2_7=$($parent.Groups[1].Value)"
+Write-Host "ECO.EVO2 E2.1 parent_p3_8=$ExpectedParentP38"
 Write-Host "ECO.EVO2 E2.1 candidate automated gates: PASS"
