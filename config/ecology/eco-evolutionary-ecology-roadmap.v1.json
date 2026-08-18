@@ -1,16 +1,16 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R65-2026-08-18",
+  "revision": "ECO-R66-2026-08-18",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO2_FINAL_AUTHORIZED_NOT_STARTED",
+  "status": "RESEARCH_ONLY_EVO2_COMPLETE_XFER0_BOUNDED_DESIGN_NEXT",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
   "current_checkpoint": "ECO.EVO2/E2.FINAL",
-  "current_step": "Unseen World Challenge authorized / not started",
-  "last_accepted_step": "ECO.EVO2/E2.8 Catalog Persistence & Provenance",
+  "current_step": "Unseen World Challenge accepted / EVO2 research route complete",
+  "last_accepted_step": "ECO.EVO2/E2.FINAL Unseen World Challenge",
   "mission": "Build a standalone evolutionary ecosystem that produces portable research species catalogs and persistent population ecology from environment, competition and history, then prove persisted-catalog transfer and causal ecology on a hidden unseen world before simulator integration.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -28,7 +28,8 @@
     "ECO.EVO2/E2.5 ECOLOGICAL SORTING VS CONTINUED ADAPTATION ACCEPTED",
     "ECO.EVO2/E2.6 REPLICATED CAUSAL EXPERIMENTS ACCEPTED",
     "ECO.EVO2/E2.7 CROSS-SEED ROBUSTNESS ACCEPTED",
-    "ECO.EVO2/E2.8 CATALOG PERSISTENCE & PROVENANCE ACCEPTED"
+    "ECO.EVO2/E2.8 CATALOG PERSISTENCE & PROVENANCE ACCEPTED",
+    "ECO.EVO2/E2.FINAL UNSEEN WORLD CHALLENGE ACCEPTED / EVO2 COMPLETE"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -88,7 +89,24 @@
     "e2_8_restore_semantic_identity_exact": true,
     "e2_8_independent_reviewer_claimed": false,
     "e2_8_validation": "validation/ecology/eco-evo2-e2-8-catalog-persistence-validation.json",
-    "e2_8_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_8_CATALOG_PERSISTENCE_PROVENANCE_ACCEPTED_RU.md"
+    "e2_8_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_8_CATALOG_PERSISTENCE_PROVENANCE_ACCEPTED_RU.md",
+    "e2_final_aggregate_hash": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "e2_final_code_under_test_head": "376796ab8c8370b7370fcd220ed207d07955cb42",
+    "e2_final_protocol_precommit_head": "d936efac36d2664ec2f24f26306fa3ba95409117",
+    "e2_final_protocol_hash": "d3dc2b0c2a251cf645d03430eb14ad2215166a5be03f5ec13b8eafb4d56678e1",
+    "e2_final_evidence_hash": "989e5ae02e66052ca7d2e46f5f452446300ba625dd4efd5cd6b5ffd9db2f2cd1",
+    "e2_final_exact_execution_blobs": 17,
+    "e2_final_assertions": 68,
+    "e2_final_fresh_process_logs_byte_identical": true,
+    "e2_final_fresh_process_log_sha256": "4fdeaa581cd889c94f1bb5e1391466cad3deea308d631f4e3a3c056b532f69c2",
+    "e2_final_reachable_colonized_patches": 2,
+    "e2_final_unique_recruited_species": 2,
+    "e2_final_isolated_no_colonization": true,
+    "e2_final_sorting_observed_cells": 2,
+    "e2_final_adaptation_positive_cells": 2,
+    "e2_final_validation": "validation/ecology/eco-evo2-final-unseen-world-validation.json",
+    "e2_final_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_FINAL_UNSEEN_WORLD_CHALLENGE_ACCEPTED_RU.md",
+    "e2_final_independent_reviewer_claimed": false
   },
   "production_integration_evidence": {
     "status": "P4_BRANCH_LIFECYCLE_COMPLETE_AWAITING_INDEPENDENT_REVIEW_AND_MAIN_PROMOTION",
@@ -104,7 +122,7 @@
   "P3": {"name":"Post-EVO1 Dynamic Ecosystem Research","status":"COMPLETE"},
   "EVO2": {
     "name": "Portable Evolutionary Ecology / SpeciesCatalog Transfer",
-    "status": "ACTIVE_FINAL_AUTHORIZED_NOT_STARTED",
+    "status": "COMPLETE_RESEARCH_ONLY",
     "north_star": "EVOLVED_SPECIES_CATALOG_SELF_ORGANIZES_IN_PREVIOUSLY_UNSEEN_ENVIRONMENT_WITHOUT_BIOME_SPECIES_TABLES",
     "steps": [
       {"id":"E2.1","name":"SpeciesCatalog Contract","status":"ACCEPTED"},
@@ -115,12 +133,12 @@
       {"id":"E2.6","name":"Replicated Causal Experiments","status":"ACCEPTED"},
       {"id":"E2.7","name":"Cross-Seed Robustness","status":"ACCEPTED"},
       {"id":"E2.8","name":"Catalog Persistence & Provenance","status":"ACCEPTED"},
-      {"id":"E2.FINAL","name":"Unseen World Challenge","status":"AUTHORIZED_NOT_STARTED"}
+      {"id":"E2.FINAL","name":"Unseen World Challenge","status":"ACCEPTED"}
     ]
   },
-  "EVO3": {"status":"AFTER_EVO2_PORTABLE_PLANT_ECOLOGY_PROOF","goal":"Planetary Ecology Compiler / broader planetary generalization"},
+  "EVO3": {"status":"PLANNED_AFTER_BOUNDED_XFER0","goal":"Planetary Ecology Compiler / broader planetary generalization"},
   "EVO4": {"status":"AFTER_PLANT_PORTABILITY_AND_PLANETARY_GENERALIZATION","goal":"multi-trophic ecosystem and coevolution"},
-  "XFER": {"XFER0":{"status":"BOUNDED_DESIGN_AFTER_EVO2_PROOF"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
+  "XFER": {"XFER0":{"status":"AUTHORIZED_BOUNDED_DESIGN_NOT_STARTED"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
   "LIVE": {"status":"DEFERRED_UNTIL_XFER_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"RESEARCH_OBSERVABILITY_SUPPORT"},
   "production_blockers": [
