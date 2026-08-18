@@ -1,11 +1,43 @@
 """Read-only checkpoint planning for the active harness Work Order."""
 from __future__ import annotations
 
+import fnmatch
 from typing import Any
 
 
 _ACTIVE_TRAIN_STATES = {"DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED"}
 _MUTATION_SLOT_STATES = {"DISPATCHED", "IN_PROGRESS"}
+_V0_NX_FOUNDATION_PATHS: dict[str, tuple[str, ...]] = {
+    "PROTOCOL": (
+        "config/network/**",
+        "scripts/network/contracts/**",
+        "scripts/network/observability/network_protocol_manifest.gd",
+        "scripts/network/transports/**",
+        "scripts/runtime/networked_gameplay/contracts/**",
+    ),
+    "AUTHORITY": (
+        "scripts/runtime/networked_gameplay/networked_gameplay_service*.gd",
+        "scripts/runtime/networked_gameplay/backends/**",
+        "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+        "scripts/runtime/networked_gameplay/services/replication_publisher.gd",
+        "scripts/runtime/networked_gameplay/transports/**",
+    ),
+    "OWNERSHIP_EPOCH": (
+        "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+        "scripts/runtime/networked_gameplay/services/player_registry.gd",
+        "scripts/runtime/networked_gameplay/contracts/player_ownership_snapshot.gd",
+        "scripts/network/session/**",
+        "scripts/runtime/networked_gameplay/m6/**",
+    ),
+    "RECONCILIATION": (
+        "scripts/network/prediction/**",
+        "scripts/network/interpolation/**",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    ),
+    "CHARACTER_OWNERSHIP": (
+        "scripts/characters/**",
+    ),
+}
 
 
 def _worker_count(state: str, limit: int) -> int:
@@ -33,6 +65,73 @@ def _enforce_runtime_mutation_lease(
     work_order_branch = str(work_order.get("branch", ""))
     if holder_branch and work_order_branch and work_order_branch != holder_branch:
         raise ValueError(f"GLOBAL_MUTATION_SLOT_BRANCH_MISMATCH:{holder_branch}")
+
+
+def classify_v0_nx_foundation_scope(work_order: dict[str, Any]) -> dict[str, Any]:
+    """Classify V0's actual diff and fail closed on NX-owned foundations.
+
+    This compatibility surface is retained for the stronger recovery state_builder.
+    It is a no-op for checkpoints other than the historical V0 S1 checkpoint, so
+    the current P4 planner semantics remain owned by the main-synchronized logic
+    below. For V0 S1 it preserves the pre-existing fail-closed classification.
+    """
+    if work_order.get("goal_checkpoint") != "V0_S1_NETWORKED_PLANETARY_OUTPOST":
+        return {
+            "blocked": False,
+            "status": "NOT_V0_S1",
+            "matched_paths": [],
+            "matched_categories": [],
+            "source": "NOT_APPLICABLE",
+            "classification_complete": True,
+            "late_delta_paths": [],
+        }
+
+    has_actual_diff = "implementation_changed_paths" in work_order
+    implementation_paths = work_order.get(
+        "implementation_changed_paths",
+        work_order.get("allowed_paths", []),
+    )
+    late_delta_paths = work_order.get("late_delta_changed_paths", []) if has_actual_diff else []
+    normalized_implementation_paths = {
+        str(path).replace("\\", "/") for path in implementation_paths
+    }
+    normalized_late_delta_paths = {
+        str(path).replace("\\", "/") for path in late_delta_paths
+    }
+    scope_paths = sorted(normalized_implementation_paths | normalized_late_delta_paths)
+    matches_by_category = {
+        category: sorted(
+            path
+            for path in scope_paths
+            if any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+        )
+        for category, patterns in _V0_NX_FOUNDATION_PATHS.items()
+    }
+    matches_by_category = {
+        category: paths for category, paths in matches_by_category.items() if paths
+    }
+    matched = sorted({path for paths in matches_by_category.values() for path in paths})
+    unexpected_late_delta_paths = sorted(
+        str(path).replace("\\", "/")
+        for path in work_order.get("unexpected_late_delta_paths", [])
+    )
+    blocked = bool(matched or unexpected_late_delta_paths)
+    status = "V0_S1_BLOCKED_REQUIRES_NX" if matched else (
+        "V0_S1_BLOCKED_UNCLASSIFIED_LATE_DELTA"
+        if unexpected_late_delta_paths
+        else "V0_S1_SCOPE_CLASSIFIED_COMPOSITION_ONLY"
+    )
+    return {
+        "blocked": blocked,
+        "status": status,
+        "matched_paths": matched,
+        "matched_categories": sorted(matches_by_category),
+        "matches_by_category": matches_by_category,
+        "source": "IMPLEMENTATION_GIT_DIFF" if has_actual_diff else "DECLARED_ALLOWED_PATHS",
+        "classification_complete": has_actual_diff,
+        "late_delta_paths": sorted(normalized_late_delta_paths),
+        "unexpected_late_delta_paths": unexpected_late_delta_paths,
+    }
 
 
 def build_plan(
