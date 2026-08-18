@@ -1,16 +1,17 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R53-2026-08-13",
+  "revision": "ECO-R54-2026-08-18",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_REPAIRED_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO2_E2_1",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_checkpoint": "ECO.EVO1/P2.8",
-  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / Repaired Candidate / Exact Windows Canonical Rerun",
-  "last_accepted_step": "ECO.EVO1/P2.7 Lineage Divergence / Speciation Candidate Diagnostics",
-  "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
+  "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
+  "current_checkpoint": "ECO.EVO2/E2.1",
+  "current_step": "SpeciesCatalog Contract / Portable Research Species Identity",
+  "last_accepted_step": "ECO.P3/P3.8 Deterministic Ecosystem Persistence",
+  "mission": "Build a standalone evolutionary ecosystem that produces portable research species catalogs and persistent population ecology from environment, competition and history, then prove transfer to unseen environments before bounded simulator integration.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
     "ECO.P1 ACCEPTED",
@@ -18,13 +19,8 @@
     "ECO.CONV0-A ACCEPTED",
     "ECO.CAL1-A..F ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "ECO.CAL1-F ROBUST_UNITY_CALIBRATION",
-    "ECO.EVO1/P2.1 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.2 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.3 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.4 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.5 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.6 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.7 ACCEPTED_EXACT_WINDOWS_CANONICAL"
+    "ECO.EVO1/P2.1..P2.8 ACCEPTED / EVO1 COMPLETE",
+    "ECO.P3/P3.1..P3.8 ACCEPTED / P3 RESEARCH ROUTE COMPLETE"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -34,27 +30,32 @@
     "p2_4_aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97",
     "p2_5_aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
     "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
-    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
+    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
+    "p2_8_aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
+    "p3_1_aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "p3_2_aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
+    "p3_3_aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
+    "p3_4_aggregate_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
+    "p3_5_aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "p3_6_aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "p3_7_aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
+    "p3_8_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
+    "p3_8_checkpoint_sha256": "1722f3ce96a8244bfaf2f8295c162b51552c6c5cc4cfd1126b40691a37bab367",
+    "p3_8_final_state_hash": "1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9"
   },
-  "candidate_evidence": {
-    "p2_8_implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
-    "p2_8_original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
-    "p2_8_codec_repair_commit": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
-    "p2_8_codec_preflight_commit": "31fd42a503875247cc758b36d7915a99a6a72698",
-    "p2_8_fail_fast_runner_commit": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-    "p2_8_finding": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
-    "p2_8_checkpoint": "docs/checkpoints/ECO_EVO1_P2_8_DETERMINISTIC_SAVE_RESTART_PLANT_WORLD_CANDIDATE_RU.md",
-    "p2_8_validation": "validation/ecology/eco-evo1-p2-8-save-restart-validation.json",
-    "p2_8_runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
-    "p2_8_truth": "typed deterministic research checkpoint of complete regional plant-world state with absolute-year continuation, double cut 14/18, P2.6 result-hash equivalence and persisted P2.7 diagnostic evidence",
-    "supplementary_attached_engine": "same Godot 4.7.1 double engine commit confirms int->float JSON erasure before repair and three deterministic repaired two-cut fresh-process probes",
-    "exact_windows_status": "RERUN_PENDING"
+  "production_integration_evidence": {
+    "status": "P4_BRANCH_LIFECYCLE_COMPLETE_AWAITING_INDEPENDENT_REVIEW_AND_MAIN_PROMOTION",
+    "p4_7_candidate_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "p4_7_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "p4_8_control_gate_head": "186c6d164b0bf17fc17e91a23136663edbe1c06d",
+    "p4_8_manifest_hash": "02d8804eb102e45eea5999744e09d4b159c22439798415b7637d0cce66596b06",
+    "global_acceptance": false,
+    "runtime_merge_authorized": false
   },
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_8_REPAIRED_CANDIDATE",
-    "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
+    "status": "COMPLETE",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
       {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"ACCEPTED"},
@@ -63,14 +64,50 @@
       {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
       {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"REPAIRED_CANDIDATE_EXACT_WINDOWS_RERUN_PENDING"}
+      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"ACCEPTED"}
     ]
   },
-  "EVO2": {"status":"BLOCKED_BY_EVO1_P2_8_ACCEPTANCE"},
-  "EVO3": {"status":"AFTER_PLANT_WORLD_PROOF"},
-  "EVO4": {"status":"AFTER_EVO2_EVO3_FOUNDATIONS"},
-  "XFER": {"XFER0":{"status":"DESIGN_DURING_EVO"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
-  "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
-  "PRES": {"status":"LOW_PRIORITY"},
-  "production_blockers": ["P2_8_EXACT_WINDOWS_ACCEPTANCE_REQUIRED_FOR_EVO1_CLOSURE","EVO2_REQUIRES_EVO1_P2_8_ACCEPTANCE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
+  "P3": {
+    "name": "Post-EVO1 Dynamic Ecosystem Research",
+    "status": "COMPLETE",
+    "steps": [
+      {"id":"P3.1","name":"Resource Competition","status":"ACCEPTED"},
+      {"id":"P3.2","name":"Density / Carrying Capacity","status":"ACCEPTED"},
+      {"id":"P3.3","name":"Spatial Dispersal","status":"ACCEPTED"},
+      {"id":"P3.4","name":"Environmental Gradient","status":"ACCEPTED"},
+      {"id":"P3.5","name":"Seasonal World","status":"ACCEPTED"},
+      {"id":"P3.6","name":"Disturbance / Succession","status":"ACCEPTED"},
+      {"id":"P3.7","name":"Multi-Niche Coexistence","status":"ACCEPTED"},
+      {"id":"P3.8","name":"Deterministic Ecosystem Persistence","status":"ACCEPTED"}
+    ]
+  },
+  "EVO2": {
+    "name": "Portable Evolutionary Ecology / SpeciesCatalog Transfer",
+    "status": "ACTIVE_E2_1",
+    "north_star": "EVOLVED_SPECIES_CATALOG_SELF_ORGANIZES_IN_PREVIOUSLY_UNSEEN_ENVIRONMENT_WITHOUT_BIOME_SPECIES_TABLES",
+    "steps": [
+      {"id":"E2.1","name":"SpeciesCatalog Contract","status":"IN_DEVELOPMENT"},
+      {"id":"E2.2","name":"Deterministic Evolution Bake Export","status":"PLANNED"},
+      {"id":"E2.3","name":"Frozen-Catalog Transfer","status":"PLANNED"},
+      {"id":"E2.4","name":"Environment Generalization Matrix","status":"PLANNED"},
+      {"id":"E2.5","name":"Ecological Sorting vs Continued Adaptation","status":"PLANNED"},
+      {"id":"E2.6","name":"Replicated Causal Experiments","status":"PLANNED"},
+      {"id":"E2.7","name":"Cross-Seed Robustness","status":"PLANNED"},
+      {"id":"E2.8","name":"Catalog Persistence & Provenance","status":"PLANNED"},
+      {"id":"E2.FINAL","name":"Unseen World Challenge","status":"PLANNED"}
+    ]
+  },
+  "EVO3": {"status":"AFTER_EVO2_PORTABLE_PLANT_ECOLOGY_PROOF","goal":"Planetary Ecology Compiler / broader planetary generalization"},
+  "EVO4": {"status":"AFTER_PLANT_PORTABILITY_AND_PLANETARY_GENERALIZATION","goal":"multi-trophic ecosystem and coevolution"},
+  "XFER": {
+    "XFER0":{"status":"BOUNDED_DESIGN_AFTER_EVO2_PROOF"},
+    "XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}
+  },
+  "LIVE": {"status":"DEFERRED_UNTIL_XFER_AND_CANONICAL_FOUNDATIONS"},
+  "PRES": {"status":"RESEARCH_OBSERVABILITY_SUPPORT"},
+  "production_blockers": [
+    "P4_REQUIRES_INDEPENDENT_REVIEW_VERIFIER_AND_MAIN_OWNED_PROMOTION_BEFORE_GLOBAL_ACCEPTANCE",
+    "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
+    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
+  ]
 }
