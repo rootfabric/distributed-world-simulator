@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "feature/v0-p5-equipment-tools",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P5 equipment/tools: canonical server-authoritative equipment relation over accepted P4 Item Graph identity.",
+  "purpose": "Turn an existing canonical Item Graph item into an equipped mining tool without creating a second inventory, equipment, persistence, or network authority truth.",
+  "expected_outcome": "Owned-tool equip/unequip is exact-once and authoritative, two clients converge, reconnect restores the exact relation, and ResourceMining requires the canonical equipped tool while preserving existing exact-once resource output.",
+  "current_stage": "V0-P5.1 CANONICAL EQUIPMENT RELATION",
+  "stage_status": "DISPATCHED_RUNTIME_MUTATION_AUTHORIZED",
+  "progress_note": "P4 is formally accepted. P5 carrier first parent is exact accepted P4 head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. Current canonical control from main 349c283dd69c766304abafdf569e9a21820d1530 was synchronized without replacing the runtime tree. Project Control 32135502638 passed on the exact pre-dispatch carrier, and Director event V0-P5-R1-EVENT-0002 authorizes exactly one bounded P5 runtime mutation worker.",
+  "last_accepted_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION @ 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "next_stage": "Implement the minimum canonical equipment relation and equip/unequip command contract, then bind ResourceMining to the exact equipped mining tool and validate replication/reconnect without duplicate truth.",
+  "parent_branch_or_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION ACCEPTED @ 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "base_commit": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "dependencies": [
+    "formal V0_P4_CHECKPOINT_ACCEPTED on main",
+    "main-owned P5 activation and exact successor base declaration",
+    "fresh E2026-08-18-V0-P5-R1 / V0-P5-R1-WO-001",
+    "single generation-80 mutation lease held by V0_P5_EQUIPMENT_TOOLS",
+    "Project Control 32135502638 SUCCESS on pre-dispatch carrier",
+    "existing canonical M4 Item Graph identity",
+    "existing P3 ResourceMining authoritative output semantics"
+  ],
+  "owned_paths": [
+    "scripts/runtime/networked_gameplay/p5/**",
+    "tests/runtime/test_v0_p5_*",
+    "tests/fixtures/v0_p5/**",
+    "RUN_V0_P5_*",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/**",
+    "config/control/branches/feature__v0-p5-equipment-tools.v1.json",
+    "docs/checkpoints/2026-08-18_V0_P5_*",
+    "docs/evidence/2026-08-18_V0_P5_*"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p3/**",
+    "scripts/app/**",
+    "scripts/ui/inventory/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p3/**",
+    "scripts/persistence/**",
+    "scripts/network/**",
+    "config/architecture/**"
+  ],
+  "runtime_paths": [
+    "scripts/runtime/networked_gameplay/p5/**"
+  ],
+  "validation_paths": [
+    "tests/runtime/test_v0_p5_*",
+    "RUN_V0_P5_*"
+  ],
+  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_TRANSACTION_MODEL",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_WORK_BUDGET",
+    "CANONICAL_ITEM_GRAPH_OWNERSHIP",
+    "NETWORK_AUTHORITY_MODEL"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
