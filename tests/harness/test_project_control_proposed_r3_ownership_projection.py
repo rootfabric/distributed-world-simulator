@@ -99,12 +99,24 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             self.assertEqual(1, len(records), key)
             identity = records[0]
             self.assertEqual(key, identity.get("program"), key)
-            self.assertEqual(central.get("branch"), identity.get("branch"), key)
-            self.assertEqual(central.get("passport_path"), identity.get("passport_path"), key)
             self.assertEqual(R2, identity.get("architecture_revision"), key)
             self.assertRegex(str(identity.get("pinned_head_sha", "")), r"^[0-9a-f]{40}$", key)
             self.assertRegex(str(identity.get("passport_blob_sha", "")), r"^[0-9a-f]{40}$", key)
             self.assertEqual([R2], central.get("historical_passport_architecture_revisions"), key)
+
+            branch = str(central.get("branch", ""))
+            passport_path = str(central.get("passport_path", ""))
+            branch_ref = pc._core.remote_ref(branch)
+            passport = pc._core.load_branch_json(branch_ref, passport_path)
+            self.assertIsNotNone(passport, (key, branch, passport_path))
+            current_revision = passport.get("architecture_revision")
+            self.assertIn(current_revision, (R2, R3), key)
+            if current_revision == R2:
+                self.assertEqual(branch, identity.get("branch"), key)
+                self.assertEqual(passport_path, identity.get("passport_path"), key)
+            else:
+                self.assertEqual(R3, current_revision, key)
+
             identities[key] = identity
         self.assertEqual(T_TRANSITIONS, registry["programs"]["T"].get("historical_passport_ownership_transitions"))
         return registry, policy, ownership, identities
@@ -254,6 +266,19 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         eco = next(program for program in programs if program["program"] == "ECO")
         if eco.get("health") == "RED":
             self.assertFalse(eco.get("blocks_global_progress", True))
+
+        nx = next(program for program in programs if program["program"] == "NX")
+        nx_central = registry["programs"]["NX"]
+        nx_passport = pc._core.load_branch_json(
+            pc._core.remote_ref(str(nx_central["branch"])),
+            str(nx_central["passport_path"]),
+        )
+        if nx_passport and nx_passport.get("architecture_revision") == R3:
+            self.assertNotEqual("RED", nx["health"], nx)
+            self.assertEqual(
+                "EXACT_CANONICAL_REVISION",
+                nx.get("architecture_compatibility", {}).get("mode"),
+            )
 
     def test_live_proposed_r3_negative_ownership_mutations_fail_closed(self):
         registry, policy, ownership, _ = self._projection()
