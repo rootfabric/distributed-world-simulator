@@ -71,8 +71,26 @@ R2 adds or tightens:
 - H10 is specifically a **physical** InteractionIsland checkpoint;
 - H12 includes an end-to-end player + nested inventory + gateway rehome + fault journey.
 
+## Development activation boundary
+
+Before P6 there are two different meanings of “start development”:
+
+```text
+INCUBATION DEVELOPMENT
+```
+
+is allowed under the pre-P6 plan and produces research donors only.
+
+```text
+PRODUCTION SM1 DEVELOPMENT
+```
+
+remains forbidden until all post-P6 activation gates are satisfied.
+
+The first semantic incubation implementation stage (`I2 Ownership Directory Prototype`) becomes eligible after fresh independent Architecture R2 review PASS. That review is therefore the immediate gate to meaningful pre-P6 implementation.
+
 ## Control rule
 
-This pointer does not activate runtime work.
+This pointer does not activate production runtime work.
 
 Future production SM1 must start from the exact accepted predecessor declared by then-current `main` after explicit main-owned SM1 activation. Research/SM0 branches are evidence donors only.
