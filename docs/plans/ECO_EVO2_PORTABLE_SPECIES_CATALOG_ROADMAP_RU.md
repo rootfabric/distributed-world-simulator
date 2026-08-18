@@ -1,32 +1,36 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1..E2.8 ACCEPTED / E2.FINAL AUTHORIZED_NOT_STARTED`.
+Статус: `COMPLETE / RESEARCH_ONLY / E2.1..E2.8 + E2.FINAL ACCEPTED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
-## 0. Назначение
+## 0. Итог EVO2
 
-EVO2 превращает результат эволюционного исследования в переносимый ecological artifact и доказывает, что его можно применить к unseen world без biome-species shortcut:
+EVO2 завершил research-only route от evolved lineage hypotheses до persisted portable SpeciesCatalog, способного пройти заранее зафиксированный unseen-world challenge без biome-species shortcut:
 
 ```text
-environment
-    ↓
-evolution / bake
-    ↓
-SpeciesCatalog
-    ↓
-causal population ecology
-    ↓
-unseen environments
-    ↓
-sorting + adaptation + robustness
-    ↓
+environment / evolution
+        ↓
+deterministic research SpeciesCatalog
+        ↓
+frozen-catalog transfer
+        ↓
+environment generalization
+        ↓
+sorting vs continued adaptation
+        ↓
+replicated causal experiments
+        ↓
+cross-seed robustness
+        ↓
 canonical research persistence / restore
-    ↓
-FINAL hidden unseen-world proof
+        ↓
+precommitted hidden unseen world
+        ↓
+causal colonization + sorting + adaptation
 ```
 
-Запрещён shortcut:
+Запрещённый shortcut не использовался:
 
 ```text
 biome -> hand-written species list -> scatter
@@ -79,17 +83,17 @@ a3a2f53107cefc5c96d835bd93327864d45f31e55b123fcd2fe4053fd5495a15
 
 E2.8 transport
 b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
+
+E2.FINAL aggregate
+6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250
+
+E2.FINAL evidence
+989e5ae02e66052ca7d2e46f5f452446300ba625dd4efd5cd6b5ffd9db2f2cd1
 ```
 
 P4 production-integration evidence остаётся отдельной governance-линией и не даёт EVO2 production authority.
 
-## 2. Species concept policy
-
-`research_species_id` — стабильная identity portable lineage hypothesis внутри research pipeline.
-
-Ни adaptation, ни replication, ни robustness, ни persistence не превращают descendants автоматически в canonical biological species.
-
-## 3. Accepted route E2.1–E2.7
+## 2. Accepted route
 
 ```text
 E2.1 SpeciesCatalog Contract                         ACCEPTED
@@ -99,219 +103,278 @@ E2.4 Environment Generalization Matrix               ACCEPTED
 E2.5 Ecological Sorting vs Continued Adaptation      ACCEPTED
 E2.6 Replicated Causal Experiments                   ACCEPTED
 E2.7 Cross-Seed Robustness                           ACCEPTED
+E2.8 Catalog Persistence & Provenance                ACCEPTED
+E2.FINAL Unseen World Challenge                      ACCEPTED
 ```
 
-Ключевые доказательства:
+Ключевые ступени:
 
-- E2.3: hidden-target transfer и causal reachability;
-- E2.4: один frozen catalog через six environment/geography classes;
-- E2.5: pure ecological sorting отделён от continued inherited adaptation;
-- E2.6: paired causal effect повторён на заранее объявленных `R01..R05`, null/reversal outcomes сохраняются;
-- E2.7: отдельный predeclared `S01..S10` ensemble показал bounded robustness без cherry-picking.
+- E2.3 доказал hidden-target transfer и causal reachability;
+- E2.4 прогнал один frozen catalog через multiple environment/geography classes;
+- E2.5 отделил ecological sorting от continued inherited adaptation;
+- E2.6 повторил paired causal effect на predeclared replicate set;
+- E2.7 доказал bounded cross-seed robustness без cherry-picking;
+- E2.8 доказал exact typed persistence/restore полного SpeciesCatalog и provenance;
+- E2.FINAL связал persisted artifact с precommitted unseen world end-to-end.
 
-## 4. E2.8 — Catalog Persistence & Provenance — ACCEPTED
+## 3. Species concept policy
 
-Exact code-under-test:
+`research_species_id` — стабильная identity portable lineage hypothesis внутри research pipeline.
 
-`5790de059aaafbfc10434bb2d40124e3c1ceb361`
-
-Validation:
-
-`validation/ecology/eco-evo2-e2-8-catalog-persistence-validation.json`
-
-Accepted checkpoint:
-
-`docs/checkpoints/2026-08-18_ECO_EVO2_E2_8_CATALOG_PERSISTENCE_PROVENANCE_ACCEPTED_RU.md`
-
-### 4.1 Research contract
-
-E2.8 сохраняет и восстанавливает **полный accepted E2.2 SpeciesCatalog**, а не проекцию:
+Ни adaptation, ни replication, ни robustness, ни persistence, ни FINAL challenge не превращают research descendants автоматически в canonical biological species.
 
 ```text
-full accepted SpeciesCatalog
-+ accepted EVO2 provenance E2.1..E2.7
-        ↓
-canonical typed Variant serialization
-        ↓
-content hash + transport hash + schema/version
-        ↓
-persist to bytes
-        ↓
-fresh-process restore
-        ↓
-exact semantic identity
+research species identity != canonical taxonomy
 ```
 
-### 4.2 Persistence format
+## 4. E2.8 persistence boundary
+
+E2.8 сохраняет и восстанавливает полный accepted E2.2 SpeciesCatalog и accepted EVO2 provenance:
 
 ```text
 schema    distributed_world_simulator.ecology.evo2_catalog_persistence.v1
 version   1.0.0
 encoding  GODOT_VARIANT_BINARY_CANONICAL_V1
-magic     DWS-ECO-EVO2-E2.8-CATALOG-PERSISTENCE-V1
+artifact  10383 bytes
+SHA-256   b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
 ```
 
-Typed Variant binary используется сознательно, чтобы сохранить точную Variant semantics (`int`, `float`, `bool`) и не зависеть от JSON type coercion. Dictionary keys canonicalized before serialization. Outer envelope содержит binary SHA-256 и canonical Base64; restore выполняет transport validation до semantic decode.
+Exact semantic identity после restore:
 
-Version policy fail-closed:
-
-```text
-CURRENT_VERSION       ACCEPT
-KNOWN_COMPATIBLE      only if explicitly declared
-UNKNOWN_NEWER         REJECT
-UNDECLARED_OLDER      REJECT
-MALFORMED             REJECT
-WRONG_SCHEMA          REJECT
-```
-
-На E2.8 список `KNOWN_COMPATIBLE` пуст.
-
-### 4.3 Exact artifacts
-
-```text
-accepted catalog carrier   b77c3421325fa1264f590b0bd75c1c59621f667f
-provenance carrier         5602607fa3b63e79da28d8da52cb3ba5f61960c1
-persistence codec          83f80afe9fd467f7718f487b70f6bf1a88521339
-tamper support             227c57ff4f25c80dc3fa35e99f0e4fe791620eb7
-acceptance                 8e0f0d2ba6eea03337f6559276da87cf5f689d4b
-writer                     32f85fc1809af8c094227ecc702dbbc8e7e94608
-restore                    5d7c698a8e30a6be9622ddd9c5c08f02feac351e
-runner                     4e75eff15351ca3ba2c9229f8b7b39937c77834e
-```
-
-### 4.4 Accepted behavioral evidence
-
-```text
-exact transitive GDScript closure   9 / 9 PASS
-Godot                               4.7.1.stable.double.custom_build.a13da4feb
-parser/preload                      PASS
-acceptance assertions               74 / 74 PASS
-acceptance A/B                      byte-identical
-acceptance log SHA-256              9c4e541105d1b6738231a6253ea522ebccc0846f552a30733744f0c34cd32505
-writer A/B                          byte-identical
-writer log SHA-256                  6ab0f1aef6a05d9e3e51fc8595d512df39b7d3aeb436d547b595ea1c6c2c912a
-persisted artifacts A/B             byte-identical
-artifact bytes                      10383
-artifact SHA-256                    b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
-restore A/B                         byte-identical
-restore log SHA-256                 fe46af6ff410cc335cdb6801cfad59fe6715857aeae7f97b7039204558e78d03
-restored semantic identity          exact
-ERROR lines                         0 in every verification process
-```
-
-Frozen semantic identities:
-
-```text
-aggregate     4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061
-content       3d7ca34560483e2a4d1eb1955c008eb1f05ab3603e3d358abbf4823b33554e2e
-provenance    a3a2f53107cefc5c96d835bd93327864d45f31e55b123fcd2fe4053fd5495a15
-catalog       5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
-bake id       eco-evo2-bake/ff406486cc83bb8217d66213
-parent E2.7   eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d
-```
-
-### 4.5 Persisted semantic identity
-
-Full catalog restore сохраняет:
-
-- canonical entry order;
-- both exact `research_species_id` values;
-- source lineage + ancestry;
+- ordered catalog entries;
+- `research_species_id`;
+- lineage + ancestry;
 - frozen genome payload/checksum;
 - recruitment traits/checksum;
 - source observation hashes;
 - entry hashes;
-- exact catalog hash;
-- exact E2.2 bake id/source identity.
+- catalog hash;
+- bake/source identity;
+- E2.1..E2.7 provenance;
+- explicit synthetic-fixture boundary E2.2.
 
-Provenance сохраняет E2.1..E2.7 identities и явную границу: E2.2 source — synthetic contract fixture; он не impersonates real accepted evolution result.
+E2.8 acceptance: 74/74 assertions, fresh writer/restore A/B byte-identical, semantic tamper fail-closed.
 
-### 4.6 Integrity
+## 5. E2.FINAL — Unseen World Challenge — ACCEPTED
 
-Acceptance reject even after rehash:
+Validation:
 
-- byte corruption;
-- transport hash corruption;
-- content hash corruption;
-- genome semantic mutation;
-- species/lineage substitution;
-- provenance parent substitution;
-- extra/missing artifact fields;
-- extra SpeciesCatalog entry field;
-- wrong schema;
-- future unknown version;
-- reordered canonical entries;
-- catalog identity substitution.
+`validation/ecology/eco-evo2-final-unseen-world-validation.json`
 
-Build/serialize не потребляют global RNG.
+Checkpoint:
 
-### 4.7 Claim boundary
+`docs/checkpoints/2026-08-18_ECO_EVO2_FINAL_UNSEEN_WORLD_CHALLENGE_ACCEPTED_RU.md`
+
+Exact code-under-test:
+
+`376796ab8c8370b7370fcd220ed207d07955cb42`
+
+### 5.1 Protocol frozen before result
+
+Hidden-world protocol был committed отдельно до первого behavioral result:
+
+```text
+protocol precommit  d936efac36d2664ec2f24f26306fa3ba95409117
+protocol blob       372591ee3bee1c19538729259373e97fd9838461
+protocol hash       d3dc2b0c2a251cf645d03430eb14ad2215166a5be03f5ec13b8eafb4d56678e1
+```
+
+После первого результата не менялись:
+
+- target geometry;
+- environment values;
+- transport;
+- emission multiplier;
+- population/adaptation protocol;
+- acceptance thresholds.
+
+Это исключает подгонку world definition после наблюдения результата.
+
+### 5.2 Frozen experiment
+
+```text
+source port          eco-evo2-final/source-port
+reachable            dry-ridge / wet-basin
+isolated control     isolated-control
+transport            Vector2(1, 0)
+turbulence           0.25
+emission             seed_count × 32
+population           8
+adaptation           10 generations
+children/parent      4
+```
+
+Precommitted minimum gates:
+
+```text
+reachable colonized patches >= 2
+unique recruited species    >= 2
+sorting observed cells      >= 1
+adaptation-positive cells   >= 1
+isolated control colonized  false
+```
+
+No censoring:
+
+```text
+ADAPTATION_NULL       valid evidence
+ADAPTATION_REVERSAL   valid evidence
+VALID_NO_COLONIZATION valid evidence
+```
+
+### 5.3 No-bypass causal path
+
+FINAL catalog source — только restored persisted E2.8 bytes:
+
+```text
+fresh E2.8 writer process
+        ↓
+exact accepted artifact
+        ↓
+Persistence.restore
+        ↓
+full frozen SpeciesCatalog + provenance
+        ↓
+every restored entry enters source port
+        ↓
+P2.1 dispersal
+        ↓
+establishment / seed bank / ResourceModel viability
+        ↓
+P2.4 patch migration
+        ↓
+actual recruited counts
+        ↓
+founder population
+        ↓
+CONTROL vs TREATMENT continued adaptation
+```
+
+Forbidden shortcuts are structurally checked:
+
+```text
+NO Catalog.build bypass
+NO direct accepted-catalog reconstruction preload
+NO bake-export preload
+NO direct SpeciesCatalog builder preload
+NO rebake
+NO target-aware species filtering
+NO biome species table
+```
+
+### 5.4 Exact artifacts
+
+```text
+protocol   372591ee3bee1c19538729259373e97fd9838461
+challenge  4d353e774887c45f8a0487cb17b782e44d563951
+acceptance 82850fb850c35bcffb937707e4a8d29fb2827caa
+runner     4385861b62ae10df07cb0f71295f50bf9a2097ee
+```
+
+Exact GDScript execution set: `17 / 17 PASS`.
+
+Acceptance transitive preload closure contains 16 exact blobs; the accepted E2.8 writer is the additional executed fresh-input producer.
+
+### 5.5 Fresh post-freeze verification
+
+```text
+Godot                               4.7.1.stable.double.custom_build.a13da4feb
+parser/preload                      PASS
+parser ERROR lines                  0
+fresh E2.8 writer A/B               PASS / PASS
+writer logs                         byte-identical
+fresh artifacts                     byte-identical
+artifact bytes                      10383
+artifact SHA-256                    b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
+FINAL process A/B                   PASS / PASS
+assertions                          68 / 68 PASS
+FINAL ERROR lines                   0 / 0
+FINAL logs                          byte-identical
+FINAL log SHA-256                   4fdeaa581cd889c94f1bb5e1391466cad3deea308d631f4e3a3c056b532f69c2
+```
+
+### 5.6 Observed result
+
+```text
+reachable_colonized_patches  2
+unique_recruited_species     2
+isolated_no_colonization     true
+sorting_observed_cells       2
+adaptation_positive_cells    2
+
+DRY classification           ADAPTATION_POSITIVE
+DRY adaptation gain          0.222347111576
+
+WET classification           ADAPTATION_POSITIVE
+WET adaptation gain          0.218384189961
+```
+
+Observed result 2/2 не заменяет precommitted thresholds 2/2, 2 species, 1 sorting cell и 1 adaptation-positive cell.
+
+Первый run после protocol precommit дал тот же evidence hash, поэтому scientific repair после результата не потребовался.
+
+### 5.7 Harness repair history
+
+Первый runner freeze:
+
+`65864edced044e170374f95980fe1edd0cc1e682`
+
+Он передал accepted E2.8 writer positional path вместо требуемого `--artifact-path=<path>`. Writer корректно fail-closed **до запуска ecology**.
+
+Repair изменил только runner invocation:
+
+```text
+accepted freeze  376796ab8c8370b7370fcd220ed207d07955cb42
+runner blob      4385861b62ae10df07cb0f71295f50bf9a2097ee
+```
+
+Scientific protocol, thresholds, challenge implementation и acceptance test не менялись.
+
+### 5.8 Claim boundary
 
 Accepted claim:
 
-`RESEARCH_ARTIFACT_PERSISTENCE_WITH_EXACT_FULL_SPECIES_CATALOG_AND_EVO2_PROVENANCE_IDENTITY`.
+> persisted frozen research SpeciesCatalog с accepted EVO2 provenance восстанавливается в fresh process и проходит precommitted unseen-world causal ecology route без rebake, biome species tables и target-aware species injection.
 
 Не accepted:
 
 ```text
-production save authority
-production persistence ownership
+production ecology authority
+production save/persistence authority
 distributed durability
+canonical biological taxonomy
 world transaction semantics
-canonical species taxonomy
+P4 global/main acceptance
 ```
 
-Canonical `.ps1` runner не исполнялся из-за отсутствия PowerShell в Linux carrier. Authority: `EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION`. Independent Reviewer/Verifier PASS не заявляется.
+Canonical `.ps1` runner существует, но `pwsh/powershell` отсутствует в Linux carrier. Acceptance authority — `EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION`. Independent Reviewer/Verifier PASS не заявляется.
 
-## 5. EVO2 FINAL — Unseen World Challenge — AUTHORIZED / CURRENT
+## 6. EVO2 completion decision
 
-### 5.1 Research question
+`ECO.EVO2` закрыт как **COMPLETE_RESEARCH_ONLY**.
 
-Может ли **именно восстановленный persisted frozen SpeciesCatalog** пройти полный unseen-world route без rebake, target-aware species injection и biome table shortcut?
+Это означает, что research route portable plant ecology доказал:
 
-### 5.2 Final experiment shape
+1. deterministic research species identities;
+2. portable frozen catalog;
+3. hidden-world causal colonization;
+4. environmental generalization;
+5. separation sorting/adaptation;
+6. replicated causal evidence;
+7. bounded seed robustness;
+8. exact persistence/provenance;
+9. end-to-end persisted-artifact unseen-world execution.
 
-```text
-predeclared hidden unseen world
-        +
-E2.8 persisted artifact bytes
-        ↓
-fresh-process restore
-        ↓
-exact frozen SpeciesCatalog + provenance
-        ↓
-E2.3/E2.4-compatible causal transfer
-        ↓
-ecology + sorting + continued adaptation
-        ↓
-replicated deterministic final evidence
-```
+Это **не** означает production integration.
 
-### 5.3 Hard gates
+## 7. Следующий этап — bounded XFER0
 
-1. target/world definition frozen before result;
-2. catalog input must originate from E2.8 restore, not direct reconstruction bypass;
-3. restored `catalog_hash`, entries and provenance must match E2.8 accepted identity;
-4. no evolution rebake before transfer;
-5. no target-aware species list/filter/injection;
-6. no biome → species table;
-7. colonization must emerge through accepted causal dispersal/establishment/population mechanisms;
-8. sorting and continued adaptation must remain separable according to E2.5 semantics;
-9. null/reversal/no-colonization outcomes remain valid evidence and cannot be censored;
-10. deterministic fresh-process result/evidence package;
-11. semantic tamper of persisted input must fail closed;
-12. FINAL does not grant production runtime/world/persistence authority.
-
-### 5.4 Acceptance meaning
-
-E2.FINAL acceptance may close **EVO2 research route**, but still does not merge any production integration or make P4 globally accepted.
-
-## 6. После EVO2
+Следующий architectural checkpoint должен определить explicit research-to-simulator boundary:
 
 ```text
-EVO2 portable persisted ecology proof
+EVO2 COMPLETE
     ↓
-bounded XFER0 contracts
+XFER0 bounded contract design
     ↓
 EVO3 Planetary Ecology Compiler
     ↓
@@ -322,11 +385,33 @@ herbivores
 predators / food web / coevolution
 ```
 
-Animals остаются deferred до plant-only portability proof.
+XFER0 должен ответить:
 
-## 7. Current execution
+- какие SpeciesCatalog fields допустимы как simulator-facing input;
+- какой provenance обязан переноситься вместе с catalog;
+- как environment/query contracts подаются ecology без захвата environment authority;
+- как population/cohort state представляется без planet-wide individual entity truth;
+- где проходит boundary между research persistence и production durability;
+- какие canonical foundations должны существовать до XFER1/LIVE;
+- какие fail-closed guards запрещают research shortcut превращать в production truth.
+
+EVO3 должен начинаться только после того, как XFER0 зафиксирует эти ownership/semantic boundaries.
+
+## 8. Production P4 remains separate
+
+P4 branch lifecycle evidence не является частью EVO2 acceptance и не меняется от FINAL proof.
 
 ```text
-CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.FINAL Unseen World Challenge
-NEXT    = EVO2 completion decision only after E2.FINAL acceptance
+P4 global acceptance        false here
+runtime merge authorized    false here
+required                    independent review/verifier + main-owned promotion
+```
+
+## 9. Current execution
+
+```text
+ECO.EVO2   COMPLETE_RESEARCH_ONLY
+CURRENT    OPEN / DESIGN ECO.XFER0 BOUNDED CONTRACTS
+NEXT       PLAN ECO.EVO3 PLANETARY ECOLOGY COMPILER
+ANIMALS    DEFERRED UNTIL PLANT FOUNDATION / PLANETARY GENERALIZATION
 ```
