@@ -1,6 +1,6 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1 ACCEPTED / E2.2 ACCEPTED / E2.3 CANDIDATE_VERIFICATION / E2.4 BLOCKED`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1 ACCEPTED / E2.2 ACCEPTED / E2.3 ACCEPTED / E2.4 AUTHORIZED_NOT_STARTED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -50,6 +50,9 @@ E2.2 frozen bake
 
 E2.2 frozen catalog
 5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
+
+E2.3 Frozen-Catalog Transfer aggregate
+82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8
 ```
 
 P4 production-integration evidence остаётся отдельной governance-линией и не даёт EVO2 production authority.
@@ -70,213 +73,93 @@ Accepted aggregate:
 
 `aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad`
 
-Frozen contract сохраняет stable research identity, exact lineage/ancestry provenance, validated ecological genome/recruitment traits, canonical ordering/hash, strict source types, no taxonomy promotion, no global RNG consumption и no source mutation.
-
 ## 4. E2.2 — Deterministic Evolution Bake Export — ACCEPTED
 
 Exact code-under-test:
 
 `7cf98d67a4658644a6f2dde3e93e28a184638ec3`
 
-Acceptance source HEAD:
-
-`4ddf7d275d10a6a84a3e414bfb0e76447cb2a890`
-
 Accepted aggregate:
 
 `56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce`
 
-E2.2 deterministically selects retained lineage hypotheses from typed long-run evidence, chooses an unambiguous representative observation, and builds the accepted E2.1 SpeciesCatalog. Selection is re-derived during validation and recomputed-hash tamper fails closed.
+Frozen export policy остаётся typed, deterministic, fail-closed и без taxonomy promotion.
 
-Known boundary: E2.2 uses a synthetic contract fixture because accepted P2.8 does not yet publish a canonical multi-lineage evolved-observation collection. Это не объявляется real accepted evolution producer.
+## 5. E2.3 — Frozen-Catalog Transfer — ACCEPTED
 
-## 5. E2.3 — Frozen-Catalog Transfer — IMPLEMENTED CANDIDATE
+Exact code-under-test:
 
-### Exact candidate identity
+`c7ee41371807ed7dbb75e7e1eae1587105873a26`
 
-Accepted E2.2 base HEAD:
+Final implementation blob:
 
-`6e5207bcdf9bce096726a4fe9d72f14e635c437f`
+`a886d179fe32a2bb531956923fd0cc59bbbb28c6`
 
-Exact E2.3 code-under-test HEAD:
-
-`6eb9c75ec3da82a9792b36a8e6c203a50a488883`
-
-Executable blobs:
-
-```text
-implementation  1077b1892c4a537d95d6e50fbfa3b9a251c85369
-acceptance test 80e0d6ee5b6626af961f54f4d34678680126041e
-runner          6a906d5a553e58388d43190f646594e94f69edfa
-```
-
-Machine validation:
+Validation:
 
 `validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json`
 
-Candidate checkpoint:
+Accepted checkpoint:
 
-`docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_CANDIDATE_RU.md`
+`docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_ACCEPTED_RU.md`
 
-### Goal
-
-Доказать, что exact frozen E2.2 catalog способен причинно заселять environment, который не участвовал в bake, при полностью отключённой evolution/mutation.
-
-### Implemented boundary
+### Frozen E2.3 contract
 
 ```text
-accepted E2.2 bake
+exact accepted E2.2 bake/catalog
         ↓
-frozen SpeciesCatalog
+all catalog entries → target-independent source port
         ↓
-ALL catalog entries -> neutral source port
+mutation/evolution disabled
         ↓
-TARGET revealed after freeze
+previously unseen target revealed
         ↓
-accepted P2.6 Biogeography.simulate(...)
+accepted P2.6 dispersal / establishment / competition / turnover
         ↓
-dispersal / recruitment / resource competition
-population turnover / succession
-        ↓
-population history + causal events + final hash
+population history
 ```
 
-E2.3 не создаёт parallel ecology solver.
+Hard constraints:
 
-Используется accepted P2.6 `plant_long_horizon_biogeography_v1.gd`, который наследует P2.3–P2.5 mechanics.
+- target patch IDs absent from bake evidence;
+- target exact EnvironmentSample checksums absent from bake evidence;
+- target starts with no adults and no seed bank;
+- no target species list API;
+- no biome->species lookup;
+- frozen catalog not mutated;
+- no global RNG consumption;
+- valid no-colonization is a successful ecological outcome, not execution failure.
 
-### Hard freeze
-
-Executable truth:
+### Accepted verification
 
 ```text
-evolution_enabled = false
-canonical_species_declared = false
-production_authority_claimed = false
+exact transitive executable closure  17 / 17 PASS
+Godot                              4.7.1.stable.double.custom_build.a13da4feb
+parser/preload                     PASS
+fresh processes                    2 / 2 PASS
+assertions                         59 / 59 PASS
+logs                               byte-identical
+log SHA-256                        7b2f89965bac13dc1238b053ecfd7b3544948eb6fa9941f3ca56d66ca79cad7b
+aggregate                          82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8
 ```
 
-Transfer API:
-
-`transfer(bake_export, target)`
-
-Нет target species list, mutation callback, biome lookup или species table.
-
-### Hidden target
-
-Target fail-closed отвергается, если target уже присутствовал в bake как:
-
-1. тот же `patch_id`;
-2. тот же exact `EnvironmentSample.checksum`.
-
-Таким образом rename patch не может превратить уже виденную среду в unseen environment.
-
-Target contract bounded:
+Paired causal control:
 
 ```text
-MAX_YEARS          = 60
-MAX_TARGET_PATCHES = 8
+same target environment suitability
+reachable → COLONIZED
+isolated  → VALID_NO_COLONIZATION
 ```
 
-Типы target descriptor проверяются до conversions; duplicate/overlapping patches, source-port overlap, invalid schedule и hash tamper fail closed.
+Initial fresh run correctly failed because source-port moisture `0.58` suppressed reproduction of one frozen strategy. Repair made the source port target-independent but neutral enough for both (`0.40`), then full closure and all behavioral assertions were rerun.
 
-### Neutral inoculum
+Acceptance authority is fresh behavioral execution, **not** independent Reviewer/Verifier authority.
 
-Все frozen catalog entries без target-aware filtering становятся strategies keyed by `research_species_id` и инокулируются только в нейтральный source port.
+## 6. E2.4 — Environment Generalization Matrix — AUTHORIZED / CURRENT
 
-Target patches начинают с:
+Goal: проверить один frozen catalog на разных previously unseen environments без rebake и без target-aware species selection.
 
-```text
-adults    = 0
-seed bank = 0
-```
-
-Никакого target scatter нет.
-
-### Paired causal proof
-
-Acceptance suite использует два target cases с **одинаковым exact suitability/environment checksum**:
-
-```text
-TARGET_REACHABLE
-Rect2(1.01, -80, 100, 160)
-
-TARGET_UNREACHABLE
-Rect2(500, -80, 100, 160)
-```
-
-Они различаются только spatial reachability.
-
-Required semantics:
-
-```text
-reachable   -> causal recruitment / colonization
-unreachable -> VALID_NO_COLONIZATION
-```
-
-Это доказывает, что suitability сама по себе не создаёт population truth.
-
-### Acceptance suite
-
-Определено `59` assertions.
-
-Покрываются:
-
-1. exact E2.2 aggregate/bake/catalog pinning;
-2. target identity absent from bake provenance;
-3. catalog and target immutability;
-4. mutation/evolution API absent;
-5. all catalog entries available through neutral source port;
-6. target starts empty;
-7. deterministic transfer replay;
-8. input order canonicalization;
-9. global RNG untouched;
-10. no biome/species tables;
-11. reachable recruitment/colonization;
-12. equal-suitability isolated no-colonization;
-13. spatial reachability changes result;
-14. target events preserve frozen research species IDs;
-15. shared-resource competition may change composition;
-16. malformed/tampered target/bake/catalog fail closed;
-17. rehashed result tamper rejected by deterministic replay;
-18. direct P2.6 reuse.
-
-### Parser evidence
-
-Exact attached Godot:
-
-```text
-4.7.1.stable.double.custom_build.a13da4feb
-SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-```
-
-Exact implementation parser/preload: `PASS / exit 0`.
-
-Exact test parser/preload: `PASS / exit 0`.
-
-Parser log SHA-256:
-
-`7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2`
-
-### Verification debt — fail closed
-
-Behavioral runner пока **не исполнялся** в текущем container, потому что здесь отсутствуют полный exact downstream dependency carrier и `pwsh`.
-
-Поэтому E2.3 сейчас НЕ имеет права заявлять:
-
-- 59/59 PASS;
-- canonical reachable/isolated result hashes;
-- two fresh-process behavioral equality;
-- formal E2.3 acceptance.
-
-Independent Reviewer PASS также не заявляется.
-
-E2.4 остаётся закрыт.
-
-## 6. E2.4 — Environment Generalization Matrix — BLOCKED
-
-Открывается только после E2.3 GREEN.
-
-Минимальные target families:
+Minimum matrix:
 
 ```text
 NEAR_SOURCE
@@ -287,7 +170,39 @@ HIGH_SEASONALITY
 PATCH_ISOLATED
 ```
 
-E2.4 должен проверять не одинаковые species lists, а причинно объяснимую occupancy/biomass/recruitment/extinction/recolonization/trait composition across environment families.
+### Required invariants
+
+Для каждой matrix cell:
+
+1. exact E2.2 catalog/bake identity;
+2. exact E2.3 accepted transfer contract lineage;
+3. evolution/mutation disabled;
+4. target absent from bake provenance;
+5. target starts empty;
+6. same frozen catalog is offered to every cell;
+7. no biome->species mapping;
+8. colonization requires causal dispersal + establishment;
+9. composition emerges from environment/competition/history;
+10. `VALID_NO_COLONIZATION` remains legitimate;
+11. deterministic same-input replay;
+12. no global RNG consumption;
+13. exact transitive executable closure before canonical behavioral execution;
+14. fresh process does not impersonate independent role evidence.
+
+### Expected E2.4 evidence
+
+Matrix result must expose per-cell:
+
+- target/environment identity;
+- colonization status;
+- first colonization timing when applicable;
+- species occupancy/composition trajectory;
+- final population state hash;
+- result hash;
+- causal contrast against relevant control;
+- aggregate matrix hash.
+
+E2.5 stays blocked until E2.4 acceptance.
 
 ## 7. E2.5 — Ecological Sorting vs Continued Adaptation
 
@@ -296,46 +211,45 @@ Control   = frozen catalog, evolution disabled
 Treatment = same catalog/root, continued adaptation enabled
 ```
 
-Нужно отделить ecological sorting существующих strategies от новой evolutionary adaptation.
+Нужно разделить ecological sorting уже существующих strategies и новую evolutionary adaptation.
 
 ## 8. E2.6 — Replicated Causal Experiments
 
-Использовать доказанные VIS2.2 patterns для replicate isolation / paired common random numbers / aggregate effects / deterministic rewind, без автоматического формального принятия VIS2.2.
+Использовать VIS2.2 evidence patterns без автоматического наследования formal PASS.
 
 ## 9. E2.7 — Cross-Seed Robustness
 
-Acceptance не может зависеть от одного seed. Нужно разделять exact same-seed reproducibility и robust regularity across independent seeds.
+Acceptance не может зависеть от одного seed.
 
 ## 10. E2.8 — Catalog Persistence & Provenance
 
-Typed deterministic persistence, schema/version boundary, canonical bytes/hash, fresh-process restore, tamper rejection и source evolution provenance.
+Typed deterministic persistence, canonical bytes/hash, schema/version policy, restore and tamper rejection.
 
 ## 11. EVO2 FINAL — Unseen World Challenge
 
-Target скрыт до freeze SpeciesCatalog. После reveal система без hardcoded biome species tables должна построить причинно объяснимую spatial population truth.
+Target скрыт от bake pipeline до freeze SpeciesCatalog. После reveal система должна построить причинно объяснимую spatial population truth без hard-coded biome species tables.
 
-## 12. XFER boundary
-
-После EVO2 допускается только bounded XFER0 contract work:
+## 12. После EVO2
 
 ```text
-WorldEnvironmentProvider -> EnvironmentSample
-SpeciesCatalog            -> research ecology input
-population solver         -> PopulationPatchState candidate
-PopulationPatchState      -> representation materialization
+EVO2 portable ecology proof
+    ↓
+bounded XFER0 contracts
+    ↓
+EVO3 Planetary Ecology Compiler
+    ↓
+plant runtime convergence
+    ↓
+herbivores
+    ↓
+predators / food web / coevolution
 ```
 
-ECO не получает ownership над G/WQ/MAT/LIFE/WB/NX/authority/persistence foundations.
+Animals остаются deferred до plant-only portability proof.
 
-## 13. После EVO2
-
-Следующий research node: `EVO3 — Planetary Ecology Compiler / broader planetary generalization`.
-
-Животные открываются только после plant-only portable ecology proof.
-
-## 14. Current execution
+## 13. Current execution
 
 ```text
-CURRENT = FRESH/CANONICAL BEHAVIORAL VERIFICATION ECO.EVO2 / E2.3
-NEXT    = E2.4 Environment Generalization Matrix only after E2.3 acceptance
+CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.4 Environment Generalization Matrix
+NEXT    = E2.5 Ecological Sorting vs Continued Adaptation after E2.4 acceptance
 ```
