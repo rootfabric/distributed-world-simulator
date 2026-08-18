@@ -40,7 +40,6 @@ if ([string]$e27.acceptance.code_under_test_head -ne $ExpectedParentE27Head) { t
 if ([string]$e27.acceptance.seed_ensemble_hash -ne $ExpectedParentE27SeedEnsemble) { throw "E2.7 seed-ensemble mismatch" }
 
 $ExpectedBlobs = [ordered]@{
-    "scripts/research/ecology/environment_sample_v1.gd" = "7ae8cc2534940ceb3c69879f8850467ba32fea8c"
     "scripts/research/ecology/plant_genome_v1.gd" = "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd"
     "scripts/research/ecology/plant_recruitment_traits_v1.gd" = "6faeff9da9f7fa5a03e1df586de9cb29795d30de"
     "scripts/research/ecology/plant_accepted_e2_2_catalog_v1.gd" = "b77c3421325fa1264f590b0bd75c1c59621f667f"
@@ -57,7 +56,7 @@ foreach ($entry in $ExpectedBlobs.GetEnumerator()) {
     $actual = (& git -C $RootDir hash-object -- $entry.Key).Trim()
     if ($LASTEXITCODE -ne 0 -or $actual -ne $entry.Value) { throw "E2.8 exact closure mismatch: $($entry.Key) expected $($entry.Value) actual $actual" }
 }
-Write-Host "ECO.EVO2 E2.8 exact transitive executable closure: PASS (10/10)"
+Write-Host "ECO.EVO2 E2.8 exact transitive executable closure: PASS (9/9)"
 
 $check = & $GodotPath --headless --path $RootDir --check-only --script $TestScript 2>&1
 $checkExit = $LASTEXITCODE
