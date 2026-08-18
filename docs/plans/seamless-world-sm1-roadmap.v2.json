@@ -1,10 +1,13 @@
 {
   "schema": "distributed_world_simulator.seamless_world_sm1_roadmap.v2",
   "status": "RESEARCH_NOT_ACTIVATED",
-  "supersedes": "docs/plans/seamless-world-sm1-roadmap.v1.json",
+  "supersedes": "HISTORICAL_R1_ARTIFACTS_REMOVED_FROM_CURRENT_TREE",
   "architecture": "docs/architecture/SEAMLESS_WORLD_ARCHITECTURE_R2_RU.md",
+  "architecture_repair": "docs/architecture/SEAMLESS_WORLD_ARCHITECTURE_R2_REPAIR_R1_RU.md",
   "human_roadmap": "docs/plans/SEAMLESS_WORLD_SM1_ROADMAP_R2_RU.md",
   "validation_strategy": "docs/testing/SEAMLESS_WORLD_VALIDATION_STRATEGY_R2_RU.md",
+  "validation_repair": "docs/testing/SEAMLESS_WORLD_VALIDATION_STRATEGY_R2_REPAIR_R1_RU.md",
+  "pre_p6_incubation_plan": "docs/plans/seamless-world-pre-p6-incubation.v1.json",
   "branch": "research/seamless-world-architecture-r1",
   "branch_creation_base": {
     "branch": "main",
@@ -19,8 +22,14 @@
   "activation": {
     "research_may_continue_now": true,
     "production_sm1_active": false,
-    "required_before_first_runtime_work": [
-      "ARCHITECTURE_R2_FRESH_INDEPENDENT_REVIEW_PASS",
+    "research_semantic_runtime_gate": {
+      "plan": "docs/plans/seamless-world-pre-p6-incubation.v1.json",
+      "required_before_i2_or_later": [
+        "PR_137_REPAIRED_HEAD_FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
+      ],
+      "production_acceptance_claim_allowed": false
+    },
+    "required_before_first_production_runtime_work": [
       "V0_P6_ACCEPTED_ON_MAIN_LINEAGE",
       "MAIN_RECORDS_ACTIVATE_V0_SM1",
       "MAIN_DECLARES_EXACT_SM1_SUCCESSOR_BASE",
@@ -35,7 +44,10 @@
     "ONE_CANONICAL_WRITER",
     "STABLE_CANONICAL_IDENTITY",
     "MONOTONIC_AUTHORITY_EPOCH_AND_FENCE",
+    "AUTHORITY_INCARNATION_CURRENT_FOR_CANONICAL_MUTATION",
+    "SAME_AUTHORITY_ID_REPLACEMENT_ROTATES_DIRECTORY_FENCE_AND_GENERATION",
     "DIRECTORY_COMMITTED_IS_ONLY_OWNERSHIP_LINEARIZATION_POINT",
+    "DOMAIN_PAYLOAD_OWNERSHIP_OBSERVATIONS_ARE_DERIVED_NOT_AUTHORITATIVE",
     "NO_OLD_SOURCE_WRITER_ROLLBACK_AFTER_DIRECTORY_COMMIT",
     "GATEWAY_IS_NEVER_CANONICAL_OWNER",
     "PROJECTION_IS_NEVER_CANONICAL_OWNER",
@@ -62,7 +74,7 @@
       "kind": "RESEARCH_CONTROL",
       "depends_on": [],
       "runtime_mutation_allowed": false,
-      "required_result": "FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
+      "required_result": "FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS_ON_REPAIRED_EXACT_HEAD"
     },
     {
       "id": "SM1-H0",
@@ -72,6 +84,7 @@
       "focus": [
         "Identity contracts",
         "OwnershipRecord",
+        "AuthorityIncarnation as ownership-critical authorization field",
         "AuthorityBinding",
         "DomainMutationBarrier",
         "AuthorityTimelineStamp",
@@ -88,12 +101,15 @@
         "atomic ownership CAS",
         "AuthorityEpoch",
         "FencingToken",
-        "incarnation",
+        "AuthorityIncarnation",
+        "same-AuthorityId incarnation replacement",
         "draining",
         "restart recovery"
       ],
       "critical_oracles": [
         "STALE_RESURRECTED_SOURCE_FENCED",
+        "STALE_SAME_AUTHORITY_ID_INCARNATION_FENCED",
+        "INCARNATION_REPLACEMENT_ROTATES_FENCE_AND_DIRECTORY_GENERATION",
         "DURABLE_CAS_SURVIVES_RESTART"
       ]
     },
@@ -104,14 +120,15 @@
       "depends_on": ["SM1-H1"],
       "focus": [
         "freeze",
-        "durable target prepare",
+        "durable target prepare bound to target incarnation",
         "Directory CAS",
-        "target activation",
+        "target activation validates current incarnation",
         "source retirement",
         "forward recovery after post-CAS failure"
       ],
       "forbidden_semantics": [
-        "OLD_SOURCE_WRITER_ROLLBACK_AFTER_DIRECTORY_COMMIT"
+        "OLD_SOURCE_WRITER_ROLLBACK_AFTER_DIRECTORY_COMMIT",
+        "ACTIVATE_PREPARED_STATE_FOR_STALE_TARGET_INCARNATION"
       ]
     },
     {
@@ -124,7 +141,8 @@
         "EXPLICIT binding",
         "binding generation",
         "nested domain members",
-        "one domain CAS for inherited members"
+        "one domain CAS for inherited members",
+        "domain payload ownership observations are non-authoritative"
       ],
       "scale_cases": [1, 10, 100, 1000]
     },
@@ -140,7 +158,8 @@
         "nested inventory",
         "equipment/hotbar",
         "DomainMutationBarrier",
-        "carried state restart recovery"
+        "carried state restart recovery",
+        "no second ownership truth in PlayerAuthorityDomain payload"
       ],
       "mandatory_scenario": "PICKUP_ON_A__PLAYER_DOMAIN_A_TO_B__USE_ON_B__DROP_TO_WORLD_B"
     },
@@ -270,6 +289,7 @@
         "end-to-end journey",
         "WAN matrix",
         "fault injection",
+        "same-AuthorityId incarnation replacement",
         "gateway rehome",
         "player carrying domain",
         "cross-authority operation",
@@ -282,6 +302,7 @@
         "duplicate_item_ids",
         "lost_item_ids",
         "stale_owner_mutations_accepted",
+        "stale_incarnation_mutations_accepted",
         "duplicate_canonical_commits",
         "canonical_revision_rollbacks",
         "unexpected_session_resets",
@@ -326,6 +347,7 @@
     "duplicate_entity_count",
     "duplicate_item_count",
     "stale_owner_mutations_accepted",
+    "stale_incarnation_mutations_accepted",
     "duplicate_canonical_commits"
   ]
 }

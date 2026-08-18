@@ -2,6 +2,7 @@
   "schema": "distributed_world_simulator.seamless_world_pre_p6_incubation.v1",
   "status": "RESEARCH_PRE_ACTIVATION_NOT_PRODUCTION",
   "architecture": "SEAMLESS_WORLD_ARCHITECTURE_R2_RU.md",
+  "architecture_repair": "SEAMLESS_WORLD_ARCHITECTURE_R2_REPAIR_R1_RU.md",
   "roadmap": "SEAMLESS_WORLD_SM1_ROADMAP_R2_RU.md",
   "production_activation": false,
   "production_branch_base": "MUST_BE_DECLARED_BY_THEN_CURRENT_MAIN_AFTER_P6",
@@ -20,7 +21,7 @@
       "WORK_ORDER_SKELETONS"
     ],
     "semantic_runtime_after": [
-      "PR_137_FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
+      "PR_137_REPAIRED_HEAD_FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
     ],
     "production_runtime_after": [
       "P6_ACCEPTED",
@@ -38,7 +39,7 @@
       "depends_on": [],
       "fresh_review_required": true,
       "outputs": [
-        "reviewed_r2_contracts",
+        "reviewed_r2_plus_repair_contracts",
         "frozen_vocabulary",
         "sm0_donor_map"
       ]
@@ -63,6 +64,8 @@
       "must_prove": [
         "atomic_owner_cas",
         "monotonic_epoch_and_fence",
+        "same_authority_id_incarnation_replacement_rotates_fence_and_generation",
+        "stale_same_authority_id_incarnation_fenced",
         "stale_writer_restart_fenced",
         "directory_restart_convergence"
       ]
@@ -74,9 +77,10 @@
       "fresh_review_required": true,
       "must_prove": [
         "domain_mutation_barrier",
-        "durable_prepared_shadow",
+        "durable_prepared_shadow_bound_to_target_incarnation",
         "directory_committed_linearization",
         "no_old_writer_after_commit",
+        "stale_target_incarnation_cannot_activate_prepared_state",
         "transfer_replay_safety",
         "temporal_continuity"
       ]
@@ -92,6 +96,7 @@
         "player_domain_a_to_b",
         "immediate_item_use_on_b",
         "drop_to_world_b",
+        "domain_payload_observed_ownership_metadata_is_non_authoritative",
         "no_item_loss_or_duplication",
         "one_domain_ownership_transition_independent_of_item_count",
         "deterministic_inventory_handoff_races"
@@ -161,12 +166,13 @@
     "writer_violations": 0,
     "identity_changes_due_to_topology": 0,
     "stale_owner_mutations_accepted": 0,
+    "stale_incarnation_mutations_accepted": 0,
     "duplicate_canonical_commits": 0,
     "projection_canonical_writes": 0,
     "unexpected_revision_rollback": 0
   },
   "ideal_state_at_p6_close": [
-    "architecture_r2_reviewed",
+    "architecture_r2_repair_reviewed",
     "research_harness_ready",
     "directory_proven_in_incubation",
     "authority_domain_transfer_proven_in_incubation",
