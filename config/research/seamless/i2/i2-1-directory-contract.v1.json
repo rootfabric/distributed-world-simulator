@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_1_directory_contract.v1",
+  "status": "RESEARCH_ONLY_CANDIDATE",
+  "checkpoint": "SM1-I2.1",
+  "architecture_base": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+  "architecture_review": {
+    "verdict": "SEAMLESS_R2_REPAIR_R1_FRESH_INDEPENDENT_REVIEW_PASS",
+    "review_id": 4961220624
+  },
+  "branch": "research/sm1-i2-directory",
+  "production_activation": false,
+  "donor_only": true,
+  "ownership_record_fields": [
+    "subject_or_domain_id",
+    "owner_authority_id",
+    "authority_epoch",
+    "fencing_token",
+    "directory_generation",
+    "authority_incarnation",
+    "state_revision",
+    "lease_state",
+    "route_revision"
+  ],
+  "operations": {
+    "lookup": "READ_ONLY",
+    "create": "CREATE_IF_ABSENT",
+    "compare_and_swap": "EXPECTED_FULL_RECORD_MATCH"
+  },
+  "cas_statuses": [
+    "CAS_OK",
+    "CAS_MISMATCH",
+    "INVALID_TRANSITION",
+    "NOT_FOUND"
+  ],
+  "transition_invariants": [
+    "SUBJECT_ID_IMMUTABLE",
+    "DIRECTORY_GENERATION_STRICTLY_INCREASES",
+    "AUTHORITY_EPOCH_NEVER_DECREASES",
+    "FENCING_TOKEN_NEVER_DECREASES",
+    "STATE_REVISION_NEVER_DECREASES",
+    "ROUTE_REVISION_NEVER_DECREASES",
+    "OWNER_CHANGE_REQUIRES_EPOCH_INCREASE",
+    "OWNER_CHANGE_REQUIRES_FENCE_INCREASE",
+    "SAME_OWNER_INCARNATION_CHANGE_REQUIRES_FENCE_INCREASE",
+    "FAILED_CAS_IS_MUTATION_FREE",
+    "AT_MOST_ONE_CONTENDER_SUCCEEDS_FOR_ONE_EXPECTED_STATE"
+  ],
+  "required_tests": [
+    "OD-CAS-01",
+    "OD-CAS-02",
+    "OD-CAS-03",
+    "OD-CAS-04",
+    "OD-CAS-05",
+    "OD-CAS-06",
+    "OD-CAS-07",
+    "OD-CAS-08",
+    "OD-CAS-09",
+    "OD-CAS-10",
+    "OD-CAS-11",
+    "OD-CAS-12",
+    "OD-CAS-13",
+    "OD-CAS-14"
+  ],
+  "out_of_scope": [
+    "DURABLE_STORAGE",
+    "DIRECTORY_CRASH_RECOVERY",
+    "PARTITION_RECOVERY",
+    "CANONICAL_MUTATION_AUTHORIZATION",
+    "LEASE_EXPIRY",
+    "GATEWAY_ROUTING",
+    "AUTHORITY_DOMAIN_HANDOFF",
+    "ITEM_GRAPH",
+    "PLAYER_RUNTIME"
+  ],
+  "next_checkpoint": "SM1-I2.2_EPOCH_FENCE_INCARNATION_AUTHORIZATION"
+}
