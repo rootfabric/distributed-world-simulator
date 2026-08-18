@@ -9,7 +9,6 @@
 Это короткая точка входа для автономной/полуавтономной разработки. Этот файл не хранит mutable current checkpoint/frontier; живое состояние берётся из machine-owned contracts и `CONTROL_DEVELOPMENT.ps1 -Status/-Plan/-Resume`.
 
 Полные протоколы:
-
 ```text
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
@@ -17,7 +16,6 @@ docs/control/HARNESS_HYGIENE_AND_CONTINUATION_RU.md
 ```
 
 Machine contracts:
-
 ```text
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
@@ -37,7 +35,6 @@ config/control/harness/rule-registry.v1.json
 ```
 
 ## Основной контур
-
 ```text
 mission / parent objective
         ↓
@@ -72,9 +69,7 @@ MISSION          = end-to-end objective
 ```
 
 ## Continuation invariant
-
 После любого промежуточного состояния Harness обязан уметь ответить:
-
 ```text
 mission_complete?
 next_actor
@@ -94,21 +89,19 @@ stop_obligation
 Human Attention предназначен для реальных решений, а не для переноса PASS/FAIL между агентами.
 
 ## Self-closing role execution R2
-
 `FIX_REQUIRED` больше не является допустимым концом Implementer-сессии сам по себе.
 
 Если defect находится внутри разрешённого Work Order scope и может быть исправлен доступными инструментами, Harness обязан вернуть:
-
 ```text
 handoff_class = CONTINUE_SAME_ROLE
 next_actor = IMPLEMENTER
 next_action = EXECUTE_REPAIR_TEST_CLOSURE_LOOP
 session_exit_allowed = false
 closure_loop_required = true
+stop_obligation = DO_NOT_STOP_WHILE_AN_IN_SCOPE_AUTOMATABLE_REPAIR_REMAINS
 ```
 
 Обязательный цикл:
-
 ```text
 diagnose root cause
   ↓
@@ -136,9 +129,7 @@ persist exact next transition
 Fresh independent review не ослабляется. Implementer обязан довести свою роль до review-ready состояния, но не имеет права сам выполнять независимый review. Review `FAIL` должен маршрутизироваться к repair ownership, а не повторно к Reviewer без ремонта.
 
 ## Review durability
-
 Reviewer имеет verdict только:
-
 ```text
 PASS
 FAIL
@@ -148,17 +139,12 @@ INSUFFICIENT_EVIDENCE
 Для Harness Work Order canonical sink по умолчанию — versioned execution review result. Для PR-only gate canonical sink — GitHub PR review/comment, явно привязанный к exact reviewed HEAD. Chat-only verdict не является durable evidence.
 
 Runtime checkpoint review остаётся exact-head fresh:
-
 ```text
 reviewed HEAD == evidence HEAD == tested runtime HEAD
 ```
 
 ## Current state
-
-Не поддерживать вручную список «текущих H0.x/V0/NX gate» в этом файле.
-
-Получать его из:
-
+Не поддерживать вручную список «текущих H0.x/V0/NX gate» в этом файле. Получать его из:
 ```text
 config/control/harness/scheduler-policy.v1.json
 config/control/project-program-registry.v1.json
@@ -166,13 +152,10 @@ CONTROL_DEVELOPMENT.ps1 -Status
 CONTROL_DEVELOPMENT.ps1 -Plan
 CONTROL_DEVELOPMENT.ps1 -Resume
 ```
-
 Это предотвращает prose/machine drift.
 
 ## Hygiene
-
 Harness обязан контролировать собственную сложность:
-
 - root instructions остаются router-ом;
 - mutable state не дублируется в prose;
 - правила имеют source / trigger / enforcement / retirement;
