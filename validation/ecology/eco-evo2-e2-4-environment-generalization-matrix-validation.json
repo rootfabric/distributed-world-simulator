@@ -1,0 +1,132 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_4_environment_generalization_matrix_validation.v1",
+  "revision": "ECO-EVO2-E2.4-2026-08-18-R1-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "base_head": "4bb8b43c1bab7f867117800836013d644831a9ca",
+  "code_under_test_head": "0135aee461a107375cdb3e52e07e8c799145998b",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "e2_3_validation": "validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json",
+    "e2_3_accepted_aggregate_hash": "82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8",
+    "e2_3_code_under_test_head": "c7ee41371807ed7dbb75e7e1eae1587105873a26",
+    "e2_2_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_environment_generalization_matrix_v1.gd",
+    "git_blob_sha": "823ef6445d7f71aee79b7c0bb0932b321f90ce8d",
+    "schema": "distributed_world_simulator.ecology.evo2_environment_generalization_matrix.v1",
+    "version": "1.0.0",
+    "years_per_probe": 30,
+    "continuous_seasonal_dynamics_claimed": false,
+    "accepted_transfer_reused_directly": true
+  },
+  "matrix_contract": {
+    "cell_order": ["NEAR_SOURCE", "DRY", "WET", "NUTRIENT_POOR", "HIGH_SEASONALITY", "PATCH_ISOLATED"],
+    "same_frozen_catalog_for_all_cells": true,
+    "evolution_enabled": false,
+    "target_population_starts_empty": true,
+    "biome_species_table_present": false,
+    "valid_no_colonization_allowed": true,
+    "high_seasonality_mode": "SEASONAL_ENVELOPE",
+    "high_seasonality_phase_order": ["COOL_WET", "MILD", "HOT_DRY", "COOL_DARK"],
+    "high_seasonality_semantics": "four deterministic independent extreme snapshots of one stable unseen target patch identity; this does not claim continuous seasonal population dynamics",
+    "patch_isolated_control": "same exact NEAR_SOURCE environment checksum with isolated geography/bounds"
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_4_environment_generalization_matrix_acceptance.gd",
+    "git_blob_sha": "e365aafe7cb703d6cc26e812b8e1ea0c7716de35",
+    "assertions": 82,
+    "runner": "RUN_ECO_EVO2_E2_4_TESTS.ps1",
+    "runner_git_blob_sha": "2b967fd42501a53f53c0cd4c51e534dd59c8f542"
+  },
+  "exact_executable_closure": {
+    "verified_exact": true,
+    "verified_count": 18,
+    "target_head": "0135aee461a107375cdb3e52e07e8c799145998b",
+    "rule": "canonical behavioral execution requires exact transitive executable closure before execution",
+    "new_e2_4_blobs": {
+      "scripts/research/ecology/plant_environment_generalization_matrix_v1.gd": "823ef6445d7f71aee79b7c0bb0932b321f90ce8d",
+      "tests/research/ecology/eco_evo2_e2_4_environment_generalization_matrix_acceptance.gd": "e365aafe7cb703d6cc26e812b8e1ea0c7716de35"
+    },
+    "inherited_exact_e2_3_dependency_count": 16,
+    "inherited_dependencies_changed_since_e2_3": false
+  },
+  "fresh_behavioral_verification": {
+    "executed_date": "2026-08-18",
+    "authority": "HUMAN_DIRECTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION_GATE",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload_exit": 0,
+    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "fresh_process_a_exit": 0,
+    "fresh_process_b_exit": 0,
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "23ac2294dbe9b7ad0f78f7807e0bde67eb804b4e2f8640f711afdc71b5d0f40c",
+    "assertions": "PASS_82_OF_82",
+    "canonical_runner_executed": false,
+    "equivalent_execution_executed": true,
+    "equivalent_execution_reason": "pwsh/powershell unavailable in the Linux execution carrier",
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "frozen_outputs": {
+    "matrix_hash": "ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5",
+    "plan_hash": "f688eb014245d63483562376c3f5db8c08a85bdc35feb52428f5ff17753f82e0",
+    "cell_near_source_hash": "04090e13c45e780bfb88f311362f10f7c48e4ce4bb1f2182cb400f72472796c4",
+    "cell_dry_hash": "b4172292008caac01921c5636f9a287e38cd64a96d855c1d581fa76cc963179e",
+    "cell_wet_hash": "37590db6149b575da162a225fdef2018e8954a6360d888bc673b8a7e7a82461d",
+    "cell_nutrient_poor_hash": "7d4f55c70c762979ea9ce1abbe1d241a5e0a4bce2d30dadb30e93f68e46c0ef1",
+    "cell_high_seasonality_hash": "7f23b7b873bc9ceb4773efb7678931e22f251f547a85622b27d48db4aa1fd103",
+    "cell_patch_isolated_hash": "3cb766a7aacf2e04a22a5515543ea9a47eb55e94be62f353018f95dd400a8b8a"
+  },
+  "observed_outcomes": {
+    "NEAR_SOURCE": "COLONIZED_YEAR_1",
+    "DRY": "COLONIZED_YEAR_1",
+    "WET": "COLONIZED_YEAR_1",
+    "NUTRIENT_POOR": "COLONIZED_YEAR_1",
+    "HIGH_SEASONALITY": {
+      "COOL_WET": "COLONIZED_YEAR_1",
+      "MILD": "COLONIZED_YEAR_1",
+      "HOT_DRY": "COLONIZED_YEAR_1",
+      "COOL_DARK": "COLONIZED_YEAR_1",
+      "distinct_population_states_or_outcomes": true
+    },
+    "PATCH_ISOLATED": "VALID_NO_COLONIZATION"
+  },
+  "closed_during_implementation": [
+    {
+      "id": "E2_4_CONTRACT_001_CANONICAL_PLAN_REBUILD",
+      "finding": "initial validate_plan attempted to feed already-canonical phase records with schema/hash fields back into a strict raw phase-input boundary",
+      "repair": "validator now reconstructs raw typed phase inputs before independent canonical rebuild",
+      "status": "CLOSED_BEFORE_CANDIDATE_FREEZE"
+    },
+    {
+      "id": "E2_4_EVIDENCE_002_FULLY_REHASHED_RESULT_TAMPER",
+      "finding": "negative evidence must reject semantically manipulated result even when phase/cell/matrix hashes are recomputed",
+      "repair": "acceptance test fully recomputes internal hashes after tamper and requires deterministic replay mismatch rejection",
+      "status": "CLOSED_BEFORE_CANDIDATE_FREEZE"
+    }
+  ],
+  "known_boundary": {
+    "high_seasonality_is_continuous_dynamic_simulation": false,
+    "high_seasonality_is_extreme_envelope_probe": true,
+    "real_evolution_bake_producer_integration_proven": false,
+    "canonical_species_taxonomy_claimed": false,
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false,
+    "e2_5_authorized": true
+  },
+  "acceptance": {
+    "accepted_date": "2026-08-18",
+    "code_under_test_head": "0135aee461a107375cdb3e52e07e8c799145998b",
+    "aggregate_hash": "ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5",
+    "decision": "ACCEPT_E2_4_AND_AUTHORIZE_E2_5",
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false
+  },
+  "decision": "ACCEPT_E2_4_AND_AUTHORIZE_E2_5",
+  "next": "ECO.EVO2 / E2.5 Ecological Sorting vs Continued Adaptation"
+}
