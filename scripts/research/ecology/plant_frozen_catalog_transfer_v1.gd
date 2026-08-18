@@ -19,10 +19,11 @@ const PRODUCTION_AUTHORITY_CLAIMED := false
 const SOURCE_PORT_ID := "eco-evo2-transfer/source-port"
 const SOURCE_PORT_BOUNDS := Rect2(-1.0, -1.0, 2.0, 2.0)
 const MAX_YEARS := 60
+const MAX_TARGET_PATCHES := 8
 const EPSILON := 0.000000000001
 
 static func create_target(target_id: String, patches: Array, years: int, transport_schedule: Array) -> Dictionary:
-	if target_id.is_empty() or target_id != target_id.strip_edges() or patches.is_empty() or years <= 0 or years > MAX_YEARS:
+	if target_id.is_empty() or target_id != target_id.strip_edges() or patches.is_empty() or patches.size() > MAX_TARGET_PATCHES or years <= 0 or years > MAX_YEARS:
 		return {}
 	var canonical_patches: Array = []
 	var seen := {}
@@ -54,6 +55,8 @@ static func validate_target(target: Dictionary) -> bool:
 	for key in ["schema", "version", "target_id", "patches", "years", "transport_schedule", "target_hash"]:
 		if not target.has(key): return false
 	if String(target["schema"]) != TARGET_SCHEMA or String(target["version"]) != VERSION:
+		return false
+	if typeof(target["target_id"]) != TYPE_STRING or typeof(target["patches"]) != TYPE_ARRAY or typeof(target["years"]) != TYPE_INT or typeof(target["transport_schedule"]) != TYPE_ARRAY or typeof(target["target_hash"]) != TYPE_STRING:
 		return false
 	var rebuilt := create_target(String(target["target_id"]), Array(target["patches"]), int(target["years"]), Array(target["transport_schedule"]))
 	return not rebuilt.is_empty() and rebuilt == target
