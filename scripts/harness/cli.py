@@ -45,6 +45,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.mode == "plan":
             plan = build_plan(bundle.contracts, state["active_work_order"], state["reduced_work_order"])
             plan["next_action"] = continuation["next_action"]
+            plan["session_exit_allowed"] = continuation["session_exit_allowed"]
+            plan["closure_loop_required"] = continuation["closure_loop_required"]
+            plan["stop_obligation"] = continuation["stop_obligation"]
             state["plan"] = plan
         elif args.mode == "resume":
             state["resume"] = {
@@ -55,8 +58,17 @@ def main(argv: list[str] | None = None) -> int:
                 "review_state": state["review"]["state"], "open_human_attention": state["human_attention"]["open_items"],
                 "human_approval_required_for": state["active_work_order"].get("human_approval_required_for", []), "verification_commands": state["verification_commands"],
                 "mission": {"mission_id":continuation["mission_id"],"objective":continuation["objective"],"parent_mission_id":continuation["parent_mission_id"],"mission_complete":continuation["mission_complete"]},
-                "next_actor":continuation["next_actor"],"next_action":continuation["next_action"],"handoff_class":continuation["handoff_class"],"evidence_sink":continuation["evidence_sink"],"resume_condition":continuation["resume_condition"]}
-        state["next"] = {"checkpoint":state["active_work_order"]["goal_checkpoint"],"work_order":state["active_work_order"]["work_order_id"],"mission_id":continuation["mission_id"],"mission_complete":continuation["mission_complete"],"handoff_class":continuation["handoff_class"],"next_actor":continuation["next_actor"],"next_action":continuation["next_action"],"evidence_sink":continuation["evidence_sink"],"resume_condition":continuation["resume_condition"],"on_success":continuation["on_success"],"on_failure":continuation["on_failure"],"human_decision_required":continuation["human_decision_required"],"verification_commands":state["verification_commands"],"human_gate":state["active_work_order"].get("human_approval_required_for", [])}
+                "next_actor":continuation["next_actor"],"next_action":continuation["next_action"],"handoff_class":continuation["handoff_class"],"evidence_sink":continuation["evidence_sink"],"resume_condition":continuation["resume_condition"],
+                "session_exit_allowed":continuation["session_exit_allowed"],"closure_loop_required":continuation["closure_loop_required"],"stop_obligation":continuation["stop_obligation"]}
+        state["next"] = {
+            "checkpoint":state["active_work_order"]["goal_checkpoint"],"work_order":state["active_work_order"]["work_order_id"],
+            "mission_id":continuation["mission_id"],"mission_complete":continuation["mission_complete"],
+            "handoff_class":continuation["handoff_class"],"next_actor":continuation["next_actor"],"next_action":continuation["next_action"],
+            "evidence_sink":continuation["evidence_sink"],"resume_condition":continuation["resume_condition"],
+            "on_success":continuation["on_success"],"on_failure":continuation["on_failure"],
+            "human_decision_required":continuation["human_decision_required"],
+            "session_exit_allowed":continuation["session_exit_allowed"],"closure_loop_required":continuation["closure_loop_required"],"stop_obligation":continuation["stop_obligation"],
+            "verification_commands":state["verification_commands"],"human_gate":state["active_work_order"].get("human_approval_required_for", [])}
         _emit(state); return 0
     except ContractValidationError as exc:
         detail = str(exc); category = _category(detail); _emit({"schema":SCHEMA,"command":command,"ok":False,"error":{"code":category,"detail":detail},"exit_codes":EXIT_CODES}); return EXIT_CODES[category]
