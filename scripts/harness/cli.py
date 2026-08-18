@@ -27,6 +27,34 @@ def _category(detail: str) -> str:
     if detail.startswith(("WORK_ORDER_SNAPSHOT_", "EVENT_", "STATE_", "GUARDED_", "EPOCH_INVALIDATED", "REPAIR_MAP_", "BLOCKING_")): return "EXECUTION_STATE_INVALID"
     return "CONTRACT_OR_DEPENDENCY_INVALID"
 
+def _derive_repair_metrics(execution: Path, state: dict[str, object]) -> dict[str, object]:
+    """Derive repeated current-defect attempts from the already validated event ledger."""
+    reduced = state.get("reduced_work_order", {})
+    work_order = state.get("active_work_order", {})
+    if not isinstance(reduced, dict) or not isinstance(work_order, dict):
+        return {"current_defect_key": None, "same_defect_fix_required_count": 0}
+    if reduced.get("state") != "FIX_REQUIRED":
+        return {"current_defect_key": None, "same_defect_fix_required_count": 0}
+    defect_key = reduced.get("open_blocker")
+    if not isinstance(defect_key, str) or not defect_key:
+        return {"current_defect_key": None, "same_defect_fix_required_count": 0}
+    work_order_id = work_order.get("work_order_id")
+    if not isinstance(work_order_id, str) or not work_order_id:
+        return {"current_defect_key": defect_key, "same_defect_fix_required_count": 0}
+    count = 0
+    event_dir = execution / "events" / work_order_id
+    for path in sorted(event_dir.rglob("*.json")) if event_dir.exists() else []:
+        try:
+            event = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ContractValidationError(f"REPAIR_HISTORY_EVENT_INVALID:{path.name}") from exc
+        if not isinstance(event, dict) or event.get("event_type") != "FIX_REQUIRED":
+            continue
+        event_defect = event.get("blocker") or "FIX_REQUIRED"
+        if event_defect == defect_key:
+            count += 1
+    return {"current_defect_key": defect_key, "same_defect_fix_required_count": count}
+
 def main(argv: list[str] | None = None) -> int:
     command = "UNKNOWN"
     parser = SafeParser(add_help=True)
@@ -39,6 +67,10 @@ def main(argv: list[str] | None = None) -> int:
         execution = args.execution if args.execution.is_absolute() else root / args.execution
         bundle = ContractBundle.load(root)
         state = build_state(root, execution)
+        repair = state.setdefault("repair", {})
+        if not isinstance(repair, dict):
+            raise ContractValidationError("REPAIR_STATE_INVALID")
+        repair.update(_derive_repair_metrics(execution, state))
         continuation = build_continuation(state, bundle.contracts["continuation_policy"])
         command = args.mode.upper()
         state["command"] = command; state["ok"] = True; state["exit_codes"] = EXIT_CODES
