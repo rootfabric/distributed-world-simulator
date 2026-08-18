@@ -98,7 +98,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_matches_actual_p0_p8_product_order(self):
+    def test_goal_graph_preserves_p0_p8_order_and_requires_post_p6_gate(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
         self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
         sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
@@ -111,10 +111,27 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
                 "V0_P4_REAL_RESOURCE_CONSTRUCTION",
                 "V0_P5_EQUIPMENT_TOOLS",
                 "V0_P6_PERSISTENT_SHARED_OUTPOST",
+                "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+                "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION_OR_EXPLICIT_DEFER",
                 "V0_P7_BOUNDED_TERRAIN_MUTATION",
                 "V0_P8_FIRST_MOBILE_CONSTRUCT",
             ],
             sequence,
+        )
+        core_p_sequence = [item for item in sequence if item.startswith("V0_P") and "POST_P6" not in item]
+        self.assertEqual(
+            [
+                "V0_P0_PLAYABLE_FRONTIER",
+                "V0_P1_WORLD_ITEMS_CONTAINERS",
+                "V0_P2_RECONNECTABLE_SHARED_STATE",
+                "V0_P3_RESOURCE_MINING",
+                "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+                "V0_P5_EQUIPMENT_TOOLS",
+                "V0_P6_PERSISTENT_SHARED_OUTPOST",
+                "V0_P7_BOUNDED_TERRAIN_MUTATION",
+                "V0_P8_FIRST_MOBILE_CONSTRUCT",
+            ],
+            core_p_sequence,
         )
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
         self.assertIn(P4, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
