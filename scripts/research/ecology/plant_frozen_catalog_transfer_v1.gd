@@ -129,7 +129,7 @@ static func _execute(bake_export: Dictionary, target: Dictionary) -> Dictionary:
 		"target_id": String(target["target_id"]), "target_hash": String(target["target_hash"]),
 		"evolution_enabled": EVOLUTION_ENABLED, "canonical_species_declared": CANONICAL_SPECIES_DECLARED, "production_authority_claimed": PRODUCTION_AUTHORITY_CLAIMED,
 		"source_port_id": SOURCE_PORT_ID, "initial_inoculum": inoculum, "initial_state_hash": initial_hash,
-		"history": Array(run["history"]).duplicate(true), "population_events": events,
+		"history": _enriched_history(run), "population_events": events,
 		"colonization_status": "COLONIZED" if first >= 0 else "VALID_NO_COLONIZATION", "first_colonization_year": first,
 		"final_population_state_hash": _final_target_hash(run, target), "biogeography": run.duplicate(true),
 	}
@@ -175,6 +175,24 @@ static func _canonical_schedule(schedule: Array, years: int) -> Array:
 	for i in range(1, result.size()):
 		if int(Dictionary(result[i])["year_start"]) <= int(Dictionary(result[i - 1])["year_start"]): return []
 	return result
+
+static func _enriched_history(run: Dictionary) -> Array:
+	var history: Array = Array(run.get("history", [])).duplicate(true)
+	for summary_value in history:
+		var summary: Dictionary = summary_value
+		for patch_value in Array(summary.get("patch_summaries", [])):
+			var patch: Dictionary = patch_value
+			var adult: Dictionary = patch.get("adult_biomass_by_lineage", {})
+			var banks: Dictionary = patch.get("seed_bank_by_lineage", {})
+			var total_adult := 0.0; var total_bank := 0; var occupied := 0
+			for key in adult.keys():
+				var biomass := float(adult[key]); total_adult += biomass
+				if biomass > 0.000001: occupied += 1
+			for key in banks.keys(): total_bank += int(banks[key])
+			patch["total_adult_biomass_kg_m2"] = total_adult
+			patch["total_seed_bank_seed_count"] = total_bank
+			patch["occupied_species_count"] = occupied
+	return history
 
 static func _events(run: Dictionary, target: Dictionary) -> Array:
 	var ids := {}; for value in Array(target["patches"]): ids[String(Dictionary(value)["patch_id"])] = true
