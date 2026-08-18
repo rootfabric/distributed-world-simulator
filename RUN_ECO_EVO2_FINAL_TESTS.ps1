@@ -79,7 +79,7 @@ try {
     $artifactA = Join-Path $tempDir "artifact-a.bin"
     $artifactB = Join-Path $tempDir "artifact-b.bin"
     function Invoke-Writer([string]$Path, [string]$Label) {
-        $output = & $GodotPath --headless --path $RootDir --script $WriterScript -- $Path 2>&1
+        $output = & $GodotPath --headless --path $RootDir --script $WriterScript -- ("--artifact-path=" + $Path) 2>&1
         $joined = $output -join "`n"
         if ($LASTEXITCODE -ne 0 -or $joined -match '(?m)^ERROR:') { throw "$Label failed" }
         return $joined
