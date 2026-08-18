@@ -1,11 +1,12 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 REPAIRED CANDIDATE / EXACT WINDOWS RERUN`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.1 IN DEVELOPMENT`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
+EVO2 plan: `docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md`.
 
-## Accepted foundation
+## 1. Что уже закрыто
 
 ```text
 ECO.P1                    ACCEPTED
@@ -13,16 +14,11 @@ ECO.PH0..PH5-S4           ACCEPTED
 ECO.CONV0-A               ACCEPTED
 ECO.CAL1-A..F             ACCEPTED
 CAL1-F                    ROBUST_UNITY_CALIBRATION
-ECO.EVO1 / P2.1           ACCEPTED
-ECO.EVO1 / P2.2           ACCEPTED
-ECO.EVO1 / P2.3           ACCEPTED
-ECO.EVO1 / P2.4           ACCEPTED
-ECO.EVO1 / P2.5           ACCEPTED
-ECO.EVO1 / P2.6           ACCEPTED
-ECO.EVO1 / P2.7           ACCEPTED
+ECO.EVO1 / P2.1..P2.8     ACCEPTED / EVO1 COMPLETE
+ECO.P3 / P3.1..P3.8       ACCEPTED / RESEARCH ROUTE COMPLETE
 ```
 
-Canonical hashes:
+Ключевые frozen identities:
 
 ```text
 CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
@@ -33,164 +29,170 @@ P2.4    78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97
 P2.5    292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696
 P2.6    3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c
 P2.7    7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe
+P2.8    ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6
+P3.1    f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a
+P3.2    172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639
+P3.3    37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41
+P3.4    a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813
+P3.5    255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83
+P3.6    a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
+P3.7    ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a
+P3.8    6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0
 ```
 
-## Current route
+P2.8 exact acceptance доказал deterministic save/restart Plant World и закрыл EVO1. P3 затем доказал resource competition, carrying capacity, spatial dispersal, environmental gradients, seasonal forcing, disturbance/succession, multi-niche coexistence и deterministic ecosystem persistence.
+
+## 2. Production P4 — отдельная governance-линия
+
+P4.1..P4.8 branch-locally завершены и собраны в lifecycle evidence. Это **не** означает global/main acceptance и **не** означает runtime merge.
+
+Текущая граница P4:
 
 ```text
-EVO0 / CAL1 COMPLETE
-   ↓
-P2.1 Seed Dispersal Kernel ACCEPTED
-   ↓
-P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
-   ↓
-P2.3 Local Population Turnover + Succession ACCEPTED
-   ↓
-P2.4 Patch Colonization / Isolation / Migration ACCEPTED
-   ↓
-P2.5 Disturbance + Recovery ACCEPTED
-   ↓
-P2.6 Long-Horizon Biogeography ACCEPTED
-   ↓
-P2.7 Lineage Divergence / Speciation Candidate Diagnostics ACCEPTED
-   ↓
-P2.8 Deterministic Save/Restart Plant World Proof
-   ├─ original candidate 8cd4c440... → exact Windows FAIL
-   ├─ finding P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE
-   ├─ codec repair dc910baa...
-   ├─ codec preflight 31fd42a...
-   └─ fail-fast runner 8d5de417... ← CURRENT REPAIRED CANDIDATE
-        ↓ exact Windows PASS required
-EVO1 COMPLETE
-   ↓
-post-EVO1 route resolution: EVO2 + XFER0
+P4_BRANCH_LIFECYCLE_COMPLETE
+    ↓
+independent review / verifier freshness
+    ↓
+main-owned promotion decision
+    ↓
+human runtime merge gate
 ```
 
-## What the exact Windows log proved
+EVO2 не получает production authority из P4 и не блокируется ожиданием его promotion. Любой будущий XFER обязан повторно сверяться с canonical `main` и Project Control.
 
-The first P2.8 candidate run used Godot `4.7.1.stable.double.custom_build.a13da4feb`.
+## 3. Новый North Star после EVO1/P3
 
-Before P2.8 execution it repeated the full accepted parent chain. P2.1 through P2.7 all passed again with their accepted hashes. P2.7 again produced:
+Следующий исследовательский вопрос:
 
-`7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe`.
+> Может ли результат эволюции стать переносимым каталогом жизненных стратегий, который без biome->asset таблиц заселяет новую, ранее не использованную среду через экологическую сортировку, конкуренцию, распространение и историю?
 
-P2.8 parser/preload also passed. The first P2.8 assertion then failed:
+Целевой pipeline:
 
 ```text
-ECO.EVO1-P2.8 assertion failed: experiment result exists
+environment family
+    ↓
+Evolution Incubator
+    ↓
+portable SpeciesCatalog
+    ↓
+unseen environment
+    ↓
+population ecology
+    ↓
+self-organized community
 ```
 
-Thus the failure was isolated to `Experiment.run()` and was not a regression in P2.7-or-earlier ecology.
+`SpeciesCatalog` здесь — research artifact. Он не является canonical species taxonomy проекта и не получает production ownership.
 
-## Root cause
-
-Original P2.8 typed JSON handled `Vector2`, `Rect2`, `StringName` and packed strings explicitly, but emitted integer Variant values as ordinary JSON numbers.
-
-Direct execution on the project-attached Godot Linux double build with the same engine commit proved:
+## 4. EVO2 — Portable Evolutionary Ecology
 
 ```text
-before JSON: int -> TYPE_INT
-JSON.parse_string: same numeric value -> TYPE_FLOAT
+E2.1 SpeciesCatalog Contract                         ← CURRENT
+    ↓
+E2.2 Deterministic Evolution Bake Export
+    ↓
+E2.3 Frozen-Catalog Transfer
+    ↓
+E2.4 Environment Generalization Matrix
+    ↓
+E2.5 Ecological Sorting vs Continued Adaptation
+    ↓
+E2.6 Replicated Causal Experiments
+    ↓
+E2.7 Cross-Seed Robustness
+    ↓
+E2.8 Catalog Persistence & Provenance
+    ↓
+EVO2 FINAL — Unseen World Challenge
 ```
 
-P2.8 canonical hashing intentionally distinguishes:
+### E2.1 — SpeciesCatalog Contract
+
+Нужно зафиксировать research-only portable contract:
+
+- stable `research_species_id`;
+- source lineage identity и ancestry;
+- ecological genome/traits;
+- recruitment/dispersal strategy;
+- observed range prior как evidence, а не biome assignment;
+- source observation/evidence hashes;
+- deterministic catalog ordering/hash;
+- explicit provenance;
+- fail-closed validation;
+- `canonical_species_declared = false`.
+
+E2.1 не решает clustering/species concept целиком. Один validated lineage hypothesis образует одну portable entry; E2.2 отвечает за deterministic bake selection/grouping policy.
+
+### E2.2 — Deterministic Evolution Bake Export
+
+Из frozen evolution result получить воспроизводимый каталог устойчивых lineage hypotheses. Acceptance требует одинакового каталога при повторе exact inputs и отсутствия зависимости от iteration order/global RNG.
+
+### E2.3 — Frozen-Catalog Transfer
+
+Запретить mutation/evolution и проверить, может ли один каталог сформировать разумное сообщество в новой карте только через ecology: establishment, competition, dispersal, succession и disturbance.
+
+### E2.4 — Environment Generalization Matrix
+
+Проверить минимум близкую, сухую, влажную, nutrient-poor, seasonal и patch-isolated среды. Acceptance — не одинаковый species list, а причинно объяснимая смена occupancy/biomass/extinction/colonization.
+
+### E2.5 — Sorting vs Adaptation
+
+Control использует frozen catalog; Treatment разрешает дальнейшую evolution. Измерять отдельно ecological sorting и новую evolutionary adaptation.
+
+### E2.6 — Replicated Causal Experiments
+
+Использовать проверенные идеи VIS2.2: независимые stochastic roots, Control/Treatment CRN внутри пары, aggregate effect и reproducible rewind/rebranch evidence. VIS2.2 остаётся отдельной research/evidence lineage; его формальная closure не подменяется этим документом.
+
+### E2.7 — Cross-Seed Robustness
+
+Запретить acceptance по одному «красивому seed». Разные seeds могут давать разные истории, но ключевые закономерности должны сохраняться статистически.
+
+### E2.8 — Catalog Persistence & Provenance
+
+Доказать typed deterministic save/load, stable hashes, schema/version migration boundary, engine/model provenance и fresh-process restore.
+
+### EVO2 FINAL — Unseen World Challenge
+
+Каталог, сформированный без знания target map, получает новую EnvironmentProfile/landscape. Система должна без hardcoded biome species tables получить устойчивую spatial population truth с причинно объяснимой структурой.
+
+## 5. Что после EVO2
+
+При PASS EVO2 открывается bounded XFER0 и следующий исследовательский слой:
 
 ```text
-TYPE_INT   -> I...
-TYPE_FLOAT -> F...
+EVO2 portable ecology proof
+    ↓
+bounded XFER0 contracts
+    ↓
+EVO3 Planetary Ecology Compiler / broader planetary generalization
+    ↓
+plant runtime convergence
+    ↓
+herbivores
+    ↓
+predators / food web / coevolution
+    ↓
+player disturbance / terraforming / invasive species
 ```
 
-Therefore a newly serialized checkpoint could change `current_year`, `seed_count`, counters and other integer truth from TYPE_INT to TYPE_FLOAT during parse, causing its own `world_hash` / `checkpoint_hash` verification to fail closed.
+Животные не открываются до plant-only portable ecology proof.
 
-Finding:
-
-`P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE`.
-
-## Repair
-
-`dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1` changes only the P2.8 persistence codec:
+## 6. Неподвижные архитектурные ограничения
 
 ```text
-TYPE_INT
-  -> typed Int JSON wrapper
-  -> int(value) during decode
+research ecology != production world authority
+SpeciesCatalog != canonical species taxonomy
+population truth != planet-wide individual entity truth
+representation != ecology truth
+EVO2 != permission to own G/WQ/MAT/LIFE/WB/NX foundations
 ```
 
-Diff from original candidate for the semantic repair itself is one P2.8 file, `+5/-1`. No accepted P2.7-or-earlier source and no runtime path changed.
+Главный runtime принцип сохраняется:
 
-`31fd42a503875247cc758b36d7915a99a6a72698` adds a dedicated checkpoint codec regression. It verifies nested integer/float types, `Vector2`, `Rect2`, `PackedStringArray` and exact canonical value hash across JSON round-trip.
+> population is truth; individual is a representation unless interaction promotes it to durable world state.
 
-`8d5de417f83ac257ee3bc1ae40c02847ac82de82` moves that regression before the long parent chain in the P2.8 runner.
-
-## Supplementary same-engine verification
-
-The attached Linux binary reports the exact same engine source revision:
-
-`4.7.1.stable.double.custom_build.a13da4feb`.
-
-On it, repaired codec probe reproduced the same canonical hash before and after JSON round-trip:
-
-`563208df7930f3ca9e341076c9dbe23f71c59d559f9206d615b164fb981cbab1`.
-
-A two-cut representative checkpoint flow was then run in three fresh Godot processes. Every run produced:
+## 7. Current resolver
 
 ```text
-cut A year 14
-checkpoint A = e10eed0d6979e4f0f3ed605a3d1a53c8688d3638fc5dc8aa586fe124c6724e41
-
-cut B year 18
-checkpoint B = 52fe07c45258cef3f90e03aaed65d1e5ad35bad8be77defb3ad1de01848845e4
-
-final year = 30
-P2.7 evidence preserved = true
-tamper rejected = true
+DEVELOP ECO.EVO2 / E2.1 SPECIES CATALOG CONTRACT
 ```
-
-This is supplementary evidence, not a substitute for exact Windows canonical acceptance.
-
-## P2.8 final proof still required
-
-P2.8 must still establish the full semantic equality:
-
-```text
-P2.6-equivalent baseline result_hash
-  == stateful uninterrupted result_hash
-  == save14/restore/save18/restore result_hash
-```
-
-plus exact final cohort state, persisted P2.7 diagnostics, conservation and fresh-process disk restore A/B.
-
-## Exact Windows rerun
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_EVO1_P2_8_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner is now fail-fast:
-
-```text
-parser/preload preflight
-P2.8 checkpoint codec preflight
-accepted P2.7 full regression
-P2.8 acceptance / disk checkpoint creation
-fresh process replay A
-fresh process replay B
-aggregate + P2.6 result equality
-```
-
-Until exact Windows PASS:
-
-```text
-P2.8 = REPAIRED_CANDIDATE
-P2.8 != ACCEPTED
-EVO1 != COMPLETE
-EVO2 = BLOCKED
-```
-
-Current resolver: `RERUN EVO1/P2.8 EXACT WINDOWS AFTER CHECKPOINT CODEC REPAIR`.
