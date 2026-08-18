@@ -46,7 +46,7 @@ static func create_target(target_id: String, patches: Array, years: int, transpo
 		return {}
 	var target := {"schema": TARGET_SCHEMA, "version": VERSION, "target_id": target_id, "patches": canonical_patches, "years": years, "transport_schedule": schedule}
 	target["target_hash"] = compute_target_hash(target)
-	return target if validate_target(target) else {}
+	return target
 
 static func validate_target(target: Dictionary) -> bool:
 	if target.keys().size() != 7:
