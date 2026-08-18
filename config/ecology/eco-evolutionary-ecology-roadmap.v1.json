@@ -1,16 +1,16 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R59-2026-08-18",
+  "revision": "ECO-R60-2026-08-18",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO2_E2_3_CANDIDATE_VERIFICATION",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO2_E2_4_AUTHORIZED_NOT_STARTED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
-  "current_checkpoint": "ECO.EVO2/E2.3",
-  "current_step": "Frozen-Catalog Transfer candidate verification",
-  "last_accepted_step": "ECO.EVO2/E2.2 Deterministic Evolution Bake Export",
+  "current_checkpoint": "ECO.EVO2/E2.4",
+  "current_step": "Environment Generalization Matrix authorized / not started",
+  "last_accepted_step": "ECO.EVO2/E2.3 Frozen-Catalog Transfer",
   "mission": "Build a standalone evolutionary ecosystem that produces portable research species catalogs and persistent population ecology from environment, competition and history, then prove transfer to unseen environments before bounded simulator integration.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -22,7 +22,8 @@
     "ECO.EVO1/P2.1..P2.8 ACCEPTED / EVO1 COMPLETE",
     "ECO.P3/P3.1..P3.8 ACCEPTED / P3 RESEARCH ROUTE COMPLETE",
     "ECO.EVO2/E2.1 SPECIES_CATALOG CONTRACT ACCEPTED",
-    "ECO.EVO2/E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT ACCEPTED"
+    "ECO.EVO2/E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT ACCEPTED",
+    "ECO.EVO2/E2.3 FROZEN-CATALOG TRANSFER ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -34,47 +35,27 @@
     "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
     "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
     "p2_8_aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
-    "p3_1_aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
-    "p3_2_aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
-    "p3_3_aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
-    "p3_4_aggregate_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
-    "p3_5_aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
-    "p3_6_aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
-    "p3_7_aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
     "p3_8_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
     "p3_8_checkpoint_sha256": "1722f3ce96a8244bfaf2f8295c162b51552c6c5cc4cfd1126b40691a37bab367",
     "p3_8_final_state_hash": "1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9",
     "e2_1_aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
-    "e2_1_code_under_test_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
-    "e2_1_acceptance_source_head": "c79e2d61e665689fe39621442f72171de5d2790f",
-    "e2_1_validation": "validation/ecology/eco-evo2-e2-1-species-catalog-validation.json",
     "e2_2_aggregate_hash": "56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce",
-    "e2_2_source_hash": "c165964f710036287b9e8d310085a662d004b05eecc0c915ad1d3650a18dedb9",
     "e2_2_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
     "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
-    "e2_2_code_under_test_head": "7cf98d67a4658644a6f2dde3e93e28a184638ec3",
-    "e2_2_acceptance_source_head": "4ddf7d275d10a6a84a3e414bfb0e76447cb2a890",
-    "e2_2_validation": "validation/ecology/eco-evo2-e2-2-evolution-bake-export-validation.json",
-    "e2_2_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_2_EVOLUTION_BAKE_EXPORT_ACCEPTED_RU.md",
-    "e2_2_godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "e2_2_assertions": 62,
-    "e2_2_fresh_process_logs_byte_identical": true,
-    "e2_2_fresh_process_log_sha256": "04a11281a398bf24a7880a95a01728a9a64bbac5c79e7a8aa6019ba918f329b2",
-    "e2_2_independent_reviewer_claimed": false
-  },
-  "evo2_candidate_evidence": {
-    "e2_3_status": "CANDIDATE_IMPLEMENTED_EXACT_PARSER_PASS_FULL_BEHAVIORAL_RUNNER_PENDING",
-    "e2_3_code_under_test_head": "6eb9c75ec3da82a9792b36a8e6c203a50a488883",
-    "e2_3_validation": "validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json",
-    "e2_3_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_CANDIDATE_RU.md",
-    "e2_3_implementation_blob": "1077b1892c4a537d95d6e50fbfa3b9a251c85369",
+    "e2_3_aggregate_hash": "82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8",
+    "e2_3_code_under_test_head": "c7ee41371807ed7dbb75e7e1eae1587105873a26",
+    "e2_3_implementation_blob": "a886d179fe32a2bb531956923fd0cc59bbbb28c6",
     "e2_3_acceptance_test_blob": "80e0d6ee5b6626af961f54f4d34678680126041e",
     "e2_3_runner_blob": "6a906d5a553e58388d43190f646594e94f69edfa",
-    "e2_3_godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "e2_3_assertions_defined": 59,
-    "e2_3_exact_parser_pass": true,
-    "e2_3_behavioral_runner_executed": false,
-    "e2_3_formally_accepted": false
+    "e2_3_validation": "validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json",
+    "e2_3_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_ACCEPTED_RU.md",
+    "e2_3_exact_closure_blobs": 17,
+    "e2_3_assertions": 59,
+    "e2_3_fresh_process_logs_byte_identical": true,
+    "e2_3_fresh_process_log_sha256": "7b2f89965bac13dc1238b053ecfd7b3544948eb6fa9941f3ca56d66ca79cad7b",
+    "e2_3_reachable_result_hash": "dc2e5b1c8a6c62fcfc7504a01f624cf635f43aa17160588696b0ddf159eb70a8",
+    "e2_3_isolated_result_hash": "dca9ae0b0e0fe7918b05e243b3164ca4de044921dc67f0471932352e4ffba4b6",
+    "e2_3_independent_reviewer_claimed": false
   },
   "production_integration_evidence": {
     "status": "P4_BRANCH_LIFECYCLE_COMPLETE_AWAITING_INDEPENDENT_REVIEW_AND_MAIN_PROMOTION",
@@ -86,43 +67,19 @@
     "runtime_merge_authorized": false
   },
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
-  "EVO1": {
-    "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "COMPLETE",
-    "steps": [
-      {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
-      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"ACCEPTED"},
-      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"ACCEPTED"},
-      {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"ACCEPTED"},
-      {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
-      {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
-      {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"ACCEPTED"}
-    ]
-  },
-  "P3": {
-    "name": "Post-EVO1 Dynamic Ecosystem Research",
-    "status": "COMPLETE",
-    "steps": [
-      {"id":"P3.1","name":"Resource Competition","status":"ACCEPTED"},
-      {"id":"P3.2","name":"Density / Carrying Capacity","status":"ACCEPTED"},
-      {"id":"P3.3","name":"Spatial Dispersal","status":"ACCEPTED"},
-      {"id":"P3.4","name":"Environmental Gradient","status":"ACCEPTED"},
-      {"id":"P3.5","name":"Seasonal World","status":"ACCEPTED"},
-      {"id":"P3.6","name":"Disturbance / Succession","status":"ACCEPTED"},
-      {"id":"P3.7","name":"Multi-Niche Coexistence","status":"ACCEPTED"},
-      {"id":"P3.8","name":"Deterministic Ecosystem Persistence","status":"ACCEPTED"}
-    ]
-  },
+  "EVO1": {"name":"Autonomous Spatial Plant Ecosystem / Plant World Proof","status":"COMPLETE","steps":[
+    {"id":"P2.1","status":"ACCEPTED"},{"id":"P2.2","status":"ACCEPTED"},{"id":"P2.3","status":"ACCEPTED"},{"id":"P2.4","status":"ACCEPTED"},{"id":"P2.5","status":"ACCEPTED"},{"id":"P2.6","status":"ACCEPTED"},{"id":"P2.7","status":"ACCEPTED"},{"id":"P2.8","status":"ACCEPTED"}
+  ]},
+  "P3": {"name":"Post-EVO1 Dynamic Ecosystem Research","status":"COMPLETE"},
   "EVO2": {
     "name": "Portable Evolutionary Ecology / SpeciesCatalog Transfer",
-    "status": "ACTIVE_E2_3_CANDIDATE_VERIFICATION",
+    "status": "ACTIVE_E2_4_AUTHORIZED_NOT_STARTED",
     "north_star": "EVOLVED_SPECIES_CATALOG_SELF_ORGANIZES_IN_PREVIOUSLY_UNSEEN_ENVIRONMENT_WITHOUT_BIOME_SPECIES_TABLES",
     "steps": [
       {"id":"E2.1","name":"SpeciesCatalog Contract","status":"ACCEPTED"},
       {"id":"E2.2","name":"Deterministic Evolution Bake Export","status":"ACCEPTED"},
-      {"id":"E2.3","name":"Frozen-Catalog Transfer","status":"CANDIDATE_VERIFICATION"},
-      {"id":"E2.4","name":"Environment Generalization Matrix","status":"BLOCKED_UNTIL_E2_3_ACCEPTED"},
+      {"id":"E2.3","name":"Frozen-Catalog Transfer","status":"ACCEPTED"},
+      {"id":"E2.4","name":"Environment Generalization Matrix","status":"AUTHORIZED_NOT_STARTED"},
       {"id":"E2.5","name":"Ecological Sorting vs Continued Adaptation","status":"PLANNED"},
       {"id":"E2.6","name":"Replicated Causal Experiments","status":"PLANNED"},
       {"id":"E2.7","name":"Cross-Seed Robustness","status":"PLANNED"},
@@ -132,14 +89,10 @@
   },
   "EVO3": {"status":"AFTER_EVO2_PORTABLE_PLANT_ECOLOGY_PROOF","goal":"Planetary Ecology Compiler / broader planetary generalization"},
   "EVO4": {"status":"AFTER_PLANT_PORTABILITY_AND_PLANETARY_GENERALIZATION","goal":"multi-trophic ecosystem and coevolution"},
-  "XFER": {
-    "XFER0":{"status":"BOUNDED_DESIGN_AFTER_EVO2_PROOF"},
-    "XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}
-  },
+  "XFER": {"XFER0":{"status":"BOUNDED_DESIGN_AFTER_EVO2_PROOF"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
   "LIVE": {"status":"DEFERRED_UNTIL_XFER_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"RESEARCH_OBSERVABILITY_SUPPORT"},
   "production_blockers": [
-    "E2_3_FORMAL_ACCEPTANCE_REQUIRED_FOR_E2_4",
     "P4_REQUIRES_INDEPENDENT_REVIEW_VERIFIER_AND_MAIN_OWNED_PROMOTION_BEFORE_GLOBAL_ACCEPTANCE",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
     "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
