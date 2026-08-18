@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"V0-P4-R1-EVENT-0016",
+  "project_epoch":"E2026-08-17-V0-P4-R1",
+  "work_order_id":"V0-P4-R1-WO-001",
+  "sequence":16,
+  "event_type":"FIX_REQUIRED",
+  "work_state":"FIX_REQUIRED",
+  "recorded_at_utc":"2026-08-18T00:40:00Z",
+  "actor":"DIRECTOR",
+  "branch":"feature/v0-p4-construction-real-resources",
+  "head_sha":"2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "command":"CLASSIFY_P4_CLOSURE_LEDGER_MATERIALIZATION_GAP",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-17-V0-P4-R1/repairs/V0-P4-R1-LEDGER-MATERIALIZATION-R1.v1.json","config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-EVIDENCE-MAP-001.v1.json","config/control/harness/executions/E2026-08-17-V0-P4-R1/reviews/V0-P4-R1-REVIEW-POST-001.v1.json","config/control/harness/executions/E2026-08-17-V0-P4-R1/verification/V0-P4-R1-VERIFY-001.v1.json"],
+  "summary":"Control-only closure finding: committed P4 implementation evidence is independently PASSed, but generation-80 reducer completes predicates only from completion-bearing event types. Runtime remains frozen; append-only ledger materialization is required without production/test mutation.",
+  "blocker":"P4_CLOSURE_PREDICATES_NOT_MATERIALIZED_IN_REDUCER"
+}
