@@ -1,9 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology.evo2_e2_2_evolution_bake_export_validation.v1",
-  "revision": "ECO-EVO2-E2.2-2026-08-18-R1-CANDIDATE",
+  "revision": "ECO-EVO2-E2.2-2026-08-18-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "candidate_head": "7cf98d67a4658644a6f2dde3e93e28a184638ec3",
-  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_PASS_FULL_BRANCH_RUNNER_PENDING",
+  "acceptance_source_head": "4ddf7d275d10a6a84a3e414bfb0e76447cb2a890",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION",
   "scope": "RESEARCH_ONLY_EVO2",
   "parent_evidence": {
     "e2_1_validation": "validation/ecology/eco-evo2-e2-1-species-catalog-validation.json",
@@ -32,12 +33,7 @@
     "source_boundary": "typed canonical long-run lineage-history evidence: validated P2.7-compatible observations plus explicit yearly occupancy history and exact source-run provenance",
     "selection": "retain only lineages old enough, present in the final year, persistent in at least 6 of the trailing 8 years, and carrying a representative observation no more than 2 years stale",
     "representative_snapshot": "latest unambiguous validated observation by observation end-year",
-    "rejection_reasons": [
-      "RECENT_LINEAGE",
-      "EXTINCT_AT_FINAL",
-      "TRANSIENT_PERSISTENCE",
-      "STALE_REPRESENTATIVE"
-    ],
+    "rejection_reasons": ["RECENT_LINEAGE", "EXTINCT_AT_FINAL", "TRANSIENT_PERSISTENCE", "STALE_REPRESENTATIVE"],
     "identity": "one retained lineage hypothesis maps to one accepted E2.1 research_species_id; mutation events are not promoted to species and no clustering is performed",
     "catalog": "selected observations are passed through accepted E2.1 SpeciesCatalog.build and the result must validate under SpeciesCatalog.validate_catalog",
     "integrity": "export embeds exact validated source evidence; validate_export re-derives selected/rejected policy decisions from the embedded source and independently rebuilds the expected SpeciesCatalog before accepting hashes",
@@ -52,12 +48,33 @@
     "runner": "RUN_ECO_EVO2_E2_2_TESTS.ps1",
     "runner_git_blob_sha": "b2d55213ac19714fe3f603e7266c539ac43ab104"
   },
-  "exact_attached_godot": {
-    "version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "formal_equivalent_verification": {
+    "executed_date": "2026-08-18",
+    "human_directed_gate": true,
+    "remote_head_verified": "4ddf7d275d10a6a84a3e414bfb0e76447cb2a890",
+    "candidate_to_remote_diff_commits": 6,
+    "candidate_to_remote_code_or_test_changes": false,
+    "candidate_to_remote_changed_scope": [
+      "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
+      "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
+      "docs/checkpoints/2026-08-18_ECO_EVO2_E2_2_EVOLUTION_BAKE_EXPORT_CANDIDATE_RU.md",
+      "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+      "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
+      "validation/ecology/eco-evo2-e2-2-evolution-bake-export-validation.json"
+    ],
+    "local_branch_identity_gate": "PASS_feature/eco-evolutionary-ecology",
+    "parent_validation_gate": "PASS_E2_1_AND_P2_8_EXACT_ACCEPTED_AGGREGATES",
+    "exact_blob_identity_gate": "PASS_8_OF_8",
+    "godot_identity_gate": "PASS",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "parser_preload_exit": 0,
+    "parser_error_lines": 0,
+    "acceptance_assertions": "PASS_62_OF_62",
     "fresh_process_a_exit": 0,
     "fresh_process_b_exit": 0,
+    "fresh_process_runs": 2,
+    "fresh_process_error_lines": 0,
     "fresh_process_logs_byte_identical": true,
     "check_log_sha256": "39fde4591a5b4e0b04ce5153e2250cb1acf164a74c7a9335186d68f9edcccc3a",
     "fresh_process_log_sha256": "04a11281a398bf24a7880a95a01728a9a64bbac5c79e7a8aa6019ba918f329b2",
@@ -65,9 +82,19 @@
     "source_hash": "c165964f710036287b9e8d310085a662d004b05eecc0c915ad1d3650a18dedb9",
     "bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
     "catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "parent_e2_1_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "parent_p2_8_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
+    "equivalence_basis": "E2.2 explicitly allows full canonical branch runner OR equivalent fresh verification. The execution environment has no PowerShell runtime, so a new clean carrier was created on the exact required branch name from the exact candidate executable blobs. All eight executable/runner blob identities were verified, parent accepted aggregates were read from the current remote branch, the exact attached Godot double identity was verified, and the canonical acceptance GDScript was executed in two fresh processes with the same constants and output checks as the PowerShell runner."
+  },
+  "exact_attached_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "aggregate_hash": "56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce",
+    "source_hash": "c165964f710036287b9e8d310085a662d004b05eecc0c915ad1d3650a18dedb9",
+    "bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
     "selected_count": 2,
     "rejected_count": 4,
-    "dependency_mode": "EXACT_GITHUB_BLOBS_MINIMAL_RES_PROJECT",
     "dependency_git_blobs": {
       "environment_sample_v1.gd": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
       "plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
@@ -75,7 +102,8 @@
       "plant_lineage_divergence_diagnostics_v1.gd": "fdb7d4cbacc7dd575c665c66340a926f82f07483",
       "plant_species_catalog_v1.gd": "f1c706b6d915e6e709be2fcdd7e0fa8cb89fcbc2",
       "plant_evolution_bake_export_v1.gd": "6ed4abfa58c28a99fb1c28547d81e1a292756e10",
-      "eco_evo2_e2_2_evolution_bake_export_acceptance.gd": "87a980543239b71b6a7fb5d7e2ecfcd2e89df195"
+      "eco_evo2_e2_2_evolution_bake_export_acceptance.gd": "87a980543239b71b6a7fb5d7e2ecfcd2e89df195",
+      "RUN_ECO_EVO2_E2_2_TESTS.ps1": "b2d55213ac19714fe3f603e7266c539ac43ab104"
     }
   },
   "fixture_boundary": {
@@ -84,36 +112,23 @@
     "source_impersonates_accepted_evolution_result": false,
     "reason": "accepted upstream P2.8 proves long-run deterministic world persistence but does not expose a canonical multi-lineage evolved-observation collection; E2.2 defines the typed boundary that a future evolution bake producer must emit"
   },
-  "closed_during_implementation": [
-    {
-      "id": "E2_2_INTEGRITY_001_RECOMPUTED_SELECTION_TAMPER",
-      "finding": "an early validator shape could validate internally rehashed selection claims without independently re-deriving them from source evidence",
-      "repair": "embed the exact validated source, re-derive policy decisions on validation, and rebuild the expected E2.1 SpeciesCatalog before accepting the export",
-      "status": "CLOSED_BEFORE_CANDIDATE_FREEZE",
-      "final_implementation_blob": "6ed4abfa58c28a99fb1c28547d81e1a292756e10",
-      "final_test_blob": "87a980543239b71b6a7fb5d7e2ecfcd2e89df195"
-    }
-  ],
+  "closed_during_implementation": [{
+    "id": "E2_2_INTEGRITY_001_RECOMPUTED_SELECTION_TAMPER",
+    "finding": "an early validator shape could validate internally rehashed selection claims without independently re-deriving them from source evidence",
+    "repair": "embed the exact validated source, re-derive policy decisions on validation, and rebuild the expected E2.1 SpeciesCatalog before accepting the export",
+    "status": "CLOSED_BEFORE_CANDIDATE_FREEZE",
+    "final_implementation_blob": "6ed4abfa58c28a99fb1c28547d81e1a292756e10",
+    "final_test_blob": "87a980543239b71b6a7fb5d7e2ecfcd2e89df195"
+  }],
   "required_properties": [
-    "E2_1_ACCEPTED_PARENT_PINNED",
-    "P2_8_ACCEPTED_PARENT_PINNED",
-    "TYPED_CANONICAL_LONG_RUN_LINEAGE_SOURCE",
-    "DETERMINISTIC_RETENTION_POLICY",
-    "EXPLICIT_RECENT_EXTINCT_TRANSIENT_STALE_REJECTIONS",
-    "LATEST_UNAMBIGUOUS_REPRESENTATIVE_SELECTION",
-    "INPUT_ORDER_INDEPENDENT_SOURCE_AND_EXPORT",
-    "AMBIGUOUS_SAME_YEAR_OBSERVATION_FAILS_CLOSED",
-    "DUPLICATE_LINEAGE_AND_DUPLICATE_OCCUPANCY_YEAR_FAIL_CLOSED",
-    "INCOMPLETE_PERSISTENCE_WINDOW_FAILS_CLOSED",
-    "NO_GLOBAL_RNG_CONSUMPTION",
-    "SOURCE_NOT_MUTATED",
-    "EXACT_SOURCE_EVIDENCE_EMBEDDED_IN_EXPORT",
-    "POLICY_DECISIONS_REDERIVED_FROM_EMBEDDED_SOURCE",
-    "EXPECTED_SPECIES_CATALOG_REBUILT_DURING_VALIDATION",
-    "REHASHED_POLICY_TAMPER_REJECTED",
-    "CANONICAL_TAXONOMY_PROMOTION_REJECTED",
-    "ALL_REJECTED_SOURCE_FAILS_CLOSED",
-    "SAME_AND_FRESH_PROCESS_DETERMINISM"
+    "E2_1_ACCEPTED_PARENT_PINNED", "P2_8_ACCEPTED_PARENT_PINNED", "TYPED_CANONICAL_LONG_RUN_LINEAGE_SOURCE",
+    "DETERMINISTIC_RETENTION_POLICY", "EXPLICIT_RECENT_EXTINCT_TRANSIENT_STALE_REJECTIONS",
+    "LATEST_UNAMBIGUOUS_REPRESENTATIVE_SELECTION", "INPUT_ORDER_INDEPENDENT_SOURCE_AND_EXPORT",
+    "AMBIGUOUS_SAME_YEAR_OBSERVATION_FAILS_CLOSED", "DUPLICATE_LINEAGE_AND_DUPLICATE_OCCUPANCY_YEAR_FAIL_CLOSED",
+    "INCOMPLETE_PERSISTENCE_WINDOW_FAILS_CLOSED", "NO_GLOBAL_RNG_CONSUMPTION", "SOURCE_NOT_MUTATED",
+    "EXACT_SOURCE_EVIDENCE_EMBEDDED_IN_EXPORT", "POLICY_DECISIONS_REDERIVED_FROM_EMBEDDED_SOURCE",
+    "EXPECTED_SPECIES_CATALOG_REBUILT_DURING_VALIDATION", "REHASHED_POLICY_TAMPER_REJECTED",
+    "CANONICAL_TAXONOMY_PROMOTION_REJECTED", "ALL_REJECTED_SOURCE_FAILS_CLOSED", "SAME_AND_FRESH_PROCESS_DETERMINISM"
   ],
   "implementation_diff": {
     "base_head": "bdd0bac6bfd109b81e1023b0106afb719a3579df",
@@ -124,15 +139,26 @@
     "accepted_e2_1_sources_modified": false,
     "accepted_p2_8_sources_modified": false
   },
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-18",
+    "aggregate_hash": "56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce",
+    "code_under_test_head": "7cf98d67a4658644a6f2dde3e93e28a184638ec3",
+    "acceptance_source_head": "4ddf7d275d10a6a84a3e414bfb0e76447cb2a890",
+    "canonical_species_declared": false,
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "decision": "ACCEPT_E2_2_AND_AUTHORIZE_E2_3"
+  },
   "known_boundary": {
     "full_repository_checkout_available_in_execution_container": false,
     "powershell_branch_runner_executed": false,
-    "exact_blob_minimal_project_execution": true,
+    "equivalent_fresh_verification_executed": true,
     "independent_reviewer_claimed": false,
     "production_authority_claimed": false,
     "canonical_taxonomy_claimed": false,
-    "e2_3_authorized": false
+    "e2_3_authorized": true
   },
-  "decision": "KEEP_E2_2_AS_NON_SELF_ACCEPTED_CANDIDATE_UNTIL_FULL_BRANCH_RUNNER_OR_EQUIVALENT_FRESH_VERIFICATION",
-  "next": "Fresh/canonical verification of ECO.EVO2 E2.2. If green, freeze E2.2 and open E2.3 Frozen-Catalog Transfer."
+  "decision": "ACCEPT_E2_2_AND_AUTHORIZE_E2_3",
+  "next": "ECO.EVO2 / E2.3 Frozen-Catalog Transfer"
 }
