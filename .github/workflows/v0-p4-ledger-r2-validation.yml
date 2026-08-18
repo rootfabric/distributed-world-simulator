@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPAIR_HEAD="5433e6733c1c110849bbb861d3e4ea1d45296f90"
+          REPAIR_HEAD="73b5bf7d31ca873f7304ab3674181077c8d624c3"
           AUDITED_MAIN="5999d935e8d5b496100ced66283d8762d3403675"
           EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
 
@@ -46,7 +46,6 @@ jobs:
           python3 -m pip install --disable-pip-version-check -q -r scripts/harness/requirements.txt
           export PYTHONPATH="$PWD/scripts"
           export PYTHONUTF8=1
-          # Replay historical initial-dispatch provenance against the exact audited generation-80 main.
           git update-ref refs/remotes/origin/main "$AUDITED_MAIN"
 
           python3 -m harness.cli status --root "$PWD" --execution "$EXECUTION" | tee /tmp/status.log
@@ -80,9 +79,9 @@ jobs:
         run: |
           set -euo pipefail
           BASE="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
-          HEAD="5433e6733c1c110849bbb861d3e4ea1d45296f90"
+          HEAD="73b5bf7d31ca873f7304ab3674181077c8d624c3"
           git diff --check "$BASE" "$HEAD"
           bad="$(git diff --name-only "$BASE" "$HEAD" | grep -Ev '^config/control/harness/executions/E2026-08-17-V0-P4-R1/' || true)"
           test -z "$bad"
-          test "$(git rev-list --count "$BASE..$HEAD")" = "1"
-          test "$(git rev-parse "$HEAD^")" = "$BASE"
+          test "$(git rev-list --count "$BASE..$HEAD")" = "2"
+          test "$(git merge-base "$BASE" "$HEAD")" = "$BASE"
