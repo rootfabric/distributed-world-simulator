@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_1_directory_repair_r2.v1",
+  "status": "RESEARCH_ONLY_REPAIR_R2_CANDIDATE",
+  "checkpoint": "SM1-I2.1",
+  "branch": "research/sm1-i2-directory",
+  "architecture_base": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+  "supersedes_repair_r1_head": "829e609a2cbf204c8cd3fed3481cc5ff112ec947",
+  "fresh_review_verdict": "SM1_I2_1_REPAIR_R1_FRESH_INDEPENDENT_REVIEW_FIX_REQUIRED",
+  "repair_scope": "TEST_AND_EVIDENCE_ONLY",
+  "production_activation": false,
+  "donor_only": true,
+  "runtime_semantics_changed": false,
+  "directory_implementation_changed": false,
+  "finding": {
+    "id": "I2.1-R-001-REPAIR-R1-CLOSURE-GAP",
+    "description": "Repair R1 proved stale expected precedence but omitted not-found plus invalid-desired precedence coverage.",
+    "required_falsification": "ABSENT_CANONICAL_RECORD_PLUS_INVALID_DESIRED_RETURNS_NOT_FOUND_BEFORE_DESIRED_VALIDATION"
+  },
+  "required_delta_tests": [
+    "OD-CAS-17"
+  ],
+  "required_result": {
+    "status": "NOT_FOUND",
+    "observed": null,
+    "current": null,
+    "canonical_directory_mutation": false
+  },
+  "evidence_expectations": {
+    "cas_result_status": "NOT_FOUND",
+    "linearization_sequence": 1,
+    "observed": null,
+    "current": null
+  },
+  "unchanged_repair_r1_findings": {
+    "I2.1-R-002": "PASS_FROM_FRESH_REVIEW",
+    "I2.1-R-003": "PASS_FROM_FRESH_REVIEW"
+  },
+  "out_of_scope": [
+    "DURABLE_STORAGE",
+    "DIRECTORY_CRASH_RECOVERY",
+    "PARTITION_RECOVERY",
+    "CANONICAL_MUTATION_AUTHORIZATION",
+    "LEASE_EXPIRY",
+    "GATEWAY_ROUTING",
+    "AUTHORITY_DOMAIN_HANDOFF",
+    "ITEM_GRAPH",
+    "PLAYER_RUNTIME",
+    "I2.2"
+  ],
+  "next_gate": "FRESH_INDEPENDENT_READ_ONLY_REVIEW_ON_EXACT_REPAIR_R2_HEAD"
+}
