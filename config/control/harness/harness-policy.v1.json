@@ -8,6 +8,8 @@
   "project_goals": "config/control/harness/project-goals.v1.json",
   "checkpoint_catalog": "config/control/harness/checkpoint-catalog.v1.json",
   "scheduler_policy": "config/control/harness/scheduler-policy.v1.json",
+  "runtime_mutation_lease_registry": "config/control/harness/pre-h0-3-runtime-mutation-leases.v1.json",
+  "runtime_mutation_lease_registry_schema": "config/control/harness/runtime-mutation-lease-registry.schema.v1.json",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "work_order_schema": "config/control/harness/work-order.schema.v1.json",
   "event_schema": "config/control/harness/event.schema.v1.json",
