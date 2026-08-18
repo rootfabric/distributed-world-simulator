@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P4-R1-LEDGER-STATE-REPAIR-001",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "Harness append-only V0-P4 closure ledger state progression",
+  "canonical_owner": "config/control/harness/executions/E2026-08-17-V0-P4-R1 append-only event ledger and derived Work Order snapshot; P4 runtime canonical owners remain frozen and unchanged.",
+  "entry_points": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/events/V0-P4-R1-WO-001/0015-predicate-independent-verifier-pass.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/work-orders/V0-P4-R1-WO-001.v1.json"
+  ],
+  "callers": [
+    "scripts/harness/event_reducer.py",
+    "scripts/harness/checkpoint_planner.py",
+    "Project Control / resume / checkpoint planning"
+  ],
+  "callees": [
+    "append-only state reduction",
+    "required-predicate completion tracking",
+    "guarded FIX_REQUIRED -> DISPATCHED recovery"
+  ],
+  "sibling_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/reviews/V0-P4-R1-REVIEW-POST-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/verification/V0-P4-R1-VERIFY-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-POST-CLEARANCE-PC0-001.v1.json"
+  ],
+  "existing_tests": [
+    "Harness event schema validation",
+    "append-only transition-table state validation",
+    "generation-80 V0 safety guards",
+    "Project Control exact-head validation"
+  ],
+  "missing_tests": [
+    "No production/runtime test is missing; this control repair must receive an exact-head Project Control run and a fresh independent review before guarded redispatch."
+  ],
+  "public_or_internal_contracts": [
+    "VERIFIED may transition to FIX_REQUIRED but may not self-transition.",
+    "PREDICATE_VERIFIED may self-transition only while VERIFYING.",
+    "guard_violation_recovery requires immediate FIX_REQUIRED, no intervening implementation event, and a fresh reviewer PASS before checkpoint continuation.",
+    "Work Order state is a derived snapshot and must match the append-only event reducer."
+  ],
+  "expected_shipped_behavior": "Preserve exact P4 runtime head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d and all existing Reviewer/Verifier evidence. Mark the premature closure-state advancement FIX_REQUIRED. After a fresh independent review of this repair, perform only the guarded control redispatch needed to return the ledger to VERIFYING, durably record every remaining required checkpoint predicate from exact existing evidence plus the post-main clearance proof, then audit and propose the checkpoint. No runtime mutation is authorized by this repair.",
+  "relevant_history_or_evidence": [
+    "Recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8 recorded event 0015 as VERIFIED.",
+    "Event 0015 records INDEPENDENT_VERIFIER_PASS for exact P4 implementation/evidence head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d.",
+    "The Work Order still requires closure predicates including REVIEW_HEAD_EXACT_AND_FRESH, TESTED_HEADS_EXACT_AND_FRESH, standard/directional PC0, overlap, human-attention, draft-PR and checkpoint proposal predicates.",
+    "PR #124 merged main-owned fail-closed directional clearance at merge commit 7351b720bc9a0a6dbe2577dfb37568a853d2f266.",
+    "Post-clearance exact-main Project Control evidence from run 32085293289 reports standard health YELLOW, directional health YELLOW, clearance loaded from main, and the V0 -> NX critical hit downgraded only by exact ACCEPTED clearance."
+  ],
+  "root_cause_hypothesis": "The recovery reconstruction used the final Verifier PASS event to advance the Work Order from VERIFYING to VERIFIED before the clean recovery ledger had durably rebuilt the remaining required checkpoint predicates. Because VERIFIED is intentionally not self-transitionable, later PREDICATE_VERIFIED events cannot be appended without first entering the explicit append-only repair path.",
+  "canonical_fix_location": "Append event V0-P4-R1-EVENT-0016 as FIX_REQUIRED immediately after 0015 and update only the derived Work Order snapshot to FIX_REQUIRED on a dedicated control-only repair branch. Do not change the transition table or any P4 runtime/test source.",
+  "why_not_symptom_patch": "Rewriting event 0015, permitting VERIFIED self-transitions, deleting required predicates, or jumping directly to AUDITED/CHECKPOINT_PROPOSED would weaken fail-closed Harness semantics and would hide the incomplete clean-ledger predicate history instead of repairing it append-only."
+}
