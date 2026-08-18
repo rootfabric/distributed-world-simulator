@@ -1,6 +1,6 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1 CANDIDATE_VERIFICATION / E2.2 BLOCKED`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1 ACCEPTED / E2.2 IN_DEVELOPMENT`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -46,6 +46,9 @@ P3.8 checkpoint SHA-256
 
 P3.8 final state hash
 1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9
+
+E2.1 SpeciesCatalog aggregate
+aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
 ```
 
 P4.1..P4.8 production-integration work существует как branch-local lifecycle evidence, но EVO2 не наследует из него production authority. P4 promotion остаётся отдельным control-plane процессом.
@@ -71,13 +74,17 @@ P2.7 deliberately produced `SPECIATION_CANDIDATE`, а не canonical taxonomy.
 
 ## 3. E2.1 — SpeciesCatalog Contract
 
-Статус: `CANDIDATE_VERIFICATION / NOT_SELF_ACCEPTED`.
+Статус: `ACCEPTED`.
 
 Exact code-under-test:
 
 `bf468942718df6b84ebd4c61a294987e8e63c607`
 
-Exact attached Godot evidence:
+Acceptance source HEAD:
+
+`c79e2d61e665689fe39621442f72171de5d2790f`
+
+Accepted exact attached Godot evidence:
 
 ```text
 4.7.1.stable.double.custom_build.a13da4feb
@@ -86,15 +93,11 @@ fresh-process logs byte-identical
 aggregate aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
 ```
 
-Полный canonical branch runner остаётся обязательным перед E2.2.
+Acceptance authority: human-directed exact-attached-Godot equivalent fresh verification. Independent Reviewer PASS не заявляется.
 
-### Goal
+### Frozen contract
 
-Создать deterministic fail-closed contract, который переносит lineage evidence из эволюционного solver в отдельный catalog artifact без мутации source state.
-
-### Минимальная entry truth
-
-Каждая entry должна содержать:
+Каждая entry содержит:
 
 - `research_species_id`;
 - `lineage_id`;
@@ -108,7 +111,7 @@ aggregate aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
 - entry hash;
 - `canonical_species_declared = false`.
 
-### Stable identity rule
+Stable identity rule:
 
 `research_species_id` выводится из schema/version/species-concept и `lineage_id`.
 
@@ -117,51 +120,33 @@ aggregate aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
 - изменение порядка входа не меняет ID;
 - повторный export той же lineage не меняет ID;
 - изменение snapshot traits не меняет lineage identity, но меняет `entry_hash` и `catalog_hash`;
-- разные lineage IDs не должны collision-collapse в одну entry.
+- разные lineage IDs не collision-collapse в одну entry.
 
-### Catalog truth
+Catalog содержит schema/version/species concept, frozen parent P2.7 evidence identity, explicit `bake_id`, `source_run_hash`, entries в canonical order и deterministic `catalog_hash`.
 
-Catalog содержит:
+Frozen acceptance gates включают strict exact source observation field shape, strict `split_year` Variant type, tamper rejection, input-order independence, no global RNG consumption и no source mutation.
 
-- schema/version/species concept;
-- frozen parent P2.7 evidence identity;
-- explicit `bake_id`;
-- `source_run_hash`;
-- entries в canonical order;
-- deterministic `catalog_hash`.
-
-### E2.1 acceptance gates
-
-Обязательны:
-
-1. valid single-entry catalog;
-2. valid multi-entry catalog;
-3. deterministic rebuild;
-4. input-order independence;
-5. stable species identity for same lineage;
-6. distinct IDs for distinct lineages;
-7. source objects remain byte/semantic-equal after build;
-8. malformed observation fails closed;
-9. duplicate lineage fails closed;
-10. malformed provenance fails closed;
-11. entry tamper rejected;
-12. catalog tamper rejected;
-13. canonical ordering enforced by validation;
-14. global RNG is not consumed;
-15. `canonical_species_declared` cannot become true;
-16. exact source observation field shape required;
-17. legacy extra fields rejected;
-18. non-int `split_year` Variant rejected.
-
-Persistence/JSON round-trip не является E2.1 gate; это E2.8, чтобы не смешивать contract semantics и codec/persistence proof.
+Persistence/JSON round-trip остаётся E2.8.
 
 ## 4. E2.2 — Deterministic Evolution Bake Export
 
-Статус: `BLOCKED_UNTIL_E2_1_ACCEPTED`.
+Статус: `IN_DEVELOPMENT / CURRENT`.
 
 ### Goal
 
 Получать SpeciesCatalog из long-run evolution result автоматически, а не вручную перечислять lineages.
+
+### Required pipeline
+
+```text
+long-run lineage evidence
+    ↓
+deterministic candidate selection
+    ↓
+deterministic representative observation per retained lineage
+    ↓
+accepted E2.1 SpeciesCatalog.build(...)
+```
 
 ### Required policy
 
@@ -173,10 +158,31 @@ Bake должен доказать:
 - no iteration-order dependence;
 - no global RNG dependence;
 - provenance до exact evolution result;
+- source long-run result is not mutated;
 - clear policy для extinct/recent/transient lineages;
-- fail-closed handling ambiguous grouping.
+- fail-closed handling duplicate/ambiguous lineage evidence;
+- accepted E2.1 catalog validation on every successful export;
+- no biome lookup;
+- no canonical species declaration.
 
-Если clustering вводится, его acceptance идёт отдельно; E2.1 не считается разрешением объявлять biological species.
+Первый E2.2 contract не вводит clustering. Одна retained validated lineage hypothesis остаётся одной research species entry. Любая более сложная grouping/species concept policy требует отдельного evidence gate.
+
+### Initial E2.2 acceptance direction
+
+Минимум нужно проверить:
+
+1. stable retained-lineage selection under shuffled input ordering;
+2. explicit minimum observation count / persistence window;
+3. deterministic latest-or-policy-selected representative observation;
+4. transient lineage exclusion;
+5. extinct lineage handling by explicit policy, not implicit disappearance;
+6. duplicate same-year / ambiguous representative evidence rejection;
+7. exact source-run provenance hash propagation;
+8. unchanged source evidence after bake;
+9. repeated/fresh-process catalog hash equality;
+10. global RNG untouched;
+11. output passes frozen E2.1 `SpeciesCatalog.validate_catalog()`;
+12. no taxonomy promotion.
 
 ## 5. E2.3 — Frozen-Catalog Transfer
 
@@ -312,6 +318,6 @@ PopulationPatchState      -> representation materialization
 ## 14. Current execution
 
 ```text
-CURRENT = VERIFY ECO.EVO2 / E2.1 SpeciesCatalog Contract
-NEXT    = E2.2 Deterministic Evolution Bake Export after E2.1 acceptance
+CURRENT = DEVELOP ECO.EVO2 / E2.2 Deterministic Evolution Bake Export
+NEXT    = E2.3 Frozen-Catalog Transfer after E2.2 acceptance
 ```
