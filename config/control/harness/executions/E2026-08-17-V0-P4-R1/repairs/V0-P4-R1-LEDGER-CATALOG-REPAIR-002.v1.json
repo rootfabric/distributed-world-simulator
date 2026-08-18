@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P4-R1-LEDGER-CATALOG-REPAIR-002",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "Harness canonical checkpoint catalog synchronization on the V0-P4 recovery lineage",
+  "canonical_owner": "origin/main:config/control/harness/checkpoint-catalog.v1.json; the recovery carrier must consume the main-owned canonical checkpoint identity without inventing branch-private checkpoint truth.",
+  "entry_points": [
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/work-orders/V0-P4-R1-WO-001.v1.json"
+  ],
+  "callers": [
+    "scripts/harness/contracts.py ContractBundle.load",
+    "scripts/harness/state_builder.py _validate_semantics",
+    "CONTROL_DEVELOPMENT status/resume/checkpoint planning"
+  ],
+  "callees": [
+    "goal checkpoint canonical-identity validation",
+    "epoch eligible-checkpoint validation",
+    "required-predicate checkpoint planning"
+  ],
+  "sibling_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/events/V0-P4-R1-WO-001/0016-fix-required-premature-verified-state.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/repairs/V0-P4-R1-LEDGER-STATE-REPAIR-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-POST-CLEARANCE-PC0-001.v1.json"
+  ],
+  "existing_tests": [
+    "Canonical Harness state_builder checkpoint identity validation",
+    "Project Control generation-80 validation",
+    "V0 generation-80 safety guards",
+    "Exact-head temporary P4 ledger machine-check probe"
+  ],
+  "missing_tests": [
+    "No runtime or gameplay test is missing. The exact-head state_builder probe must be rerun after the catalog synchronization, and the combined control repair must receive fresh independent review before redispatch."
+  ],
+  "public_or_internal_contracts": [
+    "A Work Order goal_checkpoint must exist in the canonical Harness checkpoint catalog.",
+    "A Work Order goal_checkpoint must also be listed by its Project Epoch as eligible.",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION is main-owned canonical checkpoint truth and must not be replaced with V0_S1 merely to make recovery validation pass.",
+    "Recovery control branches may carry a synchronized copy of main-owned control truth but may not fork checkpoint semantics privately."
+  ],
+  "expected_shipped_behavior": "Synchronize config/control/harness/checkpoint-catalog.v1.json on the recovery repair branch byte-for-byte to the exact current main-owned blob 00bbbe96f9de6549e71057286f2d07fbf8930cd8. Preserve exact P4 runtime/evidence subject 2a6721cdf02fa1134c59d1ab98bb7b597c66821d, preserve event 0016 unchanged, remain FIX_REQUIRED, and allow canonical state_builder validation to reach and reduce the append-only P4 ledger. No checkpoint predicate or checkpoint proposal is granted by this synchronization.",
+  "relevant_history_or_evidence": [
+    "Recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8 carries checkpoint-catalog blob 51b38f1b48a54e3bec711e4b2ee1ccb1a189a7ee, which predates the V0_P4_REAL_RESOURCE_CONSTRUCTION checkpoint definition.",
+    "Current main d9a1a3ca03016d6851a258ff93d5c260a86c5b4c carries checkpoint-catalog blob 00bbbe96f9de6549e71057286f2d07fbf8930cd8 and canonically defines V0_P4_REAL_RESOURCE_CONSTRUCTION with the P4 required-predicate envelope.",
+    "Project Epoch E2026-08-17-V0-P4-R1 already lists V0_P4_REAL_RESOURCE_CONSTRUCTION as its sole eligible checkpoint.",
+    "Work Order V0-P4-R1-WO-001 already uses V0_P4_REAL_RESOURCE_CONSTRUCTION as goal_checkpoint.",
+    "Temporary exact-head probe run 32086785066 reached scripts/harness/state_builder.py and failed closed with WORK_ORDER_CHECKPOINT_NOT_CANONICAL before event reduction."
+  ],
+  "root_cause_hypothesis": "The P4 recovery carrier was reconstructed from a lineage whose local checkpoint-catalog copy predates the main-owned V0_P4_REAL_RESOURCE_CONSTRUCTION canonicalization, while its Project Epoch and Work Order were reconstructed with the newer P4 checkpoint identity. Ordinary Project Control did not exercise this execution's full state_builder path, so the catalog/Work-Order skew remained latent until the exact-head reducer probe.",
+  "canonical_fix_location": "Use the exact current main-owned checkpoint-catalog blob 00bbbe96f9de6549e71057286f2d07fbf8930cd8 at config/control/harness/checkpoint-catalog.v1.json on the control-only recovery repair branch and append V0-P4-R1-EVENT-0017 as a second FIX_REQUIRED event documenting the discovered skew. Do not rewrite event 0016, the epoch, the Work Order goal_checkpoint, the transition table, or runtime/test source.",
+  "why_not_symptom_patch": "Changing goal_checkpoint to V0_S1, removing the canonical-checkpoint validation, editing the Project Epoch to match stale branch data, or locally inventing a P4 checkpoint definition would weaken or fork control truth. Byte-for-byte synchronization from current main preserves the main-owned contract and exposes any further latent recovery defects fail-closed."
+}
