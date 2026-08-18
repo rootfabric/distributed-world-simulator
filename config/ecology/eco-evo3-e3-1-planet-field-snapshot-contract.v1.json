@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_planet_field_snapshot_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.1-2026-08-19-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "checkpoint": "ECO.EVO3/E3.1",
+  "name": "Planet Field Snapshot Contract",
+  "status": "CANDIDATE_RESEARCH_CONTRACT",
+  "research_only": true,
+  "parent": {
+    "e3_0_durable_head": "f1820949fcb89156429e5c150e530ac7da1267b7",
+    "e3_0_code_under_test_head": "250cf503c72440972bc8cdfaf4cea95398686ae0",
+    "e3_0_architecture_hash": "cbf50695b6db79d543c26168bcfa1bb9ac2e29b052f0eabeafb028ab618a3ac6",
+    "e3_0_roadmap_hash": "1b153d5974ab2f922dfe557ce5a9d3eed5a83f904b5c50265d7a28fb6faba178",
+    "xfer0_code_under_test_head": "bb80beac95d838b56cccbe5d98f7e1bcbfd80376",
+    "xfer0_contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309",
+    "xfer0_aggregate_hash": "1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044"
+  },
+  "binding": {
+    "mode": "RESEARCH_FIXTURE_SEMANTIC_ADAPTER_NO_PRODUCTION_API_BINDING",
+    "canonical_bindings_resolved": false,
+    "required_foundations": ["G","ENV","MAT","WQ","SD","TF"],
+    "owner_references_are_opaque": true,
+    "compiler_may_write_owner_state": false,
+    "production_api_binding_authorized": false,
+    "xfer1_required_for_production_binding": true
+  },
+  "snapshot_semantics": {
+    "required_identity_fields": ["stable_planet_identity","stable_spatial_key","stable_time_key","reference_frame_identity"],
+    "required_owner_reference_fields": ["terrain_or_geology_context_reference","environment_field_reference","material_context_reference","world_query_capability_reference","spatial_domain_reference","time_fabric_reference"],
+    "required_environment_fields": ["temperature","soil_moisture","light_availability","nutrient_availability","disturbance_pressure"],
+    "numeric_encoding": "INTEGER_FIXED_UNITS_V1",
+    "units": {"latitude_microdeg":"MICRODEGREE","longitude_microdeg":"MICRODEGREE","temperature_milli_c":"MILLI_DEGREE_C","soil_moisture_ppm":"PPM_FRACTION","light_availability_ppm":"PPM_FRACTION","nutrient_availability_ppm":"PPM_FRACTION","disturbance_pressure_ppm":"PPM_FRACTION"},
+    "bounds": {"latitude_microdeg":[-90000000,90000000],"longitude_microdeg":[-180000000,180000000],"temperature_milli_c":[-150000,100000],"soil_moisture_ppm":[0,1000000],"light_availability_ppm":[0,1000000],"nutrient_availability_ppm":[0,1000000],"disturbance_pressure_ppm":[0,1000000]}
+  },
+  "fixture_policy": {
+    "fixture_id": "eco-evo3/e3.1/planet-alpha-semantic-fixture-r1",
+    "provider_mode": "RESEARCH_FIXTURE_SEMANTIC_ADAPTER",
+    "sample_count": 12,
+    "all_foundations_required_per_snapshot": true,
+    "unique_sample_ids_required": true,
+    "unique_spatial_keys_required": true,
+    "canonical_sample_order": "LEXICOGRAPHIC_STABLE_SPATIAL_KEY",
+    "global_rng_consumption_forbidden": true,
+    "species_fields_forbidden": true,
+    "biome_fields_forbidden": true,
+    "population_fields_forbidden": true
+  },
+  "output_contract": {
+    "schema": "distributed_world_simulator.ecology.evo3_planet_field_snapshot.v1",
+    "version": "1.0.0",
+    "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+    "canonical_binding_resolved": false,
+    "required_hashes": ["source_fixture_hash","field_provenance_hash","snapshot_hash"],
+    "same_fixture_same_bytes_required": true,
+    "same_fixture_same_hash_required": true,
+    "foundation_reference_change_must_change_provenance": true,
+    "field_value_change_must_change_snapshot_hash": true
+  },
+  "forbidden_promotions": ["RESEARCH_FIXTURE_TO_CANONICAL_OWNER_TRUTH","SNAPSHOT_TO_PRODUCTION_API_CONTRACT","RESEARCH_SPATIAL_KEY_TO_CANONICAL_SD_ID","FIELD_SAMPLE_TO_POPULATION_TRUTH","FIELD_SAMPLE_TO_SPECIES_ASSIGNMENT","BIOME_TO_SPECIES_MAPPING","CANONICAL_TIME_OR_ENVIRONMENT_OWNERSHIP","PRODUCTION_PERSISTENCE_AUTHORITY","NETWORK_OR_WORLD_TRANSACTION_AUTHORITY"],
+  "next_gate": {"on_accept":"AUTHORIZE_E3_2_ECOLOGICAL_OPPORTUNITY_FIELD","e3_2_may_consume_snapshot_only":true,"e3_2_may_not_consume_raw_fixture_bypass":true,"production_binding_remains_blocked_on_xfer1":true},
+  "contract_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "contract_hash": "b3e96b432008ea93692c5cbde9cf7c74cceca4e4c4196ef261a5fbd0ff405170"
+}
