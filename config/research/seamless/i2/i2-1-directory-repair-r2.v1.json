@@ -31,6 +31,14 @@
     "observed": null,
     "current": null
   },
+  "component_evidence": {
+    "directory_blob_sha": "57863a088d20a9ec400417a4c98edcdf8e9756c7",
+    "repair_r1_test_blob_sha": "fce728b1822398cd7f1a14b52a1a129a9ff2da14",
+    "repair_r2_test_blob_sha": "e1ad5b7cc4251778733f98267446971cad3ded34",
+    "repair_r1_suite": "17/17 PASS ON UNCHANGED BLOBS",
+    "repair_r2_delta": "1/1 PASS AGAINST EXACT PUBLISHED DIRECTORY AND TEST BLOBS",
+    "repair_r1_suite_files_changed_by_r2": false
+  },
   "unchanged_repair_r1_findings": {
     "I2.1-R-002": "PASS_FROM_FRESH_REVIEW",
     "I2.1-R-003": "PASS_FROM_FRESH_REVIEW"
