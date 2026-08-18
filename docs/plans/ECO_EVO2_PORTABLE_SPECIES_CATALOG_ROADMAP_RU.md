@@ -1,6 +1,6 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1 ACCEPTED / E2.2 ACCEPTED / E2.3 ACCEPTED / E2.4 AUTHORIZED_NOT_STARTED`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1 ACCEPTED / E2.2 ACCEPTED / E2.3 ACCEPTED / E2.4 ACCEPTED / E2.5 AUTHORIZED_NOT_STARTED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -53,6 +53,9 @@ E2.2 frozen catalog
 
 E2.3 Frozen-Catalog Transfer aggregate
 82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8
+
+E2.4 Environment Generalization Matrix aggregate
+ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5
 ```
 
 P4 production-integration evidence остаётся отдельной governance-линией и не даёт EVO2 production authority.
@@ -65,101 +68,49 @@ P4 production-integration evidence остаётся отдельной governanc
 
 ## 3. E2.1 — SpeciesCatalog Contract — ACCEPTED
 
-Exact code-under-test:
-
-`bf468942718df6b84ebd4c61a294987e8e63c607`
-
-Accepted aggregate:
-
-`aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad`
+Exact code-under-test: `bf468942718df6b84ebd4c61a294987e8e63c607`.  
+Accepted aggregate: `aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad`.
 
 ## 4. E2.2 — Deterministic Evolution Bake Export — ACCEPTED
 
-Exact code-under-test:
-
-`7cf98d67a4658644a6f2dde3e93e28a184638ec3`
-
-Accepted aggregate:
-
-`56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce`
+Exact code-under-test: `7cf98d67a4658644a6f2dde3e93e28a184638ec3`.  
+Accepted aggregate: `56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce`.
 
 Frozen export policy остаётся typed, deterministic, fail-closed и без taxonomy promotion.
 
 ## 5. E2.3 — Frozen-Catalog Transfer — ACCEPTED
 
+Exact code-under-test: `c7ee41371807ed7dbb75e7e1eae1587105873a26`.  
+Accepted aggregate: `82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8`.
+
+Frozen transfer contract сохраняет exact E2.2 catalog, starts target empty, hard-disables evolution, reuses causal dispersal/establishment/competition/turnover, permits `VALID_NO_COLONIZATION`, and rejects target-aware shortcuts.
+
+Accepted verification: 17/17 exact executable closure, 59/59 assertions, two byte-identical fresh processes. Independent role PASS not claimed.
+
+## 6. E2.4 — Environment Generalization Matrix — ACCEPTED
+
 Exact code-under-test:
 
-`c7ee41371807ed7dbb75e7e1eae1587105873a26`
+`0135aee461a107375cdb3e52e07e8c799145998b`
 
-Final implementation blob:
+Implementation:
 
-`a886d179fe32a2bb531956923fd0cc59bbbb28c6`
+```text
+scripts/research/ecology/plant_environment_generalization_matrix_v1.gd
+823ef6445d7f71aee79b7c0bb0932b321f90ce8d
+```
 
 Validation:
 
-`validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json`
+`validation/ecology/eco-evo2-e2-4-environment-generalization-matrix-validation.json`
 
 Accepted checkpoint:
 
-`docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_ACCEPTED_RU.md`
+`docs/checkpoints/2026-08-18_ECO_EVO2_E2_4_ENVIRONMENT_GENERALIZATION_MATRIX_ACCEPTED_RU.md`
 
-### Frozen E2.3 contract
+### Frozen E2.4 contract
 
-```text
-exact accepted E2.2 bake/catalog
-        ↓
-all catalog entries → target-independent source port
-        ↓
-mutation/evolution disabled
-        ↓
-previously unseen target revealed
-        ↓
-accepted P2.6 dispersal / establishment / competition / turnover
-        ↓
-population history
-```
-
-Hard constraints:
-
-- target patch IDs absent from bake evidence;
-- target exact EnvironmentSample checksums absent from bake evidence;
-- target starts with no adults and no seed bank;
-- no target species list API;
-- no biome->species lookup;
-- frozen catalog not mutated;
-- no global RNG consumption;
-- valid no-colonization is a successful ecological outcome, not execution failure.
-
-### Accepted verification
-
-```text
-exact transitive executable closure  17 / 17 PASS
-Godot                              4.7.1.stable.double.custom_build.a13da4feb
-parser/preload                     PASS
-fresh processes                    2 / 2 PASS
-assertions                         59 / 59 PASS
-logs                               byte-identical
-log SHA-256                        7b2f89965bac13dc1238b053ecfd7b3544948eb6fa9941f3ca56d66ca79cad7b
-aggregate                          82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8
-```
-
-Paired causal control:
-
-```text
-same target environment suitability
-reachable → COLONIZED
-isolated  → VALID_NO_COLONIZATION
-```
-
-Initial fresh run correctly failed because source-port moisture `0.58` suppressed reproduction of one frozen strategy. Repair made the source port target-independent but neutral enough for both (`0.40`), then full closure and all behavioral assertions were rerun.
-
-Acceptance authority is fresh behavioral execution, **not** independent Reviewer/Verifier authority.
-
-## 6. E2.4 — Environment Generalization Matrix — AUTHORIZED / CURRENT
-
-Goal: проверить один frozen catalog на разных previously unseen environments без rebake и без target-aware species selection.
-
-Minimum matrix:
+Один exact frozen catalog предлагается каждой environment cell без rebake, target-aware species filtering или mutation:
 
 ```text
 NEAR_SOURCE
@@ -170,48 +121,143 @@ HIGH_SEASONALITY
 PATCH_ISOLATED
 ```
 
-### Required invariants
+Matrix plan имеет canonical order/hash, per-cell typed hashes и deterministic replay validation.
 
-Для каждой matrix cell:
+### HIGH_SEASONALITY boundary
 
-1. exact E2.2 catalog/bake identity;
-2. exact E2.3 accepted transfer contract lineage;
-3. evolution/mutation disabled;
-4. target absent from bake provenance;
-5. target starts empty;
-6. same frozen catalog is offered to every cell;
-7. no biome->species mapping;
-8. colonization requires causal dispersal + establishment;
-9. composition emerges from environment/competition/history;
-10. `VALID_NO_COLONIZATION` remains legitimate;
-11. deterministic same-input replay;
-12. no global RNG consumption;
-13. exact transitive executable closure before canonical behavioral execution;
-14. fresh process does not impersonate independent role evidence.
-
-### Expected E2.4 evidence
-
-Matrix result must expose per-cell:
-
-- target/environment identity;
-- colonization status;
-- first colonization timing when applicable;
-- species occupancy/composition trajectory;
-- final population state hash;
-- result hash;
-- causal contrast against relevant control;
-- aggregate matrix hash.
-
-E2.5 stays blocked until E2.4 acceptance.
-
-## 7. E2.5 — Ecological Sorting vs Continued Adaptation
+`HIGH_SEASONALITY` — это bounded `SEASONAL_ENVELOPE`, не fake static average и не claim непрерывной seasonal dynamics:
 
 ```text
-Control   = frozen catalog, evolution disabled
-Treatment = same catalog/root, continued adaptation enabled
+same unseen patch identity
+  ├─ COOL_WET
+  ├─ MILD
+  ├─ HOT_DRY
+  └─ COOL_DARK
 ```
 
-Нужно разделить ecological sorting уже существующих strategies и новую evolutionary adaptation.
+Каждая phase является отдельным deterministic transfer probe. Такой дизайн проверяет переносимость frozen strategies к сезонным экстремумам, но не подменяет будущую continuous seasonal population simulation.
+
+### PATCH_ISOLATED causal control
+
+`PATCH_ISOLATED` использует exact environment checksum `NEAR_SOURCE`, но удалённые bounds. Результат:
+
+```text
+NEAR_SOURCE      COLONIZED year 1
+PATCH_ISOLATED   VALID_NO_COLONIZATION
+```
+
+То есть suitability не создаёт population truth без causal reachability.
+
+### Accepted verification
+
+```text
+exact transitive executable closure   18 / 18 PASS
+Godot                                4.7.1.stable.double.custom_build.a13da4feb
+parser/preload                       PASS
+fresh processes                      2 / 2 PASS
+assertions                           82 / 82 PASS
+logs                                 byte-identical
+log SHA-256                          23ac2294dbe9b7ad0f78f7807e0bde67eb804b4e2f8640f711afdc71b5d0f40c
+matrix aggregate                     ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5
+plan hash                            f688eb014245d63483562376c3f5db8c08a85bdc35feb52428f5ff17753f82e0
+```
+
+Static reachable cells `NEAR_SOURCE`, `DRY`, `WET`, `NUTRIENT_POOR` colonize in the current controlled fixture, but do not produce identical population states/histories. Seasonal envelope phases also produce distinct deterministic ecological states.
+
+Canonical PowerShell runner exists and includes an 18/18 exact closure gate, but was not executed in the Linux verification carrier because `pwsh`/`powershell` were unavailable. Equivalent execution was explicitly classified and reproduced the runner's parent, closure, parser, behavioral, fresh-process and frozen-output gates.
+
+Acceptance authority is fresh behavioral execution, **not** independent Reviewer/Verifier authority.
+
+## 7. E2.5 — Ecological Sorting vs Continued Adaptation — AUTHORIZED / CURRENT
+
+### Research question
+
+После переноса frozen SpeciesCatalog новая среда может изменить ecosystem двумя разными механизмами:
+
+1. **Ecological sorting** — уже существующие стратегии меняют abundance, occupancy и persistence без genetic change.
+2. **Continued adaptation** — после transfer mutation/selection создаёт новый adapted descendant state и дополнительное fitness response.
+
+E2.5 обязан разделить эти механизмы причинно, а не просто показать, что Treatment «лучше».
+
+### Paired causal design
+
+```text
+CONTROL
+exact accepted E2.4/E2.3 parent lineage
++ exact same frozen SpeciesCatalog
++ exact same target environment exposure
++ evolution disabled
+        ↓
+ECOLOGICAL_SORTING_ONLY
+
+TREATMENT
+exact same parent catalog/root
++ exact same target environment exposure
++ bounded continued adaptation enabled
+        ↓
+ECOLOGICAL_SORTING_PLUS_ADAPTATION
+```
+
+### Required identity locks
+
+Control и Treatment обязаны иметь одинаковые:
+
+- initial SpeciesCatalog hash;
+- initial research species IDs;
+- initial genome/recruitment-trait checksums;
+- target EnvironmentSample(s);
+- geography/transport schedule;
+- population initialization rules;
+- simulation horizon;
+- deterministic seed/stream policy.
+
+Единственная причинная treatment variable — permission for bounded continued adaptation.
+
+### Required observables
+
+Минимально фиксировать:
+
+- starting catalog/root hash;
+- parent lineage/research species identity;
+- mutation/adaptation event log;
+- descendant genome/trait checksum;
+- abundance/occupancy trajectories;
+- final population state hash;
+- fitness/resource or persistence delta against Control;
+- treatment result hash;
+- paired causal contrast hash.
+
+### Required classification
+
+E2.5 должен уметь различить:
+
+```text
+SORTING_ONLY_RESPONSE
+ADAPTATION_DETECTED
+ADAPTATION_NO_MEASURABLE_ADVANTAGE
+NO_RESPONSE
+```
+
+Наличие mutation само по себе не считается adaptation advantage.
+
+### Forbidden shortcuts
+
+- разные starting catalogs между Control/Treatment;
+- target-aware rebake;
+- разные environments или transport controls;
+- считать mutation автоматически новым canonical species;
+- hand-written target fitness bonus;
+- hidden biome/species lookup;
+- использовать global RNG без deterministic stream contract;
+- позволять Treatment переписывать accepted E2.4 evidence.
+
+### Acceptance target
+
+E2.5 GREEN требует как минимум одного controlled environment, где paired experiment причинно отделяет response frozen ecological sorting от response, возникшего только после bounded adaptation, при exact same starting parent state.
+
+Если adaptation не создаёт measurable advantage в выбранном challenge, это не повод подгонять тест. Нужно либо зафиксировать `ADAPTATION_NO_MEASURABLE_ADVANTAGE`, либо изменить научно обоснованный challenge и заново freeze protocol до acceptance.
+
+E2.6 остаётся blocked до formal E2.5 acceptance.
 
 ## 8. E2.6 — Replicated Causal Experiments
 
@@ -250,6 +296,6 @@ Animals остаются deferred до plant-only portability proof.
 ## 13. Current execution
 
 ```text
-CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.4 Environment Generalization Matrix
-NEXT    = E2.5 Ecological Sorting vs Continued Adaptation after E2.4 acceptance
+CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.5 Ecological Sorting vs Continued Adaptation
+NEXT    = E2.6 Replicated Causal Experiments after E2.5 acceptance
 ```
