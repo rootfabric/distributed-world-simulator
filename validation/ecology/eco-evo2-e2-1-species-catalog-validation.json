@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_1_species_catalog_validation.v1",
+  "revision": "ECO-EVO2-E2.1-2026-08-18-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "candidate_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
+  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_PASS_FULL_BRANCH_RUNNER_PENDING",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "p2_7_lineage_validation": "validation/ecology/eco-evo1-p2-7-lineage-divergence-validation.json",
+    "p2_7_status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
+    "p2_7_canonical_species_declared": false,
+    "p3_8_ecosystem_validation": "validation/ecology/eco-p3-8-deterministic-ecosystem-persistence-validation.json",
+    "p3_8_status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "p3_8_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_species_catalog_v1.gd",
+    "git_blob_sha": "f1c706b6d915e6e709be2fcdd7e0fa8cb89fcbc2",
+    "contract_schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1",
+    "version": "1.0.0",
+    "species_concept": "ECO_RESEARCH_LINEAGE_HYPOTHESIS_V1",
+    "canonical_species_declared": false,
+    "identity_rule": "research_species_id is derived from schema/version/species-concept/lineage_id only; snapshot trait changes alter entry/catalog evidence hashes but not lineage identity",
+    "persistence_in_scope": false
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_1_species_catalog_acceptance.gd",
+    "git_blob_sha": "4df82431d3ce20fd48610e1c250aafb9f0afbaac",
+    "assertions": 53,
+    "runner": "RUN_ECO_EVO2_E2_1_TESTS.ps1",
+    "runner_git_blob_sha": "726f56142d82106ecb1e39d32879f83c9542a46c"
+  },
+  "exact_attached_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload_exit": 0,
+    "fresh_process_a_exit": 0,
+    "fresh_process_b_exit": 0,
+    "fresh_process_logs_byte_identical": true,
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "single_catalog_hash": "b17f3c8bb17d71504aa683ca6d40cf25ab346d5a70432f8b0744566fd8c90f3a",
+    "multi_catalog_hash": "ceba80d9f639b8b5042fd826bad23a5e83c7c3a7c79baeaad9397e70ffb9f474",
+    "alpha_research_species_id": "eco-research-species/2164d8161e30ec9df8a54c47",
+    "dependency_mode": "EXACT_GITHUB_BLOBS_MINIMAL_RES_PROJECT",
+    "dependency_git_blobs": {
+      "plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
+      "plant_recruitment_traits_v1.gd": "6faeff9da9f7fa5a03e1df586de9cb29795d30de",
+      "environment_sample_v1.gd": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
+      "plant_lineage_divergence_diagnostics_v1.gd": "fdb7d4cbacc7dd575c665c66340a926f82f07483",
+      "plant_species_catalog_v1.gd": "f1c706b6d915e6e709be2fcdd7e0fa8cb89fcbc2",
+      "eco_evo2_e2_1_species_catalog_acceptance.gd": "4df82431d3ce20fd48610e1c250aafb9f0afbaac"
+    }
+  },
+  "required_properties": [
+    "STABLE_RESEARCH_SPECIES_ID_PER_LINEAGE",
+    "DISTINCT_LINEAGES_DISTINCT_RESEARCH_IDS",
+    "NO_CANONICAL_SPECIES_TAXONOMY_PROMOTION",
+    "P2_7_LINEAGE_EVIDENCE_PINNED",
+    "P3_8_ECOSYSTEM_PARENT_ACCEPTED",
+    "CANONICAL_ENTRY_ORDER",
+    "INPUT_ORDER_INDEPENDENT_CATALOG_HASH",
+    "SOURCE_STATE_NOT_MUTATED",
+    "STRICT_SOURCE_OBSERVATION_SHAPE",
+    "LEGACY_EXTRA_SOURCE_FIELDS_REJECTED",
+    "LEGACY_FLOAT_SPLIT_VARIANT_REJECTED",
+    "DUPLICATE_LINEAGE_REJECTED",
+    "ENTRY_AND_CATALOG_TAMPER_REJECTED",
+    "GLOBAL_RNG_NOT_CONSUMED",
+    "SAME_AND_FRESH_PROCESS_DETERMINISM"
+  ],
+  "known_boundary": {
+    "full_repository_checkout_available_in_execution_container": false,
+    "powershell_branch_runner_executed": false,
+    "production_authority_claimed": false,
+    "canonical_taxonomy_claimed": false,
+    "e2_2_authorized": false
+  },
+  "decision": "KEEP_E2_1_AS_NON_SELF_ACCEPTED_CANDIDATE_UNTIL_FULL_BRANCH_RUNNER_OR_EQUIVALENT_FRESH_VERIFICATION",
+  "next": "Run RUN_ECO_EVO2_E2_1_TESTS.ps1 in the canonical branch worktree with the exact Godot double binary; if green, freeze E2.1 and open E2.2 Deterministic Evolution Bake Export."
+}
