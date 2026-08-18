@@ -5,54 +5,140 @@
   "branch": "feature/eco-evolutionary-ecology",
   "program": "ECO",
   "role": "RESEARCH_DESIGN_FRONTIER",
-  "short_description": "Portable evolutionary ecology research: evolve plant strategies from causal environment/history, prove persisted-catalog unseen-world portability, then freeze bounded simulator-facing semantic and authority contracts before any production binding.",
-  "purpose": "Build a reusable autonomous evolutionary ecology pipeline in which evolution produces portable lineage/species hypotheses, population ecology remains truth, and simulator integration occurs only through explicit owner-bounded contracts rather than biome species tables, asset scatter or research-owned world authority.",
+  "short_description": "Evolutionary ecology research: portable SpeciesCatalog -> bounded XFER0 -> Planetary Ecology Compiler architecture and staged cross-planet causal ecology research.",
+  "purpose": "Research a reusable planetary ecology compiler while keeping simulator foundation, authority, persistence, networking and taxonomy ownership external.",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
   "xfer0_contract_doc": "docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md",
-  "current_stage": "ECO.EVO3 / Planetary Ecology Compiler research planning authorized / not started",
-  "stage_status": "EVO0_CAL1_COMPLETE_EVO1_P2_1_TO_P2_8_ACCEPTED_P3_COMPLETE_EVO2_COMPLETE_XFER0_ACCEPTED_EVO3_RESEARCH_PLANNING_AUTHORIZED_RESEARCH_ONLY",
-  "progress_note": "ECO.XFER0 Bounded Research-to-Simulator Contract is accepted at exact code-under-test bb80beac95d838b56cccbe5d98f7e1bcbfd80376. The machine contract hash is 06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309 and XFER0 aggregate is 1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044. Exact published contract/schema/validator/test/runner blobs passed Python compile, validator and 17/17 semantic regression tests; two fresh canonical Python runner processes exited 0 with byte-identical logs SHA-256 9126f83e992e1d834e1e7e5317ec97cca174d1027a518310d70df6bd49ac47aa. XFER0 freezes six semantic-only interfaces and fail-closed authority barriers; it explicitly does not bind production APIs or mutate runtime owners. XFER1 remains blocked on main-owned canonical G/ENV/MAT/WQ/SD/TF contracts. EVO3 is authorized for research planning only, not runtime implementation. Independent Reviewer/Verifier and Project Control/CI GREEN are not claimed. P4 promotion remains separate.",
-  "last_accepted_checkpoint": "ECO.XFER0 Bounded Research-to-Simulator Contract",
-  "next_stage": "Plan ECO.EVO3 Planetary Ecology Compiler as research-only broader planetary generalization using the accepted XFER0 semantic boundary; do not bind production APIs until XFER1 resolves canonical G/ENV/MAT/WQ/SD/TF owner contracts and authority review.",
-  "owned_paths": ["config/ecology/**","docs/future_features/evolutionary_ecology/**","docs/plans/ECO_EVO2_*","docs/plans/ECO_XFER0_*","scripts/research/ecology/**","tests/research/ecology/**","validation/ecology/**","scripts/labs/ecology/**","scenes/labs/ecology/**"],
-  "watched_paths": ["config/architecture/**","config/control/project-program-registry.v1.json","config/control/project-control-policy.v1.json","scripts/control/**","scripts/simulation/procedural/contracts/**","scripts/simulation/procedural/semantic_fields/**","scripts/simulation/procedural/hydrology/**","scripts/simulation/procedural/geomorphology/**","scripts/simulation/matter/**","scripts/network/**","scripts/ecology/production/**"],
-  "critical_watched_paths": ["config/architecture/global-program-roadmap.v1.json","config/control/project-program-registry.v1.json","config/control/project-control-policy.v1.json","scripts/simulation/procedural/contracts/**","scripts/simulation/matter/**","scripts/ecology/production/**"],
+  "evo3_architecture_doc": "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md",
+  "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
+  "current_stage": "ECO.EVO3 / E3.1 Planet Field Snapshot Contract authorized / not started",
+  "stage_status": "EVO0_COMPLETE_EVO1_COMPLETE_P3_COMPLETE_EVO2_COMPLETE_XFER0_ACCEPTED_EVO3_E3_0_ACCEPTED_E3_1_AUTHORIZED_RESEARCH_ONLY",
+  "progress_note": "E3.0 Planetary Ecology Compiler Architecture & Roadmap accepted at exact static freeze 250cf503c72440972bc8cdfaf4cea95398686ae0. Published 9-file candidate validated by canonical Python runner in two fresh processes: 25/25 tests, exit 0/0, zero stderr, byte-identical stdout SHA-256 70076e8f2eaaacc9372ae0659e4264a6e512f3b552be36badf931e200afb7165. Architecture cbf50695..., roadmap 1b153d59.... E3.1 is authorized research-only. XFER1 remains blocked on canonical G/ENV/MAT/WQ/SD/TF; production authority is not claimed.",
+  "last_accepted_checkpoint": "ECO.EVO3/E3.0 Planetary Ecology Compiler Architecture & Roadmap",
+  "next_stage": "Implement E3.1 Planet Field Snapshot Contract as a research-only snapshot adapter/fixture over XFER0 semantics without production API binding.",
+  "owned_paths": [
+    "config/ecology/**",
+    "docs/future_features/evolutionary_ecology/**",
+    "docs/architecture/ECO_EVO3_*",
+    "docs/plans/ECO_EVO2_*",
+    "docs/plans/ECO_XFER0_*",
+    "docs/plans/ECO_EVO3_*",
+    "scripts/research/ecology/**",
+    "tests/research/ecology/**",
+    "validation/ecology/**",
+    "scripts/labs/ecology/**",
+    "scenes/labs/ecology/**"
+  ],
+  "watched_paths": [
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/control/**",
+    "scripts/simulation/procedural/contracts/**",
+    "scripts/simulation/procedural/semantic_fields/**",
+    "scripts/simulation/matter/**",
+    "scripts/network/**",
+    "scripts/ecology/production/**"
+  ],
+  "critical_watched_paths": [
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/simulation/procedural/contracts/**",
+    "scripts/simulation/matter/**",
+    "scripts/ecology/production/**"
+  ],
   "runtime_paths": [],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
-    "evo0_cal1_f": "ACCEPTED_AGGREGATE_f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed_ROBUST_UNITY_CALIBRATION",
-    "evo1_p2_8": "ACCEPTED_AGGREGATE_ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
-    "p3_8": "ACCEPTED_AGGREGATE_6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0_FINAL_STATE_1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9",
-    "evo2_e2_1": "ACCEPTED_AGGREGATE_aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
-    "evo2_e2_2": "ACCEPTED_HEAD_7cf98d67a4658644a6f2dde3e93e28a184638ec3_AGGREGATE_56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce",
-    "evo2_e2_3": "ACCEPTED_HEAD_c7ee41371807ed7dbb75e7e1eae1587105873a26_AGGREGATE_82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8_EXACT_CLOSURE_17_OF_17_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_e2_4": "ACCEPTED_HEAD_0135aee461a107375cdb3e52e07e8c799145998b_EXACT_CLOSURE_18_OF_18_82_ASSERTIONS_PASS_AGGREGATE_ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_e2_5": "ACCEPTED_HEAD_4c17a91957e392eabc04e136f9590773dbe54dd1_EXACT_CLOSURE_21_OF_21_93_ASSERTIONS_PASS_AGGREGATE_942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_e2_6": "ACCEPTED_HEAD_8ac37bfea0f36731407e1252db1a7c2a2305420e_EXACT_CLOSURE_7_OF_7_218_ASSERTIONS_PASS_AGGREGATE_1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd_REPLICATE_SET_5e02d04d3d94f95f6e8e76f6387ee07c723d2e596046f6a65d65cd815abbc637_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_e2_7": "ACCEPTED_HEAD_52f31ca58a77296d63b1642954659edcbd12b8fe_IMPL_f980a6132835cd2c483d5210615579ddccf7e618_PROTOCOL_8d28fb09ac6e3f8b46594b39f76db69c2b6f9b17_EVIDENCE_940ed657b7aa85758ac33088634d1ce5fdc4e673_TEST_334a833acd1d0bc32ee03f0977d764ff5e517196_RUNNER_6da8290ec1944d704a778e3b1ce8910260e5b5cb_EXACT_CLOSURE_9_OF_9_290_ASSERTIONS_PASS_AGGREGATE_eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d_SEED_ENSEMBLE_a49ce9d6856e08e1e0a61f060a8019de61685cdc63b25229b3761c9e7c9d792f_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_e2_8": "ACCEPTED_HEAD_5790de059aaafbfc10434bb2d40124e3c1ceb361_CODEC_83f80afe9fd467f7718f487b70f6bf1a88521339_CATALOG_b77c3421325fa1264f590b0bd75c1c59621f667f_PROVENANCE_5602607fa3b63e79da28d8da52cb3ba5f61960c1_TEST_8e0f0d2ba6eea03337f6559276da87cf5f689d4b_RUNNER_4e75eff15351ca3ba2c9229f8b7b39937c77834e_EXACT_CLOSURE_9_OF_9_74_ASSERTIONS_PASS_AGGREGATE_4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061_CONTENT_3d7ca34560483e2a4d1eb1955c008eb1f05ab3603e3d358abbf4823b33554e2e_TRANSPORT_b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1_EXACT_FRESH_PERSIST_RESTORE_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "evo2_final": "ACCEPTED_HEAD_376796ab8c8370b7370fcd220ed207d07955cb42_PROTOCOL_PRECOMMIT_d936efac36d2664ec2f24f26306fa3ba95409117_PROTOCOL_BLOB_372591ee3bee1c19538729259373e97fd9838461_CHALLENGE_4d353e774887c45f8a0487cb17b782e44d563951_TEST_82850fb850c35bcffb937707e4a8d29fb2827caa_RUNNER_4385861b62ae10df07cb0f71295f50bf9a2097ee_EXECUTION_SET_17_OF_17_68_ASSERTIONS_PASS_AGGREGATE_6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250_EVIDENCE_989e5ae02e66052ca7d2e46f5f452446300ba625dd4efd5cd6b5ffd9db2f2cd1_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION_INDEPENDENT_ROLE_NOT_CLAIMED",
-    "eco_xfer0": "ACCEPTED_HEAD_bb80beac95d838b56cccbe5d98f7e1bcbfd80376_AGGREGATE_1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044_CONTRACT_06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309_CONTRACT_BLOB_1987dd67ae0755b4a00bc22f48a019837fb2066a_SCHEMA_8759a3e0832ae514df69ade5d6235b524bea84de_VALIDATOR_1244d6dac0149957857a294b662738076ccc6e2d_TEST_6afe9af777a976775fc3be4f68b5a91720e30474_RUNNER_789bc1c17b2964bc1f71166e2a7a3725911566d6_17_OF_17_PASS_CANONICAL_PYTHON_A_B_BYTE_IDENTICAL_INDEPENDENT_ROLE_NOT_CLAIMED"
+    "evo2_final": "ACCEPTED_HEAD_376796ab8c8370b7370fcd220ed207d07955cb42_AGGREGATE_6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "xfer0": "ACCEPTED_HEAD_bb80beac95d838b56cccbe5d98f7e1bcbfd80376_CONTRACT_06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309_AGGREGATE_1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044_17_TESTS_DIRECT_CANONICAL_PYTHON",
+    "evo3_e3_0": "ACCEPTED_HEAD_250cf503c72440972bc8cdfaf4cea95398686ae0_ARCH_cbf50695b6db79d543c26168bcfa1bb9ac2e29b052f0eabeafb028ab618a3ac6_ROADMAP_1b153d5974ab2f922dfe557ce5a9d3eed5a83f904b5c50265d7a28fb6faba178_25_TESTS_LOG_70076e8f2eaaacc9372ae0659e4264a6e512f3b552be36badf931e200afb7165_DIRECT_CANONICAL_PYTHON_STATIC_ARCHITECTURE_VALIDATION_INDEPENDENT_ROLE_NOT_CLAIMED"
   },
-  "ownership_claims": [{"foundation":"ECOLOGY_RESEARCH_MODEL","claimed_owner":"ECO","scope":"organism/lineage ecological semantics, research species catalog semantics, causal resource economics, population/cohort ecological state meaning, dispersal/recruitment/succession/disturbance/biogeography/divergence diagnostics and derived ecology projection requirements"}],
-  "execution_modes": ["INCUBATE_FAST","BACKGROUND_COARSE","LOCAL_ACTIVE"],
+  "ownership_claims": [
+    {
+      "foundation": "ECOLOGY_RESEARCH_MODEL",
+      "claimed_owner": "ECO",
+      "scope": "research ecology semantics, research SpeciesCatalog semantics, population/cohort meaning, causal ecological compiler semantics and derived research projections"
+    }
+  ],
+  "execution_modes": [
+    "INCUBATE_FAST",
+    "BACKGROUND_COARSE",
+    "LOCAL_ACTIVE"
+  ],
   "execution_invariant": "ALL_MODES_SHARE_ONE_ECOLOGY_STATE_MEANING",
-  "forbidden_foundation_ownership": ["GEOLOGY_OR_TERRAIN_TRUTH","SPATIAL_DOMAIN_FABRIC","TIME_FABRIC","ENVIRONMENT_SIMULATION","MATERIAL_ONTOLOGY","WORLD_QUERY_FABRIC","GENERIC_POPULATION_FIELD_RUNTIME","WORLD_LIFECYCLE_FABRIC","WORLD_WORK_BUDGET","AUTHORITY_FOUNDATION","NETWORK_REPLICATION_POLICY","PERSISTENCE_DURABILITY","WORLD_TRANSACTION_MODEL","PRESENTATION_MESH_AS_TRUTH","PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH","CANONICAL_SPECIES_TAXONOMY"],
-  "blockers": ["P4_GLOBAL_PROMOTION_REQUIRES_INDEPENDENT_REVIEW_VERIFIER_AND_MAIN_DECISION","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"],
-  "health_declared": "GREEN_RESEARCH_ONLY_EVO2_COMPLETE_XFER0_ACCEPTED_EVO3_RESEARCH_PLANNING_WITH_P4_PROMOTION_SEPARATE",
+  "forbidden_foundation_ownership": [
+    "GEOLOGY_OR_TERRAIN_TRUTH",
+    "SPATIAL_DOMAIN_FABRIC",
+    "TIME_FABRIC",
+    "ENVIRONMENT_SIMULATION",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_QUERY_FABRIC",
+    "GENERIC_POPULATION_FIELD_RUNTIME",
+    "WORLD_LIFECYCLE_FABRIC",
+    "WORLD_WORK_BUDGET",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_TRANSACTION_MODEL",
+    "PRESENTATION_MESH_AS_TRUTH",
+    "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH",
+    "CANONICAL_SPECIES_TAXONOMY"
+  ],
+  "blockers": [
+    "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
+    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
+  ],
+  "health_declared": "GREEN_RESEARCH_ONLY_EVO3_E3_0_ACCEPTED_E3_1_AUTHORIZED_XFER1_BLOCKED_PRODUCTION_SEPARATE",
   "cross_branch_overlap_enabled": false,
   "planned_cross_tracks": [
-    {"id":"ECO.EVO0","status":"COMPLETE","goal":"causal plant economics hardening and robustness closure"},
-    {"id":"ECO.EVO1","status":"COMPLETE","goal":"autonomous spatial plant ecosystem / Plant World Proof"},
-    {"id":"ECO.P3","status":"COMPLETE_RESEARCH_ONLY","goal":"dynamic ecosystem competition, space, environment, disturbance, coexistence and persistence"},
-    {"id":"ECO.EVO2","status":"COMPLETE_RESEARCH_ONLY","goal":"portable persisted SpeciesCatalog and hidden unseen-world end-to-end proof"},
-    {"id":"ECO.XFER0","status":"ACCEPTED_BOUNDED_DESIGN","goal":"bounded research-to-simulator semantic contracts without production authority transfer"},
-    {"id":"ECO.P4","status":"BRANCH_LIFECYCLE_COMPLETE_AWAITING_MAIN_PROMOTION","goal":"production integration lifecycle evidence"},
-    {"id":"ECO.EVO3","status":"AUTHORIZED_RESEARCH_PLANNING_NOT_STARTED","goal":"planetary ecology compiler / broader planetary generalization"},
-    {"id":"ECO.EVO4","status":"PLANNED_AFTER_PLANT_FOUNDATION","goal":"multi-trophic ecosystem and coevolution"},
-    {"id":"ECO.XFER1","status":"BLOCKED_WAIT_CANONICAL_G_ENV_MAT_WQ_SD_TF","goal":"production world-generation ecology bridge after owner contracts"},
-    {"id":"ECO.LIVE","status":"DEFERRED_UNTIL_XFER_AND_FOUNDATIONS","goal":"local/background continuation of same ecology state"}
+    {
+      "id": "ECO.EVO0",
+      "status": "COMPLETE",
+      "goal": "causal plant economics hardening and robustness closure"
+    },
+    {
+      "id": "ECO.EVO1",
+      "status": "COMPLETE",
+      "goal": "autonomous spatial Plant World Proof"
+    },
+    {
+      "id": "ECO.P3",
+      "status": "COMPLETE_RESEARCH_ONLY",
+      "goal": "dynamic ecosystem research"
+    },
+    {
+      "id": "ECO.EVO2",
+      "status": "COMPLETE_RESEARCH_ONLY",
+      "goal": "portable persisted SpeciesCatalog and unseen-world proof"
+    },
+    {
+      "id": "ECO.XFER0",
+      "status": "ACCEPTED_BOUNDED_DESIGN",
+      "goal": "research-to-simulator semantic/authority boundary"
+    },
+    {
+      "id": "ECO.EVO3",
+      "status": "ACTIVE_E3_1_AUTHORIZED_NOT_STARTED",
+      "goal": "Planetary Ecology Compiler / cross-planet generalization"
+    },
+    {
+      "id": "ECO.EVO4",
+      "status": "PLANNED_AFTER_EVO3",
+      "goal": "multi-trophic ecosystem and coevolution"
+    },
+    {
+      "id": "ECO.XFER1",
+      "status": "WAIT_CANONICAL_SIMULATOR_FOUNDATIONS",
+      "goal": "owner-approved production binding"
+    },
+    {
+      "id": "ECO.LIVE",
+      "status": "DEFERRED_UNTIL_XFER_AND_FOUNDATIONS",
+      "goal": "runtime convergence"
+    }
   ]
 }
