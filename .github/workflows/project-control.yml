@@ -69,6 +69,7 @@ jobs:
               Path("config/control/harness/checkpoint-catalog.v1.json"),
               Path("config/control/harness/harness-policy.v1.json"),
               Path("config/control/harness/scheduler-policy.v1.json"),
+              Path("config/control/harness/v0-product-train-policy.v1.json"),
               Path("config/control/harness/work-order.schema.v1.json"),
               Path("config/control/harness/event.schema.v1.json"),
               Path("config/control/harness/project-epoch.schema.v1.json"),
@@ -102,7 +103,10 @@ jobs:
         run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
 
       - name: Run V0 product checkpoint regression
-        run: python3 -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
+        run: |
+          python3 -m unittest \
+            tests.harness.test_v0_s1_networked_checkpoint_contract \
+            tests.harness.test_v0_product_train_policy
 
       - name: Run generation-80 authorization safety regression
         run: |
