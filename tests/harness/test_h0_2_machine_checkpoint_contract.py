@@ -27,10 +27,7 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
             "scheduler_policy": self.scheduler,
         }
         self.work_order = {
-            "work_order_id": "H0-2-NX-C1-WO-TEST",
-            "project_epoch": "E-test",
             "goal_checkpoint": CHECKPOINT,
-            "branch": "feature/h0-2-test",
         }
 
     def test_h0_2_checkpoint_exists_and_has_distinct_success_state(self):
@@ -75,6 +72,11 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         self.assertEqual(CHECKPOINT, override["checkpoint_sequence"][-1])
         self.assertEqual(1, self.scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"])
         self.assertTrue(self.scheduler["concurrency"]["h0_3_required_before_multi_runtime_worker_scheduler"])
+        lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
+        self.assertEqual(80, lease["effective_registry_generation"])
+        self.assertEqual(1, lease["capacity"])
+        self.assertEqual("V0_P4_REAL_RESOURCE_CONSTRUCTION", lease["holder_checkpoint"])
+        self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_goal_graph_routes_network_train_through_h0_2(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
@@ -97,21 +99,26 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         self.assertIn("NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", plan["stop_gates"])
         self.assertIn("H0_3_IMPLEMENTATION", plan["stop_gates"])
 
-    def test_planner_dispatch_authorizes_exactly_one_high_risk_worker_on_current_work_order_branch(self):
+    def test_generation_80_lease_blocks_a_new_h0_2_mutation_dispatch(self):
         reduced = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
             "work_order_id": "H0-2-NX-C1-WO-TEST",
             "state": "DISPATCHED",
         }
-        work_order = dict(self.work_order)
-        work_order["global_runtime_mutation_arbiter"] = {"authorized": True}
-        plan = build_plan(self.contracts, work_order, reduced)
-        self.assertEqual("SINGLE_HIGH_RISK_RUNTIME_PILOT", plan["mode"])
-        self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("CURRENT_WORK_ORDER_BRANCH", plan["nx_c1_gate"]["branch_creation"])
-        self.assertEqual("AUTHORIZED_BY_MAIN_OWNED_LEASE", plan["nx_c1_gate"]["runtime_mutation"])
-        self.assertEqual("BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH", plan["next_action"])
-        self.assertEqual("CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS", plan["nx_c1_gate"]["source_acceptance_requires"])
+        with self.assertRaisesRegex(ValueError, "GLOBAL_MUTATION_SLOT_RESERVED_FOR:V0_P4_REAL_RESOURCE_CONSTRUCTION"):
+            build_plan(self.contracts, self.work_order, reduced)
+
+    def test_implemented_h0_2_is_verification_only_and_consumes_no_mutation_worker(self):
+        reduced = {
+            "completed_predicates": ["PROJECT_EPOCH_CREATED"],
+            "work_order_id": "H0-2-NX-C1-WO-TEST",
+            "state": "IMPLEMENTED",
+        }
+        plan = build_plan(self.contracts, self.work_order, reduced)
+        self.assertEqual("HIGH_RISK_RUNTIME_VERIFICATION", plan["mode"])
+        self.assertEqual(0, plan["autonomous_runtime_workers"])
+        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", plan["nx_c1_gate"]["runtime_mutation"])
+        self.assertEqual("RUN_EXACT_NX_C1_RUNTIME_VERIFICATION", plan["next_action"])
 
 
 if __name__ == "__main__":
