@@ -6,7 +6,9 @@ const RecruitmentTraits = preload("res://scripts/research/ecology/plant_recruitm
 const DivergenceDiagnostics = preload("res://scripts/research/ecology/plant_lineage_divergence_diagnostics_v1.gd")
 const SpeciesCatalog = preload("res://scripts/research/ecology/plant_species_catalog_v1.gd")
 
-const SOURCE_RUN_HASH := "abf4251fd456117c54b4b69954d5fa3027b80085e1beac1eee347d0c604ad5b5"
+# Synthetic provenance digest used only by this contract fixture. It intentionally
+# does not impersonate an accepted ecology result hash.
+const SOURCE_RUN_HASH := "f4a2c4df81414b8b527c572454da622fbd730858a85e5bfe8f5f2eaa05418914"
 const BAKE_ID := "evo2-e2-1-contract-fixture"
 
 var assertions := 0
@@ -73,6 +75,7 @@ func _init() -> void:
 	_check(not bool(single["canonical_species_declared"]), "catalog explicitly refuses canonical species declaration")
 	_check(String(single["species_concept"]) == SpeciesCatalog.SPECIES_CONCEPT, "research species concept is explicit")
 	_check(String(single["parent_p2_7_accepted_aggregate"]) == SpeciesCatalog.PARENT_P2_7_ACCEPTED_AGGREGATE, "accepted P2.7 parent identity is pinned")
+	_check(String(single["source_run_hash"]) == SOURCE_RUN_HASH, "catalog preserves explicit source provenance digest")
 
 	var multi_ab := SpeciesCatalog.build([observation_a, observation_b], BAKE_ID, SOURCE_RUN_HASH)
 	var multi_ba := SpeciesCatalog.build([observation_b, observation_a], BAKE_ID, SOURCE_RUN_HASH)
@@ -81,7 +84,10 @@ func _init() -> void:
 	_check(multi_ab == multi_repeat, "same inputs rebuild byte-semantic-identically")
 	_check(multi_ab == multi_ba, "catalog is input-order independent")
 	_check(String(multi_ab["catalog_hash"]) == String(multi_ba["catalog_hash"]), "catalog hash is input-order independent")
-	_check(String(Array(multi_ab["entries"])[0]["research_species_id"]) < String(Array(multi_ab["entries"])[1]["research_species_id"]), "entries are in canonical species-id order")
+	var ordered_entries: Array = multi_ab["entries"]
+	var first_entry: Dictionary = ordered_entries[0]
+	var second_entry: Dictionary = ordered_entries[1]
+	_check(String(first_entry["research_species_id"]) < String(second_entry["research_species_id"]), "entries are in canonical species-id order")
 
 	var alpha_later := SpeciesCatalog.build([observation_a_later], BAKE_ID, SOURCE_RUN_HASH)
 	_check(SpeciesCatalog.validate_catalog(alpha_later), "later snapshot of same lineage validates")
