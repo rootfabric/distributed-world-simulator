@@ -4,87 +4,23 @@
   "title": "CONTROL_DEVELOPMENT command envelope",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schema", "command", "ok"],
+  "required": ["schema","command","ok"],
   "properties": {
-    "schema": {"const": "distributed_world_simulator.control_development_output.v1"},
-    "command": {"enum": ["STATUS", "PLAN", "RESUME", "UNKNOWN"]},
-    "ok": {"type": "boolean"},
-    "exit_codes": {
-      "type": "object",
-      "required": ["INVALID_INVOCATION", "CONTRACT_OR_DEPENDENCY_INVALID", "GIT_STATE_INVALID", "EXECUTION_STATE_INVALID", "INTERNAL_ERROR"],
-      "properties": {
-        "INVALID_INVOCATION": {"const": 2},
-        "CONTRACT_OR_DEPENDENCY_INVALID": {"const": 3},
-        "GIT_STATE_INVALID": {"const": 4},
-        "EXECUTION_STATE_INVALID": {"const": 5},
-        "INTERNAL_ERROR": {"const": 6}
-      }
-    },
-    "error": {"type": "object", "required": ["code", "detail"], "properties": {"code": {"enum": ["INVALID_INVOCATION", "CONTRACT_OR_DEPENDENCY_INVALID", "GIT_STATE_INVALID", "EXECUTION_STATE_INVALID", "INTERNAL_ERROR"]}, "detail": {"type": "string"}}, "additionalProperties": false},
-    "source": {"const": "GIT_ONLY_WORKER_DATA"},
-    "repository": {"type": "object"},
-    "epoch": {"type": "object"},
-    "active_work_order": {"type": "object"},
-    "reduced_work_order": {"type": "object"},
-    "review": {"type": "object"},
-    "human_attention": {"type": "object"},
-    "findings": {"type": "array", "items": {"type": "string"}},
-    "continuation_blocked": {"type": "boolean"},
-    "checkpoint_proposal_blocked": {"type": "boolean"},
-    "checkpoint_blockers": {"type": "array", "items": {"type": "string"}},
-    "runtime_authorized": {"const": false},
-    "verification_commands": {"type": "array", "items": {"type": "string"}},
-    "next": {"type": "object"},
-    "plan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mode", "selected_checkpoint", "pilot_override", "active_work_order", "satisfied_predicates", "unsatisfied_predicates", "autonomous_runtime_workers", "c22_dry_run", "next_action", "stop_gates"],
-      "properties": {
-        "mode": {"enum": ["DRY_RUN_ONLY", "PLANNING_ONLY", "SINGLE_RUNTIME_PILOT"]},
-        "selected_checkpoint": {"enum": ["H0_0_SCAFFOLD_READY", "H0_1_CLOSED_LOOP_C22_PILOT"]},
-        "pilot_override": {"type": "object"},
-        "active_work_order": {"type": "string"},
-        "satisfied_predicates": {"type": "array", "items": {"type": "string"}},
-        "unsatisfied_predicates": {"type": "array", "items": {"type": "string"}},
-        "autonomous_runtime_workers": {"type": "integer", "minimum": 0, "maximum": 1},
-        "c22_dry_run": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["requested_checkpoint", "status", "reason", "branch_creation"],
-          "properties": {
-            "requested_checkpoint": {"const": "H0_1_CLOSED_LOOP_C22_PILOT"},
-            "status": {"enum": ["BLOCKED", "WAITING_DIRECTOR_DISPATCH", "READY_FOR_FRESH_BRANCH"]},
-            "reason": {"type": "string"},
-            "branch_creation": {"enum": ["FORBIDDEN", "FORBIDDEN_UNTIL_DISPATCH", "AUTHORIZED_BY_DISPATCH"]}
-          }
-        },
-        "next_action": {"type": "string"},
-        "stop_gates": {"type": "array", "items": {"type": "string"}}
-      }
-    },
-    "resume": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["active_epoch", "branch", "current_branch_head_sha", "implementation_head_sha", "last_completed_predicate", "open_blocker", "next_work_order", "review_state", "open_human_attention", "human_approval_required_for", "verification_commands"],
-      "properties": {
-        "active_epoch": {"type": "string"},
-        "branch": {"type": "string"},
-        "current_branch_head_sha": {"type": "string"},
-        "implementation_head_sha": {"type": "string"},
-        "last_completed_predicate": {"type": ["string", "null"]},
-        "open_blocker": {"type": ["string", "null"]},
-        "next_work_order": {"type": "string"},
-        "review_state": {"type": "string"},
-        "open_human_attention": {"type": "array"},
-        "human_approval_required_for": {"type": "array", "items": {"type": "string"}},
-        "verification_commands": {"type": "array", "items": {"type": "string"}}
-      }
-    }
+    "schema": {"const":"distributed_world_simulator.control_development_output.v1"},
+    "command": {"enum":["STATUS","PLAN","RESUME","UNKNOWN"]},
+    "ok": {"type":"boolean"},
+    "exit_codes": {"type":"object","required":["INVALID_INVOCATION","CONTRACT_OR_DEPENDENCY_INVALID","GIT_STATE_INVALID","EXECUTION_STATE_INVALID","INTERNAL_ERROR"],"properties":{"INVALID_INVOCATION":{"const":2},"CONTRACT_OR_DEPENDENCY_INVALID":{"const":3},"GIT_STATE_INVALID":{"const":4},"EXECUTION_STATE_INVALID":{"const":5},"INTERNAL_ERROR":{"const":6}}},
+    "error": {"type":"object","required":["code","detail"],"properties":{"code":{"enum":["INVALID_INVOCATION","CONTRACT_OR_DEPENDENCY_INVALID","GIT_STATE_INVALID","EXECUTION_STATE_INVALID","INTERNAL_ERROR"]},"detail":{"type":"string"}},"additionalProperties":false},
+    "source": {"const":"GIT_ONLY_WORKER_DATA"}, "repository":{"type":"object"}, "epoch":{"type":"object"}, "active_work_order":{"type":"object"}, "reduced_work_order":{"type":"object"}, "review":{"type":"object"}, "human_attention":{"type":"object"},
+    "findings":{"type":"array","items":{"type":"string"}}, "continuation_blocked":{"type":"boolean"}, "checkpoint_proposal_blocked":{"type":"boolean"}, "checkpoint_blockers":{"type":"array","items":{"type":"string"}}, "runtime_authorized":{"const":false}, "verification_commands":{"type":"array","items":{"type":"string"}},
+    "next": {"type":"object","required":["checkpoint","work_order","mission_id","mission_complete","handoff_class","next_actor","next_action","resume_condition","on_success","on_failure","human_decision_required","verification_commands","human_gate"],"properties":{"checkpoint":{"type":"string"},"work_order":{"type":"string"},"mission_id":{"type":"string"},"mission_complete":{"type":"boolean"},"handoff_class":{"enum":["CONTINUE_SAME_ROLE","ROLE_BOUNDARY","EXTERNAL_WAIT","HUMAN_DECISION_REQUIRED","SYSTEM_BLOCKED","MISSION_COMPLETE"]},"next_actor":{"enum":["IMPLEMENTER","REVIEWER","VERIFIER","INTEGRATOR","PC0","DIRECTOR","HUMAN"]},"next_action":{"type":"string"},"evidence_sink":{"type":["string","null"]},"resume_condition":{"type":"string"},"on_success":{"type":"string"},"on_failure":{"type":"string"},"human_decision_required":{"type":"boolean"},"verification_commands":{"type":"array","items":{"type":"string"}},"human_gate":{"type":"array","items":{"type":"string"}}},"additionalProperties":false},
+    "plan": {"type":"object"},
+    "resume": {"type":"object","additionalProperties":false,"required":["active_epoch","branch","current_branch_head_sha","implementation_head_sha","last_completed_predicate","open_blocker","next_work_order","review_state","open_human_attention","human_approval_required_for","verification_commands","mission","next_actor","next_action","handoff_class","evidence_sink","resume_condition"],"properties":{"active_epoch":{"type":"string"},"branch":{"type":"string"},"current_branch_head_sha":{"type":"string"},"implementation_head_sha":{"type":"string"},"last_completed_predicate":{"type":["string","null"]},"open_blocker":{"type":["string","null"]},"next_work_order":{"type":["string","null"]},"review_state":{"type":"string"},"open_human_attention":{"type":"array"},"human_approval_required_for":{"type":"array","items":{"type":"string"}},"verification_commands":{"type":"array","items":{"type":"string"}},"mission":{"type":"object","required":["mission_id","objective","parent_mission_id","mission_complete"],"properties":{"mission_id":{"type":"string"},"objective":{"type":"string"},"parent_mission_id":{"type":["string","null"]},"mission_complete":{"type":"boolean"}},"additionalProperties":false},"next_actor":{"enum":["IMPLEMENTER","REVIEWER","VERIFIER","INTEGRATOR","PC0","DIRECTOR","HUMAN"]},"next_action":{"type":"string"},"handoff_class":{"enum":["CONTINUE_SAME_ROLE","ROLE_BOUNDARY","EXTERNAL_WAIT","HUMAN_DECISION_REQUIRED","SYSTEM_BLOCKED","MISSION_COMPLETE"]},"evidence_sink":{"type":["string","null"]},"resume_condition":{"type":"string"}}}
   },
   "allOf": [
-    {"if": {"properties": {"ok": {"const": false}}}, "then": {"required": ["error", "exit_codes"]}},
-    {"if": {"properties": {"ok": {"const": true}}}, "then": {"required": ["exit_codes", "source", "repository", "epoch", "active_work_order", "reduced_work_order", "review", "human_attention", "findings", "continuation_blocked", "checkpoint_proposal_blocked", "checkpoint_blockers", "runtime_authorized", "verification_commands", "next"]}},
-    {"if": {"properties": {"ok": {"const": true}, "command": {"const": "PLAN"}}, "required": ["ok", "command"]}, "then": {"required": ["plan"]}},
-    {"if": {"properties": {"ok": {"const": true}, "command": {"const": "RESUME"}}, "required": ["ok", "command"]}, "then": {"required": ["resume"]}}
+    {"if":{"properties":{"ok":{"const":false}}},"then":{"required":["error","exit_codes"]}},
+    {"if":{"properties":{"ok":{"const":true}}},"then":{"required":["exit_codes","source","repository","epoch","active_work_order","reduced_work_order","review","human_attention","findings","continuation_blocked","checkpoint_proposal_blocked","checkpoint_blockers","runtime_authorized","verification_commands","next"]}},
+    {"if":{"properties":{"ok":{"const":true},"command":{"const":"PLAN"}},"required":["ok","command"]},"then":{"required":["plan"]}},
+    {"if":{"properties":{"ok":{"const":true},"command":{"const":"RESUME"}},"required":["ok","command"]},"then":{"required":["resume"]}}
   ]
 }
