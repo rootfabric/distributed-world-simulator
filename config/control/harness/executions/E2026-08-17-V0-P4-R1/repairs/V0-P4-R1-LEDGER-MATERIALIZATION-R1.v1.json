@@ -1,23 +1,118 @@
 {
-  "schema":"distributed_world_simulator.harness_repair_map.v1",
-  "repair_id":"V0-P4-R1-LEDGER-MATERIALIZATION-R1",
-  "work_order_id":"V0-P4-R1-WO-001",
-  "checkpoint":"V0_P4_REAL_RESOURCE_CONSTRUCTION",
-  "state":"REPAIR_MAP_READY",
-  "triggering_findings":["P4_CLOSURE_PREDICATES_NOT_MATERIALIZED_IN_REDUCER","Existing implementation events prove P4 slices but event_reducer only completes predicates from PREDICATE_VERIFIED/AUDIT_COMPLETED/CHECKPOINT_PROPOSED events.","The quarantined PR #120 attempted PREDICATE_VERIFIED with IN_PROGRESS, which is invalid under the generation-80 transition table; that history remains quarantined and is not rewritten."],
-  "root_cause":"The recovery carrier correctly reconstructed a clean event ledger through independent Reviewer/Verifier PASS, but implementation/control predicates remained only observed because historical IMPLEMENTATION_COMMITTED events are not completion-bearing event types. Closure therefore needs append-only control-ledger materialization in VERIFYING state; production semantics are already frozen and verified.",
-  "affected_module":"Execution-specific V0-P4 Harness event ledger and Work Order snapshot only.",
-  "interface":"Work Order required_predicates -> event_reducer completed_predicates -> checkpoint_planner readiness.",
-  "callers":["python -m harness.cli status","checkpoint_planner","V0-P4 Director checkpoint closure"],
-  "callees":["generation-80 event_reducer","transition-table guarded redispatch","evidence-map and review-result guards"],
-  "dependencies":["clean recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8","frozen implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d","independent Reviewer PASS V0-P4-R1-REVIEW-POST-001","independent Verifier PASS V0-P4-R1-VERIFY-001","main-owned directional clearance merge 7351b720bc9a0a6dbe2577dfb37568a853d2f266","post-clearance Project Control run 32085293289 SUCCESS"],
-  "invariants":["No production file mutation.","No test mutation.","No runtime worker restart; frozen runtime implementation target remains 2a6721cdf....","No force-push or rewrite of events 1-15.","Original Work Order branch identity remains feature/v0-p4-construction-real-resources.","Independent Reviewer and Verifier results remain byte-for-byte historical records.","Raw directional RED identity remains visible; only an accepted exact main-owned clearance may make the effective result NON_RED.","Checkpoint proposal remains separate from this repair and is not emitted until reducer validation proves all non-checkpoint predicates complete."],
-  "canonical_fix_location":"config/control/harness/executions/E2026-08-17-V0-P4-R1/events/V0-P4-R1-WO-001 plus checkpoint-time evidence and derived Work Order snapshot under the same execution.",
-  "sibling_surfaces_checked":["event.schema.v1.json event_type/work_state pairs","transition-table.v1.json state transitions","event_reducer.py completion semantics","FIX_REQUIRED -> DISPATCHED guard requirements","checkpoint_planner.py required predicate comparison","harness_evidence_map.v1 schema","independent review and verification result bindings"],
-  "new_tests":["Staging generation-80 Harness status must reduce the repaired ledger to AUDITED with every required predicate complete except V0_P4_CHECKPOINT_PROPOSED.","Project Control on the final carrier must remain SUCCESS/NON_RED."],
-  "regressions":["No runtime regression is rerun or reinterpreted by this control-only repair; existing exact Godot evidence remains authoritative.","Post-clearance Project Control is separately rerun against current main semantics."],
-  "why_not_symptom_patch":"This does not edit global reducer rules, downgrade event validation, delete malformed history, reclassify raw directional RED, or force a branch backwards. It uses the existing guarded recovery transition and valid completion-bearing event types to bind already-committed evidence.",
-  "verification_plan":["Create repair on an isolated staging branch from exact b5bf2f52....","Replay current main-owned generation-80 Harness while pinning only origin/main to the audited dispatch epoch for historical initial-dispatch provenance.","Require final reduced state AUDITED, snapshot match true, no open blocker, and missing predicates exactly [V0_P4_CHECKPOINT_PROPOSED].","Require checkpoint planner to keep proposal blocked until a separate Director CHECKPOINT_PROPOSED event.","Require Project Control SUCCESS on promoted recovery carrier."],
-  "freshness_requirements":["PR #123 head must remain b5bf2f52... before fast-forward promotion.","Canonical main must remain d9a1a3ca... or later movement must be reviewed for relevance before using post-clearance evidence.","Reviewer/Verifier target remains exact frozen implementation/evidence head 2a6721cdf...."],
-  "created_at_utc":"2026-08-18T00:40:00Z"
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P4-R1-LEDGER-MATERIALIZATION-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "Execution-specific V0-P4 Harness event ledger and derived Work Order snapshot only.",
+  "canonical_owner": "Generation-80 Harness event_reducer/checkpoint_planner remain the canonical control-state owners; this repair changes only execution data consumed by them.",
+  "entry_points": [
+    "python -m harness.cli status --execution config/control/harness/executions/E2026-08-17-V0-P4-R1",
+    "checkpoint_planner required_predicates evaluation",
+    "Director checkpoint-closure flow for V0-P4"
+  ],
+  "callers": [
+    "Harness CLI status/resume/plan",
+    "V0-P4 Director checkpoint closure",
+    "checkpoint proposal guard"
+  ],
+  "callees": [
+    "generation-80 event_reducer",
+    "transition-table guarded FIX_REQUIRED -> DISPATCHED recovery",
+    "harness evidence-map and review-result guards"
+  ],
+  "sibling_paths": [
+    "config/control/harness/event.schema.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/transition-table.v1.json",
+    "scripts/harness/event_reducer.py",
+    "scripts/harness/checkpoint_planner.py",
+    "config/control/harness/evidence-map.schema.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/reviews/V0-P4-R1-REVIEW-POST-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/verification/V0-P4-R1-VERIFY-001.v1.json"
+  ],
+  "existing_tests": [
+    "tests.harness.test_v0_generation80_safety_guards",
+    "tests.harness.test_v0_s1_networked_checkpoint_contract",
+    "post-clearance Project Control run 32085293289 SUCCESS",
+    "independent Reviewer PASS V0-P4-R1-REVIEW-POST-001",
+    "independent Verifier PASS V0-P4-R1-VERIFY-001"
+  ],
+  "missing_tests": [
+    "Exact execution-specific reducer replay proving AUDITED state, snapshot match, and exactly one remaining predicate before checkpoint proposal. This is the staging validation gate for this repair."
+  ],
+  "public_or_internal_contracts": [
+    "distributed_world_simulator.harness_event.v1",
+    "distributed_world_simulator.work_order.v1",
+    "distributed_world_simulator.harness_evidence_map.v1",
+    "distributed_world_simulator.harness_review_result.v1",
+    "generation-80 transition-table event_type_states and allowed_state_transitions",
+    "repair-doctrine required repair_map_fields"
+  ],
+  "expected_shipped_behavior": "No runtime/product behavior changes. The same frozen P4 implementation target 2a6721cdf... remains authoritative; the Harness must be able to reconstruct already-proven closure predicates append-only and leave checkpoint proposal as the only missing predicate.",
+  "relevant_history_or_evidence": [
+    "clean recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8",
+    "frozen implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "quarantined PR #120 malformed PREDICATE_VERIFIED + IN_PROGRESS history, not rewritten",
+    "independent Reviewer PASS V0-P4-R1-REVIEW-POST-001",
+    "independent Verifier PASS V0-P4-R1-VERIFY-001",
+    "main-owned directional clearance merge 7351b720bc9a0a6dbe2577dfb37568a853d2f266",
+    "post-clearance Project Control run 32085293289 SUCCESS"
+  ],
+  "root_cause_hypothesis": "The clean recovery carrier reconstructed valid implementation/review states, but historical IMPLEMENTATION_COMMITTED events only observe predicate labels. Generation-80 event_reducer marks completed_predicates only for successful PREDICATE_VERIFIED, AUDIT_COMPLETED, or CHECKPOINT_PROPOSED events with command and evidence. Therefore product evidence was valid while catalog completion remained formally incomplete.",
+  "canonical_fix_location": "config/control/harness/executions/E2026-08-17-V0-P4-R1/events/V0-P4-R1-WO-001 plus checkpoint-time evidence and the derived Work Order snapshot under the same execution.",
+  "why_not_symptom_patch": "The repair does not edit global reducer rules, weaken event validation, delete or rewrite immutable history, reinterpret the raw directional RED, or force a branch backwards. It uses the existing guarded recovery transition and valid completion-bearing event types to bind already-committed evidence.",
+  "triggering_findings": [
+    "P4_CLOSURE_PREDICATES_NOT_MATERIALIZED_IN_REDUCER",
+    "Existing implementation events prove P4 slices but event_reducer only completes predicates from completion-bearing event types.",
+    "The quarantined PR #120 attempted PREDICATE_VERIFIED with IN_PROGRESS, which is invalid under the generation-80 transition table; that history remains quarantined and is not rewritten."
+  ],
+  "root_cause": "The recovery carrier correctly reconstructed a clean event ledger through independent Reviewer/Verifier PASS, but implementation/control predicates remained only observed because historical IMPLEMENTATION_COMMITTED events are not completion-bearing event types.",
+  "interface": "Work Order required_predicates -> event_reducer completed_predicates -> checkpoint_planner readiness.",
+  "dependencies": [
+    "clean recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8",
+    "frozen implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "independent Reviewer PASS V0-P4-R1-REVIEW-POST-001",
+    "independent Verifier PASS V0-P4-R1-VERIFY-001",
+    "main-owned directional clearance merge 7351b720bc9a0a6dbe2577dfb37568a853d2f266",
+    "post-clearance Project Control run 32085293289 SUCCESS"
+  ],
+  "invariants": [
+    "No production file mutation.",
+    "No test mutation.",
+    "No runtime worker restart; frozen runtime implementation target remains 2a6721cdf....",
+    "No force-push or rewrite of events 1-15.",
+    "Original Work Order branch identity remains feature/v0-p4-construction-real-resources.",
+    "Independent Reviewer and Verifier results remain historical records.",
+    "Raw directional RED identity remains visible; only an accepted exact main-owned clearance may make the effective result NON_RED.",
+    "Checkpoint proposal remains separate until reducer validation proves all non-checkpoint predicates complete."
+  ],
+  "sibling_surfaces_checked": [
+    "event.schema.v1.json event_type/work_state pairs",
+    "transition-table.v1.json state transitions",
+    "event_reducer.py completion semantics",
+    "FIX_REQUIRED -> DISPATCHED guard requirements",
+    "checkpoint_planner.py required predicate comparison",
+    "harness_evidence_map.v1 schema",
+    "independent review and verification result bindings"
+  ],
+  "new_tests": [
+    "Staging generation-80 Harness status must reduce the repaired ledger to AUDITED with every required predicate complete except V0_P4_CHECKPOINT_PROPOSED.",
+    "Project Control on the promoted carrier must remain NON_RED."
+  ],
+  "regressions": [
+    "No runtime regression is rerun or reinterpreted by this control-only repair; existing exact Godot evidence remains authoritative.",
+    "Post-clearance Project Control is separately proven against current main semantics."
+  ],
+  "verification_plan": [
+    "Replay current main-owned generation-80 Harness while pinning only origin/main to the audited dispatch epoch for historical initial-dispatch provenance.",
+    "Require final reduced state AUDITED, snapshot match true, no open blocker, and missing predicates exactly [V0_P4_CHECKPOINT_PROPOSED].",
+    "Require checkpoint planner to keep proposal blocked until a separate Director CHECKPOINT_PROPOSED event.",
+    "Require post-promotion Project Control NON_RED."
+  ],
+  "freshness_requirements": [
+    "PR #123 head must remain b5bf2f52... before fast-forward promotion.",
+    "Canonical main movement must be reviewed for relevance before using post-clearance evidence.",
+    "Reviewer/Verifier target remains exact frozen implementation/evidence head 2a6721cdf...."
+  ],
+  "created_at_utc": "2026-08-18T00:40:00Z"
 }
