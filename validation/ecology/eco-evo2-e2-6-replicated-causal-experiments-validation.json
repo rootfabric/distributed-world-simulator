@@ -1,0 +1,179 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_6_replicated_causal_experiments_validation.v1",
+  "revision": "ECO-EVO2-E2.6-2026-08-18-R1-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "base_head": "4fb0c0ec5010251373b61b5a507604ff82f2d6e5",
+  "code_under_test_head": "8ac37bfea0f36731407e1252db1a7c2a2305420e",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "e2_5_validation": "validation/ecology/eco-evo2-e2-5-sorting-vs-adaptation-validation.json",
+    "e2_5_accepted_aggregate_hash": "942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6",
+    "e2_5_code_under_test_head": "4c17a91957e392eabc04e136f9590773dbe54dd1",
+    "e2_4_accepted_aggregate_hash": "ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5",
+    "e2_4_plan_hash": "f688eb014245d63483562376c3f5db8c08a85bdc35feb52428f5ff17753f82e0",
+    "e2_2_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_replicated_causal_experiments_v1.gd",
+    "git_blob_sha": "7fb18d91ba59493c608edafba610dc882152852a",
+    "schema": "distributed_world_simulator.ecology.evo2_replicated_causal_experiments.v1",
+    "version": "1.0.0",
+    "target_cells": ["DRY", "WET"],
+    "replicate_ids": ["R01", "R02", "R03", "R04", "R05"],
+    "required_positive_replicates": 4,
+    "required_home_advantage_replicates": 4,
+    "generations": 10,
+    "population_size": 8,
+    "offspring_per_parent": 4,
+    "censoring_allowed": false,
+    "significance_claimed": false,
+    "cross_seed_robustness_claimed": false,
+    "canonical_species_declared": false,
+    "production_authority_claimed": false
+  },
+  "replication_contract": {
+    "predeclared_replicate_set": ["R01", "R02", "R03", "R04", "R05"],
+    "same_frozen_founders_within_each_environment_across_all_replicates": true,
+    "same_control_and_treatment_founders_within_each_replicate": true,
+    "exact_e2_4_dry_environment_reused": true,
+    "exact_e2_4_wet_environment_reused": true,
+    "control_mutation_probability": 0.0,
+    "treatment_policy_is_exact_e2_5_policy": true,
+    "control_and_treatment_differ_only_by_mutation_permission": true,
+    "all_replicates_must_be_retained": true,
+    "null_and_reversal_outcomes_must_be_preserved": true,
+    "post_hoc_replicate_censoring_forbidden": true,
+    "adaptation_effect_requires_novel_genome_and_positive_resource_gain": true,
+    "reciprocal_home_advantage_is_direct_cross_environment_evaluation": true,
+    "mutation_creates_canonical_species": false,
+    "global_rng_consumed": false
+  },
+  "policy_identity": {
+    "control_policy_hash": "0e6481175af3658b2673a612717dd850b917ec5156260b37bd9ee29a9789dc4e",
+    "treatment_policy_hash": "e2927ce7a8f6b3ab5f3d4942a2cc70ca3794e0d67c3e770e0301748967c14416"
+  },
+  "frozen_input_identity": {
+    "alpha_research_species_id": "eco-research-species/34b4de11b3cbb2eae9f73176",
+    "alpha_lineage_id": "eco-lineage/e22-alpha",
+    "alpha_genome_checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+    "beta_research_species_id": "eco-research-species/247a0b301db2781bfc317a13",
+    "beta_lineage_id": "eco-lineage/e22-beta",
+    "beta_genome_checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+    "dry_environment_checksum": "45e23226bf205381aa1d1e85d987f0815714fcea674e4856d534f55f38e5588b",
+    "wet_environment_checksum": "b9c6a58274ff30329a8cad3b02360a5c61036da19a4d8a0d422786bb469b7ec5"
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_6_replicated_causal_experiments_acceptance.gd",
+    "git_blob_sha": "55b9af8b1969b033606fab112accd616eee8122a",
+    "assertions": 218,
+    "runner": "RUN_ECO_EVO2_E2_6_TESTS.ps1",
+    "runner_git_blob_sha": "08a2ffbfbe1b3c28b020571256b6831d37d97fcb",
+    "fully_rehashed_effect_tamper_rejected": true,
+    "replicate_drop_after_rehash_rejected": true,
+    "replicate_reorder_after_rehash_rejected": true,
+    "significance_promotion_after_rehash_rejected": true,
+    "e2_7_robustness_promotion_after_rehash_rejected": true
+  },
+  "exact_executable_closure": {
+    "verified_exact": true,
+    "verified_count": 7,
+    "target_head": "8ac37bfea0f36731407e1252db1a7c2a2305420e",
+    "rule": "canonical behavioral execution requires exact transitive executable closure before execution",
+    "blobs": {
+      "scripts/research/ecology/environment_sample_v1.gd": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
+      "scripts/research/ecology/plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
+      "scripts/research/ecology/plant_lineage_record_v1.gd": "0b848b2dc3ed3dccc1ee02db71c161cfcc9809d0",
+      "scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd": "7b9b5d41236cb27256dd7405201436a71a3eafea",
+      "scripts/research/ecology/plant_resource_model_v1.gd": "26fd4118307f098bd85b6d4b953a27ad8b9d85cd",
+      "scripts/research/ecology/plant_replicated_causal_experiments_v1.gd": "7fb18d91ba59493c608edafba610dc882152852a",
+      "tests/research/ecology/eco_evo2_e2_6_replicated_causal_experiments_acceptance.gd": "55b9af8b1969b033606fab112accd616eee8122a"
+    },
+    "accepted_e2_5_runtime_reexecuted_as_dependency": false,
+    "accepted_e2_5_contract_pinned_as_immutable_parent": true
+  },
+  "fresh_behavioral_verification": {
+    "executed_date": "2026-08-18",
+    "authority": "HUMAN_DIRECTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION_GATE",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload_exit": 0,
+    "parser_error_lines": 0,
+    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "fresh_process_a_exit": 0,
+    "fresh_process_b_exit": 0,
+    "fresh_process_error_lines": 0,
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "a1dec9651244fb1ccf95a617469d56a4b7d674aceb6f73bf33e792a3c9a82307",
+    "assertions": "PASS_218_OF_218",
+    "canonical_runner_executed": false,
+    "equivalent_execution_executed": true,
+    "equivalent_execution_reason": "pwsh/powershell unavailable in the Linux execution carrier",
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "frozen_outputs": {
+    "aggregate_hash": "1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd",
+    "replicate_set_hash": "5e02d04d3d94f95f6e8e76f6387ee07c723d2e596046f6a65d65cd815abbc637",
+    "dry_mean_adaptation_gain": 0.235359270024,
+    "dry_positive_count": 5,
+    "dry_home_advantage_count": 5,
+    "dry_aggregate_hash": "10ca9de3ca7989494507bcb081a410bd1e8e625faa10843f62201c258e9bdd52",
+    "wet_mean_adaptation_gain": 0.379178153879,
+    "wet_positive_count": 5,
+    "wet_home_advantage_count": 5,
+    "wet_aggregate_hash": "3fa2b4a96a141241e367d56b7fa69f6d8bc9f92f32cd5266128248c21a092755",
+    "replicate_hashes": {
+      "R01": "36b5d458d037cafe6c1d72bb68040876a2a453637d68d89de75dae98f9e7fa84",
+      "R02": "c3e2dbc3949c6d16edc646954b1a324b0e03215aae7a1759ec3d79bfd8a64177",
+      "R03": "d808be565e5d1c39725b5212b72e85efb4113f3e11e27dc3f560da515d455477",
+      "R04": "9785a696f335895b48dde1dc2813bde5f872bf887f9664c3ec122dba789c4ca4",
+      "R05": "a815a398caf1845da32ea4fdc7e7462e42e36c4580393bac0b215cbbef71f4f9"
+    }
+  },
+  "observed_outcomes": {
+    "replicates_retained": 5,
+    "replicates_censored": 0,
+    "DRY": {
+      "positive_adaptation_replicates": 5,
+      "reciprocal_home_advantage_replicates": 5,
+      "predeclared_threshold_pass": true
+    },
+    "WET": {
+      "positive_adaptation_replicates": 5,
+      "reciprocal_home_advantage_replicates": 5,
+      "predeclared_threshold_pass": true
+    }
+  },
+  "scientific_boundary": {
+    "what_is_proven": "the accepted E2.5 causal effect is reproducible across five predeclared deterministic variation streams while retaining every replicate, including any potential null or reversal; both DRY and WET exceed the frozen 4/5 positive-effect and 4/5 reciprocal-home-advantage thresholds",
+    "what_is_not_proven": [
+      "formal statistical significance",
+      "broad cross-seed robustness across a larger seed ensemble",
+      "robustness across alternative bake seeds or catalogs",
+      "full continuous transfer-plus-evolution dynamics",
+      "canonical biological species formation",
+      "production world authority"
+    ]
+  },
+  "known_boundary": {
+    "canonical_runner_executed": false,
+    "equivalent_fresh_verification_executed": true,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false,
+    "production_authority_claimed": false,
+    "e2_7_authorized": true
+  },
+  "acceptance": {
+    "accepted_date": "2026-08-18",
+    "code_under_test_head": "8ac37bfea0f36731407e1252db1a7c2a2305420e",
+    "aggregate_hash": "1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd",
+    "decision": "ACCEPT_E2_6_AND_AUTHORIZE_E2_7",
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "decision": "ACCEPT_E2_6_AND_AUTHORIZE_E2_7",
+  "next": "ECO.EVO2 / E2.7 Cross-Seed Robustness"
+}
