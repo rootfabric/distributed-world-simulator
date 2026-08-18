@@ -64,6 +64,7 @@ func _init() -> void:
 	_check(String(export_a["parent_e2_1_accepted_aggregate"]) == BakeExport.PARENT_E2_1_ACCEPTED_AGGREGATE, "accepted E2.1 parent is pinned")
 	_check(String(export_a["parent_p2_8_accepted_aggregate"]) == BakeExport.PARENT_P2_8_ACCEPTED_AGGREGATE, "bake preserves P2.8 parent")
 	_check(String(export_a["source_run_hash"]) == SOURCE_RUN_HASH, "exact source run provenance is preserved")
+	_check(Dictionary(export_a["source"]) == source, "bake embeds the exact validated source evidence")
 	_check(String(export_a["bake_id"]).begins_with("eco-evo2-bake/"), "bake id uses explicit deterministic research namespace")
 
 	var selected: Array = export_a["selected_lineages"]
@@ -154,10 +155,22 @@ func _init() -> void:
 	var altered_selected: Array = Array(tampered_export["selected_lineages"]).duplicate(true)
 	var altered_selection: Dictionary = Dictionary(altered_selected[0]).duplicate(true)
 	altered_selection["final_occupied_patch_count"] = int(altered_selection["final_occupied_patch_count"]) + 1
+	altered_selection["selection_hash"] = _selection_hash_fixture(altered_selection)
 	altered_selected[0] = altered_selection
 	tampered_export["selected_lineages"] = altered_selected
 	tampered_export["bake_hash"] = BakeExport.compute_bake_hash(tampered_export)
-	_check(not BakeExport.validate_export(tampered_export), "selection evidence tamper is rejected even with recomputed bake hash")
+	_check(not BakeExport.validate_export(tampered_export), "selection policy tamper is rejected even with recomputed selection and bake hashes")
+	tampered_export = export_a.duplicate(true)
+	var embedded_source: Dictionary = Dictionary(tampered_export["source"]).duplicate(true)
+	var embedded_lineages: Array = Array(embedded_source["lineages"]).duplicate(true)
+	var embedded_alpha: Dictionary = Dictionary(embedded_lineages[0]).duplicate(true)
+	var embedded_occupancy: Array = Array(embedded_alpha["occupancy_history"]).duplicate(true)
+	embedded_occupancy[embedded_occupancy.size() - 1] = {"year": FINAL_YEAR, "occupied_patch_count": 0}
+	embedded_alpha["occupancy_history"] = embedded_occupancy
+	embedded_lineages[0] = embedded_alpha
+	embedded_source["lineages"] = embedded_lineages
+	tampered_export["source"] = embedded_source
+	_check(not BakeExport.validate_export(tampered_export), "embedded source evidence tamper is rejected before policy claims can be trusted")
 	tampered_export = export_a.duplicate(true)
 	var altered_catalog: Dictionary = Dictionary(tampered_export["species_catalog"]).duplicate(true)
 	altered_catalog["canonical_species_declared"] = true
@@ -214,6 +227,17 @@ func _reason(rejected: Array, lineage_id: String) -> String:
 		if String(record.get("lineage_id", "")) == lineage_id:
 			return String(record.get("reason", ""))
 	return ""
+
+
+func _selection_hash_fixture(selection: Dictionary) -> String:
+	return "\n".join(PackedStringArray([
+		String(selection.get("lineage_id", "")),
+		String(selection.get("representative_observation_hash", "")),
+		str(int(selection.get("representative_year", -1))),
+		str(int(selection.get("occupied_years_in_window", -1))),
+		str(int(selection.get("final_occupied_patch_count", -1))),
+		String(selection.get("research_species_id", "")),
+	])).sha256_text()
 
 
 func _check(condition: bool, label: String) -> void:
