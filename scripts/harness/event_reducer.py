@@ -10,6 +10,10 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 
 
+_P4_CHECKPOINT = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+_P4_AUDIT_SCHEMA = "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1"
+
+
 def load_guard_context(root: Path, execution_dir: Path) -> dict[str, Any]:
     documents: dict[str, dict[str, Any]] = {}
     for area in ("repairs", "reviews", "evidence", "human-attention", "audits"):
@@ -18,14 +22,247 @@ def load_guard_context(root: Path, execution_dir: Path) -> dict[str, Any]:
             continue
         for path in sorted(directory.rglob("*.json")):
             documents[path.resolve().relative_to(root.resolve()).as_posix()] = read_json(path)
-    return {"root": root, "execution_dir": execution_dir, "documents": documents}
+    epoch_path = execution_dir / "project-epoch.v1.json"
+    epoch = read_json(epoch_path) if epoch_path.exists() else None
+    return {"root": root, "execution_dir": execution_dir, "documents": documents, "epoch": epoch}
+
+
+def _safe_repository_json(context: dict[str, Any], relative: str) -> dict[str, Any] | None:
+    normalized = relative.replace("\\", "/")
+    root = context["root"].resolve()
+    candidate = (root / normalized).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return None
+    if candidate.suffix.lower() != ".json" or not candidate.is_file():
+        return None
+    try:
+        value = read_json(candidate)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
 
 
 def _referenced_documents(event: dict[str, Any], context: dict[str, Any] | None) -> list[dict[str, Any]]:
     if context is None:
         return []
     documents = context["documents"]
-    return [documents[path.replace("\\", "/")] for path in event.get("evidence_paths", []) if path.replace("\\", "/") in documents]
+    referenced: list[dict[str, Any]] = []
+    for raw_path in event.get("evidence_paths", []):
+        normalized = raw_path.replace("\\", "/")
+        document = documents.get(normalized)
+        if document is None:
+            document = _safe_repository_json(context, normalized)
+            if document is not None:
+                documents[normalized] = document
+        if document is not None:
+            referenced.append(document)
+    return referenced
+
+
+def _current_main_sha(context: dict[str, Any] | None) -> str:
+    if context is None:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_CONTEXT_REQUIRED")
+    completed = subprocess.run(
+        ["git", "rev-parse", "--verify", "origin/main"],
+        cwd=context["root"], text=True, capture_output=True, check=False,
+    )
+    if completed.returncode != 0:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_MAIN_REF_UNAVAILABLE")
+    sha = completed.stdout.strip().lower()
+    if len(sha) != 40:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_MAIN_REF_INVALID")
+    return sha
+
+
+def _lease_applies(bundle: ContractBundle, context: dict[str, Any] | None) -> tuple[bool, dict[str, Any]]:
+    lease = bundle.contracts["scheduler_policy"].get("pre_h0_3_runtime_mutation_lease")
+    if not isinstance(lease, dict):
+        return False, {}
+    if context is None or not isinstance(context.get("epoch"), dict):
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_EPOCH_CONTEXT_REQUIRED")
+    generation = int(context["epoch"].get("registry_generation", -1))
+    effective = int(lease.get("effective_registry_generation", 10**9))
+    return generation >= effective, lease
+
+
+def _git_output(root: Path, *args: str) -> tuple[int, str]:
+    completed = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return completed.returncode, completed.stdout.strip()
+
+
+def _context_relative_path(context: dict[str, Any], path: Path) -> str:
+    root = context["root"].resolve()
+    try:
+        return path.resolve().relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_PATH_ESCAPES_REPOSITORY") from exc
+
+
+def _dispatch_event_add_commit(event: dict[str, Any], context: dict[str, Any] | None) -> str:
+    """Prove the Director dispatch event itself is an immutable committed ledger entry."""
+    if context is None:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_CONTEXT_REQUIRED")
+    root = context["root"].resolve()
+    event_dir = context["execution_dir"] / "events" / event["work_order_id"]
+    _context_relative_path(context, event_dir)
+    if not event_dir.is_dir():
+        raise ContractValidationError("GUARDED_P4_DISPATCH_EVENT_DIRECTORY_REQUIRED")
+
+    matches: list[str] = []
+    for path in sorted(event_dir.rglob("*.json")):
+        relative = _context_relative_path(context, path)
+        code, dirty = _git_output(root, "status", "--porcelain", "--", relative)
+        if code != 0 or dirty:
+            continue
+        code, history = _git_output(root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            continue
+        code, add_commit = _git_output(root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        if code != 0 or len(add_commit) != 40 or add_commit != commits[0]:
+            continue
+        code, current_head = _git_output(root, "rev-parse", "HEAD")
+        if code != 0 or len(current_head) != 40:
+            continue
+        code, _ = _git_output(root, "merge-base", "--is-ancestor", add_commit, current_head)
+        if code != 0:
+            continue
+        code, raw = _git_output(root, "show", f"{add_commit}:{relative}")
+        if code != 0:
+            continue
+        try:
+            historical = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if historical == event:
+            matches.append(add_commit)
+
+    if len(matches) != 1:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_EVENT_COMMIT_PROVENANCE_REQUIRED")
+    return matches[0]
+
+
+def _committed_p4_audit_documents(
+    event: dict[str, Any],
+    context: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    """Read P4 audit evidence only from Git state that predates the dispatch event commit.
+
+    The audit must already exist in the parent tree of the commit that adds the
+    immutable Director dispatch event. Therefore an untracked audit, an audit
+    first added in the dispatch commit, or an audit committed later cannot
+    authorize runtime mutation. Current working-tree JSON is intentionally not
+    trusted for this gate.
+    """
+    if context is None:
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_CONTEXT_REQUIRED")
+    root = context["root"].resolve()
+    dispatch_commit = _dispatch_event_add_commit(event, context)
+    code, parent_commit = _git_output(root, "rev-parse", "--verify", f"{dispatch_commit}^")
+    if code != 0 or len(parent_commit) != 40:
+        raise ContractValidationError("GUARDED_P4_DISPATCH_PARENT_COMMIT_REQUIRED")
+
+    execution_relative = _context_relative_path(context, context["execution_dir"]).rstrip("/")
+    audit_prefix = f"{execution_relative}/audits/"
+    committed: list[dict[str, Any]] = []
+    for raw_path in event.get("evidence_paths", []):
+        normalized = raw_path.replace("\\", "/")
+        if not normalized.startswith(audit_prefix) or not normalized.endswith(".json"):
+            continue
+
+        # The dispatch commit may not smuggle in or rewrite the audit it cites.
+        code, changed = _git_output(
+            root,
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            dispatch_commit,
+            "--",
+            normalized,
+        )
+        if code != 0 or changed:
+            continue
+
+        code, raw = _git_output(root, "show", f"{parent_commit}:{normalized}")
+        if code != 0:
+            continue
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            committed.append(value)
+    return committed
+
+
+def _authoritative_p4_audit_present(
+    work_order: dict[str, Any],
+    event: dict[str, Any],
+    context: dict[str, Any] | None,
+) -> bool:
+    current_main = _current_main_sha(context)
+    for item in _committed_p4_audit_documents(event, context):
+        if item.get("schema") != _P4_AUDIT_SCHEMA:
+            continue
+        if item.get("decision") != "CONTINUE":
+            continue
+        if item.get("authoritative_for_dispatch") is not True:
+            continue
+        if item.get("refs_fetch_performed") is not True:
+            continue
+        if item.get("checkpoint") != _P4_CHECKPOINT:
+            continue
+        if str(item.get("p4_head", "")).lower() != event["head_sha"].lower():
+            continue
+        if str(item.get("canonical_main_head", "")).lower() != current_main:
+            continue
+        if int(item.get("registry_generation", -1)) < 80:
+            continue
+        if item.get("production_runtime_mutation_present") is not False:
+            continue
+        if item.get("director_dispatch_still_required") is not True:
+            continue
+        if str(work_order.get("branch", "")) != "feature/v0-p4-construction-real-resources":
+            continue
+        return True
+    return False
+
+
+def _enforce_initial_dispatch(
+    bundle: ContractBundle,
+    work_order: dict[str, Any],
+    event: dict[str, Any],
+    documents: list[dict[str, Any]],
+    context: dict[str, Any] | None,
+) -> None:
+    if event.get("actor") != "DIRECTOR":
+        raise ContractValidationError("GUARDED_INITIAL_DISPATCH_DIRECTOR_REQUIRED")
+
+    applies, lease = _lease_applies(bundle, context)
+    if not applies:
+        return
+    if int(lease.get("capacity", 0)) != 1:
+        raise ContractValidationError("GLOBAL_MUTATION_SLOT_LEASE_CAPACITY_INVALID")
+    holder_checkpoint = str(lease.get("holder_checkpoint", ""))
+    holder_branch = str(lease.get("holder_branch", ""))
+    checkpoint = str(work_order.get("goal_checkpoint", ""))
+    branch = str(work_order.get("branch", ""))
+    if lease.get("non_holder_dispatch_forbidden") is True and checkpoint != holder_checkpoint:
+        raise ContractValidationError(f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{holder_checkpoint}")
+    if checkpoint == holder_checkpoint and holder_branch and branch != holder_branch:
+        raise ContractValidationError(f"GLOBAL_MUTATION_SLOT_BRANCH_MISMATCH:{holder_branch}")
+    if checkpoint == _P4_CHECKPOINT and lease.get("holder_initial_dispatch_requires_authoritative_epoch_audit") is True:
+        if not _authoritative_p4_audit_present(work_order, event, context):
+            raise ContractValidationError("GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED")
 
 
 def _is_complete_repair(document: dict[str, Any], bundle: ContractBundle, work_order_id: str) -> bool:
@@ -110,7 +347,9 @@ def _enforce_guard(
 ) -> None:
     transition = (previous_state, event["work_state"])
     documents = _referenced_documents(event, context)
-    if transition == ("BLOCKED", "DISPATCHED"):
+    if transition == ("PLANNED", "DISPATCHED"):
+        _enforce_initial_dispatch(bundle, work_order, event, documents, context)
+    elif transition == ("BLOCKED", "DISPATCHED"):
         previous_event = ordered[index - 1] if index > 0 else None
         if event["actor"] != "DIRECTOR" or not _blocked_resolution_proven(bundle, work_order, event, previous_event, documents, context):
             raise ContractValidationError("GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING")
@@ -178,7 +417,7 @@ def _enforce_guard(
             raise ContractValidationError("GUARDED_CHECKPOINT_PROPOSAL_EVIDENCE_MISSING")
 
 
-def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: list[dict[str, Any],], transition_table: dict[str, Any], guard_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: list[dict[str, Any]], transition_table: dict[str, Any], guard_context: dict[str, Any] | None = None) -> dict[str, Any]:
     if not events:
         raise ContractValidationError("EVENT_LEDGER_EMPTY")
     expected_sequence = 1
