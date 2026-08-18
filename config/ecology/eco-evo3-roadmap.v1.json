@@ -1,0 +1,136 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_roadmap.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-ROADMAP-2026-08-19-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "program": "ECO.EVO3",
+  "name": "Planetary Ecology Compiler",
+  "status": "RESEARCH_ROADMAP_ACCEPTED_E3_0_CURRENT",
+  "parent_architecture_revision": "ECO-EVO3-ARCH-2026-08-19-R1",
+  "parent_xfer0_contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309",
+  "execution_policy": {
+    "sequential": true,
+    "no_stage_skip": true,
+    "post_freeze_executable_drift_requires_reverification": true,
+    "production_binding_forbidden_until_xfer1": true,
+    "independent_role_not_implicit": true
+  },
+  "steps": [
+    {
+      "id": "E3.0",
+      "name": "Planetary Ecology Compiler Architecture & Roadmap",
+      "status": "ACCEPTED",
+      "depends_on": [],
+      "output": "frozen compiler architecture, IR and staged causal roadmap"
+    },
+    {
+      "id": "E3.1",
+      "name": "Planet Field Snapshot Contract",
+      "status": "AUTHORIZED_NOT_STARTED",
+      "depends_on": [
+        "E3.0"
+      ],
+      "output": "research adapter/fixture for snapshot-bound G/ENV/MAT/WQ/SD/TF semantics without production API binding"
+    },
+    {
+      "id": "E3.2",
+      "name": "Ecological Opportunity Field",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.1"
+      ],
+      "output": "continuous causal opportunity fields; no biome/species labels"
+    },
+    {
+      "id": "E3.3",
+      "name": "Research Ecology Decomposition",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.2"
+      ],
+      "output": "deterministic research-only region/patch graph distinct from canonical SD"
+    },
+    {
+      "id": "E3.4",
+      "name": "Causal Colonization Program Compiler",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.3"
+      ],
+      "output": "full-catalog causal colonization program with valid null/no-colonization outcomes"
+    },
+    {
+      "id": "E3.5",
+      "name": "Multi-scale Population Workset Compiler",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.4"
+      ],
+      "output": "PLANET/REGION/PATCH/LOCAL_ACTIVE population work units and budget hints without individual-entity truth"
+    },
+    {
+      "id": "E3.6",
+      "name": "Seasonal & Disturbance Temporal Program",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.5"
+      ],
+      "output": "snapshot-bound temporal envelopes and disturbance schedules without owning TF/ENV"
+    },
+    {
+      "id": "E3.7",
+      "name": "Deterministic Planet Compilation",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.6"
+      ],
+      "output": "byte/hash-stable PlanetEcologyProgram across fresh processes for one full planet fixture"
+    },
+    {
+      "id": "E3.8",
+      "name": "Cross-Planet Generalization Matrix",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.7"
+      ],
+      "output": "predeclared dry/wet/cold/hot/seasonal/topologically-isolated planet families without retuning catalog or compiler"
+    },
+    {
+      "id": "E3.FINAL",
+      "name": "Planetary Ecology Compiler Challenge",
+      "status": "BLOCKED",
+      "depends_on": [
+        "E3.8"
+      ],
+      "output": "persisted EVO2 catalog + unseen planet fields -> deterministic causal ecology program/evidence with no shortcuts"
+    }
+  ],
+  "checkpoint_rules": {
+    "e3_1_must_use_semantic_adapter_not_production_api": true,
+    "e3_2_may_not_emit_species_assignment": true,
+    "e3_3_region_ids_must_be_research_namespaced": true,
+    "e3_4_full_catalog_input_required": true,
+    "e3_4_null_no_colonization_valid": true,
+    "e3_5_planet_wide_individual_truth_forbidden": true,
+    "e3_6_canonical_time_environment_ownership_forbidden": true,
+    "e3_7_fresh_process_determinism_required": true,
+    "e3_8_predeclared_planet_matrix_required": true,
+    "final_no_rebake_target_tuning_biome_table_or_asset_scatter": true
+  },
+  "xfer1_relation": {
+    "status": "BLOCKED_WAIT_CANONICAL_FOUNDATIONS",
+    "required_foundations": [
+      "G",
+      "ENV",
+      "MAT",
+      "WQ",
+      "SD",
+      "TF"
+    ],
+    "evo3_research_may_continue_without_xfer1": true,
+    "production_binding_may_not_continue_without_xfer1": true
+  },
+  "next": "E3.1_PLANET_FIELD_SNAPSHOT_CONTRACT",
+  "roadmap_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "roadmap_hash": "1b153d5974ab2f922dfe557ce5a9d3eed5a83f904b5c50265d7a28fb6faba178"
+}

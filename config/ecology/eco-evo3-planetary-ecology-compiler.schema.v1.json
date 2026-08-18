@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_planetary_ecology_compiler.schema.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "revision",
+    "branch",
+    "program",
+    "name",
+    "status",
+    "research_only",
+    "parent",
+    "north_star",
+    "scope",
+    "canonical_inputs",
+    "catalog_input",
+    "compiler_ir",
+    "stages",
+    "truth_model",
+    "determinism",
+    "scale_model",
+    "authority_barriers",
+    "acceptance_dimensions",
+    "architecture_hash_algorithm",
+    "architecture_hash"
+  ],
+  "properties": {
+    "schema": {
+      "const": "distributed_world_simulator.ecology.evo3_planetary_ecology_compiler.v1"
+    },
+    "version": {
+      "const": "1.0.0"
+    },
+    "revision": {
+      "type": "string"
+    },
+    "branch": {
+      "const": "feature/eco-evolutionary-ecology"
+    },
+    "program": {
+      "const": "ECO.EVO3"
+    },
+    "name": {
+      "const": "Planetary Ecology Compiler"
+    },
+    "status": {
+      "const": "ACCEPTED_RESEARCH_ARCHITECTURE"
+    },
+    "research_only": {
+      "const": true
+    },
+    "parent": {
+      "type": "object"
+    },
+    "north_star": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "object"
+    },
+    "canonical_inputs": {
+      "type": "object"
+    },
+    "catalog_input": {
+      "type": "object"
+    },
+    "compiler_ir": {
+      "type": "object"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object"
+      }
+    },
+    "truth_model": {
+      "type": "array",
+      "minItems": 6
+    },
+    "determinism": {
+      "type": "object"
+    },
+    "scale_model": {
+      "type": "object"
+    },
+    "authority_barriers": {
+      "type": "array",
+      "minItems": 9
+    },
+    "acceptance_dimensions": {
+      "type": "array",
+      "minItems": 9
+    },
+    "architecture_hash_algorithm": {
+      "const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"
+    },
+    "architecture_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

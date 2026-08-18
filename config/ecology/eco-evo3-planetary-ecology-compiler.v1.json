@@ -1,0 +1,272 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_planetary_ecology_compiler.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-ARCH-2026-08-19-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "program": "ECO.EVO3",
+  "name": "Planetary Ecology Compiler",
+  "status": "ACCEPTED_RESEARCH_ARCHITECTURE",
+  "research_only": true,
+  "parent": {
+    "xfer0_durable_head": "66bb9fdb2a5efa0bd7d3cf7f216d042639a60b34",
+    "xfer0_code_under_test_head": "bb80beac95d838b56cccbe5d98f7e1bcbfd80376",
+    "xfer0_contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309",
+    "xfer0_aggregate_hash": "1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044",
+    "evo2_final_aggregate_hash": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250"
+  },
+  "north_star": "COMPILE_OWNER_PROVIDED_PLANETARY_FIELDS_PLUS_PORTABLE_SPECIES_CATALOG_INTO_A_DETERMINISTIC_CAUSAL_RESEARCH_ECOLOGY_PROGRAM_WITHOUT_BIOME_SPECIES_TABLES_OR_PRODUCTION_AUTHORITY",
+  "scope": {
+    "research_architecture_only": true,
+    "runtime_implementation": false,
+    "production_binding": false,
+    "production_activation": false,
+    "canonical_owner_mutation": false,
+    "canonical_spatial_domain_creation": false,
+    "production_persistence_authority": false,
+    "world_transaction_authority": false,
+    "network_authority": false,
+    "canonical_species_taxonomy": false,
+    "biome_species_table_allowed": false,
+    "asset_scatter_as_ecology_truth_allowed": false
+  },
+  "canonical_inputs": {
+    "binding_mode": "XFER0_SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+    "required_foundations": [
+      "G",
+      "ENV",
+      "MAT",
+      "WQ",
+      "SD",
+      "TF"
+    ],
+    "binding_state": "UNRESOLVED_CANONICAL_CONTRACTS",
+    "required_snapshot_semantics": [
+      "stable_planet_identity",
+      "stable_spatial_key",
+      "stable_time_key",
+      "reference_frame_identity",
+      "terrain_or_geology_context_reference",
+      "environment_field_reference",
+      "material_context_reference",
+      "world_query_capability_reference",
+      "spatial_domain_reference",
+      "time_fabric_reference",
+      "temperature",
+      "soil_moisture",
+      "light_availability",
+      "nutrient_availability",
+      "disturbance_pressure",
+      "field_provenance_hash"
+    ],
+    "input_policy": [
+      "compiler reads owner-provided snapshots or semantic adapters only",
+      "compiler never writes canonical input foundations",
+      "concrete production API binding is deferred to XFER1",
+      "missing canonical bindings remain explicit unresolved dependencies"
+    ]
+  },
+  "catalog_input": {
+    "source": "EVO2_PERSISTED_RESEARCH_SPECIES_CATALOG_AND_PROVENANCE",
+    "required_semantics": [
+      "catalog_hash",
+      "research_species_id",
+      "lineage_provenance",
+      "genome_checksum",
+      "recruitment_traits",
+      "source_evidence_hash"
+    ],
+    "rules": [
+      "all catalog entries remain eligible unless causal ecology eliminates them",
+      "compiler may not choose species from biome labels",
+      "compiler may not rebake or target-tune the catalog",
+      "research species identity never becomes canonical taxonomy"
+    ]
+  },
+  "compiler_ir": {
+    "name": "PlanetEcologyProgram",
+    "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+    "required_sections": [
+      "input_snapshot_manifest",
+      "research_ecology_regions",
+      "ecological_opportunity_fields",
+      "colonization_program",
+      "population_work_units",
+      "temporal_disturbance_program",
+      "execution_budget_hints",
+      "projection_manifest",
+      "provenance_manifest"
+    ],
+    "identity_rules": [
+      "research ecology region ids are namespaced derived ids and are not SD ids",
+      "work-unit ids are scheduling identities, not world authority domains",
+      "program revision is monotonic only inside the research artifact lineage",
+      "all outputs carry source snapshot and catalog provenance"
+    ]
+  },
+  "truth_model": [
+    "canonical world/environment/material/spatial/time truth stays with simulator owners",
+    "PlanetEcologyProgram is a research-derived candidate program, not canonical world state",
+    "population/cohort state remains ecology truth inside ecology semantics",
+    "individual representation remains a projection until canonical lifecycle/transaction owners promote it",
+    "presentation and query projections are never ecology truth",
+    "compiled suitability is not population truth; population truth emerges from causal ecology execution"
+  ],
+  "determinism": {
+    "required": true,
+    "canonicalization": "SORTED_KEYS_STABLE_ORDER_EXPLICIT_FLOAT_POLICY",
+    "program_hash_required": true,
+    "same_inputs_same_program_required": true,
+    "global_rng_consumption_forbidden": true,
+    "all_non_deterministic_external_inputs_must_be_snapshot_bound": true
+  },
+  "scale_model": {
+    "levels": [
+      "PLANET",
+      "REGION",
+      "PATCH",
+      "LOCAL_ACTIVE"
+    ],
+    "principle": "same ecology state meaning across INCUBATE_FAST, BACKGROUND_COARSE and LOCAL_ACTIVE",
+    "compile_time_outputs": [
+      "research partition graph",
+      "work units",
+      "budget hints",
+      "temporal envelopes"
+    ],
+    "runtime_deferred": [
+      "actual population evolution",
+      "local individual representation",
+      "production scheduling",
+      "distributed authority"
+    ]
+  },
+  "authority_barriers": [
+    "NO_CANONICAL_G_ENV_MAT_WQ_SD_TF_OWNERSHIP",
+    "NO_PRODUCTION_PERSISTENCE_OR_TRANSACTION_AUTHORITY",
+    "NO_NETWORK_OR_AUTHORITY_ASSIGNMENT",
+    "NO_CANONICAL_SPECIES_TAXONOMY_PROMOTION",
+    "NO_BIOME_TO_SPECIES_MAPPING",
+    "NO_ASSET_SCATTER_AS_ECOLOGY_TRUTH",
+    "NO_RESEARCH_REGION_AS_CANONICAL_SD_DOMAIN",
+    "NO_COMPILED_SUITABILITY_AS_POPULATION_TRUTH",
+    "NO_EVO2_EVIDENCE_AS_PRODUCTION_AUTHORIZATION"
+  ],
+  "acceptance_dimensions": [
+    "ARCHITECTURE_CONTRACT_COMPLETE",
+    "STAGE_DAG_ACYCLIC",
+    "XFER0_PARENT_EXACT",
+    "FOUNDATION_BOUNDARIES_PRESERVED",
+    "NO_BIOME_SPECIES_SHORTCUT",
+    "DETERMINISTIC_PROGRAM_CONTRACT",
+    "SCALE_SEMANTICS_SINGLE_MEANING",
+    "PRODUCTION_AUTHORITY_NOT_CLAIMED",
+    "ROADMAP_GATES_FAIL_CLOSED"
+  ],
+  "stages": [
+    {
+      "id": "FIELD_INGEST",
+      "inputs": [
+        "owner field snapshot references",
+        "persisted EVO2 catalog"
+      ],
+      "outputs": [
+        "validated input_snapshot_manifest"
+      ],
+      "must_not": [
+        "copy canonical owner truth into ECO ownership",
+        "accept missing provenance",
+        "write owner fields"
+      ]
+    },
+    {
+      "id": "OPPORTUNITY_FIELD",
+      "inputs": [
+        "validated field samples"
+      ],
+      "outputs": [
+        "continuous ecological_opportunity_fields"
+      ],
+      "must_not": [
+        "emit biome species labels",
+        "turn derived suitability into population truth"
+      ]
+    },
+    {
+      "id": "ECOLOGY_DECOMPOSITION",
+      "inputs": [
+        "opportunity fields",
+        "spatial adjacency/query capabilities"
+      ],
+      "outputs": [
+        "research_ecology_regions"
+      ],
+      "must_not": [
+        "create or mutate canonical SD domains",
+        "use species identity as partition key"
+      ]
+    },
+    {
+      "id": "COLONIZATION_PROGRAM",
+      "inputs": [
+        "research regions",
+        "full portable catalog",
+        "connectivity"
+      ],
+      "outputs": [
+        "causal colonization_program"
+      ],
+      "must_not": [
+        "target-aware species injection",
+        "direct scatter as truth",
+        "guarantee colonization"
+      ]
+    },
+    {
+      "id": "POPULATION_WORKSET",
+      "inputs": [
+        "colonization program",
+        "execution modes"
+      ],
+      "outputs": [
+        "population_work_units",
+        "execution_budget_hints"
+      ],
+      "must_not": [
+        "create planet-wide individual entity truth",
+        "assign network authority",
+        "commit world transactions"
+      ]
+    },
+    {
+      "id": "TEMPORAL_PROGRAM",
+      "inputs": [
+        "TF semantics",
+        "environment/disturbance envelopes"
+      ],
+      "outputs": [
+        "temporal_disturbance_program"
+      ],
+      "must_not": [
+        "own canonical time",
+        "rewrite environment history"
+      ]
+    },
+    {
+      "id": "EVIDENCE_PACKAGE",
+      "inputs": [
+        "all compiler stages"
+      ],
+      "outputs": [
+        "provenance_manifest",
+        "deterministic program hash",
+        "projection_manifest"
+      ],
+      "must_not": [
+        "claim production acceptance",
+        "erase null/no-colonization outcomes"
+      ]
+    }
+  ],
+  "architecture_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "architecture_hash": "cbf50695b6db79d543c26168bcfa1bb9ac2e29b052f0eabeafb028ab618a3ac6"
+}
