@@ -10,6 +10,21 @@ const VERSION := "1.0.0"
 const SPECIES_CONCEPT := "ECO_RESEARCH_LINEAGE_HYPOTHESIS_V1"
 const PARENT_P2_7_ACCEPTED_AGGREGATE := "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
 
+const SOURCE_OBSERVATION_FIELDS: Array[String] = [
+	"schema",
+	"version",
+	"lineage_id",
+	"ancestry_path",
+	"split_year",
+	"genome",
+	"genome_checksum",
+	"recruitment_traits",
+	"recruitment_traits_checksum",
+	"geography_history",
+	"ecology_history",
+	"observation_hash",
+]
+
 const CATALOG_FIELDS: Array[String] = [
 	"schema",
 	"version",
@@ -81,6 +96,8 @@ static func build(observations: Array, bake_id: String, source_run_hash: String)
 
 
 static func create_entry(observation: Dictionary) -> Dictionary:
+	if not _valid_source_observation_shape(observation):
+		return {}
 	if not DivergenceDiagnostics.validate_observation(observation):
 		return {}
 	var lineage_id := String(observation.get("lineage_id", ""))
@@ -249,6 +266,30 @@ static func compute_catalog_hash(catalog: Dictionary) -> String:
 			continue
 		tokens.append(String(Dictionary(value).get("entry_hash", "")))
 	return "\n".join(tokens).sha256_text()
+
+
+static func _valid_source_observation_shape(observation: Dictionary) -> bool:
+	if not _has_exact_fields(observation, SOURCE_OBSERVATION_FIELDS):
+		return false
+	if String(observation.get("schema", "")) != DivergenceDiagnostics.OBSERVATION_SCHEMA:
+		return false
+	if String(observation.get("version", "")) != DivergenceDiagnostics.VERSION:
+		return false
+	if not _valid_id(String(observation.get("lineage_id", ""))):
+		return false
+	if typeof(observation.get("split_year")) != TYPE_INT or int(observation.get("split_year")) < 0:
+		return false
+	if typeof(observation.get("ancestry_path")) != TYPE_ARRAY:
+		return false
+	if typeof(observation.get("genome")) != TYPE_DICTIONARY:
+		return false
+	if typeof(observation.get("recruitment_traits")) != TYPE_DICTIONARY:
+		return false
+	if typeof(observation.get("geography_history")) != TYPE_ARRAY:
+		return false
+	if typeof(observation.get("ecology_history")) != TYPE_ARRAY:
+		return false
+	return _is_lower_hex_64(String(observation.get("observation_hash", "")))
 
 
 static func _observed_patch_ids(geography_history: Array) -> Array:
