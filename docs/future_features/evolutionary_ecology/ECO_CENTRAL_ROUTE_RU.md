@@ -1,10 +1,11 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.1 IN DEVELOPMENT`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.1 CANDIDATE_VERIFICATION`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 EVO2 plan: `docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md`.
+E2.1 checkpoint: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_CANDIDATE_RU.md`.
 
 ## 1. Что уже закрыто
 
@@ -87,9 +88,9 @@ self-organized community
 ## 4. EVO2 — Portable Evolutionary Ecology
 
 ```text
-E2.1 SpeciesCatalog Contract                         ← CURRENT
-    ↓
-E2.2 Deterministic Evolution Bake Export
+E2.1 SpeciesCatalog Contract                         ← CANDIDATE_VERIFICATION
+    ↓ exact canonical branch gate required
+E2.2 Deterministic Evolution Bake Export             ← BLOCKED UNTIL E2.1 ACCEPTED
     ↓
 E2.3 Frozen-Catalog Transfer
     ↓
@@ -108,7 +109,7 @@ EVO2 FINAL — Unseen World Challenge
 
 ### E2.1 — SpeciesCatalog Contract
 
-Нужно зафиксировать research-only portable contract:
+Реализован research-only portable contract:
 
 - stable `research_species_id`;
 - source lineage identity и ancestry;
@@ -123,9 +124,38 @@ EVO2 FINAL — Unseen World Challenge
 
 E2.1 не решает clustering/species concept целиком. Один validated lineage hypothesis образует одну portable entry; E2.2 отвечает за deterministic bake selection/grouping policy.
 
+Current exact candidate evidence:
+
+```text
+code-under-test HEAD
+bf468942718df6b84ebd4c61a294987e8e63c607
+
+Godot
+4.7.1.stable.double.custom_build.a13da4feb
+
+acceptance assertions
+53 / 53 PASS
+
+fresh-process replay
+byte-identical
+
+aggregate_hash
+aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
+```
+
+Exact Git blobs для нового contract, acceptance test и его ECO dependencies были сверены с GitHub перед запуском. Дополнительно найден и закрыт fail-closed gap: E2.1 запрещает legacy extra fields и `float`-Variant `split_year`, которые старый P2.7 validator способен семантически принять.
+
+Однако полный `RUN_ECO_EVO2_E2_1_TESTS.ps1` в canonical Git worktree здесь не выполнялся. Поэтому:
+
+```text
+E2.1 = STRONG CANDIDATE
+E2.1 != SELF_ACCEPTED
+E2.2 = BLOCKED
+```
+
 ### E2.2 — Deterministic Evolution Bake Export
 
-Из frozen evolution result получить воспроизводимый каталог устойчивых lineage hypotheses. Acceptance требует одинакового каталога при повторе exact inputs и отсутствия зависимости от iteration order/global RNG.
+После E2.1 acceptance из frozen evolution result нужно получить воспроизводимый каталог устойчивых lineage hypotheses. Acceptance требует одинакового каталога при повторе exact inputs и отсутствия зависимости от iteration order/global RNG.
 
 ### E2.3 — Frozen-Catalog Transfer
 
@@ -194,5 +224,6 @@ EVO2 != permission to own G/WQ/MAT/LIFE/WB/NX foundations
 ## 7. Current resolver
 
 ```text
-DEVELOP ECO.EVO2 / E2.1 SPECIES CATALOG CONTRACT
+VERIFY ECO.EVO2 / E2.1 SPECIES CATALOG CONTRACT ON CANONICAL BRANCH RUNNER
+THEN OPEN E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT
 ```
