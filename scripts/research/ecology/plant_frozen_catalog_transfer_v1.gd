@@ -98,7 +98,7 @@ static func compute_result_hash(result: Dictionary) -> String:
 
 static func _execute(bake_export: Dictionary, target: Dictionary) -> Dictionary:
 	var catalog: Dictionary = Dictionary(bake_export["species_catalog"]).duplicate(true)
-	var source_environment := EnvironmentSample.create(0.0, 0.0, 17.0, 0.58, 0.94, 0.82, 0.02, 2303001, "eco-evo2-e2-3-transfer-port")
+	var source_environment := EnvironmentSample.create(0.0, 0.0, 17.0, 0.40, 0.94, 0.82, 0.02, 2303001, "eco-evo2-e2-3-transfer-port")
 	var source_patch: Dictionary = PatchMigration.create_patch(SOURCE_PORT_ID, SOURCE_PORT_BOUNDS, source_environment)
 	if source_patch.is_empty(): return {}
 	var strategies := {}
