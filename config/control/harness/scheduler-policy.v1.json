@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R2",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -26,10 +26,9 @@
   "parallel_product_checkpoints": {
     "enabled": true,
     "checkpoints": [
-      "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+      "V0_P5_EQUIPMENT_TOOLS"
     ],
     "future_checkpoints_not_yet_eligible": [
-      "V0_P5_EQUIPMENT_TOOLS",
       "V0_P6_PERSISTENT_SHARED_OUTPOST",
       "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "V0_P7_BOUNDED_TERRAIN_MUTATION",
@@ -54,17 +53,29 @@
     }
   },
   "v0_product_train_routing": {
-    "current_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
-    "current_phase": "CLOSURE_CONTROL_ONLY",
+    "current_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "current_phase": "PRE_DISPATCH_CONTROL_READY",
     "runtime_mutation_allowed_now": false,
-    "next_runtime_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "next_runtime_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
     "next_runtime_checkpoint_eligible": false,
+    "accepted_predecessor_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "accepted_predecessor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
     "p5_activation_requires": [
       "V0_P4_CHECKPOINT_ACCEPTED",
       "CURRENT_MAIN_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
       "MAIN_DECLARED_EXACT_ACCEPTED_P4_SUCCESSOR_BASE",
       "FRESH_P5_EPOCH_AND_WORK_ORDER",
       "MUTATION_LEASE_ROTATED_TO_P5",
+      "DIRECTOR_DISPATCH"
+    ],
+    "p5_completed_activation_prerequisites": [
+      "V0_P4_CHECKPOINT_ACCEPTED",
+      "CURRENT_MAIN_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+      "MAIN_DECLARED_EXACT_ACCEPTED_P4_SUCCESSOR_BASE",
+      "FRESH_P5_EPOCH_AND_WORK_ORDER",
+      "MUTATION_LEASE_ROTATED_TO_P5"
+    ],
+    "p5_remaining_activation_prerequisites": [
       "DIRECTOR_DISPATCH"
     ],
     "p6_activation_requires": [
@@ -91,20 +102,20 @@
     "effective_registry_generation": 80,
     "capacity": 1,
     "holder_program": "V0",
-    "holder_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
-    "holder_branch": "feature/v0-p4-construction-real-resources",
-    "state": "RESERVED_FOR_V0_P4_CLOSURE_NO_ACTIVE_RUNTIME_MUTATION",
+    "holder_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "holder_branch": "feature/v0-p5-equipment-tools",
+    "state": "RESERVED_FOR_V0_P5_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
     ],
     "implementation_complete_releases_worker": true,
     "initial_dispatch_requires_director": true,
-    "holder_initial_dispatch_requires_authoritative_epoch_audit": true,
+    "holder_initial_dispatch_requires_authoritative_epoch_audit": false,
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P4 runtime is frozen and the worker slot is not actively consumed by closure control. The lease identity nevertheless remains pinned to P4 so P5 or any other runtime mutation cannot self-start. After P4 checkpoint acceptance, main must explicitly rotate the lease to P5 before Director dispatch."
+    "reason": "P4 is formally accepted on main and the exact P5 successor base is 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. The single pre-H0.3 V0 runtime mutation lease is now rotated to P5 but remains inactive until a committed Director DISPATCHED event for the fresh P5 Work Order."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
