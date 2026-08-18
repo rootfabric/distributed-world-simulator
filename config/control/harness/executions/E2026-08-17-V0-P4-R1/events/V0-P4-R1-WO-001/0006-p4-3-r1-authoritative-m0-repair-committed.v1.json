@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0006",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 6,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T04:36:30Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "696c4e0e9c24d6f73f470cab31a397fe1e6c2ce9",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-3-R1-AUTHORITATIVE-M0-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+  "summary": "P4.3 R1 supersedes the initial 92bd5a4f candidate after implementer self-audit exposed AUTHORITATIVE_ITEM_MUTATIONS_REJECTED / INVALID_ITEM_SPATIAL_REF against the real AuthoritativeConstructionItemGraphAdapter + M0 bridge. R1 projects only bridge-local root CREATE through canonical ItemRelations.world(), preserves the source Construction plan and canonical M4 identity, and passes both generic P4.3 (70 assertions) and authoritative+M0 (37 assertions) contracts on Godot 4.7.1 double. Work remains IN_PROGRESS for P4.4 live MVP composition and later publication/replication/reconnect gates."
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-08-17-V0-P4-R1",
+  "base_sha": "5999d935e8d5b496100ced66283d8762d3403675",
+  "registry_generation": 80,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-08-16T16:41:00Z",
+  "eligible_checkpoints": [
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+  ],
+  "status": "ACTIVE",
+  "decision": "CONTINUE"
+}

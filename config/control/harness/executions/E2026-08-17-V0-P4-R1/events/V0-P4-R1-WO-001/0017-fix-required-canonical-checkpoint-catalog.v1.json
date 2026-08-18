@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0017",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 17,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-18T01:08:30Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/repairs/V0-P4-R1-LEDGER-CATALOG-REPAIR-002.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/project-epoch.v1.json"
+  ],
+  "summary": "Exact-head state_builder probe exposed a second fail-closed recovery defect: the recovery carrier's local checkpoint catalog predates the main-owned V0_P4_REAL_RESOURCE_CONSTRUCTION checkpoint while the Project Epoch and Work Order already reference it. Preserve event 0016 and runtime truth unchanged, synchronize the recovery catalog byte-for-byte from current main, remain FIX_REQUIRED, rerun exact-head machine validation, and require fresh independent review before any guarded redispatch.",
+  "blocker": "RECOVERY_LINEAGE_MISSING_CANONICAL_V0_P4_CHECKPOINT_CATALOG"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0005",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 5,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T04:20:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "92bd5a4f7537f020d8a63c7809e2abe8c9acc77b",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-3-LIVE-M4-TRANSACTION-PORT-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+  "summary": "P4.3 live M4 single-owner Construction transaction port committed and validated on project Godot 4.7.1 double. The port binds the same canonical M4 object used for P3 item output, keeps material debit exclusively inside canonical M4, rejects stale allocator snapshots, restores M4 durable/replay plus Construction state on rollback-safe failures, and proves duplicate/conflict/foreign-player isolation. Work remains IN_PROGRESS for live MVP composition, publication, two-client replication and reconnect convergence."
+}

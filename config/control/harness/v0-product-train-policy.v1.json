@@ -1,0 +1,204 @@
+{
+  "schema": "distributed_world_simulator.v0_product_train_policy.v1",
+  "policy_revision": "V0-P-2026-08-18-R1",
+  "canonical_owner": "main",
+  "program": "V0",
+  "product_train_alias": "P",
+  "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
+  "current_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "current_phase": "P4_IMPLEMENTED_VERIFIED_CLOSURE_CONTROL",
+  "hard_invariants": {
+    "one_product_lineage": true,
+    "one_active_runtime_mutation_checkpoint": true,
+    "successor_starts_only_after_predecessor_checkpoint_acceptance": true,
+    "successor_execution_base_must_be_exact_accepted_predecessor_lineage": true,
+    "main_owns_checkpoint_activation_and_execution_base": true,
+    "runtime_implementation_and_closure_control_are_separate": true,
+    "implementer_cannot_self_accept": true,
+    "exact_head_review_and_verification_required_for_high_risk_runtime": true,
+    "no_private_item_graph": true,
+    "no_private_construction_truth": true,
+    "no_private_persistence_owner": true,
+    "no_private_network_authority": true,
+    "server_predicted_remains_default_network_baseline_until_nx_acceptance_changes_canonical_policy": true
+  },
+  "research_isolation": {
+    "research_frontiers_are_non_blocking_by_default": true,
+    "explicitly_non_blocking_programs_for_current_p_train": [
+      "ECO"
+    ],
+    "research_may_block_only_when": [
+      "MAIN_REGISTERS_AN_EXPLICIT_PRODUCT_DEPENDENCY",
+      "A_CANONICAL_FOUNDATION_OWNED_BY_THAT_PROGRAM_BECOMES_A_REQUIRED_PRECONDITION",
+      "DIRECTIONAL_WATCH_OR_OWNERSHIP_AUDIT_PROVES_A_REAL_INTERSECTION",
+      "THE_PRODUCT_WORK_ORDER_EXPLICITLY_CONSUMES_A_RESEARCH_CAPABILITY"
+    ],
+    "forbidden_inference": "A research branch being RED, incomplete, experimental, newer, or active is not by itself a V0/P blocker."
+  },
+  "branch_succession": {
+    "rule": "Each new P checkpoint gets a fresh bounded branch from the exact accepted predecessor product lineage declared by main-owned control. Historical donor branches remain evidence/capability donors unless main explicitly selects an exact head as an execution input.",
+    "do_not": [
+      "START_NEXT_P_CHECKPOINT_FROM_BARE_MAIN_IF_THAT_DROPS_ACCEPTED_PRODUCT_COMPOSITION",
+      "CONTINUE_RUNTIME_MUTATION_ON_A_CLOSURE_OR_QUARANTINED_BRANCH",
+      "WHOLESALE_MERGE_RESEARCH_OR_LAB_BRANCHES_INTO_PRODUCT_LINEAGE",
+      "AUTO_PROMOTE_A_REVIEWED_IMPLEMENTATION_HEAD_TO_CHECKPOINT_ACCEPTANCE"
+    ],
+    "naming": {
+      "P5": "feature/v0-p5-equipment-tools",
+      "P6": "feature/v0-p6-persistent-shared-outpost",
+      "SM1": "feature/v0-sm1-seamless-product-integration",
+      "P7": "feature/v0-p7-bounded-terrain-mutation",
+      "P8": "feature/v0-p8-first-mobile-construct"
+    }
+  },
+  "checkpoint_sequence": [
+    {
+      "id": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "short_name": "P4",
+      "state": "CURRENT_CLOSURE",
+      "goal": "Mine canonical ore, allocate it server-side, atomically debit the canonical Item Graph together with Construction commit, replicate to clients, and reconstruct on reconnect.",
+      "entry_rule": "Already implemented under generation-80 authorization.",
+      "exit_rule": "Exact implementation evidence, inherited acceptance debt, current standard/directional Project Control, append-only Harness closure ledger, independent Reviewer/Verifier evidence, checkpoint proposal and required Director/Human acceptance are complete.",
+      "next": "V0_P5_EQUIPMENT_TOOLS"
+    },
+    {
+      "id": "V0_P5_EQUIPMENT_TOOLS",
+      "short_name": "P5",
+      "state": "PLANNED_NOT_ELIGIBLE",
+      "goal": "Turn canonical items into usable equipment/tools in the playable loop without creating a second inventory/equipment truth.",
+      "must_reuse": [
+        "CANONICAL_M4_ITEM_GRAPH",
+        "EXISTING_NETWORK_COMMAND_PATH",
+        "ACCEPTED_CHARACTER_EQUIPMENT_PRESENTATION_AS_DONOR_ONLY"
+      ],
+      "minimum_product_outcomes": [
+        "SERVER_AUTHORITATIVE_EQUIP_UNEQUIP",
+        "TOOL_IDENTITY_AND_SLOT_STATE_SURVIVE_RECONNECT",
+        "REMOTE_CLIENT_SEES_CANONICAL_EQUIPMENT_STATE",
+        "AT_LEAST_ONE_REAL_GAMEPLAY_ACTION_CONSUMES_OR_REQUIRES_THE_EQUIPPED_TOOL",
+        "NO_CLIENT_PRIVATE_EQUIPMENT_TRUTH"
+      ],
+      "activation_requires": [
+        "V0_P4_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_P4_SUCCESSOR_BASE",
+        "FRESH_P5_WORK_ORDER",
+        "FRESH_EPOCH_AND_PC0",
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5"
+      ],
+      "next": "V0_P6_PERSISTENT_SHARED_OUTPOST"
+    },
+    {
+      "id": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+      "short_name": "P6",
+      "state": "PLANNED_NOT_ELIGIBLE",
+      "goal": "Establish the first stable persistent playable outpost baseline with the complete mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect loop.",
+      "minimum_product_outcomes": [
+        "TWO_CLIENT_SHARED_OUTPOST_STATE",
+        "SERVER_RESTART_RECONSTRUCTS_CANONICAL_OUTPOST",
+        "PLAYER_RECONNECT_RECONSTRUCTS_INVENTORY_EQUIPMENT_AND_CONSTRUCTION",
+        "FIVE_CLEAN_END_TO_END_REPEATS",
+        "THIRTY_MINUTE_TWO_CLIENT_SOAK",
+        "ZERO_DUPLICATE_CANONICAL_TRUTH"
+      ],
+      "activation_requires": [
+        "V0_P5_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_P5_SUCCESSOR_BASE",
+        "FRESH_P6_WORK_ORDER",
+        "FRESH_EPOCH_AND_PC0",
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P6"
+      ],
+      "next": "V0_POST_P6_SEAMLESS_INSERTION_GATE"
+    },
+    {
+      "id": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+      "short_name": "POST_P6_GATE",
+      "state": "MANDATORY_DECISION_AFTER_P6",
+      "goal": "Do not auto-dispatch terrain work. Decide and durably record whether V0-SM1 seamless product integration is activated now or explicitly deferred.",
+      "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
+      "mandatory_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
+      "allowed_decisions": [
+        "ACTIVATE_V0_SM1",
+        "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"
+      ],
+      "next_if_activated": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+      "next_if_deferred": "V0_P7_BOUNDED_TERRAIN_MUTATION"
+    },
+    {
+      "id": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+      "short_name": "SM1",
+      "state": "FUTURE_CONTROL_ACTIVATION",
+      "goal": "Port proven SM0 authority-handoff semantics and MRPF multi-route projection semantics into the then-current accepted V0/P6 product baseline.",
+      "donors_are_not_product_bases": [
+        "SM0",
+        "MRPF"
+      ],
+      "hard_invariants": [
+        "EXACTLY_ONE_ACTIVE_AUTHORITY",
+        "STABLE_PLAYER_AND_ENTITY_IDENTITY",
+        "MONOTONIC_AUTHORITY_EPOCH",
+        "NO_SECOND_ITEM_GRAPH",
+        "PROJECTION_IS_DERIVED_NOT_CANONICAL",
+        "NO_NORMAL_CROSSING_RECONNECT_OR_RESPAWN"
+      ],
+      "next": "V0_P7_BOUNDED_TERRAIN_MUTATION"
+    },
+    {
+      "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "short_name": "P7",
+      "state": "FUTURE",
+      "goal": "Add bounded authoritative terrain/material mutation to the playable product without creating V0-private Matter or terrain truth.",
+      "activation_requires": [
+        "V0_P6_CHECKPOINT_ACCEPTED",
+        "POST_P6_SEAMLESS_DECISION_RECORDED",
+        "MAIN_DECLARED_EXACT_SUCCESSOR_BASE",
+        "FRESH_P7_WORK_ORDER_AND_OWNERSHIP_AUDIT"
+      ],
+      "next": "V0_P8_FIRST_MOBILE_CONSTRUCT"
+    },
+    {
+      "id": "V0_P8_FIRST_MOBILE_CONSTRUCT",
+      "short_name": "P8",
+      "state": "FUTURE",
+      "goal": "Create the first mobile construct/ship as a real product composition over canonical Construction, items, persistence, reference frames and the selected seam-aware authority model.",
+      "activation_requires": [
+        "V0_P7_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_P7_SUCCESSOR_BASE",
+        "FRESH_P8_WORK_ORDER",
+        "REFERENCE_FRAME_AND_AUTHORITY_BOUNDARIES_REVALIDATED"
+      ]
+    }
+  ],
+  "successor_activation_protocol": [
+    "PREDECESSOR_CHECKPOINT_ACCEPTED",
+    "FETCH_CURRENT_MAIN_AND_ALL_REFERENCED_BRANCHES",
+    "RUN_STANDARD_AND_DIRECTIONAL_PROJECT_CONTROL",
+    "DECLARE_EXACT_SUCCESSOR_PRODUCT_EXECUTION_BASE_IN_MAIN_OWNED_CONTROL",
+    "CREATE_FRESH_SUCCESSOR_BRANCH_FROM_THAT_EXACT_BASE",
+    "CREATE_NEW_PROJECT_EPOCH_AND_WORK_ORDER",
+    "CLASSIFY_RISK_AND_PREPARE_DESIGN_BRIEF",
+    "ROTATE_SINGLE_V0_RUNTIME_MUTATION_LEASE",
+    "DIRECTOR_DISPATCH",
+    "IMPLEMENT_BOUNDED_SCOPE",
+    "FREEZE_RUNTIME_HEAD",
+    "INDEPENDENT_REVIEW_AND_VERIFICATION",
+    "CLOSE_APPEND_ONLY_LEDGER",
+    "PROPOSE_CHECKPOINT",
+    "MERGE_ONLY_THROUGH_REQUIRED_HUMAN_GATE"
+  ],
+  "current_p4_closure_route": {
+    "runtime_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "runtime_mutation": "FROZEN",
+    "control_repair_pr": 127,
+    "control_repair_candidate": "11969a954ceb9baab1b4a55cb2162fa1069fb0b2",
+    "live_frontier_routing_repair_merged_pr": 130,
+    "main_after_routing_repair": "598e92bb29a147bf12208d8549ddecaa4c9781ab",
+    "required_next_control_steps": [
+      "CONFIRM_EXACT_MAIN_PROJECT_CONTROL_NON_RED_AFTER_PR130",
+      "RERUN_PR127_PROJECT_CONTROL_AGAINST_CORRECTED_MAIN",
+      "MERGE_PR127_ONLY_IF_ITS_EXACT_REVIEWED_SUBJECT_REMAINS_VALID",
+      "CONTINUE_P4_CLOSURE_APPEND_ONLY_WITHOUT_RUNTIME_MUTATION",
+      "RECORD_REMAINING_P4_PREDICATES",
+      "PROPOSE_AND_ACCEPT_P4_CHECKPOINT_BEFORE_ANY_P5_RUNTIME_DISPATCH"
+    ]
+  }
+}

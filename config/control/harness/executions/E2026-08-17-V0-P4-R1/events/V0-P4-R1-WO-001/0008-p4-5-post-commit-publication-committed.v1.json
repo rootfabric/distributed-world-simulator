@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0008",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 8,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-17T06:13:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "3454ac2558a3df35f1d1f80fcb886e4a301615a4",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-5-POST-COMMIT-PUBLICATION-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_POST_COMMIT_PUBLICATION_FALLBACK_PASS",
+  "summary": "P4.5 post-commit publication/fallback is committed on exact runtime head 3454ac25. After a real accepted live Construction commit, the initiating peer receives the canonical Item Graph delta in COMMAND_RESULT, remote peers receive the same Item Graph delta, and connected peers receive the Construction event. Post-commit Item Graph delta or Construction event derivation failures do not reject the committed mutation; they fail over to authoritative Item Graph and Construction snapshots. Exact replay suppresses all delta/event/snapshot republication. Project Godot 4.7.1 double passes the focused P4.5 contract (54 assertions) and adjacent P4.1-P4.4/M4/P3/M3 regressions; Project Control 32000694207 is SUCCESS. Work remains IN_PROGRESS for real ENet two-client convergence, reconnect/repeated end-to-end evidence, Evidence Map and independent Reviewer/Verifier gates."
+}

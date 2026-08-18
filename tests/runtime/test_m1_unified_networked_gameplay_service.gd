@@ -122,10 +122,24 @@ func _test_source_convergence() -> void:
 		_assert(not source.contains("var _players: Dictionary"), "authority adapter retains independent player state")
 		_assert(not source.contains("_operation_ledger"), "authority adapter retains independent operation ledger")
 	_assert(h2_source.contains("player_ownership_service.gd"), "H2 adapter does not use common PlayerOwnershipService")
-	var service_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
+	var service_source: String = _script_inheritance_source(Service)
 	for component in ["PlayerRegistry", "OwnershipService", "MovementService", "ItemGraphService", "ContainerInteractionService", "MountInteractionService", "ResultRouter", "ReplicationPublisher"]:
 		_assert(service_source.contains(component), "NetworkedGameplayService missing component %s" % component)
 	_assert(service_source.contains("CanonicalPlayableBackend"), "canonical Item Graph backend not composed by common service")
+
+
+func _script_inheritance_source(root_script) -> String:
+	var sources: Array[String] = []
+	var visited: Dictionary = {}
+	var script = root_script
+	while script != null:
+		var resource_path := String(script.resource_path)
+		if resource_path.is_empty() or visited.has(resource_path):
+			break
+		visited[resource_path] = true
+		sources.append(FileAccess.get_file_as_string(resource_path))
+		script = script.get_base_script()
+	return "\n".join(sources)
 
 func _initial_player_state() -> Dictionary:
 	return StateCodec.create_player_state(Vector3(0.0, 1737401.0, 0.0), Basis.IDENTITY, Vector3.ZERO, Vector3.ZERO, "lunar_humanoid", "first_person", false, 0, "body/moon/fixed", "main", "moon", "m1-service", 0.0)

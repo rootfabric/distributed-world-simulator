@@ -70,7 +70,9 @@ func _phase_b() -> void:
 	_write({"state":"B_PICKUP_DONE","passed":not bool(pickup.get("success", false)),"pickup":pickup,"snapshot":_client.get_item_graph_snapshot(),"client":_client.get_report()})
 	_wait_for_peer("A_PICKUP_DONE")
 	var permission: Dictionary = _client.execute_item_command_blocking("inventory.permission_probe", {"target_player_id":"a"})
-	_wait_item_revision(12)
+	_wait_for_peer("COMPLETE")
+	var peer_final := _read(_peer_file)
+	_wait_item_checksum(String(peer_final.get("item_graph", {}).get("checksum", "")))
 	_finish(not bool(permission.get("success", false)), "COMPLETE", {"pickup":pickup,"permission":permission})
 
 func _phase_replay() -> void:
@@ -86,6 +88,16 @@ func _wait_item_revision(revision: int) -> void:
 	while Time.get_ticks_msec() - start < 20000:
 		_client._poll_blocking_once()
 		if int(_client.get_item_graph_snapshot().get("revision", 0)) >= revision:
+			return
+		OS.delay_msec(5)
+
+func _wait_item_checksum(checksum: String) -> void:
+	if checksum.is_empty():
+		return
+	var start := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - start < 20000:
+		_client._poll_blocking_once()
+		if String(_client.get_item_graph_snapshot().get("checksum", "")) == checksum:
 			return
 		OS.delay_msec(5)
 

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0016",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 16,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-18T00:53:50Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/repairs/V0-P4-R1-LEDGER-STATE-REPAIR-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-POST-CLEARANCE-PC0-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/transition-table.v1.json"
+  ],
+  "summary": "Append-only recovery correction: event 0015 advanced the clean recovery ledger to VERIFIED before all required checkpoint predicates were durably recorded. No implementation event followed. Runtime head 2a6721cdf02fa1134c59d1ab98bb7b597c66821d remains frozen and independently reviewed/verified. Post-main directional clearance is proven NON_RED but must be recorded only after the guarded ledger recovery. Fresh independent review of this repair is required before redispatch.",
+  "blocker": "PREMATURE_VERIFIED_STATE_BLOCKS_REMAINING_CHECKPOINT_PREDICATES"
+}

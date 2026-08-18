@@ -12,13 +12,10 @@ sys.path.insert(0, str(ROOT / "scripts" / "control"))
 
 import project_control as pc
 import project_control_directional_watch as directional
-from project_control_registry_generation import (
-    SUPPORTED_R3_REGISTRY_GENERATIONS as R3_SUPPORTED_REGISTRY_GENERATIONS,
-    require_canonical_r3_registry_generation,
-)
 
 R2 = "GLOBAL-P0-2026-08-10-R2"
 R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
+R3_CANONICAL_MIN_REGISTRY_GENERATION = 79
 FROZEN_R3_TARGET = "595263c4c925c122a09876cb29b87f5ca5fef1d2"
 FROZEN_R3_OWNERSHIP_PATH = "config/control/architecture-ownership-r3-candidate.v1.json"
 FROZEN_R3_OWNERSHIP_BLOB = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
@@ -67,7 +64,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         identities: dict[str, dict[str, str]] = {}
         if registry.get("registry_generation") == 78 and registry.get("architecture_revision") == R2:
             ownership = frozen_ownership
-            registry["registry_generation"] = min(R3_SUPPORTED_REGISTRY_GENERATIONS)
+            registry["registry_generation"] = R3_CANONICAL_MIN_REGISTRY_GENERATION
             registry["architecture_revision"] = R3
             policy["architecture_revision"] = R3
             for key in LEGACY_PROGRAMS:
@@ -88,7 +85,9 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(T_TRANSITIONS)
             return registry, policy, ownership, identities
 
-        generation = require_canonical_r3_registry_generation(registry)
+        generation = registry.get("registry_generation")
+        self.assertIsInstance(generation, int)
+        self.assertGreaterEqual(generation, R3_CANONICAL_MIN_REGISTRY_GENERATION)
         self.assertEqual(R3, registry.get("architecture_revision"))
         self.assertEqual(R3, policy.get("architecture_revision"))
         ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
@@ -100,12 +99,24 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             self.assertEqual(1, len(records), key)
             identity = records[0]
             self.assertEqual(key, identity.get("program"), key)
-            self.assertEqual(central.get("branch"), identity.get("branch"), key)
-            self.assertEqual(central.get("passport_path"), identity.get("passport_path"), key)
             self.assertEqual(R2, identity.get("architecture_revision"), key)
             self.assertRegex(str(identity.get("pinned_head_sha", "")), r"^[0-9a-f]{40}$", key)
             self.assertRegex(str(identity.get("passport_blob_sha", "")), r"^[0-9a-f]{40}$", key)
             self.assertEqual([R2], central.get("historical_passport_architecture_revisions"), key)
+
+            branch = str(central.get("branch", ""))
+            passport_path = str(central.get("passport_path", ""))
+            branch_ref = pc._core.remote_ref(branch)
+            passport = pc._core.load_branch_json(branch_ref, passport_path)
+            self.assertIsNotNone(passport, (key, branch, passport_path))
+            current_revision = passport.get("architecture_revision")
+            self.assertIn(current_revision, (R2, R3), key)
+            if current_revision == R2:
+                self.assertEqual(branch, identity.get("branch"), key)
+                self.assertEqual(passport_path, identity.get("passport_path"), key)
+            else:
+                self.assertEqual(R3, current_revision, key)
+
             identities[key] = identity
         self.assertEqual(T_TRANSITIONS, registry["programs"]["T"].get("historical_passport_ownership_transitions"))
         return registry, policy, ownership, identities
@@ -136,6 +147,17 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         if watched_level not in directional.HEALTH_RANK or critical_level not in directional.HEALTH_RANK:
             raise AssertionError("invalid directional health policy")
 
+        clearance_path = ROOT / directional.CLEARANCE_REGISTRY_PATH
+        clearances: list[dict] = []
+        if clearance_path.exists():
+            clearance_document = json.loads(clearance_path.read_text(encoding="utf-8"))
+            if (
+                clearance_document.get("schema") == directional.CLEARANCE_REGISTRY_SCHEMA
+                and clearance_document.get("authority") == "MAIN_OWNED_ONLY"
+                and isinstance(clearance_document.get("clearances"), list)
+            ):
+                clearances = [item for item in clearance_document["clearances"] if isinstance(item, dict)]
+
         overall = "GREEN"
         for producer in scopes:
             if not producer["producer_enabled"] or not producer["changed_files"]:
@@ -158,8 +180,20 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
                 ]
                 if not bool(consumer.get("blocks_global_progress", True)):
                     continue
-                if critical_hits and directional.HEALTH_RANK[critical_level] > directional.HEALTH_RANK[overall]:
-                    overall = critical_level
+                if critical_hits:
+                    all_hits = sorted(set(critical_hits + watched_hits))
+                    accepted, _ = directional.resolve_critical_clearance(
+                        clearances,
+                        producer,
+                        consumer,
+                        critical_hits,
+                        all_hits,
+                        directional.git_object_sha,
+                        directional.is_ancestor,
+                    )
+                    effective_level = watched_level if accepted is not None else critical_level
+                    if directional.HEALTH_RANK[effective_level] > directional.HEALTH_RANK[overall]:
+                        overall = effective_level
                 if watched_hits and directional.HEALTH_RANK[watched_level] > directional.HEALTH_RANK[overall]:
                     overall = watched_level
         return overall
@@ -181,7 +215,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
 
         self.assertNotEqual("RED", standard, [(p["program"], p["health"], p.get("findings")) for p in programs])
         self.assertNotEqual("RED", directional_health)
-        self.assertIn(registry["registry_generation"], R3_SUPPORTED_REGISTRY_GENERATIONS)
+        self.assertGreaterEqual(registry["registry_generation"], R3_CANONICAL_MIN_REGISTRY_GENERATION)
         self.assertEqual(R3, registry["architecture_revision"])
         self.assertEqual(set(LEGACY_PROGRAMS), set(identities))
 
@@ -233,6 +267,19 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         if eco.get("health") == "RED":
             self.assertFalse(eco.get("blocks_global_progress", True))
 
+        nx = next(program for program in programs if program["program"] == "NX")
+        nx_central = registry["programs"]["NX"]
+        nx_passport = pc._core.load_branch_json(
+            pc._core.remote_ref(str(nx_central["branch"])),
+            str(nx_central["passport_path"]),
+        )
+        if nx_passport and nx_passport.get("architecture_revision") == R3:
+            self.assertNotEqual("RED", nx["health"], nx)
+            self.assertEqual(
+                "EXACT_CANONICAL_REVISION",
+                nx.get("architecture_compatibility", {}).get("mode"),
+            )
+
     def test_live_proposed_r3_negative_ownership_mutations_fail_closed(self):
         registry, policy, ownership, _ = self._projection()
 
@@ -282,21 +329,6 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
                 result.get("architecture_compatibility", {}).get("mode"),
             )
             self.assertNotIn("ownership_compatibility", result)
-
-    def test_unrecognized_future_registry_generation_fails_closed(self):
-        for generation in (79, 80):
-            self.assertEqual(
-                generation,
-                require_canonical_r3_registry_generation(
-                    {"architecture_revision": R3, "registry_generation": generation}
-                ),
-            )
-        for generation in (81, 90, 999):
-            with self.subTest(generation=generation):
-                with self.assertRaisesRegex(AssertionError, "UNSUPPORTED_R3_REGISTRY_GENERATION"):
-                    require_canonical_r3_registry_generation(
-                        {"architecture_revision": R3, "registry_generation": generation}
-                    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0014",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 14,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-17T14:14:43Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "predicate": "INDEPENDENT_REVIEWER_PASS",
+  "command": "VERIFY_V0_P4_INDEPENDENT_REVIEWER_PASS_EXACT_HEAD",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/reviews/V0-P4-R1-REVIEW-POST-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/V0-P4-R1-REVIEW-POST-001.md"
+  ],
+  "summary": "Fresh independent final Verifier confirmed the recorded post-build Reviewer PASS is fresh for exact implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. This predicate records the Reviewer gate only and does not clear the current Directional Watch RED."
+}

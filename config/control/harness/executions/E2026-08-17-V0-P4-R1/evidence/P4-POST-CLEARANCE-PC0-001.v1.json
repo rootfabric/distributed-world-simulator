@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_post_clearance_pc0_evidence.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "subject_runtime_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "clearance_id": "V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001",
+  "clearance_merge_commit": "7351b720bc9a0a6dbe2577dfb37568a853d2f266",
+  "verified_main_head": "d9a1a3ca03016d6851a258ff93d5c260a86c5b4c",
+  "probe_pr": 126,
+  "probe_branch": "probe/v0-p4-post-clearance-main-r1",
+  "probe_head": "f0e808f53e11eee3440216225841f150fbd07e5b",
+  "project_control_run_id": 32085293289,
+  "project_control_artifact_id": 9306488656,
+  "project_control_artifact_digest": "sha256:f99caf2aee2a8c0d693abbef8cf4ea7c5289d8a5be8f2ca9973402013aac5598",
+  "report_generated_at_utc": "2026-08-18T00:38:47Z",
+  "standard_pc0": {
+    "overall_health": "YELLOW",
+    "non_red": true,
+    "main_head": "d9a1a3ca03016d6851a258ff93d5c260a86c5b4c",
+    "registry_generation": 80
+  },
+  "directional_pc0": {
+    "overall_health": "YELLOW",
+    "non_red": true,
+    "clearance_registry_loaded_from_main": true,
+    "critical_hit": {
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer": "V0",
+      "consumer": "NX",
+      "raw_level": "RED",
+      "level": "YELLOW",
+      "global_blocking": true,
+      "files": [
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "clearance_status": "ACCEPTED",
+      "clearance_id": "V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001",
+      "clearance_decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "reviewed_producer_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d"
+    }
+  },
+  "critical_cross_branch_overlaps": [],
+  "conclusion": "POST_CLEARANCE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_PROVEN",
+  "checkpoint_predicate_recorded": false,
+  "checkpoint_claim": false,
+  "notes": "This file preserves post-main control evidence only. It does not itself satisfy the Work Order predicate ledger and does not authorize checkpoint proposal or runtime merge."
+}

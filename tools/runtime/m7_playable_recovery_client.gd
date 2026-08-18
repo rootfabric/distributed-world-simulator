@@ -64,7 +64,7 @@ func _run() -> void:
 
 func _run_seed() -> void:
 	_assert(int(client.get_report().get("ownership_epoch", 0)) == 1, "initial M7 ownership epoch is one")
-	var moved := await _move_toward(TARGET_BEACON, 3)
+	var moved := await _move_toward(TARGET_BEACON, 12)
 	_assert(bool(moved.get("success", false)), "server simulated movement before durable mutation")
 	var pickup: Dictionary = client.execute_item_command_blocking("item.pickup", {"item_id": BEACON_ID})
 	_assert(bool(pickup.get("success", false)), "M7 beacon pickup committed before restart")

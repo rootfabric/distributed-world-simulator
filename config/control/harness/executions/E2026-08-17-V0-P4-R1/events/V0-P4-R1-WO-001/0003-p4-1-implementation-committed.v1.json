@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0003",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-16T16:59:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-1-EXACT-CONSUME-GREEN-001.v1.json"
+  ],
+  "predicate": "V0_P4_EXACT_CONSUME_GREEN",
+  "summary": "P4.1 exact-consume repair committed and revalidated on the exact committed source archive with project Godot 4.7.1 double: import 0, focused contract PASS (12 assertions), project.godot stable, no fatal parser/startup markers. Work remains IN_PROGRESS for deterministic allocation and live M4 transaction integration."
+}

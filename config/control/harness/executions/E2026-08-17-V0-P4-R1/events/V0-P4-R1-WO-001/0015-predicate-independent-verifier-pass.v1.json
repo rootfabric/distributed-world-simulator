@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0015",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 15,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-17T14:14:44Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "command": "VERIFY_V0_P4_INDEPENDENT_VERIFIER_PASS_EXACT_HEAD",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/verification/V0-P4-R1-VERIFY-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/reviews/V0-P4-R1-REVIEW-POST-001.v1.json",
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/evidence/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"
+  ],
+  "summary": "Fresh independent final Verifier PASS is recorded for exact P4 implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. P4 verification is complete, while checkpoint proposal and merge remain blocked because directional_pc0 is RED and formal V0 -> NX critical-watch clearance is still outstanding."
+}

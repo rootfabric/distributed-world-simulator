@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P4-R1-EVENT-0002",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-16T16:44:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p4-construction-real-resources",
+  "head_sha": "47ff18cf603bbf98bb67f7f62962e050f8606542",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-17-V0-P4-R1/audits/V0-P4-POST-ACTIVATION-CONTINUE-001.v1.json"
+  ],
+  "summary": "Director dispatch authorizes exactly one bounded pre-H0.3 P4 runtime mutation worker from the audited exact pre-runtime subject. Authorization is limited to the declared P4 Work Order scope and fails closed to NX for any network-foundation change."
+}

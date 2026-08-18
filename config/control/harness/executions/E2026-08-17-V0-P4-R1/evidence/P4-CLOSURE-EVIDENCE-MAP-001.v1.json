@@ -1,0 +1,123 @@
+{
+  "schema": "distributed_world_simulator.v0_p4_closure_evidence_map.v1",
+  "work_order_id": "V0-P4-R1-WO-001",
+  "project_epoch": "E2026-08-17-V0-P4-R1",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "state": "READY_FOR_INDEPENDENT_REVIEW",
+  "subject_branch": "feature/v0-p4-construction-real-resources",
+  "subject_head": "b21f6658fb57e30b9a47e1275038f224fc89de4f",
+  "product_base": {
+    "branch": "repair/v0-p3-visual-interaction-r1",
+    "sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec"
+  },
+  "authorization": {
+    "audited_main": "5999d935e8d5b496100ced66283d8762d3403675",
+    "pre_runtime_subject": "47ff18cf603bbf98bb67f7f62962e050f8606542",
+    "audit_run": 31959244884,
+    "audit_decision": "CONTINUE",
+    "director_dispatch_commit": "bc907d019900b158b26a2736be423ecaff07ecd3",
+    "dispatch_harness_run": 31959765518,
+    "runtime_worker_count": 1
+  },
+  "tested_heads": [
+    {
+      "slice": "P4.1 exact consume",
+      "head": "9c95a3ce4bdda22c7085f3b402a93d9e5f593bf1",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "result": "PASS 12/12"
+    },
+    {
+      "slice": "P4.2 deterministic allocator",
+      "head": "64379ae4c5b980481755a94607e3f7e800489561",
+      "result": "PASS 50/50"
+    },
+    {
+      "slice": "P4.3 live M4 transaction port R1",
+      "head": "696c4e0e9c24d6f73f470cab31a397fe1e6c2ce9",
+      "result": "PASS 70/70 generic + 37/37 authoritative M0",
+      "supersedes": "92bd5a4f"
+    },
+    {
+      "slice": "P4.4 live MVP composition ordering",
+      "head": "756428bb6e28db3cdc14454aaf1dd0e88237450c",
+      "result": "PASS 62/62"
+    },
+    {
+      "slice": "P4.5 post-commit publication/fallback",
+      "head": "3454ac2558a3df35f1d1f80fcb886e4a301615a4",
+      "result": "PASS 54/54",
+      "project_control_run": 32000694207
+    },
+    {
+      "slice": "P4.6 real ENet two-client reconnect",
+      "head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "result": "PASS 46/46",
+      "project_control_run": 32016291649,
+      "additional_soak": "3 independent runs, each 46/46"
+    },
+    {
+      "slice": "prior regression debt repair",
+      "head": "2e7955773d2a91113fb31d6053de00c6c140af61",
+      "result": "PASS 236/236 standalone + main-scene --run-tests=all",
+      "project_control_run": 32022427454,
+      "independent_review": "PASS — SAFE TO INTEGRATE INTO P4 CLOSURE"
+    },
+    {
+      "slice": "post-repair P4 integration",
+      "head": "b21f6658fb57e30b9a47e1275038f224fc89de4f",
+      "result": "TREE IDENTICAL to reviewed/tested repair candidate; compare files=[]",
+      "project_control_run": 32027378468
+    }
+  ],
+  "full_regression": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "historical_curated": "202/202 PASS",
+    "previously_omitted_overlay": "34/34 PASS",
+    "standalone_total": "236/236 PASS",
+    "main_scene": "PASS",
+    "failure_records": 0,
+    "project_godot_sha256": "47f05fe8f24e099abbadc30e28691042a57275853565f25ffafe0f8365e12649",
+    "post_merge_tree_equivalence": true
+  },
+  "predicate_evidence": {
+    "V0_P4_EXACT_CONSUME_RED_REPRODUCED": "P4-1-EXACT-CONSUME-GREEN-001.v1.json includes pre-fix RED 3 failures / 9 assertions",
+    "V0_P4_EXACT_CONSUME_GREEN": "P4.1 exact candidate 9c95a3ce... PASS 12/12",
+    "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS": "P4.2 64379ae4... PASS 50/50",
+    "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS": "P4.3 R1 696c4e0e... generic 70/70 + authoritative M0 37/37",
+    "V0_P4_ATOMIC_ITEM_GRAPH_AND_CONSTRUCTION_COMMIT_PASS": "P4.3 authoritative transaction-port tests prove one accepted bridge commit across canonical M4 debit and Construction/M0",
+    "V0_P4_INSUFFICIENT_RESOURCES_MUTATION_FREE_PASS": "P4.3 focused contract verifies insufficient allocation rejects before canonical mutation",
+    "V0_P4_DUPLICATE_EXACT_ONCE_PASS": "P4.3 replay tests prove exact duplicate does not debit M4 or advance Construction twice",
+    "V0_P4_OPERATION_ID_CONFLICT_PASS": "P4.3 operation-id conflict path rejects mismatched replay without mutation",
+    "V0_P4_FAULT_INJECTION_ROLLBACK_PASS": "P4.3 BEFORE_COMMIT fault restores M4 durable/replay and Construction state; unsafe post-M0 fault is fail-closed before mutation",
+    "V0_P4_FOREIGN_PLAYER_OWNERSHIP_ISOLATION_PASS": "P4.2/P4.3 allocator and transaction tests exclude foreign-player ore",
+    "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS": "P4.5 event #9, runtime 3454ac25..., delta/event publication plus full-snapshot fallback",
+    "V0_P4_TWO_CLIENT_REPLICATION_PASS": "P4.6 event #10, real ENet A/B convergence after every build stage",
+    "V0_P4_RECONNECT_CONVERGENCE_PASS": "P4.6 event #11, canonical LEAVE + new transport session + exact state reconstruction",
+    "V0_P4_NO_SECOND_ITEM_GRAPH_OR_PERSISTENCE_OWNER_PASS": "P4.3/P4.4 architecture keeps one canonical M4 Item Graph; Construction projection never stores ore; no persistence owner added",
+    "V0_P4_NETWORK_BASELINE_SERVER_PREDICTED_PASS": "P4 changes do not alter the established SERVER_PREDICTED network authority baseline or scripts/network ownership",
+    "V0_P4_FAIL_CLOSED_TO_NX_IF_NETWORK_FOUNDATION_CHANGE_REQUIRED": "No network-foundation change was required; Work Order stop condition remained untriggered and no NX-owned foundation mutation was introduced",
+    "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED": "PR #122 exact 2e795577... independently reviewed PASS and merged into P4 as b21f6658...",
+    "FULL_WORLD_CORE_REGRESSION_PASS": "Godot full sweep 236/236 standalone + main-scene PASS; merged tree is byte-equivalent to tested repair candidate"
+  },
+  "known_non_blocking_history": [
+    "Initial P4.3 candidate 92bd5a4f... was superseded after authoritative ItemRegistry exposed INVALID_ITEM_SPATIAL_REF; R1 696c4e0e... repaired it.",
+    "Windows PowerShell 5.1 ConvertFrom-Json -Depth incompatibility affected the audit runner only and was repaired without changing audit semantics.",
+    "Prior world/core regression debt predated P4 runtime; it was repaired separately in PR #122 and independently reviewed before integration.",
+    "Connector-created temporary files were immediately removed in tree-neutral recovery pairs and are absent from the reviewed trees."
+  ],
+  "remaining_gates": [
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "DRAFT_PR_OPEN",
+    "V0_P4_CHECKPOINT_PROPOSED"
+  ],
+  "conclusion": "P4 implementation and regression closure evidence is complete enough for fresh independent Reviewer and Verifier gates. This map does not self-accept the checkpoint and does not authorize merge to main."
+}
