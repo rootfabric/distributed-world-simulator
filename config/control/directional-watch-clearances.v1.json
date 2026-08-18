@@ -54,6 +54,39 @@
     },
     {
       "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "V0",
+      "producer_branch": "feature/v0-p4-construction-real-resources",
+      "consumer_program": "NX",
+      "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "reviewed_producer_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "consumer_head_sha": "d1a4466775a6e08192179dfc9af397eafbf574c0",
+      "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+      "consumer_passport_blob_sha": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
+      "critical_files": [
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "watched_files": [
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd": "131d343fb259e1a9eca5fdfaab815c6347c2cf6f",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd": "39302d2c9365ecda13480d2f4a848fc20023fa7a",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd": "7aa28b26833115427e71f049e333d7251e712c05"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "V0-P4-R1-REVIEW-POST-001",
+      "verification_id": "V0-P4-R1-VERIFY-001",
+      "recorded_at_utc": "2026-08-18T02:25:00Z",
+      "reason": "This is the current-NX consumer rebind of the independently reviewed and verified V0-P4 dependency clearance. The reviewed P4 producer target remains exactly 2a6721cdf02fa1134c59d1ab98bb7b597c66821d and its fenced blobs are unchanged on the current V0 producer branch. The new H0.2/NX.C1 consumer passport narrows the observed V0 -> NX hit set to one critical canonical M4 Item Graph service and two ordinary watched base-service files. The original P4 Reviewer/Verifier conclusion remains applicable to those exact producer blobs: the P4 delta is a server-authoritative M4 Item Graph composition extension, not a transport/protocol/prediction/reconciliation or NX foundation mutation. This record does not accept NX.C1, does not validate NX runtime, and fails closed on consumer head/passport drift, producer ancestry drift, hit-set drift or any fenced producer blob drift."
+    },
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
       "clearance_id": "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001",
       "status": "ACCEPTED",
       "kind": "CRITICAL_WATCH_HIT",
