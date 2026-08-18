@@ -72,7 +72,9 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(self.work_order["goal_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
         self.assertEqual(self.work_order["base_sha"], expected)
         self.assertEqual(self.work_order["branch"], "feature/v0-p5-equipment-tools")
-        self.assertEqual(self.work_order["state"], "PLANNED")
+        dispatch_event = HARNESS / "executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001/0002-director-dispatched.v1.json"
+        expected_state = "DISPATCHED" if dispatch_event.is_file() else "PLANNED"
+        self.assertEqual(self.work_order["state"], expected_state)
         self.assertEqual(self.work_order["risk_class"], "HIGH")
         self.assertEqual(
             self.catalog["checkpoints"]["V0_P5_EQUIPMENT_TOOLS"]["required_predicates"],
