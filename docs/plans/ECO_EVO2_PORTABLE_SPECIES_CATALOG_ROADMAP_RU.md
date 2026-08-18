@@ -1,6 +1,6 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1 IN DEVELOPMENT`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1 CANDIDATE_VERIFICATION / E2.2 BLOCKED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -71,6 +71,23 @@ P2.7 deliberately produced `SPECIATION_CANDIDATE`, а не canonical taxonomy.
 
 ## 3. E2.1 — SpeciesCatalog Contract
 
+Статус: `CANDIDATE_VERIFICATION / NOT_SELF_ACCEPTED`.
+
+Exact code-under-test:
+
+`bf468942718df6b84ebd4c61a294987e8e63c607`
+
+Exact attached Godot evidence:
+
+```text
+4.7.1.stable.double.custom_build.a13da4feb
+53 / 53 assertions PASS
+fresh-process logs byte-identical
+aggregate aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
+```
+
+Полный canonical branch runner остаётся обязательным перед E2.2.
+
 ### Goal
 
 Создать deterministic fail-closed contract, который переносит lineage evidence из эволюционного solver в отдельный catalog artifact без мутации source state.
@@ -131,11 +148,16 @@ Catalog содержит:
 12. catalog tamper rejected;
 13. canonical ordering enforced by validation;
 14. global RNG is not consumed;
-15. `canonical_species_declared` cannot become true.
+15. `canonical_species_declared` cannot become true;
+16. exact source observation field shape required;
+17. legacy extra fields rejected;
+18. non-int `split_year` Variant rejected.
 
 Persistence/JSON round-trip не является E2.1 gate; это E2.8, чтобы не смешивать contract semantics и codec/persistence proof.
 
 ## 4. E2.2 — Deterministic Evolution Bake Export
+
+Статус: `BLOCKED_UNTIL_E2_1_ACCEPTED`.
 
 ### Goal
 
@@ -290,6 +312,6 @@ PopulationPatchState      -> representation materialization
 ## 14. Current execution
 
 ```text
-CURRENT = ECO.EVO2 / E2.1 SpeciesCatalog Contract
-NEXT    = E2.2 Deterministic Evolution Bake Export
+CURRENT = VERIFY ECO.EVO2 / E2.1 SpeciesCatalog Contract
+NEXT    = E2.2 Deterministic Evolution Bake Export after E2.1 acceptance
 ```
