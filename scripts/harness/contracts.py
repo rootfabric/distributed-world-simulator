@@ -1,6 +1,6 @@
 """Canonical contract loading and JSON Schema validation.
 
-The harness deliberately has no private copy of control policy.  Every path
+The harness deliberately has no private copy of control policy. Every path
 below is named by ``harness-policy.v1.json`` or is the main-owned registry
 needed to evaluate an execution instance.
 """
@@ -11,6 +11,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
 
 class ContractValidationError(ValueError):
     """Raised when a canonical contract or execution instance is invalid."""
@@ -54,8 +55,7 @@ class ContractBundle:
     @classmethod
     def load(cls, root: Path) -> "ContractBundle":
         harness_root = root / "config" / "control" / "harness"
-        policy_path = harness_root / "harness-policy.v1.json"
-        policy = read_json(policy_path)
+        policy = read_json(harness_root / "harness-policy.v1.json")
         required = {
             "harness_policy": "config/control/harness/harness-policy.v1.json",
             "project_registry": "config/control/project-program-registry.v1.json",
@@ -70,6 +70,9 @@ class ContractBundle:
             "repair_doctrine": policy["repair_doctrine"],
             "evidence_map_schema": policy["evidence_map_schema"],
             "human_attention_schema": policy["human_attention_schema"],
+            "continuation_policy": policy["continuation_policy"],
+            "instruction_hygiene_policy": policy["instruction_hygiene_policy"],
+            "rule_registry": policy["rule_registry"],
         }
         contracts = {name: read_json(root / relative) for name, relative in required.items()}
         bundle = cls(root=root, contracts=contracts)
@@ -95,13 +98,22 @@ class ContractBundle:
             raise ContractValidationError("SCHEDULER_HARNESS_REVISION_MISMATCH")
         if self.contracts["checkpoint_catalog"].get("harness_revision") != policy.get("harness_revision"):
             raise ContractValidationError("CHECKPOINT_HARNESS_REVISION_MISMATCH")
+        continuation = self.contracts["continuation_policy"]
+        if continuation.get("continuation_layer_revision") != policy.get("continuation_layer_revision"):
+            raise ContractValidationError("CONTINUATION_LAYER_REVISION_MISMATCH")
+        hygiene = self.contracts["instruction_hygiene_policy"]
+        if hygiene.get("hygiene_layer_revision") != policy.get("hygiene_layer_revision"):
+            raise ContractValidationError("HYGIENE_LAYER_REVISION_MISMATCH")
+        if review.get("review_layer_revision") != policy.get("review_layer_revision"):
+            raise ContractValidationError("REVIEW_LAYER_REVISION_MISMATCH")
+        if continuation.get("review_evidence_sinks", {}).get("chat") != "FORBIDDEN_AS_AUTHORITY":
+            raise ContractValidationError("CHAT_REVIEW_AUTHORITY_MUST_BE_FORBIDDEN")
+        if hygiene.get("rule_lifecycle", {}).get("auto_retirement_forbidden") is not True:
+            raise ContractValidationError("RULE_AUTO_RETIREMENT_MUST_BE_FORBIDDEN")
 
     def validate(self, schema_name: str, instance: dict[str, Any], label: str) -> None:
         schema = self.contracts[schema_name]
         errors = sorted(_validator(schema).iter_errors(instance), key=lambda error: list(error.path))
         if errors:
-            detail = "; ".join(
-                f"{'.'.join(str(part) for part in error.absolute_path) or '$'}:{error.message}"
-                for error in errors[:3]
-            )
+            detail = "; ".join(f"{'.'.join(str(part) for part in error.absolute_path) or '$'}:{error.message}" for error in errors[:3])
             raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}")

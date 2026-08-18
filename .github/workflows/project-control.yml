@@ -36,7 +36,6 @@ jobs:
           python3 - <<'PY'
           import importlib.metadata
           from pathlib import Path
-
           required = Path("scripts/harness/requirements.txt").read_text(encoding="utf-8").strip()
           expected = required.split("==", 1)[1]
           actual = importlib.metadata.version("jsonschema")
@@ -54,11 +53,14 @@ jobs:
             scripts/control/directional_watch_clearance.py \
             scripts/control/project_control_directional_watch.py \
             scripts/harness/checkpoint_planner.py \
-            scripts/harness/event_reducer.py
+            scripts/harness/event_reducer.py \
+            scripts/harness/continuation.py \
+            scripts/harness/instruction_hygiene.py \
+            scripts/harness/contracts.py \
+            scripts/harness/cli.py
           python3 - <<'PY'
           import json
           from pathlib import Path
-
           required_json = [
               Path("config/control/project-control-policy.v1.json"),
               Path("config/control/project-program-registry.v1.json"),
@@ -77,6 +79,10 @@ jobs:
               Path("config/control/harness/repair-doctrine.v1.json"),
               Path("config/control/harness/evidence-map.schema.v1.json"),
               Path("config/control/harness/human-attention.schema.v1.json"),
+              Path("config/control/harness/continuation-policy.v1.json"),
+              Path("config/control/harness/instruction-hygiene-policy.v1.json"),
+              Path("config/control/harness/rule-registry.v1.json"),
+              Path("tests/harness/golden/cases.v1.json"),
           ]
           for path in required_json:
               with path.open("r", encoding="utf-8") as handle:
@@ -84,12 +90,19 @@ jobs:
               if not isinstance(value, dict):
                   raise SystemExit(f"Expected JSON object: {path}")
               print(f"JSON OK: {path}")
-
           registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text(encoding="utf-8"))
           if registry.get("registry_generation") != 80:
               raise SystemExit(f"GENERATION80_CANDIDATE_REQUIRED:{registry.get('registry_generation')}")
           print("CANDIDATE REGISTRY GENERATION OK: 80")
           PY
+
+      - name: Run Harness continuation and hygiene regression
+        run: |
+          python3 -m unittest \
+            tests.harness.test_harness_continuation \
+            tests.harness.test_harness_instruction_hygiene \
+            tests.harness.test_harness_golden_set
+          python3 scripts/harness/instruction_hygiene.py --root .
 
       - name: Run architecture and ownership passport compatibility regression
         run: |

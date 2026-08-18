@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.harness_rule_registry.v1",
+  "rules": [
+    {"rule_id":"HC-GIT-DURABLE-001","class":"CONTROL_INVARIANT","source":"H0 foundation","trigger":"all_harness_work","enforcement":"machine+router","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-SELF-ACCEPT-001","class":"CONTROL_INVARIANT","source":"H0 separation of duties","trigger":"checkpoint_acceptance","enforcement":"review_policy+state_builder","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-EXACT-HEAD-001","class":"CONTROL_INVARIANT","source":"H0 review freshness","trigger":"review_or_verification","enforcement":"state_builder","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-NO-FORCE-001","class":"SAFETY_INVARIANT","source":"restart-safe Git discipline","trigger":"active_harness_branch","enforcement":"router+policy","retirement":"SAFETY_REVIEW_REQUIRED"},
+    {"rule_id":"HC-HUMAN-EXCEPTION-001","class":"CONTROL_INVARIANT","source":"evidence-driven review layer","trigger":"human_attention","enforcement":"continuation_policy","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-ROLE-HANDOFF-001","class":"CONTROL_INVARIANT","source":"2026-08-18 continuation gap analysis","trigger":"routine_role_boundary","enforcement":"continuation_policy+cli","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-CHAT-NONAUTH-001","class":"CONTROL_INVARIANT","source":"2026-08-18 lost review evidence incident class","trigger":"review_or_verifier_result","enforcement":"continuation_policy+review_policy","retirement":"CONTROL_REVISION_REQUIRED"},
+    {"rule_id":"HC-MUTABLE-PROSE-001","class":"PROCESS_GUARD","source":"2026-08-18 H0.1/H0.2 prose drift","trigger":"router_or_control_doc_change","enforcement":"instruction_hygiene.py","retirement":"REMOVE_WHEN_ROUTER_GENERATED_FROM_MACHINE_STATE"},
+    {"rule_id":"HC-CONTEXT-BUDGET-001","class":"PROCESS_GUARD","source":"Hybrid Harness R1 / Harness_ru context SNR","trigger":"router_change","enforcement":"instruction_hygiene.py","retirement":"REVIEW_WHEN_DYNAMIC_CONTEXT_ROUTER_EXISTS"},
+    {"rule_id":"HC-PROTECTED-RETIRE-001","class":"SAFETY_INVARIANT","source":"Hybrid Harness R1 adaptation","trigger":"rule_cleanup","enforcement":"instruction_hygiene.py","retirement":"SAFETY_REVIEW_REQUIRED"}
+  ]
+}

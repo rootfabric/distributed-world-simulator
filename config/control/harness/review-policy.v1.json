@@ -1,10 +1,11 @@
 {
   "schema": "distributed_world_simulator.harness_review_policy.v1",
-  "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
+  "review_layer_revision": "H0-REVIEW-2026-08-18-R2",
   "risk_policy": "config/control/harness/risk-policy.v1.json",
   "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
   "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
   "human_attention_schema": "config/control/harness/human-attention.schema.v1.json",
+  "continuation_policy": "config/control/harness/continuation-policy.v1.json",
   "principles": {
     "checkpoint_is_unit_of_control": true,
     "evidence_package_is_unit_of_review": true,
@@ -13,29 +14,40 @@
     "reviewer_may_not_guess_missing_evidence": true,
     "post_build_critique_is_bounded_to_one_required_pass": true,
     "review_freshness_is_bound_to_exact_head": true,
-    "required_fixes_and_rank_up_moves_are_distinct": true
+    "required_fixes_and_rank_up_moves_are_distinct": true,
+    "review_result_must_be_durable_before_handoff": true,
+    "chat_only_verdict_is_non_authoritative": true,
+    "routine_review_handoff_is_not_human_attention": true
   },
-  "review_verdicts": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+  "review_verdicts": ["PASS","FAIL","INSUFFICIENT_EVIDENCE"],
   "pre_build": {
-    "required_for": ["MEDIUM", "HIGH", "CRITICAL"],
-    "design_brief_fields": ["problem_statement", "current_behavior", "desired_behavior", "alternatives_considered", "selected_design", "why_selected", "affected_owners", "dependencies", "non_goals", "expected_risks", "validation_plan"]
+    "required_for": ["MEDIUM","HIGH","CRITICAL"],
+    "design_brief_fields": ["problem_statement","current_behavior","desired_behavior","alternatives_considered","selected_design","why_selected","affected_owners","dependencies","non_goals","expected_risks","validation_plan"]
   },
   "post_build": {
-    "required_for": ["MEDIUM", "HIGH", "CRITICAL"],
-    "questions": ["unnecessary_complexity", "duplicate_truth", "implicit_owner", "coupling_reduction", "sibling_surface_fix", "removable_code", "design_regression", "refactor_if_redesigned"],
-    "outcomes": ["NO_MATERIAL_REFACTOR_REQUIRED", "REFACTOR_REQUIRED"]
+    "required_for": ["MEDIUM","HIGH","CRITICAL"],
+    "questions": ["unnecessary_complexity","duplicate_truth","implicit_owner","coupling_reduction","sibling_surface_fix","removable_code","design_regression","refactor_if_redesigned"],
+    "outcomes": ["NO_MATERIAL_REFACTOR_REQUIRED","REFACTOR_REQUIRED"]
   },
   "exact_head_protocol": {
     "reviewed_head_must_equal_evidence_head": true,
     "runtime_change_after_review_makes_review_stale": true,
     "stale_review_blocks_checkpoint_proposal": true
   },
+  "evidence_transport": {
+    "chat_result_is_authority": false,
+    "harness_work_order_default_sink": "EXECUTION_LEDGER",
+    "github_pr_gate_sink": "GITHUB_PR_REVIEW",
+    "review_request_must_name_sink": true,
+    "review_result_must_bind_exact_head": true,
+    "handoff_complete_only_after_sink_persistence": true
+  },
   "review_output": {
-    "required_sections": ["verdict", "required_fixes", "rank_up_moves", "evidence_gaps", "risk_assessment"],
+    "required_sections": ["verdict","required_fixes","rank_up_moves","evidence_gaps","risk_assessment"],
     "rank_up_moves_are_non_blocking_unless_director_promotes_them": true
   },
   "activation": {
     "h0_0": "Contracts must load and validate; no runtime review execution is required.",
-    "h0_1_and_later": "Risk routing, design brief when applicable, evidence map, reviewer verdict, post-build critique and exact-head freshness are mandatory for runtime checkpoint proposals."
+    "h0_1_and_later": "Risk routing, design brief when applicable, durable evidence, reviewer verdict, post-build critique, exact-head freshness and continuation routing are mandatory for runtime checkpoint proposals."
   }
 }

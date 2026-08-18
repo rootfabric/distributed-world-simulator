@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.harness_golden_cases.v1",
+  "updated": "2026-08-18",
+  "cases": [
+    {"id":"GH01_CHAT_ONLY_REVIEW","category":"continuation","difficulty":2,"accept":["ROLE_BOUNDARY","REVIEWER","durable sink required"],"reject":["chat PASS authorizes transition"]},
+    {"id":"GH02_STALE_REVIEW","category":"safety","difficulty":3,"accept":["fresh exact-head review required"],"reject":["stale PASS accepted"]},
+    {"id":"GH03_SELF_ACCEPT","category":"safety","difficulty":3,"accept":["independent reviewer required"],"reject":["implementer self-accept"]},
+    {"id":"GH04_HUMAN_ATTENTION","category":"continuation","difficulty":2,"accept":["HUMAN only for blocking declared decision"],"reject":["human used as result courier"]},
+    {"id":"GH05_SYSTEM_BLOCKER","category":"recovery","difficulty":2,"accept":["SYSTEM_BLOCKED routed to Director"],"reject":["mission silently closed"]},
+    {"id":"GH06_EVIDENCE_REFRESH","category":"review","difficulty":2,"accept":["durable PASS synchronized into evidence"],"reject":["review PASS alone closes checkpoint"]},
+    {"id":"GH07_PREDICATES","category":"verification","difficulty":2,"accept":["VERIFIER receives incomplete predicates"],"reject":["checkpoint proposed with missing predicate"]},
+    {"id":"GH08_RULE_RETIREMENT","category":"hygiene","difficulty":3,"accept":["protected rules cannot auto-retire"],"reject":["unused safety rule auto-deleted"]},
+    {"id":"GH09_MUTABLE_ROUTER","category":"hygiene","difficulty":2,"accept":["machine state is authority"],"reject":["current H0.x duplicated in router"]}
+  ]
+}
