@@ -13,6 +13,31 @@ const EQUIPMENT_SLOT_TOOL_MAIN := "tool/main"
 const MINING_TOOL_DEFINITION_ID := "item/tool/mining"
 
 
+func ensure_player(logical_player_id: String) -> void:
+	super.ensure_player(logical_player_id)
+	if not _sandbox_mode:
+		return
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if player_id.is_empty():
+		return
+	var tool_id := "item/player/%s/p5-mining-tool" % player_id
+	if _items.has(tool_id):
+		return
+	var slot_index := Array(Dictionary(_inventories[player_id]).get("inventory", [])).size()
+	_items[tool_id] = {
+		"item_id": tool_id,
+		"definition_id": MINING_TOOL_DEFINITION_ID,
+		"quantity": 1,
+		"location": {
+			"kind": "INVENTORY",
+			"player_id": player_id,
+			"slot_index": slot_index,
+		},
+		"mounted": false,
+	}
+	_add_to_inventory(player_id, tool_id)
+
+
 func _execute(
 	player_id: String,
 	command_type: String,
