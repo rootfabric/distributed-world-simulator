@@ -1,17 +1,18 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R66-2026-08-18",
+  "revision": "ECO-R67-2026-08-18",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO2_COMPLETE_XFER0_BOUNDED_DESIGN_NEXT",
+  "status": "RESEARCH_ONLY_EVO2_COMPLETE_XFER0_ACCEPTED_EVO3_RESEARCH_PLANNING",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
-  "current_checkpoint": "ECO.EVO2/E2.FINAL",
-  "current_step": "Unseen World Challenge accepted / EVO2 research route complete",
-  "last_accepted_step": "ECO.EVO2/E2.FINAL Unseen World Challenge",
-  "mission": "Build a standalone evolutionary ecosystem that produces portable research species catalogs and persistent population ecology from environment, competition and history, then prove persisted-catalog transfer and causal ecology on a hidden unseen world before simulator integration.",
+  "xfer0_contract_doc": "docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md",
+  "current_checkpoint": "ECO.XFER0",
+  "current_step": "Bounded Research-to-Simulator Contract accepted / EVO3 research planning authorized",
+  "last_accepted_step": "ECO.XFER0 Bounded Research-to-Simulator Contract",
+  "mission": "Build a standalone evolutionary ecosystem, prove persisted-catalog portability on unseen worlds, freeze a bounded research-to-simulator semantic/authority contract, then plan broader planetary ecology without bypassing canonical simulator owners.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
     "ECO.P1 ACCEPTED",
@@ -29,7 +30,8 @@
     "ECO.EVO2/E2.6 REPLICATED CAUSAL EXPERIMENTS ACCEPTED",
     "ECO.EVO2/E2.7 CROSS-SEED ROBUSTNESS ACCEPTED",
     "ECO.EVO2/E2.8 CATALOG PERSISTENCE & PROVENANCE ACCEPTED",
-    "ECO.EVO2/E2.FINAL UNSEEN WORLD CHALLENGE ACCEPTED / EVO2 COMPLETE"
+    "ECO.EVO2/E2.FINAL UNSEEN WORLD CHALLENGE ACCEPTED / EVO2 COMPLETE",
+    "ECO.XFER0 BOUNDED RESEARCH-TO-SIMULATOR CONTRACT ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -106,7 +108,22 @@
     "e2_final_adaptation_positive_cells": 2,
     "e2_final_validation": "validation/ecology/eco-evo2-final-unseen-world-validation.json",
     "e2_final_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_FINAL_UNSEEN_WORLD_CHALLENGE_ACCEPTED_RU.md",
-    "e2_final_independent_reviewer_claimed": false
+    "e2_final_independent_reviewer_claimed": false,
+    "xfer0_code_under_test_head": "bb80beac95d838b56cccbe5d98f7e1bcbfd80376",
+    "xfer0_aggregate_hash": "1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044",
+    "xfer0_contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309",
+    "xfer0_contract_blob": "1987dd67ae0755b4a00bc22f48a019837fb2066a",
+    "xfer0_schema_blob": "8759a3e0832ae514df69ade5d6235b524bea84de",
+    "xfer0_validator_blob": "1244d6dac0149957857a294b662738076ccc6e2d",
+    "xfer0_test_blob": "6afe9af777a976775fc3be4f68b5a91720e30474",
+    "xfer0_runner_blob": "789bc1c17b2964bc1f71166e2a7a3725911566d6",
+    "xfer0_tests": 17,
+    "xfer0_runner_logs_byte_identical": true,
+    "xfer0_runner_log_sha256": "9126f83e992e1d834e1e7e5317ec97cca174d1027a518310d70df6bd49ac47aa",
+    "xfer0_required_foundations": ["G", "ENV", "MAT", "WQ", "SD", "TF"],
+    "xfer0_validation": "validation/ecology/eco-xfer0-bounded-contract-validation.json",
+    "xfer0_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_XFER0_BOUNDED_RESEARCH_SIMULATOR_CONTRACT_ACCEPTED_RU.md",
+    "xfer0_independent_reviewer_claimed": false
   },
   "production_integration_evidence": {
     "status": "P4_BRANCH_LIFECYCLE_COMPLETE_AWAITING_INDEPENDENT_REVIEW_AND_MAIN_PROMOTION",
@@ -136,9 +153,12 @@
       {"id":"E2.FINAL","name":"Unseen World Challenge","status":"ACCEPTED"}
     ]
   },
-  "EVO3": {"status":"PLANNED_AFTER_BOUNDED_XFER0","goal":"Planetary Ecology Compiler / broader planetary generalization"},
+  "EVO3": {"status":"AUTHORIZED_RESEARCH_PLANNING_NOT_STARTED","goal":"Planetary Ecology Compiler / broader planetary generalization","production_runtime_authorized":false,"xfer1_required_before_production_binding":true},
   "EVO4": {"status":"AFTER_PLANT_PORTABILITY_AND_PLANETARY_GENERALIZATION","goal":"multi-trophic ecosystem and coevolution"},
-  "XFER": {"XFER0":{"status":"AUTHORIZED_BOUNDED_DESIGN_NOT_STARTED"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
+  "XFER": {
+    "XFER0":{"status":"ACCEPTED_BOUNDED_DESIGN","contract":"config/ecology/eco-xfer0-contract.v1.json","code_under_test":"bb80beac95d838b56cccbe5d98f7e1bcbfd80376"},
+    "XFER1":{"status":"BLOCKED_WAIT_CANONICAL_G_ENV_MAT_WQ_SD_TF","required_foundations":["G","ENV","MAT","WQ","SD","TF"]}
+  },
   "LIVE": {"status":"DEFERRED_UNTIL_XFER_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"RESEARCH_OBSERVABILITY_SUPPORT"},
   "production_blockers": [
