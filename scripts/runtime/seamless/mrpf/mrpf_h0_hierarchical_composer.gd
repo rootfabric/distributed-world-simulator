@@ -3,6 +3,7 @@ extends RefCounted
 const Contract = preload("res://scripts/runtime/seamless/mrpf/mrpf_h0_projection_contract.gd")
 
 var _representations: Dictionary = {}
+var _identity_ledger: Dictionary = {}
 var _group_contracts: Dictionary = {}
 
 func accept_representation(value: Dictionary) -> Dictionary:
@@ -11,6 +12,28 @@ func accept_representation(value: Dictionary) -> Dictionary:
 		return validated
 	var representation_id := String(value.get("representation_id", ""))
 	var group_id := String(value.get("replacement_group_id", ""))
+	var next_binding := _identity_binding(value)
+	var next_revision := int(value.get("source_revision", 0))
+	var next_checksum := String(value.get("checksum", ""))
+
+	if _identity_ledger.has(representation_id):
+		var ledger: Dictionary = Dictionary(_identity_ledger[representation_id])
+		if Array(ledger.get("identity_binding", [])) != next_binding:
+			return _failure("MRPF_H0_REPRESENTATION_IDENTITY_REBIND")
+		var max_revision := int(ledger.get("max_source_revision", 0))
+		var last_checksum := String(ledger.get("last_checksum", ""))
+		if next_revision < max_revision:
+			return _failure("MRPF_H0_SOURCE_REVISION_STALE")
+		if next_revision == max_revision:
+			if not _representations.has(representation_id):
+				if next_checksum == last_checksum:
+					return _failure("MRPF_H0_TOMBSTONED_REPLAY")
+				return _failure("MRPF_H0_SAME_REVISION_MUTATION")
+			var previous: Dictionary = Dictionary(_representations[representation_id])
+			if String(previous.get("checksum", "")) == next_checksum and next_checksum == last_checksum:
+				return _success({"replay": true})
+			return _failure("MRPF_H0_SAME_REVISION_MUTATION")
+
 	var group_contract := {
 		"canonical_subject_id": String(value.get("canonical_subject_id", "")),
 		"coverage_scope": String(value.get("coverage_scope", "")),
@@ -18,20 +41,14 @@ func accept_representation(value: Dictionary) -> Dictionary:
 	}
 	if _group_contracts.has(group_id) and Dictionary(_group_contracts[group_id]) != group_contract:
 		return _failure("MRPF_H0_REPLACEMENT_GROUP_CONTRACT_MISMATCH")
-	if _representations.has(representation_id):
-		var previous: Dictionary = Dictionary(_representations[representation_id])
-		if _identity_binding(previous) != _identity_binding(value):
-			return _failure("MRPF_H0_REPRESENTATION_IDENTITY_REBIND")
-		var previous_revision := int(previous.get("source_revision", 0))
-		var next_revision := int(value.get("source_revision", 0))
-		if next_revision < previous_revision:
-			return _failure("MRPF_H0_SOURCE_REVISION_STALE")
-		if next_revision == previous_revision:
-			if String(previous.get("checksum", "")) == String(value.get("checksum", "")):
-				return _success({"replay": true})
-			return _failure("MRPF_H0_SAME_REVISION_MUTATION")
+
 	_group_contracts[group_id] = group_contract
 	_representations[representation_id] = value.duplicate(true)
+	_identity_ledger[representation_id] = {
+		"identity_binding": next_binding.duplicate(),
+		"max_source_revision": next_revision,
+		"last_checksum": next_checksum,
+	}
 	return _success({"replay": false})
 
 func remove_representation(representation_id: String, expected_source_revision: int) -> Dictionary:
@@ -41,7 +58,7 @@ func remove_representation(representation_id: String, expected_source_revision: 
 	if int(current.get("source_revision", 0)) != expected_source_revision:
 		return _failure("MRPF_H0_REMOVE_REVISION_MISMATCH")
 	_representations.erase(representation_id)
-	return _success()
+	return _success({"tombstoned": true})
 
 func compose_view() -> Dictionary:
 	var groups: Dictionary = {}
@@ -81,6 +98,9 @@ func reject_presentation_mutation(canonical_subject_id: String, operation: Strin
 func representation_count() -> int:
 	return _representations.size()
 
+func identity_ledger_count() -> int:
+	return _identity_ledger.size()
+
 func _identity_binding(value: Dictionary) -> Array:
 	return [
 		String(value.get("canonical_subject_id", "")),
@@ -118,19 +138,10 @@ func _selected_before(a_raw, b_raw) -> bool:
 	return String(a.get("representation_id", "")) < String(b.get("representation_id", ""))
 
 func _view_hash(selected: Array) -> String:
-	var rows: Array[String] = []
+	var payloads: Array = []
 	for raw in selected:
-		var value: Dictionary = Dictionary(raw)
-		rows.append("|".join([
-			String(value.get("replacement_group_id", "")),
-			String(value.get("representation_id", "")),
-			String(value.get("canonical_subject_id", "")),
-			String(value.get("domain_level", "")),
-			str(int(value.get("source_revision", 0))),
-			String(value.get("content_hash", "")),
-			String(value.get("checksum", "")),
-		]))
-	return "\n".join(rows).sha256_text()
+		payloads.append(Contract.canonical_semantic_payload(Dictionary(raw)))
+	return Contract.canonical_string_sequence_payload(payloads).sha256_text()
 
 func _success(details: Dictionary = {}) -> Dictionary:
 	return {"success": true, "error_code": "", "details": details}
