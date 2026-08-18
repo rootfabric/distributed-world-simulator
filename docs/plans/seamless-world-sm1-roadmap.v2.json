@@ -1,0 +1,331 @@
+{
+  "schema": "distributed_world_simulator.seamless_world_sm1_roadmap.v2",
+  "status": "RESEARCH_NOT_ACTIVATED",
+  "supersedes": "docs/plans/seamless-world-sm1-roadmap.v1.json",
+  "architecture": "docs/architecture/SEAMLESS_WORLD_ARCHITECTURE_R2_RU.md",
+  "human_roadmap": "docs/plans/SEAMLESS_WORLD_SM1_ROADMAP_R2_RU.md",
+  "validation_strategy": "docs/testing/SEAMLESS_WORLD_VALIDATION_STRATEGY_R2_RU.md",
+  "branch": "research/seamless-world-architecture-r1",
+  "branch_creation_base": {
+    "branch": "main",
+    "sha": "c58339c30e6d7e708a06c41e59208bd45f0709a4"
+  },
+  "production_base_rule": "EXACT_ACCEPTED_PREDECESSOR_DECLARED_BY_THEN_CURRENT_MAIN",
+  "forbidden_production_bases": [
+    "feature/sm0-two-authority-seamless-handoff-lab",
+    "research/seamless-world-architecture-r1",
+    "research/edge-gateway-architecture"
+  ],
+  "activation": {
+    "research_may_continue_now": true,
+    "production_sm1_active": false,
+    "required_before_first_runtime_work": [
+      "ARCHITECTURE_R2_FRESH_INDEPENDENT_REVIEW_PASS",
+      "V0_P6_ACCEPTED_ON_MAIN_LINEAGE",
+      "MAIN_RECORDS_ACTIVATE_V0_SM1",
+      "MAIN_DECLARES_EXACT_SM1_SUCCESSOR_BASE",
+      "FRESH_SM1_EPOCH_AND_WORK_ORDER_EXISTS",
+      "RUNTIME_MUTATION_LEASE_ROTATED_TO_SM1_IF_REQUIRED",
+      "DIRECTOR_DISPATCHES_SM1_H0"
+    ],
+    "defer_token": "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION",
+    "activate_token": "ACTIVATE_V0_SM1"
+  },
+  "global_invariants": [
+    "ONE_CANONICAL_WRITER",
+    "STABLE_CANONICAL_IDENTITY",
+    "MONOTONIC_AUTHORITY_EPOCH_AND_FENCE",
+    "DIRECTORY_COMMITTED_IS_ONLY_OWNERSHIP_LINEARIZATION_POINT",
+    "NO_OLD_SOURCE_WRITER_ROLLBACK_AFTER_DIRECTORY_COMMIT",
+    "GATEWAY_IS_NEVER_CANONICAL_OWNER",
+    "PROJECTION_IS_NEVER_CANONICAL_OWNER",
+    "OPERATION_ID_IS_END_TO_END",
+    "AUTHORITY_DOMAIN_IS_DISTINCT_FROM_INTERACTION_ISLAND",
+    "AUTHORITY_DOMAIN_IS_DISTINCT_FROM_SPATIAL_CELL",
+    "ITEM_GRAPH_REMAINS_CANONICAL_FOR_ITEM_STRUCTURE",
+    "AUTHORITY_BINDING_AND_ITEM_GRAPH_TRANSITIONS_ARE_CONSISTENT",
+    "INHERITED_DOMAIN_HANDOFF_DOES_NOT_REQUIRE_PER_ITEM_OWNERSHIP_CAS",
+    "DOMAIN_MUTATION_BARRIER_CLASSIFIES_ALL_RACING_OPERATIONS",
+    "ACCEPTED_TIMELINE_DOES_NOT_ROLL_BACK_ON_AUTHORITY_CHANGE",
+    "STATIC_MESH_ACCEPTANCE_PRECEDES_DYNAMIC_PLACEMENT"
+  ],
+  "acceptance_dimensions": [
+    "AUTHORITY_CORRECTNESS",
+    "STATE_CONTINUITY",
+    "TRANSPORT_CONTINUITY",
+    "VISUAL_CONTINUITY"
+  ],
+  "milestones": [
+    {
+      "id": "PRE-ACTIVATION",
+      "name": "Architecture closure",
+      "kind": "RESEARCH_CONTROL",
+      "depends_on": [],
+      "runtime_mutation_allowed": false,
+      "required_result": "FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
+    },
+    {
+      "id": "SM1-H0",
+      "name": "Production Seamless Contracts",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["PRE-ACTIVATION"],
+      "focus": [
+        "Identity contracts",
+        "OwnershipRecord",
+        "AuthorityBinding",
+        "DomainMutationBarrier",
+        "AuthorityTimelineStamp",
+        "Gateway routes",
+        "Protocol compatibility metadata"
+      ]
+    },
+    {
+      "id": "SM1-H1",
+      "name": "Durable Ownership Directory",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H0"],
+      "focus": [
+        "atomic ownership CAS",
+        "AuthorityEpoch",
+        "FencingToken",
+        "incarnation",
+        "draining",
+        "restart recovery"
+      ],
+      "critical_oracles": [
+        "STALE_RESURRECTED_SOURCE_FENCED",
+        "DURABLE_CAS_SURVIVES_RESTART"
+      ]
+    },
+    {
+      "id": "SM1-H2",
+      "name": "Generic AuthorityDomain Transfer",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H1"],
+      "focus": [
+        "freeze",
+        "durable target prepare",
+        "Directory CAS",
+        "target activation",
+        "source retirement",
+        "forward recovery after post-CAS failure"
+      ],
+      "forbidden_semantics": [
+        "OLD_SOURCE_WRITER_ROLLBACK_AFTER_DIRECTORY_COMMIT"
+      ]
+    },
+    {
+      "id": "SM1-H2A",
+      "name": "AuthorityBinding and Domain Closure",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H2"],
+      "focus": [
+        "INHERIT binding",
+        "EXPLICIT binding",
+        "binding generation",
+        "nested domain members",
+        "one domain CAS for inherited members"
+      ],
+      "scale_cases": [1, 10, 100, 1000]
+    },
+    {
+      "id": "SM1-H2B",
+      "name": "Player Carrying Domain Lab",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H2A"],
+      "focus": [
+        "PlayerAuthorityDomain",
+        "Item Graph continuity",
+        "pickup/drop authority rebind",
+        "nested inventory",
+        "equipment/hotbar",
+        "DomainMutationBarrier",
+        "carried state restart recovery"
+      ],
+      "mandatory_scenario": "PICKUP_ON_A__PLAYER_DOMAIN_A_TO_B__USE_ON_B__DROP_TO_WORLD_B"
+    },
+    {
+      "id": "SM1-H3",
+      "name": "Single Edge Gateway Transparency",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H2B"],
+      "focus": [
+        "direct versus gateway semantic equivalence",
+        "gateway non-authority",
+        "OperationId forwarding"
+      ]
+    },
+    {
+      "id": "SM1-H4",
+      "name": "PRIMARY OBSERVER Multi-Authority Gateway",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H3"],
+      "focus": [
+        "PRIMARY",
+        "OBSERVER",
+        "WARM",
+        "projection fencing",
+        "no early primary flip"
+      ]
+    },
+    {
+      "id": "SM1-H5",
+      "name": "Gateway-Mediated PlayerAuthorityDomain Handoff",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H4"],
+      "focus": [
+        "stable client route",
+        "PlayerAuthorityDomain A to B",
+        "inventory continuity",
+        "operation continuity",
+        "timeline continuity",
+        "route flip only after Directory commit"
+      ]
+    },
+    {
+      "id": "SM1-H6",
+      "name": "Multi-Region Gateway Selection",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H5"],
+      "focus": [
+        "RTT",
+        "jitter",
+        "loss",
+        "health",
+        "load",
+        "hysteresis",
+        "cooldown"
+      ]
+    },
+    {
+      "id": "SM1-H7",
+      "name": "Gateway Mobility Rehome Failure",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H6"],
+      "focus": [
+        "failure-driven rehome",
+        "quality-driven rehome",
+        "session resume",
+        "dual-path OperationId dedup",
+        "gateway rehome independent of authority handoff"
+      ]
+    },
+    {
+      "id": "SM1-H8",
+      "name": "Projection AOI Interest Aggregation",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H7"],
+      "focus": [
+        "interest anchors",
+        "read-only projections",
+        "LOD budgets",
+        "stale cache",
+        "merged subscriptions"
+      ]
+    },
+    {
+      "id": "SM1-H9",
+      "name": "Cross-Authority Operation Foundation",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H8"],
+      "focus": [
+        "player at A to item at B",
+        "owner change during operation",
+        "stale route rejection",
+        "no broadcast-to-all default"
+      ]
+    },
+    {
+      "id": "SM1-H10",
+      "name": "Physical InteractionIsland Runtime",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H9"],
+      "focus": [
+        "physical co-location constraint",
+        "ship vehicle pilot passenger",
+        "membership generation",
+        "reference frame continuity",
+        "invalid partial placement rejection"
+      ]
+    },
+    {
+      "id": "SM1-H11",
+      "name": "Static N-Authority World",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H10"],
+      "focus": [
+        "arbitrary AuthorityIds",
+        "3 to 4 to configurable N",
+        "simultaneous independent transfers",
+        "fault isolation",
+        "no mandatory full mesh"
+      ]
+    },
+    {
+      "id": "SM1-H12",
+      "name": "Integrated Static Seamless-World Acceptance",
+      "kind": "STATIC_PRODUCTION",
+      "depends_on": ["SM1-H11"],
+      "focus": [
+        "end-to-end journey",
+        "WAN matrix",
+        "fault injection",
+        "gateway rehome",
+        "player carrying domain",
+        "cross-authority operation",
+        "restart recovery",
+        "visual continuity metrics"
+      ],
+      "required_zero_counters": [
+        "writer_violations",
+        "identity_changes",
+        "duplicate_item_ids",
+        "lost_item_ids",
+        "stale_owner_mutations_accepted",
+        "duplicate_canonical_commits",
+        "canonical_revision_rollbacks",
+        "unexpected_session_resets",
+        "unexpected_errors"
+      ]
+    },
+    {
+      "id": "SM-D1",
+      "name": "Dynamic AuthorityDomain Placement",
+      "kind": "DYNAMIC_DEFERRED",
+      "depends_on": ["SM1-H12"],
+      "active_before_h12": false
+    },
+    {
+      "id": "SM-D2",
+      "name": "Dynamic Split Merge",
+      "kind": "DYNAMIC_DEFERRED",
+      "depends_on": ["SM-D1"],
+      "active_before_h12": false
+    },
+    {
+      "id": "SM-D3",
+      "name": "Interaction-Aware Dynamic Meshing",
+      "kind": "DYNAMIC_DEFERRED",
+      "depends_on": ["SM-D2"],
+      "active_before_h12": false
+    }
+  ],
+  "seamless_metrics": [
+    "handoff_total_ms",
+    "canonical_write_gap_ms",
+    "movement_input_gap_ms",
+    "inventory_operation_gap_ms",
+    "projection_gap_ms",
+    "visual_gap_frames",
+    "max_prediction_error",
+    "hard_correction_count",
+    "client_disconnect_count",
+    "client_session_change_count",
+    "gateway_rehome_count",
+    "gateway_route_flip_count",
+    "duplicate_entity_count",
+    "duplicate_item_count",
+    "stale_owner_mutations_accepted",
+    "duplicate_canonical_commits"
+  ]
+}
