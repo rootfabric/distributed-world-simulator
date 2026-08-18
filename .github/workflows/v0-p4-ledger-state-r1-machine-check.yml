@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED_HEAD="9d121d5b553b4b0885240425690ce2563fb011b4"
+          EXPECTED_HEAD="11969a954ceb9baab1b4a55cb2162fa1069fb0b2"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           ACTUAL_HEAD="$(git rev-parse HEAD)"
           echo "EXPECTED_HEAD=$EXPECTED_HEAD"
@@ -52,10 +52,10 @@ jobs:
           repair = state["repair"]
 
           assert reduced["state"] == "FIX_REQUIRED", reduced
-          assert reduced["last_event_sequence"] == 16, reduced
-          assert reduced["last_event_id"] == "V0-P4-R1-EVENT-0016", reduced
+          assert reduced["last_event_sequence"] == 17, reduced
+          assert reduced["last_event_id"] == "V0-P4-R1-EVENT-0017", reduced
           assert reduced["last_event_type"] == "FIX_REQUIRED", reduced
-          assert reduced["open_blocker"] == "PREMATURE_VERIFIED_STATE_BLOCKS_REMAINING_CHECKPOINT_PREDICATES", reduced
+          assert reduced["open_blocker"] == "RECOVERY_LINEAGE_MISSING_CANONICAL_V0_P4_CHECKPOINT_CATALOG", reduced
           assert reduced["snapshot_matches_authoritative_state"] is True, reduced
           assert reduced["event_subject_head_sha"] == "2a6721cdf02fa1134c59d1ab98bb7b597c66821d", reduced
           assert "INDEPENDENT_VERIFIER_PASS" in reduced["completed_predicates"], reduced
@@ -63,10 +63,23 @@ jobs:
           assert work_order.get("repair_context_required") is True, work_order
           assert repair["required"] is True, repair
           assert repair["map"] is not None, repair
-          assert repair["map"].get("repair_id") == "V0-P4-R1-LEDGER-STATE-REPAIR-001", repair["map"]
+          assert repair["map"].get("repair_id") == "V0-P4-R1-LEDGER-CATALOG-REPAIR-002", repair["map"]
           assert repair["map"].get("state") == "REPAIR_MAP_READY", repair["map"]
           assert state["continuation_blocked"] is True, state
           assert state["checkpoint_proposal_blocked"] is True, state
+
+          catalog = root / "config/control/harness/checkpoint-catalog.v1.json"
+          import subprocess
+          blob = subprocess.run(
+              ["git", "rev-parse", "HEAD:config/control/harness/checkpoint-catalog.v1.json"],
+              cwd=root,
+              text=True,
+              capture_output=True,
+              check=True,
+          ).stdout.strip()
+          assert blob == "00bbbe96f9de6549e71057286f2d07fbf8930cd8", blob
+          catalog_payload = json.loads(catalog.read_text(encoding="utf-8"))
+          assert "V0_P4_REAL_RESOURCE_CONSTRUCTION" in catalog_payload["checkpoints"], catalog_payload["checkpoints"].keys()
 
           evidence = json.loads(
               (execution / "evidence/P4-POST-CLEARANCE-PC0-001.v1.json").read_text(encoding="utf-8")
@@ -87,6 +100,7 @@ jobs:
               "last_event_sequence": reduced["last_event_sequence"],
               "last_event_id": reduced["last_event_id"],
               "open_blocker": reduced["open_blocker"],
+              "catalog_blob": blob,
               "completed_predicates": reduced["completed_predicates"],
               "findings": state["findings"],
               "checkpoint_blockers": state["checkpoint_blockers"],
