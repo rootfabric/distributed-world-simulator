@@ -1,6 +1,6 @@
 # SM1-I2.1 — Ownership Directory atomic CAS candidate
 
-Status: `RESEARCH_ONLY_CANDIDATE`
+Status: `RESEARCH_ONLY_REPAIR_R1_CANDIDATE`
 
 Branch: `research/sm1-i2-directory`
 
@@ -94,7 +94,9 @@ python3 -m unittest discover \
   -p 'test_i2_1_directory.py'
 ```
 
-Результат: `15/15 PASS`.
+Результат исходного candidate: `15/15 PASS`.
+
+После Repair R1 component suite расширен и должен пройти `17/17 PASS`.
 
 Demo runner:
 
@@ -110,6 +112,32 @@ stale_cas = CAS_MISMATCH
 final owner = authority-b
 result = PASS
 ```
+
+
+## Repair R1 после critical review PR #149
+
+Superseded candidate HEAD:
+
+`bdca076dd5ea6fc4e304cfcac58e7d1523863bbd`
+
+Review ID: `4961827768`
+
+Repair закрывает три finding:
+
+- `I2.1-R-001`: CAS теперь классифицирует current state **до** validation desired transition. Если `expected` stale, результат всегда `CAS_MISMATCH`, даже если `desired` сам по себе invalid. `INVALID_TRANSITION` возможен только когда `expected == current`.
+- `I2.1-R-002`: каждый `CAS_RESULT` получает `linearization_sequence` под тем же ownership lock, в котором принимается CAS decision; evidence append выполняется до освобождения этого lock, поэтому concurrent CAS evidence не может инвертировать serialization order.
+- `I2.1-R-003`: contention test теперь связывает final canonical record с конкретным contender, получившим `CAS_OK`, и требует, чтобы loser видел winner state в `observed/current`.
+
+Repair добавляет falsification tests:
+
+```text
+OD-CAS-14 stale expected + invalid desired -> CAS_MISMATCH
+OD-CAS-15 concurrent CAS evidence -> linearization_sequence [1,2]
+          and status order [CAS_OK,CAS_MISMATCH]
+OD-CAS-16 machine contract matches repaired semantics
+```
+
+`linearization_sequence` — это не wall-clock timestamp. Это монотонный порядок CAS decision/linearization points внутри одного Directory instance. Durability и cross-process ordering по-прежнему остаются за пределами I2.1.
 
 ## Что сознательно НЕ реализовано
 

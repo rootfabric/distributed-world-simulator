@@ -80,14 +80,14 @@ class I21OwnershipDirectoryTests(unittest.TestCase):
         directory.create(initial)
 
         barrier = threading.Barrier(3)
-        results = []
+        results: list[tuple[OwnershipRecord, object]] = []
         results_lock = threading.Lock()
 
         def contender(desired: OwnershipRecord) -> None:
             barrier.wait()
             result = directory.compare_and_swap(initial, desired)
             with results_lock:
-                results.append(result)
+                results.append((desired, result))
 
         threads = [
             threading.Thread(target=contender, args=(to_b,)),
@@ -101,9 +101,19 @@ class I21OwnershipDirectoryTests(unittest.TestCase):
             self.assertFalse(thread.is_alive())
 
         self.assertEqual(2, len(results))
-        self.assertEqual(1, sum(result.status is CasStatus.CAS_OK for result in results))
-        self.assertEqual(1, sum(result.status is CasStatus.CAS_MISMATCH for result in results))
-        self.assertIn(directory.lookup(initial.subject_or_domain_id), (to_b, to_c))
+        winners = [(desired, result) for desired, result in results if result.status is CasStatus.CAS_OK]
+        losers = [(desired, result) for desired, result in results if result.status is CasStatus.CAS_MISMATCH]
+        self.assertEqual(1, len(winners))
+        self.assertEqual(1, len(losers))
+
+        winner_desired, winner_result = winners[0]
+        _, loser_result = losers[0]
+        final = directory.lookup(initial.subject_or_domain_id)
+
+        self.assertEqual(winner_desired, winner_result.current)
+        self.assertEqual(winner_desired, final)
+        self.assertEqual(winner_desired, loser_result.observed)
+        self.assertEqual(winner_desired, loser_result.current)
 
     def test_od_cas_05_failed_cas_leaves_record_unchanged(self) -> None:
         directory = OwnershipDirectory()
@@ -221,7 +231,54 @@ class I21OwnershipDirectoryTests(unittest.TestCase):
         self.assertEqual(initial, second.current)
         self.assertEqual(initial, directory.lookup(initial.subject_or_domain_id))
 
-    def test_od_cas_14_machine_contract_matches_implementation_surface(self) -> None:
+
+    def test_od_cas_14_stale_expected_wins_classification_over_invalid_desired(self) -> None:
+        directory = OwnershipDirectory()
+        initial = record()
+        winner = record(owner="authority-b", epoch=11, fence=101, generation=51, incarnation=3)
+        directory.create(initial)
+        self.assertEqual(CasStatus.CAS_OK, directory.compare_and_swap(initial, winner).status)
+
+        # The desired transition is invalid relative to the stale expected
+        # record (generation does not increase), but stale expected state must
+        # be classified first and therefore return CAS_MISMATCH.
+        invalid_desired = record(generation=50)
+        result = directory.compare_and_swap(initial, invalid_desired)
+
+        self.assertEqual(CasStatus.CAS_MISMATCH, result.status)
+        self.assertEqual(winner, result.observed)
+        self.assertEqual(winner, result.current)
+        self.assertEqual(winner, directory.lookup(initial.subject_or_domain_id))
+
+    def test_od_cas_15_concurrent_evidence_preserves_linearization_order(self) -> None:
+        directory = OwnershipDirectory()
+        initial = record()
+        to_b = record(owner="authority-b", epoch=11, fence=101, generation=51, incarnation=3)
+        to_c = record(owner="authority-c", epoch=11, fence=102, generation=52, incarnation=4)
+        directory.create(initial)
+
+        barrier = threading.Barrier(3)
+        threads = [
+            threading.Thread(target=lambda desired=desired: (barrier.wait(), directory.compare_and_swap(initial, desired)))
+            for desired in (to_b, to_c)
+        ]
+        for thread in threads:
+            thread.start()
+        barrier.wait()
+        for thread in threads:
+            thread.join(timeout=2.0)
+            self.assertFalse(thread.is_alive())
+
+        cas_events = [event for event in directory.evidence() if event["kind"] == "CAS_RESULT"]
+        self.assertEqual(2, len(cas_events))
+        self.assertEqual([1, 2], [event["linearization_sequence"] for event in cas_events])
+        self.assertEqual(["CAS_OK", "CAS_MISMATCH"], [event["status"] for event in cas_events])
+        self.assertEqual(
+            cas_events[0]["desired"],
+            cas_events[1]["observed"],
+        )
+
+    def test_od_cas_16_machine_contract_matches_implementation_surface(self) -> None:
         contract_path = (
             Path(__file__).resolve().parents[4]
             / "config/research/seamless/i2/i2-1-directory-contract.v1.json"
@@ -236,8 +293,10 @@ class I21OwnershipDirectoryTests(unittest.TestCase):
             contract["architecture_base"],
         )
         self.assertIn("AT_MOST_ONE_CONTENDER_SUCCEEDS_FOR_ONE_EXPECTED_STATE", contract["transition_invariants"])
+        self.assertIn("STALE_EXPECTED_CLASSIFIED_BEFORE_DESIRED_VALIDATION", contract["transition_invariants"])
+        self.assertIn("CAS_EVIDENCE_PRESERVES_LINEARIZATION_ORDER", contract["transition_invariants"])
         self.assertEqual(
-            "EXPECTED_FULL_RECORD_MATCH",
+            "EXPECTED_FULL_RECORD_MATCH_COMPARE_FIRST",
             contract["operations"]["compare_and_swap"],
         )
 

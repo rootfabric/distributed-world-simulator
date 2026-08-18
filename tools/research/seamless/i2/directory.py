@@ -117,6 +117,7 @@ class OwnershipDirectory:
         self._lock = RLock()
         self._evidence_lock = Lock()
         self._evidence_sequence = 0
+        self._linearization_sequence = 0
         self._evidence: list[dict[str, Any]] = []
 
     def lookup(self, subject_or_domain_id: str) -> OwnershipRecord | None:
@@ -149,35 +150,18 @@ class OwnershipDirectory:
         expected: OwnershipRecord,
         desired: OwnershipRecord,
     ) -> CasResult:
-        if expected.subject_or_domain_id != desired.subject_or_domain_id:
-            result = CasResult(
-                status=CasStatus.INVALID_TRANSITION,
-                expected=expected,
-                desired=desired,
-                observed=None,
-                current=None,
-                error="subject_or_domain_id cannot change",
-            )
-            self._record_cas_evidence(result)
-            return result
+        """
+        Atomically compare current ownership against ``expected`` and, only
+        when it matches, validate and install ``desired``.
 
-        transition_error = validate_transition(expected, desired)
-        if transition_error is not None:
-            with self._lock:
-                observed = self._records.get(expected.subject_or_domain_id)
-            result = CasResult(
-                status=CasStatus.INVALID_TRANSITION,
-                expected=expected,
-                desired=desired,
-                observed=observed,
-                current=observed,
-                error=transition_error,
-            )
-            self._record_cas_evidence(result)
-            return result
-
+        Classification is intentionally compare-first. A caller whose
+        expected record is stale receives CAS_MISMATCH even when its desired
+        transition would also be semantically invalid. This keeps stale-state
+        fencing distinct from transition-policy validation.
+        """
         with self._lock:
             observed = self._records.get(expected.subject_or_domain_id)
+
             if observed is None:
                 result = CasResult(
                     status=CasStatus.NOT_FOUND,
@@ -197,17 +181,35 @@ class OwnershipDirectory:
                     error="expected ownership state is stale",
                 )
             else:
-                self._records[expected.subject_or_domain_id] = desired
-                result = CasResult(
-                    status=CasStatus.CAS_OK,
-                    expected=expected,
-                    desired=desired,
-                    observed=observed,
-                    current=desired,
-                )
+                transition_error = validate_transition(expected, desired)
+                if transition_error is not None:
+                    result = CasResult(
+                        status=CasStatus.INVALID_TRANSITION,
+                        expected=expected,
+                        desired=desired,
+                        observed=observed,
+                        current=observed,
+                        error=transition_error,
+                    )
+                else:
+                    self._records[expected.subject_or_domain_id] = desired
+                    result = CasResult(
+                        status=CasStatus.CAS_OK,
+                        expected=expected,
+                        desired=desired,
+                        observed=observed,
+                        current=desired,
+                    )
 
-        self._record_cas_evidence(result)
-        return result
+            # This sequence is assigned while the ownership lock is held, at
+            # the same serialization point that decides this CAS operation.
+            # CAS_RESULT evidence is also appended before releasing that lock,
+            # so machine evidence cannot invert concurrent CAS decision order.
+            self._linearization_sequence += 1
+            self._record_cas_evidence(
+                result, linearization_sequence=self._linearization_sequence
+            )
+            return result
 
     def evidence(self) -> list[dict[str, Any]]:
         with self._evidence_lock:
@@ -217,9 +219,12 @@ class OwnershipDirectory:
         with self._lock:
             return dict(self._records)
 
-    def _record_cas_evidence(self, result: CasResult) -> None:
+    def _record_cas_evidence(
+        self, result: CasResult, *, linearization_sequence: int
+    ) -> None:
         self._record_evidence(
             "CAS_RESULT",
+            linearization_sequence=int(linearization_sequence),
             subject_or_domain_id=result.expected.subject_or_domain_id,
             status=result.status.value,
             expected=result.expected.to_mapping(),
