@@ -1,0 +1,225 @@
+name: V0 P4 Ledger Repair Builder R1
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-ledger-repair-builder-r1
+
+permissions:
+  contents: write
+
+jobs:
+  build-validate-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build exact control-only ledger repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_PARENT="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
+          EXPECTED_MAIN="d9a1a3ca03016d6851a258ff93d5c260a86c5b4c"
+          AUDITED_MAIN="5999d935e8d5b496100ced66283d8762d3403675"
+          STAGING="recovery/v0-p4-closure-ledger-r2-staging"
+          EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
+          WO="$EXECUTION/work-orders/V0-P4-R1-WO-001.v1.json"
+
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
+          test "$(git rev-parse origin/$STAGING)" = "$EXPECTED_PARENT"
+          git checkout -B ledger-repair "$EXPECTED_PARENT"
+          git config user.name "V0 P4 Ledger Repair Builder"
+          git config user.email "actions@users.noreply.github.com"
+
+          python3 - <<'PY'
+          import json
+          from datetime import datetime, timezone, timedelta
+          from pathlib import Path
+
+          BASE="config/control/harness/executions/E2026-08-17-V0-P4-R1"
+          EVENT_DIR=f"{BASE}/events/V0-P4-R1-WO-001"
+          EVID=f"{BASE}/evidence"
+          REPAIRS=f"{BASE}/repairs"
+          WO=f"{BASE}/work-orders/V0-P4-R1-WO-001.v1.json"
+          BRANCH="feature/v0-p4-construction-real-resources"
+          SUBJECT="2a6721cdf02fa1134c59d1ab98bb7b597c66821d"
+          CLEAR=f"{EVID}/P4-POST-CLEARANCE-PC0-NON-RED-001.v1.json"
+          NEWMAP=f"{EVID}/P4-CHECKPOINT-TIME-HARNESS-EVIDENCE-MAP-001.v1.json"
+          REPAIR=f"{REPAIRS}/V0-P4-R1-LEDGER-MATERIALIZATION-R1.v1.json"
+          DETAIL=f"{EVID}/P4-CLOSURE-EVIDENCE-MAP-001.v1.json"
+          HISTMAP=f"{EVID}/P4-CLOSURE-HARNESS-EVIDENCE-MAP-001.v1.json"
+          REVIEW=f"{BASE}/reviews/V0-P4-R1-REVIEW-POST-001.v1.json"
+          VERIFY=f"{BASE}/verification/V0-P4-R1-VERIFY-001.v1.json"
+          AUDIT=f"{BASE}/audits/V0-P4-POST-ACTIVATION-CONTINUE-001.v1.json"
+          EPOCH=f"{BASE}/project-epoch.v1.json"
+          EVENT1=f"{EVENT_DIR}/0001-work-order-created.v1.json"
+          EVENT2=f"{EVENT_DIR}/0002-director-dispatched.v1.json"
+          P41=f"{EVID}/P4-1-EXACT-CONSUME-GREEN-001.v1.json"
+          P42=f"{EVID}/P4-2-DETERMINISTIC-ALLOCATOR-GREEN-001.v1.json"
+          P43=f"{EVID}/P4-3-LIVE-M4-TRANSACTION-PORT-GREEN-001.v1.json"
+          P43R1=f"{EVID}/P4-3-R1-AUTHORITATIVE-M0-GREEN-001.v1.json"
+          P44=f"{EVID}/P4-4-LIVE-MVP-COMPOSITION-GREEN-001.v1.json"
+          P45=f"{EVID}/P4-5-POST-COMMIT-PUBLICATION-GREEN-001.v1.json"
+          P46=f"{EVID}/P4-6-LIVE-TWO-CLIENT-RECONNECT-GREEN-001.v1.json"
+          CRITIQUE="docs/checkpoints/2026-08-16_V0_P4_POST_BUILD_CRITIQUE_R1.md"
+
+          def write(path, obj):
+              p=Path(path); p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text(json.dumps(obj, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+
+          post_clearance={
+            "schema":"distributed_world_simulator.v0_p4_post_clearance_control_evidence.v1",
+            "work_order_id":"V0-P4-R1-WO-001","project_epoch":"E2026-08-17-V0-P4-R1",
+            "checkpoint":"V0_P4_REAL_RESOURCE_CONSTRUCTION","implementation_evidence_head":SUBJECT,
+            "canonical_main_head":"d9a1a3ca03016d6851a258ff93d5c260a86c5b4c",
+            "directional_clearance_merge_commit":"7351b720bc9a0a6dbe2577dfb37568a853d2f266",
+            "directional_clearance_id":"V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001",
+            "clearance_reviewed_producer_head":SUBJECT,
+            "clearance_critical_files":["scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"],
+            "post_clearance_probe":{"branch":"probe/v0-p4-post-clearance-main-r1","candidate_head":"f0e808f53e11eee3440216225841f150fbd07e5b","candidate_base_main":"d9a1a3ca03016d6851a258ff93d5c260a86c5b4c","only_probe_workflow_diff":True,"pull_request":126,"pull_request_merged":False,"pull_request_closed_without_merge":True,"project_control_run":32085293289,"project_control_conclusion":"SUCCESS","artifact_id":9306488656,"artifact_zip_sha256":"f99caf2aee2a8c0d693abbef8cf4ea7c5289d8a5be8f2ca9973402013aac5598"},
+            "standard_pc0":{"health":"YELLOW","predicate":"NON_RED"},
+            "directional_pc0":{"health":"YELLOW","predicate":"NON_RED","critical_watch_raw_level":"RED","critical_watch_effective_level":"YELLOW","clearance_status":"ACCEPTED","fail_closed_identity_preserved":True},
+            "critical_cross_branch_overlap":{"blocking_critical_overlap_count":0,"predicate":"ZERO","note":"Post-clearance Project Control reported only advisory cross-branch overlap; no blocking critical overlap remained for P4."},
+            "human_attention":{"open_items":[],"source":"Recovery Harness state before ledger materialization plus absence of execution human-attention entries."},
+            "pull_request_123":{"state":"OPEN","draft":True,"head_before_ledger_repair":"b5bf2f529b55ce4ac6a5fb184151122814e4dcd8","runtime_feature_merge_still_requires_human_approval":True},
+            "conclusion":"POST_CLEARANCE_CONTROL_NON_RED",
+            "notes":["The raw V0->NX critical watch remains visible as RED and is not deleted or reclassified by interpretation.","Main-owned exact clearance changes only the effective control disposition to YELLOW/NON_RED for the reviewed P4 producer head and exact critical file.","This evidence does not modify production, tests, network authority, or the independent Reviewer/Verifier records."]
+          }
+          write(CLEAR, post_clearance)
+
+          checkpoint_map={
+            "schema":"distributed_world_simulator.harness_evidence_map.v1","work_order_id":"V0-P4-R1-WO-001","program":"V0","checkpoint":"V0_P4_REAL_RESOURCE_CONSTRUCTION","risk_class":"HIGH","evidence_head_sha":SUBJECT,
+            "intent":"Checkpoint-time evidence map for the frozen P4 implementation after independent Reviewer/Verifier PASS and main-owned fail-closed directional clearance.",
+            "root_cause_or_reason":"P4 closes mine -> canonical ore -> deterministic allocation -> atomic canonical Item Graph debit plus Construction commit -> two-client/reconnect convergence without duplicate authority. The final control blocker was a raw V0->NX directional watch hit; PR #124 added an independently reviewed exact main-owned clearance and post-merge Project Control proved effective NON_RED while preserving raw RED identity.",
+            "changed_surfaces":["Construction exact-consume planning and validation","deterministic requesting-player material allocation","live M4 single-owner Construction transaction port","post-commit Item Graph delta plus Construction event publication/fallback","real ENet two-client and reconnect acceptance","world/core regression coverage repair integrated from independently reviewed PR #122"],
+            "canonical_owner":"Canonical M4 Item Graph remains the sole item/resource truth; existing Construction authority/M0 remains the sole Construction truth.",
+            "entry_points":["M3 dedicated-server gameplay command handling","Construction multiplayer gateway/executor","P4 live M4 Construction build process","P3 authoritative resource mining request path"],
+            "callers":["M3 real ENet clients through existing COMMAND_REQUEST path","Earth MVP live runtime composition","P4 focused and process acceptance drivers"],
+            "callees":["V0P4ConstructionMaterialAllocator","V0P4LiveM4ConstructionTransactionPort","ConstructionBuildProcess / ConstructionStageTransactionPlanner","AuthoritativeConstructionItemGraphAdapter / Construction M0 bridge","canonical M4 server-only material-consume seam","M3 Item Graph/Construction replication publication"],
+            "sibling_surfaces_checked":["P4.1 exact consume","P4.2 allocator","P4.3 generic transaction port","P4.3 authoritative adapter + M0","P4.4 live composition","P4.5 publication/fallback","P4.6 real ENet two-client/reconnect","P3 live mining reconnect","M4 canonical gameplay","M3 Construction bridge","M5 graphical multiplayer acceptance","M6 dedicated recovery","M7 playable recovery","full 236-test world/core + V0 overlay sweep","main-scene --run-tests=all","post-clearance generation-80 Project Control and Directional Watch"],
+            "canonical_truth_changed":True,"architecture_ownership_changed":False,"focused_validation":"PASS","full_regression":"PASS","pc0":"NON_RED","directional_pc0":"NON_RED",
+            "production_diff_summary":"Frozen implementation target 2a6721cdf... reuses the existing canonical M4 Item Graph and Construction/M0 owners. No second Item Graph, persistence owner, resource balance truth, or network authority was introduced. Post-clearance control changes live only on main and do not alter P4 production semantics.",
+            "remaining_risks":["P4 proves a bounded canonical ore economy loop, not a general multi-resource crafting framework.","Full-snapshot publication fallback is correctness-first and may be expensive under later scale targets.","The M4 + Construction/M0 atomic sequence is intentionally narrow and is not a general distributed transaction framework.","Runtime feature merge remains a separate human approval gate after checkpoint proposal."],
+            "required_fixes":[],"rank_up_moves":["After formal P4 checkpoint proposal and human-controlled integration, continue product sequence to P5 rather than expanding P4.","Future CI may shard the 236-test world/core gate while preserving fail-closed discovery."],"evidence_gaps":[],"review_verdict":"PASS"
+          }
+          write(NEWMAP, checkpoint_map)
+
+          repair={
+            "schema":"distributed_world_simulator.harness_repair_map.v1","repair_id":"V0-P4-R1-LEDGER-MATERIALIZATION-R1","work_order_id":"V0-P4-R1-WO-001","checkpoint":"V0_P4_REAL_RESOURCE_CONSTRUCTION","state":"REPAIR_MAP_READY",
+            "triggering_findings":["P4_CLOSURE_PREDICATES_NOT_MATERIALIZED_IN_REDUCER","Existing implementation events prove P4 slices but event_reducer only completes predicates from PREDICATE_VERIFIED/AUDIT_COMPLETED/CHECKPOINT_PROPOSED events.","The quarantined PR #120 attempted PREDICATE_VERIFIED with IN_PROGRESS, which is invalid under the generation-80 transition table; that history remains quarantined and is not rewritten."],
+            "root_cause":"The recovery carrier correctly reconstructed a clean event ledger through independent Reviewer/Verifier PASS, but implementation/control predicates remained only observed because historical IMPLEMENTATION_COMMITTED events are not completion-bearing event types. Closure therefore needs append-only control-ledger materialization in VERIFYING state; production semantics are already frozen and verified.",
+            "affected_module":"Execution-specific V0-P4 Harness event ledger and Work Order snapshot only.","interface":"Work Order required_predicates -> event_reducer completed_predicates -> checkpoint_planner readiness.",
+            "callers":["python -m harness.cli status","checkpoint_planner","V0-P4 Director checkpoint closure"],"callees":["generation-80 event_reducer","transition-table guarded redispatch","evidence-map and review-result guards"],
+            "dependencies":["clean recovery carrier b5bf2f529b55ce4ac6a5fb184151122814e4dcd8","frozen implementation/evidence target 2a6721cdf02fa1134c59d1ab98bb7b597c66821d","independent Reviewer PASS V0-P4-R1-REVIEW-POST-001","independent Verifier PASS V0-P4-R1-VERIFY-001","main-owned directional clearance merge 7351b720bc9a0a6dbe2577dfb37568a853d2f266","post-clearance Project Control run 32085293289 SUCCESS"],
+            "invariants":["No production file mutation.","No test mutation.","No runtime worker restart; frozen runtime implementation target remains 2a6721cdf....","No force-push or rewrite of events 1-15.","Original Work Order branch identity remains feature/v0-p4-construction-real-resources.","Independent Reviewer and Verifier results remain byte-for-byte historical records.","Raw directional RED identity remains visible; only an accepted exact main-owned clearance may make the effective result NON_RED.","Checkpoint proposal remains separate from this repair and is not emitted until reducer validation proves all non-checkpoint predicates complete."],
+            "canonical_fix_location":f"{EVENT_DIR} plus checkpoint-time evidence and derived Work Order snapshot under the same execution.",
+            "sibling_surfaces_checked":["event.schema.v1.json event_type/work_state pairs","transition-table.v1.json state transitions","event_reducer.py completion semantics","FIX_REQUIRED -> DISPATCHED guard requirements","checkpoint_planner.py required predicate comparison","harness_evidence_map.v1 schema","independent review and verification result bindings"],
+            "new_tests":["Staging generation-80 Harness status must reduce the repaired ledger to AUDITED without findings and with every required predicate complete except V0_P4_CHECKPOINT_PROPOSED.","Project Control on the final carrier must remain SUCCESS/NON_RED."],
+            "regressions":["No runtime regression is rerun or reinterpreted by this control-only repair; existing exact Godot evidence remains authoritative.","Post-clearance Project Control is separately rerun against current main semantics."],
+            "why_not_symptom_patch":"This does not edit global reducer rules, downgrade event validation, delete malformed history, reclassify raw directional RED, or force a branch backwards. It uses the existing guarded recovery transition and valid completion-bearing event types to bind already-committed evidence.",
+            "verification_plan":["Create repair on an isolated staging branch from exact b5bf2f52....","Replay current main-owned generation-80 Harness while pinning only origin/main to the audited dispatch epoch for historical initial-dispatch provenance.","Require final reduced state AUDITED, snapshot match true, no open blocker, and missing predicates exactly [V0_P4_CHECKPOINT_PROPOSED].","Require checkpoint planner to keep proposal blocked until a separate Director CHECKPOINT_PROPOSED event.","Require Project Control SUCCESS on promoted recovery carrier."],
+            "freshness_requirements":["PR #123 head must remain b5bf2f52... before fast-forward promotion.","Canonical main must remain d9a1a3ca... or later movement must be reviewed for relevance before using post-clearance evidence.","Reviewer/Verifier target remains exact frozen implementation/evidence head 2a6721cdf...."],"created_at_utc":"2026-08-18T00:40:00Z"
+          }
+          write(REPAIR, repair)
+
+          base_time=datetime(2026,8,18,0,40,0,tzinfo=timezone.utc)
+          def ts(offset): return (base_time+timedelta(seconds=offset)).isoformat().replace('+00:00','Z')
+          def event(seq, etype, state, actor, command, summary, *, predicate=None, evidence=None, blocker=None):
+              obj={"schema":"distributed_world_simulator.harness_event.v1","event_id":f"V0-P4-R1-EVENT-{seq:04d}","project_epoch":"E2026-08-17-V0-P4-R1","work_order_id":"V0-P4-R1-WO-001","sequence":seq,"event_type":etype,"work_state":state,"recorded_at_utc":ts(seq-16),"actor":actor,"branch":BRANCH,"head_sha":SUBJECT,"command":command,"exit_code":0,"evidence_paths":evidence or [],"summary":summary}
+              if predicate: obj['predicate']=predicate
+              if blocker: obj['blocker']=blocker
+              return obj
+
+          write(f"{EVENT_DIR}/0016-fix-required-ledger-materialization.v1.json", event(16,"FIX_REQUIRED","FIX_REQUIRED","DIRECTOR","CLASSIFY_P4_CLOSURE_LEDGER_MATERIALIZATION_GAP","Control-only closure finding: committed P4 implementation evidence is independently PASSed, but generation-80 reducer completes predicates only from completion-bearing event types. Runtime remains frozen; append-only ledger materialization is required without production/test mutation.",evidence=[REPAIR,DETAIL,REVIEW,VERIFY],blocker="P4_CLOSURE_PREDICATES_NOT_MATERIALIZED_IN_REDUCER"))
+          write(f"{EVENT_DIR}/0017-director-redispatch-control-only-ledger-repair.v1.json", event(17,"DISPATCHED","DISPATCHED","DIRECTOR","DIRECTOR_REDISPATCH_CONTROL_ONLY_LEDGER_MATERIALIZATION","Director redispatches only the P4 closure ledger repair. Runtime implementation stays frozen at 2a6721cdf...; no runtime worker is restarted and no production/test path is authorized for mutation.",evidence=[REPAIR,REVIEW,VERIFY]))
+          write(f"{EVENT_DIR}/0018-recovery-resumed-ledger-materialization-ready.v1.json", event(18,"RECOVERY_RESUMED","IMPLEMENTED","DIRECTOR","RECOVER_P4_CONTROL_LEDGER_FROM_COMMITTED_EVIDENCE","Control-only ledger recovery is prepared from committed evidence. This does not modify or rerun P4 production; it only enables valid VERIFYING-state predicate materialization.",evidence=[REPAIR,DETAIL,REVIEW,VERIFY,CLEAR]))
+          write(f"{EVENT_DIR}/0019-verification-started-ledger-materialization.v1.json", event(19,"VERIFICATION_STARTED","VERIFYING","DIRECTOR","BEGIN_P4_COMMITTED_EVIDENCE_PREDICATE_MATERIALIZATION","Begin machine-verifiable binding of already-proven P4 predicates. Independent Reviewer/Verifier verdicts remain historical and unchanged; no new product verdict is manufactured.",evidence=[REPAIR,NEWMAP,DETAIL]))
+
+          evidence={
+            "PROJECT_EPOCH_CREATED":[EPOCH,EVENT1],"V0_P4_MAIN_DECLARED_PRODUCT_EXECUTION_BASE":[WO,AUDIT,DETAIL],"V0_P4_WORK_ORDER_ISSUED":[WO,EVENT1],"V0_P4_RISK_CLASSIFIED_HIGH":[WO,DETAIL],"V0_P4_DESIGN_BRIEF_READY":[WO,DETAIL],"V0_P4_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS":[AUDIT,EVENT2,DETAIL],
+            "V0_P4_EXACT_CONSUME_RED_REPRODUCED":[P41,DETAIL],"V0_P4_EXACT_CONSUME_GREEN":[P41,DETAIL],"V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS":[P42,DETAIL],"V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS":[P43,P43R1,DETAIL],"V0_P4_ATOMIC_ITEM_GRAPH_AND_CONSTRUCTION_COMMIT_PASS":[P43R1,DETAIL],"V0_P4_INSUFFICIENT_RESOURCES_MUTATION_FREE_PASS":[P43R1,DETAIL],"V0_P4_DUPLICATE_EXACT_ONCE_PASS":[P43R1,DETAIL],"V0_P4_OPERATION_ID_CONFLICT_PASS":[P43R1,DETAIL],"V0_P4_FAULT_INJECTION_ROLLBACK_PASS":[P43R1,DETAIL],"V0_P4_FOREIGN_PLAYER_OWNERSHIP_ISOLATION_PASS":[P42,P43R1,DETAIL],
+            "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS":[P45,DETAIL],"V0_P4_TWO_CLIENT_REPLICATION_PASS":[P46,DETAIL],"V0_P4_RECONNECT_CONVERGENCE_PASS":[P46,DETAIL],"V0_P4_NO_SECOND_ITEM_GRAPH_OR_PERSISTENCE_OWNER_PASS":[P43R1,P44,DETAIL,REVIEW],"V0_P4_NETWORK_BASELINE_SERVER_PREDICTED_PASS":[DETAIL,REVIEW,VERIFY],"V0_P4_FAIL_CLOSED_TO_NX_IF_NETWORK_FOUNDATION_CHANGE_REQUIRED":[DETAIL,REVIEW,VERIFY,CLEAR],
+            "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED":[DETAIL,HISTMAP],"FULL_WORLD_CORE_REGRESSION_PASS":[DETAIL,HISTMAP],"POST_BUILD_CRITIQUE_COMPLETED":[CRITIQUE,DETAIL],"EVIDENCE_MAP_COMPLETE":[NEWMAP,DETAIL],"REVIEW_HEAD_EXACT_AND_FRESH":[REVIEW,VERIFY,NEWMAP],"TESTED_HEADS_EXACT_AND_FRESH":[DETAIL,VERIFY],"STANDARD_PC0_NON_RED":[CLEAR,NEWMAP],"CRITICAL_CROSS_BRANCH_OVERLAP_ZERO":[CLEAR,NEWMAP],"HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED":[CLEAR,NEWMAP],"DRAFT_PR_OPEN":[CLEAR,NEWMAP]
+          }
+          for seq,(predicate,evpaths) in enumerate(evidence.items(), start=20):
+              state="VERIFIED" if seq==51 else "VERIFYING"
+              slug=predicate.lower().replace('_','-')
+              write(f"{EVENT_DIR}/{seq:04d}-predicate-{slug}.v1.json", event(seq,"PREDICATE_VERIFIED",state,"DIRECTOR",f"MATERIALIZE_COMMITTED_EVIDENCE::{predicate}",f"Append-only control binding for {predicate}. The predicate is materialized from committed P4 evidence and/or already-completed independent review/control evidence; no production or test mutation is introduced.",predicate=predicate,evidence=evpaths))
+          assert len(evidence)==32
+          write(f"{EVENT_DIR}/0052-audit-directional-pc0-non-red-after-main-clearance.v1.json", event(52,"AUDIT_COMPLETED","AUDITED","DIRECTOR","AUDIT_POST_CLEARANCE_PROJECT_CONTROL_RUN_32085293289","Checkpoint-time directional audit completed. Raw V0->NX critical watch remains RED and visible; independently reviewed main-owned exact clearance makes the effective Directional Watch YELLOW/NON_RED without network-foundation or P4 production mutation.",predicate="DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",evidence=[CLEAR,NEWMAP,REVIEW,VERIFY]))
+
+          wo=json.loads(Path(WO).read_text(encoding='utf-8'))
+          assert wo['state']=='VERIFIED'
+          wo['state']='AUDITED'
+          wo['notes']=wo.get('notes','') + " Control-only ledger materialization R1 records already-proven predicates using generation-80 completion-bearing event types, after post-clearance Project Control run 32085293289 proved standard and directional PC0 NON_RED. Runtime implementation remains frozen at 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. Checkpoint proposal is deliberately not emitted by this repair and remains a separate Director action."
+          write(WO,wo)
+          PY
+
+          CHANGED="$(git diff --name-only)"
+          printf '%s\n' "$CHANGED"
+          test -n "$CHANGED"
+          if printf '%s\n' "$CHANGED" | grep -Ev '^config/control/harness/executions/E2026-08-17-V0-P4-R1/' ; then
+            echo "Unexpected out-of-scope file in ledger repair" >&2
+            exit 1
+          fi
+          git diff --check
+          git add "$EXECUTION"
+          git commit -m "control(v0-p4): materialize closure predicates append-only"
+          BUILT_HEAD="$(git rev-parse HEAD)"
+          echo "BUILT_HEAD=$BUILT_HEAD"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+
+          # Validate exact committed repair with current main-owned Harness bytes.
+          CURRENT_MAIN="$(git rev-parse origin/main)"
+          while IFS= read -r path; do
+            case "$path" in
+              config/control/harness/executions/*) continue ;;
+            esac
+            mkdir -p "$(dirname "$path")"
+            git show "$CURRENT_MAIN:$path" > "$path"
+          done < <(git ls-tree -r --name-only "$CURRENT_MAIN" -- scripts/harness config/control/harness)
+          for path in config/control/project-program-registry.v1.json config/control/project-control-policy.v1.json config/control/architecture-ownership.v1.json; do
+            git show "$CURRENT_MAIN:$path" > "$path"
+          done
+          python3 -m pip install --disable-pip-version-check -q -r scripts/harness/requirements.txt
+          export PYTHONPATH="$PWD/scripts"
+          export PYTHONUTF8=1
+          git update-ref refs/remotes/origin/main "$AUDITED_MAIN"
+          python3 -m harness.cli status --root "$PWD" --execution "$EXECUTION" | tee /tmp/p4-status.log
+          tail -n 1 /tmp/p4-status.log > /tmp/p4-status.json
+          python3 - <<'PY'
+          import json
+          p=json.load(open('/tmp/p4-status.json',encoding='utf-8'))
+          r=p['reduced_work_order']; required=p['active_work_order']['required_predicates']; completed=r.get('completed_predicates',[])
+          missing=[x for x in required if x not in completed]
+          summary={'ok':p.get('ok'),'state':r.get('state'),'snapshot_matches':r.get('snapshot_matches_authoritative_state'),'open_blocker':r.get('open_blocker'),'completed_count':len(completed),'missing':missing,'last_event_sequence':r.get('last_event_sequence'),'last_event_type':r.get('last_event_type')}
+          print('P4_LEDGER_REPAIR_SUMMARY='+json.dumps(summary,sort_keys=True))
+          assert p.get('ok') is True, p
+          assert r.get('state')=='AUDITED', r
+          assert r.get('snapshot_matches_authoritative_state') is True, r
+          assert r.get('open_blocker') is None, r
+          assert len(completed)==35, len(completed)
+          assert missing==['V0_P4_CHECKPOINT_PROPOSED'], missing
+          assert r.get('last_event_sequence')==52, r
+          assert r.get('last_event_type')=='AUDIT_COMPLETED', r
+          PY
+
+          # Remove temporary main-overlay dirt without altering the committed repair.
+          git reset --hard "$BUILT_HEAD"
+          test -z "$(git status --porcelain)"
+          test "$(git rev-parse origin/$STAGING)" = "$EXPECTED_PARENT"
+          git push origin "$BUILT_HEAD:refs/heads/$STAGING"
+          echo "$BUILT_HEAD" > /tmp/built-head.txt
+
+      - name: Upload reducer proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p4-ledger-repair-r1-proof
+          path: |
+            /tmp/p4-status.json
+            /tmp/p4-status.log
+            /tmp/built-head.txt
+          if-no-files-found: error
