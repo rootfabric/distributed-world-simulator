@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
+from harness.cli import _derive_repair_metrics
 from harness.continuation import build_continuation
 
 POLICY = {
@@ -130,6 +133,46 @@ class HarnessContinuationTests(unittest.TestCase):
             result["next_action"],
         )
         self.assertTrue(result["session_exit_allowed"])
+
+    def test_repair_attempt_count_is_derived_from_durable_current_defect(self):
+        value = state()
+        value["reduced_work_order"] = {
+            "state": "FIX_REQUIRED",
+            "open_blocker": "OD-CAS-17",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            execution = Path(temporary)
+            event_dir = execution / "events" / "WO-1"
+            event_dir.mkdir(parents=True)
+            events = [
+                {"event_type": "FIX_REQUIRED", "blocker": "OD-CAS-17"},
+                {"event_type": "DISPATCHED"},
+                {"event_type": "FIX_REQUIRED", "blocker": "OTHER-DEFECT"},
+                {"event_type": "FIX_REQUIRED", "blocker": "OD-CAS-17"},
+                {"event_type": "FIX_REQUIRED", "blocker": "OD-CAS-17"},
+            ]
+            for index, event in enumerate(events, start=1):
+                (event_dir / f"{index:03d}.json").write_text(
+                    json.dumps(event),
+                    encoding="utf-8",
+                )
+            metrics = _derive_repair_metrics(execution, value)
+        self.assertEqual("OD-CAS-17", metrics["current_defect_key"])
+        self.assertEqual(3, metrics["same_defect_fix_required_count"])
+        value["repair"].update(metrics)
+        result = build_continuation(value, POLICY)
+        self.assertEqual("DIRECTOR", result["next_actor"])
+        self.assertEqual(
+            "ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER",
+            result["next_action"],
+        )
+
+    def test_repair_attempt_count_resets_when_not_in_fix_required(self):
+        value = state()
+        with tempfile.TemporaryDirectory() as temporary:
+            metrics = _derive_repair_metrics(Path(temporary), value)
+        self.assertIsNone(metrics["current_defect_key"])
+        self.assertEqual(0, metrics["same_defect_fix_required_count"])
 
     def test_review_pass_then_missing_evidence_routes_to_director(self):
         value = state()
