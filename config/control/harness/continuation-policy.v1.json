@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.harness_continuation_policy.v1",
-  "continuation_layer_revision": "H0-CONTINUATION-2026-08-18-R1",
+  "continuation_layer_revision": "H0-CONTINUATION-2026-08-19-R2",
   "principles": {
     "mission_survives_role_boundaries": true,
     "routine_role_handoff_is_not_human_decision": true,
@@ -8,7 +8,12 @@
     "chat_only_role_verdict_is_not_durable_evidence": true,
     "next_transition_must_be_machine_described": true,
     "fresh_exact_head_review_required_before_review_success_transition": true,
-    "fail_closed_when_durable_evidence_missing": true
+    "fail_closed_when_durable_evidence_missing": true,
+    "automatable_failure_is_not_a_session_terminal": true,
+    "fix_required_defaults_to_same_role_repair": true,
+    "repair_requires_retest_before_handoff": true,
+    "role_may_stop_only_at_declared_exit_class": true,
+    "repeated_same_defect_escalates_to_takeover_not_vague_abandonment": true
   },
   "handoff_classes": [
     "CONTINUE_SAME_ROLE",
@@ -23,10 +28,45 @@
     "github_pr_gate": "GITHUB_PR_REVIEW",
     "chat": "FORBIDDEN_AS_AUTHORITY"
   },
+  "self_closing_execution": {
+    "enabled": true,
+    "fix_required_is_automatable_by_default": true,
+    "repair_map_required_before_non_trivial_fix": true,
+    "focused_retest_required_after_each_fix": true,
+    "required_regression_retest_before_role_handoff": true,
+    "durable_evidence_required_before_role_handoff": true,
+    "max_same_defect_fix_required_events_before_takeover": 3,
+    "same_role_non_terminal_states": [
+      "FIX_REQUIRED"
+    ],
+    "same_role_recoverable_findings": [
+      "REPAIR_MAP_REQUIRED"
+    ],
+    "allowed_role_exit_classes": [
+      "ROLE_BOUNDARY",
+      "EXTERNAL_WAIT",
+      "HUMAN_DECISION_REQUIRED",
+      "SYSTEM_BLOCKED",
+      "MISSION_COMPLETE"
+    ],
+    "required_closure_sequence": [
+      "DIAGNOSE_ROOT_CAUSE",
+      "CREATE_OR_REFRESH_REPAIR_MAP",
+      "APPLY_CANONICAL_FIX_WITHIN_SCOPE",
+      "RUN_FOCUSED_TESTS",
+      "RUN_REQUIRED_REGRESSION_OR_CONTROL_GATES",
+      "REPAIR_ANY_IN_SCOPE_FAILURE",
+      "RETEST_UNTIL_GREEN_OR_ESCALATION_THRESHOLD",
+      "PERSIST_DURABLE_EVIDENCE",
+      "PERSIST_EXACT_NEXT_TRANSITION"
+    ]
+  },
   "routing_order": [
-    "SYSTEM_FINDING",
     "WAITING_HUMAN",
-    "FIX_OR_BLOCK",
+    "HARD_SYSTEM_FINDING",
+    "REPEATED_DEFECT_TAKEOVER",
+    "SAME_ROLE_REPAIR",
+    "REVIEW_FAIL_TO_REPAIR",
     "REVIEW",
     "EVIDENCE_REFRESH",
     "PREDICATE_VERIFICATION",
@@ -34,6 +74,21 @@
     "CONTINUE"
   ],
   "default_transitions": {
+    "fix_required": {
+      "handoff_class": "CONTINUE_SAME_ROLE",
+      "next_actor": "IMPLEMENTER",
+      "next_action": "EXECUTE_REPAIR_TEST_CLOSURE_LOOP"
+    },
+    "repeated_same_defect": {
+      "handoff_class": "ROLE_BOUNDARY",
+      "next_actor": "DIRECTOR",
+      "next_action": "ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER"
+    },
+    "review_fail": {
+      "handoff_class": "ROLE_BOUNDARY",
+      "next_actor": "IMPLEMENTER",
+      "next_action": "CONSUME_REVIEW_FINDINGS_AND_EXECUTE_REPAIR_CLOSURE_LOOP"
+    },
     "review_missing_or_stale": {
       "handoff_class": "ROLE_BOUNDARY",
       "next_actor": "REVIEWER",
