@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "MRPF-H1-SPACE-EARTH-2026-08-18",
+  "program": "MRPF-H",
+  "checkpoint": "MRPF-H1_SPACE_EARTH_PROCESS_STAND",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "46ffe24371f1b908df0f7ed3614f0a54a2afc0a0",
+  "intent": "Prove casual-scale SPACE/EARTH coarse-to-fine projection replacement, source dropout fallback and newer-revision reconnect across real isolated Godot processes without creating canonical authority or coupling generic-shaped route mechanics to simulator gameplay.",
+  "root_cause_or_reason": "H0 proved deterministic offline composition but did not prove simultaneous projection-source routes, process failure isolation, transport ingress or graphical one-identity replacement.",
+  "changed_surfaces": [
+    "scripts/runtime/seamless/mrpf/h1/mrpf_h1_projection_datagram.gd",
+    "scripts/runtime/seamless/mrpf/h1/mrpf_h1_space_earth_fixture.gd",
+    "scripts/runtime/seamless/mrpf/h1/mrpf_h1_projection_publisher.gd",
+    "scripts/runtime/seamless/mrpf/h1/mrpf_h1_space_earth_client.gd",
+    "tests/runtime/seamless/mrpf/test_mrpf_h1_space_earth_process.gd",
+    "RUN_MRPF_H1_TESTS.sh",
+    "RUN_MRPF_H1_TESTS.ps1",
+    "RUN_MRPF_H1_GRAPHICAL.sh",
+    "RUN_MRPF_H1_GRAPHICAL.ps1",
+    "docs/plans/MRPF_HIERARCHICAL_PROJECTION_STANDS_EXECUTION_RULES_RU.md",
+    "docs/checkpoints/2026-08-18_MRPF_H1_SPACE_EARTH_DESIGN_RU.md",
+    "scripts/runtime/seamless/mrpf/AGENTS.md"
+  ],
+  "canonical_owner": "MRPF-H research donor; no canonical gameplay owner changed",
+  "entry_points": [
+    "RUN_MRPF_H1_TESTS.sh",
+    "RUN_MRPF_H1_TESTS.ps1",
+    "RUN_MRPF_H1_GRAPHICAL.sh",
+    "RUN_MRPF_H1_GRAPHICAL.ps1"
+  ],
+  "callers": [
+    "tests/runtime/seamless/mrpf/test_mrpf_h1_space_earth_process.gd",
+    "manual H1 graphical operator"
+  ],
+  "callees": [
+    "scripts/runtime/seamless/mrpf/mrpf_h0_projection_contract.gd",
+    "scripts/runtime/seamless/mrpf/mrpf_h0_hierarchical_composer.gd",
+    "Godot PacketPeerUDP",
+    "Godot OS.create_process / OS.kill"
+  ],
+  "sibling_surfaces_checked": [
+    "H0 representation identity and revision fence reused rather than forked",
+    "SPACE route remains resident while EARTH route drops",
+    "EARTH rev1 tombstone followed by legitimate rev2 reactivation",
+    "one Earth presentation node across coarse/fine/fallback/refined phases",
+    "closed H1 datagram schema and payload hash mutation rejection",
+    "unknown datagram fields fail closed",
+    "framework-readiness dependency direction: research scenario -> generic-shaped envelope -> UDP",
+    "no scripts/network production mutation",
+    "no Item Graph, Construction, Matter, Ecology or V0 gameplay dependency"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "production_diff_summary": "No production owner or production network foundation changes. H1 adds isolated MRPF research/runtime stand code, process test/runners and research execution guidance only.",
+  "remaining_risks": [
+    "H1 uses loopback UDP and does not yet model delayed previous-session datagrams or hostile publisher spoofing; impaired/reordered transport belongs to later fault/churn work.",
+    "SPACE-source loss does not remove its coarse representation in H1 because the H1 acceptance scenario requires SPACE continuity; SPACE dropout is reserved for H7.",
+    "Process test port allocation is deterministic and bounded but is not yet a shared parallel-CI port allocator.",
+    "Graphical operator mode is implemented but visible-window evidence is not captured in the headless implementer environment.",
+    "H0 formal final acceptance and the external Project Control repair remain separate gates before H-line acceptance can advance."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Add explicit source-session/epoch ordering semantics before impaired/reordered internet transport becomes in-scope.",
+    "Add a reusable transport-facing interface only when a second research consumer proves the boundary stable enough for promotion.",
+    "Add parallel-safe dynamic port reservation if H1 becomes part of concurrent CI.",
+    "Capture graphical approach/dropout evidence from a real local window before final H1 acceptance."
+  ],
+  "evidence_gaps": [
+    "fresh independent Reviewer",
+    "fresh independent Verifier",
+    "Director verdict required by HIGH risk",
+    "visible graphical operator evidence",
+    "applicable Project Control NON_RED state / main-owned control resolution"
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
