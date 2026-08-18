@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-18-R2",
+  "policy_revision": "V0-P-2026-08-18-R3",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-  "current_phase": "P5_PREACTIVATION_CONTROL_READY",
+  "current_phase": "P5_PRE_DISPATCH_CONTROL_READY",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -24,9 +24,7 @@
   },
   "research_isolation": {
     "research_frontiers_are_non_blocking_by_default": true,
-    "explicitly_non_blocking_programs_for_current_p_train": [
-      "ECO"
-    ],
+    "explicitly_non_blocking_programs_for_current_p_train": ["ECO"],
     "research_may_block_only_when": [
       "MAIN_REGISTERS_AN_EXPLICIT_PRODUCT_DEPENDENCY",
       "A_CANONICAL_FOUNDATION_OWNED_BY_THAT_PROGRAM_BECOMES_A_REQUIRED_PRECONDITION",
@@ -66,7 +64,7 @@
     {
       "id": "V0_P5_EQUIPMENT_TOOLS",
       "short_name": "P5",
-      "state": "CURRENT_PREACTIVATION",
+      "state": "CURRENT_PRE_DISPATCH",
       "execution_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
       "project_epoch": "E2026-08-18-V0-P5-R1",
       "work_order_id": "V0-P5-R1-WO-001",
@@ -92,10 +90,7 @@
         "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5",
         "DIRECTOR_DISPATCH"
       ],
-      "activation_complete_except": [
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5",
-        "DIRECTOR_DISPATCH"
-      ],
+      "activation_complete_except": ["DIRECTOR_DISPATCH"],
       "next": "V0_P6_PERSISTENT_SHARED_OUTPOST"
     },
     {
@@ -127,10 +122,7 @@
       "goal": "Do not auto-dispatch terrain work. Decide and durably record whether V0-SM1 seamless product integration is activated now or explicitly deferred.",
       "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
       "mandatory_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
-      "allowed_decisions": [
-        "ACTIVATE_V0_SM1",
-        "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"
-      ],
+      "allowed_decisions": ["ACTIVATE_V0_SM1", "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"],
       "next_if_activated": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "next_if_deferred": "V0_P7_BOUNDED_TERRAIN_MUTATION"
     },
@@ -139,10 +131,7 @@
       "short_name": "SM1",
       "state": "FUTURE_CONTROL_ACTIVATION",
       "goal": "Port proven SM0 authority-handoff semantics and MRPF multi-route projection semantics into the then-current accepted V0/P6 product baseline.",
-      "donors_are_not_product_bases": [
-        "SM0",
-        "MRPF"
-      ],
+      "donors_are_not_product_bases": ["SM0", "MRPF"],
       "hard_invariants": [
         "EXACTLY_ONE_ACTIVE_AUTHORITY",
         "STABLE_PLAYER_AND_ENTITY_IDENTITY",
@@ -208,11 +197,10 @@
     "project_epoch": "E2026-08-18-V0-P5-R1",
     "work_order_id": "V0-P5-R1-WO-001",
     "runtime_branch": "feature/v0-p5-equipment-tools",
-    "mutation_lease": "PENDING_MAIN_OWNED_ROTATION",
-    "runtime_mutation": "FORBIDDEN_UNTIL_LEASE_ROTATION_AND_DIRECTOR_DISPATCH",
+    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
     "remaining_control_steps": [
-      "MERGE_P5_PREACTIVATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
-      "ROTATE_SINGLE_V0_RUNTIME_MUTATION_LEASE_TO_P5",
+      "MERGE_P5_LEASE_ROTATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
       "CREATE_FRESH_P5_BRANCH_FROM_EXACT_ACCEPTED_P4_BASE",
       "COMPOSE_CURRENT_MAIN_CONTROL_WITHOUT_CHANGING_PRODUCT_BASE_PROVENANCE",
       "DIRECTOR_DISPATCH",
