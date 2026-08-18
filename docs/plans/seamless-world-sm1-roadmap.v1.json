@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "program_id": "SM1-SEAMLESS-WORLD",
+  "status": "RESEARCH_NOT_ACTIVATED",
+  "architecture_document": "docs/architecture/SEAMLESS_WORLD_ARCHITECTURE_R1_RU.md",
+  "provenance_document": "docs/architecture/SEAMLESS_WORLD_PROVENANCE_AND_RATIONALE_RU.md",
+  "roadmap_document": "docs/plans/SEAMLESS_WORLD_SM1_ROADMAP_RU.md",
+  "validation_document": "docs/testing/SEAMLESS_WORLD_VALIDATION_STRATEGY_RU.md",
+  "research_branch": "research/seamless-world-architecture-r1",
+  "research_base": {
+    "branch": "main",
+    "sha": "c58339c30e6d7e708a06c41e59208bd45f0709a4"
+  },
+  "activation": {
+    "automatic": false,
+    "requires_project_control": true,
+    "production_base_rule": "EXACT_MAIN_DECLARED_ACCEPTED_PREDECESSOR",
+    "forbidden_production_bases": [
+      "feature/sm0-two-authority-seamless-handoff-lab",
+      "research/edge-gateway-architecture",
+      "research/seamless-world-architecture-r1"
+    ],
+    "note": "Research branches are evidence/design donors only."
+  },
+  "core_invariants": [
+    "STABLE_CANONICAL_IDENTITY",
+    "ONE_CANONICAL_WRITER",
+    "MONOTONIC_AUTHORITY_EPOCH",
+    "MONOTONIC_FENCING_TOKEN",
+    "DIRECTORY_COMMIT_IS_OWNERSHIP_LINEARIZATION_POINT",
+    "PROJECTION_IS_READ_ONLY",
+    "GATEWAY_IS_NON_AUTHORITATIVE",
+    "OPERATION_ID_IS_END_TO_END",
+    "CLIENT_SESSION_ID_INDEPENDENT_OF_GATEWAY",
+    "SPATIAL_CELL_AUTHORITY_INTERACTION_ISLAND_ARE_DISTINCT",
+    "STATIC_MESH_BEFORE_DYNAMIC_PLACEMENT"
+  ],
+  "milestones": [
+    {
+      "id": "PRE-ACTIVATION",
+      "name": "Architecture closure",
+      "kind": "research",
+      "dependencies": [],
+      "runtime_changes_allowed": false,
+      "acceptance": [
+        "independent architecture review",
+        "control/product-train consistency",
+        "no runtime/control bypass"
+      ]
+    },
+    {
+      "id": "SM1-H0",
+      "name": "Production Seamless Contracts",
+      "kind": "static_mesh",
+      "dependencies": ["PRE-ACTIVATION", "EXACT_ACTIVATION_PREDECESSOR"],
+      "scope": [
+        "generic identity contracts",
+        "OwnershipRecord",
+        "AuthorityEpoch/FencingToken",
+        "TransferEnvelope/state machine",
+        "ProjectionEnvelope",
+        "Gateway route contract",
+        "InteractionIsland schema"
+      ],
+      "forbidden": [
+        "dynamic allocator",
+        "automatic island formation"
+      ]
+    },
+    {
+      "id": "SM1-H1",
+      "name": "Durable Ownership Directory",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H0"],
+      "scope": [
+        "owner lookup",
+        "strong ownership CAS",
+        "authority incarnation",
+        "draining",
+        "restart recovery",
+        "stale owner fencing"
+      ],
+      "critical_oracles": [
+        "one owner record",
+        "monotonic epoch/fence",
+        "stale authority mutation rejected"
+      ]
+    },
+    {
+      "id": "SM1-H2",
+      "name": "Generic Static Authority Transfer",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H1"],
+      "scope": [
+        "warm",
+        "freeze",
+        "durable prepare",
+        "directory commit",
+        "activate",
+        "retire",
+        "restart/replay"
+      ]
+    },
+    {
+      "id": "SM1-H3",
+      "name": "Single Edge Gateway Transparency",
+      "kind": "edge_gateway",
+      "dependencies": ["SM1-H2"],
+      "scope": [
+        "one client gateway session",
+        "one authority upstream",
+        "semantic equivalence with direct baseline",
+        "operation identity forwarding"
+      ]
+    },
+    {
+      "id": "SM1-H4",
+      "name": "PRIMARY/OBSERVER Multi-Authority Gateway",
+      "kind": "edge_gateway",
+      "dependencies": ["SM1-H3"],
+      "scope": [
+        "primary logical route",
+        "observer logical route",
+        "read-only projection composition",
+        "source degradation isolation"
+      ]
+    },
+    {
+      "id": "SM1-H5",
+      "name": "Gateway-Mediated Seamless Player Handoff",
+      "kind": "edge_gateway",
+      "dependencies": ["SM1-H4"],
+      "scope": [
+        "stable client gateway transport",
+        "A to B canonical handoff",
+        "route flip only after directory commit",
+        "input/operation continuity"
+      ],
+      "critical_oracles": [
+        "client_disconnects_during_handoff=0",
+        "player_identity_changes=0",
+        "writer_violations=0"
+      ]
+    },
+    {
+      "id": "SM1-H6",
+      "name": "Multi-Region Gateway Selection",
+      "kind": "edge_gateway",
+      "dependencies": ["SM1-H5"],
+      "scope": [
+        "multiple gateway candidates",
+        "RTT/loss/jitter/load/health score",
+        "hysteresis",
+        "cooldown"
+      ]
+    },
+    {
+      "id": "SM1-H7",
+      "name": "Gateway Rehome and Failure",
+      "kind": "edge_gateway",
+      "dependencies": ["SM1-H6"],
+      "scope": [
+        "gateway crash",
+        "session rehome",
+        "same OperationId retry",
+        "stale gateway route rejection"
+      ],
+      "critical_oracles": [
+        "duplicate_canonical_commits=0",
+        "player_identity_changes=0"
+      ]
+    },
+    {
+      "id": "SM1-H8",
+      "name": "Production Projection AOI and Interest Aggregation",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H7"],
+      "scope": [
+        "interest anchors",
+        "projection subscriptions",
+        "LOD/bandwidth budget",
+        "stale/degraded presentation",
+        "merged upstream interest"
+      ]
+    },
+    {
+      "id": "SM1-H9",
+      "name": "Cross-Authority Interaction Foundation",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H8"],
+      "scope": [
+        "targeted route resolution",
+        "expected owner/epoch/revision",
+        "cross-authority item/simple interaction",
+        "owner change during operation",
+        "end-to-end OperationId"
+      ]
+    },
+    {
+      "id": "SM1-H10",
+      "name": "Bounded InteractionIsland Runtime",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H9"],
+      "scope": [
+        "vehicle/ship island",
+        "pilot/passenger",
+        "mounted/bounded attached objects",
+        "versioned membership",
+        "co-location policy",
+        "whole-island transfer"
+      ],
+      "forbidden": [
+        "arbitrary automatic graph partitioner"
+      ]
+    },
+    {
+      "id": "SM1-H11",
+      "name": "Static N-Authority World",
+      "kind": "static_mesh",
+      "dependencies": ["SM1-H10"],
+      "scope": [
+        "3 authorities",
+        "4 authorities",
+        "configurable N model/process harness",
+        "interest-driven connectivity",
+        "no A/B hardcode"
+      ]
+    },
+    {
+      "id": "SM1-H12",
+      "name": "Static Mesh Failure WAN Scale Acceptance",
+      "kind": "static_mesh_acceptance",
+      "dependencies": ["SM1-H11"],
+      "scope": [
+        "fault matrix",
+        "WAN matrix",
+        "gateway failure",
+        "directory restart",
+        "simultaneous transfers",
+        "scale/soak",
+        "backpressure isolation"
+      ],
+      "allowed_claims": [
+        "productionized static multi-authority ownership and handoff",
+        "durable ownership directory",
+        "regional non-authoritative edge gateway model",
+        "gateway-mediated tested seamless handoff",
+        "read-only multi-authority projection/AOI",
+        "bounded cross-authority interactions",
+        "bounded InteractionIsland semantics",
+        "topology-generic static N-authority world"
+      ],
+      "forbidden_claims": [
+        "automatic split merge",
+        "optimal global load balancing",
+        "unlimited arbitrary server scale",
+        "production global edge deployment from simulated WAN only"
+      ]
+    },
+    {
+      "id": "SM-D1",
+      "name": "Dynamic AuthorityDomain Placement",
+      "kind": "dynamic_mesh",
+      "dependencies": ["SM1-H12"],
+      "scope": [
+        "move existing domains",
+        "interaction-aware placement cost",
+        "hysteresis",
+        "cooldown",
+        "migration budget",
+        "draining"
+      ],
+      "rule": "placement proposal never grants ownership; transfer+Directory CAS still required"
+    },
+    {
+      "id": "SM-D2",
+      "name": "Dynamic Split Merge",
+      "kind": "dynamic_mesh",
+      "dependencies": ["SM-D1"],
+      "scope": [
+        "domain split",
+        "domain merge",
+        "membership cut",
+        "topology generation",
+        "recovery"
+      ]
+    },
+    {
+      "id": "SM-D3",
+      "name": "Interaction-Aware Dynamic Meshing",
+      "kind": "research_dynamic_mesh",
+      "dependencies": ["SM-D2"],
+      "scope": [
+        "interaction graph",
+        "collision/constraint graph",
+        "dynamic island placement",
+        "migration/cut cost optimization"
+      ],
+      "near_term_commitment": false
+    }
+  ],
+  "global_test_oracles": {
+    "writer_violations": 0,
+    "identity_changes_due_to_topology": 0,
+    "stale_owner_mutations_accepted": 0,
+    "projection_canonical_writes": 0,
+    "duplicate_canonical_commits_for_same_operation_id": 0
+  },
+  "external_pattern_donors": [
+    {
+      "name": "Unreal Engine 5.8 MultiServerReplication",
+      "adopt": [
+        "client-facing proxy pattern",
+        "primary/non-primary route concept",
+        "proxy/backend transport separation",
+        "stable shared identity concept"
+      ],
+      "reject_or_generalize": [
+        "connect every client to every backend",
+        "canonical shared proxy world",
+        "gameplay broadcast-to-all default",
+        "Pawn/PlayerController-centric generic authority"
+      ]
+    },
+    {
+      "name": "IEEE HLA family",
+      "adopt": [
+        "explicit coordinated distributed-simulation ownership/responsibility framing"
+      ],
+      "reject_or_generalize": [
+        "mandatory HLA RTI implementation",
+        "HLA API compatibility requirement"
+      ]
+    },
+    {
+      "name": "CIG Star Citizen published server meshing progression",
+      "adopt": [
+        "static before dynamic",
+        "dynamic whole-zone/domain placement before fine split",
+        "interaction/collision-based simulation-island concept"
+      ],
+      "reject_or_generalize": [
+        "Replication Layer clone",
+        "identical zone/topology implementation"
+      ]
+    }
+  ]
+}
