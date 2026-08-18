@@ -1,7 +1,9 @@
 {
   "schema": "distributed_world_simulator.harness_project_goals.v1",
   "harness_revision": "H0-2026-08-11-R1",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
   "canonical_branch": "main",
+  "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "north_star": {
     "id": "DWS_NORTH_STAR",
     "goal": "Build a persistent seamless distributed world simulator where large-scale construction, terrain, matter, characters and multiplayer authority compose without duplicate truth layers.",
@@ -49,18 +51,49 @@
       "reason": "The second pilot proves the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. Its runtime/source acceptance remains independent and requires exact runtime evidence plus CH->NX directional dependency revalidation."
     },
     {
-      "id": "V0_S1_PRODUCT",
+      "id": "V0_P4_PRODUCT",
       "program": "V0",
-      "title": "V0-S1 Networked Planetary Outpost",
-      "priority": 108,
+      "title": "V0-P4 Real-Resource Construction Closure",
+      "priority": 120,
       "depends_on": [
         "HARNESS_H0_1",
         "GLOBAL_P0_R3_CANONICAL",
         "POST_R3_PC0_NON_RED",
         "C22_MAIN_INTEGRATED"
       ],
-      "target_checkpoint": "V0_S1_NETWORKED_PLANETARY_OUTPOST",
-      "reason": "Create the first real product vertical slice: one procedural planet, one server, two playable network characters, shared canonical Construction and reconnect-safe live-world state. Use current canonical SERVER_PREDICTED networking first; do not make unfinished NX.C1 acceptance or H0.3 a blanket prerequisite."
+      "target_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "current_phase": "IMPLEMENTED_VERIFIED_CLOSURE_CONTROL",
+      "reason": "P4 runtime is already implemented and frozen. The critical path is now control closure: prove current Project Control after live-frontier repair, integrate the append-only closure-ledger repair, record remaining predicates, and accept P4 before any P5 runtime dispatch."
+    },
+    {
+      "id": "V0_P5_PRODUCT",
+      "program": "V0",
+      "title": "V0-P5 Equipment and Tools",
+      "priority": 118,
+      "depends_on": ["V0_P4_CHECKPOINT_ACCEPTED"],
+      "planned_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+      "eligibility": "NOT_ELIGIBLE_UNTIL_MAIN_OWNED_ACTIVATION_AFTER_P4_ACCEPTANCE",
+      "reason": "Bind equipment/tool use to canonical items and existing command authority. P5 must branch from the exact accepted P4 product lineage, not from bare main and not from a historical Character donor branch."
+    },
+    {
+      "id": "V0_P6_PRODUCT",
+      "program": "V0",
+      "title": "V0-P6 Persistent Shared Outpost",
+      "priority": 116,
+      "depends_on": ["V0_P5_CHECKPOINT_ACCEPTED"],
+      "planned_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+      "eligibility": "NOT_ELIGIBLE_UNTIL_MAIN_OWNED_ACTIVATION_AFTER_P5_ACCEPTANCE",
+      "reason": "Create the first stable playable baseline containing mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect plus server-restart recovery and soak."
+    },
+    {
+      "id": "V0_POST_P6_GATE",
+      "program": "V0",
+      "title": "Post-P6 Seamless Insertion Decision",
+      "priority": 115,
+      "depends_on": ["V0_P6_CHECKPOINT_ACCEPTED"],
+      "planned_checkpoint": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+      "human_gate": "V0_POST_P6_SEAMLESS_ACTIVATION_OR_DEFER",
+      "reason": "P7 must not auto-start after P6. Main must explicitly activate V0-SM1 from the accepted P6 baseline or record a deliberate defer decision before P7 can be activated."
     },
     {
       "id": "CONSTRUCTION_TRAIN",
@@ -68,7 +101,7 @@
       "title": "Construction convergence to real heterogeneous base",
       "priority": 95,
       "depends_on": [],
-      "sequence": ["C22_CURRENT_MAIN_MERGE_READY", "C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFIED", "T2_0_ACTIVATED"]
+      "sequence": ["C22_CURRENT_MAIN_MERGE_READY", "C22_MAIN_INTEGRATED", "V0_P4_REAL_RESOURCE_CONSTRUCTION", "TS0_4_CEILING_CLASSIFIED", "T2_0_ACTIVATED"]
     },
     {
       "id": "NETWORK_TRAIN",
@@ -81,15 +114,24 @@
     {
       "id": "V0_PRODUCT_TRAIN",
       "program": "V0",
-      "title": "Playable simulator vertical slices",
-      "priority": 108,
-      "depends_on": ["V0_S1_PRODUCT"],
+      "title": "Playable persistent outpost product train",
+      "priority": 120,
+      "depends_on": ["V0_P4_PRODUCT"],
+      "policy": "config/control/harness/v0-product-train-policy.v1.json",
       "sequence": [
-        "V0_S1_NETWORKED_PLANETARY_OUTPOST",
-        "V0_S2_NETWORKED_LANDED_SHIP_0",
-        "V0_S3_MOVABLE_SHIP",
-        "V0_S4_PLANET_SPACE_TRANSITION"
-      ]
+        "V0_P0_PLAYABLE_FRONTIER",
+        "V0_P1_WORLD_ITEMS_CONTAINERS",
+        "V0_P2_RECONNECTABLE_SHARED_STATE",
+        "V0_P3_RESOURCE_MINING",
+        "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+        "V0_P5_EQUIPMENT_TOOLS",
+        "V0_P6_PERSISTENT_SHARED_OUTPOST",
+        "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+        "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION_OR_EXPLICIT_DEFER",
+        "V0_P7_BOUNDED_TERRAIN_MUTATION",
+        "V0_P8_FIRST_MOBILE_CONSTRUCT"
+      ],
+      "selection_rule": "Only the current main-activated checkpoint is eligible for runtime dispatch. Future P checkpoints are plans, not dispatch permissions."
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -119,5 +161,5 @@
       "work_order_type": "HUMAN_OBSERVATION"
     }
   ],
-  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy; never bypass dependency, ownership, validation, epoch, mutation-worker concurrency or human-approval gates."
+  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy. For V0/P, eligibility is sequential: close and accept the current P checkpoint, then main declares the exact accepted predecessor lineage as the next execution base, creates a fresh epoch/work order, rotates the single mutation lease, and only then may Director dispatch runtime mutation. Research frontiers are non-blocking unless an explicit registered dependency or a proven ownership/directional-watch intersection says otherwise."
 }
