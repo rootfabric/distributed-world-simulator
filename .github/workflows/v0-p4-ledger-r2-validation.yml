@@ -1,4 +1,4 @@
-name: V0 P4 Ledger R2 Validation
+name: V0 P4 Ledger R3 Validation
 
 on:
   pull_request:
@@ -19,11 +19,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate exact repair with current main-owned generation-80 Harness
+      - name: Validate exact immutable repair with current main-owned generation-80 Harness
         shell: bash
         run: |
           set -euo pipefail
-          REPAIR_HEAD="953cd612281b4de17b2f92294ecdb4752fd8443c"
+          BASE="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
+          REPAIR_HEAD="a5a166151bee325571260c4563bcecee942cb652"
           AUDITED_MAIN="5999d935e8d5b496100ced66283d8762d3403675"
           EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
 
@@ -33,6 +34,8 @@ jobs:
           echo "REPAIR_HEAD=$REPAIR_HEAD"
           git checkout --detach "$REPAIR_HEAD"
           test "$(git rev-parse HEAD)" = "$REPAIR_HEAD"
+          test "$(git rev-list --count "$BASE..$REPAIR_HEAD")" = "1"
+          test "$(git rev-parse "$REPAIR_HEAD^")" = "$BASE"
 
           while IFS= read -r path; do
             case "$path" in config/control/harness/executions/*) continue ;; esac
@@ -63,7 +66,7 @@ jobs:
             'last_event_sequence':r.get('last_event_sequence'), 'last_event_type':r.get('last_event_type'),
             'findings':p.get('findings'), 'checkpoint_blockers':p.get('checkpoint_blockers')
           }
-          print('P4_LEDGER_R2_VALIDATION='+json.dumps(out,sort_keys=True))
+          print('P4_LEDGER_R3_VALIDATION='+json.dumps(out,sort_keys=True))
           assert p.get('ok') is True, p
           assert r.get('state')=='AUDITED', r
           assert r.get('snapshot_matches_authoritative_state') is True, r
@@ -79,9 +82,9 @@ jobs:
         run: |
           set -euo pipefail
           BASE="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
-          HEAD="953cd612281b4de17b2f92294ecdb4752fd8443c"
+          HEAD="a5a166151bee325571260c4563bcecee942cb652"
           git diff --check "$BASE" "$HEAD"
           bad="$(git diff --name-only "$BASE" "$HEAD" | grep -Ev '^config/control/harness/executions/E2026-08-17-V0-P4-R1/' || true)"
           test -z "$bad"
-          test "$(git rev-list --count "$BASE..$HEAD")" = "3"
-          test "$(git merge-base "$BASE" "$HEAD")" = "$BASE"
+          test "$(git rev-list --count "$BASE..$HEAD")" = "1"
+          test "$(git rev-parse "$HEAD^")" = "$BASE"
