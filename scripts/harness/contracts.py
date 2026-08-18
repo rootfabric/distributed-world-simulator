@@ -69,6 +69,8 @@ class ContractBundle:
             "review_policy": policy["review_policy"],
             "repair_doctrine": policy["repair_doctrine"],
             "evidence_map_schema": policy["evidence_map_schema"],
+            "execution_evidence_policy": policy["execution_evidence_policy"],
+            "execution_evidence_schema": policy["execution_evidence_schema"],
             "human_attention_schema": policy["human_attention_schema"],
             "continuation_policy": policy["continuation_policy"],
             "instruction_hygiene_policy": policy["instruction_hygiene_policy"],
@@ -85,13 +87,22 @@ class ContractBundle:
             raise ContractValidationError("CANONICAL_BRANCH_MISMATCH")
         if policy.get("harness_revision") != self.contracts["project_goals"].get("harness_revision"):
             raise ContractValidationError("HARNESS_REVISION_MISMATCH")
-        for name in ("work_order_schema", "event_schema", "project_epoch_schema", "evidence_map_schema", "human_attention_schema"):
+        for name in (
+            "work_order_schema",
+            "event_schema",
+            "project_epoch_schema",
+            "evidence_map_schema",
+            "execution_evidence_schema",
+            "human_attention_schema",
+        ):
             schema = self.contracts[name]
             if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
                 raise ContractValidationError(f"JSON_SCHEMA_DRAFT_REQUIRED:{name}")
         review = self.contracts["review_policy"]
         if review.get("risk_policy") != "config/control/harness/risk-policy.v1.json":
             raise ContractValidationError("REVIEW_RISK_POLICY_LINK_INVALID")
+        if review.get("execution_evidence_policy") != policy.get("execution_evidence_policy"):
+            raise ContractValidationError("REVIEW_EXECUTION_EVIDENCE_POLICY_LINK_INVALID")
         if policy.get("checkpoint_catalog") != "config/control/harness/checkpoint-catalog.v1.json":
             raise ContractValidationError("CHECKPOINT_CATALOG_LINK_INVALID")
         if self.contracts["scheduler_policy"].get("harness_revision") != policy.get("harness_revision"):
@@ -106,6 +117,15 @@ class ContractBundle:
             raise ContractValidationError("HYGIENE_LAYER_REVISION_MISMATCH")
         if review.get("review_layer_revision") != policy.get("review_layer_revision"):
             raise ContractValidationError("REVIEW_LAYER_REVISION_MISMATCH")
+        execution_evidence = self.contracts["execution_evidence_policy"]
+        if execution_evidence.get("execution_evidence_revision") != policy.get("execution_evidence_revision"):
+            raise ContractValidationError("EXECUTION_EVIDENCE_LAYER_REVISION_MISMATCH")
+        if execution_evidence.get("canonical_behavioral_gate", {}).get("all_transitive_files_must_match_exact_blob") is not True:
+            raise ContractValidationError("EXACT_TRANSITIVE_EXECUTABLE_CLOSURE_MUST_BE_REQUIRED")
+        if execution_evidence.get("acceptance", {}).get("evidence_may_not_self_upgrade") is not True:
+            raise ContractValidationError("EVIDENCE_SELF_UPGRADE_MUST_BE_FORBIDDEN")
+        if review.get("role_freshness", {}).get("implementer_self_check_is_independent") is not False:
+            raise ContractValidationError("IMPLEMENTER_SELF_CHECK_MUST_NOT_BE_INDEPENDENT")
         if continuation.get("review_evidence_sinks", {}).get("chat") != "FORBIDDEN_AS_AUTHORITY":
             raise ContractValidationError("CHAT_REVIEW_AUTHORITY_MUST_BE_FORBIDDEN")
         if hygiene.get("rule_lifecycle", {}).get("auto_retirement_forbidden") is not True:

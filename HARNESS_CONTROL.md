@@ -5,6 +5,7 @@
 **Review layer:** `H0-REVIEW-2026-08-18-R2`
 **Continuation layer:** `H0-CONTINUATION-2026-08-18-R1`
 **Hygiene layer:** `H0-HYGIENE-2026-08-18-R1`
+**Execution evidence layer:** `H0-EVIDENCE-2026-08-18-R1`
 
 Это короткая точка входа для автономной/полуавтономной разработки. Этот файл не хранит mutable current checkpoint/frontier; живое состояние берётся из machine-owned contracts и `CONTROL_DEVELOPMENT.ps1 -Status/-Plan/-Resume`.
 
@@ -14,6 +15,7 @@
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
 docs/control/HARNESS_HYGIENE_AND_CONTINUATION_RU.md
+docs/control/HARNESS_EXECUTION_EVIDENCE_RU.md
 ```
 
 Machine contracts:
@@ -30,6 +32,8 @@ config/control/harness/risk-policy.v1.json
 config/control/harness/review-policy.v1.json
 config/control/harness/repair-doctrine.v1.json
 config/control/harness/evidence-map.schema.v1.json
+config/control/harness/execution-evidence-policy.v1.json
+config/control/harness/execution-evidence.schema.v1.json
 config/control/harness/human-attention.schema.v1.json
 config/control/harness/continuation-policy.v1.json
 config/control/harness/instruction-hygiene-policy.v1.json
@@ -107,6 +111,20 @@ Runtime checkpoint review остаётся exact-head fresh:
 ```text
 reviewed HEAD == evidence HEAD == tested runtime HEAD
 ```
+
+## Execution evidence invariant
+
+`fresh` больше не является одним флагом. Harness отдельно отслеживает:
+
+```text
+execution level
+process freshness
+carrier integrity
+runner/equivalent transport
+role authority
+```
+
+Canonical behavioral verification требует exact **transitive executable closure**, а не только exact top-level implementation/test. Parser PASS не равен behavioral PASS. Fresh process не создаёт independent Reviewer/Verifier authority. Equivalent execution не объявляется canonical runner execution. Любой executable drift после freeze требует нового target HEAD и re-verification.
 
 ## Current state
 
