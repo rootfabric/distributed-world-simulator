@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "series_id": "DWS-DEVELOPMENT-HARNESS-SNAPSHOTS",
+  "snapshot_id": "HARNESS-SNAPSHOT-R3",
+  "snapshot_revision": 3,
+  "captured_on": "2026-08-18",
+  "status": "VALIDATED_CANDIDATE_NOT_CANONICAL_MAIN",
+  "purpose": "historical_capture_and_project_seed_source",
+  "source": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "base_main_sha": "598e92bb29a147bf12208d8549ddecaa4c9781ab",
+    "candidate_branch": "control/harness-continuation-hygiene-r1",
+    "exact_candidate_head": "580c9453f205170600c5d8d2f596617d090359f4",
+    "pull_request": 131,
+    "project_control_run": 32102853947,
+    "project_control_conclusion": "SUCCESS"
+  },
+  "snapshot_branch": "control/harness-development-snapshot-r3",
+  "previous_snapshot": {
+    "snapshot_id": "HARNESS-SNAPSHOT-R2",
+    "source_head": "d9a1a3ca03016d6851a258ff93d5c260a86c5b4c",
+    "branch": "control/harness-development-snapshot-r2",
+    "metadata_head": "9c0a00363662305569534e51efbe0ab11409432a"
+  },
+  "lineage": {
+    "relation_to_previous_source": "direct_descendant",
+    "commits_since_previous_source": 11,
+    "previous_source_is_merge_base": true,
+    "history_rewrite_forbidden": true
+  },
+  "layers": {
+    "foundation_revision": "H0-2026-08-11-R1",
+    "review_layer_revision": "H0-REVIEW-2026-08-18-R2",
+    "continuation_layer_revision": "H0-CONTINUATION-2026-08-18-R1",
+    "hygiene_layer_revision": "H0-HYGIENE-2026-08-18-R1"
+  },
+  "major_changes": [
+    "mission_continuity_across_role_boundaries",
+    "machine_described_next_actor_and_action",
+    "durable_review_evidence_sink",
+    "chat_only_review_non_authoritative",
+    "human_not_routine_result_courier",
+    "task_sensitive_instruction_router",
+    "instruction_context_budget",
+    "rule_passports_and_lifecycle",
+    "protected_rule_no_auto_retirement",
+    "golden_harness_set",
+    "negative_harness_self_tests"
+  ],
+  "integration_state": {
+    "main_contains_candidate": false,
+    "fresh_independent_review_required": true,
+    "snapshot_is_merge_carrier": false,
+    "integration_carrier": "PR#131"
+  },
+  "future_snapshot_rule": "Create HARNESS-SNAPSHOT-R4 for any later reviewed/canonical or repaired state; never rewrite R1/R2/R3."
+}
