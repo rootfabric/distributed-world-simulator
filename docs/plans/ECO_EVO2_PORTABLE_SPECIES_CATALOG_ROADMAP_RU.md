@@ -1,12 +1,12 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1..E2.7 ACCEPTED / E2.8 AUTHORIZED_NOT_STARTED`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1..E2.8 ACCEPTED / E2.FINAL AUTHORIZED_NOT_STARTED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
 ## 0. Назначение
 
-EVO2 превращает результат эволюционного исследования в переносимый ecological artifact:
+EVO2 превращает результат эволюционного исследования в переносимый ecological artifact и доказывает, что его можно применить к unseen world без biome-species shortcut:
 
 ```text
 environment
@@ -20,6 +20,10 @@ causal population ecology
 unseen environments
     ↓
 sorting + adaptation + robustness
+    ↓
+canonical research persistence / restore
+    ↓
+FINAL hidden unseen-world proof
 ```
 
 Запрещён shortcut:
@@ -63,6 +67,18 @@ E2.6
 
 E2.7
 eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d
+
+E2.8 aggregate
+4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061
+
+E2.8 content
+3d7ca34560483e2a4d1eb1955c008eb1f05ab3603e3d358abbf4823b33554e2e
+
+E2.8 provenance
+a3a2f53107cefc5c96d835bd93327864d45f31e55b123fcd2fe4053fd5495a15
+
+E2.8 transport
+b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
 ```
 
 P4 production-integration evidence остаётся отдельной governance-линией и не даёт EVO2 production authority.
@@ -71,9 +87,9 @@ P4 production-integration evidence остаётся отдельной governanc
 
 `research_species_id` — стабильная identity portable lineage hypothesis внутри research pipeline.
 
-Ни E2.5 adaptation, ни E2.6 replication, ни E2.7 robustness не превращают adapted descendants автоматически в canonical biological species.
+Ни adaptation, ни replication, ни robustness, ни persistence не превращают descendants автоматически в canonical biological species.
 
-## 3. Accepted route E2.1–E2.6
+## 3. Accepted route E2.1–E2.7
 
 ```text
 E2.1 SpeciesCatalog Contract                         ACCEPTED
@@ -82,6 +98,7 @@ E2.3 Frozen-Catalog Transfer                         ACCEPTED
 E2.4 Environment Generalization Matrix               ACCEPTED
 E2.5 Ecological Sorting vs Continued Adaptation      ACCEPTED
 E2.6 Replicated Causal Experiments                   ACCEPTED
+E2.7 Cross-Seed Robustness                           ACCEPTED
 ```
 
 Ключевые доказательства:
@@ -89,261 +106,210 @@ E2.6 Replicated Causal Experiments                   ACCEPTED
 - E2.3: hidden-target transfer и causal reachability;
 - E2.4: один frozen catalog через six environment/geography classes;
 - E2.5: pure ecological sorting отделён от continued inherited adaptation;
-- E2.6: paired causal effect повторён на заранее объявленных `R01..R05`, включая обязательное сохранение null/reversal outcomes.
+- E2.6: paired causal effect повторён на заранее объявленных `R01..R05`, null/reversal outcomes сохраняются;
+- E2.7: отдельный predeclared `S01..S10` ensemble показал bounded robustness без cherry-picking.
 
-## 4. E2.7 — Cross-Seed Robustness — ACCEPTED
+## 4. E2.8 — Catalog Persistence & Provenance — ACCEPTED
 
 Exact code-under-test:
 
-`52f31ca58a77296d63b1642954659edcbd12b8fe`
+`5790de059aaafbfc10434bb2d40124e3c1ceb361`
 
 Validation:
 
-`validation/ecology/eco-evo2-e2-7-cross-seed-robustness-validation.json`
+`validation/ecology/eco-evo2-e2-8-catalog-persistence-validation.json`
 
 Accepted checkpoint:
 
-`docs/checkpoints/2026-08-18_ECO_EVO2_E2_7_CROSS_SEED_ROBUSTNESS_ACCEPTED_RU.md`
+`docs/checkpoints/2026-08-18_ECO_EVO2_E2_8_CATALOG_PERSISTENCE_PROVENANCE_ACCEPTED_RU.md`
 
 ### 4.1 Research contract
 
-E2.7 сохранил exact causal mechanism E2.5/E2.6 и изменил только seed-family namespace:
+E2.8 сохраняет и восстанавливает **полный accepted E2.2 SpeciesCatalog**, а не проекцию:
 
 ```text
-same frozen E2.2 catalog/genomes
-same DRY/WET environments
-same Control/Treatment policy
-same MutationKernel
-same ResourceModel
-same generations/population/offspring
-        +
-new predeclared S01..S10 seed ensemble
-```
-
-Predeclared thresholds:
-
-```text
-positive effect             >= 8 / 10 per cell
-reciprocal home advantage   >= 8 / 10 per cell
-full seed pass              >= 7 / 10
-q25 effect                  > 0
-median effect               > 0
-leave-one-out minimum mean  > 0
-```
-
-После freeze нельзя удалять или переставлять seeds.
-
-### 4.2 Architecture
-
-E2.7 разделён на три research modules:
-
-```text
-plant_cross_seed_robustness_v1.gd
-    orchestration / parent pins / bounded verdict
-
-plant_cross_seed_protocol_v1.gd
-    causal Control/Treatment execution
-
-plant_cross_seed_evidence_v1.gd
-    semantic replay validation / robust aggregates
-```
-
-Exact blobs:
-
-```text
-orchestrator  f980a6132835cd2c483d5210615579ddccf7e618
-protocol      8d28fb09ac6e3f8b46594b39f76db69c2b6f9b17
-evidence      940ed657b7aa85758ac33088634d1ce5fdc4e673
-test          334a833acd1d0bc32ee03f0977d764ff5e517196
-runner        6da8290ec1944d704a778e3b1ce8910260e5b5cb
-```
-
-### 4.3 Accepted behavioral evidence
-
-```text
-exact transitive GDScript closure   9 / 9 PASS
-Godot                               4.7.1.stable.double.custom_build.a13da4feb
-parser/preload                      PASS
-fresh processes                     2 / 2 PASS
-assertions                          290 / 290 PASS
-ERROR lines                         0 / 0
-logs                                byte-identical
-log SHA-256                         51c421e5e3f909cc265bd8180fa1bd9a56f1f5e3a1e727a5010a5667d40156a9
-aggregate                           eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d
-seed ensemble                       a49ce9d6856e08e1e0a61f060a8019de61685cdc63b25229b3761c9e7c9d792f
-```
-
-Published GitHub bytes были заново восстановлены и сверены по exact Git blob SHA перед behavioral verification; локальный pre-publication probe не использовался как acceptance authority.
-
-### 4.4 Distribution result
-
-```text
-DRY
-mean                 0.229458431680
-median               0.227109019511
-q25                  0.218691252321
-q75                  0.230928849977
-min                  0.186805390360
-max                  0.279412047042
-positive/null/rev    10 / 0 / 0
-home advantage       10 / 10
-LOO minimum mean     0.223908029973
-aggregate            f3b65f8c890c75243f9a089f6f3036ef937c7251d675c0fd6919f06b00522c3f
-
-WET
-mean                 0.386587470375
-median               0.388500039215
-q25                  0.368469916498
-q75                  0.391244612251
-min                  0.345047365361
-max                  0.425056726888
-positive/null/rev    10 / 0 / 0
-home advantage       10 / 10
-LOO minimum mean     0.382313108540
-aggregate            98020ab8f6bb8fb52775ac4796bc2f45ea16530e468c5324b5716f598af4989b
-```
-
-Observed 10/10 не заменяет frozen acceptance thresholds.
-
-### 4.5 Integrity
-
-Acceptance rejects even after rehash:
-
-- seed deletion;
-- seed reordering;
-- adaptation-effect semantic tamper;
-- formal-significance promotion;
-- cross-catalog robustness promotion;
-- production-authority promotion.
-
-Final-population semantics пересчитываются через exact ResourceModel, поэтому наружной hash-цепочки недостаточно для подделки causal result.
-
-### 4.6 Claim boundary
-
-Accepted claim:
-
-`BOUNDED_CROSS_SEED_ROBUSTNESS_FOR_ONE_FROZEN_CATALOG_AND_PROTOCOL`.
-
-Не accepted:
-
-```text
-formal statistical significance
-cross-catalog / cross-bake robustness
-production persistence/runtime authority
-canonical species taxonomy
-```
-
-Canonical `.ps1` runner не исполнялся из-за отсутствия PowerShell в Linux carrier. Authority: `EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION`. Independent Reviewer/Verifier PASS не заявляется.
-
-## 5. E2.8 — Catalog Persistence & Provenance — AUTHORIZED / CURRENT
-
-### 5.1 Research question
-
-Portable ecology доказана в памяти процесса. Теперь нужно доказать, что сам portable research artifact можно детерминированно сохранить, передать и восстановить без потери identity/provenance.
-
-```text
-accepted SpeciesCatalog + accepted EVO2 lineage
+full accepted SpeciesCatalog
++ accepted EVO2 provenance E2.1..E2.7
         ↓
-canonical serializer
+canonical typed Variant serialization
         ↓
-typed persistent artifact
+content hash + transport hash + schema/version
         ↓
-bytes/hash/schema/version
+persist to bytes
         ↓
 fresh-process restore
         ↓
 exact semantic identity
 ```
 
-### 5.2 Required persisted content
-
-Минимум:
-
-- catalog schema/version/hash;
-- ordered species entries;
-- exact `research_species_id`;
-- source lineage IDs;
-- frozen genome payload/checksum;
-- E2.2 bake/catalog parent hashes;
-- accepted E2.3/E2.4/E2.5/E2.6/E2.7 evidence identities;
-- persistence schema/version;
-- canonical content hash.
-
-### 5.3 Determinism requirements
-
-Одинаковый input должен давать:
+### 4.2 Persistence format
 
 ```text
-identical semantic object
-identical canonical bytes
-identical content hash
-identical restore result
+schema    distributed_world_simulator.ecology.evo2_catalog_persistence.v1
+version   1.0.0
+encoding  GODOT_VARIANT_BINARY_CANONICAL_V1
+magic     DWS-ECO-EVO2-E2.8-CATALOG-PERSISTENCE-V1
 ```
 
-Это должно подтверждаться fresh processes.
+Typed Variant binary используется сознательно, чтобы сохранить точную Variant semantics (`int`, `float`, `bool`) и не зависеть от JSON type coercion. Dictionary keys canonicalized before serialization. Outer envelope содержит binary SHA-256 и canonical Base64; restore выполняет transport validation до semantic decode.
 
-### 5.4 Version policy
-
-E2.8 обязан fail-closed различать минимум:
+Version policy fail-closed:
 
 ```text
-CURRENT_VERSION       accepted
+CURRENT_VERSION       ACCEPT
 KNOWN_COMPATIBLE      only if explicitly declared
-UNKNOWN_NEWER         reject
-MALFORMED             reject
-WRONG_SCHEMA          reject
+UNKNOWN_NEWER         REJECT
+UNDECLARED_OLDER      REJECT
+MALFORMED             REJECT
+WRONG_SCHEMA          REJECT
 ```
 
-Нельзя молча принимать незнакомую будущую schema.
+На E2.8 список `KNOWN_COMPATIBLE` пуст.
 
-### 5.5 Tamper gates
+### 4.3 Exact artifacts
 
-Нужны как минимум:
+```text
+accepted catalog carrier   b77c3421325fa1264f590b0bd75c1c59621f667f
+provenance carrier         5602607fa3b63e79da28d8da52cb3ba5f61960c1
+persistence codec          83f80afe9fd467f7718f487b70f6bf1a88521339
+tamper support             227c57ff4f25c80dc3fa35e99f0e4fe791620eb7
+acceptance                 8e0f0d2ba6eea03337f6559276da87cf5f689d4b
+writer                     32f85fc1809af8c094227ecc702dbbc8e7e94608
+restore                    5d7c698a8e30a6be9622ddd9c5c08f02feac351e
+runner                     4e75eff15351ca3ba2c9229f8b7b39937c77834e
+```
+
+### 4.4 Accepted behavioral evidence
+
+```text
+exact transitive GDScript closure   9 / 9 PASS
+Godot                               4.7.1.stable.double.custom_build.a13da4feb
+parser/preload                      PASS
+acceptance assertions               74 / 74 PASS
+acceptance A/B                      byte-identical
+acceptance log SHA-256              9c4e541105d1b6738231a6253ea522ebccc0846f552a30733744f0c34cd32505
+writer A/B                          byte-identical
+writer log SHA-256                  6ab0f1aef6a05d9e3e51fc8595d512df39b7d3aeb436d547b595ea1c6c2c912a
+persisted artifacts A/B             byte-identical
+artifact bytes                      10383
+artifact SHA-256                    b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1
+restore A/B                         byte-identical
+restore log SHA-256                 fe46af6ff410cc335cdb6801cfad59fe6715857aeae7f97b7039204558e78d03
+restored semantic identity          exact
+ERROR lines                         0 in every verification process
+```
+
+Frozen semantic identities:
+
+```text
+aggregate     4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061
+content       3d7ca34560483e2a4d1eb1955c008eb1f05ab3603e3d358abbf4823b33554e2e
+provenance    a3a2f53107cefc5c96d835bd93327864d45f31e55b123fcd2fe4053fd5495a15
+catalog       5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
+bake id       eco-evo2-bake/ff406486cc83bb8217d66213
+parent E2.7   eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d
+```
+
+### 4.5 Persisted semantic identity
+
+Full catalog restore сохраняет:
+
+- canonical entry order;
+- both exact `research_species_id` values;
+- source lineage + ancestry;
+- frozen genome payload/checksum;
+- recruitment traits/checksum;
+- source observation hashes;
+- entry hashes;
+- exact catalog hash;
+- exact E2.2 bake id/source identity.
+
+Provenance сохраняет E2.1..E2.7 identities и явную границу: E2.2 source — synthetic contract fixture; он не impersonates real accepted evolution result.
+
+### 4.6 Integrity
+
+Acceptance reject even after rehash:
 
 - byte corruption;
-- outer hash corruption;
-- genome mutation с пересчётом outer hash;
-- species/lineage identity substitution;
+- transport hash corruption;
+- content hash corruption;
+- genome semantic mutation;
+- species/lineage substitution;
 - provenance parent substitution;
-- field insertion/removal;
-- version/schema substitution;
-- reordered entries, если order canonical.
+- extra/missing artifact fields;
+- extra SpeciesCatalog entry field;
+- wrong schema;
+- future unknown version;
+- reordered canonical entries;
+- catalog identity substitution.
 
-Semantic tamper должен отвергаться даже при корректно пересчитанном transport/content hash.
+Build/serialize не потребляют global RNG.
 
-### 5.6 Scope boundary
+### 4.7 Claim boundary
 
-Это **research artifact persistence proof**, а не ownership production persistence subsystem.
+Accepted claim:
 
-E2.8 не может заявлять:
+`RESEARCH_ARTIFACT_PERSISTENCE_WITH_EXACT_FULL_SPECIES_CATALOG_AND_EVO2_PROVENANCE_IDENTITY`.
 
-- production save authority;
-- distributed durability;
-- canonical taxonomy;
-- world transaction semantics.
-
-EVO2 FINAL остаётся blocked до E2.8 acceptance.
-
-## 6. EVO2 FINAL — Unseen World Challenge
-
-После E2.8 можно открыть финальное сквозное доказательство:
+Не accepted:
 
 ```text
-hidden unseen world
-        +
-restored persisted frozen SpeciesCatalog/provenance
-        ↓
-no rebake / no biome species table
-        ↓
-causal colonization / ecology / adaptation
-        ↓
-reproducible evidence package
+production save authority
+production persistence ownership
+distributed durability
+world transaction semantics
+canonical species taxonomy
 ```
 
-## 7. После EVO2
+Canonical `.ps1` runner не исполнялся из-за отсутствия PowerShell в Linux carrier. Authority: `EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION`. Independent Reviewer/Verifier PASS не заявляется.
+
+## 5. EVO2 FINAL — Unseen World Challenge — AUTHORIZED / CURRENT
+
+### 5.1 Research question
+
+Может ли **именно восстановленный persisted frozen SpeciesCatalog** пройти полный unseen-world route без rebake, target-aware species injection и biome table shortcut?
+
+### 5.2 Final experiment shape
 
 ```text
-EVO2 portable ecology proof
+predeclared hidden unseen world
+        +
+E2.8 persisted artifact bytes
+        ↓
+fresh-process restore
+        ↓
+exact frozen SpeciesCatalog + provenance
+        ↓
+E2.3/E2.4-compatible causal transfer
+        ↓
+ecology + sorting + continued adaptation
+        ↓
+replicated deterministic final evidence
+```
+
+### 5.3 Hard gates
+
+1. target/world definition frozen before result;
+2. catalog input must originate from E2.8 restore, not direct reconstruction bypass;
+3. restored `catalog_hash`, entries and provenance must match E2.8 accepted identity;
+4. no evolution rebake before transfer;
+5. no target-aware species list/filter/injection;
+6. no biome → species table;
+7. colonization must emerge through accepted causal dispersal/establishment/population mechanisms;
+8. sorting and continued adaptation must remain separable according to E2.5 semantics;
+9. null/reversal/no-colonization outcomes remain valid evidence and cannot be censored;
+10. deterministic fresh-process result/evidence package;
+11. semantic tamper of persisted input must fail closed;
+12. FINAL does not grant production runtime/world/persistence authority.
+
+### 5.4 Acceptance meaning
+
+E2.FINAL acceptance may close **EVO2 research route**, but still does not merge any production integration or make P4 globally accepted.
+
+## 6. После EVO2
+
+```text
+EVO2 portable persisted ecology proof
     ↓
 bounded XFER0 contracts
     ↓
@@ -358,9 +324,9 @@ predators / food web / coevolution
 
 Animals остаются deferred до plant-only portability proof.
 
-## 8. Current execution
+## 7. Current execution
 
 ```text
-CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.8 Catalog Persistence & Provenance
-NEXT    = EVO2 FINAL Unseen World Challenge after E2.8 acceptance
+CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.FINAL Unseen World Challenge
+NEXT    = EVO2 completion decision only after E2.FINAL acceptance
 ```
