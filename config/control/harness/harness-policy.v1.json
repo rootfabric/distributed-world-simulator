@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.development_harness_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
   "review_layer_revision": "H0-REVIEW-2026-08-18-R2",
-  "continuation_layer_revision": "H0-CONTINUATION-2026-08-18-R1",
+  "continuation_layer_revision": "H0-CONTINUATION-2026-08-19-R2",
   "hygiene_layer_revision": "H0-HYGIENE-2026-08-18-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
@@ -48,36 +48,88 @@
     "role_result_must_be_durable_before_transition": true,
     "chat_only_review_verdict_is_non_authoritative": true,
     "next_transition_must_be_machine_described": true,
+    "automatable_fix_required_is_not_session_terminal": true,
+    "same_role_repair_must_continue_through_retest": true,
+    "role_exit_must_be_machine_authorized": true,
+    "vague_incomplete_stop_is_forbidden": true,
+    "repeated_same_defect_escalates_to_takeover_not_human_by_default": true,
     "machine_enforcement_displaces_duplicate_prose": true,
     "protected_invariants_are_not_auto_retired": true
   },
   "roles": {
-    "IMPLEMENTER": "Changes code within bounded Work Order scope.",
+    "IMPLEMENTER": "Changes code within bounded Work Order scope and owns the repair-test closure loop until its predicates are green or takeover is required.",
     "REVIEWER": "Challenges design/root-cause/ownership/sibling coverage and persists PASS, FAIL or INSUFFICIENT_EVIDENCE to the declared durable evidence sink.",
     "VERIFIER": "Independently executes required validation and confirms exact evidence.",
     "INTEGRATOR": "Checks cross-branch/composition behavior when checkpoint requires it.",
     "PC0": "Checks project architecture/convergence constraints.",
-    "DIRECTOR": "Maintains mission continuity and decides whether checkpoint predicates and durable review evidence are sufficient.",
+    "DIRECTOR": "Maintains mission continuity, handles takeover/escalation and decides whether checkpoint predicates and durable review evidence are sufficient.",
     "HUMAN": "Resolves explicit high-impact exceptions and approval gates; is not a courier between routine agent roles."
   },
-  "work_order_states": ["PLANNED","DISPATCHED","IN_PROGRESS","IMPLEMENTED","VERIFYING","VERIFIED","AUDITED","CHECKPOINT_PROPOSED","FIX_REQUIRED","BLOCKED","WAITING_HUMAN","EPOCH_INVALIDATED","CANCELLED"],
+  "work_order_states": [
+    "PLANNED",
+    "DISPATCHED",
+    "IN_PROGRESS",
+    "IMPLEMENTED",
+    "VERIFYING",
+    "VERIFIED",
+    "AUDITED",
+    "CHECKPOINT_PROPOSED",
+    "FIX_REQUIRED",
+    "BLOCKED",
+    "WAITING_HUMAN",
+    "EPOCH_INVALIDATED",
+    "CANCELLED"
+  ],
   "autonomy_levels": {
     "A0_OBSERVE": ["fetch","audit","analyze","report"],
     "A1_PLAN": ["select_eligible_checkpoint","create_work_order","prepare_branch_plan","classify_risk","prepare_design_brief"],
-    "A2_IMPLEMENT": ["create_feature_or_control_branch","create_clean_worktree","edit_code","test","commit","push"],
+    "A2_IMPLEMENT": ["create_feature_or_control_branch","create_clean_worktree","edit_code","test","repair_within_scope","retest","commit","push"],
     "A3_INTEGRATE_CANDIDATE": ["update_passport","record_evidence","open_draft_pr","request_independent_review","propose_source_accepted_checkpoint"],
     "A4_MERGE": "HUMAN_APPROVAL_UNLESS_EXPLICITLY_WHITELISTED",
     "A5_ARCHITECTURE_PROMOTION": "HUMAN_APPROVAL_REQUIRED"
   },
   "default_autonomy_ceiling": "A3_INTEGRATE_CANDIDATE",
-  "human_gates": ["RUNTIME_FEATURE_MERGE","TS0_4_ACTIVATION_AFTER_C22_MERGE","GLOBAL_ARCHITECTURE_PROMOTION","FOUNDATION_OWNERSHIP_TRANSFER","NEW_GLOBAL_FOUNDATION"],
-  "human_attention_triggers": ["CRITICAL_RISK","ARCHITECTURE_OR_OWNERSHIP_DECISION","SECURITY_OR_AUTH_CHANGE","CROSS_SERVER_AUTHORITY_CHANGE","UNRESOLVED_HIGH_RISK_REVIEW_DISAGREEMENT","FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE","DIRECTOR_REQUIRES_PRODUCT_OR_ARCHITECT_CHOICE"],
+  "human_gates": [
+    "RUNTIME_FEATURE_MERGE",
+    "TS0_4_ACTIVATION_AFTER_C22_MERGE",
+    "GLOBAL_ARCHITECTURE_PROMOTION",
+    "FOUNDATION_OWNERSHIP_TRANSFER",
+    "NEW_GLOBAL_FOUNDATION"
+  ],
+  "human_attention_triggers": [
+    "CRITICAL_RISK",
+    "ARCHITECTURE_OR_OWNERSHIP_DECISION",
+    "SECURITY_OR_AUTH_CHANGE",
+    "CROSS_SERVER_AUTHORITY_CHANGE",
+    "UNRESOLVED_HIGH_RISK_REVIEW_DISAGREEMENT",
+    "FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE",
+    "DIRECTOR_REQUIRES_PRODUCT_OR_ARCHITECT_CHOICE"
+  ],
   "recovery_contract": {
-    "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, parent mission, last completed predicate, open blocker, next actor/action, evidence sink, resume condition, verification commands, review state, open human-attention items and human approvals using durable repository/control evidence only.",
+    "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, parent mission, last completed predicate, open blocker, next actor/action, evidence sink, resume condition, verification commands, review state, open human-attention items, session-exit authorization and human approvals using durable repository/control evidence only.",
     "recovery_drill_required_before_h0_1_acceptance": true,
     "chat_dependency_is_failure": true
   },
-  "throughput_metrics": ["accepted_checkpoints","critical_path_checkpoints","blockers_cleared","regressions_escaped","architecture_drift_findings","accepted_but_not_integrated_backlog","average_work_order_cycle","human_decisions_required","recovery_success_rate"],
-  "non_kpis": ["commits_per_day","lines_changed","agent_action_count_without_checkpoint_evidence"],
-  "commit_trailers": ["Project-Epoch","Work-Order","Predicate","Work-State"]
+  "throughput_metrics": [
+    "accepted_checkpoints",
+    "critical_path_checkpoints",
+    "blockers_cleared",
+    "regressions_escaped",
+    "architecture_drift_findings",
+    "accepted_but_not_integrated_backlog",
+    "average_work_order_cycle",
+    "human_decisions_required",
+    "recovery_success_rate"
+  ],
+  "non_kpis": [
+    "commits_per_day",
+    "lines_changed",
+    "agent_action_count_without_checkpoint_evidence"
+  ],
+  "commit_trailers": [
+    "Project-Epoch",
+    "Work-Order",
+    "Predicate",
+    "Work-State"
+  ]
 }
