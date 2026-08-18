@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-18-V0-P5-R1",
   "program": "V0",
   "goal_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-  "state": "DISPATCHED",
+  "state": "IN_PROGRESS",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "branch": "feature/v0-p5-equipment-tools",
@@ -106,5 +106,5 @@
   "human_attention_triggers": ["RUNTIME_FEATURE_MERGE", "NETWORK_FOUNDATION_CHANGE_REQUIRED", "DUPLICATE_CANONICAL_TRUTH_REQUIRED", "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED"],
   "issued_at_utc": "2026-08-18T11:51:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "Fresh P5 Work Order issued only after formal P4 acceptance. Exact accepted base is 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. Current-main control was composed without adding main as runtime ancestry and Project Control 32135502638 passed on d66457245ccc790916a2c57c6a98ddde84865611. Director dispatch event V0-P5-R1-EVENT-0002 now authorizes exactly one bounded P5 mutation worker; all stop conditions remain fail-closed."
+  "notes": "P5 implementation is active under one Director-dispatched mutation worker. Exact runtime truth for implementation slice 1 is f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b. Project Control 32137847594 passed on that exact runtime head. GitHub exact-source artifact 9324732940 (digest sha256:523b3b0eecd3829eef2cbc814746af11dc4811e8218328de6d066003e78be56e) was executed with Godot 4.7.1.stable.double.custom_build.a13da4feb: P5 equipment 31/31, P5 mining gate 36/36, historical P3 mining 79/79. Required P5 verification predicates are not yet promoted; two-client/reconnect, full regression, critique, Reviewer and Verifier remain open."
 }
