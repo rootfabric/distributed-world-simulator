@@ -38,6 +38,7 @@ const RESULT_FIELDS: Array[String] = [
 	"source_hash",
 	"source_run_hash",
 	"final_year",
+	"source",
 	"bake_id",
 	"selected_lineages",
 	"rejected_lineages",
@@ -226,6 +227,7 @@ static func export_catalog(source: Dictionary) -> Dictionary:
 		"source_hash": String(source["source_hash"]),
 		"source_run_hash": String(source["source_run_hash"]),
 		"final_year": final_year,
+		"source": source.duplicate(true),
 		"bake_id": bake_id,
 		"selected_lineages": selected,
 		"rejected_lineages": rejected,
@@ -252,6 +254,17 @@ static func validate_export(result: Dictionary) -> bool:
 			return false
 	if typeof(result.get("final_year")) != TYPE_INT or int(result.get("final_year", -1)) < WINDOW_YEARS - 1:
 		return false
+	if typeof(result.get("source")) != TYPE_DICTIONARY:
+		return false
+	var source: Dictionary = result.get("source", {})
+	if not validate_source(source):
+		return false
+	if String(source.get("source_hash", "")) != String(result.get("source_hash", "")):
+		return false
+	if String(source.get("source_run_hash", "")) != String(result.get("source_run_hash", "")):
+		return false
+	if int(source.get("final_year", -1)) != int(result.get("final_year", -1)):
+		return false
 	if String(result.get("bake_id", "")) != _bake_id_from_hashes(String(result["source_hash"]), String(result["source_run_hash"])):
 		return false
 	if typeof(result.get("selected_lineages")) != TYPE_ARRAY or typeof(result.get("rejected_lineages")) != TYPE_ARRAY:
@@ -262,6 +275,11 @@ static func validate_export(result: Dictionary) -> bool:
 		return false
 	if not _validate_selected(selected) or not _validate_rejected(rejected):
 		return false
+	var derived := _derive_policy_decisions(source)
+	if derived.is_empty():
+		return false
+	if Array(derived.get("selected", [])) != selected or Array(derived.get("rejected", [])) != rejected:
+		return false
 	var seen := {}
 	for value in selected:
 		seen[String(Dictionary(value)["lineage_id"])] = true
@@ -270,6 +288,9 @@ static func validate_export(result: Dictionary) -> bool:
 			return false
 	var catalog: Dictionary = result.get("species_catalog", {})
 	if not SpeciesCatalog.validate_catalog(catalog):
+		return false
+	var expected_catalog := SpeciesCatalog.build(Array(derived.get("observations", [])), String(result.get("bake_id", "")), String(result.get("source_run_hash", "")))
+	if expected_catalog.is_empty() or expected_catalog != catalog:
 		return false
 	if String(catalog.get("catalog_hash", "")) != String(result.get("catalog_hash", "")):
 		return false
@@ -549,6 +570,56 @@ static func _validate_rejected(values: Array) -> bool:
 			return false
 		previous_id = lineage_id
 	return true
+
+
+static func _derive_policy_decisions(source: Dictionary) -> Dictionary:
+	if not validate_source(source):
+		return {}
+	var final_year := int(source["final_year"])
+	var selected: Array = []
+	var rejected: Array = []
+	var observations: Array = []
+	for value in Array(source["lineages"]):
+		var record: Dictionary = value
+		var representative := _representative_observation(record)
+		if representative.is_empty():
+			return {}
+		var observation: Dictionary = representative["observation"]
+		var representative_year := int(representative["year"])
+		var occupied_years := _occupied_years_in_window(Array(record["occupancy_history"]), final_year)
+		var final_count := _occupied_patch_count(Array(record["occupancy_history"]), final_year)
+		if occupied_years < 0 or final_count < 0:
+			return {}
+		var reason := _rejection_reason(int(observation["split_year"]), representative_year, final_year, occupied_years, final_count)
+		if reason.is_empty():
+			var selection := {
+				"lineage_id": String(record["lineage_id"]),
+				"representative_observation_hash": String(observation["observation_hash"]),
+				"representative_year": representative_year,
+				"occupied_years_in_window": occupied_years,
+				"final_occupied_patch_count": final_count,
+				"research_species_id": SpeciesCatalog.research_species_id(String(record["lineage_id"])),
+			}
+			selection["selection_hash"] = _selection_hash(selection)
+			selected.append(selection)
+			observations.append(observation.duplicate(true))
+		else:
+			var rejection := {
+				"lineage_id": String(record["lineage_id"]),
+				"reason": reason,
+				"representative_observation_hash": String(observation["observation_hash"]),
+				"representative_year": representative_year,
+				"occupied_years_in_window": occupied_years,
+				"final_occupied_patch_count": final_count,
+			}
+			rejection["rejection_hash"] = _rejection_hash(rejection)
+			rejected.append(rejection)
+	if selected.is_empty():
+		return {}
+	selected.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["lineage_id"]) < String(b["lineage_id"]))
+	rejected.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["lineage_id"]) < String(b["lineage_id"]))
+	observations.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["lineage_id"]) < String(b["lineage_id"]))
+	return {"selected": selected, "rejected": rejected, "observations": observations}
 
 
 static func _bake_id(source: Dictionary) -> String:
