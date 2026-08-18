@@ -1,0 +1,85 @@
+name: V0 P4 Recovery Harness Status Probe
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-recovery-status-r1
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inspect exact recovery carrier with current main-owned Harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECOVERY_HEAD="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
+          AUDITED_MAIN_HEAD="5999d935e8d5b496100ced66283d8762d3403675"
+          EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
+
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          CURRENT_MAIN_HEAD="$(git rev-parse origin/main)"
+          echo "CURRENT_MAIN_HEAD=$CURRENT_MAIN_HEAD"
+          echo "RECOVERY_HEAD=$RECOVERY_HEAD"
+          echo "AUDITED_MAIN_HEAD=$AUDITED_MAIN_HEAD"
+
+          git checkout --detach "$RECOVERY_HEAD"
+          test "$(git rev-parse HEAD)" = "$RECOVERY_HEAD"
+
+          while IFS= read -r path; do
+            case "$path" in
+              config/control/harness/executions/*) continue ;;
+            esac
+            mkdir -p "$(dirname "$path")"
+            git show "$CURRENT_MAIN_HEAD:$path" > "$path"
+          done < <(git ls-tree -r --name-only "$CURRENT_MAIN_HEAD" -- scripts/harness config/control/harness)
+
+          for path in \
+            config/control/project-program-registry.v1.json \
+            config/control/project-control-policy.v1.json \
+            config/control/architecture-ownership.v1.json; do
+            git show "$CURRENT_MAIN_HEAD:$path" > "$path"
+          done
+
+          python3 -m pip install --disable-pip-version-check -q -r scripts/harness/requirements.txt
+          export PYTHONPATH="$PWD/scripts"
+          export PYTHONUTF8=1
+
+          # Historical initial dispatch was authorized against exact generation-80 main.
+          # Pin only the local remote-tracking ref for deterministic replay of that guard;
+          # current main control health is proven separately by Project Control run 32085293289.
+          git update-ref refs/remotes/origin/main "$AUDITED_MAIN_HEAD"
+
+          python3 -m harness.cli status --root "$PWD" --execution "$EXECUTION" | tee /tmp/status.log
+          tail -n 1 /tmp/status.log > /tmp/status.json
+          python3 - <<'PY'
+          import json
+          p=json.load(open('/tmp/status.json',encoding='utf-8'))
+          r=p['reduced_work_order']
+          required=p['active_work_order'].get('required_predicates',[])
+          completed=r.get('completed_predicates',[])
+          print('P4_RECOVERY_STATUS=' + json.dumps({
+              'ok': p.get('ok'),
+              'state': r.get('state'),
+              'last_event_sequence': r.get('last_event_sequence'),
+              'last_event_type': r.get('last_event_type'),
+              'last_completed_predicate': r.get('last_completed_predicate'),
+              'completed_predicates': completed,
+              'missing_required_predicates': [x for x in required if x not in completed],
+              'open_blocker': r.get('open_blocker'),
+              'snapshot_matches': r.get('snapshot_matches_authoritative_state'),
+              'review_state': p.get('review',{}).get('state'),
+              'checkpoint_blockers': p.get('checkpoint_blockers'),
+          }, sort_keys=True))
+          PY
+
+      - name: Verify execution ledger was not modified
+        shell: bash
+        run: test -z "$(git status --porcelain -- config/control/harness/executions/E2026-08-17-V0-P4-R1)"
