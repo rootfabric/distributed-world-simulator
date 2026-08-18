@@ -1,12 +1,15 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.2 CANDIDATE_VERIFICATION`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.3 AUTHORIZED_NOT_STARTED`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 EVO2 plan: `docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md`.
-E2.1 accepted checkpoint: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_ACCEPTED_RU.md`.
-E2.2 candidate checkpoint: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_2_EVOLUTION_BAKE_EXPORT_CANDIDATE_RU.md`.
+
+Последние accepted checkpoints:
+
+- E2.1: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_ACCEPTED_RU.md`;
+- E2.2: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_2_EVOLUTION_BAKE_EXPORT_ACCEPTED_RU.md`.
 
 ## 1. Что уже закрыто
 
@@ -19,9 +22,10 @@ CAL1-F                    ROBUST_UNITY_CALIBRATION
 ECO.EVO1 / P2.1..P2.8     ACCEPTED / EVO1 COMPLETE
 ECO.P3 / P3.1..P3.8       ACCEPTED / RESEARCH ROUTE COMPLETE
 ECO.EVO2 / E2.1           ACCEPTED
+ECO.EVO2 / E2.2           ACCEPTED
 ```
 
-Ключевые frozen identities:
+Frozen identities:
 
 ```text
 CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
@@ -42,23 +46,31 @@ P3.6    a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
 P3.7    ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a
 P3.8    6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0
 E2.1    aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
+E2.2    56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce
 ```
 
-E2.1 acceptance source HEAD:
+E2.2 accepted exact identities:
 
-`c79e2d61e665689fe39621442f72171de5d2790f`
+```text
+code-under-test
+7cf98d67a4658644a6f2dde3e93e28a184638ec3
 
-E2.1 code-under-test:
+acceptance source HEAD
+4ddf7d275d10a6a84a3e414bfb0e76447cb2a890
 
-`bf468942718df6b84ebd4c61a294987e8e63c607`
+implementation blob
+6ed4abfa58c28a99fb1c28547d81e1a292756e10
 
-Acceptance был выполнен как human-directed exact-attached-Godot equivalent fresh verification. Independent Reviewer PASS этим не заявлялся.
+fresh verification
+62 / 62 assertions PASS
+fresh-process logs byte-identical
+```
+
+Acceptance был выполнен как human-directed exact-attached-Godot equivalent fresh verification. Independent Reviewer PASS не заявляется.
 
 ## 2. Production P4 — отдельная governance-линия
 
 P4.1..P4.8 branch-locally завершены и собраны в lifecycle evidence. Это **не** означает global/main acceptance и **не** означает runtime merge.
-
-Текущая граница P4:
 
 ```text
 P4_BRANCH_LIFECYCLE_COMPLETE
@@ -75,8 +87,6 @@ EVO2 не получает production authority из P4 и не блокируе
 ## 3. North Star EVO2
 
 > Может ли результат эволюции стать переносимым каталогом жизненных стратегий, который без biome->asset таблиц заселяет новую, ранее не использованную среду через экологическую сортировку, конкуренцию, распространение и историю?
-
-Целевой pipeline:
 
 ```text
 environment family
@@ -99,9 +109,9 @@ self-organized community
 ```text
 E2.1 SpeciesCatalog Contract                         ACCEPTED
     ↓
-E2.2 Deterministic Evolution Bake Export             CANDIDATE_VERIFICATION ← CURRENT
+E2.2 Deterministic Evolution Bake Export             ACCEPTED
     ↓
-E2.3 Frozen-Catalog Transfer                         BLOCKED_UNTIL_E2_2_ACCEPTED
+E2.3 Frozen-Catalog Transfer                         ← AUTHORIZED / NEXT
     ↓
 E2.4 Environment Generalization Matrix
     ↓
@@ -136,77 +146,88 @@ Canonical E2.1 aggregate:
 
 `aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad`
 
-### E2.2 — Deterministic Evolution Bake Export — CANDIDATE
+### E2.2 — Deterministic Evolution Bake Export — ACCEPTED
 
-E2.2 реализован как typed fail-closed boundary от long-run lineage-history evidence к accepted E2.1 SpeciesCatalog.
-
-Exact code-under-test HEAD:
-
-`7cf98d67a4658644a6f2dde3e93e28a184638ec3`
-
-Final implementation blob:
-
-`6ed4abfa58c28a99fb1c28547d81e1a292756e10`
-
-Exact attached Godot evidence:
-
-```text
-Godot      4.7.1.stable.double.custom_build.a13da4feb
-parser     PASS
-assertions 62 / 62 PASS
-process A  PASS
-process B  PASS
-logs       byte-identical
-aggregate  56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce
-source     c165964f710036287b9e8d310085a662d004b05eecc0c915ad1d3650a18dedb9
-bake       45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b
-catalog    5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
-```
-
-Implemented pipeline:
+Frozen pipeline:
 
 ```text
 long-run lineage evidence
     ↓
-canonical typed source + source_hash
+typed canonical bake source
     ↓
-retention policy
+deterministic retention policy
     ↓
-latest unambiguous representative observation
+deterministic representative observation
     ↓
 accepted E2.1 SpeciesCatalog.build(...)
-    ↓
-embedded source + deterministic bake evidence
 ```
 
-Retention policy:
+Frozen policy:
 
-- trailing window = 8 years;
-- occupied >= 6 years in trailing window;
-- lineage age >= 8 years;
-- lineage must exist in final year;
-- representative observation staleness <= 2 years.
+```text
+trailing window                  8 years
+minimum occupied years           6 / 8
+minimum lineage age              8 years
+max representative staleness     2 years
+```
 
-Explicit rejections:
+Explicit rejection semantics:
 
 - `RECENT_LINEAGE`;
 - `EXTINCT_AT_FINAL`;
 - `TRANSIENT_PERSISTENCE`;
 - `STALE_REPRESENTATIVE`.
 
-Integrity boundary усилен до candidate freeze: validator embeds and revalidates exact source evidence, заново выводит selected/rejected decisions и независимо пересобирает ожидаемый E2.1 SpeciesCatalog. Поэтому изменение selection claims с пересчитанными selection/bake hashes не проходит validation.
+Integrity boundary:
 
-Mutation event не считается новым species. Clustering/grouping не вводится. Одна retained lineage hypothesis остаётся одной research species entry.
+- exact source evidence embedded;
+- selection/rejection decisions re-derived on validation;
+- expected E2.1 catalog rebuilt on validation;
+- recomputed-hash tamper rejected;
+- ambiguous same-year observations fail closed;
+- no biome lookup;
+- no canonical taxonomy promotion.
 
-Acceptance fixture имеет synthetic source provenance и **не** выдаётся за accepted evolution result. Это важно: текущий accepted P2.8 доказывает deterministic long-run Plant World persistence, но не публикует canonical multi-lineage evolved-observation collection. E2.2 фиксирует typed producer boundary для такой будущей evidence.
+Canonical E2.2 hashes:
 
-Текущий formal state: `CANDIDATE / NOT_SELF_ACCEPTED`. Full canonical branch runner или equivalent fresh verification ещё нужен перед acceptance.
+```text
+aggregate 56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce
+source    c165964f710036287b9e8d310085a662d004b05eecc0c915ad1d3650a18dedb9
+bake      45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b
+catalog   5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
+```
 
-### E2.3 — Frozen-Catalog Transfer — BLOCKED
+Known boundary: E2.2 acceptance validates the deterministic export contract using a synthetic contract fixture because accepted P2.8 does not itself expose a canonical multi-lineage evolved-observation collection. Synthetic fixture не объявляется реальным accepted evolution result.
 
-E2.3 не открывается по implementer evidence E2.2.
+### E2.3 — Frozen-Catalog Transfer — AUTHORIZED / NEXT
 
-После E2.2 acceptance catalog freeze mutation/evolution выключаются. Новый landscape не использовался при bake. Разрешены только dispersal, establishment, competition, population turnover, succession и disturbance/recovery.
+Цель: после freeze SpeciesCatalog полностью отключить mutation/evolution и доказать, что каталог способен причинно заселить **ранее не использованную target environment**.
+
+Target landscape не должен участвовать в bake.
+
+После freeze разрешены только:
+
+- dispersal;
+- establishment/recruitment;
+- competition;
+- population turnover;
+- succession;
+- disturbance/recovery.
+
+E2.3 должен доказать минимум:
+
+1. exact frozen E2.2 catalog identity;
+2. target environment provenance и доказательство, что target не входил в bake source;
+3. mutation/evolution disabled fail-closed;
+4. deterministic same-seed replay;
+5. no biome->species tables;
+6. spatial population state является truth;
+7. colonization/establishment зависит от environment + dispersal + competition, а не от asset scatter;
+8. source catalog не мутирует во время transfer;
+9. transfer result hash order-independent;
+10. fresh-process determinism;
+11. explicit no-colonization outcome допустим и отличим от execution failure;
+12. E2.4 не открывается до E2.3 acceptance.
 
 ### E2.4 — Environment Generalization Matrix
 
@@ -269,6 +290,5 @@ EVO2 != permission to own G/WQ/MAT/LIFE/WB/NX foundations
 ## 7. Current resolver
 
 ```text
-VERIFY ECO.EVO2 / E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT
-NEXT = E2.3 FROZEN-CATALOG TRANSFER AFTER E2.2 ACCEPTANCE
+OPEN ECO.EVO2 / E2.3 FROZEN-CATALOG TRANSFER
 ```
