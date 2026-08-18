@@ -1,7 +1,7 @@
 extends SceneTree
 
 const GameplayP5 = preload(
-	"res://scripts/runtime/networked_gameplay/p5/networked_gameplay_service_p5.gd"
+	"res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
 )
 const EarthResourceSpatialResolver = preload(
 	"res://scripts/runtime/networked_gameplay/p3/earth_resource_spatial_resolver.gd"
