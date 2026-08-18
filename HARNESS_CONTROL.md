@@ -3,7 +3,7 @@
 **Canonical owner:** `main`
 **Foundation revision:** `H0-2026-08-11-R1`
 **Review layer:** `H0-REVIEW-2026-08-18-R2`
-**Continuation layer:** `H0-CONTINUATION-2026-08-18-R1`
+**Continuation layer:** `H0-CONTINUATION-2026-08-19-R2`
 **Hygiene layer:** `H0-HYGIENE-2026-08-18-R1`
 
 Это короткая точка входа для автономной/полуавтономной разработки. Этот файл не хранит mutable current checkpoint/frontier; живое состояние берётся из machine-owned contracts и `CONTROL_DEVELOPMENT.ps1 -Status/-Plan/-Resume`.
@@ -84,11 +84,56 @@ evidence_sink
 resume_condition
 on_success
 on_failure
+session_exit_allowed
+closure_loop_required
+stop_obligation
 ```
 
-`REVIEW_REQUIRED` является `ROLE_BOUNDARY`, а не концом работы. Остановка допустима как терминальная только при `MISSION_COMPLETE`, `SYSTEM_BLOCKED` без разрешённого автоматического перехода или реальном `HUMAN_DECISION_REQUIRED`.
+`REVIEW_REQUIRED` является `ROLE_BOUNDARY`, а не концом работы. Остановка допустима как терминальная только при `MISSION_COMPLETE`, доказанном `SYSTEM_BLOCKED` без разрешённого автоматического перехода, `ROLE_BOUNDARY` с полностью зафиксированным handoff или реальном `HUMAN_DECISION_REQUIRED`.
 
 Human Attention предназначен для реальных решений, а не для переноса PASS/FAIL между агентами.
+
+## Self-closing role execution R2
+
+`FIX_REQUIRED` больше не является допустимым концом Implementer-сессии сам по себе.
+
+Если defect находится внутри разрешённого Work Order scope и может быть исправлен доступными инструментами, Harness обязан вернуть:
+
+```text
+handoff_class = CONTINUE_SAME_ROLE
+next_actor = IMPLEMENTER
+next_action = EXECUTE_REPAIR_TEST_CLOSURE_LOOP
+session_exit_allowed = false
+closure_loop_required = true
+```
+
+Обязательный цикл:
+
+```text
+diagnose root cause
+  ↓
+create / refresh Repair Map
+  ↓
+fix canonical owner
+  ↓
+run focused failing test
+  ↓
+run all required Work Order regressions / control gates
+  ↓
+repair any new in-scope failure
+  ↓
+retest
+  ↓
+persist durable evidence
+  ↓
+persist exact next transition
+```
+
+Нельзя завершать роль сообщением вида «не доделал», «осталось проверить», «нужно продолжить позже», если Harness всё ещё видит автоматически исполнимый in-scope переход.
+
+Повторный одинаковый defect не отправляется человеку автоматически. После заданного repair-attempt ceiling Harness передаёт его Director/stronger-context takeover с durable repair history, failing command и точным следующим действием.
+
+Fresh independent review не ослабляется. Implementer обязан довести свою роль до review-ready состояния, но не имеет права сам выполнять независимый review. Review `FAIL` должен маршрутизироваться к repair ownership, а не повторно к Reviewer без ремонта.
 
 ## Review durability
 
