@@ -17,6 +17,17 @@ def _load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _latest_work_state(event_dir: Path) -> str:
+    event_paths = sorted(event_dir.glob("*.json"))
+    if not event_paths:
+        return "PLANNED"
+    latest = _load(event_paths[-1])
+    state = str(latest.get("work_state", ""))
+    if not state:
+        raise AssertionError(f"latest event has no work_state: {event_paths[-1]}")
+    return state
+
+
 class V0ProductTrainPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -72,9 +83,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(self.work_order["goal_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
         self.assertEqual(self.work_order["base_sha"], expected)
         self.assertEqual(self.work_order["branch"], "feature/v0-p5-equipment-tools")
-        dispatch_event = HARNESS / "executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001/0002-director-dispatched.v1.json"
-        expected_state = "DISPATCHED" if dispatch_event.is_file() else "PLANNED"
-        self.assertEqual(self.work_order["state"], expected_state)
+        event_dir = HARNESS / "executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001"
+        self.assertEqual(self.work_order["state"], _latest_work_state(event_dir))
         self.assertEqual(self.work_order["risk_class"], "HIGH")
         self.assertEqual(
             self.catalog["checkpoints"]["V0_P5_EQUIPMENT_TOOLS"]["required_predicates"],
