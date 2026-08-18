@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-  "current_phase": "P5_PRE_DISPATCH_CONTROL_READY",
+  "current_phase": "P5_PREACTIVATION_CONTROL_READY",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -66,7 +66,7 @@
     {
       "id": "V0_P5_EQUIPMENT_TOOLS",
       "short_name": "P5",
-      "state": "CURRENT_PRE_DISPATCH",
+      "state": "CURRENT_PREACTIVATION",
       "execution_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
       "project_epoch": "E2026-08-18-V0-P5-R1",
       "work_order_id": "V0-P5-R1-WO-001",
@@ -93,6 +93,7 @@
         "DIRECTOR_DISPATCH"
       ],
       "activation_complete_except": [
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5",
         "DIRECTOR_DISPATCH"
       ],
       "next": "V0_P6_PERSISTENT_SHARED_OUTPOST"
@@ -207,10 +208,11 @@
     "project_epoch": "E2026-08-18-V0-P5-R1",
     "work_order_id": "V0-P5-R1-WO-001",
     "runtime_branch": "feature/v0-p5-equipment-tools",
-    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
-    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
+    "mutation_lease": "PENDING_MAIN_OWNED_ROTATION",
+    "runtime_mutation": "FORBIDDEN_UNTIL_LEASE_ROTATION_AND_DIRECTOR_DISPATCH",
     "remaining_control_steps": [
-      "MERGE_P5_ACTIVATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
+      "MERGE_P5_PREACTIVATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
+      "ROTATE_SINGLE_V0_RUNTIME_MUTATION_LEASE_TO_P5",
       "CREATE_FRESH_P5_BRANCH_FROM_EXACT_ACCEPTED_P4_BASE",
       "COMPOSE_CURRENT_MAIN_CONTROL_WITHOUT_CHANGING_PRODUCT_BASE_PROVENANCE",
       "DIRECTOR_DISPATCH",
