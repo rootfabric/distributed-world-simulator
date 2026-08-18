@@ -1,0 +1,91 @@
+name: V0 P4 Ledger State R1 Machine Check
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-ledger-state-r1-machine-check
+
+permissions:
+  contents: read
+
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: repair/v0-p4-closure-ledger-state-r1
+          fetch-depth: 0
+
+      - name: Verify exact repair candidate and fetch authority refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_HEAD="9d121d5b553b4b0885240425690ce2563fb011b4"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "EXPECTED_HEAD=$EXPECTED_HEAD"
+          echo "ACTUAL_HEAD=$ACTUAL_HEAD"
+          test "$ACTUAL_HEAD" = "$EXPECTED_HEAD"
+          test "$(git branch --show-current)" = "repair/v0-p4-closure-ledger-state-r1"
+
+      - name: Install pinned Harness dependency
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Reduce exact P4 append-only ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.harness.state_builder import build_state
+
+          root = Path.cwd()
+          execution = root / "config/control/harness/executions/E2026-08-17-V0-P4-R1"
+          state = build_state(root, execution)
+          reduced = state["reduced_work_order"]
+          work_order = state["active_work_order"]
+          repair = state["repair"]
+
+          assert reduced["state"] == "FIX_REQUIRED", reduced
+          assert reduced["last_event_sequence"] == 16, reduced
+          assert reduced["last_event_id"] == "V0-P4-R1-EVENT-0016", reduced
+          assert reduced["last_event_type"] == "FIX_REQUIRED", reduced
+          assert reduced["open_blocker"] == "PREMATURE_VERIFIED_STATE_BLOCKS_REMAINING_CHECKPOINT_PREDICATES", reduced
+          assert reduced["snapshot_matches_authoritative_state"] is True, reduced
+          assert reduced["event_subject_head_sha"] == "2a6721cdf02fa1134c59d1ab98bb7b597c66821d", reduced
+          assert "INDEPENDENT_VERIFIER_PASS" in reduced["completed_predicates"], reduced
+          assert work_order["state"] == "FIX_REQUIRED", work_order["state"]
+          assert work_order.get("repair_context_required") is True, work_order
+          assert repair["required"] is True, repair
+          assert repair["map"] is not None, repair
+          assert repair["map"].get("repair_id") == "V0-P4-R1-LEDGER-STATE-REPAIR-001", repair["map"]
+          assert repair["map"].get("state") == "REPAIR_MAP_READY", repair["map"]
+          assert state["continuation_blocked"] is True, state
+          assert state["checkpoint_proposal_blocked"] is True, state
+
+          evidence = json.loads(
+              (execution / "evidence/P4-POST-CLEARANCE-PC0-001.v1.json").read_text(encoding="utf-8")
+          )
+          assert evidence["subject_runtime_head"] == "2a6721cdf02fa1134c59d1ab98bb7b597c66821d", evidence
+          assert evidence["project_control_run_id"] == 32085293289, evidence
+          assert evidence["project_control_artifact_id"] == 9306488656, evidence
+          assert evidence["project_control_artifact_digest"] == "sha256:f99caf2aee2a8c0d693abbef8cf4ea7c5289d8a5be8f2ca9973402013aac5598", evidence
+          assert evidence["standard_pc0"]["non_red"] is True, evidence
+          assert evidence["directional_pc0"]["non_red"] is True, evidence
+          assert evidence["directional_pc0"]["critical_hit"]["clearance_status"] == "ACCEPTED", evidence
+          assert evidence["checkpoint_predicate_recorded"] is False, evidence
+          assert evidence["checkpoint_claim"] is False, evidence
+
+          print("V0_P4_LEDGER_STATE_R1_MACHINE_CHECK=PASS")
+          print(json.dumps({
+              "reduced_state": reduced["state"],
+              "last_event_sequence": reduced["last_event_sequence"],
+              "last_event_id": reduced["last_event_id"],
+              "open_blocker": reduced["open_blocker"],
+              "completed_predicates": reduced["completed_predicates"],
+              "findings": state["findings"],
+              "checkpoint_blockers": state["checkpoint_blockers"],
+          }, indent=2, sort_keys=True))
+          PY
