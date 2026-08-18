@@ -63,6 +63,32 @@ func _run_actor_p4() -> void:
 	if not bool(target_result.get("success", false)):
 		_fail(String(target_result.get("error_code", "V0_P4_RESOURCE_TARGET_FAILED")), target_result)
 		return
+	var bootstrap_tool_id := "item/player/a/p5-mining-tool"
+	var equip_tool: Dictionary = client.execute_item_command_blocking(
+		"item.equip",
+		{"item_id": bootstrap_tool_id, "slot_id": "tool/main"},
+		"operation/v0-p4/e2e/a/p5-equip-tool"
+	)
+	_assert(bool(equip_tool.get("success", false)), "P4.6 actor equips canonical P5 mining tool")
+	if not bool(equip_tool.get("success", false)):
+		_fail(String(equip_tool.get("error_code", "V0_P5_MINING_TOOL_EQUIP_FAILED")), equip_tool)
+		return
+	var equipment_visible := await _wait_item_state(
+		func(snapshot: Dictionary) -> bool:
+			var tool: Dictionary = _item_record(snapshot, bootstrap_tool_id)
+			var equipment_value = tool.get("equipment", null)
+			return (
+				equipment_value is Dictionary
+				and String(Dictionary(equipment_value).get("player_id", "")) == "a"
+				and String(Dictionary(equipment_value).get("slot_id", "")) == "tool/main"
+			),
+		STATE_TIMEOUT_MS
+	)
+	_assert(equipment_visible, "P4.6 actor observes canonical P5 equipment relation")
+	if not equipment_visible:
+		_fail("V0_P5_MINING_TOOL_REPLICATION_TIMEOUT")
+		return
+
 	var approached := false
 	for stage_index in range(STAGE_COSTS.size()):
 		var phase := "STAGE_%d" % stage_index
