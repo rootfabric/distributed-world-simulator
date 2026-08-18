@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.project_epoch.v1",
-  "epoch_id": "E2026-08-17-V0-P4-R1",
-  "base_sha": "5999d935e8d5b496100ced66283d8762d3403675",
+  "epoch_id": "E2026-08-18-V0-P5-R1",
+  "base_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "harness_revision": "H0-2026-08-11-R1",
-  "created_at_utc": "2026-08-16T16:41:00Z",
+  "created_at_utc": "2026-08-18T11:50:00Z",
   "eligible_checkpoints": [
-    "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+    "V0_P5_EQUIPMENT_TOOLS"
   ],
   "status": "ACTIVE",
   "decision": "CONTINUE"

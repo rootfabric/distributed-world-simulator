@@ -1,0 +1,122 @@
+{
+  "schema": "distributed_world_simulator.directional_watch_clearance_registry.v1",
+  "version": 1,
+  "authority": "MAIN_OWNED_ONLY",
+  "clearances": [
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "V0",
+      "producer_branch": "feature/v0-p4-construction-real-resources",
+      "consumer_program": "NX",
+      "consumer_branch": "feature/nx-m7-owner-authority-convergence",
+      "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "reviewed_producer_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "consumer_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
+      "consumer_passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
+      "consumer_passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4",
+      "critical_files": [
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "watched_files": [
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd.uid",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd.uid",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd.uid",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_live_m4_construction_transaction_port.gd",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_live_m4_construction_transaction_port.gd.uid",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd": "131d343fb259e1a9eca5fdfaab815c6347c2cf6f",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd": "39302d2c9365ecda13480d2f4a848fc20023fa7a",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd": "9792828655da7602eee1282e8a302abebcfcc135",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd.uid": "2651c828741bda9f5bf5fe769d06128d3fbc6d74",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd": "dc843b9df14bd9b79bd0cc4027d438f12c7fac08",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd.uid": "9f5af749b52fa8d48dba6bd3d875459be1a0e6ed",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd": "5954d2f077aa8ae02c8729c2322086ddf4fcedf2",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_construction_material_allocator.gd.uid": "955e2cb9707881859db07f25099414b864943c85",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_live_m4_construction_transaction_port.gd": "d47fffe67340f68e4a0767f8d8897ced1446a1a1",
+        "scripts/runtime/networked_gameplay/m4/v0_p4_live_m4_construction_transaction_port.gd.uid": "88ccf49b811cd24c5168abfe3543fbe0376dbe10",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd": "7aa28b26833115427e71f049e333d7251e712c05"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "V0-P4-R1-REVIEW-POST-001",
+      "verification_id": "V0-P4-R1-VERIFY-001",
+      "recorded_at_utc": "2026-08-17T14:20:00Z",
+      "reason": "Fresh independent P4 Reviewer and Verifier inspected the exact implementation/evidence target and classified the V0 -> NX critical hit as the expected server-authoritative M4 Item Graph composition extension, not a transport, protocol, prediction, reconciliation or NX authority-foundation mutation. This record is fail-closed to exact reviewed ancestry, exact consumer head/passport and the complete observed V0 -> NX watched-file blob set. It becomes authoritative only when merged into main after independent review of this control repair."
+    },
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "V0",
+      "producer_branch": "feature/v0-p4-construction-real-resources",
+      "consumer_program": "NX",
+      "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "reviewed_producer_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "consumer_head_sha": "d1a4466775a6e08192179dfc9af397eafbf574c0",
+      "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+      "consumer_passport_blob_sha": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
+      "critical_files": [
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "watched_files": [
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd": "131d343fb259e1a9eca5fdfaab815c6347c2cf6f",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd": "39302d2c9365ecda13480d2f4a848fc20023fa7a",
+        "scripts/runtime/networked_gameplay/networked_gameplay_service.gd": "7aa28b26833115427e71f049e333d7251e712c05"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "V0-P4-R1-REVIEW-POST-001",
+      "verification_id": "V0-P4-R1-VERIFY-001",
+      "recorded_at_utc": "2026-08-18T02:25:00Z",
+      "reason": "This is the current-NX consumer rebind of the independently reviewed and verified V0-P4 dependency clearance. The reviewed P4 producer target remains exactly 2a6721cdf02fa1134c59d1ab98bb7b597c66821d and its fenced blobs are unchanged on the current V0 producer branch. The new H0.2/NX.C1 consumer passport narrows the observed V0 -> NX hit set to one critical canonical M4 Item Graph service and two ordinary watched base-service files. The original P4 Reviewer/Verifier conclusion remains applicable to those exact producer blobs: the P4 delta is a server-authoritative M4 Item Graph composition extension, not a transport/protocol/prediction/reconciliation or NX foundation mutation. This record does not accept NX.C1, does not validate NX runtime, and fails closed on consumer head/passport drift, producer ancestry drift, hit-set drift or any fenced producer blob drift."
+    },
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "NX",
+      "producer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "consumer_program": "V0",
+      "consumer_branch": "feature/v0-p4-construction-real-resources",
+      "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "reviewed_producer_head": "1814ca72c9569ea2aa7e3d1dd4a69eb790888908",
+      "consumer_head_sha": "da1c8825429af53095240943de663ada9a6549fc",
+      "consumer_passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
+      "consumer_passport_blob_sha": "c1f1f2367bedb53ff73b373c93937996f34f4a41",
+      "critical_files": [
+        "scripts/network/authority/movement_authority_profile.gd"
+      ],
+      "watched_files": [
+        "scripts/network/authority/movement_authority_profile.gd",
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/network/authority/movement_authority_profile.gd": "5b3804f9d90fcd91cfad4e6202ed3e710f0f2257",
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd": "8377db769e1c18b35d1919cbfb41d5cf32e986b9",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd": "0c5b1c51e70ccb10b6076f5921582d83d0d82c8e"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "NX-V0-P4-DIRECTIONAL-REVALIDATION-001",
+      "verification_id": "PROJECT_CONTROL_RUN_31690226579",
+      "recorded_at_utc": "2026-08-18T02:18:00Z",
+      "reason": "Narrow dependency revalidation inspected exact H0.2/NX.C1 source implementation 1814ca72 and found the watched delta limited to opt-in realtime locomotion authorship/derived M3 leaves while SERVER_PREDICTED remains available and durable gameplay, Item Graph, Construction, economy and persistence truth remain server/domain authoritative. Exact Project Control run 31690226579 succeeded on the reviewed producer head. Runtime blobs in the complete observed NX -> V0 hit set remain byte-identical through current NX lifecycle head d1a44667. This clearance does not claim H0_2_PASS, NX SOURCE_ACCEPTED, runtime-tested-head completion, P4 acceptance, or validity of quarantined consumer head da1c8825 as P4 closure truth; that head is fenced only as the current registered Directional Watch consumer identity. Any producer ancestry, consumer identity, hit-set or blob drift fails closed back to raw critical RED."
+    }
+  ]
+}

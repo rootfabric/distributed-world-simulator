@@ -1,97 +1,196 @@
 # Distributed World Simulator — Current Project Frontiers
 
 **Operational owner:** `main`  
+**Canonical main at this refresh:** `598e92bb29a147bf12208d8549ddecaa4c9781ab`  
 **Architecture baseline:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation:** `80` activation candidate on PR #98; live `main` remains generation `79` until acceptance/merge  
+**Registry generation:** `80`  
 **Control plane:** `PC0-2026-08-10-R1`  
-**Harness:** `H0-2026-08-11-R1`
+**Harness base revision:** `H0-2026-08-11-R1`  
+**Harness P-train amendment:** `H0-PTRAIN-2026-08-18-R1`
 
-> Machine project-state truth remains `config/control/project-program-registry.v1.json`. PR #98 now contains the complete generation-80 routing candidate; it becomes canonical only after the control change is accepted into `main` and post-main Project Control is NON_RED.
+> Machine project-state truth remains `config/control/project-program-registry.v1.json`. Product-train succession rules are additionally owned by `config/control/harness/v0-product-train-policy.v1.json`.
 
-## Canonical state
+## Главный продуктовый приоритет
 
-GLOBAL-P0 R3 V9 is canonical. C22 is MAIN_INTEGRATED. Mandatory post-R3 Project Control is NON_RED. H0.2/NX.C1 bounded source implementation exists but its exact Godot/runtime verification and source acceptance are still pending.
-
-## Product critical path
-
-The first product checkpoint is:
+Основная playable линия сейчас — V0/P.
 
 ```text
-V0_S1_NETWORKED_PLANETARY_OUTPOST
+P0 playable frontier
+→ P1 world items / containers
+→ P2 reconnectable shared state
+→ P3 resource mining
+→ P4 real-resource Construction       ← CURRENT CLOSURE
+→ P5 equipment / tools                 ← NOT ELIGIBLE YET
+→ P6 persistent shared outpost         ← NOT ELIGIBLE YET
+→ post-P6 seamless decision
+→ V0-SM1 or explicit defer
+→ P7 bounded terrain mutation
+→ P8 first mobile construct / ship
 ```
 
-Target runtime:
+P — последовательный product train. Следующий checkpoint не получает runtime dispatch до принятия предыдущего checkpoint и отдельной main-owned successor activation.
+
+Подробные правила:
+
+`docs/control/V0_P_PRODUCT_TRAIN_RULES_RU.md`
+
+## Current P4 state
+
+P4 runtime implementation завершён и заморожен.
+
+Historical generation-80 activation/pre-runtime subject remains immutable provenance:
 
 ```text
-one procedural planet
-+ one server
-+ two clients
-+ two playable characters
-+ bidirectional remote movement
-+ canonical Construction commit
-+ replicated small outpost
-+ reconnect to the same live world state
-+ 30-minute two-client soak
+47ff18cf603bbf98bb67f7f62962e050f8606542
 ```
 
-V0-S1 uses the canonical current-main `SERVER_PREDICTED` network behavior first. It does not infer acceptance of the in-progress `OWNER_AUTHORITATIVE_VALIDATED` NX.C1 profile.
+Это dispatch/input snapshot, а не текущая runtime truth и не checkpoint acceptance claim.
 
-## Parallel NX lane
+Exact implementation/evidence target:
 
 ```text
-H0.2 / NX.C1 source IMPLEMENTED
-        ↓
-exact Godot focused validation
-        ↓
-full world/core
-        ↓
-two-client + impaired-network
-        ↓
-reconnect / ownership epoch
-        ↓
-independent review + CH -> NX revalidation
-        ↓
-H0_2_PASS + NX SOURCE_ACCEPTED
+2a6721cdf02fa1134c59d1ab98bb7b597c66821d
 ```
 
-NX acceptance remains strict and independent.
+Fresh independent P4 Reviewer и Verifier ранее проверили этот exact runtime/evidence target. Последующие проблемы относятся к Harness/control closure, а не к новому P4 runtime scope.
 
-## H0.3 boundary
-
-H0.3 is not a gameplay prerequisite for one V0 branch. It is required before more than one concurrent autonomous runtime **mutation** worker.
-
-Before H0.3:
+Текущий closure repair:
 
 ```text
-runtime mutation workers <= 1
+PR #127
+branch: repair/v0-p4-closure-ledger-state-r1
+candidate: 11969a954ceb9baab1b4a55cb2162fa1069fb0b2
 ```
 
-NX verification/review-only activity may coexist with one V0 implementation worker. NX non-trivial FIX mutation and V0 mutation must be serialized.
-
-## Fail-closed V0 -> NX rule
-
-V0 may not implement a private protocol, authority model, ownership epoch or reconciliation contract.
-
-If the canonical `SERVER_PREDICTED` path cannot close the V0 scenario without such a change:
+Live-frontier routing repair уже интегрирован:
 
 ```text
-V0_S1_BLOCKED_REQUIRES_NX
+PR #130 merged
+main: 598e92bb29a147bf12208d8549ddecaa4c9781ab
 ```
 
-The defect/requirement returns to the NX lane.
-
-## Following slices
+Следующий P4 control path:
 
 ```text
-V0-S1 NETWORKED PLANETARY OUTPOST
-        ↓
-V0-S2 NETWORKED LANDED SHIP-0
-        ↓
-V0-S3 MOVABLE SHIP
-        ↓
-V0-S4 PLANET <-> SPACE
+confirm exact-main Project Control NON_RED after #130
+→ rerun #127 Project Control against corrected main
+→ integrate #127 only if exact reviewed subject remains valid
+→ continue append-only P4 closure ledger
+→ record remaining predicates
+→ propose/accept V0_P4 checkpoint
+→ only then activate P5
 ```
 
-Wave A, G9, MAT0, TS0.4, ECO production, terrain mutation and server handoff are not inserted into V0-S1 unless a concrete scenario gate proves they are required.
+До этого момента P5 runtime mutation запрещён.
 
-Historical R2 evidence remains immutable provenance and cannot authorize new post-R3 runtime work.
+## Mutation lease
+
+До H0.3 разрешён максимум один autonomous runtime mutation worker.
+
+Сейчас lease остаётся fail-closed привязан к:
+
+```text
+program: V0
+checkpoint: V0_P4_REAL_RESOURCE_CONSTRUCTION
+branch: feature/v0-p4-construction-real-resources
+state: RESERVED_FOR_V0_P4_CLOSURE_NO_ACTIVE_RUNTIME_MUTATION
+```
+
+P4 closure не потребляет runtime worker, но lease не переводится автоматически на P5. После P4 acceptance main должен отдельным control update назначить P5 и exact accepted P4 successor base.
+
+## P5 target
+
+P5 делает canonical items реально используемыми equipment/tools.
+
+Минимальная вертикаль:
+
+```text
+canonical item
+→ server-authoritative equip / unequip
+→ replicated equipment state
+→ reconnect restores same equipment
+→ a real gameplay action requires/uses the equipped tool
+```
+
+Предпочтительный первый gameplay binding — mining tool. CH9.6 может быть donor presentation/equipment semantics, но не product base и не Item Graph authority.
+
+## P6 target
+
+P6 — первый стабильный persistent shared-outpost baseline:
+
+```text
+join
+→ mine
+→ inventory / container
+→ equip tool
+→ build from real resources
+→ second client converges
+→ reconnect
+→ server restart
+→ same canonical outpost reconstructed
+```
+
+Минимальные acceptance outcomes:
+
+- 5 чистых end-to-end повторов;
+- 30-minute two-client soak;
+- persistent inventory/equipment/Construction reconstruction;
+- zero duplicate canonical truth.
+
+## Post-P6 seamless insertion
+
+После P6 P7 не auto-dispatchится.
+
+Обязательные документы:
+
+- `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`
+- `docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md`
+
+Main должен записать одно решение:
+
+```text
+ACTIVATE_V0_SM1
+или
+DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION
+```
+
+SM0/MRPF при этом используются как evidence/capability donors. Future V0-SM1 стартует от accepted P6 baseline, а не от historical lab branch.
+
+## NX
+
+NX/H0.2 остаётся самостоятельной HIGH-risk network-authority линией. V0/P продолжает использовать `SERVER_PREDICTED` как базовый network model, пока canonical NX acceptance/control явно не изменит это правило.
+
+Любая реальная потребность P в новом protocol ownership, authority transfer/reconciliation model или Character ownership change fail-closed маршрутизируется в NX. Это конкретная dependency, а не причина блокировать P всей NX веткой целиком.
+
+## ECO
+
+ECO — experimental/research frontier и сейчас **не блокирует V0/P**.
+
+Harness правило:
+
+```text
+research status alone != product blocker
+```
+
+Research branch становится P blocker только при явной main-registered dependency, обязательном canonical foundation precondition, доказанном ownership/directional-watch intersection или явном потреблении research capability в P Work Order.
+
+Следовательно, ECO может продолжать свои эксперименты независимо и не входит в P4/P5/P6 critical path.
+
+## Fail-closed boundaries for P
+
+Остановить текущий P checkpoint и перепланировать, если требуется:
+
+```text
+second Item Graph owner
+second Construction truth
+second persistence/durability owner
+private V0 network authority
+new network protocol/authority foundation without NX route
+successor runtime dispatch before predecessor checkpoint acceptance
+successor branch not based on exact main-declared accepted predecessor lineage
+second pre-H0.3 runtime mutation worker
+P7 dispatch after P6 without durable seamless activation/defer decision
+research branch used as implicit product blocker without a registered dependency
+```
+
+Historical branches remain evidence/capability donors unless main-owned control explicitly declares an exact head as the product execution input.

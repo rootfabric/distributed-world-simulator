@@ -56,14 +56,9 @@ def main(argv: list[str] | None = None) -> int:
         state["ok"] = True
         state["exit_codes"] = EXIT_CODES
         if args.mode == "plan":
-            planned_work_order = dict(state["active_work_order"])
-            planned_work_order["implementation_changed_paths"] = state["repository"]["implementation_changed_paths"]
-            planned_work_order["late_delta_changed_paths"] = state["repository"]["late_delta_paths"]
-            planned_work_order["unexpected_late_delta_paths"] = state["repository"]["unexpected_late_delta_paths"]
-            planned_work_order["global_runtime_mutation_arbiter"] = state["global_runtime_mutation_arbiter"]
             state["plan"] = build_plan(
                 ContractBundle.load(root).contracts,
-                planned_work_order,
+                state["active_work_order"],
                 state["reduced_work_order"],
             )
         elif args.mode == "resume":
