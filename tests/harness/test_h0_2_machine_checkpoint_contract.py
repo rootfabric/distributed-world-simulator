@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from harness.checkpoint_planner import build_plan
 
 CHECKPOINT = "H0_2_NX_C1_HIGH_RISK_PILOT"
+CURRENT_V0_LEASE_HOLDER = "V0_P5_EQUIPMENT_TOOLS"
 
 
 def load_json(path: str) -> dict:
@@ -75,7 +76,7 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(80, lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
-        self.assertEqual("V0_P4_REAL_RESOURCE_CONSTRUCTION", lease["holder_checkpoint"])
+        self.assertEqual(CURRENT_V0_LEASE_HOLDER, lease["holder_checkpoint"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_goal_graph_routes_network_train_through_h0_2(self):
@@ -105,7 +106,7 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
             "work_order_id": "H0-2-NX-C1-WO-TEST",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, "GLOBAL_MUTATION_SLOT_RESERVED_FOR:V0_P4_REAL_RESOURCE_CONSTRUCTION"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{CURRENT_V0_LEASE_HOLDER}"):
             build_plan(self.contracts, self.work_order, reduced)
 
     def test_implemented_h0_2_is_verification_only_and_consumes_no_mutation_worker(self):

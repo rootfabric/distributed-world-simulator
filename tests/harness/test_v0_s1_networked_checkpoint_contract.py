@@ -12,9 +12,11 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from harness.checkpoint_planner import build_plan
 
 P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+P5 = "V0_P5_EQUIPMENT_TOOLS"
 S1 = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
 P4_BRANCH = "feature/v0-p4-construction-real-resources"
+P5_BRANCH = "feature/v0-p5-equipment-tools"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 
 
@@ -37,7 +39,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             "scheduler_policy": self.scheduler,
         }
 
-    def test_p4_is_current_high_risk_product_checkpoint(self):
+    def test_p4_historical_high_risk_product_checkpoint_contract_is_preserved(self):
         checkpoint = self.catalog["checkpoints"][P4]
         self.assertEqual("PROJECT", checkpoint["kind"])
         self.assertEqual("V0", checkpoint["program"])
@@ -61,7 +63,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertTrue(rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"])
         self.assertTrue(rules["product_execution_base_is_not_automatic_checkpoint_acceptance"])
 
-    def test_prior_acceptance_debt_does_not_block_bounded_implementation_but_blocks_acceptance(self):
+    def test_prior_acceptance_debt_contract_is_preserved_for_historical_p4(self):
         checkpoint = self.catalog["checkpoints"][P4]
         non_preconditions = set(checkpoint["non_preconditions_for_bounded_implementation"])
         self.assertIn("P2_DIRECTOR_CHECKPOINT_VERDICT_COMPLETE", non_preconditions)
@@ -98,7 +100,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_preserves_p0_p8_order_and_requires_post_p6_gate(self):
+    def test_goal_graph_preserves_p0_p8_order_and_current_runtime_route_is_p5(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
         self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
         sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
@@ -134,10 +136,10 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             core_p_sequence,
         )
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
-        self.assertIn(P4, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
+        self.assertEqual([P5], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
 
-    def test_registry_generation_80_declares_exact_product_lineage_without_false_acceptance(self):
+    def test_registry_generation_80_preserves_historical_p4_dispatch_lineage(self):
         self.assertEqual(80, self.registry["registry_generation"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
@@ -152,16 +154,11 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertIn("P2_DIRECTOR_VERDICT_PENDING", v0["acceptance_debt"])
         self.assertIn("P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING", v0["acceptance_debt"])
 
-    def test_registry_pins_current_auditable_p4_passport(self):
+    def test_registry_pins_historical_auditable_p4_passport(self):
         v0 = self.registry["programs"]["V0"]
         remote_ref = f"origin/{P4_BRANCH}"
         remote_head = git("rev-parse", "--verify", remote_ref)
         prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
-
-        # `prebuild_state` is an immutable dispatch/input snapshot, not a promise
-        # that the active implementation branch can never advance. Once P4 is
-        # dispatched and implemented, the current branch head must descend from
-        # the frozen prebuild subject rather than equal it byte-for-byte.
         git("merge-base", "--is-ancestor", prebuild_head, remote_head)
 
         passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
@@ -187,7 +184,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             self.assertIn(prebuild_head, text)
             self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
 
-    def test_pre_h0_3_concurrency_is_one_main_owned_mutation_lease(self):
+    def test_pre_h0_3_concurrency_is_one_main_owned_p5_mutation_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
@@ -197,11 +194,11 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
         self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
         self.assertEqual(1, lease["capacity"])
-        self.assertEqual(P4, lease["holder_checkpoint"])
-        self.assertEqual(P4_BRANCH, lease["holder_branch"])
+        self.assertEqual(P5, lease["holder_checkpoint"])
+        self.assertEqual(P5_BRANCH, lease["holder_branch"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
-    def test_p4_planner_waits_for_dispatch_then_allocates_and_releases_single_worker(self):
+    def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):
         work_order = {"goal_checkpoint": P4, "branch": P4_BRANCH}
         planned = {
             "completed_predicates": [],
@@ -213,19 +210,14 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(0, plan["autonomous_runtime_workers"])
         self.assertEqual("MAIN_DECLARED_V0_PRODUCT_LINEAGE", plan["v0_p4_gate"]["runtime_execution_base"])
         self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
-        self.assertTrue(plan["v0_p4_gate"]["bounded_implementation_may_proceed_with_prior_acceptance_debt"])
 
         dispatched = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        plan = build_plan(self.contracts, work_order, dispatched)
-        self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", plan["mode"])
-        self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
-        self.assertEqual("BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION", plan["next_action"])
-        self.assertIn("SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER", plan["stop_gates"])
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P5}"):
+            build_plan(self.contracts, work_order, dispatched)
 
         implemented = dict(dispatched, state="IMPLEMENTED")
         plan = build_plan(self.contracts, work_order, implemented)
