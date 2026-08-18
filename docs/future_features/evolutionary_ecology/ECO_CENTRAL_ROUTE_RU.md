@@ -1,11 +1,11 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.1 CANDIDATE_VERIFICATION`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.2 IN_DEVELOPMENT`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 EVO2 plan: `docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md`.
-E2.1 checkpoint: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_CANDIDATE_RU.md`.
+E2.1 accepted checkpoint: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_ACCEPTED_RU.md`.
 
 ## 1. Что уже закрыто
 
@@ -17,6 +17,7 @@ ECO.CAL1-A..F             ACCEPTED
 CAL1-F                    ROBUST_UNITY_CALIBRATION
 ECO.EVO1 / P2.1..P2.8     ACCEPTED / EVO1 COMPLETE
 ECO.P3 / P3.1..P3.8       ACCEPTED / RESEARCH ROUTE COMPLETE
+ECO.EVO2 / E2.1           ACCEPTED
 ```
 
 Ключевые frozen identities:
@@ -39,9 +40,18 @@ P3.5    255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83
 P3.6    a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
 P3.7    ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a
 P3.8    6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0
+E2.1    aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
 ```
 
-P2.8 exact acceptance доказал deterministic save/restart Plant World и закрыл EVO1. P3 затем доказал resource competition, carrying capacity, spatial dispersal, environmental gradients, seasonal forcing, disturbance/succession, multi-niche coexistence и deterministic ecosystem persistence.
+E2.1 acceptance source HEAD:
+
+`c79e2d61e665689fe39621442f72171de5d2790f`
+
+E2.1 code-under-test:
+
+`bf468942718df6b84ebd4c61a294987e8e63c607`
+
+Acceptance был выполнен как human-directed exact-attached-Godot equivalent fresh verification. Independent Reviewer PASS этим не заявлялся.
 
 ## 2. Production P4 — отдельная governance-линия
 
@@ -61,9 +71,7 @@ human runtime merge gate
 
 EVO2 не получает production authority из P4 и не блокируется ожиданием его promotion. Любой будущий XFER обязан повторно сверяться с canonical `main` и Project Control.
 
-## 3. Новый North Star после EVO1/P3
-
-Следующий исследовательский вопрос:
+## 3. North Star EVO2
 
 > Может ли результат эволюции стать переносимым каталогом жизненных стратегий, который без biome->asset таблиц заселяет новую, ранее не использованную среду через экологическую сортировку, конкуренцию, распространение и историю?
 
@@ -83,14 +91,14 @@ population ecology
 self-organized community
 ```
 
-`SpeciesCatalog` здесь — research artifact. Он не является canonical species taxonomy проекта и не получает production ownership.
+`SpeciesCatalog` — research artifact, а не canonical species taxonomy и не production owner.
 
 ## 4. EVO2 — Portable Evolutionary Ecology
 
 ```text
-E2.1 SpeciesCatalog Contract                         ← CANDIDATE_VERIFICATION
-    ↓ exact canonical branch gate required
-E2.2 Deterministic Evolution Bake Export             ← BLOCKED UNTIL E2.1 ACCEPTED
+E2.1 SpeciesCatalog Contract                         ACCEPTED
+    ↓
+E2.2 Deterministic Evolution Bake Export             ← CURRENT
     ↓
 E2.3 Frozen-Catalog Transfer
     ↓
@@ -107,94 +115,95 @@ E2.8 Catalog Persistence & Provenance
 EVO2 FINAL — Unseen World Challenge
 ```
 
-### E2.1 — SpeciesCatalog Contract
+### E2.1 — SpeciesCatalog Contract — ACCEPTED
 
-Реализован research-only portable contract:
+Frozen contract:
 
 - stable `research_species_id`;
 - source lineage identity и ancestry;
 - ecological genome/traits;
 - recruitment/dispersal strategy;
-- observed range prior как evidence, а не biome assignment;
-- source observation/evidence hashes;
+- observed range prior как evidence, не biome assignment;
 - deterministic catalog ordering/hash;
+- strict source observation shape/types;
 - explicit provenance;
-- fail-closed validation;
-- `canonical_species_declared = false`.
+- `canonical_species_declared = false`;
+- no global RNG consumption;
+- no source-state mutation.
 
-E2.1 не решает clustering/species concept целиком. Один validated lineage hypothesis образует одну portable entry; E2.2 отвечает за deterministic bake selection/grouping policy.
+Canonical E2.1 aggregate:
 
-Current exact candidate evidence:
+`aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad`
 
-```text
-code-under-test HEAD
-bf468942718df6b84ebd4c61a294987e8e63c607
+### E2.2 — Deterministic Evolution Bake Export — CURRENT
 
-Godot
-4.7.1.stable.double.custom_build.a13da4feb
+Теперь нужно автоматически строить `SpeciesCatalog` из frozen long-run evolution result, а не передавать lineage observations вручную.
 
-acceptance assertions
-53 / 53 PASS
-
-fresh-process replay
-byte-identical
-
-aggregate_hash
-aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad
-```
-
-Exact Git blobs для нового contract, acceptance test и его ECO dependencies были сверены с GitHub перед запуском. Дополнительно найден и закрыт fail-closed gap: E2.1 запрещает legacy extra fields и `float`-Variant `split_year`, которые старый P2.7 validator способен семантически принять.
-
-Однако полный `RUN_ECO_EVO2_E2_1_TESTS.ps1` в canonical Git worktree здесь не выполнялся. Поэтому:
+E2.2 обязан отделить три задачи:
 
 ```text
-E2.1 = STRONG CANDIDATE
-E2.1 != SELF_ACCEPTED
-E2.2 = BLOCKED
+long-run lineage evidence
+    ↓
+deterministic candidate selection
+    ↓
+deterministic representative observation per retained lineage
+    ↓
+accepted E2.1 SpeciesCatalog.build(...)
 ```
 
-### E2.2 — Deterministic Evolution Bake Export
+Минимальные acceptance requirements:
 
-После E2.1 acceptance из frozen evolution result нужно получить воспроизводимый каталог устойчивых lineage hypotheses. Acceptance требует одинакового каталога при повторе exact inputs и отсутствия зависимости от iteration order/global RNG.
+- deterministic candidate selection;
+- explicit persistence/survival threshold;
+- deterministic representative snapshot;
+- no iteration-order dependence;
+- no global RNG dependence;
+- source long-run result not mutated;
+- exact provenance до source evolution result;
+- explicit treatment of transient/extinct/recent lineages;
+- duplicate/ambiguous lineage evidence fails closed;
+- E2.1 catalog validation обязательно проходит;
+- никаких biome tables;
+- никаких новых canonical species declarations.
+
+Clustering/grouping пока не должен вводиться автоматически. На первом E2.2 contract retained validated lineage hypothesis остаётся одной research species entry. Любая более сложная species grouping policy требует отдельного evidence gate.
 
 ### E2.3 — Frozen-Catalog Transfer
 
-Запретить mutation/evolution и проверить, может ли один каталог сформировать разумное сообщество в новой карте только через ecology: establishment, competition, dispersal, succession и disturbance.
+После E2.2 catalog freeze mutation/evolution выключаются. Новый landscape не использовался при bake. Разрешены только dispersal, establishment, competition, population turnover, succession и disturbance/recovery.
 
 ### E2.4 — Environment Generalization Matrix
 
-Проверить минимум близкую, сухую, влажную, nutrient-poor, seasonal и patch-isolated среды. Acceptance — не одинаковый species list, а причинно объяснимая смена occupancy/biomass/extinction/colonization.
+Проверяются минимум NEAR_SOURCE, DRY, WET, NUTRIENT_POOR, HIGH_SEASONALITY и PATCH_ISOLATED.
 
 ### E2.5 — Sorting vs Adaptation
 
-Control использует frozen catalog; Treatment разрешает дальнейшую evolution. Измерять отдельно ecological sorting и новую evolutionary adaptation.
+Control = frozen catalog; Treatment = тот же root/catalog с продолженной evolution.
 
 ### E2.6 — Replicated Causal Experiments
 
-Использовать проверенные идеи VIS2.2: независимые stochastic roots, Control/Treatment CRN внутри пары, aggregate effect и reproducible rewind/rebranch evidence. VIS2.2 остаётся отдельной research/evidence lineage; его формальная closure не подменяется этим документом.
+Использовать доказанные patterns VIS2.2 без автоматического присвоения VIS2.2 formal PASS.
 
 ### E2.7 — Cross-Seed Robustness
 
-Запретить acceptance по одному «красивому seed». Разные seeds могут давать разные истории, но ключевые закономерности должны сохраняться статистически.
+Acceptance не может зависеть от одного seed.
 
 ### E2.8 — Catalog Persistence & Provenance
 
-Доказать typed deterministic save/load, stable hashes, schema/version migration boundary, engine/model provenance и fresh-process restore.
+Typed deterministic save/load, canonical bytes/hash, schema/version boundary и fresh-process restore.
 
 ### EVO2 FINAL — Unseen World Challenge
 
-Каталог, сформированный без знания target map, получает новую EnvironmentProfile/landscape. Система должна без hardcoded biome species tables получить устойчивую spatial population truth с причинно объяснимой структурой.
+Target environment скрыт от bake pipeline до freeze SpeciesCatalog. После открытия target система должна без hardcoded biome species tables построить причинно объяснимую spatial population truth.
 
-## 5. Что после EVO2
-
-При PASS EVO2 открывается bounded XFER0 и следующий исследовательский слой:
+## 5. После EVO2
 
 ```text
 EVO2 portable ecology proof
     ↓
 bounded XFER0 contracts
     ↓
-EVO3 Planetary Ecology Compiler / broader planetary generalization
+EVO3 Planetary Ecology Compiler
     ↓
 plant runtime convergence
     ↓
@@ -224,6 +233,5 @@ EVO2 != permission to own G/WQ/MAT/LIFE/WB/NX foundations
 ## 7. Current resolver
 
 ```text
-VERIFY ECO.EVO2 / E2.1 SPECIES CATALOG CONTRACT ON CANONICAL BRANCH RUNNER
-THEN OPEN E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT
+DEVELOP ECO.EVO2 / E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT
 ```
