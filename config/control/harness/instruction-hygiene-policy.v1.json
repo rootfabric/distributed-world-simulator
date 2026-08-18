@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.harness_instruction_hygiene_policy.v1",
+  "hygiene_layer_revision": "H0-HYGIENE-2026-08-18-R1",
+  "router_files": ["AGENTS.md", "HARNESS_CONTROL.md"],
+  "budgets": {
+    "AGENTS.md": {"max_lines": 150, "max_bytes": 18000},
+    "HARNESS_CONTROL.md": {"max_lines": 180, "max_bytes": 22000}
+  },
+  "mutable_state_forbidden_in_router": ["## Current harness gate", "Текущая pilot-последовательность:"],
+  "importance_markers": {
+    "tokens": ["IMPORTANT", "CRITICAL", "MUST", "NEVER", "ALWAYS", "ВАЖНО", "КРИТИЧНО", "ОБЯЗАТЕЛЬНО"],
+    "warn_above_per_file": 20
+  },
+  "rule_lifecycle": {
+    "required_fields": ["rule_id", "class", "source", "trigger", "enforcement", "retirement"],
+    "protected_classes": ["SAFETY_INVARIANT", "SECURITY_INVARIANT", "CONTROL_INVARIANT", "ARCHITECTURE_INVARIANT"],
+    "auto_retirement_forbidden": true,
+    "mechanized_rule_should_remove_duplicate_prose": true,
+    "frequently_violated_prose_should_be_mechanized": true
+  },
+  "review_trigger": {
+    "accepted_checkpoints_between_hygiene_reviews": 10,
+    "also_trigger_on_context_budget_failure": true,
+    "also_trigger_on_prose_machine_drift": true,
+    "also_trigger_before_new_harness_snapshot": true
+  }
+}
