@@ -47,7 +47,7 @@ function Invoke-E22([string]$Label) {
     $joined = $output -join "`n"
     if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
     if ($joined -match '(?m)^ERROR:') { throw "$Label emitted Godot ERROR output" }
-    if ($joined -notmatch 'ECO\.EVO2 E2\.2 Deterministic Evolution Bake Export: PASS \(60 assertions\)') { throw "$Label did not emit E2.2 PASS marker" }
+    if ($joined -notmatch 'ECO\.EVO2 E2\.2 Deterministic Evolution Bake Export: PASS \(62 assertions\)') { throw "$Label did not emit E2.2 PASS marker" }
     return $joined
 }
 
