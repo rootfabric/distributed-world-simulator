@@ -1,0 +1,32 @@
+name: V0 P5 Repair R1 Exact Source Probe R6
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-p5-equipment-tools
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archive exact P5 repair base source
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="dd50af56b21c7d8f6879e056730ff21248bd7b4f"
+          echo "BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git archive --format=zip --output=p5-repair-r1-dd50.zip "$BASE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p5-repair-r1-dd50
+          path: p5-repair-r1-dd50.zip
+          if-no-files-found: error
+          retention-days: 1
