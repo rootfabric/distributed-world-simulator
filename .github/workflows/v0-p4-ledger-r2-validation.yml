@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPAIR_HEAD="73b5bf7d31ca873f7304ab3674181077c8d624c3"
+          REPAIR_HEAD="953cd612281b4de17b2f92294ecdb4752fd8443c"
           AUDITED_MAIN="5999d935e8d5b496100ced66283d8762d3403675"
           EXECUTION="config/control/harness/executions/E2026-08-17-V0-P4-R1"
 
@@ -79,9 +79,9 @@ jobs:
         run: |
           set -euo pipefail
           BASE="b5bf2f529b55ce4ac6a5fb184151122814e4dcd8"
-          HEAD="73b5bf7d31ca873f7304ab3674181077c8d624c3"
+          HEAD="953cd612281b4de17b2f92294ecdb4752fd8443c"
           git diff --check "$BASE" "$HEAD"
           bad="$(git diff --name-only "$BASE" "$HEAD" | grep -Ev '^config/control/harness/executions/E2026-08-17-V0-P4-R1/' || true)"
           test -z "$bad"
-          test "$(git rev-list --count "$BASE..$HEAD")" = "2"
+          test "$(git rev-list --count "$BASE..$HEAD")" = "3"
           test "$(git merge-base "$BASE" "$HEAD")" = "$BASE"
