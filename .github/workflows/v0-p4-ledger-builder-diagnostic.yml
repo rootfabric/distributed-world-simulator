@@ -1,0 +1,47 @@
+name: V0 P4 Ledger Builder Diagnostic
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-ledger-builder-diagnostic
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Read builder run and publish diagnostic result branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="rootfabric/distributed-world-simulator"
+          RESULT_BRANCH="probe/v0-p4-ledger-builder-diagnostic-result"
+          gh run list --repo "$REPO" --workflow v0-p4-ledger-repair-builder-r1.yml --branch probe/v0-p4-ledger-repair-builder-r1 --limit 5 --json databaseId,status,conclusion,url,headSha,createdAt > /tmp/runs.json
+          RUN_ID="$(python3 -c 'import json; x=json.load(open("/tmp/runs.json")); print(x[0]["databaseId"] if x else "")')"
+          test -n "$RUN_ID"
+          {
+            echo "RUNS_JSON"
+            cat /tmp/runs.json
+            echo
+            echo "LATEST_RUN=$RUN_ID"
+            echo "FAILED_LOG_BEGIN"
+            gh run view "$RUN_ID" --repo "$REPO" --log-failed || true
+            echo "FAILED_LOG_END"
+          } > /tmp/diagnostic.txt
+          git fetch origin "$RESULT_BRANCH"
+          git checkout -B result "origin/$RESULT_BRANCH"
+          mkdir -p artifacts/probe
+          cp /tmp/diagnostic.txt artifacts/probe/v0-p4-ledger-builder-diagnostic.txt
+          git config user.name "V0 P4 Diagnostic"
+          git config user.email "actions@users.noreply.github.com"
+          git add artifacts/probe/v0-p4-ledger-builder-diagnostic.txt
+          git commit -m "probe(v0-p4): record ledger builder diagnostic"
+          git push origin HEAD:"$RESULT_BRANCH"
