@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.6 AUTHORIZED_NOT_STARTED`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO2 E2.7 AUTHORIZED_NOT_STARTED`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.  
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
@@ -12,7 +12,8 @@ EVO2 plan: `docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md`.
 - E2.2: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_2_EVOLUTION_BAKE_EXPORT_ACCEPTED_RU.md`;
 - E2.3: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_ACCEPTED_RU.md`;
 - E2.4: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_4_ENVIRONMENT_GENERALIZATION_MATRIX_ACCEPTED_RU.md`;
-- E2.5: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_5_SORTING_VS_ADAPTATION_ACCEPTED_RU.md`.
+- E2.5: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_5_SORTING_VS_ADAPTATION_ACCEPTED_RU.md`;
+- E2.6: `docs/checkpoints/2026-08-18_ECO_EVO2_E2_6_REPLICATED_CAUSAL_EXPERIMENTS_ACCEPTED_RU.md`.
 
 ## 1. Принятый research фундамент
 
@@ -29,6 +30,7 @@ ECO.EVO2 / E2.2           ACCEPTED
 ECO.EVO2 / E2.3           ACCEPTED
 ECO.EVO2 / E2.4           ACCEPTED
 ECO.EVO2 / E2.5           ACCEPTED
+ECO.EVO2 / E2.6           ACCEPTED
 ```
 
 Frozen identities relevant to current route:
@@ -41,6 +43,7 @@ E2.2  56d4b8bfd3064ad37b720d5bff2bc98bb72b0ab7ad871877fc268d5e6df703ce
 E2.3  82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8
 E2.4  ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5
 E2.5  942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6
+E2.6  1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd
 ```
 
 E2.2 exact frozen artifact:
@@ -62,72 +65,67 @@ catalog  5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219
 
 ### E2.5 — sorting vs adaptation
 
+Одинаковые frozen founders и environment сначала показывают ecological sorting в Control с mutation disabled, а затем environment-specific inherited adaptation в Treatment. DRY/WET reciprocal cross-environment test отвергает простой global fitness inflation.
+
+Exact E2.5 aggregate:
+
+`942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6`.
+
+### E2.6 — replicated causal experiments — ACCEPTED
+
 Exact code-under-test:
 
-`4c17a91957e392eabc04e136f9590773dbe54dd1`
+`8ac37bfea0f36731407e1252db1a7c2a2305420e`
 
 Implementation blob:
 
-`74443f7b0c1b5e2234b1949761abc6cfab4bdd9c`
+`7fb18d91ba59493c608edafba610dc882152852a`
 
-Accepted evidence:
-
-```text
-exact transitive executable closure  21 / 21 PASS
-Godot                               4.7.1.stable.double.custom_build.a13da4feb
-parser/preload                      PASS
-fresh process A                     PASS
-fresh process B                     PASS
-assertions                          93 / 93 PASS
-logs                                byte-identical
-aggregate                           942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6
-```
-
-E2.5 использует causal pair:
+Replication protocol был frozen **до** acceptance execution:
 
 ```text
-CONTROL
-same frozen catalog + same environment + mutation_probability=0
-→ ecological sorting only
-
-TREATMENT
-same founders + same environment + one fixed bounded mutation policy
-→ inherited variation + ResourceModel selection
+replicates = R01 / R02 / R03 / R04 / R05
+all records retained
+post-hoc censoring forbidden
+positive adaptation threshold >= 4/5 per environment
+reciprocal home-advantage threshold >= 4/5 per environment
 ```
 
-DRY и WET Control arms меняют abundance при `novel_genome_count=0`, то есть демонстрируют pure ecological sorting. При этом DRY выбирает frozen alpha strategy, а WET — frozen beta strategy.
+Control/Treatment сохраняют E2.5 causal identity lock. Различается только permission for bounded inherited adaptation.
 
-Treatment не получает target-aware bonus: candidate consequence считается только через accepted `ResourceModel`. Mutation считается adaptation только если одновременно есть novel inherited genome и положительный gain относительно frozen Control.
+Fresh exact evidence:
 
-Observed paired result:
+```text
+exact transitive executable closure   7 / 7 PASS
+Godot                                4.7.1.stable.double.custom_build.a13da4feb
+parser/preload                       PASS
+fresh process A                      PASS
+fresh process B                      PASS
+assertions                           218 / 218 PASS
+logs                                 byte-identical
+aggregate                            1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd
+replicate set                        5e02d04d3d94f95f6e8e76f6387ee07c723d2e596046f6a65d65cd815abbc637
+```
+
+Observed retained replication result:
 
 ```text
 DRY
-sorting gain      +0.712602797217
-adaptation gain   +0.210067450172
-classification    ADAPTATION_DETECTED
+mean adaptation gain       +0.235359270024
+positive effects           5 / 5
+reciprocal home advantage  5 / 5
 
 WET
-sorting gain      +1.231209807202
-adaptation gain   +0.387714189995
-classification    ADAPTATION_DETECTED
+mean adaptation gain       +0.379178153879
+positive effects           5 / 5
+reciprocal home advantage  5 / 5
 ```
 
-Reciprocal cross-environment check:
+Важно: acceptance protocol требовал только 4/5 и не позволял удалять null/reversal runs. Получившийся 5/5 — наблюдаемый результат, а не заранее встроенное требование.
 
-```text
-DRY-adapted in DRY   +0.500903251638
-WET-adapted in DRY   -1.600499312923
+E2.6 намеренно **не** заявляет p-value/statistical significance и **не** заявляет broad cross-seed robustness. Пять deterministic replicate streams подтверждают replication causal effect; более широкий robustness claim оставлен E2.7.
 
-WET-adapted in WET   +1.157255352906
-DRY-adapted in WET   -1.601811151164
-```
-
-То есть adaptive response environment-specific, а не просто общий fitness inflation.
-
-Adapted descendant сохраняет исходный `research_species_id/source_lineage_id`; это не canonical speciation.
-
-Canonical PowerShell runner существует, но в Linux carrier нет `pwsh/powershell`; acceptance основана на explicit equivalent fresh behavioral gate. Independent Reviewer/Verifier PASS не заявляется.
+Canonical PowerShell runner существует (`08a2ffbfbe1b3c28b020571256b6831d37d97fcb`), но в Linux carrier нет `pwsh/powershell`; acceptance основана на explicit equivalent fresh behavioral gate. Independent Reviewer/Verifier PASS не заявляется.
 
 ## 3. Current research route
 
@@ -142,43 +140,34 @@ E2.4 Environment Generalization Matrix               ACCEPTED
     ↓
 E2.5 Ecological Sorting vs Continued Adaptation      ACCEPTED
     ↓
-E2.6 Replicated Causal Experiments                   ← AUTHORIZED / NEXT
+E2.6 Replicated Causal Experiments                   ACCEPTED
     ↓
-E2.7 Cross-Seed Robustness
+E2.7 Cross-Seed Robustness                           ← AUTHORIZED / NEXT
     ↓
 E2.8 Catalog Persistence & Provenance
     ↓
 EVO2 FINAL — Unseen World Challenge
 ```
 
-## 4. E2.6 — Replicated Causal Experiments
+## 4. E2.7 — Cross-Seed Robustness
 
-E2.5 сейчас является сильным deterministic paired assay, но всё ещё одной зафиксированной causal trajectory. E2.6 должен проверить, сохраняется ли вывод на bounded replication set.
+E2.7 должен перейти от малого replicated set к заранее объявленному более широкому seed ensemble и проверить, насколько causal adaptation conclusion устойчив к variation stream choice.
 
-Минимальная задача E2.6:
+Минимальные правила E2.7:
 
-```text
-same frozen starting catalog
-same declared Control/Treatment protocol
-multiple deterministic replicate identities
-        ↓
-per-replicate paired effects
-        ↓
-effect consistency / reversals / null outcomes
-        ↓
-replicated causal evidence package
-```
+- seed ensemble фиксируется до выполнения и хэшируется;
+- E2.6 `R01..R05` не считается достаточным E2.7 proof автоматически;
+- все seeds/runs сохраняются, включая null, reversal и failed-effect outcomes;
+- никакой post-hoc seed selection;
+- те же frozen catalog/environment/policy identities;
+- effect distribution фиксирует median, quantiles/range и sign consistency, а не только mean;
+- sensitivity к отдельному seed/leave-one-out должна быть явной;
+- robustness threshold фиксируется до acceptance run;
+- если вводится statistical confidence, метод и threshold фиксируются до просмотра результата;
+- DRY/WET reciprocal local-adaptation contrast остаётся обязательной частью robustness evidence;
+- E2.8 не открывается до formal E2.7 acceptance.
 
-E2.6 должен:
-
-- повторять causal pairing, а не сравнивать несвязанные runs;
-- заранее фиксировать replication set и seed/stream derivation;
-- сохранять Control/Treatment identity locks;
-- различать `ADAPTATION_DETECTED`, `ADAPTATION_NO_MEASURABLE_ADVANTAGE`, `SORTING_ONLY_RESPONSE`, `NO_RESPONSE`;
-- показывать distribution/sign consistency, а не только среднее;
-- сохранять отрицательные/null replicates, а не фильтровать их;
-- использовать VIS2.2 observability/evidence patterns как технический шаблон без автоматического наследования PASS;
-- не открывать E2.7 до formal E2.6 acceptance.
+E2.7 не должен менять biological mechanism или подгонять mutation policy. Его задача — проверить устойчивость уже принятого E2.5/E2.6 механизма.
 
 ## 5. Production P4 — отдельная governance-линия
 
@@ -202,5 +191,5 @@ EVO2 != permission to own G/WQ/MAT/LIFE/WB/NX foundations
 ## 7. Current resolver
 
 ```text
-OPEN / IMPLEMENT ECO.EVO2 / E2.6 REPLICATED CAUSAL EXPERIMENTS
+OPEN / IMPLEMENT ECO.EVO2 / E2.7 CROSS-SEED ROBUSTNESS
 ```
