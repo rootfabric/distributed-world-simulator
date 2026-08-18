@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - probe/v0-p4-ledger-state-r1-machine-check
+  pull_request:
+    branches:
+      - repair/v0-p4-closure-ledger-state-r1
 
 permissions:
   contents: read
