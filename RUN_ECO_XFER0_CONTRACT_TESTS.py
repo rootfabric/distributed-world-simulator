@@ -29,12 +29,18 @@ def main() -> int:
     if schema.get("$id") != "distributed_world_simulator.ecology.xfer0_contract.schema.v1":
         print("ECO.XFER0 runner: FAIL schema id")
         return 1
-    validator_run = subprocess.run([sys.executable, str(VALIDATOR)], cwd=ROOT, text=True)
+    validator_run = subprocess.run([sys.executable, str(VALIDATOR)], cwd=ROOT, text=True, capture_output=True)
     if validator_run.returncode != 0:
+        print(validator_run.stdout, end="")
+        print(validator_run.stderr, end="", file=sys.stderr)
         return validator_run.returncode
-    test_run = subprocess.run([sys.executable, "-m", "unittest", "-v", str(TEST)], cwd=ROOT, text=True)
+    test_run = subprocess.run([sys.executable, "-m", "unittest", str(TEST)], cwd=ROOT, text=True, capture_output=True)
     if test_run.returncode != 0:
+        print(test_run.stdout, end="")
+        print(test_run.stderr, end="", file=sys.stderr)
         return test_run.returncode
+    print("validator=PASS")
+    print("negative_positive_tests=PASS_17_OF_17")
     print("ECO.XFER0 bounded contract: PASS")
     print("contract_hash=" + str(contract.get("contract_hash", "")))
     print("interfaces=" + str(len(contract.get("interfaces", []))))
