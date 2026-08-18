@@ -17,6 +17,8 @@
     "scripts/app/**",
     "scripts/ui/inventory/**",
     "tests/runtime/test_v0_p5_*",
+    "tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd",
+    "tools/runtime/v0_p3_live_mining_client_base.gd",
     "tests/fixtures/v0_p5/**",
     "RUN_V0_P5_*",
     "config/control/harness/executions/E2026-08-18-V0-P5-R1/**",
@@ -107,5 +109,5 @@
   "human_attention_triggers": ["RUNTIME_FEATURE_MERGE", "NETWORK_FOUNDATION_CHANGE_REQUIRED", "DUPLICATE_CANONICAL_TRUTH_REQUIRED", "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED"],
   "issued_at_utc": "2026-08-18T11:51:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "P5 is IN_PROGRESS under one Director-dispatched mutation worker. Implementation slice 1 runtime truth is f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b with Project Control 32137847594 and exact-source Godot focused evidence. P5.2 replication/reconnect test is implemented at 1d366c12f50c93b6c714069a18bc1e898a37e640 and the ledger-derived control test sync passed Project Control 32145359904 at 1ccc0ba5f296b0c0d862443cd362f5379bc1aea8. Director scope clarification event 0004 adds only scripts/runtime/networked_gameplay/networked_gameplay_service.gd because the existing M3 server preloads that stable composition adapter. No M3, network, persistence, or authority foundation mutation is authorized."
+  "notes": "P5 is IN_PROGRESS under one Director-dispatched mutation worker. Live P5 stable composition is bound at 468639e678bc111cd5a590e5008417b26fd5f70c with Project Control 32145997682 SUCCESS. Director event 0005 clarifies only two historical live validation paths so they can explicitly satisfy the new P5 canonical mining-tool precondition. The production bootstrap, if used, must remain within already-allowed M4 and playable_sandbox canonical Item Graph state. No P3 domain, M3 transport, network, persistence or authority foundation mutation is authorized."
 }

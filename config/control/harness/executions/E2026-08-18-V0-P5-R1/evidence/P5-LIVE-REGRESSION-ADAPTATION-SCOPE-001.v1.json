@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_scope_clarification.v1",
+  "evidence_id": "P5-LIVE-REGRESSION-ADAPTATION-SCOPE-001",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "observed_head": "468639e678bc111cd5a590e5008417b26fd5f70c",
+  "project_control_run": 32145997682,
+  "project_control_result": "SUCCESS",
+  "finding": "After binding the stable live gameplay adapter to P5, historical live P3/P4 fixtures still initiate mining under the pre-P5 product contract without first equipping the now-required canonical mining tool. P3 domain semantics remain independently green; the RED is limited to live-product fixture preconditions.",
+  "required_bounded_changes": [
+    "Adapt the P4 live composition regression to provision and equip a canonical mining tool before the live mining step and to verify the stable M4 P5->P4 inheritance chain instead of assuming the stable alias directly extends P4.",
+    "Adapt the P3 live mining client helper to equip the canonical sandbox bootstrap mining tool before issuing the live resource command.",
+    "Keep the bootstrap tool inside the existing canonical M4 Item Graph and only in playable_sandbox setup; do not add a private equipment or item store."
+  ],
+  "newly_allowed_exact_paths": [
+    "tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd",
+    "tools/runtime/v0_p3_live_mining_client_base.gd"
+  ],
+  "already_allowed_production_path": "scripts/runtime/networked_gameplay/m4/**",
+  "network_foundation_change_required": false,
+  "persistence_foundation_change_required": false,
+  "second_canonical_truth_required": false,
+  "mutation_lease_change_required": false,
+  "historical_p3_domain_semantics_changed": false,
+  "decision": "CLARIFY_LIVE_REGRESSION_FIXTURE_SCOPE_AND_CONTINUE_SINGLE_P5_WORKER",
+  "recorded_at_utc": "2026-08-18T14:16:00Z"
+}
