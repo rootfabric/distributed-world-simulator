@@ -4,7 +4,7 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-16T15:40:00Z",
+  "updated_at_utc": "2026-08-18T01:53:00Z",
   "control_checkpoint": "V0 generation-80 P0-P4 product-lineage activation refresh candidate; P4 is the next bounded product mutation lane while inherited P2/P3 acceptance debt remains explicit",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. The V0 product train has advanced through P0 playable composition, P1 world items/containers, P2 reconnectable shared state and P3/P3.1 mining. Generation-80 declares exact P3.1 product lineage ef3ad5f... as the runtime execution input for bounded P4 continuation while current main remains the control/epoch anchor. P4 is registered as a passport-backed active frontier and the single pre-H0.3 mutation lease holder; initial mutation dispatch is Director-only and requires a fresh authoritative P4 epoch/base audit. P2/P3 acceptance debt is not waived and blocks final P4/V0 acceptance, not bounded implementation. SERVER_PREDICTED remains the V0 network baseline; H0.2/NX.C1 remains independent.",
@@ -204,8 +204,8 @@
     "NX": {
       "program": "NX",
       "program_name": "Network / Realtime",
-      "branch": "feature/nx-m7-owner-authority-convergence",
-      "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
+      "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
       "short_description": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence implementation under exact runtime verification.",
@@ -218,13 +218,14 @@
       "next_stage": "Run exact Godot focused validation, full world/core, two-client, impaired-network and reconnect/ownership-epoch validation; then post-build independent review/verifier and fresh CH->NX revalidation before any H0_2_PASS / NX SOURCE_ACCEPTED proposal.",
       "health_declared": "YELLOW",
       "blockers": [
-        "EXACT_GODOT_RUNTIME_VERIFICATION_REQUIRED",
+        "EXACT_GODOT_FOCUSED_RUNTIME_VERIFICATION_REQUIRED",
         "FULL_WORLD_CORE_REGRESSION_REQUIRED",
         "TWO_CLIENT_PROCESS_VALIDATION_REQUIRED",
         "IMPAIRED_NETWORK_VALIDATION_REQUIRED",
         "RECONNECT_OWNERSHIP_EPOCH_VALIDATION_REQUIRED",
         "POST_BUILD_INDEPENDENT_REVIEW_REQUIRED",
-        "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE"
+        "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE",
+        "RUNTIME_FEATURE_MERGE_REMAINS_HUMAN_GATED"
       ],
       "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
       "historical_passport_identities": [{
