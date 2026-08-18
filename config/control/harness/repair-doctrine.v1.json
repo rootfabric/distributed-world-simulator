@@ -1,7 +1,8 @@
 {
   "schema": "distributed_world_simulator.harness_repair_doctrine.v1",
   "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
-  "trigger": "Any FIX_REQUIRED or repeated defect in MEDIUM/HIGH/CRITICAL work must establish a repair map before changing code again.",
+  "continuation_layer_revision": "H0-CONTINUATION-2026-08-19-R2",
+  "trigger": "Any FIX_REQUIRED or repeated defect in MEDIUM/HIGH/CRITICAL work must establish a repair map before changing code again, then continue repair and retest while the defect is in scope and automatable.",
   "repair_map_fields": [
     "affected_module",
     "canonical_owner",
@@ -23,7 +24,27 @@
     "fix_must_target_canonical_owner_when_possible": true,
     "sibling_surfaces_must_be_checked": true,
     "repair_scope_expansion_requires_director_replan": true,
-    "same_defect_second_failed_attempt_requires_escalation": true
+    "fix_required_is_non_terminal_when_repair_is_in_scope_and_automatable": true,
+    "implementer_must_retest_after_each_fix": true,
+    "focused_green_is_not_enough_when_required_regression_or_control_gates_exist": true,
+    "role_exit_requires_durable_evidence_and_exact_next_transition": true,
+    "same_defect_second_failed_repair_attempt_requires_takeover": true,
+    "takeover_is_agent_or_director_escalation_not_automatic_human_escalation": true
   },
-  "states": ["REPAIR_MAP_REQUIRED", "REPAIR_MAP_READY", "FIX_IN_PROGRESS", "FIX_VERIFIED", "BLOCKED"]
+  "repair_closure_sequence": [
+    "REPAIR_MAP_READY",
+    "FIX_IN_PROGRESS",
+    "FOCUSED_RETEST",
+    "REQUIRED_REGRESSION_OR_CONTROL_RETEST",
+    "FIX_VERIFIED",
+    "DURABLE_EVIDENCE_PERSISTED",
+    "NEXT_TRANSITION_PERSISTED"
+  ],
+  "states": [
+    "REPAIR_MAP_REQUIRED",
+    "REPAIR_MAP_READY",
+    "FIX_IN_PROGRESS",
+    "FIX_VERIFIED",
+    "BLOCKED"
+  ]
 }
