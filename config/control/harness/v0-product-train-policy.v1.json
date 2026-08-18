@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-18-R1",
+  "policy_revision": "V0-P-2026-08-18-R2",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
-  "current_phase": "P4_IMPLEMENTED_VERIFIED_CLOSURE_CONTROL",
+  "current_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "current_phase": "P5_PRE_DISPATCH_CONTROL_READY",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -55,16 +55,22 @@
     {
       "id": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
       "short_name": "P4",
-      "state": "CURRENT_CLOSURE",
+      "state": "ACCEPTED",
+      "accepted_runtime_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "acceptance_record": "config/control/harness/acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json",
       "goal": "Mine canonical ore, allocate it server-side, atomically debit the canonical Item Graph together with Construction commit, replicate to clients, and reconstruct on reconnect.",
-      "entry_rule": "Already implemented under generation-80 authorization.",
-      "exit_rule": "Exact implementation evidence, inherited acceptance debt, current standard/directional Project Control, append-only Harness closure ledger, independent Reviewer/Verifier evidence, checkpoint proposal and required Director/Human acceptance are complete.",
+      "entry_rule": "Implemented under generation-80 authorization.",
+      "exit_rule": "Completed: exact implementation evidence, inherited acceptance debt, current standard/directional Project Control, append-only Harness closure ledger, independent Reviewer/Verifier evidence, checkpoint proposal and Director/Human acceptance.",
       "next": "V0_P5_EQUIPMENT_TOOLS"
     },
     {
       "id": "V0_P5_EQUIPMENT_TOOLS",
       "short_name": "P5",
-      "state": "PLANNED_NOT_ELIGIBLE",
+      "state": "CURRENT_PRE_DISPATCH",
+      "execution_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "project_epoch": "E2026-08-18-V0-P5-R1",
+      "work_order_id": "V0-P5-R1-WO-001",
+      "runtime_branch": "feature/v0-p5-equipment-tools",
       "goal": "Turn canonical items into usable equipment/tools in the playable loop without creating a second inventory/equipment truth.",
       "must_reuse": [
         "CANONICAL_M4_ITEM_GRAPH",
@@ -83,7 +89,11 @@
         "MAIN_DECLARED_EXACT_P4_SUCCESSOR_BASE",
         "FRESH_P5_WORK_ORDER",
         "FRESH_EPOCH_AND_PC0",
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5"
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5",
+        "DIRECTOR_DISPATCH"
+      ],
+      "activation_complete_except": [
+        "DIRECTOR_DISPATCH"
       ],
       "next": "V0_P6_PERSISTENT_SHARED_OUTPOST"
     },
@@ -185,20 +195,33 @@
     "PROPOSE_CHECKPOINT",
     "MERGE_ONLY_THROUGH_REQUIRED_HUMAN_GATE"
   ],
-  "current_p4_closure_route": {
-    "runtime_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
-    "runtime_mutation": "FROZEN",
-    "control_repair_pr": 127,
-    "control_repair_candidate": "11969a954ceb9baab1b4a55cb2162fa1069fb0b2",
-    "live_frontier_routing_repair_merged_pr": 130,
-    "main_after_routing_repair": "598e92bb29a147bf12208d8549ddecaa4c9781ab",
-    "required_next_control_steps": [
-      "CONFIRM_EXACT_MAIN_PROJECT_CONTROL_NON_RED_AFTER_PR130",
-      "RERUN_PR127_PROJECT_CONTROL_AGAINST_CORRECTED_MAIN",
-      "MERGE_PR127_ONLY_IF_ITS_EXACT_REVIEWED_SUBJECT_REMAINS_VALID",
-      "CONTINUE_P4_CLOSURE_APPEND_ONLY_WITHOUT_RUNTIME_MUTATION",
-      "RECORD_REMAINING_P4_PREDICATES",
-      "PROPOSE_AND_ACCEPT_P4_CHECKPOINT_BEFORE_ANY_P5_RUNTIME_DISPATCH"
+  "accepted_p4": {
+    "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "acceptance_record": "config/control/harness/acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_runtime_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "checkpoint_proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
+    "main_acceptance_merge": "2d3227eda204647f2b30ff59b7e31026e661c240"
+  },
+  "current_p5_activation_route": {
+    "accepted_predecessor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "project_epoch": "E2026-08-18-V0-P5-R1",
+    "work_order_id": "V0-P5-R1-WO-001",
+    "runtime_branch": "feature/v0-p5-equipment-tools",
+    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
+    "remaining_control_steps": [
+      "MERGE_P5_ACTIVATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
+      "CREATE_FRESH_P5_BRANCH_FROM_EXACT_ACCEPTED_P4_BASE",
+      "COMPOSE_CURRENT_MAIN_CONTROL_WITHOUT_CHANGING_PRODUCT_BASE_PROVENANCE",
+      "DIRECTOR_DISPATCH",
+      "BEGIN_BOUNDED_P5_IMPLEMENTATION"
     ]
+  },
+  "historical_p4_closure_route": {
+    "runtime_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "runtime_mutation": "FROZEN_ACCEPTED",
+    "closure_finalization_pr": 138,
+    "checkpoint_proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
+    "acceptance_main_merge": "2d3227eda204647f2b30ff59b7e31026e661c240"
   }
 }
