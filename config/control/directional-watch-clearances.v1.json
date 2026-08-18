@@ -51,6 +51,39 @@
       "verification_id": "V0-P4-R1-VERIFY-001",
       "recorded_at_utc": "2026-08-17T14:20:00Z",
       "reason": "Fresh independent P4 Reviewer and Verifier inspected the exact implementation/evidence target and classified the V0 -> NX critical hit as the expected server-authoritative M4 Item Graph composition extension, not a transport, protocol, prediction, reconciliation or NX authority-foundation mutation. This record is fail-closed to exact reviewed ancestry, exact consumer head/passport and the complete observed V0 -> NX watched-file blob set. It becomes authoritative only when merged into main after independent review of this control repair."
+    },
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "NX",
+      "producer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "consumer_program": "V0",
+      "consumer_branch": "feature/v0-p4-construction-real-resources",
+      "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+      "reviewed_producer_head": "1814ca72c9569ea2aa7e3d1dd4a69eb790888908",
+      "consumer_head_sha": "da1c8825429af53095240943de663ada9a6549fc",
+      "consumer_passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
+      "consumer_passport_blob_sha": "c1f1f2367bedb53ff73b373c93937996f34f4a41",
+      "critical_files": [
+        "scripts/network/authority/movement_authority_profile.gd"
+      ],
+      "watched_files": [
+        "scripts/network/authority/movement_authority_profile.gd",
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/network/authority/movement_authority_profile.gd": "5b3804f9d90fcd91cfad4e6202ed3e710f0f2257",
+        "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd": "8377db769e1c18b35d1919cbfb41d5cf32e986b9",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd": "0c5b1c51e70ccb10b6076f5921582d83d0d82c8e"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "NX-V0-P4-DIRECTIONAL-REVALIDATION-001",
+      "verification_id": "PROJECT_CONTROL_RUN_31690226579",
+      "recorded_at_utc": "2026-08-18T02:18:00Z",
+      "reason": "Narrow dependency revalidation inspected exact H0.2/NX.C1 source implementation 1814ca72 and found the watched delta limited to opt-in realtime locomotion authorship/derived M3 leaves while SERVER_PREDICTED remains available and durable gameplay, Item Graph, Construction, economy and persistence truth remain server/domain authoritative. Exact Project Control run 31690226579 succeeded on the reviewed producer head. Runtime blobs in the complete observed NX -> V0 hit set remain byte-identical through current NX lifecycle head d1a44667. This clearance does not claim H0_2_PASS, NX SOURCE_ACCEPTED, runtime-tested-head completion, P4 acceptance, or validity of quarantined consumer head da1c8825 as P4 closure truth; that head is fenced only as the current registered Directional Watch consumer identity. Any producer ancestry, consumer identity, hit-set or blob drift fails closed back to raw critical RED."
     }
   ]
 }
