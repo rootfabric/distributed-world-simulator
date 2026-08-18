@@ -13,6 +13,32 @@ For any new review, planning, Work Order drafting or future implementation desig
 3. `docs/plans/seamless-world-sm1-roadmap.v2.json`
 4. `docs/testing/SEAMLESS_WORLD_VALIDATION_STRATEGY_R2_RU.md`
 5. `docs/architecture/SEAMLESS_WORLD_R2_DECISION_RECORD_RU.md`
+6. `docs/plans/SEAMLESS_WORLD_PRE_P6_INCUBATION_PLAN_RU.md`
+7. `docs/plans/seamless-world-pre-p6-incubation.v1.json`
+
+## Pre-P6 development rule
+
+The pre-P6 incubation plan is now the current rule for parallel seamless development while the active V0/P product train continues.
+
+It allows research-only engineering before P6 in bounded incubation stages:
+
+```text
+I0 architecture closure
+I1 research harness
+I2 ownership directory prototype
+I3 generic AuthorityDomain transfer
+I4 Player Carrying Domain lab
+I5 Edge Gateway incubation
+I6 projection/AOI + bounded cross-owner operations
+I7 fault/WAN/soak rehearsal
+I8 production port plan + Work Order pack
+```
+
+I0/I1 scaffolding may proceed now. I2 and later semantic runtime prototypes require fresh independent Architecture R2 review PASS first.
+
+None of these stages activates production SM1, changes canonical product owners, bypasses P5/P6, or substitutes research evidence for future checkpoint acceptance.
+
+If P6 closes while incubation succeeds, the intended result is that the project already has reviewed donor carriers, machine evidence, port maps and Work Order drafts. Production SM1 still starts only from the exact accepted successor declared by then-current `main` after explicit `ACTIVATE_V0_SM1` and the normal mutation-lease/dispatch gates.
 
 ## Superseded for future implementation planning
 
