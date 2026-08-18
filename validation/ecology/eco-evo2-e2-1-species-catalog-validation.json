@@ -1,9 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology.evo2_e2_1_species_catalog_validation.v1",
-  "revision": "ECO-EVO2-E2.1-2026-08-18-R1-CANDIDATE",
+  "revision": "ECO-EVO2-E2.1-2026-08-18-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "candidate_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
-  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_PASS_FULL_BRANCH_RUNNER_PENDING",
+  "acceptance_source_head": "c79e2d61e665689fe39621442f72171de5d2790f",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION",
   "scope": "RESEARCH_ONLY_EVO2",
   "parent_evidence": {
     "p2_7_lineage_validation": "validation/ecology/eco-evo1-p2-7-lineage-divergence-validation.json",
@@ -52,6 +53,31 @@
       "eco_evo2_e2_1_species_catalog_acceptance.gd": "4df82431d3ce20fd48610e1c250aafb9f0afbaac"
     }
   },
+  "formal_equivalent_verification": {
+    "executed_date": "2026-08-18",
+    "human_directed_gate": true,
+    "remote_head_verified": "c79e2d61e665689fe39621442f72171de5d2790f",
+    "candidate_to_remote_diff_commits": 6,
+    "candidate_to_remote_code_or_test_changes": false,
+    "candidate_to_remote_changed_scope": [
+      "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
+      "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
+      "docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_CANDIDATE_RU.md",
+      "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+      "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
+      "validation/ecology/eco-evo2-e2-1-species-catalog-validation.json"
+    ],
+    "local_branch_identity_gate": "PASS_feature/eco-evolutionary-ecology",
+    "exact_blob_identity_gate": "PASS_6_OF_6",
+    "godot_identity_gate": "PASS",
+    "parser_preload_gate": "PASS",
+    "acceptance_assertions": "PASS_53_OF_53",
+    "fresh_process_runs": 2,
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "12c2d8819509e54dad6725e48cdb2cd881cf5d674632db1db268b3f7e4b5f13a",
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "equivalence_basis": "The repository validation contract explicitly allowed full canonical branch runner OR equivalent fresh verification. The execution environment had no GitHub network path and no PowerShell runtime, so verification reconstructed a fresh local branch carrier using exact current GitHub blobs, verified every executable blob identity, verified unchanged code/test scope from candidate head to remote head, and executed the canonical acceptance GDScript on the exact attached Godot double binary in two fresh processes."
+  },
   "required_properties": [
     "STABLE_RESEARCH_SPECIES_ID_PER_LINEAGE",
     "DISTINCT_LINEAGES_DISTINCT_RESEARCH_IDS",
@@ -69,13 +95,25 @@
     "GLOBAL_RNG_NOT_CONSUMED",
     "SAME_AND_FRESH_PROCESS_DETERMINISM"
   ],
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-18",
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "code_under_test_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
+    "acceptance_source_head": "c79e2d61e665689fe39621442f72171de5d2790f",
+    "canonical_species_declared": false,
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "decision": "ACCEPT_E2_1_AND_AUTHORIZE_E2_2"
+  },
   "known_boundary": {
     "full_repository_checkout_available_in_execution_container": false,
     "powershell_branch_runner_executed": false,
+    "equivalent_fresh_verification_executed": true,
     "production_authority_claimed": false,
     "canonical_taxonomy_claimed": false,
-    "e2_2_authorized": false
+    "e2_2_authorized": true
   },
-  "decision": "KEEP_E2_1_AS_NON_SELF_ACCEPTED_CANDIDATE_UNTIL_FULL_BRANCH_RUNNER_OR_EQUIVALENT_FRESH_VERIFICATION",
-  "next": "Run RUN_ECO_EVO2_E2_1_TESTS.ps1 in the canonical branch worktree with the exact Godot double binary; if green, freeze E2.1 and open E2.2 Deterministic Evolution Bake Export."
+  "decision": "ACCEPT_E2_1_AND_AUTHORIZE_E2_2",
+  "next": "ECO.EVO2 / E2.2 Deterministic Evolution Bake Export"
 }
