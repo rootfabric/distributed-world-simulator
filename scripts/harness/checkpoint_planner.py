@@ -6,6 +6,31 @@ from typing import Any
 
 _ACTIVE_TRAIN_STATES = {"DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED"}
 _MUTATION_SLOT_STATES = {"DISPATCHED", "IN_PROGRESS"}
+_PRODUCT_CHECKPOINTS = {
+    "V0_S1_NETWORKED_PLANETARY_OUTPOST",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "V0_P5_EQUIPMENT_TOOLS",
+}
+_PRODUCT_GATE_NAMES = {
+    "V0_S1_NETWORKED_PLANETARY_OUTPOST": "v0_s1_gate",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION": "v0_p4_gate",
+    "V0_P5_EQUIPMENT_TOOLS": "v0_p5_gate",
+}
+_PRODUCT_BEGIN_ACTIONS = {
+    "V0_S1_NETWORKED_PLANETARY_OUTPOST": "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION": "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "V0_P5_EQUIPMENT_TOOLS": "BEGIN_V0_P5_EQUIPMENT_TOOLS",
+}
+_PRODUCT_VERIFY_ACTIONS = {
+    "V0_S1_NETWORKED_PLANETARY_OUTPOST": "VERIFY_V0_S1_EXACT_HEAD",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION": "VERIFY_V0_P4_EXACT_HEAD",
+    "V0_P5_EQUIPMENT_TOOLS": "VERIFY_V0_P5_EXACT_HEAD",
+}
+_PRODUCT_DISPATCH_ACTIONS = {
+    "V0_S1_NETWORKED_PLANETARY_OUTPOST": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
+    "V0_P4_REAL_RESOURCE_CONSTRUCTION": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH",
+    "V0_P5_EQUIPMENT_TOOLS": "DIRECTOR_DISPATCH_ACCEPTED_P4_BASE_V0_P5_WORK_ORDER",
+}
 
 
 def _worker_count(state: str, limit: int) -> int:
@@ -35,6 +60,89 @@ def _enforce_runtime_mutation_lease(
         raise ValueError(f"GLOBAL_MUTATION_SLOT_BRANCH_MISMATCH:{holder_branch}")
 
 
+def _build_product_plan(
+    scheduler: dict[str, Any],
+    override: dict[str, Any],
+    work_order: dict[str, Any],
+    reduced: dict[str, Any],
+    required: list[str],
+    satisfied: set[str],
+) -> dict[str, Any]:
+    current = work_order["goal_checkpoint"]
+    state = reduced["state"]
+    active = state in _ACTIVE_TRAIN_STATES
+    mutating = state in _MUTATION_SLOT_STATES
+    parallel = scheduler["parallel_product_checkpoints"]
+    rules = parallel["rules"]
+    lease = scheduler.get("pre_h0_3_runtime_mutation_lease", {})
+    gate_name = _PRODUCT_GATE_NAMES[current]
+    gate = {
+        "requested_checkpoint": current,
+        "risk_floor": "HIGH",
+        "network_baseline": "SERVER_PREDICTED",
+        "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
+        "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
+        "control_epoch_anchor": "CURRENT_MAIN",
+        "runtime_execution_base": "MAIN_DECLARED_V0_PRODUCT_LINEAGE",
+        "requires_main_declared_product_execution_base": rules["requires_main_declared_product_execution_base"],
+        "stacked_product_lineage_allowed": rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"],
+        "bounded_implementation_may_proceed_with_prior_acceptance_debt": rules["bounded_implementation_may_proceed_with_prior_acceptance_debt"],
+        "checkpoint_acceptance_requires_prior_acceptance_debt_resolved": rules["checkpoint_acceptance_requires_prior_acceptance_debt_resolved"],
+        "pre_h0_3_total_mutation_workers_max": rules["pre_h0_3_total_runtime_mutation_workers_max"],
+        "global_mutation_lease_holder_checkpoint": lease.get("holder_checkpoint"),
+        "global_mutation_lease_holder_branch": lease.get("holder_branch"),
+        "global_mutation_lease_state": lease.get("state"),
+        "nx_verification_review_only_may_coexist": rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"],
+        "v0_plus_nx_or_sm0_fix_mutation_forbidden": rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"],
+        "network_foundation_change_fails_closed_to": rules["v0_network_foundation_change_fails_closed_to"],
+    }
+    if current == "V0_P5_EQUIPMENT_TOOLS":
+        routing = scheduler.get("v0_product_train_routing", {})
+        gate.update(
+            {
+                "accepted_predecessor_checkpoint": routing.get("accepted_predecessor_checkpoint"),
+                "accepted_predecessor_base": routing.get("accepted_predecessor_base"),
+                "equipment_truth": "CANONICAL_ITEM_GRAPH_RELATION_NOT_PRIVATE_INVENTORY",
+                "director_dispatch_required": True,
+            }
+        )
+
+    return {
+        "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
+        "selected_checkpoint": current,
+        "pilot_override": {
+            "enabled": override["enabled"],
+            "current_checkpoint": override["current_checkpoint"],
+            "reason": override["reason"],
+        },
+        "parallel_product_checkpoint": True,
+        "active_work_order": reduced["work_order_id"],
+        "satisfied_predicates": [item for item in required if item in satisfied],
+        "unsatisfied_predicates": [item for item in required if item not in satisfied],
+        "autonomous_runtime_workers": _worker_count(
+            state,
+            scheduler["concurrency"]["v0_product_max_autonomous_runtime_mutation_workers"],
+        ),
+        gate_name: gate,
+        "next_action": (
+            _PRODUCT_BEGIN_ACTIONS[current]
+            if mutating
+            else (_PRODUCT_VERIFY_ACTIONS[current] if active else _PRODUCT_DISPATCH_ACTIONS[current])
+        ),
+        "stop_gates": [
+            "V0_RUNTIME_MUTATION_BEFORE_DISPATCH",
+            "PRIVATE_V0_NETWORK_AUTHORITY",
+            "PRIVATE_V0_CONSTRUCTION_TRUTH",
+            "PRIVATE_V0_ITEM_GRAPH",
+            "PRIVATE_V0_EQUIPMENT_TRUTH",
+            "PRIVATE_V0_PERSISTENCE_OWNER",
+            "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
+            "SHIP_FLIGHT",
+            "SERVER_HANDOFF",
+        ],
+    }
+
+
 def build_plan(
     contracts: dict[str, dict[str, Any]],
     work_order: dict[str, Any],
@@ -45,14 +153,21 @@ def build_plan(
     current = work_order["goal_checkpoint"]
     state = reduced["state"]
     _enforce_runtime_mutation_lease(scheduler, work_order, state)
-    required = contracts["checkpoint_catalog"]["checkpoints"][current]["required_predicates"]
+    catalog = contracts["checkpoint_catalog"]["checkpoints"]
+    if current not in catalog:
+        raise ValueError(f"UNSUPPORTED_CHECKPOINT:{current}")
+    required = catalog[current]["required_predicates"]
     satisfied = set(reduced["completed_predicates"])
 
     if current == "H0_0_SCAFFOLD_READY":
         return {
             "mode": "DRY_RUN_ONLY",
             "selected_checkpoint": current,
-            "pilot_override": {"enabled": override["enabled"], "checkpoint_sequence": override["checkpoint_sequence"], "reason": override["reason"]},
+            "pilot_override": {
+                "enabled": override["enabled"],
+                "checkpoint_sequence": override["checkpoint_sequence"],
+                "reason": override["reason"],
+            },
             "active_work_order": reduced["work_order_id"],
             "satisfied_predicates": [item for item in required if item in satisfied],
             "unsatisfied_predicates": [item for item in required if item not in satisfied],
@@ -73,11 +188,18 @@ def build_plan(
         return {
             "mode": "PLANNING_ONLY" if not active else ("SINGLE_RUNTIME_PILOT" if mutating else "RUNTIME_VERIFICATION"),
             "selected_checkpoint": current,
-            "pilot_override": {"enabled": override["enabled"], "checkpoint_sequence": override["checkpoint_sequence"], "reason": override["reason"]},
+            "pilot_override": {
+                "enabled": override["enabled"],
+                "checkpoint_sequence": override["checkpoint_sequence"],
+                "reason": override["reason"],
+            },
             "active_work_order": reduced["work_order_id"],
             "satisfied_predicates": [item for item in required if item in satisfied],
             "unsatisfied_predicates": [item for item in required if item not in satisfied],
-            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["h0_1_max_autonomous_runtime_workers"]),
+            "autonomous_runtime_workers": _worker_count(
+                state,
+                scheduler["concurrency"]["h0_1_max_autonomous_runtime_workers"],
+            ),
             "c22_dry_run": {
                 "requested_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
                 "status": "READY_FOR_FRESH_BRANCH" if active else "WAITING_DIRECTOR_DISPATCH",
@@ -94,11 +216,18 @@ def build_plan(
         return {
             "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_RUNTIME_PILOT" if mutating else "HIGH_RISK_RUNTIME_VERIFICATION"),
             "selected_checkpoint": current,
-            "pilot_override": {"enabled": override["enabled"], "checkpoint_sequence": override["checkpoint_sequence"], "reason": override["reason"]},
+            "pilot_override": {
+                "enabled": override["enabled"],
+                "checkpoint_sequence": override["checkpoint_sequence"],
+                "reason": override["reason"],
+            },
             "active_work_order": reduced["work_order_id"],
             "satisfied_predicates": [item for item in required if item in satisfied],
             "unsatisfied_predicates": [item for item in required if item not in satisfied],
-            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"]),
+            "autonomous_runtime_workers": _worker_count(
+                state,
+                scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"],
+            ),
             "nx_c1_gate": {
                 "requested_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
                 "project_checkpoint": "NX_SOURCE_ACCEPTED",
@@ -113,56 +242,7 @@ def build_plan(
             "stop_gates": ["NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", "NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"],
         }
 
-    if current in {"V0_S1_NETWORKED_PLANETARY_OUTPOST", "V0_P4_REAL_RESOURCE_CONSTRUCTION"}:
-        active = state in _ACTIVE_TRAIN_STATES
-        mutating = state in _MUTATION_SLOT_STATES
-        parallel = scheduler["parallel_product_checkpoints"]
-        rules = parallel["rules"]
-        lease = scheduler.get("pre_h0_3_runtime_mutation_lease", {})
-        gate_name = "v0_p4_gate" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "v0_s1_gate"
-        begin_action = "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION"
-        verify_action = "VERIFY_V0_P4_EXACT_HEAD" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "VERIFY_V0_S1_EXACT_HEAD"
-        dispatch_action = "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH" if current == "V0_P4_REAL_RESOURCE_CONSTRUCTION" else "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH"
-        gate = {
-            "requested_checkpoint": current,
-            "risk_floor": "HIGH",
-            "network_baseline": "SERVER_PREDICTED",
-            "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
-            "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
-            "control_epoch_anchor": "CURRENT_MAIN",
-            "runtime_execution_base": "MAIN_DECLARED_V0_PRODUCT_LINEAGE",
-            "requires_main_declared_product_execution_base": rules["requires_main_declared_product_execution_base"],
-            "stacked_product_lineage_allowed": rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"],
-            "bounded_implementation_may_proceed_with_prior_acceptance_debt": rules["bounded_implementation_may_proceed_with_prior_acceptance_debt"],
-            "checkpoint_acceptance_requires_prior_acceptance_debt_resolved": rules["checkpoint_acceptance_requires_prior_acceptance_debt_resolved"],
-            "pre_h0_3_total_mutation_workers_max": rules["pre_h0_3_total_runtime_mutation_workers_max"],
-            "global_mutation_lease_holder_checkpoint": lease.get("holder_checkpoint"),
-            "global_mutation_lease_state": lease.get("state"),
-            "nx_verification_review_only_may_coexist": rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"],
-            "v0_plus_nx_or_sm0_fix_mutation_forbidden": rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"],
-            "network_foundation_change_fails_closed_to": rules["v0_network_foundation_change_fails_closed_to"],
-        }
-        return {
-            "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
-            "selected_checkpoint": current,
-            "pilot_override": {"enabled": override["enabled"], "current_checkpoint": override["current_checkpoint"], "reason": override["reason"]},
-            "parallel_product_checkpoint": True,
-            "active_work_order": reduced["work_order_id"],
-            "satisfied_predicates": [item for item in required if item in satisfied],
-            "unsatisfied_predicates": [item for item in required if item not in satisfied],
-            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["v0_product_max_autonomous_runtime_mutation_workers"]),
-            gate_name: gate,
-            "next_action": begin_action if mutating else (verify_action if active else dispatch_action),
-            "stop_gates": [
-                "V0_RUNTIME_MUTATION_BEFORE_DISPATCH",
-                "PRIVATE_V0_NETWORK_AUTHORITY",
-                "PRIVATE_V0_CONSTRUCTION_TRUTH",
-                "PRIVATE_V0_ITEM_GRAPH",
-                "PRIVATE_V0_PERSISTENCE_OWNER",
-                "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
-                "SHIP_FLIGHT",
-                "SERVER_HANDOFF",
-            ],
-        }
+    if current in _PRODUCT_CHECKPOINTS:
+        return _build_product_plan(scheduler, override, work_order, reduced, required, satisfied)
 
     raise ValueError(f"UNSUPPORTED_CHECKPOINT:{current}")
