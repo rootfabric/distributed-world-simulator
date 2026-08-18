@@ -1,0 +1,95 @@
+name: V0 P4 Post-Clearance Main Probe
+
+on:
+  push:
+    branches:
+      - probe/v0-p4-post-clearance-main-r1
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify exact probe base and fetch authority refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_MAIN="d9a1a3ca03016d6851a258ff93d5c260a86c5b4c"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          ACTUAL_MAIN="$(git rev-parse origin/main)"
+          echo "EXPECTED_MAIN=$EXPECTED_MAIN"
+          echo "ACTUAL_MAIN=$ACTUAL_MAIN"
+          test "$ACTUAL_MAIN" = "$EXPECTED_MAIN"
+
+      - name: Install pinned Harness dependency
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Run Project Control regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/control/project_control.py \
+            scripts/control/project_control_architecture_compat.py \
+            scripts/control/project_control_core.py \
+            scripts/control/directional_watch_clearance.py \
+            scripts/control/project_control_directional_watch.py \
+            scripts/harness/checkpoint_planner.py \
+            scripts/harness/event_reducer.py
+          python3 -m unittest \
+            tests.harness.test_project_control_architecture_compatibility \
+            tests.harness.test_project_control_historical_ownership_compatibility \
+            tests.harness.test_project_control_proposed_r3_ownership_projection
+          python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
+          python3 -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
+          python3 -m unittest \
+            tests.harness.test_v0_generation80_safety_guards \
+            tests.harness.test_project_control_directional_clearance
+
+      - name: Run exact post-merge Project Control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+
+      - name: Assert P4 directional clearance is effective and fail-closed identity is preserved
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report=json.loads(Path('artifacts/control/directional-watch-report.json').read_text(encoding='utf-8'))
+          assert report['overall_health'] != 'RED', report['overall_health']
+          hits=[f for f in report['findings'] if f.get('producer')=='V0' and f.get('consumer')=='NX' and f.get('kind')=='CRITICAL_WATCH_HIT']
+          assert len(hits)==1, hits
+          hit=hits[0]
+          assert hit.get('raw_level')=='RED', hit
+          assert hit.get('level')=='YELLOW', hit
+          assert hit.get('clearance_status')=='ACCEPTED', hit
+          assert hit.get('clearance_id')=='V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001', hit
+          assert hit.get('reviewed_producer_head')=='2a6721cdf02fa1134c59d1ab98bb7b597c66821d', hit
+          assert hit.get('files')==['scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd'], hit
+          print('P4_DIRECTIONAL_CLEARANCE_EFFECTIVE=PASS')
+          print(json.dumps(hit, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload exact reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p4-post-clearance-main-report
+          path: |
+            artifacts/control/PROJECT_STATUS_RU.md
+            artifacts/control/project-control-report.json
+            artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
+            artifacts/control/directional-watch-report.json
+          if-no-files-found: error
