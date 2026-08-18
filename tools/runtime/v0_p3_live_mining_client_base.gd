@@ -76,6 +76,32 @@ func _run_actor_p3() -> void:
 		_fail(String(moved.get("error_code", "V0_P3_RESOURCE_APPROACH_FAILED")), moved)
 		return
 
+	var bootstrap_tool_id := "item/player/%s/p5-mining-tool" % String(client.get_report().get("logical_player_id", "a"))
+	var equip_tool: Dictionary = client.execute_item_command_blocking(
+		"item.equip",
+		{"item_id": bootstrap_tool_id, "slot_id": "tool/main"},
+		"operation/v0-p3/live/p5-equip-tool"
+	)
+	_assert(bool(equip_tool.get("success", false)), "P3 live regression equips canonical P5 mining tool")
+	if not bool(equip_tool.get("success", false)):
+		_fail(String(equip_tool.get("error_code", "V0_P5_MINING_TOOL_EQUIP_FAILED")), equip_tool)
+		return
+	var equipment_visible := await _wait_item_state(
+		func(snapshot: Dictionary) -> bool:
+			var tool: Dictionary = _item_record(snapshot, bootstrap_tool_id)
+			var equipment_value = tool.get("equipment", null)
+			return (
+				equipment_value is Dictionary
+				and String(Dictionary(equipment_value).get("player_id", "")) == "a"
+				and String(Dictionary(equipment_value).get("slot_id", "")) == "tool/main"
+			),
+		10000
+	)
+	_assert(equipment_visible, "P3 live regression observes canonical P5 equipment relation")
+	if not equipment_visible:
+		_fail("V0_P5_MINING_TOOL_REPLICATION_TIMEOUT")
+		return
+
 	var before_mine_resource: Dictionary = client.get_resource_mining_snapshot()
 	var before_mine_item: Dictionary = client.get_item_graph_snapshot()
 	var mine_operation := "operation/v0-p3/live/mine/%d" % Time.get_ticks_msec()
