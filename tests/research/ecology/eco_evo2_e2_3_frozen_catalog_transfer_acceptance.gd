@@ -17,6 +17,7 @@ const ISOLATED_PATCH := "target/e23-isolated"
 var assertions := 0
 var failed := false
 
+
 func _init() -> void:
 	var bake := _accepted_e2_2_bake()
 	_check(not bake.is_empty(), "accepted E2.2 bake fixture builds")
@@ -133,9 +134,14 @@ func _init() -> void:
 	_check(transfer_source.find("const EVOLUTION_ENABLED := false") >= 0, "hard freeze is explicit in executable source")
 
 	var aggregate_hash := "\n".join(PackedStringArray([
-		String(bake["bake_hash"]), String(bake["catalog_hash"]), String(target_reachable["target_hash"]),
-		String(result_reachable["result_hash"]), String(target_isolated["target_hash"]), String(result_isolated["result_hash"]),
+		String(bake["bake_hash"]),
+		String(bake["catalog_hash"]),
+		String(target_reachable["target_hash"]),
+		String(result_reachable["result_hash"]),
+		String(target_isolated["target_hash"]),
+		String(result_isolated["result_hash"]),
 	])).sha256_text()
+
 	if failed:
 		quit(1)
 		return
@@ -153,6 +159,7 @@ func _init() -> void:
 	print("isolated_final_state_hash=" + String(result_isolated["final_population_state_hash"]))
 	print("isolated_status=" + String(result_isolated["colonization_status"]))
 	quit(0)
+
 
 func _accepted_e2_2_bake() -> Dictionary:
 	var genome_alpha_early := PlantGenome.create("genome/e22-alpha-early", 1.2, 0.48, 1.4, 0.38, 0.22, 0.62, 140, 14.0, 8.0)
@@ -180,19 +187,24 @@ func _accepted_e2_2_bake() -> Dictionary:
 	var source := BakeExport.create_source(lineages, FINAL_YEAR, SOURCE_RUN_HASH)
 	return BakeExport.export_catalog(source) if not source.is_empty() else {}
 
+
 func _lineage(lineage_id: String, observations: Array, window_counts: Array) -> Dictionary:
 	var history: Array = []
 	var start_year := FINAL_YEAR - BakeExport.WINDOW_YEARS + 1
-	for index in range(window_counts.size()): history.append({"year": start_year + index, "occupied_patch_count": int(window_counts[index])})
+	for index in range(window_counts.size()):
+		history.append({"year": start_year + index, "occupied_patch_count": int(window_counts[index])})
 	return {"lineage_id": lineage_id, "observations": observations.duplicate(true), "occupancy_history": history}
 
+
 func _observation(lineage_id: String, ancestry: Array, split_year: int, end_year: int, genome: Dictionary, traits: Dictionary, patch_id: String) -> Dictionary:
-	var geography: Array = []; var ecology: Array = []
+	var geography: Array = []
+	var ecology: Array = []
 	for year in range(split_year + 1, end_year + 1):
 		geography.append({"year": year, "patch_ids": [patch_id]})
 		var environment := EnvironmentSample.create(float(year), float(-year), 10.0 + float(year) * 0.2, 0.45, 0.75, 0.62, 0.02, 22000 + year, "e22-fixture")
 		ecology.append({"year": year, "environment": environment})
 	return DivergenceDiagnostics.create_observation(lineage_id, ancestry, split_year, genome, traits, geography, ecology)
+
 
 func _first_bake_environment(bake: Dictionary) -> Dictionary:
 	var source: Dictionary = bake["source"]
@@ -201,69 +213,95 @@ func _first_bake_environment(bake: Dictionary) -> Dictionary:
 	var ecology: Dictionary = Array(observation["ecology_history"])[0]
 	return Dictionary(ecology["environment"]).duplicate(true)
 
+
 func _inoculum_species_ids(result: Dictionary) -> Array[String]:
 	var ids: Array[String] = []
-	for value in Array(result.get("initial_inoculum", [])): ids.append(String(Dictionary(value).get("research_species_id", "")))
-	ids.sort(); return ids
+	for value in Array(result.get("initial_inoculum", [])):
+		ids.append(String(Dictionary(value).get("research_species_id", "")))
+	ids.sort()
+	return ids
+
 
 func _catalog_species_ids(bake: Dictionary) -> Array[String]:
 	var ids: Array[String] = []
-	for value in Array(Dictionary(bake["species_catalog"])["entries"]): ids.append(String(Dictionary(value).get("research_species_id", "")))
-	ids.sort(); return ids
+	for value in Array(Dictionary(bake["species_catalog"])["entries"]):
+		ids.append(String(Dictionary(value).get("research_species_id", "")))
+	ids.sort()
+	return ids
+
 
 func _target_starts_empty(result: Dictionary, patch_id: String) -> bool:
 	var history: Array = result.get("history", [])
-	if history.is_empty() or int(Dictionary(history[0]).get("year", -1)) != 0: return false
+	if history.is_empty() or int(Dictionary(history[0]).get("year", -1)) != 0:
+		return false
 	var patch := _history_patch(Dictionary(history[0]), patch_id)
 	return not patch.is_empty() and float(patch.get("total_adult_biomass_kg_m2", -1.0)) == 0.0 and int(patch.get("total_seed_bank_seed_count", -1)) == 0
+
 
 func _target_ever_has_adult(result: Dictionary, patch_id: String) -> bool:
 	for value in Array(result.get("history", [])):
 		var patch := _history_patch(Dictionary(value), patch_id)
-		if not patch.is_empty() and float(patch.get("total_adult_biomass_kg_m2", 0.0)) > 0.000001: return true
+		if not patch.is_empty() and float(patch.get("total_adult_biomass_kg_m2", 0.0)) > 0.000001:
+			return true
 	return false
+
 
 func _all_target_seed_banks_zero(result: Dictionary, patch_id: String) -> bool:
 	for value in Array(result.get("history", [])):
 		var patch := _history_patch(Dictionary(value), patch_id)
-		if patch.is_empty() or int(patch.get("total_seed_bank_seed_count", 0)) != 0: return false
+		if patch.is_empty() or int(patch.get("total_seed_bank_seed_count", 0)) != 0:
+			return false
 	return true
+
 
 func _competition_changes_composition(result: Dictionary, patch_id: String) -> bool:
 	var first_ratio := -1.0
 	for value in Array(result.get("history", [])):
 		var patch := _history_patch(Dictionary(value), patch_id)
-		if patch.is_empty() or int(patch.get("occupied_species_count", 0)) < 2: continue
+		if patch.is_empty() or int(patch.get("occupied_species_count", 0)) < 2:
+			continue
 		var positive: Array[float] = []
 		for species_value in Array(patch.get("adult_biomass_by_lineage", {}).keys()):
 			var biomass := float(Dictionary(patch.get("adult_biomass_by_lineage", {})).get(species_value, 0.0))
-			if biomass > 0.000001: positive.append(biomass)
-		if positive.size() < 2: continue
+			if biomass > 0.000001:
+				positive.append(biomass)
+		if positive.size() < 2:
+			continue
 		var ratio := positive[0] / maxf(positive[1], 0.000000001)
-		if first_ratio < 0.0: first_ratio = ratio
-		elif absf(ratio - first_ratio) > 0.000001: return true
+		if first_ratio < 0.0:
+			first_ratio = ratio
+		elif absf(ratio - first_ratio) > 0.000001:
+			return true
 	return false
+
 
 func _history_patch(history: Dictionary, patch_id: String) -> Dictionary:
 	for value in Array(history.get("patch_summaries", [])):
 		var patch: Dictionary = value
-		if String(patch.get("patch_id", "")) == patch_id: return patch
+		if String(patch.get("patch_id", "")) == patch_id:
+			return patch
 	return {}
+
 
 func _has_event(result: Dictionary, patch_id: String, event_type: String) -> bool:
 	for value in Array(result.get("population_events", [])):
 		var event: Dictionary = value
-		if String(event.get("patch_id", "")) == patch_id and String(event.get("event_type", "")) == event_type: return true
+		if String(event.get("patch_id", "")) == patch_id and String(event.get("event_type", "")) == event_type:
+			return true
 	return false
+
 
 func _target_event_species_are_catalog_species(result: Dictionary, bake: Dictionary) -> bool:
 	var ids := _catalog_species_ids(bake)
 	for value in Array(result.get("population_events", [])):
-		if not String(Dictionary(value).get("research_species_id", "")) in ids: return false
+		if not String(Dictionary(value).get("research_species_id", "")) in ids:
+			return false
 	return true
+
 
 func _check(condition: bool, label: String) -> void:
 	assertions += 1
-	if condition: return
+	if condition:
+		return
 	failed = true
 	push_error("ECO.EVO2 E2.3 assertion failed: " + label)
