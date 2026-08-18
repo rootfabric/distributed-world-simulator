@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 import json
 import subprocess
 import sys
@@ -17,6 +18,8 @@ from harness.event_reducer import load_guard_context, reduce_events
 
 P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
 P4_BRANCH = "feature/v0-p4-construction-real-resources"
+P5 = "V0_P5_EQUIPMENT_TOOLS"
+P5_BRANCH = "feature/v0-p5-equipment-tools"
 P4_RUNNER = "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1"
 P4_TEST_HEAD = "a" * 40
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
@@ -62,6 +65,32 @@ class Generation80SafetyGuardTests(unittest.TestCase):
             "checkpoint_catalog": self.catalog,
             "scheduler_policy": self.scheduler,
         }
+        self.historical_p4_scheduler = copy.deepcopy(self.scheduler)
+        self.historical_p4_scheduler["pre_h0_3_runtime_mutation_lease"] = {
+            "effective_registry_generation": 80,
+            "capacity": 1,
+            "holder_program": "V0",
+            "holder_checkpoint": P4,
+            "holder_branch": P4_BRANCH,
+            "state": "RESERVED_FOR_V0_P4_CLOSURE_NO_ACTIVE_RUNTIME_MUTATION",
+            "mutating_states": ["DISPATCHED", "IN_PROGRESS"],
+            "implementation_complete_releases_worker": True,
+            "initial_dispatch_requires_director": True,
+            "holder_initial_dispatch_requires_authoritative_epoch_audit": True,
+            "non_holder_dispatch_forbidden": True,
+            "release_requires_main_owned_control_update": True,
+            "successor_rotation_requires_predecessor_checkpoint_acceptance": True,
+            "reason": "Historical generation-80 P4 lease snapshot used only to replay immutable P4 dispatch provenance.",
+        }
+
+    @contextmanager
+    def _historical_p4_lease(self):
+        current = self.bundle.contracts["scheduler_policy"]
+        self.bundle.contracts["scheduler_policy"] = self.historical_p4_scheduler
+        try:
+            yield
+        finally:
+            self.bundle.contracts["scheduler_policy"] = current
 
     def _init_provenance_repo(self, root: Path) -> str:
         git_in(root, "init", "-q")
@@ -166,51 +195,40 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         context = load_guard_context(root, execution)
         return work_order, [created, dispatched], transition, context
 
-    def test_generation80_reserves_one_global_mutation_lease_for_p4(self):
+    def test_generation80_reserves_one_global_mutation_lease_for_current_p5(self):
         self.assertEqual(80, self.registry["registry_generation"])
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(80, lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
-        self.assertEqual(P4, lease["holder_checkpoint"])
-        self.assertEqual(P4_BRANCH, lease["holder_branch"])
+        self.assertEqual(P5, lease["holder_checkpoint"])
+        self.assertEqual(P5_BRANCH, lease["holder_branch"])
         self.assertEqual(["DISPATCHED", "IN_PROGRESS"], lease["mutating_states"])
         self.assertTrue(lease["implementation_complete_releases_worker"])
         self.assertTrue(lease["initial_dispatch_requires_director"])
-        self.assertTrue(lease["holder_initial_dispatch_requires_authoritative_epoch_audit"])
+        self.assertFalse(lease["holder_initial_dispatch_requires_authoritative_epoch_audit"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
         self.assertTrue(lease["release_requires_main_owned_control_update"])
+        self.assertTrue(lease["successor_rotation_requires_predecessor_checkpoint_acceptance"])
 
-    def test_p4_dispatch_gets_the_single_worker_and_implemented_releases_it(self):
-        work_order = {"goal_checkpoint": P4, "branch": P4_BRANCH}
+    def test_old_p4_dispatch_is_blocked_after_lease_rotation(self):
         dispatched = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        plan = build_plan(self.contracts, work_order, dispatched)
-        self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", plan["mode"])
-        self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
-        self.assertEqual(P4, plan["v0_p4_gate"]["global_mutation_lease_holder_checkpoint"])
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P5}"):
+            build_plan(self.contracts, {"goal_checkpoint": P4, "branch": P4_BRANCH}, dispatched)
 
-        implemented = copy.deepcopy(dispatched)
-        implemented["state"] = "IMPLEMENTED"
-        plan = build_plan(self.contracts, work_order, implemented)
-        self.assertEqual("PRODUCT_RUNTIME_VERIFICATION", plan["mode"])
-        self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", plan["v0_p4_gate"]["runtime_mutation"])
-        self.assertEqual("VERIFY_V0_P4_EXACT_HEAD", plan["next_action"])
-
-    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches(self):
+    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches_for_p5_lease(self):
         dispatched = {
             "completed_predicates": [],
             "work_order_id": "OTHER-WO",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P4}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P5}"):
             build_plan(self.contracts, {"goal_checkpoint": H0_2}, dispatched)
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P4}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P5}"):
             build_plan(self.contracts, {"goal_checkpoint": "SM0_NONTRIVIAL_FIX", "branch": "feature/sm0-fix"}, dispatched)
 
     def test_initial_dispatch_requires_director_without_rewriting_historical_evidence(self):
@@ -241,20 +259,28 @@ class Generation80SafetyGuardTests(unittest.TestCase):
     def test_p4_dispatch_rejects_uncommitted_audit_even_when_worktree_loader_can_see_it(self):
         with tempfile.TemporaryDirectory() as temporary:
             work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "uncommitted")
-            self.assertTrue(any(item.get("schema") == "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1" for item in context["documents"].values()))
-            with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
-                reduce_events(self.bundle, work_order, events, transition, context)
+            self.assertTrue(
+                any(
+                    item.get("schema") == "distributed_world_simulator.v0_p4_post_activation_epoch_audit.v1"
+                    for item in context["documents"].values()
+                )
+            )
+            with self._historical_p4_lease():
+                with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
+                    reduce_events(self.bundle, work_order, events, transition, context)
 
     def test_p4_dispatch_rejects_audit_committed_after_dispatch_event(self):
         with tempfile.TemporaryDirectory() as temporary:
             work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "after")
-            with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
-                reduce_events(self.bundle, work_order, events, transition, context)
+            with self._historical_p4_lease():
+                with self.assertRaisesRegex(ContractValidationError, "GUARDED_P4_INITIAL_DISPATCH_AUDIT_CONTINUE_REQUIRED"):
+                    reduce_events(self.bundle, work_order, events, transition, context)
 
     def test_p4_dispatch_accepts_audit_committed_before_dispatch_event(self):
         with tempfile.TemporaryDirectory() as temporary:
             work_order, events, transition, context = self._p4_provenance_fixture(Path(temporary), "before")
-            reduced = reduce_events(self.bundle, work_order, events, transition, context)
+            with self._historical_p4_lease():
+                reduced = reduce_events(self.bundle, work_order, events, transition, context)
             self.assertEqual("DISPATCHED", reduced["state"])
 
     def test_registry_pin_and_required_docs_track_frozen_p4_prebuild_subject(self):
@@ -262,9 +288,6 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         v0 = self.registry["programs"]["V0"]
         prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
 
-        # Generation-80 freezes the pre-dispatch subject for provenance. The
-        # implementation branch is expected to advance after Director dispatch,
-        # but it must continue to descend from that frozen subject.
         git("merge-base", "--is-ancestor", prebuild_head, remote_head)
 
         for relative in (
