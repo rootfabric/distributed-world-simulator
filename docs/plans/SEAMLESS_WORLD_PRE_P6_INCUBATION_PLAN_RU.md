@@ -780,14 +780,41 @@ If activated:
 
 No incubation branch is merged wholesale as the product history.
 
-## 10. Immediate next action
+## 10. Immediate execution order before P6
 
-At the current project state the first executable action is:
+The intended practical order is:
 
 ```text
-Fresh independent architecture/control review of PR #137 exact R2 HEAD
+NOW
+  |
+  +--> fresh independent review PR #137
+  |
+  +--> prepare I1 harness scaffolding in parallel
+            |
+            v
+Architecture R2 PASS
+  |
+  +--> I2 Ownership Directory
+  |      |
+  |      v
+  +--> I3 AuthorityDomain Transfer
+  |      |
+  |      v
+  +--> I4 Player Carrying Domain
+  |
+  +--> I5 Gateway work in parallel after I2 route contract stabilizes
+            |
+            v
+       I6 Projection/XO
+            |
+            v
+       I7 integrated soak
+            |
+            v
+       I8 production port pack
+            |
+            v
+       WAIT ONLY FOR P6 CONTROL DECISION
 ```
 
-In parallel it is safe to prepare I1 harness scaffolding and Work Order skeletons because they do not commit to unresolved ownership semantics.
-
-After Architecture R2 review PASS, I2 Ownership Directory and the rest of the semantic incubation train may begin without waiting for P6, provided all work remains research-only under this plan.
+This means the project does **not** wait for P6 to discover whether the architecture works. It waits for P6 only to decide whether the proven incubation work is allowed to enter the production lineage.
