@@ -1,12 +1,14 @@
 {
   "schema": "distributed_world_simulator.development_harness_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
   "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
   "project_goals": "config/control/harness/project-goals.v1.json",
   "checkpoint_catalog": "config/control/harness/checkpoint-catalog.v1.json",
   "scheduler_policy": "config/control/harness/scheduler-policy.v1.json",
+  "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "work_order_schema": "config/control/harness/work-order.schema.v1.json",
   "event_schema": "config/control/harness/event.schema.v1.json",
   "project_epoch_schema": "config/control/harness/project-epoch.schema.v1.json",
@@ -36,7 +38,13 @@
     "risk_routes_review_depth": true,
     "reviewer_does_not_guess_missing_evidence": true,
     "commits_are_recovery_units_not_throughput_kpi": true,
-    "proven_project_progress_is_primary_throughput": true
+    "proven_project_progress_is_primary_throughput": true,
+    "product_train_advances_one_accepted_checkpoint_at_a_time": true,
+    "successor_product_base_is_exact_accepted_predecessor_lineage": true,
+    "runtime_implementation_and_closure_control_are_separate": true,
+    "research_frontiers_are_non_blocking_by_default": true,
+    "research_becomes_product_blocking_only_via_explicit_registered_dependency_or_proven_ownership_watch_intersection": true,
+    "future_product_checkpoint_is_not_eligible_until_main_owned_activation": true
   },
   "roles": {
     "IMPLEMENTER": "Changes code within bounded Work Order scope.",
@@ -44,7 +52,7 @@
     "VERIFIER": "Independently executes required validation and confirms exact evidence.",
     "INTEGRATOR": "Checks cross-branch/composition behavior when checkpoint requires it.",
     "PC0": "Checks project architecture/convergence constraints.",
-    "DIRECTOR": "Decides whether checkpoint predicates and review evidence are sufficient.",
+    "DIRECTOR": "Decides whether checkpoint predicates and review evidence are sufficient and activates the next product checkpoint only after predecessor acceptance.",
     "HUMAN": "Resolves explicit high-impact exceptions and approval gates."
   },
   "work_order_states": [
@@ -73,6 +81,7 @@
   "default_autonomy_ceiling": "A3_INTEGRATE_CANDIDATE",
   "human_gates": [
     "RUNTIME_FEATURE_MERGE",
+    "V0_POST_P6_SEAMLESS_ACTIVATION_OR_DEFER",
     "TS0_4_ACTIVATION_AFTER_C22_MERGE",
     "GLOBAL_ARCHITECTURE_PROMOTION",
     "FOUNDATION_OWNERSHIP_TRANSFER",
