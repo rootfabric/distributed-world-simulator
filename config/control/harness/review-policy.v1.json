@@ -3,6 +3,7 @@
   "review_layer_revision": "H0-REVIEW-2026-08-18-R2",
   "risk_policy": "config/control/harness/risk-policy.v1.json",
   "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
+  "execution_evidence_policy": "config/control/harness/execution-evidence-policy.v1.json",
   "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
   "human_attention_schema": "config/control/harness/human-attention.schema.v1.json",
   "continuation_policy": "config/control/harness/continuation-policy.v1.json",
@@ -17,7 +18,13 @@
     "required_fixes_and_rank_up_moves_are_distinct": true,
     "review_result_must_be_durable_before_handoff": true,
     "chat_only_verdict_is_non_authoritative": true,
-    "routine_review_handoff_is_not_human_attention": true
+    "routine_review_handoff_is_not_human_attention": true,
+    "process_freshness_and_role_freshness_are_distinct": true,
+    "fresh_process_never_creates_independent_reviewer_or_verifier_authority": true,
+    "parser_preload_evidence_never_substitutes_for_behavioral_evidence": true,
+    "canonical_behavioral_evidence_requires_exact_transitive_executable_closure": true,
+    "equivalent_execution_requires_explicit_checkpoint_permission": true,
+    "evidence_class_never_auto_upgrades": true
   },
   "review_verdicts": ["PASS","FAIL","INSUFFICIENT_EVIDENCE"],
   "pre_build": {
@@ -32,7 +39,9 @@
   "exact_head_protocol": {
     "reviewed_head_must_equal_evidence_head": true,
     "runtime_change_after_review_makes_review_stale": true,
-    "stale_review_blocks_checkpoint_proposal": true
+    "stale_review_blocks_checkpoint_proposal": true,
+    "post_freeze_executable_drift_requires_new_target_head": true,
+    "code_under_test_to_evidence_carrier_diff_must_be_enumerated": true
   },
   "evidence_transport": {
     "chat_result_is_authority": false,
@@ -40,7 +49,16 @@
     "github_pr_gate_sink": "GITHUB_PR_REVIEW",
     "review_request_must_name_sink": true,
     "review_result_must_bind_exact_head": true,
-    "handoff_complete_only_after_sink_persistence": true
+    "handoff_complete_only_after_sink_persistence": true,
+    "canonical_runner_and_declared_equivalent_execution_are_distinct_evidence_classes": true
+  },
+  "role_freshness": {
+    "fresh_process": "execution freshness only",
+    "clean_carrier": "carrier freshness only",
+    "independent_reviewer": "distinct reviewer actor/session required",
+    "independent_verifier": "distinct verifier actor/session required",
+    "implementer_self_check_may_be_fresh": true,
+    "implementer_self_check_is_independent": false
   },
   "review_output": {
     "required_sections": ["verdict","required_fixes","rank_up_moves","evidence_gaps","risk_assessment"],
@@ -48,6 +66,6 @@
   },
   "activation": {
     "h0_0": "Contracts must load and validate; no runtime review execution is required.",
-    "h0_1_and_later": "Risk routing, design brief when applicable, durable evidence, reviewer verdict, post-build critique, exact-head freshness and continuation routing are mandatory for runtime checkpoint proposals."
+    "h0_1_and_later": "Risk routing, design brief when applicable, durable evidence, reviewer verdict, post-build critique, exact-head freshness, execution evidence classification and continuation routing are mandatory for runtime checkpoint proposals."
   }
 }
