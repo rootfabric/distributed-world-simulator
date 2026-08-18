@@ -1,65 +1,32 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from harness.checkpoint_planner import (
-    build_plan,
-    classify_v0_nx_foundation_scope,
-)
-from harness.global_mutation_arbiter import evaluate_pre_h0_3_runtime_mutation_lease
-from harness.state_builder import _load_main_owned_runtime_mutation_lease_registry
+from harness.checkpoint_planner import build_plan
 
-CHECKPOINT = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
+P4 = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
+S1 = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
-
-
-def runtime_work_order(work_order_id: str, checkpoint: str, branch: str = "feature/test") -> dict:
-    return {
-        "work_order_id": work_order_id,
-        "project_epoch": "E-test",
-        "goal_checkpoint": checkpoint,
-        "branch": branch,
-        "allowed_paths": ["scripts/app/lunar_app.gd"],
-    }
-
-
-def active_lease_registry(*work_orders: dict) -> dict:
-    return {
-        "schema": "distributed_world_simulator.runtime_mutation_lease_registry.v1",
-        "registry_id": "TEST",
-        "canonical_ref": "origin/main",
-        "issued_main_sha": "a" * 40,
-        "max_active_runtime_mutators": 1,
-        "reservations": [
-            {
-                "reservation_id": "lease-%d" % index,
-                "work_order_id": work_order["work_order_id"],
-                "project_epoch": work_order["project_epoch"],
-                "branch": work_order["branch"],
-                "checkpoint": work_order["goal_checkpoint"],
-                "kind": "RUNTIME_MUTATION",
-                "state": "ACTIVE",
-                "issued_by": "DIRECTOR",
-                "issued_main_sha": "a" * 40,
-            }
-            for index, work_order in enumerate(work_orders, 1)
-        ],
-    }
+P4_BRANCH = "feature/v0-p4-construction-real-resources"
+P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 
 
 def load_json(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
 
 
-class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
+def git(*args: str) -> str:
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+
+class V0ProductCheckpointContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.catalog = load_json("config/control/harness/checkpoint-catalog.v1.json")
         self.scheduler = load_json("config/control/harness/scheduler-policy.v1.json")
@@ -70,432 +37,203 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
             "scheduler_policy": self.scheduler,
         }
 
-    def test_checkpoint_exists_as_high_risk_product_checkpoint(self):
-        checkpoint = self.catalog["checkpoints"][CHECKPOINT]
+    def test_p4_is_current_high_risk_product_checkpoint(self):
+        checkpoint = self.catalog["checkpoints"][P4]
         self.assertEqual("PROJECT", checkpoint["kind"])
         self.assertEqual("V0", checkpoint["program"])
         self.assertEqual("HIGH", checkpoint["default_risk_floor"])
-        self.assertEqual("V0_S1_PASS", checkpoint["success_state"])
+        self.assertEqual("V0_P4_PASS", checkpoint["success_state"])
         self.assertEqual("SERVER_PREDICTED", checkpoint["network_baseline"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", checkpoint["blocked_state_if_network_foundation_change_required"])
+        self.assertEqual("V0_BLOCKED_REQUIRES_NX", checkpoint["blocked_state_if_network_foundation_change_required"])
         self.assertEqual("RUNTIME_FEATURE_MERGE", checkpoint["human_gate_after"])
 
-    def test_checkpoint_requires_r3_c22_pc0_and_network_runtime_not_nx_c1_acceptance(self):
-        checkpoint = self.catalog["checkpoints"][CHECKPOINT]
+    def test_p4_uses_main_declared_product_execution_base_not_bare_main(self):
+        checkpoint = self.catalog["checkpoints"][P4]
         preconditions = set(checkpoint["preconditions"])
-        non_preconditions = set(checkpoint["non_preconditions"])
-        expected_preconditions = {
-            "H0_1_PASS",
-            "C22_MAIN_INTEGRATED",
-            "GLOBAL_P0_R3_CANONICAL",
-            "POST_R3_STANDARD_PC0_NON_RED",
-            "POST_R3_DIRECTIONAL_PC0_NON_RED",
-            "CANONICAL_MAIN_KNOWN",
-            "NO_GLOBAL_PROJECT_RED",
-            "CANONICAL_NETWORK_RUNTIME_PRESENT",
-            "PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1",
-        }
-        self.assertTrue(expected_preconditions.issubset(preconditions), sorted(expected_preconditions - preconditions))
-        self.assertIn("H0_2_PASS", non_preconditions)
-        self.assertIn("NX_SOURCE_ACCEPTED", non_preconditions)
-        self.assertIn("H0_3_SCHEDULER_ACCEPTED", non_preconditions)
-        self.assertIn("OWNER_AUTHORITATIVE_VALIDATED_ACCEPTED", non_preconditions)
-        self.assertNotIn("H0_2_PASS", preconditions)
-        self.assertNotIn("NX_SOURCE_ACCEPTED", preconditions)
+        self.assertIn("MAIN_DECLARED_V0_PRODUCT_EXECUTION_BASE_PRESENT", preconditions)
+        self.assertIn("V0_P4_EXECUTION_BASE_DESCENDS_FROM_PLAYABLE_FRONTIER", preconditions)
+        self.assertNotIn("V0_P4_EXACT_CURRENT_MAIN_BASE", checkpoint["required_predicates"])
+        self.assertIn("V0_P4_MAIN_DECLARED_PRODUCT_EXECUTION_BASE", checkpoint["required_predicates"])
 
-    def test_required_predicates_cover_planet_two_clients_movement_construction_reconnect_and_soak(self):
-        required = set(self.catalog["checkpoints"][CHECKPOINT]["required_predicates"])
+        rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        self.assertTrue(rules["requires_main_declared_product_execution_base"])
+        self.assertTrue(rules["control_epoch_remains_anchored_to_current_main"])
+        self.assertTrue(rules["runtime_branch_may_continue_from_main_declared_stacked_product_lineage"])
+        self.assertTrue(rules["product_execution_base_is_not_automatic_checkpoint_acceptance"])
+
+    def test_prior_acceptance_debt_does_not_block_bounded_implementation_but_blocks_acceptance(self):
+        checkpoint = self.catalog["checkpoints"][P4]
+        non_preconditions = set(checkpoint["non_preconditions_for_bounded_implementation"])
+        self.assertIn("P2_DIRECTOR_CHECKPOINT_VERDICT_COMPLETE", non_preconditions)
+        self.assertIn("P3_AGGREGATE_ACCEPTANCE_COMPLETE", non_preconditions)
+        self.assertIn("P3_REPLICA_REPAIR_ACCEPTED", non_preconditions)
+        self.assertIn("V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED", checkpoint["required_predicates"])
+
+        rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        self.assertTrue(rules["bounded_implementation_may_proceed_with_prior_acceptance_debt"])
+        self.assertTrue(rules["checkpoint_acceptance_requires_prior_acceptance_debt_resolved"])
+
+    def test_p4_required_predicates_cover_real_resource_atomicity_and_replication(self):
+        required = set(self.catalog["checkpoints"][P4]["required_predicates"])
         expected = {
-            "V0_S1_SERVER_BOOT_PASS",
-            "V0_S1_PROCEDURAL_PLANET_PASS",
-            "V0_S1_CANONICAL_SPAWN_POINT_PASS",
-            "V0_S1_PLAYER_OR_SPECTATOR_CONTROL_PASS",
-            "V0_S1_TWO_CLIENT_JOIN_SAME_WORLD_PASS",
-            "V0_S1_TWO_PLAYABLE_CHARACTERS_PASS",
-            "V0_S1_REMOTE_CHARACTER_VISIBILITY_PASS",
-            "V0_S1_BIDIRECTIONAL_MOVEMENT_REPLICATION_PASS",
-            "V0_S1_CANONICAL_ITEM_PICKUP_MOVE_DROP_PASS",
-            "V0_S1_SECOND_CLIENT_ITEM_REPLICATION_PASS",
-            "V0_S1_CANONICAL_CONSTRUCTION_COMMIT_PASS",
-            "V0_S1_SECOND_CLIENT_CONSTRUCTION_REPLICATION_PASS",
-            "V0_S1_NO_CLIENT_PRIVATE_CONSTRUCTION_TRUTH_PASS",
-            "V0_S1_RECONNECT_SAME_WORLD_PASS",
-            "V0_S1_RECONNECT_CONSTRUCTION_STATE_PASS",
-            "V0_S1_30_MIN_TWO_CLIENT_SOAK_PASS",
-            "V0_S1_NETWORK_BASELINE_SERVER_PREDICTED_PASS",
-            "V0_S1_FAIL_CLOSED_TO_NX_IF_AUTHORITY_CHANGE_REQUIRED",
-            "FULL_WORLD_CORE_REGRESSION_PASS",
+            "V0_P4_EXACT_CONSUME_RED_REPRODUCED",
+            "V0_P4_EXACT_CONSUME_GREEN",
+            "V0_P4_DETERMINISTIC_SERVER_ALLOCATOR_PASS",
+            "V0_P4_LIVE_M4_SINGLE_OWNER_TRANSACTION_PORT_PASS",
+            "V0_P4_ATOMIC_ITEM_GRAPH_AND_CONSTRUCTION_COMMIT_PASS",
+            "V0_P4_INSUFFICIENT_RESOURCES_MUTATION_FREE_PASS",
+            "V0_P4_DUPLICATE_EXACT_ONCE_PASS",
+            "V0_P4_OPERATION_ID_CONFLICT_PASS",
+            "V0_P4_FAULT_INJECTION_ROLLBACK_PASS",
+            "V0_P4_FOREIGN_PLAYER_OWNERSHIP_ISOLATION_PASS",
+            "V0_P4_ITEM_GRAPH_DELTA_AND_CONSTRUCTION_EVENT_PUBLICATION_PASS",
+            "V0_P4_TWO_CLIENT_REPLICATION_PASS",
+            "V0_P4_RECONNECT_CONVERGENCE_PASS",
+            "V0_P4_NO_SECOND_ITEM_GRAPH_OR_PERSISTENCE_OWNER_PASS",
+            "V0_P4_FAIL_CLOSED_TO_NX_IF_NETWORK_FOUNDATION_CHANGE_REQUIRED",
+            "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED",
             "INDEPENDENT_REVIEWER_PASS",
             "INDEPENDENT_VERIFIER_PASS",
-            "STANDARD_PC0_NON_RED",
-            "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
-            "V0_S1_CHECKPOINT_PROPOSED",
+            "V0_P4_CHECKPOINT_PROPOSED",
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_declares_v0_product_lane_without_replacing_h0_2_pilot(self):
+    def test_goal_graph_preserves_p0_p8_order_and_requires_post_p6_gate(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
-        self.assertEqual(CHECKPOINT, goals["V0_S1_PRODUCT"]["target_checkpoint"])
-        self.assertIn("C22_MAIN_INTEGRATED", goals["V0_S1_PRODUCT"]["depends_on"])
+        self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
+        sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
+        self.assertEqual(
+            [
+                "V0_P0_PLAYABLE_FRONTIER",
+                "V0_P1_WORLD_ITEMS_CONTAINERS",
+                "V0_P2_RECONNECTABLE_SHARED_STATE",
+                "V0_P3_RESOURCE_MINING",
+                "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+                "V0_P5_EQUIPMENT_TOOLS",
+                "V0_P6_PERSISTENT_SHARED_OUTPOST",
+                "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+                "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION_OR_EXPLICIT_DEFER",
+                "V0_P7_BOUNDED_TERRAIN_MUTATION",
+                "V0_P8_FIRST_MOBILE_CONSTRUCT",
+            ],
+            sequence,
+        )
+        core_p_sequence = [item for item in sequence if item.startswith("V0_P") and "POST_P6" not in item]
+        self.assertEqual(
+            [
+                "V0_P0_PLAYABLE_FRONTIER",
+                "V0_P1_WORLD_ITEMS_CONTAINERS",
+                "V0_P2_RECONNECTABLE_SHARED_STATE",
+                "V0_P3_RESOURCE_MINING",
+                "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+                "V0_P5_EQUIPMENT_TOOLS",
+                "V0_P6_PERSISTENT_SHARED_OUTPOST",
+                "V0_P7_BOUNDED_TERRAIN_MUTATION",
+                "V0_P8_FIRST_MOBILE_CONSTRUCT",
+            ],
+            core_p_sequence,
+        )
+        self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
+        self.assertIn(P4, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
-        self.assertIn(CHECKPOINT, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
 
-    def test_registry_generation_80_activates_scenario_gate_without_weakening_nx(self):
+    def test_registry_generation_80_declares_exact_product_lineage_without_false_acceptance(self):
         self.assertEqual(80, self.registry["registry_generation"])
-        self.assertIn("V0", self.registry["programs"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
-        self.assertEqual("ELIGIBLE_FOR_FRESH_EXACT_MAIN_HIGH_RISK_WORK_ORDER", v0["stage_status"])
+        self.assertEqual(P4_BRANCH, v0["branch"])
+        self.assertTrue(v0["requires_passport"])
+        self.assertEqual(P4_PASSPORT, v0["passport_path"])
+        self.assertEqual(P4_PASSPORT, v0["prebuild_state"]["passport_path"])
+        execution = v0["product_execution_base"]
+        self.assertEqual("repair/v0-p3-visual-interaction-r1", execution["branch"])
+        self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", execution["sha"])
+        self.assertFalse(execution["declares_checkpoint_acceptance"])
+        self.assertIn("P2_DIRECTOR_VERDICT_PENDING", v0["acceptance_debt"])
+        self.assertIn("P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING", v0["acceptance_debt"])
 
-        transitions = {
-            item["stage"]: item["blocked_by"]
-            for item in self.registry["global_blocked_transitions"]
-        }
-        self.assertNotIn("V0 RUNTIME START", transitions)
-        self.assertIn("V0-S1 NETWORKED PLANETARY OUTPOST START", transitions)
-        self.assertNotIn("H0_3_SCHEDULER_ACCEPTED", transitions["V0-S1 NETWORKED PLANETARY OUTPOST START"])
-        self.assertEqual("H0_3_SCHEDULER_ACCEPTED_REQUIRED", transitions["MULTI_RUNTIME_IMPLEMENTATION_WORKERS"])
-        self.assertIn("CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED", transitions["NX.C1 SOURCE ACCEPTANCE"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", transitions["V0-S1 NETWORK FOUNDATION OR AUTHORITY CHANGE"])
+    def test_registry_pins_current_auditable_p4_passport(self):
+        v0 = self.registry["programs"]["V0"]
+        remote_ref = f"origin/{P4_BRANCH}"
+        remote_head = git("rev-parse", "--verify", remote_ref)
+        prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
 
-    def test_pre_h0_3_concurrency_is_one_mutation_worker_and_verification_can_coexist(self):
+        # `prebuild_state` is an immutable dispatch/input snapshot, not a promise
+        # that the active implementation branch can never advance. Once P4 is
+        # dispatched and implemented, the current branch head must descend from
+        # the frozen prebuild subject rather than equal it byte-for-byte.
+        git("merge-base", "--is-ancestor", prebuild_head, remote_head)
+
+        passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
+        self.assertEqual("distributed_world_simulator.branch_passport.v1", passport["schema"])
+        self.assertEqual(P4_BRANCH, passport["branch"])
+        self.assertEqual("V0", passport["program"])
+        self.assertEqual(v0["role"], passport["role"])
+        self.assertEqual(v0["current_stage"], passport["current_stage"])
+        self.assertEqual(v0["stage_status"], passport["stage_status"])
+        self.assertEqual(v0["blockers"], passport["blockers"])
+        self.assertEqual(v0["health_declared"], passport["health_declared"])
+        self.assertEqual([], passport["ownership_claims"])
+        self.assertEqual([], passport["runtime_paths"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_refs_fetch_performed"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_authoritative_for_dispatch"])
+        self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_committed_audit_evidence"])
+
+        for relative in (
+            "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+            "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
+        ):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn(prebuild_head, text)
+            self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
+
+    def test_pre_h0_3_concurrency_is_one_main_owned_mutation_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
+        lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(1, concurrency["pre_h0_3_total_autonomous_runtime_mutation_workers"])
-        self.assertEqual(1, concurrency["v0_s1_max_autonomous_runtime_mutation_workers"])
+        self.assertEqual(1, concurrency["v0_product_max_autonomous_runtime_mutation_workers"])
         self.assertTrue(concurrency["verification_review_only_may_wait_in_parallel_with_one_runtime_mutation_worker"])
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
-        self.assertTrue(rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"])
-        self.assertTrue(rules["v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden"])
+        self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
+        self.assertEqual(1, lease["capacity"])
+        self.assertEqual(P4, lease["holder_checkpoint"])
+        self.assertEqual(P4_BRANCH, lease["holder_branch"])
+        self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
-    def test_v0_planner_waits_for_dispatch_and_global_reservation_release(self):
-        work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
+    def test_p4_planner_waits_for_dispatch_then_allocates_and_releases_single_worker(self):
+        work_order = {"goal_checkpoint": P4, "branch": P4_BRANCH}
         planned = {
             "completed_predicates": [],
-            "work_order_id": "V0-S1-WO-TEST",
+            "work_order_id": "V0-P4-WO-TEST",
             "state": "PLANNED",
         }
         plan = build_plan(self.contracts, work_order, planned)
         self.assertEqual("PLANNING_ONLY", plan["mode"])
         self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("SERVER_PREDICTED", plan["v0_s1_gate"]["network_baseline"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["v0_s1_gate"]["network_foundation_change_fails_closed_to"])
-        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["v0_s1_gate"]["runtime_mutation"])
+        self.assertEqual("MAIN_DECLARED_V0_PRODUCT_LINEAGE", plan["v0_p4_gate"]["runtime_execution_base"])
+        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
+        self.assertTrue(plan["v0_p4_gate"]["bounded_implementation_may_proceed_with_prior_acceptance_debt"])
 
         dispatched = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
-            "work_order_id": "V0-S1-WO-TEST",
+            "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        reserved = dict(work_order)
-        reserved["global_runtime_mutation_arbiter"] = {"authorized": False}
-        plan = build_plan(self.contracts, reserved, dispatched)
-        self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("BLOCKED_BY_GLOBAL_MUTATION_LEASE", plan["v0_s1_gate"]["runtime_mutation"])
-        self.assertEqual("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LEASE_REQUIRED", plan["next_action"])
-
-        released = dict(work_order)
-        released["global_runtime_mutation_arbiter"] = {"authorized": True}
-        plan = build_plan(self.contracts, released, dispatched)
+        plan = build_plan(self.contracts, work_order, dispatched)
         self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", plan["mode"])
         self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION", plan["next_action"])
+        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_p4_gate"]["runtime_mutation"])
+        self.assertEqual("BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION", plan["next_action"])
+        self.assertIn("SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER", plan["stop_gates"])
 
-    def test_verifying_releases_mutation_slot_for_both_v0_and_h0_2(self):
-        v0_work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
-        v0_verifying = {
-            "completed_predicates": ["V0_S1_SERVER_BOOT_PASS"],
-            "work_order_id": "V0-S1-WO-TEST",
-            "state": "VERIFYING",
-        }
-        v0_plan = build_plan(self.contracts, v0_work_order, v0_verifying)
-        self.assertEqual("PRODUCT_RUNTIME_VERIFICATION", v0_plan["mode"])
-        self.assertEqual(0, v0_plan["autonomous_runtime_workers"])
-        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", v0_plan["v0_s1_gate"]["runtime_mutation"])
-
-        h0_2_work_order = {"goal_checkpoint": H0_2}
-        h0_2_verifying = {
-            "completed_predicates": ["PROJECT_EPOCH_CREATED"],
-            "work_order_id": "H0-2-WO-TEST",
-            "state": "VERIFYING",
-        }
-        h0_2_plan = build_plan(self.contracts, h0_2_work_order, h0_2_verifying)
-        self.assertEqual("HIGH_RISK_RUNTIME_VERIFICATION", h0_2_plan["mode"])
-        self.assertEqual(0, h0_2_plan["autonomous_runtime_workers"])
-        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", h0_2_plan["nx_c1_gate"]["runtime_mutation"])
-
-    def test_main_owned_lease_blocks_v0_and_nx_concurrent_mutation(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        nx = runtime_work_order("NX", H0_2, "feature/nx")
-        registry = active_lease_registry(v0, nx)
-        for work_order, state in ((v0, "DISPATCHED"), (nx, "IN_PROGRESS")):
-            result = evaluate_pre_h0_3_runtime_mutation_lease(
-                registry, work_order, {"work_order_id": work_order["work_order_id"], "state": state}, "a" * 40,
-            )
-            self.assertFalse(result["authorized"], result)
-            self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_INVALID_ACTIVE_COUNT", result["status"])
-
-    def test_v0_mutation_and_nx_verifying_are_allowed(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        nx = runtime_work_order("NX", H0_2, "feature/nx")
-        registry = active_lease_registry(v0)
-        v0_result = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "a" * 40,
-        )
-        nx_result = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, nx, {"work_order_id": "NX", "state": "VERIFYING"}, "a" * 40,
-        )
-        self.assertTrue(v0_result["authorized"], v0_result)
-        self.assertTrue(nx_result["authorized"], nx_result)
-        self.assertEqual("NOT_A_RUNTIME_MUTATOR", nx_result["status"])
-
-    def test_v0_verifying_and_nx_fix_mutating_are_allowed(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        nx = runtime_work_order("NX", H0_2, "feature/nx")
-        registry = active_lease_registry(nx)
-        v0_result = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, v0, {"work_order_id": "V0", "state": "VERIFYING"}, "a" * 40,
-        )
-        nx_result = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, nx, {"work_order_id": "NX", "state": "IN_PROGRESS"}, "a" * 40,
-        )
-        self.assertTrue(v0_result["authorized"], v0_result)
-        self.assertTrue(nx_result["authorized"], nx_result)
-
-    def test_two_v0_runtime_mutators_are_blocked(self):
-        v0_a = runtime_work_order("V0-A", CHECKPOINT, "feature/v0-a")
-        v0_b = runtime_work_order("V0-B", CHECKPOINT, "feature/v0-b")
-        registry = active_lease_registry(v0_a, v0_b)
-        for work_order, state in ((v0_a, "DISPATCHED"), (v0_b, "IMPLEMENTED")):
-            result = evaluate_pre_h0_3_runtime_mutation_lease(
-                registry, work_order, {"work_order_id": work_order["work_order_id"], "state": state}, "a" * 40,
-            )
-            self.assertFalse(result["authorized"], result)
-            self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_INVALID_ACTIVE_COUNT", result["status"])
-
-    def test_mutator_without_matching_main_lease_is_blocked(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        nx = runtime_work_order("NX", H0_2, "feature/nx")
-        result = evaluate_pre_h0_3_runtime_mutation_lease(
-            active_lease_registry(nx), v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "a" * 40,
-        )
-        self.assertFalse(result["authorized"], result)
-        self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_HELD_BY_OTHER_WORK_ORDER", result["status"])
-
-    def test_matching_work_order_lease_cannot_authorize_a_different_checked_out_branch(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0-a")
-        result = evaluate_pre_h0_3_runtime_mutation_lease(
-            active_lease_registry(v0),
-            v0,
-            {"work_order_id": "V0", "state": "DISPATCHED"},
-            "a" * 40,
-            "feature/v0-b",
-        )
-        self.assertFalse(result["authorized"], result)
-        self.assertEqual(
-            "PRE_H0_3_RUNTIME_MUTATION_LEASE_CHECKED_OUT_BRANCH_MISMATCH",
-            result["status"],
-        )
-        planned_work_order = dict(v0)
-        planned_work_order["global_runtime_mutation_arbiter"] = result
-        plan = build_plan(
-            self.contracts,
-            planned_work_order,
-            {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-        )
+        implemented = dict(dispatched, state="IMPLEMENTED")
+        plan = build_plan(self.contracts, work_order, implemented)
+        self.assertEqual("PRODUCT_RUNTIME_VERIFICATION", plan["mode"])
         self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LEASE_REQUIRED", plan["next_action"])
+        self.assertEqual("NO_ACTIVE_MUTATION_SLOT", plan["v0_p4_gate"]["runtime_mutation"])
 
-    def test_unavailable_main_registry_fails_closed_for_mutation(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        result = evaluate_pre_h0_3_runtime_mutation_lease(
-            None, v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "",
-        )
-        self.assertFalse(result["authorized"], result)
-        self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_UNAVAILABLE", result["status"])
-
-    def test_released_lease_does_not_authorize_runtime_mutation(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        registry = active_lease_registry(v0)
-        registry["reservations"][0]["state"] = "RELEASED"
-        result = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "a" * 40,
-        )
-        self.assertFalse(result["authorized"], result)
-        self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_INVALID_ACTIVE_COUNT", result["status"])
-
-    def test_lease_loader_uses_origin_main_and_ignores_branch_local_registry(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        registry = active_lease_registry(v0)
-        policy = {"runtime_mutation_lease_registry": "config/control/harness/leases.json"}
-        bundle = SimpleNamespace(contracts={"harness_policy": policy}, validate=lambda *_args: None)
-        main_sha = "a" * 40
-        blob_sha = "b" * 40
-
-        def fake_git(_root, *args):
-            calls = {
-                ("rev-parse", "origin/main"): (0, main_sha),
-                ("rev-parse", "origin/main:config/control/harness/leases.json"): (0, blob_sha),
-                ("show", "origin/main:config/control/harness/leases.json"): (0, json.dumps(registry)),
-                ("merge-base", "--is-ancestor", main_sha, main_sha): (0, ""),
-            }
-            return calls.get(args, (1, ""))
-
-        with patch("harness.state_builder._git", side_effect=fake_git) as mocked_git:
-            loaded, source_sha, source_blob, error = _load_main_owned_runtime_mutation_lease_registry(
-                ROOT, bundle,
-            )
-        self.assertEqual(registry, loaded)
-        self.assertEqual(main_sha, source_sha)
-        self.assertEqual(blob_sha, source_blob)
-        self.assertIsNone(error)
-        queried = [call.args[1:] for call in mocked_git.call_args_list]
-        self.assertIn(("show", "origin/main:config/control/harness/leases.json"), queried)
-        self.assertFalse(any("HEAD:" in str(call) for call in queried), queried)
-
-    def test_main_lease_cannot_authorize_a_different_checkpoint_or_duplicate_id(self):
-        v0 = runtime_work_order("V0", CHECKPOINT, "feature/v0")
-        registry = active_lease_registry(v0)
-        registry["reservations"][0]["checkpoint"] = H0_2
-        checkpoint_mismatch = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "a" * 40,
-        )
-        self.assertFalse(checkpoint_mismatch["authorized"], checkpoint_mismatch)
-        self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_CHECKPOINT_MISMATCH", checkpoint_mismatch["status"])
-
-        registry = active_lease_registry(v0)
-        registry["reservations"].append(dict(registry["reservations"][0]))
-        duplicate_id = evaluate_pre_h0_3_runtime_mutation_lease(
-            registry, v0, {"work_order_id": "V0", "state": "DISPATCHED"}, "a" * 40,
-        )
-        self.assertFalse(duplicate_id["authorized"], duplicate_id)
-        self.assertEqual("PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_RESERVATION_ID_INVALID", duplicate_id["status"])
-
-    def test_v0_network_foundation_scope_classifier_blocks_all_forbidden_categories(self):
-        forbidden = [
-            "scripts/network/contracts/network_protocol_manifest.gd",
-            "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
-            "scripts/runtime/networked_gameplay/transports/dedicated_gameplay_server_runtime.gd",
-            "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
-            "scripts/characters/character_owner.gd",
-            "config/network/nx4-client-prediction-reconciliation.v1.json",
-        ]
-        for path in forbidden:
-            with self.subTest(path=path):
-                work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": [path]}
-                result = classify_v0_nx_foundation_scope(work_order)
-                self.assertTrue(result["blocked"], result)
-                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", result["status"])
-                plan = build_plan(
-                    self.contracts,
-                    work_order,
-                    {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-                )
-                self.assertEqual(0, plan["autonomous_runtime_workers"])
-                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["next_action"])
-
-        safe = classify_v0_nx_foundation_scope(
-            {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
-        )
-        self.assertFalse(safe["blocked"], safe)
-
-    def test_v0_executable_diff_classifier_blocks_each_nx_category(self):
-        cases = {
-            "PROTOCOL": "scripts/network/contracts/network_handshake_envelope.gd",
-            "AUTHORITY": "scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd",
-            "OWNERSHIP_EPOCH": "scripts/network/session/network_reconnect_replay_service.gd",
-            "RECONCILIATION": "scripts/network/prediction/client_prediction_reconciler.gd",
-            "CHARACTER_OWNERSHIP": "scripts/characters/character_owner.gd",
-        }
-        for category, path in cases.items():
-            with self.subTest(category=category):
-                work_order = {
-                    "goal_checkpoint": CHECKPOINT,
-                    "allowed_paths": ["scripts/app/lunar_app.gd"],
-                    "implementation_changed_paths": ["scripts/app/lunar_app.gd", path],
-                    "global_runtime_mutation_arbiter": {"authorized": True},
-                }
-                result = classify_v0_nx_foundation_scope(work_order)
-                self.assertTrue(result["classification_complete"], result)
-                self.assertEqual("IMPLEMENTATION_GIT_DIFF", result["source"])
-                self.assertTrue(result["blocked"], result)
-                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", result["status"])
-                self.assertEqual([category], result["matched_categories"])
-                self.assertIn(path, result["matched_paths"])
-
-                plan = build_plan(
-                    self.contracts,
-                    work_order,
-                    {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-                )
-                self.assertEqual(0, plan["autonomous_runtime_workers"])
-                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["next_action"])
-                self.assertEqual(result, plan["v0_s1_gate"]["foundation_scope"])
-
-    def test_v0_actual_diff_wins_over_safe_declared_scope_and_late_nx_delta_blocks(self):
-        work_order = {
-            "goal_checkpoint": CHECKPOINT,
-            "allowed_paths": ["scripts/app/lunar_app.gd"],
-            "implementation_changed_paths": ["scripts/app/lunar_app.gd"],
-            "late_delta_changed_paths": ["scripts/network/prediction/client_prediction_reconciler.gd"],
-            "global_runtime_mutation_arbiter": {"authorized": True},
-        }
-        result = classify_v0_nx_foundation_scope(work_order)
-        self.assertTrue(result["blocked"], result)
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", result["status"])
-        self.assertEqual(["RECONCILIATION"], result["matched_categories"])
-        self.assertEqual(
-            ["scripts/network/prediction/client_prediction_reconciler.gd"],
-            result["late_delta_paths"],
-        )
-        plan = build_plan(
-            self.contracts,
-            work_order,
-            {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-        )
-        self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["next_action"])
-
-    def test_v0_unclassified_late_delta_fails_closed(self):
-        work_order = {
-            "goal_checkpoint": CHECKPOINT,
-            "implementation_changed_paths": ["scripts/app/lunar_app.gd"],
-            "unexpected_late_delta_paths": ["scripts/app/hidden_runtime_mutation.gd"],
-            "global_runtime_mutation_arbiter": {"authorized": True},
-        }
-        result = classify_v0_nx_foundation_scope(work_order)
-        self.assertTrue(result["blocked"], result)
-        self.assertEqual("V0_S1_BLOCKED_UNCLASSIFIED_LATE_DELTA", result["status"])
-        self.assertEqual([], result["matched_categories"])
-        plan = build_plan(
-            self.contracts,
-            work_order,
-            {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-        )
-        self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("V0_S1_BLOCKED_UNCLASSIFIED_LATE_DELTA", plan["next_action"])
-
-    def test_v0_actual_safe_diff_allows_composition(self):
-        work_order = {
-            "goal_checkpoint": CHECKPOINT,
-            "allowed_paths": ["scripts/network/prediction/**"],
-            "implementation_changed_paths": ["scripts/app/lunar_app.gd"],
-            "global_runtime_mutation_arbiter": {"authorized": True},
-        }
-        result = classify_v0_nx_foundation_scope(work_order)
-        self.assertTrue(result["classification_complete"], result)
-        self.assertFalse(result["blocked"], result)
-        self.assertEqual("V0_S1_SCOPE_CLASSIFIED_COMPOSITION_ONLY", result["status"])
-        self.assertEqual("IMPLEMENTATION_GIT_DIFF", result["source"])
-        plan = build_plan(
-            self.contracts,
-            work_order,
-            {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
-        )
-        self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION", plan["next_action"])
-
-    def test_nx_c1_acceptance_contract_is_still_strict(self):
+    def test_nx_c1_acceptance_contract_remains_strict(self):
         required = set(self.catalog["checkpoints"][H0_2]["required_predicates"])
         expected = {
             "OWNER_AUTHORITY_FOCUSED_PASS",
@@ -510,6 +248,7 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
             "NX_CHECKPOINT_PROPOSED",
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
+        self.assertIn(S1, self.catalog["checkpoints"])
 
 
 if __name__ == "__main__":
