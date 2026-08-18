@@ -1,0 +1,118 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "program": "NX",
+  "role": "CONVERGENCE_FRONTIER",
+  "short_description": "Fresh Harness H0.2 HIGH-risk NX.C1 owner-authority convergence branch from exact canonical R3 generation-79 main.",
+  "purpose": "Prove minimal realtime owner-locomotion authorship and rollback-safe presentation on current main without importing legacy FIX layers or moving gameplay/domain authority into NX.",
+  "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED on an exact tested/reviewed head, with CH->NX directional revalidation complete and runtime merge still gated.",
+  "current_stage": "H0.2 / NX.C1 Source Implemented — Runtime Verification Pending",
+  "stage_status": "IMPLEMENTED_WAITING_EXACT_GODOT_RUNTIME_VERIFICATION",
+  "progress_note": "Bounded source implementation is complete at exact implementation head 1814ca72c9569ea2aa7e3d1dd4a69eb790888908. It adds only opt-in NX.C1 owner-locomotion leaves, focused tests and runners; default SERVER_PREDICTED behavior and canonical Item Graph ownership are unchanged. Project Control run 31690226579 on the exact implementation head passed pinned Harness dependencies, 64 architecture/ownership regressions and 9 H0.2 regressions; standard PC0 is YELLOW/NON_RED and directional PC0 is YELLOW/NON_RED. Work Order IMPLEMENTED lifecycle state was accepted by Project Control run 31690441709. CH->NX remains a WATCH_HIT BLOCK that must be explicitly revalidated before NX SOURCE_ACCEPTED. No Godot runtime PASS is claimed yet.",
+  "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED; canonical R3 V9 + post-R3 Project Control NON_RED; H0.2 R3 exact-head PRE_BUILD_DESIGN_AUTHORIZATION PASS",
+  "next_stage": "Run exact implementation head through Godot 4.7.1 stable double using RUN_H0_2_NX_C1_TESTS, then full world/core, two-client, impaired-network and reconnect/ownership-epoch validation. Only after exact tested evidence may the Work Order enter VERIFYING and proceed to post-build review plus CH->NX revalidation.",
+  "parent_branch_or_checkpoint": "main @ 09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "base_commit": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "dependencies": [
+    "H0_1_PASS",
+    "C22_MAIN_INTEGRATED",
+    "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "REGISTRY_GENERATION_79",
+    "POST_R3_STANDARD_PC0_NON_RED",
+    "POST_R3_DIRECTIONAL_PC0_NON_RED",
+    "PROJECT_CONTROL_PINNED_HARNESS_DEPENDENCIES_PASS",
+    "H0_2_R3_PREBUILD_REVIEW_PASS_ON_7d0acd4b19e2a08027396cc55e0808a5d5664ae4",
+    "NX5_REMOTE_SNAPSHOT_INTERPOLATION_BASELINE",
+    "M7_OWNER_AUTHORITY_LEGACY_EVIDENCE_RUNTIME_464e1b8dd27fad8b4d477f6e76ca52a449893353",
+    "M7_OWNER_AUTHORITY_ACCEPTANCE_RECORD_538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6",
+    "CH9_6_DIRECTIONAL_CONSUMER_REVALIDATION_BEFORE_SOURCE_ACCEPTANCE"
+  ],
+  "owned_paths": [
+    "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/**",
+    "docs/plans/H0_2_NX_C1_OWNER_AUTHORITY_R3_RU.md",
+    "tests/harness/test_h0_2_machine_checkpoint_contract.py",
+    "scripts/network/authority/movement_authority_profile.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+    "tests/network/test_nx_owner_movement_authority.gd",
+    "tests/network/test_nx_owner_item_projection_rollback.gd",
+    "tests/network/test_nx_render_physics_separation.gd",
+    "tests/network/test_nx_client_tick_robustness.gd",
+    "RUN_H0_2_NX_C1_TESTS.ps1",
+    "RUN_H0_2_NX_C1_TESTS.sh",
+    "validation/h0-2-nx-c1-owner-authority-validation.json"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    "scripts/network/prediction/**",
+    "scripts/network/simulation/**",
+    "scripts/runtime/networked_gameplay/ch9/**",
+    "scripts/items/**",
+    "scripts/characters/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/network/contracts/network_protocol_manifest.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_5_persistent_dedicated_server_runtime.gd"
+  ],
+  "runtime_paths": [
+    "scripts/network/authority/movement_authority_profile.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd"
+  ],
+  "validation_paths": [
+    "tests/harness/test_h0_2_machine_checkpoint_contract.py",
+    "tests/network/test_nx_owner_movement_authority.gd",
+    "tests/network/test_nx_owner_item_projection_rollback.gd",
+    "tests/network/test_nx_render_physics_separation.gd",
+    "tests/network/test_nx_client_tick_robustness.gd",
+    "tests/network/test_nx6_predicted_item_interactions.gd",
+    "RUN_H0_2_NX_C1_TESTS.ps1",
+    "RUN_H0_2_NX_C1_TESTS.sh"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [
+    {
+      "foundation": "NETWORK_REPLICATION_POLICY",
+      "claimed_owner": "NX",
+      "scope": "Realtime locomotion authorship profile, server validation, snapshot relay/interpolation and optimistic presentation rollback only; permanent gameplay/domain/Item truth remains with canonical owners."
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "CONSTRUCTION_TRUTH",
+    "MATTER_TRUTH",
+    "PERSISTENCE_DURABILITY",
+    "AUTHORITY_FOUNDATION",
+    "WORLD_TRANSACTION_MODEL",
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_WORK_BUDGET",
+    "WORLD_QUERY_FABRIC",
+    "DEVELOPMENT_HARNESS"
+  ],
+  "blockers": [
+    "EXACT_GODOT_FOCUSED_RUNTIME_VERIFICATION_REQUIRED",
+    "FULL_WORLD_CORE_REGRESSION_REQUIRED",
+    "TWO_CLIENT_PROCESS_VALIDATION_REQUIRED",
+    "IMPAIRED_NETWORK_VALIDATION_REQUIRED",
+    "RECONNECT_OWNERSHIP_EPOCH_VALIDATION_REQUIRED",
+    "POST_BUILD_INDEPENDENT_REVIEW_REQUIRED",
+    "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE",
+    "RUNTIME_FEATURE_MERGE_REMAINS_HUMAN_GATED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

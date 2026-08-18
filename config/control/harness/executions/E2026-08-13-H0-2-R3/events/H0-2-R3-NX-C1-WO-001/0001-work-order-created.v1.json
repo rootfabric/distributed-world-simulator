@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-13-H0-2-R3-H0-2-R3-NX-C1-WO-001-0001",
+  "project_epoch": "E2026-08-13-H0-2-R3",
+  "work_order_id": "H0-2-R3-NX-C1-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-13T09:37:10Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "head_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "predicate": "H0_2_R3_FRESH_WORK_ORDER_READY",
+  "command": "CREATE_FRESH_H0_2_R3_FROM_EXACT_R3_GENERATION_79_MAIN_AFTER_PINNED_DEPENDENCY_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/work-orders/H0-2-R3-NX-C1-WO-001.v1.json"
+  ],
+  "summary": "Created the fresh H0.2 R3 planning ledger from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / registry generation 79 / canonical R3 after Project Control pinned-dependency repair. The branch is control-only until a fresh exact-head HIGH pre-build review PASS and Director DISPATCHED event."
+}

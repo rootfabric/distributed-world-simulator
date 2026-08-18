@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-13-H0-2-R3-H0-2-R3-NX-C1-WO-001-0004",
+  "sequence": 4,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_order_id": "H0-2-R3-NX-C1-WO-001",
+  "project_epoch": "E2026-08-13-H0-2-R3",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-13T10:16:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "head_sha": "1814ca72c9569ea2aa7e3d1dd4a69eb790888908",
+  "predicate": "NX_C1_BOUNDED_SOURCE_IMPLEMENTED",
+  "command": "SOURCE_IMPLEMENTATION_COMPLETE_PC0_NON_RED_RUNTIME_VERIFICATION_PENDING",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/network/authority/movement_authority_profile.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+    "tests/network/test_nx_owner_movement_authority.gd",
+    "tests/network/test_nx_owner_item_projection_rollback.gd",
+    "tests/network/test_nx_render_physics_separation.gd",
+    "tests/network/test_nx_client_tick_robustness.gd",
+    "RUN_H0_2_NX_C1_TESTS.ps1",
+    "RUN_H0_2_NX_C1_TESTS.sh"
+  ],
+  "summary": "Bounded NX.C1 source implementation is complete on exact head 1814ca72c9569ea2aa7e3d1dd4a69eb790888908. The opt-in leaf preserves server/domain and Item Graph ownership, suppresses routine owner rewind, reconciles once after explicit server rejection, keeps default SERVER_PREDICTED behavior unchanged, and includes focused owner/single-writer/item-rollback/sequence regressions. Project Control run 31690226579 succeeded. No Godot runtime PASS or verification state is claimed by this event."
+}

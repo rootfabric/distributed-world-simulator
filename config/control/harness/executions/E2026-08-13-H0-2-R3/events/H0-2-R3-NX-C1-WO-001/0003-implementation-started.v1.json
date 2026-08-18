@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-13-H0-2-R3-H0-2-R3-NX-C1-WO-001-0003",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_order_id": "H0-2-R3-NX-C1-WO-001",
+  "project_epoch": "E2026-08-13-H0-2-R3",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-13T09:46:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "head_sha": "a461b23b7223d6e3f1958d32387f872844265261",
+  "predicate": "NX_C1_BOUNDED_IMPLEMENTATION_STARTED",
+  "command": "BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/work-orders/H0-2-R3-NX-C1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/reviews/H0-2-R3-NX-C1-WO-001-PREBUILD-REVIEW-001.v1.json",
+    "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+    "docs/plans/H0_2_NX_C1_OWNER_AUTHORITY_R3_RU.md"
+  ],
+  "summary": "The single Director-dispatched HIGH-risk worker has started bounded NX.C1 implementation. Runtime mutation is limited to the predeclared Work Order paths; protocol manifest, architecture/ownership, cross-server authority, canonical Item/Character ownership and legacy FIX-chain writers remain forbidden."
+}
