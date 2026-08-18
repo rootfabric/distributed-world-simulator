@@ -38,6 +38,14 @@ P — последовательный product train. Следующий checkpo
 
 P4 runtime implementation завершён и заморожен.
 
+Historical generation-80 activation/pre-runtime subject remains immutable provenance:
+
+```text
+47ff18cf603bbf98bb67f7f62962e050f8606542
+```
+
+Это dispatch/input snapshot, а не текущая runtime truth и не checkpoint acceptance claim.
+
 Exact implementation/evidence target:
 
 ```text
