@@ -10,6 +10,7 @@
   "branch": "feature/v0-p5-equipment-tools",
   "scope": "Implement one bounded canonical mining-tool equipment slice over the accepted P4 product lineage: equip and unequip an existing canonical Item Graph item through server-authoritative operations, replicate the exact equipped relation, restore it on reconnect, and require the equipped mining tool for the existing canonical ResourceMining action without creating a second item, equipment, persistence, or network authority truth.",
   "allowed_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
     "scripts/runtime/networked_gameplay/m4/**",
     "scripts/runtime/networked_gameplay/p3/**",
     "scripts/runtime/networked_gameplay/p5/**",
@@ -106,5 +107,5 @@
   "human_attention_triggers": ["RUNTIME_FEATURE_MERGE", "NETWORK_FOUNDATION_CHANGE_REQUIRED", "DUPLICATE_CANONICAL_TRUTH_REQUIRED", "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED"],
   "issued_at_utc": "2026-08-18T11:51:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "P5 implementation is active under one Director-dispatched mutation worker. Exact runtime truth for implementation slice 1 is f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b. Project Control 32137847594 passed on that exact runtime head. GitHub exact-source artifact 9324732940 (digest sha256:523b3b0eecd3829eef2cbc814746af11dc4811e8218328de6d066003e78be56e) was executed with Godot 4.7.1.stable.double.custom_build.a13da4feb: P5 equipment 31/31, P5 mining gate 36/36, historical P3 mining 79/79. Required P5 verification predicates are not yet promoted; two-client/reconnect, full regression, critique, Reviewer and Verifier remain open."
+  "notes": "P5 is IN_PROGRESS under one Director-dispatched mutation worker. Implementation slice 1 runtime truth is f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b with Project Control 32137847594 and exact-source Godot focused evidence. P5.2 replication/reconnect test is implemented at 1d366c12f50c93b6c714069a18bc1e898a37e640 and the ledger-derived control test sync passed Project Control 32145359904 at 1ccc0ba5f296b0c0d862443cd362f5379bc1aea8. Director scope clarification event 0004 adds only scripts/runtime/networked_gameplay/networked_gameplay_service.gd because the existing M3 server preloads that stable composition adapter. No M3, network, persistence, or authority foundation mutation is authorized."
 }

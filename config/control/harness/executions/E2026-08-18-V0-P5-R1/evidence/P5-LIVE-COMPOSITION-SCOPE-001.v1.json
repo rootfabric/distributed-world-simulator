@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_scope_clarification.v1",
+  "evidence_id": "P5-LIVE-COMPOSITION-SCOPE-001",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "observed_head": "1ccc0ba5f296b0c0d862443cd362f5379bc1aea8",
+  "finding": "The live M3 dedicated server preloads scripts/runtime/networked_gameplay/networked_gameplay_service.gd. That stable product adapter still extends P3, so the P5 canonical Item Graph equipment operations are live, but the P5 ResourceMining tool requirement is not yet selected by the live server composition.",
+  "required_bounded_change": "Change only the stable networked_gameplay_service.gd composition adapter to inherit the already-tested P5 gameplay composition. No M3 transport, protocol, persistence, authority, or network foundation mutation is required.",
+  "newly_allowed_exact_path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+  "scope_classification": "BOUNDED_P5_PRODUCT_COMPOSITION_ADAPTER",
+  "network_foundation_change_required": false,
+  "persistence_foundation_change_required": false,
+  "second_canonical_truth_required": false,
+  "mutation_lease_change_required": false,
+  "decision": "CLARIFY_WORK_ORDER_ALLOWED_PATH_AND_CONTINUE_SINGLE_P5_WORKER",
+  "recorded_at_utc": "2026-08-18T13:59:00Z"
+}

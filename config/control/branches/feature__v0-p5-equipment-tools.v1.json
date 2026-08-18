@@ -8,11 +8,11 @@
   "short_description": "P5 equipment/tools: canonical server-authoritative equipment relation over accepted P4 Item Graph identity.",
   "purpose": "Turn an existing canonical Item Graph item into an equipped mining tool without creating a second inventory, equipment, persistence or network authority truth.",
   "expected_outcome": "Owned-tool equip/unequip is exact-once and authoritative, two clients converge, reconnect restores the exact relation, and ResourceMining requires the canonical equipped tool while preserving existing exact-once resource output.",
-  "current_stage": "V0-P5.2 REPLICATION AND RECONNECT",
+  "current_stage": "V0-P5.3 LIVE COMPOSITION BINDING",
   "stage_status": "IN_PROGRESS",
-  "progress_note": "P5.1 runtime truth is f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b. Canonical equipment relation and mining-tool gameplay gate are implemented. Project Control 32137847594 is SUCCESS on that exact head. Exact-source artifact 9324732940 was rerun under Godot 4.7.1 double: equipment 31/31, P5 mining 36/36, historical P3 mining 79/79. Formal verification remains open; next work is two-client equipment replication and reconnect restoration.",
+  "progress_note": "P5 equipment/mining domain and replication/reconnect semantics are implemented and focused-green. A live composition audit proved M3 preloads the stable networked_gameplay_service.gd adapter, which still selected P3. Director event 0004 clarifies this exact adapter as the only additional runtime path needed to make the already-tested P5 mining gate live; no M3/network/persistence foundation path is opened.",
   "last_accepted_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION @ 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
-  "next_stage": "Prove two-client canonical equipment replication and reconnect restoration without duplicate equipment or item identity, then run exact-head full regression and closure review sequence.",
+  "next_stage": "Bind the stable gameplay composition adapter to P5, prove live server semantics without M3/network changes, then freeze implementation and run full regression/verification.",
   "parent_branch_or_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION ACCEPTED @ 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "base_commit": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "dependencies": [
@@ -20,7 +20,7 @@
     "main-owned P5 activation and exact successor base declaration",
     "fresh E2026-08-18-V0-P5-R1 / V0-P5-R1-WO-001",
     "single generation-80 mutation lease held by V0_P5_EQUIPMENT_TOOLS",
-    "Project Control 32137847594 SUCCESS on runtime head f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b",
+    "Project Control 32145359904 SUCCESS on pre-scope-clarification P5 head 1ccc0ba5f296b0c0d862443cd362f5379bc1aea8",
     "existing canonical M4 Item Graph identity",
     "existing P3 ResourceMining authoritative output semantics"
   ],
@@ -35,23 +35,28 @@
     "docs/evidence/2026-08-18_V0_P5_*"
   ],
   "watched_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
     "scripts/runtime/networked_gameplay/m4/**",
     "scripts/runtime/networked_gameplay/p3/**",
     "scripts/app/**",
     "scripts/ui/inventory/**"
   ],
   "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
     "scripts/runtime/networked_gameplay/m4/**",
     "scripts/runtime/networked_gameplay/p3/**",
     "scripts/persistence/**",
     "scripts/network/**",
     "config/architecture/**"
   ],
-  "runtime_paths": ["scripts/runtime/networked_gameplay/p5/**"],
+  "runtime_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/p5/**"
+  ],
   "validation_paths": ["tests/runtime/test_v0_p5_*", "RUN_V0_P5_*"],
   "tested_heads": {
     "runtime": "f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b",
-    "focused": "f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b",
+    "focused": "1d366c12f50c93b6c714069a18bc1e898a37e640",
     "full_regression": ""
   },
   "ownership_claims": [],
