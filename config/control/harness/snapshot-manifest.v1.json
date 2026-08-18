@@ -1,0 +1,141 @@
+{
+  "schema": "distributed_world_simulator.harness_snapshot_manifest.v1",
+  "snapshot_series": "Distributed World Simulator Development Harness",
+  "snapshot_id": "HARNESS-SNAPSHOT-R2",
+  "snapshot_revision": 2,
+  "captured_at": "2026-08-18T12:16:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "snapshot_branch": "control/harness-development-snapshot-r2",
+  "source": {
+    "branch": "main",
+    "head_sha": "d9a1a3ca03016d6851a258ff93d5c260a86c5b4c",
+    "tree_sha": "a5bf117c721605bbc8ab07ff7bcb8c7806405e23",
+    "snapshot_metadata_only_after_source": true
+  },
+  "lineage": {
+    "previous_snapshot": {
+      "snapshot_id": "HARNESS-SNAPSHOT-R1",
+      "branch": "control/harness-development-protocol-r1",
+      "head_sha": "4b9e6c2c9428f59860368ccad6cf1a561f28206e",
+      "pull_request": 65,
+      "merge_commit_sha": "a578b2df4cd73bfd05379a81c574a7a5739b1030",
+      "role": "FIRST_PROTOCOL_SNAPSHOT"
+    },
+    "major_intermediate_milestone": {
+      "branch": "control/harness-evidence-review-layer",
+      "head_sha": "474c0552f2671d28dbfdff64a389ccd525364a5c",
+      "pull_request": 67,
+      "merge_commit_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
+      "role": "EVIDENCE_REVIEW_LAYER"
+    },
+    "commits_from_r1_source_to_r2_source": 307,
+    "r1_is_ancestor_of_r2": true,
+    "history_policy": "APPEND_ONLY_SNAPSHOTS_NO_REWRITE"
+  },
+  "r2_capabilities": [
+    "EXECUTABLE_STATUS_PLAN_RESUME",
+    "GIT_ONLY_RECOVERY",
+    "APPEND_ONLY_EVENT_REDUCTION",
+    "DERIVED_WORK_ORDER_STATE",
+    "PROJECT_EPOCH_VALIDATION",
+    "CHECKPOINT_PLANNING",
+    "RISK_ROUTING",
+    "DESIGN_BRIEF",
+    "REPAIR_DOCTRINE",
+    "EVIDENCE_MAP",
+    "INDEPENDENT_REVIEWER",
+    "INDEPENDENT_VERIFIER",
+    "EXACT_HEAD_REVIEW_FRESHNESS",
+    "POST_BUILD_CRITIQUE",
+    "HUMAN_ATTENTION_QUEUE",
+    "PROJECT_CONTROL_ARCHITECTURE_COMPATIBILITY",
+    "DIRECTIONAL_WATCH_AND_REVIEWED_CLEARANCE",
+    "CROSS_BRANCH_OVERLAP_GUARDS",
+    "PRE_H0_3_RUNTIME_MUTATION_LEASE"
+  ],
+  "extraction_profile": {
+    "copy_as_generic_core": [
+      "CONTROL_DEVELOPMENT.ps1",
+      "scripts/harness/**",
+      "validation/harness/**",
+      "config/control/harness/event.schema.v1.json",
+      "config/control/harness/project-epoch.schema.v1.json",
+      "config/control/harness/evidence-map.schema.v1.json",
+      "config/control/harness/human-attention.schema.v1.json",
+      "config/control/harness/risk-policy.v1.json",
+      "config/control/harness/review-policy.v1.json",
+      "config/control/harness/repair-doctrine.v1.json"
+    ],
+    "copy_then_parameterize": [
+      "AGENTS.md",
+      "HARNESS_CONTROL.md",
+      "PROJECT_CONTROL.md",
+      ".github/workflows/project-control.yml",
+      "config/control/harness/harness-policy.v1.json",
+      "config/control/harness/work-order.schema.v1.json",
+      "config/control/project-control-policy.v1.json",
+      "scripts/control/project_control.py",
+      "scripts/control/project_control_core.py",
+      "scripts/control/project_control_architecture_compat.py",
+      "scripts/control/project_control_directional_watch.py",
+      "scripts/control/directional_watch_clearance.py",
+      "tests/harness/**"
+    ],
+    "recreate_for_target_project": [
+      "config/control/harness/project-goals.v1.json",
+      "config/control/harness/checkpoint-catalog.v1.json",
+      "config/control/harness/scheduler-policy.v1.json",
+      "config/control/project-program-registry.v1.json",
+      "config/control/architecture-ownership.v1.json",
+      "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md"
+    ],
+    "exclude_from_clean_seed": [
+      "config/control/harness/executions/**",
+      "config/control/branches/**",
+      "artifacts/**",
+      "scripts/runtime/**",
+      "scripts/construction/**",
+      "tests/runtime/**",
+      "tests/construction/**",
+      "docs/checkpoints/**",
+      "docs/plans/**",
+      "validation/c22-*.json"
+    ]
+  },
+  "bootstrap_order": [
+    "COPY_GENERIC_CORE",
+    "RESET_EXECUTION_HISTORY_TO_EMPTY",
+    "DEFINE_PROJECT_GOALS",
+    "DEFINE_CHECKPOINT_CATALOG",
+    "DEFINE_PROGRAM_REGISTRY",
+    "DEFINE_ARCHITECTURE_OWNERSHIP",
+    "CONFIGURE_SCHEDULER_AND_CONCURRENCY",
+    "PARAMETERIZE_PROJECT_CONTROL",
+    "RUN_HARNESS_TESTS",
+    "VERIFY_STATUS_PLAN_RESUME_WITHOUT_ACTIVE_EXECUTION",
+    "CREATE_FIRST_PROJECT_EPOCH",
+    "CREATE_FIRST_BOUNDED_WORK_ORDER"
+  ],
+  "preserved_invariants": [
+    "GIT_IS_DURABLE_MEMORY",
+    "CHAT_NOT_REQUIRED_FOR_RESUME",
+    "MAIN_OWNS_POLICY_AND_PROJECT_STATE",
+    "BRANCHES_REPORT_EXECUTION_FACTS",
+    "EVENTS_ARE_APPEND_ONLY",
+    "DERIVED_STATE_IS_REBUILDABLE",
+    "IMPLEMENTER_CANNOT_SELF_ACCEPT",
+    "MISSING_EVIDENCE_IS_NOT_PASS",
+    "EXACT_TESTED_AND_REVIEWED_HEADS_REQUIRED",
+    "RUNTIME_CHANGE_MAKES_REVIEW_STALE",
+    "MAIN_MOVEMENT_REQUIRES_AUDIT_OR_REFRESH",
+    "ARCHITECTURE_AND_OWNERSHIP_DRIFT_FAIL_CLOSED",
+    "HUMAN_GATES_REMAIN_EXPLICIT"
+  ],
+  "future_snapshot_rule": {
+    "next_snapshot_id": "HARNESS-SNAPSHOT-R3",
+    "must_reference_previous": "HARNESS-SNAPSHOT-R2",
+    "must_record_exact_source_branch_head_tree": true,
+    "must_summarize_delta_from_previous": true,
+    "must_not_rewrite_older_snapshots": true
+  }
+}
