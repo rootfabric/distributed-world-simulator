@@ -1,6 +1,6 @@
 # ECO EVO2 — Portable SpeciesCatalog / Unseen World Roadmap
 
-Статус: `ACTIVE / RESEARCH_ONLY / E2.1..E2.5 ACCEPTED / E2.6 AUTHORIZED_NOT_STARTED`.
+Статус: `ACTIVE / RESEARCH_ONLY / E2.1..E2.6 ACCEPTED / E2.7 AUTHORIZED_NOT_STARTED`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -59,13 +59,16 @@ ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5
 
 E2.5
 942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6
+
+E2.6
+1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd
 ```
 
 P4 production-integration evidence остаётся отдельной governance-линией и не даёт EVO2 production authority.
 
 ## 2. Species concept policy
 
-`research_species_id` — стабильная идентичность portable lineage hypothesis внутри research pipeline. Adapted descendants E2.5 сохраняют эту research identity; genetic divergence не превращается автоматически в canonical biological taxonomy.
+`research_species_id` — стабильная идентичность portable lineage hypothesis внутри research pipeline. Adapted descendants E2.5/E2.6 сохраняют эту research identity; genetic divergence не превращается автоматически в canonical biological taxonomy.
 
 ## 3. Accepted sequence E2.1–E2.4
 
@@ -132,63 +135,17 @@ selection
 
 Mutation event сам по себе недостаточен.
 
-### 4.2 Bounded challenge
+### 4.2 Accepted outcome
 
 ```text
-cells                  DRY / WET
-generations            10
-population             8
-offspring per parent   4
+DRY Control sorting gain      +0.712602797217
+DRY Treatment adaptation      +0.210067450172
+
+WET Control sorting gain      +1.231209807202
+WET Treatment adaptation      +0.387714189995
 ```
 
-Treatment policy:
-
-```text
-mutation_probability              0.30
-water_preference_step             0.055
-root_depth_m_step                 0.20
-growth_rate_step                  0.045
-shade_tolerance_step              0.045
-seed_dispersal_distance_m_step    0.0
-```
-
-Control совпадает с Treatment policy по всем step values и меняет только `mutation_probability -> 0`.
-
-### 4.3 Sorting result
-
-Оба Control arm начинают с одинакового 50/50 frozen founder set и не создают novel genomes.
-
-```text
-DRY Control
-→ frozen alpha strategy wins
-→ sorting gain +0.712602797217
-
-WET Control
-→ frozen beta strategy wins
-→ sorting gain +1.231209807202
-```
-
-Это pure ecological sorting существующих strategies без genetic change.
-
-### 4.4 Adaptation result
-
-```text
-DRY Treatment
-classification    ADAPTATION_DETECTED
-adaptation gain   +0.210067450172
-water preference  shifts below frozen DRY-sorted state
-
-WET Treatment
-classification    ADAPTATION_DETECTED
-adaptation gain   +0.387714189995
-water preference  shifts above frozen WET-sorted state
-```
-
-Adapted descendants сохраняют исходный `research_species_id/source_lineage_id`. E2.5 не объявляет новые canonical species.
-
-### 4.5 Reciprocal local adaptation
-
-Final Treatment populations cross-evaluated through the same accepted causal `ResourceModel`:
+Reciprocal cross-environment result:
 
 ```text
 DRY-adapted in DRY   +0.500903251638
@@ -198,9 +155,9 @@ WET-adapted in WET   +1.157255352906
 DRY-adapted in WET   -1.601811151164
 ```
 
-Обе populations имеют home advantage. Это исключает простую интерпретацию «Treatment получил общий скрытый fitness bonus».
+Adapted descendants сохраняют исходный `research_species_id/source_lineage_id`. E2.5 не объявляет новые canonical species.
 
-### 4.6 Accepted verification
+### 4.3 Accepted verification
 
 ```text
 exact transitive executable closure   21 / 21 PASS
@@ -211,92 +168,244 @@ assertions                           93 / 93 PASS
 logs                                 byte-identical
 run log SHA-256                      9aa1e912a545cdb470dbada92ba8eac5024632e2ec7f58eaef6a4ffd977975a9
 aggregate                            942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6
-DRY paired hash                      1d8dd8f37ad0c83f439dce5493c59b38a3618f9201630a125a6197691eecab7c
-WET paired hash                      9234fdfa74530c1f16b90960814e88e6417b2f3f9a92a8523e825471f2dd1292
+```
+
+Acceptance authority — fresh behavioral execution; independent Reviewer/Verifier PASS не заявляется.
+
+## 5. E2.6 — Replicated Causal Experiments — ACCEPTED
+
+Exact code-under-test:
+
+`8ac37bfea0f36731407e1252db1a7c2a2305420e`
+
+Implementation:
+
+```text
+scripts/research/ecology/plant_replicated_causal_experiments_v1.gd
+7fb18d91ba59493c608edafba610dc882152852a
+```
+
+Acceptance test:
+
+```text
+tests/research/ecology/eco_evo2_e2_6_replicated_causal_experiments_acceptance.gd
+55b9af8b1969b033606fab112accd616eee8122a
 ```
 
 Canonical runner:
 
 ```text
-RUN_ECO_EVO2_E2_5_TESTS.ps1
-aac648105002a3b9337c0b7fcedfdc501d01402e
+RUN_ECO_EVO2_E2_6_TESTS.ps1
+08a2ffbfbe1b3c28b020571256b6831d37d97fcb
 ```
 
-Он не запускался в Linux carrier из-за отсутствия `pwsh/powershell`; exact equivalent gate воспроизвёл его parent, 21-file closure, parser, behavioral, fresh-process and frozen-output predicates.
+Validation:
 
-Acceptance authority — fresh behavioral execution; independent Reviewer/Verifier PASS **не заявляется**.
+`validation/ecology/eco-evo2-e2-6-replicated-causal-experiments-validation.json`
 
-### 4.7 Integrity
+Accepted checkpoint:
 
-Validator перестраивает expected result deterministic replay-ом. Acceptance negative tests отвергают даже:
+`docs/checkpoints/2026-08-18_ECO_EVO2_E2_6_REPLICATED_CAUSAL_EXPERIMENTS_ACCEPTED_RU.md`
 
-- cross-environment semantic tamper после пересчёта aggregate hash;
-- selected mutation-event tamper после пересчёта arm/paired/aggregate hashes;
-- parent/bake/catalog tamper;
-- extra fields;
-- canonical-taxonomy promotion.
+### 5.1 Frozen replication protocol
 
-## 5. E2.6 — Replicated Causal Experiments — AUTHORIZED / CURRENT
-
-E2.5 показал causal split на одном frozen deterministic assay. E2.6 должен проверить устойчивость causal вывода на заранее объявленном bounded replication set.
-
-### 5.1 Replication contract
-
-До исполнения E2.6 должен freeze:
-
-- replicate IDs;
-- seed/stream derivation;
-- exact Control/Treatment identity locks;
-- target environments/challenge set;
-- horizon/population protocol;
-- aggregation rules;
-- acceptance rule для null/reversal outcomes.
-
-После freeze нельзя выбрасывать «неудобные» replicates.
-
-### 5.2 Required per-replicate evidence
-
-Для каждого replicate:
-
-- exact starting parent hash;
-- Control/Treatment initial equality;
-- sorting result;
-- adaptation classification;
-- paired effect/gain;
-- novel-genome evidence;
-- cross-environment contrast, когда применимо;
-- deterministic result hash;
-- failure/null reason, если эффект отсутствует.
-
-### 5.3 Aggregate evidence
-
-E2.6 должен показывать не только mean:
-
-- count/sign consistency;
-- min/max effect;
-- null/reversal count;
-- classification distribution;
-- exact replicate set hash;
-- aggregate causal evidence hash.
-
-Допустимые replicate classifications сохраняются:
+Replicate identities были объявлены до acceptance run:
 
 ```text
-SORTING_ONLY_RESPONSE
-ADAPTATION_DETECTED
-ADAPTATION_NO_MEASURABLE_ADVANTAGE
-NO_RESPONSE
+R01
+R02
+R03
+R04
+R05
 ```
 
-### 5.4 Observability reuse
+Acceptance thresholds были также frozen заранее:
 
-Можно использовать VIS2.2 evidence/causal observability patterns как техническую архитектуру записи evidence, но formal PASS VIS2.2 не наследуется автоматически.
+```text
+positive adaptation effect    >= 4 / 5 per environment
+reciprocal home advantage     >= 4 / 5 per environment
+```
 
-E2.7 остаётся blocked до formal E2.6 acceptance.
+Hard evidence rule:
 
-## 6. E2.7 — Cross-Seed Robustness
+```text
+all 5 replicate records retained
+null/reversal outcomes retained
+post-hoc replicate censoring forbidden
+```
 
-После replicated causal design проверить, что acceptance не зависит от одного seed family / replication schedule.
+E2.6 не требует 5/5. Если один replicate оказался бы null/reversal, он должен был остаться в artifact и учитываться в aggregate.
+
+### 5.2 Replicate causal identity
+
+В каждом replicate:
+
+```text
+CONTROL
+same frozen founders
+same DRY/WET environment
+same replicate stream
+mutation_probability = 0
+
+TREATMENT
+same frozen founders
+same DRY/WET environment
+same replicate stream
+exact E2.5 mutation policy
+```
+
+Control/Treatment отличаются только permission for inherited adaptation.
+
+Selection consequence вычисляется accepted `ResourceModel`; variation — accepted deterministic `MutationKernel`. No global RNG.
+
+### 5.3 Small closure by design
+
+E2.6 не запускает заново весь transfer/matrix graph. E2.5 accepted contract закреплён как immutable parent; для replication mechanism используется минимальный causal closure:
+
+```text
+EnvironmentSample
+PlantGenome
+LineageRecord
+MutationKernel
+ResourceModel
+E2.6 implementation
+E2.6 acceptance test
+```
+
+Exact closure:
+
+`7 / 7 PASS`.
+
+Это уменьшает скрытую coupling surface и делает replicated evidence легче для independent audit.
+
+### 5.4 Observed replication result
+
+```text
+replicate set hash
+5e02d04d3d94f95f6e8e76f6387ee07c723d2e596046f6a65d65cd815abbc637
+
+DRY
+mean adaptation gain       +0.235359270024
+positive effects           5 / 5
+reciprocal home advantage  5 / 5
+aggregate                  10ca9de3ca7989494507bcb081a410bd1e8e625faa10843f62201c258e9bdd52
+
+WET
+mean adaptation gain       +0.379178153879
+positive effects           5 / 5
+reciprocal home advantage  5 / 5
+aggregate                  3fa2b4a96a141241e367d56b7fa69f6d8bc9f92f32cd5266128248c21a092755
+```
+
+Individual replicate evidence hashes:
+
+```text
+R01 36b5d458d037cafe6c1d72bb68040876a2a453637d68d89de75dae98f9e7fa84
+R02 c3e2dbc3949c6d16edc646954b1a324b0e03215aae7a1759ec3d79bfd8a64177
+R03 d808be565e5d1c39725b5212b72e85efb4113f3e11e27dc3f560da515d455477
+R04 9785a696f335895b48dde1dc2813bde5f872bf887f9664c3ec122dba789c4ca4
+R05 a815a398caf1845da32ea4fdc7e7462e42e36c4580393bac0b215cbbef71f4f9
+```
+
+Overall E2.6 aggregate:
+
+`1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd`.
+
+### 5.5 Accepted verification
+
+```text
+exact transitive executable closure   7 / 7 PASS
+Godot                                4.7.1.stable.double.custom_build.a13da4feb
+Godot SHA-256                        bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+parser/preload                       PASS
+fresh processes                      2 / 2 PASS
+assertions                           218 / 218 PASS
+ERROR lines                          0 / 0
+logs                                 byte-identical
+run log SHA-256                      a1dec9651244fb1ccf95a617469d56a4b7d674aceb6f73bf33e792a3c9a82307
+```
+
+Canonical PowerShell runner не запускался в Linux carrier из-за отсутствия `pwsh/powershell`; exact equivalent execution воспроизвёл его parent, closure, parser, fresh-process, PASS-marker and frozen-output predicates.
+
+Independent Reviewer/Verifier PASS не заявляется.
+
+### 5.6 Scientific boundary
+
+E2.6 доказывает reproducibility causal effect across five predeclared deterministic streams.
+
+E2.6 **не** доказывает:
+
+- formal statistical significance;
+- broad cross-seed robustness;
+- robustness across alternative bake/catalog seeds;
+- canonical speciation;
+- production authority.
+
+Поэтому observed 5/5 нельзя автоматически использовать как E2.7 PASS.
+
+## 6. E2.7 — Cross-Seed Robustness — AUTHORIZED / CURRENT
+
+E2.7 расширяет small replication proof до robustness study.
+
+### 6.1 Research question
+
+> Сохраняется ли принятый E2.5/E2.6 causal conclusion, если variation stream выбирается из существенно более широкого заранее объявленного seed ensemble?
+
+E2.7 не должен менять biological mechanism, target environments или mutation policy. Это robustness test уже принятой модели, а не новый tuning stage.
+
+### 6.2 Protocol freeze before execution
+
+До первого acceptance run необходимо зафиксировать:
+
+- полный seed ensemble и его hash;
+- minimum ensemble size;
+- derivation rule seed → replicate stream;
+- exact frozen parent catalog/founders;
+- exact DRY/WET environments;
+- exact E2.5 treatment policy;
+- effect observables;
+- robustness thresholds;
+- handling null/reversal/failed runs;
+- uncertainty/statistical method, если он используется.
+
+После просмотра результатов seed set нельзя менять без protocol revision/refreeze.
+
+### 6.3 Required evidence
+
+Для каждого seed:
+
+- retained paired Control/Treatment record;
+- adaptation effect sign/magnitude;
+- reciprocal home/away contrast;
+- classification;
+- exact result hash.
+
+Aggregate должен показывать минимум:
+
+- N retained / N declared;
+- positive/null/reversal counts;
+- median effect;
+- lower/upper quantiles или полный bounded range;
+- sign consistency;
+- reciprocal-home-advantage rate;
+- leave-one-out sensitivity либо аналогичный single-seed influence diagnostic;
+- seed-ensemble hash;
+- aggregate robustness hash.
+
+### 6.4 Fail-closed rules
+
+Запрещено:
+
+- post-hoc seed deletion;
+- выбирать только «удачное» seed family;
+- менять mutation policy после просмотра результатов;
+- объявлять robustness только по mean;
+- наследовать E2.6 5/5 как E2.7 acceptance;
+- скрывать null/reversal outcomes;
+- повышать adapted lineage до canonical species;
+- приписывать production authority.
+
+E2.8 остаётся blocked до formal E2.7 acceptance.
 
 ## 7. E2.8 — Catalog Persistence & Provenance
 
@@ -327,6 +436,6 @@ Animals остаются deferred до plant-only portability proof.
 ## 10. Current execution
 
 ```text
-CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.6 Replicated Causal Experiments
-NEXT    = E2.7 Cross-Seed Robustness after E2.6 acceptance
+CURRENT = OPEN / IMPLEMENT ECO.EVO2 / E2.7 Cross-Seed Robustness
+NEXT    = E2.8 Catalog Persistence & Provenance after E2.7 acceptance
 ```
