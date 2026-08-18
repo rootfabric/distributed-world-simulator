@@ -1,16 +1,16 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R60-2026-08-18",
+  "revision": "ECO-R61-2026-08-18",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO2_E2_4_AUTHORIZED_NOT_STARTED",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO2_E2_5_AUTHORIZED_NOT_STARTED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
-  "current_checkpoint": "ECO.EVO2/E2.4",
-  "current_step": "Environment Generalization Matrix authorized / not started",
-  "last_accepted_step": "ECO.EVO2/E2.3 Frozen-Catalog Transfer",
+  "current_checkpoint": "ECO.EVO2/E2.5",
+  "current_step": "Ecological Sorting vs Continued Adaptation authorized / not started",
+  "last_accepted_step": "ECO.EVO2/E2.4 Environment Generalization Matrix",
   "mission": "Build a standalone evolutionary ecosystem that produces portable research species catalogs and persistent population ecology from environment, competition and history, then prove transfer to unseen environments before bounded simulator integration.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -23,7 +23,8 @@
     "ECO.P3/P3.1..P3.8 ACCEPTED / P3 RESEARCH ROUTE COMPLETE",
     "ECO.EVO2/E2.1 SPECIES_CATALOG CONTRACT ACCEPTED",
     "ECO.EVO2/E2.2 DETERMINISTIC EVOLUTION BAKE EXPORT ACCEPTED",
-    "ECO.EVO2/E2.3 FROZEN-CATALOG TRANSFER ACCEPTED"
+    "ECO.EVO2/E2.3 FROZEN-CATALOG TRANSFER ACCEPTED",
+    "ECO.EVO2/E2.4 ENVIRONMENT GENERALIZATION MATRIX ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -44,18 +45,20 @@
     "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
     "e2_3_aggregate_hash": "82d76f858568d5bd53af4d299abd2155f2fde7e845de828cf4555e601ee1efa8",
     "e2_3_code_under_test_head": "c7ee41371807ed7dbb75e7e1eae1587105873a26",
-    "e2_3_implementation_blob": "a886d179fe32a2bb531956923fd0cc59bbbb28c6",
-    "e2_3_acceptance_test_blob": "80e0d6ee5b6626af961f54f4d34678680126041e",
-    "e2_3_runner_blob": "6a906d5a553e58388d43190f646594e94f69edfa",
     "e2_3_validation": "validation/ecology/eco-evo2-e2-3-frozen-catalog-transfer-validation.json",
-    "e2_3_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_3_FROZEN_CATALOG_TRANSFER_ACCEPTED_RU.md",
-    "e2_3_exact_closure_blobs": 17,
-    "e2_3_assertions": 59,
-    "e2_3_fresh_process_logs_byte_identical": true,
-    "e2_3_fresh_process_log_sha256": "7b2f89965bac13dc1238b053ecfd7b3544948eb6fa9941f3ca56d66ca79cad7b",
-    "e2_3_reachable_result_hash": "dc2e5b1c8a6c62fcfc7504a01f624cf635f43aa17160588696b0ddf159eb70a8",
-    "e2_3_isolated_result_hash": "dca9ae0b0e0fe7918b05e243b3164ca4de044921dc67f0471932352e4ffba4b6",
-    "e2_3_independent_reviewer_claimed": false
+    "e2_4_aggregate_hash": "ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5",
+    "e2_4_plan_hash": "f688eb014245d63483562376c3f5db8c08a85bdc35feb52428f5ff17753f82e0",
+    "e2_4_code_under_test_head": "0135aee461a107375cdb3e52e07e8c799145998b",
+    "e2_4_implementation_blob": "823ef6445d7f71aee79b7c0bb0932b321f90ce8d",
+    "e2_4_acceptance_test_blob": "e365aafe7cb703d6cc26e812b8e1ea0c7716de35",
+    "e2_4_runner_blob": "2b967fd42501a53f53c0cd4c51e534dd59c8f542",
+    "e2_4_validation": "validation/ecology/eco-evo2-e2-4-environment-generalization-matrix-validation.json",
+    "e2_4_acceptance_checkpoint": "docs/checkpoints/2026-08-18_ECO_EVO2_E2_4_ENVIRONMENT_GENERALIZATION_MATRIX_ACCEPTED_RU.md",
+    "e2_4_exact_closure_blobs": 18,
+    "e2_4_assertions": 82,
+    "e2_4_fresh_process_logs_byte_identical": true,
+    "e2_4_fresh_process_log_sha256": "23ac2294dbe9b7ad0f78f7807e0bde67eb804b4e2f8640f711afdc71b5d0f40c",
+    "e2_4_independent_reviewer_claimed": false
   },
   "production_integration_evidence": {
     "status": "P4_BRANCH_LIFECYCLE_COMPLETE_AWAITING_INDEPENDENT_REVIEW_AND_MAIN_PROMOTION",
@@ -67,20 +70,18 @@
     "runtime_merge_authorized": false
   },
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
-  "EVO1": {"name":"Autonomous Spatial Plant Ecosystem / Plant World Proof","status":"COMPLETE","steps":[
-    {"id":"P2.1","status":"ACCEPTED"},{"id":"P2.2","status":"ACCEPTED"},{"id":"P2.3","status":"ACCEPTED"},{"id":"P2.4","status":"ACCEPTED"},{"id":"P2.5","status":"ACCEPTED"},{"id":"P2.6","status":"ACCEPTED"},{"id":"P2.7","status":"ACCEPTED"},{"id":"P2.8","status":"ACCEPTED"}
-  ]},
+  "EVO1": {"name":"Autonomous Spatial Plant Ecosystem / Plant World Proof","status":"COMPLETE"},
   "P3": {"name":"Post-EVO1 Dynamic Ecosystem Research","status":"COMPLETE"},
   "EVO2": {
     "name": "Portable Evolutionary Ecology / SpeciesCatalog Transfer",
-    "status": "ACTIVE_E2_4_AUTHORIZED_NOT_STARTED",
+    "status": "ACTIVE_E2_5_AUTHORIZED_NOT_STARTED",
     "north_star": "EVOLVED_SPECIES_CATALOG_SELF_ORGANIZES_IN_PREVIOUSLY_UNSEEN_ENVIRONMENT_WITHOUT_BIOME_SPECIES_TABLES",
     "steps": [
       {"id":"E2.1","name":"SpeciesCatalog Contract","status":"ACCEPTED"},
       {"id":"E2.2","name":"Deterministic Evolution Bake Export","status":"ACCEPTED"},
       {"id":"E2.3","name":"Frozen-Catalog Transfer","status":"ACCEPTED"},
-      {"id":"E2.4","name":"Environment Generalization Matrix","status":"AUTHORIZED_NOT_STARTED"},
-      {"id":"E2.5","name":"Ecological Sorting vs Continued Adaptation","status":"PLANNED"},
+      {"id":"E2.4","name":"Environment Generalization Matrix","status":"ACCEPTED"},
+      {"id":"E2.5","name":"Ecological Sorting vs Continued Adaptation","status":"AUTHORIZED_NOT_STARTED"},
       {"id":"E2.6","name":"Replicated Causal Experiments","status":"PLANNED"},
       {"id":"E2.7","name":"Cross-Seed Robustness","status":"PLANNED"},
       {"id":"E2.8","name":"Catalog Persistence & Provenance","status":"PLANNED"},
