@@ -16,13 +16,13 @@ class HarnessGoldenSetTests(unittest.TestCase):
             value["schema"],
         )
         cases = value["cases"]
-        self.assertGreaterEqual(len(cases), 12)
+        self.assertGreaterEqual(len(cases), 15)
         ids = [item["id"] for item in cases]
         self.assertEqual(len(ids), len(set(ids)))
         categories = {item["category"] for item in cases}
         self.assertGreaterEqual(len(categories), 4)
         self.assertIn("safety", categories)
-        self.assertGreaterEqual(sum(item["difficulty"] >= 3 for item in cases), 5)
+        self.assertGreaterEqual(sum(item["difficulty"] >= 3 for item in cases), 8)
         for item in cases:
             self.assertTrue(item["accept"])
             self.assertTrue(item["reject"])
@@ -36,6 +36,9 @@ class HarnessGoldenSetTests(unittest.TestCase):
             "GH10_AUTOMATABLE_FIX_REQUIRED",
             "GH11_REVIEW_FAIL_ROUTING",
             "GH12_REPEATED_DEFECT_TAKEOVER",
+            "GH13_UNFINISHED_ACTIVE_ROLE",
+            "GH14_CLOSE_GATE",
+            "GH15_PREMATURE_REVIEW",
         ):
             self.assertIn(case_id, cases)
             self.assertTrue(cases[case_id]["accept"])
