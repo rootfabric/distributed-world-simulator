@@ -14,7 +14,7 @@
   "properties": {
     "schema": {"const": "distributed_world_simulator.ecology.evo3_ecological_opportunity_field.v1"},
     "version": {"const": "1.0.0"},
-    "field_id": {"type": "string", "minLength": 1},
+    "field_id": {"type": "string", "pattern": "^eco-evo3/e3\\.2/field/[0-9a-f]{24}$"},
     "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
     "canonical_binding_resolved": {"const": false},
     "stable_planet_identity": {"type": "string", "minLength": 1},
@@ -24,19 +24,55 @@
     "source_field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "derivation_contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "samples": {
-      "type": "array", "minItems": 12, "maxItems": 12,
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
       "items": {
-        "type": "object", "additionalProperties": false,
+        "type": "object",
+        "additionalProperties": false,
         "required": [
           "opportunity_id", "stable_spatial_key", "latitude_microdeg", "longitude_microdeg",
           "thermal_context_milli_c", "water_opportunity_ppm", "light_opportunity_ppm",
           "nutrient_opportunity_ppm", "persistence_opportunity_ppm",
           "limiting_resource_opportunity_ppm", "establishment_opportunity_ppm",
           "source_sample_hash", "source_field_provenance_hash", "opportunity_sample_hash"
-        ]
+        ],
+        "properties": {
+          "opportunity_id": {"type": "string", "pattern": "^eco-evo3/e3\\.2/opportunity/[0-9a-f]{24}$"},
+          "stable_spatial_key": {"type": "string", "minLength": 1},
+          "latitude_microdeg": {"type": "integer", "minimum": -90000000, "maximum": 90000000},
+          "longitude_microdeg": {"type": "integer", "minimum": -180000000, "maximum": 180000000},
+          "thermal_context_milli_c": {"type": "integer", "minimum": -150000, "maximum": 100000},
+          "water_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "light_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "nutrient_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "persistence_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "limiting_resource_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "establishment_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "source_sample_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source_field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "opportunity_sample_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
       }
     },
-    "summary": {"type": "object"},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sample_count",
+        "limiting_resource_min_ppm", "limiting_resource_max_ppm", "limiting_resource_mean_ppm",
+        "establishment_min_ppm", "establishment_max_ppm", "establishment_mean_ppm"
+      ],
+      "properties": {
+        "sample_count": {"const": 12},
+        "limiting_resource_min_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "limiting_resource_max_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "limiting_resource_mean_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "establishment_min_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "establishment_max_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "establishment_mean_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000}
+      }
+    },
     "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "opportunity_field_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
     "opportunity_field_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
