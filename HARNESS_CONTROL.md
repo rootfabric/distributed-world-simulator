@@ -3,10 +3,10 @@
 **Canonical owner:** `main`
 **Foundation revision:** `H0-2026-08-11-R1`
 **Review layer:** `H0-REVIEW-2026-08-18-R2`
-**Continuation layer:** `H0-CONTINUATION-2026-08-19-R2`
+**Continuation layer:** `H0-CONTINUATION-2026-08-19-R3`
 **Hygiene layer:** `H0-HYGIENE-2026-08-18-R1`
 
-Это короткая точка входа для автономной/полуавтономной разработки. Этот файл не хранит mutable current checkpoint/frontier; живое состояние берётся из machine-owned contracts и `CONTROL_DEVELOPMENT.ps1 -Status/-Plan/-Resume`.
+Это короткая точка входа для автономной/полуавтономной разработки. Mutable state берётся из machine-owned contracts и `CONTROL_DEVELOPMENT.ps1 -Status/-Plan/-Resume`; право завершить роль — только через `-Close`.
 
 Полные протоколы:
 ```text
@@ -57,7 +57,7 @@ post-gate validation
 resume parent mission
 ```
 
-Потеря чата не должна мешать `Resume`. Результат штатной роли, существующий только в чате, считается недолговечным и не завершает handoff.
+Потеря чата не должна мешать `Resume`. Результат штатной роли, существующий только в чате, не завершает handoff.
 
 ```text
 COMMITS          = recovery units
@@ -84,14 +84,14 @@ closure_loop_required
 stop_obligation
 ```
 
-`REVIEW_REQUIRED` является `ROLE_BOUNDARY`, а не концом работы. Остановка допустима как терминальная только при `MISSION_COMPLETE`, доказанном `SYSTEM_BLOCKED` без разрешённого автоматического перехода, `ROLE_BOUNDARY` с полностью зафиксированным handoff или реальном `HUMAN_DECISION_REQUIRED`.
+`REVIEW_REQUIRED` — `ROLE_BOUNDARY`, а не конец mission. Остановка роли допустима только после успешного `CONTROL_DEVELOPMENT.ps1 -Close`; exit code `7` означает обязательное продолжение по `next_action`.
 
 Human Attention предназначен для реальных решений, а не для переноса PASS/FAIL между агентами.
 
-## Self-closing role execution R2
-`FIX_REQUIRED` больше не является допустимым концом Implementer-сессии сам по себе.
+## Self-closing role execution R3
+`PLANNED`, `DISPATCHED`, `IN_PROGRESS` и автоматически исправимый `FIX_REQUIRED` не являются допустимым концом роли. `IMPLEMENTED` также не review-ready, пока не закрыты required predicates текущей роли.
 
-Если defect находится внутри разрешённого Work Order scope и может быть исправлен доступными инструментами, Harness обязан вернуть:
+Для in-scope repair Harness возвращает:
 ```text
 handoff_class = CONTINUE_SAME_ROLE
 next_actor = IMPLEMENTER
@@ -103,30 +103,28 @@ stop_obligation = DO_NOT_STOP_WHILE_AN_IN_SCOPE_AUTOMATABLE_REPAIR_REMAINS
 
 Обязательный цикл:
 ```text
-diagnose root cause
+continue active role
   ↓
-create / refresh Repair Map
+diagnose / Repair Map / canonical fix
   ↓
-fix canonical owner
+focused test
   ↓
-run focused failing test
-  ↓
-run all required Work Order regressions / control gates
+all required regressions / control gates
   ↓
 repair any new in-scope failure
   ↓
-retest
+retest until GREEN or takeover threshold
   ↓
-persist durable evidence
+persist evidence + exact next transition
   ↓
-persist exact next transition
+CONTROL_DEVELOPMENT.ps1 -Close
 ```
 
-Нельзя завершать роль сообщением вида «не доделал», «осталось проверить», «нужно продолжить позже», если Harness всё ещё видит автоматически исполнимый in-scope переход.
+Нельзя завершать роль сообщением «не доделал», «осталось проверить», «нужно продолжить позже», если Harness видит автоматически исполнимый переход. Review не запускается поверх незакрытой implementer-owned validation.
 
-Повторный одинаковый defect не отправляется человеку автоматически. После заданного repair-attempt ceiling Harness передаёт его Director/stronger-context takeover с durable repair history, failing command и точным следующим действием.
+Повторный одинаковый defect после repair-attempt ceiling передаётся Director/stronger-context takeover с durable repair history, а не человеку как неопределённая проблема.
 
-Fresh independent review не ослабляется. Implementer обязан довести свою роль до review-ready состояния, но не имеет права сам выполнять независимый review. Review `FAIL` должен маршрутизироваться к repair ownership, а не повторно к Reviewer без ремонта.
+Fresh independent review не ослабляется: Implementer доводит роль до review-ready, но не self-reviews. Review `FAIL` маршрутизируется к repair ownership.
 
 ## Review durability
 Reviewer имеет verdict только:
@@ -136,7 +134,7 @@ FAIL
 INSUFFICIENT_EVIDENCE
 ```
 
-Для Harness Work Order canonical sink по умолчанию — versioned execution review result. Для PR-only gate canonical sink — GitHub PR review/comment, явно привязанный к exact reviewed HEAD. Chat-only verdict не является durable evidence.
+Для Harness Work Order default sink — versioned execution review result. Для PR-only gate — GitHub PR review/comment на exact HEAD. Chat-only verdict не является durable evidence.
 
 Runtime checkpoint review остаётся exact-head fresh:
 ```text
@@ -144,7 +142,7 @@ reviewed HEAD == evidence HEAD == tested runtime HEAD
 ```
 
 ## Current state
-Не поддерживать вручную список «текущих H0.x/V0/NX gate» в этом файле. Получать его из:
+Не поддерживать вручную список текущих gate. Получать его из:
 ```text
 config/control/harness/scheduler-policy.v1.json
 config/control/project-program-registry.v1.json
@@ -152,7 +150,6 @@ CONTROL_DEVELOPMENT.ps1 -Status
 CONTROL_DEVELOPMENT.ps1 -Plan
 CONTROL_DEVELOPMENT.ps1 -Resume
 ```
-Это предотвращает prose/machine drift.
 
 ## Hygiene
 Harness обязан контролировать собственную сложность:
