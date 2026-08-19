@@ -1,12 +1,13 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0 + E3.1 + E3.2 ACCEPTED / E3.3 CURRENT`.
+Статус: `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0 + E3.1 + E3.2 + E3.3 ACCEPTED / E3.4 CURRENT`.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
 EVO3 architecture: `docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md`.  
 EVO3 roadmap: `docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md`.  
 E3.1 snapshot contract: `docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md`.  
 E3.2 acceptance: `docs/checkpoints/2026-08-19_ECO_EVO3_E3_2_ACCEPTED_E3_3_AUTHORIZED_RU.md`.  
+E3.3 acceptance: `docs/checkpoints/2026-08-19_ECO_EVO3_E3_3_ACCEPTED_E3_4_AUTHORIZED_RU.md`.  
 XFER0 boundary: `docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md`.
 
 ## Accepted research route
@@ -20,7 +21,8 @@ XFER0                               ACCEPTED_BOUNDED_DESIGN
 EVO3 / E3.0                        ACCEPTED
 EVO3 / E3.1                        ACCEPTED
 EVO3 / E3.2                        ACCEPTED
-EVO3 / E3.3                        AUTHORIZED_NOT_STARTED  ← CURRENT
+EVO3 / E3.3                        ACCEPTED
+EVO3 / E3.4                        AUTHORIZED_NOT_STARTED  ← CURRENT
 ```
 
 ## E3.0 — Planetary Ecology Compiler Architecture — ACCEPTED
@@ -49,11 +51,7 @@ FIELD_INGEST
 
 ## E3.1 — Planet Field Snapshot Contract — ACCEPTED
 
-Exact freeze:
-
-`7a1f5f0dc29b0564c6d4b684826250fca6a9b711`.
-
-Frozen identities:
+Exact freeze: `7a1f5f0dc29b0564c6d4b684826250fca6a9b711`.
 
 ```text
 contract hash       b3e96b432008ea93692c5cbde9cf7c74cceca4e4c4196ef261a5fbd0ff405170
@@ -69,8 +67,6 @@ E3.1 фиксирует deterministic research snapshot входа planet compil
 
 ## E3.2 — Ecological Opportunity Field — ACCEPTED
 
-Принят после Repair R1 и fresh independent critical review.
-
 ```text
 reviewed HEAD       578981af36c2fe101925db024e6b7747c99806ab
 executable freeze   f276a5b29a39a00ae15c866a310b20f3ad9fe9c8
@@ -78,49 +74,63 @@ merge commit        83f35d7abe2ebdea3e5afe175833817ad631c5e6
 Project Control     32214348326 / #997 — SUCCESS
 aggregate           ef0ed137bf8d2862f4c9cfacee0792dba8079e539daa4bfb7322d7d5da8afc9c
 contract hash       bbb2e4f29ac88da42102ee6c08d239f8e0a72760ab8d1371fdea2cda258ed47d
-field provenance    9be81517eaf0c28503291c5595c0790232b8f88c7ffa9ced2e886ec1f8597aa4
 opportunity field   acba61638f8128b667880f2bd391ab73f6175d0899656bba92657d578d48203c
 artifact SHA-256    59a0af5e40cae5c8a91e487da158edadfd4e127a0390ebe856f78f2365a066ff
-runner log          b75830bb535830aac62825a54ceefc6e8b94fdbb64f9966c824fa74bb9681195
 tests               47/47
 ```
 
-Fresh independent verdict:
+Fresh independent verdict: `PASS — SAFE FOR E3.2 MERGE/ACCEPTANCE AND SUBSEQUENT E3.3 AUTHORIZATION`.
 
-`PASS — SAFE FOR E3.2 MERGE/ACCEPTANCE AND SUBSEQUENT E3.3 AUTHORIZATION`.
+## E3.3 — Research Ecology Decomposition — ACCEPTED
 
-E3.2 получает только accepted E3.1 snapshot и выводит species-agnostic continuous opportunity values. Он не создаёт species assignment, biome mapping, population truth, canonical SD или production authority.
-
-## Current — E3.3 Research Ecology Decomposition
-
-E3.3 обязан потреблять **accepted E3.2 opportunity field**, а не E3.1/raw fixture как ecological-field truth.
+Принят после exact-head Project Control и fresh independent critical review.
 
 ```text
-accepted E3.2 opportunity field
+reviewed HEAD       7ae4c17d0cca0d37369b620481d000fdbc8545fc
+executable freeze   527e2dbef1ae4462e5b9e682b002408057930970
+merge commit        ac47904147edaa7dc46c63c20e91fd4f3a580c13
+Project Control     32247214418 / #1003 — SUCCESS
+candidate aggregate 148b627b094bc71574a21043627bea859e05716e6cd3d09d57f94111a51cb837
+contract hash       593b1889198021e2fcdae0c3746bdbe771d606427f07a7ccfc7c8a530cebec9f
+decomposition       9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a
+artifact SHA-256    cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a
+tests               60/60
+```
+
+Fresh independent verdict: `PASS — SAFE FOR E3.3 MERGE/ACCEPTANCE AND SUBSEQUENT E3.4 AUTHORIZATION`.
+
+E3.3 фиксирует deterministic research-only patch/edge/region decomposition. Research identities не являются canonical SD domains; species identity и biome labels не являются partition keys.
+
+## Current — E3.4 Causal Colonization Program Compiler
+
+E3.4 обязан потреблять одновременно:
+
+```text
+accepted E3.3 research decomposition
++
+FULL persisted EVO2 SpeciesCatalog
         ↓
-deterministic research decomposition
+causal dispersal / establishment compiler
         ↓
-research_ecology_regions / patch graph
+causal colonization_program
 ```
 
 Обязательные границы:
 
-- region/patch IDs — только research-namespaced derived identities;
-- source E3.2 provenance сохраняется;
-- ordering/hash — deterministic;
-- species identity не может быть partition key;
-- canonical SD domains нельзя создавать или изменять;
-- decomposition не является population truth;
-- никаких production persistence/network/transaction/authority claims.
+- все записи полного SpeciesCatalog входят в input manifest и остаются eligible на входной границе;
+- causal dispersal/establishment может отсеивать отдельные виды;
+- `NO_COLONIZATION` является допустимым полноценным результатом;
+- запрещены biome→species tables, target-aware species injection, catalog rebake/retuning и direct scatter как ecology truth;
+- output остаётся `RESEARCH_DERIVED_NON_AUTHORITATIVE`;
+- canonical SD, production persistence/network/transaction/authority не создаются;
+- E3.5 остаётся заблокированным до отдельного принятия E3.4.
 
-Architecture source of truth: stage `ECOLOGY_DECOMPOSITION` в `config/ecology/eco-evo3-planetary-ecology-compiler.v1.json`.
+Architecture source of truth: stage `COLONIZATION_PROGRAM` в `config/ecology/eco-evo3-planetary-ecology-compiler.v1.json`.
 
 ## Дальнейший EVO3 route
 
 ```text
-E3.3 Research Ecology Decomposition              CURRENT
-  ↓
-E3.4 Causal Colonization Program Compiler
+E3.4 Causal Colonization Program Compiler        CURRENT
   ↓
 E3.5 Multi-scale Population Workset Compiler
   ↓
