@@ -1,0 +1,90 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_3_incarnation_replacement_contract.v1",
+  "status": "RESEARCH_ONLY_CANDIDATE",
+  "checkpoint": "SM1-I2.3",
+  "branch": "research/sm1-i2-incarnation-replacement",
+  "accepted_i2_2_base": "c09a53b5c7aba10c091e8cfb2ea8307d5f6b39da",
+  "accepted_i2_2_review": "SM1_I2_2_FRESH_INDEPENDENT_REVIEW_PASS",
+  "accepted_i2_1_base": "f1fd65ad73da8c95612a641be0ad52048c90169a",
+  "architecture_base": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+  "production_activation": false,
+  "donor_only": true,
+  "operation": "SAME_AUTHORITY_ID_INCARNATION_REPLACEMENT",
+  "canonical_mutation_path": "ACCEPTED_I2_1_DIRECTORY_COMPARE_AND_SWAP_ONLY",
+  "statuses": [
+    "REPLACED",
+    "ALREADY_COMMITTED",
+    "STALE_REPLACEMENT",
+    "INVALID_REPLACEMENT",
+    "NOT_FOUND"
+  ],
+  "invariants": [
+    "DIRECTORY_REMAINS_ONLY_CANONICAL_OWNERSHIP_ORACLE",
+    "REPLACEMENT_NEVER_ALLOCATES_FENCE_OR_GENERATION_IMPLICITLY",
+    "REPLACEMENT_REQUIRES_SAME_SUBJECT_AND_SAME_AUTHORITY_ID",
+    "REPLACEMENT_REQUIRES_NEW_AUTHORITY_INCARNATION",
+    "ACCEPTED_DIRECTORY_TRANSITION_RULES_VALIDATE_FENCE_AND_GENERATION",
+    "EXACT_RETRY_AFTER_AMBIGUOUS_SUCCESS_CONVERGES_TO_ALREADY_COMMITTED",
+    "EXACT_RETRY_DOES_NOT_ROTATE_FENCE_OR_GENERATION_AGAIN",
+    "CONCURRENT_DUPLICATE_RETRY_HAS_ONE_CAS_OK_AND_ONE_CONVERGENT_REPLAY",
+    "COMPETING_REPLACEMENTS_FROM_ONE_EXPECTED_STATE_HAVE_AT_MOST_ONE_WINNER",
+    "OLD_INCARNATION_IS_FENCED_AFTER_REPLACEMENT",
+    "UNCHANGED_AUTHORITY_ID_AND_EPOCH_DO_NOT_RESTORE_OLD_INCARNATION",
+    "STALE_LOCAL_RESTART_CLAIM_REMAINS_FENCED",
+    "REPLAY_AFTER_LATER_REPLACEMENT_IS_STALE_NOT_ALREADY_COMMITTED"
+  ],
+  "required_tests": [
+    "I2.3-INC-01",
+    "I2.3-INC-02",
+    "I2.3-INC-03",
+    "I2.3-INC-04",
+    "I2.3-INC-05",
+    "I2.3-INC-06",
+    "I2.3-INC-07",
+    "I2.3-INC-08",
+    "I2.3-INC-09",
+    "I2.3-INC-10",
+    "I2.3-INC-11",
+    "I2.3-INC-12",
+    "I2.3-INC-13",
+    "I2.3-INC-14",
+    "I2.3-INC-15",
+    "I2.3-INC-16"
+  ],
+  "ambiguous_response_contract": {
+    "first_call": "CAS_OK -> REPLACED",
+    "lost_response_retry": "CAS_MISMATCH_WITH_CURRENT_EQUAL_DESIRED -> ALREADY_COMMITTED",
+    "later_state_advanced": "CAS_MISMATCH_WITH_CURRENT_NOT_EQUAL_DESIRED -> STALE_REPLACEMENT",
+    "second_rotation_on_exact_retry_allowed": false
+  },
+  "evidence_contract": {
+    "replacement_kind": "INCARNATION_REPLACEMENT_RESULT",
+    "replacement_sequence_field": "emission_sequence",
+    "replacement_sequence_semantics": "LOCAL_EMISSION_ORDER_NOT_DIRECTORY_LINEARIZATION",
+    "directory_causality_source": "I2_1_CAS_RESULT_LINEARIZATION_SEQUENCE",
+    "fields": [
+      "status",
+      "directory_cas_status",
+      "expected",
+      "desired",
+      "observed",
+      "current",
+      "error"
+    ]
+  },
+  "out_of_scope": [
+    "DURABLE_DIRECTORY_STORAGE",
+    "DIRECTORY_PROCESS_RESTART",
+    "NETWORK_PARTITION_RECOVERY",
+    "DURABLE_REPLACEMENT_OPERATION_LEDGER",
+    "PROCESS_LIVENESS_DETECTION",
+    "LEASE_ADMISSION_POLICY",
+    "AUTHORITY_BINDING_GENERATION",
+    "ATOMIC_GAMEPLAY_STATE_COMMIT",
+    "AUTHORITY_DOMAIN_HANDOFF",
+    "GATEWAY_ROUTING",
+    "ITEM_GRAPH",
+    "PLAYER_RUNTIME"
+  ],
+  "next_checkpoint": "SM1-I2.4_DURABLE_DIRECTORY"
+}

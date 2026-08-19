@@ -13,6 +13,12 @@ from .directory import (
     OwnershipRecord,
     validate_transition,
 )
+from .incarnation_replacement import (
+    IncarnationReplacementCoordinator,
+    IncarnationReplacementRequest,
+    IncarnationReplacementResult,
+    IncarnationReplacementStatus,
+)
 
 __all__ = [
     "CasResult",
@@ -26,4 +32,8 @@ __all__ = [
     "OwnershipDirectory",
     "OwnershipRecord",
     "validate_transition",
+    "IncarnationReplacementCoordinator",
+    "IncarnationReplacementRequest",
+    "IncarnationReplacementResult",
+    "IncarnationReplacementStatus",
 ]
