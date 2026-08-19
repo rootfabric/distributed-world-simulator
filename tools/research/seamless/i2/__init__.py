@@ -33,6 +33,12 @@ from .partition_fencing import (
     MutationGateStatus,
     PartitionFencingGate,
 )
+from .one_writer_proof import (
+    IntegratedOneWriterProbe,
+    OneWriterProbeAttempt,
+    OneWriterRoundResult,
+    OneWriterRoundStatus,
+)
 
 __all__ = [
     "CasResult",
@@ -60,4 +66,8 @@ __all__ = [
     "MutationGateResult",
     "MutationGateStatus",
     "PartitionFencingGate",
+    "IntegratedOneWriterProbe",
+    "OneWriterProbeAttempt",
+    "OneWriterRoundResult",
+    "OneWriterRoundStatus",
 ]
