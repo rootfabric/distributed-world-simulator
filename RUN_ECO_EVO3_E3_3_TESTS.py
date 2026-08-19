@@ -22,7 +22,7 @@ TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_3_research_ecology_decomp
 EXPECTED_BLOBS = {
     "config/ecology/eco-evo3-e3-3-research-ecology-decomposition-contract.v1.json": "784cc3aef012a3647bf8010436ff2dac6f6446f4",
     "config/ecology/accepted_inputs/e3_2_accepted_ecological_opportunity_field.v1.json": "68e601958b1206235729aceb40843cd8666840aa",
-    "config/ecology/eco-evo3-e3-3-research-ecology-decomposition.schema.v1.json": "5052fc10172d3ccfc9dcbf0508899eeb7db19585",
+    "config/ecology/eco-evo3-e3-3-research-ecology-decomposition.schema.v1.json": "80454d5ba92553b58f598a237bf3b7815773ad33",
     "scripts/research/ecology/research_ecology_decomposition_v1.py": "02fbc95fe94f51b09970b1d17c4a629c692f500d",
     "tests/research/ecology/test_eco_evo3_e3_3_research_ecology_decomposition.py": "9268abdbb96231f24bcbaab7d4692371e5e9dbe8",
 }
