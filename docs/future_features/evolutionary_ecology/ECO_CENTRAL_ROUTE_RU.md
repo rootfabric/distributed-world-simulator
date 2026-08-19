@@ -1,11 +1,12 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0 + E3.1 ACCEPTED / E3.2 CURRENT`.
+Статус: `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0 + E3.1 + E3.2 ACCEPTED / E3.3 CURRENT`.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
 EVO3 architecture: `docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md`.  
 EVO3 roadmap: `docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md`.  
 E3.1 snapshot contract: `docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md`.  
+E3.2 acceptance: `docs/checkpoints/2026-08-19_ECO_EVO3_E3_2_ACCEPTED_E3_3_AUTHORIZED_RU.md`.  
 XFER0 boundary: `docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md`.
 
 ## Accepted research route
@@ -16,9 +17,10 @@ EVO1 / P2.1..P2.8                  COMPLETE
 P3 / P3.1..P3.8                    COMPLETE_RESEARCH_ONLY
 EVO2 / E2.1..E2.FINAL              COMPLETE_RESEARCH_ONLY
 XFER0                               ACCEPTED_BOUNDED_DESIGN
-EVO3 / E3.0                         ACCEPTED
-EVO3 / E3.1                         ACCEPTED
-EVO3 / E3.2                         AUTHORIZED_NOT_STARTED  ← CURRENT
+EVO3 / E3.0                        ACCEPTED
+EVO3 / E3.1                        ACCEPTED
+EVO3 / E3.2                        ACCEPTED
+EVO3 / E3.3                        AUTHORIZED_NOT_STARTED  ← CURRENT
 ```
 
 ## E3.0 — Planetary Ecology Compiler Architecture — ACCEPTED
@@ -63,61 +65,60 @@ aggregate           0a412c5c6cb12264c93c92d502321b578ebb3d166ae90d80ab450e03478e
 runner log          f0c8169b1c36edb68505e19951db493324fac637b989383d2f3234304a3763e2
 ```
 
-E3.1 фиксирует deterministic research snapshot входа planet compiler:
+E3.1 фиксирует deterministic research snapshot входа planet compiler и не создаёт biome/species/population truth, canonical SD или production binding.
+
+## E3.2 — Ecological Opportunity Field — ACCEPTED
+
+Принят после Repair R1 и fresh independent critical review.
 
 ```text
-stable planet identity
-stable time key
-reference frame identity
-stable spatial keys
-opaque G / ENV / MAT / WQ / SD / TF references
-temperature
-soil moisture
-light
-nutrients
-disturbance
-provenance hashes
+reviewed HEAD       578981af36c2fe101925db024e6b7747c99806ab
+executable freeze   f276a5b29a39a00ae15c866a310b20f3ad9fe9c8
+merge commit        83f35d7abe2ebdea3e5afe175833817ad631c5e6
+Project Control     32214348326 / #997 — SUCCESS
+aggregate           ef0ed137bf8d2862f4c9cfacee0792dba8079e539daa4bfb7322d7d5da8afc9c
+contract hash       bbb2e4f29ac88da42102ee6c08d239f8e0a72760ab8d1371fdea2cda258ed47d
+field provenance    9be81517eaf0c28503291c5595c0790232b8f88c7ffa9ced2e886ec1f8597aa4
+opportunity field   acba61638f8128b667880f2bd391ab73f6175d0899656bba92657d578d48203c
+artifact SHA-256    59a0af5e40cae5c8a91e487da158edadfd4e127a0390ebe856f78f2365a066ff
+runner log          b75830bb535830aac62825a54ceefc6e8b94fdbb64f9966c824fa74bb9681195
+tests               47/47
 ```
 
-Continuous values сериализуются как integer fixed units (`microdeg / milli-C / ppm`), поэтому input canonicalization не зависит от float formatting.
+Fresh independent verdict:
 
-Принципиально отсутствуют:
+`PASS — SAFE FOR E3.2 MERGE/ACCEPTANCE AND SUBSEQUENT E3.3 AUTHORIZATION`.
 
-```text
-NO biome labels
-NO species assignment
-NO population truth
-NO canonical SD creation
-NO production API binding
-NO owner-state mutation
-```
+E3.2 получает только accepted E3.1 snapshot и выводит species-agnostic continuous opportunity values. Он не создаёт species assignment, biome mapping, population truth, canonical SD или production authority.
 
-Exact published six-blob carrier прошёл canonical Python verification: `32/32`, fresh runner A/B `0/0`, два snapshot-build процесса создали byte-identical artifact.
+## Current — E3.3 Research Ecology Decomposition
 
-## Current — E3.2 Ecological Opportunity Field
-
-E3.2 должен потреблять **только accepted E3.1 PlanetFieldSnapshot**.
+E3.3 обязан потреблять **accepted E3.2 opportunity field**, а не E3.1/raw fixture как ecological-field truth.
 
 ```text
-PlanetFieldSnapshot
+accepted E3.2 opportunity field
         ↓
-continuous causal opportunity field
+deterministic research decomposition
+        ↓
+research_ecology_regions / patch graph
 ```
 
-Прямой обход через raw E3.1 fixture запрещён. Opportunity field должен оставаться derived research field и не имеет права:
+Обязательные границы:
 
-- выдавать species assignment;
-- становиться population truth;
-- создавать biome→species mapping;
-- менять `G/ENV/MAT/WQ/SD/TF` ownership;
-- объявлять production binding.
+- region/patch IDs — только research-namespaced derived identities;
+- source E3.2 provenance сохраняется;
+- ordering/hash — deterministic;
+- species identity не может быть partition key;
+- canonical SD domains нельзя создавать или изменять;
+- decomposition не является population truth;
+- никаких production persistence/network/transaction/authority claims.
+
+Architecture source of truth: stage `ECOLOGY_DECOMPOSITION` в `config/ecology/eco-evo3-planetary-ecology-compiler.v1.json`.
 
 ## Дальнейший EVO3 route
 
 ```text
-E3.2 Ecological Opportunity Field               CURRENT
-  ↓
-E3.3 Research Ecology Decomposition
+E3.3 Research Ecology Decomposition              CURRENT
   ↓
 E3.4 Causal Colonization Program Compiler
   ↓
