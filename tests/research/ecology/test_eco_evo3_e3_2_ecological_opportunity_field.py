@@ -8,6 +8,9 @@ import sys
 import tempfile
 import unittest
 
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import ValidationError
+
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 MODULE_PATH = ROOT / "scripts/research/ecology/ecological_opportunity_field_v1.py"
 CONTRACT_PATH = ROOT / "config/ecology/eco-evo3-e3-2-ecological-opportunity-field-contract.v1.json"
@@ -47,6 +50,12 @@ def rehash_field(field):
     rehash(field, "opportunity_field_hash")
 
 
+def schema_validator():
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema)
+
+
 class E32EcologicalOpportunityFieldTests(unittest.TestCase):
     def setUp(self):
         self.contract = mod.load_json(CONTRACT_PATH)
@@ -71,45 +80,31 @@ class E32EcologicalOpportunityFieldTests(unittest.TestCase):
         self.assertEqual(mod.canonical_bytes(self.field), mod.canonical_bytes(other))
 
     def test_05_parent_e31_head_lock(self):
-        c = copy.deepcopy(self.contract)
-        c["parent"]["e3_1_code_under_test_head"] = "0" * 40
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["parent"]["e3_1_code_under_test_head"] = "0" * 40; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_06_parent_e31_aggregate_lock(self):
-        c = copy.deepcopy(self.contract)
-        c["parent"]["e3_1_aggregate_hash"] = "0" * 64
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["parent"]["e3_1_aggregate_hash"] = "0" * 64; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_07_parent_snapshot_hash_lock(self):
-        c = copy.deepcopy(self.contract)
-        c["parent"]["e3_1_snapshot_hash"] = "0" * 64
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["parent"]["e3_1_snapshot_hash"] = "0" * 64; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_08_parent_snapshot_artifact_lock(self):
-        c = copy.deepcopy(self.contract)
-        c["parent"]["e3_1_snapshot_artifact_sha256"] = "0" * 64
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["parent"]["e3_1_snapshot_artifact_sha256"] = "0" * 64; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_09_parent_architecture_lock(self):
-        c = copy.deepcopy(self.contract)
-        c["parent"]["e3_0_architecture_hash"] = "0" * 64
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["parent"]["e3_0_architecture_hash"] = "0" * 64; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_10_raw_fixture_policy_cannot_flip(self):
-        c = copy.deepcopy(self.contract)
-        c["input_policy"]["raw_fixture_input_forbidden"] = False
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["input_policy"]["raw_fixture_input_forbidden"] = False; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_11_raw_owner_policy_cannot_flip(self):
-        c = copy.deepcopy(self.contract)
-        c["input_policy"]["raw_owner_field_input_forbidden"] = False
-        rehash_contract(c)
+        c = copy.deepcopy(self.contract); c["input_policy"]["raw_owner_field_input_forbidden"] = False; rehash_contract(c)
         self.rejected(lambda: mod.validate_contract(c))
 
     def test_12_transform_formula_cannot_tune_after_rehash(self):
@@ -199,15 +194,11 @@ class E32EcologicalOpportunityFieldTests(unittest.TestCase):
         self.rejected(lambda: mod.validate_accepted_snapshot(s, self.contract))
 
     def test_28_snapshot_authority_promotion_rejected(self):
-        s = copy.deepcopy(self.snapshot)
-        s["authority"] = "CANONICAL_WORLD_STATE"
-        rehash_snapshot(s)
+        s = copy.deepcopy(self.snapshot); s["authority"] = "CANONICAL_WORLD_STATE"; rehash_snapshot(s)
         self.rejected(lambda: mod.validate_accepted_snapshot(s, self.contract))
 
     def test_29_snapshot_reorder_rejected(self):
-        s = copy.deepcopy(self.snapshot)
-        s["samples"][0], s["samples"][1] = s["samples"][1], s["samples"][0]
-        rehash_snapshot(s)
+        s = copy.deepcopy(self.snapshot); s["samples"][0], s["samples"][1] = s["samples"][1], s["samples"][0]; rehash_snapshot(s)
         self.rejected(lambda: mod.validate_accepted_snapshot(s, self.contract))
 
     def test_30_noncanonical_snapshot_artifact_bytes_rejected(self):
@@ -217,51 +208,35 @@ class E32EcologicalOpportunityFieldTests(unittest.TestCase):
             self.rejected(lambda: mod.load_accepted_snapshot(p, self.contract))
 
     def test_31_output_authority_promotion_rejected(self):
-        f = copy.deepcopy(self.field)
-        f["authority"] = "CANONICAL_WORLD_STATE"
-        rehash(f, "opportunity_field_hash")
+        f = copy.deepcopy(self.field); f["authority"] = "CANONICAL_WORLD_STATE"; rehash(f, "opportunity_field_hash")
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_32_species_injection_rejected_after_rehash(self):
-        f = copy.deepcopy(self.field)
-        f["samples"][0]["species_assignment"] = "x"
-        rehash_field(f)
+        f = copy.deepcopy(self.field); f["samples"][0]["species_assignment"] = "x"; rehash_field(f)
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_33_biome_injection_rejected_after_rehash(self):
-        f = copy.deepcopy(self.field)
-        f["biome_label"] = "wet"
-        rehash(f, "opportunity_field_hash")
+        f = copy.deepcopy(self.field); f["biome_label"] = "wet"; rehash(f, "opportunity_field_hash")
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_34_population_injection_rejected_after_rehash(self):
-        f = copy.deepcopy(self.field)
-        f["population_truth"] = {}
-        rehash(f, "opportunity_field_hash")
+        f = copy.deepcopy(self.field); f["population_truth"] = {}; rehash(f, "opportunity_field_hash")
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_35_semantic_tamper_rejected_after_full_rehash(self):
-        f = copy.deepcopy(self.field)
-        f["samples"][0]["establishment_opportunity_ppm"] += 1
-        rehash_field(f)
+        f = copy.deepcopy(self.field); f["samples"][0]["establishment_opportunity_ppm"] += 1; rehash_field(f)
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_36_drop_sample_rejected(self):
-        f = copy.deepcopy(self.field)
-        f["samples"].pop()
-        rehash_field(f)
+        f = copy.deepcopy(self.field); f["samples"].pop(); rehash_field(f)
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_37_reorder_output_rejected(self):
-        f = copy.deepcopy(self.field)
-        f["samples"][0], f["samples"][1] = f["samples"][1], f["samples"][0]
-        rehash_field(f)
+        f = copy.deepcopy(self.field); f["samples"][0], f["samples"][1] = f["samples"][1], f["samples"][0]; rehash_field(f)
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_38_unexpected_output_field_rejected(self):
-        f = copy.deepcopy(self.field)
-        f["projection_hint"] = "x"
-        rehash(f, "opportunity_field_hash")
+        f = copy.deepcopy(self.field); f["projection_hint"] = "x"; rehash(f, "opportunity_field_hash")
         self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
 
     def test_39_no_forbidden_semantics_in_output(self):
@@ -280,10 +255,48 @@ class E32EcologicalOpportunityFieldTests(unittest.TestCase):
         self.assertNotIn('add_argument("--fixture"', src)
         self.assertNotIn("add_argument('--fixture'", src)
 
-    def test_42_schema_parses_and_matches_output_identity(self):
-        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    def test_42_published_schema_validates_generated_field(self):
+        validator = schema_validator()
+        validator.validate(self.field)
+        schema = validator.schema
         self.assertEqual(schema["$id"], mod.OUTPUT_SCHEMA)
         self.assertEqual(schema["properties"]["schema"]["const"], mod.OUTPUT_SCHEMA)
+
+    def test_43_published_schema_rejects_unexpected_sample_property(self):
+        f = copy.deepcopy(self.field)
+        f["samples"][0]["schema_probe_extra"] = 1
+        with self.assertRaises(ValidationError):
+            schema_validator().validate(f)
+
+    def test_44_duplicate_output_sample_rejected_after_full_rehash(self):
+        f = copy.deepcopy(self.field)
+        f["samples"][1] = copy.deepcopy(f["samples"][0])
+        rehash_field(f)
+        self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
+
+    def test_45_snapshot_canonical_binding_promotion_rejected(self):
+        s = copy.deepcopy(self.snapshot)
+        s["canonical_binding_resolved"] = True
+        rehash_snapshot(s)
+        self.rejected(lambda: mod.validate_accepted_snapshot(s, self.contract))
+
+    def test_46_output_canonical_binding_promotion_rejected(self):
+        f = copy.deepcopy(self.field)
+        f["canonical_binding_resolved"] = True
+        rehash(f, "opportunity_field_hash")
+        self.rejected(lambda: mod.validate_opportunity_field(f, self.contract, self.snapshot))
+
+    def test_47_raw_fixture_artifact_rejected_through_accepted_snapshot_loader(self):
+        raw_fixture = {
+            "schema": "distributed_world_simulator.ecology.evo3_planet_field_semantic_fixture.v1",
+            "version": "1.0.0",
+            "fixture_id": "eco-evo3/e3.1/raw-fixture-bypass-attempt",
+            "samples": [],
+        }
+        with tempfile.TemporaryDirectory() as td:
+            p = pathlib.Path(td) / "raw_fixture.json"
+            p.write_bytes(mod.canonical_bytes(raw_fixture) + b"\n")
+            self.rejected(lambda: mod.load_accepted_snapshot(p, self.contract))
 
 
 if __name__ == "__main__":
