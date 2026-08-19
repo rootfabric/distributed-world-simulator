@@ -6,6 +6,15 @@ from typing import Any
 
 _HARD_BLOCK_STATES = {"BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"}
 _DEFAULT_RECOVERABLE_FINDINGS = {"REPAIR_MAP_REQUIRED"}
+_AUTO_ROLE_BY_WORK_TYPE = {
+    "IMPLEMENTATION": "IMPLEMENTER",
+    "FIX": "IMPLEMENTER",
+    "INTEGRATION": "INTEGRATOR",
+    "VALIDATION": "VERIFIER",
+    "REVIEW": "REVIEWER",
+    "CONTROL": "DIRECTOR",
+    "RECOVERY": "DIRECTOR",
+}
 
 
 def _mission(work_order: dict[str, Any]) -> dict[str, Any]:
@@ -91,6 +100,85 @@ def _recoverable_findings(policy: dict[str, Any]) -> set[str]:
     if isinstance(declared, list):
         return {str(item) for item in declared}
     return set(_DEFAULT_RECOVERABLE_FINDINGS)
+
+
+def _active_role(work_order: dict[str, Any], state_name: str) -> str | None:
+    if state_name == "PLANNED":
+        return "DIRECTOR"
+    work_type = str(work_order.get("work_order_type", "IMPLEMENTATION"))
+    return _AUTO_ROLE_BY_WORK_TYPE.get(work_type)
+
+
+def _unfinished_same_role_transition(
+    work_order: dict[str, Any],
+    state_name: str,
+    blockers: set[str],
+    mission: dict[str, Any],
+) -> dict[str, Any] | None:
+    actor = _active_role(work_order, state_name)
+    if actor is None:
+        return None
+    if state_name == "PLANNED":
+        return _transition(
+            mission=mission,
+            handoff_class="CONTINUE_SAME_ROLE",
+            next_actor="DIRECTOR",
+            next_action="DISPATCH_ACTIVE_WORK_ORDER",
+            evidence_sink="EXECUTION_LEDGER",
+            resume_condition="WORK_ORDER_DURABLY_DISPATCHED_OR_REAL_BLOCKER_RECORDED",
+            on_success="RECOMPUTE_CONTINUATION",
+            on_failure="RECORD_BLOCKER_AND_REPLAN",
+            reason="A planned automatable Work Order is unfinished work, not a session terminal.",
+            session_exit_allowed=False,
+            closure_loop_required=True,
+            stop_obligation="DO_NOT_STOP_BEFORE_DISPATCH_OR_DURABLE_BLOCKER",
+        )
+    if state_name in {"DISPATCHED", "IN_PROGRESS"}:
+        return _transition(
+            mission=mission,
+            handoff_class="CONTINUE_SAME_ROLE",
+            next_actor=actor,
+            next_action="CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED",
+            evidence_sink="EXECUTION_LEDGER",
+            resume_condition="ROLE_OUTPUT_IMPLEMENTED_AND_REQUIRED_SELF_VALIDATION_COMPLETE_OR_REAL_BOUNDARY_REACHED",
+            on_success="RECOMPUTE_CONTINUATION",
+            on_failure="FIX_IN_SCOPE_FAILURE_AND_RETEST_OR_RECORD_REAL_BLOCKER",
+            reason=f"Work Order state {state_name} still has executable work owned by {actor}.",
+            session_exit_allowed=False,
+            closure_loop_required=True,
+            stop_obligation="DO_NOT_STOP_WITH_AUTOMATABLE_WORK_STILL_IN_PROGRESS",
+        )
+    if state_name == "IMPLEMENTED" and "REQUIRED_PREDICATES_INCOMPLETE" in blockers and actor in {"IMPLEMENTER", "INTEGRATOR", "DIRECTOR"}:
+        return _transition(
+            mission=mission,
+            handoff_class="CONTINUE_SAME_ROLE",
+            next_actor=actor,
+            next_action="RUN_REQUIRED_VALIDATION_AND_REPAIR_UNTIL_GREEN",
+            evidence_sink="EXECUTION_LEDGER",
+            resume_condition="ALL_REQUIRED_PREDICATES_GREEN_OR_REAL_ROLE_BOUNDARY_REACHED",
+            on_success="RECOMPUTE_CONTINUATION",
+            on_failure="FIX_IN_SCOPE_FAILURE_AND_RETEST_OR_ESCALATE_AT_TAKEOVER_THRESHOLD",
+            reason="Implementation exists, but required predicates are still incomplete; review handoff would be premature.",
+            session_exit_allowed=False,
+            closure_loop_required=True,
+            stop_obligation="DO_NOT_HANDOFF_OR_STOP_BEFORE_REQUIRED_VALIDATION_COMPLETES",
+        )
+    if state_name == "VERIFYING" and "REQUIRED_PREDICATES_INCOMPLETE" in blockers:
+        return _transition(
+            mission=mission,
+            handoff_class="CONTINUE_SAME_ROLE",
+            next_actor="VERIFIER",
+            next_action="CONTINUE_VERIFICATION_UNTIL_PREDICATES_COMPLETE",
+            evidence_sink="EXECUTION_LEDGER",
+            resume_condition="ALL_REQUIRED_PREDICATES_DURABLY_VERIFIED_OR_FAILED_PREDICATE_ROUTED_TO_REPAIR",
+            on_success="RECOMPUTE_CONTINUATION",
+            on_failure="ROUTE_FAILED_PREDICATE_TO_REPAIR",
+            reason="Verification is active and incomplete; the Verifier must finish or route a concrete failure.",
+            session_exit_allowed=False,
+            closure_loop_required=True,
+            stop_obligation="DO_NOT_STOP_WITH_REQUIRED_VERIFICATION_STILL_INCOMPLETE",
+        )
+    return None
 
 
 def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
@@ -184,6 +272,10 @@ def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[st
             closure_loop_required=False,
             stop_obligation="PERSIST_BLOCKER_PROOF_AND_EXACT_NEXT_ACTOR_ACTION",
         )
+
+    unfinished = _unfinished_same_role_transition(work_order, state_name, blockers, mission)
+    if unfinished is not None:
+        return unfinished
 
     post_build_state = str(review.get("post_build_state", "MISSING"))
     if work_order.get("review_required") and post_build_state == "FAIL":
