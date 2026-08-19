@@ -31,6 +31,10 @@ var failures: Array[String] = []
 
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	_test_protocol_manifest_changes_for_resource_wire_contract()
 	_test_resource_delta_round_trip()
 	_test_m3_adapters_expose_resource_contract()
@@ -128,8 +132,10 @@ func _test_resource_focus_conflict_policy() -> void:
 		return
 	var runtime = runtime_script.new()
 	var ordinary := Node3D.new()
-	ordinary.position = Vector3(0.0, 0.0, -2.0)
 	var resource := Node3D.new()
+	root.add_child(ordinary)
+	root.add_child(resource)
+	ordinary.position = Vector3(0.0, 0.0, -2.0)
 	resource.position = Vector3(0.05, 0.0, -2.5)
 	var origin := Vector3.ZERO
 	var forward := Vector3(0.0, 0.0, -1.0)

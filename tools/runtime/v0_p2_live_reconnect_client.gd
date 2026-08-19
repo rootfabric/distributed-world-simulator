@@ -5,11 +5,15 @@ const Fingerprint = preload("res://scripts/runtime/networked_gameplay/v0/v0_cano
 const ConstructionCommand = preload("res://scripts/construction/multiplayer/construction_multiplayer_command.gd")
 const OutpostAuthority = preload("res://scripts/construction/mvp/mvp_earth_outpost_authority.gd")
 const Grant = preload("res://scripts/construction/multiplayer/construction_multiplayer_permission_grant.gd")
+const P2EarthResourceSpatialResolver = preload(
+	"res://scripts/runtime/networked_gameplay/p3/earth_resource_spatial_resolver.gd"
+)
 
 const BEACON_ID := "item/shared/beacon/1"
 const CRATE_CONTAINER_ID := "container/shared/crate/1"
 const TARGET_BEACON := Vector3(1.2, 0.4, -3.4)
 const TARGET_CRATE := Vector3(3.0, 0.8, -2.0)
+const P2_RESOURCE_NODE_ID := "resource/earth/ore-demo/1"
 const COMMAND_TIMEOUT_MS := 30000
 const CONTROL_TIMEOUT_MS := 60000
 
@@ -164,6 +168,37 @@ func _run_actor() -> void:
 	_assert(item_mutation_visible, "actor confirms absent-peer Item Graph mutation")
 	if not item_mutation_visible:
 		_fail("V0_P2_RECONNECT_ITEM_MUTATION_NOT_CONFIRMED")
+		return
+
+	# Construction now consumes canonical P3-mined ore. The old P2 fixture
+	# assumed free materials, so keep this reconnect test meaningful by earning
+	# the exact foundation cost through the live ResourceMining authority first.
+	var resource_snapshot: Dictionary = client.get_resource_mining_snapshot()
+	var target_result := _resource_target_position(resource_snapshot)
+	_assert(bool(target_result.get("success", false)), "actor resolves canonical ore target for P2/P4 compatibility")
+	if not bool(target_result.get("success", false)):
+		_fail(String(target_result.get("error_code", "V0_P2_RESOURCE_TARGET_FAILED")), target_result)
+		return
+	var resource_target: Vector3 = target_result.get("details", {}).get("position", Vector3.ZERO)
+	var move_to_resource: Dictionary = await _move_toward(resource_target, 24)
+	_assert(bool(move_to_resource.get("success", false)), "actor approaches canonical ore node before Construction")
+	if not bool(move_to_resource.get("success", false)):
+		_fail(String(move_to_resource.get("error_code", "V0_P2_RESOURCE_APPROACH_FAILED")), move_to_resource)
+		return
+	var mine_operation := "operation/v0-p2/compat/mine-foundation/%d" % Time.get_ticks_msec()
+	var mined: Dictionary = client.execute_resource_mine_blocking(P2_RESOURCE_NODE_ID, 2, mine_operation)
+	_assert(bool(mined.get("success", false)), "actor mines exact canonical foundation ore cost")
+	if not bool(mined.get("success", false)):
+		_fail(String(mined.get("error_code", "V0_P2_RESOURCE_MINE_FAILED")), mined)
+		return
+	var ore_ready := await _wait_item_state(
+		func(snapshot: Dictionary) -> bool:
+			return _ore_quantity(snapshot, "a") == 2,
+		10000
+	)
+	_assert(ore_ready, "actor receives two canonical ore before Construction")
+	if not ore_ready:
+		_fail("V0_P2_CANONICAL_ORE_NOT_VISIBLE")
 		return
 
 	var construction_session: Dictionary = client.get_construction_session()
@@ -428,6 +463,50 @@ func _wait_control_phase(expected_phase: String, timeout_ms: int) -> bool:
 			return true
 		await create_timer(0.05).timeout
 	return false
+
+
+func _resource_target_position(snapshot: Dictionary) -> Dictionary:
+	var node := _resource_node(snapshot, P2_RESOURCE_NODE_ID)
+	if node.is_empty():
+		return {"success": false, "error_code": "RESOURCE_NOT_FOUND", "details": {}}
+	var resolver = P2EarthResourceSpatialResolver.new()
+	var setup_result: Dictionary = resolver.setup()
+	if not bool(setup_result.get("success", false)):
+		return setup_result
+	var resolved: Dictionary = resolver.resolve_planar(Dictionary(node.get("spatial", {})))
+	if not bool(resolved.get("success", false)):
+		return resolved
+	var planar: Dictionary = Dictionary(resolved.get("details", {}).get("planar_position", {}))
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"position": Vector3(float(planar.get("x", 0.0)), 0.0, float(planar.get("z", 0.0))),
+		},
+	}
+
+
+func _resource_node(snapshot: Dictionary, node_id: String) -> Dictionary:
+	for node_value in snapshot.get("nodes", []):
+		if node_value is Dictionary and String(node_value.get("resource_node_id", "")) == node_id:
+			return Dictionary(node_value).duplicate(true)
+	return {}
+
+
+func _ore_quantity(snapshot: Dictionary, player_id: String) -> int:
+	var total := 0
+	for item_value in snapshot.get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var item: Dictionary = item_value
+		var location: Dictionary = Dictionary(item.get("location", {}))
+		if (
+			String(item.get("definition_id", "")) == "item/ore"
+			and String(location.get("kind", "")) == "INVENTORY"
+			and String(location.get("player_id", "")) == player_id
+		):
+			total += int(item.get("quantity", 0))
+	return total
 
 
 func _item_location(snapshot: Dictionary, item_id: String) -> String:
