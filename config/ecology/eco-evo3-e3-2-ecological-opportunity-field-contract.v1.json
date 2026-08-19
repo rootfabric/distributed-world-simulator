@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_ecological_opportunity_field_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.2-2026-08-19-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "checkpoint": "ECO.EVO3/E3.2",
+  "name": "Ecological Opportunity Field",
+  "status": "CANDIDATE_RESEARCH_CONTRACT",
+  "research_only": true,
+  "parent": {
+    "e3_1_code_under_test_head": "7a1f5f0dc29b0564c6d4b684826250fca6a9b711",
+    "e3_1_aggregate_hash": "0a412c5c6cb12264c93c92d502321b578ebb3d166ae90d80ab450e03478e8036",
+    "e3_1_contract_hash": "b3e96b432008ea93692c5cbde9cf7c74cceca4e4c4196ef261a5fbd0ff405170",
+    "e3_1_fixture_hash": "3e22d87666b13a4bafcdd5dd3184097b53b221103fd2f9e9f2be452c8ab79978",
+    "e3_1_field_provenance_hash": "3827c1da7d94227fb04b5fbfbd93fd5262c826cd86503af9f540a120431a82c3",
+    "e3_1_snapshot_hash": "2ceb042d905b06ae76acc699b60ed6c115d3e0ac7943ce7cbe0c94f962447b00",
+    "e3_1_snapshot_artifact_sha256": "5123ebd58e6eade5d3dab2325af49a43234bc8834182ddd7db7d6c463896b790",
+    "e3_0_architecture_hash": "cbf50695b6db79d543c26168bcfa1bb9ac2e29b052f0eabeafb028ab618a3ac6"
+  },
+  "input_policy": {
+    "mode": "EXACT_ACCEPTED_E3_1_SNAPSHOT_ONLY",
+    "materialized_snapshot_path": "config/ecology/accepted_inputs/e3_1_accepted_planet_field_snapshot.v1.json",
+    "raw_fixture_input_forbidden": true,
+    "raw_owner_field_input_forbidden": true,
+    "snapshot_hash_must_match_parent": true,
+    "field_provenance_must_match_parent": true,
+    "artifact_sha256_must_match_parent": true,
+    "canonical_binding_must_remain_unresolved": true,
+    "owner_state_write_forbidden": true
+  },
+  "transform_semantics": {
+    "numeric_encoding": "INTEGER_FIXED_UNITS_V1",
+    "fraction_scale_ppm": 1000000,
+    "sample_order": "LEXICOGRAPHIC_STABLE_SPATIAL_KEY",
+    "water_opportunity_ppm": "soil_moisture_ppm",
+    "light_opportunity_ppm": "light_availability_ppm",
+    "nutrient_opportunity_ppm": "nutrient_availability_ppm",
+    "persistence_opportunity_ppm": "1000000-disturbance_pressure_ppm",
+    "limiting_resource_opportunity_ppm": "min(water_opportunity_ppm,light_opportunity_ppm,nutrient_opportunity_ppm)",
+    "establishment_opportunity_ppm": "floor(limiting_resource_opportunity_ppm*persistence_opportunity_ppm/1000000)",
+    "thermal_context": "temperature_milli_c_passthrough_only_not_a_target_or_fitness_optimum",
+    "interpolation": "NONE_E3_2_SAMPLE_FIELD_ONLY",
+    "global_rng_consumption_forbidden": true
+  },
+  "output_contract": {
+    "schema": "distributed_world_simulator.ecology.evo3_ecological_opportunity_field.v1",
+    "version": "1.0.0",
+    "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+    "canonical_binding_resolved": false,
+    "expected_sample_count": 12,
+    "one_to_one_with_snapshot_samples": true,
+    "all_fraction_outputs_bounded_ppm": true,
+    "source_provenance_retained": true,
+    "species_assignment_forbidden": true,
+    "biome_label_forbidden": true,
+    "population_truth_forbidden": true,
+    "compiled_suitability_is_population_truth": false,
+    "research_region_creation_forbidden": true
+  },
+  "acceptance_gates": {
+    "exact_parent_snapshot_required": true,
+    "exact_formula_contract_required": true,
+    "same_input_same_bytes_required": true,
+    "fresh_process_replay_count": 2,
+    "fresh_process_bytes_must_match": true,
+    "all_12_samples_retained": true,
+    "semantic_tamper_after_rehash_must_fail": true,
+    "raw_fixture_cli_surface_must_be_absent": true,
+    "forbidden_semantic_injection_must_fail": true,
+    "production_authority_claim_forbidden": true
+  },
+  "forbidden_promotions": [
+    "OPPORTUNITY_TO_SPECIES_ASSIGNMENT",
+    "OPPORTUNITY_TO_BIOME_LABEL",
+    "OPPORTUNITY_TO_POPULATION_TRUTH",
+    "RESEARCH_SPATIAL_KEY_TO_CANONICAL_SD_ID",
+    "RAW_FIXTURE_BYPASS_OF_E3_1_SNAPSHOT",
+    "CANONICAL_G_ENV_MAT_WQ_SD_TF_OWNERSHIP",
+    "PRODUCTION_API_BINDING",
+    "PRODUCTION_PERSISTENCE_AUTHORITY",
+    "NETWORK_OR_WORLD_TRANSACTION_AUTHORITY"
+  ],
+  "next_gate": {
+    "on_accept": "AUTHORIZE_E3_3_RESEARCH_ECOLOGY_DECOMPOSITION",
+    "e3_3_must_consume_accepted_opportunity_field": true,
+    "e3_3_research_region_ids_must_be_namespaced": true,
+    "e3_3_may_not_create_canonical_sd_domains": true,
+    "production_binding_remains_blocked_on_xfer1": true
+  },
+  "contract_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "contract_hash": "bbb2e4f29ac88da42102ee6c08d239f8e0a72760ab8d1371fdea2cda258ed47d"
+}
