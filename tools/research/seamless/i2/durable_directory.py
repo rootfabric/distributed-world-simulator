@@ -57,6 +57,17 @@ class DurableOwnershipDirectory(OwnershipDirectory):
 
     SNAPSHOT_SCHEMA = "distributed_world_simulator.sm1_i2_4_durable_directory_snapshot.v1"
     DURABILITY_EVIDENCE_SCHEMA = "distributed_world_simulator.sm1_i2_4_durable_directory_evidence.v1"
+    _OWNERSHIP_RECORD_FIELD_TYPES = {
+        "subject_or_domain_id": str,
+        "owner_authority_id": str,
+        "authority_epoch": int,
+        "fencing_token": int,
+        "directory_generation": int,
+        "authority_incarnation": int,
+        "state_revision": int,
+        "lease_state": str,
+        "route_revision": int,
+    }
 
     def __init__(
         self,
@@ -274,22 +285,53 @@ class DurableOwnershipDirectory(OwnershipDirectory):
             raise DurableDirectoryCorruption("snapshot checksum mismatch")
 
         records: dict[str, OwnershipRecord] = {}
-        try:
-            for raw_record in raw_records:
-                if not isinstance(raw_record, Mapping):
-                    raise DurableDirectoryCorruption("record entry must be an object")
-                record = OwnershipRecord.from_mapping(raw_record)
-                if record.subject_or_domain_id in records:
-                    raise DurableDirectoryCorruption(
-                        "snapshot contains duplicate subject_or_domain_id"
-                    )
-                records[record.subject_or_domain_id] = record
-        except (KeyError, TypeError, ValueError, DirectoryContractError) as exc:
-            if isinstance(exc, DurableDirectoryCorruption):
-                raise
-            raise DurableDirectoryCorruption("snapshot contains an invalid OwnershipRecord") from exc
+        for raw_record in raw_records:
+            record = self._strict_ownership_record_from_snapshot(raw_record)
+            if record.subject_or_domain_id in records:
+                raise DurableDirectoryCorruption(
+                    "snapshot contains duplicate subject_or_domain_id"
+                )
+            records[record.subject_or_domain_id] = record
 
         return records, revision, checksum
+
+    @classmethod
+    def _strict_ownership_record_from_snapshot(
+        cls,
+        raw_record: Any,
+    ) -> OwnershipRecord:
+        if not isinstance(raw_record, Mapping):
+            raise DurableDirectoryCorruption("record entry must be an object")
+
+        expected_fields = set(cls._OWNERSHIP_RECORD_FIELD_TYPES)
+        if set(raw_record.keys()) != expected_fields:
+            raise DurableDirectoryCorruption(
+                "record fields do not match the OwnershipRecord schema"
+            )
+
+        for field, expected_type in cls._OWNERSHIP_RECORD_FIELD_TYPES.items():
+            value = raw_record[field]
+            if expected_type is int:
+                if type(value) is not int:
+                    raise DurableDirectoryCorruption(
+                        f"OwnershipRecord field {field} must be an integer"
+                    )
+            elif type(value) is not str:
+                raise DurableDirectoryCorruption(
+                    f"OwnershipRecord field {field} must be a string"
+                )
+
+        try:
+            return OwnershipRecord(
+                **{
+                    field: raw_record[field]
+                    for field in cls._OWNERSHIP_RECORD_FIELD_TYPES
+                }
+            )
+        except DirectoryContractError as exc:
+            raise DurableDirectoryCorruption(
+                "snapshot contains an invalid OwnershipRecord"
+            ) from exc
 
     def _durably_commit_snapshot_locked(
         self,
