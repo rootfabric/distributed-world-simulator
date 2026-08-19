@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_4_durable_directory_repair_r1_contract.v1",
+  "status": "RESEARCH_ONLY_REPAIR_CANDIDATE",
+  "checkpoint": "SM1-I2.4-REPAIR-R1",
+  "branch": "research/sm1-i2-durable-directory",
+  "superseded_candidate_head": "7411ddba1bb4f3048e3b8930d6868c1f643350be",
+  "blocking_review": {
+    "verdict": "SM1_I2_4_FRESH_INDEPENDENT_REVIEW_FIX_REQUIRED",
+    "github_review": 4972023390,
+    "findings": [
+      "I2.4-R-001",
+      "I2.4-R-002"
+    ]
+  },
+  "repair_scope": [
+    "STRICT_RAW_OWNERSHIP_RECORD_SCHEMA_VALIDATION_BEFORE_DESERIALIZATION",
+    "NO_STR_OR_INT_COERCION_FOR_CANONICAL_SNAPSHOT_RECORD_FIELDS",
+    "CHECKSUM_VALID_STRUCTURALLY_INVALID_RECORDS_FAIL_CLOSED",
+    "EXECUTABLE_REGRESSION_MATRIX_FOR_REVIEWER_FALSIFICATION_CASES"
+  ],
+  "ownership_record_snapshot_schema": {
+    "exact_fields": [
+      "subject_or_domain_id",
+      "owner_authority_id",
+      "authority_epoch",
+      "fencing_token",
+      "directory_generation",
+      "authority_incarnation",
+      "state_revision",
+      "lease_state",
+      "route_revision"
+    ],
+    "string_fields": [
+      "subject_or_domain_id",
+      "owner_authority_id",
+      "lease_state"
+    ],
+    "integer_fields": [
+      "authority_epoch",
+      "fencing_token",
+      "directory_generation",
+      "authority_incarnation",
+      "state_revision",
+      "route_revision"
+    ],
+    "integer_rule": "JSON_INTEGER_ONLY_BOOL_FLOAT_AND_STRING_REJECTED",
+    "unknown_fields": "REJECT",
+    "missing_fields": "REJECT",
+    "semantic_validation": "OWNERSHIP_RECORD_CONSTRUCTOR_AFTER_STRICT_TYPE_VALIDATION"
+  },
+  "required_test": "I2.4-R1-DUR-16",
+  "required_falsification_cases": [
+    "NULL_SUBJECT",
+    "NUMERIC_STRING_EPOCH",
+    "FLOAT_EPOCH",
+    "BOOLEAN_EPOCH",
+    "NUMERIC_STRING_FENCE",
+    "FLOAT_STATE_REVISION",
+    "NON_STRING_LEASE_STATE",
+    "MISSING_FIELD",
+    "EXTRA_FIELD"
+  ],
+  "preserve": [
+    "I2_1_COMPARE_FIRST_CAS",
+    "I2_2_EXACT_TUPLE_AUTHORIZATION",
+    "I2_3_RETRY_CONVERGENCE",
+    "I2_4_DURABLE_COMMIT_BOUNDARY",
+    "I2_4_PRE_AND_POST_COMMIT_CRASH_RECOVERY",
+    "SINGLE_ACTIVE_DIRECTORY_PROCESS_SCOPE"
+  ],
+  "production_activation": false,
+  "donor_only": true,
+  "next_gate": "FRESH_INDEPENDENT_EXACT_HEAD_REVIEW_OF_I2_4_REPAIR_R1",
+  "i2_5_locked": true
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_4_durable_directory_contract.v1",
+  "status": "RESEARCH_ONLY_CANDIDATE",
+  "checkpoint": "SM1-I2.4",
+  "branch": "research/sm1-i2-durable-directory",
+  "accepted_i2_3_base": "2e709249b5854e1bd0584041c3731e5bf102bde6",
+  "accepted_i2_3_review": "SM1_I2_3_FRESH_INDEPENDENT_REVIEW_PASS",
+  "accepted_i2_2_base": "c09a53b5c7aba10c091e8cfb2ea8307d5f6b39da",
+  "architecture_base": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+  "production_activation": false,
+  "donor_only": true,
+  "backend": "POSIX_ATOMIC_FILE_SINGLE_ACTIVE_DIRECTORY_PROCESS",
+  "accepted_unchanged_blobs": {
+    "directory.py": "4cd3f97cb31e7afc1964595af3356ac1e83040e5",
+    "incarnation_replacement.py": "2d7d12a41ee8fa61ef4bc66c32230db0eeeaf1a4"
+  },
+  "snapshot": {
+    "schema": "distributed_world_simulator.sm1_i2_4_durable_directory_snapshot.v1",
+    "fields": [
+      "schema",
+      "storage_revision",
+      "records",
+      "checksum_sha256"
+    ],
+    "checksum_scope": "CANONICAL_JSON_OF_SCHEMA_STORAGE_REVISION_RECORDS",
+    "corruption_policy": "FAIL_CLOSED_NEVER_TREAT_CORRUPT_CANONICAL_FILE_AS_EMPTY"
+  },
+  "durable_commit_protocol": [
+    "WRITE_CANONICAL_JSON_TO_UNIQUE_TEMP_FILE",
+    "FLUSH_AND_FSYNC_TEMP_FILE",
+    "ATOMIC_OS_REPLACE_TO_CANONICAL_PATH",
+    "FSYNC_PARENT_DIRECTORY",
+    "ONLY_THEN_PUBLISH_CREATED_OR_CAS_OK"
+  ],
+  "fault_points": [
+    "AFTER_TEMP_FSYNC_BEFORE_REPLACE",
+    "AFTER_DURABLE_COMMIT_BEFORE_RETURN"
+  ],
+  "durability_invariants": [
+    "CANONICAL_FILE_IS_ONLY_DURABLE_OWNERSHIP_TRUTH",
+    "CAS_OK_IS_NEVER_PUBLISHED_BEFORE_DURABLE_COMMIT",
+    "CREATED_IS_NEVER_PUBLISHED_BEFORE_DURABLE_COMMIT",
+    "PRE_REPLACE_PROCESS_CRASH_RECOVERS_PREVIOUS_CANONICAL_STATE",
+    "POST_DURABLE_COMMIT_PRE_RESPONSE_PROCESS_CRASH_RECOVERS_COMMITTED_STATE",
+    "AMBIGUOUS_REPLACEMENT_RETRY_CONVERGES_VIA_CURRENT_DIRECTORY_STATE",
+    "REOPEN_AUTHORIZATION_USES_RECOVERED_CANONICAL_RECORD",
+    "OLD_INCARNATION_REMAINS_FENCED_AFTER_REOPEN",
+    "FAILED_CAS_IS_DURABLE_STORAGE_MUTATION_FREE",
+    "INVALID_TRANSITION_IS_DURABLE_STORAGE_MUTATION_FREE",
+    "STORAGE_REVISION_ADVANCES_ONLY_ON_DURABLE_MUTATION",
+    "STORAGE_REVISION_SURVIVES_REOPEN",
+    "STALE_TEMP_FILES_ARE_NEVER_CANONICAL_TRUTH",
+    "CORRUPT_CANONICAL_SNAPSHOT_FAILS_CLOSED",
+    "POISONED_LIVE_INSTANCE_CANNOT_AUTHORIZE_AFTER_AMBIGUOUS_PERSISTENCE_FAILURE"
+  ],
+  "required_tests": [
+    "I2.4-DUR-01",
+    "I2.4-DUR-02",
+    "I2.4-DUR-03",
+    "I2.4-DUR-04",
+    "I2.4-DUR-05",
+    "I2.4-DUR-06",
+    "I2.4-DUR-07",
+    "I2.4-DUR-08",
+    "I2.4-DUR-09",
+    "I2.4-DUR-10",
+    "I2.4-DUR-11",
+    "I2.4-DUR-12",
+    "I2.4-DUR-13",
+    "I2.4-DUR-14",
+    "I2.4-DUR-15",
+    "I2.4-CONTRACT-01"
+  ],
+  "evidence": {
+    "schema": "distributed_world_simulator.sm1_i2_4_durable_directory_evidence.v1",
+    "events": [
+      "DURABLE_DIRECTORY_OPENED",
+      "DURABLE_CREATE_COMMITTED",
+      "DURABLE_CAS_COMMITTED"
+    ],
+    "storage_revision": "DURABLE_LOCAL_SNAPSHOT_REVISION",
+    "cas_linearization": "REMAINS_CAS_RESULT.linearization_sequence",
+    "storage_revision_not_claimed_as": [
+      "GLOBAL_DISTRIBUTED_CONSENSUS_INDEX",
+      "ANTI_ROLLBACK_TRUST_ANCHOR"
+    ]
+  },
+  "out_of_scope": [
+    "MULTIPLE_SIMULTANEOUS_DIRECTORY_PROCESS_WRITERS",
+    "DIRECTORY_REPLICATION_OR_CONSENSUS",
+    "NETWORK_PARTITION_RECOVERY",
+    "AUTHORITY_PROCESS_LIVENESS_DETECTION",
+    "LEASE_ADMISSION_POLICY",
+    "DURABLE_OPERATION_LEDGER",
+    "ANTI_TAMPER_OR_EXTERNAL_ROLLBACK_DETECTION",
+    "NON_POSIX_DURABILITY_BACKEND",
+    "AUTHORITY_BINDING_GENERATION",
+    "ATOMIC_GAMEPLAY_STATE_COMMIT",
+    "AUTHORITY_DOMAIN_HANDOFF",
+    "GATEWAY_ROUTING",
+    "ITEM_GRAPH",
+    "PLAYER_RUNTIME",
+    "PRODUCTION_SM1_ACTIVATION"
+  ],
+  "next_checkpoint": "SM1-I2.5_CRASH_RESTART_PARTITION_FENCING"
+}
