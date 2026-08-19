@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_ecological_opportunity_field.v1",
+  "title": "ECO EVO3 E3.2 Ecological Opportunity Field",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "field_id", "authority", "canonical_binding_resolved",
+    "stable_planet_identity", "stable_time_key", "reference_frame_identity",
+    "source_snapshot_hash", "source_field_provenance_hash", "derivation_contract_hash",
+    "samples", "summary", "field_provenance_hash", "opportunity_field_hash_algorithm",
+    "opportunity_field_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_ecological_opportunity_field.v1"},
+    "version": {"const": "1.0.0"},
+    "field_id": {"type": "string", "minLength": 1},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "stable_planet_identity": {"type": "string", "minLength": 1},
+    "stable_time_key": {"type": "string", "minLength": 1},
+    "reference_frame_identity": {"type": "string", "minLength": 1},
+    "source_snapshot_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "derivation_contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "samples": {
+      "type": "array", "minItems": 12, "maxItems": 12,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "opportunity_id", "stable_spatial_key", "latitude_microdeg", "longitude_microdeg",
+          "thermal_context_milli_c", "water_opportunity_ppm", "light_opportunity_ppm",
+          "nutrient_opportunity_ppm", "persistence_opportunity_ppm",
+          "limiting_resource_opportunity_ppm", "establishment_opportunity_ppm",
+          "source_sample_hash", "source_field_provenance_hash", "opportunity_sample_hash"
+        ]
+      }
+    },
+    "summary": {"type": "object"},
+    "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "opportunity_field_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "opportunity_field_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
