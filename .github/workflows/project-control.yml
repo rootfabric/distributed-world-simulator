@@ -54,7 +54,8 @@ jobs:
             scripts/control/directional_watch_clearance.py \
             scripts/control/project_control_directional_watch.py \
             scripts/harness/checkpoint_planner.py \
-            scripts/harness/event_reducer.py
+            scripts/harness/event_reducer.py \
+            tests/harness/test_seamless_world_research_plan_contract.py
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -78,6 +79,8 @@ jobs:
               Path("config/control/harness/repair-doctrine.v1.json"),
               Path("config/control/harness/evidence-map.schema.v1.json"),
               Path("config/control/harness/human-attention.schema.v1.json"),
+              Path("docs/plans/seamless-world-sm1-roadmap.v2.json"),
+              Path("docs/plans/seamless-world-pre-p6-incubation.v1.json"),
           ]
           for path in required_json:
               with path.open("r", encoding="utf-8") as handle:
@@ -107,6 +110,9 @@ jobs:
           python3 -m unittest \
             tests.harness.test_v0_s1_networked_checkpoint_contract \
             tests.harness.test_v0_product_train_policy
+
+      - name: Run seamless research-plan contract regression
+        run: python3 -m unittest tests.harness.test_seamless_world_research_plan_contract
 
       - name: Run generation-80 authorization safety regression
         run: |

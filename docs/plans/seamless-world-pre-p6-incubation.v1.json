@@ -1,0 +1,197 @@
+{
+  "schema": "distributed_world_simulator.seamless_world_pre_p6_incubation.v1",
+  "status": "RESEARCH_PRE_ACTIVATION_NOT_PRODUCTION",
+  "architecture": "SEAMLESS_WORLD_ARCHITECTURE_R2_RU.md",
+  "architecture_repair": "SEAMLESS_WORLD_ARCHITECTURE_R2_REPAIR_R1_RU.md",
+  "roadmap": "SEAMLESS_WORLD_SM1_ROADMAP_R2_RU.md",
+  "production_activation": false,
+  "production_branch_base": "MUST_BE_DECLARED_BY_THEN_CURRENT_MAIN_AFTER_P6",
+  "controls": {
+    "canonical_owner_mutation_allowed": false,
+    "production_runtime_mutation_allowed": false,
+    "may_satisfy_sm1_acceptance": false,
+    "may_bypass_p5_or_p6": false,
+    "research_donor_only": true,
+    "dynamic_meshing_allowed": false
+  },
+  "start_rule": {
+    "now_allowed": [
+      "I0_ARCHITECTURE_CLOSURE",
+      "I1_HARNESS_SCAFFOLD",
+      "WORK_ORDER_SKELETONS"
+    ],
+    "semantic_runtime_after": [
+      "PR_137_REPAIRED_HEAD_FRESH_INDEPENDENT_ARCHITECTURE_REVIEW_PASS"
+    ],
+    "production_runtime_after": [
+      "P6_ACCEPTED",
+      "MAIN_DECISION_ACTIVATE_V0_SM1",
+      "MAIN_DECLARED_EXACT_SM1_BASE",
+      "FRESH_SM1_EPOCH_AND_WORK_ORDER",
+      "RUNTIME_MUTATION_LEASE_ROTATED_TO_SM1",
+      "DIRECTOR_DISPATCH_SM1_H0"
+    ]
+  },
+  "stages": [
+    {
+      "id": "I0",
+      "name": "Architecture Closure and Contract Freeze",
+      "depends_on": [],
+      "fresh_review_required": true,
+      "outputs": [
+        "reviewed_r2_plus_repair_contracts",
+        "frozen_vocabulary",
+        "sm0_donor_map"
+      ]
+    },
+    {
+      "id": "I1",
+      "name": "Seamless Research Harness and Global Oracles",
+      "depends_on": [],
+      "may_begin_before_i0_pass": true,
+      "outputs": [
+        "multi_process_harness",
+        "deterministic_link_faults",
+        "global_writer_analyzer",
+        "machine_readable_reports"
+      ]
+    },
+    {
+      "id": "I2",
+      "name": "Ownership Directory Prototype",
+      "depends_on": ["I0"],
+      "fresh_review_required": true,
+      "must_prove": [
+        "atomic_owner_cas",
+        "monotonic_epoch_and_fence",
+        "same_authority_id_incarnation_replacement_rotates_fence_and_generation",
+        "stale_same_authority_id_incarnation_fenced",
+        "stale_writer_restart_fenced",
+        "directory_restart_convergence"
+      ]
+    },
+    {
+      "id": "I3",
+      "name": "Generic AuthorityDomain Transfer Prototype",
+      "depends_on": ["I2"],
+      "fresh_review_required": true,
+      "must_prove": [
+        "domain_mutation_barrier",
+        "durable_prepared_shadow_bound_to_target_incarnation",
+        "directory_committed_linearization",
+        "no_old_writer_after_commit",
+        "stale_target_incarnation_cannot_activate_prepared_state",
+        "transfer_replay_safety",
+        "temporal_continuity"
+      ]
+    },
+    {
+      "id": "I4",
+      "name": "Player Carrying Domain Lab",
+      "depends_on": ["I3"],
+      "fresh_review_required": true,
+      "must_prove": [
+        "pickup_world_a_to_player_domain",
+        "nested_inventory_authority_inheritance",
+        "player_domain_a_to_b",
+        "immediate_item_use_on_b",
+        "drop_to_world_b",
+        "domain_payload_observed_ownership_metadata_is_non_authoritative",
+        "no_item_loss_or_duplication",
+        "one_domain_ownership_transition_independent_of_item_count",
+        "deterministic_inventory_handoff_races"
+      ]
+    },
+    {
+      "id": "I5",
+      "name": "Edge Gateway Incubation",
+      "depends_on": ["I0", "I2"],
+      "fresh_review_required": true,
+      "sub_stages": [
+        "I5A_SINGLE_GATEWAY_TRANSPARENCY",
+        "I5B_PRIMARY_OBSERVER_WARM",
+        "I5C_GATEWAY_MOBILITY_REHOME"
+      ],
+      "must_prove": [
+        "gateway_never_owner",
+        "route_flip_only_after_directory_commit",
+        "stable_client_identity",
+        "operation_id_survives_rehome"
+      ]
+    },
+    {
+      "id": "I6",
+      "name": "Projection AOI and Cross Owner Interaction Lab",
+      "depends_on": ["I2", "I5"],
+      "must_prove": [
+        "projection_read_only",
+        "projection_epoch_revision_fencing",
+        "bounded_interest_aggregation",
+        "player_a_to_item_b_targeted_operation",
+        "owner_change_during_operation_re_resolve",
+        "no_broadcast_fallback"
+      ]
+    },
+    {
+      "id": "I7",
+      "name": "Fault WAN and Soak Rehearsal",
+      "depends_on": ["I3", "I4", "I5", "I6"],
+      "fresh_review_required": true,
+      "minimum_topology": {
+        "directories": 1,
+        "gateways": 2,
+        "authorities": 3,
+        "clients": 2
+      },
+      "acceptance_dimensions": [
+        "AUTHORITY_CORRECTNESS",
+        "STATE_CONTINUITY",
+        "TRANSPORT_CONTINUITY",
+        "VISUAL_CONTINUITY"
+      ]
+    },
+    {
+      "id": "I8",
+      "name": "Production Port Plan and Work Order Pack",
+      "depends_on": ["I0", "I7"],
+      "outputs": [
+        "port_classification",
+        "production_dependency_map",
+        "sm1_h0_to_h3_work_order_templates",
+        "baseline_drift_checklist"
+      ]
+    }
+  ],
+  "global_oracles": {
+    "writer_violations": 0,
+    "identity_changes_due_to_topology": 0,
+    "stale_owner_mutations_accepted": 0,
+    "stale_incarnation_mutations_accepted": 0,
+    "duplicate_canonical_commits": 0,
+    "projection_canonical_writes": 0,
+    "unexpected_revision_rollback": 0
+  },
+  "ideal_state_at_p6_close": [
+    "architecture_r2_repair_reviewed",
+    "research_harness_ready",
+    "directory_proven_in_incubation",
+    "authority_domain_transfer_proven_in_incubation",
+    "player_carrying_domain_proven_in_incubation",
+    "gateway_proven_in_incubation",
+    "projection_and_bounded_cross_owner_operation_proven_in_incubation",
+    "fault_wan_soak_rehearsed",
+    "production_work_orders_drafted",
+    "production_port_map_ready"
+  ],
+  "post_p6": {
+    "defer": "freeze_donor_carriers_no_production_mutation",
+    "activate": [
+      "declare_exact_accepted_sm1_base",
+      "create_fresh_sm1_epoch_work_order",
+      "rotate_runtime_mutation_lease",
+      "branch_sm1_h0_from_declared_base",
+      "compare_baseline_drift",
+      "port_contracts_and_tests_intentionally"
+    ]
+  }
+}
