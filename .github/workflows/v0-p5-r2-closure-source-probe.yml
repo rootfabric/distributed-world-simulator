@@ -1,0 +1,32 @@
+name: V0 P5 R2 Closure Source Probe
+
+on:
+  pull_request:
+    branches:
+      - repair/v0-p5-closure-r2
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archive exact P5 R2 closure base source
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="cd5521c2e518d11857cd8b375472949240b5448a"
+          echo "BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git archive --format=zip --output=p5-r2-closure-cd5521.zip "$BASE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p5-r2-closure-cd5521
+          path: p5-r2-closure-cd5521.zip
+          if-no-files-found: error
+          retention-days: 1
