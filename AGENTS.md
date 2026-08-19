@@ -56,8 +56,9 @@ EXCEPTION IS THE UNIT OF HUMAN ATTENTION
 ROUTINE ROLE HANDOFF IS NOT A HUMAN DECISION
 HUMAN IS NOT A ROUTINE RESULT COURIER
 MISSION REMAINS OPEN ACROSS ROLE BOUNDARIES
+UNFINISHED AUTOMATABLE ROLE WORK IS NOT A SESSION STOP
 AUTOMATABLE FIX_REQUIRED IS NOT A SESSION STOP
-ROLE MAY STOP ONLY AT A MACHINE-DECLARED EXIT CLASS
+ROLE MAY STOP ONLY AFTER CONTROL_DEVELOPMENT -Close AUTHORIZES EXIT
 VAGUE INCOMPLETE STOP IS NOT A VALID HANDOFF
 ```
 
@@ -73,18 +74,20 @@ For every Work Order:
 4. Classify risk using `config/control/harness/risk-policy.v1.json`.
 5. For MEDIUM+ work, complete the Design Brief before implementation.
 6. Commit/push durable recoverable states; do not use commit count as throughput.
-7. On `FIX_REQUIRED`, follow Repair Doctrine, then continue the same-role repair/test loop while the defect remains in scope and automatable.
-8. After every fix, rerun the focused failing test and every required regression/control gate owned by the Work Order. A focused GREEN result alone does not close the role when broader predicates remain.
-9. Do not stop a role while `CONTROL_DEVELOPMENT` reports `session_exit_allowed=false`; follow `next_action`, `resume_condition` and `stop_obligation` instead.
-10. Repeated failure of the same defect escalates to Director/stronger-context takeover according to policy; it does not become an unstructured human handoff.
-11. After MEDIUM+ implementation, perform one bounded post-build critique.
-12. Use an independent Reviewer/Verifier according to risk routing.
-13. Reviewer/Verifier results must be persisted to the declared durable evidence sink before a role transition can complete. A chat-only PASS is not evidence.
-14. Treat missing proof as `INSUFFICIENT_EVIDENCE`, not an invitation to guess.
-15. Ensure reviewed/evidence/tested heads are exact and fresh.
-16. Run PC0 and directional audit before checkpoint proposal.
-17. Ask a human only for an actual Human Attention decision/approval; never use the human as a message bus between routine roles.
-18. At every stop report the machine-derived `next_actor`, `next_action`, `resume_condition`, `session_exit_allowed`, `stop_obligation` and whether the global mission is complete.
+7. Continue `PLANNED`/`DISPATCHED`/`IN_PROGRESS` automatable work instead of treating an unfinished state as a reportable terminal.
+8. On `FIX_REQUIRED`, follow Repair Doctrine, then continue the same-role repair/test loop while the defect remains in scope and automatable.
+9. After implementation or every fix, rerun the focused test and every required regression/control gate owned by the Work Order. A focused GREEN result alone does not close the role when broader predicates remain.
+10. Required validation must complete before an implementation role hands a candidate to independent review.
+11. Before any final role response run `CONTROL_DEVELOPMENT.ps1 -Close`. Exit code `7` means the session must continue with the returned `next_action`; it is not an allowed stop.
+12. Repeated failure of the same defect escalates to Director/stronger-context takeover according to policy; it does not become an unstructured human handoff.
+13. After MEDIUM+ implementation, perform one bounded post-build critique.
+14. Use an independent Reviewer/Verifier according to risk routing.
+15. Reviewer/Verifier results must be persisted to the declared durable evidence sink before a role transition can complete. A chat-only PASS is not evidence.
+16. Treat missing proof as `INSUFFICIENT_EVIDENCE`, not an invitation to guess.
+17. Ensure reviewed/evidence/tested heads are exact and fresh.
+18. Run PC0 and directional audit before checkpoint proposal.
+19. Ask a human only for an actual Human Attention decision/approval; never use the human as a message bus between routine roles.
+20. At every authorized stop report the machine-derived `next_actor`, `next_action`, `resume_condition`, `session_exit_allowed`, `stop_obligation` and whether the global mission is complete.
 
 ## Harness hygiene
 
