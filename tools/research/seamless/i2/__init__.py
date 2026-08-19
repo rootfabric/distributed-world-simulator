@@ -19,6 +19,13 @@ from .incarnation_replacement import (
     IncarnationReplacementResult,
     IncarnationReplacementStatus,
 )
+from .durable_directory import (
+    DurableCommitFaultPoint,
+    DurableDirectoryCorruption,
+    DurableDirectoryError,
+    DurableDirectoryUnavailable,
+    DurableOwnershipDirectory,
+)
 
 __all__ = [
     "CasResult",
@@ -36,4 +43,9 @@ __all__ = [
     "IncarnationReplacementRequest",
     "IncarnationReplacementResult",
     "IncarnationReplacementStatus",
+    "DurableCommitFaultPoint",
+    "DurableDirectoryCorruption",
+    "DurableDirectoryError",
+    "DurableDirectoryUnavailable",
+    "DurableOwnershipDirectory",
 ]
