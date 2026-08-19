@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.development_harness_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
   "review_layer_revision": "H0-REVIEW-2026-08-18-R2",
-  "continuation_layer_revision": "H0-CONTINUATION-2026-08-19-R2",
+  "continuation_layer_revision": "H0-CONTINUATION-2026-08-19-R3",
   "hygiene_layer_revision": "H0-HYGIENE-2026-08-18-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
@@ -48,21 +48,24 @@
     "role_result_must_be_durable_before_transition": true,
     "chat_only_review_verdict_is_non_authoritative": true,
     "next_transition_must_be_machine_described": true,
+    "unfinished_automatable_role_work_is_not_session_terminal": true,
     "automatable_fix_required_is_not_session_terminal": true,
     "same_role_repair_must_continue_through_retest": true,
+    "required_validation_must_complete_before_review_handoff": true,
     "role_exit_must_be_machine_authorized": true,
+    "role_session_must_pass_close_gate_before_final_response": true,
     "vague_incomplete_stop_is_forbidden": true,
     "repeated_same_defect_escalates_to_takeover_not_human_by_default": true,
     "machine_enforcement_displaces_duplicate_prose": true,
     "protected_invariants_are_not_auto_retired": true
   },
   "roles": {
-    "IMPLEMENTER": "Changes code within bounded Work Order scope and owns the repair-test closure loop until its predicates are green or takeover is required.",
+    "IMPLEMENTER": "Changes code within bounded Work Order scope and owns implementation plus repair-test closure until required validation is green or a real boundary/takeover is reached.",
     "REVIEWER": "Challenges design/root-cause/ownership/sibling coverage and persists PASS, FAIL or INSUFFICIENT_EVIDENCE to the declared durable evidence sink.",
-    "VERIFIER": "Independently executes required validation and confirms exact evidence.",
-    "INTEGRATOR": "Checks cross-branch/composition behavior when checkpoint requires it.",
+    "VERIFIER": "Independently executes required validation and must finish active verification or route a concrete failed predicate before exiting.",
+    "INTEGRATOR": "Checks cross-branch/composition behavior and owns its active integration validation until a real boundary is reached.",
     "PC0": "Checks project architecture/convergence constraints.",
-    "DIRECTOR": "Maintains mission continuity, handles takeover/escalation and decides whether checkpoint predicates and durable review evidence are sufficient.",
+    "DIRECTOR": "Maintains mission continuity, dispatches planned work, handles takeover/escalation and decides whether checkpoint predicates and durable review evidence are sufficient.",
     "HUMAN": "Resolves explicit high-impact exceptions and approval gates; is not a courier between routine agent roles."
   },
   "work_order_states": [
@@ -105,6 +108,12 @@
     "FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE",
     "DIRECTOR_REQUIRES_PRODUCT_OR_ARCHITECT_CHOICE"
   ],
+  "session_close_contract": {
+    "command": "CONTROL_DEVELOPMENT.ps1 -Close",
+    "required_before_role_final_response": true,
+    "forbidden_exit_code": 7,
+    "authorized_only_when_session_exit_allowed": true
+  },
   "recovery_contract": {
     "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, parent mission, last completed predicate, open blocker, next actor/action, evidence sink, resume condition, verification commands, review state, open human-attention items, session-exit authorization and human approvals using durable repository/control evidence only.",
     "recovery_drill_required_before_h0_1_acceptance": true,
