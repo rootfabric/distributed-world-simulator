@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_checkpoint_acceptance.v1",
+  "revision": "ECO-EVO3-E3.3-2026-08-19-R1-ACCEPTED",
+  "checkpoint": "ECO.EVO3/E3.3",
+  "name": "Research Ecology Decomposition",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED",
+  "decision": "ACCEPT_E3_3_AND_AUTHORIZE_E3_4",
+  "canonical_merge_commit": "ac47904147edaa7dc46c63c20e91fd4f3a580c13",
+  "review": {
+    "pull_request": 162,
+    "reviewed_head": "7ae4c17d0cca0d37369b620481d000fdbc8545fc",
+    "executable_freeze": "527e2dbef1ae4462e5b9e682b002408057930970",
+    "reviewer_dispatch_comment_id": 5341444222,
+    "review_relay_comment_id": 5341914378,
+    "verdict": "PASS — SAFE FOR E3.3 MERGE/ACCEPTANCE AND SUBSEQUENT E3.4 AUTHORIZATION",
+    "project_control_run_id": 32247214418,
+    "project_control_check_suite": 1003,
+    "project_control_status": "SUCCESS"
+  },
+  "accepted_identity": {
+    "candidate_evidence_aggregate": "148b627b094bc71574a21043627bea859e05716e6cd3d09d57f94111a51cb837",
+    "contract_hash": "593b1889198021e2fcdae0c3746bdbe771d606427f07a7ccfc7c8a530cebec9f",
+    "decomposition_provenance_hash": "76cf3fac25f7c7f52309d9c38befb3c50321e652eacb3a58731473646d680e02",
+    "decomposition_hash": "9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a",
+    "decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+    "decomposition_artifact_git_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
+    "decomposition_artifact_path": "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json"
+  },
+  "successor": {
+    "checkpoint": "ECO.EVO3/E3.4",
+    "name": "Causal Colonization Program Compiler",
+    "status": "AUTHORIZED_NOT_STARTED",
+    "must_consume_accepted_e3_3_decomposition": true,
+    "must_consume_full_persisted_evo2_species_catalog": true,
+    "no_colonization_is_valid": true
+  },
+  "scope_boundary": {
+    "research_only": true,
+    "production_binding_authorized": false,
+    "xfer1_authorized": false,
+    "e3_5_authorized": false,
+    "canonical_species_taxonomy": false,
+    "canonical_spatial_domain_creation": false,
+    "production_ecology_authority": false
+  }
+}
