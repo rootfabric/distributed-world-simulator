@@ -188,7 +188,7 @@ func _init() -> void:
 	var replay_outbox_count := int(before_replay.get("persistence", {}).get("outbox", {}).get("outbox_count", -1))
 	var replay_item_checksum := String(before_replay.get("item_graph_snapshot", {}).get("checksum", ""))
 	var replay_item_revision := int(before_replay.get("item_graph_snapshot", {}).get("revision", -1))
-	var replay_service_revision := int(before_replay.get("service", {}).get("revision", -1))
+	var replay_service_operation_count := int(before_replay.get("service", {}).get("operation_count", -1))
 	Support.write(client_control, {"allow_replay": true, "allow_finish": false})
 	var replay_a := _wait_state(recover_a_result, ["REPLAY_COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	var replay_b := _wait_state(recover_b_result, ["REPLAY_BARRIER", "FAILED"], CLIENT_TIMEOUT_MS)
@@ -206,7 +206,7 @@ func _init() -> void:
 	_assert(int(after_replay.get("persistence", {}).get("outbox", {}).get("outbox_count", -2)) == replay_outbox_count, "Committed replay created no duplicate outbox record")
 	_assert(String(after_replay.get("item_graph_snapshot", {}).get("checksum", "")) == replay_item_checksum, "Committed replay did not mutate Item Graph checksum")
 	_assert(int(after_replay.get("item_graph_snapshot", {}).get("revision", -2)) == replay_item_revision, "Committed replay did not advance Item Graph revision")
-	_assert(int(after_replay.get("service", {}).get("revision", -2)) == replay_service_revision, "Committed replay did not advance gameplay revision")
+	_assert(int(after_replay.get("service", {}).get("operation_count", -2)) == replay_service_operation_count, "Committed replay created no second gameplay operation")
 	_assert(String(replay_a.get("results", {}).get("replay_before_checksum", "")) == String(replay_a.get("results", {}).get("replay_after_checksum", "")), "Client observed no Item Graph mutation during replay")
 	_assert(int(replay_a.get("results", {}).get("replay_before_revision", -1)) == int(replay_a.get("results", {}).get("replay_after_revision", -2)), "Client observed stable Item Graph revision during replay")
 

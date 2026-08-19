@@ -160,8 +160,12 @@ func _process(_delta: float) -> void:
 					_failures.append("Unexpected contention rejection: %s" % _contention_result)
 					_finish(false)
 					return
-				if bool(shell.get_report().get("cursor_active", true)):
-					failures_append("Rejected contention did not roll back cursor")
+				if not bool(shell.get_report().get("cursor_active", false)):
+					failures_append("Rejected contention did not preserve presentation cursor")
+				else:
+					var cancelled: Dictionary = shell.acceptance_cancel_cursor()
+					if not bool(cancelled.get("success", false)) or bool(shell.get_report().get("cursor_active", true)):
+						failures_append("Rejected contention cursor could not be cancelled before next workflow")
 			_write_report("POST_CONTENTION_READY", false, runtime.create_m3_graphical_client_report(), shell)
 			_set_stage("WAIT_WINNER_WORKFLOW")
 		"WAIT_WINNER_WORKFLOW":
