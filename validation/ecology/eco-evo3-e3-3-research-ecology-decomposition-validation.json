@@ -1,0 +1,151 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_checkpoint_validation.v1",
+  "revision": "ECO-EVO3-E3.3-2026-08-19-R1-CANDIDATE",
+  "checkpoint": "ECO.EVO3/E3.3",
+  "name": "Research Ecology Decomposition",
+  "branch": "feature/eco-evo3-e3-3-research-ecology-decomposition",
+  "status": "CANDIDATE_VERIFIED_EXACT_PUBLISHED_IMPLEMENTER_SIDE_AWAITING_FRESH_INDEPENDENT_REVIEW",
+  "decision": "REQUEST_FRESH_INDEPENDENT_REVIEW_E3_4_REMAINS_BLOCKED",
+  "scope": "RESEARCH_ONLY_DECOMPOSITION_NO_PRODUCTION_BINDING",
+  "parent": {
+    "canonical_e3_2_acceptance_frontier": "768b683f0dfb4973e0fe32934dd56183ba0a0d83",
+    "e3_2_acceptance_revision": "ECO-EVO3-E3.2-2026-08-19-R2-ACCEPTED",
+    "e3_2_reviewed_head": "578981af36c2fe101925db024e6b7747c99806ab",
+    "e3_2_merge_commit": "83f35d7abe2ebdea3e5afe175833817ad631c5e6",
+    "e3_2_code_under_test_head": "f276a5b29a39a00ae15c866a310b20f3ad9fe9c8",
+    "e3_2_aggregate_hash": "ef0ed137bf8d2862f4c9cfacee0792dba8079e539daa4bfb7322d7d5da8afc9c",
+    "e3_2_contract_hash": "bbb2e4f29ac88da42102ee6c08d239f8e0a72760ab8d1371fdea2cda258ed47d",
+    "e3_2_field_provenance_hash": "9be81517eaf0c28503291c5595c0790232b8f88c7ffa9ced2e886ec1f8597aa4",
+    "e3_2_opportunity_field_hash": "acba61638f8128b667880f2bd391ab73f6175d0899656bba92657d578d48203c",
+    "e3_2_field_artifact_sha256": "59a0af5e40cae5c8a91e487da158edadfd4e127a0390ebe856f78f2365a066ff",
+    "e3_0_architecture_hash": "cbf50695b6db79d543c26168bcfa1bb9ac2e29b052f0eabeafb028ab618a3ac6"
+  },
+  "acceptance_candidate": {
+    "source_frontier": "768b683f0dfb4973e0fe32934dd56183ba0a0d83",
+    "code_under_test_head": "527e2dbef1ae4462e5b9e682b002408057930970",
+    "first_post_freeze_artifact_head": "7f1d9b474794b642aad512d07d2b9af2c5bf83cc",
+    "post_freeze_executable_drift": false,
+    "contract_hash": "593b1889198021e2fcdae0c3746bdbe771d606427f07a7ccfc7c8a530cebec9f",
+    "source_opportunity_field_hash": "acba61638f8128b667880f2bd391ab73f6175d0899656bba92657d578d48203c",
+    "source_field_artifact_sha256": "59a0af5e40cae5c8a91e487da158edadfd4e127a0390ebe856f78f2365a066ff",
+    "decomposition_provenance_hash": "76cf3fac25f7c7f52309d9c38befb3c50321e652eacb3a58731473646d680e02",
+    "decomposition_hash": "9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a",
+    "decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+    "decomposition_artifact_git_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
+    "evidence_aggregate_hash": "148b627b094bc71574a21043627bea859e05716e6cd3d09d57f94111a51cb837",
+    "aggregate_derivation": "sha256(newline-joined checkpoint id, code-under-test HEAD, parent E3.2 aggregate, E3.3 contract hash, source opportunity-field hash, source field artifact SHA-256, decomposition provenance hash, decomposition hash, decomposition artifact SHA-256, six published closure Git blobs, generated decomposition artifact Git blob)"
+  },
+  "published_closure": {
+    "contract": {
+      "path": "config/ecology/eco-evo3-e3-3-research-ecology-decomposition-contract.v1.json",
+      "git_blob": "784cc3aef012a3647bf8010436ff2dac6f6446f4"
+    },
+    "accepted_e3_2_field": {
+      "path": "config/ecology/accepted_inputs/e3_2_accepted_ecological_opportunity_field.v1.json",
+      "git_blob": "68e601958b1206235729aceb40843cd8666840aa"
+    },
+    "schema": {
+      "path": "config/ecology/eco-evo3-e3-3-research-ecology-decomposition.schema.v1.json",
+      "git_blob": "80454d5ba92553b58f598a237bf3b7815773ad33"
+    },
+    "implementation": {
+      "path": "scripts/research/ecology/research_ecology_decomposition_v1.py",
+      "git_blob": "02fbc95fe94f51b09970b1d17c4a629c692f500d"
+    },
+    "tests": {
+      "path": "tests/research/ecology/test_eco_evo3_e3_3_research_ecology_decomposition.py",
+      "git_blob": "9268abdbb96231f24bcbaab7d4692371e5e9dbe8",
+      "tests": 60
+    },
+    "runner": {
+      "path": "RUN_ECO_EVO3_E3_3_TESTS.py",
+      "git_blob": "2572abc247f6832238f9c42f4ac261592e53f4b8",
+      "executed": true
+    },
+    "generated_decomposition": {
+      "path": "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json",
+      "git_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda"
+    }
+  },
+  "decomposition_result": {
+    "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+    "canonical_binding_resolved": false,
+    "patch_count": 12,
+    "edge_count": 10,
+    "region_count": 2,
+    "singleton_region_count": 1,
+    "largest_region_patch_count": 11,
+    "main_region_mean_internal_continuity_ppm": 914200,
+    "patch_model": "ONE_RESEARCH_PATCH_PER_ACCEPTED_E3_2_SAMPLE",
+    "spatial_metric": "WRAPPED_LAT_LON_MICRODEG_SQUARED_V1",
+    "neighbor_selection": "TWO_NEAREST_BY_DISTANCE_THEN_STABLE_SPATIAL_KEY",
+    "edge_rule": "UNDIRECTED_EDGE_ONLY_IF_NEIGHBOR_SELECTION_IS_MUTUAL",
+    "region_rule": "CONNECTED_COMPONENTS_OF_MUTUAL_NEAREST_NEIGHBOR_PATCH_GRAPH",
+    "research_ids_are_not_canonical_sd_ids": true,
+    "species_identity_partition_key": false,
+    "biome_label_partition_key": false
+  },
+  "verification": {
+    "python_executable": "/opt/pyvenv/bin/python3",
+    "python_version": "3.13.5",
+    "jsonschema_version": "4.26.0",
+    "python_compile": "PASS",
+    "semantic_tests": "PASS_60_OF_60",
+    "published_schema_validation": "PASS",
+    "exact_dependency_git_blobs": "PASS_5_OF_5",
+    "published_executable_closure_blob_count": 6,
+    "fresh_runner_processes": ["PASS", "PASS"],
+    "fresh_runner_exit_codes": [0, 0],
+    "fresh_runner_logs_byte_identical": true,
+    "fresh_runner_log_sha256": "b09c7b690e142b6676614cc01abcccf804e750c16d6d0e6a5ce232d760d1ab6c",
+    "fresh_decomposition_builds": ["PASS", "PASS"],
+    "fresh_decomposition_bytes_identical": true,
+    "fresh_decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+    "execution_class": "DIRECT_CANONICAL_PYTHON_EXACT_PUBLISHED_DECOMPOSITION_VALIDATION",
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false,
+    "project_control_green_claimed": false,
+    "github_ci_green_claimed": false
+  },
+  "negative_gates": [
+    "E3.2 reviewed-head, merge-commit, aggregate, field-hash and artifact locks reject substitution after rehash",
+    "E3.0 architecture substitution rejected",
+    "direct E3.1 snapshot input policy cannot be enabled",
+    "raw fixture input policy cannot be enabled",
+    "candidate-alias input policy cannot be enabled",
+    "neighbor count cannot be target-tuned after contract rehash",
+    "species identity cannot become a partition key",
+    "source authority promotion rejected after source rehash",
+    "source canonical-binding promotion rejected after source rehash",
+    "source semantic mutation rejected even after source rehash",
+    "candidate alias exact bytes rejected at accepted-field boundary",
+    "raw fixture artifact rejected at accepted-field boundary",
+    "noncanonical accepted-field bytes rejected",
+    "output authority promotion rejected after full output rehash",
+    "output canonical-binding promotion rejected after full output rehash",
+    "species partition injection rejected after full output rehash",
+    "biome injection rejected after full output rehash",
+    "canonical SD injection rejected after full output rehash",
+    "duplicate patch rejected after full output rehash",
+    "edge drop and continuity tamper rejected after full output rehash",
+    "region partition tamper rejected after full output rehash",
+    "Draft 2020-12 schema validates exact generated decomposition and rejects unexpected patch properties",
+    "global RNG imports absent",
+    "E3.1 snapshot/raw-fixture CLI surfaces absent"
+  ],
+  "scope_boundary": {
+    "e3_3_candidate_implemented": true,
+    "e3_3_accepted": false,
+    "fresh_independent_review_required": true,
+    "e3_4_authorized": false,
+    "e3_4_must_remain_blocked_until_e3_3_acceptance": true,
+    "e3_4_must_consume_accepted_e3_3_decomposition": true,
+    "e3_4_must_consume_full_portable_species_catalog": true,
+    "e3_4_null_no_colonization_must_remain_valid": true,
+    "xfer1_unblocked": false,
+    "production_binding_authorized": false,
+    "canonical_sd_creation_authorized": false,
+    "production_ecology_authority": false
+  },
+  "next": "FRESH_INDEPENDENT_CRITICAL_REVIEW_OF_EXACT_E3_3_PR_HEAD"
+}

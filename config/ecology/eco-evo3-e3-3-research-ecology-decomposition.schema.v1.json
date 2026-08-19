@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_research_ecology_decomposition.v1",
+  "title": "ECO EVO3 E3.3 Research Ecology Decomposition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "decomposition_id",
+    "authority",
+    "canonical_binding_resolved",
+    "stable_planet_identity",
+    "stable_time_key",
+    "reference_frame_identity",
+    "source_opportunity_field_hash",
+    "source_field_provenance_hash",
+    "derivation_contract_hash",
+    "adjacency_model",
+    "patches",
+    "edges",
+    "regions",
+    "summary",
+    "decomposition_provenance_hash",
+    "decomposition_hash_algorithm",
+    "decomposition_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_research_ecology_decomposition.v1"},
+    "version": {"const": "1.0.0"},
+    "decomposition_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/decomposition/[0-9a-f]{24}$"},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "stable_planet_identity": {"type": "string", "minLength": 1},
+    "stable_time_key": {"type": "string", "minLength": 1},
+    "reference_frame_identity": {"type": "string", "minLength": 1},
+    "source_opportunity_field_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "derivation_contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "adjacency_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spatial_metric", "neighbor_selection", "neighbor_count", "edge_rule", "continuity_dimensions"],
+      "properties": {
+        "spatial_metric": {"const": "WRAPPED_LAT_LON_MICRODEG_SQUARED_V1"},
+        "neighbor_selection": {"const": "TWO_NEAREST_BY_DISTANCE_THEN_STABLE_SPATIAL_KEY"},
+        "neighbor_count": {"const": 2},
+        "edge_rule": {"const": "UNDIRECTED_EDGE_ONLY_IF_NEIGHBOR_SELECTION_IS_MUTUAL"},
+        "continuity_dimensions": {"const": ["water_opportunity_ppm", "light_opportunity_ppm", "nutrient_opportunity_ppm", "persistence_opportunity_ppm", "limiting_resource_opportunity_ppm", "establishment_opportunity_ppm"]}
+      }
+    },
+    "patches": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["research_patch_id", "stable_spatial_key", "latitude_microdeg", "longitude_microdeg", "source_opportunity_id", "source_opportunity_sample_hash", "opportunity_vector", "patch_hash"],
+        "properties": {
+          "research_patch_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/patch/[0-9a-f]{24}$"},
+          "stable_spatial_key": {"type": "string", "minLength": 1},
+          "latitude_microdeg": {"type": "integer", "minimum": -90000000, "maximum": 90000000},
+          "longitude_microdeg": {"type": "integer", "minimum": -180000000, "maximum": 180000000},
+          "source_opportunity_id": {"type": "string", "pattern": "^eco-evo3/e3\\.2/opportunity/[0-9a-f]{24}$"},
+          "source_opportunity_sample_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "opportunity_vector": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["water_opportunity_ppm", "light_opportunity_ppm", "nutrient_opportunity_ppm", "persistence_opportunity_ppm", "limiting_resource_opportunity_ppm", "establishment_opportunity_ppm"],
+            "properties": {
+              "water_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "light_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "nutrient_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "persistence_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "limiting_resource_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "establishment_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000}
+            }
+          },
+          "patch_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "maxItems": 66,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["research_edge_id", "patch_a_id", "patch_b_id", "endpoint_spatial_keys", "spatial_distance_sq_microdeg2", "opportunity_delta_mean_ppm", "continuity_ppm", "edge_hash"],
+        "properties": {
+          "research_edge_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/edge/[0-9a-f]{24}$"},
+          "patch_a_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/patch/[0-9a-f]{24}$"},
+          "patch_b_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/patch/[0-9a-f]{24}$"},
+          "endpoint_spatial_keys": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string", "minLength": 1}},
+          "spatial_distance_sq_microdeg2": {"type": "integer", "minimum": 0},
+          "opportunity_delta_mean_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "continuity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+          "edge_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["research_region_id", "patch_ids", "stable_spatial_keys", "internal_edge_ids", "internal_edge_count", "mean_internal_continuity_ppm", "mean_opportunity_ppm", "source_opportunity_field_hash", "region_hash"],
+        "properties": {
+          "research_region_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/region/[0-9a-f]{24}$"},
+          "patch_ids": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "pattern": "^eco-evo3/e3\\.3/patch/[0-9a-f]{24}$"}},
+          "stable_spatial_keys": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "minLength": 1}},
+          "internal_edge_ids": {"type": "array", "maxItems": 66, "items": {"type": "string", "pattern": "^eco-evo3/e3\\.3/edge/[0-9a-f]{24}$"}},
+          "internal_edge_count": {"type": "integer", "minimum": 0, "maximum": 66},
+          "mean_internal_continuity_ppm": {"anyOf": [{"type": "integer", "minimum": 0, "maximum": 1000000}, {"type": "null"}]},
+          "mean_opportunity_ppm": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["water_opportunity_ppm", "light_opportunity_ppm", "nutrient_opportunity_ppm", "persistence_opportunity_ppm", "limiting_resource_opportunity_ppm", "establishment_opportunity_ppm"],
+            "properties": {
+              "water_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "light_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "nutrient_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "persistence_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "limiting_resource_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+              "establishment_opportunity_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000}
+            }
+          },
+          "source_opportunity_field_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "region_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["patch_count", "edge_count", "region_count", "singleton_region_count", "largest_region_patch_count"],
+      "properties": {
+        "patch_count": {"const": 12},
+        "edge_count": {"type": "integer", "minimum": 0, "maximum": 66},
+        "region_count": {"type": "integer", "minimum": 1, "maximum": 12},
+        "singleton_region_count": {"type": "integer", "minimum": 0, "maximum": 12},
+        "largest_region_patch_count": {"type": "integer", "minimum": 1, "maximum": 12}
+      }
+    },
+    "decomposition_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "decomposition_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "decomposition_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
