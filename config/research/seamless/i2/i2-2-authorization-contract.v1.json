@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.sm1_i2_2_authorization_contract.v1",
+  "status": "RESEARCH_ONLY_CANDIDATE",
+  "checkpoint": "SM1-I2.2",
+  "branch": "research/sm1-i2-authorization",
+  "accepted_i2_1_base": "f1fd65ad73da8c95612a641be0ad52048c90169a",
+  "accepted_i2_1_review": "SM1_I2_1_REPAIR_R2_FRESH_INDEPENDENT_REVIEW_PASS",
+  "architecture_base": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+  "production_activation": false,
+  "donor_only": true,
+  "ownership_authorization_tuple": [
+    "owner_authority_id",
+    "authority_epoch",
+    "fencing_token",
+    "authority_incarnation"
+  ],
+  "binding_generation": "OUT_OF_SCOPE_UNTIL_AUTHORITY_BINDING_CHECKPOINT",
+  "operations": {
+    "authorize_ownership_tuple": "READ_ONLY_LINEARIZED_WITH_DIRECTORY_CAS"
+  },
+  "authorization_statuses": [
+    "AUTHORIZED",
+    "FENCED",
+    "NOT_FOUND"
+  ],
+  "authorization_invariants": [
+    "CURRENT_CANONICAL_DIRECTORY_RECORD_IS_ONLY_AUTHORIZATION_SOURCE",
+    "EXACT_MATCH_ONLY_NO_GREATER_THAN_SEMANTICS",
+    "ANY_OWNER_EPOCH_FENCE_OR_INCARNATION_MISMATCH_FAILS_CLOSED",
+    "SAME_AUTHORITY_ID_OLD_INCARNATION_FENCED_AFTER_REPLACEMENT",
+    "OLD_OWNER_FENCED_AFTER_OWNER_TRANSFER",
+    "AUTHORIZATION_IS_READ_ONLY",
+    "AUTHORIZATION_DECISION_SERIALIZED_BY_SAME_OWNERSHIP_LOCK_AS_CAS",
+    "POST_COMMIT_STALE_AUTHORIZATION_CANNOT_SUCCEED"
+  ],
+  "required_tests": [
+    "I2.2-AUTH-01",
+    "I2.2-AUTH-02",
+    "I2.2-AUTH-03",
+    "I2.2-AUTH-04",
+    "I2.2-AUTH-05",
+    "I2.2-AUTH-06",
+    "I2.2-AUTH-07",
+    "I2.2-AUTH-08",
+    "I2.2-AUTH-09",
+    "I2.2-AUTH-10",
+    "I2.2-AUTH-11",
+    "I2.2-AUTH-12",
+    "I2.2-AUTH-13",
+    "I2.2-AUTH-14"
+  ],
+  "evidence_contract": {
+    "kind": "OWNERSHIP_AUTHORIZATION",
+    "sequence_field": "authorization_sequence",
+    "assignment": "UNDER_SAME_OWNERSHIP_LOCK_AS_DIRECTORY_CAS",
+    "fields": [
+      "status",
+      "claim",
+      "observed",
+      "mismatched_fields"
+    ],
+    "causality_rule": "CAS_AND_AUTHORIZATION_EVIDENCE_ORDER_MATCHES_OWNERSHIP_LOCK_SERIALIZATION",
+    "schema": "distributed_world_simulator.sm1_i2_2_authorization_evidence.v1"
+  },
+  "scope_notes": {
+    "lease_state": "NOT_INTERPRETED_AS_ADMISSION_POLICY_IN_I2_2",
+    "gameplay_mutation": "NOT_APPLIED_BY_THIS_CHECKPOINT",
+    "meaning_of_authorized": "OWNERSHIP_TUPLE_MATCHED_AT_A_LINEARIZED_DIRECTORY_DECISION_POINT"
+  },
+  "out_of_scope": [
+    "DURABLE_STORAGE",
+    "DIRECTORY_RESTART_RECOVERY",
+    "PARTITION_RECOVERY",
+    "PROCESS_RESTART_RECOVERY",
+    "AUTHORITY_BINDING_GENERATION",
+    "LEASE_ADMISSION_POLICY",
+    "ATOMIC_GAMEPLAY_STATE_COMMIT",
+    "AUTHORITY_DOMAIN_HANDOFF",
+    "GATEWAY_ROUTING",
+    "ITEM_GRAPH",
+    "PLAYER_RUNTIME"
+  ],
+  "next_checkpoint": "SM1-I2.3_SAME_AUTHORITY_ID_INCARNATION_REPLACEMENT"
+}

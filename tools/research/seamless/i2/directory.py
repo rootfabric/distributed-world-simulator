@@ -22,6 +22,12 @@ class CreateStatus(str, Enum):
     ALREADY_EXISTS = "ALREADY_EXISTS"
 
 
+class MutationAuthorizationStatus(str, Enum):
+    AUTHORIZED = "AUTHORIZED"
+    FENCED = "FENCED"
+    NOT_FOUND = "NOT_FOUND"
+
+
 ALLOWED_LEASE_STATES = frozenset({"ACTIVE", "DRAINING", "UNAVAILABLE"})
 
 
@@ -78,6 +84,40 @@ class OwnershipRecord:
 
 
 @dataclass(frozen=True)
+class MutationAuthorityClaim:
+    subject_or_domain_id: str
+    owner_authority_id: str
+    authority_epoch: int
+    fencing_token: int
+    authority_incarnation: int
+
+    def __post_init__(self) -> None:
+        if not self.subject_or_domain_id.strip():
+            raise DirectoryContractError("claim subject_or_domain_id must be non-empty")
+        if not self.owner_authority_id.strip():
+            raise DirectoryContractError("claim owner_authority_id must be non-empty")
+        if self.authority_epoch < 1:
+            raise DirectoryContractError("claim authority_epoch must be >= 1")
+        if self.fencing_token < 1:
+            raise DirectoryContractError("claim fencing_token must be >= 1")
+        if self.authority_incarnation < 1:
+            raise DirectoryContractError("claim authority_incarnation must be >= 1")
+
+    @classmethod
+    def from_record(cls, record: OwnershipRecord) -> "MutationAuthorityClaim":
+        return cls(
+            subject_or_domain_id=record.subject_or_domain_id,
+            owner_authority_id=record.owner_authority_id,
+            authority_epoch=record.authority_epoch,
+            fencing_token=record.fencing_token,
+            authority_incarnation=record.authority_incarnation,
+        )
+
+    def to_mapping(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class CreateResult:
     status: CreateStatus
     current: OwnershipRecord
@@ -101,6 +141,19 @@ class CasResult:
         return self.status is CasStatus.CAS_OK
 
 
+@dataclass(frozen=True)
+class MutationAuthorizationResult:
+    status: MutationAuthorizationStatus
+    claim: MutationAuthorityClaim
+    observed: OwnershipRecord | None
+    mismatched_fields: tuple[str, ...] = ()
+    error: str | None = None
+
+    @property
+    def authorized(self) -> bool:
+        return self.status is MutationAuthorizationStatus.AUTHORIZED
+
+
 class OwnershipDirectory:
     """
     Research-only I2.1 ownership oracle.
@@ -111,6 +164,13 @@ class OwnershipDirectory:
     """
 
     EVIDENCE_SCHEMA = "distributed_world_simulator.sm1_i2_1_directory_evidence.v1"
+    AUTHORIZATION_EVIDENCE_SCHEMA = "distributed_world_simulator.sm1_i2_2_authorization_evidence.v1"
+    _AUTH_FIELDS = (
+        "owner_authority_id",
+        "authority_epoch",
+        "fencing_token",
+        "authority_incarnation",
+    )
 
     def __init__(self) -> None:
         self._records: dict[str, OwnershipRecord] = {}
@@ -118,6 +178,7 @@ class OwnershipDirectory:
         self._evidence_lock = Lock()
         self._evidence_sequence = 0
         self._linearization_sequence = 0
+        self._authorization_sequence = 0
         self._evidence: list[dict[str, Any]] = []
 
     def lookup(self, subject_or_domain_id: str) -> OwnershipRecord | None:
@@ -211,6 +272,53 @@ class OwnershipDirectory:
             )
             return result
 
+    def authorize_ownership_tuple(
+        self,
+        claim: MutationAuthorityClaim,
+    ) -> MutationAuthorizationResult:
+        """
+        Validate the exact ownership-critical tuple against canonical state.
+
+        This decision is serialized by the same ownership lock as CAS. It is
+        one prerequisite for canonical mutation, not a gameplay-state commit
+        and not a lease/binding admission decision.
+        """
+        with self._lock:
+            observed = self._records.get(claim.subject_or_domain_id)
+            if observed is None:
+                result = MutationAuthorizationResult(
+                    status=MutationAuthorizationStatus.NOT_FOUND,
+                    claim=claim,
+                    observed=None,
+                    error="ownership record not found",
+                )
+            else:
+                mismatched_fields = tuple(
+                    field
+                    for field in self._AUTH_FIELDS
+                    if getattr(claim, field) != getattr(observed, field)
+                )
+                if mismatched_fields:
+                    result = MutationAuthorizationResult(
+                        status=MutationAuthorizationStatus.FENCED,
+                        claim=claim,
+                        observed=observed,
+                        mismatched_fields=mismatched_fields,
+                        error="ownership-critical tuple does not match canonical Directory state",
+                    )
+                else:
+                    result = MutationAuthorizationResult(
+                        status=MutationAuthorizationStatus.AUTHORIZED,
+                        claim=claim,
+                        observed=observed,
+                    )
+
+            self._authorization_sequence += 1
+            self._record_authorization_evidence(
+                result, authorization_sequence=self._authorization_sequence
+            )
+            return result
+
     def evidence(self) -> list[dict[str, Any]]:
         with self._evidence_lock:
             return [dict(event) for event in self._evidence]
@@ -231,6 +339,24 @@ class OwnershipDirectory:
             desired=result.desired.to_mapping(),
             observed=result.observed.to_mapping() if result.observed else None,
             current=result.current.to_mapping() if result.current else None,
+            error=result.error,
+        )
+
+    def _record_authorization_evidence(
+        self,
+        result: MutationAuthorizationResult,
+        *,
+        authorization_sequence: int,
+    ) -> None:
+        self._record_evidence(
+            "OWNERSHIP_AUTHORIZATION",
+            schema=self.AUTHORIZATION_EVIDENCE_SCHEMA,
+            authorization_sequence=int(authorization_sequence),
+            subject_or_domain_id=result.claim.subject_or_domain_id,
+            status=result.status.value,
+            claim=result.claim.to_mapping(),
+            observed=result.observed.to_mapping() if result.observed else None,
+            mismatched_fields=list(result.mismatched_fields),
             error=result.error,
         )
 
