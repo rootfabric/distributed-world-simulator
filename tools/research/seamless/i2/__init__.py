@@ -26,6 +26,13 @@ from .durable_directory import (
     DurableDirectoryUnavailable,
     DurableOwnershipDirectory,
 )
+from .partition_fencing import (
+    AuthorityRuntimeClaim,
+    DirectoryReachability,
+    MutationGateResult,
+    MutationGateStatus,
+    PartitionFencingGate,
+)
 
 __all__ = [
     "CasResult",
@@ -48,4 +55,9 @@ __all__ = [
     "DurableDirectoryError",
     "DurableDirectoryUnavailable",
     "DurableOwnershipDirectory",
+    "AuthorityRuntimeClaim",
+    "DirectoryReachability",
+    "MutationGateResult",
+    "MutationGateStatus",
+    "PartitionFencingGate",
 ]
