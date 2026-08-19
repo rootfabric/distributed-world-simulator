@@ -1,0 +1,32 @@
+name: V0 P5 Full Stack Source Probe
+
+on:
+  pull_request:
+    branches:
+      - repair/v0-p5-compact-replica-health-r1
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archive exact full-stack repair base source
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="fe0512615f354e0592934e39b94f6b4b06db9d8c"
+          echo "BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git archive --format=zip --output=p5-full-stack-fe0512.zip "$BASE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p5-full-stack-fe0512
+          path: p5-full-stack-fe0512.zip
+          if-no-files-found: error
+          retention-days: 1
