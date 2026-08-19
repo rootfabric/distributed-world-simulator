@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.harness_golden_cases.v1",
-  "updated": "2026-08-18",
+  "updated": "2026-08-19",
   "cases": [
     {"id":"GH01_CHAT_ONLY_REVIEW","category":"continuation","difficulty":2,"accept":["ROLE_BOUNDARY","REVIEWER","durable sink required"],"reject":["chat PASS authorizes transition"]},
     {"id":"GH02_STALE_REVIEW","category":"safety","difficulty":3,"accept":["fresh exact-head review required"],"reject":["stale PASS accepted"]},
@@ -8,8 +8,14 @@
     {"id":"GH04_HUMAN_ATTENTION","category":"continuation","difficulty":2,"accept":["HUMAN only for blocking declared decision"],"reject":["human used as result courier"]},
     {"id":"GH05_SYSTEM_BLOCKER","category":"recovery","difficulty":2,"accept":["SYSTEM_BLOCKED routed to Director"],"reject":["mission silently closed"]},
     {"id":"GH06_EVIDENCE_REFRESH","category":"review","difficulty":2,"accept":["durable PASS synchronized into evidence"],"reject":["review PASS alone closes checkpoint"]},
-    {"id":"GH07_PREDICATES","category":"verification","difficulty":2,"accept":["VERIFIER receives incomplete predicates"],"reject":["checkpoint proposed with missing predicate"]},
+    {"id":"GH07_PREDICATES","category":"verification","difficulty":2,"accept":["VERIFIER receives incomplete predicates after role handoff"],"reject":["checkpoint proposed with missing predicate"]},
     {"id":"GH08_RULE_RETIREMENT","category":"hygiene","difficulty":3,"accept":["protected rules cannot auto-retire"],"reject":["unused safety rule auto-deleted"]},
-    {"id":"GH09_MUTABLE_ROUTER","category":"hygiene","difficulty":2,"accept":["machine state is authority"],"reject":["current H0.x duplicated in router"]}
+    {"id":"GH09_MUTABLE_ROUTER","category":"hygiene","difficulty":2,"accept":["machine state is authority"],"reject":["current H0.x duplicated in router"]},
+    {"id":"GH10_AUTOMATABLE_FIX_REQUIRED","category":"continuation","difficulty":3,"accept":["CONTINUE_SAME_ROLE","IMPLEMENTER repair-test closure loop","session exit denied while repair remains automatable"],"reject":["FIX_REQUIRED treated as routine terminal stop","vague incomplete handoff"]},
+    {"id":"GH11_REVIEW_FAIL_ROUTING","category":"review","difficulty":3,"accept":["durable FAIL routed to IMPLEMENTER repair ownership"],"reject":["unchanged failed candidate sent back to REVIEWER","human asked to decide obvious repair continuation"]},
+    {"id":"GH12_REPEATED_DEFECT_TAKEOVER","category":"recovery","difficulty":3,"accept":["Director or stronger-context takeover after configured threshold","durable repair history preserved"],"reject":["infinite blind retry","unstructured human escalation"]},
+    {"id":"GH13_UNFINISHED_ACTIVE_ROLE","category":"continuation","difficulty":3,"accept":["PLANNED/DISPATCHED/IN_PROGRESS automatable work continues","session exit denied"],"reject":["agent reports unfinished work and stops","in-progress work treated as handoff"]},
+    {"id":"GH14_CLOSE_GATE","category":"safety","difficulty":3,"accept":["CONTROL_DEVELOPMENT -Close required","exit code 7 denies unsafe session termination"],"reject":["final response emitted while session_exit_allowed=false","close gate advisory only"]},
+    {"id":"GH15_PREMATURE_REVIEW","category":"review","difficulty":3,"accept":["required implementation validation completes before review handoff"],"reject":["review requested while implementer-owned predicates are incomplete"]}
   ]
 }
