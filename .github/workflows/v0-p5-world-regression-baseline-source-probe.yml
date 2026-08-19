@@ -1,0 +1,32 @@
+name: V0 P5 World Regression Baseline Source Probe
+
+on:
+  pull_request:
+    branches:
+      - repair/v0-p5-world-regression-baseline-r1
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archive exact repair base source
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="396362da692a1ce4bd0c4a17ad21493d780c63b4"
+          echo "BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git archive --format=zip --output=p5-world-regression-baseline-396362.zip "$BASE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p5-world-regression-baseline-396362
+          path: p5-world-regression-baseline-396362.zip
+          if-no-files-found: error
+          retention-days: 1
