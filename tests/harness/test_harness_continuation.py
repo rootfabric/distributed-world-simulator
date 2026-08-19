@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from harness.cli import _derive_repair_metrics
+from harness.cli import _close_gate, _derive_repair_metrics
 from harness.continuation import build_continuation
 
 POLICY = {
@@ -29,6 +29,7 @@ def state() -> dict:
         "active_work_order": {
             "work_order_id": "WO-1",
             "goal_checkpoint": "CP-1",
+            "work_order_type": "IMPLEMENTATION",
             "review_required": True,
         },
         "reduced_work_order": {"state": "IMPLEMENTED"},
@@ -52,6 +53,45 @@ def state() -> dict:
 
 
 class HarnessContinuationTests(unittest.TestCase):
+    def test_planned_work_order_must_be_dispatched_before_session_exit(self):
+        value = state()
+        value["reduced_work_order"]["state"] = "PLANNED"
+        result = build_continuation(value, POLICY)
+        self.assertEqual("CONTINUE_SAME_ROLE", result["handoff_class"])
+        self.assertEqual("DIRECTOR", result["next_actor"])
+        self.assertEqual("DISPATCH_ACTIVE_WORK_ORDER", result["next_action"])
+        self.assertFalse(result["session_exit_allowed"])
+
+    def test_in_progress_implementation_cannot_stop_vaguely(self):
+        value = state()
+        value["reduced_work_order"]["state"] = "IN_PROGRESS"
+        result = build_continuation(value, POLICY)
+        self.assertEqual("CONTINUE_SAME_ROLE", result["handoff_class"])
+        self.assertEqual("IMPLEMENTER", result["next_actor"])
+        self.assertEqual("CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED", result["next_action"])
+        self.assertFalse(result["session_exit_allowed"])
+        self.assertTrue(result["closure_loop_required"])
+
+    def test_implemented_with_missing_predicates_stays_with_implementer_before_review(self):
+        value = state()
+        value["checkpoint_blockers"].append("REQUIRED_PREDICATES_INCOMPLETE")
+        result = build_continuation(value, POLICY)
+        self.assertEqual("CONTINUE_SAME_ROLE", result["handoff_class"])
+        self.assertEqual("IMPLEMENTER", result["next_actor"])
+        self.assertEqual("RUN_REQUIRED_VALIDATION_AND_REPAIR_UNTIL_GREEN", result["next_action"])
+        self.assertFalse(result["session_exit_allowed"])
+
+    def test_active_verifier_must_finish_or_route_concrete_failure(self):
+        value = state()
+        value["active_work_order"]["work_order_type"] = "VALIDATION"
+        value["reduced_work_order"]["state"] = "VERIFYING"
+        value["checkpoint_blockers"] = ["REQUIRED_PREDICATES_INCOMPLETE"]
+        value["active_work_order"]["review_required"] = False
+        result = build_continuation(value, POLICY)
+        self.assertEqual("CONTINUE_SAME_ROLE", result["handoff_class"])
+        self.assertEqual("VERIFIER", result["next_actor"])
+        self.assertFalse(result["session_exit_allowed"])
+
     def test_missing_review_is_role_boundary_not_human_stop(self):
         result = build_continuation(state(), POLICY)
         self.assertEqual("ROLE_BOUNDARY", result["handoff_class"])
@@ -69,13 +109,8 @@ class HarnessContinuationTests(unittest.TestCase):
 
     def test_pr_handoff_can_require_github_review_sink(self):
         value = state()
-        value["active_work_order"]["handoff"] = {
-            "review_evidence_sink": "GITHUB_PR_REVIEW"
-        }
-        self.assertEqual(
-            "GITHUB_PR_REVIEW",
-            build_continuation(value, POLICY)["evidence_sink"],
-        )
+        value["active_work_order"]["handoff"] = {"review_evidence_sink": "GITHUB_PR_REVIEW"}
+        self.assertEqual("GITHUB_PR_REVIEW", build_continuation(value, POLICY)["evidence_sink"])
 
     def test_stale_review_routes_back_to_reviewer(self):
         value = state()
@@ -88,20 +123,14 @@ class HarnessContinuationTests(unittest.TestCase):
         result = build_continuation(value, POLICY)
         self.assertEqual("ROLE_BOUNDARY", result["handoff_class"])
         self.assertEqual("IMPLEMENTER", result["next_actor"])
-        self.assertEqual(
-            "CONSUME_REVIEW_FINDINGS_AND_EXECUTE_REPAIR_CLOSURE_LOOP",
-            result["next_action"],
-        )
+        self.assertEqual("CONSUME_REVIEW_FINDINGS_AND_EXECUTE_REPAIR_CLOSURE_LOOP", result["next_action"])
 
     def test_insufficient_evidence_routes_to_exact_gap_ownership(self):
         value = state()
         value["review"]["post_build_state"] = "INSUFFICIENT_EVIDENCE"
         result = build_continuation(value, POLICY)
         self.assertEqual("DIRECTOR", result["next_actor"])
-        self.assertEqual(
-            "ROUTE_EXACT_EVIDENCE_GAPS_TO_OWNING_ROLE",
-            result["next_action"],
-        )
+        self.assertEqual("ROUTE_EXACT_EVIDENCE_GAPS_TO_OWNING_ROLE", result["next_action"])
 
     def test_fix_required_without_repair_map_continues_same_role(self):
         value = state()
@@ -128,18 +157,12 @@ class HarnessContinuationTests(unittest.TestCase):
         result = build_continuation(value, POLICY)
         self.assertEqual("ROLE_BOUNDARY", result["handoff_class"])
         self.assertEqual("DIRECTOR", result["next_actor"])
-        self.assertEqual(
-            "ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER",
-            result["next_action"],
-        )
+        self.assertEqual("ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER", result["next_action"])
         self.assertTrue(result["session_exit_allowed"])
 
     def test_repair_attempt_count_is_derived_from_durable_current_defect(self):
         value = state()
-        value["reduced_work_order"] = {
-            "state": "FIX_REQUIRED",
-            "open_blocker": "OD-CAS-17",
-        }
+        value["reduced_work_order"] = {"state": "FIX_REQUIRED", "open_blocker": "OD-CAS-17"}
         with tempfile.TemporaryDirectory() as temporary:
             execution = Path(temporary)
             event_dir = execution / "events" / "WO-1"
@@ -152,20 +175,14 @@ class HarnessContinuationTests(unittest.TestCase):
                 {"event_type": "FIX_REQUIRED", "blocker": "OD-CAS-17"},
             ]
             for index, event in enumerate(events, start=1):
-                (event_dir / f"{index:03d}.json").write_text(
-                    json.dumps(event),
-                    encoding="utf-8",
-                )
+                (event_dir / f"{index:03d}.json").write_text(json.dumps(event), encoding="utf-8")
             metrics = _derive_repair_metrics(execution, value)
         self.assertEqual("OD-CAS-17", metrics["current_defect_key"])
         self.assertEqual(3, metrics["same_defect_fix_required_count"])
         value["repair"].update(metrics)
         result = build_continuation(value, POLICY)
         self.assertEqual("DIRECTOR", result["next_actor"])
-        self.assertEqual(
-            "ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER",
-            result["next_action"],
-        )
+        self.assertEqual("ESCALATE_REPEATED_DEFECT_FOR_TAKEOVER", result["next_action"])
 
     def test_repair_attempt_count_resets_when_not_in_fix_required(self):
         value = state()
@@ -180,16 +197,30 @@ class HarnessContinuationTests(unittest.TestCase):
         value["checkpoint_blockers"] = ["EVIDENCE_MAP_MISSING"]
         result = build_continuation(value, POLICY)
         self.assertEqual("DIRECTOR", result["next_actor"])
-        self.assertEqual(
-            "INGEST_DURABLE_REVIEW_AND_REFRESH_EVIDENCE_MAP",
-            result["next_action"],
-        )
+        self.assertEqual("INGEST_DURABLE_REVIEW_AND_REFRESH_EVIDENCE_MAP", result["next_action"])
 
-    def test_missing_predicates_route_to_verifier(self):
+    def test_post_role_missing_predicates_route_to_verifier(self):
         value = state()
+        value["reduced_work_order"]["state"] = "VERIFIED"
         value["review"]["post_build_state"] = "PASS"
         value["checkpoint_blockers"] = ["REQUIRED_PREDICATES_INCOMPLETE"]
         self.assertEqual("VERIFIER", build_continuation(value, POLICY)["next_actor"])
+
+    def test_close_gate_denies_incomplete_automatable_role(self):
+        value = state()
+        value["reduced_work_order"]["state"] = "IN_PROGRESS"
+        continuation = build_continuation(value, POLICY)
+        authorized, exit_code, detail = _close_gate(continuation)
+        self.assertFalse(authorized)
+        self.assertEqual(7, exit_code)
+        self.assertIn("SESSION_EXIT_FORBIDDEN", detail)
+
+    def test_close_gate_allows_durable_role_boundary(self):
+        continuation = build_continuation(state(), POLICY)
+        authorized, exit_code, detail = _close_gate(continuation)
+        self.assertTrue(authorized)
+        self.assertEqual(0, exit_code)
+        self.assertEqual("SESSION_EXIT_AUTHORIZED", detail)
 
     def test_blocking_human_attention_is_real_human_gate(self):
         value = state()
