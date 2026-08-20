@@ -65,14 +65,8 @@
   },
   "output_policy": {
     "all_input_species_manifested": true,
-    "per_species_statuses": [
-      "COLONIZED",
-      "NO_COLONIZATION"
-    ],
-    "overall_statuses": [
-      "COLONIZATION_PRESENT",
-      "NO_COLONIZATION"
-    ],
+    "per_species_statuses": ["COLONIZED", "NO_COLONIZATION"],
+    "overall_statuses": ["COLONIZATION_PRESENT", "NO_COLONIZATION"],
     "compiled_suitability_is_population_truth": false,
     "canonical_binding_resolved": false,
     "production_binding_authorized": false,
