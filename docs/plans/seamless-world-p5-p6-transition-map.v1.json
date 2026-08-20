@@ -1,0 +1,144 @@
+{
+  "schema": "distributed_world_simulator.seamless_world_p5_p6_transition_map.v1",
+  "status": "ROADMAP_AMENDMENT_CANDIDATE",
+  "purpose": "Prevent deep redesign of legacy networking during P5/P6 while preserving all foundations required by production SM1.",
+  "provenance": {
+    "reviewed_seamless_architecture_head": "87a9ca12c38a9b15069fb49a57bfa344b8c25cfa",
+    "reviewed_human_roadmap": "docs/plans/SEAMLESS_WORLD_SM1_ROADMAP_R2_RU.md",
+    "existing_machine_roadmap": "docs/plans/seamless-world-sm1-roadmap.v2.json",
+    "amendment_branch": "docs/seamless-p5-p6-transition-map-r1"
+  },
+  "product_train_boundary": {
+    "sequence": [
+      "P5_ACCEPTED",
+      "P6_PERSISTENT_SHARED_OUTPOST",
+      "P6_ACCEPTED",
+      "POST_P6_SEAMLESS_DECISION",
+      "ACTIVATE_V0_SM1_OR_EXPLICITLY_DEFER"
+    ],
+    "old_network_required_through": "P6_ACCEPTANCE",
+    "production_sm1_base_rule": "THEN_CURRENT_ACCEPTED_V0_BASELINE_NOT_RESEARCH_BRANCH_HISTORY"
+  },
+  "required_red_classification": [
+    "FOUNDATION",
+    "LEGACY_TRANSPORT",
+    "HARNESS_TEST"
+  ],
+  "repair_policy": {
+    "FOUNDATION": "FULL_CORRECTNESS_REPAIR_NOW",
+    "LEGACY_TRANSPORT": "MINIMUM_BOUNDED_REPAIR_NO_LEGACY_REDESIGN",
+    "HARNESS_TEST": "REPAIR_HARNESS_OR_TEST_OWNER_DO_NOT_MUTATE_PRODUCT_SEMANTICS"
+  },
+  "fail_closed_rules": [
+    "DO_NOT_HIDE_RED",
+    "DO_NOT_REMOVE_REQUIRED_REGRESSION",
+    "DO_NOT_USE_SELECTIVE_RETRY_TO_SYNTHESIZE_PASS",
+    "DO_NOT_RECLASSIFY_REQUIRED_PREDICATE_WITHOUT_EXPLICIT_MAIN_OWNED_CONTROL_DECISION",
+    "CLASSIFY_BEFORE_PRODUCTION_REPAIR"
+  ],
+  "transition_map": [
+    {
+      "capability": "CANONICAL_ITEM_GRAPH_STRUCTURE",
+      "transition": "KEEP",
+      "reason": "Item/container relationships remain canonical and AuthorityDomain must not become a second Item Graph."
+    },
+    {
+      "capability": "STABLE_PLAYER_ITEM_SUBJECT_IDENTITY",
+      "transition": "KEEP",
+      "reason": "Canonical identity must survive authority and session transitions."
+    },
+    {
+      "capability": "DURABLE_GAMEPLAY_STATE_AND_RESTART_RECOVERY",
+      "transition": "KEEP",
+      "reason": "Durable recovery remains foundational and becomes more important with multiple authorities."
+    },
+    {
+      "capability": "END_TO_END_OPERATION_ID_AND_DEDUP",
+      "transition": "KEEP",
+      "reason": "Required across retry, gateway rehome and authority handoff."
+    },
+    {
+      "capability": "SERVER_OR_DOMAIN_AUTHORITATIVE_DURABLE_GAMEPLAY_TRUTH",
+      "transition": "KEEP",
+      "reason": "Ownership implementation changes but canonical-state discipline remains."
+    },
+    {
+      "capability": "SM0_SINGLE_WRITER_HANDOFF_RECOVERY_INVARIANTS",
+      "transition": "PORT_KEEP",
+      "reason": "Use as donor invariants for SM1 while forbidding old-source rollback after Directory commit."
+    },
+    {
+      "capability": "M3_M4_GAMEPLAY_NETWORK_COMPOSITION_SERVICES",
+      "transition": "ADAPT",
+      "reason": "Preserve gameplay semantics while changing ownership and routing boundaries underneath."
+    },
+    {
+      "capability": "CURRENT_CLIENT_REPLICA_MACHINERY",
+      "transition": "ADAPT",
+      "reason": "Reuse useful prediction/projection pieces only after making them epoch/fence/projection aware."
+    },
+    {
+      "capability": "RAW_ENET_PACKET_TRANSPORT",
+      "transition": "ADAPT",
+      "reason": "Transport may survive but authority semantics must not depend on old topology."
+    },
+    {
+      "capability": "DIRECT_CLIENT_TO_GAMEPLAY_AUTHORITY_ROUTING_AND_SESSION_CHOREOGRAPHY",
+      "transition": "REPLACE",
+      "reason": "Future route is stable client session through gateway with canonical authority resolution."
+    },
+    {
+      "capability": "CURRENT_AUTHORITY_OWNERSHIP_AND_ROUTING_ASSUMPTIONS",
+      "transition": "REPLACE",
+      "reason": "Replaced by Ownership Directory, epoch, fencing token, incarnation and AuthorityBinding."
+    },
+    {
+      "capability": "M5_FINAL_GRAPHICAL_CHECKSUM_CONVERGENCE_BARRIER_AS_PRODUCTION_AUTHORITY",
+      "transition": "RETIRE_TEST_ONLY",
+      "reason": "May remain as compatibility or acceptance machinery but must not become the SM1 ownership protocol."
+    },
+    {
+      "capability": "LEGACY_SINGLE_AUTHORITY_CLIENT_BACKEND_FINALIZATION",
+      "transition": "REPLACE",
+      "reason": "Replaced by PRIMARY/OBSERVER/WARM projection and explicit handoff lifecycle."
+    },
+    {
+      "capability": "SM1_OWNERSHIP_DIRECTORY_FENCING_INCARNATION_AUTHORIZATION",
+      "transition": "NEW_CANONICAL",
+      "reason": "New production ownership authority after explicit post-P6 activation."
+    }
+  ],
+  "transferable_invariants": [
+    "PREPARED_OR_LOCKED_STATE_REMAINS_REVOCABLE_UNTIL_FINAL_CONSUMPTION",
+    "CANONICAL_ADVANCE_INVALIDATES_STALE_PREPARED_EVIDENCE",
+    "STALE_DIRECTORY_GENERATION_FAILS_CLOSED",
+    "STALE_AUTHORITY_EPOCH_FAILS_CLOSED",
+    "STALE_FENCING_TOKEN_FAILS_CLOSED",
+    "STALE_AUTHORITY_INCARNATION_FAILS_CLOSED",
+    "STALE_BINDING_GENERATION_FAILS_CLOSED"
+  ],
+  "m7_p5_diagnostic_rule": {
+    "foundation_examples": [
+      "HOTBAR_STATE_LOST_OR_DUPLICATED_AFTER_RESTART",
+      "EQUIPMENT_STATE_LOST_OR_ROLLED_BACK_AFTER_RESTART",
+      "ITEM_GRAPH_CANONICAL_STATE_RESTORED_INCORRECTLY",
+      "DURABLE_CANONICAL_REVISION_ROLLBACK",
+      "DUPLICATE_CANONICAL_OPERATION_COMMIT"
+    ],
+    "legacy_or_harness_examples": [
+      "OLD_PROCESS_CLEANUP_RACE",
+      "ENET_SESSION_TIMING",
+      "PORT_REUSE_TIMING",
+      "FIXED_SLEEP_OR_WAIT_ASSUMPTION",
+      "WRAPPER_EXIT_STATUS_CAPTURE",
+      "LEGACY_CLIENT_FINALIZATION_CHOREOGRAPHY"
+    ],
+    "broad_legacy_redesign_allowed": false
+  },
+  "pre_sm1_optimization_target": [
+    "FULLY_REPAIR_FUTURE_FOUNDATION_DEFECTS",
+    "MINIMALLY_STABILIZE_REQUIRED_LEGACY_NETWORK_BEHAVIOR",
+    "REPAIR_HARNESS_DEFECTS_AT_HARNESS_LAYER",
+    "AVOID_DEEP_LEGACY_NETWORK_REDESIGN"
+  ]
+}
