@@ -1,0 +1,89 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_4_causal_colonization_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.4-2026-08-19-R1",
+  "checkpoint": "ECO.EVO3/E3.4",
+  "stage": "COLONIZATION_PROGRAM",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "input_policy": {
+    "accepted_e3_3_only": true,
+    "accepted_decomposition_binding_path": "config/ecology/accepted_inputs/e3_3_accepted_research_ecology_decomposition.binding.v1.json",
+    "full_persisted_catalog_path": "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json",
+    "catalog_prefilter_allowed": false,
+    "biome_species_table_allowed": false,
+    "target_aware_species_injection_allowed": false,
+    "catalog_rebake_allowed": false,
+    "catalog_target_tuning_allowed": false,
+    "all_catalog_entries_enter_source_port": true
+  },
+  "accepted_e3_3": {
+    "canonical_merge_commit": "ac47904147edaa7dc46c63c20e91fd4f3a580c13",
+    "reviewed_head": "7ae4c17d0cca0d37369b620481d000fdbc8545fc",
+    "executable_freeze": "527e2dbef1ae4462e5b9e682b002408057930970",
+    "project_control_run_id": 32247214418,
+    "project_control_check_suite": 1003,
+    "review_relay_comment_id": 5341914378,
+    "decomposition_artifact_path": "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json",
+    "decomposition_artifact_git_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
+    "decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+    "decomposition_hash": "9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a",
+    "decomposition_provenance_hash": "76cf3fac25f7c7f52309d9c38befb3c50321e652eacb3a58731473646d680e02"
+  },
+  "persisted_evo2_catalog": {
+    "catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "semantic_artifact_sha256": "99d6dbf87d1a459e2f73f13959dcb53d9b0b8be1519bb5352622202954cf7d1e",
+    "semantic_artifact_git_blob": "397ace0c6c7b204793b7663e7a89417d44ba3484",
+    "entry_count": 2,
+    "e2_8_transport_sha256": "b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1",
+    "e2_8_transport_bytes": 10383,
+    "e2_final_aggregate_hash": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "historical_eco_anchor": "f0e16195f1331f238bbacab2768e5d72ec01d1a3"
+  },
+  "source_port": {
+    "selection": "LEXICOGRAPHICALLY_LOWEST_STABLE_SPATIAL_KEY_V1",
+    "species_independent": true
+  },
+  "causal_model": {
+    "opportunity_dimensions": [
+      "water_opportunity_ppm",
+      "light_opportunity_ppm",
+      "nutrient_opportunity_ppm",
+      "persistence_opportunity_ppm",
+      "limiting_resource_opportunity_ppm",
+      "establishment_opportunity_ppm"
+    ],
+    "patch_base_opportunity": "MIN_OF_SIX_OPPORTUNITY_DIMENSIONS_PPM",
+    "trait_support": "MEAN_WATER_TOLERANCE_SHADE_ROOT_DORMANCY_SEEDBANK_PPM",
+    "trait_modifier": "500000_PLUS_HALF_TRAIT_SUPPORT_PPM",
+    "establishment_score": "FLOOR_BASE_TIMES_TRAIT_MODIFIER_DIV_1000000",
+    "dispersal_capacity": "MIN_1000000_OF_DISTANCE_MILLI_TIMES_10_PLUS_SEED_COUNT_TIMES_500",
+    "edge_arrival": "FLOOR_DISPERSAL_CAPACITY_TIMES_CONTINUITY_DIV_1000000",
+    "minimum_establishment_ppm": 60000,
+    "minimum_edge_arrival_ppm": 150000,
+    "propagation": "DETERMINISTIC_FIXED_POINT_SORTED_EDGES_FROM_ESTABLISHED_PATCHES",
+    "no_colonization_is_valid": true
+  },
+  "output_policy": {
+    "all_input_species_manifested": true,
+    "per_species_statuses": ["COLONIZED", "NO_COLONIZATION"],
+    "overall_statuses": ["COLONIZATION_PRESENT", "NO_COLONIZATION"],
+    "compiled_suitability_is_population_truth": false,
+    "canonical_binding_resolved": false,
+    "production_binding_authorized": false,
+    "canonical_species_taxonomy": false,
+    "canonical_spatial_domain_creation": false,
+    "production_persistence_authority": false,
+    "world_transaction_authority": false,
+    "network_authority": false
+  },
+  "determinism": {
+    "canonical_json": "SORTED_KEYS_COMPACT_UTF8_NEWLINE_V1",
+    "global_rng_allowed": false,
+    "same_inputs_same_program_required": true
+  },
+  "successor": {
+    "e3_5_authorized": false,
+    "e3_5_must_remain_blocked_until_independent_e3_4_acceptance": true
+  },
+  "contract_hash": "531172bc2ebdd4d13977d50afe25616a34bb0879fb8efa34d745ea3048b9d3d3"
+}

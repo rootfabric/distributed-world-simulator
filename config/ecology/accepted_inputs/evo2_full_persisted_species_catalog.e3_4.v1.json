@@ -1,0 +1,98 @@
+{
+  "bake_id": "eco-evo2-bake/ff406486cc83bb8217d66213",
+  "canonical_species_declared": false,
+  "catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+  "entries": [
+    {
+      "ancestry_path": [
+        "eco-lineage/e22-root",
+        "eco-lineage/e22-beta"
+      ],
+      "canonical_species_declared": false,
+      "entry_hash": "058efd7836bdceec9b39c6a2b5c46b013d4bafd14c7b0da92e3a75b406046ec2",
+      "genome": {
+        "checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+        "genome_id": "genome/e22-beta",
+        "growth_rate": 0.72,
+        "height_m": 0.8,
+        "lifespan_years": 3.0,
+        "root_depth_m": 0.6,
+        "schema": "distributed_world_simulator.ecology.plant_genome.v1",
+        "seed_count": 360,
+        "seed_dispersal_distance_m": 28.0,
+        "shade_tolerance": 0.28,
+        "version": "1.0.0",
+        "water_preference": 0.7,
+        "water_tolerance_width": 0.28
+      },
+      "genome_checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+      "lineage_id": "eco-lineage/e22-beta",
+      "observed_patch_ids": [
+        "patch/beta"
+      ],
+      "parent_lineage_id": "eco-lineage/e22-root",
+      "recruitment_traits": {
+        "checksum": "71d06132f37687ba471e3ebcd56fc457a08c307aae4097fc874cb204b04f1595",
+        "dormancy_fraction": 0.18,
+        "schema": "distributed_world_simulator.ecology.evo1_recruitment_traits.v1",
+        "seed_bank_half_life_years": 1.8,
+        "trait_id": "recruit/e22-beta",
+        "version": "1.0.0"
+      },
+      "recruitment_traits_checksum": "71d06132f37687ba471e3ebcd56fc457a08c307aae4097fc874cb204b04f1595",
+      "research_species_id": "eco-research-species/247a0b301db2781bfc317a13",
+      "schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1.entry",
+      "source_observation_hash": "7bbbec07fb4199166147d7556ac2984156b4a5d24d3b922728e18652b884edf3",
+      "split_year": 1,
+      "version": "1.0.0"
+    },
+    {
+      "ancestry_path": [
+        "eco-lineage/e22-root",
+        "eco-lineage/e22-alpha"
+      ],
+      "canonical_species_declared": false,
+      "entry_hash": "0b7485141737c5dea6bb86ba3fbbc0dc586ad2bc845584e018733eacf0f2b4fa",
+      "genome": {
+        "checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+        "genome_id": "genome/e22-alpha-late",
+        "growth_rate": 0.54,
+        "height_m": 1.5,
+        "lifespan_years": 8.5,
+        "root_depth_m": 1.7,
+        "schema": "distributed_world_simulator.ecology.plant_genome.v1",
+        "seed_count": 130,
+        "seed_dispersal_distance_m": 16.0,
+        "shade_tolerance": 0.65,
+        "version": "1.0.0",
+        "water_preference": 0.34,
+        "water_tolerance_width": 0.25
+      },
+      "genome_checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+      "lineage_id": "eco-lineage/e22-alpha",
+      "observed_patch_ids": [
+        "patch/alpha"
+      ],
+      "parent_lineage_id": "eco-lineage/e22-root",
+      "recruitment_traits": {
+        "checksum": "eaf40935117a150fa72eadbe512c04475896ba4e6ed1253c395bd8c8e15e50dc",
+        "dormancy_fraction": 0.38,
+        "schema": "distributed_world_simulator.ecology.evo1_recruitment_traits.v1",
+        "seed_bank_half_life_years": 4.5,
+        "trait_id": "recruit/e22-alpha",
+        "version": "1.0.0"
+      },
+      "recruitment_traits_checksum": "eaf40935117a150fa72eadbe512c04475896ba4e6ed1253c395bd8c8e15e50dc",
+      "research_species_id": "eco-research-species/34b4de11b3cbb2eae9f73176",
+      "schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1.entry",
+      "source_observation_hash": "11bd55d59969080dd0c9809141b694851e7ba9b41d26c7545fdeadb4ff799b40",
+      "split_year": 2,
+      "version": "1.0.0"
+    }
+  ],
+  "parent_p2_7_accepted_aggregate": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
+  "schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1",
+  "source_run_hash": "d44a160531d7f49cd0d0018a1fa8cb55d6be8ebf8157e5cb555232b8dd0fb337",
+  "species_concept": "ECO_RESEARCH_LINEAGE_HYPOTHESIS_V1",
+  "version": "1.0.0"
+}
