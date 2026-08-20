@@ -22,13 +22,13 @@ IMPL = ROOT / "scripts/research/ecology/causal_colonization_program_compiler_v1.
 TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py"
 
 EXPECTED_BLOBS = {
-    "config/ecology/eco-evo3-e3-4-causal-colonization-contract.v1.json": "bc1050e8938b9d38b915400d36af3c7986d5713b",
+    "config/ecology/eco-evo3-e3-4-causal-colonization-contract.v1.json": "de38fbc06a2a733cfac52df5b0345f900f42f117",
     "config/ecology/accepted_inputs/e3_3_accepted_research_ecology_decomposition.binding.v1.json": "84660f5c60da2e7b9dcb9ace0d287321f303a94e",
     "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
     "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json": "397ace0c6c7b204793b7663e7a89417d44ba3484",
-    "config/ecology/eco-evo3-e3-4-causal-colonization-program.schema.v1.json": "19c2a20ae6bb9e46f4204259832e35d3fc5a3456",
+    "config/ecology/eco-evo3-e3-4-causal-colonization-program.schema.v1.json": "95991eb62d90690b351d7522805ada2695d82898",
     "scripts/research/ecology/causal_colonization_program_compiler_v1.py": "46f424608a9d4e9bf9119b3700c3ba75b24197bd",
-    "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py": "87a04ca2d672fbb668f7d9f7860e2a5393234469",
+    "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py": "91499b788c4d8908fdad272c4cc69289e905d71d",
 }
 EXPECTED_CONTRACT_HASH = "531172bc2ebdd4d13977d50afe25616a34bb0879fb8efa34d745ea3048b9d3d3"
 EXPECTED_DECOMPOSITION_SHA256 = "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a"
