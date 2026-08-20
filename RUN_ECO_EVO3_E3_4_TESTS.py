@@ -19,7 +19,9 @@ DECOMPOSITION = ROOT / "config/ecology/accepted_inputs/e3_3_candidate_research_e
 CATALOG = ROOT / "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json"
 SCHEMA = ROOT / "config/ecology/eco-evo3-e3-4-causal-colonization-program.schema.v1.json"
 IMPL = ROOT / "scripts/research/ecology/causal_colonization_program_compiler_v1.py"
+CORE = ROOT / "scripts/research/ecology/causal_colonization_program_compiler_v1_core.py"
 TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py"
+REPAIR_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r1.py"
 
 EXPECTED_BLOBS = {
     "config/ecology/eco-evo3-e3-4-causal-colonization-contract.v1.json": "de38fbc06a2a733cfac52df5b0345f900f42f117",
@@ -27,8 +29,10 @@ EXPECTED_BLOBS = {
     "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
     "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json": "397ace0c6c7b204793b7663e7a89417d44ba3484",
     "config/ecology/eco-evo3-e3-4-causal-colonization-program.schema.v1.json": "95991eb62d90690b351d7522805ada2695d82898",
-    "scripts/research/ecology/causal_colonization_program_compiler_v1.py": "46f424608a9d4e9bf9119b3700c3ba75b24197bd",
+    "scripts/research/ecology/causal_colonization_program_compiler_v1.py": "e3af356a2e30eb29af27caef7c0ac6a6f067cc6d",
+    "scripts/research/ecology/causal_colonization_program_compiler_v1_core.py": "46f424608a9d4e9bf9119b3700c3ba75b24197bd",
     "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py": "91499b788c4d8908fdad272c4cc69289e905d71d",
+    "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r1.py": "0baf87ac438a742ec8d1b7ca4fd6739fd8a2642b",
 }
 EXPECTED_CONTRACT_HASH = "531172bc2ebdd4d13977d50afe25616a34bb0879fb8efa34d745ea3048b9d3d3"
 EXPECTED_DECOMPOSITION_SHA256 = "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a"
@@ -47,7 +51,7 @@ EXPECTED_SUMMARY = {
     "total_species_patch_establishments": 22,
     "no_colonization": False,
 }
-EXPECTED_TESTS = 48
+EXPECTED_TESTS = 58
 
 
 def git_blob(path: pathlib.Path) -> str:
@@ -83,7 +87,7 @@ def main() -> int:
         return 12
 
     compiled = subprocess.run(
-        [sys.executable, "-m", "py_compile", str(IMPL), str(TEST)],
+        [sys.executable, "-m", "py_compile", str(IMPL), str(CORE), str(TEST), str(REPAIR_TEST)],
         cwd=ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -135,7 +139,11 @@ def main() -> int:
         return 26
 
     tests = load_module(TEST, "e34_acceptance_tests")
-    suite = unittest.defaultTestLoader.loadTestsFromModule(tests)
+    repair_tests = load_module(REPAIR_TEST, "e34_repair_r1_tests")
+    suite = unittest.TestSuite([
+        unittest.defaultTestLoader.loadTestsFromModule(tests),
+        unittest.defaultTestLoader.loadTestsFromModule(repair_tests),
+    ])
     stream = io.StringIO()
     result = unittest.TextTestRunner(stream=stream, verbosity=0).run(suite)
     if not result.wasSuccessful() or result.testsRun != EXPECTED_TESTS:
@@ -174,10 +182,12 @@ def main() -> int:
             return 32
 
     print("ECO.EVO3 E3.4 Causal Colonization Program Compiler: PASS")
-    print("semantic_tests=48/48")
+    print("semantic_and_repair_tests=58/58")
+    print("authority_regression_tests=10/10")
     print("negative_matrix=PASS")
     print("published_schema_validation=PASS")
-    print("closure_blobs=7/7")
+    print("closure_blobs=9/9")
+    print("scientific_core_blob_unchanged=46f424608a9d4e9bf9119b3700c3ba75b24197bd")
     print("full_persisted_catalog_entries=2/2")
     print("fresh_colonization_builds=2/2")
     print("fresh_colonization_bytes_identical=true")
