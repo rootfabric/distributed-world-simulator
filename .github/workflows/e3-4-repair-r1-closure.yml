@@ -1,4 +1,4 @@
-name: ECO E3.4 Repair R1 Closure
+name: ECO E3.4 Repair R2 Closure
 
 on:
   pull_request:
@@ -9,18 +9,20 @@ on:
       - "config/ecology/**"
       - "scripts/research/ecology/**"
       - "tests/research/ecology/**"
+      - "validation/ecology/eco-evo3-e3-4-repair-r2-validation.json"
+      - "docs/checkpoints/2026-08-20_ECO_EVO3_E3_4_REPAIR_R2_CORE_AUTHORITY_RU.md"
       - ".github/workflows/e3-4-repair-r1-closure.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: eco-e3-4-repair-r1-${{ github.event.pull_request.number }}
+  group: eco-e3-4-repair-r2-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   closure:
-    name: exact published E3.4 Repair R1 closure
+    name: exact published E3.4 Repair R2 closure
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -45,17 +47,17 @@ jobs:
       - name: Install exact validation dependency
         run: python -m pip install --disable-pip-version-check jsonschema==4.26.0
 
-      - name: Run exact E3.4 closure
+      - name: Run exact E3.4 Repair R2 closure
         shell: bash
         run: |
           set -o pipefail
-          python RUN_ECO_EVO3_E3_4_TESTS.py | tee e3_4_repair_r1_runner.log
+          python RUN_ECO_EVO3_E3_4_TESTS.py | tee e3_4_repair_r2_runner.log
 
       - name: Upload exact runner log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: eco-e3-4-repair-r1-runner-log
-          path: e3_4_repair_r1_runner.log
+          name: eco-e3-4-repair-r2-runner-log
+          path: e3_4_repair_r2_runner.log
           if-no-files-found: error
           retention-days: 30

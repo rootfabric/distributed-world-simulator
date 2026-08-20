@@ -6,17 +6,22 @@ import hashlib
 import importlib.util
 import json
 import pathlib
+import subprocess
 from typing import Any
 
 _CORE_PATH = pathlib.Path(__file__).with_name("causal_colonization_program_compiler_v1_core.py")
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+_E2_8_VALIDATION_PATH = _REPO_ROOT / "validation/ecology/eco-evo2-e2-8-catalog-persistence-validation.json"
+_E2_FINAL_VALIDATION_PATH = _REPO_ROOT / "validation/ecology/eco-evo2-final-unseen-world-validation.json"
 _SPEC = importlib.util.spec_from_file_location("e34_causal_core", _CORE_PATH)
 if _SPEC is None or _SPEC.loader is None:
     raise RuntimeError("E3_4_CORE_IMPORT_FAILED")
 _core = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_core)
 
-# Preserve the original E3.4 scientific/compiler surface. Authority-sensitive
-# loaders, catalog validation, build entrypoint and main() are overridden below.
+# Preserve the scientific surface while overriding every authority-sensitive
+# loader/build boundary below. The retained core is intentionally incapable of
+# emitting accepted-input provenance on its own.
 for _name in dir(_core):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_core, _name)
@@ -25,6 +30,8 @@ CONTRACT_GIT_BLOB = "de38fbc06a2a733cfac52df5b0345f900f42f117"
 BINDING_GIT_BLOB = "84660f5c60da2e7b9dcb9ace0d287321f303a94e"
 DECOMPOSITION_GIT_BLOB = "9915bc13b0e81533fdc99ffe5707d0d60ba58eda"
 CATALOG_GIT_BLOB = "397ace0c6c7b204793b7663e7a89417d44ba3484"
+E2_8_VALIDATION_GIT_BLOB = "47d55332591ef59fcf324701fece19df10781d44"
+E2_FINAL_VALIDATION_GIT_BLOB = "bd7999a7bbaba4048844333f509994b2668ed227"
 
 GENOME_SCHEMA = "distributed_world_simulator.ecology.plant_genome.v1"
 RECRUITMENT_SCHEMA = "distributed_world_simulator.ecology.evo1_recruitment_traits.v1"
@@ -204,8 +211,88 @@ def load_full_persisted_catalog(path: pathlib.Path, contract: dict[str, Any]) ->
     return _VerifiedInput(catalog, kind="catalog", raw=raw)
 
 
-def _rehash_program(program: dict[str, Any], provenance: dict[str, Any]) -> dict[str, Any]:
+def _git_is_ancestor(ancestor: str, descendant: str) -> bool:
+    completed = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=_REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return completed.returncode == 0
+
+
+def _verify_historical_lineage(
+    contract: dict[str, Any],
+    catalog_hash: str,
+    *,
+    e2_8_path: pathlib.Path = _E2_8_VALIDATION_PATH,
+    e2_final_path: pathlib.Path = _E2_FINAL_VALIDATION_PATH,
+) -> dict[str, Any]:
+    expected = contract["persisted_evo2_catalog"]
+
+    e2_8_raw = e2_8_path.read_bytes()
+    _verify_blob(e2_8_raw, E2_8_VALIDATION_GIT_BLOB, "E3_4_E2_8_EVIDENCE_GIT_BLOB")
+    e2_8 = _parse_object(e2_8_raw, "E3_4_E2_8_EVIDENCE_ROOT")
+    _require(e2_8.get("schema") == "distributed_world_simulator.ecology.evo2_checkpoint_validation.v1", "E3_4_E2_8_EVIDENCE_SCHEMA")
+    _require(e2_8.get("checkpoint") == "ECO.EVO2/E2.8", "E3_4_E2_8_EVIDENCE_CHECKPOINT")
+    _require(e2_8.get("status") == "ACCEPTED_EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION", "E3_4_E2_8_EVIDENCE_STATUS")
+    _require(e2_8.get("decision") == "ACCEPT_E2_8_AND_AUTHORIZE_EVO2_FINAL", "E3_4_E2_8_EVIDENCE_DECISION")
+    e2_8_acceptance = e2_8.get("acceptance", {})
+    _require(e2_8_acceptance.get("catalog_hash") == catalog_hash, "E3_4_E2_8_CATALOG_HASH")
+    _require(e2_8_acceptance.get("catalog_hash") == expected["catalog_hash"], "E3_4_E2_8_CONTRACT_CATALOG_HASH")
+    _require(e2_8_acceptance.get("transport_sha256") == expected["e2_8_transport_sha256"], "E3_4_E2_8_TRANSPORT_SHA256")
+    _require(int(e2_8_acceptance.get("artifact_bytes", -1)) == int(expected["e2_8_transport_bytes"]), "E3_4_E2_8_TRANSPORT_BYTES")
+    _require(e2_8.get("persisted_semantic_identity", {}).get("catalog_entry_count") == expected["entry_count"], "E3_4_E2_8_ENTRY_COUNT")
+    _require(e2_8.get("verification", {}).get("fresh_restore_semantic_identity_exact") is True, "E3_4_E2_8_FRESH_RESTORE_IDENTITY")
+
+    e2_final_raw = e2_final_path.read_bytes()
+    _verify_blob(e2_final_raw, E2_FINAL_VALIDATION_GIT_BLOB, "E3_4_E2_FINAL_EVIDENCE_GIT_BLOB")
+    e2_final = _parse_object(e2_final_raw, "E3_4_E2_FINAL_EVIDENCE_ROOT")
+    _require(e2_final.get("schema") == "distributed_world_simulator.ecology.evo2_checkpoint_validation.v1", "E3_4_E2_FINAL_EVIDENCE_SCHEMA")
+    _require(e2_final.get("checkpoint") == "ECO.EVO2/E2.FINAL", "E3_4_E2_FINAL_EVIDENCE_CHECKPOINT")
+    _require(e2_final.get("status") == "ACCEPTED_EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION", "E3_4_E2_FINAL_EVIDENCE_STATUS")
+    _require(e2_final.get("decision") == "ACCEPT_EVO2_FINAL_AND_CLOSE_EVO2_RESEARCH_ROUTE", "E3_4_E2_FINAL_EVIDENCE_DECISION")
+    e2_final_acceptance = e2_final.get("acceptance", {})
+    _require(e2_final_acceptance.get("parent_e2_8_aggregate") == e2_8_acceptance.get("aggregate_hash"), "E3_4_E2_FINAL_PARENT_E2_8")
+    _require(e2_final_acceptance.get("input_transport_sha256") == e2_8_acceptance.get("transport_sha256"), "E3_4_E2_FINAL_TRANSPORT_LINK")
+    _require(e2_final_acceptance.get("catalog_hash") == catalog_hash, "E3_4_E2_FINAL_CATALOG_HASH")
+    _require(e2_final_acceptance.get("aggregate_hash") == expected["e2_final_aggregate_hash"], "E3_4_E2_FINAL_AGGREGATE")
+    route = e2_final.get("causal_route", {})
+    _require(route.get("direct_catalog_reconstruction_bypass") is False, "E3_4_E2_FINAL_RECONSTRUCTION_BYPASS")
+    _require(route.get("rebake") is False, "E3_4_E2_FINAL_REBAKE")
+    _require(route.get("all_restored_catalog_entries_enter_source_port") is True, "E3_4_E2_FINAL_FULL_SOURCE_PORT")
+
+    anchor = str(expected["historical_eco_anchor"])
+    _require(len(anchor) == 40 and all(ch in "0123456789abcdef" for ch in anchor), "E3_4_HISTORICAL_ECO_ANCHOR_FORMAT")
+    _require(_git_is_ancestor(anchor, str(e2_8_acceptance.get("code_under_test_head", ""))), "E3_4_HISTORICAL_ECO_ANCHOR_E2_8_LINEAGE")
+    _require(_git_is_ancestor(anchor, str(e2_final_acceptance.get("code_under_test_head", ""))), "E3_4_HISTORICAL_ECO_ANCHOR_E2_FINAL_LINEAGE")
+
+    return {
+        "persisted_evo2_transport_sha256": e2_8_acceptance["transport_sha256"],
+        "persisted_evo2_transport_bytes": int(e2_8_acceptance["artifact_bytes"]),
+        "e2_final_aggregate_hash": e2_final_acceptance["aggregate_hash"],
+        "historical_eco_anchor": anchor,
+        "e2_8_validation_git_blob": E2_8_VALIDATION_GIT_BLOB,
+        "e2_final_validation_git_blob": E2_FINAL_VALIDATION_GIT_BLOB,
+    }
+
+
+def _rehash_program(
+    program: dict[str, Any],
+    provenance: dict[str, Any],
+    *,
+    transport_sha256: str | None = None,
+    transport_bytes: int | None = None,
+) -> dict[str, Any]:
     result = copy.deepcopy(program)
+    if transport_sha256 is None:
+        result.get("source_catalog", {}).pop("transport_sha256", None)
+        result.get("source_catalog", {}).pop("transport_bytes", None)
+    else:
+        _require(transport_bytes is not None and transport_bytes > 0, "E3_4_VERIFIED_TRANSPORT_BYTES")
+        result["source_catalog"]["transport_sha256"] = transport_sha256
+        result["source_catalog"]["transport_bytes"] = int(transport_bytes)
     result["provenance"] = provenance
     result["provenance_hash"] = sha256_canonical(provenance)
     result.pop("colonization_program_hash", None)
@@ -214,21 +301,14 @@ def _rehash_program(program: dict[str, Any], provenance: dict[str, Any]) -> dict
 
 
 def _unverified_build(contract: dict[str, Any], decomposition: dict[str, Any], catalog: dict[str, Any]) -> dict[str, Any]:
-    program = _core.build_colonization_program(contract, decomposition, catalog)
-    provenance = {
-        "input_verification": "UNVERIFIED_PARSED_INPUTS_NO_ACCEPTED_INPUT_ATTESTATION",
-        "persisted_evo2_transport_sha256": contract["persisted_evo2_catalog"]["e2_8_transport_sha256"],
-        "e2_final_aggregate_hash": contract["persisted_evo2_catalog"]["e2_final_aggregate_hash"],
-        "historical_eco_anchor": contract["persisted_evo2_catalog"]["historical_eco_anchor"],
-    }
-    return _rehash_program(program, provenance)
+    return _core.build_colonization_program(contract, decomposition, catalog)
 
 
 def _reparse_verified_inputs(
     contract_input: _VerifiedInput,
     decomposition_input: _VerifiedInput,
     catalog_input: _VerifiedInput,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     _require(contract_input.kind == "contract", "E3_4_EXACT_RAW_CONTRACT_REQUIRED")
     _require(decomposition_input.kind == "decomposition", "E3_4_EXACT_RAW_DECOMPOSITION_REQUIRED")
     _require(catalog_input.kind == "catalog", "E3_4_EXACT_RAW_CATALOG_REQUIRED")
@@ -254,6 +334,7 @@ def _reparse_verified_inputs(
     _require(catalog_sha256 == contract["persisted_evo2_catalog"]["semantic_artifact_sha256"], "E3_4_CATALOG_ARTIFACT_SHA256")
     catalog = _parse_object(catalog_raw, "E3_4_CATALOG_ROOT")
     catalog_hash = validate_catalog(catalog, contract)
+    historical = _verify_historical_lineage(contract, catalog_hash)
 
     provenance = {
         "contract_hash": contract["contract_hash"],
@@ -262,20 +343,25 @@ def _reparse_verified_inputs(
         "accepted_e3_3_decomposition_provenance_hash": decomposition["decomposition_provenance_hash"],
         "persisted_evo2_catalog_hash": catalog_hash,
         "persisted_evo2_catalog_semantic_artifact_sha256": catalog_sha256,
-        "persisted_evo2_transport_sha256": contract["persisted_evo2_catalog"]["e2_8_transport_sha256"],
-        "e2_final_aggregate_hash": contract["persisted_evo2_catalog"]["e2_final_aggregate_hash"],
-        "historical_eco_anchor": contract["persisted_evo2_catalog"]["historical_eco_anchor"],
+        "persisted_evo2_transport_sha256": historical["persisted_evo2_transport_sha256"],
+        "e2_final_aggregate_hash": historical["e2_final_aggregate_hash"],
+        "historical_eco_anchor": historical["historical_eco_anchor"],
     }
-    return contract, decomposition, catalog, provenance
+    return contract, decomposition, catalog, provenance, historical
 
 
 def build_colonization_program(contract: dict[str, Any], decomposition: dict[str, Any], catalog: dict[str, Any]) -> dict[str, Any]:
     verified = all(isinstance(value, _VerifiedInput) for value in (contract, decomposition, catalog))
     if not verified:
         return _unverified_build(contract, decomposition, catalog)
-    contract_value, decomposition_value, catalog_value, provenance = _reparse_verified_inputs(contract, decomposition, catalog)
+    contract_value, decomposition_value, catalog_value, provenance, historical = _reparse_verified_inputs(contract, decomposition, catalog)
     program = _core.build_colonization_program(contract_value, decomposition_value, catalog_value)
-    return _rehash_program(program, provenance)
+    return _rehash_program(
+        program,
+        provenance,
+        transport_sha256=historical["persisted_evo2_transport_sha256"],
+        transport_bytes=historical["persisted_evo2_transport_bytes"],
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

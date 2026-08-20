@@ -11,6 +11,8 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 IMPL_PATH = ROOT / "scripts/research/ecology/causal_colonization_program_compiler_v1.py"
 CONTRACT_PATH = ROOT / "config/ecology/eco-evo3-e3-4-causal-colonization-contract.v1.json"
+BINDING_PATH = ROOT / "config/ecology/accepted_inputs/e3_3_accepted_research_ecology_decomposition.binding.v1.json"
+DECOMPOSITION_PATH = ROOT / "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json"
 CATALOG_PATH = ROOT / "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json"
 
 spec = importlib.util.spec_from_file_location("e34_impl", IMPL_PATH)
@@ -75,6 +77,13 @@ def program_fixture(source_base=110_400):
     contract = load(CONTRACT_PATH)
     catalog = load(CATALOG_PATH)
     return contract, catalog, decomposition(contract, source_base)
+
+
+def authoritative_program():
+    contract = impl.load_contract(CONTRACT_PATH)
+    decomposition_value = impl.load_accepted_decomposition(DECOMPOSITION_PATH, BINDING_PATH, contract)
+    catalog = impl.load_full_persisted_catalog(CATALOG_PATH, contract)
+    return impl.build_colonization_program(contract, decomposition_value, catalog)
 
 
 class E34Tests(unittest.TestCase):
@@ -145,16 +154,16 @@ class E34Tests(unittest.TestCase):
         self.assertFalse(out["canonical_binding_resolved"])
         self.assertFalse(out["production_binding_authorized"])
 
-    def test_14_provenance_carries_e2_final(self):
-        c, cat, dec = program_fixture(); out = impl.build_colonization_program(c, dec, cat)
+    def test_14_authoritative_provenance_carries_e2_final(self):
+        out = authoritative_program()
         self.assertEqual(out["provenance"]["e2_final_aggregate_hash"], "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250")
 
-    def test_15_provenance_carries_historical_anchor(self):
-        c, cat, dec = program_fixture(); out = impl.build_colonization_program(c, dec, cat)
+    def test_15_authoritative_provenance_carries_historical_anchor(self):
+        out = authoritative_program()
         self.assertEqual(out["provenance"]["historical_eco_anchor"], "f0e16195f1331f238bbacab2768e5d72ec01d1a3")
 
-    def test_16_provenance_carries_transport_sha(self):
-        c, cat, dec = program_fixture(); out = impl.build_colonization_program(c, dec, cat)
+    def test_16_authoritative_provenance_carries_transport_sha(self):
+        out = authoritative_program()
         self.assertEqual(out["provenance"]["persisted_evo2_transport_sha256"], "b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1")
 
     def test_17_program_hash_valid(self):
@@ -253,8 +262,8 @@ class E34Tests(unittest.TestCase):
         c, cat, dec = program_fixture(); out = impl.build_colonization_program(c, dec, cat); out["summary"]["colonized_patch_count"] += 1
         with self.assertRaises(ValueError): impl.validate_program_integrity(out)
 
-    def test_41_provenance_tamper_rejected(self):
-        c, cat, dec = program_fixture(); out = impl.build_colonization_program(c, dec, cat); out["provenance"]["historical_eco_anchor"] = "0" * 40
+    def test_41_authoritative_provenance_tamper_rejected(self):
+        out = authoritative_program(); out["provenance"]["historical_eco_anchor"] = "0" * 40
         with self.assertRaises(ValueError): impl.validate_program_integrity(out)
 
     def test_42_manifest_species_drop_rejected_after_program_rehash(self):

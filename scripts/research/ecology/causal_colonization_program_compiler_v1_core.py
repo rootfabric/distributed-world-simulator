@@ -15,6 +15,7 @@ STAGE = "COLONIZATION_PROGRAM"
 AUTHORITY = "RESEARCH_DERIVED_NON_AUTHORITATIVE"
 HASH_ALGORITHM = "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"
 PPM = 1_000_000
+UNVERIFIED_INPUT_MARKER = "UNVERIFIED_PARSED_INPUTS_NO_ACCEPTED_INPUT_ATTESTATION"
 
 
 def canonical_bytes(value: Any, *, newline: bool = False) -> bytes:
@@ -228,6 +229,7 @@ def build_colonization_program(
     decomposition: dict[str, Any],
     catalog: dict[str, Any],
 ) -> dict[str, Any]:
+    """Build the scientific result only; parsed inputs never gain accepted provenance here."""
     validate_contract(contract)
     validate_catalog(catalog, contract)
     _require(decomposition.get("authority") == AUTHORITY, "E3_4_BUILD_DECOMPOSITION_AUTHORITY")
@@ -331,17 +333,7 @@ def build_colonization_program(
     colonized_species = sum(1 for item in species_programs if item["status"] == "COLONIZED")
     filtered_species = len(species_programs) - colonized_species
     overall = "COLONIZATION_PRESENT" if colonized_species else "NO_COLONIZATION"
-    provenance = {
-        "contract_hash": contract["contract_hash"],
-        "accepted_e3_3_merge_commit": contract["accepted_e3_3"]["canonical_merge_commit"],
-        "accepted_e3_3_decomposition_hash": contract["accepted_e3_3"]["decomposition_hash"],
-        "accepted_e3_3_decomposition_provenance_hash": contract["accepted_e3_3"]["decomposition_provenance_hash"],
-        "persisted_evo2_catalog_hash": contract["persisted_evo2_catalog"]["catalog_hash"],
-        "persisted_evo2_catalog_semantic_artifact_sha256": contract["persisted_evo2_catalog"]["semantic_artifact_sha256"],
-        "persisted_evo2_transport_sha256": contract["persisted_evo2_catalog"]["e2_8_transport_sha256"],
-        "e2_final_aggregate_hash": contract["persisted_evo2_catalog"]["e2_final_aggregate_hash"],
-        "historical_eco_anchor": contract["persisted_evo2_catalog"]["historical_eco_anchor"],
-    }
+    provenance = {"input_verification": UNVERIFIED_INPUT_MARKER}
     program: dict[str, Any] = {
         "schema": PROGRAM_SCHEMA,
         "version": PROGRAM_VERSION,
@@ -364,8 +356,6 @@ def build_colonization_program(
             "bake_id": catalog["bake_id"],
             "source_run_hash": catalog["source_run_hash"],
             "entry_count": len(entries),
-            "transport_sha256": contract["persisted_evo2_catalog"]["e2_8_transport_sha256"],
-            "transport_bytes": int(contract["persisted_evo2_catalog"]["e2_8_transport_bytes"]),
         },
         "input_species_manifest": manifests,
         "source_port": {
