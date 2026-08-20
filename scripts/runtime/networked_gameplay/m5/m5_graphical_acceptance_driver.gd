@@ -1,6 +1,7 @@
 extends Node
 
 const Support = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_support.gd")
+const Barrier = preload("res://scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd")
 
 const TIMEOUT_MS := 150000
 const INPUT_HOLD_MS := 500
@@ -32,7 +33,11 @@ var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
 var _convergence_prepare_id := ""
+var _prepared_player_checksum := ""
+var _prepared_item_checksum := ""
 var _convergence_prepared := false
+var _convergence_release_id := ""
+var _convergence_release_consumed := false
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -236,27 +241,49 @@ func _process(_delta: float) -> void:
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
 		"WAIT_CONVERGENCE_PEER":
-			# The coordinator owns the final two-phase barrier. Client locks remain
-			# revocable until a concrete checksum pair is prepared, so late
-			# authoritative snapshots can never strand peers on different locks.
+			# A prepared acknowledgement remains revocable until release is actually
+			# consumed. Fresh authoritative checksums are read before any prepared
+			# short-circuit so a superseded generation can never complete.
 			var control := Support.read(_control_file)
 			var prepare: Dictionary = control.get("convergence_prepare", {})
 			var prepare_id := String(prepare.get("id", "")).strip_edges()
 			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
 			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
 			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
-			if _convergence_prepared:
-				if prepare_id != _convergence_prepare_id:
-					_convergence_prepared = false
-					_convergence_prepare_id = ""
-					_convergence_locked = false
-					_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
-					return
-				if release_id == _convergence_prepare_id:
-					_finish(true)
-				return
+			var complete_id := String(control.get("convergence_complete_id", "")).strip_edges()
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
+			if _convergence_release_consumed:
+				# Release consumption is the exact convergence acceptance point. Keep
+				# the client connected until the coordinator observes both releases,
+				# preventing the first graceful leave from invalidating the peer.
+				if prepare_id != _convergence_prepare_id or release_id != _convergence_release_id:
+					_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+					return
+				if complete_id == _convergence_release_id:
+					_finish(true)
+				return
+			if _convergence_prepared:
+				var release_decision := Barrier.evaluate_prepared_release(
+					_convergence_prepare_id,
+					_prepared_player_checksum,
+					_prepared_item_checksum,
+					prepare,
+					release_id,
+					latest_player_checksum,
+					latest_item_checksum
+				)
+				match String(release_decision.get("action", "")):
+					Barrier.CLIENT_REVOKE:
+						_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+						return
+					Barrier.CLIENT_CONSUME_RELEASE:
+						_convergence_release_id = _convergence_prepare_id
+						_convergence_release_consumed = true
+						_write_report("CONVERGENCE_RELEASED", false, _convergence_world, shell)
+						return
+					_:
+						return
 			if (
 				not latest_player_checksum.is_empty()
 				and not latest_item_checksum.is_empty()
@@ -283,7 +310,11 @@ func _process(_delta: float) -> void:
 				and prepare_item_checksum == _item_checksum
 			):
 				_convergence_prepare_id = prepare_id
+				_prepared_player_checksum = prepare_player_checksum
+				_prepared_item_checksum = prepare_item_checksum
 				_convergence_prepared = true
+				_convergence_release_id = ""
+				_convergence_release_consumed = false
 				_write_report("CONVERGENCE_PREPARED", false, _convergence_world, shell)
 
 
@@ -407,6 +438,8 @@ func _verify_reconnect_state(shell) -> void:
 
 
 func _begin_convergence(world: Dictionary, shell) -> void:
+	_clear_convergence_prepare_state()
+	_convergence_locked = false
 	_player_checksum = String(_client.get_snapshot().get("checksum", ""))
 	_item_checksum = String(_client.get_item_graph_snapshot().get("checksum", ""))
 	_convergence_world = world.duplicate(true)
@@ -416,6 +449,29 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
 	_set_stage("WAIT_CONVERGENCE_PEER")
+
+
+func _revoke_convergence_prepare(
+	current_player_checksum: String,
+	current_item_checksum: String,
+	world: Dictionary,
+	shell
+) -> void:
+	_player_checksum = current_player_checksum
+	_item_checksum = current_item_checksum
+	_convergence_world = world.duplicate(true)
+	_convergence_locked = false
+	_clear_convergence_prepare_state()
+	_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
+
+
+func _clear_convergence_prepare_state() -> void:
+	_convergence_prepare_id = ""
+	_prepared_player_checksum = ""
+	_prepared_item_checksum = ""
+	_convergence_prepared = false
+	_convergence_release_id = ""
+	_convergence_release_consumed = false
 
 
 func _open_inventory_through_input(shell) -> void:
@@ -539,7 +595,11 @@ func _write_report(
 		"player_checksum": _player_checksum,
 		"item_checksum": _item_checksum,
 		"convergence_prepare_id": _convergence_prepare_id,
+		"prepared_player_checksum": _prepared_player_checksum,
+		"prepared_item_checksum": _prepared_item_checksum,
 		"convergence_prepared": _convergence_prepared,
+		"convergence_release_id": _convergence_release_id,
+		"convergence_release_consumed": _convergence_release_consumed,
 		"client_runtime": _client.get_report() if _client != null else {},
 		"item_graph": _client.get_item_graph_snapshot() if _client != null else {},
 		"world": world.duplicate(true),
