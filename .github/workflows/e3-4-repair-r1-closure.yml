@@ -25,10 +25,17 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout exact PR revision
+      - name: Checkout exact PR HEAD
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - name: Assert exact PR HEAD checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          echo "exact_head=$(git rev-parse HEAD)"
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
