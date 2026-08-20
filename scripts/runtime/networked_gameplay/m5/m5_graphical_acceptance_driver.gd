@@ -31,6 +31,7 @@ var _player_checksum := ""
 var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
+var _published_convergence_locks: Dictionary = {}
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -236,8 +237,12 @@ func _process(_delta: float) -> void:
 		"WAIT_CONVERGENCE_PEER":
 			# A late authoritative snapshot can arrive after one client has already
 			# locked an older checksum. Keep the convergence lock revocable until
-			# both clients have locked the same latest canonical state.
-			var finish_requested := bool(Support.read(_control_file).get("finish", false))
+			# the parent commits an exact pair that both clients actually published.
+			var control := Support.read(_control_file)
+			var finish_requested := bool(control.get("finish", false))
+			if finish_requested and _restore_committed_convergence_lock(control):
+				_finish(true)
+				return
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
 			if (
@@ -260,6 +265,7 @@ func _process(_delta: float) -> void:
 				if String(peer_ready.get("item_checksum", "")) != _item_checksum:
 					return
 				_convergence_locked = true
+				_record_convergence_lock()
 				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
 			var peer_convergence := Support.read(_peer_result_file)
 			if String(peer_convergence.get("state", "")) not in ["CONVERGENCE_LOCKED", "COMPLETE"]:
@@ -358,7 +364,6 @@ func _ui_transfer(shell, item_id: String, target_container_id: String, target_sl
 	_wait_revision(shell, before_revision + 1, 12000)
 	return result
 
-
 func _wait_replica_after_command(_shell) -> void:
 	# UI helpers wait for the authoritative replica revision before returning.
 	pass
@@ -402,6 +407,35 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
 	_set_stage("WAIT_CONVERGENCE_PEER")
+
+
+func _convergence_lock_key(player_checksum: String, item_checksum: String) -> String:
+	return "%s:%s" % [player_checksum, item_checksum]
+
+
+func _record_convergence_lock() -> void:
+	var key := _convergence_lock_key(_player_checksum, _item_checksum)
+	_published_convergence_locks[key] = {
+		"player_checksum": _player_checksum,
+		"item_checksum": _item_checksum,
+		"world": _convergence_world.duplicate(true),
+	}
+
+
+func _restore_committed_convergence_lock(control: Dictionary) -> bool:
+	var player_checksum := String(control.get("finish_player_checksum", ""))
+	var item_checksum := String(control.get("finish_item_checksum", ""))
+	if player_checksum.is_empty() or item_checksum.is_empty():
+		return false
+	var key := _convergence_lock_key(player_checksum, item_checksum)
+	if not _published_convergence_locks.has(key):
+		return false
+	var committed: Dictionary = _published_convergence_locks.get(key, {})
+	_player_checksum = String(committed.get("player_checksum", ""))
+	_item_checksum = String(committed.get("item_checksum", ""))
+	_convergence_world = Dictionary(committed.get("world", {})).duplicate(true)
+	_convergence_locked = true
+	return not _player_checksum.is_empty() and not _item_checksum.is_empty()
 
 
 func _open_inventory_through_input(shell) -> void:

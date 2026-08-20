@@ -7,6 +7,7 @@ const POLL_MS := 75
 const SERVER_TIMEOUT_MS := 90000
 const CLIENT_TIMEOUT_MS := 180000
 const EXIT_TIMEOUT_MS := 20000
+const FINISH_COMMIT_DELAY_MS := 250
 
 var failures: Array[String] = []
 var assertions := 0
@@ -35,6 +36,8 @@ func _init() -> void:
 		"go_contention": false,
 		"disconnect_a": false,
 		"finish": false,
+		"finish_player_checksum": "",
+		"finish_item_checksum": "",
 		"reconnect_peer_result_file": "",
 	})
 	var profiles := [
@@ -123,7 +126,17 @@ func _init() -> void:
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
 	_assert(bool(convergence_pair.get("success", false)), "A and B reached identical player and Item Graph checksums")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
-	_write_control(control_path, {"finish": true})
+	var finish_player_checksum := String(a2_ready.get("player_checksum", ""))
+	var finish_item_checksum := String(a2_ready.get("item_checksum", ""))
+	# Preserve a scheduler window after the parent observed the pair. A late
+	# authoritative snapshot may revoke the displayed lock during this window;
+	# the exact committed pair must still remain finishable.
+	OS.delay_msec(FINISH_COMMIT_DELAY_MS)
+	_write_control(control_path, {
+		"finish": true,
+		"finish_player_checksum": finish_player_checksum,
+		"finish_item_checksum": finish_item_checksum,
+	})
 	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	_assert(bool(a2_final.get("passed", false)), "A reconnect graphical acceptance completed")
