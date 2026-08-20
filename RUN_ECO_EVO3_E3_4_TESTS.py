@@ -25,6 +25,7 @@ CORE = ROOT / "scripts/research/ecology/causal_colonization_program_compiler_v1_
 TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py"
 REPAIR_R1_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r1.py"
 REPAIR_R2_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r2.py"
+REPAIR_R3_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r3.py"
 WORKFLOW = ROOT / ".github/workflows/e3-4-repair-r1-closure.yml"
 
 EXPECTED_BLOBS = {
@@ -35,12 +36,13 @@ EXPECTED_BLOBS = {
     "config/ecology/eco-evo3-e3-4-causal-colonization-program.schema.v1.json": "95991eb62d90690b351d7522805ada2695d82898",
     "validation/ecology/eco-evo2-e2-8-catalog-persistence-validation.json": "47d55332591ef59fcf324701fece19df10781d44",
     "validation/ecology/eco-evo2-final-unseen-world-validation.json": "bd7999a7bbaba4048844333f509994b2668ed227",
-    "scripts/research/ecology/causal_colonization_program_compiler_v1.py": "5ec0cd05a04c0d02677875290306ee1fc51f07b2",
+    "scripts/research/ecology/causal_colonization_program_compiler_v1.py": "91f31dd7a291ef1f88c3af1bf8456ebd0dad4c08",
     "scripts/research/ecology/causal_colonization_program_compiler_v1_core.py": "1472f0b1b8dbd7f0311404680f8ba6e40c4aa96c",
     "tests/research/ecology/test_eco_evo3_e3_4_causal_colonization.py": "946674326ac60557023b19ff75fea5d9dac4afec",
     "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r1.py": "0baf87ac438a742ec8d1b7ca4fd6739fd8a2642b",
     "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r2.py": "65253d0f1b2b8c2f9e4c862c06d05b8de968b4bd",
-    ".github/workflows/e3-4-repair-r1-closure.yml": "0b2a0322db2bf4770c07e4db9fbebc3a012a791f",
+    "tests/research/ecology/test_eco_evo3_e3_4_authority_repair_r3.py": "3ecea6de15814f72311f8d807724c14a00e28c4c",
+    ".github/workflows/e3-4-repair-r1-closure.yml": "aa8ef86ad6b39d07ff59768a63feca1db6185f80",
 }
 EXPECTED_CONTRACT_HASH = "531172bc2ebdd4d13977d50afe25616a34bb0879fb8efa34d745ea3048b9d3d3"
 EXPECTED_DECOMPOSITION_SHA256 = "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a"
@@ -60,7 +62,7 @@ EXPECTED_SUMMARY = {
     "total_species_patch_establishments": 22,
     "no_colonization": False,
 }
-EXPECTED_TESTS = 68
+EXPECTED_TESTS = 78
 
 
 def git_blob(path: pathlib.Path) -> str:
@@ -105,6 +107,7 @@ def main() -> int:
             str(TEST),
             str(REPAIR_R1_TEST),
             str(REPAIR_R2_TEST),
+            str(REPAIR_R3_TEST),
         ],
         cwd=ROOT,
         stdout=subprocess.PIPE,
@@ -162,10 +165,12 @@ def main() -> int:
     tests = load_module(TEST, "e34_acceptance_tests")
     repair_r1_tests = load_module(REPAIR_R1_TEST, "e34_repair_r1_tests")
     repair_r2_tests = load_module(REPAIR_R2_TEST, "e34_repair_r2_tests")
+    repair_r3_tests = load_module(REPAIR_R3_TEST, "e34_repair_r3_tests")
     suite = unittest.TestSuite([
         unittest.defaultTestLoader.loadTestsFromModule(tests),
         unittest.defaultTestLoader.loadTestsFromModule(repair_r1_tests),
         unittest.defaultTestLoader.loadTestsFromModule(repair_r2_tests),
+        unittest.defaultTestLoader.loadTestsFromModule(repair_r3_tests),
     ])
     stream = io.StringIO()
     result = unittest.TextTestRunner(stream=stream, verbosity=0).run(suite)
@@ -173,7 +178,7 @@ def main() -> int:
         sys.stderr.write(stream.getvalue())
         return 28
 
-    with tempfile.TemporaryDirectory(prefix="eco-e34-r2-") as td:
+    with tempfile.TemporaryDirectory(prefix="eco-e34-r3-") as td:
         first = pathlib.Path(td) / "a.json"
         second = pathlib.Path(td) / "b.json"
         base = [
@@ -205,17 +210,20 @@ def main() -> int:
             return 33
 
     print("ECO.EVO3 E3.4 Causal Colonization Program Compiler: PASS")
-    print("semantic_and_repair_tests=68/68")
+    print("semantic_and_repair_tests=78/78")
     print("repair_r1_authority_regression_tests=10/10")
     print("repair_r2_direct_core_regression_tests=10/10")
-    print("authority_regression_tests=20/20")
+    print("repair_r3_helper_bypass_regression_tests=10/10")
+    print("authority_regression_tests=30/30")
+    print("rehash_program_authority_surface=ABSENT")
+    print("replacement_program_provenance_injection_helpers=ABSENT")
     print("direct_core_authoritative_attestation=ABSENT")
     print("wrapper_core_handle_authoritative_attestation=ABSENT")
     print("historical_lineage_evidence=2/2")
     print("historical_lineage_contract_is_constraint_only=true")
     print("negative_matrix=PASS")
     print("published_schema_validation=PASS")
-    print("closure_blobs=13/13")
+    print("closure_blobs=14/14")
     print("scientific_core_authority=NON_AUTHORITATIVE")
     print("scientific_core_blob=1472f0b1b8dbd7f0311404680f8ba6e40c4aa96c")
     print("full_persisted_catalog_entries=2/2")

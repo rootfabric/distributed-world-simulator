@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import copy
 import hashlib
 import importlib.util
 import json
@@ -278,28 +277,6 @@ def _verify_historical_lineage(
     }
 
 
-def _rehash_program(
-    program: dict[str, Any],
-    provenance: dict[str, Any],
-    *,
-    transport_sha256: str | None = None,
-    transport_bytes: int | None = None,
-) -> dict[str, Any]:
-    result = copy.deepcopy(program)
-    if transport_sha256 is None:
-        result.get("source_catalog", {}).pop("transport_sha256", None)
-        result.get("source_catalog", {}).pop("transport_bytes", None)
-    else:
-        _require(transport_bytes is not None and transport_bytes > 0, "E3_4_VERIFIED_TRANSPORT_BYTES")
-        result["source_catalog"]["transport_sha256"] = transport_sha256
-        result["source_catalog"]["transport_bytes"] = int(transport_bytes)
-    result["provenance"] = provenance
-    result["provenance_hash"] = sha256_canonical(provenance)
-    result.pop("colonization_program_hash", None)
-    result["colonization_program_hash"] = sha256_canonical(result)
-    return result
-
-
 def _unverified_build(contract: dict[str, Any], decomposition: dict[str, Any], catalog: dict[str, Any]) -> dict[str, Any]:
     return _core.build_colonization_program(contract, decomposition, catalog)
 
@@ -354,14 +331,24 @@ def build_colonization_program(contract: dict[str, Any], decomposition: dict[str
     verified = all(isinstance(value, _VerifiedInput) for value in (contract, decomposition, catalog))
     if not verified:
         return _unverified_build(contract, decomposition, catalog)
-    contract_value, decomposition_value, catalog_value, provenance, historical = _reparse_verified_inputs(contract, decomposition, catalog)
-    program = _core.build_colonization_program(contract_value, decomposition_value, catalog_value)
-    return _rehash_program(
-        program,
-        provenance,
-        transport_sha256=historical["persisted_evo2_transport_sha256"],
-        transport_bytes=historical["persisted_evo2_transport_bytes"],
+
+    contract_value, decomposition_value, catalog_value, provenance, historical = _reparse_verified_inputs(
+        contract,
+        decomposition,
+        catalog,
     )
+    program = _core.build_colonization_program(contract_value, decomposition_value, catalog_value)
+
+    transport_sha256 = historical["persisted_evo2_transport_sha256"]
+    transport_bytes = int(historical["persisted_evo2_transport_bytes"])
+    _require(transport_bytes > 0, "E3_4_VERIFIED_TRANSPORT_BYTES")
+    program["source_catalog"]["transport_sha256"] = transport_sha256
+    program["source_catalog"]["transport_bytes"] = transport_bytes
+    program["provenance"] = provenance
+    program["provenance_hash"] = sha256_canonical(provenance)
+    program.pop("colonization_program_hash", None)
+    program["colonization_program_hash"] = sha256_canonical(program)
+    return program
 
 
 def main(argv: list[str] | None = None) -> int:
