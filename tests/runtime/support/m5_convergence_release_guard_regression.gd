@@ -54,6 +54,9 @@ func _init() -> void:
 	_assert(String(stale_item_release.get("current_item_checksum", "")) == ITEM_G2, "changed current Item Graph checksum is exposed by the guard")
 
 	var a_revoked := _ready_report(PLAYER_G2, ITEM_G1)
+	_assert(not bool(a_revoked.get("convergence_prepared", true)), "revoked client no longer advertises prepared acknowledgement for G1")
+	_assert(String(a_revoked.get("convergence_prepare_id", "stale")) == "", "revoked client clears stale prepared generation G1")
+	_assert(String(a_revoked.get("player_checksum", "")) == PLAYER_G2, "revoked client publishes the changed current player checksum")
 	var stale_coordinator := Barrier.evaluate_coordinator_generation(
 		g1, PLAYER_G1, ITEM_G1, true, a_revoked, b_g1
 	)
