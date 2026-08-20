@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-18-R3",
+  "policy_revision": "V0-P-2026-08-20-R4",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
@@ -120,8 +120,10 @@
       "short_name": "POST_P6_GATE",
       "state": "MANDATORY_DECISION_AFTER_P6",
       "goal": "Do not auto-dispatch terrain work. Decide and durably record whether V0-SM1 seamless product integration is activated now or explicitly deferred.",
-      "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
+      "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_CONVERGENCE_R2_RU.md",
+      "mandatory_legacy_context": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
       "mandatory_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
+      "machine_convergence_contract": "config/control/harness/v0-post-p6-seamless-convergence.v1.json",
       "allowed_decisions": ["ACTIVATE_V0_SM1", "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"],
       "next_if_activated": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "next_if_deferred": "V0_P7_BOUNDED_TERRAIN_MUTATION"
@@ -130,14 +132,19 @@
       "id": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "short_name": "SM1",
       "state": "FUTURE_CONTROL_ACTIVATION",
-      "goal": "Port proven SM0 authority-handoff semantics and MRPF multi-route projection semantics into the then-current accepted V0/P6 product baseline.",
-      "donors_are_not_product_bases": ["SM0", "MRPF"],
+      "goal": "Converge the then-current accepted V0/P6 product baseline with accepted Seamless R2 authority semantics, frozen SM0 scenario evidence, MRPF projection semantics, and the current NX production network foundation.",
+      "production_base": "THEN_CURRENT_ACCEPTED_P6_MAIN_DECLARED_PRODUCT_BASELINE",
+      "donors_are_not_product_bases": ["SEAMLESS_R2_INCUBATION", "SM0", "MRPF"],
+      "production_network_foundation_owner": "NX_OR_ACCEPTED_SUCCESSOR",
       "hard_invariants": [
         "EXACTLY_ONE_ACTIVE_AUTHORITY",
         "STABLE_PLAYER_AND_ENTITY_IDENTITY",
         "MONOTONIC_AUTHORITY_EPOCH",
+        "STALE_OLD_AUTHORITY_FAILS_CLOSED",
+        "NO_SECOND_OWNERSHIP_ORACLE",
         "NO_SECOND_ITEM_GRAPH",
         "PROJECTION_IS_DERIVED_NOT_CANONICAL",
+        "NO_PRIVATE_V0_NETWORK_FOUNDATION",
         "NO_NORMAL_CROSSING_RECONNECT_OR_RESPAWN"
       ],
       "next": "V0_P7_BOUNDED_TERRAIN_MUTATION"

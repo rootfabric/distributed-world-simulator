@@ -1,0 +1,189 @@
+{
+  "schema": "distributed_world_simulator.v0_post_p6_seamless_convergence.v1",
+  "revision": "V0-SM1-CONVERGENCE-2026-08-20-R1",
+  "canonical_owner": "main",
+  "status": "FUTURE_ACTIVATION_PLAN_NOT_ELIGIBLE",
+  "product_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "activation_gate": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+  "purpose": "Normalize the future P6-to-SM1 convergence around Seamless R2 semantics, current NX network ownership, MRPF projection donors, frozen SM0 evidence, and the accepted P6 product baseline without making any research lineage a production base.",
+  "control_effect": {
+    "production_sm1_activated": false,
+    "p5_state_changed": false,
+    "p6_state_changed": false,
+    "runtime_mutation_authorized": false,
+    "network_owner_changed": false,
+    "canonical_gameplay_owner_changed": false
+  },
+  "documents": {
+    "normative_plan": "docs/plans/V0_POST_P6_SEAMLESS_CONVERGENCE_R2_RU.md",
+    "legacy_scenario_context": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
+    "projection_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
+    "seamless_r2_current_pointer": "docs/architecture/SEAMLESS_WORLD_CURRENT_RU.md"
+  },
+  "convergence_roles": {
+    "V0_P6": {
+      "role": "PRODUCTION_EXECUTION_BASE",
+      "rule": "Use the exact accepted P6 product lineage declared by then-current main-owned control."
+    },
+    "SEAMLESS_R2_INCUBATION": {
+      "role": "SEMANTIC_AUTHORITY_DONOR",
+      "provides": [
+        "OWNERSHIP_DIRECTORY_CONTRACTS",
+        "AUTHORITY_INCARNATION_AND_FENCING",
+        "AUTHORITY_DOMAIN_TRANSFER",
+        "AUTHORITY_BINDING_AND_DOMAIN_CLOSURE",
+        "PLAYER_CARRYING_DOMAIN",
+        "DOMAIN_MUTATION_BARRIER",
+        "INTERACTION_ISLAND_SEMANTICS",
+        "GLOBAL_ONE_WRITER_ORACLES"
+      ],
+      "production_base": false
+    },
+    "SM0": {
+      "role": "HISTORICAL_SCENARIO_EVIDENCE_DONOR",
+      "provides": [
+        "A_B_HANDOFF_SCENARIOS",
+        "STABLE_IDENTITY_EVIDENCE",
+        "REFERENCE_FRAME_CONTINUITY",
+        "FOREIGN_ITEM_BOUNDARY_EVIDENCE",
+        "MULTI_AUTHORITY_PRESENTATION_EVIDENCE",
+        "FAULT_AND_SOAK_PATTERNS"
+      ],
+      "production_base": false
+    },
+    "NX": {
+      "role": "PRODUCTION_NETWORK_FOUNDATION_OWNER",
+      "owns_or_controls": [
+        "PROTOCOL_OWNERSHIP",
+        "CONNECTION_AND_SESSION_TRANSPORT",
+        "INPUT_SEQUENCING",
+        "PREDICTION_AND_RECONCILIATION",
+        "NETWORK_AUTHORITY_CONTRACTS",
+        "TRANSPORT_HEALTH_AND_BACKPRESSURE"
+      ],
+      "private_v0_replacement_forbidden": true
+    },
+    "MRPF": {
+      "role": "PROJECTION_TOPOLOGY_DONOR",
+      "provides": [
+        "GENERIC_N_ROUTE_PROJECTION",
+        "HIERARCHICAL_MACRO_DETAIL_COMPOSITION",
+        "PROJECTION_MANIFEST_AND_GRANT",
+        "MULTI_SCALE_VISIBILITY_AND_LOD",
+        "PROJECTION_SOURCE_FENCING",
+        "CONNECTION_BUDGET_TOPOLOGY"
+      ],
+      "production_base": false,
+      "blanket_sm1_blocker": false
+    },
+    "EDGE_GATEWAY": {
+      "role": "NON_AUTHORITATIVE_COMMAND_SESSION_ROUTER",
+      "ownership_authority": false,
+      "canonical_gameplay_owner": false,
+      "protocol_foundation_changes_require": "NX_OR_MAIN_ARCHITECTURE"
+    }
+  },
+  "foundation_partition": {
+    "ownership_and_migration": "SEAMLESS_R2_TO_PRODUCTION_SM1",
+    "canonical_gameplay_state": "ACCEPTED_V0_P6_OWNERS",
+    "transport_prediction_reconciliation": "NX_OR_ACCEPTED_SUCCESSOR",
+    "presentation_projection": "MRPF_DERIVED_READ_ONLY_MODEL",
+    "command_session_routing": "NON_AUTHORITATIVE_EDGE_GATEWAY"
+  },
+  "transport_topology_decision": {
+    "model": "HYBRID_GATEWAY_COMMAND_SESSION_PLUS_OPTIONAL_DIRECT_PROJECTION",
+    "canonical_command_session_plane": "CLIENT_TO_STABLE_EDGE_GATEWAY",
+    "authority_route_roles": [
+      "ACTIVE",
+      "WARM",
+      "DRAIN",
+      "DEGRADED"
+    ],
+    "projection_data_plane": "DIRECT_SOURCE_TO_CLIENT_ALLOWED_WHEN_AUTHORIZED",
+    "projection_is_read_only": true,
+    "projection_route_grants_mutation_authority": false,
+    "active_authority_must_relay_all_view_traffic": false,
+    "normal_handoff_requires_new_player_identity": false,
+    "normal_handoff_requires_respawn": false
+  },
+  "pre_p6_priority": [
+    "CLOSE_I2_AT_REVIEWED_I2_6_BOUNDARY_UNLESS_FRESH_REVIEW_FINDS_A_CONCRETE_BLOCKER",
+    "I3_GENERIC_AUTHORITY_DOMAIN_TRANSFER",
+    "I4_PLAYER_CARRYING_DOMAIN",
+    "START_AND_MAINTAIN_I8_PRODUCTION_PORT_MAP_EARLY",
+    "CONTINUE_BOUNDED_MRPF_PROJECTION_DONOR_WORK",
+    "COMPLETE_NX_SM1_OWNERSHIP_AUDIT_BEFORE_POST_P6_ACTIVATION"
+  ],
+  "port_classifications": [
+    "PORT_AS_IS",
+    "PORT_WITH_ADAPTER",
+    "REIMPLEMENT_FROM_CONTRACT",
+    "KEEP_RESEARCH_ONLY",
+    "DISCARD"
+  ],
+  "post_p6_required_exact_inputs": [
+    "EXACT_CANONICAL_MAIN",
+    "EXACT_ACCEPTED_P6_PRODUCT_HEAD_AND_MAIN_DECLARED_SUCCESSOR_BASE",
+    "EXACT_ACCEPTED_SEAMLESS_R2_INCUBATION_DONOR_BOUNDARY",
+    "EXACT_FROZEN_SM0_EVIDENCE_DONOR_BOUNDARY",
+    "EXACT_ACCEPTED_OR_USABLE_MRPF_DONOR_BOUNDARY_IF_AVAILABLE",
+    "EXACT_CURRENT_NX_PRODUCTION_NETWORK_FOUNDATION_BOUNDARY"
+  ],
+  "production_branch_rule": {
+    "recommended_branch": "feature/v0-sm1-seamless-product-integration",
+    "base": "THEN_CURRENT_ACCEPTED_P6_MAIN_DECLARED_V0_PRODUCT_BASELINE",
+    "research_lineage_is_production_base": false,
+    "donor_sha_is_provenance_not_ancestry_requirement": true
+  },
+  "production_milestone_direction": [
+    "SM1_H0_PRODUCTION_SEAMLESS_CONTRACTS",
+    "SM1_H1_DURABLE_OWNERSHIP_DIRECTORY_INTEGRATION",
+    "SM1_H2_GENERIC_AUTHORITY_DOMAIN_TRANSFER",
+    "SM1_H2A_AUTHORITY_BINDING_AND_DOMAIN_CLOSURE",
+    "SM1_H2B_PLAYER_CARRYING_DOMAIN",
+    "SM1_H3_SINGLE_EDGE_GATEWAY_TRANSPARENCY",
+    "SM1_H4_PRIMARY_OBSERVER_WARM_ROUTING",
+    "SM1_H5_GATEWAY_MEDIATED_PLAYER_DOMAIN_HANDOFF",
+    "SM1_H6_MULTI_REGION_GATEWAY_SELECTION",
+    "SM1_H7_GATEWAY_REHOME_FAILURE",
+    "SM1_H8_PROJECTION_AOI_INTEGRATION",
+    "SM1_H9_CROSS_AUTHORITY_OPERATION_FOUNDATION",
+    "SM1_H10_INTERACTION_ISLAND_RUNTIME",
+    "SM1_H11_STATIC_N_AUTHORITY_WORLD",
+    "SM1_H12_INTEGRATED_STATIC_SEAMLESS_ACCEPTANCE"
+  ],
+  "hard_invariants": [
+    "EXACTLY_ONE_CANONICAL_WRITER",
+    "STABLE_LOGICAL_PLAYER_ID",
+    "STABLE_PLAYER_ENTITY_ID",
+    "STALE_OLD_AUTHORITY_FAILS_CLOSED",
+    "NO_SECOND_OWNERSHIP_ORACLE",
+    "NO_SECOND_GAMEPLAY_TRUTH",
+    "NO_SECOND_ITEM_GRAPH",
+    "NO_SECOND_CONSTRUCTION_TRUTH",
+    "NO_SECOND_PERSISTENCE_OWNER",
+    "NO_PRIVATE_V0_NETWORK_FOUNDATION",
+    "PROJECTION_IS_DERIVED_NOT_CANONICAL",
+    "PROJECTION_CANNOT_GRANT_MUTATION_AUTHORITY",
+    "NO_NORMAL_CROSSING_RESPAWN_OR_IDENTITY_RESET"
+  ],
+  "mrpf_policy": {
+    "preferred_before_sm1": "BOUNDED_ACCEPTED_DONOR_EVIDENCE",
+    "full_mrpf_completion_is_blanket_prerequisite": false,
+    "if_missing": "SM1_DESIGN_BRIEF_MUST_INCLUDE_THE_REQUIRED_BOUNDED_PROJECTION_CONTRACTS_TESTS_OR_MAIN_HUMAN_EXPLICITLY_DEFERS_THAT_SCOPE"
+  },
+  "fail_closed_network_rule": {
+    "if_sm1_requires_new_protocol_or_network_foundation_owner": "V0_BLOCKED_REQUIRES_NX_OR_MAIN_ARCHITECTURE",
+    "private_v0_implementation": false
+  },
+  "forbidden": [
+    "ACTIVATE_PRODUCTION_SM1_BEFORE_ACCEPTED_P6_AND_POST_P6_DECISION",
+    "AUTO_DISPATCH_P7_BEFORE_POST_P6_SEAMLESS_DECISION",
+    "WHOLESALE_MERGE_SM0_INTO_P6",
+    "WHOLESALE_MERGE_SEAMLESS_RESEARCH_LINEAGE_INTO_P6",
+    "WHOLESALE_MERGE_MRPF_INTO_P6",
+    "PROMOTE_RESEARCH_SYNTHETIC_OWNERS_TO_PRODUCTION_TRUTH",
+    "CREATE_PRIVATE_V0_NETWORK_FOUNDATION",
+    "START_DYNAMIC_SPLIT_MERGE_BEFORE_STATIC_SM1_ACCEPTANCE"
+  ]
+}

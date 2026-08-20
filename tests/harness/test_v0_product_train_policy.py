@@ -32,6 +32,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.policy = _load(HARNESS / "v0-product-train-policy.v1.json")
+        cls.seamless = _load(HARNESS / "v0-post-p6-seamless-convergence.v1.json")
         cls.harness = _load(HARNESS / "harness-policy.v1.json")
         cls.scheduler = _load(HARNESS / "scheduler-policy.v1.json")
         cls.goals = _load(HARNESS / "project-goals.v1.json")
@@ -146,6 +147,10 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         p6 = self.policy["checkpoint_sequence"][2]
         self.assertEqual(p6["state"], "PLANNED_NOT_ELIGIBLE")
         self.assertIn("V0_P5_CHECKPOINT_ACCEPTED", p6["activation_requires"])
+        self.assertEqual(self.seamless["status"], "FUTURE_ACTIVATION_PLAN_NOT_ELIGIBLE")
+        self.assertFalse(self.seamless["control_effect"]["production_sm1_activated"])
+        self.assertFalse(self.seamless["control_effect"]["p6_state_changed"])
+        self.assertFalse(self.seamless["control_effect"]["runtime_mutation_authorized"])
 
     def test_product_sequence_and_research_isolation_remain_unchanged(self) -> None:
         ids = [item["id"] for item in self.policy["checkpoint_sequence"]]
@@ -164,6 +169,76 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertIn("ECO", self.policy["research_isolation"]["explicitly_non_blocking_programs_for_current_p_train"])
         self.assertTrue(self.scheduler["research_isolation"]["non_blocking_by_default"])
+
+    def test_post_p6_gate_routes_to_r2_convergence_contract(self) -> None:
+        gate = self.policy["checkpoint_sequence"][3]
+        self.assertEqual(gate["id"], "V0_POST_P6_SEAMLESS_INSERTION_GATE")
+        self.assertEqual(gate["mandatory_plan"], "docs/plans/V0_POST_P6_SEAMLESS_CONVERGENCE_R2_RU.md")
+        self.assertEqual(gate["mandatory_legacy_context"], "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md")
+        self.assertEqual(gate["mandatory_companion"], "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md")
+        self.assertEqual(
+            gate["machine_convergence_contract"],
+            "config/control/harness/v0-post-p6-seamless-convergence.v1.json",
+        )
+        self.assertEqual(
+            gate["allowed_decisions"],
+            ["ACTIVATE_V0_SM1", "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"],
+        )
+
+    def test_seamless_convergence_roles_and_topology_are_explicit(self) -> None:
+        roles = self.seamless["convergence_roles"]
+        self.assertEqual(roles["V0_P6"]["role"], "PRODUCTION_EXECUTION_BASE")
+        self.assertEqual(roles["SEAMLESS_R2_INCUBATION"]["role"], "SEMANTIC_AUTHORITY_DONOR")
+        self.assertEqual(roles["SM0"]["role"], "HISTORICAL_SCENARIO_EVIDENCE_DONOR")
+        self.assertEqual(roles["NX"]["role"], "PRODUCTION_NETWORK_FOUNDATION_OWNER")
+        self.assertEqual(roles["MRPF"]["role"], "PROJECTION_TOPOLOGY_DONOR")
+        self.assertEqual(roles["EDGE_GATEWAY"]["role"], "NON_AUTHORITATIVE_COMMAND_SESSION_ROUTER")
+        self.assertFalse(roles["EDGE_GATEWAY"]["ownership_authority"])
+        topology = self.seamless["transport_topology_decision"]
+        self.assertEqual(topology["model"], "HYBRID_GATEWAY_COMMAND_SESSION_PLUS_OPTIONAL_DIRECT_PROJECTION")
+        self.assertEqual(topology["canonical_command_session_plane"], "CLIENT_TO_STABLE_EDGE_GATEWAY")
+        self.assertEqual(topology["projection_data_plane"], "DIRECT_SOURCE_TO_CLIENT_ALLOWED_WHEN_AUTHORIZED")
+        self.assertTrue(topology["projection_is_read_only"])
+        self.assertFalse(topology["projection_route_grants_mutation_authority"])
+        self.assertFalse(topology["active_authority_must_relay_all_view_traffic"])
+
+    def test_pre_p6_priority_moves_from_i2_to_domain_and_player_closure(self) -> None:
+        self.assertEqual(
+            self.seamless["pre_p6_priority"][:4],
+            [
+                "CLOSE_I2_AT_REVIEWED_I2_6_BOUNDARY_UNLESS_FRESH_REVIEW_FINDS_A_CONCRETE_BLOCKER",
+                "I3_GENERIC_AUTHORITY_DOMAIN_TRANSFER",
+                "I4_PLAYER_CARRYING_DOMAIN",
+                "START_AND_MAINTAIN_I8_PRODUCTION_PORT_MAP_EARLY",
+            ],
+        )
+        self.assertIn("COMPLETE_NX_SM1_OWNERSHIP_AUDIT_BEFORE_POST_P6_ACTIVATION", self.seamless["pre_p6_priority"])
+        self.assertFalse(self.seamless["mrpf_policy"]["full_mrpf_completion_is_blanket_prerequisite"])
+
+    def test_sm1_production_base_and_exact_activation_inputs_are_fail_closed(self) -> None:
+        sm1 = self.policy["checkpoint_sequence"][4]
+        self.assertEqual(sm1["production_base"], "THEN_CURRENT_ACCEPTED_P6_MAIN_DECLARED_PRODUCT_BASELINE")
+        self.assertEqual(sm1["production_network_foundation_owner"], "NX_OR_ACCEPTED_SUCCESSOR")
+        self.assertEqual(
+            set(sm1["donors_are_not_product_bases"]),
+            {"SEAMLESS_R2_INCUBATION", "SM0", "MRPF"},
+        )
+        required = set(self.seamless["post_p6_required_exact_inputs"])
+        self.assertIn("EXACT_ACCEPTED_P6_PRODUCT_HEAD_AND_MAIN_DECLARED_SUCCESSOR_BASE", required)
+        self.assertIn("EXACT_ACCEPTED_SEAMLESS_R2_INCUBATION_DONOR_BOUNDARY", required)
+        self.assertIn("EXACT_FROZEN_SM0_EVIDENCE_DONOR_BOUNDARY", required)
+        self.assertIn("EXACT_CURRENT_NX_PRODUCTION_NETWORK_FOUNDATION_BOUNDARY", required)
+        self.assertEqual(
+            self.seamless["production_branch_rule"]["base"],
+            "THEN_CURRENT_ACCEPTED_P6_MAIN_DECLARED_V0_PRODUCT_BASELINE",
+        )
+        self.assertFalse(self.seamless["production_branch_rule"]["research_lineage_is_production_base"])
+        self.assertTrue(self.seamless["production_branch_rule"]["donor_sha_is_provenance_not_ancestry_requirement"])
+        self.assertEqual(
+            self.seamless["fail_closed_network_rule"]["if_sm1_requires_new_protocol_or_network_foundation_owner"],
+            "V0_BLOCKED_REQUIRES_NX_OR_MAIN_ARCHITECTURE",
+        )
+        self.assertFalse(self.seamless["fail_closed_network_rule"]["private_v0_implementation"])
 
     def test_project_goal_graph_still_exposes_product_order(self) -> None:
         train = next(item for item in self.goals["current_goal_graph"] if item["id"] == "V0_PRODUCT_TRAIN")
