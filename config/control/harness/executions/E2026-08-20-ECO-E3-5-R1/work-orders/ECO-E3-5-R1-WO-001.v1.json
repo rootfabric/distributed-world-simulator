@@ -1,1 +1,156 @@
-{"schema":"distributed_world_simulator.work_order.v1","work_order_id":"ECO-E3-5-R1-WO-001","project_epoch":"E2026-08-20-ECO-E3-5-R1","program":"ECO.EVO3","goal_checkpoint":"ECO_EVO3_E3_5_MULTI_SCALE_POPULATION_WORKSET_COMPILER","mission":{"mission_id":"ECO-EVO3-E3-5-MISSION-001","objective":"Compile the exact accepted E3.4 causal colonization program into deterministic multi-scale aggregate population worksets without creating individual-entity, canonical spatial, persistence, network, or production authority truth.","parent_mission_id":null,"completion_condition":"Exact candidate is frozen, deterministic and fail-closed; all HIGH-risk predicates, evidence map, post-build critique, fresh Reviewer and independent Verifier complete; checkpoint is proposed but not self-accepted.","session_scope":"CHECKPOINT","auto_continue_across_role_boundaries":false},"state":"DISPATCHED","work_order_type":"IMPLEMENTATION","base_sha":"872f2d993cc002b72529ea7f2a3274d0d71245b0","branch":"feature/eco-evo3-e3-5-population-workset-compiler","scope":"Implement E3.5 as a research-only deterministic compiler stage consuming only the exact accepted E3.4 causal colonization program. Emit aggregate PLANET/REGION/PATCH/LOCAL_ACTIVE work units plus execution budget hints while preserving one ecology-state meaning and explicitly forbidding planet-wide individual truth, canonical SD ownership, production persistence/network/transaction authority, and E3.6 activation.","allowed_paths":["config/ecology/eco-evo3-e3-5-*","config/ecology/accepted_inputs/e3_4_*","scripts/research/ecology/population_workset_compiler_v1.py","tests/research/ecology/test_eco_evo3_e3_5_*","RUN_ECO_EVO3_E3_5_TESTS.py",".github/workflows/e3-5-closure.yml","validation/ecology/eco-evo3-e3-5-*","docs/checkpoints/2026-08-20_ECO_EVO3_E3_5_*","docs/evidence/2026-08-20_ECO_EVO3_E3_5_*","config/control/harness/executions/E2026-08-20-ECO-E3-5-R1/**"],"forbidden_paths":["config/architecture/**","config/control/architecture-ownership.v1.json","config/control/project-program-registry.v1.json","scripts/network/**","scripts/persistence/**","scripts/runtime/**","config/ecology/eco-evo3-roadmap.v1.json","docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md"],"required_predicates":["PROJECT_EPOCH_CREATED","E3_4_ACCEPTED_PREDECESSOR_BASE_EXACT","E3_5_WORK_ORDER_ISSUED","E3_5_RISK_CLASSIFIED_HIGH","E3_5_DESIGN_BRIEF_READY","E3_5_EXACT_ACCEPTED_E3_4_RAW_INPUT_BOUNDARY_PASS","E3_5_NO_CANDIDATE_ALIAS_OR_PARSED_DICT_AUTHORITY_BYPASS_PASS","E3_5_PLANET_WORKSET_PASS","E3_5_REGION_WORKSET_PASS","E3_5_PATCH_WORKSET_PASS","E3_5_LOCAL_ACTIVE_WORKSET_PASS","E3_5_ONE_STATE_MEANING_ACROSS_SCALES_PASS","E3_5_NO_PLANET_WIDE_INDIVIDUAL_TRUTH_PASS","E3_5_NO_CANONICAL_SD_OR_POP_AUTHORITY_PASS","E3_5_NO_NETWORK_PERSISTENCE_TRANSACTION_AUTHORITY_PASS","E3_5_NO_COLONIZATION_EMPTY_WORKSET_PASS","E3_5_ORDER_INDEPENDENCE_PASS","E3_5_GLOBAL_RNG_ABSENT_PASS","E3_5_FRESH_BUILD_DETERMINISM_PASS","E3_5_SCHEMA_VALIDATION_PASS","POST_BUILD_CRITIQUE_COMPLETED","EVIDENCE_MAP_COMPLETE","INDEPENDENT_REVIEWER_PASS","INDEPENDENT_VERIFIER_PASS","REVIEW_HEAD_EXACT_AND_FRESH","TESTED_HEADS_EXACT_AND_FRESH","PROJECT_CONTROL_NON_RED","E3_5_CHECKPOINT_PROPOSED"],"required_outputs":["Exact accepted E3.4 input binding with raw-byte and Git-blob identity","Research-only E3.5 contract and Draft 2020-12 output schema","Deterministic aggregate population workset compiler","PLANET/REGION/PATCH/LOCAL_ACTIVE work units and budget hints","NO_COLONIZATION empty-workset semantics","Authority negative matrix proving no individual/canonical/network/persistence/transaction truth","Fresh-process byte-identical artifact evidence","Post-build critique and evidence map","Fresh Reviewer and independent Verifier evidence before checkpoint proposal"],"stop_conditions":["E3.5 would require a planet-wide individual entity registry or per-individual canonical truth","E3.5 would require canonical SD region/domain creation or mutation","E3.5 would require POP/LIFE/WB/NX/persistence/transaction owner mutation","E3.5 would require production API binding or XFER1 activation","Exact accepted E3.4 predecessor identity cannot be proven from immutable bytes","Research workset semantics require changing accepted E3.4 scientific output","Scope expands into E3.6 temporal ownership or disturbance scheduling"],"risk_class":"HIGH","risk_reasons":["Defines a new population workset contract at the truth/authority boundary","Must prevent aggregate scheduling hints from becoming planet-wide individual truth","Must preserve exact accepted E3.4 provenance while exposing four scale projections"],"review_required":true,"required_review_roles":["IMPLEMENTER","REVIEWER","VERIFIER","DIRECTOR"],"design_brief":{"problem_statement":"Accepted E3.4 proves causal colonization but does not yet provide deterministic units for executing one ecology-state meaning at planet, region, patch and locally active resolutions.","current_behavior":"E3.4 provides exact colonized species, patch evaluations, arrival/establishment results, stable patch/spatial identities and accepted provenance, but no population execution worksets or budgets.","desired_behavior":"Compile only aggregate work units and deterministic budget hints at PLANET/REGION/PATCH/LOCAL_ACTIVE scales from the exact accepted E3.4 artifact. The same colonization-derived ecology state set must underlie every scale; local-active detail is a projection/work budget, never planet-wide individual truth.","alternatives_considered":["Create a planet-wide individual entity list at compile time","Create a second canonical population registry owned by ECO","Read E3.3/EVO2 directly again and independently reconstruct population input","Compile aggregate species×patch cohort/work descriptors from exact E3.4 and derive deterministic scale groupings"],"selected_design":"Use exact E3.4 as the sole authoritative predecessor input, verify raw bytes/blob/hash/provenance fail-closed, derive one canonical aggregate population basis from colonized species×patch establishments, and project that same basis into deterministic PLANET/REGION/PATCH/LOCAL_ACTIVE scheduling units with integer-only budget hints.","why_selected":"It advances the accepted EVO3 DAG while preserving E3.4 causal truth, avoiding duplicate scientific input authority, preventing individual-entity truth creation, and keeping execution scheduling derived/non-authoritative.","affected_owners":["ECO.EVO3","E3.4_ACCEPTED_COLONIZATION_PROGRAM","POP_AS_EXTERNAL_FUTURE_OWNER","SD_AS_EXTERNAL_CANONICAL_OWNER","XFER1_BOUNDARY"],"dependencies":["E3.4 ACCEPTED control head 872f2d993cc002b72529ea7f2a3274d0d71245b0","canonical E3.4 merge 8618032bfb668c7f0427f0aa80c0e07de69a3cfc","exact E3.4 artifact blob db725ef37912547527dff5fffe39ca63e5f8c22e","E3.4 program hash 6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6","E3.4 provenance hash d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a","EVO3 accepted architecture and scale model"],"non_goals":["No actual population evolution runtime","No individual agents/entities","No canonical population registry","No canonical SD domains","No persistence/network/transaction integration","No temporal/seasonal/disturbance scheduling","No E3.6 implementation","No XFER1 or production binding"],"expected_risks":["Work units accidentally encode individual identity or become a second truth store","Scale-specific derivation changes ecology meaning between PLANET and LOCAL_ACTIVE","Plain parsed E3.4 data or copied provenance bypasses exact accepted-input authority","REGION grouping invents canonical spatial authority","Budget hints depend on ordering or nondeterministic RNG"],"validation_plan":["Pin exact accepted E3.4 artifact Git blob and SHA-256 in a binding","Fail closed on raw/blob/program/provenance/source identity substitutions before parse-derived authority","Generate aggregate species×patch basis only from E3.4 ESTABLISHED decisions","Derive deterministic research scheduling regions from E3.4 route connectivity without claiming SD identity","Prove scale projections cover the same aggregate basis exactly with no duplicates/loss","Prove NO_COLONIZATION yields valid deterministic zero-active-population worksets","Reject individual/entity/canonical/production authority fields and candidate aliases","Run schema validation, order permutation tests and fresh-process byte identity","Run post-build critique, evidence map, fresh Reviewer and independent Verifier"]},"repair_context_required":false,"evidence_map_required":true,"human_attention_triggers":["ARCHITECTURE_OR_OWNERSHIP_DECISION","AUTHORITY_CHANGE","FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE"],"issued_at_utc":"2026-08-20T14:05:01Z","human_approval_required_for":["RESEARCH_CANDIDATE_MERGE_ACCEPTANCE"],"notes":"Main-owned Harness policy was re-read at main 379987c1fb80258224bb152fb712aae9adbd807c before dispatch. ECO remains research-only/non-blocking. The single pre-H0.3 product runtime mutation lease is not consumed by this research compiler. Director/Human continuation authorizes E3.5 research execution only; E3.6, XFER1 and production ECO authority remain blocked."}
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "ECO-E3-5-R1-WO-001",
+  "project_epoch": "E2026-08-20-ECO-E3-5-R1",
+  "program": "ECO.EVO3",
+  "goal_checkpoint": "ECO_EVO3_E3_5_MULTI_SCALE_POPULATION_WORKSET_COMPILER",
+  "mission": {
+    "mission_id": "ECO-EVO3-E3-5-MISSION-001",
+    "objective": "Compile the exact accepted E3.4 causal colonization program into deterministic multi-scale aggregate population worksets without creating individual-entity, canonical spatial, persistence, network, or production authority truth.",
+    "parent_mission_id": null,
+    "completion_condition": "Exact candidate is frozen, deterministic and fail-closed; all HIGH-risk predicates, evidence map, post-build critique, fresh Reviewer and independent Verifier complete; checkpoint is proposed but not self-accepted.",
+    "session_scope": "CHECKPOINT",
+    "auto_continue_across_role_boundaries": true
+  },
+  "state": "DISPATCHED",
+  "work_order_type": "IMPLEMENTATION",
+  "base_sha": "872f2d993cc002b72529ea7f2a3274d0d71245b0",
+  "branch": "feature/eco-evo3-e3-5-population-workset-compiler",
+  "scope": "Implement E3.5 as a research-only deterministic compiler stage consuming only the exact accepted E3.4 causal colonization program. Emit aggregate PLANET/REGION/PATCH/LOCAL_ACTIVE work units plus execution budget hints while preserving one ecology-state meaning and explicitly forbidding planet-wide individual truth, canonical SD ownership, production persistence/network/transaction authority, and E3.6 activation.",
+  "allowed_paths": [
+    "config/ecology/eco-evo3-e3-5-*",
+    "config/ecology/accepted_inputs/e3_4_*",
+    "scripts/research/ecology/population_workset_compiler_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_5_*",
+    "RUN_ECO_EVO3_E3_5_TESTS.py",
+    ".github/workflows/e3-5-closure.yml",
+    "validation/ecology/eco-evo3-e3-5-*",
+    "docs/checkpoints/2026-08-20_ECO_EVO3_E3_5_*",
+    "docs/evidence/2026-08-20_ECO_EVO3_E3_5_*",
+    "config/control/harness/executions/E2026-08-20-ECO-E3-5-R1/**"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/**",
+    "scripts/persistence/**",
+    "scripts/runtime/**",
+    "config/ecology/eco-evo3-roadmap.v1.json",
+    "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "E3_4_ACCEPTED_PREDECESSOR_BASE_EXACT",
+    "E3_5_WORK_ORDER_ISSUED",
+    "E3_5_RISK_CLASSIFIED_HIGH",
+    "E3_5_DESIGN_BRIEF_READY",
+    "E3_5_EXACT_ACCEPTED_E3_4_RAW_INPUT_BOUNDARY_PASS",
+    "E3_5_NO_CANDIDATE_ALIAS_OR_PARSED_DICT_AUTHORITY_BYPASS_PASS",
+    "E3_5_PLANET_WORKSET_PASS",
+    "E3_5_REGION_WORKSET_PASS",
+    "E3_5_PATCH_WORKSET_PASS",
+    "E3_5_LOCAL_ACTIVE_WORKSET_PASS",
+    "E3_5_ONE_STATE_MEANING_ACROSS_SCALES_PASS",
+    "E3_5_NO_PLANET_WIDE_INDIVIDUAL_TRUTH_PASS",
+    "E3_5_NO_CANONICAL_SD_OR_POP_AUTHORITY_PASS",
+    "E3_5_NO_NETWORK_PERSISTENCE_TRANSACTION_AUTHORITY_PASS",
+    "E3_5_NO_COLONIZATION_EMPTY_WORKSET_PASS",
+    "E3_5_ORDER_INDEPENDENCE_PASS",
+    "E3_5_GLOBAL_RNG_ABSENT_PASS",
+    "E3_5_FRESH_BUILD_DETERMINISM_PASS",
+    "E3_5_SCHEMA_VALIDATION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "PROJECT_CONTROL_NON_RED",
+    "E3_5_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "Exact accepted E3.4 input binding with raw-byte and Git-blob identity",
+    "Research-only E3.5 contract and Draft 2020-12 output schema",
+    "Deterministic aggregate population workset compiler",
+    "PLANET/REGION/PATCH/LOCAL_ACTIVE work units and budget hints",
+    "NO_COLONIZATION empty-workset semantics",
+    "Authority negative matrix proving no individual/canonical/network/persistence/transaction truth",
+    "Fresh-process byte-identical artifact evidence",
+    "Post-build critique and evidence map",
+    "Fresh Reviewer and independent Verifier evidence before checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "E3.5 would require a planet-wide individual entity registry or per-individual canonical truth",
+    "E3.5 would require canonical SD region/domain creation or mutation",
+    "E3.5 would require POP/LIFE/WB/NX/persistence/transaction owner mutation",
+    "E3.5 would require production API binding or XFER1 activation",
+    "Exact accepted E3.4 predecessor identity cannot be proven from immutable bytes",
+    "Research workset semantics require changing accepted E3.4 scientific output",
+    "Scope expands into E3.6 temporal ownership or disturbance scheduling"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Defines a new population workset contract at the truth/authority boundary",
+    "Must prevent aggregate scheduling hints from becoming planet-wide individual truth",
+    "Must preserve exact accepted E3.4 provenance while exposing four scale projections"
+  ],
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
+  "design_brief": {
+    "problem_statement": "Accepted E3.4 proves causal colonization but does not yet provide deterministic units for executing one ecology-state meaning at planet, region, patch and locally active resolutions.",
+    "current_behavior": "E3.4 provides exact colonized species, patch evaluations, arrival/establishment results, stable patch/spatial identities and accepted provenance, but no population execution worksets or budgets.",
+    "desired_behavior": "Compile only aggregate work units and deterministic budget hints at PLANET/REGION/PATCH/LOCAL_ACTIVE scales from the exact accepted E3.4 artifact. The same colonization-derived ecology state set must underlie every scale; local-active detail is a projection/work budget, never planet-wide individual truth.",
+    "alternatives_considered": [
+      "Create a planet-wide individual entity list at compile time",
+      "Create a second canonical population registry owned by ECO",
+      "Read E3.3/EVO2 directly again and independently reconstruct population input",
+      "Compile aggregate species×patch cohort/work descriptors from exact E3.4 and derive deterministic scale groupings"
+    ],
+    "selected_design": "Use exact E3.4 as the sole authoritative predecessor input, verify raw bytes/blob/hash/provenance fail-closed, derive one canonical aggregate population basis from colonized species×patch establishments, and project that same basis into deterministic PLANET/REGION/PATCH/LOCAL_ACTIVE scheduling units with integer-only budget hints.",
+    "why_selected": "It advances the accepted EVO3 DAG while preserving E3.4 causal truth, avoiding duplicate scientific input authority, preventing individual-entity truth creation, and keeping execution scheduling derived/non-authoritative.",
+    "affected_owners": ["ECO.EVO3", "E3.4_ACCEPTED_COLONIZATION_PROGRAM", "POP_AS_EXTERNAL_FUTURE_OWNER", "SD_AS_EXTERNAL_CANONICAL_OWNER", "XFER1_BOUNDARY"],
+    "dependencies": [
+      "E3.4 ACCEPTED control head 872f2d993cc002b72529ea7f2a3274d0d71245b0",
+      "canonical E3.4 merge 8618032bfb668c7f0427f0aa80c0e07de69a3cfc",
+      "exact E3.4 artifact blob db725ef37912547527dff5fffe39ca63e5f8c22e",
+      "E3.4 program hash 6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6",
+      "E3.4 provenance hash d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
+      "EVO3 accepted architecture and scale model"
+    ],
+    "non_goals": [
+      "No actual population evolution runtime",
+      "No individual agents/entities",
+      "No canonical population registry",
+      "No canonical SD domains",
+      "No persistence/network/transaction integration",
+      "No temporal/seasonal/disturbance scheduling",
+      "No E3.6 implementation",
+      "No XFER1 or production binding"
+    ],
+    "expected_risks": [
+      "Work units accidentally encode individual identity or become a second truth store",
+      "Scale-specific derivation changes ecology meaning between PLANET and LOCAL_ACTIVE",
+      "Plain parsed E3.4 data or copied provenance bypasses exact accepted-input authority",
+      "REGION grouping invents canonical spatial authority",
+      "Budget hints depend on ordering or nondeterministic RNG"
+    ],
+    "validation_plan": [
+      "Pin exact accepted E3.4 artifact Git blob and SHA-256 in a binding",
+      "Fail closed on raw/blob/program/provenance/source identity substitutions before parse-derived authority",
+      "Generate aggregate species×patch basis only from E3.4 ESTABLISHED decisions",
+      "Derive deterministic research scheduling regions from E3.4 route connectivity without claiming SD identity",
+      "Prove scale projections cover the same aggregate basis exactly with no duplicates/loss",
+      "Prove NO_COLONIZATION yields valid deterministic zero-active-population worksets",
+      "Reject individual/entity/canonical/production authority fields and candidate aliases",
+      "Run schema validation, order permutation tests and fresh-process byte identity",
+      "Run post-build critique, evidence map, fresh Reviewer and independent Verifier"
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": ["ARCHITECTURE_OR_OWNERSHIP_DECISION", "AUTHORITY_CHANGE", "FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE"],
+  "issued_at_utc": "2026-08-20T14:05:01Z",
+  "human_approval_required_for": ["RESEARCH_CANDIDATE_MERGE_ACCEPTANCE"],
+  "notes": "Dispatch was created against main 379987c1fb80258224bb152fb712aae9adbd807c. Main advanced to 19c1268599b52cbc1099d6009eabd3099e20b64a with Harness continuation/Git-authority R5 only. Director audit found no ECO architecture, registry, accepted E3.4 lineage, or E3.5 scope change. Main-owned R5 supersedes the old mission auto-continue flag; mission now continues across routine role boundaries until acceptance, a real Human Attention gate, or proven hard block. E3.6, XFER1 and production authority remain blocked."
+}
