@@ -38,6 +38,93 @@ Production SM1 work may start only after:
 
 Research branch history is never the production base.
 
+## 2.1 P5/P6 -> SM1 legacy-network transition map
+
+The product-train transition is deliberately **not** `P5 -> throw away the old network -> SM1`.
+The current network remains the production carrier through P6; after P6, main performs the explicit seamless decision and, if `ACTIVATE_V0_SM1` is selected, production SM1 starts from the then-current accepted V0 baseline.
+
+Therefore pre-SM1 network work must preserve future foundations without spending large repair effort on synchronization/routing machinery that SM1 is expected to replace.
+
+### Mandatory classification for every P5/P6 network RED
+
+Before changing production code, classify the failure into exactly one primary class:
+
+```text
+FOUNDATION
+LEGACY_TRANSPORT
+HARNESS_TEST
+```
+
+Rules:
+
+- `FOUNDATION` — canonical state/identity/persistence/operation/recovery correctness that remains required under SM1. Repair fully and preserve as production behavior.
+- `LEGACY_TRANSPORT` — current transport/session/convergence/routing choreography that SM1 is expected to replace or substantially adapt. Apply only the smallest bounded correctness repair required to keep P5/P6 valid; do not redesign the legacy network into the future architecture.
+- `HARNESS_TEST` — process lifecycle, fixed waits, port reuse, wrapper status capture, fixture orchestration, evidence collection, or another non-product defect. Repair the harness/test owner; do not mutate production semantics to satisfy a harness artifact.
+
+A RED must never be hidden, selectively retried, removed from the continuous regression, or converted to PASS because it is considered legacy. If a required legacy test remains RED, it remains blocking unless a separate explicit main-owned control decision changes the required predicate.
+
+### KEEP / ADAPT / REPLACE / RETIRE map
+
+| Current capability | Transition | SM1 intent |
+| --- | --- | --- |
+| Canonical Item Graph structure and item/container relationships | `KEEP` | Remains canonical structure; AuthorityDomain must not become a second Item Graph. |
+| Stable `PlayerEntityId`, `ItemId`, subject identity | `KEEP` | Identity must survive authority/session transitions. |
+| Durable gameplay state and restart recovery | `KEEP` | Becomes more important under multi-authority recovery. |
+| End-to-end `OperationId`, dedup/exactly-once semantics | `KEEP` | Required across gateway/authority retry and handoff. |
+| Server/domain-authoritative durable gameplay truth | `KEEP` | Ownership mechanism changes, canonical-state discipline does not. |
+| SM0 single-writer/handoff/recovery contracts | `PORT_KEEP` | Donor invariants for SM1 transfer/fencing; do not copy obsolete rollback semantics past Directory commit. |
+| M3/M4 gameplay/network composition services | `ADAPT` | Preserve gameplay semantics while replacing ownership/routing boundaries underneath. |
+| Current client replica machinery | `ADAPT` | Reuse useful projection/prediction pieces, but make them epoch/fence/projection aware. |
+| Raw ENet packet transport where useful | `ADAPT` | Transport implementation may survive; authority semantics must not depend on the old topology. |
+| Current direct client -> gameplay authority routing/session choreography | `REPLACE` | Replaced by stable gateway/session routing and canonical Directory-based authority resolution. |
+| Current authority ownership/routing assumptions | `REPLACE` | Replaced by Ownership Directory + epoch/fence/incarnation + AuthorityBinding. |
+| M5 final graphical checksum convergence barrier as production synchronization authority | `RETIRE_TEST_ONLY` | May remain as compatibility/acceptance machinery, but must not become the future ownership protocol. |
+| Legacy client/backend finalization choreography tied to one authority session | `REPLACE` | Replaced by PRIMARY/OBSERVER/WARM projection and explicit handoff lifecycle. |
+| SM1 Ownership Directory, fencing, incarnation authorization | `NEW_CANONICAL` | New production ownership authority after activation. |
+
+### Transfer the invariant, not necessarily the legacy mechanism
+
+The P5 M5 convergence repair exposed a durable rule that **does** carry into SM1:
+
+```text
+prepared/locked state is revocable until final consumption;
+if canonical state advances, stale prepared evidence cannot authorize completion.
+```
+
+In legacy M5 this is expressed through convergence generations and authoritative checksums.
+In SM1 the same correctness rule must be expressed through current ownership/binding identities such as:
+
+```text
+DirectoryGeneration
+AuthorityEpoch
+FencingToken
+AuthorityIncarnation
+binding_generation
+```
+
+A stale generation/epoch/fence/incarnation/binding must fail closed rather than complete a handoff or mutation.
+
+### Current M7/P5 diagnostic rule
+
+For failures in restart/recovery fixtures, including hotbar/equipment/Item Graph continuity:
+
+- if canonical hotbar/equipment/Item Graph state is actually lost, duplicated, rolled back, or restored incorrectly after restart -> `FOUNDATION`, repair fully now;
+- if canonical state is correct and the failure comes from old process cleanup, ENet session timing, port reuse, fixed sleep/wait assumptions, or legacy client-finalization choreography -> `LEGACY_TRANSPORT` or `HARNESS_TEST`, repair minimally at the correct owner;
+- do not use an M7/P5 failure as justification for a broad redesign of M5/M7 legacy networking before the post-P6 SM1 activation gate.
+
+### Regression policy before SM1
+
+The complete P5/P6 regression remains a safety net. Legacy tests may still expose real foundation defects, so the suite remains required until an explicit main-owned control change says otherwise.
+
+The optimization target before SM1 is therefore:
+
+```text
+fully repair future foundation defects
++ minimally stabilize required legacy network behavior
++ repair harness defects at the harness layer
+- avoid deep legacy-network redesign
+```
+
 ## 3. Revised milestone order
 
 ```text
