@@ -1,15 +1,15 @@
 name: V0 P5 V001 Exact Source Probe
 
 on:
-  push:
+  pull_request:
     branches:
-      - probe/v0-p5-v001-601ca87-source
+      - repair/v0-p5-r2-v001-m5-convergence-r1
 
 permissions:
   contents: read
 
 env:
-  CANDIDATE_SHA: 601ca87f36b96bae9d519693e5cac9dfc38abec9
+  EXPECTED_CANDIDATE_SHA: 601ca87f36b96bae9d519693e5cac9dfc38abec9
   IMMUTABLE_BASE_SHA: 2dd646550dae0b6644ef0559e14f6a21f0d2ac27
   ARTIFACT_NAME: p5-v001-source-601ca87
 
@@ -17,19 +17,22 @@ jobs:
   source-probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact candidate
+      - name: Checkout exact PR base candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.CANDIDATE_SHA }}
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
 
       - name: Verify exact source identity and bounded delta
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          CANDIDATE_SHA="${{ github.event.pull_request.base.sha }}"
+          echo "CANDIDATE_SHA=$CANDIDATE_SHA"
+          test "$CANDIDATE_SHA" = "$EXPECTED_CANDIDATE_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_CANDIDATE_SHA"
           git cat-file -e "$IMMUTABLE_BASE_SHA^{commit}"
-          mapfile -t changed < <(git diff --name-only "$IMMUTABLE_BASE_SHA" "$CANDIDATE_SHA")
+          mapfile -t changed < <(git diff --name-only "$IMMUTABLE_BASE_SHA" "$EXPECTED_CANDIDATE_SHA")
           expected=(
             scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd
             scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd
@@ -39,12 +42,14 @@ jobs:
           printf '%s\n' "${changed[@]}" > /tmp/changed.txt
           printf '%s\n' "${expected[@]}" > /tmp/expected.txt
           diff -u /tmp/expected.txt /tmp/changed.txt
-          test -z "$(git status --porcelain)"
+          git diff --quiet
+          git diff --cached --quiet
 
       - name: Build exact candidate source archive
         shell: bash
         run: |
           set -euo pipefail
+          CANDIDATE_SHA="$EXPECTED_CANDIDATE_SHA"
           mkdir -p source-probe
           archive="distributed-world-simulator-${CANDIDATE_SHA}.tar.gz"
           git archive --format=tar --prefix="distributed-world-simulator-${CANDIDATE_SHA}/" "$CANDIDATE_SHA" | gzip -n > "source-probe/$archive"
@@ -56,7 +61,7 @@ jobs:
             echo "artifact_name=$ARTIFACT_NAME"
             echo "archive_name=$archive"
             echo "source_tree=$(git rev-parse ${CANDIDATE_SHA}^{tree})"
-            echo "tracked_status_before_upload=$(test -z \"$(git status --porcelain)\" && echo CLEAN || echo DIRTY)"
+            echo "tracked_worktree_clean=$(git diff --quiet && git diff --cached --quiet && echo YES || echo NO)"
           } > source-probe/probe-metadata.txt
 
       - name: Upload exact source probe
@@ -66,3 +71,4 @@ jobs:
           path: source-probe/
           compression-level: 0
           if-no-files-found: error
+          retention-days: 2
