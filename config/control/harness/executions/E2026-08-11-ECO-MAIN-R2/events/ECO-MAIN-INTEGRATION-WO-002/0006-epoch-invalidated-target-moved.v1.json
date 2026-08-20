@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R2-ECO-MAIN-INTEGRATION-WO-002-0006",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R2",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "sequence": 6,
+  "event_type": "EPOCH_INVALIDATED",
+  "work_state": "EPOCH_INVALIDATED",
+  "recorded_at_utc": "2026-08-11T08:42:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r2",
+  "head_sha": "8e3611366e5edc25b204ee62efb7841d365076d5",
+  "predicate": "EXACT_MAIN_AND_ECO_INPUTS_PINNED",
+  "command": "Re-read exact ECO target before human merge",
+  "exit_code": 1,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/integration-inputs.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/evidence/ECO-MAIN-INTEGRATION-WO-002-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/pr/ECO-MAIN-INTEGRATION-WO-002-DRAFT-PR-001.v1.json"
+  ],
+  "summary": "Fail-closed freshness stop: R2 pinned ECO source 67e23224ae153a9fc43ca5feea21c50165a99f1d, but the target advanced to 2a4c3103234717f813cd6fe8f60de0d50f3012ba before CONTROL_DOCS_ONLY_MERGE. R2 review, verifier and synthetic PC0 remain durable historical evidence but are stale for promotion. Draft PR #68 must remain unmerged; a fresh R3 epoch is required.",
+  "blocker": "ECO_TARGET_MOVED_R2_EVIDENCE_STALE"
+}

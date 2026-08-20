@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R2-ECO-MAIN-INTEGRATION-WO-002-0004",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R2",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "sequence": 4,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-11T08:18:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r2",
+  "head_sha": "275b4a81e74adce4797d792bfc71ce11fc0f64ab",
+  "predicate": "DRAFT_PR_TARGETING_ECO_OPEN",
+  "command": "gh pr create --draft --base feature/eco-evolutionary-ecology --head control/eco-main-integration-r2",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/pr/ECO-MAIN-INTEGRATION-WO-002-DRAFT-PR-001.v1.json"],
+  "summary": "Draft PR #68 was opened against the exact ECO target; no merge was performed.",
+  "blocker": ""
+}

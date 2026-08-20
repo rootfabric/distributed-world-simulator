@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "ECO-MAIN-INTEGRATION-WO-002-CONTROL-DOCS-MERGE-001",
+  "program": "ECO",
+  "checkpoint": "H0_0_SCAFFOLD_READY",
+  "risk_class": "HIGH",
+  "reason": "The candidate changes ECO ancestry to remove a verified control-only PC0 RED. The autonomy ceiling permits a draft PR but requires a human decision before merge.",
+  "decision_required": "Approve or decline CONTROL_DOCS_ONLY_MERGE for PR #68 into feature/eco-evolutionary-ecology.",
+  "options": ["Approve the draft PR merge after reviewing its evidence package", "Decline and retain the current paused ECO branch unchanged"],
+  "recommended_option": "Approve the draft PR merge after reviewing its evidence package",
+  "recommendation_reason": "The normal merge preserves ECO content, removes the only aggregate PC0 RED in a synthetic clean-clone audit, and has independent HIGH-risk PASS verdicts.",
+  "blast_radius": ["ECO branch ancestry", "PC0 dependency-drift evaluation", "H0.0 PC0_NON_RED blocker"],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/evidence/ECO-MAIN-INTEGRATION-WO-002-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/pr/ECO-MAIN-INTEGRATION-WO-002-DRAFT-PR-001.v1.json",
+    "docs/checkpoints/ECO_MAIN_INTEGRATION_CANDIDATE_R2_RU.md"
+  ],
+  "status": "OPEN"
+}
