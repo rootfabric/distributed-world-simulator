@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-5-R1-EVENT-0006",
+  "project_epoch": "E2026-08-20-ECO-E3-5-R1",
+  "work_order_id": "ECO-E3-5-R1-WO-001",
+  "sequence": 6,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-20T14:58:30Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/eco-evo3-e3-5-population-workset-compiler",
+  "head_sha": "4625c950946f7a1b3cea67b9a1411fb993c20957",
+  "predicate": "POST_BUILD_CRITIQUE_COMPLETED_AND_EVIDENCE_PACKAGE_READY",
+  "command": "PUBLISH_E3_5_EVIDENCE_ONLY_LAYER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "validation/ecology/eco-evo3-e3-5-validation.json",
+    "validation/ecology/eco-evo3-e3-5-population-workset.generated.json",
+    "docs/checkpoints/2026-08-20_ECO_EVO3_E3_5_POPULATION_WORKSET_CANDIDATE_RU.md",
+    "docs/evidence/2026-08-20_ECO_EVO3_E3_5_POST_BUILD_CRITIQUE_RU.md",
+    "config/control/harness/executions/E2026-08-20-ECO-E3-5-R1/evidence/E3-5-POST-BUILD-CRITIQUE-001.v1.json"
+  ],
+  "summary": "Post-build critique is NO_MATERIAL_REFACTOR_REQUIRED. CI-produced workset and exact machine receipts are ready for an evidence-only final head. Evidence Map will be published as a durable PR comment after the final commit SHA exists so evidence_head_sha can bind exactly to the review target."
+}
