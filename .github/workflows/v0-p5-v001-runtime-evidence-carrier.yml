@@ -1,0 +1,98 @@
+name: V0 P5 V001 Exact Candidate Runtime Evidence Carrier
+
+on:
+  pull_request:
+    branches:
+      - repair/v0-p5-r2-v001-m5-convergence-r1
+
+permissions:
+  contents: read
+
+env:
+  EXPECTED_CANDIDATE_SHA: 601ca87f36b96bae9d519693e5cac9dfc38abec9
+  EXPECTED_CANDIDATE_TREE: 7369136e3971d773a23f71201001f9838b1c8844
+  EXPECTED_BUNDLE_SHA256: 5fb31f5945174b1fe2255d5a414c975b01582afc5151e93b4ded1c6c014d813e
+  EXPECTED_EVIDENCE_MANIFEST_SHA256: 64403cdae3d08a7a10b99ea2a94b87ee9761876e9ffb341317340e4475d3a4e6
+  ARTIFACT_NAME: p5-v001-runtime-evidence-601ca87-r1
+  BUNDLE_PATH: evidence/validation/p5-v001-runtime-601ca87-r1/p5-v001-runtime-evidence-601ca87-r1.tar.xz
+
+jobs:
+  validate-and-publish-exact-pr-base-evidence:
+    name: Validate exact PR BASE candidate evidence — DO NOT MERGE
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation-only carrier
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail closed on exact PR base and validation-only delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}"
+          echo "CARRIER_HEAD_SHA=${{ github.event.pull_request.head.sha }}"
+          test "${{ github.event.pull_request.base.ref }}" = "repair/v0-p5-r2-v001-m5-convergence-r1"
+          test "${{ github.event.pull_request.base.sha }}" = "$EXPECTED_CANDIDATE_SHA"
+          test "${{ github.event.pull_request.draft }}" = "true"
+          test "$(git rev-parse "$EXPECTED_CANDIDATE_SHA^{tree}")" = "$EXPECTED_CANDIDATE_TREE"
+          mapfile -t changed < <(git diff --name-only "$EXPECTED_CANDIDATE_SHA" "${{ github.event.pull_request.head.sha }}")
+          test "${#changed[@]}" -ge 1
+          for path in "${changed[@]}"; do
+            case "$path" in
+              .github/workflows/v0-p5-v001-runtime-evidence-carrier.yml) ;;
+              evidence/validation/p5-v001-runtime-601ca87-r1/*) ;;
+              *)
+                echo "DISALLOWED_CARRIER_PATH=$path" >&2
+                exit 1
+                ;;
+            esac
+          done
+          echo "VALIDATED_SUBJECT=PR_BASE:$EXPECTED_CANDIDATE_SHA"
+          echo "CARRIER_HEAD_IS_NOT_PRODUCT_SUBJECT=${{ github.event.pull_request.head.sha }}"
+
+      - name: Verify immutable bundle digest and unpack
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$BUNDLE_PATH"
+          actual_bundle_sha="$(sha256sum "$BUNDLE_PATH" | awk '{print $1}')"
+          echo "BUNDLE_SHA256=$actual_bundle_sha"
+          test "$actual_bundle_sha" = "$EXPECTED_BUNDLE_SHA256"
+          mkdir -p /tmp/p5-v001-runtime-evidence
+          tar -xJf "$BUNDLE_PATH" -C /tmp/p5-v001-runtime-evidence
+
+      - name: Verify bundle checksums and fail-closed evidence validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/p5-v001-runtime-evidence/runtime-evidence-r1
+          actual_manifest_sha="$(sha256sum manifest/evidence-manifest.json | awk '{print $1}')"
+          echo "EVIDENCE_MANIFEST_SHA256=$actual_manifest_sha"
+          test "$actual_manifest_sha" = "$EXPECTED_EVIDENCE_MANIFEST_SHA256"
+          sha256sum -c checksums/SHA256SUMS
+          python3 validator/validate_bundle.py .
+          python3 - <<'PY'
+          import json
+          p='manifest/evidence-manifest.json'
+          m=json.load(open(p,encoding='utf-8'))
+          assert m['candidate']['sha']=='601ca87f36b96bae9d519693e5cac9dfc38abec9'
+          assert m['candidate']['tree']=='7369136e3971d773a23f71201001f9838b1c8844'
+          assert m['carrier']['base_candidate_sha']==m['candidate']['sha']
+          assert m['gates']['continuous_239']['continuous_launch_count']==1
+          assert m['gates']['continuous_239']['result']=='239/239 PASS'
+          assert m['gates']['full_world_core_regression_pass'] is True
+          print('EXACT_PR_BASE_EVIDENCE_VALIDATED')
+          PY
+
+      - name: Upload complete exact-candidate runtime bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            evidence/validation/p5-v001-runtime-601ca87-r1/p5-v001-runtime-evidence-601ca87-r1.tar.xz
+            evidence/validation/p5-v001-runtime-601ca87-r1/bundle-archive.sha256
+            evidence/validation/p5-v001-runtime-601ca87-r1/evidence-manifest.sha256
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
