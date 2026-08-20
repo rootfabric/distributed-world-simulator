@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_r2_v002_runtime_evidence.v1",
+  "campaign_id": "P5-R2-V002-RUNTIME-R1",
+  "evidence_head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "runtime_test_freeze_sha": "5c3d936b35ecaa6b6023aac0e251f56858852186",
+  "base_sha": "601ca87f36b96bae9d519693e5cac9dfc38abec9",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "manifest_count": 239,
+  "manifest_sha256": "3e1ce975f33d9811821db3e7018afe4fd1c4bc0d61418cb4a334151eb7679fef",
+  "continuous_launch_count": 1,
+  "continuous_result": "239/239 PASS",
+  "first_failure": null,
+  "critical_ordinals": {"44":"PASS","50":"PASS","232":"PASS","233":"PASS","234":"PASS","235":"PASS","236":"PASS"},
+  "main_scene_cli_all": "PASS",
+  "full_world_core_regression": "PASS",
+  "project_control_run_id": 32378258397,
+  "project_control_run_number": 1044,
+  "project_control": "SUCCESS/YELLOW_NON_RED",
+  "directional_pc0": "YELLOW_NON_RED"
+}
