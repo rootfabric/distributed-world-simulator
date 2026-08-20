@@ -1,0 +1,68 @@
+name: V0 P5 V001 Exact Source Probe
+
+on:
+  push:
+    branches:
+      - probe/v0-p5-v001-601ca87-source
+
+permissions:
+  contents: read
+
+env:
+  CANDIDATE_SHA: 601ca87f36b96bae9d519693e5cac9dfc38abec9
+  IMMUTABLE_BASE_SHA: 2dd646550dae0b6644ef0559e14f6a21f0d2ac27
+  ARTIFACT_NAME: p5-v001-source-601ca87
+
+jobs:
+  source-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+
+      - name: Verify exact source identity and bounded delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git cat-file -e "$IMMUTABLE_BASE_SHA^{commit}"
+          mapfile -t changed < <(git diff --name-only "$IMMUTABLE_BASE_SHA" "$CANDIDATE_SHA")
+          expected=(
+            scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd
+            scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd
+            tests/runtime/support/m5_convergence_release_guard_regression.gd
+            tests/runtime/test_m5_graphical_multiplayer_acceptance.gd
+          )
+          printf '%s\n' "${changed[@]}" > /tmp/changed.txt
+          printf '%s\n' "${expected[@]}" > /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/changed.txt
+          test -z "$(git status --porcelain)"
+
+      - name: Build exact candidate source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p source-probe
+          archive="distributed-world-simulator-${CANDIDATE_SHA}.tar.gz"
+          git archive --format=tar --prefix="distributed-world-simulator-${CANDIDATE_SHA}/" "$CANDIDATE_SHA" | gzip -n > "source-probe/$archive"
+          sha256sum "source-probe/$archive" | tee source-probe/source-archive.sha256
+          git ls-tree -r --full-tree "$CANDIDATE_SHA" > source-probe/tracked-tree.txt
+          {
+            echo "candidate_sha=$CANDIDATE_SHA"
+            echo "immutable_base_sha=$IMMUTABLE_BASE_SHA"
+            echo "artifact_name=$ARTIFACT_NAME"
+            echo "archive_name=$archive"
+            echo "source_tree=$(git rev-parse ${CANDIDATE_SHA}^{tree})"
+            echo "tracked_status_before_upload=$(test -z \"$(git status --porcelain)\" && echo CLEAN || echo DIRTY)"
+          } > source-probe/probe-metadata.txt
+
+      - name: Upload exact source probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: source-probe/
+          compression-level: 0
+          if-no-files-found: error
