@@ -3,6 +3,12 @@ param(
     [switch]$Status,
     [switch]$Plan,
     [switch]$Resume,
+    [switch]$Drive,
+    [switch]$Close,
+    [switch]$CloseRole,
+    [switch]$CloseMission,
+    [string]$Execution,
+    [string]$Checkpoint,
     [switch]$Execute,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$UnexpectedArguments
@@ -10,34 +16,57 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
-$executionPath = 'config/control/harness/executions/E2026-08-12-H0-1-R8'
-$selectedModes = @($Status, $Plan, $Resume) | Where-Object { $_ }
+$selectedModes = @($Status, $Plan, $Resume, $Drive, $Close, $CloseRole, $CloseMission) | Where-Object { $_ }
+$exitCodes = '"INVALID_INVOCATION":2,"CONTRACT_OR_DEPENDENCY_INVALID":3,"GIT_STATE_INVALID":4,"EXECUTION_STATE_INVALID":5,"INTERNAL_ERROR":6,"ROLE_EXIT_FORBIDDEN":7,"MISSION_EXIT_FORBIDDEN":8'
 if ($Execute -or $UnexpectedArguments.Count -gt 0 -or $selectedModes.Count -ne 1) {
-    Write-Output '{"schema":"distributed_world_simulator.control_development_output.v1","command":"UNKNOWN","ok":false,"error":{"code":"INVALID_INVOCATION","detail":"EXACTLY_ONE_OF_STATUS_PLAN_RESUME_REQUIRED; EXECUTE_IS_FORBIDDEN"},"exit_codes":{"INVALID_INVOCATION":2,"CONTRACT_OR_DEPENDENCY_INVALID":3,"GIT_STATE_INVALID":4,"EXECUTION_STATE_INVALID":5,"INTERNAL_ERROR":6}}'
+    Write-Output ("{`"schema`":`"distributed_world_simulator.control_development_output.v1`",`"command`":`"UNKNOWN`",`"ok`":false,`"error`":{`"code`":`"INVALID_INVOCATION`",`"detail`":`"EXACTLY_ONE_OF_STATUS_PLAN_RESUME_DRIVE_CLOSE_CLOSEROLE_CLOSEMISSION_REQUIRED; EXECUTE_IS_FORBIDDEN`"},`"exit_codes`":{$exitCodes}}")
     exit 2
 }
-$mode = if ($Status) { 'status' } elseif ($Plan) { 'plan' } else { 'resume' }
+
+$mode = if ($Status) {
+    'status'
+} elseif ($Plan) {
+    'plan'
+} elseif ($Resume) {
+    'resume'
+} elseif ($Drive) {
+    'drive'
+} elseif ($CloseRole) {
+    'close-role'
+} else {
+    # -Close is intentionally a mission close gate: the user-visible session is the checkpoint mission.
+    'close-mission'
+}
+
 $previousPythonPath = $env:PYTHONPATH
 $previousPythonUtf8 = $env:PYTHONUTF8
 try {
     [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
     $env:PYTHONUTF8 = '1'
     Write-Host "[CONTROL][CONTRACT_LOAD] loading canonical contracts"
+    Write-Host "[CONTROL][EXECUTION_SELECT] resolving current checkpoint execution from machine policy"
     Write-Host "[CONTROL][STATE_BUILD] reducing append-only execution ledger"
-    Write-Host "[CONTROL][EPOCH_CHECK] validating epoch against canonical main"
-    if ($Plan) { Write-Host "[CONTROL][PLAN] executing H0.1 R8 closed-loop C22 pilot under a single Director-dispatched runtime worker" }
-    if ($Resume) { Write-Host "[CONTROL][RESUME] reconstructing Git-only recovery state" }
+    Write-Host "[CONTROL][MISSION] binding the user session to one checkpoint mission"
+    if ($Plan) { Write-Host "[CONTROL][PLAN] deriving the next bounded checkpoint action" }
+    if ($Resume) { Write-Host "[CONTROL][RESUME] reconstructing Git-only checkpoint-session state" }
+    if ($Drive) { Write-Host "[CONTROL][DRIVE] continuing across routine role boundaries until a mission terminal" }
+    if ($CloseRole) { Write-Host "[CONTROL][CLOSE_ROLE] checking whether the current isolated role may end" }
+    if ($Close -or $CloseMission) { Write-Host "[CONTROL][CLOSE_MISSION] authorizing user-session exit only at checkpoint acceptance, human decision, or proven hard block" }
+
     $harnessPythonPath = Join-Path $repoRoot 'scripts'
     $env:PYTHONPATH = if ($previousPythonPath) { "$harnessPythonPath;$previousPythonPath" } else { $harnessPythonPath }
     $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
     if ($null -eq $pythonCommand) {
-        $missingPythonCommand = $mode.ToUpperInvariant()
-        Write-Output ("{`"schema`":`"distributed_world_simulator.control_development_output.v1`",`"command`":`"$missingPythonCommand`",`"ok`":false,`"error`":{`"code`":`"CONTRACT_OR_DEPENDENCY_INVALID`",`"detail`":`"PYTHON_3_REQUIRED`"},`"exit_codes`":{`"INVALID_INVOCATION`":2,`"CONTRACT_OR_DEPENDENCY_INVALID`":3,`"GIT_STATE_INVALID`":4,`"EXECUTION_STATE_INVALID`":5,`"INTERNAL_ERROR`":6}}")
+        $missingPythonCommand = $mode.Replace('-', '_').ToUpperInvariant()
+        Write-Output ("{`"schema`":`"distributed_world_simulator.control_development_output.v1`",`"command`":`"$missingPythonCommand`",`"ok`":false,`"error`":{`"code`":`"CONTRACT_OR_DEPENDENCY_INVALID`",`"detail`":`"PYTHON_3_REQUIRED`"},`"exit_codes`":{$exitCodes}}")
         exit 3
     }
-    & $pythonCommand.Source -m harness.cli $mode --root $repoRoot --execution $executionPath
-    $pythonExitCode = $LASTEXITCODE
-    exit $pythonExitCode
+
+    $arguments = @('-m', 'harness.cli', $mode, '--root', $repoRoot)
+    if ($Execution) { $arguments += @('--execution', $Execution) }
+    if ($Checkpoint) { $arguments += @('--checkpoint', $Checkpoint) }
+    & $pythonCommand.Source @arguments
+    exit $LASTEXITCODE
 }
 finally {
     $env:PYTHONPATH = $previousPythonPath
