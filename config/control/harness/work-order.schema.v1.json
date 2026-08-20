@@ -11,6 +11,18 @@
     "project_epoch": {"type": "string", "minLength": 1},
     "program": {"type": "string", "minLength": 1},
     "goal_checkpoint": {"type": "string", "minLength": 1},
+    "mission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mission_id": {"type": "string", "minLength": 1},
+        "objective": {"type": "string", "minLength": 1},
+        "parent_mission_id": {"type": ["string", "null"]},
+        "completion_condition": {"type": "string", "minLength": 1},
+        "session_scope": {"const": "CHECKPOINT"},
+        "auto_continue_across_role_boundaries": {"type": "boolean"}
+      }
+    },
     "state": {"enum": ["PLANNED", "DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED", "CHECKPOINT_PROPOSED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"]},
     "work_order_type": {"enum": ["IMPLEMENTATION", "VALIDATION", "CONTROL", "HUMAN_OBSERVATION", "RECOVERY", "FIX", "REVIEW", "INTEGRATION"]},
     "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
