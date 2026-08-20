@@ -1,0 +1,58 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_r2_v002_runtime_receipt.v1",
+  "evidence_head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "runtime_test_freeze_sha": "5c3d936b35ecaa6b6023aac0e251f56858852186",
+  "runtime_blobs": {
+    "tools/runtime/m7_playable_recovery_client.gd": "291bef21798c59a9fc167cd6cc401df36454cc5c",
+    "tests/runtime/support/m7_recovery_seed_approach_regression.gd": "d21a3a599176664654c092e3df80983735190b70"
+  },
+  "continuous": {
+    "launch_count": 1,
+    "manifest_count": 239,
+    "manifest_sha256": "3e1ce975f33d9811821db3e7018afe4fd1c4bc0d61418cb4a334151eb7679fef",
+    "result": "239/239 PASS",
+    "first_failure": null,
+    "full_console_sha256": "2abb213168e3afedc84cc84f70e5e1932e584676742787d3b6d7f6648a00b022",
+    "all_per_test_log_hashes_sha256": "66cc73ed15c05f3434129cd26aa3f05f2aeaa50cf4563e58c25941b262e6b7dc",
+    "critical_logs": {
+      "44": "4a1a4c66de5cd4e5bfed9a3978e04866f29614a7a97217fdc6f34bc69ea2ec23",
+      "50": "33c093c10e9e19b064d9930d85f71ecc36c1bef55eb4b88fb17fc79a552efb96",
+      "232": "33b2f38e612ab7f3c4d5d50b7713707f51ece8fa35ef2c1465e579f07ffa5960",
+      "233": "b1168955d58987097553d6e5759479d7d86e424bba5b56d08ed29ffff5273d37",
+      "234": "3c52e620b130997327b9208cf3e13b1fc81e3c8d2fc81401c0374c072391a54a",
+      "235": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511",
+      "236": "1cbbb3a39a89b04075142e7fe0e1f10d0843a87bed8dd9b9d633badef5321528",
+      "main_scene_cli_all": "59fc9375a0abac2315380662d2af3162b808eb901df9e7f6a1e31b8607e020eb"
+    },
+    "main_scene_cli_all": "PASS",
+    "full_world_core_regression": "PASS"
+  },
+  "focused": {
+    "import_sha256": "2534fc6203e074673345bf8a8cb0955fd6e978dd4dad7b163fda37be3874da2a",
+    "seed_regression": "6/6 PASS",
+    "seed_regression_sha256": "f12fa2c58477285e7e18110960aef9b57e18f6cf0137e0ff38755efcdc77fbc9",
+    "m7_recovery_direct": "36/36 PASS",
+    "m7_recovery_direct_sha256": "4f8386fe9757be835567fd7a4da0672aad48741c87117ef647b17d35e3dc55af",
+    "m7_recovery_repeats": "5/5 x 36/36 PASS",
+    "repeat_sha256": [
+      "62144f41687acea76af5db2a6da31a220cb845854c0d8e84743bd242c418c8be",
+      "b38c6d839bd4c982dbb1eabdd7b222e501d73d66980a88d088f5174d2b8407c8",
+      "6ac849fb1db306ca14d48f3bcfc4e1e0f5635404c330104d44ec132cb1169a04",
+      "dd2096b06494c232498eefbf675bded0d7d8c7bd08c87860b2d04dd958df4e6b",
+      "c91d9748803e2ee9749ebfe4777ae2493c6e6ab37d5ed51f3ed89fc6766fcb18"
+    ],
+    "stress": "36/36 PASS",
+    "stress_sha256": "98fc4fa2fe9b8559e3957bc1dc0d8c53d5563dff7d62304fac29c50f9ea1d213",
+    "prefix_1_50": "PASS",
+    "prefix_sha256": "af804f33233b542b1a11cefcad464c94ede0e6755c5455745cfe0d696e285e47"
+  },
+  "project_control": {
+    "run_id": 32378258397,
+    "run_number": 1044,
+    "conclusion": "SUCCESS",
+    "overall": "YELLOW_NON_RED",
+    "directional": "YELLOW_NON_RED",
+    "artifact_id": 9409920221,
+    "artifact_zip_sha256": "410272f3aa2ac78a5ec2e6db005218f7d172a1d339e542aa445fbf8c67bfbd5c"
+  }
+}
