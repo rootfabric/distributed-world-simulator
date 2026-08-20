@@ -1,0 +1,21 @@
+{
+  "campaign": "fresh exact-candidate runtime evidence R1",
+  "candidate_sha": "601ca87f36b96bae9d519693e5cac9dfc38abec9",
+  "candidate_tree": "7369136e3971d773a23f71201001f9838b1c8844",
+  "status": "RED",
+  "blocking_gate": "m5_graphical_fresh_5x",
+  "expected_count": 5,
+  "started_count": 5,
+  "replacement_run_count": 0,
+  "results": {
+    "1": "PASS_RC0_99_0",
+    "2": "PASS_RC0_99_0",
+    "3": "RED_OUTER_WAIT_STATUS_UNAVAILABLE",
+    "4": "PASS_RC0_99_0",
+    "5": "PASS_RC0_99_0"
+  },
+  "run3_core_raw_archive_sha256": "2006c4048c047178327304f87434efb964e5afa7356cccd8f6eb85182133bb78",
+  "continuous_launch_count": 0,
+  "stopped_fail_closed": true,
+  "candidate_code_repair_authorized": false
+}
