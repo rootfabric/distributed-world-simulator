@@ -1,0 +1,58 @@
+{
+  "schema": "distributed_world_simulator.harness_continuation_policy.v1",
+  "continuation_layer_revision": "H0-CONTINUATION-2026-08-20-R5",
+  "principles": {
+    "checkpoint_is_user_session_unit": true,
+    "work_order_is_execution_unit": true,
+    "role_is_isolation_unit": true,
+    "attempt_is_repair_retry_unit": true,
+    "mission_survives_role_boundaries": true,
+    "role_boundary_is_not_mission_boundary": true,
+    "human_is_not_routine_result_courier": true,
+    "chat_only_role_result_is_not_durable_handoff": true,
+    "mission_exit_requires_machine_terminal": true,
+    "blocked_state_alone_is_not_hard_block_proof": true,
+    "routine_git_write_is_not_human_gate": true,
+    "role_boundary_does_not_revoke_git_authority": true,
+    "do_not_reask_human_for_pre_authorized_git_operations": true
+  },
+  "mission_terminal_policy": {
+    "allowed_terminals": [
+      "MISSION_COMPLETE",
+      "HUMAN_DECISION_REQUIRED",
+      "HARD_BLOCKED"
+    ],
+    "mission_complete_requires": "CANONICAL_MAIN_CHECKPOINT_ACCEPTANCE_RECORD",
+    "role_boundary_mission_exit_allowed": false,
+    "work_order_cancellation_mission_exit_allowed": false,
+    "checkpoint_proposed_mission_exit_allowed": false,
+    "fix_required_mission_exit_allowed": false,
+    "review_required_mission_exit_allowed": false,
+    "verification_required_mission_exit_allowed": false
+  },
+  "close_gates": {
+    "close_role_command": "CONTROL_DEVELOPMENT.ps1 -CloseRole",
+    "close_mission_command": "CONTROL_DEVELOPMENT.ps1 -CloseMission",
+    "close_alias_targets": "MISSION",
+    "role_exit_forbidden_exit_code": 7,
+    "mission_exit_forbidden_exit_code": 8
+  },
+  "driver": {
+    "command": "CONTROL_DEVELOPMENT.ps1 -Drive",
+    "auto_continue_status": "CONTINUE_REQUIRED",
+    "rerun_after_each_durable_role_result": true,
+    "same_parent_session_required": true,
+    "fresh_reviewer_context_required": true,
+    "fresh_verifier_context_required": true,
+    "stop_only_on": [
+      "MISSION_COMPLETE",
+      "WAITING_HUMAN",
+      "HARD_BLOCKED"
+    ]
+  },
+  "self_closing_execution": {
+    "max_same_defect_fix_required_events_before_takeover": 3,
+    "takeover_actor": "DIRECTOR",
+    "takeover_does_not_end_mission": true
+  }
+}
