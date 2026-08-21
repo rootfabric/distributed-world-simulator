@@ -4,7 +4,7 @@
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_AUTHORIZED_PRECOMMIT_FROZEN",
+  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_IMPLEMENTED_AWAITING_REVIEW",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO3/E3.FINAL",
-  "current_step": "Planetary Ecology Compiler Challenge precommit frozen / implementation next",
+  "current_step": "Planetary Ecology Compiler Challenge implemented / awaiting independent review",
   "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -279,7 +279,11 @@
     "e3_final_authorization_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO3_E3_FINAL_AUTHORIZED_RU.md",
     "e3_final_challenge_contract_path": "config/ecology/eco-evo3-e3-final-unseen-world-challenge-contract.v1.json",
     "e3_final_contract_hash": "ee66f06dd186ba914508c1f7d157d01288a8d51d7c04f6be7147d558849ece99",
-    "e3_final_contract_artifact_sha256": "2df71a1c478730cb8539176fd3d8165504e5c5c567725e41192591d2cdf1f8e8"
+    "e3_final_contract_artifact_sha256": "2df71a1c478730cb8539176fd3d8165504e5c5c567725e41192591d2cdf1f8e8",
+    "e3_final_program_artifact_path": "validation/ecology/eco-evo3-e3-final-unseen-world-program.generated.json",
+    "e3_final_planetary_ecology_program_hash": "6d28b032c193cb046d48a07a21fd31996331ef4cbb19add25e5eb1fd2b228767",
+    "e3_final_sealed_reveal_evidence": "validation/ecology/eco-evo3-e3-final-sealed-reveal-evidence.json",
+    "e3_final_reveal_summary": "12/12 digests verified; 6 confirmed / 6 falsified (falsification evidence recorded)"
   },
   "production_integration_boundary": {
     "status": "SEPARATE_MAIN_OWNED_PRODUCT_TRAIN",
@@ -359,7 +363,7 @@
       {
         "id": "E3.FINAL",
         "name": "Planetary Ecology Compiler Challenge",
-        "status": "AUTHORIZED_PRECOMMIT_FROZEN"
+        "status": "IMPLEMENTED_AWAITING_INDEPENDENT_REVIEW"
       }
     ],
     "e3_2_input_rule": "MUST_CONSUME_ACCEPTED_E3_1_SNAPSHOT_NO_RAW_FIXTURE_BYPASS",
