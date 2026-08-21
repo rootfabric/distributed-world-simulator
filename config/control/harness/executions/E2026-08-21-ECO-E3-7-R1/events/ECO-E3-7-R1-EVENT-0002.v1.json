@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-7-R1-EVENT-0002",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "sequence": 2,
+  "event_type": "IMPLEMENTATION_CANDIDATE_PUBLISHED",
+  "work_state": "IMPLEMENTED_CANDIDATE",
+  "recorded_at_utc": "2026-08-21T11:01:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/eco-evo3-e3-7-deterministic-planet-compilation",
+  "head_sha": "54b3c349183cdcae0309fdd344f5ffecf3f007a8",
+  "details": {
+    "checkpoint": "ECO.EVO3/E3.7",
+    "executable_commit": "54b3c349183cdcae0309fdd344f5ffecf3f007a8",
+    "tests_declared": 28,
+    "generated_artifact_pending_machine_freeze": true,
+    "review_authorized": false
+  }
+}

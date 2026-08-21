@@ -1,0 +1,69 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_7_planet_compilation_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.7-2026-08-21-R1",
+  "checkpoint": "ECO.EVO3/E3.7",
+  "compiler_stage": "PLANET_COMPILATION",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "canonical_binding_resolved": false,
+  "production_binding_authorized": false,
+  "input_policy": {
+    "immediate_ecology_predecessor": "EXACT_ACCEPTED_E3_6_TEMPORAL_PROGRAM",
+    "accepted_chain_required": [
+      "E3.1",
+      "E3.2",
+      "E3.3",
+      "E3.4",
+      "E3.5",
+      "E3.6"
+    ],
+    "persisted_evo2_species_catalog_required": true,
+    "raw_bytes_required": true,
+    "git_blob_required": true,
+    "artifact_sha256_required": true,
+    "semantic_identity_recompute_required_where_defined": true,
+    "plain_parsed_json_authority_forbidden": true,
+    "candidate_alias_authority_forbidden": true,
+    "stage_rebake_or_retuning_forbidden": true
+  },
+  "output_policy": {
+    "program_type": "PlanetEcologyProgram",
+    "research_derived_non_authoritative": true,
+    "contains": [
+      "foundation_manifest",
+      "species_manifest",
+      "regions",
+      "opportunity_field",
+      "ecology_decomposition",
+      "colonization_program",
+      "population_workset",
+      "temporal_program",
+      "execution_budget_hints",
+      "projection",
+      "evidence_package",
+      "provenance"
+    ],
+    "canonical_foundation_ownership": false,
+    "canonical_species_taxonomy": false,
+    "individual_entity_truth": false,
+    "production_persistence_authority": false,
+    "world_transaction_authority": false,
+    "network_authority": false,
+    "asset_scatter_truth": false,
+    "xfer1_authority": false
+  },
+  "determinism": {
+    "canonical_json": "SORTED_KEYS_COMPACT_UTF8_NEWLINE_V1",
+    "global_rng_allowed": false,
+    "local_clock_allowed": false,
+    "ambient_environment_allowed": false,
+    "same_exact_inputs_same_program_bytes_required": true,
+    "same_exact_inputs_same_program_hash_required": true,
+    "fresh_process_replay_required": true
+  },
+  "successor": {
+    "e3_8_authorized": false,
+    "e3_8_must_remain_blocked_until_independent_e3_7_acceptance": true
+  },
+  "contract_hash": "c2d0eec22d554cd6ec202a99c38c19609ad8d33ecb388bf598fe0d82b28483a1"
+}

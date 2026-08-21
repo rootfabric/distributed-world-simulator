@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rootfabric.dev/schemas/ecology/evo3_e3_7_planet_ecology_program.v1.schema.json",
+  "title": "ECO EVO3 E3.7 PlanetEcologyProgram",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "checkpoint",
+    "compiler_stage",
+    "program_type",
+    "authority",
+    "canonical_binding_resolved",
+    "production_binding_authorized",
+    "stable_planet_identity",
+    "stable_time_key",
+    "foundation_manifest",
+    "species_manifest",
+    "accepted_chain_manifest",
+    "regions",
+    "opportunity_field",
+    "ecology_decomposition",
+    "colonization_program",
+    "population_workset",
+    "temporal_program",
+    "execution_budget_hints",
+    "projection",
+    "evidence_package",
+    "provenance",
+    "provenance_hash",
+    "planet_ecology_program_hash_algorithm",
+    "planet_ecology_program_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_e3_7_planet_ecology_program.v1"},
+    "version": {"const": "1.0.0"},
+    "checkpoint": {"const": "ECO.EVO3/E3.7"},
+    "compiler_stage": {"const": "PLANET_COMPILATION"},
+    "program_type": {"const": "PlanetEcologyProgram"},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "production_binding_authorized": {"const": false},
+    "stable_planet_identity": {"type": "string", "minLength": 1},
+    "stable_time_key": {"type": "string", "minLength": 1},
+    "foundation_manifest": {
+      "type": "object",
+      "required": ["stable_planet_identity", "stable_time_key", "snapshot_hash", "field_provenance_hash", "ownership"],
+      "properties": {
+        "stable_planet_identity": {"type": "string"},
+        "stable_time_key": {"type": "string"},
+        "snapshot_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "reference_frame_identity": {"type": ["string", "null"]},
+        "tf_semantic_reference": {"type": "string"},
+        "env_semantic_reference": {"type": "string"},
+        "ownership": {"const": "EXTERNAL_OWNER_SNAPSHOT_CONTEXT"}
+      },
+      "additionalProperties": false
+    },
+    "species_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["research_species_id", "entry_hash", "genome_checksum", "recruitment_traits_checksum", "canonical_species_declared"],
+        "properties": {
+          "research_species_id": {"type": "string"},
+          "entry_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "genome_checksum": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "recruitment_traits_checksum": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "canonical_species_declared": {"const": false}
+        },
+        "additionalProperties": false
+      }
+    },
+    "accepted_chain_manifest": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["input", "path", "git_blob", "sha256", "semantic_fields"],
+        "properties": {
+          "input": {"enum": ["e3_1", "e3_2", "e3_3", "e3_4", "catalog", "e3_5", "e3_6"]},
+          "path": {"type": "string"},
+          "git_blob": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "semantic_fields": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "regions": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "opportunity_field": {"type": "object"},
+    "ecology_decomposition": {"type": "object"},
+    "colonization_program": {"type": "object"},
+    "population_workset": {"type": "object"},
+    "temporal_program": {"type": "object"},
+    "execution_budget_hints": {"type": "array"},
+    "projection": {
+      "type": "object",
+      "required": [
+        "authority", "stable_planet_identity", "stable_time_key", "catalog_entry_count",
+        "opportunity_sample_count", "research_patch_count", "research_edge_count",
+        "research_region_count", "active_spatial_key_count", "active_basis_count",
+        "temporal_envelope_count", "individual_entity_count"
+      ],
+      "properties": {
+        "authority": {"const": "RESEARCH_PROJECTION_NON_CANONICAL"},
+        "stable_planet_identity": {"type": "string"},
+        "stable_time_key": {"type": "string"},
+        "catalog_entry_count": {"type": "integer", "minimum": 0},
+        "opportunity_sample_count": {"type": "integer", "minimum": 0},
+        "research_patch_count": {"type": "integer", "minimum": 0},
+        "research_edge_count": {"type": "integer", "minimum": 0},
+        "research_region_count": {"type": "integer", "minimum": 0},
+        "active_spatial_key_count": {"type": "integer", "minimum": 0},
+        "active_basis_count": {"type": "integer", "minimum": 0},
+        "temporal_envelope_count": {"type": "integer", "minimum": 0},
+        "individual_entity_count": {"const": 0}
+      },
+      "additionalProperties": false
+    },
+    "evidence_package": {"type": "object"},
+    "provenance": {"type": "object"},
+    "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "planet_ecology_program_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "planet_ecology_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

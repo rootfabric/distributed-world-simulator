@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO.EVO3/E3.7 Repair R1",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+  "intent": "Demonstrate bounded repair of Reviewer finding E3.7-R1-001 by eliminating the alternate exact-final-byte serializer helper while preserving exact accepted inputs, deterministic scientific output identity, and research-only authority.",
+  "root_cause_or_reason": "Fresh independent review found that serialized_bytes(v: Any) reproduced exact final PlanetEcologyProgram bytes for plain reconstructed JSON outside the verified-output serialization capability boundary.",
+  "changed_surfaces": [
+    "scripts/research/ecology/planet_ecology_program_compiler_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_7_authority.py",
+    "RUN_ECO_EVO3_E3_7_TESTS.py",
+    "config/control/harness/executions/E2026-08-21-ECO-E3-7-R1/evidence/E3-7-REPAIR-R1-*",
+    "docs/evidence/2026-08-21_ECO_EVO3_E3_7_REPAIR_R1_*"
+  ],
+  "canonical_owner": "ECO.EVO3 research derivation only; canonical foundation/species/runtime owners remain external",
+  "entry_points": [
+    "load_verified_inputs(contract,binding)",
+    "build_planet_ecology_program(verified_inputs)",
+    "serialize_planet_ecology_program(verified_program)",
+    "write_planet_ecology_program(verified_program, output)",
+    "RUN_ECO_EVO3_E3_7_TESTS.py"
+  ],
+  "callers": [
+    "E3.7 CLI main()",
+    "E3.7 exact closure runner",
+    "E3.7 semantic/authority tests"
+  ],
+  "callees": [
+    "canonical_bytes for newline-free hashing/canonical comparison",
+    "validate_output_integrity",
+    "independent exact-input rebuild",
+    "raw Git-blob/SHA/semantic identity verification"
+  ],
+  "sibling_surfaces_checked": [
+    "module public functions containing serial/final/write are enumerated by authority regression",
+    "serialized_bytes helper is absent",
+    "serialize_planet_ecology_program rejects plain/forged/mutated dicts",
+    "write_planet_ecology_program rejects plain/forged/mutated dicts without creating output",
+    "accepted E3.1-E3.6 artifacts remain read-only",
+    "persisted EVO2 SpeciesCatalog remains read-only",
+    "generated PlanetEcologyProgram remains byte-identical to pre-repair artifact",
+    "no network/persistence/runtime/XFER1/production owner surfaces changed"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "RED",
+  "directional_pc0": "RED",
+  "production_diff_summary": "No production runtime diff and no scientific output diff. Repair is confined to E3.7 serialization authority surface and its regression/closure checks.",
+  "remaining_risks": [
+    "Fresh independent Repair R1 Reviewer verdict pending on the post-evidence exact repair review head.",
+    "Independent Verifier remains blocked until fresh Repair R1 Reviewer PASS.",
+    "Global/ECO/directional Project Control remain RED; scoped ECO research clearance must not be described as global NON_RED."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Retain public finalization-surface enumeration in successor compiler stages.",
+    "Keep generic canonicalization primitives format-distinct from authoritative final serialization where practical."
+  ],
+  "evidence_gaps": [
+    "Fresh exact post-evidence Repair R1 Closure pending.",
+    "Fresh exact post-evidence Repair R1 Project Control pending.",
+    "Fresh independent Repair R1 Reviewer verdict pending.",
+    "Independent Verifier verdict pending after Reviewer PASS."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
