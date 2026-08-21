@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_e3_final_unseen_world_program.v1",
+  "title": "ECO EVO3 E3.FINAL unseen world challenge program",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "checkpoint",
+    "compiler_stage",
+    "authority",
+    "canonical_binding_resolved",
+    "production_binding_authorized",
+    "challenge",
+    "combinations",
+    "summary",
+    "provenance",
+    "provenance_hash",
+    "planetary_ecology_program_hash_algorithm",
+    "planetary_ecology_program_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_e3_final_unseen_world_program.v1"},
+    "version": {"const": "1.0.0"},
+    "checkpoint": {"const": "ECO.EVO3/E3.FINAL"},
+    "compiler_stage": {"const": "UNSEEN_WORLD_CHALLENGE"},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "production_binding_authorized": {"const": false},
+    "challenge": {
+      "type": "object",
+      "required": ["contract_hash", "predeclared_combination_count", "scientific_thresholds"],
+      "properties": {
+        "contract_schema": {"type": "string"},
+        "contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "predeclared_combination_count": {"const": 12},
+        "scientific_thresholds": {"const": "ACCEPTED_E3_4_60000_150000_UNTOUCHED"}
+      }
+    },
+    "combinations": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": [
+          "combination_id",
+          "stable_planet_identity",
+          "planet_snapshot",
+          "catalog",
+          "chain_hashes",
+          "chain_counts",
+          "colonization_program",
+          "downstream_projection",
+          "species_outcomes",
+          "observed_outcome_class",
+          "sealed_prediction_digest"
+        ],
+        "properties": {
+          "combination_id": {"type": "string", "pattern": "^[a-z0-9-]+__[a-z0-9_]+$"},
+          "stable_planet_identity": {"type": "string", "pattern": "^eco-evo3-final/unseen/"},
+          "planet_snapshot": {
+            "type": "object",
+            "required": ["snapshot_hash", "sha256"],
+            "properties": {
+              "snapshot_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          },
+          "catalog": {
+            "type": "object",
+            "required": ["variant", "catalog_hash", "entry_count", "sha256"],
+            "properties": {
+              "variant": {"enum": ["baseline", "extended_r1", "mono_r1"]},
+              "catalog_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "entry_count": {"type": "integer", "minimum": 1},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          },
+          "chain_hashes": {
+            "type": "object",
+            "required": ["derivation_contract_hash", "opportunity_field_hash", "field_provenance_hash", "decomposition_hash", "decomposition_provenance_hash", "colonization_program_hash"],
+            "properties": {
+              "derivation_contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "opportunity_field_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "decomposition_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "decomposition_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "colonization_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          },
+          "chain_counts": {
+            "type": "object",
+            "required": ["opportunity_samples", "patches", "edges", "regions"],
+            "properties": {
+              "opportunity_samples": {"const": 12},
+              "patches": {"type": "integer", "minimum": 1},
+              "edges": {"type": "integer", "minimum": 0},
+              "regions": {"type": "integer", "minimum": 1}
+            }
+          },
+          "colonization_program": {"type": "object"},
+          "downstream_projection": {"type": "object"},
+          "species_outcomes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["research_species_id", "status", "established_patch_count"],
+              "properties": {
+                "research_species_id": {"type": "string", "pattern": "^eco-research-species/"},
+                "status": {"enum": ["COLONIZED", "NO_COLONIZATION"]},
+                "established_patch_count": {"type": "integer", "minimum": 0}
+              }
+            }
+          },
+          "observed_outcome_class": {"enum": ["COLONIZED_ALL_SPECIES", "MIXED_PARTIAL_COLONIZATION", "NO_COLONIZATION_ALL_SPECIES"]},
+          "sealed_prediction_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["combination_count", "null_outcome_valid", "outcome_diversity_present"],
+      "properties": {
+        "combination_count": {"const": 12},
+        "colonized_all_species_combinations": {"type": "integer", "minimum": 0},
+        "mixed_partial_colonization_combinations": {"type": "integer", "minimum": 0},
+        "no_colonization_all_species_combinations": {"type": "integer", "minimum": 0},
+        "total_species_outcomes": {"type": "integer", "minimum": 12},
+        "null_outcome_valid": {"const": true},
+        "outcome_diversity_present": {"type": "boolean"},
+        "seasonality_state": {"const": "UNRESOLVED_SINGLE_SNAPSHOT"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["input_verification", "reused_modules", "compiler_module_reuse", "forbidden_promotions"],
+      "properties": {
+        "input_verification": {"type": "string"},
+        "reused_modules": {
+          "type": "object",
+          "minProperties": 6,
+          "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "compiler_module_reuse": {"const": "UNMODIFIED_IMPORTED_ACCEPTED_BUILDERS"},
+        "accepted_module_modification": {"type": "null"},
+        "forbidden_promotions": {
+          "type": "object",
+          "additionalProperties": {"const": false}
+        },
+        "sealed_commitments_verification": {"type": "string"}
+      }
+    },
+    "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "provenance_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "planetary_ecology_program_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "planetary_ecology_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
