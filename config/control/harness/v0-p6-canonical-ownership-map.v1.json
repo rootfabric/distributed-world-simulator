@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.v0_p6_canonical_ownership_map.v1",
-  "revision": "V0-P6.1-OWNERSHIP-2026-08-21-R1",
-  "status": "P6_1_CONTROL_AUDIT_CANDIDATE",
+  "revision": "V0-P6.1-OWNERSHIP-2026-08-21-R2",
+  "status": "P6_1_CONTROL_AUDIT_REPAIR_CANDIDATE",
   "canonical_owner": "main",
   "program": "V0",
   "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
@@ -11,6 +11,13 @@
   "accepted_p5_product_lineage": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
   "project_epoch": "E2026-08-21-V0-P6-R1",
   "work_order_id": "V0-P6-R1-WO-001",
+  "repair_of": {
+    "finding_id": "P6.1-R-001",
+    "failed_review_head": "9e4a0cebfe4801e075b7f91774e55173b5143619",
+    "severity": "HIGH",
+    "blocking": true,
+    "scope": "P6.1_CONTROL_MACHINE_ENFORCEMENT_ONLY"
+  },
   "source_ownership_registry": {
     "path": "config/control/architecture-ownership.v1.json",
     "blob_sha": "3319422747bd19bdef14abe5035fdd3c4af21d20",
@@ -22,6 +29,83 @@
     "ADAPT": "P6 may add a narrow adapter or composition boundary that delegates to the existing canonical owner.",
     "READ_ONLY_DONOR": "P6 may inspect or consume semantics/evidence, but may not make the donor a product owner or product base.",
     "FORBIDDEN_SECOND_TRUTH": "Any P6-private canonical store/oracle for this domain is forbidden."
+  },
+  "closed_model": {
+    "policy": "EXACT_ALLOWLIST_REJECT_UNKNOWN_OR_UNMAPPED",
+    "unknown_domain_disposition": "FAIL",
+    "missing_domain_disposition": "FAIL",
+    "duplicate_domain_id_disposition": "FAIL",
+    "missing_registry_key_disposition": "FAIL_UNLESS_EXPLICIT_NON_REGISTRY_CONTRACT",
+    "allowed_domain_ids": [
+      "DEVELOPMENT_CONTROL",
+      "ACCOUNT_AND_SESSION_IDENTITY",
+      "AUTHORITY_OWNERSHIP_AND_FENCING",
+      "NETWORK_TRANSPORT_REPLICATION_PREDICTION_RECONCILIATION",
+      "CANONICAL_ITEM_GRAPH_INVENTORY_CONTAINERS",
+      "EQUIPMENT_AND_TOOLS",
+      "CONSTRUCTION",
+      "PERSISTENCE_REPLAY_RECOVERY",
+      "OPERATION_ID_DEDUP_IDEMPOTENCY",
+      "RESOURCE_MINING_GAMEPLAY",
+      "PERSISTENT_SHARED_OUTPOST_COMPOSITION",
+      "EDGE_GATEWAY_COMMAND_SESSION_ROUTING",
+      "WARM_SHADOW_COMPATIBILITY",
+      "PRODUCTION_OWNERSHIP_DIRECTORY_AND_DOMAIN_TRANSFER",
+      "SEAMLESS_RESEARCH_AND_MRPF"
+    ],
+    "registry_backed_domain_ids": [
+      "DEVELOPMENT_CONTROL",
+      "ACCOUNT_AND_SESSION_IDENTITY",
+      "AUTHORITY_OWNERSHIP_AND_FENCING",
+      "NETWORK_TRANSPORT_REPLICATION_PREDICTION_RECONCILIATION",
+      "CANONICAL_ITEM_GRAPH_INVENTORY_CONTAINERS",
+      "EQUIPMENT_AND_TOOLS",
+      "CONSTRUCTION",
+      "PERSISTENCE_REPLAY_RECOVERY",
+      "OPERATION_ID_DEDUP_IDEMPOTENCY",
+      "WARM_SHADOW_COMPATIBILITY"
+    ],
+    "non_registry_domain_contracts": {
+      "RESOURCE_MINING_GAMEPLAY": {
+        "source_kind": "ACCEPTED_PRODUCT_COMPOSITION",
+        "canonical_owner": "V0_P3_RESOURCE_MINING_RULE",
+        "canonical_output_foundation_owner": "ITEM",
+        "classification": "ADAPT"
+      },
+      "PERSISTENT_SHARED_OUTPOST_COMPOSITION": {
+        "source_kind": "PRODUCT_COMPOSITION",
+        "canonical_owner": "COMPOSITE_EXISTING_OWNERS",
+        "classification": "ADAPT",
+        "canonical_components": [
+          "ITEM",
+          "CONSTRUCTION",
+          "V0_P3_RESOURCE_MINING_RULE",
+          "V0_P5_EQUIPMENT_TOOLS",
+          "R3_M0_MW"
+        ],
+        "creates_canonical_store": false
+      },
+      "EDGE_GATEWAY_COMMAND_SESSION_ROUTING": {
+        "source_kind": "SEAM_READY_ADAPTER_BOUNDARY",
+        "canonical_owner": "NX_AND_AUTHORITY_FOUNDATIONS",
+        "classification": "ADAPT",
+        "authoritative": false
+      },
+      "PRODUCTION_OWNERSHIP_DIRECTORY_AND_DOMAIN_TRANSFER": {
+        "source_kind": "POST_P6_SM1_SCOPE",
+        "canonical_owner": "AUTHORITY",
+        "classification": "READ_ONLY_DONOR",
+        "production_active_in_p6": false
+      },
+      "SEAMLESS_RESEARCH_AND_MRPF": {
+        "source_kind": "RESEARCH_DONOR",
+        "canonical_owner": "RESEARCH_ONLY",
+        "classification": "READ_ONLY_DONOR",
+        "becomes_product_base": false
+      }
+    },
+    "derivation_authority": "tests/harness/test_v0_p6_canonical_ownership_map.py",
+    "rule": "ZERO_UNRESOLVED_DUPLICATE_TRUTH is valid only when the machine derivation over this exact closed model returns zero violations. Authored empty arrays are evidence snapshots, never authority."
   },
   "global_rules": {
     "p6_is_product_composition_not_foundation_owner": true,
@@ -212,10 +296,13 @@
   ],
   "p6_1_exit_gate": {
     "required_result": "ZERO_UNRESOLVED_DUPLICATE_TRUTH",
+    "derivation_mode": "MACHINE_DERIVED_FROM_CLOSED_MODEL",
+    "declared_arrays_are_authority": false,
     "unresolved_domains": [],
     "unresolved_duplicate_truth": [],
     "control_audit_result": "PASS_CANDIDATE",
     "completion_bearing_harness_event_emitted": false,
-    "runtime_authority_granted": false
+    "runtime_authority_granted": false,
+    "rule": "The regression independently derives violations from the exact domain allowlist, canonical registry, explicit non-registry contracts, forbidden truth set and global safety flags, then requires the derived result to equal these evidence snapshots."
   }
 }
