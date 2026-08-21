@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "ECO-E3-6-R1-WO-001",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO.EVO3/E3.6",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "82214bf840cddd32d8f012e62f0e790feac3a76b",
+  "intent": "Prove the E3.6 executable freeze is a deterministic research-only temporal/disturbance compiler bound to exact accepted E3.5 and exact immutable TF/ENV snapshot context, without canonical TF/ENV/history or production authority.",
+  "root_cause_or_reason": "Accepted E3.5 lacks a temporal section; E3.6 adds snapshot-bound temporal envelopes while explicitly failing closed because only one accepted owner time snapshot exists.",
+  "changed_surfaces": [
+    ".github/workflows/e3-6-closure.yml",
+    "RUN_ECO_EVO3_E3_6_TESTS.py",
+    "config/control/harness/executions/E2026-08-21-ECO-E3-6-R1/**",
+    "config/ecology/eco-evo3-e3-6-inputs.binding.v1.json",
+    "config/ecology/eco-evo3-e3-6-temporal-disturbance-contract.v1.json",
+    "config/ecology/eco-evo3-e3-6-temporal-disturbance-program.schema.v1.json",
+    "scripts/research/ecology/temporal_disturbance_program_compiler_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_6_authority.py",
+    "tests/research/ecology/test_eco_evo3_e3_6_temporal_disturbance_program.py",
+    "validation/ecology/eco-evo3-e3-6-temporal-disturbance-program.generated.json"
+  ],
+  "canonical_owner": "ECO.EVO3 research derivation only; canonical TF/ENV/history remain external owners",
+  "entry_points": [
+    "load_verified_inputs(contract,binding,workset,snapshot)",
+    "build_temporal_program(verified_inputs)",
+    "serialize_temporal_program(verified_program)",
+    "RUN_ECO_EVO3_E3_6_TESTS.py"
+  ],
+  "callers": [
+    "E3.6 CLI main()",
+    "E3.6 exact closure runner",
+    "E3.6 semantic/authority tests"
+  ],
+  "callees": [
+    "_verify_raw_inputs",
+    "_validate_contract",
+    "_validate_binding",
+    "_validate_workset",
+    "_validate_snapshot",
+    "_compile_envelopes",
+    "_build_temporal_program",
+    "validate_output_integrity"
+  ],
+  "sibling_surfaces_checked": [
+    "accepted E3.5 generated workset remains byte-identical and read-only",
+    "accepted E3.1 TF/ENV snapshot remains byte-identical and read-only",
+    "no scripts/network changes",
+    "no scripts/persistence changes",
+    "no scripts/runtime changes",
+    "no architecture ownership changes",
+    "no XFER1 or production binding changes"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "RED",
+  "directional_pc0": "RED",
+  "production_diff_summary": "No production runtime diff. E3.6 is research-only; generated output explicitly reports canonical_binding_resolved=false and production_binding_authorized=false.",
+  "remaining_risks": [
+    "Single-snapshot evidence cannot support non-degenerate seasonality; output must remain UNRESOLVED_SINGLE_SNAPSHOT until new accepted owner temporal evidence exists.",
+    "Fresh independent Reviewer has not yet supplied the required role-separated verdict.",
+    "Independent Verifier remains required after Reviewer PASS.",
+    "Global Project Control remains RED; scoped ECO research clearance must not be described as global NON_RED."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Future TF/ENV owner snapshots should expose explicit accepted temporal-series identity if non-degenerate seasonal envelopes are required.",
+    "Keep authoritative serialization capability-bound and independently rebuilt from exact raw inputs in later EVO3 compiler stages."
+  ],
+  "evidence_gaps": [
+    "Fresh independent Reviewer verdict pending",
+    "Independent Verifier verdict pending",
+    "Fresh review-head Closure and Project Control evidence pending after evidence-only commit"
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
