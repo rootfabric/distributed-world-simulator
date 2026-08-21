@@ -76,6 +76,7 @@ jobs:
               Path("config/control/harness/harness-policy.v1.json"),
               Path("config/control/harness/scheduler-policy.v1.json"),
               Path("config/control/harness/v0-product-train-policy.v1.json"),
+              Path("config/control/harness/v0-p6-canonical-ownership-map.v1.json"),
               Path("config/control/harness/continuation-policy.v1.json"),
               Path("config/control/harness/work-order.schema.v1.json"),
               Path("config/control/harness/event.schema.v1.json"),
@@ -117,7 +118,8 @@ jobs:
         run: |
           python3 -m unittest \
             tests.harness.test_v0_s1_networked_checkpoint_contract \
-            tests.harness.test_v0_product_train_policy
+            tests.harness.test_v0_product_train_policy \
+            tests.harness.test_v0_p6_canonical_ownership_map
 
       - name: Run generation-80 authorization safety regression
         run: |
