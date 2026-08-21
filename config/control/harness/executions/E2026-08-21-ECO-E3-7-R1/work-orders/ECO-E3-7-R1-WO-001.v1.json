@@ -1,0 +1,114 @@
+{
+  "schema": "distributed_world_simulator.harness_work_order.v1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO_EVO3_E3_7_DETERMINISTIC_PLANET_COMPILATION",
+  "risk_class": "HIGH",
+  "base_branch": "feature/eco-evolutionary-ecology",
+  "base_head": "c9f0b0becb3d2494097d946202788b9d1aa292f4",
+  "worker": "root",
+  "status": "DISPATCHED",
+  "design_brief": {
+    "problem_statement": "E3.1-E3.6 provide accepted deterministic stage artifacts but there is no single exact-input, fresh-process deterministic PlanetEcologyProgram compiler that packages the accepted chain into one reviewable research program.",
+    "current_behavior": "Accepted owner snapshot context, opportunity field, ecology decomposition, causal colonization, population workset, and temporal program exist as separate stage outputs with their own authority boundaries.",
+    "desired_behavior": "Compile the exact accepted EVO3 chain plus persisted EVO2 SpeciesCatalog identity into one deterministic PlanetEcologyProgram whose canonical bytes and program hash are identical for identical accepted inputs across fresh processes.",
+    "alternatives_considered": [
+      "Recompute scientific stages from ad-hoc parsed JSON: rejected because it creates an alternate authority path and weakens accepted-input provenance.",
+      "Concatenate files without semantic cross-link validation: rejected because mutually inconsistent but individually valid artifacts could be packaged.",
+      "Exact accepted-chain verification plus deterministic assembly and independent rebuild: selected."
+    ],
+    "selected_design": "Verify raw Git-blob/SHA/semantic identities for the exact accepted stage artifacts, cross-check chain links and persisted catalog identity, create a verified-input capability, deterministically assemble PlanetEcologyProgram, and permit authoritative research serialization only after independent rebuild from retained exact raw bytes equals canonical output bytes.",
+    "affected_canonical_owners": ["ECO.EVO3 research compiler only"],
+    "dependencies": [
+      "ECO.EVO3/E3.6 ACCEPTED at canonical ECO control head c9f0b0becb3d2494097d946202788b9d1aa292f4",
+      "Exact accepted E3.1 owner-provided G/ENV/MAT/WQ/SD/TF snapshot context",
+      "Exact accepted E3.2 opportunity field",
+      "Exact accepted E3.3 research ecology decomposition",
+      "Exact accepted E3.4 causal colonization program and persisted EVO2 SpeciesCatalog identity",
+      "Exact accepted E3.5 population workset",
+      "Exact accepted E3.6 temporal program"
+    ],
+    "non_goals": [
+      "No E3.8 cross-planet generalization",
+      "No new scientific calibration or catalog rebake",
+      "No canonical G/ENV/MAT/WQ/SD/TF ownership",
+      "No canonical species taxonomy",
+      "No individual planet-wide entity truth",
+      "No production persistence, transaction, network, runtime, XFER1, or asset-scatter authority"
+    ],
+    "expected_risks": [
+      "Alternate helper/core path could serialize unverified reconstructed inputs",
+      "Stage artifacts could be individually valid but mutually inconsistent",
+      "Hidden process/global RNG/time/environment dependence could break fresh-process determinism",
+      "Packaging could accidentally promote research-derived fields into canonical ownership",
+      "Committed generated artifact could drift from machine-produced output"
+    ],
+    "validation_plan": [
+      "Semantic and adversarial authority unit tests",
+      "Exact Git-blob/SHA/semantic identity checks for accepted inputs",
+      "Cross-stage lineage consistency checks",
+      "Global RNG/time/process-environment negative-surface checks",
+      "Two or more fresh-process full fixture compilations with canonical byte/hash equality",
+      "Draft 2020-12 schema validation",
+      "Committed generated artifact byte-for-byte comparison",
+      "Independent Reviewer then independent Verifier before acceptance"
+    ]
+  },
+  "allowed_paths": [
+    "config/ecology/eco-evo3-e3-7-*",
+    "scripts/research/ecology/planet_ecology_program_compiler_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_7_*",
+    "RUN_ECO_EVO3_E3_7_TESTS.py",
+    ".github/workflows/e3-7-closure.yml",
+    "validation/ecology/eco-evo3-e3-7-*",
+    "docs/checkpoints/2026-08-21_ECO_EVO3_E3_7_*",
+    "docs/evidence/2026-08-21_ECO_EVO3_E3_7_*",
+    "config/control/harness/executions/E2026-08-21-ECO-E3-7-R1/**"
+  ],
+  "required_tests": [
+    "exact accepted E3.1-E3.6 chain verification",
+    "persisted EVO2 SpeciesCatalog identity verification",
+    "cross-stage planet/spatial/catalog/provenance linkage",
+    "plain reconstructed JSON serialization rejected",
+    "forged verified wrapper rejected by independent rebuild",
+    "mutation of legitimate verified program rejected",
+    "global RNG and local clock dependence absent",
+    "input ordering does not alter canonical output",
+    "fresh-process PlanetEcologyProgram byte/hash determinism",
+    "schema validation",
+    "committed generated bytes identical to machine output",
+    "negative production/canonical authority assertions"
+  ],
+  "closure_predicates": [
+    "TESTS_PASS",
+    "FOCUSED_VALIDATION_PASS",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "E3_7_ACCEPTED_CHAIN_EXACT",
+    "E3_7_PERSISTED_CATALOG_IDENTITY_EXACT",
+    "E3_7_CROSS_STAGE_LINEAGE_CONSISTENT",
+    "E3_7_BUILD_AUTHORITY_FROM_VERIFIED_INPUTS_ONLY",
+    "E3_7_SERIALIZATION_AUTHORITY_FROM_VERIFIED_OUTPUT_ONLY",
+    "E3_7_PLANET_PROGRAM_RESEARCH_NON_AUTHORITATIVE",
+    "E3_7_NO_CANONICAL_FOUNDATION_OR_SPECIES_AUTHORITY",
+    "E3_7_NO_PRODUCTION_PERSISTENCE_TRANSACTION_NETWORK_AUTHORITY",
+    "E3_7_GLOBAL_RNG_FORBIDDEN",
+    "E3_7_EXTERNAL_NONDETERMINISM_SNAPSHOT_BOUND",
+    "E3_7_FRESH_PROCESS_BYTE_HASH_DETERMINISM",
+    "E3_7_SCHEMA_VALID",
+    "E3_7_COMMITTED_GENERATED_BYTES_IDENTICAL",
+    "POST_BUILD_CRITIQUE_COMPLETE",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "E3_7_CHECKPOINT_PROPOSED",
+    "NO_BLOCKING_HUMAN_ATTENTION_ITEM"
+  ],
+  "fix_budget": 2,
+  "resolved_decisions": [],
+  "notes": [
+    "Global Project Control RED must remain RED; scoped ECO research continuation is permitted only under the main-owned research-isolation policy and absence of a critical ECO intersection.",
+    "E3.8, XFER1 and production ECO authority remain blocked/inactive.",
+    "The accepted E3.6 artifact is the immediate ecology predecessor; earlier accepted stages are immutable chain inputs/evidence, not alternative predecessor authority."
+  ]
+}
