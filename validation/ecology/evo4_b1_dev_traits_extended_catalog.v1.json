@@ -1,0 +1,142 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b1_extended_species_catalog.v1",
+  "version": "1.0.0",
+  "derived_representation": true,
+  "extension_provenance": {
+    "schema": "distributed_world_simulator.ecology.evo4_b1_catalog_extension.v1",
+    "version": "1.0.0",
+    "source_catalog_schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1",
+    "source_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "source_catalog_sha256": "99d6dbf87d1a459e2f73f13959dcb53d9b0b8be1519bb5352622202954cf7d1e",
+    "source_catalog_path": "config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json",
+    "derivation_rule_id": "evo4-b0-derivation-v0",
+    "generator": "evo4_bridge_catalog_extender_v1.py",
+    "generator_version": "1.0.0"
+  },
+  "entries": [
+    {
+      "ancestry_path": [
+        "eco-lineage/e22-root",
+        "eco-lineage/e22-beta"
+      ],
+      "canonical_species_declared": false,
+      "entry_hash": "058efd7836bdceec9b39c6a2b5c46b013d4bafd14c7b0da92e3a75b406046ec2",
+      "genome": {
+        "checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+        "genome_id": "genome/e22-beta",
+        "growth_rate": 0.72,
+        "height_m": 0.8,
+        "lifespan_years": 3.0,
+        "root_depth_m": 0.6,
+        "schema": "distributed_world_simulator.ecology.plant_genome.v1",
+        "seed_count": 360,
+        "seed_dispersal_distance_m": 28.0,
+        "shade_tolerance": 0.28,
+        "version": "1.0.0",
+        "water_preference": 0.7,
+        "water_tolerance_width": 0.28
+      },
+      "genome_checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+      "lineage_id": "eco-lineage/e22-beta",
+      "observed_patch_ids": [
+        "patch/beta"
+      ],
+      "parent_lineage_id": "eco-lineage/e22-root",
+      "recruitment_traits": {
+        "checksum": "71d06132f37687ba471e3ebcd56fc457a08c307aae4097fc874cb204b04f1595",
+        "dormancy_fraction": 0.18,
+        "schema": "distributed_world_simulator.ecology.evo1_recruitment_traits.v1",
+        "seed_bank_half_life_years": 1.8,
+        "trait_id": "recruit/e22-beta",
+        "version": "1.0.0"
+      },
+      "recruitment_traits_checksum": "71d06132f37687ba471e3ebcd56fc457a08c307aae4097fc874cb204b04f1595",
+      "research_species_id": "eco-research-species/247a0b301db2781bfc317a13",
+      "schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1.entry",
+      "source_observation_hash": "7bbbec07fb4199166147d7556ac2984156b4a5d24d3b922728e18652b884edf3",
+      "split_year": 1,
+      "version": "1.0.0",
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta",
+        "max_height_m": 3.2,
+        "internode_length_m": 0.32000000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5142857142857142,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 2.24,
+        "checksum": "ecadca02a3db6eb740eb6ddf13b5c63bdb627358afcde573c990483f0d60eddd"
+      },
+      "evo4_bridge": {
+        "derivation_rule_id": "evo4-b0-derivation-v0",
+        "individual_seed_demo": 533520666319502244,
+        "source_genome_checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6"
+      }
+    },
+    {
+      "ancestry_path": [
+        "eco-lineage/e22-root",
+        "eco-lineage/e22-alpha"
+      ],
+      "canonical_species_declared": false,
+      "entry_hash": "0b7485141737c5dea6bb86ba3fbbc0dc586ad2bc845584e018733eacf0f2b4fa",
+      "genome": {
+        "checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+        "genome_id": "genome/e22-alpha-late",
+        "growth_rate": 0.54,
+        "height_m": 1.5,
+        "lifespan_years": 8.5,
+        "root_depth_m": 1.7,
+        "schema": "distributed_world_simulator.ecology.plant_genome.v1",
+        "seed_count": 130,
+        "seed_dispersal_distance_m": 16.0,
+        "shade_tolerance": 0.65,
+        "version": "1.0.0",
+        "water_preference": 0.34,
+        "water_tolerance_width": 0.25
+      },
+      "genome_checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+      "lineage_id": "eco-lineage/e22-alpha",
+      "observed_patch_ids": [
+        "patch/alpha"
+      ],
+      "parent_lineage_id": "eco-lineage/e22-root",
+      "recruitment_traits": {
+        "checksum": "eaf40935117a150fa72eadbe512c04475896ba4e6ed1253c395bd8c8e15e50dc",
+        "dormancy_fraction": 0.38,
+        "schema": "distributed_world_simulator.ecology.evo1_recruitment_traits.v1",
+        "seed_bank_half_life_years": 4.5,
+        "trait_id": "recruit/e22-alpha",
+        "version": "1.0.0"
+      },
+      "recruitment_traits_checksum": "eaf40935117a150fa72eadbe512c04475896ba4e6ed1253c395bd8c8e15e50dc",
+      "research_species_id": "eco-research-species/34b4de11b3cbb2eae9f73176",
+      "schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1.entry",
+      "source_observation_hash": "11bd55d59969080dd0c9809141b694851e7ba9b41d26c7545fdeadb4ff799b40",
+      "split_year": 2,
+      "version": "1.0.0",
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late",
+        "max_height_m": 6.0,
+        "internode_length_m": 0.6000000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.18571428571428572,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.28,
+        "checksum": "1b536a0b20f4ea775f00e4fde6defdf61618ef57d81a852ee7565349257141c0"
+      },
+      "evo4_bridge": {
+        "derivation_rule_id": "evo4-b0-derivation-v0",
+        "individual_seed_demo": 687614577541481247,
+        "source_genome_checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383"
+      }
+    }
+  ]
+}
