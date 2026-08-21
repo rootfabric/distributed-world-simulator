@@ -1,46 +1,37 @@
 # V0 Edge Gateway Fabric — Test Implementation Plan
 
-Статус: **RESEARCH/TEST IMPLEMENTATION CANDIDATE / DONOR-ONLY / NO PRODUCTION AUTHORITY**
+Статус: **CURRENT PRE-P6 RESEARCH/TEST IMPLEMENTATION CANDIDATE / DONOR-ONLY / NO PRODUCTION AUTHORITY**
 
-Связанная спецификация:
+Связанные документы:
 
-`docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md`
+- `docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md`
+- `docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md`
+- `config/control/harness/v0-edge-gateway-fabric-test-plan.v1.json`
+- `config/control/harness/v0-p6-seamless-execution-roadmap.v1.json`
 
-Цель — получить исполняемый multi-process prototype до/параллельно P6 так, чтобы P6.6 и P6.9 могли опираться на проверенный Gateway contract, а post-P6 SM1 не начинал проектирование прокси с нуля.
+## 1. Execution decision
 
----
+Текущий порядок больше не является `P6 + EG0-EG5 parallel`.
 
-## 1. Стратегия внедрения сейчас
-
-Не переносить full distributed Gateway runtime внутрь P6 product branch.
-
-Разделить работу:
+Новый обязательный порядок:
 
 ```text
-PRODUCT P6
-  |
-  +-- topology-neutral identity
-  +-- OperationId continuity
-  +-- mutation admission boundary
-  +-- GatewayIngress-compatible command/session port
-  +-- WARM read-only compatibility
-  |
-  +---------------- convergence ----------------+
-                                                |
-SEAMLESS RESEARCH / EDGE GATEWAY LAB            |
-  |                                             |
-  +-- real Gateway process                      |
-  +-- shared backend tunnels                    |
-  +-- auth/session/placement                    |
-  +-- projection fan-in                         |
-  +-- nearest-edge selection                    |
-  +-- A->B backend pivot                        |
-                                                |
-                                                v
-                                         POST-P6 V0-SM1
+EG0 -> EG1 -> EG2 -> EG3 -> EG4 -> EG5
+        |
+        v
+EDGE_GATEWAY_FOUNDATION_ACCEPTED
+        |
+        v
+P6 runtime activation
+        |
+        +---- P6.1 -> P6.11
+        |
+        +---- EG6 -> EG7 -> EG8 -> EG9 in parallel
 ```
 
-P6 не блокируется на production-ready global network, но P6 API не имеет права закрепить direct-client-to-server assumptions.
+P6 runtime mutation запрещена до отдельного accepted Gateway Foundation checkpoint.
+
+Причина: EG0-EG5 проверяют transport/session границу, на которой потом строится весь P6 gameplay. Эти риски дешевле закрыть до роста P6.
 
 ---
 
@@ -59,51 +50,70 @@ gateway-g3
 
 sim-a
 sim-b
+macro-projection (optional in early stages)
 
 client-graphical-1
 client-graphical-2
-
 client-bots (configurable)
 
 test-orchestrator
 ```
 
-Все процессы должны запускаться локально. Geo/WAN моделируется `tc/netem`.
+Все процессы должны запускаться локально.
+
+Geo/WAN моделируется `tc/netem`, причём отдельно для:
+
+```text
+Client <-> Gateway
+Gateway <-> Server A
+Gateway <-> Server B / projection source
+Server/Directory control path
+```
 
 ---
 
-## 3. Reference implementation choice
+## 3. Reference implementation for the prototype
 
-Для первого prototype:
+Первый prototype:
 
 ```text
 Godot client
-    ENet/project DTO
+    ENet + project DTO
         |
 Godot headless Gateway
         |
-    ENet/GatewayEnvelope
+    ENet + GatewayEnvelope DTO
         |
 Godot headless Simulation Server
 ```
 
-Причины:
+Оркестрация:
 
-- минимальный новый stack;
-- уже существующие Godot/headless test patterns;
-- можно иметь client-facing и backend MultiplayerAPI/ENet peers в одном Gateway process;
-- wire DTO остаются проектными;
-- легко fault-inject через netem.
+```text
+Python + pytest + subprocess
+```
 
-Python/pytest orchestration управляет процессами и evidence.
+Fault injection:
 
-Production QUIC spike выполняется отдельно после semantics proof.
+```text
+Linux tc/netem
+```
+
+Почему сейчас не QUIC:
+
+- сначала нужно доказать semantics;
+- ENet уже входит в текущий стек проекта;
+- уменьшается число одновременно меняемых переменных;
+- Godot client/server/headless patterns уже существуют;
+- Gateway может иметь разные client-facing и backend peers.
+
+После semantics proof выполняется отдельный production transport spike; QUIC является сильным кандидатом, но не фиксируется этим планом.
 
 ---
 
-## 4. Work breakdown
+# PRE-P6 FOUNDATION
 
-### EG0 — contracts and fixtures
+## EG0 — Contracts and fixtures
 
 Deliver:
 
@@ -114,18 +124,32 @@ Deliver:
 - `GatewayRouteBinding`;
 - `ProjectionSubscription`;
 - `GatewayDescriptor`;
+- channel definitions;
 - canonical JSON fixtures;
 - schema validation;
 - protocol glossary update.
 
+Identity separation must hold:
+
+```text
+TransportConnectionId != GatewaySessionId
+GatewaySessionId       != ClientSessionId
+ClientSessionId        != PlayerId
+PlayerId               != PlayerEntityId
+session_slot            != PlayerId
+backend_peer_id         != PlayerId
+RouteRevision           != AuthorityEpoch
+```
+
 Exit:
 
 ```text
-all DTO roundtrip tests pass
-no DTO field equates transport peer id with PlayerId
+TOPOLOGY_NEUTRAL_DTOS_PASS
 ```
 
-### EG1 — single Gateway pass-through
+---
+
+## EG1 — Single Gateway pass-through
 
 Topology:
 
@@ -135,45 +159,68 @@ Client -> Gateway G1 -> Sim A
 
 Implement:
 
-- one client-facing listener;
-- one backend connection;
-- channel forwarding;
+- client-facing listener;
+- backend connection;
+- envelope forwarding;
 - route/session table;
-- metrics;
+- per-direction metrics;
 - no canonical gameplay logic inside Gateway.
 
-Run direct vs Gateway canonical-equivalence scenario.
+Run one scenario twice:
+
+```text
+DIRECT:  Client -> A
+GATEWAY: Client -> G1 -> A
+```
+
+Both paths must enter the same gameplay/domain boundary and produce equivalent canonical state/result.
 
 Exit:
 
 ```text
-same canonical result
-Gateway writes = 0
+DIRECT_GATEWAY_CANONICAL_EQUIVALENCE_PASS
+Gateway canonical writes = 0
+Gateway ownership decisions = 0
 ```
 
-### EG2 — Auth / Session / Placement
+---
 
-Flow:
+## EG2 — Auth / Session / Placement
+
+Target flow:
 
 ```text
-connect Gateway
-authenticate
-create/resume session
-resolve placement
-attach Sim A
-WorldReady
+EdgeLocator
+-> connect Gateway
+-> authenticate
+-> create/resume ClientSession
+-> resolve world/player placement
+-> Directory resolves current Authority
+-> Gateway ensures backend link
+-> logical session attach
+-> server reconstruct/load
+-> WorldReady
 ```
 
-Implement minimal test services/adapters using existing project identity/control contracts.
+Hard rules:
+
+```text
+client does not receive Sim A endpoint
+Gateway session id is not PlayerId
+Gateway route cache is not ownership truth
+```
+
+Reconnect/resume must preserve logical player identity.
 
 Exit:
 
 ```text
-client receives no Sim A endpoint
-PlayerId/PlayerEntityId stable across reconnect/resume
+WORLD_READY_WITHOUT_SERVER_ENDPOINT_DISCLOSURE
 ```
 
-### EG3 — shared multiplexed Gateway->Server tunnel
+---
+
+## EG3 — Shared multiplexed Gateway->Server tunnel
 
 Topology:
 
@@ -183,32 +230,60 @@ Client B --- Gateway G1 === one physical tunnel === Sim A
 Client C --/
 ```
 
+MVP deliberately proves many logical player sessions over one physical backend link.
+
 Implement:
 
 - ephemeral `session_slot`;
+- logical session attach/detach;
 - per-session queues;
-- channel scheduler;
-- demux on server;
+- scheduler;
+- server demux;
 - egress remux;
-- per-session fairness metrics.
+- per-session/per-link metrics.
 
-Tests:
+Priority classes:
 
-1. 2 clients minimum share exactly one backend link.
-2. one client floods unreliable input; other client still receives control/snapshot traffic.
-3. reliable world operation for one client does not corrupt another session.
-4. disconnect one client; backend tunnel remains for other clients.
-5. reconnect client gets new ephemeral slot but same logical identity.
+```text
+P0 session / authority control
+P1 reliable world operations
+P2 input
+P3 authoritative snapshots
+P4 projections
+P5 telemetry
+```
+
+Rules:
+
+- P4/P5 backlog must not block P0/P1;
+- stale unreliable snapshot/projection may be dropped;
+- reliable world operation backpressures instead of silent drop;
+- one client cannot monopolize tunnel;
+- queues are bounded;
+- session slot reuse cannot leak data between identities.
+
+Mandatory tests:
+
+1. 2+ clients share exactly one physical backend link.
+2. One client floods input; another still receives control/operations/snapshots.
+3. Reliable operation from one logical session cannot appear in another.
+4. Disconnect one client; tunnel remains for the others.
+5. Reconnect may receive new ephemeral slot while PlayerId/PlayerEntityId remain stable.
+6. Backend tunnel drop affects sessions predictably and leaves no stale slot resurrection.
 
 Exit:
 
 ```text
-backend physical link count independent of client count for MVP
-cross-session leakage = 0
-unbounded queue growth = 0
+MULTI_CLIENT_ONE_BACKEND_LINK_PASS
+cross_session_leakage = 0
+unbounded_queue_growth = 0
 ```
 
-### EG4 — projection aggregation through one client connection
+Production is allowed to evolve from one physical tunnel to a small `1..K` pool for congestion/failure isolation. `K` is a measured tuning value, not a gameplay contract.
+
+---
+
+## EG4 — Projection aggregation through one client connection
 
 Topology:
 
@@ -218,26 +293,31 @@ Topology:
 Client -> Gateway
             \
              Sim B PROJECTION
+              \
+               Macro projection (optional)
 ```
+
+Client remains connected only to Gateway.
 
 Implement:
 
-- ProjectionManifest/demand adapter;
-- Gateway subscription;
-- source stream revision;
-- C4 projection channel;
-- projection remux to client;
-- read-only enforcement.
+- projection demand/subscription;
+- source revision/sequence;
+- projection stream role;
+- Gateway fan-in;
+- remux into `WORLD_PROJECTION` channel;
+- read-only fencing;
+- projection priority/backpressure policy.
 
-Test:
+Graphical proof:
 
 ```text
 client transport count = 1
-active snapshot source = A
+active authoritative source = A
 projection source = B
-both visible in one graphical client
-B write injection rejected
-B loss does not disconnect gameplay session
+both visible in same graphical client
+projection write injection rejected
+projection source loss does not disconnect gameplay
 ```
 
 Exit:
@@ -246,7 +326,11 @@ Exit:
 MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS
 ```
 
-### EG5 — multi-Gateway nearest-edge selection
+Direct `ProjectionPublisher -> Client` sockets are not a V0 baseline dependency.
+
+---
+
+## EG5 — Multi-Gateway nearest-edge selection
 
 Topology:
 
@@ -254,28 +338,32 @@ Topology:
 Client
   |
 EdgeLocator
-  +-- G1
-  +-- G2
-  +-- G3
+  +-- Gateway G1
+  +-- Gateway G2
+  +-- Gateway G3
 ```
 
-Use netem to model different RTT/loss.
+`tc/netem` models different RTT/loss/jitter and health.
 
 Implement:
 
 - locator revision;
-- health/capacity candidates;
-- bounded client probes;
-- deterministic scoring;
+- bounded candidate list;
+- health/capacity hints;
+- bounded network probes;
+- deterministic network score;
 - hysteresis;
-- fallback when best Gateway unhealthy.
+- fallback selection.
+
+"Nearest" means best healthy network path, not geographic distance.
 
 Tests:
 
-1. lowest healthy network score selected.
-2. geographically named hint does not override measured bad path.
-3. failed G1 selects G2.
-4. active world session does not rehome merely because backend authority changes.
+1. Lowest healthy network score is selected.
+2. A geographically closer but poor route loses to a better path.
+3. Failed preferred Gateway falls back deterministically.
+4. Gateway selection and world authority selection remain separate.
+5. A future routine authority change A->B does not itself cause Gateway rehome.
 
 Exit:
 
@@ -283,142 +371,51 @@ Exit:
 NEAREST_HEALTHY_EDGE_SELECTION_PASS
 ```
 
-### EG6 — ACTIVE/WARM A->B backend pivot
+---
 
-Topology:
+## 4. PRE-P6 acceptance gate
 
-```text
-Client <-> Gateway G1 stable
-Gateway -> A ACTIVE
-Gateway -> B WARM
-```
+After EG5, do not immediately start P6 from chat state.
 
-Implement:
-
-- WARM attach;
-- handoff barrier/input watermark;
-- target reconstruction;
-- Directory commit integration;
-- route revision pivot;
-- A DRAIN;
-- stale response fencing;
-- exact OperationId retry.
-
-Hard test:
+Create durable acceptance evidence for:
 
 ```text
-same client transport before/during/after
-A ACTIVE -> B ACTIVE
-same PlayerId
-same PlayerEntityId
-no reconnect
-no respawn
-no duplicate canonical operation
+EDGE_GATEWAY_FOUNDATION_ACCEPTED
 ```
 
-Return B -> A too.
+Required:
 
-Exit:
+- EG0 PASS;
+- EG1 PASS;
+- EG2 PASS;
+- EG3 PASS;
+- EG4 PASS;
+- EG5 PASS;
+- `client_active_world_transports == 1`;
+- no simulation endpoint required by client;
+- shared backend tunnel proven;
+- auth/session/placement proven;
+- projection fan-in proven;
+- nearest healthy Edge selection proven;
+- Gateway canonical writes = 0;
+- Gateway ownership decisions = 0;
+- stable PlayerId/PlayerEntityId;
+- OperationId forwarding continuity;
+- no cross-session leakage/starvation;
+- bounded queues;
+- direct and Gateway adapters converge on same `ClientGameplayPort` / domain path;
+- no unresolved NX/AUTHORITY ownership conflict;
+- exact candidate Project Control SUCCESS;
+- fresh independent critical review PASS;
+- independent verification PASS.
 
-```text
-STABLE_CLIENT_CONNECTION_BACKEND_PIVOT_PASS
-```
-
-### EG7 — Gateway failure and rehome
-
-Test:
-
-```text
-Client -> G1 -> A
-kill G1
-Client resumes via edge endpoint -> G2 -> A
-```
-
-Implement:
-
-- resume token;
-- route reconstruction from Session + Directory;
-- stale old-Gateway fencing;
-- no canonical session truth only in G1 memory.
-
-Exit:
-
-```text
-same logical session/player
-no duplication
-no stale G1 resurrection
-```
-
-Physical reconnect is allowed for Gateway process failure in V0.
-
-### EG8 — WAN fault matrix
-
-Run independent impairment:
-
-```text
-Client->Gateway
-Gateway->A
-Gateway->B
-A/B->Directory
-```
-
-Profiles:
-
-- RTT classes from spec;
-- jitter;
-- 1/5% loss;
-- duplicate;
-- reorder;
-- asymmetric delay;
-- bandwidth cap;
-- temporary disconnect.
-
-Verify correctness before smoothness.
-
-### EG9 — scale/fairness/soak
-
-Minimum acceptance run:
-
-```text
-2 graphical clients
-32 bot clients
-1 Gateway
-2 simulation servers
-shared backend tunnel pool
-30 min
-repeated A<->B pivots
-projection source churn
-```
-
-Also run configurable 64/128+ bot stress when machine capacity allows.
-
-Measure:
-
-- sessions/tunnel;
-- queue depth;
-- bytes/player;
-- CPU/Gateway;
-- memory/session;
-- handoff success;
-- drops/backpressure;
-- route churn;
-- leaked sessions/tunnels.
-
-No fixed production SLO is promoted until measured baseline exists.
+Only after formal acceptance can P6 preactivation be refreshed and runtime lease rotated.
 
 ---
 
-## 5. Required server refactor boundary for P6.6
+## 5. P6 convergence boundary after Foundation acceptance
 
-P6.6 should add/confirm a topology-neutral ingress layer before gameplay handlers.
-
-Bad:
-
-```text
-multiplayer.get_remote_sender_id() -> PlayerId
-socket peer -> authority identity
-RPC sender address -> mutation authority
-```
+P6 must consume the proven network boundary, not invent a parallel gameplay path.
 
 Target:
 
@@ -430,70 +427,161 @@ TransportAdapter
     -> DomainCommand
 ```
 
-Future Gateway path:
+Both:
 
 ```text
+DirectTransportAdapter
 GatewayIngressAdapter
-    -> same ClientGameplayPort
 ```
 
-Direct single-server P6 path and Gateway lab path must execute the same domain commands.
+must enter the same `ClientGameplayPort` and domain semantics.
 
-This is the critical convergence point between P6 and EG lab.
-
----
-
-## 6. Shared tunnel scheduler
-
-MVP priority classes:
+Forbidden P6 assumptions:
 
 ```text
-P0 session/authority control
-P1 reliable world operations
-P2 input
-P3 authoritative snapshots
-P4 projections
-P5 telemetry
+multiplayer.get_remote_sender_id() == PlayerId
+socket peer == canonical authority identity
+RPC sender address == mutation authority
+client server address == gameplay owner
 ```
-
-Rules:
-
-- never allow telemetry/projection backlog to block P0/P1;
-- stale unreliable snapshot/projection may be dropped;
-- reliable operation must backpressure rather than silently drop;
-- per-session budget prevents one client monopolizing link;
-- scheduler metrics are mandatory.
-
-Exact weights are tuning values, not canonical contract.
 
 ---
 
-## 7. Handoff ordering proof
+# PARALLEL AFTER P6 ACTIVATION
 
-Required trace for every EG6 pass:
+## EG6 — ACTIVE/WARM A->B backend pivot
+
+After P6 runtime starts, run EG6 in parallel.
+
+Topology:
+
+```text
+Client <-> Gateway G1 = stable
+Gateway -> A = ACTIVE
+Gateway -> B = WARM
+```
+
+Required ordering:
 
 ```text
 1. A ACTIVE epoch E
-2. B WARM epoch candidate E+1, writes=0
-3. barrier/input watermark fixed
+2. B WARM, writes=0
+3. explicit input/command barrier fixed
 4. A reaches barrier
-5. target state consistent with barrier
-6. Directory commit B epoch E+1
+5. B reconstructs state at barrier
+6. Directory commits B epoch E+1
 7. Gateway observes committed ownership
-8. route_revision R+1
-9. B ACTIVE
-10. A DRAIN/READ_ONLY
-11. post-barrier input routed only B
+8. Gateway route_revision advances
+9. A -> DRAIN/READ_ONLY
+10. B -> ACTIVE
+11. post-barrier input routes only to B
 12. delayed A traffic fenced
 ```
 
-Evidence must contain timestamps/correlation IDs but ordering is logical, not wall-clock-authoritative.
+Hard test:
+
+```text
+same client transport before/during/after
+same PlayerId
+same PlayerEntityId
+no gameplay reconnect
+no respawn
+same logical OperationId retry semantics
+A->B and B->A pass
+```
+
+Exit:
+
+```text
+STABLE_CLIENT_CONNECTION_BACKEND_PIVOT_PASS
+```
+
+EG6 is a required donor for the preferred immediate post-P6 SM1 path unless a concrete independently reviewed blocker exists.
 
 ---
 
-## 8. Evidence
+## EG7 — Gateway failure/rehome
 
-Each test run publishes:
+Topology:
+
+```text
+Client -> G1 -> A
+kill G1
+Client resumes through edge endpoint -> G2 -> A
+```
+
+Gateway failure/rehome is distinct from normal authority handoff.
+
+For V0 a physical reconnect to a new Gateway is allowed after Gateway process failure, but logical identity/state must survive.
+
+Exit:
+
+```text
+LOGICAL_SESSION_REHOME_PASS
+```
+
+---
+
+## EG8 — WAN fault matrix
+
+Run impairments independently across network legs:
+
+- latency;
+- jitter;
+- 1/5% loss;
+- duplicate;
+- reorder;
+- asymmetric delay;
+- bandwidth cap;
+- temporary disconnect.
+
+Correctness gates precede smoothness tuning.
+
+Exit:
+
+```text
+CORRECTNESS_UNDER_SPLIT_LEG_IMPAIRMENT_PASS
+```
+
+---
+
+## EG9 — scale/fairness/soak
+
+Minimum:
+
+```text
+2 graphical clients
+32 bot clients
+1+ Gateways
+2 simulation servers
+shared backend tunnel pool
+30 min
+projection churn
+repeated A<->B pivots when EG6 available
+```
+
+Also run 64/128+ bots when machine capacity allows.
+
+Measure:
+
+- sessions/tunnel;
+- backend link count;
+- queue depth;
+- bytes/player;
+- Gateway CPU;
+- memory/session;
+- drops/backpressure;
+- handoff success;
+- route churn;
+- leaked sessions/tunnels.
+
+No production SLO is promoted before measured baseline exists.
+
+---
+
+## 6. Evidence package
+
+Each run publishes at minimum:
 
 ```text
 topology.json
@@ -507,12 +595,13 @@ assertions.json
 summary.json
 ```
 
-Critical fields:
+Critical correlation fields:
 
 ```text
 run_id
 gateway_instance_id
 gateway_session_id
+client_session_id
 player_entity_id
 operation_id
 input_seq
@@ -520,110 +609,69 @@ route_revision
 authority_epoch
 source_role
 backend_link_id
+session_slot
 ```
 
 ---
 
-## 9. Fault cases
-
-Mandatory before donor acceptance:
+## 7. Mandatory fault cases across the program
 
 - stale Gateway route revision;
 - forged session slot;
 - session slot reuse after disconnect;
 - duplicate forwarded operation;
-- lost response + exact retry;
-- late A packet after B activation;
+- lost response + exact OperationId retry;
+- projection source disconnect;
+- malformed/oversized projection;
+- one slow/flooding client;
+- one backend tunnel failure with multiple sessions;
+- Gateway route cache stale relative to Directory;
 - WARM write attempt;
 - B failure before commit;
 - A failure during prepare;
+- late A packet after B activation;
 - Gateway failure before/after ownership commit;
-- Directory stale read;
-- one backend tunnel drop with multiple clients;
-- one slow/flooding client;
-- projection source disconnect;
-- malformed oversized projection;
 - rapid A->B->A;
 - client reconnect during handoff.
 
----
-
-## 10. Integration into current P6 campaign
-
-Do now, before P6 runtime mutation is finally activated:
-
-1. accept/review the Gateway architecture control update;
-2. refresh P6 preactivation/Work Order so P6.6 binds this spec;
-3. keep P6 product base unchanged;
-4. start EG0-EG5 as donor-only Seamless Research in parallel;
-5. P6 implementation consumes only reviewed contracts/adapters, not research branch ancestry;
-6. complete EG6 before preferred post-P6 SM1 activation, or record a concrete reviewed blocker;
-7. EG7-EG9 become SM1 readiness / production hardening donors.
-
-Mapping:
-
-```text
-P6.2  <- EG0 identity contracts
-P6.3  <- EG0/EG1 OperationId forwarding
-P6.4  <- EG1/EG2 mutation admission boundary
-P6.6  <- EG0-EG3 ingress/session/shared-tunnel contract
-P6.9  <- EG4/EG6 WARM model
-P6.10 <- EG7-EG9 fault evidence
-
-SR3/I5A <- EG0-EG5
-SR4/I5B <- EG6
-SM1-H3/H4 <- reviewed EG1-EG6 donor contracts
-SM1-H5 <- productionized EG6
-SM1-H7 <- productionized EG7
-```
+Not all of these block P6 start: EG0-EG5 require their relevant subset; EG6-EG9 close the later pivot/recovery/WAN/scale cases.
 
 ---
 
-## 11. What must change in current R2 candidate
+## 8. Definition of PRE-P6 success
 
-Current R2 text allowing direct `ProjectionPublisher -> Client` is weakened for V0 baseline.
-
-New baseline:
+Before P6, the lab must demonstrate at least:
 
 ```text
-Client -> Gateway only
-Gateway -> ACTIVE server(s)
-Gateway -> projection source(s)
-```
-
-Direct projection transport is deferred optimization.
-
-Also add:
-
-- multi-Gateway EdgeLocator/nearest selection;
-- shared multiplexed GatewayServerLinkPool;
-- auth/session/placement flow;
-- projection aggregation;
-- Gateway failure/rehome distinction;
-- per-session fairness/backpressure;
-- explicit EG0-EG9 executable lab.
-
----
-
-## 12. Definition of successful test solution
-
-Test solution is successful when one run can demonstrate:
-
-```text
-Client A and Client B select a healthy Gateway.
-Both authenticate and enter world A.
+Client A and Client B discover/select a healthy Gateway.
+Both authenticate and enter world A without learning Sim A endpoint.
 Both share one Gateway->A physical backend tunnel.
-Client A approaches world B.
-Gateway subscribes to B projection for Client A.
-Client A still has exactly one client-facing transport.
-B becomes WARM.
-Directory commits A->B for Client A.
-Gateway pivots Client A backend route to B.
-Client B remains on A through the same shared tunnel.
-Client A continues on B without reconnect/respawn.
-Gateway G1 is killed.
-Client A resumes through G2 with same logical identity/state.
-No duplicate canonical operation or split-brain occurs.
+Client A and B remain isolated logical sessions.
+Client A approaches neighboring world B.
+Gateway subscribes to B projection.
+Client A sees A + B through exactly one client transport.
+Multiple Gateway candidates are measured and nearest healthy Edge is selected.
+Gateway owns no canonical world or authority truth.
 ```
 
-That scenario is the minimum proof that the architecture actually hides distributed-world complexity behind the Gateway.
+This is enough to prove the transport/session foundation on which P6 can safely grow.
+
+A real A->B authority pivot is deliberately EG6 and does not block P6 activation.
+
+---
+
+## 9. Final execution rule
+
+```text
+BEFORE P6:
+  EG0 -> EG1 -> EG2 -> EG3 -> EG4 -> EG5
+  -> EDGE_GATEWAY_FOUNDATION_ACCEPTED
+
+THEN:
+  P6.1 -> P6.11
+  in parallel with
+  EG6 -> EG7 -> EG8 -> EG9
+
+AFTER P6:
+  V0-SM1 productionizes accepted P6 + reviewed Gateway donors.
+```
