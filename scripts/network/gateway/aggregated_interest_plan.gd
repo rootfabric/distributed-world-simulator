@@ -7,6 +7,7 @@ const GatewayUtilsScript = preload("res://scripts/network/gateway/gateway_contra
 const SCHEMA := "planet_simulator.aggregated_interest_plan.v1"
 const PROTOCOL_VERSION := 1
 const SOURCE_ROLES: Array[String] = ["ACTIVE", "WARM", "PROJECTION", "MACRO", "CELESTIAL"]
+const AGGREGATE_BUDGET_FIELDS: Array[String] = ["bytes_per_second"]
 const FIELDS: Array[String] = [
 	"schema",
 	"protocol_version",
@@ -68,10 +69,14 @@ static func validate(value: Dictionary) -> Dictionary:
 		GatewayUtilsScript.require_nonnegative_integer(value, "aggregate_priority"),
 		GatewayUtilsScript.require_positive_integer(value, "graph_revision"),
 		GatewayUtilsScript.require_positive_integer(value, "interest_revision"),
-		GatewayUtilsScript.validate_derived_routing_payload(value.get("aggregate_budget")),
+		GatewayUtilsScript.validate_derived_routing_semantic_fields(value.get("aggregate_budget"), AGGREGATE_BUDGET_FIELDS, "AggregatedInterestPlan.aggregate_budget"),
 	]:
 		if not bool(check.get("success", false)):
 			return check
+	var aggregate_budget: Dictionary = Dictionary(value.get("aggregate_budget"))
+	var budget_check: Dictionary = GatewayUtilsScript.require_nonnegative_integer(aggregate_budget, "bytes_per_second")
+	if not bool(budget_check.get("success", false)):
+		return budget_check
 	if not BusUtilsScript.is_semantic_name(value.get("representation_or_lod"), false):
 		return NetworkUtilsScript.validation_failure(
 			"INVALID_REPRESENTATION",
@@ -107,8 +112,8 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 		return current_check
 	if String(candidate.get("source_world_id")) != String(current.get("source_world_id")):
 		return NetworkUtilsScript.validation_failure("SOURCE_WORLD_MISMATCH", "Cannot compare plans for different source worlds")
-	if int(candidate.get("graph_revision")) < int(current.get("graph_revision")):
-		return NetworkUtilsScript.validation_failure("STALE_GRAPH_REVISION", "graph_revision cannot rewind")
 	if int(candidate.get("interest_revision")) <= int(current.get("interest_revision")):
 		return NetworkUtilsScript.validation_failure("STALE_INTEREST_REVISION", "interest_revision must advance")
+	if int(candidate.get("graph_revision")) < int(current.get("graph_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_GRAPH_REVISION", "graph_revision cannot rewind")
 	return NetworkUtilsScript.validation_success()

@@ -1,10 +1,14 @@
 extends RefCounted
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const BusUtilsScript = preload("res://scripts/network/bus/message_bus_contract_utils.gd")
 const GatewayUtilsScript = preload("res://scripts/network/gateway/gateway_contract_utils.gd")
 
 const SCHEMA := "planet_simulator.world_relation.v1"
 const PROTOCOL_VERSION := 1
+const TRANSITION_REGION_FIELDS: Array[String] = ["id", "kind"]
+const REFERENCE_FRAME_RELATION_FIELDS: Array[String] = ["kind"]
+const PROJECTION_POLICY_FIELDS: Array[String] = ["read_only", "allows_mutation"]
 const RELATION_KINDS: Array[String] = [
 	"NEIGHBOR",
 	"OVERLAP",
@@ -71,10 +75,13 @@ static func validate(value: Dictionary) -> Dictionary:
 	]:
 		if not bool(check.get("success", false)):
 			return check
-	for field in ["intersection_or_transition_region", "reference_frame_relation", "projection_policy"]:
-		var payload_check: Dictionary = GatewayUtilsScript.validate_world_graph_payload(value.get(String(field)))
-		if not bool(payload_check.get("success", false)):
-			return payload_check
+	for semantic_check in [
+		_validate_transition_region(value.get("intersection_or_transition_region")),
+		_validate_reference_frame_relation(value.get("reference_frame_relation")),
+		_validate_projection_policy(value.get("projection_policy")),
+	]:
+		if not bool(semantic_check.get("success", false)):
+			return semantic_check
 	var projection_policy: Dictionary = Dictionary(value.get("projection_policy"))
 	if bool(projection_policy.get("allows_mutation", false)):
 		return NetworkUtilsScript.validation_failure(
@@ -95,4 +102,36 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 		return NetworkUtilsScript.validation_failure("RELATION_ID_MISMATCH", "Cannot compare different relations")
 	if int(candidate.get("relation_revision")) <= int(current.get("relation_revision")):
 		return NetworkUtilsScript.validation_failure("STALE_RELATION_REVISION", "relation_revision must advance")
+	return NetworkUtilsScript.validation_success()
+
+
+static func _validate_transition_region(raw_value) -> Dictionary:
+	var fields: Dictionary = GatewayUtilsScript.validate_world_graph_semantic_fields(raw_value, TRANSITION_REGION_FIELDS, "WorldRelation.intersection_or_transition_region")
+	if not bool(fields.get("success", false)):
+		return fields
+	var value: Dictionary = Dictionary(raw_value)
+	for field in value.keys():
+		if not BusUtilsScript.is_semantic_name(value.get(field), false):
+			return NetworkUtilsScript.validation_failure("INVALID_TRANSITION_REGION", "%s must be semantic" % field)
+	return NetworkUtilsScript.validation_success()
+
+
+static func _validate_reference_frame_relation(raw_value) -> Dictionary:
+	var fields: Dictionary = GatewayUtilsScript.validate_world_graph_semantic_fields(raw_value, REFERENCE_FRAME_RELATION_FIELDS, "WorldRelation.reference_frame_relation")
+	if not bool(fields.get("success", false)):
+		return fields
+	var value: Dictionary = Dictionary(raw_value)
+	if value.has("kind") and not BusUtilsScript.is_semantic_name(value.get("kind"), false):
+		return NetworkUtilsScript.validation_failure("INVALID_REFERENCE_FRAME_RELATION", "kind must be semantic")
+	return NetworkUtilsScript.validation_success()
+
+
+static func _validate_projection_policy(raw_value) -> Dictionary:
+	var fields: Dictionary = GatewayUtilsScript.validate_world_graph_semantic_fields(raw_value, PROJECTION_POLICY_FIELDS, "WorldRelation.projection_policy")
+	if not bool(fields.get("success", false)):
+		return fields
+	var value: Dictionary = Dictionary(raw_value)
+	for field in value.keys():
+		if typeof(value.get(field)) != TYPE_BOOL:
+			return NetworkUtilsScript.validation_failure("INVALID_PROJECTION_POLICY", "projection policy fields must be Boolean")
 	return NetworkUtilsScript.validation_success()

@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R6-REVIEW-REPAIR",
+  "revision": "V0-EG0-2026-08-21-R7-SEMANTIC-BOUNDARY-PROVENANCE-REPAIR",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
@@ -8,14 +8,16 @@
     "must_be_canonical_before_acceptance": true
   },
   "repair_base": {
-    "reviewed_head": "8316c926245fc14af08504c418636d2107135e15",
+    "reviewed_head": "a3b0e34910c48ab776119146dee48f6fff4b509d",
     "review_disposition": "FIX_REQUIRED",
     "blocking_findings": [
-      "EG0-R5-R-001",
-      "EG0-R5-R-002",
+      "EG0-R6-R-001",
+      "EG0-R6-R-002",
+      "EG0-R6-R-003"
+    ],
+    "prior_closed_findings": [
       "EG0-R5-R-003",
-      "EG0-R5-R-004",
-      "EG0-R5-R-005"
+      "EG0-R5-R-004"
     ]
   },
   "goal": "TOPOLOGY_NEUTRAL_DTOS_WORLD_GRAPH_AND_CWIP_CONTRACTS_PASS",
@@ -82,14 +84,18 @@
     "WORLD_GRAPH_NESTED_REVISIONS_NON_REGRESSING",
     "VIEW_AND_INTEREST_GRAPH_REVISION_NON_REGRESSING",
     "CONNECT_GATE_BINDS_SESSION_PLACEMENT_DIRECTORY_ROUTE_AND_READY_EVIDENCE",
-    "COLLISION_PROOF_BOUND_TO_QUERY_REVISION_AND_PROVENANCE"
+    "COLLISION_PROOF_BOUND_TO_QUERY_REVISION_AND_PROVENANCE",
+    "CLIENT_FRAME_PAYLOAD_SCHEMA_REGISTRATION_FAILS_CLOSED",
+    "WORLD_GRAPH_SEMANTIC_EXTENSION_FIELDS_ARE_SCHEMA_BOUND",
+    "WORLD_GRAPH_ABSENT_IDENTITY_PROVENANCE_PERSISTS_ACROSS_PARTITION_GAPS"
   ],
   "focused_tests": [
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
     "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
     "res://tests/network/test_eg0_world_graph_contracts.gd",
     "res://tests/network/test_eg0_cwip_connect_gate_contracts.gd",
-    "res://tests/network/test_eg0_r6_review_repairs.gd"
+    "res://tests/network/test_eg0_r6_review_repairs.gd",
+    "res://tests/network/test_eg0_r7_review_repairs.gd"
   ],
   "validation": {
     "previous_exact_head": {
@@ -106,7 +112,13 @@
     "r5_review_disposition": "FIX_REQUIRED",
     "r6_exact_head_focused_suite": "REQUIRED_BEFORE_FRESH_REVIEW",
     "r6_fresh_independent_review": "REQUIRED",
-    "r6_independent_verifier": "BLOCKED_UNTIL_FRESH_REVIEW_PASS"
+    "r6_independent_verifier": "BLOCKED_UNTIL_FRESH_REVIEW_PASS",
+    "r6_reviewed_head": "a3b0e34910c48ab776119146dee48f6fff4b509d",
+    "r6_review_disposition": "FIX_REQUIRED",
+    "r7_implementer_local_regression": "R6_29_PASS_AND_R7_21_PASS_EDITOR_PARSE_PASS",
+    "r7_exact_head_focused_suite": "REQUIRED_BEFORE_FRESH_REVIEW",
+    "r7_fresh_independent_review": "REQUIRED",
+    "r7_independent_verifier": "BLOCKED_UNTIL_FRESH_REVIEW_PASS"
   },
   "next_stage": "EG1_BLOCKED_UNTIL_CONTROL_DEPENDENCY_ACCEPTED_EXACT_HEAD_FOCUSED_PASS_FRESH_REVIEW_AND_VERIFICATION",
   "p6_runtime_authorized": false

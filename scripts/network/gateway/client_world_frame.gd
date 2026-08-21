@@ -52,7 +52,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		GatewayUtilsScript.require_enum(value, "channel", GatewayUtilsScript.CHANNELS),
 		GatewayUtilsScript.require_positive_integer(value, "sequence"),
 		GatewayUtilsScript.require_payload_schema(value),
-		GatewayUtilsScript.validate_client_surface_payload(value.get("payload")),
+		GatewayUtilsScript.validate_client_surface_payload(value.get("payload"), String(value.get("payload_schema", ""))),
 	]:
 		if not bool(check.get("success", false)):
 			return check

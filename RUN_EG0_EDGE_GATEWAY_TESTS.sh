@@ -25,7 +25,8 @@ for test_script in \
   res://tests/network/test_eg0_edge_gateway_fixtures.gd \
   res://tests/network/test_eg0_world_graph_contracts.gd \
   res://tests/network/test_eg0_cwip_connect_gate_contracts.gd \
-  res://tests/network/test_eg0_r6_review_repairs.gd
+  res://tests/network/test_eg0_r6_review_repairs.gd \
+  res://tests/network/test_eg0_r7_review_repairs.gd
 do
   BREAKPOINT_RUNTIME_DISABLED=1 "$godot_bin" \
     --headless --path "$project_root" --script "$test_script"
