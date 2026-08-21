@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import importlib.util
 import io
 import json
@@ -20,20 +21,25 @@ WORKSET = ROOT / "validation/ecology/eco-evo3-e3-5-population-workset.generated.
 SNAPSHOT = ROOT / "config/ecology/accepted_inputs/e3_1_accepted_planet_field_snapshot.v1.json"
 SCHEMA = ROOT / "config/ecology/eco-evo3-e3-6-temporal-disturbance-program.schema.v1.json"
 IMPL = ROOT / "scripts/research/ecology/temporal_disturbance_program_compiler_v1.py"
-TEST_DIR = ROOT / "tests/research/ecology"
+SEMANTIC_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_6_temporal_disturbance_program.py"
+AUTHORITY_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_6_authority.py"
 FINAL_ARTIFACT = ROOT / "e3_6_candidate_temporal_program.json"
 EXPECTED_TESTS = 23
 EXPECTED_ACTIVE_BASIS = 22
 EXPECTED_ACTIVE_SPATIAL_KEYS = 11
 
 
-def load_impl():
-    spec = importlib.util.spec_from_file_location("e3_6_temporal_compiler_runner", IMPL)
+def load_module(path: pathlib.Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load E3.6 compiler")
+        raise RuntimeError(f"cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_impl():
+    return load_module(IMPL, "e3_6_temporal_compiler_runner")
 
 
 def sha256_hex(raw: bytes) -> str:
@@ -46,21 +52,19 @@ def git_blob_hex(raw: bytes) -> str:
 
 
 def run_tests() -> tuple[int, str]:
-    suite = unittest.defaultTestLoader.discover(
-        str(TEST_DIR),
-        pattern="test_eco_evo3_e3_6_*.py",
-        top_level_dir=str(ROOT),
-    )
+    loader = unittest.TestLoader()
+    suite = unittest.TestSuite()
+    suite.addTests(loader.loadTestsFromModule(load_module(SEMANTIC_TEST, "e3_6_semantic_tests")))
+    suite.addTests(loader.loadTestsFromModule(load_module(AUTHORITY_TEST, "e3_6_authority_tests")))
     stream = io.StringIO()
     result = unittest.TextTestRunner(stream=stream, verbosity=2).run(suite)
     text = stream.getvalue()
     print(text, end="")
     if not result.wasSuccessful():
         raise SystemExit("E3.6 unit/authority tests failed")
-    count = result.testsRun
-    if count != EXPECTED_TESTS:
-        raise SystemExit(f"expected {EXPECTED_TESTS} E3.6 tests, got {count}")
-    return count, text
+    if result.testsRun != EXPECTED_TESTS:
+        raise SystemExit(f"expected {EXPECTED_TESTS} E3.6 tests, got {result.testsRun}")
+    return result.testsRun, text
 
 
 def validate_schema(program: dict) -> None:
@@ -91,7 +95,7 @@ def run_fresh_process(output: pathlib.Path) -> bytes:
 def main() -> int:
     print("=== ECO EVO3 E3.6 EXACT CLOSURE ===")
     print(f"python={sys.version.split()[0]}")
-    print(f"jsonschema={jsonschema.__version__ if hasattr(jsonschema, '__version__') else 'installed'}")
+    print(f"jsonschema={importlib.metadata.version('jsonschema')}")
 
     test_count, _ = run_tests()
     mod = load_impl()
