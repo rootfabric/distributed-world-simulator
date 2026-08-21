@@ -1,13 +1,15 @@
 {
   "schema": "distributed_world_simulator.v0_edge_gateway_fabric_test_plan.v1",
-  "revision": "V0-EDGE-GATEWAY-FABRIC-2026-08-21-R3-WORLD-GRAPH-PLANNER",
+  "revision": "V0-EDGE-GATEWAY-FABRIC-2026-08-21-R4-CWIP",
   "canonical_owner": "main",
   "status": "CURRENT_PRE_P6_FOUNDATION_CANDIDATE_DONOR_ONLY",
   "authored_against_main": "1d9de3c479c60045d613660b2a5c5db0374963f8",
   "current_execution_plan": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md",
-  "current_execution_amendment": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_R4_WORLD_GRAPH_AMENDMENT_RU.md",
+  "world_graph_amendment": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_R4_WORLD_GRAPH_AMENDMENT_RU.md",
+  "current_execution_amendment": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_R5_CWIP_AMENDMENT_RU.md",
   "human_spec": "docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md",
   "normative_world_graph_spec": "docs/network/EDGE_GATEWAY_WORLD_GRAPH_VIEW_PLANNER_SPEC_RU.md",
+  "normative_cwip_plan": "docs/network/EDGE_GATEWAY_CROSS_WORLD_INTERACTION_PROTOCOL_PLAN_RU.md",
   "human_implementation_plan": "docs/network/EDGE_GATEWAY_TEST_IMPLEMENTATION_PLAN_RU.md",
   "p6_roadmap": "config/control/harness/v0-p6-seamless-execution-roadmap.v1.json",
   "control_effect": {
@@ -17,14 +19,7 @@
     "gateway_research_becomes_product_base": false
   },
   "pre_p6_cutoff": {
-    "required_stages": [
-      "EG0",
-      "EG1",
-      "EG2",
-      "EG3",
-      "EG4",
-      "EG5"
-    ],
+    "required_stages": ["EG0", "EG1", "EG2", "EG3", "EG4", "EG4.5", "EG5"],
     "acceptance_record": "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
     "eg6_eg9_required_before_p6": false,
     "eg6_eg9_continue_parallel_after_p6_activation": true
@@ -41,30 +36,26 @@
     "gateway_world_graph_cache": "READ_ONLY_DERIVED_RECONSTRUCTIBLE",
     "gateway_view_planner_required": true,
     "gateway_interest_aggregator_required": true,
-    "global_knowledge_implies_global_connection": false
+    "global_knowledge_implies_global_connection": false,
+    "cross_world_interaction_gateway_role": "ROUTING_ORCHESTRATOR_ONLY",
+    "projection_hit_can_commit_effect": false
   },
   "world_graph_contracts": {
-    "required_in_eg0": [
-      "WorldDescriptor",
-      "WorldRelation",
-      "GatewayWorldGraphSnapshot",
-      "ClientWorldView",
-      "AggregatedInterestPlan",
-      "ViewRevision",
-      "InterestRevision"
-    ],
-    "minimum_relation_kinds": [
-      "NEIGHBOR",
-      "OVERLAP",
-      "CONTAINS",
-      "REFERENCE_FRAME_PARENT",
-      "REFERENCE_FRAME_CHILD",
-      "PORTAL_OR_TRANSITION",
-      "VISUALLY_RELEVANT"
-    ],
+    "required_in_eg0": ["WorldDescriptor", "WorldRelation", "GatewayWorldGraphSnapshot", "ClientWorldView", "AggregatedInterestPlan", "ViewRevision", "InterestRevision"],
+    "minimum_relation_kinds": ["NEIGHBOR", "OVERLAP", "CONTAINS", "REFERENCE_FRAME_PARENT", "REFERENCE_FRAME_CHILD", "PORTAL_OR_TRANSITION", "VISUALLY_RELEVANT"],
     "client_selects_world_server": false,
     "gateway_cache_can_be_partial": true,
     "stale_world_graph_revision_fails_closed": true
+  },
+  "cwip_contracts": {
+    "required_in_eg0": ["InteractionTime", "ReferenceFrameEvidence", "CrossWorldInteractionIntent", "InteractionDomainSegment", "CollisionQuery", "CollisionProof", "InteractionResolution", "EffectCommitRequest", "EffectCommitResult"],
+    "action_authority_validates_action": true,
+    "each_world_authority_validates_own_collision_domain": true,
+    "action_authority_resolves_first_valid_collision": true,
+    "target_effect_authority_commits_canonical_effect": true,
+    "gateway_resolves_first_collision": false,
+    "projection_target_hint_is_authority": false,
+    "same_interaction_operation_retry_is_idempotent": true
   },
   "edge_selection": {
     "production_direction": "ANYCAST_OR_LATENCY_AWARE_EDGE_ROUTING_VENDOR_NEUTRAL",
@@ -73,17 +64,7 @@
     "routine_authority_handoff_rehomes_gateway": false,
     "saved_world_location_controls_gateway_selection": false
   },
-  "session_flow": [
-    "DISCOVER_GATEWAY",
-    "CONNECT_GATEWAY",
-    "AUTHENTICATE",
-    "CREATE_OR_RESUME_SESSION",
-    "RESOLVE_WORLD_PLACEMENT",
-    "RESOLVE_CURRENT_AUTHORITY",
-    "ENSURE_SHARED_BACKEND_LINK",
-    "ATTACH_LOGICAL_SESSION",
-    "WORLD_READY"
-  ],
+  "session_flow": ["DISCOVER_GATEWAY", "CONNECT_GATEWAY", "AUTHENTICATE", "CREATE_OR_RESUME_SESSION", "RESOLVE_WORLD_PLACEMENT", "RESOLVE_CURRENT_AUTHORITY", "ENSURE_SHARED_BACKEND_LINK", "ATTACH_LOGICAL_SESSION", "WORLD_READY"],
   "client_channels": [
     {"id": "C0", "name": "SESSION_CONTROL", "delivery": "RELIABLE"},
     {"id": "C1", "name": "INPUT_MOVEMENT", "delivery": "UNRELIABLE_ORDERED"},
@@ -94,133 +75,23 @@
     {"id": "C6", "name": "TELEMETRY", "delivery": "BEST_EFFORT"}
   ],
   "stages": [
-    {
-      "id": "EG0",
-      "name": "CONTRACTS_AND_FIXTURES",
-      "phase": "PRE_P6_REQUIRED",
-      "amendment": "ADD_WORLD_GRAPH_VIEW_INTEREST_CONTRACTS",
-      "exit": "TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS"
-    },
-    {
-      "id": "EG1",
-      "name": "SINGLE_GATEWAY_PASS_THROUGH",
-      "phase": "PRE_P6_REQUIRED",
-      "exit": "DIRECT_GATEWAY_CANONICAL_EQUIVALENCE_PASS"
-    },
-    {
-      "id": "EG2",
-      "name": "AUTH_SESSION_PLACEMENT",
-      "phase": "PRE_P6_REQUIRED",
-      "additional_invariant": "NEAREST_GATEWAY_SELECTION_INDEPENDENT_FROM_SAVED_WORLD_AUTHORITY",
-      "exit": "WORLD_READY_WITHOUT_SERVER_ENDPOINT_DISCLOSURE"
-    },
-    {
-      "id": "EG3",
-      "name": "SHARED_MULTIPLEXED_BACKEND_TUNNEL",
-      "phase": "PRE_P6_REQUIRED",
-      "exit": "MULTI_CLIENT_ONE_BACKEND_LINK_PASS"
-    },
-    {
-      "id": "EG4",
-      "name": "WORLD_GRAPH_DRIVEN_PROJECTION_AGGREGATION",
-      "phase": "PRE_P6_REQUIRED",
-      "required_machine_walk_worlds": 8,
-      "known_world_fixture_minimum": 100,
-      "required_exits": [
-        "WORLD_GRAPH_DRIVEN_VIEW_PLANNING_PASS",
-        "MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS",
-        "INTEREST_AGGREGATION_PASS",
-        "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS",
-        "EIGHT_WORLD_PLANNER_WALK_PASS",
-        "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO"
-      ]
-    },
-    {
-      "id": "EG5",
-      "name": "MULTI_GATEWAY_NEAREST_EDGE_SELECTION",
-      "phase": "PRE_P6_REQUIRED",
-      "exit": "NEAREST_HEALTHY_EDGE_SELECTION_PASS"
-    },
-    {
-      "id": "EG6",
-      "name": "ACTIVE_WARM_MULTI_WORLD_BACKEND_PIVOT",
-      "phase": "PARALLEL_AFTER_P6_ACTIVATION",
-      "initial_bringup": "A_TO_B",
-      "donor_acceptance": "REPEATED_COMMITTED_MULTI_WORLD_CHAIN_TRAVERSAL",
-      "exit": "STABLE_CLIENT_CONNECTION_MULTI_WORLD_BACKEND_PIVOT_PASS"
-    },
+    {"id": "EG0", "name": "CONTRACTS_AND_FIXTURES", "phase": "PRE_P6_REQUIRED", "amendments": ["ADD_WORLD_GRAPH_VIEW_INTEREST_CONTRACTS", "ADD_CWIP_CONTRACTS"], "exit": "TOPOLOGY_NEUTRAL_DTOS_WORLD_GRAPH_AND_CWIP_CONTRACTS_PASS"},
+    {"id": "EG1", "name": "SINGLE_GATEWAY_PASS_THROUGH", "phase": "PRE_P6_REQUIRED", "exit": "DIRECT_GATEWAY_CANONICAL_EQUIVALENCE_PASS"},
+    {"id": "EG2", "name": "AUTH_SESSION_PLACEMENT", "phase": "PRE_P6_REQUIRED", "additional_invariant": "NEAREST_GATEWAY_SELECTION_INDEPENDENT_FROM_SAVED_WORLD_AUTHORITY", "exit": "WORLD_READY_WITHOUT_SERVER_ENDPOINT_DISCLOSURE"},
+    {"id": "EG3", "name": "SHARED_MULTIPLEXED_BACKEND_TUNNEL", "phase": "PRE_P6_REQUIRED", "exit": "MULTI_CLIENT_ONE_BACKEND_LINK_PASS"},
+    {"id": "EG4", "name": "WORLD_GRAPH_DRIVEN_PROJECTION_AGGREGATION", "phase": "PRE_P6_REQUIRED", "required_machine_walk_worlds": 8, "known_world_fixture_minimum": 100, "required_exits": ["WORLD_GRAPH_DRIVEN_VIEW_PLANNING_PASS", "MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS", "INTEREST_AGGREGATION_PASS", "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS", "EIGHT_WORLD_PLANNER_WALK_PASS", "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO"]},
+    {"id": "EG4.5", "name": "CROSS_WORLD_INTERACTION_ROUTING_PROOF", "phase": "PRE_P6_REQUIRED", "product_canonical_mutation_allowed": false, "reference_cases": ["B_SHOOTER_A_TARGET_CLEAR", "B_SHOOTER_C_WALL_BLOCKS_A_TARGET", "B_SHOOTER_C_NEAR_TARGET_WINS_OVER_A_FAR_TARGET"], "required_exits": ["CROSS_WORLD_INTERACTION_CONTRACTS_PASS", "CROSS_WORLD_DOMAIN_ROUTING_PASS", "MULTI_AUTHORITY_COLLISION_PROOF_PASS", "DETERMINISTIC_FIRST_COLLISION_RESOLUTION_PASS", "PROJECTION_HIT_IS_CANDIDATE_ONLY_PASS", "CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS"]},
+    {"id": "EG5", "name": "MULTI_GATEWAY_NEAREST_EDGE_SELECTION", "phase": "PRE_P6_REQUIRED", "exit": "NEAREST_HEALTHY_EDGE_SELECTION_PASS"},
+    {"id": "EG6", "name": "ACTIVE_WARM_MULTI_WORLD_BACKEND_PIVOT", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "initial_bringup": "A_TO_B", "donor_acceptance": "REPEATED_COMMITTED_MULTI_WORLD_CHAIN_TRAVERSAL", "exit": "STABLE_CLIENT_CONNECTION_MULTI_WORLD_BACKEND_PIVOT_PASS"},
+    {"id": "EG6.5", "name": "CROSS_WORLD_CANONICAL_EFFECT_COMMIT", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "reference_case": "HITSCAN_DAMAGE_IF_COMBAT_DOMAIN_ACCEPTED_OTHERWISE_FIRST_ACCEPTED_MUTABLE_PRODUCT_DOMAIN", "exit": "CROSS_WORLD_CANONICAL_EFFECT_COMMIT_PASS"},
     {"id": "EG7", "name": "GATEWAY_FAILURE_REHOME", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "LOGICAL_SESSION_REHOME_PASS"},
-    {"id": "EG8", "name": "WAN_FAULT_MATRIX", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "CORRECTNESS_UNDER_SPLIT_LEG_IMPAIRMENT_PASS"},
-    {"id": "EG9", "name": "SCALE_FAIRNESS_SOAK", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "BOUNDED_QUEUE_MULTI_CLIENT_SOAK_PASS"}
+    {"id": "EG8", "name": "WAN_AND_CWIP_FAULT_MATRIX", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "CORRECTNESS_UNDER_SPLIT_LEG_AND_CWIP_IMPAIRMENT_PASS"},
+    {"id": "EG9", "name": "SCALE_FAIRNESS_CWIP_SOAK", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "BOUNDED_QUEUE_MULTI_CLIENT_CWIP_SOAK_PASS"}
   ],
-  "pre_p6_acceptance": [
-    "EG0_PASS",
-    "EG1_PASS",
-    "EG2_PASS",
-    "EG3_PASS",
-    "EG4_PASS",
-    "EG5_PASS",
-    "WORLD_GRAPH_CONTRACTS_PASS",
-    "WORLD_GRAPH_READ_ONLY_CACHE_PASS",
-    "CLIENT_VIEW_PLANNER_PASS",
-    "INTEREST_AGGREGATION_PASS",
-    "GLOBAL_KNOWLEDGE_NOT_GLOBAL_CONNECTION_PASS",
-    "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS",
-    "EIGHT_WORLD_PLANNER_WALK_PASS",
-    "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO",
-    "CLIENT_NORMAL_WORLD_TRANSPORT_COUNT_ONE",
-    "MULTI_CLIENT_SHARED_BACKEND_LINK",
-    "PROJECTION_FAN_IN_THROUGH_GATEWAY",
-    "NO_SIM_SERVER_ENDPOINT_REQUIRED_BY_CLIENT",
-    "GATEWAY_CANONICAL_WRITES_ZERO",
-    "GATEWAY_OWNERSHIP_DECISIONS_ZERO",
-    "STABLE_PLAYER_IDENTITIES",
-    "OPERATION_ID_CONTINUITY",
-    "BOUNDED_PER_SESSION_QUEUES",
-    "NO_CROSS_SESSION_LEAKAGE_OR_STARVATION",
-    "DIRECT_AND_GATEWAY_PATH_SHARE_CLIENT_GAMEPLAY_PORT",
-    "NO_UNRESOLVED_NX_AUTHORITY_OWNERSHIP_CONFLICT",
-    "PROJECT_CONTROL_SUCCESS",
-    "FRESH_INDEPENDENT_REVIEW_PASS",
-    "INDEPENDENT_VERIFICATION_PASS"
-  ],
-  "mvp_reference_transport": {
-    "client_gateway": "GODOT_ENET_PROJECT_DTO",
-    "gateway_simulation": "GODOT_ENET_GATEWAY_ENVELOPE_DTO",
-    "orchestration": "PYTHON_PYTEST_SUBPROCESS",
-    "fault_injection": "TC_NETEM",
-    "production_transport_locked_by_this_spec": false,
-    "production_quic_spike_recommended": true
-  },
-  "p6_convergence_boundary": [
-    "TransportAdapter",
-    "ClientGameplayPort",
-    "SessionBinding",
-    "MutationAdmission",
-    "DomainCommand"
-  ],
-  "after_p6_activation": {
-    "run_in_parallel": ["EG6", "EG7", "EG8", "EG9"],
-    "eg6_required_for_preferred_immediate_sm1": true,
-    "eg6_donor_requires_multi_world_chain": true,
-    "eg7_eg9_are_sm1_readiness_hardening": true
-  },
-  "hard_invariants": [
-    "GLOBAL_KNOWLEDGE_DOES_NOT_IMPLY_GLOBAL_CONNECTION",
-    "WORLD_GRAPH_CACHE_IS_READ_ONLY_DERIVED_RECONSTRUCTIBLE",
-    "GATEWAY_VIEW_PLAN_IS_NOT_CANONICAL_WORLD_TRUTH",
-    "CLIENT_NEVER_SELECTS_SIMULATION_WORLD_ENDPOINT",
-    "INTEREST_IS_GATEWAY_MANAGED",
-    "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO",
-    "TRAVERSAL_HISTORY_DOES_NOT_CAUSE_UNBOUNDED_LINK_OR_MEMORY_GROWTH"
-  ],
-  "non_goals_before_p6": [
-    "PRODUCTION_BGP_ANYCAST_DEPLOYMENT",
-    "FINAL_QUIC_SELECTION",
-    "PRODUCTION_AUTHORITY_HANDOFF",
-    "ZERO_PACKET_LOSS_GATEWAY_PROCESS_FAILOVER",
-    "PRODUCTION_AUTOSCALING_POLICY",
-    "DYNAMIC_WORLD_SPLIT_MERGE",
-    "PRODUCTION_SCALE_SLO"
-  ]
+  "pre_p6_acceptance": ["EG0_PASS", "EG1_PASS", "EG2_PASS", "EG3_PASS", "EG4_PASS", "EG4_5_PASS", "EG5_PASS", "WORLD_GRAPH_CONTRACTS_PASS", "WORLD_GRAPH_READ_ONLY_CACHE_PASS", "CLIENT_VIEW_PLANNER_PASS", "INTEREST_AGGREGATION_PASS", "GLOBAL_KNOWLEDGE_NOT_GLOBAL_CONNECTION_PASS", "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS", "EIGHT_WORLD_PLANNER_WALK_PASS", "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO", "CROSS_WORLD_INTERACTION_CONTRACTS_PASS", "CROSS_WORLD_DOMAIN_ROUTING_PASS", "MULTI_AUTHORITY_COLLISION_PROOF_PASS", "DETERMINISTIC_FIRST_COLLISION_RESOLUTION_PASS", "PROJECTION_HIT_IS_CANDIDATE_ONLY_PASS", "CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS", "CLIENT_NORMAL_WORLD_TRANSPORT_COUNT_ONE", "MULTI_CLIENT_SHARED_BACKEND_LINK", "PROJECTION_FAN_IN_THROUGH_GATEWAY", "NO_SIM_SERVER_ENDPOINT_REQUIRED_BY_CLIENT", "GATEWAY_CANONICAL_WRITES_ZERO", "GATEWAY_OWNERSHIP_DECISIONS_ZERO", "STABLE_PLAYER_IDENTITIES", "OPERATION_ID_CONTINUITY", "BOUNDED_PER_SESSION_QUEUES", "NO_CROSS_SESSION_LEAKAGE_OR_STARVATION", "DIRECT_AND_GATEWAY_PATH_SHARE_CLIENT_GAMEPLAY_PORT", "NO_UNRESOLVED_NX_AUTHORITY_OWNERSHIP_CONFLICT", "PROJECT_CONTROL_SUCCESS", "FRESH_INDEPENDENT_REVIEW_PASS", "INDEPENDENT_VERIFICATION_PASS"],
+  "mvp_reference_transport": {"client_gateway": "GODOT_ENET_PROJECT_DTO", "gateway_simulation": "GODOT_ENET_GATEWAY_ENVELOPE_DTO", "orchestration": "PYTHON_PYTEST_SUBPROCESS", "fault_injection": "TC_NETEM", "production_transport_locked_by_this_spec": false, "production_quic_spike_recommended": true},
+  "p6_convergence_boundary": ["TransportAdapter", "ClientGameplayPort", "SessionBinding", "MutationAdmission", "DomainCommand"],
+  "after_p6_activation": {"run_in_parallel": ["EG6", "EG6.5", "EG7", "EG8", "EG9"], "eg6_required_for_preferred_immediate_sm1": true, "eg6_donor_requires_multi_world_chain": true, "eg6_5_required_for_cross_world_product_effect_readiness": true, "eg7_eg9_are_sm1_readiness_hardening": true},
+  "hard_invariants": ["GLOBAL_KNOWLEDGE_DOES_NOT_IMPLY_GLOBAL_CONNECTION", "WORLD_GRAPH_CACHE_IS_READ_ONLY_DERIVED_RECONSTRUCTIBLE", "GATEWAY_VIEW_PLAN_IS_NOT_CANONICAL_WORLD_TRUTH", "CLIENT_NEVER_SELECTS_SIMULATION_WORLD_ENDPOINT", "INTEREST_IS_GATEWAY_MANAGED", "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO", "TRAVERSAL_HISTORY_DOES_NOT_CAUSE_UNBOUNDED_LINK_OR_MEMORY_GROWTH", "PROJECTION_HIT_IS_CANDIDATE_NOT_CANONICAL_EFFECT", "ACTION_AUTHORITY_VALIDATES_ACTION", "EACH_WORLD_AUTHORITY_VALIDATES_ONLY_ITS_COLLISION_DOMAIN", "ACTION_AUTHORITY_RESOLVES_FIRST_VALID_COLLISION", "TARGET_EFFECT_AUTHORITY_COMMITS_CANONICAL_EFFECT", "GATEWAY_ROUTES_INTERACTION_BUT_DOES_NOT_RESOLVE_GAMEPLAY_TRUTH", "ONE_INTERACTION_AT_MOST_ONE_CANONICAL_EFFECT_COMMIT", "CROSS_WORLD_INTERACTION_USES_VERSIONED_TIME_AND_REFERENCE_FRAME_EVIDENCE"],
+  "non_goals_before_p6": ["PRODUCTION_BGP_ANYCAST_DEPLOYMENT", "FINAL_QUIC_SELECTION", "PRODUCTION_AUTHORITY_HANDOFF", "REAL_PRODUCT_DAMAGE_COMMIT", "ZERO_PACKET_LOSS_GATEWAY_PROCESS_FAILOVER", "PRODUCTION_AUTOSCALING_POLICY", "DYNAMIC_WORLD_SPLIT_MERGE", "PRODUCTION_SCALE_SLO"]
 }
