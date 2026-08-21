@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R78-2026-08-22",
+  "revision": "ECO-R79-2026-08-22",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
@@ -13,12 +13,12 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO3/E3.FINAL",
-  "current_step": "E3.FINAL implemented, independent review PASS; awaiting Director acceptance via PR #190",
+  "current_step": "E3.FINAL review PASS awaiting Director acceptance via PR #190; EVO4 morphology bridge lane proposed as ECO-R79",
   "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
-    "amended_by": "ECO-R78-2026-08-22",
-    "amendment_doc": "docs/plans/ECO_EVO3_ROADMAP_AMENDMENTS_R78_RU.md",
+    "amended_by": "ECO-R79-2026-08-22",
+    "amendment_doc": "docs/plans/ECO_ROADMAP_AMENDMENTS_R79_RU.md",
     "authority_note": "Amendments bind the live research policy layer only. Frozen E3.0 architecture/roadmap artifacts stay byte-frozen pending formal revalidation. This block carries no acceptance authority until independently reviewed.",
     "frozen_documents_untouched": [
       "config/ecology/eco-evo3-roadmap.v1.json",
@@ -73,7 +73,15 @@
       "status": "RESEARCH_ONLY_NON_AUTHORITATIVE",
       "rule": "Pre-design prepares binding requirements for canonical G/ENV/MAT/WQ/SD/TF contracts without creating production authorization or XFER1 activation"
     },
-    "renumber_note": "Renumbered from the local ECO-R77 draft after the upstream ECO-R77 collision (E3.8 acceptance landed first); amendment content unchanged."
+    "renumber_note": "Renumbered from the local ECO-R77 draft after the upstream ECO-R77 collision (E3.8 acceptance landed first); amendment content unchanged.",
+    "previous_amendments": [
+      "ECO-R78-2026-08-22"
+    ],
+    "evo4_morphology_bridge_predesign": {
+      "doc": "docs/plans/ECO_EVO4_MORPHOLOGY_VISUAL_PREDESIGN_RU.md",
+      "status": "RESEARCH_ONLY_NON_AUTHORITATIVE",
+      "rule": "Bridge lane builds only on accepted ECO.PH0..PH5-S4 machinery (DevelopmentTraits contract, IndividualSeed, renderer profiles, tiers); PH5 core stays closed; no parallel visual compiler; no product promotion"
+    }
   },
   "execution_modes": [
     "INCUBATE_FAST",
@@ -381,8 +389,72 @@
     "e3_7_global_rng_rule": "GLOBAL_RNG_FORBIDDEN"
   },
   "EVO4": {
-    "status": "AFTER_EVO3_PLANETARY_GENERALIZATION",
-    "goal": "multi-trophic ecosystem and coevolution"
+    "name": "Morphology Bridge & Multi-Trophic Ecosystem",
+    "status": "PROPOSED_PENDING_AUTHORIZATION_AFTER_E3_FINAL_ACCEPTANCE",
+    "predesign_doc": "docs/plans/ECO_EVO4_MORPHOLOGY_VISUAL_PREDESIGN_RU.md",
+    "declared_goal_inherited": "multi-trophic ecosystem and coevolution",
+    "tracks": {
+      "E4.B": {
+        "name": "Morphology Bridge EVO3->PH",
+        "status": "PROPOSED_PENDING_AUTHORIZATION",
+        "authorization_rule": "Separate Director authorization dispatch required after E3.FINAL acceptance; no implementation before that",
+        "steps": [
+          {
+            "id": "E4.B0",
+            "name": "Demo pipe: accepted catalog species -> developmental derivation v0 -> GrowthGraph skeleton -> PH5 render profile",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B1",
+            "name": "Additive DevelopmentTraits block in persisted SpeciesCatalog per PH0 contract; v0 derived from metabolic fields, v1 independent genes deferred behind separate coupling stage",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B2",
+            "name": "Bridge compiler: catalog entry + EVO3 opportunity vector + IndividualSeed + cohort age -> DevelopmentState/GrowthGraph seed params; patch demographic synthesis without truth claims",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B3",
+            "name": "Sealed plasticity gate on EVO3 opportunity vectors incl. disturbance form expression",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B4",
+            "name": "Diversity coverage gate + silhouette fingerprint species-distinctness gate",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B5",
+            "name": "Deterministic point-sampling contract for conditions at arbitrary planet coordinates",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B6",
+            "name": "Region materialization from accepted E3.7/E3.FINAL programs with cohort ages, fixed camera rigs, MCP_GODOT screenshot evidence",
+            "status": "PROPOSED"
+          },
+          {
+            "id": "E4.B7",
+            "name": "Scale/perf probe ~1000 instances under PH5-S3 tier policy; measured budgets as CONV0-A/WQ-WB input",
+            "status": "PROPOSED"
+          }
+        ],
+        "input_rules": [
+          "MUST_REUSE_PH0_DEVELOPMENT_TRAIT_CONTRACT_AND_PH5_RENDERER_PROFILES_NO_PARALLEL_RENDERER",
+          "MUST_CONSUME_ACCEPTED_PERSISTED_SPECIES_CATALOG_NO_SYNTHETIC_SPECIES",
+          "NO_PLANET_WIDE_INDIVIDUAL_GROWTHGRAPH_TRUTH",
+          "PH5_CORE_EXTENSION_FORBIDDEN_NEW_IDEAS_VIA_CONV0_CAL1_P2_P3_PH6",
+          "SEASONAL_VISUAL_STATES_BLOCKED_WAIT_E36_R",
+          "ASSET_PACK_SWAP_MUST_NOT_CHANGE_ANY_CHAIN_HASH"
+        ]
+      },
+      "E4.T": {
+        "name": "Multi-Trophic Ecosystem & Coevolution (inherited declared goal)",
+        "status": "DECLARED_GOAL_AFTER_OR_BESIDE_BRIDGE",
+        "rule": "Defense/spines morphology genes become trophic traits; requires visible morphology first (E4.B) and its own separate authorization"
+      }
+    }
   },
   "XFER": {
     "XFER0": {
