@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R2-WORLD-GRAPH",
+  "revision": "V0-EG0-2026-08-21-R3-WORLD-GRAPH",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
-    "exact_head": "3e1b42cd2ea24b32a4b54218541fbffa621a0f9f",
+    "exact_head": "b62535ea1ed7cf6f687ab5ee91f206cd6eea0a7d",
     "must_be_canonical_before_acceptance": true
   },
   "goal": "TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS",
@@ -45,6 +45,15 @@
     "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
     "res://tests/network/test_eg0_world_graph_contracts.gd"
   ],
+  "implementer_validation": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "editor_parse": "PASS",
+    "contract_assertions": 24,
+    "fixture_assertions": 39,
+    "world_graph_assertions": 27,
+    "total_assertions": 90
+  },
   "next_stage": "EG1_BLOCKED_UNTIL_EG0_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
   "p6_runtime_authorized": false
 }

@@ -1,11 +1,13 @@
 {
   "schema": "distributed_world_simulator.v0_edge_gateway_fabric_test_plan.v1",
-  "revision": "V0-EDGE-GATEWAY-FABRIC-2026-08-21-R2-PRE-P6-FOUNDATION",
+  "revision": "V0-EDGE-GATEWAY-FABRIC-2026-08-21-R3-WORLD-GRAPH-PLANNER",
   "canonical_owner": "main",
   "status": "CURRENT_PRE_P6_FOUNDATION_CANDIDATE_DONOR_ONLY",
   "authored_against_main": "1d9de3c479c60045d613660b2a5c5db0374963f8",
   "current_execution_plan": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md",
+  "current_execution_amendment": "docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_R4_WORLD_GRAPH_AMENDMENT_RU.md",
   "human_spec": "docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md",
+  "normative_world_graph_spec": "docs/network/EDGE_GATEWAY_WORLD_GRAPH_VIEW_PLANNER_SPEC_RU.md",
   "human_implementation_plan": "docs/network/EDGE_GATEWAY_TEST_IMPLEMENTATION_PLAN_RU.md",
   "p6_roadmap": "config/control/harness/v0-p6-seamless-execution-roadmap.v1.json",
   "control_effect": {
@@ -34,13 +36,42 @@
     "normal_projection_source_adds_client_transport": false,
     "gateway_is_canonical_owner": false,
     "gateway_server_links_are_shared": true,
-    "gateway_server_link_pool_model": "ONE_TO_K_PHYSICAL_TUNNELS_MULTIPLEX_MANY_LOGICAL_SESSIONS"
+    "gateway_server_link_pool_model": "ONE_TO_K_PHYSICAL_TUNNELS_MULTIPLEX_MANY_LOGICAL_SESSIONS",
+    "world_topology_truth_owner": "WORLD_DIRECTORY",
+    "gateway_world_graph_cache": "READ_ONLY_DERIVED_RECONSTRUCTIBLE",
+    "gateway_view_planner_required": true,
+    "gateway_interest_aggregator_required": true,
+    "global_knowledge_implies_global_connection": false
+  },
+  "world_graph_contracts": {
+    "required_in_eg0": [
+      "WorldDescriptor",
+      "WorldRelation",
+      "GatewayWorldGraphSnapshot",
+      "ClientWorldView",
+      "AggregatedInterestPlan",
+      "ViewRevision",
+      "InterestRevision"
+    ],
+    "minimum_relation_kinds": [
+      "NEIGHBOR",
+      "OVERLAP",
+      "CONTAINS",
+      "REFERENCE_FRAME_PARENT",
+      "REFERENCE_FRAME_CHILD",
+      "PORTAL_OR_TRANSITION",
+      "VISUALLY_RELEVANT"
+    ],
+    "client_selects_world_server": false,
+    "gateway_cache_can_be_partial": true,
+    "stale_world_graph_revision_fails_closed": true
   },
   "edge_selection": {
     "production_direction": "ANYCAST_OR_LATENCY_AWARE_EDGE_ROUTING_VENDOR_NEUTRAL",
     "mvp": "EDGE_LOCATOR_PLUS_BOUNDED_CLIENT_NETWORK_PROBES",
     "nearest_definition": "LOWEST_HEALTHY_NETWORK_SCORE_NOT_GEO_DISTANCE",
-    "routine_authority_handoff_rehomes_gateway": false
+    "routine_authority_handoff_rehomes_gateway": false,
+    "saved_world_location_controls_gateway_selection": false
   },
   "session_flow": [
     "DISCOVER_GATEWAY",
@@ -54,48 +85,21 @@
     "WORLD_READY"
   ],
   "client_channels": [
-    {
-      "id": "C0",
-      "name": "SESSION_CONTROL",
-      "delivery": "RELIABLE"
-    },
-    {
-      "id": "C1",
-      "name": "INPUT_MOVEMENT",
-      "delivery": "UNRELIABLE_ORDERED"
-    },
-    {
-      "id": "C2",
-      "name": "AUTHORITATIVE_SNAPSHOT",
-      "delivery": "UNRELIABLE_ORDERED"
-    },
-    {
-      "id": "C3",
-      "name": "WORLD_OPERATION",
-      "delivery": "RELIABLE_ORDERED"
-    },
-    {
-      "id": "C4",
-      "name": "WORLD_PROJECTION",
-      "delivery": "UNRELIABLE_ORDERED"
-    },
-    {
-      "id": "C5",
-      "name": "RECOVERY_FULL_STATE",
-      "delivery": "RELIABLE_ORDERED"
-    },
-    {
-      "id": "C6",
-      "name": "TELEMETRY",
-      "delivery": "BEST_EFFORT"
-    }
+    {"id": "C0", "name": "SESSION_CONTROL", "delivery": "RELIABLE"},
+    {"id": "C1", "name": "INPUT_MOVEMENT", "delivery": "UNRELIABLE_ORDERED"},
+    {"id": "C2", "name": "AUTHORITATIVE_SNAPSHOT", "delivery": "UNRELIABLE_ORDERED"},
+    {"id": "C3", "name": "WORLD_OPERATION", "delivery": "RELIABLE_ORDERED"},
+    {"id": "C4", "name": "WORLD_PROJECTION", "delivery": "UNRELIABLE_ORDERED"},
+    {"id": "C5", "name": "RECOVERY_FULL_STATE", "delivery": "RELIABLE_ORDERED"},
+    {"id": "C6", "name": "TELEMETRY", "delivery": "BEST_EFFORT"}
   ],
   "stages": [
     {
       "id": "EG0",
       "name": "CONTRACTS_AND_FIXTURES",
       "phase": "PRE_P6_REQUIRED",
-      "exit": "TOPOLOGY_NEUTRAL_DTOS_PASS"
+      "amendment": "ADD_WORLD_GRAPH_VIEW_INTEREST_CONTRACTS",
+      "exit": "TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS"
     },
     {
       "id": "EG1",
@@ -107,6 +111,7 @@
       "id": "EG2",
       "name": "AUTH_SESSION_PLACEMENT",
       "phase": "PRE_P6_REQUIRED",
+      "additional_invariant": "NEAREST_GATEWAY_SELECTION_INDEPENDENT_FROM_SAVED_WORLD_AUTHORITY",
       "exit": "WORLD_READY_WITHOUT_SERVER_ENDPOINT_DISCLOSURE"
     },
     {
@@ -117,9 +122,18 @@
     },
     {
       "id": "EG4",
-      "name": "PROJECTION_AGGREGATION",
+      "name": "WORLD_GRAPH_DRIVEN_PROJECTION_AGGREGATION",
       "phase": "PRE_P6_REQUIRED",
-      "exit": "MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS"
+      "required_machine_walk_worlds": 8,
+      "known_world_fixture_minimum": 100,
+      "required_exits": [
+        "WORLD_GRAPH_DRIVEN_VIEW_PLANNING_PASS",
+        "MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS",
+        "INTEREST_AGGREGATION_PASS",
+        "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS",
+        "EIGHT_WORLD_PLANNER_WALK_PASS",
+        "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO"
+      ]
     },
     {
       "id": "EG5",
@@ -129,28 +143,15 @@
     },
     {
       "id": "EG6",
-      "name": "ACTIVE_WARM_BACKEND_PIVOT",
+      "name": "ACTIVE_WARM_MULTI_WORLD_BACKEND_PIVOT",
       "phase": "PARALLEL_AFTER_P6_ACTIVATION",
-      "exit": "STABLE_CLIENT_CONNECTION_BACKEND_PIVOT_PASS"
+      "initial_bringup": "A_TO_B",
+      "donor_acceptance": "REPEATED_COMMITTED_MULTI_WORLD_CHAIN_TRAVERSAL",
+      "exit": "STABLE_CLIENT_CONNECTION_MULTI_WORLD_BACKEND_PIVOT_PASS"
     },
-    {
-      "id": "EG7",
-      "name": "GATEWAY_FAILURE_REHOME",
-      "phase": "PARALLEL_AFTER_P6_ACTIVATION",
-      "exit": "LOGICAL_SESSION_REHOME_PASS"
-    },
-    {
-      "id": "EG8",
-      "name": "WAN_FAULT_MATRIX",
-      "phase": "PARALLEL_AFTER_P6_ACTIVATION",
-      "exit": "CORRECTNESS_UNDER_SPLIT_LEG_IMPAIRMENT_PASS"
-    },
-    {
-      "id": "EG9",
-      "name": "SCALE_FAIRNESS_SOAK",
-      "phase": "PARALLEL_AFTER_P6_ACTIVATION",
-      "exit": "BOUNDED_QUEUE_MULTI_CLIENT_SOAK_PASS"
-    }
+    {"id": "EG7", "name": "GATEWAY_FAILURE_REHOME", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "LOGICAL_SESSION_REHOME_PASS"},
+    {"id": "EG8", "name": "WAN_FAULT_MATRIX", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "CORRECTNESS_UNDER_SPLIT_LEG_IMPAIRMENT_PASS"},
+    {"id": "EG9", "name": "SCALE_FAIRNESS_SOAK", "phase": "PARALLEL_AFTER_P6_ACTIVATION", "exit": "BOUNDED_QUEUE_MULTI_CLIENT_SOAK_PASS"}
   ],
   "pre_p6_acceptance": [
     "EG0_PASS",
@@ -159,6 +160,14 @@
     "EG3_PASS",
     "EG4_PASS",
     "EG5_PASS",
+    "WORLD_GRAPH_CONTRACTS_PASS",
+    "WORLD_GRAPH_READ_ONLY_CACHE_PASS",
+    "CLIENT_VIEW_PLANNER_PASS",
+    "INTEREST_AGGREGATION_PASS",
+    "GLOBAL_KNOWLEDGE_NOT_GLOBAL_CONNECTION_PASS",
+    "BOUNDED_DYNAMIC_UPSTREAM_SET_PASS",
+    "EIGHT_WORLD_PLANNER_WALK_PASS",
+    "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO",
     "CLIENT_NORMAL_WORLD_TRANSPORT_COUNT_ONE",
     "MULTI_CLIENT_SHARED_BACKEND_LINK",
     "PROJECTION_FAN_IN_THROUGH_GATEWAY",
@@ -191,15 +200,20 @@
     "DomainCommand"
   ],
   "after_p6_activation": {
-    "run_in_parallel": [
-      "EG6",
-      "EG7",
-      "EG8",
-      "EG9"
-    ],
+    "run_in_parallel": ["EG6", "EG7", "EG8", "EG9"],
     "eg6_required_for_preferred_immediate_sm1": true,
+    "eg6_donor_requires_multi_world_chain": true,
     "eg7_eg9_are_sm1_readiness_hardening": true
   },
+  "hard_invariants": [
+    "GLOBAL_KNOWLEDGE_DOES_NOT_IMPLY_GLOBAL_CONNECTION",
+    "WORLD_GRAPH_CACHE_IS_READ_ONLY_DERIVED_RECONSTRUCTIBLE",
+    "GATEWAY_VIEW_PLAN_IS_NOT_CANONICAL_WORLD_TRUTH",
+    "CLIENT_NEVER_SELECTS_SIMULATION_WORLD_ENDPOINT",
+    "INTEREST_IS_GATEWAY_MANAGED",
+    "STALE_UPSTREAM_SUBSCRIPTIONS_EVENTUALLY_ZERO",
+    "TRAVERSAL_HISTORY_DOES_NOT_CAUSE_UNBOUNDED_LINK_OR_MEMORY_GROWTH"
+  ],
   "non_goals_before_p6": [
     "PRODUCTION_BGP_ANYCAST_DEPLOYMENT",
     "FINAL_QUIC_SELECTION",

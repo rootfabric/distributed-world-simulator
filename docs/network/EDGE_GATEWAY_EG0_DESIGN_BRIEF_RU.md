@@ -2,21 +2,25 @@
 
 Статус: **STACKED HIGH-RISK IMPLEMENTATION CANDIDATE / NOT ACCEPTED / NO P6 AUTHORITY**
 
-Зависимость: draft control PR `#185`.
+Control dependency: draft PR `#185`.
 
-Exact stacked base:
+Initial implementation base:
 
 `c5d7d0d682181f0a796d0e059508a1fdfe91b6e1`
+
+Current refreshed R4 control base:
+
+`b62535ea1ed7cf6f687ab5ee91f206cd6eea0a7d`
 
 Branch:
 
 `feature/eg0-edge-gateway-contracts-r1`
 
-## Проблема
+## Problem
 
-До реального `Client -> Gateway -> Server` процесса необходимо зафиксировать transport-independent DTO, иначе EG1 рискует смешать transport peer/session identity с PlayerId, authority ownership и gameplay semantics.
+Before implementing the real `Client -> Gateway -> Server` process, freeze transport-independent contracts so EG1 cannot accidentally equate network topology with player identity, authority or gameplay semantics.
 
-Опасные равенства, которые EG0 обязан не допустить:
+Forbidden semantic aliases:
 
 ```text
 TransportConnectionId != GatewaySessionId
@@ -28,121 +32,120 @@ backend_peer_id         != PlayerId
 RouteRevision           != AuthorityEpoch
 ```
 
-## Текущее состояние
+The R4 World Graph amendment additionally requires Gateway world/view/interest contracts before EG0 closure.
 
-Проект уже имеет JSON-safe network DTO utilities и transport-independent message-bus contracts. Edge Gateway contract family отсутствует. Draft #185 определяет будущую модель одного клиентского `WorldConnection`, shared Gateway->Server links и Gateway projection fan-in.
+## Selected design
 
-## Требуемое состояние
+`ClientWorldFrame` is the client-facing semantic frame. `GatewayIngressEnvelope` and `GatewayEgressEnvelope` wrap it with route/session metadata instead of rebuilding gameplay payloads.
 
-EG1 должен получить строгий, versioned и тестируемый contract surface:
+For `WORLD_OPERATION`, canonical `operation_id` remains inside the wrapped frame and must survive Gateway forwarding unchanged.
 
-- `ClientWorldFrame`;
-- `GatewayIngressEnvelope`;
-- `GatewayEgressEnvelope`;
-- `GatewaySessionBinding`;
-- `GatewayRouteBinding`;
-- `ProjectionSubscription`;
-- `GatewayDescriptor`;
-- channel/direction/role enums;
-- canonical JSON fixtures.
-
-## Рассмотренные варианты
-
-1. Проксировать существующие Godot RPC без project envelope — отклонено: transport metadata станет частью gameplay semantics.
-2. Разбирать и заново собирать gameplay operation внутри Gateway — отклонено: Gateway сможет случайно заменить `OperationId`/input sequencing.
-3. Сразу перейти на opaque binary/QUIC wire contract — отклонено: слишком много переменных до доказательства semantics.
-4. Versioned project DTO поверх существующих canonical JSON utilities — выбран.
-
-## Выбранный дизайн
-
-`ClientWorldFrame` — клиентская семантическая единица. `GatewayIngressEnvelope` и `GatewayEgressEnvelope` добавляют только route/session metadata снаружи frame.
-
-Hard rule:
+Gateway topology knowledge is a read-only, derived and reconstructible view of World Directory truth:
 
 ```text
-Gateway routes the frame.
-Gateway does not reinterpret canonical gameplay identity.
+World Directory / World Graph
+        -> GatewayWorldGraphSnapshot
+        -> ClientWorldView
+        -> AggregatedInterestPlan
+        -> later Route/Link Manager
 ```
 
-Для `WORLD_OPERATION` canonical `operation_id` находится внутри `ClientWorldFrame.payload` и проходит Gateway без замены.
+Hard rules:
 
-`WORLD_PROJECTION` разрешён только как `WORLD_TO_CLIENT` read-only поток от `PROJECTION` source.
+```text
+GATEWAY ROUTES; IT DOES NOT OWN GAMEPLAY TRUTH.
+WORLD DIRECTORY OWNS WORLD TOPOLOGY TRUTH.
+DIRECTORY/AUTHORITY OWNS AUTHORITY TRUTH.
+GLOBAL KNOWLEDGE DOES NOT IMPLY GLOBAL CONNECTION.
+```
 
-## Владельцы и зависимости
+## Contract surface frozen by EG0 candidate
+
+Transport/session:
+
+- `ClientWorldFrame`
+- `GatewayIngressEnvelope`
+- `GatewayEgressEnvelope`
+- `GatewaySessionBinding`
+- `GatewayRouteBinding`
+- `ProjectionSubscription`
+- `GatewayDescriptor`
+
+World Graph / View / Interest:
+
+- `WorldDescriptor`
+- `WorldRelation`
+- `GatewayWorldGraphSnapshot`
+- `ClientWorldView`
+- `AggregatedInterestPlan`
+- explicit `ViewRevision`
+- explicit `InterestRevision`
+
+## Safety semantics
+
+- strict exact-field validation rejects accidental transport-specific fields;
+- runtime Godot objects are forbidden in network DTO payloads;
+- mutating client channels can route only to `ACTIVE`;
+- `WORLD_PROJECTION` is read-only and requires a `PROJECTION` source;
+- projection policy cannot grant mutation authority;
+- `GatewayDescriptor` and `ClientWorldView` reject simulation-server endpoint leakage;
+- stale World/Relation/Graph/View/Interest revisions fail closed;
+- graph cache input must be `read_only=true` and `reconstructible=true`;
+- multiple client sessions may aggregate into one source-interest plan;
+- a 1000-world graph contract does not contain or require upstream connection state.
+
+## Ownership boundaries
 
 - NX — transport/replication foundation;
+- World Directory — world-topology truth;
 - AUTHORITY/Directory — authority ownership/epoch truth;
 - IAM — account/client-session identity;
 - domain owners — canonical gameplay mutation;
-- EG0 — только transport-neutral gateway contract donor, не новый owner.
+- EG0 — contract donor only, not a new canonical owner.
 
-## Non-goals EG0
+## Non-goals
 
-- реальный Gateway process;
-- ENet listener/backend tunnel;
-- auth implementation;
-- Directory mutation/ownership decision;
+EG0 does not implement:
+
+- real Gateway process / EG1;
+- ENet listener or backend tunnel;
+- auth/session placement runtime;
 - shared tunnel scheduler;
-- A->B handoff;
+- View Planner algorithm / dynamic subscription lifecycle (EG4);
+- A->B authority handoff;
 - Gateway rehome;
-- QUIC selection;
+- final QUIC choice;
 - P6 runtime mutation;
-- acceptance `EDGE_GATEWAY_FOUNDATION_ACCEPTED`.
+- `EDGE_GATEWAY_FOUNDATION_ACCEPTED`.
 
-## Риски
+## Validation
 
-- identity aliasing;
-- Gateway route metadata becoming mutation authority;
-- projection write path;
-- replacing OperationId during forwarding;
-- accidental transport-specific fields in domain payload;
-- protocol drift before EG1.
-
-## Validation plan
-
-1. strict exact-field validation;
-2. canonical ID namespaces;
-3. canonical JSON round-trip;
-4. runtime-object rejection;
-5. OperationId preservation;
-6. ACTIVE-only ingress for mutating client channels;
-7. PROJECTION-only `WORLD_PROJECTION` egress;
-8. explicit read-only projection subscription;
-9. descriptor rejects simulation-server endpoint leakage;
-10. fixture suite validates all canonical examples.
-
-## Review gate
-
-Это HIGH-risk public protocol candidate. Implementer не может self-accept.
-
-До перехода EG0 в accepted требуется:
+Implementer validation on double Godot:
 
 ```text
-#185 canonical dependency resolved
-focused tests PASS on exact head
-Project Control SUCCESS
+4.7.1.stable.double.custom_build.a13da4feb
+SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+editor parse                                      PASS
+EG0 base contracts                                PASS 24 assertions
+EG0 canonical fixtures                            PASS 39 assertions
+EG0 WorldGraph/View/Interest contracts            PASS 27 assertions
+TOTAL                                             PASS 90 assertions
+```
+
+This is implementer evidence only.
+
+## Exit and review gate
+
+Target exit:
+
+`TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS`
+
+Because this is HIGH-risk public protocol work, Implementer cannot self-accept. EG0 remains blocked from acceptance and EG1 remains blocked until:
+
+```text
+PR #185 dependency is canonical
+exact candidate Project Control SUCCESS
 fresh independent Reviewer PASS
 independent Verifier PASS
 Director verdict
 ```
-
-До этого EG1 не получает canonical dispatch.
-
-## R4 World Graph / View Planner amendment
-
-Control branch advanced during implementation with the R4 amendment. EG0 scope is therefore extended before freeze with:
-
-- `WorldDescriptor`;
-- `WorldRelation`;
-- `GatewayWorldGraphSnapshot`;
-- `ClientWorldView`;
-- `AggregatedInterestPlan`;
-- explicit `ViewRevision` / `InterestRevision`;
-- world-graph stale revision rejection;
-- read-only/reconstructible cache semantics;
-- aggregation of multiple client sessions into one source-interest plan;
-- proof that 1000 known worlds do not imply 1000 upstream connections.
-
-Updated exit:
-
-`TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS`
