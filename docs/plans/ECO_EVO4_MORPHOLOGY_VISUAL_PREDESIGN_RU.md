@@ -2,6 +2,23 @@
 
 Статус: `RESEARCH_ONLY / NON_AUTHORITATIVE_PREDESIGN`. Документ — материал для решения Director о запуске нового лейна; он **не** авторизует работы, не изменяет роадмап и не касается принятых поверхностей E3.x. Базовое состояние ветки: `a65ce972` (E3.FINAL REVIEW_PASS_PENDING_DIRECTOR_ACCEPTANCE).
 
+## 0. Аудит связи с принятым треком ECO.PH (уточнение после аудита документов)
+
+Аудит показал: значительная часть настоящего предизайна **уже принята** в треке `ECO.PH` (Plant Development & Phenotype, `PH0..PH5-S4 ACCEPTED`, `ECO.PH RESEARCH COMPLETE`):
+
+| Идея предизайна | Уже принято в ECO.PH |
+|---|---|
+| Двухслойная архитектура «детерминированный blueprint + презентационный рендер» | Инварианты PH: `GrowthGraph` — derived representation, population is truth; `PH5` rendering architecture (`PlantRenderDescription → RendererProfile → Multi-Scale`) |
+| Морфогенетические гены | `PH0 Development Trait Contract` — разделение genome на ecological/metabolic и **developmental traits** (готовый список: internode_length, apical_dominance, branch_*, leaf_*, root_*, тропизмы) |
+| Гибрид «грамматика + органы + материалы» | Принятый пайплайн: stochastic parametric grammar (P0) → tube/ArrayMesh ветви + instanced foliage (PH5-S2) → archetype-листва; renderer profiles `DEBUG_SKELETON..IMPOSTOR_BILLBOARD`, тиры `TIER_0..TIER_4` |
+| Пластичность по условиям | `PH2 Environment-Coupled Development` ACCEPTED |
+| Seeded индивидуальный джиттер | `IndividualSeed = hash(parent_lineage, reproduction_event, seed_index, genome_revision)` — принятый контракт PH0/PH4 |
+| Формула «Phenotype = Genome × Environment × Age × History × Seed» | Принята дословно в PH |
+| Запрет канонических классов TREE/BUSH/GRASS, смена asset pack не меняет ecological hash | Принятые инварианты + `EXP-V9 Phenotype Projection PASS` |
+| Materialization при визите игрока | `PopulationPatch + genome + individual_seed + local environment → derived individual phenotype`; promoted individuals — `PH6` (после canonical production foundations) |
+
+**Следствие: новизна сужается до «моста» EVO3↔PH.** PH-машинария построена на локальном контуре P1-эры (EnvironmentSample/PopulationPatch) и потребляет developmental traits, которых нет в persisted SpeciesCatalog эпохи EVO2/EVO3 (геном v1 — только metabolic-поля). Планетарная цепь EVO3 (opportunity fields, патчи, программы колонизации, unseen worlds) никогда не соединялась с PH. Предмет настоящего предизайна после аудита — **bridge-лейн E4.B**, а не новый визуальный компилятор. Разделы §3–§5 ниже сохранены как сверка дизайна с принятым; эскиз лейна (§9) переписан на bridge-шаги.
+
 ## 1. Постановка задачи
 
 Механизм эволюции должен доводить результат до наблюдаемого вида: новый вид растения, возникший эволюционно под конкретными условиями участка симулятора, должен быть отображён визуально в симуляторе (Godot), причём:
@@ -105,15 +122,18 @@ blueprints(виды региона) × условия(точка) × seed(точ
 
 Одной итерацией доказать трубу end-to-end: взять существующую запись каталога (`genome/e22-beta`), набросать v0-деривацию blueprint временным скриптом вне принятых поверхностей, отрендерить трубчатый меш дерева в Godot из JSON, снять скриншот по контракту MCP_GODOT. Только после живой демонстрации — решение о schema freeze.
 
-## 9. Эскиз лейна E4 (черновой порядок, не обязательства)
+## 9. Эскиз лейна E4 (после аудита: bridge-шаги поверх принятого PH)
 
-- **E4.0**: amendment генома v2 — additive блок морфогенетических генов (правило честности §4B).
-- **E4.1**: morphology compiler v1 + валидаторы (bounds, детерминизм, forbidden keys).
-- **E4.2**: гейт разнообразия (метрика, пороги).
-- **E4.3**: гейт пластичности (sealed directions, матрица возмущений).
-- **E4.4**: Godot-интерпретатор + скриншот-evidence.
-- **E4.5**: placement-интеграция (спавн по регионам, произвольная точка).
-- **Горизонт E5**: крупные существа на том же принципе.
+- **E4.B0 — демо-труба моста**: одна запись persisted SpeciesCatalog (`genome/e22-beta`) → детерминированная деривация developmental-параметров v0 → GrowthGraph skeleton (PH1-паттерн) → рендер профилем `BRANCH_TUBES`/`BRANCH_LEAF_INSTANCED`. Research scratch, без schema freeze.
+- **E4.B1 — amendment каталога**: additive блок DevelopmentTraits в persisted SpeciesCatalog (по контракту PH0, не новый изобретённый список) + правило эволюционной честности (связь каждого гена с metabolic-полем или условием отбора).
+- **E4.B2 — bridge-компилятор**: `(catalog entry + EVO3 opportunity vector + IndividualSeed + cohort age из программ E3.4/E3.5) → DevelopmentState/GrowthGraph seed params`; IndividualSeed выводится детерминированно из `(genome_hash, stable_spatial_key, establishment_order)` по духу PH0-контракта.
+- **E4.B3 — гейт пластичности на EVO3-условиях**: возмущение opportunity vector при фиксированном геноме; sealed directions (аналог матрицы семейств E3.8 и PH2 morph tests).
+- **E4.B4 — гейт разнообразия**: фич-вектор blueprint'ов, порог покрытия по N генотипам × условиям × сидам.
+- **E4.B5 — контракт сэмплирования условий в произвольной точке планеты**: nearest-patch или билинейное по сэмплам E3.1/E3.2, объявленный в контракте (детерминированно).
+- **E4.B6 — materialization региона**: спавн экземпляров из принятой программы E3.7/E3.FINAL по регионам с когортными возрастами; рендер принятыми PH5-профилями; скриншот-evidence через MCP_GODOT.
+- **Горизонт E4.T**: multi-trophic ecosystem and coevolution (исходная declared goal EVO4) — defense/spines-гены становятся трофическими признаками; строится ПОСЛЕ/ПАРАЛЛЕЛЬНО мосту, т.к. без видимой морфологии коэволюцию нельзя наблюдать.
+
+Запрещено: параллельный визуальный компилятор вне PH-наследия; расширение PH5 core (closure boundary: новые идеи идут через CONV0/CAL1-P2/P3-PH6 контексты).
 
 ## 10. Открытые вопросы
 
