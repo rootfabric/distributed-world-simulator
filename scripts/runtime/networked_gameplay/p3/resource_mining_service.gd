@@ -95,6 +95,9 @@ func mine(
 	var range_result := _validate_range(node, player_position)
 	if not bool(range_result.get("success", false)):
 		return _record_result(op, fingerprint, range_result)
+	var capability_result := _validate_mining_capability(player_id)
+	if not bool(capability_result.get("success", false)):
+		return _record_result(op, fingerprint, capability_result)
 	var output_quantity := requested_units * int(node.get("unit_item_quantity", 1))
 	var output_operation_id := _output_operation_id(op)
 	var preflight: Dictionary = _item_graph.preflight_server_output(
@@ -256,6 +259,12 @@ func has_replay_operation(operation_id: String) -> bool:
 
 func get_replay_operation_count() -> int:
 	return _ledger.size()
+
+
+func _validate_mining_capability(_logical_player_id: String) -> Dictionary:
+	# P3 default: no equipment requirement. Product successors may override this
+	# hook without changing P3 replay, validation or mutation ordering.
+	return _success()
 
 
 func _validate_range(node: Dictionary, player_position: Dictionary) -> Dictionary:

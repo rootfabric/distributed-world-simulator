@@ -1,6 +1,6 @@
-extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd"
+extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd"
 
 # Current canonical M4 composition.
-# P3 trusted server output and P4 trusted Construction consumption are layered
-# below this stable canonical path so the live NetworkedGameplayService owns one
-# Item Graph object for mining, inventory and Construction material debit.
+# P3 trusted server output, P4 trusted Construction consumption and the P5
+# canonical equipment relation are layered below this stable path so the live
+# NetworkedGameplayService continues to own exactly one Item Graph object.

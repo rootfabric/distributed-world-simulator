@@ -44,7 +44,12 @@ func _static_ordering() -> void:
 	var service := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd")
 	_check(service.count("_canonical_multiplayer_items = CanonicalMultiplayerItemGraph.new()") == 1, "one canonical M4 owner is constructed")
 	var canonical := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
-	_check(canonical.begins_with('extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd"'), "stable M4 alias is P4-capable")
+	var canonical_p5 := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd")
+	_check(
+		canonical.begins_with('extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd"')
+		and canonical_p5.begins_with('extends "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd"'),
+		"stable M4 alias preserves P4 capability through P5"
+	)
 
 func _runtime_ordering() -> void:
 	var service = _service("runtime-hook")
@@ -80,6 +85,23 @@ func _live_economy() -> void:
 	var mining = service.get_resource_mining_port()
 	_check(graph != null and mining != null, "live P3/P4 ports exist")
 	_check(graph.has_method("apply_server_output") and graph.has_method("apply_server_construction_consume"), "same M4 has output+consume")
+	var tool_output: Dictionary = graph.apply_server_output(
+		"operation/v0-p4/p4-4/p5-tool-output",
+		PLAYER,
+		"item/tool/mining",
+		1,
+		"source/v0-p4/p5-regression"
+	)
+	_ok(tool_output, "P5 regression tool provision")
+	var tool_id := String(tool_output.get("details", {}).get("output_item_id", ""))
+	_ok(service.handle_canonical_item_command(
+		PLAYER,
+		TRANSPORT,
+		1,
+		"operation/v0-p4/p4-4/p5-equip-tool",
+		"item.equip",
+		{"item_id": tool_id, "slot_id": "tool/main"}
+	), "P5 regression tool equip")
 	var authority: Dictionary = Authority.create_gateway(graph, "authority/v0-p4/p4-4", 1, "user://v0-p4-p4-4/%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
 	_ok(authority, "live authority")
 	if not bool(authority.get("success", false)): return

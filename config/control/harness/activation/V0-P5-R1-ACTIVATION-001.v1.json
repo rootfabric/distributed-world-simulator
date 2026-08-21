@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_activation.v1",
+  "activation_id": "V0-P5-R1-ACTIVATION-001",
+  "program": "V0",
+  "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "state": "PRE_DISPATCH_CONTROL_READY",
+  "accepted_predecessor": {
+    "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+    "acceptance_record": "config/control/harness/acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_product_lineage_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d"
+  },
+  "main_control_base": "9c15d3f04f478e93560265d3a781c08629649c90",
+  "main_declared_exact_successor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "runtime_branch": "feature/v0-p5-equipment-tools",
+  "risk_class": "HIGH",
+  "current_control": {
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "evidence_source": "formal P4 acceptance plus exact P5 preactivation Project Control on canonical main"
+  },
+  "mutation_lease": {
+    "required_holder_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "required_holder_branch": "feature/v0-p5-equipment-tools",
+    "rotation_status": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation_authorized": false,
+    "capacity": 1
+  },
+  "director_dispatch": {
+    "status": "PENDING",
+    "runtime_mutation_authorized": false
+  },
+  "prebuild_package": {
+    "branch": "prep/v0-p5-equipment-tools-r1",
+    "head": "0148bfbe7339d0755229661230b9f91bea42e900",
+    "role": "DONOR_PREACTIVATION_PLAN_ONLY_NOT_PRODUCT_BASE"
+  },
+  "created_at_utc": "2026-08-18T11:52:00Z",
+  "updated_at_utc": "2026-08-18T12:00:00Z"
+}

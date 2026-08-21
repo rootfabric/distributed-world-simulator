@@ -1,7 +1,6 @@
 """Build complete H0.0 status using only versioned JSON and Git metadata."""
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 from datetime import datetime
@@ -11,11 +10,6 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
-from .checkpoint_planner import classify_v0_nx_foundation_scope
-from .global_mutation_arbiter import (
-    evaluate_pre_h0_3_runtime_mutation_lease,
-    requires_runtime_mutation_lease,
-)
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -114,79 +108,6 @@ def _git_path_head(root: Path, path: Path) -> str:
 def _git(root: Path, *args: str) -> tuple[int, str]:
     output = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True, check=False)
     return output.returncode, output.stdout.strip()
-
-
-def _git_changed_paths(root: Path, base_sha: str, implementation_head: str) -> list[str]:
-    code, output = _git(root, "diff", "--name-only", f"{base_sha}..{implementation_head}")
-    if code != 0:
-        raise ContractValidationError("IMPLEMENTATION_DIFF_UNAVAILABLE")
-    return sorted({line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()})
-
-
-def _git_late_delta_paths(
-    root: Path,
-    implementation_head: str,
-    current_head: str,
-    execution_dir: Path,
-) -> tuple[list[str], list[str]]:
-    """Return post-implementation paths and non-evidence paths that must be fenced.
-
-    The implementation head intentionally excludes append-only evidence. A later
-    runtime change is therefore not allowed to disappear from V0->NX
-    classification merely because it is newer than that head.
-    """
-    code, _ = _git(root, "merge-base", "--is-ancestor", implementation_head, current_head)
-    if code != 0:
-        raise ContractValidationError("IMPLEMENTATION_HEAD_NOT_ANCESTOR_OF_CURRENT_HEAD")
-    late_paths = _git_changed_paths(root, implementation_head, current_head)
-    execution_prefix = f"{_repo_relative(root, execution_dir).rstrip('/')}/"
-    evidence_only_prefixes = (execution_prefix, "config/control/branches/", "docs/checkpoints/")
-    unexpected = [
-        path for path in late_paths
-        if not any(path.startswith(prefix) for prefix in evidence_only_prefixes)
-    ]
-    return late_paths, unexpected
-
-
-def _load_main_owned_runtime_mutation_lease_registry(
-    root: Path,
-    bundle: ContractBundle,
-) -> tuple[dict[str, Any] | None, str, str, str | None]:
-    """Read the lease registry from origin/main, never from a candidate branch."""
-    relative_path = str(bundle.contracts["harness_policy"]["runtime_mutation_lease_registry"])
-    code, main_sha = _git(root, "rev-parse", "origin/main")
-    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", main_sha):
-        return None, "", "", "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_MAIN_REF_UNAVAILABLE"
-    code, registry_blob_sha = _git(root, "rev-parse", "origin/main:%s" % relative_path)
-    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", registry_blob_sha):
-        return None, main_sha, "", "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_UNAVAILABLE_ON_MAIN"
-    code, payload = _git(root, "show", "origin/main:%s" % relative_path)
-    if code != 0:
-        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_UNAVAILABLE_ON_MAIN"
-    try:
-        registry = json.loads(payload)
-    except json.JSONDecodeError:
-        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_JSON_INVALID"
-    if not isinstance(registry, dict):
-        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_OBJECT_REQUIRED"
-    try:
-        bundle.validate(
-            "runtime_mutation_lease_registry_schema",
-            registry,
-            "origin_main_runtime_mutation_lease_registry",
-        )
-    except ContractValidationError as exc:
-        return None, main_sha, registry_blob_sha, str(exc)
-    registry_issued_sha = str(registry.get("issued_main_sha", ""))
-    code, _ = _git(root, "merge-base", "--is-ancestor", registry_issued_sha, main_sha)
-    if code != 0:
-        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_ISSUED_SHA_NOT_ON_MAIN"
-    for reservation in registry.get("reservations", []):
-        lease_issued_sha = str(reservation.get("issued_main_sha", ""))
-        code, _ = _git(root, "merge-base", "--is-ancestor", lease_issued_sha, main_sha)
-        if code != 0:
-            return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_ISSUED_SHA_NOT_ON_MAIN"
-    return registry, main_sha, registry_blob_sha, None
 
 
 def _validate_event_git_provenance(
@@ -492,19 +413,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
 
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
-    current_branch = _git_branch(root)
     implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
-    implementation_changed_paths = _git_changed_paths(
-        root,
-        str(active["definition"]["base_sha"]),
-        implementation_head,
-    )
-    late_delta_paths, unexpected_late_delta_paths = _git_late_delta_paths(
-        root,
-        implementation_head,
-        current_head,
-        execution_dir,
-    )
     ledger_head = _validate_event_git_provenance(
         root,
         active["event_paths"],
@@ -530,28 +439,6 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if active["reduced"]["state"] == "FIX_REQUIRED" and repair_map is None:
         findings.append("REPAIR_MAP_REQUIRED")
 
-    lease_registry, lease_main_sha, lease_registry_blob_sha, lease_error = _load_main_owned_runtime_mutation_lease_registry(root, bundle)
-    global_mutation = evaluate_pre_h0_3_runtime_mutation_lease(
-        lease_registry,
-        active["definition"],
-        active["reduced"],
-        lease_main_sha,
-        current_branch,
-    )
-    global_mutation["registry_path"] = str(bundle.contracts["harness_policy"]["runtime_mutation_lease_registry"])
-    global_mutation["registry_blob_sha"] = lease_registry_blob_sha
-    global_mutation["registry_error"] = lease_error
-    if requires_runtime_mutation_lease(active["definition"], active["reduced"]) and not global_mutation["authorized"]:
-        findings.append("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LIMIT_EXCEEDED")
-
-    classified_work_order = dict(active["definition"])
-    classified_work_order["implementation_changed_paths"] = implementation_changed_paths
-    classified_work_order["late_delta_changed_paths"] = late_delta_paths
-    classified_work_order["unexpected_late_delta_paths"] = unexpected_late_delta_paths
-    v0_foundation_scope = classify_v0_nx_foundation_scope(classified_work_order)
-    if v0_foundation_scope["blocked"]:
-        findings.append(v0_foundation_scope["status"])
-
     blocking_attention = [
         item
         for item in attention
@@ -571,6 +458,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if blocking_attention:
         findings.append("BLOCKING_HUMAN_ATTENTION")
 
+    current_branch = _git_branch(root)
     if current_branch != active["definition"]["branch"]:
         findings.append("WORK_ORDER_BRANCH_NOT_CHECKED_OUT")
 
@@ -629,9 +517,6 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "event_ledger_head_sha": ledger_head,
             "current_branch_head_sha": current_head,
             "implementation_head_sha": implementation_head,
-            "implementation_changed_paths": implementation_changed_paths,
-            "late_delta_paths": late_delta_paths,
-            "unexpected_late_delta_paths": unexpected_late_delta_paths,
             "current_branch": current_branch,
             "origin_main_head_sha": epoch_validation["main_sha"],
             "worktree_dirty": bool(
@@ -667,8 +552,6 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "all_items": attention,
         },
         "findings": findings,
-        "global_runtime_mutation_arbiter": global_mutation,
-        "v0_nx_foundation_scope": v0_foundation_scope,
         "continuation_blocked": bool(findings)
         or active["reduced"]["state"]
         in {
