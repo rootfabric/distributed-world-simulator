@@ -17,22 +17,11 @@ extends RefCounted
 const ClientWorldFrameScript = preload("res://scripts/network/gateway/client_world_frame.gd")
 const IngressEnvelopeScript = preload("res://scripts/network/gateway/gateway_ingress_envelope.gd")
 const EgressEnvelopeScript = preload("res://scripts/network/gateway/gateway_egress_envelope.gd")
-const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
+const GatewayUtilsScript = preload("res://scripts/network/gateway/gateway_contract_utils.gd")
 
 const FORWARDER_SCHEMA := "planet_simulator.eg1_gateway_forwarder.v1"
 const INGRESS_PAYLOAD_SCHEMA := "planet_simulator.gateway_ingress_envelope.v1"
 const EGRESS_PAYLOAD_SCHEMA := "planet_simulator.gateway_egress_envelope.v1"
-
-## EG0 client-facing channel -> ENET physical channel (published EG1 mapping).
-const CHANNEL_MAPPING := {
-	"SESSION_CONTROL": "CONTROL",
-	"INPUT_MOVEMENT": "INPUT",
-	"AUTHORITATIVE_SNAPSHOT": "SNAPSHOT",
-	"WORLD_OPERATION": "ITEM",
-	"RECOVERY_FULL_STATE": "RESYNC",
-	"TELEMETRY": "TELEMETRY",
-	"WORLD_PROJECTION": "SNAPSHOT",
-}
 
 var gateway_instance_id := ""
 var _envelope_counter := 0
@@ -151,16 +140,15 @@ func get_counters() -> Dictionary:
 
 
 ## EG1 published channel mapping: client-facing semantic channel -> ENET physical
-## channel. Deterministic and fail-closed.
+## channel. Deterministic and fail-closed. Delegates to the shared contract
+## utils so sim-side endpoints encode the same mapping without touching the
+## gateway runtime.
 static func physical_channel_for(client_channel: String) -> String:
-	return String(CHANNEL_MAPPING.get(client_channel, ""))
+	return GatewayUtilsScript.eg1_physical_channel_for(client_channel)
 
 
 static func delivery_mode_for(client_channel: String) -> String:
-	var physical := physical_channel_for(client_channel)
-	if physical.is_empty():
-		return "RELIABLE_ORDERED"
-	return String(ChannelPolicyScript.default_delivery(physical))
+	return GatewayUtilsScript.eg1_delivery_mode_for(client_channel)
 
 
 func _reframe(frame_id: String, session_id: String, client_channel: String, payload_schema: String, payload: Dictionary) -> Dictionary:

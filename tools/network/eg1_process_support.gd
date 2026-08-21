@@ -10,7 +10,6 @@ extends RefCounted
 const AtomicJsonScript = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
 const FrameScript = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
 const ClientWorldFrameScript = preload("res://scripts/network/gateway/client_world_frame.gd")
-const ForwarderScript = preload("res://scripts/network/gateway/runtime/eg1_gateway_forwarder.gd")
 const GatewayUtils = preload("res://scripts/network/gateway/gateway_contract_utils.gd")
 const ServiceScript = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
@@ -136,13 +135,13 @@ static func movement_inner_frame(gateway_session_id: String, input_seq: int) -> 
 
 ## Materialize a protocol-frame wire envelope for an inner ClientWorldFrame.
 static func wire_frame_for_inner(inner: Dictionary, wire_session: String, frame_id: String, sequence: int) -> Dictionary:
-	var physical := ForwarderScript.physical_channel_for(String(inner["channel"]))
+	var physical := GatewayUtils.eg1_physical_channel_for(String(inner["channel"]))
 	return FrameScript.create(
 			frame_id,
 			wire_session,
 			maxi(sequence, 1),
 			physical,
-			ForwarderScript.delivery_mode_for(String(inner["channel"])),
+			GatewayUtils.eg1_delivery_mode_for(String(inner["channel"])),
 			String(inner["payload_schema"]),
 			Dictionary(inner))
 

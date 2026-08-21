@@ -2,6 +2,7 @@ extends RefCounted
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const BusUtilsScript = preload("res://scripts/network/bus/message_bus_contract_utils.gd")
+const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const PROTOCOL_VERSION: int = 1
 
@@ -91,6 +92,31 @@ const EG1_SESSION_HELLO_FIELDS: Array[String] = [
 const EG1_SESSION_DETACH_FIELDS: Array[String] = []
 const EG1_SESSION_ATTACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "session_slot", "state"]
 const EG1_SESSION_DETACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "state"]
+
+# EG1 published channel mapping: client-facing semantic channel -> ENET physical
+# channel. Deterministic and fail-closed. Lives with the shared contracts so
+# both gateway and sim-side endpoints can encode/decode the same wire mapping
+# without depending on gateway runtime internals.
+const EG1_CHANNEL_MAPPING := {
+	"SESSION_CONTROL": "CONTROL",
+	"INPUT_MOVEMENT": "INPUT",
+	"AUTHORITATIVE_SNAPSHOT": "SNAPSHOT",
+	"WORLD_OPERATION": "ITEM",
+	"RECOVERY_FULL_STATE": "RESYNC",
+	"TELEMETRY": "TELEMETRY",
+	"WORLD_PROJECTION": "SNAPSHOT",
+}
+
+
+static func eg1_physical_channel_for(client_channel: String) -> String:
+	return String(EG1_CHANNEL_MAPPING.get(client_channel, ""))
+
+
+static func eg1_delivery_mode_for(client_channel: String) -> String:
+	var physical := eg1_physical_channel_for(client_channel)
+	if physical.is_empty():
+		return "RELIABLE_ORDERED"
+	return String(ChannelPolicyScript.default_delivery(physical))
 
 
 static func validate_schema(value: Dictionary, expected_schema: String) -> Dictionary:

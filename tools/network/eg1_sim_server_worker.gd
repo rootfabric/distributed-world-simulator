@@ -13,7 +13,6 @@ const BoundaryScript = preload("res://scripts/network/transports/v2/network_tran
 const EnetPortScript = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 const IngressEnvelopeScript = preload("res://scripts/network/gateway/gateway_ingress_envelope.gd")
 const EgressEnvelopeScript = preload("res://scripts/network/gateway/gateway_egress_envelope.gd")
-const ForwarderScript = preload("res://scripts/network/gateway/runtime/eg1_gateway_forwarder.gd")
 
 const OPTION_SPEC := {
 	"host": {"kind": "string", "default": "127.0.0.1"},
@@ -195,8 +194,7 @@ func _admit_movement(inner: Dictionary) -> void:
 
 func _send_egress(request_inner: Dictionary, egress_channel: String, egress_payload: Dictionary) -> void:
 	_egress_counter += 1
-	var inner_frame = preload("res://scripts/network/gateway/client_world_frame.gd")
-	var inner: Dictionary = inner_frame.create(
+	var inner: Dictionary = Support.ClientWorldFrameScript.create(
 			"frame/eg1/p2p/result/%d" % _egress_counter,
 			String(request_inner["gateway_session_id"]),
 			"WORLD_TO_CLIENT",
@@ -219,8 +217,8 @@ func _send_egress(request_inner: Dictionary, egress_channel: String, egress_payl
 	var spec: Dictionary = {
 		"frame_id": "frame/eg1/p2p/backend-down/%d" % _egress_counter,
 		"session_id": _backend_wire_session,
-		"channel": ForwarderScript.physical_channel_for(egress_channel),
-		"delivery_mode": ForwarderScript.delivery_mode_for(egress_channel),
+		"channel": Support.GatewayUtils.eg1_physical_channel_for(egress_channel),
+		"delivery_mode": Support.GatewayUtils.eg1_delivery_mode_for(egress_channel),
 		"payload_schema": "planet_simulator.gateway_egress_envelope.v1",
 	}
 	var wire: Dictionary = Support.FrameScript.create(
