@@ -1,0 +1,50 @@
+{
+  "schema": "distributed_world_simulator.eco_evo3_e3_7_validation_receipt.v1",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "checkpoint": "ECO.EVO3/E3.7",
+  "executable_freeze": "851ea433a9b6b88b6123f8504def2722a3ffbc56",
+  "closure": {
+    "run_id": 32476053613,
+    "job_id": 96752514419,
+    "conclusion": "SUCCESS",
+    "tests_passed": 28,
+    "tests_total": 28,
+    "predicates_passed": 15,
+    "predicates_total": 15,
+    "schema": "PASS",
+    "fresh_process_builds": "2/2",
+    "fresh_process_bytes_identical": true,
+    "committed_generated_bytes_identical": true,
+    "artifact_id": 9444318099,
+    "artifact_zip_sha256": "02021d6b183edd2b2ddaf0e145d358a81915d44a9deb57eb4b89702058ed1650"
+  },
+  "generated_program": {
+    "path": "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json",
+    "bytes": 104186,
+    "sha256": "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303",
+    "git_blob": "01207a7025710db34fafc959fcc26dade2606d89",
+    "provenance_hash": "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff",
+    "planet_ecology_program_hash": "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956"
+  },
+  "projection": {
+    "regions": 1,
+    "species": 2,
+    "active_basis": 22,
+    "active_spatial_keys": 11,
+    "temporal_envelopes": 11
+  },
+  "project_control": {
+    "run_id": 32476053598,
+    "job_id": 96752514025,
+    "conclusion": "SUCCESS",
+    "overall": "RED",
+    "eco": "RED",
+    "directional": "RED",
+    "eco_directional_watch": "NX -> ECO YELLOW WATCH_HIT",
+    "eco_critical_intersection": "ABSENT",
+    "artifact_id": 9444315628,
+    "artifact_zip_sha256": "956ab520385d10d9d174f7aad8518b640d0137d7a20d287b5470c8a3a02a6b43"
+  },
+  "disposition": "EXECUTABLE_FREEZE_VALIDATED_AWAITING_FRESH_REVIEW_HEAD_EVIDENCE"
+}

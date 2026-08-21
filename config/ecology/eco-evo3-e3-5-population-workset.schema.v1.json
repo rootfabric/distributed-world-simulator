@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_e3_5_population_workset.schema.v1",
+  "title": "ECO EVO3 E3.5 Multi-scale Population Workset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "checkpoint", "compiler_stage", "authority", "canonical_binding_resolved", "production_binding_authorized", "workset_result", "source_colonization_program", "work_basis_manifest", "population_work_units", "execution_budget_hints", "summary", "provenance", "provenance_hash", "population_workset_hash", "population_workset_hash_algorithm"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_e3_5_population_workset.v1"},
+    "checkpoint": {"const": "ECO.EVO3/E3.5"},
+    "compiler_stage": {"const": "POPULATION_WORKSET"},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "production_binding_authorized": {"const": false},
+    "workset_result": {"enum": ["ACTIVE_WORKSETS", "NO_ACTIVE_POPULATION_WORK"]},
+    "source_colonization_program": {
+      "type": "object", "additionalProperties": false,
+      "required": ["colonization_program_hash", "provenance_hash", "artifact_sha256", "git_blob", "accepted_control_head", "canonical_merge_commit", "colonization_result", "stable_planet_identity", "stable_time_key"],
+      "properties": {
+        "colonization_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "git_blob": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "accepted_control_head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "canonical_merge_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "colonization_result": {"enum": ["COLONIZATION_PRESENT", "NO_COLONIZATION"]},
+        "stable_planet_identity": {"type": "string", "minLength": 1},
+        "stable_time_key": {"type": "string", "minLength": 1}
+      }
+    },
+    "work_basis_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["basis_key", "research_species_id", "research_patch_id", "stable_spatial_key", "source_decision"],
+        "properties": {
+          "basis_key": {"type": "string", "pattern": "^eco-evo3/e3\\.5/basis/[0-9a-f]{24}$"},
+          "research_species_id": {"type": "string", "pattern": "^eco-research-species/"},
+          "research_patch_id": {"type": "string", "pattern": "^eco-evo3/e3\\.3/patch/"},
+          "stable_spatial_key": {"type": "string", "minLength": 1},
+          "source_decision": {"const": "ESTABLISHED"}
+        }
+      }
+    },
+    "population_work_units": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["work_unit_id", "scale", "basis_keys", "aggregate_member_count", "stable_planet_identity", "stable_spatial_keys", "representation", "authority"],
+        "properties": {
+          "work_unit_id": {"type": "string", "pattern": "^eco-evo3/e3\\.5/work/(planet|region|patch|local-active)/[0-9a-f]{24}$"},
+          "scale": {"enum": ["PLANET", "REGION", "PATCH", "LOCAL_ACTIVE"]},
+          "scheduling_region_id": {"type": "string", "pattern": "^eco-evo3/e3\\.5/scheduling-region/[0-9a-f]{24}$"},
+          "basis_keys": {"type": "array", "items": {"type": "string", "pattern": "^eco-evo3/e3\\.5/basis/[0-9a-f]{24}$"}, "uniqueItems": true},
+          "aggregate_member_count": {"type": "integer", "minimum": 1},
+          "stable_planet_identity": {"type": "string", "minLength": 1},
+          "stable_spatial_keys": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+          "representation": {"enum": ["PLANET_AGGREGATE", "REGION_AGGREGATE", "PATCH_AGGREGATE", "LOCAL_ACTIVE_AGGREGATE_COHORT_PROJECTION"]},
+          "authority": {"const": "RESEARCH_SCHEDULING_IDENTITY_NON_CANONICAL"}
+        }
+      }
+    },
+    "execution_budget_hints": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["work_unit_id", "scale", "budget_units", "policy", "meaning"],
+        "properties": {
+          "work_unit_id": {"type": "string", "minLength": 1},
+          "scale": {"enum": ["PLANET", "REGION", "PATCH", "LOCAL_ACTIVE"]},
+          "budget_units": {"type": "integer", "minimum": 1},
+          "policy": {"const": "INTEGER_OVERHEAD_PLUS_MEMBER_COST_V1"},
+          "meaning": {"const": "NON_AUTHORITATIVE_EXECUTION_BUDGET_HINT_ONLY"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["active_basis_count", "active_species_count", "active_patch_count", "active_scheduling_region_count", "planet_work_unit_count", "region_work_unit_count", "patch_work_unit_count", "local_active_work_unit_count", "total_work_unit_count", "budget_hint_count", "individual_entity_count"],
+      "properties": {
+        "active_basis_count": {"type": "integer", "minimum": 0},
+        "active_species_count": {"type": "integer", "minimum": 0},
+        "active_patch_count": {"type": "integer", "minimum": 0},
+        "active_scheduling_region_count": {"type": "integer", "minimum": 0},
+        "planet_work_unit_count": {"type": "integer", "minimum": 0},
+        "region_work_unit_count": {"type": "integer", "minimum": 0},
+        "patch_work_unit_count": {"type": "integer", "minimum": 0},
+        "local_active_work_unit_count": {"type": "integer", "minimum": 0},
+        "total_work_unit_count": {"type": "integer", "minimum": 0},
+        "budget_hint_count": {"type": "integer", "minimum": 0},
+        "individual_entity_count": {"const": 0}
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract_hash", "accepted_e3_4_program_hash", "accepted_e3_4_provenance_hash", "accepted_e3_4_artifact_sha256", "accepted_e3_4_git_blob", "accepted_e3_4_control_head", "accepted_e3_4_merge_commit", "full_persisted_evo2_catalog_hash", "input_verification"],
+      "properties": {
+        "contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "accepted_e3_4_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "accepted_e3_4_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "accepted_e3_4_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "accepted_e3_4_git_blob": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "accepted_e3_4_control_head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "accepted_e3_4_merge_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "full_persisted_evo2_catalog_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "input_verification": {"const": "EXACT_ACCEPTED_E3_4_RAW_BYTES_VERIFIED"}
+      }
+    },
+    "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "population_workset_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "population_workset_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"}
+  }
+}

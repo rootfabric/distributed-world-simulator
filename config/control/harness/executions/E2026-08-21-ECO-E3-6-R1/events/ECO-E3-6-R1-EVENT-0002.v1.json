@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-6-R1-EVENT-0002",
+  "project_epoch": "E2026-08-21-ECO-E3-6-R1",
+  "work_order_id": "ECO-E3-6-R1-WO-001",
+  "sequence": 2,
+  "event_type": "VALIDATION_FAILED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-21T05:56:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/eco-evo3-e3-6-seasonal-disturbance-temporal-program",
+  "head_sha": "560c83105afb6baa5630c1f842226bf34a9b4e21",
+  "predicate": "E3_6_INITIAL_MACHINE_CLOSURE",
+  "command": "GITHUB_ACTIONS_ECO_E3_6_CLOSURE_32452351975",
+  "exit_code": 1,
+  "evidence_paths": [
+    "GitHub Actions run 32452351975 / #1",
+    "job 96683030628",
+    "artifact 9436071004"
+  ],
+  "summary": "Initial E3.6 Closure failed before compiler/test execution because unittest discovery required tests/research/ecology to be an importable package. Exact checkout 560c83105afb6baa5630c1f842226bf34a9b4e21 succeeded. Project Control run 32452352028/#1066 succeeded. Repair is runner-only: load the two declared E3.6 test modules directly by exact file path; scientific compiler, contract, binding, schema and accepted inputs are unchanged."
+}

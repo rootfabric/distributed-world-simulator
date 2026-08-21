@@ -1,0 +1,45 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_d_lifecycle_payoff_validation.v1",
+  "revision": "ECO-CAL1-D-2026-08-12-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "88adcc609fdfbc5511dc2aa0a4b779edc9a114e0",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "parent": {
+    "checkpoint": "ECO.CAL1-C",
+    "aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a",
+    "preserved": true
+  },
+  "canonical_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "canonical_aggregate_hash": "c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6",
+  "fresh_process_replay_equal": true,
+  "canonical_observations": {
+    "mature_to_immature_seed_ratio": 4.0,
+    "high_to_low_reserve_seed_ratio": 3.333333333333,
+    "high_to_low_release_distance_ratio": 2.0,
+    "fast_maturity_time": 2.5,
+    "slow_maturity_time": 8.0,
+    "short_life_amortized_structure": 0.043650537490,
+    "long_life_amortized_structure": 0.007275089582,
+    "shallow_survival": 0.412244897959,
+    "deep_survival": 0.8,
+    "fast_recovery_time": 0.446428571429,
+    "slow_recovery_time": 1.428571428571,
+    "mild_post_seed_potential": 462.357351103707,
+    "severe_post_seed_potential": 268.807788421491
+  },
+  "accepted_properties": [
+    "MATURITY_GATES_REPRODUCTION",
+    "RESERVE_GATES_REALIZED_SEED_OUTPUT",
+    "RELEASE_HEIGHT_CAUSALLY_INCREASES_DISPERSAL",
+    "GROWTH_RATE_CAUSALLY_CHANGES_MATURITY_AND_RECOVERY_TIME",
+    "LIFESPAN_AMORTIZES_STRUCTURE",
+    "ROOT_DEPTH_CAUSALLY_CHANGES_DISTURBANCE_SURVIVAL",
+    "SEVERITY_REDUCES_POST_DISTURBANCE_REPRODUCTION",
+    "NO_FINAL_LIFECYCLE_FITNESS_SCALAR",
+    "NO_TALL_BONUS",
+    "NO_COEFFICIENT_CALIBRATION"
+  ],
+  "checkpoint": "docs/checkpoints/ECO_CAL1_D_LIFECYCLE_PAYOFFS_ACCEPTED_RU.md",
+  "decision": "ACCEPTED_OPEN_CAL1_E"
+}

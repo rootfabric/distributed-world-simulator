@@ -1,0 +1,153 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_5_sorting_vs_adaptation_validation.v1",
+  "revision": "ECO-EVO2-E2.5-2026-08-18-R1-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "base_head": "3c29e06600d911a49864d5991f6a03928612b97d",
+  "code_under_test_head": "4c17a91957e392eabc04e136f9590773dbe54dd1",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "e2_4_validation": "validation/ecology/eco-evo2-e2-4-environment-generalization-matrix-validation.json",
+    "e2_4_accepted_aggregate_hash": "ae2952de10ac721c8052694963b690d9f72af05d9c92e2fa4cd70e00f72fb2b5",
+    "e2_4_code_under_test_head": "0135aee461a107375cdb3e52e07e8c799145998b",
+    "e2_4_plan_hash": "f688eb014245d63483562376c3f5db8c08a85bdc35feb52428f5ff17753f82e0",
+    "e2_2_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_sorting_vs_adaptation_v1.gd",
+    "git_blob_sha": "74443f7b0c1b5e2234b1949761abc6cfab4bdd9c",
+    "schema": "distributed_world_simulator.ecology.evo2_sorting_vs_adaptation.v1",
+    "version": "1.0.0",
+    "target_cells": ["DRY", "WET"],
+    "generations": 10,
+    "population_size": 8,
+    "offspring_per_parent": 4,
+    "full_transfer_continuation_claimed": false,
+    "canonical_species_declared": false,
+    "production_authority_claimed": false,
+    "adaptation_creates_canonical_species": false
+  },
+  "causal_contract": {
+    "control": "same frozen E2.2 SpeciesCatalog roots and same E2.4 environment exposure with mutation_probability=0; only ecological sorting can change lineage abundance",
+    "treatment": "same exact founders and environment with one fixed target-agnostic bounded mutation policy; selection consequence comes only from accepted ResourceModel",
+    "only_deliberate_treatment_variable": "bounded continued adaptation permission",
+    "mutation_alone_counts_as_adaptation": false,
+    "adaptation_detected_requires": ["novel descendant genome", "positive measurable resource-balance advantage over frozen sorting Control"],
+    "reciprocal_home_advantage_required": true,
+    "biome_species_table_present": false,
+    "target_fitness_bonus_present": false,
+    "global_rng_consumed": false
+  },
+  "policies": {
+    "control_policy_hash": "0e6481175af3658b2673a612717dd850b917ec5156260b37bd9ee29a9789dc4e",
+    "treatment_policy_hash": "e2927ce7a8f6b3ab5f3d4942a2cc70ca3794e0d67c3e770e0301748967c14416",
+    "treatment_policy": {
+      "mutation_probability": 0.30,
+      "water_preference_step": 0.055,
+      "root_depth_m_step": 0.20,
+      "growth_rate_step": 0.045,
+      "shade_tolerance_step": 0.045,
+      "seed_dispersal_distance_m_step": 0.0
+    },
+    "control_differs_only_by_mutation_probability_zero": true
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_5_sorting_vs_adaptation_acceptance.gd",
+    "git_blob_sha": "3b2dca9fd3f15750da7a3b200ce800371f6d2021",
+    "assertions": 93,
+    "runner": "RUN_ECO_EVO2_E2_5_TESTS.ps1",
+    "runner_git_blob_sha": "aac648105002a3b9337c0b7fcedfdc501d01402e",
+    "rehashed_semantic_tamper_rejected": true,
+    "rehashed_selected_mutation_event_tamper_rejected": true
+  },
+  "exact_executable_closure": {
+    "verified_exact": true,
+    "verified_count": 21,
+    "target_head": "4c17a91957e392eabc04e136f9590773dbe54dd1",
+    "rule": "canonical behavioral execution requires exact transitive executable closure before execution",
+    "new_e2_5_blobs": {
+      "scripts/research/ecology/plant_sorting_vs_adaptation_v1.gd": "74443f7b0c1b5e2234b1949761abc6cfab4bdd9c",
+      "tests/research/ecology/eco_evo2_e2_5_sorting_vs_adaptation_acceptance.gd": "3b2dca9fd3f15750da7a3b200ce800371f6d2021"
+    },
+    "newly_reached_inherited_dependencies": {
+      "scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd": "7b9b5d41236cb27256dd7405201436a71a3eafea",
+      "scripts/research/ecology/plant_lineage_record_v1.gd": "0b848b2dc3ed3dccc1ee02db71c161cfcc9809d0"
+    },
+    "inherited_e2_4_executable_dependencies_changed": false
+  },
+  "fresh_behavioral_verification": {
+    "executed_date": "2026-08-18",
+    "authority": "HUMAN_DIRECTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION_GATE",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload_exit": 0,
+    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "fresh_process_a_exit": 0,
+    "fresh_process_b_exit": 0,
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "9aa1e912a545cdb470dbada92ba8eac5024632e2ec7f58eaef6a4ffd977975a9",
+    "assertions": "PASS_93_OF_93",
+    "canonical_runner_executed": false,
+    "equivalent_execution_executed": true,
+    "equivalent_execution_reason": "pwsh/powershell unavailable in the Linux execution carrier",
+    "combined_shell_watchdog_timeout_interpreted_as_test_result": false,
+    "fresh_process_b_rerun_separately_after_shell_watchdog": true,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "frozen_outputs": {
+    "aggregate_hash": "942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6",
+    "dry_paired_hash": "1d8dd8f37ad0c83f439dce5493c59b38a3618f9201630a125a6197691eecab7c",
+    "wet_paired_hash": "9234fdfa74530c1f16b90960814e88e6417b2f3f9a92a8523e825471f2dd1292"
+  },
+  "observed_outcomes": {
+    "DRY": {
+      "classification": "ADAPTATION_DETECTED",
+      "sorting_detected": true,
+      "sorting_gain": 0.712602797217,
+      "adaptation_gain": 0.210067450172,
+      "control_final_novel_genome_count": 0,
+      "treatment_final_novel_genomes_present": true,
+      "water_preference_direction": "LOWER_THAN_FROZEN_SORTED_CONTROL"
+    },
+    "WET": {
+      "classification": "ADAPTATION_DETECTED",
+      "sorting_detected": true,
+      "sorting_gain": 1.231209807202,
+      "adaptation_gain": 0.387714189995,
+      "control_final_novel_genome_count": 0,
+      "treatment_final_novel_genomes_present": true,
+      "water_preference_direction": "HIGHER_THAN_FROZEN_SORTED_CONTROL"
+    },
+    "reciprocal_cross_environment": {
+      "dry_adapted_in_dry": 0.500903251638,
+      "wet_adapted_in_dry": -1.600499312923,
+      "wet_adapted_in_wet": 1.157255352906,
+      "dry_adapted_in_wet": -1.601811151164,
+      "dry_home_advantage": true,
+      "wet_home_advantage": true
+    }
+  },
+  "scientific_boundary": {
+    "what_is_proven": "with identical frozen starting strategies and target exposure, ecological sorting alone changes lineage abundance; enabling bounded inherited variation then creates novel descendant genomes with additional environment-specific resource advantage and reciprocal local adaptation",
+    "what_is_not_proven": [
+      "full continuous E2.3 transfer plus mutation dynamics",
+      "new canonical species formation",
+      "cross-seed robustness",
+      "replicated causal confidence",
+      "production world authority"
+    ]
+  },
+  "acceptance": {
+    "accepted_date": "2026-08-18",
+    "code_under_test_head": "4c17a91957e392eabc04e136f9590773dbe54dd1",
+    "aggregate_hash": "942ad54e7672c4f57874e1802b320c1b2a4aa74e43b05f7e285793ea4ec8b2a6",
+    "decision": "ACCEPT_E2_5_AND_AUTHORIZE_E2_6",
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "decision": "ACCEPT_E2_5_AND_AUTHORIZE_E2_6",
+  "next": "ECO.EVO2 / E2.6 Replicated Causal Experiments"
+}

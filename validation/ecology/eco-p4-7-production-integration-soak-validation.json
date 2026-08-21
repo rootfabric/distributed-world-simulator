@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_7_production_integration_soak_validation.v1",
+  "revision": "ECO-P4.7-2026-08-15-R10-ACCEPTED-EXACT-WINDOWS-ISOLATED-A-B",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_WINDOWS_ISOLATED_HEADLESS_BOUNDED_ROTATING_A_B",
+  "scope": "BOUNDED_DETERMINISTIC_MULTI_REGION_PRODUCTION_INTEGRATION_SOAK_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P4.6",
+    "status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION",
+    "validation_blob": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc",
+    "unit_aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
+    "real_integration_hash": "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf"
+  },
+  "accepted_candidate": {
+    "tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "soak_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
+    "runner_blob": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4",
+    "runner": "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1",
+    "runner_filename_note": "legacy PREACCEPTANCE filename retained; the executed semantics are canonical",
+    "headless_project_policy": "temporary minimal Godot project; scripts/tests are junctions to exact validation checkout; no gameplay or Breakpoint MCP autoloads",
+    "unexpected_godot_error_policy": "FAIL"
+  },
+  "scenario": {
+    "regions": 8,
+    "cycles": 12,
+    "mutation_policy": "one rotating active region per cycle; all eight authoritative regions participate in final fanout",
+    "ecology_step_interval_world_time": 10.0,
+    "ecology_generation_steps": 8,
+    "handoff_operations": 4,
+    "save_load_operations": 12,
+    "client_updates": 12,
+    "interest_projections": 14,
+    "restart_operations": 3,
+    "restart_cycles": [3, 7, 11],
+    "max_remaining_due_steps": 0,
+    "full_fanout_policy": "all eight regions plus two missing ids projected with forward and reversed authoritative ownership-array order; interest identity equal"
+  },
+  "acceptance_evidence": {
+    "parser_preload_preflight": "PASS",
+    "run_a": {
+      "result": "PASS",
+      "assertions": 242,
+      "soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+      "final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
+    },
+    "run_b": {
+      "result": "PASS",
+      "assertions": 242,
+      "soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+      "final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e"
+    },
+    "fresh_process_logs_byte_identical": true,
+    "canonical_automated_gates": "PASS",
+    "workflow_stage_p4_7": "PASS",
+    "p4_8_preparation_stage_after_p4_7": "PASS",
+    "workflow_suite_current": "PASS",
+    "validation_workspace": "PASS",
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "counts": {
+      "handoffs": 4,
+      "ecology_generation_steps": 8,
+      "save_loads": 12,
+      "client_updates": 12,
+      "interest_projections": 14,
+      "restarts": 3,
+      "max_remaining_due_steps": 0,
+      "regions": 8,
+      "cycles": 12
+    },
+    "legacy_output_label_note": "the test prints parent_p4_6=c966... but that value is ReadModel.PARENT_P4_5_AGGREGATE, i.e. the accepted P4.5 aggregate; it is not a P4.6 aggregate identity"
+  },
+  "repair_history": {
+    "r5": "fixed Godot 4.7.1 Array[String] type inference in the soak test",
+    "r6": "bounded deep ecology generations after first 600s timeout without increasing timeout",
+    "r7": "reworked 96 recursive full-region mutations into bounded rotating composition after second 600s timeout",
+    "r8": "added non-canonical internal phase heartbeat",
+    "r9": "isolated headless test project from unrelated project-level UID autoload errors without allowlisting ERROR output"
+  },
+  "boundary": {
+    "not_a_scheduler": true,
+    "not_runtime_authority": true,
+    "not_network_transport": true,
+    "not_wall_clock_soak": true,
+    "accelerated_deterministic_soak": true,
+    "does_not_replace_lower_layer_acceptance": true,
+    "production_runtime_changed_by_acceptance": false,
+    "project_godot_changed_by_acceptance": false
+  },
+  "gate": {
+    "status": "ACCEPTED",
+    "timeout_seconds_per_process": 600,
+    "heartbeat_seconds": 10,
+    "hash_policy": "frozen from exact committed Windows fresh-process A/B byte-identical PASS"
+  },
+  "decision": "P4_7_ACCEPTED; OPEN_P4_8_FINAL_MANIFEST_GATE"
+}

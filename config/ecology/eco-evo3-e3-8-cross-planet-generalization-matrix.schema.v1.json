@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_e3_8_cross_planet_generalization_matrix.v1",
+  "title": "ECO EVO3 E3.8 Cross-Planet Generalization Matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "checkpoint",
+    "compiler_stage",
+    "authority",
+    "canonical_binding_resolved",
+    "production_binding_authorized",
+    "predeclaration",
+    "accepted_inputs",
+    "reused_modules",
+    "families",
+    "matrix_invariants",
+    "provenance",
+    "provenance_hash",
+    "cross_planet_generalization_matrix_hash_algorithm",
+    "cross_planet_generalization_matrix_hash"
+  ],
+  "properties": {
+    "schema": { "const": "distributed_world_simulator.ecology.evo3_e3_8_cross_planet_generalization_matrix.v1" },
+    "version": { "const": "1.0.0" },
+    "checkpoint": { "const": "ECO.EVO3/E3.8" },
+    "compiler_stage": { "const": "CROSS_PLANET_GENERALIZATION_MATRIX" },
+    "authority": { "const": "RESEARCH_DERIVED_NON_AUTHORITATIVE" },
+    "canonical_binding_resolved": { "const": false },
+    "production_binding_authorized": { "const": false },
+    "stable_planet_identity": { "type": "string" },
+    "stable_time_key": { "type": "string" },
+    "predeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_hash", "family_count", "families"],
+      "properties": {
+        "contract_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "family_count": { "const": 6 },
+        "families": {
+          "type": "array", "minItems": 6, "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["family", "variation"],
+            "properties": {
+              "family": { "enum": ["dry", "wet", "cold", "hot", "seasonal", "isolated"] },
+              "variation": { "type": "string" },
+              "numerator": { "type": "integer" },
+              "denominator": { "type": "integer" },
+              "offset_milli_c": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "accepted_inputs": {
+      "type": "object",
+      "required": ["catalog_hash", "e3_1_snapshot_hash", "e3_4_colonization_program_hash"],
+      "additionalProperties": { "type": ["string", "boolean", "integer", "object"] }
+    },
+    "reused_modules": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "families": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "family", "stable_planet_identity", "variant_snapshot_hash",
+          "opportunity_field_hash", "decomposition_hash",
+          "edge_continuity_scaling", "per_species", "summary"
+        ],
+        "properties": {
+          "family": { "enum": ["dry", "wet", "cold", "hot", "seasonal", "isolated"] },
+          "stable_planet_identity": { "type": "string" },
+          "variant_snapshot_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "opportunity_field_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "decomposition_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "edge_continuity_scaling": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object", "additionalProperties": false,
+                "required": ["numerator", "denominator"],
+                "properties": {
+                  "numerator": { "type": "integer" },
+                  "denominator": { "type": "integer" }
+                }
+              }
+            ]
+          },
+          "per_species": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "research_species_id", "baseline_status", "family_status",
+                "outcome_class", "established_patch_count"
+              ],
+              "properties": {
+                "research_species_id": { "type": "string" },
+                "baseline_status": { "enum": ["COLONIZED", "NO_COLONIZATION"] },
+                "family_status": { "enum": ["COLONIZED", "NO_COLONIZATION"] },
+                "outcome_class": { "enum": ["PRESERVED_COLONIZED", "PRESERVED_NO_COLONIZATION", "LOST_REVERSAL", "GAINED_ESTABLISHMENT"] },
+                "established_patch_count": { "type": "integer", "minimum": 0 }
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["colonized_species_count", "no_colonization_species_count", "established_patch_total"],
+            "properties": {
+              "colonized_species_count": { "type": "integer", "minimum": 0 },
+              "no_colonization_species_count": { "type": "integer", "minimum": 0 },
+              "established_patch_total": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "matrix_invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "six_families_exact", "thermal_shortcut_absent", "outcome_diversity_present",
+        "null_outcome_valid", "catalog_untouched", "compiler_modules_reused_unmodified"
+      ],
+      "properties": {
+        "six_families_exact": { "const": true },
+        "thermal_shortcut_absent": { "const": true },
+        "outcome_diversity_present": { "const": true },
+        "null_outcome_valid": { "const": true },
+        "catalog_untouched": { "const": true },
+        "compiler_modules_reused_unmodified": { "const": true }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["contract_hash", "input_verification", "compiler_module_reuse"],
+      "additionalProperties": { "type": ["string"] }
+    },
+    "provenance_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "cross_planet_generalization_matrix_hash_algorithm": { "const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1" },
+    "cross_planet_generalization_matrix_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

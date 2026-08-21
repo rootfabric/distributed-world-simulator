@@ -1,0 +1,119 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_e2_1_species_catalog_validation.v1",
+  "revision": "ECO-EVO2-E2.1-2026-08-18-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "candidate_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
+  "acceptance_source_head": "c79e2d61e665689fe39621442f72171de5d2790f",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION",
+  "scope": "RESEARCH_ONLY_EVO2",
+  "parent_evidence": {
+    "p2_7_lineage_validation": "validation/ecology/eco-evo1-p2-7-lineage-divergence-validation.json",
+    "p2_7_status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
+    "p2_7_canonical_species_declared": false,
+    "p3_8_ecosystem_validation": "validation/ecology/eco-p3-8-deterministic-ecosystem-persistence-validation.json",
+    "p3_8_status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "p3_8_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0"
+  },
+  "implementation": {
+    "path": "scripts/research/ecology/plant_species_catalog_v1.gd",
+    "git_blob_sha": "f1c706b6d915e6e709be2fcdd7e0fa8cb89fcbc2",
+    "contract_schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1",
+    "version": "1.0.0",
+    "species_concept": "ECO_RESEARCH_LINEAGE_HYPOTHESIS_V1",
+    "canonical_species_declared": false,
+    "identity_rule": "research_species_id is derived from schema/version/species-concept/lineage_id only; snapshot trait changes alter entry/catalog evidence hashes but not lineage identity",
+    "persistence_in_scope": false
+  },
+  "acceptance_test": {
+    "path": "tests/research/ecology/eco_evo2_e2_1_species_catalog_acceptance.gd",
+    "git_blob_sha": "4df82431d3ce20fd48610e1c250aafb9f0afbaac",
+    "assertions": 53,
+    "runner": "RUN_ECO_EVO2_E2_1_TESTS.ps1",
+    "runner_git_blob_sha": "726f56142d82106ecb1e39d32879f83c9542a46c"
+  },
+  "exact_attached_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload_exit": 0,
+    "fresh_process_a_exit": 0,
+    "fresh_process_b_exit": 0,
+    "fresh_process_logs_byte_identical": true,
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "single_catalog_hash": "b17f3c8bb17d71504aa683ca6d40cf25ab346d5a70432f8b0744566fd8c90f3a",
+    "multi_catalog_hash": "ceba80d9f639b8b5042fd826bad23a5e83c7c3a7c79baeaad9397e70ffb9f474",
+    "alpha_research_species_id": "eco-research-species/2164d8161e30ec9df8a54c47",
+    "dependency_mode": "EXACT_GITHUB_BLOBS_MINIMAL_RES_PROJECT",
+    "dependency_git_blobs": {
+      "plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
+      "plant_recruitment_traits_v1.gd": "6faeff9da9f7fa5a03e1df586de9cb29795d30de",
+      "environment_sample_v1.gd": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
+      "plant_lineage_divergence_diagnostics_v1.gd": "fdb7d4cbacc7dd575c665c66340a926f82f07483",
+      "plant_species_catalog_v1.gd": "f1c706b6d915e6e709be2fcdd7e0fa8cb89fcbc2",
+      "eco_evo2_e2_1_species_catalog_acceptance.gd": "4df82431d3ce20fd48610e1c250aafb9f0afbaac"
+    }
+  },
+  "formal_equivalent_verification": {
+    "executed_date": "2026-08-18",
+    "human_directed_gate": true,
+    "remote_head_verified": "c79e2d61e665689fe39621442f72171de5d2790f",
+    "candidate_to_remote_diff_commits": 6,
+    "candidate_to_remote_code_or_test_changes": false,
+    "candidate_to_remote_changed_scope": [
+      "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
+      "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
+      "docs/checkpoints/2026-08-18_ECO_EVO2_E2_1_SPECIES_CATALOG_CANDIDATE_RU.md",
+      "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+      "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
+      "validation/ecology/eco-evo2-e2-1-species-catalog-validation.json"
+    ],
+    "local_branch_identity_gate": "PASS_feature/eco-evolutionary-ecology",
+    "exact_blob_identity_gate": "PASS_6_OF_6",
+    "godot_identity_gate": "PASS",
+    "parser_preload_gate": "PASS",
+    "acceptance_assertions": "PASS_53_OF_53",
+    "fresh_process_runs": 2,
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "12c2d8819509e54dad6725e48cdb2cd881cf5d674632db1db268b3f7e4b5f13a",
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "equivalence_basis": "The repository validation contract explicitly allowed full canonical branch runner OR equivalent fresh verification. The execution environment had no GitHub network path and no PowerShell runtime, so verification reconstructed a fresh local branch carrier using exact current GitHub blobs, verified every executable blob identity, verified unchanged code/test scope from candidate head to remote head, and executed the canonical acceptance GDScript on the exact attached Godot double binary in two fresh processes."
+  },
+  "required_properties": [
+    "STABLE_RESEARCH_SPECIES_ID_PER_LINEAGE",
+    "DISTINCT_LINEAGES_DISTINCT_RESEARCH_IDS",
+    "NO_CANONICAL_SPECIES_TAXONOMY_PROMOTION",
+    "P2_7_LINEAGE_EVIDENCE_PINNED",
+    "P3_8_ECOSYSTEM_PARENT_ACCEPTED",
+    "CANONICAL_ENTRY_ORDER",
+    "INPUT_ORDER_INDEPENDENT_CATALOG_HASH",
+    "SOURCE_STATE_NOT_MUTATED",
+    "STRICT_SOURCE_OBSERVATION_SHAPE",
+    "LEGACY_EXTRA_SOURCE_FIELDS_REJECTED",
+    "LEGACY_FLOAT_SPLIT_VARIANT_REJECTED",
+    "DUPLICATE_LINEAGE_REJECTED",
+    "ENTRY_AND_CATALOG_TAMPER_REJECTED",
+    "GLOBAL_RNG_NOT_CONSUMED",
+    "SAME_AND_FRESH_PROCESS_DETERMINISM"
+  ],
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_EQUIVALENT_FRESH_VERIFICATION_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-18",
+    "aggregate_hash": "aa23bc269738ace132fb1386ec01b339cc7fd82e1238223c1075b60dac5896ad",
+    "code_under_test_head": "bf468942718df6b84ebd4c61a294987e8e63c607",
+    "acceptance_source_head": "c79e2d61e665689fe39621442f72171de5d2790f",
+    "canonical_species_declared": false,
+    "production_authority_claimed": false,
+    "independent_reviewer_claimed": false,
+    "decision": "ACCEPT_E2_1_AND_AUTHORIZE_E2_2"
+  },
+  "known_boundary": {
+    "full_repository_checkout_available_in_execution_container": false,
+    "powershell_branch_runner_executed": false,
+    "equivalent_fresh_verification_executed": true,
+    "production_authority_claimed": false,
+    "canonical_taxonomy_claimed": false,
+    "e2_2_authorized": true
+  },
+  "decision": "ACCEPT_E2_1_AND_AUTHORIZE_E2_2",
+  "next": "ECO.EVO2 / E2.2 Deterministic Evolution Bake Export"
+}

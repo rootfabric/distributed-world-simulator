@@ -1,0 +1,283 @@
+{
+  "schema": "distributed_world_simulator.ecology.xfer0_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-XFER0-2026-08-18-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "checkpoint": "ECO.XFER0",
+  "name": "Bounded Research-to-Simulator Contract",
+  "status": "ACCEPTED_BOUNDED_DESIGN",
+  "research_only": true,
+  "parent_evo2": {
+    "final_code_under_test": "376796ab8c8370b7370fcd220ed207d07955cb42",
+    "final_durable_head": "3367615b8ad5fed59ac13ac6fcc215e36155b27d",
+    "final_aggregate_hash": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "final_evidence_hash": "989e5ae02e66052ca7d2e46f5f452446300ba625dd4efd5cd6b5ffd9db2f2cd1",
+    "e2_8_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "e2_8_persistence_aggregate": "4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061",
+    "e2_8_transport_sha256": "b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1"
+  },
+  "scope": {
+    "design_only": true,
+    "runtime_implementation": false,
+    "production_activation": false,
+    "canonical_owner_mutation": false,
+    "production_path_mutation": false,
+    "network_protocol_mutation": false,
+    "production_persistence_mutation": false,
+    "world_transaction_mutation": false,
+    "canonical_taxonomy_mutation": false,
+    "biome_species_table_allowed": false,
+    "asset_scatter_as_ecology_truth_allowed": false
+  },
+  "authority_model": {
+    "eco_research_owns": [
+      "RESEARCH_ECOLOGY_SEMANTICS",
+      "RESEARCH_SPECIES_CATALOG_SEMANTICS",
+      "RESEARCH_POPULATION_AND_COHORT_MEANING",
+      "RESEARCH_LINEAGE_AND_ADAPTATION_PROVENANCE"
+    ],
+    "eco_must_not_own": [
+      "GEOLOGY_OR_TERRAIN_TRUTH",
+      "ENVIRONMENT_TRUTH",
+      "MATERIAL_ONTOLOGY",
+      "WORLD_QUERY_FABRIC",
+      "SPATIAL_DOMAIN_FABRIC",
+      "TIME_FABRIC",
+      "GENERIC_POPULATION_RUNTIME",
+      "WORLD_LIFECYCLE_FABRIC",
+      "WORLD_WORK_BUDGET",
+      "AUTHORITY_FOUNDATION",
+      "NETWORK_REPLICATION_POLICY",
+      "PRODUCTION_PERSISTENCE_DURABILITY",
+      "WORLD_TRANSACTION_MODEL",
+      "PRESENTATION_MESH_AS_TRUTH",
+      "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH",
+      "CANONICAL_SPECIES_TAXONOMY"
+    ],
+    "single_rule": "ECO may publish typed research-derived payloads and requests; only canonical simulator owners may turn them into authoritative world state."
+  },
+  "canonical_foundation_dependencies": {
+    "required_before_xfer1": [
+      "G",
+      "ENV",
+      "MAT",
+      "WQ",
+      "SD",
+      "TF"
+    ],
+    "binding_state": "UNRESOLVED_CANONICAL_CONTRACTS",
+    "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+    "xfer0_may_invent_production_api": false,
+    "xfer0_may_copy_research_contract_into_owner": false
+  },
+  "interfaces": [
+    {
+      "id": "ENVIRONMENT_INPUT",
+      "direction": "SIMULATOR_TO_ECO",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "provider_foundations": [
+        "G",
+        "ENV",
+        "MAT",
+        "WQ",
+        "SD",
+        "TF"
+      ],
+      "required_semantics": [
+        "stable_spatial_key",
+        "stable_time_key",
+        "reference_frame_identity",
+        "temperature",
+        "soil_moisture",
+        "light_availability",
+        "nutrient_availability",
+        "flood_or_disturbance_pressure"
+      ],
+      "allowed_operations": [
+        "READ_SAMPLE",
+        "READ_REGION_SUMMARY"
+      ],
+      "forbidden_operations": [
+        "WRITE_TERRAIN",
+        "WRITE_ENVIRONMENT",
+        "WRITE_MATERIAL",
+        "WRITE_TIME",
+        "WRITE_SPATIAL_DOMAIN"
+      ]
+    },
+    {
+      "id": "ECOLOGY_STATE_OUTPUT",
+      "direction": "ECO_TO_SIMULATOR",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "consumer_foundations": [
+        "GENERIC_POPULATION_RUNTIME",
+        "WORLD_LIFECYCLE_FABRIC",
+        "WORLD_WORK_BUDGET"
+      ],
+      "required_semantics": [
+        "population_or_cohort_state",
+        "research_species_id",
+        "lineage_provenance",
+        "biomass_or_density",
+        "seed_bank_or_recruitment_state",
+        "ecology_revision"
+      ],
+      "allowed_operations": [
+        "PUBLISH_DERIVED_STATE",
+        "PUBLISH_DELTA_CANDIDATE"
+      ],
+      "forbidden_operations": [
+        "CREATE_PLANET_WIDE_ENTITY_TRUTH",
+        "AUTHORIZE_WORLD_MUTATION",
+        "BYPASS_LIFECYCLE_OWNER"
+      ]
+    },
+    {
+      "id": "QUERY_PROJECTION",
+      "direction": "ECO_TO_QUERY_PRESENTATION",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "consumer_foundations": [
+        "WQ",
+        "PRESENTATION"
+      ],
+      "required_semantics": [
+        "read_only_projection",
+        "source_ecology_revision",
+        "source_spatial_key",
+        "source_provenance_hash"
+      ],
+      "allowed_operations": [
+        "READ_ONLY_QUERY",
+        "DERIVE_PRESENTATION"
+      ],
+      "forbidden_operations": [
+        "MUTATE_ECOLOGY",
+        "MUTATE_WORLD",
+        "AUTHORIZE_INTERACTION"
+      ]
+    },
+    {
+      "id": "PERSISTENCE_PAYLOAD",
+      "direction": "ECO_TO_PERSISTENCE_OWNER",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "consumer_foundations": [
+        "PRODUCTION_PERSISTENCE_DURABILITY"
+      ],
+      "required_semantics": [
+        "typed_payload_schema",
+        "payload_version",
+        "content_hash",
+        "catalog_or_population_provenance",
+        "restore_validation_contract"
+      ],
+      "allowed_operations": [
+        "ENCODE_PAYLOAD",
+        "VALIDATE_RESTORED_PAYLOAD"
+      ],
+      "forbidden_operations": [
+        "OWN_DURABILITY",
+        "CHOOSE_COMMIT_POINT",
+        "WRITE_DISTRIBUTED_LOG",
+        "DECLARE_TRANSACTION_COMMITTED"
+      ]
+    },
+    {
+      "id": "IDENTITY_PROVENANCE",
+      "direction": "BIDIRECTIONAL_REFERENCE_ONLY",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "consumer_foundations": [
+        "WQ",
+        "PRODUCTION_PERSISTENCE_DURABILITY",
+        "PRESENTATION"
+      ],
+      "required_semantics": [
+        "research_species_id",
+        "catalog_hash",
+        "lineage_id",
+        "genome_checksum",
+        "source_evidence_hash"
+      ],
+      "allowed_operations": [
+        "REFERENCE",
+        "COMPARE",
+        "AUDIT"
+      ],
+      "forbidden_operations": [
+        "PROMOTE_TO_CANONICAL_TAXONOMY",
+        "REASSIGN_CANONICAL_OWNER",
+        "AUTHORIZE_MUTATION"
+      ]
+    },
+    {
+      "id": "REPRESENTATION_PROMOTION_REQUEST",
+      "direction": "ECO_TO_CANONICAL_WORLD_OWNERS",
+      "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+      "consumer_foundations": [
+        "WORLD_LIFECYCLE_FABRIC",
+        "WORLD_TRANSACTION_MODEL",
+        "AUTHORITY_FOUNDATION"
+      ],
+      "required_semantics": [
+        "source_population_identity",
+        "source_ecology_revision",
+        "requested_representation_scope",
+        "interaction_reason",
+        "provenance_hash"
+      ],
+      "allowed_operations": [
+        "REQUEST_PROMOTION"
+      ],
+      "forbidden_operations": [
+        "CREATE_DURABLE_ENTITY",
+        "ASSIGN_AUTHORITY",
+        "COMMIT_TRANSACTION",
+        "DELETE_POPULATION_TRUTH"
+      ]
+    }
+  ],
+  "handoff_invariants": [
+    "population state remains ecology truth until a canonical lifecycle/transaction owner explicitly promotes representation",
+    "a promoted representation cannot become a second ecology truth",
+    "query and presentation surfaces are read-only derived views",
+    "persistence accepts ECO payloads but owns durability and commit semantics",
+    "research_species_id is portable research identity and never silently becomes canonical taxonomy",
+    "all production bindings remain unresolved in XFER0; concrete API binding belongs to XFER1 or later owner-approved work",
+    "EVO2 evidence is provenance input, not production authorization"
+  ],
+  "xfer1_gate": {
+    "status": "BLOCKED_WAIT_CANONICAL_FOUNDATIONS",
+    "required_foundations": [
+      "G",
+      "ENV",
+      "MAT",
+      "WQ",
+      "SD",
+      "TF"
+    ],
+    "requires_main_owned_contracts": true,
+    "requires_explicit_owner_mapping": true,
+    "requires_authority_review": true,
+    "may_start_from_xfer0_design_only": true,
+    "may_treat_xfer0_as_production_authorization": false
+  },
+  "evo3_gate": {
+    "after_xfer0_acceptance": "AUTHORIZED_FOR_RESEARCH_PLANNING_ONLY",
+    "production_runtime_authorized": false,
+    "xfer1_required_before_production_binding": true,
+    "goal": "Planetary Ecology Compiler / broader planetary generalization"
+  },
+  "acceptance_requirements": [
+    "exact EVO2 FINAL and E2.8 parent identities preserved",
+    "six canonical foundation dependencies G/ENV/MAT/WQ/SD/TF declared and unresolved",
+    "all six interface contracts present with no production API binding",
+    "authority barriers fail closed",
+    "query/projection remains read only",
+    "persistence durability and transaction commit remain external",
+    "representation promotion is request-only",
+    "biome species tables and asset scatter cannot become ecology truth",
+    "XFER1 remains blocked on canonical owner contracts",
+    "EVO3 is research-planning-only after XFER0 acceptance"
+  ],
+  "contract_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309"
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "components": {"P1A":"ACCEPTED_10_OF_10","P1B":"ACCEPTED_10_OF_10","P1C":"ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE"},
+  "windows_final_gate": "P1C_S4_EXACT_WINDOWS_PASS_6x30_27_30_AGGREGATE_15_RESTART_6",
+  "final_p1c_hash": "0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112",
+  "failures": 0,
+  "scope_note": "P1 proves ecological adaptation and strategy coexistence. Developmental morphology remains a separate PH extension and is not retroactively claimed as accepted P1 competition truth.",
+  "next": "PH0/PH1 developmental phenotype work."
+}

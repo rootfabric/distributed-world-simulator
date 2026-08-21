@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_6_client_read_model_validation.v1",
+  "revision": "ECO-P4.6-2026-08-14-R5-ACCEPTED-WINDOWS-REAL-INTEGRATION",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_REAL_INTEGRATION",
+  "scope": "READ_ONLY_INTEREST_SELECTION_CLIENT_SUMMARY_AND_MONOTONIC_READ_CACHE_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P4.5",
+    "status_required_for_canonical_gate": "ACCEPTED*",
+    "accepted_aggregate_hash": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419",
+    "current_status": "ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN",
+    "kernel_blob": "2a4083fb9d4b55f8c16421c4f3555c19a952711f",
+    "acceptance_test_blob": "041e7e81588f59b54bac76d7cd9ad558d054b0de",
+    "runner_blob": "b712fb2ac1bda03dffdbaff4eee435f60cf236d5",
+    "validation_blob_after_acceptance": "a02f1547c1beea5a49d500304b58ab8c763334ca"
+  },
+  "accepted_blobs": {
+    "kernel": "5ce5aa88549c171eeda92b6d6f3202ff5c44c6b1",
+    "unit_acceptance_test": "9cde3960a37010a15d00c3d8c3c736943c59e7ba",
+    "fixture_builder": "dc55b886c057e2ccd8f454658b6be58d579642e1",
+    "real_integration_test": "1924202c9ba98ccc5e867529fda1d328b9d746ce",
+    "runner": "bd65dd9df5b964f0c930814e97c160520033adc2"
+  },
+  "contract": {
+    "server_read_projection": "P4.6 derives bounded client summaries only from validated P4.5 ownership state; canonical ecology remains server-owned",
+    "summary_identity": "summary_hash binds region, owner/epoch source cursor, source snapshot/ownership hashes, ecology generation/time cursor, backlog state and canonical lineage biomass summary",
+    "interest": "requested region ids are canonicalized as sorted unique ids; duplicate authoritative states fail closed; missing requested regions remain explicit",
+    "read_cache": "client read updates are monotonic by ownership epoch, ecology generation and observed horizon; stale epochs/generations/times and equal-cursor conflicts fail closed",
+    "mutation_isolation": "returned summaries/projections are detached values and no client API commits data into P4.5 ownership",
+    "not_authorized": ["client canonical mutation", "network RPC transport", "interest subscription ownership", "runtime scheduler authority"]
+  },
+  "acceptance_evidence": {
+    "host": "Windows exact local checkout",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "runner": "RUN_ECO_P4_6_TESTS.ps1",
+    "accepted_parent_identity": {
+      "checkpoint": "ECO.P4.5",
+      "aggregate_hash": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419",
+      "policy": "durable accepted validation plus exact accepted P4.5 blobs; no redundant parent runtime replay"
+    },
+    "unit": {
+      "fresh_process_runs": 2,
+      "assertions_per_run": 24,
+      "logs_byte_identical": true,
+      "aggregate_hash": "88999825347c805b9ac2b2a35da32415b730566ae3b94eebd4203e9adff387c2",
+      "summary_hash": "9b3270edcb178dcb681de63223c0d5f5c8c851d90856f94d660e76c125b4521f",
+      "interest_hash": "875fce66118cc2810755549e3663d92575b4942e8a42dd00bd710c2acdc57864"
+    },
+    "real_integration": {
+      "fresh_process_runs": 2,
+      "assertions_per_run": 43,
+      "logs_byte_identical": true,
+      "integration_hash": "f8191c46658f345e54c85c61b29059939bbf9c7decda2892b9ef62e733a27bdf",
+      "source_summary_hash": "6134abede8369ed885c5e85e7ef7b127c85a51db7d5aa7b1be71990f8f0f9ab9",
+      "target_summary_hash": "2f8e38e132edc4302a0b2ca93c4c33abb0f0f8889b56ae2a4271068204503ef7",
+      "interest_hash": "4a2d3b31c7542d4711864fe482eb42297b2751f583770a6854c31eccc18d1cd5",
+      "future_summary_hash": "b763915d5ad45a85bf8fae53212d0ae1477c125840e6a9685fab0035bc2ef83b",
+      "restart_ownership_hash": "c53214d530c8b711b14065d9c18a3dab30cff45e4d70eeaad40298a75eba4e34",
+      "parent_p4_5": "c966d60e6101e934f63945c7a5ea834ecf6e61646d3aaf54fca4657ccc7b5419"
+    },
+    "result": "PASS"
+  },
+  "decision": "ACCEPT_P4_6; OPEN_P4_7_CANONICAL_GATE; P4_8_MAY_BE_PREPARED_BUT_NOT_ACCEPTED"
+}

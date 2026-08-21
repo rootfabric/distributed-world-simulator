@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.xfer0_contract.schema.v1",
+  "title": "ECO XFER0 bounded research-to-simulator contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "revision",
+    "branch",
+    "checkpoint",
+    "name",
+    "status",
+    "research_only",
+    "parent_evo2",
+    "scope",
+    "authority_model",
+    "canonical_foundation_dependencies",
+    "interfaces",
+    "handoff_invariants",
+    "xfer1_gate",
+    "evo3_gate",
+    "acceptance_requirements",
+    "contract_hash_algorithm",
+    "contract_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.xfer0_contract.v1"},
+    "version": {"const": "1.0.0"},
+    "revision": {"type": "string", "minLength": 1},
+    "branch": {"const": "feature/eco-evolutionary-ecology"},
+    "checkpoint": {"const": "ECO.XFER0"},
+    "name": {"type": "string", "minLength": 1},
+    "status": {"enum": ["BOUNDED_DESIGN_CANDIDATE", "ACCEPTED_BOUNDED_DESIGN"]},
+    "research_only": {"const": true},
+    "parent_evo2": {"type": "object"},
+    "scope": {"type": "object"},
+    "authority_model": {"type": "object"},
+    "canonical_foundation_dependencies": {"type": "object"},
+    "interfaces": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "direction", "binding_mode", "required_semantics", "allowed_operations", "forbidden_operations"],
+        "properties": {
+          "id": {"enum": ["ENVIRONMENT_INPUT", "ECOLOGY_STATE_OUTPUT", "QUERY_PROJECTION", "PERSISTENCE_PAYLOAD", "IDENTITY_PROVENANCE", "REPRESENTATION_PROMOTION_REQUEST"]},
+          "direction": {"type": "string", "minLength": 1},
+          "binding_mode": {"const": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING"},
+          "provider_foundations": {"type": "array", "items": {"type": "string"}},
+          "consumer_foundations": {"type": "array", "items": {"type": "string"}},
+          "required_semantics": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "allowed_operations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "forbidden_operations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "handoff_invariants": {"type": "array", "minItems": 7, "items": {"type": "string"}},
+    "xfer1_gate": {"type": "object"},
+    "evo3_gate": {"type": "object"},
+    "acceptance_requirements": {"type": "array", "minItems": 10, "items": {"type": "string"}},
+    "contract_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

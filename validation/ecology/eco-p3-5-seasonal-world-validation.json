@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_5_seasonal_world_validation.v1",
+  "revision": "ECO-P3.5-2026-08-13-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "acceptance_head": "fff3a8dc62e76a873e86bf0ebc9392e9bfb16755",
+    "checkpoint": "ECO.P3.4",
+    "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "aggregate_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
+    "kernel_blob": "11e2b281c48d378da906f0739c739eecf9aa8465",
+    "acceptance_test_blob": "f3412bd53ebe7d647b83266e4945d758924ab66b"
+  },
+  "accepted_ancestor": {
+    "checkpoint": "ECO.P3.2",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+  },
+  "contract": {
+    "domain": "direct deterministic evaluation of continuous seasonal environment from immutable P3.4 baseline plus finite time; no cumulative timestep integration",
+    "cycle": "finite period/epoch and continuous global phase with exact cycle index",
+    "waveform": "piecewise-linear triangle waveform without transcendental canonical-hash dependency",
+    "spatial_phase": "continuous x/y/altitude phase shift relative to P3.4 origin",
+    "channel_phase": "independent temperature/moisture/light/nutrients amplitudes and phase offsets",
+    "bounds": "P3.4 bounds preserved; moisture/light/nutrients remain [0,1]",
+    "resource_bridge": "seasonal light/moisture/nutrients deterministically scale resource supply",
+    "periodicity": "patch environmental state repeats after integer periods without cumulative drift",
+    "rng": "no simulation/global RNG consumption",
+    "production_boundary": "research seasonality only; no production clock/persistence authority"
+  },
+  "durable_full_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parent_p3_4_regression": "PASS_56_ASSERTIONS_CANDIDATE_AGGREGATE_REPRODUCED",
+    "process_runs": 3,
+    "all_process_logs_byte_identical": true,
+    "assertions_per_run": 74,
+    "aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "phase0_hash": "2ee8d7c6dc55a7c55af35cc945b0b85f79cc27fe0145b921eb5b9f0023b5d060",
+    "quarter_hash": "3e9ae067e034b4a4ce4b149ee0306ecfae7d12189d82d55e6d2e5e541dab1bb2",
+    "half_hash": "aec09a3a29d5c528140e70d79cd7970e3d3d09ee9e4f848d854cd205bc13b790",
+    "empty_hash": "8d87247c14199a2c65d17389658c89067f8787a262253b8ecc03db9926f9f620",
+    "parent_p3_4": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
+    "source_p3_4_result_hash": "2651bb4da195af4c1d2ba7f6b09ef9bdc9e459f9206c32ef1e9eb0dbddd6b293",
+    "kernel_blob": "649d26457ac8383f890f0dfca890353cc200ee7e",
+    "acceptance_test_blob": "c91ed0c25c418be1a7c7c4352423b7214c8706f8",
+    "fresh_process_log_sha256": "ca5368cec1477975fe89aa138111f24b61907eb410a47effcf1962e88e92e5d9"
+  },
+  "acceptance_basis": {
+    "authority": "HUMAN_DIRECTED_ATTACHED_EXACT_GODOT_CANONICAL",
+    "human_direction_date": "2026-08-13",
+    "windows_claim": false,
+    "windows_only_requirement_for_this_checkpoint": "SUPERSEDED_BY_HUMAN_DIRECTION",
+    "current_head_recheck": {
+      "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+      "exact_kernel_blob": "649d26457ac8383f890f0dfca890353cc200ee7e",
+      "exact_test_blob": "c91ed0c25c418be1a7c7c4352423b7214c8706f8",
+      "integration_result": "PASS",
+      "integration_fixture_hash": "a28031d525fed077b23023d04fbe005e355eb6b77b3d06af7a731836324275dd",
+      "note": "supplemental current-head integration smoke; not a replacement for the frozen aggregate"
+    }
+  },
+  "canonical_gate": {
+    "satisfied": true,
+    "execution_authority": "ATTACHED_EXACT_GODOT",
+    "required_parent_status_prefix": "ACCEPTED",
+    "required_aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "required_parent_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813"
+  },
+  "decision": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "next": "P3.6 Disturbance & Succession canonical gate is now parent-authorized; P3.6 itself remains candidate until its own gate runs"
+}

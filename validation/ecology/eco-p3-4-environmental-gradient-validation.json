@@ -1,0 +1,68 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_4_environmental_gradient_validation.v1",
+  "revision": "ECO-P3.4-2026-08-13-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "acceptance_head": "23f1a98479dacf1d88e016493d026fb462ffb6b9",
+    "checkpoint": "ECO.P3.3",
+    "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
+    "kernel_blob": "43a25eb0e6677749162de99c251231c94d243dc1",
+    "acceptance_test_blob": "9911c9197663098e1efa8875332b9d7c88ca34c6"
+  },
+  "accepted_ancestor": {
+    "checkpoint": "ECO.P3.2",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+  },
+  "contract": {
+    "domain": "continuous deterministic environmental field sampled on explicit P3.3 patch/cell coordinates; no discrete biome classification",
+    "coordinates": "every P3.3 patch ID has exactly one finite x/y/altitude coordinate; input order canonicalizes to P3.3 patch order",
+    "field_model": "temperature/moisture/light/nutrients are affine x/y/altitude fields relative to configurable origin and deterministically clamped",
+    "normalized_channels": "moisture/light/nutrients remain within [0,1]",
+    "resource_bridge": "light->light, moisture->water, nutrients->nutrients availability",
+    "edge_diagnostics": "P3.3 topology preserved while deterministic environmental deltas are derived",
+    "rng": "no simulation/global RNG consumption",
+    "production_boundary": "research environmental sampling only; no production weather/server ownership"
+  },
+  "durable_full_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parent_p3_3_regression": "PASS_66_ASSERTIONS_CANDIDATE_AGGREGATE_REPRODUCED",
+    "process_runs": 3,
+    "all_process_logs_byte_identical": true,
+    "assertions_per_run": 56,
+    "aggregate_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
+    "gradient_hash": "2651bb4da195af4c1d2ba7f6b09ef9bdc9e459f9206c32ef1e9eb0dbddd6b293",
+    "empty_hash": "13ec0762efeec0e0130f7b587b17bc7bd5b133fafa4f8eaf2975c5c5ff5c91a1",
+    "parent_p3_3": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
+    "source_p3_3_result_hash": "21a8de4b12cd541d40c8fd34b725e59e493a775e3465b853945f46f85445a8a2",
+    "kernel_blob": "11e2b281c48d378da906f0739c739eecf9aa8465",
+    "acceptance_test_blob": "f3412bd53ebe7d647b83266e4945d758924ab66b"
+  },
+  "acceptance_basis": {
+    "authority": "HUMAN_DIRECTED_ATTACHED_EXACT_GODOT_CANONICAL",
+    "human_direction_date": "2026-08-13",
+    "windows_claim": false,
+    "windows_only_requirement_for_this_checkpoint": "SUPERSEDED_BY_HUMAN_DIRECTION",
+    "current_head_recheck": {
+      "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+      "exact_kernel_blob": "11e2b281c48d378da906f0739c739eecf9aa8465",
+      "exact_test_blob": "f3412bd53ebe7d647b83266e4945d758924ab66b",
+      "integration_result": "PASS",
+      "integration_fixture_hash": "6c4da52f0ca5da551236df7c8c2051545d60ef62a9751ae0a40e86b48ecbc720",
+      "note": "supplemental current-head integration smoke; not a replacement for the frozen aggregate"
+    }
+  },
+  "canonical_gate": {
+    "satisfied": true,
+    "execution_authority": "ATTACHED_EXACT_GODOT",
+    "required_parent_status_prefix": "ACCEPTED",
+    "required_aggregate_hash": "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813",
+    "required_parent_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41"
+  },
+  "decision": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "next": "P3.5 Seasonal World is eligible for lifecycle acceptance if frozen identities remain exact"
+}

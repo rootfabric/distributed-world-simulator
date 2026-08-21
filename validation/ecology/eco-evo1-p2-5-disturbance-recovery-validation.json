@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_5_disturbance_recovery_validation.v1",
+  "revision": "ECO-EVO1-P2.5-2026-08-13-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "b645ee451dd5c1c2558647c8e50eb293ec80c21c",
+  "candidate_head": "a40efb45437387812adbc6fdaac2a5ae494362e5",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.4",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97"
+  },
+  "canonical_windows": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "acceptance": "PASS_173_ASSERTIONS",
+    "restart_replay_a": "PASS_5_ASSERTIONS",
+    "restart_replay_b": "PASS_5_ASSERTIONS",
+    "aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
+    "mild_loss": 0.030140495868,
+    "severe_loss": 0.073198347107,
+    "shallow_survival": 0.297520661157,
+    "deep_survival": 0.7875,
+    "mild_bank_killed": 20,
+    "severe_bank_killed": 70,
+    "severe_post_biomass": 0.086801652893,
+    "single_severe_final": 0.111289229748,
+    "recovery_gain": 0.024487576856,
+    "reactivated": 81,
+    "repeated_reactivated": 79,
+    "repeated_final": 0.07697058482,
+    "second_loss": 0.037909682296
+  },
+  "truth": {
+    "event_channels": "mechanical_severity + seed_bank_mortality_fraction",
+    "adult_damage": "accepted CAL1-D exposure/anchoring disturbance survival",
+    "seed_bank_damage": "explicit event mortality with integer conservation and P2.2-valid cohort rebuild",
+    "recovery": "accepted ResourceModel + P2.2 bank reactivation + P2.3 turnover coefficients by reference",
+    "capacity": "accepted P1 single-patch MAX_BIOMASS_KG_M2",
+    "production_boundary": "research event input only; no canonical ENV/TF/LIFE/WB ownership"
+  },
+  "accepted_properties": [
+    "P2_4_PARENT_HASH_UNCHANGED",
+    "SEVERE_ADULT_LOSS_GT_MILD",
+    "SEVERE_SEED_BANK_KILL_GT_MILD",
+    "DEEP_ROOT_MECHANICAL_SURVIVAL_GT_SHALLOW_ROOT",
+    "ADULT_EVENT_BIOMASS_CONSERVATION",
+    "SEED_BANK_EVENT_INTEGER_CONSERVATION",
+    "SEVERE_IMMEDIATE_BIOMASS_LOSS",
+    "SURVIVING_SEED_BANK_REACTIVATION_GT_ZERO",
+    "SINGLE_SEVERE_MULTIYEAR_RECOVERY_GAIN_GT_ZERO",
+    "SECOND_EVENT_ADDITIONAL_DAMAGE_GT_ZERO",
+    "REPEATED_FINAL_BIOMASS_LT_SINGLE_SEVERE_FINAL",
+    "ALL_RUNS_CAPACITY_BOUNDED",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "122ed0c5f0f08ec36bd4fdec8fda8af1c9e9270b",
+    "head": "b645ee451dd5c1c2558647c8e50eb293ec80c21c",
+    "changed_files": 5,
+    "accepted_p2_4_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "decision": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "next": "ECO.EVO1 / P2.6 Long-Horizon Biogeography"
+}

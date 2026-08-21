@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_6_disturbance_succession_validation.v1",
+  "revision": "ECO-P3.6-2026-08-13-R3-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "acceptance_head": "2b4e4953abea554e6ea6299c08b0afd8c8a3e875",
+    "checkpoint": "ECO.P3.5",
+    "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "kernel_blob": "649d26457ac8383f890f0dfca890353cc200ee7e",
+    "acceptance_test_blob": "c91ed0c25c418be1a7c7c4352423b7214c8706f8"
+  },
+  "contract": {
+    "domain": "deterministic disturbance pressure and direct succession/recovery over immutable P3.5 seasonal state and P3.3 final biomass",
+    "disturbance_profile": "continuous severity plus heat/flood/drought pressure channels in [0,1]; no event-name winner table",
+    "functional_traits": "per-lineage heat/flood/drought resistance, recovery rate and pioneer capacity; canonicalized by lineage ID",
+    "damage": "bounded multiplicative survival across active pressure channels",
+    "recovery": "direct resource-supported recovery with strict pre-disturbance biomass ceiling",
+    "no_drift": "same source/disturbance/traits/recovery time reconstructs exactly; no hidden timestep state",
+    "rng": "no simulation/global RNG consumption"
+  },
+  "frozen_full_exact_godot_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parent_p3_5_regression": "PASS_74_ASSERTIONS_AGGREGATE_REPRODUCED",
+    "process_runs": 3,
+    "all_process_logs_byte_identical": true,
+    "assertions_per_run": 33,
+    "aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "heat_hash": "7c6b21d85342835f8c29aad745ed3931fce7b50284509f7eaf0a4f31e0214f10",
+    "flood_hash": "d7fb655873afb749433151d9262f04f9e9542ffb94e3c7cea04b8538fc534f94",
+    "drought_hash": "2ac7cd6beaf26326a88e7ad16c47fe25d0022d69c19e5b7297df6aa6b8261994",
+    "parent_p3_5": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "kernel_blob": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+    "acceptance_test_blob": "ef8e8565246fb454ed6483f95df3b33c1d253802",
+    "fresh_process_log_sha256": "71cb3bbfac17b2bc3667b0ffc3ab8055ff0a9c9c04e2c7d1cdb63a4cf0c0c537"
+  },
+  "fresh_current_head_integration_smoke": {
+    "authority": "FRESH_CURRENT_LIVE_KERNEL_INTEGRATION_SMOKE_ON_EXACT_ATTACHED_GODOT",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "live_source_head": "ed8eb946a99b0f736d2d7f7cd1879d9455cffde4",
+    "process_runs": 2,
+    "all_process_logs_byte_identical": true,
+    "checks_per_run": 32,
+    "log_sha256": "18a21dfbc585326d971d88fda568d77e1a54ba84cef538c532ae73babfb03318",
+    "p3_6_fixture_hash": "388fc9500345691bd5fa4064787206de331b5cc862b3ed92dfb23fac819c64f5",
+    "p3_7_fixture_hash": "d8f47dc9c8f363d2bdf495b8279d4ee95f6f382032657a6b6bead081f95661ab",
+    "p3_8_initial_state_hash": "4935a05b3cce4a20c5bb293f71185d54ef7de48741b27af2b16cced789c85735",
+    "p3_8_final_state_hash": "1027eda45de0749ca30a0c49963a638e07277e191939c6ce10f78db806035412",
+    "p3_8_serialized_sha256": "58c251bf77a66793aa6a16e3dc42243372314e9b3c452f4ef4b539292d94b77e",
+    "note": "Focused current-live-kernel smoke uses the established strict minimal P3.2 boundary fixture only below P3.3; exact live P3.3-P3.8 kernels are unmodified GitHub blobs. Frozen checkpoint aggregates remain those from full committed acceptance tests."
+  },
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_CANONICAL_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-13",
+    "aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "parent_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "kernel_blob": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+    "acceptance_test_blob": "ef8e8565246fb454ed6483f95df3b33c1d253802",
+    "windows_evidence_claimed": false,
+    "decision": "ACCEPT_P3_6"
+  },
+  "next": "P3.7 own gate is now authorized; no P3.7 acceptance is implied by this record."
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_5_accepted_e3_4_binding.v1",
+  "version": "1.0.0",
+  "checkpoint": "ECO.EVO3/E3.5",
+  "binding_state": "ACCEPTED_E3_4_EXACT_INPUT",
+  "accepted_control_head": "872f2d993cc002b72529ea7f2a3274d0d71245b0",
+  "canonical_merge_commit": "8618032bfb668c7f0427f0aa80c0e07de69a3cfc",
+  "reviewed_head": "9fc491f59e7dbad1d7e2cd6e880c598a4970ebae",
+  "executable_freeze": "b51e815df0939deaf99ea0dc349fc7fc80c0a3bc",
+  "review_relay_comment_id": 5356471742,
+  "artifact_path": "config/ecology/accepted_inputs/e3_4_candidate_causal_colonization_program.v1.json",
+  "artifact_git_blob": "db725ef37912547527dff5fffe39ca63e5f8c22e",
+  "artifact_sha256": "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463",
+  "colonization_program_hash": "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6",
+  "provenance_hash": "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
+  "full_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "canonical_binding_resolved": false,
+  "production_binding_authorized": false
+}

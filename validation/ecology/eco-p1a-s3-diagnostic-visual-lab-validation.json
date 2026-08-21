@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1A-S3",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "accepted_truth_baseline": {
+    "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c"
+  },
+  "final_windows_automated_evidence": {
+    "checkout_after_pull": "441957baec079a330dca3dc8cf6287f840b59bb2",
+    "p1a_s1": "PASS_109_ASSERTIONS",
+    "p1a_s2": "PASS_235_ASSERTIONS",
+    "p1a_s3": "PASS_208_ASSERTIONS",
+    "focused_dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "scene_headless_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
+    "result": "PASS_CLEAN"
+  },
+  "runner_reporting_fix": {
+    "issue": "PowerShell runner printed stale summary text saying 114 assertions although the Godot S3 test in the same run actually executed and passed 208 assertions.",
+    "truth_or_test_failure": false,
+    "fixed_in_commit": "a1fa4ecdb88c04f1a40c6620c650735d44e99314",
+    "correct_summary": "PASS_208_ASSERTIONS"
+  },
+  "manual_graphical_review": {
+    "pre_fix_result": "FIX_REQUIRED_PRESENTATION_ONLY",
+    "truth_failure": false,
+    "fix1_result": "PASS_BY_USER_OBSERVATION",
+    "evidence": [
+      "heatmap and right-side diagnostics panel are separated and readable",
+      "views 1 through 8 switch correctly",
+      "temperature view remains continuous probe-independent S1 truth",
+      "limiting-factor view exposes WATER, NUTRIENT, LIGHT and FLOOD regions",
+      "selected patch exposes ENV, RESP, LIMIT, ENERGY, BIO, RESULT, WHY and LOCAL VS BASE diagnostics"
+    ]
+  },
+  "focused_evidence": {
+    "assertions": 208,
+    "failures": 0,
+    "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "scene_grid": "33x33",
+    "scene_dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c"
+  },
+  "truth_boundary": "S3 remains presentation/diagnostics over accepted S1/S2 truth. Fix1 changed only derived diagnostics and layout; accepted environment/resource/simulation hashes did not change.",
+  "next": "ECO.P1A-S4 Determinism, Sensitivity and Failure Classification"
+}

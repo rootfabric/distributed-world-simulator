@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_a_baseline_decomposition_validation.v1",
+  "revision": "ECO-CAL1-A-2026-08-12-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e",
+  "acceptance_evidence_head": "960231ba08b0e196ab78226098322ddc0ab5a900",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "decision": "ACCEPTED",
+  "goal": "Measure existing PH3/PH3C morphology economics without tuning coefficients and explain HEIGHT_LOW broad full-pool dominance before introducing new causal mechanisms.",
+  "canonical_windows_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "Windows exact user checkout",
+    "runner": "RUN_ECO_CAL1_A_TESTS.ps1",
+    "ph3_regression": {
+      "result": "PASS",
+      "assertions": 217,
+      "profile_hash": "1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a",
+      "reference_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+      "giant_hash": "eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704"
+    },
+    "ph3_restart": {
+      "result": "PASS",
+      "assertions": 5,
+      "reference_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+      "shade_high_hash": "d437d45d4beea747df717703afb1e536e5712df837677956f16c24953e5c2759",
+      "dry_wide_hash": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466"
+    },
+    "ph3c_regression": {
+      "result": "PASS",
+      "assertions": 97,
+      "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+      "height_low_share": 0.88312054209733,
+      "giant_dense_share": 0.00014414428813
+    },
+    "ph3c_restart": {
+      "result": "PASS",
+      "assertions": 6,
+      "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb"
+    },
+    "cal1_a": {
+      "result": "PASS",
+      "assertions": 1094,
+      "baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
+      "legacy_ph3c_pairwise_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+      "dominance_classification": "HEIGHT_LOW_BROAD_FULL_POOL_WINNER",
+      "height_low_wins": 4,
+      "height_low_top2": 4,
+      "fresh_process_a": "PASS",
+      "fresh_process_b": "PASS"
+    },
+    "environment_diagnostics": {
+      "REFERENCE": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.028264166,"driver":"structural_cost","driver_delta":0.071206790,"height_low_rank":1,"height_high_rank":7,"height_delta":0.577805307,"height_driver":"structural_cost"},
+      "SHADE": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.004685816,"driver":"structural_cost","driver_delta":0.079952795,"height_low_rank":1,"height_high_rank":7,"height_delta":0.545990845,"height_driver":"structural_cost"},
+      "SUN": {"winner":"HEIGHT_LOW","runner":"CROWN_WIDE","margin":0.043289224,"driver":"structural_cost","driver_delta":0.071206790,"height_low_rank":1,"height_high_rank":7,"height_delta":0.614010029,"height_driver":"structural_cost"},
+      "DRY": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.022911560,"driver":"structural_cost","driver_delta":0.057786857,"height_low_rank":1,"height_high_rank":7,"height_delta":0.455052978,"height_driver":"structural_cost"}
+    }
+  },
+  "accepted_findings": [
+    "HEIGHT_LOW is the full-pool winner in all four controlled environments.",
+    "HEIGHT_HIGH ranks seventh in all four controlled environments.",
+    "The strongest HEIGHT_LOW-vs-HEIGHT_HIGH score driver in every environment is structural_cost.",
+    "The accepted PH3/PH3C hashes remain unchanged.",
+    "The CAL1-A baseline is deterministic across two fresh Godot processes.",
+    "No morphology coefficient calibration occurred."
+  ],
+  "next": {
+    "checkpoint": "ECO.CAL1-B",
+    "name": "Relative Vertical Light Competition",
+    "principle": "Add a neighbour-dependent light redistribution term whose effect vanishes without neighbours and is symmetric for equal-height competitors; do not alter accepted PH3 coefficients."
+  }
+}

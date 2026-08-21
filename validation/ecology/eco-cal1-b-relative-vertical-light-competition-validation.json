@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_b_relative_vertical_light_competition_validation.v1",
+  "revision": "ECO-CAL1-B-2026-08-12-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "561daee4cd9fa48bcef5c78e6f2b0d050451f3b9",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "parent": {
+    "cal1_a_baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
+    "legacy_ph3c_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+    "preserved": true
+  },
+  "accepted_evidence": {
+    "assertions": 109,
+    "aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c",
+    "dense_delta": 0.099556363636,
+    "sparse_delta": 0.002765454545,
+    "dense_to_sparse": 36.0,
+    "reference_gap_before": -0.577805307483,
+    "reference_gap_after": -0.378692580210,
+    "dry_gap_before": -0.455052978213,
+    "dry_gap_after": -0.255940250941,
+    "pair_gap_shift": 0.199112727273,
+    "fresh_process_replay": "PASS_EXACT_HASH_A_B"
+  },
+  "accepted_properties": [
+    "NO_NEIGHBOURS_DELTA_ZERO",
+    "EQUAL_HEIGHT_SYMMETRIC_ZERO_DELTA",
+    "DENSE_TALL_GAINS_SHORT_LOSES",
+    "DENSE_EFFECT_36X_SPARSE",
+    "DRY_DENSE_HEIGHT_ADVANTAGE_EXISTS_WITHOUT_UNIVERSAL_TALL_DOMINANCE",
+    "A_B_SWAP_EXACT_SYMMETRY",
+    "ZERO_SUM_LIGHT_REDISTRIBUTION",
+    "DETERMINISTIC_FRESH_PROCESS_HASH",
+    "CAL1_A_BASELINE_HASH_UNCHANGED",
+    "PH3C_HASH_UNCHANGED",
+    "NO_ACCEPTED_PH3_COEFFICIENT_CHANGE"
+  ],
+  "decision": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "next": "ECO.CAL1-C Crown + Root Spatial Competition"
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "distributed_world_simulator.ecology.obs1_read_only_observer_validation.v1",
+  "revision": "ECO-OBS1-2026-08-13-R1-TARGETED-PASS",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "IMPLEMENTED_NON_GATING_TARGETED_LINUX_PASS",
+  "scope": "READ_ONLY_VISUAL_OBSERVER",
+  "parent": {
+    "implementation_head": "a208d0c2670754b46f9e475d6cba11fedac6a119",
+    "p3_1_status": "CANDIDATE_EXACT_WINDOWS_CANONICAL_PENDING",
+    "p3_2_status": "CANDIDATE_TARGETED_LINUX_PASS_BLOCKED_ON_P3_1_ACCEPTANCE"
+  },
+  "boundary": {
+    "simulation_write_access": false,
+    "simulation_rng_access": false,
+    "canonical_hash_ownership": false,
+    "network_authority": false,
+    "observer_state": ["frame_index", "playing", "presentation_accumulator", "visual_nodes"],
+    "source_contract": "validated immutable/reproducible P3.2 result dictionaries converted to defensive observer snapshots"
+  },
+  "presentation": {
+    "scene": "scenes/labs/ecology/eco_obs1_patch_observer_lab.tscn",
+    "controls": ["Play", "Pause", "Step", "left/right keyboard navigation"],
+    "displayed_metrics": [
+      "year/frame",
+      "total biomass",
+      "next biomass",
+      "effective carrying capacity",
+      "density ratio",
+      "density feedback",
+      "resource support",
+      "resource pressure",
+      "limiting resource",
+      "active plant count",
+      "source result hash",
+      "snapshot hash"
+    ],
+    "low_poly_proxy": "fixed canonical-index placement; bounded biomass-driven size; fixed palette; no RNG"
+  },
+  "covered_properties": [
+    "P3_2_SOURCE_VALIDATED",
+    "SOURCE_HASH_UNCHANGED_AFTER_SNAPSHOT",
+    "SOURCE_DICTIONARY_NOT_MUTATED",
+    "DEFENSIVE_SNAPSHOT_COPY",
+    "CANONICAL_PLANT_ORDER",
+    "LIMITING_RESOURCE_EXPOSED",
+    "SNAPSHOT_DETERMINISM",
+    "GLOBAL_RNG_SEQUENCE_UNCHANGED",
+    "MALFORMED_SOURCE_FAIL_CLOSED",
+    "TAMPERED_SNAPSHOT_REJECTED",
+    "TIMELINE_DETERMINISM",
+    "FRESH_PROCESS_HASH_EQUALITY",
+    "ACTUAL_SCENE_INSTANTIATION",
+    "PLAY_PAUSE_STEP_PRESENTATION_ONLY"
+  ],
+  "targeted_linux_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "fresh_processes": 3,
+    "assertions_per_boundary_process": 49,
+    "all_process_hashes_identical": true,
+    "snapshot_hash": "1a71d293354516adfb0c07752623d5b1cb80b5d1f7674feb06dfa76e2efb8e57",
+    "timeline_hash": "0d5d35e7b04fa6921dc3d0f8f1827055f68aeb5e91e46c17db3e5b4572f21031",
+    "boundary_source_p3_2_hash": "9667aba9cd8d33668abcaf7b1123e1ceb846dc59f48a646de91c7cc7bec35dac",
+    "scene_smoke_assertions": 9,
+    "scene_initial_source_hash": "cea41ca41890e8456c640ff40be70f89460a74b1be7a02359bc1d58df8e7fd9d"
+  },
+  "runner": "RUN_ECO_OBS1_TESTS.ps1",
+  "launcher": "OPEN_ECO_OBS1_LAB.ps1",
+  "decision": "OBS1_TARGETED_PASS_NON_GATING; DO_NOT_CHANGE_P3_ACCEPTANCE_STATE",
+  "next": "continue strict P3.1 -> P3.2 canonical acceptance chain; P3.3 remains closed"
+}

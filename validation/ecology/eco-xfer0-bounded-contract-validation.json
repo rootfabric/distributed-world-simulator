@@ -1,0 +1,121 @@
+{
+  "schema": "distributed_world_simulator.ecology.xfer0_checkpoint_validation.v1",
+  "revision": "ECO-XFER0-2026-08-18-R1-ACCEPTED",
+  "checkpoint": "ECO.XFER0",
+  "name": "Bounded Research-to-Simulator Contract",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_DIRECT_PYTHON_STATIC_CONTRACT_VALIDATION",
+  "decision": "ACCEPT_XFER0_AND_AUTHORIZE_EVO3_RESEARCH_PLANNING",
+  "scope": "RESEARCH_ONLY_DESIGN_NO_PRODUCTION_BINDING",
+  "acceptance": {
+    "code_under_test_head": "bb80beac95d838b56cccbe5d98f7e1bcbfd80376",
+    "parent_evo2_durable_head": "3367615b8ad5fed59ac13ac6fcc215e36155b27d",
+    "aggregate_hash": "1adf3d0fa733ed74e3a28bfe1d0632f5d45c62ca5df932bce3e55693a18e9044",
+    "aggregate_derivation": "sha256(newline-joined checkpoint id, code-under-test HEAD, contract hash, contract/schema/validator/test/runner Git blobs, parent EVO2 FINAL aggregate)",
+    "contract_hash": "06024c88fba045ba98e74594e55dce717d2c8dcd26f3d6a559a789bb5e39d309",
+    "parent_evo2_final_aggregate": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "parent_evo2_final_evidence": "989e5ae02e66052ca7d2e46f5f452446300ba625dd4efd5cd6b5ffd9db2f2cd1",
+    "parent_e2_8_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "parent_e2_8_persistence_aggregate": "4182176c1cc8b6d609fefc7057b5ff5307c92f839682e76f6168841d60275061",
+    "parent_e2_8_transport_sha256": "b31c863f8e1943e5778d56631f8c8ad75b95f3b9d3930a699f80fd07595d45d1"
+  },
+  "published_artifacts": {
+    "contract": {"path": "config/ecology/eco-xfer0-contract.v1.json", "git_blob": "1987dd67ae0755b4a00bc22f48a019837fb2066a"},
+    "schema": {"path": "config/ecology/eco-xfer0-contract.schema.v1.json", "git_blob": "8759a3e0832ae514df69ade5d6235b524bea84de"},
+    "validator": {"path": "scripts/research/ecology/validate_xfer0_contract.py", "git_blob": "1244d6dac0149957857a294b662738076ccc6e2d"},
+    "test": {"path": "tests/research/ecology/test_eco_xfer0_contract.py", "git_blob": "6afe9af777a976775fc3be4f68b5a91720e30474", "tests": 17},
+    "runner": {"path": "RUN_ECO_XFER0_CONTRACT_TESTS.py", "git_blob": "789bc1c17b2964bc1f71166e2a7a3725911566d6", "executed": true},
+    "design_doc": {"path": "docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md", "git_blob": "c8402925b16bbefb755fbc69641fdaeb664da714"}
+  },
+  "contract": {
+    "interfaces": [
+      "ENVIRONMENT_INPUT",
+      "ECOLOGY_STATE_OUTPUT",
+      "QUERY_PROJECTION",
+      "PERSISTENCE_PAYLOAD",
+      "IDENTITY_PROVENANCE",
+      "REPRESENTATION_PROMOTION_REQUEST"
+    ],
+    "required_canonical_foundations_before_xfer1": ["G", "ENV", "MAT", "WQ", "SD", "TF"],
+    "foundation_binding_state": "UNRESOLVED_CANONICAL_CONTRACTS",
+    "binding_mode": "SEMANTIC_ONLY_NO_PRODUCTION_API_BINDING",
+    "xfer1_status": "BLOCKED_WAIT_CANONICAL_FOUNDATIONS",
+    "evo3_after_xfer0": "AUTHORIZED_FOR_RESEARCH_PLANNING_ONLY",
+    "production_runtime_authorized": false,
+    "canonical_owner_mutation": false,
+    "production_persistence_authority": false,
+    "world_transaction_authority": false,
+    "network_authority": false,
+    "canonical_species_taxonomy": false
+  },
+  "authority_barriers": {
+    "environment_is_read_only_to_eco": true,
+    "ecology_output_is_candidate_not_world_mutation_authority": true,
+    "query_projection_is_read_only": true,
+    "persistence_owner_retains_durability_and_commit_point": true,
+    "research_species_identity_does_not_promote_to_canonical_taxonomy": true,
+    "representation_promotion_is_request_only": true,
+    "population_state_remains_ecology_truth_until_explicit_canonical_promotion": true,
+    "promoted_representation_cannot_be_second_ecology_truth": true,
+    "biome_species_table_forbidden": true,
+    "asset_scatter_as_ecology_truth_forbidden": true
+  },
+  "verification": {
+    "python_version": "3.13.5",
+    "python_compile": "PASS",
+    "contract_validator": "PASS",
+    "semantic_tests": "PASS_17_OF_17",
+    "semantic_tamper_tests_rehash_contract_before_validation": true,
+    "canonical_runner_executed": true,
+    "fresh_runner_processes": ["PASS", "PASS"],
+    "fresh_runner_exit_codes": [0, 0],
+    "fresh_runner_logs_byte_identical": true,
+    "fresh_runner_log_sha256": "9126f83e992e1d834e1e7e5317ec97cca174d1027a518310d70df6bd49ac47aa",
+    "execution_class": "DIRECT_CANONICAL_PYTHON_STATIC_CONTRACT_VALIDATION",
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false,
+    "project_control_green_claimed": false,
+    "github_ci_green_claimed": false
+  },
+  "negative_gates": [
+    "EVO2 parent substitution rejected after contract rehash",
+    "production activation rejected after contract rehash",
+    "canonical owner mutation rejected after contract rehash",
+    "canonical foundation removal rejected after contract rehash",
+    "concrete production API binding rejected after contract rehash",
+    "environment write surface rejected after contract rehash",
+    "query/world write surface rejected after contract rehash",
+    "persistence durability ownership rejected after contract rehash",
+    "canonical taxonomy promotion rejected after contract rehash",
+    "promotion surface durable-entity creation rejected after contract rehash",
+    "planet-wide entity truth creation rejected after contract rehash",
+    "premature XFER1 readiness rejected after contract rehash",
+    "XFER0-as-production-authorization rejected after contract rehash",
+    "EVO3 runtime authority rejected after contract rehash",
+    "biome species-table shortcut rejected after contract rehash",
+    "asset scatter as ecology truth rejected after contract rehash"
+  ],
+  "candidate_shape": {
+    "base_head": "3367615b8ad5fed59ac13ac6fcc215e36155b27d",
+    "freeze_head": "bb80beac95d838b56cccbe5d98f7e1bcbfd80376",
+    "commits": 6,
+    "distinct_files": 5,
+    "runner_only_repair_commit_included": true,
+    "production_runtime_files_changed": 0,
+    "production_control_owner_files_changed": 0
+  },
+  "canonical_main_observation": {
+    "observed_main_head": "2cff3e999a3beb82ffab207fc79b0629f2765007",
+    "global_program_roadmap_blob": "8c1bcce110585e1c1bea81436c2cab6362c2781a",
+    "observation_is_production_binding_pin": false
+  },
+  "scope_boundary": {
+    "xfer0_bounded_design_complete": true,
+    "xfer1_ready": false,
+    "evo3_research_planning_authorized": true,
+    "evo3_runtime_authorized": false,
+    "p4_global_acceptance_changed": false,
+    "production_integration_claimed": false
+  },
+  "next": "ECO.EVO3_RESEARCH_PLANNING_WITH_XFER1_STILL_BLOCKED_ON_G_ENV_MAT_WQ_SD_TF"
+}

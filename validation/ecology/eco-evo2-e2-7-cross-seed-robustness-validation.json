@@ -1,0 +1,166 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo2_checkpoint_validation.v1",
+  "revision": "ECO-EVO2-E2.7-2026-08-18-R1-ACCEPTED",
+  "checkpoint": "ECO.EVO2/E2.7",
+  "name": "Cross-Seed Robustness",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_VERIFICATION",
+  "decision": "ACCEPT_E2_7_AND_AUTHORIZE_E2_8",
+  "acceptance": {
+    "code_under_test_head": "52f31ca58a77296d63b1642954659edcbd12b8fe",
+    "aggregate_hash": "eb3b30919114cb9971b7413f416a3ae07eb50aebe81801454aaa310d6e879c7d",
+    "seed_ensemble_hash": "a49ce9d6856e08e1e0a61f060a8019de61685cdc63b25229b3761c9e7c9d792f",
+    "parent_e2_6_aggregate": "1a4bcf1cffe65450a27037e9307bb5c7ac3cb8a98899918207107e367d9d5fbd",
+    "parent_e2_6_code_under_test": "8ac37bfea0f36731407e1252db1a7c2a2305420e",
+    "parent_e2_6_replicate_set_hash": "5e02d04d3d94f95f6e8e76f6387ee07c723d2e596046f6a65d65cd815abbc637",
+    "e2_2_bake_hash": "45496eb67aac5cc0a65babfeb0c49fa99616df17c2f7e8b9e8b95d04cb2b4e5b",
+    "e2_2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "control_policy_hash": "0e6481175af3658b2673a612717dd850b917ec5156260b37bd9ee29a9789dc4e",
+    "treatment_policy_hash": "e2927ce7a8f6b3ab5f3d4942a2cc70ca3794e0d67c3e770e0301748967c14416"
+  },
+  "protocol": {
+    "target_cells": ["DRY", "WET"],
+    "seed_ids": ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"],
+    "seed_count": 10,
+    "generations": 10,
+    "population_size": 8,
+    "offspring_per_parent": 4,
+    "required_positive_seeds_per_cell": 8,
+    "required_home_advantage_seeds_per_cell": 8,
+    "required_full_seed_pass": 7,
+    "censoring_allowed": false,
+    "formal_significance_claimed": false,
+    "cross_catalog_robustness_claimed": false,
+    "canonical_species_declared": false,
+    "production_authority_claimed": false
+  },
+  "executable_artifacts": {
+    "implementation": {
+      "path": "scripts/research/ecology/plant_cross_seed_robustness_v1.gd",
+      "git_blob": "f980a6132835cd2c483d5210615579ddccf7e618"
+    },
+    "protocol": {
+      "path": "scripts/research/ecology/plant_cross_seed_protocol_v1.gd",
+      "git_blob": "8d28fb09ac6e3f8b46594b39f76db69c2b6f9b17"
+    },
+    "evidence": {
+      "path": "scripts/research/ecology/plant_cross_seed_evidence_v1.gd",
+      "git_blob": "940ed657b7aa85758ac33088634d1ce5fdc4e673"
+    },
+    "acceptance_test": {
+      "path": "tests/research/ecology/eco_evo2_e2_7_cross_seed_robustness_acceptance.gd",
+      "git_blob": "334a833acd1d0bc32ee03f0977d764ff5e517196",
+      "assertions": 290
+    },
+    "canonical_runner": {
+      "path": "RUN_ECO_EVO2_E2_7_TESTS.ps1",
+      "git_blob": "6da8290ec1944d704a778e3b1ce8910260e5b5cb",
+      "executed": false,
+      "not_executed_reason": "pwsh/powershell unavailable in Linux verification carrier"
+    }
+  },
+  "exact_transitive_executable_closure": {
+    "status": "PASS",
+    "count": 9,
+    "matched": 9,
+    "blobs": {
+      "scripts/research/ecology/environment_sample_v1.gd": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
+      "scripts/research/ecology/plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
+      "scripts/research/ecology/plant_lineage_record_v1.gd": "0b848b2dc3ed3dccc1ee02db71c161cfcc9809d0",
+      "scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd": "7b9b5d41236cb27256dd7405201436a71a3eafea",
+      "scripts/research/ecology/plant_resource_model_v1.gd": "26fd4118307f098bd85b6d4b953a27ad8b9d85cd",
+      "scripts/research/ecology/plant_cross_seed_robustness_v1.gd": "f980a6132835cd2c483d5210615579ddccf7e618",
+      "scripts/research/ecology/plant_cross_seed_protocol_v1.gd": "8d28fb09ac6e3f8b46594b39f76db69c2b6f9b17",
+      "scripts/research/ecology/plant_cross_seed_evidence_v1.gd": "940ed657b7aa85758ac33088634d1ce5fdc4e673",
+      "tests/research/ecology/eco_evo2_e2_7_cross_seed_robustness_acceptance.gd": "334a833acd1d0bc32ee03f0977d764ff5e517196"
+    }
+  },
+  "verification": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "parser_preload": "PASS",
+    "parser_exit_code": 0,
+    "parser_error_lines": 0,
+    "parser_log_sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "fresh_process_a": "PASS",
+    "fresh_process_b": "PASS",
+    "fresh_process_a_exit_code": 0,
+    "fresh_process_b_exit_code": 0,
+    "fresh_process_error_lines": [0, 0],
+    "fresh_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "51c421e5e3f909cc265bd8180fa1bd9a56f1f5e3a1e727a5010a5667d40156a9",
+    "behavioral_assertions_passed": 290,
+    "behavioral_assertions_total": 290,
+    "execution_class": "EXPLICIT_EQUIVALENT_FRESH_BEHAVIORAL_EXECUTION",
+    "canonical_runner_execution_claimed": false,
+    "independent_reviewer_claimed": false,
+    "independent_verifier_claimed": false
+  },
+  "frozen_outputs": {
+    "full_seed_pass_count": 10,
+    "full_seed_fail_count": 0,
+    "dry": {
+      "mean_adaptation_gain": 0.229458431680,
+      "median_adaptation_gain": 0.227109019511,
+      "q25_adaptation_gain": 0.218691252321,
+      "q75_adaptation_gain": 0.230928849977,
+      "minimum_adaptation_gain": 0.186805390360,
+      "maximum_adaptation_gain": 0.279412047042,
+      "positive_count": 10,
+      "null_count": 0,
+      "reversal_count": 0,
+      "home_advantage_count": 10,
+      "leave_one_out_min_mean": 0.223908029973,
+      "aggregate_hash": "f3b65f8c890c75243f9a089f6f3036ef937c7251d675c0fd6919f06b00522c3f"
+    },
+    "wet": {
+      "mean_adaptation_gain": 0.386587470375,
+      "median_adaptation_gain": 0.388500039215,
+      "q25_adaptation_gain": 0.368469916498,
+      "q75_adaptation_gain": 0.391244612251,
+      "minimum_adaptation_gain": 0.345047365361,
+      "maximum_adaptation_gain": 0.425056726888,
+      "positive_count": 10,
+      "null_count": 0,
+      "reversal_count": 0,
+      "home_advantage_count": 10,
+      "leave_one_out_min_mean": 0.382313108540,
+      "aggregate_hash": "98020ab8f6bb8fb52775ac4796bc2f45ea16530e468c5324b5716f598af4989b"
+    },
+    "seed_hashes": {
+      "S01": "ae0a56a16f051fc7cb2785aae0b2eb309dcd0685a09e4c188be130ee96bbe885",
+      "S02": "ca1c23c55e51e661883dec472a9fb7b99868ce34772157d5ee857fc039e88f7c",
+      "S03": "1a4d8c72260dad64812afa5117a753fe0c71619dcac487e99d0d9a688c6d075e",
+      "S04": "e41ca27d456a333d8f61ef998dd63aaec1c549e81d4abac148c87a85155d4842",
+      "S05": "2bed282c5f669477c8b4a83e6b87bac63dc52dd2f0bfd9795b28c9f5c5de4498",
+      "S06": "a26ee6f9b68f7e1c5afd78ac7dd3c5b8caaf943ca6957babb8cc928c9e6fb6ae",
+      "S07": "e752eff1689d2916a6a32d3cb2e945e6559dd96c3a6e1d090fa35ebbac65a541",
+      "S08": "5e28cc0aa8cbf0ca5a82bbb51ce09da7291ead237e45174045d1a1a144c8428c",
+      "S09": "72d6b6c7bdc709bd79ac8260336bdd736c352f91422613f18d562a5b9a28007b",
+      "S10": "a22af771eb538c8d6ed7df4500e7ad341ab4dd7f7391675d9c224163a46b36de"
+    }
+  },
+  "integrity_gates": [
+    "all 10 predeclared seeds retained in canonical order",
+    "dropping or reordering a seed is rejected after rehash",
+    "fully rehashed semantic adaptation-effect tamper is rejected",
+    "formal-significance promotion is rejected",
+    "cross-catalog robustness promotion is rejected",
+    "production-authority promotion is rejected",
+    "Control remains genetically frozen",
+    "Treatment reuses exact E2.5 bounded mutation policy",
+    "selection consequence comes from exact accepted ResourceModel",
+    "no biome/species table shortcut",
+    "no hidden target/fitness bonus",
+    "no global RNG API consumption"
+  ],
+  "scope_boundary": {
+    "bounded_cross_seed_robustness_proven": true,
+    "formal_statistical_significance_proven": false,
+    "cross_catalog_or_cross_bake_robustness_proven": false,
+    "production_runtime_authority": false,
+    "canonical_species_taxonomy": false
+  },
+  "next": "ECO.EVO2/E2.8 Catalog Persistence & Provenance",
+  "e2_8_authorized": true
+}

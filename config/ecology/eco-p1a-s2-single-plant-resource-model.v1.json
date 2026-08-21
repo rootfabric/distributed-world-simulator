@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1A-S2",
+  "name": "Single-Plant Resource Model",
+  "status": "LINUX_FOCUSED_PASS_WINDOWS_CONFIRMATION_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent": {
+    "checkpoint": "ECO.P1A-S1",
+    "decision": "ACCEPTED",
+    "environment_revision": "ECO.P1A-S1.1",
+    "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
+  },
+  "fixed_genome": {
+    "genome_id": "plant-genome/p1a-s2-baseline",
+    "height_m": 1.6,
+    "growth_rate": 0.65,
+    "root_depth_m": 0.85,
+    "water_preference": 0.58,
+    "water_tolerance_width": 0.30,
+    "shade_tolerance": 0.45,
+    "seed_count": 80,
+    "seed_dispersal_distance_m": 15.0,
+    "lifespan_years": 5.0
+  },
+  "resource_model": {
+    "income": [
+      "light/photosynthetic response",
+      "water availability response",
+      "nutrient response",
+      "temperature response"
+    ],
+    "costs_and_penalties": [
+      "maintenance_cost",
+      "root_cost",
+      "structural_cost",
+      "growth_allocation_cost",
+      "reproduction_allocation_cost",
+      "water_stress_penalty",
+      "flood_penalty",
+      "density_cost"
+    ],
+    "viability_classes": ["FAVOURABLE", "MARGINAL", "UNSUSTAINABLE"],
+    "dominant_limiting_factors": ["LIGHT", "WATER", "NUTRIENT", "TEMPERATURE", "FLOOD"]
+  },
+  "patch_simulation": {
+    "seasons": 120,
+    "initial_biomass_kg_m2": 0.05,
+    "max_biomass_kg_m2": 8.0,
+    "truth": "research-only aggregate/cohort biomass; no individual plants are materialized"
+  },
+  "control_point_evidence": {
+    "river_bank": {"class": "UNSUSTAINABLE", "net": -0.599677, "limiting": "FLOOD", "final_biomass_kg_m2": 0.0},
+    "floodplain": {"class": "FAVOURABLE", "net": 0.387294, "limiting": "LIGHT", "final_biomass_kg_m2": 2.276921},
+    "wet_lowland": {"class": "UNSUSTAINABLE", "net": -1.212373, "limiting": "WATER", "final_biomass_kg_m2": 0.0},
+    "lower_slope": {"class": "FAVOURABLE", "net": 0.469920, "limiting": "NUTRIENT", "final_biomass_kg_m2": 2.812276},
+    "sunny_slope": {"class": "MARGINAL", "net": 0.162516, "limiting": "NUTRIENT", "final_biomass_kg_m2": 0.534787},
+    "shaded_slope": {"class": "UNSUSTAINABLE", "net": -0.464599, "limiting": "LIGHT", "final_biomass_kg_m2": 0.0},
+    "plateau": {"class": "UNSUSTAINABLE", "net": -0.955845, "limiting": "WATER", "final_biomass_kg_m2": 0.0},
+    "dry_ridge": {"class": "UNSUSTAINABLE", "net": -0.933244, "limiting": "WATER", "final_biomass_kg_m2": 0.0}
+  },
+  "root_depth_tradeoff_evidence": {
+    "dry_ridge": {
+      "shallow_0_35m_net": -1.009518,
+      "deep_1_60m_net": -0.831995,
+      "interpretation": "deeper roots improve dry-site balance but do not magically make the site viable"
+    },
+    "sunny_slope": {
+      "shallow_0_35m_net": 0.096788,
+      "deep_1_60m_net": 0.205052,
+      "extreme_2_20m_net": 0.111927,
+      "interpretation": "benefit saturates; extreme root depth loses to its super-linear cost"
+    },
+    "floodplain": {
+      "shallow_0_35m_net": 0.528138,
+      "deep_1_60m_net": 0.133350,
+      "extreme_2_20m_net": -0.095264,
+      "interpretation": "deep roots are costly on already-wet favourable ground"
+    }
+  },
+  "focused_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+    "assertions": 235,
+    "failures": 0,
+    "simulation_hash": "618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
+    "parent_s1_regression": "PASS_109_ASSERTIONS_ENV_HASH_UNCHANGED"
+  },
+  "invariants": {
+    "mutation_enabled": false,
+    "selection_enabled": false,
+    "multiple_species": false,
+    "biome_specific_placement": false,
+    "camera_or_lod_truth_dependency": false,
+    "production_runtime_ownership": false
+  },
+  "next_gate": "Run RUN_ECO_P1A_S2_TESTS.ps1 on exact Windows checkout; if 109/109 parent + 235/235 S2 and simulation hash match, record ECO.P1A-S2 ACCEPTED and move to P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes."
+}

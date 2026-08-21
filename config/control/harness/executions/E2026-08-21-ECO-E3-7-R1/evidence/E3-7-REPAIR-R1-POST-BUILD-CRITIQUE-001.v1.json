@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "E3-7-REPAIR-R1-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "repair": "E3.7-R1",
+  "supersedes_for_current_candidate": "E3-7-POST-BUILD-CRITIQUE-001",
+  "reviewer_finding_comment": 5369696271,
+  "blocking_finding": "E3.7-R1-001",
+  "exact_failed_review_head": "97d01ec3cca450709af53a80c233970ee1187d62",
+  "exact_repair_executable_freeze": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+  "verdict": "REPAIR_R1_IMPLEMENTER_EVIDENCE_COMPLETE_AWAITING_FRESH_INDEPENDENT_REVIEW",
+  "finding_analysis": {
+    "root_cause": "The module exposed serialized_bytes(v: Any), a generic helper that produced the exact final SORTED_KEYS_COMPACT_UTF8_NEWLINE_V1 bytes for plain reconstructed JSON without _VerifiedPlanetEcologyProgram, retained raw input traversal, validate_output_integrity, or independent rebuild.",
+    "why_original_self_audit_missed_it": "The original authority regression exercised serialize_planet_ecology_program(plain) but did not enumerate sibling/module serialization/finalizer/write helper surfaces. The original critique therefore overstated that all serialization was capability-bound.",
+    "repair": "serialized_bytes was removed from the production module. canonical_bytes remains a newline-free generic canonicalization primitive for hashing only. Exact final newline bytes are now formed only inside serialize_planet_ecology_program after validate_output_integrity. Public program finalization surfaces are audited and constrained to serialize_planet_ecology_program and write_planet_ecology_program.",
+    "scientific_change_required": false
+  },
+  "repair_regressions": [
+    "generic serialized_bytes helper must be absent",
+    "public serialize/finalize/write surface enumeration must equal protected serializer and writer only",
+    "plain reconstructed program rejected by every finalization surface",
+    "forged production-authority plain dict rejected by every finalization surface",
+    "mutated plain dict rejected by every finalization surface",
+    "writer must not create output on rejected unauthorized values"
+  ],
+  "machine_evidence": {
+    "closure_run_id": 32481325987,
+    "closure_run_number": 9,
+    "closure_job_id": 96768126271,
+    "exact_head": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+    "tests": "30/30 PASS",
+    "closure_predicates": "16/16 PASS",
+    "alternate_serializer_predicate": "NO_ALTERNATE_PROGRAM_SERIALIZER_HELPER PASS",
+    "public_finalization_surfaces": [
+      "serialize_planet_ecology_program",
+      "write_planet_ecology_program"
+    ],
+    "fresh_process_byte_identity": "2/2 PASS",
+    "committed_generated_byte_identity": "PASS",
+    "schema": "PASS",
+    "closure_artifact_id": 9446160054,
+    "closure_artifact_zip_sha256": "25b9a8541e6f4f6ca669f4858f8645db7ad26e937bc78cce17d2c9e3bebdff74",
+    "artifact_bytes": 104186,
+    "artifact_sha256": "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303",
+    "artifact_git_blob": "01207a7025710db34fafc959fcc26dade2606d89",
+    "provenance_hash": "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff",
+    "planet_ecology_program_hash": "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956"
+  },
+  "project_control_observation": {
+    "workflow_run_id": 32481326131,
+    "workflow_run_number": 1121,
+    "workflow_job_id": 96768126542,
+    "workflow_conclusion": "SUCCESS",
+    "merge_ref": "f563e7cf9a17609084a04edda0c0ccff486b64d6",
+    "global_pc0": "RED",
+    "eco_pc0": "RED",
+    "directional_pc0": "RED",
+    "eco_directional_watch": "NX -> ECO YELLOW WATCH_HIT",
+    "eco_critical_intersection": "ABSENT",
+    "critical_red_intersections": ["NX -> V0", "V0 -> NX"],
+    "artifact_id": 9446157926,
+    "artifact_zip_sha256": "72089eae39d5a66453ff01fc6f40bf9b4b63b2ed440b9539e1860549160b01f4"
+  },
+  "remaining_risks": [
+    "A fresh independent Reviewer must independently verify that E3.7-R1-001 is actually closed on the final immutable repair review head.",
+    "Independent Verifier remains blocked until a fresh Reviewer PASS.",
+    "E3.8, XFER1, and production ECO remain blocked/inactive."
+  ],
+  "runtime_repair_required_by_critique": false,
+  "ready_for_exact_head_review": false,
+  "checkpoint_proposal_authorized": false
+}

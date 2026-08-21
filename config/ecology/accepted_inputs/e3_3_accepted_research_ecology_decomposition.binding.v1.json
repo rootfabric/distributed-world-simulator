@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_3_accepted_decomposition_binding.v1",
+  "version": "1.0.0",
+  "status": "ACCEPTED",
+  "checkpoint": "ECO.EVO3/E3.3",
+  "canonical_merge_commit": "ac47904147edaa7dc46c63c20e91fd4f3a580c13",
+  "acceptance_record": "validation/ecology/eco-evo3-e3-3-acceptance.json",
+  "reviewed_head": "7ae4c17d0cca0d37369b620481d000fdbc8545fc",
+  "executable_freeze": "527e2dbef1ae4462e5b9e682b002408057930970",
+  "project_control": "32247214418 / #1003 — SUCCESS",
+  "review_relay_comment_id": 5341914378,
+  "decomposition_artifact_path": "config/ecology/accepted_inputs/e3_3_candidate_research_ecology_decomposition.v1.json",
+  "decomposition_artifact_git_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
+  "decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+  "decomposition_hash": "9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a",
+  "decomposition_provenance_hash": "76cf3fac25f7c7f52309d9c38befb3c50321e652eacb3a58731473646d680e02",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "canonical_binding_resolved": false,
+  "production_binding_authorized": false
+}

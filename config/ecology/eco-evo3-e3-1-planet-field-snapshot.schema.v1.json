@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_planet_field_snapshot.schema.v1",
+  "title": "ECO EVO3 E3.1 Planet Field Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "snapshot_id", "authority", "canonical_binding_resolved",
+    "stable_planet_identity", "stable_time_key", "reference_frame_identity",
+    "foundation_manifest", "samples", "source_fixture_hash", "field_provenance_hash",
+    "snapshot_hash_algorithm", "snapshot_hash"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_planet_field_snapshot.v1"},
+    "version": {"const": "1.0.0"},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "stable_planet_identity": {"type": "string", "minLength": 1},
+    "stable_time_key": {"type": "string", "minLength": 1},
+    "reference_frame_identity": {"type": "string", "minLength": 1},
+    "foundation_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["G", "ENV", "MAT", "WQ", "SD", "TF"],
+      "properties": {
+        "G": {"$ref": "#/$defs/foundation"},
+        "ENV": {"$ref": "#/$defs/foundation"},
+        "MAT": {"$ref": "#/$defs/foundation"},
+        "WQ": {"$ref": "#/$defs/foundation"},
+        "SD": {"$ref": "#/$defs/foundation"},
+        "TF": {"$ref": "#/$defs/foundation"}
+      }
+    },
+    "samples": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/sample"}
+    },
+    "source_fixture_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "snapshot_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"},
+    "snapshot_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "foundation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["semantic_reference", "canonical_binding_resolved"],
+      "properties": {
+        "semantic_reference": {"type": "string", "minLength": 1},
+        "canonical_binding_resolved": {"const": false}
+      }
+    },
+    "sample": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "sample_id", "stable_spatial_key", "latitude_microdeg", "longitude_microdeg",
+        "temperature_milli_c", "soil_moisture_ppm", "light_availability_ppm",
+        "nutrient_availability_ppm", "disturbance_pressure_ppm", "sample_hash",
+        "field_provenance_hash"
+      ],
+      "properties": {
+        "sample_id": {"type": "string", "minLength": 1},
+        "stable_spatial_key": {"type": "string", "minLength": 1},
+        "latitude_microdeg": {"type": "integer", "minimum": -90000000, "maximum": 90000000},
+        "longitude_microdeg": {"type": "integer", "minimum": -180000000, "maximum": 180000000},
+        "temperature_milli_c": {"type": "integer", "minimum": -150000, "maximum": 100000},
+        "soil_moisture_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "light_availability_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "nutrient_availability_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "disturbance_pressure_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "sample_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

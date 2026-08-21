@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.ecology_acceptance_decision.v1",
+  "checkpoint": "ECO.P1A-S5",
+  "aggregate_checkpoint": "ECO.P1A",
+  "name": "Environmental Causality Baseline Acceptance + Evolution Decision",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "accepted_steps": ["P1A-S1", "P1A-S2", "P1A-S3", "P1A-S4"],
+  "gate": [
+    {"id": 1, "criterion": "environment query deterministic and seam-safe", "result": "PASS", "evidence": "P1A-S1 109/109; accepted environment hash b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"},
+    {"id": 2, "criterion": "environment truth independent from camera/LOD/presentation", "result": "PASS", "evidence": "P1A-S1 resolution-independence plus P1A-S3 presentation-only lab; S1 hash unchanged"},
+    {"id": 3, "criterion": "one fixed genome creates spatially different viability and biomass", "result": "PASS", "evidence": "P1A-S2 235/235 with favourable, marginal and unsustainable zones"},
+    {"id": 4, "criterion": "local outcomes explainable through explicit resource/cost breakdown", "result": "PASS", "evidence": "P1A-S2 resource balance plus P1A-S3 ENV/RESP/LIMIT/ENERGY/BIO/WHY diagnostics"},
+    {"id": 5, "criterion": "no biome-specific placement logic", "result": "PASS", "evidence": "P1A-S1 continuous fields and P1A-S4 hidden-biome source scan PASS"},
+    {"id": 6, "criterion": "at least one structural trade-off demonstrated", "result": "PASS", "evidence": "root-depth benefit/cost is non-monotonic globally and has opposite dry-ridge versus wet-floodplain local effects"},
+    {"id": 7, "criterion": "same seed/revision replay produces identical hashes", "result": "PASS", "evidence": "S1/S2 accepted hashes plus P1A-S4 same-process and fresh-process exact replay"},
+    {"id": 8, "criterion": "controlled trait probes move niches in explainable directions", "result": "PASS", "evidence": "P1A-S3 controlled probes and graphical/manual confirmation"},
+    {"id": 9, "criterion": "baseline biomass bounded with no total extinction/runaway", "result": "PASS", "evidence": "P1A-S4 global_extinction PASS and unbounded_biomass PASS_BOUNDED_FAR_BELOW_CAP"},
+    {"id": 10, "criterion": "visual and headless evidence share one truth model", "result": "PASS", "evidence": "P1A-S3 graphical PASS with unchanged accepted S1/S2/S3 hashes and presentation-only truth boundary"}
+  ],
+  "aggregate_evidence": {
+    "p1a_s1": "ACCEPTED_109_ASSERTIONS",
+    "p1a_s2": "ACCEPTED_235_ASSERTIONS",
+    "p1a_s3": "ACCEPTED_208_ASSERTIONS_PLUS_GRAPHICAL_PASS",
+    "p1a_s4": "ACCEPTED_165_ASSERTIONS_PLUS_5_RESTART_ASSERTIONS",
+    "failures": 0
+  },
+  "decision_effect": {
+    "open": ["ECO.P1B Local Adaptation Proof", "ECO.PH0 Development Trait Contract"],
+    "remain_blocked": ["production runtime promotion", "planet-wide authoritative ecology", "per-individual network replication", "canonical persistence ownership", "canonical geology/hydrology/matter ownership"],
+    "p1b_rule": "Start from one ancestor. Mutation and selection must discover adaptive strategies; controlled S3 probes are diagnostics only and must not seed species roles.",
+    "ph0_rule": "Development traits may now be contracted in parallel, but must preserve accepted P1A ecology truth and must not introduce canonical TREE/BUSH/GRASS types or renderer-dependent genome/resource hashes."
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_8_acceptance_preparation.v1",
+  "revision": "ECO-P4.8-2026-08-15-R8-ACCEPTED-FINAL-MANIFEST-GATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_EXACT_WINDOWS_FINAL_MANIFEST_GATE",
+  "scope": "P4_FINAL_ACCEPTANCE_CONTROL_MANIFEST_ONLY",
+  "accepted_validation_chain": {
+    "p4_1": "9a18978a4206452d58d32eb3ec49e2effdff26f6",
+    "p4_2": "730452dc2bcd8fe58e758197e0209e6bc38b540c",
+    "p4_3": "1236fdefcf490838bbe69431588d5878b7949f2c",
+    "p4_4": "9f540c402506b1494d8ac69ca6a81a76696bab2f",
+    "p4_5": "a02f1547c1beea5a49d500304b58ab8c763334ca",
+    "p4_6": "d2bcd0342c882ef9c2c161ddef949c2ea0d0e8fc",
+    "p4_7": "747d1406971bc69bd81b6d149481da00d65d5a47"
+  },
+  "p4_7_acceptance": {
+    "status": "ACCEPTED_EXACT_WINDOWS_ISOLATED_HEADLESS_BOUNDED_ROTATING_A_B",
+    "tested_head": "cb5f6c69bfb0299770e09d3acff41a8fbf8aa61c",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "runner_blob": "2bd6e1da8951238ff36b61e9ca5813a125e0dcd4",
+    "soak_test_blob": "49821079787479212feb78a10a4703bc52ba89b3",
+    "frozen_soak_hash": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "fresh_process_logs_byte_identical": true,
+    "counts": {
+      "regions": 8,
+      "cycles": 12,
+      "ecology_generation_steps": 8,
+      "handoffs": 4,
+      "save_loads": 12,
+      "client_updates": 12,
+      "interest_projections": 14,
+      "restarts": 3,
+      "max_remaining_due_steps": 0
+    }
+  },
+  "acceptance_evidence": {
+    "tested_head": "186c6d164b0bf17fc17e91a23136663edbe1c06d",
+    "runner": "RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1",
+    "runner_blob": "fa91e68f877551d0d08cea38382543ab23b9c4ac",
+    "execution_environment": "Windows PowerShell control-only validation workspace",
+    "godot_invoked": false,
+    "parser_preflight": "PASS",
+    "accepted_ancestors_p4_1_through_p4_6": "PASS",
+    "accepted_p4_7_exact_identities": "PASS",
+    "frozen_soak_hash_verified": "d7cee96abd82c09afab50873bb07271d112684ccad3be4127a995ff8501cd2fe",
+    "frozen_final_interest_hash_verified": "62d28c383697a01c5b96ec6e9c72b3e71a8fbf5e51a76ddeccacae3885decd2e",
+    "final_manifest_gate": "PASS",
+    "final_gates_marker": "ECO.P4.8 FINAL GATES: PASS",
+    "workflow_stage_p4_8": "PASS",
+    "workflow_suite_p4_8": "PASS",
+    "isolated_validation_workspace": "PASS",
+    "external_verifier_source": "human-provided exact console transcript"
+  },
+  "contract": {
+    "control_only": true,
+    "adds_runtime_semantics": false,
+    "all_p4_1_through_p4_7_accepted": true,
+    "reruns_p4_7_soak": false,
+    "exact_accepted_p4_7_blobs_and_frozen_hashes_verified": true,
+    "wall_clock_soak_claimed": false,
+    "production_runtime_changed_by_acceptance": false,
+    "global_main_acceptance_claimed": false
+  },
+  "gate": {
+    "status": "ACCEPTED",
+    "expected_success_marker": "ECO.P4.8 FINAL GATES: PASS",
+    "observed_success_marker": "ECO.P4.8 FINAL GATES: PASS"
+  },
+  "decision": "P4_8_ACCEPTED; P4_BRANCH_LIFECYCLE_EVIDENCE_COMPLETE; MAIN_OWNED_PROMOTION_AND_RUNTIME_MERGE_REMAIN_SEPARATE_GATES"
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "distributed_world_simulator.ecology.conv0_a_global_alignment_validation.v1",
+  "checkpoint": "ECO.CONV0-A",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "ACCEPTED_DESIGN_REQUIREMENTS_GLOBAL_GAPS_REPORTED",
+  "scope": "RESEARCH_DESIGN_CONTRACT_ONLY",
+  "observed_global_state": {
+    "main": "eefd75fa3badec10c6e7db959e2a3992dba30f0e",
+    "main_event": "H0.1 R8 / C22 PR #90 merged",
+    "canonical_architecture": "GLOBAL-P0-2026-08-10-R2",
+    "r3_candidate": "GLOBAL-P0-2026-08-11-R3-CANDIDATE",
+    "r3_candidate_config_blob": "0a7b5b322f9d928fd6ec295753b9b0e18d2fc464",
+    "r3_candidate_ownership_blob": "9271ecc03f87fbb4f6a9ea1bd0889bdefc73f6a3",
+    "r3_promotion_state": "PENDING_CURRENT_MAIN_REFRESH_AND_HUMAN_GATE"
+  },
+  "requirements_contract": "config/ecology/eco-conv0-a-global-consumer-requirements.v1.json",
+  "gap_report": "docs/future_features/evolutionary_ecology/ECO_CONV0_A_R3_GAP_REPORT_RU.md",
+  "canonical_owner_domains_reviewed": ["TF", "SD", "ENV", "MAT", "WQ", "POP", "LIFE", "WB", "NX", "WT/M0", "COMPAT"],
+  "findings": [
+    {"id":"R3_ECO_PROGRAM_ID_COLLISION","severity":"HIGH_ARCHITECTURE","disposition":"REQUIRES_GLOBAL_R3_RESOLUTION_BEFORE_PROMOTION_OR_LEDGER_CANONICALIZATION"},
+    {"id":"R3_ECO_POP_OWNERSHIP_INTERSECTION_UNSPECIFIED","severity":"HIGH_ARCHITECTURE","disposition":"REQUIRES_ECO_MODEL_VS_POP_RUNTIME_ADAPTER_BOUNDARY_BEFORE_PRODUCTION"},
+    {"id":"R3_WQ_SYSTEM_DOMAIN_SCOPE_UNSPECIFIED","severity":"MEDIUM_ARCHITECTURE","disposition":"REQUIRES_CANONICAL_QUERY_PATH_DECISION_BEFORE_CONV0_B"},
+    {"id":"R3_ENV_ECO_PROJECTION_PATH_UNSPECIFIED","severity":"MEDIUM_ARCHITECTURE","disposition":"REQUIRES_EXPLICIT_ENV_MAT_TO_ECO_PROJECTION_CONTRACT_BEFORE_CONV0_B"},
+    {"id":"R3_WB_ECO_CONSUMER_UNSPECIFIED","severity":"MEDIUM_ARCHITECTURE","disposition":"REQUIRES_EXPLICIT_WORK_PROPOSAL_PATH_BEFORE_PRODUCTION_ECO_SCHEDULING"}
+  ],
+  "high_findings": 2,
+  "medium_findings": 3,
+  "runtime_paths_changed": 0,
+  "production_foundations_created": 0,
+  "main_changed": false,
+  "r3_branch_changed": false,
+  "accepted_boundary": [
+    "ECO owns ecological model semantics",
+    "POP owns generic production population field/runtime aggregate fabric",
+    "ENV owns physical environment simulation",
+    "MAT owns canonical material identity",
+    "TF/SD/WQ/LIFE/WB/NX/WT remain their canonical foundation owners",
+    "ECO may specify consumer/producer requirements but may not implement private substitutes"
+  ],
+  "next": "ECO.CAL1",
+  "deferred": "ECO.CONV0-B waits canonical R3/WQ/MAT/LIFE/WB/POP/ENV contract shapes",
+  "decision": "CONV0_A_ACCEPTED_CAL1_NEXT"
+}

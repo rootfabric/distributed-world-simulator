@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.ecology_checkpoint_decision.v1",
+  "checkpoint": "ECO.P1C",
+  "name": "Strategy Competition Proof",
+  "decision": "ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1B ACCEPTED",
+  "steps": [
+    {"id":"P1C-S1","status":"ACCEPTED","windows":"PASS_116_RESTART_5","evidence":"unlabeled founder pool, accepted resource tradeoffs and heterogeneous competition baseline"},
+    {"id":"P1C-S2","status":"ACCEPTED","windows":"PASS_101_RESTART_5","evidence":"dynamic shared-patch abundance competition; 19/20 founders >=1% in baseline"},
+    {"id":"P1C-S3","status":"ACCEPTED","windows":"PASS_64_63_63_64_AGGREGATE_5_RESTART_5","evidence":"anonymous trait clusters plus environment-dependent niche enrichment and uniform negative control"},
+    {"id":"P1C-S4","status":"ACCEPTED","windows":"PASS_6x30_27_30_AGGREGATE_15_RESTART_6","evidence":"six-seed robustness, uniform negative control and 24-cycle deep horizon"}
+  ],
+  "acceptance_gate": {"criteria_total":8,"criteria_passed":8,"criteria_failed":0,"criteria":["multiple persistent strategies survive heterogeneous competition","no global environment-independent takeover","coexistence repeats across multiple seeds and longer horizon","uniform control does not invent spatial niche enrichment","anonymous clusters are diagnostic only and not species identities","accepted resource tradeoffs remain the source of competition consequences","no predefined species or biome placement rules","deterministic fresh-process hashes replay exactly"]},
+  "aggregate_evidence": {"s3_aggregate_hash":"75512459aa4a7d97b7e9549842c41a5ebf4b5574575bac9fec3ee51fd92d44a9","s4_aggregate_hash":"0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112","s4_minimum_effective_founders_1pct":15,"s4_maximum_top1_biomass_share":0.27832221094551,"s4_minimum_shannon":2.29610063443602,"s4_minimum_substantial_clusters":3,"s4_minimum_niche_enriched_clusters":2,"uniform_niche_enrichment_span":0.0},
+  "scope_note": "P1C is accepted as an ecological-trait-only strategy competition proof. Developmental morphology is not yet in strategy space; PH3 morphology-to-resource convergence is not claimed and remains a separate extension before morphology-aware competition claims.",
+  "truth_boundary": "Research-only strategy proof. No canonical species, biome placement, migration, production persistence, authority, networking or renderer-owned ecology truth.",
+  "next": "Close ECO.P1 aggregate and continue ECO.PH starting with PH0/PH1 before morphology-aware competition extensions or P2 dispersal history."
+}

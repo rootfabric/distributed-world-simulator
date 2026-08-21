@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1A-S3",
+  "name": "Diagnostic Visual Lab + Controlled Trait Probes",
+  "status": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parents": {"p1a_s1": "ACCEPTED", "p1a_s2": "ACCEPTED"},
+  "truth_sources": [
+    "scripts/research/ecology/environment_sample_v1.gd",
+    "scripts/research/ecology/synthetic_environment_fixture_v1.gd",
+    "scripts/research/ecology/plant_genome_v1.gd",
+    "scripts/research/ecology/plant_resource_model_v1.gd",
+    "scripts/research/ecology/single_plant_patch_simulator_v1.gd"
+  ],
+  "derived_lab_layers": [
+    "scripts/research/ecology/controlled_trait_probes_v1.gd",
+    "scripts/research/ecology/eco_p1a_s3_lab_dataset_v1.gd",
+    "scripts/labs/ecology/eco_p1a_s3_visual_lab.gd",
+    "scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn"
+  ],
+  "views": ["temperature_c", "soil_moisture", "sunlight", "nutrients", "flood_frequency", "final_biomass_kg_m2", "net_resource_balance", "dominant_limiting_factor"],
+  "controlled_probes": ["BASE", "SHALLOW_ROOT", "DEEP_ROOT", "WATER_LOVING", "DROUGHT_TOLERANT", "SHADE_TOLERANT", "SUN_FAVORED"],
+  "accepted_evidence": {
+    "windows_s1": "PASS_109_ASSERTIONS",
+    "windows_s2": "PASS_235_ASSERTIONS",
+    "windows_s3": "PASS_208_ASSERTIONS",
+    "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "scene_grid": 33,
+    "scene_dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
+    "graphical": "PASS_BY_USER_OBSERVATION"
+  },
+  "invariants": {
+    "presentation_is_truth": false,
+    "probe_is_species_catalog_entry": false,
+    "mutation_enabled": false,
+    "selection_enabled": false,
+    "biome_placement_logic": false,
+    "network_authority_owned": false,
+    "material_truth_owned": false
+  },
+  "next": "ECO.P1A-S4 Determinism, Sensitivity and Failure Classification"
+}

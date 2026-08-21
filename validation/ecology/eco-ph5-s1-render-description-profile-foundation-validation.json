@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH5-S1",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb exact Windows",
+  "tested_checkout": "5d339b3628298e7f84ff563b6bdaf0bcb3aa2c7b",
+  "execution": {
+    "renderer_profile": "res://scripts/research/ecology/plant_renderer_profile_v1.gd",
+    "render_description": "res://scripts/research/ecology/plant_render_description_v1.gd",
+    "probe_matrix": "res://scripts/research/ecology/plant_render_description_probes_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph5_render_materialization_acceptance.gd",
+    "visual_smoke": "res://tests/research/ecology/eco_ph5_visual_lab_smoke.gd",
+    "restart": "res://tests/research/ecology/eco_ph5_restart_replay_probe.gd",
+    "scene": "res://scenes/labs/ecology/eco_ph5_render_materialization_lab.tscn",
+    "runner": "RUN_ECO_PH5_TESTS.ps1",
+    "opener": "OPEN_ECO_PH5_LAB.ps1"
+  },
+  "parent_gate": {
+    "ph4_focused": 718,
+    "ph4_restart": 5,
+    "ph4_lifecycle_hash": "88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1",
+    "ph4_offspring_batch_hash": "48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"
+  },
+  "acceptance_matrix": {
+    "DERIVED_DESCRIPTION": "PASS",
+    "GROWTH_GRAPH_IMMUTABILITY": "PASS",
+    "PROFILE_INDEPENDENCE": "PASS_SIX_PROFILES_DISTINCT_MATERIALIZATION",
+    "DETERMINISTIC_REBUILD": "PASS_EXACT_HASH",
+    "TAPER": "PASS",
+    "FOLIAGE_ANCHORS": "PASS",
+    "CANOPY": "PASS",
+    "DEBUG_SKELETON": "PASS",
+    "BRANCH_TUBES": "PASS_METADATA_FOUNDATION",
+    "BRANCH_LEAF_INSTANCED": "PASS_METADATA_FOUNDATION",
+    "CANOPY_APPROXIMATION": "PASS_DIAGNOSTIC_FOUNDATION",
+    "FULL_PROCEDURAL": "PASS_DIAGNOSTIC_FOUNDATION",
+    "IMPOSTOR_BILLBOARD": "PASS_DIAGNOSTIC_FOUNDATION",
+    "NO_CANONICAL_PLANT_TYPES": "PASS",
+    "RESTART_REPLAY": "PASS_EXACT_HASH",
+    "GRAPHICAL": "PASS_BY_USER_OBSERVATION"
+  },
+  "windows_confirmation": {
+    "focused": "PASS_720",
+    "visual_smoke": "PASS_15",
+    "restart": "PASS_4",
+    "reference_description_hash": "72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3",
+    "profile_matrix_hash": "2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0",
+    "full_materialization_hash": "374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c"
+  },
+  "graphical_confirmation": "PASS_BY_USER_OBSERVATION_PROFILE_SWITCHING_VISIBLE_NO_ERRORS",
+  "truth_boundary": "PH5-S1 defines derived presentation metadata only. No renderer output participates in ecology, resource, selection, lifecycle, authority, networking or persistence semantics.",
+  "next": "ECO.PH5-S2 actual 3D tapered branch tubes and instanced foliage."
+}

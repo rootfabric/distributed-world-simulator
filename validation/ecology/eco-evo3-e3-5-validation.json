@@ -1,0 +1,133 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_5_validation.v1",
+  "checkpoint": "ECO.EVO3/E3.5",
+  "candidate_state": "REPAIR_R1_IMPLEMENTED_CANDIDATE_NOT_ACCEPTED",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "repair": {
+    "failed_review_head": "696e8975ad375e33b9897aaddcee607ac5af41f6",
+    "durable_fail_transcription_comment": 5364294674,
+    "blocking_findings": [
+      "E3.5-R-001",
+      "E3.5-R-002"
+    ],
+    "repair_r1_executable_freeze": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "scope": "E3.5-R-001 + E3.5-R-002 only"
+  },
+  "accepted_predecessor": {
+    "accepted_e3_4_control_head": "872f2d993cc002b72529ea7f2a3274d0d71245b0",
+    "canonical_e3_4_merge_commit": "8618032bfb668c7f0427f0aa80c0e07de69a3cfc",
+    "artifact_git_blob": "db725ef37912547527dff5fffe39ca63e5f8c22e",
+    "artifact_sha256": "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463",
+    "colonization_program_hash": "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6",
+    "provenance_hash": "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
+    "full_persisted_evo2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
+  },
+  "closure_blobs": {
+    "contract": "b2afe370aa505e3d8448e5bd2ebb065a00dd7f38",
+    "accepted_e3_4_binding": "3705d33cd1c393f9a8ce03ce59d89a883933f05f",
+    "accepted_e3_4_artifact": "db725ef37912547527dff5fffe39ca63e5f8c22e",
+    "schema": "45145b93b2bb5b4c74af6444b2095b2fcf3d12de",
+    "compiler": "fa6d1271d9f2ded1024ba0c9f378f4aa476dd59a",
+    "semantic_tests": "c07641b7c747f587f71e58d86c39e8d49fe1b083",
+    "authority_tests": "5dc263729eb8dc07f84c8c26fc21bc586d5e4c00",
+    "workflow": "c65d84172fe20bea8e668ec584620c7bd9682f48",
+    "runner": "4bc1b9314c0b3eeb9ffc74be1cf4b306fe68d5b0",
+    "generated_artifact": "d54ce8dad2760312d414c62c88d5f4f71427514f"
+  },
+  "repair_r1_exact_head_closure": {
+    "head_sha": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "run_id": 32439393494,
+    "run_number": 5,
+    "job_id": 96646877759,
+    "conclusion": "SUCCESS",
+    "semantic_tests": "27/27",
+    "authority_regression_tests": "24/24",
+    "total_tests": "51/51",
+    "exact_published_closure": "9/9",
+    "published_schema_validation": "PASS",
+    "fresh_process_builds": "2/2",
+    "fresh_process_bytes_identical": true,
+    "committed_generated_bytes_identical": true,
+    "parsed_artifact_serialization_capability": "ABSENT",
+    "reviewer_provenance_replacement_reproducer": "REJECTED",
+    "exact_input_serialization_traversal": "REQUIRED",
+    "order_independence": "PASS",
+    "no_colonization_semantics": "PASS",
+    "global_rng_surface": "ABSENT",
+    "individual_entity_truth": "ABSENT",
+    "canonical_sd_authority": "ABSENT",
+    "network_persistence_transaction_authority": "ABSENT",
+    "scale_coverage": "PLANET,REGION,PATCH,LOCAL_ACTIVE:EXACT_ONCE",
+    "artifact_id": 9431855061,
+    "artifact_zip_sha256": "276aa25984d9a4ebac19264c0ef79fad6c81b9ab0f15850f3388dbc6357c216f"
+  },
+  "project_control": {
+    "head_sha": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "run_id": 32439393477,
+    "run_number": 1057,
+    "job_id": 96646877533,
+    "workflow_conclusion": "SUCCESS",
+    "project_control_report_overall": "RED",
+    "directional_watch_overall": "RED",
+    "eco_program_state_in_report": "RED",
+    "eco_directional_hits": [
+      "NX -> ECO WATCH_HIT:YELLOW"
+    ],
+    "eco_critical_directional_hits": [],
+    "critical_hits_observed_elsewhere": [
+      "NX -> V0 CRITICAL_WATCH_HIT",
+      "V0 -> NX CRITICAL_WATCH_HIT"
+    ],
+    "scoped_policy_clearance": "ECO_RESEARCH_NON_BLOCKER_NO_CRITICAL_INTERSECTION",
+    "policy_basis_main": "19c1268599b52cbc1099d6009eabd3099e20b64a",
+    "artifact_id": 9431853553,
+    "artifact_zip_sha256": "761dabd1f76860f923b156dd99fe0512f6cf7b8e6688903787a6f23a6bdda4cb"
+  },
+  "generated_population_workset": {
+    "git_blob": "d54ce8dad2760312d414c62c88d5f4f71427514f",
+    "artifact_sha256": "0ea5351b7692564161804a3aea5fe5044f3321ded3dcb4d0c7343e93d52c4975",
+    "bytes": 27611,
+    "population_workset_hash": "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5",
+    "provenance_hash": "ec9c734882ef4a97eec2ed071f3c06ec2a29df52f13a45c7054a4641cbd42738",
+    "workset_result": "ACTIVE_WORKSETS",
+    "active_basis_count": 22,
+    "active_species_count": 2,
+    "active_patch_count": 11,
+    "active_scheduling_region_count": 1,
+    "total_work_unit_count": 24,
+    "individual_entity_count": 0,
+    "machine_and_committed_bytes_bound": true
+  },
+  "finding_closure": {
+    "E3.5-R-001": {
+      "status": "REPAIRED_PENDING_FRESH_REVIEW",
+      "mechanism": "_VerifiedWorkset capability retains exact raw contract/binding/E3.4 bytes; authoritative validate/serialize reparses exact bytes and exact-rebuilds output; plain parsed artifacts have no serialization capability.",
+      "regression": "Fully shaped published artifact with replaced source/provenance identities and recomputed hashes is rejected."
+    },
+    "E3.5-R-002": {
+      "status": "REPAIRED_PENDING_FRESH_REVIEW",
+      "mechanism": "Closure directly byte-compares committed generated artifact against two fresh process outputs and checks Git blob, SHA-256, workset hash and provenance hash.",
+      "regression": "Committed generated blob is d54ce8dad2760312d414c62c88d5f4f71427514f and is byte-identical to machine output."
+    }
+  },
+  "scope_guards": {
+    "canonical_population_registry_created": false,
+    "canonical_sd_authority_created": false,
+    "network_authority_changed": false,
+    "persistence_authority_changed": false,
+    "transaction_authority_changed": false,
+    "production_binding_authorized": false,
+    "xfer1_activated": false,
+    "e3_6_started_or_authorized": false
+  },
+  "review_state": {
+    "failed_reviewer_verdict": "FAIL_DURABLY_TRANSCRIBED",
+    "repair_r1_machine_validation": "PASS",
+    "fresh_independent_reviewer": "PENDING_NEW_IMMUTABLE_FINAL_HEAD",
+    "fresh_independent_verifier": "BLOCKED_PENDING_REVIEWER_PASS",
+    "checkpoint_proposal": "BLOCKED_PENDING_REVIEW_AND_VERIFICATION",
+    "merge_acceptance": "HUMAN_GATE_NOT_PERFORMED"
+  },
+  "evidence_aggregate_algorithm": "SHA256_CANONICAL_JSON_EXCLUDING_EVIDENCE_AGGREGATE_V1",
+  "evidence_aggregate_sha256": "b7e3a3169a78c18cd7944debe67b14d44ecbaa0ac1b2db4edf11e19bcf630fad"
+}

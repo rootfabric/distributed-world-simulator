@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-5-R1-EVENT-0005",
+  "project_epoch": "E2026-08-20-ECO-E3-5-R1",
+  "work_order_id": "ECO-E3-5-R1-WO-001",
+  "sequence": 5,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-20T14:58:20Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/eco-evo3-e3-5-population-workset-compiler",
+  "head_sha": "4625c950946f7a1b3cea67b9a1411fb993c20957",
+  "predicate": "E3_5_PROJECT_CONTROL_RUN_SUCCESS_AND_NO_ECO_CRITICAL_INTERSECTION",
+  "command": "AUDIT_PROJECT_CONTROL_32380793808_AGAINST_MAIN_19C126_RESEARCH_ISOLATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/project-control-policy.v1.json"
+  ],
+  "summary": "Project Control workflow succeeded but its global PC0 and directional reports are RED. RED is preserved. Main policy explicitly treats ECO as a research non-blocker; current directional output has NX->ECO YELLOW only and no ECO critical intersection. The original dispatch shorthand PROJECT_CONTROL_NON_RED is superseded for this mission by this scoped policy-correct predicate; no claim of global GREEN/NON_RED is made."
+}

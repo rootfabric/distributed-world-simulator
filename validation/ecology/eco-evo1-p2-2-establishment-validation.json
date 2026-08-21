@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_2_establishment_validation.v1",
+  "revision": "ECO-EVO1-P2.2-2026-08-12-R2-ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "d09857528adee1010f2177095f2afb04bf651532",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.1",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6"
+  },
+  "canonical_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86",
+    "acceptance_assertions": 59,
+    "fresh_process_replay_a": "PASS_EXACT_HASH",
+    "fresh_process_replay_b": "PASS_EXACT_HASH",
+    "favourable_recruited": 46,
+    "dry_recruited": 21,
+    "flooded_recruited": 26,
+    "low_dormancy_recruited": 71,
+    "high_dormancy_recruited": 14,
+    "low_dormancy_bank": 8,
+    "high_dormancy_bank": 66,
+    "short_half_life_bank": 4,
+    "long_half_life_bank": 61,
+    "reactivation_recruited": 33,
+    "boundary_exported": 80
+  },
+  "truth": {
+    "input": "inside-domain P2.1 seed packets or existing P2.2 seed-bank cohorts",
+    "outputs": ["recruitment cohort","viable seed-bank cohort","failed germinants","decayed seeds","outside-domain passthrough export"],
+    "conservation": "input = exported + decayed + failed + recruited + seed_bank",
+    "granularity": "bounded cohorts, never one entity per seed"
+  },
+  "research_defaults": {
+    "dormancy_fraction": 0.45,
+    "seed_bank_half_life_years": 3.0,
+    "status": "PROVISIONAL_CAUSAL_DEFAULTS_NOT_EMPIRICAL_CALIBRATION"
+  },
+  "decision": "ECO_EVO1_P2_2_ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "next": "ECO.EVO1 / P2.3 Local Population Turnover + Succession"
+}

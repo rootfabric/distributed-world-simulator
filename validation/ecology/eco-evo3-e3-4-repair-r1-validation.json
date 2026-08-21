@@ -1,0 +1,109 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_4_repair_r1_validation.v1",
+  "revision": "ECO-EVO3-E3.4-REPAIR-R1-2026-08-20-CANDIDATE",
+  "status": "IMPLEMENTER_REPAIR_VERIFIED_AWAITING_FRESH_INDEPENDENT_REVIEW",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pull_request": 168,
+  "candidate_branch": "feature/eco-evo3-e3-4-causal-colonization-compiler",
+  "base_branch": "feature/eco-evolutionary-ecology",
+  "base_sha": "6848eb81ea8bd137bc81d42a6348046c0837c3e1",
+  "blocking_finding": {
+    "id": "E3.4-R-001",
+    "repair_base": "79158dfe0d3dc31720da8915b74321ed2c48ee8a",
+    "statement": "exact-input authority can be bypassed inside build_colonization_program(), allowing false provenance attestation",
+    "scope": "AUTHORITY_AND_PROVENANCE_ONLY"
+  },
+  "repair_commits": [
+    "63e00fbbdfdbe70802c524db5c1443b76490bca5",
+    "9931d1ac304ab46fa9b9825bce5080db991cfc90",
+    "8c1644d190e34e8a4169d6c8682c4b44614be8cc",
+    "99941d07ec64edd39a81aae6d2812d4968e91aed"
+  ],
+  "executable_freeze": "99941d07ec64edd39a81aae6d2812d4968e91aed",
+  "repair_properties": {
+    "exact_artifact_bytes_verified_before_parse": true,
+    "authoritative_build_reparses_verified_raw_bytes": true,
+    "mutable_loaded_dict_state_is_not_authoritative": true,
+    "plain_parsed_dict_builds_cannot_emit_accepted_input_attestation": true,
+    "catalog_genome_checksums_recomputed_from_actual_content": true,
+    "catalog_recruitment_checksums_recomputed_from_actual_content": true,
+    "catalog_entry_hashes_recomputed_from_actual_content": true,
+    "catalog_hash_recomputed_from_actual_content": true,
+    "authoritative_provenance_derived_from_verified_input_identities": true,
+    "scientific_core_rewritten": false
+  },
+  "published_closure": {
+    "contract_blob": "de38fbc06a2a733cfac52df5b0345f900f42f117",
+    "accepted_e3_3_binding_blob": "84660f5c60da2e7b9dcb9ace0d287321f303a94e",
+    "accepted_e3_3_decomposition_blob": "9915bc13b0e81533fdc99ffe5707d0d60ba58eda",
+    "full_persisted_evo2_catalog_blob": "397ace0c6c7b204793b7663e7a89417d44ba3484",
+    "program_schema_blob": "95991eb62d90690b351d7522805ada2695d82898",
+    "authority_wrapper_blob": "e3af356a2e30eb29af27caef7c0ac6a6f067cc6d",
+    "scientific_core_blob": "46f424608a9d4e9bf9119b3700c3ba75b24197bd",
+    "original_48_test_matrix_blob": "91499b788c4d8908fdad272c4cc69289e905d71d",
+    "repair_r1_10_test_matrix_blob": "0baf87ac438a742ec8d1b7ca4fd6739fd8a2642b",
+    "canonical_runner_blob": "e779d4667a9ac5216f4b8ff436b808037c3979c0",
+    "exact_head_closure_workflow_blob": "f7a7e56c59ef9554da854eef074899bdcd689330"
+  },
+  "accepted_input_identities": {
+    "contract_hash": "531172bc2ebdd4d13977d50afe25616a34bb0879fb8efa34d745ea3048b9d3d3",
+    "accepted_e3_3_decomposition_artifact_sha256": "cab0ec65d66f68f097c07b686e5e87ba998dfe39a9b587a3f945b10d0ac2029a",
+    "full_persisted_evo2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "full_persisted_evo2_catalog_artifact_sha256": "99d6dbf87d1a459e2f73f13959dcb53d9b0b8be1519bb5352622202954cf7d1e",
+    "e2_final_aggregate_hash": "6daab256af3d1e7693c66a8afaad4d04fd1564c4376b9f3cd747a268a10c2250",
+    "historical_eco_anchor": "f0e16195f1331f238bbacab2768e5d72ec01d1a3"
+  },
+  "scientific_identity_stability": {
+    "program_hash": "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6",
+    "provenance_hash": "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
+    "generated_artifact_sha256": "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463",
+    "same_as_reviewer_failed_candidate": true,
+    "scientific_core_blob_same_as_reviewer_failed_implementation_blob": true
+  },
+  "exact_head_closure": {
+    "workflow_run_id": 32325422099,
+    "workflow_run_number": 2,
+    "job_id": 96295571982,
+    "head_sha": "99941d07ec64edd39a81aae6d2812d4968e91aed",
+    "exact_head_assertion": "PASS",
+    "conclusion": "success",
+    "python": "3.13.15",
+    "jsonschema": "4.26.0",
+    "semantic_and_repair_tests": "58/58",
+    "original_semantic_tests_preserved": 48,
+    "authority_regression_tests_added": "10/10",
+    "negative_matrix": "PASS",
+    "published_schema_validation": "PASS",
+    "closure_blobs": "9/9",
+    "fresh_colonization_builds": "2/2",
+    "fresh_colonization_bytes_identical": true,
+    "runner_log_bytes": 1143,
+    "runner_log_sha256": "1827b1127fdf538183fb81a4b5dcc6ae26b669e85acc42eb4b4251c57e72f5fa",
+    "artifact_id": 9391172531,
+    "artifact_zip_sha256": "5a1de800f6dda8934d48573b3f74bcd7e7bce3f3fa4c00ea61f34e4d9129b60d"
+  },
+  "freeze_project_control": {
+    "run_id": 32325422108,
+    "run_number": 1020,
+    "head_sha": "99941d07ec64edd39a81aae6d2812d4968e91aed",
+    "conclusion": "success"
+  },
+  "superseded_non_exact_closure_run": {
+    "workflow_run_id": 32325379763,
+    "reason_not_used_as_freeze_evidence": "default pull_request checkout resolved synthetic merge ref rather than immutable PR head",
+    "accepted_as_exact_head_evidence": false
+  },
+  "evidence_aggregate": {
+    "algorithm": "SHA256_NEWLINE_JOINED_FIXED_FIELDS_V1",
+    "sha256": "ce18620d9699e4b8b69724ad6e7bd8c27647a919cd4126a75e0753715576a013"
+  },
+  "scope_boundary": {
+    "e3_4": "CANDIDATE_NOT_ACCEPTED",
+    "e3_5": "BLOCKED_NOT_AUTHORIZED_NOT_STARTED",
+    "xfer1": "BLOCKED",
+    "production_eco_authority": "NOT_ACTIVATED",
+    "merge_pr_168": "NOT_PERFORMED",
+    "self_acceptance": "NOT_PERFORMED",
+    "next_action": "FRESH_INDEPENDENT_CRITICAL_REVIEW_ONLY"
+  }
+}

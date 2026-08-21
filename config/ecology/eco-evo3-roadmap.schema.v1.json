@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_roadmap.schema.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "revision",
+    "branch",
+    "program",
+    "name",
+    "status",
+    "parent_architecture_revision",
+    "parent_xfer0_contract_hash",
+    "execution_policy",
+    "steps",
+    "checkpoint_rules",
+    "xfer1_relation",
+    "next",
+    "roadmap_hash_algorithm",
+    "roadmap_hash"
+  ],
+  "properties": {
+    "schema": {
+      "const": "distributed_world_simulator.ecology.evo3_roadmap.v1"
+    },
+    "version": {
+      "const": "1.0.0"
+    },
+    "revision": {
+      "type": "string"
+    },
+    "branch": {
+      "const": "feature/eco-evolutionary-ecology"
+    },
+    "program": {
+      "const": "ECO.EVO3"
+    },
+    "name": {
+      "const": "Planetary Ecology Compiler"
+    },
+    "status": {
+      "const": "RESEARCH_ROADMAP_ACCEPTED_E3_0_CURRENT"
+    },
+    "parent_architecture_revision": {
+      "type": "string"
+    },
+    "parent_xfer0_contract_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "execution_policy": {
+      "type": "object"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object"
+      }
+    },
+    "checkpoint_rules": {
+      "type": "object"
+    },
+    "xfer1_relation": {
+      "type": "object"
+    },
+    "next": {
+      "const": "E3.1_PLANET_FIELD_SNAPSHOT_CONTRACT"
+    },
+    "roadmap_hash_algorithm": {
+      "const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"
+    },
+    "roadmap_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1B",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "evidence_chain": {
+    "p1b_s1": "ACCEPTED_WINDOWS_5834_RESTART_6",
+    "p1b_s2": "ACCEPTED_WINDOWS_364_RESTART_6",
+    "p1b_s3": "ACCEPTED_WINDOWS_388_RESTART_6",
+    "p1b_s4": "ACCEPTED_WINDOWS_86_RESTART_5"
+  },
+  "criteria_total": 10,
+  "criteria_passed": 10,
+  "criteria_failed": 0,
+  "control_audit": "validation/ecology/eco-p1b-intermediate-control-audit.json",
+  "decision_reason": "Local adaptation emerges from one ancestor through deterministic mutation and accepted P1A resource selection; spatial specialization survives neutral controls, multiple seeds and a longer horizon without predefined species roles.",
+  "next": "Open ECO.P1C Strategy Competition Proof after intermediate control audit."
+}
