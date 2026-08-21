@@ -26,7 +26,6 @@ FORBIDDEN_TRUE_KEYS={"canonical_binding_resolved","production_binding_authorized
 
 def canonical_bytes(v:Any)->bytes:
     return json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(",",":"),allow_nan=False).encode()
-def serialized_bytes(v:Any)->bytes: return canonical_bytes(v)+b"\n"
 def sha256_hex(raw:bytes)->str: return hashlib.sha256(raw).hexdigest()
 def git_blob_hex(raw:bytes)->str:
     return hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+b"\0"+raw).hexdigest()
@@ -170,7 +169,7 @@ def validate_output_structure(p):
 
 def validate_output_integrity(program):
     _require(type(program) is _VerifiedPlanetEcologyProgram,"serialization requires _VerifiedPlanetEcologyProgram capability"); inputs=_verified_inputs_from_raw(program._raw); expected=_build_program(inputs); validate_output_structure(expected); _require(canonical_bytes(dict(program))==canonical_bytes(expected),"PlanetEcologyProgram differs from independent exact-input rebuild")
-def serialize_planet_ecology_program(program): validate_output_integrity(program); return serialized_bytes(dict(program))
+def serialize_planet_ecology_program(program): validate_output_integrity(program); return canonical_bytes(dict(program))+b"\n"
 def write_planet_ecology_program(program,output): Path(output).write_bytes(serialize_planet_ecology_program(program))
 def build_from_paths(contract_path:Path=DEFAULT_CONTRACT,binding_path:Path=DEFAULT_BINDING): return build_planet_ecology_program(load_verified_inputs(contract_path,binding_path))
 def main():
