@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_activation.v1",
+  "activation_id": "V0-P6-R1-ACTIVATION-001",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "state": "PRE_DISPATCH_CONTROL_READY",
+  "accepted_predecessor": {
+    "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "acceptance_record": "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_product_lineage_head": "491ca7d058690d3de5fcea5e41aaee230a31b3ab"
+  },
+  "main_control_base": "1d9de3c479c60045d613660b2a5c5db0374963f8",
+  "main_declared_exact_successor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+  "project_epoch": "E2026-08-21-V0-P6-R1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
+  "risk_class": "HIGH",
+  "current_control": {
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "evidence_source": "Canonical P5 acceptance plus independently reviewed P6+Seamless roadmap; this preactivation candidate must revalidate exact current main through Project Control before merge"
+  },
+  "mutation_lease": {
+    "required_holder_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "required_holder_branch": "feature/v0-p6-persistent-shared-outpost",
+    "rotation_status": "PENDING_MAIN_OWNED_ROTATION",
+    "runtime_mutation_authorized": false
+  },
+  "director_dispatch": {
+    "status": "PENDING",
+    "runtime_mutation_authorized": false
+  },
+  "primary_roadmap": {
+    "human": "docs/plans/V0_P6_SEAMLESS_EXECUTION_ROADMAP_RU.md",
+    "machine": "config/control/harness/v0-p6-seamless-execution-roadmap.v1.json",
+    "canonical_main_merge": "1d9de3c479c60045d613660b2a5c5db0374963f8",
+    "role": "MAIN_OWNED_PRIMARY_EXECUTION_MAP"
+  },
+  "parallel_research": {
+    "train": "SEAMLESS_RESEARCH",
+    "production_base": false,
+    "production_sm1_activated": false,
+    "required_convergence_before_post_p6_sm1_activation": [
+      "I2_6_CLOSED_OR_CONCRETE_BLOCKER_RECORDED",
+      "I3_GENERIC_AUTHORITY_DOMAIN_TRANSFER_DONOR",
+      "I4_PLAYER_CARRYING_DOMAIN_DONOR",
+      "I8_PRODUCTION_PORT_MAP",
+      "NX_SM1_OWNERSHIP_AUDIT"
+    ]
+  },
+  "created_at_utc": "2026-08-21T05:50:00Z"
+}
