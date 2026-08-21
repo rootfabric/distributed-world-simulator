@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance.v1",
+  "acceptance_id": "V0-P5-R2-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "decision": "V0_P5_CHECKPOINT_ACCEPTED",
+  "status": "ACCEPTED",
+  "accepted_runtime_head": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "accepted_product_lineage_head": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+  "checkpoint_proposal": {
+    "carrier_branch": "control/v0-p5-final-checkpoint-proposal-r1",
+    "proposal_commit": "e42c23efbdd6bc37366a789a71986dd4aa920679",
+    "event_id": "V0-P5-R2-EVENT-0033",
+    "sequence": 33,
+    "work_state": "CHECKPOINT_PROPOSED"
+  },
+  "closure_finalization": {
+    "pr": 177,
+    "exact_candidate_head": "e42c23efbdd6bc37366a789a71986dd4aa920679",
+    "merge_commit": "7f19c85ef3168619e0e41737c3c95352eaced266",
+    "fresh_independent_review_node": "PRR_kwDOTlKYmc8AAAABKRHXkg",
+    "fresh_independent_review_verdict": "PASS",
+    "fresh_independent_verifier_comment": 5364299430,
+    "fresh_independent_verifier_verdict": "PASS"
+  },
+  "runtime_feature_merge": {
+    "pr": 145,
+    "authorized_subject_head": "7f19c85ef3168619e0e41737c3c95352eaced266",
+    "merge_commit": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+    "human_authorization_comment": 5364531133,
+    "final_merge_readiness_comment": 5364633397
+  },
+  "machine_evidence": {
+    "post_integration_project_control_run": 32438985414,
+    "checkpoint_proposal_project_control_run": 32441446625,
+    "post_integration_continuous": "239/239 PASS",
+    "post_integration_first_failure": null,
+    "post_integration_main_scene_cli_all": "PASS / RC=0",
+    "post_integration_terminal_marker": "FULL_WORLD_CORE_REGRESSION_PASS",
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "cross_branch_overlaps": [],
+    "open_blocker": null,
+    "findings": [],
+    "all_required_predicates_complete": true
+  },
+  "canonical_main_at_acceptance": "19c1268599b52cbc1099d6009eabd3099e20b64a",
+  "human_authorization": {
+    "decision": "CLOSE_P5_FORMALLY_AFTER_AUTHORIZED_RUNTIME_MERGE",
+    "source": "EXPLICIT_USER_DIRECTIVE_IN_ACTIVE_CONTROL_SESSION",
+    "durable_pr": 145,
+    "durable_comment_id": 5364531133
+  },
+  "successor": {
+    "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "main_declared_exact_successor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+    "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
+    "activation_still_requires_main_owned_control_update": true,
+    "runtime_mutation_authorized_by_this_record": false
+  },
+  "accepted_at_utc": "2026-08-21T02:58:00Z"
+}
