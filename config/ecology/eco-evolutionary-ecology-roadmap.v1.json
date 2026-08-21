@@ -4,7 +4,7 @@
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_BLOCKED_PENDING_AUTHORIZATION",
+  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_AUTHORIZED_NOT_STARTED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -12,8 +12,8 @@
   "evo3_architecture_doc": "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md",
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
-  "current_checkpoint": "ECO.EVO3/E3.8",
-  "current_step": "Planetary Ecology Compiler Challenge blocked pending separate authorization",
+  "current_checkpoint": "ECO.EVO3/E3.FINAL",
+  "current_step": "Planetary Ecology Compiler Challenge authorized / not started",
   "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -355,7 +355,7 @@
       {
         "id": "E3.FINAL",
         "name": "Planetary Ecology Compiler Challenge",
-        "status": "BLOCKED"
+        "status": "AUTHORIZED_NOT_STARTED"
       }
     ],
     "e3_2_input_rule": "MUST_CONSUME_ACCEPTED_E3_1_SNAPSHOT_NO_RAW_FIXTURE_BYPASS",
