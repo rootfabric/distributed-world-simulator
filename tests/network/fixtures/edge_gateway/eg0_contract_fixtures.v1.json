@@ -130,6 +130,7 @@
     "gateway_session_id": "gateway-session/test/a",
     "grant_id": "projection-grant/test/a-b",
     "interest_key": "interest/test/neighbor-b",
+    "interest_revision": 6,
     "manifest_revision": 2,
     "protocol_version": 1,
     "read_only": true,
@@ -137,8 +138,10 @@
     "source_authority_id": "authority/test/b",
     "source_revision": 4,
     "source_server_instance_id": "server-instance/test/b-1",
+    "source_world_id": "world/test/b",
     "stream_id": "projection-stream/test/b-neighbor",
-    "subscription_id": "projection-subscription/test/b"
+    "subscription_id": "projection-subscription/test/b",
+    "view_revision": 5
   },
   "protocol_version": 1,
   "schema": "planet_simulator.edge_gateway_eg0_fixture_set.v1"

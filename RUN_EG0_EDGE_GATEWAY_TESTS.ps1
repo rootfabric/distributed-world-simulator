@@ -36,7 +36,8 @@ function Resolve-GodotExecutable {
 $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $Tests = @(
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
-    "res://tests/network/test_eg0_edge_gateway_fixtures.gd"
+    "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
+    "res://tests/network/test_eg0_world_graph_contracts.gd"
 )
 
 $previous = $env:BREAKPOINT_RUNTIME_DISABLED

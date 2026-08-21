@@ -4,7 +4,7 @@
 
 Goal:
 
-`TOPOLOGY_NEUTRAL_DTOS_PASS`
+`TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS`
 
 Stacked base:
 
@@ -27,7 +27,9 @@ Branch:
 - focused contract tests;
 - fixture round-trip tests;
 - Windows/Linux focused runners;
-- HIGH-risk design brief + glossary.
+- HIGH-risk design brief + glossary;
+- R4 World Graph/View/Interest contracts;
+- 1000-world global-knowledge-without-global-connection proof fixture/test.
 
 ## Инварианты
 

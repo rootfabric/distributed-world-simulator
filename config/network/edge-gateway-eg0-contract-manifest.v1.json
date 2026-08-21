@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R1",
+  "revision": "V0-EG0-2026-08-21-R2-WORLD-GRAPH",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
-    "exact_head": "c5d7d0d682181f0a796d0e059508a1fdfe91b6e1",
+    "exact_head": "3e1b42cd2ea24b32a4b54218541fbffa621a0f9f",
     "must_be_canonical_before_acceptance": true
   },
-  "goal": "TOPOLOGY_NEUTRAL_DTOS_PASS",
+  "goal": "TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS",
   "protocol_version": 1,
   "schemas": [
     "planet_simulator.client_world_frame.v1",
@@ -16,7 +16,12 @@
     "planet_simulator.gateway_session_binding.v1",
     "planet_simulator.gateway_route_binding.v1",
     "planet_simulator.projection_subscription.v1",
-    "planet_simulator.gateway_descriptor.v1"
+    "planet_simulator.gateway_descriptor.v1",
+    "planet_simulator.world_descriptor.v1",
+    "planet_simulator.world_relation.v1",
+    "planet_simulator.gateway_world_graph_snapshot.v1",
+    "planet_simulator.client_world_view.v1",
+    "planet_simulator.aggregated_interest_plan.v1"
   ],
   "hard_invariants": [
     "TRANSPORT_CONNECTION_ID_NOT_PLAYER_ID",
@@ -28,11 +33,17 @@
     "ROUTE_REVISION_NOT_AUTHORITY_EPOCH",
     "GATEWAY_ROUTE_METADATA_NOT_MUTATION_AUTHORITY",
     "WORLD_OPERATION_OPERATION_ID_STABLE_THROUGH_GATEWAY_WRAPPING",
-    "PROJECTION_READ_ONLY"
+    "PROJECTION_READ_ONLY",
+    "GLOBAL_KNOWLEDGE_DOES_NOT_IMPLY_GLOBAL_CONNECTION",
+    "WORLD_GRAPH_CACHE_IS_READ_ONLY_DERIVED_RECONSTRUCTIBLE",
+    "GATEWAY_VIEW_PLAN_IS_NOT_CANONICAL_WORLD_TRUTH",
+    "INTEREST_IS_GATEWAY_MANAGED",
+    "PROJECTION_POLICY_CANNOT_GRANT_MUTATION_AUTHORITY"
   ],
   "focused_tests": [
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
-    "res://tests/network/test_eg0_edge_gateway_fixtures.gd"
+    "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
+    "res://tests/network/test_eg0_world_graph_contracts.gd"
   ],
   "next_stage": "EG1_BLOCKED_UNTIL_EG0_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
   "p6_runtime_authorized": false

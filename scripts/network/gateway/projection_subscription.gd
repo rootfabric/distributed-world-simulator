@@ -10,11 +10,14 @@ const FIELDS: Array[String] = [
 	"protocol_version",
 	"subscription_id",
 	"gateway_session_id",
+	"source_world_id",
 	"source_authority_id",
 	"source_server_instance_id",
 	"stream_id",
 	"manifest_revision",
 	"source_revision",
+	"view_revision",
+	"interest_revision",
 	"grant_id",
 	"interest_key",
 	"read_only",
@@ -24,11 +27,14 @@ const FIELDS: Array[String] = [
 static func create(
 		subscription_id: String,
 		gateway_session_id: String,
+		source_world_id: String,
 		source_authority_id: String,
 		source_server_instance_id: String,
 		stream_id: String,
 		manifest_revision: int,
 		source_revision: int,
+		view_revision: int,
+		interest_revision: int,
 		grant_id: String,
 		interest_key: String,
 		read_only: bool = true,
@@ -38,11 +44,14 @@ static func create(
 		"protocol_version": PROTOCOL_VERSION,
 		"subscription_id": subscription_id,
 		"gateway_session_id": gateway_session_id,
+		"source_world_id": source_world_id,
 		"source_authority_id": source_authority_id,
 		"source_server_instance_id": source_server_instance_id,
 		"stream_id": stream_id,
 		"manifest_revision": manifest_revision,
 		"source_revision": source_revision,
+		"view_revision": view_revision,
+		"interest_revision": interest_revision,
 		"grant_id": grant_id,
 		"interest_key": interest_key,
 		"read_only": read_only,
@@ -56,6 +65,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	for pair in [
 		["subscription_id", "projection-subscription"],
 		["gateway_session_id", "gateway-session"],
+		["source_world_id", "world"],
 		["source_authority_id", "authority"],
 		["source_server_instance_id", "server-instance"],
 		["stream_id", "projection-stream"],
@@ -69,6 +79,10 @@ static func validate(value: Dictionary) -> Dictionary:
 		var integer_check: Dictionary = GatewayUtilsScript.require_nonnegative_integer(value, String(integer_field))
 		if not bool(integer_check.get("success", false)):
 			return integer_check
+	for integer_field in ["view_revision", "interest_revision"]:
+		var integer_check: Dictionary = GatewayUtilsScript.require_positive_integer(value, String(integer_field))
+		if not bool(integer_check.get("success", false)):
+			return integer_check
 	var schema_check: Dictionary = GatewayUtilsScript.validate_schema(value, SCHEMA)
 	if not bool(schema_check.get("success", false)):
 		return schema_check
@@ -77,4 +91,20 @@ static func validate(value: Dictionary) -> Dictionary:
 			"PROJECTION_NOT_READ_ONLY",
 			"Projection subscription must be read_only=true",
 		)
+	return NetworkUtilsScript.validation_success()
+
+
+static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictionary:
+	var candidate_check: Dictionary = validate(candidate)
+	if not bool(candidate_check.get("success", false)):
+		return candidate_check
+	var current_check: Dictionary = validate(current)
+	if not bool(current_check.get("success", false)):
+		return current_check
+	if String(candidate.get("subscription_id")) != String(current.get("subscription_id")):
+		return NetworkUtilsScript.validation_failure("SUBSCRIPTION_ID_MISMATCH", "Cannot compare different subscriptions")
+	if int(candidate.get("interest_revision")) <= int(current.get("interest_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_INTEREST_REVISION", "interest_revision must advance")
+	if int(candidate.get("view_revision")) < int(current.get("view_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_VIEW_REVISION", "view_revision cannot rewind")
 	return NetworkUtilsScript.validation_success()

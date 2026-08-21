@@ -127,3 +127,22 @@ Director verdict
 ```
 
 До этого EG1 не получает canonical dispatch.
+
+## R4 World Graph / View Planner amendment
+
+Control branch advanced during implementation with the R4 amendment. EG0 scope is therefore extended before freeze with:
+
+- `WorldDescriptor`;
+- `WorldRelation`;
+- `GatewayWorldGraphSnapshot`;
+- `ClientWorldView`;
+- `AggregatedInterestPlan`;
+- explicit `ViewRevision` / `InterestRevision`;
+- world-graph stale revision rejection;
+- read-only/reconstructible cache semantics;
+- aggregation of multiple client sessions into one source-interest plan;
+- proof that 1000 known worlds do not imply 1000 upstream connections.
+
+Updated exit:
+
+`TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS`
