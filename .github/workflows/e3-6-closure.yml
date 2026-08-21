@@ -63,5 +63,6 @@ jobs:
           path: |
             e3_6_runner.log
             e3_6_candidate_temporal_program.json
+            validation/ecology/eco-evo3-e3-6-temporal-disturbance-program.generated.json
           if-no-files-found: error
           retention-days: 30
