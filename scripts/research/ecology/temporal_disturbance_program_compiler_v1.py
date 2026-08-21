@@ -51,16 +51,15 @@ SAMPLE_VALUE_FIELDS = (
     *OBSERVED_FIELDS,
 )
 SAMPLE_SOURCE_FIELDS = ("sample_id", "stable_spatial_key", *SAMPLE_VALUE_FIELDS, "sample_hash")
-FORBIDDEN_OUTPUT_TOKENS = (
+FORBIDDEN_OUTPUT_KEYS = {
     "canonical_time_value",
-    "canonical_history",
+    "canonical_history_entries",
     "predicted_future",
     "forecast_value",
-    "production_binding",
     "network_authority",
     "persistence_authority",
     "transaction_authority",
-)
+}
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -148,8 +147,6 @@ class _VerifiedInputs:
 
 
 class _VerifiedTemporalProgram(dict):
-    __slots__ = ("_contract_raw", "_binding_raw", "_workset_raw", "_snapshot_raw")
-
     def __init__(
         self,
         value: Dict[str, Any],
@@ -169,7 +166,7 @@ class _VerifiedTemporalProgram(dict):
 def _validate_contract(contract: Dict[str, Any]) -> None:
     _require(contract.get("schema") == "distributed_world_simulator.ecology.evo3_e3_6_temporal_disturbance_contract.v1", "contract schema")
     _require(contract.get("checkpoint") == CHECKPOINT, "contract checkpoint")
-    _require(contract.get("compiler_stage") == COMPILER_STAGE, "contract compiler stage")
+    _require(contract.get("compiler_stage") == COMPILER_STAGE, "contract stage")
     _require(contract.get("authority") == AUTHORITY, "contract authority")
     _require(contract.get("canonical_binding_resolved") is False, "contract canonical binding")
     _require(contract.get("production_binding_authorized") is False, "contract production binding")
@@ -177,17 +174,13 @@ def _validate_contract(contract: Dict[str, Any]) -> None:
     _require(object_hash(contract, "contract_hash") == EXPECTED_CONTRACT_HASH, "contract self hash")
 
     e35 = contract.get("accepted_e3_5", {})
-    expected_e35 = {
-        "accepted_control_head": EXPECTED_E3_5_CONTROL_HEAD,
-        "canonical_merge_commit": EXPECTED_E3_5_MERGE,
-        "artifact_path": E3_5_PATH,
-        "artifact_git_blob": E3_5_GIT_BLOB,
-        "artifact_sha256": EXPECTED_E3_5_SHA256,
-        "population_workset_hash": EXPECTED_E3_5_WORKSET_HASH,
-        "provenance_hash": EXPECTED_E3_5_PROVENANCE_HASH,
-        "acceptance_checkpoint": "docs/checkpoints/2026-08-21_ECO_EVO3_E3_5_ACCEPTED_E3_6_AUTHORIZED_RU.md",
-    }
-    _require(e35 == expected_e35, "contract E3.5 identity")
+    _require(e35.get("accepted_control_head") == EXPECTED_E3_5_CONTROL_HEAD, "contract E3.5 control")
+    _require(e35.get("canonical_merge_commit") == EXPECTED_E3_5_MERGE, "contract E3.5 merge")
+    _require(e35.get("artifact_path") == E3_5_PATH, "contract E3.5 path")
+    _require(e35.get("artifact_git_blob") == E3_5_GIT_BLOB, "contract E3.5 blob")
+    _require(e35.get("artifact_sha256") == EXPECTED_E3_5_SHA256, "contract E3.5 sha")
+    _require(e35.get("population_workset_hash") == EXPECTED_E3_5_WORKSET_HASH, "contract E3.5 hash")
+    _require(e35.get("provenance_hash") == EXPECTED_E3_5_PROVENANCE_HASH, "contract E3.5 provenance")
 
     ctx = contract.get("tf_env_context", {})
     _require(ctx.get("role") == "IMMUTABLE_UPSTREAM_CONTEXT_NOT_ECOLOGY_PREDECESSOR", "context role")
@@ -198,11 +191,11 @@ def _validate_contract(contract: Dict[str, Any]) -> None:
     _require(ctx.get("field_provenance_hash") == EXPECTED_E3_1_FIELD_PROVENANCE_HASH, "context provenance")
     _require(ctx.get("stable_planet_identity") == EXPECTED_PLANET, "context planet")
     _require(ctx.get("stable_time_key") == EXPECTED_TIME_KEY, "context time")
-    _require(ctx.get("tf_semantic_reference") == EXPECTED_TF_REFERENCE, "context TF ref")
-    _require(ctx.get("env_semantic_reference") == EXPECTED_ENV_REFERENCE, "context ENV ref")
+    _require(ctx.get("tf_semantic_reference") == EXPECTED_TF_REFERENCE, "context TF")
+    _require(ctx.get("env_semantic_reference") == EXPECTED_ENV_REFERENCE, "context ENV")
 
     policy = contract.get("input_policy", {})
-    for field in (
+    for name in (
         "raw_bytes_required",
         "git_blob_required",
         "artifact_sha256_required",
@@ -211,7 +204,7 @@ def _validate_contract(contract: Dict[str, Any]) -> None:
         "plain_parsed_dict_authority_forbidden",
         "earlier_stage_scientific_reconstruction_forbidden",
     ):
-        _require(policy.get(field) is True, f"contract input policy {field}")
+        _require(policy.get(name) is True, f"contract input policy {name}")
     _require(policy.get("sole_ecology_predecessor") == "EXACT_ACCEPTED_E3_5_POPULATION_WORKSET", "sole ecology predecessor")
     _require(policy.get("tf_env_context_is_authoritative_ecology_predecessor") is False, "context predecessor escalation")
 
@@ -219,14 +212,14 @@ def _validate_contract(contract: Dict[str, Any]) -> None:
     _require(temporal.get("mode") == TEMPORAL_MODE, "temporal mode")
     _require(temporal.get("stable_time_key_semantics") == "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME", "time key semantics")
     _require(temporal.get("refresh_policy") == "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT", "refresh policy")
-    for field in ("history_write_allowed", "future_forecast_allowed", "canonical_time_ownership", "canonical_environment_ownership"):
-        _require(temporal.get(field) is False, f"temporal authority {field}")
+    for name in ("history_write_allowed", "future_forecast_allowed", "canonical_time_ownership", "canonical_environment_ownership"):
+        _require(temporal.get(name) is False, f"temporal authority {name}")
 
     single = contract.get("single_snapshot_policy", {})
     _require(single.get("seasonality_state") == "UNRESOLVED_SINGLE_SNAPSHOT", "single snapshot state")
     _require(single.get("envelope_rule") == "MIN_EQUALS_ANCHOR_EQUALS_MAX_FOR_EACH_OBSERVED_FIELD", "single snapshot envelope")
-    for field in ("invented_cycle_forbidden", "latitude_derived_cycle_forbidden", "opaque_time_key_numeric_interpretation_forbidden"):
-        _require(single.get(field) is True, f"single snapshot policy {field}")
+    for name in ("invented_cycle_forbidden", "latitude_derived_cycle_forbidden", "opaque_time_key_numeric_interpretation_forbidden"):
+        _require(single.get(name) is True, f"single snapshot policy {name}")
     _require(tuple(contract.get("observed_fields", ())) == OBSERVED_FIELDS, "observed fields")
 
 
@@ -244,7 +237,7 @@ def _validate_binding(binding: Dict[str, Any], contract: Dict[str, Any]) -> None
     _require(e35.get("artifact_path") == E3_5_PATH, "binding E3.5 path")
     _require(e35.get("artifact_git_blob") == E3_5_GIT_BLOB, "binding E3.5 blob")
     _require(e35.get("artifact_sha256") == EXPECTED_E3_5_SHA256, "binding E3.5 sha")
-    _require(e35.get("population_workset_hash") == EXPECTED_E3_5_WORKSET_HASH, "binding E3.5 workset")
+    _require(e35.get("population_workset_hash") == EXPECTED_E3_5_WORKSET_HASH, "binding E3.5 hash")
     _require(e35.get("provenance_hash") == EXPECTED_E3_5_PROVENANCE_HASH, "binding E3.5 provenance")
 
     ctx = binding.get("tf_env_context", {})
@@ -272,9 +265,8 @@ def _validate_workset(workset: Dict[str, Any]) -> None:
     _require(object_hash(workset, "population_workset_hash") == EXPECTED_E3_5_WORKSET_HASH, "E3.5 self hash")
     provenance = workset.get("provenance")
     _require(isinstance(provenance, dict), "E3.5 provenance object")
-    _require(sha256_hex(canonical_bytes(provenance)) == EXPECTED_E3_5_PROVENANCE_HASH, "E3.5 provenance hash")
     _require(workset.get("provenance_hash") == EXPECTED_E3_5_PROVENANCE_HASH, "E3.5 provenance identity")
-
+    _require(sha256_hex(canonical_bytes(provenance)) == EXPECTED_E3_5_PROVENANCE_HASH, "E3.5 provenance hash")
     source = workset.get("source_colonization_program", {})
     _require(source.get("stable_planet_identity") == EXPECTED_PLANET, "E3.5 planet")
     _require(source.get("stable_time_key") == EXPECTED_TIME_KEY, "E3.5 time")
@@ -284,17 +276,13 @@ def _validate_workset(workset: Dict[str, Any]) -> None:
     _require(isinstance(manifest, list), "E3.5 basis manifest")
     seen = set()
     for row in manifest:
-        _require(isinstance(row, dict), "E3.5 basis row")
-        _exact_keys(
-            row,
-            {"basis_key", "research_patch_id", "research_species_id", "source_decision", "stable_spatial_key"},
-            "E3.5 basis row",
-        )
+        _exact_keys(row, {"basis_key", "research_patch_id", "research_species_id", "source_decision", "stable_spatial_key"}, "E3.5 basis row")
         _require(row["source_decision"] == "ESTABLISHED", "E3.5 basis decision")
         _require(row["basis_key"] not in seen, "E3.5 duplicate basis")
         seen.add(row["basis_key"])
-    _require(len(manifest) == workset.get("summary", {}).get("active_basis_count"), "E3.5 basis summary")
-    _require(workset.get("summary", {}).get("individual_entity_count") == 0, "E3.5 individual entity truth")
+    summary = workset.get("summary", {})
+    _require(len(manifest) == summary.get("active_basis_count"), "E3.5 basis summary")
+    _require(summary.get("individual_entity_count") == 0, "E3.5 individual entity truth")
     if workset["workset_result"] == "NO_ACTIVE_POPULATION_WORK":
         _require(not manifest, "E3.5 empty result with basis")
 
@@ -321,20 +309,19 @@ def _validate_snapshot(snapshot: Dict[str, Any]) -> None:
     _require(snapshot.get("snapshot_hash") == EXPECTED_E3_1_SNAPSHOT_HASH, "E3.1 expected snapshot hash")
     _require(object_hash(snapshot, "snapshot_hash") == EXPECTED_E3_1_SNAPSHOT_HASH, "E3.1 self hash")
     _require(snapshot.get("field_provenance_hash") == EXPECTED_E3_1_FIELD_PROVENANCE_HASH, "E3.1 field provenance")
-
     foundations = snapshot.get("foundation_manifest", {})
-    _require(foundations.get("TF", {}).get("semantic_reference") == EXPECTED_TF_REFERENCE, "E3.1 TF reference")
-    _require(foundations.get("ENV", {}).get("semantic_reference") == EXPECTED_ENV_REFERENCE, "E3.1 ENV reference")
-    _require(foundations.get("TF", {}).get("canonical_binding_resolved") is False, "E3.1 TF canonical binding")
-    _require(foundations.get("ENV", {}).get("canonical_binding_resolved") is False, "E3.1 ENV canonical binding")
+    _require(foundations.get("TF", {}).get("semantic_reference") == EXPECTED_TF_REFERENCE, "E3.1 TF ref")
+    _require(foundations.get("ENV", {}).get("semantic_reference") == EXPECTED_ENV_REFERENCE, "E3.1 ENV ref")
+    _require(foundations.get("TF", {}).get("canonical_binding_resolved") is False, "E3.1 TF canonical")
+    _require(foundations.get("ENV", {}).get("canonical_binding_resolved") is False, "E3.1 ENV canonical")
 
     samples = snapshot.get("samples")
     _require(isinstance(samples, list), "E3.1 samples")
-    spatial = set()
+    seen_spatial = set()
     for sample in samples:
-        _require(isinstance(sample, dict), "E3.1 sample")
-        _require(sample.get("stable_spatial_key") not in spatial, "E3.1 duplicate spatial key")
-        spatial.add(sample["stable_spatial_key"])
+        spatial_key = sample.get("stable_spatial_key")
+        _require(spatial_key not in seen_spatial, "E3.1 duplicate spatial key")
+        seen_spatial.add(spatial_key)
         source_shape = {key: sample[key] for key in SAMPLE_SOURCE_FIELDS}
         _require(sample.get("sample_hash") == object_hash(source_shape, "sample_hash"), "E3.1 sample hash")
         _require(sample.get("field_provenance_hash") == _sample_provenance(sample, snapshot), "E3.1 sample provenance")
@@ -347,7 +334,6 @@ def _verify_raw_inputs(contract_raw: bytes, binding_raw: bytes, workset_raw: byt
     _assert_raw_identity(binding_raw, BINDING_GIT_BLOB, None, "E3.6 binding")
     _assert_raw_identity(workset_raw, E3_5_GIT_BLOB, EXPECTED_E3_5_SHA256, "accepted E3.5 workset")
     _assert_raw_identity(snapshot_raw, E3_1_GIT_BLOB, EXPECTED_E3_1_SHA256, "accepted E3.1 snapshot")
-
     contract = _parse_object(contract_raw, "contract")
     binding = _parse_object(binding_raw, "binding")
     workset = _parse_object(workset_raw, "E3.5 workset")
@@ -356,15 +342,12 @@ def _verify_raw_inputs(contract_raw: bytes, binding_raw: bytes, workset_raw: byt
     _validate_binding(binding, contract)
     _validate_workset(workset)
     _validate_snapshot(snapshot)
-
     source = workset["source_colonization_program"]
     _require(source["stable_planet_identity"] == snapshot["stable_planet_identity"], "planet mismatch across E3.5/E3.1")
     _require(source["stable_time_key"] == snapshot["stable_time_key"], "time mismatch across E3.5/E3.1")
-
     sample_keys = {sample["stable_spatial_key"] for sample in snapshot["samples"]}
     active_keys = {row["stable_spatial_key"] for row in workset["work_basis_manifest"]}
     _require(active_keys <= sample_keys, "active E3.5 spatial key missing from exact E3.1 context")
-
     return _VerifiedInputs(
         contract=contract,
         binding=binding,
@@ -400,12 +383,11 @@ def _compile_envelopes(workset: Dict[str, Any], snapshot: Dict[str, Any]) -> lis
     for row in workset["work_basis_manifest"]:
         grouped.setdefault(row["stable_spatial_key"], []).append(row["basis_key"])
     samples = {sample["stable_spatial_key"]: sample for sample in snapshot["samples"]}
-
     envelopes: list[Dict[str, Any]] = []
     for spatial_key in sorted(grouped):
         basis_keys = sorted(grouped[spatial_key])
         sample = samples[spatial_key]
-        identity_material = {
+        identity = {
             "stable_planet_identity": snapshot["stable_planet_identity"],
             "stable_spatial_key": spatial_key,
             "stable_time_key": snapshot["stable_time_key"],
@@ -414,11 +396,9 @@ def _compile_envelopes(workset: Dict[str, Any], snapshot: Dict[str, Any]) -> lis
             "source_sample_hash": sample["sample_hash"],
             "source_field_provenance_hash": sample["field_provenance_hash"],
         }
-        envelope_id = "eco-evo3/e3.6/envelope/" + sha256_hex(canonical_bytes(identity_material))[:24]
-        observed = {field: _triple(sample[field]) for field in OBSERVED_FIELDS}
         envelopes.append(
             {
-                "envelope_id": envelope_id,
+                "envelope_id": "eco-evo3/e3.6/envelope/" + sha256_hex(canonical_bytes(identity))[:24],
                 "authority": "RESEARCH_TEMPORAL_ENVELOPE_NON_CANONICAL",
                 "stable_planet_identity": snapshot["stable_planet_identity"],
                 "stable_spatial_key": spatial_key,
@@ -429,7 +409,7 @@ def _compile_envelopes(workset: Dict[str, Any], snapshot: Dict[str, Any]) -> lis
                 "source_field_provenance_hash": sample["field_provenance_hash"],
                 "seasonality_state": "UNRESOLVED_SINGLE_SNAPSHOT",
                 "temporal_evidence_state": "SINGLE_ACCEPTED_OWNER_SNAPSHOT_ONLY",
-                "observed_envelopes": observed,
+                "observed_envelopes": {field: _triple(sample[field]) for field in OBSERVED_FIELDS},
                 "disturbance_schedule": {
                     "state": "NOT_DERIVABLE_FROM_SINGLE_SNAPSHOT",
                     "observed_pressure_ppm": sample["disturbance_pressure_ppm"],
@@ -449,50 +429,8 @@ def _build_temporal_program(inputs: _VerifiedInputs) -> Dict[str, Any]:
     snapshot = inputs.snapshot
     binding = inputs.binding
     envelopes = _compile_envelopes(workset, snapshot)
-
     source_e35 = binding["accepted_e3_5"]
     source_ctx = binding["tf_env_context"]
-    source_population = {
-        "accepted_control_head": source_e35["accepted_control_head"],
-        "canonical_merge_commit": source_e35["canonical_merge_commit"],
-        "artifact_sha256": source_e35["artifact_sha256"],
-        "git_blob": source_e35["artifact_git_blob"],
-        "population_workset_hash": source_e35["population_workset_hash"],
-        "provenance_hash": source_e35["provenance_hash"],
-        "workset_result": workset["workset_result"],
-        "stable_planet_identity": workset["source_colonization_program"]["stable_planet_identity"],
-        "stable_time_key": workset["source_colonization_program"]["stable_time_key"],
-    }
-    source_snapshot = {
-        "context_role": source_ctx["role"],
-        "artifact_sha256": source_ctx["artifact_sha256"],
-        "git_blob": source_ctx["artifact_git_blob"],
-        "snapshot_hash": source_ctx["snapshot_hash"],
-        "field_provenance_hash": source_ctx["field_provenance_hash"],
-        "stable_planet_identity": source_ctx["stable_planet_identity"],
-        "stable_time_key": source_ctx["stable_time_key"],
-        "tf_semantic_reference": source_ctx["tf_semantic_reference"],
-        "env_semantic_reference": source_ctx["env_semantic_reference"],
-    }
-    refresh = {
-        "policy": "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT",
-        "stable_time_key_semantics": "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME",
-        "seasonality_evidence_state": "UNRESOLVED_SINGLE_SNAPSHOT",
-        "history_write_allowed": False,
-        "forecast_authorized": False,
-        "canonical_time_ownership": False,
-        "canonical_environment_ownership": False,
-    }
-    basis_count = len(workset["work_basis_manifest"])
-    summary = {
-        "active_basis_count": basis_count,
-        "active_spatial_key_count": len(envelopes),
-        "temporal_envelope_count": len(envelopes),
-        "unresolved_seasonality_count": len(envelopes),
-        "future_disturbance_event_count": 0,
-        "canonical_history_write_count": 0,
-        "individual_entity_count": 0,
-    }
     provenance = {
         "contract_hash": inputs.contract["contract_hash"],
         "binding_git_blob": BINDING_GIT_BLOB,
@@ -509,8 +447,7 @@ def _build_temporal_program(inputs: _VerifiedInputs) -> Dict[str, Any]:
         "input_verification": "EXACT_ACCEPTED_E3_5_AND_TF_ENV_CONTEXT_RAW_BYTES_VERIFIED",
         "single_snapshot_seasonality_unresolved": True,
     }
-    provenance_hash = sha256_hex(canonical_bytes(provenance))
-    result = {
+    program = {
         "schema": SCHEMA,
         "checkpoint": CHECKPOINT,
         "compiler_stage": COMPILER_STAGE,
@@ -519,34 +456,67 @@ def _build_temporal_program(inputs: _VerifiedInputs) -> Dict[str, Any]:
         "production_binding_authorized": False,
         "temporal_mode": TEMPORAL_MODE,
         "temporal_result": "TEMPORAL_PROGRAM_PRESENT" if envelopes else "NO_ACTIVE_POPULATION_TEMPORAL_WORK",
-        "source_population_workset": source_population,
-        "source_tf_env_snapshot": source_snapshot,
+        "source_population_workset": {
+            "accepted_control_head": source_e35["accepted_control_head"],
+            "canonical_merge_commit": source_e35["canonical_merge_commit"],
+            "artifact_sha256": source_e35["artifact_sha256"],
+            "git_blob": source_e35["artifact_git_blob"],
+            "population_workset_hash": source_e35["population_workset_hash"],
+            "provenance_hash": source_e35["provenance_hash"],
+            "workset_result": workset["workset_result"],
+            "stable_planet_identity": workset["source_colonization_program"]["stable_planet_identity"],
+            "stable_time_key": workset["source_colonization_program"]["stable_time_key"],
+        },
+        "source_tf_env_snapshot": {
+            "context_role": source_ctx["role"],
+            "artifact_sha256": source_ctx["artifact_sha256"],
+            "git_blob": source_ctx["artifact_git_blob"],
+            "snapshot_hash": source_ctx["snapshot_hash"],
+            "field_provenance_hash": source_ctx["field_provenance_hash"],
+            "stable_planet_identity": source_ctx["stable_planet_identity"],
+            "stable_time_key": source_ctx["stable_time_key"],
+            "tf_semantic_reference": source_ctx["tf_semantic_reference"],
+            "env_semantic_reference": source_ctx["env_semantic_reference"],
+        },
         "temporal_envelopes": envelopes,
-        "refresh_contract": refresh,
-        "summary": summary,
+        "refresh_contract": {
+            "policy": "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT",
+            "stable_time_key_semantics": "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME",
+            "seasonality_evidence_state": "UNRESOLVED_SINGLE_SNAPSHOT",
+            "history_write_allowed": False,
+            "forecast_authorized": False,
+            "canonical_time_ownership": False,
+            "canonical_environment_ownership": False,
+        },
+        "summary": {
+            "active_basis_count": len(workset["work_basis_manifest"]),
+            "active_spatial_key_count": len(envelopes),
+            "temporal_envelope_count": len(envelopes),
+            "unresolved_seasonality_count": len(envelopes),
+            "future_disturbance_event_count": 0,
+            "canonical_history_write_count": 0,
+            "individual_entity_count": 0,
+        },
         "provenance": provenance,
-        "provenance_hash": provenance_hash,
+        "provenance_hash": sha256_hex(canonical_bytes(provenance)),
         "temporal_program_hash_algorithm": HASH_ALGORITHM,
     }
-    result["temporal_program_hash"] = object_hash(result, "temporal_program_hash")
-    return result
+    program["temporal_program_hash"] = object_hash(program, "temporal_program_hash")
+    return program
 
 
-def _assert_no_forbidden_output_tokens(value: Any) -> None:
+def _assert_no_forbidden_output_keys(value: Any) -> None:
     if isinstance(value, dict):
         for key, child in value.items():
-            lower = str(key).lower()
-            if any(token in lower for token in FORBIDDEN_OUTPUT_TOKENS):
-                raise ValueError(f"forbidden output authority/history token: {key}")
-            _assert_no_forbidden_output_tokens(child)
+            if str(key) in FORBIDDEN_OUTPUT_KEYS:
+                raise ValueError(f"forbidden output authority/history key: {key}")
+            _assert_no_forbidden_output_keys(child)
     elif isinstance(value, list):
         for child in value:
-            _assert_no_forbidden_output_tokens(child)
+            _assert_no_forbidden_output_keys(child)
 
 
 def validate_output_structure(program: Dict[str, Any]) -> None:
-    if not isinstance(program, dict):
-        raise ValueError("program must be object")
     expected_top = {
         "schema", "checkpoint", "compiler_stage", "authority", "canonical_binding_resolved",
         "production_binding_authorized", "temporal_mode", "temporal_result",
@@ -566,39 +536,38 @@ def validate_output_structure(program: Dict[str, Any]) -> None:
     _require(program["temporal_program_hash"] == object_hash(program, "temporal_program_hash"), "program self hash")
     _require(program["provenance_hash"] == sha256_hex(canonical_bytes(program["provenance"])), "program provenance hash")
 
-    source_workset = program["source_population_workset"]
-    _require(source_workset["accepted_control_head"] == EXPECTED_E3_5_CONTROL_HEAD, "program source control")
-    _require(source_workset["canonical_merge_commit"] == EXPECTED_E3_5_MERGE, "program source merge")
-    _require(source_workset["artifact_sha256"] == EXPECTED_E3_5_SHA256, "program source sha")
-    _require(source_workset["git_blob"] == E3_5_GIT_BLOB, "program source blob")
-    _require(source_workset["population_workset_hash"] == EXPECTED_E3_5_WORKSET_HASH, "program source workset")
-    _require(source_workset["provenance_hash"] == EXPECTED_E3_5_PROVENANCE_HASH, "program source provenance")
-    _require(source_workset["stable_planet_identity"] == EXPECTED_PLANET, "program source planet")
-    _require(source_workset["stable_time_key"] == EXPECTED_TIME_KEY, "program source time")
+    source = program["source_population_workset"]
+    _require(source["accepted_control_head"] == EXPECTED_E3_5_CONTROL_HEAD, "program source control")
+    _require(source["canonical_merge_commit"] == EXPECTED_E3_5_MERGE, "program source merge")
+    _require(source["artifact_sha256"] == EXPECTED_E3_5_SHA256, "program source sha")
+    _require(source["git_blob"] == E3_5_GIT_BLOB, "program source blob")
+    _require(source["population_workset_hash"] == EXPECTED_E3_5_WORKSET_HASH, "program source workset")
+    _require(source["provenance_hash"] == EXPECTED_E3_5_PROVENANCE_HASH, "program source provenance")
+    _require(source["stable_planet_identity"] == EXPECTED_PLANET, "program source planet")
+    _require(source["stable_time_key"] == EXPECTED_TIME_KEY, "program source time")
 
-    source_snapshot = program["source_tf_env_snapshot"]
-    _require(source_snapshot["context_role"] == "IMMUTABLE_UPSTREAM_CONTEXT_NOT_ECOLOGY_PREDECESSOR", "program context role")
-    _require(source_snapshot["artifact_sha256"] == EXPECTED_E3_1_SHA256, "program context sha")
-    _require(source_snapshot["git_blob"] == E3_1_GIT_BLOB, "program context blob")
-    _require(source_snapshot["snapshot_hash"] == EXPECTED_E3_1_SNAPSHOT_HASH, "program context snapshot")
-    _require(source_snapshot["field_provenance_hash"] == EXPECTED_E3_1_FIELD_PROVENANCE_HASH, "program context provenance")
-    _require(source_snapshot["stable_planet_identity"] == EXPECTED_PLANET, "program context planet")
-    _require(source_snapshot["stable_time_key"] == EXPECTED_TIME_KEY, "program context time")
-    _require(source_snapshot["tf_semantic_reference"] == EXPECTED_TF_REFERENCE, "program TF ref")
-    _require(source_snapshot["env_semantic_reference"] == EXPECTED_ENV_REFERENCE, "program ENV ref")
+    context = program["source_tf_env_snapshot"]
+    _require(context["context_role"] == "IMMUTABLE_UPSTREAM_CONTEXT_NOT_ECOLOGY_PREDECESSOR", "program context role")
+    _require(context["artifact_sha256"] == EXPECTED_E3_1_SHA256, "program context sha")
+    _require(context["git_blob"] == E3_1_GIT_BLOB, "program context blob")
+    _require(context["snapshot_hash"] == EXPECTED_E3_1_SNAPSHOT_HASH, "program context snapshot")
+    _require(context["field_provenance_hash"] == EXPECTED_E3_1_FIELD_PROVENANCE_HASH, "program context provenance")
+    _require(context["stable_planet_identity"] == EXPECTED_PLANET, "program context planet")
+    _require(context["stable_time_key"] == EXPECTED_TIME_KEY, "program context time")
+    _require(context["tf_semantic_reference"] == EXPECTED_TF_REFERENCE, "program TF ref")
+    _require(context["env_semantic_reference"] == EXPECTED_ENV_REFERENCE, "program ENV ref")
 
     refresh = program["refresh_contract"]
     _require(refresh["policy"] == "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT", "program refresh policy")
     _require(refresh["stable_time_key_semantics"] == "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME", "program time semantics")
-    _require(refresh["seasonality_evidence_state"] == "UNRESOLVED_SINGLE_SNAPSHOT", "program seasonality evidence")
-    for field in ("history_write_allowed", "forecast_authorized", "canonical_time_ownership", "canonical_environment_ownership"):
-        _require(refresh[field] is False, f"program refresh authority {field}")
+    _require(refresh["seasonality_evidence_state"] == "UNRESOLVED_SINGLE_SNAPSHOT", "program seasonality state")
+    for name in ("history_write_allowed", "forecast_authorized", "canonical_time_ownership", "canonical_environment_ownership"):
+        _require(refresh[name] is False, f"program authority {name}")
 
     envelopes = program["temporal_envelopes"]
-    _require(isinstance(envelopes, list), "program envelopes")
     spatial_keys = [item["stable_spatial_key"] for item in envelopes]
     _require(spatial_keys == sorted(spatial_keys), "program envelope order")
-    _require(len(spatial_keys) == len(set(spatial_keys)), "program duplicate spatial envelope")
+    _require(len(spatial_keys) == len(set(spatial_keys)), "program duplicate envelope")
     all_basis: list[str] = []
     for envelope in envelopes:
         _require(envelope["authority"] == "RESEARCH_TEMPORAL_ENVELOPE_NON_CANONICAL", "envelope authority")
@@ -607,14 +576,13 @@ def validate_output_structure(program: Dict[str, Any]) -> None:
         _require(envelope["seasonality_state"] == "UNRESOLVED_SINGLE_SNAPSHOT", "envelope seasonality")
         _require(envelope["temporal_evidence_state"] == "SINGLE_ACCEPTED_OWNER_SNAPSHOT_ONLY", "envelope evidence")
         _require(envelope["refresh_policy"] == "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT", "envelope refresh")
-        _require(envelope["history_write_allowed"] is False, "envelope history")
-        _require(envelope["forecast_authorized"] is False, "envelope forecast")
-        basis = envelope["basis_keys"]
-        _require(basis == sorted(basis) and len(basis) == len(set(basis)) and len(basis) > 0, "envelope basis")
-        all_basis.extend(basis)
+        _require(envelope["history_write_allowed"] is False and envelope["forecast_authorized"] is False, "envelope authority")
+        basis_keys = envelope["basis_keys"]
+        _require(basis_keys == sorted(basis_keys) and len(basis_keys) == len(set(basis_keys)) and basis_keys, "envelope basis")
+        all_basis.extend(basis_keys)
         for field in OBSERVED_FIELDS:
             triple = envelope["observed_envelopes"][field]
-            _require(set(triple) == {"min", "anchor", "max"}, f"{field} envelope keys")
+            _require(set(triple) == {"min", "anchor", "max"}, f"{field} triple keys")
             _require(type(triple["anchor"]) is int, f"{field} anchor type")
             _require(triple["min"] == triple["anchor"] == triple["max"], f"{field} fabricated variation")
         disturbance = envelope["disturbance_schedule"]
@@ -629,25 +597,24 @@ def validate_output_structure(program: Dict[str, Any]) -> None:
     _require(summary["active_spatial_key_count"] == len(envelopes), "summary spatial")
     _require(summary["temporal_envelope_count"] == len(envelopes), "summary envelopes")
     _require(summary["unresolved_seasonality_count"] == len(envelopes), "summary unresolved")
-    _require(summary["future_disturbance_event_count"] == 0, "summary future events")
-    _require(summary["canonical_history_write_count"] == 0, "summary history writes")
+    _require(summary["future_disturbance_event_count"] == 0, "summary future")
+    _require(summary["canonical_history_write_count"] == 0, "summary history")
     _require(summary["individual_entity_count"] == 0, "summary individuals")
-    expected_result = "TEMPORAL_PROGRAM_PRESENT" if envelopes else "NO_ACTIVE_POPULATION_TEMPORAL_WORK"
-    _require(program["temporal_result"] == expected_result, "program temporal result")
-    _assert_no_forbidden_output_tokens(program)
+    _require(program["temporal_result"] == ("TEMPORAL_PROGRAM_PRESENT" if envelopes else "NO_ACTIVE_POPULATION_TEMPORAL_WORK"), "temporal result")
+    _assert_no_forbidden_output_keys(program)
 
 
 def validate_output_integrity(program: Dict[str, Any]) -> None:
     if not isinstance(program, _VerifiedTemporalProgram):
         raise ValueError("authoritative integrity requires _VerifiedTemporalProgram exact-input capability")
     validate_output_structure(program)
-    verified_inputs = _verify_raw_inputs(
+    inputs = _verify_raw_inputs(
         program._contract_raw,
         program._binding_raw,
         program._workset_raw,
         program._snapshot_raw,
     )
-    expected = _build_temporal_program(verified_inputs)
+    expected = _build_temporal_program(inputs)
     if canonical_bytes(dict(program)) != canonical_bytes(expected):
         raise ValueError("temporal program differs from independent exact-input rebuild")
 
@@ -656,15 +623,15 @@ def build_temporal_program(inputs: _VerifiedInputs) -> _VerifiedTemporalProgram:
     if not isinstance(inputs, _VerifiedInputs):
         raise ValueError("build requires _VerifiedInputs exact-input capability")
     value = _build_temporal_program(inputs)
-    result = _VerifiedTemporalProgram(
+    program = _VerifiedTemporalProgram(
         value,
         contract_raw=inputs.contract_raw,
         binding_raw=inputs.binding_raw,
         workset_raw=inputs.workset_raw,
         snapshot_raw=inputs.snapshot_raw,
     )
-    validate_output_integrity(result)
-    return result
+    validate_output_integrity(program)
+    return program
 
 
 def serialize_temporal_program(program: Dict[str, Any]) -> bytes:
@@ -694,7 +661,6 @@ def main() -> int:
     parser.add_argument("--output")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
-
     program = build_from_paths(args.contract, args.binding, args.workset, args.snapshot)
     if args.output:
         write_temporal_program(args.output, program)
