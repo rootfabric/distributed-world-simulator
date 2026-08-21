@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0034",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 34,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-21T19:04:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: standard and directional PC0 audits are NON_RED per main-owned acceptance record machine_evidence (post_integration_project_control_run 32438985414, checkpoint_proposal_project_control_run 32441446625, 239/239 PASS continuous regression); canonical main Project Control remained NON_RED through reconciliations (runs 32499780719, 32503031224, #1132).",
+  "command": "RECORD_MAIN_OWNED_AUDIT_COMPLETION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json"
+  ]
+}

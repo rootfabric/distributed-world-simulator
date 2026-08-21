@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-18-V0-P5-R1",
   "program": "V0",
   "goal_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-  "state": "PLANNED",
+  "state": "CHECKPOINT_PROPOSED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
   "branch": "feature/v0-p5-equipment-tools",

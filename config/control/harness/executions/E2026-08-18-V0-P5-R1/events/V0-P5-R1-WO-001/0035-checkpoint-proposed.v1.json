@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0035",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 35,
+  "event_type": "CHECKPOINT_PROPOSED",
+  "work_state": "CHECKPOINT_PROPOSED",
+  "recorded_at_utc": "2026-08-21T19:05:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: checkpoint proposal e42c23efbdd6bc37366a789a71986dd4aa920679 (sequence 33, carrier control/v0-p5-final-checkpoint-proposal-r1, closure PR 177 merge 7f19c85ef3168619e0e41737c3c95352eaced266) was followed by human-authorized runtime merge PR 145 (merge commit 491ca7d058690d3de5fcea5e41aaee230a31b3ab) and formal acceptance recorded main-owned as V0-P5-R2-CHECKPOINT-ACCEPTED-001 at 2026-08-21T02:58:00Z. Ledger terminal state aligned with that record; mission completion derives from the main-owned acceptance record.",
+  "command": "ALIGN_LEDGER_WITH_MAIN_OWNED_ACCEPTANCE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/reviews/V0-P5-R1-WO-001-P0-RECONCILIATION-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/evidence/V0-P5-R1-WO-001-P0-RECONCILIATION-EVIDENCE-001.v1.json",
+    "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json"
+  ]
+}

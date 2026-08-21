@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0001",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-21T18:31:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: Work Order V0-P5-R1-WO-001 was authored 2026-08-18T11:51:00Z for goal checkpoint V0_P5_EQUIPMENT_TOOLS (base 2a6721cdf02fa1134c59d1ab98bb7b597c66821d). Original authoring durably recorded on origin/control/v0-p5-final-checkpoint-proposal-r1; this ledger entry is appended now because canonical main lacked the execution events directory entirely.",
+  "command": "REGISTER_HISTORICAL_WORK_ORDER_CREATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0005",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 5,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T18:35:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: predicate PROJECT_EPOCH_CREATED is durably proven by main-owned acceptance record V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json (decision V0_P5_CHECKPOINT_ACCEPTED, machine_evidence.all_required_predicates_complete=true, standard_pc0 NON_RED, directional_pc0 NON_RED, cross_branch_overlaps empty).",
+  "command": "VERIFY_PREDICATE_VIA_MAIN_OWNED_ACCEPTANCE_RECORD",
+  "exit_code": 0,
+  "predicate": "PROJECT_EPOCH_CREATED",
+  "evidence_paths": [
+    "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json"
+  ]
+}

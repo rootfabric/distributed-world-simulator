@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0004",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 4,
+  "event_type": "VERIFICATION_STARTED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T18:34:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: verification and independent review phase executed historically; post-build critique evidence pinned byte-exactly; final fresh independent Reviewer and Verifier verdicts are durably recorded by the main-owned acceptance record (closure_finalization: fresh_independent_review_verdict PASS, fresh_independent_verifier_comment 5364299430 PASS).",
+  "command": "RECORD_HISTORICAL_VERIFICATION_PHASE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/evidence/P5-POST-BUILD-CRITIQUE-001.v1.json",
+    "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json"
+  ]
+}

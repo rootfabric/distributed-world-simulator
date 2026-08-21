@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_implementation_evidence.v1",
+  "evidence_id": "P5-IMPLEMENTATION-SLICE-001",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "runtime_head": "f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b",
+  "accepted_p4_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "canonical_main_observed": "2cff3e999a3beb82ffab207fc79b0629f2765007",
+  "implementation": {
+    "canonical_equipment_relation": "EXISTING_M4_ITEM_GRAPH_ITEM_RELATION",
+    "separate_equipment_store_created": false,
+    "equip_commands": ["item.equip", "item.unequip"],
+    "required_mining_tool_definition": "item/tool/mining",
+    "required_equipment_slot": "tool/main",
+    "resource_mining_exact_once_gate": "EXISTING_RESOURCE_MINING_REPLAY_LEDGER"
+  },
+  "project_control": {
+    "run": 32137847594,
+    "result": "SUCCESS",
+    "exact_head": "f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b"
+  },
+  "exact_source_artifact": {
+    "probe_pr": 148,
+    "probe_run": 32138008731,
+    "artifact_id": 9324732940,
+    "artifact_name": "p5-source-f9e5",
+    "artifact_digest": "sha256:523b3b0eecd3829eef2cbc814746af11dc4811e8218328de6d066003e78be56e",
+    "archived_base_sha": "f9e5d4bcaccd677726efb3a65b843b9bd6f78d6b"
+  },
+  "godot_runtime": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "tests": [
+      {
+        "path": "tests/runtime/test_v0_p5_canonical_equipment_relation.gd",
+        "assertions": 31,
+        "failures": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/runtime/test_v0_p5_mining_tool_gate.gd",
+        "assertions": 36,
+        "failures": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/runtime/test_v0_p3_resource_mining_contract.gd",
+        "assertions": 79,
+        "failures": 0,
+        "exit_code": 0
+      }
+    ]
+  },
+  "observed_properties": [
+    "owned canonical mining tool equips without changing item identity",
+    "unowned and invalid-slot equipment commands reject",
+    "one canonical equipment slot cannot acquire a second item",
+    "equip operation replay does not advance canonical revision twice",
+    "equipment relation survives existing Item Graph durable export/restore",
+    "unequip removes only the equipment relation and preserves exactly one inventory reference",
+    "new mining operation without equipped canonical mining tool rejects mutation-free",
+    "missing-tool rejection is replay-stable after later equip",
+    "equipped mining preserves canonical P3 item/ore output and exact-once replay",
+    "historical P3 ResourceMining default behavior remains green"
+  ],
+  "formal_verification_state": "IMPLEMENTATION_EVIDENCE_ONLY_NOT_VERIFIED",
+  "remaining_high_risk_evidence": [
+    "V0_P5_TWO_CLIENT_EQUIPMENT_REPLICATION_PASS",
+    "V0_P5_RECONNECT_EQUIPMENT_RESTORATION_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "recorded_at_utc": "2026-08-18T13:42:00Z"
+}

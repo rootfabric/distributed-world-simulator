@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "intent": "Reconcile the append-only execution ledger of the formally accepted V0_P5_EQUIPMENT_TOOLS checkpoint so harness state building reduces cleanly on canonical main.",
+  "root_cause_or_reason": "Canonical main carried the execution directory without transition table and events while the checkpoint was already accepted by main-owned record V0-P5-R2-CHECKPOINT-ACCEPTED-001; CONTROL_DEVELOPMENT.ps1 failed closed for every consumer.",
+  "changed_surfaces": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/evidence/* (eight genuine documents pinned byte-exactly)",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/reviews/V0-P5-R1-WO-001-P0-RECONCILIATION-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001/* (reconciliation series)",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json (state snapshot only)"
+  ],
+  "canonical_owner": "main",
+  "entry_points": [],
+  "callers": [],
+  "callees": [],
+  "sibling_surfaces_checked": [
+    "config/control/harness/executions/E2026-08-12-H0-1-R8"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "production_diff_summary": "Zero production surfaces touched: control/harness JSON data only (ledger artifacts, snapshot field, review/evidence records); no scripts/, scenes/ or config/architecture paths.",
+  "remaining_risks": [
+    "Stale R8-era scheduler pins keep six pre-existing local pytest failures red on any current main; unchanged by this repair.",
+    "test_current_diff_stays_inside_declared_scope measures branch diff against frozen R8-era allowed_paths and is red on any non-empty control repair branch; vacuous green on empty-diff main only.",
+    "jsonschema pin reverted itself once on this machine; validators re-verify the pin before each run."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Coordinate a main-owned refresh of stale pre-dispatch scheduler fields together with their pins."
+  ],
+  "evidence_gaps": [],
+  "review_verdict": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED"
+}
