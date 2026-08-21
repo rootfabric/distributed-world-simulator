@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R4-WORLD-GRAPH-HARDENING",
+  "revision": "V0-EG0-2026-08-21-R5-CWIP-CONNECT-GATE",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
-    "exact_head": "b62535ea1ed7cf6f687ab5ee91f206cd6eea0a7d",
+    "exact_head": "d83ba3598d8a4cbf3a313633c4e42a85397a3a7f",
     "must_be_canonical_before_acceptance": true
   },
-  "goal": "TOPOLOGY_NEUTRAL_DTOS_AND_WORLD_GRAPH_CONTRACTS_PASS",
+  "goal": "TOPOLOGY_NEUTRAL_DTOS_WORLD_GRAPH_AND_CWIP_CONTRACTS_PASS",
   "protocol_version": 1,
   "schemas": [
     "planet_simulator.client_world_frame.v1",
@@ -21,7 +21,17 @@
     "planet_simulator.world_relation.v1",
     "planet_simulator.gateway_world_graph_snapshot.v1",
     "planet_simulator.client_world_view.v1",
-    "planet_simulator.aggregated_interest_plan.v1"
+    "planet_simulator.aggregated_interest_plan.v1",
+    "planet_simulator.gateway_connect_gate.v1",
+    "planet_simulator.interaction_time.v1",
+    "planet_simulator.reference_frame_evidence.v1",
+    "planet_simulator.cross_world_interaction_intent.v1",
+    "planet_simulator.interaction_domain_segment.v1",
+    "planet_simulator.collision_query.v1",
+    "planet_simulator.collision_proof.v1",
+    "planet_simulator.interaction_resolution.v1",
+    "planet_simulator.effect_commit_request.v1",
+    "planet_simulator.effect_commit_result.v1"
   ],
   "hard_invariants": [
     "TRANSPORT_CONNECTION_ID_NOT_PLAYER_ID",
@@ -43,12 +53,25 @@
     "PROJECTION_POLICY_CANNOT_GRANT_MUTATION_AUTHORITY",
     "PROJECTION_GRANT_NAMESPACE_NOT_AUTHORITY_ID",
     "CLIENT_WORLD_VIEW_NO_SIMULATION_ENDPOINT_OR_PEER_ID",
-    "COMPATIBLE_MULTI_CLIENT_INTEREST_AGGREGATES_BY_SOURCE_AND_LOD"
+    "COMPATIBLE_MULTI_CLIENT_INTEREST_AGGREGATES_BY_SOURCE_AND_LOD",
+    "CONNECT_GATE_FAILS_CLOSED_BEFORE_WORLD_READY",
+    "CONNECT_GATE_NO_SIMULATION_ENDPOINT_OR_CREDENTIAL",
+    "CONNECT_GATE_USES_VERSIONED_AUTH_SESSION_PLACEMENT_DIRECTORY_ROUTE_EVIDENCE",
+    "PROJECTION_HIT_IS_CANDIDATE_NOT_CANONICAL_EFFECT",
+    "ACTION_AUTHORITY_VALIDATES_ACTION",
+    "EACH_WORLD_AUTHORITY_VALIDATES_ONLY_ITS_COLLISION_DOMAIN",
+    "ACTION_AUTHORITY_RESOLVES_FIRST_VALID_COLLISION",
+    "TARGET_EFFECT_AUTHORITY_COMMITS_CANONICAL_EFFECT",
+    "GATEWAY_ROUTES_INTERACTION_BUT_DOES_NOT_RESOLVE_GAMEPLAY_TRUTH",
+    "ONE_INTERACTION_AT_MOST_ONE_CANONICAL_EFFECT_COMMIT",
+    "CROSS_WORLD_INTERACTION_USES_VERSIONED_TIME_AND_REFERENCE_FRAME_EVIDENCE",
+    "STALE_ROUTE_WORLDGRAPH_EPOCH_TIME_OR_TRANSFORM_EVIDENCE_FAILS_CLOSED"
   ],
   "focused_tests": [
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
     "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
-    "res://tests/network/test_eg0_world_graph_contracts.gd"
+    "res://tests/network/test_eg0_world_graph_contracts.gd",
+    "res://tests/network/test_eg0_cwip_connect_gate_contracts.gd"
   ],
   "validation": {
     "previous_exact_head": {
@@ -67,8 +90,8 @@
       "world_graph_assertions": 53,
       "total_assertions": 116
     },
-    "r4_hardening_exact_head_focused_suite": "REQUIRED_BEFORE_REVIEW_OR_ACCEPTANCE"
+    "r5_cwip_connect_gate_exact_head_focused_suite": "REQUIRED_BEFORE_REVIEW_OR_ACCEPTANCE"
   },
-  "next_stage": "EG1_BLOCKED_UNTIL_EG0_EXACT_HEAD_FOCUSED_PASS_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
+  "next_stage": "EG1_BLOCKED_UNTIL_CONTROL_DEPENDENCY_ACCEPTED_EXACT_HEAD_FOCUSED_PASS_REVIEW_AND_VERIFICATION",
   "p6_runtime_authorized": false
 }
