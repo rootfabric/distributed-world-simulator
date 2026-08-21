@@ -1,0 +1,55 @@
+name: ECO E3 Regression Closure
+
+# ECO-R77 amendment A4: reruns every accepted EVO3 stage closure.
+# Intentionally workflow_dispatch-only until the Director enables automatic
+# triggers after a first successful manual CI run; see
+# docs/plans/ECO_EVO3_ROADMAP_AMENDMENTS_R77_RU.md (A4).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-e3-regression-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  regression:
+    name: all accepted EVO3 stage closures
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout exact dispatch HEAD
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record exact checkout head
+        shell: bash
+        run: echo "exact_head=$(git rev-parse HEAD)"
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install validation dependency
+        run: python -m pip install --disable-pip-version-check jsonschema==4.26.0
+
+      - name: Run all accepted stage closures
+        shell: bash
+        run: |
+          set -o pipefail
+          python RUN_ECO_EVO3_REGRESSION_CLOSURE.py | tee e3_regression_runner.log
+
+      - name: Upload regression runner evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-e3-regression-runner-evidence
+          path: e3_regression_runner.log
+          if-no-files-found: error
+          retention-days: 30
