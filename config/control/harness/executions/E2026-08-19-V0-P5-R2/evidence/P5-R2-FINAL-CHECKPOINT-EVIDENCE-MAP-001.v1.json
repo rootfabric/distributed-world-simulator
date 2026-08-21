@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "intent": "Final P5 checkpoint-time Evidence Map after V001 M5 convergence repair, V002 M7 recovery repair, fresh independent Reviewer/Verifier PASS, guarded product integration, post-integration PC0 and one fresh continuous runtime campaign.",
+  "root_cause_or_reason": "P5 product semantics were implemented on the R2 line; independent verification exposed two bounded closure races (M5 convergence release and M7 recovery seed readiness). Both were repaired fail-closed without architecture ownership change. Final integration adds only closure-control JSON after the exact reviewed/verified runtime subject.",
+  "changed_surfaces": [
+    "P5 equipment/tool relation and mining prerequisites from parent R2",
+    "M5 convergence prepared/release coordination repair",
+    "M7 scheduler-independent recovery seed readiness repair",
+    "append-only Harness closure evidence"
+  ],
+  "canonical_owner": "Existing V0/M4 Item Graph, M5 networked gameplay and P5 equipment/mining owners remain canonical; no second authority truth introduced.",
+  "entry_points": [
+    "P5 canonical equipment relation",
+    "P5 mining tool gate",
+    "M5 graphical multiplayer acceptance",
+    "M7 playable recovery",
+    "full world/core regression"
+  ],
+  "callers": [
+    "V0 product carrier PR #145",
+    "real ENet graphical/process tests",
+    "P4/P5 regression overlays"
+  ],
+  "callees": [
+    "canonical M4 Item Graph",
+    "existing equipment relation service",
+    "resource mining authority",
+    "M5 convergence barrier",
+    "M7 recovery client/runtime"
+  ],
+  "sibling_surfaces_checked": [
+    "P1 67/67",
+    "strict P2 41/41",
+    "P4 publication 60/60",
+    "P3 43/43",
+    "P5 focused 14/14",
+    "M7 63/63",
+    "M5 bounded 5/5 x99",
+    "M7 recovery bounded 5/5 x36",
+    "continuous 239/239",
+    "main_scene_cli_all"
+  ],
+  "canonical_truth_changed": true,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Exact final runtime subject is 543455. Product integration head 5dcdddc is a descendant whose only changes relative to 543455 are four closure-control JSON files. Post-integration runtime therefore exercised the same runtime/test bytes and passed 239/239 plus main scene.",
+  "remaining_risks": [
+    "P6 is not activated by P5 acceptance; successor activation remains a separate main-owned control step.",
+    "Project-wide health remains YELLOW/NON_RED and must not be relabeled GREEN."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "After canonical P5 acceptance, prepare P6 activation from the exact accepted P5 product lineage in a separate control step."
+  ],
+  "evidence_gaps": [],
+  "review_verdict": "PASS"
+}
