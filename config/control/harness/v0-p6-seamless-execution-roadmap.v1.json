@@ -1,12 +1,13 @@
 {
   "schema": "distributed_world_simulator.v0_p6_seamless_execution_roadmap.v1",
-  "revision": "V0-P6-SEAMLESS-2026-08-21-R1",
+  "revision": "V0-P6-SEAMLESS-2026-08-21-R2-STABLE-GATEWAY",
   "canonical_owner": "main",
-  "status": "CONTROL_CANDIDATE_PRIMARY_WORK_MAP",
-  "authored_against_main": "4057b4e5daf1842de412e78838e876225674e859",
+  "status": "CONTROL_CANDIDATE_PRIMARY_WORK_MAP_R2",
+  "authored_against_main": "1d9de3c479c60045d613660b2a5c5db0374963f8",
   "accepted_p5_product_lineage": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
   "p6_runtime_branch": "feature/v0-p6-persistent-shared-outpost",
   "human_plan": "docs/plans/V0_P6_SEAMLESS_EXECUTION_ROADMAP_RU.md",
+  "normative_gateway_overlay": "docs/plans/V0_P6_SEAMLESS_EXECUTION_ROADMAP_R2_GATEWAY_OVERLAY_RU.md",
   "control_effect": {
     "p6_runtime_mutation_authorized": false,
     "production_sm1_activated": false,
@@ -14,6 +15,18 @@
     "p7_auto_dispatch_allowed": false
   },
   "campaign_goal": "PERSISTENT_SHARED_OUTPOST_PLUS_SEAMLESS_READY_GAMEPLAY_FOUNDATION",
+  "gateway_strategy": {
+    "target": "STABLE_CLIENT_GAMEPLAY_INGRESS_WITH_BACKEND_AUTHORITY_PIVOT",
+    "canonical_gameplay_path": "CLIENT_TO_STABLE_GATEWAY_TO_ACTIVE_AUTHORITY",
+    "direct_projection_path_allowed": true,
+    "projection_path": "AUTHORIZED_READ_ONLY_SOURCE_DIRECT_TO_CLIENT_WHERE_USEFUL",
+    "gateway_is_ownership_oracle": false,
+    "gateway_can_authorize_mutation_by_itself": false,
+    "gateway_can_own_canonical_gameplay_state": false,
+    "client_gameplay_endpoint_changes_on_normal_authority_pivot": false,
+    "client_gameplay_reconnect_required_on_normal_authority_pivot": false,
+    "directory_authority_remains_ownership_truth": true
+  },
   "campaign_structure": {
     "product_train": "P6",
     "parallel_research_train": "SEAMLESS_RESEARCH",
@@ -27,11 +40,11 @@
     {"id":"P6.3","name":"OPERATION_CONTINUITY_AND_IDEMPOTENCY","visual_gate":"REQUIRED","exit":"ZERO_DUPLICATE_CANONICAL_COMMITS"},
     {"id":"P6.4","name":"SEAM_READY_MUTATION_ADMISSION_BOUNDARY","visual_gate":"REQUIRED","exit":"MUTATION_ADMISSION_ADAPTER_PRESENT_NO_SECOND_ORACLE"},
     {"id":"P6.5","name":"AUTHORITY_DOMAIN_READY_CLOSURE_ADAPTER","visual_gate":"REQUIRED","exit":"DETERMINISTIC_PLAYER_DOMAIN_TRANSFER_CANDIDATE"},
-    {"id":"P6.6","name":"GATEWAY_READY_COMMAND_SESSION_ROUTING","visual_gate":"REQUIRED","exit":"GAMEPLAY_SEMANTICS_TOPOLOGY_INDEPENDENT"},
+    {"id":"P6.6","name":"GATEWAY_READY_COMMAND_SESSION_ROUTING","r2_semantics":"STABLE_INGRESS_COMPATIBLE_GAMEPLAY_SURFACE","visual_gate":"REQUIRED","exit":"STABLE_INGRESS_COMPATIBLE_GAMEPLAY_SURFACE"},
     {"id":"P6.7","name":"PERSISTENT_SHARED_OUTPOST","visual_gate":"MANDATORY_GRAPHICAL","exit":"TWO_CLIENT_SHARED_OUTPOST_STATE"},
     {"id":"P6.8","name":"SERVER_RESTART_AND_RECOVERY","visual_gate":"MANDATORY_GRAPHICAL","exit":"SERVER_RESTART_RECONSTRUCTS_CANONICAL_OUTPOST"},
-    {"id":"P6.9","name":"WARM_SHADOW_AUTHORITY_COMPATIBILITY","visual_gate":"MANDATORY_SEAM_READINESS","exit":"SHADOW_HASH_MATCH_AND_ZERO_SHADOW_WRITES"},
-    {"id":"P6.10","name":"FAULT_AND_RACE_MATRIX","visual_gate":"SELECTIVE_MANDATORY","exit":"GLOBAL_SAFETY_INVARIANTS_PASS"},
+    {"id":"P6.9","name":"WARM_SHADOW_AUTHORITY_COMPATIBILITY","r2_semantics":"GATEWAY_ORIENTED_ACTIVE_WARM_MODEL_WITHOUT_PRODUCTION_PIVOT","visual_gate":"MANDATORY_SEAM_READINESS","exit":"SHADOW_HASH_MATCH_AND_ZERO_SHADOW_WRITES"},
+    {"id":"P6.10","name":"FAULT_AND_RACE_MATRIX","r2_additions":["STALE_GATEWAY_ROUTE_REVISION","DUPLICATE_FORWARDED_COMMAND","DELAYED_OLD_AUTHORITY_RESPONSE_MODEL","FORGED_GATEWAY_MUTATION_AUTHORITY","DIRECT_PROJECTION_WRITE_INJECTION"],"visual_gate":"SELECTIVE_MANDATORY","exit":"GLOBAL_SAFETY_INVARIANTS_PASS"},
     {"id":"P6.11","name":"E2E_REPEAT_SOAK_AND_CLOSURE","visual_gate":"MANDATORY_FINAL","exit":"P6_CHECKPOINT_PROPOSABLE"}
   ],
   "p6_visual_minimum": {
@@ -47,21 +60,34 @@
     {"id":"SR0","source":"I2.6","name":"CLOSE_INTEGRATED_ONE_WRITER_PROOF","visual_gate":"NO","required_for_convergence":true},
     {"id":"SR1","source":"I3","name":"GENERIC_AUTHORITY_DOMAIN_TRANSFER","visual_gate":"OPTIONAL_RESEARCH_VISUALIZATION","required_for_convergence":true},
     {"id":"SR2","source":"I4","name":"PLAYER_CARRYING_DOMAIN","visual_gate":"REQUIRED_RESEARCH_DEMO","required_for_convergence":true},
-    {"id":"SR3","source":"I5A","name":"EDGE_GATEWAY_TRANSPARENCY","visual_gate":"REQUIRED_RESEARCH_DEMO","required_for_convergence":true},
-    {"id":"SR4","source":"I5B","name":"ACTIVE_WARM_ROUTING_PROTOTYPE","visual_gate":"REQUIRED_RESEARCH_DEMO","required_for_convergence":false},
+    {"id":"SR3","source":"I5A","name":"STABLE_EDGE_GATEWAY_MVP","visual_gate":"REQUIRED_RESEARCH_DEMO","required_for_convergence":true},
+    {"id":"SR4","source":"I5B","name":"STABLE_INGRESS_ACTIVE_WARM_BACKEND_PIVOT","visual_gate":"REQUIRED_RESEARCH_DEMO","required_for_convergence":true,"allow_concrete_reviewed_blocker":true},
     {"id":"SR5","source":"I8","name":"PRODUCTION_PORT_MAP","visual_gate":"NO","required_for_convergence":true},
     {"id":"SR6","source":"NX_SM1","name":"NETWORK_OWNERSHIP_AUDIT","visual_gate":"OPTIONAL","required_for_convergence":true},
-    {"id":"SR7","source":"MRPF","name":"BOUNDED_PROJECTION_DONOR_ALIGNMENT","visual_gate":"OPTIONAL","required_for_convergence":false}
+    {"id":"SR7","source":"MRPF","name":"GATEWAY_PROJECTION_SPLIT_ALIGNMENT","visual_gate":"OPTIONAL","required_for_convergence":false}
   ],
+  "gateway_research_contract": {
+    "sr3_required_topology": "CLIENT_TO_GATEWAY_PROCESS_TO_AUTHORITY_A_PROCESS",
+    "sr3_direct_vs_gateway_canonical_equivalence": true,
+    "sr3_gateway_canonical_writes": 0,
+    "sr3_gateway_ownership_decisions": 0,
+    "sr4_client_gameplay_connection_stable_across_pivot": true,
+    "sr4_client_gameplay_endpoint_stable_across_pivot": true,
+    "sr4_backend_roles": ["ACTIVE","WARM","DRAIN"],
+    "sr4_directory_commit_precedes_target_activation": true,
+    "sr4_stale_old_authority_traffic_fenced": true,
+    "sr4_operation_id_continuous_across_pivot": true
+  },
   "convergence_pairs": [
     ["P6_TOPOLOGY_NEUTRAL_IDENTITY","SEAMLESS_IDENTITY_FENCING"],
     ["P6_OPERATION_ID_CONTINUITY","SEAMLESS_TRANSFER_REPLAY"],
     ["P6_MUTATION_ADMISSION","DIRECTORY_BACKED_AUTHORIZATION"],
     ["P6_PLAYER_DOMAIN_CLOSURE","I4_PLAYER_CARRYING_DOMAIN"],
-    ["P6_ROUTE_SESSION_ABSTRACTION","I5_EDGE_GATEWAY"],
-    ["P6_WARM_SHADOW","I3_I5_WARM_SEMANTICS"],
+    ["P6_STABLE_INGRESS_COMPATIBLE_ROUTE_SESSION","I5A_STABLE_EDGE_GATEWAY"],
+    ["P6_WARM_SHADOW","I5B_STABLE_INGRESS_ACTIVE_WARM_PIVOT"],
     ["P6_ITEM_GRAPH","I4_INHERITED_CARRIED_DESCENDANTS"],
-    ["P6_NX_BOUNDARY","SM1_OWNERSHIP_MIGRATION"]
+    ["P6_NX_BOUNDARY","SM1_OWNERSHIP_MIGRATION"],
+    ["P6_PROJECTION_READ_ONLY_BOUNDARY","MRPF_GATEWAY_PROJECTION_SPLIT"]
   ],
   "hard_invariants": [
     "ONE_CANONICAL_ITEM_GRAPH",
@@ -70,10 +96,15 @@
     "NO_PRIVATE_V0_NETWORK_FOUNDATION",
     "NO_RESEARCH_BRANCH_AS_PRODUCTION_BASE",
     "NO_GATEWAY_OWNERSHIP_AUTHORITY",
+    "NO_GATEWAY_CANONICAL_GAMEPLAY_TRUTH",
     "PROJECTION_READ_ONLY",
+    "PROJECTION_GRANT_IS_NOT_MUTATION_AUTHORITY",
     "STABLE_LOGICAL_PLAYER_ID",
     "STABLE_PLAYER_ENTITY_ID",
-    "NO_NORMAL_SEAMLESS_RESPAWN_OR_RECONNECT",
+    "STABLE_CLIENT_GAMEPLAY_ENDPOINT_ACROSS_NORMAL_AUTHORITY_PIVOT",
+    "NO_NORMAL_SEAMLESS_RESPAWN_OR_GAMEPLAY_RECONNECT",
+    "OPERATION_ID_END_TO_END_STABLE_THROUGH_GATEWAY",
+    "STALE_GATEWAY_ROUTE_REVISION_FAILS_CLOSED",
     "STALE_OR_READ_ONLY_AUTHORITY_FAILS_CLOSED"
   ],
   "p6_acceptance_readiness": [
@@ -84,7 +115,7 @@
     "OPERATION_CONTINUITY_PASS",
     "SEAM_READY_MUTATION_ADMISSION_PASS",
     "PLAYER_DOMAIN_CLOSURE_ADAPTER_PASS",
-    "GATEWAY_READY_ROUTE_SESSION_PASS",
+    "STABLE_INGRESS_COMPATIBLE_ROUTE_SESSION_PASS",
     "WARM_SHADOW_READ_ONLY_COMPATIBILITY_PASS",
     "FIVE_CLEAN_END_TO_END_REPEATS",
     "THIRTY_MINUTE_TWO_CLIENT_SOAK",
@@ -92,8 +123,11 @@
     "SR0_I2_6_REVIEWED_BOUNDARY",
     "SR1_I3_REVIEWED_DONOR_OR_CONCRETE_BLOCKER",
     "SR2_I4_TARGET_COMPLETE_UNLESS_CONCRETE_BLOCKER",
+    "SR3_I5A_STABLE_EDGE_GATEWAY_MVP_REVIEWED_DONOR",
+    "SR4_I5B_STABLE_INGRESS_PIVOT_REVIEWED_DONOR_OR_CONCRETE_BLOCKER",
     "SR5_I8_CURRENT_PORT_MAP",
     "SR6_NX_SM1_OWNERSHIP_AUDIT_CURRENT",
+    "MRPF_GATEWAY_PROJECTION_SPLIT_COMPATIBLE_OR_EXPLICITLY_DEFERRED",
     "NO_UNRESOLVED_SEMANTIC_CONFLICT_BLOCKING_SM1",
     "FRESH_INDEPENDENT_REVIEW_AND_VERIFICATION"
   ],
@@ -102,6 +136,17 @@
     "preferred_decision": "ACTIVATE_V0_SM1",
     "production_branch": "feature/v0-sm1-seamless-product-integration",
     "production_base": "EXACT_ACCEPTED_P6_PRODUCT_LINEAGE",
+    "production_gateway_milestones": {
+      "SM1-H3": "PRODUCTION_STABLE_EDGE_GATEWAY",
+      "SM1-H4": "ACTIVE_WARM_DRAIN_BACKEND_ROUTING_THROUGH_GATEWAY",
+      "SM1-H5": "GATEWAY_MEDIATED_PLAYER_AUTHORITY_DOMAIN_A_B_HANDOFF",
+      "SM1-H7": "GATEWAY_INSTANCE_FAILURE_REHOME_SESSION_RESUME",
+      "SM1-H8": "MRPF_PROJECTION_AOI_HYBRID_INTEGRATION"
+    },
     "dynamic_split_merge_before_static_sm1_acceptance": false
-  }
+  },
+  "stale_open_control_candidates_after_r2_acceptance": [
+    {"pr":182,"reason":"P6_PREACTIVATION_AUTHORED_AGAINST_R1_MUST_REFRESH_OR_REBASE"},
+    {"pr":184,"reason":"P6_1_OWNERSHIP_MAP_STACKED_ON_R1_PREACTIVATION_MUST_REFRESH_OR_REBASE"}
+  ]
 }
