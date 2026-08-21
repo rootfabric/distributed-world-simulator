@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import inspect
 import json
 import pathlib
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
@@ -29,18 +31,53 @@ class TestE37AuthorityBoundary(unittest.TestCase):
         raw = dict(self.inputs.raw)
         value = json.loads(raw[name].decode("utf-8"))
         value["__e37_drift__"] = True
-        raw[name] = self.mod.serialized_bytes(value)
+        raw[name] = self.mod.canonical_bytes(value) + b"\n"
         with self.assertRaises(ValueError):
             self.mod._verified_inputs_from_raw(raw)
+
+    def _plain_program_variants(self):
+        exact = self.mod.serialize_planet_ecology_program(self.program)
+        plain = json.loads(exact.decode("utf-8"))
+        forged = copy.deepcopy(plain)
+        forged["authority"] = "PRODUCTION_AUTHORITATIVE"
+        forged["planet_ecology_program_hash"] = self.mod.object_hash(forged, "planet_ecology_program_hash")
+        mutated = copy.deepcopy(plain)
+        mutated["projection"]["active_basis_count"] += 1
+        mutated["planet_ecology_program_hash"] = self.mod.object_hash(mutated, "planet_ecology_program_hash")
+        return plain, forged, mutated
 
     def test_15_plain_dict_cannot_build(self):
         with self.assertRaises(ValueError):
             self.mod.build_planet_ecology_program(dict(self.inputs.values))
 
     def test_16_plain_reconstructed_json_cannot_serialize(self):
-        plain = json.loads(self.mod.serialize_planet_ecology_program(self.program).decode("utf-8"))
+        plain = self._plain_program_variants()[0]
         with self.assertRaises(ValueError):
             self.mod.serialize_planet_ecology_program(plain)
+
+    def test_16a_generic_exact_final_byte_helper_absent(self):
+        self.assertFalse(hasattr(self.mod, "serialized_bytes"))
+
+    def test_16b_all_public_program_finalization_surfaces_reject_plain_and_forged_dicts(self):
+        surfaces = sorted(
+            name
+            for name, value in vars(self.mod).items()
+            if inspect.isfunction(value)
+            and value.__module__ == self.mod.__name__
+            and not name.startswith("_")
+            and any(token in name.lower() for token in ("serial", "final", "write"))
+        )
+        self.assertEqual(surfaces, ["serialize_planet_ecology_program", "write_planet_ecology_program"])
+        for variant in self._plain_program_variants():
+            with self.subTest(surface="serialize_planet_ecology_program", authority=variant.get("authority")):
+                with self.assertRaises(ValueError):
+                    self.mod.serialize_planet_ecology_program(variant)
+            with tempfile.TemporaryDirectory() as td:
+                output = pathlib.Path(td) / "unauthorized.json"
+                with self.subTest(surface="write_planet_ecology_program", authority=variant.get("authority")):
+                    with self.assertRaises(ValueError):
+                        self.mod.write_planet_ecology_program(variant, output)
+                    self.assertFalse(output.exists())
 
     def test_17_mutated_verified_program_rejected(self):
         mutated = self.mod._VerifiedPlanetEcologyProgram(dict(self.program), self.inputs)
