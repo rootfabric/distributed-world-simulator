@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R76-2026-08-21",
+  "revision": "ECO-R77-2026-08-21",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_7_ACCEPTED_E3_8_AUTHORIZED_NOT_STARTED",
+  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_BLOCKED_PENDING_AUTHORIZATION",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -13,8 +13,8 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO3/E3.8",
-  "current_step": "Cross-Planet Generalization Matrix authorized / not started",
-  "last_accepted_step": "ECO.EVO3/E3.7 Deterministic Planet Compilation",
+  "current_step": "Planetary Ecology Compiler Challenge blocked pending separate authorization",
+  "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "execution_modes": [
     "INCUBATE_FAST",
@@ -39,7 +39,8 @@
     "ECO.EVO3/E3.4 CAUSAL COLONIZATION PROGRAM COMPILER ACCEPTED",
     "ECO.EVO3/E3.5 MULTI-SCALE POPULATION WORKSET COMPILER ACCEPTED",
     "ECO.EVO3/E3.6 SEASONAL & DISTURBANCE TEMPORAL PROGRAM ACCEPTED",
-    "ECO.EVO3/E3.7 DETERMINISTIC PLANET COMPILATION ACCEPTED"
+    "ECO.EVO3/E3.7 DETERMINISTIC PLANET COMPILATION ACCEPTED",
+    "ECO.EVO3/E3.8 CROSS-PLANET GENERALIZATION MATRIX ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -195,7 +196,27 @@
     "e3_7_project_control_run_id": 32481702988,
     "e3_7_project_control_run_number": 1122,
     "e3_7_closure_run_id": 32481702894,
-    "e3_7_closure_run_number": 10
+    "e3_7_closure_run_number": 10,
+    "e3_8_authorization_comment_id": 5371006859,
+    "e3_8_reviewed_verified_head": "7a6bb752d17c4fb3a8db992d492a88eaa2315c11",
+    "e3_8_merge_head": "847ea24b7e010e6db2d8221ed7c2706083edc6c4",
+    "e3_8_artifact_git_blob": "28edbe05d89daa219105fcddff20d5edaf6dd57f",
+    "e3_8_artifact_sha256": "44de8474647483a6b18b6e5d88202358857f3b2b09171ae302b1c8497ea5b79c",
+    "e3_8_provenance_hash": "3ede4a18fb0fa8b8895813452fe6ae4f62e633f6d7ea9188ab49ec18f6fd76be",
+    "e3_8_matrix_hash": "707ee5bc4235ef2fcef917b8fcc825455440f7d1fa6511f5802a9a480479404e",
+    "e3_8_tests": 26,
+    "e3_8_closure_predicates": 18,
+    "e3_8_generated_matrix": "validation/ecology/eco-evo3-e3-8-cross-planet-generalization-matrix.generated.json",
+    "e3_8_acceptance_checkpoint": "docs/checkpoints/2026-08-21_ECO_EVO3_E3_8_ACCEPTED_RU.md",
+    "e3_8_independent_review_verdict": "PASS",
+    "e3_8_review_comment_id": 5371446287,
+    "e3_8_verifier_verdict": "PASS",
+    "e3_8_verifier_comment_id": 5371650661,
+    "e3_8_director_comment_id": 5371658138,
+    "e3_8_project_control_run_id": 32492640816,
+    "e3_8_project_control_run_number": 1127,
+    "e3_8_closure_run_id": 32492640806,
+    "e3_8_closure_run_number": 2
   },
   "production_integration_boundary": {
     "status": "SEPARATE_MAIN_OWNED_PRODUCT_TRAIN",
@@ -221,7 +242,7 @@
   },
   "EVO3": {
     "name": "Planetary Ecology Compiler / broader planetary generalization",
-    "status": "ACTIVE_E3_8_AUTHORIZED_NOT_STARTED",
+    "status": "ACTIVE_E3_8_ACCEPTED_E3_FINAL_BLOCKED_PENDING_AUTHORIZATION",
     "production_runtime_authorized": false,
     "xfer1_required_before_production_binding": true,
     "architecture": "config/ecology/eco-evo3-planetary-ecology-compiler.v1.json",
@@ -270,7 +291,7 @@
       {
         "id": "E3.8",
         "name": "Cross-Planet Generalization Matrix",
-        "status": "AUTHORIZED_NOT_STARTED"
+        "status": "ACCEPTED"
       },
       {
         "id": "E3.FINAL",
