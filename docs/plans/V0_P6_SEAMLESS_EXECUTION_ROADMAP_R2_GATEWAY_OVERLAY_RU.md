@@ -1,4 +1,4 @@
-# V0 P6 + Seamless — R2 Stable Gateway / Proxy Overlay
+# V0 P6 + Seamless — R2 Edge Gateway Fabric Overlay
 
 Статус: **CONTROL CANDIDATE / NORMATIVE OVERLAY OVER R1 / NO RUNTIME AUTHORITY**
 
@@ -10,161 +10,183 @@ Accepted P5 product lineage / declared P6 execution base:
 
 `491ca7d058690d3de5fcea5e41aaee230a31b3ab`
 
-Base detailed roadmap retained:
+Base detailed roadmap:
 
 `docs/plans/V0_P6_SEAMLESS_EXECUTION_ROADMAP_RU.md`
 
-Machine companion:
+Normative network specification:
 
-`config/control/harness/v0-p6-seamless-execution-roadmap.v1.json`
+`docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md`
 
-This R2 overlay does not authorize P6 runtime mutation, does not rotate the V0 mutation lease, does not activate production SM1, and does not make Seamless Research or MRPF a production base.
+Executable research/test plan:
+
+`docs/network/EDGE_GATEWAY_TEST_IMPLEMENTATION_PLAN_RU.md`
+
+Machine companions:
+
+- `config/control/harness/v0-p6-seamless-execution-roadmap.v1.json`
+- `config/control/harness/v0-edge-gateway-fabric-test-plan.v1.json`
+
+This R2 overlay does not authorize P6 runtime mutation, does not rotate the V0 mutation lease, does not activate production SM1, and does not make Seamless Research or Edge Gateway lab ancestry a product base.
 
 ---
 
-## 1. Why R2 exists
+## 1. R2 architectural decision
 
-R1 correctly introduced:
+R1 correctly introduced topology-neutral identity, OperationId continuity, seam-ready mutation admission, PlayerAuthorityDomain-ready closure, Gateway-ready routing and WARM/SHADOW compatibility.
 
-- topology-neutral identities;
-- OperationId continuity;
-- seam-ready mutation admission;
-- PlayerAuthorityDomain-ready closure;
-- gateway-ready command/session routing;
-- WARM/SHADOW compatibility;
-- parallel I5A Edge Gateway and I5B ACTIVE/WARM research;
-- post-P6 production SM1.
-
-However, R1 leaves one important ambiguity: `Gateway` can still be interpreted as only an adapter or discovery/router abstraction while the gameplay client physically reconnects to each simulation authority.
-
-R2 removes that ambiguity.
-
-The target product architecture is a **stable gameplay ingress**:
+R2 fixes the remaining ambiguity and defines the product network shape:
 
 ```text
-Game Client
-    |
-    | stable gameplay transport/session
-    v
-World / Edge Gateway
-    |
-    +----> ACTIVE Authority A
-    |
-    +----> WARM Authority B
-    |
-    +----> later ACTIVE Authority B after committed handoff
-
-Ownership truth: Directory / AUTHORITY foundation
-Canonical gameplay truth: existing domain owners
-Gateway canonical writes: ZERO
-Gateway ownership decisions: ZERO
+PLAYER CONNECTS TO THE WORLD, NOT TO A SIMULATION SERVER.
 ```
 
-For normal A -> B authority crossing the client gameplay endpoint/session MUST remain stable. Backend routing changes behind the Gateway.
-
-This is aligned with the recent seamless-network architecture analysis and with the useful proxy pattern identified while comparing multi-server networking approaches: topology changes should normally be hidden behind a stable client ingress rather than exposed as physical gameplay-server reconnects.
-
----
-
-## 2. R2 target network split
-
-R2 deliberately separates **canonical gameplay transport** from **read-only projection transport**.
-
-### 2.1 Canonical gameplay path
-
-Preferred production path:
+Normal V0 client topology:
 
 ```text
 Client
-  -> stable Gateway session
-  -> current ACTIVE authority
-  -> canonical domain owners
+  |
+  | exactly one normal world transport
+  v
+Edge Gateway
+  |
+  +---- shared/multiplexed links ----> Authority A ACTIVE
+  |
+  +---- shared/multiplexed links ----> Authority B WARM/PROJECTION
+  |
+  +---- shared/multiplexed links ----> Macro/other projection source
 ```
 
-Gameplay path includes at minimum:
+The client does not open simulation-server connections and does not receive simulation-server endpoints for normal world routing.
 
-- movement/input commands;
-- authoritative gameplay RPC/commands;
-- inventory/container operations;
-- equipment/tool operations;
-- mining;
-- Construction operations;
-- OperationId continuity;
-- reconnect/resume metadata;
-- authority-route changes.
-
-The client must not need to know or switch its public gameplay endpoint when authority changes A -> B.
-
-### 2.2 Projection path
-
-MRPF direct source projections remain allowed and preferred where they reduce relay cost:
+For normal A -> B authority crossing:
 
 ```text
-ProjectionPublisher A -------> Client
-Earth/Macro Publisher -------> Client
-Moon/Celestial Publisher ----> Client
-```
-
-These routes are:
-
-- read-only;
-- grant-controlled;
-- presentation-only;
-- independently fenced by source epoch/sequence/revision;
-- incapable of canonical mutation.
-
-Therefore R2 is a hybrid:
-
-```text
-canonical gameplay = stable Gateway ingress
-read-only projection = direct source -> Client where useful
-```
-
-The Gateway is not required to relay all visual/projection traffic.
-
----
-
-## 3. Gateway responsibility boundary
-
-The production Gateway may own:
-
-- public ingress endpoint;
-- transport termination where selected by NX;
-- logical gameplay session attachment;
-- authentication/session handoff integration with IAM;
-- backend route table/cache;
-- forwarding of client commands and authoritative responses;
-- route revision fencing;
-- connection health/backpressure instrumentation;
-- stable client-facing session during backend authority pivot.
-
-The Gateway MUST NOT own:
-
-- PlayerId or PlayerEntityId canonical identity;
-- Item Graph truth;
-- inventory/equipment truth;
-- Construction truth;
-- persistence truth;
-- OperationId dedup truth;
-- authority ownership truth;
-- authority epoch assignment;
-- Directory linearization;
-- cross-authority transaction coordination;
-- gameplay mutation authorization by itself.
-
-Hard rule:
-
-```text
-GATEWAY ROUTES
-DIRECTORY / AUTHORITY DECIDES OWNERSHIP
-DOMAIN OWNERS DECIDE CANONICAL MUTATION
+client transport remains stable
+Gateway backend route changes
 ```
 
 ---
 
-## 4. Identity and routing model
+## 2. Multi-Gateway edge fabric
 
-R2 strengthens P6.2/P6.6 identity separation:
+Production target contains many geographically distributed Gateway POPs and multiple Gateway instances per POP.
+
+Client initially reaches the best healthy Edge Gateway by network quality, not by simple geographic distance.
+
+Production discovery may use Anycast, latency-aware DNS, a managed global accelerator, or a custom Edge Locator. Vendor choice is not part of gameplay/domain contract.
+
+The V0 lab uses a deterministic `EdgeLocator + bounded RTT/loss probe` model.
+
+Hard distinction:
+
+```text
+SIMULATION HANDOFF:
+    same Gateway
+    backend authority A -> B
+
+EDGE REHOME:
+    Gateway G1 -> G2
+    rare recovery/network event
+```
+
+Routine movement across world/server boundaries MUST NOT rehome the client to another Gateway.
+
+---
+
+## 3. One client-facing connection includes projections
+
+The previous R2 draft allowed direct `ProjectionPublisher -> Client` sockets. That is no longer the V0 baseline.
+
+New baseline:
+
+```text
+canonical gameplay:   Client -> Gateway -> ACTIVE authority
+read-only projection: Projection source -> Gateway -> Client
+```
+
+Therefore:
+
+```text
+client_active_world_transports == 1
+```
+
+for normal gameplay, including neighboring-world projection fan-in.
+
+Direct projection transports may be researched only later as a separate optimization after the single-connection Gateway path is accepted. They are not required and are not allowed to weaken V0 acceptance.
+
+Projection remains read-only and cannot authorize mutation.
+
+---
+
+## 4. Shared Gateway -> Server links
+
+Gateway MUST NOT create one backend transport per player as the default architecture.
+
+Introduce:
+
+```text
+GatewayServerLinkPool
+```
+
+Conceptually:
+
+```text
+Gateway G1
+  |
+  +-- LinkPool -> Sim A
+  |      physical tunnel 1: Player sessions 1..N
+  |      physical tunnel 2: Player sessions ...
+  |
+  +-- LinkPool -> Sim B
+         physical tunnel 1: Player sessions ...
+```
+
+MVP hard proof:
+
+```text
+2+ clients
+1 Gateway
+1 physical Gateway->Sim A backend link
+multiple logical player sessions multiplexed over it
+```
+
+Production uses `1..K` tunnels per GatewayInstance/ServerInstance, not one unbounded global tunnel. Pool size is transport tuning.
+
+Required safety:
+
+- per-session bounded queues;
+- per-link bounded queues;
+- traffic priorities;
+- fair scheduling;
+- stale unreliable drop policy;
+- reliable-operation backpressure;
+- no cross-session packet/state leakage;
+- one slow/flooding client cannot starve another.
+
+---
+
+## 5. Auth / session / placement
+
+Target connect sequence:
+
+```text
+Client
+  -> discover nearest healthy Gateway
+  -> connect Gateway
+  -> authenticate
+  -> create/resume logical ClientSession
+  -> resolve player/world placement
+  -> Directory/AUTHORITY current owner lookup
+  -> Gateway ensures shared backend link
+  -> attach logical player session
+  -> Authority reconstructs/loads player domain
+  -> WorldReady through same Gateway connection
+```
+
+Client never needs the selected simulation server address.
+
+Identity separation remains mandatory:
 
 ```text
 TransportConnectionId != GatewaySessionId
@@ -176,276 +198,241 @@ ServerInstanceId       != AuthorityId
 RouteRevision          != AuthorityEpoch
 ```
 
-A route binding is conceptually:
+---
+
+## 6. Gateway responsibility boundary
+
+Gateway may own:
+
+- public ingress endpoint;
+- client transport termination;
+- logical Gateway session attachment;
+- auth/session integration;
+- ephemeral route cache;
+- shared backend link pools;
+- multiplex/demultiplex;
+- projection aggregation;
+- route revision fencing;
+- per-session queues/backpressure;
+- network metrics;
+- stable client-facing session while backend authority changes.
+
+Gateway MUST NOT own:
+
+- PlayerId/PlayerEntityId truth;
+- Item Graph;
+- Inventory/Equipment truth;
+- Construction truth;
+- Persistence truth;
+- OperationId dedup truth;
+- Authority ownership truth;
+- AuthorityEpoch assignment;
+- Directory linearization;
+- cross-authority transaction commit;
+- mutation authorization merely from Gateway/session/route identity.
+
+Hard rule:
 
 ```text
-GameplayRouteBinding {
-    gateway_session_id
-    player_entity_id
-    active_authority_id
-    active_server_instance_id
-    observed_authority_epoch
-    route_revision
-    route_role
-}
+GATEWAY ROUTES
+DIRECTORY / AUTHORITY DECIDES OWNERSHIP
+DOMAIN OWNERS DECIDE CANONICAL MUTATION
 ```
-
-The binding is routing metadata, not ownership truth.
-
-Gateway may consume Directory/AUTHORITY evidence but cannot synthesize a newer authority epoch or promote a target based only on local routing state.
 
 ---
 
-## 5. Normal A -> B handoff data path
+## 7. P6 product changes relative to R1
 
-Target behavior:
-
-```text
-before:
-    Client <-> Gateway = STABLE
-    Gateway -> A = ACTIVE
-    Gateway -> B = optional PROJECTION/WARM backend path
-
-prepare:
-    B reconstructs PlayerAuthorityDomain
-    B = WARM / canonical writes forbidden
-    A remains ACTIVE
-
-commit:
-    Directory/AUTHORITY linearization commits A -> B
-    authority_epoch advances
-
-pivot:
-    Gateway route_revision advances
-    A = DRAIN/READ_ONLY
-    B = ACTIVE
-    Client <-> Gateway transport/session unchanged
-
-settled:
-    late A traffic is fenced
-    B handles new canonical gameplay commands
-```
-
-The client must not see:
-
-- reconnect screen;
-- respawn/new player entity;
-- new gameplay login;
-- backend server endpoint switch;
-- duplicate canonical result.
-
-A bounded presentation correction may still be tolerated before later perceptual-smoothness hardening, but transport/session/identity continuity is a hard gate.
-
----
-
-## 6. P6 product changes relative to R1
-
-All R1 P6.0-P6.11 stages remain in force unless overridden here.
+P6 remains a single-authority product checkpoint. Production A<->B ownership transfer remains post-P6 SM1 scope.
 
 ### P6.2 — topology-neutral identity
 
-Add required proof:
+Required proof:
 
 ```text
-future GatewaySessionId insertion does not alter PlayerId/PlayerEntityId
-future backend authority route change does not require identity recreation
+GatewaySessionId insertion does not alter PlayerId/PlayerEntityId
+backend route identity does not become gameplay identity
+Gateway peer id is not PlayerId
 ```
-
-P6 still does not need production A -> B transfer.
 
 ### P6.3 — OperationId continuity
 
-Add invariant:
+Required invariant:
 
 ```text
-OperationId is end-to-end stable through:
-Client -> RoutePort/Gateway boundary -> Authority -> canonical owner
+OperationId remains end-to-end stable through
+Client -> Gateway boundary -> Authority -> canonical owner
 ```
 
-Gateway retries/forwarding must not mint replacement OperationIds for the same logical operation.
+Gateway retry/forwarding does not mint a replacement OperationId for the same logical operation.
 
 ### P6.4 — mutation admission
 
-Add explicit rule:
+Gateway/session/route identity is insufficient to authorize canonical mutation.
+
+Future server-side admission resolves SessionBinding plus Directory/AUTHORITY owner/epoch/fence/incarnation and domain authorization.
+
+### P6.6 — Edge-Gateway-compatible gameplay ingress
+
+R1 stage name remains `GATEWAY_READY_COMMAND_SESSION_ROUTING`, but R2 exit is strengthened to:
 
 ```text
-GatewaySessionId, GatewayInstanceId and RouteRevision are insufficient to authorize canonical mutation.
+EDGE_GATEWAY_INGRESS_COMPATIBLE_GAMEPLAY_SURFACE
 ```
-
-Future SM1 authorization still resolves against Directory/AUTHORITY owner/epoch/fence/incarnation/binding semantics.
-
-### P6.6 — stable-ingress-compatible command/session routing
-
-R1 name `GATEWAY_READY_COMMAND_SESSION_ROUTING` is retained for compatibility, but R2 strengthens the goal.
 
 Target abstraction:
 
 ```text
-Client Gameplay API
-    -> Stable Logical Session
-    -> RoutePort / Gateway-compatible boundary
-    -> current authority route
+TransportAdapter
+    -> ClientGameplayPort
+    -> SessionBinding
+    -> MutationAdmission
+    -> DomainCommand
 ```
 
-P6 direct single-authority implementation may remain behind this boundary, but handlers MUST NOT assume:
+Future Gateway path:
 
 ```text
-client socket endpoint == canonical authority identity
-network peer id == player identity
+GatewayIngressAdapter
+    -> same ClientGameplayPort
+```
+
+P6 direct single-server handlers MUST NOT assume:
+
+```text
+network peer id == PlayerId
+socket endpoint == canonical authority identity
 direct server address == gameplay semantic owner
 ```
 
-P6.6 exit becomes:
+### P6.9 — WARM compatibility
+
+Required evidence shape:
 
 ```text
-STABLE_INGRESS_COMPATIBLE_GAMEPLAY_SURFACE
-```
-
-### P6.9 — WARM/SHADOW compatibility
-
-Add Gateway-oriented evidence shape:
-
-```text
-ACTIVE A
-WARM B
-stable logical gameplay session model exists
-B reconstruction matches closure/hash
+A ACTIVE
+B WARM/SHADOW
+stable logical session model
+B reconstruction/hash matches
 B canonical writes = 0
 ```
 
-Still no production A -> B ownership switch inside P6.
-
 ### P6.10 — fault matrix
 
-Add cases:
+Add/retain:
 
 - stale Gateway route revision;
 - duplicate forwarded command;
-- delayed A response after future route pivot model;
-- route metadata newer than observed authority epoch;
-- forged Gateway identity used as mutation authority;
-- Gateway path response loss with exact OperationId retry;
-- direct projection route attempting canonical command injection.
+- delayed old-authority response;
+- forged Gateway mutation authority;
+- projection-channel write injection;
+- session-slot reuse;
+- slow/flooding client isolation on shared backend link;
+- lost response + exact OperationId retry.
 
 ---
 
-## 7. Seamless Research changes
+## 8. Seamless Research / Edge Gateway Lab
 
-R2 makes the Gateway research path explicit and completion-bearing for immediate post-P6 SM1 readiness.
+The Gateway research path is expanded into executable stages `EG0-EG9` defined in:
 
-### SR3 / I5A — Stable Edge Gateway MVP
+`docs/network/EDGE_GATEWAY_TEST_IMPLEMENTATION_PLAN_RU.md`
 
-R1 `EDGE_GATEWAY_TRANSPARENCY` is strengthened to a real process prototype.
+### SR3 / I5A = EG0-EG5
+
+Required donor proof:
+
+```text
+EG0 contracts/fixtures
+EG1 Client -> Gateway -> A pass-through
+EG2 auth/session/placement
+EG3 multiple clients share one backend tunnel
+EG4 A+B projection fan-in through one client connection
+EG5 multiple Gateways + nearest healthy edge selection
+```
+
+Hard SR3 properties:
+
+- normal client world transport count = 1;
+- Gateway canonical writes = 0;
+- Gateway ownership decisions = 0;
+- client receives no simulation server endpoint;
+- multiple logical sessions multiplex over shared Gateway->Server connection;
+- projections do not create new client transports.
+
+### SR4 / I5B = EG6
 
 Required topology:
 
 ```text
-Client
-  -> Gateway process
-      -> Authority A process
-```
-
-Required properties:
-
-- client connects to the Gateway endpoint, not directly to A for gameplay;
-- Gateway forwards real movement/input and gameplay commands;
-- OperationId and input sequence survive forwarding unchanged semantically;
-- direct vs gateway outcomes are canonical-equivalent;
-- Gateway canonical writes = 0;
-- Gateway ownership decisions = 0;
-- Gateway restart/failure limitations are measured and documented;
-- per-direction bytes/packets/latency/queue metrics are captured.
-
-Required graphical demo:
-
-```text
-same client build
-same gameplay scenario
-DIRECT baseline
-vs
-GATEWAY path
-```
-
-Canonical outcome must match.
-
-SR3 is required donor evidence for immediate post-P6 SM1 activation.
-
-### SR4 / I5B — Stable-ingress ACTIVE/WARM backend pivot
-
-R1 `ACTIVE_WARM_ROUTING_PROTOTYPE` becomes a hard research proof for the proxy architecture.
-
-Topology:
-
-```text
-Client <-> Gateway = one stable gameplay connection/session
+Client <-> Gateway = STABLE
 Gateway -> A = ACTIVE
 Gateway -> B = WARM
 ```
 
-Required pivot:
+Required ordering:
 
 ```text
-A ACTIVE
-B WARM
-Directory/AUTHORITY commit A -> B
-Gateway route_revision advances
-A -> DRAIN
-B -> ACTIVE
-Client gameplay connection/session remains unchanged
+1. A ACTIVE epoch E
+2. B WARM, writes=0
+3. explicit input/command barrier
+4. target state consistent with barrier
+5. Directory commits B epoch E+1
+6. Gateway observes committed ownership
+7. route_revision advances
+8. B ACTIVE
+9. A DRAIN/READ_ONLY
+10. post-barrier input routes only B
+11. delayed A traffic fenced
 ```
 
 Hard gates:
 
-- no new client gameplay transport connection at crossing;
-- no gameplay endpoint change;
-- no reconnect/login/respawn;
-- stable logical_player_id;
-- stable player_entity_id;
+- no new client gameplay transport;
+- no endpoint change;
+- no login/respawn;
+- stable player identities;
 - exactly one canonical writer;
-- monotonic authority epoch;
-- monotonic Gateway route revision;
-- stale A traffic rejected/fenced;
-- duplicate OperationId remains idempotent across pivot;
-- WARM cannot mutate before ownership commit;
-- Gateway cannot promote B before ownership commit.
+- monotonic AuthorityEpoch;
+- monotonic Gateway RouteRevision;
+- stable OperationId across pivot;
+- lost response + retry yields exactly one canonical result.
 
-Required fault cases:
+### EG7-EG9
 
-- B fails before Directory commit -> A remains writer;
-- A fails during prepare -> recovery path explicit;
-- delayed A packets arrive after B activation -> fenced;
-- Gateway sees stale Directory/route data -> fail closed;
-- response to an operation is lost during pivot -> exact retry yields one result;
-- rapid A -> B -> A sequence does not rewind epoch/route revision.
+These prove:
 
-SR4 is upgraded from optional donor to required donor for the preferred immediate SM1 route unless a concrete reviewed blocker is recorded.
+- Gateway instance failure/rehome with logical session resume;
+- independent Client->Gateway and Gateway->Server WAN impairments;
+- scale/fairness/queue bounds/soak.
 
-### SR7 / MRPF — Gateway/projection split alignment
-
-MRPF must explicitly prove compatibility with R2:
-
-```text
-Gameplay commands -> Gateway
-Read-only projections -> direct authorized source routes where useful
-```
-
-Required non-conflict rules:
-
-- projection route cannot become gameplay write route merely because it is open;
-- projection grant is not mutation authority;
-- client is never cross-authority transaction coordinator;
-- active gameplay authority is not forced to relay all projection traffic;
-- projection source dropout must not break the stable gameplay Gateway session.
-
-Full MRPF remains non-blocking if a bounded compatible donor contract is available or an explicit defer is recorded.
+Gateway process failure may cause a physical client reconnect in V0, but must not cause new gameplay identity or canonical duplication. Zero-transport-reconnect Gateway failover is a later optimization.
 
 ---
 
-## 8. Production SM1 changes
+## 9. Transport direction
 
-Production SM1 remains post-P6 and starts from the exact accepted P6 product lineage.
+Gateway/domain semantics stay transport-neutral and NX-owned.
 
-R2 refines the production milestones:
+Reference lab may use:
+
+```text
+Client <-> Gateway: Godot ENet + project DTO
+Gateway <-> Simulation: Godot ENet + GatewayEnvelope DTO
+Gateway: headless Godot process
+Python/pytest: orchestration
+netem: WAN/fault injection
+```
+
+Do not make SceneTree replication the Gateway protocol.
+
+QUIC remains a strong later NX candidate for secure multiplexed streams/datagrams and path migration, but this R2 does not force production transport selection.
+
+---
+
+## 10. Production SM1 refinement
+
+Production milestones become:
 
 ```text
 SM1-H0  production seamless contracts
@@ -453,132 +440,113 @@ SM1-H1  durable Ownership Directory integration
 SM1-H2  generic AuthorityDomain transfer
 SM1-H2A AuthorityBinding + domain closure
 SM1-H2B Player Carrying Domain
-SM1-H3  production Stable Edge Gateway
-SM1-H4  ACTIVE/WARM/DRAIN backend routing through Gateway
-SM1-H5  Gateway-mediated PlayerAuthorityDomain A <-> B handoff
-SM1-H6  multi-region route/directory selection
+SM1-H3  production Global Edge Gateway Fabric
+SM1-H4  shared backend LinkPools + ACTIVE/WARM/DRAIN routing
+SM1-H5  Gateway-mediated PlayerAuthorityDomain A<->B handoff
+SM1-H6  multi-region nearest-edge selection + directory routing
 SM1-H7  Gateway instance failure/rehome/session resume
-SM1-H8  MRPF projection/AOI hybrid integration
+SM1-H8  MRPF projection/AOI aggregation through Gateway
 SM1-H9  cross-authority operation foundation
 SM1-H10 InteractionIsland runtime
 SM1-H11 static N-authority world
 SM1-H12 integrated static seamless acceptance
 ```
 
-### SM1-H3 hard gate
-
-A real graphical client must use a stable Gateway gameplay endpoint for all tested canonical gameplay commands.
-
-### SM1-H5 hard gate
-
-```text
-Client <-> Gateway connection/session stays logically continuous
-Player starts on A
-B becomes WARM
-ownership commit A -> B
-Gateway backend route pivots
-same PlayerId
-same PlayerEntityId
-same inventory/equipment identities
-no reconnect screen
-no respawn
-continue movement/gameplay on B
-B -> A return also passes
-```
-
-### SM1-H7 hard gate
-
-Gateway must not become a new single point of architectural truth.
-
-Required result:
-
-- Gateway process/instance may fail or be replaced;
-- canonical ownership remains in Directory/AUTHORITY;
-- client session can resume/rehome according to NX/IAM contract;
-- a failed old Gateway cannot resurrect a stale backend route.
+Direct client projection transport is not required before static SM1 acceptance.
 
 ---
 
-## 9. Required test/evidence matrix added by R2
+## 11. Required evidence matrix
 
-Before production SM1 can claim stable-proxy seamlessness, evidence must cover:
+Before stable-proxy seamlessness can be claimed:
 
 1. direct vs Gateway canonical equivalence;
-2. one stable client gameplay ingress across A -> B;
-3. stable PlayerId/PlayerEntityId across pivot;
-4. exactly one writer for all observed ticks/operations;
-5. OperationId continuity through Gateway and across pivot;
-6. stale old-authority packet fencing;
-7. stale Gateway route revision fencing;
-8. WARM mutation rejection;
-9. target failure before ownership commit;
-10. response loss around handoff and exact retry;
-11. repeated A <-> B pivots;
-12. latency/jitter/loss/duplicate/reorder profiles through Gateway;
-13. no unbounded Gateway queue/session growth;
-14. projection source dropout does not break gameplay ingress;
-15. direct projection cannot authorize canonical mutation.
+2. one client-facing world transport in normal play;
+3. two or more clients sharing one backend tunnel in MVP;
+4. no cross-session leakage;
+5. projection fan-in A+B through same client transport;
+6. nearest healthy Gateway selection among at least three candidates;
+7. stable PlayerId/PlayerEntityId;
+8. exactly one writer;
+9. OperationId continuity;
+10. stale old-authority packet fencing;
+11. stale Gateway route revision fencing;
+12. WARM write rejection;
+13. A->B and B->A pivots without client gameplay reconnect;
+14. target failure before ownership commit;
+15. response loss around handoff and exact retry;
+16. Gateway failure logical-session rehome;
+17. independent C->G and G->S latency/loss/jitter/reorder profiles;
+18. bounded per-session/per-link queues;
+19. slow-client isolation;
+20. 30-minute multi-client soak with repeated pivots/projection churn.
 
-Perceptual smoothness is a separate quality gate after canonical/transport seamlessness. Prediction/interpolation/camera continuity should then be hardened against the same pivot scenarios.
+Perceptual smoothness remains a later quality gate after canonical/transport correctness.
 
 ---
 
-## 10. Updated convergence requirements before P6 acceptance
+## 12. Integration into the current P6 campaign
 
-For the preferred immediate post-P6 `ACTIVATE_V0_SM1` path, the convergence package should now contain:
+Do now:
 
 ```text
-P6 exact candidate
-+ reviewed I2.6 one-writer donor
-+ reviewed I3 AuthorityDomain transfer donor
-+ reviewed I4 Player Carrying Domain donor or concrete blocker
-+ reviewed SR3/I5A Stable Edge Gateway MVP donor
-+ reviewed SR4/I5B stable-ingress A/W pivot donor or concrete blocker
-+ current I8 production port map
-+ current NX <-> SM1 ownership audit
-+ bounded MRPF Gateway/projection compatibility result
+1. Review/accept this control + network spec candidate.
+2. Refresh PR #182 / P6 Work Order to bind the Edge Gateway spec.
+3. Refresh/rebase PR #184 ownership map if required by accepted control lineage.
+4. Activate P6 product work only after refreshed control is accepted.
+5. Run EG0-EG5 donor-only in parallel with P6.
+6. Make P6.6 consume reviewed contract shapes, not research code ancestry.
+7. Complete EG6 before preferred immediate post-P6 SM1 activation, or record a concrete reviewed blocker.
+8. Carry EG7-EG9 evidence into SM1 hardening.
 ```
 
-An unresolved conflict in stable ingress, identity, ownership, mutation admission, OperationId continuity or NX transport ownership blocks immediate SM1 activation.
+Mapping:
 
-P6 itself remains a stable single-authority product checkpoint and does not claim production multi-authority handoff.
+```text
+P6.2  <- EG0
+P6.3  <- EG0/EG1
+P6.4  <- EG1/EG2
+P6.6  <- EG0-EG3
+P6.9  <- EG4/EG6
+P6.10 <- EG7-EG9
 
----
+SR3/I5A <- EG0-EG5
+SR4/I5B <- EG6
+SM1-H3/H4 <- productionized EG1-EG6 contracts
+SM1-H5 <- productionized EG6
+SM1-H7 <- productionized EG7
+```
 
-## 11. Open control work affected by R2
-
-At the time of this overlay, canonical main is:
-
-`1d9de3c479c60045d613660b2a5c5db0374963f8`
-
-Open stacked P6 control candidates include:
-
-- PR #182 — P6 preactivation;
-- PR #184 — P6.1 canonical ownership map stacked on #182.
-
-They were authored against R1 semantics.
-
-Therefore, if this R2 overlay is independently reviewed and accepted into main, #182/#184 MUST be refreshed/rebased or replaced so their Work Order/ownership map bind the R2 stable-ingress contract before runtime mutation is authorized.
-
-Do not merge an older preactivation candidate that silently restores weaker R1 Gateway semantics after R2 becomes canonical.
+P6 product base remains unchanged; Seamless Research remains donor-only until separately promoted.
 
 ---
 
-## 12. Final product route after R2
+## 13. Open control candidates
+
+PR #182 and PR #184 were authored against weaker R1 semantics.
+
+If this R2 Edge Gateway Fabric candidate is accepted, they MUST be refreshed/rebased or replaced before runtime mutation is authorized.
+
+Do not merge an older preactivation carrier that restores:
+
+- direct client/server gameplay coupling;
+- direct projection sockets as V0 baseline;
+- one-backend-connection-per-player assumptions;
+- peer-id-as-player-identity assumptions.
+
+---
+
+## 14. Final route
 
 ```text
 P5 ACCEPTED
     |
     v
-P6 Persistent Shared Outpost + Seamless-Ready Foundation
+P6 Seamless-Ready Product Foundation
     |
-    | P6.6 stable-ingress-compatible gameplay surface
-    |
-    +------ parallel ------> I3/I4
-    |                       I5A Stable Edge Gateway MVP
-    |                       I5B ACTIVE/WARM backend pivot
-    |                       I8 + NX audit
-    |                       bounded MRPF projection alignment
+    +-------- parallel --------> EG0-EG5 Edge Gateway Fabric MVP
+    |                           EG6 stable A/W pivot
+    |                           I3/I4 + I8 + NX audit
     |
     v
 P6 ACCEPTED
@@ -587,26 +555,23 @@ P6 ACCEPTED
 ACTIVATE V0-SM1
     |
     v
-Directory + Stable Gateway + Authority A/B
+Global Edge Gateway Fabric
+    |
+    +--> shared links to Authority A/B/C
+    +--> projection aggregation
+    +--> nearest-edge placement
     |
     v
-real A <-> B handoff behind one client gameplay ingress
-    |
-    v
-Gateway failure/rehome + projection/AOI integration
-    |
-    v
-static N-authority seamless world
-    |
-    v
-P7 -> P8
+real A<->B handoff behind one client-facing world connection
 ```
 
 Final rule:
 
 ```text
-ONE STABLE GAMEPLAY INGRESS FOR THE CLIENT
-BACKEND AUTHORITY MAY CHANGE BEHIND IT
+ONE CLIENT-FACING WORLD CONNECTION IN NORMAL PLAY
+MANY EDGE GATEWAYS GLOBALLY
+SHARED MULTIPLEXED GATEWAY->SERVER LINKS
+PROJECTIONS AGGREGATED THROUGH GATEWAY
+NORMAL HANDOFF CHANGES BACKEND ROUTE, NOT CLIENT TRANSPORT
 GATEWAY NEVER BECOMES CANONICAL OWNERSHIP TRUTH
-DIRECT PROJECTIONS MAY BYPASS GATEWAY BUT REMAIN READ-ONLY
 ```
