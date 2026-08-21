@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "E3-7-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "exact_candidate": "851ea433a9b6b88b6123f8504def2722a3ffbc56",
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "questions": {
+    "unnecessary_complexity": "No material complexity beyond the exact-input authority boundary and deterministic package assembly. E3.7 does not recompute accepted science; it verifies and packages the accepted E3.1-E3.6 chain plus the persisted EVO2 SpeciesCatalog.",
+    "duplicate_truth": "No duplicate scientific owner was introduced. The accepted E3.6 temporal program remains the immediate ecology predecessor; earlier accepted stages are immutable chain inputs/evidence and the persisted EVO2 catalog remains external accepted taxonomy input.",
+    "implicit_owner": "No canonical G/ENV/MAT/WQ/SD/TF, species taxonomy, individual entity, persistence, transaction, network, XFER1, asset-scatter, or production authority is claimed.",
+    "coupling_reduction": "The compiler consumes only exact accepted artifacts through a binding manifest and raw identity verification; it does not call earlier stage compilers or ambient runtime services.",
+    "sibling_surface_fix": "No sibling production/runtime/owner surface required mutation. All changes remain under E3.7 research/control/test/evidence paths allowed by the Work Order.",
+    "removable_code": "Independent exact-input rebuild in validate_output_integrity is intentionally retained because plain/reconstructed JSON must not gain serialization authority.",
+    "design_regression": "No design regression found. Same accepted snapshots/catalog produce the same PlanetEcologyProgram bytes/hash in fresh processes, and all authority flags remain research-only.",
+    "refactor_if_redesigned": "Keep exact raw input verification, cross-stage lineage checks, verified input/output capabilities, and byte-bound committed artifact. Future E3.8 should vary accepted planet fixtures without weakening these invariants."
+  },
+  "pre_freeze_issues_closed": [
+    {
+      "issue": "Initial E3.7 CI over-constrained catalog lineage by requiring E3.5 to repeat catalog_hash directly.",
+      "resolution": "The predicate was corrected to preserve accepted transitive lineage E3.4 -> persisted catalog and E3.5 -> E3.4. No accepted scientific artifact changed."
+    },
+    {
+      "issue": "Committed generated PlanetEcologyProgram was initially absent by design.",
+      "resolution": "Exact Actions output was frozen to validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json, then the temporary write-capability workflow was removed. Final executable freeze uses a read-only workflow and exact artifact identity predicates."
+    }
+  ],
+  "machine_evidence": {
+    "closure_run_id": 32476053613,
+    "closure_job_id": 96752514419,
+    "exact_head": "851ea433a9b6b88b6123f8504def2722a3ffbc56",
+    "tests": "28/28 PASS",
+    "closure_predicates": "15/15 PASS",
+    "fresh_process_byte_identity": "2/2 PASS",
+    "committed_generated_byte_identity": "PASS",
+    "schema": "PASS",
+    "artifact_bytes": 104186,
+    "artifact_sha256": "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303",
+    "artifact_git_blob": "01207a7025710db34fafc959fcc26dade2606d89",
+    "provenance_hash": "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff",
+    "planet_ecology_program_hash": "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956",
+    "closure_artifact_id": 9444318099,
+    "closure_artifact_zip_sha256": "02021d6b183edd2b2ddaf0e145d358a81915d44a9deb57eb4b89702058ed1650"
+  },
+  "project_control_observation": {
+    "workflow_run_id": 32476053598,
+    "workflow_job_id": 96752514025,
+    "workflow_conclusion": "SUCCESS",
+    "global_pc0": "RED",
+    "eco_pc0": "RED",
+    "directional_pc0": "RED",
+    "eco_directional_watch": "NX -> ECO YELLOW WATCH_HIT",
+    "eco_critical_intersection": "ABSENT",
+    "critical_red_intersections": [
+      "NX -> V0",
+      "V0 -> NX"
+    ],
+    "artifact_id": 9444315628,
+    "artifact_zip_sha256": "956ab520385d10d9d174f7aad8518b640d0137d7a20d287b5470c8a3a02a6b43",
+    "policy_disposition": "RESEARCH_NON_BLOCKER_SCOPED_CLEARANCE",
+    "note": "Global/ECO/directional RED are retained as evidence and are not reinterpreted as GREEN or NON_RED. Fresh review-head Project Control evidence is required after the evidence-only commit."
+  },
+  "remaining_risks": [
+    "Fresh independent Reviewer must inspect the exact immutable review head, authority boundary, deterministic assembly, cross-stage lineage, and evidence freshness.",
+    "Independent Verifier remains mandatory after Reviewer PASS.",
+    "E3.7 remains research-only and is not accepted until role-separated review/verification and checkpoint acceptance complete.",
+    "E3.8, XFER1, and production ECO authority remain blocked/inactive."
+  ],
+  "runtime_repair_required_by_critique": false,
+  "ready_for_exact_head_review": true,
+  "checkpoint_proposal_authorized": false,
+  "recorded_at_utc": "2026-08-21T11:38:00Z"
+}

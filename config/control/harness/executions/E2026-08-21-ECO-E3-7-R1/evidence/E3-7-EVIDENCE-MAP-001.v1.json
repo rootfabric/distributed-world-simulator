@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO.EVO3/E3.7",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "851ea433a9b6b88b6123f8504def2722a3ffbc56",
+  "intent": "Prove the E3.7 executable freeze is a deterministic, exact-input, research-only PlanetEcologyProgram compiler over the accepted E3.1-E3.6 chain plus the persisted EVO2 SpeciesCatalog, with no production/canonical authority.",
+  "root_cause_or_reason": "Accepted E3.1-E3.6 outputs existed as separate artifacts; E3.7 adds a single deterministic reviewable package without recomputing their scientific truth.",
+  "changed_surfaces": [
+    ".github/workflows/e3-7-closure.yml",
+    "RUN_ECO_EVO3_E3_7_TESTS.py",
+    "config/control/harness/executions/E2026-08-21-ECO-E3-7-R1/**",
+    "config/ecology/eco-evo3-e3-7-inputs.binding.v1.json",
+    "config/ecology/eco-evo3-e3-7-planet-compilation-contract.v1.json",
+    "config/ecology/eco-evo3-e3-7-planet-ecology-program.schema.v1.json",
+    "docs/checkpoints/2026-08-21_ECO_EVO3_E3_7_IMPLEMENTATION_CANDIDATE_RU.md",
+    "docs/evidence/2026-08-21_ECO_EVO3_E3_7_POST_BUILD_CRITIQUE_RU.md",
+    "scripts/research/ecology/planet_ecology_program_compiler_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_7_authority.py",
+    "tests/research/ecology/test_eco_evo3_e3_7_planet_compilation.py",
+    "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json"
+  ],
+  "canonical_owner": "ECO.EVO3 research derivation only; canonical foundation/species/runtime owners remain external",
+  "entry_points": [
+    "load_verified_inputs(contract,binding)",
+    "build_planet_ecology_program(verified_inputs)",
+    "serialize_planet_ecology_program(verified_program)",
+    "RUN_ECO_EVO3_E3_7_TESTS.py"
+  ],
+  "callers": [
+    "E3.7 CLI main()",
+    "E3.7 exact closure runner",
+    "E3.7 semantic/authority tests"
+  ],
+  "callees": [
+    "raw Git-blob/SHA/semantic identity verification",
+    "cross-stage lineage validation",
+    "deterministic PlanetEcologyProgram assembly",
+    "validate_output_integrity independent exact-input rebuild"
+  ],
+  "sibling_surfaces_checked": [
+    "accepted E3.1-E3.6 artifacts remain read-only",
+    "persisted EVO2 SpeciesCatalog remains read-only",
+    "no scripts/network changes",
+    "no scripts/persistence changes",
+    "no scripts/runtime changes",
+    "no architecture ownership changes",
+    "no XFER1 or production binding changes"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "RED",
+  "directional_pc0": "RED",
+  "production_diff_summary": "No production runtime diff. PlanetEcologyProgram is RESEARCH_DERIVED_NON_AUTHORITATIVE with canonical_binding_resolved=false and production_binding_authorized=false.",
+  "remaining_risks": [
+    "Fresh independent Reviewer verdict pending on the post-evidence exact review head.",
+    "Independent Verifier verdict pending after Reviewer PASS.",
+    "Global/ECO/directional Project Control remain RED; scoped ECO research clearance must not be described as global NON_RED.",
+    "E3.8, XFER1 and production ECO remain blocked/inactive."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Reuse exact-input capability and independent rebuild invariants in E3.8 multi-planet generalization.",
+    "Keep committed generated program byte-bound to fresh machine output."
+  ],
+  "evidence_gaps": [
+    "Fresh exact review-head E3.7 Closure pending after this evidence-only commit.",
+    "Fresh exact review-head Project Control pending after this evidence-only commit.",
+    "Fresh independent Reviewer verdict pending.",
+    "Independent Verifier verdict pending."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
