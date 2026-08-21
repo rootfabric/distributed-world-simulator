@@ -68,7 +68,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		GatewayUtilsScript.require_nonnegative_integer(value, "aggregate_priority"),
 		GatewayUtilsScript.require_positive_integer(value, "graph_revision"),
 		GatewayUtilsScript.require_positive_integer(value, "interest_revision"),
-		GatewayUtilsScript.validate_payload(value.get("aggregate_budget")),
+		GatewayUtilsScript.validate_derived_routing_payload(value.get("aggregate_budget")),
 	]:
 		if not bool(check.get("success", false)):
 			return check
@@ -107,6 +107,8 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 		return current_check
 	if String(candidate.get("source_world_id")) != String(current.get("source_world_id")):
 		return NetworkUtilsScript.validation_failure("SOURCE_WORLD_MISMATCH", "Cannot compare plans for different source worlds")
+	if int(candidate.get("graph_revision")) < int(current.get("graph_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_GRAPH_REVISION", "graph_revision cannot rewind")
 	if int(candidate.get("interest_revision")) <= int(current.get("interest_revision")):
 		return NetworkUtilsScript.validation_failure("STALE_INTEREST_REVISION", "interest_revision must advance")
 	return NetworkUtilsScript.validation_success()

@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.eg0_cwip_connect_gate_fixtures.v1",
-  "revision": "V0-EG0-R5-CWIP-CONNECT-GATE-001",
+  "revision": "V0-EG0-R6-REVIEW-REPAIR-001",
   "connect_gate": {
     "schema": "planet_simulator.gateway_connect_gate.v1",
     "protocol_version": 1,
@@ -9,7 +9,7 @@
     "gateway_instance_id": "gateway/test/g1",
     "gateway_session_id": "gateway-session/test/a",
     "client_session_id": "client-session/test/a",
-    "session_binding_id": "session-binding/test/a",
+    "route_binding_id": "gateway-route/test/b",
     "logical_player_id": "player/test/alice",
     "player_entity_id": "entity/test/player-alice",
     "world_id": "world/test/b",
@@ -21,7 +21,7 @@
     "placement_revision": 6,
     "directory_generation": 20,
     "authority_epoch": 52,
-    "route_revision": 92,
+    "route_revision": 52,
     "ready_snapshot_revision": 7,
     "protocol_admitted": true,
     "identity_verified": true,
@@ -31,7 +31,59 @@
     "backend_route_attached": true,
     "player_domain_ready": true,
     "world_ready": true,
-    "gate_revision": 8
+    "gate_revision": 8,
+    "session_binding": {
+      "schema": "planet_simulator.gateway_session_binding.v1",
+      "protocol_version": 1,
+      "gateway_session_id": "gateway-session/test/a",
+      "client_session_id": "client-session/test/a",
+      "logical_player_id": "player/test/alice",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "binding_revision": 5,
+      "state": "ATTACHED"
+    },
+    "route_binding": {
+      "schema": "planet_simulator.gateway_route_binding.v1",
+      "protocol_version": 1,
+      "route_binding_id": "gateway-route/test/b",
+      "gateway_session_id": "gateway-session/test/a",
+      "player_entity_id": "entity/test/player-alice",
+      "authority_id": "authority/test/b",
+      "server_instance_id": "server-instance/test/b-1",
+      "observed_authority_epoch": 52,
+      "route_revision": 52,
+      "route_role": "ACTIVE"
+    },
+    "placement_evidence": {
+      "placement_evidence_id": "placement-evidence/test/a",
+      "source_owner": "SESSION_PLACEMENT",
+      "client_session_id": "client-session/test/a",
+      "logical_player_id": "player/test/alice",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "placement_revision": 6
+    },
+    "directory_authority_evidence": {
+      "authority_resolution_id": "authority-resolution/test/b",
+      "source_owner": "WORLD_DIRECTORY",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "authority_id": "authority/test/b",
+      "server_instance_id": "server-instance/test/b-1",
+      "directory_generation": 20,
+      "authority_epoch": 52
+    },
+    "ready_snapshot_evidence": {
+      "ready_snapshot_id": "ready-snapshot/test/a",
+      "source_owner": "AUTHORITY",
+      "gateway_session_id": "gateway-session/test/a",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "authority_id": "authority/test/b",
+      "authority_epoch": 52,
+      "snapshot_revision": 7
+    }
   },
   "interaction_time": {
     "schema": "planet_simulator.interaction_time.v1",
@@ -140,6 +192,7 @@
     "schema": "planet_simulator.collision_proof.v1",
     "protocol_version": 1,
     "interaction_id": "interaction/test/shot-1",
+    "query_revision": 2,
     "world_id": "world/test/a",
     "authority_id": "authority/test/a",
     "authority_epoch": 61,

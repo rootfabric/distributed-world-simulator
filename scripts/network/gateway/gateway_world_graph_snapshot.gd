@@ -157,4 +157,58 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 			"STALE_DIRECTORY_REVISION",
 			"directory_revision cannot rewind",
 		)
+	var nested_check: Dictionary = _validate_nested_revision_provenance(candidate, current)
+	if not bool(nested_check.get("success", false)):
+		return nested_check
+	return NetworkUtilsScript.validation_success()
+
+
+static func _validate_nested_revision_provenance(candidate: Dictionary, current: Dictionary) -> Dictionary:
+	var current_worlds: Dictionary = {}
+	for raw_world in Array(current.get("worlds")):
+		var world: Dictionary = Dictionary(raw_world)
+		current_worlds[String(world.get("world_id"))] = world
+	for raw_world in Array(candidate.get("worlds")):
+		var world: Dictionary = Dictionary(raw_world)
+		var world_id: String = String(world.get("world_id"))
+		if not current_worlds.has(world_id):
+			continue
+		var previous: Dictionary = Dictionary(current_worlds[world_id])
+		var candidate_revision: int = int(world.get("world_revision"))
+		var current_revision: int = int(previous.get("world_revision"))
+		if candidate_revision < current_revision:
+			return NetworkUtilsScript.validation_failure(
+				"STALE_NESTED_WORLD_REVISION",
+				"world_revision cannot rewind inside a newer graph snapshot",
+			)
+		if candidate_revision == current_revision \
+				and NetworkUtilsScript.canonical_json(world) != NetworkUtilsScript.canonical_json(previous):
+			return NetworkUtilsScript.validation_failure(
+				"WORLD_REVISION_REUSED_WITH_DIFFERENT_CONTENT",
+				"A world revision cannot be reused for different descriptor content",
+			)
+
+	var current_relations: Dictionary = {}
+	for raw_relation in Array(current.get("relations")):
+		var relation: Dictionary = Dictionary(raw_relation)
+		current_relations[String(relation.get("relation_id"))] = relation
+	for raw_relation in Array(candidate.get("relations")):
+		var relation: Dictionary = Dictionary(raw_relation)
+		var relation_id: String = String(relation.get("relation_id"))
+		if not current_relations.has(relation_id):
+			continue
+		var previous: Dictionary = Dictionary(current_relations[relation_id])
+		var candidate_revision: int = int(relation.get("relation_revision"))
+		var current_revision: int = int(previous.get("relation_revision"))
+		if candidate_revision < current_revision:
+			return NetworkUtilsScript.validation_failure(
+				"STALE_NESTED_RELATION_REVISION",
+				"relation_revision cannot rewind inside a newer graph snapshot",
+			)
+		if candidate_revision == current_revision \
+				and NetworkUtilsScript.canonical_json(relation) != NetworkUtilsScript.canonical_json(previous):
+			return NetworkUtilsScript.validation_failure(
+				"RELATION_REVISION_REUSED_WITH_DIFFERENT_CONTENT",
+				"A relation revision cannot be reused for different relation content",
+			)
 	return NetworkUtilsScript.validation_success()

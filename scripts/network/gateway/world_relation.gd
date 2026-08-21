@@ -72,7 +72,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		if not bool(check.get("success", false)):
 			return check
 	for field in ["intersection_or_transition_region", "reference_frame_relation", "projection_policy"]:
-		var payload_check: Dictionary = GatewayUtilsScript.validate_payload(value.get(String(field)))
+		var payload_check: Dictionary = GatewayUtilsScript.validate_world_graph_payload(value.get(String(field)))
 		if not bool(payload_check.get("success", false)):
 			return payload_check
 	var projection_policy: Dictionary = Dictionary(value.get("projection_policy"))

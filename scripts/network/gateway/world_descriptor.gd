@@ -74,7 +74,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	if not bool(revision_check.get("success", false)):
 		return revision_check
 	for field in ["spatial_domain", "coverage", "projection_policy", "visibility_rules", "interest_rules"]:
-		var payload_check: Dictionary = GatewayUtilsScript.validate_payload(value.get(String(field)))
+		var payload_check: Dictionary = GatewayUtilsScript.validate_world_graph_payload(value.get(String(field)))
 		if not bool(payload_check.get("success", false)):
 			return payload_check
 	var projection_policy: Dictionary = Dictionary(value.get("projection_policy"))

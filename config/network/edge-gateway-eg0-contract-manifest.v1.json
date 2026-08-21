@@ -1,11 +1,22 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R5-CWIP-CONNECT-GATE",
+  "revision": "V0-EG0-2026-08-21-R6-REVIEW-REPAIR",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
     "exact_head": "d83ba3598d8a4cbf3a313633c4e42a85397a3a7f",
     "must_be_canonical_before_acceptance": true
+  },
+  "repair_base": {
+    "reviewed_head": "8316c926245fc14af08504c418636d2107135e15",
+    "review_disposition": "FIX_REQUIRED",
+    "blocking_findings": [
+      "EG0-R5-R-001",
+      "EG0-R5-R-002",
+      "EG0-R5-R-003",
+      "EG0-R5-R-004",
+      "EG0-R5-R-005"
+    ]
   },
   "goal": "TOPOLOGY_NEUTRAL_DTOS_WORLD_GRAPH_AND_CWIP_CONTRACTS_PASS",
   "protocol_version": 1,
@@ -65,13 +76,20 @@
     "GATEWAY_ROUTES_INTERACTION_BUT_DOES_NOT_RESOLVE_GAMEPLAY_TRUTH",
     "ONE_INTERACTION_AT_MOST_ONE_CANONICAL_EFFECT_COMMIT",
     "CROSS_WORLD_INTERACTION_USES_VERSIONED_TIME_AND_REFERENCE_FRAME_EVIDENCE",
-    "STALE_ROUTE_WORLDGRAPH_EPOCH_TIME_OR_TRANSFORM_EVIDENCE_FAILS_CLOSED"
+    "STALE_ROUTE_WORLDGRAPH_EPOCH_TIME_OR_TRANSFORM_EVIDENCE_FAILS_CLOSED",
+    "CLIENT_FRAME_PAYLOAD_NO_PHYSICAL_TOPOLOGY_METADATA",
+    "WORLD_GRAPH_NESTED_PAYLOAD_NO_PHYSICAL_CONNECTION_STATE",
+    "WORLD_GRAPH_NESTED_REVISIONS_NON_REGRESSING",
+    "VIEW_AND_INTEREST_GRAPH_REVISION_NON_REGRESSING",
+    "CONNECT_GATE_BINDS_SESSION_PLACEMENT_DIRECTORY_ROUTE_AND_READY_EVIDENCE",
+    "COLLISION_PROOF_BOUND_TO_QUERY_REVISION_AND_PROVENANCE"
   ],
   "focused_tests": [
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
     "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
     "res://tests/network/test_eg0_world_graph_contracts.gd",
-    "res://tests/network/test_eg0_cwip_connect_gate_contracts.gd"
+    "res://tests/network/test_eg0_cwip_connect_gate_contracts.gd",
+    "res://tests/network/test_eg0_r6_review_repairs.gd"
   ],
   "validation": {
     "previous_exact_head": {
@@ -84,14 +102,12 @@
       "world_graph_assertions": 27,
       "total_assertions": 90
     },
-    "r4_hardening_expected_assertions": {
-      "contract_assertions": 24,
-      "fixture_assertions": 39,
-      "world_graph_assertions": 53,
-      "total_assertions": 116
-    },
-    "r5_cwip_connect_gate_exact_head_focused_suite": "REQUIRED_BEFORE_REVIEW_OR_ACCEPTANCE"
+    "r5_reviewed_head": "8316c926245fc14af08504c418636d2107135e15",
+    "r5_review_disposition": "FIX_REQUIRED",
+    "r6_exact_head_focused_suite": "REQUIRED_BEFORE_FRESH_REVIEW",
+    "r6_fresh_independent_review": "REQUIRED",
+    "r6_independent_verifier": "BLOCKED_UNTIL_FRESH_REVIEW_PASS"
   },
-  "next_stage": "EG1_BLOCKED_UNTIL_CONTROL_DEPENDENCY_ACCEPTED_EXACT_HEAD_FOCUSED_PASS_REVIEW_AND_VERIFICATION",
+  "next_stage": "EG1_BLOCKED_UNTIL_CONTROL_DEPENDENCY_ACCEPTED_EXACT_HEAD_FOCUSED_PASS_FRESH_REVIEW_AND_VERIFICATION",
   "p6_runtime_authorized": false
 }

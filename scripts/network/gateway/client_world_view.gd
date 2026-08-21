@@ -109,6 +109,8 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 		return current_check
 	if String(candidate.get("gateway_session_id")) != String(current.get("gateway_session_id")):
 		return NetworkUtilsScript.validation_failure("SESSION_MISMATCH", "Cannot compare views for different sessions")
+	if int(candidate.get("graph_revision")) < int(current.get("graph_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_GRAPH_REVISION", "graph_revision cannot rewind")
 	if int(candidate.get("view_revision")) <= int(current.get("view_revision")):
 		return NetworkUtilsScript.validation_failure("STALE_VIEW_REVISION", "view_revision must advance")
 	if int(candidate.get("interest_revision")) < int(current.get("interest_revision")):
