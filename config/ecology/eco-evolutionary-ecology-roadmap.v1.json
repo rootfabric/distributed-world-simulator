@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R72-2026-08-20",
+  "revision": "ECO-R73-2026-08-21",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_4_ACCEPTED_E3_5_AUTHORIZED_NOT_STARTED",
+  "status": "RESEARCH_ONLY_EVO3_E3_5_ACCEPTED_E3_6_AUTHORIZED_NOT_STARTED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -12,9 +12,9 @@
   "evo3_architecture_doc": "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md",
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
-  "current_checkpoint": "ECO.EVO3/E3.5",
-  "current_step": "Multi-scale Population Workset Compiler authorized / not started",
-  "last_accepted_step": "ECO.EVO3/E3.4 Causal Colonization Program Compiler",
+  "current_checkpoint": "ECO.EVO3/E3.6",
+  "current_step": "Seasonal & Disturbance Temporal Program authorized / not started",
+  "last_accepted_step": "ECO.EVO3/E3.5 Multi-scale Population Workset Compiler",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "execution_modes": [
     "INCUBATE_FAST",
@@ -36,7 +36,8 @@
     "ECO.EVO3/E3.1 PLANET FIELD SNAPSHOT CONTRACT ACCEPTED",
     "ECO.EVO3/E3.2 ECOLOGICAL OPPORTUNITY FIELD ACCEPTED",
     "ECO.EVO3/E3.3 RESEARCH ECOLOGY DECOMPOSITION ACCEPTED",
-    "ECO.EVO3/E3.4 CAUSAL COLONIZATION PROGRAM COMPILER ACCEPTED"
+    "ECO.EVO3/E3.4 CAUSAL COLONIZATION PROGRAM COMPILER ACCEPTED",
+    "ECO.EVO3/E3.5 MULTI-SCALE POPULATION WORKSET COMPILER ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -128,7 +129,27 @@
     "e3_4_project_control_run_id": 32345933609,
     "e3_4_project_control_check_suite": 1035,
     "e3_4_closure_run_id": 32345933565,
-    "e3_4_closure_run_number": 7
+    "e3_4_closure_run_number": 7,
+    "e3_5_code_under_test_head": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "e3_5_reviewed_head": "3439f4436d3cb885f2496a1fc4295b43d7af5093",
+    "e3_5_merge_head": "cf6374e30e309988f04dfd5d127cca70f10de871",
+    "e3_5_artifact_git_blob": "d54ce8dad2760312d414c62c88d5f4f71427514f",
+    "e3_5_artifact_sha256": "0ea5351b7692564161804a3aea5fe5044f3321ded3dcb4d0c7343e93d52c4975",
+    "e3_5_population_workset_hash": "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5",
+    "e3_5_provenance_hash": "ec9c734882ef4a97eec2ed071f3c06ec2a29df52f13a45c7054a4641cbd42738",
+    "e3_5_tests": 51,
+    "e3_5_authority_regression_tests": 24,
+    "e3_5_validation": "validation/ecology/eco-evo3-e3-5-validation.json",
+    "e3_5_acceptance_checkpoint": "docs/checkpoints/2026-08-21_ECO_EVO3_E3_5_ACCEPTED_E3_6_AUTHORIZED_RU.md",
+    "e3_5_independent_review_verdict": "PASS",
+    "e3_5_review_comment_id": 5365261131,
+    "e3_5_verifier_verdict": "PASS",
+    "e3_5_verifier_comment_id": 5365274237,
+    "e3_5_director_comment_id": 5365292809,
+    "e3_5_project_control_run_id": 32439723507,
+    "e3_5_project_control_run_number": 1058,
+    "e3_5_closure_run_id": 32439723532,
+    "e3_5_closure_run_number": 6
   },
   "production_integration_boundary": {
     "status": "SEPARATE_MAIN_OWNED_PRODUCT_TRAIN",
@@ -154,7 +175,7 @@
   },
   "EVO3": {
     "name": "Planetary Ecology Compiler / broader planetary generalization",
-    "status": "ACTIVE_E3_5_AUTHORIZED_NOT_STARTED",
+    "status": "ACTIVE_E3_6_AUTHORIZED_NOT_STARTED",
     "production_runtime_authorized": false,
     "xfer1_required_before_production_binding": true,
     "architecture": "config/ecology/eco-evo3-planetary-ecology-compiler.v1.json",
@@ -188,12 +209,12 @@
       {
         "id": "E3.5",
         "name": "Multi-scale Population Workset Compiler",
-        "status": "AUTHORIZED_NOT_STARTED"
+        "status": "ACCEPTED"
       },
       {
         "id": "E3.6",
         "name": "Seasonal & Disturbance Temporal Program",
-        "status": "BLOCKED"
+        "status": "AUTHORIZED_NOT_STARTED"
       },
       {
         "id": "E3.7",
@@ -216,7 +237,9 @@
     "e3_4_input_rule": "MUST_CONSUME_ACCEPTED_E3_3_DECOMPOSITION_PLUS_FULL_PERSISTED_EVO2_SPECIES_CATALOG_NO_PREFILTER",
     "e3_4_no_colonization_rule": "NO_COLONIZATION_IS_VALID_RESULT",
     "e3_5_input_rule": "MUST_CONSUME_ACCEPTED_E3_4_CAUSAL_COLONIZATION_PROGRAM",
-    "e3_5_planet_wide_individual_truth_rule": "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH_FORBIDDEN"
+    "e3_5_planet_wide_individual_truth_rule": "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH_FORBIDDEN",
+    "e3_6_input_rule": "MUST_CONSUME_ACCEPTED_E3_5_POPULATION_WORKSET",
+    "e3_6_canonical_time_environment_ownership_rule": "TF_ENV_OWNERSHIP_FORBIDDEN"
   },
   "EVO4": {
     "status": "AFTER_EVO3_PLANETARY_GENERALIZATION",
