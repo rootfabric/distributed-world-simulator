@@ -85,6 +85,33 @@ H0.1 C22 only after H0.0
 - Use Conventional Commits for normal development commits.
 - Do not force-push active harness-managed branches.
 
+## Windows local workspace / tests
+
+Для локальной Windows-разработки и runtime-тестов обязательно читать:
+
+```text
+docs/control/WINDOWS_LOCAL_WORKSPACE_AND_TEST_LAYOUT_RU.md
+```
+
+Канонический layout:
+
+```text
+C:\distributed-world-simulator\
+  distributed-world-simulator\    # central checkout
+  worktrees\                       # all task worktrees
+```
+
+Канонический double Godot:
+
+```text
+C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
+```
+
+Новые Windows runner/instruction не должны вводить checkout-пути `C:\distributed-world-simulator-v0-*` или старый `C:\Godot\lunar-world-*` layout.
+
+PowerShell runners должны определять project root относительно собственного файла, поэтому работать как из центрального checkout, так и из worktree под `C:\distributed-world-simulator\worktrees\`.
+
 ## Godot runtime / MCP
 
 If work requires launching Godot, runtime input, screenshots or runtime logs, read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
