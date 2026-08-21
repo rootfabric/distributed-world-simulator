@@ -1,0 +1,74 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "ECO-E3-8-WO-001",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO.EVO3/E3.8",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "668ed22d762da6fd407b9b7852ad049b218ed48b",
+  "intent": "Demonstrate predeclared cross-planet generalization without retuning the persisted EVO2 catalog or any accepted stage compiler, preserving null/reversal/no-colonization outcomes, with capability-bound serialization and exact frozen artifact identity.",
+  "root_cause_or_reason": "Director authorization on post-merge accepted ECO control state (PR #187 comment 5371006859); roadmap step E3.8 requires a predeclared dry/wet/cold/hot/seasonal/topologically-isolated planet matrix.",
+  "changed_surfaces": [
+    "config/ecology/eco-evo3-e3-8-cross-planet-matrix-contract.v1.json",
+    "config/ecology/eco-evo3-e3-8-cross-planet-generalization-matrix.schema.v1.json",
+    "scripts/research/ecology/cross_planet_generalization_matrix_v1.py",
+    "tests/research/ecology/test_eco_evo3_e3_8_matrix_semantic.py",
+    "tests/research/ecology/test_eco_evo3_e3_8_matrix_authority.py",
+    "RUN_ECO_EVO3_E3_8_TESTS.py",
+    ".github/workflows/e3-8-closure.yml",
+    "validation/ecology/eco-evo3-e3-8-cross-planet-generalization-matrix.generated.json",
+    "config/control/harness/executions/E2026-08-21-ECO-E3-8-R1/**",
+    "docs/checkpoints/2026-08-21_ECO_EVO3_E3_8_*",
+    "docs/evidence/2026-08-21_ECO_EVO3_E3_8_*"
+  ],
+  "canonical_owner": "ECO.EVO3 research derivation only; canonical foundation/species/runtime owners remain external",
+  "entry_points": [
+    "load_verified_inputs(contract)",
+    "build_planet_generalization_matrix(verified_inputs)",
+    "serialize_planet_generalization_matrix(verified_matrix)",
+    "write_planet_generalization_matrix(verified_matrix, output)",
+    "RUN_ECO_EVO3_E3_8_TESTS.py"
+  ],
+  "callers": [
+    "E3.8 CLI main()",
+    "E3.8 exact closure runner",
+    "E3.8 semantic/authority tests"
+  ],
+  "callees": [
+    "unmodified accepted E3.2 module builder (opportunity fields)",
+    "unmodified accepted E3.3 module builder (decompositions)",
+    "unmodified accepted E3.4 core primitives with accepted thresholds (colonization decisions)",
+    "exact persisted EVO2 SpeciesCatalog",
+    "validate_output_integrity / independent exact-input rebuild"
+  ],
+  "sibling_surfaces_checked": [
+    "module public functions containing serial/final/write are enumerated by authority regression and constrained to serialize_planet_generalization_matrix and write_planet_generalization_matrix",
+    "generic serialized_bytes helper is absent",
+    "plain/forged/mutated matrices rejected by every finalization surface without creating output",
+    "forged _VerifiedMatrixInputs values cannot bypass raw re-verification",
+    "accepted E3.1-E3.7 artifacts remain read-only",
+    "persisted EVO2 SpeciesCatalog remains read-only and verbatim",
+    "no network/persistence/runtime/XFER1/production owner surfaces changed"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "RED",
+  "directional_pc0": "RED",
+  "production_diff_summary": "No production runtime diff. New research-only matrix stage; accepted inputs consumed read-only.",
+  "remaining_risks": [
+    "Fresh independent Reviewer verdict pending on the exact evidence head.",
+    "Independent Verifier remains blocked until fresh Reviewer PASS.",
+    "Global/ECO/directional Project Control remain RED; scoped ECO research clearance must not be described as global NON_RED."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Retain finalization-surface enumeration in successor stages including E3.FINAL."
+  ],
+  "evidence_gaps": [
+    "Fresh exact post-evidence E3.8 Closure pending.",
+    "Fresh independent Reviewer verdict pending.",
+    "Independent Verifier verdict pending after Reviewer PASS."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
