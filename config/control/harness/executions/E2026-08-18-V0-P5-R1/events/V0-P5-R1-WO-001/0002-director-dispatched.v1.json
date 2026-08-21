@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-18-V0-P5-R1-V0-P5-R1-WO-001-0002",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-21T18:32:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p5-equipment-tools",
+  "head_sha": "01396ad4984fadb2d0becfc4d8eee499cf2bf85c",
+  "summary": "Reconciliation record: Director dispatched the single high-risk P5 implementation worker onto feature/v0-p5-equipment-tools; original dispatch is durably recorded as commit 276e8aa1 and events 0002..0009 on origin/control/v0-p5-r2-v002-closure-r1. Lease holder identity matches holder_checkpoint and holder_branch.",
+  "command": "RECORD_HISTORICAL_DIRECTOR_DISPATCH",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json"
+  ]
+}
