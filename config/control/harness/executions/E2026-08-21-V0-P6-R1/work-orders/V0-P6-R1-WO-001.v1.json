@@ -1,0 +1,183 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "project_epoch": "E2026-08-21-V0-P6-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "state": "PLANNED",
+  "work_order_type": "IMPLEMENTATION",
+  "base_sha": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "scope": "Implement the accepted P6 campaign over the exact accepted P5 product lineage: establish a persistent two-client shared outpost and make the existing product seam-ready through topology-neutral identity, retry-safe OperationId continuity, an explicit non-oracular mutation-admission boundary, deterministic PlayerAuthorityDomain-ready closure construction, gateway-ready command/session routing, restart/reconnect recovery, and a read-only WARM/SHADOW compatibility proof. Preserve the existing canonical Item Graph, P4 Construction, P5 equipment/tool, persistence/recovery and NX network owners. Do not implement production Directory-backed authority transfer or activate SM1 in this Work Order.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/**",
+    "scripts/app/**",
+    "scripts/ui/inventory/**",
+    "tools/runtime/v0_p6_*",
+    "tests/runtime/test_v0_p6_*",
+    "tests/runtime/support/v0_p6/**",
+    "tests/fixtures/v0_p6/**",
+    "RUN_V0_P6_*",
+    "config/control/harness/executions/E2026-08-21-V0-P6-R1/**",
+    "config/control/branches/feature__v0-p6-persistent-shared-outpost.v1.json",
+    "docs/checkpoints/2026-08-21_V0_P6_*",
+    "docs/evidence/2026-08-21_V0_P6_*"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/**",
+    "scripts/persistence/**",
+    "scripts/research/**"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "V0_P6_ACCEPTED_P5_SUCCESSOR_BASE_EXACT",
+    "V0_P6_WORK_ORDER_ISSUED",
+    "V0_P6_RISK_CLASSIFIED_HIGH",
+    "V0_P6_DESIGN_BRIEF_READY",
+    "V0_P6_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+    "V0_P6_CANONICAL_OWNERSHIP_MAP_PASS",
+    "V0_P6_TOPOLOGY_NEUTRAL_IDENTITY_PASS",
+    "V0_P6_OPERATION_CONTINUITY_IDEMPOTENCY_PASS",
+    "V0_P6_MUTATION_ADMISSION_BOUNDARY_PASS",
+    "V0_P6_AUTHORITY_DOMAIN_CLOSURE_ADAPTER_PASS",
+    "V0_P6_GATEWAY_READY_ROUTING_PASS",
+    "V0_P6_TWO_CLIENT_SHARED_OUTPOST_PASS",
+    "V0_P6_SERVER_RESTART_RECONSTRUCTION_PASS",
+    "V0_P6_PLAYER_RECONNECT_RECONSTRUCTION_PASS",
+    "V0_P6_WARM_SHADOW_READ_ONLY_COMPATIBILITY_PASS",
+    "V0_P6_FAULT_RACE_MATRIX_PASS",
+    "V0_P6_FIVE_CLEAN_END_TO_END_REPEATS_PASS",
+    "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS",
+    "V0_P6_VISUAL_MANUAL_GATES_PASS",
+    "V0_P6_ZERO_DUPLICATE_CANONICAL_TRUTH_PASS",
+    "V0_P6_NO_PRIVATE_NETWORK_FOUNDATION_PASS",
+    "V0_P6_NO_RESEARCH_PRODUCTION_ANCESTRY_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "V0_P6_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "Machine-readable canonical ownership map proving zero duplicate P6 truth",
+    "Topology-neutral logical player/entity/item/construction identity across reconnect and process restart",
+    "End-to-end OperationId retry/idempotency evidence across lost response and reconnect",
+    "Explicit mutation-admission boundary that preserves current ownership and can later accept Directory-backed authorization",
+    "Deterministic immutable PlayerAuthorityDomain-ready closure adapter over canonical player/inventory/equipment state",
+    "Gateway-ready logical session and route boundary with no private network or ownership authority",
+    "Two-client persistent shared outpost graphical and machine evidence",
+    "Server restart and player reconnect reconstruction evidence",
+    "Read-only WARM/SHADOW reconstruction with exact state/hash compatibility and zero canonical writes",
+    "Fault/race matrix evidence, five clean E2E repeats and 30-minute two-graphical-client soak",
+    "Fresh evidence map, Reviewer PASS and Verifier PASS before P6 checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "A second Item Graph, equipment, Construction, outpost, persistence or operation-ledger truth would be required",
+    "A network protocol, prediction, reconciliation, transport-session or network-authority foundation change would be required; fail closed to NX/main architecture",
+    "A production Ownership Directory or actual A-to-B ownership switch would be required inside P6; stop and preserve it for post-P6 SM1 activation",
+    "A research branch would need to become the P6 Git ancestry or production base",
+    "A second pre-H0.3 runtime mutation worker would be required",
+    "The exact accepted P5 predecessor base cannot be proven",
+    "Production mutation escapes the bounded P6 gameplay/seam-ready scope"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Composes authoritative Item Graph, Construction, equipment, persistence/recovery and multiplayer gameplay into the first persistent shared outpost",
+    "Introduces seam-ready mutation/session/domain boundaries that must not become competing ownership or network foundations",
+    "Requires real two-client graphical validation, server restart recovery and long-running soak without duplicate canonical truth"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "P5 is accepted, but the product still lacks one stable persistent shared outpost composition and its current single-authority interfaces would otherwise require a disruptive rewrite when Directory/Gateway-based seamless authority migration is integrated after P6.",
+    "current_behavior": "The accepted product already has canonical mining/resources, Item Graph, Construction, equipment/tools, multiplayer replication and recovery primitives, but they are not yet proven as one durable two-client outpost loop and are not all explicitly topology-neutral or prepared for future authority-domain transfer.",
+    "desired_behavior": "Two graphical clients can repeatedly mine, equip/use tools, share containers, build and recover the same persistent outpost; logical identity and OperationId survive reconnect/restart; canonical mutations enter through an explicit admission boundary; player carried state can be deterministically reconstructed read-only on a WARM/SHADOW authority; gameplay commands are route/gateway-ready without moving ownership or networking authority into P6.",
+    "alternatives_considered": [
+      "Keep P6 persistence-only and redesign gameplay/network boundaries later during SM1",
+      "Implement full production two-authority seamless handoff inside P6",
+      "Create P6-private outpost/persistence/network state to simplify the checkpoint",
+      "Make P6 seam-ready while keeping the actual ownership switch in a separate post-P6 SM1 checkpoint"
+    ],
+    "selected_design": "Make P6 the persistent shared-outpost product baseline plus seam-ready interfaces, while running Seamless Research independently as donor evidence and reserving Directory-backed ownership transfer for the separately activated production SM1 branch from accepted P6.",
+    "why_selected": "It removes foreseeable future integration seams now without coupling P6 acceptance to the much larger risk of production distributed ownership, and preserves one canonical owner for gameplay, persistence and networking throughout P6.",
+    "affected_owners": [
+      "V0",
+      "CANONICAL_ITEM_GRAPH",
+      "P4_CONSTRUCTION",
+      "P5_EQUIPMENT_TOOLS",
+      "EXISTING_PERSISTENCE_RECOVERY",
+      "NX_NETWORK_FOUNDATION",
+      "SEAMLESS_R2_AS_DONOR_ONLY"
+    ],
+    "dependencies": [
+      "V0_P5_CHECKPOINT_ACCEPTED",
+      "accepted P5 lineage 491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+      "canonical P6+Seamless roadmap merged to main as 1d9de3c479c60045d613660b2a5c5db0374963f8",
+      "canonical M4 Item Graph",
+      "canonical P4 Construction",
+      "accepted P5 equipment/tools",
+      "existing persistence/recovery owner",
+      "current NX production network boundary"
+    ],
+    "non_goals": [
+      "No production Ownership Directory activation",
+      "No production A-to-B authority ownership switch",
+      "No dynamic split/merge or automatic load balancing",
+      "No new private network protocol/prediction/reconciliation stack",
+      "No wholesale merge of SM0, Seamless Research or MRPF branches",
+      "No P7 terrain mutation or P8 mobile construct scope"
+    ],
+    "expected_risks": [
+      "Reconnect or restart changes canonical identity instead of only transport/process identity",
+      "Lost responses or retries duplicate construction/resource/item operations",
+      "Mutation admission accidentally becomes a second ownership oracle",
+      "Domain closure accidentally becomes a second persistence store or per-item ownership system",
+      "Gateway-ready routing accidentally moves protocol/session authority away from NX",
+      "WARM/SHADOW process accidentally gains canonical write authority",
+      "Two-client persistence appears correct visually while canonical hashes/IDs diverge"
+    ],
+    "validation_plan": [
+      "Freeze and machine-check canonical ownership before broad P6 implementation",
+      "Run graphical reconnect tests for topology-neutral identity and retry-safe visible operations",
+      "Exercise authorized and unauthorized mutation-admission paths",
+      "Compare live PlayerAuthorityDomain-shaped state with deterministic reconstructed closure/hash",
+      "Run the normal graphical client through the route abstraction and prove semantic equivalence",
+      "Run mandatory two-client persistent shared-outpost and hard server-restart graphical gates",
+      "Run WARM/SHADOW read-only compatibility with matching hashes and explicit mutation rejection",
+      "Execute deterministic fault/race coverage plus five clean E2E repeats",
+      "Run 30-minute two-graphical-client mixed-workload soak and full world/core regression",
+      "Perform post-build critique, fresh independent Reviewer and Verifier before checkpoint proposal"
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "RUNTIME_FEATURE_MERGE",
+    "NETWORK_FOUNDATION_CHANGE_REQUIRED",
+    "DUPLICATE_CANONICAL_TRUTH_REQUIRED",
+    "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED",
+    "PRODUCTION_SM1_ACTIVATION_REQUESTED",
+    "RESEARCH_BRANCH_AS_PRODUCT_BASE_REQUESTED"
+  ],
+  "issued_at_utc": "2026-08-21T05:51:00Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE",
+    "PRODUCTION_SM1_ACTIVATION"
+  ],
+  "notes": "Fresh P6 Work Order issued only after formal P5 acceptance and independent acceptance of the P6+Seamless roadmap into canonical main. Runtime mutation remains forbidden until a separate main-owned lease rotation moves the single V0 mutation lease to P6, the runtime branch is created from exact accepted P5 lineage 491ca7d..., current main control is composed without changing product-base provenance, and a separate committed DIRECTOR DISPATCHED event authorizes implementation. Seamless Research remains donor-only throughout P6."
+}
