@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
+  "revision": "V0-EG0-2026-08-21-R1",
+  "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
+  "stacked_control_dependency": {
+    "pr": 185,
+    "exact_head": "c5d7d0d682181f0a796d0e059508a1fdfe91b6e1",
+    "must_be_canonical_before_acceptance": true
+  },
+  "goal": "TOPOLOGY_NEUTRAL_DTOS_PASS",
+  "protocol_version": 1,
+  "schemas": [
+    "planet_simulator.client_world_frame.v1",
+    "planet_simulator.gateway_ingress_envelope.v1",
+    "planet_simulator.gateway_egress_envelope.v1",
+    "planet_simulator.gateway_session_binding.v1",
+    "planet_simulator.gateway_route_binding.v1",
+    "planet_simulator.projection_subscription.v1",
+    "planet_simulator.gateway_descriptor.v1"
+  ],
+  "hard_invariants": [
+    "TRANSPORT_CONNECTION_ID_NOT_PLAYER_ID",
+    "GATEWAY_SESSION_ID_NOT_CLIENT_SESSION_ID",
+    "GATEWAY_SESSION_ID_NOT_PLAYER_ID",
+    "PLAYER_ID_NOT_PLAYER_ENTITY_ID",
+    "SESSION_SLOT_NOT_PLAYER_ID",
+    "BACKEND_PEER_ID_NOT_PLAYER_ID",
+    "ROUTE_REVISION_NOT_AUTHORITY_EPOCH",
+    "GATEWAY_ROUTE_METADATA_NOT_MUTATION_AUTHORITY",
+    "WORLD_OPERATION_OPERATION_ID_STABLE_THROUGH_GATEWAY_WRAPPING",
+    "PROJECTION_READ_ONLY"
+  ],
+  "focused_tests": [
+    "res://tests/network/test_eg0_edge_gateway_contracts.gd",
+    "res://tests/network/test_eg0_edge_gateway_fixtures.gd"
+  ],
+  "next_stage": "EG1_BLOCKED_UNTIL_EG0_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
+  "p6_runtime_authorized": false
+}

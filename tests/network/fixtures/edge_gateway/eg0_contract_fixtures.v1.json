@@ -1,0 +1,145 @@
+{
+  "client_world_frame_operation": {
+    "channel": "WORLD_OPERATION",
+    "direction": "CLIENT_TO_WORLD",
+    "frame_id": "frame/test/operation-1",
+    "gateway_session_id": "gateway-session/test/a",
+    "payload": {
+      "command": "pickup",
+      "operation_id": "operation/test/pickup-1",
+      "target_id": "entity/test/item-1"
+    },
+    "payload_schema": "planet_simulator.test_world_operation.v1",
+    "protocol_version": 1,
+    "schema": "planet_simulator.client_world_frame.v1",
+    "sequence": 7
+  },
+  "client_world_frame_projection": {
+    "channel": "WORLD_PROJECTION",
+    "direction": "WORLD_TO_CLIENT",
+    "frame_id": "frame/test/projection-1",
+    "gateway_session_id": "gateway-session/test/a",
+    "payload": {
+      "entities": [
+        "entity/test/tree-1"
+      ],
+      "read_only": true,
+      "source_revision": 4
+    },
+    "payload_schema": "planet_simulator.test_world_projection.v1",
+    "protocol_version": 1,
+    "schema": "planet_simulator.client_world_frame.v1",
+    "sequence": 8
+  },
+  "gateway_descriptor": {
+    "capacity_hint": 73,
+    "descriptor_id": "gateway-descriptor/test/g1",
+    "endpoint_id": "endpoint/test/g1-public",
+    "gateway_instance_id": "gateway/test/g1",
+    "health_state": "HEALTHY",
+    "locator_revision": 7,
+    "pop_id": "gateway-pop/test/us-central",
+    "protocol_version": 1,
+    "region_hint": "us/central",
+    "schema": "planet_simulator.gateway_descriptor.v1"
+  },
+  "gateway_egress_envelope_projection": {
+    "backend_link_id": "backend-link/test/g1-b",
+    "envelope_id": "gateway-envelope/test/egress-1",
+    "frame": {
+      "channel": "WORLD_PROJECTION",
+      "direction": "WORLD_TO_CLIENT",
+      "frame_id": "frame/test/projection-1",
+      "gateway_session_id": "gateway-session/test/a",
+      "payload": {
+        "entities": [
+          "entity/test/tree-1"
+        ],
+        "read_only": true,
+        "source_revision": 4
+      },
+      "payload_schema": "planet_simulator.test_world_projection.v1",
+      "protocol_version": 1,
+      "schema": "planet_simulator.client_world_frame.v1",
+      "sequence": 8
+    },
+    "gateway_instance_id": "gateway/test/g1",
+    "gateway_session_id": "gateway-session/test/a",
+    "observed_authority_epoch": 53,
+    "protocol_version": 1,
+    "route_revision": 93,
+    "schema": "planet_simulator.gateway_egress_envelope.v1",
+    "session_slot": 14,
+    "source_authority_id": "authority/test/b",
+    "source_role": "PROJECTION",
+    "source_server_instance_id": "server-instance/test/b-1"
+  },
+  "gateway_ingress_envelope": {
+    "backend_link_id": "backend-link/test/g1-a",
+    "envelope_id": "gateway-envelope/test/ingress-1",
+    "frame": {
+      "channel": "WORLD_OPERATION",
+      "direction": "CLIENT_TO_WORLD",
+      "frame_id": "frame/test/operation-1",
+      "gateway_session_id": "gateway-session/test/a",
+      "payload": {
+        "command": "pickup",
+        "operation_id": "operation/test/pickup-1",
+        "target_id": "entity/test/item-1"
+      },
+      "payload_schema": "planet_simulator.test_world_operation.v1",
+      "protocol_version": 1,
+      "schema": "planet_simulator.client_world_frame.v1",
+      "sequence": 7
+    },
+    "gateway_instance_id": "gateway/test/g1",
+    "gateway_session_id": "gateway-session/test/a",
+    "observed_authority_epoch": 52,
+    "protocol_version": 1,
+    "route_revision": 92,
+    "route_role": "ACTIVE",
+    "schema": "planet_simulator.gateway_ingress_envelope.v1",
+    "session_slot": 14,
+    "target_authority_id": "authority/test/a",
+    "target_server_instance_id": "server-instance/test/a-1"
+  },
+  "gateway_route_binding": {
+    "authority_id": "authority/test/a",
+    "gateway_session_id": "gateway-session/test/a",
+    "observed_authority_epoch": 52,
+    "player_entity_id": "entity/test/player-alice",
+    "protocol_version": 1,
+    "route_binding_id": "gateway-route/test/a",
+    "route_revision": 92,
+    "route_role": "ACTIVE",
+    "schema": "planet_simulator.gateway_route_binding.v1",
+    "server_instance_id": "server-instance/test/a-1"
+  },
+  "gateway_session_binding": {
+    "binding_revision": 3,
+    "client_session_id": "client-session/test/a",
+    "gateway_session_id": "gateway-session/test/a",
+    "logical_player_id": "player/test/alice",
+    "player_entity_id": "entity/test/player-alice",
+    "protocol_version": 1,
+    "schema": "planet_simulator.gateway_session_binding.v1",
+    "state": "ATTACHED",
+    "world_id": "world/test/earth"
+  },
+  "projection_subscription": {
+    "gateway_session_id": "gateway-session/test/a",
+    "grant_id": "projection-grant/test/a-b",
+    "interest_key": "interest/test/neighbor-b",
+    "manifest_revision": 2,
+    "protocol_version": 1,
+    "read_only": true,
+    "schema": "planet_simulator.projection_subscription.v1",
+    "source_authority_id": "authority/test/b",
+    "source_revision": 4,
+    "source_server_instance_id": "server-instance/test/b-1",
+    "stream_id": "projection-stream/test/b-neighbor",
+    "subscription_id": "projection-subscription/test/b"
+  },
+  "protocol_version": 1,
+  "schema": "planet_simulator.edge_gateway_eg0_fixture_set.v1"
+}
