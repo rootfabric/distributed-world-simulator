@@ -15,6 +15,7 @@ IMPL = ROOT / "scripts/research/ecology/population_workset_compiler_v1.py"
 CONTRACT = ROOT / "config/ecology/eco-evo3-e3-5-population-workset-contract.v1.json"
 BINDING = ROOT / "config/ecology/accepted_inputs/e3_4_accepted_causal_colonization_program.binding.v1.json"
 E34 = ROOT / "config/ecology/accepted_inputs/e3_4_candidate_causal_colonization_program.v1.json"
+COMMITTED = ROOT / "validation/ecology/eco-evo3-e3-5-population-workset.generated.json"
 
 
 def load_module():
@@ -47,7 +48,7 @@ class E35PopulationWorksetAuthorityTests(unittest.TestCase):
     def rehash_output(self, output):
         output = copy.deepcopy(output)
         output["provenance_hash"] = self.mod.sha256_canonical(output["provenance"])
-        body = copy.deepcopy(output)
+        body = copy.deepcopy(dict(output))
         body.pop("population_workset_hash", None)
         output["population_workset_hash"] = self.mod.sha256_canonical(body)
         return output
@@ -63,6 +64,7 @@ class E35PopulationWorksetAuthorityTests(unittest.TestCase):
 
     def test_02_authoritative_provenance_requires_exact_raw_traversal(self):
         _, _, output = self.authoritative()
+        self.assertIsInstance(output, self.mod._VerifiedWorkset)
         self.assertEqual(output["provenance"]["input_verification"], "EXACT_ACCEPTED_E3_4_RAW_BYTES_VERIFIED")
         self.assertEqual(output["provenance"]["accepted_e3_4_git_blob"], "db725ef37912547527dff5fffe39ca63e5f8c22e")
 
@@ -211,6 +213,54 @@ class E35PopulationWorksetAuthorityTests(unittest.TestCase):
     def test_20_authority_entrypoint_accepts_no_caller_provenance_or_transport(self):
         parameters = list(inspect.signature(self.mod.build_population_workset).parameters)
         self.assertEqual(parameters, ["contract", "program"])
+
+    def test_21_fully_shaped_parsed_artifact_cannot_serialize(self):
+        _, _, output = self.authoritative()
+        parsed = json.loads(self.mod.serialize_workset(output).decode("utf-8"))
+        self.mod.validate_output_structure(parsed)
+        with self.assertRaisesRegex(self.mod.E35Error, "E3_5_VERIFIED_WORKSET_REQUIRED"):
+            self.mod.serialize_workset(parsed)
+
+    def test_22_reviewer_provenance_replacement_reproducer_fails_closed(self):
+        _, _, output = self.authoritative()
+        forged = json.loads(self.mod.serialize_workset(output).decode("utf-8"))
+        source = forged["source_colonization_program"]
+        provenance = forged["provenance"]
+        source["colonization_program_hash"] = "0" * 64
+        source["provenance_hash"] = "1" * 64
+        source["artifact_sha256"] = "2" * 64
+        source["accepted_control_head"] = "3" * 40
+        source["canonical_merge_commit"] = "4" * 40
+        provenance["accepted_e3_4_program_hash"] = source["colonization_program_hash"]
+        provenance["accepted_e3_4_provenance_hash"] = source["provenance_hash"]
+        provenance["accepted_e3_4_artifact_sha256"] = source["artifact_sha256"]
+        provenance["accepted_e3_4_control_head"] = source["accepted_control_head"]
+        provenance["accepted_e3_4_merge_commit"] = source["canonical_merge_commit"]
+        provenance["contract_hash"] = "5" * 64
+        provenance["full_persisted_evo2_catalog_hash"] = "6" * 64
+        forged["provenance_hash"] = self.mod.sha256_canonical(provenance)
+        body = copy.deepcopy(forged)
+        body.pop("population_workset_hash", None)
+        forged["population_workset_hash"] = self.mod.sha256_canonical(body)
+        with self.assertRaises(self.mod.E35Error):
+            self.mod.validate_output_structure(forged)
+        with self.assertRaises(self.mod.E35Error):
+            self.mod.serialize_workset(forged)
+
+    def test_23_verified_workset_rebuild_detects_rehashed_source_mutation(self):
+        _, _, output = self.authoritative()
+        mutated = copy.deepcopy(output)
+        mutated["source_colonization_program"]["stable_time_key"] += "/forged"
+        mutated = self.rehash_output(mutated)
+        with self.assertRaises(self.mod.E35Error):
+            self.mod.serialize_workset(mutated)
+
+    def test_24_committed_generated_artifact_is_plain_evidence_not_serialization_capability(self):
+        parsed = json.loads(COMMITTED.read_text(encoding="utf-8"))
+        self.mod.validate_output_structure(parsed)
+        self.assertEqual(parsed["population_workset_hash"], self.mod.EXPECTED_E3_5_WORKSET_HASH)
+        with self.assertRaisesRegex(self.mod.E35Error, "E3_5_VERIFIED_WORKSET_REQUIRED"):
+            self.mod.serialize_workset(parsed)
 
 
 if __name__ == "__main__":

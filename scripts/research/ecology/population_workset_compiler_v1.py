@@ -13,6 +13,16 @@ CONTRACT_GIT_BLOB = "b2afe370aa505e3d8448e5bd2ebb065a00dd7f38"
 BINDING_GIT_BLOB = "3705d33cd1c393f9a8ce03ce59d89a883933f05f"
 ACCEPTED_E3_4_GIT_BLOB = "db725ef37912547527dff5fffe39ca63e5f8c22e"
 
+EXPECTED_CONTRACT_HASH = "45317ec4912e9add2ed0f722a0184d0065772da2130b9f58d063729e9a321100"
+EXPECTED_E3_4_PROGRAM_HASH = "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6"
+EXPECTED_E3_4_PROVENANCE_HASH = "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a"
+EXPECTED_E3_4_ARTIFACT_SHA256 = "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463"
+EXPECTED_E3_4_CONTROL_HEAD = "872f2d993cc002b72529ea7f2a3274d0d71245b0"
+EXPECTED_E3_4_MERGE_COMMIT = "8618032bfb668c7f0427f0aa80c0e07de69a3cfc"
+EXPECTED_EVO2_CATALOG_HASH = "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
+EXPECTED_E3_5_PROVENANCE_HASH = "ec9c734882ef4a97eec2ed071f3c06ec2a29df52f13a45c7054a4641cbd42738"
+EXPECTED_E3_5_WORKSET_HASH = "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5"
+
 AUTHORITY = "RESEARCH_DERIVED_NON_AUTHORITATIVE"
 UNVERIFIED_AUTHORITY = "UNVERIFIED_PARSED_INPUTS_NO_ACCEPTED_INPUT_ATTESTATION"
 SCHEDULING_AUTHORITY = "RESEARCH_SCHEDULING_IDENTITY_NON_CANONICAL"
@@ -40,6 +50,26 @@ class _VerifiedInput(dict[str, Any]):
         self.kind = kind
         self.raw = bytes(raw)
         self.binding_raw = None if binding_raw is None else bytes(binding_raw)
+
+
+class _VerifiedWorkset(dict[str, Any]):
+    """Authoritative serialization capability bound to exact accepted raw inputs."""
+
+    def __init__(self, value: dict[str, Any], *, contract_raw: bytes, binding_raw: bytes, program_raw: bytes) -> None:
+        super().__init__(value)
+        self.contract_raw = bytes(contract_raw)
+        self.binding_raw = bytes(binding_raw)
+        self.program_raw = bytes(program_raw)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> "_VerifiedWorkset":
+        copied = _VerifiedWorkset(
+            copy.deepcopy(dict(self), memo),
+            contract_raw=self.contract_raw,
+            binding_raw=self.binding_raw,
+            program_raw=self.program_raw,
+        )
+        memo[id(self)] = copied
+        return copied
 
 
 def _require(condition: bool, code: str) -> None:
@@ -83,9 +113,20 @@ def validate_contract(contract: dict[str, Any]) -> None:
     body = copy.deepcopy(contract)
     body.pop("contract_hash", None)
     _require(sha256_canonical(body) == expected_hash, "E3_5_CONTRACT_HASH")
+    _require(expected_hash == EXPECTED_CONTRACT_HASH, "E3_5_CONTRACT_HASH_IDENTITY")
     accepted = contract.get("accepted_e3_4")
     _require(isinstance(accepted, dict), "E3_5_CONTRACT_ACCEPTED_E3_4")
-    _require(accepted.get("artifact_git_blob") == ACCEPTED_E3_4_GIT_BLOB, "E3_5_CONTRACT_E3_4_BLOB")
+    exact_expected = {
+        "artifact_git_blob": ACCEPTED_E3_4_GIT_BLOB,
+        "artifact_sha256": EXPECTED_E3_4_ARTIFACT_SHA256,
+        "colonization_program_hash": EXPECTED_E3_4_PROGRAM_HASH,
+        "provenance_hash": EXPECTED_E3_4_PROVENANCE_HASH,
+        "accepted_control_head": EXPECTED_E3_4_CONTROL_HEAD,
+        "canonical_merge_commit": EXPECTED_E3_4_MERGE_COMMIT,
+        "full_catalog_hash": EXPECTED_EVO2_CATALOG_HASH,
+    }
+    for key, expected in exact_expected.items():
+        _require(accepted.get(key) == expected, f"E3_5_CONTRACT_E3_4_{key.upper()}")
     _require(contract.get("scale_model", {}).get("levels") == list(SCALE_LEVELS), "E3_5_SCALE_LEVELS")
     _require(contract.get("population_basis", {}).get("individual_entity_truth") is False, "E3_5_INDIVIDUAL_TRUTH_FORBIDDEN")
     _require(contract.get("population_basis", {}).get("population_count_truth") is False, "E3_5_POPULATION_COUNT_TRUTH_FORBIDDEN")
@@ -118,16 +159,16 @@ def _validate_e3_4_program(program: dict[str, Any], contract: dict[str, Any]) ->
     provenance = program.get("provenance")
     _require(isinstance(provenance, dict), "E3_5_E3_4_PROVENANCE")
     _require(sha256_canonical(provenance) == program.get("provenance_hash"), "E3_5_E3_4_PROVENANCE_HASH_CONTENT")
-    _require(program.get("provenance_hash") == expected["provenance_hash"], "E3_5_E3_4_PROVENANCE_HASH")
+    _require(program.get("provenance_hash") == expected["provenance_hash"] == EXPECTED_E3_4_PROVENANCE_HASH, "E3_5_E3_4_PROVENANCE_HASH")
     unhashed = copy.deepcopy(program)
     claimed = unhashed.pop("colonization_program_hash", None)
     _require(sha256_canonical(unhashed) == claimed, "E3_5_E3_4_PROGRAM_HASH_CONTENT")
-    _require(claimed == expected["colonization_program_hash"], "E3_5_E3_4_PROGRAM_HASH")
+    _require(claimed == expected["colonization_program_hash"] == EXPECTED_E3_4_PROGRAM_HASH, "E3_5_E3_4_PROGRAM_HASH")
     source_catalog = program.get("source_catalog")
     source_decomposition = program.get("source_decomposition")
     _require(isinstance(source_catalog, dict), "E3_5_E3_4_SOURCE_CATALOG")
     _require(isinstance(source_decomposition, dict), "E3_5_E3_4_SOURCE_DECOMPOSITION")
-    _require(source_catalog.get("catalog_hash") == expected["full_catalog_hash"], "E3_5_E3_4_CATALOG_HASH")
+    _require(source_catalog.get("catalog_hash") == expected["full_catalog_hash"] == EXPECTED_EVO2_CATALOG_HASH, "E3_5_E3_4_CATALOG_HASH")
     _require(source_decomposition.get("decomposition_hash") == expected["decomposition_hash"], "E3_5_E3_4_DECOMPOSITION_HASH")
     _require(program.get("colonization_result") in {"COLONIZATION_PRESENT", "NO_COLONIZATION"}, "E3_5_E3_4_RESULT")
     manifest = program.get("input_species_manifest")
@@ -155,7 +196,7 @@ def load_accepted_e3_4(path: pathlib.Path, binding_path: pathlib.Path, contract:
     _verify_blob(program_raw, ACCEPTED_E3_4_GIT_BLOB, "E3_5_E3_4_GIT_BLOB")
     binding = _parse_object(binding_raw, "E3_5_BINDING_ROOT")
     _validate_binding(binding, contract)
-    _require(hashlib.sha256(program_raw).hexdigest() == contract["accepted_e3_4"]["artifact_sha256"], "E3_5_E3_4_ARTIFACT_SHA256")
+    _require(hashlib.sha256(program_raw).hexdigest() == contract["accepted_e3_4"]["artifact_sha256"] == EXPECTED_E3_4_ARTIFACT_SHA256, "E3_5_E3_4_ARTIFACT_SHA256")
     program = _parse_object(program_raw, "E3_5_E3_4_ROOT")
     _validate_e3_4_program(program, contract)
     return _VerifiedInput(program, kind="accepted_e3_4", raw=program_raw, binding_raw=binding_raw)
@@ -357,13 +398,18 @@ def _unverified_output(program: dict[str, Any], contract: dict[str, Any]) -> dic
     }
 
 
-def _reparse_verified_inputs(contract_input: _VerifiedInput, program_input: _VerifiedInput) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], bytes]:
+def _reparse_verified_inputs(contract_input: _VerifiedInput, program_input: _VerifiedInput) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], bytes, bytes, bytes]:
     _require(contract_input.kind == "contract", "E3_5_EXACT_RAW_CONTRACT_REQUIRED")
     _require(program_input.kind == "accepted_e3_4", "E3_5_EXACT_RAW_E3_4_REQUIRED")
     _require(program_input.binding_raw is not None, "E3_5_EXACT_RAW_BINDING_REQUIRED")
     contract_raw = contract_input.raw
     binding_raw = program_input.binding_raw
     program_raw = program_input.raw
+    contract, binding, program = _reparse_raw_inputs(contract_raw, binding_raw, program_raw)
+    return contract, binding, program, contract_raw, binding_raw, program_raw
+
+
+def _reparse_raw_inputs(contract_raw: bytes, binding_raw: bytes, program_raw: bytes) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     _verify_blob(contract_raw, CONTRACT_GIT_BLOB, "E3_5_CONTRACT_GIT_BLOB")
     _verify_blob(binding_raw, BINDING_GIT_BLOB, "E3_5_BINDING_GIT_BLOB")
     _verify_blob(program_raw, ACCEPTED_E3_4_GIT_BLOB, "E3_5_E3_4_GIT_BLOB")
@@ -371,21 +417,13 @@ def _reparse_verified_inputs(contract_input: _VerifiedInput, program_input: _Ver
     validate_contract(contract)
     binding = _parse_object(binding_raw, "E3_5_BINDING_ROOT")
     _validate_binding(binding, contract)
-    _require(hashlib.sha256(program_raw).hexdigest() == contract["accepted_e3_4"]["artifact_sha256"], "E3_5_E3_4_ARTIFACT_SHA256")
+    _require(hashlib.sha256(program_raw).hexdigest() == contract["accepted_e3_4"]["artifact_sha256"] == EXPECTED_E3_4_ARTIFACT_SHA256, "E3_5_E3_4_ARTIFACT_SHA256")
     program = _parse_object(program_raw, "E3_5_E3_4_ROOT")
     _validate_e3_4_program(program, contract)
-    return contract, binding, program, program_raw
+    return contract, binding, program
 
 
-def build_population_workset(contract: dict[str, Any], program: dict[str, Any]) -> dict[str, Any]:
-    if not (
-        isinstance(contract, _VerifiedInput)
-        and contract.kind == "contract"
-        and isinstance(program, _VerifiedInput)
-        and program.kind == "accepted_e3_4"
-    ):
-        return _unverified_output(program, contract)
-    contract_value, binding, program_value, program_raw = _reparse_verified_inputs(contract, program)
+def _build_authoritative_value(contract_value: dict[str, Any], binding: dict[str, Any], program_value: dict[str, Any], program_raw: bytes) -> dict[str, Any]:
     derived = _derive_core(program_value, contract_value)
     source = program_value["source_decomposition"]
     accepted = contract_value["accepted_e3_4"]
@@ -426,11 +464,25 @@ def build_population_workset(contract: dict[str, Any], program: dict[str, Any]) 
     return output
 
 
+def build_population_workset(contract: dict[str, Any], program: dict[str, Any]) -> dict[str, Any]:
+    if not (
+        isinstance(contract, _VerifiedInput)
+        and contract.kind == "contract"
+        and isinstance(program, _VerifiedInput)
+        and program.kind == "accepted_e3_4"
+    ):
+        return _unverified_output(program, contract)
+    contract_value, binding, program_value, contract_raw, binding_raw, program_raw = _reparse_verified_inputs(contract, program)
+    output = _build_authoritative_value(contract_value, binding, program_value, program_raw)
+    return _VerifiedWorkset(output, contract_raw=contract_raw, binding_raw=binding_raw, program_raw=program_raw)
+
+
 def _assert_exact_keys(value: dict[str, Any], expected: set[str], code: str) -> None:
     _require(set(value) == expected, code)
 
 
-def validate_output_integrity(output: dict[str, Any]) -> None:
+def validate_output_structure(output: dict[str, Any]) -> None:
+    """Validate shape/content only; this function never grants serialization authority."""
     _require(isinstance(output, dict), "E3_5_OUTPUT_ROOT")
     _assert_exact_keys(output, {
         "schema", "checkpoint", "compiler_stage", "authority", "canonical_binding_resolved",
@@ -453,7 +505,16 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         "accepted_control_head", "canonical_merge_commit", "colonization_result",
         "stable_planet_identity", "stable_time_key",
     }, "E3_5_OUTPUT_SOURCE_FIELDS")
-    _require(source.get("git_blob") == ACCEPTED_E3_4_GIT_BLOB, "E3_5_OUTPUT_SOURCE_GIT_BLOB")
+    exact_source = {
+        "colonization_program_hash": EXPECTED_E3_4_PROGRAM_HASH,
+        "provenance_hash": EXPECTED_E3_4_PROVENANCE_HASH,
+        "artifact_sha256": EXPECTED_E3_4_ARTIFACT_SHA256,
+        "git_blob": ACCEPTED_E3_4_GIT_BLOB,
+        "accepted_control_head": EXPECTED_E3_4_CONTROL_HEAD,
+        "canonical_merge_commit": EXPECTED_E3_4_MERGE_COMMIT,
+    }
+    for key, expected in exact_source.items():
+        _require(source.get(key) == expected, f"E3_5_OUTPUT_SOURCE_{key.upper()}_IDENTITY")
     _require(source.get("colonization_result") in {"COLONIZATION_PRESENT", "NO_COLONIZATION"}, "E3_5_OUTPUT_SOURCE_RESULT")
     _require(bool(source.get("stable_planet_identity")) and bool(source.get("stable_time_key")), "E3_5_OUTPUT_SOURCE_IDENTITY")
 
@@ -464,14 +525,25 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         "accepted_e3_4_artifact_sha256", "accepted_e3_4_git_blob", "accepted_e3_4_control_head",
         "accepted_e3_4_merge_commit", "full_persisted_evo2_catalog_hash", "input_verification",
     }, "E3_5_OUTPUT_PROVENANCE_FIELDS")
-    _require(provenance.get("input_verification") == "EXACT_ACCEPTED_E3_4_RAW_BYTES_VERIFIED", "E3_5_OUTPUT_INPUT_VERIFICATION")
-    _require(provenance.get("accepted_e3_4_git_blob") == ACCEPTED_E3_4_GIT_BLOB, "E3_5_OUTPUT_PROVENANCE_GIT_BLOB")
+    exact_provenance = {
+        "contract_hash": EXPECTED_CONTRACT_HASH,
+        "accepted_e3_4_program_hash": EXPECTED_E3_4_PROGRAM_HASH,
+        "accepted_e3_4_provenance_hash": EXPECTED_E3_4_PROVENANCE_HASH,
+        "accepted_e3_4_artifact_sha256": EXPECTED_E3_4_ARTIFACT_SHA256,
+        "accepted_e3_4_git_blob": ACCEPTED_E3_4_GIT_BLOB,
+        "accepted_e3_4_control_head": EXPECTED_E3_4_CONTROL_HEAD,
+        "accepted_e3_4_merge_commit": EXPECTED_E3_4_MERGE_COMMIT,
+        "full_persisted_evo2_catalog_hash": EXPECTED_EVO2_CATALOG_HASH,
+        "input_verification": "EXACT_ACCEPTED_E3_4_RAW_BYTES_VERIFIED",
+    }
+    for key, expected in exact_provenance.items():
+        _require(provenance.get(key) == expected, f"E3_5_OUTPUT_PROVENANCE_{key.upper()}_IDENTITY")
     _require(provenance.get("accepted_e3_4_program_hash") == source.get("colonization_program_hash"), "E3_5_OUTPUT_PROGRAM_LINK")
     _require(provenance.get("accepted_e3_4_provenance_hash") == source.get("provenance_hash"), "E3_5_OUTPUT_SOURCE_PROVENANCE_LINK")
     _require(provenance.get("accepted_e3_4_artifact_sha256") == source.get("artifact_sha256"), "E3_5_OUTPUT_ARTIFACT_LINK")
     _require(provenance.get("accepted_e3_4_control_head") == source.get("accepted_control_head"), "E3_5_OUTPUT_CONTROL_HEAD_LINK")
     _require(provenance.get("accepted_e3_4_merge_commit") == source.get("canonical_merge_commit"), "E3_5_OUTPUT_MERGE_LINK")
-    _require(sha256_canonical(provenance) == output.get("provenance_hash"), "E3_5_OUTPUT_PROVENANCE_HASH")
+    _require(sha256_canonical(provenance) == output.get("provenance_hash") == EXPECTED_E3_5_PROVENANCE_HASH, "E3_5_OUTPUT_PROVENANCE_HASH")
 
     basis = output.get("work_basis_manifest")
     work_units = output.get("population_work_units")
@@ -506,10 +578,12 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         basis_by_key[basis_key] = item
         species_ids.add(species_id)
         patch_ids.add(patch_id)
+    _require(basis == sorted(basis, key=lambda item: (item["stable_spatial_key"], item["research_species_id"], item["basis_key"])), "E3_5_OUTPUT_BASIS_ORDER")
 
     expected_basis_keys = sorted(basis_by_key)
     work_ids: set[str] = set()
     counts = {scale: 0 for scale in SCALE_LEVELS}
+    scale_order = {"PLANET": 0, "REGION": 1, "PATCH": 2, "LOCAL_ACTIVE": 3}
     for unit in work_units:
         _require(isinstance(unit, dict), "E3_5_OUTPUT_WORK_UNIT_TYPE")
         scale = str(unit.get("scale", ""))
@@ -522,6 +596,7 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         _require(unit.get("representation") == REPRESENTATIONS[scale], "E3_5_OUTPUT_WORK_UNIT_REPRESENTATION")
         keys = unit.get("basis_keys")
         _require(isinstance(keys, list) and keys, "E3_5_OUTPUT_WORK_UNIT_BASIS_KEYS")
+        _require(keys == sorted(keys), "E3_5_OUTPUT_WORK_UNIT_BASIS_ORDER")
         _require(len(keys) == len(set(keys)), "E3_5_OUTPUT_WORK_UNIT_DUPLICATE_BASIS")
         _require(all(key in basis_by_key for key in keys), "E3_5_OUTPUT_WORK_UNIT_UNKNOWN_BASIS")
         _require(unit.get("aggregate_member_count") == len(keys), "E3_5_OUTPUT_WORK_UNIT_MEMBER_COUNT")
@@ -538,6 +613,7 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         elif scale in {"PATCH", "LOCAL_ACTIVE"}:
             _require(len({basis_by_key[key]["research_patch_id"] for key in keys}) == 1, "E3_5_OUTPUT_PATCH_SCOPE")
         counts[scale] += 1
+    _require(work_units == sorted(work_units, key=lambda item: (scale_order[item["scale"]], item["work_unit_id"])), "E3_5_OUTPUT_WORK_UNIT_ORDER")
 
     for scale in SCALE_LEVELS:
         covered = sorted(key for unit in work_units if unit["scale"] == scale for key in unit["basis_keys"])
@@ -558,6 +634,7 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
         _require(hint.get("meaning") == BUDGET_MEANING, "E3_5_OUTPUT_HINT_MEANING")
         expected_budget = BUDGET_OVERHEAD[scale] + matching["aggregate_member_count"] * BUDGET_PER_MEMBER[scale]
         _require(hint.get("budget_units") == expected_budget, "E3_5_OUTPUT_HINT_BUDGET")
+    _require(hints == sorted(hints, key=lambda item: (scale_order[item["scale"]], item["work_unit_id"])), "E3_5_OUTPUT_HINT_ORDER")
 
     _require(work_ids == hint_ids, "E3_5_OUTPUT_BUDGET_LINKS")
     expected_summary = {
@@ -584,14 +661,29 @@ def validate_output_integrity(output: dict[str, Any]) -> None:
     else:
         raise E35Error("E3_5_OUTPUT_WORKSET_RESULT")
 
-    unhashed = copy.deepcopy(output)
+    unhashed = copy.deepcopy(dict(output))
     claimed = unhashed.pop("population_workset_hash", None)
-    _require(sha256_canonical(unhashed) == claimed, "E3_5_OUTPUT_WORKSET_HASH")
+    _require(sha256_canonical(unhashed) == claimed == EXPECTED_E3_5_WORKSET_HASH, "E3_5_OUTPUT_WORKSET_HASH")
+
+
+def _rebuild_verified_workset(output: _VerifiedWorkset) -> dict[str, Any]:
+    contract, binding, program = _reparse_raw_inputs(output.contract_raw, output.binding_raw, output.program_raw)
+    expected = _build_authoritative_value(contract, binding, program, output.program_raw)
+    validate_output_structure(expected)
+    return expected
+
+
+def validate_output_integrity(output: dict[str, Any]) -> None:
+    """Authoritative integrity check. Plain parsed dictionaries are intentionally rejected."""
+    _require(isinstance(output, _VerifiedWorkset), "E3_5_VERIFIED_WORKSET_REQUIRED")
+    validate_output_structure(output)
+    expected = _rebuild_verified_workset(output)
+    _require(_canonical_bytes(dict(output)) == _canonical_bytes(expected), "E3_5_OUTPUT_EXACT_REBUILD_MISMATCH")
 
 
 def serialize_workset(output: dict[str, Any]) -> bytes:
     validate_output_integrity(output)
-    return _canonical_bytes(output) + b"\n"
+    return _canonical_bytes(dict(output)) + b"\n"
 
 
 def _parser() -> argparse.ArgumentParser:

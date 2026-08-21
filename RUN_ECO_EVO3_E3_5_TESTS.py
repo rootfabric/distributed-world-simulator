@@ -21,6 +21,7 @@ IMPL = ROOT / "scripts/research/ecology/population_workset_compiler_v1.py"
 SEMANTIC_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_5_population_workset.py"
 AUTHORITY_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_5_authority.py"
 WORKFLOW = ROOT / ".github/workflows/e3-5-closure.yml"
+COMMITTED_ARTIFACT = ROOT / "validation/ecology/eco-evo3-e3-5-population-workset.generated.json"
 FINAL_ARTIFACT = ROOT / "e3_5_candidate_population_workset.json"
 
 EXPECTED_BLOBS = {
@@ -28,16 +29,20 @@ EXPECTED_BLOBS = {
     "config/ecology/accepted_inputs/e3_4_accepted_causal_colonization_program.binding.v1.json": "3705d33cd1c393f9a8ce03ce59d89a883933f05f",
     "config/ecology/accepted_inputs/e3_4_candidate_causal_colonization_program.v1.json": "db725ef37912547527dff5fffe39ca63e5f8c22e",
     "config/ecology/eco-evo3-e3-5-population-workset.schema.v1.json": "45145b93b2bb5b4c74af6444b2095b2fcf3d12de",
-    "scripts/research/ecology/population_workset_compiler_v1.py": "233271037400c6085d0adcd1f211f052556f753e",
+    "scripts/research/ecology/population_workset_compiler_v1.py": "fa6d1271d9f2ded1024ba0c9f378f4aa476dd59a",
     "tests/research/ecology/test_eco_evo3_e3_5_population_workset.py": "c07641b7c747f587f71e58d86c39e8d49fe1b083",
-    "tests/research/ecology/test_eco_evo3_e3_5_authority.py": "dd5f8933456a8c5f0556a888fe13c9a52b8bf8b0",
-    ".github/workflows/e3-5-closure.yml": "90b829bc629aedb5c496d9c01defa703a057e5b9",
+    "tests/research/ecology/test_eco_evo3_e3_5_authority.py": "5dc263729eb8dc07f84c8c26fc21bc586d5e4c00",
+    ".github/workflows/e3-5-closure.yml": "c65d84172fe20bea8e668ec584620c7bd9682f48",
+    "validation/ecology/eco-evo3-e3-5-population-workset.generated.json": "d54ce8dad2760312d414c62c88d5f4f71427514f",
 }
 EXPECTED_CONTRACT_HASH = "45317ec4912e9add2ed0f722a0184d0065772da2130b9f58d063729e9a321100"
 EXPECTED_E34_PROGRAM_HASH = "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6"
 EXPECTED_E34_PROVENANCE_HASH = "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a"
 EXPECTED_E34_ARTIFACT_SHA256 = "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463"
-EXPECTED_TESTS = 47
+EXPECTED_E35_WORKSET_HASH = "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5"
+EXPECTED_E35_PROVENANCE_HASH = "ec9c734882ef4a97eec2ed071f3c06ec2a29df52f13a45c7054a4641cbd42738"
+EXPECTED_COMMITTED_ARTIFACT_SHA256 = "0ea5351b7692564161804a3aea5fe5044f3321ded3dcb4d0c7343e93d52c4975"
+EXPECTED_TESTS = 51
 EXPECTED_SUMMARY = {
     "active_basis_count": 22,
     "active_species_count": 2,
@@ -118,12 +123,16 @@ def main() -> int:
         return 17
     if output["workset_result"] != "ACTIVE_WORKSETS":
         return 18
+    if output["population_workset_hash"] != EXPECTED_E35_WORKSET_HASH:
+        return 19
+    if output["provenance_hash"] != EXPECTED_E35_PROVENANCE_HASH:
+        return 20
 
     validator = Draft202012Validator(schema)
     errors = sorted(validator.iter_errors(output), key=lambda error: list(error.path))
     if errors:
         print(f"published_schema_rejects_generated_workset={errors[0].message}", file=sys.stderr)
-        return 19
+        return 21
 
     semantic_tests = load_module(SEMANTIC_TEST, "e35_population_workset_semantic_tests")
     authority_tests = load_module(AUTHORITY_TEST, "e35_population_workset_authority_tests")
@@ -136,8 +145,9 @@ def main() -> int:
     if not result.wasSuccessful() or result.testsRun != EXPECTED_TESTS:
         sys.stderr.write(stream.getvalue())
         print(f"tests_run={result.testsRun}", file=sys.stderr)
-        return 20
+        return 22
 
+    in_process_bytes = impl.serialize_workset(output)
     with tempfile.TemporaryDirectory(prefix="eco-e35-") as td:
         td_path = pathlib.Path(td)
         fresh_paths = [td_path / "fresh-a.json", td_path / "fresh-b.json"]
@@ -152,40 +162,62 @@ def main() -> int:
             if completed.returncode != 0 or completed.stdout or completed.stderr:
                 sys.stderr.buffer.write(completed.stdout)
                 sys.stderr.buffer.write(completed.stderr)
-                return 21
+                return 23
             fresh_bytes.append(path.read_bytes())
         if fresh_bytes[0] != fresh_bytes[1]:
             print("fresh_build_bytes_mismatch", file=sys.stderr)
-            return 22
-        in_process_bytes = impl.serialize_workset(output)
+            return 24
         if fresh_bytes[0] != in_process_bytes:
             print("fresh_process_vs_in_process_mismatch", file=sys.stderr)
-            return 23
+            return 25
+
+        committed_bytes = COMMITTED_ARTIFACT.read_bytes()
+        if committed_bytes != fresh_bytes[0]:
+            print("committed_generated_vs_machine_bytes_mismatch", file=sys.stderr)
+            return 26
+        if hashlib.sha256(committed_bytes).hexdigest() != EXPECTED_COMMITTED_ARTIFACT_SHA256:
+            print("committed_generated_sha256_mismatch", file=sys.stderr)
+            return 27
+        if git_blob(COMMITTED_ARTIFACT) != EXPECTED_BLOBS["validation/ecology/eco-evo3-e3-5-population-workset.generated.json"]:
+            print("committed_generated_git_blob_mismatch", file=sys.stderr)
+            return 28
         FINAL_ARTIFACT.write_bytes(fresh_bytes[0])
 
     artifact_bytes = FINAL_ARTIFACT.read_bytes()
     artifact_sha256 = hashlib.sha256(artifact_bytes).hexdigest()
+    if artifact_sha256 != EXPECTED_COMMITTED_ARTIFACT_SHA256:
+        return 29
     artifact = json.loads(artifact_bytes.decode("utf-8"))
-    impl.validate_output_integrity(artifact)
+    impl.validate_output_structure(artifact)
+    if artifact["population_workset_hash"] != EXPECTED_E35_WORKSET_HASH:
+        return 30
+    if artifact["provenance_hash"] != EXPECTED_E35_PROVENANCE_HASH:
+        return 31
     schema_errors = sorted(validator.iter_errors(artifact), key=lambda error: list(error.path))
     if schema_errors:
-        return 24
+        return 32
 
     source_text = IMPL.read_text(encoding="utf-8")
     forbidden_rng = ("import random", "from random", "import secrets", "import uuid", "random.")
     if any(token in source_text for token in forbidden_rng):
-        return 25
+        return 33
 
-    print("ECO.EVO3 E3.5 exact closure: PASS")
+    print("ECO.EVO3 E3.5 repair R1 exact closure: PASS")
     print("python_version=" + sys.version.split()[0])
     print("jsonschema_version=4.26.0")
     print("semantic_tests=27/27")
-    print("authority_regression_tests=20/20")
-    print("total_tests=47/47")
-    print("exact_published_closure=8/8")
+    print("authority_regression_tests=24/24")
+    print("total_tests=51/51")
+    print("exact_published_closure=9/9")
     print("published_schema_validation=PASS")
     print("fresh_process_builds=2/2")
     print("fresh_process_bytes_identical=true")
+    print("committed_generated_bytes_identical=true")
+    print("committed_generated_git_blob=" + git_blob(COMMITTED_ARTIFACT))
+    print("committed_generated_sha256=" + hashlib.sha256(COMMITTED_ARTIFACT.read_bytes()).hexdigest())
+    print("parsed_artifact_serialization_capability=ABSENT")
+    print("reviewer_provenance_replacement_reproducer=REJECTED")
+    print("exact_input_serialization_traversal=REQUIRED")
     print("order_independence=PASS")
     print("no_colonization_semantics=PASS")
     print("global_rng_surface=ABSENT")

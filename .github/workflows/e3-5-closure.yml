@@ -62,5 +62,6 @@ jobs:
           path: |
             e3_5_runner.log
             e3_5_candidate_population_workset.json
+            validation/ecology/eco-evo3-e3-5-population-workset.generated.json
           if-no-files-found: error
           retention-days: 30
