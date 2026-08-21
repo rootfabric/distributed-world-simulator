@@ -228,38 +228,39 @@ static func validate_client_frame_semantics(value: Dictionary) -> Dictionary:
 
 
 static func _validate_registered_client_payload(payload: Dictionary, payload_schema: String) -> Dictionary:
+	# EG0-R7-V-001 repair ordering contract:
+	# 1) required/domain semantic fields validate first and keep their
+	#    established domain-specific error codes
+	#    (INVALID_OPERATION_ID / INVALID_INPUT_SEQUENCE /
+	#    PROJECTION_NOT_READ_ONLY / INVALID_CLIENT_PAYLOAD);
+	# 2) exact admitted-field enforcement runs last and stays fail-closed,
+	#    returning CLIENT_PAYLOAD_SCHEMA_VIOLATION for unregistered extras.
 	match payload_schema:
 		"planet_simulator.test_world_operation.v1":
-			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_WORLD_OPERATION_FIELDS)
-			if not bool(exact.get("success", false)):
-				return NetworkUtilsScript.validation_failure(
-					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
-					"WORLD_OPERATION payload does not match its registered semantic schema",
-				)
 			if not BusUtilsScript.is_canonical_id(payload.get("operation_id"), "operation"):
 				return NetworkUtilsScript.validation_failure("INVALID_OPERATION_ID", "Invalid operation_id")
 			if not BusUtilsScript.is_semantic_name(payload.get("command"), false):
 				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "command must be semantic")
 			if not BusUtilsScript.is_canonical_id(payload.get("target_id"), "entity"):
 				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "target_id must be entity/*")
+			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_WORLD_OPERATION_FIELDS)
+			if not bool(exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"WORLD_OPERATION payload does not match its registered semantic schema",
+				)
 		"planet_simulator.test_input.v1":
+			if not NetworkUtilsScript.is_json_integer(payload.get("input_seq")) or int(payload.get("input_seq")) < 1:
+				return NetworkUtilsScript.validation_failure("INVALID_INPUT_SEQUENCE", "input_seq must be positive")
+			if not _is_finite_number(payload.get("axis_x")):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "axis_x must be finite numeric")
 			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_INPUT_FIELDS)
 			if not bool(exact.get("success", false)):
 				return NetworkUtilsScript.validation_failure(
 					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
 					"INPUT_MOVEMENT payload does not match its registered semantic schema",
 				)
-			if not NetworkUtilsScript.is_json_integer(payload.get("input_seq")) or int(payload.get("input_seq")) < 1:
-				return NetworkUtilsScript.validation_failure("INVALID_INPUT_SEQUENCE", "input_seq must be positive")
-			if not _is_finite_number(payload.get("axis_x")):
-				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "axis_x must be finite numeric")
 		"planet_simulator.test_world_projection.v1":
-			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_WORLD_PROJECTION_FIELDS)
-			if not bool(exact.get("success", false)):
-				return NetworkUtilsScript.validation_failure(
-					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
-					"WORLD_PROJECTION payload does not match its registered semantic schema",
-				)
 			if typeof(payload.get("read_only")) != TYPE_BOOL or not bool(payload.get("read_only")):
 				return NetworkUtilsScript.validation_failure("PROJECTION_NOT_READ_ONLY", "Projection must be read_only")
 			if not NetworkUtilsScript.is_json_integer(payload.get("source_revision")) or int(payload.get("source_revision")) < 1:
@@ -269,15 +270,21 @@ static func _validate_registered_client_payload(payload: Dictionary, payload_sch
 			for entity_id in Array(payload.get("entities")):
 				if not BusUtilsScript.is_canonical_id(entity_id, "entity"):
 					return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "entities must contain entity/* ids")
+			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_WORLD_PROJECTION_FIELDS)
+			if not bool(exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"WORLD_PROJECTION payload does not match its registered semantic schema",
+				)
 		"planet_simulator.test_snapshot.v1":
+			if not NetworkUtilsScript.is_json_integer(payload.get("revision")) or int(payload.get("revision")) < 1:
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "revision must be positive")
 			var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, CLIENT_SNAPSHOT_FIELDS)
 			if not bool(exact.get("success", false)):
 				return NetworkUtilsScript.validation_failure(
 					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
 					"AUTHORITATIVE_SNAPSHOT payload does not match its registered semantic schema",
 				)
-			if not NetworkUtilsScript.is_json_integer(payload.get("revision")) or int(payload.get("revision")) < 1:
-				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "revision must be positive")
 		_:
 			return NetworkUtilsScript.validation_failure(
 				"UNREGISTERED_CLIENT_PAYLOAD_SCHEMA",

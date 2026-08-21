@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R7-SEMANTIC-BOUNDARY-PROVENANCE-REPAIR",
+  "revision": "V0-EG0-2026-08-21-R7-V001-DOMAIN-TAXONOMY-REPAIR",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
@@ -118,7 +118,20 @@
     "r7_implementer_local_regression": "R6_29_PASS_AND_R7_21_PASS_EDITOR_PARSE_PASS",
     "r7_exact_head_focused_suite": "REQUIRED_BEFORE_FRESH_REVIEW",
     "r7_fresh_independent_review": "REQUIRED",
-    "r7_independent_verifier": "BLOCKED_UNTIL_FRESH_REVIEW_PASS"
+    "r7_independent_verifier": "FIX_REQUIRED",
+    "r7_blocking_verifier_finding": {
+      "finding": "EG0-R7-V-001",
+      "severity": "MEDIUM",
+      "blocking": true,
+      "verified_head": "6118a6c58a2fd3cec8816a0ac8b7bee8a1fdbe47",
+      "failing_suite": "res://tests/network/test_eg0_edge_gateway_contracts.gd",
+      "expected_error_code": "INVALID_OPERATION_ID",
+      "observed_error_code": "CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+      "parent_control_head": "a3b0e34910c48ab776119146dee48f6fff4b509d",
+      "parent_same_suite": "PASS_24_ASSERTIONS"
+    },
+    "v001_repair_base": "6118a6c58a2fd3cec8816a0ac8b7bee8a1fdbe47",
+    "v001_repair_scope": "DOMAIN_ERROR_TAXONOMY_BEFORE_EXACT_SCHEMA_ADMISSION_FOR_ALL_REGISTERED_CLIENT_PAYLOAD_SCHEMAS"
   },
   "next_stage": "EG1_BLOCKED_UNTIL_CONTROL_DEPENDENCY_ACCEPTED_EXACT_HEAD_FOCUSED_PASS_FRESH_REVIEW_AND_VERIFICATION",
   "p6_runtime_authorized": false

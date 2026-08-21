@@ -13,6 +13,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_client_schema_boundary()
+	_test_client_domain_error_taxonomy()
 	_test_world_graph_semantic_subschemas()
 	_test_absence_reintroduction_provenance()
 	_finish()
@@ -57,6 +58,152 @@ func _test_client_schema_boundary() -> void:
 	_assert_ok(
 		GatewayUtilsScript.validate_payload({"backend_link_id": "backend-link/test/server-side"}),
 		"Generic/server-side payload validation was incorrectly tightened by client schema fence",
+	)
+
+
+func _client_frame(
+		frame_id: String,
+		direction: String,
+		channel: String,
+		sequence: int,
+		payload_schema: String,
+		payload: Dictionary,
+) -> Dictionary:
+	return FrameScript.create(
+		frame_id,
+		"gateway-session/test/a",
+		direction,
+		channel,
+		sequence,
+		payload_schema,
+		payload,
+	)
+
+
+# EG0-R7-V-001 regression coverage: domain error taxonomy must stay distinct
+# from fail-closed exact schema admission for every registered client payload
+# schema. Missing/invalid required semantic fields keep their domain-specific
+# codes; only fully valid payloads with unregistered extra fields are rejected
+# as CLIENT_PAYLOAD_SCHEMA_VIOLATION.
+func _test_client_domain_error_taxonomy() -> void:
+	var operation := _client_frame(
+		"frame/test/r7-operation",
+		"CLIENT_TO_WORLD",
+		"WORLD_OPERATION",
+		7,
+		"planet_simulator.test_world_operation.v1",
+		{"operation_id": "operation/test/pickup-1", "command": "pickup", "target_id": "entity/test/item-1"},
+	)
+	_assert_ok(FrameScript.validate(operation), "Valid registered WORLD_OPERATION frame rejected")
+
+	var missing_operation := operation.duplicate(true)
+	missing_operation["payload"].erase("operation_id")
+	_assert_error(
+		FrameScript.validate(missing_operation),
+		"INVALID_OPERATION_ID",
+		"WORLD_OPERATION missing operation_id lost its domain error",
+	)
+
+	var invalid_operation := operation.duplicate(true)
+	invalid_operation["payload"]["operation_id"] = "entity/not-an-operation"
+	_assert_error(
+		FrameScript.validate(invalid_operation),
+		"INVALID_OPERATION_ID",
+		"WORLD_OPERATION invalid operation_id lost its domain error",
+	)
+
+	var operation_extra := operation.duplicate(true)
+	operation_extra["payload"]["delivery_target"] = "10.0.0.2:7777"
+	_assert_error(
+		FrameScript.validate(operation_extra),
+		"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+		"Valid WORLD_OPERATION accepted delivery_target alias",
+	)
+
+	var input := _client_frame(
+		"frame/test/r7-input",
+		"CLIENT_TO_WORLD",
+		"INPUT_MOVEMENT",
+		8,
+		"planet_simulator.test_input.v1",
+		{"input_seq": 42, "axis_x": 1},
+	)
+	_assert_ok(FrameScript.validate(input), "Valid registered INPUT_MOVEMENT frame rejected")
+
+	var missing_input := input.duplicate(true)
+	missing_input["payload"].erase("input_seq")
+	_assert_error(
+		FrameScript.validate(missing_input),
+		"INVALID_INPUT_SEQUENCE",
+		"INPUT_MOVEMENT missing input_seq lost its domain error",
+	)
+
+	var input_extra := input.duplicate(true)
+	input_extra["payload"]["backend_endpoint"] = "10.0.0.2:7777"
+	_assert_error(
+		FrameScript.validate(input_extra),
+		"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+		"Valid INPUT_MOVEMENT accepted backend_endpoint alias",
+	)
+
+	var projection := _client_frame(
+		"frame/test/r7-projection",
+		"WORLD_TO_CLIENT",
+		"WORLD_PROJECTION",
+		9,
+		"planet_simulator.test_world_projection.v1",
+		{"read_only": true, "source_revision": 4, "entities": ["entity/test/tree-1"]},
+	)
+	_assert_ok(FrameScript.validate(projection), "Valid registered WORLD_PROJECTION frame rejected")
+
+	var writable_projection := projection.duplicate(true)
+	writable_projection["payload"]["read_only"] = false
+	_assert_error(
+		FrameScript.validate(writable_projection),
+		"PROJECTION_NOT_READ_ONLY",
+		"WORLD_PROJECTION read_only=false lost its domain error",
+	)
+
+	var projection_extra := projection.duplicate(true)
+	projection_extra["payload"]["physical_route"] = "route-b"
+	_assert_error(
+		FrameScript.validate(projection_extra),
+		"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+		"Valid WORLD_PROJECTION accepted physical_route alias",
+	)
+
+	var snapshot := _client_frame(
+		"frame/test/r7-snapshot-domain",
+		"WORLD_TO_CLIENT",
+		"AUTHORITATIVE_SNAPSHOT",
+		10,
+		"planet_simulator.test_snapshot.v1",
+		{"revision": 2},
+	)
+	_assert_ok(FrameScript.validate(snapshot), "Valid registered AUTHORITATIVE_SNAPSHOT frame rejected")
+
+	var invalid_snapshot_revision := snapshot.duplicate(true)
+	invalid_snapshot_revision["payload"]["revision"] = 0
+	_assert_error(
+		FrameScript.validate(invalid_snapshot_revision),
+		"INVALID_CLIENT_PAYLOAD",
+		"AUTHORITATIVE_SNAPSHOT revision=0 lost its domain error",
+	)
+
+	var missing_snapshot_revision := snapshot.duplicate(true)
+	missing_snapshot_revision["payload"].erase("revision")
+	_assert_error(
+		FrameScript.validate(missing_snapshot_revision),
+		"INVALID_CLIENT_PAYLOAD",
+		"AUTHORITATIVE_SNAPSHOT missing revision lost its domain error",
+	)
+
+	var snapshot_extra := snapshot.duplicate(true)
+	snapshot_extra["payload"]["future_unknown_field"] = {"nested": true}
+	_assert_error(
+		FrameScript.validate(snapshot_extra),
+		"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+		"Valid AUTHORITATIVE_SNAPSHOT accepted future_unknown_field",
 	)
 
 
