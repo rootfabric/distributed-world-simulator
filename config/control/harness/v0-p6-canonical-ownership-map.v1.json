@@ -1,0 +1,221 @@
+{
+  "schema": "distributed_world_simulator.v0_p6_canonical_ownership_map.v1",
+  "revision": "V0-P6.1-OWNERSHIP-2026-08-21-R1",
+  "status": "P6_1_CONTROL_AUDIT_CANDIDATE",
+  "canonical_owner": "main",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "stage": "P6.1_CANONICAL_OWNERSHIP_MAP",
+  "stacked_control_base": "715370c2d81e5129095412fdf68e34eee1f71bdf",
+  "canonical_main_anchor": "1d9de3c479c60045d613660b2a5c5db0374963f8",
+  "accepted_p5_product_lineage": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+  "project_epoch": "E2026-08-21-V0-P6-R1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "source_ownership_registry": {
+    "path": "config/control/architecture-ownership.v1.json",
+    "blob_sha": "3319422747bd19bdef14abe5035fdd3c4af21d20",
+    "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "rule": "This P6 map is a derived product projection. It MUST NOT supersede or rewrite the global ownership registry."
+  },
+  "classification": {
+    "OWN": "Existing canonical owner retains semantic and mutation authority.",
+    "ADAPT": "P6 may add a narrow adapter or composition boundary that delegates to the existing canonical owner.",
+    "READ_ONLY_DONOR": "P6 may inspect or consume semantics/evidence, but may not make the donor a product owner or product base.",
+    "FORBIDDEN_SECOND_TRUTH": "Any P6-private canonical store/oracle for this domain is forbidden."
+  },
+  "global_rules": {
+    "p6_is_product_composition_not_foundation_owner": true,
+    "p6_runtime_mutation_authorized_by_this_map": false,
+    "production_sm1_activated_by_this_map": false,
+    "research_lineage_becomes_product_base": false,
+    "gateway_can_authorize_mutation": false,
+    "warm_shadow_can_authorize_mutation": false,
+    "projection_can_authorize_mutation": false,
+    "outpost_composition_creates_new_canonical_store": false,
+    "actual_authority_transfer_is_post_p6_sm1_scope": true
+  },
+  "domains": [
+    {
+      "id": "DEVELOPMENT_CONTROL",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "DEVELOPMENT_HARNESS",
+      "canonical_owner": "MAIN/HARNESS",
+      "classification": "OWN",
+      "p6_role": "CONSUME_AUTHORIZATION_ONLY",
+      "status": "RESOLVED",
+      "boundary": "P6 Work Orders, evidence and runtime-worker authorization remain main/Harness owned. P6 runtime code cannot self-dispatch or self-accept."
+    },
+    {
+      "id": "ACCOUNT_AND_SESSION_IDENTITY",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "IDENTITY_SESSION_FABRIC",
+      "canonical_owner": "IAM",
+      "classification": "ADAPT",
+      "p6_role": "PRESERVE_STABLE_IDENTITY_ACROSS_RECONNECT_AND_TOPOLOGY_CHANGES",
+      "status": "RESOLVED",
+      "boundary": "Network peer/session identity must not become logical player or world entity identity."
+    },
+    {
+      "id": "AUTHORITY_OWNERSHIP_AND_FENCING",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "AUTHORITY_FOUNDATION",
+      "canonical_owner": "AUTHORITY",
+      "classification": "ADAPT",
+      "p6_role": "EXPOSE_SEAM_READY_MUTATION_ADMISSION_INPUTS_WITHOUT_DIRECTORY_OWNERSHIP",
+      "status": "RESOLVED",
+      "boundary": "P6 may prepare authority-domain compatible boundaries but may not create the production Ownership Directory or perform production A<->B ownership transfer."
+    },
+    {
+      "id": "NETWORK_TRANSPORT_REPLICATION_PREDICTION_RECONCILIATION",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "NETWORK_REPLICATION_POLICY",
+      "canonical_owner": "NX",
+      "classification": "ADAPT",
+      "p6_role": "USE_CURRENT_NETWORK_FOUNDATION_THROUGH_EXISTING_APIS",
+      "status": "RESOLVED",
+      "boundary": "Any required protocol, prediction, reconciliation or network-authority foundation change fails closed to NX."
+    },
+    {
+      "id": "CANONICAL_ITEM_GRAPH_INVENTORY_CONTAINERS",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "ITEM_IDENTITY_AND_GRAPH",
+      "canonical_owner": "ITEM",
+      "classification": "OWN",
+      "p6_role": "COMPOSE_EXISTING_ITEM_GRAPH_ONLY",
+      "status": "RESOLVED",
+      "boundary": "All ItemId, inventory, container and nested item relations remain in the one canonical Item Graph. No outpost-private inventory or item store is permitted."
+    },
+    {
+      "id": "EQUIPMENT_AND_TOOLS",
+      "source_kind": "ACCEPTED_PRODUCT_CONTRACT_OVER_FOUNDATION",
+      "ownership_registry_key": "ITEM_IDENTITY_AND_GRAPH",
+      "canonical_owner": "ITEM",
+      "accepted_gameplay_owner": "V0_P5_EQUIPMENT_TOOLS",
+      "classification": "ADAPT",
+      "p6_role": "REUSE_ACCEPTED_P5_EQUIPMENT_RELATION_AND_TOOL_RULES",
+      "status": "RESOLVED",
+      "boundary": "P5 owns accepted gameplay equip/unequip semantics; canonical item identity and possession remain ITEM-owned. P6 adds no private equipment truth."
+    },
+    {
+      "id": "CONSTRUCTION",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "CONSTRUCTION_TRUTH",
+      "canonical_owner": "CONSTRUCTION",
+      "classification": "OWN",
+      "p6_role": "COMPOSE_ACCEPTED_REAL_RESOURCE_CONSTRUCTION",
+      "status": "RESOLVED",
+      "boundary": "Construct/part/bond state remains canonical Construction truth. Persistent outpost is a composition of Construction state, not an OutpostService canonical store."
+    },
+    {
+      "id": "PERSISTENCE_REPLAY_RECOVERY",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "PERSISTENCE_DURABILITY",
+      "canonical_owner": "R3_M0_MW",
+      "classification": "ADAPT",
+      "p6_role": "COMPOSE_EXISTING_DURABLE_SAVE_REPLAY_RECOVERY_APIS",
+      "status": "RESOLVED",
+      "boundary": "P6 may orchestrate restart/reconnect recovery but may not introduce a P6-private save format, persistence owner or recovery oracle."
+    },
+    {
+      "id": "OPERATION_ID_DEDUP_IDEMPOTENCY",
+      "source_kind": "FOUNDATION",
+      "ownership_registry_key": "WORLD_TRANSACTION_MODEL",
+      "canonical_owner": "WT",
+      "implementation_authority": "EXISTING_M0_ATOMIC_COMMIT_AND_REPLAY_SEMANTICS",
+      "classification": "ADAPT",
+      "p6_role": "PROPAGATE_OPERATION_ID_END_TO_END_WITHOUT_SECOND_DEDUP_LEDGER",
+      "status": "RESOLVED",
+      "boundary": "P6 operation continuity must compile to existing transaction/commit/replay semantics and must not create a second transaction coordinator or private dedup ledger."
+    },
+    {
+      "id": "RESOURCE_MINING_GAMEPLAY",
+      "source_kind": "ACCEPTED_PRODUCT_COMPOSITION",
+      "canonical_owner": "V0_P3_RESOURCE_MINING_RULE",
+      "canonical_output_foundation_owner": "ITEM",
+      "classification": "ADAPT",
+      "p6_role": "REUSE_ACCEPTED_MINING_ACTION_WITH_P5_TOOL_REQUIREMENT",
+      "status": "RESOLVED",
+      "boundary": "P6 composes the accepted resource.mine rule. Canonical produced resources remain Item Graph truth; P6 must not add an outpost resource balance."
+    },
+    {
+      "id": "PERSISTENT_SHARED_OUTPOST_COMPOSITION",
+      "source_kind": "PRODUCT_COMPOSITION",
+      "canonical_owner": "COMPOSITE_EXISTING_OWNERS",
+      "canonical_components": [
+        "ITEM",
+        "CONSTRUCTION",
+        "V0_P3_RESOURCE_MINING_RULE",
+        "V0_P5_EQUIPMENT_TOOLS",
+        "R3_M0_MW"
+      ],
+      "classification": "ADAPT",
+      "p6_role": "ORCHESTRATE_PLAYABLE_LOOP_WITHOUT_NEW_TRUTH_STORE",
+      "status": "RESOLVED",
+      "creates_canonical_store": false,
+      "boundary": "Outpost identity is the durable composition of existing canonical states. A separate authoritative OutpostService database is forbidden."
+    },
+    {
+      "id": "EDGE_GATEWAY_COMMAND_SESSION_ROUTING",
+      "source_kind": "SEAM_READY_ADAPTER_BOUNDARY",
+      "canonical_owner": "NX_AND_AUTHORITY_FOUNDATIONS",
+      "classification": "ADAPT",
+      "p6_role": "MAKE_COMMAND_SESSION_ENTRY_TOPOLOGY_INDEPENDENT",
+      "status": "RESOLVED",
+      "authoritative": false,
+      "boundary": "Gateway-style routing may select/forward routes but cannot become an ownership oracle, gameplay truth owner or mutation-authority source."
+    },
+    {
+      "id": "WARM_SHADOW_COMPATIBILITY",
+      "source_kind": "DERIVED_READ_ONLY_COMPATIBILITY",
+      "ownership_registry_key": "DERIVED_PRESENTATION",
+      "canonical_owner": "DOMAIN_ADAPTERS",
+      "classification": "READ_ONLY_DONOR",
+      "p6_role": "PROVE_DERIVED_STATE_CAN_TRACK_ACTIVE_WITH_ZERO_WRITES",
+      "status": "RESOLVED",
+      "read_only": true,
+      "boundary": "WARM/SHADOW replicas may hash/compare derived state but cannot mutate gameplay, claim ownership or promote themselves in P6."
+    },
+    {
+      "id": "PRODUCTION_OWNERSHIP_DIRECTORY_AND_DOMAIN_TRANSFER",
+      "source_kind": "POST_P6_SM1_SCOPE",
+      "canonical_owner": "AUTHORITY",
+      "classification": "READ_ONLY_DONOR",
+      "p6_role": "PREPARE_COMPATIBLE_CONTRACTS_ONLY",
+      "status": "RESOLVED",
+      "production_active_in_p6": false,
+      "boundary": "Seamless Research I2.6/I3/I4 may donate reviewed semantics, but production Directory commit, fencing transition and A<->B ownership switch are SM1 work after P6 acceptance."
+    },
+    {
+      "id": "SEAMLESS_RESEARCH_AND_MRPF",
+      "source_kind": "RESEARCH_DONOR",
+      "canonical_owner": "RESEARCH_ONLY",
+      "classification": "READ_ONLY_DONOR",
+      "p6_role": "CONSUME_REVIEWED_CONTRACTS_AND_PORT_MAPS_ONLY",
+      "status": "RESOLVED",
+      "becomes_product_base": false,
+      "boundary": "No wholesale merge and no research branch in P6 product ancestry. Port/adapt/reimplement only after explicit production ownership checks."
+    }
+  ],
+  "forbidden_second_truths": [
+    "P6_PRIVATE_ITEM_GRAPH",
+    "P6_PRIVATE_INVENTORY_OR_CONTAINER_STORE",
+    "P6_PRIVATE_EQUIPMENT_STORE",
+    "P6_PRIVATE_CONSTRUCTION_STORE",
+    "P6_PRIVATE_OUTPOST_CANONICAL_DATABASE",
+    "P6_PRIVATE_PERSISTENCE_FORMAT_OR_OWNER",
+    "P6_PRIVATE_OPERATION_DEDUP_LEDGER",
+    "P6_PRIVATE_NETWORK_PROTOCOL_AUTHORITY_OR_RECONCILIATION_FOUNDATION",
+    "GATEWAY_AS_OWNERSHIP_OR_MUTATION_ORACLE",
+    "WARM_SHADOW_AS_MUTATION_AUTHORITY",
+    "PROJECTION_AS_CANONICAL_GAMEPLAY_TRUTH",
+    "RESEARCH_BRANCH_AS_PRODUCT_BASE"
+  ],
+  "p6_1_exit_gate": {
+    "required_result": "ZERO_UNRESOLVED_DUPLICATE_TRUTH",
+    "unresolved_domains": [],
+    "unresolved_duplicate_truth": [],
+    "control_audit_result": "PASS_CANDIDATE",
+    "completion_bearing_harness_event_emitted": false,
+    "runtime_authority_granted": false
+  }
+}
