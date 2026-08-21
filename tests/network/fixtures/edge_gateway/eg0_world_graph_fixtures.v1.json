@@ -1,0 +1,274 @@
+{
+  "aggregated_interest_plan": {
+    "aggregate_budget": {
+      "bytes_per_second": 100000
+    },
+    "aggregate_priority": 10,
+    "graph_revision": 9,
+    "interest_revision": 6,
+    "plan_id": "interest-plan/test/w1-fine",
+    "protocol_version": 1,
+    "read_only": true,
+    "representation_or_lod": "fine",
+    "schema": "planet_simulator.aggregated_interest_plan.v1",
+    "source_role": "PROJECTION",
+    "source_world_id": "world/test/w1",
+    "subscriber_sessions": [
+      "gateway-session/test/a",
+      "gateway-session/test/b"
+    ]
+  },
+  "client_world_view": {
+    "active_authority_world": "world/test/w0",
+    "anchor_world_id": "world/test/w0",
+    "gateway_session_id": "gateway-session/test/a",
+    "graph_revision": 9,
+    "interest_revision": 6,
+    "macro_sources": [],
+    "projection_streams": [
+      {
+        "interest_revision": 6,
+        "lod_class": "fine",
+        "priority": 10,
+        "projection_grant": "projection-grant/test/a-w1",
+        "projection_stream_id": "projection-stream/test/w1-fine",
+        "source_world_id": "world/test/w1",
+        "visibility_reason": "neighbor"
+      }
+    ],
+    "protocol_version": 1,
+    "read_only": true,
+    "reference_frame_id": "reference-frame/test/sol",
+    "schema": "planet_simulator.client_world_view.v1",
+    "view_id": "world-view/test/alice-5",
+    "view_revision": 5,
+    "warm_worlds": [
+      "world/test/w1"
+    ]
+  },
+  "client_world_view_b": {
+    "active_authority_world": "world/test/w0",
+    "anchor_world_id": "world/test/w0",
+    "gateway_session_id": "gateway-session/test/b",
+    "graph_revision": 9,
+    "interest_revision": 6,
+    "macro_sources": [],
+    "projection_streams": [
+      {
+        "interest_revision": 6,
+        "lod_class": "fine",
+        "priority": 10,
+        "projection_grant": "projection-grant/test/b-w1",
+        "projection_stream_id": "projection-stream/test/w1-fine",
+        "source_world_id": "world/test/w1",
+        "visibility_reason": "neighbor"
+      }
+    ],
+    "protocol_version": 1,
+    "read_only": true,
+    "reference_frame_id": "reference-frame/test/sol",
+    "schema": "planet_simulator.client_world_view.v1",
+    "view_id": "world-view/test/bob-5",
+    "view_revision": 5,
+    "warm_worlds": [
+      "world/test/w1"
+    ]
+  },
+  "protocol_version": 1,
+  "schema": "planet_simulator.edge_gateway_eg0_world_graph_fixture_set.v1",
+  "world_descriptor_a": {
+    "authority_directory_key": "authority-subject/test/w0",
+    "coverage": {
+      "kind": "sphere",
+      "radius": 1000
+    },
+    "interest_rules": {
+      "max_projection_neighbors": 4
+    },
+    "lod_classes": [
+      "coarse",
+      "fine"
+    ],
+    "projection_capabilities": [
+      "coarse",
+      "fine"
+    ],
+    "projection_policy": {
+      "allows_mutation": false,
+      "read_only": true
+    },
+    "protocol_version": 1,
+    "reference_frame_id": "reference-frame/test/sol",
+    "schema": "planet_simulator.world_descriptor.v1",
+    "spatial_domain": {
+      "kind": "bounded",
+      "partition": 0
+    },
+    "visibility_rules": {
+      "neighbor_depth": 1
+    },
+    "world_id": "world/test/w0",
+    "world_kind": "planet_surface",
+    "world_revision": 3
+  },
+  "world_descriptor_b": {
+    "authority_directory_key": "authority-subject/test/w1",
+    "coverage": {
+      "kind": "sphere",
+      "radius": 1001
+    },
+    "interest_rules": {
+      "max_projection_neighbors": 4
+    },
+    "lod_classes": [
+      "coarse",
+      "fine"
+    ],
+    "projection_capabilities": [
+      "coarse",
+      "fine"
+    ],
+    "projection_policy": {
+      "allows_mutation": false,
+      "read_only": true
+    },
+    "protocol_version": 1,
+    "reference_frame_id": "reference-frame/test/sol",
+    "schema": "planet_simulator.world_descriptor.v1",
+    "spatial_domain": {
+      "kind": "bounded",
+      "partition": 1
+    },
+    "visibility_rules": {
+      "neighbor_depth": 1
+    },
+    "world_id": "world/test/w1",
+    "world_kind": "planet_surface",
+    "world_revision": 4
+  },
+  "world_graph_snapshot": {
+    "canonical": false,
+    "directory_revision": 11,
+    "graph_revision": 9,
+    "graph_snapshot_id": "world-graph/test/partition-0",
+    "protocol_version": 1,
+    "read_only": true,
+    "reconstructible": true,
+    "relations": [
+      {
+        "intersection_or_transition_region": {
+          "id": "seam-0-1",
+          "kind": "seam"
+        },
+        "projection_policy": {
+          "allows_mutation": false,
+          "read_only": true
+        },
+        "protocol_version": 1,
+        "reference_frame_relation": {
+          "kind": "shared_parent"
+        },
+        "relation_id": "world-relation/test/w0-w1",
+        "relation_kind": "NEIGHBOR",
+        "relation_revision": 7,
+        "schema": "planet_simulator.world_relation.v1",
+        "world_a": "world/test/w0",
+        "world_b": "world/test/w1"
+      }
+    ],
+    "schema": "planet_simulator.gateway_world_graph_snapshot.v1",
+    "source_owner": "WORLD_DIRECTORY",
+    "worlds": [
+      {
+        "authority_directory_key": "authority-subject/test/w0",
+        "coverage": {
+          "kind": "sphere",
+          "radius": 1000
+        },
+        "interest_rules": {
+          "max_projection_neighbors": 4
+        },
+        "lod_classes": [
+          "coarse",
+          "fine"
+        ],
+        "projection_capabilities": [
+          "coarse",
+          "fine"
+        ],
+        "projection_policy": {
+          "allows_mutation": false,
+          "read_only": true
+        },
+        "protocol_version": 1,
+        "reference_frame_id": "reference-frame/test/sol",
+        "schema": "planet_simulator.world_descriptor.v1",
+        "spatial_domain": {
+          "kind": "bounded",
+          "partition": 0
+        },
+        "visibility_rules": {
+          "neighbor_depth": 1
+        },
+        "world_id": "world/test/w0",
+        "world_kind": "planet_surface",
+        "world_revision": 3
+      },
+      {
+        "authority_directory_key": "authority-subject/test/w1",
+        "coverage": {
+          "kind": "sphere",
+          "radius": 1001
+        },
+        "interest_rules": {
+          "max_projection_neighbors": 4
+        },
+        "lod_classes": [
+          "coarse",
+          "fine"
+        ],
+        "projection_capabilities": [
+          "coarse",
+          "fine"
+        ],
+        "projection_policy": {
+          "allows_mutation": false,
+          "read_only": true
+        },
+        "protocol_version": 1,
+        "reference_frame_id": "reference-frame/test/sol",
+        "schema": "planet_simulator.world_descriptor.v1",
+        "spatial_domain": {
+          "kind": "bounded",
+          "partition": 1
+        },
+        "visibility_rules": {
+          "neighbor_depth": 1
+        },
+        "world_id": "world/test/w1",
+        "world_kind": "planet_surface",
+        "world_revision": 4
+      }
+    ]
+  },
+  "world_relation": {
+    "intersection_or_transition_region": {
+      "id": "seam-0-1",
+      "kind": "seam"
+    },
+    "projection_policy": {
+      "allows_mutation": false,
+      "read_only": true
+    },
+    "protocol_version": 1,
+    "reference_frame_relation": {
+      "kind": "shared_parent"
+    },
+    "relation_id": "world-relation/test/w0-w1",
+    "relation_kind": "NEIGHBOR",
+    "relation_revision": 7,
+    "schema": "planet_simulator.world_relation.v1",
+    "world_a": "world/test/w0",
+    "world_b": "world/test/w1"
+  }
+}

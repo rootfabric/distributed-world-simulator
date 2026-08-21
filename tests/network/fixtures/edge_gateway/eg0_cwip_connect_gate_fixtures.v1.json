@@ -1,0 +1,253 @@
+{
+  "schema": "distributed_world_simulator.eg0_cwip_connect_gate_fixtures.v1",
+  "revision": "V0-EG0-R6-REVIEW-REPAIR-001",
+  "connect_gate": {
+    "schema": "planet_simulator.gateway_connect_gate.v1",
+    "protocol_version": 1,
+    "connect_attempt_id": "connect-attempt/test/a",
+    "transport_connection_id": "transport-connection/test/a",
+    "gateway_instance_id": "gateway/test/g1",
+    "gateway_session_id": "gateway-session/test/a",
+    "client_session_id": "client-session/test/a",
+    "route_binding_id": "gateway-route/test/b",
+    "logical_player_id": "player/test/alice",
+    "player_entity_id": "entity/test/player-alice",
+    "world_id": "world/test/b",
+    "authority_id": "authority/test/b",
+    "server_instance_id": "server-instance/test/b-1",
+    "protocol_admission_revision": 3,
+    "identity_verification_revision": 4,
+    "session_revision": 5,
+    "placement_revision": 6,
+    "directory_generation": 20,
+    "authority_epoch": 52,
+    "route_revision": 52,
+    "ready_snapshot_revision": 7,
+    "protocol_admitted": true,
+    "identity_verified": true,
+    "session_resolved": true,
+    "placement_resolved": true,
+    "authority_resolved": true,
+    "backend_route_attached": true,
+    "player_domain_ready": true,
+    "world_ready": true,
+    "gate_revision": 8,
+    "session_binding": {
+      "schema": "planet_simulator.gateway_session_binding.v1",
+      "protocol_version": 1,
+      "gateway_session_id": "gateway-session/test/a",
+      "client_session_id": "client-session/test/a",
+      "logical_player_id": "player/test/alice",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "binding_revision": 5,
+      "state": "ATTACHED"
+    },
+    "route_binding": {
+      "schema": "planet_simulator.gateway_route_binding.v1",
+      "protocol_version": 1,
+      "route_binding_id": "gateway-route/test/b",
+      "gateway_session_id": "gateway-session/test/a",
+      "player_entity_id": "entity/test/player-alice",
+      "authority_id": "authority/test/b",
+      "server_instance_id": "server-instance/test/b-1",
+      "observed_authority_epoch": 52,
+      "route_revision": 52,
+      "route_role": "ACTIVE"
+    },
+    "placement_evidence": {
+      "placement_evidence_id": "placement-evidence/test/a",
+      "source_owner": "SESSION_PLACEMENT",
+      "client_session_id": "client-session/test/a",
+      "logical_player_id": "player/test/alice",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "placement_revision": 6
+    },
+    "directory_authority_evidence": {
+      "authority_resolution_id": "authority-resolution/test/b",
+      "source_owner": "WORLD_DIRECTORY",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "authority_id": "authority/test/b",
+      "server_instance_id": "server-instance/test/b-1",
+      "directory_generation": 20,
+      "authority_epoch": 52
+    },
+    "ready_snapshot_evidence": {
+      "ready_snapshot_id": "ready-snapshot/test/a",
+      "source_owner": "AUTHORITY",
+      "gateway_session_id": "gateway-session/test/a",
+      "player_entity_id": "entity/test/player-alice",
+      "world_id": "world/test/b",
+      "authority_id": "authority/test/b",
+      "authority_epoch": 52,
+      "snapshot_revision": 7
+    }
+  },
+  "interaction_time": {
+    "schema": "planet_simulator.interaction_time.v1",
+    "protocol_version": 1,
+    "simulation_epoch": 4,
+    "canonical_time": 1234.5,
+    "source_local_tick": 74067,
+    "time_mapping_revision": 9
+  },
+  "reference_frame_evidence": {
+    "schema": "planet_simulator.reference_frame_evidence.v1",
+    "protocol_version": 1,
+    "source_reference_frame_id": "reference-frame/test/world-b",
+    "target_reference_frame_id": "reference-frame/test/world-a",
+    "transform_revision": 17,
+    "world_graph_revision": 31
+  },
+  "intent": {
+    "schema": "planet_simulator.cross_world_interaction_intent.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "operation_id": "operation/test/shot-1",
+    "input_seq": 441,
+    "interaction_kind": "HITSCAN",
+    "actor_id": "player/test/alice",
+    "actor_entity_id": "entity/test/player-alice",
+    "action_authority": "authority/test/b",
+    "action_authority_epoch": 52,
+    "interaction_time": {
+      "schema": "planet_simulator.interaction_time.v1",
+      "protocol_version": 1,
+      "simulation_epoch": 4,
+      "canonical_time": 1234.5,
+      "source_local_tick": 74067,
+      "time_mapping_revision": 9
+    },
+    "source_world_id": "world/test/b",
+    "source_reference_frame_id": "reference-frame/test/world-b",
+    "origin_or_shape": {
+      "origin": [0.0, 1.6, 0.0]
+    },
+    "direction_or_motion": {
+      "direction": [1.0, 0.0, 0.0]
+    },
+    "max_range_or_extent": {
+      "max_range": 250.0
+    },
+    "capability_definition_id": "capability-definition/test/rifle",
+    "capability_definition_revision": 12,
+    "optional_projection_target_hint": "entity/test/player-bob",
+    "projection_revision": 14,
+    "world_graph_revision": 31,
+    "route_revision": 92
+  },
+  "domain_segment": {
+    "schema": "planet_simulator.interaction_domain_segment.v1",
+    "protocol_version": 1,
+    "world_id": "world/test/a",
+    "authority_ref": "authority/test/a",
+    "path_t_start": 0.2,
+    "path_t_end": 0.8,
+    "reference_frame_evidence": {
+      "schema": "planet_simulator.reference_frame_evidence.v1",
+      "protocol_version": 1,
+      "source_reference_frame_id": "reference-frame/test/world-b",
+      "target_reference_frame_id": "reference-frame/test/world-a",
+      "transform_revision": 17,
+      "world_graph_revision": 31
+    },
+    "relation_revision": 22
+  },
+  "collision_query": {
+    "schema": "planet_simulator.collision_query.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "interaction_time": {
+      "schema": "planet_simulator.interaction_time.v1",
+      "protocol_version": 1,
+      "simulation_epoch": 4,
+      "canonical_time": 1234.5,
+      "source_local_tick": 74067,
+      "time_mapping_revision": 9
+    },
+    "domain_segment": {
+      "schema": "planet_simulator.interaction_domain_segment.v1",
+      "protocol_version": 1,
+      "world_id": "world/test/a",
+      "authority_ref": "authority/test/a",
+      "path_t_start": 0.2,
+      "path_t_end": 0.8,
+      "reference_frame_evidence": {
+        "schema": "planet_simulator.reference_frame_evidence.v1",
+        "protocol_version": 1,
+        "source_reference_frame_id": "reference-frame/test/world-b",
+        "target_reference_frame_id": "reference-frame/test/world-a",
+        "transform_revision": 17,
+        "world_graph_revision": 31
+      },
+      "relation_revision": 22
+    },
+    "world_graph_revision": 31,
+    "authority_epoch_observed": 61,
+    "query_revision": 2
+  },
+  "collision_proof": {
+    "schema": "planet_simulator.collision_proof.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "query_revision": 2,
+    "world_id": "world/test/a",
+    "authority_id": "authority/test/a",
+    "authority_epoch": 61,
+    "path_t_start": 0.2,
+    "path_t_end": 0.8,
+    "first_collision_t": 0.44,
+    "collided_entity_id": "entity/test/player-bob",
+    "collision_kind": "ENTITY",
+    "hit_zone": "torso",
+    "interaction_time": {
+      "schema": "planet_simulator.interaction_time.v1",
+      "protocol_version": 1,
+      "simulation_epoch": 4,
+      "canonical_time": 1234.5,
+      "source_local_tick": 74067,
+      "time_mapping_revision": 9
+    },
+    "history_revision": 45,
+    "transform_revision": 17,
+    "proof_revision": 3
+  },
+  "resolution": {
+    "schema": "planet_simulator.interaction_resolution.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "result": "COLLISION",
+    "winning_world_id": "world/test/a",
+    "winning_entity_id": "entity/test/player-bob",
+    "winning_collision_t": 0.44,
+    "proof_set_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "resolution_revision": 5
+  },
+  "effect_request": {
+    "schema": "planet_simulator.effect_commit_request.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "operation_id": "operation/test/shot-1",
+    "resolution_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "target_entity_id": "entity/test/player-bob",
+    "target_authority": "authority/test/a",
+    "target_authority_epoch_observed": 61,
+    "effect_kind": "HITSCAN_DAMAGE",
+    "effect_definition_id": "effect-definition/test/rifle-hit",
+    "effect_payload": {
+      "synthetic": true,
+      "amount": 10
+    }
+  },
+  "effect_result": {
+    "schema": "planet_simulator.effect_commit_result.v1",
+    "protocol_version": 1,
+    "interaction_id": "interaction/test/shot-1",
+    "operation_id": "operation/test/shot-1",
+    "result": "COMMITTED",
+    "canonical_effect_revision": 101,
+    "target_authority_epoch": 61
+  }
+}
