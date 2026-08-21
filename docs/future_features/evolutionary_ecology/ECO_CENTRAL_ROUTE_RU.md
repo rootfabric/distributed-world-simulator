@@ -1,6 +1,9 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0 + E3.1 + E3.2 + E3.3 ACCEPTED / E3.4 CURRENT`.
+Статус (исторический документ): `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0..E3.3 ACCEPTED / E3.4 CURRENT` — срез на момент написания.
+
+**Статус на 2026-08-22 (ECO-R77):** `EVO3 E3.0–E3.7 ACCEPTED / E3.8 AUTHORIZED_NOT_STARTED ← CURRENT / E3.FINAL BLOCKED`.
+Единственный живой источник текущего состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`. Разделы ниже сохраняются как история маршрута; статусы внутри них не обновляются задним числом.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
 EVO3 architecture: `docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md`.  

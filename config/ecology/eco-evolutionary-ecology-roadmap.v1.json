@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R77-2026-08-21",
+  "revision": "ECO-R78-2026-08-22",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
@@ -16,6 +16,65 @@
   "current_step": "Planetary Ecology Compiler Challenge blocked pending separate authorization",
   "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
+  "roadmap_amendments": {
+    "amended_by": "ECO-R78-2026-08-22",
+    "amendment_doc": "docs/plans/ECO_EVO3_ROADMAP_AMENDMENTS_R78_RU.md",
+    "authority_note": "Amendments bind the live research policy layer only. Frozen E3.0 architecture/roadmap artifacts stay byte-frozen pending formal revalidation. This block carries no acceptance authority until independently reviewed.",
+    "frozen_documents_untouched": [
+      "config/ecology/eco-evo3-roadmap.v1.json",
+      "config/ecology/eco-evo3-planetary-ecology-compiler.v1.json",
+      "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md"
+    ],
+    "e3_final_gate_additions": {
+      "catalog_generalization_required": true,
+      "catalog_generalization_rule": "E3.FINAL precommit MUST declare persisted SpeciesCatalog variants (extended multi-species catalog, edge-case trait distributions, mono-species catalog) compiled through the exact accepted chain without retuning; cross-planet generalization with a single fixed catalog alone is insufficient",
+      "sealed_outcome_predictions_required": true,
+      "sealed_outcome_predictions_rule": "For every precommitted unseen planet a sealed predeclared outcome-class envelope (colonization / no-colonization / reversal) MUST be committed before the first compilation and opened only after the compiled program is frozen",
+      "execution_envelope_required": true,
+      "execution_envelope_rule": "E3.FINAL closure MUST record wall-time, peak memory and artifact bytes per compiled planet against a predeclared scale ceiling"
+    },
+    "regression_closure_policy": {
+      "all_accepted_stages_rerun_required": true,
+      "runner": "RUN_ECO_EVO3_REGRESSION_CLOSURE.py",
+      "stage_runners": [
+        "RUN_ECO_EVO3_ARCHITECTURE_TESTS.py",
+        "RUN_ECO_EVO3_E3_1_TESTS.py",
+        "RUN_ECO_EVO3_E3_2_TESTS.py",
+        "RUN_ECO_EVO3_E3_3_TESTS.py",
+        "RUN_ECO_EVO3_E3_4_TESTS.py",
+        "RUN_ECO_EVO3_E3_5_TESTS.py",
+        "RUN_ECO_EVO3_E3_6_TESTS.py",
+        "RUN_ECO_EVO3_E3_7_TESTS.py"
+      ],
+      "trigger_state": "WORKFLOW_DISPATCH_ONLY_UNTIL_DIRECTOR_ENABLES_AUTOMATIC_TRIGGERS",
+      "environment": "python>=3.11 with jsonschema==4.26.0 (same pin as stage closure CI; E3.5 runner asserts the version)",
+      "requirement": "Every change touching accepted EVO3 compiler surfaces must rerun all accepted stage closures read-only with committed-artifact byte identity before review"
+    },
+    "evidence_final_closure_binding_rule": {
+      "required": true,
+      "lint": "scripts/control/lint_eco_evo3_evidence_sync.py",
+      "rule": "Evidence maps, receipts and acceptance checkpoints must bind the final closure run id; a superseded run id may be kept as history but must not be presented as final"
+    },
+    "prose_status_banner_rule": {
+      "required": true,
+      "rule": "Historical prose route documents must carry an explicit status-as-of banner pointing at this machine tracker as the single live source of truth; banners are refreshed by the same control commit that advances the tracker revision"
+    },
+    "conditional_followups": [
+      {
+        "id": "E3.6-R",
+        "name": "Multi-Snapshot Temporal Envelopes",
+        "status": "CONDITIONAL_BLOCKED_WAIT_OWNER_TEMPORAL_EVIDENCE",
+        "unlock_condition": "Owner declares sufficiency criteria and provides accepted multi-snapshot temporal evidence via a separate dispatch",
+        "invariant": "Remains fail-closed UNRESOLVED_SINGLE_SNAPSHOT until separately authorized; creates no ECO ownership of TF/ENV"
+      }
+    ],
+    "xfer1_readiness_predesign": {
+      "doc": "docs/plans/ECO_XFER1_READINESS_PREDESIGN_RU.md",
+      "status": "RESEARCH_ONLY_NON_AUTHORITATIVE",
+      "rule": "Pre-design prepares binding requirements for canonical G/ENV/MAT/WQ/SD/TF contracts without creating production authorization or XFER1 activation"
+    },
+    "renumber_note": "Renumbered from the local ECO-R77 draft after the upstream ECO-R77 collision (E3.8 acceptance landed first); amendment content unchanged."
+  },
   "execution_modes": [
     "INCUBATE_FAST",
     "BACKGROUND_COARSE",
@@ -95,7 +154,7 @@
     "e3_2_runner_log_sha256": "b75830bb535830aac62825a54ceefc6e8b94fdbb64f9966c824fa74bb9681195",
     "e3_2_validation": "validation/ecology/eco-evo3-e3-2-acceptance.json",
     "e3_2_acceptance_checkpoint": "docs/checkpoints/2026-08-19_ECO_EVO3_E3_2_ACCEPTED_E3_3_AUTHORIZED_RU.md",
-    "e3_2_independent_review_verdict": "PASS — SAFE FOR E3.2 MERGE/ACCEPTANCE AND SUBSEQUENT E3.3 AUTHORIZATION",
+    "e3_2_independent_review_verdict": "PASS вЂ” SAFE FOR E3.2 MERGE/ACCEPTANCE AND SUBSEQUENT E3.3 AUTHORIZATION",
     "e3_2_review_relay_comment_id": 5340082691,
     "e3_3_code_under_test_head": "527e2dbef1ae4462e5b9e682b002408057930970",
     "e3_3_reviewed_head": "7ae4c17d0cca0d37369b620481d000fdbc8545fc",
@@ -109,7 +168,7 @@
     "e3_3_runner_log_sha256": "b09c7b690e142b6676614cc01abcccf804e750c16d6d0e6a5ce232d760d1ab6c",
     "e3_3_validation": "validation/ecology/eco-evo3-e3-3-research-ecology-decomposition-validation.json",
     "e3_3_acceptance_checkpoint": "docs/checkpoints/2026-08-19_ECO_EVO3_E3_3_ACCEPTED_E3_4_AUTHORIZED_RU.md",
-    "e3_3_independent_review_verdict": "PASS — SAFE FOR E3.3 MERGE/ACCEPTANCE AND SUBSEQUENT E3.4 AUTHORIZATION",
+    "e3_3_independent_review_verdict": "PASS вЂ” SAFE FOR E3.3 MERGE/ACCEPTANCE AND SUBSEQUENT E3.4 AUTHORIZATION",
     "e3_3_review_relay_comment_id": 5341914378,
     "e3_3_project_control_run_id": 32247214418,
     "e3_3_project_control_check_suite": 1003,
@@ -127,7 +186,7 @@
     "e3_4_runner_log_sha256": "035ada3c85be142b4f5b55e1354ece5f67e269e32b500bc7d30875713f195f54",
     "e3_4_validation": "validation/ecology/eco-evo3-e3-4-repair-r3-validation.json",
     "e3_4_acceptance_checkpoint": "docs/checkpoints/2026-08-20_ECO_EVO3_E3_4_ACCEPTED_E3_5_AUTHORIZED_RU.md",
-    "e3_4_independent_review_verdict": "PASS — E3.4-R-001 CLOSED; SAFE FOR E3.4 MERGE/ACCEPTANCE; E3.5 REMAINS BLOCKED PENDING EXPLICIT SUCCESSOR AUTHORIZATION",
+    "e3_4_independent_review_verdict": "PASS вЂ” E3.4-R-001 CLOSED; SAFE FOR E3.4 MERGE/ACCEPTANCE; E3.5 REMAINS BLOCKED PENDING EXPLICIT SUCCESSOR AUTHORIZATION",
     "e3_4_review_relay_comment_id": 5356471742,
     "e3_4_project_control_run_id": 32345933609,
     "e3_4_project_control_check_suite": 1035,
