@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_r2_v002_repair_map.v1",
+  "evidence_id": "P5-R2-V002-REPAIR-MAP-001",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "finding": "P5-R2-R1-V-002",
+  "classification": "PRODUCT_RUNTIME_RED",
+  "frozen_subject_sha": "601ca87f36b96bae9d519693e5cac9dfc38abec9",
+  "affected_module": "tools/runtime/m7_playable_recovery_client.gd seed approach before item.pickup",
+  "canonical_owner": "M7_PLAYABLE_RECOVERY_TEST_DRIVER; canonical product Item Graph/fixed-tick/persistence are callees and remain unchanged",
+  "entry_points": ["_run_seed()", "_move_toward()", "ClientRuntime.submit_movement_intent_blocking()", "ClientRuntime.execute_item_command_blocking(item.pickup)"],
+  "callers": ["tests/runtime/test_m7_playable_networked_recovery_processes.gd"],
+  "callees": [
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd::_create_item_authority_context",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p1.gd::_pickup"
+  ],
+  "sibling_paths": [
+    "tests/runtime/test_m7_playable_networked_processes.gd",
+    "scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd (checked, not on failing blocking path)",
+    "scripts/persistence/** (checked as downstream only after successful command)"
+  ],
+  "existing_tests_and_evidence": [
+    "governed R2 ordinal #50: 36 assertions / 4 failures, first semantic failure seed beacon pickup",
+    "isolated exact-candidate M7 recovery runs PASS",
+    "CPU-stressed exact-candidate M7 recovery PASS",
+    "ordered #49 -> #50 exact-candidate PASS",
+    "ordered prefix #1 -> #50 exact-candidate PASS including M5 #44 99/99 and M7 #50 36/36",
+    "diagnostic forced out-of-range seed reproduces same parent 36 assertions / 4 failures cascade fingerprint"
+  ],
+  "missing_tests": [
+    "explicit regression that legacy minimum progress (12 * 0.1m) does not guarantee entry into the 5m server pickup sphere from spawn",
+    "explicit readiness-policy boundary test"
+  ],
+  "public_or_internal_contracts": [
+    "server-authoritative pickup maximum distance 5.0m plus visibility/occlusion checks",
+    "blocking movement success acknowledges authoritative input sequence, not a requested absolute displacement",
+    "no client-private item/equipment truth",
+    "durable recovery must only validate a seed state that was actually committed"
+  ],
+  "expected_shipped_behavior": "No product semantics change. The test driver must establish the existing authoritative spatial precondition deterministically before requesting seed pickup; if it cannot, it fails closed with diagnostic distance/step evidence.",
+  "relevant_history_or_evidence": [
+    "PR #172 comment #5356372067",
+    "PR #169 comment #5356373958",
+    "PR #169 comment #5356530273",
+    "historical exact candidate 601ca87",
+    "historical V001 M5 repair remains unchanged"
+  ],
+  "root_cause_hypothesis": "The fixed 12-command seed approach is scheduler/snapshot-phase dependent. At 6m/s and 60Hz, one authoritative tick advances only 0.1m; 12 minimum-progress acknowledgements yield 1.2m, while spawn-to-beacon interaction distance requires more than ~2m of approach before the 5m pickup bound can be satisfied. The governed RED can therefore reject pickup even though each movement command reports success.",
+  "canonical_fix_location": "tools/runtime/m7_playable_recovery_client.gd::_move_toward / _run_seed setup logic, not M4 pickup, fixed-tick authority, network or persistence",
+  "why_not_symptom_patch": "The fix proves the pre-existing server contract before mutation instead of increasing timeouts, retrying pickup, weakening assertions, changing range, or modifying downstream recovery. The diagnostic forced-precondition violation reproduces the same parent failure cardinality/cascade.",
+  "proof_limit": "The raw governed child error_code was not durably published, so the exact rejection code is not claimed. Mutation remains bounded to eliminating a demonstrable scheduler-dependent precondition defect that matches the governed failure chain.",
+  "recorded_at_utc": "2026-08-20T13:51:03Z"
+}

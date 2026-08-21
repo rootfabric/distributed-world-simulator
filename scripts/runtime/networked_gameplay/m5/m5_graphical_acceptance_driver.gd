@@ -1,6 +1,7 @@
 extends Node
 
 const Support = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_support.gd")
+const Barrier = preload("res://scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd")
 
 const TIMEOUT_MS := 150000
 const INPUT_HOLD_MS := 500
@@ -31,6 +32,12 @@ var _player_checksum := ""
 var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
+var _convergence_prepare_id := ""
+var _prepared_player_checksum := ""
+var _prepared_item_checksum := ""
+var _convergence_prepared := false
+var _convergence_release_id := ""
+var _convergence_release_consumed := false
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -234,15 +241,51 @@ func _process(_delta: float) -> void:
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
 		"WAIT_CONVERGENCE_PEER":
-			# A late authoritative snapshot can arrive after one client has already
-			# locked an older checksum. Keep the convergence lock revocable until
-			# both clients have locked the same latest canonical state.
-			var finish_requested := bool(Support.read(_control_file).get("finish", false))
+			# A prepared acknowledgement remains revocable until release is actually
+			# consumed. Fresh authoritative checksums are read before any prepared
+			# short-circuit so a superseded generation can never complete.
+			var control := Support.read(_control_file)
+			var prepare: Dictionary = control.get("convergence_prepare", {})
+			var prepare_id := String(prepare.get("id", "")).strip_edges()
+			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
+			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
+			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
+			var complete_id := String(control.get("convergence_complete_id", "")).strip_edges()
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
+			if _convergence_release_consumed:
+				# Release consumption is the exact convergence acceptance point. Keep
+				# the client connected until the coordinator observes both releases,
+				# preventing the first graceful leave from invalidating the peer.
+				if prepare_id != _convergence_prepare_id or release_id != _convergence_release_id:
+					_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+					return
+				if complete_id == _convergence_release_id:
+					_finish(true)
+				return
+			if _convergence_prepared:
+				var release_decision := Barrier.evaluate_prepared_release(
+					_convergence_prepare_id,
+					_prepared_player_checksum,
+					_prepared_item_checksum,
+					prepare,
+					release_id,
+					latest_player_checksum,
+					latest_item_checksum
+				)
+				match String(release_decision.get("action", "")):
+					Barrier.CLIENT_REVOKE:
+						_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+						return
+					Barrier.CLIENT_CONSUME_RELEASE:
+						_convergence_release_id = _convergence_prepare_id
+						_convergence_release_consumed = true
+						_write_report("CONVERGENCE_RELEASED", false, _convergence_world, shell)
+						return
+					_:
+						return
 			if (
-				not (_convergence_locked and finish_requested)
-				and not latest_player_checksum.is_empty()
+				not latest_player_checksum.is_empty()
 				and not latest_item_checksum.is_empty()
 				and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
 			):
@@ -253,7 +296,7 @@ func _process(_delta: float) -> void:
 				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
 			if not _convergence_locked:
 				var peer_ready := Support.read(_peer_result_file)
-				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]:
+				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "CONVERGENCE_PREPARED"]:
 					return
 				if String(peer_ready.get("player_checksum", "")) != _player_checksum:
 					return
@@ -261,16 +304,18 @@ func _process(_delta: float) -> void:
 					return
 				_convergence_locked = true
 				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
-			var peer_convergence := Support.read(_peer_result_file)
-			if String(peer_convergence.get("state", "")) not in ["CONVERGENCE_LOCKED", "COMPLETE"]:
-				return
-			if String(peer_convergence.get("player_checksum", "")) != _player_checksum:
-				return
-			if String(peer_convergence.get("item_checksum", "")) != _item_checksum:
-				return
-			if not finish_requested:
-				return
-			_finish(true)
+			if (
+				not prepare_id.is_empty()
+				and prepare_player_checksum == _player_checksum
+				and prepare_item_checksum == _item_checksum
+			):
+				_convergence_prepare_id = prepare_id
+				_prepared_player_checksum = prepare_player_checksum
+				_prepared_item_checksum = prepare_item_checksum
+				_convergence_prepared = true
+				_convergence_release_id = ""
+				_convergence_release_consumed = false
+				_write_report("CONVERGENCE_PREPARED", false, _convergence_world, shell)
 
 
 func _run_winner_ui_workflow(shell) -> Dictionary:
@@ -393,6 +438,8 @@ func _verify_reconnect_state(shell) -> void:
 
 
 func _begin_convergence(world: Dictionary, shell) -> void:
+	_clear_convergence_prepare_state()
+	_convergence_locked = false
 	_player_checksum = String(_client.get_snapshot().get("checksum", ""))
 	_item_checksum = String(_client.get_item_graph_snapshot().get("checksum", ""))
 	_convergence_world = world.duplicate(true)
@@ -402,6 +449,29 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
 	_set_stage("WAIT_CONVERGENCE_PEER")
+
+
+func _revoke_convergence_prepare(
+	current_player_checksum: String,
+	current_item_checksum: String,
+	world: Dictionary,
+	shell
+) -> void:
+	_player_checksum = current_player_checksum
+	_item_checksum = current_item_checksum
+	_convergence_world = world.duplicate(true)
+	_convergence_locked = false
+	_clear_convergence_prepare_state()
+	_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
+
+
+func _clear_convergence_prepare_state() -> void:
+	_convergence_prepare_id = ""
+	_prepared_player_checksum = ""
+	_prepared_item_checksum = ""
+	_convergence_prepared = false
+	_convergence_release_id = ""
+	_convergence_release_consumed = false
 
 
 func _open_inventory_through_input(shell) -> void:
@@ -524,6 +594,12 @@ func _write_report(
 		"screenshot": _screenshot_result.duplicate(true),
 		"player_checksum": _player_checksum,
 		"item_checksum": _item_checksum,
+		"convergence_prepare_id": _convergence_prepare_id,
+		"prepared_player_checksum": _prepared_player_checksum,
+		"prepared_item_checksum": _prepared_item_checksum,
+		"convergence_prepared": _convergence_prepared,
+		"convergence_release_id": _convergence_release_id,
+		"convergence_release_consumed": _convergence_release_consumed,
 		"client_runtime": _client.get_report() if _client != null else {},
 		"item_graph": _client.get_item_graph_snapshot() if _client != null else {},
 		"world": world.duplicate(true),

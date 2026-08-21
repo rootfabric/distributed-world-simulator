@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-V002-0002",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-20T13:51:03Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p5-r2-v002-m7-recovery-r1",
+  "head_sha": "601ca87f36b96bae9d519693e5cac9dfc38abec9",
+  "predicate": "P5_R2_R1_V002_CONTROL_DISPATCH_PRECEDES_MUTATION",
+  "command": "DISPATCH_ONE_BOUNDED_V002_M7_RECOVERY_REPAIR_WORKER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/work-orders/V0-P5-R2-WO-002.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-V002-REPAIR-MAP-001.v1.json"
+  ],
+  "summary": "Authorize one bounded repair worker to remove scheduler-dependent seed pickup readiness in the M7 recovery helper. No M4, M5, network, persistence or P5 product semantic mutation is authorized."
+}
