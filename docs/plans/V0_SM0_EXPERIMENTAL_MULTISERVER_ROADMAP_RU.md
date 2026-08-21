@@ -9,6 +9,8 @@
 
 > Этот документ является страховочным дополнительным вектором разработки. Он НЕ заменяет основной SM0 plan, V0 critical path, N3-N6 roadmap, control registry или обязательные human/reviewer gates. Любой runtime checkpoint по-прежнему получает отдельный work order, risk classification и acceptance.
 
+> **Обновление статуса (2026-08-21):** лестница P4–P11 и FINAL integrated closure исполнены и покрыты runtime-evidence (см. раздел 12). Маркеры `[CURRENT]`/`[NEXT]`/`[LATER]` в теле документа сохранены как исторический снимок от 2026-08-16; актуальное состояние и открытые пробелы — в разделе 12.
+
 Связанные текущие документы:
 
 - [`V0_SM0_TWO_AUTHORITY_SEAMLESS_HANDOFF_LAB_RU.md`](V0_SM0_TWO_AUTHORITY_SEAMLESS_HANDOFF_LAB_RU.md) — исходный two-authority correctness lab;
@@ -38,29 +40,30 @@
 Текущий путь:
 
 ```text
-P3   two-authority correctness                     [DONE]
+P3     two-authority correctness                     [DONE]
  |
-P3.1 controlled WAN latency + matrix              [DONE]
+P3.1   controlled WAN latency + matrix               [DONE]
  |     найден stop-and-wait MOVE RTT limit
  |
-P4   prewarmed fast handoff                       [CURRENT]
- |     CRITICAL / human gate перед runtime mutation
+P4     prewarmed fast handoff                        [DONE]
  |
-P5   two players / two authorities / projections  [NEXT]
+P5     two players / two authorities / projections   [DONE]
  |
-P6   projection pivot during handoff              [NEXT]
+P6     projection pivot during handoff               [DONE]
  |
-P7   three-authority routing                      [LATER]
+P7     three-authority routing (+P7.1 canonical)     [DONE]
  |
-P8   nested authority island                      [LATER]
+P8     nested authority island (+P8.1/P8.1.1)        [DONE]
  |
-P9   foreign items + interaction routing          [LATER]
+P9     foreign item boundary                         [DONE: read-only]
  |
-P10 multi-authority view composition + LOD        [LATER]
+P10    multi-authority view composition + LOD        [DONE]
  |
-P11 simultaneous crossings + faults + soak        [LATER]
+P11    simultaneous crossings + faults + soak        [DONE]
  |
-N3/N4/N5/N6 + NX5/NX8 convergence                 [CONVERGE]
+FINAL  integrated closure                            [DONE: WINDOWS PASS @ b5966ef1]
+ |
+N3/N4/N5/N6 + NX5/NX8 convergence                   [CONVERGE]
 ```
 
 ### Уже доказано
@@ -305,7 +308,7 @@ Parent authority должен трактовать descendant-owned scope как
 
 ## 7. Экспериментальная лестница
 
-### P4 — Prewarmed Fast Handoff — **[CURRENT]**
+### P4 — Prewarmed Fast Handoff — **[DONE]**
 
 Цель:
 
@@ -325,7 +328,7 @@ independent review mandatory
 
 P4 решает **authority transition latency**, но не должен создавать новый custom movement prediction stack.
 
-### P5 — Two Players / Two Authorities / Foreign Player Projection — **[NEXT]**
+### P5 — Two Players / Two Authorities / Foreign Player Projection — **[DONE]**
 
 Лаборатория:
 
@@ -347,7 +350,7 @@ Client 2 active on B
 
 Это первый эксперимент, где server-to-server projection нужен даже **без handoff**.
 
-### P6 — Projection Pivot During Handoff — **[NEXT]**
+### P6 — Projection Pivot During Handoff — **[DONE]**
 
 P1 идёт A -> B при активной foreign projection.
 
@@ -365,7 +368,7 @@ no frame where both A and B can mutate P1
 
 После crossing новый active server B продолжает получать A-owned projections, если они остаются в interest volume игрока.
 
-### P7 — Three-Authority Route Lab — **[LATER]**
+### P7 — Three-Authority Route Lab — **[DONE]**
 
 Топология:
 
@@ -393,7 +396,7 @@ Route должен разрешаться через topology/directory data.
 
 На этом этапе допустимо иметь только bounded number of warm/projection peer links вокруг текущего interest region.
 
-### P8 — Nested Authority Island — **[LATER]**
+### P8 — Nested Authority Island — **[DONE]**
 
 Топология:
 
@@ -413,7 +416,7 @@ A large parent scope
 - child unavailable does not silently give parent write authority;
 - optional fallback semantics формализуются отдельно, а не возникают автоматически.
 
-### P9 — Foreign World Items + Interaction Routing — **[LATER]**
+### P9 — Foreign World Items + Interaction Routing — **[DONE: read-only boundary]**
 
 Добавить world items/containers на разных authorities.
 
@@ -439,7 +442,7 @@ Mutation foreign replica запрещена.
 
 Player-owned inventory продолжает использовать существующий Item Graph truth и не превращается в отдельный SM0 inventory store.
 
-### P10 — Multi-Authority View Composition + Representation LOD — **[LATER]**
+### P10 — Multi-Authority View Composition + Representation LOD — **[DONE]**
 
 Active authority становится view composer для клиента:
 
@@ -464,7 +467,7 @@ client interest volume
 
 Здесь надо максимально переиспользовать идеи NX8, MW7 и RL3.
 
-### P11 — Simultaneous Crossings / Faults / Soak — **[LATER]**
+### P11 — Simultaneous Crossings / Faults / Soak — **[DONE]**
 
 Сценарии:
 
@@ -558,42 +561,40 @@ SM0 остаётся controlled laboratory.
 
 ```text
 DONE
-  P3 correctness
-  P3.1 WAN measurement
-
-YOU ARE HERE
+  P3 correctness, P3.1 WAN measurement
   P4 prewarmed fast handoff
-
-NEXT EXPERIMENTAL PROOF
-  P5 two players on different authorities + mutual foreign projections
+  P5 two players + mutual foreign projections
   P6 ghost/canonical role pivot during handoff
-
-PROVE N-SERVER, NOT A/B SPECIAL CASE
-  P7 three authorities
-  P8 nested authority scope
-
-EXPAND WORLD CONTINUITY
-  P9 foreign items + interaction routing
+  P7 three authorities (+P7.1 canonical transfer)
+  P8 nested authority scope (+P8.1 reference frame, P8.1.1 stationary passenger)
+  P9 foreign item boundary (read-only)
   P10 multi-authority view composition + representation LOD
-
-HARDEN
   P11 simultaneous crossings + faults + soak
+  FINAL integrated closure — WINDOWS PASS @ b5966ef1
+
+OPEN (не блокируют closure review, см. раздел 12)
+  movement convergence с NX4/NX5 realtime path (находка P3.1)
+  inventory fingerprint в transfer carrier (SM0.6)
+  directory leader failover во время commit
+  cross-zone item mutation routing (server-mediated forwarding)
 
 CONVERGE
   N3 -> N4 -> N5 -> N6
   NX4/NX5/NX8 reuse
+  scripts/network/ incubation per NETWORK_FRAMEWORK_READY_DEVELOPMENT_POLICY_RU.md
 ```
 
 ### Ближайший практический путь
 
 ```text
-P4 fast handoff
-  -> independent evidence/review
-  -> P5 two-player/two-authority projection lab
-  -> P6 projection pivot
+SM0 FINAL closure review (PR #102)
+  -> независимый closure review + решение по merge (human gate)
+  -> перенос доказанных semantics в актуальную product/network line
+     (donor rule: NETWORK_FRAMEWORK_READY_DEVELOPMENT_POLICY_RU.md,
+      incubation boundary scripts/network/)
 ```
 
-Именно эти три шага сейчас считаются ближайшей экспериментальной дорожкой. P7-P11 зафиксированы, чтобы не потерять дальнейшую архитектурную цель, но не являются автоматическим разрешением на runtime implementation.
+Эти шаги считаются ближайшей дорожкой после green FINAL. P4–P11 исполнены внутри лаборатории; их production-эквиваленты остаются за gates N3–N6.
 
 ---
 
@@ -611,3 +612,46 @@ P4 fast handoff
 10. SM0 не создаёт второй prediction, Item Graph, replication или representation stack там, где уже существует общий accepted foundation.
 11. Любой CRITICAL authority runtime change проходит human gate и независимый exact-head review.
 12. Этот roadmap хранит направление исследования, но не является self-acceptance какого-либо N3-N6 checkpoint.
+
+---
+
+## 12. Статус исполнения на 2026-08-21
+
+Фактическое состояние ветки `feature/sm0-two-authority-seamless-handoff-lab`
+(exact Windows-runtime-validated carrier `b5966ef113b73e3156488805057ce9b464362d89`):
+
+```text
+P3, P3.1, P4, P5, P6, P7 (+P7.1), P8 (+P8.1, P8.1.1), P9, P10, P11 — реализованы;
+каждый этап имеет собственные RUN_V0_SM0_* runner-ы и machine-readable evidence.
+FINAL integrated closure: PASS (Windows, Godot 4.7.1.stable.double.custom_build.a13da4feb)
+  evidence : artifacts/runtime/sm0-final-20260817-233239363-f6845c11/
+  canonical: 20/20 A<->B handoffs, epoch 1 -> 21
+  counters : player_identity_changes=0, invariant_violation_count=0,
+             unexpected_error_count=0
+  soak     : P11 process-isolated simultaneous crossings, 120 iterations
+Project Control на carrier b5966ef1: SUCCESS (run #855)
+```
+
+Статус closure: `WINDOWS RUNTIME VALIDATED / READY FOR INDEPENDENT CLOSURE REVIEW`
+(см. [`../checkpoints/2026-08-17_V0_SM0_FINAL_INTEGRATED_CLOSURE_RU.md`](../checkpoints/2026-08-17_V0_SM0_FINAL_INTEGRATED_CLOSURE_RU.md)).
+Merge остаётся отдельным человеческим решением; self-acceptance запрещён.
+
+### Открытые пробелы (осознанные, не блокируют closure review)
+
+1. **Движение клиента стенда** остаётся stop-and-wait MOVE с одним outstanding
+   запросом (`sm0_automated_client_node.gd`, gate `_outstanding.is_empty()`),
+   то есть находка P3.1 о сходимости с NX4/NX5 realtime path не закрыта.
+2. **Инвентарная непрерывность** из SM0.6 (bounded inventory fingerprint) в
+   канонический transfer carrier не входит: поля inventory fingerprint/checksum
+   в SM0-контрактах отсутствуют.
+3. **Отказ лидера лабораторной директории** во время commit отдельно не покрыт
+   (покрыты dual authority outage / target/source crash сценарии).
+4. **Кросс-зоновая мутация предметов** (server-mediated forwarding из P9) осталась
+   за границей реализованного: P9 доказал read-only foreign-item boundary.
+
+### Направление конвергенции
+
+Согласно [`../control/NETWORK_FRAMEWORK_READY_DEVELOPMENT_POLICY_RU.md`](../control/NETWORK_FRAMEWORK_READY_DEVELOPMENT_POLICY_RU.md):
+SM0 остаётся research/evidence environment и semantic donor; доказанные semantics
+переносятся в актуальную product/network line адаптацией, а не blind merge;
+incubation boundary общего network runtime — `scripts/network/`.
