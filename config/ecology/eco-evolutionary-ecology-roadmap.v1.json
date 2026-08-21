@@ -4,7 +4,7 @@
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_8_ACCEPTED_E3_FINAL_REVIEW_PASS_PENDING_ACCEPTANCE",
+  "status": "RESEARCH_ONLY_EVO3_COMPLETE_E3_FINAL_ACCEPTED_EVO4_B0_AUTHORIZED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -12,9 +12,9 @@
   "evo3_architecture_doc": "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md",
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
-  "current_checkpoint": "ECO.EVO3/E3.FINAL",
-  "current_step": "E3.FINAL review PASS awaiting Director acceptance via PR #190; EVO4 morphology bridge lane proposed as ECO-R79",
-  "last_accepted_step": "ECO.EVO3/E3.8 Cross-Planet Generalization Matrix",
+  "current_checkpoint": "ECO.EVO4/E4.B0",
+  "current_step": "E4.B0 demo pipe authorized and in progress (Director dispatch post PR #190 merge)",
+  "last_accepted_step": "ECO.EVO3/E3.FINAL Planetary Ecology Compiler Challenge",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
     "amended_by": "ECO-R79-2026-08-22",
@@ -293,7 +293,8 @@
     "e3_final_sealed_reveal_evidence": "validation/ecology/eco-evo3-e3-final-sealed-reveal-evidence.json",
     "e3_final_reveal_summary": "12/12 digests verified; 6 confirmed / 6 falsified (falsification evidence recorded)",
     "e3_final_independent_review": "VERDICT PASS at ffec975a (read-only fresh reviewer); findings NOTE-level only",
-    "e3_final_wrapup_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO3_BRANCH_WRAPUP_RU.md"
+    "e3_final_wrapup_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO3_BRANCH_WRAPUP_RU.md",
+    "e3_final_acceptance": "PR #190 merged 5b44068d; review PASS; closure 20/20+19/19; regression 8/8"
   },
   "production_integration_boundary": {
     "status": "SEPARATE_MAIN_OWNED_PRODUCT_TRAIN",
@@ -373,7 +374,13 @@
       {
         "id": "E3.FINAL",
         "name": "Planetary Ecology Compiler Challenge",
-        "status": "REVIEW_PASS_PENDING_DIRECTOR_ACCEPTANCE"
+        "status": "ACCEPTED",
+        "acceptance": {
+          "merged_pr": 190,
+          "merge_commit": "5b44068d80439deb0f16597ddd36b546d68eebfa",
+          "merged_at_utc": "2026-08-21T23:03:29Z",
+          "checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO3_E3_FINAL_ACCEPTED_RU.md"
+        }
       }
     ],
     "e3_2_input_rule": "MUST_CONSUME_ACCEPTED_E3_1_SNAPSHOT_NO_RAW_FIXTURE_BYPASS",
@@ -396,13 +403,14 @@
     "tracks": {
       "E4.B": {
         "name": "Morphology Bridge EVO3->PH",
-        "status": "PROPOSED_PENDING_AUTHORIZATION",
+        "status": "B0_AUTHORIZED_B1_PLUS_PROPOSED",
         "authorization_rule": "Separate Director authorization dispatch required after E3.FINAL acceptance; no implementation before that",
         "steps": [
           {
             "id": "E4.B0",
             "name": "Demo pipe: accepted catalog species -> developmental derivation v0 -> GrowthGraph skeleton -> PH5 render profile",
-            "status": "PROPOSED"
+            "status": "AUTHORIZED_IN_PROGRESS",
+            "authorization_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO4_B0_AUTHORIZED_RU.md"
           },
           {
             "id": "E4.B1",
