@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R74-2026-08-21",
+  "revision": "ECO-R75-2026-08-21",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_6_ACCEPTED_E3_7_AUTHORIZED_NOT_STARTED",
+  "status": "RESEARCH_ONLY_EVO3_E3_7_ACCEPTED_E3_8_PENDING_POST_MERGE_CONTROL",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -12,9 +12,9 @@
   "evo3_architecture_doc": "docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md",
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
-  "current_checkpoint": "ECO.EVO3/E3.7",
-  "current_step": "Deterministic Planet Compilation authorized / not started",
-  "last_accepted_step": "ECO.EVO3/E3.6 Seasonal & Disturbance Temporal Program",
+  "current_checkpoint": "ECO.EVO3/E3.8",
+  "current_step": "Cross-Planet Generalization Matrix pending post-merge accepted ECO control state",
+  "last_accepted_step": "ECO.EVO3/E3.7 Deterministic Planet Compilation",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "execution_modes": [
     "INCUBATE_FAST",
@@ -38,7 +38,8 @@
     "ECO.EVO3/E3.3 RESEARCH ECOLOGY DECOMPOSITION ACCEPTED",
     "ECO.EVO3/E3.4 CAUSAL COLONIZATION PROGRAM COMPILER ACCEPTED",
     "ECO.EVO3/E3.5 MULTI-SCALE POPULATION WORKSET COMPILER ACCEPTED",
-    "ECO.EVO3/E3.6 SEASONAL & DISTURBANCE TEMPORAL PROGRAM ACCEPTED"
+    "ECO.EVO3/E3.6 SEASONAL & DISTURBANCE TEMPORAL PROGRAM ACCEPTED",
+    "ECO.EVO3/E3.7 DETERMINISTIC PLANET COMPILATION ACCEPTED"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -172,7 +173,29 @@
     "e3_6_project_control_run_id": 32457280676,
     "e3_6_project_control_run_number": 1077,
     "e3_6_closure_run_id": 32457280719,
-    "e3_6_closure_run_number": 8
+    "e3_6_closure_run_number": 8,
+    "e3_7_repair_freeze_head": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+    "e3_7_reviewed_verified_head": "bdf9dd8bef6e4883cb30973550f5ce288c76b97a",
+    "e3_7_merge_head": "fbb8addb34b2809c5f90e55e003b5f3af41c3bfa",
+    "e3_7_artifact_git_blob": "01207a7025710db34fafc959fcc26dade2606d89",
+    "e3_7_artifact_sha256": "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303",
+    "e3_7_provenance_hash": "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff",
+    "e3_7_planet_ecology_program_hash": "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956",
+    "e3_7_tests": 30,
+    "e3_7_authority_regression_tests": 16,
+    "e3_7_generated_program": "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json",
+    "e3_7_acceptance_checkpoint": "docs/checkpoints/2026-08-21_ECO_EVO3_E3_7_ACCEPTED_RU.md",
+    "e3_7_independent_review_verdict": "PASS",
+    "e3_7_review_comment_id": 5370213207,
+    "e3_7_finding_status": "E3.7-R1-001 CLOSED",
+    "e3_7_historical_finding_comment_id": 5369696271,
+    "e3_7_verifier_verdict": "PASS",
+    "e3_7_verifier_comment_id": 5370307701,
+    "e3_7_director_comment_id": 5370372420,
+    "e3_7_project_control_run_id": 32481702988,
+    "e3_7_project_control_run_number": 1122,
+    "e3_7_closure_run_id": 32481702894,
+    "e3_7_closure_run_number": 10
   },
   "production_integration_boundary": {
     "status": "SEPARATE_MAIN_OWNED_PRODUCT_TRAIN",
@@ -198,7 +221,7 @@
   },
   "EVO3": {
     "name": "Planetary Ecology Compiler / broader planetary generalization",
-    "status": "ACTIVE_E3_7_AUTHORIZED_NOT_STARTED",
+    "status": "ACTIVE_E3_7_ACCEPTED_E3_8_PENDING_POST_MERGE_CONTROL",
     "production_runtime_authorized": false,
     "xfer1_required_before_production_binding": true,
     "architecture": "config/ecology/eco-evo3-planetary-ecology-compiler.v1.json",
@@ -242,7 +265,7 @@
       {
         "id": "E3.7",
         "name": "Deterministic Planet Compilation",
-        "status": "AUTHORIZED_NOT_STARTED"
+        "status": "ACCEPTED"
       },
       {
         "id": "E3.8",
