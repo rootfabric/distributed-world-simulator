@@ -16,7 +16,7 @@ on:
       - ".github/workflows/e3-7-closure.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: eco-e3-7-${{ github.event.pull_request.number }}
@@ -54,6 +54,26 @@ jobs:
         run: |
           set -o pipefail
           python RUN_ECO_EVO3_E3_7_TESTS.py | tee e3_7_runner.log
+
+      - name: Freeze exact machine-generated PlanetEcologyProgram
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json"
+          candidate="e3_7_candidate_planet_ecology_program.json"
+          test ! -e "$target"
+          test -s "$candidate"
+          test "$(wc -c < "$candidate")" = "104186"
+          test "$(sha256sum "$candidate" | awk '{print $1}')" = "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303"
+          test "$(git hash-object "$candidate")" = "01207a7025710db34fafc959fcc26dade2606d89"
+          cp "$candidate" "$target"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$target"
+          git diff --cached --quiet && exit 1
+          git commit -m "data(eco): freeze exact E3.7 PlanetEcologyProgram"
+          git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Upload exact E3.7 runner evidence
         if: always()
