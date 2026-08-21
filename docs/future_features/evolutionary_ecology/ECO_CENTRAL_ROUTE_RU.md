@@ -2,7 +2,7 @@
 
 Статус (исторический документ): `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0..E3.3 ACCEPTED / E3.4 CURRENT` — срез на момент написания.
 
-**Статус на 2026-08-22 (ECO-R77):** `EVO3 E3.0–E3.7 ACCEPTED / E3.8 AUTHORIZED_NOT_STARTED ← CURRENT / E3.FINAL BLOCKED`.
+**Статус на 2026-08-22 (ECO-R78):** `EVO3 E3.0–E3.8 ACCEPTED / E3.FINAL BLOCKED_PENDING_AUTHORIZATION`.
 Единственный живой источник текущего состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`. Разделы ниже сохраняются как история маршрута; статусы внутри них не обновляются задним числом.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  

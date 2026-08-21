@@ -7,7 +7,7 @@
 ## Карта остатка маршрута
 
 ```text
-Этап 0  E3.8  Cross-Planet Generalization Matrix      IN_PROGRESS (PR #188)
+Этап 0  E3.8  Cross-Planet Generalization Matrix      ACCEPTED (PR #188 merged)
 Этап 1  ECO-R78 поправки: review → внедрение          READY (этот коммит)
 Этап 2  E3.FINAL Planetary Ecology Compiler Challenge BLOCKED (после E3.8)
 Этап 3  E3.6-R Multi-Snapshot Temporal Envelopes      CONDITIONAL (owner evidence)
