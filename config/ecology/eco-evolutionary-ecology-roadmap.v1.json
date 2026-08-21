@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R75-2026-08-21",
+  "revision": "ECO-R76-2026-08-21",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_EVO3_E3_7_ACCEPTED_E3_8_PENDING_POST_MERGE_CONTROL",
+  "status": "RESEARCH_ONLY_EVO3_E3_7_ACCEPTED_E3_8_AUTHORIZED_NOT_STARTED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "evo2_plan_doc": "docs/plans/ECO_EVO2_PORTABLE_SPECIES_CATALOG_ROADMAP_RU.md",
@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO3/E3.8",
-  "current_step": "Cross-Planet Generalization Matrix pending post-merge accepted ECO control state",
+  "current_step": "Cross-Planet Generalization Matrix authorized / not started",
   "last_accepted_step": "ECO.EVO3/E3.7 Deterministic Planet Compilation",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "execution_modes": [
@@ -221,7 +221,7 @@
   },
   "EVO3": {
     "name": "Planetary Ecology Compiler / broader planetary generalization",
-    "status": "ACTIVE_E3_7_ACCEPTED_E3_8_PENDING_POST_MERGE_CONTROL",
+    "status": "ACTIVE_E3_8_AUTHORIZED_NOT_STARTED",
     "production_runtime_authorized": false,
     "xfer1_required_before_production_binding": true,
     "architecture": "config/ecology/eco-evo3-planetary-ecology-compiler.v1.json",
@@ -270,7 +270,7 @@
       {
         "id": "E3.8",
         "name": "Cross-Planet Generalization Matrix",
-        "status": "BLOCKED"
+        "status": "AUTHORIZED_NOT_STARTED"
       },
       {
         "id": "E3.FINAL",
