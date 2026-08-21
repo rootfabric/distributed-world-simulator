@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import importlib.metadata
 import importlib.util
+import inspect
 import io
 import json
 import pathlib
@@ -23,7 +24,7 @@ SEMANTIC_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_7_planet_compila
 AUTHORITY_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_7_authority.py"
 COMMITTED_ARTIFACT = ROOT / "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json"
 FINAL_ARTIFACT = ROOT / "e3_7_candidate_planet_ecology_program.json"
-EXPECTED_TESTS = 28
+EXPECTED_TESTS = 30
 EXPECTED_ARTIFACT_BYTES = 104186
 EXPECTED_ARTIFACT_SHA256 = "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303"
 EXPECTED_ARTIFACT_GIT_BLOB = "01207a7025710db34fafc959fcc26dade2606d89"
@@ -138,6 +139,18 @@ def main() -> int:
         "import random", "from random", "time.time(", "datetime.now(",
         "os.environ", "os.getenv(", "uuid4(",
     ))
+    public_finalization_surfaces = sorted(
+        name
+        for name, value in vars(mod).items()
+        if inspect.isfunction(value)
+        and value.__module__ == mod.__name__
+        and not name.startswith("_")
+        and any(token in name.lower() for token in ("serial", "final", "write"))
+    )
+    no_alternate_serializer_helper = (
+        public_finalization_surfaces == ["serialize_planet_ecology_program", "write_planet_ecology_program"]
+        and not hasattr(mod, "serialized_bytes")
+    )
 
     predicates = [
         ("EXACT_ACCEPTED_E3_1_TO_E3_6_CHAIN", len(program["accepted_chain_manifest"]) == 7),
@@ -145,6 +158,7 @@ def main() -> int:
         ("CROSS_STAGE_LINEAGE_CONSISTENT", True),
         ("VERIFIED_INPUT_BUILD_CAPABILITY", type(inputs).__name__ == "_VerifiedInputs"),
         ("VERIFIED_OUTPUT_SERIALIZATION_CAPABILITY", type(program).__name__ == "_VerifiedPlanetEcologyProgram"),
+        ("NO_ALTERNATE_PROGRAM_SERIALIZER_HELPER", no_alternate_serializer_helper),
         ("RESEARCH_NON_AUTHORITATIVE", program["authority"] == mod.AUTHORITY and not program["canonical_binding_resolved"] and not program["production_binding_authorized"]),
         ("NO_INDIVIDUAL_ENTITY_TRUTH", program["projection"]["individual_entity_count"] == 0),
         ("GLOBAL_RNG_CLOCK_ENVIRONMENT_SURFACE_ABSENT", no_nondeterminism_surface),
@@ -177,6 +191,7 @@ def main() -> int:
     print(f"active_basis={program['projection']['active_basis_count']}")
     print(f"active_spatial_keys={program['projection']['active_spatial_key_count']}")
     print(f"temporal_envelopes={program['projection']['temporal_envelope_count']}")
+    print(f"public_finalization_surfaces={','.join(public_finalization_surfaces)}")
 
     failed = [name for name, ok in predicates if not ok]
     if failed:
