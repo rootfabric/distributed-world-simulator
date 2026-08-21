@@ -1,0 +1,127 @@
+extends RefCounted
+
+const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const GatewayUtilsScript = preload("res://scripts/network/gateway/gateway_contract_utils.gd")
+const CwipUtilsScript = preload("res://scripts/network/gateway/cwip_contract_utils.gd")
+const InteractionTimeScript = preload("res://scripts/network/gateway/interaction_time.gd")
+
+const SCHEMA := "planet_simulator.collision_proof.v1"
+const PROTOCOL_VERSION := 1
+const COLLISION_KINDS: Array[String] = ["NONE", "STATIC", "ENTITY", "TERRAIN", "BOUNDARY"]
+const FIELDS: Array[String] = [
+	"schema",
+	"protocol_version",
+	"interaction_id",
+	"world_id",
+	"authority_id",
+	"authority_epoch",
+	"path_t_start",
+	"path_t_end",
+	"first_collision_t",
+	"collided_entity_id",
+	"collision_kind",
+	"hit_zone",
+	"interaction_time",
+	"history_revision",
+	"transform_revision",
+	"proof_revision",
+]
+
+
+static func create(
+		interaction_id: String,
+		world_id: String,
+		authority_id: String,
+		authority_epoch: int,
+		path_t_start: float,
+		path_t_end: float,
+		first_collision_t,
+		collided_entity_id,
+		collision_kind: String,
+		hit_zone,
+		interaction_time: Dictionary,
+		history_revision: int,
+		transform_revision: int,
+		proof_revision: int,
+) -> Dictionary:
+	return {
+		"schema": SCHEMA,
+		"protocol_version": PROTOCOL_VERSION,
+		"interaction_id": interaction_id,
+		"world_id": world_id,
+		"authority_id": authority_id,
+		"authority_epoch": authority_epoch,
+		"path_t_start": path_t_start,
+		"path_t_end": path_t_end,
+		"first_collision_t": first_collision_t,
+		"collided_entity_id": collided_entity_id,
+		"collision_kind": collision_kind,
+		"hit_zone": hit_zone,
+		"interaction_time": interaction_time.duplicate(true),
+		"history_revision": history_revision,
+		"transform_revision": transform_revision,
+		"proof_revision": proof_revision,
+	}
+
+
+static func validate(value: Dictionary) -> Dictionary:
+	var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(value, FIELDS)
+	if not bool(exact.get("success", false)):
+		return exact
+	for pair in [
+		["interaction_id", "interaction"],
+		["world_id", "world"],
+		["authority_id", "authority"],
+	]:
+		var id_check: Dictionary = CwipUtilsScript.require_id(value, String(pair[0]), String(pair[1]))
+		if not bool(id_check.get("success", false)):
+			return id_check
+	for check in [
+		GatewayUtilsScript.validate_schema(value, SCHEMA),
+		CwipUtilsScript.require_positive_integer(value, "authority_epoch"),
+		CwipUtilsScript.require_path_range(value),
+		GatewayUtilsScript.require_enum(value, "collision_kind", COLLISION_KINDS),
+		CwipUtilsScript.require_positive_integer(value, "history_revision"),
+		CwipUtilsScript.require_positive_integer(value, "transform_revision"),
+		CwipUtilsScript.require_positive_integer(value, "proof_revision"),
+		CwipUtilsScript.require_optional_string(value, "hit_zone"),
+	]:
+		if not bool(check.get("success", false)):
+			return check
+	if typeof(value.get("interaction_time")) != TYPE_DICTIONARY:
+		return NetworkUtilsScript.validation_failure("INVALID_INTERACTION_TIME", "interaction_time must be a Dictionary")
+	var time_check: Dictionary = InteractionTimeScript.validate(Dictionary(value.get("interaction_time")))
+	if not bool(time_check.get("success", false)):
+		return time_check
+	var collision_kind := String(value.get("collision_kind"))
+	if collision_kind == "NONE":
+		if value.get("first_collision_t") != null or value.get("collided_entity_id") != null or value.get("hit_zone") != null:
+			return NetworkUtilsScript.validation_failure("INVALID_NO_COLLISION_PROOF", "NONE proof cannot carry collision fields")
+		return NetworkUtilsScript.validation_success()
+	var first_collision_check: Dictionary = CwipUtilsScript.require_nonnegative_number(value, "first_collision_t")
+	if not bool(first_collision_check.get("success", false)):
+		return first_collision_check
+	var first_t := float(value.get("first_collision_t"))
+	if first_t < float(value.get("path_t_start")) or first_t > float(value.get("path_t_end")):
+		return NetworkUtilsScript.validation_failure("INVALID_COLLISION_T", "first_collision_t must be within proof path range")
+	var entity_check: Dictionary = CwipUtilsScript.require_optional_id(value, "collided_entity_id", "entity")
+	if not bool(entity_check.get("success", false)):
+		return entity_check
+	if collision_kind == "ENTITY" and value.get("collided_entity_id") == null:
+		return NetworkUtilsScript.validation_failure("MISSING_COLLIDED_ENTITY", "ENTITY collision requires collided_entity_id")
+	return NetworkUtilsScript.validation_success()
+
+
+static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictionary:
+	var candidate_check: Dictionary = validate(candidate)
+	if not bool(candidate_check.get("success", false)):
+		return candidate_check
+	var current_check: Dictionary = validate(current)
+	if not bool(current_check.get("success", false)):
+		return current_check
+	for field in ["interaction_id", "world_id", "authority_id"]:
+		if String(candidate.get(String(field))) != String(current.get(String(field))):
+			return NetworkUtilsScript.validation_failure("PROOF_IDENTITY_MISMATCH", "Cannot compare proofs from different interaction/world/authority")
+	if int(candidate.get("proof_revision")) <= int(current.get("proof_revision")):
+		return NetworkUtilsScript.validation_failure("STALE_PROOF_REVISION", "proof_revision must advance")
+	return NetworkUtilsScript.validation_success()
