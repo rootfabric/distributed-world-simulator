@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-5-R1-EVENT-0007",
+  "project_epoch": "E2026-08-20-ECO-E3-5-R1",
+  "work_order_id": "ECO-E3-5-R1-WO-001",
+  "sequence": 7,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-21T02:12:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/eco-evo3-e3-5-population-workset-compiler",
+  "head_sha": "696e8975ad375e33b9897aaddcee607ac5af41f6",
+  "predicate": "FRESH_INDEPENDENT_REVIEWER_PASS",
+  "command": "TRANSCRIBE_REVIEWER_FAIL_PR_175_COMMENT_5364294674",
+  "exit_code": 1,
+  "evidence_paths": [
+    "PR #175 comment #5357817777",
+    "PR #175 comment #5364294674"
+  ],
+  "summary": "Fresh independent Reviewer returned FAIL on exact head 696e8975ad375e33b9897aaddcee607ac5af41f6 with blocking findings E3.5-R-001 (serialization authority bypass) and E3.5-R-002 (committed generated artifact not byte-bound to final machine artifact). Verifier dispatch is blocked; bounded Repair R1 required."
+}

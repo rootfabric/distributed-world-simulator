@@ -1,0 +1,91 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_5_population_workset_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.5-CONTRACT-2026-08-20-R1",
+  "checkpoint": "ECO.EVO3/E3.5",
+  "compiler_stage": "POPULATION_WORKSET",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "canonical_binding_resolved": false,
+  "production_binding_authorized": false,
+  "accepted_e3_4": {
+    "accepted_control_head": "872f2d993cc002b72529ea7f2a3274d0d71245b0",
+    "canonical_merge_commit": "8618032bfb668c7f0427f0aa80c0e07de69a3cfc",
+    "artifact_path": "config/ecology/accepted_inputs/e3_4_candidate_causal_colonization_program.v1.json",
+    "artifact_git_blob": "db725ef37912547527dff5fffe39ca63e5f8c22e",
+    "artifact_sha256": "fa6ece19e76784428fb0251a99d5b88bc1ed6183000e6c99755edbe2439c8463",
+    "colonization_program_hash": "6f0b1cbe134f6b77825f66b356624975cc84e88f08c9aaba789f24c7d1cba4e6",
+    "provenance_hash": "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
+    "full_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+    "decomposition_hash": "9736ec70f844c930f8e160a4f08ae8e0aae1cce6f73fbf106499bea15b15a51a",
+    "review_relay_comment_id": 5356471742
+  },
+  "input_policy": {
+    "sole_scientific_predecessor": "EXACT_ACCEPTED_E3_4_CAUSAL_COLONIZATION_PROGRAM",
+    "raw_bytes_required": true,
+    "git_blob_required": true,
+    "artifact_sha256_required": true,
+    "program_hash_recompute_required": true,
+    "provenance_hash_recompute_required": true,
+    "candidate_alias_authority_forbidden": true,
+    "plain_parsed_dict_authority_forbidden": true
+  },
+  "population_basis": {
+    "meaning": "COLONIZATION_ESTABLISHED_SPECIES_PATCH_AGGREGATE_WORK_BASIS",
+    "source_decision": "ESTABLISHED",
+    "individual_entity_truth": false,
+    "population_count_truth": false,
+    "basis_key_algorithm": "SHA256(research_species_id|research_patch_id) first 24 hex",
+    "deduplicate_exact_pairs": true
+  },
+  "scale_model": {
+    "levels": [
+      "PLANET",
+      "REGION",
+      "PATCH",
+      "LOCAL_ACTIVE"
+    ],
+    "one_state_meaning_required": true,
+    "coverage_rule": "EVERY_SCALE_COVERS_EACH_ACTIVE_BASIS_KEY_EXACTLY_ONCE",
+    "region_grouping": "CONNECTED_COMPONENTS_OF_E3_4_ESTABLISHED_ROUTE_GRAPH",
+    "region_identity": "E3_5_RESEARCH_SCHEDULING_ID_NOT_CANONICAL_SD",
+    "patch_identity": "REUSE_E3_4_RESEARCH_PATCH_REFERENCE_NOT_CANONICAL_SD",
+    "local_active_identity": "PATCH_AGGREGATE_PROJECTION_NOT_INDIVIDUAL_ENTITY"
+  },
+  "budget_policy": {
+    "algorithm": "INTEGER_OVERHEAD_PLUS_MEMBER_COST_V1",
+    "overhead_units": {
+      "PLANET": 100,
+      "REGION": 80,
+      "PATCH": 40,
+      "LOCAL_ACTIVE": 100
+    },
+    "per_basis_member_units": {
+      "PLANET": 2,
+      "REGION": 4,
+      "PATCH": 8,
+      "LOCAL_ACTIVE": 16
+    },
+    "meaning": "NON_AUTHORITATIVE_EXECUTION_BUDGET_HINT_ONLY",
+    "global_rng_forbidden": true
+  },
+  "empty_semantics": {
+    "accepted_colonization_result": "NO_COLONIZATION",
+    "workset_result": "NO_ACTIVE_POPULATION_WORK",
+    "active_basis_count": 0,
+    "work_units": 0,
+    "budget_hints": 0,
+    "invent_population_forbidden": true
+  },
+  "authority_barriers": [
+    "NO_PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH",
+    "NO_CANONICAL_POPULATION_REGISTRY",
+    "NO_CANONICAL_SD_DOMAIN_OR_REGION_CREATION",
+    "NO_NETWORK_AUTHORITY_ASSIGNMENT",
+    "NO_PRODUCTION_PERSISTENCE",
+    "NO_WORLD_TRANSACTION_AUTHORITY",
+    "NO_XFER1_OR_PRODUCTION_BINDING",
+    "NO_E3_6_TEMPORAL_AUTHORITY"
+  ],
+  "output_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "contract_hash": "45317ec4912e9add2ed0f722a0184d0065772da2130b9f58d063729e9a321100"
+}
