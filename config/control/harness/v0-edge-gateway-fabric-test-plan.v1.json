@@ -1,0 +1,117 @@
+{
+  "schema": "distributed_world_simulator.v0_edge_gateway_fabric_test_plan.v1",
+  "revision": "V0-EDGE-GATEWAY-FABRIC-2026-08-21-R1",
+  "canonical_owner": "main",
+  "status": "CONTROL_NETWORK_SPEC_CANDIDATE_DONOR_ONLY",
+  "authored_against_main": "1d9de3c479c60045d613660b2a5c5db0374963f8",
+  "human_spec": "docs/network/EDGE_GATEWAY_FABRIC_SPEC_RU.md",
+  "human_implementation_plan": "docs/network/EDGE_GATEWAY_TEST_IMPLEMENTATION_PLAN_RU.md",
+  "p6_roadmap": "config/control/harness/v0-p6-seamless-execution-roadmap.v1.json",
+  "control_effect": {
+    "p6_runtime_mutation_authorized": false,
+    "production_sm1_activated": false,
+    "gateway_research_becomes_product_base": false
+  },
+  "target": {
+    "client_normal_world_transport_count": 1,
+    "client_connects_to_simulation_server_directly": false,
+    "normal_authority_pivot_changes_client_transport": false,
+    "normal_projection_source_adds_client_transport": false,
+    "gateway_is_canonical_owner": false,
+    "gateway_server_links_are_shared": true,
+    "gateway_server_link_pool_model": "ONE_TO_K_PHYSICAL_TUNNELS_MULTIPLEX_MANY_LOGICAL_SESSIONS"
+  },
+  "edge_selection": {
+    "production_direction": "ANYCAST_OR_LATENCY_AWARE_EDGE_ROUTING_VENDOR_NEUTRAL",
+    "mvp": "EDGE_LOCATOR_PLUS_BOUNDED_CLIENT_NETWORK_PROBES",
+    "nearest_definition": "LOWEST_HEALTHY_NETWORK_SCORE_NOT_GEO_DISTANCE",
+    "routine_authority_handoff_rehomes_gateway": false
+  },
+  "session_flow": [
+    "DISCOVER_GATEWAY",
+    "CONNECT_GATEWAY",
+    "AUTHENTICATE",
+    "CREATE_OR_RESUME_SESSION",
+    "RESOLVE_WORLD_PLACEMENT",
+    "RESOLVE_CURRENT_AUTHORITY",
+    "ENSURE_SHARED_BACKEND_LINK",
+    "ATTACH_LOGICAL_SESSION",
+    "WORLD_READY"
+  ],
+  "client_channels": [
+    {"id":"C0","name":"SESSION_CONTROL","delivery":"RELIABLE"},
+    {"id":"C1","name":"INPUT_MOVEMENT","delivery":"UNRELIABLE_ORDERED"},
+    {"id":"C2","name":"AUTHORITATIVE_SNAPSHOT","delivery":"UNRELIABLE_ORDERED"},
+    {"id":"C3","name":"WORLD_OPERATION","delivery":"RELIABLE_ORDERED"},
+    {"id":"C4","name":"WORLD_PROJECTION","delivery":"UNRELIABLE_ORDERED"},
+    {"id":"C5","name":"RECOVERY_FULL_STATE","delivery":"RELIABLE_ORDERED"},
+    {"id":"C6","name":"TELEMETRY","delivery":"BEST_EFFORT"}
+  ],
+  "research_stages": [
+    {"id":"EG0","name":"CONTRACTS_AND_FIXTURES","exit":"TOPOLOGY_NEUTRAL_DTOS_PASS"},
+    {"id":"EG1","name":"SINGLE_GATEWAY_PASS_THROUGH","exit":"DIRECT_GATEWAY_CANONICAL_EQUIVALENCE_PASS"},
+    {"id":"EG2","name":"AUTH_SESSION_PLACEMENT","exit":"WORLD_READY_WITHOUT_SERVER_ENDPOINT_DISCLOSURE"},
+    {"id":"EG3","name":"SHARED_MULTIPLEXED_BACKEND_TUNNEL","exit":"MULTI_CLIENT_ONE_BACKEND_LINK_PASS"},
+    {"id":"EG4","name":"PROJECTION_AGGREGATION","exit":"MULTI_SOURCE_SINGLE_CLIENT_TRANSPORT_PASS"},
+    {"id":"EG5","name":"MULTI_GATEWAY_NEAREST_EDGE_SELECTION","exit":"NEAREST_HEALTHY_EDGE_SELECTION_PASS"},
+    {"id":"EG6","name":"ACTIVE_WARM_BACKEND_PIVOT","exit":"STABLE_CLIENT_CONNECTION_BACKEND_PIVOT_PASS"},
+    {"id":"EG7","name":"GATEWAY_FAILURE_REHOME","exit":"LOGICAL_SESSION_REHOME_PASS"},
+    {"id":"EG8","name":"WAN_FAULT_MATRIX","exit":"CORRECTNESS_UNDER_SPLIT_LEG_IMPAIRMENT_PASS"},
+    {"id":"EG9","name":"SCALE_FAIRNESS_SOAK","exit":"BOUNDED_QUEUE_MULTI_CLIENT_SOAK_PASS"}
+  ],
+  "mvp_reference_transport": {
+    "client_gateway": "GODOT_ENET_PROJECT_DTO",
+    "gateway_simulation": "GODOT_ENET_GATEWAY_ENVELOPE_DTO",
+    "orchestration": "PYTHON_PYTEST_SUBPROCESS",
+    "fault_injection": "TC_NETEM",
+    "production_transport_locked_by_this_spec": false,
+    "production_quic_spike_recommended": true
+  },
+  "handoff_invariants": [
+    "A_REMAINS_ACTIVE_UNTIL_COMMIT",
+    "B_WARM_CANONICAL_WRITES_ZERO",
+    "EXPLICIT_INPUT_OR_COMMAND_BARRIER",
+    "DIRECTORY_COMMIT_PRECEDES_GATEWAY_PIVOT",
+    "AUTHORITY_EPOCH_MONOTONIC",
+    "GATEWAY_ROUTE_REVISION_MONOTONIC",
+    "POST_BARRIER_WRITES_ROUTE_ONLY_TO_B",
+    "STALE_A_TRAFFIC_FENCED",
+    "OPERATION_ID_STABLE_ACROSS_PIVOT",
+    "CLIENT_TRANSPORT_UNCHANGED",
+    "PLAYER_IDENTITIES_UNCHANGED"
+  ],
+  "p6_mapping": {
+    "P6.2": ["EG0"],
+    "P6.3": ["EG0","EG1"],
+    "P6.4": ["EG1","EG2"],
+    "P6.6": ["EG0","EG1","EG2","EG3"],
+    "P6.9": ["EG4","EG6"],
+    "P6.10": ["EG7","EG8","EG9"],
+    "SR3_I5A": ["EG0","EG1","EG2","EG3","EG4","EG5"],
+    "SR4_I5B": ["EG6"],
+    "SM1_H7": ["EG7"]
+  },
+  "acceptance": [
+    "CLIENT_NORMAL_WORLD_TRANSPORT_COUNT_ONE",
+    "MULTI_CLIENT_SHARED_BACKEND_LINK",
+    "PROJECTION_FAN_IN_THROUGH_GATEWAY",
+    "NO_SIM_SERVER_ENDPOINT_REQUIRED_BY_CLIENT",
+    "GATEWAY_CANONICAL_WRITES_ZERO",
+    "EXACTLY_ONE_CANONICAL_WRITER",
+    "STABLE_PLAYER_IDENTITIES",
+    "OPERATION_ID_CONTINUITY",
+    "STALE_ROUTE_AND_EPOCH_FENCING",
+    "BOUNDED_PER_SESSION_QUEUES",
+    "NO_CROSS_SESSION_LEAKAGE_OR_STARVATION",
+    "A_B_PIVOT_ZERO_CLIENT_GAMEPLAY_RECONNECTS",
+    "GATEWAY_FAILURE_LOGICAL_SESSION_RESUME"
+  ],
+  "non_goals": [
+    "PRODUCTION_BGP_ANYCAST_DEPLOYMENT",
+    "FINAL_QUIC_SELECTION",
+    "DYNAMIC_WORLD_SPLIT_MERGE",
+    "ZERO_PACKET_LOSS_GATEWAY_PROCESS_FAILOVER",
+    "DIRECT_CLIENT_PROJECTION_SOCKETS",
+    "PRODUCTION_AUTOSCALING_POLICY"
+  ]
+}
