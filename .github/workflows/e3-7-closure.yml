@@ -1,0 +1,68 @@
+name: ECO E3.7 Closure
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evolutionary-ecology
+    paths:
+      - "RUN_ECO_EVO3_E3_7_TESTS.py"
+      - "config/ecology/eco-evo3-e3-7-*"
+      - "scripts/research/ecology/planet_ecology_program_compiler_v1.py"
+      - "tests/research/ecology/test_eco_evo3_e3_7_*"
+      - "validation/ecology/eco-evo3-e3-7-*"
+      - "docs/checkpoints/2026-08-21_ECO_EVO3_E3_7_*"
+      - "docs/evidence/2026-08-21_ECO_EVO3_E3_7_*"
+      - "config/control/harness/executions/E2026-08-21-ECO-E3-7-R1/**"
+      - ".github/workflows/e3-7-closure.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-e3-7-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  closure:
+    name: exact published E3.7 closure
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout exact PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact PR HEAD checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          echo "exact_head=$(git rev-parse HEAD)"
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install exact validation dependency
+        run: python -m pip install --disable-pip-version-check jsonschema==4.26.0
+
+      - name: Run exact E3.7 closure
+        shell: bash
+        run: |
+          set -o pipefail
+          python RUN_ECO_EVO3_E3_7_TESTS.py | tee e3_7_runner.log
+
+      - name: Upload exact E3.7 runner evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-e3-7-runner-evidence
+          path: |
+            e3_7_runner.log
+            e3_7_candidate_planet_ecology_program.json
+            validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json
+          if-no-files-found: warn
+          retention-days: 30
