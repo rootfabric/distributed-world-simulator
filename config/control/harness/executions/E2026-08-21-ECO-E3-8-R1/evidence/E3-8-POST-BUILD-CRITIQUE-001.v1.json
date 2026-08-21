@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "E3-8-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-21-ECO-E3-8-R1",
+  "work_order_id": "ECO-E3-8-WO-001",
+  "verdict": "IMPLEMENTER_EVIDENCE_COMPLETE_AWAITING_FRESH_INDEPENDENT_REVIEW",
+  "finding_analysis": {
+    "root_cause": "Roadmap step E3.8 requires a predeclared cross-planet generalization matrix proving the accepted causal semantics generalize across dry/wet/cold/hot/seasonal/topologically-isolated planet families without catalog or compiler retuning.",
+    "approach": "Family variant snapshots are derived from the exact accepted E3.1 snapshot by predeclared integer deltas; opportunity fields and decompositions are computed by importing the unmodified accepted E3.2/E3.3 module builders; colonization decisions reuse unmodified accepted E3.4 core primitives with the accepted thresholds. Reused module SHA-256 digests are recorded in the artifact as no-retuning proof.",
+    "scientific_results": {
+      "dry": "both species LOST_REVERSAL -> NO_COLONIZATION (null outcome preserved)",
+      "wet": "PRESERVED_COLONIZED (22 established patches)",
+      "cold": "PRESERVED_COLONIZED, identical to baseline (thermal context is not a fitness target)",
+      "hot": "PRESERVED_COLONIZED, identical to baseline (thermal context is not a fitness target)",
+      "seasonal": "one LOST_REVERSAL, one PRESERVED_COLONIZED",
+      "isolated": "species-level PRESERVED with dispersal compressed 22 -> 2 established patches"
+    },
+    "self_audit_result": "Capability boundary holds: plain/forged/mutated matrices rejected by both finalization surfaces without output creation; forged _VerifiedMatrixInputs values are discarded by raw re-verification; finalizer surface enumeration constrained to serialize_planet_generalization_matrix and write_planet_generalization_matrix; no generic final-byte helper exists.",
+    "scientific_change_required": false
+  },
+  "machine_evidence": {
+    "closure_run_id": 32492345563,
+    "closure_run_number": 1,
+    "closure_job_id": 96802700395,
+    "exact_head": "668ed22d762da6fd407b9b7852ad049b218ed48b",
+    "tests": "26/26 PASS",
+    "closure_predicates": "18/18 PASS",
+    "alternate_serializer_predicate": "NO_ALTERNATE_MATRIX_SERIALIZER_HELPER PASS",
+    "public_finalization_surfaces": [
+      "serialize_planet_generalization_matrix",
+      "write_planet_generalization_matrix"
+    ],
+    "fresh_process_byte_identity": "2/2 PASS",
+    "committed_generated_byte_identity": "PASS",
+    "schema": "PASS",
+    "closure_artifact_id": 9450244657,
+    "closure_artifact_zip_sha256": "30c8cb420cc3d660536384c09d1bdcfbadb57b2af4938d42d4c281287065f82a",
+    "artifact_bytes": 9348,
+    "artifact_sha256": "44de8474647483a6b18b6e5d88202358857f3b2b09171ae302b1c8497ea5b79c",
+    "artifact_git_blob": "28edbe05d89daa219105fcddff20d5edaf6dd57f",
+    "provenance_hash": "3ede4a18fb0fa8b8895813452fe6ae4f62e633f6d7ea9188ab49ec18f6fd76be",
+    "cross_planet_generalization_matrix_hash": "707ee5bc4235ef2fcef917b8fcc825455440f7d1fa6511f5802a9a480479404e"
+  },
+  "remaining_risks": [
+    "A fresh independent Reviewer must verify closure on the final immutable evidence head.",
+    "Independent Verifier remains blocked until a fresh Reviewer PASS.",
+    "E3.FINAL, XFER1, and production ECO remain blocked/inactive."
+  ],
+  "runtime_repair_required_by_critique": false,
+  "ready_for_exact_head_review": false,
+  "checkpoint_proposal_authorized": false
+}

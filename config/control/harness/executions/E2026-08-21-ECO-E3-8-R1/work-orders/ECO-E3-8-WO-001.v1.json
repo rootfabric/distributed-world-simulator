@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.harness_work_order.v1",
+  "work_order_id": "ECO-E3-8-WO-001",
+  "program": "ECO.EVO3",
+  "checkpoint": "ECO.EVO3/E3.8",
+  "title": "Cross-Planet Generalization Matrix",
+  "risk_class": "HIGH",
+  "authorization": {
+    "authorized_by": "Director gate dispatch on PR #187 comment 5371006859",
+    "resulting_control_state": "post-merge Project Control 32489319569 / #1124, Overall RED / ECO RED / directional RED, critical ECO intersection ABSENT",
+    "accepted_base_tip": "0abae91237ec05cf974a793fae7097ea40ac35ca"
+  },
+  "scope": [
+    "Predeclared 6-family planet matrix (dry, wet, cold, hot, seasonal, isolated) committed before compiled results",
+    "Reuse unmodified accepted E3.2/E3.3 builders and E3.4 core primitives with accepted thresholds",
+    "Preserve null/reversal/no-colonization outcomes",
+    "Capability-bound serialization mirroring post-Repair-R1 E3.7 discipline",
+    "Exact frozen generated matrix artifact with byte/hash identity"
+  ],
+  "out_of_scope": [
+    "No catalog or accepted compiler retuning",
+    "No E3.FINAL implementation",
+    "No XFER1 activation",
+    "No production ECO authority",
+    "No canonical foundation/species/time/environment ownership",
+    "No individual-entity truth or asset-scatter truth"
+  ],
+  "acceptance_requirements": [
+    "Fresh exact-head E3.8 Closure SUCCESS on the PR HEAD",
+    "Fresh independent Reviewer verdict",
+    "Fresh independent Verifier verdict",
+    "Formal acceptance decision",
+    "Post-merge control roll-forward"
+  ],
+  "blocked_followups": ["E3.FINAL", "XFER1", "production ECO"]
+}

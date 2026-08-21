@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.eco_evo3_e3_8_validation_receipt.v1",
+  "project_epoch": "E2026-08-21-ECO-E3-8-R1",
+  "work_order_id": "ECO-E3-8-WO-001",
+  "checkpoint": "ECO.EVO3/E3.8",
+  "authorization": {
+    "director_comment_id": 5371006859,
+    "accepted_base_tip": "0abae91237ec05cf974a793fae7097ea40ac35ca"
+  },
+  "implementation_commits": [
+    "d51fbf45",
+    "0edcf214",
+    "668ed22d762da6fd407b9b7852ad049b218ed48b"
+  ],
+  "closure": {
+    "run_id": 32492345563,
+    "run_number": 1,
+    "job_id": 96802700395,
+    "conclusion": "SUCCESS",
+    "exact_checkout": "668ed22d762da6fd407b9b7852ad049b218ed48b",
+    "tests_passed": 26,
+    "tests_total": 26,
+    "predicates_passed": 18,
+    "predicates_total": 18,
+    "alternate_serializer_predicate": "PASS",
+    "schema": "PASS",
+    "fresh_process_builds": "2/2",
+    "fresh_process_bytes_identical": true,
+    "committed_generated_bytes_identical": true,
+    "artifact_id": 9450244657,
+    "artifact_zip_sha256": "30c8cb420cc3d660536384c09d1bdcfbadb57b2af4938d42d4c281287065f82a"
+  },
+  "generated_matrix_unchanged": {
+    "path": "validation/ecology/eco-evo3-e3-8-cross-planet-generalization-matrix.generated.json",
+    "bytes": 9348,
+    "sha256": "44de8474647483a6b18b6e5d88202358857f3b2b09171ae302b1c8497ea5b79c",
+    "git_blob": "28edbe05d89daa219105fcddff20d5edaf6dd57f",
+    "provenance_hash": "3ede4a18fb0fa8b8895813452fe6ae4f62e633f6d7ea9188ab49ec18f6fd76be",
+    "cross_planet_generalization_matrix_hash": "707ee5bc4235ef2fcef917b8fcc825455440f7d1fa6511f5802a9a480479404e"
+  },
+  "disposition": "E3_8_IMPLEMENTER_EVIDENCE_COMPLETE_AWAITING_POST_EVIDENCE_EXACT_HEAD_CLOSURE_AND_FRESH_REVIEW"
+}
