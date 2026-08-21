@@ -164,10 +164,11 @@ class V0P6CanonicalOwnershipMapTests(unittest.TestCase):
         self.assertFalse(exit_gate["runtime_authority_granted"])
         self.assertFalse(self.map["global_rules"]["p6_runtime_mutation_authorized_by_this_map"])
 
-    def test_work_order_requires_both_ownership_predicates(self) -> None:
+    def test_frozen_work_order_predicates_cover_ownership_and_duplicate_truth(self) -> None:
         predicates = set(self.work_order["required_predicates"])
-        self.assertIn("V0_P6_CANONICAL_OWNERSHIP_MAP_COMPLETE", predicates)
-        self.assertIn("V0_P6_ZERO_UNRESOLVED_DUPLICATE_TRUTH", predicates)
+        self.assertIn("V0_P6_CANONICAL_OWNERSHIP_MAP_PASS", predicates)
+        self.assertIn("V0_P6_ZERO_DUPLICATE_CANONICAL_TRUTH_PASS", predicates)
+        self.assertEqual(self.map["p6_1_exit_gate"]["required_result"], "ZERO_UNRESOLVED_DUPLICATE_TRUTH")
 
 
 if __name__ == "__main__":
