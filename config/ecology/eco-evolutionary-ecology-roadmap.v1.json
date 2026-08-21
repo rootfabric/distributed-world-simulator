@@ -46,7 +46,7 @@
         "RUN_ECO_EVO3_E3_6_TESTS.py",
         "RUN_ECO_EVO3_E3_7_TESTS.py"
       ],
-      "trigger_state": "PULL_REQUEST_PATHS_FILTERED_ENABLED_2026_08_22_DIRECTOR_DECISION",
+      "trigger_state": "TRIGGERS_ARMED_ON_BRANCH_AWAITING_DEFAULT_BRANCH_REGISTRATION_VIA_PR_190_MERGE",
       "environment": "python>=3.11 with jsonschema==4.26.0 (same pin as stage closure CI; E3.5 runner asserts the version)",
       "requirement": "Every change touching accepted EVO3 compiler surfaces must rerun all accepted stage closures read-only with committed-artifact byte identity before review"
     },
