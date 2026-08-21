@@ -77,6 +77,21 @@ const CLIENT_INPUT_FIELDS: Array[String] = ["input_seq", "axis_x"]
 const CLIENT_WORLD_PROJECTION_FIELDS: Array[String] = ["read_only", "source_revision", "entities"]
 const CLIENT_SNAPSHOT_FIELDS: Array[String] = ["revision"]
 
+# EG1 session-control wire schemas (registered client surface payloads).
+const EG1_SESSION_HELLO_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_hello.v1"
+const EG1_SESSION_DETACH_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_detach.v1"
+const EG1_SESSION_ATTACHED_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_attached_ack.v1"
+const EG1_SESSION_DETACHED_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_detached_ack.v1"
+const EG1_SESSION_HELLO_FIELDS: Array[String] = [
+	"client_session_id",
+	"logical_player_id",
+	"player_entity_id",
+	"world_id",
+]
+const EG1_SESSION_DETACH_FIELDS: Array[String] = []
+const EG1_SESSION_ATTACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "session_slot", "state"]
+const EG1_SESSION_DETACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "state"]
+
 
 static func validate_schema(value: Dictionary, expected_schema: String) -> Dictionary:
 	if value.get("schema") != expected_schema:
@@ -284,6 +299,64 @@ static func _validate_registered_client_payload(payload: Dictionary, payload_sch
 				return NetworkUtilsScript.validation_failure(
 					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
 					"AUTHORITATIVE_SNAPSHOT payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_hello.v1":
+			for pair in [
+				["client_session_id", "client-session"],
+				["logical_player_id", "player"],
+				["player_entity_id", "entity"],
+				["world_id", "world"],
+			]:
+				var id_check: Dictionary = require_id(payload, String(pair[0]), String(pair[1]))
+				if not bool(id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			var hello_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_HELLO_FIELDS)
+			if not bool(hello_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL hello payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_detach.v1":
+			if not payload.is_empty():
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL detach payload must be empty",
+				)
+		"planet_simulator.eg1_session_attached_ack.v1":
+			for check in [
+				require_id(payload, "gateway_session_id", "gateway-session"),
+				require_positive_integer(payload, "session_slot"),
+				require_enum(payload, "state", [String("ATTACHED")]),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						String(check.get("message", "invalid attached ack payload")),
+					)
+			var attached_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_ATTACHED_ACK_FIELDS)
+			if not bool(attached_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL attached ack payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_detached_ack.v1":
+			for check in [
+				require_id(payload, "gateway_session_id", "gateway-session"),
+				require_enum(payload, "state", [String("DETACHED")]),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						String(check.get("message", "invalid detached ack payload")),
+					)
+			var detached_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_DETACHED_ACK_FIELDS)
+			if not bool(detached_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL detached ack payload does not match its registered semantic schema",
 				)
 		_:
 			return NetworkUtilsScript.validation_failure(
