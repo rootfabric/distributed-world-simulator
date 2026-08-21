@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.ecology.evo3_e3_6_temporal_disturbance_program.v1",
+  "title": "ECO EVO3 E3.6 Temporal Disturbance Program",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "checkpoint", "compiler_stage", "authority", "canonical_binding_resolved",
+    "production_binding_authorized", "temporal_mode", "temporal_result",
+    "source_population_workset", "source_tf_env_snapshot", "temporal_envelopes",
+    "refresh_contract", "summary", "provenance", "provenance_hash",
+    "temporal_program_hash", "temporal_program_hash_algorithm"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.ecology.evo3_e3_6_temporal_disturbance_program.v1"},
+    "checkpoint": {"const": "ECO.EVO3/E3.6"},
+    "compiler_stage": {"const": "TEMPORAL_PROGRAM"},
+    "authority": {"const": "RESEARCH_DERIVED_NON_AUTHORITATIVE"},
+    "canonical_binding_resolved": {"const": false},
+    "production_binding_authorized": {"const": false},
+    "temporal_mode": {"const": "SNAPSHOT_ANCHORED_ENVELOPES"},
+    "temporal_result": {"enum": ["TEMPORAL_PROGRAM_PRESENT", "NO_ACTIVE_POPULATION_TEMPORAL_WORK"]},
+    "source_population_workset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["accepted_control_head", "canonical_merge_commit", "artifact_sha256", "git_blob", "population_workset_hash", "provenance_hash", "workset_result", "stable_planet_identity", "stable_time_key"],
+      "properties": {
+        "accepted_control_head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "canonical_merge_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "git_blob": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "population_workset_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "workset_result": {"enum": ["ACTIVE_WORKSETS", "NO_ACTIVE_POPULATION_WORK"]},
+        "stable_planet_identity": {"type": "string", "minLength": 1},
+        "stable_time_key": {"type": "string", "minLength": 1}
+      }
+    },
+    "source_tf_env_snapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context_role", "artifact_sha256", "git_blob", "snapshot_hash", "field_provenance_hash", "stable_planet_identity", "stable_time_key", "tf_semantic_reference", "env_semantic_reference"],
+      "properties": {
+        "context_role": {"const": "IMMUTABLE_UPSTREAM_CONTEXT_NOT_ECOLOGY_PREDECESSOR"},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "git_blob": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "snapshot_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "stable_planet_identity": {"type": "string", "minLength": 1},
+        "stable_time_key": {"type": "string", "minLength": 1},
+        "tf_semantic_reference": {"type": "string", "minLength": 1},
+        "env_semantic_reference": {"type": "string", "minLength": 1}
+      }
+    },
+    "temporal_envelopes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/temporalEnvelope"}
+    },
+    "refresh_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["policy", "stable_time_key_semantics", "seasonality_evidence_state", "history_write_allowed", "forecast_authorized", "canonical_time_ownership", "canonical_environment_ownership"],
+      "properties": {
+        "policy": {"const": "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT"},
+        "stable_time_key_semantics": {"const": "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME"},
+        "seasonality_evidence_state": {"const": "UNRESOLVED_SINGLE_SNAPSHOT"},
+        "history_write_allowed": {"const": false},
+        "forecast_authorized": {"const": false},
+        "canonical_time_ownership": {"const": false},
+        "canonical_environment_ownership": {"const": false}
+      }
+    },
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["active_basis_count", "active_spatial_key_count", "temporal_envelope_count", "unresolved_seasonality_count", "future_disturbance_event_count", "canonical_history_write_count", "individual_entity_count"],
+      "properties": {
+        "active_basis_count": {"type": "integer", "minimum": 0},
+        "active_spatial_key_count": {"type": "integer", "minimum": 0},
+        "temporal_envelope_count": {"type": "integer", "minimum": 0},
+        "unresolved_seasonality_count": {"type": "integer", "minimum": 0},
+        "future_disturbance_event_count": {"const": 0},
+        "canonical_history_write_count": {"const": 0},
+        "individual_entity_count": {"const": 0}
+      }
+    },
+    "provenance": {"type": "object", "additionalProperties": {"type": ["string", "boolean", "integer"]}},
+    "provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "temporal_program_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "temporal_program_hash_algorithm": {"const": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1"}
+  },
+  "$defs": {
+    "triple": {
+      "type": "object", "additionalProperties": false,
+      "required": ["min", "anchor", "max"],
+      "properties": {
+        "min": {"type": "integer"},
+        "anchor": {"type": "integer"},
+        "max": {"type": "integer"}
+      }
+    },
+    "temporalEnvelope": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "envelope_id", "authority", "stable_planet_identity", "stable_spatial_key", "stable_time_key",
+        "basis_keys", "source_sample_id", "source_sample_hash", "source_field_provenance_hash",
+        "seasonality_state", "temporal_evidence_state", "observed_envelopes", "disturbance_schedule",
+        "refresh_policy", "history_write_allowed", "forecast_authorized"
+      ],
+      "properties": {
+        "envelope_id": {"type": "string", "pattern": "^eco-evo3/e3\\.6/envelope/[0-9a-f]{24}$"},
+        "authority": {"const": "RESEARCH_TEMPORAL_ENVELOPE_NON_CANONICAL"},
+        "stable_planet_identity": {"type": "string", "minLength": 1},
+        "stable_spatial_key": {"type": "string", "minLength": 1},
+        "stable_time_key": {"type": "string", "minLength": 1},
+        "basis_keys": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "source_sample_id": {"type": "string", "minLength": 1},
+        "source_sample_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_field_provenance_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "seasonality_state": {"const": "UNRESOLVED_SINGLE_SNAPSHOT"},
+        "temporal_evidence_state": {"const": "SINGLE_ACCEPTED_OWNER_SNAPSHOT_ONLY"},
+        "observed_envelopes": {
+          "type": "object", "additionalProperties": false,
+          "required": ["temperature_milli_c", "soil_moisture_ppm", "light_availability_ppm", "nutrient_availability_ppm", "disturbance_pressure_ppm"],
+          "properties": {
+            "temperature_milli_c": {"$ref": "#/$defs/triple"},
+            "soil_moisture_ppm": {"$ref": "#/$defs/triple"},
+            "light_availability_ppm": {"$ref": "#/$defs/triple"},
+            "nutrient_availability_ppm": {"$ref": "#/$defs/triple"},
+            "disturbance_pressure_ppm": {"$ref": "#/$defs/triple"}
+          }
+        },
+        "disturbance_schedule": {
+          "type": "object", "additionalProperties": false,
+          "required": ["state", "observed_pressure_ppm", "scheduled_events", "authority"],
+          "properties": {
+            "state": {"const": "NOT_DERIVABLE_FROM_SINGLE_SNAPSHOT"},
+            "observed_pressure_ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "scheduled_events": {"type": "array", "maxItems": 0},
+            "authority": {"const": "NO_FUTURE_DISTURBANCE_EVENT_AUTHORITY"}
+          }
+        },
+        "refresh_policy": {"const": "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT"},
+        "history_write_allowed": {"const": false},
+        "forecast_authorized": {"const": false}
+      }
+    }
+  }
+}
