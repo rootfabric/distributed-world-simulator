@@ -1,6 +1,6 @@
 # V0 P6.1 — Canonical Ownership Map
 
-Статус: **CONTROL / AUDIT CANDIDATE — NO RUNTIME AUTHORITY**
+Статус: **CONTROL / AUDIT REPAIR CANDIDATE — NO RUNTIME AUTHORITY**
 
 P6 checkpoint: `V0_P6_PERSISTENT_SHARED_OUTPOST`
 
@@ -12,6 +12,8 @@ Accepted P5 product lineage / P6 runtime execution base: `491ca7d058690d3de5fcea
 
 Machine map: `config/control/harness/v0-p6-canonical-ownership-map.v1.json`
 
+Repair finding: `P6.1-R-001` against failed review HEAD `9e4a0cebfe4801e075b7f91774e55173b5143619`.
+
 ## Цель
 
 P6.1 не создаёт новую подсистему. Его задача — до первой runtime-мутации зафиксировать, **кто уже владеет каждой канонической истиной**, и где P6 разрешено только композировать или адаптировать существующий owner API.
@@ -21,6 +23,49 @@ P6.1 не создаёт новую подсистему. Его задача �
 `ZERO_UNRESOLVED_DUPLICATE_TRUTH`
 
 P6 является product-composition checkpoint. Он не становится новым foundation owner.
+
+## Fail-closed closed model — Repair R2
+
+После finding `P6.1-R-001` карта больше не считается открытым набором domains.
+
+Machine contract теперь требует:
+
+- exact allowlist из 15 P6.1 domains;
+- отсутствие missing domains;
+- отсутствие extra/unknown domains;
+- отсутствие duplicate domain IDs;
+- для каждого registry-backed domain — **точный ожидаемый registry key**, а не любой существующий key;
+- domain без registry key запрещён, если он не входит в пять явных non-registry contracts;
+- каждый non-registry exception/composite/donor имеет точный разрешённый owner/classification/authority contract;
+- полный `forbidden_second_truths` проверяется как exact set, а не как набор отдельных presence assertions;
+- `ZERO_UNRESOLVED_DUPLICATE_TRUTH` вычисляется regression-кодом из closed model; записанные `[]` в exit gate — только evidence snapshot, а не источник истины.
+
+Пять допустимых non-registry contracts:
+
+1. `RESOURCE_MINING_GAMEPLAY` — accepted P3 gameplay rule, canonical output остаётся `ITEM`.
+2. `PERSISTENT_SHARED_OUTPOST_COMPOSITION` — composition existing owners, `creates_canonical_store=false`.
+3. `EDGE_GATEWAY_COMMAND_SESSION_ROUTING` — NX+Authority boundary, `authoritative=false`.
+4. `PRODUCTION_OWNERSHIP_DIRECTORY_AND_DOMAIN_TRANSFER` — post-P6 SM1 donor boundary, `production_active_in_p6=false`.
+5. `SEAMLESS_RESEARCH_AND_MRPF` — research-only donor, `becomes_product_base=false`.
+
+Любой шестой unmapped domain должен делать Project Control RED.
+
+Regression содержит adversarial proofs, в том числе исходный reviewer counterexample:
+
+```text
+OUTPOST_OPERATION_LEDGER
+canonical_owner = P6
+status = RESOLVED
+unresolved_duplicate_truth = []
+```
+
+Даже если автор одновременно пытается добавить этот domain в локальный JSON allowlist/non-registry contracts, regression сравнивает его с независимым frozen expected model и обязан вернуть violation.
+
+Также проверяются обходы:
+
+- удалить registry binding у Item Graph;
+- перепривязать Item Graph к другому валидному foundation key;
+- превратить outpost composition в `P6_OUTPOST` canonical owner/store.
 
 ## Нормативная классификация
 
@@ -86,12 +131,24 @@ P6 обязан подготовить интерфейсы так, чтобы �
 - gateway-style entry point не принимает ownership decisions;
 - WARM/SHADOW остаётся строго read-only.
 
-Это позволяет после P6 acceptance подключить production SM1 над рабочим gameplay baseline, а не одновременно изобретать persistence, Item Graph, Construction и handoff.
+## Что именно доказывает P6.1
+
+P6.1 доказывает закрытость **control ownership model до runtime dispatch**. На этом этапе runtime P6 ещё не разрешён и не существует как active mutation line.
+
+P6.1 не объявляет, что будущий runtime-код автоматически доказан корректным навсегда. После activation каждый runtime candidate остаётся обязан выполнить frozen Work Order predicates, в том числе:
+
+- `V0_P6_CANONICAL_OWNERSHIP_MAP_PASS`;
+- `V0_P6_ZERO_DUPLICATE_CANONICAL_TRUTH_PASS`;
+- fresh Reviewer/Verifier gates.
+
+То есть closed ownership model является нормативной границей для runtime implementation, а окончательное отсутствие duplicate runtime truth всё равно должно быть доказано на exact реализованном P6 HEAD. P6.1 не подменяет этот будущий runtime proof.
 
 ## Fail-closed правила
 
 Любое из следующего останавливает P6 и требует возврата к соответствующему foundation owner:
 
+- неизвестный/unmapped ownership domain → запрещено;
+- смена expected registry binding → запрещено;
 - новый network protocol/prediction/reconciliation authority → `NX`;
 - новый canonical ownership/directory mechanism → post-P6 `SM1/AUTHORITY`;
 - новый Item Graph/inventory/equipment store → запрещено;
@@ -103,10 +160,12 @@ P6 обязан подготовить интерфейсы так, чтобы �
 
 ## Evidence semantics
 
-Machine map намеренно фиксирует `control_audit_result = PASS_CANDIDATE`, но:
+Machine map фиксирует `control_audit_result = PASS_CANDIDATE`, но:
 
+- `derivation_mode = MACHINE_DERIVED_FROM_CLOSED_MODEL`;
+- `declared_arrays_are_authority = false`;
 - `completion_bearing_harness_event_emitted = false`;
 - `runtime_authority_granted = false`;
 - P6 mutation lease не вращается этим изменением;
 - production SM1 не активируется;
-- P6.1 считается завершённым только после требуемого control review/integration и последующего Harness materialization в разрешённом activation flow.
+- P6.1 считается завершённым только после fresh exact-head Project Control, fresh independent review и последующей materialization в разрешённом activation flow.
