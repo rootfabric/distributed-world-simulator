@@ -1,14 +1,10 @@
 # EG0 — Edge Gateway Contracts / DTO / Fixtures — Design Brief
 
-Статус: **STACKED HIGH-RISK IMPLEMENTATION CANDIDATE / NOT ACCEPTED / NO P6 AUTHORITY**
+Статус: **STACKED HIGH-RISK IMPLEMENTATION CANDIDATE / R4 HARDENED / NOT ACCEPTED / NO P6 AUTHORITY**
 
 Control dependency: draft PR `#185`.
 
-Initial implementation base:
-
-`c5d7d0d682181f0a796d0e059508a1fdfe91b6e1`
-
-Current refreshed R4 control base:
+Current R4 control base:
 
 `b62535ea1ed7cf6f687ab5ee91f206cd6eea0a7d`
 
@@ -18,7 +14,7 @@ Branch:
 
 ## Problem
 
-Before implementing the real `Client -> Gateway -> Server` process, freeze transport-independent contracts so EG1 cannot accidentally equate network topology with player identity, authority or gameplay semantics.
+Before implementing the real `Client -> Gateway -> Server` process, freeze transport-independent contracts so EG1 cannot accidentally equate network topology with player identity, authority, world-topology truth or gameplay semantics.
 
 Forbidden semantic aliases:
 
@@ -32,7 +28,7 @@ backend_peer_id         != PlayerId
 RouteRevision           != AuthorityEpoch
 ```
 
-The R4 World Graph amendment additionally requires Gateway world/view/interest contracts before EG0 closure.
+R4 additionally requires a fail-closed contract boundary for World Graph / client view / interest aggregation.
 
 ## Selected design
 
@@ -40,22 +36,32 @@ The R4 World Graph amendment additionally requires Gateway world/view/interest c
 
 For `WORLD_OPERATION`, canonical `operation_id` remains inside the wrapped frame and must survive Gateway forwarding unchanged.
 
-Gateway topology knowledge is a read-only, derived and reconstructible view of World Directory truth:
+World topology is represented at Gateway as a derived cache input:
 
 ```text
 World Directory / World Graph
         -> GatewayWorldGraphSnapshot
         -> ClientWorldView
         -> AggregatedInterestPlan
-        -> later Route/Link Manager
+        -> later EG4 View Planner / Route-Link Manager
+```
+
+The graph-cache contract is now explicit, not documentary-only:
+
+```text
+source_owner = WORLD_DIRECTORY
+read_only = true
+reconstructible = true
+canonical = false
 ```
 
 Hard rules:
 
 ```text
-GATEWAY ROUTES; IT DOES NOT OWN GAMEPLAY TRUTH.
 WORLD DIRECTORY OWNS WORLD TOPOLOGY TRUTH.
-DIRECTORY/AUTHORITY OWNS AUTHORITY TRUTH.
+DIRECTORY / AUTHORITY OWNS CANONICAL OWNERSHIP TRUTH.
+GATEWAY OWNS DERIVED VIEW / INTEREST / ROUTING ONLY.
+
 GLOBAL KNOWLEDGE DOES NOT IMPLY GLOBAL CONNECTION.
 ```
 
@@ -81,6 +87,18 @@ World Graph / View / Interest:
 - explicit `ViewRevision`
 - explicit `InterestRevision`
 
+## R4 hardening added after the first EG0 implementation
+
+The first R4 pass already had all required DTO families, but several required proofs were only implicit. The hardening makes them executable:
+
+1. `WorldDescriptor.validate_newer()` is exercised explicitly for stale-world rejection.
+2. `GatewayWorldGraphSnapshot` encodes `source_owner=WORLD_DIRECTORY` and `canonical=false`.
+3. `reconstruct_from_directory(...)` provides an explicit reconstructible cache path.
+4. A second client view fixture proves two compatible client demands map to one `AggregatedInterestPlan`.
+5. Projection grant namespace is fenced from authority identity and mutation-authority fields are rejected.
+6. `ClientWorldView` rejects both nested/top-level simulation endpoint fields and `peer_id`.
+7. A 1000-world graph remains pure topology data and rejects physical upstream/link state.
+
 ## Safety semantics
 
 - strict exact-field validation rejects accidental transport-specific fields;
@@ -88,11 +106,12 @@ World Graph / View / Interest:
 - mutating client channels can route only to `ACTIVE`;
 - `WORLD_PROJECTION` is read-only and requires a `PROJECTION` source;
 - projection policy cannot grant mutation authority;
+- projection grant IDs use an opaque `projection-grant/*` namespace and cannot be authority IDs;
 - `GatewayDescriptor` and `ClientWorldView` reject simulation-server endpoint leakage;
 - stale World/Relation/Graph/View/Interest revisions fail closed;
-- graph cache input must be `read_only=true` and `reconstructible=true`;
-- multiple client sessions may aggregate into one source-interest plan;
-- a 1000-world graph contract does not contain or require upstream connection state.
+- graph cache input must be derived from `WORLD_DIRECTORY`, read-only, reconstructible and non-canonical;
+- multiple compatible client sessions may aggregate into one source/LOD interest plan;
+- graph/view/interest contracts cannot carry physical connection state.
 
 ## Ownership boundaries
 
@@ -112,27 +131,27 @@ EG0 does not implement:
 - auth/session placement runtime;
 - shared tunnel scheduler;
 - View Planner algorithm / dynamic subscription lifecycle (EG4);
-- A->B authority handoff;
+- eight-world planner runtime walk (EG4);
+- A->B or multi-world authority handoff (EG6);
 - Gateway rehome;
 - final QUIC choice;
 - P6 runtime mutation;
 - `EDGE_GATEWAY_FOUNDATION_ACCEPTED`.
 
-## Validation
+## Validation state
 
-Implementer validation on double Godot:
+Previous exact head `d9a31be3ceb376557d8e805c971c052a02b12294` passed the focused double-Godot suite:
 
 ```text
-4.7.1.stable.double.custom_build.a13da4feb
-SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-editor parse                                      PASS
-EG0 base contracts                                PASS 24 assertions
-EG0 canonical fixtures                            PASS 39 assertions
-EG0 WorldGraph/View/Interest contracts            PASS 27 assertions
-TOTAL                                             PASS 90 assertions
+base contracts                     PASS 24 assertions
+canonical fixtures                 PASS 39 assertions
+WorldGraph/View/Interest            PASS 27 assertions
+TOTAL                               PASS 90 assertions
 ```
 
-This is implementer evidence only.
+This R4 hardening expands the WorldGraph/View/Interest suite to an expected 53 assertions, for an expected focused total of 116 assertions.
+
+Because the current execution environment does not contain the project double-Godot binary, the new exact HEAD must rerun `RUN_EG0_EDGE_GATEWAY_TESTS.sh` or `.ps1` before Reviewer/Verifier acceptance. Project Control success is necessary but does not substitute for the focused Godot run.
 
 ## Exit and review gate
 
@@ -144,7 +163,8 @@ Because this is HIGH-risk public protocol work, Implementer cannot self-accept. 
 
 ```text
 PR #185 dependency is canonical
-exact candidate Project Control SUCCESS
+exact hardened candidate Project Control SUCCESS
+exact hardened candidate focused Godot suite PASS
 fresh independent Reviewer PASS
 independent Verifier PASS
 Director verdict

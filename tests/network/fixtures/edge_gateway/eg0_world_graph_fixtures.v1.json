@@ -46,6 +46,34 @@
       "world/test/w1"
     ]
   },
+  "client_world_view_b": {
+    "active_authority_world": "world/test/w0",
+    "anchor_world_id": "world/test/w0",
+    "gateway_session_id": "gateway-session/test/b",
+    "graph_revision": 9,
+    "interest_revision": 6,
+    "macro_sources": [],
+    "projection_streams": [
+      {
+        "interest_revision": 6,
+        "lod_class": "fine",
+        "priority": 10,
+        "projection_grant": "projection-grant/test/b-w1",
+        "projection_stream_id": "projection-stream/test/w1-fine",
+        "source_world_id": "world/test/w1",
+        "visibility_reason": "neighbor"
+      }
+    ],
+    "protocol_version": 1,
+    "read_only": true,
+    "reference_frame_id": "reference-frame/test/sol",
+    "schema": "planet_simulator.client_world_view.v1",
+    "view_id": "world-view/test/bob-5",
+    "view_revision": 5,
+    "warm_worlds": [
+      "world/test/w1"
+    ]
+  },
   "protocol_version": 1,
   "schema": "planet_simulator.edge_gateway_eg0_world_graph_fixture_set.v1",
   "world_descriptor_a": {
@@ -119,6 +147,7 @@
     "world_revision": 4
   },
   "world_graph_snapshot": {
+    "canonical": false,
     "directory_revision": 11,
     "graph_revision": 9,
     "graph_snapshot_id": "world-graph/test/partition-0",
@@ -148,6 +177,7 @@
       }
     ],
     "schema": "planet_simulator.gateway_world_graph_snapshot.v1",
+    "source_owner": "WORLD_DIRECTORY",
     "worlds": [
       {
         "authority_directory_key": "authority-subject/test/w0",

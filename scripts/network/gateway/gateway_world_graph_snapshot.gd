@@ -7,16 +7,19 @@ const WorldRelationScript = preload("res://scripts/network/gateway/world_relatio
 
 const SCHEMA := "planet_simulator.gateway_world_graph_snapshot.v1"
 const PROTOCOL_VERSION := 1
+const SOURCE_OWNER := "WORLD_DIRECTORY"
 const FIELDS: Array[String] = [
 	"schema",
 	"protocol_version",
 	"graph_snapshot_id",
+	"source_owner",
 	"directory_revision",
 	"graph_revision",
 	"worlds",
 	"relations",
 	"read_only",
 	"reconstructible",
+	"canonical",
 ]
 
 
@@ -28,18 +31,40 @@ static func create(
 		relations: Array,
 		read_only: bool = true,
 		reconstructible: bool = true,
+		canonical: bool = false,
 ) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
 		"graph_snapshot_id": graph_snapshot_id,
+		"source_owner": SOURCE_OWNER,
 		"directory_revision": directory_revision,
 		"graph_revision": graph_revision,
 		"worlds": worlds.duplicate(true),
 		"relations": relations.duplicate(true),
 		"read_only": read_only,
 		"reconstructible": reconstructible,
+		"canonical": canonical,
 	}
+
+
+static func reconstruct_from_directory(
+		graph_snapshot_id: String,
+		directory_revision: int,
+		graph_revision: int,
+		worlds: Array,
+		relations: Array,
+) -> Dictionary:
+	return create(
+		graph_snapshot_id,
+		directory_revision,
+		graph_revision,
+		worlds,
+		relations,
+		true,
+		true,
+		false,
+	)
 
 
 static func validate(value: Dictionary) -> Dictionary:
@@ -54,36 +79,64 @@ static func validate(value: Dictionary) -> Dictionary:
 	]:
 		if not bool(check.get("success", false)):
 			return check
+	if value.get("source_owner") != SOURCE_OWNER:
+		return NetworkUtilsScript.validation_failure(
+			"WORLD_GRAPH_SOURCE_OWNER_INVALID",
+			"Gateway WorldGraph cache input must be derived from WORLD_DIRECTORY",
+		)
 	if typeof(value.get("read_only")) != TYPE_BOOL or not bool(value.get("read_only")):
-		return NetworkUtilsScript.validation_failure("WORLD_GRAPH_NOT_READ_ONLY", "Gateway WorldGraph cache input must be read_only=true")
+		return NetworkUtilsScript.validation_failure(
+			"WORLD_GRAPH_NOT_READ_ONLY",
+			"Gateway WorldGraph cache input must be read_only=true",
+		)
 	if typeof(value.get("reconstructible")) != TYPE_BOOL or not bool(value.get("reconstructible")):
 		return NetworkUtilsScript.validation_failure(
 			"WORLD_GRAPH_NOT_RECONSTRUCTIBLE",
 			"Gateway WorldGraph cache input must be reconstructible=true",
 		)
+	if typeof(value.get("canonical")) != TYPE_BOOL or bool(value.get("canonical")):
+		return NetworkUtilsScript.validation_failure(
+			"WORLD_GRAPH_CANONICAL_FORBIDDEN",
+			"Gateway WorldGraph cache input must be canonical=false",
+		)
 	if typeof(value.get("worlds")) != TYPE_ARRAY or typeof(value.get("relations")) != TYPE_ARRAY:
-		return NetworkUtilsScript.validation_failure("INVALID_GRAPH_COLLECTION", "worlds and relations must be Arrays")
+		return NetworkUtilsScript.validation_failure(
+			"INVALID_GRAPH_COLLECTION",
+			"worlds and relations must be Arrays",
+		)
 	var world_ids: Dictionary = {}
 	for raw_world in Array(value.get("worlds")):
 		if typeof(raw_world) != TYPE_DICTIONARY:
-			return NetworkUtilsScript.validation_failure("INVALID_WORLD_DESCRIPTOR", "worlds contains non-Dictionary")
+			return NetworkUtilsScript.validation_failure(
+				"INVALID_WORLD_DESCRIPTOR",
+				"worlds contains non-Dictionary",
+			)
 		var world: Dictionary = Dictionary(raw_world)
 		var world_check: Dictionary = WorldDescriptorScript.validate(world)
 		if not bool(world_check.get("success", false)):
 			return world_check
 		var world_id: String = String(world.get("world_id"))
 		if world_ids.has(world_id):
-			return NetworkUtilsScript.validation_failure("DUPLICATE_WORLD_ID", "Duplicate world_id in graph snapshot")
+			return NetworkUtilsScript.validation_failure(
+				"DUPLICATE_WORLD_ID",
+				"Duplicate world_id in graph snapshot",
+			)
 		world_ids[world_id] = true
 	for raw_relation in Array(value.get("relations")):
 		if typeof(raw_relation) != TYPE_DICTIONARY:
-			return NetworkUtilsScript.validation_failure("INVALID_WORLD_RELATION", "relations contains non-Dictionary")
+			return NetworkUtilsScript.validation_failure(
+				"INVALID_WORLD_RELATION",
+				"relations contains non-Dictionary",
+			)
 		var relation: Dictionary = Dictionary(raw_relation)
 		var relation_check: Dictionary = WorldRelationScript.validate(relation)
 		if not bool(relation_check.get("success", false)):
 			return relation_check
 		if not world_ids.has(String(relation.get("world_a"))) or not world_ids.has(String(relation.get("world_b"))):
-			return NetworkUtilsScript.validation_failure("UNKNOWN_RELATION_WORLD", "Relation references world outside snapshot partition")
+			return NetworkUtilsScript.validation_failure(
+				"UNKNOWN_RELATION_WORLD",
+				"Relation references world outside snapshot partition",
+			)
 	return NetworkUtilsScript.validation_success()
 
 
@@ -95,7 +148,13 @@ static func validate_newer(candidate: Dictionary, current: Dictionary) -> Dictio
 	if not bool(current_check.get("success", false)):
 		return current_check
 	if int(candidate.get("graph_revision")) <= int(current.get("graph_revision")):
-		return NetworkUtilsScript.validation_failure("STALE_GRAPH_REVISION", "graph_revision must advance")
+		return NetworkUtilsScript.validation_failure(
+			"STALE_GRAPH_REVISION",
+			"graph_revision must advance",
+		)
 	if int(candidate.get("directory_revision")) < int(current.get("directory_revision")):
-		return NetworkUtilsScript.validation_failure("STALE_DIRECTORY_REVISION", "directory_revision cannot rewind")
+		return NetworkUtilsScript.validation_failure(
+			"STALE_DIRECTORY_REVISION",
+			"directory_revision cannot rewind",
+		)
 	return NetworkUtilsScript.validation_success()

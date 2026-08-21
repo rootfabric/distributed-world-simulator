@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.edge_gateway_eg0_contract_manifest.v1",
-  "revision": "V0-EG0-2026-08-21-R3-WORLD-GRAPH",
+  "revision": "V0-EG0-2026-08-21-R4-WORLD-GRAPH-HARDENING",
   "status": "IMPLEMENTATION_CANDIDATE_NOT_ACCEPTED",
   "stacked_control_dependency": {
     "pr": 185,
@@ -36,24 +36,39 @@
     "PROJECTION_READ_ONLY",
     "GLOBAL_KNOWLEDGE_DOES_NOT_IMPLY_GLOBAL_CONNECTION",
     "WORLD_GRAPH_CACHE_IS_READ_ONLY_DERIVED_RECONSTRUCTIBLE",
+    "WORLD_GRAPH_SOURCE_OWNER_IS_WORLD_DIRECTORY",
+    "WORLD_GRAPH_CACHE_CANONICAL_FALSE",
     "GATEWAY_VIEW_PLAN_IS_NOT_CANONICAL_WORLD_TRUTH",
     "INTEREST_IS_GATEWAY_MANAGED",
-    "PROJECTION_POLICY_CANNOT_GRANT_MUTATION_AUTHORITY"
+    "PROJECTION_POLICY_CANNOT_GRANT_MUTATION_AUTHORITY",
+    "PROJECTION_GRANT_NAMESPACE_NOT_AUTHORITY_ID",
+    "CLIENT_WORLD_VIEW_NO_SIMULATION_ENDPOINT_OR_PEER_ID",
+    "COMPATIBLE_MULTI_CLIENT_INTEREST_AGGREGATES_BY_SOURCE_AND_LOD"
   ],
   "focused_tests": [
     "res://tests/network/test_eg0_edge_gateway_contracts.gd",
     "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
     "res://tests/network/test_eg0_world_graph_contracts.gd"
   ],
-  "implementer_validation": {
-    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
-    "editor_parse": "PASS",
-    "contract_assertions": 24,
-    "fixture_assertions": 39,
-    "world_graph_assertions": 27,
-    "total_assertions": 90
+  "validation": {
+    "previous_exact_head": {
+      "head": "d9a31be3ceb376557d8e805c971c052a02b12294",
+      "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "editor_parse": "PASS",
+      "contract_assertions": 24,
+      "fixture_assertions": 39,
+      "world_graph_assertions": 27,
+      "total_assertions": 90
+    },
+    "r4_hardening_expected_assertions": {
+      "contract_assertions": 24,
+      "fixture_assertions": 39,
+      "world_graph_assertions": 53,
+      "total_assertions": 116
+    },
+    "r4_hardening_exact_head_focused_suite": "REQUIRED_BEFORE_REVIEW_OR_ACCEPTANCE"
   },
-  "next_stage": "EG1_BLOCKED_UNTIL_EG0_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
+  "next_stage": "EG1_BLOCKED_UNTIL_EG0_EXACT_HEAD_FOCUSED_PASS_REVIEW_VERIFICATION_AND_CONTROL_DEPENDENCY_ACCEPTANCE",
   "p6_runtime_authorized": false
 }
