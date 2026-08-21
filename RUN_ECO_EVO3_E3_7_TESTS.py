@@ -24,6 +24,11 @@ AUTHORITY_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_7_authority.py"
 COMMITTED_ARTIFACT = ROOT / "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json"
 FINAL_ARTIFACT = ROOT / "e3_7_candidate_planet_ecology_program.json"
 EXPECTED_TESTS = 28
+EXPECTED_ARTIFACT_BYTES = 104186
+EXPECTED_ARTIFACT_SHA256 = "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303"
+EXPECTED_ARTIFACT_GIT_BLOB = "01207a7025710db34fafc959fcc26dade2606d89"
+EXPECTED_PROVENANCE_HASH = "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff"
+EXPECTED_PLANET_PROGRAM_HASH = "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956"
 
 
 def load_module(path: pathlib.Path, name: str):
@@ -105,9 +110,28 @@ def main() -> int:
         b = run_fresh_process(pathlib.Path(td) / "b.json")
 
     committed_present = COMMITTED_ARTIFACT.exists()
-    committed_identical = committed_present and COMMITTED_ARTIFACT.read_bytes() == final_bytes
+    committed_bytes = COMMITTED_ARTIFACT.read_bytes() if committed_present else b""
+    committed_json = json.loads(committed_bytes.decode("utf-8")) if committed_present else {}
     if committed_present:
-        validate_schema(json.loads(COMMITTED_ARTIFACT.read_text(encoding="utf-8")))
+        validate_schema(committed_json)
+        mod.validate_output_structure(committed_json)
+
+    exact_program_identity = (
+        len(final_bytes) == EXPECTED_ARTIFACT_BYTES
+        and sha256_hex(final_bytes) == EXPECTED_ARTIFACT_SHA256
+        and git_blob_hex(final_bytes) == EXPECTED_ARTIFACT_GIT_BLOB
+        and program["provenance_hash"] == EXPECTED_PROVENANCE_HASH
+        and program["planet_ecology_program_hash"] == EXPECTED_PLANET_PROGRAM_HASH
+    )
+    committed_identical = (
+        committed_present
+        and committed_bytes == final_bytes
+        and len(committed_bytes) == EXPECTED_ARTIFACT_BYTES
+        and sha256_hex(committed_bytes) == EXPECTED_ARTIFACT_SHA256
+        and git_blob_hex(committed_bytes) == EXPECTED_ARTIFACT_GIT_BLOB
+        and committed_json.get("provenance_hash") == EXPECTED_PROVENANCE_HASH
+        and committed_json.get("planet_ecology_program_hash") == EXPECTED_PLANET_PROGRAM_HASH
+    )
 
     source = IMPL.read_text(encoding="utf-8")
     no_nondeterminism_surface = all(token not in source for token in (
@@ -129,6 +153,7 @@ def main() -> int:
         ("FRESH_PROCESS_BYTE_DETERMINISM", a == b == final_bytes),
         ("FRESH_PROCESS_HASH_DETERMINISM", sha256_hex(a) == sha256_hex(b) == sha256_hex(final_bytes)),
         ("PROGRAM_HASH_RECOMPUTES", program["planet_ecology_program_hash"] == mod.object_hash(dict(program), "planet_ecology_program_hash")),
+        ("EXACT_GENERATED_PROGRAM_IDENTITY", exact_program_identity),
         ("COMMITTED_GENERATED_BYTES_IDENTICAL", committed_identical),
     ]
     for name, ok in predicates:
