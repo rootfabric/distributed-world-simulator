@@ -1,8 +1,18 @@
 {
   "schema": "distributed_world_simulator.ecology.evo3_e3_5_validation.v1",
   "checkpoint": "ECO.EVO3/E3.5",
-  "candidate_state": "IMPLEMENTED_CANDIDATE_NOT_ACCEPTED",
+  "candidate_state": "REPAIR_R1_IMPLEMENTED_CANDIDATE_NOT_ACCEPTED",
   "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "repair": {
+    "failed_review_head": "696e8975ad375e33b9897aaddcee607ac5af41f6",
+    "durable_fail_transcription_comment": 5364294674,
+    "blocking_findings": [
+      "E3.5-R-001",
+      "E3.5-R-002"
+    ],
+    "repair_r1_executable_freeze": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "scope": "E3.5-R-001 + E3.5-R-002 only"
+  },
   "accepted_predecessor": {
     "accepted_e3_4_control_head": "872f2d993cc002b72529ea7f2a3274d0d71245b0",
     "canonical_e3_4_merge_commit": "8618032bfb668c7f0427f0aa80c0e07de69a3cfc",
@@ -12,32 +22,35 @@
     "provenance_hash": "d79a41e95c7cfb39dec2f41b11d4066f1e57ab0260ed991c69077348ce6add9a",
     "full_persisted_evo2_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219"
   },
-  "executable_freeze": "4625c950946f7a1b3cea67b9a1411fb993c20957",
   "closure_blobs": {
     "contract": "b2afe370aa505e3d8448e5bd2ebb065a00dd7f38",
     "accepted_e3_4_binding": "3705d33cd1c393f9a8ce03ce59d89a883933f05f",
     "accepted_e3_4_artifact": "db725ef37912547527dff5fffe39ca63e5f8c22e",
     "schema": "45145b93b2bb5b4c74af6444b2095b2fcf3d12de",
-    "compiler": "233271037400c6085d0adcd1f211f052556f753e",
+    "compiler": "fa6d1271d9f2ded1024ba0c9f378f4aa476dd59a",
     "semantic_tests": "c07641b7c747f587f71e58d86c39e8d49fe1b083",
-    "authority_tests": "dd5f8933456a8c5f0556a888fe13c9a52b8bf8b0",
-    "workflow": "90b829bc629aedb5c496d9c01defa703a057e5b9",
-    "runner": "17519945771dc92ec0a21e98ffcd781d48d23f45"
+    "authority_tests": "5dc263729eb8dc07f84c8c26fc21bc586d5e4c00",
+    "workflow": "c65d84172fe20bea8e668ec584620c7bd9682f48",
+    "runner": "4bc1b9314c0b3eeb9ffc74be1cf4b306fe68d5b0",
+    "generated_artifact": "d54ce8dad2760312d414c62c88d5f4f71427514f"
   },
-  "exact_head_closure": {
-    "run_id": 32380793912,
-    "run_number": 1,
-    "job_id": 96463219073,
+  "repair_r1_exact_head_closure": {
+    "head_sha": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "run_id": 32439393494,
+    "run_number": 5,
+    "job_id": 96646877759,
     "conclusion": "SUCCESS",
-    "python_version": "3.13.15",
-    "jsonschema_version": "4.26.0",
     "semantic_tests": "27/27",
-    "authority_regression_tests": "20/20",
-    "total_tests": "47/47",
-    "exact_published_closure": "8/8",
+    "authority_regression_tests": "24/24",
+    "total_tests": "51/51",
+    "exact_published_closure": "9/9",
     "published_schema_validation": "PASS",
     "fresh_process_builds": "2/2",
     "fresh_process_bytes_identical": true,
+    "committed_generated_bytes_identical": true,
+    "parsed_artifact_serialization_capability": "ABSENT",
+    "reviewer_provenance_replacement_reproducer": "REJECTED",
+    "exact_input_serialization_traversal": "REQUIRED",
     "order_independence": "PASS",
     "no_colonization_semantics": "PASS",
     "global_rng_surface": "ABSENT",
@@ -45,34 +58,33 @@
     "canonical_sd_authority": "ABSENT",
     "network_persistence_transaction_authority": "ABSENT",
     "scale_coverage": "PLANET,REGION,PATCH,LOCAL_ACTIVE:EXACT_ONCE",
-    "runner_log_sha256": "6ef1867fda9d16dbab2942fdac09c0e1f8bc0ea41a0bce67ecc83972ecc349a8",
-    "artifact_id": 9410902315,
-    "artifact_zip_sha256": "d57cf00a50417227a64a6b4a60bed7408d378494021f41525363388b303b356c"
+    "artifact_id": 9431855061,
+    "artifact_zip_sha256": "276aa25984d9a4ebac19264c0ef79fad6c81b9ab0f15850f3388dbc6357c216f"
   },
   "project_control": {
-    "run_id": 32380793808,
-    "run_number": 1047,
-    "job_id": 96463218395,
+    "head_sha": "9d2558f0d60b2dded9f3f980e8bfe5ed96031877",
+    "run_id": 32439393477,
+    "run_number": 1057,
+    "job_id": 96646877533,
     "workflow_conclusion": "SUCCESS",
     "project_control_report_overall": "RED",
     "directional_watch_overall": "RED",
     "eco_program_state_in_report": "RED",
-    "eco_directional_hits": ["NX -> ECO WATCH_HIT:YELLOW"],
+    "eco_directional_hits": [
+      "NX -> ECO WATCH_HIT:YELLOW"
+    ],
     "eco_critical_directional_hits": [],
-    "critical_hits_observed_elsewhere": ["NX -> V0 CRITICAL_WATCH_HIT", "V0 -> NX CRITICAL_WATCH_HIT"],
+    "critical_hits_observed_elsewhere": [
+      "NX -> V0 CRITICAL_WATCH_HIT",
+      "V0 -> NX CRITICAL_WATCH_HIT"
+    ],
     "scoped_policy_clearance": "ECO_RESEARCH_NON_BLOCKER_NO_CRITICAL_INTERSECTION",
     "policy_basis_main": "19c1268599b52cbc1099d6009eabd3099e20b64a",
-    "policy_basis": [
-      "scheduler-policy research_isolation.non_blocking_by_default=true",
-      "scheduler-policy research_isolation.current_explicit_non_blocker=ECO",
-      "project-control-policy research_design_frontiers_are_advisory_to_global_health=true"
-    ],
-    "interpretation": "Global RED is preserved as RED. It is not reinterpreted as GREEN/NON_RED. For this research-only ECO candidate, no proven ECO critical dependency/ownership/directional intersection exists; therefore current unrelated global RED does not by itself hard-block the E3.5 review path.",
-    "artifact_id": 9410895632,
-    "artifact_zip_sha256": "772fa1dc7e3d9312816accea49006cd3fad5f93a07ebe2e9cf48c2def14e8f1b"
+    "artifact_id": 9431853553,
+    "artifact_zip_sha256": "761dabd1f76860f923b156dd99fe0512f6cf7b8e6688903787a6f23a6bdda4cb"
   },
   "generated_population_workset": {
-    "git_blob": "212cbc08675d706233c13c15146f864981a9b5a8",
+    "git_blob": "d54ce8dad2760312d414c62c88d5f4f71427514f",
     "artifact_sha256": "0ea5351b7692564161804a3aea5fe5044f3321ded3dcb4d0c7343e93d52c4975",
     "bytes": 27611,
     "population_workset_hash": "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5",
@@ -82,17 +94,21 @@
     "active_species_count": 2,
     "active_patch_count": 11,
     "active_scheduling_region_count": 1,
-    "planet_work_unit_count": 1,
-    "region_work_unit_count": 1,
-    "patch_work_unit_count": 11,
-    "local_active_work_unit_count": 11,
     "total_work_unit_count": 24,
-    "individual_entity_count": 0
+    "individual_entity_count": 0,
+    "machine_and_committed_bytes_bound": true
   },
-  "pre_freeze_critique_repair": {
-    "finding": "Nested output integrity previously allowed per-work-unit authority mutation followed by outer hash recomputation.",
-    "disposition": "CLOSED_BEFORE_EXECUTABLE_FREEZE",
-    "frozen_behavior": "Structural integrity validates scheduling authority, representation, IDs, coverage, budget semantics, summary and provenance links before serialization."
+  "finding_closure": {
+    "E3.5-R-001": {
+      "status": "REPAIRED_PENDING_FRESH_REVIEW",
+      "mechanism": "_VerifiedWorkset capability retains exact raw contract/binding/E3.4 bytes; authoritative validate/serialize reparses exact bytes and exact-rebuilds output; plain parsed artifacts have no serialization capability.",
+      "regression": "Fully shaped published artifact with replaced source/provenance identities and recomputed hashes is rejected."
+    },
+    "E3.5-R-002": {
+      "status": "REPAIRED_PENDING_FRESH_REVIEW",
+      "mechanism": "Closure directly byte-compares committed generated artifact against two fresh process outputs and checks Git blob, SHA-256, workset hash and provenance hash.",
+      "regression": "Committed generated blob is d54ce8dad2760312d414c62c88d5f4f71427514f and is byte-identical to machine output."
+    }
   },
   "scope_guards": {
     "canonical_population_registry_created": false,
@@ -104,24 +120,14 @@
     "xfer1_activated": false,
     "e3_6_started_or_authorized": false
   },
-  "evidence_aggregate_algorithm": "SHA256_NEWLINE_JOINED_FIXED_FIELDS_V1",
-  "evidence_aggregate_fixed_field_order": [
-    "checkpoint", "accepted_e3_4_control_head", "executable_freeze", "main_policy_head",
-    "closure_run_id", "closure_job_id", "project_control_run_id", "project_control_job_id",
-    "runner_log_sha256", "closure_artifact_id", "closure_artifact_zip_sha256",
-    "project_control_artifact_id", "project_control_artifact_zip_sha256",
-    "generated_artifact_git_blob", "generated_artifact_sha256", "population_workset_hash", "provenance_hash",
-    "contract_blob", "accepted_e3_4_binding_blob", "accepted_e3_4_artifact_blob", "schema_blob", "compiler_blob",
-    "semantic_tests_blob", "authority_tests_blob", "workflow_blob", "runner_blob",
-    "tests_total", "closure_total", "fresh_process_builds", "pc0_global_state", "eco_scoped_clearance"
-  ],
-  "evidence_aggregate_sha256": "6db8c59276e6ac59c34fe43c04a10e179894d5698adbad18a434e43f6e3908d7",
   "review_state": {
-    "post_build_critique": "NO_MATERIAL_REFACTOR_REQUIRED",
-    "evidence_map": "TO_BE_PUBLISHED_AS_DURABLE_PR_COMMENT_BOUND_TO_EXACT_FINAL_HEAD",
-    "fresh_independent_reviewer": "PENDING",
-    "fresh_independent_verifier": "PENDING",
+    "failed_reviewer_verdict": "FAIL_DURABLY_TRANSCRIBED",
+    "repair_r1_machine_validation": "PASS",
+    "fresh_independent_reviewer": "PENDING_NEW_IMMUTABLE_FINAL_HEAD",
+    "fresh_independent_verifier": "BLOCKED_PENDING_REVIEWER_PASS",
     "checkpoint_proposal": "BLOCKED_PENDING_REVIEW_AND_VERIFICATION",
     "merge_acceptance": "HUMAN_GATE_NOT_PERFORMED"
-  }
+  },
+  "evidence_aggregate_algorithm": "SHA256_CANONICAL_JSON_EXCLUDING_EVIDENCE_AGGREGATE_V1",
+  "evidence_aggregate_sha256": "b7e3a3169a78c18cd7944debe67b14d44ecbaa0ac1b2db4edf11e19bcf630fad"
 }
