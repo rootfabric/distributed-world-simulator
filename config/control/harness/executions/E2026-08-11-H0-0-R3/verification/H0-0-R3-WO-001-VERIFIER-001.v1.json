@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "H0-0-R3-WO-001",
+  "verified_head_sha": "8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T11:04:00Z",
+  "environment": "Independent verification over exact GitHub PR/ref metadata and append-only R3 evidence, combined with user-supplied exact Windows PowerShell execution from the fresh R3 checkout. No runtime/gameplay execution is claimed or required for this control-only checkpoint.",
+  "commands": [
+    "Verify PR #75 remains control/harness-only and contains no runtime/domain or historical R1/R2 execution paths",
+    "Verify implementation freshness target remains 8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+    "Validate Windows focused suite evidence: 18 tests, 17 PASS, 0 failures/errors, one non-required symlink skip",
+    "Validate Windows moved-main Status/Plan/Resume evidence on branch head 358874fd9ecff31df06153f678f407db2b49f508 and origin/main 8c388d6595115e4a22953629e07008299e66b6c7",
+    "Require MAIN_MOVED_AUDIT_CONTINUE / action CONTINUE / ok=true for public commands",
+    "Require Plan to keep C22 BLOCKED, branch creation FORBIDDEN, autonomous runtime workers 0",
+    "Verify referenced main-movement audit is active in event #24",
+    "Verify Project Control run 31484468604 checked the R3+main merge composition and returned standard and directional NON_RED with HARNESS GREEN",
+    "Validate final Evidence Map has PASS, no required fixes and no evidence gaps"
+  ],
+  "results": {
+    "implementation_head_fresh": true,
+    "windows_focused_suite": "PASS",
+    "windows_clean_clone_recovery": "PASS",
+    "moved_main_public_interface": "PASS",
+    "epoch_validation": "MAIN_MOVED_AUDIT_CONTINUE",
+    "all_required_predicates_satisfied": true,
+    "c22_runtime_gate": "BLOCKED_FORBIDDEN",
+    "runtime_authorized": false,
+    "production_scope_runtime_paths_present": false,
+    "historical_r1_r2_execution_paths_present": false,
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "harness_pc0_health": "GREEN",
+    "final_evidence_map": "PASS",
+    "required_fixes": 0,
+    "evidence_gaps": 0
+  },
+  "summary": "Independent verifier PASS. H0.0 R3 proves restart-safe Git-only control, phase-independent predicate reconstruction, stale historical evidence isolation, audited descendant-main continuation, and fail-closed runtime gating. The evidence supports proposing H0_0_SCAFFOLD_READY only; it does not authorize C22/NX/runtime work or merge without the explicit CONTROL_DOCS_ONLY_MERGE human gate."
+}

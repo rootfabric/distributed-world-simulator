@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.h0_1_r8_exact_runtime_evidence.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "tested_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "source_commit": "a13da4feb8d8aefc"
+  },
+  "harness": {
+    "pinned_dependency": "jsonschema==4.22.0",
+    "tests_passed": 13,
+    "tests_failed": 0,
+    "status_plan_resume": "PASS",
+    "git_only_recovery": "PASS"
+  },
+  "runtime": {
+    "c22_incremental_local_rebuild": {
+      "assertions": 28,
+      "failures": 0,
+      "result": "PASS"
+    },
+    "c22_compiled_proxy_graphical": {
+      "assertions": 35,
+      "failures": 0,
+      "result": "PASS"
+    },
+    "c24_proxy_mesh_backend_contracts": {
+      "assertions": 81,
+      "failures": 0,
+      "result": "PASS"
+    },
+    "focused_total": {
+      "assertions": 144,
+      "failures": 0,
+      "result": "PASS"
+    }
+  },
+  "exact_head_fence": {
+    "implementation_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+    "review_target_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+    "result": "PASS"
+  },
+  "result": "PASS"
+}

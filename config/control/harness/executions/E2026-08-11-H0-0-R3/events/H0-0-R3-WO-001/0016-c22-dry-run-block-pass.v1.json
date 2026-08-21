@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0016",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":16,
+  "event_type":"PREDICATE_VERIFIED",
+  "work_state":"VERIFYING",
+  "recorded_at_utc":"2026-08-11T10:46:40Z",
+  "actor":"VERIFIER",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"a3cde435e0e59b1de74d411b502be98f6e3a88ab",
+  "predicate":"DRY_RUN_C22_PLAN_PASS",
+  "command":".\\CONTROL_DEVELOPMENT.ps1 -Plan + test_plan_keeps_c22_blocked",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-WINDOWS-EXECUTION-001.v1.json"],
+  "summary":"H0.0 Plan remains DRY_RUN_ONLY; C22 status BLOCKED and branch_creation FORBIDDEN until H0_0_SCAFFOLD_READY."
+}

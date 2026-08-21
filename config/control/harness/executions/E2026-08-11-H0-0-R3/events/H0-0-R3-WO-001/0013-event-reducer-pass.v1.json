@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0013",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":13,
+  "event_type":"PREDICATE_VERIFIED",
+  "work_state":"VERIFYING",
+  "recorded_at_utc":"2026-08-11T10:46:10Z",
+  "actor":"VERIFIER",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"a3cde435e0e59b1de74d411b502be98f6e3a88ab",
+  "predicate":"EVENT_REDUCER_REBUILDS_STATE_PASS",
+  "command":"python -m unittest discover -s tests/harness -v :: active ledger + reducer corruption/identity tests",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-WINDOWS-EXECUTION-001.v1.json"],
+  "summary":"Append-only R3 events rebuild the declared state; sequence, identity and branch corruption fail closed."
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_resolution.v1",
+  "repair_id": "H0-0-R3-WO-001-AUDITED-REGISTRY-CONTINUATION-001",
+  "work_order_id": "H0-0-R3-WO-001",
+  "state": "FIX_VERIFIED",
+  "reviewed_head_sha": "8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "resolved_by": "INDEPENDENT_REVIEWER_TERRA",
+  "resolution": "No implementation change required. Active R3 semantic validation reads the branch-local registry generation 67, which matches the epoch. origin/main movement to 8c388d / registry 68 is evaluated later by epoch_validator and can be authorized by an explicitly referenced NON_RED audit. The R3 epoch becomes historical after control-doc merge; H0.1 starts a fresh epoch from the resulting main.",
+  "remaining_required_fixes": [],
+  "remaining_verification": [
+    "Create the exact descendant-main audit for 8c388d / registry 68 using Project Control run 31483922647.",
+    "Rerun Status, Plan and Resume from the R3 branch after pulling the referenced audit and require MAIN_MOVED_AUDIT_CONTINUE with runtime_authorized=false."
+  ]
+}

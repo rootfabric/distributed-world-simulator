@@ -1,0 +1,21 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0020",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":20,
+  "event_type":"DISPATCHED",
+  "work_state":"DISPATCHED",
+  "recorded_at_utc":"2026-08-11T10:53:00Z",
+  "actor":"DIRECTOR",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "command":"Guarded FIX_REQUIRED -> DISPATCHED after repair-map review and no-code resolution",
+  "exit_code":0,
+  "evidence_paths":[
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/repairs/H0-0-R3-WO-001-AUDITED-REGISTRY-CONTINUATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/repairs/H0-0-R3-WO-001-AUDITED-REGISTRY-CONTINUATION-001-RESOLUTION.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/reviews/H0-0-R3-WO-001-AUDIT-COMPOSITION-REVIEW-001.v1.json"
+  ],
+  "summary":"Director redispatches H0.0 R3 after independent review determined that audited registry continuation already composes correctly and no implementation patch is required."
+}

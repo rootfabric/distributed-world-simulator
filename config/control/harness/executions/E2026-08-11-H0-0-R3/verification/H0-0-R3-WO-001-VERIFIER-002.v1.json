@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "H0-0-R3-WO-001",
+  "verified_head_sha": "8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA_FINAL",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T11:08:00Z",
+  "environment": "Final independent verification after GitHub Project Control run 31485188749 on the PR #75 merge composition, plus the exact Windows clean-clone and moved-main public-interface executions already recorded in R3 evidence.",
+  "commands": [
+    "Require final PC0 evidence H0-0-R3-WO-001-PC0-FINAL-001 to report standard and directional NON_RED",
+    "Require final PC0 merge candidate f9d3b2a30a26c154e4447453f252ce6189987f31 to compose R3 83893572c8b07347b379856ed38b759027c27c2c with main 8c388d6595115e4a22953629e07008299e66b6c7",
+    "Require HARNESS GREEN at registry generation 68",
+    "Require final Evidence Map PASS with evidence_head_sha equal to implementation head 8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+    "Require moved-main Windows Status/Plan/Resume PASS with MAIN_MOVED_AUDIT_CONTINUE",
+    "Require C22 runtime gate BLOCKED/FORBIDDEN and runtime_authorized=false"
+  ],
+  "results": {
+    "final_pc0": "NON_RED",
+    "final_directional_pc0": "NON_RED",
+    "harness": "GREEN",
+    "registry_generation": 68,
+    "implementation_head_fresh": true,
+    "evidence_map": "PASS",
+    "moved_main_public_interface": "PASS",
+    "checkpoint_guards_satisfied": true,
+    "runtime_authorized": false,
+    "required_fixes": 0,
+    "evidence_gaps": 0
+  },
+  "summary": "Final verifier PASS. The guarded transition from AUDITED to CHECKPOINT_PROPOSED has sufficient evidence for H0_0_SCAFFOLD_READY: exact implementation-head evidence, independent review, final merge-composition PC0 NON_RED, and no runtime authorization. Merge remains a separate explicit human gate."
+}

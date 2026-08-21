@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0019",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 19,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-12T02:11:14Z",
+  "actor": "VERIFIER",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "command": "VERIFY_REVIEW_HEAD_EXACT_AND_FRESH",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/reviews/H0-1-R8-C22-WO-001-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/evidence/H0-1-R8-C22-WO-001-FINAL-EVIDENCE-MAP-001.v1.json"
+  ],
+  "summary": "R8 predicate verified on exact implementation/review target 4c69de50c8374112d82efee2fd6917c770b3eae0: REVIEW_HEAD_EXACT_AND_FRESH."
+}

@@ -1,11 +1,11 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
-  "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-11T03:24:00Z",
+  "global_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "updated_at_utc": "2026-08-13T09:03:15Z",
   "canonical_branch": "main",
   "status": "active",
   "operational_status_source": "config/control/project-program-registry.v1.json",
-  "operational_snapshot_note": "The fields active_sync_branches and active_frontiers below are an advisory R2 snapshot synchronized with PC0 generation 62 after project-control convergence became canonical in main. The main-owned project-program-registry remains authoritative for fast-moving frontier state.",
+  "operational_snapshot_note": "The detailed operational snapshot below may retain historical R2-era wording. Canonical fast-moving project state is registry generation 79; canonical R3 architecture semantics are pinned by canonical_architecture_source.",
   "architecture_invariants": [
     "CANONICAL_WORLD_NE_PRESENTATION",
     "CANONICAL_WORLD_NE_TRANSPORT",
@@ -113,11 +113,11 @@
       "branch": "feature/world-building-doctrine",
       "stage": "active design-doctrine frontier"
     },
-    "architecture_candidate": {
-      "branch": "feature/global-p0-r3-architecture",
-      "stage": "GLOBAL-P0 R3 candidate current-main refresh",
-      "status": "DOCUMENTED_CANDIDATE_REFRESH_REQUIRED",
-      "note": "R3 is not canonical until current-main refresh, revision-transition policy and non-RED PC0."
+    "canonical_architecture": {
+      "branch": "main",
+      "stage": "GLOBAL-P0 R3 V9 canonical architecture",
+      "status": "PROMOTED_CANONICAL_POST_R3_PC0_PENDING",
+      "note": "Human-approved V9 promotion; mandatory post-R3 Project Control precedes runtime dispatch."
     }
   },
   "character_equipment_track": {
@@ -209,5 +209,12 @@
     "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
     "STATUS_DIMENSIONS_REMAIN_DISTINCT",
     "BRANCH_REGRESSION_PASS"
-  ]
+  ],
+  "canonical_architecture_source": {
+    "revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "path": "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "frozen_target_sha": "595263c4c925c122a09876cb29b87f5ca5fef1d2",
+    "blob_sha": "c569d90b9aa2d4675e8ef30cb524aef5771f1522",
+    "status": "PROMOTED_CANONICAL_V9"
+  }
 }

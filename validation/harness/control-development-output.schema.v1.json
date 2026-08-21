@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.control_development_output.schema.v1",
+  "title": "CONTROL_DEVELOPMENT command envelope",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "command",
+    "ok"
+  ],
+  "properties": {
+    "schema": {
+      "const": "distributed_world_simulator.control_development_output.v1"
+    },
+    "command": {
+      "enum": [
+        "STATUS",
+        "PLAN",
+        "RESUME",
+        "DRIVE",
+        "CLOSE_ROLE",
+        "CLOSE_MISSION",
+        "UNKNOWN"
+      ]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "exit_codes": {
+      "type": "object",
+      "required": [
+        "INVALID_INVOCATION",
+        "CONTRACT_OR_DEPENDENCY_INVALID",
+        "GIT_STATE_INVALID",
+        "EXECUTION_STATE_INVALID",
+        "INTERNAL_ERROR",
+        "ROLE_EXIT_FORBIDDEN",
+        "MISSION_EXIT_FORBIDDEN"
+      ],
+      "properties": {
+        "INVALID_INVOCATION": {"const": 2},
+        "CONTRACT_OR_DEPENDENCY_INVALID": {"const": 3},
+        "GIT_STATE_INVALID": {"const": 4},
+        "EXECUTION_STATE_INVALID": {"const": 5},
+        "INTERNAL_ERROR": {"const": 6},
+        "ROLE_EXIT_FORBIDDEN": {"const": 7},
+        "MISSION_EXIT_FORBIDDEN": {"const": 8}
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "detail"],
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_INVOCATION",
+            "CONTRACT_OR_DEPENDENCY_INVALID",
+            "GIT_STATE_INVALID",
+            "EXECUTION_STATE_INVALID",
+            "INTERNAL_ERROR",
+            "ROLE_EXIT_FORBIDDEN",
+            "MISSION_EXIT_FORBIDDEN"
+          ]
+        },
+        "detail": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "source": {"const": "GIT_ONLY_WORKER_DATA"},
+    "repository": {"type": "object"},
+    "epoch": {"type": "object"},
+    "active_work_order": {"type": "object"},
+    "reduced_work_order": {"type": "object"},
+    "review": {"type": "object"},
+    "human_attention": {"type": "object"},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "continuation_blocked": {"type": "boolean"},
+    "checkpoint_proposal_blocked": {"type": "boolean"},
+    "checkpoint_blockers": {"type": "array", "items": {"type": "string"}},
+    "runtime_authorized": {"const": false},
+    "verification_commands": {"type": "array", "items": {"type": "string"}},
+    "selected_execution": {"type": "string", "minLength": 1},
+    "selected_checkpoint": {"type": "string", "minLength": 1},
+    "checkpoint_acceptance": {"type": ["object", "null"]},
+    "next": {
+      "type": "object",
+      "required": [
+        "mission_id",
+        "goal_checkpoint",
+        "session_scope",
+        "mission_complete",
+        "handoff_class",
+        "next_actor",
+        "next_action",
+        "resume_condition",
+        "role_exit_allowed",
+        "mission_exit_allowed",
+        "session_exit_allowed",
+        "human_decision_required",
+        "hard_blocked",
+        "mission_driver_required",
+        "stop_obligation",
+        "checkpoint",
+        "work_order",
+        "verification_commands",
+        "human_gate",
+        "git_authority"
+      ],
+      "properties": {
+        "mission_id": {"type": "string", "minLength": 1},
+        "goal_checkpoint": {"type": "string", "minLength": 1},
+        "session_scope": {"const": "CHECKPOINT"},
+        "mission_complete": {"type": "boolean"},
+        "handoff_class": {
+          "enum": [
+            "CONTINUE_SAME_ROLE",
+            "ROLE_BOUNDARY",
+            "HUMAN_DECISION_REQUIRED",
+            "SYSTEM_BLOCKED",
+            "MISSION_COMPLETE"
+          ]
+        },
+        "next_actor": {"type": "string", "minLength": 1},
+        "next_action": {"type": "string", "minLength": 1},
+        "resume_condition": {"type": "string", "minLength": 1},
+        "role_exit_allowed": {"type": "boolean"},
+        "mission_exit_allowed": {"type": "boolean"},
+        "session_exit_allowed": {"type": "boolean"},
+        "human_decision_required": {"type": "boolean"},
+        "hard_blocked": {"type": "boolean"},
+        "mission_driver_required": {"type": "boolean"},
+        "stop_obligation": {"type": "string", "minLength": 1},
+        "checkpoint": {"type": "string", "minLength": 1},
+        "work_order": {"type": "string", "minLength": 1},
+        "verification_commands": {"type": "array", "items": {"type": "string"}},
+        "human_gate": {"type": "array", "items": {"type": "string"}},
+        "git_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "autonomy_ceiling",
+            "scope",
+            "routine_confirmation_required",
+            "routine_operations",
+            "human_confirmation_required_for",
+            "external_tool_boundary"
+          ],
+          "properties": {
+            "status": {"const": "PREAUTHORIZED_WITHIN_ACTIVE_CHECKPOINT_MISSION"},
+            "autonomy_ceiling": {"const": "A3_INTEGRATE_CANDIDATE"},
+            "scope": {"type": "string", "minLength": 1},
+            "routine_confirmation_required": {"const": false},
+            "routine_operations": {"type": "array", "items": {"type": "string"}},
+            "human_confirmation_required_for": {"type": "array", "items": {"type": "string"}},
+            "external_tool_boundary": {"type": "string"}
+          }
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "selected_checkpoint",
+        "pilot_override",
+        "active_work_order",
+        "satisfied_predicates",
+        "unsatisfied_predicates",
+        "autonomous_runtime_workers",
+        "next_action",
+        "stop_gates"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "DRY_RUN_ONLY",
+            "PLANNING_ONLY",
+            "SINGLE_RUNTIME_PILOT",
+            "RUNTIME_VERIFICATION",
+            "SINGLE_HIGH_RISK_RUNTIME_PILOT",
+            "HIGH_RISK_RUNTIME_VERIFICATION",
+            "SINGLE_HIGH_RISK_PRODUCT_SLICE",
+            "PRODUCT_RUNTIME_VERIFICATION"
+          ]
+        },
+        "selected_checkpoint": {
+          "enum": [
+            "H0_0_SCAFFOLD_READY",
+            "H0_1_CLOSED_LOOP_C22_PILOT",
+            "H0_2_NX_C1_HIGH_RISK_PILOT",
+            "V0_S1_NETWORKED_PLANETARY_OUTPOST",
+            "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+            "V0_P5_EQUIPMENT_TOOLS"
+          ]
+        },
+        "pilot_override": {"type": "object"},
+        "parallel_product_checkpoint": {"type": "boolean"},
+        "active_work_order": {"type": "string"},
+        "satisfied_predicates": {"type": "array", "items": {"type": "string"}},
+        "unsatisfied_predicates": {"type": "array", "items": {"type": "string"}},
+        "autonomous_runtime_workers": {"type": "integer", "minimum": 0, "maximum": 1},
+        "c22_dry_run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requested_checkpoint", "status", "reason", "branch_creation"],
+          "properties": {
+            "requested_checkpoint": {"const": "H0_1_CLOSED_LOOP_C22_PILOT"},
+            "status": {"enum": ["BLOCKED", "WAITING_DIRECTOR_DISPATCH", "READY_FOR_FRESH_BRANCH"]},
+            "reason": {"type": "string"},
+            "branch_creation": {"enum": ["FORBIDDEN", "FORBIDDEN_UNTIL_DISPATCH", "AUTHORIZED_BY_DISPATCH", "CURRENT_WORK_ORDER_BRANCH"]}
+          }
+        },
+        "nx_c1_gate": {"type": "object"},
+        "v0_s1_gate": {"type": "object"},
+        "v0_p4_gate": {"type": "object"},
+        "v0_p5_gate": {"type": "object"},
+        "next_action": {"type": "string"},
+        "stop_gates": {"type": "array", "items": {"type": "string"}}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"selected_checkpoint": {"enum": ["H0_0_SCAFFOLD_READY", "H0_1_CLOSED_LOOP_C22_PILOT"]}}},
+          "then": {"required": ["c22_dry_run"]}
+        },
+        {
+          "if": {"properties": {"selected_checkpoint": {"const": "H0_2_NX_C1_HIGH_RISK_PILOT"}}},
+          "then": {"required": ["nx_c1_gate"]}
+        },
+        {
+          "if": {"properties": {"selected_checkpoint": {"const": "V0_S1_NETWORKED_PLANETARY_OUTPOST"}}},
+          "then": {"required": ["parallel_product_checkpoint", "v0_s1_gate"]}
+        },
+        {
+          "if": {"properties": {"selected_checkpoint": {"const": "V0_P4_REAL_RESOURCE_CONSTRUCTION"}}},
+          "then": {"required": ["parallel_product_checkpoint", "v0_p4_gate"]}
+        },
+        {
+          "if": {"properties": {"selected_checkpoint": {"const": "V0_P5_EQUIPMENT_TOOLS"}}},
+          "then": {"required": ["parallel_product_checkpoint", "v0_p5_gate"]}
+        }
+      ]
+    },
+    "resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_epoch",
+        "branch",
+        "current_branch_head_sha",
+        "implementation_head_sha",
+        "last_completed_predicate",
+        "open_blocker",
+        "next_work_order",
+        "review_state",
+        "open_human_attention",
+        "human_approval_required_for",
+        "verification_commands",
+        "mission_id",
+        "mission_complete",
+        "mission_exit_allowed",
+        "next_actor",
+        "next_action",
+        "resume_condition"
+      ],
+      "properties": {
+        "active_epoch": {"type": "string"},
+        "branch": {"type": "string"},
+        "current_branch_head_sha": {"type": "string"},
+        "implementation_head_sha": {"type": "string"},
+        "last_completed_predicate": {"type": ["string", "null"]},
+        "open_blocker": {"type": ["string", "null"]},
+        "next_work_order": {"type": "string"},
+        "review_state": {"type": "string"},
+        "open_human_attention": {"type": "array"},
+        "human_approval_required_for": {"type": "array", "items": {"type": "string"}},
+        "verification_commands": {"type": "array", "items": {"type": "string"}},
+        "mission_id": {"type": "string", "minLength": 1},
+        "mission_complete": {"type": "boolean"},
+        "mission_exit_allowed": {"type": "boolean"},
+        "next_actor": {"type": "string", "minLength": 1},
+        "next_action": {"type": "string", "minLength": 1},
+        "resume_condition": {"type": "string", "minLength": 1}
+      }
+    },
+    "drive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "auto_continue_required",
+        "next_actor",
+        "next_action",
+        "resume_condition",
+        "instruction",
+        "git_authority"
+      ],
+      "properties": {
+        "status": {"enum": ["CONTINUE_REQUIRED", "MISSION_COMPLETE", "WAITING_HUMAN", "HARD_BLOCKED"]},
+        "auto_continue_required": {"type": "boolean"},
+        "next_actor": {"type": "string", "minLength": 1},
+        "next_action": {"type": "string", "minLength": 1},
+        "resume_condition": {"type": "string", "minLength": 1},
+        "instruction": {"type": "string", "minLength": 1},
+        "git_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "autonomy_ceiling",
+            "scope",
+            "routine_confirmation_required",
+            "routine_operations",
+            "human_confirmation_required_for",
+            "external_tool_boundary"
+          ],
+          "properties": {
+            "status": {"const": "PREAUTHORIZED_WITHIN_ACTIVE_CHECKPOINT_MISSION"},
+            "autonomy_ceiling": {"const": "A3_INTEGRATE_CANDIDATE"},
+            "scope": {"type": "string", "minLength": 1},
+            "routine_confirmation_required": {"const": false},
+            "routine_operations": {"type": "array", "items": {"type": "string"}},
+            "human_confirmation_required_for": {"type": "array", "items": {"type": "string"}},
+            "external_tool_boundary": {"type": "string"}
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"ok": {"const": false}}},
+      "then": {"required": ["error", "exit_codes"]}
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}}},
+      "then": {
+        "required": [
+          "exit_codes",
+          "source",
+          "repository",
+          "epoch",
+          "active_work_order",
+          "reduced_work_order",
+          "review",
+          "human_attention",
+          "findings",
+          "continuation_blocked",
+          "checkpoint_proposal_blocked",
+          "checkpoint_blockers",
+          "runtime_authorized",
+          "verification_commands",
+          "selected_execution",
+          "selected_checkpoint",
+          "checkpoint_acceptance",
+          "next"
+        ]
+      }
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}, "command": {"const": "PLAN"}}, "required": ["ok", "command"]},
+      "then": {"required": ["plan"]}
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}, "command": {"const": "RESUME"}}, "required": ["ok", "command"]},
+      "then": {"required": ["resume"]}
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}, "command": {"const": "DRIVE"}}, "required": ["ok", "command"]},
+      "then": {"required": ["drive"]}
+    }
+  ]
+}

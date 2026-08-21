@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0027",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 27,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-12T02:11:22Z",
+  "actor": "VERIFIER",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "predicate": "R8_FINAL_AUDIT_PASS",
+  "command": "AUDIT_R8_FINAL_EVIDENCE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/evidence/H0-1-R8-C22-WO-001-FINAL-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/reviews/H0-1-R8-C22-WO-001-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/verification/H0-1-R8-C22-WO-001-VERIFIER-001.v1.json"
+  ],
+  "summary": "Final R8 audit confirms exact implementation/review/test target, complete evidence, NON_RED PC0, zero critical overlap and empty human-attention queue."
+}

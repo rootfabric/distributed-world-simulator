@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0005",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 5,
+  "event_type": "VERIFICATION_STARTED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T10:32:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "2afb19af138e1050adbb6c2619c20798eec5e1c8",
+  "predicate": "H0_0_R3_VERIFICATION_STARTED",
+  "command": "GitHub Project Control run 31482566948 on Draft PR #75 candidate 2afb19af138e1050adbb6c2619c20798eec5e1c8",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-PC0-001.v1.json"
+  ],
+  "summary": "Fresh R3 verification started after exact current-main and HIGH pre-build gates. GitHub Project Control is complete; focused harness, public commands and clean-clone recovery remain pending.",
+  "blocker": "FRESH_R3_UNIT_STATUS_PLAN_RESUME_AND_CLEAN_CLONE_EVIDENCE_REQUIRED"
+}

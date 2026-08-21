@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "program": "TS",
+  "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "intent": "Prove the first restart-safe closed-loop H0.1 runtime pilot by converging SOURCE_ACCEPTED C22 incremental local rebuild capability onto exact current main while preserving exact-head review freshness and stopping before runtime merge.",
+  "root_cause_or_reason": "R8 supersedes fail-closed R7 because R7 exact-head freshness omitted C22 runtime surfaces. R8 repairs that fence within predeclared scope and re-verifies the unchanged accepted capability.",
+  "changed_surfaces": [
+    "scripts/harness/state_builder.py",
+    "tests/harness/test_h0_control_harness.py",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.sh",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid",
+    "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
+    "tests/construction/test_c22_incremental_local_rebuild.gd",
+    "tests/construction/test_c22_incremental_local_rebuild.gd.uid",
+    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
+    "validation/c22-incremental-local-rebuild-validation.json"
+  ],
+  "canonical_owner": "TS/C22 + MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/state_builder.py",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.sh",
+    "RUN_WORLD_REGRESSION_TESTS.ps1"
+  ],
+  "callers": [
+    "H0.1 Project Control",
+    "C22 focused runner",
+    "world/core regression runner"
+  ],
+  "callees": [
+    "Construction proxy streaming controller",
+    "incremental local rebuilder",
+    "artifact merger",
+    "array mesh backend"
+  ],
+  "sibling_surfaces_checked": [
+    "C24 proxy mesh backend contracts",
+    "full world/core regression through NX4",
+    "Project Control standard PC0",
+    "Project Control directional watch",
+    "Git-only recovery"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Exactly 13 SOURCE_ACCEPTED C22 blobs transferred byte-identically. Freshness repair changes only harness behavior: implementation/review head now derives from predeclared Work Order scope. No semantic Construction truth or architecture ownership changed.",
+  "remaining_risks": [
+    "C22 runtime merge still requires explicit human action.",
+    "Post-merge PC0 is mandatory before C22 MAIN_INTEGRATED."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Human C22_RUNTIME_MERGE",
+    "post-C22 PC0",
+    "C22 MAIN_INTEGRATED",
+    "GLOBAL-P0 R3 current-main refresh"
+  ],
+  "evidence_gaps": [],
+  "review_verdict": "PASS"
+}

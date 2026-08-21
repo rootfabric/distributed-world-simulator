@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "verified_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "verifier": "INDEPENDENT_VERIFIER_SOL",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-12T02:10:42Z",
+  "environment": "Godot 4.7.1 stable double custom build a13da4feb + pinned Python harness + GitHub Project Control",
+  "commands": [
+    "pinned harness unit suite",
+    "CONTROL_DEVELOPMENT Status/Plan/Resume",
+    "fresh Git-only recovery",
+    "C22 incremental local rebuild",
+    "C22 graphical",
+    "C24 backend contracts",
+    "PC0 standard/directional",
+    "regression promotion byte fence"
+  ],
+  "results": {
+    "harness": "13/13 PASS",
+    "focused_runtime": "144 assertions / 0 failures",
+    "recovery": "PASS",
+    "pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "critical_overlap": "ZERO",
+    "review_target": "4c69de50c8374112d82efee2fd6917c770b3eae0"
+  },
+  "summary": "Independent verification finds no unresolved H0.1 R8 blocker. Exact implementation and review target remain 4c69de50; runtime merge is intentionally not authorized."
+}

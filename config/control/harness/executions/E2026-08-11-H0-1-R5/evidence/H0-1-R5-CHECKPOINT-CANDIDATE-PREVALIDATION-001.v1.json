@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_checkpoint_candidate_prevalidation.v1",
+  "candidate": "H0_0_SCAFFOLD_READY_PROJECT_CANONICALIZATION",
+  "source_main_sha": "9ab5b16332de47fe6a9c525442d4efa882c9a71c",
+  "registry_generation": 71,
+  "active_planning_epoch": "E2026-08-11-H0-1-R5",
+  "active_planning_work_order": "H0-1-R5-DISPATCH-WO-001",
+  "runtime_authorized": false,
+  "c22_branch_creation": "FORBIDDEN_UNTIL_FRESH_POST_CHECKPOINT_H0_1_EXECUTION_AND_DIRECTOR_DISPATCH",
+  "validation_required": [
+    "FOCUSED_CANONICAL_HANDOFF_SUITE_PASS",
+    "STATUS_PLAN_RESUME_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED",
+    "NO_RUNTIME_DOMAIN_DIFF",
+    "PR_MERGEABLE",
+    "MAIN_FRESH"
+  ],
+  "note": "Prevalidation marker refreshed to current main 9ab5b163 / registry generation 71 after a newer ECO-only registry commit. Current-main registry content is preserved byte-for-byte; H0/G machine-registry milestone synchronization is deferred to post-merge generation 72. This marker does not authorize runtime or checkpoint merge."
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "distributed_world_simulator.h0_1_r8_world_regression_promotion_evidence.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "promoted_from_head_sha": "b75165e48c963bd55b2f6c214e75d1328b0eb187",
+  "promoted_to_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "source_environment": "EXACT_WINDOWS_GODOT_4_7_1_DOUBLE",
+  "source_result": "FULL_WORLD_CORE_REGRESSION_PASS_THROUGH_NX4_CLEAN_STOPPED_LIFECYCLE",
+  "promotion_rule": "Allowed only when no production runtime, construction test, C22/C24 runner or RUN_WORLD_REGRESSION_TESTS blob changed after the accepted Windows run.",
+  "boundary_check": "PASS",
+  "runtime_namespace_delta": "HARNESS_ONLY",
+  "protected_c22_and_world_runner_diff": "BYTE_IDENTICAL",
+  "result": "PASS"
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance.v1",
+  "acceptance_id": "V0-P4-R1-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+  "decision": "V0_P4_CHECKPOINT_ACCEPTED",
+  "status": "ACCEPTED",
+  "accepted_runtime_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "accepted_product_lineage_head": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "checkpoint_proposal": {
+    "carrier_branch": "recovery/v0-p4-closure-ledger-r1",
+    "proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
+    "event_id": "V0-P4-R1-EVENT-0054",
+    "sequence": 54,
+    "work_state": "CHECKPOINT_PROPOSED"
+  },
+  "closure_finalization": {
+    "pr": 138,
+    "exact_candidate_head": "7107e9cded9338e31528a5c31e804a7d84f62f9b",
+    "merge_commit": "d35cac6f8bdc18f200f7ba59f636912b954fc513",
+    "fresh_independent_review_relay_comment": 5327624478,
+    "fresh_independent_review_verdict": "PASS — SAFE TO MERGE P4 CLOSURE FINALIZATION TO AUDITED"
+  },
+  "machine_evidence": {
+    "project_control_run": 32131179861,
+    "focused_validation_run": 32131271546,
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "open_blocker": null,
+    "findings": [],
+    "all_required_predicates_complete": true
+  },
+  "canonical_main_at_acceptance": "c58339c30e6d7e708a06c41e59208bd45f0709a4",
+  "human_authorization": {
+    "decision": "CLOSE_P4_AND_BEGIN_P5",
+    "source": "EXPLICIT_USER_DIRECTIVE_IN_ACTIVE_CONTROL_SESSION"
+  },
+  "successor": {
+    "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+    "main_declared_exact_successor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "runtime_branch": "feature/v0-p5-equipment-tools",
+    "activation_still_requires_main_owned_control_update": true,
+    "runtime_mutation_authorized_by_this_record": false
+  },
+  "accepted_at_utc": "2026-08-18T11:45:00Z"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0006",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 6,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T10:33:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "2afb19af138e1050adbb6c2619c20798eec5e1c8",
+  "predicate": "PC0_NON_RED",
+  "command": "GitHub Actions Project Control run 31482566948: standard Overall YELLOW; directional Overall YELLOW; no global RED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-PC0-001.v1.json"
+  ],
+  "summary": "PC0_NON_RED is verified for fresh H0.0 R3 candidate 2afb19af against exact main 9ad18eab. HARNESS is GREEN; ECO is RED but ADVISORY; blocking-consumer directional finding CH to NX is YELLOW, not RED. Final checkpoint freshness rerun remains mandatory.",
+  "blocker": "FRESH_R3_UNIT_STATUS_PLAN_RESUME_AND_CLEAN_CLONE_EVIDENCE_REQUIRED"
+}

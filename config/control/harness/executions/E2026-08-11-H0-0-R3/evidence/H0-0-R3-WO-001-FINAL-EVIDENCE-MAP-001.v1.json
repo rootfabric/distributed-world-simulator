@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "H0-0-R3-WO-001",
+  "program": "HARNESS",
+  "checkpoint": "H0_0_SCAFFOLD_READY",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "intent": "Authorize proposal of the restart-safe H0.0 control scaffold only, with runtime work remaining blocked and with all authorization reconstructed from Git-only evidence.",
+  "root_cause_or_reason": "H0.0 must prove that development control can restart from versioned Git state, reject stale historical authorization, survive an audited descendant-main control-registry movement, and keep C22 runtime creation blocked until the checkpoint is explicitly accepted.",
+  "changed_surfaces": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/**",
+    "tests/harness/**",
+    "validation/harness/**",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/**"
+  ],
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume",
+    "scripts/harness/cli.py",
+    "scripts/harness/state_builder.py",
+    "scripts/harness/event_reducer.py",
+    "scripts/harness/epoch_validator.py"
+  ],
+  "callers": [
+    "human/director control session",
+    "future closed-loop H0.1 workers",
+    "Git-only recovery workflow"
+  ],
+  "callees": [
+    "canonical harness contracts",
+    "Git metadata and origin/main",
+    "append-only Work Order event ledger",
+    "checkpoint planner",
+    "referenced epoch audits"
+  ],
+  "sibling_surfaces_checked": [
+    "project-control standard auditor",
+    "project-control directional watch auditor",
+    "R1/R2 historical execution isolation",
+    "C22 runtime branch gate",
+    "worktree cleanliness and event provenance",
+    "HIGH-risk review/evidence freshness"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "PR #75 contains only H0 control/harness implementation, tests, validation schema and R3 execution/evidence/review records. No gameplay, runtime, network, construction, item, character, simulation, canonical registry/policy/architecture, or historical R1/R2 execution path is introduced by the H0.0 implementation surface. Windows focused suite passed 18 tests with 17 PASS and one non-required symlink skip. Status/Plan/Resume passed first on exact base and again after audited main movement to 8c388d65 / registry 68. Project Control run 31484468604 on the R3+main merge checkout reported standard YELLOW/NON_RED, directional YELLOW/NON_RED and HARNESS GREEN.",
+  "remaining_risks": [
+    "Any further main movement before merge requires another exact freshness fence and may require a new referenced audit.",
+    "H0.0 acceptance authorizes only the scaffold; C22 runtime work must start as H0.1 from the then-current canonical main.",
+    "The optional prose checkpoint document remains deferred because creating it after implementation freeze would change the calculated implementation head."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Add full build_state regression coverage for positive and negative audited descendant-main continuation cases.",
+    "Separate purely documentary checkpoint files from implementation-head freshness or require checkpoint prose before implementation freeze.",
+    "Put the focused H0 harness suite into a canonical CI gate after H0.0 acceptance."
+  ],
+  "evidence_gaps": [],
+  "review_verdict": "PASS"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0028",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 28,
+  "event_type": "CHECKPOINT_PROPOSED",
+  "work_state": "CHECKPOINT_PROPOSED",
+  "recorded_at_utc": "2026-08-12T02:11:23Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "predicate": "C22_CHECKPOINT_PROPOSED",
+  "command": "PROPOSE_H0_1_PASS_C22_SOURCE_ACCEPTED_MERGE_READY",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/evidence/H0-1-R8-C22-WO-001-FINAL-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/reviews/H0-1-R8-C22-WO-001-FINAL-REVIEW-001.v1.json"
+  ],
+  "summary": "H0.1 R8 checkpoint proposed: H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY. STOP before explicit human C22_RUNTIME_MERGE."
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.h0_1_r8_blob_equivalence_evidence.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "source_accepted_head_sha": "e3b865e763212e2b61ab1361afd2aa57fe2a0cbe",
+  "implementation_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "checked_blob_count": 13,
+  "expected_blob_count": 13,
+  "blobs": {
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1": "00aff2ea79b18b2d3df8477ba6f384274f91d021",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.sh": "5fd401bd23e74848695b4355a661eea78bde8178",
+    "RUN_WORLD_REGRESSION_TESTS.ps1": "56dbe3e9510675ff99fa1bc6ca5156591c52ddbc",
+    "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd": "9292910452ab8a729744dcdefaac0acfaaf3339b",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd": "3946919011663e874179080aeba31f0cef4aa0ba",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid": "110c07cd03d89f77035b93495ccba49a7c6c4705",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd": "eb7ae1bde276d6354465bacc22a3b51d084d0538",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid": "24ea3d281929c0e81f4ce26663d03900b68baf1f",
+    "scripts/construction/proxies/construction_proxy_streaming_controller.gd": "423c141a9017e272ea6c38ca67e469eb6c692926",
+    "tests/construction/test_c22_incremental_local_rebuild.gd": "bcd57e832d11cb72994d9054e9d07387a320fdbc",
+    "tests/construction/test_c22_incremental_local_rebuild.gd.uid": "940dbf523d7ca2b95c92ed4049bcb2f05d7dd323",
+    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd": "74d87b70c902762f40e8e281cf492ab9ef7be218",
+    "validation/c22-incremental-local-rebuild-validation.json": "9fe3b7701f20bb83377a548c5da8131ca2160989"
+  },
+  "result": "PASS"
+}

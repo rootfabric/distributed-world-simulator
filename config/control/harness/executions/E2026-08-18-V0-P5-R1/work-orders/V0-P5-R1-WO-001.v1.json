@@ -1,0 +1,158 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P5-R1-WO-001",
+  "project_epoch": "E2026-08-18-V0-P5-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+  "state": "PLANNED",
+  "work_order_type": "IMPLEMENTATION",
+  "base_sha": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+  "branch": "feature/v0-p5-equipment-tools",
+  "scope": "Implement one bounded canonical mining-tool equipment slice over the accepted P4 product lineage: equip and unequip an existing canonical Item Graph item through server-authoritative operations, replicate the exact equipped relation, restore it on reconnect, and require the equipped mining tool for the existing canonical ResourceMining action without creating a second item, equipment, persistence, or network authority truth.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p3/**",
+    "scripts/runtime/networked_gameplay/p5/**",
+    "scripts/app/**",
+    "scripts/ui/inventory/**",
+    "tests/runtime/test_v0_p5_*",
+    "tests/fixtures/v0_p5/**",
+    "RUN_V0_P5_*",
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1/**",
+    "config/control/branches/feature__v0-p5-equipment-tools.v1.json",
+    "docs/checkpoints/2026-08-18_V0_P5_*",
+    "docs/evidence/2026-08-18_V0_P5_*"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/**",
+    "scripts/persistence/**",
+    "scripts/runtime/networked_gameplay/m7/**"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "V0_P5_ACCEPTED_P4_SUCCESSOR_BASE_EXACT",
+    "V0_P5_WORK_ORDER_ISSUED",
+    "V0_P5_RISK_CLASSIFIED_HIGH",
+    "V0_P5_DESIGN_BRIEF_READY",
+    "V0_P5_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+    "V0_P5_EQUIP_OWNED_TOOL_PASS",
+    "V0_P5_REJECT_UNOWNED_TOOL_PASS",
+    "V0_P5_REJECT_INVALID_SLOT_PASS",
+    "V0_P5_UNEQUIP_ITEM_GRAPH_CONVERGENCE_PASS",
+    "V0_P5_EXACT_ONCE_EQUIP_COMMAND_PASS",
+    "V0_P5_TWO_CLIENT_EQUIPMENT_REPLICATION_PASS",
+    "V0_P5_RECONNECT_EQUIPMENT_RESTORATION_PASS",
+    "V0_P5_MINING_REQUIRES_CANONICAL_EQUIPPED_TOOL_PASS",
+    "V0_P5_CANONICAL_P3_RESOURCE_OUTPUT_EXACT_ONCE_PASS",
+    "V0_P5_NO_PRIVATE_EQUIPMENT_TRUTH_PASS",
+    "V0_P5_NO_DUPLICATE_ITEM_IDENTITY_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "V0_P5_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "Canonical equipment relation bound to existing Item Graph item identity",
+    "Server-authoritative equip and unequip command path",
+    "Invalid ownership and slot rejection evidence",
+    "Two-client equipment replication evidence",
+    "Reconnect equipment restoration evidence",
+    "Mining validation against exact equipped mining tool",
+    "Existing canonical P3 resource output preserved exact-once",
+    "Fresh evidence map, Reviewer PASS and Verifier PASS before P5 checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "A second Item Graph or private equipment inventory truth would be required",
+    "A new persistence owner or private P5 save format would be required",
+    "A network protocol, authority, prediction, or reconciliation foundation change would be required; fail closed to NX/foundation decision",
+    "A second pre-H0.3 runtime mutation worker would be required",
+    "The exact accepted P4 predecessor base cannot be proven",
+    "Production mutation escapes the bounded equipment/tool scope"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Mutates authoritative item/equipment gameplay state",
+    "Composes Item Graph, multiplayer replication, reconnect recovery, and ResourceMining",
+    "Must prevent duplicate canonical equipment or item identity"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "The accepted V0 product can mine and construct with canonical ore, but canonical items cannot yet become authoritative equipped tools consumed by gameplay rules.",
+    "current_behavior": "Item identity and possession are canonical in the M4 Item Graph and ResourceMining already produces canonical output, while equipment/tool state is not yet a bounded authoritative product relation on the accepted P4 lineage.",
+    "desired_behavior": "A player equips one owned canonical mining-tool item through the server, all replicas observe the same equipped item and slot, reconnect restores it, and authoritative mining validates that exact equipped tool before producing the existing canonical resource output.",
+    "alternatives_considered": [
+      "Create a P5-private equipment inventory",
+      "Treat character presentation attachment as canonical equipment truth",
+      "Store only a client-side selected-tool flag",
+      "Add the minimum server-authoritative equipment relation over existing canonical Item Graph identity"
+    ],
+    "selected_design": "Add the minimum canonical equipment relation and equip/unequip operations over existing Item Graph item identity, reuse the current command/replication path, and make ResourceMining validate the canonical relation rather than presentation state.",
+    "why_selected": "It adds the product capability while preserving one item identity, one persistence boundary, and one network authority path.",
+    "affected_owners": [
+      "V0",
+      "CANONICAL_ITEM_GRAPH",
+      "RESOURCE_MINING",
+      "M4_NETWORKED_GAMEPLAY",
+      "CHARACTER_PRESENTATION_AS_DONOR_ONLY"
+    ],
+    "dependencies": [
+      "V0_P4_CHECKPOINT_ACCEPTED",
+      "accepted P4 lineage 2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+      "current canonical M4 Item Graph",
+      "existing server-predicted command/replication path",
+      "existing P3 ResourceMining canonical output"
+    ],
+    "non_goals": [
+      "No full armor system",
+      "No combat or weapon ballistics",
+      "No attachment/mod framework",
+      "No durability economy",
+      "No crafting/fabrication",
+      "No new persistence or network foundation"
+    ],
+    "expected_risks": [
+      "Equipped item duplicated between inventory and slot",
+      "Stale/replayed equip command causes divergent relation",
+      "Reconnect loses equipment state",
+      "Mining trusts presentation state instead of canonical equipped relation"
+    ],
+    "validation_plan": [
+      "Inventory existing Item Graph, CH presentation donor, ResourceMining, persistence and command entry points",
+      "Freeze equipment relation and command contract before broad implementation",
+      "Test owned/unowned/invalid-slot/exact-once equip and canonical unequip",
+      "Run two-client replication and reconnect restoration",
+      "Require canonical equipped mining tool in ResourceMining and prove existing output exact-once",
+      "Run full world regression, post-build critique, independent Reviewer and Verifier"
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "RUNTIME_FEATURE_MERGE",
+    "NETWORK_FOUNDATION_CHANGE_REQUIRED",
+    "DUPLICATE_CANONICAL_TRUTH_REQUIRED",
+    "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED"
+  ],
+  "issued_at_utc": "2026-08-18T11:51:00Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE"
+  ],
+  "notes": "Fresh P5 Work Order issued only after formal P4 acceptance merged to main as 2d3227eda204647f2b30ff59b7e31026e661c240. Runtime mutation remains forbidden until the single V0 mutation lease is rotated to P5 in main-owned control and a separate Director DISPATCHED event is committed."
+}
