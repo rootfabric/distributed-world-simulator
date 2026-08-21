@@ -1,0 +1,61 @@
+{
+  "schema": "distributed_world_simulator.eco_evo3_e3_7_repair_r1_validation_receipt.v1",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "checkpoint": "ECO.EVO3/E3.7 Repair R1",
+  "reviewer_finding": {
+    "finding_id": "E3.7-R1-001",
+    "severity": "HIGH",
+    "blocking": true,
+    "durable_verdict_comment": 5369696271,
+    "failed_review_head": "97d01ec3cca450709af53a80c233970ee1187d62"
+  },
+  "repair_executable_freeze": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+  "repair_commits": [
+    "e41dfa66d92b6665d6fbc36923dcb7b1341c30c7",
+    "ac9a154715055e0849235d99218a63eb45ca0873",
+    "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9"
+  ],
+  "closure": {
+    "run_id": 32481325987,
+    "run_number": 9,
+    "job_id": 96768126271,
+    "conclusion": "SUCCESS",
+    "exact_checkout": "b30f7a9cfb54a673c6249be1e5f9a3c7f60042c9",
+    "tests_passed": 30,
+    "tests_total": 30,
+    "predicates_passed": 16,
+    "predicates_total": 16,
+    "alternate_serializer_predicate": "PASS",
+    "schema": "PASS",
+    "fresh_process_builds": "2/2",
+    "fresh_process_bytes_identical": true,
+    "committed_generated_bytes_identical": true,
+    "artifact_id": 9446160054,
+    "artifact_zip_sha256": "25b9a8541e6f4f6ca669f4858f8645db7ad26e937bc78cce17d2c9e3bebdff74"
+  },
+  "generated_program_unchanged": {
+    "path": "validation/ecology/eco-evo3-e3-7-planet-ecology-program.generated.json",
+    "bytes": 104186,
+    "sha256": "52ff70fddc7f05fde00e5159f38dd8e67def3e732b03c93a15bedce540dae303",
+    "git_blob": "01207a7025710db34fafc959fcc26dade2606d89",
+    "provenance_hash": "832a2d1c5b78ceda2f674843b4e6ee7052f5bd8a8400181aec7aeb029b472eff",
+    "planet_ecology_program_hash": "b405d35ebd8bebcc3218249fe78e495b94f4098eb06673eebc3e6475ea7a4956"
+  },
+  "project_control": {
+    "run_id": 32481326131,
+    "run_number": 1121,
+    "job_id": 96768126542,
+    "conclusion": "SUCCESS",
+    "merge_ref": "f563e7cf9a17609084a04edda0c0ccff486b64d6",
+    "overall": "RED",
+    "eco": "RED",
+    "directional": "RED",
+    "eco_directional_watch": "NX -> ECO YELLOW WATCH_HIT",
+    "eco_critical_intersection": "ABSENT",
+    "critical_red_intersections": ["NX -> V0", "V0 -> NX"],
+    "artifact_id": 9446157926,
+    "artifact_zip_sha256": "72089eae39d5a66453ff01fc6f40bf9b4b63b2ed440b9539e1860549160b01f4"
+  },
+  "disposition": "REPAIR_R1_EXECUTABLE_FREEZE_VALIDATED_AWAITING_POST_EVIDENCE_EXACT_HEAD_AND_FRESH_REVIEW"
+}
