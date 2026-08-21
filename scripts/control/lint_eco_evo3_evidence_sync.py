@@ -1,4 +1,4 @@
-"""ECO EVO3 evidence closure-run binding lint (ECO-R77, A5).
+"""ECO EVO3 evidence closure-run binding lint (ECO-R78, A5).
 
 Cross-checks the live roadmap tracker against acceptance checkpoints:
 for every accepted-evidence field ``<stage>_closure_run_id`` and

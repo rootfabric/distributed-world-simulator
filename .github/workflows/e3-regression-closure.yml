@@ -1,9 +1,9 @@
 name: ECO E3 Regression Closure
 
-# ECO-R77 amendment A4: reruns every accepted EVO3 stage closure.
+# ECO-R78 amendment A4: reruns every accepted EVO3 stage closure.
 # Intentionally workflow_dispatch-only until the Director enables automatic
 # triggers after a first successful manual CI run; see
-# docs/plans/ECO_EVO3_ROADMAP_AMENDMENTS_R77_RU.md (A4).
+# docs/plans/ECO_EVO3_ROADMAP_AMENDMENTS_R78_RU.md (A4).
 
 on:
   workflow_dispatch:

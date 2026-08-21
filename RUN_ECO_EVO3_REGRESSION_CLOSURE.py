@@ -5,7 +5,7 @@ subprocess against the exact working-tree HEAD, read-only with respect to
 committed artifacts, and requires PASS from each stage.
 
 Policy: config/ecology/eco-evolutionary-ecology-roadmap.v1.json
-        roadmap_amendments.regression_closure_policy (ECO-R77)
+        roadmap_amendments.regression_closure_policy (ECO-R78)
 
 Exit codes: 0 = all stages PASS, 1 = at least one stage FAIL.
 """

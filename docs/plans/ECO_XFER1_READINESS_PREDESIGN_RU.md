@@ -1,7 +1,7 @@
 # ECO XFER1 — Readiness Pre-Design (research-only, non-authoritative)
 
 Статус: `RESEARCH_ONLY_NON_AUTHORITATIVE / NOT_AN_XFER1_ACTIVATION`.
-Ревизия: `ECO-R77-2026-08-22`.
+Ревизия: `ECO-R78-2026-08-22`.
 Связанные документы: `docs/plans/ECO_XFER0_RESEARCH_SIMULATOR_CONTRACT_RU.md`, `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
 ## 0. Что этот документ НЕ делает

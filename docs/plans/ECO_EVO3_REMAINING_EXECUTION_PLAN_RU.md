@@ -1,14 +1,14 @@
 # ECO EVO3 — План выполнения оставшихся пунктов ветки
 
 Статус: `RESEARCH_EXECUTION_PLAN / RESEARCH_ONLY / NO_PRODUCTION_AUTHORITY`.
-Ревизия трекера: `ECO-R77-2026-08-22`. Базовый HEAD: `0abae91237ec05cf974a793fae7097ea40ac35ca`.
+Ревизия трекера: `ECO-R78-2026-08-22`. Базовый HEAD: `5fc9895`.
 Живой источник состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
 ## Карта остатка маршрута
 
 ```text
 Этап 0  E3.8  Cross-Planet Generalization Matrix      IN_PROGRESS (PR #188)
-Этап 1  ECO-R77 поправки: review → внедрение          READY (этот коммит)
+Этап 1  ECO-R78 поправки: review → внедрение          READY (этот коммит)
 Этап 2  E3.FINAL Planetary Ecology Compiler Challenge BLOCKED (после E3.8)
 Этап 3  E3.6-R Multi-Snapshot Temporal Envelopes      CONDITIONAL (owner evidence)
 Этап 4  XFER1 readiness                                PARALLEL_RESEARCH_ONLY
@@ -34,7 +34,7 @@
 
 **Критерий выхода:** `ECO.EVO3/E3.8 = ACCEPTED`, все 6 семейств сохранены вместе с null/reversal/no-colonization исходами, retuning отсутствует (diff защищённых модулей пуст).
 
-## Этап 1 — Поправки ECO-R77 (этот коммит → внедрение)
+## Этап 1 — Поправки ECO-R78 (этот коммит → внедрение)
 
 **Уже сделано:** трекер R77 (гейты A1–A3, политики A4/A5/A6/A7/A8), документ поправок, агрегирующий раннер + workflow (dispatch-only), линт привязки run id, XFER1 pre-design, фикс загрузки тестов архитектурного раннера.
 
