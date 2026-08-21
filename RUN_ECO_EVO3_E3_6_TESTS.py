@@ -23,10 +23,16 @@ SCHEMA = ROOT / "config/ecology/eco-evo3-e3-6-temporal-disturbance-program.schem
 IMPL = ROOT / "scripts/research/ecology/temporal_disturbance_program_compiler_v1.py"
 SEMANTIC_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_6_temporal_disturbance_program.py"
 AUTHORITY_TEST = ROOT / "tests/research/ecology/test_eco_evo3_e3_6_authority.py"
+COMMITTED_ARTIFACT = ROOT / "validation/ecology/eco-evo3-e3-6-temporal-disturbance-program.generated.json"
 FINAL_ARTIFACT = ROOT / "e3_6_candidate_temporal_program.json"
 EXPECTED_TESTS = 23
 EXPECTED_ACTIVE_BASIS = 22
 EXPECTED_ACTIVE_SPATIAL_KEYS = 11
+EXPECTED_ARTIFACT_BYTES = 18865
+EXPECTED_ARTIFACT_SHA256 = "0dbeea7185e7667259af3846486b9e4a3350fac4f2e731ad0dc4a0e59e48c9cf"
+EXPECTED_ARTIFACT_GIT_BLOB = "fc083dfddbe4142f13ab2a1649cb85c52ea0c652"
+EXPECTED_PROVENANCE_HASH = "da934ab4ef4eae43c3622806cf6a731dbf4998c85e2721139e80af43ff5a7530"
+EXPECTED_TEMPORAL_PROGRAM_HASH = "a2fcb297872c8d7706b854a2cb01bdd25744296f3f94921ab7613c0de8e46908"
 
 
 def load_module(path: pathlib.Path, name: str):
@@ -106,6 +112,11 @@ def main() -> int:
     final_bytes = mod.serialize_temporal_program(program)
     FINAL_ARTIFACT.write_bytes(final_bytes)
 
+    committed_bytes = COMMITTED_ARTIFACT.read_bytes()
+    committed_json = json.loads(committed_bytes.decode("utf-8"))
+    validate_schema(committed_json)
+    mod.validate_output_structure(committed_json)
+
     predicates: list[tuple[str, bool]] = []
     add = predicates.append
     add(("EXACT_ACCEPTED_E3_5_RAW_INPUT_BOUNDARY", mod.git_blob_hex(WORKSET.read_bytes()) == mod.E3_5_GIT_BLOB and mod.sha256_hex(WORKSET.read_bytes()) == mod.EXPECTED_E3_5_SHA256))
@@ -132,6 +143,15 @@ def main() -> int:
         a = run_fresh_process(pathlib.Path(td) / "a.json")
         b = run_fresh_process(pathlib.Path(td) / "b.json")
     add(("FRESH_PROCESS_BYTE_DETERMINISM", a == b == final_bytes))
+    add((
+        "COMMITTED_GENERATED_BYTES_IDENTICAL",
+        committed_bytes == final_bytes
+        and len(committed_bytes) == EXPECTED_ARTIFACT_BYTES
+        and sha256_hex(committed_bytes) == EXPECTED_ARTIFACT_SHA256
+        and git_blob_hex(committed_bytes) == EXPECTED_ARTIFACT_GIT_BLOB
+        and committed_json["provenance_hash"] == EXPECTED_PROVENANCE_HASH
+        and committed_json["temporal_program_hash"] == EXPECTED_TEMPORAL_PROGRAM_HASH,
+    ))
 
     failed = [name for name, ok in predicates if not ok]
     for name, ok in predicates:
@@ -145,6 +165,7 @@ def main() -> int:
     print("schema=PASS")
     print("fresh_process_builds=2/2")
     print("fresh_process_bytes_identical=true")
+    print("committed_generated_bytes_identical=true")
     print(f"active_basis={program['summary']['active_basis_count']}")
     print(f"active_spatial_keys={program['summary']['active_spatial_key_count']}")
     print(f"temporal_envelopes={program['summary']['temporal_envelope_count']}")
