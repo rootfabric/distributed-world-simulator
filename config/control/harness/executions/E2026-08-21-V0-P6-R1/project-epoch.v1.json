@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-08-21-V0-P6-R1",
+  "base_sha": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+  "registry_generation": 80,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-08-21T05:50:00Z",
+  "eligible_checkpoints": [
+    "V0_P6_PERSISTENT_SHARED_OUTPOST"
+  ],
+  "status": "ACTIVE",
+  "decision": "CONTINUE"
+}
