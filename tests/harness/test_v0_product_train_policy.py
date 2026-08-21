@@ -36,10 +36,14 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         cls.scheduler = _load(HARNESS / "scheduler-policy.v1.json")
         cls.goals = _load(HARNESS / "project-goals.v1.json")
         cls.catalog = _load(HARNESS / "checkpoint-catalog.v1.json")
-        cls.acceptance = _load(HARNESS / "acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json")
-        cls.activation = _load(HARNESS / "activation/V0-P5-R1-ACTIVATION-001.v1.json")
-        cls.epoch = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/project-epoch.v1.json")
-        cls.work_order = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json")
+        cls.p4_acceptance = _load(HARNESS / "acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json")
+        cls.p5_acceptance = _load(HARNESS / "acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json")
+        cls.p5_activation = _load(HARNESS / "activation/V0-P5-R1-ACTIVATION-001.v1.json")
+        cls.p5_epoch = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/project-epoch.v1.json")
+        cls.p5_work_order = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json")
+        cls.p6_activation = _load(HARNESS / "activation/V0-P6-R1-ACTIVATION-001.v1.json")
+        cls.p6_epoch = _load(HARNESS / "executions/E2026-08-21-V0-P6-R1/project-epoch.v1.json")
+        cls.p6_work_order = _load(HARNESS / "executions/E2026-08-21-V0-P6-R1/work-orders/V0-P6-R1-WO-001.v1.json")
         cls.contracts = {
             "checkpoint_catalog": cls.catalog,
             "scheduler_policy": cls.scheduler,
@@ -55,55 +59,88 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p4_is_formally_accepted_and_exact(self) -> None:
         expected = "2a6721cdf02fa1134c59d1ab98bb7b597c66821d"
-        self.assertEqual(self.acceptance["decision"], "V0_P4_CHECKPOINT_ACCEPTED")
-        self.assertEqual(self.acceptance["status"], "ACCEPTED")
-        self.assertEqual(self.acceptance["accepted_product_lineage_head"], expected)
+        self.assertEqual(self.p4_acceptance["decision"], "V0_P4_CHECKPOINT_ACCEPTED")
+        self.assertEqual(self.p4_acceptance["status"], "ACCEPTED")
+        self.assertEqual(self.p4_acceptance["accepted_product_lineage_head"], expected)
         p4 = self.policy["checkpoint_sequence"][0]
         self.assertEqual(p4["state"], "ACCEPTED")
         self.assertEqual(p4["accepted_runtime_head"], expected)
 
-    def test_p5_is_current_pre_dispatch_checkpoint(self) -> None:
-        self.assertEqual(self.policy["current_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
-        self.assertEqual(self.policy["current_phase"], "P5_PRE_DISPATCH_CONTROL_READY")
-        p5 = self.policy["checkpoint_sequence"][1]
-        self.assertEqual(p5["state"], "CURRENT_PRE_DISPATCH")
-        self.assertEqual(p5["activation_complete_except"], ["DIRECTOR_DISPATCH"])
-        routing = self.scheduler["v0_product_train_routing"]
-        self.assertEqual(routing["current_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
-        self.assertEqual(routing["current_phase"], "PRE_DISPATCH_CONTROL_READY")
-        self.assertFalse(routing["runtime_mutation_allowed_now"])
-        self.assertEqual(routing["p5_remaining_activation_prerequisites"], ["DIRECTOR_DISPATCH"])
-
-    def test_p5_base_epoch_and_work_order_are_exact(self) -> None:
-        expected = "2a6721cdf02fa1134c59d1ab98bb7b597c66821d"
-        self.assertEqual(self.activation["main_declared_exact_successor_base"], expected)
-        self.assertEqual(self.epoch["base_sha"], expected)
-        self.assertEqual(self.epoch["eligible_checkpoints"], ["V0_P5_EQUIPMENT_TOOLS"])
-        self.assertEqual(self.epoch["status"], "ACTIVE")
-        self.assertEqual(self.work_order["goal_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
-        self.assertEqual(self.work_order["base_sha"], expected)
-        self.assertEqual(self.work_order["branch"], "feature/v0-p5-equipment-tools")
-        event_dir = HARNESS / "executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001"
-        self.assertEqual(self.work_order["state"], _latest_work_state(event_dir))
-        self.assertEqual(self.work_order["risk_class"], "HIGH")
+    def test_p5_is_formally_accepted_and_declares_exact_p6_base(self) -> None:
+        accepted_runtime = "5434558856c00b588eed5369d2c613cd4b9858bb"
+        accepted_lineage = "491ca7d058690d3de5fcea5e41aaee230a31b3ab"
+        self.assertEqual(self.p5_acceptance["decision"], "V0_P5_CHECKPOINT_ACCEPTED")
+        self.assertEqual(self.p5_acceptance["status"], "ACCEPTED")
+        self.assertEqual(self.p5_acceptance["accepted_runtime_head"], accepted_runtime)
+        self.assertEqual(self.p5_acceptance["accepted_product_lineage_head"], accepted_lineage)
         self.assertEqual(
-            self.catalog["checkpoints"]["V0_P5_EQUIPMENT_TOOLS"]["required_predicates"],
-            self.work_order["required_predicates"],
+            self.p5_acceptance["successor"]["main_declared_exact_successor_base"],
+            accepted_lineage,
         )
+        p5 = self.policy["checkpoint_sequence"][1]
+        self.assertEqual(p5["state"], "ACCEPTED")
+        self.assertEqual(p5["accepted_runtime_head"], accepted_runtime)
+        self.assertEqual(p5["accepted_product_lineage_head"], accepted_lineage)
 
-    def test_single_mutation_lease_is_rotated_but_inactive_before_dispatch(self) -> None:
+    def test_p6_is_current_preactivation_checkpoint_without_runtime_authority(self) -> None:
+        self.assertEqual(self.policy["current_checkpoint"], "V0_P6_PERSISTENT_SHARED_OUTPOST")
+        self.assertEqual(self.policy["current_phase"], "P6_PREACTIVATION_CONTROL_READY")
+        p6 = self.policy["checkpoint_sequence"][2]
+        self.assertEqual(p6["state"], "CURRENT_PREACTIVATION")
+        self.assertEqual(p6["execution_base"], "491ca7d058690d3de5fcea5e41aaee230a31b3ab")
+        self.assertEqual(p6["project_epoch"], "E2026-08-21-V0-P6-R1")
+        self.assertEqual(p6["work_order_id"], "V0-P6-R1-WO-001")
+        self.assertIn("V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P6", p6["activation_requires"])
+        self.assertIn("DIRECTOR_DISPATCH", p6["activation_requires"])
+        self.assertIn("MAIN_OWNED_MUTATION_LEASE_ROTATION_TO_P6", p6["activation_pending"])
+        self.assertIn("DIRECTOR_DISPATCH", p6["activation_pending"])
+        self.assertFalse(self.p6_activation["mutation_lease"]["runtime_mutation_authorized"])
+        self.assertFalse(self.p6_activation["director_dispatch"]["runtime_mutation_authorized"])
+
+    def test_p6_base_epoch_and_work_order_are_exact(self) -> None:
+        expected = "491ca7d058690d3de5fcea5e41aaee230a31b3ab"
+        self.assertEqual(self.p6_activation["main_declared_exact_successor_base"], expected)
+        self.assertEqual(self.p6_epoch["base_sha"], expected)
+        self.assertEqual(self.p6_epoch["eligible_checkpoints"], ["V0_P6_PERSISTENT_SHARED_OUTPOST"])
+        self.assertEqual(self.p6_epoch["status"], "ACTIVE")
+        self.assertEqual(self.p6_work_order["goal_checkpoint"], "V0_P6_PERSISTENT_SHARED_OUTPOST")
+        self.assertEqual(self.p6_work_order["base_sha"], expected)
+        self.assertEqual(self.p6_work_order["branch"], "feature/v0-p6-persistent-shared-outpost")
+        event_dir = HARNESS / "executions/E2026-08-21-V0-P6-R1/events/V0-P6-R1-WO-001"
+        self.assertEqual(self.p6_work_order["state"], _latest_work_state(event_dir))
+        self.assertEqual(self.p6_work_order["risk_class"], "HIGH")
+        self.assertIn("V0_P6_VISUAL_MANUAL_GATES_PASS", self.p6_work_order["required_predicates"])
+        self.assertIn("V0_P6_WARM_SHADOW_READ_ONLY_COMPATIBILITY_PASS", self.p6_work_order["required_predicates"])
+        self.assertIn("V0_P6_NO_PRIVATE_NETWORK_FOUNDATION_PASS", self.p6_work_order["required_predicates"])
+
+    def test_p6_preactivation_does_not_self_rotate_live_mutation_lease(self) -> None:
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(lease["capacity"], 1)
         self.assertEqual(lease["holder_program"], "V0")
+        # P6 preactivation deliberately does not mutate scheduler ownership. The
+        # live lease remains on the accepted P5 lane until a separate main-owned
+        # lease-rotation candidate updates scheduler/catalog/planner together.
         self.assertEqual(lease["holder_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
         self.assertEqual(lease["holder_branch"], "feature/v0-p5-equipment-tools")
         self.assertEqual(lease["state"], "RESERVED_FOR_V0_P5_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION")
         self.assertTrue(lease["successor_rotation_requires_predecessor_checkpoint_acceptance"])
-        self.assertEqual(self.activation["mutation_lease"]["rotation_status"], "ROTATED_RESERVED_PRE_DISPATCH")
-        self.assertEqual(self.policy["current_p5_activation_route"]["mutation_lease"], "ROTATED_RESERVED_PRE_DISPATCH")
-        self.assertEqual(self.policy["current_p5_activation_route"]["runtime_mutation"], "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH")
+        self.assertEqual(self.p6_activation["mutation_lease"]["rotation_status"], "PENDING_MAIN_OWNED_ROTATION")
+        self.assertFalse(self.p6_activation["mutation_lease"]["runtime_mutation_authorized"])
+        self.assertEqual(self.policy["current_p6_activation_route"]["mutation_lease"], "PENDING_MAIN_OWNED_ROTATION")
+        self.assertEqual(
+            self.policy["current_p6_activation_route"]["runtime_mutation"],
+            "FORBIDDEN_UNTIL_LEASE_ROTATION_AND_DIRECTOR_DISPATCH",
+        )
 
-    def test_p5_planner_waits_for_director_then_grants_exactly_one_worker(self) -> None:
+    def test_historical_p5_lease_and_planner_remain_unchanged_until_p6_rotation(self) -> None:
+        self.assertEqual(self.p5_activation["mutation_lease"]["rotation_status"], "ROTATED_RESERVED_PRE_DISPATCH")
+        self.assertEqual(self.p5_epoch["base_sha"], "2a6721cdf02fa1134c59d1ab98bb7b597c66821d")
+        self.assertEqual(self.p5_work_order["goal_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
+        self.assertEqual(
+            self.catalog["checkpoints"]["V0_P5_EQUIPMENT_TOOLS"]["required_predicates"],
+            self.p5_work_order["required_predicates"],
+        )
+
         work_order = {
             "goal_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
             "branch": "feature/v0-p5-equipment-tools",
@@ -118,34 +155,23 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(plan["autonomous_runtime_workers"], 0)
         self.assertEqual(plan["next_action"], "DIRECTOR_DISPATCH_ACCEPTED_P4_BASE_V0_P5_WORK_ORDER")
         self.assertEqual(plan["v0_p5_gate"]["runtime_mutation"], "FORBIDDEN_UNTIL_DISPATCH")
-        self.assertEqual(
-            plan["v0_p5_gate"]["accepted_predecessor_base"],
-            "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
-        )
 
-        dispatched = dict(planned)
-        dispatched["state"] = "DISPATCHED"
-        plan = build_plan(self.contracts, work_order, dispatched)
-        self.assertEqual(plan["mode"], "SINGLE_HIGH_RISK_PRODUCT_SLICE")
-        self.assertEqual(plan["autonomous_runtime_workers"], 1)
-        self.assertEqual(plan["next_action"], "BEGIN_V0_P5_EQUIPMENT_TOOLS")
-        self.assertEqual(plan["v0_p5_gate"]["runtime_mutation"], "AUTHORIZED_BY_DISPATCH")
-        self.assertEqual(plan["v0_p5_gate"]["global_mutation_lease_holder_checkpoint"], "V0_P5_EQUIPMENT_TOOLS")
-
-    def test_future_product_checkpoints_remain_ineligible(self) -> None:
+    def test_p6_is_preactivated_while_sm1_p7_p8_remain_ineligible(self) -> None:
+        # Scheduler still represents the pre-rotation lease owner. P6 becoming
+        # the main-owned preactivation pointer does not make it schedulable yet.
         self.assertEqual(self.scheduler["parallel_product_checkpoints"]["checkpoints"], ["V0_P5_EQUIPMENT_TOOLS"])
-        self.assertEqual(
-            set(self.scheduler["parallel_product_checkpoints"]["future_checkpoints_not_yet_eligible"]),
-            {
-                "V0_P6_PERSISTENT_SHARED_OUTPOST",
-                "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-                "V0_P7_BOUNDED_TERRAIN_MUTATION",
-                "V0_P8_FIRST_MOBILE_CONSTRUCT",
-            },
+        self.assertIn(
+            "V0_P6_PERSISTENT_SHARED_OUTPOST",
+            self.scheduler["parallel_product_checkpoints"]["future_checkpoints_not_yet_eligible"],
         )
         p6 = self.policy["checkpoint_sequence"][2]
-        self.assertEqual(p6["state"], "PLANNED_NOT_ELIGIBLE")
-        self.assertIn("V0_P5_CHECKPOINT_ACCEPTED", p6["activation_requires"])
+        self.assertEqual(p6["state"], "CURRENT_PREACTIVATION")
+        self.assertEqual(p6["activation_pending"][0], "FRESH_EXACT_PREACTIVATION_PROJECT_CONTROL_NON_RED")
+
+        by_id = {item["id"]: item for item in self.policy["checkpoint_sequence"]}
+        self.assertEqual(by_id["V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"]["state"], "FUTURE_CONTROL_ACTIVATION")
+        self.assertEqual(by_id["V0_P7_BOUNDED_TERRAIN_MUTATION"]["state"], "FUTURE")
+        self.assertEqual(by_id["V0_P8_FIRST_MOBILE_CONSTRUCT"]["state"], "FUTURE")
 
     def test_product_sequence_and_research_isolation_remain_unchanged(self) -> None:
         ids = [item["id"] for item in self.policy["checkpoint_sequence"]]
@@ -163,6 +189,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         )
         self.assertEqual(len(ids), len(set(ids)))
         self.assertIn("ECO", self.policy["research_isolation"]["explicitly_non_blocking_programs_for_current_p_train"])
+        self.assertTrue(self.policy["research_isolation"]["seamless_research_parallel_train"])
+        self.assertFalse(self.policy["research_isolation"]["seamless_research_production_base"])
         self.assertTrue(self.scheduler["research_isolation"]["non_blocking_by_default"])
 
     def test_project_goal_graph_still_exposes_product_order(self) -> None:
