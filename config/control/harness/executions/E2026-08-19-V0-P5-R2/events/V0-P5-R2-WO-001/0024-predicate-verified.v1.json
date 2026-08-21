@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0024",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 24,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T02:34:17Z",
+  "actor": "VERIFIER",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "INDEPENDENT_REVIEWER_PASS is durably established from exact existing evidence and the post-integration campaign.",
+  "predicate": "INDEPENDENT_REVIEWER_PASS",
+  "command": "MATERIALIZE_INDEPENDENT_REVIEWER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-001-FINAL-CLOSURE-REVIEW-TRANSCRIPTION-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-002-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-REVIEW-REPAIR-R1-001.v1.json"
+  ],
+  "exit_code": 0
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_post_integration_runtime.v1",
+  "evidence_id": "P5-R2-POST-INTEGRATION-RUNTIME-001",
+  "product_head": "5dcdddc2a92afcb42f16fafd38bd93bbe267d755",
+  "runtime_identity_head": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "runtime_diff_from_verified_subject": {
+    "status": "CONTROL_ONLY",
+    "changed_files": [
+      "config/control/harness/executions/E2026-08-19-V0-P5-R2/events/V0-P5-R2-WO-002/0004-verification-started.v1.json",
+      "config/control/harness/executions/E2026-08-19-V0-P5-R2/events/V0-P5-R2-WO-002/0005-status-verified.v1.json",
+      "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-002-FINAL-REVIEW-001.v1.json",
+      "config/control/harness/executions/E2026-08-19-V0-P5-R2/verification/V0-P5-R2-WO-002-VERIFIER-001.v1.json"
+    ],
+    "runtime_test_changes": 0
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "campaign": {
+    "id": "P5_POST_INTEGRATION_5DCDDDC_R1",
+    "expected_launch_count": 1,
+    "actual_launch_count": 1,
+    "manifest_count": 239,
+    "manifest_sha256": "3e1ce975f33d9811821db3e7018afe4fd1c4bc0d61418cb4a334151eb7679fef",
+    "started_at": "2026-08-21T02:13:56Z",
+    "finished_at": "2026-08-21T02:32:57Z"
+  },
+  "result": {
+    "continuous": "239/239 PASS",
+    "first_failure": null,
+    "ordinal_44_m5": "99 assertions / 0 failures; RC=0",
+    "ordinal_50_m7": "36 assertions / 0 failures; RC=0",
+    "overlays_232_236": "PASS RC=0",
+    "main_scene_cli_all": "PASS RC=0",
+    "terminal_marker": "FULL_WORLD_CORE_REGRESSION_PASS",
+    "final_rc": 0
+  },
+  "raw_sha256": {
+    "campaign.txt": "59689b4764f88ee7c7dcd40d840621f901962466665479a5c4bbdfe84b5d91bc",
+    "orchestration.log": "d72afd7abb12cfa422953ef06d93821ad9985d12fa23b74adc97159db5c4b5f2",
+    "status.tsv": "7373171bc896d7f9f894f30bb0f5dd17abbe05cde16d4280084b2e62125a0242",
+    "main_scene_cli_all.console": "2eec6b1cfa8dd346276c80117d27d1728e61093a2c07f3dcd7fe17853e42587a",
+    "terminal.txt": "598499b2252582ca1fc6e9fe1d9d4fdf76ff7bd541c33a619d9b5ad6abe32322",
+    "final.rc": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "logs/044.console": "403eaca4143ed9d005d79132904a9e218f631b55f03661611e8fe77017bd568a",
+    "logs/050.console": "df6c583321b1551d85b97ca5425746c67293f7c5356f24405bc3c9e5a301ca09"
+  }
+}

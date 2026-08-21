@@ -1,0 +1,8 @@
+campaign=P5_POST_INTEGRATION_5DCDDDC_R1
+product_head=5dcdddc2a92afcb42f16fafd38bd93bbe267d755
+runtime_identity_head=5434558856c00b588eed5369d2c613cd4b9858bb
+expected_launch_count=1
+actual_launch_count=1
+manifest_count=239
+manifest_sha256=3e1ce975f33d9811821db3e7018afe4fd1c4bc0d61418cb4a334151eb7679fef
+started_at=2026-08-21T02:13:56Z
