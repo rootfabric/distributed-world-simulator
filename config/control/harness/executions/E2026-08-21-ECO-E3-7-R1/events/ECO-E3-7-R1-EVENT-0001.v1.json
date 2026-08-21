@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "ECO-E3-7-R1-EVENT-0001",
+  "project_epoch": "E2026-08-21-ECO-E3-7-R1",
+  "work_order_id": "ECO-E3-7-R1-WO-001",
+  "sequence": 1,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-21T10:48:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/eco-evo3-e3-7-deterministic-planet-compilation",
+  "head_sha": "c9f0b0becb3d2494097d946202788b9d1aa292f4",
+  "details": {
+    "checkpoint": "ECO.EVO3/E3.7",
+    "risk_class": "HIGH",
+    "base_head": "c9f0b0becb3d2494097d946202788b9d1aa292f4",
+    "scope": "Deterministic PlanetEcologyProgram compilation from exact accepted E3.1-E3.6 chain and persisted EVO2 catalog identity"
+  }
+}
