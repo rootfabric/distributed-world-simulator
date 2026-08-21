@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo3_e3_6_temporal_disturbance_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO-EVO3-E3.6-CONTRACT-2026-08-21-R1",
+  "checkpoint": "ECO.EVO3/E3.6",
+  "compiler_stage": "TEMPORAL_PROGRAM",
+  "authority": "RESEARCH_DERIVED_NON_AUTHORITATIVE",
+  "canonical_binding_resolved": false,
+  "production_binding_authorized": false,
+  "accepted_e3_5": {
+    "accepted_control_head": "bb1e62532a51841a29b5dd680d0f0f435cfc003d",
+    "canonical_merge_commit": "cf6374e30e309988f04dfd5d127cca70f10de871",
+    "artifact_path": "validation/ecology/eco-evo3-e3-5-population-workset.generated.json",
+    "artifact_git_blob": "d54ce8dad2760312d414c62c88d5f4f71427514f",
+    "artifact_sha256": "0ea5351b7692564161804a3aea5fe5044f3321ded3dcb4d0c7343e93d52c4975",
+    "population_workset_hash": "b8f30e129c0f714ebc937cdac6869e63223d8d72172cecb68dd049f604557ff5",
+    "provenance_hash": "ec9c734882ef4a97eec2ed071f3c06ec2a29df52f13a45c7054a4641cbd42738",
+    "acceptance_checkpoint": "docs/checkpoints/2026-08-21_ECO_EVO3_E3_5_ACCEPTED_E3_6_AUTHORIZED_RU.md"
+  },
+  "tf_env_context": {
+    "role": "IMMUTABLE_UPSTREAM_CONTEXT_NOT_ECOLOGY_PREDECESSOR",
+    "artifact_path": "config/ecology/accepted_inputs/e3_1_accepted_planet_field_snapshot.v1.json",
+    "artifact_git_blob": "0d5f8b6b66b56195770af94ed2d847b5c84751c5",
+    "artifact_sha256": "5123ebd58e6eade5d3dab2325af49a43234bc8834182ddd7db7d6c463896b790",
+    "snapshot_hash": "2ceb042d905b06ae76acc699b60ed6c115d3e0ac7943ce7cbe0c94f962447b00",
+    "field_provenance_hash": "3827c1da7d94227fb04b5fbfbd93fd5262c826cd86503af9f540a120431a82c3",
+    "stable_planet_identity": "eco-evo3-fixture/planet-alpha-01",
+    "stable_time_key": "tf-fixture/planet-alpha/t000180",
+    "tf_semantic_reference": "tf-fixture/planet-alpha/time-r1",
+    "env_semantic_reference": "env-fixture/planet-alpha/environment-r1"
+  },
+  "input_policy": {
+    "sole_ecology_predecessor": "EXACT_ACCEPTED_E3_5_POPULATION_WORKSET",
+    "tf_env_context_is_authoritative_ecology_predecessor": false,
+    "raw_bytes_required": true,
+    "git_blob_required": true,
+    "artifact_sha256_required": true,
+    "semantic_hash_recompute_required": true,
+    "candidate_alias_authority_forbidden": true,
+    "plain_parsed_dict_authority_forbidden": true,
+    "earlier_stage_scientific_reconstruction_forbidden": true
+  },
+  "temporal_semantics": {
+    "mode": "SNAPSHOT_ANCHORED_ENVELOPES",
+    "active_spatial_scope": "ONLY_STABLE_SPATIAL_KEYS_PRESENT_IN_ACCEPTED_E3_5_ACTIVE_BASIS",
+    "stable_time_key_semantics": "OPAQUE_OWNER_TIME_IDENTITY_NOT_NUMERIC_TIME",
+    "refresh_policy": "RECOMPILE_FROM_NEW_EXACT_OWNER_SNAPSHOT",
+    "history_write_allowed": false,
+    "future_forecast_allowed": false,
+    "canonical_time_ownership": false,
+    "canonical_environment_ownership": false
+  },
+  "single_snapshot_policy": {
+    "condition": "ONLY_ONE_ACCEPTED_OWNER_TIME_SNAPSHOT_AVAILABLE",
+    "seasonality_state": "UNRESOLVED_SINGLE_SNAPSHOT",
+    "envelope_rule": "MIN_EQUALS_ANCHOR_EQUALS_MAX_FOR_EACH_OBSERVED_FIELD",
+    "invented_cycle_forbidden": true,
+    "latitude_derived_cycle_forbidden": true,
+    "opaque_time_key_numeric_interpretation_forbidden": true,
+    "non_degenerate_seasonality_requires": "NEW_EXACT_OWNER_SNAPSHOT_EVIDENCE"
+  },
+  "observed_fields": [
+    "temperature_milli_c",
+    "soil_moisture_ppm",
+    "light_availability_ppm",
+    "nutrient_availability_ppm",
+    "disturbance_pressure_ppm"
+  ],
+  "empty_semantics": {
+    "accepted_e3_5_result": "NO_ACTIVE_POPULATION_WORK",
+    "temporal_result": "NO_ACTIVE_POPULATION_TEMPORAL_WORK",
+    "envelope_count": 0,
+    "invent_temporal_work_forbidden": true
+  },
+  "authority_barriers": [
+    "NO_CANONICAL_TF_OWNERSHIP",
+    "NO_CANONICAL_ENV_OWNERSHIP",
+    "NO_CANONICAL_HISTORY_REWRITE",
+    "NO_FUTURE_FORECAST_AUTHORITY",
+    "NO_PRODUCTION_PERSISTENCE",
+    "NO_NETWORK_AUTHORITY_ASSIGNMENT",
+    "NO_WORLD_TRANSACTION_AUTHORITY",
+    "NO_XFER1_OR_PRODUCTION_BINDING",
+    "NO_E3_7_PLANET_COMPILATION_AUTHORITY"
+  ],
+  "output_hash_algorithm": "SHA256_CANONICAL_JSON_SORTED_KEYS_V1",
+  "contract_hash": "77077514b9cb72874a26df810bcf9bb761fe0479bce63db432ea8aeba02adc69"
+}
