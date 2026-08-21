@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-21-R3",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R2",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -85,21 +85,6 @@
       "MUTATION_LEASE_ROTATED_TO_P6",
       "DIRECTOR_DISPATCH"
     ],
-    "post_p5_acceptance_reconciliation": {
-      "status": "V0_P5_CHECKPOINT_ACCEPTED",
-      "acceptance_record": "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json",
-      "accepted_runtime_head": "5434558856c00b588eed5369d2c613cd4b9858bb",
-      "accepted_product_lineage_head": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
-      "canonical_main_at_acceptance": "19c1268599b52cbc1099d6009eabd3099e20b64a",
-      "accepted_at_utc": "2026-08-21T02:58:00Z",
-      "work_map_current_campaign": "PRE_P6_EDGE_GATEWAY_FOUNDATION",
-      "supersedes_pre_dispatch_fields_note": "This block declares post-acceptance truth. The legacy pre-dispatch fields above (current_phase, p5_remaining_activation_prerequisites, accepted_predecessor_checkpoint/base) and the pre-dispatch lease state string are pinned by tests/harness and are refreshed only by a coordinated main-owned control update together with their pins; they must be read as historical pre-dispatch declarations until that refresh.",
-      "reconciliation_control_update_candidate": "control/p0-machine-state-reconciliation"
-    },
-    "next_runtime_checkpoint_blocked_by": [
-      "EDGE_GATEWAY_FOUNDATION_ACCEPTED"
-    ],
-    "next_runtime_checkpoint_activation_ordering": "After EDGE_GATEWAY_FOUNDATION_ACCEPTED, run REFRESH_P6_PREACTIVATION before P6 activation per v0-current-work-map.v1.json sequencing (accepted_predecessor V0_P5_EQUIPMENT_TOOLS, lineage 491ca7d058690d3de5fcea5e41aaee230a31b3ab); no EDGE_GATEWAY entries exist in checkpoint-catalog or project-goals and none may be invented.",
     "post_p6_rule": "P7 is not auto-dispatched. Execute V0_POST_P6_SEAMLESS_INSERTION_GATE and record ACTIVATE_V0_SM1 or an explicit human DEFER decision first."
   },
   "research_isolation": {
@@ -130,13 +115,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "implementation_complete_release_record": {
-      "worker_released": true,
-      "basis": "implementation_complete_releases_worker=true: the single pre-H0.3 V0 runtime mutation worker completed P5; implementation is frozen at accepted_runtime_head 5434558856c00b588eed5369d2c613cd4b9858bb over product lineage 491ca7d058690d3de5fcea5e41aaee230a31b3ab and V0_P5_EQUIPMENT_TOOLS is formally ACCEPTED by main-owned record config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json.",
-      "effective_upon": "CANONICALIZATION_OF_THIS_MAIN_OWNED_CONTROL_UPDATE (per release_requires_main_owned_control_update=true); the legacy state string above remains a pinned historical pre-dispatch declaration until a coordinated pin refresh lands on main",
-      "no_new_runtime_mutation_authorized_by_this_record": true
-    },
-    "reason": "P4 is formally accepted on main and the exact P5 successor base is 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. The single pre-H0.3 V0 runtime mutation lease is rotated to P5 but remains inactive until a committed Director DISPATCHED event for the fresh P5 Work Order. [Reconciliation 2026-08-21: P5 was dispatched, executed, and formally accepted after this reason was written; see implementation_complete_release_record and v0_product_train_routing.post_p5_acceptance_reconciliation. Historical text preserved verbatim.]"
+    "reason": "P4 is formally accepted on main and the exact P5 successor base is 2a6721cdf02fa1134c59d1ab98bb7b597c66821d. The single pre-H0.3 V0 runtime mutation lease is rotated to P5 but remains inactive until a committed Director DISPATCHED event for the fresh P5 Work Order."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
