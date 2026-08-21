@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b0_bridge_input.v1",
+  "version": "1.0.0",
+  "derived_representation": true,
+  "source_catalog_schema": "distributed_world_simulator.ecology.evo2_species_catalog.v1",
+  "source_catalog_hash": "5fcd8b90135cd8af69defc4f4a5ea26ede422ff82b25a0995bf5c6b10a53f219",
+  "bake_id": "eco-evo2-bake/ff406486cc83bb8217d66213",
+  "derivation_rule": "evo4-b0-derivation-v0",
+  "rule_note": "v0 honesty: developmental traits are deterministic derivations of metabolic genome fields; no independent genes, no ecology coupling, presentation only.",
+  "subjects": [
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "genome_checksum": "a4c391bd696aea19075f7b7ff42122401db65644b038d7983d89f18102e9eff6",
+      "individual_seed": 533520666319502244,
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta",
+        "max_height_m": 3.2,
+        "internode_length_m": 0.32000000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5142857142857142,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 2.24,
+        "checksum": "ecadca02a3db6eb740eb6ddf13b5c63bdb627358afcde573c990483f0d60eddd"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "genome_checksum": "ebed17aadaf721218d91af4c07bc1242700151fdad8d3f614b43e751de607383",
+      "individual_seed": 687614577541481247,
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late",
+        "max_height_m": 6.0,
+        "internode_length_m": 0.6000000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.18571428571428572,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.28,
+        "checksum": "1b536a0b20f4ea775f00e4fde6defdf61618ef57d81a852ee7565349257141c0"
+      }
+    }
+  ]
+}
