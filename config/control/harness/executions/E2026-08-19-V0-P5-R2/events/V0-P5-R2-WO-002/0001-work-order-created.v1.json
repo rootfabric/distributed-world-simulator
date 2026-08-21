@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-V002-0001",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-20T13:51:03Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p5-r2-v002-m7-recovery-r1",
+  "head_sha": "601ca87f36b96bae9d519693e5cac9dfc38abec9",
+  "predicate": "P5_R2_R1_V002_REPAIR_MAP_ESTABLISHED",
+  "command": "CREATE_BOUNDED_V002_REPAIR_WORK_ORDER_FROM_FROZEN_601CA87",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-V002-REPAIR-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/work-orders/V0-P5-R2-WO-002.v1.json"
+  ],
+  "summary": "Create a bounded control-first V002 repair continuation from frozen 601ca87. The repair map localizes the first causal failure to M7 seed pickup setup and forbids product-foundation mutation."
+}

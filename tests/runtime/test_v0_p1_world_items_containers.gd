@@ -213,7 +213,10 @@ func _test_join_materializes_seeded_inventory() -> void:
 	_assert(inventories.has("a"), "join materializes canonical player A inventory")
 	var inventory: Dictionary = Dictionary(inventories.get("a", {}))
 	var starter_ids: Array = Array(inventory.get("inventory", [])).duplicate()
-	_assert(starter_ids.size() == 3, "join materializes all canonical starter stacks")
+	_assert(
+		starter_ids.size() == 4,
+		"join materializes all canonical P1 starter stacks plus the P5 mining tool"
+	)
 	_assert(
 		int(_item_by_id(snapshot, "item/player/a/beacons").get("quantity", 0)) == 3,
 		"starter beacon stack is canonical"
@@ -225,6 +228,12 @@ func _test_join_materializes_seeded_inventory() -> void:
 	_assert(
 		int(_item_by_id(snapshot, "item/player/a/battery").get("quantity", 0)) == 1,
 		"starter battery is canonical"
+	)
+	var p5_tool := _item_by_id(snapshot, "item/player/a/p5-mining-tool")
+	_assert(
+		String(p5_tool.get("definition_id", "")) == "item/tool/mining"
+		and int(p5_tool.get("quantity", 0)) == 1,
+		"P5 join adds exactly one canonical mining tool without replacing P1 starter stacks"
 	)
 	var hotbar: Array = Array(inventory.get("hotbar", []))
 	_assert(

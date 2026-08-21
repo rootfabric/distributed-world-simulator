@@ -27,6 +27,22 @@ func setup(config: Dictionary) -> Dictionary:
 	return super.setup(config)
 
 
+func _accept_compact_snapshot(snapshot: Dictionary) -> void:
+	var updates_before := _compact_snapshot_updates
+	var clock_updates_before := _compact_snapshot_clock_updates
+	var rejections_before := _compact_snapshot_rejections
+	super._accept_compact_snapshot(snapshot)
+	var accepted_newer_snapshot := _compact_snapshot_updates > updates_before
+	var accepted_clock_update := _compact_snapshot_clock_updates > clock_updates_before
+	var rejected := _compact_snapshot_rejections > rejections_before
+	if (
+		not rejected
+		and (accepted_newer_snapshot or accepted_clock_update)
+		and _last_error_code == "MULTIPLAYER_SAME_REVISION_MUTATION"
+	):
+		_last_error_code = ""
+
+
 func _handle_message(payload: Dictionary) -> void:
 	var message_type := String(payload.get("type", ""))
 	match message_type:

@@ -152,7 +152,7 @@ func _spawn_server(executable: String, project_root: String, port: int, log_file
 	return _spawn(executable, ["--headless", "--path", project_root, "--log-file", log_file, "--", "--network-mvp", "--role=dedicated-server", "--world=earth", "--server-address=127.0.0.1", "--server-port=%d" % port, "--network-debug", "--network-debug-stay-open", "--shutdown-after-ms=180000"], user_root)
 
 func _spawn_client(executable: String, project_root: String, port: int, mode: String, result_file: String, control_file: String, extra: Dictionary, log_file: String, user_root: String) -> int:
-	var args: Array[String] = ["--headless", "--path", project_root, "--log-file", log_file, "--script", "res://tools/runtime/v0_p2_live_reconnect_client.gd", "--", "--host=127.0.0.1", "--port=%d" % port, "--mode=%s" % mode, "--result-file=%s" % result_file, "--control-file=%s" % control_file]
+	var args: Array[String] = ["--headless", "--path", project_root, "--log-file", log_file, "--script", "res://tools/runtime/v0_p2_live_reconnect_client_p5.gd", "--", "--host=127.0.0.1", "--port=%d" % port, "--mode=%s" % mode, "--result-file=%s" % result_file, "--control-file=%s" % control_file]
 	var keys := extra.keys(); keys.sort()
 	for key_value in keys: args.append("--%s=%s" % [String(key_value), String(extra[key_value])])
 	return _spawn(executable, args, user_root)

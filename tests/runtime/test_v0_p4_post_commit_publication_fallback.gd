@@ -10,6 +10,8 @@ const Grant = preload("res://scripts/construction/multiplayer/construction_multi
 const Replica = preload("res://scripts/construction/multiplayer/construction_multiplayer_replica.gd")
 const ItemDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const NODE := "resource/earth/ore-demo/1"
+const TOOL_DEFINITION := "item/tool/mining"
+const TOOL_SLOT := "tool/main"
 const A := "alpha"
 const B := "beta"
 var assertions := 0
@@ -114,10 +116,22 @@ func _fallback() -> void:
 
 func _fixture(suffix: String) -> Dictionary:
 	var service = Gameplay.new(); _ok(service.setup("authority/v0-p4/p4-5/%s"%suffix,1,0,{"profile":Gameplay.PROFILE_MULTIPLAYER_CORE,"topology_adapter":"ENET","region_id":"region/v0-p4/p4-5/%s"%suffix,"fixed_tick_authority":true}),"setup")
-	_ok(service.join(A,"transport-session/v0-p4/p4-5/%s/a"%suffix,"operation/v0-p4/p4-5/%s/join-a"%suffix),"join A"); _ok(service.join(B,"transport-session/v0-p4/p4-5/%s/b"%suffix,"operation/v0-p4/p4-5/%s/join-b"%suffix),"join B")
+	var session_a := "transport-session/v0-p4/p4-5/%s/a" % suffix
+	var join_a: Dictionary = service.join(A,session_a,"operation/v0-p4/p4-5/%s/join-a"%suffix); _ok(join_a,"join A")
+	_ok(service.join(B,"transport-session/v0-p4/p4-5/%s/b"%suffix,"operation/v0-p4/p4-5/%s/join-b"%suffix),"join B")
+	if not bool(join_a.get("success", false)): service.shutdown(); return {}
+	var ownership_epoch := int(join_a.get("details", {}).get("player", {}).get("ownership_epoch", 0))
 	var graph = service.get_canonical_item_graph_port(); var mining = service.get_resource_mining_port(); var resolver = Resolver.new(); _ok(resolver.setup(),"resolver")
+	var tool: Dictionary = graph.apply_server_output("operation/v0-p4/p4-5/%s/tool"%suffix,A,TOOL_DEFINITION,1,"source/v0-p4/p4-5/tool"); _ok(tool,"tool")
+	if not bool(tool.get("success", false)): service.shutdown(); return {}
+	var tool_id := String(tool.get("details", {}).get("output_item_id", ""))
+	var equip: Dictionary = service.handle_canonical_item_command(A,session_a,ownership_epoch,"operation/v0-p4/p4-5/%s/equip"%suffix,"item.equip",{"item_id":tool_id,"slot_id":TOOL_SLOT}); _ok(equip,"equip tool")
+	if not bool(equip.get("success", false)): service.shutdown(); return {}
 	var resolved: Dictionary = resolver.resolve_planar(mining.get_node(NODE).spatial); _ok(resolved,"resolve"); if not bool(resolved.get("success",false)): service.shutdown(); return {}
-	_ok(mining.mine(A,"operation/v0-p4/p4-5/%s/mine"%suffix,{"resource_node_id":NODE,"requested_units":2},resolved.details.planar_position),"mine")
+	var mined: Dictionary = mining.mine(A,"operation/v0-p4/p4-5/%s/mine"%suffix,{"resource_node_id":NODE,"requested_units":2},resolved.details.planar_position); _ok(mined,"mine")
+	if not bool(mined.get("success", false)): service.shutdown(); return {}
+	var unequip: Dictionary = service.handle_canonical_item_command(A,session_a,ownership_epoch,"operation/v0-p4/p4-5/%s/unequip"%suffix,"item.unequip",{"item_id":tool_id,"slot_id":TOOL_SLOT}); _ok(unequip,"unequip tool")
+	if not bool(unequip.get("success", false)): service.shutdown(); return {}
 	var auth: Dictionary = Authority.create_gateway(graph,"authority/v0-p4/p4-5/%s"%suffix,1,"user://v0-p4-p4-5/%s/%d-%d"%[suffix,OS.get_process_id(),Time.get_ticks_usec()]); _ok(auth,"authority"); if not bool(auth.get("success",false)): service.shutdown(); return {}
 	var bridge = Bridge.new(); _ok(bridge.setup(auth.details.gateway),"bridge"); var ca: Dictionary = bridge.connect_player(A,1); var cb: Dictionary = bridge.connect_player(B,1); _ok(ca,"connect A"); _ok(cb,"connect B")
 	var runtime = Server.new(); get_root().add_child(runtime); var wire := FakeBoundary.new(); runtime.set("_service",service); runtime.set("_construction_bridge",bridge); runtime.set("_boundary",wire); runtime.set("_peer_to_player",{"peer-a":A,"peer-b":B}); runtime.set("_peer_to_session",{"peer-a":"wire-a","peer-b":"wire-b"})
