@@ -48,7 +48,15 @@ static func walk_worlds(snapshot: Dictionary, home_world_id: String, max_depth: 
 	var graph_check: Dictionary = _validated_adjacency(snapshot)
 	if not bool(graph_check.get("success", false)):
 		return graph_check
-	var adjacency: Dictionary = graph_check["details"]["adjacency"]
+	# Defensive fail-closed extraction: a malformed internal result must yield
+	# an explicit error result, never a script-error crash on ["adjacency"].
+	var details_value: Variant = graph_check.get("details", {})
+	if typeof(details_value) != TYPE_DICTIONARY:
+		return _failure("INVALID_ADJACENCY_STATE", {})
+	var adjacency_value: Variant = details_value.get("adjacency", {})
+	if typeof(adjacency_value) != TYPE_DICTIONARY:
+		return _failure("INVALID_ADJACENCY_STATE", {})
+	var adjacency: Dictionary = adjacency_value
 	if not adjacency.has(home_world_id):
 		return _failure("UNKNOWN_HOME_WORLD", {"home_world_id": home_world_id})
 	var visited: Array[String] = [home_world_id]
