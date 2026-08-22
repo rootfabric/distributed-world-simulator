@@ -111,6 +111,11 @@ func register_client(gateway_session_id: String) -> Dictionary:
 	return _success({})
 
 
+## Release ONE client and EVERY per-client derived record: fan-in slots,
+## subscription seats, and latest-wins stream revisions (review R2-A: without
+## this cleanup, connect/disconnect churn leaks all three maps). Pairs whose
+## last seat disappeared become STALE — they retire through the bounded
+## maintenance cycles, never by unbounded silent deletion.
 func release_client(gateway_session_id: String) -> Dictionary:
 	if not _clients.has(gateway_session_id):
 		return _failure("UNKNOWN_CLIENT", {"gateway_session_id": gateway_session_id})
@@ -118,8 +123,29 @@ func release_client(gateway_session_id: String) -> Dictionary:
 		var pair: Dictionary = _key_by_pair[pair_key_value]
 		if String(pair["gateway_session_id"]) == gateway_session_id:
 			_release_slot(String(pair_key_value))
+	var pairs_now_stale := 0
+	for sub_key_value in _subscriptions.keys():
+		if _detach_session_from_subscription(String(sub_key_value), gateway_session_id):
+			pairs_now_stale += 1
+	var stream_prefix := "%s%s" % [gateway_session_id, String.chr(31)]
+	for stream_key_value in _last_source_revision_by_stream.keys():
+		if String(stream_key_value).begins_with(stream_prefix):
+			_last_source_revision_by_stream.erase(stream_key_value)
 	_clients.erase(gateway_session_id)
-	return _success({})
+	return _success({
+		"released": gateway_session_id,
+		"pairs_now_stale": pairs_now_stale,
+	})
+
+
+## Gateway-facing lifecycle hook (review R2-B): called by eg1_gateway_node
+## when the client session is dropped/detached so no projection state can
+## outlive its session. Idempotent: dropping an already-unknown session is a
+## successful no-op.
+func on_gateway_session_detached(gateway_session_id: String) -> Dictionary:
+	if not _clients.has(gateway_session_id):
+		return _success({"released": false, "reason": "UNKNOWN_CLIENT"})
+	return release_client(gateway_session_id)
 
 
 ## Register an upstream projection source within the BOUNDED set. When the cap
@@ -180,15 +206,35 @@ func unsubscribe_world(gateway_session_id: String, source_authority_id: String, 
 	var sub_key := "%s%s%s" % [source_authority_id, String.chr(31), world_id]
 	if not _subscriptions.has(sub_key):
 		return _failure("UNKNOWN_SUBSCRIPTION", {})
+	var became_stale := _detach_session_from_subscription(sub_key, gateway_session_id)
+	if became_stale:
+		_counters["unsubscribe_worlds"] = int(_counters["unsubscribe_worlds"]) + 1
+	var entry: Dictionary = _subscriptions[sub_key]
+	return _success({"stale": bool(entry["stale"])})
+
+
+## Remove ONE session seat from a subscription entry. When the last seat is
+## gone the upstream subscription turns STALE (bounded retirement path) and
+## the world leaves its source's served set immediately — served-set mirrors
+## ACTIVE demand only.
+func _detach_session_from_subscription(sub_key: String, gateway_session_id: String) -> bool:
 	var entry: Dictionary = _subscriptions[sub_key]
 	var sessions: Dictionary = entry["sessions"]
 	sessions.erase(gateway_session_id)
-	if sessions.is_empty():
+	if sessions.is_empty() and not bool(entry["stale"]):
 		# Last demand gone: the upstream subscription is now STALE until a
 		# bounded maintenance cycle retires it (or the source disappears).
 		entry["stale"] = true
-		_counters["unsubscribe_worlds"] = int(_counters["unsubscribe_worlds"]) + 1
-	return _success({"stale": bool(entry["stale"])})
+		var parts := sub_key.split(String.chr(31))
+		if parts.size() == 2:
+			var source_served: Dictionary = Dictionary(_served_worlds_by_source.get(String(parts[0]), {}))
+			source_served.erase(String(parts[1]))
+			if source_served.is_empty():
+				_served_worlds_by_source.erase(String(parts[0]))
+			else:
+				_served_worlds_by_source[String(parts[0])] = source_served
+		return true
+	return false
 
 
 ## Bounded pump-cycle step: retire at most retire_batch_per_cycle stale
@@ -218,6 +264,11 @@ func stale_subscription_count() -> int:
 		if bool(_subscriptions[sub_key_value]["stale"]):
 			count += 1
 	return count
+
+
+## (source, world) pairs currently demanded by at least one live client.
+func active_subscription_count() -> int:
+	return _active_subscription_count()
 
 
 func stale_subscriptions() -> Array[String]:
@@ -282,11 +333,19 @@ func accept_upstream_frame(source_authority_id: String, transport_frame: Diction
 			"source_revision": source_revision,
 			"last_revision": last_revision,
 		})
+	var slot_key := _ensure_slot(gateway_session_id, source_authority_id)
+	if slot_key.is_empty():
+		# Review R2-E: a failed fan-in slot registration is fail-closed for
+		# THIS frame — no acceptance accounting, no latest-wins revision
+		# record, explicit error result instead of an unschedulable accept.
+		return _failure("FAN_IN_SLOT_UNAVAILABLE", {
+			"gateway_session_id": gateway_session_id,
+			"source_authority_id": source_authority_id,
+		})
 	_last_source_revision_by_stream[stream_key] = source_revision
 	_counters["frames_accepted"] = int(_counters["frames_accepted"]) + 1
 	_upstream_set.note_activity(source_authority_id)
 
-	var slot_key := _ensure_slot(gateway_session_id, source_authority_id)
 	_frame_counter += 1
 	var client_frame := ClientWorldFrameScript.create(
 			"frame/eg4/proj/%06d" % _frame_counter,
@@ -393,7 +452,12 @@ func _ensure_slot(gateway_session_id: String, source_authority_id: String) -> St
 	_key_by_pair[pair_key] = slot_key
 	var registered: Dictionary = _egress_multiplexer.register_session(slot_key)
 	if not bool(registered.get("success", false)):
+		# Fail closed (review R2-E): roll the slot bookkeeping back and report
+		# an empty slot key — the caller must surface FAN_IN_SLOT_UNAVAILABLE.
+		_slot_by_key.erase(slot_key)
+		_key_by_pair.erase(pair_key)
 		push_error("eg4 fan-in slot registration failed: %s" % String(registered.get("error_code", "")))
+		return ""
 	return slot_key
 
 
