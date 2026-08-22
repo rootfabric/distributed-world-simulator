@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo5_t5_predator_probe.v1.result",
+  "version": "1.0.0",
+  "generations": 60,
+  "gates": {
+    "no_extinction_all_levels": true,
+    "no_blowup_all_levels": true,
+    "restart_byte_equal": true,
+    "robustness_3_seeds": true
+  },
+  "final_state": {
+    "plants": 552.576,
+    "agents": 46.415,
+    "predators": 9.788
+  },
+  "trajectory_head": [
+    {
+      "plants": 513.0,
+      "agents": 24.12,
+      "predators": 5.988
+    },
+    {
+      "plants": 525.61,
+      "agents": 24.273,
+      "predators": 5.977
+    },
+    {
+      "plants": 537.786,
+      "agents": 24.46,
+      "predators": 5.966
+    },
+    {
+      "plants": 549.489,
+      "agents": 24.679,
+      "predators": 5.956
+    },
+    {
+      "plants": 560.683,
+      "agents": 24.93,
+      "predators": 5.947
+    }
+  ],
+  "verdict": "PASS"
+}
