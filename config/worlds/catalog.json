@@ -24,6 +24,9 @@
       "display_name": "Земля",
       "description": "Процедурная Земля с атмосферой без отображения Луны.",
       "runtime_script": "res://scripts/app/earth_p3_resource_mining_app.gd",
+      "seed": 20260726,
+      "rules_config": "res://config/generation/earth_rules.json",
+      "generator_version": "earth-rule-pipeline-v1",
       "tags": [
         "planet",
         "procedural",

@@ -1,10 +1,16 @@
 extends "res://scripts/world/atmosphere/atmosphere_plugin_base.gd"
 
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
+
 var cloud_instance: MultiMeshInstance3D
 var cloud_multimesh: MultiMesh
 var cloud_material: StandardMaterial3D
 var density_noise: FastNoiseLite
-var seed: int = 2026072604
+# Resolved during setup(): an explicit seed in the atmosphere plugin config
+# wins, otherwise the world seed from the catalog PlanetDefinition is used.
+var seed: int = -1
 var cloud_altitude_m: float = 4000.0
 var cloud_thickness_m: float = 850.0
 var maximum_observer_altitude_m: float = 32000.0
@@ -33,7 +39,8 @@ var rebuild_count: int = 0
 func setup(owner_reference, config_value: Dictionary, logger_reference = null) -> bool:
 	if not super.setup(owner_reference, config_value, logger_reference):
 		return false
-	seed = int(plugin_config.get("seed", seed))
+	var configured_seed: int = int(plugin_config.get("seed", -1))
+	seed = configured_seed if configured_seed >= 0 else WorldDefinitionScript.get_world_seed()
 	cloud_altitude_m = float(plugin_config.get("altitude_m", cloud_altitude_m))
 	cloud_thickness_m = float(plugin_config.get("thickness_m", cloud_thickness_m))
 	maximum_observer_altitude_m = float(
