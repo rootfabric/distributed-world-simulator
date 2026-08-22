@@ -20,6 +20,45 @@ var _seeds: Array[Dictionary] = []
 var _zone_ctx: Dictionary = {}
 var _roots: Array[Node3D] = []
 var _rng_tick := 0
+var _cell_top := {}
+const RichPresentation = preload("res://scripts/research/ecology/evo4_bridge_presentation_v1.gd")
+var _species: Dictionary = {}
+
+func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
+	if _species.is_empty():
+		var man = JSON.parse_string(FileAccess.get_file_as_string("res://validation/ecology/evo4_b6_region_manifest.v1.json"))
+		for gid in ((man as Dictionary)["species_traits"] as Dictionary).keys():
+			var sp: Dictionary = (man["species_traits"] as Dictionary)[gid]
+			var t: Dictionary = (sp["development_traits"] as Dictionary).duplicate(true)
+			t["branching_depth"] = int(t["branching_depth"])
+			_species[gid] = {"traits": t, "wpref": float(sp["water_preference"]),
+				"stol": float(sp["shade_tolerance"]), "dorm": float(sp["dormancy_fraction"]),
+				"base": int(sp["variant_base_seed"])}
+	var gids := _species.keys()
+	var gid: String = gids[int(_unit("gid|%s|%f" % [zone, hue_jitter]) * float(gids.size()))]
+	var sp: Dictionary = _species[gid]
+	var seed_int := int(_unit("seedint|%s|%d" % [zone, _rng_tick]) * 900000.0) + 1000
+	var built := RichPresentation.build_rich_subject(
+		sp["traits"], seed_int + int(hue_jitter * 7919.0), sp["wpref"], sp["stol"], sp["dorm"], 1.4)
+	if built.is_empty():
+		return
+	var holder := Node3D.new()
+	holder.position = pos
+	holder.scale = Vector3.ONE * 0.45
+	add_child(holder)
+	_roots.append(holder)
+	for mesh_key in ["branch_mesh", "leaf_mesh", "flower_mesh"]:
+		if not built.has(mesh_key) or built[mesh_key] == null:
+			continue
+		var mi := MultiMeshInstance3D.new()
+		mi.multimesh = built[mesh_key]
+		mi.position = Vector3.ZERO
+		holder.add_child(mi)
+		if mesh_key != "branch_mesh":
+			var mm_mat := StandardMaterial3D.new()
+			mm_mat.vertex_color_use_as_albedo = true
+			mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mi.material_override = mm_mat
 
 func _sha(text: String) -> String:
 	var ctx := HashingContext.new()
@@ -71,6 +110,7 @@ func _ready() -> void:
 		box.size = Vector3(1.9, 3.0, 1.9)
 		tile.mesh = box
 		tile.position = Vector3(float(cell["x"]) * 2.0, float(cell["height"]) * 1.6 - 1.1, float(cell["z"]) * 2.0)
+		_cell_top["%d|%d" % [int(cell["x"]), int(cell["z"])]] = float(cell["height"]) * 1.6 + 0.4
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = _shade(PALETTE[zone], float(cell["height"]))
 		tile.material_override = mat
@@ -188,9 +228,10 @@ func _update_seeds() -> void:
 		if established:
 			var pos := node.position
 			node.queue_free()
-			_make_plant(Vector3(pos.x, 0.4, pos.z), String(s["zone"]), _unit("esth|%d" % i), {})
-			var young: Dictionary = _spikes[_spikes.size() - 1]
-			(young["root"] as Node3D).scale = Vector3.ONE * 0.30
+			_seeds.remove_at(i)
+			var key := "%d|%d" % [int(round(pos.x / 2.0)), int(round(pos.z / 2.0))]
+			var ground_y: float = float(_cell_top.get(key, 0.4))
+			_establish(Vector3(pos.x, ground_y, pos.z), String(s["zone"]), _unit("esth|%d" % i))
 		else:
 			var fade: float = clampf(node.scale.x - 0.08, 0.05, 1.0)
 			node.scale = Vector3.ONE * fade
@@ -239,6 +280,9 @@ func _process(delta: float) -> void:
 		_spawn_seed()
 	if _tick % 10 == 0:
 		_update_seeds()
+	for r in _roots:
+		if is_instance_valid(r) and r.scale.x < 1.0:
+			r.scale = r.scale.lerp(Vector3.ONE, 0.01)
 	if _roots.size() > 300 and _tick % 200 == 0:
 		var victim: Dictionary = _spikes[0]
 		if is_instance_valid(victim["root"]):
