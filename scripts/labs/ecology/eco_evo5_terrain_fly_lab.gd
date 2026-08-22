@@ -18,7 +18,7 @@ var _trajectories: Dictionary = {}
 var _tick := 0
 var _seeds: Array[Dictionary] = []
 var _zone_ctx: Dictionary = {}
-var _roots: Array[Node3D] = []
+var _roots: Array[Dictionary] = []
 var _rng_tick := 0
 var _established_count := 0
 var _cell_top := {}
@@ -46,11 +46,13 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 		print("ECO.EVO5.FLY: establish FAILED empty build gid=", gid)
 		return
 	_established_count += 1
+	var baabb := (built["branch_mesh"] as Mesh).get_aabb() if built["branch_mesh"] != null else AABB(Vector3.ZERO, Vector3.ONE)
+	var fit := clampf(1.8 / maxf(baabb.size.y, 0.01), 0.04, 1.0)
 	var holder := Node3D.new()
-	holder.position = pos
-	holder.scale = Vector3.ONE * 0.8
+	holder.position = Vector3(pos.x, pos.y - baabb.position.y * fit, pos.z)
+	holder.scale = Vector3.ONE * fit * 0.55
 	add_child(holder)
-	_roots.append(holder)
+	_roots.append({"node": holder, "target": fit})
 	for pair in [["branch_mesh", null, null], ["leaf_mesh", "leaf_colors", "leaf_transforms"], ["flower_mesh", "flower_color", "flower_transforms"]]:
 		var key: String = pair[0]
 		if not built.has(key) or built[key] == null:
@@ -84,11 +86,10 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 	# Guaranteed connected trunk: anchors crown to ground even if the
 	# presentation tube mesh comes out empty (liana-style fallback).
 	if built.has("branch_mesh") and built["branch_mesh"] != null:
-		var baabb := (built["branch_mesh"] as Mesh).get_aabb()
 		var trunk := MeshInstance3D.new()
 		var tcyl := CylinderMesh.new()
-		tcyl.top_radius = 0.045
-		tcyl.bottom_radius = 0.09
+		tcyl.top_radius = 0.08
+		tcyl.bottom_radius = 0.16
 		tcyl.height = maxf(baabb.size.y, 0.3)
 		trunk.mesh = tcyl
 		trunk.position = Vector3(baabb.get_center().x, baabb.position.y + tcyl.height * 0.5, baabb.get_center().z)
@@ -319,13 +320,13 @@ func _process(delta: float) -> void:
 	if _tick % 10 == 0:
 		_update_seeds()
 	for r in _roots:
-		if is_instance_valid(r) and r.scale.x < 1.0:
-			r.scale = r.scale.lerp(Vector3.ONE, 0.01)
+		var rn: Node3D = r["node"]
+		if is_instance_valid(rn) and rn.scale.x < float(r["target"]):
+			rn.scale = rn.scale.lerp(Vector3.ONE * float(r["target"]), 0.01)
 	if _roots.size() > 300 and _tick % 200 == 0:
 		var victim: Dictionary = _spikes[0]
 		if is_instance_valid(victim["root"]):
 			(victim["root"] as Node3D).queue_free()
-		_roots.erase(victim["root"])
 		_spikes = _spikes.filter(func(e): return e["root"] != victim["root"])
 
 func _input(event: InputEvent) -> void:
