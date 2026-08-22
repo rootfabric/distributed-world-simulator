@@ -11,8 +11,11 @@ extends RefCounted
 ## (auth-ticket/*, resume-token/*, gateway-session/*, player/*, entity/*).
 ##
 ## Identity grant: on first session creation the service derives and records
-## the logical identity from the canonical client_session_id. Resumes return
-## exactly that recorded grant, no matter what the caller claims afterwards.
+## the logical identity from the canonical client_session_id INJECTIVELY
+## (sanitized readable suffix + short digest of the full canonical id), so two
+## distinct client sessions can never collide onto one logical player identity.
+## Resumes return exactly that recorded grant, no matter what the caller
+## claims afterwards.
 
 const GatewayUtilsScript = preload("res://scripts/network/gateway/gateway_contract_utils.gd")
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
@@ -199,6 +202,10 @@ func _resume_session(client_session_id: String, ticket: Dictionary, resume_token
 	}
 	ticket["state"] = TICKET_STATE_EXCHANGED
 	_live_resume_tokens.erase(resume_token)
+	# Accounting hygiene: the previous session row is SUPERSEDED by the resumed
+	# one (its resume token was already rotated away), so it is pruned instead
+	# of accumulating as a dead row; live_sessions counts LIVE rows only.
+	_sessions_by_gateway_session_id.erase(previous_gateway_session_id)
 	_sessions_by_gateway_session_id[gateway_session_id] = session
 	_live_resume_tokens[next_resume_token] = gateway_session_id
 	_counters["sessions_resumed"] = int(_counters["sessions_resumed"]) + 1
@@ -262,8 +269,19 @@ func _random_hex(length: int) -> String:
 	return out
 
 
+## Injective identity-suffix derivation. The naive sanitize-and-dash scheme
+## ("a/b" -> "a-b") is NOT injective: "client-session/x/a-b" and
+## "client-session/x-a-b" both collapse to "x-a-b" and would grant two distinct
+## client sessions ONE shared logical player identity (cross-identity data
+## leak). The short lowercase-hex digest of the FULL canonical id disambiguates
+## every collision while keeping the suffix deterministic and readable.
 func _identity_suffix(client_session_id: String) -> String:
-	return client_session_id.trim_prefix(CLIENT_SESSION_PREFIX).replace("/", "-")
+	var sanitized := client_session_id.trim_prefix(CLIENT_SESSION_PREFIX).replace("/", "-")
+	return "%s-%s" % [sanitized, _identity_digest(client_session_id)]
+
+
+func _identity_digest(client_session_id: String) -> String:
+	return client_session_id.sha256_text().substr(0, 10)
 
 
 func _is_canonical_client_session_id(client_session_id: String) -> bool:

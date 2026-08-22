@@ -214,6 +214,8 @@ func _init() -> void:
 	_run_full_flow_to_world_ready()
 	_run_reject_paths()
 	_run_resume_preserves_identity()
+	_run_detach_prunes_auth_binding()
+	_run_reauth_rejection()
 	_run_warm_degradation_and_recovery()
 	_run_gateway_selection_independence()
 	_run_redaction_scan()
@@ -241,8 +243,9 @@ func _run_full_flow_to_world_ready() -> void:
 	_assert(String(payload["server_instance_id"]) == "server-instance/eg2/main-a-1", "WORLD_READY lost the server instance id")
 	_assert(String(payload["route_role"]) == "ACTIVE", "fresh placement did not report ACTIVE route role")
 	_assert(bool(payload["resumed"]) == false, "fresh placement reported resumed=true")
-	_assert(String(payload["logical_player_id"]) == "player/eg2-eg2-l1-alpha", "identity grant mismatch")
-	_assert(String(payload["player_entity_id"]) == "entity/eg2-player-eg2-l1-alpha", "entity grant mismatch")
+	var l1_alpha_suffix := "eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10)
+	_assert(String(payload["logical_player_id"]) == "player/eg2-%s" % l1_alpha_suffix, "identity grant mismatch")
+	_assert(String(payload["player_entity_id"]) == "entity/eg2-player-%s" % l1_alpha_suffix, "entity grant mismatch")
 	_assert(String(payload["resume_token"]).begins_with("resume-token/eg2/"), "resume token outside its namespace")
 	_assert(String(payload["gateway_session_id"]).begins_with("gateway-session/"), "gateway session id outside its namespace")
 	var row := _route_row(String(payload["gateway_session_id"]))
@@ -286,8 +289,10 @@ func _run_resume_preserves_identity() -> void:
 	if payload.is_empty():
 		return
 	_assert(bool(payload["resumed"]) == true, "token resume did not report resumed=true")
-	_assert(String(payload["logical_player_id"]) == "player/eg2-eg2-l1-alpha"
-			and String(payload["player_entity_id"]) == "entity/eg2-player-eg2-l1-alpha",
+	_assert(String(payload["logical_player_id"]) == "player/eg2-%s"
+			% ("eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10))
+			and String(payload["player_entity_id"]) == "entity/eg2-player-%s"
+			% ("eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10)),
 			"resume did not preserve the logical identity")
 	_assert(String(payload["gateway_session_id"]) != String(alpha["gateway_session_id"]),
 			"resume reused the previous gateway session id")
@@ -299,6 +304,111 @@ func _run_resume_preserves_identity() -> void:
 			"superseded gateway session row survived the resume")
 	_assert(not _route_row(String(payload["gateway_session_id"])).is_empty(),
 			"resumed gateway session row missing")
+
+
+## Accounting hygiene: a graceful DETACH must prune the peer's AUTHENTICATED
+## binding (a reused transport peer must never inherit an earlier identity),
+## while the session's resume grant stays intact — that is the EG2 reconnect
+## contract, so DETACH may not kill the live resume token.
+func _run_detach_prunes_auth_binding() -> void:
+	var hygiene := _register_client("hygiene")
+	_authenticate(hygiene, "client-session/eg2/l1-hygiene", "OK")
+	var payload := _place(hygiene, "client-session/eg2/l1-hygiene", MAIN_WORLD_ID, "")
+	_assert(not payload.is_empty(), "hygiene placement failed")
+	if payload.is_empty():
+		return
+	var before: Dictionary = _flow.get_report()
+	var bound_before := int(before["authenticated_peer_count"])
+	_assert(bound_before >= 1, "authenticated peer binding missing before the detach")
+	var gateway_session_id := String(payload["gateway_session_id"])
+	var seq := int(hygiene["wire_sequence"]) + 1
+	hygiene["wire_sequence"] = seq
+	var inner := ClientWorldFrameScript.create(
+			"frame/eg2/l1/detach-hygiene/%d" % seq, gateway_session_id,
+			"CLIENT_TO_WORLD", "SESSION_CONTROL", seq,
+			GatewayUtils.EG1_SESSION_DETACH_PAYLOAD_SCHEMA, {})
+	_inject_wire(hygiene, {
+		"frame_id": "frame/eg2/l1/detach-hygiene-wire/%d" % seq,
+		"session_id": String(hygiene["wire_session"]),
+		"sequence": seq,
+		"channel": "CONTROL",
+		"delivery_mode": "RELIABLE_ORDERED",
+		"payload_schema": GatewayUtils.EG1_SESSION_DETACH_PAYLOAD_SCHEMA,
+		"payload": inner,
+	})
+	_pump("detach(hygiene)")
+	var ack := _take_ack(hygiene, "detach")
+	if ack.is_empty():
+		return
+	_assert(String(ack["payload"]["state"]) == "DETACHED", "detach ack did not report DETACHED")
+	var after: Dictionary = _flow.get_report()
+	_assert(int(after["authenticated_peer_count"]) == bound_before - 1,
+			"stale auth binding survived the detach: %d -> %d"
+					% [bound_before, int(after["authenticated_peer_count"])])
+	_assert(int(after["counters"]["peer_bindings_pruned"]) == 1, "peer-binding prune counter mismatch")
+	_assert(_auth.is_resume_token_live(String(payload["resume_token"])),
+			"graceful detach destroyed the live resume token")
+
+
+## Explicit re-auth semantics: an already-bound transport peer that sends
+## AUTHENTICATE again is rejected with PLACEMENT_PEER_ALREADY_AUTHENTICATED;
+## the presented ticket is not consumed and the original binding survives
+## (the peer can still place with the originally authenticated pair).
+func _run_reauth_rejection() -> void:
+	var reauth := _register_client("reauth")
+	_authenticate(reauth, "client-session/eg2/l1-reauth", "OK")
+	# Second AUTHENTICATE over the same transport peer, fresh ticket.
+	var fresh_mint: Dictionary = _auth.mint_auth_ticket("client-session/eg2/l1-reauth")
+	_assert(bool(fresh_mint.get("success", false)), "re-auth fresh ticket mint failed")
+	var fresh_ticket := String(fresh_mint.get("details", {}).get("ticket_id", ""))
+	var rejected_before: Dictionary = _flow.get_report()
+	var node_before_reject: Dictionary = _gateway.get_report()["counters"]
+	_send_session_control(reauth, "reauth", GatewayUtils.EG2_SESSION_AUTHENTICATE_PAYLOAD_SCHEMA, {
+		"client_session_id": "client-session/eg2/l1-reauth",
+		"ticket_id": fresh_ticket,
+	})
+	_pump("re-auth rejection")
+	var flow_after: Dictionary = _flow.get_report()
+	_assert(int(flow_after["counters"]["placement_frames_rejected"])
+			== int(rejected_before["counters"]["placement_frames_rejected"]) + 1,
+			"re-auth was not rejected by the placement flow")
+	_assert(int(_gateway.get_report()["counters"]["placement_rejected"])
+			== int(node_before_reject["placement_rejected"]) + 1,
+			"re-auth rejection was not accounted at the gateway")
+	_assert(_auth.is_resume_token_live("") == false, "sanity: empty token must not be live")
+	# Direct handler probe pins the exact error code and proves the ticket
+	# survived the rejection unconsumed.
+	var seq := int(reauth["wire_sequence"]) + 1
+	reauth["wire_sequence"] = seq
+	var probe_inner := ClientWorldFrameScript.create(
+			"frame/eg2/l1/reauth-probe/%d" % seq, "gateway-session/eg2/probe/reauth",
+			"CLIENT_TO_WORLD", "SESSION_CONTROL", seq,
+			GatewayUtils.EG2_SESSION_AUTHENTICATE_PAYLOAD_SCHEMA, {
+				"client_session_id": "client-session/eg2/l1-reauth",
+				"ticket_id": fresh_ticket,
+			})
+	var probe_result: Dictionary = _flow.handle_session_control(
+			{"payload": probe_inner, "session_id": String(reauth["wire_session"])},
+			_gateway._route_table, String(reauth["peer_id"]))
+	_assert(_err(probe_result) == "PLACEMENT_PEER_ALREADY_AUTHENTICATED",
+			"re-auth error code mismatch: %s" % _err(probe_result))
+	# The rejected attempt must not have burned the one-time ticket.
+	var consume_probe: Dictionary = _auth.authenticate(fresh_ticket)
+	_assert(bool(consume_probe.get("success", false)),
+			"rejected re-auth consumed the one-time ticket")
+	# The ORIGINAL binding still works: place succeeds with the first ticket.
+	var payload := _place(reauth, "client-session/eg2/l1-reauth", MAIN_WORLD_ID, "")
+	_assert(not payload.is_empty(), "original binding lost after the re-auth rejection")
+	if not payload.is_empty():
+		_assert(bool(payload["resumed"]) == false, "post-rejection placement wrongly resumed")
+	# No ack reached the rejected second authenticate.
+	for frame_value in _drain_inbox(reauth):
+		var frame: Dictionary = frame_value
+		var inner: Dictionary = frame.get("payload", {})
+		if String(inner.get("channel", "")) == "SESSION_CONTROL" \
+				and String(inner.get("payload_schema", "")).contains("authenticate"):
+			_assert(false, "rejected re-auth produced a SESSION_CONTROL ack")
+			break
 
 
 func _run_warm_degradation_and_recovery() -> void:

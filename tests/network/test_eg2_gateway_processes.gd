@@ -95,6 +95,7 @@ func _init() -> void:
 	DirAccess.make_dir_recursive_absolute(root)
 	var sim_result: String = root.path_join("sim.json")
 	var gateway_result: String = root.path_join("gateway.json")
+	var player_bindings: String = root.path_join("player-bindings.json")
 	var client_a_result: String = root.path_join("client-a.json")
 	var client_b_result: String = root.path_join("client-b.json")
 
@@ -105,6 +106,7 @@ func _init() -> void:
 	var sim_pid: int = _launch(executable, project_root, "eg2_sim_server_worker.gd", [
 		"--host=127.0.0.1", "--port=%d" % sim_port,
 		"--result-file=%s" % sim_result,
+		"--player-binding-file=%s" % player_bindings,
 		"--timeout-ms=%d" % TIMEOUT_MS,
 		"--user-data-dir=%s" % root.path_join("ud-sim"),
 	])
@@ -121,6 +123,7 @@ func _init() -> void:
 		"--client-host=127.0.0.1", "--client-port=%d" % gateway_port,
 		"--sim-host=127.0.0.1", "--sim-port=%d" % sim_port,
 		"--result-file=%s" % gateway_result,
+		"--player-binding-file=%s" % player_bindings,
 		"--timeout-ms=%d" % int(TIMEOUT_MS * 2),
 		"--user-data-dir=%s" % root.path_join("ud-gateway"),
 	])
@@ -234,6 +237,26 @@ func _init() -> void:
 			"resume reused the previous gateway session id")
 	_assert(String(client_b.get("resume_token_out", "")) != String(client_a.get("resume_token_out", "")),
 			"resume did not rotate the resume token")
+
+	# --- L2 domain identity binding: ops applied to the GRANTED identity ---
+	var session_bindings: Dictionary = sim.get("session_bindings", {})
+	_assert(not session_bindings.is_empty(), "sim recorded no gateway-session identity bindings")
+	var player_ids: Array = sim.get("player_ids", [])
+	_assert(player_ids.size() == 1, "expected exactly one bound domain identity: %s" % str(player_ids))
+	if player_ids.size() == 1:
+		_assert(String(player_ids[0]) == String(world_ready_a.get("logical_player_id", "")),
+				"sim did not bind the GATEWAY-GRANTED logical player id")
+		_assert(String(player_ids[0]).begins_with("player/"),
+				"bound domain identity outside the player namespace")
+	for bound_session_value in session_bindings.keys():
+		var bound_player := String(session_bindings[bound_session_value])
+		_assert(bound_player == String(world_ready_a.get("logical_player_id", "")),
+				"session %s bound to a foreign identity" % String(bound_session_value))
+	_assert(session_bindings.has(String(world_ready_a.get("gateway_session_id", ""))),
+			"phase-A gateway session was never identity-bound at the sim")
+	_assert(session_bindings.has(String(world_ready_b.get("gateway_session_id", ""))),
+			"resumed gateway session was never identity-bound at the sim")
+
 	_assert(int(client_a.get("results_received", -1)) == 3, "client A wrong result count")
 	_assert(int(client_b.get("results_received", -1)) == 3, "client B wrong result count")
 	_assert(bool(client_a.get("detached_ack", false)) and bool(client_b.get("detached_ack", false)),

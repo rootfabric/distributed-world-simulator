@@ -22,6 +22,7 @@ const FrameScript = preload("res://scripts/network/transports/v2/protocol_frame_
 const RouteTableScript = preload("res://scripts/network/gateway/runtime/eg1_gateway_route_table.gd")
 const ForwarderScript = preload("res://scripts/network/gateway/runtime/eg1_gateway_forwarder.gd")
 const SessionControlScript = preload("res://scripts/network/gateway/runtime/eg1_gateway_session_control.gd")
+const BackendMultiplexerScript = preload("res://scripts/network/gateway/runtime/eg3_backend_multiplexer.gd")
 
 const SCHEMA := "planet_simulator.eg1_gateway_node.v1"
 const DEFAULT_AUTHORITY_ID := "authority/eg1-local-sim"
@@ -32,6 +33,9 @@ var _route_table
 var _forwarder
 var _session_control
 var _placement_handler = null
+# EG3: optional shared-multiplexed backend tunnel scheduler. When absent the
+# backend leg behaves exactly as in EG1/EG2 (direct dispatch + retry parking).
+var _backend_multiplexer = null
 var _client_boundary
 var _backend_boundary
 var _gateway_instance_id := ""
@@ -59,6 +63,7 @@ var _counters := {
 	"frames_sent_world_to_client": 0,
 	"backend_send_retries": 0,
 	"backend_send_failures": 0,
+	"backend_mux_rejected": 0,
 	"client_send_failures": 0,
 	"client_send_dropped_no_wire_session": 0,
 }
@@ -132,6 +137,7 @@ func pump(max_events: int = 64) -> Dictionary:
 		return _failure(String(backend_poll.get("error_code", "BACKEND_POLL_FAILED")), {"leg": "backend"})
 	for event_value in backend_poll.get("details", {}).get("events", []):
 		_handle_backend_event(Dictionary(event_value))
+	_pump_backend_multiplexer(max_events)
 	_retry_pending_backend_specs()
 	var backend_dispatch: Dictionary = _backend_boundary.flush_outbound(max_events)
 	if not bool(backend_dispatch.get("success", false)):
@@ -200,7 +206,7 @@ func get_report() -> Dictionary:
 	if _forwarder != null:
 		counters["forwarder"] = _forwarder.get_counters()
 	counters["failure_codes"] = _failure_codes.duplicate(true)
-	return {
+	var report := {
 		"schema": SCHEMA,
 		"identity": {
 			"gateway_instance_id": _gateway_instance_id,
@@ -212,6 +218,10 @@ func get_report() -> Dictionary:
 		"counters": counters,
 		"sessions": rows,
 	}
+	if _backend_multiplexer != null:
+		# EG3 per-session/per-link tunnel metrics (identity + counters only).
+		report["backend_multiplexer"] = _backend_multiplexer.get_report()
+	return report
 
 
 ## Install the optional EG2 placement handler (additive dispatch): SESSION_CONTROL
@@ -223,6 +233,85 @@ func set_placement_handler(handler) -> Dictionary:
 		return _failure("INVALID_PLACEMENT_HANDLER", {})
 	_placement_handler = handler
 	return _success({})
+
+
+## Additive accounting hook: when a client transport peer detaches or its
+## connection drops, the installed placement handler may prune per-peer auth
+## bindings. Optional-method dispatch keeps EG1-only handlers fully unchanged.
+func _notify_placement_peer_gone(peer_id: String) -> void:
+	if _placement_handler != null and _placement_handler.has_method("on_client_peer_gone"):
+		_placement_handler.on_client_peer_gone(peer_id)
+
+
+## Install the optional EG3 backend multiplexer (additive dispatch): once
+## installed, every client->world backend frame is scheduled through the
+## multiplexer's per-session P0..P5 queues instead of direct dispatch.
+## EG1/EG2 behavior is unchanged when no multiplexer is installed.
+func set_backend_multiplexer(multiplexer) -> Dictionary:
+	if multiplexer == null \
+			or not multiplexer.has_method("enqueue") \
+			or not multiplexer.has_method("drain_link") \
+			or not multiplexer.has_method("get_report"):
+		return _failure("INVALID_BACKEND_MULTIPLEXER", {})
+	_backend_multiplexer = multiplexer
+	return _success({})
+
+
+## ---- EG3 shared-multiplexed backend tunnel ---------------------------------
+
+
+func _send_to_backend_via_multiplexer(frame_spec: Dictionary) -> void:
+	var payload: Dictionary = Dictionary(frame_spec.get("payload", {}))
+	# The ingress envelope carries the logical session key and the SEMANTIC
+	# channel; the wire frame itself carries only physical channel names.
+	var gateway_session_id := String(payload.get("gateway_session_id", ""))
+	var semantic_channel := String(Dictionary(payload.get("frame", {})).get("channel", ""))
+	if gateway_session_id.is_empty() or semantic_channel.is_empty():
+		_counters["backend_send_failures"] = int(_counters["backend_send_failures"]) + 1
+		_record_failure_code("backend_send", "MISSING_MUX_IDENTITY")
+		return
+	if not _backend_multiplexer.has_session(gateway_session_id):
+		var registered: Dictionary = _backend_multiplexer.register_session(gateway_session_id)
+		if not bool(registered.get("success", false)):
+			_counters["backend_mux_rejected"] = int(_counters["backend_mux_rejected"]) + 1
+			_record_failure_code("backend_mux_rejected",
+					"REGISTER_FAILED:%s" % String(registered.get("error_code", "")))
+			return
+	var enqueued: Dictionary = _backend_multiplexer.enqueue(
+			gateway_session_id, frame_spec, semantic_channel)
+	if bool(enqueued.get("success", false)):
+		return
+	_counters["backend_mux_rejected"] = int(_counters["backend_mux_rejected"]) + 1
+	_record_failure_code("backend_mux_rejected",
+			"%s:%s" % [String(enqueued.get("error_code", "")), semantic_channel])
+
+
+## Drain the scheduler onto the ONE physical backend link; wire sequences are
+## allocated here (at dispatch time) to keep gap-free per-peer sequencing.
+func _pump_backend_multiplexer(budget: int) -> void:
+	if _backend_multiplexer == null or _backend_boundary == null:
+		return
+	var drained: Dictionary = _backend_multiplexer.drain_link(budget)
+	if not bool(drained.get("success", false)):
+		_record_failure_code("backend_mux_drain", String(drained.get("error_code", "")))
+		return
+	for entry_value in drained.get("details", {}).get("frames", []):
+		var entry: Dictionary = entry_value
+		var spec: Dictionary = Dictionary(entry["frame_spec"]).duplicate(true)
+		_backend_wire_sequence += 1
+		spec["sequence"] = _backend_wire_sequence
+		spec["session_id"] = _backend_session_id
+		var sent: Dictionary = _dispatch_backend_spec(spec)
+		if bool(sent.get("success", false)):
+			continue
+		if String(sent.get("error_code", "")) in ["PEER_NOT_READY", "UNKNOWN_PEER"]:
+			# Backend link not READY yet: park and retry on later pumps.
+			_counters["backend_send_retries"] = int(_counters["backend_send_retries"]) + 1
+			_record_failure_code("backend_retry", String(sent.get("error_code", "")))
+			_pending_backend_specs.append(spec)
+			continue
+		_counters["backend_send_failures"] = int(_counters["backend_send_failures"]) + 1
+		_record_failure_code("backend_send", String(sent.get("error_code", "")))
 
 
 func _handle_client_event(event: Dictionary) -> void:
@@ -255,6 +344,8 @@ func _handle_client_event(event: Dictionary) -> void:
 										String(result["details"]["gateway_session_id"]), _backend_link_id)
 							"DETACH":
 								_counters["session_control_detached"] = int(_counters["session_control_detached"]) + 1
+								_notify_placement_peer_gone(peer_id)
+								_purge_mux_session(String(result["details"].get("gateway_session_id", "")))
 					if result["details"].has("ack_transport_frame"):
 						_send_to_client(peer_id, result["details"]["ack_transport_frame"])
 				else:
@@ -270,8 +361,10 @@ func _handle_client_event(event: Dictionary) -> void:
 		"PEER_DISCONNECTED":
 			var lookup: Dictionary = _route_table.lookup_by_client_peer(String(event.get("peer_id", "")))
 			if bool(lookup.get("success", false)):
-				_route_table.set_binding_state(
-						String(lookup["details"]["row"]["gateway_session_id"]), "DETACHED")
+				var dropped_session := String(lookup["details"]["row"]["gateway_session_id"])
+				_route_table.set_binding_state(dropped_session, "DETACHED")
+				_purge_mux_session(dropped_session)
+			_notify_placement_peer_gone(String(event.get("peer_id", "")))
 		_:
 			pass
 
@@ -287,6 +380,14 @@ func _handle_backend_event(event: Dictionary) -> void:
 						forwarded["details"]["client_transport_frame"])
 		"PEER_CONNECTED":
 			_drive_backend_peer_ready()
+		"PEER_DISCONNECTED":
+			# Fail-predictable backend link loss: parked retries and scheduled
+			# frames for the dead link are dropped and accounted — never
+			# replayed into a future link incarnation (no stale resurrection).
+			_pending_backend_specs.clear()
+			if _backend_multiplexer != null and _backend_multiplexer.has_method("purge_all"):
+				_backend_multiplexer.purge_all()
+			_counters["backend_link_drops"] = int(_counters.get("backend_link_drops", 0)) + 1
 		_:
 			pass
 
@@ -354,6 +455,11 @@ func _send_to_client(peer_id: String, frame_spec: Dictionary) -> void:
 
 
 func _send_to_backend(frame_spec: Dictionary) -> void:
+	if _backend_multiplexer != null:
+		# EG3 path: schedule through the shared tunnel; wire sequencing is
+		# deferred to drain/dispatch time.
+		_send_to_backend_via_multiplexer(frame_spec)
+		return
 	_backend_wire_sequence += 1
 	var spec: Dictionary = frame_spec.duplicate(true)
 	spec["sequence"] = _backend_wire_sequence
@@ -399,6 +505,16 @@ func _dispatch_backend_spec(spec: Dictionary) -> Dictionary:
 	if bool(sent.get("success", false)):
 		_counters["frames_sent_client_to_world"] = int(_counters["frames_sent_client_to_world"]) + 1
 	return sent
+
+
+## Slot-reuse hygiene: drop every queued backend frame of a detached session
+## so nothing scheduled for the old identity can ever reach the new occupant.
+func _purge_mux_session(gateway_session_id: String) -> void:
+	if _backend_multiplexer == null or gateway_session_id.is_empty():
+		return
+	if _backend_multiplexer.has_method("purge_session") \
+			and _backend_multiplexer.has_session(gateway_session_id):
+		_backend_multiplexer.purge_session(gateway_session_id)
 
 
 func _record_failure_code(kind: String, code: String) -> void:

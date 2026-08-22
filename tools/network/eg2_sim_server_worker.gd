@@ -18,6 +18,7 @@ const OPTION_SPEC := {
 	"host": {"kind": "string", "default": "127.0.0.1"},
 	"port": {"kind": "int", "default": 0, "required": true},
 	"result-file": {"kind": "string", "default": "", "required": true},
+	"player-binding-file": {"kind": "string", "default": ""},
 	"timeout-ms": {"kind": "int", "default": 60000},
 	"user-data-dir": {"kind": "string", "default": ""},
 }
@@ -26,6 +27,14 @@ var _options: Dictionary = {}
 var _boundary
 var _service
 var _ledger: Dictionary = {}
+# Gateway-granted domain identity bindings: gateway_session_id -> logical
+# player id (player/eg2-*). Published by the gateway worker; operations are
+# applied to the BOUND identity, never to a fixed one.
+var _bindings_by_gateway_session: Dictionary = {}
+var _joined_players: Dictionary = {}
+# Ingress envelopes whose session identity was not yet published: parked in
+# wire order until the binding sidecar carries their gateway_session_id.
+var _pending_admissions: Array = []
 var _peer_id := ""
 var _backend_wire_session := ""
 var _egress_counter: int = 0
@@ -50,11 +59,9 @@ func _initialize() -> void:
 	if not bool(setup.get("success", false)):
 		_finish_failure("SERVICE_SETUP_FAILED", {"error_code": String(setup.get("error_code", ""))})
 		return
-	var joined: Dictionary = _service.join(
-			Support.LOGICAL_PLAYER_ID, Support.PLAYER_TRANSPORT_SESSION, Support.JOIN_OPERATION_ID)
-	if not bool(joined.get("success", false)):
-		_finish_failure("PLAYER_JOIN_FAILED", {"error_code": String(joined.get("error_code", ""))})
-		return
+	# NOTE: no eager fixed-identity join here. Domain players are joined lazily
+	# under the GATEWAY-GRANTED logical_player_id resolved from the binding
+	# sidecar, keyed by the inner gateway_session_id of each ingress envelope.
 
 	_boundary = BoundaryScript.new()
 	var configured: Dictionary = _boundary.configure(EnetPortScript.new(), 1048576, 128, 2097152)
@@ -80,6 +87,7 @@ func _process(_delta: float) -> bool:
 	for event_value in polled.get("details", {}).get("events", []):
 		_handle_event(Dictionary(event_value))
 	_boundary.flush_outbound(64)
+	_drain_pending_admissions()
 	_maybe_complete()
 	if _completion_at_ms >= 0 and Time.get_ticks_msec() - _completion_at_ms >= 500:
 		_finish_success()
@@ -91,6 +99,9 @@ func _process(_delta: float) -> bool:
 
 func _handle_event(event: Dictionary) -> void:
 	match String(event.get("event_type", "")):
+		"PEER_CONNECTED":
+			_peer_id = String(event["peer_id"])
+			_ensure_peer_ready()
 		"MESSAGE_RECEIVED":
 			_peer_id = String(event["peer_id"])
 			_backend_wire_session = String(Dictionary(event.get("frame", {})).get("session_id", _backend_wire_session))
@@ -116,15 +127,95 @@ func _admit(payload) -> void:
 		_finish_failure("NON_ENVELOPE_BACKEND_PAYLOAD", {})
 		return
 	var envelope: Dictionary = Dictionary(payload)
+	var gateway_session_id := String(envelope.get("gateway_session_id", ""))
+	# Demux by the INNER gateway session: every logical player session shares
+	# one physical backend link, and its granted identity binds the domain
+	# application. Unresolved identities park in wire order (the binding
+	# sidecar may lag the first envelope by a tick).
+	var logical_player_id := _resolve_player_id(gateway_session_id)
+	if logical_player_id.is_empty():
+		_pending_admissions.append({"player_id": "", "envelope": envelope.duplicate(true)})
+		return
+	_apply_admission(logical_player_id, envelope)
+
+
+## FIFO drain of parked envelopes; stops at the first still-unresolved head so
+## wire order is preserved. The backend peer is driven READY before any parked
+## egress is sent: parked application no longer runs inside a message event,
+## so readiness must be established here explicitly.
+func _drain_pending_admissions() -> void:
+	if _pending_admissions.is_empty():
+		return
+	_refresh_bindings()
+	_ensure_peer_ready()
+	var snapshot: Dictionary = _boundary.get_peer_snapshot(_peer_id) if not _peer_id.is_empty() else {}
+	if snapshot.is_empty() or String(snapshot.get("state", "")) != "READY":
+		return
+	while not _pending_admissions.is_empty():
+		var pending: Dictionary = _pending_admissions[0]
+		var logical_player_id := String(pending["player_id"])
+		if logical_player_id.is_empty():
+			logical_player_id = _resolve_player_id(String(pending["envelope"]["gateway_session_id"]))
+			if logical_player_id.is_empty():
+				return
+			pending["player_id"] = logical_player_id
+		_pending_admissions.pop_front()
+		_apply_admission(logical_player_id, Dictionary(pending["envelope"]))
+
+
+func _apply_admission(logical_player_id: String, envelope: Dictionary) -> void:
+	if not _ensure_player_joined(logical_player_id):
+		return
 	var inner: Dictionary = envelope.get("frame", {})
-	var channel := String(inner.get("channel", ""))
-	match channel:
+	match String(inner.get("channel", "")):
 		"WORLD_OPERATION":
-			_admit_item(inner)
+			_admit_item(inner, logical_player_id)
 		"INPUT_MOVEMENT":
-			_admit_movement(inner)
+			_admit_movement(inner, logical_player_id)
 		_:
-			_finish_failure("UNEXPECTED_SIM_CHANNEL", {"channel": channel})
+			_finish_failure("UNEXPECTED_SIM_CHANNEL", {"channel": String(inner.get("channel", ""))})
+
+
+func _resolve_player_id(gateway_session_id: String) -> String:
+	if gateway_session_id.is_empty():
+		return ""
+	if _bindings_by_gateway_session.has(gateway_session_id):
+		return String(_bindings_by_gateway_session[gateway_session_id])
+	_refresh_bindings()
+	return String(_bindings_by_gateway_session.get(gateway_session_id, ""))
+
+
+func _refresh_bindings() -> void:
+	var path := String(_options.get("player-binding-file", ""))
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary and Dictionary(parsed).has("bindings"):
+		var bindings: Dictionary = Dictionary(parsed)["bindings"]
+		for gateway_session_id_value in bindings.keys():
+			var row: Dictionary = Dictionary(bindings[String(gateway_session_id_value)])
+			var player_id := String(row.get("logical_player_id", ""))
+			if not player_id.is_empty():
+				_bindings_by_gateway_session[String(gateway_session_id_value)] = player_id
+
+
+## Lazy domain join under the GRANTED identity with its derived per-player
+## transport session (identical to the DIRECT baseline's derivation).
+func _ensure_player_joined(logical_player_id: String) -> bool:
+	if _joined_players.has(logical_player_id):
+		return true
+	var joined: Dictionary = _service.join(
+			logical_player_id, Support.sim_transport_session_for(logical_player_id),
+			Support.JOIN_OPERATION_ID)
+	if not bool(joined.get("success", false)):
+		_finish_failure("PLAYER_JOIN_FAILED", {"error_code": String(joined.get("error_code", ""))})
+		return false
+	_joined_players[logical_player_id] = true
+	return true
 
 
 func _admit_once(operation_id: String) -> bool:
@@ -146,19 +237,17 @@ func _maybe_take_resume_probe() -> void:
 	_resume_checksum = String(snapshot.get("checksum", ""))
 
 
-func _admit_item(inner: Dictionary) -> void:
+func _admit_item(inner: Dictionary, logical_player_id: String) -> void:
 	var operation_id := String(inner.get("payload", {}).get("operation_id", ""))
 	_maybe_take_resume_probe()
 	if not _admit_once(operation_id):
 		return
-	var step: Dictionary = Support.scenario_a_step(operation_id)
-	if step.is_empty():
-		step = Support.scenario_b_step(operation_id)
+	var step: Dictionary = Support.scenario_step_for(operation_id, logical_player_id)
 	if step.is_empty():
 		_finish_failure("UNKNOWN_OPERATION_AT_SIM", {"operation_id": operation_id})
 		return
 	var result: Dictionary = _service.handle_canonical_item_command(
-			Support.LOGICAL_PLAYER_ID, Support.PLAYER_TRANSPORT_SESSION, 1,
+			logical_player_id, Support.sim_transport_session_for(logical_player_id), 1,
 			operation_id, String(step["command_type"]),
 			Dictionary(step["payload"]).duplicate(true))
 	if not bool(result.get("success", false)):
@@ -171,7 +260,7 @@ func _admit_item(inner: Dictionary) -> void:
 	})
 
 
-func _admit_movement(inner: Dictionary) -> void:
+func _admit_movement(inner: Dictionary, logical_player_id: String) -> void:
 	var input_seq := int(inner.get("payload", {}).get("input_seq", 0))
 	_maybe_take_resume_probe()
 	var operation_id := ""
@@ -185,7 +274,7 @@ func _admit_movement(inner: Dictionary) -> void:
 	if not _admit_once(operation_id):
 		return
 	var result: Dictionary = _service.submit_movement_intent(
-			Support.LOGICAL_PLAYER_ID, Support.PLAYER_TRANSPORT_SESSION, 1, input_seq,
+			logical_player_id, Support.sim_transport_session_for(logical_player_id), 1, input_seq,
 			Support.MOVEMENT_INTENT.duplicate(true), operation_id)
 	if not bool(result.get("success", false)):
 		_finish_failure("SIM_MOVEMENT_INTENT_FAILED", {"operation_id": operation_id, "error_code": String(result.get("error_code", ""))})
@@ -238,7 +327,13 @@ func _send_egress(request_inner: Dictionary, egress_channel: String, egress_payl
 func _maybe_complete() -> void:
 	if _completion_at_ms >= 0 or _ledger.size() < Support.expected_operation_ids_all().size():
 		return
-	var comparison: Dictionary = Support.compare_with_combined_direct(_service)
+	if not _pending_admissions.is_empty() or _joined_players.is_empty():
+		return
+	var bound_players: Array = _joined_players.keys()
+	bound_players.sort()
+	var bound_player_id := String(bound_players[0])
+	var comparison: Dictionary = Support.compare_with_combined_direct(
+			_service, bound_player_id, Support.sim_transport_session_for(bound_player_id))
 	if not bool(comparison.get("success", false)):
 		_finish_failure(String(comparison.get("error_code", "COMPARISON_FAILED")), {})
 		return
@@ -267,6 +362,8 @@ func _maybe_complete() -> void:
 		"resume_continuity_equal": not _resume_checksum.is_empty() and _resume_checksum == _checkpoint_checksum,
 		"world_state": world_state,
 		"operation_ledger": ledger_keys,
+		"session_bindings": _bindings_by_gateway_session.duplicate(true),
+		"player_ids": bound_players,
 		"user_data_dir": String(_options["user-data-dir"]),
 		"process_id": OS.get_process_id(),
 	})

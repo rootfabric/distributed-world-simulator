@@ -16,30 +16,56 @@ const AUTHORITY_ID := "authority/eg2-l2-sim"
 const SERVER_INSTANCE_ID := "server-instance/eg2-sim-a"
 const CATALOG_REVISION := 1
 
-# Phase A: fresh placement (first client process).
-const SCENARIO_A_ITEM_COMMANDS := [
-	{"operation_id": "operation/eg2/l2/a-0001", "command_type": "inventory.assign_hotbar", "payload": {"item_id": "item/player/a/beacons", "slot_index": 5}, "target_id": "entity/eg2-scenario-1"},
-	{"operation_id": "operation/eg2/l2/a-0002", "command_type": "inventory.select_hotbar", "payload": {"selected_hotbar_index": 2}, "target_id": "entity/eg2-scenario-2"},
-]
+# Phase A: fresh placement (first client process). Phase B: resume (second
+# client process, same logical identity). Operation ids, command types and
+# targets are FIXED; item ids are DERIVED from the joined logical player id
+# because the multiplayer sandbox seeds item/player/<logical_player_id>/<suffix>
+# per player — a granted identity (player/eg2-*) must operate on its own seeds,
+# never on another identity's items.
+const SCENARIO_PHASE_A := "A"
+const SCENARIO_PHASE_B := "B"
+
 const MOVEMENT_A_OPERATION_ID := "operation/eg2/l2/a-move-0001"
 const MOVEMENT_A_INPUT_SEQ := 1
-
-# Phase B: resume (second client process, same logical identity).
-const SCENARIO_B_ITEM_COMMANDS := [
-	{"operation_id": "operation/eg2/l2/b-0001", "command_type": "inventory.assign_hotbar", "payload": {"item_id": "item/player/a/battery", "slot_index": 4}, "target_id": "entity/eg2-scenario-3"},
-	{"operation_id": "operation/eg2/l2/b-0002", "command_type": "inventory.select_hotbar", "payload": {"selected_hotbar_index": 1}, "target_id": "entity/eg2-scenario-4"},
-]
 const MOVEMENT_B_OPERATION_ID := "operation/eg2/l2/b-move-0001"
 const MOVEMENT_B_INPUT_SEQ := 2
+
+
+static func player_item_id(logical_player_id: String, suffix: String) -> String:
+	return "item/player/%s/%s" % [logical_player_id, suffix]
+
+
+static func scenario_item_commands(phase: String, logical_player_id: String) -> Array:
+	if phase == SCENARIO_PHASE_B:
+		return [
+			{"operation_id": "operation/eg2/l2/b-0001", "command_type": "inventory.assign_hotbar", "payload": {"item_id": player_item_id(logical_player_id, "battery"), "slot_index": 4}, "target_id": "entity/eg2-scenario-3"},
+			{"operation_id": "operation/eg2/l2/b-0002", "command_type": "inventory.select_hotbar", "payload": {"selected_hotbar_index": 1}, "target_id": "entity/eg2-scenario-4"},
+		]
+	return [
+		{"operation_id": "operation/eg2/l2/a-0001", "command_type": "inventory.assign_hotbar", "payload": {"item_id": player_item_id(logical_player_id, "beacons"), "slot_index": 5}, "target_id": "entity/eg2-scenario-1"},
+		{"operation_id": "operation/eg2/l2/a-0002", "command_type": "inventory.select_hotbar", "payload": {"selected_hotbar_index": 2}, "target_id": "entity/eg2-scenario-2"},
+	]
+
+
+## EG2 step lookup for a BOUND logical player id (name differs from the EG1
+## parent's single-argument scenario_step on purpose: different signature).
+static func scenario_step_for(operation_id: String, logical_player_id: String) -> Dictionary:
+	for phase in [SCENARIO_PHASE_A, SCENARIO_PHASE_B]:
+		for step in scenario_item_commands(phase, logical_player_id):
+			if String(step["operation_id"]) == operation_id:
+				return step
+	return {}
 
 
 static func expected_operation_ids_all() -> Array[String]:
 	var ids: Array[String] = [
 		MOVEMENT_A_OPERATION_ID, MOVEMENT_B_OPERATION_ID,
 	]
-	for step in SCENARIO_A_ITEM_COMMANDS:
+	# Operation ids do not depend on the player identity; the legacy sandbox
+	# player is just a stable placeholder for the id-only lookup.
+	for step in scenario_item_commands(SCENARIO_PHASE_A, LOGICAL_PLAYER_ID):
 		ids.append(String(step["operation_id"]))
-	for step in SCENARIO_B_ITEM_COMMANDS:
+	for step in scenario_item_commands(SCENARIO_PHASE_B, LOGICAL_PLAYER_ID):
 		ids.append(String(step["operation_id"]))
 	ids.sort()
 	return ids
@@ -47,26 +73,11 @@ static func expected_operation_ids_all() -> Array[String]:
 
 static func expected_operation_ids_phase(phase: String) -> Array[String]:
 	var ids: Array[String] = []
-	var steps: Array = SCENARIO_A_ITEM_COMMANDS if phase == "A" else SCENARIO_B_ITEM_COMMANDS
-	for step in steps:
+	for step in scenario_item_commands(phase, LOGICAL_PLAYER_ID):
 		ids.append(String(step["operation_id"]))
-	ids.append(MOVEMENT_A_OPERATION_ID if phase == "A" else MOVEMENT_B_OPERATION_ID)
+	ids.append(MOVEMENT_A_OPERATION_ID if phase == SCENARIO_PHASE_A else MOVEMENT_B_OPERATION_ID)
 	ids.sort()
 	return ids
-
-
-static func scenario_a_step(operation_id: String) -> Dictionary:
-	for step in SCENARIO_A_ITEM_COMMANDS:
-		if String(step["operation_id"]) == operation_id:
-			return step
-	return {}
-
-
-static func scenario_b_step(operation_id: String) -> Dictionary:
-	for step in SCENARIO_B_ITEM_COMMANDS:
-		if String(step["operation_id"]) == operation_id:
-			return step
-	return {}
 
 
 ## ---- EG2 session-control inner frames ---------------------------------------
@@ -115,46 +126,53 @@ static func detach_inner(gateway_session_id: String) -> Dictionary:
 
 ## ---- domain application (SIM side only) -------------------------------------
 
+## Per-player domain transport session / join operation derivations. The LIVE
+## sim worker and the DIRECT comparison baseline MUST use the same pair for a
+## given logical player id, or ownership validation and canonical snapshots
+## diverge. Derived deterministically from the GATEWAY-GRANTED identity.
+static func sim_transport_session_for(logical_player_id: String) -> String:
+	return "transport-session/eg2/sim/%s" % logical_player_id.replace("/", "-")
 
-static func apply_item_phase(service, steps: Array) -> bool:
+
+static func apply_item_phase(service, steps: Array, logical_player_id: String = LOGICAL_PLAYER_ID, transport_session: String = PLAYER_TRANSPORT_SESSION) -> bool:
 	var ok := true
 	for step in steps:
 		var result: Dictionary = service.handle_canonical_item_command(
-				LOGICAL_PLAYER_ID, PLAYER_TRANSPORT_SESSION, 1,
+				logical_player_id, transport_session, 1,
 				String(step["operation_id"]), String(step["command_type"]),
 				Dictionary(step["payload"]).duplicate(true))
 		ok = ok and bool(result.get("success", false))
 	return ok
 
 
-static func apply_movement(service, operation_id: String, input_seq: int) -> bool:
+static func apply_movement(service, operation_id: String, input_seq: int, logical_player_id: String = LOGICAL_PLAYER_ID, transport_session: String = PLAYER_TRANSPORT_SESSION) -> bool:
 	var moved: Dictionary = service.submit_movement_intent(
-			LOGICAL_PLAYER_ID, PLAYER_TRANSPORT_SESSION, 1, input_seq,
+			logical_player_id, transport_session, 1, input_seq,
 			MOVEMENT_INTENT.duplicate(true), operation_id)
 	return bool(moved.get("success", false))
 
 
 ## Fresh DIRECT application of BOTH phases in wire order (the reference the
 ## live gateway-fed service is compared against).
-static func apply_all_phases_direct() -> Dictionary:
+static func apply_all_phases_direct(logical_player_id: String = LOGICAL_PLAYER_ID, transport_session: String = PLAYER_TRANSPORT_SESSION) -> Dictionary:
 	var direct = ServiceScript.new()
 	var setup: Dictionary = direct.setup(AUTHORITY_OWNER_ID, AUTHORITY_EPOCH, SERVER_TICK, SERVICE_CONFIG.duplicate(true))
 	if not bool(setup.get("success", false)):
 		return {"success": false, "error_code": "DIRECT_SETUP_FAILED"}
-	var joined: Dictionary = direct.join(LOGICAL_PLAYER_ID, PLAYER_TRANSPORT_SESSION, JOIN_OPERATION_ID)
+	var joined: Dictionary = direct.join(logical_player_id, transport_session, JOIN_OPERATION_ID)
 	if not bool(joined.get("success", false)):
 		return {"success": false, "error_code": "DIRECT_JOIN_FAILED"}
-	var ok := apply_item_phase(direct, SCENARIO_A_ITEM_COMMANDS)
-	ok = apply_movement(direct, MOVEMENT_A_OPERATION_ID, MOVEMENT_A_INPUT_SEQ) and ok
-	ok = apply_item_phase(direct, SCENARIO_B_ITEM_COMMANDS) and ok
-	ok = apply_movement(direct, MOVEMENT_B_OPERATION_ID, MOVEMENT_B_INPUT_SEQ) and ok
+	var ok := apply_item_phase(direct, scenario_item_commands(SCENARIO_PHASE_A, logical_player_id), logical_player_id, transport_session)
+	ok = apply_movement(direct, MOVEMENT_A_OPERATION_ID, MOVEMENT_A_INPUT_SEQ, logical_player_id, transport_session) and ok
+	ok = apply_item_phase(direct, scenario_item_commands(SCENARIO_PHASE_B, logical_player_id), logical_player_id, transport_session) and ok
+	ok = apply_movement(direct, MOVEMENT_B_OPERATION_ID, MOVEMENT_B_INPUT_SEQ, logical_player_id, transport_session) and ok
 	if not ok:
 		return {"success": false, "error_code": "DIRECT_APPLICATION_FAILED"}
 	return {"success": true, "service": direct}
 
 
-static func compare_with_combined_direct(live_service) -> Dictionary:
-	var baseline: Dictionary = apply_all_phases_direct()
+static func compare_with_combined_direct(live_service, logical_player_id: String = LOGICAL_PLAYER_ID, transport_session: String = PLAYER_TRANSPORT_SESSION) -> Dictionary:
+	var baseline: Dictionary = apply_all_phases_direct(logical_player_id, transport_session)
 	if not bool(baseline.get("success", false)):
 		return {"success": false, "error_code": String(baseline.get("error_code", "DIRECT_FAILED"))}
 	var direct = baseline["service"]

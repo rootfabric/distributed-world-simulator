@@ -70,16 +70,19 @@ func _init() -> void:
 	var created: Dictionary = service.create_or_resume_session("client-session/eg2/alpha", ticket_a)
 	_assert(bool(created.get("success", false)), "session creation failed: %s" % _err(created))
 	var create_details := _details(created)
+	# Mirror of the injective identity-suffix derivation (sanitized remainder +
+	# short digest of the full canonical client session id).
+	var alpha_suffix := "eg2-alpha-%s" % "client-session/eg2/alpha".sha256_text().substr(0, 10)
 	if bool(created.get("success", false)):
 		_assert(String(create_details["action"]) == "CREATED", "creation did not report CREATED")
-		_assert(String(create_details["gateway_session_id"]) == "gateway-session/eg2/eg2-alpha/1",
+		_assert(String(create_details["gateway_session_id"]) == "gateway-session/eg2/%s/1" % alpha_suffix,
 				"minted gateway session id unexpected: %s" % str(create_details.get("gateway_session_id", "")))
 		_assert(String(create_details["gateway_session_id"]).begins_with("gateway-session/")
 				and not String(create_details["gateway_session_id"]).contains("player/"),
 				"gateway session id leaked into the player namespace")
-		_assert(String(create_details["logical_player_id"]) == "player/eg2-eg2-alpha",
+		_assert(String(create_details["logical_player_id"]) == "player/eg2-%s" % alpha_suffix,
 				"identity grant unexpected: %s" % str(create_details.get("logical_player_id", "")))
-		_assert(String(create_details["player_entity_id"]) == "entity/eg2-player-eg2-alpha",
+		_assert(String(create_details["player_entity_id"]) == "entity/eg2-player-%s" % alpha_suffix,
 				"entity grant unexpected: %s" % str(create_details.get("player_entity_id", "")))
 		_assert(String(create_details["resume_token"]).begins_with("resume-token/eg2/"),
 				"resume token outside its namespace")
@@ -126,6 +129,16 @@ func _init() -> void:
 		_assert(String(resume_details["previous_gateway_session_id"]) == String(create_details["gateway_session_id"]),
 				"resume lost the previous gateway session linkage")
 
+	# --- accounting hygiene: superseded rows are pruned, live counts are live ---
+	var superseded_lookup := service.get_session(String(create_details["gateway_session_id"]))
+	_assert(_err(superseded_lookup) == "UNKNOWN_GATEWAY_SESSION",
+			"superseded session row survived the resume")
+	var hygiene_report: Dictionary = service.get_report()
+	_assert(int(hygiene_report["live_sessions"]) == 1,
+			"live_sessions does not count LIVE rows only: %s" % str(hygiene_report.get("live_sessions")))
+	_assert(int(hygiene_report["live_resume_tokens"]) == 1,
+			"live_resume_tokens does not count LIVE tokens only")
+
 	# --- stale/wrong resume rejections ---
 	var probe_ticket := _mint_ok(service, "client-session/eg2/alpha")
 	_auth_ok(service, probe_ticket)
@@ -156,6 +169,28 @@ func _init() -> void:
 	var fresh_after := _mint_ok(aging, "client-session/eg2/exp")
 	_assert(bool(aging.authenticate(fresh_after).get("success", false)),
 			"fresh ticket expired immediately under age policy")
+
+	# --- injective identity suffix regression ---
+	# These two canonical ids collapse to the SAME sanitized remainder
+	# ("eg3-x-y"); the suffix derivation must still keep their grants apart.
+	var collision_a := AuthService.new()
+	var ticket_ca := _mint_ok(collision_a, "client-session/eg3/x-y")
+	_auth_ok(collision_a, ticket_ca)
+	var created_a := collision_a.create_or_resume_session("client-session/eg3/x-y", ticket_ca)
+	var ticket_cb := _mint_ok(collision_a, "client-session/eg3-x-y")
+	_auth_ok(collision_a, ticket_cb)
+	var created_b := collision_a.create_or_resume_session("client-session/eg3-x-y", ticket_cb)
+	if bool(created_a.get("success", false)) and bool(created_b.get("success", false)):
+		var details_a := _details(created_a)
+		var details_b := _details(created_b)
+		_assert(String(details_a["logical_player_id"]) != String(details_b["logical_player_id"]),
+				"distinct client sessions collided onto one logical player id")
+		_assert(String(details_a["player_entity_id"]) != String(details_b["player_entity_id"]),
+				"distinct client sessions collided onto one player entity id")
+		_assert(String(details_a["gateway_session_id"]) != String(details_b["gateway_session_id"]),
+				"distinct client sessions collided onto one gateway session id")
+	else:
+		_assert(false, "identity-collision probe sessions failed: %s / %s" % [_err(created_a), _err(created_b)])
 
 	# --- report surface: counters only, no endpoints, no domain payloads ---
 	var report: Dictionary = service.get_report()
