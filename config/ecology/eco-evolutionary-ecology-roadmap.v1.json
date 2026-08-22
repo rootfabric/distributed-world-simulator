@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO4/E4.B0",
-  "current_step": "Wave 2 implemented (E4.B2 bridge compiler, 24 records); next authorization: Wave 3 (B3 sealed plasticity gate + B4 diversity/fingerprint gates)",
+  "current_step": "E4.B complete through B7; E4.T multi-trophic predesign next",
   "last_accepted_step": "ECO.EVO3/E3.FINAL Planetary Ecology Compiler Challenge",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -465,12 +465,20 @@
           {
             "id": "E4.B6",
             "name": "Region materialization from accepted E3.7/E3.FINAL programs with cohort ages, fixed camera rigs, MCP_GODOT screenshot evidence",
-            "status": "PROPOSED"
+            "status": "PASS_REGION_MATERIALIZED",
+            "evidence": [
+              "validation/ecology/evo4_b6_region_manifest.v1.json",
+              "docs/checkpoints/2026-08-22_ECO_EVO4_WAVE4_RU.md"
+            ]
           },
           {
             "id": "E4.B7",
             "name": "Scale/perf probe ~1000 instances under PH5-S3 tier policy; measured budgets as CONV0-A/WQ-WB input",
-            "status": "PROPOSED"
+            "status": "PASS_165FPS_990I",
+            "evidence": [
+              "validation/ecology/evo4_b7_scale_probe_result.v1.json",
+              "docs/checkpoints/2026-08-22_ECO_EVO4_WAVE4_RU.md"
+            ]
           }
         ],
         "input_rules": [

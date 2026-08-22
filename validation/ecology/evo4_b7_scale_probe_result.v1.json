@@ -1,0 +1,12 @@
+{
+  "avg_fps": 165.3,
+  "avg_frame_ms": 6.05,
+  "draw_calls_in_frame": 653,
+  "instances": 990,
+  "primitives_in_frame": 849298,
+  "sample_frames": 90,
+  "schema": "distributed_world_simulator.ecology.evo4_b7_scale_probe.v1",
+  "version": "1.0.0",
+  "visual_variants": 72,
+  "worst_frame_ms": 6.245
+}
