@@ -75,7 +75,10 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 		mi.multimesh = mm
 		holder.add_child(mi)
 		var mm_mat := StandardMaterial3D.new()
-		mm_mat.vertex_color_use_as_albedo = true
+		if key == "branch_mesh":
+			mm_mat.albedo_color = Color(0.36, 0.24, 0.14)
+		else:
+			mm_mat.vertex_color_use_as_albedo = true
 		mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		mi.material_override = mm_mat
 
