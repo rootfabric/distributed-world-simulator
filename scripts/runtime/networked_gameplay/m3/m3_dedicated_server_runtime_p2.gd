@@ -310,18 +310,9 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 	if not _send_control(peer_id, "COMPATIBILITY_ACK", {"ack": ack}):
 		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "FINGERPRINT_ACK_SEND_FAILED")
 		return
-	if already_compatible:
-		_handshake_replays += 1
-		_telemetry.increment("handshake_replays")
-		return
-	_peer_compatibility[peer_id] = {
-		"session_id": session_id,
-		"handshake_id": String(hello.get("handshake_id", "")),
-		"verified_at_ms": Time.get_ticks_msec(),
-		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
-	}
-	# GEN-A world identity handshake: publish the server PlanetDefinition so the
-	# client can fail closed with WORLD_DEFINITION_MISMATCH before joining.
+	# GEN-A world identity handshake: publish the server PlanetDefinition
+	# idempotently on BOTH first-contact and replay paths, so a replaying
+	# client always receives the definition and can pass its join gate.
 	var announcement: Dictionary = _resolve_world_announcement()
 	if announcement.is_empty():
 		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "WORLD_DEFINITION_UNRESOLVABLE")
@@ -335,6 +326,16 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		"definition": announcement,
 		"control_point_digest": _world_control_point_digest,
 	})
+	if already_compatible:
+		_handshake_replays += 1
+		_telemetry.increment("handshake_replays")
+		return
+	_peer_compatibility[peer_id] = {
+		"session_id": session_id,
+		"handshake_id": String(hello.get("handshake_id", "")),
+		"verified_at_ms": Time.get_ticks_msec(),
+		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
+	}
 	_handshake_accepts += 1
 	_telemetry.increment("handshake_accepts")
 	for method_name in ["mark_peer_synchronizing", "mark_peer_ready"]:
