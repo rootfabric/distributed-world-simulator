@@ -222,8 +222,10 @@ func _init() -> void:
 	, 25000)
 	_assert(bool(flowing.get("success", false)), "projection stream never reached the client")
 
-	# Let the mutation-shaped injection attempt land mid-stream (it fires after
-	# the FIRST subscription's third healthy frame), then KILL Sim B.
+	# Let the mutation-shaped injection attempts land mid-stream (the source
+	# attempts one SOLO injection every inject-after-frames frames PER pair,
+	# starting with each pair's very first frame: frames_sent % N == 0, so
+	# attempt #1 rides the first beat), then KILL Sim B.
 	OS.delay_msec(1500)
 	var sim_b_killed_at_ms: int = int(Time.get_unix_time_from_system() * 1000.0)
 	if OS.is_process_running(sim_b_pid):
@@ -282,7 +284,9 @@ func _init() -> void:
 			"Sim B never attempted the write injection")
 	var injected_leaked := false
 	for receipt_value in client_report.get("receipts", []):
-		if String(Dictionary(receipt_value)["operation_id"]).contains("injected-write"):
+		# Producer id (eg4_process_support.mutation_injection_envelope):
+		# "operation/eg4/inj-%06d" — the needle must match it exactly.
+		if String(Dictionary(receipt_value)["operation_id"]).contains("operation/eg4/inj-"):
 			injected_leaked = true
 	_assert(not injected_leaked, "the injected write REACHED the client as a receipt")
 	_assert(int(client_report.get("receipt_count", -1)) == 6,

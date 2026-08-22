@@ -12,10 +12,11 @@ extends SceneTree
 ##   --role=PROJECTION  a PROJECTION source (Sim B): admits projection_subscribe
 ##                      / projection_withdraw control operations and streams
 ##                      synthetic READ-ONLY WORLD_PROJECTION frames per
-##                      subscribed (gateway session, world) pair. After
-##                      --inject-after-frames healthy frames it sends ONE
-##                      mutation-shaped frame (write injection attempt) that
-##                      the gateway fence must reject end to end.
+##                      subscribed (gateway session, world) pair. Every
+##                      --inject-after-frames frames per pair (0-based, so the
+##                      pair's FIRST frame is already an attempt) it sends a
+##                      SOLO mutation-shaped frame (write injection attempt)
+##                      that the gateway fence must reject end to end.
 ##
 ## With --death-marker-file set, the worker EXITS ABRUPTLY when the marker
 ## appears (the orchestrator may also OS.kill it — a killed UDP process is
@@ -400,11 +401,13 @@ func _pump_projections() -> void:
 		_frames_per_subscription[sub_key] = frames_sent + 1
 		if frames_sent % maxi(int(_options["inject-after-frames"]), 1) == 0:
 			# Mutation-shaped write injection attempt. Sent ALONE in its own
-			# beat and REPEATED every inject-after-frames frames per pair: the
-			# boundary coalesces same-stream queued frames latest-wins, so a
-			# one-shot attempt can legally be swallowed by a newer healthy
-			# frame under load — repeated solo beats make at-least-one-arrival
-			# deterministic while the read-only fence rejects every attempt.
+			# beat and REPEATED every inject-after-frames frames per pair,
+			# STARTING with the pair's first frame (frames_sent is 0-based, so
+			# attempt #1 rides the first beat). The boundary coalesces
+			# same-stream queued frames latest-wins, so a one-shot attempt can
+			# legally be swallowed by a newer healthy frame under load —
+			# repeated solo beats make at-least-one-arrival deterministic while
+			# the read-only fence rejects every attempt.
 			_injected_frames += 1
 			var injection_envelope: Dictionary = Support.mutation_injection_envelope(
 					_source_revision, gateway_session_id)

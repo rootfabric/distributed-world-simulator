@@ -38,8 +38,10 @@ const DEMAND_KIND_WITHDRAW := "projection_withdraw"
 ## threshold arrives with the UNRELIABLE_FRAGMENT transfer mode, which the
 ## strict physical frame-binding fence rejects as a protocol violation.
 const PROJECTION_BEAT_MS := 120
-## The PROJECTION source injects ONE mutation-shaped frame after this many
-## healthy frames (end-to-end write-injection rejection proof).
+## The PROJECTION source attempts a SOLO mutation-shaped frame every this many
+## frames per subscribed pair (0-based: each pair's first frame is an attempt);
+## repetition makes at-least-one-arrival deterministic for the end-to-end
+## write-injection rejection proof.
 const INJECTION_AFTER_FRAMES := 3
 
 ## Gateway watchdog: a subscribed source silent this long is LOST (a killed
