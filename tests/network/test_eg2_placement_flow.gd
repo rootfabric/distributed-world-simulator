@@ -241,8 +241,9 @@ func _run_full_flow_to_world_ready() -> void:
 	_assert(String(payload["server_instance_id"]) == "server-instance/eg2/main-a-1", "WORLD_READY lost the server instance id")
 	_assert(String(payload["route_role"]) == "ACTIVE", "fresh placement did not report ACTIVE route role")
 	_assert(bool(payload["resumed"]) == false, "fresh placement reported resumed=true")
-	_assert(String(payload["logical_player_id"]) == "player/eg2-eg2-l1-alpha", "identity grant mismatch")
-	_assert(String(payload["player_entity_id"]) == "entity/eg2-player-eg2-l1-alpha", "entity grant mismatch")
+	var l1_alpha_suffix := "eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10)
+	_assert(String(payload["logical_player_id"]) == "player/eg2-%s" % l1_alpha_suffix, "identity grant mismatch")
+	_assert(String(payload["player_entity_id"]) == "entity/eg2-player-%s" % l1_alpha_suffix, "entity grant mismatch")
 	_assert(String(payload["resume_token"]).begins_with("resume-token/eg2/"), "resume token outside its namespace")
 	_assert(String(payload["gateway_session_id"]).begins_with("gateway-session/"), "gateway session id outside its namespace")
 	var row := _route_row(String(payload["gateway_session_id"]))
@@ -286,8 +287,10 @@ func _run_resume_preserves_identity() -> void:
 	if payload.is_empty():
 		return
 	_assert(bool(payload["resumed"]) == true, "token resume did not report resumed=true")
-	_assert(String(payload["logical_player_id"]) == "player/eg2-eg2-l1-alpha"
-			and String(payload["player_entity_id"]) == "entity/eg2-player-eg2-l1-alpha",
+	_assert(String(payload["logical_player_id"]) == "player/eg2-%s"
+			% ("eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10))
+			and String(payload["player_entity_id"]) == "entity/eg2-player-%s"
+			% ("eg2-l1-alpha-%s" % "client-session/eg2/l1-alpha".sha256_text().substr(0, 10)),
 			"resume did not preserve the logical identity")
 	_assert(String(payload["gateway_session_id"]) != String(alpha["gateway_session_id"]),
 			"resume reused the previous gateway session id")
