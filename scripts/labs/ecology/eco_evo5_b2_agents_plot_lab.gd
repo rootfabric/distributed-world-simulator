@@ -12,6 +12,11 @@ var _bites := 0
 var _hud: Label
 
 func _ready() -> void:
+	var camera := Camera3D.new()
+	add_child(camera)
+	camera.current = true
+	camera.position = Vector3(0.0, 13.0, 15.0)
+	camera.look_at(Vector3(0.0, 0.8, 0.0), Vector3.UP)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-35.0, 25.0, 0.0)
 	sun.light_energy = 1.4
