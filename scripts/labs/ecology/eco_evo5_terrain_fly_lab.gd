@@ -22,6 +22,7 @@ var _roots: Array[Node3D] = []
 var _rng_tick := 0
 var _established_count := 0
 var _cell_top := {}
+var _cell_keys: Array = []
 const RichPresentation = preload("res://scripts/research/ecology/evo4_bridge_presentation_v1.gd")
 var _species: Dictionary = {}
 
@@ -50,12 +51,28 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 	holder.scale = Vector3.ONE * 0.8
 	add_child(holder)
 	_roots.append(holder)
-	for mesh_key in ["branch_mesh", "leaf_mesh", "flower_mesh"]:
-		if not built.has(mesh_key) or built[mesh_key] == null:
+	for pair in [["branch_mesh", null, null], ["leaf_mesh", "leaf_colors", "leaf_transforms"], ["flower_mesh", "flower_color", "flower_transforms"]]:
+		var key: String = pair[0]
+		if not built.has(key) or built[key] == null:
 			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = built[key]
+		var xforms: Array = built[pair[2]] if pair[2] != null else [Transform3D.IDENTITY]
+		mm.instance_count = xforms.size()
+		for xi in range(mm.instance_count):
+			if pair[2] != null:
+				mm.set_instance_transform(xi, xforms[xi])
+			var col := Color(1, 1, 1)
+			if pair[1] == "leaf_colors":
+				var lc: Array = built["leaf_colors"]
+				col = lc[xi % lc.size()]
+			elif pair[1] == "flower_color":
+				col = built["flower_color"]
+			mm.set_instance_color(xi, col)
 		var mi := MultiMeshInstance3D.new()
-		mi.multimesh = built[mesh_key]
-		mi.position = Vector3.ZERO
+		mi.multimesh = mm
 		holder.add_child(mi)
 		var mm_mat := StandardMaterial3D.new()
 		mm_mat.vertex_color_use_as_albedo = true
@@ -113,6 +130,7 @@ func _ready() -> void:
 		tile.mesh = box
 		tile.position = Vector3(float(cell["x"]) * 2.0, float(cell["height"]) * 1.6 - 1.1, float(cell["z"]) * 2.0)
 		_cell_top["%d|%d" % [int(cell["x"]), int(cell["z"])]] = float(cell["height"]) * 1.6 + 0.4
+		_cell_keys.append("%d|%d" % [int(cell["x"]), int(cell["z"])])
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = _shade(PALETTE[zone], float(cell["height"]))
 		tile.material_override = mat
@@ -210,12 +228,14 @@ func _spawn_seed() -> void:
 	var sm := StandardMaterial3D.new()
 	sm.albedo_color = Color(0.85, 0.72, 0.40)
 	seed_node.material_override = sm
-	var drop_x := (_unit("sx|%d" % _rng_tick) - 0.5) * 26.0
-	var drop_z := (_unit("sz|%d" % _rng_tick) - 0.5) * 26.0
+	var cell_key: String = _cell_keys[int(_unit("cell|%d|%d" % [_tick, _rng_tick]) * float(_cell_keys.size()))]
+	var parts := (cell_key as String).split("|")
+	var drop_x := float(int(parts[0])) * 2.0 + (_unit("sx|%d" % _rng_tick) - 0.5) * 1.4
+	var drop_z := float(int(parts[1])) * 2.0 + (_unit("sz|%d" % _rng_tick) - 0.5) * 1.4
 	seed_node.position = Vector3(drop_x, 9.0, drop_z)
 	add_child(seed_node)
 	var score: float = 0.45 + float(eff.get("soil_moisture_ppm", 400000)) / 2e6 - float(eff.get("disturbance_pressure_ppm", 50000)) / 1e6 + 0.15 * _unit("sc|%d" % _rng_tick)
-	_seeds.append({"node": seed_node, "zone": zone, "fall": 34,
+	_seeds.append({"node": seed_node, "zone": zone, "fall": 34, "cell": cell_key,
 		"score": clampf(score, 0.15, 0.95)})
 
 func _update_seeds() -> void:
@@ -231,8 +251,7 @@ func _update_seeds() -> void:
 			var pos := node.position
 			node.queue_free()
 			_seeds.remove_at(i)
-			var key := "%d|%d" % [int(round(pos.x / 2.0)), int(round(pos.z / 2.0))]
-			var ground_y: float = float(_cell_top.get(key, 0.4))
+			var ground_y: float = float(_cell_top.get(String(s["cell"]), 0.4))
 			_establish(Vector3(pos.x, ground_y, pos.z), String(s["zone"]), _unit("esth|%d" % i))
 		else:
 			var fade: float = clampf(node.scale.x - 0.08, 0.05, 1.0)
@@ -304,6 +323,10 @@ func _apply_look() -> void:
 	_cam.rotation = Vector3(_pitch, _yaw, 0.0)
 
 func _autocap() -> void:
+	_cam.position = Vector3(1.0, 30.0, 1.0)
+	_pitch = -1.4
+	_yaw = 0.0
+	_apply_look()
 	for i in range(700):
 		await get_tree().process_frame
 	await get_tree().process_frame
