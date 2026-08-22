@@ -257,6 +257,23 @@ func set_backend_multiplexer(multiplexer) -> Dictionary:
 	return _success({})
 
 
+## EG4 additive egress hook: deliver ONE client-facing frame spec (already
+## physically channel-mapped and priority-scheduled by the projection
+## aggregation layer) through the node's route-table admission, per-peer wire
+## sequencing and client boundary. The EG1..EG3 forwarding paths are unchanged.
+func send_client_frame_spec_for_session(gateway_session_id: String, frame_spec: Dictionary) -> Dictionary:
+	if _route_table == null:
+		return _failure("NOT_STARTED", {})
+	var lookup: Dictionary = _route_table.lookup(gateway_session_id)
+	if not bool(lookup.get("success", false)):
+		return _failure("UNKNOWN_GATEWAY_SESSION", {"gateway_session_id": gateway_session_id})
+	var row: Dictionary = lookup["details"]["row"]
+	if String(row["binding"]["state"]) == "DETACHED":
+		return _failure("GATEWAY_SESSION_DETACHED", {"gateway_session_id": gateway_session_id})
+	_send_to_client(String(row["client_transport_peer_id"]), frame_spec)
+	return _success({"gateway_session_id": gateway_session_id})
+
+
 ## ---- EG3 shared-multiplexed backend tunnel ---------------------------------
 
 
