@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO4/E4.B0",
-  "current_step": "E4.T predesign ready; T0 trophic payoff probe proposed",
+  "current_step": "E4.T COMPLETE_T0_T4 (T0-T4 PASS; canonization of bridge+E4.T remains human gate via merge PR #196)",
   "last_accepted_step": "ECO.EVO3/E3.FINAL Planetary Ecology Compiler Challenge",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -492,10 +492,62 @@
       },
       "E4.T": {
         "name": "Multi-Trophic Ecosystem & Coevolution (inherited declared goal)",
-        "status": "T0_PAYOFF_PROBE_PASS_4_4",
+        "status": "COMPLETE_T0_T4",
         "rule": "Defense/spines morphology genes become trophic traits; requires visible morphology first (E4.B) and its own separate authorization",
         "predesign_doc": "docs/plans/ECO_EVO4T_MULTITROPHIC_PREDESIGN_RU.md",
-        "director_dispatch": "received in session after E4.B closure (B0-B7 PASS)"
+        "megawave_plan_doc": "docs/plans/ECO_EVO4T_MEGAWAVE_PLAN_RU.md",
+        "director_dispatch": "received in session after E4.B closure (B0-B7 PASS)",
+        "steps": [
+          {
+            "id": "E4.T0",
+            "name": "Trophic payoff probe (sealed directions)",
+            "status": "PASS_4_4",
+            "evidence": [
+              "validation/ecology/evo4_t0_payoff_probe_result.v1.json"
+            ]
+          },
+          {
+            "id": "E4.T1",
+            "name": "Herbivore agent contract with aggregate patch pressure",
+            "status": "PASS_GATES_3_3_TESTS_6_6",
+            "evidence": [
+              "scripts/research/ecology/evo4_t1_herbivore_agent_v1.py",
+              "validation/ecology/evo4_t1_agent_pressure.v1.json",
+              "tests/research/ecology/test_evo4_t1_herbivore_agent.py (6/6)"
+            ]
+          },
+          {
+            "id": "E4.T2",
+            "name": "Plant-defense x herbivore-preference coevolution loop (40 generations)",
+            "status": "PASS_NO_PURE_DOMINANCE_RESTART_BYTE_EQUAL_3_SEEDS",
+            "evidence": [
+              "scripts/research/ecology/evo4_t2_coevolution_loop_v1.py",
+              "validation/ecology/evo4_t2_coevolution_trajectory.v1.json",
+              "validation/ecology/evo4_t2_coevolution_result.v1.json",
+              "tests/research/ecology/test_evo4_t2_coevolution_loop.py (6/6)"
+            ]
+          },
+          {
+            "id": "E4.T3",
+            "name": "Defense visualization: optional thorn_density presentation + trophic defense lab",
+            "status": "PASS_PIXEL_GATE",
+            "evidence": [
+              "scripts/labs/ecology/eco_evo4_t3_trophic_defense_lab.gd",
+              "artifacts/evo4_t3_trophic_defense.png (local evidence)"
+            ]
+          },
+          {
+            "id": "E4.T4",
+            "name": "Planetary trophic probe: T2 equilibrium defense classes over B6 region",
+            "status": "PASS_FPS_165_3_GRAPH_HASH_INVARIANT",
+            "evidence": [
+              "scripts/labs/ecology/eco_evo4_t4_planetary_trophic_lab.gd",
+              "validation/ecology/evo4_t4_planetary_probe_result.v1.json",
+              "artifacts/evo4_t4_planetary_trophic.png (local evidence)"
+            ]
+          }
+        ],
+        "closure_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO4_T_MEGAWAVE_RU.md"
       }
     }
   },
