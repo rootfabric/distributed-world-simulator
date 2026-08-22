@@ -1,0 +1,369 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_t1_agent_pressure.v1",
+  "version": "1.0.0",
+  "rule": "evo4-t1-herbivore-agent-v0",
+  "derived_representation": true,
+  "source_manifest_sha256": "7becec7e119f73b211a6c7a53fa1832fef1abdfa607e0ccc3c29cb6562efce0a",
+  "agent_contract": {
+    "appetite": 1.0,
+    "mobility": 0.6,
+    "preference_vector": {
+      "nutrient_weight": 0.7,
+      "toxicity_weight": 0.3
+    }
+  },
+  "species_count": 9,
+  "patch_count": 11,
+  "species_attributes": {
+    "genome/e22-alpha-late": {
+      "defense": 0.5641,
+      "vigor": 0.45,
+      "nutrient_value": 0.5563,
+      "toxicity": 0.3101
+    },
+    "genome/e22-beta": {
+      "defense": 0.3755,
+      "vigor": 0.38,
+      "nutrient_value": 0.4972,
+      "toxicity": 0.1784
+    },
+    "genome/e3f-ext-01": {
+      "defense": 0.5863,
+      "vigor": 0.375,
+      "nutrient_value": 0.5449,
+      "toxicity": 0.2005
+    },
+    "genome/e3f-ext-02": {
+      "defense": 0.4562,
+      "vigor": 0.41,
+      "nutrient_value": 0.7118,
+      "toxicity": 0.2777
+    },
+    "genome/e3f-ext-03": {
+      "defense": 0.3984,
+      "vigor": 0.445,
+      "nutrient_value": 0.645,
+      "toxicity": 0.2157
+    },
+    "genome/e3f-ext-04": {
+      "defense": 0.2949,
+      "vigor": 0.48,
+      "nutrient_value": 0.5292,
+      "toxicity": 0.2434
+    },
+    "genome/e3f-ext-05": {
+      "defense": 0.1818,
+      "vigor": 0.34,
+      "nutrient_value": 0.6237,
+      "toxicity": 0.1476
+    },
+    "genome/e3f-ext-07": {
+      "defense": 0.5546,
+      "vigor": 0.41,
+      "nutrient_value": 0.5212,
+      "toxicity": 0.2338
+    },
+    "genome/e3f-ext-08": {
+      "defense": 0.5137,
+      "vigor": 0.445,
+      "nutrient_value": 0.575,
+      "toxicity": 0.2128
+    }
+  },
+  "patches": [
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-01",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.45454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.11363636,
+        "0.50": 0.22727273,
+        "1.00": 0.45454545,
+        "1.50": 0.68181818,
+        "2.00": 0.90909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-02",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-03",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-04",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-05",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-06",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-07",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-08",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-09",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-10",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    },
+    {
+      "patch_key": "eco-evo3-fixture/planet-alpha/cell-11",
+      "instance_count": 90,
+      "resident_species": 9,
+      "palatability_score": 0.33745,
+      "visitation_weight": 0.05454545,
+      "species_pressure_share": {
+        "genome/e22-alpha-late": 0.00481454,
+        "genome/e22-beta": 0.0,
+        "genome/e3f-ext-01": 0.06926721,
+        "genome/e3f-ext-02": 0.31172832,
+        "genome/e3f-ext-03": 0.23883726,
+        "genome/e3f-ext-04": 0.00750654,
+        "genome/e3f-ext-05": 0.25312557,
+        "genome/e3f-ext-07": 0.00046592,
+        "genome/e3f-ext-08": 0.11425465
+      },
+      "pressure_by_appetite": {
+        "0.25": 0.01363636,
+        "0.50": 0.02727273,
+        "1.00": 0.05454545,
+        "1.50": 0.08181818,
+        "2.00": 0.10909091
+      }
+    }
+  ],
+  "gates": {
+    "g1_recompute_determinism": true,
+    "g2_monotone_in_appetite": true,
+    "g2_total_pressure_by_appetite": [
+      0.25,
+      0.5,
+      1.0,
+      1.5,
+      2.0
+    ],
+    "g3_preference_alignment": true,
+    "pressured_palatability_vs_uniform_mean": [
+      0.38578,
+      0.337446
+    ],
+    "pressure_digest_sha256": "d96c8c9df710022d38bb1c0fb2c303b50a35e9cb4f17b4b661149c55d1347ac1"
+  },
+  "no_individual_truth": true,
+  "verdict": "PASS"
+}

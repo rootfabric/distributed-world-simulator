@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b3_plasticity_gate.v1.preview_subjects",
+  "subjects": [
+    {
+      "label": "BASELINE",
+      "genome_id": "genome/e22-beta",
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.2383200000000003,
+        "internode_length_m": 0.31600000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5245714285714286,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 2.3072000000000004,
+        "checksum": "92ea53b56d18c7f93862c0bc86504610b238cc74223dc8e5b8ee305bdb566b4c"
+      },
+      "individual_seed_demo": 533520666319502244
+    },
+    {
+      "label": "LIGHT_HIGH",
+      "genome_id": "genome/e22-beta",
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.80424,
+        "internode_length_m": 0.31600000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5245714285714286,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 2.3072000000000004,
+        "checksum": "a4d503a20f4df3c42e339fbcc803c2a33be7b9723cf7cfb1e90219c9fe03d9a1"
+      },
+      "individual_seed_demo": 533520666319502244
+    },
+    {
+      "label": "DISTURBANCE_HIGH",
+      "genome_id": "genome/e22-beta",
+      "development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 2.48848,
+        "internode_length_m": 0.264,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5245714285714286,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 2.3072000000000004,
+        "checksum": "d949e41ce8a8927ddf6a7e7ba442bd5beb290c9f2bb462a695490027578c4930"
+      },
+      "individual_seed_demo": 533520666319502244
+    }
+  ]
+}
