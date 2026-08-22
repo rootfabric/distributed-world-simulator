@@ -7,6 +7,9 @@ extends RefCounted
 ## derived flowers, deterministic scatter, atmosphere and cohorts.
 ## Every stochastic choice is keyed by (individual_seed | graph_hash | label).
 ## Touches no PH5 core module and no chain hash; fully revertible.
+## E4.T3 adds OPTIONAL presentation-only params: thorn_density (defense-proxy
+## cone spikes on branches) and browse_pressure (deterministic leaf/flower
+## loss plus browsed-foliage tint). Defaults 0.0 reproduce pre-T3 builds.
 
 const Skeleton = preload("res://scripts/research/ecology/plant_growth_graph_skeleton_v1.gd")
 const RenderDescription = preload("res://scripts/research/ecology/plant_render_description_v1.gd")
@@ -162,7 +165,8 @@ static func _basis_from_z(z_axis: Vector3) -> Basis:
 
 static func build_rich_subject(
 	traits: Dictionary, individual_seed: int, water_preference: float,
-	shade_tolerance: float, dormancy_fraction: float, foliage_density: float = 1.0
+	shade_tolerance: float, dormancy_fraction: float, foliage_density: float = 1.0,
+	thorn_density: float = 0.0, browse_pressure: float = 0.0
 ) -> Dictionary:
 	var graph := Skeleton.build(traits, individual_seed)
 	if graph.is_empty():
@@ -240,6 +244,34 @@ static func build_rich_subject(
 		index_cursor += (BRANCH_SIDES + 1) * 2
 	var branch_mesh: ArrayMesh = st.commit(ArrayMesh.new())
 
+	# E4.T3 presentation-only thorns: cone spikes on lateral branches and
+	# twigs, keyed by (individual_seed | segment | index). Derived from the
+	# v0 defense proxy passed by the caller; touches no PH5 core module and
+	# no chain hash. Zero density keeps output identical to pre-T3 builds.
+	var thorn_transforms: Array[Transform3D] = []
+	var thorn_clamped := clampf(thorn_density, 0.0, 1.0)
+	if thorn_clamped > 0.001:
+		for br in branches:
+			var segment: Dictionary = br
+			if bool(segment["main_axis"]):
+				continue
+			var seg_start := _vec3(Array(segment["start"]))
+			var seg_end := _vec3(Array(segment["end"]))
+			var seg_dir := seg_end - seg_start
+			if seg_dir.length() < 0.001:
+				continue
+			seg_dir = seg_dir.normalized()
+			var count := int(round(thorn_clamped * clampf(float(segment["length_m"]) * 12.0, 1.0, 7.0)))
+			for k in range(count):
+				var t := (float(k) + 0.5) / float(count)
+				var pos := _bend_point(seg_start.lerp(seg_end, t), height, bend)
+				var key := "thorn/%s/%d" % [String(segment["segment_id"]), k]
+				var radial := _perp(seg_dir).rotated(seg_dir, TAU * _hash01(individual_seed, 20, key))
+				var thorn_dir := (radial * 0.85 + seg_dir * 0.25 + Vector3.UP * 0.35).normalized()
+				var thorn_scale := 0.8 + 0.5 * _hash01(individual_seed, 21, key + "/s")
+				thorn_transforms.append(Transform3D(_basis_from_z(thorn_dir), pos).scaled(Vector3.ONE * thorn_scale))
+	var browse := clampf(browse_pressure, 0.0, 0.95)
+
 	# leaf sites: whorls on terminals (richer on real terminals, small on twigs)
 	# + along-lateral leaves; golden-angle azimuths
 	var size_scale: float = clampf(height / 4.0, 0.7, 1.5)
@@ -255,6 +287,8 @@ static func build_rich_subject(
 		var base_whorl := (3 if is_twig else 6) + int(3.0 * _hash01(individual_seed, 12, "whorl/" + String(tseg["segment_id"])))
 		var whorl_n := clampi(int(round(float(base_whorl) * foliage_density)), 2, 14)
 		for i in range(whorl_n):
+			if browse > 0.001 and _hash01(individual_seed, 22, "bite/%s/%d" % [String(tseg["segment_id"]), i]) < browse:
+				continue
 			var azim_deg: float = GOLDEN_ANGLE_DEG * float(i) + 360.0 * _hash01(individual_seed, 13, "az/" + String(tseg["segment_id"]) + "/" + str(i))
 			var radial := Vector3(cos(deg_to_rad(azim_deg)), 0.0, sin(deg_to_rad(azim_deg)))
 			var leaf_dir := (radial + stem_dir * 0.35 + Vector3.UP * 0.55).normalized()
@@ -272,11 +306,19 @@ static func build_rich_subject(
 		var ldir := (radial2 + Vector3.UP * 0.5).normalized()
 		var along_count := 1 + int(clampf(foliage_density, 1.0, 3.0))
 		for li in range(along_count):
+			if browse > 0.001 and _hash01(individual_seed, 23, "bite/lat/%s/%d" % [String(segment["segment_id"]), li]) < browse:
+				continue
 			var t_along: float = 0.35 + 0.28 * float(li)
 			var pos_along := _bend_point((_vec3(Array(segment["start"])) + (_vec3(Array(segment["end"])) - _vec3(Array(segment["start"]))) * t_along), height, bend)
 			var ldir_i := (radial2.rotated(sdir, 0.9 * float(li)) + Vector3.UP * 0.5).normalized()
 			_add_leaf_site(leaf_transforms, leaf_colors, individual_seed, li, ldir_i, pos_along, size_scale * 0.85, archetype, palette, graph_hash, true)
 
+	if browse > 0.001:
+		# E4.T3 presentation-only herbivory traces: surviving foliage is
+		# tinted toward a browsed tan; lost leaves were skipped above.
+		var browsed_tint := Color(0.62, 0.47, 0.24)
+		for ci in range(leaf_colors.size()):
+			leaf_colors[ci] = (leaf_colors[ci] as Color).lerp(browsed_tint, 0.30 * browse)
 	var stats := {
 		"schema": SCHEMA, "version": VERSION, "derived_representation": true,
 		"source_graph_hash": graph_hash,
@@ -287,7 +329,11 @@ static func build_rich_subject(
 		"flower_count": flower_transforms.size(),
 		"height_m": height,
 	}
-	stats["presentation_hash"] = _presentation_hash(stats)
+	if thorn_transforms.size() > 0:
+		stats["thorn_count"] = thorn_transforms.size()
+	if browse > 0.001:
+		stats["browse_pressure"] = browse
+	stats["presentation_hash"] = _presentation_hash(stats, thorn_transforms.size())
 	return {
 		"stats": stats, "branch_mesh": branch_mesh,
 		"leaf_mesh": _leaf_mesh(archetype),
@@ -295,6 +341,8 @@ static func build_rich_subject(
 		"leaf_transforms": leaf_transforms, "leaf_colors": leaf_colors,
 		"flower_transforms": flower_transforms,
 		"flower_color": palette["flower"], "flower_core_color": palette["flower_core"],
+		"thorn_mesh": _thorn_mesh(), "thorn_transforms": thorn_transforms,
+		"thorn_color": Color(0.45, 0.23, 0.11),
 	}
 
 static func _add_leaf_site(
@@ -313,13 +361,32 @@ static func _add_leaf_site(
 static func _leaf_basis(dir: Vector3, pos: Vector3) -> Transform3D:
 	return Transform3D(_basis_from_z(dir), pos)
 
-static func _presentation_hash(stats: Dictionary) -> String:
+static func _presentation_hash(stats: Dictionary, thorn_count: int = 0) -> String:
 	var tokens := PackedStringArray([
 		SCHEMA, VERSION, String(stats["source_graph_hash"]), str(int(stats["individual_seed"])),
 		String(stats["archetype"]), String(stats["palette_id"]),
 		str(int(stats["twig_count"])), str(int(stats["leaf_count"])), str(int(stats["flower_count"])),
 	])
+	# Thorn token appended only when thorns exist, so every pre-T3
+	# presentation hash stays byte-stable.
+	if thorn_count > 0:
+		tokens.append("thorn/" + str(thorn_count))
 	return "|".join(tokens).sha256_text()
+
+static func _thorn_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var tip := Vector3(0.0, 0.0, 0.10)
+	var base := 0.016
+	for corner in range(4):
+		var ang := TAU * float(corner) / 4.0
+		var a := Vector3(cos(ang) * base, sin(ang) * base, 0.0)
+		var b := Vector3(cos(ang + TAU / 4.0) * base, sin(ang + TAU / 4.0) * base, 0.0)
+		var n := Vector3((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, 0.0).normalized()
+		st.set_normal(n); st.set_color(Color(1, 1, 1)); st.add_vertex(a)
+		st.set_normal(n); st.set_color(Color(1, 1, 1)); st.add_vertex(b)
+		st.set_normal(n); st.set_color(Color(1, 1, 1)); st.add_vertex(tip)
+	return st.commit(ArrayMesh.new())
 
 static func _vec3(values: Array) -> Vector3:
 	return Vector3(float(values[0]), float(values[1]), float(values[2]))
