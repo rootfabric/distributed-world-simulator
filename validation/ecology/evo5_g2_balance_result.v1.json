@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo5_g2_balance.v1.result",
+  "version": "1.0.0",
+  "ticks": 200,
+  "seeds": [
+    "20260822",
+    "20260823",
+    "20260824"
+  ],
+  "gates": {
+    "restart_byte_equal": true,
+    "no_class_extinct": true,
+    "no_total_dominance": true,
+    "robustness_3_seeds": true
+  },
+  "survival_rates": {
+    "amphibious/low": 0.257,
+    "terrestrial/low": 0.962,
+    "terrestrial/tall": 0.809
+  },
+  "verdict": "PASS"
+}
