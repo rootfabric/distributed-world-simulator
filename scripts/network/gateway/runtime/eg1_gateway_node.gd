@@ -31,6 +31,7 @@ const DEFAULT_BACKEND_LINK_ID := "backend-link/eg1/local-sim"
 var _route_table
 var _forwarder
 var _session_control
+var _placement_handler = null
 var _client_boundary
 var _backend_boundary
 var _gateway_instance_id := ""
@@ -38,7 +39,11 @@ var _backend_session_id := ""
 var _backend_route_id := ""
 var _backend_link_id := ""
 var _backend_peer_id := ""
-var _client_wire_sequence: int = 0
+# EG2: many clients share one gateway, and the client boundary enforces
+# gap-free outgoing sequencing PER PEER — so wire sequences are tracked per
+# transport peer instead of one global counter (which only worked while a
+# single client leg existed).
+var _client_wire_sequence_by_peer: Dictionary = {}
 var _backend_wire_sequence: int = 0
 var _pending_backend_specs: Array = []
 var _pump_count: int = 0
@@ -48,11 +53,14 @@ var _counters := {
 	"session_control_attached": 0,
 	"session_control_detached": 0,
 	"session_control_rejected": 0,
+	"placement_handled": 0,
+	"placement_rejected": 0,
 	"frames_sent_client_to_world": 0,
 	"frames_sent_world_to_client": 0,
 	"backend_send_retries": 0,
 	"backend_send_failures": 0,
 	"client_send_failures": 0,
+	"client_send_dropped_no_wire_session": 0,
 }
 var _failure_codes := {
 	"backend_send": {},
@@ -206,6 +214,17 @@ func get_report() -> Dictionary:
 	}
 
 
+## Install the optional EG2 placement handler (additive dispatch): SESSION_CONTROL
+## frames the EG1 session control rejects with UNSUPPORTED_SESSION_CONTROL_SCHEMA
+## are offered to this handler instead. EG1 behavior is unchanged when no
+## handler is installed.
+func set_placement_handler(handler) -> Dictionary:
+	if handler == null or not handler.has_method("handle_session_control"):
+		return _failure("INVALID_PLACEMENT_HANDLER", {})
+	_placement_handler = handler
+	return _success({})
+
+
 func _handle_client_event(event: Dictionary) -> void:
 	match String(event.get("event_type", "")):
 		"MESSAGE_RECEIVED":
@@ -216,17 +235,33 @@ func _handle_client_event(event: Dictionary) -> void:
 			if String(inner.get("channel", "")) == "SESSION_CONTROL":
 				_counters["session_control_handled"] = int(_counters["session_control_handled"]) + 1
 				var result: Dictionary = _session_control.handle_session_control(frame, _route_table, peer_id)
+				var handled_by_placement := false
+				if not bool(result.get("success", false)) \
+						and String(result.get("error_code", "")) == "UNSUPPORTED_SESSION_CONTROL_SCHEMA" \
+						and _placement_handler != null:
+					handled_by_placement = true
+					result = _placement_handler.handle_session_control(frame, _route_table, peer_id)
 				if bool(result.get("success", false)):
-					match String(result["details"].get("action", "")):
-						"ATTACH":
-							_counters["session_control_attached"] = int(_counters["session_control_attached"]) + 1
+					if handled_by_placement:
+						_counters["placement_handled"] = int(_counters["placement_handled"]) + 1
+						if result["details"].has("gateway_session_id"):
 							_route_table.bind_backend_link(
 									String(result["details"]["gateway_session_id"]), _backend_link_id)
-						"DETACH":
-							_counters["session_control_detached"] = int(_counters["session_control_detached"]) + 1
-					_send_to_client(peer_id, result["details"]["ack_transport_frame"])
+					else:
+						match String(result["details"].get("action", "")):
+							"ATTACH":
+								_counters["session_control_attached"] = int(_counters["session_control_attached"]) + 1
+								_route_table.bind_backend_link(
+										String(result["details"]["gateway_session_id"]), _backend_link_id)
+							"DETACH":
+								_counters["session_control_detached"] = int(_counters["session_control_detached"]) + 1
+					if result["details"].has("ack_transport_frame"):
+						_send_to_client(peer_id, result["details"]["ack_transport_frame"])
 				else:
-					_counters["session_control_rejected"] = int(_counters["session_control_rejected"]) + 1
+					if handled_by_placement:
+						_counters["placement_rejected"] = int(_counters["placement_rejected"]) + 1
+					else:
+						_counters["session_control_rejected"] = int(_counters["session_control_rejected"]) + 1
 			else:
 				var forwarded: Dictionary = _forwarder.forward_client_to_world(
 						frame, _route_table, _backend_session_id)
@@ -285,16 +320,22 @@ func _drive_backend_peer_ready() -> void:
 
 
 func _send_to_client(peer_id: String, frame_spec: Dictionary) -> void:
-	_client_wire_sequence += 1
+	_client_wire_sequence_by_peer[peer_id] = int(_client_wire_sequence_by_peer.get(peer_id, 0)) + 1
 	var spec: Dictionary = frame_spec.duplicate(true)
-	spec["sequence"] = _client_wire_sequence
+	spec["sequence"] = int(_client_wire_sequence_by_peer[peer_id])
 	# The egress reframe carries the gateway-session identity; the wire frame
 	# itself must use the transport-session the boundary registered this peer
 	# under, so resolve it from the leg snapshot.
 	var peer_snapshot: Dictionary = _client_boundary.get_peer_snapshot(peer_id)
 	var wire_session := String(peer_snapshot.get("session_id", ""))
-	if not wire_session.is_empty():
-		spec["session_id"] = wire_session
+	if wire_session.is_empty():
+		# Fail closed (EG2 review hardening): without the boundary-registered
+		# transport session no deliverable wire frame can be built, so the
+		# frame is DROPPED and accounted instead of sent with a guessed session.
+		_counters["client_send_dropped_no_wire_session"] = int(_counters["client_send_dropped_no_wire_session"]) + 1
+		_record_failure_code("client_send", "MISSING_WIRE_SESSION:%s" % String(spec.get("channel", "")))
+		return
+	spec["session_id"] = wire_session
 	var wire: Dictionary = FrameScript.create(
 			String(spec["frame_id"]),
 			String(spec["session_id"]),
