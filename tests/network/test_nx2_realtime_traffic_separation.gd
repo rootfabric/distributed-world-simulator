@@ -308,7 +308,22 @@ func _test_runtime_wiring() -> void:
 	_assert(controller.contains("uses_server_authoritative_persistence") and controller.contains("SERVER_AUTHORITATIVE_PERSISTENCE"), "Server-authoritative persistence capability is not consulted")
 	_assert(m7_bridge.contains("func uses_server_authoritative_persistence() -> bool") and m7_bridge.contains("return true"), "M7 network bridge does not suppress client item.save")
 	_assert(enet.contains("ChannelPolicyScript.ENET_CHANNEL_COUNT"), "ENet did not adopt six-channel policy")
-	_assert(enet.contains("MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if delivery_mode == \"UNRELIABLE_SEQUENCED\""), "NX2 realtime delivery still relies on ENet ordered packet-size-sensitive sequencing")
+	# NX2 delivery pin (updated by EG4): UNRELIABLE_SEQUENCED must map to ENet's
+	# sequenced-unreliable transfer mode. Godot flags fragmented unreliable
+	# datagrams (UNRELIABLE_FRAGMENT) and get_packet_mode() decodes that flag as
+	# TRANSFER_MODE_UNRELIABLE_ORDERED, so the old plain-UNRELIABLE downgrade
+	# made the STRICT_CHANNEL_AND_TRANSFER_MODE_V1 fence packet-size-sensitive:
+	# whole datagrams matched (mode 0) while fragmented ones were quarantined
+	# (mode 1 vs expected 0) — measured on EG4 leg-B at ~1.2KB envelopes.
+	_assert(
+		enet.contains("if delivery_mode == \"UNRELIABLE_SEQUENCED\":")
+		and enet.contains("return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED"),
+		"UNRELIABLE_SEQUENCED must map to ENet sequenced-unreliable transfer mode (declared/physical fidelity, size-independent binding; see EG4_DELIVERY_MODE_DECISION_NOTE)"
+	)
+	_assert(
+		not enet.contains("TRANSFER_MODE_UNRELIABLE if delivery_mode == \"UNRELIABLE_SEQUENCED\""),
+		"UNRELIABLE_SEQUENCED must not downgrade to plain ENet unreliable: fragmented datagrams decode as UNRELIABLE_ORDERED and the strict binding fence quarantines them"
+	)
 
 	_assert(server.contains("_movement_snapshot_retransmit_requests += 1"), "Redundant movement batches do not request authoritative snapshot retransmission")
 	_assert(server.contains("_movement_snapshot_dirty = target_count > 0 and not all_enqueued"), "Movement snapshot dirty state is cleared before all target queues accept the acknowledgement")
