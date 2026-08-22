@@ -20,6 +20,7 @@ var _seeds: Array[Dictionary] = []
 var _zone_ctx: Dictionary = {}
 var _roots: Array[Node3D] = []
 var _rng_tick := 0
+var _established_count := 0
 var _cell_top := {}
 const RichPresentation = preload("res://scripts/research/ecology/evo4_bridge_presentation_v1.gd")
 var _species: Dictionary = {}
@@ -41,10 +42,12 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 	var built := RichPresentation.build_rich_subject(
 		sp["traits"], seed_int + int(hue_jitter * 7919.0), sp["wpref"], sp["stol"], sp["dorm"], 1.4)
 	if built.is_empty():
+		print("ECO.EVO5.FLY: establish FAILED empty build gid=", gid)
 		return
+	_established_count += 1
 	var holder := Node3D.new()
 	holder.position = pos
-	holder.scale = Vector3.ONE * 0.45
+	holder.scale = Vector3.ONE * 0.8
 	add_child(holder)
 	_roots.append(holder)
 	for mesh_key in ["branch_mesh", "leaf_mesh", "flower_mesh"]:
@@ -54,11 +57,10 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 		mi.multimesh = built[mesh_key]
 		mi.position = Vector3.ZERO
 		holder.add_child(mi)
-		if mesh_key != "branch_mesh":
-			var mm_mat := StandardMaterial3D.new()
-			mm_mat.vertex_color_use_as_albedo = true
-			mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-			mi.material_override = mm_mat
+		var mm_mat := StandardMaterial3D.new()
+		mm_mat.vertex_color_use_as_albedo = true
+		mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mi.material_override = mm_mat
 
 func _sha(text: String) -> String:
 	var ctx := HashingContext.new()
@@ -302,11 +304,11 @@ func _apply_look() -> void:
 	_cam.rotation = Vector3(_pitch, _yaw, 0.0)
 
 func _autocap() -> void:
-	for i in range(90):
+	for i in range(700):
 		await get_tree().process_frame
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.save_png(ProjectSettings.globalize_path("res://artifacts/evo5_terrain_fly.png"))
-	print("ECO.EVO5.TERRAIN-FLY: AUTOCAP PASS screenshot=artifacts/evo5_terrain_fly.png")
+	print("ECO.EVO5.TERRAIN-FLY: AUTOCAP established=%d screenshot=artifacts/evo5_terrain_fly.png" % _established_count)
 	get_tree().quit(0)
