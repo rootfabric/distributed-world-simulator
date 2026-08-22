@@ -1,0 +1,192 @@
+{
+  "schema": "distributed_world_simulator.rta0_realtime_action_temporal_foundation.v1",
+  "checkpoint_id": "RTA0_REALTIME_ACTION_TEMPORAL_FOUNDATION",
+  "revision": "RTA0-2026-08-22-R1",
+  "status": "CONTROL_DESIGN_CANDIDATE",
+  "canonical_main_anchor": "5b44068d80439deb0f16597ddd36b546d68eebfa",
+  "purpose": "Freeze topology-neutral temporal/action evidence boundaries before any combat or historical-rewind runtime exists.",
+  "normative_plan": "docs/plans/RTA0_REALTIME_ACTION_TEMPORAL_FOUNDATION_RU.md",
+  "integration_anchors": [
+    "docs/plans/V0_CURRENT_WORK_MAP_RU.md",
+    "docs/plans/V0_P6_SEAMLESS_EXECUTION_ROADMAP_RU.md",
+    "config/network/network-experience-roadmap.v1.json"
+  ],
+  "scope": {
+    "control_design_only": true,
+    "runtime_mutation": false,
+    "combat_runtime": false,
+    "damage_runtime": false,
+    "weapon_runtime": false,
+    "historical_state_storage_runtime": false,
+    "p6_runtime_authority_granted": false,
+    "production_sm1_activated": false,
+    "eg_runtime_activated": false
+  },
+  "foundations": [
+    {
+      "id": "TIME_IDENTITY",
+      "policy": "ONE_SEMANTIC_TIME_IDENTITY_NO_COMPETING_CLOCK_TRUTH",
+      "client_supplied_time_role": "EVIDENCE_NOT_AUTHORITY",
+      "server_or_action_authority_role": "VALIDATE_CLAMP_OR_REJECT_TEMPORAL_EVIDENCE",
+      "eg0_alignment": "REUSE_OR_ADAPT_ACCEPTED_INTERACTION_TIME_WHEN_CANONICAL_DO_NOT_FORK",
+      "minimum_semantics": [
+        "simulation_epoch_or_equivalent_timeline_generation",
+        "canonical_or_server_time_reference",
+        "source_local_tick_or_input_sequence",
+        "time_mapping_revision_when_cross_timeline_mapping_is_used"
+      ]
+    },
+    {
+      "id": "ACTION_IDENTITY",
+      "policy": "REALTIME_ACTION_ID_IS_TOPOLOGY_NEUTRAL_BOUNDED_AND_DISTINCT_FROM_OPERATION_ID",
+      "realtime_action_id_lifetime": "BOUNDED_EPHEMERAL_DEDUP_WINDOW",
+      "realtime_action_id_must_not_encode": [
+        "transport_connection_id",
+        "enet_peer_id",
+        "socket_id",
+        "server_process_id"
+      ],
+      "canonical_mutation_rule": "A_REALTIME_ACTION_MAY_CAUSE_ZERO_OR_MORE_DOMAIN_RESULTS_BUT_ANY_CANONICAL_MUTATION_USES_EXISTING_OPERATION_ID_SEMANTICS",
+      "causality_link": "CANONICAL_OPERATION_MAY_REFERENCE_CAUSING_REALTIME_ACTION_ID"
+    },
+    {
+      "id": "OBSERVED_STATE_IDENTITY",
+      "policy": "OBSERVED_STATE_REFERENCE_IDENTIFIES_WHAT_STATE_WAS_PRESENTED_WITHOUT_BECOMING_WORLD_TRUTH",
+      "role": "READ_ONLY_EVIDENCE",
+      "minimum_semantics": [
+        "subject_or_domain_identity",
+        "authoritative_time_reference",
+        "snapshot_or_state_revision_when_available",
+        "reference_frame_evidence_when_required"
+      ],
+      "client_claim_is_authority": false,
+      "projection_hit_is_canonical_effect": false
+    },
+    {
+      "id": "ROUTE_PRESERVATION",
+      "policy": "ROUTING_MAY_ADD_TRANSPORT_METADATA_BUT_MUST_NOT_REWRITE_ACTION_SEMANTICS",
+      "semantic_fields_preserved": [
+        "realtime_action_id",
+        "actor_id",
+        "input_sequence_or_equivalent",
+        "action_time_identity",
+        "observed_state_identity",
+        "action_type",
+        "action_payload"
+      ],
+      "allowed_route_metadata_examples": [
+        "transport_connection_id",
+        "client_session_id",
+        "route_binding",
+        "authority_binding",
+        "gateway_hop_metadata"
+      ],
+      "gateway_creates_new_gameplay_action": false
+    },
+    {
+      "id": "AUTHORITY_BOUNDARY",
+      "policy": "CLIENT_DECLARES_INTENT_AND_EVIDENCE_AUTHORITIES_RESOLVE_TRUTH",
+      "client_may_claim": [
+        "action_intent",
+        "action_time_evidence",
+        "observed_state_evidence"
+      ],
+      "client_may_not_canonically_decide": [
+        "target",
+        "collision_result",
+        "damage_or_effect",
+        "canonical_mutation_authorization"
+      ],
+      "gateway_can_resolve_gameplay_truth": false,
+      "action_authority_validates_action": true,
+      "world_authority_validates_own_collision_domain": true,
+      "target_effect_authority_commits_canonical_effect": true
+    },
+    {
+      "id": "READ_ONLY_HISTORICAL_QUERY_CONCEPT",
+      "policy": "HISTORICAL_QUERY_IS_OPTIONAL_DERIVED_BOUNDED_READ_ONLY_AND_NON_CANONICAL",
+      "runtime_storage_required_by_rta0": false,
+      "may_mutate_live_world": false,
+      "may_authorize_mutation": false,
+      "may_become_second_canonical_truth": false,
+      "domain_opt_in_required": true,
+      "future_examples": [
+        "historical_player_pose_query",
+        "historical_collision_query",
+        "historical_reference_frame_query"
+      ]
+    }
+  ],
+  "integration_points": [
+    {
+      "stage": "PRE_P6_EG0_TO_EG5",
+      "requirements": [
+        "InteractionTime or its accepted successor remains the single cross-world temporal evidence contract",
+        "Gateway preserves action/time/observed-state semantics and never resolves gameplay truth"
+      ]
+    },
+    {
+      "stage": "P6.2",
+      "requirements": [
+        "actor/action identity remains independent from transport/process topology"
+      ]
+    },
+    {
+      "stage": "P6.3",
+      "requirements": [
+        "RealtimeActionId remains distinct from durable OperationId",
+        "canonical mutation may retain causal link to the realtime action"
+      ]
+    },
+    {
+      "stage": "P6.4",
+      "requirements": [
+        "temporal and observed-state claims are evidence to mutation admission, never authority grants"
+      ]
+    },
+    {
+      "stage": "P6.6",
+      "requirements": [
+        "RoutePort or CommandRouter preserves semantic action identity and temporal evidence unchanged"
+      ]
+    },
+    {
+      "stage": "P6.7_TO_P6.11",
+      "requirements": [
+        "no historical buffer or combat implementation is required for P6 acceptance"
+      ]
+    },
+    {
+      "stage": "SM1",
+      "requirements": [
+        "route or authority changes preserve action/time/observed-state identity across the selected authority path"
+      ]
+    },
+    {
+      "stage": "FUTURE_NXC_OR_OTHER_FAST_INTERACTION_DOMAIN",
+      "requirements": [
+        "historical storage and validation may be implemented behind the frozen read-only query boundary without changing gameplay action identity"
+      ]
+    }
+  ],
+  "exit_predicates": [
+    "RTA0_TIME_IDENTITY_FROZEN",
+    "RTA0_ACTION_IDENTITY_FROZEN",
+    "RTA0_OBSERVED_STATE_IDENTITY_FROZEN",
+    "RTA0_ROUTE_PRESERVATION_FROZEN",
+    "RTA0_AUTHORITY_BOUNDARY_FROZEN",
+    "RTA0_READ_ONLY_HISTORICAL_QUERY_CONCEPT_FROZEN",
+    "RTA0_NO_COMPETING_TIME_OR_ACTION_TRUTH",
+    "RTA0_NO_RUNTIME_COMBAT_OR_HISTORY_ACTIVATION"
+  ],
+  "stop_before": [
+    "COMBAT_RUNTIME_IMPLEMENTATION",
+    "WEAPON_OR_DAMAGE_RUNTIME_IMPLEMENTATION",
+    "HISTORICAL_STATE_BUFFER_IMPLEMENTATION",
+    "SERVER_REWIND_IMPLEMENTATION",
+    "ANTI_CHEAT_RUNTIME_IMPLEMENTATION",
+    "P6_RUNTIME_AUTHORITY_CHANGE",
+    "SM1_ACTIVATION",
+    "EG_RUNTIME_ACTIVATION"
+  ]
+}
