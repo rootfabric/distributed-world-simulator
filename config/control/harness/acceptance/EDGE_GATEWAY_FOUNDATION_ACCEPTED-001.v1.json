@@ -13,10 +13,11 @@
   },
   "stage_evidence": {
     "EG0": {
-      "pr": 185,
+      "pr": 186,
       "merge_commit": "211950385caf0e6159aaf7e659adcf24651c6abe",
       "exit": "TOPOLOGY_NEUTRAL_DTOS_PASS",
       "durable_closure_comment": 5372576782,
+      "formal_stage_closure_comment": 5372261255,
       "project_control_runs": [32463458812, 32499780719, 32503031224]
     },
     "EG1": {
