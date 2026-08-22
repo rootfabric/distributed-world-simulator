@@ -165,7 +165,6 @@ func _make_plant(pos: Vector3, zone: String, hue_jitter: float = 0.5, genes: Dic
 	var size_var := 0.75 + hue_jitter * 0.6
 	root.scale = Vector3.ONE * size_var
 	add_child(root)
-	_roots.append(root)
 	var stem := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 0.07
