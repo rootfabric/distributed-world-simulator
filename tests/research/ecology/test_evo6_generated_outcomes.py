@@ -7,10 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts/research/ecology"))
 
-from evo6_generated_outcomes_v1 import PHENOTYPES, build_artifact  # noqa: E402
+from evo6_generated_outcomes_v1 import PHENOTYPES, _site_context, build_artifact  # noqa: E402
 
-EXPECTED_ARTIFACT_DIGEST = "c2c49218cc04dffaf8b036b0b2986672559ff8884e4be54d2149b61ba45f0f67"
-EXPECTED_SURFACE_DIGEST = "e3fbaee778ba54708057e623fb6e515b7de6e7eedd20248d2a3daad45d3fb6de"
+EXPECTED_ARTIFACT_DIGEST = "e2b4de200e919546e00ce7606af0402019409f75435d739bbc963afded7953f1"
+EXPECTED_SURFACE_DIGEST = "5e3469504d8fbfb38a0c13bb4ad6ceb300c29164a4b465d743f10b3bdd5fad34"
 
 
 def check(condition: bool, label: str) -> None:
@@ -33,6 +33,26 @@ def main() -> int:
     check(a["artifact_digest"] != c["artifact_digest"], "different seed changes artifact")
     check(a["metrics"]["cell_count"] == len(a["fates"]), "every terrain cell has a visual fate")
     check(len(a["selection_sites"]) == 4, "four deterministic selection sites materialized")
+    check(
+        default["metrics"]["neighbour_aggregate_cells"] == 196,
+        "neighbour aggregates materialized for every terrain cell",
+    )
+    check(default["metrics"]["snow_context_cells"] == 12, "snow features bridged into rule-visible conditions")
+    snow_context = _site_context(
+        {"height": 1.0, "features": {"snow_cover_frac": 0.6}, "context": {"effective_conditions": {}}}
+    )
+    check(
+        float(snow_context["effective_conditions"]["snow_cover_frac"]) == 0.6,
+        "snow predicate is visible to the existing compiler",
+    )
+    check(
+        default["metrics"]["generated_neighbour_rule_count"] > 0,
+        "default generated set exercises neighbour predicates",
+    )
+    check(
+        all(float(site["fitness_spread"]) > 0.0 for site in default["selection_sites"]),
+        "selection sites exclude flat fitness surfaces",
+    )
 
     expected = {f"{root}/{form}" for root, form in PHENOTYPES}
     for site in a["selection_sites"]:
