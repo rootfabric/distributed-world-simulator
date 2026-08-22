@@ -1,0 +1,161 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo5_a05_broken_plot_contexts.v1",
+  "version": "1.0.0",
+  "derived_representation": true,
+  "base_conditions": {
+    "light_availability_ppm": 550000,
+    "soil_moisture_ppm": 400000,
+    "nutrient_availability_ppm": 500000,
+    "disturbance_pressure_ppm": 50000,
+    "temperature_milli_c": 15000
+  },
+  "sites": {
+    "flat_plain": {
+      "effective_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 400000,
+        "nutrient_availability_ppm": 500000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "applied_factors": []
+    },
+    "north_slope": {
+      "effective_conditions": {
+        "light_availability_ppm": 490000,
+        "soil_moisture_ppm": 320000,
+        "nutrient_availability_ppm": 500000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 12500
+      },
+      "applied_factors": [
+        {
+          "factor_id": "aspect_north",
+          "deltas": {
+            "temperature_milli_c": -2500
+          }
+        },
+        {
+          "factor_id": "slope",
+          "deltas": {
+            "light_availability_ppm": -60000,
+            "soil_moisture_ppm": -80000
+          }
+        }
+      ]
+    },
+    "ravine_bottom": {
+      "effective_conditions": {
+        "light_availability_ppm": 330000,
+        "soil_moisture_ppm": 640000,
+        "nutrient_availability_ppm": 560000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 11500
+      },
+      "applied_factors": [
+        {
+          "factor_id": "cavity_shade",
+          "deltas": {
+            "light_availability_ppm": -220000,
+            "soil_moisture_ppm": 90000,
+            "temperature_milli_c": -3500
+          }
+        },
+        {
+          "factor_id": "water_proximity",
+          "deltas": {
+            "nutrient_availability_ppm": 60000,
+            "soil_moisture_ppm": 150000
+          }
+        }
+      ]
+    },
+    "rocky_ridge_ore": {
+      "effective_conditions": {
+        "light_availability_ppm": 460000,
+        "soil_moisture_ppm": 320000,
+        "nutrient_availability_ppm": 500000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 16500,
+        "mineral_richness_ppm": 860000,
+        "establishment_bonus_ppm": 550000
+      },
+      "applied_factors": [
+        {
+          "factor_id": "aspect_north",
+          "deltas": {
+            "temperature_milli_c": 1500
+          }
+        },
+        {
+          "factor_id": "mineral_deposit",
+          "deltas": {
+            "mineral_richness_ppm": 360000
+          }
+        },
+        {
+          "factor_id": "rock",
+          "deltas": {
+            "establishment_bonus_ppm": 50000,
+            "light_availability_ppm": -30000
+          }
+        },
+        {
+          "factor_id": "slope",
+          "deltas": {
+            "light_availability_ppm": -60000,
+            "soil_moisture_ppm": -80000
+          }
+        }
+      ]
+    },
+    "snow_patch": {
+      "effective_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 470000,
+        "nutrient_availability_ppm": 500000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 6500
+      },
+      "applied_factors": [
+        {
+          "factor_id": "aspect_north",
+          "deltas": {
+            "temperature_milli_c": -2500
+          }
+        },
+        {
+          "factor_id": "snow_cover",
+          "deltas": {
+            "soil_moisture_ppm": 70000,
+            "temperature_milli_c": -6000
+          }
+        }
+      ]
+    },
+    "south_slope": {
+      "effective_conditions": {
+        "light_availability_ppm": 490000,
+        "soil_moisture_ppm": 320000,
+        "nutrient_availability_ppm": 500000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 16500
+      },
+      "applied_factors": [
+        {
+          "factor_id": "aspect_north",
+          "deltas": {
+            "temperature_milli_c": 1500
+          }
+        },
+        {
+          "factor_id": "slope",
+          "deltas": {
+            "light_availability_ppm": -60000,
+            "soil_moisture_ppm": -80000
+          }
+        }
+      ]
+    }
+  }
+}
