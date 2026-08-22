@@ -1,0 +1,59 @@
+{
+  "avg_fps": 165.3,
+  "avg_frame_ms": 6.05,
+  "defense_classes": {
+    "genome/e22-alpha-late": {
+      "class": "NONE",
+      "level": 0.1
+    },
+    "genome/e22-beta": {
+      "class": "LIGHT",
+      "level": 0.2
+    },
+    "genome/e3f-ext-01": {
+      "class": "LIGHT",
+      "level": 0.2
+    },
+    "genome/e3f-ext-02": {
+      "class": "NONE",
+      "level": 0.15
+    },
+    "genome/e3f-ext-03": {
+      "class": "LIGHT",
+      "level": 0.25
+    },
+    "genome/e3f-ext-04": {
+      "class": "NONE",
+      "level": 0.15
+    },
+    "genome/e3f-ext-05": {
+      "class": "LIGHT",
+      "level": 0.3
+    },
+    "genome/e3f-ext-07": {
+      "class": "NONE",
+      "level": 0.15
+    },
+    "genome/e3f-ext-08": {
+      "class": "LIGHT",
+      "level": 0.2
+    }
+  },
+  "defense_source_artifact": "validation/ecology/evo4_t2_coevolution_trajectory.v1.json",
+  "derived_representation": true,
+  "draw_calls_in_frame": 827,
+  "fps_gate": true,
+  "graph_hash_invariance": true,
+  "instances": 990,
+  "planet_snapshot_sha256": "9798d9864be0dfa6ad3430e2cb1c0dc302c7109fd94d257db5146411689fad8e",
+  "primitives_in_frame": 858670,
+  "sample_frames": 90,
+  "schema": "distributed_world_simulator.ecology.evo4_t4_planetary_probe.v1",
+  "source_program_sha256": "",
+  "stable_planet_identity": "eco-evo3-final/unseen/polar-plateau-04/planet-alpha-derived-04",
+  "thorn_instances_total": 6094,
+  "verdict": "PASS",
+  "version": "1.0.0",
+  "visual_variants": 72,
+  "worst_frame_ms": 12.056
+}
