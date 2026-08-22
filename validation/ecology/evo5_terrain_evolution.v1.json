@@ -1,0 +1,241 @@
+{
+ "schema": "distributed_world_simulator.ecology.evo5_terrain_evolution.v1",
+ "generations": 20,
+ "zones": {
+  "hill_slopes": {
+   "zone": "hill_slopes",
+   "pressure_used": 0.775,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 490000,
+    "nutrient_availability_ppm": 500000,
+    "soil_moisture_ppm": 320000,
+    "temperature_milli_c": 16500
+   },
+   "final_genes": {
+    "defense_intensity": 0.6263,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.199,
+    0.244,
+    0.285,
+    0.323,
+    0.357,
+    0.388,
+    0.417,
+    0.443,
+    0.467,
+    0.489,
+    0.509,
+    0.527,
+    0.544,
+    0.559,
+    0.573,
+    0.586,
+    0.597,
+    0.608,
+    0.617,
+    0.626
+   ],
+   "cells": 47
+  },
+  "iron_ridge": {
+   "zone": "iron_ridge",
+   "pressure_used": 0.775,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 490000,
+    "mineral_richness_ppm": 860000,
+    "nutrient_availability_ppm": 500000,
+    "soil_moisture_ppm": 320000,
+    "temperature_milli_c": 16500
+   },
+   "final_genes": {
+    "defense_intensity": 0.6263,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.199,
+    0.244,
+    0.285,
+    0.323,
+    0.357,
+    0.388,
+    0.417,
+    0.443,
+    0.467,
+    0.489,
+    0.509,
+    0.527,
+    0.544,
+    0.559,
+    0.573,
+    0.586,
+    0.597,
+    0.608,
+    0.617,
+    0.626
+   ],
+   "cells": 2
+  },
+  "plain": {
+   "zone": "plain",
+   "pressure_used": 0.745,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 550000,
+    "nutrient_availability_ppm": 500000,
+    "soil_moisture_ppm": 400000,
+    "temperature_milli_c": 15000
+   },
+   "final_genes": {
+    "defense_intensity": 0.6148,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.197,
+    0.24,
+    0.28,
+    0.316,
+    0.349,
+    0.38,
+    0.407,
+    0.433,
+    0.456,
+    0.478,
+    0.497,
+    0.515,
+    0.532,
+    0.547,
+    0.561,
+    0.574,
+    0.585,
+    0.596,
+    0.606,
+    0.615
+   ],
+   "cells": 65
+  },
+  "ravine_bottom": {
+   "zone": "ravine_bottom",
+   "pressure_used": 0.885,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 270000,
+    "nutrient_availability_ppm": 560000,
+    "soil_moisture_ppm": 560000,
+    "temperature_milli_c": 9000
+   },
+   "final_genes": {
+    "defense_intensity": 0.6654,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.207,
+    0.258,
+    0.304,
+    0.346,
+    0.384,
+    0.419,
+    0.45,
+    0.478,
+    0.503,
+    0.526,
+    0.547,
+    0.566,
+    0.583,
+    0.599,
+    0.613,
+    0.626,
+    0.637,
+    0.647,
+    0.657,
+    0.665
+   ],
+   "cells": 6
+  },
+  "riverside": {
+   "zone": "riverside",
+   "pressure_used": 0.745,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 550000,
+    "nutrient_availability_ppm": 560000,
+    "soil_moisture_ppm": 550000,
+    "temperature_milli_c": 15000
+   },
+   "final_genes": {
+    "defense_intensity": 0.6148,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.197,
+    0.24,
+    0.28,
+    0.316,
+    0.349,
+    0.38,
+    0.407,
+    0.433,
+    0.456,
+    0.478,
+    0.497,
+    0.515,
+    0.532,
+    0.547,
+    0.561,
+    0.574,
+    0.585,
+    0.596,
+    0.606,
+    0.615
+   ],
+   "cells": 64
+  },
+  "snow_corner": {
+   "zone": "snow_corner",
+   "pressure_used": 0.745,
+   "conditions": {
+    "disturbance_pressure_ppm": 50000,
+    "light_availability_ppm": 550000,
+    "nutrient_availability_ppm": 500000,
+    "soil_moisture_ppm": 470000,
+    "temperature_milli_c": 10500
+   },
+   "final_genes": {
+    "defense_intensity": 0.6148,
+    "toxicity": 0.1,
+    "nutrient_value": 0.516
+   },
+   "defense_trajectory": [
+    0.197,
+    0.24,
+    0.28,
+    0.316,
+    0.349,
+    0.38,
+    0.407,
+    0.433,
+    0.456,
+    0.478,
+    0.497,
+    0.515,
+    0.532,
+    0.547,
+    0.561,
+    0.574,
+    0.585,
+    0.596,
+    0.606,
+    0.615
+   ],
+   "cells": 12
+  }
+ }
+}
