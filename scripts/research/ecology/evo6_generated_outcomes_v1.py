@@ -16,6 +16,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,7 @@ DEFAULT_SEED = "20260823"
 DEFAULT_TICKS = 40
 DEFAULT_OUTPUT = ROOT / "validation/ecology/evo6_r31_generated_outcomes.v1.json"
 TERRAIN_PATH = ROOT / "validation/ecology/evo5_terrain_demo.v1.json"
+CELL_SPACING_M = 0.5
 CLASS_KEYS = ("terrestrial/low", "terrestrial/tall", "amphibious/low", "amphibious/tall")
 PHENOTYPES = (
     ("terrestrial", "low"),
@@ -63,12 +65,60 @@ def _display_phenotype(cell: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def _required_neighbour_radius(compiled: list[dict[str, Any]]) -> float | None:
+    radii = {
+        float(rule["when"]["neighbours"].get("within_r", 0.0))
+        for rule in compiled
+        if "neighbours" in rule["when"]
+    }
+    if not radii:
+        return None
+    if any(radius <= 0.0 for radius in radii):
+        raise ValueError("neighbour rule requires positive within_r")
+    if len(radii) != 1:
+        raise ValueError("mixed neighbour radii require a versioned aggregate contract")
+    return next(iter(radii))
+
+
+def _prepare_cells(cells: list[dict[str, Any]], compiled: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    prepared = copy.deepcopy(cells)
+    radius_m = _required_neighbour_radius(compiled)
+    if radius_m is None:
+        return prepared
+    for cell in prepared:
+        x = int(cell["x"])
+        z = int(cell["z"])
+        own_height = float(cell["height"])
+        count = 0
+        taller = 0
+        for other in prepared:
+            ox = int(other["x"])
+            oz = int(other["z"])
+            if ox == x and oz == z:
+                continue
+            distance_m = math.hypot(float(ox - x) * CELL_SPACING_M, float(oz - z) * CELL_SPACING_M)
+            if distance_m > radius_m + 1e-12:
+                continue
+            count += 1
+            if float(other["height"]) > own_height:
+                taller += 1
+        cell.setdefault("features", {})["neighbours"] = {
+            "within_r": radius_m,
+            "count": count,
+            "taller_than_self": taller,
+        }
+    return prepared
+
+
 def _site_context(cell: dict[str, Any]) -> dict[str, Any]:
     context = copy.deepcopy(cell.get("context", {}))
-    context["features"] = copy.deepcopy(cell.get("features", {}))
+    features = copy.deepcopy(cell.get("features", {}))
+    context["features"] = features
     effective = context.setdefault("effective_conditions", {})
     height = float(cell.get("height", 1.0))
     effective.setdefault("wind_exposure", round(min(1.0, max(0.0, (height - 1.0) * 0.55)), 3))
+    if "snow_cover_frac" in features:
+        effective.setdefault("snow_cover_frac", float(features["snow_cover_frac"]))
     return context
 
 
@@ -110,6 +160,8 @@ def _pick_selection_sites(cells: list[dict[str, Any]], limit: int = 4) -> list[d
     chosen: list[dict[str, Any]] = []
     winners: set[str] = set()
     for cell in ranked:
+        if float(cell["fitness_spread"]) <= 0.0:
+            continue
         winner = str(cell["winner_class"])
         if winner in winners:
             continue
@@ -120,6 +172,8 @@ def _pick_selection_sites(cells: list[dict[str, Any]], limit: int = 4) -> list[d
     if len(chosen) < limit:
         used = {str(cell["cell_key"]) for cell in chosen}
         for cell in ranked:
+            if float(cell["fitness_spread"]) <= 0.0:
+                continue
             if str(cell["cell_key"]) in used:
                 continue
             chosen.append(cell)
@@ -169,10 +223,11 @@ def build_artifact(
     raw_rules = generate_rules(seed)
     compiled = compile_rules(raw_rules)
     rule_digest = _digest(raw_rules)
+    prepared_cells = _prepare_cells(cells, compiled)
     fates: list[dict[str, Any]] = []
     surfaces: list[dict[str, Any]] = []
 
-    for cell in sorted(cells, key=lambda item: (int(item.get("z", 0)), int(item.get("x", 0)))):
+    for cell in sorted(prepared_cells, key=lambda item: (int(item.get("z", 0)), int(item.get("x", 0)))):
         x = int(cell["x"])
         z = int(cell["z"])
         class_results: dict[str, dict[str, Any]] = {}
@@ -215,7 +270,13 @@ def build_artifact(
 
     selection_sites = _pick_selection_sites(surfaces)
     max_spread = max(float(cell["fitness_spread"]) for cell in surfaces)
-    winner_classes = sorted({str(cell["winner_class"]) for cell in surfaces})
+    winner_classes = sorted(
+        {
+            str(cell["winner_class"])
+            for cell in surfaces
+            if float(cell["fitness_spread"]) > 0.0
+        }
+    )
     payload: dict[str, Any] = {
         "schema": SCHEMA,
         "version": VERSION,
@@ -229,6 +290,15 @@ def build_artifact(
         "selection_surface_digest": selection_surface_digest(selection_sites),
         "metrics": {
             "cell_count": len(fates),
+            "neighbour_aggregate_cells": sum(
+                1 for cell in prepared_cells if "neighbours" in cell.get("features", {})
+            ),
+            "snow_context_cells": sum(
+                1 for cell in prepared_cells if "snow_cover_frac" in cell.get("features", {})
+            ),
+            "generated_neighbour_rule_count": sum(
+                1 for rule in compiled if "neighbours" in rule["when"]
+            ),
             "max_class_fitness_spread": round(max_spread, 6),
             "winner_classes": winner_classes,
             "selection_signal_present": max_spread > 0.0,
