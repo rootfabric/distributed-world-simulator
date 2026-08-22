@@ -80,6 +80,6 @@ finally {
     Remove-Item -LiteralPath $TempArtifact -Force -ErrorAction SilentlyContinue
 }
 
-Write-Host "ECO.EVO6 R3.1 exact artifact digest: c2c49218cc04dffaf8b036b0b2986672559ff8884e4be54d2149b61ba45f0f67"
-Write-Host "ECO.EVO6 selection surface digest: e3fbaee778ba54708057e623fb6e515b7de6e7eedd20248d2a3daad45d3fb6de"
+Write-Host "ECO.EVO6 R3.1 exact artifact digest: e2b4de200e919546e00ce7606af0402019409f75435d739bbc963afded7953f1"
+Write-Host "ECO.EVO6 selection surface digest: 5e3469504d8fbfb38a0c13bb4ad6ceb300c29164a4b465d743f10b3bdd5fad34"
 Write-Host "ECO.EVO6 rule-language -> P1B selection/mutation continuation: PASS"
