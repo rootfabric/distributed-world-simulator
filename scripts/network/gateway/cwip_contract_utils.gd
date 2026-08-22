@@ -87,3 +87,29 @@ static func require_path_range(value: Dictionary, start_field: String = "path_t_
 	if float(value.get(end_field)) < float(value.get(start_field)):
 		return NetworkUtilsScript.validation_failure("INVALID_PATH_RANGE", "%s must be >= %s" % [end_field, start_field])
 	return NetworkUtilsScript.validation_success()
+
+
+## EG4.5: canonical digest over a SET of CollisionProofs. The order-independence
+## contract: proofs are sorted by authority_id before hashing, so the gateway
+## router and the sim-side authorities derive the SAME proof_set_digest without
+## either side preloading the other's internals.
+## Fail-closed: returns "" when an entry is not a Dictionary carrying a non-empty
+## String authority_id, or when two proofs share one authority_id (a proof set
+## holds at most one CollisionProof per world authority).
+static func proof_set_digest(proofs: Array) -> String:
+	var proofs_by_authority: Dictionary = {}
+	for proof_value in proofs:
+		if typeof(proof_value) != TYPE_DICTIONARY:
+			return ""
+		var authority_id = Dictionary(proof_value).get("authority_id")
+		if typeof(authority_id) != TYPE_STRING or String(authority_id).is_empty():
+			return ""
+		if proofs_by_authority.has(String(authority_id)):
+			return ""
+		proofs_by_authority[String(authority_id)] = proof_value
+	var authority_ids: Array = proofs_by_authority.keys()
+	authority_ids.sort()
+	var ordered: Array = []
+	for authority_id in authority_ids:
+		ordered.append(proofs_by_authority[String(authority_id)])
+	return NetworkUtilsScript.payload_hash(ordered)
