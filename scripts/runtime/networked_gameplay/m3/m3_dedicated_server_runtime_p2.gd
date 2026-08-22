@@ -14,6 +14,8 @@ const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_d
 const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
 const ProtocolManifest = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 const CompatibilityHandshake = preload("res://scripts/network/observability/network_compatibility_handshake.gd")
+const WorldDefinitionScript = preload("res://scripts/world/earth/world_definition.gd")
+const ControlPointProbeScript = preload("res://scripts/world/earth/control_point_probe.gd")
 const TelemetryCollector = preload("res://scripts/network/observability/network_telemetry_collector.gd")
 const ConditionSimulatorPort = preload("res://scripts/network/conditions/network_condition_simulator_port.gd")
 const ConditionProfileStore = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
@@ -94,6 +96,9 @@ var _network_condition_simulator
 var _network_condition_profile: Dictionary = {}
 var _network_condition_presets_file: String = ConditionProfileStore.DEFAULT_PRESETS_PATH
 var _peer_compatibility: Dictionary = {}
+var _world_announcement: Dictionary = {}
+var _world_control_point_digest: String = ""
+var _world_definition_publications := 0
 var _handshake_attempts := 0
 var _handshake_accepts := 0
 var _handshake_rejections := 0
@@ -315,6 +320,21 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		"verified_at_ms": Time.get_ticks_msec(),
 		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
 	}
+	# GEN-A world identity handshake: publish the server PlanetDefinition so the
+	# client can fail closed with WORLD_DEFINITION_MISMATCH before joining.
+	var announcement: Dictionary = _resolve_world_announcement()
+	if announcement.is_empty():
+		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "WORLD_DEFINITION_UNRESOLVABLE")
+		return
+	if not _send_control(peer_id, "WORLD_DEFINITION", {"definition": announcement}):
+		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "WORLD_DEFINITION_SEND_FAILED")
+		return
+	_world_definition_publications += 1
+	_debug_event("WORLD_DEFINITION_PUBLISHED", {
+		"peer_id": peer_id,
+		"definition": announcement,
+		"control_point_digest": _world_control_point_digest,
+	})
 	_handshake_accepts += 1
 	_telemetry.increment("handshake_accepts")
 	for method_name in ["mark_peer_synchronizing", "mark_peer_ready"]:
@@ -322,6 +342,19 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		if not bool(transition.get("success", false)):
 			_last_error_code = "NX0_PEER_READY_FAILED"
 			return
+
+
+func _resolve_world_announcement() -> Dictionary:
+	if _world_announcement.is_empty():
+		_world_announcement = WorldDefinitionScript.create_announcement()
+		var probe: Dictionary = ControlPointProbeScript.compute_for_world()
+		_world_control_point_digest = String(probe.get("digest", ""))
+	return {
+		"world_id": String(_world_announcement.get("world_id", "")),
+		"generator_version": String(_world_announcement.get("generator_version", "")),
+		"generator_hash": String(_world_announcement.get("generator_hash", "")),
+		"control_point_digest": _world_control_point_digest,
+	}
 
 
 func _reject_handshake(peer_id: String, handshake_id: String, error_code: String) -> void:
@@ -1408,6 +1441,10 @@ func get_report() -> Dictionary:
 			"replays": _handshake_replays,
 			"last_error_code": _last_handshake_error_code,
 			"compatible_peers": _peer_compatibility.duplicate(true),
+		},
+		"world_definition": {
+			"announcement": _resolve_world_announcement() if not _world_announcement.is_empty() else {},
+			"publications": _world_definition_publications,
 		},
 		"network_conditions": (
 			_network_condition_simulator.get_runtime_snapshot()
