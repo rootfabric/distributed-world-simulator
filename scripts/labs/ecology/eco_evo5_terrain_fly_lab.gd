@@ -46,57 +46,52 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 		print("ECO.EVO5.FLY: establish FAILED empty build gid=", gid)
 		return
 	_established_count += 1
-	var baabb := (built["branch_mesh"] as Mesh).get_aabb() if built["branch_mesh"] != null else AABB(Vector3.ZERO, Vector3.ONE)
-	var fit := clampf(1.8 / maxf(baabb.size.y, 0.01), 0.04, 1.0)
 	var holder := Node3D.new()
-	holder.position = Vector3(pos.x, pos.y - baabb.position.y * fit, pos.z)
-	holder.scale = Vector3.ONE * fit * 0.55
+	holder.position = pos
 	add_child(holder)
-	_roots.append({"node": holder, "target": fit})
-	for pair in [["branch_mesh", null, null], ["leaf_mesh", "leaf_colors", "leaf_transforms"], ["flower_mesh", "flower_color", "flower_transforms"]]:
-		var key: String = pair[0]
-		if not built.has(key) or built[key] == null:
-			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_colors = true
-		mm.mesh = built[key]
-		var xforms: Array = built[pair[2]] if pair[2] != null else [Transform3D.IDENTITY]
-		mm.instance_count = xforms.size()
-		for xi in range(mm.instance_count):
-			if pair[2] != null:
-				mm.set_instance_transform(xi, xforms[xi])
-			var col := Color(1, 1, 1)
-			if pair[1] == "leaf_colors":
-				var lc: Array = built["leaf_colors"]
-				col = lc[xi % lc.size()]
-			elif pair[1] == "flower_color":
-				col = built["flower_color"]
-			mm.set_instance_color(xi, col)
-		var mi := MultiMeshInstance3D.new()
-		mi.multimesh = mm
-		holder.add_child(mi)
-		var mm_mat := StandardMaterial3D.new()
-		if key == "branch_mesh":
-			mm_mat.albedo_color = Color(0.36, 0.24, 0.14)
-		else:
-			mm_mat.vertex_color_use_as_albedo = true
-		mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		mi.material_override = mm_mat
-	# Guaranteed connected trunk: anchors crown to ground even if the
-	# presentation tube mesh comes out empty (liana-style fallback).
-	if built.has("branch_mesh") and built["branch_mesh"] != null:
-		var trunk := MeshInstance3D.new()
-		var tcyl := CylinderMesh.new()
-		tcyl.top_radius = 0.08
-		tcyl.bottom_radius = 0.16
-		tcyl.height = maxf(baabb.size.y, 0.3)
-		trunk.mesh = tcyl
-		trunk.position = Vector3(baabb.get_center().x, baabb.position.y + tcyl.height * 0.5, baabb.get_center().z)
-		var tm := StandardMaterial3D.new()
-		tm.albedo_color = Color(0.36, 0.24, 0.14)
-		trunk.material_override = tm
-		holder.add_child(trunk)
+	var defense: float = clampf(float((_trajectories[zone] as Array).back()), 0.1, 1.0)
+	var trunk_h := 1.2 + 1.4 * _unit("th|%d|%f" % [_rng_tick, hue_jitter])
+	var limbs := 3 + int(_unit("lm|%d" % _rng_tick) * 4.0)
+	var bark := StandardMaterial3D.new()
+	bark.albedo_color = Color(0.36, 0.24, 0.14)
+	var leaf_mat := StandardMaterial3D.new()
+	leaf_mat.albedo_color = Color(0.28, 0.52, 0.20).lerp(Color(0.16, 0.30, 0.12), defense * 0.5)
+	var stem := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.06
+	cyl.bottom_radius = 0.13
+	cyl.height = trunk_h
+	stem.mesh = cyl
+	stem.position.y = trunk_h * 0.5
+	stem.material_override = bark
+	holder.add_child(stem)
+	for li in range(limbs):
+		var ang := TAU * float(li) / float(limbs) + _unit("ba|%d|%d" % [_rng_tick, li]) * 0.8
+		var tilt := 0.6 + 0.5 * _unit("bt|%d|%d" % [_rng_tick, li])
+		var blen := (0.7 + 0.5 * _unit("bl|%d|%d" % [_rng_tick, li])) * (0.7 + 0.6 * defense)
+		var joint := Node3D.new()
+		joint.position = Vector3(0.0, trunk_h * (0.55 + 0.4 * float(li % 3) / 2.0), 0.0)
+		joint.rotation = Vector3(0.0, -ang, tilt)
+		holder.add_child(joint)
+		var bone := MeshInstance3D.new()
+		var bcyl := CylinderMesh.new()
+		bcyl.top_radius = 0.03
+		bcyl.bottom_radius = 0.05
+		bcyl.height = blen
+		bone.mesh = bcyl
+		bone.position.y = blen * 0.5
+		bone.material_override = bark
+		joint.add_child(bone)
+		var tip_y := blen
+		var leaves := MeshInstance3D.new()
+		var lsph := SphereMesh.new()
+		lsph.radius = 0.28 + 0.22 * defense
+		lsph.height = lsph.radius * 2.0
+		leaves.mesh = lsph
+		leaves.position.y = tip_y + lsph.radius * 0.6
+		leaves.material_override = leaf_mat
+		joint.add_child(leaves)
+	return
 
 func _sha(text: String) -> String:
 	var ctx := HashingContext.new()
