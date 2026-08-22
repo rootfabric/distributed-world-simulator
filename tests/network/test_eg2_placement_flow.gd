@@ -215,6 +215,7 @@ func _init() -> void:
 	_run_reject_paths()
 	_run_resume_preserves_identity()
 	_run_detach_prunes_auth_binding()
+	_run_reauth_rejection()
 	_run_warm_degradation_and_recovery()
 	_run_gateway_selection_independence()
 	_run_redaction_scan()
@@ -347,6 +348,67 @@ func _run_detach_prunes_auth_binding() -> void:
 	_assert(int(after["counters"]["peer_bindings_pruned"]) == 1, "peer-binding prune counter mismatch")
 	_assert(_auth.is_resume_token_live(String(payload["resume_token"])),
 			"graceful detach destroyed the live resume token")
+
+
+## Explicit re-auth semantics: an already-bound transport peer that sends
+## AUTHENTICATE again is rejected with PLACEMENT_PEER_ALREADY_AUTHENTICATED;
+## the presented ticket is not consumed and the original binding survives
+## (the peer can still place with the originally authenticated pair).
+func _run_reauth_rejection() -> void:
+	var reauth := _register_client("reauth")
+	_authenticate(reauth, "client-session/eg2/l1-reauth", "OK")
+	# Second AUTHENTICATE over the same transport peer, fresh ticket.
+	var fresh_mint: Dictionary = _auth.mint_auth_ticket("client-session/eg2/l1-reauth")
+	_assert(bool(fresh_mint.get("success", false)), "re-auth fresh ticket mint failed")
+	var fresh_ticket := String(fresh_mint.get("details", {}).get("ticket_id", ""))
+	var rejected_before: Dictionary = _flow.get_report()
+	var node_before_reject: Dictionary = _gateway.get_report()["counters"]
+	_send_session_control(reauth, "reauth", GatewayUtils.EG2_SESSION_AUTHENTICATE_PAYLOAD_SCHEMA, {
+		"client_session_id": "client-session/eg2/l1-reauth",
+		"ticket_id": fresh_ticket,
+	})
+	_pump("re-auth rejection")
+	var flow_after: Dictionary = _flow.get_report()
+	_assert(int(flow_after["counters"]["placement_frames_rejected"])
+			== int(rejected_before["counters"]["placement_frames_rejected"]) + 1,
+			"re-auth was not rejected by the placement flow")
+	_assert(int(_gateway.get_report()["counters"]["placement_rejected"])
+			== int(node_before_reject["placement_rejected"]) + 1,
+			"re-auth rejection was not accounted at the gateway")
+	_assert(_auth.is_resume_token_live("") == false, "sanity: empty token must not be live")
+	# Direct handler probe pins the exact error code and proves the ticket
+	# survived the rejection unconsumed.
+	var seq := int(reauth["wire_sequence"]) + 1
+	reauth["wire_sequence"] = seq
+	var probe_inner := ClientWorldFrameScript.create(
+			"frame/eg2/l1/reauth-probe/%d" % seq, "gateway-session/eg2/probe/reauth",
+			"CLIENT_TO_WORLD", "SESSION_CONTROL", seq,
+			GatewayUtils.EG2_SESSION_AUTHENTICATE_PAYLOAD_SCHEMA, {
+				"client_session_id": "client-session/eg2/l1-reauth",
+				"ticket_id": fresh_ticket,
+			})
+	var probe_result: Dictionary = _flow.handle_session_control(
+			{"payload": probe_inner, "session_id": String(reauth["wire_session"])},
+			_gateway._route_table, String(reauth["peer_id"]))
+	_assert(_err(probe_result) == "PLACEMENT_PEER_ALREADY_AUTHENTICATED",
+			"re-auth error code mismatch: %s" % _err(probe_result))
+	# The rejected attempt must not have burned the one-time ticket.
+	var consume_probe: Dictionary = _auth.authenticate(fresh_ticket)
+	_assert(bool(consume_probe.get("success", false)),
+			"rejected re-auth consumed the one-time ticket")
+	# The ORIGINAL binding still works: place succeeds with the first ticket.
+	var payload := _place(reauth, "client-session/eg2/l1-reauth", MAIN_WORLD_ID, "")
+	_assert(not payload.is_empty(), "original binding lost after the re-auth rejection")
+	if not payload.is_empty():
+		_assert(bool(payload["resumed"]) == false, "post-rejection placement wrongly resumed")
+	# No ack reached the rejected second authenticate.
+	for frame_value in _drain_inbox(reauth):
+		var frame: Dictionary = frame_value
+		var inner: Dictionary = frame.get("payload", {})
+		if String(inner.get("channel", "")) == "SESSION_CONTROL" \
+				and String(inner.get("payload_schema", "")).contains("authenticate"):
+			_assert(false, "rejected re-auth produced a SESSION_CONTROL ack")
+			break
 
 
 func _run_warm_degradation_and_recovery() -> void:

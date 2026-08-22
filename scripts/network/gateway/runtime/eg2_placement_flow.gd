@@ -132,6 +132,14 @@ func on_client_peer_gone(client_transport_peer_id: String) -> void:
 
 func _handle_authenticate(transport_frame: Dictionary, frame: Dictionary, client_transport_peer_id: String) -> Dictionary:
 	_counters["authenticate_frames"] = int(_counters["authenticate_frames"]) + 1
+	# Explicit re-auth semantics: a transport peer that already carries a live
+	# AUTHENTICATED binding is rejected instead of silently rotated. The
+	# presented ticket is NOT consumed, and the existing binding stays intact —
+	# placement must keep presenting exactly the originally authenticated pair.
+	if _auth_by_peer.has(client_transport_peer_id):
+		_counters["authenticate_rejected"] = int(_counters["authenticate_rejected"]) + 1
+		_counters["placement_frames_rejected"] = int(_counters["placement_frames_rejected"]) + 1
+		return _failure("PLACEMENT_PEER_ALREADY_AUTHENTICATED", {"peer": client_transport_peer_id})
 	var payload: Dictionary = frame["payload"]
 	var payload_check: Dictionary = GatewayUtilsScript.validate_client_surface_payload(
 			payload, AUTHENTICATE_PAYLOAD_SCHEMA)
