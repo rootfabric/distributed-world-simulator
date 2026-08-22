@@ -140,6 +140,10 @@ func register_session(gateway_session_id: String) -> Dictionary:
 	return _success({"gateway_session_id": gateway_session_id})
 
 
+func has_session(gateway_session_id: String) -> bool:
+	return _sessions.has(gateway_session_id)
+
+
 func release_session(gateway_session_id: String) -> Dictionary:
 	if not _sessions.has(gateway_session_id):
 		return _failure("UNKNOWN_GATEWAY_SESSION", {"gateway_session_id": gateway_session_id})
@@ -169,25 +173,31 @@ func purge_session(gateway_session_id: String) -> Dictionary:
 
 ## Enqueue one backend-leg frame spec for a logical session.
 ## frame_spec requires: channel, delivery_mode, payload (payload_schema
-## optional passthrough). Reliable overflow => explicit rejection, never a
-## silent drop.
-func enqueue(gateway_session_id: String, frame_spec: Dictionary) -> Dictionary:
+## optional passthrough). The backend wire frame carries the PHYSICAL channel
+## name, so callers on the gateway node pass the SEMANTIC client channel
+## (SESSION_CONTROL, WORLD_OPERATION, ...) explicitly; direct callers may rely
+## on frame_spec.channel alone. Reliable overflow => explicit rejection, never
+## a silent drop.
+func enqueue(gateway_session_id: String, frame_spec: Dictionary, semantic_channel: String = "") -> Dictionary:
 	if not _sessions.has(gateway_session_id):
 		return _failure("UNKNOWN_GATEWAY_SESSION", {"gateway_session_id": gateway_session_id})
 	var channel := String(frame_spec.get("channel", ""))
-	if not CHANNEL_PRIORITY.has(channel):
-		return _failure("UNKNOWN_CHANNEL", {"channel": channel})
+	if not DELIVERY_MODES.has(String(frame_spec.get("delivery_mode", ""))):
+		return _failure("INVALID_DELIVERY_MODE", {"delivery_mode": String(frame_spec.get("delivery_mode", ""))})
 	var delivery_mode := String(frame_spec.get("delivery_mode", ""))
-	if not DELIVERY_MODES.has(delivery_mode):
-		return _failure("INVALID_DELIVERY_MODE", {"delivery_mode": delivery_mode})
-	var priority := int(CHANNEL_PRIORITY[channel])
+	var priority_channel := channel
+	if not semantic_channel.is_empty():
+		priority_channel = semantic_channel
+	if not CHANNEL_PRIORITY.has(priority_channel):
+		return _failure("UNKNOWN_CHANNEL", {"channel": priority_channel})
+	var priority := int(CHANNEL_PRIORITY[priority_channel])
 	var byte_size := _estimate_bytes(frame_spec)
 	var state: Dictionary = _sessions[gateway_session_id]
 
 	# Latest-wins coalescing for stale unreliable snapshot/projection/
 	# telemetry streams: replacing entries never grows the queue, so cap
 	# checks are unnecessary by construction here.
-	if channel in COALESCING_CHANNELS and delivery_mode == COALESCING_DELIVERY_MODE:
+	if priority_channel in COALESCING_CHANNELS and delivery_mode == COALESCING_DELIVERY_MODE:
 		var stream_queue: Array = state["queues"][priority]
 		var stale_count := (stream_queue as Array).size()
 		if stale_count > 0:
