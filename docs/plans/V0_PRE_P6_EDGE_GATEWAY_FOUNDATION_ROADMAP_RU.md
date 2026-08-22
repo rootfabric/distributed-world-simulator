@@ -606,3 +606,47 @@ Final rule:
 FIRST PROVE THE WORLD CONNECTION.
 THEN BUILD P6 ON TOP OF IT.
 ```
+
+---
+
+## 14. CONV-0 — ранняя интеграционная проверка (amendment 2026-08-22, donor lane)
+
+Мотивация: продуктовая линия (accepted P5 lineage `491ca7d0`) и gateway foundation
+(`main`, EG0–EG3) до этой поправки встречаются только на P6.6. Риск несовпадения
+допущений растёт с каждым днём параллельной работы.
+
+Правила:
+
+- CONV-0 — лаборатория/донор, **не** product base; merge в любую из линий запрещён;
+- ветка `conv0-gateway-product-spike` режется от exact accepted P5 lineage (`491ca7d0`);
+- из `main` импортируется донором только `scripts/network/gateway/**` и EG0/CWIP contract-схемы;
+- известные точки конфликтов проверяются первыми:
+  `scripts/network/realtime/realtime_channel_policy.gd`, `scripts/network/transports/v2/**`.
+
+Exit-предикаты:
+
+```text
+PRODUCT_LINE_WITH_GATEWAY_IMPORT_COMPILES
+EXISTING_BOTH_LINE_TEST_SUITES_PASS
+CLIENT_MOVES_THROUGH_GATEWAY_ONE_WORLD_PASS
+CONFLICT_RESOLUTION_REPORT_PUBLISHED
+```
+
+Применение результата:
+
+- refresh P6 preactivation обязан сослаться на свежий CONV-0 evidence (≤ 30 дней)
+  и зафиксировать выбранное решение по channel-policy;
+- P6.6 (`GATEWAY_READY_COMMAND_SESSION_ROUTING`) принимает CONV-0 как donor evidence.
+
+## 15. Two-line rule until P6 (amendment 2026-08-22)
+
+```text
+PRODUCT LINE BASE    = accepted P5 lineage (491ca7d0 и его канонизированные преемники)
+NETWORK/CONTROL BASE = origin/main
+```
+
+- Новые продуктовые фичи режутся только от product base.
+- `main` не принимает продуктовых фич до P6 activation.
+- Прямые переносы между линиями — только через CONV-0-подобные лаборатории
+  с published evidence.
+- Нарушение правила фиксируется PC0 как cross-branch overlap RED.
