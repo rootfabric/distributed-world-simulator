@@ -1,6 +1,5 @@
 {
   "schema": "planet_simulator.earth_placement.v1",
-  "seed": 20260726,
   "placement_radius_m": 9200.0,
   "near_tree_radius_m": 3600.0,
   "billboard_tree_radius_m": 9200.0,

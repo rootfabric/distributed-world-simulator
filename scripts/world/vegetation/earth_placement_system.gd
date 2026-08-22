@@ -1,6 +1,9 @@
 extends Node3D
 
 const CONFIG_PATH: String = "res://config/generation/earth_vegetation.json"
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
 
 var earth_world
 var pipeline
@@ -429,7 +432,12 @@ func _anchor_seed(direction: Vector3) -> int:
 		roundi(direction.y * 10000.0),
 		roundi(direction.z * 10000.0)
 	)
-	var value: int = int(config.get("seed", 20260726))
+	# Vegetation placement inherits the world seed from the PlanetDefinition
+	# (catalog) through the owning procedural world; the placement config no
+	# longer carries its own seed copy.
+	var value: int = WorldDefinitionScript.get_world_seed()
+	if earth_world != null and earth_world.has_method("get_world_seed"):
+		value = int(earth_world.get_world_seed())
 	value ^= quantized.x * 73856093
 	value ^= quantized.y * 19349663
 	value ^= quantized.z * 83492791
