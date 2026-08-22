@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b4_diversity_gate.v1.result",
+  "version": "1.0.0",
+  "species_count": 2,
+  "records_consumed": 24,
+  "dataset_variance": 0.007402,
+  "min_dataset_variance": 0.005,
+  "coverage_verdict": "PASS",
+  "distinct_species_identities": 2,
+  "identity_verdict": "PASS",
+  "fingerprint_margin": 1.5,
+  "fingerprint_verdict": "PASS",
+  "pair_results": [
+    {
+      "pair": [
+        "genome/e22-alpha-late",
+        "genome/e22-beta"
+      ],
+      "centroid_distance": 0.483543,
+      "required_gt": 0.082991,
+      "verdict": "PASS"
+    }
+  ],
+  "verdict": "PASS"
+}

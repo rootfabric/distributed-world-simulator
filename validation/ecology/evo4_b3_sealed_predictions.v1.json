@@ -1,0 +1,331 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b3_plasticity_gate.v1.sealed_predictions",
+  "version": "1.0.0",
+  "rule_under_test": "evo4-b2-plasticity-v0",
+  "honesty_note": "declared design expectations of the contract, sealed before verification",
+  "bound_inputs": {
+    "b1_artifact_sha256": "e5f32fa6812165186b34eb909deaef11366249c6398a5184ce3806036c0db155"
+  },
+  "predictions": [
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "LIGHT_LOW",
+      "metric": "plasticity.height_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 250000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "LIGHT_HIGH",
+      "metric": "plasticity.height_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 850000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "SOIL_DRY",
+      "metric": "plasticity.crown_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 200000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "SOIL_WET",
+      "metric": "plasticity.crown_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 850000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "NUTRIENT_POOR",
+      "metric": "plasticity.branch_prob_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 200000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "NUTRIENT_RICH",
+      "metric": "plasticity.branch_prob_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 850000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "DISTURBANCE_STRESS",
+      "metric": "stress_index",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 700000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "DISTURBANCE_STUNT",
+      "metric": "effective.max_height_m",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 700000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "LIGHT_LOW",
+      "metric": "plasticity.height_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 250000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "LIGHT_HIGH",
+      "metric": "plasticity.height_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 850000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "SOIL_DRY",
+      "metric": "plasticity.crown_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 200000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "SOIL_WET",
+      "metric": "plasticity.crown_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 850000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "NUTRIENT_POOR",
+      "metric": "plasticity.branch_prob_scale",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 200000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "NUTRIENT_RICH",
+      "metric": "plasticity.branch_prob_scale",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 850000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "DISTURBANCE_STRESS",
+      "metric": "stress_index",
+      "expected_direction": "INCREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 700000,
+        "temperature_milli_c": 15000
+      }
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "DISTURBANCE_STUNT",
+      "metric": "effective.max_height_m",
+      "expected_direction": "DECREASE",
+      "baseline_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 50000,
+        "temperature_milli_c": 15000
+      },
+      "perturbed_conditions": {
+        "light_availability_ppm": 550000,
+        "soil_moisture_ppm": 550000,
+        "nutrient_availability_ppm": 550000,
+        "disturbance_pressure_ppm": 700000,
+        "temperature_milli_c": 15000
+      }
+    }
+  ]
+}

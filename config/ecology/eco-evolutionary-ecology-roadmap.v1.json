@@ -437,12 +437,20 @@
           {
             "id": "E4.B3",
             "name": "Sealed plasticity gate on EVO3 opportunity vectors incl. disturbance form expression",
-            "status": "PROPOSED"
+            "status": "GATES_PASS_SEALED_16_16",
+            "evidence": [
+              "validation/ecology/evo4_b3_plasticity_gate_result.v1.json",
+              "docs/checkpoints/2026-08-22_ECO_EVO4_WAVE3_RU.md"
+            ]
           },
           {
             "id": "E4.B4",
             "name": "Diversity coverage gate + silhouette fingerprint species-distinctness gate",
-            "status": "PROPOSED"
+            "status": "GATES_PASS",
+            "evidence": [
+              "validation/ecology/evo4_b4_diversity_gate_result.v1.json",
+              "docs/checkpoints/2026-08-22_ECO_EVO4_WAVE3_RU.md"
+            ]
           },
           {
             "id": "E4.B5",

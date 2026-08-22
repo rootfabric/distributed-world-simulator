@@ -1,0 +1,5 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b3_plasticity_gate.v1.seal",
+  "algorithm": "sha256(canonical_json)",
+  "sealed_predictions_sha256": "7af83bc23ea6d75ddbb548e7a78a62974977c84835a5728c7ebfb53982144215"
+}

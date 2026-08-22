@@ -1,0 +1,157 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b3_plasticity_gate.v1.result",
+  "version": "1.0.0",
+  "seal_integrity_ok": true,
+  "confirmed": 16,
+  "total": 16,
+  "determinism_note": "compiler main() rerun without exception",
+  "artifact_sha256_after_rerun": "cb500791bcb0906da0f8d63862727f39f21cdd03fe3f87092fab9003f6761b58",
+  "verdict": "PASS",
+  "outcomes": [
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "LIGHT_LOW",
+      "metric": "plasticity.height_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.18000000000000005,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "LIGHT_HIGH",
+      "metric": "plasticity.height_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.17999999999999994,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "SOIL_DRY",
+      "metric": "plasticity.crown_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.21000000000000008,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "SOIL_WET",
+      "metric": "plasticity.crown_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.17999999999999994,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "NUTRIENT_POOR",
+      "metric": "plasticity.branch_prob_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.1399999999999999,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "NUTRIENT_RICH",
+      "metric": "plasticity.branch_prob_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.1200000000000001,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "DISTURBANCE_STRESS",
+      "metric": "stress_index",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.6499999999999999,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-beta",
+      "probe": "DISTURBANCE_STUNT",
+      "metric": "effective.max_height_m",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.7498400000000003,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "LIGHT_LOW",
+      "metric": "plasticity.height_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.18000000000000005,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "LIGHT_HIGH",
+      "metric": "plasticity.height_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.17999999999999994,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "SOIL_DRY",
+      "metric": "plasticity.crown_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.21000000000000008,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "SOIL_WET",
+      "metric": "plasticity.crown_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.17999999999999994,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "NUTRIENT_POOR",
+      "metric": "plasticity.branch_prob_scale",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -0.1399999999999999,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "NUTRIENT_RICH",
+      "metric": "plasticity.branch_prob_scale",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.1200000000000001,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "DISTURBANCE_STRESS",
+      "metric": "stress_index",
+      "expected": "INCREASE",
+      "actual": "INCREASE",
+      "delta": 0.6499999999999999,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "genome_id": "genome/e22-alpha-late",
+      "probe": "DISTURBANCE_STUNT",
+      "metric": "effective.max_height_m",
+      "expected": "DECREASE",
+      "actual": "DECREASE",
+      "delta": -1.4059499999999998,
+      "verdict": "CONFIRMED"
+    }
+  ],
+  "preview_subjects_path": "validation\\ecology\\evo4_b3_preview_subjects.v1.json"
+}
