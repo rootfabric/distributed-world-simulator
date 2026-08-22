@@ -1,0 +1,18 @@
+{
+ "schema": "distributed_world_simulator.ecology.evo5_reference_rules.v1",
+ "version": "1.0.0",
+ "rules": [
+  {"id": "01-shade-oppression", "when": {"neighbours": {"within_r": 6, "taller_than_self": 3}},
+   "target": {"form": "low"}, "effect": {"vitality": -0.15, "max_height_cap": 0.8}},
+  {"id": "02-hydrophobe-drowns", "when": {"water_dist_m": "<2"},
+   "target": {"root_type": "terrestrial"}, "effect": {"death_chance": 0.08}},
+  {"id": "03-helophyte-loves-water", "when": {"water_dist_m": "<3"},
+   "target": {"root_type": "amphibious"}, "effect": {"vitality": 0.3, "seed_establishment": 0.2}},
+  {"id": "04-submerged-only", "when": {"in_water": true},
+   "target": {"root_type": "aquatic"}, "effect": {"vitality": 0.5}},
+  {"id": "05-iron-pigment", "when": {"mineral": {"type": "iron_vein", "richness": ">0.5"}},
+   "target": {"any": true}, "effect": {"pigment_shift": [0.25, -0.1, -0.05], "thorns": 2}},
+  {"id": "06-wind-fragile", "when": {"wind_exposure": ">0.6"},
+   "target": {"form": "tall"}, "effect": {"death_chance": 0.05}}
+ ]
+}
