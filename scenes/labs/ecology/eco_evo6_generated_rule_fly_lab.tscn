@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_evo6_generated_rule_fly_lab.gd" id="1_lab"]
+
+[node name="EcoEvo6GeneratedRuleFlyLab" type="Node3D"]
+script = ExtResource("1_lab")
