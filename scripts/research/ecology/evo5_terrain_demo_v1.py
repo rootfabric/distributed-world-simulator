@@ -74,6 +74,8 @@ def cell_features(h, x, z, river_z) -> dict:
         feats["snow_cover_frac"] = 0.6
     if water_dist <= 2:
         feats["water_dist_m"] = float(water_dist)
+    if abs(z - river_z[x]) < 0.6:
+        feats["in_water"] = True
     if (x, z) == (11, 9) or (x, z) == (12, 9):
         feats["mineral_deposit"] = {"type": "iron_vein", "richness": 0.9}
     if _unit(f"rock|x{x}z{z}") > 0.93:
