@@ -372,7 +372,16 @@ func _channel_index(channel: String) -> int:
 
 
 func _transfer_mode(delivery_mode: String) -> int:
-	return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if delivery_mode == "UNRELIABLE_SEQUENCED" else MultiplayerPeer.TRANSFER_MODE_RELIABLE
+	# Exact physical fidelity: Godot's ENET maps TRANSFER_MODE_UNRELIABLE to
+	# ENET_PACKET_FLAG_UNSEQUENCED and TRANSFER_MODE_UNRELIABLE_ORDERED to
+	# plain sequenced-unreliable on the wire, and get_packet_mode() decodes the
+	# SAME flags back — so the declared mode must map 1:1 or every receiver
+	# quarantines the frame as PHYSICAL_DELIVERY_MODE_MISMATCH (EG4 L2 leg-B).
+	if delivery_mode == "UNRELIABLE":
+		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
+	if delivery_mode == "UNRELIABLE_SEQUENCED":
+		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
+	return MultiplayerPeer.TRANSFER_MODE_RELIABLE
 
 
 func _validate_endpoint(endpoint: Dictionary) -> Dictionary:

@@ -14,13 +14,13 @@
     "input": {
       "index": 1,
       "delivery": "UNRELIABLE_SEQUENCED",
-      "enet_mapping": "RAW_UNRELIABLE",
+      "enet_mapping": "ENET_TRANSFER_MODE_UNRELIABLE_ORDERED",
       "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
     },
     "snapshot": {
       "index": 2,
       "delivery": "UNRELIABLE_SEQUENCED",
-      "enet_mapping": "RAW_UNRELIABLE",
+      "enet_mapping": "ENET_TRANSFER_MODE_UNRELIABLE_ORDERED",
       "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
     },
     "item": {
@@ -34,7 +34,7 @@
     "telemetry": {
       "index": 5,
       "delivery": "UNRELIABLE_SEQUENCED",
-      "enet_mapping": "RAW_UNRELIABLE",
+      "enet_mapping": "ENET_TRANSFER_MODE_UNRELIABLE_ORDERED",
       "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
     }
   },
@@ -102,3 +102,4 @@
     "healthy_peers_preserved": true
   }
 }
+
