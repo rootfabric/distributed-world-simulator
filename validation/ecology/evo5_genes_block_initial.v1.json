@@ -1,0 +1,787 @@
+{
+ "schema": "distributed_world_simulator.ecology.evo5_genes_block_initial.v1",
+ "version": "1.0.0",
+ "derived_representation": true,
+ "blocks": {
+  "1b536a0b20f4ea775f00e4fde6defdf61618ef57d81a852ee7565349257141c0": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "1b536a0b20f4ea775f00e4fde6defdf61618ef57d81a852ee7565349257141c0",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.2156,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.9842,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 2,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.8134,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.3445,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.0142,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.6141,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "ecadca02a3db6eb740eb6ddf13b5c63bdb627358afcde573c990483f0d60eddd": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "ecadca02a3db6eb740eb6ddf13b5c63bdb627358afcde573c990483f0d60eddd",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.1272,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.0657,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 1,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.261,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.3417,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.0978,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.4543,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "8d8c63ab223df9f7a80c43cb72b6480b65ac34cc8bbaa0a715a19536eee486b1": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "8d8c63ab223df9f7a80c43cb72b6480b65ac34cc8bbaa0a715a19536eee486b1",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.7299,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.149,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 1,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.401,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.1159,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.7784,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.4172,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "e02942e2ce5901edce9127974dae02392da6bf6f8982bac3e16e50c30c4db0a1": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "e02942e2ce5901edce9127974dae02392da6bf6f8982bac3e16e50c30c4db0a1",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.1186,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.5477,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 0,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.9386,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.8833,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.9694,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.737,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "4c377b142ccbefd33cd7ce03feb6fa92fb0de5023f5e27804d947290f102177c": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "4c377b142ccbefd33cd7ce03feb6fa92fb0de5023f5e27804d947290f102177c",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.4745,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.9227,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 2,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.8198,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.6353,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.3927,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.1412,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "af03cb39bb31038c68568923fa28d880d5b1b10fa1d8c64d2ba7b2ba85ac0b1f": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "af03cb39bb31038c68568923fa28d880d5b1b10fa1d8c64d2ba7b2ba85ac0b1f",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.187,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.2086,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 1,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.2971,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.4472,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.2281,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.2502,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "b8881b14dc750476ded22f4fd7fd7c2dceebc20b7bef1e9a3a04d91bfff92b3a": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "b8881b14dc750476ded22f4fd7fd7c2dceebc20b7bef1e9a3a04d91bfff92b3a",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.4952,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.2292,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 2,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.8572,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.4592,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.3394,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.3935,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "bd85530f1011e59c4eee025a0e8447c5e1ad7822556cdcb1f68714403ced036f": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "bd85530f1011e59c4eee025a0e8447c5e1ad7822556cdcb1f68714403ced036f",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.1803,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.427,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 1,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.5798,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.3507,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.6196,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.3459,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "00520485e3a7a84a054aad84fdd4583daf8ee29c3cbd30a65901be0c972ed7ee": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "00520485e3a7a84a054aad84fdd4583daf8ee29c3cbd30a65901be0c972ed7ee",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.1037,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.824,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 0,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.203,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.889,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.7977,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.4412,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "64885fd7a43e1ceda9d313e6199c4568be7729bb0c36f68c91a36694a644aa82": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "64885fd7a43e1ceda9d313e6199c4568be7729bb0c36f68c91a36694a644aa82",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.1324,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.6366,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 2,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.5522,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.3256,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.4063,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.6896,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "030c3681109894c07a025019c66c6e52c6e4b452f66d16f0edf4a36be5b833f6": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "030c3681109894c07a025019c66c6e52c6e4b452f66d16f0edf4a36be5b833f6",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.5242,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.6519,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 2,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.4085,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.7957,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.951,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.5676,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  },
+  "ae0ab19ed4ea5a41ae5c050a95999b24e2c658a837027323f7e4393c8b27bb81": {
+   "schema": "distributed_world_simulator.ecology.evo5_genes_block.v1",
+   "genome_checksum": "ae0ab19ed4ea5a41ae5c050a95999b24e2c658a837027323f7e4393c8b27bb81",
+   "genes": {
+    "defense_intensity": {
+     "value": 0.8956,
+     "bounds": [
+      0.0,
+      0.95
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "hue_gene": {
+     "value": 0.8584,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "leaf_archetype_gene": {
+     "value": 1,
+     "bounds": [
+      0,
+      2
+     ]
+    },
+    "nutrient_value": {
+     "value": 0.3055,
+     "bounds": [
+      0.1,
+      1.0
+     ]
+    },
+    "regrowth_rate": {
+     "value": 0.1383,
+     "bounds": [
+      0.0,
+      1.0
+     ]
+    },
+    "thorn_gene": {
+     "value": 0.7666,
+     "bounds": [
+      0.0,
+      1.0
+     ],
+     "expression_requirements": {
+      "mineral_type": "iron_vein",
+      "min_mineral_richness_ppm": 300000
+     },
+     "expressed_at_reference_site": true
+    },
+    "toxicity": {
+     "value": 0.4919,
+     "bounds": [
+      0.0,
+      0.9
+     ]
+    }
+   }
+  }
+ }
+}
