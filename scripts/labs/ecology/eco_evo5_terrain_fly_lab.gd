@@ -23,10 +23,32 @@ var _rng_tick := 0
 var _established_count := 0
 var _cell_top := {}
 var _cell_keys: Array = []
+var _fates := {}
 const RichPresentation = preload("res://scripts/research/ecology/evo4_bridge_presentation_v1.gd")
 var _species: Dictionary = {}
 
-func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
+func _establish(pos: Vector3, zone: String, hue_jitter: float, cell_key: String) -> void:
+	if _fates.is_empty():
+		var fates = JSON.parse_string(FileAccess.get_file_as_string("res://validation/ecology/evo5_r2_rule_outcomes.v1.json"))
+		for f in ((fates as Dictionary)["fates"] as Array):
+			_fates["%d|%d" % [int(f["x"]), int(f["z"])]] = f
+	var fate: Dictionary = _fates.get(cell_key, {})
+	if not fate.is_empty() and not bool(fate["survived"]):
+		var withered := Node3D.new()
+		withered.position = Vector3(pos.x, pos.y + 0.15, pos.z)
+		withered.scale = Vector3.ONE * 0.45
+		add_child(withered)
+		var wm := MeshInstance3D.new()
+		var wsph := SphereMesh.new()
+		wsph.radius = 0.22
+		wsph.height = 0.44
+		wm.mesh = wsph
+		wm.position.y = 0.22
+		var wmat := StandardMaterial3D.new()
+		wmat.albedo_color = Color(0.42, 0.38, 0.30)
+		wm.material_override = wmat
+		withered.add_child(wm)
+		return
 	if _species.is_empty():
 		var man = JSON.parse_string(FileAccess.get_file_as_string("res://validation/ecology/evo4_b6_region_manifest.v1.json"))
 		for gid in ((man as Dictionary)["species_traits"] as Dictionary).keys():
@@ -55,7 +77,13 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 	var bark := StandardMaterial3D.new()
 	bark.albedo_color = Color(0.36, 0.24, 0.14)
 	var leaf_mat := StandardMaterial3D.new()
-	leaf_mat.albedo_color = Color(0.28, 0.52, 0.20).lerp(Color(0.16, 0.30, 0.12), defense * 0.5)
+	var base_green := Color(0.28, 0.52, 0.20).lerp(Color(0.16, 0.30, 0.12), defense * 0.5)
+	if not fate.is_empty():
+		var pig: Array = fate["pigment"]
+		base_green = Color(clampf(base_green.r + float(pig[0]), 0.0, 1.0),
+			clampf(base_green.g + float(pig[1]), 0.0, 1.0),
+			clampf(base_green.b + float(pig[2]), 0.0, 1.0))
+	leaf_mat.albedo_color = base_green
 	var stem := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 0.06
@@ -265,7 +293,7 @@ func _update_seeds() -> void:
 			node.queue_free()
 			_seeds.remove_at(i)
 			var ground_y: float = float(_cell_top.get(String(s["cell"]), 0.4))
-			_establish(Vector3(pos.x, ground_y, pos.z), String(s["zone"]), _unit("esth|%d" % i))
+			_establish(Vector3(pos.x, ground_y, pos.z), String(s["zone"]), _unit("esth|%d" % i), String(s["cell"]))
 		else:
 			var fade: float = clampf(node.scale.x - 0.08, 0.05, 1.0)
 			node.scale = Vector3.ONE * fade
