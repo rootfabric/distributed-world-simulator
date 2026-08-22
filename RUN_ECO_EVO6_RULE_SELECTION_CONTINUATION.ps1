@@ -13,7 +13,7 @@ if (Get-Command py -ErrorAction SilentlyContinue) {
     $PythonExe = (Get-Command py).Source
     $PythonPrefix = @("-3")
 }
-elelseif (Get-Command python -ErrorAction SilentlyContinue) {
+elseif (Get-Command python -ErrorAction SilentlyContinue) {
     $PythonExe = (Get-Command python).Source
 }
 else {
@@ -41,8 +41,8 @@ try {
     $env:BREAKPOINT_RUNTIME_DISABLED = "1"
 
     Write-Host "=== ECO.EVO6 R3.1 generated outcomes ==="
-    Invoke-PythonChecked @((Join-Path $RootDir "tests\research\ecology\test_evo6_generated_outcomes.py"))
-    Invoke-PythonChecked @(
+    Invoke-PythonChecked -ArgsList @((Join-Path $RootDir "tests\research\ecology\test_evo6_generated_outcomes.py"))
+    Invoke-PythonChecked -ArgsList @(
         (Join-Path $RootDir "scripts\research\ecology\evo6_generated_outcomes_v1.py"),
         "--seed", "20260823",
         "--output", $TempArtifact
