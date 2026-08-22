@@ -90,9 +90,18 @@ func commit(request: Dictionary) -> Dictionary:
 	if _committed_by_operation.has(operation_id):
 		var entry: Dictionary = _committed_by_operation[operation_id]
 		_counters["duplicate_replays"] = int(_counters["duplicate_replays"]) + 1
+		var replay_result: Dictionary = EffectResultScript.create(
+				String(request.get("interaction_id")),
+				operation_id,
+				"DUPLICATE_REPLAY",
+				int(entry["canonical_effect_revision"]),
+				_authority_epoch)
+		var replay_check: Dictionary = EffectResultScript.validate(replay_result)
+		if not bool(replay_check.get("success", false)):
+			return _failure(String(replay_check.get("error_code", "INVALID_RESULT")), {})
 		return _success({
 			"status": "DUPLICATE_REPLAY",
-			"result": Dictionary(entry["result"]).duplicate(true),
+			"result": replay_result,
 			"canonical_effect_revision": int(entry["canonical_effect_revision"]),
 			"applied_now": false,
 		})
