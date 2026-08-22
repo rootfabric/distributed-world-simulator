@@ -107,6 +107,7 @@ func _run() -> void:
 		if tick % 60 == 0:
 			_hud.text = "tick %d/%d  bites=%d" % [tick, TICKS, _bites]
 			await get_tree().process_frame
+	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.save_png(ProjectSettings.globalize_path("res://artifacts/evo5_b2_agents_plot.png"))
