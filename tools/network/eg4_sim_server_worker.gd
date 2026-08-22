@@ -398,11 +398,13 @@ func _pump_projections() -> void:
 		_source_revision += 1
 		var frames_sent := int(_frames_per_subscription.get(sub_key, 0))
 		_frames_per_subscription[sub_key] = frames_sent + 1
-		if frames_sent == int(_options["inject-after-frames"]) and _injected_frames < 1:
-			# ONE mutation-shaped write injection attempt mid-stream. Sent ALONE
-			# in its own beat: the boundary coalesces same-stream queued frames
-			# latest-wins, so sharing the beat would let a newer healthy frame
-			# silently swallow the injection before it ever reaches the fence.
+		if frames_sent % maxi(int(_options["inject-after-frames"]), 1) == 0:
+			# Mutation-shaped write injection attempt. Sent ALONE in its own
+			# beat and REPEATED every inject-after-frames frames per pair: the
+			# boundary coalesces same-stream queued frames latest-wins, so a
+			# one-shot attempt can legally be swallowed by a newer healthy
+			# frame under load — repeated solo beats make at-least-one-arrival
+			# deterministic while the read-only fence rejects every attempt.
 			_injected_frames += 1
 			var injection_envelope: Dictionary = Support.mutation_injection_envelope(
 					_source_revision, gateway_session_id)
