@@ -380,6 +380,14 @@ func _handle_backend_event(event: Dictionary) -> void:
 						forwarded["details"]["client_transport_frame"])
 		"PEER_CONNECTED":
 			_drive_backend_peer_ready()
+		"PEER_DISCONNECTED":
+			# Fail-predictable backend link loss: parked retries and scheduled
+			# frames for the dead link are dropped and accounted — never
+			# replayed into a future link incarnation (no stale resurrection).
+			_pending_backend_specs.clear()
+			if _backend_multiplexer != null and _backend_multiplexer.has_method("purge_all"):
+				_backend_multiplexer.purge_all()
+			_counters["backend_link_drops"] = int(_counters.get("backend_link_drops", 0)) + 1
 		_:
 			pass
 

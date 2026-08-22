@@ -171,6 +171,22 @@ func purge_session(gateway_session_id: String) -> Dictionary:
 	return _success({"purged_frames": purged})
 
 
+## Fail-predictable link drop: clear EVERY session's scheduled frames at once
+## (backend transport lost). Registrations survive — a session that re-places
+## starts from a clean, identity-fresh queue with no stale resurrection.
+func purge_all() -> Dictionary:
+	var purged := _link_messages
+	for gateway_session_id in _sessions.keys():
+		var state: Dictionary = _sessions[gateway_session_id]
+		state["queues"] = _fresh_queues()
+		state["messages"] = 0
+		state["bytes"] = 0
+	_link_messages = 0
+	_counters["purged_frames"] = int(_counters["purged_frames"]) + purged
+	_counters["purges"] = int(_counters["purges"]) + 1
+	return _success({"purged_frames": purged})
+
+
 ## Enqueue one backend-leg frame spec for a logical session.
 ## frame_spec requires: channel, delivery_mode, payload (payload_schema
 ## optional passthrough). The backend wire frame carries the PHYSICAL channel
