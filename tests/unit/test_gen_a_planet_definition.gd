@@ -1,4 +1,4 @@
-extends SceneTree
+﻿extends SceneTree
 
 # GEN-A predicate evidence:
 #   PLANET_DEFINITION_PER_WORLD_PASS      - catalog is the single seed source
@@ -30,6 +30,7 @@ func _init() -> void:
 	_test_seed_parameter_forwarding()
 	_test_world_definition_hash_contract()
 	_test_announcement_evaluation_fail_closed()
+	_test_control_point_digest_contract()
 	_test_control_point_elevation_match()
 	if failures.is_empty():
 		print("GEN-A planet definition tests: PASS (%d assertions)" % assertions)
@@ -125,8 +126,9 @@ func _test_world_definition_hash_contract() -> void:
 		var tampered_hash := WorldDefinitionScript.compute_definition_hash(tampered_definition)
 		_assert(tampered_hash != baseline_hash, "Rules content change alters the world hash.")
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(tampered_path))
-	# Seed substitution via the documented test hook.
+	# Seed substitution via the documented test hook, gated to the test contour.
 	OS.set_environment(WorldDefinitionScript.TEST_SEED_OVERRIDE_ENV, "")
+	OS.set_environment(WorldDefinitionScript.TEST_RUNTIME_FLAG_ENV, "1")
 	var neutral_hash := WorldDefinitionScript.get_world_definition_hash()
 	_assert(neutral_hash == baseline_hash, "Empty test override keeps the catalog hash.")
 	OS.set_environment(WorldDefinitionScript.TEST_SEED_OVERRIDE_ENV, "20260727")
@@ -136,10 +138,28 @@ func _test_world_definition_hash_contract() -> void:
 		WorldDefinitionScript.get_world_definition_hash() != baseline_hash,
 		"Substituted seed produces a different world hash."
 	)
+	# F5: outside the test contour (runtime flag disabled) the hook is ignored.
+	OS.set_environment(WorldDefinitionScript.TEST_RUNTIME_FLAG_ENV, "0")
+	_assert(
+		WorldDefinitionScript.get_world_definition_hash() == baseline_hash,
+		"Seed override ignored when BREAKPOINT_RUNTIME_DISABLED!=1."
+	)
+	OS.set_environment(WorldDefinitionScript.TEST_RUNTIME_FLAG_ENV, "1")
+	_assert(
+		WorldDefinitionScript.get_world_definition_hash() != baseline_hash,
+		"Seed override honoured again once the runtime flag returns."
+	)
 	OS.set_environment(WorldDefinitionScript.TEST_SEED_OVERRIDE_ENV, "")
 	_assert(
 		WorldDefinitionScript.get_world_definition_hash() == baseline_hash,
 		"Hash returns to the catalog value after the override clears."
+	)
+	# F3: a definition whose rules file does not exist must not produce a hash.
+	var missing_rules_definition := definition.duplicate(true)
+	missing_rules_definition["rules_config"] = "res://config/generation/definitely_missing_rules.json"
+	_assert(
+		WorldDefinitionScript.compute_definition_hash(missing_rules_definition).is_empty(),
+		"Missing rules file yields no world definition hash."
 	)
 
 
@@ -175,6 +195,50 @@ func _test_announcement_evaluation_fail_closed() -> void:
 		String(WorldDefinitionScript.evaluate_announcement({}, local).get("error_code", ""))
 			== "WORLD_DEFINITION_UNRESOLVABLE",
 		"Unresolvable local definition fails closed."
+	)
+
+
+func _test_control_point_digest_contract() -> void:
+	var local := WorldDefinitionScript.create_announcement("earth")
+	var announced := local.duplicate(true)
+	announced["control_point_digest"] = "a".repeat(64)
+	_assert(
+		bool(WorldDefinitionScript.evaluate_control_point_digest("a".repeat(64), announced).get("success", false)),
+		"Matching control-point digests evaluate compatible."
+	)
+	var without_digest := local.duplicate(true)
+	without_digest.erase("control_point_digest")
+	var missing: Dictionary = WorldDefinitionScript.evaluate_control_point_digest("a".repeat(64), without_digest)
+	_assert(
+		not bool(missing.get("success", false))
+		and String(missing.get("error_code", "")) == "WORLD_DEFINITION_DIGEST_MISSING",
+		"Announcement without control_point_digest fails with WORLD_DEFINITION_DIGEST_MISSING."
+	)
+	var empty_digest := local.duplicate(true)
+	empty_digest["control_point_digest"] = ""
+	var empty: Dictionary = WorldDefinitionScript.evaluate_control_point_digest("a".repeat(64), empty_digest)
+	_assert(
+		not bool(empty.get("success", false))
+		and String(empty.get("error_code", "")) == "WORLD_DEFINITION_DIGEST_MISSING",
+		"Empty control_point_digest fails with WORLD_DEFINITION_DIGEST_MISSING."
+	)
+	var wrong_type := local.duplicate(true)
+	wrong_type["control_point_digest"] = 12345
+	_assert(
+		String(WorldDefinitionScript.evaluate_control_point_digest("a".repeat(64), wrong_type).get("error_code", ""))
+			== "WORLD_DEFINITION_DIGEST_MISSING",
+		"Non-string control_point_digest fails closed."
+	)
+	var divergent := WorldDefinitionScript.evaluate_control_point_digest("b".repeat(64), announced)
+	_assert(
+		not bool(divergent.get("success", false))
+		and String(divergent.get("error_code", "")) == "WORLD_DEFINITION_MISMATCH",
+		"Divergent control-point digest fails with WORLD_DEFINITION_MISMATCH."
+	)
+	var unresolvable_probe := WorldDefinitionScript.evaluate_control_point_digest("", announced)
+	_assert(
+		String(unresolvable_probe.get("error_code", "")) == "WORLD_DEFINITION_DIGEST_MISSING",
+		"Unresolvable local probe fails closed instead of self-matching."
 	)
 
 

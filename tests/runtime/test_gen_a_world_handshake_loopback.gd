@@ -17,6 +17,9 @@ const ClientRuntimeScript = preload(
 const WorldDefinitionScript = preload(
 	"res://scripts/world/earth/world_definition.gd"
 )
+const CompatibilityHandshake = preload(
+	"res://scripts/network/observability/network_compatibility_handshake.gd"
+)
 
 const CONNECT_DEADLINE_MS := 30000
 const FAILURE_DEADLINE_MS := 30000
@@ -123,7 +126,98 @@ func _run() -> void:
 			"no unexpected server-side handshake rejection"
 		)
 
+	# --- Phase 3: replayed hello must republish the definition (F2) ----------
+	var publications_before := int(
+		server_final.get("world_definition", {}).get("publications", 0)
+	)
+	var compatible_peers: Dictionary = server_final.get(
+		"compatibility_handshake", {}
+	).get("compatible_peers", {})
+	# The tampered client B is also handshake-compatible server-side (it failed
+	# closed on its own after receiving the announcement), so locate client A
+	# by its transport session id instead of counting entries.
+	var replay_peer_id := ""
+	for peer_key in compatible_peers:
+		if String(Dictionary(compatible_peers[peer_key]).get("session_id", "")) \
+				== String(report_a.get("transport_session_id", "")):
+			replay_peer_id = String(peer_key)
+	_assert(not replay_peer_id.is_empty(), "client A compatible peer resolved for replay")
+	if replay_peer_id.is_empty():
+		server.stop()
+		_finish()
+		return
+	var replay_session_id := String(
+		Dictionary(compatible_peers[replay_peer_id]).get("session_id", "")
+	)
+	var replay_handshake_id := String(
+		report_a.get("compatibility_handshake", {}).get("handshake_id", "")
+	)
+	_assert(not replay_session_id.is_empty(), "replay peer session resolved")
+	_assert(not replay_handshake_id.is_empty(), "replay client handshake id resolved")
+	var replay_hello: Dictionary = CompatibilityHandshake.create_hello(
+		replay_handshake_id,
+		Dictionary(server_final.get("network_fingerprint", {})),
+		Time.get_ticks_msec()
+	)
+	# Suspend the live client so the duplicate ACK/definition frames queued by
+	# the replay stay unprocessed (a second READY transition on an already-ready
+	# client session is pre-existing behaviour outside R2 scope).
+	client_a.set_process(false)
+	server._handle_compatibility_hello(replay_peer_id, replay_session_id, {
+		"type": "COMPATIBILITY_HELLO",
+		"hello": replay_hello,
+	})
+	var server_after_replay: Dictionary = server.get_report()
+	_assert(
+		int(server_after_replay.get("world_definition", {}).get("publications", 0))
+			== publications_before + 1,
+		"replayed handshake republished the world definition idempotently"
+	)
+	_assert(
+		int(server_after_replay.get("compatibility_handshake", {}).get("replays", 0)) >= 1,
+		"replayed handshake counted as a replay"
+	)
+	_assert(
+		String(server_after_replay.get("compatibility_handshake", {}).get("last_error_code", "")).is_empty(),
+		"replay publication produced no rejection"
+	)
+	_assert(
+		int(server_after_replay.get("joins", 0)) == 1,
+		"replay did not create a second join"
+	)
+	client_a.set_process(true)
+
+	# --- Phase 4: missing/empty digest fails closed at the runtime gate (F1) --
+	var client_c = ClientRuntimeScript.new()
+	root.add_child(client_c)
+	var announcement_template: Dictionary = WorldDefinitionScript.create_announcement()
+	_assert(not announcement_template.is_empty(), "announcement template for digest-negative case resolved")
+	var incomplete_announcement := announcement_template.duplicate(true)
+	client_c._handle_world_definition({"definition": incomplete_announcement})
+	var report_c: Dictionary = client_c.get_report()
+	_assert(
+		String(report_c.get("last_error_code", "")) == "WORLD_DEFINITION_DIGEST_MISSING",
+		"announce without digest fails with WORLD_DEFINITION_DIGEST_MISSING: %s" % String(report_c.get("last_error_code", ""))
+	)
+	_assert(bool(report_c.get("world_definition", {}).get("verified", true)) == false, "announce without digest never verified the world")
+	_assert(not bool(report_c.get("joined", false)), "announce without digest never joined")
+
+	var client_d = ClientRuntimeScript.new()
+	root.add_child(client_d)
+	var empty_digest_announcement := announcement_template.duplicate(true)
+	empty_digest_announcement["control_point_digest"] = ""
+	client_d._handle_world_definition({"definition": empty_digest_announcement})
+	var report_d: Dictionary = client_d.get_report()
+	_assert(
+		String(report_d.get("last_error_code", "")) == "WORLD_DEFINITION_DIGEST_MISSING",
+		"empty digest announce fails with WORLD_DEFINITION_DIGEST_MISSING: %s" % String(report_d.get("last_error_code", ""))
+	)
+	_assert(not bool(report_d.get("joined", false)), "empty digest announce never joined")
+	# The matching-digest positive path is proven end-to-end by Phase 1.
+
 	client_b.stop()
+	client_c.stop()
+	client_d.stop()
 	client_a.stop()
 	server.stop()
 	_finish()
