@@ -81,6 +81,21 @@ func _establish(pos: Vector3, zone: String, hue_jitter: float) -> void:
 			mm_mat.vertex_color_use_as_albedo = true
 		mm_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		mi.material_override = mm_mat
+	# Guaranteed connected trunk: anchors crown to ground even if the
+	# presentation tube mesh comes out empty (liana-style fallback).
+	if built.has("branch_mesh") and built["branch_mesh"] != null:
+		var baabb := (built["branch_mesh"] as Mesh).get_aabb()
+		var trunk := MeshInstance3D.new()
+		var tcyl := CylinderMesh.new()
+		tcyl.top_radius = 0.045
+		tcyl.bottom_radius = 0.09
+		tcyl.height = maxf(baabb.size.y, 0.3)
+		trunk.mesh = tcyl
+		trunk.position = Vector3(baabb.get_center().x, baabb.position.y + tcyl.height * 0.5, baabb.get_center().z)
+		var tm := StandardMaterial3D.new()
+		tm.albedo_color = Color(0.36, 0.24, 0.14)
+		trunk.material_override = tm
+		holder.add_child(trunk)
 
 func _sha(text: String) -> String:
 	var ctx := HashingContext.new()
