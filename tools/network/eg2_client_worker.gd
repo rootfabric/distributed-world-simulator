@@ -139,9 +139,8 @@ func _drive() -> bool:
 			_place_sent = true
 			_send_place_request()
 		return false
-	var expected_results := Support.SCENARIO_A_ITEM_COMMANDS.size() + 1 \
-			if String(_options["phase"]) == "A" \
-			else Support.SCENARIO_B_ITEM_COMMANDS.size() + 1
+	var expected_results := Support.scenario_item_commands(String(_options["phase"]),
+			String(_world_ready["logical_player_id"])).size() + 1
 	if _scenario_sent_up_to < _phase_item_commands().size():
 		_send_scenario_step(_scenario_sent_up_to)
 		_scenario_sent_up_to += 1
@@ -160,9 +159,11 @@ func _drive() -> bool:
 	return false
 
 
+## Scenario steps for THIS session's phase, with item ids derived from the
+## GATEWAY-GRANTED logical player id (only valid after WORLD_READY).
 func _phase_item_commands() -> Array:
-	return Support.SCENARIO_A_ITEM_COMMANDS if String(_options["phase"]) == "A" \
-			else Support.SCENARIO_B_ITEM_COMMANDS
+	return Support.scenario_item_commands(String(_options["phase"]),
+			String(_world_ready["logical_player_id"]))
 
 
 func _send_inner(inner: Dictionary) -> void:

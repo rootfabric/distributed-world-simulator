@@ -30,6 +30,7 @@ const OPTION_SPEC := {
 	"premint-count": {"kind": "int", "default": 2},
 	"expected-placements": {"kind": "int", "default": 2},
 	"result-file": {"kind": "string", "default": "", "required": true},
+	"player-binding-file": {"kind": "string", "default": ""},
 	"timeout-ms": {"kind": "int", "default": 60000},
 	"user-data-dir": {"kind": "string", "default": ""},
 }
@@ -39,6 +40,7 @@ var _node
 var _auth_service
 var _directory
 var _placement
+var _published_bindings: Dictionary = {}
 var _started_ms: int = 0
 var _finished := false
 var _completion_at_ms: int = -1
@@ -117,6 +119,7 @@ func _process(_delta: float) -> bool:
 	if not bool(pumped.get("success", false)):
 		_finish_failure(String(pumped.get("error_code", "PUMP_FAILED")), {})
 		return false
+	_publish_player_bindings()
 	var counters: Dictionary = _node.get_report()["counters"]
 	var detached := int(counters.get("session_control_detached", 0))
 	var placements_done := int(counters.get("placement_handled", 0))
@@ -131,8 +134,44 @@ func _process(_delta: float) -> bool:
 	return false
 
 
+## Publish the GATEWAY-GRANTED domain identity for every live placement so the
+## sim-side worker can bind operations to the granted logical player id
+## (player/eg2-*) instead of a fixed identity. Identifier-only sidecar file:
+## the wire contract (ingress envelope) stays untouched.
+func _publish_player_bindings() -> void:
+	var path := String(_options.get("player-binding-file", ""))
+	if path.is_empty():
+		return
+	var flow_report: Dictionary = _placement.get_report()
+	var dirty := false
+	for entry_value in flow_report.get("live_placements", []):
+		var entry: Dictionary = entry_value
+		var gateway_session_id := String(entry["gateway_session_id"])
+		if _published_bindings.has(gateway_session_id):
+			continue
+		var session_result: Dictionary = _auth_service.get_session(gateway_session_id)
+		if not bool(session_result.get("success", false)):
+			continue
+		var session: Dictionary = session_result.get("details", {}).get("session", {})
+		if session.is_empty():
+			continue
+		_published_bindings[gateway_session_id] = {
+			"gateway_session_id": gateway_session_id,
+			"client_session_id": String(session["client_session_id"]),
+			"logical_player_id": String(session["logical_player_id"]),
+			"player_entity_id": String(session["player_entity_id"]),
+		}
+		dirty = true
+	if dirty:
+		Support.write_json(path, {
+			"schema": "planet_simulator.eg2_player_bindings.v1",
+			"bindings": _published_bindings.duplicate(true),
+		})
+
+
 func _finish_success() -> void:
 	_finished = true
+	_publish_player_bindings()
 	var report: Dictionary = _node.get_report()
 	report["schema"] = "planet_simulator.eg2_gateway_worker_report.v1"
 	report["state"] = "COMPLETE"
