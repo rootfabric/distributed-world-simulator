@@ -65,8 +65,10 @@ function Write-JsonFileAtomically {
             $Stream.Dispose()
         }
         $null = [IO.File]::ReadAllText($TemporaryPath, $Utf8NoBom) | ConvertFrom-Json -ErrorAction Stop
-        if ([IO.File]::Exists($Path)) { [IO.File]::Delete($Path) }
-        [IO.File]::Move($TemporaryPath, $Path)
+        # Review R2-D: publish atomically. Move-Item -Force overwrites the
+        # destination in one step (mv -f semantics); the previous explicit
+        # Delete followed by Move left a window with NO summary file at all.
+        Move-Item -LiteralPath $TemporaryPath -Destination $Path -Force
     }
     catch {
         if ([IO.File]::Exists($TemporaryPath)) { [IO.File]::Delete($TemporaryPath) }
