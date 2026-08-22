@@ -1,8 +1,8 @@
 # ECO.EVO6 — продолжение Rule Language → эволюционный отбор, R1
 
-Статус: `IMPLEMENTED_CANDIDATE / LOCAL_SMOKE_PASS / FRESH_REPO_EXECUTION_REQUIRED`.
+Статус: `IMPLEMENTED_CANDIDATE / LOCAL_SMOKE_PASS / PROJECT_CONTROL_PASS / EXACT_GODOT_CLOSURE_PENDING_SELF_HOSTED_RUNNER`.
 
-База реализации: `main@1cb7e45daf520c8f094849b2e0d70fb157ace5c0` (`Merge EVO6 R4 rule generator`). Ветка: `feature/eco-evo6-rule-selection-continuation`.
+База реализации: `main@1cb7e45daf520c8f094849b2e0d70fb157ace5c0` (`Merge EVO6 R4 rule generator`). Ветка: `feature/eco-evo6-rule-selection-continuation`. PR: `#206` (DRAFT, human-gated, NOT MERGED).
 
 ## Что закрывает R1
 
@@ -62,7 +62,12 @@ Bridge считает:
 - population conservation;
 - common first candidate-pool predicate.
 
-Focused acceptance также строит counterfactual surface: меняется только EVO6 fitness, mutation seed остаётся тем же. Selected descendants обязаны изменить `result_hash`. Это отделяет причинность rule selection от случайного mutation drift.
+Focused acceptance содержит усиленный counterfactual causality gate. Он меняет только EVO6 fitness surface, сохраняя тот же lineage seed. Проверка требует одновременно:
+
+1. одинаковый generation-one `candidate_pool_hash` для original и counterfactual на каждом site;
+2. изменение `final_population_hash` хотя бы на одном site.
+
+Сравнения одного `result_hash` недостаточно, потому что он включает `selection_surface_digest`; поэтому такой слабый вариант теста удалён. Новый gate доказывает, что изменение generated rule fitness реально меняет выбранных потомков, а не только metadata результата.
 
 ## Границы
 
@@ -72,7 +77,7 @@ Focused acceptance также строит counterfactual surface: меняет�
 - старый EVO6 R1–R4 код не переписан;
 - старый R3 flyover не переписан;
 - population truth не объявляется canonical;
-- результат остаётся research-layer candidate до отдельного review/acceptance.
+- результат остаётся research-layer candidate до fresh review/verification/acceptance.
 
 ## Проверка
 
@@ -84,8 +89,10 @@ Focused runner: `RUN_ECO_EVO6_RULE_SELECTION_CONTINUATION.ps1`.
 2. generation временного exact artifact;
 3. существующий `ECO.P1B-S2` parent regression;
 4. R3.1 visual adapter acceptance;
-5. H1–H3 selection bridge acceptance.
+5. H1–H3 selection bridge acceptance, включая strengthened final-population counterfactual gate.
 
 PR-only exact-head workflow: `.github/workflows/evo6-rule-selection-continuation.yml`.
+
+На implementation HEAD `30203acd5890ba65fcf5f7461f3c775e9e2e4b4c` Project Control `#1191` завершился `SUCCESS`. Exact Godot closure на этом HEAD был создан, но остался `pending` до назначения self-hosted Windows/X64 runner; это инфраструктурное ожидание не считается PASS и не подменяется локальным smoke.
 
 Интерактивный визуал: `OPEN_ECO_EVO6_GENERATED_RULE_LAB.ps1`.
