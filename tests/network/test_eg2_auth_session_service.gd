@@ -129,6 +129,16 @@ func _init() -> void:
 		_assert(String(resume_details["previous_gateway_session_id"]) == String(create_details["gateway_session_id"]),
 				"resume lost the previous gateway session linkage")
 
+	# --- accounting hygiene: superseded rows are pruned, live counts are live ---
+	var superseded_lookup := service.get_session(String(create_details["gateway_session_id"]))
+	_assert(_err(superseded_lookup) == "UNKNOWN_GATEWAY_SESSION",
+			"superseded session row survived the resume")
+	var hygiene_report: Dictionary = service.get_report()
+	_assert(int(hygiene_report["live_sessions"]) == 1,
+			"live_sessions does not count LIVE rows only: %s" % str(hygiene_report.get("live_sessions")))
+	_assert(int(hygiene_report["live_resume_tokens"]) == 1,
+			"live_resume_tokens does not count LIVE tokens only")
+
 	# --- stale/wrong resume rejections ---
 	var probe_ticket := _mint_ok(service, "client-session/eg2/alpha")
 	_auth_ok(service, probe_ticket)

@@ -214,6 +214,7 @@ func _init() -> void:
 	_run_full_flow_to_world_ready()
 	_run_reject_paths()
 	_run_resume_preserves_identity()
+	_run_detach_prunes_auth_binding()
 	_run_warm_degradation_and_recovery()
 	_run_gateway_selection_independence()
 	_run_redaction_scan()
@@ -302,6 +303,50 @@ func _run_resume_preserves_identity() -> void:
 			"superseded gateway session row survived the resume")
 	_assert(not _route_row(String(payload["gateway_session_id"])).is_empty(),
 			"resumed gateway session row missing")
+
+
+## Accounting hygiene: a graceful DETACH must prune the peer's AUTHENTICATED
+## binding (a reused transport peer must never inherit an earlier identity),
+## while the session's resume grant stays intact — that is the EG2 reconnect
+## contract, so DETACH may not kill the live resume token.
+func _run_detach_prunes_auth_binding() -> void:
+	var hygiene := _register_client("hygiene")
+	_authenticate(hygiene, "client-session/eg2/l1-hygiene", "OK")
+	var payload := _place(hygiene, "client-session/eg2/l1-hygiene", MAIN_WORLD_ID, "")
+	_assert(not payload.is_empty(), "hygiene placement failed")
+	if payload.is_empty():
+		return
+	var before: Dictionary = _flow.get_report()
+	var bound_before := int(before["authenticated_peer_count"])
+	_assert(bound_before >= 1, "authenticated peer binding missing before the detach")
+	var gateway_session_id := String(payload["gateway_session_id"])
+	var seq := int(hygiene["wire_sequence"]) + 1
+	hygiene["wire_sequence"] = seq
+	var inner := ClientWorldFrameScript.create(
+			"frame/eg2/l1/detach-hygiene/%d" % seq, gateway_session_id,
+			"CLIENT_TO_WORLD", "SESSION_CONTROL", seq,
+			GatewayUtils.EG1_SESSION_DETACH_PAYLOAD_SCHEMA, {})
+	_inject_wire(hygiene, {
+		"frame_id": "frame/eg2/l1/detach-hygiene-wire/%d" % seq,
+		"session_id": String(hygiene["wire_session"]),
+		"sequence": seq,
+		"channel": "CONTROL",
+		"delivery_mode": "RELIABLE_ORDERED",
+		"payload_schema": GatewayUtils.EG1_SESSION_DETACH_PAYLOAD_SCHEMA,
+		"payload": inner,
+	})
+	_pump("detach(hygiene)")
+	var ack := _take_ack(hygiene, "detach")
+	if ack.is_empty():
+		return
+	_assert(String(ack["payload"]["state"]) == "DETACHED", "detach ack did not report DETACHED")
+	var after: Dictionary = _flow.get_report()
+	_assert(int(after["authenticated_peer_count"]) == bound_before - 1,
+			"stale auth binding survived the detach: %d -> %d"
+					% [bound_before, int(after["authenticated_peer_count"])])
+	_assert(int(after["counters"]["peer_bindings_pruned"]) == 1, "peer-binding prune counter mismatch")
+	_assert(_auth.is_resume_token_live(String(payload["resume_token"])),
+			"graceful detach destroyed the live resume token")
 
 
 func _run_warm_degradation_and_recovery() -> void:

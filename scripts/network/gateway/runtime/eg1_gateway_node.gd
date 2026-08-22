@@ -225,6 +225,14 @@ func set_placement_handler(handler) -> Dictionary:
 	return _success({})
 
 
+## Additive accounting hook: when a client transport peer detaches or its
+## connection drops, the installed placement handler may prune per-peer auth
+## bindings. Optional-method dispatch keeps EG1-only handlers fully unchanged.
+func _notify_placement_peer_gone(peer_id: String) -> void:
+	if _placement_handler != null and _placement_handler.has_method("on_client_peer_gone"):
+		_placement_handler.on_client_peer_gone(peer_id)
+
+
 func _handle_client_event(event: Dictionary) -> void:
 	match String(event.get("event_type", "")):
 		"MESSAGE_RECEIVED":
@@ -255,6 +263,7 @@ func _handle_client_event(event: Dictionary) -> void:
 										String(result["details"]["gateway_session_id"]), _backend_link_id)
 							"DETACH":
 								_counters["session_control_detached"] = int(_counters["session_control_detached"]) + 1
+								_notify_placement_peer_gone(peer_id)
 					if result["details"].has("ack_transport_frame"):
 						_send_to_client(peer_id, result["details"]["ack_transport_frame"])
 				else:
@@ -272,6 +281,7 @@ func _handle_client_event(event: Dictionary) -> void:
 			if bool(lookup.get("success", false)):
 				_route_table.set_binding_state(
 						String(lookup["details"]["row"]["gateway_session_id"]), "DETACHED")
+			_notify_placement_peer_gone(String(event.get("peer_id", "")))
 		_:
 			pass
 

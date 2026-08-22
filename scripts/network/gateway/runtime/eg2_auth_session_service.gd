@@ -202,6 +202,10 @@ func _resume_session(client_session_id: String, ticket: Dictionary, resume_token
 	}
 	ticket["state"] = TICKET_STATE_EXCHANGED
 	_live_resume_tokens.erase(resume_token)
+	# Accounting hygiene: the previous session row is SUPERSEDED by the resumed
+	# one (its resume token was already rotated away), so it is pruned instead
+	# of accumulating as a dead row; live_sessions counts LIVE rows only.
+	_sessions_by_gateway_session_id.erase(previous_gateway_session_id)
 	_sessions_by_gateway_session_id[gateway_session_id] = session
 	_live_resume_tokens[next_resume_token] = gateway_session_id
 	_counters["sessions_resumed"] = int(_counters["sessions_resumed"]) + 1

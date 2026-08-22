@@ -48,6 +48,7 @@ var _counters := {
 	"placements_degraded_warm": 0,
 	"placements_pending": 0,
 	"placement_frames_rejected": 0,
+	"peer_bindings_pruned": 0,
 }
 
 
@@ -110,7 +111,20 @@ func get_report() -> Dictionary:
 		"cache_status": "DERIVED_CACHE_NOT_OWNERSHIP_TRUTH",
 		"live_placements": live_placements,
 		"cached_resolutions": cached_resolutions,
+		"authenticated_peer_count": _auth_by_peer.size(),
 	}
+
+
+## Accounting hygiene hook: the gateway node calls this when a client transport
+## peer detaches or disconnects, so the stale AUTHENTICATED binding cannot be
+## reused by whatever reconnects under the same peer id. Resume tokens are NOT
+## touched: a graceful DETACH (or transport loss) must keep the recorded
+## identity resumable — that is exactly the EG2 reconnect contract.
+func on_client_peer_gone(client_transport_peer_id: String) -> void:
+	if not _auth_by_peer.has(client_transport_peer_id):
+		return
+	_auth_by_peer.erase(client_transport_peer_id)
+	_counters["peer_bindings_pruned"] = int(_counters["peer_bindings_pruned"]) + 1
 
 
 ## ---- authenticate -----------------------------------------------------------
