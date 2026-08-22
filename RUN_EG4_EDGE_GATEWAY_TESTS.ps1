@@ -102,6 +102,7 @@ $Tests = @(
     "res://tests/network/test_eg4_view_planner.gd",
     "res://tests/network/test_eg4_interest_aggregator.gd",
     "res://tests/network/test_eg4_projection_aggregation.gd",
+    "res://tests/network/test_eg4_projection_lifecycle.gd",
     "res://tests/network/test_eg4_two_worlds_one_transport.gd"
 )
 

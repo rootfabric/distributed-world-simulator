@@ -119,10 +119,13 @@ func register_client(gateway_session_id: String) -> Dictionary:
 func release_client(gateway_session_id: String) -> Dictionary:
 	if not _clients.has(gateway_session_id):
 		return _failure("UNKNOWN_CLIENT", {"gateway_session_id": gateway_session_id})
+	# _key_by_pair maps "<gateway_session_id>\u001f<source_authority_id>" to the
+	# STRING fan-in slot key; the session identity lives in the KEY itself.
 	for pair_key_value in _key_by_pair.keys():
-		var pair: Dictionary = _key_by_pair[pair_key_value]
-		if String(pair["gateway_session_id"]) == gateway_session_id:
-			_release_slot(String(pair_key_value))
+		var pair_key := String(pair_key_value)
+		var pair_parts := pair_key.split(String.chr(31))
+		if pair_parts.size() == 2 and String(pair_parts[0]) == gateway_session_id:
+			_release_slot(pair_key)
 	var pairs_now_stale := 0
 	for sub_key_value in _subscriptions.keys():
 		if _detach_session_from_subscription(String(sub_key_value), gateway_session_id):
@@ -133,7 +136,8 @@ func release_client(gateway_session_id: String) -> Dictionary:
 			_last_source_revision_by_stream.erase(stream_key_value)
 	_clients.erase(gateway_session_id)
 	return _success({
-		"released": gateway_session_id,
+		"released": true,
+		"gateway_session_id": gateway_session_id,
 		"pairs_now_stale": pairs_now_stale,
 	})
 

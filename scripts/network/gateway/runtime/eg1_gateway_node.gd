@@ -36,6 +36,9 @@ var _placement_handler = null
 # EG3: optional shared-multiplexed backend tunnel scheduler. When absent the
 # backend leg behaves exactly as in EG1/EG2 (direct dispatch + retry parking).
 var _backend_multiplexer = null
+# EG4: optional projection lifecycle hook (review R2-B). When absent, session
+# drop behaves exactly as in EG1..EG3 (route-table detach + mux purge only).
+var _projection_lifecycle = null
 var _client_boundary
 var _backend_boundary
 var _gateway_instance_id := ""
@@ -66,6 +69,7 @@ var _counters := {
 	"backend_mux_rejected": 0,
 	"client_send_failures": 0,
 	"client_send_dropped_no_wire_session": 0,
+	"projection_session_releases": 0,
 }
 var _failure_codes := {
 	"backend_send": {},
@@ -243,6 +247,34 @@ func _notify_placement_peer_gone(peer_id: String) -> void:
 		_placement_handler.on_client_peer_gone(peer_id)
 
 
+## Install the optional EG4 projection lifecycle hook (additive dispatch):
+## whenever a client session is dropped or explicitly detached, the handler's
+## on_gateway_session_detached(gateway_session_id) releases that session's
+## projection state (subscription seats, fan-in slots, stream revisions).
+## EG1..EG3 behavior is unchanged when no handler is installed.
+func set_projection_lifecycle_handler(handler) -> Dictionary:
+	if handler == null or not handler.has_method("on_gateway_session_detached"):
+		return _failure("INVALID_PROJECTION_LIFECYCLE_HANDLER", {})
+	_projection_lifecycle = handler
+	return _success({})
+
+
+## Review R2-B: projection state must never outlive its gateway session. The
+## hook is best-effort from the forwarding path's perspective: failures are
+## accounted, never raised into the drop path itself.
+func _notify_projection_session_gone(gateway_session_id: String) -> void:
+	if _projection_lifecycle == null or gateway_session_id.is_empty():
+		return
+	var released: Dictionary = _projection_lifecycle.on_gateway_session_detached(gateway_session_id)
+	if bool(released.get("success", false)):
+		if bool(released.get("details", {}).get("released", false)):
+			_counters["projection_session_releases"] = int(_counters["projection_session_releases"]) + 1
+	else:
+		_record_failure_code(
+				"projection_lifecycle",
+				"%s:%s" % [String(released.get("error_code", "UNKNOWN")), gateway_session_id])
+
+
 ## Install the optional EG3 backend multiplexer (additive dispatch): once
 ## installed, every client->world backend frame is scheduled through the
 ## multiplexer's per-session P0..P5 queues instead of direct dispatch.
@@ -362,7 +394,9 @@ func _handle_client_event(event: Dictionary) -> void:
 							"DETACH":
 								_counters["session_control_detached"] = int(_counters["session_control_detached"]) + 1
 								_notify_placement_peer_gone(peer_id)
-								_purge_mux_session(String(result["details"].get("gateway_session_id", "")))
+								var detached_session := String(result["details"].get("gateway_session_id", ""))
+								_notify_projection_session_gone(detached_session)
+								_purge_mux_session(detached_session)
 					if result["details"].has("ack_transport_frame"):
 						_send_to_client(peer_id, result["details"]["ack_transport_frame"])
 				else:
@@ -380,6 +414,7 @@ func _handle_client_event(event: Dictionary) -> void:
 			if bool(lookup.get("success", false)):
 				var dropped_session := String(lookup["details"]["row"]["gateway_session_id"])
 				_route_table.set_binding_state(dropped_session, "DETACHED")
+				_notify_projection_session_gone(dropped_session)
 				_purge_mux_session(dropped_session)
 			_notify_placement_peer_gone(String(event.get("peer_id", "")))
 		_:
