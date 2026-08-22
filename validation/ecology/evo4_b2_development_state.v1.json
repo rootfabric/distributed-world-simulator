@@ -1,0 +1,784 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_b2_development_state.v1",
+  "version": "1.0.0",
+  "derived_representation": true,
+  "rule_id": "evo4-b2-plasticity-v0",
+  "provenance": {
+    "generator": "evo4_bridge_compiler_v1.py",
+    "generator_version": "1.0.0",
+    "inputs": {
+      "b1_artifact_sha256": "e5f32fa6812165186b34eb909deaef11366249c6398a5184ce3806036c0db155",
+      "snapshot_sha256": "8273ec2b560faca53dcce44de833247734422308333c37678e1cb3ab1a87c4ef"
+    }
+  },
+  "records": [
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-01",
+      "sample_id": "pf-01",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.08,
+        "plasticity_scales": {
+          "height_scale": 0.9303999999999999,
+          "crown_scale": 0.718,
+          "branch_prob_scale": 0.872
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 2.89391616,
+        "internode_length_m": 0.31360000000000005,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.44845714285714283,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.6083200000000002,
+        "checksum": "ac4651f1790de230b2cdb285ca4d486d0257dcaa1c3eff30921a0bfc2865dc05"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-02",
+      "sample_id": "pf-02",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.12,
+        "plasticity_scales": {
+          "height_scale": 0.9807999999999999,
+          "crown_scale": 0.727,
+          "branch_prob_scale": 0.896
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.00674048,
+        "internode_length_m": 0.31040000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.4608,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.6284800000000001,
+        "checksum": "1d01af1cbff930cca57a2a142615e8521ef02e11230acb0d7a0b1dab02a9431e"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-03",
+      "sample_id": "pf-03",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.15,
+        "plasticity_scales": {
+          "height_scale": 1.0384,
+          "crown_scale": 0.7374999999999999,
+          "branch_prob_scale": 0.924
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.1484288,
+        "internode_length_m": 0.30800000000000005,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.47519999999999996,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.652,
+        "checksum": "983886b1f8996c01be82df1b9b08766e0f1dae6d13bcb60b06a867802eca85b6"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-04",
+      "sample_id": "pf-04",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.22,
+        "plasticity_scales": {
+          "height_scale": 1.1032,
+          "crown_scale": 0.751,
+          "branch_prob_scale": 0.9560000000000001
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.25841152,
+        "internode_length_m": 0.30240000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.49165714285714285,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.6822400000000002,
+        "checksum": "62cd0a094b1dd103456c9b19f7c33b6b2536baae1789799001f85fd6c00119db"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-05",
+      "sample_id": "pf-05",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.28,
+        "plasticity_scales": {
+          "height_scale": 1.1752,
+          "crown_scale": 0.7629999999999999,
+          "branch_prob_scale": 0.988
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.3920972800000007,
+        "internode_length_m": 0.29760000000000003,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5081142857142856,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.70912,
+        "checksum": "6e8219c6a59712993d1d8bbe9c016bf0b822cb858a0d4e63740e53b4666f20d8"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-06",
+      "sample_id": "pf-06",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.36,
+        "plasticity_scales": {
+          "height_scale": 1.2616,
+          "crown_scale": 0.7825,
+          "branch_prob_scale": 1.02
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.5284428800000005,
+        "internode_length_m": 0.29120000000000007,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5245714285714286,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.7528000000000001,
+        "checksum": "f113f3194ee4e91ff0212e0e0bdc31896f15a4517cc2739d2efc27c1566633bf"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-07",
+      "sample_id": "pf-07",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.42,
+        "plasticity_scales": {
+          "height_scale": 1.2999999999999998,
+          "crown_scale": 0.8019999999999999,
+          "branch_prob_scale": 1.048
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.548479999999999,
+        "internode_length_m": 0.28640000000000004,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5389714285714285,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.79648,
+        "checksum": "202a50f32402486b5681a8d1a3527d392fc634b602d72c7a9a1b5c9fe3b54f61"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-08",
+      "sample_id": "pf-08",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.5,
+        "plasticity_scales": {
+          "height_scale": 1.2184,
+          "crown_scale": 0.814,
+          "branch_prob_scale": 1.08
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.216576,
+        "internode_length_m": 0.28,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5554285714285714,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.82336,
+        "checksum": "9eb9f5ab87322369e059fddfe5c3e0aa8659dfce4d4c2e0e4cc11841b28d4c5f"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-09",
+      "sample_id": "pf-09",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.34,
+        "plasticity_scales": {
+          "height_scale": 1.1392,
+          "crown_scale": 0.7929999999999999,
+          "branch_prob_scale": 1.056
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.2116326400000004,
+        "internode_length_m": 0.29280000000000006,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5430857142857143,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.77632,
+        "checksum": "ba329a8f88dad61810817dc7c224f613d850bdd07751b0cca00e9450913eb4fb"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-10",
+      "sample_id": "pf-10",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.26,
+        "plasticity_scales": {
+          "height_scale": 1.06,
+          "crown_scale": 0.7675,
+          "branch_prob_scale": 1.004
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.0833280000000003,
+        "internode_length_m": 0.2992000000000001,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.5163428571428571,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.7192,
+        "checksum": "b9ebd64188bc032d18cca2994002769c5f03475df2511f8f4ff8fe810e62cec4"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-11",
+      "sample_id": "pf-11",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.18,
+        "plasticity_scales": {
+          "height_scale": 0.988,
+          "crown_scale": 0.745,
+          "branch_prob_scale": 0.9440000000000001
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 2.9624192000000003,
+        "internode_length_m": 0.30560000000000004,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.48548571428571424,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.6688,
+        "checksum": "8d3f99bcf32bc7878a8c3fd8d041ea87ae61e81afb0c664f1dd2c83d31033c0f"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-beta",
+      "genome_id": "genome/e22-beta",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-12",
+      "sample_id": "pf-12",
+      "individual_seed_demo": 533520666319502244,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.65,
+        "plasticity_scales": {
+          "height_scale": 1.2999999999999998,
+          "crown_scale": 0.7224999999999999,
+          "branch_prob_scale": 0.888
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-beta+evo4-b2",
+        "max_height_m": 3.213599999999999,
+        "internode_length_m": 0.26800000000000007,
+        "apical_dominance": 0.30000000000000004,
+        "branch_probability": 0.45668571428571425,
+        "branch_angle_deg": 36.2,
+        "branch_length_ratio": 0.845,
+        "branching_depth": 3,
+        "crown_spread_m": 1.6184,
+        "checksum": "5d8da45bd94dbb5e252fdc39671fd7a9aeed502109a8a1e18442899c6d9285c7"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-01",
+      "sample_id": "pf-01",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.08,
+        "plasticity_scales": {
+          "height_scale": 0.9303999999999999,
+          "crown_scale": 0.718,
+          "branch_prob_scale": 0.872
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 5.426092799999999,
+        "internode_length_m": 0.5880000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.16194285714285714,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.91904,
+        "checksum": "7aaa25a0ebd39fcaeeb0c9469e35a2717aa58110dd3e5a0d21a3bb8718c270d6"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-02",
+      "sample_id": "pf-02",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.12,
+        "plasticity_scales": {
+          "height_scale": 0.9807999999999999,
+          "crown_scale": 0.727,
+          "branch_prob_scale": 0.896
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 5.637638399999999,
+        "internode_length_m": 0.5820000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.16640000000000002,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.9305599999999999,
+        "checksum": "0efd6307436ae5ce0b70cf1eceea64f65dcf1f198567441ea44cecffb124cbbe"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-03",
+      "sample_id": "pf-03",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.15,
+        "plasticity_scales": {
+          "height_scale": 1.0384,
+          "crown_scale": 0.7374999999999999,
+          "branch_prob_scale": 0.924
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 5.903303999999999,
+        "internode_length_m": 0.5775000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.1716,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.944,
+        "checksum": "3744e620edcc33f2a2be2dbab177fd19b44fdaaec72ee321240f49d8f01fee64"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-04",
+      "sample_id": "pf-04",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.22,
+        "plasticity_scales": {
+          "height_scale": 1.1032,
+          "crown_scale": 0.751,
+          "branch_prob_scale": 0.9560000000000001
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.1095216,
+        "internode_length_m": 0.5670000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.17754285714285717,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.96128,
+        "checksum": "63590444f3e5714f41f2c8a6b26c09cae8afde76ce7dbc25bf7f0bb9b2ddcb50"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-05",
+      "sample_id": "pf-05",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.28,
+        "plasticity_scales": {
+          "height_scale": 1.1752,
+          "crown_scale": 0.7629999999999999,
+          "branch_prob_scale": 0.988
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.3601824,
+        "internode_length_m": 0.558,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.18348571428571428,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.9766399999999998,
+        "checksum": "addda9e721e1b93130401f3e44c86c6bf932ec5c769fb68b5f217c0a4d552819"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-06",
+      "sample_id": "pf-06",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.36,
+        "plasticity_scales": {
+          "height_scale": 1.2616,
+          "crown_scale": 0.7825,
+          "branch_prob_scale": 1.02
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.6158304,
+        "internode_length_m": 0.5460000000000002,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.18942857142857145,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.0016,
+        "checksum": "33e523cee632473734f984f8c1085e0377b1c3898f11fedfac45d181b5227ef7"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-07",
+      "sample_id": "pf-07",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.42,
+        "plasticity_scales": {
+          "height_scale": 1.2999999999999998,
+          "crown_scale": 0.8019999999999999,
+          "branch_prob_scale": 1.048
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.653399999999999,
+        "internode_length_m": 0.5370000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.19462857142857146,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.02656,
+        "checksum": "0a20858efe64691ce55339c3c176ea7ed72b133520fe2743485c61e83b0d009d"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-08",
+      "sample_id": "pf-08",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.5,
+        "plasticity_scales": {
+          "height_scale": 1.2184,
+          "crown_scale": 0.814,
+          "branch_prob_scale": 1.08
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.031079999999999,
+        "internode_length_m": 0.5250000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.2005714285714286,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.04192,
+        "checksum": "f165f46892ba92ac77e8495eab5a3d4552023419ebb21a6d46a11a477172a985"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-09",
+      "sample_id": "pf-09",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.34,
+        "plasticity_scales": {
+          "height_scale": 1.1392,
+          "crown_scale": 0.7929999999999999,
+          "branch_prob_scale": 1.056
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.0218112,
+        "internode_length_m": 0.5490000000000002,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.19611428571428574,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 1.01504,
+        "checksum": "b34ff0409dddd3b69374a3f746405350300b856f3d2de3f517b508a7cb0be9f9"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-10",
+      "sample_id": "pf-10",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.26,
+        "plasticity_scales": {
+          "height_scale": 1.06,
+          "crown_scale": 0.7675,
+          "branch_prob_scale": 1.004
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 5.78124,
+        "internode_length_m": 0.5610000000000002,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.18645714285714288,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.9823999999999999,
+        "checksum": "62ed3d0e979e4013678751f657c0fda135b3c0360ed5bdbe14b470a0bfaee03e"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-11",
+      "sample_id": "pf-11",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "DORMANT_COLD",
+        "stress_index": 0.18,
+        "plasticity_scales": {
+          "height_scale": 0.988,
+          "crown_scale": 0.745,
+          "branch_prob_scale": 0.9440000000000001
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 5.554536000000001,
+        "internode_length_m": 0.5730000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.17531428571428573,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.9536,
+        "checksum": "889c2534a50a77be45274acd30e1e9b5d64e6da14ef51141bb05a8cd9af982e4"
+      }
+    },
+    {
+      "lineage_id": "eco-lineage/e22-alpha",
+      "genome_id": "genome/e22-alpha-late",
+      "stable_spatial_key": "eco-evo3-fixture/planet-alpha/cell-12",
+      "sample_id": "pf-12",
+      "individual_seed_demo": 687614577541481247,
+      "cohort_age_years": 2.0,
+      "development_state": {
+        "age_years": 2.0,
+        "dormancy_state": "ACTIVE",
+        "stress_index": 0.65,
+        "plasticity_scales": {
+          "height_scale": 1.2999999999999998,
+          "crown_scale": 0.7224999999999999,
+          "branch_prob_scale": 0.888
+        }
+      },
+      "effective_development_traits": {
+        "schema": "distributed_world_simulator.ecology.plant_development_traits.v1",
+        "version": "1.0.0",
+        "traits_id": "plant-development/evo4-b0-derivation-v0/genome-e22-alpha-late+evo4-b2",
+        "max_height_m": 6.025499999999999,
+        "internode_length_m": 0.5025000000000001,
+        "apical_dominance": 0.6,
+        "branch_probability": 0.16491428571428574,
+        "branch_angle_deg": 51.0,
+        "branch_length_ratio": 0.719,
+        "branching_depth": 3,
+        "crown_spread_m": 0.9248,
+        "checksum": "db4eaa08c32ba52b7e2a4a3fd254de0907b5fba91800dbc82b4af4e80c8f85b5"
+      }
+    }
+  ]
+}
