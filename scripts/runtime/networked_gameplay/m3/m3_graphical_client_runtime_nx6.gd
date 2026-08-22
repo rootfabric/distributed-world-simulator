@@ -371,19 +371,23 @@ func _handle_world_definition(payload: Dictionary) -> void:
 	if not bool(evaluation.get("success", false)):
 		_fail_connection(String(evaluation.get("error_code", "WORLD_DEFINITION_MISMATCH")), evaluation)
 		return
-	_world_definition = announced.duplicate(true)
-	_world_definition_verified = true
 	var probe: Dictionary = ControlPointProbeScript.compute_for_world(
 		String(local_announcement["world_id"])
 	)
-	var control_point_digest := String(probe.get("digest", ""))
-	if control_point_digest != String(announced.get("control_point_digest", control_point_digest)):
-		_fail_connection("WORLD_DEFINITION_MISMATCH", {
-			"stage": "control_points",
-			"local_digest": control_point_digest,
-			"announced_digest": String(announced.get("control_point_digest", "")),
-		})
+	# Fail closed on digest presence first: a missing or empty announced
+	# control-point digest must never degenerate into a self-comparison.
+	var digest_evaluation: Dictionary = WorldDefinitionScript.evaluate_control_point_digest(
+		String(probe.get("digest", "")), announced
+	)
+	if not bool(digest_evaluation.get("success", false)):
+		_fail_connection(
+			String(digest_evaluation.get("error_code", "WORLD_DEFINITION_DIGEST_MISSING")),
+			digest_evaluation
+		)
 		return
+	_world_definition = announced.duplicate(true)
+	_world_definition_verified = true
+	var control_point_digest := String(probe.get("digest", ""))
 	_telemetry.increment("world_definition_verified")
 	_debug_event("WORLD_DEFINITION_VERIFIED", {
 		"world_id": String(_world_definition.get("world_id", "")),

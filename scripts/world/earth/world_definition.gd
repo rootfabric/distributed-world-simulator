@@ -14,9 +14,13 @@ const CATALOG_PATH: String = "res://config/worlds/catalog.json"
 const DEFAULT_WORLD_ID: String = "earth"
 const DEFAULT_GENERATOR_VERSION: String = "earth-rule-pipeline-v1"
 # Test-only injection hook: when this environment variable holds a positive
-# integer, it overrides the catalog seed so tests can prove fail-closed
-# behaviour on world definition mismatch. Production runs never set it.
+# integer it overrides the catalog seed so tests can prove fail-closed
+# behaviour on world definition mismatch. The hook is honoured only inside the
+# test contour: the harness must have disabled the breakpoint runtime
+# (BREAKPOINT_RUNTIME_DISABLED=1) AND the binary must be a debug/editor build.
+# Release export builds ignore it regardless of the environment.
 const TEST_SEED_OVERRIDE_ENV: String = "PLANET_SIMULATOR_TEST_WORLD_SEED"
+const TEST_RUNTIME_FLAG_ENV: String = "BREAKPOINT_RUNTIME_DISABLED"
 const DEFINITION_FIELDS: Array[String] = [
 	"world_id",
 	"generator_version",
@@ -32,7 +36,11 @@ static func load_definition(world_id: String = DEFAULT_WORLD_ID) -> Dictionary:
 	var override_seed := _environment_seed_override()
 	if override_seed > 0:
 		definition["seed"] = override_seed
-	if int(definition["seed"]) <= 0 or String(definition["rules_config"]).is_empty():
+	# Fail closed: a definition whose rules file is missing cannot produce a
+	# meaningful content hash, so it must not resolve at all (F3).
+	if int(definition["seed"]) <= 0 \
+			or String(definition["rules_config"]).is_empty() \
+			or not FileAccess.file_exists(String(definition["rules_config"])):
 		return {}
 	return definition
 
@@ -96,6 +104,27 @@ static func evaluate_announcement(expected: Dictionary, announced: Dictionary) -
 	return _success({"compatible": true})
 
 
+static func evaluate_control_point_digest(local_digest: String, announced: Dictionary) -> Dictionary:
+	# Strict presence check first: a missing or empty announced control-point
+	# digest must fail closed with WORLD_DEFINITION_DIGEST_MISSING instead of
+	# degenerating into a self-comparison. An unresolvable local probe fails
+	# closed the same way rather than silently matching.
+	if not announced.has("control_point_digest") \
+			or typeof(announced["control_point_digest"]) != TYPE_STRING:
+		return _failure("WORLD_DEFINITION_DIGEST_MISSING", {"field": "control_point_digest"})
+	if String(announced["control_point_digest"]).is_empty():
+		return _failure("WORLD_DEFINITION_DIGEST_MISSING", {"field": "control_point_digest"})
+	if local_digest.is_empty():
+		return _failure("WORLD_DEFINITION_DIGEST_MISSING", {"stage": "local_probe"})
+	if local_digest != String(announced["control_point_digest"]):
+		return _failure("WORLD_DEFINITION_MISMATCH", {
+			"stage": "control_points",
+			"local_digest": local_digest,
+			"announced_digest": String(announced["control_point_digest"]),
+		})
+	return _success({"compatible": true})
+
+
 # Deterministic JSON: object keys sorted lexicographically at every depth,
 # arrays keep order, scalars use Godot's stable JSON scalar encoding. Both
 # peers run the same engine build, so encoding is byte-identical.
@@ -144,11 +173,23 @@ static func _is_valid_definition_shape(definition: Dictionary) -> bool:
 		if not definition.has(field):
 			return false
 	return int(definition.get("seed", 0)) > 0 \
-		and not String(definition.get("rules_config", "")).is_empty()
+		and not String(definition.get("rules_config", "")).is_empty() \
+		and FileAccess.file_exists(String(definition.get("rules_config", "")))
 
 
 static func _environment_seed_override() -> int:
+	# F5 decision (documented): the substitution hook exists for the test
+	# contour only. It is honoured when ALL of the following hold:
+	#   1. PLANET_SIMULATOR_TEST_WORLD_SEED holds a positive integer;
+	#   2. BREAKPOINT_RUNTIME_DISABLED=1, i.e. the harness explicitly disabled
+	#      the breakpoint runtime for this process tree;
+	#   3. the binary is a debug/editor build (OS.is_debug_build()).
+	# Release export builds ignore the hook regardless of the environment.
 	if not OS.has_environment(TEST_SEED_OVERRIDE_ENV):
+		return 0
+	if String(OS.get_environment(TEST_RUNTIME_FLAG_ENV)).strip_edges() != "1":
+		return 0
+	if not OS.is_debug_build():
 		return 0
 	var parsed := int(OS.get_environment(TEST_SEED_OVERRIDE_ENV).strip_edges())
 	return parsed if parsed > 0 else 0
