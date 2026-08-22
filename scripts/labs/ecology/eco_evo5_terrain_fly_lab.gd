@@ -17,6 +17,15 @@ var _spikes: Array[Dictionary] = []
 var _trajectories: Dictionary = {}
 var _tick := 0
 
+func _sha(text: String) -> String:
+	var ctx := HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA256)
+	ctx.update(text.to_utf8_buffer())
+	return ctx.finish().hex_encode()
+
+func _unit(s: String) -> float:
+	return float(int(_sha(s).substr(0, 12).hex_to_int())) / 281474976710656.0
+
 func _ready() -> void:
 	var evo = JSON.parse_string(FileAccess.get_file_as_string("res://validation/ecology/evo5_terrain_evolution.v1.json"))
 	var terrain = JSON.parse_string(FileAccess.get_file_as_string("res://validation/ecology/evo5_terrain_demo.v1.json"))
@@ -44,26 +53,27 @@ func _ready() -> void:
 	we.environment = env
 	add_child(we)
 	var cells: Array = (terrain as Dictionary)["cells"]
-	var zone_centers: Dictionary = {}
+	var zone_genes: Dictionary = {}
+	for zone in (evo as Dictionary)["zones"].keys():
+		zone_genes[zone] = ((evo["zones"][zone] as Dictionary)["final_genes"])
+	var planted := 0
 	for c in cells:
 		var cell: Dictionary = c
+		var zone := String(cell["zone"])
 		var tile := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(1.9, 0.8, 1.9)
+		box.size = Vector3(1.9, 3.0, 1.9)
 		tile.mesh = box
-		tile.position = Vector3(float(cell["x"]) * 2.0, float(cell["height"]) * 1.6 - 0.6, float(cell["z"]) * 2.0)
+		tile.position = Vector3(float(cell["x"]) * 2.0, float(cell["height"]) * 1.6 - 1.1, float(cell["z"]) * 2.0)
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = _shade(PALETTE[String(cell["zone"])], float(cell["height"]))
+		mat.albedo_color = _shade(PALETTE[zone], float(cell["height"]))
 		tile.material_override = mat
 		add_child(tile)
-		var zone := String(cell["zone"])
-		if not zone_centers.has(zone):
-			zone_centers[zone] = []
-		if (zone_centers[zone] as Array).size() < 3:
-			(zone_centers[zone] as Array).append(tile.position + Vector3(0.0, 0.45, 0.0))
-	for zone in zone_centers.keys():
-		for spot in zone_centers[zone]:
-			_make_plant(spot, String(zone))
+		var roll: float = _unit("plant|" + str(cell["x"]) + "|" + str(cell["z"]))
+		if roll > 0.45 and planted < 170:
+			planted += 1
+			var jitter := Vector3((_unit("jx|%d|%d" % [cell["x"], cell["z"]]) - 0.5) * 1.2, 0.45, (_unit("jz|%d|%d" % [cell["x"], cell["z"]]) - 0.5) * 1.2)
+			_make_plant(tile.position + jitter, zone, _unit("hue|%d|%d" % [cell["x"], cell["z"]]), zone_genes[zone])
 	_cam = Camera3D.new()
 	add_child(_cam)
 	_cam.current = true
@@ -80,9 +90,11 @@ func _ready() -> void:
 func _shade(base: Color, height: float) -> Color:
 	return base.lightened(clampf((height - 1.0) * 0.12, -0.12, 0.18))
 
-func _make_plant(pos: Vector3, zone: String) -> void:
+func _make_plant(pos: Vector3, zone: String, hue_jitter: float = 0.5, genes: Dictionary = {}) -> void:
 	var root := Node3D.new()
 	root.position = pos
+	var size_var := 0.75 + hue_jitter * 0.6
+	root.scale = Vector3.ONE * size_var
 	add_child(root)
 	var stem := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
@@ -99,10 +111,13 @@ func _make_plant(pos: Vector3, zone: String) -> void:
 	crown.mesh = sph
 	crown.position.y = 1.5
 	var cm := StandardMaterial3D.new()
-	cm.albedo_color = Color(0.30, 0.50, 0.20).lerp(Color(0.22, 0.34, 0.14), 0.4)
+	var base_green := Color(0.30, 0.50, 0.20).lerp(Color(0.22, 0.34, 0.14), 0.4)
+	var hue_shift: float = (hue_jitter - 0.5) * 0.25
+	cm.albedo_color = base_green.lerp(Color(0.45, 0.48, 0.18), clampf(hue_shift + 0.12, 0.0, 1.0))
 	crown.material_override = cm
 	root.add_child(crown)
-	for s in range(6):
+	var spike_count := 4 + int(clampf(float(genes.get("defense_intensity", 0.3)) * 6.0, 0.0, 4.0))
+	for s in range(spike_count):
 		var spike := MeshInstance3D.new()
 		var cone := CylinderMesh.new()
 		cone.top_radius = 0.015
@@ -117,7 +132,25 @@ func _make_plant(pos: Vector3, zone: String) -> void:
 		sm.albedo_color = Color(0.75, 0.70, 0.45)
 		spike.material_override = sm
 		root.add_child(spike)
-		_spikes.append({"mesh": spike, "zone": zone, "base_y": spike.position.y})
+		_spikes.append({"mesh": spike, "zone": zone, "base_y": 1.62 + 0.12 * sin(float(s) * 2.1), "root": root})
+
+func _spawn_offspring() -> void:
+	if _spikes.is_empty() or _spikes.size() > 240:
+		return
+	var parent: Dictionary = _spikes[int(_unit("spawn|%d" % _tick) * float(_spikes.size()))]
+	var root: Node3D = parent["root"]
+	var offset := Vector3((_unit("ox|%d" % _tick) - 0.5) * 2.2, 0.45, (_unit("oz|%d" % _tick) - 0.5) * 2.2)
+	_make_plant(root.position + offset, String(parent["zone"]), _unit("oh|%d" % _tick), {})
+	var young: Dictionary = _spikes[_spikes.size() - 1]
+	(young["root"] as Node3D).scale = Vector3.ONE * 0.35
+
+func _cull_oldest() -> void:
+	if _spikes.size() < 40:
+		return
+	var victim: Dictionary = _spikes[0]
+	if is_instance_valid(victim["root"]):
+		(victim["root"] as Node3D).queue_free()
+	_spikes = _spikes.filter(func(e): return e["root"] != victim["root"])
 
 func _process(delta: float) -> void:
 	_tick += 1
@@ -146,6 +179,10 @@ func _process(delta: float) -> void:
 		var spike: MeshInstance3D = entry["mesh"]
 		spike.scale = Vector3.ONE * clampf(0.25 + def * 1.4, 0.25, 1.7)
 		spike.position.y = float(entry["base_y"]) + 0.10 * def
+	if _tick % 90 == 0:
+		_spawn_offspring()
+	if _tick % 240 == 0:
+		_cull_oldest()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
