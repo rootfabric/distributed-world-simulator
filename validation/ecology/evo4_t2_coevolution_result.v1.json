@@ -1,0 +1,50 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_t2_coevolution.v1.result",
+  "version": "1.0.0",
+  "rule": "evo4-t2-coevolution-v0",
+  "source_manifest_sha256": "7becec7e119f73b211a6c7a53fa1832fef1abdfa607e0ccc3c29cb6562efce0a",
+  "trajectory_artifact": "validation/ecology/evo4_t2_coevolution_trajectory.v1.json",
+  "trajectory_sha256": "90b898e9a487650b3acbab24a9cad61b7515688ee994ac869db390ce6627264b",
+  "replay_sha256": "90b898e9a487650b3acbab24a9cad61b7515688ee994ac869db390ce6627264b",
+  "gates": {
+    "g1_no_pure_strategy_dominance": {
+      "no_defense_invadable": true,
+      "full_defense_invadable": true,
+      "evidence": {
+        "no_defense_top": [
+          "genome/e3f-ext-05",
+          {
+            "resident_payoff": 0.078162,
+            "mutant_defense": 0.45,
+            "mutant_payoff": 0.189919
+          }
+        ],
+        "full_defense_top": [
+          "genome/e22-alpha-late",
+          {
+            "resident_payoff": 0.1,
+            "mutant_defense": 0.2,
+            "mutant_payoff": 0.375556
+          }
+        ]
+      }
+    },
+    "g2_restart_determinism_byte_equal": true,
+    "g3_robustness_three_seeds": true
+  },
+  "per_seed_gates": {
+    "20260822": {
+      "no_defense_invadable": true,
+      "full_defense_invadable": true
+    },
+    "20260823": {
+      "no_defense_invadable": true,
+      "full_defense_invadable": true
+    },
+    "20260824": {
+      "no_defense_invadable": true,
+      "full_defense_invadable": true
+    }
+  },
+  "verdict": "PASS"
+}

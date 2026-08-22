@@ -1,0 +1,631 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_t2_coevolution.v1.trajectory",
+  "version": "1.0.0",
+  "rule": "evo4-t2-coevolution-v0",
+  "derived_representation": true,
+  "generations": 40,
+  "seed_main": 20260822,
+  "robustness_seeds": [
+    20260822,
+    20260823,
+    20260824
+  ],
+  "constants": {
+    "defense_cost": 0.35,
+    "herbivory_gain": 0.85,
+    "appetite": 1.0,
+    "pref_floor": 0.02,
+    "pref_eta": 0.35,
+    "mutation_rate": 0.2,
+    "defense_grid_step": 0.05
+  },
+  "species": [
+    "genome/e22-alpha-late",
+    "genome/e22-beta",
+    "genome/e3f-ext-01",
+    "genome/e3f-ext-02",
+    "genome/e3f-ext-03",
+    "genome/e3f-ext-04",
+    "genome/e3f-ext-05",
+    "genome/e3f-ext-07",
+    "genome/e3f-ext-08"
+  ],
+  "trajectory": [
+    {
+      "generation": 0,
+      "mean_defense": 0.116667,
+      "defense_histogram": {
+        "NONE": 9,
+        "LIGHT": 0,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.451698,
+      "mean_plant_payoff": 0.335802,
+      "pressure_entropy": 2.197225
+    },
+    {
+      "generation": 1,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 1,
+        "LIGHT": 8,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.366247,
+      "mean_plant_payoff": 0.340503,
+      "pressure_entropy": 2.175731
+    },
+    {
+      "generation": 2,
+      "mean_defense": 0.194444,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.379049,
+      "mean_plant_payoff": 0.34026,
+      "pressure_entropy": 2.140133
+    },
+    {
+      "generation": 3,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.359825,
+      "mean_plant_payoff": 0.341436,
+      "pressure_entropy": 2.128803
+    },
+    {
+      "generation": 4,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.356405,
+      "mean_plant_payoff": 0.341684,
+      "pressure_entropy": 2.134849
+    },
+    {
+      "generation": 5,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.366957,
+      "mean_plant_payoff": 0.340296,
+      "pressure_entropy": 2.145403
+    },
+    {
+      "generation": 6,
+      "mean_defense": 0.216667,
+      "defense_histogram": {
+        "NONE": 1,
+        "LIGHT": 8,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.350333,
+      "mean_plant_payoff": 0.341065,
+      "pressure_entropy": 2.125646
+    },
+    {
+      "generation": 7,
+      "mean_defense": 0.222222,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.339702,
+      "mean_plant_payoff": 0.341631,
+      "pressure_entropy": 2.116809
+    },
+    {
+      "generation": 8,
+      "mean_defense": 0.194444,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.36252,
+      "mean_plant_payoff": 0.341382,
+      "pressure_entropy": 2.142145
+    },
+    {
+      "generation": 9,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.354684,
+      "mean_plant_payoff": 0.341872,
+      "pressure_entropy": 2.137735
+    },
+    {
+      "generation": 10,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.358316,
+      "mean_plant_payoff": 0.341285,
+      "pressure_entropy": 2.132775
+    },
+    {
+      "generation": 11,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.359125,
+      "mean_plant_payoff": 0.341195,
+      "pressure_entropy": 2.13707
+    },
+    {
+      "generation": 12,
+      "mean_defense": 0.216667,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.343703,
+      "mean_plant_payoff": 0.340882,
+      "pressure_entropy": 2.140098
+    },
+    {
+      "generation": 13,
+      "mean_defense": 0.211111,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.350043,
+      "mean_plant_payoff": 0.341734,
+      "pressure_entropy": 2.134218
+    },
+    {
+      "generation": 14,
+      "mean_defense": 0.211111,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 6,
+        "MODERATE": 1,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.354534,
+      "mean_plant_payoff": 0.339423,
+      "pressure_entropy": 2.162792
+    },
+    {
+      "generation": 15,
+      "mean_defense": 0.216667,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.349306,
+      "mean_plant_payoff": 0.340912,
+      "pressure_entropy": 2.145831
+    },
+    {
+      "generation": 16,
+      "mean_defense": 0.194444,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.366991,
+      "mean_plant_payoff": 0.341516,
+      "pressure_entropy": 2.137028
+    },
+    {
+      "generation": 17,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.363962,
+      "mean_plant_payoff": 0.341696,
+      "pressure_entropy": 2.122851
+    },
+    {
+      "generation": 18,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.356034,
+      "mean_plant_payoff": 0.341829,
+      "pressure_entropy": 2.132252
+    },
+    {
+      "generation": 19,
+      "mean_defense": 0.194444,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.362537,
+      "mean_plant_payoff": 0.341619,
+      "pressure_entropy": 2.139467
+    },
+    {
+      "generation": 20,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.354257,
+      "mean_plant_payoff": 0.341919,
+      "pressure_entropy": 2.134258
+    },
+    {
+      "generation": 21,
+      "mean_defense": 0.194444,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.368458,
+      "mean_plant_payoff": 0.340665,
+      "pressure_entropy": 2.144115
+    },
+    {
+      "generation": 22,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.358099,
+      "mean_plant_payoff": 0.340675,
+      "pressure_entropy": 2.158536
+    },
+    {
+      "generation": 23,
+      "mean_defense": 0.216667,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.34725,
+      "mean_plant_payoff": 0.341599,
+      "pressure_entropy": 2.14108
+    },
+    {
+      "generation": 24,
+      "mean_defense": 0.188889,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.375028,
+      "mean_plant_payoff": 0.341527,
+      "pressure_entropy": 2.126443
+    },
+    {
+      "generation": 25,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.362765,
+      "mean_plant_payoff": 0.341103,
+      "pressure_entropy": 2.127781
+    },
+    {
+      "generation": 26,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.358417,
+      "mean_plant_payoff": 0.340112,
+      "pressure_entropy": 2.144556
+    },
+    {
+      "generation": 27,
+      "mean_defense": 0.211111,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.351599,
+      "mean_plant_payoff": 0.340306,
+      "pressure_entropy": 2.150552
+    },
+    {
+      "generation": 28,
+      "mean_defense": 0.211111,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.352254,
+      "mean_plant_payoff": 0.341647,
+      "pressure_entropy": 2.132444
+    },
+    {
+      "generation": 29,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.354061,
+      "mean_plant_payoff": 0.341415,
+      "pressure_entropy": 2.148145
+    },
+    {
+      "generation": 30,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.35577,
+      "mean_plant_payoff": 0.341115,
+      "pressure_entropy": 2.138132
+    },
+    {
+      "generation": 31,
+      "mean_defense": 0.216667,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.351296,
+      "mean_plant_payoff": 0.341726,
+      "pressure_entropy": 2.118483
+    },
+    {
+      "generation": 32,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.357327,
+      "mean_plant_payoff": 0.34074,
+      "pressure_entropy": 2.141511
+    },
+    {
+      "generation": 33,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.363826,
+      "mean_plant_payoff": 0.341361,
+      "pressure_entropy": 2.125511
+    },
+    {
+      "generation": 34,
+      "mean_defense": 0.2,
+      "defense_histogram": {
+        "NONE": 4,
+        "LIGHT": 5,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.364243,
+      "mean_plant_payoff": 0.340095,
+      "pressure_entropy": 2.143646
+    },
+    {
+      "generation": 35,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.356843,
+      "mean_plant_payoff": 0.340679,
+      "pressure_entropy": 2.131997
+    },
+    {
+      "generation": 36,
+      "mean_defense": 0.211111,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.348942,
+      "mean_plant_payoff": 0.341657,
+      "pressure_entropy": 2.144688
+    },
+    {
+      "generation": 37,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 1,
+        "LIGHT": 8,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.359206,
+      "mean_plant_payoff": 0.341847,
+      "pressure_entropy": 2.132051
+    },
+    {
+      "generation": 38,
+      "mean_defense": 0.205556,
+      "defense_histogram": {
+        "NONE": 2,
+        "LIGHT": 7,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.354906,
+      "mean_plant_payoff": 0.342007,
+      "pressure_entropy": 2.126415
+    },
+    {
+      "generation": 39,
+      "mean_defense": 0.222222,
+      "defense_histogram": {
+        "NONE": 3,
+        "LIGHT": 6,
+        "MODERATE": 0,
+        "HIGH": 0,
+        "FULL": 0
+      },
+      "total_agent_intake": 0.337648,
+      "mean_plant_payoff": 0.341827,
+      "pressure_entropy": 2.134409
+    }
+  ],
+  "equilibrium": {
+    "final_defense": {
+      "genome/e22-alpha-late": 0.1,
+      "genome/e22-beta": 0.2,
+      "genome/e3f-ext-01": 0.2,
+      "genome/e3f-ext-02": 0.15,
+      "genome/e3f-ext-03": 0.25,
+      "genome/e3f-ext-04": 0.15,
+      "genome/e3f-ext-05": 0.3,
+      "genome/e3f-ext-07": 0.15,
+      "genome/e3f-ext-08": 0.2
+    },
+    "final_preferences": {
+      "genome/e22-alpha-late": 0.053336,
+      "genome/e22-beta": 0.099367,
+      "genome/e3f-ext-01": 0.099851,
+      "genome/e3f-ext-02": 0.153717,
+      "genome/e3f-ext-03": 0.143965,
+      "genome/e3f-ext-04": 0.077823,
+      "genome/e3f-ext-05": 0.188489,
+      "genome/e3f-ext-07": 0.071305,
+      "genome/e3f-ext-08": 0.112147
+    },
+    "final_pressure": {
+      "genome/e22-alpha-late": 0.053336,
+      "genome/e22-beta": 0.099367,
+      "genome/e3f-ext-01": 0.099851,
+      "genome/e3f-ext-02": 0.153717,
+      "genome/e3f-ext-03": 0.143965,
+      "genome/e3f-ext-04": 0.077823,
+      "genome/e3f-ext-05": 0.188489,
+      "genome/e3f-ext-07": 0.071305,
+      "genome/e3f-ext-08": 0.112147
+    }
+  },
+  "trajectory_sha256": "90b898e9a487650b3acbab24a9cad61b7515688ee994ac869db390ce6627264b"
+}
