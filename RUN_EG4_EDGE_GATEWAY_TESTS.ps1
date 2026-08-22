@@ -103,7 +103,8 @@ $Tests = @(
     "res://tests/network/test_eg4_interest_aggregator.gd",
     "res://tests/network/test_eg4_projection_aggregation.gd",
     "res://tests/network/test_eg4_projection_lifecycle.gd",
-    "res://tests/network/test_eg4_two_worlds_one_transport.gd"
+    "res://tests/network/test_eg4_two_worlds_one_transport.gd",
+    "res://tests/network/test_eg4_gateway_processes.gd"
 )
 
 # Failure markers any EG4 test may print on an assertion breach.

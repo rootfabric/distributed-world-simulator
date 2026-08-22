@@ -270,7 +270,9 @@ func stale_subscription_count() -> int:
 	return count
 
 
-## (source, world) pairs currently demanded by at least one live client.
+## (source, world) pairs currently demanded by at least one live client —
+## public surface used by the gateway worker's source-liveness watchdog and
+## telemetry consumers.
 func active_subscription_count() -> int:
 	return _active_subscription_count()
 
