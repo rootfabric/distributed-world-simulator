@@ -26,6 +26,7 @@ tests=(
   "res://tests/network/test_eg4_view_planner.gd"
   "res://tests/network/test_eg4_interest_aggregator.gd"
   "res://tests/network/test_eg4_projection_aggregation.gd"
+  "res://tests/network/test_eg4_two_worlds_one_transport.gd"
 )
 
 # Failure markers any EG4 test may print on an assertion breach.
