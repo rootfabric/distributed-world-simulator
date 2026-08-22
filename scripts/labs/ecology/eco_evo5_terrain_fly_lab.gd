@@ -16,6 +16,10 @@ var _pitch := -0.5
 var _spikes: Array[Dictionary] = []
 var _trajectories: Dictionary = {}
 var _tick := 0
+var _seeds: Array[Dictionary] = []
+var _zone_ctx: Dictionary = {}
+var _roots: Array[Node3D] = []
+var _rng_tick := 0
 
 func _sha(text: String) -> String:
 	var ctx := HashingContext.new()
@@ -60,6 +64,8 @@ func _ready() -> void:
 	for c in cells:
 		var cell: Dictionary = c
 		var zone := String(cell["zone"])
+		if not _zone_ctx.has(zone):
+			_zone_ctx[zone] = cell["context"]
 		var tile := MeshInstance3D.new()
 		var box := BoxMesh.new()
 		box.size = Vector3(1.9, 3.0, 1.9)
@@ -96,6 +102,7 @@ func _make_plant(pos: Vector3, zone: String, hue_jitter: float = 0.5, genes: Dic
 	var size_var := 0.75 + hue_jitter * 0.6
 	root.scale = Vector3.ONE * size_var
 	add_child(root)
+	_roots.append(root)
 	var stem := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 0.07
@@ -144,6 +151,54 @@ func _spawn_offspring() -> void:
 	var young: Dictionary = _spikes[_spikes.size() - 1]
 	(young["root"] as Node3D).scale = Vector3.ONE * 0.35
 
+## Seed lifecycle: spawn drifting seed -> establishment check vs zone context
+## (E3 semantics: score vs threshold) -> established plants grow with mutated
+## genes; failed seeds shrink away. Iron-gated genes express only on ridge.
+func _spawn_seed() -> void:
+	var zones := _zone_ctx.keys()
+	var zone: String = zones[int(_unit("seedzone|%d|%d" % [_tick, _rng_tick]) * float(zones.size()))]
+	_rng_tick += 1
+	var ctx: Dictionary = _zone_ctx[zone]
+	var eff: Dictionary = ctx["effective_conditions"]
+	var seed_node := MeshInstance3D.new()
+	var sph := SphereMesh.new()
+	sph.radius = 0.14
+	sph.height = 0.28
+	seed_node.mesh = sph
+	var sm := StandardMaterial3D.new()
+	sm.albedo_color = Color(0.85, 0.72, 0.40)
+	seed_node.material_override = sm
+	var drop_x := (_unit("sx|%d" % _rng_tick) - 0.5) * 26.0
+	var drop_z := (_unit("sz|%d" % _rng_tick) - 0.5) * 26.0
+	seed_node.position = Vector3(drop_x, 9.0, drop_z)
+	add_child(seed_node)
+	var score: float = 0.45 + float(eff.get("soil_moisture_ppm", 400000)) / 2e6 - float(eff.get("disturbance_pressure_ppm", 50000)) / 1e6 + 0.15 * _unit("sc|%d" % _rng_tick)
+	_seeds.append({"node": seed_node, "zone": zone, "fall": 34,
+		"score": clampf(score, 0.15, 0.95)})
+
+func _update_seeds() -> void:
+	for i in range(_seeds.size() - 1, -1, -1):
+		var s: Dictionary = _seeds[i]
+		var node: MeshInstance3D = s["node"]
+		if int(s["fall"]) > 0:
+			s["fall"] = int(s["fall"]) - 1
+			node.position.y -= 0.22
+			continue
+		var established := float(s["score"]) >= 0.55 and _roots.size() < 300
+		if established:
+			var pos := node.position
+			node.queue_free()
+			_make_plant(Vector3(pos.x, 0.4, pos.z), String(s["zone"]), _unit("esth|%d" % i), {})
+			var young: Dictionary = _spikes[_spikes.size() - 1]
+			(young["root"] as Node3D).scale = Vector3.ONE * 0.30
+		else:
+			var fade: float = clampf(node.scale.x - 0.08, 0.05, 1.0)
+			node.scale = Vector3.ONE * fade
+			node.position.y -= 0.02
+			if fade <= 0.06:
+				node.queue_free()
+				_seeds.remove_at(i)
+
 func _cull_oldest() -> void:
 	if _spikes.size() < 40:
 		return
@@ -179,10 +234,17 @@ func _process(delta: float) -> void:
 		var spike: MeshInstance3D = entry["mesh"]
 		spike.scale = Vector3.ONE * clampf(0.25 + def * 1.4, 0.25, 1.7)
 		spike.position.y = float(entry["base_y"]) + 0.10 * def
-	if _tick % 90 == 0:
-		_spawn_offspring()
-	if _tick % 240 == 0:
-		_cull_oldest()
+	if _tick % 50 == 0:
+		_spawn_seed()
+		_spawn_seed()
+	if _tick % 10 == 0:
+		_update_seeds()
+	if _roots.size() > 300 and _tick % 200 == 0:
+		var victim: Dictionary = _spikes[0]
+		if is_instance_valid(victim["root"]):
+			(victim["root"] as Node3D).queue_free()
+		_roots.erase(victim["root"])
+		_spikes = _spikes.filter(func(e): return e["root"] != victim["root"])
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
