@@ -35,6 +35,10 @@ func _init() -> void:
 	_check(float(metrics["largest_genome_share"]) < 1.0, "no single genome owns all final populations")
 	_check(float(metrics["max_trait_variance"]) > 0.0, "mutable trait variance survives selection")
 
+	# Counterfactual causality gate: keep lineage seed and generation-one mutation
+	# candidates identical, alter only EVO6 fitness surfaces, and require at least
+	# one actually selected final population to change. Comparing result_hash alone
+	# would be insufficient because it also includes selection_surface_digest.
 	var biased := artifact.duplicate(true)
 	for raw_site in biased["selection_sites"] as Array:
 		var site: Dictionary = raw_site
@@ -48,10 +52,32 @@ func _init() -> void:
 		surface[weakest] = 4.0
 	biased["selection_surface_digest"] = Bridge.selection_surface_digest(biased["selection_sites"] as Array)
 	var counterfactual := Bridge.run(biased)
-	_check(
-		String(counterfactual.get("result_hash", "")) != String(first.get("result_hash", "")),
-		"changing only EVO6 fitness surface changes selected descendants"
-	)
+	_check(not counterfactual.is_empty(), "counterfactual rule-selection bridge builds")
+
+	var same_first_candidate_pools := true
+	var changed_final_population := false
+	if not counterfactual.is_empty():
+		var original_sites: Dictionary = first["sites"]
+		var counterfactual_sites: Dictionary = counterfactual["sites"]
+		for site_id in original_sites.keys():
+			if not counterfactual_sites.has(site_id):
+				same_first_candidate_pools = false
+				continue
+			var original_site: Dictionary = original_sites[site_id]
+			var counterfactual_site: Dictionary = counterfactual_sites[site_id]
+			var original_history: Array = original_site["history"]
+			var counterfactual_history: Array = counterfactual_site["history"]
+			if original_history.size() < 2 or counterfactual_history.size() < 2:
+				same_first_candidate_pools = false
+			else:
+				same_first_candidate_pools = same_first_candidate_pools and (
+					String(original_history[1].get("candidate_pool_hash", ""))
+					== String(counterfactual_history[1].get("candidate_pool_hash", ""))
+				)
+			if String(original_site.get("final_population_hash", "")) != String(counterfactual_site.get("final_population_hash", "")):
+				changed_final_population = true
+	_check(same_first_candidate_pools, "counterfactual keeps generation-one mutation candidate pools identical")
+	_check(changed_final_population, "changing only EVO6 fitness changes at least one selected final population")
 
 	var source := FileAccess.get_file_as_string("res://scripts/research/ecology/evo6_rule_selection_bridge_v1.gd")
 	_check(source.find("MutationKernel.reproduce") >= 0, "bridge delegates reproduction to existing P1B kernel")
