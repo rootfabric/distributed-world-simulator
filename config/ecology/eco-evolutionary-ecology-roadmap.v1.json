@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO4/E4.B0",
-  "current_step": "E4.B0 demo pipe authorized and in progress (Director dispatch post PR #190 merge)",
+  "current_step": "Wave 1 of E4.B implemented (B1+B5); next authorization: Wave 2 (E4.B2 bridge compiler)",
   "last_accepted_step": "ECO.EVO3/E3.FINAL Planetary Ecology Compiler Challenge",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -403,19 +403,25 @@
     "tracks": {
       "E4.B": {
         "name": "Morphology Bridge EVO3->PH",
-        "status": "B0_AUTHORIZED_B1_PLUS_PROPOSED",
+        "status": "WAVE1_IMPLEMENTED_B2_NEXT",
         "authorization_rule": "Separate Director authorization dispatch required after E3.FINAL acceptance; no implementation before that",
         "steps": [
           {
             "id": "E4.B0",
             "name": "Demo pipe: accepted catalog species -> developmental derivation v0 -> GrowthGraph skeleton -> PH5 render profile",
-            "status": "AUTHORIZED_IN_PROGRESS",
+            "status": "IMPLEMENTED_DEMO_PASS",
             "authorization_checkpoint": "docs/checkpoints/2026-08-22_ECO_EVO4_B0_AUTHORIZED_RU.md"
           },
           {
             "id": "E4.B1",
             "name": "Additive DevelopmentTraits block in persisted SpeciesCatalog per PH0 contract; v0 derived from metabolic fields, v1 independent genes deferred behind separate coupling stage",
-            "status": "PROPOSED"
+            "status": "IMPLEMENTED_WAVE1",
+            "evidence": {
+              "contract": "docs/plans/ECO_EVO4_B1_DERIVATION_CONTRACT_RU.md",
+              "generator": "scripts/research/ecology/evo4_bridge_catalog_extender_v1.py",
+              "artifact": "validation/ecology/evo4_b1_dev_traits_extended_catalog.v1.json",
+              "tests": "tests/research/ecology/test_evo4_b1_catalog_extension.py (7/7)"
+            }
           },
           {
             "id": "E4.B2",
@@ -435,7 +441,12 @@
           {
             "id": "E4.B5",
             "name": "Deterministic point-sampling contract for conditions at arbitrary planet coordinates",
-            "status": "PROPOSED"
+            "status": "IMPLEMENTED_WAVE1",
+            "evidence": {
+              "contract": "docs/plans/ECO_EVO4_B5_POINT_SAMPLING_CONTRACT_RU.md",
+              "module": "scripts/research/ecology/evo4_point_sampling_v1.py",
+              "tests": "tests/research/ecology/test_evo4_point_sampling_v1.py (9/9 incl. real arid-basin-02 smoke)"
+            }
           },
           {
             "id": "E4.B6",
