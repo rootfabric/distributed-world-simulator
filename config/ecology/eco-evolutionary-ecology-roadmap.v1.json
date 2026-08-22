@@ -13,7 +13,7 @@
   "evo3_roadmap_doc": "docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md",
   "e3_1_contract_doc": "docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md",
   "current_checkpoint": "ECO.EVO4/E4.B0",
-  "current_step": "E4.B complete through B7; E4.T multi-trophic predesign next",
+  "current_step": "E4.T predesign ready; T0 trophic payoff probe proposed",
   "last_accepted_step": "ECO.EVO3/E3.FINAL Planetary Ecology Compiler Challenge",
   "mission": "Compile snapshot-bound owner-provided planetary fields plus the persisted portable SpeciesCatalog into deterministic causal research ecology programs, then generalize across planets without biome-species shortcuts or production authority capture.",
   "roadmap_amendments": {
@@ -492,8 +492,10 @@
       },
       "E4.T": {
         "name": "Multi-Trophic Ecosystem & Coevolution (inherited declared goal)",
-        "status": "DECLARED_GOAL_AFTER_OR_BESIDE_BRIDGE",
-        "rule": "Defense/spines morphology genes become trophic traits; requires visible morphology first (E4.B) and its own separate authorization"
+        "status": "PREDESIGN_READY_T0_PROPOSED",
+        "rule": "Defense/spines morphology genes become trophic traits; requires visible morphology first (E4.B) and its own separate authorization",
+        "predesign_doc": "docs/plans/ECO_EVO4T_MULTITROPHIC_PREDESIGN_RU.md",
+        "director_dispatch": "received in session after E4.B closure (B0-B7 PASS)"
       }
     }
   },
