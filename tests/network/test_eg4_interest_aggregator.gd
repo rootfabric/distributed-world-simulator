@@ -54,6 +54,40 @@ func _collect_actions(deltas: Array) -> Dictionary:
 	return actions
 
 
+## Extract demand deltas WITHOUT ever crashing on a fail/malformed result
+## (review R2-C): any deviation becomes a recorded assertion failure plus an
+## empty array, so a regression surfaces as a clean FAIL verdict instead of a
+## SCRIPT ERROR aborting _init.
+func _result_deltas(result: Dictionary, context: String) -> Array:
+	if not bool(result.get("success", false)):
+		_assert(false, "%s failed: %s" % [context, JSON.stringify(result)])
+		return []
+	var details_value: Variant = result.get("details", {})
+	if typeof(details_value) != TYPE_DICTIONARY:
+		_assert(false, "%s returned non-Dictionary details" % context)
+		return []
+	var deltas_value: Variant = details_value.get("deltas", [])
+	if typeof(deltas_value) != TYPE_ARRAY:
+		_assert(false, "%s returned non-Array deltas" % context)
+		return []
+	return deltas_value
+
+
+func _result_plan(result: Dictionary) -> Dictionary:
+	if not bool(result.get("success", false)):
+		_assert(false, "aggregated plan lookup failed: %s" % JSON.stringify(result))
+		return {}
+	var details_value: Variant = result.get("details", {})
+	if typeof(details_value) != TYPE_DICTIONARY:
+		_assert(false, "aggregated plan returned non-Dictionary details")
+		return {}
+	var plan_value: Variant = details_value.get("plan", {})
+	if typeof(plan_value) != TYPE_DICTIONARY:
+		_assert(false, "aggregated plan returned non-Dictionary plan")
+		return {}
+	return plan_value
+
+
 func _init() -> void:
 	_started_ms = Time.get_ticks_msec()
 	var aggregator = AggregatorScript.new()
@@ -71,7 +105,7 @@ func _init() -> void:
 		_world_entry(0, source_a), _world_entry(1, source_b),
 	], 3))
 	_assert(bool(first.get("success", false)), "first demand rejected: %s" % str(first.get("error_code", first)))
-	var first_actions := _collect_actions(first["details"]["deltas"])
+	var first_actions := _collect_actions(_result_deltas(first, "first demand"))
 	_assert(bool(first_actions.get("SUBSCRIBE:%s" % world_0, false)) and bool(first_actions.get("SUBSCRIBE:%s" % world_1, false)),
 			"first demand did not subscribe both worlds")
 
@@ -80,20 +114,21 @@ func _init() -> void:
 		_world_entry(0, source_a), _world_entry(2, source_b),
 	], 5))
 	_assert(bool(second.get("success", false)), "second demand rejected")
-	var second_actions := _collect_actions(second["details"]["deltas"])
+	var second_actions := _collect_actions(_result_deltas(second, "second demand"))
 	_assert(not second_actions.has("SUBSCRIBE:%s" % world_0),
 			"shared world produced a DUPLICATE subscribe delta instead of deduping")
 	_assert(bool(second_actions.has("SUBSCRIBE:%s" % world_2)), "new world was not subscribed")
 
 	var shared_plan: Dictionary = aggregator.plan_for_world(world_0)
-	_assert(bool(shared_plan.get("success", false)), "no aggregated plan for the shared world")
-	var plan: Dictionary = shared_plan["details"]["plan"]
-	_assert(bool(PlanScript.validate(plan).get("success", false)), "aggregated plan failed contract validation")
+	var plan := _result_plan(shared_plan)
+	_assert(not plan.is_empty(), "no aggregated plan for the shared world")
 	if not plan.is_empty():
-		var subscribers: Array = plan["subscriber_sessions"]
+		_assert(bool(PlanScript.validate(plan).get("success", false)), "aggregated plan failed contract validation")
+		var subscribers_value: Variant = plan.get("subscriber_sessions", [])
+		var subscribers: Array = subscribers_value if subscribers_value is Array else []
 		_assert(subscribers.size() == 2, "shared plan did not merge BOTH subscriber sessions: %s" % str(subscribers))
-		_assert(int(plan["interest_revision"]) == 5, "plan did not advance to the max demand revision")
-		_assert(String(plan["source_role"]) == "PROJECTION" and bool(plan["read_only"]),
+		_assert(int(plan.get("interest_revision", 0)) == 5, "plan did not advance to the max demand revision")
+		_assert(String(plan.get("source_role", "")) == "PROJECTION" and bool(plan.get("read_only", false)),
 				"aggregated plan must stay read-only PROJECTION demand")
 
 	# --- stream sets group by upstream source -----------------------------------
@@ -108,7 +143,7 @@ func _init() -> void:
 	var partial: Dictionary = aggregator.withdraw_client_demand("gateway-session/eg4/agg-two")
 	_assert(bool(partial.get("success", false)), "partial withdraw failed")
 	var partially_unsubscribed: Array[String] = []
-	for delta_value in partial["details"]["deltas"]:
+	for delta_value in _result_deltas(partial, "partial withdraw"):
 		var delta: Dictionary = delta_value
 		if String(delta["action"]) == "UNSUBSCRIBE":
 			partially_unsubscribed.append(String(delta["world_id"]))
@@ -123,7 +158,7 @@ func _init() -> void:
 	var final_withdraw: Dictionary = aggregator.withdraw_client_demand("gateway-session/eg4/agg-one")
 	_assert(bool(final_withdraw.get("success", false)), "final withdraw failed")
 	var unsubscribed_worlds: Array[String] = []
-	for delta_value in final_withdraw["details"]["deltas"]:
+	for delta_value in _result_deltas(final_withdraw, "final withdraw"):
 		var delta: Dictionary = delta_value
 		if String(delta["action"]) == "UNSUBSCRIBE":
 			unsubscribed_worlds.append(String(delta["world_id"]))
