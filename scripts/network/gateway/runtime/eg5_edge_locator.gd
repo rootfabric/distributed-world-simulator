@@ -79,6 +79,7 @@ func select_for_client(client_id: String, candidates: Array, world_id_hint: Stri
 			return _selection_outcome(_last_selected_gateway, {"healthy_score": _last_primary_score, "health_state": _last_health_state}, world_id_hint, primary, false)
 	var chosen := String(primary["gateway_instance_id"])
 	var healthy_state := String(primary["probe"]["health_state"])
+	var selection_changed_bool: bool = chosen != _last_selected_gateway
 	if healthy_state == "HEALTHY":
 		_counters["healthy_selections"] = int(_counters["healthy_selections"]) + 1
 	elif healthy_state == "DEGRADED" or healthy_state == "DRAINING":
@@ -92,7 +93,7 @@ func select_for_client(client_id: String, candidates: Array, world_id_hint: Stri
 	if probe_failures > 0:
 		_counters["probe_failures"] = int(_counters["probe_failures"]) + probe_failures
 	_counters["independent_of_world_location"] = int(_counters["independent_of_world_location"]) + 1
-	return _selection_outcome(chosen, primary["score"], world_id_hint, primary, true)
+	return _selection_outcome(chosen, primary["score"], world_id_hint, primary, selection_changed_bool)
 
 
 ## Assert that two world-location hints for the same client produce the same
@@ -113,6 +114,16 @@ func mark_authority_handoff(p_authority_id: String) -> Dictionary:
 	if p_authority_id.is_empty():
 		return _failure("INVALID_AUTHORITY", {})
 	return _success({"selected_gateway_unchanged": _last_selected_gateway})
+
+
+## Reset persisted selection state — used by tests to isolate independent
+## scenarios; not part of any public locator contract.
+func reset_state() -> Dictionary:
+	_last_selected_gateway = ""
+	_last_primary_score = -1.0
+	_last_health_state = ""
+	_fallback_chain = []
+	return _success({})
 
 
 func get_report() -> Dictionary:
