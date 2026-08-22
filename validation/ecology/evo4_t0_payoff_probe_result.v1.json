@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo4_t0_payoff_probe.v1.result",
+  "version": "1.0.0",
+  "rule": "evo4-t0-defense-proxy-v0",
+  "species_count": 2,
+  "probes": 4,
+  "confirmed": 4,
+  "sealed_directions_sha256": "fe6dfcb27877031a685ca1f69e643c2097154d8289dd540103eaa6b18b9f463f",
+  "verdict": "PASS",
+  "details": [
+    {
+      "probe": "LOW_PRESSURE",
+      "genome_id": "genome/e22-alpha-late",
+      "defense": 0.5641,
+      "payoff_undefended": 0.3082,
+      "payoff_defended": 0.18269,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "probe": "LOW_PRESSURE",
+      "genome_id": "genome/e22-beta",
+      "defense": 0.3755,
+      "payoff_undefended": 0.2448,
+      "payoff_defended": 0.16125,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "probe": "HIGH_PRESSURE",
+      "genome_id": "genome/e22-alpha-late",
+      "defense": 0.5641,
+      "payoff_undefended": -0.2443,
+      "payoff_defended": -0.05815,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "probe": "HIGH_PRESSURE",
+      "genome_id": "genome/e22-beta",
+      "defense": 0.3755,
+      "payoff_undefended": -0.3077,
+      "payoff_defended": -0.18379,
+      "verdict": "CONFIRMED"
+    }
+  ]
+}

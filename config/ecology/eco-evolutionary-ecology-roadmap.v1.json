@@ -492,7 +492,7 @@
       },
       "E4.T": {
         "name": "Multi-Trophic Ecosystem & Coevolution (inherited declared goal)",
-        "status": "PREDESIGN_READY_T0_PROPOSED",
+        "status": "T0_PAYOFF_PROBE_PASS_4_4",
         "rule": "Defense/spines morphology genes become trophic traits; requires visible morphology first (E4.B) and its own separate authorization",
         "predesign_doc": "docs/plans/ECO_EVO4T_MULTITROPHIC_PREDESIGN_RU.md",
         "director_dispatch": "received in session after E4.B closure (B0-B7 PASS)"
