@@ -39,7 +39,11 @@ var _backend_session_id := ""
 var _backend_route_id := ""
 var _backend_link_id := ""
 var _backend_peer_id := ""
-var _client_wire_sequence: int = 0
+# EG2: many clients share one gateway, and the client boundary enforces
+# gap-free outgoing sequencing PER PEER — so wire sequences are tracked per
+# transport peer instead of one global counter (which only worked while a
+# single client leg existed).
+var _client_wire_sequence_by_peer: Dictionary = {}
 var _backend_wire_sequence: int = 0
 var _pending_backend_specs: Array = []
 var _pump_count: int = 0
@@ -316,9 +320,9 @@ func _drive_backend_peer_ready() -> void:
 
 
 func _send_to_client(peer_id: String, frame_spec: Dictionary) -> void:
-	_client_wire_sequence += 1
+	_client_wire_sequence_by_peer[peer_id] = int(_client_wire_sequence_by_peer.get(peer_id, 0)) + 1
 	var spec: Dictionary = frame_spec.duplicate(true)
-	spec["sequence"] = _client_wire_sequence
+	spec["sequence"] = int(_client_wire_sequence_by_peer[peer_id])
 	# The egress reframe carries the gateway-session identity; the wire frame
 	# itself must use the transport-session the boundary registered this peer
 	# under, so resolve it from the leg snapshot.

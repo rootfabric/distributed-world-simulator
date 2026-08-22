@@ -34,7 +34,10 @@ var _auth_by_peer: Dictionary = {}
 var _live_placement_by_client_session: Dictionary = {}
 var _last_known_resolution: Dictionary = {}
 var _ack_frame_counter: int = 0
-var _ack_sequence: int = 0
+# Transport-level ack sequences are PER CLIENT WIRE SESSION: the client
+# boundary enforces gap-free outgoing sequencing per peer, so a single global
+# counter would strand every ack after the first client's exchanges.
+var _ack_sequence_by_wire_session: Dictionary = {}
 var _counters := {
 	"authenticate_frames": 0,
 	"authenticate_ok": 0,
@@ -224,6 +227,13 @@ func _attach_and_ack_world_ready(
 	_last_known_resolution[world_id] = resolution.duplicate(true)
 	var row: Dictionary = attach["details"]["row"]
 	var resumed := bool(session_details["resumed"])
+	# Record the live placement so a later placement of the SAME client session
+	# (resume over a new transport peer, re-placement) supersedes this row
+	# instead of stranding the old transport-peer binding.
+	_live_placement_by_client_session[String(session_details["client_session_id"])] = {
+		"gateway_session_id": String(session_details["gateway_session_id"]),
+		"world_id": world_id,
+	}
 	if resumed:
 		_counters["placements_resumed"] = int(_counters["placements_resumed"]) + 1
 	else:
@@ -292,6 +302,12 @@ func _degrade_and_ack(
 					String(warm.get("error_code", "ROUTE_DEGRADE_FAILED")),
 					warm.get("details", {}))
 		row["route_binding"]["route_role"] = "WARM"
+		# A degraded placement still CREATED its (warm) route row.
+		_counters["placements_created"] = int(_counters["placements_created"]) + 1
+		_live_placement_by_client_session[String(session_details["client_session_id"])] = {
+			"gateway_session_id": gateway_session_id,
+			"world_id": world_id,
+		}
 		status = "WARM"
 		_counters["placements_degraded_warm"] = int(_counters["placements_degraded_warm"]) + 1
 	var ack_payload := {
@@ -397,11 +413,12 @@ func _ack_frame(wire_session: String, gateway_session_id: String, request_sequen
 			payload_schema,
 			payload
 	)
-	_ack_sequence += 1
+	_ack_sequence_by_wire_session[wire_session] = int(_ack_sequence_by_wire_session.get(wire_session, 0)) + 1
+	var wire_ack_sequence := int(_ack_sequence_by_wire_session[wire_session])
 	var transport_frame := {
 		"frame_id": "frame/eg2/session-ack-transport/%d" % _ack_frame_counter,
 		"session_id": wire_session,
-		"sequence": _ack_sequence,
+		"sequence": wire_ack_sequence,
 		"channel": "CONTROL",
 		"delivery_mode": "RELIABLE_ORDERED",
 		"payload_schema": payload_schema,
