@@ -11,6 +11,7 @@ const Presentation = preload("res://scripts/research/ecology/evo4_bridge_present
 const INPUT_PATH := "res://validation/ecology/evo4_b0_bridge_input.v1.json"
 const CATALOG_PATH := "res://config/ecology/accepted_inputs/evo2_full_persisted_species_catalog.e3_4.v1.json"
 const COHORT_SCALES: Array[float] = [0.85, 1.0, 1.18]
+const FOLIAGE_DENSITY := 1.8
 
 func _ready() -> void:
 	var input_text := FileAccess.get_file_as_string(INPUT_PATH)
@@ -36,15 +37,15 @@ func _ready() -> void:
 		var traits: Dictionary = (subject["development_traits"] as Dictionary).duplicate(true)
 		traits["branching_depth"] = int(traits["branching_depth"])
 		var base_seed := int(subject["individual_seed"])
-		var dorm: float = float(dormancy.get(String(subject["genome_id"]), 0.25))
 		var wp: float = float((subject["development_traits"] as Dictionary).get("_water_preference", 0.0))
 		# water/shade preference are metabolic fields; read them from accepted catalog genome if present
 		wp = _metabolic_field(catalog, String(subject["genome_id"]), "water_preference", wp)
 		var shade: float = _metabolic_field(catalog, String(subject["genome_id"]), "shade_tolerance", 0.3)
+		var dorm: float = float(dormancy.get(String(subject["genome_id"]), 0.25))
 		var center: Vector3 = group_centers[s]
 		for c in range(COHORT_SCALES.size()):
 			var seed_value := base_seed + c * 7919
-			var built := Presentation.build_rich_subject(traits, seed_value, wp, shade, dorm)
+			var built := Presentation.build_rich_subject(traits, seed_value, wp, shade, dorm, FOLIAGE_DENSITY)
 			if built.is_empty():
 				print("ECO.EVO4/E4.B0.5 RICH PRESENTATION: FAIL (subject %s cohort %d)" % [String(subject["genome_id"]), c])
 				get_tree().quit(1)
@@ -60,7 +61,7 @@ func _ready() -> void:
 				String(stats["archetype"]), String(stats["palette_id"]),
 			])
 	await _capture("res://artifacts/evo4_b05_rich_presentation.png")
-	print("ECO.EVO4/E4.B0.5 RICH PRESENTATION: PASS (%d cohorts)" % (COHORT_SCALES.size() * 2))
+	print("ECO.EVO4/E4.B0.5 RICH PRESENTATION: PASS (%d cohorts, foliage_density=%.1f)" % [COHORT_SCALES.size() * 2, FOLIAGE_DENSITY])
 	for line in report:
 		print(line)
 	print("screenshot=artifacts/evo4_b05_rich_presentation.png")

@@ -162,7 +162,7 @@ static func _basis_from_z(z_axis: Vector3) -> Basis:
 
 static func build_rich_subject(
 	traits: Dictionary, individual_seed: int, water_preference: float,
-	shade_tolerance: float, dormancy_fraction: float
+	shade_tolerance: float, dormancy_fraction: float, foliage_density: float = 1.0
 ) -> Dictionary:
 	var graph := Skeleton.build(traits, individual_seed)
 	if graph.is_empty():
@@ -252,7 +252,8 @@ static func build_rich_subject(
 		var tip := _bend_point(_vec3(Array(tseg["end"])), height, bend)
 		var stem_dir := (_vec3(Array(tseg["end"])) - _vec3(Array(tseg["start"]))).normalized()
 		var is_twig := int(tseg.get("axis_order", 0)) >= 3
-		var whorl_n := (3 if is_twig else 6) + int(3.0 * _hash01(individual_seed, 12, "whorl/" + String(tseg["segment_id"])))
+		var base_whorl := (3 if is_twig else 6) + int(3.0 * _hash01(individual_seed, 12, "whorl/" + String(tseg["segment_id"])))
+		var whorl_n := clampi(int(round(float(base_whorl) * foliage_density)), 2, 14)
 		for i in range(whorl_n):
 			var azim_deg: float = GOLDEN_ANGLE_DEG * float(i) + 360.0 * _hash01(individual_seed, 13, "az/" + String(tseg["segment_id"]) + "/" + str(i))
 			var radial := Vector3(cos(deg_to_rad(azim_deg)), 0.0, sin(deg_to_rad(azim_deg)))
@@ -266,11 +267,15 @@ static func build_rich_subject(
 		var segment: Dictionary = br
 		if bool(segment["main_axis"]):
 			continue
-		var mid := _bend_point((_vec3(Array(segment["start"])) + _vec3(Array(segment["end"]))) * 0.5, height, bend)
 		var sdir := (_vec3(Array(segment["end"])) - _vec3(Array(segment["start"]))).normalized()
 		var radial2 := _perp(sdir).rotated(sdir, TAU * _hash01(individual_seed, 15, "latleaf/" + String(segment["segment_id"])))
 		var ldir := (radial2 + Vector3.UP * 0.5).normalized()
-		_add_leaf_site(leaf_transforms, leaf_colors, individual_seed, 0, ldir, mid, size_scale * 0.85, archetype, palette, graph_hash, true)
+		var along_count := 1 + int(clampf(foliage_density, 1.0, 3.0))
+		for li in range(along_count):
+			var t_along: float = 0.35 + 0.28 * float(li)
+			var pos_along := _bend_point((_vec3(Array(segment["start"])) + (_vec3(Array(segment["end"])) - _vec3(Array(segment["start"]))) * t_along), height, bend)
+			var ldir_i := (radial2.rotated(sdir, 0.9 * float(li)) + Vector3.UP * 0.5).normalized()
+			_add_leaf_site(leaf_transforms, leaf_colors, individual_seed, li, ldir_i, pos_along, size_scale * 0.85, archetype, palette, graph_hash, true)
 
 	var stats := {
 		"schema": SCHEMA, "version": VERSION, "derived_representation": true,
