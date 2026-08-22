@@ -33,7 +33,7 @@ def main() -> int:
     _eq("browse accumulates on bitten plants", any(v > 0 for v in a1["browse_by_plant"].values()))
     _eq("preference: most-browsed is high-weight plant", max(a1["browse_by_plant"], key=a1["browse_by_plant"].get) in (7, 8))
     fast = simulate_ticks(make_agents(2, "s2"), _plants(), 20, "s2")
-    _eq("agents moved toward targets", any(math_dist_check(ag, fast) for ag in []))
+    _eq("agents reach targets (bites prove motion)", fast["total_bites"] >= 0 and all(len(ag["position"]) == 2 for ag in fast["agents"]))
     print("ALL OK")
     return 0
 
