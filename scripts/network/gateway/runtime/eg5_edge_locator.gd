@@ -3,7 +3,7 @@ extends RefCounted
 ## EG5 edge locator: deterministic gateway selection by client-network
 ## health score. "Nearest" = lowest healthy score over the bounded candidate
 ## set; NOT geographic distance. Routine authority handoff must NOT cause
-## Gateway rehome, and saved world location must NOT influence selection.
+## Gateway rehome, and the persisted world location must NOT influence selection.
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const BusUtilsScript = preload("res://scripts/network/bus/message_bus_contract_utils.gd")
@@ -43,7 +43,7 @@ func configure(p_probe_simulator) -> Dictionary:
 
 
 ## Select the lowest-healthy-score gateway for a given client. Independent of
-## the saved world location: a `world_id_hint` is accepted only to enforce
+## the persisted world location: a `world_id_hint` is accepted only to enforce
 ## the documented invariant, NOT to influence selection.
 func select_for_client(client_id: String, candidates: Array, world_id_hint: String = "") -> Dictionary:
 	_counters["selections"] = int(_counters["selections"]) + 1
