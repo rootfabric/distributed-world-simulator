@@ -12,16 +12,23 @@
 
 1. fate для каждой из 196 клеток A0 terrain (`survived`, `pigment`, `thorns`, `fitness_weight`);
 2. четыре phenotype-класса на каждой клетке: `terrestrial/low`, `terrestrial/tall`, `amphibious/low`, `amphibious/tall`;
-3. четыре детерминированных selection site с максимальным полезным fitness spread.
+3. четыре детерминированных selection site только с ненулевым fitness spread.
+
+Adapter также закрывает два контекстных пробела, не меняя замороженный R1 compiler/R4 generator:
+
+- для generated `neighbours` rules строится детерминированный агрегат `count/taller_than_self` в заявленном `within_r=6` по A0 grid spacing `0.5 m`; mixed neighbour radii fail-close до появления отдельного versioned aggregate contract;
+- terrain `snow_cover_frac` переносится из `features` в rule-visible `effective_conditions`, потому что существующий compiler читает этот predicate оттуда.
+
+Для default seed materialized `196/196` neighbour aggregates; snow predicate доступен на 12 snow cells; generated set действительно содержит neighbour predicates.
 
 Отдельный `eco_evo6_generated_rule_fly_lab.gd` наследует существующий R3 flyover и только подменяет источник `_fates`. Старый R3 lab не изменён. Если generated artifact отсутствует или невалиден, EVO6 lab fail-closes вместо молчаливого возврата к R2.
 
 Default seed: `20260823`.
 
-- exact artifact digest: `c2c49218cc04dffaf8b036b0b2986672559ff8884e4be54d2149b61ba45f0f67`;
-- selection surface digest: `e3fbaee778ba54708057e623fb6e515b7de6e7eedd20248d2a3daad45d3fb6de`;
-- max phenotype fitness spread: `0.85`;
-- winner classes на полном terrain: `amphibious/low`, `amphibious/tall`, `terrestrial/tall`.
+- exact artifact digest: `e2b4de200e919546e00ce7606af0402019409f75435d739bbc963afded7953f1`;
+- selection surface digest: `5e3469504d8fbfb38a0c13bb4ad6ceb300c29164a4b465d743f10b3bdd5fad34`;
+- max phenotype fitness spread: `1.20`;
+- winner classes с ненулевым spread на полном terrain: `amphibious/tall`, `terrestrial/low`, `terrestrial/tall`.
 
 Generated artifact не хранится как новый mutable truth: runner создаёт его во временный файл, передаёт путь через `EVO6_GENERATED_OUTCOMES_PATH` и удаляет после прогона.
 
@@ -73,10 +80,12 @@ Focused runner: `RUN_ECO_EVO6_RULE_SELECTION_CONTINUATION.ps1`.
 
 Он выполняет:
 
-1. Python R3.1 determinism/exact-digest tests;
+1. Python R3.1 determinism/exact-digest + neighbour/snow context tests;
 2. generation временного exact artifact;
 3. существующий `ECO.P1B-S2` parent regression;
 4. R3.1 visual adapter acceptance;
 5. H1–H3 selection bridge acceptance.
+
+PR-only exact-head workflow: `.github/workflows/evo6-rule-selection-continuation.yml`.
 
 Интерактивный визуал: `OPEN_ECO_EVO6_GENERATED_RULE_LAB.ps1`.
