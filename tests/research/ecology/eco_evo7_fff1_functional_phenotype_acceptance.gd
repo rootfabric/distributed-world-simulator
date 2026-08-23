@@ -90,6 +90,7 @@ func _g1_contract_shape_and_determinism(base: Dictionary) -> void:
 	var mid := FunctionalPhenotype.compile(_inputs(base["genome"], Traits.create_default(), Extension.create_default(), Fixture.control_point("wet_lowland", SEED), 0.5))
 	_check(not mid.is_empty() and is_finite(float(mid["realized_height_m"])), "mid-age compile finite")
 	_check(float(mid["realized_height_m"]) < float(fp["realized_height_m"]), "age curve monotone toward maturity")
+	_check(String(mid["phenotype_hash"]) != hash_value, "age_fraction participates in phenotype hash identity")
 
 ## G2: one genome, wet vs dry -> different realized phenotype, untouched heredity.
 func _g2_plasticity_without_lamarck(genome: Dictionary, traits: Dictionary, ext: Dictionary) -> void:
@@ -196,6 +197,19 @@ func _fail_closed_and_edges(genome: Dictionary, traits: Dictionary, ext: Diction
 	var wrong_ph2 := _inputs(genome, traits, ext, env_wet)
 	wrong_ph2["ph2_realized"] = {"schema": "not/the/right/schema"}
 	_check(FunctionalPhenotype.compile(wrong_ph2).is_empty(), "foreign ph2 payload fails closed")
+
+	var reference := _inputs(genome, traits, ext, env_wet)
+	var fabricated_ph2: Dictionary = reference["ph2_realized"].duplicate(true)
+	fabricated_ph2.erase("phenotype_hash")
+	var fabricated_inputs := _inputs(genome, traits, ext, env_wet)
+	fabricated_inputs["ph2_realized"] = fabricated_ph2
+	_check(FunctionalPhenotype.compile(fabricated_inputs).is_empty(), "schema-valid ph2 without provenance hash fails closed")
+
+	var fabricated_provenance: Dictionary = reference["ph2_realized"].duplicate(true)
+	fabricated_provenance.erase("inherited_traits_checksum")
+	var fabricated_provenance_inputs := _inputs(genome, traits, ext, env_wet)
+	fabricated_provenance_inputs["ph2_realized"] = fabricated_provenance
+	_check(FunctionalPhenotype.compile(fabricated_provenance_inputs).is_empty(), "schema-valid ph2 without traits provenance fails closed")
 
 	var mismatched_env := _inputs(genome, traits, ext, Fixture.control_point("plateau", SEED))
 	mismatched_env["environment_sample"] = Fixture.control_point("dry_ridge", SEED)

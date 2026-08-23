@@ -75,6 +75,8 @@ static func compile(inputs: Dictionary) -> Dictionary:
 		return {}
 	if String(ph2.get("schema", "")) != CoupledDevelopment.SCHEMA or ph2.is_empty():
 		return {}
+	if String(ph2.get("inherited_traits_checksum", "")).is_empty() or String(ph2.get("phenotype_hash", "")).is_empty():
+		return {}
 	var realized: Dictionary = ph2.get("realized_development_traits", {})
 	var graph: Dictionary = ph2.get("growth_graph", {})
 	if not bool(Traits.validate(realized).get("success", false)):
@@ -142,9 +144,9 @@ static func compile(inputs: Dictionary) -> Dictionary:
 		"environment_hash": String(env["checksum"]),
 		"individual_seed": individual_seed,
 		"age_fraction": _snap(age_fraction),
-		"inherited_traits_hash": String(ph2["inherited_traits_checksum"]),
-		"growth_graph_hash": String(graph["graph_hash"]),
-		"plasticity_phenotype_hash": String(ph2["phenotype_hash"]),
+		"inherited_traits_hash": String(ph2.get("inherited_traits_checksum", "")),
+		"growth_graph_hash": String(graph.get("graph_hash", "")),
+		"plasticity_phenotype_hash": String(ph2.get("phenotype_hash", "")),
 		"realized_height_m": realized_height,
 		"realized_crown_radius_m": realized_crown_radius,
 		"realized_crown_density": crown_density,
@@ -170,6 +172,7 @@ static func compute_phenotype_hash(phenotype: Dictionary) -> String:
 	var tokens := PackedStringArray([
 		SCHEMA, VERSION,
 		str(int(phenotype.get("individual_seed", -1))),
+		"%.9f" % float(phenotype.get("age_fraction", -1.0)),
 		String(phenotype.get("genome_hash", "")),
 		String(phenotype.get("environment_hash", "")),
 		String(phenotype.get("inherited_traits_hash", "")),
