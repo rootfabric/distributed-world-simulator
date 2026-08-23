@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-23-V0-P6-R1-V0-P6-R1-WO-001-0001",
+  "project_epoch": "E2026-08-23-V0-P6-R1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-23T06:05:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "head_sha": "56555fd557ecaf0efb0659dff523c782c6ccf9ba",
+  "summary": "Work Order V0-P6-R1-WO-001 issued for goal checkpoint V0_P6_PERSISTENT_SHARED_OUTPOST (base 491ca7d058690d3de5fcea5e41aaee230a31b3ab) as part of REFRESH_P6_PREACTIVATION: the Edge Gateway Foundation is formally accepted (EDGE_GATEWAY_FOUNDATION_ACCEPTED-001 at main 56555fd557ecaf0efb0659dff523c782c6ccf9ba) and the runtime mutation lease is rotated to P6 in RESERVED_FOR_V0_P6_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION state. Runtime mutation remains forbidden until a committed Director DISPATCHED event.",
+  "command": "ISSUE_FRESH_P6_WORK_ORDER_AFTER_FOUNDATION_ACCEPTANCE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/acceptance/EDGE_GATEWAY_FOUNDATION_ACCEPTED-001.v1.json",
+    "config/control/harness/activation/V0-P6-R1-ACTIVATION-001.v1.json"
+  ]
+}

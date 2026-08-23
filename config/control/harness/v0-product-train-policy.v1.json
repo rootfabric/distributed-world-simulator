@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-18-R3",
+  "policy_revision": "V0-P-2026-08-23-R4",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-  "current_phase": "P5_PRE_DISPATCH_CONTROL_READY",
+  "current_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "current_phase": "P6_PRE_DISPATCH_CONTROL_READY",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -24,7 +24,9 @@
   },
   "research_isolation": {
     "research_frontiers_are_non_blocking_by_default": true,
-    "explicitly_non_blocking_programs_for_current_p_train": ["ECO"],
+    "explicitly_non_blocking_programs_for_current_p_train": [
+      "ECO"
+    ],
     "research_may_block_only_when": [
       "MAIN_REGISTERS_AN_EXPLICIT_PRODUCT_DEPENDENCY",
       "A_CANONICAL_FOUNDATION_OWNED_BY_THAT_PROGRAM_BECOMES_A_REQUIRED_PRECONDITION",
@@ -64,11 +66,7 @@
     {
       "id": "V0_P5_EQUIPMENT_TOOLS",
       "short_name": "P5",
-      "state": "CURRENT_PRE_DISPATCH",
-      "execution_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
-      "project_epoch": "E2026-08-18-V0-P5-R1",
-      "work_order_id": "V0-P5-R1-WO-001",
-      "runtime_branch": "feature/v0-p5-equipment-tools",
+      "state": "ACCEPTED",
       "goal": "Turn canonical items into usable equipment/tools in the playable loop without creating a second inventory/equipment truth.",
       "must_reuse": [
         "CANONICAL_M4_ITEM_GRAPH",
@@ -82,21 +80,14 @@
         "AT_LEAST_ONE_REAL_GAMEPLAY_ACTION_CONSUMES_OR_REQUIRES_THE_EQUIPPED_TOOL",
         "NO_CLIENT_PRIVATE_EQUIPMENT_TRUTH"
       ],
-      "activation_requires": [
-        "V0_P4_CHECKPOINT_ACCEPTED",
-        "MAIN_DECLARED_EXACT_P4_SUCCESSOR_BASE",
-        "FRESH_P5_WORK_ORDER",
-        "FRESH_EPOCH_AND_PC0",
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P5",
-        "DIRECTOR_DISPATCH"
-      ],
-      "activation_complete_except": ["DIRECTOR_DISPATCH"],
-      "next": "V0_P6_PERSISTENT_SHARED_OUTPOST"
+      "next": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+      "accepted_runtime_head": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+      "acceptance_record": "config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json"
     },
     {
       "id": "V0_P6_PERSISTENT_SHARED_OUTPOST",
       "short_name": "P6",
-      "state": "PLANNED_NOT_ELIGIBLE",
+      "state": "CURRENT_PRE_DISPATCH",
       "goal": "Establish the first stable persistent playable outpost baseline with the complete mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect loop.",
       "minimum_product_outcomes": [
         "TWO_CLIENT_SHARED_OUTPOST_STATE",
@@ -108,12 +99,26 @@
       ],
       "activation_requires": [
         "V0_P5_CHECKPOINT_ACCEPTED",
+        "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
         "MAIN_DECLARED_EXACT_P5_SUCCESSOR_BASE",
         "FRESH_P6_WORK_ORDER",
         "FRESH_EPOCH_AND_PC0",
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P6"
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P6",
+        "DIRECTOR_DISPATCH"
       ],
-      "next": "V0_POST_P6_SEAMLESS_INSERTION_GATE"
+      "next": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+      "execution_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+      "project_epoch": "E2026-08-23-V0-P6-R1",
+      "work_order_id": "V0-P6-R1-WO-001",
+      "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
+      "must_reuse": [
+        "EDGE_GATEWAY_FOUNDATION_ACCEPTED_TRANSPORT_AND_SESSION_STACK",
+        "CANONICAL_M4_ITEM_GRAPH",
+        "EXISTING_SINGLE_PERSISTENCE_OWNER"
+      ],
+      "activation_complete_except": [
+        "DIRECTOR_DISPATCH"
+      ]
     },
     {
       "id": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
@@ -122,7 +127,10 @@
       "goal": "Do not auto-dispatch terrain work. Decide and durably record whether V0-SM1 seamless product integration is activated now or explicitly deferred.",
       "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
       "mandatory_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
-      "allowed_decisions": ["ACTIVATE_V0_SM1", "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"],
+      "allowed_decisions": [
+        "ACTIVATE_V0_SM1",
+        "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"
+      ],
       "next_if_activated": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "next_if_deferred": "V0_P7_BOUNDED_TERRAIN_MUTATION"
     },
@@ -131,7 +139,10 @@
       "short_name": "SM1",
       "state": "FUTURE_CONTROL_ACTIVATION",
       "goal": "Port proven SM0 authority-handoff semantics and MRPF multi-route projection semantics into the then-current accepted V0/P6 product baseline.",
-      "donors_are_not_product_bases": ["SM0", "MRPF"],
+      "donors_are_not_product_bases": [
+        "SM0",
+        "MRPF"
+      ],
       "hard_invariants": [
         "EXACTLY_ONE_ACTIVE_AUTHORITY",
         "STABLE_PLAYER_AND_ENTITY_IDENTITY",
@@ -192,7 +203,33 @@
     "checkpoint_proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
     "main_acceptance_merge": "2d3227eda204647f2b30ff59b7e31026e661c240"
   },
-  "current_p5_activation_route": {
+  "historical_p4_closure_route": {
+    "runtime_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
+    "runtime_mutation": "FROZEN_ACCEPTED",
+    "closure_finalization_pr": 138,
+    "checkpoint_proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
+    "acceptance_main_merge": "2d3227eda204647f2b30ff59b7e31026e661c240"
+  },
+  "edge_gateway_foundation": {
+    "acceptance_record": "config/control/harness/acceptance/EDGE_GATEWAY_FOUNDATION_ACCEPTED-001.v1.json",
+    "decision": "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
+    "accepted_at_utc": "2026-08-23T05:30:00Z",
+    "canonical_main_at_acceptance": "2021ee7ce8b4b66208f2da1ce142d36bcb356c53",
+    "consumed_by_p6": true
+  },
+  "current_p6_activation_route": {
+    "accepted_predecessor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+    "project_epoch": "E2026-08-23-V0-P6-R1",
+    "work_order_id": "V0-P6-R1-WO-001",
+    "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
+    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
+    "remaining_control_steps": [
+      "DIRECTOR_DISPATCH",
+      "BEGIN_BOUNDED_P6_IMPLEMENTATION"
+    ]
+  },
+  "historical_p5_activation_route": {
     "accepted_predecessor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
     "project_epoch": "E2026-08-18-V0-P5-R1",
     "work_order_id": "V0-P5-R1-WO-001",
@@ -206,12 +243,5 @@
       "DIRECTOR_DISPATCH",
       "BEGIN_BOUNDED_P5_IMPLEMENTATION"
     ]
-  },
-  "historical_p4_closure_route": {
-    "runtime_target": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
-    "runtime_mutation": "FROZEN_ACCEPTED",
-    "closure_finalization_pr": 138,
-    "checkpoint_proposal_commit": "aedc419f24dea2f836a166f0d2ebc88008af7d4f",
-    "acceptance_main_merge": "2d3227eda204647f2b30ff59b7e31026e661c240"
   }
 }
