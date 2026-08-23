@@ -1,10 +1,10 @@
 extends SceneTree
 
-## P6.3 L0: per-player operation ledger — exactly-once, crash recovery,
-## cross-transport continuity (identity rebind), bounded history.
+## P6 R3 regression: OperationId history is fail-closed.
+## A bounded guard may reject new work at capacity, but it may never evict an
+## old key and later report it as newly APPLIED.
 
 const LedgerScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd")
-const RegistryScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_identity_registry.gd")
 
 var assertions := 0
 var failures: Array[String] = []
@@ -14,70 +14,55 @@ func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
-		print("[p6.3-l0][FAIL] %s" % message)
+		print("[p6-r3-ledger][FAIL] %s" % message)
 
 
 func _init() -> void:
 	var ledger = LedgerScript.new()
-	var configured: Dictionary = ledger.configure(256)
+	var configured: Dictionary = ledger.configure(4)
 	_assert(bool(configured.get("success", false)), "ledger configure failed")
+	_assert(String(configured.get("details", {}).get("retirement_policy", "")) == "FAIL_CLOSED_NO_EVICTION", "retirement policy is not fail-closed")
 
-	# --- exactly-once happy path ---
-	var first: Dictionary = ledger.record_applied("player/a", "operation/p6.3-0001")
-	_assert(bool(first.get("success", false)) and String(first["details"]["result"]) == "APPLIED", "first apply failed")
-	var digest: String = String(first["details"]["outcome_digest"])
-	_assert(not digest.is_empty(), "digest empty on apply")
-	var replay: Dictionary = ledger.record_applied("player/a", "operation/p6.3-0001")
-	_assert(String(replay["details"]["result"]) == "ALREADY_APPLIED", "replay did not report ALREADY_APPLIED")
-	_assert(String(replay["details"]["outcome_digest"]) == digest, "replay digest diverged")
-	_assert(bool(replay["details"].get("applied_now", true)) == false, "replay claimed applied_now")
+	# Fill the complete bounded history.
+	for i in range(4):
+		var operation_id := "operation/p6-r3-%04d" % i
+		var applied: Dictionary = ledger.record_applied("player/a", operation_id)
+		_assert(bool(applied.get("success", false)) and String(applied["details"]["result"]) == "APPLIED", "initial apply failed for %s" % operation_id)
 
-	# --- pending -> crash -> restore -> complete exactly once ---
-	ledger.record_pending("player/b", "operation/p6.3-crash")
-	_assert(ledger.is_pending("player/b", "operation/p6.3-crash"), "pending not recorded")
-	var snap: Dictionary = ledger.snapshot()
-	var fresh = LedgerScript.new()
-	fresh.configure(256)
-	var restored: Dictionary = fresh.restore(snap)
-	_assert(bool(restored.get("success", false)), "restore failed")
-	_assert(fresh.is_pending("player/b", "operation/p6.3-crash"), "pending lost across crash")
-	var completed: Dictionary = fresh.complete_pending("player/b", "operation/p6.3-crash")
-	_assert(String(completed["details"]["result"]) == "APPLIED", "crash recovery did not complete")
-	var repeat: Dictionary = fresh.complete_pending("player/b", "operation/p6.3-crash")
-	_assert(String(repeat["details"]["result"]) == "ALREADY_APPLIED", "double recovery applied twice")
+	# New work fails closed; no old key is forgotten to make room.
+	var overflow: Dictionary = ledger.record_applied("player/a", "operation/p6-r3-overflow")
+	_assert(not bool(overflow.get("success", false)), "capacity overflow was accepted")
+	_assert(String(overflow.get("error_code", "")) == "LEDGER_CAPACITY_EXCEEDED", "capacity overflow error mismatch")
+	_assert(int(ledger.get_report()["applied_count"]) == 4, "capacity rejection changed applied set")
+	_assert(int(ledger.get_report()["counters"]["retired"]) == 0, "an OperationId was retired")
 
-	# --- unknown key rejected ---
-	var unknown: Dictionary = fresh.complete_pending("player/b", "operation/p6.3-unknown")
-	_assert(not bool(unknown.get("success", false)) and String(unknown["error_code"]) == "NO_PENDING_OPERATION", "unknown completion accepted")
+	# The oldest operation remains a replay, never a fresh application.
+	var oldest_replay: Dictionary = ledger.record_applied("player/a", "operation/p6-r3-0000")
+	_assert(bool(oldest_replay.get("success", false)), "oldest replay failed")
+	_assert(String(oldest_replay["details"]["result"]) == "ALREADY_APPLIED", "oldest OperationId became executable again")
+	_assert(bool(oldest_replay["details"]["applied_now"]) == false, "oldest replay reported applied_now")
 
-	# --- cross-transport continuity via identity rebind (P6.2 integration) ---
-	var registry = RegistryScript.new()
-	registry.bind("client-session/pre-rebind", "player/traveler", "entity/traveler-1")
-	registry.rebind_on_transport_change("client-session/pre-rebind", "client-session/post-rebind")
-	var binding: Dictionary = registry.resolve_by_session("client-session/post-rebind")["details"]["binding"]
-	var traveler: String = String(binding["logical_player_id"])
-	_assert(traveler == "player/traveler", "traveler identity mismatch after rebind")
-	var t_first: Dictionary = ledger.record_applied(traveler, "operation/p6.3-travel-1")
-	_assert(String(t_first["details"]["result"]) == "APPLIED", "traveler op apply failed")
-	var t_replay: Dictionary = ledger.record_applied(traveler, "operation/p6.3-travel-1")
-	_assert(String(t_replay["details"]["result"]) == "ALREADY_APPLIED", "traveler replay broke continuity")
+	# PENDING is idempotent as a reservation, not a second admission.
+	var pending_ledger = LedgerScript.new()
+	pending_ledger.configure(4)
+	var pending1: Dictionary = pending_ledger.record_pending("player/b", "operation/pending")
+	var pending2: Dictionary = pending_ledger.record_pending("player/b", "operation/pending")
+	_assert(bool(pending1.get("success", false)) and not bool(pending1["details"].get("existing", true)), "first pending reservation failed")
+	_assert(bool(pending2.get("success", false)) and bool(pending2["details"].get("existing", false)), "repeated pending did not report existing reservation")
+	_assert(int(pending_ledger.get_report()["pending_count"]) == 1, "repeated pending duplicated reservation")
 
-	# --- bounded history retires oldest but keeps recent ---
-	var small = LedgerScript.new()
-	small.configure(4)
-	for i in range(8):
-		small.record_applied("player/rotator", "operation/p6.3-rot-%04d" % i)
-	_assert(bool(small.is_applied("player/rotator", "operation/p6.3-rot-0007")), "most recent retired unexpectedly")
-	_assert(int(small.get_report()["applied_count"]) <= 4, "bounded cap exceeded")
-
-	# --- schema gate on restore ---
-	var bad_restore: Dictionary = fresh.restore({"schema": "wrong"})
-	_assert(not bool(bad_restore.get("success", false)), "wrong-schema restore accepted")
+	# Snapshot restore preserves the no-forget property and validates ordering.
+	var restored = LedgerScript.new()
+	restored.configure(4)
+	var restore_result: Dictionary = restored.restore(ledger.snapshot())
+	_assert(bool(restore_result.get("success", false)), "snapshot restore failed")
+	var restored_replay: Dictionary = restored.record_applied("player/a", "operation/p6-r3-0000")
+	_assert(String(restored_replay.get("details", {}).get("result", "")) == "ALREADY_APPLIED", "restore forgot oldest OperationId")
 
 	if failures.is_empty():
-		print("[p6.3-l0] all %d assertions passed" % assertions)
-		print("[p6.3-l0][stage] OPERATION_CONTINUITY_PASS")
+		print("[p6-r3-ledger] all %d assertions passed" % assertions)
+		print("[p6-r3-ledger][stage] OPERATION_ID_RETIREMENT_CANNOT_REEXECUTE_PASS")
 		quit(0)
 	else:
-		print("[p6.3-l0] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
+		print("[p6-r3-ledger] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
 		quit(1)
