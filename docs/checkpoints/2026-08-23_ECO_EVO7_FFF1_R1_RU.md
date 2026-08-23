@@ -24,7 +24,7 @@
    - компоненты §11 (preview): `photosynthetic_gain_proxy`, `maintenance_cost_proxy` (shoot+root+structural), `net_resource_proxy`; flux-записи `transpiration_demand_ppm`, `shade_output_ppm`, `litter_flux_ppm` (только публикация значений — **обратной связи в среду нет**, эффект-рекорды придут в FFF3/FFF4);
    - reuse констант: root-reach `0.22` и structural-cost `0.095` из `plant_resource_model_v1` (задекларировано);
    - fail-closed: любой невалидный/несогласованный вход (checksum mismatch ph2↔genome↔environment) ⇒ пустой результат.
-3. `tests/research/ecology/eco_evo7_fff1_functional_phenotype_acceptance.gd` — gates G1–G3 (107 assertions) + fail-closed + source-boundaries.
+3. `tests/research/ecology/eco_evo7_fff1_functional_phenotype_acceptance.gd` — gates G1–G3 (110 assertions после repair R1) + fail-closed + source-boundaries.
 4. `RUN_ECO_EVO7_FFF1_TESTS.ps1` — цепочка: FFF1 → FFF0 chain → PH2 (зависимость) → P1A-S1/S2 → P1C-S4 → PH0.
 
 ## Замороженные couplings R1 (проверяются тестом)
@@ -61,15 +61,34 @@ structural_investment   = potential echo; в R1 влияет только на c
 `Godot 4.7.1.stable.double.custom_build.a13da4feb`, Windows headless:
 
 ```text
-ECO.EVO7 FFF1 PlantFunctionalPhenotype: PASS (107 assertions)
+ECO.EVO7 FFF1 PlantFunctionalPhenotype: PASS (110 assertions)  # после repair R1
 ECO.EVO7 FFF0 Contract Mapping:         PASS (112 assertions)   # chain
 ECO.PH2 Environment-Coupled Development: PASS (107 assertions)  # dependency
 ECO.P1A-S1: PASS (109)   hash b862c4fc… = accepted
 ECO.P1A-S2: PASS (235)   hash 618ec5c1… = accepted
 ECO.P1C-S4: PASS (15)    failure matrix all PASS
 ECO.PH0:    PASS (63)    traits_hash 9d812950… = accepted
-EVO6-WATER -SkipBaseline: PASS, result_hash 7010e307… (см. checkpoint FFF0; повторён для FFF1)
+EVO6-WATER -SkipBaseline: PASS, result_hash 7010e307… (evolution == visual observatory)
 ```
+
+## Review & Verification
+
+### Independent review — PASS
+
+Свежая изолированная роль reviewer'а на exact head `a8958d7dcfa6e96b52923f53395b966d382a3eec`.
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF1_FINAL_REVIEW_RU.md`.
+- R1–R8 подтверждены по коду, включая single-morphological-truth (компилятор не строит геометрию), отсутствие heredity/render/persistence-связностей, сверку констант 0.22 и 0.095 с `plant_resource_model_v1`, фиксированный порядок hash-токенов.
+- BLOCKER/MAJOR: нет. MINOR-1: `age_fraction` не входил в токены `phenotype_hash` (детерминизм цел, инъективность ослаблена в вырожденных случаях). MINOR-2: fail-closed был не тотален для сфабрикованного schema-valid ph2 без provenance-полей (прямой dict-индекс мог дать runtime error вместо `{}`).
+- **Repair R1 (этот коммит):** `age_fraction` добавлен в hash-токены; provenance-поля ph2 (`phenotype_hash`, `inherited_traits_checksum`) проверяются на непустоту до использования; добавлены регрессионные assertions (+3). Гейты и принятые хэши поверхностей не менялись; полный раннер после repair: FFF1 PASS (110), цепочка зелёная.
+
+### Clean-checkout verification — VERIFIED
+
+Независимая роль верификатора на чистом detached worktree той же exact head (без `.godot`, fresh-worktree import правило отработано).
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF1_VERIFICATION_RU.md`.
+- Все хэши/assertion counts совпали с checkpoint-документом, ноль расхождений; EVO6-WATER `result_hash 7010e307…` побайтно идентичен в evolution и visual observatory; dry root_depth 0.85 → 2.16355.
+- NOTE (не блокер): parse-ошибки трёх legacy `eco_evo5_*.tscn` при импорт-скане существуют на голове независимо от FFF1.
 
 ## Осознанные ограничения R1 (не блокируют G1–G3)
 
