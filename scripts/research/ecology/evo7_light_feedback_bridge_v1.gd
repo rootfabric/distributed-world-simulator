@@ -3,15 +3,17 @@ extends RefCounted
 ## ECO.EVO7 FFF3 - light feedback bridge: plants change the light field, the changed
 ## field changes selection (spec sections 8, 13; gates G6/G7/G10/G12).
 ##
-## Community microcosm: 5x5 plants on a 0.5 m grid (crown scale - skeleton crowns
+## Community microcosm: 5x5 plants on a 0.35 m grid (crown scale - skeleton crowns
 ## are sub-meter). Each generation:
-##   1. realize every plant under its CURRENT light (plasticity), publish geometry;
-##   2. aggregate the understory light field from published geometry (canonical
-##      identity order, cell buckets, Beer-Lambert);
+##   1. realize every plant under the BASE environment and publish geometry (the
+##      light field is aggregated from published geometry);
+##   2. aggregate the understory light field (canonical identity order, cell
+##      buckets, Beer-Lambert) and publish effect records;
 ##   3. feedback ON: each plant is re-realized and scored under its OWN understory
-##      light; feedback OFF (counterfactual): every plant scores under base light -
-##      the mutation stream formula is identical in both modes, only the
-##      environment assignment differs (that difference IS the tested causality);
+##      light (light-driven plasticity); feedback OFF (counterfactual): every plant
+##      scores under base light - the mutation stream formula is identical in both
+##      modes, only the environment assignment differs (that difference IS the
+##      tested causality);
 ##   4. reproduce through the single lineage authority and select.
 ##
 ## No plant writes the environment directly: geometry is published as
