@@ -29,7 +29,7 @@
    - `moisture_after = clamp01(base − (uptake+evap)/ёмкость)`, ёмкость `CELL_WATER_CAPACITY_PPM = 4·10⁶` (калибровка);
    - выходы: per-cell moisture/uptake/evaporation/cover, per-plant `actual_uptake_ppm` + `root_access`, `field_hash` + `plant_uptake_hash` (identity-sorted токены), публикация effect-записей с водными каналами в каноническом порядке; fail-closed на все нарушения входов.
 4. `scripts/research/ecology/evo7_water_feedback_bridge_v1.gd` — замкнутый водный контур: 25 позиций (5×5, 0.35 м), 16 поколений, 4 потомка, воспроизводство только через `LineageExtension` (единственная authority), сценарии `dry_sand`/`mesic_loam` на одних позициях; ON — оценка под влагой своей ячейки, OFF — под базовой; метрики на сценарий/режим: `final_population_hash`, `final_field_hash`, `mean_cell_moisture`, `mean_fitness`, mean features (включая `root_shoot_ratio`), quartiles «самая сухая/самая влажная четверть растений» по средней глубине корней, `feature_delta_on_minus_off`, кросс-сценарное сравнение G9.
-5. Тест `eco_evo7_fff4_water_feedback_acceptance.gd` (95 assertions) + раннер `RUN_ECO_EVO7_FFF4_TESTS.ps1` (цепочка 11 наборов, включая P1B-S1 kernel 5834).
+5. Тест `eco_evo7_fff4_water_feedback_acceptance.gd` (101 assertion после repair R1) + раннер `RUN_ECO_EVO7_FFF4_TESTS.ps1` (цепочка 11 наборов, включая P1B-S1 kernel 5834).
 
 ## Наблюдаемая динамика (lineage_seed 20260823, 16 поколений, 25 растений, feedback ON)
 
@@ -59,12 +59,29 @@ G9-дельты (ON, dry_sand против mesic_loam): LAI **−0.131** (ком
 - **G12 Order invariance** (поддерживающий) — перестановки и реверс входных записей дают идентичные `field_hash`, `plant_uptake_hash` и per-plant uptake; combined hash effect-записей порядко-инвариантен. PASS.
 - **G13/G14** — наследственность только через `LineageExtension`→v1 kernel (нет RNG в слое, source gate); полная регрессия зелёная (ниже). PASS.
 
+## Review & Verification
+
+### Independent review — PASS
+
+Свежая изолированная роль reviewer'а на exact head `352ca327f23223add574425741570cd0fac0c778`.
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF4_FINAL_REVIEW_RU.md`.
+- Подтверждено по коду: behavior-neutrality изменения effect-контракта для FFF3 (bridge hash `cd30fcbf…` воспроизведён бит-exact), структурный инвариант «Σuptake ≤ available» fail-closed (`soil_water_field_v1.gd::216`), texture строго как fixture-вход, биекция coprime-stride `(rank·7) mod 25` (gcd(7,25)=1 ⇒ одна особь на позицию, позиций пустых нет), identity остаётся каноническим ключом.
+- BLOCKER/MAJOR: нет. MINOR: кросс-seed направления G9 существовали только как ручное evidence → **исправлено repair'ом R1** (этот коммит): направления на seed'ах 20260824/25 автоматизированы в acceptance (+6 assertions). NOTE'ы (недостижимый shrink-путь при <25 кандидатов; tie-детерминизм компаратора) записаны в отчёте.
+
+### Clean-checkout verification — VERIFIED
+
+Независимая роль верификатора на чистом detached worktree той же exact head (без `.godot`, fresh-worktree import правило отработано).
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF4_VERIFICATION_RU.md`.
+- Все счётчики и хэши совпали с checkpoint-документом; EVO6-WATER `result_hash 7010e307…` идентичен в evolution и visual observatory.
+
 ## Focused evidence
 
 `Godot 4.7.1.stable.double.custom_build.a13da4feb`, Windows headless:
 
 ```text
-ECO.EVO7 FFF4 Water Feedback:           PASS (95 assertions)   # bridge ~9-10 s
+ECO.EVO7 FFF4 Water Feedback:           PASS (101 assertions)  # после repair R1 (кросс-seed гейты автоматизированы); bridge ~9-10 s
 ECO.EVO7 FFF3 Light Feedback:           PASS (51)
 ECO.EVO7 FFF2 Morphology Evolution:     PASS (56)
 ECO.EVO7 FFF1 PlantFunctionalPhenotype: PASS (110)

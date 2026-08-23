@@ -31,6 +31,7 @@ func _init() -> void:
 	var result := Bridge.run_all(SEED)
 	bridge_runtime_msec = Time.get_ticks_msec() - bridge_started
 	_g9_sand_vs_loam(result)
+	_g9_cross_seed_directions()
 	_determinism_and_order(result)
 	_source_boundaries()
 	_finish()
@@ -254,6 +255,23 @@ func _g9_sand_vs_loam(result: Dictionary) -> void:
 	_check(String(mesic_on["final_population_hash"]) != String(mesic_off["final_population_hash"]), "G7-causality: mesic_loam feedback ON/OFF select different descendants")
 	_check(String(dry_on["final_population_hash"]) != String(mesic_on["final_population_hash"]), "G9: scenarios evolve different communities under the same mutation stream formula")
 	_check(String(result["mutation_stream_formula"]) == "EVO7-WATER|seed|gen|parent|off", "mutation stream formula shared across modes and scenarios")
+
+## Reviewer MINOR repair: cross-seed G9 directions are automated here
+## (previously recorded only as manual evidence on seeds 20260824/25).
+func _g9_cross_seed_directions() -> void:
+	for cross_seed in [20260824, 20260825]:
+		var cross := Bridge.run_all(cross_seed)
+		if cross.is_empty():
+			_check(false, "cross-seed %d bridge runs" % cross_seed)
+			continue
+		var dry: Dictionary = cross["scenarios"]["dry_sand"]["feedback_on"]["mean_features"]
+		var mesic: Dictionary = cross["scenarios"]["mesic_loam"]["feedback_on"]["mean_features"]
+		_check(float(mesic["leaf_area_index_proxy"]) - float(dry["leaf_area_index_proxy"]) > LAI_DELTA_THRESHOLD,
+			"G9 cross-seed %d: dry_sand lower LAI than mesic_loam" % cross_seed)
+		_check(float(dry["realized_root_depth_m"]) - float(mesic["realized_root_depth_m"]) > ROOT_DEPTH_DELTA_THRESHOLD,
+			"G9 cross-seed %d: dry_sand deeper roots than mesic_loam" % cross_seed)
+		_check(float(dry["root_shoot_ratio"]) - float(mesic["root_shoot_ratio"]) > RSR_DELTA_THRESHOLD,
+			"G9 cross-seed %d: dry_sand higher root-shoot allocation" % cross_seed)
 
 func _determinism_and_order(result: Dictionary) -> void:
 	if result.is_empty():
