@@ -17,6 +17,17 @@ extends RefCounted
 ##     in that order, so input permutation cannot change any hash (G12).
 ##   - Cell buckets (CELL_SIZE_M) give deterministic membership and per-cell canopy
 ##     load observability; per-plant light does not depend on bucket traversal order.
+##   - FFF6 BUCKET-PRUNED NEIGHBOR SEARCH: sources are indexed into their
+##     cell_identity_for(...) buckets once per compute; for each target only the
+##     sources in cells within Chebyshev range ceil(max_crown_radius / CELL_SIZE_M) + 1
+##     of the target's cell are visited (candidates re-sorted to ascending validated
+##     index = canonical identity order). A skipped pair is provably zero-weight:
+##     weight w = clamp01(1 - dist/radius_source) is positive only when the source is
+##     taller and dist < radius_source <= max_crown_radius, and any such source lies in
+##     the scanned cell range. Byte-identical outputs: dropped terms are exactly 0.0,
+##     kept terms accumulate in the same canonical order, so field_hash /
+##     plant_light_hash / per-plant understory light are unchanged (FFF3 regression
+##     stays bit-exact). Complexity drops from O(N^2) to O(N + C + local).
 
 const SCHEMA := "distributed_world_simulator.ecology.understory_light_field.v1"
 const VERSION := "1.0.0"
@@ -69,12 +80,40 @@ static func compute(records: Array) -> Dictionary:
 	validated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return String(a["identity"]) < String(b["identity"]))
 
+	# FFF6 bucket-pruned neighbor search: index sources by cell once, then visit
+	# only the cells that can contain a nonzero-weight source for each target.
+	# Candidate indices are consumed in ascending order, which is exactly the
+	# canonical (identity-sorted) validated order, so every float sum below keeps
+	# its canonical accumulation order and the outputs are byte-identical to the
+	# previous all-pairs scan.
+	var max_crown_radius := 0.0
+	for record in validated:
+		max_crown_radius = maxf(max_crown_radius, float(record["realized_crown_radius_m"]))
+	var prune_range := ceili(max_crown_radius / CELL_SIZE_M) + 1
+	var source_buckets := {}
+	for index in validated.size():
+		var bucket_source: Dictionary = validated[index]
+		var bucket_cell := cell_identity_for(float(bucket_source["world_x_m"]), float(bucket_source["world_z_m"]))
+		if not source_buckets.has(bucket_cell):
+			source_buckets[bucket_cell] = PackedInt32Array()
+		source_buckets[bucket_cell].append(index)
+
 	var cells := {}
 	var plant_light := {}
 	for index in validated.size():
 		var target: Dictionary = validated[index]
+		var target_cell_x := floori(float(target["world_x_m"]) / CELL_SIZE_M)
+		var target_cell_z := floori(float(target["world_z_m"]) / CELL_SIZE_M)
+		var candidate_indices := PackedInt32Array()
+		for dx in range(-prune_range, prune_range + 1):
+			for dz in range(-prune_range, prune_range + 1):
+				var nearby_cell := "%d|%d" % [target_cell_x + dx, target_cell_z + dz]
+				if source_buckets.has(nearby_cell):
+					candidate_indices.append_array(source_buckets[nearby_cell])
+		candidate_indices.sort()
 		var overlap := 0.0
-		for source in validated:
+		for source_index in candidate_indices:
+			var source: Dictionary = validated[source_index]
 			if String(source["identity"]) == String(target["identity"]):
 				continue
 			if float(source["realized_height_m"]) <= float(target["realized_height_m"]):
