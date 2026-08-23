@@ -40,7 +40,7 @@ func _effect_contract() -> void:
 	var effect := Effect.create("p00", "0|0", 3, 15000, "b".repeat(64))
 	_check(not effect.is_empty(), "effect record created")
 	_check(bool(Effect.validate(effect).get("success", false)), "effect record validates")
-	_check(int(effect["water_uptake_ppm"]) == 0 and int(effect["litter_input_ppm"]) == 0, "inactive channels are zero in R1")
+	_check(int(effect["litter_input_ppm"]) == 0 and int(effect["soil_binding_ppm"]) == 0, "inactive channels are zero in R1")
 	_check(String(effect["effect_hash"]) == Effect.compute_effect_hash(effect), "effect hash reproducible")
 	var tampered: Dictionary = effect.duplicate(true)
 	tampered["litter_input_ppm"] = 5
