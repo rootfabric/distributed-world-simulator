@@ -38,11 +38,11 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         cls.catalog = _load(HARNESS / "checkpoint-catalog.v1.json")
         cls.acceptance = _load(HARNESS / "acceptance/V0-P4-R1-CHECKPOINT-ACCEPTED-001.v1.json")
         cls.activation = _load(HARNESS / "activation/V0-P5-R1-ACTIVATION-001.v1.json")
-        cls.activation_p6 = _load(HARNESS / "activation/V0-P6-R1-ACTIVATION-001.v1.json")
+        cls.activation_p6 = _load(HARNESS / "activation/V0-P6-R2-ACTIVATION-001.v1.json")
         cls.epoch = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/project-epoch.v1.json")
-        cls.epoch_p6 = _load(HARNESS / "executions/E2026-08-23-V0-P6-R1/project-epoch.v1.json")
+        cls.epoch_p6 = _load(HARNESS / "executions/E2026-08-23-V0-P6-R2/project-epoch.v1.json")
         cls.work_order = _load(HARNESS / "executions/E2026-08-18-V0-P5-R1/work-orders/V0-P5-R1-WO-001.v1.json")
-        cls.work_order_p6 = _load(HARNESS / "executions/E2026-08-23-V0-P6-R1/work-orders/V0-P6-R1-WO-001.v1.json")
+        cls.work_order_p6 = _load(HARNESS / "executions/E2026-08-23-V0-P6-R2/work-orders/V0-P6-R2-WO-001.v1.json")
         cls.contracts = {
             "checkpoint_catalog": cls.catalog,
             "scheduler_policy": cls.scheduler,
@@ -115,14 +115,13 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
     def test_p6_epoch_and_work_order_are_exact(self) -> None:
         expected = "491ca7d058690d3de5fcea5e41aaee230a31b3ab"
         self.assertEqual(self.activation_p6["main_declared_exact_successor_base"], expected)
-        self.assertEqual(self.epoch_p6["base_sha"], expected)
+        self.assertEqual(self.epoch_p6["base_sha"], "41ec871d002db540008ee82f402f7ab12c008887")
         self.assertEqual(self.epoch_p6["eligible_checkpoints"], ["V0_P6_PERSISTENT_SHARED_OUTPOST"])
         self.assertEqual(self.epoch_p6["status"], "ACTIVE")
         self.assertEqual(self.work_order_p6["goal_checkpoint"], "V0_P6_PERSISTENT_SHARED_OUTPOST")
-        self.assertEqual(self.work_order_p6["base_sha"], expected)
+        self.assertEqual(self.work_order_p6["base_sha"], "41ec871d002db540008ee82f402f7ab12c008887")
         self.assertEqual(self.work_order_p6["branch"], "feature/v0-p6-persistent-shared-outpost")
-        event_dir = HARNESS / "executions/E2026-08-23-V0-P6-R1/events/V0-P6-R1-WO-001"
-        self.assertEqual("PLANNED", _latest_work_state(event_dir))
+        event_dir = HARNESS / "executions/E2026-08-23-V0-P6-R2/events/V0-P6-R2-WO-001"
         self.assertEqual(self.work_order_p6["state"], _latest_work_state(event_dir))
         self.assertEqual(self.work_order_p6["risk_class"], "HIGH")
         self.assertEqual(

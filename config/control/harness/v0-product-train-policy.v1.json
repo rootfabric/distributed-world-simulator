@@ -107,9 +107,9 @@
         "DIRECTOR_DISPATCH"
       ],
       "next": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
-      "execution_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
-      "project_epoch": "E2026-08-23-V0-P6-R1",
-      "work_order_id": "V0-P6-R1-WO-001",
+      "execution_base": "41ec871d002db540008ee82f402f7ab12c008887",
+      "project_epoch": "E2026-08-23-V0-P6-R2",
+      "work_order_id": "V0-P6-R2-WO-001",
       "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
       "must_reuse": [
         "EDGE_GATEWAY_FOUNDATION_ACCEPTED_TRANSPORT_AND_SESSION_STACK",
@@ -219,15 +219,16 @@
   },
   "current_p6_activation_route": {
     "accepted_predecessor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
-    "project_epoch": "E2026-08-23-V0-P6-R1",
-    "work_order_id": "V0-P6-R1-WO-001",
+    "project_epoch": "E2026-08-23-V0-P6-R2",
+    "work_order_id": "V0-P6-R2-WO-001",
     "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
     "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
     "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
     "remaining_control_steps": [
       "DIRECTOR_DISPATCH",
       "BEGIN_BOUNDED_P6_IMPLEMENTATION"
-    ]
+    ],
+    "execution_base": "41ec871d002db540008ee82f402f7ab12c008887"
   },
   "historical_p5_activation_route": {
     "accepted_predecessor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",

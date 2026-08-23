@@ -518,7 +518,9 @@ func _test_telemetry_and_runtime_wiring() -> void:
 		"--role=dedicated-server", "--world=moon", "--network-profile=bad mobile",
 	]))
 	_assert(not bool(invalid.get("success", true)), "CLI rejects invalid network profile ID")
-	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+	var server_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
 	var client_source: String = _load_script_source_chain(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
 	)

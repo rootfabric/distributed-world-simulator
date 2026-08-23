@@ -1,0 +1,34 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "verified_head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_SOL",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-21T01:46:35Z",
+  "environment": "Godot 4.7.1 stable double custom build a13da4feb + clean imported verifier workspace + exact candidate runtime/test blobs",
+  "commands": [
+    "seed approach regression",
+    "direct M7 recovery",
+    "fresh bounded M7 5x",
+    "fresh bounded M5 graphical 5x",
+    "single continuous canonical 239 world/core orchestration",
+    "main_scene_cli_all"
+  ],
+  "results": {
+    "seed_regression": "6/6 PASS",
+    "m7_direct": "36/36 PASS",
+    "m7_bounded": "5/5 x 36/36 PASS",
+    "m5_bounded": "5/5 x 99/99 PASS",
+    "continuous_manifest": "202 curated + 37 overlays = 239",
+    "manifest_sha256": "3e1ce975f33d9811821db3e7018afe4fd1c4bc0d61418cb4a334151eb7679fef",
+    "continuous": "239/239 PASS; first_failure=null",
+    "ordinal_44_m5": "PASS RC=0",
+    "ordinal_50_m7_recovery": "PASS RC=0",
+    "p4_p5_overlays_232_236": "PASS RC=0",
+    "main_scene_cli_all": "PASS RC=0",
+    "full_world_core": "FULL_WORLD_CORE_REGRESSION_PASS",
+    "final_rc": 0,
+    "project_control": "#1044 run 32378258397 SUCCESS / YELLOW NON_RED"
+  },
+  "summary": "Fresh independent verification passed exact candidate 543455 with no repository mutation. Durable verifier PASS is PR #173 comment #5364299430. Runtime merge and P5 acceptance remain separate Director/Human gates."
+}

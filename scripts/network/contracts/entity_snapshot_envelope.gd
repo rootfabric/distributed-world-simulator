@@ -145,7 +145,40 @@ static func compute_checksum(value: Dictionary) -> String:
 		var spatial_validation: Dictionary = _validate_spatial_ref_strict(payload["spatial_ref"])
 		if bool(spatial_validation.get("success", false)):
 			payload["spatial_ref"] = _canonicalize_spatial_ref(payload["spatial_ref"])
+	# Item-graph snapshots may embed high-precision values loaded from JSON.
+	# Limit transport-stable numeric identity to that payload type so checksum
+	# semantics for every other entity snapshot remain unchanged.
+	if String(payload.get("entity_type", "")) == "item_graph":
+		payload = _canonicalize_checksum_numbers(payload)
 	return UtilsScript.payload_hash(payload)
+
+
+static func _canonicalize_checksum_numbers(value):
+	match typeof(value):
+		TYPE_FLOAT:
+			var number: float = float(value)
+			if is_nan(number) or is_inf(number):
+				return number
+			if number == floor(number):
+				return int(number) if absf(number) <= 9007199254740991.0 else number
+			# Godot double builds can shift the last few binary digits while parsing
+			# their own full-precision JSON. Bind checksums to 13 significant decimal
+			# digits so a valid wire round trip has one stable numeric identity.
+			var decimal_exponent: float = floor(log(absf(number)) / log(10.0))
+			var scale: float = pow(10.0, 12.0 - decimal_exponent)
+			return round(number * scale) / scale
+		TYPE_ARRAY:
+			var normalized_array: Array = []
+			for child in value:
+				normalized_array.append(_canonicalize_checksum_numbers(child))
+			return normalized_array
+		TYPE_DICTIONARY:
+			var normalized_dictionary: Dictionary = {}
+			for key in value.keys():
+				normalized_dictionary[key] = _canonicalize_checksum_numbers(value[key])
+			return normalized_dictionary
+		_:
+			return value
 
 
 static func snapshot_hash(value: Dictionary) -> String:

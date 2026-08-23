@@ -1,0 +1,11 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_human_authorization.v1",
+  "evidence_id": "P5-R2-HUMAN-RUNTIME-MERGE-AND-ACCEPTANCE-001",
+  "decision": "AUTHORIZE_P5_RUNTIME_MERGE_AND_FORMAL_ACCEPTANCE_AFTER_GREEN_GATES",
+  "source": "EXPLICIT_USER_DIRECTIVE_IN_ACTIVE_CONTROL_SESSION",
+  "durable_pr": 145,
+  "durable_comment_id": 5364531133,
+  "product_head_entering_authorization": "5dcdddc2a92afcb42f16fafd38bd93bbe267d755",
+  "p6_activation_authorized": false,
+  "recorded_at_utc": "2026-08-21T02:33:50Z"
+}

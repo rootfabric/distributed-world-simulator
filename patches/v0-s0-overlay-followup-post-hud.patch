@@ -1,0 +1,66 @@
+diff --git a/scripts/ui/planetary_overlay.gd b/scripts/ui/planetary_overlay.gd
+--- a/scripts/ui/planetary_overlay.gd
++++ b/scripts/ui/planetary_overlay.gd
+@@ -3,5 +3,6 @@ extends CanvasLayer
+ var panel: PanelContainer
+ var label: Label
+ var minimize_button: Button
+-var _minimized := false
+-var _overlay_visible := true
++var _content: VBoxContainer
++var _minimized: bool = true
++var _overlay_visible: bool = true
+@@ -22,10 +23,10 @@ func setup() -> void:
+ 	style.content_margin_bottom = 10.0
+ 	panel.add_theme_stylebox_override("panel", style)
+ 
+-	var content := VBoxContainer.new()
+-	content.add_theme_constant_override("separation", 6)
+-	panel.add_child(content)
++	_content = VBoxContainer.new()
++	_content.add_theme_constant_override("separation", 6)
++	panel.add_child(_content)
+ 
+ 	var header := HBoxContainer.new()
+ 	header.mouse_filter = Control.MOUSE_FILTER_PASS
+-	content.add_child(header)
++	_content.add_child(header)
+@@ -48,5 +49,6 @@ func setup() -> void:
+ 	label.name = "PlanetaryArchitectureLabel"
+ 	label.add_theme_font_size_override("font_size", 15)
+ 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	content.add_child(label)
+-	set_process_unhandled_input(true)
++	_content.add_child(label)
++	set_process_input(true)
++	_set_minimized(true)
+@@ -71,9 +73,15 @@ func _set_minimized(value: bool) -> void:
+ 		minimize_button.text = "□" if value else "—"
+ 
+ 
+-func _unhandled_input(event: InputEvent) -> void:
+-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
+-		_overlay_visible = not _overlay_visible
+-		if panel != null:
+-			panel.visible = _overlay_visible
+-		get_viewport().set_input_as_handled()
++func _input(event: InputEvent) -> void:
++	if not event is InputEventKey:
++		return
++	var key_event := event as InputEventKey
++	if not key_event.pressed or key_event.echo:
++		return
++	if key_event.keycode != KEY_F1 and key_event.physical_keycode != KEY_F1:
++		return
++	_overlay_visible = not _overlay_visible
++	if panel != null:
++		panel.visible = _overlay_visible
++	get_viewport().set_input_as_handled()
+@@ -196,6 +203,6 @@ func show_shared_space_mode(
+ 	)
+ 	var controls_description: String = (
+-		"WASD — движение через сервер | мышь — обзор | H — горизонт | F1 — debug HUD"
++		"WASD — движение | мышь — обзор | H — горизонт | F1 — debug HUD"
+ 		if explorer.has_method("is_network_replica_mode") and explorer.is_network_replica_mode()
+ 		else "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+ 	)
