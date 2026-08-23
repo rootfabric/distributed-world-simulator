@@ -4,7 +4,7 @@
   "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
   "work_order_id": "V0-P6-R2-WO-001",
   "risk_class": "HIGH",
-  "reviewed_head_sha": "9c3390decca3db9d90accb619e58797b022460a6",
+  "reviewed_head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
   "reviewer": "INDEPENDENT_REVIEWER_GATE",
   "verdict": "PASS",
   "reviewed_at_utc": "2026-08-23T08:30:00Z",

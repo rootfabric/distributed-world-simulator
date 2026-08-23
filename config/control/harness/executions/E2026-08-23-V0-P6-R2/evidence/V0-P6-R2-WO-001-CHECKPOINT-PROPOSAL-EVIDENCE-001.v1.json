@@ -4,7 +4,7 @@
   "program": "V0",
   "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
   "risk_class": "HIGH",
-  "evidence_head_sha": "9c3390decca3db9d90accb619e58797b022460a6",
+  "evidence_head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
   "intent": "Checkpoint proposal evidence for V0_P6_PERSISTENT_SHARED_OUTPOST: all 26 required predicates VERIFIED across 12 stage cycles (P6.1-P6.11 + P6.0 dispatch).",
   "root_cause_or_reason": "Checkpoint proposal after full P6 campaign implementation, review and verification.",
   "changed_surfaces": [
