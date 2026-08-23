@@ -17,7 +17,7 @@ boot_splash/bg_color=Color(0.005, 0.005, 0.012, 1)
 
 [autoload]
 
-BreakpointRuntimeBridge="*uid://cpjc0o64cgs1"
+BreakpointRuntimeBridge="*res://addons/breakpoint_mcp/runtime_bridge.gd"
 
 [debug]
 

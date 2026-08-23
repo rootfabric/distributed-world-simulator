@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_post_integration_project_control.v1",
+  "evidence_id": "P5-R2-POST-INTEGRATION-PC0-001",
+  "product_head": "5dcdddc2a92afcb42f16fafd38bd93bbe267d755",
+  "workflow_run": 32438985414,
+  "run_number": 1054,
+  "conclusion": "SUCCESS",
+  "exact_checkout": "5dcdddc2a92afcb42f16fafd38bd93bbe267d755",
+  "architecture_ownership_tests": "64/64 PASS",
+  "h0_2_machine": "8/8 PASS",
+  "v0_product": "19/19 PASS",
+  "generation80_safety": "17/17 PASS",
+  "standard_pc0": "NON_RED",
+  "standard_overall": "YELLOW",
+  "directional_pc0": "NON_RED",
+  "directional_overall": "YELLOW",
+  "cross_branch_overlaps": [],
+  "project_control_artifact": {
+    "id": 9431722035,
+    "name": "project-control-report",
+    "zip_sha256": "7b0e3ab4d8f9e4fb546b99ce9f2fe33a97e4e2380dddd9670ba0fcd3fc80d172"
+  },
+  "main_head_observed": "19c1268599b52cbc1099d6009eabd3099e20b64a",
+  "recorded_from_exact_workflow_logs": true
+}

@@ -7,6 +7,8 @@ const StateCodec = preload("res://scripts/runtime/listen_host/playable_state_cod
 const BEACON_ID := "item/shared/beacon/1"
 const TARGET_BEACON := Vector3(1.2, 0.4, -3.4)
 const COMMAND_TIMEOUT_MS := 30000
+const SEED_APPROACH_MAX_STEPS := 64
+const SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M := 2.5
 
 var host := "127.0.0.1"
 var port := 0
@@ -64,10 +66,24 @@ func _run() -> void:
 
 func _run_seed() -> void:
 	_assert(int(client.get_report().get("ownership_epoch", 0)) == 1, "initial M7 ownership epoch is one")
-	var moved := await _move_toward(TARGET_BEACON, 3)
-	_assert(bool(moved.get("success", false)), "server simulated movement before durable mutation")
+	var moved := await _move_toward(TARGET_BEACON, SEED_APPROACH_MAX_STEPS)
+	_assert(bool(moved.get("success", false)), "server simulated movement reached durable pickup precondition")
+	if not bool(moved.get("success", false)):
+		_complete("SEED_FAILED", {
+			"stage": "APPROACH_PICKUP_PRECONDITION",
+			"error_code": String(moved.get("error_code", "M7_SEED_PICKUP_PRECONDITION_NOT_REACHED")),
+			"approach": Dictionary(moved.get("details", {})).duplicate(true),
+		})
+		return
 	var pickup: Dictionary = client.execute_item_command_blocking("item.pickup", {"item_id": BEACON_ID})
 	_assert(bool(pickup.get("success", false)), "M7 beacon pickup committed before restart")
+	if not bool(pickup.get("success", false)):
+		_complete("SEED_FAILED", {
+			"stage": "PICKUP",
+			"error_code": String(pickup.get("error_code", "M7_SEED_PICKUP_REJECTED")),
+			"approach": Dictionary(moved.get("details", {})).duplicate(true),
+		})
+		return
 	var assign: Dictionary = client.execute_item_command_blocking("inventory.assign_hotbar", {
 		"item_id": BEACON_ID,
 		"slot_index": 9,
@@ -86,6 +102,7 @@ func _run_seed() -> void:
 		"item_graph_revision": int(snapshot.get("revision", -1)),
 		"hotbar_size": _hotbar(snapshot, "a").size(),
 		"slot_9_item_id": String(_hotbar(snapshot, "a")[9]) if _hotbar(snapshot, "a").size() > 9 else "",
+		"approach": Dictionary(moved.get("details", {})).duplicate(true),
 	})
 
 
@@ -136,14 +153,17 @@ func _run_recover() -> void:
 	})
 
 
-func _move_toward(target: Vector3, steps: int) -> Dictionary:
+func _move_toward(target: Vector3, max_steps: int) -> Dictionary:
 	var result: Dictionary = {"success": true, "error_code": ""}
-	for _index in range(steps):
+	var steps_used := 0
+	for _index in range(max_steps):
 		var position := _player_position(client.get_local_player_record())
-		var direction := (target - position).slide(Vector3.UP)
-		if direction.length_squared() <= 0.000001:
+		var horizontal_to_target := (target - position).slide(Vector3.UP)
+		if horizontal_to_target.length() <= SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M:
 			break
-		direction = direction.normalized()
+		if horizontal_to_target.length_squared() <= 0.000001:
+			break
+		var direction := horizontal_to_target.normalized()
 		var yaw := atan2(-direction.x, -direction.z)
 		result = client.submit_movement_intent_blocking({
 			"move_x": 0.0,
@@ -154,12 +174,28 @@ func _move_toward(target: Vector3, steps: int) -> Dictionary:
 			"sprint": false,
 			"delta_seconds": 0.25,
 		})
+		steps_used += 1
 		if not bool(result.get("success", false)):
 			return result
 		await _wait_frames(3)
+
 	var position := _player_position(client.get_local_player_record())
-	var direction := (target - position).slide(Vector3.UP)
-	var yaw := atan2(-direction.x, -direction.z) if direction.length_squared() > 0.000001 else 0.0
+	var horizontal_to_target := (target - position).slide(Vector3.UP)
+	var horizontal_distance := horizontal_to_target.length()
+	if horizontal_distance > SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M:
+		return {
+			"success": false,
+			"error_code": "M7_SEED_PICKUP_PRECONDITION_NOT_REACHED",
+			"details": {
+				"steps_used": steps_used,
+				"max_steps": max_steps,
+				"horizontal_distance_m": horizontal_distance,
+				"ready_distance_m": SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M,
+				"player_position": {"x": position.x, "y": position.y, "z": position.z},
+			},
+		}
+
+	var yaw := atan2(-horizontal_to_target.x, -horizontal_to_target.z) if horizontal_to_target.length_squared() > 0.000001 else 0.0
 	result = client.submit_movement_intent_blocking({
 		"move_x": 0.0,
 		"move_z": 0.0,
@@ -169,8 +205,32 @@ func _move_toward(target: Vector3, steps: int) -> Dictionary:
 		"sprint": false,
 		"delta_seconds": 0.05,
 	})
+	if not bool(result.get("success", false)):
+		return result
 	await _wait_frames(3)
-	return result
+	position = _player_position(client.get_local_player_record())
+	horizontal_to_target = (target - position).slide(Vector3.UP)
+	horizontal_distance = horizontal_to_target.length()
+	if horizontal_distance > SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M:
+		return {
+			"success": false,
+			"error_code": "M7_SEED_PICKUP_PRECONDITION_LOST",
+			"details": {
+				"steps_used": steps_used,
+				"horizontal_distance_m": horizontal_distance,
+				"ready_distance_m": SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M,
+			},
+		}
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"steps_used": steps_used,
+			"max_steps": max_steps,
+			"horizontal_distance_m": horizontal_distance,
+			"ready_distance_m": SEED_PICKUP_READY_HORIZONTAL_DISTANCE_M,
+		},
+	}
 
 
 func _wait_item_state(predicate: Callable, timeout_ms: int) -> bool:

@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0032",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 32,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-21T02:34:25Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "All non-proposal P5 predicates are complete; Reviewer/Verifier PASS and PC0 NON_RED are preserved; runtime merge is human-authorized; proceed only to checkpoint proposal.",
+  "predicate": "P5_R2_FINAL_CLOSURE_AUDIT_COMPLETED",
+  "command": "AUDIT_P5_FINAL_CLOSURE_AFTER_ALL_REQUIRED_NONPROPOSAL_PREDICATES",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-FINAL-CHECKPOINT-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-POST-INTEGRATION-RUNTIME-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-POST-INTEGRATION-PC0-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-HUMAN-AUTHORIZATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-001-FINAL-CLOSURE-REVIEW-TRANSCRIPTION-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/verification/V0-P5-R2-WO-002-VERIFIER-001.v1.json"
+  ],
+  "exit_code": 0
+}

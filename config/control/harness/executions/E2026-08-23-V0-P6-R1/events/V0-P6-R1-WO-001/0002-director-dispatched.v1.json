@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-23-V0-P6-R1-V0-P6-R1-WO-001-0002",
+  "project_epoch": "E2026-08-23-V0-P6-R1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-23T06:20:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "head_sha": "9ad78e704ff758763f8016c54bb2987536fca3c4",
+  "summary": "Director dispatched the single high-risk P6 implementation worker onto feature/v0-p6-persistent-shared-outpost. The runtime branch starts from the exact accepted P5 successor base 491ca7d058690d3de5fcea5e41aaee230a31b3ab and carries the accepted Edge Gateway Foundation era via merge 9ad78e704ff758763f8016c54bb2987536fca3c4 (control state at REFRESH_P6_PREACTIVATION main 41ec871d002db540008ee82f402f7ab12c008887). Lease holder identity matches holder_checkpoint and holder_branch; RUNTIME_FEATURE_MERGE policy for the P6 campaign is explicitly authorized by the owner.",
+  "command": "DIRECTOR_DISPATCH_AFTER_FOUNDATION_ACCEPTANCE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-23-V0-P6-R1/work-orders/V0-P6-R1-WO-001.v1.json",
+    "config/control/harness/acceptance/EDGE_GATEWAY_FOUNDATION_ACCEPTED-001.v1.json"
+  ]
+}
