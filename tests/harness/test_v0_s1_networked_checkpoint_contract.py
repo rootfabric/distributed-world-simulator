@@ -17,6 +17,8 @@ S1 = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
 P4_BRANCH = "feature/v0-p4-construction-real-resources"
 P5_BRANCH = "feature/v0-p5-equipment-tools"
+P6 = "V0_P6_PERSISTENT_SHARED_OUTPOST"
+P6_BRANCH = "feature/v0-p6-persistent-shared-outpost"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 
 
@@ -136,7 +138,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             core_p_sequence,
         )
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
-        self.assertEqual([P5], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
+        self.assertEqual([P6], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
 
     def test_registry_generation_80_preserves_historical_p4_dispatch_lineage(self):
@@ -184,7 +186,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             self.assertIn(prebuild_head, text)
             self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
 
-    def test_pre_h0_3_concurrency_is_one_main_owned_p5_mutation_lease(self):
+    def test_pre_h0_3_concurrency_is_one_main_owned_p6_mutation_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
@@ -194,8 +196,8 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
         self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
         self.assertEqual(1, lease["capacity"])
-        self.assertEqual(P5, lease["holder_checkpoint"])
-        self.assertEqual(P5_BRANCH, lease["holder_branch"])
+        self.assertEqual(P6, lease["holder_checkpoint"])
+        self.assertEqual(P6_BRANCH, lease["holder_branch"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):
@@ -216,7 +218,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P5}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P6}"):
             build_plan(self.contracts, work_order, dispatched)
 
         implemented = dict(dispatched, state="IMPLEMENTED")

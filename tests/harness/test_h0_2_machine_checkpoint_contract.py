@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from harness.checkpoint_planner import build_plan
 
 CHECKPOINT = "H0_2_NX_C1_HIGH_RISK_PILOT"
-CURRENT_V0_LEASE_HOLDER = "V0_P5_EQUIPMENT_TOOLS"
+CURRENT_V0_LEASE_HOLDER = "V0_P6_PERSISTENT_SHARED_OUTPOST"
 
 
 def load_json(path: str) -> dict:
