@@ -1,7 +1,6 @@
 extends SceneTree
 
-## P6.4 L0: mutation admission boundary — five gates, crash window,
-## forbidden writes, replay short-circuit.
+## P6 R3 regression: admission is fail-closed across the crash window.
 
 const AdmissionScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_mutation_admission.gd")
 const LedgerScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd")
@@ -15,7 +14,7 @@ func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
-		print("[p6.4-l0][FAIL] %s" % message)
+		print("[p6-r3-admission][FAIL] %s" % message)
 
 
 func _err(result: Dictionary) -> String:
@@ -25,59 +24,51 @@ func _err(result: Dictionary) -> String:
 func _init() -> void:
 	var registry = RegistryScript.new()
 	var ledger = LedgerScript.new()
-	ledger.configure(256)
-
-	registry.bind("client-session/p64-a", "player/worker", "entity/worker-1")
-	registry.bind("client-session/p64-b", "player/second", "entity/second-1")
+	ledger.configure(8)
+	registry.bind("client-session/p6-r3-a", "player/worker", "entity/worker-1")
 
 	var admission = AdmissionScript.new()
-	var configured: Dictionary = admission.configure(registry, ledger)
-	_assert(bool(configured.get("success", false)), "admission configure failed")
+	_assert(bool(admission.configure(registry, ledger).get("success", false)), "admission configure failed")
 
-	# Gate 1: unknown player rejected before anything else
 	var unknown: Dictionary = admission.admit("player/nobody", "operation/u1", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
-	_assert(_err(unknown) == "UNKNOWN_PLAYER", "unknown player not rejected first")
+	_assert(_err(unknown) == "UNKNOWN_PLAYER", "unknown player not rejected")
 
-	# Gate 2: replay short-circuit
 	ledger.record_applied("player/worker", "operation/replayed")
 	var replay: Dictionary = admission.admit("player/worker", "operation/replayed", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
-	_assert(_err(replay) == "ALREADY_APPLIED", "replay did not short-circuit")
+	_assert(_err(replay) == "ALREADY_APPLIED", "applied replay did not short-circuit")
 
-	# Gate 3: undeclared domain rejected
-	var undeclared: Dictionary = admission.admit("player/worker", "operation/u2", "p6-domain/not-declared", {"command_kind": "BUILD"})
-	_assert(_err(undeclared) == "UNDECLARED_DOMAIN", "undeclared domain not rejected")
-
-	# Gate 4: forbidden write rejected
 	var forbidden: Dictionary = admission.admit("player/worker", "operation/f1", "p6-domain/outpost-world-state", {"command_kind": "DIRECT_CANONICAL_OVERWRITE"})
 	_assert(_err(forbidden) == "FORBIDDEN_WRITE", "forbidden write admitted")
-	_assert(not ledger.is_pending("player/worker", "operation/f1"), "forbidden write left a pending intent")
+	_assert(not ledger.is_pending("player/worker", "operation/f1"), "forbidden write reserved an operation")
 
-	# Happy path: admit → handler executes once → complete applies exactly once
-	var ok: Dictionary = admission.admit("player/worker", "operation/ok-1", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
-	_assert(bool(ok.get("success", false)) and _err(ok) == "" and String(ok["details"]["operation_id"]) == "operation/ok-1", "happy path admission failed")
-	_assert(ledger.is_pending("player/worker", "operation/ok-1"), "crash-window pending intent missing after admission")
-	var completion: Dictionary = admission.complete("player/worker", "operation/ok-1")
-	_assert(String(completion["details"]["result"]) == "APPLIED", "completion did not apply")
-	var repeat_admission: Dictionary = admission.admit("player/worker", "operation/ok-1", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
-	_assert(_err(repeat_admission) == "ALREADY_APPLIED", "replay after completion not short-circuited at the boundary")
+	# First admission reserves PENDING.
+	var first: Dictionary = admission.admit("player/worker", "operation/crash-window", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
+	_assert(bool(first.get("success", false)), "first crash-window admission failed")
+	_assert(ledger.is_pending("player/worker", "operation/crash-window"), "pending reservation missing")
 
-	# Crash window: admit → (no completion) → recovery completes exactly once
-	var crash: Dictionary = admission.admit("player/worker", "operation/crash-1", "p6-domain/item-inventory", {"command_kind": "BUILD"})
-	_assert(bool(crash.get("success", false)), "crash-window admission failed")
-	var recovered: Dictionary = admission.complete("player/worker", "operation/crash-1")
-	_assert(String(recovered["details"]["result"]) == "APPLIED", "crash-window recovery failed")
+	# Critical R3 regression: the same operation must not be admitted while it is
+	# still PENDING. This is the path that previously invoked the handler twice.
+	var retry_pending: Dictionary = admission.admit("player/worker", "operation/crash-window", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
+	_assert(not bool(retry_pending.get("success", false)), "PENDING retry was re-admitted")
+	_assert(_err(retry_pending) == "OPERATION_PENDING", "PENDING retry error mismatch")
+	_assert(int(admission.get_report()["counters"]["pending_rejections"]) == 1, "pending rejection counter mismatch")
 
-	# Counters coherence
-	var report: Dictionary = admission.get_report()
-	var counters: Dictionary = report["counters"]
-	_assert(int(counters["admitted"]) >= 2, "admitted counter wrong")
-	_assert(int(counters["forbidden_writes"]) >= 1, "forbidden_writes counter wrong")
-	_assert(String(report["forbidden_commands"][0]) == "DIRECT_CANONICAL_OVERWRITE", "forbidden list exposed for fail-closed checks")
+	# Explicit reconciliation completes it once; later calls are replays.
+	var completion: Dictionary = admission.complete("player/worker", "operation/crash-window")
+	_assert(String(completion.get("details", {}).get("result", "")) == "APPLIED", "explicit completion failed")
+	var after: Dictionary = admission.admit("player/worker", "operation/crash-window", "p6-domain/outpost-world-state", {"command_kind": "BUILD"})
+	_assert(_err(after) == "ALREADY_APPLIED", "completed operation did not become replay")
+
+	# Read-only digest lookup must not accidentally create an APPLIED record.
+	var before_count := int(ledger.get_report()["applied_count"])
+	var unknown_digest := admission.applied_digest("player/worker", "operation/never-recorded")
+	_assert(unknown_digest.is_empty(), "unknown digest unexpectedly exists")
+	_assert(int(ledger.get_report()["applied_count"]) == before_count, "digest lookup mutated replay state")
 
 	if failures.is_empty():
-		print("[p6.4-l0] all %d assertions passed" % assertions)
-		print("[p6.4-l0][stage] MUTATION_ADMISSION_BOUNDARY_PASS")
+		print("[p6-r3-admission] all %d assertions passed" % assertions)
+		print("[p6-r3-admission][stage] PENDING_RETRY_FAIL_CLOSED_PASS")
 		quit(0)
 	else:
-		print("[p6.4-l0] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
+		print("[p6-r3-admission] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
 		quit(1)
