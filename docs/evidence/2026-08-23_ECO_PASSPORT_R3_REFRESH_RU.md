@@ -27,4 +27,4 @@ Project Control на голове EVO7-линии (`504b9e28…`) стал **RED
 
 ## Статус EVO7
 
-FFF0..FFF5 — реализованы, review PASS + verification VERIFIED, все принятые хэши воспроизводятся; FFF6 Succession Lab — в реализации по дизайн-доку.
+FFF0..FFF6 — реализованы, review PASS + verification VERIFIED, все принятые хэши воспроизводятся; линия EVO7 FFF завершена как research layer (candidate).
