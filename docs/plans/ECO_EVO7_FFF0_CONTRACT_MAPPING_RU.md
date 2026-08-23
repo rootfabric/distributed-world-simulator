@@ -83,12 +83,12 @@ EVO7 расширяет только **набор входов** (understory lig
 | litter / organic matter | FFF5 | flux-записи + медленный legacy proxy |
 | transpiration flux | FFF4 | derived от functional phenotype, bounded uptake |
 
-Важно: вода и тень сегодня **только потребляются** растениями (pairwise contested-light, caller-supplied `canopy_overlap`/`local_density`) — ни одно растение не публикует эффект в среду. Это ровно поверхность, которую достраивает `plant_environment_effect.v1` ТЗ §7.
+Важно: вода и тень сегодня **только потребляются** растениями (pairwise contested-light; контекст `canopy_overlap`/`local_density` задаёт вызывающий код через `VerticalLight.create_context`) — ни одно растение не публикует эффект в среду. Это ровно поверхность, которую достраивает `plant_environment_effect.v1` ТЗ §7.
 
 ## 7. Feedback surfaces, которые нельзя дублировать или ломать
 
-- CAL1-B `plant_relative_vertical_light_competition_v1` — zero-sum light pool по относительной высоте (высокое затеняет низкое асимметрично — совместимо с §8.2 ТЗ).
-- CAL1-C `plant_spatial_crown_root_competition_v1` — crown/root overlap давление; параметры `canopy_overlap`, `local_density` подаются вызывающим кодом → **естественная точка инъекции** будущих агрегированных cell-полей вместо all-pairs скана.
+- CAL1-B `plant_relative_vertical_light_competition_v1` — zero-sum light pool по относительной высоте (высокое затеняет низкое асимметрично — совместимо с §8.2 ТЗ); контекст `create_context(canopy_overlap, local_density, label)` подаётся вызывающим кодом → **естественная точка инъекции** будущих агрегированных cell-полей вместо all-pairs скана.
+- CAL1-C `plant_spatial_crown_root_competition_v1` — crown/root overlap давление между пространственными соседями (поверхность пространственной конкуренции; собственный контекст конкуренции).
 - P3.6 `plant_disturbance_succession_v1` — уже есть succession-поверхность; EVO7 даёт ей причинную морфологическую основу.
 - `plant_resource_model_v1` — net balance с costs/penalties; fitness decomposition ТЗ §11 расширяет её, а не заменяет.
 

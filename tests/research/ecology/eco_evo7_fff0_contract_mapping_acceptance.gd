@@ -65,14 +65,10 @@ func _m3_ph0_traits_intact() -> void:
 	_check(Traits.TRAIT_NAMES.size() == expected.size(), "PH0 trait count is eight")
 	for i in expected.size():
 		_check(String(Traits.TRAIT_NAMES[i]) == expected[i], "PH0 trait %d is %s" % [i, expected[i]])
-		check_bounds_keys(expected)
-	for trait_name in expected:
-		var bounds: Array = Traits.BOUNDS[trait_name]
-		_check(bounds.size() == 2, "%s bounds pair present" % trait_name)
-
-func check_bounds_keys(expected: Array) -> void:
 	for trait_name in expected:
 		_check(Traits.BOUNDS.has(trait_name), "bounds registered for %s" % trait_name)
+		var bounds: Array = Traits.BOUNDS[trait_name]
+		_check(bounds.size() == 2, "%s bounds pair present" % trait_name)
 
 ## M4: environment-coupled realization surface exists (plasticity without genome write).
 func _m4_plasticity_surface_exists() -> void:
