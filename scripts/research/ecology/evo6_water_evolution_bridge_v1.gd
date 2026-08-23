@@ -179,6 +179,10 @@ static func _run_scenario(
 			"summary": _summary(population, scenario),
 		})
 
+	var final_genomes: Array[Dictionary] = []
+	for entry in population:
+		final_genomes.append((entry["genome"] as Dictionary).duplicate(true))
+
 	return {
 		"scenario_id": String(scenario["id"]),
 		"surface_water": WaterFitness.water_availability(scenario),
@@ -186,6 +190,7 @@ static func _run_scenario(
 		"final": history.back()["summary"],
 		"mutation_events": mutation_events,
 		"history": history,
+		"final_genomes": final_genomes,
 		"final_population_hash": _population_hash(population),
 	}
 

@@ -68,4 +68,22 @@ foreach ($Test in $Tests) {
     }
 }
 
-Write-Host "ECO.EVO6-WATER strong water rules + evolutionary divergence: PASS"
+$PreviousVisualAutocap = $env:EVO6_WATER_LAB_AUTOCAP
+try {
+    Write-Host "=== ECO.EVO6-WATER visual observatory adapter ==="
+    $env:EVO6_WATER_LAB_AUTOCAP = "1"
+    & $GodotPath --headless --path $RootDir res://scenes/labs/ecology/eco_evo6_water_evolution_lab.tscn
+    if ($LASTEXITCODE -ne 0) {
+        throw "water visual observatory adapter failed with exit code $LASTEXITCODE"
+    }
+}
+finally {
+    if ($null -eq $PreviousVisualAutocap) {
+        Remove-Item Env:\EVO6_WATER_LAB_AUTOCAP -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:EVO6_WATER_LAB_AUTOCAP = $PreviousVisualAutocap
+    }
+}
+
+Write-Host "ECO.EVO6-WATER strong water rules + evolutionary divergence + visual adapter: PASS"

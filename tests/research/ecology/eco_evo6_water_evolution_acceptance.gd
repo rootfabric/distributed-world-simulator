@@ -37,10 +37,17 @@ func _init() -> void:
 	_check(float(dry_final["mean_water_preference"]) <= 0.45, "drought drives water preference toward the dry extreme")
 	_check(float(dry_final["mean_root_depth_m"]) >= 1.50, "drought produces deep-rooted descendants")
 
+	var all_final_genomes_materialized := true
+	var all_final_genomes_match_population := true
 	for scenario_id in ["flooded", "riparian", "mesic", "dry"]:
 		var scenario: Dictionary = scenarios[scenario_id]
 		_check(float(scenario["final"]["mean_fitness"]) >= float(scenario["initial"]["mean_fitness"]), "%s population does not lose fitness" % scenario_id)
 		_check(int(scenario["mutation_events"]) > 0, "%s observes mutations from existing P1B kernel" % scenario_id)
+		var final_genomes: Array = scenario.get("final_genomes", [])
+		all_final_genomes_materialized = all_final_genomes_materialized and not final_genomes.is_empty()
+		all_final_genomes_match_population = all_final_genomes_match_population and final_genomes.size() == int(first["population_size"])
+	_check(all_final_genomes_materialized, "selected final genomes are materialized for visual/read-only adapters")
+	_check(all_final_genomes_match_population, "materialized final genome count matches selected population size")
 
 	var source := FileAccess.get_file_as_string("res://scripts/research/ecology/evo6_water_evolution_bridge_v1.gd")
 	_check(source.find("MutationKernel.reproduce") >= 0, "water evolution delegates mutation to existing P1B kernel")
