@@ -30,10 +30,10 @@
 .\RUN_ECO_EVO7_FFF0_TESTS.ps1
 ```
 
-Результат:
+Результат (после repair R1; до repair — 168 assertions c 56 дублями в M3, см. секцию Review):
 
 ```text
-ECO.EVO7 FFF0 Contract Mapping: PASS (168 assertions)
+ECO.EVO7 FFF0 Contract Mapping: PASS (112 assertions)
 ECO.P1A-S1 Environment Baseline: PASS (109 assertions)  # hash b862c4fc… совпал с принятым baseline
 ECO.P1A-S2 Single-Plant Resource Model: PASS (235 assertions)
 ECO.P1C-S4 Aggregate Contract: PASS (15 assertions)     # failure matrix: все PASS
@@ -58,6 +58,25 @@ result_hash=7010e30707613e2837c45c26e7b516547fc5e35ad88997f93bc62660efecaa6e
 dry: mean water_preference 0.58 -> 0.343, mean root_depth_m 0.85 -> 2.164
   (воспроизведены значения принятого EVO6-WATER R1)
 ```
+
+## Review & Verification
+
+### Independent review — PASS
+
+Свежая изолированная роль reviewer'а на exact head `6b56c82ab8a2d672e3c48b8bf5a8becb5f8a841f`.
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF0_FINAL_REVIEW_RU.md`.
+- Re-run evidence воспроизведён ревьюером лично; ключевые заявления аудита подтверждены по коду (`MUTABLE_TRAITS` ровно 5 экологических полей, делегация моста, все REUSE/gap-факты).
+- BLOCKER/MAJOR: нет. MINOR-1: в M3 `check_bounds_keys` вызывался внутри цикла → 56 дублей-assertions (168 вместо честных 112). MINOR-2: в mapping doc §7 параметры `canopy_overlap`/`local_density` были приписаны CAL1-C, тогда как в коде это параметры `VerticalLight.create_context` (CAL1-B).
+- **Repair R1 (этот коммит):** дубли M3 удалены (тест теперь 112 assertions), атрибуция CAL1-B/CAL1-C исправлена в `docs/plans/ECO_EVO7_FFF0_CONTRACT_MAPPING_RU.md` §7. Гейты M1–M10 и все зафиксированные хэши не менялись; после repair FFF0 gate повторно прогнан локально: `PASS (112 assertions)`.
+
+### Clean-checkout verification — VERIFIED
+
+Независимая роль верификатора воспроизвела весь evidence на чистом detached worktree той же exact head (без `.godot`, fresh-worktree import правило отработано).
+
+- Отчёт: `docs/evidence/2026-08-23_ECO_EVO7_FFF0_VERIFICATION_RU.md`.
+- Все хэши совпали: environment `b862c4fc…`, simulation `618ec5c1…`, aggregate `0ca70eab…`, traits `9d812950…`, EVO6-WATER `result_hash 7010e307…` (идентичен в evolution и visual observatory); dry root_depth_m 0.85 → 2.16355.
+- Неблокирующее замечание верификатора: parse-ошибки импорта трёх legacy-сцен `eco_evo5_*_lab.tscn` существуют на этой голове независимо от FFF0 и на гейты не влияют.
 
 ## Exit FFF0 по ТЗ §19
 
