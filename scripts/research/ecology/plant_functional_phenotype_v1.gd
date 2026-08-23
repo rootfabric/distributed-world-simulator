@@ -40,13 +40,13 @@ const VERSION := "1.0.0"
 
 const DERIVED_REPRESENTATION := true
 const CROWN_BASE_FOLIAGE := 0.35  # leaf-bearing trunk floor of the foliage-bearing fraction
-const LEAF_AREA_REF_M2 := 20.0
+const LEAF_AREA_REF_M2 := 2.0  # FFF2 calibration: skeleton crowns are ~0.5-1.5 m2, ref keeps LAI ~O(0.1-1)
 const LEAF_AREA_CAP := 6.0
 const LEAF_SIZE_REF_M := 1.0
 const ROOT_REACH_EFFICIENCY := 0.22  # reuse of plant_resource_model_v1 root-reach constant
-const STRUCTURAL_COST_SCALE := 0.095 / 8.0  # reuse of resource-model structural cost, rescaled
+const STRUCTURAL_COST_SCALE := 0.095 / 40.0  # resource-model structural cost, rescaled by FFF2 calibration (ancestor net balance must be positive; see FFF2 checkpoint)
 const SHOOT_MAINTENANCE_PER_LAI := 0.08
-const ROOT_MAINTENANCE_PER_METER := 0.06
+const ROOT_MAINTENANCE_PER_METER := 0.025  # FFF2 calibration: root upkeep comparable to marginal gain
 
 const _NUMERIC_FIELDS: Array[String] = [
 	"realized_height_m", "realized_crown_radius_m", "realized_crown_density",

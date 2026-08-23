@@ -33,7 +33,7 @@
 realized_height_m       = graph.metrics.height_m * age^0.8
 realized_crown_radius_m = graph.metrics.horizontal_radius_m * age^0.5
 realized_crown_density  = foliage_density * (0.35 + 0.65 * lateral_fraction)
-leaf_area_index_proxy   = crown_density * PI * r^2 / 20  (cap 6)
+leaf_area_index_proxy   = crown_density * PI * r^2 / 2.0  (cap 6)  # recalibrated by FFF2, was /20
 leaf_size_proxy         = realized internode / 1.0        (declared)
 leaf_conservative       = 1 - leaf_economics_proxy
 realized_root_depth_m   = genome.root_depth_m * (2*rsr) * age^0.5
@@ -42,6 +42,16 @@ allocation factors      = 2*rsr (root), 2*(1-rsr) (shoot); 1.0 при rsr=0.5;
                           масштабируют ТОЛЬКО функциональные компоненты, не геометрию
 structural_investment   = potential echo; в R1 влияет только на cost
 ```
+
+## Recalibration (FFF2, 2026-08-23)
+
+Калибровочный эксперимент FFF2 показал, что исходные масштабы компонент делают net-баланс предка отрицательным во всех средах (отбор вырождается в минимизацию издержек). Изменены три константы `plant_functional_phenotype_v1.gd`:
+
+- `LEAF_AREA_REF_M2`: 20 → **2.0** (радиус скелетной кроны ~0.5–1.5 м ⇒ LAI должен быть порядка 0.1–1);
+- `ROOT_MAINTENANCE_PER_METER`: 0.06 → **0.025** (корневой upkeep сравним с маржинальным gain, а не доминирует над ним);
+- `STRUCTURAL_COST_SCALE`: 0.095/8 → **0.095/40** (структурная цена высоты не должна подавлять её слабый R1-benefit).
+
+Направления всех couplings G1–G3 не изменились; FFF1 acceptance после перекалибровки: **PASS (110 assertions)**. Подробности и история калибровки — в checkpoint FFF2.
 
 ## Gates
 
