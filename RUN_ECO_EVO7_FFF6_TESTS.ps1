@@ -31,6 +31,9 @@ try {
         & $GodotPath --headless --path $RootDir --script $Test.Script
         if ($LASTEXITCODE -ne 0) { throw "$($Test.Name) failed with exit code $LASTEXITCODE" }
     }
+    Write-Host "=== ECO EVO6-WATER cross-stage determinism regression ==="
+    & (Join-Path $RootDir "RUN_ECO_EVO6_WATER_SELECTION.ps1") -SkipBaseline -GodotPath $GodotPath
+    if ($LASTEXITCODE -ne 0) { throw "EVO6-WATER regression failed with exit code $LASTEXITCODE" }
 }
 finally {
     if ($null -eq $PreviousBreakpointDisabled) { Remove-Item Env:\BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
