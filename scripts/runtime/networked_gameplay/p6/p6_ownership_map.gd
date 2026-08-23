@@ -1,30 +1,26 @@
 extends RefCounted
-## P6.1 canonical ownership map (DECLARATION ONLY — persistence itself belongs to P6.7).
-##
-## Single machine-readable registry of every canonical state domain the P6
-## persistent shared outpost will own. Every later P6 stage must resolve
-## ownership questions against this map instead of inventing local truth.
-##
-## Design rules encoded here:
-## - exactly ONE persistence owner identity for every replay domain;
-## - ALL client-facing traffic moves through the edge gateway (GATEWAY_ONLY);
-## - ONLY the server writes persistent/shared truth (SERVER_ONLY);
-## - no state outside this map may ever be persisted (fail-closed helpers).
 
-const SCHEMA_ID := "distributed_world_simulator.p6_ownership_map.v1"
+## P6 canonical ownership map — R3 repaired semantics.
+##
+## P6 is a composition boundary, not a canonical state owner. `canonical_owner`
+## names the already accepted gameplay/replay owner of each domain while
+## `persistence_owner` names the ONE existing authoritative recovery pipeline
+## that durably checkpoints authority_state + replay_state.
+##
+## No `p6-owner/*` identity exists after R3. P6 may route, project and validate;
+## it may not become an Item Graph, Construction, equipment, persistence or
+## durable replay owner.
 
+const SCHEMA_ID := "distributed_world_simulator.p6_ownership_map.v2"
 const TRANSPORT_GATEWAY_ONLY := "GATEWAY_ONLY"
 const WRITE_AUTHORITY_SERVER_ONLY := "SERVER_ONLY"
-
-## The single canonical persistence/recovery owner for all P6 replay state
-## (Directory-backed one-writer server authority; see V0_P6 roadmap P6.1).
-const SINGLE_PERSISTENCE_OWNER_ID := "p6-owner/directory-one-writer"
-
+const EXISTING_PERSISTENCE_OWNER_ID := "persistence/authoritative-recovery"
 const DOMAIN_ID_PREFIX := "p6-domain/"
 
 const REQUIRED_ENTRY_FIELDS: Array = [
 	"domain_id",
-	"owner",
+	"canonical_owner",
+	"persistence_owner",
 	"persistence_replay",
 	"reconnect_restore",
 	"transport_path",
@@ -32,107 +28,106 @@ const REQUIRED_ENTRY_FIELDS: Array = [
 	"notes",
 ]
 
-## Declared ownership map. Frozen at compile time; entries must never be
-## mutated at runtime. Order of fields inside each entry follows
-## REQUIRED_ENTRY_FIELDS; snapshots re-sort keys deterministically.
 const DOMAINS: Array = [
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "outpost-world-state",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "v0/p4-p5-product-composition",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Outpost shared world state; canonical truth stays with the accepted network/gameplay owner, persisted only by the single directory one-writer.",
+		"notes": "Composition/read-model identity only. Canonical Item/Construction/player truth remains in the owners below; no mutable P6OutpostState is authoritative.",
 	},
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "item-inventory",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "item/m4-canonical-item-graph",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Inventory/containers remain canonical M4 Item Graph truth; P6 adds no second item store.",
+		"notes": "Inventory and containers remain the canonical M4 Item Graph.",
 	},
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "equipment-tool-slots",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "item/m4-canonical-item-graph",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Equipment/tools stay accepted P5 composition relations over the M4 Item Graph; no private equipment truth.",
+		"notes": "P5 equipment/tool slots are canonical relations on the M4 Item Graph; P6 owns no equipment store.",
 	},
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "construction-builds",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "construction/p4-authority",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Construction/outpost builds remain canonical P4 Construction owner truth; P6 adds no second construction store.",
+		"notes": "Construct/part/bond truth remains the accepted P4 Construction authority bound to the same M4 Item Graph.",
 	},
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "player-identity-bindings",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "networked-gameplay/player-ownership",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Player identity bindings follow the existing canonical player owner; topology-neutral identity resolution lands in P6.2.",
+		"notes": "Canonical player/entity/ownership recovery stays in NetworkedGameplayService ownership state; P6 session registry is transport-local only.",
 	},
 	{
 		"domain_id": DOMAIN_ID_PREFIX + "interaction-operation-ledger",
-		"owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"canonical_owner": "replay/m6-durable-replay",
+		"persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"persistence_replay": true,
 		"reconnect_restore": true,
 		"transport_path": TRANSPORT_GATEWAY_ONLY,
 		"write_authority": WRITE_AUTHORITY_SERVER_ONLY,
-		"notes": "Interaction dedup/operation ledger remains the existing operation ledger; P6 adds no second replay oracle.",
+		"notes": "Durable OperationId replay truth is NetworkedGameplayService + M6 durable replay outbox inside authoritative checkpoints. P6 guard is transient/fail-closed only.",
 	},
 ]
 
-const FORBIDDEN_PRIVATE_TRUTH_NAMES: Array = [
-	"OutpostTruthStore",
-	"OutpostInventory",
-	"OutpostPersistence",
+const FORBIDDEN_PRIVATE_OWNER_PREFIXES: Array[String] = [
+	"p6-owner/",
+	"p6/persistence",
+	"p6/item",
+	"p6/construction",
+	"p6/replay",
 ]
 
 
-## --- Deterministic introspection -------------------------------------------
-
-## Deep, key-sorted snapshot of the whole map. Two constructions MUST produce
-## identical canonical JSON (determinism contract enforced by the L0 test).
 static func snapshot() -> Dictionary:
 	var domains: Array = []
 	for entry_value in DOMAINS:
-		var entry: Dictionary = entry_value
-		domains.append(_canonical_copy(entry))
+		domains.append(_canonical_copy(Dictionary(entry_value)))
 	domains.sort_custom(_compare_snapshots_by_domain_id)
 	return {
 		"schema": SCHEMA_ID,
-		"single_persistence_owner": SINGLE_PERSISTENCE_OWNER_ID,
+		"existing_persistence_owner": EXISTING_PERSISTENCE_OWNER_ID,
 		"transport_policy": TRANSPORT_GATEWAY_ONLY,
 		"write_authority_policy": WRITE_AUTHORITY_SERVER_ONLY,
 		"domains": domains,
 	}
 
 
-## Canonical JSON of snapshot(): object keys sorted recursively, stable order.
 static func snapshot_canonical_json() -> String:
-	return JSON.stringify(_canonical_copy(snapshot()))
+	return JSON.stringify(_canonical_copy(snapshot()), "", false)
 
 
 static func declared_domain_ids() -> Array:
 	var ids: Array = []
 	for entry_value in DOMAINS:
-		ids.append(String(entry_value.get("domain_id", "")))
+		ids.append(String(Dictionary(entry_value).get("domain_id", "")))
 	return ids
 
 
 static func find_domain(domain_id: String) -> Dictionary:
 	for entry_value in DOMAINS:
-		var entry: Dictionary = entry_value
+		var entry := Dictionary(entry_value)
 		if String(entry.get("domain_id", "")) == domain_id:
 			return entry.duplicate(true)
 	return {}
@@ -142,50 +137,40 @@ static func is_domain_declared(domain_id: String) -> bool:
 	return not find_domain(domain_id).is_empty()
 
 
-## --- Ownership invariants ---------------------------------------------------
-
-## True iff every replay domain declares the SAME single persistence owner.
 static func single_persistence_owner() -> bool:
-	var owners: Array = []
+	var owner := ""
 	for entry_value in DOMAINS:
-		var entry: Dictionary = entry_value
-		if bool(entry.get("persistence_replay", false)):
-			owners.append(String(entry.get("owner", "")))
-	if owners.is_empty():
-		return false
-	for owner in owners:
-		if String(owner) != SINGLE_PERSISTENCE_OWNER_ID:
+		var entry := Dictionary(entry_value)
+		if not bool(entry.get("persistence_replay", false)):
+			continue
+		var candidate := String(entry.get("persistence_owner", ""))
+		if owner.is_empty():
+			owner = candidate
+		elif candidate != owner:
 			return false
-	return true
+	return owner == EXISTING_PERSISTENCE_OWNER_ID
 
 
-## True iff every client-facing domain routes exclusively through the gateway.
-## All declared domains are client-facing shared outpost state.
-static func gateway_only_transport() -> bool:
+static func canonical_owners_are_external_to_p6() -> bool:
 	for entry_value in DOMAINS:
-		var entry: Dictionary = entry_value
-		if String(entry.get("transport_path", "")) != TRANSPORT_GATEWAY_ONLY:
-			return false
-	return true
-
-
-## True iff this map is internally consistent and no forbidden private-truth
-## store name is declared as a domain or owner. Later stages additionally call
-## assert_domains_declared() from persistence call sites (P6.7+ enforcement).
-static func no_private_truth() -> bool:
-	if validate_map(DOMAINS).get("success", false) != true:
-		return false
-	for entry_value in DOMAINS:
-		var entry: Dictionary = entry_value
-		var label := "%s %s" % [String(entry.get("domain_id", "")), String(entry.get("owner", ""))]
-		for forbidden in FORBIDDEN_PRIVATE_TRUTH_NAMES:
-			if label.contains(String(forbidden)):
+		var owner := String(Dictionary(entry_value).get("canonical_owner", ""))
+		for prefix in FORBIDDEN_PRIVATE_OWNER_PREFIXES:
+			if owner.begins_with(prefix):
 				return false
 	return true
 
 
-## Fail-closed gate for later stages: EVERY persisted domain id must already be
-## declared here. Unknown ids are reported as PRIVATE_TRUTH_UNDECLARED.
+static func gateway_only_transport() -> bool:
+	for entry_value in DOMAINS:
+		if String(Dictionary(entry_value).get("transport_path", "")) != TRANSPORT_GATEWAY_ONLY:
+			return false
+	return true
+
+
+static func no_private_truth() -> bool:
+	return bool(validate_map(DOMAINS).get("success", false)) and canonical_owners_are_external_to_p6()
+
+
 static func assert_domains_declared(candidate_domain_ids: Array) -> Dictionary:
 	var undeclared: Array = []
 	for candidate_value in candidate_domain_ids:
@@ -193,17 +178,10 @@ static func assert_domains_declared(candidate_domain_ids: Array) -> Dictionary:
 		if not is_domain_declared(candidate):
 			undeclared.append(candidate)
 	if not undeclared.is_empty():
-		return {
-			"success": false,
-			"error_code": "PRIVATE_TRUTH_UNDECLARED",
-			"undeclared_domain_ids": undeclared,
-		}
+		return {"success": false, "error_code": "PRIVATE_TRUTH_UNDECLARED", "undeclared_domain_ids": undeclared}
 	return {"success": true}
 
 
-## --- Validation helpers (fail-closed; used by tests and future stages) ------
-
-## Validate one candidate entry against the required schema and policies.
 static func validate_domain(entry: Dictionary) -> Dictionary:
 	if entry.is_empty():
 		return _validation_failure("EMPTY_DOMAIN_ENTRY")
@@ -213,18 +191,11 @@ static func validate_domain(entry: Dictionary) -> Dictionary:
 	for field in entry.keys():
 		if not REQUIRED_ENTRY_FIELDS.has(field):
 			return _validation_failure("UNKNOWN_FIELD", {"field": String(field)})
-	var type_errors := {
-		"domain_id": TYPE_STRING,
-		"owner": TYPE_STRING,
-		"persistence_replay": TYPE_BOOL,
-		"reconnect_restore": TYPE_BOOL,
-		"transport_path": TYPE_STRING,
-		"write_authority": TYPE_STRING,
-		"notes": TYPE_STRING,
-	}
-	for field in type_errors.keys():
-		var expected: int = type_errors[field]
-		if typeof(entry[field]) != expected:
+	for field in ["domain_id", "canonical_owner", "persistence_owner", "transport_path", "write_authority", "notes"]:
+		if typeof(entry[field]) != TYPE_STRING:
+			return _validation_failure("BAD_FIELD_TYPE", {"field": String(field)})
+	for field in ["persistence_replay", "reconnect_restore"]:
+		if typeof(entry[field]) != TYPE_BOOL:
 			return _validation_failure("BAD_FIELD_TYPE", {"field": String(field)})
 	var domain_id := String(entry["domain_id"])
 	if not _is_canonical_domain_id(domain_id):
@@ -233,53 +204,47 @@ static func validate_domain(entry: Dictionary) -> Dictionary:
 		return _validation_failure("NON_GATEWAY_TRANSPORT", {"transport_path": String(entry["transport_path"])})
 	if String(entry["write_authority"]) != WRITE_AUTHORITY_SERVER_ONLY:
 		return _validation_failure("INVALID_WRITE_AUTHORITY", {"write_authority": String(entry["write_authority"])})
-	if not _is_namespaced_id(String(entry["owner"])):
-		return _validation_failure("NON_CANONICAL_OWNER_ID", {"owner": String(entry["owner"])})
+	if not _is_namespaced_id(String(entry["canonical_owner"])) or not _is_namespaced_id(String(entry["persistence_owner"])):
+		return _validation_failure("NON_CANONICAL_OWNER_ID")
+	if bool(entry["persistence_replay"]) and String(entry["persistence_owner"]) != EXISTING_PERSISTENCE_OWNER_ID:
+		return _validation_failure("NON_CANONICAL_PERSISTENCE_OWNER", {"persistence_owner": String(entry["persistence_owner"])})
+	for prefix in FORBIDDEN_PRIVATE_OWNER_PREFIXES:
+		if String(entry["canonical_owner"]).begins_with(prefix) or String(entry["persistence_owner"]).begins_with(prefix):
+			return _validation_failure("P6_PRIVATE_OWNER_FORBIDDEN")
 	return {"success": true}
 
 
-## Validate a full candidate map: entry schema, unique ids, and exactly one
-## persistence owner across all replay domains.
 static func validate_map(domains: Array) -> Dictionary:
 	if domains.is_empty():
 		return _validation_failure("EMPTY_DOMAIN_MAP")
 	var seen_ids: Dictionary = {}
-	var replay_owners: Dictionary = {}
+	var persistence_owners: Dictionary = {}
 	for entry_value in domains:
-		var entry: Dictionary = entry_value
-		var domain_result := validate_domain(entry)
-		if domain_result.get("success", false) != true:
-			return domain_result
+		if not entry_value is Dictionary:
+			return _validation_failure("BAD_DOMAIN_ENTRY_TYPE")
+		var entry := Dictionary(entry_value)
+		var result := validate_domain(entry)
+		if not bool(result.get("success", false)):
+			return result
 		var domain_id := String(entry["domain_id"])
 		if seen_ids.has(domain_id):
 			return _validation_failure("DUPLICATE_DOMAIN_ID", {"domain_id": domain_id})
 		seen_ids[domain_id] = true
 		if bool(entry["persistence_replay"]):
-			replay_owners[String(entry["owner"])] = true
-	if replay_owners.size() > 1:
-		return _validation_failure(
-			"MULTIPLE_PERSISTENCE_OWNERS",
-			{"owners": replay_owners.keys()}
-		)
-	if replay_owners.is_empty():
-		return _validation_failure("NO_PERSISTENCE_OWNER")
+			persistence_owners[String(entry["persistence_owner"])] = true
+	if persistence_owners.size() != 1 or not persistence_owners.has(EXISTING_PERSISTENCE_OWNER_ID):
+		return _validation_failure("MULTIPLE_PERSISTENCE_OWNERS", {"owners": persistence_owners.keys()})
 	return {"success": true}
 
 
-## Admission check for adding a domain to the map WITHOUT mutating anything
-## (this stage is declaration-only): the candidate must pass entry validation
-## and the combined map [DOMAINS, candidate] must still satisfy every
-## invariant. Returns success/failure; NEVER mutates DOMAINS.
 static func try_register_domain(entry: Dictionary) -> Dictionary:
-	var entry_result := validate_domain(entry)
-	if entry_result.get("success", false) != true:
-		return entry_result
-	var combined: Array = DOMAINS.duplicate()
+	var result := validate_domain(entry)
+	if not bool(result.get("success", false)):
+		return result
+	var combined: Array = DOMAINS.duplicate(true)
 	combined.append(entry.duplicate(true))
 	return validate_map(combined)
 
-
-## --- Internals ---------------------------------------------------------------
 
 static func _validation_failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	var failure := {"success": false, "error_code": error_code}
@@ -289,26 +254,24 @@ static func _validation_failure(error_code: String, details: Dictionary = {}) ->
 
 
 static func _is_canonical_domain_id(domain_id: String) -> bool:
-	if not domain_id.begins_with(DOMAIN_ID_PREFIX):
-		return false
-	return _is_lower_snake_tokens(domain_id.trim_prefix(DOMAIN_ID_PREFIX))
+	return domain_id.begins_with(DOMAIN_ID_PREFIX) and _is_lower_tokens(domain_id.trim_prefix(DOMAIN_ID_PREFIX))
 
 
-static func _is_namespaced_id(id: String) -> bool:
-	var parts := id.split("/")
+static func _is_namespaced_id(value: String) -> bool:
+	var parts := value.split("/")
 	if parts.size() < 2:
 		return false
 	for part in parts:
-		if not _is_lower_snake_tokens(part):
+		if not _is_lower_tokens(String(part)):
 			return false
 	return true
 
 
-static func _is_lower_snake_tokens(text: String) -> bool:
+static func _is_lower_tokens(text: String) -> bool:
 	if text.is_empty():
 		return false
 	var matcher := RegEx.new()
-	matcher.compile("^[a-z0-9]+(-[a-z0-9]+)*$")
+	matcher.compile("^[a-z0-9]+([._-][a-z0-9]+)*$")
 	return matcher.search(text) != null
 
 
