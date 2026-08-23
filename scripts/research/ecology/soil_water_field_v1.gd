@@ -24,6 +24,16 @@ extends RefCounted
 ##     light field soft-disc weight w = clamp01(1 - dist/crown_radius), weighted
 ##     by crown density; shade_suppression = clamp01(canopy_cover * 0.6);
 ##     evaporation_cell = base_evaporation_rate * texture_evap_mult * (1 - shade_suppression).
+##   - FFF5 ORGANIC RETENTION COUPLING (optional): field_inputs may carry an
+##     "organic_map" (cell_identity -> organic proxy in [0,1], produced by
+##     soil_organic_field_v1). When present, each occupied cell's evaporation
+##     additionally scales by 1 / retention_multiplier(organic_cell) where
+##     retention_multiplier(o) = 1 + 0.35 * o (see soil_organic_field_v1):
+##     organic matter slows bare-soil evaporation ("mulch effect"). The scaled
+##     evaporation is clamped into [0, unscaled] so it can never go negative or
+##     exceed the base value; uptake and everything else are untouched. When the
+##     map is ABSENT the field computes exactly as before this coupling existed
+##     (pristine path is bit-identical, FFF4 regression stays green).
 ##   - moisture_after = clamp01(base_moisture - (total_uptake + evaporation) / CELL_WATER_CAPACITY_PPM).
 ##
 ## Deterministic: no RNG, no SceneTree, canonical identity order for every float
@@ -65,6 +75,7 @@ const CELL_WATER_CAPACITY_PPM := 4000000.0
 const EVAPORATION_SUPPRESSION_PPM_SCALE := 90000.0
 
 const Effect = preload("res://scripts/research/ecology/plant_environment_effect_v1.gd")
+const SoilOrganic = preload("res://scripts/research/ecology/soil_organic_field_v1.gd")
 
 ## Required record fields (research read-model over realized phenotypes):
 ##   identity (String, unique), world_x_m, world_z_m (finite),
@@ -78,7 +89,9 @@ const Effect = preload("res://scripts/research/ecology/plant_environment_effect_
 ##   fixture_id (non-empty String), fixture_version (non-empty String),
 ##   textures (cell_identity -> "sand"|"loam"|"clay", must cover every occupied cell),
 ##   base_moisture (cell_identity -> float in [0,1], must cover every occupied cell),
-##   base_evaporation_rate (finite float >= 0).
+##   base_evaporation_rate (finite float >= 0),
+##   organic_map (OPTIONAL cell_identity -> float in [0,1], FFF5 retention
+##   coupling from soil_organic_field_v1; absent = pristine behavior).
 static func validate_record(record: Dictionary) -> Dictionary:
 	for field_name in ["identity", "world_x_m", "world_z_m", "transpiration_demand_ppm", "realized_crown_radius_m", "realized_crown_density", "realized_root_depth_m", "realized_root_spread_m", "root_shoot_ratio"]:
 		if not record.has(field_name):
@@ -108,6 +121,12 @@ static func validate_field_inputs(field_inputs: Dictionary) -> Dictionary:
 		return _failure("ECO_WATER_FIELD_INPUTS_FIXTURE_IDENTITY")
 	if not is_finite(float(field_inputs["base_evaporation_rate"])) or float(field_inputs["base_evaporation_rate"]) < 0.0:
 		return _failure("ECO_WATER_FIELD_INPUTS_EVAPORATION_RATE")
+	if field_inputs.has("organic_map") and typeof(field_inputs["organic_map"]) != TYPE_DICTIONARY:
+		return _failure("ECO_WATER_FIELD_INPUTS_ORGANIC_MAP_TYPE")
+	for cell_id in (field_inputs.get("organic_map", {}) as Dictionary).keys():
+		var raw_organic = field_inputs["organic_map"][cell_id]
+		if not is_finite(float(raw_organic)) or float(raw_organic) < 0.0 or float(raw_organic) > SoilOrganic.ORGANIC_CAPACITY:
+			return _failure("ECO_WATER_FIELD_INPUTS_ORGANIC_RANGE", {"cell": String(cell_id)})
 	return _success()
 
 static func cell_identity_for(world_x_m: float, world_z_m: float) -> String:
@@ -144,6 +163,9 @@ static func compute(records: Array, field_inputs: Dictionary) -> Dictionary:
 	var textures: Dictionary = field_inputs["textures"]
 	var base_moisture: Dictionary = field_inputs["base_moisture"]
 	var base_evaporation := snappedf(float(field_inputs["base_evaporation_rate"]), 1e-9)
+	# FFF5 optional retention coupling: absent map = pristine behavior.
+	var organic_map: Dictionary = field_inputs.get("organic_map", {})
+	var organic_coupling: bool = not organic_map.is_empty()
 
 	# Deterministic cell membership from the canonical record order.
 	var cell_plants := {}
@@ -187,7 +209,21 @@ static func compute(records: Array, field_inputs: Dictionary) -> Dictionary:
 		cover_sum = snappedf(cover_sum, 1e-9)
 		var canopy_cover := clampf(cover_sum, 0.0, 1.0)
 		var shade_suppression := clampf(canopy_cover * SHADE_EVAPORATION_SUPPRESSION, 0.0, 1.0)
-		var evaporation := snappedf(base_evaporation * evaporation_multiplier * (1.0 - shade_suppression), 1e-9)
+		var unscaled_evaporation := snappedf(base_evaporation * evaporation_multiplier * (1.0 - shade_suppression), 1e-9)
+		var evaporation := unscaled_evaporation
+		var organic_input := 0.0
+		var evaporation_retention := 1.0
+		if organic_coupling:
+			if not organic_map.has(cell_id):
+				return {}
+			var raw_cell_organic = organic_map[cell_id]
+			if not is_finite(float(raw_cell_organic)) or float(raw_cell_organic) < 0.0 or float(raw_cell_organic) > SoilOrganic.ORGANIC_CAPACITY:
+				return {}
+			organic_input = snappedf(float(raw_cell_organic), 1e-9)
+			evaporation_retention = snappedf(SoilOrganic.retention_multiplier(organic_input), 1e-9)
+			# Organic mulch slows evaporation: scale by 1/retention, clamped so
+			# evaporation never goes negative and never exceeds the base value.
+			evaporation = snappedf(clampf(unscaled_evaporation / evaporation_retention, 0.0, unscaled_evaporation), 1e-9)
 
 		# Bounded uptake: the cell reservoir is depleted in canonical identity
 		# order, so the per-cell total can never exceed available water.
@@ -227,6 +263,9 @@ static func compute(records: Array, field_inputs: Dictionary) -> Dictionary:
 			"shade_suppression": shade_suppression,
 			"plant_count": (cell_plants[cell_id] as Array).size(),
 		}
+		if organic_coupling:
+			cells[cell_id]["organic_input"] = organic_input
+			cells[cell_id]["evaporation_retention"] = evaporation_retention
 
 	var field := {
 		"schema": SCHEMA,
@@ -237,6 +276,7 @@ static func compute(records: Array, field_inputs: Dictionary) -> Dictionary:
 		"cell_size_m": CELL_SIZE_M,
 		"water_capacity_ppm": CELL_WATER_CAPACITY_PPM,
 		"base_evaporation_rate": base_evaporation,
+		"organic_coupling": organic_coupling,
 		"record_count": validated.size(),
 		"cells": cells,
 		"plant_uptake": plant_uptake,
@@ -277,11 +317,16 @@ static func _field_hash(field: Dictionary) -> String:
 	cell_ids.sort()
 	for cell_id in cell_ids:
 		var cell: Dictionary = field["cells"][cell_id]
-		cell_tokens.append("%s:%s:%.9f:%.9f:%d:%.9f:%.9f" % [
+		var token := "%s:%s:%.9f:%.9f:%d:%.9f:%.9f" % [
 			String(cell_id), String(cell["texture"]),
 			float(cell["base_moisture"]), float(cell["moisture_after"]),
 			int(cell["total_uptake_ppm"]), float(cell["evaporation_ppm"]), float(cell["canopy_cover"]),
-		])
+		]
+		# FFF5 retention-coupling extension: extra tokens appear ONLY when an
+		# organic map was supplied, so the pristine hash format is unchanged.
+		if bool(field.get("organic_coupling", false)):
+			token += ":%.9f:%.9f" % [float(cell.get("organic_input", 0.0)), float(cell.get("evaporation_retention", 1.0))]
+		cell_tokens.append(token)
 	return "|".join(PackedStringArray([
 		SCHEMA, VERSION, String(field["fixture_id"]), String(field["fixture_version"]),
 		"%.1f" % float(field["cell_size_m"]), "%.1f" % float(field["water_capacity_ppm"]),

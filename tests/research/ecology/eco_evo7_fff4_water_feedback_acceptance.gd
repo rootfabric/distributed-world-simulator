@@ -87,7 +87,7 @@ static func _field_inputs(maps: Dictionary, base_evaporation := 20000.0) -> Dict
 
 func _effect_contract_water() -> void:
 	_check(Effect.ACTIVE_CHANNELS.has("shade_ppm") and Effect.ACTIVE_CHANNELS.has("water_uptake_ppm") and Effect.ACTIVE_CHANNELS.has("evaporation_suppression_ppm"), "water channels activated in R1 (FFF4)")
-	_check(Effect.INACTIVE_CHANNELS.has("litter_input_ppm") and Effect.INACTIVE_CHANNELS.has("soil_binding_ppm"), "litter/soil_binding stay reserved for FFF5")
+	_check(Effect.ACTIVE_CHANNELS.has("litter_input_ppm") and Effect.INACTIVE_CHANNELS.has("soil_binding_ppm"), "litter activated in FFF5; soil_binding stays reserved")
 	var effect := Effect.create("p00", "0|0", 4, 12000, "b".repeat(64), 25000, 30000)
 	_check(not effect.is_empty(), "water effect record created")
 	_check(int(effect["water_uptake_ppm"]) == 25000 and int(effect["evaporation_suppression_ppm"]) == 30000, "water channels carry the published values")
@@ -96,8 +96,8 @@ func _effect_contract_water() -> void:
 	var zero_water := Effect.create("p00", "0|0", 4, 12000, "b".repeat(64))
 	_check(int(zero_water["water_uptake_ppm"]) == 0 and int(zero_water["evaporation_suppression_ppm"]) == 0, "water channels default to zero")
 	var tampered: Dictionary = effect.duplicate(true)
-	tampered["litter_input_ppm"] = 7
-	_check(not bool(Effect.validate(tampered).get("success", false)), "nonzero FFF5 channel still rejected (no creation from nothing)")
+	tampered["soil_binding_ppm"] = 7
+	_check(not bool(Effect.validate(tampered).get("success", false)), "nonzero reserved channel still rejected (no creation from nothing)")
 	var negative: Dictionary = effect.duplicate(true)
 	negative["water_uptake_ppm"] = -1
 	_check(not bool(Effect.validate(negative).get("success", false)), "negative water channel rejected")

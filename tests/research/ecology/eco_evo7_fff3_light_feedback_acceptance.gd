@@ -43,8 +43,8 @@ func _effect_contract() -> void:
 	_check(int(effect["litter_input_ppm"]) == 0 and int(effect["soil_binding_ppm"]) == 0, "inactive channels are zero in R1")
 	_check(String(effect["effect_hash"]) == Effect.compute_effect_hash(effect), "effect hash reproducible")
 	var tampered: Dictionary = effect.duplicate(true)
-	tampered["litter_input_ppm"] = 5
-	_check(not bool(Effect.validate(tampered).get("success", false)), "nonzero inactive channel rejected (no creation from nothing)")
+	tampered["soil_binding_ppm"] = 5
+	_check(not bool(Effect.validate(tampered).get("success", false)), "nonzero reserved channel rejected (no creation from nothing)")
 	var negative: Dictionary = effect.duplicate(true)
 	negative["shade_ppm"] = -1
 	_check(not bool(Effect.validate(negative).get("success", false)), "negative channel rejected")

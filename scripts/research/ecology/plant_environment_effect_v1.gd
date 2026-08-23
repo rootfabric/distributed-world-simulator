@@ -1,19 +1,22 @@
 extends RefCounted
 
-## ECO.EVO7 FFF3/FFF4 - plant_environment_effect.v1 (spec section 7).
+## ECO.EVO7 FFF3/FFF4/FFF5 - plant_environment_effect.v1 (spec section 7).
 ## A plant never writes environment state directly: it publishes this deterministic
 ## effect record, and the field aggregator applies records in canonical identity
-## order. R1 activates the shade (FFF3) and water (FFF4: uptake + evaporation
-## suppression) channels; litter_input/soil_binding stay zero until FFF5 - a
-## nonzero inactive channel is a contract violation ("no creation from nothing").
+## order. Activated channels: shade (FFF3), water uptake + evaporation suppression
+## (FFF4), litter_input (FFF5, published by the soil organic field aggregator).
+## soil_binding stays zero until a later stage - a nonzero reserved channel is a
+## contract violation ("no creation from nothing").
+## Backward compatibility: create() gains litter_input_ppm as a DEFAULTED trailing
+## argument (0), so every FFF3/FFF4 call site stays bit-identical.
 
 const SCHEMA := "distributed_world_simulator.ecology.plant_environment_effect.v1"
 const VERSION := "1.0.0"
 
 ## Channels activated by stage: shade=FFF3, water_uptake/evaporation_suppression=FFF4,
-## litter_input=FFF5, soil_binding=FFF5+.
-const ACTIVE_CHANNELS: Array[String] = ["shade_ppm", "water_uptake_ppm", "evaporation_suppression_ppm"]
-const INACTIVE_CHANNELS: Array[String] = ["litter_input_ppm", "soil_binding_ppm"]
+## litter_input=FFF5, soil_binding=later (still reserved).
+const ACTIVE_CHANNELS: Array[String] = ["shade_ppm", "water_uptake_ppm", "evaporation_suppression_ppm", "litter_input_ppm"]
+const INACTIVE_CHANNELS: Array[String] = ["soil_binding_ppm"]
 const FIELD_NAMES: Array[String] = [
 	"schema", "version", "plant_identity", "cell_identity", "generation",
 	"shade_ppm", "water_uptake_ppm", "evaporation_suppression_ppm",
@@ -27,7 +30,8 @@ static func create(
 	shade_ppm: int,
 	source_phenotype_hash: String,
 	water_uptake_ppm: int = 0,
-	evaporation_suppression_ppm: int = 0
+	evaporation_suppression_ppm: int = 0,
+	litter_input_ppm: int = 0
 ) -> Dictionary:
 	if plant_identity.is_empty() or plant_identity != plant_identity.strip_edges():
 		return {}
@@ -38,6 +42,7 @@ static func create(
 	var shade := maxi(int(shade_ppm), 0)
 	var uptake := maxi(int(water_uptake_ppm), 0)
 	var suppression := maxi(int(evaporation_suppression_ppm), 0)
+	var litter := maxi(int(litter_input_ppm), 0)
 	var effect := {
 		"schema": SCHEMA,
 		"version": VERSION,
@@ -47,7 +52,7 @@ static func create(
 		"shade_ppm": shade,
 		"water_uptake_ppm": uptake,
 		"evaporation_suppression_ppm": suppression,
-		"litter_input_ppm": 0,
+		"litter_input_ppm": litter,
 		"soil_binding_ppm": 0,
 		"source_phenotype_hash": source_phenotype_hash,
 	}
