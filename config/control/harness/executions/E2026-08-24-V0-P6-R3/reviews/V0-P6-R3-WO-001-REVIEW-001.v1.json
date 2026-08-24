@@ -1,0 +1,91 @@
+{
+  "schema": "distributed_world_simulator.harness_review.v1",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "reviewer": "INDEPENDENT_REVIEWER_ISOLATED_ROLE",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "reviewed_head_sha": "aefa6b77f971c751db83cf06ae417e07f4601807",
+  "reviewed_at_utc": "2026-08-24T04:55:30Z",
+  "verdict": "PASS",
+  "head_verification": {
+    "git_rev_parse_head_at_review_start": "aefa6b77f971c751db83cf06ae417e07f4601807",
+    "matches_declared_head": true,
+    "note": "During the review a concurrent control-only commit 3730747f0c43fa2a3010231159c2fb8b57d94e5d (verifications/V0-P6-R3-WO-001-VERIFICATION-001.v1.json, allowed execution dir) advanced the branch. It contains zero runtime-scope changes, so the runtime diff under review remains exactly origin/main..aefa6b77 and this review stays exact-head."
+  },
+  "findings": [
+    {
+      "id": "REVIEW-001-NOTE-001",
+      "severity": "NOTE",
+      "message": "Concurrent control-only commit 3730747f (independent verifier verification JSON inside config/control/harness/executions/E2026-08-24-V0-P6-R3/**) landed on the branch after review start; no runtime-scope commits exist after aefa6b77, so the exact-head basis of this review is unaffected."
+    },
+    {
+      "id": "REVIEW-001-MINOR-002",
+      "severity": "MINOR",
+      "message": "Godot .uid metadata hygiene: tests/runtime/test_v0_p6_thirty_minute_soak.gd is tracked without its .uid while sibling new files (test_v0_p6_real_process_restart.gd.uid, p6_r3_* support .uid) are committed; 8 untracked auto-generated .uid files sit in the working tree. None are part of reviewed HEAD; recommend committing the missing .uid in a control-only follow-up."
+    },
+    {
+      "id": "REVIEW-001-NOTE-003",
+      "severity": "NOTE",
+      "message": "Canonical gameplay owners in the R3 gates are contract-form fixtures standing in for M4/P4/P5/M6 owners (tests/runtime/support/p6_r3_canonical_fixtures.gd discloses this in its header). Durability itself always flows through the real AuthoritativeRecoveryCoordinator/AuthoritativeRecoveryRepository (read-only consumption of scripts/persistence/**), and the limitation is consistently disclosed: ledger predicate row 5 carries an asterisk, and [scope] markers of test_v0_p6_real_process_restart.gd / test_v0_p6_thirty_minute_soak.gd explicitly keep live production-stack coverage with the accepted M6/M3/M7 runners. No overclaim found."
+    },
+    {
+      "id": "REVIEW-001-NOTE-004",
+      "severity": "NOTE",
+      "message": "docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md names core-fix predicate REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS where the WO predicate id is V0_P6_R3_REAL_PROCESS_RESTART_RECOVERY_PASS (the former is the test stage marker). Naming variance only; no evidential drift."
+    },
+    {
+      "id": "REVIEW-001-NOTE-005",
+      "severity": "NOTE",
+      "message": "Event 0005 evidence_paths cite untracked local artifacts (artifacts/test-results/p6-r3-soak-suite-410928/..., p6-r3-night-chain-.../verdicts.txt). They exist on disk and were independently audited by the Verifier on the same head, but they are not part of git history; acceptable for this project's artifact policy, recorded here for traceability."
+    }
+  ],
+  "checked_items": {
+    "1_fence_allowed_forbidden_paths": {
+      "status": "PASS",
+      "evidence": [
+        "git diff --name-status origin/main..aefa6b77 = 38 files: scripts/runtime/networked_gameplay/p6/** (6), tests/runtime/test_v0_p6_*, tests/runtime/support/p6_*, RUN_V0_P6_R3_*.sh, config/control/harness/executions/E2026-08-24-V0-P6-R3/**, docs/evidence/2026-08-24_V0_P6_R3_* — every path matches an allowed_paths pattern of V0-P6-R3-WO-001.v1.json",
+        "Zero forbidden paths touched: no scripts/network/gateway/**, no scripts/persistence/** modifications (only read-side preloads in tests), no scripts/runtime/networked_gameplay/m4|m5|m6/** or p5/**, no scripts/construction/**, no config/architecture/**, no registry files",
+        "Explicitly permitted additions present as allowed by task brief: tests/runtime/support/p6_*, RUN_V0_P6_R3_*, docs/evidence/2026-08-24_V0_P6_R3_*, execution dir"
+      ]
+    },
+    "2_architectural_honesty_single_owner_fail_closed": {
+      "status": "PASS",
+      "evidence": [
+        "p6_persistence_owner.gd rewritten from a private FileAccess/DirAccess envelope writer into a pure adapter delegating persist_checkpoint/recover_latest to the injected AuthoritativeRecoveryCoordinator; fail-closed PERSISTENCE_ADAPTER_NOT_CONFIGURED/AUTHORITATIVE_RECOVERY_COORDINATOR_REQUIRED; OWNER_ID = OwnershipMapScript.EXISTING_PERSISTENCE_OWNER_ID ('persistence/authoritative-recovery')",
+        "p6_ownership_map.gd v2: every domain declares canonical_owner external to P6 (m4-canonical-item-graph, construction/p4-authority, replay/m6-durable-replay, ...) plus the single existing persistence owner; validate_map fails unless exactly one persistence owner equal to EXISTING_PERSISTENCE_OWNER_ID; canonical_owners_are_external_to_p6() rejects 'p6-owner/*' style prefixes; no 'p6-owner/*' identity survives R3",
+        "p6_outpost_state.gd converted to read-only projection composed from exported canonical sources; apply_delta() is fail-closed (P6_PRIVATE_CANONICAL_MUTATION_FORBIDDEN) — no second outpost truth",
+        "p6_operation_ledger.gd: _retire_overflow eviction removed entirely; capacity is a fail-closed bound (LEDGER_CAPACITY_EXCEEDED, retirement_policy=FAIL_CLOSED_NO_EVICTION); restore() strictly validates overlap/order/capacity so OperationId history cannot be forgotten into re-execution",
+        "p6_mutation_admission.gd: dedicated in-flight gate rejects PENDING retry (OPERATION_PENDING) before handler invocation, double-checked after record_pending; complete() documented as explicit reconciliation only",
+        "Grep of HEAD scripts/runtime/networked_gameplay/p6/** finds zero FileAccess/DirAccess/store_string tokens; test_v0_p6_zero_write_fence.gd enforces the same token fence over all p6_*.gd modules"
+      ]
+    },
+    "3_test_honesty_markers_smoke_real_processes": {
+      "status": "PASS",
+      "evidence": [
+        "[stage] markers present in all focused tests and match their asserted behavior (PRIVATE_PERSISTENCE_REMOVED_PASS, CANONICAL_OWNER_COMPOSITION_PASS, PENDING_RETRY_FAIL_CLOSED_PASS, OPERATION_ID_RETIREMENT_CANNOT_REEXECUTE_PASS, REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS, ZERO_PRIVATE_P6_WRITE_PASS, ROUTE_PENDING_NO_DOUBLE_EXECUTION_PASS, ...); [scope] lines restrict claims: restart_recovery/shared_outpost disclaim literal OS-process evidence, repeat_soak disclaims the soak predicate, suite runner disclaims soak/MCP/restart coverage",
+        "test_v0_p6_thirty_minute_soak.gd SMOKE branch verified by code reading: --soak-smoke-seconds sets smoke_mode; marker emission is a mutually exclusive if smoke_mode -> V0_P6_SOAK_SMOKE_ONLY_NO_REAL_TIME_CLAIM else V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME, so SMOKE mode structurally cannot emit the REAL_TIME predicate marker; RUN_V0_P6_R3_SOAK.sh never passes the smoke flag and requires exit 0 AND the exact REAL_TIME stage string",
+        "test_v0_p6_real_process_restart.gd spawns real OS processes (OS.create_process of the Godot executable with isolated HOME/XDG env), hard-kills generation A via OS.kill(seed_pid), asserts not OS.is_process_running, and generation B recovers through a second fresh process; the worker idles until killed so no graceful shutdown path exists; only --persistence-root and result JSONs cross generations; persistence root is asserted to contain only authoritative-checkpoint* files before/after the kill",
+        "Literal soak run evidence on disk: artifacts/test-results/p6-r3-soak-suite-410928/test_v0_p6_thirty_minute_soak.log shows elapsed=1800013 ms (30.00 min), checkpoints=29, reconnects alice x2 bob x2, all 51 assertions passed, final marker V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME with honest composition-level [scope]"
+      ]
+    },
+    "4_documents_consistency_open_predicates": {
+      "status": "PASS",
+      "evidence": [
+        "docs/evidence/2026-08-24_V0_P6_R3_WO_PREDICATE_LEDGER_RU.md marks V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS as ОТКРЫТ (environment-blocked, PASS не фабрикуется) and FULL_WORLD_CORE_REGRESSION_PASS as ОТКРЫТ with blockers A (nx2+eg45 proven inherited from pristine main 9ade3233) and B (5 display-fenced tests marked FENCED/PENDING, not PASS); roles 14-18/20-24 honestly PENDING/BLOCKED",
+        "docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md annuls R2 events 0015/0031 and MCP visual claims append-only, declares replacement gates open until literally executed — consistent with ledger text",
+        "docs/evidence/2026-08-24_V0_P6_R3_REGRESSION_FENCE_FINDINGS_RU.md classifies nx2/eg45 as PRE_EXISTING_MAIN_RED with detached-worktree proof on pristine main, keeps display-fenced tests out of PASS/FAIL, records flake suspects resolved by isolated reruns, and states the full regression PASS marker will not be issued until blockers A/B are resolved in their own lanes — matches ledger row 13",
+        "Soak predicate PASS in ledger row 11 is backed by the cited artifact log (verified present and internally consistent)"
+      ]
+    },
+    "5_commit_hygiene_and_event_chain": {
+      "status": "PASS",
+      "evidence": [
+        "12 commits origin/main..aefa6b77 all follow Conventional Commits (fix(p6)/test(p6)/control(p6): subject)",
+        "Events 0001-0005 parse as valid distributed_world_simulator.harness_event.v1 JSON; sequence strictly 1..5; recorded_at_utc non-decreasing: 2026-08-23T15:01Z, 15:02Z, 16:40Z, 2026-08-24T02:47:20Z, 04:31:32Z",
+        "Event 0004 head_sha a070af8af4c7686ef2063cf1644cf52c4e1f60ea and event 0005 head_sha c6456de9e39223d397fbda12d7f2891658d81210 both exist and are ancestors of the reviewed head; event 0004 honestly reports IN_PROGRESS with remaining gates, event 0005 records only the literally-proven soak predicate and lists remaining open items"
+      ]
+    }
+  },
+  "summary": "Exact-head independent review of aefa6b77 against base 9ade3233: repair fence intact (38 changed files, all within WO allowed_paths, zero forbidden paths); P6 R3 removes the private persistence owner and duplicate outpost truth, delegates durability to the existing authoritative recovery stack, and makes PENDING retries and ledger capacity fail closed without ever forgetting an OperationId; tests are honest (scope-marked, SMOKE mode structurally unable to emit the real-time soak marker, real OS-process spawn + OS.kill restart gate); control documents keep MCP visual and full regression visibly OPEN with named blockers instead of fabricating PASS; commits and event chain 0004/0005 are well-formed and consistent. No BLOCKER or MAJOR findings. Verdict: PASS."
+}
