@@ -3,7 +3,8 @@ extends RefCounted
 ## ECO.EVO7 FFF4 - deterministic bounded soil-water field.
 ## Texture is a versioned research selector, not geology authority. Plant records are
 ## canonically sorted; uptake is proportionally apportioned and can never exceed
-## water available after evaporation. Canopy shade suppresses only evaporation.
+## either water available after evaporation or each individual request. Canopy shade
+## suppresses only evaporation.
 const EffectV2 = preload("res://scripts/research/ecology/plant_environment_effect_v2.gd")
 const SCHEMA := "distributed_world_simulator.ecology.soil_water_field.v1"
 const VERSION := "1.0.0"
@@ -65,6 +66,8 @@ static func compute(base_moisture_ppm: int, texture: String, sunlight: float, pl
 		var record: Dictionary = records[index]
 		var demand := maxi(int(record["transpiration_demand_ppm"]), 1)
 		var uptake := uptake_alloc[index]
+		if uptake > uptake_requests[index] or suppression_alloc[index] > suppression_requests[index]:
+			return {}
 		var satisfaction := clampf(float(uptake) / float(demand), 0.0, 1.0)
 		var depth_norm := clampf(float(record["realized_root_depth_m"]) / 4.0, 0.0, 1.0)
 		var effective_moisture := clampf(float(base_moisture_ppm) / float(MAX_PPM) * (0.30 + 0.70 * satisfaction) + 0.12 * depth_norm, 0.0, 1.0)
@@ -115,13 +118,28 @@ static func _apportion(requests: Array[int], limit: int) -> Array[int]:
 			result[index] = maxi(requests[index], 0)
 		return result
 	var assigned := 0
+	var positive_indices: Array[int] = []
 	for index in requests.size():
-		var share := int(floor(float(limit) * float(maxi(requests[index], 0)) / float(total)))
+		var request := maxi(requests[index], 0)
+		if request > 0:
+			positive_indices.append(index)
+		var share := mini(request, int(floor(float(limit) * float(request) / float(total))))
 		result[index] = share
 		assigned += share
-	var remainder := mini(limit - assigned, requests.size())
-	for index in remainder:
-		result[index] += 1
+	var remainder := maxi(limit - assigned, 0)
+	while remainder > 0:
+		var progressed := false
+		for index in positive_indices:
+			var request := maxi(requests[index], 0)
+			if result[index] >= request:
+				continue
+			result[index] += 1
+			remainder -= 1
+			progressed = true
+			if remainder == 0:
+				break
+		if not progressed:
+			break
 	return result
 
 static func _valid_record(record: Dictionary) -> bool:
