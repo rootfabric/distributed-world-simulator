@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-23-R4",
+  "policy_revision": "V0-P-2026-08-24-R5-POST-P6",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-  "current_phase": "P6_PRE_DISPATCH_CONTROL_READY",
+  "current_checkpoint": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+  "current_phase": "POST_P6_SM1_ACTIVATION_CONTROL_CANDIDATE",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -24,9 +24,7 @@
   },
   "research_isolation": {
     "research_frontiers_are_non_blocking_by_default": true,
-    "explicitly_non_blocking_programs_for_current_p_train": [
-      "ECO"
-    ],
+    "explicitly_non_blocking_programs_for_current_p_train": ["ECO"],
     "research_may_block_only_when": [
       "MAIN_REGISTERS_AN_EXPLICIT_PRODUCT_DEPENDENCY",
       "A_CANONICAL_FOUNDATION_OWNED_BY_THAT_PROGRAM_BECOMES_A_REQUIRED_PRECONDITION",
@@ -87,7 +85,7 @@
     {
       "id": "V0_P6_PERSISTENT_SHARED_OUTPOST",
       "short_name": "P6",
-      "state": "CURRENT_PRE_DISPATCH",
+      "state": "ACCEPTED",
       "goal": "Establish the first stable persistent playable outpost baseline with the complete mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect loop.",
       "minimum_product_outcomes": [
         "TWO_CLIENT_SHARED_OUTPOST_STATE",
@@ -97,59 +95,67 @@
         "THIRTY_MINUTE_TWO_CLIENT_SOAK",
         "ZERO_DUPLICATE_CANONICAL_TRUTH"
       ],
-      "activation_requires": [
-        "V0_P5_CHECKPOINT_ACCEPTED",
-        "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
-        "MAIN_DECLARED_EXACT_P5_SUCCESSOR_BASE",
-        "FRESH_P6_WORK_ORDER",
-        "FRESH_EPOCH_AND_PC0",
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P6",
-        "DIRECTOR_DISPATCH"
-      ],
       "next": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
-      "execution_base": "41ec871d002db540008ee82f402f7ab12c008887",
-      "project_epoch": "E2026-08-23-V0-P6-R2",
-      "work_order_id": "V0-P6-R2-WO-001",
-      "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
-      "must_reuse": [
-        "EDGE_GATEWAY_FOUNDATION_ACCEPTED_TRANSPORT_AND_SESSION_STACK",
-        "CANONICAL_M4_ITEM_GRAPH",
-        "EXISTING_SINGLE_PERSISTENCE_OWNER"
-      ],
-      "activation_complete_except": [
-        "DIRECTOR_DISPATCH"
-      ]
+      "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
+      "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+      "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json"
     },
     {
       "id": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
       "short_name": "POST_P6_GATE",
-      "state": "MANDATORY_DECISION_AFTER_P6",
-      "goal": "Do not auto-dispatch terrain work. Decide and durably record whether V0-SM1 seamless product integration is activated now or explicitly deferred.",
+      "state": "CURRENT_DECISION_RECORDED_PENDING_CONTROL_REVIEW",
+      "goal": "Do not auto-dispatch terrain work. Reconcile accepted P6 control state and durably activate V0-SM1 or record an explicit defer decision.",
       "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
-      "mandatory_companion": "docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md",
-      "allowed_decisions": [
-        "ACTIVATE_V0_SM1",
-        "DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION"
-      ],
+      "mandatory_companion": "docs/plans/V0_SM1_PRODUCTION_HANDOFF_EXECUTION_RU.md",
+      "decision": "ACTIVATE_V0_SM1",
+      "decision_source": "EXPLICIT_OWNER_DIRECTIVE_2026_08_24",
+      "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
       "next_if_activated": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "next_if_deferred": "V0_P7_BOUNDED_TERRAIN_MUTATION"
     },
     {
       "id": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "short_name": "SM1",
-      "state": "FUTURE_CONTROL_ACTIVATION",
-      "goal": "Port proven SM0 authority-handoff semantics and MRPF multi-route projection semantics into the then-current accepted V0/P6 product baseline.",
-      "donors_are_not_product_bases": [
-        "SM0",
-        "MRPF"
-      ],
+      "state": "ACTIVATION_CANDIDATE_NOT_RUNTIME_ELIGIBLE",
+      "goal": "Port proven SM0 authority-handoff semantics into the exact accepted P6 product baseline and prove production A<->B static authority handoff while preserving current Gateway/NX and canonical gameplay owners.",
+      "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+      "project_epoch": "E2026-08-24-V0-SM1-R1",
+      "work_order_id": "V0-SM1-R1-WO-001",
+      "runtime_branch": "feature/v0-sm1-seamless-product-integration",
+      "risk_class": "CRITICAL",
+      "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
+      "machine_plan": "config/control/harness/v0-sm1-production-handoff-plan.v1.json",
+      "donors_are_not_product_bases": ["SM0", "RESEARCH_SM1", "MRPF"],
       "hard_invariants": [
         "EXACTLY_ONE_ACTIVE_AUTHORITY",
         "STABLE_PLAYER_AND_ENTITY_IDENTITY",
         "MONOTONIC_AUTHORITY_EPOCH",
         "NO_SECOND_ITEM_GRAPH",
-        "PROJECTION_IS_DERIVED_NOT_CANONICAL",
-        "NO_NORMAL_CROSSING_RECONNECT_OR_RESPAWN"
+        "NO_SECOND_CONSTRUCTION_TRUTH",
+        "NO_SECOND_PERSISTENCE_OWNER",
+        "NO_NORMAL_CROSSING_RECONNECT_OR_RESPAWN",
+        "CLIENT_GATEWAY_ENDPOINT_UNCHANGED",
+        "WARM_SHADOW_ZERO_WRITES",
+        "STALE_SOURCE_FAILS_CLOSED"
+      ],
+      "activation_requires": [
+        "V0_P6_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_ACCEPTED_P6_SUCCESSOR_BASE",
+        "FRESH_SM1_EPOCH_AND_WORK_ORDER",
+        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
+        "FRESH_INDEPENDENT_POST_P6_CONTROL_REVIEW_PASS",
+        "POST_P6_CONTROL_MERGED_TO_MAIN",
+        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_SM1",
+        "DIRECTOR_DISPATCH"
+      ],
+      "activation_complete_except": [
+        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
+        "FRESH_INDEPENDENT_POST_P6_CONTROL_REVIEW_PASS",
+        "POST_P6_CONTROL_MERGED_TO_MAIN",
+        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_SM1",
+        "DIRECTOR_DISPATCH"
       ],
       "next": "V0_P7_BOUNDED_TERRAIN_MUTATION"
     },
@@ -161,6 +167,7 @@
       "activation_requires": [
         "V0_P6_CHECKPOINT_ACCEPTED",
         "POST_P6_SEAMLESS_DECISION_RECORDED",
+        "V0_SM1_CHECKPOINT_ACCEPTED_OR_EXPLICIT_MAIN_DEFER",
         "MAIN_DECLARED_EXACT_SUCCESSOR_BASE",
         "FRESH_P7_WORK_ORDER_AND_OWNERSHIP_AUDIT"
       ],
@@ -215,20 +222,34 @@
     "decision": "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
     "accepted_at_utc": "2026-08-23T05:30:00Z",
     "canonical_main_at_acceptance": "2021ee7ce8b4b66208f2da1ce142d36bcb356c53",
-    "consumed_by_p6": true
+    "consumed_by_p6": true,
+    "consumed_by_sm1": true
   },
-  "current_p6_activation_route": {
+  "current_sm1_activation_route": {
+    "accepted_predecessor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "project_epoch": "E2026-08-24-V0-SM1-R1",
+    "work_order_id": "V0-SM1-R1-WO-001",
+    "runtime_branch": "feature/v0-sm1-seamless-product-integration",
+    "mutation_lease": "NOT_ROTATED_CONTROL_CANDIDATE",
+    "runtime_mutation": "FORBIDDEN_UNTIL_CONTROL_ACCEPTANCE_LEASE_ROTATION_AND_DIRECTOR_DISPATCH",
+    "remaining_control_steps": [
+      "EG5_REPAIR",
+      "FRESH_INDEPENDENT_CONTROL_REVIEW",
+      "MERGE_POST_P6_CONTROL",
+      "POST_MERGE_PC0",
+      "ROTATE_LEASE_TO_SM1",
+      "DIRECTOR_DISPATCH"
+    ],
+    "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+  },
+  "historical_p6_activation_route": {
     "accepted_predecessor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
     "project_epoch": "E2026-08-23-V0-P6-R2",
     "work_order_id": "V0-P6-R2-WO-001",
     "runtime_branch": "feature/v0-p6-persistent-shared-outpost",
-    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
-    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
-    "remaining_control_steps": [
-      "DIRECTOR_DISPATCH",
-      "BEGIN_BOUNDED_P6_IMPLEMENTATION"
-    ],
-    "execution_base": "41ec871d002db540008ee82f402f7ab12c008887"
+    "runtime_mutation": "FROZEN_ACCEPTED",
+    "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
+    "acceptance_main_merge": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
   },
   "historical_p5_activation_route": {
     "accepted_predecessor_base": "2a6721cdf02fa1134c59d1ab98bb7b597c66821d",
@@ -236,13 +257,6 @@
     "work_order_id": "V0-P5-R1-WO-001",
     "runtime_branch": "feature/v0-p5-equipment-tools",
     "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
-    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
-    "remaining_control_steps": [
-      "MERGE_P5_LEASE_ROTATION_TO_MAIN_AFTER_PROJECT_CONTROL_NON_RED",
-      "CREATE_FRESH_P5_BRANCH_FROM_EXACT_ACCEPTED_P4_BASE",
-      "COMPOSE_CURRENT_MAIN_CONTROL_WITHOUT_CHANGING_PRODUCT_BASE_PROVENANCE",
-      "DIRECTOR_DISPATCH",
-      "BEGIN_BOUNDED_P5_IMPLEMENTATION"
-    ]
+    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH"
   }
 }

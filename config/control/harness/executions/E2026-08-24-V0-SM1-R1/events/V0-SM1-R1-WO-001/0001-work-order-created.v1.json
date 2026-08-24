@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0001",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-24T05:13:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-sm1-seamless-product-integration",
+  "head_sha": "00ceaa334f4a9ad58c7a0e4a9214ede0400fca53",
+  "summary": "SM1 CRITICAL work order created from exact accepted P6 main. Runtime mutation remains blocked pending post-P6 control review/integration and Director dispatch.",
+  "command": "CREATE_WORK_ORDER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+    "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json"
+  ]
+}
