@@ -92,10 +92,6 @@ func prepare_transfer(transfer_id: String) -> Dictionary:
 	return _success({"result": "WORLD_STATE_PREPARED", "manifest": manifest.duplicate(true)})
 
 
-## Wrap an already valid SM1.3/P6 WARM report. The new checksum commits to the
-## previous WARM checksum AND canonical world fingerprints. SM1.2 therefore
-## cannot commit a transfer against one player/world closure and activate a
-## different one without detection.
 func bind_to_warm(transfer_id: String, previous_warm_report: Dictionary) -> Dictionary:
 	if not _prepared.has(transfer_id):
 		return _reject("SM1_WORLD_TRANSFER_NOT_PREPARED", {"transfer_id": transfer_id})
@@ -232,9 +228,6 @@ func _capture_live_state() -> Dictionary:
 	var item_validation: Dictionary = _item_graph_persistence.validate_snapshot(item_snapshot)
 	if not bool(item_validation.get("success", false)):
 		return _reject("SM1_WORLD_ITEM_GRAPH_SNAPSHOT_INVALID", {"cause": item_validation})
-	# Metadata is transport/persistence bookkeeping, not canonical Item Graph
-	# gameplay truth. Remove it from the continuity fingerprint to avoid false
-	# divergence from unrelated save annotations.
 	var item_canonical := item_snapshot.duplicate(true)
 	item_canonical["metadata"] = {}
 	var item_fingerprint := NetworkUtils.payload_hash(item_canonical)
@@ -246,9 +239,11 @@ func _capture_live_state() -> Dictionary:
 	var construction_fingerprint := NetworkUtils.payload_hash(construction_snapshot)
 
 	var persistence_report: Dictionary = _p6_persistence_owner.get_report()
-	if bool(persistence_report.get("private_persistence_owner", true)):
+	if not bool(persistence_report.get("configured", false)):
+		return _reject("SM1_WORLD_PERSISTENCE_ADAPTER_NOT_CONFIGURED")
+	if bool(persistence_report.get("private_filesystem", true)) or bool(persistence_report.get("private_save_format", true)):
 		return _reject("SM1_WORLD_PRIVATE_PERSISTENCE_OWNER_FORBIDDEN")
-	var persistence_owner_id := String(persistence_report.get("existing_persistence_owner", ""))
+	var persistence_owner_id := String(persistence_report.get("persistence_owner", ""))
 	if persistence_owner_id != EXISTING_PERSISTENCE_OWNER:
 		return _reject("SM1_WORLD_PERSISTENCE_OWNER_MISMATCH", {"owner": persistence_owner_id})
 
@@ -256,8 +251,6 @@ func _capture_live_state() -> Dictionary:
 	var projection_checksum := String(_p6_projection.compute_checksum())
 	if projection_checksum.is_empty() or String(projection_serialized.get("checksum", "")) != projection_checksum:
 		return _reject("SM1_WORLD_OUTPOST_PROJECTION_INVALID")
-	# Prove that the read model references the same canonical source snapshots
-	# sampled above. It remains evidence only and cannot become a truth owner.
 	var projection_item: Dictionary = _p6_projection.get_source("item_graph")
 	var projection_construction: Dictionary = _p6_projection.get_source("construction")
 	if NetworkUtils.payload_hash(projection_item) != item_fingerprint:
@@ -272,10 +265,18 @@ func _capture_live_state() -> Dictionary:
 		"construction_fingerprint": construction_fingerprint,
 		"outpost_projection_checksum": projection_checksum,
 		"persistence_owner_id": persistence_owner_id,
-		"item_count": int(Dictionary(item_canonical.get("items", {})).get("items", []).size()) if item_canonical.get("items", {}) is Dictionary else 0,
-		"container_count": int(Dictionary(item_canonical.get("containers", {})).get("containers", []).size()) if item_canonical.get("containers", {}) is Dictionary else 0,
-		"construct_count": int(Dictionary(construction_snapshot.get("construct_store", {})).get("constructs", []).size()) if construction_snapshot.get("construct_store", {}) is Dictionary else 0,
+		"item_count": _section_row_count(item_canonical, "items", "items"),
+		"container_count": _section_row_count(item_canonical, "containers", "containers"),
+		"construct_count": _section_row_count(construction_snapshot, "construct_store", "constructs"),
 	}})
+
+
+func _section_row_count(snapshot: Dictionary, section_name: String, rows_name: String) -> int:
+	var section_value: Variant = snapshot.get(section_name, {})
+	if not section_value is Dictionary:
+		return 0
+	var rows_value: Variant = Dictionary(section_value).get(rows_name, [])
+	return rows_value.size() if rows_value is Array or rows_value is Dictionary else 0
 
 
 func _owner_report() -> Dictionary:
