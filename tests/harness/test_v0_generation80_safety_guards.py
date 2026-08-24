@@ -22,6 +22,8 @@ P5 = "V0_P5_EQUIPMENT_TOOLS"
 P5_BRANCH = "feature/v0-p5-equipment-tools"
 P6 = "V0_P6_PERSISTENT_SHARED_OUTPOST"
 P6_BRANCH = "feature/v0-p6-persistent-shared-outpost"
+SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
+SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P4_RUNNER = "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1"
 P4_TEST_HEAD = "a" * 40
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
@@ -197,14 +199,14 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         context = load_guard_context(root, execution)
         return work_order, [created, dispatched], transition, context
 
-    def test_generation80_reserves_one_global_mutation_lease_for_current_p6(self):
+    def test_generation80_reserves_one_global_mutation_lease_for_current_sm1(self):
         self.assertEqual(80, self.registry["registry_generation"])
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(80, lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
-        self.assertEqual(P6, lease["holder_checkpoint"])
-        self.assertEqual(P6_BRANCH, lease["holder_branch"])
+        self.assertEqual(SM1, lease["holder_checkpoint"])
+        self.assertEqual(SM1_BRANCH, lease["holder_branch"])
         self.assertEqual(["DISPATCHED", "IN_PROGRESS"], lease["mutating_states"])
         self.assertTrue(lease["implementation_complete_releases_worker"])
         self.assertTrue(lease["initial_dispatch_requires_director"])
@@ -219,18 +221,18 @@ class Generation80SafetyGuardTests(unittest.TestCase):
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P6}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{SM1}"):
             build_plan(self.contracts, {"goal_checkpoint": P4, "branch": P4_BRANCH}, dispatched)
 
-    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches_for_p5_lease(self):
+    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches_for_sm1_lease(self):
         dispatched = {
             "completed_predicates": [],
             "work_order_id": "OTHER-WO",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P6}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{SM1}"):
             build_plan(self.contracts, {"goal_checkpoint": H0_2}, dispatched)
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P6}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{SM1}"):
             build_plan(self.contracts, {"goal_checkpoint": "SM0_NONTRIVIAL_FIX", "branch": "feature/sm0-fix"}, dispatched)
 
     def test_initial_dispatch_requires_director_without_rewriting_historical_evidence(self):
@@ -299,7 +301,7 @@ class Generation80SafetyGuardTests(unittest.TestCase):
 
         current_v0 = self.registry["programs"]["V0"]
         self.assertEqual("control/post-p6-sm1-activation-r1", current_v0["branch"])
-        self.assertEqual("feature/v0-sm1-seamless-product-integration", current_v0["prebuild_state"]["branch"])
+        self.assertEqual(SM1_BRANCH, current_v0["prebuild_state"]["branch"])
         self.assertEqual("NOT_CREATED", current_v0["prebuild_state"]["head_at_refresh_input"])
         self.assertFalse(current_v0["prebuild_state"]["runtime_mutation_present"])
         self.assertNotEqual(P4_BRANCH, current_v0["branch"])
