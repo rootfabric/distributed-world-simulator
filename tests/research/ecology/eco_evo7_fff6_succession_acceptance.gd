@@ -1,13 +1,15 @@
 extends SceneTree
 
 ## ECO.EVO7 FFF6 integrated succession acceptance: >=100 cycles, multiple functional
-## strategies, canopy gap recovery, anti-runaway, deterministic replay.
+## strategies, canopy gap recovery, anti-runaway, deterministic replay, and
+## zone/phase-independent stochastic realization identity.
 const Bridge = preload("res://scripts/research/ecology/evo7_succession_bridge_v1.gd")
 const SEED := 20260823
 var assertions := 0
 var failures: Array[String] = []
 
 func _init() -> void:
+	_identity_contract()
 	var started := Time.get_ticks_msec()
 	var result := Bridge.run_all(SEED, 100, true)
 	_check(not result.is_empty(), "FFF6 100-cycle integrated bridge runs")
@@ -15,6 +17,7 @@ func _init() -> void:
 		_finish()
 		return
 	print("ECO.EVO7 FFF6 runtime_ms=%d result_hash=%s" % [Time.get_ticks_msec() - started, String(result["result_hash"]).substr(0,16)])
+	_check(String(result.get("evaluation_identity_rule", "")) == Bridge.EVALUATION_IDENTITY_RULE, "FFF6 publishes bundle-seed-only evaluation identity rule")
 	_check(int(result["cycles"]) >= 100, "FFF6 stability horizon >=100 cycles")
 	_check(String(result["common_first_candidate_pool_hash"]).length() == 64, "all six zones share generation-one mutation pool")
 	_check(int(result["distinct_final_population_count"]) >= 3, "at least three distinct evolved populations emerge")
@@ -49,6 +52,13 @@ func _init() -> void:
 	_source_boundaries()
 	_finish()
 
+func _identity_contract() -> void:
+	var tag := Bridge.stable_evaluation_seed_tag({"individual_seed": 424242})
+	_check(tag == "evo7-fff6-eval|424242", "FFF6 realization identity derives from candidate bundle seed only")
+	for forbidden in ["flood", "riparian", "mesic", "dry", "sand", "canopy", "gap", "provisional", "final", "feedback"]:
+		_check(not tag.contains(forbidden), "FFF6 realization identity excludes %s context" % forbidden)
+	_check(Bridge.stable_evaluation_seed_tag({"individual_seed": -1}).is_empty(), "invalid FFF6 realization identity fails closed")
+
 func _source_boundaries() -> void:
 	var source := FileAccess.get_file_as_string("res://scripts/research/ecology/evo7_succession_bridge_v1.gd").to_lower()
 	for forbidden in ["randf", "randi(", "randomize", "species_class", "tree:", "bush:", "grass:"]:
@@ -57,12 +67,18 @@ func _source_boundaries() -> void:
 	_check(source.contains("lightfield.compute"), "FFF6 consumes canopy light feedback")
 	_check(source.contains("waterfield.compute"), "FFF6 consumes bounded soil-water feedback")
 	_check(source.contains("legacy.apply_cycle"), "FFF6 feeds selected plants into slow soil memory")
+	_check(source.contains("stable_evaluation_seed_tag(bundle)"), "FFF6 functional realization consumes stable bundle identity")
+	_check(not source.contains("_functional(bundle, base_env,"), "FFF6 provisional realization cannot receive zone/phase seed tag")
+	_check(not source.contains("_functional(item[\"bundle\"],env,"), "FFF6 final realization cannot receive zone/phase seed tag")
+	_check(not source.contains("fff6-provisional|%s"), "FFF6 zone name is absent from provisional realization identity")
+	_check(not source.contains("fff6-final|%s"), "FFF6 zone name is absent from final realization identity")
 	var gate_text := FileAccess.get_file_as_string("res://config/ecology/research/evo7_fff7_xfer_gate.v1.json")
 	var gate = JSON.parse_string(gate_text)
 	_check(typeof(gate) == TYPE_DICTIONARY, "FFF7/XFER gate JSON parses")
 	if typeof(gate) == TYPE_DICTIONARY:
 		_check(not bool(gate.get("fff7_activation_authorized", true)), "FFF7 remains fail-closed before FFF6 acceptance")
 		_check(not bool(gate.get("xfer_authorized", true)), "XFER remains fail-closed before FFF6 acceptance")
+		_check(not bool(gate.get("production_ecology_authority_authorized", true)), "production ecology authority remains fail-closed before FFF6 acceptance")
 
 func _check(condition: bool, label: String) -> void:
 	assertions += 1
