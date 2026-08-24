@@ -1267,7 +1267,10 @@ func _validate_or_migrate_manifest_identity(manifest: Dictionary) -> bool:
 		if not manifest.has(field_name):
 			manifest[field_name] = expected_value
 			migrated_fields.append(field_name)
-		elif str(manifest.get(field_name, "")) != str(expected_value):
+		elif not _manifest_identity_value_matches(
+			manifest.get(field_name, ""),
+			expected_value
+		):
 			mismatches.append(field_name)
 	if not partition_grid_descriptor.is_empty():
 		if not manifest.has("partition_grid"):
@@ -1309,12 +1312,27 @@ func _partition_grid_identity_matches(saved_value, expected: Dictionary) -> bool
 		"zones_per_face",
 		"chunks_per_zone",
 	]:
-		if str(saved.get(field_name, "")) != str(expected.get(field_name, "")):
+		if not _manifest_identity_value_matches(
+			saved.get(field_name, ""),
+			expected.get(field_name, "")
+		):
 			return false
 	return is_equal_approx(
 		float(saved.get("body_radius_m", 0.0)),
 		float(expected.get("body_radius_m", -1.0))
 	)
+
+
+func _manifest_identity_value_matches(saved_value, expected_value) -> bool:
+	var saved_type: int = typeof(saved_value)
+	var expected_type: int = typeof(expected_value)
+	var saved_is_number: bool = saved_type == TYPE_INT or saved_type == TYPE_FLOAT
+	var expected_is_number: bool = (
+		expected_type == TYPE_INT or expected_type == TYPE_FLOAT
+	)
+	if saved_is_number and expected_is_number:
+		return float(saved_value) == float(expected_value)
+	return str(saved_value) == str(expected_value)
 
 
 func _sanitize_path_component(value: String) -> String:

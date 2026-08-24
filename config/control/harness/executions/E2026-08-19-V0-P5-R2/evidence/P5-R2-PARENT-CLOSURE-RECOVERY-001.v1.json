@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.v0_p5_parent_closure_recovery.v1",
+  "evidence_id": "P5-R2-PARENT-CLOSURE-RECOVERY-001",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "child_work_order": "V0-P5-R2-WO-002",
+  "decision": "PARENT_LEDGER_IS_CANONICAL_CHECKPOINT_CLOSURE",
+  "reason": "WO-002 carries valid technical Reviewer/Verifier evidence for exact 543455 but its merged 0004/0005 event branch metadata names the control carrier while its Work Order branch names the repair branch, and its snapshot remained DISPATCHED. Immutable child events are not rewritten. Parent WO-001 consumes the child technical evidence and completes checkpoint predicates append-only under its own branch identity.",
+  "runtime_subject": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "product_head": "5dcdddc2a92afcb42f16fafd38bd93bbe267d755",
+  "child_evidence_preserved": true,
+  "child_event_rewrite_performed": false
+}

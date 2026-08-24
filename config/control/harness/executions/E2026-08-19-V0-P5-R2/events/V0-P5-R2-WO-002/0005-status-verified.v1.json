@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-V002-0005",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "sequence": 5,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-21T01:46:35Z",
+  "actor": "VERIFIER",
+  "branch": "control/v0-p5-r2-v002-closure-r1",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "command": "VERIFY_V002_EXACT_HEAD_FULL_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-002-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/verification/V0-P5-R2-WO-002-VERIFIER-001.v1.json"
+  ],
+  "summary": "WO-002 VERIFIED on exact immutable 543455 after fresh Reviewer PASS and fresh Verifier PASS: M7 5/5, M5 5/5, one continuous 239/239, main_scene_cli_all PASS, FULL_WORLD_CORE_REGRESSION_PASS, Project Control #1044 SUCCESS/YELLOW NON_RED."
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "a2da4729da9b6ff7370ad7e701f3b9cad0dc1db5",
+  "intent": "Repair merged V0-P6 correctness defects without expanding architecture ownership: remove P6-private persistence/canonical truth, bind durability to the existing M6 authoritative recovery stack and P4/M4/P5 canonical owners, fail-closed PENDING/OperationId handling, real process-boundary restart gate, retract false soak/visual completion claims, prove literal thirty-minute two-client real-time soak.",
+  "root_cause_or_reason": "Merged P6 introduced P6-private persistence owner, duplicate mutable outpost truth, in-memory replay side channel, OperationId retirement re-execution, PENDING retry double execution and false soak/visual completion claims (findings P6-R-002..P6-R-007).",
+  "changed_surfaces": [
+    "scripts/runtime/networked_gameplay/p6/**",
+    "tests/runtime/test_v0_p6_*",
+    "tests/runtime/support/p6_*",
+    "RUN_V0_P6_R3_TESTS.sh",
+    "RUN_V0_P6_R3_SOAK.sh",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/**",
+    "docs/evidence/2026-08-24_V0_P6_R3_*"
+  ],
+  "canonical_owner": "persistence/replay: scripts/persistence/authoritative_recovery_repository.gd + authoritative_recovery_coordinator.gd and M6 durable replay stack; item/inventory/equipment: canonical M4 Item Graph with P5 composition; construction: P4 Construction authority bound to M4; network runtime: accepted Gateway Foundation path consumed via p6_gateway_command_route.gd",
+  "entry_points": [
+    "P6GatewayCommandRoute.route_command",
+    "P6PersistenceOwner.persist_checkpoint/recover_latest -> AuthoritativeRecoveryCoordinator",
+    "test_v0_p6_real_process_restart.gd (two OS processes, hard kill, bytes-only recovery)",
+    "test_v0_p6_thirty_minute_soak.gd (literal wall-clock two-session soak)"
+  ],
+  "callers": [
+    "P6 focused acceptance tests",
+    "restart/reconnect/soak gates",
+    "future V0-P7 consumers of the persistent outpost baseline"
+  ],
+  "callees": [
+    "AuthoritativeRecoveryCoordinator",
+    "AuthoritativeRecoveryRepository",
+    "CanonicalMultiplayerItemGraph contract surface (fixture stand-ins in composition tests)",
+    "P4 Construction / P5 gameplay contract surfaces (fixture stand-ins)",
+    "M6 durable replay outbox contract"
+  ],
+  "sibling_surfaces_checked": [
+    "scripts/runtime/networked_gameplay/m4/** (untouched, forbidden)",
+    "scripts/runtime/networked_gameplay/m5/** (untouched, forbidden)",
+    "scripts/runtime/networked_gameplay/m6/** (untouched, forbidden; consumed as recovery owner)",
+    "scripts/persistence/** (untouched, forbidden; consumed via public API)",
+    "scripts/network/gateway/** (untouched, forbidden)"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "FAIL",
+  "pc0": "RED",
+  "directional_pc0": "RED",
+  "remaining_risks": [
+    "FULL_WORLD_CORE_REGRESSION_PASS remains open: census failures nx2_realtime_traffic_separation and eg45_synthetic_journal are PROVEN pre-existing on pristine origin/main 9ade3233 (not caused by this branch) and live in forbidden_paths for this WO - they require their own repair lanes on main",
+    "5 display-dependent standalone tests are environment-fenced on this Ubuntu box (no Xvfb/display); canonical coverage is the Windows RUN_WORLD_REGRESSION_TESTS.ps1 operator run",
+    "V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS is environment-blocked: no display and no Breakpoint MCP host on this machine; requires an operator Windows MCP session or an equivalent provisioned environment",
+    "Formal PC0 overall is RED from registry-declared pre-existing states (V0 program acceptance debt, declared directional hits); these are main-owned control states predating this mission",
+    "Composition-level proofs use contract-form fixtures standing in for live M4/P4/P5/M6 surfaces; scope markers disclose this; live-surface soak/restart remains delegated to accepted M6/M3/M7 harnesses"
+  ],
+  "review_verdict": "PASS"
+}

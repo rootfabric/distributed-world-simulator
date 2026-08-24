@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0003",
+  "sequence": 3,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-23T16:40:00Z",
+  "head_sha": "28467bd2982af6f9e84da482b65174694ad85165",
+  "summary": "Durable WIP checkpoint before local continuation. Repair Map and Work Order are committed; exactly-once PENDING/capacity fixes and removal of P6-private persistence/canonical outpost truth are committed. No verification PASS is claimed. Remaining work is canonical P4/M4/P5/M6 composition validation, real process restart proof, full regression, literal 30-minute two-client soak, MCP visual evidence, exact-head Reviewer and Verifier, then Project Control closure.",
+  "command": "DURABLE_WIP_CHECKPOINT_BEFORE_LOCAL_CONTINUATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/repairs/V0-P6-R3-REPAIR-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/work-orders/V0-P6-R3-WO-001.v1.json",
+    "scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_mutation_admission.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_persistence_owner.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_shadow_authority.gd",
+    "docs/evidence/2026-08-24_V0_P6_R3_WIP_HANDOFF_RU.md"
+  ]
+}

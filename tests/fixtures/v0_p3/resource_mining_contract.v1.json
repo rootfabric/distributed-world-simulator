@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.v0_p3_resource_mining_preparation.v1",
+  "preparation_only": true,
+  "production_runtime_mutation_allowed": false,
+  "activation_blocker": "P2_REVIEW_VERIFIER_DIRECTOR_AND_RUNTIME_FRONTIER_GATE",
+  "authority": {
+    "resource_state_owner": "dedicated-server",
+    "item_output_owner": "canonical-m4-item-graph",
+    "construction_role": "downstream-consumer",
+    "client_authoritative_fields": []
+  },
+  "resource_node": {
+    "resource_node_id": "resource/earth/ore-demo/1",
+    "resource_definition_id": "resource/ore",
+    "output_definition_id": "item/ore",
+    "remaining_units": 8,
+    "unit_item_quantity": 1,
+    "spatial": {
+      "frame": "earth-fixed",
+      "latitude_deg": 45.0,
+      "longitude_deg": 25.0001,
+      "altitude_m": 450.0
+    }
+  },
+  "command": {
+    "command_type": "resource.mine",
+    "request_fields": ["resource_node_id", "requested_units"],
+    "forbidden_client_authority_fields": [
+      "remaining_units",
+      "new_remaining_units",
+      "output_item_id",
+      "output_quantity",
+      "revision",
+      "generation",
+      "checksum",
+      "canonical_position"
+    ]
+  },
+  "success": {
+    "decrement_per_unit": 1,
+    "output": {
+      "definition_id": "item/ore",
+      "quantity_per_unit": 1,
+      "canonical_owner": "canonical-m4-item-graph"
+    },
+    "atomic_resource_and_item_publication_required": true
+  },
+  "rejections": [
+    {"error_code": "RESOURCE_NOT_FOUND", "mutation_free": true},
+    {"error_code": "RESOURCE_DEPLETED", "mutation_free": true},
+    {"error_code": "RESOURCE_OUT_OF_RANGE", "mutation_free": true},
+    {"error_code": "INVALID_MINING_QUANTITY", "mutation_free": true},
+    {"error_code": "RESOURCE_OUTPUT_REJECTED", "mutation_free": true}
+  ],
+  "source_seams": {
+    "item_graph": "res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd",
+    "construction_bundle": "res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd",
+    "construction_projection": "res://scripts/construction/item_graph/construction_item_projection.gd"
+  }
+}

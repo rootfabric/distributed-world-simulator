@@ -95,16 +95,28 @@ static func build_stage_transaction_plan(
 		var before: Dictionary = initial.duplicate(true)
 		before["quantity"] = int(initial["quantity"]) - consumed_before
 		before["revision"] = int(initial["revision"]) + previous_mutations
-		var after: Dictionary = before.duplicate(true)
-		after["quantity"] = int(before["quantity"]) - int(allocation["quantity"])
-		after["revision"] = int(before["revision"]) + 1
-		mutations.append(ItemMutationScript.create(
-			ItemMutationScript.OP_UPDATE,
-			ItemMutationScript.PURPOSE_CONSUME_MATERIAL,
-			item_id,
-			before,
-			after
-		))
+		var remaining: int = int(before["quantity"]) - int(allocation["quantity"])
+		if remaining < 0:
+			return _failure("CONSTRUCTION_BUILD_STAGE_MATERIAL_SHORTFALL")
+		if remaining == 0:
+			mutations.append(ItemMutationScript.create(
+				ItemMutationScript.OP_DELETE,
+				ItemMutationScript.PURPOSE_CONSUME_MATERIAL,
+				item_id,
+				before,
+				{}
+			))
+		else:
+			var after: Dictionary = before.duplicate(true)
+			after["quantity"] = remaining
+			after["revision"] = int(before["revision"]) + 1
+			mutations.append(ItemMutationScript.create(
+				ItemMutationScript.OP_UPDATE,
+				ItemMutationScript.PURPOSE_CONSUME_MATERIAL,
+				item_id,
+				before,
+				after
+			))
 	if mutations.is_empty():
 		return _failure("CONSTRUCTION_BUILD_STAGE_HAS_NO_ITEM_MUTATIONS")
 	var construct_mutation: Dictionary = ConstructMutationScript.create(

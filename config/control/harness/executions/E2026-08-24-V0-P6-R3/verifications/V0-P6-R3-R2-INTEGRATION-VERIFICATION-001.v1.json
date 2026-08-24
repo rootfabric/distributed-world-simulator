@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P6-R3-R2-INTEGRATION-VERIFICATION-001.v1",
+  "verified_head_sha": "371a43f98ff99dcd7d13987a7acb9d7698295a77",
+  "verifier": "INDEPENDENT_VERIFIER_ISOLATED_ROLE",
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-24T08:21:19Z",
+  "branch": "repair/v0-p6-persistence-exactly-once-r2-integration",
+  "environment": "Ubuntu; Godot 4.7.1.stable.double.custom_build.a13da4feb at ~/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+  "checks": {
+    "gates": {
+      "method": "independent reproduction of the two most critical gates on exact HEAD; each run with isolated HOME (HOME/APPDATA/LOCALAPPDATA/XDG_DATA_HOME/XDG_CONFIG_HOME/XDG_CACHE_HOME) and timeout 300s, invocation form identical to RUN_V0_P6_R3_TESTS.sh: godot --headless --path <root> --script <res://test>",
+      "real_process_restart": {
+        "script": "res://tests/runtime/test_v0_p6_real_process_restart.gd",
+        "exit": 0,
+        "elapsed_seconds": 2,
+        "timeout_budget_seconds": 300,
+        "marker_present": "REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS",
+        "assertions": "all 33 assertions passed (two OS processes, hard kill, bytes-only recovery)",
+        "fail_script_error_parse_compile_matches": 0,
+        "log": "artifacts/test-results/p6-r2-integration-verifier-gates-*/real_process_restart/run.log"
+      },
+      "exactly_once_pair": {
+        "operation_ledger": {
+          "script": "res://tests/runtime/test_v0_p6_operation_ledger.gd",
+          "exit": 0,
+          "elapsed_seconds": 1,
+          "timeout_budget_seconds": 300,
+          "stage_marker": "OPERATION_ID_RETIREMENT_CANNOT_REEXECUTE_PASS",
+          "assertions": "all 18 assertions passed",
+          "fail_script_error_parse_compile_matches": 0
+        },
+        "mutation_admission": {
+          "script": "res://tests/runtime/test_v0_p6_mutation_admission.gd",
+          "exit": 0,
+          "elapsed_seconds": 0,
+          "timeout_budget_seconds": 300,
+          "stage_marker": "PENDING_RETRY_FAIL_CLOSED_PASS",
+          "assertions": "all 14 assertions passed",
+          "fail_script_error_parse_compile_matches": 0
+        }
+      }
+    },
+    "soak_audit": {
+      "method": "authenticity audit of the fresh literal real-time soak repeat produced on this tree; 30-minute run NOT re-executed by verifier",
+      "log_path": "artifacts/test-results/p6-r3-soak-suite-1277084/test_v0_p6_thirty_minute_soak.log",
+      "window_closed_line_present": true,
+      "elapsed_ms": 1800013,
+      "elapsed_minutes": "30.00",
+      "checkpoints": 29,
+      "reconnects_alice": 2,
+      "reconnects_bob": 2,
+      "applied_total": 8552,
+      "handler_rejected": 0,
+      "committed_total": 8553,
+      "blocks": 7698,
+      "crate_items": 854,
+      "assertions_passed": "all 51 assertions passed (literal 30.00 real-time minutes, two concurrent client sessions)",
+      "stage_marker_present": "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME",
+      "fail_or_script_error_matches": 0,
+      "godot_banner": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC)",
+      "log_mtime_local_utc_plus10": "2026-08-24T17:41:34+10:00",
+      "review_time_local_utc_plus10": "2026-08-24T18:19:29+10:00",
+      "mtime_within_last_hour_of_review": true,
+      "persistence_dir_found": "artifacts/test-results/p6-r3-soak-persistence-1277089 (PID-adjacent to soak suite dir 1277084)",
+      "persistence_bytes_verified": "authoritative-checkpoint.json (861582 B, mtime 17:41 +10, checkpoint_id checkpoint/p6-r3/soak/final) and authoritative-checkpoint.previous.json (833881 B, mtime 17:40 +10, checkpoint_id checkpoint/p6-r3/soak/029); both parse as valid JSON containing schema/authority_epoch/authority_owner_id/checkpoint_id/checksum/generation/previous_generation/committed_operation_id/replay_state"
+    },
+    "freshness": {
+      "head_before_run": "371a43f98ff99dcd7d13987a7acb9d7698295a77",
+      "head_after_run": "371a43f98ff99dcd7d13987a7acb9d7698295a77",
+      "tested_head_equals_reviewed_head": true,
+      "expected_head_prefix_371a43f9_matched": true,
+      "git_diff_head_empty": true,
+      "tracked_runtime_scope_changes": false,
+      "untracked_uid_files_noted": [
+        "scripts/ecology/production/ecology_client_read_model_v1.gd.uid",
+        "scripts/ecology/production/ecology_clock_v1.gd.uid",
+        "scripts/ecology/production/ecology_offline_catchup_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_ownership_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_persistence_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_state_v1.gd.uid",
+        "tests/runtime/test_v0_p3_replica_clock_delta_reordering.gd.uid"
+      ],
+      "uid_files_assessment": "7 untracked Godot auto-generated .uid metadata files present before and after the runs; identical list before/after; none modifies tracked runtime-scope code (noted as fact per verification protocol)"
+    }
+  },
+  "notes": "Independent verification on exact HEAD 371a43f98ff99dcd7d13987a7acb9d7698295a77 of repair/v0-p6-persistence-exactly-once-r2-integration. Both critical gates reproduced from scratch with isolated HOMEs under timeout 300s: test_v0_p6_real_process_restart exit 0 with stage REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS (33/33 assertions, two OS processes with hard kill and bytes-only recovery), and the exactly-once pair test_v0_p6_operation_ledger exit 0 (OPERATION_ID_RETIREMENT_CANNOT_REEXECUTE_PASS, 18/18) plus test_v0_p6_mutation_admission exit 0 (PENDING_RETRY_FAIL_CLOSED_PASS, 14/14). The fresh soak repeat on this tree was audited instead of re-executed: log artifacts/test-results/p6-r3-soak-suite-1277084/test_v0_p6_thirty_minute_soak.log is internally consistent (window closed elapsed=1800013 ms = 30.00 real-time minutes, checkpoints=29, reconnects alice=2 bob=2, totals applied=8552 handler_rejected=0 committed=8553 blocks=7698 crate_items=854, all 51 assertions passed, stage V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME, zero FAIL/SCRIPT ERROR lines), its mtime 17:41:34 +10 lies within one hour before this review (~38 min), and it is corroborated by on-disk persistence bytes in PID-adjacent p6-r3-soak-persistence-1277089: authoritative-checkpoint.json (final generation, checkpoint/p6-r3/soak/final) and authoritative-checkpoint.previous.json (generation 029), both valid JSON authority checkpoints written at 17:40-17:41 +10. HEAD identical before and after all gates; tracked tree clean throughout (only pre-existing untracked Godot .uid files). Verdict VERIFIED."
+}

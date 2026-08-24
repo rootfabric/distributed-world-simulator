@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-08-24-EG45-R1",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "registry_generation": 80,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-08-24T06:05:00Z",
+  "eligible_checkpoints": [
+    "EG45_SYNTHETIC_EFFECT_JOURNAL_REPAIR"
+  ],
+  "status": "ACTIVE",
+  "decision": "CONTINUE",
+  "owner_directive": "HA-002 APPROVED via owner instruction 'реализуй оба' (2026-08-24): open repair lanes for proven pre-existing main REDs eg45_synthetic_journal (this lane, runtime mutation lease priority #1) and nx2_realtime_traffic_separation (diagnosis-first sibling lane). Base is verified current origin/main tip 9ade3233."
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0007",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 7,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-21T02:34:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "Premature parent VERIFIED state did not materialize required checkpoint predicates; reopen append-only without rewriting 0001..0006.",
+  "command": "OPEN_APPEND_ONLY_PARENT_CLOSURE_RECOVERY",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/repairs/V0-P5-R2-WO-001-PREMATURE-VERIFIED-CLOSURE-RECOVERY-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-PARENT-CLOSURE-RECOVERY-001.v1.json"
+  ],
+  "exit_code": 0,
+  "blocker": "PREMATURE_VERIFIED_REQUIRED_PREDICATES_NOT_MATERIALIZED"
+}

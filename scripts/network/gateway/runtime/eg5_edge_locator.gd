@@ -57,11 +57,13 @@ func select_for_client(client_id: String, candidates: Array, world_id_hint: Stri
 		var gateway_id: String = String(candidate.get("gateway_instance_id", ""))
 		var probe_result: Variant = _probe_simulator.probe(client_id, candidate)
 		if typeof(probe_result) != TYPE_DICTIONARY or not bool(Dictionary(probe_result).get("success", false)):
-			probe_failures += int(probe_failures) + 1
+			probe_failures += 1
 			continue
 		var probe: Dictionary = Dictionary(probe_result["details"])
 		var score: Dictionary = _score(probe)
 		scored.append({"gateway_instance_id": gateway_id, "candidate": candidate, "probe": probe, "score": score})
+	if probe_failures > 0:
+		_counters["probe_failures"] = int(_counters["probe_failures"]) + probe_failures
 	if scored.is_empty():
 		return _failure("ALL_PROBES_FAILED", {"probe_failures": probe_failures})
 	scored.sort_custom(func(a, b) -> bool:
@@ -74,24 +76,27 @@ func select_for_client(client_id: String, candidates: Array, world_id_hint: Stri
 	var primary: Dictionary = scored[0]
 	var primary_score: float = float(primary["score"]["healthy_score"])
 	if not _last_selected_gateway.is_empty() and _last_selected_gateway != String(primary["gateway_instance_id"]):
-		if _last_primary_score >= 0.0 and primary_score >= _last_primary_score * (1.0 - HYSTERESIS_MARGIN) and primary_score <= _last_primary_score * (1.0 + HYSTERESIS_MARGIN):
-			_counters["hysteresis_holds"] = int(_counters["hysteresis_holds"]) + 1
-			return _selection_outcome(_last_selected_gateway, {"healthy_score": _last_primary_score, "health_state": _last_health_state}, world_id_hint, primary, false)
-	var chosen := String(primary["gateway_instance_id"])
-	var healthy_state := String(primary["probe"]["health_state"])
+		var current_entry: Dictionary = _find_scored_entry(scored, _last_selected_gateway)
+		if not current_entry.is_empty():
+			var current_score: float = float(current_entry["score"]["healthy_score"])
+			if primary_score >= current_score * (1.0 - HYSTERESIS_MARGIN):
+				_counters["hysteresis_holds"] = int(_counters["hysteresis_holds"]) + 1
+				_last_primary_score = current_score
+				_last_health_state = String(current_entry["probe"]["health_state"])
+				_set_fallback_chain(scored, _last_selected_gateway)
+				_counters["independent_of_world_location"] = int(_counters["independent_of_world_location"]) + 1
+				return _selection_outcome(_last_selected_gateway, current_entry["score"], world_id_hint, current_entry, false)
+	var chosen: String = String(primary["gateway_instance_id"])
+	var healthy_state: String = String(primary["probe"]["health_state"])
 	var selection_changed_bool: bool = chosen != _last_selected_gateway
 	if healthy_state == "HEALTHY":
 		_counters["healthy_selections"] = int(_counters["healthy_selections"]) + 1
 	elif healthy_state == "DEGRADED" or healthy_state == "DRAINING":
 		_counters["degraded_selections"] = int(_counters["degraded_selections"]) + 1
-	_fallback_chain = []
-	for entry in scored.slice(1, scored.size()):
-		_fallback_chain.append(String(entry["gateway_instance_id"]))
+	_set_fallback_chain(scored, chosen)
 	_last_selected_gateway = chosen
 	_last_primary_score = primary_score
 	_last_health_state = healthy_state
-	if probe_failures > 0:
-		_counters["probe_failures"] = int(_counters["probe_failures"]) + probe_failures
 	_counters["independent_of_world_location"] = int(_counters["independent_of_world_location"]) + 1
 	return _selection_outcome(chosen, primary["score"], world_id_hint, primary, selection_changed_bool)
 
@@ -172,13 +177,30 @@ func _validate_candidates(candidates: Array) -> Array:
 	return ids
 
 
-func _selection_outcome(gateway_id: String, score: Dictionary, world_id_hint: String, primary: Dictionary, changed: bool) -> Dictionary:
+func _find_scored_entry(scored: Array, gateway_id: String) -> Dictionary:
+	for entry_value in scored:
+		var entry: Dictionary = Dictionary(entry_value)
+		if String(entry.get("gateway_instance_id", "")) == gateway_id:
+			return entry
+	return {}
+
+
+func _set_fallback_chain(scored: Array, selected_gateway: String) -> void:
+	_fallback_chain = []
+	for entry_value in scored:
+		var entry: Dictionary = Dictionary(entry_value)
+		var gateway_id: String = String(entry.get("gateway_instance_id", ""))
+		if gateway_id != selected_gateway:
+			_fallback_chain.append(gateway_id)
+
+
+func _selection_outcome(gateway_id: String, score: Dictionary, world_id_hint: String, selected_entry: Dictionary, changed: bool) -> Dictionary:
 	return _success({
 		"gateway_instance_id": gateway_id,
 		"healthy_score": score,
 		"world_id_hint": world_id_hint,
 		"selection_changed": changed,
-		"health_state": String(primary["probe"]["health_state"]),
+		"health_state": String(selected_entry["probe"]["health_state"]),
 	})
 
 

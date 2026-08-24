@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-23-V0-P6-R2-V0-P6-R2-WO-001-0030",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "sequence": 30,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-23T08:30:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "summary": "Standard and directional PC0 NON_RED.",
+  "command": "RECORD_AUDIT_COMPLETED",
+  "exit_code": 0
+}

@@ -302,7 +302,9 @@ func _test_transport_telemetry_integration() -> void:
 
 
 func _test_runtime_wiring_and_non_goals() -> void:
-	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+	var server_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
 	var client_source: String = _load_script_source_chain(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
 	)

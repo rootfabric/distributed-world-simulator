@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "event_id": "E2026-08-23-V0-P6-R2-V0-P6-R2-WO-001-0001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-23T07:35:00Z",
+  "head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "summary": "Fresh epoch E2026-08-23-V0-P6-R2 anchored to canonical main 41ec871d (ancestor of canonical main and of the unified P6 runtime branch); Work Order V0-P6-R2-WO-001 supersedes V0-P6-R1-WO-001 content-identically (26 predicates).",
+  "command": "REFRESH_PROJECT_EPOCH_AND_REDISPATCH_CHECKPOINT_WORK",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-23-V0-P6-R1/work-orders/V0-P6-R1-WO-001.v1.json"
+  ]
+}

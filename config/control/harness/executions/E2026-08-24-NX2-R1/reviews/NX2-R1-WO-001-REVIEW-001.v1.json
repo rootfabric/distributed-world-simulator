@@ -1,0 +1,131 @@
+{
+  "schema": "distributed_world_simulator.harness_review.v1",
+  "review_id": "NX2-R1-WO-001-REVIEW-001",
+  "project_epoch": "E2026-08-24-NX2-R1",
+  "work_order_id": "NX2-R1-WO-001",
+  "role": "INDEPENDENT_REVIEWER",
+  "reviewed_at_utc": "2026-08-24T09:30:00Z",
+  "branch": "repair/nx2-realtime-traffic-separation-r1",
+  "reviewed_head_sha": "5bebf80040cf15359b5597b650dbed522e0680a1",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "NX2-R1-REV-001-F1",
+      "severity": "INFO",
+      "message": "Item A confirmed with physical-fidelity evidence: UNRELIABLE_TRANSPORT_MAPPING='RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1' accurately describes existing behavior. In scripts/network/transports/v2/enet_multi_peer_transport_port.gd (_transfer_mode), delivery_mode 'UNRELIABLE_SEQUENCED' maps to MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, which Godot's ENetMultiplayerPeer emits WITHOUT ENET_PACKET_FLAG_RELIABLE (unreliable on the wire; fragmented unreliable datagrams carry ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT and get_packet_mode() decodes them back as TRANSFER_MODE_UNRELIABLE_ORDERED - same shared mapping used at receiver, so declared==physical identity holds size-independently). Sequencing is application-owned: every frame carries an application 'sequence' field (receive path records int(frame['sequence'])), realtime_channel_policy.sequence_stream() defines app-level stream identity 'UNRELIABLE_SEQUENCED|ENET_CHANNEL_<i>', and REALTIME_COALESCING_POLICY='LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1' performs latest-wins replacement per application stream. Nuance (non-blocking): ENet itself also sequences within a channel under UNRELIABLE_ORDERED, so 'APPLICATION_SEQUENCED' denotes app-owned sequence bookkeeping/coalescing rather than absence of any wire-level ordering; this does not contradict the pinned value."
+    },
+    {
+      "id": "NX2-R1-REV-001-F2",
+      "severity": "INFO",
+      "message": "Git narrative of item A3 verified via git show: constant introduced as RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1 by ac8ae0af; 0fdf74fa (2026-08-22, 'fix(eg4): keep global UNRELIABLE_SEQUENCED remap, refresh NX2 pins and record decision') deliberately kept the RAW_ENET pin (test assertion at that revision pins ChannelPolicy.UNRELIABLE_TRANSPORT_MAPPING == 'RAW_ENET_...', decision rationale recorded in EG4 notes and commit body); P6 commit 9e0cc74f (2026-08-23, 'control(p6): P6 implementation (ownership, identity, ledger, admission, closure, route, outpost, persistence, shadow)') silently flipped the constant to ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1 without any mention in its commit message - accidental drift confirmed."
+    },
+    {
+      "id": "NX2-R1-REV-001-F3",
+      "severity": "INFO",
+      "message": "No runtime or test consumer depends on the drifted value: grep over scripts/, tests/, config/network/ finds zero references to ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1; the only literal pins are the restored policy constant, the test assertion, the protocol-manifest mirror (by reference), and control/validation documents (validation/v16.12.0-network-nx2-realtime-traffic-separation-validation.json pins the RAW_ENET value). Restoration is behavior-neutral."
+    },
+    {
+      "id": "NX2-R1-REV-001-F4",
+      "severity": "NOTE",
+      "message": "Working tree contains a few untracked *.uid sidecars (scripts/ecology/*, tests/runtime/test_v0_p3_replica_clock_delta_reordering.gd.uid) outside lane scope; they are NOT committed on this branch (66deb469 already dropped committed sidecars) and do not affect the origin/main..HEAD fence. No action required for this WO."
+    }
+  ],
+  "checked_items": {
+    "A_campaign_owner_enet_mapping_check": {
+      "status": "CONFIRMED",
+      "constant_restored": "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1",
+      "restored_at": "b7292748 fix(nx2): restore pre-P6 realtime contract bindings and pinned mapping",
+      "A1_enet_transport_mapping": {
+        "file": "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+        "_transfer_mode_map": {
+          "UNRELIABLE": "TRANSFER_MODE_UNRELIABLE (ENET_PACKET_FLAG_UNSEQUENCED)",
+          "UNRELIABLE_SEQUENCED": "TRANSFER_MODE_UNRELIABLE_ORDERED (sequenced-unreliable, NO ENET_PACKET_FLAG_RELIABLE)",
+          "default": "TRANSFER_MODE_RELIABLE"
+        },
+        "channels": {
+          "CONTROL": {"index": 0, "delivery": "RELIABLE_ORDERED"},
+          "INPUT": {"index": 1, "delivery": "UNRELIABLE_SEQUENCED"},
+          "SNAPSHOT": {"index": 2, "delivery": "UNRELIABLE_SEQUENCED"},
+          "ITEM": {"index": 3, "delivery": "RELIABLE_ORDERED"},
+          "RESYNC": {"index": 4, "delivery": "RELIABLE_ORDERED"},
+          "TELEMETRY": {"index": 5, "delivery": "UNRELIABLE_SEQUENCED"}
+        },
+        "unreliable_channels_without_reliable_flag": true,
+        "application_level_sequencing": [
+          "frames carry application 'sequence' field, recorded on MESSAGE_RECEIVED (int(frame['sequence']))",
+          "sequence_stream() = '<class>|ENET_CHANNEL_<index>' application stream identity",
+          "REALTIME_COALESCING_POLICY LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1 latest-wins per app stream",
+          "receiver-side STRICT_CHANNEL_AND_TRANSFER_MODE_V1 fence + PEER_LOCAL_QUARANTINE_V1 validates get_packet_mode()/get_packet_channel() against declared mode"
+        ],
+        "conclusion": "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1 describes existing physical behavior; no divergence"
+      },
+      "A2_manifest_self_consistency": {
+        "file": "scripts/network/observability/network_protocol_manifest_p2.gd",
+        "line": 139,
+        "mechanism": "'unreliable_transport_mapping': RealtimeChannelPolicyScript.UNRELIABLE_TRANSPORT_MAPPING - mirror by reference, drift-impossible by construction; test asserts manifest value == ChannelPolicy constant"
+      },
+      "A3_git_history_narrative": {
+        "ac8ae0af": "introduced RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1 (feat(network): add NX2 realtime traffic separation)",
+        "commit_0fdf74fa": "2026-08-22 'keep global UNRELIABLE_SEQUENCED remap, refresh NX2 pins' - deliberately kept/refreshed the RAW_ENET pin (test line 63 at that revision) with recorded decision rationale",
+        "commit_9e0cc74f": "2026-08-23 P6 implementation - changed constant to ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1; commit message does not mention the constant change; silent drift CONFIRMED via git show"
+      }
+    },
+    "fence_check": {
+      "status": "PASS",
+      "diff_origin_main_head_files": [
+        "config/control/harness/executions/E2026-08-24-NX2-R1/events/NX2-R1-WO-001/0001-work-order-created.v1.json",
+        "config/control/harness/executions/E2026-08-24-NX2-R1/events/NX2-R1-WO-001/0002-director-dispatched.v1.json",
+        "config/control/harness/executions/E2026-08-24-NX2-R1/events/NX2-R1-WO-001/0003-implementation-committed.v1.json",
+        "config/control/harness/executions/E2026-08-24-NX2-R1/project-epoch.v1.json",
+        "config/control/harness/executions/E2026-08-24-NX2-R1/work-orders/NX2-R1-WO-001.v1.json",
+        "scripts/network/realtime/realtime_channel_policy.gd",
+        "tests/network/test_nx2_realtime_traffic_separation.gd"
+      ],
+      "allowed_paths_respected": true,
+      "forbidden_paths_touched": [],
+      "forbidden_globs_checked": ["scripts/network/gateway/**", "scripts/network/transports/**", "scripts/runtime/**", "config/architecture/**", "config/control/project-program-registry.v1.json"]
+    },
+    "test_binding_inheritance_chain": {
+      "status": "PASS",
+      "server_bound_via": "_load_script_source_chain (tests/network/test_nx2_realtime_traffic_separation.gd lines 292-299), symmetric with existing client binding",
+      "head_base_of_server_runtime": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd line 1 extends res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd (chain loader follows quoted extends first-line recursively)",
+      "markers_present_in_chain": {
+        "func _handle_player_input_batch": "m3_dedicated_server_runtime_p2.gd:465",
+        "_movement_results_suppressed += 1": "m3_dedicated_server_runtime_p2.gd:610",
+        "COMPACT_GAMEPLAY_SNAPSHOT": "m3_dedicated_server_runtime_p2.gd:666",
+        "MOVEMENT_NETWORK_TICK": "m3_dedicated_server_runtime_p2.gd:667",
+        "ITEM_GRAPH_RESYNC_REQUEST": "m3_dedicated_server_runtime_p2.gd:273",
+        "_handle_item_graph_resync_request": "m3_dedicated_server_runtime_p2.gd:721",
+        "ITEM_GRAPH_DELTA_BUILD_FALLBACK": "m3_dedicated_server_runtime_p2.gd:803",
+        "_broadcast_item_snapshot": "m3_dedicated_server_runtime_p2.gd:741 (+ usages in m3_dedicated_server_runtime.gd)",
+        "_movement_snapshot_retransmit_requests += 1": "m3_dedicated_server_runtime_p2.gd:531",
+        "_movement_snapshot_dirty = target_count > 0 and not all_enqueued": "m3_dedicated_server_runtime_p2.gd:676"
+      },
+      "weakening_assessment": "git diff base..HEAD on the test shows exactly ONE change: FileAccess single-file read replaced by inheritance-chain loader for the server source (comment documents parity rule with client); no assertion removed or weakened"
+    },
+    "provenance_events": {
+      "status": "PASS",
+      "events": [
+        {"sequence": 1, "type": "WORK_ORDER_CREATED", "actor": "DIRECTOR", "at_utc": "2026-08-24T07:00:16Z"},
+        {"sequence": 2, "type": "DISPATCHED", "actor": "DIRECTOR", "at_utc": "2026-08-24T07:00:16Z"},
+        {"sequence": 3, "type": "IMPLEMENTATION_COMMITTED", "actor": "IMPLEMENTER", "at_utc": "2026-08-24T07:00:16Z"}
+      ],
+      "sequence_valid_1_to_3": true,
+      "timestamps_monotonic_non_decreasing": true,
+      "preexisting_wip_adoption_honest": "event 0003 explicitly adopts b7292748 and 66deb469 as PREEXISTING_WIP authored before WO materialization",
+      "historical_regression_proof_documented": "WO scope and event 0003 document pass at 9e0cc74f~1 (exit 0 pre-P6) with regression exactly at P6 commit 9e0cc74f"
+    },
+    "exact_head_validation": {
+      "status": "PASS",
+      "command": "<godot-double-4.7.1-a13da4f> --headless --path <repo> --script res://tests/network/test_nx2_realtime_traffic_separation.gd",
+      "environment": "isolated HOME/XDG dirs, BREAKPOINT_RUNTIME_DISABLED=1, timeout 300s",
+      "godot": "v4.7.1.stable.double.custom_build.a13da4feb",
+      "exit_code": 0,
+      "output": "NX2 realtime traffic separation: 131 assertions, 0 failures",
+      "predicate_NX2_TEST_FULL_PASS_131_ASSERTIONS": true
+    }
+  },
+  "runtime_code_modified_by_reviewer": false,
+  "verdict_rationale": "Repair matches WO scope exactly: pinned mapping restored to the value deliberately refreshed in 0fdf74fa and accidentally flipped by undocumented P6 commit 9e0cc74f; restoration is semantically faithful to the real ENet transport behavior (item A confirmed with flag/streaming evidence); server source-contract binding now uses the same inheritance-chain loader as the client without weakening any assertion; provenance is complete and honest; focused suite passes at exact head with 131 assertions / 0 failures."
+}
