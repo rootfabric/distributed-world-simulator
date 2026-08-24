@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0007",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "sequence": 7,
+  "event_type": "WAITING_HUMAN",
+  "work_state": "WAITING_HUMAN",
+  "recorded_at_utc": "2026-08-24T04:45:17Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "head_sha": "a2da4729da9b6ff7370ad7e701f3b9cad0dc1db5",
+  "summary": "Human attention required before checkpoint proposal can be guarded. Decision queue: (1) ROUTING OF MCP VISUAL EVIDENCE - predicate V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS is environment-blocked on this Ubuntu machine (no display, no Breakpoint MCP host); options: operator Windows MCP session per docs/MCP_GODOT.md (canonical precedent CH9.6), or provision Xvfb+MCP environment, or explicit main-owned deferral amendment. (2) ROUTING OF MAIN-INHERITED REDS - test_nx2_realtime_traffic_separation and test_eg45_synthetic_journal proven failing identically on pristine origin/main 9ade3233; they block FULL_WORLD_CORE_REGRESSION_PASS for every branch including main and live in forbidden_paths of this repair WO; require separate main-side repair lanes and scheduling. (3) REGISTRY ACCEPTANCE DEBT - formal PC0 overall RED is driven by declared V0 program states predating this mission (P2/P3 debt, generation-80 items); proposal guard STANDARD_PC0_NON_RED requires main-owned registry progression. Implementation, focused validation, literal real-time soak and control roles are COMPLETE and durable; nothing in this repair scope remains automatable.",
+  "command": "RECORD_WAITING_HUMAN_DECISION_QUEUE_FOR_P6_R3_CLOSURE",
+  "exit_code": 0,
+  "human_attention_items": [
+    {"decision_id": "P6-R3-HA-001-MCP-VISUAL-EVIDENCE-ROUTING", "risk": "HIGH", "blocking": true},
+    {"decision_id": "P6-R3-HA-002-MAIN-INHERITED-REDS-LANES", "risk": "HIGH", "blocking": true},
+    {"decision_id": "P6-R3-HA-003-REGISTRY-ACCEPTANCE-DEBT-PROGRESSION", "risk": "HIGH", "blocking": true}
+  ],
+  "evidence_paths": [
+    "docs/evidence/2026-08-24_V0_P6_R3_WO_PREDICATE_LEDGER_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_REGRESSION_FENCE_FINDINGS_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md",
+    "artifacts/test-results/p6-r3-soak-suite-410928/test_v0_p6_thirty_minute_soak.log",
+    "artifacts/test-results/world-regression-summary.json"
+  ]
+}
