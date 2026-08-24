@@ -34,7 +34,7 @@ regression fence findings ............. aadab1ca..., b14da054..., <этот ко
 | 9 | ZERO_PRIVATE_WRITE_PASS | PASS | suite 16/16 |
 | 10 | FALSE_COMPLETION_EVIDENCE_RETRACTED_PASS | PASS | 2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md, commit 9c411aa7 |
 | 11 | THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME | **PASS** | elapsed=1800013 ms (30.00 мин), checkpoints=29, reconnects 2+2, 51/51 assertions, `V0_P6_R3_SOAK_SUITE_PASS`; artifacts/test-results/p6-r3-soak-suite-410928/ |
-| 12 | V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS | **ОТКРЫТ (environment-blocked)** | на данной машине нет дисплея/Xvfb и Breakpoint MCP host; канонический путь — операторская Windows MCP-сессия (как принято в CH9.6). PASS не фабрикуется |
+| 12 | V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS | **PASS** | MCP-сессия исполнена автономно на этой машине (Ubuntu, double a13da4feb, SHA bfa7ce63…, breakpoint-mcp 1.82.0, addon 1.7.0): Сценарии 1–2 `docs/MCP_GODOT.md`, 17/17 проверок, managed stop подтверждён; exact head 20b00f89, изолированный worktree. См. `2026-08-24_V0_P6_R3_MCP_VISUAL_EVIDENCE_RU.md`, event 0008 |
 | 13 | FULL_WORLD_CORE_REGRESSION_PASS | **ОТКРЫТ (блокеры вне ветки)** | census 293 шага: всё GREEN кроме (A) nx2+eg45 — доказанно унаследованные RED чистого main 9ade3233, (B) 5 display-fenced тестов. См. REGRESSION_FENCE_FINDINGS |
 | 14 | POST_BUILD_CRITIQUE_COMPLETED | PENDING | роль post-build critique после данного документа |
 | 15 | EVIDENCE_MAP_COMPLETE | PENDING | карта собирается по мере ролей |
@@ -55,11 +55,11 @@ focused suite 16/16, реальный process-restart гейт, литераль
 two-client real-time soak (новое доказательство этой сессии), полная ретракция
 ложных claims R2, census regression без единого нового дефекта ветки.
 
-До checkpoint proposal остались три категории работы:
+До checkpoint proposal остались две категории работы:
 
-1. **Environment-gate**: MCP visual evidence требует дисплея + MCP host —
-   недоступно на данной Ubuntu-машине; нужен операторский Windows-прогон
-   или предоставление среды. STOP-condition WO прямо запрещает имитацию.
+1. **Environment-gate — ЗАКРЫТ (2026-08-24)**: MCP visual evidence исполнен
+   автономно на этой машине через предоставленную среду (double-Godot +
+   breakpoint-mcp host, X11 :0); предикат №12 → PASS, HA-001 снят (event 0008).
 2. **Чужие дефекты**: nx2 и eg45 — унаследованные RED чистого main;
    ремонт возможен только в отдельных линиях (scripts/network — forbidden
    paths данного WO).
@@ -67,4 +67,4 @@ two-client real-time soak (новое доказательство этой се
    Verifier, Evidence Map, формальный PC0, затем proposal.
 
 Статус миссии: `VERIFYING — implementation complete; verification partially
-complete; two predicates honestly open (environment/other-lane blockers)`.
+complete; one predicate honestly open (other-lane blockers nx2+eg45)`.

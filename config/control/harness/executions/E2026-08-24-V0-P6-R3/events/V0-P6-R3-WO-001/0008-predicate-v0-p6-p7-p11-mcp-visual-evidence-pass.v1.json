@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0008",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "sequence": 8,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-24T06:53:57Z",
+  "actor": "IMPLEMENTER",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "head_sha": "20b00f897e1f42bea9bc5474f85d3995a0d0a478",
+  "summary": "Predicate V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS durably proven and human attention item P6-R3-HA-001-MCP-VISUAL-EVIDENCE-ROUTING resolved via decision-queue option 2 (provision environment + autonomous session; no operator Windows session needed, no deferral). Environment provisioned on this Ubuntu machine: canonical double build 4.7.1 custom_build a13da4feb (sha256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7), breakpoint-mcp host 1.82.0 over stdio, checked-in addon 1.7.0, X11 display :0 (Xvfb not required). Session executed per docs/MCP_GODOT.md contract against exact head 20b00f89 in an isolated detached worktree: godot_run_managed playground.tscn, SceneTree readiness asserted, Scenario 1 (Tab inventory open/close, screen text INVENTORY, item-inspector hover feedback) and Scenario 2 (camera-yaw calibrated homing to item_container 'Универсальный ящик', E-key open, screen text asserted) all PASS; 17/17 checks, all inputs via runtime_inject_input with confirm, all frames via runtime_screenshot (1280x720), zero new warning/error log entries, all actions released, managed process stopped and exit confirmed. Canonical run artifacts: artifacts/test-results/p6r3-mcp-visual-final-2026-08-24T06-44-42/ and artifacts/mcp/final-*.png (sha256 recorded in evidence doc). Earlier driver-iteration runs (run1-run4) are documented honestly as driver debugging, incl. runs made while the main checkout was transiently switched by a parallel process to nx2-r1 @66deb46; they are not used as predicate proof. Remaining open items unchanged: FULL_WORLD_CORE_REGRESSION_PASS (nx2+eg45 main-inherited lanes, HA-002) and control roles (ledger 14-24).",
+  "command": "RECORD_PREDICATE_VERIFIED_AFTER_AUTONOMOUS_MCP_VISUAL_SESSION",
+  "exit_code": 0,
+  "predicate": "V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS",
+  "resolves_human_attention_item": "P6-R3-HA-001-MCP-VISUAL-EVIDENCE-ROUTING",
+  "evidence_paths": [
+    "docs/evidence/2026-08-24_V0_P6_R3_MCP_VISUAL_EVIDENCE_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_WO_PREDICATE_LEDGER_RU.md",
+    "artifacts/test-results/p6r3-mcp-visual-final-2026-08-24T06-44-42/summary.json",
+    "artifacts/test-results/p6r3-mcp-visual-final-2026-08-24T06-44-42/transcript.jsonl",
+    "artifacts/mcp/final-s1-inventory-open.png",
+    "artifacts/mcp/final-s1-hover-backpack-item.png",
+    "artifacts/mcp/final-s2-container-open.png",
+    "artifacts/mcp/final-final-state.png"
+  ]
+}
