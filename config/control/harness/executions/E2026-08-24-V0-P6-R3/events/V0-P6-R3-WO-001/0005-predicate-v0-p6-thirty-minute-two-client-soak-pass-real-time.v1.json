@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0005",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "sequence": 5,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-24T04:31:32Z",
+  "actor": "IMPLEMENTER",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "head_sha": "c6456de9e39223d397fbda12d7f2891658d81210",
+  "summary": "Predicate V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME durably proven by literal real-time run: elapsed=1800013ms (30.00 minutes wall clock, no acceleration), 29 periodic delegated checkpoints through the REAL AuthoritativeRecoveryCoordinator/Repository, session mobility via registry rebind_on_transport_change (alice x2, bob x2), 51/51 assertions including generation-B bytes-only recovery with canonical-owner dedup. Runner marker V0_P6_R3_SOAK_SUITE_PASS. Regression census closed: no new defects on this branch; nx2 and eg45 proven inherited from pristine main; m6/p1 classified load flakes via isolated reruns. Remaining honestly-open WO items: MCP visual evidence (environment-blocked), FULL_WORLD_CORE_REGRESSION_PASS (main-inherited REDs + display-fenced set), control roles (critique/review/verify/PC0/proposal).",
+  "command": "RECORD_PREDICATE_VERIFIED_AFTER_LITERAL_SOAK_AND_CENSUS_CLOSURE",
+  "exit_code": 0,
+  "predicate": "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME",
+  "evidence_paths": [
+    "RUN_V0_P6_R3_SOAK.sh",
+    "tests/runtime/test_v0_p6_thirty_minute_soak.gd",
+    "artifacts/test-results/p6-r3-soak-suite-410928/test_v0_p6_thirty_minute_soak.log",
+    "artifacts/test-results/p6-r3-night-chain-20260824-132416/verdicts.txt",
+    "docs/evidence/2026-08-24_V0_P6_R3_REGRESSION_FENCE_FINDINGS_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_WO_PREDICATE_LEDGER_RU.md"
+  ]
+}
