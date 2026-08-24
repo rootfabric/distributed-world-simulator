@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-23-R3",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-24-R4-POST-P6",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -21,12 +21,12 @@
       "H0_2_NX_C1_HIGH_RISK_PILOT"
     ],
     "current_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-    "reason": "H0.2 remains the active Harness pilot and keeps all HIGH-risk acceptance predicates. V0/P is a separately declared sequential product lane. Review/verification-only NX activity may coexist, but non-trivial runtime mutation remains globally serialized before H0.3."
+    "reason": "H0.2 remains the active Harness pilot. V0/P is a separately declared sequential product lane. Review/verification-only activity may coexist, but non-trivial runtime mutation remains globally serialized before H0.3."
   },
   "parallel_product_checkpoints": {
     "enabled": true,
     "checkpoints": [
-      "V0_P6_PERSISTENT_SHARED_OUTPOST"
+      "V0_POST_P6_SEAMLESS_INSERTION_GATE"
     ],
     "future_checkpoints_not_yet_eligible": [
       "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
@@ -52,28 +52,35 @@
     }
   },
   "v0_product_train_routing": {
-    "current_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-    "current_phase": "P6_PRE_DISPATCH_CONTROL_READY",
+    "current_checkpoint": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
+    "current_phase": "POST_P6_SM1_ACTIVATION_CONTROL_CANDIDATE",
     "runtime_mutation_allowed_now": false,
     "next_runtime_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "next_runtime_checkpoint_eligible": false,
-    "accepted_predecessor_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-    "accepted_predecessor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",
-    "p6_activation_requires": [
-      "V0_P5_CHECKPOINT_ACCEPTED",
-      "MAIN_DECLARED_EXACT_ACCEPTED_P5_SUCCESSOR_BASE",
-      "FRESH_P6_EPOCH_AND_WORK_ORDER",
-      "MUTATION_LEASE_ROTATED_TO_P6",
-      "DIRECTOR_DISPATCH"
+    "accepted_predecessor_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "accepted_predecessor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "p6_acceptance": {
+      "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+      "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
+      "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+    },
+    "post_p6_decision": {
+      "decision": "ACTIVATE_V0_SM1",
+      "source": "EXPLICIT_OWNER_DIRECTIVE_2026_08_24",
+      "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json"
+    },
+    "sm1_completed_control_prerequisites": [
+      "V0_P6_CHECKPOINT_ACCEPTED",
+      "MAIN_DECLARED_EXACT_ACCEPTED_P6_SUCCESSOR_BASE",
+      "FRESH_SM1_EPOCH_AND_WORK_ORDER",
+      "OWNER_DECISION_ACTIVATE_V0_SM1"
     ],
-    "post_p6_rule": "P7 is not auto-dispatched. Execute V0_POST_P6_SEAMLESS_INSERTION_GATE and record ACTIVATE_V0_SM1 or an explicit human DEFER decision first.",
-    "p6_completed_activation_prerequisites": [
-      "V0_P5_CHECKPOINT_ACCEPTED",
-      "MAIN_DECLARED_EXACT_ACCEPTED_P5_SUCCESSOR_BASE",
-      "FRESH_P6_EPOCH_AND_WORK_ORDER",
-      "MUTATION_LEASE_ROTATED_TO_P6"
-    ],
-    "p6_remaining_activation_prerequisites": [
+    "sm1_remaining_activation_prerequisites": [
+      "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
+      "FRESH_INDEPENDENT_POST_P6_CONTROL_REVIEW_PASS",
+      "POST_P6_CONTROL_MERGED_TO_MAIN",
+      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+      "MUTATION_LEASE_ROTATED_TO_SM1",
       "DIRECTOR_DISPATCH"
     ],
     "edge_gateway_foundation": {
@@ -97,9 +104,9 @@
     "effective_registry_generation": 80,
     "capacity": 1,
     "holder_program": "V0",
-    "holder_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-    "holder_branch": "feature/v0-p6-persistent-shared-outpost",
-    "state": "RESERVED_FOR_V0_P6_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION",
+    "holder_checkpoint": "NONE",
+    "holder_branch": "NONE",
+    "state": "FREE_CONTROL_ONLY_AWAITING_SM1_ACTIVATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -110,7 +117,9 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P5 is formally accepted on main (record config/control/harness/acceptance/V0-P5-R2-CHECKPOINT-ACCEPTED-001.v1.json) and the Edge Gateway Foundation is formally accepted (record config/control/harness/acceptance/EDGE_GATEWAY_FOUNDATION_ACCEPTED-001.v1.json at main 2021ee7ce8b4b66208f2da1ce142d36bcb356c53). The exact P6 successor base is 491ca7d058690d3de5fcea5e41aaee230a31b3ab. The single pre-H0.3 V0 runtime mutation lease is rotated to P6 but remains inactive until a committed Director DISPATCHED event for the fresh P6 Work Order."
+    "proposed_next_holder_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "proposed_next_holder_branch": "feature/v0-sm1-seamless-product-integration",
+    "reason": "P6 is formally accepted at main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637. The previous P6 runtime worker is released. Owner selected ACTIVATE_V0_SM1, but runtime remains forbidden while the post-P6 control candidate, EG5 repair, post-merge PC0 and Director dispatch gates are incomplete."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
