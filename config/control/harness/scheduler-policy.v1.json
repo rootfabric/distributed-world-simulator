@@ -104,9 +104,9 @@
     "effective_registry_generation": 80,
     "capacity": 1,
     "holder_program": "V0",
-    "holder_checkpoint": "NONE",
-    "holder_branch": "NONE",
-    "state": "FREE_CONTROL_ONLY_AWAITING_SM1_ACTIVATION",
+    "holder_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "holder_branch": "feature/v0-p6-persistent-shared-outpost",
+    "state": "FROZEN_ACCEPTED_PENDING_POST_P6_CONTROL_RELEASE",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -119,7 +119,7 @@
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
     "proposed_next_holder_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "proposed_next_holder_branch": "feature/v0-sm1-seamless-product-integration",
-    "reason": "P6 is formally accepted at main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637. The previous P6 runtime worker is released. Owner selected ACTIVATE_V0_SM1, but runtime remains forbidden while the post-P6 control candidate, EG5 repair, post-merge PC0 and Director dispatch gates are incomplete."
+    "reason": "P6 is formally accepted, but this post-P6 control candidate is not yet canonical. Keep the existing P6 lease identity as a frozen fail-closed holder until the reconciliation is independently reviewed and integrated. After canonical post-merge NON_RED and the separate EG5 repair gate, rotate the lease directly from accepted P6 to SM1 before Director dispatch."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
