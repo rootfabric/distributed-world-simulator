@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-EG45-R1-EG45-R1-WO-001-0004",
+  "project_epoch": "E2026-08-24-EG45-R1",
+  "work_order_id": "EG45-R1-WO-001",
+  "sequence": 4,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-24T06:50:21Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/eg45-synthetic-journal-r1",
+  "head_sha": "b2a88eb537f53ed711bcdfacbfed478101d544e0",
+  "summary": "CHRONOLOGY RECONCILIATION (append-only, no backdating): implementation commit 866a44ec was authored at 2026-08-24T15:27:15+10:00 (05:27:15Z) and therefore PRECEDES the Work Order materialization events 0001 (06:05Z) and 0002 (06:10Z). The existing events 0001-0003 are preserved as historical artifacts with their actual recording times. Effective interpretation adopted by Director: the implementation existed as PREEXISTING_WIP before formal control materialization and is hereby explicitly ADOPTED into EG45-R1-WO-001 as RECOVERED_WIP; the Work Order governs the repair from this adoption point onward. No timestamps were altered; the chronology inconsistency itself is durably recorded by this event.",
+  "command": "CONTROL_RECONCILIATION_ADOPT_PREEXISTING_WIP_AS_RECOVERED_WIP",
+  "exit_code": 0,
+  "preexisting_wip_commits": ["866a44ecde9819523d1b9cec9ee936c879dc84cc"],
+  "evidence_paths": [
+    "tools/network/eg45_synthetic_effect_journal.gd",
+    "scripts/network/gateway/runtime/eg45_interaction_router.gd",
+    "tests/network/test_eg45_interaction_router.gd"
+  ]
+}
