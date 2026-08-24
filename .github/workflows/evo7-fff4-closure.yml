@@ -3,7 +3,7 @@ name: ECO EVO7 FFF4 Closure
 on:
   pull_request:
     branches:
-      - control/eco-evo7-fff3-baseline-freeze-r1
+      - feature/eco-evo7-fff31-causality-repair-r1
     paths:
       - "RUN_ECO_EVO7_FFF4_TESTS.ps1"
       - "scripts/research/ecology/plant_environment_effect_v2.gd"
