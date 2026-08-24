@@ -47,24 +47,25 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         ]
         self.assertEqual(1, len(historical), historical)
         self.clearance = historical[0]
-        self.producer_ref = f"origin/{self.clearance['producer_branch']}"
-        self.consumer_ref = f"origin/{self.clearance['consumer_branch']}"
+        self.producer_ref = self.clearance["reviewed_producer_head"]
+        self.consumer_ref = self.clearance["consumer_head_sha"]
         self.producer = {
             "program": self.clearance["producer_program"],
             "branch": self.clearance["producer_branch"],
-            "head_sha": git("rev-parse", "--verify", self.producer_ref),
+            "head_sha": self.clearance["reviewed_producer_head"],
         }
         self.consumer = {
             "program": self.clearance["consumer_program"],
             "branch": self.clearance["consumer_branch"],
-            "head_sha": git("rev-parse", "--verify", self.consumer_ref),
+            "head_sha": self.clearance["consumer_head_sha"],
             "passport_path": self.clearance["consumer_passport_path"],
             "passport_blob_sha": git(
                 "rev-parse",
                 "--verify",
-                f"{self.consumer_ref}:{self.clearance['consumer_passport_path']}",
+                f"{self.clearance['consumer_head_sha']}:{self.clearance['consumer_passport_path']}",
             ),
         }
+        self.assertEqual(self.clearance["consumer_passport_blob_sha"], self.consumer["passport_blob_sha"])
         self.critical_hits = list(self.clearance["critical_files"])
         self.all_hits = list(self.clearance["watched_files"])
 
@@ -82,17 +83,17 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         return completed.returncode == 0
 
     def _scope(self, clearance: dict) -> tuple[dict, dict, list[str], list[str], str, str]:
-        producer_ref = f"origin/{clearance['producer_branch']}"
-        consumer_ref = f"origin/{clearance['consumer_branch']}"
+        producer_ref = clearance["reviewed_producer_head"]
+        consumer_ref = clearance["consumer_head_sha"]
         producer = {
             "program": clearance["producer_program"],
             "branch": clearance["producer_branch"],
-            "head_sha": git("rev-parse", "--verify", producer_ref),
+            "head_sha": clearance["reviewed_producer_head"],
         }
         consumer = {
             "program": clearance["consumer_program"],
             "branch": clearance["consumer_branch"],
-            "head_sha": git("rev-parse", "--verify", consumer_ref),
+            "head_sha": clearance["consumer_head_sha"],
             "passport_path": clearance["consumer_passport_path"],
             "passport_blob_sha": git(
                 "rev-parse",
@@ -100,6 +101,7 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
                 f"{consumer_ref}:{clearance['consumer_passport_path']}",
             ),
         }
+        self.assertEqual(clearance["consumer_passport_blob_sha"], consumer["passport_blob_sha"])
         return (
             producer,
             consumer,
@@ -126,17 +128,17 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
             ancestor_check,
         )
 
-    def test_historical_v0_p4_to_nx_clearance_still_matches_reviewed_refs_and_blobs(self):
+    def test_historical_v0_p4_to_nx_clearance_replays_on_exact_reviewed_subjects(self):
         accepted, rejections = self.resolve()
         self.assertIsNotNone(accepted, rejections)
         self.assertEqual([], rejections)
         self.assertEqual(HISTORICAL_V0_TO_NX_CLEARANCE, accepted["clearance_id"])
-        self.assertTrue(self.ancestor_check(self.clearance["reviewed_producer_head"], self.producer_ref))
+        self.assertEqual(self.clearance["reviewed_producer_head"], self.producer["head_sha"])
+        self.assertEqual(self.clearance["consumer_head_sha"], self.consumer["head_sha"])
         for path, expected in self.clearance["watched_file_blobs"].items():
             self.assertEqual(expected, self.blob_lookup(self.clearance["reviewed_producer_head"], path), path)
-            self.assertEqual(expected, self.blob_lookup(self.producer_ref, path), path)
 
-    def test_historical_nx_to_v0_p4_clearance_still_matches_reviewed_refs_and_blobs(self):
+    def test_historical_nx_to_v0_p4_clearance_replays_on_exact_reviewed_subjects(self):
         matching = [
             item
             for item in self.clearances
@@ -156,10 +158,9 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         )
         self.assertIsNotNone(accepted, rejections)
         self.assertEqual([], rejections)
-        self.assertTrue(self.ancestor_check(clearance["reviewed_producer_head"], producer_ref))
+        self.assertEqual(clearance["reviewed_producer_head"], producer_ref)
         for path, expected in clearance["watched_file_blobs"].items():
             self.assertEqual(expected, self.blob_lookup(clearance["reviewed_producer_head"], path), path)
-            self.assertEqual(expected, self.blob_lookup(producer_ref, path), path)
 
     def test_current_post_p6_v0_does_not_inherit_historical_p4_to_nx_clearance(self):
         current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
@@ -244,7 +245,7 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
 
         accepted, rejections = self.resolve(blob_lookup=producer_drift)
         self.assertIsNone(accepted)
-        self.assertEqual(f"PRODUCER_BLOB_DRIFT:{target}", rejections[0]["reason"])
+        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{target}", rejections[0]["reason"])
         self.assertNotEqual(expected, "f" * 40)
 
     def test_decision_and_independent_evidence_ids_are_mandatory(self):
