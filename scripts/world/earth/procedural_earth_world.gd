@@ -82,11 +82,7 @@ func setup(logger_reference = null) -> bool:
 	pipeline.begin_batch("global_earth")
 	global_earth.mesh = _build_global_mesh()
 	var global_profile: Dictionary = pipeline.end_batch()
-	var default_spawn: Dictionary = body_config.get("default_spawn", {})
-	var default_direction: Vector3 = direction_from_lat_lon(
-		deg_to_rad(float(default_spawn.get("latitude_deg", 45.0))),
-		deg_to_rad(float(default_spawn.get("longitude_deg", 25.0)))
-	)
+	var default_direction: Vector3 = get_canonical_spawn_direction()
 	prepare_surface_region(default_direction, false)
 	initialized = true
 	_log_info("earth_world_initialized", {
@@ -275,6 +271,31 @@ func get_altitude(world_position: Vector3) -> float:
 	return world_position.length() - planet_radius_m - get_surface_height(direction)
 
 
+func get_canonical_spawn_direction() -> Vector3:
+	var default_spawn: Dictionary = body_config.get("default_spawn", {})
+	return direction_from_lat_lon(
+		deg_to_rad(float(default_spawn.get("latitude_deg", 45.0))),
+		deg_to_rad(float(default_spawn.get("longitude_deg", 25.0)))
+	)
+
+
+func get_canonical_spawn_altitude_m() -> float:
+	var default_spawn: Dictionary = body_config.get("default_spawn", {})
+	return float(default_spawn.get("altitude_m", 450.0))
+
+
+func get_canonical_spawn_snapshot() -> Dictionary:
+	var default_spawn: Dictionary = body_config.get("default_spawn", {})
+	var direction: Vector3 = get_canonical_spawn_direction()
+	return {
+		"id": "earth-default-spawn",
+		"latitude_deg": float(default_spawn.get("latitude_deg", 45.0)),
+		"longitude_deg": float(default_spawn.get("longitude_deg", 25.0)),
+		"altitude_m": get_canonical_spawn_altitude_m(),
+		"direction": [direction.x, direction.y, direction.z],
+	}
+
+
 func get_gravity_at_distance(distance_from_center: float) -> float:
 	return GravityMathScript.acceleration_magnitude(
 		distance_from_center,
@@ -419,6 +440,7 @@ func create_snapshot() -> Dictionary:
 		"local_mesh_statistics": last_local_mesh_statistics.duplicate(true),
 		"global_mesh_statistics": last_global_mesh_statistics.duplicate(true),
 		"placement": placement_system.get_summary() if placement_system != null else {},
+		"canonical_spawn": get_canonical_spawn_snapshot(),
 	}
 
 

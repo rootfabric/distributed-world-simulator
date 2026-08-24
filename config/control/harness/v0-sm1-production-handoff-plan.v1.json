@@ -1,0 +1,185 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_production_handoff_plan.v1",
+  "revision": "V0-SM1-PRODUCTION-HANDOFF-2026-08-24-R1",
+  "canonical_owner": "main",
+  "status": "CONTROL_CANDIDATE",
+  "authored_against_main": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "accepted_p6_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+  "accepted_p6_product_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "runtime_branch": "feature/v0-sm1-seamless-product-integration",
+  "risk_class": "CRITICAL",
+  "campaign_goal": "PRODUCTION_STATIC_A_B_SEAMLESS_HANDOFF_OVER_ACCEPTED_P6",
+  "hard_invariants": [
+    "EXACTLY_ONE_ACTIVE_AUTHORITY_PER_CANONICAL_AGGREGATE",
+    "STABLE_LOGICAL_PLAYER_ID",
+    "STABLE_PLAYER_ENTITY_ID",
+    "MONOTONIC_AUTHORITY_EPOCH",
+    "NO_NORMAL_CROSSING_RESPAWN",
+    "NO_NORMAL_CROSSING_CLIENT_RECONNECT",
+    "CLIENT_GATEWAY_ENDPOINT_UNCHANGED_DURING_AUTHORITY_PIVOT",
+    "OPERATION_ID_CONTINUITY",
+    "INPUT_SEQUENCE_CONTINUITY",
+    "ONE_CANONICAL_ITEM_GRAPH",
+    "ONE_CANONICAL_CONSTRUCTION_TRUTH",
+    "ONE_CANONICAL_PERSISTENCE_OWNER",
+    "WARM_SHADOW_ZERO_CANONICAL_WRITES",
+    "STALE_SOURCE_FAILS_CLOSED",
+    "GATEWAY_ROUTING_ONLY_NOT_GAMEPLAY_AUTHORITY"
+  ],
+  "pre_dispatch_repairs": [
+    {
+      "id": "EG5-R1",
+      "name": "EDGE_LOCATOR_TELEMETRY_AND_HYSTERESIS_CORRECTNESS",
+      "required": true,
+      "issues": [
+        "probe_failures counter increments as n=n+n+1 instead of n=n+1",
+        "hysteresis must compare fresh old-gateway score against fresh candidate score",
+        "hysteresis result metadata must describe the actually selected gateway"
+      ],
+      "runtime_mutation_must_be_separate_reviewed_repair": true,
+      "sm1_dispatch_blocked_until": "EG5_REPAIR_REVIEWED_AND_VERIFIED_OR_MAIN_EXPLICITLY_CLASSIFIES_NON_BLOCKING"
+    }
+  ],
+  "stages": [
+    {
+      "id": "SM1.0",
+      "name": "POST_P6_CONTROL_RECONCILIATION",
+      "exit": "P6_ACCEPTED_SM1_ACTIVATION_CONTROL_PASS",
+      "runtime_mutation": false
+    },
+    {
+      "id": "SM1.1",
+      "name": "DONOR_AND_OWNER_PORT_MAP",
+      "exit": "SM0_DONOR_TO_P6_OWNER_MAP_PASS",
+      "requirements": [
+        "map every SM0 transfer concept to current P6/AUTHORITY/NX owner",
+        "forbid wholesale SM0/research merge",
+        "identify exact reusable semantics and discarded lab owners"
+      ]
+    },
+    {
+      "id": "SM1.2",
+      "name": "AUTHORITY_TRANSFER_CORE",
+      "exit": "STATIC_AUTHORITY_DOMAIN_TRANSFER_CORE_PASS",
+      "requirements": [
+        "ACTIVE source freeze",
+        "WARM target reconstruct+validate",
+        "single ownership linearization point",
+        "source retire",
+        "target activate at higher epoch",
+        "ambiguous response retry converges exactly once",
+        "stale source remains fenced"
+      ]
+    },
+    {
+      "id": "SM1.3",
+      "name": "PLAYER_CARRYING_DOMAIN",
+      "exit": "PLAYER_DOMAIN_CONTINUITY_PASS",
+      "requirements": [
+        "logical_player_id stable",
+        "player_entity_id stable",
+        "input sequence stable",
+        "OperationId continuity",
+        "inventory/equipment references preserved",
+        "no respawn semantics"
+      ]
+    },
+    {
+      "id": "SM1.4",
+      "name": "GATEWAY_PRESERVING_ROUTE_PIVOT",
+      "exit": "AUTHORITY_PIVOT_WITH_SINGLE_WORLD_CONNECTION_PASS",
+      "requirements": [
+        "client stays on accepted Gateway endpoint",
+        "target is WARM before pivot",
+        "Gateway never chooses gameplay winner",
+        "ordinary authority handoff does not trigger Gateway rehome"
+      ]
+    },
+    {
+      "id": "SM1.5",
+      "name": "P6_PRODUCT_STATE_COMPOSITION",
+      "exit": "P6_STATE_SURVIVES_A_B_A_PASS",
+      "requirements": [
+        "canonical Item Graph continuity",
+        "Construction/outpost continuity",
+        "single persistence owner continuity",
+        "second client converges",
+        "reconnect after handoff reconstructs same durable truth"
+      ]
+    },
+    {
+      "id": "SM1.6",
+      "name": "GRAPHICAL_TWO_AUTHORITY_ACCEPTANCE",
+      "exit": "GRAPHICAL_A_B_A_SEAMLESS_HANDOFF_PASS",
+      "requirements": [
+        "two authorities as distinct processes",
+        "two graphical clients",
+        "A->B->A physical boundary crossing",
+        "zero identity changes",
+        "zero split brain",
+        "no reconnect/loading screen caused by normal crossing",
+        "bounded correction/pause allowed before smoothness tuning"
+      ]
+    },
+    {
+      "id": "SM1.7",
+      "name": "FAULT_RACE_AND_REPEAT_CLOSURE",
+      "exit": "STATIC_PRODUCTION_SEAMLESS_CHECKPOINT_PROPOSABLE",
+      "requirements": [
+        "source death before ownership commit",
+        "source death after ownership commit before response",
+        "target failure before activation",
+        "stale source returns after partition/restart",
+        "duplicate/reorder around transfer",
+        "two players cross concurrently",
+        "repeated A<->B crossings",
+        "full world/core regression",
+        "fresh Reviewer+Verifier PASS"
+      ]
+    }
+  ],
+  "acceptance_reference_scenario": {
+    "topology": "CLIENTS_2_GATEWAY_1_AUTHORITIES_2",
+    "path": [
+      "connect under A",
+      "mine/equip/build using accepted P6 state",
+      "approach A/B boundary",
+      "prepare B as WARM read-only",
+      "A freeze",
+      "ownership transition",
+      "A retire",
+      "B activate",
+      "continue gameplay in B",
+      "second client observes same truth",
+      "B->A return handoff",
+      "disconnect/reconnect",
+      "same durable state restored"
+    ],
+    "required_zero_counts": [
+      "split_brain",
+      "identity_changes",
+      "duplicate_operations",
+      "duplicate_items",
+      "duplicate_construction_commits",
+      "warm_writes",
+      "gateway_gameplay_decisions"
+    ]
+  },
+  "explicit_non_goals": [
+    "dynamic shard split/merge",
+    "arbitrary-many-authority balancing",
+    "production WAN optimization",
+    "Gateway failure rehome",
+    "NATS/JetStream deployment",
+    "new combat/damage domain",
+    "P7 terrain mutation",
+    "P8 mobile construct"
+  ],
+  "post_sm1": {
+    "next_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "eg_parallel_followups": ["EG6", "EG6.5", "EG7", "EG8", "EG9"]
+  }
+}

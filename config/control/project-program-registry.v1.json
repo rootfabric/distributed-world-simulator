@@ -4,10 +4,10 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-18T01:53:00Z",
-  "control_checkpoint": "V0 generation-80 P0-P4 product-lineage activation refresh candidate; P4 is the next bounded product mutation lane while inherited P2/P3 acceptance debt remains explicit",
+  "updated_at_utc": "2026-08-24T05:30:00Z",
+  "control_checkpoint": "V0 post-P6 reconciliation: P6 accepted on main; production SM1 activation is the next bounded product gate and remains runtime-blocked pending fresh control review, EG5 repair, post-merge PC0, lease rotation and Director dispatch",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. The V0 product train has advanced through P0 playable composition, P1 world items/containers, P2 reconnectable shared state and P3/P3.1 mining. Generation-80 declares exact P3.1 product lineage ef3ad5f... as the runtime execution input for bounded P4 continuation while current main remains the control/epoch anchor. P4 is registered as a passport-backed active frontier and the single pre-H0.3 mutation lease holder; initial mutation dispatch is Director-only and requires a fresh authoritative P4 epoch/base audit. P2/P3 acceptance debt is not waived and blocks final P4/V0 acceptance, not bounded implementation. SERVER_PREDICTED remains the V0 network baseline; H0.2/NX.C1 remains independent.",
+  "project_summary": "GLOBAL-P0 R3 remains canonical. V0 P6 Persistent Shared Outpost is accepted at main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637 with accepted runtime head 7a77c048caa680871d4895c09eca89e84136b154. The current V0 frontier is now a control-only post-P6 convergence branch preparing production SM1 A<->B seamless authority handoff from the exact accepted P6 baseline. Historical SM0/research branches are donor-only. The single pre-H0.3 runtime mutation lease is not silently transferred to SM1 and runtime stays blocked until explicit activation gates close.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -18,12 +18,12 @@
       "role": "CONTROL_INFRASTRUCTURE",
       "short_description": "Restart-safe checkpoint-driven development control with risk routing, evidence review and human-exception compression.",
       "purpose": "Keep main as the project-state/authorization owner while allowing an explicitly main-declared exact product lineage to serve as a bounded runtime continuation input when restarting from bare main would discard demonstrated composition.",
-      "expected_outcome": "H0.2/NX.C1 continues exact verification independently while V0-P4 may become the one pre-H0.3 product mutation lane after generation-80 integration, post-main PC0, fresh epoch/base audit and Director dispatch.",
-      "current_stage": "H0.2 NX.C1 Verification + V0 P0-P4 Activation Refresh",
-      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_P4_ROUTE_REFRESH_CANDIDATE",
-      "progress_note": "Canonical R3 and mandatory post-R3 standard/directional Project Control are NON_RED. V0 runtime evidence has advanced beyond the original S1 planning point. Generation-80 refresh separates the current-main control anchor from the main-declared V0 product execution base, preserves the one-mutation-worker ceiling, and keeps prior acceptance debt visible instead of turning it into a blanket implementation stop.",
-      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + GLOBAL-P0 R3 canonical + post-R3 Project Control NON_RED",
-      "next_stage": "Accept generation-80 refresh only after fresh independent review and exact-head Project Control. After main moves, run fresh-ref post-main PC0 + P4 epoch/base audit; commit its authoritative CONTINUE evidence, then only a Director initial dispatch may authorize bounded P4 mutation.",
+      "expected_outcome": "H0.2/NX.C1 continues exact verification independently while V0 follows the explicitly declared sequential product lane.",
+      "current_stage": "H0.2 NX.C1 Verification + V0 Post-P6 Control Reconciliation",
+      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_POST_P6_SM1_CONTROL_CANDIDATE",
+      "progress_note": "Canonical R3 remains active. V0 has reached formal P6 acceptance and is reconciling stale control pointers before any SM1 runtime dispatch. The one-mutation-worker ceiling remains enforced.",
+      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + GLOBAL-P0 R3 canonical + V0 P6 ACCEPTED",
+      "next_stage": "Complete exact-head post-P6 Project Control and independent control review; only after canonical integration may the runtime mutation lease rotate to SM1 and Director dispatch occur.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -143,7 +143,7 @@
       "stage_status": "C22_MAIN_INTEGRATED_FROZEN",
       "progress_note": "Whole PR #90 was merged normally as eefd75fa. Accepted implementation provenance is retained; post-C22 and post-R3 standard/directional Project Control are NON_RED. The source convergence branch is retired as canonical runtime authority and remains historical evidence only.",
       "last_accepted_checkpoint": "C22 MAIN_INTEGRATED @ eefd75fa3badec10c6e7db959e2a3992dba30f0e",
-      "next_stage": "Keep C22 canonical and consume it through V0-P4 real-resource Construction. TS0.4 remains outside the P4/P6 critical path.",
+      "next_stage": "Keep C22 canonical and consume it through the current V0 product train. TS0.4 remains separate.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -213,7 +213,7 @@
       "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED only after exact Godot runtime evidence, full/two-client/impaired/reconnect validation, independent review/verifier and fresh CH->NX dependency revalidation.",
       "current_stage": "H0.2 / NX.C1 Source Implemented — Runtime Verification Pending",
       "stage_status": "IMPLEMENTED_WAITING_EXACT_GODOT_RUNTIME_VERIFICATION",
-      "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0-P4/P6 prerequisite; V0 continues on SERVER_PREDICTED unless a concrete foundation change is proven necessary.",
+      "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0/SM1 prerequisite; V0 continues on SERVER_PREDICTED unless a concrete foundation change is proven necessary.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; H0.2 pre-build authorization PASS; bounded NX.C1 source implementation present but not source-accepted",
       "next_stage": "Run exact Godot focused validation, full world/core, two-client, impaired-network and reconnect/ownership-epoch validation; then post-build independent review/verifier and fresh CH->NX revalidation before any H0_2_PASS / NX SOURCE_ACCEPTED proposal.",
       "health_declared": "YELLOW",
@@ -240,60 +240,57 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "feature/v0-p4-construction-real-resources",
-      "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
+      "branch": "control/post-p6-sm1-activation-r1",
+      "passport_path": "config/control/branches/control__post-p6-sm1-activation-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "Current product-facing train from the validated playable frontier through world items, reconnect and mining into atomic real-resource Construction.",
-      "purpose": "Close the persistent shared-outpost gameplay loop without replacing proven product composition or creating duplicate Item Graph, Construction, persistence or network authority.",
-      "expected_outcome": "P4 proves mine -> canonical item/ore -> deterministic server allocation -> atomic Item Graph debit + Construction commit -> A/B replication -> reconnect convergence; P5/P6 then turn that into a repeatable persistent outpost baseline.",
-      "current_stage": "V0-P4 POST-ACTIVATION EPOCH AUDIT GATE PREPARED",
-      "stage_status": "IMPLEMENTATION_READY_RUNTIME_MUTATION_BLOCKED_PENDING_CONTROL_ACCEPTANCE",
-      "progress_note": "P0-P3 product capabilities exist on a demonstrated stacked lineage. P4 branch 47ff18cf603bbf98bb67f7f62962e050f8606542 remains pre-runtime; its epoch/base audit now fails closed when refs are not fetched and emits authoritative_for_dispatch only for a fresh full CONTINUE. Generation-80 declares P3.1 ef3ad5f... as the exact runtime execution input, reserves the sole mutation lease for this exact P4 branch, and requires Director-only initial dispatch with committed authoritative audit evidence. Prior P2/P3 acceptance debt remains explicit and is required before P4 checkpoint acceptance.",
-      "last_accepted_checkpoint": "No P4 acceptance claim. Product execution evidence: P1 review PASS; P2 Windows GREEN + Reviewer/Verifier PASS with Director pending; P3 mining Windows GREEN and P3.1 operator-demonstrated.",
-      "next_stage": "After generation-80 control acceptance into main: fetch fresh refs, run post-main standard/directional PC0 and RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1; commit only authoritative CONTINUE evidence, then a separate Director initial dispatch may permit P4.1 exact-consume RED->GREEN. Continue with allocator, live-M4 transaction port, composition/publication, rollback, ownership, A/B and reconnect gates.",
+      "short_description": "Post-P6 V0 control convergence preparing production SM1 from exact accepted P6 main.",
+      "purpose": "Remove stale P4/P6-pre-dispatch control truth after P6 acceptance, preserve all canonical gameplay/network owners, and establish an exact reviewed entry boundary for production A<->B seamless handoff.",
+      "expected_outcome": "P6 is formally recorded ACCEPTED; the current V0 frontier becomes the post-P6 SM1 activation gate; runtime mutation stays disabled until independent review, main integration, post-merge PC0, EG5 repair, lease rotation and Director dispatch.",
+      "current_stage": "POST-P6 SM1 Activation Control Reconciliation",
+      "stage_status": "CONTROL_CANDIDATE_AWAITING_PROJECT_CONTROL_AND_FRESH_REVIEW",
+      "progress_note": "Canonical main already contains P6 ACCEPTED at 9ade3233. This control branch refreshes V0 registry/work-map/scheduler/product-train state, adds formal P6 acceptance and a fresh CRITICAL SM1 activation candidate. No runtime paths are mutated.",
+      "last_accepted_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST accepted @ main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637; runtime head 7a77c048caa680871d4895c09eca89e84136b154",
+      "next_stage": "Fresh exact-head Project Control and independent control review; then merge, post-merge Project Control, reviewed EG5 repair, mutation-lease rotation and Director dispatch of feature/v0-sm1-seamless-product-integration.",
       "product_execution_base": {
-        "branch": "repair/v0-p3-visual-interaction-r1",
-        "sha": "ef3ad5f0afc433802d639171d938e4720b3a46ec",
-        "playable_frontier_ancestor": "feature/v0-playable-product-frontier",
+        "branch": "main",
+        "sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
         "declared_by_control_generation": 80,
-        "declares_checkpoint_acceptance": false,
-        "reason": "Preserve the demonstrated P0-P3 product composition as the P4 input instead of forcing a reconstruction from bare main. PR #117 is deliberately excluded pending independent HIGH-risk acceptance."
+        "declares_checkpoint_acceptance": true,
+        "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+        "reason": "P6 is accepted and canonical. Production SM1 must start from this exact product composition rather than from historical SM0/research ancestry."
       },
       "prebuild_state": {
-        "branch": "feature/v0-p4-construction-real-resources",
-        "head_at_refresh_input": "47ff18cf603bbf98bb67f7f62962e050f8606542",
-        "passport_path": "config/control/branches/feature__v0-p4-construction-real-resources.v1.json",
-        "work_order_issue": 118,
+        "branch": "feature/v0-sm1-seamless-product-integration",
+        "head_at_refresh_input": "NOT_CREATED",
+        "passport_path": "config/control/branches/feature__v0-sm1-seamless-product-integration.v1.json",
+        "work_order_id": "V0-SM1-R1-WO-001",
         "runtime_mutation_present": false,
-        "next_code_step": "Run fresh-ref post-activation audit after generation-80 merge; commit authoritative CONTINUE audit evidence; P4.1 exact-consume production repair only after Director dispatch"
+        "next_code_step": "Do not create/mutate the runtime branch until this control candidate is reviewed and merged, post-merge PC0 is NON_RED, EG5 repair is closed, the lease rotates to SM1, and Director dispatch is durably recorded."
       },
-      "acceptance_debt": [
-        "P2_DIRECTOR_VERDICT_PENDING",
-        "P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING",
-        "P3_REPLICA_REPAIR_PR_117_INDEPENDENT_HIGH_RISK_ROUTING_PENDING"
-      ],
       "implementation_blockers": [
-        "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
-        "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
-        "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
-        "AUTHORITATIVE_AUDIT_EVIDENCE_COMMIT_REQUIRED",
-        "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
-        "PRE_H0_3_GLOBAL_MUTATION_LEASE_MUST_REMAIN_P4"
+        "PROJECT_CONTROL_NON_RED_REQUIRED",
+        "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
+        "POST_P6_CONTROL_MAIN_INTEGRATION_REQUIRED",
+        "POST_MERGE_PC0_NON_RED_REQUIRED",
+        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED",
+        "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
+        "DIRECTOR_DISPATCH_REQUIRED"
       ],
       "acceptance_blockers": [
-        "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_REQUIRED",
-        "P4_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
-        "P4_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
+        "SM1_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
+        "SM1_GRAPHICAL_A_B_A_HANDOFF_REQUIRED",
+        "SM1_FAULT_RACE_REPEAT_CLOSURE_REQUIRED",
+        "SM1_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
       ],
       "health_declared": "YELLOW",
       "blockers": [
-        "GENERATION80_CONTROL_ACCEPTANCE_PENDING",
-        "FRESH_POST_REFRESH_REVIEW_OF_PR_98_PENDING",
-        "POST_ACTIVATION_EPOCH_AUDIT_CONTINUE_REQUIRED",
-        "AUTHORITATIVE_AUDIT_EVIDENCE_COMMIT_REQUIRED",
-        "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
-        "PR_117_EXPLICITLY_EXCLUDED_PENDING_INDEPENDENT_ACCEPTANCE"
+        "PROJECT_CONTROL_NON_RED_REQUIRED",
+        "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
+        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED_BEFORE_SM1_RUNTIME_DISPATCH",
+        "POST_MERGE_PC0_NON_RED_REQUIRED",
+        "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
+        "DIRECTOR_DISPATCH_REQUIRED"
       ]
     },
     "MATTER": {
@@ -336,11 +333,10 @@
   "convergence_order": {
     "principle": "Branches report facts; main declares project state, exact product execution inputs and the single pre-H0.3 mutation lease; the auditor checks consistency; bounded runtime work moves only between declared checkpoints.",
     "now_parallel": [
-      "Generation-80 V0 P0-P4 control refresh review/validation",
-      "P2/P3/PR #117 acceptance routing and review/verification-only work",
+      "V0 post-P6 control reconciliation / SM1 activation review",
       "H0.2/NX.C1 exact runtime verification and review-only lifecycle work",
       "ECO research/design-only work",
-      "SM0 review/verification-only work while P4 owns the mutation slot after activation"
+      "SM0/research seamless evidence remains donor-only"
     ],
     "harness_train": [
       "H0_0_SCAFFOLD_READY canonical",
@@ -353,52 +349,51 @@
     ],
     "construction_train": [
       "C22 MAIN_INTEGRATED",
-      "GLOBAL-P0 R3 + post-R3 PC0 NON_RED",
-      "V0-P4 consumes canonical Construction + canonical M4 Item Graph",
-      "V0-P6 persistent shared-outpost baseline",
+      "V0 P4 ACCEPTED",
+      "V0 P5 ACCEPTED",
+      "V0 P6 persistent shared-outpost ACCEPTED",
+      "SM1 preserves canonical Construction truth through A<->B authority handoff",
       "TS0.4 1M Research Ceiling remains separate",
-      "PC0 convergence with T",
-      "T2.0"
+      "T2.0 remains separate"
     ],
     "network_train": [
-      "canonical SERVER_PREDICTED baseline available for V0-P4/P6",
-      "PR #117 same-revision replica repair remains separate pending HIGH-risk routing",
-      "fresh H0.2/NX.C1 OWNER_AUTHORITATIVE_VALIDATED verification",
-      "HIGH-risk owner-authority transfer",
-      "CH->NX dependency revalidation",
-      "network/reconnect/review gates",
-      "NX SOURCE_ACCEPTED"
+      "accepted Edge Gateway Foundation EG0-EG5",
+      "canonical SERVER_PREDICTED V0 baseline",
+      "separate bounded EG5 telemetry/hysteresis correctness repair before SM1 dispatch",
+      "V0-SM1 consumes Gateway/NX without becoming network foundation owner",
+      "H0.2/NX.C1 remains separate",
+      "post-SM1 EG6/EG6.5/EG7/EG8/EG9 follow independently"
     ],
     "v0_train": [
       "V0_P0_PLAYABLE_FRONTIER",
       "V0_P1_WORLD_ITEMS_CONTAINERS",
       "V0_P2_RECONNECTABLE_SHARED_STATE",
       "V0_P3_RESOURCE_MINING",
-      "V0_P4_REAL_RESOURCE_CONSTRUCTION",
-      "V0_P5_EQUIPMENT_TOOLS",
-      "V0_P6_PERSISTENT_SHARED_OUTPOST",
+      "V0_P4_REAL_RESOURCE_CONSTRUCTION ACCEPTED",
+      "V0_P5_EQUIPMENT_TOOLS ACCEPTED",
+      "V0_P6_PERSISTENT_SHARED_OUTPOST ACCEPTED",
+      "V0_POST_P6_SEAMLESS_INSERTION_GATE CURRENT",
+      "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION NEXT",
       "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "V0_P8_FIRST_MOBILE_CONSTRUCT"
     ],
     "architecture_train": [
       "GLOBAL-P0 R3 canonical promotion",
       "mandatory post-R3 PC0 NON_RED",
-      "generation-80 main-owned product execution-base policy",
-      "generation-80 single mutation lease reserved for P4",
-      "one V0 mutation lane plus independent review/verification lanes before H0.3",
-      "then next declared runtime checkpoint"
+      "P6 accepted product baseline 9ade3233",
+      "post-P6 control reconciliation",
+      "single mutation lease remains free until SM1 activation gates close",
+      "SM1 production authority handoff from exact accepted P6 baseline"
     ]
   },
   "global_blocked_transitions": [
     {"stage": "NX.C1 SOURCE ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
     {"stage": "H0.3 IMPLEMENTATION", "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"},
     {"stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS", "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"},
-    {"stage": "NEW_NON_P4_RUNTIME_MUTATION_DISPATCH_PRE_H0_3", "blocked_by": "GENERATION80_GLOBAL_MUTATION_LEASE_RESERVED_FOR_V0_P4"},
-    {"stage": "V0-P4 RUNTIME MUTATION START", "blocked_by": "GENERATION80_MAIN_INTEGRATION_PLUS_POST_MAIN_PC0_PLUS_MAIN_DECLARED_PRODUCT_EXECUTION_BASE_PLUS_FRESH_FETCHED_P4_EPOCH_BASE_AUDIT_CONTINUE_PLUS_COMMITTED_AUDIT_EVIDENCE_PLUS_DIRECTOR_INITIAL_DISPATCH_PLUS_GLOBAL_MUTATION_LEASE_REQUIRED"},
-    {"stage": "V0-P4 CHECKPOINT ACCEPTANCE", "blocked_by": "V0_PRIOR_ACCEPTANCE_DEBT_RESOLVED_PLUS_EXACT_HEAD_P4_RUNTIME_REGRESSION_REVIEW_VERIFIER_DIRECTOR_REQUIRED"},
-    {"stage": "V0 NETWORK FOUNDATION OR AUTHORITY CHANGE", "blocked_by": "V0_BLOCKED_REQUIRES_NX"},
-    {"stage": "V0 OWNER_AUTHORITATIVE_VALIDATED AXIS", "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_PLUS_REQUIRED_NX_MAIN_INTEGRATION"},
-    {"stage": "V0 PR #117 REPLICA REPAIR INTEGRATION", "blocked_by": "INDEPENDENT_HIGH_RISK_REVIEW_VERIFIER_DIRECTOR_ROUTING_REQUIRED"},
+    {"stage": "V0-SM1 RUNTIME MUTATION START", "blocked_by": "POST_P6_CONTROL_REVIEW_AND_MAIN_INTEGRATION_PLUS_POST_MERGE_PC0_PLUS_EG5_REPAIR_PLUS_SM1_MUTATION_LEASE_ROTATION_PLUS_DIRECTOR_DISPATCH_REQUIRED"},
+    {"stage": "V0-SM1 CHECKPOINT ACCEPTANCE", "blocked_by": "STATIC_A_B_A_GRAPHICAL_HANDOFF_PLUS_FAULT_RACE_REPEAT_PLUS_FULL_REGRESSION_PLUS_FRESH_REVIEW_VERIFIER_DIRECTOR_REQUIRED"},
+    {"stage": "V0-P7 START", "blocked_by": "V0_SM1_CHECKPOINT_ACCEPTED_OR_EXPLICIT_MAIN_OWNED_SM1_DEFER_REQUIRED"},
+    {"stage": "V0 NETWORK FOUNDATION CHANGE", "blocked_by": "V0_BLOCKED_REQUIRES_NX"},
     {"stage": "G9 START", "blocked_by": "MAT0_REQUIRED"},
     {"stage": "TS0.4 START", "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},

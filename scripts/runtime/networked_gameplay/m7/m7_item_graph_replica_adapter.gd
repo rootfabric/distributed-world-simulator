@@ -338,6 +338,7 @@ func _definition_id(canonical_id: String) -> String:
 		"item/crate": return "portable_crate"
 		"item/mount-base": return "beacon_mount_base"
 		"item/battery": return "battery_pack"
+		"item/tool/mining": return "mining_tool"
 	return ""
 
 
@@ -351,6 +352,7 @@ func _register_definitions(domain: Dictionary) -> void:
 		{"id":"battery_pack","display_name":"Аккумулятор","max_stack":4,"unit_mass_kg":8.0,"external_volume_l":6.0,"tags":["battery","power"],"metadata":{"size":[0.42,0.28,0.30],"icon_color":[0.20,0.82,0.32]}},
 		{"id":"lunar_rock","display_name":"Лунный камень","max_stack":50,"unit_mass_kg":2.0,"external_volume_l":0.8,"tags":["rock","resource"],"metadata":{"size":[0.34,0.26,0.36],"icon_color":[0.65,0.65,0.70]}},
 		{"id":"portable_crate","display_name":"Универсальный ящик","max_stack":1,"unit_mass_kg":4.0,"external_volume_l":30.0,"tags":["container"],"metadata":{"size":[0.95,0.65,0.72],"icon_color":[0.62,0.38,0.14],"freeze_world_body":true}},
+		{"id":"mining_tool","display_name":"Горный инструмент","max_stack":1,"unit_mass_kg":3.5,"external_volume_l":4.0,"tags":["tool","mining"],"metadata":{"size":[0.28,0.16,0.72],"icon_color":[0.76,0.58,0.18]}},
 		{
 			"id":"beacon_mount_base","display_name":"Монтажное гнездо маяка","max_stack":10,
 			"unit_mass_kg":6.0,"external_volume_l":12.0,"tags":["assembly_root","placeable","mount_socket"],

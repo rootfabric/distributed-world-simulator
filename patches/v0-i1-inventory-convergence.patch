@@ -1,0 +1,362 @@
+diff --git a/scripts/app/earth_mvp_app.gd b/scripts/app/earth_mvp_app.gd
+index 6564d55..562c891 100644
+--- a/scripts/app/earth_mvp_app.gd
++++ b/scripts/app/earth_mvp_app.gd
+@@ -9,6 +9,9 @@ const MVP_SURFACE_EYE_ALTITUDE_M := 1.75
+ const MVP_PREFERRED_BIOMES: Array[String] = ["grassland", "forest", "desert"]
+ const MVP_SPECTATOR_SPEED_MPS := 25.0
+ const MVP_LOCAL_BODY_VISUAL_OFFSET_M := -0.85
++const M5NetworkedInventoryShellScript = preload(
++	"res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"
++)
+ 
+ var _mvp_surface_anchor_direction := Vector3.ZERO
+ var _mvp_surface_biome := "unknown"
+@@ -20,9 +23,8 @@ var _mvp_prediction_failures := 0
+ var _mvp_local_vertical_offset_m := 0.0
+ 
+ var _mvp_inventory_visible := false
+-var _mvp_inventory_root: Control
+-var _mvp_inventory_body: Label
+-var _mvp_inventory_status: Label
++var _mvp_inventory_shell
++var _mvp_inventory_setup_error := ""
+ 
+ var _mvp_spectator_enabled := false
+ var _mvp_spectator_saved_speed := 900.0
+@@ -56,9 +58,10 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
+ 	else:
+ 		_mvp_prediction_signal_connected = false
+ 
+-	_ensure_mvp_inventory_ui()
++	var inventory_setup: Dictionary = _ensure_mvp_inventory_shell(runtime)
++	if not bool(inventory_setup.get("success", false)):
++		return inventory_setup
+ 	_ensure_mvp_local_body()
+-	_refresh_mvp_inventory_ui()
+ 	_update_mvp_local_body_visual()
+ 
+ 	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
+@@ -81,7 +84,7 @@ func register_runtime_commands(registry, owner_id: String) -> void:
+ 	_register_command(registry, owner_id, {
+ 		"id": "inventory.hotbar.select",
+ 		"description": "Выбрать слот хотбара сетевого игрока.",
+-		"usage": "inventory.hotbar.select <1-10>",
++		"usage": "inventory.hotbar.select <1-8>",
+ 		"category": "inventory",
+ 	}, Callable(self, "_command_mvp_inventory_hotbar_select"))
+ 	_register_command(registry, owner_id, {
+@@ -160,8 +163,9 @@ func _on_mvp_prediction_updated(
+ 
+ 
+ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
++	# Keep Earth diagnostics synchronized. The V0-I1 shell listens directly to
++	# the same canonical runtime signal through M5InventoryUiBridge.
+ 	super._on_m4_item_graph_updated(snapshot)
+-	_refresh_mvp_inventory_ui()
+ 
+ 
+ func _apply_mvp_presentation_record(record: Dictionary) -> void:
+@@ -340,7 +344,9 @@ func _submit_mvp_neutral_input() -> void:
+ 
+ 
+ func _command_mvp_inventory_toggle(_arguments: Array[String]) -> Dictionary:
+-	_set_mvp_inventory_visible(not _mvp_inventory_visible)
++	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
++		return {"success": false, "output": "Сетевой инвентарь ещё не готов"}
++	_set_mvp_inventory_visible(not _mvp_inventory_shell.is_inventory_visible())
+ 	return {
+ 		"success": true,
+ 		"output": "Инвентарь открыт" if _mvp_inventory_visible else "Инвентарь закрыт",
+@@ -349,16 +355,13 @@ func _command_mvp_inventory_toggle(_arguments: Array[String]) -> Dictionary:
+ 
+ func _command_mvp_inventory_hotbar_select(arguments: Array[String]) -> Dictionary:
+ 	if arguments.size() != 1 or not arguments[0].is_valid_int():
+-		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
++		return {"success": false, "output": "Использование: inventory.hotbar.select <1-8>"}
+ 	var slot_number := int(arguments[0])
+-	if slot_number < 1 or slot_number > 10:
+-		return {"success": false, "output": "Слот хотбара должен быть в диапазоне 1..10"}
+-	var result := m4_execute_item_command(
+-		"inventory.select_hotbar",
+-		{"selected_hotbar_index": slot_number - 1}
+-	)
+-	_set_mvp_inventory_status_from_result(result, "Выбран слот %d" % slot_number)
+-	_refresh_mvp_inventory_snapshot_from_runtime()
++	if slot_number < 1 or slot_number > 8:
++		return {"success": false, "output": "Слот хотбара должен быть в диапазоне 1..8"}
++	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
++		return {"success": false, "output": "Сетевой инвентарь ещё не готов"}
++	var result: Dictionary = _mvp_inventory_shell.select_hotbar(slot_number - 1)
+ 	return _mvp_command_result(result, "Выбран слот %d" % slot_number)
+ 
+ 
+@@ -370,8 +373,6 @@ func _command_mvp_inventory_drop(_arguments: Array[String]) -> Dictionary:
+ 		"item_id": item_id,
+ 		"quantity": -1,
+ 	})
+-	_set_mvp_inventory_status_from_result(result, "Предмет выброшен")
+-	_refresh_mvp_inventory_snapshot_from_runtime()
+ 	return _mvp_command_result(result, "Предмет выброшен")
+ 
+ 
+@@ -388,22 +389,16 @@ func _command_mvp_spectator_toggle(_arguments: Array[String]) -> Dictionary:
+ 
+ 
+ func _set_mvp_inventory_visible(visible: bool) -> void:
+-	_ensure_mvp_inventory_ui()
++	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
++		return
+ 	if _mvp_inventory_visible == visible:
+ 		return
+ 	_mvp_inventory_visible = visible
+-	if _mvp_inventory_root != null:
+-		_mvp_inventory_root.visible = visible
+ 	if visible:
+ 		_submit_mvp_neutral_input()
+-		_refresh_mvp_inventory_ui()
+-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+-		if _mvp_spectator_enabled and earth_explorer != null:
+-			earth_explorer.set_physics_process(false)
+-	else:
+-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+-		if _mvp_spectator_enabled and earth_explorer != null:
+-			earth_explorer.set_physics_process(true)
++	_mvp_inventory_shell.set_inventory_visible(visible)
++	if _mvp_spectator_enabled and earth_explorer != null:
++		earth_explorer.set_physics_process(not visible)
+ 
+ 
+ func _set_mvp_spectator_enabled(enabled: bool) -> void:
+@@ -488,134 +483,54 @@ func _update_mvp_local_body_visual() -> void:
+ 	_mvp_local_body.basis = Basis(east, direction, -north).orthonormalized()
+ 
+ 
+-func _ensure_mvp_inventory_ui() -> void:
+-	if _mvp_inventory_root != null and is_instance_valid(_mvp_inventory_root):
+-		return
+-	var layer := CanvasLayer.new()
+-	layer.name = "MvpInventoryLayer"
+-	layer.layer = 50
+-	add_child(layer)
+-
+-	_mvp_inventory_root = Control.new()
+-	_mvp_inventory_root.name = "MvpInventoryRoot"
+-	_mvp_inventory_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	_mvp_inventory_root.mouse_filter = Control.MOUSE_FILTER_STOP
+-	_mvp_inventory_root.visible = false
+-	layer.add_child(_mvp_inventory_root)
+-
+-	var center := CenterContainer.new()
+-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-	_mvp_inventory_root.add_child(center)
+-
+-	var panel := PanelContainer.new()
+-	panel.custom_minimum_size = Vector2(680.0, 460.0)
+-	center.add_child(panel)
+-
+-	var margin := MarginContainer.new()
+-	margin.add_theme_constant_override("margin_left", 22)
+-	margin.add_theme_constant_override("margin_top", 18)
+-	margin.add_theme_constant_override("margin_right", 22)
+-	margin.add_theme_constant_override("margin_bottom", 18)
+-	panel.add_child(margin)
+-
+-	var column := VBoxContainer.new()
+-	column.add_theme_constant_override("separation", 12)
+-	margin.add_child(column)
+-
+-	var title := Label.new()
+-	title.text = "ИНВЕНТАРЬ — NETWORK MVP"
+-	title.add_theme_font_size_override("font_size", 24)
+-	column.add_child(title)
+-
+-	_mvp_inventory_body = Label.new()
+-	_mvp_inventory_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	_mvp_inventory_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+-	column.add_child(_mvp_inventory_body)
+-
+-	_mvp_inventory_status = Label.new()
+-	_mvp_inventory_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	_mvp_inventory_status.text = "Tab — закрыть · 1–0 — выбрать слот · G — выбросить выбранный предмет"
+-	column.add_child(_mvp_inventory_status)
+-
+-
+-func _refresh_mvp_inventory_snapshot_from_runtime() -> void:
+-	if (
+-		m3_multiplayer_client_runtime != null
+-		and m3_multiplayer_client_runtime.has_method("get_item_graph_snapshot")
+-	):
+-		var snapshot = m3_multiplayer_client_runtime.get_item_graph_snapshot()
+-		if snapshot is Dictionary and not Dictionary(snapshot).is_empty():
+-			super._on_m4_item_graph_updated(Dictionary(snapshot))
+-	_refresh_mvp_inventory_ui()
+-
++func _ensure_mvp_inventory_shell(runtime) -> Dictionary:
++	if _mvp_inventory_shell != null and is_instance_valid(_mvp_inventory_shell):
++		return {"success": true, "error_code": "", "details": {"reused": true}}
++	if runtime == null or not runtime.has_method("get_local_player_id"):
++		_mvp_inventory_setup_error = "V0_I1_NETWORK_RUNTIME_REQUIRED"
++		return {"success": false, "error_code": _mvp_inventory_setup_error, "details": {}}
+ 
+-func _refresh_mvp_inventory_ui() -> void:
+-	if _mvp_inventory_body == null:
+-		return
+-	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
+-		_mvp_inventory_body.text = "Ожидание сетевого Item Graph…"
+-		return
+-	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
+-	var inventories_value = _m4_item_graph_snapshot.get("inventories", {})
+-	if not inventories_value is Dictionary:
+-		_mvp_inventory_body.text = "Item Graph не содержит inventories"
+-		return
+-	var inventories: Dictionary = inventories_value
+-	var inventory_value = inventories.get(player_id, {})
+-	if not inventory_value is Dictionary:
+-		_mvp_inventory_body.text = "Инвентарь игрока %s ещё не создан" % player_id
+-		return
+-	var inventory: Dictionary = inventory_value
+-	var items_by_id := _get_mvp_items_by_id()
+-	var lines := PackedStringArray()
+-	lines.append("Игрок: %s    Ревизия: %d" % [
+-		player_id,
+-		int(_m4_item_graph_snapshot.get("revision", -1)),
+-	])
+-	lines.append("")
+-	lines.append("ПРЕДМЕТЫ")
+-	var inventory_items_value = inventory.get("inventory", [])
+-	var inventory_items: Array = (
+-		inventory_items_value if inventory_items_value is Array else []
++	_mvp_inventory_shell = M5NetworkedInventoryShellScript.new()
++	_mvp_inventory_shell.name = "V0NetworkedInventory"
++	add_child(_mvp_inventory_shell)
++	var setup_result: Dictionary = _mvp_inventory_shell.setup(
++		runtime,
++		String(runtime.get_local_player_id())
+ 	)
+-	if inventory_items.is_empty():
+-		lines.append("  — пусто —")
+-	else:
+-		for item_id_value in inventory_items:
+-			lines.append("  • %s" % _mvp_item_display_line(
+-				String(item_id_value), items_by_id
+-			))
+-	lines.append("")
+-	lines.append("ХОТБАР")
+-	var hotbar_value = inventory.get("hotbar", [])
+-	var hotbar: Array = hotbar_value if hotbar_value is Array else []
+-	var selected_index := int(inventory.get("selected_hotbar_index", 0))
+-	for index in range(maxi(hotbar.size(), 10)):
+-		var item_id := String(hotbar[index]) if index < hotbar.size() else ""
+-		var marker := ">" if index == selected_index else " "
+-		var label := "—"
+-		if not item_id.is_empty():
+-			label = _mvp_item_display_line(item_id, items_by_id)
+-		lines.append("%s [%d] %s" % [marker, (index + 1) % 10, label])
+-	_mvp_inventory_body.text = "\n".join(lines)
+-
+-
+-func _get_mvp_items_by_id() -> Dictionary:
+-	var result: Dictionary = {}
+-	var items_value = _m4_item_graph_snapshot.get("items", [])
+-	if not items_value is Array:
+-		return result
+-	for item_value in items_value:
+-		if not item_value is Dictionary:
+-			continue
+-		var item: Dictionary = item_value
+-		var item_id := String(item.get("item_id", ""))
+-		if not item_id.is_empty():
+-			result[item_id] = item
+-	return result
++	if not bool(setup_result.get("success", false)):
++		_mvp_inventory_setup_error = String(
++			setup_result.get("error_code", "V0_I1_INVENTORY_SETUP_FAILED")
++		)
++		_mvp_inventory_shell.queue_free()
++		_mvp_inventory_shell = null
++		return setup_result
++
++	_mvp_inventory_setup_error = ""
++	_mvp_inventory_visible = false
++	_mvp_inventory_shell.set_inventory_visible(false)
++	return {
++		"success": true,
++		"error_code": "",
++		"details": {
++			"ui": "M5_NETWORKED_INVENTORY_SHELL",
++			"bridge": "M5_INVENTORY_UI_BRIDGE",
++			"canonical_truth": "SERVER_M4_ITEM_GRAPH",
++		},
++	}
+ 
+ 
+ func _get_mvp_selected_hotbar_item_id() -> String:
++	if _mvp_inventory_shell != null and is_instance_valid(_mvp_inventory_shell):
++		var report: Dictionary = _mvp_inventory_shell.get_report()
++		var hotbar_model: Dictionary = Dictionary(report.get("hotbar_model", {}))
++		for cell_value in hotbar_model.get("cells", []):
++			if not cell_value is Dictionary:
++				continue
++			var cell: Dictionary = cell_value
++			if bool(cell.get("selected", false)):
++				return String(cell.get("item_id", ""))
++
++	# Bounded fallback for the initial snapshot before the shell has rendered.
+ 	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
+ 		return ""
+ 	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
+@@ -636,36 +551,6 @@ func _get_mvp_selected_hotbar_item_id() -> String:
+ 	return String(hotbar[selected_index])
+ 
+ 
+-func _mvp_item_display_line(item_id: String, items_by_id: Dictionary) -> String:
+-	if not items_by_id.has(item_id):
+-		return item_id
+-	var item: Dictionary = items_by_id[item_id]
+-	var definition_id := String(item.get("definition_id", ""))
+-	var display_name := definition_id
+-	match definition_id:
+-		"item/beacon":
+-			display_name = "Маяк"
+-		"item/mount-base":
+-			display_name = "Основание маяка"
+-		"item/battery":
+-			display_name = "Батарея"
+-		"item/ore":
+-			display_name = "Руда"
+-		"item/crate":
+-			display_name = "Контейнер"
+-	return "%s ×%d" % [display_name, int(item.get("quantity", 1))]
+-
+-
+-func _set_mvp_inventory_status_from_result(result: Dictionary, success_text: String) -> void:
+-	if _mvp_inventory_status == null:
+-		return
+-	_mvp_inventory_status.text = (
+-		success_text
+-		if bool(result.get("success", false))
+-		else "Ошибка: %s" % String(result.get("error_code", result.get("output", "UNKNOWN")))
+-	)
+-
+-
+ func _mvp_command_result(result: Dictionary, success_text: String) -> Dictionary:
+ 	if bool(result.get("success", false)):
+ 		return {"success": true, "output": success_text, "details": result}
+@@ -697,6 +582,16 @@ func create_m3_graphical_client_report() -> Dictionary:
+ 		_mvp_surface_anchor_direction.z,
+ 	]
+ 	report["inventory_visible"] = _mvp_inventory_visible
++	report["inventory_convergence"] = {
++		"checkpoint": "V0-I1",
++		"ready": _mvp_inventory_shell != null and is_instance_valid(_mvp_inventory_shell),
++		"setup_error": _mvp_inventory_setup_error,
++		"shell": (
++			_mvp_inventory_shell.get_report()
++			if _mvp_inventory_shell != null and is_instance_valid(_mvp_inventory_shell)
++			else {}
++		),
++	}
+ 	report["spectator_enabled"] = _mvp_spectator_enabled
+ 	report["spectator_body_visible"] = (
+ 		_mvp_local_body != null

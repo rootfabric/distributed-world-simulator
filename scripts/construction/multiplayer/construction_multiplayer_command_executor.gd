@@ -18,12 +18,21 @@ func setup(adapter, build_process, geometry_process, damage_process) -> Dictiona
 	_adapter = adapter; _build_process = build_process; _geometry_process = geometry_process; _damage_process = damage_process
 	return ParametricUtils.success()
 
-func execute(command: Dictionary) -> Dictionary:
+func execute(command: Dictionary, trusted_context: Dictionary = {}) -> Dictionary:
 	var action := String(command["action"]); var payload: Dictionary = command["payload"]
 	match action:
 		GrantScript.ACTION_BUILD:
 			var checked := _exact_payload(payload, ["build_plan_id", "stage_index", "operation_id", "provided_capabilities", "options"]); if not bool(checked.get("success", false)): return checked
 			if String(command["construct_id"]) != String(payload.get("construct_id", command["construct_id"])): return ParametricUtils.failure("CONSTRUCTION_MULTIPLAYER_COMMAND_TARGET_MISMATCH")
+			if _build_process.has_method("advance_stage_for_actor"):
+				return _build_process.advance_stage_for_actor(
+					String(trusted_context.get("logical_player_id", "")),
+					String(payload["build_plan_id"]),
+					int(payload["stage_index"]),
+					String(payload["operation_id"]),
+					Array(payload["provided_capabilities"]),
+					Dictionary(payload["options"])
+				)
 			return _build_process.advance_stage(String(payload["build_plan_id"]), int(payload["stage_index"]), String(payload["operation_id"]), Array(payload["provided_capabilities"]), Dictionary(payload["options"]))
 		GrantScript.ACTION_EDIT:
 			var checked := _exact_payload(payload, ["plan_id", "request", "failure_mode"]); if not bool(checked.get("success", false)): return checked

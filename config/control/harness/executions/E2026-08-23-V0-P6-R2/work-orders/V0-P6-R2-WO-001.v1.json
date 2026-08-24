@@ -1,0 +1,143 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "program": "V0",
+  "goal_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "state": "CHECKPOINT_PROPOSED",
+  "work_order_type": "IMPLEMENTATION",
+  "base_sha": "41ec871d002db540008ee82f402f7ab12c008887",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "scope": "Implement one bounded persistent-shared-outpost product slice on the accepted P5 lineage over the accepted Edge Gateway Foundation: two clients share one persistent outpost through the gateway transport stack; the mine -> inventory/container -> equipment/tool -> real-resource build loop persists to the single existing persistence owner; server restart reconstructs the canonical outpost; player reconnect restores inventory, equipment and construction; five clean end-to-end repeats and a bounded soak prove stability. No new network authority, no second persistence owner, no private item graph.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/p6/**",
+    "scripts/persistence/**",
+    "scripts/app/**",
+    "scripts/ui/inventory/**",
+    "tests/runtime/test_v0_p6_*",
+    "tests/fixtures/v0_p6/**",
+    "RUN_V0_P6_*",
+    "config/control/harness/executions/E2026-08-23-V0-P6-R1/**",
+    "config/control/branches/feature__v0-p6-persistent-shared-outpost.v1.json",
+    "docs/checkpoints/2026-08-23_V0_P6_*",
+    "docs/evidence/2026-08-23_V0_P6_*"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/gateway/**",
+    "scripts/network/transports/v2/**"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "V0_P6_ACCEPTED_P5_SUCCESSOR_BASE_EXACT",
+    "V0_P6_WORK_ORDER_ISSUED",
+    "V0_P6_RISK_CLASSIFIED_HIGH",
+    "V0_P6_DESIGN_BRIEF_READY",
+    "V0_P6_GATEWAY_FOUNDATION_CONSUMED_PASS",
+    "V0_P6_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+    "V0_P6_TWO_CLIENT_SHARED_OUTPOST_STATE_PASS",
+    "V0_P6_SERVER_RESTART_RECONSTRUCTS_OUTPOST_PASS",
+    "V0_P6_PLAYER_RECONNECT_RESTORES_INVENTORY_EQUIPMENT_CONSTRUCTION_PASS",
+    "V0_P6_FIVE_CLEAN_END_TO_END_REPEATS_PASS",
+    "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS",
+    "V0_P6_NO_PRIVATE_PERSISTENCE_OWNER_PASS",
+    "V0_P6_NO_PRIVATE_ITEM_GRAPH_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "V0_P6_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "Persistent shared outpost state bound to the single existing persistence owner",
+    "Two-client shared outpost gameplay through the gateway transport stack",
+    "Server restart reconstructs the canonical outpost",
+    "Player reconnect restores inventory, equipment and construction",
+    "Five clean end-to-end repeats with stable identities and OperationId continuity",
+    "Bounded two-client soak evidence",
+    "Fresh evidence map, Reviewer PASS and Verifier PASS before P6 checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "A second persistence owner or private P6 save format would be required",
+    "A second Item Graph or private construction truth would be required",
+    "A network protocol, authority, prediction or reconciliation foundation change would be required; fail closed to NX/foundation decision",
+    "The exact accepted P5 predecessor base cannot be proven",
+    "Production mutation escapes the bounded persistent-outpost scope"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Mutates authoritative persistence and canonical outpost gameplay state",
+    "Composes persistence, replication, reconnect recovery and construction",
+    "Must prevent duplicate canonical outpost truth or identity drift after restart/reconnect"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "The accepted P5 lineage can equip tools and mine canonically, and the accepted Edge Gateway Foundation transports clients through the gateway, but no persistent playable outpost survives server restart or player reconnect as shared canonical state.",
+    "current_behavior": "Outpost-relevant state lives in volatile runtime structures; restart loses the world and reconnect reconstructs only partially from per-system recovery paths.",
+    "desired_behavior": "A persistent shared outpost whose canonical state is owned by the single existing persistence owner, reconstructed deterministically on server restart, restored per-player on reconnect, and played by two clients through the gateway transport stack without duplicate truth.",
+    "selected_design": "Bind the existing single persistence owner to the canonical outpost composition over the accepted P5 lineage and the accepted gateway foundation transport/session stack; reconstruct on start from that owner; keep all client traffic on the gateway path proven by EG1-EG5.",
+    "alternatives_considered": [
+      "P6-private save format",
+      "Second outpost authority",
+      "Client-side outpost reconstruction"
+    ],
+    "expected_risks": [
+      "Duplicate canonical outpost truth between persistence and runtime",
+      "Identity drift across restart/reconnect",
+      "Persistence writes escaping the bounded outpost scope"
+    ],
+    "non_goals": [
+      "No terrain mutation (P7)",
+      "No seamless production integration (SM1 gate)",
+      "No new network authority"
+    ],
+    "validation_plan": [
+      "Freeze persistence ownership boundary before implementation",
+      "Two-client shared outpost proof through the gateway",
+      "Restart/reconstruct and reconnect/restore proofs with checksums",
+      "Five repeats plus bounded soak",
+      "Full world regression, post-build critique, independent review and verification"
+    ],
+    "why_selected": "It adds the persistence capability while preserving one persistence owner, one item graph and the gateway-only client topology accepted by the foundation.",
+    "affected_owners": [
+      "V0",
+      "CANONICAL_ITEM_GRAPH",
+      "PERSISTENCE",
+      "M4_NETWORKED_GAMEPLAY"
+    ],
+    "dependencies": [
+      "V0_P5_CHECKPOINT_ACCEPTED",
+      "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
+      "accepted P5 lineage 491ca7d058690d3de5fcea5e41aaee230a31b3ab",
+      "existing single persistence owner"
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "RUNTIME_FEATURE_MERGE",
+    "DUPLICATE_CANONICAL_TRUTH_REQUIRED",
+    "PERSISTENCE_FOUNDATION_CHANGE_REQUIRED",
+    "NETWORK_FOUNDATION_CHANGE_REQUIRED"
+  ],
+  "issued_at_utc": "2026-08-23T07:30:00Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE"
+  ],
+  "notes": "Fresh P6 Work Order issued only after formal P5 acceptance merged to main as 491ca7d058690d3de5fcea5e41aaee230a31b3ab and after EDGE_GATEWAY_FOUNDATION_ACCEPTED-001 was canonicalized at main 56555fd557ecaf0efb0659dff523c782c6ccf9ba. Runtime mutation remains forbidden until the rotated lease holder executes under a committed Director DISPATCHED event. Execution base unified with canonical main 41ec871d002db540008ee82f402f7ab12c008887 by Director decision at epoch refresh: this base contains the entire accepted P5 composition 491ca7d058690d3de5fcea5e41aaee230a31b3ab via merge 9ad78e704ff758763f8016c54bb2987536fca3c4 plus the accepted Edge Gateway Foundation era."
+}

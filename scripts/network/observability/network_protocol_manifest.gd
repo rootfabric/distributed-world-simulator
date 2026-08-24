@@ -1,42 +1,35 @@
 extends RefCounted
 
-const FingerprintScript = preload("res://scripts/network/observability/network_build_fingerprint.gd")
-const ProtocolFrameScript = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
-const TransportEventScript = preload("res://scripts/network/transports/v2/network_transport_event.gd")
-const PeerSessionScript = preload("res://scripts/network/transports/v2/network_peer_session.gd")
-const TransportBoundaryScript = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
-const TransportPortScript = preload("res://scripts/network/transports/v2/network_transport_port_v2.gd")
-const PlayerInputScript = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_command.gd")
-const PlayerSnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
-const PlayerDeltaScript = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_delta.gd")
-const CommandResultScript = preload("res://scripts/runtime/networked_gameplay/contracts/command_result.gd")
-const ItemGraphSnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/item_graph_snapshot.gd")
-const ItemGraphDeltaScript = preload("res://scripts/runtime/networked_gameplay/contracts/item_graph_delta.gd")
-const CompatibilityHandshakeScript = preload("res://scripts/network/observability/network_compatibility_handshake.gd")
-const ObservabilitySampleScript = preload("res://scripts/network/observability/network_observability_sample.gd")
-const NetworkConditionProfileScript = preload("res://scripts/network/conditions/network_condition_profile.gd")
-const NetworkConditionSimulatorPortScript = preload("res://scripts/network/conditions/network_condition_simulator_port.gd")
-const RealtimeChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
-const PlayerInputBatchScript = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
-const CanonicalItemGraphDeltaScript = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
-const CompactGameplaySnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
-const ENetPortScript = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
-const InputSequenceScript = preload("res://scripts/network/simulation/input_sequence.gd")
-const FixedTickSchedulerScript = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
-const FixedTickInputBufferScript = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
-const ClientPredictionReconcilerScript = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
+const P2Manifest = preload(
+	"res://scripts/network/observability/network_protocol_manifest_p2.gd"
+)
+const FingerprintScript = preload(
+	"res://scripts/network/observability/network_build_fingerprint.gd"
+)
+const ResourceMineCommand = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mine_command.gd"
+)
+const ResourceMiningSnapshot = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
+)
+const ResourceMiningDelta = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
+)
+const ResourceMiningService = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_service.gd"
+)
 
-const SCHEMA: String = "planet_simulator.network_protocol_manifest.v1"
-const MANIFEST_VERSION: int = 1
-const M3_MESSAGE_SCHEMA: String = "planet_simulator.m3.graphical_multiplayer_message.v1"
+const SCHEMA: String = P2Manifest.SCHEMA
+const MANIFEST_VERSION: int = P2Manifest.MANIFEST_VERSION
+const M3_MESSAGE_SCHEMA: String = P2Manifest.M3_MESSAGE_SCHEMA
 const FIELDS: Array[String] = [
 	"schema", "manifest_version", "contract_versions", "channel_policy", "protocol_hash",
 ]
 
 
 static func create() -> Dictionary:
-	var contracts: Dictionary = contract_versions()
-	var channels: Dictionary = channel_policy()
+	var contracts := contract_versions()
+	var channels := channel_policy()
 	return {
 		"schema": SCHEMA,
 		"manifest_version": MANIFEST_VERSION,
@@ -51,98 +44,35 @@ static func current_protocol_hash() -> String:
 
 
 static func contract_versions() -> Dictionary:
-	return {
-		"protocol_frame": {
-			"schema": ProtocolFrameScript.SCHEMA,
-			"protocol_version": ProtocolFrameScript.PROTOCOL_VERSION,
-		},
-		"transport_event": {"schema": TransportEventScript.SCHEMA},
-		"peer_session": {
-			"schema": PeerSessionScript.SCHEMA,
-			"incoming_sequence_stream_policy": PeerSessionScript.INCOMING_SEQUENCE_STREAM_POLICY,
-			"reliable_sequence_policy": PeerSessionScript.RELIABLE_SEQUENCE_POLICY,
-			"unreliable_sequence_policy": PeerSessionScript.UNRELIABLE_SEQUENCE_POLICY,
-		},
-		"transport_boundary": {"schema": TransportBoundaryScript.SCHEMA},
-		"transport_port": {"schema": TransportPortScript.SCHEMA},
-		"enet_transport": {
-			"physical_frame_binding_policy": ENetPortScript.PHYSICAL_FRAME_BINDING_POLICY,
-			"physical_mismatch_handling_policy": ENetPortScript.PHYSICAL_MISMATCH_HANDLING_POLICY,
-		},
-		"m3_message": {"schema": M3_MESSAGE_SCHEMA},
-		"player_input": {"schema": PlayerInputScript.SCHEMA},
-		"player_input_batch": {
-			"schema": PlayerInputBatchScript.SCHEMA,
-			"max_inputs": PlayerInputBatchScript.MAX_INPUTS,
-			"history_policy": PlayerInputBatchScript.HISTORY_POLICY,
-			"server_delta_policy": PlayerInputBatchScript.SERVER_DELTA_POLICY,
-			"sequence_order_policy": PlayerInputBatchScript.SEQUENCE_ORDER_POLICY,
-		},
-		"player_snapshot": {"schema": PlayerSnapshotScript.SCHEMA},
-		"player_delta": {"schema": PlayerDeltaScript.SCHEMA},
-		"command_result": {"schema": CommandResultScript.SCHEMA},
-		"item_graph_snapshot": {"schema": ItemGraphSnapshotScript.SCHEMA},
-		"item_graph_delta": {"schema": ItemGraphDeltaScript.SCHEMA},
-		"canonical_item_graph_delta": {
-			"schema": CanonicalItemGraphDeltaScript.SCHEMA,
-			"validation_policy": CanonicalItemGraphDeltaScript.VALIDATION_POLICY,
-		},
-		"compact_gameplay_snapshot": {"schema": CompactGameplaySnapshotScript.SCHEMA},
-		"input_sequence": {
-			"schema": InputSequenceScript.SCHEMA,
-			"max_sequence": InputSequenceScript.MAX_SEQUENCE,
-			"half_range": InputSequenceScript.HALF_RANGE,
-		},
-		"fixed_tick_scheduler": {
-			"schema": FixedTickSchedulerScript.SCHEMA,
-			"tick_rate_hz": FixedTickSchedulerScript.DEFAULT_TICK_RATE_HZ,
-			"max_catch_up_ticks": FixedTickSchedulerScript.DEFAULT_MAX_CATCH_UP_TICKS,
-		},
-		"fixed_tick_input_buffer": {
-			"schema": FixedTickInputBufferScript.SCHEMA,
-			"selection_policy": FixedTickInputBufferScript.INPUT_SELECTION_POLICY,
-			"jump_policy": FixedTickInputBufferScript.JUMP_POLICY,
-			"hold_policy": FixedTickInputBufferScript.HOLD_POLICY,
-			"max_pending_inputs": FixedTickInputBufferScript.MAX_PENDING_INPUTS,
-			"max_sequence_ahead": FixedTickInputBufferScript.MAX_SEQUENCE_AHEAD,
-			"max_queue_age_ticks": FixedTickInputBufferScript.MAX_QUEUE_AGE_TICKS,
-		},
-		"client_prediction_reconciler": {
-			"schema": ClientPredictionReconcilerScript.SCHEMA,
-			"tick_rate_hz": ClientPredictionReconcilerScript.TICK_RATE_HZ,
-			"max_history_ticks": ClientPredictionReconcilerScript.MAX_HISTORY_TICKS,
-			"history_policy": ClientPredictionReconcilerScript.HISTORY_POLICY,
-			"replay_policy": ClientPredictionReconcilerScript.REPLAY_POLICY,
-			"correction_policy": ClientPredictionReconcilerScript.CORRECTION_POLICY,
-			"clock_only_snapshot_policy": ClientPredictionReconcilerScript.CLOCK_ONLY_SNAPSHOT_POLICY,
-			"history_miss_policy": ClientPredictionReconcilerScript.HISTORY_MISS_POLICY,
-			"hard_correction_threshold_m": ClientPredictionReconcilerScript.HARD_CORRECTION_THRESHOLD_M,
-		},
-		"compatibility_hello": {"schema": CompatibilityHandshakeScript.HELLO_SCHEMA},
-		"compatibility_ack": {"schema": CompatibilityHandshakeScript.ACK_SCHEMA},
-		"compatibility_rejection": {"schema": CompatibilityHandshakeScript.REJECTION_SCHEMA},
-		"observability_sample": {"schema": ObservabilitySampleScript.SCHEMA},
-		"network_condition_profile": {"schema": NetworkConditionProfileScript.SCHEMA},
-		"network_condition_simulator_port": {"schema": NetworkConditionSimulatorPortScript.SIMULATOR_SCHEMA},
+	var contracts: Dictionary = P2Manifest.contract_versions().duplicate(true)
+	contracts["resource_mine_command"] = {
+		"schema": ResourceMineCommand.SCHEMA,
+		"command_type": ResourceMineCommand.COMMAND_TYPE,
+		"transport_message_type": "RESOURCE_COMMAND",
 	}
+	contracts["resource_mining_snapshot"] = {
+		"schema": ResourceMiningSnapshot.SCHEMA,
+		"transport_message_type": "RESOURCE_SNAPSHOT",
+	}
+	contracts["resource_mining_delta"] = {
+		"schema": ResourceMiningDelta.SCHEMA,
+		"transport_message_type": "RESOURCE_DELTA",
+	}
+	contracts["resource_mining_policy"] = {
+		"mining_range_m": ResourceMiningService.MINING_RANGE_M,
+		"command_channel": "CONTROL",
+		"delta_channel": "ITEM",
+		"snapshot_channel": "RESYNC",
+	}
+	return contracts
 
 
 static func channel_policy() -> Dictionary:
-	var policy: Dictionary = RealtimeChannelPolicyScript.canonical_policy()
-	policy["frame_channels"] = ProtocolFrameScript.CHANNELS.duplicate()
-	policy["delivery_modes"] = ProtocolFrameScript.DELIVERY_MODES.duplicate()
-	policy["queue_policy"] = {
-		"partition": "PEER_DELIVERY_CHANNEL_STREAM_V1",
-		"realtime_coalescing": RealtimeChannelPolicyScript.REALTIME_COALESCING_POLICY,
-		"reliable_ordering": "FIFO_PER_STREAM_V1",
-		"flush_fairness": "PRIORITY_ROUND_ROBIN_V1",
-		"unreliable_transport_mapping": RealtimeChannelPolicyScript.UNRELIABLE_TRANSPORT_MAPPING,
-	}
-	return policy
+	return P2Manifest.channel_policy().duplicate(true)
 
 
 static func validate(value: Dictionary) -> Dictionary:
-	var exact: Dictionary = _validate_exact_fields(value, FIELDS)
+	var exact := _validate_exact_fields(value, FIELDS)
 	if not bool(exact.get("success", false)):
 		return exact
 	if String(value.get("schema", "")) != SCHEMA:
@@ -151,7 +81,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		return _failure("UNSUPPORTED_MANIFEST_VERSION")
 	if not value.get("contract_versions") is Dictionary or not value.get("channel_policy") is Dictionary:
 		return _failure("INVALID_PROTOCOL_COMPONENTS")
-	var expected: Dictionary = create()
+	var expected := create()
 	if Dictionary(value.get("contract_versions", {})) != Dictionary(expected["contract_versions"]):
 		return _failure("CONTRACT_VERSION_DRIFT")
 	if Dictionary(value.get("channel_policy", {})) != Dictionary(expected["channel_policy"]):

@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-23-V0-P6-R2-V0-P6-R2-WO-001-0028",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "sequence": 28,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-23T08:28:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "summary": "Predicate HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED durably proven.",
+  "command": "RECORD_PREDICATE_VERIFIED",
+  "exit_code": 0,
+  "predicate": "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED"
+}

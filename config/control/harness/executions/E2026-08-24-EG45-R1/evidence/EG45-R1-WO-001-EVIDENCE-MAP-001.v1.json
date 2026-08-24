@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "EG45-R1-WO-001",
+  "program": "EG",
+  "checkpoint": "EG45_SYNTHETIC_EFFECT_JOURNAL_REPAIR",
+  "risk_class": "MEDIUM",
+  "evidence_head_sha": "112328105983dc3afa5b94fa1febed04ff9bf427",
+  "intent": "Repair the pre-existing main RED in the EG4.5 synthetic effect journal: duplicate commits must return the stored prior EffectCommitResult verbatim instead of fabricating a rewritten DUPLICATE_REPLAY result; duplicate classification moves to the response envelope and is relayed by the interaction router as an envelope-level flag.",
+  "root_cause_or_reason": "Journal duplicate path constructed a new EffectCommitResult (status DUPLICATE_REPLAY, current interaction_id) violating its own 'prior result wins' contract; router classified by that rewritten inner status. Proven failing identically on pristine origin/main 9ade3233.",
+  "changed_surfaces": [
+    "tools/network/eg45_synthetic_effect_journal.gd",
+    "scripts/network/gateway/runtime/eg45_interaction_router.gd",
+    "tests/network/test_eg45_interaction_router.gd"
+  ],
+  "canonical_owner": "sim-side synthetic effect journal: tools/network/eg45_synthetic_effect_journal.gd; gateway relay classification: scripts/network/gateway/runtime/eg45_interaction_router.gd",
+  "entry_points": ["Eg45SyntheticEffectJournal.commit", "Eg45InteractionRouter route/_send_commit"],
+  "callers": ["tests/network/test_eg45_*", "gateway cross-world interaction routing"],
+  "callees": ["EffectCommitRequest/EffectResult contracts", "GatewayContractUtils.require_id", "NetworkContractUtils.payload_hash"],
+  "sibling_surfaces_checked": [
+    "scripts/network/gateway/effect_commit_request.gd (untouched)",
+    "scripts/network/gateway/effect_commit_result.gd (untouched)",
+    "scripts/network/session/network_reconnect_replay_service.gd (own DUPLICATE_REPLAY_* codes, unrelated)"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "remaining_risks": [
+    "Event-stream recorded_at_utc inversion (0003 predates 0001/0002 because implementation pre-existed WO materialization) - durably reconciled by append-only event 0004 RECOVERY_RESUMED; no backdating",
+    "RUN_EG4_EDGE_GATEWAY_TESTS.sh has a pre-existing JSON-parsing tooling failure reproduced identically on pure main - separate EG4 tooling defect, out of this lane",
+    "Full world/core census deferred to post-merge main run per WO predicate FULL_WORLD_CORE_CENSUS_DEFERRED_TO_POST_MERGE_MAIN_RUN"
+  ],
+  "review_verdict": "PASS"
+}

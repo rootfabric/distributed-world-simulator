@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.harness_review.v1",
+  "review_id": "EG45-R1-WO-001-REVIEW-001",
+  "work_order_id": "EG45-R1-WO-001",
+  "project_epoch": "E2026-08-24-EG45-R1",
+  "reviewed_head_sha": "112328105983dc3afa5b94fa1febed04ff9bf427",
+  "reviewed_branch": "repair/eg45-synthetic-journal-r1",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "reviewer_role": "INDEPENDENT_REVIEWER_FRESH_ISOLATED",
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "F-001",
+      "severity": "INFO",
+      "message": "Event-stream recorded_at_utc is NOT monotonically non-decreasing across sequence numbers: seq2 DISPATCHED claims 2026-08-24T06:10:00Z while seq3 IMPLEMENTATION_COMMITTED claims 2026-08-24T05:27:45Z. This inversion is the faithfully preserved preexisting-WIP artifact: the implementation commit 866a44ec (authored 05:27:15Z) predates the formal work-order materialization events. It is explicitly reconciled append-only by event 0004 RECOVERY_RESUMED (PREEXISTING_WIP adopted as RECOVERED_WIP, no backdating); forcing monotonicity would have required rewriting historical records, which the harness forbids."
+    },
+    {
+      "id": "F-002",
+      "severity": "LOW",
+      "message": "Events 0001 and 0002 carry claimed recorded_at_utc values (06:05:00Z / 06:10:00Z) that postdate their physical git materialization in commit b2a88eb5 (committer/author date 2026-08-24T05:27:45Z). Git history shows each of the four event files was introduced exactly once and never modified afterwards, so no historical record was rewritten; the discrepancy is disclosed by the 0004 reconciliation narrative rather than hidden. Provenance wart only; no impact on fence, runtime semantics or test honesty."
+    },
+    {
+      "id": "F-003",
+      "severity": "INFO",
+      "message": "Router _send_commit classifies duplicates solely by the envelope marker details.status == DUPLICATE_REPLAY and does not cross-check that the inner relayed result status is COMMITTED when the marker is present. In-repo this is unreachable (the journal re-validates the prior result against effect_commit_result.v1 before every replay), but a foreign backend leg could pair a DUPLICATE_REPLAY envelope with a non-COMMITTED inner result and be counted as duplicate replay. Hardening opportunity only; the WO scope explicitly ordered envelope-based classification, so this is not a defect against EG45-R1-WO-001."
+    }
+  ],
+  "checked_items": {
+    "1_fence_allowed_forbidden_paths": {
+      "status": "PASS",
+      "evidence": "git diff --name-only origin/main..HEAD lists exactly 9 files: 4x events/EG45-R1-WO-001/*.json + project-epoch.v1.json + work-orders/EG45-R1-WO-001.v1.json (all under allowed config/control/harness/executions/E2026-08-24-EG45-R1/**), plus tools/network/eg45_synthetic_effect_journal.gd, scripts/network/gateway/runtime/eg45_interaction_router.gd, tests/network/test_eg45_interaction_router.gd (each individually allowed). No forbidden path touched: scripts/network/gateway/effect_commit_request.gd, scripts/network/gateway/effect_commit_result.gd, scripts/persistence/**, scripts/runtime/**, config/architecture/**, project-program-registry are all unchanged vs base."
+    },
+    "2_fix_semantics_prior_result_wins": {
+      "status": "PASS",
+      "evidence": "Journal duplicate branch (tools/network/eg45_synthetic_effect_journal.gd, commit() lines ~89-106) returns the STORED prior EffectCommitResult deep-copied verbatim and re-validated against EffectResultScript.validate; it no longer fabricates a rewritten result (old code created status=DUPLICATE_REPLAY with the incoming interaction_id - removed in 866a44ec). Prior result keeps status COMMITTED, original interaction_id, original canonical_effect_revision; the DUPLICATE_REPLAY marker lives only on the response envelope (details.status), applied_now=false, revision counter untouched. Consistent with the journal docstring 'idempotent on repeated operation ids (prior result wins)' and with the effect_commit_result.gd v1 contract (COMMITTED requires positive revision; contract file itself unmodified). Router (_send_commit) validates the relayed result against the same contract, derives duplicate_replay from envelope details.get(\"status\") instead of the inner result field, increments commits_duplicate_replay, relays top-level duplicate_replay flag and the inner result verbatim; gateway-side ALREADY_APPLIED replay cache stores the same verbatim result. Verified directly by reading HEAD sources and by test_neg07 byte-identical assertion."
+    },
+    "3_campaign_owner_scope_transport_policy_untouched": {
+      "status": "PASS",
+      "evidence": "RAW_ENET restore/save belongs to the sibling NX2 realtime traffic separation lane (references found only under docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md, validation/v16.12.0-network-nx2-realtime-traffic-separation-validation.json, tests/network/test_nx2_realtime_traffic_separation.gd, EG4_DELIVERY_MODE_DECISION_NOTE.md - all outside this line's diff). Diff vs base contains no transport/enet/policy/persistence/architecture files; the only runtime/-pattern match is scripts/network/gateway/runtime/eg45_interaction_router.gd which is an explicitly allowed WO path."
+    },
+    "4_chronology_provenance_events_append_only": {
+      "status": "PASS_WITH_FINDINGS",
+      "evidence": "All four event JSON files parse as valid JSON. sequence values are exactly 1,2,3,4 with matching event_ids. Physical materialization verified via per-file git log --follow: 0001-0003 introduced together in b2a88eb5 (2026-08-24T05:27:45Z, 30s after implementation commit 866a44ec authored 05:27:15Z = 15:27:15+10:00); 0004 introduced alone in 11232810 (06:50:21Z). No event file was ever modified after introduction - no historical record rewritten. The inversion of implementation-before-work-order-materialization is honestly reconciled by append-only event 0004 RECOVERY_RESUMED classifying PREEXISTING_WIP adopted as RECOVERED_WIP with explicit no-backdating statement; see findings F-001/F-002 for the two recorded_at_utc warts (non-monotonicity at seq2->seq3; future-dated claims of 0001/0002 relative to their git birth)."
+    },
+    "5_test_honesty_no_weakening": {
+      "status": "PASS",
+      "evidence": "tests/network/test_eg45_interaction_router.gd changed by exactly one hunk in test_neg07_replay_after_success_exactly_once: the single weak assertion (inner rewritten result == DUPLICATE_REPLAY) was REPLACED by three strictly stronger assertions: envelope-level duplicate_replay flag true, inner result COMMITTED, and JSON.stringify byte-equality between replayed result and the original first-commit result. Net assertions increased; nothing removed or loosened. tests/network/test_eg45_synthetic_journal.gd has ZERO diff vs base - its original strict assertion ('replay result must equal the stored prior result verbatim' comparing journal.result_for(op_one) with replay.details.result via JSON.stringify) remains verbatim. No stubs added anywhere in the diff."
+    },
+    "6_validation_three_tests_green_exact_head": {
+      "status": "PASS",
+      "evidence": "Executed locally at exact HEAD 112328105983dc3afa5b94fa1febed04ff9bf427 with GODOT_BIN=$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64, isolated HOME=/tmp/eg45-review-home, BREAKPOINT_RUNTIME_DISABLED=1, --headless --script res://tests/network/<test>.gd, timeout 300s each: test_eg45_synthetic_journal EXIT_CODE=0 (verdict PASS, 25 assertions, 0 failures, predicate CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS(journal-core)); test_eg45_interaction_router EXIT_CODE=0 (6 PASS exit markers incl. CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS, zero FAIL/error lines); test_eg45_scenarios EXIT_CODE=0 (6 PASS exit markers incl. DETERMINISTIC_FIRST_COLLISION_RESOLUTION_PASS, PROJECTION_HIT_IS_CANDIDATE_ONLY_PASS, CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS, zero FAIL/error lines)."
+    }
+  },
+  "runtime_code_modified_by_reviewer": false,
+  "notes": "Independent fresh-isolated reviewer pass over repair lane EG45-R1-WO-001. Verdict PASS: fence clean, fix semantics match 'prior result wins' and the EffectCommitResult contract, transport/policy ownership untouched, provenance preserved append-only with honest reconciliation, tests strengthened not weakened, and all three required suites green on the exact reviewed head. Findings F-001..F-003 are informational/hardening notes and do not gate the line."
+}

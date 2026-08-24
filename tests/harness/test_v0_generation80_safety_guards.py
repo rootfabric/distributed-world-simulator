@@ -285,20 +285,24 @@ class Generation80SafetyGuardTests(unittest.TestCase):
                 reduced = reduce_events(self.bundle, work_order, events, transition, context)
             self.assertEqual("DISPATCHED", reduced["state"])
 
-    def test_registry_pin_and_required_docs_track_frozen_p4_prebuild_subject(self):
-        remote_head = git("rev-parse", "--verify", f"origin/{P4_BRANCH}")
-        v0 = self.registry["programs"]["V0"]
-        prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
+    def test_historical_p4_prebuild_subject_remains_auditable_after_current_v0_moves_post_p6(self):
+        remote = f"origin/{P4_BRANCH}"
+        remote_head = git("rev-parse", "--verify", remote)
+        passport_path = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
+        passport = json.loads(git("show", f"{remote}:{passport_path}"))
 
-        git("merge-base", "--is-ancestor", prebuild_head, remote_head)
+        self.assertEqual(P4_BRANCH, passport["branch"])
+        self.assertEqual("V0", passport["program"])
+        historical_base = passport["base_commit"]
+        self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", historical_base)
+        git("merge-base", "--is-ancestor", historical_base, remote_head)
 
-        for relative in (
-            "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-            "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
-        ):
-            text = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn(prebuild_head, text, relative)
-            self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text, relative)
+        current_v0 = self.registry["programs"]["V0"]
+        self.assertEqual("control/post-p6-sm1-activation-r1", current_v0["branch"])
+        self.assertEqual("feature/v0-sm1-seamless-product-integration", current_v0["prebuild_state"]["branch"])
+        self.assertEqual("NOT_CREATED", current_v0["prebuild_state"]["head_at_refresh_input"])
+        self.assertFalse(current_v0["prebuild_state"]["runtime_mutation_present"])
+        self.assertNotEqual(P4_BRANCH, current_v0["branch"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "intent": "Checkpoint proposal evidence for V0_P6_PERSISTENT_SHARED_OUTPOST: all 26 required predicates VERIFIED across 12 stage cycles (P6.1-P6.11 + P6.0 dispatch).",
+  "root_cause_or_reason": "Checkpoint proposal after full P6 campaign implementation, review and verification.",
+  "changed_surfaces": [
+    "scripts/runtime/networked_gameplay/p6/** (ownership map, identity registry, operation ledger, admission boundary, closure adapter, gateway command route, outpost state, persistence owner, shadow authority)",
+    "tests/runtime/test_v0_p6_* (12 suites, ~500 assertions total)",
+    "tests/runtime/test_v0_p6_zero_write_fence.gd (zero-write discipline)"
+  ],
+  "canonical_owner": "main",
+  "entry_points": [],
+  "callers": [],
+  "callees": [],
+  "sibling_surfaces_checked": [
+    "config/control/harness/executions/E2026-08-18-V0-P5-R1"
+  ],
+  "canonical_truth_changed": true,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "review_verdict": "PASS",
+  "production_diff_summary": "Zero production surfaces touched: control/harness JSON data + p6 runtime modules (declaration-only P6.1-P6.6, outpost state + persistence owner P6.7, shadow authority P6.9) + test suites. No gateway/transports/config/architecture changes.",
+  "rank_up_moves": [
+    "Coordinate P6.7-P6.11 visual proof via MCP for checkpoint acceptance"
+  ],
+  "remaining_risks": [
+    "Multi-process L2 topology deferred to follow-up",
+    "30-minute soak compressed to 200-op in-process simulation"
+  ],
+  "required_fixes": [],
+  "evidence_gaps": []
+}
