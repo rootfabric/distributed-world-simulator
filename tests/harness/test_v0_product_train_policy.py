@@ -122,15 +122,16 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertIn("DIRECTOR_DISPATCH", routing["sm1_remaining_activation_prerequisites"])
         self.assertIn("MUTATION_LEASE_ROTATED_TO_SM1", routing["sm1_remaining_activation_prerequisites"])
 
-    def test_runtime_mutation_lease_is_free_after_p6_not_silently_granted_to_sm1(self) -> None:
+    def test_runtime_mutation_lease_remains_frozen_on_p6_until_control_candidate_lands(self) -> None:
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(lease["capacity"], 1)
-        self.assertEqual(lease["holder_checkpoint"], "NONE")
-        self.assertEqual(lease["holder_branch"], "NONE")
-        self.assertEqual(lease["state"], "FREE_CONTROL_ONLY_AWAITING_SM1_ACTIVATION")
+        self.assertEqual(lease["holder_checkpoint"], "V0_P6_PERSISTENT_SHARED_OUTPOST")
+        self.assertEqual(lease["holder_branch"], "feature/v0-p6-persistent-shared-outpost")
+        self.assertEqual(lease["state"], "FROZEN_ACCEPTED_PENDING_POST_P6_CONTROL_RELEASE")
         self.assertEqual(lease["proposed_next_holder_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
         self.assertEqual(lease["proposed_next_holder_branch"], "feature/v0-sm1-seamless-product-integration")
         self.assertTrue(lease["successor_rotation_requires_predecessor_checkpoint_acceptance"])
+        self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_historical_p5_and_p6_execution_snapshots_still_match_events(self) -> None:
         p5_events = HARNESS / "executions/E2026-08-18-V0-P5-R1/events/V0-P5-R1-WO-001"
