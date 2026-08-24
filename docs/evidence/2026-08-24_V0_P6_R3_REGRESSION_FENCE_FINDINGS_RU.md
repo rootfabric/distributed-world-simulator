@@ -105,6 +105,51 @@ display-fenced (не запускались) 5 (Находка 2)
 *main_scene_cli_all выполняется последним шагом census; его результат
 фиксируется отдельно при закрытии миссии.
 
+## Находка 5 — изолированные рераны и финальная классификация
+
+Ночная цепочка после тишины машины (внешняя параллельная сессия завершила
+прогоны в 13:54 UTC+10) дала окончательную классификацию:
+
+```text
+test_m6_dedicated_recovery_processes .... ISOLATED_RERUN_PASS -> нагрузочный флак
+test_v0_p1_live_reconnect_convergence ... ISOLATED_RERUN_PASS -> нагрузочный флак
+test_eg45_synthetic_journal ............. ISOLATED_RERUN_FAIL -> РЕАЛЬНЫЙ дефект;
+    воспроизводится идентично на БЕЗУПРЕЧНОМ origin/main 9ade3233
+    («replay result must equal the stored prior result verbatim»,
+    25 assertions / 1 failure) => ВТОРОЙ PRE_EXISTING_MAIN_RED
+```
+
+Итог: оба нагрузочных подозреваемых сняты, реальных дефектов на ветке
+ремонта НЕТ; оба реальных RED (nx2, eg45) унаследованы от main и требуют
+отдельных линий ремонта вне scope данного WO (`scripts/network/**` —
+forbidden_paths).
+
+## Находка 6 — NX lane: фокусная верификация заблокирована parse-ошибкой
+
+Первая же фаза NX-кампании (`RUN_H0_2_NX_C1_TESTS.sh` на ветке
+`feature/h0-2-nx-c1-owner-authority-r3`, head `1a56fe0e`) упала на первом
+фокусном тесте: `tests/network/test_nx_owner_movement_authority.gd`
+содержит GDScript parse-ошибки («Cannot infer the type of ... variable»,
+11 мест). Оставшиеся 4 фокусных теста не исполнялись (раннер fail-fast).
+Вывод для NX lane: источник не проходит даже парсинг под каноническим
+Godot 4.7.1 double — предикат
+EXACT_GODOT_FOCUSED_RUNTIME_VERIFICATION требует предварительного
+тестового ремонта на самой NX-ветке (её собственным порядком, вне данного
+WO). Артефакт: `artifacts/test-results/p6-r3-night-chain-20260824-132416/nx-focused.log`.
+
+## Позитивный итог цепочки — литеральный soak доказан
+
+```text
+V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME
+elapsed ....... 1800013 ms (30.00 real-time minutes)
+checkpoints ... 29 периодических delegated checkpoint'ов (каждые ~60s)
+reconnects .... alice x2, bob x2 (registry rebind_on_transport_change)
+assertions .... 51/51 PASS
+маркер раннера  V0_P6_R3_SOAK_SUITE_PASS
+артефакты ..... artifacts/test-results/p6-r3-soak-suite-410928/
+                artifacts/test-results/p6-r3-night-chain-20260824-132416/
+```
+
 ## Влияние на предикаты WO
 
 ```text
