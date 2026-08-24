@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-EG45-R1-EG45-R1-WO-001-0005",
+  "project_epoch": "E2026-08-24-EG45-R1",
+  "work_order_id": "EG45-R1-WO-001",
+  "sequence": 5,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-24T06:59:36Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/eg45-synthetic-journal-r1",
+  "head_sha": "8d5fec53b9632dcf8dd4ad3983dc6e09be96f7d2",
+  "summary": "Control roles complete on exact head 11232810 lineage: independent Reviewer PASS (8d5fec53; findings INFO/LOW only - chronology inversion durably reconciled by event 0004, no gating items), independent Verifier VERIFIED (f53cfec2; all three eg45 tests independently reproduced green, semantics spot-check confirmed stored-prior-result verbatim replay and envelope classification). Evidence Map recorded with focused_validation=PASS, full_regression=NOT_REQUIRED (deferred to post-merge main run per WO), pc0/directional=NOT_RUN at lane scope. Lane is READY_FOR_INTEGRATION into integration/post-p6-repairs-a-r1; checkpoint acceptance beyond repair scope is not claimed.",
+  "command": "RECORD_AUDIT_COMPLETED_LANE_READY_FOR_INTEGRATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-EG45-R1/reviews/EG45-R1-WO-001-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-EG45-R1/verifications/EG45-R1-WO-001-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-EG45-R1/evidence/EG45-R1-WO-001-EVIDENCE-MAP-001.v1.json"
+  ]
+}

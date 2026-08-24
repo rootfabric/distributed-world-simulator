@@ -86,22 +86,21 @@ func commit(request: Dictionary) -> Dictionary:
 			"expected": _authority_id,
 			"received": String(request.get("target_authority")),
 		})
-	# Exactly-once: a known operation ALWAYS replays its prior outcome.
+	# Exactly-once: a known operation ALWAYS replays its PRIOR RESULT verbatim -
+	# the same canonical EffectCommitResult the authority originally produced
+	# (status COMMITTED, original interaction_id, original revision). Rewriting
+	# it would break causality/evidence/reconciliation on authority handoff
+	# retries. The DUPLICATE_REPLAY marker lives on the response ENVELOPE only.
 	if _committed_by_operation.has(operation_id):
 		var entry: Dictionary = _committed_by_operation[operation_id]
 		_counters["duplicate_replays"] = int(_counters["duplicate_replays"]) + 1
-		var replay_result: Dictionary = EffectResultScript.create(
-				String(request.get("interaction_id")),
-				operation_id,
-				"DUPLICATE_REPLAY",
-				int(entry["canonical_effect_revision"]),
-				_authority_epoch)
-		var replay_check: Dictionary = EffectResultScript.validate(replay_result)
+		var prior_result: Dictionary = Dictionary(entry["result"]).duplicate(true)
+		var replay_check: Dictionary = EffectResultScript.validate(prior_result)
 		if not bool(replay_check.get("success", false)):
 			return _failure(String(replay_check.get("error_code", "INVALID_RESULT")), {})
 		return _success({
 			"status": "DUPLICATE_REPLAY",
-			"result": replay_result,
+			"result": prior_result,
 			"canonical_effect_revision": int(entry["canonical_effect_revision"]),
 			"applied_now": false,
 		})
