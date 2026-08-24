@@ -19,7 +19,12 @@ P4_BRANCH = "feature/v0-p4-construction-real-resources"
 P5_BRANCH = "feature/v0-p5-equipment-tools"
 P6 = "V0_P6_PERSISTENT_SHARED_OUTPOST"
 P6_BRANCH = "feature/v0-p6-persistent-shared-outpost"
+POST_P6_GATE = "V0_POST_P6_SEAMLESS_INSERTION_GATE"
+SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
+CURRENT_V0_BRANCH = "control/post-p6-sm1-activation-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__post-p6-sm1-activation-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
+P6_ACCEPTED_MAIN = "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
 
 
 def load_json(path: str) -> dict:
@@ -102,7 +107,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_preserves_p0_p8_order_and_current_runtime_route_is_p5(self):
+    def test_goal_graph_preserves_p0_p8_order_and_routes_current_product_lane_to_post_p6_gate(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
         self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
         sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
@@ -138,55 +143,62 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             core_p_sequence,
         )
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
-        self.assertEqual([P6], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
+        self.assertEqual([POST_P6_GATE], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
+        self.assertEqual(SM1, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
+        self.assertFalse(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
 
-    def test_registry_generation_80_preserves_historical_p4_dispatch_lineage(self):
+    def test_registry_generation_80_points_to_current_post_p6_control_frontier(self):
         self.assertEqual(80, self.registry["registry_generation"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
-        self.assertEqual(P4_BRANCH, v0["branch"])
+        self.assertEqual(CURRENT_V0_BRANCH, v0["branch"])
         self.assertTrue(v0["requires_passport"])
-        self.assertEqual(P4_PASSPORT, v0["passport_path"])
-        self.assertEqual(P4_PASSPORT, v0["prebuild_state"]["passport_path"])
+        self.assertEqual(CURRENT_V0_PASSPORT, v0["passport_path"])
         execution = v0["product_execution_base"]
-        self.assertEqual("repair/v0-p3-visual-interaction-r1", execution["branch"])
-        self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", execution["sha"])
-        self.assertFalse(execution["declares_checkpoint_acceptance"])
-        self.assertIn("P2_DIRECTOR_VERDICT_PENDING", v0["acceptance_debt"])
-        self.assertIn("P3_AGGREGATE_REVIEW_VERIFICATION_DIRECTOR_PENDING", v0["acceptance_debt"])
+        self.assertEqual("main", execution["branch"])
+        self.assertEqual(P6_ACCEPTED_MAIN, execution["sha"])
+        self.assertTrue(execution["declares_checkpoint_acceptance"])
+        self.assertEqual(
+            "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+            execution["acceptance_record"],
+        )
+        prebuild = v0["prebuild_state"]
+        self.assertEqual("feature/v0-sm1-seamless-product-integration", prebuild["branch"])
+        self.assertEqual("NOT_CREATED", prebuild["head_at_refresh_input"])
+        self.assertFalse(prebuild["runtime_mutation_present"])
 
-    def test_registry_pins_historical_auditable_p4_passport(self):
+    def test_current_registry_and_current_passport_are_consistent(self):
         v0 = self.registry["programs"]["V0"]
-        remote_ref = f"origin/{P4_BRANCH}"
-        remote_head = git("rev-parse", "--verify", remote_ref)
-        prebuild_head = v0["prebuild_state"]["head_at_refresh_input"]
-        git("merge-base", "--is-ancestor", prebuild_head, remote_head)
-
-        passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
-        self.assertEqual("distributed_world_simulator.branch_passport.v1", passport["schema"])
-        self.assertEqual(P4_BRANCH, passport["branch"])
+        passport = load_json(CURRENT_V0_PASSPORT)
+        self.assertEqual(CURRENT_V0_BRANCH, passport["branch"])
         self.assertEqual("V0", passport["program"])
         self.assertEqual(v0["role"], passport["role"])
         self.assertEqual(v0["current_stage"], passport["current_stage"])
         self.assertEqual(v0["stage_status"], passport["stage_status"])
         self.assertEqual(v0["blockers"], passport["blockers"])
         self.assertEqual(v0["health_declared"], passport["health_declared"])
+        self.assertEqual(P6_ACCEPTED_MAIN, passport["base_commit"])
+        self.assertEqual([], passport["ownership_claims"])
+        self.assertEqual([], passport["runtime_paths"])
+
+    def test_historical_p4_passport_remains_auditable_without_being_current_registry_truth(self):
+        remote_ref = f"origin/{P4_BRANCH}"
+        git("rev-parse", "--verify", remote_ref)
+        passport = json.loads(git("show", f"{remote_ref}:{P4_PASSPORT}"))
+        self.assertEqual("distributed_world_simulator.branch_passport.v1", passport["schema"])
+        self.assertEqual(P4_BRANCH, passport["branch"])
+        self.assertEqual("V0", passport["program"])
+        self.assertEqual("COMPOSITION_FRONTIER", passport["role"])
+        self.assertEqual("ef3ad5f0afc433802d639171d938e4720b3a46ec", passport["base_commit"])
         self.assertEqual([], passport["ownership_claims"])
         self.assertEqual([], passport["runtime_paths"])
         self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_refs_fetch_performed"])
         self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_authoritative_for_dispatch"])
         self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_committed_audit_evidence"])
+        self.assertNotEqual(P4_BRANCH, self.registry["programs"]["V0"]["branch"])
 
-        for relative in (
-            "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-            "docs/plans/V0_CRITICAL_PATH_ACCELERATION_PROPOSAL_RU.md",
-        ):
-            text = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn(prebuild_head, text)
-            self.assertNotIn("c20310cf804374ab515fd7a363b6471c2b933ac0", text)
-
-    def test_pre_h0_3_concurrency_is_one_main_owned_p6_mutation_lease(self):
+    def test_pre_h0_3_concurrency_is_one_main_owned_p6_frozen_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
@@ -198,6 +210,8 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P6, lease["holder_checkpoint"])
         self.assertEqual(P6_BRANCH, lease["holder_branch"])
+        self.assertEqual("FROZEN_ACCEPTED_PENDING_POST_P6_CONTROL_RELEASE", lease["state"])
+        self.assertEqual(SM1, lease["proposed_next_holder_checkpoint"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):

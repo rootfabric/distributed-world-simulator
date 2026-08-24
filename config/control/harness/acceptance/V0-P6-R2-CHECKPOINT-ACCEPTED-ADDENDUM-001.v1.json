@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance_addendum.v1",
+  "addendum_id": "V0-P6-R2-CHECKPOINT-ACCEPTED-ADDENDUM-001",
+  "references_acceptance_id": "V0-P6-R2-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "recorded_at_utc": "2026-08-24T07:20:00Z",
+  "addendum_type": "POST_ACCEPTANCE_EVIDENCE_RECONCILIATION_AND_HARDENING_ROUTE",
+  "acceptance_stance": {
+    "decision": "ACCEPTANCE_STANDS_BY_OWNER_AUTHORITY",
+    "reason": "RUNTIME_FEATURE_MERGE was owner-authorized through PR #212 and merge commit 9ade3233f8d9f16b77edcc8cf273fe8e649d5637; this addendum does not revoke the acceptance and does not rewrite the original record."
+  },
+  "post_acceptance_evidence_conflict": {
+    "summary": "Durable evidence recorded after the acceptance contradicts parts of the R2 machine_evidence block: the R2 thirty-minute soak predicate was proven SIMULATED (event E2026-08-23-V0-P6-R2/.../0015 retracted in docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md, commit 9c411aa7 on repair/v0-p6-persistence-exactly-once-r1), the derived all-predicates claim of event 0031 is annulled accordingly, and correctness findings P6-R-002..P6-R-007 were real in the merged implementation.",
+    "resolution_route": "Repair mission E2026-08-24-V0-P6-R3 / WO V0-P6-R3-WO-001 on repair/v0-p6-persistence-exactly-once-r1"
+  },
+  "hardening_evidence_now_durable": {
+    "branch": "repair/v0-p6-persistence-exactly-once-r1",
+    "head": "20b00f89",
+    "focused_suite": "RUN_V0_P6_R3_TESTS.sh 16/16 PASS including REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS (two OS processes, hard kill, bytes-only recovery)",
+    "literal_real_time_soak": "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME: elapsed=1800013ms (30.00 wall-clock minutes), checkpoints=29, reconnects alice=2/bob=2, 51/51 assertions (artifacts/test-results/p6-r3-soak-suite-410928)",
+    "independent_reviewer": "PASS (reviews/V0-P6-R3-WO-001-REVIEW-001.v1.json, commit d7bf17ca)",
+    "independent_verifier": "VERIFIED (verifications/V0-P6-R3-WO-001-VERIFICATION-001.v1.json, commit 3730747f)",
+    "evidence_map": "evidence/V0-P6-R3-WO-001-EVIDENCE-MAP-001.v1.json on the repair branch"
+  },
+  "still_open_predicates_routing": [
+    {
+      "predicate": "V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS",
+      "status": "ENVIRONMENT_BLOCKED",
+      "route": "HA-001: operator Windows MCP session per docs/MCP_GODOT.md, or a provisioned Xvfb+MCP environment, or an explicit main-owned deferral amendment"
+    },
+    {
+      "predicate": "FULL_WORLD_CORE_REGRESSION_PASS",
+      "status": "BLOCKED_BY_MAIN_INHERITED_REDS_AND_DISPLAY_FENCE",
+      "route": "HA-002 executed: pre-existing main REDs repaired on branches repair/eg45-synthetic-journal-r1 (b2a88eb5) and repair/nx2-realtime-traffic-separation-r1 (66deb469), both validated green and pushed, awaiting owner merges into main; the 5 display-dependent tests require the canonical Windows/Xvfb operator run"
+    }
+  ],
+  "successor_constraint_reaffirmed": {
+    "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "note": "Consistent with the accepted record: successor runtime mutation remains unauthorized until a main-owned control update. This addendum additionally recommends that SM1 runtime activation waits until the HA-002 repair branches are merged so the seamless base does not inherit the eg45 journal replay defect or the nx2 contract-binding regression.",
+    "runtime_mutation_authorized_by_this_record": false
+  },
+  "merge_order_recommendation": [
+    "control/post-p6-sm1-activation-r1 + this addendum branch (control truth reconciliation)",
+    "repair/v0-p6-persistence-exactly-once-r1 (P6 R3 hardening: fixes P6-R-002..007, literal soak evidence)",
+    "repair/eg45-synthetic-journal-r1 (pre-existing main RED fix)",
+    "repair/nx2-realtime-traffic-separation-r1 (pre-existing main RED fix)"
+  ]
+}
