@@ -4,6 +4,11 @@ extends RefCounted
 ## One feedback loop combines inherited morphology, canopy light, bounded soil water,
 ## and slow soil legacy for >=100 deterministic cycles. No renderer or environment
 ## writes genome state; all offspring still pass through LineageExtension.
+##
+## CAUSALITY FENCE (FFF6.2): stochastic development identity is bundle-seed-only.
+## Zone, soil texture, light, water, feedback mode and provisional/final evaluation
+## phase may change EnvironmentSample/plasticity/fitness, but never the growth-skeleton
+## draw for the same candidate bundle.
 const Morphology = preload("res://scripts/research/ecology/evo7_morphology_evolution_bridge_v1.gd")
 const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
 const Contract = preload("res://scripts/research/ecology/plant_development_contract_v1.gd")
@@ -19,7 +24,8 @@ const ExtensionTraits = preload("res://scripts/research/ecology/plant_developmen
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_succession_bridge.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-FFF6.1"
+const REVISION := "ECO.EVO7-FFF6.2"
+const EVALUATION_IDENTITY_RULE := "BUNDLE_SEED_ONLY_V1"
 const MIN_CYCLES := 100
 const POPULATION_SIZE := 12
 const OFFSPRING_PER_PARENT := 2
@@ -41,6 +47,12 @@ const FEATURE_FIELDS: Array[String] = [
 	"leaf_area_index_proxy", "realized_root_depth_m", "realized_root_spread_m",
 	"structural_investment",
 ]
+
+static func stable_evaluation_seed_tag(bundle: Dictionary) -> String:
+	var individual_seed := int(bundle.get("individual_seed", -1))
+	if individual_seed < 0:
+		return ""
+	return "evo7-fff6-eval|%d" % individual_seed
 
 static func run_all(lineage_seed := 20260823, cycles := MIN_CYCLES, feedback_enabled := true) -> Dictionary:
 	if cycles < MIN_CYCLES:
@@ -74,6 +86,7 @@ static func run_all(lineage_seed := 20260823, cycles := MIN_CYCLES, feedback_ena
 		distinct_population_hashes[String(zones[zone_name]["final_population_hash"])] = true
 	var result := {
 		"schema":SCHEMA, "version":VERSION, "revision":REVISION,
+		"evaluation_identity_rule":EVALUATION_IDENTITY_RULE,
 		"lineage_seed":lineage_seed, "cycles":cycles, "feedback_enabled":feedback_enabled,
 		"population_size":POPULATION_SIZE, "offspring_per_parent":OFFSPRING_PER_PARENT,
 		"policy_hash":LineageExtension.policy_hash(policy),
@@ -190,7 +203,7 @@ static func _evaluate_candidates(candidates: Array[Dictionary], zone_name: Strin
 	var water_records: Array = []
 	for index in candidates.size():
 		var bundle: Dictionary = candidates[index]["bundle"]
-		var fp := _functional(bundle, base_env, "fff6-provisional|%s|%d|%d" % [zone_name,cycle,index])
+		var fp := _functional(bundle, base_env)
 		if fp.is_empty(): return []
 		var pos := _position(index)
 		var identity := "c%03d" % index
@@ -219,7 +232,7 @@ static func _evaluate_candidates(candidates: Array[Dictionary], zone_name: Strin
 			effective_moisture = float(water_item["effective_soil_moisture"])
 			water_satisfaction = float(water_item["water_satisfaction"])
 		var env := EnvSample.create(float(item["x"]),float(item["z"]),float(cfg["temperature_c"]),clampf(effective_moisture,0.0,1.0),clampf(effective_light,0.0,1.0),base_nutrients,float(cfg["flood"]),lineage_seed,"ECO.EVO7-FFF6|%s|c%d|%s" % [zone_name,cycle,identity])
-		var fp := _functional(item["bundle"],env,"fff6-final|%s|%d|%s" % [zone_name,cycle,identity])
+		var fp := _functional(item["bundle"],env)
 		if fp.is_empty(): return []
 		var shade_tolerance := float(item["bundle"]["genome"]["shade_tolerance"])
 		var water_preference := float(item["bundle"]["genome"]["water_preference"])
@@ -290,7 +303,10 @@ static func _near_all_max(bundle: Dictionary) -> bool:
 		if float(axis[0]) >= float(axis[1]) * 0.99: maxed += 1
 	return maxed >= 7
 
-static func _functional(bundle: Dictionary, env: Dictionary, seed_tag: String) -> Dictionary:
+static func _functional(bundle: Dictionary, env: Dictionary) -> Dictionary:
+	var seed_tag := stable_evaluation_seed_tag(bundle)
+	if seed_tag.is_empty():
+		return {}
 	var envelope := Contract.create_seed_envelope(bundle["genome"],bundle["dev_traits"],String(bundle["lineage"]["lineage_id"]),seed_tag,0,1.25)
 	var ph2 := CoupledDevelopment.realize(envelope,bundle["dev_traits"],env)
 	return FunctionalPhenotype.compile({"genome":bundle["genome"],"ph2_realized":ph2,"traits_extension":bundle["ext_traits"],"environment_sample":env,"age_fraction":1.0})
@@ -344,7 +360,12 @@ static func _geometry_cluster_count(zones:Dictionary)->int:
 	return representatives.size()
 
 static func _result_hash(result:Dictionary)->String:
-	var tokens := PackedStringArray([SCHEMA,VERSION,REVISION,str(int(result["lineage_seed"])),str(int(result["cycles"])),"1" if bool(result["feedback_enabled"]) else "0",String(result["policy_hash"]),String(result["common_first_candidate_pool_hash"])])
+	var tokens := PackedStringArray([
+		SCHEMA,VERSION,REVISION,String(result.get("evaluation_identity_rule", "")),
+		str(int(result["lineage_seed"])),str(int(result["cycles"])),
+		"1" if bool(result["feedback_enabled"]) else "0",String(result["policy_hash"]),
+		String(result["common_first_candidate_pool_hash"])
+	])
 	for zone_name in ZONE_ORDER:
 		var zone:Dictionary = result["zones"][zone_name]
 		tokens.append("%s:%s:%s:%d" % [zone_name,String(zone["final_population_hash"]),String(zone["final_soil_state_hash"]),int(zone["organic_matter_ppm"])])
