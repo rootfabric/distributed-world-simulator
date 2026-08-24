@@ -13,7 +13,7 @@ extends SceneTree
 ##     mid-run removal restores CANOPY_GAP light and fitness;
 ##   - ON/OFF counterfactual divergence in every zone under one mutation stream;
 ##   - >= 100 generation-equivalent stability runs without NaN, out-of-bounds
-##     means or full axis bound-pinning (G11 preview);
+##     means or axis pinning beyond the calibrated hard ceiling (G11);
 ##   - deterministic replay (run_all twice, incremental context path equivalence,
 ##     lineage-seed sensitivity);
 ##   - fail-closed matrix + source boundaries (single lineage authority, no RNG,
@@ -24,6 +24,14 @@ const LightField = preload("res://scripts/research/ecology/understory_light_fiel
 const EnvSample = preload("res://scripts/research/ecology/environment_sample_v1.gd")
 
 const SEED := 20260823
+
+## Anti-runaway hard ceiling for the 108-cycle stability block (G11). Set by
+## cross-seed calibration (seeds 20260823/20260824/20260825 x
+## {MESIC_LOAM, DRY_SAND}; see eco_evo7_fff6_pinning_calibration_probe.gd and
+## docs/checkpoints/2026-08-24_ECO_EVO7_FFF6_R2_MINORS_RU.md): the observed
+## per-seed maximum bound-pinning fraction is 0.080, so this ceiling keeps a
+## >3x margin while still failing closed on any real runaway drift.
+const STABILITY_PINNING_CEILING := 0.25
 
 var assertions := 0
 var failures: Array[String] = []
@@ -239,6 +247,10 @@ func _stability_evidence() -> void:
 		_check(bool(stability["no_axis_fully_pinned"]),
 			"G11: no evolvable axis fully bound-pinned in %s (max %.3f)" % [
 				stability_zone, float(stability["max_bound_pinning_fraction"])])
+		var pin_max := float(stability["max_bound_pinning_fraction"])
+		_check(pin_max <= STABILITY_PINNING_CEILING,
+			"G11: %s max bound-pinning %.3f stays under the calibrated ceiling %.2f" % [
+				stability_zone, pin_max, STABILITY_PINNING_CEILING])
 		var pinning: Dictionary = stability["bound_pinning_fractions"]
 		_check(pinning.size() == 8, "bound-pinning reported for all 8 lineage axes (%s)" % stability_zone)
 		var pinning_sane := true
