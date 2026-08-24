@@ -3,6 +3,12 @@ extends RefCounted
 ## ECO.EVO7 FFF4 - morphology -> transpiration/root access -> bounded soil-water field -> selection.
 ## Candidate generation is environment-independent; all scenarios share the exact
 ## generation-one mutation pool. Only the evaluated water/texture surface differs.
+##
+## CAUSALITY FENCE (FFF4.2): stochastic development identity is derived only from
+## the candidate bundle individual_seed. Scenario, texture, sunlight, moisture and
+## provisional/final evaluation phase never enter reproduction_event. Therefore a
+## cross-scenario difference can be attributed to environment/plasticity/fitness,
+## not a different stochastic growth-skeleton draw.
 const Morphology = preload("res://scripts/research/ecology/evo7_morphology_evolution_bridge_v1.gd")
 const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
 const Contract = preload("res://scripts/research/ecology/plant_development_contract_v1.gd")
@@ -13,7 +19,8 @@ const WaterField = preload("res://scripts/research/ecology/soil_water_field_v1.g
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_water_soil_feedback_bridge.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-FFF4.1"
+const REVISION := "ECO.EVO7-FFF4.2"
+const EVALUATION_IDENTITY_RULE := "BUNDLE_SEED_ONLY_V1"
 const SCENARIOS := {
 	"dry_sand": {"texture":"sand", "moisture_ppm":180000, "sunlight":0.95, "nutrients":0.25, "temperature_c":28.0, "flood":0.0},
 	"mesic_loam": {"texture":"loam", "moisture_ppm":520000, "sunlight":0.82, "nutrients":0.55, "temperature_c":21.0, "flood":0.02},
@@ -25,6 +32,12 @@ const FEATURE_FIELDS: Array[String] = [
 	"leaf_area_index_proxy", "realized_root_depth_m", "realized_root_spread_m",
 	"root_shoot_ratio", "structural_investment",
 ]
+
+static func stable_evaluation_seed_tag(bundle: Dictionary) -> String:
+	var individual_seed := int(bundle.get("individual_seed", -1))
+	if individual_seed < 0:
+		return ""
+	return "evo7-fff4-eval|%d" % individual_seed
 
 static func run_all(lineage_seed := 20260823, generations := 28, population_size := 18, offspring_per_parent := 4) -> Dictionary:
 	if generations < 2 or population_size < 2 or offspring_per_parent < 1:
@@ -56,6 +69,7 @@ static func run_all(lineage_seed := 20260823, generations := 28, population_size
 	var mesic: Dictionary = results["mesic_loam"]
 	var result := {
 		"schema": SCHEMA, "version": VERSION, "revision": REVISION,
+		"evaluation_identity_rule": EVALUATION_IDENTITY_RULE,
 		"lineage_seed": lineage_seed, "generations": generations,
 		"population_size": population_size, "offspring_per_parent": offspring_per_parent,
 		"policy_hash": LineageExtension.policy_hash(policy),
@@ -142,7 +156,7 @@ static func _evaluate_pool(candidates: Array[Dictionary], scenario_name: String,
 	var records: Array = []
 	for index in candidates.size():
 		var bundle: Dictionary = candidates[index]["bundle"]
-		var fp := _functional(bundle, base_env, "fff4-base|%s|%d|%d" % [scenario_name, generation, index])
+		var fp := _functional(bundle, base_env)
 		if fp.is_empty():
 			return []
 		var identity := "c%04d" % index
@@ -166,7 +180,7 @@ static func _evaluate_pool(candidates: Array[Dictionary], scenario_name: String,
 		var water_item: Dictionary = water["plant_water"][String(item["identity"])]
 		var effective_moisture := float(water_item["effective_soil_moisture"])
 		var derived_env := _environment(cfg, lineage_seed, generation, "%s|%s" % [scenario_name, String(item["identity"])], effective_moisture)
-		var fp := _functional(item["bundle"], derived_env, "fff4-final|%s|%d|%d" % [scenario_name, generation, index])
+		var fp := _functional(item["bundle"], derived_env)
 		if fp.is_empty():
 			return []
 		var satisfaction := float(water_item["water_satisfaction"])
@@ -182,7 +196,10 @@ static func _evaluate_pool(candidates: Array[Dictionary], scenario_name: String,
 		})
 	return evaluated
 
-static func _functional(bundle: Dictionary, env: Dictionary, seed_tag: String) -> Dictionary:
+static func _functional(bundle: Dictionary, env: Dictionary) -> Dictionary:
+	var seed_tag := stable_evaluation_seed_tag(bundle)
+	if seed_tag.is_empty():
+		return {}
 	var envelope := Contract.create_seed_envelope(bundle["genome"], bundle["dev_traits"],
 		String(bundle["lineage"]["lineage_id"]), seed_tag, 0, 1.25)
 	var ph2 := CoupledDevelopment.realize(envelope, bundle["dev_traits"], env)
@@ -200,8 +217,12 @@ static func _rank_order(a: Dictionary, b: Dictionary) -> bool:
 	return String(a["bundle"]["bundle_checksum"]) < String(b["bundle"]["bundle_checksum"])
 
 static func _result_hash(result: Dictionary, names: PackedStringArray) -> String:
-	var tokens := PackedStringArray([SCHEMA, VERSION, REVISION, str(int(result["lineage_seed"])),
-		str(int(result["generations"])), String(result["policy_hash"]), String(result["common_first_candidate_pool_hash"])])
+	var tokens := PackedStringArray([
+		SCHEMA, VERSION, REVISION,
+		String(result.get("evaluation_identity_rule", "")),
+		str(int(result["lineage_seed"])), str(int(result["generations"])),
+		String(result["policy_hash"]), String(result["common_first_candidate_pool_hash"]),
+	])
 	for name in names:
 		var scenario: Dictionary = result["scenarios"][name]
 		tokens.append("%s:%s:%s:%s" % [name, String(scenario["first_candidate_pool_hash"]),

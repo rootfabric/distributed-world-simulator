@@ -12,6 +12,7 @@ func _init() -> void:
 	_effect_v2_contract()
 	_water_budget_and_texture()
 	_order_invariance()
+	_causality_identity_fence()
 	_g8_g9_evolution()
 	_multiseed_direction()
 	_source_boundaries()
@@ -82,6 +83,14 @@ func _order_invariance() -> void:
 	_check(String(a["field_hash"]) == String(b["field_hash"]), "G12: soil-water field hash order invariant")
 	_check(String(a["effects_hash"]) == String(b["effects_hash"]), "G12: water effects hash order invariant")
 
+func _causality_identity_fence() -> void:
+	var bundle := {"individual_seed": 123456789}
+	var tag := Bridge.stable_evaluation_seed_tag(bundle)
+	_check(tag == "evo7-fff4-eval|123456789", "FFF4 realization identity derives from candidate bundle only")
+	for forbidden in ["dry", "sand", "mesic", "loam", "riparian", "clay", "sun", "water"]:
+		_check(not tag.contains(forbidden), "FFF4 realization identity excludes %s scenario signal" % forbidden)
+	_check(Bridge.stable_evaluation_seed_tag({"individual_seed": -1}).is_empty(), "invalid FFF4 realization identity fails closed")
+
 func _g8_g9_evolution() -> void:
 	var result := Bridge.run_all(SEED)
 	_check(not result.is_empty(), "FFF4 bridge runs")
@@ -89,6 +98,7 @@ func _g8_g9_evolution() -> void:
 		return
 	var dry: Dictionary = result["scenarios"]["dry_sand"]
 	var mesic: Dictionary = result["scenarios"]["mesic_loam"]
+	_check(String(result.get("evaluation_identity_rule", "")) == Bridge.EVALUATION_IDENTITY_RULE, "FFF4 publishes scenario-independent evaluation identity rule")
 	_check(String(result["common_first_candidate_pool_hash"]).length() == 64, "G4: common generation-one mutation pool")
 	_check(String(dry["final_population_hash"]) != String(mesic["final_population_hash"]), "G9: dry-sand and mesic-loam select different descendants")
 	_check(float(dry["mean_water_satisfaction"]) < float(mesic["mean_water_satisfaction"]), "G8: dry sand imposes stronger water limitation")
@@ -121,6 +131,9 @@ func _source_boundaries() -> void:
 	_check(water_source.contains("uptake > uptake_requests[index]"), "water field contains per-request allocation fence")
 	var bridge_source := FileAccess.get_file_as_string("res://scripts/research/ecology/evo7_water_soil_feedback_bridge_v1.gd")
 	_check(bridge_source.contains("LineageExtension.reproduce_bundle"), "FFF4 uses the single EVO7 lineage extension")
+	_check(bridge_source.contains("stable_evaluation_seed_tag(bundle)"), "FFF4 functional realization consumes stable bundle identity")
+	_check(not bridge_source.contains("_functional(bundle, base_env,"), "FFF4 provisional realization cannot receive scenario seed tag")
+	_check(not bridge_source.contains("_functional(item[\"bundle\"], derived_env,"), "FFF4 final realization cannot receive scenario seed tag")
 	_check(not bridge_source.contains("Kernel.reproduce"), "FFF4 has no second direct mutation path")
 	var old_effect_source := FileAccess.get_file_as_string("res://scripts/research/ecology/plant_environment_effect_v1.gd")
 	_check(old_effect_source.contains("ACTIVE_CHANNELS: Array[String] = [\"shade_ppm\"]"), "FFF3 shade-only v1 remains unchanged")
