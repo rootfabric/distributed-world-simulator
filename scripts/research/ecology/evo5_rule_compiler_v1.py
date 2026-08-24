@@ -2,14 +2,51 @@
 canonical application order = sorted by id; deterministic accumulation."""
 from __future__ import annotations
 
-WHEN_KEYS = {"neighbours", "water_dist_m", "in_water", "mineral", "wind_exposure", "sun_exposure", "snow_cover_frac"}
+WHEN_KEYS = {
+    "neighbours", "water_dist_m", "in_water", "mineral", "wind_exposure",
+    "sun_exposure", "snow_cover_frac", "soil_moisture_ppm",
+}
 NEIGHBOUR_KEYS = {"within_r", "taller_than_self", "count"}
 TARGET_KEYS = {"form", "root_type", "pigment_class", "any"}
-EFFECT_CHANNELS = {"vitality", "death_chance", "max_height_cap", "pigment_shift", "thorns", "seed_establishment"}
+EFFECT_CHANNELS = {
+    "vitality", "death_chance", "max_height_cap", "pigment_shift", "thorns",
+    "seed_establishment",
+}
 
 
 def _reject(msg: str):
     raise ValueError(f"rule rejected fail-closed: {msg}")
+
+
+def _numeric_predicate(spec, *, default_op: str = ">=") -> tuple[str, float]:
+    if isinstance(spec, bool) or not isinstance(spec, (int, float, str)):
+        _reject(f"numeric predicate expected, got {type(spec).__name__}")
+    if isinstance(spec, (int, float)):
+        return default_op, float(spec)
+    text = spec.strip()
+    for op in ("<=", ">=", "==", "<", ">"):
+        if text.startswith(op):
+            try:
+                return op, float(text[len(op):].strip())
+            except ValueError:
+                _reject(f"invalid numeric predicate {spec!r}")
+    try:
+        return default_op, float(text)
+    except ValueError:
+        _reject(f"invalid numeric predicate {spec!r}")
+
+
+def _compare_numeric(actual: float, spec, *, default_op: str = ">=") -> bool:
+    op, expected = _numeric_predicate(spec, default_op=default_op)
+    if op == "<":
+        return actual < expected
+    if op == "<=":
+        return actual <= expected
+    if op == ">":
+        return actual > expected
+    if op == ">=":
+        return actual >= expected
+    return actual == expected
 
 
 def _validate_when(when: dict) -> None:
@@ -19,13 +56,20 @@ def _validate_when(when: dict) -> None:
         if key not in WHEN_KEYS:
             _reject(f"unknown when key {key}")
         if key == "neighbours":
+            if not isinstance(spec, dict):
+                _reject("neighbours must be an object")
             for nk in spec:
                 if nk not in NEIGHBOUR_KEYS:
                     _reject(f"unknown neighbour key {nk}")
-        if key == "mineral":
+        elif key == "mineral":
+            if not isinstance(spec, dict):
+                _reject("mineral must be an object")
             for mk in ("type", "richness"):
                 if mk not in spec:
                     _reject("mineral requires type and richness")
+            _numeric_predicate(spec["richness"], default_op=">")
+        elif key != "in_water":
+            _numeric_predicate(spec, default_op="<" if key == "water_dist_m" else ">=")
 
 
 def _validate_target(target: dict) -> None:
@@ -76,40 +120,55 @@ def _phenotype_matches(target: dict, phenotype: dict) -> bool:
 
 
 def apply_rules(compiled: list[dict], site_context: dict, phenotype: dict) -> dict:
-    effects = {"vitality": 0.0, "death_chance": 0.0, "thorns": 0,
-               "seed_establishment": 0.0, "pigment_shift": [0.0, 0.0, 0.0]}
+    effects = {
+        "vitality": 0.0,
+        "death_chance": 0.0,
+        "thorns": 0,
+        "seed_establishment": 0.0,
+        "pigment_shift": [0.0, 0.0, 0.0],
+    }
     eff_conditions = site_context.get("effective_conditions", site_context)
     features = site_context.get("features", site_context)
     for rule in compiled:
         target = rule["target"]
-        if not _phenotype_matches(target if "any" in target else
-                                  {k: v for k, v in target.items() if k != "any"} or {"any": True},
-                                  phenotype):
+        if not _phenotype_matches(
+            target if "any" in target else {k: v for k, v in target.items() if k != "any"} or {"any": True},
+            phenotype,
+        ):
             if "any" not in target and not _phenotype_matches(target, phenotype):
                 continue
-        when = rule["when"]
         matched = True
-        for key, spec in when.items():
+        for key, spec in rule["when"].items():
             if key == "neighbours":
                 nb = features.get("neighbours", {})
-                if float(nb.get("taller_than_self", 0)) < int(spec.get("taller_than_self", 0)):
+                if "taller_than_self" in spec and not _compare_numeric(
+                    float(nb.get("taller_than_self", 0)), spec["taller_than_self"], default_op=">="
+                ):
+                    matched = False
+                if "count" in spec and not _compare_numeric(
+                    float(nb.get("count", 0)), spec["count"], default_op=">="
+                ):
+                    matched = False
+                if "within_r" in spec and abs(float(nb.get("within_r", -1.0)) - float(spec["within_r"])) > 1e-9:
                     matched = False
             elif key == "water_dist_m":
-                op = spec if isinstance(spec, str) else f"<{spec}"
-                num = float(op.lstrip("<>="))
-                dist = float(features.get("water_dist_m", 9999))
-                if not (dist < num if "<" in op else dist > num):
+                if "water_dist_m" not in features or not _compare_numeric(
+                    float(features["water_dist_m"]), spec, default_op="<"
+                ):
                     matched = False
             elif key == "in_water":
                 if bool(features.get("in_water", False)) != bool(spec):
                     matched = False
             elif key == "mineral":
                 dep = features.get("mineral_deposit") or {}
-                if str(dep.get("type")) != str(spec["type"]) or \
-                   float(dep.get("richness", 0)) < float(str(spec["richness"]).lstrip(">")):
+                if str(dep.get("type")) != str(spec["type"]) or not _compare_numeric(
+                    float(dep.get("richness", 0.0)), spec["richness"], default_op=">"
+                ):
                     matched = False
             else:
-                if float(eff_conditions.get(key, 0)) < float(str(spec).lstrip("<>")):
+                if key not in eff_conditions or not _compare_numeric(
+                    float(eff_conditions[key]), spec, default_op=">="
+                ):
                     matched = False
         if not matched:
             continue

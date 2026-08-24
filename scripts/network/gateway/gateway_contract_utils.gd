@@ -2,6 +2,7 @@ extends RefCounted
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const BusUtilsScript = preload("res://scripts/network/bus/message_bus_contract_utils.gd")
+const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const PROTOCOL_VERSION: int = 1
 
@@ -76,6 +77,92 @@ const CLIENT_WORLD_OPERATION_FIELDS: Array[String] = ["operation_id", "command",
 const CLIENT_INPUT_FIELDS: Array[String] = ["input_seq", "axis_x"]
 const CLIENT_WORLD_PROJECTION_FIELDS: Array[String] = ["read_only", "source_revision", "entities"]
 const CLIENT_SNAPSHOT_FIELDS: Array[String] = ["revision"]
+
+# EG1 session-control wire schemas (registered client surface payloads).
+const EG1_SESSION_HELLO_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_hello.v1"
+const EG1_SESSION_DETACH_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_detach.v1"
+const EG1_SESSION_ATTACHED_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_attached_ack.v1"
+const EG1_SESSION_DETACHED_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg1_session_detached_ack.v1"
+const EG1_SESSION_HELLO_FIELDS: Array[String] = [
+	"client_session_id",
+	"logical_player_id",
+	"player_entity_id",
+	"world_id",
+]
+const EG1_SESSION_DETACH_FIELDS: Array[String] = []
+const EG1_SESSION_ATTACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "session_slot", "state"]
+const EG1_SESSION_DETACHED_ACK_FIELDS: Array[String] = ["gateway_session_id", "state"]
+
+# EG2 session-control wire schemas (additive EG1 pattern). REQUEST schemas
+# travel client->gateway and are admitted through the registered client-surface
+# policy below, so the topology-metadata fence applies to them in full. The ACK
+# schemas are gateway-originated: by EG2 stage design the WORLD_READY ack
+# carries authority IDENTIFIERS (authority_id/server_instance_id — never
+# host/port endpoints), which the legacy client-surface fence forbids as keys,
+# so acks are validated by validate_eg2_gateway_ack_payload() instead.
+const EG2_SESSION_AUTHENTICATE_PAYLOAD_SCHEMA := "planet_simulator.eg2_session_authenticate.v1"
+const EG2_SESSION_PLACE_REQUEST_PAYLOAD_SCHEMA := "planet_simulator.eg2_session_place_request.v1"
+const EG2_SESSION_AUTH_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg2_session_auth_ack.v1"
+const EG2_WORLD_READY_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg2_world_ready.v1"
+const EG2_PLACEMENT_DEGRADED_ACK_PAYLOAD_SCHEMA := "planet_simulator.eg2_placement_degraded.v1"
+const EG2_SESSION_AUTHENTICATE_FIELDS: Array[String] = ["client_session_id", "ticket_id"]
+const EG2_SESSION_PLACE_REQUEST_FIELDS: Array[String] = [
+	"client_session_id",
+	"ticket_id",
+	"resume_token",
+	"world_id",
+]
+const EG2_SESSION_AUTH_ACK_FIELDS: Array[String] = ["client_session_id", "ticket_status"]
+const EG2_WORLD_READY_ACK_FIELDS: Array[String] = [
+	"world_id",
+	"authority_id",
+	"server_instance_id",
+	"gateway_session_id",
+	"session_slot",
+	"route_role",
+	"resumed",
+	"logical_player_id",
+	"player_entity_id",
+	"resume_token",
+]
+const EG2_PLACEMENT_DEGRADED_ACK_FIELDS: Array[String] = ["world_id", "status", "gateway_session_id"]
+const EG2_TICKET_STATUSES: Array[String] = ["OK", "REUSED", "EXPIRED", "UNKNOWN_TICKET"]
+const EG2_PLACEMENT_DEGRADED_STATES: Array[String] = ["WARM", "PLACEMENT_PENDING"]
+
+# EG2 surface operation schemas: the command payload travels ON THE WIRE so the
+# sim side admits what it received (instead of re-deriving from a local table)
+# and verifies integrity by recomputing the payload checksum into the result.
+const EG2_WORLD_OPERATION_PAYLOAD_SCHEMA := "planet_simulator.eg2_world_operation.v1"
+const EG2_WORLD_OPERATION_FIELDS: Array[String] = ["operation_id", "command", "target_id", "arguments"]
+const EG2_OPERATION_RESULT_PAYLOAD_SCHEMA := "planet_simulator.eg2_operation_result.v1"
+const EG2_OPERATION_RESULT_FIELDS: Array[String] = ["operation_id", "command", "target_id", "payload_checksum"]
+const EG2_WORLD_STATE_PAYLOAD_SCHEMA := "planet_simulator.eg2_world_state.v1"
+const EG2_WORLD_STATE_FIELDS: Array[String] = ["revision", "state_checksum"]
+
+# EG1 published channel mapping: client-facing semantic channel -> ENET physical
+# channel. Deterministic and fail-closed. Lives with the shared contracts so
+# both gateway and sim-side endpoints can encode/decode the same wire mapping
+# without depending on gateway runtime internals.
+const EG1_CHANNEL_MAPPING := {
+	"SESSION_CONTROL": "CONTROL",
+	"INPUT_MOVEMENT": "INPUT",
+	"AUTHORITATIVE_SNAPSHOT": "SNAPSHOT",
+	"WORLD_OPERATION": "ITEM",
+	"RECOVERY_FULL_STATE": "RESYNC",
+	"TELEMETRY": "TELEMETRY",
+	"WORLD_PROJECTION": "SNAPSHOT",
+}
+
+
+static func eg1_physical_channel_for(client_channel: String) -> String:
+	return String(EG1_CHANNEL_MAPPING.get(client_channel, ""))
+
+
+static func eg1_delivery_mode_for(client_channel: String) -> String:
+	var physical := eg1_physical_channel_for(client_channel)
+	if physical.is_empty():
+		return "RELIABLE_ORDERED"
+	return String(ChannelPolicyScript.default_delivery(physical))
 
 
 static func validate_schema(value: Dictionary, expected_schema: String) -> Dictionary:
@@ -197,6 +284,87 @@ static func is_mutating_client_channel(channel: String) -> bool:
 	return MUTATING_CLIENT_CHANNELS.has(channel)
 
 
+## Validator for GATEWAY-ORIGINATED EG2 session-control acks. These payloads
+## intentionally carry authority identifiers (authority_id, server_instance_id)
+## per the EG2 stage contract, so they must not run through the client-surface
+## topology fence; they still get exact-field enforcement, canonical-id
+## namespace checks and enum checks. They never contain host/port endpoints.
+static func validate_eg2_gateway_ack_payload(payload, payload_schema: String) -> Dictionary:
+	var base_check: Dictionary = validate_payload(payload)
+	if not bool(base_check.get("success", false)):
+		return base_check
+	if typeof(payload) != TYPE_DICTIONARY:
+		return NetworkUtilsScript.validation_failure("INVALID_PAYLOAD_TYPE", "payload must be a Dictionary")
+	var payload_dict: Dictionary = Dictionary(payload)
+	match payload_schema:
+		EG2_SESSION_AUTH_ACK_PAYLOAD_SCHEMA:
+			for check in [
+				require_id(payload_dict, "client_session_id", "client-session"),
+				require_enum(payload_dict, "ticket_status", EG2_TICKET_STATUSES),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_GATEWAY_ACK_PAYLOAD",
+						String(check.get("message", "invalid auth ack payload")),
+					)
+		EG2_WORLD_READY_ACK_PAYLOAD_SCHEMA:
+			for pair in [
+				["world_id", "world"],
+				["authority_id", "authority"],
+				["server_instance_id", "server-instance"],
+				["gateway_session_id", "gateway-session"],
+				["logical_player_id", "player"],
+				["player_entity_id", "entity"],
+				["resume_token", "resume-token"],
+			]:
+				var id_check: Dictionary = require_id(payload_dict, String(pair[0]), String(pair[1]))
+				if not bool(id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_GATEWAY_ACK_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			for check in [
+				require_positive_integer(payload_dict, "session_slot"),
+				require_enum(payload_dict, "route_role", ROUTE_ROLES),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_GATEWAY_ACK_PAYLOAD",
+						String(check.get("message", "invalid world ready payload")),
+					)
+			if typeof(payload_dict.get("resumed")) != TYPE_BOOL:
+				return NetworkUtilsScript.validation_failure(
+					"INVALID_GATEWAY_ACK_PAYLOAD", "resumed must be a Boolean")
+		EG2_PLACEMENT_DEGRADED_ACK_PAYLOAD_SCHEMA:
+			for check_pair in [
+				require_id(payload_dict, "world_id", "world"),
+				require_id(payload_dict, "gateway_session_id", "gateway-session"),
+				require_enum(payload_dict, "status", EG2_PLACEMENT_DEGRADED_STATES),
+			]:
+				if not bool(check_pair.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_GATEWAY_ACK_PAYLOAD",
+						String(check_pair.get("message", "invalid degraded placement payload")),
+					)
+		_:
+			return NetworkUtilsScript.validation_failure(
+				"UNREGISTERED_EG2_GATEWAY_ACK_SCHEMA",
+				"Ack payload schema is not a registered EG2 gateway-originated ack",
+			)
+	var fields_for_schema := {}
+	fields_for_schema[EG2_SESSION_AUTH_ACK_PAYLOAD_SCHEMA] = EG2_SESSION_AUTH_ACK_FIELDS
+	fields_for_schema[EG2_WORLD_READY_ACK_PAYLOAD_SCHEMA] = EG2_WORLD_READY_ACK_FIELDS
+	fields_for_schema[EG2_PLACEMENT_DEGRADED_ACK_PAYLOAD_SCHEMA] = EG2_PLACEMENT_DEGRADED_ACK_FIELDS
+	var exact: Dictionary = NetworkUtilsScript.validate_exact_fields(
+			payload_dict, fields_for_schema[payload_schema])
+	if not bool(exact.get("success", false)):
+		return NetworkUtilsScript.validation_failure(
+			"EG2_GATEWAY_ACK_SCHEMA_VIOLATION",
+			"Gateway ack payload does not match its registered semantic schema",
+		)
+	return NetworkUtilsScript.validation_success()
+
+
 static func validate_client_frame_semantics(value: Dictionary) -> Dictionary:
 	var channel: String = String(value.get("channel", ""))
 	var payload = value.get("payload")
@@ -284,6 +452,155 @@ static func _validate_registered_client_payload(payload: Dictionary, payload_sch
 				return NetworkUtilsScript.validation_failure(
 					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
 					"AUTHORITATIVE_SNAPSHOT payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_hello.v1":
+			for pair in [
+				["client_session_id", "client-session"],
+				["logical_player_id", "player"],
+				["player_entity_id", "entity"],
+				["world_id", "world"],
+			]:
+				var id_check: Dictionary = require_id(payload, String(pair[0]), String(pair[1]))
+				if not bool(id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			var hello_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_HELLO_FIELDS)
+			if not bool(hello_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL hello payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_detach.v1":
+			if not payload.is_empty():
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL detach payload must be empty",
+				)
+		"planet_simulator.eg1_session_attached_ack.v1":
+			for check in [
+				require_id(payload, "gateway_session_id", "gateway-session"),
+				require_positive_integer(payload, "session_slot"),
+				require_enum(payload, "state", [String("ATTACHED")]),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						String(check.get("message", "invalid attached ack payload")),
+					)
+			var attached_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_ATTACHED_ACK_FIELDS)
+			if not bool(attached_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL attached ack payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg1_session_detached_ack.v1":
+			for check in [
+				require_id(payload, "gateway_session_id", "gateway-session"),
+				require_enum(payload, "state", [String("DETACHED")]),
+			]:
+				if not bool(check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						String(check.get("message", "invalid detached ack payload")),
+					)
+			var detached_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG1_SESSION_DETACHED_ACK_FIELDS)
+			if not bool(detached_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL detached ack payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg2_session_authenticate.v1":
+			for pair in [
+				["client_session_id", "client-session"],
+				["ticket_id", "auth-ticket"],
+			]:
+				var eg2_auth_id_check: Dictionary = require_id(payload, String(pair[0]), String(pair[1]))
+				if not bool(eg2_auth_id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			var eg2_auth_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG2_SESSION_AUTHENTICATE_FIELDS)
+			if not bool(eg2_auth_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL authenticate payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg2_session_place_request.v1":
+			for pair in [
+				["client_session_id", "client-session"],
+				["ticket_id", "auth-ticket"],
+				["world_id", "world"],
+			]:
+				var eg2_place_id_check: Dictionary = require_id(payload, String(pair[0]), String(pair[1]))
+				if not bool(eg2_place_id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			var resume_token = payload.get("resume_token")
+			var resume_ok := typeof(resume_token) == TYPE_STRING \
+					and (String(resume_token).is_empty()
+							or bool(require_id(payload, "resume_token", "resume-token").get("success", false)))
+			if not resume_ok:
+				return NetworkUtilsScript.validation_failure(
+					"INVALID_CLIENT_PAYLOAD",
+					"resume_token must be empty or a canonical resume-token/* id",
+				)
+			var eg2_place_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG2_SESSION_PLACE_REQUEST_FIELDS)
+			if not bool(eg2_place_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"SESSION_CONTROL place request payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg2_world_operation.v1":
+			if not BusUtilsScript.is_canonical_id(payload.get("operation_id"), "operation"):
+				return NetworkUtilsScript.validation_failure("INVALID_OPERATION_ID", "Invalid operation_id")
+			if not BusUtilsScript.is_semantic_name(payload.get("command"), false):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "command must be semantic")
+			if not BusUtilsScript.is_canonical_id(payload.get("target_id"), "entity"):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "target_id must be entity/*")
+			if typeof(payload.get("arguments")) != TYPE_DICTIONARY:
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "arguments must be a Dictionary")
+			var eg2_op_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG2_WORLD_OPERATION_FIELDS)
+			if not bool(eg2_op_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"WORLD_OPERATION payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg2_operation_result.v1":
+			for pair in [
+				["operation_id", "operation"],
+				["target_id", "entity"],
+			]:
+				var result_id_check: Dictionary = require_id(payload, String(pair[0]), String(pair[1]))
+				if not bool(result_id_check.get("success", false)):
+					return NetworkUtilsScript.validation_failure(
+						"INVALID_CLIENT_PAYLOAD",
+						"%s must be a canonical %s/* id" % [String(pair[0]), String(pair[1])],
+					)
+			if not BusUtilsScript.is_semantic_name(payload.get("command"), false):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "command must be semantic")
+			if not BusUtilsScript.is_semantic_name(payload.get("payload_checksum"), false):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "payload_checksum must be semantic")
+			var eg2_result_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG2_OPERATION_RESULT_FIELDS)
+			if not bool(eg2_result_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"WORLD_OPERATION result payload does not match its registered semantic schema",
+				)
+		"planet_simulator.eg2_world_state.v1":
+			if not NetworkUtilsScript.is_json_integer(payload.get("revision")) or int(payload.get("revision")) < 1:
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "revision must be positive")
+			if not BusUtilsScript.is_semantic_name(payload.get("state_checksum"), false):
+				return NetworkUtilsScript.validation_failure("INVALID_CLIENT_PAYLOAD", "state_checksum must be semantic")
+			var eg2_state_exact: Dictionary = NetworkUtilsScript.validate_exact_fields(payload, EG2_WORLD_STATE_FIELDS)
+			if not bool(eg2_state_exact.get("success", false)):
+				return NetworkUtilsScript.validation_failure(
+					"CLIENT_PAYLOAD_SCHEMA_VIOLATION",
+					"WORLD_STATE payload does not match its registered semantic schema",
 				)
 		_:
 			return NetworkUtilsScript.validation_failure(

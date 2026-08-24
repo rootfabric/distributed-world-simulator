@@ -6,7 +6,10 @@
     "H0_0_SCAFFOLD_READY": {
       "kind": "HARNESS",
       "description": "Prove the executable harness scaffold before any autonomous runtime implementation.",
-      "preconditions": ["PC0_MAIN_INTEGRATED", "CANONICAL_HARNESS_CONTRACTS_PRESENT"],
+      "preconditions": [
+        "PC0_MAIN_INTEGRATED",
+        "CANONICAL_HARNESS_CONTRACTS_PRESENT"
+      ],
       "required_predicates": [
         "CONTROL_DEVELOPMENT_STATUS_WORKS",
         "CONTROL_DEVELOPMENT_PLAN_WORKS",
@@ -24,12 +27,20 @@
       ],
       "success_state": "H0_0_SCAFFOLD_READY",
       "next_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-      "stop_before": ["AUTONOMOUS_RUNTIME_BRANCH_CREATION"]
+      "stop_before": [
+        "AUTONOMOUS_RUNTIME_BRANCH_CREATION"
+      ]
     },
     "H0_1_CLOSED_LOOP_C22_PILOT": {
       "kind": "HARNESS",
       "description": "Prove a restart-safe and evidence-driven closed-loop development cycle by bringing fresh current-main C22 convergence to a machine-verifiable merge-ready proposal without performing the runtime merge.",
-      "preconditions": ["H0_0_SCAFFOLD_READY", "PC0_MAIN_INTEGRATED", "CANONICAL_MAIN_KNOWN", "REGISTRY_GENERATION_KNOWN", "NO_PROJECT_RED_BLOCKING_C22"],
+      "preconditions": [
+        "H0_0_SCAFFOLD_READY",
+        "PC0_MAIN_INTEGRATED",
+        "CANONICAL_MAIN_KNOWN",
+        "REGISTRY_GENERATION_KNOWN",
+        "NO_PROJECT_RED_BLOCKING_C22"
+      ],
       "required_predicates": [
         "PROJECT_EPOCH_CREATED",
         "C22_WORK_ORDER_ISSUED",
@@ -57,7 +68,10 @@
       ],
       "success_state": "H0_1_PASS",
       "project_success_state": "SOURCE_ACCEPTED_MERGE_READY",
-      "stop_before": ["C22_RUNTIME_MERGE", "TS0_4_START"]
+      "stop_before": [
+        "C22_RUNTIME_MERGE",
+        "TS0_4_START"
+      ]
     },
     "H0_2_NX_C1_HIGH_RISK_PILOT": {
       "kind": "HARNESS",
@@ -104,7 +118,10 @@
       "success_state": "H0_2_PASS",
       "project_success_state": "SOURCE_ACCEPTED",
       "next_checkpoint": "H0_3_MULTI_WORKER_SCHEDULER",
-      "stop_before": ["NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"]
+      "stop_before": [
+        "NX_C1_RUNTIME_MERGE",
+        "H0_3_IMPLEMENTATION"
+      ]
     },
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": {
       "kind": "PROJECT",
@@ -387,6 +404,61 @@
       ],
       "success_state": "R3_REFRESHED_CANDIDATE_READY",
       "human_gate_after": "GLOBAL_ARCHITECTURE_PROMOTION"
+    },
+    "V0_P6_PERSISTENT_SHARED_OUTPOST": {
+      "kind": "PROJECT",
+      "program": "V0",
+      "default_risk_floor": "HIGH",
+      "description": "Establish the first stable persistent playable outpost baseline over the accepted Edge Gateway Foundation: complete mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect loop with server restart reconstruction and two-client shared state, without creating a private persistence owner or duplicate canonical truth.",
+      "preconditions": [
+        "V0_P5_CHECKPOINT_ACCEPTED",
+        "EDGE_GATEWAY_FOUNDATION_ACCEPTED",
+        "CANONICAL_MAIN_KNOWN",
+        "NO_GLOBAL_PROJECT_RED",
+        "MAIN_DECLARED_V0_PRODUCT_EXECUTION_BASE_PRESENT",
+        "V0_P6_EXECUTION_BASE_IS_EXACT_ACCEPTED_P5_LINEAGE",
+        "V0_P6_HIGH_RISK_WORK_ORDER_PRESENT",
+        "PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1"
+      ],
+      "required_predicates": [
+        "PROJECT_EPOCH_CREATED",
+        "V0_P6_ACCEPTED_P5_SUCCESSOR_BASE_EXACT",
+        "V0_P6_WORK_ORDER_ISSUED",
+        "V0_P6_RISK_CLASSIFIED_HIGH",
+        "V0_P6_DESIGN_BRIEF_READY",
+        "V0_P6_GATEWAY_FOUNDATION_CONSUMED_PASS",
+        "V0_P6_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+        "V0_P6_TWO_CLIENT_SHARED_OUTPOST_STATE_PASS",
+        "V0_P6_SERVER_RESTART_RECONSTRUCTS_OUTPOST_PASS",
+        "V0_P6_PLAYER_RECONNECT_RESTORES_INVENTORY_EQUIPMENT_CONSTRUCTION_PASS",
+        "V0_P6_FIVE_CLEAN_END_TO_END_REPEATS_PASS",
+        "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS",
+        "V0_P6_NO_PRIVATE_PERSISTENCE_OWNER_PASS",
+        "V0_P6_NO_PRIVATE_ITEM_GRAPH_PASS",
+        "FULL_WORLD_CORE_REGRESSION_PASS",
+        "POST_BUILD_CRITIQUE_COMPLETED",
+        "EVIDENCE_MAP_COMPLETE",
+        "INDEPENDENT_REVIEWER_PASS",
+        "INDEPENDENT_VERIFIER_PASS",
+        "REVIEW_HEAD_EXACT_AND_FRESH",
+        "TESTED_HEADS_EXACT_AND_FRESH",
+        "STANDARD_PC0_NON_RED",
+        "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+        "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+        "V0_P6_CHECKPOINT_PROPOSED"
+      ],
+      "success_state": "V0_P6_PASS",
+      "network_baseline": "SERVER_PREDICTED",
+      "blocked_state_if_network_foundation_change_required": "V0_BLOCKED_REQUIRES_NX",
+      "human_gate_after": "RUNTIME_FEATURE_MERGE",
+      "stop_before": [
+        "PRIVATE_V0_PERSISTENCE_OWNER",
+        "PRIVATE_V0_ITEM_GRAPH",
+        "PRIVATE_V0_NETWORK_AUTHORITY",
+        "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
+        "P6_CHECKPOINT_ACCEPTANCE_WITHOUT_EXACT_REVIEW_AND_VERIFICATION"
+      ]
     }
   }
 }

@@ -10,26 +10,31 @@ _PRODUCT_CHECKPOINTS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS",
+    "V0_P6_PERSISTENT_SHARED_OUTPOST",
 }
 _PRODUCT_GATE_NAMES = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "v0_s1_gate",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "v0_p4_gate",
     "V0_P5_EQUIPMENT_TOOLS": "v0_p5_gate",
+    "V0_P6_PERSISTENT_SHARED_OUTPOST": "v0_p6_gate",
 }
 _PRODUCT_BEGIN_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS": "BEGIN_V0_P5_EQUIPMENT_TOOLS",
+    "V0_P6_PERSISTENT_SHARED_OUTPOST": "BEGIN_V0_P6_PERSISTENT_SHARED_OUTPOST",
 }
 _PRODUCT_VERIFY_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "VERIFY_V0_S1_EXACT_HEAD",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "VERIFY_V0_P4_EXACT_HEAD",
     "V0_P5_EQUIPMENT_TOOLS": "VERIFY_V0_P5_EXACT_HEAD",
+    "V0_P6_PERSISTENT_SHARED_OUTPOST": "VERIFY_V0_P6_EXACT_HEAD",
 }
 _PRODUCT_DISPATCH_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P5_EQUIPMENT_TOOLS": "DIRECTOR_DISPATCH_ACCEPTED_P4_BASE_V0_P5_WORK_ORDER",
+    "V0_P6_PERSISTENT_SHARED_OUTPOST": "DIRECTOR_DISPATCH_ACCEPTED_P5_BASE_V0_P6_WORK_ORDER",
 }
 
 
@@ -103,6 +108,17 @@ def _build_product_plan(
                 "accepted_predecessor_checkpoint": routing.get("accepted_predecessor_checkpoint"),
                 "accepted_predecessor_base": routing.get("accepted_predecessor_base"),
                 "equipment_truth": "CANONICAL_ITEM_GRAPH_RELATION_NOT_PRIVATE_INVENTORY",
+                "director_dispatch_required": True,
+            }
+        )
+    if current == "V0_P6_PERSISTENT_SHARED_OUTPOST":
+        routing = scheduler.get("v0_product_train_routing", {})
+        gate.update(
+            {
+                "accepted_predecessor_checkpoint": routing.get("accepted_predecessor_checkpoint"),
+                "accepted_predecessor_base": routing.get("accepted_predecessor_base"),
+                "edge_gateway_foundation": "ACCEPTED_TRANSPORT_AND_SESSION_STACK_DONOR_ONLY",
+                "persistence_truth": "SINGLE_EXISTING_PERSISTENCE_OWNER_NOT_PRIVATE_SAVE",
                 "director_dispatch_required": True,
             }
         )

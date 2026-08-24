@@ -10,6 +10,29 @@
 
 > Machine project-state truth remains `config/control/project-program-registry.v1.json`. Product-train succession rules are additionally owned by `config/control/harness/v0-product-train-policy.v1.json`.
 
+## Owner-directed addendum — 2026-08-22 (control candidate)
+
+Факты, зафиксированные владельцем проекта после этой редакции снапшота:
+
+1. **P5 принят.** Accepted product lineage: `491ca7d058690d3de5fcea5e41aaee230a31b3ab`
+   («Merge V0-P5 equipment/tools accepted product candidate», ветка
+   `origin/accepted/v0-p4-real-resource-construction`). Это product base до явной
+   смены владельцем.
+2. **EG0–EG3 интегрированы в main** (PR #194 / #197 / #200); кампания
+   `PRE_P6_EDGE_GATEWAY_FOUNDATION` продолжается стадией EG4;
+   `EDGE_GATEWAY_FOUNDATION_ACCEPTED` остаётся блокером P6.
+3. **CONV-0 donor lane и Two-line rule** введены секциями §14–§15 в
+   `docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md`:
+   продуктовая база и сетевая база не смешиваются до P6; интеграционная
+   проверка выполняется лабораторией-донором.
+4. **Открыт трек генерации** `docs/plans/V0_GENERATION_TRACK_PLAN_RU.md`
+   (GEN-A PlanetDefinition + world hash handshake обязателен до P6.7).
+5. Рабочий чекаут воркспейса выровнен на accepted P5 lineage; устаревший снимок
+   v0-s1 заархивирован (stash + patch в workspace archive).
+
+Этот аддендум — control candidate: факты подлежат независимой проверке при ревью
+ветки `control/pre-p6-roadmap-amendments` перед канонизацией в main.
+
 ## Главный продуктовый приоритет
 
 Основная playable линия сейчас — V0/P.
