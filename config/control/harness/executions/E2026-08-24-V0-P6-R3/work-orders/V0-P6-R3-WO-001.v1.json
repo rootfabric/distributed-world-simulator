@@ -1,0 +1,149 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "program": "V0",
+  "goal_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "state": "DISPATCHED",
+  "work_order_type": "REPAIR",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "scope": "Repair the merged P6 correctness defects without expanding architecture ownership: remove P6-private persistence/canonical truth, bind P6 persistence/replay evidence to the existing M6 authoritative recovery stack and P4/M4/P5 canonical owners, make PENDING/OperationId handling fail closed, replace simulated restart evidence with a real process-boundary gate, and retract false soak/visual completion claims until literal evidence exists.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/p6/**",
+    "tests/runtime/test_v0_p6_*",
+    "tests/runtime/support/p6_*",
+    "RUN_V0_P6_*",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/**",
+    "docs/evidence/2026-08-24_V0_P6_R3_*"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/network/gateway/**",
+    "scripts/network/transports/v2/**",
+    "scripts/persistence/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p5/**",
+    "scripts/runtime/networked_gameplay/m6/**",
+    "scripts/construction/**"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "V0_P6_R3_WORK_ORDER_ISSUED",
+    "V0_P6_R3_REPAIR_MAP_READY",
+    "V0_P6_R3_PRIVATE_PERSISTENCE_REMOVED_PASS",
+    "V0_P6_R3_CANONICAL_OWNER_COMPOSITION_PASS",
+    "V0_P6_R3_PENDING_RETRY_FAIL_CLOSED_PASS",
+    "V0_P6_R3_OPERATION_ID_RETIREMENT_CANNOT_REEXECUTE_PASS",
+    "V0_P6_R3_REAL_PROCESS_RESTART_RECOVERY_PASS",
+    "V0_P6_R3_ZERO_PRIVATE_WRITE_PASS",
+    "V0_P6_R3_FALSE_COMPLETION_EVIDENCE_RETRACTED_PASS",
+    "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME",
+    "V0_P6_P7_P11_MCP_VISUAL_EVIDENCE_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "V0_P6_R3_REPAIR_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "P6 has zero filesystem writer and zero private save format",
+    "P6 canonical mutations route to accepted M4/P4/P5 owners rather than P6OutpostState",
+    "Replay durability is delegated to the existing M6 authoritative recovery stack",
+    "PENDING retry cannot execute a handler twice",
+    "OperationId history is never forgotten in a way that permits re-execution",
+    "Restart proof crosses an actual process boundary with persisted bytes only",
+    "Literal 30-minute two-client soak and MCP visual evidence are required before P6 may be re-accepted"
+  ],
+  "stop_conditions": [
+    "Repair would require a new persistence owner or P6-private save format",
+    "Repair would require a second Item Graph, Construction truth, equipment store or replay oracle",
+    "Repair would require changing NX/gateway/network authority foundations",
+    "Literal soak or MCP evidence is unavailable: remain FIX_REQUIRED/VERIFYING; do not fabricate PASS",
+    "Repair requires architecture ownership transfer"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Repairs persistence and replay semantics after a merged checkpoint",
+    "Touches exactly-once admission behavior",
+    "Corrects previously overclaimed checkpoint evidence"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "Merged P6 introduced a P6-private persistence owner, a duplicate mutable outpost truth and an in-memory replay ledger whose PENDING and retirement semantics can re-execute operations. Restart and soak evidence overclaimed the literal product predicates.",
+    "current_behavior": "P6 tests can pass by persisting a private P6OutpostState and carrying ledger snapshots through the same test process; old OperationIds can be retired and PENDING retries can be admitted again.",
+    "desired_behavior": "P6 is a composition/read-model boundary only. Canonical Item Graph, equipment, Construction and persistence/replay remain with the accepted M4/P5/P4/M6 owners. Recovery uses authoritative checkpoint + replay_state across a real process boundary. Incomplete literal soak/MCP gates remain visibly incomplete.",
+    "selected_design": "Fail closed all P6-private mutation/persistence surfaces, convert P6 helpers to adapters/read models over existing canonical owners, keep transient in-flight reservations non-durable, and require the canonical M6 replay owner to prove completion. Use the existing authoritative recovery repository/coordinator for process restart evidence.",
+    "alternatives_considered": [
+      "Patch only the 256-entry cap",
+      "Persist the P6 ledger beside the P6 outpost file",
+      "Increase the compressed soak loop count",
+      "Keep P6OutpostState as canonical and document it as an owner"
+    ],
+    "expected_risks": [
+      "Legacy P6 focused tests depend on private mutable state and must be replaced rather than weakened",
+      "A repair that marks transient PENDING as durable would recreate a second replay oracle",
+      "Control evidence must preserve the historical false PASS while explicitly superseding it"
+    ],
+    "non_goals": [
+      "No new persistence schema",
+      "No P4/M4/P5/M6 implementation change",
+      "No gateway or transport foundation change",
+      "No SM1/P7/EG6 activation"
+    ],
+    "validation_plan": [
+      "Static zero-write fence over all P6 runtime modules",
+      "Focused PENDING retry and OperationId retirement regressions",
+      "Canonical-owner composition regression against existing P4/M4/P5/M6 public surfaces",
+      "Two-process restart/recovery test using only existing authoritative checkpoint bytes",
+      "Full world/core regression",
+      "Literal 30-minute two-client soak",
+      "MCP visual proof for P6.7-P6.11",
+      "Fresh Reviewer and Verifier on exact repair head"
+    ],
+    "why_selected": "It repairs the defects at their canonical ownership boundaries instead of strengthening the duplicate P6 stack that violated the original Work Order.",
+    "affected_owners": [
+      "V0",
+      "CANONICAL_ITEM_GRAPH",
+      "CONSTRUCTION",
+      "PERSISTENCE",
+      "M4_NETWORKED_GAMEPLAY"
+    ],
+    "dependencies": [
+      "main@9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+      "scripts/persistence/authoritative_recovery_repository.gd",
+      "scripts/persistence/authoritative_recovery_coordinator.gd",
+      "scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd",
+      "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+      "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
+    ]
+  },
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "RUNTIME_FEATURE_MERGE",
+    "ARCHITECTURE_OWNERSHIP_CHANGE_REQUIRED",
+    "NEW_PERSISTENCE_FOUNDATION_REQUIRED",
+    "NEW_NETWORK_FOUNDATION_REQUIRED"
+  ],
+  "issued_at_utc": "2026-08-23T15:01:00Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE"
+  ],
+  "notes": "This R3 repair supersedes the correctness claims of the merged P6 R2 candidate but does not rewrite its append-only history. Until all R3 predicates pass, P6 must be treated as merged-but-FIX_REQUIRED rather than a valid accepted predecessor for SM1/P7."
+}

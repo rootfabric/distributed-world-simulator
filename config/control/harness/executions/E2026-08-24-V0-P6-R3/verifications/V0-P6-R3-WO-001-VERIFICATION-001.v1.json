@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "verified_head_sha": "aefa6b77f971c751db83cf06ae417e07f4601807",
+  "verifier": "INDEPENDENT_VERIFIER_ISOLATED_ROLE",
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-24T04:34:44Z",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "environment": "Ubuntu; Godot 4.7.1.stable.double.custom_build.a13da4feb at ~/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+  "checks": {
+    "focused_suite": {
+      "exit": 0,
+      "pass_count": 16,
+      "fail_count": 0,
+      "markers": [
+        "V0_P6_R3_FOCUSED_SUITE_PASS",
+        "REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS"
+      ],
+      "command": "./RUN_V0_P6_R3_TESTS.sh with GODOT_BIN=double-4.7.1-a13da4f build",
+      "artifacts_dir": "artifacts/test-results/p6-r3-focused-suite-542569"
+    },
+    "soak_evidence_audit": {
+      "method": "authenticity audit of existing literal real-time run evidence; 30-minute run NOT repeated by verifier (already literally executed)",
+      "log_path": "artifacts/test-results/p6-r3-soak-suite-410928/test_v0_p6_thirty_minute_soak.log",
+      "window_closed_line_present": true,
+      "elapsed_ms": 1800013,
+      "elapsed_minutes": "30.00",
+      "checkpoints": 29,
+      "reconnects_alice": 2,
+      "reconnects_bob": 2,
+      "assertions_passed": "all 51 assertions passed",
+      "stage_marker_present": "V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS_REAL_TIME",
+      "fail_or_script_error_matches": 0,
+      "log_mtime_local_utc_plus10": "2026-08-24T14:25:19+10:00",
+      "mtime_within_expected_window_13_55_14_26": true,
+      "persistence_dirs_found": [
+        "artifacts/test-results/p6-r3-soak-persistence-115235",
+        "artifacts/test-results/p6-r3-soak-persistence-140457",
+        "artifacts/test-results/p6-r3-soak-persistence-184928",
+        "artifacts/test-results/p6-r3-soak-persistence-288546",
+        "artifacts/test-results/p6-r3-soak-persistence-410933"
+      ],
+      "persistence_bytes_verified": "p6-r3-soak-persistence-410933 (PID-adjacent to soak suite dir 410928) contains authoritative-checkpoint.json (861379 B, mtime 14:25 +10) and authoritative-checkpoint.previous.json (833973 B, mtime 14:24 +10); both parse as valid JSON with keys schema/authority_epoch/authority_owner_id/checkpoint_id/checksum/generation/previous_generation/committed_operation_id/replay_state",
+      "internal_consistency_notes": "elapsed math consistent: log mtime 14:25:19 minus 1800013 ms gives ~13:55:17 start, matching suite dir creation 13:55 and final checkpoint write 14:24-14:25"
+    },
+    "freshness": {
+      "head_before_run": "aefa6b77f971c751db83cf06ae417e07f4601807",
+      "head_after_run": "aefa6b77f971c751db83cf06ae417e07f4601807",
+      "tracked_runtime_scope_changes": false,
+      "git_diff_head_empty": true,
+      "tested_head_equals_reviewed_head": true,
+      "untracked_uid_files_noted": [
+        "scripts/ecology/production/ecology_client_read_model_v1.gd.uid",
+        "scripts/ecology/production/ecology_clock_v1.gd.uid",
+        "scripts/ecology/production/ecology_offline_catchup_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_ownership_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_persistence_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_state_v1.gd.uid",
+        "tests/runtime/test_v0_p3_replica_clock_delta_reordering.gd.uid",
+        "tests/runtime/test_v0_p6_thirty_minute_soak.gd.uid"
+      ],
+      "uid_files_assessment": "8 untracked Godot auto-generated .uid metadata files present before the run and unchanged after it; identical list before/after; none modifies tracked runtime-scope code (noted as fact per verification protocol)"
+    }
+  },
+  "notes": "Independent reproduction on exact HEAD aefa6b77 of repair/v0-p6-persistence-exactly-once-r1: focused suite exit 0 with 16/16 PASS including editor preflight and test_v0_p6_real_process_restart stage REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS, final marker V0_P6_R3_FOCUSED_SUITE_PASS emitted. Soak proof audited for authenticity instead of re-executed: log internally consistent (elapsed=1800013 ms / 30.00 min wall clock, 29 delegated checkpoints, reconnects alice=2 bob=2 >= 1, 51/51 assertions, pass marker, zero FAIL/SCRIPT ERROR lines), mtime inside the expected 13:55-14:26 UTC+10 window on 2026-08-24, and corroborated by on-disk persistence bytes (authoritative-checkpoint*.json, ~861 KB current generation plus previous generation) written in the same window under p6-r3-soak-persistence-410933. Working tree clean in runtime scope before and after; tested head equals reviewed head aefa6b77. Verdict VERIFIED."
+}
