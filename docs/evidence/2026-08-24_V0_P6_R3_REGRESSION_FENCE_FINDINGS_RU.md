@@ -63,6 +63,48 @@ tests/runtime/test_m7_playable_networked_processes.gd
 изолированным повторным прогоном после завершения census. До тех пор находка
 классифицируется как UNCLASSIFIED_FLAKE_SUSPECT, а не как продуктовый дефект.
 
+## Находка 4 — коррекция census: 6 фантомных записей инструментария
+
+Первичная сводка census назвала провальными также:
+
+```text
+test_environment_cell_adapter
+test_environment_cell_aggregate
+test_growth_compute_handler
+test_item_location_conservation_validator
+test_transaction_aggregate_adapter
+test_transaction_snapshot_factory
+```
+
+Все шесть лежат в `tests/simulation/fixtures/**`. Канонический ps1 явно
+исключает любой путь-сегмент `fixtures` («support types ... must not be
+executed as SceneTree entry points»), инлайн-репликация этот фильтр
+первоначально упустила и попыталась запустить support-скрипты как точки входа.
+Godot детерминированно отказал: «Can't load the script ... doesn't inherit
+from SceneTree or MainLoop». Это **TOOLING_ARTIFACT репликации**, а не
+тестовые провалы и не продуктовые дефекты; на предикаты WO они не влияют и
+в блокеры не заносятся. Фильтр исправлен для последующих прогонов.
+
+## Итоговый честный реестр census
+
+```text
+выполнено шагов ............. 293 (editor-import + 287 standalone + main_scene_cli_all*)
+реальные тестовые провалы ... 4:
+    test_m6_dedicated_recovery_processes .... FLAKE_SUSPECT -> изолированный реран
+    test_eg45_synthetic_journal ............. FLAKE_SUSPECT -> изолированный реран
+    test_v0_p1_live_reconnect_convergence ... FLAKE_SUSPECT -> изолированный реран
+    test_nx2_realtime_traffic_separation .... PRE_EXISTING_MAIN_RED (Находка 1)
+ожидаемый таймаут по дизайну . 1:
+    test_v0_p6_thirty_minute_soak ........... литеральный 30-мин гейт не помещается
+                                              в per-test окно 600s; канонический
+                                              прогон - RUN_V0_P6_R3_SOAK.sh
+tooling-artifact ............ 6 записей fixtures (Находка 4)
+display-fenced (не запускались) 5 (Находка 2)
+```
+
+*main_scene_cli_all выполняется последним шагом census; его результат
+фиксируется отдельно при закрытии миссии.
+
 ## Влияние на предикаты WO
 
 ```text
