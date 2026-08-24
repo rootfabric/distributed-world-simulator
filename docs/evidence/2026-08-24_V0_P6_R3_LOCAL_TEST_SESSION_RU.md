@@ -121,3 +121,65 @@ export GODOT_BIN="$godot_bin"
 
 Handoff-шаги 2–4 закрыты; следующий шаг — шаг 5 (M6-bound restart gate) и
 затем полный world/core regression.
+
+---
+
+# Продолжение сессии: real-process restart gate (handoff шаг 5)
+
+## Что добавлено
+
+### Process-boundary restart gate
+
+Три новых файла:
+
+- `tests/runtime/support/p6_r3_canonical_fixtures.gd` — общие canonical-owner
+  fixtures (M4/P4/P5/M6 stand-ins) с точным authoritative recovery-контрактом;
+- `tests/runtime/support/p6_r3_process_worker.gd` — воркер одной boot-генерации:
+  фаза `seed` (дюрабельный checkpoint через РЕАЛЬНЫЕ coordinator/repository,
+  crash-windows, затем idle до killed) и фаза `recover` (свежий процесс,
+  восстановление только из байтов checkpoint);
+- `tests/runtime/test_v0_p6_real_process_restart.gd` — родительский гейт:
+  спавн generation A → чтение фактов → `OS.kill` (hard crash, без graceful
+  shutdown) → спавн generation B с изолированным HOME → сверка fact-JSON.
+
+Канал между генерациями ТОЛЬКО один: файл authoritative checkpoint в
+`--persistence-root`. Ни память, ни объекты, ни ledger-снапшоты, ни state
+тестового процесса не передаются. Изолированные HOME у каждого воркера
+(паттерн M6 `_spawn`).
+
+## Результат
+
+```text
+[p6-r3-real-restart] all 33 assertions passed (two OS processes, hard kill, bytes-only recovery)
+[p6-r3-real-restart][stage] REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS
+```
+
+Доказано через реальную границу процессов:
+
+- канонические sources/replay/projection восстановлены генерацией B только из
+  checkpoint-байтов (блоки, контейнер+item, replay-ids, проекция-чексумма);
+- PENDING-резервация НЕ дюрабельна (fresh guard пуст);
+- replay checkpointed OperationId отклонён exactly-once на канонической
+  границе (`ALREADY_COMMITTED_AT_CANONICAL_OWNER`), мир не сдвинулся;
+- потерянные intents (window A/B) приземлились ровно один раз;
+- повторный retry после восстановления — `ALREADY_APPLIED`;
+- persistence root содержит только authoritative-файлы на всех фазах.
+
+Раннер `RUN_V0_P6_R3_TESTS.sh` расширен до 16 шагов (editor-preflight +
+15 тестов): сфера действия маркера оговорена явно — живой
+production-stack рестарт (M4/P4/P5/M6 сервисы) остаётся за принятым M6
+process recovery runner (`RUN_M6_DEDICATED_RECOVERY_TESTS.sh`), а не
+дублируется здесь вторым oracle-стеком.
+
+## Уточнение статуса предикатов
+
+- `V0_P6_R3_REAL_PROCESS_RESTART_RECOVERY_PASS` — теперь есть
+  composition-level literal evidence (реальная граница OS-процессов, байты
+  только через authoritative checkpoint). Продакшн-stack компонент
+  подтверждается существующим M6 process recovery runner на этом HEAD.
+- Остальные открытые предикаты без изменений: литеральный 30-минутный soak,
+  MCP visual, свежие Reviewer/Verifier, Evidence Map, checkpoint proposal.
+- `FULL_WORLD_CORE_REGRESSION_PASS` — bash-воспроизведение
+  `RUN_WORLD_REGRESSION_TESTS.ps1` запущено на этом HEAD (тот же список,
+  тот же stop-at-first-failure, те же failure-маркеры); результат фиксируется
+  в artifacts/test-results/world-regression-bash-*/summary.log.
