@@ -1,0 +1,43 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "NX2-R1-WO-001",
+  "project_epoch": "E2026-08-24-NX2-R1",
+  "program": "NX",
+  "goal_checkpoint": "NX2_REALTIME_TRAFFIC_SEPARATION_REPAIR",
+  "state": "DISPATCHED",
+  "work_order_type": "REPAIR",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "branch": "repair/nx2-realtime-traffic-separation-r1",
+  "scope": "Repair the pre-existing main RED in test_nx2_realtime_traffic_separation (8 failures), proven a REGRESSION introduced by P6 implementation commit 9e0cc74f via historical run at 9e0cc74f~1 (exit 0 before P6). Two root causes: (1) source-contract test read the base m3_dedicated_server_runtime.gd as a single file while P6 moved the wiring markers into its _p2 inheritance parent - fix binds server source through the same inheritance-chain loader already used for the client; (2) accidental constant drift UNRELIABLE_TRANSPORT_MAPPING RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1 -> ENET_UNRELIABLE_ORDERED_APPLICATION_SEQUENCED_V1 (semantically contradictory name; no consumer depends on the new value; pins had been deliberately refreshed to RAW_ENET one day earlier in 0fdf74fa) - restore pinned value.",
+  "allowed_paths": [
+    "scripts/network/realtime/realtime_channel_policy.gd",
+    "tests/network/test_nx2_realtime_traffic_separation.gd",
+    "config/control/harness/executions/E2026-08-24-NX2-R1/**",
+    "docs/evidence/2026-08-24_NX2_*"
+  ],
+  "forbidden_paths": [
+    "scripts/network/gateway/**",
+    "scripts/network/transports/**",
+    "scripts/runtime/**",
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "WORK_ORDER_ISSUED",
+    "NX2_TEST_FULL_PASS_131_ASSERTIONS",
+    "NX_FAMILY_NEIGHBORS_NON_REGRESSION",
+    "INDEPENDENT_REVIEW_PENDING_AT_PROPOSAL_TIME"
+  ],
+  "required_outputs": [
+    "test_nx2_realtime_traffic_separation exit 0 with zero failures on exact head",
+    "channel policy constant restored to the deliberately pinned RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1",
+    "server binding uses the inheritance-chain loader symmetrically with client"
+  ],
+  "stop_conditions": [
+    "Classification would have been UNDECLARED_FEATURE (it was not: historical pass proven)",
+    "Fix would require weakening assertions or stubbing wiring"
+  ],
+  "risk_class": "MEDIUM",
+  "review_required": true
+}
