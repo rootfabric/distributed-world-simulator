@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0004",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "sequence": 4,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-24T02:47:20Z",
+  "actor": "IMPLEMENTER",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "head_sha": "a070af8af4c7686ef2063cf1644cf52c4e1f60ea",
+  "summary": "Handoff step 5 committed at a070af8a: REAL OS-process restart gate (generation A seed process hard-killed, generation B fresh-HOME process recovers from persisted bytes only) following the accepted M6 dedicated recovery pattern; RUN_V0_P6_R3_TESTS.sh extended and full suite 16/16 PASS with V0_P6_R3_FOCUSED_SUITE_PASS including REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS. False completion claims from R2 (simulated thirty-minute soak event 0015, derived all-predicates claim of event 0031, absent MCP visual evidence) are explicitly retracted in docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md; replacement literal gates remain PENDING. Remaining WO work: full world/core regression, literal 30-minute two-client real-time soak, MCP visual evidence, canonical live-surface composition proof scope decision, post-build critique, Evidence Map, independent Reviewer/Verifier, PC0 closure.",
+  "command": "COMMIT_IMPLEMENTATION_STEP5_REAL_PROCESS_RESTART_GATE_AND_RETRACT_FALSE_COMPLETION_CLAIMS",
+  "exit_code": 0,
+  "evidence_paths": [
+    "tests/runtime/test_v0_p6_real_process_restart.gd",
+    "tests/runtime/support/p6_r3_process_worker.gd",
+    "tests/runtime/support/p6_r3_canonical_fixtures.gd",
+    "RUN_V0_P6_R3_TESTS.sh",
+    "docs/evidence/2026-08-24_V0_P6_R3_LOCAL_TEST_SESSION_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_FALSE_COMPLETION_RETRACTION_RU.md"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-23T15:01:00Z",
+  "head_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "summary": "Fresh HIGH-risk P6 R3 correctness repair created from exact merged main after independent FIX_REQUIRED findings against P6 persistence, replay, restart and evidence semantics.",
+  "command": "CREATE_BOUNDED_P6_R3_REPAIR_WORK_ORDER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/repairs/V0-P6-R3-REPAIR-MAP-001.v1.json"
+  ]
+}

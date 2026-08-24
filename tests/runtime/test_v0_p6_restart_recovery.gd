@@ -1,278 +1,446 @@
 extends SceneTree
 
-## P6.8 L0 stage proof: server restart reconstructs the persistent shared outpost.
+## P6 R3 rewrite of the P6.8 restart/recovery gate (delegation level).
 ##
-## Formalizes the restart/recovery pattern proven in P6.7 as a first-class
-## stage exit. One canonical file, one persistence owner, TWO full
-## save -> crash -> restore cycles:
-##   1. build outpost state via THREE players and many operation kinds;
-##   2. save via the single persistence owner (atomic write);
-##   3. simulate server crash: destroy EVERY in-memory object (null refs);
-##   4. restore: fresh outpost + fresh stack; persistence owner load rebuilds
-##      the state, ledger snapshot restore rebuilds exactly-once memory;
-##   5. assert checksum identical, ledger exactly-once preserved (a duplicated
-##      container item would be visible if replay memory were lost), identity
-##      bindings re-established for the SAME logical players/entities;
-##   6. repeat the cycle to prove the restart loop is idempotent, including a
-##      stale ".tmp" leftover from a crashed write being absorbed safely.
+## What this file proves:
+##   - the ONLY thing that crosses the boot boundary is authoritative
+##     checkpoint BYTES written by the real AuthoritativeRecoveryRepository
+##     through the real AuthoritativeRecoveryCoordinator;
+##   - generation B rebuilds canonical sources, the canonical replay owner and
+##     the read-only P6 projection exclusively from those bytes;
+##   - checkpointed OperationIds are exactly-once after recovery because the
+##     CANONICAL replay owner rejects them, not because P6 carried memory;
+##   - work committed after the last checkpoint re-lands idempotently at the
+##     canonical boundary (no duplicate world effects);
+##   - PENDING reservations are NOT durable truth: a fresh boot has a fresh
+##     admission guard and an uncheckpointed intent simply executes once.
+##
+## What this file deliberately does NOT claim:
+##   - a literal OS-process kill/restart boundary. That evidence is bound to
+##     the existing M6 process recovery runner (test_m6_dedicated_recovery_
+##     processes.gd pattern) and stays an explicit, separate gate.
 
 const RegistryScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_identity_registry.gd")
 const LedgerScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd")
 const AdmissionScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_mutation_admission.gd")
-const AdapterScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_closure_adapter.gd")
+const ClosureScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_closure_adapter.gd")
 const RouteScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_gateway_command_route.gd")
-const StateScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd")
-const OwnerScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_persistence_owner.gd")
+const ProjectionScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd")
+const PersistenceAdapterScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_persistence_owner.gd")
+const RepositoryScript = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
+const CoordinatorScript = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
 
-const BASE_DIR := "user://p6_restart_recovery"
-const CANONICAL_PATH := BASE_DIR + "/canonical_outpost.json"
 const DOMAIN_ID := "p6-domain/outpost-world-state"
-const WORLD_SEED := 4242
 
-const PLAYERS: Array = [
-	["player/alice", "entity/alice-main"],
-	["player/bob", "entity/bob-main"],
-	["player/carol", "entity/carol-main"],
-]
+var base_dir := "res://artifacts/test-results/p6-r3-restart-recovery-%d" % OS.get_process_id()
 
 var assertions := 0
 var failures: Array[String] = []
 
 
-class OutpostHandler:
-	extends RefCounted
+## Canonical owners fixture (M4 Item Graph / P4 Construction / P5 stand-in).
+class CanonicalSourcesOwner extends RefCounted:
+	var construction := {"schema": "fixture.construction.v1", "revision": 0, "blocks": {}}
+	var item_graph := {"schema": "fixture.item_graph.v1", "revision": 0, "containers": {}}
+	var gameplay := {"schema": "fixture.gameplay.v1", "revision": 0, "players": {}, "tick": 0}
+	var resource_mining := {"schema": "fixture.resource.v1", "revision": 0}
 
-	var outpost = null
+	func apply_player_command(delta: Dictionary) -> Dictionary:
+		var op := String(delta.get("op", ""))
+		match op:
+			"place_block":
+				var pos: Array = delta.get("pos", [])
+				var pos_key := "%d,%d,%d" % [int(pos[0]), int(pos[1]), int(pos[2])]
+				if (construction["blocks"] as Dictionary).has(pos_key):
+					return {"applied": false, "error_code": "POSITION_OCCUPIED"}
+				construction["blocks"][pos_key] = String(delta.get("block_type", ""))
+				construction["revision"] = int(construction["revision"]) + 1
+			"container_create":
+				item_graph["containers"][String(delta.get("container_id", ""))] = []
+				item_graph["revision"] = int(item_graph["revision"]) + 1
+			"container_add_item":
+				var container_id := String(delta.get("container_id", ""))
+				if not (item_graph["containers"] as Dictionary).has(container_id):
+					return {"applied": false, "error_code": "UNKNOWN_CONTAINER"}
+				item_graph["containers"][container_id].append(String(delta.get("item", "")))
+				item_graph["revision"] = int(item_graph["revision"]) + 1
+			"player_move":
+				gameplay["players"][String(delta.get("player_id", ""))] = {"pos": delta.get("pos", []), "rot": float(delta.get("rot", 0.0))}
+				gameplay["revision"] = int(gameplay["revision"]) + 1
+			"set_tick":
+				gameplay["tick"] = int(delta.get("value", 0))
+				gameplay["revision"] = int(gameplay["revision"]) + 1
+			_:
+				return {"applied": false, "error_code": "UNSUPPORTED_CANONICAL_OPERATION"}
+		return {"applied": true, "error_code": ""}
+
+	func export_sources() -> Dictionary:
+		return {
+			"gameplay": gameplay.duplicate(true),
+			"item_graph": item_graph.duplicate(true),
+			"construction": construction.duplicate(true),
+			"resource_mining": resource_mining.duplicate(true),
+		}
+
+	func import_sources(sources: Dictionary) -> Dictionary:
+		for name in ["gameplay", "item_graph", "construction", "resource_mining"]:
+			if not sources.has(name) or typeof(sources[name]) != TYPE_DICTIONARY:
+				return {"success": false, "error_code": "INVALID_CANONICAL_SOURCES"}
+		gameplay = (sources["gameplay"] as Dictionary).duplicate(true)
+		item_graph = (sources["item_graph"] as Dictionary).duplicate(true)
+		construction = (sources["construction"] as Dictionary).duplicate(true)
+		resource_mining = (sources["resource_mining"] as Dictionary).duplicate(true)
+		return {"success": true, "error_code": ""}
+
+	func block_count() -> int:
+		return (construction["blocks"] as Dictionary).size()
+
+	func block_type_at(pos_key: String) -> String:
+		return String(construction["blocks"].get(pos_key, ""))
+
+
+## Authority fixture exporting the accepted authoritative recovery shape.
+class CanonicalAuthorityFixture extends RefCounted:
+	const EntitySnapshot = preload("res://scripts/network/contracts/entity_snapshot_envelope.gd")
+	const AUTHORITY_OWNER_ID := "authority/p6-r3/canonical-fixture"
+	const LOGICAL_SESSION_ID := "session/p6-r3/restart-recovery"
+
+	var owner: CanonicalSourcesOwner
+	var authority_epoch := 1
+	var state_revision := 0
+	var server_tick := 0
+
+	func _init(p_owner: CanonicalSourcesOwner) -> void:
+		owner = p_owner
+
+	func export_recovery_state() -> Dictionary:
+		var snapshot: Dictionary = EntitySnapshot.create(
+			"snapshot/p6-r3/%08d" % state_revision,
+			"entity/p6-r3/outpost-world",
+			"planet_simulator.canonical_world",
+			state_revision,
+			AUTHORITY_OWNER_ID,
+			authority_epoch,
+			server_tick,
+			_spatial_ref(),
+			{"region_id": "region/p6-r3"},
+			{},
+			{"p6_canonical_sources": owner.export_sources()}
+		)
+		if snapshot.is_empty():
+			return {}
+		return {
+			"schema": "p6-r3.fixture.canonical_authority.v1",
+			"authority_owner_id": AUTHORITY_OWNER_ID,
+			"authority_epoch": authority_epoch,
+			"server_tick": server_tick,
+			"session_id": LOGICAL_SESSION_ID,
+			"current_snapshot": snapshot,
+		}
+
+	func restore_recovery_state(value: Dictionary) -> Dictionary:
+		var snapshot_value: Variant = value.get("current_snapshot", null)
+		if not snapshot_value is Dictionary:
+			return {"success": false, "error_code": "INVALID_RECOVERY_STATE"}
+		var components_value: Variant = (snapshot_value as Dictionary).get("domain_components", null)
+		if not components_value is Dictionary:
+			return {"success": false, "error_code": "INVALID_RECOVERY_STATE"}
+		var sources_value: Variant = (components_value as Dictionary).get("p6_canonical_sources", null)
+		if not sources_value is Dictionary:
+			return {"success": false, "error_code": "INVALID_RECOVERY_STATE"}
+		var imported: Dictionary = owner.import_sources(Dictionary(sources_value))
+		if not bool(imported.get("success", false)):
+			return imported
+		authority_epoch = int((snapshot_value as Dictionary).get("authority_epoch", 1))
+		state_revision = int((snapshot_value as Dictionary).get("state_revision", 0))
+		server_tick = int((snapshot_value as Dictionary).get("server_tick", 0))
+		return {
+			"success": true,
+			"error_code": "",
+			"details": {"state_revision": state_revision, "server_tick": server_tick, "restored": true},
+		}
+
+	func advance() -> void:
+		state_revision += 1
+		server_tick += 1
+
+	func _spatial_ref() -> Dictionary:
+		return {
+			"schema": EntitySnapshot.SPATIAL_REF_SCHEMA,
+			"universe_id": "planet-simulator",
+			"instance_id": "p6-r3",
+			"space_id": "networked-gameplay",
+			"frame_id": "frame/p6-r3",
+			"position_m": [0.0, 0.0, 0.0],
+			"rotation_xyzw": [0.0, 0.0, 0.0, 1.0],
+			"linear_velocity_mps": [0.0, 0.0, 0.0],
+			"angular_velocity_rps": [0.0, 0.0, 0.0],
+			"sample_time_s": float(server_tick),
+		}
+
+
+## Canonical replay owner fixture (M6 durable replay outbox stand-in).
+class CanonicalReplayFixture extends RefCounted:
+	const SCHEMA := "p6-r3.fixture.replay.v1"
+
+	var records := {}
+
+	func commit_operation(operation_id: String, command_type: String) -> void:
+		records[operation_id] = {"command_type": command_type, "state": "COMMITTED"}
+
+	func has(operation_id: String) -> bool:
+		return records.has(operation_id)
+
+	func to_dict() -> Dictionary:
+		return {"schema": SCHEMA, "records": records.duplicate(true)}
+
+	func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
+		if String(value.get("schema", "")) != SCHEMA:
+			return {"success": false, "error_code": "INVALID_REPLAY_STATE"}
+		var loaded_value: Variant = value.get("records", null)
+		if not loaded_value is Dictionary:
+			return {"success": false, "error_code": "INVALID_REPLAY_STATE"}
+		records = Dictionary(loaded_value).duplicate(true)
+		return {"success": true, "error_code": "", "details": {"records": (records as Dictionary).size()}}
+
+
+class CanonicalCommandHandler extends RefCounted:
+	var authority: CanonicalAuthorityFixture
+	var replay: CanonicalReplayFixture
+	var executions := 0
 
 	func execute_command(command: Dictionary) -> Dictionary:
-		var delta: Dictionary = command.get("delta", {})
-		var applied: bool = outpost.apply_delta(delta)
-		return {"applied": applied, "error_code": String(outpost.get_report()["last_error_code"])}
+		executions += 1
+		var operation_id := String(command.get("operation_id", ""))
+		if replay.has(operation_id):
+			return {"applied": false, "error_code": "ALREADY_COMMITTED_AT_CANONICAL_OWNER"}
+		var outcome: Dictionary = authority.owner.apply_player_command(Dictionary(command.get("delta", {})))
+		if bool(outcome.get("applied", false)):
+			replay.commit_operation(operation_id, String(command.get("command_kind", "")))
+			authority.advance()
+		return outcome
 
 
 func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
-		print("[p6.8-restart-recovery][FAIL] %s" % message)
+		print("[p6.8-restart-recovery-r3][FAIL] %s" % message)
 
 
-## One fresh server boot: empty outpost + full P6 stack + ledger snapshot
-## restore (the crash-recovery handoff) + identity re-binding of the SAME
-## logical players to NEW sessions. Returns every live object so the caller
-## can destroy them all when simulating the next crash.
-func _boot_generation(generation: int, ledger_snapshot: Dictionary) -> Dictionary:
-	var outpost = StateScript.new()
-	if generation == 1:
-		outpost.set_world_seed(WORLD_SEED)
+func _place(operation_id: String, pos: Array, block_type: String) -> Dictionary:
+	return {
+		"domain_id": DOMAIN_ID,
+		"command_kind": "PLACE_BLOCK",
+		"operation_id": operation_id,
+		"delta": {"op": "place_block", "pos": pos, "block_type": block_type},
+	}
+
+
+func _build_stack(authority: CanonicalAuthorityFixture, replay: CanonicalReplayFixture) -> Dictionary:
 	var registry = RegistryScript.new()
 	var ledger = LedgerScript.new()
 	ledger.configure(256)
-	if not ledger_snapshot.is_empty():
-		var restored: Dictionary = ledger.restore(ledger_snapshot)
-		_assert(bool(restored.get("success", false)), "gen %d ledger restore failed" % generation)
 	var admission = AdmissionScript.new()
+	var closure = ClosureScript.new()
 	admission.configure(registry, ledger)
-	var adapter = AdapterScript.new()
-	adapter.configure(registry, ledger)
-	var handler = OutpostHandler.new()
-	handler.outpost = outpost
+	closure.configure(registry, ledger)
+	var handler = CanonicalCommandHandler.new()
+	handler.authority = authority
+	handler.replay = replay
 	var route = RouteScript.new()
-	route.configure(registry, ledger, admission, adapter, handler)
-	for player_row in PLAYERS:
-		var logical := String(player_row[0])
-		var entity := String(player_row[1])
-		var session := "client-session/%s-gen%d" % [logical.get_file(), generation]
-		var bound: Dictionary = registry.bind(session, logical, entity)
-		_assert(bool(bound.get("success", false)), "gen %d bind failed for %s" % [generation, logical])
-	return {
-		"outpost": outpost,
-		"registry": registry,
-		"ledger": ledger,
-		"route": route,
-		"session_for": func(logical_player_id: String) -> String:
-			return "client-session/%s-gen%d" % [logical_player_id.get_file(), generation],
-	}
+	route.configure(registry, ledger, admission, closure, handler)
+	return {"registry": registry, "ledger": ledger, "admission": admission, "route": route, "handler": handler}
 
 
-func _command(kind: String, delta: Dictionary) -> Dictionary:
-	return {"domain_id": DOMAIN_ID, "command_kind": kind, "delta": delta}
-
-
-func _place(pos: Array, block_type: String) -> Dictionary:
-	return _command("PLACE_BLOCK", {"op": "place_block", "pos": pos, "block_type": block_type})
-
-
-## Identity bindings preserved across restart: the fresh registry re-binds the
-## SAME (logical, entity) pairs; the deterministic binding rows must match the
-## pre-crash rows on every durable field, with only the session id renewed.
-func _assert_bindings_preserved(pre_crash_bindings: Dictionary, registry, session_for: Callable) -> void:
-	for logical_value in pre_crash_bindings.keys():
-		var logical := String(logical_value)
-		var expected: Dictionary = pre_crash_bindings[logical]
-		var resolved: Dictionary = registry.resolve(logical)
-		if not _assert_bool(resolved, "post-restart resolve failed for %s" % logical):
-			continue
-		var row: Dictionary = resolved["details"]["binding"]
-		_assert(String(row["logical_player_id"]) == String(expected["logical_player_id"]), "logical id changed for %s" % logical)
-		_assert(String(row["player_entity_id"]) == String(expected["player_entity_id"]), "entity binding changed for %s" % logical)
-		_assert(String(row["binding_id"]) == String(expected["binding_id"]), "binding_id not deterministically rebuilt for %s" % logical)
-		_assert(int(row["binding_revision"]) == int(expected["binding_revision"]), "binding_revision drifted for %s" % logical)
-		_assert(String(row["state"]) == String(expected["state"]), "binding state drifted for %s" % logical)
-		_assert(String(row["client_session_id"]) == String(session_for.call(logical)), "session not renewed for %s" % logical)
-
-
-func _assert_bool(result: Dictionary, message: String) -> bool:
-	if not bool(result.get("success", false)):
-		_assert(false, message)
-		return false
-	return true
-
-
-func _destroy_generation(live: Dictionary) -> void:
-	# Server process death: NO live object survives the crash.
-	live["outpost"] = null
-	live["registry"] = null
-	live["ledger"] = null
-	live["route"] = null
-	live["session_for"] = Callable()
-	live.clear()
+func _projection_checksum(authority: CanonicalAuthorityFixture) -> String:
+	var projection = ProjectionScript.new()
+	var configured: Dictionary = projection.configure_from_canonical_sources(authority.owner.export_sources())
+	if not bool(configured.get("success", false)):
+		return ""
+	return projection.compute_checksum()
 
 
 func _init() -> void:
-	_dir_recursive_delete(ProjectSettings.globalize_path(BASE_DIR))
-	var owner = OwnerScript.new()
+	var root := ProjectSettings.globalize_path(base_dir)
+	_remove_tree(root)
+	DirAccess.make_dir_recursive_absolute(root)
+	var persistence_root := root.path_join("persistence")
 
-	# ================= GENERATION 1: build shared work =======================
-	var gen1: Dictionary = _boot_generation(1, {})
-	var outpost1 = gen1["outpost"]
-	var route1 = gen1["route"]
-	var ledger1 = gen1["ledger"]
+	# ================= GENERATION A =================
+	var authority = CanonicalAuthorityFixture.new(CanonicalSourcesOwner.new())
+	var replay = CanonicalReplayFixture.new()
+	var repository = RepositoryScript.new()
+	_assert(bool(repository.configure(persistence_root).get("success", false)), "repository configure failed")
+	var coordinator = CoordinatorScript.new()
+	_assert(bool(coordinator.configure(repository, authority, replay).get("success", false)), "coordinator configure failed")
+	var p6_owner = PersistenceAdapterScript.new()
+	_assert(bool(p6_owner.configure(coordinator).get("success", false)), "P6 adapter configure failed")
 
-	var ops := {
-		"alice_place": route1.route_command("client-session/alice-gen1", "operation/g1-alice-1", _place([1, 0, 1], "stone")),
-		"bob_place": route1.route_command("client-session/bob-gen1", "operation/g1-bob-1", _place([2, 0, 2], "wood")),
-		"carol_crate": route1.route_command("client-session/carol-gen1", "operation/g1-carol-1", _command("CONTAINER_CREATE", {"op": "container_create", "container_id": "crate-1"})),
-		"carol_axe": route1.route_command("client-session/carol-gen1", "operation/g1-carol-2", _command("CONTAINER_ADD_ITEM", {"op": "container_add_item", "container_id": "crate-1", "item": "axe"})),
-		"alice_move": route1.route_command("client-session/alice-gen1", "operation/g1-alice-2", _command("PLAYER_MOVE", {"op": "player_move", "player_id": "player/alice", "pos": [5, 0, 5], "rot": 1.5})),
-		"bob_tick": route1.route_command("client-session/bob-gen1", "operation/g1-bob-2", _command("SET_TICK", {"op": "set_tick", "value": 100})),
-	}
-	for op_name in ops.keys():
-		var outcome: Dictionary = ops[op_name]
-		_assert(bool(outcome.get("success", false)) and String(outcome["details"]["result"]) == "EXECUTED", "gen1 op %s not executed" % String(op_name))
-	_assert(outpost1.block_count() == 2, "gen1 block count wrong")
-	_assert(outpost1.container_items("crate-1") == ["axe"], "gen1 container items wrong")
-	_assert(int(outpost1.get_report()["tick"]) == 100, "gen1 tick wrong")
-	# exactly-once sanity before any crash
-	var pre_replay: Dictionary = route1.route_command("client-session/carol-gen1", "operation/g1-carol-2", _command("CONTAINER_ADD_ITEM", {"op": "container_add_item", "container_id": "crate-1", "item": "axe"}))
-	_assert(bool(pre_replay.get("success", false)) and String(pre_replay["details"]["result"]) == "ALREADY_APPLIED", "gen1 replay not deduplicated")
-	_assert(outpost1.container_items("crate-1") == ["axe"], "gen1 replay duplicated item")
+	var stack: Dictionary = _build_stack(authority, replay)
+	var registry = stack["registry"]
+	var route = stack["route"]
+	var admission = stack["admission"]
+	var ledger = stack["ledger"]
+	for player_row in [["client-session/alice-a", "player/alice", "entity/alice-a"], ["client-session/bob-a", "player/bob", "entity/bob-a"], ["client-session/carol-a", "player/carol", "entity/carol-a"]]:
+		_assert(bool(registry.bind(String(player_row[0]), String(player_row[1]), String(player_row[2])).get("success", false)), "generation A bind failed: %s" % String(player_row[1]))
 
-	var pre_crash_bindings := {}
-	for player_row in PLAYERS:
-		var logical := String(player_row[0])
-		var resolved: Dictionary = gen1["registry"].resolve(logical)
-		if _assert_bool(resolved, "gen1 resolve failed for %s" % logical):
-			pre_crash_bindings[logical] = resolved["details"]["binding"]
+	# durable committed work by three players across several command kinds
+	for command_row in [
+		["operation/p6.8-d1", "client-session/alice-a", _place("operation/p6.8-d1", [1, 0, 1], "stone")],
+		["operation/p6.8-d2", "client-session/bob-a", _place("operation/p6.8-d2", [2, 0, 2], "wood")],
+		["operation/p6.8-d3", "client-session/carol-a", {
+			"domain_id": DOMAIN_ID, "command_kind": "CONTAINER_CREATE", "operation_id": "operation/p6.8-d3",
+			"delta": {"op": "container_create", "container_id": "crate-1"},
+		}],
+		["operation/p6.8-d4", "client-session/alice-a", {
+			"domain_id": DOMAIN_ID, "command_kind": "CONTAINER_ADD_ITEM", "operation_id": "operation/p6.8-d4",
+			"delta": {"op": "container_add_item", "container_id": "crate-1", "item": "pickaxe"},
+		}],
+	]:
+		var routed: Dictionary = route.route_command(String(command_row[1]), String(command_row[0]), command_row[2])
+		_assert(bool(routed.get("success", false)) and String(routed["details"]["result"]) == "EXECUTED", "generation A durable op failed: %s" % String(command_row[0]))
+	_assert(authority.owner.block_count() == 2, "generation A block count wrong")
+	var durable_checkpoint: Dictionary = p6_owner.persist_checkpoint("checkpoint/p6-r3/restart/001", 1, 0, "operation/p6.8-d4")
+	_assert(bool(durable_checkpoint.get("success", false)), "generation A checkpoint failed")
+	var checkpointed_projection_checksum := _projection_checksum(authority)
+	_assert(checkpointed_projection_checksum.length() == 64, "generation A projection checksum missing")
 
-	var checksum_g1: String = outpost1.compute_checksum()
-	var ledger_snap_g1: Dictionary = ledger1.snapshot()
-	_assert(owner.save(outpost1, CANONICAL_PATH), "gen1 save failed: %s" % owner.get_report()["last_error_code"])
-	_assert(not FileAccess.file_exists(ProjectSettings.globalize_path(CANONICAL_PATH + ".tmp")), "gen1 save left tmp file behind")
+	# --- crash window A: admission reserved PENDING, handler never ran ---
+	var window_a: Dictionary = admission.admit("player/alice", "operation/p6.8-wa", DOMAIN_ID, _place("operation/p6.8-wa", [5, 0, 5], "glass"))
+	_assert(bool(window_a.get("success", false)), "window A admission failed")
+	_assert(ledger.is_pending("player/alice", "operation/p6.8-wa"), "window A reservation missing")
 
-	# ================= CRASH 1: destroy EVERYTHING ===========================
-	_destroy_generation(gen1)
-	_assert(gen1.is_empty(), "crash 1 left live references")
+	# --- crash window B: canonical effect landed + replay committed AFTER the
+	# last checkpoint (not yet durable) ---
+	var window_b: Dictionary = admission.admit("player/bob", "operation/p6.8-wb", DOMAIN_ID, _place("operation/p6.8-wb", [6, 0, 6], "brick"))
+	_assert(bool(window_b.get("success", false)), "window B admission failed")
+	var window_b_outcome: Dictionary = (stack["handler"] as CanonicalCommandHandler).execute_command(_place("operation/p6.8-wb", [6, 0, 6], "brick"))
+	_assert(bool(window_b_outcome.get("applied", false)), "window B canonical effect failed")
+	# no admission.complete(): completion was lost with the process
 
-	# ================= RESTORE 1 (generation 2) ==============================
-	var gen2: Dictionary = _boot_generation(2, ledger_snap_g1)
-	var outpost2 = gen2["outpost"]
-	var route2 = gen2["route"]
-	var ledger2 = gen2["ledger"]
-	var loaded1: Dictionary = owner.load(CANONICAL_PATH)
-	if _assert_bool(loaded1, "gen2 load failed: %s" % owner.get_report()["last_error_code"]):
-		var restored1 = loaded1["details"]["state"]
-		_assert(restored1.compute_checksum() == checksum_g1, "gen2 restored checksum mismatch")
-		_assert(outpost2.deserialize(restored1.serialize()), "gen2 adoption failed")
-		_assert(outpost2.compute_checksum() == checksum_g1, "gen2 adopted outpost diverged")
-		_assert(outpost2.block_count() == 2, "gen2 lost blocks")
-		_assert(outpost2.container_items("crate-1") == ["axe"], "gen2 lost container items")
-		_assert(outpost2.has_player("player/alice") and outpost2.player_position("player/alice")["pos"] == [5, 0, 5], "gen2 lost player position")
-	_assert(int(ledger2.get_report()["applied_count"]) == 6, "gen2 ledger applied count wrong")
-	# exactly-once across the restart: the duplicated-item replay is the sharpest probe
-	var post_replay: Dictionary = route2.route_command("client-session/carol-gen2", "operation/g1-carol-2", _command("CONTAINER_ADD_ITEM", {"op": "container_add_item", "container_id": "crate-1", "item": "axe"}))
-	_assert(bool(post_replay.get("success", false)) and String(post_replay["details"]["result"]) == "ALREADY_APPLIED", "gen2 replay not deduplicated after restart")
-	_assert(outpost2.container_items("crate-1") == ["axe"], "gen2 replay duplicated item after restart")
-	var post_replay2: Dictionary = route2.route_command("client-session/alice-gen2", "operation/g1-alice-1", _place([1, 0, 1], "stone"))
-	_assert(bool(post_replay2.get("success", false)) and String(post_replay2["details"]["result"]) == "ALREADY_APPLIED", "gen2 alice replay not deduplicated")
-	# identity bindings preserved: same logical players/entities re-established
-	_assert_bindings_preserved(pre_crash_bindings, gen2["registry"], gen2["session_for"])
-	# the restored world keeps accepting new work
-	var gen2_op: Dictionary = route2.route_command("client-session/bob-gen2", "operation/g2-bob-1", _place([3, 0, 3], "brick"))
-	_assert(bool(gen2_op.get("success", false)) and String(gen2_op["details"]["result"]) == "EXECUTED", "gen2 new op not executed")
-	_assert(outpost2.block_count() == 3, "gen2 block count after new op wrong")
+	# CRASH: every live object dies; only checkpoint bytes remain on disk.
+	stack = {}
+	registry = null
+	route = null
+	admission = null
+	ledger = null
+	authority = null
+	replay = null
+	coordinator = null
+	p6_owner = null
 
-	var checksum_g2: String = outpost2.compute_checksum()
-	var ledger_snap_g2: Dictionary = ledger2.snapshot()
-	# crash-mid-write leftover: a stale ".tmp" must be absorbed by the next atomic save
-	var tmp_path: String = ProjectSettings.globalize_path(CANONICAL_PATH + ".tmp")
-	var junk := FileAccess.open(tmp_path, FileAccess.WRITE)
-	junk.store_string("{\"torn\":true}")
-	junk.flush()
-	junk.close()
-	_assert(owner.save(outpost2, CANONICAL_PATH), "gen2 save failed: %s" % owner.get_report()["last_error_code"])
-	_assert(not FileAccess.file_exists(tmp_path), "gen2 save left stale tmp behind")
+	# ================= GENERATION B =================
+	var authority_b = CanonicalAuthorityFixture.new(CanonicalSourcesOwner.new())
+	var replay_b = CanonicalReplayFixture.new()
+	var repository_b = RepositoryScript.new()
+	repository_b.configure(persistence_root)
+	var coordinator_b = CoordinatorScript.new()
+	coordinator_b.configure(repository_b, authority_b, replay_b)
+	var p6_owner_b = PersistenceAdapterScript.new()
+	p6_owner_b.configure(coordinator_b)
+	var recovered: Dictionary = p6_owner_b.recover_latest()
+	_assert(bool(recovered.get("success", false)), "generation B recovery from bytes failed")
+	if not bool(recovered.get("success", false)):
+		_remove_tree(root)
+		_finish()
+		return
 
-	# ================= CRASH 2 + RESTORE 2 (generation 3) ====================
-	_destroy_generation(gen2)
-	_assert(gen2.is_empty(), "crash 2 left live references")
+	# canonical truth rebuilt exactly from the checkpointed bytes
+	_assert(authority_b.owner.block_count() == 2, "recovery changed checkpointed block count")
+	_assert(authority_b.owner.block_type_at("1,0,1") == "stone" and authority_b.owner.block_type_at("2,0,2") == "wood", "recovery lost checkpointed blocks")
+	_assert(_projection_checksum(authority_b) == checkpointed_projection_checksum, "projection diverged across the boot boundary")
+	_assert(replay_b.has("operation/p6.8-d1") and replay_b.has("operation/p6.8-d4"), "checkpointed replay records lost")
+	_assert(not replay_b.has("operation/p6.8-wa") and not replay_b.has("operation/p6.8-wb"), "uncheckpointed work leaked into durable replay truth")
 
-	var gen3: Dictionary = _boot_generation(3, ledger_snap_g2)
-	var outpost3 = gen3["outpost"]
-	var route3 = gen3["route"]
-	var ledger3 = gen3["ledger"]
-	var loaded2: Dictionary = owner.load(CANONICAL_PATH)
-	if _assert_bool(loaded2, "gen3 load failed: %s" % owner.get_report()["last_error_code"]):
-		var restored2 = loaded2["details"]["state"]
-		_assert(restored2.compute_checksum() == checksum_g2, "gen3 restored checksum mismatch")
-		_assert(outpost3.deserialize(restored2.serialize()), "gen3 adoption failed")
-		_assert(outpost3.compute_checksum() == checksum_g2, "gen3 adopted outpost diverged")
-		_assert(outpost3.block_count() == 3, "gen3 lost blocks")
-		_assert(int(outpost3.get_report()["tick"]) == 100, "gen3 lost tick")
-	# deep exactly-once: a GENERATION-1 operation still replays as applied
-	var deep_replay: Dictionary = route3.route_command("client-session/carol-gen3", "operation/g1-carol-2", _command("CONTAINER_ADD_ITEM", {"op": "container_add_item", "container_id": "crate-1", "item": "axe"}))
-	_assert(bool(deep_replay.get("success", false)) and String(deep_replay["details"]["result"]) == "ALREADY_APPLIED", "gen3 deep replay not deduplicated")
-	_assert(outpost3.container_items("crate-1") == ["axe"], "gen3 deep replay duplicated item")
-	var deep_replay2: Dictionary = route3.route_command("client-session/bob-gen3", "operation/g2-bob-1", _place([3, 0, 3], "brick"))
-	_assert(bool(deep_replay2.get("success", false)) and String(deep_replay2["details"]["result"]) == "ALREADY_APPLIED", "gen3 g2 replay not deduplicated")
-	_assert_bindings_preserved(pre_crash_bindings, gen3["registry"], gen3["session_for"])
-	var gen3_op: Dictionary = route3.route_command("client-session/alice-gen3", "operation/g3-alice-1", _place([4, 0, 4], "glass"))
-	_assert(bool(gen3_op.get("success", false)) and String(gen3_op["details"]["result"]) == "EXECUTED", "gen3 new op not executed")
-	_assert(outpost3.block_count() == 4, "gen3 block count after new op wrong")
+	# PENDING is NOT durable: the fresh admission guard starts empty.
+	var stack_b: Dictionary = _build_stack(authority_b, replay_b)
+	var registry_b = stack_b["registry"]
+	var route_b = stack_b["route"]
+	var ledger_b = stack_b["ledger"]
+	_assert(not ledger_b.is_pending("player/alice", "operation/p6.8-wa"), "PENDING survived as durable truth")
+	_assert(bool(registry_b.bind("client-session/alice-b", "player/alice", "entity/alice-b").get("success", false)), "alice generation B bind failed")
 
-	# ================= IDEMPOTENCE: double save, double load =================
-	var checksum_g3: String = outpost3.compute_checksum()
-	_assert(owner.save(outpost3, CANONICAL_PATH), "gen3 save A failed")
-	_assert(owner.save(outpost3, CANONICAL_PATH), "gen3 save B failed")
-	var reload_a: Dictionary = owner.load(CANONICAL_PATH)
-	var reload_b: Dictionary = owner.load(CANONICAL_PATH)
-	if _assert_bool(reload_a, "gen3 reload A failed") and _assert_bool(reload_b, "gen3 reload B failed"):
-		_assert(reload_a["details"]["state"].compute_checksum() == checksum_g3, "reload A checksum mismatch")
-		_assert(reload_b["details"]["state"].compute_checksum() == checksum_g3, "reload B checksum mismatch")
-		_assert(String(reload_a["details"]["checksum"]) == String(reload_b["details"]["checksum"]), "double load diverged")
+	# checkpointed operation replay: exactly-once at the CANONICAL owner.
+	var replay_d1: Dictionary = route_b.route_command("client-session/alice-b", "operation/p6.8-d1", _place("operation/p6.8-d1", [1, 0, 1], "stone"))
+	_assert(bool(replay_d1.get("success", false)), "checkpointed replay route failed")
+	if bool(replay_d1.get("success", false)):
+		var outcome_d1: Dictionary = replay_d1["details"]["outcome"]
+		_assert(String(outcome_d1.get("error_code", "")) == "ALREADY_COMMITTED_AT_CANONICAL_OWNER", "checkpointed replay not rejected by canonical owner")
+	_assert(authority_b.owner.block_count() == 2, "checkpointed replay duplicated a canonical block")
 
-	_dir_recursive_delete(ProjectSettings.globalize_path(BASE_DIR))
+	# window A intent: never committed anywhere -> executes exactly once now.
+	var window_a_replay: Dictionary = route_b.route_command("client-session/alice-b", "operation/p6.8-wa", _place("operation/p6.8-wa", [5, 0, 5], "glass"))
+	_assert(bool(window_a_replay.get("success", false)) and String(window_a_replay["details"]["result"]) == "EXECUTED", "window A intent did not execute after recovery")
+	_assert(authority_b.owner.block_type_at("5,0,5") == "glass", "window A block missing")
+	# replaying it again is exactly-once through BOTH guards now.
+	var window_a_again: Dictionary = route_b.route_command("client-session/alice-b", "operation/p6.8-wa", _place("operation/p6.8-wa", [5, 0, 5], "glass"))
+	_assert(bool(window_a_again.get("success", false)) and String(window_a_again["details"]["result"]) == "ALREADY_APPLIED", "window A replay not deduplicated after execution")
 
+	# window B intent: the in-flight effect was lost with the process; the
+	# canonical boundary re-lands it idempotently (no duplicate world effect).
+	var window_b_replay: Dictionary = route_b.route_command("client-session/alice-b", "operation/p6.8-wb", _place("operation/p6.8-wb", [6, 0, 6], "brick"))
+	_assert(bool(window_b_replay.get("success", false)), "window B re-submission failed")
+	if bool(window_b_replay.get("success", false)):
+		var outcome_wb: Dictionary = window_b_replay["details"]["outcome"]
+		_assert(not bool(outcome_wb.get("applied", true)) or String(outcome_wb.get("error_code", "")) == "", "window B re-submission duplicated the world effect")
+	_assert(authority_b.owner.block_count() == 4, "post-recovery block count wrong")
+	_assert((authority_b.owner.export_sources()["item_graph"]["containers"] as Dictionary).has("crate-1"), "checkpointed container lost")
+	_assert(((authority_b.owner.export_sources()["item_graph"]["containers"] as Dictionary)["crate-1"] as Array).has("pickaxe"), "checkpointed container item lost")
+
+	# pin the recovered generation with a new checkpoint: from here on the
+	# window-B operation is durable exactly-once as well.
+	var pinned: Dictionary = p6_owner_b.persist_checkpoint("checkpoint/p6-r3/restart/002", 2, 1, "operation/p6.8-wa")
+	_assert(bool(pinned.get("success", false)), "generation B checkpoint failed")
+
+	var authority_c = CanonicalAuthorityFixture.new(CanonicalSourcesOwner.new())
+	var replay_c = CanonicalReplayFixture.new()
+	var repository_c = RepositoryScript.new()
+	repository_c.configure(persistence_root)
+	var coordinator_c = CoordinatorScript.new()
+	coordinator_c.configure(repository_c, authority_c, replay_c)
+	var p6_owner_c = PersistenceAdapterScript.new()
+	p6_owner_c.configure(coordinator_c)
+	var recovered_c: Dictionary = p6_owner_c.recover_latest()
+	_assert(bool(recovered_c.get("success", false)), "generation C recovery failed")
+	_assert(int(recovered_c["details"]["checkpoint"]["generation"]) == 2, "generation C did not see the pinned checkpoint")
+	_assert(authority_c.owner.block_count() == 4, "generation C lost pinned blocks")
+	_assert(replay_c.has("operation/p6.8-wa"), "pinned replay record missing")
+
+	# private-write fence footprint: only authoritative files exist.
+	_assert(_only_authoritative_files(persistence_root), "persistence root contains non-authoritative files")
+
+	_remove_tree(root)
+	_finish()
+
+
+func _only_authoritative_files(directory: String) -> bool:
+	var dir := DirAccess.open(directory)
+	if dir == null:
+		return false
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while entry != "":
+		if not dir.current_is_dir() and not entry.begins_with("authoritative-checkpoint"):
+			dir.list_dir_end()
+			return false
+		entry = dir.get_next()
+	dir.list_dir_end()
+	return true
+
+
+func _finish() -> void:
 	if failures.is_empty():
-		print("[p6.8-restart-recovery] all %d assertions passed" % assertions)
-		print("[p6.8-restart-recovery][stage] RESTART_RECOVERY_PASS")
+		print("[p6.8-restart-recovery-r3] all %d assertions passed" % assertions)
+		print("[p6.8-restart-recovery-r3][stage] DELEGATED_RECOVERY_EXACTLY_ONCE_PASS")
+		print("[p6.8-restart-recovery-r3][scope] in-process delegated durability only; the literal OS-process restart gate stays bound to the existing M6 process recovery runner and is NOT claimed here")
 		quit(0)
 	else:
-		print("[p6.8-restart-recovery] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
+		print("[p6.8-restart-recovery-r3] %d/%d ASSERTIONS FAILED" % [failures.size(), assertions])
 		quit(1)
 
 
-func _dir_recursive_delete(path: String) -> void:
+func _remove_tree(path: String) -> void:
 	var dir := DirAccess.open(path)
 	if dir == null:
 		return
@@ -281,7 +449,7 @@ func _dir_recursive_delete(path: String) -> void:
 	while entry != "":
 		var full := path.path_join(entry)
 		if dir.current_is_dir():
-			_dir_recursive_delete(full)
+			_remove_tree(full)
 		else:
 			DirAccess.remove_absolute(full)
 		entry = dir.get_next()
