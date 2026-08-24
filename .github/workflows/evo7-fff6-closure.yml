@@ -1,0 +1,71 @@
+name: ECO EVO7 FFF6 Closure
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-fff5-soil-memory-r1
+    paths:
+      - "RUN_ECO_EVO7_FFF6_TESTS.ps1"
+      - "OPEN_ECO_EVO7_FFF6_LAB.ps1"
+      - "scripts/research/ecology/evo7_succession_bridge_v1.gd"
+      - "tests/research/ecology/eco_evo7_fff6_succession_acceptance.gd"
+      - "scripts/labs/ecology/eco_evo7_form_function_feedback_lab.gd"
+      - "scenes/labs/ecology/eco_evo7_form_function_feedback_lab.tscn"
+      - "config/ecology/research/evo7_fff7_xfer_gate.v1.json"
+      - ".github/workflows/evo7-fff6-closure.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-fff6-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  closure:
+    name: exact FFF6 succession closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact PR HEAD checkout
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne "${{ github.event.pull_request.head.sha }}") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}"
+          }
+          Write-Host "exact_head=$head"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found. Configure DWS_GODOT_DOUBLE_BIN or install: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run exact FFF6 closure
+        run: |
+          .\RUN_ECO_EVO7_FFF6_TESTS.ps1 `
+            -GodotPath "${{ steps.godot.outputs.path }}"
