@@ -70,6 +70,7 @@ TESTS=(
   res://tests/runtime/test_v0_p6_restart_recovery.gd
   res://tests/runtime/test_v0_p6_fault_race_matrix.gd
   res://tests/runtime/test_v0_p6_repeat_soak.gd
+  res://tests/runtime/test_v0_p6_real_process_restart.gd
 )
 
 for test_script in "${TESTS[@]}"; do
