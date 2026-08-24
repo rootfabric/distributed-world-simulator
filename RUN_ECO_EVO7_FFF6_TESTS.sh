@@ -171,6 +171,13 @@ else
 fi
 
 ## --------------------------------------- EVO6-WATER determinism regression ----
+# FINAL stage before the aggregate marker. Mirrors the tail step of
+# RUN_ECO_EVO7_FFF6_TESTS.ps1 (commit c0a70efc), which invokes
+# RUN_ECO_EVO6_WATER_SELECTION.ps1 -SkipBaseline. There is no direct .sh
+# equivalent of that runner, so this block executes the same wrapped stages:
+# the two python rule-pack tests, the water fitness + water-driven evolution
+# acceptances and the visual observatory adapter under EVO6_WATER_LAB_AUTOCAP=1,
+# preserving the bit-identical result_hash guard on the frozen baseline.
 
 echo "[eco-evo7-fff6-suite] EVO6-WATER rule pack + numeric predicates"
 python_stage test_evo5_rule_compiler "$ROOT/tests/research/ecology/test_evo5_rule_compiler.py"

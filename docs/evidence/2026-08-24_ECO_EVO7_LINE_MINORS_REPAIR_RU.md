@@ -21,8 +21,17 @@
 | 7 | повтор `#2` ПОСЛЕ перекалибровки | **0** | `PASS (173 assertions)` (+2 потолочных ассерта), хэш не изменился |
 | 8 | `RUN_ECO_EVO7_FFF6_TESTS.sh` — ПРОГОН 1 | **1** | fail-closed: 18 pass / 2 FAIL — мои python-стадии использовали относительный путь (см. §5); научные стадии зелёные |
 | 9 | `RUN_ECO_EVO7_FFF6_TESTS.sh` — ПРОГОН 2 (после фикса путей) | **0** | `passed: 20 failed: 0`, финальный маркер `[stage] ECO_EVO7_FFF6_REPAIR_SUITE_PASS`, 601 c |
+| 10 | `RUN_ECO_EVO7_FFF6_TESTS.sh` — ПРОГОН 3 (сертификация итоговых байтов файла после явного комментария-зеркала MINOR-1) | **0** | `passed: 20 failed: 0`, тот же финальный маркер, 586 c, профиль `eco-evo7-fff6-suite-308714` |
 
 Прогоны #1–#3 выполнены до правок (базовая линия), #6–#9 после соответствующих правок; порядок честно отражает «сначала данные — потом порог».
+
+## 1а. Верификация закрытия MINOR-1 (без повторной реализации)
+
+По уточнению центральной сессии MINOR-1 уже закрыт на ветке: коммит **`c0a70efcf3d79b8dff999de042f25c281cec58e5`** («test(eco): fold EVO6-WATER determinism regression into FFF6 chain») добавил в хвост `RUN_ECO_EVO7_FFF6_TESTS.ps1` шаг `RUN_ECO_EVO6_WATER_SELECTION.ps1 -SkipBaseline`. Повторная реализация НЕ выполнялась. Проверка наличия и когерентности в рабочем дереве (HEAD `43f225e2…`, затем собственные коммиты):
+
+- `git show c0a70efc --stat`: ровно 1 файл, +3 строки — вызов sub-runner с `-SkipBaseline`, проверка `$LASTEXITCODE`, throw при отказе; блок стоит ПОСЛЕ основного списка тестов и перед финальным PASS-сообщением — когерентно.
+- Исполнительная верификация: полный зелёный прогон Linux-цепочки (§3) содержит эквивалентный финальный EVO6-WATER блок + `EVO6_WATER_BASELINE_HASH_GUARD_PASS (7010e30707613e28... bit-identical)`.
+- `.sh`-близнец зеркалирует семантику `.ps1`-хвоста: прямой `.sh`-эквивалент `RUN_ECO_EVO6_WATER_SELECTION.ps1` отсутствует, поэтому исполняются ТЕ ЖЕ обёрнутые стадии (два python rule-pack теста, water fitness, water-driven evolution acceptance, visual observatory adapter под `EVO6_WATER_LAB_AUTOCAP=1`) с сохранением guard'а замороженного хэша.
 
 ## 2. Калибровочная проба NOTE-2 (кросс-seed pinning)
 
@@ -46,9 +55,9 @@ ECO.EVO7 FFF6 result_hash=52995cf4bcd03578
 ECO.EVO7 FFF6 Succession Lab: PASS (173 assertions)
 ```
 
-## 3. Полный прогон отремонтированной Linux-цепочки (#9)
+## 3. Полный прогон отремонтированной Linux-цепочки (#9, сертификационный повтор #10)
 
-`RUN_ECO_EVO7_FFF6_TESTS.sh` — editor-preflight первым шагом, изолированный HOME на стадию, timeout на вызов, fail-closed, агрегат под `artifacts/test-results/eco-evo7-fff6-suite-236849`. Хвост журнала (exit 0, 601 c):
+`RUN_ECO_EVO7_FFF6_TESTS.sh` — editor-preflight первым шагом, изолированный HOME на стадию, timeout на вызов, fail-closed, агрегат под `artifacts/test-results/eco-evo7-fff6-suite-236849`. Хвост журнала (exit 0, 601 c; сертификационный прогон #10 итогового файла завершился идентично — exit 0, `passed: 20 failed: 0`, профиль `artifacts/test-results/eco-evo7-fff6-suite-308714`, 586 c):
 
 ```text
 [eco-evo7-fff6-suite][stage] EDITOR_PREFLIGHT_OK
