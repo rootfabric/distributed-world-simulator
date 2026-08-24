@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.project_epoch.v1",
   "epoch_id": "E2026-08-24-V0-SM1-R1",
-  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "base_sha": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "harness_revision": "H0-2026-08-11-R1",
