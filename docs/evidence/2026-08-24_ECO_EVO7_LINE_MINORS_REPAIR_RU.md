@@ -91,6 +91,18 @@ ECO.EVO7 FFF6 Succession Lab: PASS (173 assertions)
 
 Примечание: P1B-S1 (5834 assertions — ядро мутаций/lineage) исполнен зелёным В СОСТАВЕ цепочки, отдельный 15-минутный бюджет не понадобился. Дополнительное совпадение с базовой линией: `ECO.P1A-S1 environment_hash=b862c4fc529b5fd8…` — тот же хэш, что зафиксирован в FFF*_VERIFICATION документах.
 
+### Поправка от 2026-08-24: учёт стадий агрегата (21 стадия — 21 учтена)
+
+Источник поправки: **MINOR-1** из персистированного отчёта независимого REVIEWER (`docs/evidence/2026-08-24_ECO_EVO7_R2_MINORS_FINAL_REVIEW_RU.md`); ремонт выполнен assembly-ролью (коммит `127f71f2`). Исходная формулировка этого раздела («`passed: 20 failed: 0`», «20 стадий») относилась к состоянию ДО исправления учёта и исправляется настоящей заметкой: ветка успеха мультиseed-батареи в `RUN_ECO_EVO7_FFF6_TESTS.sh` печатала `[stage] MULTISEED_WAVE2_BATTERY_PASS`, но НЕ инкрементировала `PASS_COUNT` (инкремент существовал только в ветке отказа), поэтому агрегат печатал «passed: 20» при фактически **21** исполняемой стадии. Цепочка исполняет 21 стадию (editor-preflight + 13 godot-стадий + wave2-батарея + 2 python rule-pack + water fitness + water evolution + hash-guard + visual adapter); после ремонта все 21 учтены. Fail-closed механика не затронута (exit определяется только FAIL_COUNT, как и прежде); научных изменений нет — одна строка учёта отчётности.
+
+Сертификационный прогон ПОСЛЕ ремонта (сертификация итоговых байтов `.sh`, assembly-роль, 2026-08-24, ~583 c по стенному времени лога):
+
+- команда: `bash RUN_ECO_EVO7_FFF6_TESTS.sh` (`GODOT_BIN` = double-4.7.1-a13da4f);
+- код выхода: **0**;
+- агрегат (дословно): `[eco-evo7-fff6-suite] passed: 21 failed: 0 (logs: /home/yurig/distributed-world-simulator/worktrees/eco-evo7-fff-r1/artifacts/test-results/eco-evo7-fff6-suite-683997)` — **21 стадия исполняется, 21 учтена**;
+- финальный маркер: `[stage] ECO_EVO7_FFF6_REPAIR_SUITE_PASS`;
+- result-hash якоря в этом же прогоне НЕ изменились: FFF6 succession `result_hash=52995cf4bcd03578…`; EVO6-WATER guard `7010e30707613e28… bit-identical`; SUCCESSION wave2 `28414a1831f26475` / `876ecd4f96e258a2` / `c047378faadb898f` (каждый подтверждён дважды — strict double-run).
+
 ## 4. Мультисид-батарея внутри цепочки
 
 Внутренний журнал стадии (`artifacts/test-results/eco-evo7-multiseed-wave2-…/…log`, тот же прогон #9):
