@@ -31,6 +31,9 @@ try {
         & $GodotPath --headless --path $RootDir --script $Test.Script
         if ($LASTEXITCODE -ne 0) { throw "$($Test.Name) failed with exit code $LASTEXITCODE" }
     }
+    Write-Host "=== ECO EVO7 multiseed wave2 cross-seed battery ==="
+    & (Join-Path $RootDir "RUN_ECO_EVO7_MULTISEED_WAVE2_TESTS.ps1") -GodotPath $GodotPath
+    if ($LASTEXITCODE -ne 0) { throw "ECO.EVO7 multiseed wave2 battery failed with exit code $LASTEXITCODE" }
     Write-Host "=== ECO EVO6-WATER cross-stage determinism regression ==="
     & (Join-Path $RootDir "RUN_ECO_EVO6_WATER_SELECTION.ps1") -SkipBaseline -GodotPath $GodotPath
     if ($LASTEXITCODE -ne 0) { throw "EVO6-WATER regression failed with exit code $LASTEXITCODE" }

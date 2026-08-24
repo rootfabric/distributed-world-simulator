@@ -60,8 +60,28 @@ $Tests = @(
     @{ Name = "water-driven evolution causality"; Script = "res://tests/research/ecology/eco_evo6_water_evolution_acceptance.gd" }
 )
 
+# Bit-identical baseline guard: the frozen EVO6-WATER result hash recorded in
+# docs/checkpoints and every FFF*_VERIFICATION evidence document. Any drift is
+# a regression, not a recalibration.
+$ExpectedWaterResultHash = "7010e30707613e2837c45c26e7b516547fc5e35ad88997f93bc62660efecaa6e"
+
 foreach ($Test in $Tests) {
     Write-Host "=== ECO.EVO6-WATER $($Test.Name) ==="
+    if ($Test.Name -eq "water-driven evolution causality") {
+        # Capture stdout only (stderr passes through) so the frozen
+        # result_hash line can be guarded bit-identically.
+        $EvolutionOutput = & $GodotPath --headless --path $RootDir --script $Test.Script
+        $EvolutionExitCode = $LASTEXITCODE
+        $EvolutionOutput | ForEach-Object { Write-Host $_ }
+        if ($EvolutionExitCode -ne 0) {
+            throw "$($Test.Name) failed with exit code $EvolutionExitCode"
+        }
+        $EvolutionText = ($EvolutionOutput | ForEach-Object { $_.ToString() }) -join "`n"
+        if (-not $EvolutionText.Contains("result_hash=$ExpectedWaterResultHash")) {
+            throw "EVO6-WATER baseline drift: expected result_hash=$ExpectedWaterResultHash in the evolution acceptance output"
+        }
+        continue
+    }
     & $GodotPath --headless --path $RootDir --script $Test.Script
     if ($LASTEXITCODE -ne 0) {
         throw "$($Test.Name) failed with exit code $LASTEXITCODE"
