@@ -1,0 +1,85 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/post-p6-sm1-activation-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "Post-P6 V0 control convergence: formalize accepted P6 state and prepare fail-closed production SM1 activation from exact current main.",
+  "purpose": "Remove stale P4/P6-pre-dispatch control truth after P6 acceptance, preserve all canonical gameplay/network owners, and establish an exact reviewed entry boundary for production A<->B seamless handoff.",
+  "expected_outcome": "P6 is formally recorded ACCEPTED; the current V0 frontier becomes the post-P6 SM1 activation gate; runtime mutation stays disabled until independent review, main integration, post-merge PC0, EG5 repair, lease rotation and Director dispatch.",
+  "current_stage": "POST-P6 SM1 Activation Control Reconciliation",
+  "stage_status": "CONTROL_CANDIDATE_AWAITING_PROJECT_CONTROL_AND_FRESH_REVIEW",
+  "progress_note": "Canonical main already contains P6 ACCEPTED at 9ade3233. This branch repairs stale main-owned V0 registry/work-map/scheduler/product-train pointers, creates the formal P6 acceptance record, and issues a fresh CRITICAL SM1 activation candidate without modifying runtime code.",
+  "last_accepted_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST accepted at main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637; runtime head 7a77c048caa680871d4895c09eca89e84136b154",
+  "next_stage": "Fresh Project Control + independent control review; after merge and post-merge NON_RED, complete separate EG5 repair, rotate the single runtime mutation lease to SM1 and Director-dispatch the fresh production runtime branch.",
+  "parent_branch_or_checkpoint": "main @ 9ade3233f8d9f16b77edcc8cf273fe8e649d5637 / V0_P6_ACCEPTED",
+  "base_commit": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "dependencies": [
+    "V0_P6_CHECKPOINT_ACCEPTED @ main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "EDGE_GATEWAY_FOUNDATION_ACCEPTED-001",
+    "SM0 two-authority handoff evidence as donor-only, never product ancestry",
+    "fresh Project Control on this exact control candidate",
+    "fresh independent control review before main integration"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__post-p6-sm1-activation-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+    "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-sm1-production-handoff-plan.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "docs/plans/V0_CURRENT_WORK_MAP_RU.md",
+    "docs/plans/V0_SM1_PRODUCTION_HANDOFF_EXECUTION_RU.md",
+    "tests/harness/test_v0_product_train_policy.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p6/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/construction/**",
+    "scripts/network/gateway/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/acceptance/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p6/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/construction/**",
+    "scripts/network/gateway/**",
+    "config/control/architecture-ownership.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "AUTHORITY_FOUNDATION",
+    "CANONICAL_ITEM_GRAPH_OWNERSHIP",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_AUTHORITY_MODEL",
+    "WORLD_TRANSACTION_MODEL",
+    "WORLD_QUERY_FABRIC",
+    "MATERIAL_ONTOLOGY"
+  ],
+  "blockers": [
+    "PROJECT_CONTROL_NON_RED_REQUIRED",
+    "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
+    "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED_BEFORE_SM1_RUNTIME_DISPATCH",
+    "POST_MERGE_PC0_NON_RED_REQUIRED",
+    "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
+    "DIRECTOR_DISPATCH_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

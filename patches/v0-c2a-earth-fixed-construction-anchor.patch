@@ -1,0 +1,355 @@
+diff --git a/scripts/app/earth_app.gd b/scripts/app/earth_app.gd
+index 319ba08..e497ad4 100644
+--- a/scripts/app/earth_app.gd
++++ b/scripts/app/earth_app.gd
+@@ -11,2 +11,8 @@ const ConstructionPresentationScript = preload(
+ )
++const EarthSurfaceRenderProjectorScript = preload(
++	"res://scripts/app/earth_surface_render_projector.gd"
++)
++
++const MVP_OUTPOST_PLANAR_POSITION := Vector2(0.0, -12.0)
++const MVP_OUTPOST_FOUNDATION_HALF_HEIGHT_M := 0.25
+ 
+@@ -50,2 +56,5 @@ var _m4_item_rejections: int = 0
+ var construction_presentation
++var _construction_surface_anchor := Transform3D.IDENTITY
++var _construction_surface_anchor_ready := false
++var _construction_render_transform_updates := 0
+ 
+@@ -77,3 +86,3 @@ func _process(delta: float) -> void:
+ 	_apply_m3_network_input(delta)
+-	_update_construction_observer_frame()
++	_update_construction_render_transform()
+ 
+@@ -104,3 +113,3 @@ func _on_m3_construction_updated(bundle: Dictionary) -> void:
+ 		return
+-	_update_construction_observer_frame()
++	_update_construction_render_transform()
+ 	var accepted: Dictionary = construction_presentation.apply_authoritative_bundle(bundle)
+@@ -110,23 +119,38 @@ func _on_m3_construction_updated(bundle: Dictionary) -> void:
+ 
+-func _update_construction_observer_frame() -> void:
++func _update_construction_render_transform() -> void:
+ 	if (
+ 		construction_presentation == null
+-		or earth_explorer == null
+-		or not construction_presentation.has_method("set_observer_tangent_frame")
++		or earth_world == null
++		or not _m3_attached
++		or not construction_presentation.has_method("set_derived_render_transform")
+ 	):
+ 		return
+-	var frame_position: Vector3 = earth_explorer.get_frame_position()
+-	if frame_position.length_squared() < 1.0:
++	if not _construction_surface_anchor_ready:
++		_resolve_construction_surface_anchor()
++	if not _construction_surface_anchor_ready:
+ 		return
+-	var up := frame_position.normalized()
+-	var east := Vector3.UP.cross(up)
+-	if east.length_squared() < 0.000001:
+-		east = Vector3.RIGHT.cross(up)
+-	east = east.normalized()
+-	var north := up.cross(east).normalized()
+-	var tangent_basis := Basis(east, up, -north).orthonormalized()
+-	construction_presentation.set_observer_tangent_frame(
+-		tangent_basis,
+-		_m3_local_planar_position
++	var projected: Transform3D = EarthSurfaceRenderProjectorScript.project_anchor(
++		_construction_surface_anchor,
++		earth_world.get_render_origin(),
++		earth_world.basis
++	)
++	construction_presentation.set_derived_render_transform(projected)
++	_construction_render_transform_updates += 1
++
++
++func _resolve_construction_surface_anchor() -> void:
++	if earth_world == null:
++		return
++	var direction: Vector3 = _map_m3_position_to_earth_direction(
++		MVP_OUTPOST_PLANAR_POSITION.x,
++		MVP_OUTPOST_PLANAR_POSITION.y
++	)
++	if direction.length_squared() < 0.5:
++		return
++	var surface_point: Vector3 = earth_world.get_surface_point(direction)
++	_construction_surface_anchor = EarthSurfaceRenderProjectorScript.create_surface_anchor(
++		surface_point,
++		MVP_OUTPOST_FOUNDATION_HALF_HEIGHT_M
+ 	)
++	_construction_surface_anchor_ready = true
+ 
+@@ -166,2 +190,9 @@ func create_m3_graphical_client_report() -> Dictionary:
+ 		"construction_presentation": construction_presentation.get_report() if construction_presentation != null else {},
++		"construction_surface_anchor_ready": _construction_surface_anchor_ready,
++		"construction_surface_anchor_world": (
++			_vector_to_array(_construction_surface_anchor.origin)
++			if _construction_surface_anchor_ready
++			else []
++		),
++		"construction_render_transform_updates": _construction_render_transform_updates,
+ 		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
+diff --git a/scripts/app/earth_construction_presentation.gd b/scripts/app/earth_construction_presentation.gd
+index 969ee47..5e4a423 100644
+--- a/scripts/app/earth_construction_presentation.gd
++++ b/scripts/app/earth_construction_presentation.gd
+@@ -3,2 +3,4 @@ extends Node3D
+ # Derived C22/C24 presentation only. Canonical Construction state remains server-owned.
++# Spatial authority also stays outside this adapter: Earth runtime supplies a derived
++# floating-origin transform from a stable Earth-fixed anchor.
+ const ControllerScript = preload("res://scripts/construction/proxies/construction_proxy_streaming_controller.gd")
+@@ -10,4 +12,2 @@ const InterestRequestScript = preload("res://scripts/construction/proxies/constr
+ const MVP_OUTPOST_CONSTRUCT_ID := "construct/mvp/earth-outpost"
+-const MVP_OUTPOST_PLANAR_POSITION := Vector2(0.0, -12.0)
+-const MVP_EYE_HEIGHT_M := 1.75
+ const MVP_AUTHORITY_EPOCH := 1
+@@ -21,4 +21,4 @@ var _last_detail_mode := ""
+ var _authoritative_bundle: Dictionary = {}
+-var _observer_tangent_basis := Basis.IDENTITY
+-var _observer_planar_position := Vector2.ZERO
++var _derived_render_transform := Transform3D.IDENTITY
++var _render_transform_updates := 0
+ var _projection_updates := 0
+@@ -38,5 +38,8 @@ func setup(observer_id: String) -> Dictionary:
+ 
+-func set_observer_tangent_frame(tangent_basis: Basis, planar_position: Vector2) -> void:
+-	_observer_tangent_basis = tangent_basis.orthonormalized()
+-	_observer_planar_position = planar_position
++func set_derived_render_transform(value: Transform3D) -> void:
++	_derived_render_transform = Transform3D(
++		value.basis.orthonormalized(),
++		value.origin
++	)
++	_render_transform_updates += 1
+ 	_update_runtime_transform()
+@@ -129,4 +132,5 @@ func apply_authoritative_bundle(bundle: Dictionary) -> Dictionary:
+ func get_report() -> Dictionary:
++	var rotation := Quaternion(_derived_render_transform.basis).normalized()
+ 	return {
+-		"schema": "planet_simulator.earth_construction_presentation.v1",
++		"schema": "planet_simulator.earth_construction_presentation.v2",
+ 		"observer_id": _observer_id,
+@@ -139,3 +143,10 @@ func get_report() -> Dictionary:
+ 		"projection_failures": _projection_failures,
+-		"observer_planar_position": [_observer_planar_position.x, _observer_planar_position.y],
++		"render_transform_updates": _render_transform_updates,
++		"derived_render_origin": [
++			_derived_render_transform.origin.x,
++			_derived_render_transform.origin.y,
++			_derived_render_transform.origin.z,
++		],
++		"derived_render_rotation_xyzw": [rotation.x, rotation.y, rotation.z, rotation.w],
++		"spatial_authority": "EXTERNAL_EARTH_FIXED_ANCHOR",
+ 		"direct_authority_references": 0,
+@@ -151,12 +162,4 @@ func _find_mvp_outpost_snapshot(bundle: Dictionary) -> Dictionary:
+ 
+-func _relative_outpost_local() -> Vector3:
+-	return Vector3(
+-		MVP_OUTPOST_PLANAR_POSITION.x - _observer_planar_position.x,
+-		-MVP_EYE_HEIGHT_M,
+-		MVP_OUTPOST_PLANAR_POSITION.y - _observer_planar_position.y
+-	)
+-
+-
+ func _world_origin_array() -> Array:
+-	var value: Vector3 = _observer_tangent_basis * _relative_outpost_local()
++	var value: Vector3 = _derived_render_transform.origin
+ 	return [value.x, value.y, value.z]
+@@ -165,3 +168,3 @@ func _world_origin_array() -> Array:
+ func _world_rotation_array() -> Array:
+-	var value := Quaternion(_observer_tangent_basis).normalized()
++	var value := Quaternion(_derived_render_transform.basis).normalized()
+ 	return [value.x, value.y, value.z, value.w]
+@@ -170,3 +173,3 @@ func _world_rotation_array() -> Array:
+ func _update_runtime_transform() -> void:
+-	if _controller == null or _last_construct_id != MVP_OUTPOST_CONSTRUCT_ID:
++	if _controller == null or _last_construct_id.is_empty():
+ 		return
+@@ -175,5 +178,4 @@ func _update_runtime_transform() -> void:
+ 		return
+-	var origin: Vector3 = _observer_tangent_basis * _relative_outpost_local()
+-	runtime.position = origin
+-	runtime.quaternion = Quaternion(_observer_tangent_basis).normalized()
++	runtime.position = _derived_render_transform.origin
++	runtime.quaternion = Quaternion(_derived_render_transform.basis).normalized()
+ 
+diff --git a/scripts/app/earth_surface_render_projector.gd b/scripts/app/earth_surface_render_projector.gd
+new file mode 100644
+index 0000000..72ebbd9
+--- /dev/null
++++ b/scripts/app/earth_surface_render_projector.gd
+@@ -0,0 +1,41 @@
++extends RefCounted
++
++# Presentation-only transform helper for Earth-fixed objects. It never owns
++# canonical spatial state: callers provide a stable Earth-fixed anchor and the
++# current render origin/reference-frame basis, and receive a derived Node3D
++# transform suitable for the floating-origin scene.
++const EPSILON := 0.000001
++
++
++static func create_surface_anchor(
++	surface_point_world: Vector3,
++	surface_clearance_m: float = 0.0
++) -> Transform3D:
++	if surface_point_world.length_squared() < EPSILON:
++		return Transform3D.IDENTITY
++	var up: Vector3 = surface_point_world.normalized()
++	var anchor_basis: Basis = _surface_basis(up)
++	var anchor_origin: Vector3 = surface_point_world + up * surface_clearance_m
++	return Transform3D(anchor_basis, anchor_origin)
++
++
++static func project_anchor(
++	canonical_anchor: Transform3D,
++	render_origin_world: Vector3,
++	earth_fixed_to_render: Basis = Basis.IDENTITY
++) -> Transform3D:
++	var frame_basis: Basis = earth_fixed_to_render.orthonormalized()
++	return Transform3D(
++		(frame_basis * canonical_anchor.basis).orthonormalized(),
++		frame_basis * (canonical_anchor.origin - render_origin_world)
++	)
++
++
++static func _surface_basis(up_value: Vector3) -> Basis:
++	var up: Vector3 = up_value.normalized()
++	var east: Vector3 = Vector3.UP.cross(up)
++	if east.length_squared() < EPSILON:
++		east = Vector3.RIGHT.cross(up)
++	east = east.normalized()
++	var north: Vector3 = up.cross(east).normalized()
++	return Basis(east, up, -north).orthonormalized()
+diff --git a/tests/runtime/test_v0_c2a_earth_surface_render_projector.gd b/tests/runtime/test_v0_c2a_earth_surface_render_projector.gd
+new file mode 100644
+index 0000000..79113f8
+--- /dev/null
++++ b/tests/runtime/test_v0_c2a_earth_surface_render_projector.gd
+@@ -0,0 +1,125 @@
++extends SceneTree
++
++const ProjectorScript = preload("res://scripts/app/earth_surface_render_projector.gd")
++
++var assertions := 0
++var failures: Array[String] = []
++
++
++func _init() -> void:
++	var surface_direction := Vector3(0.37, 0.81, -0.45).normalized()
++	var surface_point := surface_direction * 6_371_123.0
++	var canonical_anchor: Transform3D = ProjectorScript.create_surface_anchor(
++		surface_point,
++		0.25
++	)
++	var canonical_origin := canonical_anchor.origin
++	var canonical_basis := canonical_anchor.basis
++
++	_assert(
++		canonical_origin.distance_to(surface_point + surface_direction * 0.25) < 0.000001,
++		"foundation center is lifted by half-height from the surface"
++	)
++	_assert(
++		canonical_basis.y.normalized().distance_to(surface_direction) < 0.000001,
++		"construction up axis follows Earth surface normal"
++	)
++
++	var eye_origin := surface_point + surface_direction * 1.75
++	var near_transform: Transform3D = ProjectorScript.project_anchor(
++		canonical_anchor,
++		eye_origin,
++		Basis.IDENTITY
++	)
++	_assert(
++		near_transform.origin.distance_to(surface_direction * -1.5) < 0.000001,
++		"near render origin is observer-relative without changing anchor"
++	)
++
++	var walked_origin := eye_origin + canonical_basis.x * 10.0
++	var walked_transform: Transform3D = ProjectorScript.project_anchor(
++		canonical_anchor,
++		walked_origin,
++		Basis.IDENTITY
++	)
++	_assert(
++		(walked_transform.origin - near_transform.origin).distance_to(
++			canonical_basis.x * -10.0
++		) < 0.000001,
++		"walking moves only the derived render transform"
++	)
++
++	var jumped_origin := eye_origin + surface_direction * 3.0
++	var jumped_transform: Transform3D = ProjectorScript.project_anchor(
++		canonical_anchor,
++		jumped_origin,
++		Basis.IDENTITY
++	)
++	_assert(
++		(jumped_transform.origin - near_transform.origin).distance_to(
++			surface_direction * -3.0
++		) < 0.000001,
++		"jumping moves construction down relative to observer while world anchor stays fixed"
++	)
++
++	var spectator_delta := Vector3(125.0, -40.0, 310.0)
++	var spectator_transform: Transform3D = ProjectorScript.project_anchor(
++		canonical_anchor,
++		eye_origin + spectator_delta,
++		Basis.IDENTITY
++	)
++	_assert(
++		(spectator_transform.origin - near_transform.origin).distance_to(
++			-spectator_delta
++		) < 0.000001,
++		"spectator translation is reflected exactly in derived construction position"
++	)
++
++	var rotated_frame := Basis(Vector3.UP, 0.47).orthonormalized()
++	var rotated_transform: Transform3D = ProjectorScript.project_anchor(
++		canonical_anchor,
++		eye_origin,
++		rotated_frame
++	)
++	_assert(
++		rotated_transform.origin.distance_to(
++			rotated_frame * (canonical_anchor.origin - eye_origin)
++		) < 0.000001,
++		"reference-frame conversion is applied only during presentation projection"
++	)
++	_assert(
++		rotated_transform.basis.y.normalized().distance_to(
++			(rotated_frame * surface_direction).normalized()
++		) < 0.000001,
++		"surface orientation survives reference-frame conversion"
++	)
++
++	_assert(
++		canonical_anchor.origin.distance_to(canonical_origin) < 0.000001,
++		"canonical anchor origin is immutable across observer movement"
++	)
++	_assert(
++		canonical_anchor.basis.x.distance_to(canonical_basis.x) < 0.000001
++		and canonical_anchor.basis.y.distance_to(canonical_basis.y) < 0.000001
++		and canonical_anchor.basis.z.distance_to(canonical_basis.z) < 0.000001,
++		"canonical anchor basis is immutable across observer movement"
++	)
++
++	_finish()
++
++
++func _assert(value: bool, message: String) -> void:
++	assertions += 1
++	if not value:
++		failures.append(message)
++
++
++func _finish() -> void:
++	if failures.is_empty():
++		print("V0-C2A Earth surface render projector: PASS (%d assertions)" % assertions)
++		quit(0)
++		return
++	for failure in failures:
++		push_error(failure)
++	print("V0-C2A Earth surface render projector: FAIL (%d failures)" % failures.size())
++	quit(1)

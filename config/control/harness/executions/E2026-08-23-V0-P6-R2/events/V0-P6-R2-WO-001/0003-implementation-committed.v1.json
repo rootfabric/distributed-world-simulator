@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "event_id": "E2026-08-23-V0-P6-R2-V0-P6-R2-WO-001-0003",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-23T07:45:00Z",
+  "head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "summary": "P6.1 ownership map implementation carried into the refreshed epoch content-identically: ownership registry (six canonical domains, single persistence owner, GATEWAY_ONLY), L0 suite 71 assertions, RU evidence doc, smoke proof; regression gate green (7/138/2 era profile).",
+  "command": "RECORD_P61_IMPLEMENTATION_COMMITTED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/runtime/networked_gameplay/p6/p6_ownership_map.gd",
+    "tests/runtime/test_v0_p6_ownership_map.gd",
+    "docs/evidence/2026-08-23_V0_P6_OWNERSHIP_MAP_RU.md"
+  ]
+}

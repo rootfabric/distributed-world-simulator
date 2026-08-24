@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "EG45-R1-WO-001-VERIFICATION-001",
+  "work_order_id": "EG45-R1-WO-001",
+  "project_epoch": "E2026-08-24-EG45-R1",
+  "role": "VERIFIER",
+  "isolation": "fresh independent verifier; runtime code not modified",
+  "verified_head_sha": "112328105983dc3afa5b94fa1febed04ff9bf427",
+  "branch": "repair/eg45-synthetic-journal-r1",
+  "godot_binary": "godot.linuxbsd.editor.double.x86_64 v4.7.1.stable.double.custom_build.a13da4feb",
+  "checks": {
+    "tests": {
+      "method": "independent rerun at exact HEAD with isolated HOME per test (/tmp/eg45ver-{1,2,3}), timeout 300s each, godot --headless --path . --script res://<test>",
+      "tests": [
+        {
+          "script": "res://tests/network/test_eg45_synthetic_journal.gd",
+          "exit_code": 0,
+          "assertions_passed": 25,
+          "verdict_line": "CWIP_SYNTHETIC_EXACTLY_ONCE_EFFECT_PASS(journal-core)",
+          "forbidden_markers_found": false
+        },
+        {
+          "script": "res://tests/network/test_eg45_interaction_router.gd",
+          "exit_code": 0,
+          "assertions_passed": 91,
+          "verdict_line": "CROSS_WORLD_INTERACTION_CONTRACTS_PASS",
+          "forbidden_markers_found": false
+        },
+        {
+          "script": "res://tests/network/test_eg45_scenarios.gd",
+          "exit_code": 0,
+          "assertions_passed": 17,
+          "verdict_line": "CROSS_WORLD_INTERACTION_CONTRACTS_PASS",
+          "forbidden_markers_found": false
+        }
+      ],
+      "all_exit_zero": true,
+      "no_fail_script_error_parse_error_markers": true,
+      "pass": true
+    },
+    "semantics_spot_check": {
+      "journal_duplicate_branch": {
+        "file": "tools/network/eg45_synthetic_effect_journal.gd",
+        "function": "commit()",
+        "lines": "94-106",
+        "observed": "on known operation_id the stored entry['result'] is returned verbatim (deep-copied prior_result, revalidated, unchanged canonical EffectCommitResult status COMMITTED); envelope carries status=DUPLICATE_REPLAY with applied_now=false and original canonical_effect_revision",
+        "stored_result_returned_verbatim": true,
+        "envelope_status_duplicate_replay": true
+      },
+      "router_classification": {
+        "file": "scripts/network/gateway/runtime/eg45_interaction_router.gd",
+        "function": "_send_commit() commit-relay path",
+        "lines": "508-534",
+        "naming_note": "no symbol literally named _commit_relayed exists in repo at this HEAD; the duplicate classification described for _commit_relayed lives in _send_commit() lines 508-534",
+        "observed": "router reads details.status of the response ENVELOPE, classifies duplicate_replay = (envelope_status == 'DUPLICATE_REPLAY'), increments commits_duplicate_replay counter without rewriting the canonical relayed result, and relays duplicate_replay flag in the outcome details",
+        "reads_details_status_for_classification": true,
+        "relays_duplicate_replay_flag": true,
+        "canonical_result_not_rewritten": true
+      },
+      "pass": true
+    },
+    "provenance": {
+      "directory": "config/control/harness/executions/E2026-08-24-EG45-R1/events/EG45-R1-WO-001/",
+      "events_checked": [
+        "0001-work-order-created.v1.json",
+        "0002-director-dispatched.v1.json",
+        "0003-implementation-committed.v1.json",
+        "0004-recovery-resumed-preexisting-wip-reconciliation.v1.json"
+      ],
+      "all_valid_json": true,
+      "sequence_1_to_4_complete_and_ordered": true,
+      "timestamps_nondecreasing_strict": false,
+      "timestamp_observation": "event 0003 recorded_at_utc=2026-08-24T05:27:45Z precedes events 0001 (06:05:00Z) / 0002 (06:10:00Z); implementation commit 866a44ec authored 2026-08-24T05:27:15Z predates WO materialization events",
+      "chronology_exception_documented_by_event_0004": true,
+      "event_0004_honest_reconciliation": "RECOVERY_RESUMED explicitly documents CHRONOLOGY RECONCILIATION as append-only adoption of PREEXISTING_WIP commit 866a44ec into EG45-R1-WO-001 as RECOVERED_WIP; states no timestamps were altered and durably records the inconsistency itself; confirmed against git author/commit dates of 866a44ec, b2a88eb5, 11232810",
+      "referenced_commits_exist_in_history": ["866a44ecde9819523d1b9cec9ee936c879dc84cc", "b2a88eb537f53ed711bcdfacbfed478101d544e0"],
+      "pass_with_documented_exception": true
+    },
+    "freshness": {
+      "head_before_runs": "112328105983dc3afa5b94fa1febed04ff9bf427",
+      "head_after_runs": "112328105983dc3afa5b94fa1febed04ff9bf427",
+      "head_unchanged_during_validation": true,
+      "tested_head_matches_expected": true,
+      "tracked_files_clean_before_and_after": true,
+      "untracked_out_of_scope_facts": [
+        "scripts/ecology/production/ecology_client_read_model_v1.gd.uid",
+        "scripts/ecology/production/ecology_clock_v1.gd.uid",
+        "scripts/ecology/production/ecology_offline_catchup_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_ownership_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_persistence_v1.gd.uid",
+        "scripts/ecology/production/ecology_region_state_v1.gd.uid",
+        "tests/runtime/test_v0_p3_replica_clock_delta_reordering.gd.uid"
+      ],
+      "pass": true
+    }
+  },
+  "verdict": "VERIFIED"
+}

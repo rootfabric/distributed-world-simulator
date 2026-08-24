@@ -127,6 +127,9 @@ static func validate(value: Dictionary) -> Dictionary:
 			if purpose == PURPOSE_DESTROY_ROOT:
 				if not _is_construction_root(before):
 					return _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")
+			elif purpose == PURPOSE_CONSUME_MATERIAL:
+				if String(before["relation"].get("kind", "")) in [ProjectionScript.ATTACHMENT, ProjectionScript.DESTROYED]:
+					return _failure("CONSUME_MATERIAL_SOURCE_NOT_TRANSFERABLE")
 			elif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:
 				if String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:
 					return _failure("FABRICATION_INPUT_NOT_RESERVED")

@@ -289,7 +289,11 @@ func _test_runtime_wiring() -> void:
 	var powershell_runner: String = FileAccess.get_file_as_string("res://RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1")
 	_assert(powershell_runner.contains("res://tests/network/test_nx2_physical_channel_processes.gd"), "PowerShell focused runner omits physical channel regression")
 	_assert(powershell_runner.contains("PASS (9/9)"), "PowerShell focused runner step count is not 9/9")
-	var server := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+	# The dedicated server runtime extends its _p2 base class; source-contract
+	# markers may live anywhere in the inheritance chain (same rule as client).
+	var server := _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
 	var client := _load_script_source_chain(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
 	)

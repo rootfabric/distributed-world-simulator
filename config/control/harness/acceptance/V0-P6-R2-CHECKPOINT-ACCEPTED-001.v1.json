@@ -1,0 +1,48 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance.v1",
+  "acceptance_id": "V0-P6-R2-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
+  "decision": "V0_P6_CHECKPOINT_ACCEPTED",
+  "status": "ACCEPTED",
+  "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
+  "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "checkpoint_proposal": {
+    "project_epoch": "E2026-08-23-V0-P6-R2",
+    "work_order_id": "V0-P6-R2-WO-001",
+    "proposal_event": "config/control/harness/executions/E2026-08-23-V0-P6-R2/events/V0-P6-R2-WO-001/0031-checkpoint-proposed.v1.json",
+    "proposal_head": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+    "work_state": "CHECKPOINT_PROPOSED"
+  },
+  "closure_finalization": {
+    "pr": 212,
+    "exact_final_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
+    "merge_commit": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "merge_message_contract": "P6 ACCEPTED: persistent shared outpost. RUNTIME_FEATURE_MERGE authorized by owner. All 26 predicates verified. Epoch EXACT_BASE. Findings=[]. P6.1-P6.11 review+verify PASS."
+  },
+  "machine_evidence": {
+    "required_predicate_count": 26,
+    "all_required_predicates_complete": true,
+    "review_verification_chain": "P6.1-P6.11 REVIEW+VERIFY PASS",
+    "fault_race_matrix": "PASS",
+    "repeat_soak": "PASS",
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "findings": []
+  },
+  "canonical_main_at_acceptance": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "human_authorization": {
+    "decision": "RUNTIME_FEATURE_MERGE_AND_P6_ACCEPTANCE",
+    "source": "OWNER_AUTHORIZED_PR212_MERGE",
+    "durable_pr": 212,
+    "durable_merge_commit": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+  },
+  "successor": {
+    "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "main_declared_exact_successor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "runtime_branch": "feature/v0-sm1-seamless-product-integration",
+    "activation_requires_main_owned_control_update": true,
+    "runtime_mutation_authorized_by_this_record": false
+  },
+  "accepted_at_utc": "2026-08-23T14:38:36Z"
+}

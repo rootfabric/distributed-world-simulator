@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-23-V0-P6-R1-V0-P6-R1-WO-001-0003",
+  "project_epoch": "E2026-08-23-V0-P6-R1",
+  "work_order_id": "V0-P6-R1-WO-001",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-23T07:10:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "head_sha": "d5eb2aa4c68a577fb0553448a5c29a880a14733c",
+  "summary": "P6.1 ownership map implemented and self-validated: machine-readable ownership registry scripts/runtime/networked_gameplay/p6/p6_ownership_map.gd (six canonical domains p6-domain/*, single persistence owner p6-owner/directory-one-writer, GATEWAY_ONLY transport everywhere, SERVER_ONLY write authority, fail-closed validators), L0 contract suite tests/runtime/test_v0_p6_ownership_map.gd (71 assertions: field/type/canonical-id checks, exactly-one-owner, GATEWAY_ONLY, deterministic canonical snapshot, negatives MULTIPLE_PERSISTENCE_OWNERS / NON_GATEWAY_TRANSPORT), RU evidence doc plus optional smoke launch proof (main scene headless exit 0). Regression gate restored and green at implementation head: pytest tests/harness 7 failed / 138 passed / 2 skipped (documented era profile) after completing the coordinated pin-refresh conflict resolution (commit b9aaec1b) and making the P6 ledger-state pin self-consistent (commit d5eb2aa4).",
+  "command": "RECORD_P61_IMPLEMENTATION_COMMITTED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/runtime/networked_gameplay/p6/p6_ownership_map.gd",
+    "tests/runtime/test_v0_p6_ownership_map.gd",
+    "docs/evidence/2026-08-23_V0_P6_OWNERSHIP_MAP_RU.md"
+  ]
+}

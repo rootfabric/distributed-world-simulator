@@ -153,7 +153,7 @@ static func validate(value: Dictionary) -> Dictionary:
 			if String(source["relation"].get("kind", "")) in [ProjectionScript.ATTACHMENT, ProjectionScript.DESTROYED]:
 				return _failure("BUILD_PLAN_MATERIAL_SOURCE_NOT_TRANSFERABLE")
 			material_totals[item_id] = int(material_totals.get(item_id, 0)) + int(allocation["quantity"])
-			if int(material_totals[item_id]) >= int(source["quantity"]):
+			if int(material_totals[item_id]) > int(source["quantity"]):
 				return _failure("BUILD_PLAN_MATERIAL_WOULD_EXHAUST_STACK")
 			referenced_source_ids[item_id] = true
 		previous_parts = current_parts

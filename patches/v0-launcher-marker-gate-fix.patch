@@ -1,0 +1,6 @@
+diff --git a/RUN_V0_MVP.ps1 b/RUN_V0_MVP.ps1
+--- a/RUN_V0_MVP.ps1
++++ b/RUN_V0_MVP.ps1
+@@ -64,1 +64,1 @@ function Test-SourceMarker {
+-    return $null -ne (Select-String -Path $Path -SimpleMatch $Marker -Quiet)
++    return [bool](Select-String -Path $Path -SimpleMatch $Marker -Quiet)

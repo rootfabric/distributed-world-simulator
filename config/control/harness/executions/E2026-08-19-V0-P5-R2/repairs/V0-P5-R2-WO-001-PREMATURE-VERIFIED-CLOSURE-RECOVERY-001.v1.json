@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P5-R2-WO-001-PREMATURE-VERIFIED-CLOSURE-RECOVERY-001",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "V0 P5 R2 parent closure ledger predicate materialization",
+  "canonical_owner": "V0/HARNESS closure control; runtime truth remains exact reviewed/verified 543455",
+  "entry_points": [
+    "scripts/harness/event_reducer.py::reduce_events",
+    "scripts/harness/state_builder.py::build_state",
+    "V0-P5-R2-WO-001 append-only event ledger"
+  ],
+  "callers": [
+    "P5 Director closure",
+    "formal V0 P5 checkpoint proposal",
+    "later canonical P5 acceptance record"
+  ],
+  "callees": [
+    "existing independent Reviewer PASS evidence",
+    "existing independent Verifier PASS evidence",
+    "post-integration Project Control #1054",
+    "post-integration single continuous runtime campaign"
+  ],
+  "sibling_paths": [
+    "V0-P5-R2-WO-002 child repair evidence",
+    "PR #173/#169/#164 guarded integration history",
+    "PR #145 product carrier"
+  ],
+  "existing_tests": [
+    "event reducer fail-closed transition rules",
+    "P4 append-only closure precedent",
+    "P5 exact candidate Reviewer/Verifier runtime gates"
+  ],
+  "missing_tests": [
+    "Explicit parent-ledger rematerialization after premature VERIFIED state without rewriting events 0001..0006"
+  ],
+  "public_or_internal_contracts": [
+    "events are append-only and authoritative; Work Order state is a derived snapshot",
+    "all required checkpoint predicates must be materialized by successful PREDICATE_VERIFIED/AUDIT/CHECKPOINT events",
+    "VERIFIED may only advance to AUDITED before CHECKPOINT_PROPOSED",
+    "checkpoint proposal requires Reviewer PASS, Verifier PASS, PC0 NON_RED and no blocking human attention"
+  ],
+  "expected_shipped_behavior": "No shipped runtime behavior changes. Parent P5 closure reopens its premature VERIFIED state append-only, records every required predicate against already-proven exact evidence, reaches AUDITED, then Director proposes the exact frozen P5 checkpoint.",
+  "relevant_history_or_evidence": [
+    "WO-001 event 0006 moved VERIFYING -> VERIFIED while reducer had materialized only IMPLEMENTER_OWNED_P5_R2_PREDICATES_VERIFIED",
+    "fresh independent Reviewer PASS on exact 543455 child final repair",
+    "fresh independent Verifier PASS on exact 543455, PR #173 comment #5364299430",
+    "post-integration product head 5dcdddc changes only four closure-control JSON files relative to 543455",
+    "post-integration Project Control #1054 / 32438985414 SUCCESS, YELLOW NON_RED, cross_branch_overlaps=[]",
+    "post-integration single launch 239/239 PASS + main_scene_cli_all PASS"
+  ],
+  "root_cause_hypothesis": "The parent R2 closure transitioned to VERIFIED using an aggregate implementer predicate before the reducer's explicit completed_predicates set contained the Work Order's required checkpoint predicates. Later repair work created a child WO, but did not append the missing parent checkpoint predicates.",
+  "canonical_fix_location": "Append-only V0-P5-R2-WO-001 event continuation: VERIFIED -> FIX_REQUIRED -> guarded closure-only redispatch -> IMPLEMENTED -> VERIFYING -> explicit required predicates -> VERIFIED -> AUDITED -> CHECKPOINT_PROPOSED. Do not rewrite 0001..0006 or runtime/test bytes.",
+  "why_not_symptom_patch": "Rewriting historical events, deleting required predicates, or treating non-PREDICATE event labels as completed would weaken fail-closed closure semantics. The recovery uses only legal append-only transitions and explicit evidence-backed predicate events."
+}

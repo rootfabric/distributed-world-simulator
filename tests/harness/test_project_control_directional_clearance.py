@@ -14,6 +14,8 @@ from directional_watch_clearance import resolve_critical_clearance
 
 CLEARANCE_PATH = ROOT / "config/control/directional-watch-clearances.v1.json"
 REGISTRY_PATH = ROOT / "config/control/project-program-registry.v1.json"
+HISTORICAL_V0_TO_NX_CLEARANCE = "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002"
+HISTORICAL_NX_TO_V0_CLEARANCE = "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
 
 
 def git(*args: str, check: bool = True) -> str:
@@ -32,7 +34,7 @@ def git(*args: str, check: bool = True) -> str:
 class DirectionalWatchClearanceTests(unittest.TestCase):
     def setUp(self) -> None:
         clearance_registry = json.loads(CLEARANCE_PATH.read_text(encoding="utf-8"))
-        project_registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        self.project_registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
         self.assertEqual(
             "distributed_world_simulator.directional_watch_clearance_registry.v1",
             clearance_registry["schema"],
@@ -40,37 +42,30 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         self.assertEqual("MAIN_OWNED_ONLY", clearance_registry["authority"])
 
         self.clearances = list(clearance_registry["clearances"])
-        current_v0_branch = project_registry["programs"]["V0"]["branch"]
-        current_nx_branch = project_registry["programs"]["NX"]["branch"]
-        active_v0_to_nx = [
-            item
-            for item in self.clearances
-            if item.get("status") == "ACCEPTED"
-            and item.get("producer_program") == "V0"
-            and item.get("producer_branch") == current_v0_branch
-            and item.get("consumer_program") == "NX"
-            and item.get("consumer_branch") == current_nx_branch
+        historical = [
+            item for item in self.clearances if item.get("clearance_id") == HISTORICAL_V0_TO_NX_CLEARANCE
         ]
-        self.assertEqual(1, len(active_v0_to_nx), active_v0_to_nx)
-        self.clearance = active_v0_to_nx[0]
-        self.producer_ref = f"origin/{self.clearance['producer_branch']}"
-        self.consumer_ref = f"origin/{self.clearance['consumer_branch']}"
+        self.assertEqual(1, len(historical), historical)
+        self.clearance = historical[0]
+        self.producer_ref = self.clearance["reviewed_producer_head"]
+        self.consumer_ref = self.clearance["consumer_head_sha"]
         self.producer = {
             "program": self.clearance["producer_program"],
             "branch": self.clearance["producer_branch"],
-            "head_sha": git("rev-parse", "--verify", self.producer_ref),
+            "head_sha": self.clearance["reviewed_producer_head"],
         }
         self.consumer = {
             "program": self.clearance["consumer_program"],
             "branch": self.clearance["consumer_branch"],
-            "head_sha": git("rev-parse", "--verify", self.consumer_ref),
+            "head_sha": self.clearance["consumer_head_sha"],
             "passport_path": self.clearance["consumer_passport_path"],
             "passport_blob_sha": git(
                 "rev-parse",
                 "--verify",
-                f"{self.consumer_ref}:{self.clearance['consumer_passport_path']}",
+                f"{self.clearance['consumer_head_sha']}:{self.clearance['consumer_passport_path']}",
             ),
         }
+        self.assertEqual(self.clearance["consumer_passport_blob_sha"], self.consumer["passport_blob_sha"])
         self.critical_hits = list(self.clearance["critical_files"])
         self.all_hits = list(self.clearance["watched_files"])
 
@@ -88,17 +83,17 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         return completed.returncode == 0
 
     def _scope(self, clearance: dict) -> tuple[dict, dict, list[str], list[str], str, str]:
-        producer_ref = f"origin/{clearance['producer_branch']}"
-        consumer_ref = f"origin/{clearance['consumer_branch']}"
+        producer_ref = clearance["reviewed_producer_head"]
+        consumer_ref = clearance["consumer_head_sha"]
         producer = {
             "program": clearance["producer_program"],
             "branch": clearance["producer_branch"],
-            "head_sha": git("rev-parse", "--verify", producer_ref),
+            "head_sha": clearance["reviewed_producer_head"],
         }
         consumer = {
             "program": clearance["consumer_program"],
             "branch": clearance["consumer_branch"],
-            "head_sha": git("rev-parse", "--verify", consumer_ref),
+            "head_sha": clearance["consumer_head_sha"],
             "passport_path": clearance["consumer_passport_path"],
             "passport_blob_sha": git(
                 "rev-parse",
@@ -106,6 +101,7 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
                 f"{consumer_ref}:{clearance['consumer_passport_path']}",
             ),
         }
+        self.assertEqual(clearance["consumer_passport_blob_sha"], consumer["passport_blob_sha"])
         return (
             producer,
             consumer,
@@ -132,24 +128,21 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
             ancestor_check,
         )
 
-    def test_exact_current_v0_to_nx_clearance_matches_current_refs_and_reviewed_blobs(self):
+    def test_historical_v0_p4_to_nx_clearance_replays_on_exact_reviewed_subjects(self):
         accepted, rejections = self.resolve()
         self.assertIsNotNone(accepted, rejections)
         self.assertEqual([], rejections)
-        self.assertEqual(
-            "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002",
-            accepted["clearance_id"],
-        )
-        self.assertTrue(self.ancestor_check(self.clearance["reviewed_producer_head"], self.producer_ref))
+        self.assertEqual(HISTORICAL_V0_TO_NX_CLEARANCE, accepted["clearance_id"])
+        self.assertEqual(self.clearance["reviewed_producer_head"], self.producer["head_sha"])
+        self.assertEqual(self.clearance["consumer_head_sha"], self.consumer["head_sha"])
         for path, expected in self.clearance["watched_file_blobs"].items():
             self.assertEqual(expected, self.blob_lookup(self.clearance["reviewed_producer_head"], path), path)
-            self.assertEqual(expected, self.blob_lookup(self.producer_ref, path), path)
 
-    def test_exact_current_nx_to_v0_clearance_matches_current_refs_and_reviewed_blobs(self):
+    def test_historical_nx_to_v0_p4_clearance_replays_on_exact_reviewed_subjects(self):
         matching = [
             item
             for item in self.clearances
-            if item.get("clearance_id") == "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
+            if item.get("clearance_id") == HISTORICAL_NX_TO_V0_CLEARANCE
         ]
         self.assertEqual(1, len(matching), matching)
         clearance = matching[0]
@@ -165,12 +158,40 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         )
         self.assertIsNotNone(accepted, rejections)
         self.assertEqual([], rejections)
-        self.assertTrue(self.ancestor_check(clearance["reviewed_producer_head"], producer_ref))
+        self.assertEqual(clearance["reviewed_producer_head"], producer_ref)
         for path, expected in clearance["watched_file_blobs"].items():
             self.assertEqual(expected, self.blob_lookup(clearance["reviewed_producer_head"], path), path)
-            self.assertEqual(expected, self.blob_lookup(producer_ref, path), path)
 
-    def test_historical_clearance_is_retained_but_not_selected_as_current_route(self):
+    def test_current_post_p6_v0_does_not_inherit_historical_p4_to_nx_clearance(self):
+        current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
+        current_nx_branch = self.project_registry["programs"]["NX"]["branch"]
+        self.assertNotEqual(self.clearance["producer_branch"], current_v0_branch)
+        matching = [
+            item
+            for item in self.clearances
+            if item.get("status") == "ACCEPTED"
+            and item.get("producer_program") == "V0"
+            and item.get("producer_branch") == current_v0_branch
+            and item.get("consumer_program") == "NX"
+            and item.get("consumer_branch") == current_nx_branch
+        ]
+        self.assertEqual([], matching)
+
+    def test_current_nx_does_not_inherit_historical_nx_to_p4_clearance_for_post_p6_v0(self):
+        current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
+        current_nx_branch = self.project_registry["programs"]["NX"]["branch"]
+        matching = [
+            item
+            for item in self.clearances
+            if item.get("status") == "ACCEPTED"
+            and item.get("producer_program") == "NX"
+            and item.get("producer_branch") == current_nx_branch
+            and item.get("consumer_program") == "V0"
+            and item.get("consumer_branch") == current_v0_branch
+        ]
+        self.assertEqual([], matching)
+
+    def test_older_historical_clearance_is_retained_but_not_selected_as_p4_h0_2_clearance(self):
         historical = [
             item
             for item in self.clearances
@@ -224,7 +245,7 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
 
         accepted, rejections = self.resolve(blob_lookup=producer_drift)
         self.assertIsNone(accepted)
-        self.assertEqual(f"PRODUCER_BLOB_DRIFT:{target}", rejections[0]["reason"])
+        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{target}", rejections[0]["reason"])
         self.assertNotEqual(expected, "f" * 40)
 
     def test_decision_and_independent_evidence_ids_are_mandatory(self):

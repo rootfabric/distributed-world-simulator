@@ -93,6 +93,24 @@ func _init() -> void:
 		and int(migrated_grid.get("chunks_per_zone", 0)) == 32,
 		"World manifest did not persist the exact partition-grid descriptor."
 	)
+	var restarted_repository = RepositoryScript.new()
+	container.add_child(restarted_repository)
+	_assert(
+		restarted_repository.setup(
+			mock_world,
+			manager,
+			registry,
+			logger,
+			"persistence-test",
+			test_root
+		),
+		"Repository rejected its own JSON-written manifest after restart."
+	)
+	_assert(
+		bool(restarted_repository.create_snapshot().get("initialized", false)),
+		"Restarted repository did not report initialized state."
+	)
+	restarted_repository.free()
 	var forward := Vector3(0.0, 0.0, -1.0)
 	var entity_id: String = repository.create_survey_beacon(
 		start + Vector3(0.0, 0.0, -5.0),

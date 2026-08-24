@@ -506,10 +506,17 @@ func _send_commit(commit_request: Dictionary, resolution: Dictionary, losers: Ar
 			"underlying_error_code": String(result_check.get("error_code", "")),
 		})
 	var status := String(result["result"])
-	if status == "COMMITTED":
-		_counters["commits_committed"] = int(_counters["commits_committed"]) + 1
-	elif status == "DUPLICATE_REPLAY":
+	# Journal contract: the inner EffectCommitResult is ALWAYS the stored prior
+	# canonical result verbatim (status COMMITTED); a duplicate replay is
+	# marked on the response ENVELOPE via details.status = DUPLICATE_REPLAY.
+	# Classify by the envelope marker - never by rewriting canonical result
+	# identity inside the relayed payload.
+	var envelope_status := String(details.get("status", ""))
+	var duplicate_replay := envelope_status == "DUPLICATE_REPLAY"
+	if duplicate_replay:
 		_counters["commits_duplicate_replay"] = int(_counters["commits_duplicate_replay"]) + 1
+	elif status == "COMMITTED":
+		_counters["commits_committed"] = int(_counters["commits_committed"]) + 1
 	else:
 		return _outcome(false, "UNEXPECTED_COMMIT_STATUS", "journal reported unexpected status %s" % status, {})
 	_forget_pending(operation_id)
@@ -523,6 +530,7 @@ func _send_commit(commit_request: Dictionary, resolution: Dictionary, losers: Ar
 		"resolution": resolution.duplicate(true),
 		"losers": losers.duplicate(true),
 		"already_applied": false,
+		"duplicate_replay": duplicate_replay,
 	})
 
 

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0008",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 8,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-21T02:34:01Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "Director redispatches only parent closure materialization. Runtime subject remains exact independently reviewed 543455; no runtime mutation authorized.",
+  "command": "DIRECTOR_REDISPATCH_CONTROL_ONLY_PARENT_CLOSURE",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/repairs/V0-P5-R2-WO-001-PREMATURE-VERIFIED-CLOSURE-RECOVERY-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-001-FINAL-CLOSURE-REVIEW-TRANSCRIPTION-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-002-FINAL-REVIEW-001.v1.json"
+  ],
+  "exit_code": 0
+}

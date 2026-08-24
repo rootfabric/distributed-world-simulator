@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0012",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 12,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T02:34:05Z",
+  "actor": "VERIFIER",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "V0_P5_R2_BASE_DD50_EXACT is durably established from exact existing evidence and the post-integration campaign.",
+  "predicate": "V0_P5_R2_BASE_DD50_EXACT",
+  "command": "MATERIALIZE_V0_P5_R2_BASE_DD50_EXACT",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/work-orders/V0-P5-R2-WO-001.v1.json"
+  ],
+  "exit_code": 0
+}
