@@ -146,7 +146,7 @@ func _test_source_evidence(manifest: Dictionary) -> void:
 	var h2_replica := _read("res://scripts/runtime/host_client/player_ownership_replica_store.gd")
 	var h3_authority := _read("res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd")
 	var h3_replica := _read("res://scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd")
-	var service := _read("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
+	var service := _read_script_inheritance("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 	var h3_client := _read("res://tools/runtime/h3_multiplayer_client.gd")
 	var t1_boundary := _read("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 	for content in [h1_authority, h1_session, h1_bridge, h2_registry, h2_replica, h3_authority, h3_replica, service, h3_client, t1_boundary]:
@@ -213,6 +213,20 @@ func _test_regression_runner_coverage() -> void:
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
 		_assert(runner.contains("v16.10.6-architecture-a3-single-server-multiplayer"), "Regression runner checkpoint is stale")
+
+
+func _read_script_inheritance(path: String) -> String:
+	var script = load(path)
+	var sources: Array[String] = []
+	var visited: Dictionary = {}
+	while script != null:
+		var resource_path := String(script.resource_path)
+		if resource_path.is_empty() or visited.has(resource_path):
+			break
+		visited[resource_path] = true
+		sources.append(_read(resource_path))
+		script = script.get_base_script()
+	return "\n".join(sources)
 
 
 func _load_json(path: String) -> Dictionary:

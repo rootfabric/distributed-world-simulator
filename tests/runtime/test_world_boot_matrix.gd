@@ -70,6 +70,17 @@ func _run() -> void:
 		if runtime == null:
 			continue
 		_assert(runtime.has_method("create_runtime_snapshot"), "Runtime snapshot contract missing: %s" % world_id)
+		if world_id == "earth":
+			var snapshot: Dictionary = runtime.create_runtime_snapshot()
+			var canonical_spawn: Dictionary = Dictionary(snapshot.get("canonical_spawn", {}))
+			_assert(
+				String(canonical_spawn.get("id", "")) == "earth-default-spawn",
+				"Earth runtime did not expose canonical spawn identity."
+			)
+			_assert(
+				is_equal_approx(float(canonical_spawn.get("altitude_m", -1.0)), 450.0),
+				"Earth runtime canonical spawn altitude drifted."
+			)
 		_assert(simulator.test_registry.list_tests("active_world").size() > 0, "World registered no regression tests: %s" % world_id)
 		_assert_optional_diagnostic_menu_is_closed(runtime, world_id)
 		var suite: Dictionary = simulator.test_registry.run_all("active_world")

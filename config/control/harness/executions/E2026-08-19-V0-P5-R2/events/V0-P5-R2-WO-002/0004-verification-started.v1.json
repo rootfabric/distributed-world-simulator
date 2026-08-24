@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-V002-0004",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-002",
+  "sequence": 4,
+  "event_type": "VERIFICATION_STARTED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T01:20:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/v0-p5-r2-v002-closure-r1",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "command": "FRESH_EXACT_HEAD_VERIFICATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/reviews/V0-P5-R2-WO-002-FINAL-REVIEW-001.v1.json"
+  ],
+  "summary": "Fresh verifier phase begins only after durable exact-head Reviewer PASS; verified subject remains immutable 543455."
+}

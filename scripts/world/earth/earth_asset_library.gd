@@ -1,6 +1,8 @@
 extends RefCounted
 
-var surface_material: StandardMaterial3D
+const LocalSurfaceShader = preload("res://shaders/earth_surface_presentation.gdshader")
+
+var surface_material: ShaderMaterial
 var global_surface_material: StandardMaterial3D
 var billboard_materials: Dictionary = {}
 var grass_materials: Dictionary = {}
@@ -23,15 +25,14 @@ func get_surface_material(global_lod: bool = false) -> Material:
 
 
 func set_surface_debug_mode(enabled: bool) -> void:
-	var shading_mode: int = (
-		BaseMaterial3D.SHADING_MODE_UNSHADED
-		if enabled
-		else BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	)
 	if surface_material != null:
-		surface_material.shading_mode = shading_mode
+		surface_material.set_shader_parameter("debug_mode", enabled)
 	if global_surface_material != null:
-		global_surface_material.shading_mode = shading_mode
+		global_surface_material.shading_mode = (
+			BaseMaterial3D.SHADING_MODE_UNSHADED
+			if enabled
+			else BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		)
 
 
 func get_tree_mesh(type_id: String) -> Mesh:
@@ -63,14 +64,19 @@ func get_rock_material(index: int) -> Material:
 
 
 func _create_surface_materials() -> void:
-	surface_material = StandardMaterial3D.new()
-	surface_material.vertex_color_use_as_albedo = true
-	surface_material.roughness = 0.92
-	surface_material.metallic = 0.0
-	surface_material.cull_mode = BaseMaterial3D.CULL_BACK
+	# V0-P1 is presentation-only. The procedural mesh continues to supply the
+	# canonical biome/surface vertex color; the shader adds deterministic local
+	# macro/detail variation without changing geometry, collision or gameplay.
+	surface_material = ShaderMaterial.new()
+	surface_material.shader = LocalSurfaceShader
+	surface_material.set_shader_parameter("debug_mode", false)
 
-	global_surface_material = surface_material.duplicate()
+	# Keep global/orbital LOD intentionally cheap and unchanged in semantics.
+	global_surface_material = StandardMaterial3D.new()
+	global_surface_material.vertex_color_use_as_albedo = true
 	global_surface_material.roughness = 0.88
+	global_surface_material.metallic = 0.0
+	global_surface_material.cull_mode = BaseMaterial3D.CULL_BACK
 
 
 func _create_tree_assets() -> void:

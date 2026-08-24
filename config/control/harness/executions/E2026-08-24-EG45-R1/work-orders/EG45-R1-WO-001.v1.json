@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "EG45-R1-WO-001",
+  "project_epoch": "E2026-08-24-EG45-R1",
+  "program": "EG",
+  "goal_checkpoint": "EG45_SYNTHETIC_EFFECT_JOURNAL_REPAIR",
+  "state": "DISPATCHED",
+  "work_order_type": "REPAIR",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "branch": "repair/eg45-synthetic-journal-r1",
+  "scope": "Repair the pre-existing main RED in the EG4.5 synthetic effect journal: a duplicate commit must return the STORED PRIOR EffectCommitResult verbatim (status COMMITTED, original interaction_id, original revision) instead of fabricating a rewritten DUPLICATE_REPLAY result. Duplicate classification moves to the response envelope (details.status) and is relayed by the interaction router as an envelope-level duplicate_replay marker. No assertion weakening; no stubs.",
+  "allowed_paths": [
+    "tools/network/eg45_synthetic_effect_journal.gd",
+    "scripts/network/gateway/runtime/eg45_interaction_router.gd",
+    "tests/network/test_eg45_interaction_router.gd",
+    "config/control/harness/executions/E2026-08-24-EG45-R1/**",
+    "docs/evidence/2026-08-24_EG45_*"
+  ],
+  "forbidden_paths": [
+    "scripts/network/gateway/effect_commit_request.gd",
+    "scripts/network/gateway/effect_commit_result.gd",
+    "scripts/persistence/**",
+    "scripts/runtime/**",
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "WORK_ORDER_ISSUED",
+    "EG45_JOURNAL_REPLAY_VERBATIM_PASS",
+    "EG45_ROUTER_EXACTLY_ONCE_REGRESSION_PASS",
+    "EG45_SCENARIOS_REGRESSION_PASS",
+    "EG_GATEWAY_SUITES_NON_NEW_FAILURES",
+    "INDEPENDENT_REVIEW_PENDING_AT_PROPOSAL_TIME",
+    "FULL_WORLD_CORE_CENSUS_DEFERRED_TO_POST_MERGE_MAIN_RUN"
+  ],
+  "required_outputs": [
+    "journal.result_for(op) == replay.details.result verbatim on every duplicate commit",
+    "envelope carries status=DUPLICATE_REPLAY without rewriting canonical result identity",
+    "router classifies duplicates by envelope marker and relays a duplicate_replay flag",
+    "all three eg45 tests green: synthetic_journal, interaction_router, scenarios"
+  ],
+  "stop_conditions": [
+    "Fix would require changing EffectCommitResult contract schema",
+    "Fix would require weakening any existing assertion or adding stubs",
+    "Fix would expand into gateway routing architecture changes beyond classification"
+  ],
+  "risk_class": "MEDIUM",
+  "review_required": true,
+  "notes": "Defect proven pre-existing on pristine origin/main 9ade3233 (identical failure). Discovered during V0-P6-R3 full world/core census; owner directive HA-002 authorized this lane."
+}

@@ -11,6 +11,8 @@ var _snapshot_deliveries := 0
 var _delta_deliveries := 0
 var _replays := 0
 var _superseded_deltas := 0
+var _clock_only_snapshot_updates := 0
+var _stale_clock_only_snapshots := 0
 
 
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
@@ -25,13 +27,24 @@ func accept_snapshot(snapshot: Dictionary) -> Dictionary:
 		if int(snapshot.get("revision", 0)) < int(_snapshot.get("revision", 0)):
 			return _failure("MULTIPLAYER_REVISION_ROLLBACK")
 		if int(snapshot.get("revision", 0)) == int(_snapshot.get("revision", 0)):
-			if String(snapshot.get("checksum", "")) != String(_snapshot.get("checksum", "")):
-				return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
-			_replays += 1
-			return _success({"replay": true})
+			if String(snapshot.get("checksum", "")) == String(_snapshot.get("checksum", "")):
+				_replays += 1
+				return _success({"replay": true, "clock_update": false, "stale": false})
+			if _same_state_except_clock(_snapshot, snapshot):
+				var current_tick := int(_snapshot.get("server_tick", -1))
+				var incoming_tick := int(snapshot.get("server_tick", -1))
+				_replays += 1
+				if incoming_tick > current_tick:
+					_snapshot = snapshot.duplicate(true)
+					_clock_only_snapshot_updates += 1
+					return _success({"replay": true, "clock_update": true, "stale": false})
+				if incoming_tick < current_tick:
+					_stale_clock_only_snapshots += 1
+					return _success({"replay": true, "clock_update": false, "stale": true})
+			return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
 	_snapshot = snapshot.duplicate(true)
 	_snapshot_deliveries += 1
-	return _success({"replay": false})
+	return _success({"replay": false, "clock_update": false, "stale": false})
 
 
 func accept_delta(delta: Dictionary) -> Dictionary:
@@ -118,9 +131,20 @@ func get_report() -> Dictionary:
 		"delta_deliveries": _delta_deliveries,
 		"replays": _replays,
 		"superseded_deltas": _superseded_deltas,
+		"clock_only_snapshot_updates": _clock_only_snapshot_updates,
+		"stale_clock_only_snapshots": _stale_clock_only_snapshots,
 		"direct_authority_references": 0,
 		"direct_domain_references": 0,
 	}
+
+
+func _same_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool:
+	var current_state: Dictionary = current.duplicate(true)
+	var incoming_state: Dictionary = incoming.duplicate(true)
+	for key in ["server_tick", "checksum"]:
+		current_state.erase(key)
+		incoming_state.erase(key)
+	return current_state == incoming_state
 
 
 func _success(details: Dictionary = {}) -> Dictionary:

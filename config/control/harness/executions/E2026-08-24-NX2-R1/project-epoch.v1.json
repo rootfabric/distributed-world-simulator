@@ -1,0 +1,13 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-08-24-NX2-R1",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "registry_generation": 80,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-08-24T06:30:00Z",
+  "eligible_checkpoints": ["NX2_REALTIME_TRAFFIC_SEPARATION_REPAIR"],
+  "status": "ACTIVE",
+  "decision": "CONTINUE",
+  "owner_directive": "HA-002 approved via owner instruction 'реализуй оба' (2026-08-24). Diagnosis-first sibling lane of E2026-08-24-EG45-R1."
+}

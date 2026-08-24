@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0021",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 21,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T02:34:14Z",
+  "actor": "VERIFIER",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "FULL_WORLD_CORE_REGRESSION_PASS is durably established from exact existing evidence and the post-integration campaign.",
+  "predicate": "FULL_WORLD_CORE_REGRESSION_PASS",
+  "command": "MATERIALIZE_FULL_WORLD_CORE_REGRESSION_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-POST-INTEGRATION-RUNTIME-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/raw/post-integration-5dcdddc-r1/status.tsv",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/raw/post-integration-5dcdddc-r1/terminal.txt"
+  ],
+  "exit_code": 0
+}

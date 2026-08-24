@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "work_order_id": "NX2-R1-WO-001",
+  "verified_head_sha": "5bebf80040cf15359b5597b650dbed522e0680a1",
+  "branch": "repair/nx2-realtime-traffic-separation-r1",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER",
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-24T07:05:34Z",
+  "environment": "Godot 4.7.1.stable.double.custom_build.a13da4feb (GODOT_BIN=$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64), headless --path <repo>, isolated HOME=/tmp/nx2-verify-home, exact HEAD 5bebf800 runtime/test blobs",
+  "checks": {
+    "step1_head_and_cleanliness": {
+      "status": "PASS",
+      "head_sha": "5bebf80040cf15359b5597b650dbed522e0680a1",
+      "expected_head_prefix": "5bebf800",
+      "branch": "repair/nx2-realtime-traffic-separation-r1",
+      "tracked_files_dirty": false,
+      "note": "git status --short shows only untracked .uid sidecars (ecology/production/*, tests/runtime/test_v0_p3_replica_clock_delta_reordering.gd.uid) outside lane scope; zero modified/deleted tracked entries."
+    },
+    "step2_test_runs_isolated_home": {
+      "status": "PASS",
+      "nx2_realtime_traffic_separation": {
+        "script": "res://tests/network/test_nx2_realtime_traffic_separation.gd",
+        "exit_code": 0,
+        "summary_line": "NX2 realtime traffic separation: 131 assertions, 0 failures",
+        "assertions": 131,
+        "failures": 0
+      },
+      "neighbors": [
+        {
+          "script": "res://tests/network/test_nx0_observability_baseline.gd",
+          "exit_code": 0,
+          "summary_line": "NX0 observability baseline: PASS (150 assertions)"
+        },
+        {
+          "script": "res://tests/simulation/../network/test_nx1_deterministic_network_condition_simulator.gd (exists; primary path used, NX3 fallback not needed)",
+          "exit_code": 0,
+          "summary_line": "NX1 deterministic network condition simulator: 282 assertions, 0 failures"
+        }
+      ]
+    },
+    "step3_spot_checks": {
+      "status": "PASS",
+      "pinned_mapping_constant": "scripts/network/realtime/realtime_channel_policy.gd line 5: const UNRELIABLE_TRANSPORT_MAPPING: String = \"RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1\"",
+      "server_source_chain_loader": "test reads dedicated-server runtime via _load_script_source_chain(\"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd\", {}) at tests/network/test_nx2_realtime_traffic_separation.gd:294 (loader defined at :338, walks extends-chain)",
+      "diff_vs_origin_main_no_assertion_removals": {
+        "status": "PASS",
+        "stat": "1 file changed, 5 insertions(+), 1 deletion(-)",
+        "removed_lines_containing_assert": 0,
+        "sole_removed_line": "var server := FileAccess.get_file_as_string(\"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd\")",
+        "note": "Only removal is the old direct server-source read, replaced by _load_script_source_chain call plus comment; all prior _assert lines retained, additions only otherwise."
+      }
+    },
+    "step4_provenance_events": {
+      "status": "PASS",
+      "directory": "config/control/harness/executions/E2026-08-24-NX2-R1/events/NX2-R1-WO-001/",
+      "events": [
+        "0001-work-order-created.v1.json (schema distributed_world_simulator.harness_event.v1, sequence=1, WORK_ORDER_CREATED, valid JSON)",
+        "0002-director-dispatched.v1.json (sequence=2, DISPATCHED, valid JSON)",
+        "0003-implementation-committed.v1.json (sequence=3, IMPLEMENTATION_COMMITTED, valid JSON)"
+      ],
+      "sequence_monotonic": true,
+      "preexisting_wip_adoption_documented": true,
+      "adoption_evidence": "Event 0003 summary states 'PREEXISTING_WIP ADOPTED' and carries preexisting_wip_commits=[b7292748, 66deb469]; both commits are ancestors of verified HEAD (b7292748 restores pinned mapping + inheritance-chain source-contract binding; 66deb469 drops incidental uid sidecars)."
+    },
+    "step5_freshness": {
+      "status": "PASS",
+      "head_before_validation": "5bebf80040cf15359b5597b650dbed522e0680a1",
+      "head_after_validation_before_verification_commit": "5bebf80040cf15359b5597b650dbed522e0680a1",
+      "identical": true,
+      "runtime_code_modified_by_verifier": false
+    }
+  },
+  "results": {
+    "nx2_test_exit_code": 0,
+    "nx2_assertions": 131,
+    "nx2_failures": 0,
+    "neighbor_exit_codes": { "nx0_observability_baseline": 0, "nx1_deterministic_network_condition_simulator": 0 },
+    "verdict_inputs_all_pass": true
+  },
+  "summary": "Independent fresh verification of repair line NX2 at exact HEAD 5bebf80040cf15359b5597b650dbed522e0680a1 on repair/nx2-realtime-traffic-separation-r1: tracked tree clean, NX2 realtime traffic separation test exits 0 with 131 assertions / 0 failures under isolated HOME, neighbor NX0 and NX1 suites exit 0, pinned RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1 mapping present in scripts/network/realtime/realtime_channel_policy.gd, server source-contract inspection routed through _load_script_source_chain, diff vs origin/main removes no assertions (only replaces the server-source read mechanism), harness events 0001..0003 are valid and monotonic with documented PREEXISTING_WIP adoption, and HEAD showed no drift across validation. Verdict: VERIFIED. Runtime code was not modified by the verifier."
+}

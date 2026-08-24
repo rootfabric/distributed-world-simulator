@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.p6_repair_map.v1",
+  "repair_id": "V0-P6-R3-REPAIR-001",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "findings": [
+    "P6-R-002_PRIVATE_PERSISTENCE_OWNER",
+    "P6-R-003_DUPLICATE_CANONICAL_OUTPOST_TRUTH",
+    "P6-R-004_RESTART_TEST_IN_MEMORY_LEDGER_SIDE_CHANNEL",
+    "P6-R-005_OPERATION_ID_RETIREMENT_REEXECUTION",
+    "P6-R-006_PENDING_RETRY_DOUBLE_EXECUTION",
+    "P6-R-007_FALSE_SOAK_AND_VISUAL_COMPLETION_EVIDENCE"
+  ],
+  "affected_module": [
+    "scripts/runtime/networked_gameplay/p6/p6_persistence_owner.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_mutation_admission.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_gateway_command_route.gd",
+    "scripts/runtime/networked_gameplay/p6/p6_ownership_map.gd"
+  ],
+  "canonical_owner": {
+    "persistence": "scripts/persistence/authoritative_recovery_repository.gd + authoritative_recovery_coordinator.gd",
+    "replay": "scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd + networked_gameplay_service export_replay_state",
+    "item_inventory_equipment": "canonical M4 Item Graph with P5 equipment composition",
+    "construction": "P4 Construction authority/gateway bound to the same canonical M4 Item Graph",
+    "network_command_runtime": "M3 dedicated server runtime / accepted Gateway Foundation transport path"
+  },
+  "entry_points": [
+    "M3DedicatedServerRuntime.setup(persistence_root=...)",
+    "M3DedicatedServerRuntime._persist_command_result",
+    "AuthoritativeRecoveryCoordinator.persist_checkpoint/recover_latest",
+    "NetworkedGameplayService.export_durable_state/export_replay_state",
+    "P4 construction gateway submit_player_command",
+    "P6 GatewayCommandRoute.route_command"
+  ],
+  "callers": [
+    "M3 client command handlers",
+    "P6 gateway/session adapter",
+    "P6 focused acceptance tests",
+    "restart/reconnect/soak gates"
+  ],
+  "callees": [
+    "CanonicalMultiplayerItemGraph",
+    "P5 ResourceMining/Equipment composition",
+    "P4 Construction gateway",
+    "M6 durable replay outbox",
+    "AuthoritativeRecoveryRepository"
+  ],
+  "sibling_paths": [
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scripts/runtime/networked_gameplay/p5/networked_gameplay_service_p5.gd",
+    "scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox_p2.gd",
+    "scripts/persistence/authoritative_checkpoint.gd",
+    "scripts/persistence/authoritative_recovery_repository.gd",
+    "scripts/persistence/authoritative_recovery_coordinator.gd"
+  ],
+  "existing_tests": [
+    "tests/runtime/test_v0_p6_operation_ledger.gd",
+    "tests/runtime/test_v0_p6_mutation_admission.gd",
+    "tests/runtime/test_v0_p6_shared_outpost.gd",
+    "tests/runtime/test_v0_p6_restart_recovery.gd",
+    "tests/runtime/test_v0_p6_fault_race_matrix.gd",
+    "tests/runtime/test_v0_p6_repeat_soak.gd",
+    "tests/runtime/test_v0_p6_zero_write_fence.gd",
+    "existing M6 dedicated recovery/process tests"
+  ],
+  "missing_tests": [
+    "retry while operation is PENDING must never invoke handler again",
+    "history capacity must fail closed instead of forgetting an OperationId",
+    "P6 runtime directory contains zero filesystem writers",
+    "P6 state surface cannot mutate a second Item/Construction truth",
+    "restart recovery uses a second OS process and only persisted authoritative checkpoint bytes",
+    "literal elapsed >= 30 minutes two-client soak evidence",
+    "MCP visual evidence bound to exact P6.7-P6.11 tested head"
+  ],
+  "public_or_internal_contracts": [
+    "V0-P6-R2-WO-001 stop conditions: no private persistence owner/save format, no second Item Graph/private Construction truth",
+    "V0 product train hard invariants: no_private_item_graph/no_private_construction_truth/no_private_persistence_owner",
+    "M6 AuthoritativeCheckpoint atomically binds authority_state + replay_state",
+    "M3 durable command path persists only after canonical replay state contains OperationId"
+  ],
+  "expected_shipped_behavior": "Two clients operate on the accepted canonical M4/P5/P4 gameplay composition through the gateway path. Durable command results and replay identity survive actual server-process restart via the existing authoritative M6 checkpoint. P6 itself owns no filesystem, Item Graph, Construction store, equipment store or durable replay ledger. Repeated/PENDING OperationIds fail closed without a second handler execution.",
+  "relevant_history_or_evidence": [
+    "merged P6 runtime candidate 7a77c048caa680871d4895c09eca89e84136b154",
+    "main merge 9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "R2 event 0015 claims V0_P6_THIRTY_MINUTE_TWO_CLIENT_SOAK_PASS",
+    "R2 Evidence Map records 30-minute soak compressed to 200-op in-process simulation and MCP visual proof as rank-up move",
+    "independent Godot probes reproduced OperationId retirement re-execution and repeated PENDING acceptance"
+  ],
+  "root_cause_hypothesis": "P6.7-P6.11 were validated against a newly invented self-contained P6 model rather than the already accepted M4/P4/P5/M6 product composition. This made unit/in-process tests internally green while bypassing the canonical persistence/replay owners and allowed simulated evidence to be promoted to literal product predicates.",
+  "canonical_fix_location": "P6 boundary adapters/tests: remove private owner behavior from scripts/runtime/networked_gameplay/p6 and make P6 consume existing M3/M4/P4/P5/M6 public surfaces. Do not patch scripts/persistence, M4, P4, P5 or M6 unless an independent new defect is proven there.",
+  "why_not_symptom_patch": "Increasing the ledger cap, persisting the P6 ledger, or lengthening the in-process loop would preserve the architectural violation. The repair instead removes duplicate ownership, delegates durability to the existing canonical stack, and changes the evidence boundary to a real process/literal-time gate.",
+  "state": "REPAIR_MAP_READY"
+}

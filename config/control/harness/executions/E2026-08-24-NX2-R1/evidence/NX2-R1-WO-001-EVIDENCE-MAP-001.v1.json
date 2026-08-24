@@ -1,0 +1,33 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "NX2-R1-WO-001",
+  "program": "NX",
+  "checkpoint": "NX2_REALTIME_TRAFFIC_SEPARATION_REPAIR",
+  "risk_class": "MEDIUM",
+  "evidence_head_sha": "85adabc63ddab53e1aefb15e38a74ae81041e6d3",
+  "intent": "Repair the pre-existing main RED test_nx2_realtime_traffic_separation (8 failures on pristine 9ade3233), proven a REGRESSION introduced by P6 implementation commit 9e0cc74f: restore the deliberately pinned UNRELIABLE_TRANSPORT_MAPPING and bind the server source-contract inspection through the inheritance-chain loader symmetrically with the client.",
+  "root_cause_or_reason": "P6 commit moved dedicated-server wiring markers from m3_dedicated_server_runtime.gd into its inheritance parent _p2 without rebinding the source-contract test, and silently flipped the pinned transport-mapping constant to a semantically contradictory ORDERED+UNRELIABLE value no consumer requested.",
+  "changed_surfaces": [
+    "scripts/network/realtime/realtime_channel_policy.gd",
+    "tests/network/test_nx2_realtime_traffic_separation.gd"
+  ],
+  "canonical_owner": "realtime channel policy: scripts/network/realtime/realtime_channel_policy.gd; nx2 source-contract test: tests/network/test_nx2_realtime_traffic_separation.gd",
+  "entry_points": ["RealtimeChannelPolicy constants", "test_nx2 _test_channel_policy / _test_runtime_wiring"],
+  "callers": ["nx0/nx1/nx2/nx3 network suites", "protocol manifest p2 mirror"],
+  "callees": ["ENet multi-peer transport port channel configuration (read-only inspection)"],
+  "sibling_surfaces_checked": [
+    "scripts/network/transports/v2/enet_multi_peer_transport_port.gd (untouched; reviewer verified RAW_ENET value describes actual unreliable-channel behavior)",
+    "scripts/network/gateway/** (untouched)"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "remaining_risks": [
+    "Full world/core census deferred to post-merge main run per campaign sequencing",
+    "5 display-dependent tests remain environment-fenced on this machine (campaign-wide, not lane-specific)"
+  ],
+  "review_verdict": "PASS"
+}

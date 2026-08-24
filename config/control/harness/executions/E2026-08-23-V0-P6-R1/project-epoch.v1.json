@@ -10,5 +10,6 @@
     "V0_P6_PERSISTENT_SHARED_OUTPOST"
   ],
   "status": "ACTIVE",
-  "decision": "CONTINUE"
+  "decision": "STOP_AND_REFRESH",
+  "invalidated_by_main_sha": "41ec871d002db540008ee82f402f7ab12c008887"
 }

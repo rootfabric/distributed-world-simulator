@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-23-V0-P6-R2",
+  "work_order_id": "V0-P6-R2-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p6-persistent-shared-outpost",
+  "event_id": "E2026-08-23-V0-P6-R2-V0-P6-R2-WO-001-0002",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-23T07:40:00Z",
+  "head_sha": "9e0cc74fdab020d35ec52d501c2b15614298c4a7",
+  "summary": "Director re-dispatched the single high-risk P6 implementation worker under the refreshed R2 epoch; lease holder matches holder_checkpoint and holder_branch; RUNTIME_FEATURE_MERGE policy authorized by the owner.",
+  "command": "DIRECTOR_DISPATCH_AFTER_EPOCH_REFRESH",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-23-V0-P6-R2/work-orders/V0-P6-R2-WO-001.v1.json"
+  ]
+}

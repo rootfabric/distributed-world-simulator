@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0002",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-23T15:02:00Z",
+  "head_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "summary": "Director dispatched one bounded P6 R3 repair worker after Repair Map readiness. Scope does not transfer architecture ownership and merge remains a human gate.",
+  "command": "DIRECTOR_DISPATCH_P6_R3_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/work-orders/V0-P6-R3-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/repairs/V0-P6-R3-REPAIR-MAP-001.v1.json"
+  ]
+}

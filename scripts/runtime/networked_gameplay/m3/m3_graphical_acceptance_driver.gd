@@ -18,6 +18,8 @@ var _second_move_result: Dictionary = {}
 var _presentation_result: Dictionary = {}
 var _playground_item_result: Dictionary = {}
 var _playground_item_verified := false
+var _earth_item_result: Dictionary = {}
+var _earth_item_verified := false
 var _initial_ownership_epoch := 0
 var _failures: Array[String] = []
 var _finished := false
@@ -82,7 +84,26 @@ func _process(_delta: float) -> void:
 					_finish(false)
 					return
 				_playground_item_verified = true
+			if (
+				String(world.get("world_id", "")) == "earth"
+				and _client_id == "a"
+				and _phase == 1
+				and not _earth_item_verified
+			):
+				if not runtime.has_method("m4_execute_item_command"):
+					_failures.append("Earth M4 item command adapter is missing")
+					_finish(false)
+					return
+				_earth_item_result = _run_earth_item_workflow(runtime)
+				if not bool(_earth_item_result.get("success", false)):
+					_failures.append("Earth M4 item workflow failed: %s" % _earth_item_result)
+					_finish(false)
+					return
+				_earth_item_verified = true
 			_initial_ownership_epoch = int(local.get("ownership_epoch", 0))
+			if String(world.get("world_id", "")) == "earth":
+				_stage = "WAIT_EARTH_ITEM_REPLICATION"
+				return
 			if _phase == 3:
 				if _initial_ownership_epoch < 2: return
 				if int(remote.get("last_input_sequence", 0)) < 2: return
@@ -92,6 +113,24 @@ func _process(_delta: float) -> void:
 			var offset := Vector3(0.8, 0.0, 0.2) if _client_id == "a" else Vector3(-0.7, 0.0, -0.3)
 			_move_result = runtime.m3_apply_test_input_offset(offset)
 			if not bool(_move_result.get("success", false)): _failures.append("Initial authoritative move failed: %s" % _move_result); _finish(false); return
+			_stage = "WAIT_MUTUAL_MOVEMENT"
+		"WAIT_EARTH_ITEM_REPLICATION":
+			if int(world.get("m4_item_graph_revision", -1)) < 1:
+				return
+			if _phase == 3:
+				if _initial_ownership_epoch < 2:
+					return
+				if int(remote.get("last_input_sequence", 0)) < 2:
+					return
+				_move_result = runtime.m3_apply_test_input_offset(Vector3(0.5, 0.0, 0.5))
+				_stage = "WAIT_RECONNECT_MOVE"
+				return
+			var earth_offset := Vector3(0.8, 0.0, 0.2) if _client_id == "a" else Vector3(-0.7, 0.0, -0.3)
+			_move_result = runtime.m3_apply_test_input_offset(earth_offset)
+			if not bool(_move_result.get("success", false)):
+				_failures.append("Earth initial authoritative move failed: %s" % _move_result)
+				_finish(false)
+				return
 			_stage = "WAIT_MUTUAL_MOVEMENT"
 		"WAIT_MUTUAL_MOVEMENT":
 			if int(local.get("last_input_sequence", 0)) < 1 or int(remote.get("last_input_sequence", 0)) < 1: return
@@ -160,6 +199,27 @@ func _begin_convergence(world: Dictionary) -> void:
 	_write_report("READY_TO_CONVERGE", false, world, _convergence_checksum)
 	_stage = "WAIT_CONVERGENCE_PEER"
 
+func _run_earth_item_workflow(runtime) -> Dictionary:
+	var operation_prefix := "operation/m4/earth/acceptance/%s/%d/%d" % [_client_id, _phase, OS.get_process_id()]
+	var commands: Array[Dictionary] = [
+		{"type": "item.pickup", "payload": {"item_id": "item/shared/beacon/1"}},
+		{"type": "container.open", "payload": {"container_id": "container/shared/crate/1"}},
+		{"type": "item.move_to_container", "payload": {"item_id": "item/shared/beacon/1", "container_id": "container/shared/crate/1"}},
+		{"type": "item.move_to_inventory", "payload": {"item_id": "item/shared/beacon/1"}},
+		{"type": "item.drop", "payload": {"item_id": "item/shared/beacon/1", "quantity": -1}},
+		{"type": "item.pickup", "payload": {"item_id": "item/shared/beacon/1"}},
+	]
+	var steps: Array[Dictionary] = []
+	for index in range(commands.size()):
+		var command: Dictionary = commands[index]
+		var result: Dictionary = runtime.m4_execute_item_command(
+			String(command["type"]), Dictionary(command["payload"]), "%s/%d" % [operation_prefix, index + 1]
+		)
+		steps.append({"type": String(command["type"]), "success": bool(result.get("success", false)), "error_code": String(result.get("error_code", ""))})
+		if not bool(result.get("success", false)):
+			return {"success": false, "error_code": String(result.get("error_code", "EARTH_M4_WORKFLOW_FAILED")), "steps": steps}
+	return {"success": true, "error_code": "", "steps": steps}
+
 func _validate_graphical_world(world: Dictionary) -> void:
 	if DisplayServer.get_name().to_lower() in ["headless", "dummy"]: _failures.append("Client is not graphical")
 	if not bool(world.get("presentation_enabled", false)) or not bool(world.get("local_input_enabled", false)): _failures.append("Graphical composition disabled")
@@ -199,6 +259,7 @@ func _write_report(state: String, passed: bool, world: Dictionary, checksum: Str
 		"move_result": _move_result.duplicate(true), "second_move_result": _second_move_result.duplicate(true),
 		"presentation_result": _presentation_result.duplicate(true),
 		"playground_item_result": _playground_item_result.duplicate(true),
+		"earth_item_result": _earth_item_result.duplicate(true),
 		"initial_ownership_epoch": _initial_ownership_epoch,
 		"convergence_checksum": checksum if not checksum.is_empty() else String(_client.get_snapshot().get("checksum", "")),
 		"leave_result": leave_result.duplicate(true), "failures": _failures.duplicate(),

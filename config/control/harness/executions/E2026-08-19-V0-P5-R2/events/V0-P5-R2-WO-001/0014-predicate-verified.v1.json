@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "V0-P5-R2-EVENT-0014",
+  "project_epoch": "E2026-08-19-V0-P5-R2",
+  "work_order_id": "V0-P5-R2-WO-001",
+  "sequence": 14,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-21T02:34:07Z",
+  "actor": "VERIFIER",
+  "branch": "repair/v0-p5-closure-r2",
+  "head_sha": "5434558856c00b588eed5369d2c613cd4b9858bb",
+  "summary": "V0_P5_R2_SINGLE_RUNTIME_WORKER_PASS is durably established from exact existing evidence and the post-integration campaign.",
+  "predicate": "V0_P5_R2_SINGLE_RUNTIME_WORKER_PASS",
+  "command": "MATERIALIZE_V0_P5_R2_SINGLE_RUNTIME_WORKER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-RUNTIME-VALIDATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-19-V0-P5-R2/evidence/P5-R2-PARENT-CLOSURE-RECOVERY-001.v1.json"
+  ],
+  "exit_code": 0
+}
