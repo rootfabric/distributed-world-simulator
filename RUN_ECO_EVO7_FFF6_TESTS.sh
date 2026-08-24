@@ -163,6 +163,7 @@ set +e
 WAVE2_EXIT=$?
 set -e
 if [[ $WAVE2_EXIT == 0 ]]; then
+  PASS_COUNT=$((PASS_COUNT + 1))
   echo "[eco-evo7-fff6-suite][stage] MULTISEED_WAVE2_BATTERY_PASS"
 else
   FAIL_COUNT=$((FAIL_COUNT + 1))
