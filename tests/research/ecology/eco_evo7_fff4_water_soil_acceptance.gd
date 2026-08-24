@@ -48,6 +48,17 @@ func _water_budget_and_texture() -> void:
 	_check(int(dry["water_after_ppm"]) >= 0, "G8: water never negative")
 	_check(float(dry["plant_water"]["b"]["water_satisfaction"]) > float(dry["plant_water"]["a"]["water_satisfaction"]), "G8: deeper/root-heavy strategy has stronger dry access")
 
+	var zero_request := _record("0-zero", 0.5, 0.5, 0.35, 0.0, 0, 0)
+	var contested := WaterField.compute(60000, "sand", 1.0, [zero_request, shallow, deep], 2)
+	_check(not contested.is_empty(), "contested low-water field computes")
+	_check(int(contested["plant_water"]["0-zero"]["water_uptake_ppm"]) == 0, "per-request bound: zero transpiration request receives zero water")
+	var zero_effect_found := false
+	for effect in contested["effects"]:
+		if String(effect["plant_identity"]) == "0-zero":
+			zero_effect_found = true
+			_check(int(effect["water_uptake_ppm"]) == 0 and int(effect["evaporation_suppression_ppm"]) == 0, "per-request bound also holds for published effect channels")
+	_check(zero_effect_found, "zero-request effect is present for non-vacuous bound test")
+
 	var sand := WaterField.compute(400000, "sand", 0.8, [shallow, deep], 1)
 	var loam := WaterField.compute(400000, "loam", 0.8, [shallow, deep], 1)
 	var clay := WaterField.compute(400000, "clay", 0.8, [shallow, deep], 1)
@@ -107,6 +118,7 @@ func _source_boundaries() -> void:
 	for forbidden in ["randf", "randi(", "randomize", "get_tree", "node3d"]:
 		_check(not water_source.contains(forbidden), "water field excludes %s" % forbidden)
 	_check(water_source.contains("total_uptake > water_for_plants"), "water field contains structural conservation fence")
+	_check(water_source.contains("uptake > uptake_requests[index]"), "water field contains per-request allocation fence")
 	var bridge_source := FileAccess.get_file_as_string("res://scripts/research/ecology/evo7_water_soil_feedback_bridge_v1.gd")
 	_check(bridge_source.contains("LineageExtension.reproduce_bundle"), "FFF4 uses the single EVO7 lineage extension")
 	_check(not bridge_source.contains("Kernel.reproduce"), "FFF4 has no second direct mutation path")
