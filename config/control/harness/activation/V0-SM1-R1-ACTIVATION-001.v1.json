@@ -3,14 +3,14 @@
   "activation_id": "V0-SM1-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-  "state": "CONTROL_CANDIDATE_AWAITING_REVIEW",
+  "state": "PRE_DISPATCH_CONTROL_READY",
   "accepted_predecessor": {
     "checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
     "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
     "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
     "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154"
   },
-  "main_control_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "main_control_base": "21c74307812ffea56ef1aae263f029eec2549460",
   "main_declared_exact_successor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
   "project_epoch": "E2026-08-24-V0-SM1-R1",
   "work_order_id": "V0-SM1-R1-WO-001",
@@ -25,27 +25,40 @@
     "sm0_pr": 102,
     "sm0_runtime_validated_carrier": "b5966ef113b73e3156488805057ce9b464362d89",
     "sm0_role": "CAPABILITY_DONOR_ONLY_NOT_PRODUCT_BASE",
-    "p6_role": "EXACT_PRODUCT_BASE"
+    "p6_role": "EXACT_ACCEPTED_PRODUCT_PREDECESSOR"
+  },
+  "control_evidence": {
+    "post_p6_control_pr": 214,
+    "post_p6_control_review_id": 5005642693,
+    "post_p6_control_merge": "22f9720cfa2151ec215a874fed2bdca3b6ff52b4",
+    "eg5_repair_pr": 215,
+    "eg5_repair_review_id": 5005784770,
+    "eg5_repair_head": "344027375800ce1837e7d2ea46f6b1123254e79c",
+    "eg5_repair_merge": "21c74307812ffea56ef1aae263f029eec2549460",
+    "eg5_project_control_run": 32705312282,
+    "eg5_project_control_result": "SUCCESS",
+    "predispatch_exact_head_project_control": "REQUIRED_BEFORE_MERGE"
   },
   "mutation_lease": {
     "required_holder_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "required_holder_branch": "feature/v0-sm1-seamless-product-integration",
-    "rotation_status": "PROPOSED_NOT_ACTIVE_UNTIL_CONTROL_ACCEPTANCE",
+    "rotation_status": "ROTATED_RESERVED_PRE_DISPATCH",
     "runtime_mutation_authorized": false,
     "capacity": 1
   },
   "director_dispatch": {
-    "status": "PENDING_CONTROL_REVIEW_AND_MAIN_INTEGRATION",
+    "status": "PENDING",
     "runtime_mutation_authorized": false
   },
   "entry_gates": [
     "P6_ACCEPTANCE_RECORD_PRESENT",
     "POST_P6_CURRENT_WORK_MAP_RECONCILED",
-    "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
+    "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED",
     "STANDARD_PC0_NON_RED",
     "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
-    "FRESH_INDEPENDENT_CONTROL_REVIEW_PASS"
+    "POST_P6_CONTROL_REVIEW_PASS",
+    "MUTATION_LEASE_ROTATED_TO_SM1"
   ],
   "created_at_utc": "2026-08-24T05:13:00Z",
-  "updated_at_utc": "2026-08-24T05:13:00Z"
+  "updated_at_utc": "2026-08-24T08:20:00Z"
 }
