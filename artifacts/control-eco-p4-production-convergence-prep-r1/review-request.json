@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_convergence_review_request.v1",
+  "revision": "ECO-P4-CONV-REVIEW-2026-08-15-R1",
+  "branch": "control/eco-p4-production-convergence-prep-r1",
+  "status": "READY_FOR_INDEPENDENT_REVIEW",
+  "review_target_head": "9d23ffdc1fbf42690c2b3af0c887b4930a5c1284",
+  "base_main_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "risk_of_this_change": "LOW_CONTROL_ONLY",
+  "future_runtime_transfer_risk": "CRITICAL",
+  "requested_verdict": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+  "review_scope": [
+    "config/control/branches/control__eco-p4-production-convergence-prep-r1.v1.json",
+    "docs/control/ECO_P4_PRODUCTION_CONVERGENCE_PREPARATION_RU.md",
+    "validation/ecology/eco-p4-production-convergence-preparation.json"
+  ],
+  "required_checks": [
+    "Exact base is current canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / R3 generation 79.",
+    "Source P4 evidence identities point to feature/eco-evolutionary-ecology and are internally consistent.",
+    "Dependency closure contains exactly the six P4 production kernels, eight required P3 research kernels, and P4 acceptance tests needed for later convergence regression.",
+    "Whole historical ECO branch is not proposed for merge/rebase into main.",
+    "P4.1-P4.3 are classified as ecology semantics requiring canonical adapters, not new global foundations.",
+    "P4.4 is explicitly forbidden from becoming a second persistence/durability owner.",
+    "P4.5 is explicitly forbidden from becoming a second authority/cross-server ownership foundation.",
+    "P4.6 remains a derived read model and never canonical truth.",
+    "No runtime file, project.godot, registry generation, scheduler state, authority, persistence, network, or gameplay behavior is changed by this preparation branch."
+  ],
+  "required_follow_up_if_pass": [
+    "Do not copy runtime files on this branch.",
+    "Resolve the CRITICAL Human/Director architecture decision for P4.4/P4.5 adaptation.",
+    "Wait until the Harness single-runtime-worker slot is free.",
+    "Declare a main-owned ECO production convergence checkpoint/Work Order from then-current main.",
+    "Create a separate fresh-main runtime branch and port only the reviewed minimal capability closure."
+  ],
+  "merge_authorization": false,
+  "runtime_transfer_authorization": false
+}
