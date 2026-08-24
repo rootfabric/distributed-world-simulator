@@ -9,8 +9,8 @@ if (-not (Test-Path -LiteralPath $UidCachePath -PathType Leaf)) {
     if ($LASTEXITCODE -ne 0) { throw "Godot import/UID-cache preflight failed with exit code $LASTEXITCODE" }
 }
 if (-not $SkipBaseline) {
-    & (Join-Path $RootDir "RUN_ECO_EVO7_FFF3_BASELINE_CLOSURE.ps1") -GodotPath $GodotPath
-    if ($LASTEXITCODE -ne 0) { throw "FFF3 immutable baseline regression failed with exit code $LASTEXITCODE" }
+    & (Join-Path $RootDir "RUN_ECO_EVO7_FFF31_CAUSALITY_REPAIR.ps1") -GodotPath $GodotPath
+    if ($LASTEXITCODE -ne 0) { throw "FFF3.1 causality repair chain failed with exit code $LASTEXITCODE" }
 }
 & $GodotPath --headless --path $RootDir --script res://tests/research/ecology/eco_evo7_fff4_water_soil_acceptance.gd
 if ($LASTEXITCODE -ne 0) { throw "FFF4 water+soil acceptance failed with exit code $LASTEXITCODE" }
