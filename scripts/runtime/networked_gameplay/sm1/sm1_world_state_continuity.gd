@@ -2,12 +2,9 @@ extends RefCounted
 
 ## SM1.5 canonical world-state continuity proof.
 ##
-## This adapter is deliberately READ ONLY with respect to canonical gameplay
-## truth. It samples the existing M4 Item Graph, P4 Construction authority,
-## P6 read-only outpost composition, and the existing persistence owner. It
-## binds their fingerprints into the WARM checksum consumed by SM1.2 and then
-## re-reads the SAME owners after activation to prove no canonical state was
-## forked, reset, or silently replaced during the authority pivot.
+## READ-ONLY over the existing M4 Item Graph, P4 Construction authority,
+## P6 outpost projection and authoritative-recovery persistence owner.
+## SM1 retains fingerprints only; canonical snapshots never become SM1 state.
 
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const ConstructionState = preload("res://scripts/construction/authoritative/construction_authoritative_state.gd")
@@ -50,7 +47,7 @@ func configure(item_graph_persistence, construction_authority, p6_persistence_ow
 	_construction_authority = construction_authority
 	_p6_persistence_owner = p6_persistence_owner
 	_p6_projection = p6_projection
-	var probe := _capture_live_state()
+	var probe := _capture_live_fingerprints()
 	if not bool(probe.get("success", false)):
 		return probe
 	return _success({"result": "CONFIGURED", "owners": _owner_report()})
@@ -61,7 +58,7 @@ func prepare_transfer(transfer_id: String) -> Dictionary:
 		return _reject("SM1_WORLD_TRANSFER_ID_REQUIRED")
 	if _prepared.has(transfer_id) or _completed.has(transfer_id):
 		return _reject("SM1_WORLD_TRANSFER_ALREADY_TRACKED", {"transfer_id": transfer_id})
-	var captured := _capture_live_state()
+	var captured := _capture_live_fingerprints()
 	if not bool(captured.get("success", false)):
 		return captured
 	var live: Dictionary = Dictionary(captured.get("details", {}).get("live", {}))
@@ -78,20 +75,22 @@ func prepare_transfer(transfer_id: String) -> Dictionary:
 		"canonical_item_owner": "item/m4-canonical-item-graph",
 		"canonical_construction_owner": "construction/p4-authority",
 		"canonical_persistence_owner": EXISTING_PERSISTENCE_OWNER,
+		"evidence_retention": "HASH_ONLY_NO_CANONICAL_SNAPSHOT_COPY",
 		"derived_only": true,
 		"private_canonical_truth": false,
 	}
 	manifest["manifest_checksum"] = _manifest_checksum(manifest)
 	_prepared[transfer_id] = {
 		"manifest": manifest,
-		"canonical_item_graph": Dictionary(live.get("item_graph", {})).duplicate(true),
-		"canonical_construction": Dictionary(live.get("construction", {})).duplicate(true),
 		"world_bound_warm_checksum": "",
 	}
 	_counters["captures"] = int(_counters["captures"]) + 1
 	return _success({"result": "WORLD_STATE_PREPARED", "manifest": manifest.duplicate(true)})
 
 
+## Layer canonical-world evidence over the previous P6/SM1.3 WARM checksum.
+## SM1.2's commit token therefore commits to player + world continuity without
+## Gateway or SM1 becoming an Item Graph/Construction/persistence owner.
 func bind_to_warm(transfer_id: String, previous_warm_report: Dictionary) -> Dictionary:
 	if not _prepared.has(transfer_id):
 		return _reject("SM1_WORLD_TRANSFER_NOT_PREPARED", {"transfer_id": transfer_id})
@@ -109,13 +108,12 @@ func bind_to_warm(transfer_id: String, previous_warm_report: Dictionary) -> Dict
 	var manifest_checksum := String(manifest.get("manifest_checksum", ""))
 	if manifest_checksum.is_empty() or manifest_checksum != _manifest_checksum(manifest):
 		return _reject("SM1_WORLD_MANIFEST_CHECKSUM_INVALID")
-	var payload := {
+	var checksum := NetworkUtils.payload_hash({
 		"schema": WARM_SCHEMA,
 		"transfer_id": transfer_id,
 		"previous_warm_checksum": previous_checksum,
 		"world_manifest_checksum": manifest_checksum,
-	}
-	var checksum := NetworkUtils.payload_hash(payload)
+	})
 	if checksum.is_empty():
 		return _reject("SM1_WORLD_WARM_BINDING_HASH_FAILED")
 	var report := previous_warm_report.duplicate(true)
@@ -143,8 +141,7 @@ func validate_after_activation(transfer_id: String, transfer_coordinator) -> Dic
 	var completed_transfer: Dictionary = transfer_coordinator.get_completed_transfer(transfer_id)
 	if completed_transfer.is_empty():
 		return _reject("SM1_WORLD_TRANSFER_NOT_COMPLETED")
-	var coordinator_snapshot: Dictionary = transfer_coordinator.snapshot()
-	if String(coordinator_snapshot.get("state", "")) != "ACTIVE":
+	if String(transfer_coordinator.snapshot().get("state", "")) != "ACTIVE":
 		return _reject("SM1_WORLD_TARGET_NOT_ACTIVE")
 	var record: Dictionary = Dictionary(_prepared[transfer_id])
 	var expected_checksum := String(record.get("world_bound_warm_checksum", ""))
@@ -153,39 +150,36 @@ func validate_after_activation(transfer_id: String, transfer_coordinator) -> Dic
 	if String(completed_transfer.get("warm_checksum", "")) != expected_checksum:
 		return _reject("SM1_WORLD_COMMIT_NOT_BOUND_TO_MANIFEST")
 
-	var current_result := _capture_live_state()
+	var current_result := _capture_live_fingerprints()
 	if not bool(current_result.get("success", false)):
 		return current_result
 	var current: Dictionary = Dictionary(current_result.get("details", {}).get("live", {}))
-	var before_manifest: Dictionary = Dictionary(record.get("manifest", {}))
-	if String(current.get("item_graph_fingerprint", "")) != String(before_manifest.get("item_graph_fingerprint", "")):
+	var before: Dictionary = Dictionary(record.get("manifest", {}))
+	if String(current.get("item_graph_fingerprint", "")) != String(before.get("item_graph_fingerprint", "")):
 		return _reject("SM1_WORLD_ITEM_GRAPH_DIVERGED")
-	if String(current.get("construction_fingerprint", "")) != String(before_manifest.get("construction_fingerprint", "")):
+	if String(current.get("construction_fingerprint", "")) != String(before.get("construction_fingerprint", "")):
 		return _reject("SM1_WORLD_CONSTRUCTION_DIVERGED")
-	if String(current.get("outpost_projection_checksum", "")) != String(before_manifest.get("outpost_projection_checksum", "")):
+	if String(current.get("outpost_projection_checksum", "")) != String(before.get("outpost_projection_checksum", "")):
 		return _reject("SM1_WORLD_OUTPOST_PROJECTION_DIVERGED")
-	if String(current.get("persistence_owner_id", "")) != String(before_manifest.get("persistence_owner_id", "")):
+	if String(current.get("persistence_owner_id", "")) != String(before.get("persistence_owner_id", "")):
 		return _reject("SM1_WORLD_PERSISTENCE_OWNER_CHANGED")
-	if NetworkUtils.canonical_json(current.get("item_graph", {})) != NetworkUtils.canonical_json(record.get("canonical_item_graph", {})):
-		return _reject("SM1_WORLD_ITEM_GRAPH_CANONICAL_BYTES_CHANGED")
-	if NetworkUtils.canonical_json(current.get("construction", {})) != NetworkUtils.canonical_json(record.get("canonical_construction", {})):
-		return _reject("SM1_WORLD_CONSTRUCTION_CANONICAL_BYTES_CHANGED")
 
-	var result := {
+	var proof := {
 		"transfer_id": transfer_id,
 		"target_authority_id": String(completed_transfer.get("target_authority_id", "")),
 		"target_epoch": int(completed_transfer.get("target_epoch", 0)),
-		"manifest": before_manifest.duplicate(true),
+		"manifest": before.duplicate(true),
+		"evidence_retention": "HASH_ONLY_NO_CANONICAL_SNAPSHOT_COPY",
 		"item_graph_result": "ITEM_GRAPH_CANONICAL_CONTINUITY_PASS",
 		"construction_result": "CONSTRUCTION_CANONICAL_CONTINUITY_PASS",
 		"outpost_result": "OUTPOST_PERSISTENCE_COMPOSITION_CONTINUITY_PASS",
 	}
-	_completed[transfer_id] = result.duplicate(true)
+	_completed[transfer_id] = proof.duplicate(true)
 	_prepared.erase(transfer_id)
 	_counters["continuity_passes"] = int(_counters["continuity_passes"]) + 1
 	return _success({
 		"result": "SM1_5_CANONICAL_WORLD_STATE_CONTINUITY_PASS",
-		"details": result,
+		"details": proof,
 	})
 
 
@@ -209,6 +203,7 @@ func get_report() -> Dictionary:
 		"prepared_count": _prepared.size(),
 		"completed_count": _completed.size(),
 		"owners": _owner_report(),
+		"evidence_retention": "HASH_ONLY_NO_CANONICAL_SNAPSHOT_COPY",
 		"derived_only": true,
 		"private_item_graph": false,
 		"private_construction_truth": false,
@@ -218,9 +213,10 @@ func get_report() -> Dictionary:
 	}
 
 
-func _capture_live_state() -> Dictionary:
+func _capture_live_fingerprints() -> Dictionary:
 	if _item_graph_persistence == null or _construction_authority == null or _p6_persistence_owner == null or _p6_projection == null:
 		return _reject("SM1_WORLD_NOT_CONFIGURED")
+
 	var item_result: Dictionary = _item_graph_persistence.create_snapshot_result({})
 	if not bool(item_result.get("success", false)):
 		return _reject("SM1_WORLD_ITEM_GRAPH_SNAPSHOT_FAILED", {"cause": item_result})
@@ -228,9 +224,8 @@ func _capture_live_state() -> Dictionary:
 	var item_validation: Dictionary = _item_graph_persistence.validate_snapshot(item_snapshot)
 	if not bool(item_validation.get("success", false)):
 		return _reject("SM1_WORLD_ITEM_GRAPH_SNAPSHOT_INVALID", {"cause": item_validation})
-	var item_canonical := item_snapshot.duplicate(true)
-	item_canonical["metadata"] = {}
-	var item_fingerprint := NetworkUtils.payload_hash(item_canonical)
+	item_snapshot["metadata"] = {}
+	var item_fingerprint := NetworkUtils.payload_hash(item_snapshot)
 
 	var construction_snapshot: Dictionary = _construction_authority.export_state()
 	var construction_validation: Dictionary = ConstructionState.validate(construction_snapshot)
@@ -259,14 +254,12 @@ func _capture_live_state() -> Dictionary:
 		return _reject("SM1_WORLD_OUTPOST_CONSTRUCTION_SOURCE_DIVERGED")
 
 	return _success({"live": {
-		"item_graph": item_canonical,
-		"construction": construction_snapshot.duplicate(true),
 		"item_graph_fingerprint": item_fingerprint,
 		"construction_fingerprint": construction_fingerprint,
 		"outpost_projection_checksum": projection_checksum,
 		"persistence_owner_id": persistence_owner_id,
-		"item_count": _section_row_count(item_canonical, "items", "items"),
-		"container_count": _section_row_count(item_canonical, "containers", "containers"),
+		"item_count": _section_row_count(item_snapshot, "items", "items"),
+		"container_count": _section_row_count(item_snapshot, "containers", "containers"),
 		"construct_count": _section_row_count(construction_snapshot, "construct_store", "constructs"),
 	}})
 
@@ -276,7 +269,9 @@ func _section_row_count(snapshot: Dictionary, section_name: String, rows_name: S
 	if not section_value is Dictionary:
 		return 0
 	var rows_value: Variant = Dictionary(section_value).get(rows_name, [])
-	return rows_value.size() if rows_value is Array or rows_value is Dictionary else 0
+	if rows_value is Array or rows_value is Dictionary:
+		return rows_value.size()
+	return 0
 
 
 func _owner_report() -> Dictionary:
