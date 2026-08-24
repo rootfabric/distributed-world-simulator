@@ -17,6 +17,7 @@ $env:BREAKPOINT_RUNTIME_DISABLED = '1'
 
 $tests = @(
     'tests/network/test_eg5_edge_locator.gd',
+    'tests/network/test_eg5_correctness_repair.gd',
     'tests/network/test_eg5_selection.gd',
     'tests/network/test_eg5_zero_write_fence.gd'
 )
