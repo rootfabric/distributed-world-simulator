@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-24-R5-POST-P6",
+  "policy_revision": "V0-P-2026-08-24-R6-SM1-PREDISPATCH",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
-  "current_phase": "POST_P6_SM1_ACTIVATION_CONTROL_CANDIDATE",
+  "current_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "current_phase": "SM1_PRE_DISPATCH_CONTROL_READY",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -103,7 +103,7 @@
     {
       "id": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
       "short_name": "POST_P6_GATE",
-      "state": "CURRENT_DECISION_RECORDED_PENDING_CONTROL_REVIEW",
+      "state": "DECISION_ACCEPTED_SM1_PREDISPATCH",
       "goal": "Do not auto-dispatch terrain work. Reconcile accepted P6 control state and durably activate V0-SM1 or record an explicit defer decision.",
       "mandatory_plan": "docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md",
       "mandatory_companion": "docs/plans/V0_SM1_PRODUCTION_HANDOFF_EXECUTION_RU.md",
@@ -116,9 +116,10 @@
     {
       "id": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "short_name": "SM1",
-      "state": "ACTIVATION_CANDIDATE_NOT_RUNTIME_ELIGIBLE",
+      "state": "CURRENT_PRE_DISPATCH",
       "goal": "Port proven SM0 authority-handoff semantics into the exact accepted P6 product baseline and prove production A<->B static authority handoff while preserving current Gateway/NX and canonical gameplay owners.",
       "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+      "control_execution_base": "21c74307812ffea56ef1aae263f029eec2549460",
       "project_epoch": "E2026-08-24-V0-SM1-R1",
       "work_order_id": "V0-SM1-R1-WO-001",
       "runtime_branch": "feature/v0-sm1-seamless-product-integration",
@@ -150,11 +151,6 @@
         "DIRECTOR_DISPATCH"
       ],
       "activation_complete_except": [
-        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
-        "FRESH_INDEPENDENT_POST_P6_CONTROL_REVIEW_PASS",
-        "POST_P6_CONTROL_MERGED_TO_MAIN",
-        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
-        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_SM1",
         "DIRECTOR_DISPATCH"
       ],
       "next": "V0_P7_BOUNDED_TERRAIN_MUTATION"
@@ -227,19 +223,17 @@
   },
   "current_sm1_activation_route": {
     "accepted_predecessor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "control_execution_base": "21c74307812ffea56ef1aae263f029eec2549460",
     "project_epoch": "E2026-08-24-V0-SM1-R1",
     "work_order_id": "V0-SM1-R1-WO-001",
     "runtime_branch": "feature/v0-sm1-seamless-product-integration",
-    "mutation_lease": "NOT_ROTATED_CONTROL_CANDIDATE",
-    "runtime_mutation": "FORBIDDEN_UNTIL_CONTROL_ACCEPTANCE_LEASE_ROTATION_AND_DIRECTOR_DISPATCH",
+    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH",
     "remaining_control_steps": [
-      "EG5_REPAIR",
-      "FRESH_INDEPENDENT_CONTROL_REVIEW",
-      "MERGE_POST_P6_CONTROL",
-      "POST_MERGE_PC0",
-      "ROTATE_LEASE_TO_SM1",
       "DIRECTOR_DISPATCH"
     ],
+    "eg5_repair_pr": 215,
+    "eg5_repair_merge": "21c74307812ffea56ef1aae263f029eec2549460",
     "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
   },
   "historical_p6_activation_route": {
