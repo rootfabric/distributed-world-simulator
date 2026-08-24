@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: eco-evo7-fff4-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   closure:
