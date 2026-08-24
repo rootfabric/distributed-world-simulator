@@ -949,4 +949,87 @@ func _autocap() -> void:
 	if not ok:
 		for failure in failures:
 			print("ECO.EVO7-FFF6-VIS FAILED CHECK: %s" % failure)
+
+	# G5 visual evidence (presentation only): activate C-mode through the SAME
+	# code path as the KEY_C handler - set the same flag, call the same apply
+	# function, refresh the same HUD - then capture the viewport with the
+	# canonical idiom proven in eco_evo5_terrain_fly_lab.gd / the anti-black fix
+	# in eco_evo5_b2_agents_plot_lab.gd. Materials, HUD text and camera framing
+	# are presentation state; no ecological computation or hash input is touched
+	# (G15). The interrupted run proved HUD readability but captured a
+	# background-only viewport because readback raced the renderer after a
+	# single process_frame; the eco_evo5 precedent settles many frames first.
+	_neutral_materials = true
+	_apply_neutral_state()
+	_update_hud()
+	await get_tree().process_frame
+
+	# Wide shot: elevated 3/4 view computed from the REAL zone origins (never
+	# hardcoded blindly) so the whole 3x2 zone grid fits the frame. The camera
+	# sits behind the -Z row (FLOODED/RIPARIAN/MESIC_LOAM carry no canopy ring),
+	# so the 19.5 m canopy trunks of the far row stay background, not occluders.
+	var bounds_min := Vector3(INF, INF, INF)
+	var bounds_max := Vector3(-INF, -INF, -INF)
+	for zone_index in range(Simulation.ZONE_ORDER.size()):
+		bounds_min = bounds_min.min(_zone_origin(zone_index))
+		bounds_max = bounds_max.max(_zone_origin(zone_index))
+	var grid_center := (bounds_min + bounds_max) * 0.5
+	var grid_span := bounds_max - bounds_min
+	_place_camera(
+		grid_center + Vector3(grid_span.x * 0.25, 40.0, -(grid_span.z * 0.5 + 42.0)),
+		grid_center + Vector3(0.0, 3.0, 0.0))
+	await _settle_frames(20)
+	await _autocap_capture("evo7_fff6_lab_cmode_wide.png")
+
+	# Close shot: the UNDER_CANOPY|CANOPY_GAP neighbouring pair (~17 m apart on
+	# the same row), camera ~11 m from the pair at crown height so individual
+	# grey plant silhouettes are discernible despite the canopy trunks.
+	var pair_center := (_zone_origin(Simulation.ZONE_ORDER.find("UNDER_CANOPY"))
+		+ _zone_origin(Simulation.ZONE_ORDER.find("CANOPY_GAP"))) * 0.5
+	_place_camera(pair_center + Vector3(0.0, 4.5, 11.0), pair_center + Vector3(0.0, 3.4, 0.0))
+	await _settle_frames(20)
+	await _autocap_capture("evo7_fff6_lab_cmode_close.png")
 	get_tree().quit(0 if ok else 1)
+
+
+## Presentation-only camera placement for autocap: derives _yaw/_pitch from the
+## position/target pair and goes through _apply_look(), so the mouse-look state
+## stays consistent instead of bypassing it. Never enters any hash.
+func _place_camera(position: Vector3, target: Vector3) -> void:
+	var offset := position - target
+	var horizontal := sqrt(offset.x * offset.x + offset.z * offset.z)
+	_cam.global_position = position
+	_yaw = atan2(offset.x, offset.z)
+	_pitch = atan2(-offset.y, maxf(horizontal, 0.001))
+	_apply_look()
+
+
+## Let the renderer actually draw the reframed view before readback.
+func _settle_frames(frame_count: int) -> void:
+	for _frame in range(frame_count):
+		await get_tree().process_frame
+
+
+## Grab the viewport after RenderingServer.frame_post_draw, save the PNG and
+## print the machine-checkable SCREENSHOT line naming the file.
+func _autocap_capture(file_name: String) -> void:
+	await RenderingServer.frame_post_draw
+	var screenshot := get_viewport().get_texture().get_image()
+	if screenshot.is_compressed():
+		screenshot.decompress()
+	screenshot.convert(Image.FORMAT_RGB8)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://artifacts"))
+	var save_error := screenshot.save_png(ProjectSettings.globalize_path("res://artifacts/%s" % file_name))
+	var luma_sum := 0.0
+	var luma_samples := 0
+	var image_width := screenshot.get_width()
+	for pixel_index in range(0, image_width * screenshot.get_height(), 16):
+		var pixel_x := pixel_index % image_width
+		@warning_ignore("integer_division")
+		var pixel_y := pixel_index / image_width
+		var pixel := screenshot.get_pixel(pixel_x, pixel_y)
+		luma_sum += 0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b
+		luma_samples += 1
+	print("ECO.EVO7-FFF6-VIS: SCREENSHOT %s size=%dx%d mean_luma=%.4f err=%d" % [
+		file_name, image_width, screenshot.get_height(),
+		luma_sum / maxf(float(luma_samples), 1.0), save_error])
