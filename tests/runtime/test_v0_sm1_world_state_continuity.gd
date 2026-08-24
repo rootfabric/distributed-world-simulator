@@ -91,8 +91,6 @@ func _init() -> void:
 		"last_operation_id": "operation/sm1/world-bootstrap",
 	})), "SM1.2 coordinator setup failed")
 
-	# A -> B: bind real Item Graph + Construction fingerprints into the same
-	# WARM checksum that becomes the SM1.2 ownership linearization proof.
 	var transfer_ab := "transfer/sm1/world-a-b/1"
 	var prepared_ab: Dictionary = world.prepare_transfer(transfer_ab)
 	_assert(_ok(prepared_ab), "A->B world manifest prepare failed: %s" % prepared_ab)
@@ -125,8 +123,8 @@ func _init() -> void:
 	_assert(not _ok(coordinator.authorize_write(AUTHORITY_A, 1)), "stale A still writable after A->B")
 
 	# While B is ACTIVE, mutate the real M4 Item Graph through its canonical
-	# registry. Refresh only the read-only P6 projection, then prove B->A carries
-	# this NEW canonical state rather than restoring the old A snapshot.
+	# registry. Construction authority references the same ItemRegistry, so its
+	# full authoritative composite snapshot must evolve consistently too.
 	_add_ore_item(domain)
 	_assert(_ok(domain.validator.validate_graph()), "Item Graph invalid after B-era canonical mutation")
 	item_snapshot = _canonical_item_snapshot(item_persistence)
@@ -144,7 +142,8 @@ func _init() -> void:
 	var manifest_ba: Dictionary = Dictionary(prepared_ba.get("details", {}).get("manifest", {}))
 	_assert(int(manifest_ba.get("item_count", 0)) == int(manifest_ab.get("item_count", 0)) + 1, "B-era Item Graph state not captured for return transfer")
 	_assert(String(manifest_ba.get("item_graph_fingerprint", "")) != String(manifest_ab.get("item_graph_fingerprint", "")), "B-era Item Graph mutation did not change canonical fingerprint")
-	_assert(String(manifest_ba.get("construction_fingerprint", "")) == String(manifest_ab.get("construction_fingerprint", "")), "unmodified Construction unexpectedly changed")
+	_assert(String(manifest_ba.get("construction_fingerprint", "")) != String(manifest_ab.get("construction_fingerprint", "")), "Construction composite did not observe B-era Item Graph mutation")
+	_assert(int(manifest_ba.get("construct_count", 0)) == 1, "B-era mutation changed canonical construct count")
 
 	_assert(_ok(coordinator.begin_transfer(transfer_ba, AUTHORITY_B, AUTHORITY_A, 2)), "B->A transfer begin failed")
 	var world_warm_ba: Dictionary = world.bind_to_warm(transfer_ba, shadow.get_report())
