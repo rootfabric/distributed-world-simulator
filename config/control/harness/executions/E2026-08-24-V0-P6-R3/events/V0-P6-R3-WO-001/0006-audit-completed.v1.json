@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-P6-R3-V0-P6-R3-WO-001-0006",
+  "project_epoch": "E2026-08-24-V0-P6-R3",
+  "work_order_id": "V0-P6-R3-WO-001",
+  "sequence": 6,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-24T04:45:17Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-p6-persistence-exactly-once-r1",
+  "head_sha": "a2da4729da9b6ff7370ad7e701f3b9cad0dc1db5",
+  "summary": "Control roles complete on exact head a2da4729 lineage: independent Reviewer PASS (d7bf17ca, 0 BLOCKER / 0 MAJOR / 1 MINOR fixed by a2da4729 / 4 NOTE), independent Verifier VERIFIED (3730747f: focused suite reproduced 16/16 with REAL_PROCESS_RESTART_DELEGATED_RECOVERY_PASS, soak evidence audited internally consistent - elapsed 1800013ms/29 checkpoints/51 assertions, persistence bytes present, freshness tested_head==reviewed_head). Evidence Map recorded (full_regression=FAIL honestly reflecting main-inherited REDs nx2+eg45 and display-fenced set; pc0=RED from registry-declared pre-existing states; review_verdict=PASS). CHECKPOINT_PROPOSED guard NOT satisfied: PC0 overall RED (pre-existing registry-declared V0 acceptance debt) and two WO predicates honestly open (MCP visual evidence environment-blocked; FULL_WORLD_CORE_REGRESSION blocked by other-lane main REDs + display fence). Mission proceeds to WAITING_HUMAN decision queue.",
+  "command": "RECORD_AUDIT_COMPLETED_AFTER_REVIEW_VERIFICATION_PC0",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/reviews/V0-P6-R3-WO-001-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/verifications/V0-P6-R3-WO-001-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/evidence/V0-P6-R3-WO-001-EVIDENCE-MAP-001.v1.json",
+    "artifacts/control/project-control-report.json",
+    "artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md",
+    "docs/evidence/2026-08-24_V0_P6_R3_WO_PREDICATE_LEDGER_RU.md"
+  ]
+}
