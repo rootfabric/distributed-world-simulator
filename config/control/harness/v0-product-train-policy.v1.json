@@ -118,7 +118,7 @@
       "short_name": "SM1",
       "state": "ACTIVATION_CANDIDATE_NOT_RUNTIME_ELIGIBLE",
       "goal": "Port proven SM0 authority-handoff semantics into the exact accepted P6 product baseline and prove production A<->B static authority handoff while preserving current Gateway/NX and canonical gameplay owners.",
-      "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+      "execution_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
       "project_epoch": "E2026-08-24-V0-SM1-R1",
       "work_order_id": "V0-SM1-R1-WO-001",
       "runtime_branch": "feature/v0-sm1-seamless-product-integration",
@@ -226,7 +226,7 @@
     "consumed_by_sm1": true
   },
   "current_sm1_activation_route": {
-    "accepted_predecessor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "accepted_predecessor_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
     "project_epoch": "E2026-08-24-V0-SM1-R1",
     "work_order_id": "V0-SM1-R1-WO-001",
     "runtime_branch": "feature/v0-sm1-seamless-product-integration",
@@ -240,7 +240,7 @@
       "ROTATE_LEASE_TO_SM1",
       "DIRECTOR_DISPATCH"
     ],
-    "execution_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+    "execution_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
   },
   "historical_p6_activation_route": {
     "accepted_predecessor_base": "491ca7d058690d3de5fcea5e41aaee230a31b3ab",

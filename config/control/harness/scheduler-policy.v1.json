@@ -58,7 +58,7 @@
     "next_runtime_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "next_runtime_checkpoint_eligible": false,
     "accepted_predecessor_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-    "accepted_predecessor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+    "accepted_predecessor_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
     "p6_acceptance": {
       "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
       "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",

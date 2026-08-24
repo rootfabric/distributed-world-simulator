@@ -6,7 +6,7 @@
   "goal_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "state": "PLANNED",
   "work_order_type": "IMPLEMENTATION",
-  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "base_sha": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "branch": "feature/v0-sm1-seamless-product-integration",
   "scope": "Port the already proven SM0 two-authority handoff semantics onto the exact accepted P6 product baseline without merging historical research lineage. First bounded product slice: two authorities A/B behind the accepted Edge Gateway path, two graphical clients, one real P6 player/outpost composition, WARM target preparation, A->B->A authority transfer with stable identities, OperationId/input continuity, exactly one canonical writer, unchanged client gateway endpoint, canonical Item Graph/Construction/persistence continuity, stale-source fencing, restart/reconnect convergence, and a deterministic fault matrix.",
   "allowed_paths": [

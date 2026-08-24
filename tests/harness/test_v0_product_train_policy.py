@@ -93,17 +93,29 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertFalse(routing["runtime_mutation_allowed_now"])
         self.assertEqual(routing["post_p6_decision"]["decision"], "ACTIVATE_V0_SM1")
 
-    def test_sm1_activation_candidate_uses_exact_accepted_p6_base(self) -> None:
-        expected = "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+    def test_sm1_activation_candidate_uses_exact_post_repair_base(self) -> None:
+        # POST-P6 REPAIR MERGE CAMPAIGN R1 (owner-directed): the SM1 successor
+        # base was rebound from the pre-repair P6 lineage head (9ade3233,
+        # preserved below as accepted_predecessor provenance) to the exact
+        # repaired canonical main produced by the eg45 + nx2 repairs and the
+        # P6-R3 hardening composition.
+        expected_successor_base = "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
+        p6_lineage_head = "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
         self.assertEqual(self.activation_sm1["checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
-        self.assertEqual(self.activation_sm1["main_declared_exact_successor_base"], expected)
-        self.assertEqual(self.activation_sm1["accepted_predecessor"]["accepted_product_lineage_head"], expected)
+        self.assertEqual(
+            self.activation_sm1["main_declared_exact_successor_base"],
+            expected_successor_base,
+        )
+        self.assertEqual(
+            self.activation_sm1["accepted_predecessor"]["accepted_product_lineage_head"],
+            p6_lineage_head,
+        )
         self.assertFalse(self.activation_sm1["mutation_lease"]["runtime_mutation_authorized"])
-        self.assertEqual(self.epoch_sm1["base_sha"], expected)
+        self.assertEqual(self.epoch_sm1["base_sha"], expected_successor_base)
         self.assertEqual(self.epoch_sm1["eligible_checkpoints"], ["V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"])
         self.assertEqual(self.epoch_sm1["status"], "ACTIVE")
         self.assertEqual(self.work_order_sm1["goal_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
-        self.assertEqual(self.work_order_sm1["base_sha"], expected)
+        self.assertEqual(self.work_order_sm1["base_sha"], expected_successor_base)
         self.assertEqual(self.work_order_sm1["branch"], "feature/v0-sm1-seamless-product-integration")
         self.assertEqual(self.work_order_sm1["risk_class"], "CRITICAL")
         event_dir = HARNESS / "executions/E2026-08-24-V0-SM1-R1/events/V0-SM1-R1-WO-001"

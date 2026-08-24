@@ -10,8 +10,8 @@
     "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
     "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154"
   },
-  "main_control_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
-  "main_declared_exact_successor_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "main_control_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
+  "main_declared_exact_successor_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "project_epoch": "E2026-08-24-V0-SM1-R1",
   "work_order_id": "V0-SM1-R1-WO-001",
   "runtime_branch": "feature/v0-sm1-seamless-product-integration",

@@ -3,7 +3,7 @@
   "revision": "V0-SM1-PRODUCTION-HANDOFF-2026-08-24-R1",
   "canonical_owner": "main",
   "status": "CONTROL_CANDIDATE",
-  "authored_against_main": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "authored_against_main": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "accepted_p6_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_p6_product_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
   "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",

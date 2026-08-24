@@ -3,7 +3,7 @@
   "revision": "V0-CURRENT-WORK-MAP-2026-08-24-R6-POST-P6-SM1",
   "canonical_owner": "main",
   "status": "PRIMARY_WORK_MAP_CANDIDATE_R6",
-  "authored_against_main": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "authored_against_main": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "accepted_predecessor": "V0_P6_PERSISTENT_SHARED_OUTPOST",
   "accepted_predecessor_product_lineage": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
   "p6_acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -68,7 +68,7 @@
     "sm0": "CAPABILITY_DONOR_ONLY",
     "research_sm1": "CAPABILITY_DONOR_ONLY",
     "wholesale_research_merge_forbidden": true,
-    "product_base": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+    "product_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
   },
   "preferred_next_after_sm1_acceptance": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "runtime_mutation_authorized_by_this_pointer": false,
