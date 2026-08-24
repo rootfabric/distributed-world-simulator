@@ -19,3 +19,4 @@ if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
 fi
 
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/runtime/test_v0_sm1_owner_map_and_transfer.gd
+"$GODOT_BIN" --headless --path "$ROOT" --script res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd
