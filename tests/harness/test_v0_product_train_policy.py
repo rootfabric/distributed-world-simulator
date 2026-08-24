@@ -79,29 +79,26 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         )
         p6 = self.policy["checkpoint_sequence"][2]
         self.assertEqual(p6["state"], "ACCEPTED")
+        self.assertEqual(p6["effective_repaired_product_base"], "72684bc9f243d7a458f4dbc6d460efc1c65d825e")
         self.assertEqual(p6["acceptance_record"], "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json")
 
-    def test_post_p6_gate_is_current_and_sm1_decision_recorded(self) -> None:
-        self.assertEqual(self.policy["current_checkpoint"], "V0_POST_P6_SEAMLESS_INSERTION_GATE")
-        self.assertEqual(self.policy["current_phase"], "POST_P6_SM1_ACTIVATION_CONTROL_CANDIDATE")
+    def test_post_p6_gate_is_completed_and_sm1_is_current(self) -> None:
+        self.assertEqual(self.policy["current_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
+        self.assertEqual(self.policy["current_phase"], "SM1_PRE_DISPATCH_CONTROL_READY")
         gate = self.policy["checkpoint_sequence"][3]
-        self.assertEqual(gate["state"], "CURRENT_DECISION_RECORDED_PENDING_CONTROL_REVIEW")
+        self.assertEqual(gate["state"], "DECISION_ACCEPTED_SM1_PREDISPATCH")
         self.assertEqual(gate["decision"], "ACTIVATE_V0_SM1")
         routing = self.scheduler["v0_product_train_routing"]
-        self.assertEqual(routing["current_checkpoint"], "V0_POST_P6_SEAMLESS_INSERTION_GATE")
-        self.assertEqual(routing["current_phase"], "POST_P6_SM1_ACTIVATION_CONTROL_CANDIDATE")
+        self.assertEqual(routing["current_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
+        self.assertEqual(routing["current_phase"], "SM1_PRE_DISPATCH_CONTROL_READY")
         self.assertFalse(routing["runtime_mutation_allowed_now"])
         self.assertEqual(routing["post_p6_decision"]["decision"], "ACTIVATE_V0_SM1")
 
     def test_sm1_activation_candidate_uses_exact_post_repair_base(self) -> None:
-        # POST-P6 REPAIR MERGE CAMPAIGN R1 (owner-directed): the SM1 successor
-        # base was rebound from the pre-repair P6 lineage head (9ade3233,
-        # preserved below as accepted_predecessor provenance) to the exact
-        # repaired canonical main produced by the eg45 + nx2 repairs and the
-        # P6-R3 hardening composition.
         expected_successor_base = "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
         p6_lineage_head = "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
         self.assertEqual(self.activation_sm1["checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
+        self.assertEqual(self.activation_sm1["state"], "PRE_DISPATCH_CONTROL_READY")
         self.assertEqual(
             self.activation_sm1["main_declared_exact_successor_base"],
             expected_successor_base,
@@ -111,6 +108,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
             p6_lineage_head,
         )
         self.assertFalse(self.activation_sm1["mutation_lease"]["runtime_mutation_authorized"])
+        self.assertEqual(self.activation_sm1["mutation_lease"]["rotation_status"], "ROTATED_RESERVED_PRE_DISPATCH")
         self.assertEqual(self.epoch_sm1["base_sha"], expected_successor_base)
         self.assertEqual(self.epoch_sm1["eligible_checkpoints"], ["V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"])
         self.assertEqual(self.epoch_sm1["status"], "ACTIVE")
@@ -121,27 +119,23 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         event_dir = HARNESS / "executions/E2026-08-24-V0-SM1-R1/events/V0-SM1-R1-WO-001"
         self.assertEqual(self.work_order_sm1["state"], _latest_work_state(event_dir))
 
-    def test_sm1_runtime_is_fail_closed_until_remaining_control_gates(self) -> None:
+    def test_sm1_runtime_is_fail_closed_until_director_dispatch(self) -> None:
         sm1 = self.policy["checkpoint_sequence"][4]
-        self.assertEqual(sm1["state"], "ACTIVATION_CANDIDATE_NOT_RUNTIME_ELIGIBLE")
-        self.assertIn("DIRECTOR_DISPATCH", sm1["activation_complete_except"])
-        self.assertIn(
-            "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED_OR_EXPLICITLY_NON_BLOCKING",
-            sm1["activation_complete_except"],
-        )
+        self.assertEqual(sm1["state"], "CURRENT_PRE_DISPATCH")
+        self.assertEqual(sm1["activation_complete_except"], ["DIRECTOR_DISPATCH"])
         routing = self.scheduler["v0_product_train_routing"]
-        self.assertFalse(routing["next_runtime_checkpoint_eligible"])
-        self.assertIn("DIRECTOR_DISPATCH", routing["sm1_remaining_activation_prerequisites"])
-        self.assertIn("MUTATION_LEASE_ROTATED_TO_SM1", routing["sm1_remaining_activation_prerequisites"])
+        self.assertTrue(routing["next_runtime_checkpoint_eligible"])
+        self.assertFalse(routing["runtime_mutation_allowed_now"])
+        self.assertEqual(routing["sm1_remaining_activation_prerequisites"], ["DIRECTOR_DISPATCH"])
+        self.assertEqual(self.activation_sm1["director_dispatch"]["status"], "PENDING")
+        self.assertFalse(self.activation_sm1["director_dispatch"]["runtime_mutation_authorized"])
 
-    def test_runtime_mutation_lease_remains_frozen_on_p6_until_control_candidate_lands(self) -> None:
+    def test_runtime_mutation_lease_is_reserved_on_sm1_pre_dispatch(self) -> None:
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(lease["capacity"], 1)
-        self.assertEqual(lease["holder_checkpoint"], "V0_P6_PERSISTENT_SHARED_OUTPOST")
-        self.assertEqual(lease["holder_branch"], "feature/v0-p6-persistent-shared-outpost")
-        self.assertEqual(lease["state"], "FROZEN_ACCEPTED_PENDING_POST_P6_CONTROL_RELEASE")
-        self.assertEqual(lease["proposed_next_holder_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
-        self.assertEqual(lease["proposed_next_holder_branch"], "feature/v0-sm1-seamless-product-integration")
+        self.assertEqual(lease["holder_checkpoint"], "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION")
+        self.assertEqual(lease["holder_branch"], "feature/v0-sm1-seamless-product-integration")
+        self.assertEqual(lease["state"], "RESERVED_FOR_V0_SM1_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION")
         self.assertTrue(lease["successor_rotation_requires_predecessor_checkpoint_acceptance"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
@@ -158,12 +152,11 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
     def test_product_checkpoints_and_future_eligibility_are_exact(self) -> None:
         self.assertEqual(
             self.scheduler["parallel_product_checkpoints"]["checkpoints"],
-            ["V0_POST_P6_SEAMLESS_INSERTION_GATE"],
+            ["V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"],
         )
         self.assertEqual(
             set(self.scheduler["parallel_product_checkpoints"]["future_checkpoints_not_yet_eligible"]),
             {
-                "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
                 "V0_P7_BOUNDED_TERRAIN_MUTATION",
                 "V0_P8_FIRST_MOBILE_CONSTRUCT",
             },
