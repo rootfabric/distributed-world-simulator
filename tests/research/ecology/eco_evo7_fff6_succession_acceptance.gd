@@ -5,6 +5,14 @@ extends SceneTree
 ## zone/phase-independent stochastic realization identity.
 const Bridge = preload("res://scripts/research/ecology/evo7_succession_bridge_v1.gd")
 const SEED := 20260823
+const REQUIRED_GATE_EVIDENCE: Array[String] = [
+	"FFF31_COUNTERFACTUAL_REALIZATION_IDENTITY_PASS",
+	"FFF4_SCENARIO_INDEPENDENT_REALIZATION_IDENTITY_PASS",
+	"FFF4_WATER_CONSERVATION_AND_PER_REQUEST_BOUNDS_PASS",
+	"FFF5_MODIFIED_PRISTINE_REALIZATION_IDENTITY_PASS",
+	"FFF6_ZONE_PHASE_INDEPENDENT_REALIZATION_IDENTITY_PASS",
+	"FFF6_PRODUCTION_ECOLOGY_AUTHORITY_FAIL_CLOSED_PASS",
+]
 var assertions := 0
 var failures: Array[String] = []
 
@@ -79,6 +87,9 @@ func _source_boundaries() -> void:
 		_check(not bool(gate.get("fff7_activation_authorized", true)), "FFF7 remains fail-closed before FFF6 acceptance")
 		_check(not bool(gate.get("xfer_authorized", true)), "XFER remains fail-closed before FFF6 acceptance")
 		_check(not bool(gate.get("production_ecology_authority_authorized", true)), "production ecology authority remains fail-closed before FFF6 acceptance")
+		var required_evidence: Array = gate.get("required_evidence", [])
+		for evidence in REQUIRED_GATE_EVIDENCE:
+			_check(required_evidence.has(evidence), "FFF7 gate requires causality evidence %s" % evidence)
 
 func _check(condition: bool, label: String) -> void:
 	assertions += 1
