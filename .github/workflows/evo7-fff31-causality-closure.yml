@@ -1,0 +1,53 @@
+name: ECO EVO7 FFF3.1 Causality Closure
+
+on:
+  pull_request:
+    branches:
+      - control/eco-evo7-fff3-baseline-freeze-r1
+    paths:
+      - "RUN_ECO_EVO7_FFF31_CAUSALITY_REPAIR.ps1"
+      - "scripts/research/ecology/evo7_light_feedback_counterfactual_v2.gd"
+      - "tests/research/ecology/eco_evo7_fff31_counterfactual_identity_acceptance.gd"
+      - ".github/workflows/evo7-fff31-causality-closure.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-fff31-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  closure:
+    name: exact FFF3.1 counterfactual causality closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout exact PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Assert exact PR HEAD checkout
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne "${{ github.event.pull_request.head.sha }}") { throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}" }
+          Write-Host "exact_head=$head"
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe" }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw "Exact Godot binary not found: $godot" }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_IDENTITY_MISMATCH: $version" }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+      - name: Run exact FFF3.1 repair closure
+        run: |
+          .\RUN_ECO_EVO7_FFF31_CAUSALITY_REPAIR.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
