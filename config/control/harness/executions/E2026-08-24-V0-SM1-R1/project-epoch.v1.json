@@ -1,0 +1,11 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "program": "V0",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "base_sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
+  "registry_generation": 80,
+  "status": "ACTIVE_CONTROL_CANDIDATE",
+  "main_movement_policy": "STOP_AND_REFRESH",
+  "created_at_utc": "2026-08-24T05:13:00Z"
+}
