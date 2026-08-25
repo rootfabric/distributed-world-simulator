@@ -51,6 +51,10 @@ func _ok(result: Dictionary) -> bool:
 	return bool(result.get("success", false))
 
 
+func _err(result: Dictionary) -> String:
+	return String(result.get("error_code", ""))
+
+
 func _init() -> void:
 	var runtime := _make_canonical_runtime()
 	var domain: Dictionary = runtime.domain
@@ -79,10 +83,6 @@ func _init() -> void:
 	_assert(String(persistence_report.get("persistence_owner", "")) == "persistence/authoritative-recovery", "wrong persistence owner in fixture")
 	_assert(not bool(persistence_report.get("private_filesystem", true)), "P6 adapter claims private filesystem")
 
-	var world = WorldContinuity.new()
-	var configured: Dictionary = world.configure(item_persistence, construction, persistence, projection)
-	_assert(_ok(configured), "SM1.5 world continuity configure failed: %s" % configured)
-
 	var coordinator = TransferCoordinator.new()
 	_assert(_ok(coordinator.configure(AUTHORITY_A, 1, {
 		"logical_player_id": "player/sm1-world",
@@ -91,7 +91,15 @@ func _init() -> void:
 		"last_operation_id": "operation/sm1/world-bootstrap",
 	})), "SM1.2 coordinator setup failed")
 
+	var world = WorldContinuity.new()
+	var configured: Dictionary = world.configure(item_persistence, construction, persistence, projection, coordinator)
+	_assert(_ok(configured), "SM1.5 world continuity configure failed: %s" % configured)
+
 	var transfer_ab := "transfer/sm1/world-a-b/1"
+	var unsafe_prepare_ab: Dictionary = world.prepare_transfer(transfer_ab)
+	_assert(not _ok(unsafe_prepare_ab) and _err(unsafe_prepare_ab) == "SM1_WORLD_SOURCE_NOT_FROZEN", "world snapshot was allowed before A source freeze")
+	_assert(_ok(coordinator.begin_transfer(transfer_ab, AUTHORITY_A, AUTHORITY_B, 1)), "A->B transfer begin failed")
+
 	var prepared_ab: Dictionary = world.prepare_transfer(transfer_ab)
 	_assert(_ok(prepared_ab), "A->B world manifest prepare failed: %s" % prepared_ab)
 	var manifest_ab: Dictionary = Dictionary(prepared_ab.get("details", {}).get("manifest", {}))
@@ -101,12 +109,15 @@ func _init() -> void:
 	_assert(String(manifest_ab.get("canonical_construction_owner", "")) == "construction/p4-authority", "A->B changed Construction owner")
 	_assert(String(manifest_ab.get("canonical_persistence_owner", "")) == "persistence/authoritative-recovery", "A->B changed persistence owner")
 	_assert(not bool(manifest_ab.get("private_canonical_truth", true)), "A->B world manifest claims canonical truth")
+	_assert(bool(manifest_ab.get("captured_after_source_freeze", false)), "A->B world manifest lacks source-freeze marker")
+	_assert(String(manifest_ab.get("source_authority_id", "")) == AUTHORITY_A and String(manifest_ab.get("target_authority_id", "")) == AUTHORITY_B, "A->B world manifest authority tuple mismatch")
+	_assert(int(manifest_ab.get("source_epoch", 0)) == 1 and int(manifest_ab.get("target_epoch", 0)) == 2, "A->B world manifest epoch tuple mismatch")
 
-	_assert(_ok(coordinator.begin_transfer(transfer_ab, AUTHORITY_A, AUTHORITY_B, 1)), "A->B transfer begin failed")
 	var world_warm_ab: Dictionary = world.bind_to_warm(transfer_ab, shadow.get_report())
 	_assert(_ok(world_warm_ab), "A->B world WARM binding failed: %s" % world_warm_ab)
 	var warm_report_ab: Dictionary = Dictionary(world_warm_ab.get("details", {}).get("warm_report", {}))
 	_assert(not String(warm_report_ab.get("world_manifest_checksum", "")).is_empty(), "A->B world manifest checksum missing from WARM")
+	_assert(String(warm_report_ab.get("transfer_id", "")) == transfer_ab, "A->B WARM report lost transfer binding")
 	_assert(_ok(coordinator.validate_warm_target(transfer_ab, AUTHORITY_B, warm_report_ab)), "A->B WARM validation failed")
 	var commit_ab: Dictionary = coordinator.commit_ownership(transfer_ab, AUTHORITY_A, AUTHORITY_B, 1, 2)
 	_assert(_ok(commit_ab), "A->B ownership commit failed")
@@ -137,6 +148,10 @@ func _init() -> void:
 	_assert(_ok(shadow.configure(projection)), "P6 shadow refresh after B-era mutation failed")
 
 	var transfer_ba := "transfer/sm1/world-b-a/2"
+	var unsafe_prepare_ba: Dictionary = world.prepare_transfer(transfer_ba)
+	_assert(not _ok(unsafe_prepare_ba) and _err(unsafe_prepare_ba) == "SM1_WORLD_SOURCE_NOT_FROZEN", "world snapshot was allowed before B source freeze")
+	_assert(_ok(coordinator.begin_transfer(transfer_ba, AUTHORITY_B, AUTHORITY_A, 2)), "B->A transfer begin failed")
+
 	var prepared_ba: Dictionary = world.prepare_transfer(transfer_ba)
 	_assert(_ok(prepared_ba), "B->A world manifest prepare failed: %s" % prepared_ba)
 	var manifest_ba: Dictionary = Dictionary(prepared_ba.get("details", {}).get("manifest", {}))
@@ -144,8 +159,10 @@ func _init() -> void:
 	_assert(String(manifest_ba.get("item_graph_fingerprint", "")) != String(manifest_ab.get("item_graph_fingerprint", "")), "B-era Item Graph mutation did not change canonical fingerprint")
 	_assert(String(manifest_ba.get("construction_fingerprint", "")) != String(manifest_ab.get("construction_fingerprint", "")), "Construction composite did not observe B-era Item Graph mutation")
 	_assert(int(manifest_ba.get("construct_count", 0)) == 1, "B-era mutation changed canonical construct count")
+	_assert(bool(manifest_ba.get("captured_after_source_freeze", false)), "B->A world manifest lacks source-freeze marker")
+	_assert(String(manifest_ba.get("source_authority_id", "")) == AUTHORITY_B and String(manifest_ba.get("target_authority_id", "")) == AUTHORITY_A, "B->A world manifest authority tuple mismatch")
+	_assert(int(manifest_ba.get("source_epoch", 0)) == 2 and int(manifest_ba.get("target_epoch", 0)) == 3, "B->A world manifest epoch tuple mismatch")
 
-	_assert(_ok(coordinator.begin_transfer(transfer_ba, AUTHORITY_B, AUTHORITY_A, 2)), "B->A transfer begin failed")
 	var world_warm_ba: Dictionary = world.bind_to_warm(transfer_ba, shadow.get_report())
 	_assert(_ok(world_warm_ba), "B->A world WARM binding failed")
 	var warm_report_ba: Dictionary = Dictionary(world_warm_ba.get("details", {}).get("warm_report", {}))
@@ -258,6 +275,7 @@ func _canonical_item_snapshot(item_persistence) -> Dictionary:
 func _finish() -> void:
 	if failures.is_empty():
 		print("[sm1-world] all %d assertions passed" % assertions)
+		print("[sm1-world][stage] SOURCE_FREEZE_BEFORE_WORLD_CAPTURE_PASS")
 		print("[sm1-world][stage] ITEM_GRAPH_CANONICAL_CONTINUITY_PASS")
 		print("[sm1-world][stage] CONSTRUCTION_CANONICAL_CONTINUITY_PASS")
 		print("[sm1-world][stage] OUTPOST_PERSISTENCE_COMPOSITION_CONTINUITY_PASS")
