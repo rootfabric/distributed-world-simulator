@@ -16,6 +16,7 @@ const WARM_SCHEMA := "distributed_world_simulator.v0_sm1_composite_warm_report.v
 var _registry = null
 var _ledger = null
 var _closure_adapter = null
+var _transfer_coordinator = null
 var _prepared: Dictionary = {}
 var _completed: Dictionary = {}
 var _counters := {
@@ -28,7 +29,7 @@ var _counters := {
 }
 
 
-func configure(p_registry, p_ledger, p_closure_adapter) -> Dictionary:
+func configure(p_registry, p_ledger, p_closure_adapter, p_transfer_coordinator) -> Dictionary:
 	if p_registry == null or not p_registry.has_method("resolve_by_session"):
 		return _reject("SM1_CARRY_INVALID_IDENTITY_REGISTRY")
 	if (
@@ -40,9 +41,16 @@ func configure(p_registry, p_ledger, p_closure_adapter) -> Dictionary:
 		return _reject("SM1_CARRY_INVALID_OPERATION_LEDGER")
 	if p_closure_adapter == null or not p_closure_adapter.has_method("build_closure_view"):
 		return _reject("SM1_CARRY_INVALID_CLOSURE_ADAPTER")
+	if (
+		p_transfer_coordinator == null
+		or not p_transfer_coordinator.has_method("snapshot")
+		or not p_transfer_coordinator.has_method("get_completed_transfer")
+	):
+		return _reject("SM1_CARRY_INVALID_TRANSFER_COORDINATOR")
 	_registry = p_registry
 	_ledger = p_ledger
 	_closure_adapter = p_closure_adapter
+	_transfer_coordinator = p_transfer_coordinator
 	return _success({"result": "CONFIGURED"})
 
 
@@ -99,10 +107,34 @@ func prepare_transfer(transfer_id: String, client_session_id: String, input_sequ
 		return _reject("SM1_CARRY_TRANSFER_ID_REQUIRED")
 	if _prepared.has(transfer_id) or _completed.has(transfer_id):
 		return _reject("SM1_CARRY_TRANSFER_ALREADY_TRACKED", {"transfer_id": transfer_id})
+
+	# Transfer manifests are valid only after the source writer is frozen. This
+	# closes the capture-before-freeze race: no client command may be accepted
+	# between the last observed OperationId/input watermark and the manifest.
+	var freeze_before: Dictionary = _source_freeze_proof(transfer_id)
+	if not bool(freeze_before.get("success", false)):
+		return freeze_before
+	var transfer_before: Dictionary = Dictionary(freeze_before.get("details", {}).get("transfer", {}))
+
 	var captured: Dictionary = capture_manifest(client_session_id, input_sequence, last_operation_id)
 	if not bool(captured.get("success", false)):
 		return captured
+
+	var freeze_after: Dictionary = _source_freeze_proof(transfer_id)
+	if not bool(freeze_after.get("success", false)):
+		return freeze_after
+	var transfer_after: Dictionary = Dictionary(freeze_after.get("details", {}).get("transfer", {}))
+	if NetworkUtils.payload_hash(transfer_before) != NetworkUtils.payload_hash(transfer_after):
+		return _reject("SM1_CARRY_FREEZE_CHANGED_DURING_CAPTURE")
+
 	var manifest: Dictionary = Dictionary(captured.get("details", {}).get("manifest", {})).duplicate(true)
+	manifest["transfer_id"] = transfer_id
+	manifest["source_authority_id"] = String(transfer_before.get("source_authority_id", ""))
+	manifest["target_authority_id"] = String(transfer_before.get("target_authority_id", ""))
+	manifest["source_epoch"] = int(transfer_before.get("source_epoch", 0))
+	manifest["target_epoch"] = int(transfer_before.get("target_epoch", 0))
+	manifest["captured_after_source_freeze"] = true
+	manifest["manifest_checksum"] = _manifest_checksum(manifest)
 	_prepared[transfer_id] = {
 		"manifest": manifest,
 		"composite_warm_checksum": "",
@@ -177,6 +209,9 @@ func validate_after_activation(
 	var coordinator_snapshot: Dictionary = transfer_coordinator.snapshot()
 	if String(coordinator_snapshot.get("state", "")) != "ACTIVE":
 		return _reject("SM1_CARRY_TARGET_NOT_ACTIVE")
+	if String(coordinator_snapshot.get("active_authority_id", "")) != String(completed_transfer.get("target_authority_id", "")) \
+			or int(coordinator_snapshot.get("authority_epoch", 0)) != int(completed_transfer.get("target_epoch", 0)):
+		return _reject("SM1_CARRY_COMPLETED_TARGET_NOT_CURRENT")
 
 	var current_result: Dictionary = capture_manifest(client_session_id, input_sequence, last_operation_id)
 	if not bool(current_result.get("success", false)):
@@ -242,6 +277,21 @@ func get_report() -> Dictionary:
 		"private_canonical_truth": false,
 		"counters": _counters.duplicate(true),
 	}
+
+
+func _source_freeze_proof(transfer_id: String) -> Dictionary:
+	if _transfer_coordinator == null or not _transfer_coordinator.has_method("snapshot"):
+		return _reject("SM1_CARRY_SOURCE_FREEZE_PROOF_REQUIRED")
+	var coordinator_snapshot: Dictionary = _transfer_coordinator.snapshot()
+	if String(coordinator_snapshot.get("state", "")) != "SOURCE_FROZEN":
+		return _reject("SM1_CARRY_SOURCE_NOT_FROZEN", {"state": String(coordinator_snapshot.get("state", ""))})
+	var transfer: Dictionary = Dictionary(coordinator_snapshot.get("transfer", {}))
+	if String(transfer.get("transfer_id", "")) != transfer_id:
+		return _reject("SM1_CARRY_TRANSFER_COORDINATOR_MISMATCH")
+	if String(coordinator_snapshot.get("active_authority_id", "")) != String(transfer.get("source_authority_id", "")) \
+			or int(coordinator_snapshot.get("authority_epoch", 0)) != int(transfer.get("source_epoch", 0)):
+		return _reject("SM1_CARRY_SOURCE_FREEZE_TUPLE_INVALID")
+	return _success({"transfer": transfer.duplicate(true)})
 
 
 func _validate_continuity(before: Dictionary, after: Dictionary) -> Dictionary:
