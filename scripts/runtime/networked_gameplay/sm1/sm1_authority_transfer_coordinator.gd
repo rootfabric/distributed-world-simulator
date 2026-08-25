@@ -86,6 +86,7 @@ func begin_transfer(transfer_id: String, source_authority_id: String, target_aut
 		"target_epoch": _authority_epoch + 1,
 		"player_snapshot": _player_snapshot.duplicate(true),
 		"warm_checksum": "",
+		"warm_report": {},
 		"commit_token": "",
 	}
 	_state = STATE_SOURCE_FROZEN
@@ -130,7 +131,12 @@ func validate_warm_target(transfer_id: String, target_authority_id: String, warm
 		if attempts != rejections:
 			return _failure("SM1_WARM_WRITE_NOT_FAIL_CLOSED", {"attempts": attempts, "rejections": rejections})
 
+	# Retain only derived WARM evidence used by the ownership decision. This is
+	# not canonical gameplay state; it lets downstream continuity adapters prove
+	# that their intermediate checksum is actually nested inside the final
+	# checksum committed by SM1.2 instead of comparing incompatible layers.
 	_transfer["warm_checksum"] = checksum
+	_transfer["warm_report"] = warm_report.duplicate(true)
 	_state = STATE_TARGET_WARM_VALIDATED
 	_counters["warm_validations"] = int(_counters["warm_validations"]) + 1
 	return _success({"result": RESULT_WARM_VALIDATED, "transfer": _transfer.duplicate(true)})
@@ -301,6 +307,7 @@ func get_report() -> Dictionary:
 	var report := snapshot()
 	report["counters"] = _counters.duplicate(true)
 	report["one_writer_policy"] = "ACTIVE_TUPLE_ONLY_ZERO_WRITER_TRANSFER_GAP"
+	report["warm_evidence_role"] = "DERIVED_COMMIT_EVIDENCE_ONLY"
 	return report
 
 
