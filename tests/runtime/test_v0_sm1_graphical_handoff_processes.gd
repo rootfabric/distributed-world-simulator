@@ -154,9 +154,8 @@ func _spawn(executable: String, args: Array, user_root: String, display: String,
 	if not display.is_empty():
 		OS.set_environment("DISPLAY", display)
 		OS.set_environment("LIBGL_ALWAYS_SOFTWARE", "1")
-	var full_args: Array = args.duplicate()
-	full_args.insert(4 if String(full_args[0]) == "--quiet" else 3, "--log-file")
-	full_args.insert(5 if String(full_args[0]) == "--quiet" else 4, log_path)
+	var full_args: Array = ["--log-file", log_path]
+	full_args.append_array(args)
 	var pid := OS.create_process(executable, full_args, false)
 	_restore_environment(captured)
 	return pid
