@@ -103,6 +103,9 @@ func validate_warm_target(transfer_id: String, target_authority_id: String, warm
 		return _failure("SM1_TRANSFER_NOT_FOUND", {"transfer_id": transfer_id})
 	if target_authority_id != String(_transfer.get("target_authority_id", "")):
 		return _failure("SM1_WARM_TARGET_MISMATCH")
+	var report_transfer_id := String(warm_report.get("transfer_id", ""))
+	if not report_transfer_id.is_empty() and report_transfer_id != transfer_id:
+		return _failure("SM1_WARM_TRANSFER_ID_MISMATCH", {"expected": transfer_id, "actual": report_transfer_id})
 
 	var checksum := String(warm_report.get("checksum", ""))
 	if _state == STATE_TARGET_WARM_VALIDATED:
@@ -135,8 +138,16 @@ func validate_warm_target(transfer_id: String, target_authority_id: String, warm
 
 func commit_ownership(transfer_id: String, source_authority_id: String, target_authority_id: String, source_epoch: int, target_epoch: int) -> Dictionary:
 	if _completed_transfers.has(transfer_id):
+		var completed := Dictionary(_completed_transfers[transfer_id])
+		if not _completed_tuple_matches(completed, source_authority_id, target_authority_id, source_epoch, target_epoch):
+			return _failure("SM1_COMMIT_REPLAY_CONFLICT")
 		_counters["commit_replays"] = int(_counters["commit_replays"]) + 1
-		return _success({"result": RESULT_ALREADY_COMMITTED, "completed": Dictionary(_completed_transfers[transfer_id]).duplicate(true)})
+		return _success({
+			"result": RESULT_ALREADY_COMMITTED,
+			"commit_token": String(completed.get("commit_token", "")),
+			"linearized_now": false,
+			"completed": completed.duplicate(true),
+		})
 	if not _matches_live_transfer(transfer_id):
 		return _failure("SM1_TRANSFER_NOT_FOUND", {"transfer_id": transfer_id})
 	if _state in [STATE_OWNERSHIP_COMMITTED, STATE_SOURCE_RETIRED]:
@@ -184,7 +195,10 @@ func commit_ownership(transfer_id: String, source_authority_id: String, target_a
 
 func retire_source(transfer_id: String, source_authority_id: String, commit_token: String) -> Dictionary:
 	if _completed_transfers.has(transfer_id):
-		return _success({"result": RESULT_ALREADY_RETIRED, "completed": Dictionary(_completed_transfers[transfer_id]).duplicate(true)})
+		var completed := Dictionary(_completed_transfers[transfer_id])
+		if not _completed_source_and_token_match(completed, source_authority_id, commit_token):
+			return _failure("SM1_SOURCE_RETIRE_REPLAY_CONFLICT")
+		return _success({"result": RESULT_ALREADY_RETIRED, "completed": completed.duplicate(true)})
 	if not _matches_live_transfer(transfer_id):
 		return _failure("SM1_TRANSFER_NOT_FOUND", {"transfer_id": transfer_id})
 	if _state == STATE_SOURCE_RETIRED:
@@ -307,10 +321,23 @@ func _tuple_matches(source_authority_id: String, target_authority_id: String, so
 		and target_epoch == int(_transfer.get("target_epoch", 0))
 
 
+func _completed_tuple_matches(completed: Dictionary, source_authority_id: String, target_authority_id: String, source_epoch: int, target_epoch: int) -> bool:
+	return source_authority_id == String(completed.get("source_authority_id", "")) \
+		and target_authority_id == String(completed.get("target_authority_id", "")) \
+		and source_epoch == int(completed.get("source_epoch", 0)) \
+		and target_epoch == int(completed.get("target_epoch", 0))
+
+
 func _source_and_token_match(source_authority_id: String, commit_token: String) -> bool:
 	return source_authority_id == String(_transfer.get("source_authority_id", "")) \
 		and not commit_token.is_empty() \
 		and commit_token == String(_transfer.get("commit_token", ""))
+
+
+func _completed_source_and_token_match(completed: Dictionary, source_authority_id: String, commit_token: String) -> bool:
+	return source_authority_id == String(completed.get("source_authority_id", "")) \
+		and not commit_token.is_empty() \
+		and commit_token == String(completed.get("commit_token", ""))
 
 
 func _validate_player_snapshot(player_snapshot: Dictionary) -> Dictionary:
