@@ -24,7 +24,7 @@ const ExtensionTraits = preload("res://scripts/research/ecology/plant_developmen
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_succession_bridge.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-FFF6.2"
+const REVISION := "ECO.EVO7-FFF6.3"
 const EVALUATION_IDENTITY_RULE := "BUNDLE_SEED_ONLY_V1"
 const MIN_CYCLES := 100
 const POPULATION_SIZE := 12
@@ -239,9 +239,11 @@ static func _evaluate_candidates(candidates: Array[Dictionary], zone_name: Strin
 		var light_stress := 1.0 - clampf(effective_light / maxf(float(cfg["sunlight"]),0.001),0.0,1.0)
 		var shade_adaptation := shade_tolerance * light_stress * 0.45
 		var water_match := 1.0 - absf(water_preference - effective_moisture)
+		var realized_photosynthetic_gain := float(fp["photosynthetic_gain_proxy"]) * (0.15 + 0.85 * water_satisfaction)
+		var water_limited_resource := realized_photosynthetic_gain - float(fp["maintenance_cost_proxy"])
 		var drought_cost := (1.0 - water_satisfaction) * (0.30 + 0.20 * float(fp["leaf_area_index_proxy"]))
 		var establishment_legacy := float(soil["establishment_bonus_ppm"]) / 1000000.0 if feedback_enabled else 0.0
-		var fitness := float(fp["net_resource_proxy"]) + 0.35 * float(fp["establishment_capacity"]) + 0.30 * water_match + shade_adaptation + 0.55 * establishment_legacy - drought_cost
+		var fitness := water_limited_resource + 0.35 * float(fp["establishment_capacity"]) + 0.30 * water_match + shade_adaptation + 0.55 * establishment_legacy - drought_cost
 		evaluated.append({"bundle":item["bundle"],"fitness":snappedf(fitness,1e-9),"fp":fp,"understory_light":snappedf(effective_light,1e-9),"water_satisfaction":snappedf(water_satisfaction,1e-9),"water_uptake_ppm":int(water_field["plant_water"][identity]["water_uptake_ppm"]) if feedback_enabled else 0,"evaporation_suppression_ppm":_effect_suppression(water_field,identity) if feedback_enabled else 0})
 	return evaluated
 
