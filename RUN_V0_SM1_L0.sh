@@ -38,5 +38,6 @@ echo "SM1_L0_TESTED_HEAD=$TESTED_HEAD"
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/runtime/test_v0_sm1_world_state_continuity.gd
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/runtime/test_v0_sm1_combined_carry_world_chain.gd
+"$GODOT_BIN" --headless --path "$ROOT" --script res://tests/runtime/test_v0_sm1_historical_activation_replay.gd
 
 echo "SM1_L0_EXACT_HEAD_EXECUTABLE_PASS head=$TESTED_HEAD godot=$ACTUAL_GODOT_VERSION"
