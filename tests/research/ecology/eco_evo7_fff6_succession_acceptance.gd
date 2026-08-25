@@ -37,6 +37,11 @@ func _init() -> void:
 	var riparian: Dictionary = zones["riparian"]
 	var understory: Dictionary = zones["under_canopy"]
 	var gap: Dictionary = zones["canopy_gap"]
+	print("ECO.EVO7 FFF6 strategy_metrics dry(lai=%.6f,height=%.6f,root=%.6f,rsr=%.6f,water=%.6f) mesic(lai=%.6f,height=%.6f,root=%.6f,rsr=%.6f,water=%.6f) riparian(lai=%.6f,height=%.6f,root=%.6f,rsr=%.6f,water=%.6f)" % [
+		float(dry["mean_features"]["leaf_area_index_proxy"]), float(dry["mean_features"]["realized_height_m"]), float(dry["mean_features"]["realized_root_depth_m"]), float(dry["mean_root_shoot_ratio"]), float(dry["mean_water_satisfaction"]),
+		float(mesic["mean_features"]["leaf_area_index_proxy"]), float(mesic["mean_features"]["realized_height_m"]), float(mesic["mean_features"]["realized_root_depth_m"]), float(mesic["mean_root_shoot_ratio"]), float(mesic["mean_water_satisfaction"]),
+		float(riparian["mean_features"]["leaf_area_index_proxy"]), float(riparian["mean_features"]["realized_height_m"]), float(riparian["mean_features"]["realized_root_depth_m"]), float(riparian["mean_root_shoot_ratio"]), float(riparian["mean_water_satisfaction"]),
+	])
 	_check(float(dry["mean_water_satisfaction"]) < float(riparian["mean_water_satisfaction"]), "dry sand remains more water-limited than riparian")
 	var dry_compact_signals := 0
 	if float(dry["mean_features"]["leaf_area_index_proxy"]) < float(mesic["mean_features"]["leaf_area_index_proxy"]): dry_compact_signals += 1
