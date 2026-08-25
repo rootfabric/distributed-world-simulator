@@ -23,7 +23,8 @@ jobs:
           EXPECTED="93093d3a3675b5773b8a672d39fb11e4965bf16a"
           echo "BASE=$BASE"
           test "$BASE" = "$EXPECTED"
-          git bundle create sm1-graphical-9309.bundle "$BASE"
+          git branch exact-sm1-graphical "$BASE"
+          git bundle create sm1-graphical-9309.bundle refs/heads/exact-sm1-graphical
           git archive --format=zip --output=sm1-source-9309.zip "$BASE"
           printf '%s\n' "$BASE" > EXACT_HEAD.txt
       - uses: actions/upload-artifact@v4
