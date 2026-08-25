@@ -100,8 +100,9 @@ func _init() -> void:
 	_assert(_ok(admission.configure(registry, ledger)), "mutation admission configure failed")
 	var closure = ClosureAdapter.new()
 	_assert(_ok(closure.configure(registry, ledger)), "closure adapter configure failed")
+	var coordinator = TransferCoordinator.new()
 	var carrying = PlayerCarryingDomain.new()
-	_assert(_ok(carrying.configure(registry, ledger, closure)), "player carrying domain configure failed")
+	_assert(_ok(carrying.configure(registry, ledger, closure, coordinator)), "player carrying domain configure failed")
 
 	var initial_capture: Dictionary = carrying.capture_manifest(SESSION, 40, "operation/bootstrap/40")
 	_assert(_ok(initial_capture), "initial carrying manifest capture failed")
@@ -109,7 +110,6 @@ func _init() -> void:
 	_assert(bool(initial_manifest.get("derived_only", false)), "carrying manifest is not marked derived-only")
 	_assert(not bool(initial_manifest.get("private_canonical_truth", true)), "carrying manifest claims canonical truth")
 
-	var coordinator = TransferCoordinator.new()
 	_assert(_ok(coordinator.configure(AUTHORITY_A, 1, initial_manifest)), "transfer coordinator configure failed")
 
 	var handler_a = AuthorityHandler.new()
@@ -136,21 +136,30 @@ func _init() -> void:
 	_assert(handler_a.executions == 1 and handler_b.executions == 0, "pre-handoff command did not execute only on A")
 	_assert(ledger.is_applied(PLAYER, op41), "pre-handoff OperationId not durable in shared ledger")
 
-	# Freeze the actual carrying state AFTER the latest acknowledged operation.
+	# The transfer manifest must NOT be captured while A is still ACTIVE.
 	var transfer_ab := "transfer/sm1/a-b/1"
-	var prepared_ab: Dictionary = carrying.prepare_transfer(transfer_ab, SESSION, 41, op41)
-	_assert(_ok(prepared_ab), "A->B player carry prepare failed")
-	var prepared_manifest_ab: Dictionary = Dictionary(prepared_ab.get("details", {}).get("manifest", {}))
-	var carried_ops_ab: Array = Dictionary(prepared_manifest_ab.get("closure_view", {})).get("carried_operations", [])
-	_assert(carried_ops_ab.has(op41), "A->B carrying manifest omitted latest OperationId")
-	_assert(int(prepared_manifest_ab.get("last_input_sequence", -1)) == 41, "A->B carrying manifest lost input sequence")
+	var unsafe_prepare_ab: Dictionary = carrying.prepare_transfer(transfer_ab, SESSION, 41, op41)
+	_assert(not _ok(unsafe_prepare_ab) and _err(unsafe_prepare_ab) == "SM1_CARRY_SOURCE_NOT_FROZEN", "player carrying capture was allowed before source freeze")
 
+	# Freeze first. From this point both source and target writes are fenced;
+	# only then may the exact player closure/watermarks be sampled.
 	var begin_ab: Dictionary = coordinator.begin_transfer(transfer_ab, AUTHORITY_A, AUTHORITY_B, 1)
 	_assert(_ok(begin_ab), "A->B begin failed")
 	var blocked_during_ab: Dictionary = pivot.route_command(SESSION, "operation/sm1/blocked-ab", _command(42))
 	_assert(not _ok(blocked_during_ab) and _err(blocked_during_ab) == "SM1_ROUTE_FROZEN_DURING_AUTHORITY_TRANSFER", "Gateway route did not freeze during A->B")
 	_assert(not ledger.is_pending(PLAYER, "operation/sm1/blocked-ab"), "frozen Gateway route leaked command into P6 pending ledger")
 	_assert(handler_a.executions == 1 and handler_b.executions == 0, "handler executed during A->B zero-writer gap")
+
+	var prepared_ab: Dictionary = carrying.prepare_transfer(transfer_ab, SESSION, 41, op41)
+	_assert(_ok(prepared_ab), "A->B player carry prepare failed")
+	var prepared_manifest_ab: Dictionary = Dictionary(prepared_ab.get("details", {}).get("manifest", {}))
+	var carried_ops_ab: Array = Dictionary(prepared_manifest_ab.get("closure_view", {})).get("carried_operations", [])
+	_assert(carried_ops_ab.has(op41), "A->B carrying manifest omitted latest OperationId")
+	_assert(int(prepared_manifest_ab.get("last_input_sequence", -1)) == 41, "A->B carrying manifest lost input sequence")
+	_assert(bool(prepared_manifest_ab.get("captured_after_source_freeze", false)), "A->B carrying manifest lacks freeze proof marker")
+	_assert(String(prepared_manifest_ab.get("source_authority_id", "")) == AUTHORITY_A, "A->B carrying manifest source tuple mismatch")
+	_assert(String(prepared_manifest_ab.get("target_authority_id", "")) == AUTHORITY_B, "A->B carrying manifest target tuple mismatch")
+	_assert(int(prepared_manifest_ab.get("source_epoch", 0)) == 1 and int(prepared_manifest_ab.get("target_epoch", 0)) == 2, "A->B carrying manifest epoch tuple mismatch")
 
 	var shadow = _make_shadow()
 	var warm_ab: Dictionary = carrying.build_composite_warm_report(transfer_ab, shadow.get_report())
@@ -168,6 +177,16 @@ func _init() -> void:
 	var internal_after_ab: Dictionary = pivot.get_internal_route_projection()
 	_assert(String(internal_after_ab.get("internal_authority_id", "")) == AUTHORITY_B, "internal route did not pivot to B")
 	_assert(int(internal_after_ab.get("authority_epoch", 0)) == 2, "internal route epoch did not advance to 2")
+
+	# Completed-transfer retries remain proof-bound: the transfer id alone is
+	# never enough to obtain a successful replay response.
+	var bad_completed_commit_ab: Dictionary = coordinator.commit_ownership(transfer_ab, AUTHORITY_A, "authority/c", 1, 2)
+	_assert(not _ok(bad_completed_commit_ab) and _err(bad_completed_commit_ab) == "SM1_COMMIT_REPLAY_CONFLICT", "completed commit replay accepted a different tuple")
+	var bad_completed_retire_ab: Dictionary = coordinator.retire_source(transfer_ab, AUTHORITY_A, "wrong-token")
+	_assert(not _ok(bad_completed_retire_ab) and _err(bad_completed_retire_ab) == "SM1_SOURCE_RETIRE_REPLAY_CONFLICT", "completed retire replay accepted an invalid token")
+	var exact_completed_commit_ab: Dictionary = coordinator.commit_ownership(transfer_ab, AUTHORITY_A, AUTHORITY_B, 1, 2)
+	_assert(_ok(exact_completed_commit_ab) and String(exact_completed_commit_ab.get("details", {}).get("result", "")) == TransferCoordinator.RESULT_ALREADY_COMMITTED, "exact completed commit replay did not converge")
+	_assert(String(exact_completed_commit_ab.get("details", {}).get("commit_token", "")) == token_ab, "exact completed commit replay changed token")
 
 	# Replay of an A-era operation reaches the shared P6 replay boundary and is
 	# not executed on B a second time.
@@ -195,11 +214,13 @@ func _init() -> void:
 
 	# Return B -> A using the SAME client-facing Gateway endpoint/session.
 	var transfer_ba := "transfer/sm1/b-a/2"
-	_assert(_ok(carrying.prepare_transfer(transfer_ba, SESSION, 42, op42)), "B->A player carry prepare failed")
+	var unsafe_prepare_ba: Dictionary = carrying.prepare_transfer(transfer_ba, SESSION, 42, op42)
+	_assert(not _ok(unsafe_prepare_ba) and _err(unsafe_prepare_ba) == "SM1_CARRY_SOURCE_NOT_FROZEN", "return carrying capture was allowed before source freeze")
 	var begin_ba: Dictionary = coordinator.begin_transfer(transfer_ba, AUTHORITY_B, AUTHORITY_A, 2)
 	_assert(_ok(begin_ba), "B->A begin failed")
 	var blocked_during_ba: Dictionary = pivot.route_command(SESSION, "operation/sm1/blocked-ba", _command(43))
 	_assert(not _ok(blocked_during_ba) and _err(blocked_during_ba) == "SM1_ROUTE_FROZEN_DURING_AUTHORITY_TRANSFER", "Gateway route did not freeze during B->A")
+	_assert(_ok(carrying.prepare_transfer(transfer_ba, SESSION, 42, op42)), "B->A player carry prepare failed")
 	var warm_ba: Dictionary = carrying.build_composite_warm_report(transfer_ba, shadow.get_report())
 	_assert(_ok(warm_ba), "B->A composite WARM build failed")
 	var warm_report_ba: Dictionary = Dictionary(warm_ba.get("details", {}).get("warm_report", {}))
@@ -243,6 +264,8 @@ func _init() -> void:
 
 	if failures.is_empty():
 		print("[sm1-carry-route] all %d assertions passed" % assertions)
+		print("[sm1-carry-route][stage] SOURCE_FREEZE_BEFORE_PLAYER_CAPTURE_PASS")
+		print("[sm1-carry-route][stage] COMPLETED_TRANSFER_REPLAY_PROOF_FENCE_PASS")
 		print("[sm1-carry-route][stage] PLAYER_CARRYING_DOMAIN_CONTINUITY_PASS")
 		print("[sm1-carry-route][stage] CLIENT_GATEWAY_ENDPOINT_UNCHANGED_PASS")
 		print("[sm1-carry-route][stage] OPERATION_ID_CONTINUITY_ACROSS_AUTHORITY_PASS")
