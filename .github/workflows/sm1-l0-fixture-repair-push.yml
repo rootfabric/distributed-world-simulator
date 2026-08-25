@@ -1,0 +1,68 @@
+name: V0 SM1 L0 Fixture Repair Push
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-sm1-seamless-product-integration
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.pull_request.base.sha == '1e39bc1df73571fed23290c168bd33dcba5e0812'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: 1e39bc1df73571fed23290c168bd33dcba5e0812
+      - name: Align SM1 continuity fixtures with canonical P4 construction bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          cases = [
+              (Path('tests/runtime/test_v0_sm1_world_state_continuity.gd'), 'part/sm1/panel'),
+              (Path('tests/runtime/test_v0_sm1_combined_carry_world_chain.gd'), 'part/sm1/combined-panel'),
+          ]
+
+          for path, part_id in cases:
+              text = path.read_text(encoding='utf-8')
+              old = (
+                  '\t_add_item_to_container(domain, ROOT_ID, "construct_root", "Outpost root", 1, 0)\n'
+                  '\t_add_item_to_container(domain, PANEL_ID, "panel", "Outpost panel", 1, 1)\n'
+              )
+              if old not in text:
+                  raise SystemExit(f'EXPECTED_INVALID_FIXTURE_NOT_FOUND:{path}')
+              text = text.replace(
+                  old,
+                  f'\t_add_construct_root(domain)\n\t_add_attached_part(domain, "{part_id}")\n',
+                  1,
+              )
+              helper = '''\n\nfunc _add_construct_root(domain: Dictionary) -> void:\n\tvar root = Item.new({\n\t\t"instance_id": ROOT_ID,\n\t\t"definition_id": "construct_root",\n\t\t"display_name": "Outpost root",\n\t\t"quantity": 1,\n\t\t"relation": Relations.world(),\n\t\t"components": {\n\t\t\t"construction_root": {\n\t\t\t\t"schema": "planet_simulator.construction_root_component.v1",\n\t\t\t\t"construct_id": CONSTRUCT_ID,\n\t\t\t}\n\t\t},\n\t\t"revision": 0,\n\t})\n\t_assert(domain.items.add_item(root), "canonical construct root add failed")\n\n\nfunc _add_attached_part(domain: Dictionary, part_id: String) -> void:\n\tvar panel = Item.new({\n\t\t"instance_id": PANEL_ID,\n\t\t"definition_id": "panel",\n\t\t"display_name": "Outpost panel",\n\t\t"quantity": 1,\n\t\t"relation": Relations.attachment(CONSTRUCT_ID, ROOT_ID, part_id),\n\t\t"components": {},\n\t\t"revision": 0,\n\t})\n\t_assert(domain.items.add_item(panel), "canonical attached panel add failed")\n'''
+              marker = '\n\nfunc _add_item_to_container('
+              if marker not in text:
+                  raise SystemExit(f'HELPER_INSERTION_POINT_NOT_FOUND:{path}')
+              text = text.replace(marker, helper + marker, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          git diff --name-only | sort > /tmp/changed.txt
+          printf '%s\n' \
+            tests/runtime/test_v0_sm1_combined_carry_world_chain.gd \
+            tests/runtime/test_v0_sm1_world_state_continuity.gd | sort > /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/changed.txt
+      - name: Commit bounded fixture repair to SM1 product branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            tests/runtime/test_v0_sm1_world_state_continuity.gd \
+            tests/runtime/test_v0_sm1_combined_carry_world_chain.gd
+          git commit -m 'test(sm1): align continuity fixtures with P4 construct bindings'
+          git push origin HEAD:feature/v0-sm1-seamless-product-integration
