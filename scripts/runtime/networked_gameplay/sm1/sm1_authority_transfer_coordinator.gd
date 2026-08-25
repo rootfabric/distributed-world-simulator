@@ -26,6 +26,7 @@ const RESULT_SOURCE_RETIRED := "SOURCE_RETIRED"
 const RESULT_ALREADY_RETIRED := "ALREADY_RETIRED"
 const RESULT_TARGET_ACTIVATED := "TARGET_ACTIVATED"
 const RESULT_ALREADY_ACTIVE := "ALREADY_ACTIVE"
+const RESULT_ALREADY_ACTIVATED := "ALREADY_ACTIVATED"
 const RESULT_ABORTED := "ABORTED_BEFORE_COMMIT"
 
 var _state: String = STATE_UNCONFIGURED
@@ -42,6 +43,7 @@ var _counters := {
 	"source_retires": 0,
 	"activations": 0,
 	"activation_replays": 0,
+	"historical_activation_replays": 0,
 	"aborts_before_commit": 0,
 	"write_authorizations": 0,
 	"write_rejections": 0,
@@ -223,12 +225,23 @@ func retire_source(transfer_id: String, source_authority_id: String, commit_toke
 func activate_target(transfer_id: String, target_authority_id: String, target_epoch: int, commit_token: String) -> Dictionary:
 	if _completed_transfers.has(transfer_id):
 		var completed := Dictionary(_completed_transfers[transfer_id])
-		if target_authority_id == String(completed.get("target_authority_id", "")) \
-				and target_epoch == int(completed.get("target_epoch", 0)) \
-				and commit_token == String(completed.get("commit_token", "")):
-			_counters["activation_replays"] = int(_counters["activation_replays"]) + 1
-			return _success({"result": RESULT_ALREADY_ACTIVE, "completed": completed.duplicate(true)})
-		return _failure("SM1_TARGET_ACTIVATION_REPLAY_CONFLICT")
+		if target_authority_id != String(completed.get("target_authority_id", "")) \
+				or target_epoch != int(completed.get("target_epoch", 0)) \
+				or commit_token != String(completed.get("commit_token", "")):
+			return _failure("SM1_TARGET_ACTIVATION_REPLAY_CONFLICT")
+		_counters["activation_replays"] = int(_counters["activation_replays"]) + 1
+		var currently_active := _state == STATE_ACTIVE \
+			and _active_authority_id == target_authority_id \
+			and _authority_epoch == target_epoch
+		if not currently_active:
+			_counters["historical_activation_replays"] = int(_counters["historical_activation_replays"]) + 1
+		return _success({
+			"result": RESULT_ALREADY_ACTIVE if currently_active else RESULT_ALREADY_ACTIVATED,
+			"currently_active": currently_active,
+			"current_authority_id": _active_authority_id,
+			"current_authority_epoch": _authority_epoch,
+			"completed": completed.duplicate(true),
+		})
 	if not _matches_live_transfer(transfer_id):
 		return _failure("SM1_TRANSFER_NOT_FOUND", {"transfer_id": transfer_id})
 	if _state != STATE_SOURCE_RETIRED:
