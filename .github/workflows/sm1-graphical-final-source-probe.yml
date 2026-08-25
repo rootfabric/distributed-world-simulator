@@ -1,0 +1,38 @@
+name: V0 SM1 Graphical Final Exact Source Probe
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-sm1-seamless-product-integration
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archive exact SM1 graphical final base
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="fa6b035d63033f95793d49b3f523a5cee7e6e1fa"
+          echo "BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git branch exact-sm1-graphical-final "$BASE"
+          git bundle create sm1-graphical-final-fa6b.bundle refs/heads/exact-sm1-graphical-final
+          git archive --format=zip --output=sm1-source-final-fa6b.zip "$BASE"
+          printf '%s\n' "$BASE" > EXACT_HEAD.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sm1-graphical-final-fa6b
+          path: |
+            sm1-graphical-final-fa6b.bundle
+            sm1-source-final-fa6b.zip
+            EXACT_HEAD.txt
+          if-no-files-found: error
+          retention-days: 1
