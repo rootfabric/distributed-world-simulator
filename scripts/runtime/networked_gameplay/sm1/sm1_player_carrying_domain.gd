@@ -147,10 +147,10 @@ func prepare_transfer(transfer_id: String, client_session_id: String, input_sequ
 	})
 
 
-## Build the WARM report consumed by SM1.2. Its checksum commits to BOTH the
-## reconstructed P6 world projection and the player carrying manifest, so the
-## ownership linearization token cannot silently refer to a different player
-## closure/watermark set.
+## Build the first SM1 WARM layer over the accepted P6 SHADOW report. Later
+## derived layers (SM1.5 world continuity) may wrap this checksum, but they must
+## retain an explicit previous_warm_checksum edge so this manifest can still be
+## proven to participate in the final commit chain.
 func build_composite_warm_report(transfer_id: String, p6_shadow_report: Dictionary) -> Dictionary:
 	if not _prepared.has(transfer_id):
 		return _reject("SM1_CARRY_TRANSFER_NOT_PREPARED", {"transfer_id": transfer_id})
@@ -182,6 +182,7 @@ func build_composite_warm_report(transfer_id: String, p6_shadow_report: Dictiona
 	var report := p6_shadow_report.duplicate(true)
 	report["schema"] = WARM_SCHEMA
 	report["checksum"] = composite_checksum
+	report["previous_warm_checksum"] = p6_checksum
 	report["p6_shadow_checksum"] = p6_checksum
 	report["carrying_manifest_checksum"] = manifest_checksum
 	report["transfer_id"] = transfer_id
@@ -223,11 +224,27 @@ func validate_after_activation(
 	if not bool(continuity.get("success", false)):
 		return continuity
 
-	var expected_warm_checksum := String(record.get("composite_warm_checksum", ""))
-	if expected_warm_checksum.is_empty():
+	var player_warm_checksum := String(record.get("composite_warm_checksum", ""))
+	if player_warm_checksum.is_empty():
 		return _reject("SM1_CARRY_WARM_NOT_BOUND")
-	if String(completed_transfer.get("warm_checksum", "")) != expected_warm_checksum:
-		return _reject("SM1_CARRY_COMMIT_NOT_BOUND_TO_MANIFEST")
+	var committed_warm_checksum := String(completed_transfer.get("warm_checksum", ""))
+	if committed_warm_checksum.is_empty():
+		return _reject("SM1_CARRY_COMMIT_WARM_CHECKSUM_MISSING")
+
+	# Direct SM1.3 composition ends at player_warm_checksum. SM1.5 may wrap one
+	# additional world-state layer; in that case prove the retained final report
+	# points directly back to this exact player checksum and manifest checksum.
+	var warm_chain_mode := "DIRECT_PLAYER_COMMIT"
+	if committed_warm_checksum != player_warm_checksum:
+		var final_warm_report: Dictionary = Dictionary(completed_transfer.get("warm_report", {}))
+		if final_warm_report.is_empty() \
+				or String(final_warm_report.get("checksum", "")) != committed_warm_checksum \
+				or String(final_warm_report.get("transfer_id", "")) != transfer_id \
+				or String(final_warm_report.get("previous_warm_checksum", "")) != player_warm_checksum \
+				or String(final_warm_report.get("carrying_manifest_checksum", "")) != String(before.get("manifest_checksum", "")):
+			return _reject("SM1_CARRY_COMMIT_WARM_CHAIN_INVALID")
+		warm_chain_mode = "DOWNSTREAM_LAYER_BOUND"
+
 	var carried_player: Dictionary = Dictionary(completed_transfer.get("player_snapshot", {}))
 	if String(carried_player.get("logical_player_id", "")) != String(before.get("logical_player_id", "")) \
 			or String(carried_player.get("player_entity_id", "")) != String(before.get("player_entity_id", "")):
@@ -236,7 +253,9 @@ func validate_after_activation(
 	var completed_record := {
 		"before": before.duplicate(true),
 		"after": after.duplicate(true),
-		"composite_warm_checksum": expected_warm_checksum,
+		"composite_warm_checksum": player_warm_checksum,
+		"committed_warm_checksum": committed_warm_checksum,
+		"warm_chain_mode": warm_chain_mode,
 		"target_authority_id": String(completed_transfer.get("target_authority_id", "")),
 		"target_epoch": int(completed_transfer.get("target_epoch", 0)),
 	}
@@ -248,6 +267,7 @@ func validate_after_activation(
 		"transfer_id": transfer_id,
 		"before": before.duplicate(true),
 		"after": after.duplicate(true),
+		"warm_chain_mode": warm_chain_mode,
 	})
 
 
