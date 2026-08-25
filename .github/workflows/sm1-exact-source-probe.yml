@@ -1,0 +1,39 @@
+name: V0 SM1 Exact Source Probe R2
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-sm1-seamless-product-integration
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Package exact repaired SM1 base
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          EXPECTED="b402300769bc3ccafc87845af1c4b50e776ac66e"
+          echo "SM1_PROBE_BASE=$BASE"
+          test "$BASE" = "$EXPECTED"
+          git branch --force sm1-exact "$BASE"
+          git bundle create sm1-exact-b402.bundle refs/heads/sm1-exact
+          git archive --format=zip --output=sm1-source-b402.zip "$BASE"
+          printf '%s\n' "$BASE" > EXACT_HEAD.txt
+          git bundle verify sm1-exact-b402.bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sm1-exact-b402
+          path: |
+            sm1-exact-b402.bundle
+            sm1-source-b402.zip
+            EXACT_HEAD.txt
+          if-no-files-found: error
+          retention-days: 1
