@@ -1,0 +1,41 @@
+name: V0 SM1 Graphical Spawn Repair Push
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-sm1-seamless-product-integration
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/v0-sm1-seamless-product-integration
+          fetch-depth: 0
+      - name: Apply exact bounded repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED="93093d3a3675b5773b8a672d39fb11e4965bf16a"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/runtime/test_v0_sm1_graphical_handoff_processes.gd')
+          s=p.read_text()
+          old='''\tvar full_args: Array = args.duplicate()\n\tfull_args.insert(4 if String(full_args[0]) == "--quiet" else 3, "--log-file")\n\tfull_args.insert(5 if String(full_args[0]) == "--quiet" else 4, log_path)\n\tvar pid := OS.create_process(executable, full_args, false)'''
+          new='''\tvar full_args: Array = ["--log-file", log_path]\n\tfull_args.append_array(args)\n\tvar pid := OS.create_process(executable, full_args, false)'''
+          if old not in s:
+              raise SystemExit('expected spawn block not found')
+          p.write_text(s.replace(old,new))
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = "tests/runtime/test_v0_sm1_graphical_handoff_processes.gd"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tests/runtime/test_v0_sm1_graphical_handoff_processes.gd
+          git commit -m "test(sm1): repair graphical child process argv"
+          git push origin HEAD:feature/v0-sm1-seamless-product-integration
