@@ -206,8 +206,8 @@ func _make_canonical_runtime() -> Dictionary:
 		"maximum_volume_l": 1000.0,
 	})
 	_assert(domain.containers.add_container(backpack), "canonical backpack creation failed")
-	_add_item_to_container(domain, ROOT_ID, "construct_root", "Outpost root", 1, 0)
-	_add_item_to_container(domain, PANEL_ID, "panel", "Outpost panel", 1, 1)
+	_add_construct_root(domain)
+	_add_attached_part(domain, "part/sm1/panel")
 	_assert(_ok(domain.validator.validate_graph()), "initial canonical Item Graph invalid")
 
 	var aggregate = Aggregate.new()
@@ -241,6 +241,37 @@ func _make_canonical_runtime() -> Dictionary:
 	var item_persistence = ItemGraphPersistence.new()
 	item_persistence.setup(domain, null, "sm1-world-item-graph")
 	return {"domain": domain, "construction": construction, "item_persistence": item_persistence}
+
+
+func _add_construct_root(domain: Dictionary) -> void:
+	var root = Item.new({
+		"instance_id": ROOT_ID,
+		"definition_id": "construct_root",
+		"display_name": "Outpost root",
+		"quantity": 1,
+		"relation": Relations.world(),
+		"components": {
+			"construction_root": {
+				"schema": "planet_simulator.construction_root_component.v1",
+				"construct_id": CONSTRUCT_ID,
+			}
+		},
+		"revision": 0,
+	})
+	_assert(domain.items.add_item(root), "canonical construct root add failed")
+
+
+func _add_attached_part(domain: Dictionary, part_id: String) -> void:
+	var panel = Item.new({
+		"instance_id": PANEL_ID,
+		"definition_id": "panel",
+		"display_name": "Outpost panel",
+		"quantity": 1,
+		"relation": Relations.attachment(CONSTRUCT_ID, ROOT_ID, part_id),
+		"components": {},
+		"revision": 0,
+	})
+	_assert(domain.items.add_item(panel), "canonical attached panel add failed")
 
 
 func _add_item_to_container(domain: Dictionary, item_id: String, definition_id: String, display_name: String, quantity: int, slot: int) -> void:
