@@ -18,6 +18,7 @@ var _item_graph_persistence = null
 var _construction_authority = null
 var _p6_persistence_owner = null
 var _p6_projection = null
+var _transfer_coordinator = null
 var _prepared: Dictionary = {}
 var _completed: Dictionary = {}
 var _counters := {
@@ -29,7 +30,7 @@ var _counters := {
 }
 
 
-func configure(item_graph_persistence, construction_authority, p6_persistence_owner, p6_projection) -> Dictionary:
+func configure(item_graph_persistence, construction_authority, p6_persistence_owner, p6_projection, transfer_coordinator) -> Dictionary:
 	if item_graph_persistence == null \
 			or not item_graph_persistence.has_method("create_snapshot_result") \
 			or not item_graph_persistence.has_method("validate_snapshot"):
@@ -43,10 +44,15 @@ func configure(item_graph_persistence, construction_authority, p6_persistence_ow
 			or not p6_projection.has_method("compute_checksum") \
 			or not p6_projection.has_method("get_source"):
 		return _reject("SM1_WORLD_INVALID_OUTPOST_PROJECTION")
+	if transfer_coordinator == null \
+			or not transfer_coordinator.has_method("snapshot") \
+			or not transfer_coordinator.has_method("get_completed_transfer"):
+		return _reject("SM1_WORLD_INVALID_TRANSFER_COORDINATOR")
 	_item_graph_persistence = item_graph_persistence
 	_construction_authority = construction_authority
 	_p6_persistence_owner = p6_persistence_owner
 	_p6_projection = p6_projection
+	_transfer_coordinator = transfer_coordinator
 	var probe := _capture_live_fingerprints()
 	if not bool(probe.get("success", false)):
 		return probe
@@ -58,13 +64,35 @@ func prepare_transfer(transfer_id: String) -> Dictionary:
 		return _reject("SM1_WORLD_TRANSFER_ID_REQUIRED")
 	if _prepared.has(transfer_id) or _completed.has(transfer_id):
 		return _reject("SM1_WORLD_TRANSFER_ALREADY_TRACKED", {"transfer_id": transfer_id})
+
+	# Canonical fingerprints must be sampled from the zero-writer gap. Capturing
+	# them while the source is still ACTIVE leaves a write race between capture
+	# and begin_transfer and can commit a stale Item/Construction closure.
+	var freeze_before: Dictionary = _source_freeze_proof(transfer_id)
+	if not bool(freeze_before.get("success", false)):
+		return freeze_before
+	var transfer_before: Dictionary = Dictionary(freeze_before.get("details", {}).get("transfer", {}))
+
 	var captured := _capture_live_fingerprints()
 	if not bool(captured.get("success", false)):
 		return captured
+
+	var freeze_after: Dictionary = _source_freeze_proof(transfer_id)
+	if not bool(freeze_after.get("success", false)):
+		return freeze_after
+	var transfer_after: Dictionary = Dictionary(freeze_after.get("details", {}).get("transfer", {}))
+	if NetworkUtils.payload_hash(transfer_before) != NetworkUtils.payload_hash(transfer_after):
+		return _reject("SM1_WORLD_FREEZE_CHANGED_DURING_CAPTURE")
+
 	var live: Dictionary = Dictionary(captured.get("details", {}).get("live", {}))
 	var manifest := {
 		"schema": MANIFEST_SCHEMA,
 		"transfer_id": transfer_id,
+		"source_authority_id": String(transfer_before.get("source_authority_id", "")),
+		"target_authority_id": String(transfer_before.get("target_authority_id", "")),
+		"source_epoch": int(transfer_before.get("source_epoch", 0)),
+		"target_epoch": int(transfer_before.get("target_epoch", 0)),
+		"captured_after_source_freeze": true,
 		"item_graph_fingerprint": String(live.get("item_graph_fingerprint", "")),
 		"construction_fingerprint": String(live.get("construction_fingerprint", "")),
 		"outpost_projection_checksum": String(live.get("outpost_projection_checksum", "")),
@@ -100,6 +128,9 @@ func bind_to_warm(transfer_id: String, previous_warm_report: Dictionary) -> Dict
 		return _reject("SM1_WORLD_WARM_PRIVATE_TRUTH_FORBIDDEN")
 	if String(previous_warm_report.get("persistence_owner", "")) != "EXTERNAL":
 		return _reject("SM1_WORLD_WARM_PERSISTENCE_OWNER_INVALID")
+	var previous_report_transfer_id := String(previous_warm_report.get("transfer_id", ""))
+	if not previous_report_transfer_id.is_empty() and previous_report_transfer_id != transfer_id:
+		return _reject("SM1_WORLD_PREVIOUS_WARM_TRANSFER_ID_MISMATCH")
 	var previous_checksum := String(previous_warm_report.get("checksum", ""))
 	if previous_checksum.is_empty():
 		return _reject("SM1_WORLD_PREVIOUS_WARM_CHECKSUM_REQUIRED")
@@ -119,6 +150,7 @@ func bind_to_warm(transfer_id: String, previous_warm_report: Dictionary) -> Dict
 	var report := previous_warm_report.duplicate(true)
 	report["schema"] = WARM_SCHEMA
 	report["checksum"] = checksum
+	report["transfer_id"] = transfer_id
 	report["previous_warm_checksum"] = previous_checksum
 	report["world_manifest_checksum"] = manifest_checksum
 	report["item_graph_fingerprint"] = String(manifest.get("item_graph_fingerprint", ""))
@@ -141,8 +173,12 @@ func validate_after_activation(transfer_id: String, transfer_coordinator) -> Dic
 	var completed_transfer: Dictionary = transfer_coordinator.get_completed_transfer(transfer_id)
 	if completed_transfer.is_empty():
 		return _reject("SM1_WORLD_TRANSFER_NOT_COMPLETED")
-	if String(transfer_coordinator.snapshot().get("state", "")) != "ACTIVE":
+	var coordinator_snapshot: Dictionary = transfer_coordinator.snapshot()
+	if String(coordinator_snapshot.get("state", "")) != "ACTIVE":
 		return _reject("SM1_WORLD_TARGET_NOT_ACTIVE")
+	if String(coordinator_snapshot.get("active_authority_id", "")) != String(completed_transfer.get("target_authority_id", "")) \
+			or int(coordinator_snapshot.get("authority_epoch", 0)) != int(completed_transfer.get("target_epoch", 0)):
+		return _reject("SM1_WORLD_COMPLETED_TARGET_NOT_CURRENT")
 	var record: Dictionary = Dictionary(_prepared[transfer_id])
 	var expected_checksum := String(record.get("world_bound_warm_checksum", ""))
 	if expected_checksum.is_empty():
@@ -211,6 +247,21 @@ func get_report() -> Dictionary:
 		"private_outpost_truth": false,
 		"counters": _counters.duplicate(true),
 	}
+
+
+func _source_freeze_proof(transfer_id: String) -> Dictionary:
+	if _transfer_coordinator == null or not _transfer_coordinator.has_method("snapshot"):
+		return _reject("SM1_WORLD_SOURCE_FREEZE_PROOF_REQUIRED")
+	var coordinator_snapshot: Dictionary = _transfer_coordinator.snapshot()
+	if String(coordinator_snapshot.get("state", "")) != "SOURCE_FROZEN":
+		return _reject("SM1_WORLD_SOURCE_NOT_FROZEN", {"state": String(coordinator_snapshot.get("state", ""))})
+	var transfer: Dictionary = Dictionary(coordinator_snapshot.get("transfer", {}))
+	if String(transfer.get("transfer_id", "")) != transfer_id:
+		return _reject("SM1_WORLD_TRANSFER_COORDINATOR_MISMATCH")
+	if String(coordinator_snapshot.get("active_authority_id", "")) != String(transfer.get("source_authority_id", "")) \
+			or int(coordinator_snapshot.get("authority_epoch", 0)) != int(transfer.get("source_epoch", 0)):
+		return _reject("SM1_WORLD_SOURCE_FREEZE_TUPLE_INVALID")
+	return _success({"transfer": transfer.duplicate(true)})
 
 
 func _capture_live_fingerprints() -> Dictionary:
