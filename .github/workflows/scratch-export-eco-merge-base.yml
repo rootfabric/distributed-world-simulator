@@ -1,0 +1,42 @@
+name: scratch export eco merge base
+
+on:
+  push:
+    branches:
+      - control/scratch-export-main-for-eco-shadow
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact merge base
+        uses: actions/checkout@v4
+        with:
+          ref: 72684bc9f243d7a458f4dbc6d460efc1c65d825e
+          fetch-depth: 0
+      - name: Assert exact checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          echo "exact_head=$actual"
+          test "$actual" = "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
+      - name: Package source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _export
+          tar --exclude='./.git' --exclude='./_export' -czf _export/merge-base-source.tar.gz .
+          sha256sum _export/merge-base-source.tar.gz | tee _export/merge-base-source.sha256
+      - name: Upload exact merge-base source
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-eco-merge-base-72684bc-source
+          path: |
+            _export/merge-base-source.tar.gz
+            _export/merge-base-source.sha256
+          if-no-files-found: error
+          retention-days: 1
