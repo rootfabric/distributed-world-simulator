@@ -1,0 +1,42 @@
+name: scratch export main for eco shadow
+
+on:
+  push:
+    branches:
+      - control/scratch-export-main-for-eco-shadow
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact current main
+        uses: actions/checkout@v4
+        with:
+          ref: e14f8b6e5b07709d18273cc7886fe660bc353ebf
+          fetch-depth: 0
+      - name: Assert exact checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          echo "exact_head=$actual"
+          test "$actual" = "e14f8b6e5b07709d18273cc7886fe660bc353ebf"
+      - name: Package source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _export
+          tar --exclude='./.git' --exclude='./_export' -czf _export/main-source.tar.gz .
+          sha256sum _export/main-source.tar.gz | tee _export/main-source.sha256
+      - name: Upload exact main source
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-main-e14f8b6-source
+          path: |
+            _export/main-source.tar.gz
+            _export/main-source.sha256
+          if-no-files-found: error
+          retention-days: 1
