@@ -1,0 +1,57 @@
+name: scratch wire eco live shadow
+
+on:
+  push:
+    branches:
+      - control/scratch-export-main-for-eco-shadow
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout live-shadow branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/eco-evo7-live-shadow-r1
+          fetch-depth: 0
+      - name: Assert exact pre-wire HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "52e7c0f404243a71a4330ddddfbb4958e321960f"
+      - name: Wire read-only observer into lazy Earth setup
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('scripts/app/planetary_app.gd')
+          s = p.read_text()
+          assert 'EcoLiveWorldShadowObserverScript' not in s
+          replacements = [
+              ('const AtmosphereManagerScript = preload(\n\t"res://scripts/world/atmosphere/atmosphere_manager.gd"\n)\n', 'const AtmosphereManagerScript = preload(\n\t"res://scripts/world/atmosphere/atmosphere_manager.gd"\n)\nconst EcoLiveWorldShadowObserverScript = preload(\n\t"res://scripts/ecology/shadow/eco_evo7_live_world_shadow_observer_v1.gd"\n)\n'),
+              ('var atmosphere_manager\nvar atmosphere_initialized: bool = false\n', 'var atmosphere_manager\nvar eco_live_world_shadow_observer\nvar atmosphere_initialized: bool = false\n'),
+              ('\tearth_world.process_mode = Node.PROCESS_MODE_DISABLED\n\tadd_child(earth_world)\n\n\tearth_explorer = EarthExplorerScript.new()\n', '\tearth_world.process_mode = Node.PROCESS_MODE_DISABLED\n\tadd_child(earth_world)\n\n\teco_live_world_shadow_observer = EcoLiveWorldShadowObserverScript.new()\n\teco_live_world_shadow_observer.name = "EcoEvo7LiveWorldShadowObserver"\n\tadd_child(eco_live_world_shadow_observer)\n\n\tearth_explorer = EarthExplorerScript.new()\n'),
+              ('\t\tif not earth_initialized:\n\t\t\tlogger.error("earth", "shared_space_activation_failed", {})\n\t\t\treturn\n\tif not atmosphere_initialized:\n', '\t\tif not earth_initialized:\n\t\t\tlogger.error("earth", "shared_space_activation_failed", {})\n\t\t\treturn\n\t\tif eco_live_world_shadow_observer != null:\n\t\t\teco_live_world_shadow_observer.setup(earth_world, simulation_clock)\n\tif not atmosphere_initialized:\n'),
+          ]
+          for old, new in replacements:
+              assert s.count(old) == 1, old
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+      - name: Verify exact 10-line additive delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git diff -- scripts/app/planetary_app.gd
+          test "$(git diff --numstat -- scripts/app/planetary_app.gd)" = $'10\t0\tscripts/app/planetary_app.gd'
+      - name: Commit and push live-shadow wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name rootfabric-control
+          git config user.email rootfabric-control@users.noreply.github.com
+          git add scripts/app/planetary_app.gd
+          git commit -m "feat(eco): wire live shadow observer to Earth runtime"
+          git push origin HEAD:feature/eco-evo7-live-shadow-r1
