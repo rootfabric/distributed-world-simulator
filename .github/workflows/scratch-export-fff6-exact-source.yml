@@ -32,13 +32,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar --exclude=.git -czf dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz .
-          sha256sum dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
+          mkdir -p _export
+          tar --exclude=.git --exclude=./_export -czf _export/dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz .
+          sha256sum _export/dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
 
       - name: Upload exact source artifact
         uses: actions/upload-artifact@v4
         with:
           name: dws-fff6-exact-source
-          path: dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
+          path: _export/dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
           if-no-files-found: error
           retention-days: 1
