@@ -15,6 +15,9 @@ const PlanetaryOverlayScript = preload(
 const AtmosphereManagerScript = preload(
 	"res://scripts/world/atmosphere/atmosphere_manager.gd"
 )
+const EcoLiveWorldShadowObserverScript = preload(
+	"res://scripts/ecology/shadow/eco_evo7_live_world_shadow_observer_v1.gd"
+)
 
 var celestial_system
 var earth_world
@@ -26,6 +29,7 @@ var earth_moon_distance_m: float = 384_400_000.0
 var nearest_body_id: String = "moon"
 var moon_sun: DirectionalLight3D
 var atmosphere_manager
+var eco_live_world_shadow_observer
 var atmosphere_initialized: bool = false
 var runtime_startup_mode: String = "moon"
 var visible_body_ids: Array[String] = ["earth", "moon"]
@@ -58,6 +62,10 @@ func _ready() -> void:
 	earth_world.visible = false
 	earth_world.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child(earth_world)
+
+	eco_live_world_shadow_observer = EcoLiveWorldShadowObserverScript.new()
+	eco_live_world_shadow_observer.name = "EcoEvo7LiveWorldShadowObserver"
+	add_child(eco_live_world_shadow_observer)
 
 	earth_explorer = EarthExplorerScript.new()
 	earth_explorer.name = "SharedSpaceSpectator"
@@ -227,6 +235,8 @@ func _enter_shared_space_mode() -> void:
 		if not earth_initialized:
 			logger.error("earth", "shared_space_activation_failed", {})
 			return
+		if eco_live_world_shadow_observer != null:
+			eco_live_world_shadow_observer.setup(earth_world, simulation_clock)
 	if not atmosphere_initialized:
 		var world_environment := moon_world.get_node_or_null("WorldEnvironment") as WorldEnvironment
 		atmosphere_initialized = atmosphere_manager.setup(
