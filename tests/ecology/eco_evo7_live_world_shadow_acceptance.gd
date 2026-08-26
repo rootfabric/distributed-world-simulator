@@ -59,7 +59,7 @@ func _init() -> void:
 	if bool(dry_eval.get("success", false)) and bool(wet_eval.get("success", false)):
 		var dry_result: Dictionary = dry_eval["details"]
 		var wet_result: Dictionary = wet_eval["details"]
-		var try_replay_result: Dictionary = dry_eval_replay["details"]
+		var dry_replay_result: Dictionary = dry_eval_replay["details"]
 		_check(String(dry_result["shadow_result_hash"]) == String(dry_replay_result["shadow_result_hash"]), "same live observation + candidate replays shadow result hash-identically")
 		_check(String(dry_result["evaluation_identity_tag"]) == String(wet_result["evaluation_identity_tag"]), "environment cannot re-roll EVO7 candidate realization identity")
 		_check(int(dry_result["candidate_individual_seed"]) == int(wet_result["candidate_individual_seed"]), "environment cannot change candidate individual seed")
