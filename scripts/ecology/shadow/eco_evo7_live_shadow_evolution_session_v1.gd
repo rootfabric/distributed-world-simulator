@@ -302,6 +302,16 @@ func _zone_snapshot(zone_index: int, observation: Dictionary, evaluated: Array[D
 			"realized_crown_density": float(result["realized_crown_density"]),
 			"root_shoot_ratio": float(result["root_shoot_ratio"]),
 			"structural_investment": float(result["structural_investment"]),
+			"photosynthetic_gain_proxy": float(result["photosynthetic_gain_proxy"]),
+			"realized_photosynthetic_gain": float(result["realized_photosynthetic_gain"]),
+			"maintenance_cost_proxy": float(result["maintenance_cost_proxy"]),
+			"establishment_capacity": float(result["establishment_capacity"]),
+			"fitness_establishment_term": float(result["fitness_establishment_term"]),
+			"water_match": float(result["water_match"]),
+			"fitness_water_match_term": float(result["fitness_water_match_term"]),
+			"fitness_shade_term": float(result["fitness_shade_term"]),
+			"fitness_drought_cost": float(result["fitness_drought_cost"]),
+			"water_limited_resource": float(result["water_limited_resource"]),
 			"phenotype_hash": String(result["phenotype_hash"]),
 		})
 	var n := float(evaluated.size())
