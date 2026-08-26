@@ -1,0 +1,30 @@
+name: scratch export LS shadow head
+on:
+  push:
+    branches: [control/scratch-export-main-for-eco-shadow]
+  workflow_dispatch:
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 065569e47d18827876275d128cba6001ed6a0b52
+          fetch-depth: 0
+      - name: Assert exact head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "065569e47d18827876275d128cba6001ed6a0b52"
+      - name: Package exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/eco-ls-export"
+          tar --exclude=.git -czf "$RUNNER_TEMP/eco-ls-export/source.tar.gz" .
+          sha256sum "$RUNNER_TEMP/eco-ls-export/source.tar.gz" | tee "$RUNNER_TEMP/eco-ls-export/source.tar.gz.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exact-eco-live-shadow-065569e-source
+          path: ${{ runner.temp }}/eco-ls-export/
+          retention-days: 1
