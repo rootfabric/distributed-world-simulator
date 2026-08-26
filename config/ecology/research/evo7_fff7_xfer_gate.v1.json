@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_fff7_xfer_gate.v1",
+  "version": "1.1.0",
+  "stage": "ECO.EVO7/FFF7_SCALE_XFER_READINESS",
+  "status": "BLOCKED_PENDING_FFF6_ACCEPTANCE",
+  "fff7_activation_authorized": false,
+  "xfer_authorized": false,
+  "production_ecology_authority_authorized": false,
+  "required_predecessor": "ECO.EVO7/FFF6_CLOSED_COMMUNITY_SUCCESSION",
+  "required_evidence": [
+    "FFF6_EXACT_REPOSITORY_RUNNER_PASS",
+    "FFF6_PROJECT_CONTROL_SUCCESS",
+    "FFF6_FRESH_INDEPENDENT_REVIEW_PASS",
+    "FFF6_FRESH_INDEPENDENT_VERIFIER_PASS",
+    "FFF31_COUNTERFACTUAL_REALIZATION_IDENTITY_PASS",
+    "FFF4_SCENARIO_INDEPENDENT_REALIZATION_IDENTITY_PASS",
+    "FFF4_WATER_CONSERVATION_AND_PER_REQUEST_BOUNDS_PASS",
+    "FFF5_MODIFIED_PRISTINE_REALIZATION_IDENTITY_PASS",
+    "FFF6_ZONE_PHASE_INDEPENDENT_REALIZATION_IDENTITY_PASS",
+    "FFF6_CYCLES_AT_LEAST_100",
+    "FFF6_DETERMINISTIC_REPLAY_PASS",
+    "FFF6_GEOMETRY_CLUSTER_COUNT_AT_LEAST_3",
+    "FFF6_CANOPY_GAP_RECOVERY_PASS",
+    "FFF6_ANTI_RUNAWAY_PASS",
+    "FFF6_NO_SECOND_MUTATION_AUTHORITY_PASS",
+    "FFF6_PRODUCTION_ECOLOGY_AUTHORITY_FAIL_CLOSED_PASS"
+  ],
+  "after_acceptance_scope_only": [
+    "profiling",
+    "aggregation_lod",
+    "persistence_boundary_design",
+    "production_environment_write_authority_design",
+    "network_read_only_projection_design"
+  ],
+  "forbidden_before_acceptance": [
+    "production_ecology_write_authority",
+    "network_replication_activation",
+    "persistence_owner_activation",
+    "xfer_runtime_activation"
+  ]
+}

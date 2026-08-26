@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_evo6_water_evolution_lab.gd" id="1_lab"]
+
+[node name="EcoEvo6WaterEvolutionLab" type="Node3D"]
+script = ExtResource("1_lab")
