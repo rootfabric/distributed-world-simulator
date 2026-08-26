@@ -1,0 +1,44 @@
+name: Scratch Export Exact FFF6 Source
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/scratch-export-fff6-exact-source.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact FFF6 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 58af47d738169580aa9fdfa979054663d64e6093
+          fetch-depth: 0
+
+      - name: Assert exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          test "$head" = "58af47d738169580aa9fdfa979054663d64e6093"
+          echo "exact_head=$head"
+
+      - name: Package exact source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf ../dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz .
+          sha256sum ../dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
+
+      - name: Upload exact source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dws-fff6-exact-source
+          path: ../dws-58af47d738169580aa9fdfa979054663d64e6093-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
