@@ -1,0 +1,33 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_live_world_shadow_config.v1",
+  "version": "1.0.0",
+  "stage": "ECO.EVO7/LIVE_WORLD_SHADOW_R1",
+  "mode": "SHADOW_READ_ONLY",
+  "enabled": true,
+  "source": {
+    "world": "ProceduralEarthWorld",
+    "environment": "EarthRulePipeline.sample",
+    "water": ["moisture", "water_kind", "river_mask", "lake_mask", "sea_mask"],
+    "light": ["EarthSun.light_energy", "tree_density"]
+  },
+  "unbound_shadow_inputs": {
+    "nutrients": 0.5,
+    "soil_texture": "derived_shadow_proxy_not_canonical_geology"
+  },
+  "authority": {
+    "world_write": false,
+    "ecology_write": false,
+    "persistence_write": false,
+    "network_replication_write": false,
+    "mutation_authority": false,
+    "xfer_authority": false
+  },
+  "promotion": {
+    "authorized": false,
+    "requires_fff3_1_reviewer_verifier": true,
+    "requires_fff4_reviewer_verifier": true,
+    "requires_fff5_reviewer_verifier": true,
+    "requires_fff6_reviewer_verifier": true,
+    "requires_separate_fff7_xfer_authorization": true
+  }
+}
