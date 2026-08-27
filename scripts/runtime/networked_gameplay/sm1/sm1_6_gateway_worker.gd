@@ -42,6 +42,7 @@ var _counters := {
 	"handoffs": 0,
 	"state_broadcasts": 0,
 	"route_changes": 0,
+	"busy_rejections": 0,
 }
 
 
@@ -178,10 +179,17 @@ func _handle_client(peer_id: String, payload: Dictionary) -> void:
 		_send_client(peer_id, {"type": "ERROR", "error_code": "SM1_CLIENT_MESSAGE_UNKNOWN"})
 		return
 	if String(_client_by_peer.get(peer_id, "")) != "a":
-		_send_client(peer_id, {"type": "COMMAND_RESULT", "success": false, "error_code": "SM1_OBSERVER_CANNOT_WRITE"})
+		_send_client(peer_id, {
+			"type": "COMMAND_RESULT", "request_id": String(payload.get("request_id", "")),
+			"success": false, "error_code": "SM1_OBSERVER_CANNOT_WRITE",
+		})
 		return
 	if not _started_clients or not _pending_command.is_empty() or not _transfer.is_empty():
-		_send_client(peer_id, {"type": "COMMAND_RESULT", "success": false, "error_code": "SM1_GATEWAY_COMMAND_BUSY"})
+		_counters["busy_rejections"] = int(_counters["busy_rejections"]) + 1
+		_send_client(peer_id, {
+			"type": "COMMAND_RESULT", "request_id": String(payload.get("request_id", "")),
+			"success": false, "error_code": "SM1_GATEWAY_COMMAND_BUSY",
+		})
 		return
 	_request_serial += 1
 	var gateway_request_id := "sm1/gateway/execute/%d" % _request_serial
