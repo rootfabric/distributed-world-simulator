@@ -1,0 +1,52 @@
+name: Publish exact SM1.7.12 candidate
+
+on:
+  push:
+    branches:
+      - staging/sm1-7-12-impaired-crossings
+    paths:
+      - .github/workflows/sm1-7-12-exact-publish.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild exact patch and fast-forward product branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          product_branch='feature/v0-sm1-seamless-product-integration'
+          expected_base='716ed913f9835593a31d142a556d78833c7088b1'
+
+          cat carrier/sm1712/00.b64 carrier/sm1712/01.b64 carrier/sm1712/02.b64 carrier/sm1712/03.b64 > /tmp/sm1712.patch.b64
+          test "$(wc -c < /tmp/sm1712.patch.b64)" = "13760"
+          base64 -d /tmp/sm1712.patch.b64 | gzip -d > /tmp/sm1712.patch
+          test -s /tmp/sm1712.patch
+
+          git fetch origin "$product_branch"
+          test "$(git rev-parse "origin/$product_branch")" = "$expected_base"
+          git checkout --detach "$expected_base"
+          git config user.name "rootfabric-sm1-publisher"
+          git config user.email "rootfabric-sm1-publisher@users.noreply.github.com"
+
+          git am /tmp/sm1712.patch
+
+          test "$(git rev-list --count "$expected_base"..HEAD)" = "1"
+          test "$(git diff --name-only "$expected_base"..HEAD | wc -l)" = "6"
+          test "$(git hash-object RUN_V0_SM1_REPEATED_CROSSINGS_IMPAIRED_NETWORK.sh)" = "6d96a2e65599720dc3a07d4ea1b8c2fa64d68215"
+          test "$(git hash-object scripts/runtime/networked_gameplay/sm1/sm1_6_authority_worker.gd)" = "00b4294127cd7c632eda63e98fccadc8d79de162"
+          test "$(git hash-object scripts/runtime/networked_gameplay/sm1/sm1_6_gateway_worker.gd)" = "213d16c019220e45b9cee89be8b57797197d009c"
+          test "$(git hash-object scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd)" = "fb2222bf25fe363c3bdc3f6ff31098b39ef572dd"
+          test "$(git hash-object scripts/runtime/networked_gameplay/sm1/sm1_7_impaired_crossing_client.gd)" = "1da38b596b1a964b5fb6759232d9864c8d78845e"
+          test "$(git hash-object tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd)" = "7049a66a2e265c08d8fe43f3d5b15d2598eb9bf5"
+          test "$(git rev-parse HEAD^{tree})" = "29cf315699041e417648af447837ceace68be0b4"
+          test "$(git status --porcelain --untracked-files=all)" = ""
+
+          git push origin HEAD:"refs/heads/$product_branch"
+          git show -s --format='published=%H tree=%T parent=%P subject=%s'
