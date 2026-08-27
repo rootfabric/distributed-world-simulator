@@ -31,6 +31,7 @@ var _counters := {
 	"warm_loads": 0,
 	"activations": 0,
 	"retires": 0,
+	"state_queries": 0,
 }
 
 
@@ -104,6 +105,8 @@ func _handle(payload: Dictionary) -> void:
 			_retire(request_id, payload)
 		"ACTIVATE":
 			_activate(request_id, payload)
+		"STATE_QUERY":
+			_state_query(request_id, payload)
 		"SHUTDOWN":
 			_finish_success()
 		_:
@@ -159,6 +162,25 @@ func _execute(request_id: String, payload: Dictionary) -> void:
 		"state": _state.duplicate(true),
 		"state_checksum": Support.checksum(_state),
 		"handoff_target": handoff_target,
+	})
+
+
+func _state_query(request_id: String, payload: Dictionary) -> void:
+	_counters["state_queries"] = int(_counters["state_queries"]) + 1
+	if not _active:
+		_send({"type": "STATE_QUERY_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_AUTHORITY_NOT_ACTIVE"})
+		return
+	if int(payload.get("authority_epoch", 0)) != _authority_epoch:
+		_send({"type": "STATE_QUERY_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_AUTHORITY_EPOCH_MISMATCH"})
+		return
+	_send({
+		"type": "STATE_QUERY_RESULT",
+		"request_id": request_id,
+		"success": true,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"state": _state.duplicate(true),
+		"state_checksum": Support.checksum(_state),
 	})
 
 
