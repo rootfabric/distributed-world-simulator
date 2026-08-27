@@ -1,0 +1,97 @@
+name: ECO EVO7 LS3.1 Exact Closure R1
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls30-ls31-spatial-planet-patch-r1
+    paths:
+      - ".github/workflows/evo7-ls31-exact-closure-r1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-ls31-exact-closure-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  closure:
+    name: exact LS3.0 LS3.1 closure on immutable target
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout immutable LS3.1 target
+        uses: actions/checkout@v4
+        with:
+          ref: d7d16beccf87e685d420b2f673c02536d6b114a7
+          fetch-depth: 0
+
+      - name: Assert exact target checkout
+        run: |
+          $expected = "d7d16beccf87e685d420b2f673c02536d6b114a7"
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne $expected) {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=$expected"
+          }
+          Write-Host "exact_head=$head"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found. Configure DWS_GODOT_DOUBLE_BIN or install: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run exact inherited LS2.1 plus LS3.1 chain
+        run: |
+          $godot = "${{ steps.godot.outputs.path }}"
+          function Run-Godot([string]$label, [string[]]$arguments) {
+            Write-Host "=== $label ==="
+            & $godot @arguments
+            if ($LASTEXITCODE -ne 0) {
+              throw "$label failed with exit code $LASTEXITCODE"
+            }
+          }
+
+          Run-Godot "Live World Shadow acceptance" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_live_world_shadow_acceptance.gd")
+          Run-Godot "Live World Shadow runtime smoke" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_live_world_shadow_runtime_smoke.gd")
+          Run-Godot "LS1 live shadow session" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_ls1_live_shadow_session_acceptance.gd")
+          Run-Godot "LS2 live polygon acceptance" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_ls2_live_polygon_acceptance.gd")
+
+          $env:EVO7_LS2_POLYGON_AUTOCAP = "1"
+          Run-Godot "LS2 polygon smoke" @("--headless", "--path", ".", "res://scenes/labs/ecology/eco_evo7_live_ecology_polygon.tscn")
+          Remove-Item Env:EVO7_LS2_POLYGON_AUTOCAP
+
+          Run-Godot "LS2.1 evolution observatory" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_ls21_evolution_observatory_acceptance.gd")
+          Run-Godot "LS3.0 LS3.1 planet patch acceptance" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_ls31_planet_patch_acceptance.gd")
+          Run-Godot "LS3.0 LS3.1 fail-closed acceptance" @("--headless", "--path", ".", "--script", "res://tests/ecology/eco_evo7_ls31_failclosed_acceptance.gd")
+
+          $env:EVO7_LS31_PATCH_AUTOCAP = "1"
+          Run-Godot "LS3.1 spatial patch smoke" @("--headless", "--path", ".", "res://scenes/labs/ecology/eco_evo7_ls31_spatial_patch_lab.tscn")
+          Remove-Item Env:EVO7_LS31_PATCH_AUTOCAP
+
+      - name: Final immutable target assertion
+        run: |
+          $expected = "d7d16beccf87e685d420b2f673c02536d6b114a7"
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne $expected) {
+            throw "TARGET_MOVED_DURING_CLOSURE: actual=$head expected=$expected"
+          }
+          Write-Host "ECO EVO7 LS3.1 exact closure target preserved: $head"
