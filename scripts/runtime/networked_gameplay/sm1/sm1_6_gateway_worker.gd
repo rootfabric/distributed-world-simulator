@@ -26,12 +26,21 @@ var _peer_by_client: Dictionary = {}
 var _ever_connected_clients: Dictionary = {}
 var _resuming_peers: Dictionary = {}
 var _resume_requests: Dictionary = {}
+var _pending_restart_hellos: Dictionary = {}
+var _authority_status_requests: Dictionary = {}
+var _authority_status_results: Dictionary = {}
+var _authority_recovery_requested := false
+var _authority_recovery_complete := false
+var _restart_recovery_session := false
+var _bootstrap_authority_id := ""
+var _bootstrap_authority_epoch := 0
+var _session_ready_announced := false
 var _started_ms := 0
 var _started_clients := false
 var _finished := false
 var _shutdown_at_ms := -1
-var _active_authority_id := Support.AUTHORITY_A
-var _authority_epoch := 1
+var _active_authority_id := ""
+var _authority_epoch := 0
 var _pending_command: Dictionary = {}
 var _transfer: Dictionary = {}
 var _request_serial := 0
@@ -50,6 +59,10 @@ var _counters := {
 	"client_reconnects": 0,
 	"resume_queries": 0,
 	"resume_successes": 0,
+	"authority_status_queries": 0,
+	"authority_recoveries": 0,
+	"restart_resume_sessions": 0,
+	"session_ready_announcements": 0,
 }
 
 
@@ -73,10 +86,12 @@ func _initialize() -> void:
 		return
 	_started_ms = Time.get_ticks_msec()
 	Support.write_state(String(_options["result-file"]), "LISTENING", {
+		"process_id": OS.get_process_id(),
 		"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
 		"client_port": int(_options["client-port"]),
 		"active_authority_id": _active_authority_id,
 		"authority_epoch": _authority_epoch,
+		"authority_recovery_complete": false,
 	})
 	print("SM1_6_GATEWAY_LISTENING port=%d" % int(_options["client-port"]))
 
@@ -104,6 +119,7 @@ func _process(_delta: float) -> bool:
 	_poll_clients()
 	_poll_authority(Support.AUTHORITY_A)
 	_poll_authority(Support.AUTHORITY_B)
+	_maybe_start_authority_recovery()
 	_flush_all()
 	_maybe_start_clients()
 	if _shutdown_at_ms > 0 and Time.get_ticks_msec() >= _shutdown_at_ms:
@@ -112,6 +128,124 @@ func _process(_delta: float) -> bool:
 	if Time.get_ticks_msec() - _started_ms > int(_options.get("timeout-ms", 120000)):
 		_finish_failure("GATEWAY_TIMEOUT", {"pending_command": _pending_command, "transfer": _transfer})
 	return false
+
+
+func _maybe_start_authority_recovery() -> void:
+	if _authority_recovery_requested or _authority_recovery_complete:
+		return
+	if not bool(_authority_ready.get(Support.AUTHORITY_A, false)) or not bool(_authority_ready.get(Support.AUTHORITY_B, false)):
+		return
+	_authority_recovery_requested = true
+	for authority_id in [Support.AUTHORITY_A, Support.AUTHORITY_B]:
+		_request_serial += 1
+		var request_id := "sm1/gateway/status/%d" % _request_serial
+		_authority_status_requests[request_id] = authority_id
+		_counters["authority_status_queries"] = int(_counters["authority_status_queries"]) + 1
+		_send_authority(authority_id, {"type": "STATUS_QUERY", "request_id": request_id})
+
+
+func _handle_status_query_result(authority_id: String, payload: Dictionary) -> void:
+	var request_id := String(payload.get("request_id", ""))
+	if not _authority_status_requests.has(request_id) or String(_authority_status_requests[request_id]) != authority_id:
+		_finish_failure("AUTHORITY_STATUS_CORRELATION_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	_authority_status_requests.erase(request_id)
+	if not bool(payload.get("success", false)):
+		_finish_failure("AUTHORITY_STATUS_QUERY_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	if String(payload.get("authority_id", "")) != authority_id:
+		_finish_failure("AUTHORITY_STATUS_ID_DIVERGED", {"authority_id": authority_id, "payload": payload})
+		return
+	_authority_status_results[authority_id] = payload.duplicate(true)
+	if _authority_status_results.size() != 2:
+		return
+	var active_ids: Array[String] = []
+	for candidate in [Support.AUTHORITY_A, Support.AUTHORITY_B]:
+		if bool(Dictionary(_authority_status_results.get(candidate, {})).get("active", false)):
+			active_ids.append(candidate)
+	if active_ids.size() != 1:
+		_finish_failure("AUTHORITY_RECOVERY_ACTIVE_SET_INVALID", {"active_authority_ids": active_ids})
+		return
+	var selected := String(active_ids[0])
+	var status: Dictionary = Dictionary(_authority_status_results[selected])
+	var epoch := int(status.get("authority_epoch", 0))
+	if epoch < 1:
+		_finish_failure("AUTHORITY_RECOVERY_EPOCH_INVALID", {"authority_id": selected, "status": status})
+		return
+	_active_authority_id = selected
+	_authority_epoch = epoch
+	_bootstrap_authority_id = selected
+	_bootstrap_authority_epoch = epoch
+	_last_world_revision = int(status.get("world_revision", 0))
+	_last_state_checksum = String(status.get("state_checksum", ""))
+	_authority_recovery_complete = true
+	_counters["authority_recoveries"] = int(_counters["authority_recoveries"]) + 1
+	for peer_value in _pending_restart_hellos.keys().duplicate():
+		var peer_id := String(peer_value)
+		var hello: Dictionary = Dictionary(_pending_restart_hellos[peer_id]).duplicate(true)
+		_begin_restart_resume(peer_id, String(hello.get("client_id", "")), hello)
+	_maybe_start_clients()
+
+
+func _begin_restart_resume(peer_id: String, client_id: String, hello: Dictionary) -> void:
+	if not _authority_recovery_complete:
+		_pending_restart_hellos[peer_id] = hello.duplicate(true)
+		return
+	if not _pending_command.is_empty() or not _transfer.is_empty():
+		_finish_failure("CLIENT_RECONNECT_DURING_HANDOFF", {"client_id": client_id})
+		return
+	var observed_epoch := int(hello.get("observed_authority_epoch", 0))
+	var observed_revision := int(hello.get("observed_world_revision", 0))
+	var observed_checksum := String(hello.get("observed_state_checksum", ""))
+	if observed_epoch != _authority_epoch or observed_revision != _last_world_revision or observed_checksum.is_empty() or observed_checksum != _last_state_checksum:
+		_finish_failure("GATEWAY_RESTART_OBSERVED_STATE_DIVERGED", {
+			"client_id": client_id,
+			"observed_epoch": observed_epoch,
+			"observed_revision": observed_revision,
+			"expected_epoch": _authority_epoch,
+			"expected_revision": _last_world_revision,
+		})
+		return
+	_pending_restart_hellos.erase(peer_id)
+	_request_serial += 1
+	var request_id := "sm1/gateway/restart-resume/%d" % _request_serial
+	_resuming_peers[peer_id] = true
+	_resume_requests[request_id] = {
+		"peer_id": peer_id,
+		"client_id": client_id,
+		"restart": true,
+		"observed_epoch": observed_epoch,
+		"observed_revision": observed_revision,
+		"observed_checksum": observed_checksum,
+	}
+	_counters["client_reconnects"] = int(_counters["client_reconnects"]) + 1
+	_counters["resume_queries"] = int(_counters["resume_queries"]) + 1
+	_send_authority(_active_authority_id, {
+		"type": "STATE_QUERY",
+		"request_id": request_id,
+		"authority_epoch": _authority_epoch,
+	})
+
+
+func _maybe_announce_recovered_session_ready() -> void:
+	if not _restart_recovery_session or _session_ready_announced:
+		return
+	if _peer_by_client.size() != 2 or not _resuming_peers.is_empty() or not _pending_restart_hellos.is_empty():
+		return
+	if int(_counters.get("restart_resume_sessions", 0)) != 2:
+		return
+	_session_ready_announced = true
+	_started_clients = true
+	_counters["session_ready_announcements"] = int(_counters["session_ready_announcements"]) + 1
+	for peer_value in _client_by_peer.keys():
+		_send_client(String(peer_value), {
+			"type": "SESSION_READY",
+			"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
+			"product_session_id": Support.PRODUCT_SESSION_ID,
+			"active_authority_id": _active_authority_id,
+			"authority_epoch": _authority_epoch,
+			"world_revision": _last_world_revision,
+		})
 
 
 func _poll_clients() -> void:
@@ -151,6 +285,7 @@ func _handle_client_disconnect(peer_id: String) -> void:
 	if String(_peer_by_client.get(client_id, "")) == peer_id:
 		_peer_by_client.erase(client_id)
 	_resuming_peers.erase(peer_id)
+	_pending_restart_hellos.erase(peer_id)
 	for request_value in _resume_requests.keys():
 		var request_id := String(request_value)
 		if String(Dictionary(_resume_requests[request_id]).get("peer_id", "")) == peer_id:
@@ -210,9 +345,12 @@ func _handle_state_query_result(authority_id: String, payload: Dictionary) -> vo
 	if String(_peer_by_client.get(client_id, "")) != peer_id:
 		_finish_failure("RESUME_CLIENT_BINDING_CHANGED", {"client_id": client_id})
 		return
+	var restart_resume := bool(resume.get("restart", false))
 	_resume_requests.erase(request_id)
 	_resuming_peers.erase(peer_id)
 	_counters["resume_successes"] = int(_counters["resume_successes"]) + 1
+	if restart_resume:
+		_counters["restart_resume_sessions"] = int(_counters["restart_resume_sessions"]) + 1
 	_send_client(peer_id, {
 		"type": "RESUME",
 		"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
@@ -223,6 +361,8 @@ func _handle_state_query_result(authority_id: String, payload: Dictionary) -> vo
 		"shared_state": state,
 		"state_checksum": state_checksum,
 	})
+	if restart_resume:
+		_maybe_announce_recovered_session_ready()
 
 
 func _poll_authority(authority_id: String) -> void:
@@ -264,11 +404,16 @@ func _handle_client(peer_id: String, payload: Dictionary) -> void:
 		if _peer_by_client.has(client_id) and String(_peer_by_client[client_id]) != peer_id:
 			_finish_failure("CLIENT_ID_ALREADY_BOUND", {"client_id": client_id})
 			return
+		var gateway_restart := bool(payload.get("gateway_restart", false))
 		var reconnecting := bool(_ever_connected_clients.get(client_id, false))
 		_client_by_peer[peer_id] = client_id
 		_peer_by_client[client_id] = peer_id
 		_ever_connected_clients[client_id] = true
-		if reconnecting:
+		if gateway_restart:
+			_restart_recovery_session = true
+			_pending_restart_hellos[peer_id] = payload.duplicate(true)
+			_begin_restart_resume(peer_id, client_id, payload)
+		elif reconnecting:
 			_begin_client_resume(peer_id, client_id)
 		else:
 			_maybe_start_clients()
@@ -330,6 +475,8 @@ func _handle_authority(authority_id: String, payload: Dictionary) -> void:
 			_handle_activate_result(authority_id, payload)
 		"STATE_QUERY_RESULT":
 			_handle_state_query_result(authority_id, payload)
+		"STATUS_QUERY_RESULT":
+			_handle_status_query_result(authority_id, payload)
 		"ERROR":
 			_finish_failure(String(payload.get("error_code", "AUTHORITY_ERROR")), {"authority_id": authority_id})
 
@@ -463,7 +610,7 @@ func _broadcast_state(state: Dictionary) -> void:
 
 
 func _maybe_start_clients() -> void:
-	if _started_clients or _peer_by_client.size() != 2:
+	if _started_clients or _restart_recovery_session or not _authority_recovery_complete or _peer_by_client.size() != 2:
 		return
 	if not bool(_authority_ready.get(Support.AUTHORITY_A, false)) or not bool(_authority_ready.get(Support.AUTHORITY_B, false)):
 		return
@@ -545,6 +692,9 @@ func _finish_success() -> void:
 		"active_authority_id": _active_authority_id,
 		"authority_epoch": _authority_epoch,
 		"handoff_count": _handoff_count,
+		"authority_recovery_complete": _authority_recovery_complete,
+		"bootstrap_authority_id": _bootstrap_authority_id,
+		"bootstrap_authority_epoch": _bootstrap_authority_epoch,
 		"last_world_revision": _last_world_revision,
 		"last_state_checksum": _last_state_checksum,
 		"transfer_payload_retained": not _transfer.is_empty(),

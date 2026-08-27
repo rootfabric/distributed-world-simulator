@@ -32,6 +32,7 @@ var _counters := {
 	"activations": 0,
 	"retires": 0,
 	"state_queries": 0,
+	"status_queries": 0,
 }
 
 
@@ -107,6 +108,8 @@ func _handle(payload: Dictionary) -> void:
 			_activate(request_id, payload)
 		"STATE_QUERY":
 			_state_query(request_id, payload)
+		"STATUS_QUERY":
+			_status_query(request_id)
 		"SHUTDOWN":
 			_finish_success()
 		_:
@@ -181,6 +184,21 @@ func _state_query(request_id: String, payload: Dictionary) -> void:
 		"authority_epoch": _authority_epoch,
 		"state": _state.duplicate(true),
 		"state_checksum": Support.checksum(_state),
+	})
+
+
+func _status_query(request_id: String) -> void:
+	_counters["status_queries"] = int(_counters["status_queries"]) + 1
+	_send({
+		"type": "STATUS_QUERY_RESULT",
+		"request_id": request_id,
+		"success": true,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"active": _active,
+		"warm": _warm,
+		"world_revision": int(_state.get("world_revision", 0)),
+		"state_checksum": Support.checksum(_state) if not _state.is_empty() else "",
 	})
 
 
