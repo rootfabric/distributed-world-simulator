@@ -26,7 +26,11 @@ jobs:
 
           cat carrier/sm1712/00.b64 carrier/sm1712/01.b64 carrier/sm1712/02.b64 carrier/sm1712/03.b64 > /tmp/sm1712.patch.b64
           test "$(wc -c < /tmp/sm1712.patch.b64)" = "13760"
-          base64 -d /tmp/sm1712.patch.b64 | gzip -d > /tmp/sm1712.patch
+          set +e
+          base64 -d /tmp/sm1712.patch.b64 | gzip -dc > /tmp/sm1712.patch
+          gzip_rc=$?
+          set -e
+          echo "gzip_rc=$gzip_rc patch_bytes=$(wc -c < /tmp/sm1712.patch)"
           test -s /tmp/sm1712.patch
 
           git fetch origin "$product_branch"
