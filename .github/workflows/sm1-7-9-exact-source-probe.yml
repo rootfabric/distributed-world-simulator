@@ -1,0 +1,40 @@
+name: SM1.7.9 exact source probe
+
+on:
+  push:
+    branches:
+      - probe/sm1-7-9-final-98e035b
+
+permissions:
+  contents: read
+
+jobs:
+  package-exact-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Package immutable candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate=98e035ba97fb1c2d817323a4e0fa8238846ef740
+          git cat-file -e "${candidate}^{commit}"
+          git branch --force exact-candidate "$candidate"
+          git bundle create sm1-7-9-candidate.bundle exact-candidate
+          printf '%s\n' "$candidate" > exact-head.txt
+          git show -s --format='%H %T %P %s' "$candidate" > exact-commit.txt
+          sha256sum sm1-7-9-candidate.bundle exact-head.txt exact-commit.txt > SHA256SUMS
+          cat exact-commit.txt
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sm1-7-9-final-98e035b
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            sm1-7-9-candidate.bundle
+            exact-head.txt
+            exact-commit.txt
+            SHA256SUMS
