@@ -23,7 +23,12 @@ jobs:
           git checkout --detach "$expected_base"
           git config user.name "rootfabric-sm1-publisher"
           git config user.email "rootfabric-sm1-publisher@users.noreply.github.com"
-          printf '%s' "$PATCH_B64" | base64 -d | gzip -d > /tmp/sm1711.patch
+          set +e
+          printf '%s' "$PATCH_B64" | base64 -d | gzip -dc > /tmp/sm1711.patch
+          gzip_rc=$?
+          set -e
+          echo "gzip_rc=$gzip_rc patch_bytes=$(wc -c < /tmp/sm1711.patch)"
+          test -s /tmp/sm1711.patch
           git am /tmp/sm1711.patch
           test "$(git rev-list --count "$expected_base"..HEAD)" = "1"
           test "$(git diff --name-only "$expected_base"..HEAD | wc -l)" = "3"
