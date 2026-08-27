@@ -33,6 +33,9 @@ var _counters := {
 	"retires": 0,
 	"state_queries": 0,
 	"status_queries": 0,
+	"recovery_state_queries": 0,
+	"standby_syncs": 0,
+	"recovery_activations": 0,
 }
 
 
@@ -110,6 +113,12 @@ func _handle(payload: Dictionary) -> void:
 			_state_query(request_id, payload)
 		"STATUS_QUERY":
 			_status_query(request_id)
+		"RECOVERY_STATE_QUERY":
+			_recovery_state_query(request_id)
+		"STANDBY_SYNC":
+			_standby_sync(request_id, payload)
+		"RECOVER_ACTIVATE":
+			_recover_activate(request_id, payload)
 		"SHUTDOWN":
 			_finish_success()
 		_:
@@ -199,6 +208,75 @@ func _status_query(request_id: String) -> void:
 		"warm": _warm,
 		"world_revision": int(_state.get("world_revision", 0)),
 		"state_checksum": Support.checksum(_state) if not _state.is_empty() else "",
+	})
+
+
+func _recovery_state_query(request_id: String) -> void:
+	_counters["recovery_state_queries"] = int(_counters["recovery_state_queries"]) + 1
+	if _state.is_empty():
+		_send({"type": "RECOVERY_STATE_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_RECOVERY_STATE_UNAVAILABLE"})
+		return
+	_send({
+		"type": "RECOVERY_STATE_RESULT",
+		"request_id": request_id,
+		"success": true,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"active": _active,
+		"warm": _warm,
+		"state": _state.duplicate(true),
+		"state_checksum": Support.checksum(_state),
+	})
+
+
+func _standby_sync(request_id: String, payload: Dictionary) -> void:
+	if _active:
+		_send({"type": "STANDBY_SYNC_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_STANDBY_SYNC_TARGET_ACTIVE"})
+		return
+	var incoming = payload.get("state", {})
+	if not incoming is Dictionary:
+		_send({"type": "STANDBY_SYNC_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_STANDBY_SYNC_STATE_REQUIRED"})
+		return
+	var candidate: Dictionary = Dictionary(incoming).duplicate(true)
+	if String(candidate.get("product_session_id", "")) != Support.PRODUCT_SESSION_ID \
+			or String(candidate.get("logical_player_id", "")) != Support.LOGICAL_PLAYER_ID \
+			or String(candidate.get("player_entity_id", "")) != Support.PLAYER_ENTITY_ID \
+			or int(candidate.get("spawn_generation", 0)) != 1:
+		_send({"type": "STANDBY_SYNC_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_STANDBY_SYNC_IDENTITY_DIVERGED"})
+		return
+	_state = candidate
+	_warm = true
+	_counters["standby_syncs"] = int(_counters["standby_syncs"]) + 1
+	_send({
+		"type": "STANDBY_SYNC_RESULT",
+		"request_id": request_id,
+		"success": true,
+		"zero_write": true,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"state_checksum": Support.checksum(_state),
+	})
+
+
+func _recover_activate(request_id: String, payload: Dictionary) -> void:
+	if _active or not _warm:
+		_send({"type": "RECOVER_ACTIVATE_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_RECOVERY_TARGET_NOT_WARM"})
+		return
+	var target_epoch := int(payload.get("target_epoch", 0))
+	if target_epoch <= _authority_epoch:
+		_send({"type": "RECOVER_ACTIVATE_RESULT", "request_id": request_id, "success": false, "error_code": "SM1_RECOVERY_EPOCH_NOT_MONOTONIC"})
+		return
+	_authority_epoch = target_epoch
+	_active = true
+	_warm = false
+	_counters["recovery_activations"] = int(_counters["recovery_activations"]) + 1
+	_send({
+		"type": "RECOVER_ACTIVATE_RESULT",
+		"request_id": request_id,
+		"success": true,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"state_checksum": Support.checksum(_state),
 	})
 
 

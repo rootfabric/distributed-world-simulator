@@ -21,6 +21,11 @@ var _authority_peer_ids := {
 	Support.AUTHORITY_B: "peer/enet/sm1/gateway-authority-b",
 }
 var _authority_ready := {Support.AUTHORITY_A: false, Support.AUTHORITY_B: false}
+var _authority_connection_generation := {Support.AUTHORITY_A: 1, Support.AUTHORITY_B: 1}
+var _authority_reconnect_due_ms := {Support.AUTHORITY_A: -1, Support.AUTHORITY_B: -1}
+var _runtime_authority_recovery: Dictionary = {}
+var _runtime_authority_requests: Dictionary = {}
+var _authority_recovery_blocks_writes := false
 var _client_by_peer: Dictionary = {}
 var _peer_by_client: Dictionary = {}
 var _ever_connected_clients: Dictionary = {}
@@ -63,7 +68,15 @@ var _counters := {
 	"authority_recoveries": 0,
 	"restart_resume_sessions": 0,
 	"session_ready_announcements": 0,
+	"authority_disconnects": 0,
+	"authority_reconnects": 0,
+	"authority_recovery_status_queries": 0,
+	"authority_recovery_state_queries": 0,
+	"standby_syncs": 0,
+	"active_authority_recoveries": 0,
+	"authority_recovery_events": 0,
 }
+
 
 
 func _initialize() -> void:
@@ -102,12 +115,13 @@ func _connect_authority(authority_id: String, host: String, port: int) -> bool:
 		_finish_failure("AUTHORITY_BOUNDARY_CONFIGURE_FAILED", {"authority_id": authority_id})
 		return false
 	var peer_id := String(_authority_peer_ids[authority_id])
+	var generation := int(_authority_connection_generation.get(authority_id, 1))
 	var connected: Dictionary = boundary.connect_client(
 		Support.endpoint(host, port), peer_id,
-		"transport-session/sm1/gateway/%s" % authority_id.replace("/", "-"),
-		"route/sm1/gateway/%s" % authority_id.replace("/", "-"), 1)
+		"transport-session/sm1/gateway/%s/%d" % [authority_id.replace("/", "-"), generation],
+		"route/sm1/gateway/%s/%d" % [authority_id.replace("/", "-"), generation], generation)
 	if not bool(connected.get("success", false)):
-		_finish_failure(String(connected.get("error_code", "AUTHORITY_CONNECT_FAILED")), {"authority_id": authority_id})
+		boundary.stop()
 		return false
 	_authority_boundaries[authority_id] = boundary
 	return true
@@ -117,6 +131,7 @@ func _process(_delta: float) -> bool:
 	if _finished:
 		return false
 	_poll_clients()
+	_maybe_reconnect_authorities()
 	_poll_authority(Support.AUTHORITY_A)
 	_poll_authority(Support.AUTHORITY_B)
 	_maybe_start_authority_recovery()
@@ -365,6 +380,206 @@ func _handle_state_query_result(authority_id: String, payload: Dictionary) -> vo
 		_maybe_announce_recovered_session_ready()
 
 
+func _authority_endpoint(authority_id: String) -> Dictionary:
+	if authority_id == Support.AUTHORITY_A:
+		return Support.endpoint(String(_options["authority-a-host"]), int(_options["authority-a-port"]))
+	return Support.endpoint(String(_options["authority-b-host"]), int(_options["authority-b-port"]))
+
+
+func _maybe_reconnect_authorities() -> void:
+	for authority_id in [Support.AUTHORITY_A, Support.AUTHORITY_B]:
+		if not _runtime_authority_recovery.has(authority_id):
+			continue
+		if _authority_boundaries.has(authority_id):
+			continue
+		var due := int(_authority_reconnect_due_ms.get(authority_id, -1))
+		if due < 0 or Time.get_ticks_msec() < due:
+			continue
+		_authority_reconnect_due_ms[authority_id] = Time.get_ticks_msec() + 300
+		var endpoint := _authority_endpoint(authority_id)
+		_connect_authority(authority_id, String(endpoint["host"]), int(endpoint["port"]))
+
+
+func _handle_authority_disconnect(authority_id: String) -> void:
+	if not _pending_command.is_empty() or not _transfer.is_empty():
+		_finish_failure("AUTHORITY_DISCONNECTED_DURING_HANDOFF", {"authority_id": authority_id})
+		return
+	if not _runtime_authority_recovery.is_empty() and not _runtime_authority_recovery.has(authority_id):
+		_finish_failure("MULTIPLE_AUTHORITY_RECOVERY_UNSUPPORTED", {"authority_id": authority_id, "existing": _runtime_authority_recovery.keys()})
+		return
+	_authority_ready[authority_id] = false
+	if _authority_boundaries.has(authority_id):
+		_authority_boundaries[authority_id].stop()
+		_authority_boundaries.erase(authority_id)
+	_authority_connection_generation[authority_id] = int(_authority_connection_generation.get(authority_id, 1)) + 1
+	_authority_reconnect_due_ms[authority_id] = Time.get_ticks_msec() + 200
+	_runtime_authority_recovery[authority_id] = {
+		"authority_id": authority_id,
+		"was_active": authority_id == _active_authority_id,
+		"expected_epoch": _authority_epoch if authority_id == _active_authority_id else 0,
+		"stage": "WAIT_RECONNECT",
+	}
+	_authority_recovery_blocks_writes = true
+	_counters["authority_disconnects"] = int(_counters["authority_disconnects"]) + 1
+	_broadcast_authority_recovery("AUTHORITY_RECOVERY_PENDING", authority_id, authority_id == _active_authority_id)
+
+
+func _start_reconnected_authority_validation(authority_id: String) -> void:
+	if not _runtime_authority_recovery.has(authority_id):
+		return
+	var recovery: Dictionary = Dictionary(_runtime_authority_recovery[authority_id])
+	if String(recovery.get("stage", "")) != "WAIT_RECONNECT":
+		return
+	recovery["stage"] = "STATUS"
+	_runtime_authority_recovery[authority_id] = recovery
+	_request_serial += 1
+	var request_id := "sm1/gateway/authority-recovery/%d/status" % _request_serial
+	_runtime_authority_requests[request_id] = {"kind": "RECOVERY_STATUS", "target": authority_id}
+	_counters["authority_recovery_status_queries"] = int(_counters["authority_recovery_status_queries"]) + 1
+	_send_authority(authority_id, {"type": "STATUS_QUERY", "request_id": request_id})
+
+
+func _handle_runtime_recovery_status(authority_id: String, payload: Dictionary, context: Dictionary) -> void:
+	var target := String(context.get("target", ""))
+	if authority_id != target or not _runtime_authority_recovery.has(target):
+		_finish_failure("AUTHORITY_RECOVERY_STATUS_CORRELATION_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	if not bool(payload.get("success", false)) or String(payload.get("authority_id", "")) != target:
+		_finish_failure("AUTHORITY_RECOVERY_STATUS_INVALID", {"authority_id": authority_id, "payload": payload})
+		return
+	if bool(payload.get("active", false)):
+		_finish_failure("AUTHORITY_RECOVERY_REPLACEMENT_SELF_ACTIVE", {"authority_id": authority_id, "payload": payload})
+		return
+	var recovery: Dictionary = Dictionary(_runtime_authority_recovery[target])
+	var source := _active_authority_id if not bool(recovery.get("was_active", false)) else _other_authority(target)
+	if source.is_empty() or not bool(_authority_ready.get(source, false)):
+		_finish_failure("AUTHORITY_RECOVERY_SOURCE_UNAVAILABLE", {"target": target, "source": source})
+		return
+	recovery["stage"] = "STATE_QUERY"
+	recovery["source"] = source
+	_runtime_authority_recovery[target] = recovery
+	_request_serial += 1
+	var request_id := "sm1/gateway/authority-recovery/%d/state" % _request_serial
+	_runtime_authority_requests[request_id] = {"kind": "RECOVERY_STATE", "target": target, "source": source}
+	_counters["authority_recovery_state_queries"] = int(_counters["authority_recovery_state_queries"]) + 1
+	_send_authority(source, {"type": "RECOVERY_STATE_QUERY", "request_id": request_id})
+
+
+func _handle_runtime_recovery_state(authority_id: String, payload: Dictionary, context: Dictionary) -> void:
+	var target := String(context.get("target", ""))
+	var source := String(context.get("source", ""))
+	if authority_id != source or not _runtime_authority_recovery.has(target):
+		_finish_failure("AUTHORITY_RECOVERY_STATE_CORRELATION_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	if not bool(payload.get("success", false)) or String(payload.get("authority_id", "")) != source:
+		_finish_failure("AUTHORITY_RECOVERY_STATE_INVALID", {"authority_id": authority_id, "payload": payload})
+		return
+	var state_value = payload.get("state", {})
+	if not state_value is Dictionary:
+		_finish_failure("AUTHORITY_RECOVERY_STATE_REQUIRED", {"payload": payload})
+		return
+	var state: Dictionary = Dictionary(state_value).duplicate(true)
+	var checksum := Support.checksum(state)
+	if not _validate_identity(state) or checksum != String(payload.get("state_checksum", "")):
+		_finish_failure("AUTHORITY_RECOVERY_STATE_IDENTITY_DIVERGED", {"payload": payload})
+		return
+	if int(state.get("world_revision", 0)) != _last_world_revision or checksum != _last_state_checksum:
+		_finish_failure("AUTHORITY_RECOVERY_OBSERVED_STATE_DIVERGED", {
+			"expected_revision": _last_world_revision,
+			"actual_revision": int(state.get("world_revision", 0)),
+			"expected_checksum": _last_state_checksum,
+			"actual_checksum": checksum,
+		})
+		return
+	var recovery: Dictionary = Dictionary(_runtime_authority_recovery[target])
+	var source_should_be_active := not bool(recovery.get("was_active", false))
+	if bool(payload.get("active", false)) != source_should_be_active:
+		_finish_failure("AUTHORITY_RECOVERY_SOURCE_ROLE_DIVERGED", {"source": source, "payload": payload})
+		return
+	recovery["stage"] = "STANDBY_SYNC"
+	recovery["state_checksum"] = checksum
+	_runtime_authority_recovery[target] = recovery
+	_request_serial += 1
+	var request_id := "sm1/gateway/authority-recovery/%d/sync" % _request_serial
+	_runtime_authority_requests[request_id] = {"kind": "STANDBY_SYNC", "target": target}
+	_send_authority(target, {"type": "STANDBY_SYNC", "request_id": request_id, "state": state})
+
+
+func _handle_runtime_standby_sync(authority_id: String, payload: Dictionary, context: Dictionary) -> void:
+	var target := String(context.get("target", ""))
+	if authority_id != target or not _runtime_authority_recovery.has(target):
+		_finish_failure("AUTHORITY_STANDBY_SYNC_CORRELATION_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	var recovery: Dictionary = Dictionary(_runtime_authority_recovery[target])
+	if not bool(payload.get("success", false)) or not bool(payload.get("zero_write", false)) or String(payload.get("state_checksum", "")) != String(recovery.get("state_checksum", "")):
+		_finish_failure("AUTHORITY_STANDBY_SYNC_INVALID", {"authority_id": authority_id, "payload": payload})
+		return
+	_counters["standby_syncs"] = int(_counters["standby_syncs"]) + 1
+	if not bool(recovery.get("was_active", false)):
+		_complete_runtime_authority_recovery(target, false)
+		return
+	recovery["stage"] = "RECOVER_ACTIVATE"
+	_runtime_authority_recovery[target] = recovery
+	_request_serial += 1
+	var request_id := "sm1/gateway/authority-recovery/%d/activate" % _request_serial
+	_runtime_authority_requests[request_id] = {"kind": "RECOVER_ACTIVATE", "target": target}
+	_send_authority(target, {"type": "RECOVER_ACTIVATE", "request_id": request_id, "target_epoch": int(recovery.get("expected_epoch", 0))})
+
+
+func _handle_runtime_recover_activate(authority_id: String, payload: Dictionary, context: Dictionary) -> void:
+	var target := String(context.get("target", ""))
+	if authority_id != target or not _runtime_authority_recovery.has(target):
+		_finish_failure("AUTHORITY_RECOVER_ACTIVATE_CORRELATION_FAILED", {"authority_id": authority_id, "payload": payload})
+		return
+	var recovery: Dictionary = Dictionary(_runtime_authority_recovery[target])
+	if not bool(payload.get("success", false)) or int(payload.get("authority_epoch", 0)) != int(recovery.get("expected_epoch", 0)) or String(payload.get("state_checksum", "")) != String(recovery.get("state_checksum", "")):
+		_finish_failure("AUTHORITY_RECOVER_ACTIVATE_INVALID", {"authority_id": authority_id, "payload": payload})
+		return
+	_counters["active_authority_recoveries"] = int(_counters["active_authority_recoveries"]) + 1
+	_complete_runtime_authority_recovery(target, true)
+
+
+func _complete_runtime_authority_recovery(authority_id: String, restored_active: bool) -> void:
+	_runtime_authority_recovery.erase(authority_id)
+	_authority_reconnect_due_ms[authority_id] = -1
+	_authority_recovery_blocks_writes = not _runtime_authority_recovery.is_empty()
+	_counters["authority_recovery_events"] = int(_counters["authority_recovery_events"]) + 1
+	Support.write_state(String(_options["result-file"]), "AUTHORITY_RECOVERED", {
+		"process_id": OS.get_process_id(),
+		"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
+		"recovered_authority_id": authority_id,
+		"restored_active": restored_active,
+		"active_authority_id": _active_authority_id,
+		"authority_epoch": _authority_epoch,
+		"world_revision": _last_world_revision,
+		"state_checksum": _last_state_checksum,
+	})
+	_broadcast_authority_recovery("AUTHORITY_RECOVERY_COMPLETE", authority_id, restored_active)
+
+
+func _broadcast_authority_recovery(event_type: String, recovered_authority_id: String, restored_active: bool) -> void:
+	for peer_value in _client_by_peer.keys():
+		_send_client(String(peer_value), {
+			"type": event_type,
+			"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
+			"product_session_id": Support.PRODUCT_SESSION_ID,
+			"recovered_authority_id": recovered_authority_id,
+			"restored_active": restored_active,
+			"active_authority_id": _active_authority_id,
+			"authority_epoch": _authority_epoch,
+			"world_revision": _last_world_revision,
+			"state_checksum": _last_state_checksum,
+		})
+
+
+func _other_authority(authority_id: String) -> String:
+	if authority_id == Support.AUTHORITY_A:
+		return Support.AUTHORITY_B
+	if authority_id == Support.AUTHORITY_B:
+		return Support.AUTHORITY_A
+	return ""
+
+
 func _poll_authority(authority_id: String) -> void:
 	if not _authority_boundaries.has(authority_id):
 		return
@@ -372,6 +587,11 @@ func _poll_authority(authority_id: String) -> void:
 	var peer_id := String(_authority_peer_ids[authority_id])
 	var polled: Dictionary = boundary.poll_events(128)
 	if not bool(polled.get("success", false)):
+		if _runtime_authority_recovery.has(authority_id):
+			boundary.stop()
+			_authority_boundaries.erase(authority_id)
+			_authority_reconnect_due_ms[authority_id] = Time.get_ticks_msec() + 200
+			return
 		_finish_failure(String(polled.get("error_code", "AUTHORITY_POLL_FAILED")), {"authority_id": authority_id})
 		return
 	for raw in polled.get("details", {}).get("events", []):
@@ -381,9 +601,13 @@ func _poll_authority(authority_id: String) -> void:
 			if not Support.mark_ready(boundary, peer_id):
 				_finish_failure("AUTHORITY_PEER_NOT_READY", {"authority_id": authority_id})
 				return
+			var was_ready := bool(_authority_ready.get(authority_id, false))
 			_authority_ready[authority_id] = true
+			if _runtime_authority_recovery.has(authority_id) and not was_ready:
+				_counters["authority_reconnects"] = int(_counters["authority_reconnects"]) + 1
+				_start_reconnected_authority_validation(authority_id)
 		elif event_type == "PEER_DISCONNECTED" and _shutdown_at_ms < 0:
-			_finish_failure("AUTHORITY_DISCONNECTED_DURING_HANDOFF", {"authority_id": authority_id})
+			_handle_authority_disconnect(authority_id)
 			return
 		elif event_type == "MESSAGE_RECEIVED":
 			var payload := Support.payload_from_event(event)
@@ -433,6 +657,12 @@ func _handle_client(peer_id: String, payload: Dictionary) -> void:
 			"success": false, "error_code": "SM1_OBSERVER_CANNOT_WRITE",
 		})
 		return
+	if _authority_recovery_blocks_writes:
+		_send_client(peer_id, {
+			"type": "COMMAND_RESULT", "request_id": String(payload.get("request_id", "")),
+			"success": false, "error_code": "SM1_AUTHORITY_RECOVERY_PENDING",
+		})
+		return
 	if not _started_clients or not _pending_command.is_empty() or not _transfer.is_empty():
 		_counters["busy_rejections"] = int(_counters["busy_rejections"]) + 1
 		_send_client(peer_id, {
@@ -462,6 +692,22 @@ func _handle_client(peer_id: String, payload: Dictionary) -> void:
 
 func _handle_authority(authority_id: String, payload: Dictionary) -> void:
 	var type := String(payload.get("type", ""))
+	var request_id := String(payload.get("request_id", ""))
+	if _runtime_authority_requests.has(request_id):
+		var context: Dictionary = Dictionary(_runtime_authority_requests[request_id]).duplicate(true)
+		_runtime_authority_requests.erase(request_id)
+		match String(context.get("kind", "")):
+			"RECOVERY_STATUS":
+				_handle_runtime_recovery_status(authority_id, payload, context)
+			"RECOVERY_STATE":
+				_handle_runtime_recovery_state(authority_id, payload, context)
+			"STANDBY_SYNC":
+				_handle_runtime_standby_sync(authority_id, payload, context)
+			"RECOVER_ACTIVATE":
+				_handle_runtime_recover_activate(authority_id, payload, context)
+			_:
+				_finish_failure("AUTHORITY_RECOVERY_RESPONSE_KIND_UNKNOWN", {"context": context, "payload": payload})
+		return
 	match type:
 		"EXECUTE_RESULT":
 			_handle_execute_result(authority_id, payload)
@@ -477,6 +723,8 @@ func _handle_authority(authority_id: String, payload: Dictionary) -> void:
 			_handle_state_query_result(authority_id, payload)
 		"STATUS_QUERY_RESULT":
 			_handle_status_query_result(authority_id, payload)
+		"RECOVERY_STATE_RESULT", "STANDBY_SYNC_RESULT", "RECOVER_ACTIVATE_RESULT":
+			_finish_failure("AUTHORITY_RECOVERY_RESPONSE_UNCORRELATED", {"authority_id": authority_id, "payload": payload})
 		"ERROR":
 			_finish_failure(String(payload.get("error_code", "AUTHORITY_ERROR")), {"authority_id": authority_id})
 
@@ -698,6 +946,8 @@ func _finish_success() -> void:
 		"last_world_revision": _last_world_revision,
 		"last_state_checksum": _last_state_checksum,
 		"transfer_payload_retained": not _transfer.is_empty(),
+		"authority_runtime_recovery_pending": not _runtime_authority_recovery.is_empty(),
+		"authority_recovery_blocks_writes": _authority_recovery_blocks_writes,
 		"canonical_gameplay_owner": false,
 		"client_endpoint_changed": false,
 		"counters": _counters.duplicate(true),
