@@ -1,0 +1,45 @@
+name: ECO EVO7 LS3.1 Source Carrier R1
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls30-ls31-spatial-planet-patch-r1
+    paths:
+      - ".github/workflows/evo7-ls31-source-carrier-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact LS3 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 930d975e85601bf41e6b5ce8595c99dafdc361a1
+          fetch-depth: 0
+
+      - name: Assert exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "930d975e85601bf41e6b5ce8595c99dafdc361a1"
+          test "$(git rev-parse HEAD^)" = "05a564f1c49622e78333935f893a14bf268b055b"
+          test "$(git rev-parse 'HEAD^{tree}')" = "cc1e6a51885248a12a7716675c14e7a9a0935368"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Materialize exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/ls31-source-930d975.tar.gz" .
+          sha256sum "$RUNNER_TEMP/ls31-source-930d975.tar.gz"
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ls31-source-930d975
+          path: ${{ runner.temp }}/ls31-source-930d975.tar.gz
+          if-no-files-found: error
+          retention-days: 1
