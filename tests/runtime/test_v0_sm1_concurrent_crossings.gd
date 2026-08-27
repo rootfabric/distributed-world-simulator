@@ -66,7 +66,7 @@ func _run_process_race() -> void:
 		"--headless", "--quiet", "--path", project_root, "--script", "res://scripts/runtime/networked_gameplay/sm1/sm1_6_authority_worker.gd", "--",
 		"--authority-id=%s" % Support.AUTHORITY_B, "--host=127.0.0.1", "--port=%d" % int(ports[2]),
 		"--initial-active=false", "--initial-epoch=1", "--result-file=%s" % b_path,
-	], root.path_join("user-authority-b"), "", root.path.join("authority-b.log"))
+	], root.path_join("user-authority-b"), "", root.path_join("authority-b.log"))
 	child_pids.append(authority_a_pid)
 	child_pids.append(authority_b_pid)
 	_assert(authority_a_pid > 0 and authority_b_pid > 0, "7.7B two authority processes launched")
