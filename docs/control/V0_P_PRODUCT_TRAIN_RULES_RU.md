@@ -43,7 +43,7 @@ P4, P5 и P6 уже приняты. Edge Gateway Foundation также прин�
 
 Observed validated head на refresh 2026-08-28:
 
-`716ed913f9835593a31d142a556d78833c7088b1`
+`b270fb806038333c97fa1ed49655961adddd6a21`
 
 PR #242 остаётся Draft; SM1 ещё не accepted/merged.
 
@@ -58,13 +58,16 @@ SM1 implementation уже включает:
 - reconnect;
 - Gateway restart;
 - Authority recovery;
-- Item Graph / Construction / outpost mutation continuity.
+- Item Graph / Construction / outpost mutation continuity;
+- repeated crossings under deterministic impaired network.
 
-Следующий runtime slice:
+SM1.7.12 **закрыт** на exact head `b270fb8...`: 700/700 PASS, regression belt PASS, Project Control #1439 SUCCESS.
 
-**SM1.7.12 repeated crossings under impaired network**
+Текущая closure работа:
 
-После него нельзя сразу открывать P7. Сначала:
+**full world/core regression**
+
+После неё всё ещё нельзя открывать P7. Сначала:
 
 ```text
 full world/core regression
@@ -76,6 +79,26 @@ full world/core regression
 → human RUNTIME_FEATURE_MERGE
 → SM1 ACCEPTED
 ```
+
+## Manual seamless smoke demo до P7
+
+Ручной tester demo A<->B не является отдельным checkpoint и не требует terrain mutation.
+
+Его можно собрать поверх текущего SM1 runtime после full world/core regression:
+
+```text
+start Authority A
+start Authority B
+start Gateway
+start graphical client
+client connects only to Gateway
+manual walk A -> B -> A
+observe stable identity and unchanged Gateway endpoint
+```
+
+Текущий graphical client script-driven; разрешён thin manual-input/presentation wrapper без изменения canonical ownership/protocol semantics.
+
+Demo PASS != SM1 checkpoint acceptance.
 
 ## Как открывать следующий checkpoint
 
@@ -226,7 +249,7 @@ A active: dig/build
 
 Progress baseline:
 
-`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R1_RU.md`
+`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
 
 ## P8 — first mobile construct / ship
 
