@@ -11,6 +11,8 @@ const OPTION_SPEC := {
 	"authority-b-port": {"kind": "int", "default": 0, "required": true},
 	"client-network-profile": {"kind": "string", "default": ""},
 	"authority-network-profile": {"kind": "string", "default": ""},
+	"demo-mode": {"kind": "bool", "default": false},
+	"required-client-count": {"kind": "int", "default": 2},
 	"result-file": {"kind": "string", "default": "", "required": true},
 	"timeout-ms": {"kind": "int", "default": 120000},
 }
@@ -634,6 +636,18 @@ func _poll_authority(authority_id: String) -> void:
 
 func _handle_client(peer_id: String, payload: Dictionary) -> void:
 	var type := String(payload.get("type", ""))
+	if type == "DEMO_STOP":
+		if not bool(_options.get("demo-mode", false)):
+			_send_client(peer_id, {"type": "ERROR", "error_code": "SM1_DEMO_MODE_DISABLED"})
+			return
+		if String(_client_by_peer.get(peer_id, "")) != "a":
+			_send_client(peer_id, {"type": "ERROR", "error_code": "SM1_DEMO_STOP_WRITER_REQUIRED"})
+			return
+		if not _pending_command.is_empty() or not _transfer.is_empty():
+			_send_client(peer_id, {"type": "ERROR", "error_code": "SM1_DEMO_STOP_BUSY"})
+			return
+		_begin_shutdown()
+		return
 	if type == "HELLO":
 		var client_id := String(payload.get("client_id", ""))
 		if client_id not in ["a", "b"]:
@@ -872,7 +886,13 @@ func _broadcast_state(state: Dictionary) -> void:
 
 
 func _maybe_start_clients() -> void:
-	if _started_clients or _restart_recovery_session or not _authority_recovery_complete or _peer_by_client.size() != 2:
+	var required_client_count := int(_options.get("required-client-count", 2))
+	if required_client_count not in [1, 2]:
+		_finish_failure("REQUIRED_CLIENT_COUNT_INVALID", {"required_client_count": required_client_count})
+		return
+	if _started_clients or _restart_recovery_session or not _authority_recovery_complete or _peer_by_client.size() != required_client_count:
+		return
+	if required_client_count == 1 and not _peer_by_client.has("a"):
 		return
 	if not bool(_authority_ready.get(Support.AUTHORITY_A, false)) or not bool(_authority_ready.get(Support.AUTHORITY_B, false)):
 		return
@@ -968,6 +988,8 @@ func _finish_success() -> void:
 		"gateway_endpoint_id": Support.GATEWAY_ENDPOINT_ID,
 		"client_ids": _peer_by_client.keys(),
 		"client_connection_count": _peer_by_client.size(),
+		"demo_mode": bool(_options.get("demo-mode", false)),
+		"required_client_count": int(_options.get("required-client-count", 2)),
 		"active_authority_id": _active_authority_id,
 		"authority_epoch": _authority_epoch,
 		"handoff_count": _handoff_count,
