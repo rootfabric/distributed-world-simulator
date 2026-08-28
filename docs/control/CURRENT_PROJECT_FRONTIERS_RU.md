@@ -2,7 +2,7 @@
 
 **Operational owner:** `main`  
 **Canonical main at this refresh:** `e14f8b6e5b07709d18273cc7886fe660bc353ebf`  
-**Refresh date:** 2026-08-28  
+**Refresh date:** 2026-08-29  
 **Machine product policy:** `config/control/harness/v0-product-train-policy.v1.json`
 
 > Machine truth remains in `config/control/**`. This file is a human-readable routing snapshot. Branch implementation progress is not checkpoint acceptance until the required control/review/merge lifecycle completes.
@@ -119,12 +119,23 @@ SM1.7.11                145/145 PASS
 Project Control #1439             SUCCESS
 ```
 
-Текущая работа — **B2 full world/core regression**.
+**B2 full world/core regression = CLOSED.**
+
+Composite regression-repair candidate:
+
+`6fdfc047f54e727e6b398370e576c746c7949441`
+
+tree `b9b1202d959b3da4a0c73840091c7bf56070429e`, Draft PR #282 over exact SM1.7.12 `b270fb8...`.
+
+Exact Windows double-Godot evidence: **307/307 steps PASS**, `304/304` standalone tests, `main_scene_cli_all` PASS, `summary.passed=true`.
+
+Текущая работа — **B2.5 manual seamless smoke demo**.
 
 Closure path:
 
 ```text
-full world/core regression
+B2 full world/core regression             CLOSED
+→ manual seamless smoke demo              CURRENT (non-acceptance)
 → post-build critique
 → Evidence Map
 → fresh Reviewer
@@ -150,7 +161,7 @@ Authority A
 
 Текущий graphical SM1 client script-driven, поэтому для tester-facing demo нужен отдельный тонкий manual-input/presentation wrapper. Это packaging/presentation work, а не новый authority protocol.
 
-Рекомендуемый момент: **после B2 full world/core regression**, до либо параллельно critique/review closure. Demo не означает SM1 acceptance.
+Рекомендуемый момент достигнут: **B2 закрыт; manual seamless smoke demo = CURRENT**, до critique/review closure. Demo не означает SM1 acceptance.
 
 ## Next product runtime frontier — P7
 
@@ -194,9 +205,9 @@ P7 не должен переизобретать уже принятые P4/P5 
 - переживать server restart;
 - сходиться к одной canonical truth.
 
-Current navigation estimate после SM1.7.12 closure:
+Current navigation estimate после B2 closure:
 
-**~81-82% функциональной готовности до этого milestone.**
+**~82% функциональной готовности до этого milestone.**
 
 Это product navigation metric, не Harness acceptance state.
 
