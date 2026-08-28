@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-28-R2",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-28-R5",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/ECO-VIS1",
-  "visualization_gate": "SATISFIED_BY_LS3_FINAL_A7E3F81",
+  "current_checkpoint": "ECO.EVO7/ECO-VIS2",
+  "visualization_gate": "VIS1_ACCEPTED_57577F5",
   "route": [
     {
       "id": "LS3.0",
@@ -49,12 +49,12 @@
     {
       "id": "ECO-VIS1",
       "name": "Spatial World Viewer",
-      "status": "IMPLEMENTATION_CANDIDATE"
+      "status": "CLOSED_ACCEPTED_57577F5"
     },
     {
       "id": "ECO-VIS2",
       "name": "Procedural Plant Renderer",
-      "status": "BLOCKED_BY_VIS1"
+      "status": "IMPLEMENTATION_CANDIDATE_R2_1"
     },
     {
       "id": "ECO-VIS3",
@@ -89,8 +89,9 @@
   "visualization": {
     "start_condition": "SATISFIED: LS3.FINAL accepted candidate a7e3f81ee10c70757d3604a50f8cf98258b50964",
     "vis1": "Godot spatial viewer with 32x32 world projection, camera, environment/population/biome overlays and selectable plants/cohorts.",
-    "vis2": "Procedural phenotype renderer driven by existing phenotype/trait data; visuals remain presentation, never ecology truth.",
-    "vis3": "Planet patch / biome viewer with multi-scale camera and observable evolutionary history."
+    "vis2": "Procedural plant renderer driven directly by accepted LS3.4 phenotype evidence: height, LAI, root depth/spread, root-shoot allocation, water satisfaction and resource balance. Founder generation remains explicitly non-phenotype markers.",
+    "vis3": "Planet patch / biome viewer with multi-scale camera and observable evolutionary history.",
+    "vis2_authority": "Presentation-only adapter + renderer; no phenotype recomputation, genome edits, fitness edits, persistence or network authority."
   },
   "authority": {
     "production_promotion": false,
