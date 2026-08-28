@@ -162,7 +162,7 @@ func _execute(request_id: String, payload: Dictionary) -> void:
 	_state["world_revision"] = int(_state.get("world_revision", 0)) + 1
 	_counters["executed"] = int(_counters["executed"]) + 1
 	var handoff_target := ""
-	if kind == "MOVE" and _authority_id == Support.AUTHORITY_A and float(_state.get("position_x", 0.0)) >= 10.0 and _authority_epoch == 1:
+	if kind == "MOVE" and _authority_id == Support.AUTHORITY_A and float(_state.get("position_x", 0.0)) >= 10.0:
 		handoff_target = Support.AUTHORITY_B
 	elif kind == "MOVE" and _authority_id == Support.AUTHORITY_B and float(_state.get("position_x", 0.0)) <= 0.0:
 		handoff_target = Support.AUTHORITY_A

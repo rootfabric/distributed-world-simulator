@@ -3,6 +3,9 @@ extends RefCounted
 const AtomicJson = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
 const BoundaryScript = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const EnetPortScript = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
+const NetworkConditionSimulatorPort = preload("res://scripts/network/conditions/network_condition_simulator_port.gd")
+const NetworkConditionProfileStore = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
+const NetworkConditionProfile = preload("res://scripts/network/conditions/network_condition_profile.gd")
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const MESSAGE_SCHEMA := "planet_simulator.sm1_graphical_process_message.v1"
@@ -54,10 +57,38 @@ static func endpoint(host: String, port: int) -> Dictionary:
 	return {"transport": "ENET", "host": host, "port": port, "channel": "CONTROL", "secure": false}
 
 
-static func make_boundary() -> Object:
+static func make_boundary(network_profile_id: String = "", seed_offset: int = 0) -> Object:
+	var bundle: Dictionary = make_boundary_bundle(network_profile_id, seed_offset)
+	return bundle.get("boundary")
+
+
+static func make_boundary_bundle(network_profile_id: String = "", seed_offset: int = 0) -> Dictionary:
+	var port = EnetPortScript.new()
+	var simulator = null
+	var profile: Dictionary = {}
+	var normalized_profile := network_profile_id.strip_edges().to_upper()
+	if not normalized_profile.is_empty():
+		var loaded: Dictionary = NetworkConditionProfileStore.load_profile(normalized_profile)
+		if not bool(loaded.get("success", false)):
+			return {}
+		profile = Dictionary(loaded.get("details", {}).get("profile", {})).duplicate(true)
+		if seed_offset != 0:
+			var values := profile.duplicate(true)
+			values.erase("schema")
+			values.erase("profile_id")
+			values.erase("checksum")
+			values["random_seed"] = maxi(1, int(profile.get("random_seed", 1)) + seed_offset)
+			profile = NetworkConditionProfile.create(normalized_profile, values)
+		simulator = NetworkConditionSimulatorPort.new()
+		var setup: Dictionary = simulator.setup(port, profile)
+		if not bool(setup.get("success", false)):
+			return {}
+		port = simulator
 	var boundary = BoundaryScript.new()
-	var configured: Dictionary = boundary.configure(EnetPortScript.new(), 1048576, 256, 4194304)
-	return boundary if bool(configured.get("success", false)) else null
+	var configured: Dictionary = boundary.configure(port, 1048576, 256, 4194304)
+	if not bool(configured.get("success", false)):
+		return {}
+	return {"boundary": boundary, "simulator": simulator, "profile": profile}
 
 
 static func mark_ready(boundary, peer_id: String) -> bool:

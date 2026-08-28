@@ -9,13 +9,19 @@ const OPTION_SPEC := {
 	"authority-a-port": {"kind": "int", "default": 0, "required": true},
 	"authority-b-host": {"kind": "string", "default": "127.0.0.1"},
 	"authority-b-port": {"kind": "int", "default": 0, "required": true},
+	"client-network-profile": {"kind": "string", "default": ""},
+	"authority-network-profile": {"kind": "string", "default": ""},
 	"result-file": {"kind": "string", "default": "", "required": true},
 	"timeout-ms": {"kind": "int", "default": 120000},
 }
 
 var _options: Dictionary = {}
 var _client_boundary = null
+var _client_network_simulator = null
+var _client_network_profile: Dictionary = {}
 var _authority_boundaries: Dictionary = {}
+var _authority_network_simulators: Dictionary = {}
+var _authority_network_profiles: Dictionary = {}
 var _authority_peer_ids := {
 	Support.AUTHORITY_A: "peer/enet/sm1/gateway-authority-a",
 	Support.AUTHORITY_B: "peer/enet/sm1/gateway-authority-b",
@@ -85,9 +91,12 @@ func _initialize() -> void:
 		_finish_failure("INVALID_OPTIONS", {"errors": parsed.get("errors", [])})
 		return
 	_options = parsed["options"]
-	_client_boundary = Support.make_boundary()
+	var client_bundle: Dictionary = Support.make_boundary_bundle(String(_options.get("client-network-profile", "")), 101)
+	_client_boundary = client_bundle.get("boundary")
+	_client_network_simulator = client_bundle.get("simulator")
+	_client_network_profile = Dictionary(client_bundle.get("profile", {})).duplicate(true)
 	if _client_boundary == null:
-		_finish_failure("CLIENT_BOUNDARY_CONFIGURE_FAILED", {})
+		_finish_failure("CLIENT_BOUNDARY_CONFIGURE_FAILED", {"network_profile": String(_options.get("client-network-profile", ""))})
 		return
 	var listening: Dictionary = _client_boundary.start_server(Support.endpoint(String(_options["client-host"]), int(_options["client-port"])))
 	if not bool(listening.get("success", false)):
@@ -110,10 +119,15 @@ func _initialize() -> void:
 
 
 func _connect_authority(authority_id: String, host: String, port: int) -> bool:
-	var boundary = Support.make_boundary()
+	var seed_offset := 201 if authority_id == Support.AUTHORITY_A else 202
+	seed_offset += int(_authority_connection_generation.get(authority_id, 1)) * 10
+	var bundle: Dictionary = Support.make_boundary_bundle(String(_options.get("authority-network-profile", "")), seed_offset)
+	var boundary = bundle.get("boundary")
 	if boundary == null:
-		_finish_failure("AUTHORITY_BOUNDARY_CONFIGURE_FAILED", {"authority_id": authority_id})
+		_finish_failure("AUTHORITY_BOUNDARY_CONFIGURE_FAILED", {"authority_id": authority_id, "network_profile": String(_options.get("authority-network-profile", ""))})
 		return false
+	_authority_network_simulators[authority_id] = bundle.get("simulator")
+	_authority_network_profiles[authority_id] = Dictionary(bundle.get("profile", {})).duplicate(true)
 	var peer_id := String(_authority_peer_ids[authority_id])
 	var generation := int(_authority_connection_generation.get(authority_id, 1))
 	var connected: Dictionary = boundary.connect_client(
@@ -925,6 +939,23 @@ func _validate_identity(state: Dictionary) -> bool:
 		and int(state.get("spawn_generation", 0)) == 1
 
 
+func _network_condition_report() -> Dictionary:
+	var result := {
+		"client": {
+			"profile": _client_network_profile.duplicate(true),
+			"snapshot": _client_network_simulator.get_runtime_snapshot().duplicate(true) if _client_network_simulator != null else {},
+		},
+		"authorities": {},
+	}
+	for authority_id in [Support.AUTHORITY_A, Support.AUTHORITY_B]:
+		var simulator = _authority_network_simulators.get(authority_id)
+		result["authorities"][authority_id] = {
+			"profile": Dictionary(_authority_network_profiles.get(authority_id, {})).duplicate(true),
+			"snapshot": simulator.get_runtime_snapshot().duplicate(true) if simulator != null else {},
+		}
+	return result
+
+
 func _finish_success() -> void:
 	if _finished:
 		return
@@ -951,6 +982,7 @@ func _finish_success() -> void:
 		"canonical_gameplay_owner": false,
 		"client_endpoint_changed": false,
 		"counters": _counters.duplicate(true),
+		"network_conditions": _network_condition_report(),
 	}
 	Support.write_json(String(_options["result-file"]), report)
 	_stop_boundaries()
