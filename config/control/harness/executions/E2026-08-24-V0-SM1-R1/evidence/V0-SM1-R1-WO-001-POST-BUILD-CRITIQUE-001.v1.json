@@ -1,0 +1,96 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "V0-SM1-R1-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "source_implementation_candidate": "b270fb806038333c97fa1ed49655961adddd6a21",
+  "exact_closure_candidate": "6fdfc047f54e727e6b398370e576c746c7949441",
+  "exact_closure_tree": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+  "closure_candidate_pr": 282,
+  "manual_demo_candidate": "b0445e08c56e090279ab21a210169df01ff3bd73",
+  "manual_demo_pr": 284,
+  "verdict": "IMPLEMENTATION_COMPLETE_READY_FOR_EVIDENCE_MAP_WITH_NONBLOCKING_FOLLOWUPS",
+  "strengths": [
+    "The authority-transfer path preserves exactly one active canonical writer while authority epoch increases monotonically across A->B->A and repeated impaired-network crossings.",
+    "The client-facing Gateway endpoint remains stable across normal handoff, reconnect, Gateway restart and Authority recovery; the Gateway remains routing-only and does not become a gameplay or persistence owner.",
+    "Canonical Item Graph, Construction and outpost mutations were exercised before, during and after handoff with transfer-gap fencing and no duplicate canonical truth.",
+    "The exact closure candidate passed the canonical Windows double-Godot world/core gate: 304/304 standalone tests plus editor/import, manifest coverage and main_scene_cli_all, 307/307 steps total.",
+    "The manual graphical demo independently proved the user-visible property: one client connected only to Gateway, manual A->B->A, one connection, zero reconnects, zero respawns and no noticeable input delay."
+  ],
+  "production_scope_review": {
+    "second_item_graph": false,
+    "second_construction_truth": false,
+    "second_persistence_owner": false,
+    "gateway_gameplay_authority": false,
+    "direct_client_to_authority_path": false,
+    "nx_transport_foundation_change": false,
+    "authority_foundation_replacement": false,
+    "unexpected_runtime_scope": false
+  },
+  "findings": [
+    {
+      "id": "SM1-B3-F001",
+      "severity": "IMPORTANT",
+      "classification": "CLOSURE_CANDIDATE_BINDING",
+      "blocks_evidence_map": false,
+      "blocks_reviewer": false,
+      "blocks_checkpoint_proposal_if_ignored": true,
+      "summary": "Fresh Reviewer/Verifier must bind to composite closure candidate 6fdfc047..., not source-only b270fb8....",
+      "rationale": "The fresh world/core PASS depends on bounded R1-R4 repair commits carried by PR #282. Reviewing or merging only PR #242 @ b270fb8 would discard the proven fresh-checkout repair layer."
+    },
+    {
+      "id": "SM1-B3-F002",
+      "severity": "LOW",
+      "classification": "TRANSIENT_TIMING_RISK",
+      "blocks_evidence_map": false,
+      "blocks_reviewer": false,
+      "summary": "M5 graphical acceptance produced one WAIT_CONVERGENCE_PEER wall-clock timeout during B2 exploration and then passed on rerun and in the final full suite.",
+      "rationale": "This was not reproduced as a deterministic candidate defect, but the fixed 150 s wall-clock convergence budget remains a known timing sensitivity and should be watched by Reviewer."
+    },
+    {
+      "id": "SM1-B3-F003",
+      "severity": "LOW",
+      "classification": "DEMO_TOOLING_PROFILE_ISOLATION",
+      "blocks_evidence_map": false,
+      "blocks_reviewer": false,
+      "summary": "The Windows manual-demo test runner initially reused the user's Godot editor profile and could crash while saving editor settings.",
+      "rationale": "The canonical world regression already isolates HOME/APPDATA/XDG. The manual-demo test runner should mirror that behavior; this is tooling hygiene, not seamless correctness."
+    },
+    {
+      "id": "SM1-B3-F004",
+      "severity": "LOW",
+      "classification": "DEMO_PRESENTATION_WARNING",
+      "blocks_evidence_map": false,
+      "blocks_reviewer": false,
+      "summary": "The manual demo emits repeated Camera3D physics-interpolation warnings because camera transforms are updated from _process while interpolation is inherited.",
+      "rationale": "The warnings were non-fatal and the manual path completed PASS with responsive controls. The demo camera should disable automatic physics interpolation or move transform updates to the appropriate processing mode."
+    },
+    {
+      "id": "SM1-B3-F005",
+      "severity": "INFO",
+      "classification": "DEMO_SCOPE_BOUNDARY",
+      "blocks_evidence_map": false,
+      "blocks_reviewer": false,
+      "summary": "The manual demo proves seamless routing and control continuity but is intentionally a thin presentation wrapper, not the full gameplay client.",
+      "rationale": "Inventory/Construction/outpost continuity is covered by SM1.7.11 process evidence rather than the manual HUD demo. Do not overclaim the demo as North Star gameplay acceptance."
+    }
+  ],
+  "merge_and_review_constraints": [
+    "PR #242 remains the source SM1 implementation lineage and must not be accepted alone as the final fresh-regression candidate.",
+    "PR #282 is the exact closure candidate carrier for B2 and must be preserved in any final merge plan or equivalent byte-exact authorized repair carrier.",
+    "PR #284 is non-acceptance demo evidence and should not be required in the SM1 production acceptance merge.",
+    "Fresh Reviewer and Verifier must independently check exact HEAD 6fdfc047f54e727e6b398370e576c746c7949441 and its relationship to b270fb8 plus R1-R4 repairs."
+  ],
+  "open_blockers": [],
+  "nonblocking_followups": [
+    "Isolate the Windows manual-demo test runner user profile.",
+    "Remove Camera3D physics-interpolation warning noise in the manual demo.",
+    "Track the observed M5 WAIT_CONVERGENCE_PEER timing sensitivity; harden only if independently reproduced."
+  ],
+  "runtime_repair_required_by_critique": false,
+  "ready_for_evidence_map": true,
+  "ready_for_fresh_reviewer_after_evidence_map": true,
+  "checkpoint_proposal_authorized": false,
+  "sm1_accepted": false,
+  "recorded_at_utc": "2026-08-28T15:36:00Z"
+}
