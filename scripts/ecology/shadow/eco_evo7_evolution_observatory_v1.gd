@@ -8,6 +8,7 @@ const SCHEMA := "distributed_world_simulator.ecology.evo7_evolution_observatory.
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-LS2.1.1"
 const MAX_HISTORY := 4096
+const SPATIAL_REVISION := "ECO.EVO7-LS3.6.1"
 const TRAIT_FIELDS := [
 	"fitness",
 	"leaf_area_index_proxy",
@@ -27,6 +28,11 @@ var history: Array[Dictionary] = []
 var fixation_generation: Array[int] = [-1, -1, -1]
 var source_session_seed := 0
 var initialized := false
+
+# LS3.6 spatial extension of the existing observability stack.
+var spatial_history: Array[Dictionary] = []
+var spatial_initialized := false
+var spatial_environment_hash := ""
 
 func setup(initial_snapshot: Dictionary) -> bool:
 	history.clear()
@@ -200,4 +206,221 @@ func _entry_hash(entry: Dictionary) -> String:
 			float(zone.get("fitness_balance_error", 0.0)),
 			int(zone.get("fixation_generation", -1)), String(zone.get("population_hash", "")),
 		])
+	return "|".join(tokens).sha256_text()
+
+
+## LS3.6 spatial observability extension. Legacy LS2.1 zone APIs above remain unchanged.
+func setup_spatial(environment_field: Dictionary, ecology_snapshot: Dictionary) -> bool:
+	spatial_history.clear()
+	spatial_initialized = false
+	spatial_environment_hash = String(environment_field.get("field_hash", ""))
+	if spatial_environment_hash.length() != 64 or Array(environment_field.get("cells", [])).size() != 1024:
+		return false
+	if ecology_snapshot.is_empty() or not bool(ecology_snapshot.get("shadow_only", false)):
+		return false
+	spatial_initialized = true
+	return record_spatial_snapshot(environment_field, ecology_snapshot, {})
+
+func record_spatial_snapshot(environment_field: Dictionary, ecology_snapshot: Dictionary, classification: Dictionary = {}) -> bool:
+	if not spatial_initialized or String(environment_field.get("field_hash", "")) != spatial_environment_hash:
+		return false
+	if ecology_snapshot.is_empty() or not bool(ecology_snapshot.get("shadow_only", false)):
+		return false
+	if String(ecology_snapshot.get("state_hash", "")).length() != 64:
+		return false
+	if int(ecology_snapshot.get("generation", 0)) > 0 and String(ecology_snapshot.get("postcompetition_population_hash", "")).length() != 64:
+		return false
+	if not classification.is_empty():
+		if String(classification.get("source_environment_field_hash", "")) != spatial_environment_hash:
+			return false
+		if String(classification.get("source_ecology_state_hash", "")) != String(ecology_snapshot.get("state_hash", "")):
+			return false
+		if String(classification.get("source_population_hash", "")) != String(ecology_snapshot.get("postcompetition_population_hash", "")):
+			return false
+		if int(classification.get("generation", -1)) != int(ecology_snapshot.get("generation", -2)):
+			return false
+	var generation := int(ecology_snapshot.get("generation", -1))
+	if generation < 0:
+		return false
+	if not spatial_history.is_empty() and generation < int(spatial_history[-1].get("generation", -1)):
+		return false
+	var entry := _spatial_entry(environment_field, ecology_snapshot, classification)
+	if entry.is_empty() or not validate_spatial_entry(entry):
+		return false
+	if not spatial_history.is_empty() and generation == int(spatial_history[-1].get("generation", -2)):
+		spatial_history[-1] = entry
+	else:
+		spatial_history.append(entry)
+		if spatial_history.size() > MAX_HISTORY:
+			spatial_history.pop_front()
+	return true
+
+func get_spatial_latest() -> Dictionary:
+	return {} if spatial_history.is_empty() else spatial_history[-1].duplicate(true)
+
+func get_spatial_history() -> Array[Dictionary]:
+	return spatial_history.duplicate(true)
+
+func _spatial_entry(environment_field: Dictionary, ecology_snapshot: Dictionary, classification: Dictionary) -> Dictionary:
+	var records: Array = ecology_snapshot.get("records", [])
+	var occupied := {}
+	var lineage_counts := {}
+	for value in records:
+		if not value is Dictionary:
+			return {}
+		var record: Dictionary = value
+		occupied[int(record.get("cell_index", -1))] = true
+		var bundle_value = record.get("hereditary_bundle")
+		if bundle_value is Dictionary:
+			var lineage_value = Dictionary(bundle_value).get("lineage_record")
+			if lineage_value is Dictionary:
+				var lineage_id := String(Dictionary(lineage_value).get("lineage_id", ""))
+				if not lineage_id.is_empty():
+					lineage_counts[lineage_id] = int(lineage_counts.get(lineage_id, 0)) + 1
+	var entropy := 0.0
+	var dominant := 0
+	for count_value in lineage_counts.values():
+		var count := int(count_value)
+		dominant = maxi(dominant, count)
+		if records.size() > 0:
+			var probability := float(count) / float(records.size())
+			if probability > 0.0:
+				entropy -= probability * log(probability)
+
+	var evaluations: Array = Dictionary(ecology_snapshot.get("competition_field", {})).get("evaluations", [])
+	var survivor_ids := {}
+	for value in records:
+		survivor_ids[String(Dictionary(value).get("record_id", ""))] = true
+	var survivor_evaluations: Array[Dictionary] = []
+	for value in evaluations:
+		if value is Dictionary and survivor_ids.has(String(Dictionary(value).get("record_id", ""))):
+			survivor_evaluations.append(Dictionary(value))
+	var trait_moments := {}
+	for field in ["leaf_area_index_proxy", "realized_root_depth_m", "root_shoot_ratio", "realized_height_m", "water_satisfaction", "realized_resource_balance"]:
+		trait_moments[field] = _spatial_moments(survivor_evaluations, field)
+
+	var class_counts := {}
+	var mean_cover := 0.0; var mean_continuity := 0.0; var mean_fragmentation := 0.0
+	if not classification.is_empty():
+		var summary: Dictionary = classification.get("summary", {})
+		class_counts = Dictionary(summary.get("class_counts", {})).duplicate(true)
+		mean_cover = float(summary.get("mean_cover_proxy", 0.0))
+		mean_continuity = float(summary.get("mean_continuity", 0.0))
+		mean_fragmentation = float(summary.get("mean_fragmentation", 0.0))
+
+	var source_population_hash := String(ecology_snapshot.get("postcompetition_population_hash", ""))
+	if source_population_hash.is_empty():
+		source_population_hash = _spatial_record_set_hash(records)
+	var entry := {
+		"schema": SCHEMA,
+		"version": VERSION,
+		"revision": REVISION,
+		"spatial_revision": SPATIAL_REVISION,
+		"shadow_only": true,
+		"spatial": true,
+		"generation": int(ecology_snapshot.get("generation", 0)),
+		"source_environment_hash": String(environment_field.get("field_hash", "")),
+		"source_ecology_state_hash": String(ecology_snapshot.get("state_hash", "")),
+		"source_population_hash": source_population_hash,
+		"source_classification_hash": String(classification.get("classification_hash", "")),
+		"population_count": records.size(),
+		"occupied_cells": occupied.size(),
+		"occupancy_fraction": snappedf(float(occupied.size()) / 1024.0, 1e-9),
+		"lineage_richness": lineage_counts.size(),
+		"shannon_entropy": snappedf(entropy, 1e-9),
+		"dominant_fraction": snappedf(float(dominant) / float(maxi(records.size(), 1)), 1e-9),
+		"trait_moments": trait_moments,
+		"class_counts": class_counts,
+		"mean_cover_proxy": snappedf(mean_cover, 1e-9),
+		"mean_continuity": snappedf(mean_continuity, 1e-9),
+		"mean_fragmentation": snappedf(mean_fragmentation, 1e-9),
+	}
+	entry["observatory_hash"] = _spatial_entry_hash(entry)
+	return entry
+
+func _spatial_moments(values: Array[Dictionary], field: String) -> Dictionary:
+	if values.is_empty():
+		return {"mean": 0.0, "variance": 0.0}
+	var total := 0.0
+	for value in values:
+		total += float(value.get(field, 0.0))
+	var mean := total / float(values.size())
+	var variance := 0.0
+	for value in values:
+		var delta := float(value.get(field, 0.0)) - mean
+		variance += delta * delta
+	variance /= float(values.size())
+	return {"mean": snappedf(mean, 1e-9), "variance": snappedf(variance, 1e-9)}
+
+func _spatial_record_set_hash(records: Array) -> String:
+	var tokens: Array[String] = []
+	for value in records:
+		if not value is Dictionary:
+			return ""
+		var record: Dictionary = value
+		var record_hash := String(record.get("record_hash", ""))
+		if record_hash.is_empty():
+			record_hash = "%s|%s|%d|%d" % [String(record.get("record_id", "")), String(record.get("bundle_checksum", "")), int(record.get("cell_index", -1)), int(record.get("slot_index", -1))]
+		tokens.append(record_hash)
+	tokens.sort()
+	return "|".join(PackedStringArray(tokens)).sha256_text()
+
+func validate_spatial_entry(entry: Dictionary) -> bool:
+	if String(entry.get("schema", "")) != SCHEMA or String(entry.get("version", "")) != VERSION or String(entry.get("revision", "")) != REVISION or String(entry.get("spatial_revision", "")) != SPATIAL_REVISION:
+		return false
+	if not bool(entry.get("shadow_only", false)) or not bool(entry.get("spatial", false)):
+		return false
+	if int(entry.get("generation", -1)) < 0 or int(entry.get("population_count", -1)) < 0:
+		return false
+	var occupied := int(entry.get("occupied_cells", -1))
+	if occupied < 0 or occupied > 1024:
+		return false
+	var occupancy := float(entry.get("occupancy_fraction", -1.0))
+	if occupancy < 0.0 or occupancy > 1.0 or absf(occupancy - snappedf(float(occupied) / 1024.0, 1e-9)) > 1e-9:
+		return false
+	if int(entry.get("lineage_richness", -1)) < 0 or float(entry.get("shannon_entropy", -1.0)) < 0.0:
+		return false
+	if float(entry.get("dominant_fraction", -1.0)) < 0.0 or float(entry.get("dominant_fraction", 2.0)) > 1.0:
+		return false
+	for key in ["mean_cover_proxy", "mean_continuity", "mean_fragmentation"]:
+		var value := float(entry.get(key, -1.0))
+		if not is_finite(value) or value < 0.0 or value > 1.0:
+			return false
+	var moments_value = entry.get("trait_moments")
+	if not moments_value is Dictionary:
+		return false
+	for field in ["leaf_area_index_proxy", "realized_root_depth_m", "root_shoot_ratio", "realized_height_m", "water_satisfaction", "realized_resource_balance"]:
+		var moment_value = Dictionary(moments_value).get(field)
+		if not moment_value is Dictionary:
+			return false
+		for component in ["mean", "variance"]:
+			var number := float(Dictionary(moment_value).get(component, NAN))
+			if not is_finite(number) or (component == "variance" and number < 0.0):
+				return false
+	return String(entry.get("observatory_hash", "")) == _spatial_entry_hash(entry)
+
+func _spatial_entry_hash(entry: Dictionary) -> String:
+	var moments: Dictionary = entry.get("trait_moments", {})
+	var tokens := PackedStringArray([
+		SCHEMA, VERSION, REVISION, SPATIAL_REVISION, "spatial",
+		str(int(entry.get("generation", 0))),
+		String(entry.get("source_environment_hash", "")),
+		String(entry.get("source_ecology_state_hash", "")),
+		String(entry.get("source_population_hash", "")),
+		String(entry.get("source_classification_hash", "")),
+		str(int(entry.get("population_count", 0))), str(int(entry.get("occupied_cells", 0))),
+		"%.9f" % float(entry.get("occupancy_fraction", 0.0)),
+		str(int(entry.get("lineage_richness", 0))), "%.9f" % float(entry.get("shannon_entropy", 0.0)),
+		"%.9f" % float(entry.get("dominant_fraction", 0.0)),
+		"%.9f" % float(entry.get("mean_cover_proxy", 0.0)),
+		"%.9f" % float(entry.get("mean_continuity", 0.0)),
+		"%.9f" % float(entry.get("mean_fragmentation", 0.0)),
+	])
+	for field in ["leaf_area_index_proxy", "realized_root_depth_m", "root_shoot_ratio", "realized_height_m", "water_satisfaction", "realized_resource_balance"]:
+		var moment: Dictionary = moments.get(field, {})
+		tokens.append("%s|%.9f|%.9f" % [field, float(moment.get("mean", 0.0)), float(moment.get("variance", 0.0))])
+	var class_counts: Dictionary = entry.get("class_counts", {})
+	var labels := class_counts.keys(); labels.sort()
+	for label in labels:
+		tokens.append("class|%s|%d" % [String(label), int(class_counts[label])])
 	return "|".join(tokens).sha256_text()
