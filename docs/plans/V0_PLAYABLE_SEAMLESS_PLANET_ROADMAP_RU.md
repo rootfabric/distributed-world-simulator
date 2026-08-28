@@ -44,7 +44,7 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / feature-complete; B2 + B2.5 + B3 + B4 closed; B5 Reviewer current**
+**Статус: ACTIVE / feature-complete; B2-B5 closed; B6 Verifier current**
 
 Уже реализовано до SM1.7.12:
 
@@ -83,8 +83,8 @@ B2. full world/core regression                       CLOSED
 B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PASS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
-B5. fresh exact-head Reviewer                          CURRENT
-B6. fresh Verifier
+B5. fresh exact-head Reviewer                          CLOSED / PASS
+B6. fresh Verifier                                     CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -322,3 +322,13 @@ STANDARD/DIRECTIONAL PC0 на composite closure head честно остаютс
 Demo/tooling cleanup PR #286 подтверждён на Windows: ghosting исчез, isolated profile PASS, repeated manual route A→B→A→B→A→B / epochs 1..6 PASS при одном Gateway connection и zero reconnect/respawn.
 
 Текущий следующий этап: **B5 fresh exact-head Reviewer**.
+
+### B5 Reviewer closure
+
+Fresh independent Reviewer PASS опубликован отдельным control-only record на `control/v0-sm1-b5-final-review-r1`.
+
+Review record commit `8b4793d868eb81ff4786d51a4ba5ec90deb08a4e`, tree `4df95dcd3c32e49539b074990095726ca5aa0b4f`.
+
+Reviewed subject остаётся exact `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; verdict PASS; required_fixes=[].
+
+Reviewer не объявлял Verifier PASS, checkpoint/merge acceptance или PC0 NON_RED. B6 fresh exact-head machine verification dispatched в Draft PR #290.
