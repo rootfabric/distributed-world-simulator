@@ -1,80 +1,28 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-28-R5",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-29-R6",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/ECO-VIS2",
-  "visualization_gate": "VIS1_ACCEPTED_57577F5",
+  "current_checkpoint": "ECO.EVO7/ECO-VIS3",
+  "visualization_gate": "VIS2_ACCEPTED_DD6304E",
   "route": [
-    {
-      "id": "LS3.0",
-      "name": "Real Planet Patch",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.1",
-      "name": "Environment Generator",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.2",
-      "name": "Spatial Cohort Lattice",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.3",
-      "name": "Dispersal / Recruitment",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.4",
-      "name": "Local Competition",
-      "status": "CLOSED_WITH_LS3_FINAL_EXTINCTION_EVIDENCE_REPAIR"
-    },
-    {
-      "id": "LS3.5",
-      "name": "Emergent Biomes",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.6",
-      "name": "Rule Workbench",
-      "status": "CLOSED"
-    },
-    {
-      "id": "LS3.FINAL",
-      "name": "Multi-environment Challenge",
-      "status": "CLOSED_ACCEPTED_A7E3F81"
-    },
-    {
-      "id": "ECO-VIS1",
-      "name": "Spatial World Viewer",
-      "status": "CLOSED_ACCEPTED_57577F5"
-    },
-    {
-      "id": "ECO-VIS2",
-      "name": "Procedural Plant Renderer",
-      "status": "IMPLEMENTATION_CANDIDATE_R2_1"
-    },
-    {
-      "id": "ECO-VIS3",
-      "name": "Planet Patch / Biome Viewer",
-      "status": "BLOCKED_BY_VIS2"
-    },
-    {
-      "id": "LS4",
-      "name": "Next ecology complexity stage",
-      "status": "AFTER_VISUAL_FEEDBACK_CHECKPOINT"
-    }
+    {"id": "LS3.0", "name": "Real Planet Patch", "status": "CLOSED"},
+    {"id": "LS3.1", "name": "Environment Generator", "status": "CLOSED"},
+    {"id": "LS3.2", "name": "Spatial Cohort Lattice", "status": "CLOSED"},
+    {"id": "LS3.3", "name": "Dispersal / Recruitment", "status": "CLOSED"},
+    {"id": "LS3.4", "name": "Local Competition", "status": "CLOSED_WITH_LS3_FINAL_EXTINCTION_EVIDENCE_REPAIR"},
+    {"id": "LS3.5", "name": "Emergent Biomes", "status": "CLOSED"},
+    {"id": "LS3.6", "name": "Rule Workbench", "status": "CLOSED"},
+    {"id": "LS3.FINAL", "name": "Multi-environment Challenge", "status": "CLOSED_ACCEPTED_A7E3F81"},
+    {"id": "ECO-VIS1", "name": "Spatial World Viewer", "status": "CLOSED_ACCEPTED_57577F5"},
+    {"id": "ECO-VIS2", "name": "Procedural Plant Renderer", "status": "CLOSED_ACCEPTED_DD6304E"},
+    {"id": "ECO-VIS3", "name": "Planet Patch / Biome Viewer", "status": "IMPLEMENTATION_CANDIDATE"},
+    {"id": "LS4", "name": "Next ecology complexity stage", "status": "AFTER_VIS3_VISUAL_FEEDBACK_CHECKPOINT"}
   ],
   "ls3_final": {
     "goal": "Run identical founder heredity through frozen contrasting physical environments and prove strong causal divergence without desired-biome or genome controls.",
     "max_generations": 10,
-    "cases": [
-      "WET_SURFACE",
-      "DRY_DRAINED",
-      "BRIGHT_DRY"
-    ],
+    "cases": ["WET_SURFACE", "DRY_DRAINED", "BRIGHT_DRY"],
     "required_evidence": [
       "same_founder_heredity",
       "distinct_physical_environment_fields",
@@ -89,9 +37,16 @@
   "visualization": {
     "start_condition": "SATISFIED: LS3.FINAL accepted candidate a7e3f81ee10c70757d3604a50f8cf98258b50964",
     "vis1": "Godot spatial viewer with 32x32 world projection, camera, environment/population/biome overlays and selectable plants/cohorts.",
-    "vis2": "Procedural plant renderer driven directly by accepted LS3.4 phenotype evidence: height, LAI, root depth/spread, root-shoot allocation, water satisfaction and resource balance. Founder generation remains explicitly non-phenotype markers.",
-    "vis3": "Planet patch / biome viewer with multi-scale camera and observable evolutionary history.",
-    "vis2_authority": "Presentation-only adapter + renderer; no phenotype recomputation, genome edits, fitness edits, persistence or network authority."
+    "vis2": "Accepted procedural plant renderer driven directly by LS3.4 phenotype evidence; accepted head dd6304eb28434666a401f888b583d7b17c1474c5.",
+    "vis3": "2.5D physical Planet Patch viewer with hillshade/contours, biome boundaries, REGION/PATCH/PLANT LOD, bounded observed-generation history scrub and performance telemetry. History is presentation-only and never rewinds ecology.",
+    "vis2_authority": "Presentation-only adapter + renderer; no phenotype recomputation, genome edits, fitness edits, persistence or network authority.",
+    "vis3_authority": "Presentation-only terrain/history/telemetry over public Workbench facades; no ecology rewind, world write, persistence or network authority."
+  },
+  "performance_debt": {
+    "status": "NON_BLOCKING_OBSERVED_IN_VIS2_WINDOWS_RUNS",
+    "symptom": "Later generations / larger populations become visibly CPU-heavy.",
+    "vis3_action": "Measure Workbench step, VIS3 refresh, history capture, FPS, population and visible-plant count; REGION LOD suppresses individual plant geometry.",
+    "optimization_gate": "PROFILE_BEFORE_OPTIMIZE"
   },
   "authority": {
     "production_promotion": false,
