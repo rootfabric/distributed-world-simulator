@@ -129,16 +129,16 @@ tree `b9b1202d959b3da4a0c73840091c7bf56070429e`, Draft PR #282 over exact SM1.7.
 
 Exact Windows double-Godot evidence: **307/307 steps PASS**, `304/304` standalone tests, `main_scene_cli_all` PASS, `summary.passed=true`.
 
-**B2.5 manual seamless smoke demo = IMPLEMENTED / automated graphical PASS; Windows manual tester execution PENDING.**
+**B2.5 manual seamless smoke demo = CLOSED / WINDOWS MANUAL PASS.**
 
-Demo candidate: `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`, Draft PR #284. Exact double-Godot Linux/Xvfb validation: 10/10 A→B→A cycles, 320/320 assertions PASS; default two-client SM1.6 regression 58/58 PASS.
+Demo candidate: `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`, Draft PR #284. Exact double-Godot Linux/Xvfb validation: 10/10 A→B→A cycles, 320/320 assertions PASS; default two-client SM1.6 regression 58/58 PASS. Real Windows manual run also PASS: graceful close marker `SM1_MANUAL_SEAMLESS_DEMO_PASS`, route `A→B→A`, epochs `1→2→3`, one Gateway connection, zero reconnects, zero respawns, 119/119 commands confirmed, no last error; tester reports no noticeable movement delay.
 
 Closure path:
 
 ```text
 B2 full world/core regression             CLOSED
-→ manual seamless smoke demo              IMPLEMENTED / AUTO PASS (manual Windows check pending)
-→ post-build critique
+→ manual seamless smoke demo              CLOSED / WINDOWS MANUAL PASS
+→ post-build critique                      CURRENT
 → Evidence Map
 → fresh Reviewer
 → fresh Verifier
@@ -163,7 +163,7 @@ Authority A
 
 Текущий graphical SM1 client script-driven, поэтому для tester-facing demo нужен отдельный тонкий manual-input/presentation wrapper. Это packaging/presentation work, а не новый authority protocol.
 
-Demo реализован после закрытия B2: **manual seamless smoke = IMPLEMENTED / automated graphical PASS**, Windows manual tester execution pending. Demo не означает SM1 acceptance.
+Demo реализован и закрыт после B2: **manual seamless smoke = CLOSED / Windows manual PASS**. Demo не означает SM1 acceptance. Non-fatal Camera3D physics-interpolation warnings из manual run перенесены в B3 critique как cleanup item.
 
 ## Next product runtime frontier — P7
 
@@ -207,9 +207,9 @@ P7 не должен переизобретать уже принятые P4/P5 
 - переживать server restart;
 - сходиться к одной canonical truth.
 
-Current navigation estimate после B2 closure:
+Current navigation estimate после B2 + B2.5 closure:
 
-**~82% функциональной готовности до этого milestone.**
+**~83% функциональной готовности до этого milestone.**
 
 Это product navigation metric, не Harness acceptance state.
 
