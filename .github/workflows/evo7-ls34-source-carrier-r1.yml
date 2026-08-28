@@ -1,0 +1,45 @@
+name: ECO EVO7 LS3.4 Source Carrier R1
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls34-local-competition-r1
+    paths:
+      - ".github/workflows/evo7-ls34-source-carrier-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact LS3.4 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 78ba78a19ed77eb7a1678b01e6e001edb5284104
+          fetch-depth: 0
+
+      - name: Assert exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "78ba78a19ed77eb7a1678b01e6e001edb5284104"
+          test "$(git rev-parse HEAD^)" = "a8050ab310257949fd7f1d1862eecd3e72050af9"
+          test "$(git rev-parse 'HEAD^{tree}')" = "05ae2adf9e9a6fd108e6ff827da3fab7c5c0d4a5"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Materialize exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/ls34-source-78ba78a.tar.gz" .
+          sha256sum "$RUNNER_TEMP/ls34-source-78ba78a.tar.gz"
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ls34-source-78ba78a
+          path: ${{ runner.temp }}/ls34-source-78ba78a.tar.gz
+          if-no-files-found: error
+          retention-days: 1
