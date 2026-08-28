@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "6fdfc047f54e727e6b398370e576c746c7949441",
+  "intent": "Close the production SM1 A<->B seamless authority handoff slice over the accepted P6 product baseline while preserving one canonical writer, stable client Gateway endpoint, logical/player identity, Item Graph/Construction/persistence continuity, retry fencing, reconnect/restart convergence and fault recovery. Bind fresh review to the exact composite B2 closure candidate rather than the source-only SM1 implementation commit.",
+  "root_cause_or_reason": "Accepted P6 provided persistent shared gameplay and Gateway-ready identity/operation continuity, while SM0 separately proved two-authority handoff semantics. The product lineage lacked a production A<->B ownership transfer composed with current P6 owners. SM1 source implementation reached b270fb8; B2 then exposed inherited fresh-checkout/test-harness defects outside SM1 runtime. Those were repaired in a bounded four-commit carrier, producing exact closure candidate 6fdfc047 with full canonical Windows world/core regression PASS. Manual graphical evidence was intentionally kept in a separate non-acceptance demo lineage.",
+  "changed_surfaces": [
+    "source SM1 implementation @ b270fb806038333c97fa1ed49655961adddd6a21: scripts/runtime/networked_gameplay/sm1/**",
+    "source SM1 tests: tests/runtime/test_v0_sm1_* + tests/network/test_v0_sm1_* + RUN_V0_SM1_*",
+    "bounded B2 repair R1: six scenes/labs/ecology/*.tscn BOM-only fresh-import repairs",
+    "bounded B2 repair R2: tools/network/eg1_client_worker.gd sequencing-only process driver repair",
+    "bounded B2 repair R3: tools/runtime/m7_playable_network_client.gd authoritative interaction readiness fence",
+    "bounded B2 repair R4: tests/runtime/test_v0_sm1_authority_recovery.gd + test_v0_sm1_gateway_failure_restart.gd Windows detached-spawn portability"
+  ],
+  "canonical_owner": "Authority ownership: SM1 authority transfer coordinator/owner-port map only chooses the single active writer and increments authority epoch; Gateway remains routing-only. Canonical gameplay truth remains with accepted product owners: M4 Item Graph + P5 equipment/mining composition, P4 Construction, accepted P6 persistence/recovery/outpost composition and existing NX/Gateway transport foundation.",
+  "entry_points": [
+    "scripts/runtime/networked_gameplay/sm1/sm1_6_gateway_worker.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_6_authority_worker.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_canonical_mutation_gate.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_world_state_continuity.gd"
+  ],
+  "callers": [
+    "SM1 two-client graphical/process acceptance drivers",
+    "SM1 fault/replay/concurrency/reconnect/restart/recovery drivers",
+    "SM1 canonical Item Graph/Construction/outpost mutation continuity scenarios",
+    "future V0 product client/server composition that consumes accepted SM1 authority routing"
+  ],
+  "callees": [
+    "accepted Gateway transport boundary and route identity",
+    "accepted NX transport/reconciliation foundation",
+    "accepted P6 persistent shared-outpost identity/operation/persistence composition",
+    "canonical M4 Item Graph",
+    "P4 Construction authority",
+    "P5 equipment/mining composition"
+  ],
+  "sibling_surfaces_checked": [
+    "scripts/network/transports/v2/** untouched by SM1 and forbidden by Work Order",
+    "scripts/network/gateway/runtime/** untouched by SM1 and forbidden by Work Order",
+    "scripts/runtime/networked_gameplay/p6/p6_persistence_owner.gd untouched by SM1 and forbidden by Work Order",
+    "scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd untouched by SM1 and forbidden by Work Order",
+    "B2 full world/core regression on exact closure candidate: 304/304 standalone + editor/import + manifest coverage + main_scene_cli_all = 307/307 steps PASS",
+    "B2 focused M7 repair: 10 consecutive 51/51 PASS with 7/7 accepted, 0 rejected, 0 rollback",
+    "B2.5 manual graphical demo lineage #284: Windows A->B->A PASS through one Gateway connection, zero reconnects/respawns; later cleanup lineage #286 manually proved repeated A->B->A->B->A->B with epochs 1..6 and passed=true",
+    "B3 post-build critique carrier #285: no new seamless correctness blocker; exact closure candidate binding confirmed"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "production_diff_summary": "Source SM1 implementation adds a bounded authority-domain adapter, one-writer transfer state machine, stable identity/epoch continuity, Gateway-preserving route pivot, world-state/mutation continuity and fault/recovery process harnesses. The final executable closure candidate is source b270fb8 plus four bounded B2 repairs in PR #282. No second Item Graph, Construction truth, persistence owner, direct client-to-Authority route or Gateway gameplay authority was introduced. Manual/demo presentation changes in PRs #284/#286 are evidence/tooling only and are not required in the production acceptance merge.",
+  "remaining_risks": [
+    "Fresh Reviewer/Verifier must bind to exact composite closure candidate 6fdfc047f54e727e6b398370e576c746c7949441 / tree b9b1202d959b3da4a0c73840091c7bf56070429e; reviewing source-only b270fb8 would omit the proven B2 repair layer.",
+    "One M5 graphical acceptance WAIT_CONVERGENCE_PEER timing timeout was observed during B2 exploration; it passed on rerun and in the final full suite and was not reproduced as a deterministic SM1 defect.",
+    "Project Control #1439 SUCCESS is durable for source candidate b270fb8. No fresh STANDARD/DIRECTIONAL PC0 has yet been run on the composite closure candidate 6fdfc047; these remain explicit pre-review/control gaps rather than inferred PASS.",
+    "Manual graphical demo proves routing/control continuity and UX responsiveness, not the full North Star gameplay surface; Item Graph/Construction/outpost continuity is established by dedicated SM1 process evidence instead.",
+    "Demo/tooling cleanup PR #286 is non-blocking and outside the production acceptance candidate unless separately authorized; it must not silently redefine the SM1 merge set."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Run/record STANDARD_PC0_NON_RED and DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS on the final evidence-bearing review head or prove the configured control mechanism treats the exact closure candidate as non-red.",
+    "Fresh independent Reviewer checks exact closure candidate topology, Work Order scope, R1-R4 repair classification, one-writer semantics, stable identity/epoch/route invariants, full regression evidence and the M5 timing observation.",
+    "Fresh independent Verifier independently materializes the exact candidate and executes/validates the required machine evidence without mutation.",
+    "Only after Reviewer + Verifier + remaining control predicates PASS may checkpoint proposal and human RUNTIME_FEATURE_MERGE be considered."
+  ],
+  "evidence_gaps": [
+    "INDEPENDENT_REVIEWER_PASS pending",
+    "INDEPENDENT_VERIFIER_PASS pending",
+    "REVIEW_HEAD_EXACT_AND_FRESH pending",
+    "STANDARD_PC0_NON_RED on final closure/review head pending",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS on final closure/review head pending",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO pending fresh closure check",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED pending closure check",
+    "V0_SM1_CHECKPOINT_PROPOSED pending",
+    "human RUNTIME_FEATURE_MERGE approval pending"
+  ],
+  "review_verdict": "PASS"
+}
