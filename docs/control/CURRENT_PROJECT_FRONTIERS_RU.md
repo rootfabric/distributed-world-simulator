@@ -138,8 +138,8 @@ Closure path:
 ```text
 B2 full world/core regression             CLOSED
 → manual seamless smoke demo              CLOSED / WINDOWS MANUAL PASS
-→ post-build critique                      CURRENT
-→ Evidence Map
+→ post-build critique                      CLOSED
+→ Evidence Map                              CURRENT
 → fresh Reviewer
 → fresh Verifier
 → checkpoint proposal
@@ -280,3 +280,15 @@ STOP_AND_REPLAN если текущий путь требует:
 6. переживает ли terrain reconnect/restart;
 7. проходит ли mutation через A/B seam;
 8. достигнут ли V0 PLAYABLE SEAMLESS PLANET.
+
+## B3 post-build critique
+
+**CLOSED.** Durable carrier: Draft PR #285.
+
+Exact closure candidate: `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Verdict: implementation complete and ready for B4 Evidence Map; no new seamless correctness blocker. Reviewer/Verifier must bind this composite candidate. Demo #284 remains non-acceptance UX evidence.
+
+Non-blocking tooling cleanup from critique is isolated in Draft PR #286; one historical M5 timing observation remains for Reviewer attention.
+
+**Current closure step: B4 Evidence Map.**
