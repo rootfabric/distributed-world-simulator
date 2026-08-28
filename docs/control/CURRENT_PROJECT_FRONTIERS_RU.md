@@ -129,13 +129,15 @@ tree `b9b1202d959b3da4a0c73840091c7bf56070429e`, Draft PR #282 over exact SM1.7.
 
 Exact Windows double-Godot evidence: **307/307 steps PASS**, `304/304` standalone tests, `main_scene_cli_all` PASS, `summary.passed=true`.
 
-Текущая работа — **B2.5 manual seamless smoke demo**.
+**B2.5 manual seamless smoke demo = IMPLEMENTED / automated graphical PASS; Windows manual tester execution PENDING.**
+
+Demo candidate: `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`, Draft PR #284. Exact double-Godot Linux/Xvfb validation: 10/10 A→B→A cycles, 320/320 assertions PASS; default two-client SM1.6 regression 58/58 PASS.
 
 Closure path:
 
 ```text
 B2 full world/core regression             CLOSED
-→ manual seamless smoke demo              CURRENT (non-acceptance)
+→ manual seamless smoke demo              IMPLEMENTED / AUTO PASS (manual Windows check pending)
 → post-build critique
 → Evidence Map
 → fresh Reviewer
@@ -161,7 +163,7 @@ Authority A
 
 Текущий graphical SM1 client script-driven, поэтому для tester-facing demo нужен отдельный тонкий manual-input/presentation wrapper. Это packaging/presentation work, а не новый authority protocol.
 
-Рекомендуемый момент достигнут: **B2 закрыт; manual seamless smoke demo = CURRENT**, до critique/review closure. Demo не означает SM1 acceptance.
+Demo реализован после закрытия B2: **manual seamless smoke = IMPLEMENTED / automated graphical PASS**, Windows manual tester execution pending. Demo не означает SM1 acceptance.
 
 ## Next product runtime frontier — P7
 
