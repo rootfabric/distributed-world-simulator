@@ -1,0 +1,60 @@
+name: ECO EVO7 LS3.6 Materialize Tested Payload
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls36-rule-workbench-r1
+    paths:
+      - ".github/ls36_payload_*.b64"
+      - ".github/workflows/evo7-ls36-materialize.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staging head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Reconstruct exact tested LS3.6 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/ls36_payload_*.b64 | base64 -d > "$RUNNER_TEMP/ls36_payload.tar.gz"
+          echo "9b85ab868ec7e9914b065ded45132e23f6d1e5a7e8f2e8eeed9c2a4cae1cabdd  $RUNNER_TEMP/ls36_payload.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/ls36_payload"
+          tar -xzf "$RUNNER_TEMP/ls36_payload.tar.gz" -C "$RUNNER_TEMP/ls36_payload"
+          cp -a "$RUNNER_TEMP/ls36_payload/." .
+          chmod 755 RUN_ECO_EVO7_LS36_TESTS.sh
+          chmod 755 OPEN_ECO_EVO7_LS36_RULE_WORKBENCH.sh
+
+          test "$(git hash-object scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd)" = "f3d575d7cc2bbf106ef10c026250a827c1c42005"
+          test "$(git hash-object scripts/ecology/shadow/eco_evo7_evolution_observatory_v1.gd)" = "b6fc3cdf324f83503cdc03fdb492d2337e6db189"
+          test "$(git hash-object tests/ecology/eco_evo7_ls36_rule_workbench_acceptance.gd)" = "491bbca92618b8cdc09016e6d0032ffaa7c3f5db"
+          test "$(git hash-object scripts/labs/ecology/eco_evo7_ls36_rule_workbench_lab.gd)" = "5cf961d328ae69b5718f654df8c5c776b0000d78"
+          test "$(git hash-object scenes/labs/ecology/eco_evo7_ls36_rule_workbench_lab.tscn)" = "758803e286f390e97a46fd6c01f64006828f2311"
+          test "$(git hash-object RUN_ECO_EVO7_LS36_TESTS.sh)" = "6e0e6e7fcf40782835bea9ca909abc3743821f36"
+          test "$(git hash-object docs/checkpoints/2026-08-28_ECO_EVO7_LS3_6_RULE_WORKBENCH_R1_RU.md)" = "1a1b11daee52434e941a15a9c0820bfedbf5fbb6"
+          test "$(git hash-object OPEN_ECO_EVO7_LS36_RULE_WORKBENCH.sh)" = "bbfd3cf58c5568d0dd17c6ad7816c56db872d6be"
+          test "$(git hash-object OPEN_ECO_EVO7_LS36_RULE_WORKBENCH.ps1)" = "f2875740f79f2136d3853232f7dea0ca6308104c"
+
+          rm -f .github/ls36_payload_*.b64
+          rm -f .github/workflows/evo7-ls36-materialize.yml
+
+      - name: Commit materialized files to staging branch
+        shell: bash
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --name-status
+          git commit -m "chore(eco): materialize tested LS3.6 payload"
+          git push origin "HEAD:$HEAD_BRANCH"
