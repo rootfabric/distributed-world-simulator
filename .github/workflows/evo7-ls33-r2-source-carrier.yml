@@ -1,0 +1,45 @@
+name: ECO EVO7 LS3.3 R2 Source Carrier
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls33-dispersal-recruitment-r1
+    paths:
+      - ".github/workflows/evo7-ls33-r2-source-carrier.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact LS3.3 R2 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: a89349abf72ec1cdd36f1be04efca596874d9edd
+          fetch-depth: 0
+
+      - name: Assert exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "a89349abf72ec1cdd36f1be04efca596874d9edd"
+          test "$(git rev-parse HEAD^)" = "c0cf7a8d37f73e5ffeabd856e70d7ee05e8d5541"
+          test "$(git rev-parse 'HEAD^{tree}')" = "774d7a2daa09d3ae9c4395eb3483419769d0e0f4"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Materialize exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/ls33-r2-source-a89349a.tar.gz" .
+          sha256sum "$RUNNER_TEMP/ls33-r2-source-a89349a.tar.gz"
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ls33-r2-source-a89349a
+          path: ${{ runner.temp }}/ls33-r2-source-a89349a.tar.gz
+          if-no-files-found: error
+          retention-days: 1
