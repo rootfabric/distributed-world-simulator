@@ -1,6 +1,6 @@
 # V0 PLAYABLE SEAMLESS PLANET — глобальная продуктовая дорожная карта
 
-**Revision:** R1 / 2026-08-28  
+**Revision:** R2 / 2026-08-28  
 **Primary purpose:** сфокусировать product critical path на первом полноценном playable seamless world milestone.
 
 > Эта roadmap — human product-routing document. Canonical checkpoint eligibility, ownership и acceptance по-прежнему определяются `config/control/harness/v0-product-train-policy.v1.json` и остальным main-owned control plane.
@@ -44,9 +44,9 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / late closure**
+**Статус: ACTIVE / feature-complete, closure in progress**
 
-Уже реализовано до SM1.7.11:
+Уже реализовано до SM1.7.12:
 
 - one-writer transfer;
 - stable logical player/entity identity;
@@ -58,13 +58,20 @@ Acceptance scenario:
 - reconnect;
 - Gateway restart;
 - Authority recovery;
-- canonical gameplay mutation continuity.
+- canonical gameplay mutation continuity;
+- repeated A<->B crossings under BAD_MOBILE/LAG_SPIKE network impairment.
+
+Текущий exact implementation candidate:
+
+`b270fb806038333c97fa1ed49655961adddd6a21`
+
+SM1.7.12 закрыт: **700/700 PASS**, regression belt PASS, Project Control #1439 SUCCESS.
 
 Осталось:
 
 ```text
-B1. SM1.7.12 impaired-network repeated crossings
-B2. full world/core regression
+B1. SM1.7.12 impaired-network repeated crossings    DONE
+B2. full world/core regression                       CURRENT
 B3. post-build critique
 B4. Evidence Map
 B5. fresh exact-head Reviewer
@@ -72,6 +79,21 @@ B6. fresh Verifier
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
+
+### Pre-P7 manual seamless smoke demo
+
+После B2 допускается собрать отдельный non-acceptance tester demo без terrain mutation:
+
+```text
+Authority A + Authority B + Gateway
+→ graphical client connects only to Gateway
+→ manual movement across visible A/B boundary
+→ A -> B without loading/reconnect/respawn
+→ B -> A
+→ repeated crossings
+```
+
+SM1 protocol для этого уже реализован. Нужен только тонкий manual-input/presentation wrapper поверх существующих process workers; текущий graphical client остаётся script-driven. P7/terraforming для такого demo не требуется.
 
 Exit condition: **SM1 ACCEPTED**.
 
@@ -262,4 +284,4 @@ Baseline 2026-08-28:
 
 Historical comparison snapshot:
 
-`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R1_RU.md`
+`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
