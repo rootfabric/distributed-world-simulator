@@ -1,6 +1,6 @@
 # V0 PLAYABLE SEAMLESS PLANET — глобальная продуктовая дорожная карта
 
-**Revision:** R2 / 2026-08-28  
+**Revision:** R3 / 2026-08-29  
 **Primary purpose:** сфокусировать product critical path на первом полноценном playable seamless world milestone.
 
 > Эта roadmap — human product-routing document. Canonical checkpoint eligibility, ownership и acceptance по-прежнему определяются `config/control/harness/v0-product-train-policy.v1.json` и остальным main-owned control plane.
@@ -44,7 +44,7 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / feature-complete, closure in progress**
+**Статус: ACTIVE / feature-complete, B2 closed; manual seamless smoke current**
 
 Уже реализовано до SM1.7.12:
 
@@ -67,11 +67,20 @@ Acceptance scenario:
 
 SM1.7.12 закрыт: **700/700 PASS**, regression belt PASS, Project Control #1439 SUCCESS.
 
+B2 composite regression-repair candidate:
+
+`6fdfc047f54e727e6b398370e576c746c7949441`
+
+tree `b9b1202d959b3da4a0c73840091c7bf56070429e`, Draft PR #282 over exact `b270fb8...`.
+
+Exact Windows double-Godot B2: **307/307 steps PASS**, `304/304` standalone tests, `main_scene_cli_all` PASS, `summary.passed=true`. Durable closure is linked from PR #242.
+
 Осталось:
 
 ```text
 B1. SM1.7.12 impaired-network repeated crossings    DONE
-B2. full world/core regression                       CURRENT
+B2. full world/core regression                       CLOSED
+B2.5 manual seamless smoke demo                      CURRENT
 B3. post-build critique
 B4. Evidence Map
 B5. fresh exact-head Reviewer
@@ -82,7 +91,7 @@ B8. human RUNTIME_FEATURE_MERGE
 
 ### Pre-P7 manual seamless smoke demo
 
-После B2 допускается собрать отдельный non-acceptance tester demo без terrain mutation:
+B2 закрыт. Текущая product-facing точка — собрать отдельный non-acceptance tester demo без terrain mutation:
 
 ```text
 Authority A + Authority B + Gateway
@@ -281,6 +290,8 @@ North Star graphical acceptance
 Baseline 2026-08-28:
 
 **~80% до V0 PLAYABLE SEAMLESS PLANET по функциональной готовности.**
+
+Current navigation after B2 closure (2026-08-29): **~82%**, не Harness acceptance.
 
 Historical comparison snapshot:
 
