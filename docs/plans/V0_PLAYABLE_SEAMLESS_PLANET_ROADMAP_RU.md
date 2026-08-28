@@ -80,7 +80,7 @@ Exact Windows double-Godot B2: **307/307 steps PASS**, `304/304` standalone test
 ```text
 B1. SM1.7.12 impaired-network repeated crossings    DONE
 B2. full world/core regression                       CLOSED
-B2.5 manual seamless smoke demo                      CURRENT
+B2.5 manual seamless smoke demo                      IMPLEMENTED / AUTO PASS; WINDOWS MANUAL PENDING
 B3. post-build critique
 B4. Evidence Map
 B5. fresh exact-head Reviewer
@@ -91,7 +91,7 @@ B8. human RUNTIME_FEATURE_MERGE
 
 ### Pre-P7 manual seamless smoke demo
 
-B2 закрыт. Текущая product-facing точка — собрать отдельный non-acceptance tester demo без terrain mutation:
+B2 закрыт. Non-acceptance tester demo реализован в Draft PR #284 поверх B2 composite.
 
 ```text
 Authority A + Authority B + Gateway
@@ -102,7 +102,7 @@ Authority A + Authority B + Gateway
 → repeated crossings
 ```
 
-SM1 protocol для этого уже реализован. Нужен только тонкий manual-input/presentation wrapper поверх существующих process workers; текущий graphical client остаётся script-driven. P7/terraforming для такого demo не требуется.
+Manual-input/presentation wrapper теперь реализован: один graphical client подключается только к стабильному Gateway endpoint, показывает active Authority/epoch/world revision/reconnect/respawn и вручную управляется WASD/стрелками. Exact demo candidate `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`. Автоматический graphical smoke тем же client path: 10/10 A→B→A циклов, 320/320 assertions PASS; старый two-client SM1.6 остаётся 58/58 PASS. Windows manual tester execution остаётся последней проверкой UX, не checkpoint acceptance. P7/terraforming для demo не требуется.
 
 Exit condition: **SM1 ACCEPTED**.
 
