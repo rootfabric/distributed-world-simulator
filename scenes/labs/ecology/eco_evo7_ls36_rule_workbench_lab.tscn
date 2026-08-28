@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_evo7_ls36_rule_workbench_lab.gd" id="1_ls36"]
+
+[node name="EcoEvo7LS36RuleWorkbenchLab" type="Node"]
+script = ExtResource("1_ls36")
