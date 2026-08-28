@@ -311,4 +311,10 @@ Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fre
 
 Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
 
-**B6 fresh exact-head Verifier is CURRENT; dispatch carrier Draft PR #290.**
+**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 repair R1 is CURRENT.**
+
+## B6 Verifier failure
+
+Fresh verifier on `6fdfc047...` reproduced M5 graphical multiprocess instability and returned FAILED. B7 is blocked.
+
+Repair Map: PR #291. Bounded M5 harness repair: PR #292 @ `8c44ea1a...`. Linux exact-double supporting run after repair: 5/5 PASS; Windows 10x stability is the decisive next test.
