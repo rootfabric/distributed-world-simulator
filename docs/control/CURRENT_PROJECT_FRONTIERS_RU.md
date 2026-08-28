@@ -140,8 +140,8 @@ B2 full world/core regression             CLOSED
 → manual seamless smoke demo              CLOSED / WINDOWS MANUAL PASS
 → post-build critique                      CLOSED
 → Evidence Map                              CLOSED
-→ fresh Reviewer                             CURRENT
-→ fresh Verifier
+→ fresh Reviewer                             CLOSED / PASS
+→ fresh Verifier                              CURRENT
 → checkpoint proposal
 → human RUNTIME_FEATURE_MERGE
 → SM1 ACCEPTED
@@ -303,4 +303,12 @@ Evidence Map basic schema audit: all required fields present, no additional prop
 
 Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fresh review-head rather than inferred PASS.
 
-**Current closure step: B5 fresh exact-head Reviewer.**
+**B5 fresh exact-head Reviewer = CLOSED / PASS. Current closure step: B6 fresh Verifier.**
+
+## B5 fresh exact-head Reviewer
+
+**CLOSED / PASS.** Review record commit `8b4793d868eb81ff4786d51a4ba5ec90deb08a4e` on `control/v0-sm1-b5-final-review-r1`.
+
+Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
+
+**B6 fresh exact-head Verifier is CURRENT; dispatch carrier Draft PR #290.**
