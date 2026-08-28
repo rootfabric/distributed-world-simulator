@@ -339,6 +339,10 @@ func _build_scene() -> void:
 	_world_root.add_child(light)
 
 	_camera = Camera3D.new()
+	# Camera motion is presentation-only and updated every render frame.
+	# Disable automatic physics interpolation to avoid Camera3D warnings and
+	# keep the manual demo camera responsive to the latest canonical position.
+	_camera.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	_camera.current = true
 	_world_root.add_child(_camera)
 
