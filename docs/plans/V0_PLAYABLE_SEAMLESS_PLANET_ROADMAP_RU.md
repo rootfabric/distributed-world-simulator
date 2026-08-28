@@ -44,7 +44,7 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / feature-complete; B2 + B2.5 closed; B3 critique current**
+**Статус: ACTIVE / feature-complete; B2 + B2.5 + B3 closed; B4 Evidence Map current**
 
 Уже реализовано до SM1.7.12:
 
@@ -81,8 +81,8 @@ Exact Windows double-Godot B2: **307/307 steps PASS**, `304/304` standalone test
 B1. SM1.7.12 impaired-network repeated crossings    DONE
 B2. full world/core regression                       CLOSED
 B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PASS
-B3. post-build critique                               CURRENT
-B4. Evidence Map
+B3. post-build critique                               CLOSED
+B4. Evidence Map                                      CURRENT
 B5. fresh exact-head Reviewer
 B6. fresh Verifier
 B7. checkpoint proposal
@@ -296,3 +296,15 @@ Current navigation after B2 + B2.5 closure (2026-08-29): **~83%**, не Harness 
 Historical comparison snapshot:
 
 `docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
+
+### B3 post-build critique closure
+
+B3 закрыт отдельным control/evidence carrier PR #285.
+
+Exact closure candidate для дальнейшего Reviewer/Verifier: `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Verdict: `IMPLEMENTATION_COMPLETE_READY_FOR_EVIDENCE_MAP_WITH_NONBLOCKING_FOLLOWUPS`.
+
+Новых correctness-блокеров не найдено. Важно: Reviewer должен проверять composite closure candidate `6fdfc047...`, а не source-only `b270fb8...`; demo #284 остаётся non-acceptance UX evidence.
+
+Non-blocking followups: один наблюдавшийся M5 convergence timing flake; isolated-profile cleanup и Camera3D warning cleanup для demo вынесены в Draft PR #286.
