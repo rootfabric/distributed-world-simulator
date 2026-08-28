@@ -1,0 +1,40 @@
+name: SM1.7.12 exact source probe
+
+on:
+  push:
+    branches:
+      - probe/sm1-7-12-final-b270fb8
+
+permissions:
+  contents: read
+
+jobs:
+  package-exact-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Package immutable candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate=b270fb806038333c97fa1ed49655961adddd6a21
+          git cat-file -e "${candidate}^{commit}"
+          git branch --force exact-candidate "$candidate"
+          git bundle create sm1-7-12-candidate.bundle exact-candidate
+          printf '%s\n' "$candidate" > exact-head.txt
+          git show -s --format='%H %T %P %s' "$candidate" > exact-commit.txt
+          sha256sum sm1-7-12-candidate.bundle exact-head.txt exact-commit.txt > SHA256SUMS
+          cat exact-commit.txt
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sm1-7-12-final-b270fb8
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            sm1-7-12-candidate.bundle
+            exact-head.txt
+            exact-commit.txt
+            SHA256SUMS
