@@ -61,7 +61,7 @@ func _init() -> void:
 	var server_pid := _spawn(
 		executable,
 		[
-			"--headless", "--quiet", "--path", project_root,
+			"--headless", "--quiet", "--max-fps", "120", "--path", project_root,
 			"--audio-driver", "Dummy", "--log-file", root.path_join("server.log"), "--",
 			"--role=dedicated-server", "--world=playground",
 			"--node-id=m5-dedicated-server", "--server-address=127.0.0.1",
@@ -158,7 +158,7 @@ func _spawn_client(
 	return _spawn(
 		executable,
 		[
-			"--quiet", "--path", project_root,
+			"--quiet", "--max-fps", "60", "--path", project_root,
 			"--rendering-method", "gl_compatibility", "--audio-driver", "Dummy",
 			"--log-file", log_path, "--",
 			"--role=game-client", "--world=playground",
