@@ -23,6 +23,7 @@ const WaterField = preload("res://scripts/research/ecology/soil_water_field_v1.g
 const SCHEMA := "distributed_world_simulator.ecology.evo7_local_competition.v1"
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-LS3.4.2"
+const PROFILE_SCHEMA := "distributed_world_simulator.ecology.evo7_perf1.ls34_profile.v1"
 const MODE := "SHADOW_RAM_ONLY"
 const GRID_SIZE := 32
 const SLOTS_PER_CELL := 4
@@ -51,6 +52,8 @@ var last_precompetition_population_hash := ""
 var last_postcompetition_population_hash := ""
 var last_survivor_count := 0
 var last_culled_count := 0
+var last_profile: Dictionary = {}
+var last_competition_profile: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -87,20 +90,30 @@ func set_competition_enabled(value: bool) -> bool:
 func step_generation() -> Dictionary:
     if not initialized:
         return {}
+    var total_started := Time.get_ticks_usec()
+    var phase_started := Time.get_ticks_usec()
     var pre: Dictionary = core.step_generation()
+    var ls33_total_ms := _elapsed_ms(phase_started)
     if pre.is_empty():
         return {}
     last_precompetition_population_hash = String(pre["population_hash"])
     last_competition_field = {}
     last_competition_hash = ""
     last_culled_count = 0
+    last_profile.clear()
+    last_competition_profile.clear()
     last_survivor_count = int(pre["record_count"])
 
+    var competition_pass_ms := 0.0
+    var survivor_apply_ms := 0.0
     if competition_enabled:
         if int(pre["record_count"]) > 0:
+            phase_started = Time.get_ticks_usec()
             var competition_result: Dictionary = _competition_pass(Array(pre["records"]), int(pre["generation"]))
+            competition_pass_ms = _elapsed_ms(phase_started)
             if competition_result.is_empty():
                 return {}
+            phase_started = Time.get_ticks_usec()
             var survivors: Array[Dictionary] = competition_result["survivors"]
             last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
             last_competition_hash = String(last_competition_field["field_hash"])
@@ -110,15 +123,44 @@ func step_generation() -> Dictionary:
             core.call("_refresh_population_hashes")
             if not survivors.is_empty() and not bool(core.call("_validate_current_records", survivors)):
                 return {}
+            survivor_apply_ms = _elapsed_ms(phase_started)
         else:
+            phase_started = Time.get_ticks_usec()
             last_competition_field = _empty_competition_field(int(pre["generation"]))
+            competition_pass_ms = _elapsed_ms(phase_started)
             if last_competition_field.is_empty():
                 return {}
             last_competition_hash = String(last_competition_field["field_hash"])
 
+    phase_started = Time.get_ticks_usec()
     var post: Dictionary = core.get_snapshot()
     last_postcompetition_population_hash = String(post["population_hash"])
-    return get_snapshot()
+    var post_snapshot_ms := _elapsed_ms(phase_started)
+
+    phase_started = Time.get_ticks_usec()
+    var snapshot := get_snapshot()
+    var snapshot_build_ms := _elapsed_ms(phase_started)
+    last_profile = {
+        "schema": PROFILE_SCHEMA,
+        "generation": int(pre.get("generation", -1)),
+        "record_count_precompetition": int(pre.get("record_count", 0)),
+        "record_count_postcompetition": int(post.get("record_count", 0)),
+        "ls33_total_ms": ls33_total_ms,
+        "competition_pass_ms": competition_pass_ms,
+        "survivor_apply_ms": survivor_apply_ms,
+        "post_snapshot_ms": post_snapshot_ms,
+        "snapshot_build_ms": snapshot_build_ms,
+        "competition": last_competition_profile.duplicate(true),
+        "ls33": core.get_last_profile(),
+        "total_ms": _elapsed_ms(total_started),
+    }
+    return snapshot
+
+func get_last_profile() -> Dictionary:
+    return last_profile.duplicate(true)
+
+func _elapsed_ms(start_usec: int) -> float:
+    return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
 func get_snapshot() -> Dictionary:
     if not initialized:
@@ -157,6 +199,8 @@ func get_snapshot() -> Dictionary:
 func _competition_pass(source_records: Array, generation_value: int) -> Dictionary:
     if source_records.is_empty() or generation_value < 1:
         return {}
+    var profile_total_started := Time.get_ticks_usec()
+    var profile_phase_started := Time.get_ticks_usec()
     var ordered: Array[Dictionary] = []
     for value in source_records:
         if not value is Dictionary:
@@ -195,9 +239,13 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
             water_records_by_cell[cell_index] = []
         water_records_by_cell[cell_index].append(_water_record(identity, cell_index, fp))
 
+    var prepare_ms := _elapsed_ms(profile_phase_started)
+    profile_phase_started = Time.get_ticks_usec()
     var light_field := LightField.compute(light_records)
     if light_field.is_empty():
         return {}
+    var light_field_ms := _elapsed_ms(profile_phase_started)
+    profile_phase_started = Time.get_ticks_usec()
     var water_fields := {}
     var water_cells: Array[Dictionary] = []
     var cell_ids: Array = water_records_by_cell.keys()
@@ -220,9 +268,13 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
             "field_hash": String(wf["field_hash"]),
         })
 
+    var water_fields_ms := _elapsed_ms(profile_phase_started)
+    profile_phase_started = Time.get_ticks_usec()
     var geometry := _geometry_pressures(provisional)
     if geometry.is_empty():
         return {}
+    var geometry_ms := _elapsed_ms(profile_phase_started)
+    profile_phase_started = Time.get_ticks_usec()
     var evaluations: Array[Dictionary] = []
     var survivors: Array[Dictionary] = []
     for item in provisional:
@@ -286,6 +338,8 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         if survives:
             survivors.append(record.duplicate(true))
 
+    var evaluation_ms := _elapsed_ms(profile_phase_started)
+    profile_phase_started = Time.get_ticks_usec()
     evaluations.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         return String(a["record_id"]) < String(b["record_id"])
     )
@@ -313,6 +367,18 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
     field["field_hash"] = _competition_field_hash(field)
     if not validate_competition_field(field):
         return {}
+    var finalize_validate_ms := _elapsed_ms(profile_phase_started)
+    last_competition_profile = {
+        "record_count": ordered.size(),
+        "occupied_water_cells": water_cells.size(),
+        "prepare_ms": prepare_ms,
+        "light_field_ms": light_field_ms,
+        "water_fields_ms": water_fields_ms,
+        "geometry_ms": geometry_ms,
+        "evaluation_ms": evaluation_ms,
+        "finalize_validate_ms": finalize_validate_ms,
+        "total_ms": _elapsed_ms(profile_total_started),
+    }
     return {"survivors": survivors, "field": field}
 
 func _empty_competition_field(generation_value: int) -> Dictionary:
@@ -628,3 +694,5 @@ func _reset() -> void:
     last_postcompetition_population_hash = ""
     last_survivor_count = 0
     last_culled_count = 0
+    last_profile.clear()
+    last_competition_profile.clear()

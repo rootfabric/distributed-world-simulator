@@ -22,6 +22,7 @@ const ECOLOGY_VERSION := "1.0.0"
 const SCHEMA := "distributed_world_simulator.ecology.evo7_emergent_biome_observatory.v1"
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-LS3.5.2"
+const PROFILE_SCHEMA := "distributed_world_simulator.ecology.evo7_perf1.ls35_profile.v1"
 const GRID_SIZE := 32
 const SLOTS_PER_CELL := 4
 const LABELS: Array[String] = [
@@ -52,13 +53,37 @@ const ECOLOGY_FIELDS: Array[String] = [
     "competition_field", "authorities", "state_hash",
 ]
 
+var last_profile: Dictionary = {}
+var last_validation_recompute_ms := 0.0
+
 func classify(environment_field: Dictionary, ecology_snapshot: Dictionary, enabled: bool = true) -> Dictionary:
     if not enabled:
         return {}
+    var total_started := Time.get_ticks_usec()
+    var phase_started := Time.get_ticks_usec()
     var result := _classify_unchecked(environment_field, ecology_snapshot)
-    if result.is_empty() or not validate_classification(result, environment_field, ecology_snapshot):
+    var primary_compute_ms := _elapsed_ms(phase_started)
+    if result.is_empty():
         return {}
+    phase_started = Time.get_ticks_usec()
+    if not validate_classification(result, environment_field, ecology_snapshot):
+        return {}
+    var validation_ms := _elapsed_ms(phase_started)
+    last_profile = {
+        "schema": PROFILE_SCHEMA,
+        "generation": int(ecology_snapshot.get("generation", -1)),
+        "primary_compute_ms": primary_compute_ms,
+        "validation_ms": validation_ms,
+        "validation_recompute_ms": last_validation_recompute_ms,
+        "total_ms": _elapsed_ms(total_started),
+    }
     return result
+
+func get_last_profile() -> Dictionary:
+    return last_profile.duplicate(true)
+
+func _elapsed_ms(start_usec: int) -> float:
+    return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
 func validate_classification(classification: Dictionary, environment_field: Dictionary, ecology_snapshot: Dictionary) -> bool:
     if classification.is_empty():
@@ -142,7 +167,9 @@ func validate_classification(classification: Dictionary, environment_field: Dict
         return false
     if String(classification.get("classification_hash", "")) != _classification_hash(classification):
         return false
+    var recompute_started := Time.get_ticks_usec()
     var expected := _classify_unchecked(environment_field, ecology_snapshot)
+    last_validation_recompute_ms = _elapsed_ms(recompute_started)
     if expected.is_empty():
         return false
     return String(classification["classification_hash"]) == String(expected["classification_hash"])

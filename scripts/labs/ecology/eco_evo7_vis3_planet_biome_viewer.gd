@@ -167,6 +167,9 @@ func get_performance_snapshot() -> Dictionary:
     var visible_plants := 0
     if plant_overlay != null and plant_overlay.visible:
         visible_plants = plant_overlay.descriptors.size()
+    var generation_profile: Dictionary = {}
+    if workbench != null and workbench.has_method("get_last_generation_profile"):
+        generation_profile = workbench.get_last_generation_profile()
     return {
         "last_step_ms": last_step_ms,
         "last_refresh_ms": last_refresh_ms,
@@ -176,6 +179,7 @@ func get_performance_snapshot() -> Dictionary:
         "visible_plants": visible_plants,
         "history_frames": history.size(),
         "effective_lod": "" if terrain_overlay == null else terrain_overlay.effective_lod(),
+        "generation_profile": generation_profile,
     }
 
 func set_lod_mode(value: String, apply_camera_preset: bool = true) -> bool:
@@ -460,9 +464,21 @@ func _refresh_performance_hud() -> void:
     if performance_label == null:
         return
     var perf := get_performance_snapshot()
-    performance_label.text = "FPS: %d\nStep: %.2f ms\nVIS3 refresh: %.2f ms\nHistory capture: %.2f ms\nPopulation: %d\nVisible plants: %d\nLOD: %s\nHistory frames: %d/%d" % [
+    var profile: Dictionary = perf.get("generation_profile", {})
+    var ecology_profile: Dictionary = profile.get("ecology", {})
+    var competition_profile: Dictionary = ecology_profile.get("competition", {})
+    var ls33_profile: Dictionary = ecology_profile.get("ls33", {})
+    var observability_profile: Dictionary = profile.get("observability", {})
+    var classification_detail: Dictionary = observability_profile.get("classification_detail", {})
+    performance_label.text = "FPS: %d\nStep: %.2f ms\nVIS3 refresh: %.2f ms\nHistory capture: %.2f ms\nPopulation: %d\nVisible plants: %d\nLOD: %s\nHistory frames: %d/%d\n--- PERF1 generation ---\nEcology step: %.2f ms\n  LS3.3 total: %.2f ms\n    parents/candidates: %d/%d\n    pre/post competition: %d/%d\n    candidates: %.2f\n    routes: %.2f\n    recruitment: %.2f\n    materialize: %.2f\n  competition: %.2f ms\n    geometry: %.2f\n    light: %.2f\n    water: %.2f\n    evaluation: %.2f\nEcology validate: %.2f ms\nRepeated validate: %.2f ms\nClassification: %.2f ms\n  primary: %.2f\n  validation: %.2f\n  recompute oracle: %.2f\nSpatial observatory: %.2f ms" % [
         int(perf.get("fps", 0)), float(perf.get("last_step_ms", 0.0)), float(perf.get("last_refresh_ms", 0.0)), float(perf.get("last_history_capture_ms", 0.0)),
         int(perf.get("population", 0)), int(perf.get("visible_plants", 0)), String(perf.get("effective_lod", "")), int(perf.get("history_frames", 0)), VIS3_HISTORY_LIMIT,
+        float(profile.get("ecology_step_ms", 0.0)), float(ecology_profile.get("ls33_total_ms", 0.0)),
+        int(ls33_profile.get("parent_count", 0)), int(ls33_profile.get("candidate_count", 0)), int(ecology_profile.get("record_count_precompetition", 0)), int(ecology_profile.get("record_count_postcompetition", 0)),
+        float(ls33_profile.get("candidate_build_ms", 0.0)), float(ls33_profile.get("route_build_ms", 0.0)), float(ls33_profile.get("recruitment_eval_ms", 0.0)), float(ls33_profile.get("materialize_ms", 0.0)),
+        float(ecology_profile.get("competition_pass_ms", 0.0)), float(competition_profile.get("geometry_ms", 0.0)), float(competition_profile.get("light_field_ms", 0.0)), float(competition_profile.get("water_fields_ms", 0.0)), float(competition_profile.get("evaluation_ms", 0.0)),
+        float(profile.get("ecology_validation_ms", 0.0)), float(observability_profile.get("repeated_ecology_validation_ms", 0.0)), float(observability_profile.get("classification_ms", 0.0)),
+        float(classification_detail.get("primary_compute_ms", 0.0)), float(classification_detail.get("validation_ms", 0.0)), float(classification_detail.get("validation_recompute_ms", 0.0)), float(observability_profile.get("spatial_observatory_ms", 0.0)),
     ]
 
 func _on_lod_selected(index: int) -> void:

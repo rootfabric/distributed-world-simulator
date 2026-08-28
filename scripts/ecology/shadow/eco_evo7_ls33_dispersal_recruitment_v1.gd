@@ -19,6 +19,7 @@ const Shadow = preload("res://scripts/ecology/shadow/eco_evo7_live_world_shadow_
 const SCHEMA := "distributed_world_simulator.ecology.evo7_dispersal_recruitment.v1"
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-LS3.3.2"
+const PROFILE_SCHEMA := "distributed_world_simulator.ecology.evo7_perf1.ls33_profile.v1"
 const MODE := "SHADOW_RAM_ONLY"
 const GRID_SIZE := 32
 const SLOTS_PER_CELL := 4
@@ -57,6 +58,7 @@ var last_recruitment_hash := ""
 var occupied_map_hash := ""
 var hereditary_pool_hash := ""
 var population_hash := ""
+var last_profile: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -106,18 +108,33 @@ func set_evolution_enabled(value: bool) -> bool:
 func step_generation() -> Dictionary:
     if not initialized or not evolution_enabled or records.is_empty():
         return {}
+    var total_started := Time.get_ticks_usec()
+    var parent_count := records.size()
     var next_generation := generation + 1
+
+    var phase_started := Time.get_ticks_usec()
     var candidates := _build_candidates(records, next_generation)
+    var candidate_build_ms := _elapsed_ms(phase_started)
     if candidates.is_empty():
         return {}
+
+    phase_started = Time.get_ticks_usec()
     var routes := _build_routes(candidates, next_generation)
+    var route_build_ms := _elapsed_ms(phase_started)
     if routes.size() != candidates.size():
         return {}
+
+    phase_started = Time.get_ticks_usec()
     var recruitment := _evaluate_recruitment(candidates, routes, next_generation)
+    var recruitment_eval_ms := _elapsed_ms(phase_started)
     if recruitment.is_empty():
         return {}
-    var next_records := _materialize_recruits(candidates, routes, recruitment, next_generation)
 
+    phase_started = Time.get_ticks_usec()
+    var next_records := _materialize_recruits(candidates, routes, recruitment, next_generation)
+    var materialize_ms := _elapsed_ms(phase_started)
+
+    phase_started = Time.get_ticks_usec()
     last_candidates = candidates.duplicate(true)
     last_routes = routes.duplicate(true)
     last_recruitment = recruitment.duplicate(true)
@@ -127,12 +144,41 @@ func step_generation() -> Dictionary:
     generation = next_generation
     records = next_records
     _refresh_population_hashes()
+    var commit_hash_ms := _elapsed_ms(phase_started)
 
+    phase_started = Time.get_ticks_usec()
     if not _validate_generation_evidence():
         return {}
     if not records.is_empty() and not _validate_current_records(records):
         return {}
-    return get_snapshot()
+    var validation_ms := _elapsed_ms(phase_started)
+
+    phase_started = Time.get_ticks_usec()
+    var snapshot := get_snapshot()
+    var snapshot_build_ms := _elapsed_ms(phase_started)
+    last_profile = {
+        "schema": PROFILE_SCHEMA,
+        "generation": next_generation,
+        "parent_count": parent_count,
+        "candidate_count": candidates.size(),
+        "recruitment_event_count": recruitment.size(),
+        "record_count_after": records.size(),
+        "candidate_build_ms": candidate_build_ms,
+        "route_build_ms": route_build_ms,
+        "recruitment_eval_ms": recruitment_eval_ms,
+        "materialize_ms": materialize_ms,
+        "commit_hash_ms": commit_hash_ms,
+        "validation_ms": validation_ms,
+        "snapshot_build_ms": snapshot_build_ms,
+        "total_ms": _elapsed_ms(total_started),
+    }
+    return snapshot
+
+func get_last_profile() -> Dictionary:
+    return last_profile.duplicate(true)
+
+func _elapsed_ms(start_usec: int) -> float:
+    return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
 func get_snapshot() -> Dictionary:
     if not initialized:
@@ -678,3 +724,4 @@ func _reset() -> void:
     occupied_map_hash = ""
     hereditary_pool_hash = ""
     population_hash = ""
+    last_profile.clear()

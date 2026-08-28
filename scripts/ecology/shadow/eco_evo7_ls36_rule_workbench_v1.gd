@@ -15,6 +15,8 @@ const Observatory = preload("res://scripts/ecology/shadow/eco_evo7_evolution_obs
 const SCHEMA := "distributed_world_simulator.ecology.evo7_rule_workbench.v1"
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-LS3.6.2"
+const PROFILE_SCHEMA := "distributed_world_simulator.ecology.evo7_perf1.workbench_profile.v1"
+const PROFILE_HISTORY_LIMIT := 64
 const MODE := "SHADOW_RAM_ONLY"
 const GRID_SIZE := 32
 const CELL_SIZE_M := 16.0
@@ -68,6 +70,9 @@ var observatory = null
 var classification: Dictionary = {}
 var reset_count := 0
 var manual_step_count := 0
+var last_generation_profile: Dictionary = {}
+var generation_profile_history: Array[Dictionary] = []
+var last_observability_profile: Dictionary = {}
 
 static func default_spec() -> Dictionary:
     return {
@@ -157,13 +162,45 @@ func advance_generations(count: int) -> Dictionary:
         return {}
     var result: Dictionary = {}
     for _index in count:
+        var total_started := Time.get_ticks_usec()
+        var phase_started := Time.get_ticks_usec()
         result = ecology.step_generation()
-        if result.is_empty() or not ecology.validate_snapshot(result):
+        var ecology_step_ms := _elapsed_ms(phase_started)
+        if result.is_empty():
             return {}
+
+        phase_started = Time.get_ticks_usec()
+        if not ecology.validate_snapshot(result):
+            return {}
+        var ecology_validation_ms := _elapsed_ms(phase_started)
+
         if not _refresh_observability(result, true):
             return {}
+        var profile := {
+            "schema": PROFILE_SCHEMA,
+            "generation": int(result.get("generation", -1)),
+            "record_count": int(result.get("record_count", 0)),
+            "ecology_step_ms": ecology_step_ms,
+            "ecology_validation_ms": ecology_validation_ms,
+            "observability": last_observability_profile.duplicate(true),
+            "ecology": ecology.get_last_profile(),
+            "total_ms": _elapsed_ms(total_started),
+        }
+        last_generation_profile = profile
+        generation_profile_history.append(profile.duplicate(true))
+        if generation_profile_history.size() > PROFILE_HISTORY_LIMIT:
+            generation_profile_history.pop_front()
     manual_step_count += count
     return get_workbench_snapshot()
+
+func get_last_generation_profile() -> Dictionary:
+    return last_generation_profile.duplicate(true)
+
+func get_generation_profile_history() -> Array[Dictionary]:
+    return generation_profile_history.duplicate(true)
+
+func _elapsed_ms(start_usec: int) -> float:
+    return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
 func set_evolution_enabled(value: bool) -> bool:
     if not initialized or not ecology.set_evolution_enabled(value):
@@ -327,14 +364,32 @@ func _rebuild() -> bool:
 func _refresh_observability(ecology_snapshot: Dictionary, require_classification: bool) -> bool:
     if ecology_snapshot.is_empty():
         return false
+    var total_started := Time.get_ticks_usec()
+    var phase_started := Time.get_ticks_usec()
     if int(ecology_snapshot.get("generation", 0)) > 0 and not ecology.validate_snapshot(ecology_snapshot):
         return false
+    var repeated_validation_ms := _elapsed_ms(phase_started)
+
     classification = {}
+    var classification_ms := 0.0
     if bool(spec["competition_enabled"]) and int(ecology_snapshot.get("generation", 0)) > 0:
+        phase_started = Time.get_ticks_usec()
         classification = classifier.classify(environment_field, ecology_snapshot, true)
+        classification_ms = _elapsed_ms(phase_started)
         if require_classification and classification.is_empty():
             return false
-    return observatory.record_spatial_snapshot(environment_field, ecology_snapshot, classification)
+
+    phase_started = Time.get_ticks_usec()
+    var recorded: bool = bool(observatory.record_spatial_snapshot(environment_field, ecology_snapshot, classification))
+    var spatial_observatory_ms := _elapsed_ms(phase_started)
+    last_observability_profile = {
+        "repeated_ecology_validation_ms": repeated_validation_ms,
+        "classification_ms": classification_ms,
+        "classification_detail": classifier.get_last_profile() if classifier != null and classifier.has_method("get_last_profile") else {},
+        "spatial_observatory_ms": spatial_observatory_ms,
+        "total_ms": _elapsed_ms(total_started),
+    }
+    return recorded
 
 func _center_direction(world_seed: int) -> Vector3:
     var anchor := LAND_ANCHOR.normalized()
@@ -430,3 +485,4 @@ func _reset_runtime() -> void:
     spec.clear(); patch.clear(); environment_field.clear(); classification.clear()
     ecology = null; classifier = null; observatory = null
     reset_count = 0; manual_step_count = 0
+    last_generation_profile.clear(); generation_profile_history.clear(); last_observability_profile.clear()

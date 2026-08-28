@@ -1,28 +1,85 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-29-R6",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-29-R7",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/ECO-VIS3",
-  "visualization_gate": "VIS2_ACCEPTED_DD6304E",
+  "current_checkpoint": "ECO.EVO7/PERF1",
+  "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
-    {"id": "LS3.0", "name": "Real Planet Patch", "status": "CLOSED"},
-    {"id": "LS3.1", "name": "Environment Generator", "status": "CLOSED"},
-    {"id": "LS3.2", "name": "Spatial Cohort Lattice", "status": "CLOSED"},
-    {"id": "LS3.3", "name": "Dispersal / Recruitment", "status": "CLOSED"},
-    {"id": "LS3.4", "name": "Local Competition", "status": "CLOSED_WITH_LS3_FINAL_EXTINCTION_EVIDENCE_REPAIR"},
-    {"id": "LS3.5", "name": "Emergent Biomes", "status": "CLOSED"},
-    {"id": "LS3.6", "name": "Rule Workbench", "status": "CLOSED"},
-    {"id": "LS3.FINAL", "name": "Multi-environment Challenge", "status": "CLOSED_ACCEPTED_A7E3F81"},
-    {"id": "ECO-VIS1", "name": "Spatial World Viewer", "status": "CLOSED_ACCEPTED_57577F5"},
-    {"id": "ECO-VIS2", "name": "Procedural Plant Renderer", "status": "CLOSED_ACCEPTED_DD6304E"},
-    {"id": "ECO-VIS3", "name": "Planet Patch / Biome Viewer", "status": "IMPLEMENTATION_CANDIDATE"},
-    {"id": "LS4", "name": "Next ecology complexity stage", "status": "AFTER_VIS3_VISUAL_FEEDBACK_CHECKPOINT"}
+    {
+      "id": "LS3.0",
+      "name": "Real Planet Patch",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.1",
+      "name": "Environment Generator",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.2",
+      "name": "Spatial Cohort Lattice",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.3",
+      "name": "Dispersal / Recruitment",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.4",
+      "name": "Local Competition",
+      "status": "CLOSED_WITH_LS3_FINAL_EXTINCTION_EVIDENCE_REPAIR"
+    },
+    {
+      "id": "LS3.5",
+      "name": "Emergent Biomes",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.6",
+      "name": "Rule Workbench",
+      "status": "CLOSED"
+    },
+    {
+      "id": "LS3.FINAL",
+      "name": "Multi-environment Challenge",
+      "status": "CLOSED_ACCEPTED_A7E3F81"
+    },
+    {
+      "id": "ECO-VIS1",
+      "name": "Spatial World Viewer",
+      "status": "CLOSED_ACCEPTED_57577F5"
+    },
+    {
+      "id": "ECO-VIS2",
+      "name": "Procedural Plant Renderer",
+      "status": "CLOSED_ACCEPTED_DD6304E"
+    },
+    {
+      "id": "ECO-VIS3",
+      "name": "Planet Patch / Biome Viewer",
+      "status": "CLOSED_ACCEPTED_C3D72DA"
+    },
+    {
+      "id": "PERF1",
+      "name": "Generation Stage Profiling",
+      "status": "IMPLEMENTATION_CANDIDATE"
+    },
+    {
+      "id": "LS4",
+      "name": "Next ecology complexity stage",
+      "status": "AFTER_PERF1_PROFILE_DECISION"
+    }
   ],
   "ls3_final": {
     "goal": "Run identical founder heredity through frozen contrasting physical environments and prove strong causal divergence without desired-biome or genome controls.",
     "max_generations": 10,
-    "cases": ["WET_SURFACE", "DRY_DRAINED", "BRIGHT_DRY"],
+    "cases": [
+      "WET_SURFACE",
+      "DRY_DRAINED",
+      "BRIGHT_DRY"
+    ],
     "required_evidence": [
       "same_founder_heredity",
       "distinct_physical_environment_fields",
@@ -43,15 +100,60 @@
     "vis3_authority": "Presentation-only terrain/history/telemetry over public Workbench facades; no ecology rewind, world write, persistence or network authority."
   },
   "performance_debt": {
-    "status": "NON_BLOCKING_OBSERVED_IN_VIS2_WINDOWS_RUNS",
-    "symptom": "Later generations / larger populations become visibly CPU-heavy.",
-    "vis3_action": "Measure Workbench step, VIS3 refresh, history capture, FPS, population and visible-plant count; REGION LOD suppresses individual plant geometry.",
-    "optimization_gate": "PROFILE_BEFORE_OPTIMIZE"
+    "status": "MEASURED_BY_PERF1_R1",
+    "visual_windows_evidence": {
+      "population_314": {
+        "workbench_step_ms": 3720.73,
+        "vis3_refresh_ms": 57.62,
+        "history_capture_ms": 149.55
+      },
+      "population_442": {
+        "workbench_step_ms": 5406.8,
+        "vis3_refresh_ms": 73.0,
+        "history_capture_ms": 209.49
+      },
+      "population_665": {
+        "workbench_step_ms": 8046.45,
+        "vis3_refresh_ms": 113.84,
+        "history_capture_ms": 326.02
+      }
+    },
+    "perf1_12_generation_local_average_ms": {
+      "total": 1566.33066666667,
+      "ls33_total": 781.984,
+      "candidate_build": 279.4195,
+      "recruitment_eval": 432.988,
+      "competition_pass": 178.435916666667,
+      "geometry": 9.846,
+      "classification": 451.747416666667,
+      "classification_primary": 199.77925,
+      "classification_validation": 251.941166666667,
+      "classification_recompute_oracle": 185.905083333333,
+      "ecology_validation": 43.46525,
+      "repeated_ecology_validation": 38.6038333333333,
+      "spatial_observatory": 2.93266666666667
+    },
+    "finding": "LS3.3 candidate/recruitment work dominates as population grows; LS3.5 deterministic validation recompute is a large secondary cost; LS3.4 geometry is currently small and should not be first parallel target.",
+    "optimization_gate": "REMOVE_DUPLICATE_SERIAL_WORK_THEN_PERF1_PAR0_DETERMINISTIC_PARALLEL_PROTOTYPE"
   },
   "authority": {
     "production_promotion": false,
     "world_write": false,
     "ecology_direct_write": false,
     "renderer_as_truth": false
+  },
+  "parallel_execution": {
+    "next_checkpoint": "PERF1-PAR0",
+    "status": "DESIGN_READY_NOT_IMPLEMENTED",
+    "process_model": "PERSISTENT_WORKERS_ONLY",
+    "candidate_targets": [
+      "LS3.3_RECRUITMENT_EVALUATION",
+      "LS3.3_CANDIDATE_REPRODUCTION",
+      "LS3.5_PER_CELL_CLASSIFICATION",
+      "LS3.4_PER_CELL_WATER_FIELDS"
+    ],
+    "defer_target": "LS3.4_GEOMETRY_CURRENTLY_TOO_CHEAP",
+    "determinism_gate": "EXACT_SERIAL_PARALLEL_HASH_PARITY_WORKER_COUNTS_1_2_4_N_OVER_100_PLUS_GENERATIONS",
+    "transport_gate": "PROVE_WINDOWS_LINUX_PERSISTENT_PROCESS_PROTOCOL_BEFORE_ADOPTION"
   }
 }

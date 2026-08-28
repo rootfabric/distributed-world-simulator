@@ -3,6 +3,10 @@
 Статус (исторический документ): `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0..E3.3 ACCEPTED / E3.4 CURRENT` — срез на момент написания.
 
 **Статус на 2026-08-22 (ECO-R78):** `EVO3 E3.0–E3.8 ACCEPTED / E3.FINAL BLOCKED_PENDING_AUTHORIZATION`.
+
+**Живой статус на 2026-08-29 (ECO EVO7 live continuation):** `LS3.0–LS3.FINAL CLOSED / ECO-VIS1 CLOSED / ECO-VIS2 CLOSED / ECO-VIS3 CLOSED_ACCEPTED_C3D72DA / PERF1 IMPLEMENTATION CANDIDATE`.
+
+Текущий live machine-roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. PERF1 измеряет стоимость generation pipeline без изменения ecology truth; следующий возможный optimization checkpoint — `PERF1-PAR0`, только после exact serial/parallel determinism gate.
 Единственный живой источник текущего состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`. Разделы ниже сохраняются как история маршрута; статусы внутри них не обновляются задним числом.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
