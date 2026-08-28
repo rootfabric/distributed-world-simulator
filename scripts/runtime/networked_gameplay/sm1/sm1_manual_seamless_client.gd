@@ -318,7 +318,9 @@ func _build_scene() -> void:
 	var band_mesh := BoxMesh.new()
 	band_mesh.size = Vector3(10.0, 0.025, 7.6)
 	band.mesh = band_mesh
-	band.material_override = _material(Color(0.16, 0.20, 0.28, 0.72), true)
+	# Keep the authority transition band opaque. Alpha blending made the moving
+	# presentation proxy look like it left a short ghost trail over the band.
+	band.material_override = _material(Color(0.16, 0.20, 0.28, 1.0))
 	band.position = Vector3(5.0, 0.02, 0.0)
 	_world_root.add_child(band)
 
@@ -326,6 +328,10 @@ func _build_scene() -> void:
 	_add_threshold_marker(AUTHORITY_A_TO_B_X, "A → B threshold  x=10")
 
 	_player_mesh = MeshInstance3D.new()
+	# This proxy is driven directly from the latest canonical network state in
+	# _process(), not from the physics tick. Disable automatic interpolation so
+	# Godot does not blend an already-discrete presentation transform twice.
+	_player_mesh.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	var player_box := BoxMesh.new()
 	player_box.size = Vector3(0.8, 1.2, 0.8)
 	_player_mesh.mesh = player_box
