@@ -1,0 +1,45 @@
+name: ECO EVO7 LS3.5 Source Carrier R1
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls35-emergent-biomes-r1
+    paths:
+      - ".github/workflows/evo7-ls35-source-carrier-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact LS3.5 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: b64d7baacd1ce9cd8c260e6c3c1882d561f1e13f
+          fetch-depth: 0
+
+      - name: Assert exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "b64d7baacd1ce9cd8c260e6c3c1882d561f1e13f"
+          test "$(git rev-parse HEAD^)" = "78ba78a19ed77eb7a1678b01e6e001edb5284104"
+          test "$(git rev-parse 'HEAD^{tree}')" = "d3d94afd4eff6404aa6488ce35d17ed5786ba986"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Materialize exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/ls35-source-b64d7ba.tar.gz" .
+          sha256sum "$RUNNER_TEMP/ls35-source-b64d7ba.tar.gz"
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ls35-source-b64d7ba
+          path: ${{ runner.temp }}/ls35-source-b64d7ba.tar.gz
+          if-no-files-found: error
+          retention-days: 1
