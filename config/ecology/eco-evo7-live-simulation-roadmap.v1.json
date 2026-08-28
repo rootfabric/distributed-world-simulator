@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-28-R1",
+  "mode": "RESEARCH_SHADOW_ONLY",
+  "current_checkpoint": "ECO.EVO7/LS3.FINAL",
+  "visualization_gate": "LS3.FINAL_ACCEPTED",
+  "route": [
+    {"id":"LS3.0","name":"Real Planet Patch","status":"CLOSED"},
+    {"id":"LS3.1","name":"Environment Generator","status":"CLOSED"},
+    {"id":"LS3.2","name":"Spatial Cohort Lattice","status":"CLOSED"},
+    {"id":"LS3.3","name":"Dispersal / Recruitment","status":"CLOSED"},
+    {"id":"LS3.4","name":"Local Competition","status":"CLOSED_WITH_LS3_FINAL_EXTINCTION_EVIDENCE_REPAIR"},
+    {"id":"LS3.5","name":"Emergent Biomes","status":"CLOSED"},
+    {"id":"LS3.6","name":"Rule Workbench","status":"CLOSED"},
+    {"id":"LS3.FINAL","name":"Multi-environment Challenge","status":"IMPLEMENTATION_CANDIDATE"},
+    {"id":"ECO-VIS1","name":"Spatial World Viewer","status":"NEXT_AFTER_LS3_FINAL_ACCEPTANCE"},
+    {"id":"ECO-VIS2","name":"Procedural Plant Renderer","status":"BLOCKED_BY_VIS1"},
+    {"id":"ECO-VIS3","name":"Planet Patch / Biome Viewer","status":"BLOCKED_BY_VIS2"},
+    {"id":"LS4","name":"Next ecology complexity stage","status":"AFTER_VISUAL_FEEDBACK_CHECKPOINT"}
+  ],
+  "ls3_final": {
+    "goal": "Run identical founder heredity through frozen contrasting physical environments and prove strong causal divergence without desired-biome or genome controls.",
+    "max_generations": 10,
+    "cases": ["WET_SURFACE","DRY_DRAINED","BRIGHT_DRY"],
+    "required_evidence": [
+      "same_founder_heredity",
+      "distinct_physical_environment_fields",
+      "valid_terminal_extinction_evidence",
+      "distinct_final_ecology_states",
+      "distinct_final_hereditary_outcomes",
+      "strong_population_response_gap",
+      "public_workbench_only",
+      "full_ls3_regression"
+    ]
+  },
+  "visualization": {
+    "start_condition": "LS3.FINAL accepted on exact tested head",
+    "vis1": "Godot spatial viewer with 32x32 world projection, camera, environment/population/biome overlays and selectable plants/cohorts.",
+    "vis2": "Procedural phenotype renderer driven by existing phenotype/trait data; visuals remain presentation, never ecology truth.",
+    "vis3": "Planet patch / biome viewer with multi-scale camera and observable evolutionary history."
+  },
+  "authority": {
+    "production_promotion": false,
+    "world_write": false,
+    "ecology_direct_write": false,
+    "renderer_as_truth": false
+  }
+}

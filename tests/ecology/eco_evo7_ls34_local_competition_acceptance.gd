@@ -46,6 +46,15 @@ func _init() -> void:
     _check(_controlled_root_heavy_cost(on), "root-heavy allocation increases root maintenance price")
     _check(on.validate_snapshot(g1_on), "LS3.4 snapshot validates fail-closed")
 
+    # Extinction is a valid terminal ecology outcome, not a malformed competition state.
+    var empty_field: Dictionary = on.call("_empty_competition_field", 1)
+    _check(not empty_field.is_empty() and int(empty_field.get("record_count_before", -1)) == 0 and int(empty_field.get("record_count_after", -1)) == 0, "zero-population competition evidence materializes deterministically")
+    _check(on.validate_competition_field(empty_field), "zero-population competition evidence validates")
+    var forged_empty: Dictionary = empty_field.duplicate(true)
+    forged_empty["light_field_hash"] = "0".repeat(64)
+    forged_empty["field_hash"] = on.call("_competition_field_hash", forged_empty)
+    _check(not on.validate_competition_field(forged_empty), "zero-population competition evidence rejects forged empty-light identity after rehash")
+
     var pass_source: Array = Array(on.last_competition_field.get("evaluations", []))
     _check(not pass_source.is_empty(), "competition evaluations materialize")
     var pre_records: Array = Array(off.core.get_snapshot()["records"]).duplicate(true)

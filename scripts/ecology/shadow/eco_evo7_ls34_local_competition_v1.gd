@@ -22,7 +22,7 @@ const WaterField = preload("res://scripts/research/ecology/soil_water_field_v1.g
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_local_competition.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-LS3.4.1"
+const REVISION := "ECO.EVO7-LS3.4.2"
 const MODE := "SHADOW_RAM_ONLY"
 const GRID_SIZE := 32
 const SLOTS_PER_CELL := 4
@@ -96,19 +96,25 @@ func step_generation() -> Dictionary:
     last_culled_count = 0
     last_survivor_count = int(pre["record_count"])
 
-    if competition_enabled and int(pre["record_count"]) > 0:
-        var competition_result: Dictionary = _competition_pass(Array(pre["records"]), int(pre["generation"]))
-        if competition_result.is_empty():
-            return {}
-        var survivors: Array[Dictionary] = competition_result["survivors"]
-        last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
-        last_competition_hash = String(last_competition_field["field_hash"])
-        last_survivor_count = survivors.size()
-        last_culled_count = int(pre["record_count"]) - survivors.size()
-        core.records = survivors.duplicate(true)
-        core.call("_refresh_population_hashes")
-        if not survivors.is_empty() and not bool(core.call("_validate_current_records", survivors)):
-            return {}
+    if competition_enabled:
+        if int(pre["record_count"]) > 0:
+            var competition_result: Dictionary = _competition_pass(Array(pre["records"]), int(pre["generation"]))
+            if competition_result.is_empty():
+                return {}
+            var survivors: Array[Dictionary] = competition_result["survivors"]
+            last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
+            last_competition_hash = String(last_competition_field["field_hash"])
+            last_survivor_count = survivors.size()
+            last_culled_count = int(pre["record_count"]) - survivors.size()
+            core.records = survivors.duplicate(true)
+            core.call("_refresh_population_hashes")
+            if not survivors.is_empty() and not bool(core.call("_validate_current_records", survivors)):
+                return {}
+        else:
+            last_competition_field = _empty_competition_field(int(pre["generation"]))
+            if last_competition_field.is_empty():
+                return {}
+            last_competition_hash = String(last_competition_field["field_hash"])
 
     var post: Dictionary = core.get_snapshot()
     last_postcompetition_population_hash = String(post["population_hash"])
@@ -309,6 +315,32 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         return {}
     return {"survivors": survivors, "field": field}
 
+func _empty_competition_field(generation_value: int) -> Dictionary:
+    if generation_value < 1:
+        return {}
+    var empty_water_cells: Array[Dictionary] = []
+    var empty_evaluations: Array[Dictionary] = []
+    var field := {
+        "schema": SCHEMA + ".field",
+        "version": VERSION,
+        "revision": REVISION,
+        "generation": generation_value,
+        "neighborhood_policy": "SAME_CELL_WATER+MOORE_GEOMETRY+TRAIT_RADIUS",
+        "moore_radius_cells": MOORE_RADIUS_CELLS,
+        "max_trait_radius_cells": MAX_TRAIT_RADIUS_CELLS,
+        "record_count_before": 0,
+        "record_count_after": 0,
+        "light_field_hash": _empty_light_field_hash(generation_value),
+        "water_cells": empty_water_cells,
+        "evaluations": empty_evaluations,
+    }
+    field["water_field_hash"] = _water_cells_hash(empty_water_cells)
+    field["field_hash"] = _competition_field_hash(field)
+    return field if validate_competition_field(field) else {}
+
+func _empty_light_field_hash(generation_value: int) -> String:
+    return ("%s|%s|%s|empty-light|%d" % [SCHEMA, VERSION, REVISION, generation_value]).sha256_text()
+
 func validate_competition_field(field: Dictionary) -> bool:
     if field.is_empty():
         return false
@@ -319,7 +351,7 @@ func validate_competition_field(field: Dictionary) -> bool:
     if int(field.get("moore_radius_cells", -1)) != MOORE_RADIUS_CELLS or int(field.get("max_trait_radius_cells", -1)) != MAX_TRAIT_RADIUS_CELLS:
         return false
     var before := int(field.get("record_count_before", -1)); var after := int(field.get("record_count_after", -1))
-    if before < 1 or after < 0 or after > before:
+    if before < 0 or after < 0 or after > before:
         return false
     if String(field.get("light_field_hash", "")).length() != 64 or String(field.get("water_field_hash", "")).length() != 64:
         return false
@@ -327,6 +359,11 @@ func validate_competition_field(field: Dictionary) -> bool:
     var eval_value = field.get("evaluations")
     if not water_value is Array or not eval_value is Array or Array(eval_value).size() != before:
         return false
+    if before == 0:
+        if after != 0 or not Array(water_value).is_empty() or not Array(eval_value).is_empty():
+            return false
+        if String(field.get("light_field_hash", "")) != _empty_light_field_hash(int(field["generation"])):
+            return false
     var water_cells: Array = water_value
     var seen_cells := {}
     var previous_cell := -1

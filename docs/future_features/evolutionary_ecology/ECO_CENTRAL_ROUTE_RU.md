@@ -2,10 +2,12 @@
 
 Статус (исторический документ): `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0..E3.3 ACCEPTED / E3.4 CURRENT` — срез на момент написания.
 
-**Статус на 2026-08-22 (ECO-R78):** `EVO3 E3.0–E3.8 ACCEPTED / E3.FINAL BLOCKED_PENDING_AUTHORIZATION`.
-Единственный живой источник текущего состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`. Разделы ниже сохраняются как история маршрута; статусы внутри них не обновляются задним числом.
+**Статус на 2026-08-28 (ECO EVO7 live continuation):** `LS3.0–LS3.6 CLOSED / LS3.FINAL IMPLEMENTATION CANDIDATE / ECO-VIS1 NEXT AFTER LS3.FINAL ACCEPTANCE`.
 
-Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
+Текущий live-simulation маршрут вынесен в `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. Он фиксирует новый визуальный checkpoint: `LS3.FINAL → ECO-VIS1 → ECO-VIS2 → ECO-VIS3 → LS4`. Исторические EVO2/EVO3 разделы ниже не переписываются задним числом.
+
+Historical machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.  
+Live EVO7 roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`.  
 EVO3 architecture: `docs/architecture/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ARCHITECTURE_RU.md`.  
 EVO3 roadmap: `docs/plans/ECO_EVO3_PLANETARY_ECOLOGY_COMPILER_ROADMAP_RU.md`.  
 E3.1 snapshot contract: `docs/plans/ECO_EVO3_E3_1_PLANET_FIELD_SNAPSHOT_CONTRACT_RU.md`.  
