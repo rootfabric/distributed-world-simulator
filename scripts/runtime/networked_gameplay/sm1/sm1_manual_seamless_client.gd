@@ -48,6 +48,9 @@ var _last_state: Dictionary = {}
 var _identity_failures: Array[String] = []
 var _commands_sent := 0
 var _command_results := 0
+var _goal_achieved := false
+var _goal_achieved_at_epoch := 0
+var _goal_route_snapshot: Array[String] = []
 
 var _world_root: Node3D
 var _player_mesh: MeshInstance3D
@@ -155,6 +158,7 @@ func _handle_start(payload: Dictionary) -> void:
 	_active_authority_id = String(payload.get("active_authority_id", ""))
 	_authority_epoch = int(payload.get("authority_epoch", 0))
 	_record_route(_active_authority_id, _authority_epoch)
+	_maybe_latch_demo_goal()
 	if _gateway_endpoint_id != Support.GATEWAY_ENDPOINT_ID:
 		_finish_failure("GATEWAY_ENDPOINT_CHANGED", {"gateway_endpoint_id": _gateway_endpoint_id})
 
@@ -174,6 +178,7 @@ func _handle_state(payload: Dictionary) -> void:
 	_active_authority_id = String(payload.get("active_authority_id", _active_authority_id))
 	_authority_epoch = int(payload.get("authority_epoch", _authority_epoch))
 	_record_route(_active_authority_id, _authority_epoch)
+	_maybe_latch_demo_goal()
 
 
 func _handle_command_result(payload: Dictionary) -> void:
@@ -188,6 +193,7 @@ func _handle_command_result(payload: Dictionary) -> void:
 	_authority_epoch = int(payload.get("authority_epoch", _authority_epoch))
 	_world_revision = int(payload.get("world_revision", _world_revision))
 	_record_route(_active_authority_id, _authority_epoch)
+	_maybe_latch_demo_goal()
 	if bool(payload.get("handoff_complete", false)):
 		_handoff_flash_until_ms = Time.get_ticks_msec() + 1300
 
@@ -279,11 +285,25 @@ func _validate_identity(state: Dictionary) -> void:
 
 
 func _demo_goal_reached() -> bool:
-	return _contains_route_pattern([Support.AUTHORITY_A, Support.AUTHORITY_B, Support.AUTHORITY_A]) \
-		and _epochs.has(1) and _epochs.has(2) and _epochs.has(3) \
-		and _active_authority_id == Support.AUTHORITY_A and _authority_epoch >= 3 \
-		and _connect_count == 1 and _reconnect_count == 0 and _respawn_count == 0 \
-		and _identity_failures.is_empty()
+	return _goal_achieved
+
+
+func _maybe_latch_demo_goal() -> void:
+	if _goal_achieved:
+		return
+	if not _contains_route_pattern([Support.AUTHORITY_A, Support.AUTHORITY_B, Support.AUTHORITY_A]):
+		return
+	if not (_epochs.has(1) and _epochs.has(2) and _epochs.has(3)):
+		return
+	if _active_authority_id != Support.AUTHORITY_A or _authority_epoch < 3:
+		return
+	if _connect_count != 1 or _reconnect_count != 0 or _respawn_count != 0:
+		return
+	if not _identity_failures.is_empty():
+		return
+	_goal_achieved = true
+	_goal_achieved_at_epoch = _authority_epoch
+	_goal_route_snapshot = _route_history.duplicate()
 
 
 func _contains_route_pattern(pattern: Array[String]) -> bool:
@@ -318,7 +338,9 @@ func _build_scene() -> void:
 	var band_mesh := BoxMesh.new()
 	band_mesh.size = Vector3(10.0, 0.025, 7.6)
 	band.mesh = band_mesh
-	band.material_override = _material(Color(0.16, 0.20, 0.28, 0.72), true)
+	# Keep the authority transition band opaque. Alpha blending made the moving
+	# presentation proxy look like it left a short ghost trail over the band.
+	band.material_override = _material(Color(0.16, 0.20, 0.28, 1.0))
 	band.position = Vector3(5.0, 0.02, 0.0)
 	_world_root.add_child(band)
 
@@ -326,6 +348,10 @@ func _build_scene() -> void:
 	_add_threshold_marker(AUTHORITY_A_TO_B_X, "A → B threshold  x=10")
 
 	_player_mesh = MeshInstance3D.new()
+	# This proxy is driven directly from the latest canonical network state in
+	# _process(), not from the physics tick. Disable automatic interpolation so
+	# Godot does not blend an already-discrete presentation transform twice.
+	_player_mesh.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	var player_box := BoxMesh.new()
 	player_box.size = Vector3(0.8, 1.2, 0.8)
 	_player_mesh.mesh = player_box
@@ -339,6 +365,10 @@ func _build_scene() -> void:
 	_world_root.add_child(light)
 
 	_camera = Camera3D.new()
+	# Camera motion is presentation-only and updated every render frame.
+	# Disable automatic physics interpolation to avoid Camera3D warnings and
+	# keep the manual demo camera responsive to the latest canonical position.
+	_camera.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	_camera.current = true
 	_world_root.add_child(_camera)
 
@@ -414,7 +444,7 @@ func _update_hud() -> void:
 		"Last error: %s" % (_last_error if not _last_error.is_empty() else "none"),
 	])
 	if _demo_goal_reached():
-		_banner_label.text = "✓ A → B → A complete with one Gateway connection. Press Esc to stop."
+		_banner_label.text = "✓ A → B → A proven. You may keep moving; Esc will preserve PASS."
 	elif Time.get_ticks_msec() < _handoff_flash_until_ms:
 		_banner_label.text = "HANDOFF COMPLETE → active %s / epoch %d" % [authority_short, _authority_epoch]
 	elif not _start_received:
@@ -455,6 +485,9 @@ func _finish_success(payload: Dictionary) -> void:
 		"spawn_generation": int(_last_state.get("spawn_generation", 0)),
 		"identity_failures": _identity_failures.duplicate(),
 		"auto_demo": bool(_options.get("auto-demo", false)),
+		"goal_achieved": _goal_achieved,
+		"goal_achieved_at_epoch": _goal_achieved_at_epoch,
+		"goal_route_snapshot": _goal_route_snapshot.duplicate(),
 	}
 	Support.write_json(String(_options["result-file"]), report)
 	_finished = true
