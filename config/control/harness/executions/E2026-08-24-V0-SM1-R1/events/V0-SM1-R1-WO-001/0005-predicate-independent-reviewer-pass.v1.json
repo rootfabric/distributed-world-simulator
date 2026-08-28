@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0005",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 5,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-28T16:36:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/v0-sm1-b6-verifier-dispatch-r1",
+  "head_sha": "8b4793d868eb81ff4786d51a4ba5ec90deb08a4e",
+  "summary": "Fresh independent B5 exact-head Reviewer PASS durably recorded for immutable runtime subject 6fdfc047... / tree b9b1202d...; review does not claim Verifier PASS, PC0 NON_RED, checkpoint acceptance or merge authorization.",
+  "command": "RECORD_INDEPENDENT_REVIEWER_PASS",
+  "exit_code": 0,
+  "predicate": "INDEPENDENT_REVIEWER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-001.v1.json"
+  ]
+}
