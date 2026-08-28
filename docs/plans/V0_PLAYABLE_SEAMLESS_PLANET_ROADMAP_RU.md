@@ -44,7 +44,7 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / feature-complete; B2 + B2.5 + B3 closed; B4 Evidence Map current**
+**Статус: ACTIVE / feature-complete; B2 + B2.5 + B3 + B4 closed; B5 Reviewer current**
 
 Уже реализовано до SM1.7.12:
 
@@ -82,8 +82,8 @@ B1. SM1.7.12 impaired-network repeated crossings    DONE
 B2. full world/core regression                       CLOSED
 B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PASS
 B3. post-build critique                               CLOSED
-B4. Evidence Map                                      CURRENT
-B5. fresh exact-head Reviewer
+B4. Evidence Map                                      CLOSED
+B5. fresh exact-head Reviewer                          CURRENT
 B6. fresh Verifier
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
@@ -308,3 +308,17 @@ Verdict: `IMPLEMENTATION_COMPLETE_READY_FOR_EVIDENCE_MAP_WITH_NONBLOCKING_FOLLOW
 Новых correctness-блокеров не найдено. Важно: Reviewer должен проверять composite closure candidate `6fdfc047...`, а не source-only `b270fb8...`; demo #284 остаётся non-acceptance UX evidence.
 
 Non-blocking followups: один наблюдавшийся M5 convergence timing flake; isolated-profile cleanup и Camera3D warning cleanup для demo вынесены в Draft PR #286.
+
+### B4 Evidence Map closure
+
+B4 закрыт отдельным control/evidence carrier PR #287.
+
+Evidence Map bind: exact production closure candidate `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Map: focused PASS, full regression PASS, canonical truth changed=false, architecture ownership changed=false, required_fixes=[], review_verdict=PASS.
+
+STANDARD/DIRECTIONAL PC0 на composite closure head честно остаются NOT_RUN и должны быть закрыты на fresh review-head; Project Control #1439 не переинтерпретируется как composite-head PASS.
+
+Demo/tooling cleanup PR #286 подтверждён на Windows: ghosting исчез, isolated profile PASS, repeated manual route A→B→A→B→A→B / epochs 1..6 PASS при одном Gateway connection и zero reconnect/respawn.
+
+Текущий следующий этап: **B5 fresh exact-head Reviewer**.
