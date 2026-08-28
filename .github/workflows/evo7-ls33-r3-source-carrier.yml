@@ -1,0 +1,45 @@
+name: ECO EVO7 LS3.3 R3 Source Carrier
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-ls33-dispersal-recruitment-r1
+    paths:
+      - ".github/workflows/evo7-ls33-r3-source-carrier.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact LS3.3 R3 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: a8050ab310257949fd7f1d1862eecd3e72050af9
+          fetch-depth: 0
+
+      - name: Assert exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "a8050ab310257949fd7f1d1862eecd3e72050af9"
+          test "$(git rev-parse HEAD^)" = "c0cf7a8d37f73e5ffeabd856e70d7ee05e8d5541"
+          test "$(git rev-parse 'HEAD^{tree}')" = "df489e39857c8eec231c379a0de2bb0e0e6d5553"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Materialize exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/ls33-r3-source-a8050ab.tar.gz" .
+          sha256sum "$RUNNER_TEMP/ls33-r3-source-a8050ab.tar.gz"
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ls33-r3-source-a8050ab
+          path: ${{ runner.temp }}/ls33-r3-source-a8050ab.tar.gz
+          if-no-files-found: error
+          retention-days: 1
