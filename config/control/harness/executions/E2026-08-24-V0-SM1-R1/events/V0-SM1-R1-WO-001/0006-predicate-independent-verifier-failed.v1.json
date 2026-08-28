@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0006",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 6,
+  "event_type": "PREDICATE_FAILED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-28T23:30:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/v0-sm1-b6-verifier-record-r1",
+  "head_sha": "00337e8f6e7f3a212cbce6809b0adb6a11956336",
+  "summary": "Fresh B6 exact-head machine verification failed because canonical full world/core regression reproduced intermittent M5 graphical multiprocess instability; focused SM1 and impaired-network gates remained green.",
+  "command": "RECORD_INDEPENDENT_VERIFIER_FAILURE",
+  "exit_code": 1,
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-001.v1.json"
+  ]
+}
