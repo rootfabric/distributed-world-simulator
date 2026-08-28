@@ -44,7 +44,7 @@ Acceptance scenario:
 
 ## Фаза B — SM1 production seamless
 
-**Статус: ACTIVE / feature-complete, B2 closed; manual seamless smoke current**
+**Статус: ACTIVE / feature-complete; B2 + B2.5 closed; B3 critique current**
 
 Уже реализовано до SM1.7.12:
 
@@ -80,8 +80,8 @@ Exact Windows double-Godot B2: **307/307 steps PASS**, `304/304` standalone test
 ```text
 B1. SM1.7.12 impaired-network repeated crossings    DONE
 B2. full world/core regression                       CLOSED
-B2.5 manual seamless smoke demo                      IMPLEMENTED / AUTO PASS; WINDOWS MANUAL PENDING
-B3. post-build critique
+B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PASS
+B3. post-build critique                               CURRENT
 B4. Evidence Map
 B5. fresh exact-head Reviewer
 B6. fresh Verifier
@@ -102,7 +102,7 @@ Authority A + Authority B + Gateway
 → repeated crossings
 ```
 
-Manual-input/presentation wrapper теперь реализован: один graphical client подключается только к стабильному Gateway endpoint, показывает active Authority/epoch/world revision/reconnect/respawn и вручную управляется WASD/стрелками. Exact demo candidate `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`. Автоматический graphical smoke тем же client path: 10/10 A→B→A циклов, 320/320 assertions PASS; старый two-client SM1.6 остаётся 58/58 PASS. Windows manual tester execution остаётся последней проверкой UX, не checkpoint acceptance. P7/terraforming для demo не требуется.
+Manual-input/presentation wrapper реализован: один graphical client подключается только к стабильному Gateway endpoint, показывает active Authority/epoch/world revision/reconnect/respawn и вручную управляется WASD/стрелками. Exact demo candidate `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`. Автоматический graphical smoke тем же client path: 10/10 A→B→A циклов, 320/320 assertions PASS; старый two-client SM1.6 остаётся 58/58 PASS. Windows manual tester execution также PASS: `SM1_MANUAL_SEAMLESS_CLIENT_COMPLETE passed=true`, `SM1_MANUAL_SEAMLESS_DEMO_PASS`, route `A→B→A`, epochs `1→2→3`, `connect_count=1`, `reconnect_count=0`, `respawn_count=0`, 119/119 commands confirmed, last error none. Tester reports no noticeable movement delay. Repeated Camera3D physics-interpolation warnings were non-fatal and move to B3 critique cleanup. P7/terraforming для demo не требуется.
 
 Exit condition: **SM1 ACCEPTED**.
 
@@ -291,7 +291,7 @@ Baseline 2026-08-28:
 
 **~80% до V0 PLAYABLE SEAMLESS PLANET по функциональной готовности.**
 
-Current navigation after B2 closure (2026-08-29): **~82%**, не Harness acceptance.
+Current navigation after B2 + B2.5 closure (2026-08-29): **~83%**, не Harness acceptance.
 
 Historical comparison snapshot:
 
