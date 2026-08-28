@@ -73,7 +73,7 @@ func _init() -> void:
 	)
 	child_pids.append(server_pid)
 	_assert(server_pid > 0, "M5 dedicated server process launched")
-	var server_ready := _wait_state(server_path, ["READY", "FAILED"], SERVER_TIMEOUT_MS)
+	var server_ready := _wait_state(server_path, ["READY", "FAILED"], SERVER_TIMEOUT_MS, server_pid, "server_ready")
 	_assert(String(server_ready.get("state", "")) == "READY", "M5 dedicated server ready: %s" % server_ready)
 	if String(server_ready.get("state", "")) != "READY":
 		_finish()
@@ -89,27 +89,27 @@ func _init() -> void:
 	child_pids.append(a1_pid)
 	child_pids.append(b_pid)
 	_assert(a1_pid > 0 and b_pid > 0, "two M5 graphical clients launched concurrently")
-	var a_ready := _wait_state(a1_path, ["READY_FOR_CONTENTION", "FAILED"], CLIENT_TIMEOUT_MS)
-	var b_ready := _wait_state(b_path, ["READY_FOR_CONTENTION", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a_ready := _wait_state(a1_path, ["READY_FOR_CONTENTION", "FAILED"], CLIENT_TIMEOUT_MS, a1_pid, "a1_ready_for_contention")
+	var b_ready := _wait_state(b_path, ["READY_FOR_CONTENTION", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_ready_for_contention")
 	_assert(String(a_ready.get("state", "")) == "READY_FOR_CONTENTION", "client A reached UI contention barrier")
 	_assert(String(b_ready.get("state", "")) == "READY_FOR_CONTENTION", "client B reached UI contention barrier")
 	if String(a_ready.get("state", "")) != "READY_FOR_CONTENTION" or String(b_ready.get("state", "")) != "READY_FOR_CONTENTION":
 		_finish()
 		return
 	_write_control(control_path, {"go_contention": true})
-	var a_post := _wait_state(a1_path, ["POST_CONTENTION_READY", "A_CURSOR_PENDING", "FAILED"], CLIENT_TIMEOUT_MS)
-	var b_post := _wait_state(b_path, ["POST_CONTENTION_READY", "WAITING_RECONNECT", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a_post := _wait_state(a1_path, ["POST_CONTENTION_READY", "A_CURSOR_PENDING", "FAILED"], CLIENT_TIMEOUT_MS, a1_pid, "a1_post_contention")
+	var b_post := _wait_state(b_path, ["POST_CONTENTION_READY", "WAITING_RECONNECT", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_post_contention")
 	_assert(String(a_post.get("state", "")) != "FAILED", "client A completed UI contention")
 	_assert(String(b_post.get("state", "")) != "FAILED", "client B completed UI contention")
-	var a_cursor := _wait_state(a1_path, ["A_CURSOR_PENDING", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a_cursor := _wait_state(a1_path, ["A_CURSOR_PENDING", "FAILED"], CLIENT_TIMEOUT_MS, a1_pid, "a1_cursor_pending")
 	_assert(String(a_cursor.get("state", "")) == "A_CURSOR_PENDING", "A created transient cursor after server-confirmed ore pickup")
 	_write_control(control_path, {"disconnect_a": true})
-	var a_left := _wait_state(a1_path, ["DISCONNECTED_WITH_TRANSIENT", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a_left := _wait_state(a1_path, ["DISCONNECTED_WITH_TRANSIENT", "FAILED"], CLIENT_TIMEOUT_MS, a1_pid, "a1_disconnect_transient")
 	_assert(bool(a_left.get("passed", false)), "A disconnected with transient UI state only")
 	_wait_exit(a1_pid, EXIT_TIMEOUT_MS)
 	_assert(not OS.is_process_running(a1_pid), "initial A graphical process exited")
 	child_pids.erase(a1_pid)
-	var b_wait := _wait_state(b_path, ["WAITING_RECONNECT", "FAILED"], CLIENT_TIMEOUT_MS)
+	var b_wait := _wait_state(b_path, ["WAITING_RECONNECT", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_waiting_reconnect")
 	_assert(String(b_wait.get("state", "")) == "WAITING_RECONNECT", "B continued real InputMap movement while A was offline")
 	_write_control(control_path, {"reconnect_peer_result_file": a2_path})
 	var a2_pid := _spawn_client(
@@ -118,17 +118,17 @@ func _init() -> void:
 	)
 	child_pids.append(a2_pid)
 	_assert(a2_pid > 0, "A reconnect graphical process launched")
-	var a2_ready := _wait_state(a2_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS)
-	var b_converge := _wait_state(b_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a2_ready := _wait_state(a2_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS, a2_pid, "a2_ready_to_converge")
+	var b_converge := _wait_state(b_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_ready_to_converge")
 	_assert(String(a2_ready.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "A reconnect reached convergence barrier")
 	_assert(String(b_converge.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "B reached convergence barrier")
-	var convergence_pair := _coordinate_convergence_pair(a2_path, b_path, control_path, CLIENT_TIMEOUT_MS)
+	var convergence_pair := _coordinate_convergence_pair(a2_path, b_path, control_path, CLIENT_TIMEOUT_MS, a2_pid, b_pid)
 	a2_ready = Dictionary(convergence_pair.get("a", a2_ready))
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
 	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for identical current player and Item Graph checksums")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
-	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
-	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
+	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS, a2_pid, "a2_complete")
+	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_complete")
 	_assert(bool(a2_final.get("passed", false)), "A reconnect graphical acceptance completed")
 	_assert(bool(b_final.get("passed", false)), "B graphical acceptance completed")
 	_wait_exit(a2_pid, EXIT_TIMEOUT_MS)
@@ -136,7 +136,7 @@ func _init() -> void:
 	_assert(not OS.is_process_running(a2_pid) and not OS.is_process_running(b_pid), "M5 graphical clients exited cleanly")
 	child_pids.erase(a2_pid)
 	child_pids.erase(b_pid)
-	var server_final := _wait_server_counts(server_path, 3, 3, 30000)
+	var server_final := _wait_server_counts(server_path, 3, 3, 30000, server_pid)
 	_validate_final(a_post, b_post, a_cursor, b_wait, a2_final, b_final, server_final, root)
 	_finish()
 
@@ -187,7 +187,7 @@ func _spawn(executable: String, args: Array[String], profile: Dictionary, displa
 		var name := String(name_value)
 		captured[name] = {"set": OS.has_environment(name), "value": OS.get_environment(name)}
 		OS.set_environment(name, String(environment[name]))
-	for path_key in ["HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]:
+	for path_key in ["HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]:
 		DirAccess.make_dir_recursive_absolute(String(environment.get(path_key, "")))
 	var pid := OS.create_process(executable, args, false)
 	for name_value in captured.keys():
@@ -294,18 +294,44 @@ func _write_control(path: String, updates: Dictionary) -> void:
 	Support.write(path, current)
 
 
-func _wait_state(path: String, states: Array[String], timeout_ms: int) -> Dictionary:
+func _wait_state(
+	path: String,
+	states: Array[String],
+	timeout_ms: int,
+	pid: int = 0,
+	wait_label: String = ""
+) -> Dictionary:
 	var started := Time.get_ticks_msec()
 	var last: Dictionary = {}
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		last = Support.read(path)
 		if String(last.get("state", "")) in states:
 			return last
+		if pid > 0 and not OS.is_process_running(pid):
+			return _process_exit_report(pid, wait_label, last)
 		OS.delay_msec(POLL_MS)
 	return last
 
 
-func _coordinate_convergence_pair(a_path: String, b_path: String, control_path: String, timeout_ms: int) -> Dictionary:
+func _process_exit_report(pid: int, wait_label: String, last: Dictionary) -> Dictionary:
+	return {
+		"state": "FAILED",
+		"passed": false,
+		"failure_code": "PROCESS_EXITED_BEFORE_STATE",
+		"process_id": pid,
+		"wait_label": wait_label,
+		"last_report": last.duplicate(true),
+	}
+
+
+func _coordinate_convergence_pair(
+	a_path: String,
+	b_path: String,
+	control_path: String,
+	timeout_ms: int,
+	a_pid: int = 0,
+	b_pid: int = 0
+) -> Dictionary:
 	var started := Time.get_ticks_msec()
 	var a: Dictionary = {}
 	var b: Dictionary = {}
@@ -318,6 +344,28 @@ func _coordinate_convergence_pair(a_path: String, b_path: String, control_path: 
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		a = Support.read(a_path)
 		b = Support.read(b_path)
+		if a_pid > 0 and not OS.is_process_running(a_pid):
+			return {
+				"success": false,
+				"failure_code": "PROCESS_EXITED_DURING_CONVERGENCE",
+				"dead_process": "a2",
+				"process_id": a_pid,
+				"a": a,
+				"b": b,
+				"prepare_id": active_id,
+				"abandoned_ids": abandoned_ids,
+			}
+		if b_pid > 0 and not OS.is_process_running(b_pid):
+			return {
+				"success": false,
+				"failure_code": "PROCESS_EXITED_DURING_CONVERGENCE",
+				"dead_process": "b",
+				"process_id": b_pid,
+				"a": a,
+				"b": b,
+				"prepare_id": active_id,
+				"abandoned_ids": abandoned_ids,
+			}
 		var a_state := String(a.get("state", ""))
 		var b_state := String(b.get("state", ""))
 		if a_state == "FAILED" or b_state == "FAILED":
@@ -400,13 +448,15 @@ func _coordinate_convergence_pair(a_path: String, b_path: String, control_path: 
 	return {"success": false, "a": a, "b": b, "prepare_id": active_id, "abandoned_ids": abandoned_ids}
 
 
-func _wait_server_counts(path: String, joins: int, leaves: int, timeout_ms: int) -> Dictionary:
+func _wait_server_counts(path: String, joins: int, leaves: int, timeout_ms: int, pid: int = 0) -> Dictionary:
 	var started := Time.get_ticks_msec()
 	var last: Dictionary = {}
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		last = Support.read(path)
 		if int(last.get("joins", 0)) >= joins and int(last.get("leaves", 0)) >= leaves:
 			return last
+		if pid > 0 and not OS.is_process_running(pid):
+			return _process_exit_report(pid, "server_final_counts", last)
 		OS.delay_msec(POLL_MS)
 	return last
 
