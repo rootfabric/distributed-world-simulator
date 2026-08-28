@@ -30,7 +30,7 @@ P4 real-resource Construction         ACCEPTED
 
 Progress baseline для будущего сравнения:
 
-`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R1_RU.md`
+`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
 
 ## Принятый persistent-playable фундамент
 
@@ -78,7 +78,7 @@ Canonical production branch:
 
 Observed validated implementation head на момент refresh:
 
-`716ed913f9835593a31d142a556d78833c7088b1`
+`b270fb806038333c97fa1ed49655961adddd6a21`
 
 PR #242 остаётся Draft. Следовательно:
 
@@ -88,7 +88,7 @@ IMPLEMENTED / EXACT-HEAD EXECUTABLE EVIDENCE
 SM1 CHECKPOINT ACCEPTED
 ```
 
-Runtime дошёл до SM1.7.11:
+Runtime implementation дошёл до SM1.7.12 и feature scope завершён:
 
 - owner-port map;
 - one-writer transfer;
@@ -101,11 +101,13 @@ Runtime дошёл до SM1.7.11:
 - reconnect after handoff;
 - Gateway restart;
 - Authority recovery;
-- canonical Item Graph / Construction / outpost mutations across handoff.
+- canonical Item Graph / Construction / outpost mutations across handoff;
+- repeated A<->B crossings under deterministic BAD_MOBILE/LAG_SPIKE impairment.
 
-Exact-head evidence на `716ed913...` включает:
+Exact-head evidence на `b270fb8...` включает:
 
 ```text
+SM1.7.12         70 x 10 = 700 PASS
 SM1 L0                  339/339 PASS
 SM1.6 graphical          58/58 PASS
 SM1.7.1-7.6             157/157 PASS
@@ -113,15 +115,13 @@ SM1.7.7                  79/79 PASS
 SM1.7.8                  71/71 PASS
 SM1.7.9                  81/81 PASS
 SM1.7.10                 89/89 PASS
-SM1.7.11        145 x 10 = 1450 PASS
-Project Control                    SUCCESS
+SM1.7.11                145/145 PASS
+Project Control #1439             SUCCESS
 ```
 
-Следующий bounded runtime slice:
+Текущая работа — **B2 full world/core regression**.
 
-**SM1.7.12 repeated crossings under impaired network**
-
-После него closure path:
+Closure path:
 
 ```text
 full world/core regression
@@ -133,6 +133,24 @@ full world/core regression
 → human RUNTIME_FEATURE_MERGE
 → SM1 ACCEPTED
 ```
+
+## Pre-P7 manual seamless smoke demo
+
+Технический smoke/demo бесшовности можно собрать уже на current SM1 candidate, не дожидаясь P7:
+
+```text
+Authority A
++ Authority B
++ Gateway
++ graphical client
+→ client connects only to Gateway
+→ manual A -> B -> A crossing
+→ no reconnect / respawn / loading
+```
+
+Текущий graphical SM1 client script-driven, поэтому для tester-facing demo нужен отдельный тонкий manual-input/presentation wrapper. Это packaging/presentation work, а не новый authority protocol.
+
+Рекомендуемый момент: **после B2 full world/core regression**, до либо параллельно critique/review closure. Demo не означает SM1 acceptance.
 
 ## Next product runtime frontier — P7
 
@@ -176,9 +194,9 @@ P7 не должен переизобретать уже принятые P4/P5 
 - переживать server restart;
 - сходиться к одной canonical truth.
 
-Baseline navigation estimate на 2026-08-28:
+Current navigation estimate после SM1.7.12 closure:
 
-**~80% функциональной готовности до этого milestone.**
+**~81-82% функциональной готовности до этого milestone.**
 
 Это product navigation metric, не Harness acceptance state.
 
