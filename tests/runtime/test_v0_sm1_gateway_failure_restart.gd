@@ -211,6 +211,14 @@ func _spawn_detached(executable: String, args: Array, user_root: String, log_pat
 	OS.set_environment("LOCALAPPDATA", data)
 	OS.set_environment("BREAKPOINT_RUNTIME_DISABLED", "1")
 	OS.set_environment("GODOT_SILENCE_ROOT_WARNING", "1")
+	var full_args: Array = ["--log-file", log_path]
+	full_args.append_array(args)
+	if OS.get_name() == "Windows":
+		# The Unix detached launcher requires /bin/sh and setsid, which do not
+		# exist on Windows; spawn the detached worker process directly instead.
+		var spawned_pid := OS.create_process(executable, full_args, false)
+		_restore_environment(captured)
+		return spawned_pid
 	var launcher_path := user_root.path_join("launch-detached.sh")
 	var launcher := FileAccess.open(launcher_path, FileAccess.WRITE)
 	if launcher == null:
@@ -218,8 +226,6 @@ func _spawn_detached(executable: String, args: Array, user_root: String, log_pat
 		return -1
 	launcher.store_string("#!/bin/sh\nlog=\"$1\"\npidfile=\"$2\"\nshift 2\n/usr/bin/setsid \"$@\" >\"$log\" 2>&1 < /dev/null &\necho $! >\"$pidfile\"\n")
 	launcher.close()
-	var full_args: Array = ["--log-file", log_path]
-	full_args.append_array(args)
 	var shell_args: Array = [launcher_path, log_path, pid_path, executable]
 	shell_args.append_array(full_args)
 	var output: Array[String] = []
