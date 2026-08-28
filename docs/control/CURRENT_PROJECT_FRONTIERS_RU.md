@@ -139,8 +139,8 @@ Closure path:
 B2 full world/core regression             CLOSED
 → manual seamless smoke demo              CLOSED / WINDOWS MANUAL PASS
 → post-build critique                      CLOSED
-→ Evidence Map                              CURRENT
-→ fresh Reviewer
+→ Evidence Map                              CLOSED
+→ fresh Reviewer                             CURRENT
 → fresh Verifier
 → checkpoint proposal
 → human RUNTIME_FEATURE_MERGE
@@ -292,3 +292,15 @@ Verdict: implementation complete and ready for B4 Evidence Map; no new seamless 
 Non-blocking tooling cleanup from critique is isolated in Draft PR #286; one historical M5 timing observation remains for Reviewer attention.
 
 **Current closure step: B4 Evidence Map.**
+
+## B4 Evidence Map
+
+**CLOSED.** Durable carrier: Draft PR #287.
+
+Exact production closure candidate: `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Evidence Map basic schema audit: all required fields present, no additional properties, enum values valid, exact SHA pattern valid. focused/full regression PASS; canonical truth and architecture ownership unchanged.
+
+Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fresh review-head rather than inferred PASS.
+
+**Current closure step: B5 fresh exact-head Reviewer.**
