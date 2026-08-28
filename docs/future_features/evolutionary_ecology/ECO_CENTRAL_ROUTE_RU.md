@@ -2,7 +2,7 @@
 
 Статус (исторический документ): `RESEARCH_ONLY / EVO2 COMPLETE / XFER0 ACCEPTED / EVO3 E3.0..E3.3 ACCEPTED / E3.4 CURRENT` — срез на момент написания.
 
-**Статус на 2026-08-28 (ECO EVO7 live continuation):** `LS3.0–LS3.FINAL CLOSED / ECO-VIS1 IMPLEMENTATION CANDIDATE`.
+**Статус на 2026-08-28 (ECO EVO7 live continuation):** `LS3.0–LS3.FINAL CLOSED / ECO-VIS1 CLOSED / ECO-VIS2 IMPLEMENTATION CANDIDATE`.
 
 Текущий live-simulation маршрут вынесен в `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. Он фиксирует новый визуальный checkpoint: `LS3.FINAL → ECO-VIS1 → ECO-VIS2 → ECO-VIS3 → LS4`. Исторические EVO2/EVO3 разделы ниже не переписываются задним числом.
 
