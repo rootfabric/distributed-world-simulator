@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0013",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 13,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T04:57:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r7",
+  "head_sha": "c0b318d6a0f6df0e37a31ed22c551d4f4e1084c7",
+  "summary": "R6 Windows gate passed five runs and failed run 6 with explicit CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE while Item Graph remained stable. Director authorizes R7 pinned observed-state identity semantics: exact PlayerStateSnapshot is proven at PREPARE, then live player snapshot may advance monotonically in revision/server_tick under the same authority while the pinned generation remains stable.",
+  "command": "AUTHORIZE_REPAIR_MAP_R7",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R7_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-007.v1.json"
+  ]
+}
