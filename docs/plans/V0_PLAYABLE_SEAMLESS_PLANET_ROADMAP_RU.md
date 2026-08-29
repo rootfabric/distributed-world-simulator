@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 diagnostic R4 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 diagnostic R5 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -358,3 +358,13 @@ Earlier AppHang attribution is withdrawn: WER events do not overlap the gate win
 R4 Repair Map: PR #299. Diagnostic implementation: PR #300 @ `ba5e1509f078b4b7599f9390da7df819b7340c4d`, tree `471f86dc3d69fcef5bf50e89cdc80ff909798b24`.
 
 R4 captures direct stdout/stderr, actual child exit code, parent-kill attribution, first-death wait label and last result/control snapshots. It does not claim to fix correctness. B6/B7 stay blocked until diagnostic evidence identifies the next legal repair.
+
+### M5 R5 pipe observability repair
+
+R4 diagnostic run был invalid: instrumentation вызывал отсутствующий `FileAccess.get_available_bytes()`. При этом A2 и B в этом прогоне дошли до `CONVERGENCE_LOCKED`, поэтому preserved R3 silent-A2 class остаётся OPEN, но не был воспроизведён в R4.
+
+R5 Repair Map: PR #301. Diagnostic implementation: PR #302 @ `b9bc54086e959e7d26f79336c264a96f29f31a17`, tree `6c631f1517ce1f335fe2765fcdafcf5b1b39ef20`.
+
+R5 использует FileAccess pipe `get_length() -> get_buffer() -> get_error()` и обязует stability runner выполнить настоящий stdout+stderr pipe smoke до run 1. Exact double-Godot algorithm smoke локально PASS (stdout/stderr по 13 bytes, child exit 0).
+
+R5 остаётся diagnostic-only; canonical full regression из этой ветки не запускается автоматически. B6/B7 остаются BLOCKED.
