@@ -3,6 +3,9 @@ extends RefCounted
 const CLIENT_WAIT := "WAIT"
 const CLIENT_REVOKE := "REVOKE"
 const CLIENT_CONSUME_RELEASE := "CONSUME_RELEASE"
+const CLIENT_HOLD_RELEASE := "HOLD_RELEASE"
+const CLIENT_COMPLETE_RELEASE := "COMPLETE_RELEASE"
+const CLIENT_FAIL_RELEASE := "FAIL_RELEASE"
 
 const COORDINATOR_WAIT := "WAIT"
 const COORDINATOR_RELEASE := "RELEASE"
@@ -47,6 +50,36 @@ static func evaluate_prepared_release(
 	if String(release_id).strip_edges() == prepared_id:
 		return _client_decision(CLIENT_CONSUME_RELEASE, "EXACT_PREPARED_TARGET_STILL_CURRENT", current_player_checksum, current_item_checksum)
 	return _client_decision(CLIENT_WAIT, "WAITING_FOR_RELEASE", current_player_checksum, current_item_checksum)
+
+
+static func evaluate_consumed_release_integrity(
+	consumed_id: String,
+	prepared_player_checksum: String,
+	prepared_item_checksum: String,
+	control_prepare: Dictionary,
+	release_id: String,
+	complete_id: String,
+	current_player_checksum: String,
+	current_item_checksum: String
+) -> Dictionary:
+	var control_id := String(control_prepare.get("id", "")).strip_edges()
+	var control_player_checksum := String(control_prepare.get("player_checksum", ""))
+	var control_item_checksum := String(control_prepare.get("item_checksum", ""))
+	if consumed_id.is_empty():
+		return _client_decision(CLIENT_FAIL_RELEASE, "CONSUMED_GENERATION_EMPTY", current_player_checksum, current_item_checksum)
+	if control_id != consumed_id:
+		return _client_decision(CLIENT_FAIL_RELEASE, "CONTROL_GENERATION_REGRESSED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
+	if String(release_id).strip_edges() != consumed_id:
+		return _client_decision(CLIENT_FAIL_RELEASE, "RELEASE_ID_REGRESSED_AFTER_CONSUMPTION", current_player_checksum, current_item_checksum)
+	if control_player_checksum != prepared_player_checksum or control_item_checksum != prepared_item_checksum:
+		return _client_decision(CLIENT_FAIL_RELEASE, "PREPARED_TARGET_CHANGED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
+	if current_player_checksum.is_empty() or current_item_checksum.is_empty():
+		return _client_decision(CLIENT_FAIL_RELEASE, "CURRENT_AUTHORITATIVE_CHECKSUM_EMPTY_AFTER_RELEASE", current_player_checksum, current_item_checksum)
+	if current_player_checksum != prepared_player_checksum or current_item_checksum != prepared_item_checksum:
+		return _client_decision(CLIENT_FAIL_RELEASE, "CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
+	if String(complete_id).strip_edges() == consumed_id:
+		return _client_decision(CLIENT_COMPLETE_RELEASE, "EXACT_CONSUMED_GENERATION_COMPLETE", current_player_checksum, current_item_checksum)
+	return _client_decision(CLIENT_HOLD_RELEASE, "WAITING_FOR_COORDINATOR_COMPLETE", current_player_checksum, current_item_checksum)
 
 
 static func evaluate_coordinator_generation(
