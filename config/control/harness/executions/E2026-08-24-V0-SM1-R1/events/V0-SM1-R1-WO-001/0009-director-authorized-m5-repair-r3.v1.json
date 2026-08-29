@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0009",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 9,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T00:52:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r3",
+  "head_sha": "69d6a23aadd0039abd3d24d4ef916100d6fb1d3f",
+  "summary": "Windows R2 failure reproduced historical WAIT_CONVERGENCE_PEER timeout. Code review identified the timeout clock as process-lifetime-scoped via _started_ms despite per-stage timestamps already being tracked. Director authorizes stage-scoped timeout correction with unchanged 150 s budget.",
+  "command": "AUTHORIZE_REPAIR_MAP_R3",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R3_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-003.v1.json"
+  ]
+}
