@@ -199,6 +199,21 @@ func get_last_generation_profile() -> Dictionary:
 func get_generation_profile_history() -> Array[Dictionary]:
     return generation_profile_history.duplicate(true)
 
+## PAR2 minimal pass-through: the Workbench stays backend-ignorant and never
+## reaches into ecology.core private members; it forwards the existing LS3.3
+## executor seam through the public LS3.4 facade.
+func set_recruitment_executor(executor) -> bool:
+    if not initialized or ecology == null:
+        return false
+    return ecology.set_recruitment_executor(executor)
+
+func clear_recruitment_executor() -> void:
+    if ecology != null:
+        ecology.clear_recruitment_executor()
+
+func has_recruitment_executor() -> bool:
+    return ecology != null and ecology.has_recruitment_executor()
+
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
