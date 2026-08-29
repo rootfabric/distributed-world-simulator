@@ -116,6 +116,19 @@ func _init() -> void:
 	)
 	_assert(String(epoch_change_before_release.get("action", "")) == Barrier.CLIENT_REVOKE, "authority epoch change before release is rejected")
 
+	var checksum_only_mutation := prepare_g1.duplicate(true)
+	checksum_only_mutation["player_checksum"] = PLAYER_G2
+	var checksum_only_mutation_decision := Barrier.evaluate_prepared_release(
+		g1,
+		observed_g1,
+		ITEM_G1,
+		checksum_only_mutation,
+		g1,
+		forward_g2,
+		ITEM_G1
+	)
+	_assert(String(checksum_only_mutation_decision.get("action", "")) == Barrier.CLIENT_REVOKE, "control checksum cannot disagree with pinned player observation")
+
 	var mutated_prepare := prepare_g1.duplicate(true)
 	mutated_prepare["player_observation"] = forward_g2
 	var mutated_prepare_decision := Barrier.evaluate_prepared_release(
