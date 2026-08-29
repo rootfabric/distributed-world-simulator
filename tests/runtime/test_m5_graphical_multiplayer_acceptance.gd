@@ -350,6 +350,8 @@ func _write_process_lifecycle(
 			if not result_path.is_empty()
 			else {}
 		),
+		"stdout_bytes": FileAccess.get_file_as_bytes(String(record.get("stdout_path", ""))).size() if FileAccess.file_exists(String(record.get("stdout_path", ""))) else 0,
+		"stderr_bytes": FileAccess.get_file_as_bytes(String(record.get("stderr_path", ""))).size() if FileAccess.file_exists(String(record.get("stderr_path", ""))) else 0,
 		"last_control": Support.read(control_path) if not control_path.is_empty() else {},
 	}
 	Support.write(String(record.get("lifecycle_path", "")), snapshot)
@@ -368,6 +370,8 @@ func _observe_process_exit(pid: int, wait_label: String, last_result: Dictionary
 	OS.delay_msec(10)
 	_drain_process_output(pid)
 	var record: Dictionary = process_observability[pid]
+	if bool(record.get("exit_observed", false)):
+		return Support.read(String(record.get("lifecycle_path", "")))
 	if not bool(record.get("exit_observed", false)):
 		record["exit_observed"] = true
 		record["exit_code"] = OS.get_process_exit_code(pid)
@@ -669,6 +673,7 @@ func _wait_server_counts(path: String, joins: int, leaves: int, timeout_ms: int,
 	var started := Time.get_ticks_msec()
 	var last: Dictionary = {}
 	while Time.get_ticks_msec() - started <= timeout_ms:
+		_drain_all_process_output()
 		last = Support.read(path)
 		if int(last.get("joins", 0)) >= joins and int(last.get("leaves", 0)) >= leaves:
 			return last
