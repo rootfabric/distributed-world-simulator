@@ -58,6 +58,14 @@ var occupied_map_hash := ""
 var hereditary_pool_hash := ""
 var population_hash := ""
 var last_profile: Dictionary = {}
+## PAR0.2: injectable recruitment executor (runtime-only dual-mode seam).
+## Absent (null) -> canonical SERIAL path, unchanged. Present -> the executor
+## owns serial-oracle + parallel-pool verification and its verified PARALLEL
+## result becomes the canonical recruitment source. Injection is explicit
+## (set_recruitment_executor); no environment variable activates dual mode.
+var _recruitment_executor = null
+var _dual_executor_calls := 0
+var _last_dual_meta: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -103,6 +111,22 @@ func set_evolution_enabled(value: bool) -> bool:
         return false
     evolution_enabled = value
     return true
+
+## PAR0.2: runtime-only dual-mode seam. The executor must implement
+## evaluate_generation(generation, candidates, routes, immutable_context)
+## -> Dictionary with "success" and "canonical_events". Domain code never
+## creates a process pool itself and never selects the executor from env.
+func set_recruitment_executor(executor) -> bool:
+    if executor == null:
+        return false
+    _recruitment_executor = executor
+    return true
+
+func clear_recruitment_executor() -> void:
+    _recruitment_executor = null
+
+func has_recruitment_executor() -> bool:
+    return _recruitment_executor != null
 
 func step_generation() -> Dictionary:
     if not initialized or not evolution_enabled or records.is_empty():
@@ -162,6 +186,10 @@ func step_generation() -> Dictionary:
         "candidate_count": candidates.size(),
         "recruitment_event_count": recruitment.size(),
         "record_count_after": records.size(),
+        ## PAR0.2 telemetry (non-canonical, never enters snapshot hashes):
+        ## SERIAL is the default and only mode when no executor is injected.
+        "recruitment_mode": "DUAL_VERIFY" if _recruitment_executor != null else "SERIAL",
+        "dual_executor_calls": _dual_executor_calls,
         "candidate_build_ms": candidate_build_ms,
         "route_build_ms": route_build_ms,
         "recruitment_eval_ms": recruitment_eval_ms,
@@ -171,6 +199,10 @@ func step_generation() -> Dictionary:
         "snapshot_build_ms": snapshot_build_ms,
         "total_ms": _elapsed_ms(total_started),
     }
+    ## PAR0.2: non-canonical dual-mode metadata (source authority, hashes,
+    ## failure evidence). Never enters snapshot or any canonical hash.
+    if not _last_dual_meta.is_empty():
+        last_profile.merge(_last_dual_meta, true)
     return snapshot
 
 func get_last_profile() -> Dictionary:
@@ -363,7 +395,44 @@ func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictiona
     var context := Par0Kernel.build_context(
         SCHEMA, VERSION, REVISION,
         environment_seed, environment_field_hash, environment_cells)
-    var out: Array[Dictionary] = []
+
+    ## PAR0.2 dual mode: an explicitly injected executor owns the
+    ## serial-oracle + process-pool verification. On any failure the result
+    ## is fail-closed: empty recruitment -> step_generation commits nothing.
+    ## The verified PARALLEL event list becomes the canonical source.
+    if _recruitment_executor != null:
+        _dual_executor_calls += 1
+        var dual_result: Dictionary = _recruitment_executor.evaluate_generation(
+            next_generation, candidates, routes, context)
+        _last_dual_meta = {
+            "recruitment_mode": "DUAL_VERIFY",
+            "dual_executor_calls": _dual_executor_calls,
+            "canonical_source": String(dual_result.get("canonical_source", "")),
+            "comparison_passed": bool(dual_result.get("comparison_passed", false)),
+            "serial_hash": String(dual_result.get("serial_hash", "")),
+            "parallel_hash": String(dual_result.get("parallel_hash", "")),
+        }
+        if not bool(dual_result.get("success", false)):
+            _last_dual_meta["failure_code"] = String(dual_result.get("failure_code", "PAR02_EXECUTOR_FAILURE"))
+            _last_dual_meta["evidence_path"] = String(dual_result.get("evidence_path", ""))
+            last_profile.merge(_last_dual_meta, true)
+            return []
+        var parallel_events: Array = dual_result.get("canonical_events", [])
+        if parallel_events.size() != candidates.size():
+            _last_dual_meta["failure_code"] = "PAR02_EVENT_COUNT_MISMATCH"
+            last_profile.merge(_last_dual_meta, true)
+            return []
+        var out: Array[Dictionary] = []
+        for event_value in parallel_events:
+            if not event_value is Dictionary:
+                _last_dual_meta["failure_code"] = "PAR02_EVENT_TYPE_INVALID"
+                last_profile.merge(_last_dual_meta, true)
+                return []
+            out.append(event_value)
+        return out
+
+    _last_dual_meta = {}
+    var out_serial: Array[Dictionary] = []
     for route_value in routes:
         var route: Dictionary = route_value
         var candidate_hash := String(route["candidate_hash"])
@@ -375,11 +444,11 @@ func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictiona
             return []
         var event: Dictionary = event_result
         event["recruitment_event_hash"] = Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION)
-        out.append(event)
-    out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        out_serial.append(event)
+    out_serial.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         return String(a["candidate_hash"]) < String(b["candidate_hash"])
     )
-    return out
+    return out_serial
 
 func _environment_observation(env_cell: Dictionary, next_generation: int, candidate_hash: String) -> Dictionary:
     ## PERF1-PAR0: observation construction moved to the shared kernel.
@@ -630,6 +699,11 @@ func _reset() -> void:
     initialized = false
     evolution_enabled = true
     generation = 0
+    ## PAR0.2: a reset simulation starts SERIAL again; the owner must
+    ## re-inject the executor explicitly for the new run (no hidden dual).
+    _recruitment_executor = null
+    _dual_executor_calls = 0
+    _last_dual_meta = {}
     cell_size_m = 0.0
     evolution_seed = 0
     source_patch_hash = ""
