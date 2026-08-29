@@ -375,8 +375,10 @@ R5 diagnostic gate на Windows полностью локализовал акт
 
 Root cause: convergence-клиенты формировали второй peer-to-peer barrier через result-файлы, а `CONVERGENCE_RELEASED` оставался revocable. Из-за последовательного чтения `a.json`/`b.json` parent мог собрать временно несовместимые RELEASED snapshots и ложно решить, что оба release consumed.
 
-R6 Repair Map: PR #303. Implementation: PR #304 @ `796a84f097f54b009e9745353a28a294f2937a70`, tree `5c064747589f298cc35b8f33a66a4ba55ac833c5`.
+R6 Repair Map: PR #303. Implementation: PR #304 @ `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8`, tree `72192fd30c66df974b669ed38f47de353cdeee6c`.
 
 R6 делает parent единственным pair matcher, убирает peer-result gating из convergence, делает consumed release monotonic для generation и превращает post-release drift/control regression в явный fail-closed. Exact COMPLETE запечатывает convergence до штатного serialized teardown.
 
 Pure convergence monotonicity regression включён в `RUN_NETWORK_CONTRACT_TESTS.ps1`. B6/B7 остаются BLOCKED до Windows contracts + pure regression + pipe smoke + 10/10 stability; только затем допустим один canonical full regression first attempt.
+
+R6 final validation target after stage-name cleanup: `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8`, tree `72192fd30c66df974b669ed38f47de353cdeee6c`; obsolete `WAIT_CONVERGENCE_PEER` stage name removed in favor of `WAIT_CONVERGENCE_COORDINATOR`.
