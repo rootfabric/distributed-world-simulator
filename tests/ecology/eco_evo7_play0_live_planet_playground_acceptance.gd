@@ -62,36 +62,60 @@ func _run() -> void:
 	var spawn_altitude: float = earth.get_altitude(player.get_world_position())
 	_check(absf(spawn_altitude) < 8.0, "spawn altitude near surface (no fall-through)")
 
-	# (6) GROUND -> SPECTATOR works and is a real free camera over the planet.
-	_check(String(playground.toggle_mode()) == "SPECTATOR", "GROUND -> SPECTATOR works")
+	# Existing player presentation is reused: F5 exposes the accepted LunarPlayer
+	# third-person character instead of adding a PLAY0-specific ground avatar.
+	var initial_camera_mode := String(player.get_camera_mode())
+	var toggled_camera_mode := String(playground.toggle_player_camera())
+	_check(toggled_camera_mode != initial_camera_mode, "F5-style camera toggle reuses LunarPlayer third person")
+	_check(player.visual_root.visible, "accepted LunarPlayer character visual is visible in third person")
+	playground.toggle_player_camera()
+
+	# (6) F3 detaches SPECTATOR while preserving the gameplay body in place.
+	var player_body_before_spectator: Vector3 = player.get_world_position()
+	_check(playground.enter_spectator(), "F3-style GROUND -> SPECTATOR works")
+	_check(String(playground.get_mode()) == "SPECTATOR", "mode becomes SPECTATOR")
 	_check(bool(spectator.active), "spectator controller owns the active camera")
 	_check(not playground.is_earth_humanoid_active(), "humanoid frozen while spectator")
+	_check(playground.is_spectator_body_visible(), "detached spectator leaves a visible local player body figure")
+	_check(
+		playground.get_spectator_body_world_position().distance_to(player_body_before_spectator) < 0.001,
+		"spectator body figure is anchored to the exact preserved player world position"
+	)
+
 	var radial_up: Vector3 = spectator.get_world_position().normalized()
-	spectator.world_position += radial_up * 6000.0
+	var east: Vector3 = Vector3.UP.cross(radial_up).normalized()
+	spectator.world_position += radial_up * 6000.0 + east * 25000.0
 	await process_frame
 	var spectator_altitude: float = earth.get_altitude(spectator.get_world_position())
-	_check(spectator_altitude > 4000.0, "spectator flies over the planet (alt %.0f m)" % spectator_altitude)
-
-	# (7) SPECTATOR -> GROUND works at a remote location (recenter + land).
-	var east: Vector3 = Vector3.UP.cross(radial_up).normalized()
-	spectator.world_position += east * 25000.0 + radial_up * -4000.0
-	var refreshes_before_landing: int = playground.get_collision_refresh_count()
-	_check(String(playground.toggle_mode()) == "GROUND", "SPECTATOR -> GROUND works")
+	_check(spectator_altitude > 4000.0, "spectator flies away from the player body (alt %.0f m)" % spectator_altitude)
 	_check(
-		playground.get_collision_refresh_count() > refreshes_before_landing,
-		"remote landing rebuilt the local region and refreshed collision"
+		playground.get_spectator_body_world_position().distance_to(player_body_before_spectator) < 0.001,
+		"flying spectator cannot move the preserved player body"
+	)
+
+	# (7) F2 returns to THAT body, not to the spectator camera position.
+	var spectator_position_before_return: Vector3 = spectator.get_world_position()
+	var refreshes_before_return: int = playground.get_collision_refresh_count()
+	_check(playground.return_to_player(), "F2-style SPECTATOR -> PLAYER works")
+	_check(String(playground.get_mode()) == "GROUND", "mode returns to GROUND")
+	_check(
+		playground.get_collision_refresh_count() > refreshes_before_return,
+		"return rebuilt the local region under the preserved player body"
 	)
 	for _index in 120:
 		await physics_frame
-	_check(player.is_on_floor(), "player lands on the remote surface")
-	var remote_altitude: float = earth.get_altitude(player.get_world_position())
-	_check(absf(remote_altitude) < 10.0, "remote landing altitude near surface (no fall-through)")
+	_check(player.is_on_floor(), "player stands on the restored body surface")
+	var restored_altitude: float = earth.get_altitude(player.get_world_position())
+	_check(absf(restored_altitude) < 10.0, "restored body altitude near surface (no fall-through)")
 	_check(
-		player.get_world_position().normalized().angle_to(
-			spectator.get_world_position().normalized()
-		) < 0.01,
-		"player landed at the spectator direction, not the old spawn"
+		player.get_world_position().distance_to(player_body_before_spectator) < 2.0,
+		"F2 returns to the preserved player body position"
 	)
+	_check(
+		player.get_world_position().distance_to(spectator_position_before_return) > 1000.0,
+		"F2 does not teleport gameplay to the spectator camera"
+	)
+	_check(not playground.is_spectator_body_visible(), "detached body figure hides after control returns")
 
 	# (16) Earth region rebuild refreshes terrain collision.
 	var refreshes_before_forced: int = playground.get_collision_refresh_count()
@@ -288,6 +312,21 @@ func _source_guard() -> void:
 	_check(
 		playground_source.contains("workbench.advance_generations(1)"),
 		"evolution bridge advances the Workbench by exactly one generation"
+	)
+	_check(
+		playground_source.contains("localplayerbodyspectatorvisual")
+		and playground_source.contains("capsulemesh.new()"),
+		"PLAY0 mirrors the existing Earth MVP simple spectator-body figure"
+	)
+	_check(
+		playground_source.contains("key_f3")
+		and playground_source.contains("key_f2")
+		and playground_source.contains("key_f5"),
+		"PLAY0 exposes F3 spectator, F2 return-to-body, and F5 character camera semantics"
+	)
+	_check(
+		not playground_source.contains("player.teleport_to_surface(direction)"),
+		"return-to-player path cannot teleport gameplay to spectator direction"
 	)
 	for source_name in [playground_source, presentation_source]:
 		_check(not source_name.contains("eco_evo7_ls33"), "no bypass into LS3.3 internals")

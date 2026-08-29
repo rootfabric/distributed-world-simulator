@@ -21,7 +21,7 @@ extends Node3D
 ## The whole runtime is presentation-only: no persistence writes, no network
 ## authority, no ecology-authority replacement.
 
-const REVISION := "ECO.EVO7-PLAY0.FINAL.R1"
+const REVISION := "ECO.EVO7-PLAY0.FINAL.R2"
 const TITLE := "ECO EVO7 — PLAY0 Live Planet Playground"
 
 const EarthWorldScript = preload(
@@ -66,6 +66,13 @@ var earth_world = null
 var player = null
 var spectator = null
 var workbench = null
+
+# Mirrors the already-shipped Earth MVP spectator-body presentation:
+# spectator detaches from the player, while a simple local body figure remains
+# at the exact canonical player position. The figure is presentation-only.
+var _spectator_body_visual: MeshInstance3D = null
+var _spectator_body_world_position := Vector3.ZERO
+var _spectator_body_basis := Basis.IDENTITY
 var vis2_adapter = null
 var presentation = null
 
@@ -198,6 +205,8 @@ func _process(delta: float) -> void:
 	if auto_evolution and not _gen_in_flight:
 		request_generation()
 	_update_view(delta)
+	if mode == MODE_SPECTATOR:
+		_update_spectator_body_visual()
 	if presentation != null:
 		presentation.refresh_render_transform(false)
 	_hud_accumulator += delta
@@ -319,45 +328,153 @@ func get_collision_refresh_count() -> int:
 
 
 # ------------------------------------------------------------------
-# F3 — GROUND <-> SPECTATOR
+# Player / spectator handoff.
+#
+# This intentionally mirrors scripts/app/earth_mvp_app.gd semantics:
+# - F3 detaches a spectator camera from the player body;
+# - the body remains at its canonical world position and is represented by the
+#   same simple CapsuleMesh-style spectator body figure used by the Earth MVP;
+# - F2 returns control to THAT body, never to the spectator camera position.
 # ------------------------------------------------------------------
 
+func enter_spectator() -> bool:
+	if not ready_success or mode != MODE_GROUND:
+		return false
+	_enter_spectator()
+	_report_mode_change()
+	return true
+
+
+func return_to_player() -> bool:
+	if not ready_success or mode != MODE_SPECTATOR:
+		return false
+	_enter_ground_from_spectator()
+	_report_mode_change()
+	return true
+
+
 func toggle_mode() -> String:
-	if not ready_success:
-		return mode
+	# Compatibility helper for automated soak drivers. Human hotkeys are
+	# deliberately asymmetric: F3 enters spectator, F2 returns to the body.
 	if mode == MODE_GROUND:
-		_enter_spectator()
+		enter_spectator()
 	else:
-		_enter_ground_from_spectator()
-	if logger != null:
-		logger.info("play0", "mode_changed", {"mode": mode})
-	_refresh_hud_text()
+		return_to_player()
 	return mode
+
+
+func toggle_player_camera() -> String:
+	if not ready_success or player == null or mode != MODE_GROUND:
+		return player.get_camera_mode() if player != null else ""
+	var camera_mode := player.toggle_camera_mode()
+	_refresh_hud_text()
+	return camera_mode
+
+
+func _report_mode_change() -> void:
+	if logger != null:
+		logger.info("play0", "mode_changed", {
+			"mode": mode,
+			"player_body_world_position": [
+				_spectator_body_world_position.x,
+				_spectator_body_world_position.y,
+				_spectator_body_world_position.z,
+			],
+		})
+	_refresh_hud_text()
 
 
 func _enter_spectator() -> void:
 	var camera_transform: Transform3D = player.get_active_camera_world_transform()
+	_spectator_body_world_position = player.get_world_position()
+	_spectator_body_basis = player.global_transform.basis.orthonormalized()
+
+	# Reuse the accepted LunarPlayer freeze path for input/physics ownership.
+	# It stores the canonical player world position and disables body simulation.
 	player.freeze_for_spectator()
+
+	# Earth MVP already uses a simple capsule as the detached local body visual.
+	# Keep the same shape/name and the same semantic boundary here instead of
+	# inventing another character-presentation contract.
+	_ensure_spectator_body_visual()
+	_spectator_body_visual.visible = true
+	_update_spectator_body_visual()
+
 	spectator.activate(camera_transform)
 	mode = MODE_SPECTATOR
 
 
 func _enter_ground_from_spectator() -> void:
-	var spectator_position: Vector3 = spectator.get_world_position()
+	var body_position := _spectator_body_world_position
+	if body_position.length_squared() <= 1.0:
+		body_position = player.get_stored_world_position()
 	var direction: Vector3 = (
-		spectator_position.normalized()
-		if spectator_position.length_squared() > 1.0
+		body_position.normalized()
+		if body_position.length_squared() > 1.0
 		else earth_world.surface_center_direction
 	)
+
 	spectator.deactivate()
-	# Prepare/recenter the Earth surface region under the spectator direction,
-	# refresh collision, and drop the humanoid slightly above the surface.
+
+	# Rebuild/recenter under the PLAYER BODY, not under the spectator. This is
+	# the important portability contract shared with the existing Earth MVP:
+	# spectator is presentation-only and cannot teleport authoritative gameplay.
 	earth_world.prepare_surface_region(direction, true)
 	earth_world.set_render_origin(earth_world.get_surface_anchor())
 	_build_terrain_collision()
-	player.teleport_to_surface(direction)
-	player.activate_after_spawn()
+
+	player.restore_from_spectator()
+	# Explicitly re-project the preserved canonical body position after the
+	# render-origin change. No teleport_to_surface(spectator_direction) here.
+	player.set_world_position(body_position)
+	player.align_body_to_up(direction)
+	player.reset_physics_interpolation()
+
+	if _spectator_body_visual != null:
+		_spectator_body_visual.visible = false
 	mode = MODE_GROUND
+
+
+func _ensure_spectator_body_visual() -> void:
+	if _spectator_body_visual != null and is_instance_valid(_spectator_body_visual):
+		return
+	_spectator_body_visual = MeshInstance3D.new()
+	_spectator_body_visual.name = "LocalPlayerBodySpectatorVisual"
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.35
+	capsule.height = 1.8
+	_spectator_body_visual.mesh = capsule
+	_spectator_body_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_spectator_body_visual.visible = false
+	add_child(_spectator_body_visual)
+
+
+func _update_spectator_body_visual() -> void:
+	if (
+		_spectator_body_visual == null
+		or not is_instance_valid(_spectator_body_visual)
+		or earth_world == null
+	):
+		return
+	_spectator_body_visual.visible = mode == MODE_SPECTATOR
+	if mode != MODE_SPECTATOR or _spectator_body_world_position.length_squared() <= 1.0:
+		return
+	var up := _spectator_body_world_position.normalized()
+	var visual_center_world := _spectator_body_world_position + up * 0.90
+	_spectator_body_visual.position = earth_world.world_to_render(visual_center_world)
+	_spectator_body_visual.basis = _spectator_body_basis
+
+
+func is_spectator_body_visible() -> bool:
+	return (
+		_spectator_body_visual != null
+		and is_instance_valid(_spectator_body_visual)
+		and _spectator_body_visual.visible
+	)
+
+
+func get_spectator_body_world_position() -> Vector3:
+	return _spectator_body_world_position
 
 
 func is_earth_humanoid_active() -> bool:
@@ -553,6 +670,8 @@ func get_play0_status() -> Dictionary:
 		"biome_overlay": is_biome_overlay_visible(),
 		"collision_refresh_count": _collision_refresh_count,
 		"mouse_captured": mouse_captured,
+		"player_camera_mode": player.get_camera_mode() if player != null else "",
+		"spectator_body_visible": is_spectator_body_visible(),
 	}
 
 
@@ -564,7 +683,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_F3:
-				toggle_mode()
+				enter_spectator()
+				get_viewport().set_input_as_handled()
+			KEY_F2:
+				return_to_player()
+				get_viewport().set_input_as_handled()
+			KEY_F5:
+				toggle_player_camera()
 				get_viewport().set_input_as_handled()
 			KEY_P:
 				set_auto_evolution(not auto_evolution)
@@ -651,7 +776,9 @@ func _build_hud() -> void:
 		"Ctrl        spectator down",
 		"Mouse       look        Wheel   spectator speed",
 		"Q / E       spectator roll      H   level horizon",
-		"F3          GROUND <-> SPECTATOR",
+		"F3          enter SPECTATOR",
+		"F2          return to PLAYER BODY at its preserved position",
+		"F5          first-person / third-person character camera",
 		"P           live ecology AUTO / PAUSE",
 		"N           advance exactly one generation",
 		"B           biome overlay ON / OFF",
@@ -746,13 +873,13 @@ func _autocap() -> void:
 
 	toggle_mode()
 	await _settle_physics_frames(120)
-	_check(_condition(mode == MODE_GROUND), "C: F3 lands player at remote site")
-	_check(_condition(player.is_on_floor()), "C: player stands on freshly built remote region")
+	_check(_condition(mode == MODE_GROUND), "C: return restores control to preserved player body")
+	_check(_condition(player.is_on_floor()), "C: player stands on rebuilt body region")
 	_check(
 		_condition(absf(earth_world.get_altitude(player.get_world_position())) < 10.0),
-		"C: remote landing altitude near zero (collision refreshed)"
+		"C: restored player altitude near zero (collision refreshed)"
 	)
-	await _capture("05_remote_ground", shot_dir)
+	await _capture("05_returned_player_body", shot_dir)
 
 	var before_generation := int(get_published_snapshot().get("generation", -1))
 	_check(_condition(request_generation()), "D: manual generation accepted")
