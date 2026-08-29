@@ -2,6 +2,13 @@ extends RefCounted
 
 const MAX_REPLACE_ATTEMPTS := 20
 const RETRY_DELAY_MS := 5
+const MAX_READ_ATTEMPTS := MAX_REPLACE_ATTEMPTS + 5
+const TRANSIENT_READ_ERRORS := [
+	"ATOMIC_JSON_NOT_FOUND",
+	"ATOMIC_JSON_OPEN_FAILED",
+	"ATOMIC_JSON_EMPTY",
+	"ATOMIC_JSON_INCOMPLETE",
+]
 
 
 static func write_dictionary(path: String, value: Dictionary, pretty := true) -> Dictionary:
@@ -65,6 +72,46 @@ static func read_dictionary(path: String) -> Dictionary:
 	if parse_error != OK or not parser.data is Dictionary:
 		return {"success": false, "error_code": "ATOMIC_JSON_INCOMPLETE", "value": {}}
 	return {"success": true, "value": Dictionary(parser.data).duplicate(true)}
+
+
+static func is_transient_read_error(error_code: String) -> bool:
+	return error_code in TRANSIENT_READ_ERRORS
+
+
+static func read_dictionary_with_retry(
+	path: String,
+	max_attempts := MAX_READ_ATTEMPTS,
+	retry_delay_ms := RETRY_DELAY_MS
+) -> Dictionary:
+	var attempts_limit := maxi(1, int(max_attempts))
+	var delay_ms := maxi(0, int(retry_delay_ms))
+	var started_ms := Time.get_ticks_msec()
+	var last: Dictionary = {
+		"success": false,
+		"error_code": "ATOMIC_JSON_NOT_FOUND",
+		"value": {},
+	}
+	var attempts := 0
+	for attempt in range(attempts_limit):
+		attempts = attempt + 1
+		last = read_dictionary(path)
+		if bool(last.get("success", false)):
+			var success_result := last.duplicate(true)
+			success_result["attempts"] = attempts
+			success_result["elapsed_ms"] = Time.get_ticks_msec() - started_ms
+			success_result["transient_exhausted"] = false
+			return success_result
+		var error_code := String(last.get("error_code", ""))
+		if not is_transient_read_error(error_code):
+			break
+		if attempts < attempts_limit and delay_ms > 0:
+			OS.delay_msec(delay_ms)
+	var failure_result := last.duplicate(true)
+	var final_code := String(failure_result.get("error_code", ""))
+	failure_result["attempts"] = attempts
+	failure_result["elapsed_ms"] = Time.get_ticks_msec() - started_ms
+	failure_result["transient_exhausted"] = is_transient_read_error(final_code)
+	return failure_result
 
 
 static func read_value(path: String) -> Dictionary:
