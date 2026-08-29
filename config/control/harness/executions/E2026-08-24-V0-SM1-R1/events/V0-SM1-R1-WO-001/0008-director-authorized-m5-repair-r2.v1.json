@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0008",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 8,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T00:42:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r2",
+  "head_sha": "d75bed597b98fa8fd21c9bfb10e3299f4e150617",
+  "summary": "R1 Windows stability gate reached convergence but failed run 2/10 at B terminal acceptance. Director authorizes R2 post-convergence finalization hardening: terminal report after LEAVE_ACK and serialized A2 then B graceful finalization after both convergence releases are already consumed.",
+  "command": "AUTHORIZE_REPAIR_MAP_R2",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R2_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-002.v1.json"
+  ]
+}
