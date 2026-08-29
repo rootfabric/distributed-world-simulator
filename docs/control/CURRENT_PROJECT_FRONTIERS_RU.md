@@ -1,219 +1,348 @@
 # Distributed World Simulator — Current Project Frontiers
 
 **Operational owner:** `main`  
-**Canonical main at this refresh:** `598e92bb29a147bf12208d8549ddecaa4c9781ab`  
-**Architecture baseline:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation:** `80`  
-**Control plane:** `PC0-2026-08-10-R1`  
-**Harness base revision:** `H0-2026-08-11-R1`  
-**Harness P-train amendment:** `H0-PTRAIN-2026-08-18-R1`
+**Canonical main at this refresh:** `e14f8b6e5b07709d18273cc7886fe660bc353ebf`  
+**Refresh date:** 2026-08-29  
+**Machine product policy:** `config/control/harness/v0-product-train-policy.v1.json`
 
-> Machine project-state truth remains `config/control/project-program-registry.v1.json`. Product-train succession rules are additionally owned by `config/control/harness/v0-product-train-policy.v1.json`.
-
-## Owner-directed addendum — 2026-08-22 (control candidate)
-
-Факты, зафиксированные владельцем проекта после этой редакции снапшота:
-
-1. **P5 принят.** Accepted product lineage: `491ca7d058690d3de5fcea5e41aaee230a31b3ab`
-   («Merge V0-P5 equipment/tools accepted product candidate», ветка
-   `origin/accepted/v0-p4-real-resource-construction`). Это product base до явной
-   смены владельцем.
-2. **EG0–EG3 интегрированы в main** (PR #194 / #197 / #200); кампания
-   `PRE_P6_EDGE_GATEWAY_FOUNDATION` продолжается стадией EG4;
-   `EDGE_GATEWAY_FOUNDATION_ACCEPTED` остаётся блокером P6.
-3. **CONV-0 donor lane и Two-line rule** введены секциями §14–§15 в
-   `docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md`:
-   продуктовая база и сетевая база не смешиваются до P6; интеграционная
-   проверка выполняется лабораторией-донором.
-4. **Открыт трек генерации** `docs/plans/V0_GENERATION_TRACK_PLAN_RU.md`
-   (GEN-A PlanetDefinition + world hash handshake обязателен до P6.7).
-5. Рабочий чекаут воркспейса выровнен на accepted P5 lineage; устаревший снимок
-   v0-s1 заархивирован (stash + patch в workspace archive).
-
-Этот аддендум — control candidate: факты подлежат независимой проверке при ревью
-ветки `control/pre-p6-roadmap-amendments` перед канонизацией в main.
+> Machine truth remains in `config/control/**`. This file is a human-readable routing snapshot. Branch implementation progress is not checkpoint acceptance until the required control/review/merge lifecycle completes.
 
 ## Главный продуктовый приоритет
 
-Основная playable линия сейчас — V0/P.
+Главная product line — V0/P.
+
+Фактическая последовательность сейчас:
 
 ```text
-P0 playable frontier
-→ P1 world items / containers
-→ P2 reconnectable shared state
-→ P3 resource mining
-→ P4 real-resource Construction       ← CURRENT CLOSURE
-→ P5 equipment / tools                 ← NOT ELIGIBLE YET
-→ P6 persistent shared outpost         ← NOT ELIGIBLE YET
-→ post-P6 seamless decision
-→ V0-SM1 or explicit defer
-→ P7 bounded terrain mutation
+P4 real-resource Construction         ACCEPTED
+→ P5 equipment / tools                ACCEPTED
+→ P6 persistent shared outpost        ACCEPTED
+→ Edge Gateway Foundation             ACCEPTED
+→ SM1 seamless product integration    ACTIVE / NOT ACCEPTED
+→ P7 bounded terrain mutation         NEXT AFTER SM1
+→ V0 PLAYABLE SEAMLESS PLANET         NORTH STAR PRODUCT MILESTONE
 → P8 first mobile construct / ship
 ```
 
-P — последовательный product train. Следующий checkpoint не получает runtime dispatch до принятия предыдущего checkpoint и отдельной main-owned successor activation.
+Глобальная roadmap:
 
-Подробные правила:
+`docs/plans/V0_PLAYABLE_SEAMLESS_PLANET_ROADMAP_RU.md`
 
-`docs/control/V0_P_PRODUCT_TRAIN_RULES_RU.md`
+Progress baseline для будущего сравнения:
 
-## Current P4 state
+`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
 
-P4 runtime implementation завершён и заморожен.
+## Принятый persistent-playable фундамент
 
-Historical generation-80 activation/pre-runtime subject remains immutable provenance:
+### P4 — Real Resource Construction
 
-```text
-47ff18cf603bbf98bb67f7f62962e050f8606542
-```
+**ACCEPTED**
 
-Это dispatch/input snapshot, а не текущая runtime truth и не checkpoint acceptance claim.
+Accepted runtime:
 
-Exact implementation/evidence target:
+`2a6721cdf02fa1134c59d1ab98bb7b597c66821d`
 
-```text
-2a6721cdf02fa1134c59d1ab98bb7b597c66821d
-```
+P4 уже даёт canonical mining/resource -> Item Graph -> resource-backed Construction loop. Не планировать mining/Construction как новые системы для ближайшего большого checkpoint.
 
-Fresh independent P4 Reviewer и Verifier ранее проверили этот exact runtime/evidence target. Последующие проблемы относятся к Harness/control closure, а не к новому P4 runtime scope.
+### P5 — Equipment / Tools
 
-Текущий closure repair:
+**ACCEPTED**
 
-```text
-PR #127
-branch: repair/v0-p4-closure-ledger-state-r1
-candidate: 11969a954ceb9baab1b4a55cb2162fa1069fb0b2
-```
+Accepted runtime:
 
-Live-frontier routing repair уже интегрирован:
+`491ca7d058690d3de5fcea5e41aaee230a31b3ab`
 
-```text
-PR #130 merged
-main: 598e92bb29a147bf12208d8549ddecaa4c9781ab
-```
+Equipment/tools уже server-authoritative и являются частью playable loop.
 
-Следующий P4 control path:
+### P6 — Persistent Shared Outpost
 
-```text
-confirm exact-main Project Control NON_RED after #130
-→ rerun #127 Project Control against corrected main
-→ integrate #127 only if exact reviewed subject remains valid
-→ continue append-only P4 closure ledger
-→ record remaining predicates
-→ propose/accept V0_P4 checkpoint
-→ only then activate P5
-```
+**ACCEPTED**
 
-До этого момента P5 runtime mutation запрещён.
+Accepted runtime:
 
-## Mutation lease
+`7a77c048caa680871d4895c09eca89e84136b154`
 
-До H0.3 разрешён максимум один autonomous runtime mutation worker.
+P6 закрепляет shared two-client outpost, reconnect, persistence, server restart reconstruction, repeated E2E и soak.
 
-Сейчас lease остаётся fail-closed привязан к:
+### Edge Gateway Foundation
+
+**ACCEPTED**
+
+Gateway foundation уже consumed by P6/SM1. Не открывать новый Gateway owner для текущего product critical path.
+
+## Current runtime frontier — SM1
+
+Canonical production branch:
+
+`feature/v0-sm1-seamless-product-integration`
+
+Observed validated implementation head на момент refresh:
+
+`b270fb806038333c97fa1ed49655961adddd6a21`
+
+PR #242 остаётся Draft. Следовательно:
 
 ```text
-program: V0
-checkpoint: V0_P4_REAL_RESOURCE_CONSTRUCTION
-branch: feature/v0-p4-construction-real-resources
-state: RESERVED_FOR_V0_P4_CLOSURE_NO_ACTIVE_RUNTIME_MUTATION
+IMPLEMENTED / EXACT-HEAD EXECUTABLE EVIDENCE
+!=
+SM1 CHECKPOINT ACCEPTED
 ```
 
-P4 closure не потребляет runtime worker, но lease не переводится автоматически на P5. После P4 acceptance main должен отдельным control update назначить P5 и exact accepted P4 successor base.
+Runtime implementation дошёл до SM1.7.12 и feature scope завершён:
 
-## P5 target
+- owner-port map;
+- one-writer transfer;
+- stable Player Carrying Domain;
+- Gateway route pivot;
+- world-state continuity;
+- five-process graphical A<->B;
+- fault/replay/stale-source matrix;
+- concurrent crossings;
+- reconnect after handoff;
+- Gateway restart;
+- Authority recovery;
+- canonical Item Graph / Construction / outpost mutations across handoff;
+- repeated A<->B crossings under deterministic BAD_MOBILE/LAG_SPIKE impairment.
 
-P5 делает canonical items реально используемыми equipment/tools.
+Exact-head evidence на `b270fb8...` включает:
+
+```text
+SM1.7.12         70 x 10 = 700 PASS
+SM1 L0                  339/339 PASS
+SM1.6 graphical          58/58 PASS
+SM1.7.1-7.6             157/157 PASS
+SM1.7.7                  79/79 PASS
+SM1.7.8                  71/71 PASS
+SM1.7.9                  81/81 PASS
+SM1.7.10                 89/89 PASS
+SM1.7.11                145/145 PASS
+Project Control #1439             SUCCESS
+```
+
+**B2 full world/core regression = CLOSED.**
+
+Composite regression-repair candidate:
+
+`6fdfc047f54e727e6b398370e576c746c7949441`
+
+tree `b9b1202d959b3da4a0c73840091c7bf56070429e`, Draft PR #282 over exact SM1.7.12 `b270fb8...`.
+
+Exact Windows double-Godot evidence: **307/307 steps PASS**, `304/304` standalone tests, `main_scene_cli_all` PASS, `summary.passed=true`.
+
+**B2.5 manual seamless smoke demo = CLOSED / WINDOWS MANUAL PASS.**
+
+Demo candidate: `b0445e08c56e090279ab21a210169df01ff3bd73`, tree `98ab141e03707ca17a5ba913b9d0d9a7e775d7d5`, Draft PR #284. Exact double-Godot Linux/Xvfb validation: 10/10 A→B→A cycles, 320/320 assertions PASS; default two-client SM1.6 regression 58/58 PASS. Real Windows manual run also PASS: graceful close marker `SM1_MANUAL_SEAMLESS_DEMO_PASS`, route `A→B→A`, epochs `1→2→3`, one Gateway connection, zero reconnects, zero respawns, 119/119 commands confirmed, no last error; tester reports no noticeable movement delay.
+
+Closure path:
+
+```text
+B2 full world/core regression             CLOSED
+→ manual seamless smoke demo              CLOSED / WINDOWS MANUAL PASS
+→ post-build critique                      CLOSED
+→ Evidence Map                              CLOSED
+→ fresh Reviewer                             CLOSED / PASS
+→ fresh Verifier                              CURRENT
+→ checkpoint proposal
+→ human RUNTIME_FEATURE_MERGE
+→ SM1 ACCEPTED
+```
+
+## Pre-P7 manual seamless smoke demo
+
+Технический smoke/demo бесшовности можно собрать уже на current SM1 candidate, не дожидаясь P7:
+
+```text
+Authority A
++ Authority B
++ Gateway
++ graphical client
+→ client connects only to Gateway
+→ manual A -> B -> A crossing
+→ no reconnect / respawn / loading
+```
+
+Текущий graphical SM1 client script-driven, поэтому для tester-facing demo нужен отдельный тонкий manual-input/presentation wrapper. Это packaging/presentation work, а не новый authority protocol.
+
+Demo реализован и закрыт после B2: **manual seamless smoke = CLOSED / Windows manual PASS**. Demo не означает SM1 acceptance. Non-fatal Camera3D physics-interpolation warnings из manual run перенесены в B3 critique как cleanup item.
+
+## Next product runtime frontier — P7
+
+После SM1 acceptance следующий основной gameplay block:
+
+**V0_P7_BOUNDED_TERRAIN_MUTATION**
+
+P7 должен добавить authoritative mutable planetary surface без второй terrain/Matter truth.
 
 Минимальная вертикаль:
 
 ```text
-canonical item
-→ server-authoritative equip / unequip
-→ replicated equipment state
-→ reconnect restores same equipment
-→ a real gameplay action requires/uses the equipped tool
+equipped tool
+→ authoritative dig command
+→ canonical terrain/material mutation
+→ material/resource yield
+→ canonical Item Graph
+→ two-client replication
+→ reconnect reconstruction
+→ server restart reconstruction
+→ seamless-boundary mutation continuity
 ```
 
-Предпочтительный первый gameplay binding — mining tool. CH9.6 может быть donor presentation/equipment semantics, но не product base и не Item Graph authority.
+P7 не должен переизобретать уже принятые P4/P5 mining, inventory, tool или Construction owners.
 
-## P6 target
+## North Star — V0 PLAYABLE SEAMLESS PLANET
 
-P6 — первый стабильный persistent shared-outpost baseline:
+После P7 требуется отдельный product-level graphical acceptance.
 
-```text
-join
-→ mine
-→ inventory / container
-→ equip tool
-→ build from real resources
-→ second client converges
-→ reconnect
-→ server restart
-→ same canonical outpost reconstructed
-```
+Два graphical clients должны на одном bounded planetary patch:
 
-Минимальные acceptance outcomes:
+- видеть один persistent world;
+- ходить и взаимодействовать;
+- добывать ресурс;
+- копать/изменять поверхность;
+- получать canonical material;
+- строить из canonical resources;
+- пересекать A/B boundary без respawn/reconnect/loading;
+- продолжать dig/build после handoff;
+- переживать reconnect;
+- переживать server restart;
+- сходиться к одной canonical truth.
 
-- 5 чистых end-to-end повторов;
-- 30-minute two-client soak;
-- persistent inventory/equipment/Construction reconstruction;
-- zero duplicate canonical truth.
+Current navigation estimate после B2 + B2.5 closure:
 
-## Post-P6 seamless insertion
+**~83% функциональной готовности до этого milestone.**
 
-После P6 P7 не auto-dispatchится.
-
-Обязательные документы:
-
-- `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`
-- `docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md`
-
-Main должен записать одно решение:
-
-```text
-ACTIVATE_V0_SM1
-или
-DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION
-```
-
-SM0/MRPF при этом используются как evidence/capability donors. Future V0-SM1 стартует от accepted P6 baseline, а не от historical lab branch.
-
-## NX
-
-NX/H0.2 остаётся самостоятельной HIGH-risk network-authority линией. V0/P продолжает использовать `SERVER_PREDICTED` как базовый network model, пока canonical NX acceptance/control явно не изменит это правило.
-
-Любая реальная потребность P в новом protocol ownership, authority transfer/reconciliation model или Character ownership change fail-closed маршрутизируется в NX. Это конкретная dependency, а не причина блокировать P всей NX веткой целиком.
+Это product navigation metric, не Harness acceptance state.
 
 ## ECO
 
-ECO — experimental/research frontier и сейчас **не блокирует V0/P**.
+ECO продолжает параллельный research frontier и **не блокирует V0/P по умолчанию**.
 
-Harness правило:
+Наблюдаемая live-spatial линия дошла до LS3.3 Dispersal / Recruitment staging/evidence после LS3.0-3.2.
 
-```text
-research status alone != product blocker
-```
-
-Research branch становится P blocker только при явной main-registered dependency, обязательном canonical foundation precondition, доказанном ownership/directional-watch intersection или явном потреблении research capability в P Work Order.
-
-Следовательно, ECO может продолжать свои эксперименты независимо и не входит в P4/P5/P6 critical path.
-
-## Fail-closed boundaries for P
-
-Остановить текущий P checkpoint и перепланировать, если требуется:
+План:
 
 ```text
-second Item Graph owner
-second Construction truth
-second persistence/durability owner
-private V0 network authority
-new network protocol/authority foundation without NX route
-successor runtime dispatch before predecessor checkpoint acceptance
-successor branch not based on exact main-declared accepted predecessor lineage
-second pre-H0.3 runtime mutation worker
-P7 dispatch after P6 without durable seamless activation/defer decision
-research branch used as implicit product blocker without a registered dependency
+LS3.0 Real Planet Patch
+→ LS3.1 Environment Generator
+→ LS3.2 Spatial Cohort Lattice
+→ LS3.3 Dispersal / Recruitment
+→ LS3.4 Competition
+→ LS3.5 Emergent Biomes
+→ LS3.6 Rule Workbench
+→ LS3.FINAL
 ```
 
-Historical branches remain evidence/capability donors unless main-owned control explicitly declares an exact head as the product execution input.
+Research становится product blocker только через явную main-owned dependency/ownership intersection.
+
+## Critical-path discipline
+
+До V0 PLAYABLE SEAMLESS PLANET:
+
+```text
+SM1 closure
+→ P7 terrain mutation
+→ North Star graphical acceptance
+```
+
+Не добавлять на critical path без доказанного blocker:
+
+- P8 mobile construct;
+- arbitrary-N authority balancing;
+- dynamic shard split/merge;
+- новый transport foundation;
+- новый Gateway;
+- full planet HLOD/MRPF completion;
+- ECO product promotion.
+
+## Fail-closed boundaries
+
+STOP_AND_REPLAN если текущий путь требует:
+
+- second Item Graph owner;
+- second Construction truth;
+- second persistence owner;
+- Gateway gameplay/ownership authority;
+- client-private terrain truth;
+- direct client connection to simulation authorities вместо stable Gateway endpoint;
+- successor runtime before predecessor acceptance;
+- research branch wholesale merge как product base;
+- скрытый scope expansion SM1 до dynamic global sharding.
+
+## Следующая точка progress review
+
+Сравнить с snapshot 2026-08-28 и ответить:
+
+1. принят ли SM1;
+2. какой accepted SM1 head;
+3. активирован ли P7;
+4. работает ли authoritative terrain mutation;
+5. материализуется ли dig result в Item Graph;
+6. переживает ли terrain reconnect/restart;
+7. проходит ли mutation через A/B seam;
+8. достигнут ли V0 PLAYABLE SEAMLESS PLANET.
+
+## B3 post-build critique
+
+**CLOSED.** Durable carrier: Draft PR #285.
+
+Exact closure candidate: `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Verdict: implementation complete and ready for B4 Evidence Map; no new seamless correctness blocker. Reviewer/Verifier must bind this composite candidate. Demo #284 remains non-acceptance UX evidence.
+
+Non-blocking tooling cleanup from critique is isolated in Draft PR #286; one historical M5 timing observation remains for Reviewer attention.
+
+**Current closure step: B4 Evidence Map.**
+
+## B4 Evidence Map
+
+**CLOSED.** Durable carrier: Draft PR #287.
+
+Exact production closure candidate: `6fdfc047f54e727e6b398370e576c746c7949441`, tree `b9b1202d959b3da4a0c73840091c7bf56070429e`.
+
+Evidence Map basic schema audit: all required fields present, no additional properties, enum values valid, exact SHA pattern valid. focused/full regression PASS; canonical truth and architecture ownership unchanged.
+
+Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fresh review-head rather than inferred PASS.
+
+**B5 fresh exact-head Reviewer = CLOSED / PASS. Current closure step: B6 fresh Verifier.**
+
+## B5 fresh exact-head Reviewer
+
+**CLOSED / PASS.** Review record commit `8b4793d868eb81ff4786d51a4ba5ec90deb08a4e` on `control/v0-sm1-b5-final-review-r1`.
+
+Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
+
+**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 control-read continuity repair R8 is CURRENT.**
+
+## B6 Verifier failure
+
+Fresh verifier on `6fdfc047...` reproduced M5 graphical multiprocess instability and returned FAILED. B7 is blocked.
+
+Repair Map: PR #291. Bounded M5 harness repair: PR #292 @ `8c44ea1a...`. Linux exact-double supporting run after repair: 5/5 PASS; Windows R6 contracts + pure convergence regression + pipe smoke + 10x stability are the decisive next tests.
+
+## M5 R6 centralized convergence
+
+R5 observability proved a mutual `WAIT_CONVERGENCE_PEER` deadlock: both clients independently exhausted the full 150s stage timeout and self-exited code 1 while parent-side release coordination had already reported success.
+
+R6: PR #303 / #304. Exact implementation `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8`, tree `72192fd30c66df974b669ed38f47de353cdeee6c`.
+
+Convergence pair matching is now parent-owned; consumed release is monotonic; post-release regression fails explicitly; completed convergence survives expected teardown drift. B6/B7 remain BLOCKED pending decisive Windows validation.
+
+R6 final exact target: `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8` / `72192fd30c66df974b669ed38f47de353cdeee6c`. Convergence timeout evidence now names `WAIT_CONVERGENCE_COORDINATOR`, not the removed peer-wait stage.
+
+## M5 R7 observed-state identity
+
+R6 Windows gate прошёл 5 последовательных прогонов и упал на 6-м из-за legitimate forward `PlayerStateSnapshot` progression после release. Full player checksum включает revision/server_tick/movement fields, поэтому его immobility была неверным test invariant.
+
+R7: PR #305 / #306. Exact implementation `baa0e192209e72aba5ae9d04663eea85b1099e82`, tree `08f01fd955c2d31c1ad49aa917e542c93e278241`.
+
+Exact snapshot identity доказывается и пинится при PREPARE; после этого разрешён только monotonic live progression под тем же authority, при exact Item Graph continuity. B6/B7 остаются BLOCKED до decisive Windows validation.
+
+## M5 R8 control-read continuity
+
+R7 Windows decisive run 1 exposed a harness durability race, not a convergence semantic regression: `control.json` was sampled during AtomicJson's replacement gap, and legacy `Support.read()` collapsed the transient missing file to `{}`. Final control state was intact and retained the same prepare/release/complete generation.
+
+R8: PR #309 / #310. Exact implementation `25f5ddf6280a39a44ddfc3bbec5245873021c0a1`, tree `82c6567acdc735bc02a4808159328f00722b0b6b`.
+
+Bounded typed reads retry only missing/open/empty/incomplete JSON; valid empty JSON is not retried; persistent outage fails as `M5_CONTROL_READ_UNAVAILABLE`. R7 convergence barrier is unchanged. Exact double-Godot control-read regression PASS `25/25`.
+
+B6/B7 remain BLOCKED pending decisive Windows R8 10x stability validation and, only if that passes, one canonical full regression first attempt.

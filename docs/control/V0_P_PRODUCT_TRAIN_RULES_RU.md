@@ -2,63 +2,107 @@
 
 **Owner:** `main`  
 **Machine policy:** `config/control/harness/v0-product-train-policy.v1.json`  
-**Policy amendment:** `H0-PTRAIN-2026-08-18-R1`
+**Human roadmap:** `docs/plans/V0_PLAYABLE_SEAMLESS_PLANET_ROADMAP_RU.md`
+
+> Этот документ объясняет product routing. Machine eligibility и acceptance не выводятся из текста этой страницы.
 
 ## Что такое P
 
-P — это не набор независимых экспериментов. Это одна последовательная продуктовая линия V0, в которой каждый следующий checkpoint продолжает уже работающий playable world:
+P — одна последовательная playable product line. Каждый следующий этап обязан продолжать уже принятую canonical композицию.
+
+Актуальная последовательность:
 
 ```text
-P0 playable frontier
-→ P1 world items / containers
-→ P2 reconnectable shared state
-→ P3 resource mining
-→ P4 real-resource Construction
-→ P5 equipment / tools
-→ P6 persistent shared outpost
-→ POST-P6 seamless decision
-→ V0-SM1 seamless product integration (или явный defer)
+P4 real-resource Construction         ACCEPTED
+→ P5 equipment / tools                ACCEPTED
+→ P6 persistent shared outpost        ACCEPTED
+→ POST-P6 seamless decision           ACTIVATE_SM1
+→ SM1 seamless product integration    ACTIVE / NOT ACCEPTED
 → P7 bounded terrain mutation
+→ V0 PLAYABLE SEAMLESS PLANET         product milestone
 → P8 first mobile construct / ship
 ```
 
-Главное правило: следующий P checkpoint не начинается, пока предыдущий не принят как checkpoint. Reviewed implementation head сам по себе не является accepted predecessor.
-
-## Текущее положение — P4 closure
-
-Текущий runtime P4 уже реализован и должен оставаться замороженным:
+Главное правило не меняется:
 
 ```text
-exact runtime/evidence target:
-2a6721cdf02fa1134c59d1ab98bb7b597c66821d
+reviewed/verified implementation
+!=
+accepted predecessor checkpoint
 ```
 
-Сейчас задача P — не писать ещё runtime-код P4 и не начинать P5, а закрыть control lifecycle P4.
+Следующий runtime checkpoint не стартует до formal predecessor acceptance и main-owned successor activation.
 
-После merge PR #130 текущий canonical main:
+## Текущее положение — SM1
+
+P4, P5 и P6 уже приняты. Edge Gateway Foundation также принят.
+
+Текущий runtime owner line:
+
+`feature/v0-sm1-seamless-product-integration`
+
+Observed validated head на refresh 2026-08-28:
+
+`b270fb806038333c97fa1ed49655961adddd6a21`
+
+PR #242 остаётся Draft; SM1 ещё не accepted/merged.
+
+SM1 implementation уже включает:
+
+- one-writer authority handoff;
+- stable player/entity identity;
+- Gateway-preserving routing;
+- A<->B graphical process scenario;
+- stale/replay/failure fencing;
+- concurrent crossings;
+- reconnect;
+- Gateway restart;
+- Authority recovery;
+- Item Graph / Construction / outpost mutation continuity;
+- repeated crossings under deterministic impaired network.
+
+SM1.7.12 **закрыт** на exact head `b270fb8...`: 700/700 PASS, regression belt PASS, Project Control #1439 SUCCESS.
+
+Текущая closure работа:
+
+**full world/core regression**
+
+После неё всё ещё нельзя открывать P7. Сначала:
 
 ```text
-598e92bb29a147bf12208d8549ddecaa4c9781ab
+full world/core regression
+→ post-build critique
+→ Evidence Map
+→ fresh Reviewer
+→ fresh Verifier
+→ checkpoint proposal
+→ human RUNTIME_FEATURE_MERGE
+→ SM1 ACCEPTED
 ```
 
-Оставшаяся последовательность P4:
+## Manual seamless smoke demo до P7
+
+Ручной tester demo A<->B не является отдельным checkpoint и не требует terrain mutation.
+
+Его можно собрать поверх текущего SM1 runtime после full world/core regression:
 
 ```text
-1. подтвердить Project Control NON_RED на exact current main после #130
-2. повторно прогнать PR #127 против исправленного main
-3. если exact reviewed subject #127 остаётся валиден — интегрировать control-only ledger repair
-4. продолжить append-only closure ledger без runtime mutation
-5. записать оставшиеся required predicates
-6. сформировать V0_P4_CHECKPOINT_PROPOSED
-7. пройти требуемый Director/Human acceptance gate
-8. только после принятого P4 активировать P5
+start Authority A
+start Authority B
+start Gateway
+start graphical client
+client connects only to Gateway
+manual walk A -> B -> A
+observe stable identity and unchanged Gateway endpoint
 ```
 
-Runtime P4 не должен ремонтироваться в ходе этой closure-последовательности, если не появляется новый доказанный runtime defect. В таком случае текущий closure останавливается и открывается отдельный repair lifecycle.
+Текущий graphical client script-driven; разрешён thin manual-input/presentation wrapper без изменения canonical ownership/protocol semantics.
 
-## Как открывать каждый следующий P checkpoint
+Demo PASS != SM1 checkpoint acceptance.
 
-Для P5, P6, P7, P8 применяется одинаковая схема:
+## Как открывать следующий checkpoint
+
+Для P7 и P8 применяется прежняя схема:
 
 ```text
 PREDECESSOR CHECKPOINT ACCEPTED
@@ -67,7 +111,7 @@ fetch current main + referenced branches
         ↓
 standard + directional Project Control NON_RED
         ↓
-main объявляет exact accepted predecessor product base
+main declares exact accepted predecessor product base
         ↓
 fresh bounded successor branch
         ↓
@@ -75,127 +119,143 @@ new Project Epoch + Work Order
         ↓
 risk classification + Design Brief
         ↓
-main-owned mutation lease rotation
+mutation lease rotation
         ↓
 Director dispatch
         ↓
-bounded runtime implementation
+bounded implementation
         ↓
 freeze exact runtime head
         ↓
-independent Reviewer + Verifier
+fresh Reviewer + Verifier
         ↓
 append-only closure
         ↓
-checkpoint proposal / required merge gate
+checkpoint proposal / human gate
 ```
 
-Запрещено продолжать следующий продуктовый этап на случайной исторической ветке, начинать его от bare `main`, если при этом теряется принятая продуктовая композиция, или считать donor branch новым product base.
+Запрещено:
 
-## P5 — Equipment / Tools
+- начинать successor от bare main, если теряется accepted product composition;
+- wholesale merge donor/research branch как product base;
+- создавать второго owner для Item Graph / Construction / persistence / terrain;
+- считать Draft PR acceptance.
 
-P5 должен сделать предметы не просто содержимым inventory, а рабочими инструментами игрового цикла.
+## Уже принятый foundation нельзя переизобретать
 
-Минимальная цель:
+### P4
+
+Mining/resource-backed Construction уже принят.
+
+Не строить новый parallel loop:
 
 ```text
-canonical item
-→ equip / unequip server-authoritative
-→ equipment state replicated to A/B
-→ reconnect restores exact equipment state
-→ at least one real gameplay action requires/uses equipped tool
+new resource truth
+→ new inventory truth
+→ new construction truth
 ```
 
-Рекомендуемый первый вертикальный slice:
+Новый capability должен потреблять existing canonical owners.
 
-```text
-mining tool
-→ equip
-→ mining action validates equipped tool
-→ canonical resource output remains P3 authority path
-```
+### P5
 
-Затем можно связать tool/equipment с Construction UX, но нельзя создавать отдельную equipment inventory truth.
+Equipment/tools уже принят.
 
-Исторический CH9.6 — donor presentation/equipment semantics, не product base и не новый Item Graph owner.
+P7 dig action должен использовать existing equipment/tool identity, а не private terrain tool state.
 
-P5 не eligible сейчас. Для его активации нужны accepted P4, exact successor base, новый Work Order/Epoch и ротация mutation lease на P5.
+### P6
 
-## P6 — Persistent Shared Outpost
+Persistent Shared Outpost уже принят.
 
-P6 — первый стабильный продуктовый baseline.
+Terrain persistence должна композиционно добавиться к существующим reconnect/restart semantics, а не создать отдельный V0 durability stack.
 
-К концу P6 должна работать целая петля:
+### Edge Gateway
 
-```text
-join
-→ mine
-→ inventory / container
-→ equip tool
-→ build from real resources
-→ second client sees canonical result
-→ disconnect / reconnect
-→ server restart
-→ same canonical outpost reconstructed
-```
+Gateway foundation уже принят и остаётся non-authoritative.
 
-Минимальные acceptance outcomes:
-
-- два клиента видят одно общее состояние outpost;
-- inventory/equipment/Construction восстанавливаются после reconnect;
-- canonical outpost восстанавливается после server restart;
-- минимум 5 чистых end-to-end повторов;
-- 30-minute two-client soak;
-- zero duplicate canonical truth.
-
-После P6 мы получаем первую действительно полезную стабильную точку, которую уже разумно распределять между authorities.
-
-## После P6 — обязательный seamless gate
-
-После принятия P6 **P7 автоматически не запускается**.
-
-Сначала открыть:
-
-- `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`
-- `docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md`
-
-И main-owned решением выбрать одно:
-
-```text
-ACTIVATE_V0_SM1
-или
-DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION
-```
-
-Если SM1 активируется, он стартует от accepted P6 product baseline. SM0 и MRPF используются только как capability/evidence donors.
-
-Цель V0-SM1 — перенести в реальный продукт:
-
-- exactly one active authority;
-- stable player/entity identity;
-- monotonic authority epoch;
-- seamless route role pivot;
-- derived multi-authority projections;
-- existing canonical Item Graph/Construction/persistence owners.
-
-После этого P7 terrain и P8 mobile construct строятся уже поверх seam-aware продукта.
+Gateway не должен решать terrain ownership, Construction truth или Item Graph truth.
 
 ## P7 — bounded terrain mutation
 
-P7 добавляет ограниченное реальное изменение terrain/material state в playable loop.
+P7 — следующий крупный runtime block после SM1 acceptance.
 
-Правило ownership:
+Цель:
+
+**authoritative mutable planetary surface inside the existing persistent seamless product.**
+
+Минимальная вертикаль:
 
 ```text
-V0 consumes canonical Matter/terrain authority
-V0 does not create private terrain or material truth
+tool equipped
+→ dig command
+→ server authority validates
+→ bounded terrain/material mutation
+→ material yield
+→ canonical Item Graph
+→ client A/B convergence
+→ reconnect
+→ server restart
+→ same terrain state
 ```
 
-P7 начинается только после accepted P6 и durable post-P6 seamless decision.
+### Ownership rules
+
+P7 обязан:
+
+- переиспользовать canonical Matter/terrain authority или явно создать ровно один main-approved canonical owner;
+- не создавать client-private terrain truth;
+- не создавать parallel resource economy;
+- использовать deterministic OperationId;
+- fail closed на stale/duplicate operation;
+- иметь deterministic terrain fingerprint/delta representation.
+
+### Seam requirement
+
+После принятого SM1 P7 обязан доказать:
+
+```text
+A active: dig/build
+→ transfer starts
+→ A/B writes during unsafe gap are fenced
+→ B active: dig/build
+→ B->A
+→ terrain + Item Graph + Construction remain canonical
+```
+
+Если P7 требует менять фундамент authority transfer, работа fail-closed возвращается в соответствующий network/authority owner, а не чинится private workaround'ом.
+
+## V0 PLAYABLE SEAMLESS PLANET
+
+Это **product milestone overlay**, а не новый machine checkpoint в текущей policy revision.
+
+После P7 acceptance нужен отдельный graphical E2E gate.
+
+Два клиента должны доказать:
+
+1. shared persistent world;
+2. equipment/tool;
+3. mining;
+4. terrain digging;
+5. material in Item Graph;
+6. resource-backed Construction;
+7. seamless A<->B crossing;
+8. continued dig/build after crossing;
+9. reconnect;
+10. server restart;
+11. repeated clean runs / bounded soak;
+12. zero duplicate canonical truth.
+
+Только после этого milestone считается достигнутым.
+
+Progress baseline:
+
+`docs/checkpoints/2026-08-28_V0_PLAYABLE_SEAMLESS_PLANET_PROGRESS_R2_RU.md`
 
 ## P8 — first mobile construct / ship
 
-P8 должен впервые собрать в одном реальном продукте:
+P8 идёт **после** North Star milestone.
+
+Он должен собрать:
 
 ```text
 Construction
@@ -203,42 +263,58 @@ Construction
 + persistence
 + reference frames
 + terrain/world relation
-+ selected authority/seam model
-→ mobile construct / ship
++ seam-aware authority
+→ bounded mobile construct
 ```
 
-Не нужно сразу делать полноценный space game. Первый P8 должен быть bounded mobile construct с проверяемым lifecycle, persistence и authority behavior.
+P8 не является prerequisite для первого playable seamless planet.
 
-## ECO и другие research branches
+## ECO и research
 
-ECO сейчас экспериментальная ветка и **не блокирует P**.
-
-Общее Harness-правило:
+ECO остаётся parallel research line и по умолчанию не блокирует P.
 
 ```text
-research branch status != product blocker
+research status alone != product blocker
 ```
 
-Research может стать настоящим блокером только если возникает одно из условий:
+Research может стать blocker только если:
+
+- main явно регистрирует dependency;
+- canonical owner из research становится prerequisite;
+- ownership/directional audit показывает реальное пересечение;
+- Work Order явно потребляет capability.
+
+Поэтому LS3 может идти параллельно SM1/P7.
+
+## Critical-path discipline до North Star
+
+Приоритет:
 
 ```text
-main explicitly registers dependency
-canonical foundation owned by that program becomes required
-ownership/directional-watch audit proves real intersection
-P Work Order explicitly consumes that research capability
+SM1 closure
+→ P7 terrain mutation
+→ V0 PLAYABLE SEAMLESS PLANET graphical acceptance
 ```
 
-Поэтому RED/unfinished/active состояние ECO само по себе не должно останавливать P4/P5/P6.
+Не расширять critical path следующими направлениями без доказанного blocker:
 
-## Что делать агенту, когда пользователь говорит «продолжи P»
+- P8;
+- arbitrary-N authorities;
+- dynamic shard split/merge;
+- новый transport;
+- новый Gateway;
+- full MRPF/HLOD;
+- ECO product integration.
 
-1. Прочитать `v0-product-train-policy.v1.json`.
-2. Определить current checkpoint и phase.
-3. Не выбирать следующий checkpoint по названию из roadmap — проверить его eligibility.
-4. Если current checkpoint в closure, закрывать его control lifecycle, а не писать successor runtime.
-5. Если predecessor accepted — подготовить main-owned successor activation.
-6. Создавать свежую successor branch только от exact main-declared accepted product base.
-7. Сохранять один runtime mutation worker до принятия H0.3 scheduler.
-8. Не превращать research/lab donor в product authority.
-9. Любой новый network foundation/authority change fail-closed маршрутизировать в NX.
-10. Любой второй Item Graph, Construction, persistence или terrain truth — STOP_AND_REPLAN.
+## Что делать агенту, когда пользователь говорит «продолжи основную ветку»
+
+1. Прочитать machine `v0-product-train-policy.v1.json`.
+2. Прочитать `CURRENT_PROJECT_FRONTIERS_RU.md`.
+3. Прочитать `V0_PLAYABLE_SEAMLESS_PLANET_ROADMAP_RU.md`.
+4. Определить current accepted predecessor и current runtime Work Order.
+5. Если SM1 не принят — закрывать SM1, не начинать P7 runtime.
+6. После SM1 acceptance — активировать P7 через полный successor protocol.
+7. После P7 — выполнить отдельный North Star graphical acceptance.
+8. Не превращать research donor в canonical product owner.
+9. Любой второй canonical truth — STOP_AND_REPLAN.
+10. При следующем review сравнить состояние с датированным progress snapshot.
