@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0010",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 10,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T03:10:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r4",
+  "head_sha": "1e8e33045c1c3bee18bbe5efefae5be26a56dbf9",
+  "summary": "R3 diagnostic gate failed on first Windows run with A2 disappearing before result creation and no matching WER crash/hang. Director authorizes R4 observability-only instrumentation: direct redirected child IO, exit-code capture, parent-kill attribution, and durable first-death lifecycle evidence.",
+  "command": "AUTHORIZE_REPAIR_MAP_R4",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R4_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-004.v1.json"
+  ]
+}
