@@ -251,6 +251,7 @@ func _process(_delta: float) -> void:
 			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
 			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
 			var complete_id := String(control.get("convergence_complete_id", "")).strip_edges()
+			var finish_client_id := String(control.get("convergence_finish_client_id", "")).strip_edges()
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
 			if _convergence_release_consumed:
@@ -260,7 +261,7 @@ func _process(_delta: float) -> void:
 				if prepare_id != _convergence_prepare_id or release_id != _convergence_release_id:
 					_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
 					return
-				if complete_id == _convergence_release_id:
+				if complete_id == _convergence_release_id and finish_client_id == _client_id:
 					_finish(true)
 				return
 			if _convergence_prepared:
@@ -552,12 +553,17 @@ func _finish(passed: bool, final_state: String = "COMPLETE") -> void:
 	if passed and not _convergence_world.is_empty():
 		world = _convergence_world.duplicate(true)
 	passed = passed and _failures.is_empty()
-	_write_report(final_state if passed else "FAILED", passed, world, shell)
+
+	# Terminal success is committed only after the server acknowledged LEAVE.
+	# The previous optimistic COMPLETE write could be observed by the parent and
+	# later be rewritten FAILED when LEAVE_ACK timed out.
+	_write_report("FINALIZING" if passed else "FAILING", false, world, shell)
 	var leave_result: Dictionary = _client.request_graceful_leave(4000)
 	if not bool(leave_result.get("success", false)):
 		_failures.append("Graceful leave failed: %s" % leave_result)
 		passed = false
-		_write_report("FAILED", false, world, shell, leave_result)
+	_write_report(final_state if passed else "FAILED", passed, world, shell, leave_result)
+
 	_finished = true
 	set_process(false)
 	print("M5_GRAPHICAL_CLIENT_RESULT %s" % JSON.stringify(Support.read(_result_file)))

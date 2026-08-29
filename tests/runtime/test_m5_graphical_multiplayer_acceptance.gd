@@ -40,6 +40,7 @@ func _init() -> void:
 		"convergence_prepare": {},
 		"convergence_release_id": "",
 		"convergence_complete_id": "",
+		"convergence_finish_client_id": "",
 	})
 	var profiles := [
 		ProcessEnvironment.create(root.path_join("profiles"), "server", 0, "disabled"),
@@ -127,14 +128,24 @@ func _init() -> void:
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
 	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for identical current player and Item Graph checksums")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
+
+	# Convergence is already accepted once BOTH clients consumed the same release.
+	# Final process teardown is intentionally serialized so Windows cannot turn
+	# simultaneous LEAVE/ACK handling into a post-convergence acceptance race.
+	_write_control(control_path, {"convergence_finish_client_id": "a"})
 	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS, a2_pid, "a2_complete")
-	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_complete")
 	_assert(bool(a2_final.get("passed", false)), "A reconnect graphical acceptance completed")
-	_assert(bool(b_final.get("passed", false)), "B graphical acceptance completed")
+	_assert(bool(a2_final.get("leave_result", {}).get("success", false)), "A reconnect graceful leave acknowledged")
 	_wait_exit(a2_pid, EXIT_TIMEOUT_MS)
-	_wait_exit(b_pid, EXIT_TIMEOUT_MS)
-	_assert(not OS.is_process_running(a2_pid) and not OS.is_process_running(b_pid), "M5 graphical clients exited cleanly")
+	_assert(not OS.is_process_running(a2_pid), "A reconnect graphical process exited cleanly")
 	child_pids.erase(a2_pid)
+
+	_write_control(control_path, {"convergence_finish_client_id": "b"})
+	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS, b_pid, "b_complete")
+	_assert(bool(b_final.get("passed", false)), "B graphical acceptance completed")
+	_assert(bool(b_final.get("leave_result", {}).get("success", false)), "B graceful leave acknowledged")
+	_wait_exit(b_pid, EXIT_TIMEOUT_MS)
+	_assert(not OS.is_process_running(b_pid), "B graphical process exited cleanly")
 	child_pids.erase(b_pid)
 	var server_final := _wait_server_counts(server_path, 3, 3, 30000, server_pid)
 	_validate_final(a_post, b_post, a_cursor, b_wait, a2_final, b_final, server_final, root)
