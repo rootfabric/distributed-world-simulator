@@ -13,8 +13,7 @@ extends RefCounted
 const Lattice = preload("res://scripts/ecology/shadow/eco_evo7_ls32_spatial_cohort_lattice_v1.gd")
 const EnvironmentField = preload("res://scripts/ecology/shadow/eco_evo7_ls31_environment_field_v1.gd")
 const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
-const EnvironmentSample = preload("res://scripts/research/ecology/environment_sample_v1.gd")
-const Shadow = preload("res://scripts/ecology/shadow/eco_evo7_live_world_shadow_v1.gd")
+const Par0Kernel = preload("res://scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_dispersal_recruitment.v1"
 const VERSION := "1.0.0"
@@ -353,10 +352,17 @@ func _route_for_child(candidate_hash: String, bundle: Dictionary, parent_cell_in
     return route
 
 func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictionary], next_generation: int) -> Array[Dictionary]:
+	## PERF1-PAR0: the per-candidate calculation lives in the shared pure
+    ## kernel (single implementation, also used by PAR0 workers). The serial
+    ## evaluation order, formulas and hashes are unchanged; this loop is the
+    ## canonical serial oracle.
     var candidate_by_hash := {}
     for candidate_value in candidates:
         var candidate: Dictionary = candidate_value
         candidate_by_hash[String(candidate["candidate_hash"])] = candidate
+    var context := Par0Kernel.build_context(
+        SCHEMA, VERSION, REVISION,
+        environment_seed, environment_field_hash, environment_cells)
     var out: Array[Dictionary] = []
     for route_value in routes:
         var route: Dictionary = route_value
@@ -364,58 +370,11 @@ func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictiona
         if not candidate_by_hash.has(candidate_hash):
             return []
         var candidate: Dictionary = candidate_by_hash[candidate_hash]
-        var in_patch := bool(route["in_patch"])
-        var destination_index := int(route["destination_cell_index"])
-        if not in_patch:
-            var rejected := {
-                "candidate_hash": candidate_hash,
-                "route_hash": String(route["route_hash"]),
-                "generation": next_generation,
-                "destination_cell_index": -1,
-                "environment_cell_hash": "",
-                "evaluation_hash": "",
-                "shadow_fitness": -999.0,
-                "establishment_capacity": 0.0,
-                "establishment_probability": 0.0,
-                "establishment_gate": 1.0,
-                "eligible": false,
-                "reason": "OUT_OF_PATCH",
-            }
-            rejected["recruitment_event_hash"] = _recruitment_event_hash(rejected)
-            out.append(rejected)
-            continue
-        if destination_index < 0 or destination_index >= environment_cells.size():
+        var event_result := Par0Kernel.evaluate_recruitment_event(candidate, route, context)
+        if event_result.is_empty():
             return []
-        var env_cell: Dictionary = environment_cells[destination_index]
-        var observation := _environment_observation(env_cell, next_generation, candidate_hash)
-        if observation.is_empty():
-            return []
-        var evaluation_result := Shadow.evaluate_bundle_against_observation(candidate["child_bundle"], observation)
-        if not bool(evaluation_result.get("success", false)):
-            return []
-        var evaluation: Dictionary = evaluation_result["details"]
-        var fitness := float(evaluation["shadow_fitness"])
-        var establishment_capacity := float(evaluation["establishment_capacity"])
-        var resource_open := clampf(1.0 - float(env_cell["surface_water_fraction"]), 0.0, 1.0)
-        var probability := clampf(0.22 + 0.28 * fitness + 0.34 * establishment_capacity + 0.16 * resource_open, 0.02, 0.98)
-        var gate := _unit01("%s|recruit|%d|%d" % [String(candidate["child_bundle_checksum"]), next_generation, destination_index])
-        var eligible := float(env_cell["land_mask"]) >= 0.5 and gate < probability
-        var reason := "ELIGIBLE" if eligible else ("NON_LAND" if float(env_cell["land_mask"]) < 0.5 else "ESTABLISHMENT_FAIL")
-        var event := {
-            "candidate_hash": candidate_hash,
-            "route_hash": String(route["route_hash"]),
-            "generation": next_generation,
-            "destination_cell_index": destination_index,
-            "environment_cell_hash": String(env_cell["cell_hash"]),
-            "evaluation_hash": String(evaluation["shadow_result_hash"]),
-            "shadow_fitness": snappedf(fitness, 1e-9),
-            "establishment_capacity": snappedf(establishment_capacity, 1e-9),
-            "establishment_probability": snappedf(probability, 1e-9),
-            "establishment_gate": snappedf(gate, 1e-9),
-            "eligible": eligible,
-            "reason": reason,
-        }
-        event["recruitment_event_hash"] = _recruitment_event_hash(event)
+        var event: Dictionary = event_result
+        event["recruitment_event_hash"] = Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION)
         out.append(event)
     out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         return String(a["candidate_hash"]) < String(b["candidate_hash"])
@@ -423,45 +382,11 @@ func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictiona
     return out
 
 func _environment_observation(env_cell: Dictionary, next_generation: int, candidate_hash: String) -> Dictionary:
-    var sand := float(env_cell["soil_texture_sand"])
-    var clay := float(env_cell["soil_texture_clay"])
-    var texture := "sand" if sand >= 0.55 and sand >= clay else ("clay" if clay >= 0.38 else "loam")
-    var env := EnvironmentSample.create(
-        float(env_cell["east_m"]), float(env_cell["north_m"]),
-        float(env_cell["temperature_c"]), float(env_cell["soil_moisture"]),
-        float(env_cell["incident_light"]), 0.50,
-        clampf(float(env_cell["surface_water_fraction"]), 0.0, 1.0),
-        environment_seed,
-        "%s|field=%s|cell=%s" % [REVISION, environment_field_hash, String(env_cell["cell_hash"])]
-    )
-    if not bool(EnvironmentSample.validate(env).get("success", false)):
-        return {}
-    var obs := {
-        "schema": Shadow.SCHEMA,
-        "version": Shadow.VERSION,
-        "mode": Shadow.MODE,
-        "observation_id": "ls33/%d/%d/%s" % [next_generation, int(env_cell["index"]), candidate_hash.substr(0, 12)],
-        "world_time": float(next_generation),
-        "live_state_hash": String(env_cell["cell_hash"]),
-        "environment_sample": env,
-        "shadow_texture_proxy": texture,
-        "open_sunlight": float(env_cell["incident_light"]),
-        "canopy_adjusted_sunlight": float(env_cell["incident_light"]),
-    }
-    obs["observation_hash"] = _shadow_observation_hash(obs)
-    return obs
-
-func _shadow_observation_hash(observation: Dictionary) -> String:
-    return "|".join(PackedStringArray([
-        Shadow.SCHEMA, Shadow.VERSION, Shadow.MODE,
-        String(observation.get("observation_id", "")),
-        "%.9f" % float(observation.get("world_time", -1.0)),
-        String(observation.get("live_state_hash", "")),
-        String(Dictionary(observation.get("environment_sample", {})).get("checksum", "")),
-        String(observation.get("shadow_texture_proxy", "")),
-        "%.9f" % float(observation.get("open_sunlight", 0.0)),
-        "%.9f" % float(observation.get("canopy_adjusted_sunlight", 0.0)),
-    ])).sha256_text()
+    ## PERF1-PAR0: observation construction moved to the shared kernel.
+    var context := Par0Kernel.build_context(
+        SCHEMA, VERSION, REVISION,
+        environment_seed, environment_field_hash, environment_cells)
+    return Par0Kernel.build_observation(env_cell, context, next_generation, candidate_hash)
 
 func _materialize_recruits(candidates: Array[Dictionary], routes: Array[Dictionary], recruitment: Array[Dictionary], next_generation: int) -> Array[Dictionary]:
     var candidate_by_hash := {}
