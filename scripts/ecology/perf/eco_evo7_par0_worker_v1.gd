@@ -14,6 +14,7 @@ extends SceneTree
 ##     lifetime so no orphan worker outlives its coordinator session.
 
 const Kernel = preload("res://scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd")
+const Par3Kernel = preload("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
 const Transport = preload("res://scripts/ecology/perf/eco_evo7_par0_transport_v1.gd")
 
 const IDLE_LIFETIME_MS := 1_800_000
@@ -120,6 +121,13 @@ func _evaluate_job(job_id: String, started: int) -> Dictionary:
 		return _error_response(job_id, "PROTOCOL_MISMATCH")
 	if String(payload.get("job_id", "")) != job_id:
 		return _error_response(job_id, "JOB_ID_MISMATCH")
+	## PAR3 minimal protocol extension: a payload may carry
+	## "phase": "CANDIDATE_BUILD" — items are canonical parent records and
+	## the worker builds candidates through the SAME pure kernel as the
+	## serial coordinator. Payloads without a phase keep the frozen PAR0
+	## recruitment semantics untouched.
+	if String(payload.get("phase", "")) == "CANDIDATE_BUILD":
+		return _evaluate_candidate_build(job_id, payload, started)
 	if _context.is_empty():
 		return _error_response(job_id, "NO_SETUP")
 	var items_value = payload.get("items")
@@ -159,6 +167,46 @@ func _evaluate_job(job_id: String, started: int) -> Dictionary:
 	}
 	_jobs_done += 1
 	return response
+
+func _evaluate_candidate_build(job_id: String, payload: Dictionary, started: int) -> Dictionary:
+	## PAR3 CANDIDATE_BUILD phase: items are canonical parent records; the
+	## deterministic orchestration lives in the shared pure kernel (mutation
+	## seed, reproduce_bundle, fields, candidate_hash). Worker identity,
+	## scheduling and timing never enter the candidates.
+	var parents_value = payload.get("items")
+	if not parents_value is Array:
+		return _error_response(job_id, "PARENTS_INVALID")
+	var parents: Array = parents_value
+	var generation := int(payload.get("generation", -1))
+	var evolution_seed := int(payload.get("evolution_seed", 0))
+	var schema := String(payload.get("schema", ""))
+	var version := String(payload.get("version", ""))
+	var offspring_per_parent := int(payload.get("offspring_per_parent", 0))
+	if generation < 1 or schema.is_empty() or version.is_empty() or offspring_per_parent < 1:
+		return _error_response(job_id, "CANDIDATE_BUILD_PARAMS_INVALID")
+	var candidates := Par3Kernel.build_all(
+		parents, generation, schema, version, evolution_seed, offspring_per_parent)
+	if candidates.is_empty():
+		return _error_response(job_id, "CANDIDATE_BUILD_FAILED")
+	var input_keys := PackedStringArray()
+	for parent_value in parents:
+		input_keys.append(String(Dictionary(parent_value).get("record_id", "")))
+	var candidate_hashes := PackedStringArray()
+	for candidate in candidates:
+		candidate_hashes.append(String(candidate.get("candidate_hash", "")))
+	return {
+		"protocol_version": Transport.PROTOCOL_VERSION,
+		"job_id": job_id,
+		"generation": generation,
+		"worker_index": _worker_index,
+		"phase": "CANDIDATE_BUILD",
+		"input_hash": "|".join(input_keys).sha256_text(),
+		"result_count": candidates.size(),
+		"parent_count": parents.size(),
+		"events": candidates,
+		"result_hash": "|".join(candidate_hashes).sha256_text(),
+		"worker_compute_us": Time.get_ticks_usec() - started,
+	}
 
 func _error_response(job_id: String, code: String) -> Dictionary:
 	return {

@@ -14,6 +14,10 @@ const Lattice = preload("res://scripts/ecology/shadow/eco_evo7_ls32_spatial_coho
 const EnvironmentField = preload("res://scripts/ecology/shadow/eco_evo7_ls31_environment_field_v1.gd")
 const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
 const Par0Kernel = preload("res://scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd")
+## PAR3: the single pure candidate kernel owns mutation-seed derivation, the
+## reproduce_bundle call, the candidate field layout and candidate_hash.
+## Serial and parallel candidate generation share this ONE implementation.
+const Par3CandidateKernel = preload("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_dispersal_recruitment.v1"
 const VERSION := "1.0.0"
@@ -66,6 +70,14 @@ var last_profile: Dictionary = {}
 var _recruitment_executor = null
 var _dual_executor_calls := 0
 var _last_dual_meta: Dictionary = {}
+## PAR3: injectable candidate-build executor. Absent (null) -> the default
+## SERIAL candidate path through the single pure kernel. Present -> the
+## executor owns parallel candidate construction (fail-closed: any executor
+## failure yields an empty candidate list and the generation commits
+## nothing). Injection is explicit; no environment variable activates it.
+var _candidate_executor = null
+var _candidate_executor_calls := 0
+var _last_candidate_meta: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -127,6 +139,22 @@ func clear_recruitment_executor() -> void:
 
 func has_recruitment_executor() -> bool:
     return _recruitment_executor != null
+
+## PAR3 candidate-build seam. The executor must implement
+## build_candidates(parents, generation) -> Dictionary with "success" and
+## "candidates" (canonically sorted by candidate_hash). Domain code never
+## spawns worker processes itself.
+func set_candidate_executor(executor) -> bool:
+    if executor == null:
+        return false
+    _candidate_executor = executor
+    return true
+
+func clear_candidate_executor() -> void:
+    _candidate_executor = null
+
+func has_candidate_executor() -> bool:
+    return _candidate_executor != null
 
 func step_generation() -> Dictionary:
     if not initialized or not evolution_enabled or records.is_empty():
@@ -203,6 +231,9 @@ func step_generation() -> Dictionary:
     ## failure evidence). Never enters snapshot or any canonical hash.
     if not _last_dual_meta.is_empty():
         last_profile.merge(_last_dual_meta, true)
+    ## PAR3: non-canonical candidate-build telemetry (never hashed).
+    if not _last_candidate_meta.is_empty():
+        last_profile.merge(_last_candidate_meta, true)
     return snapshot
 
 func get_last_profile() -> Dictionary:
@@ -283,38 +314,41 @@ func _founder_reproductive_identity(source_record: Dictionary, bundle: Dictionar
     ]).sha256_text().substr(0, 24)
 
 func _build_candidates(parents: Array[Dictionary], next_generation: int) -> Array[Dictionary]:
-    var out: Array[Dictionary] = []
-    var ordered := parents.duplicate(true)
-    ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        return String(a["record_id"]) < String(b["record_id"])
-    )
-    for parent_value in ordered:
-        var parent: Dictionary = parent_value
-        var parent_bundle: Dictionary = parent["hereditary_bundle"]
-        for offspring_ordinal in OFFSPRING_PER_PARENT:
-            var mutation_seed := _mutation_seed(parent, next_generation, offspring_ordinal)
-            var reproduction := _canonical_reproduce(parent_bundle, mutation_seed, offspring_ordinal)
-            if reproduction.is_empty():
+    ## PAR3: the single pure kernel owns the deterministic orchestration
+    ## (mutation seed, reproduce_bundle call, fields, candidate_hash); the
+    ## serial loop, formulas and ordering are unchanged. When a candidate
+    ## executor is injected, it owns construction through the SAME kernel in
+    ## parallel workers; every failure is fail-closed (empty result -> the
+    ## generation commits nothing).
+    if _candidate_executor != null:
+        _candidate_executor_calls += 1
+        var par3_result: Dictionary = _candidate_executor.build_candidates(parents, next_generation)
+        _last_candidate_meta = {
+            "candidate_build_mode": "PAR3_PARALLEL",
+            "candidate_executor_calls": _candidate_executor_calls,
+            "canonical_source": String(par3_result.get("canonical_source", "")),
+            "comparison_passed": bool(par3_result.get("comparison_passed", false)),
+        }
+        if not bool(par3_result.get("success", false)):
+            _last_candidate_meta["failure_code"] = String(par3_result.get("failure_code", "PAR3_CANDIDATE_EXECUTOR_FAILURE"))
+            last_profile.merge(_last_candidate_meta, true)
+            return []
+        var parallel_candidates_value = par3_result.get("candidates", [])
+        if not parallel_candidates_value is Array or (parallel_candidates_value as Array).size() != parents.size() * OFFSPRING_PER_PARENT:
+            _last_candidate_meta["failure_code"] = "PAR3_CANDIDATE_COUNT_MISMATCH"
+            last_profile.merge(_last_candidate_meta, true)
+            return []
+        var out_parallel: Array[Dictionary] = []
+        for candidate_value in parallel_candidates_value:
+            if not candidate_value is Dictionary:
+                _last_candidate_meta["failure_code"] = "PAR3_CANDIDATE_TYPE_INVALID"
+                last_profile.merge(_last_candidate_meta, true)
                 return []
-            var child_bundle: Dictionary = Dictionary(reproduction["bundle"]).duplicate(true)
-            var candidate := {
-                "parent_record_id": String(parent["record_id"]),
-                "parent_reproductive_identity": String(parent["reproductive_identity"]),
-                "parent_cell_index": int(parent["cell_index"]),
-                "generation": next_generation,
-                "offspring_ordinal": offspring_ordinal,
-                "mutation_seed": mutation_seed,
-                "reproduction_result_hash": String(reproduction["result_hash"]),
-                "child_bundle_checksum": String(child_bundle["bundle_checksum"]),
-                "child_individual_id": String(Dictionary(child_bundle["lineage"])["individual_id"]),
-                "child_bundle": child_bundle,
-            }
-            candidate["candidate_hash"] = _candidate_hash(candidate)
-            out.append(candidate)
-    out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        return String(a["candidate_hash"]) < String(b["candidate_hash"])
-    )
-    return out
+            out_parallel.append(candidate_value)
+        return Par3CandidateKernel.sort_candidates(out_parallel)
+    _last_candidate_meta = {}
+    return Par3CandidateKernel.build_all(
+        parents, next_generation, SCHEMA, VERSION, evolution_seed, OFFSPRING_PER_PARENT)
 
 func _canonical_reproduce(parent_bundle: Dictionary, mutation_seed: int, offspring_ordinal: int) -> Dictionary:
     ## The only LS3.3 offspring creation call site. No alternate mutation kernel.
@@ -704,6 +738,10 @@ func _reset() -> void:
     _recruitment_executor = null
     _dual_executor_calls = 0
     _last_dual_meta = {}
+    ## PAR3: same isolation for the candidate-build executor.
+    _candidate_executor = null
+    _candidate_executor_calls = 0
+    _last_candidate_meta = {}
     cell_size_m = 0.0
     evolution_seed = 0
     source_patch_hash = ""

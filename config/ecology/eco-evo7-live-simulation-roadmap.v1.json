@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-29-R7",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R8",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF1",
+  "current_checkpoint": "ECO.EVO7/PAR3",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -64,12 +64,51 @@
     {
       "id": "PERF1",
       "name": "Generation Stage Profiling",
-      "status": "IMPLEMENTATION_CANDIDATE"
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PAR0",
+      "name": "Deterministic Parallel Recruitment Prototype (process pool)",
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PAR0.2",
+      "name": "Dual Serial+Parallel Recruitment Verification",
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PLAY0.FINAL",
+      "name": "Live Planet Playground R2",
+      "status": "ACCEPTED",
+      "head": "1e512b834a85ec985c270529686c4197f6df8042"
+    },
+    {
+      "id": "PAR1",
+      "name": "Parallel Backend Selection",
+      "status": "LOCAL_CANDIDATE",
+      "detail": "AWAITING_EXTERNAL_REVIEW; selected PROCESS_POOL; head d70473f0f446488a89b3e83ec9b3b49fe64ce7aa; draft PR #319"
+    },
+    {
+      "id": "PAR2",
+      "name": "Parallel-Only Recruitment with Bounded Audits",
+      "status": "LOCAL_CANDIDATE",
+      "detail": "BLOCKED_PENDING_PAR1_FORMAL_ACCEPTANCE; head 499797653373bf7fa009a99652c2db4a8429ac8c; draft PR #320"
+    },
+    {
+      "id": "PAR3",
+      "name": "Parallel Deterministic Candidate Reproduction",
+      "status": "LOCAL_CANDIDATE",
+      "detail": "BLOCKED_PENDING_PAR2_FORMAL_ACCEPTANCE; single pure candidate kernel + process CANDIDATE_BUILD phase"
+    },
+    {
+      "id": "STREAM1",
+      "name": "Next stage after PAR3 acceptance",
+      "status": "AFTER_PAR3_ACCEPTANCE"
     },
     {
       "id": "LS4",
       "name": "Next ecology complexity stage",
-      "status": "AFTER_PERF1_PROFILE_DECISION"
+      "status": "AFTER_PAR3_ACCEPTANCE"
     }
   ],
   "ls3_final": {
