@@ -238,3 +238,188 @@ numerical dissipation = 1024/49
 4. nonlinear unknown-machine experiments: saturation, diode-like one-way law, nonlinear spring, friction/contact precursor.
 
 Production promotion пока не заявляется. PR остаётся Draft.
+
+
+## FABRIC0.5 — NONLINEAR LAW + DIMENSIONS
+
+**Parent research head:** `d67e8c4887f176f451c3bb1206f545375af60019`  
+**Design:** `docs/research/FABRIC0_5_NONLINEAR_DIMENSIONS_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v5-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- nonlinear + dimensions focused acceptance: `86/86 PASS`;
+- V3 predecessor compatibility: `78/78 PASS`;
+- historical FABRIC0.4 acceptance: `89/89 PASS`;
+- historical V2 compatibility: `49/49 PASS`;
+- playground: `FABRIC0_5_NONLINEAR_DIMENSIONS_PLAYGROUND_PASS`;
+- editor parse/compile scan: CLEAN;
+- all five V3 executable files are byte-identical between local tested files and GitHub branch by Git blob SHA.
+
+### Dimension contract
+
+V3 introduces seven-base SI exponent algebra:
+
+```text
+L M T I Theta N J
+```
+
+Every physical domain must satisfy:
+
+```text
+common_dimension * balance_dimension = power_dimension
+```
+
+Examples proven:
+
+```text
+voltage * current         = power
+torque * angular_velocity = power
+force * velocity          = power
+pressure * volume_flow    = power
+```
+
+Invalid domain `voltage × torque` is rejected as `DOMAIN_NOT_POWER_CONJUGATE`.
+
+Power Map coefficients now carry explicit dimensions. Hidden relation `V - 2*omega = 0` with dimensionless `2` is rejected; the conversion coefficient must explicitly carry `voltage/angular_velocity` dimension.
+
+### Generic nonlinear law
+
+New primitive:
+
+```text
+nonlinear_constitutive
+```
+
+accepts dimension-checked residual expressions:
+
+```text
+F(common, balance, parameters) = 0
+```
+
+Expression language includes add/sub/mul/div, integer powers, exp and tanh. Jacobian is produced automatically through forward-mode differentiation.
+
+### Nonlinear evidence
+
+**Diode-like exponential law**
+
+```text
+I + Is*(exp(V/Vscale)-1) = 0
+bias = +3 A
+V = ln(4) = 1.3862943611198906
+I = -3
+Newton iterations = 5
+```
+
+**Smooth saturation**
+
+```text
+I - Imax*tanh((Vpreferred-V)/width) = 0
+common = 1.9902990904610843
+balance = 1.9902990904610843
+limit = 2
+Newton iterations = 4
+```
+
+**Cubic rotational drag**
+
+```text
+torque + k*omega^3 = 0
+drive = +3
+omega = 1.4422495703074083
+drag torque = -3
+Newton iterations = 6
+```
+
+No Diode / Saturation / CubicDrag kernel classes exist.
+
+### Dimensioned mixed-domain Power Map survives V3
+
+Correct dimensioned relation:
+
+```text
+V - k*omega = 0
+dimension(k) = voltage / angular_velocity
+```
+
+gives:
+
+```text
+V       = 32/3
+omega   = 16/3
+current = -8/3
+torque  = +16/3
+P_map   = 0
+```
+
+### Fail-closed nonlinear solver
+
+Bounded damped Newton contract:
+
+```text
+max Newton iterations = 48
+max line-search steps  = 16
+```
+
+Residuals use explicit nominal scaling.
+
+A crucial compatibility finding was fixed: `F(x)=0` alone is not proof of a unique physical state. Solver now also requires a nonsingular tangent Jacobian at convergence.
+
+Therefore floating underdetermined physics remains:
+
+```text
+SINGULAR_FLOATING_ISLAND
+```
+
+and impossible nonlinear law such as:
+
+```text
+balance^2 + 1 A^2 = 0
+```
+
+fails closed as:
+
+```text
+NEWTON_SINGULAR_JACOBIAN
+```
+
+### Главный вывод FABRIC0.5
+
+> Physical laws are now executable, dimension-checked residuals rather than device-specific code.
+
+FABRIC now has a coherent research chain:
+
+```text
+topology
+→ Conservation Cells
+→ power-conjugate domains
+→ Power Maps
+→ storage
+→ dimension algebra
+→ nonlinear residual laws
+→ automatic Jacobian
+→ bounded equation solve
+```
+
+### Следующая фундаментальная граница
+
+`FABRIC0.6 NONSMOOTH WORLD`
+
+Smooth nonlinear equations are now proven. Next research wall is inequalities, complementarity and event surfaces:
+
+```text
+hard contact
+Coulomb friction
+hard diode / check valve
+one-way clutch
+tension-only cable
+compression-only support
+yield / break
+hysteresis
+```
+
+The goal is again to express these as generic mathematical contracts rather than object classes.
+
+Production promotion is still not requested. PR remains Draft.
