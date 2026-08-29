@@ -366,7 +366,7 @@ func toggle_mode() -> String:
 func toggle_player_camera() -> String:
 	if not ready_success or player == null or mode != MODE_GROUND:
 		return player.get_camera_mode() if player != null else ""
-	var camera_mode := player.toggle_camera_mode()
+	var camera_mode: String = player.toggle_camera_mode()
 	_refresh_hud_text()
 	return camera_mode
 
@@ -397,11 +397,12 @@ func _enter_spectator() -> void:
 	# Keep the same shape/name and the same semantic boundary here instead of
 	# inventing another character-presentation contract.
 	_ensure_spectator_body_visual()
-	_spectator_body_visual.visible = true
-	_update_spectator_body_visual()
-
 	spectator.activate(camera_transform)
+	# Mode must be SPECTATOR before the visual update: the updater derives
+	# visibility from the current mode, and the detached figure must be
+	# visible in the same frame the spectator detaches.
 	mode = MODE_SPECTATOR
+	_update_spectator_body_visual()
 
 
 func _enter_ground_from_spectator() -> void:
