@@ -5,7 +5,7 @@ const Experiments = preload("res://scripts/research/fabric0/fabric0_experiments_
 
 func _init() -> void:
 	print("=== FABRIC0 LOW-LEVEL PLAYGROUND ===")
-	print("No Lamp, Motor, Fuse or Tank runtime classes exist here; only generic local laws and typed bonds.\n")
+	print("No Lamp, Motor, Fuse, Tank, Thermostat or Door runtime classes exist here; only generic local laws and typed bonds.\n")
 
 	var lamp := Experiments.build_switchable_lamp()
 	Kernel.settle(lamp)
@@ -28,15 +28,36 @@ func _init() -> void:
 	print("    after overload:  components=%d receiver=%.1f bond_active=%s" % [Kernel.connected_components(breaker).size(), Kernel.read_input(breaker, "receiver"), str(Kernel.is_bond_active(breaker, "weak_bond"))])
 
 	var tank := Experiments.build_auto_fill_tank()
-	print("\n[4] CLOSED LOOP FROM THE SAME PRIMITIVES")
-	for tick in range(8):
+	print("\n[4] SAME FEEDBACK PATTERN: TANK")
+	for tick in range(6):
 		Kernel.step(tank)
-		print("    tick %d: level=%.1f valve_flow=%.1f control=%.0f" % [
+		print("    tick %d: level=%.1f flow=%.1f control=%.0f" % [
 			tick + 1,
-			float(Kernel.read_state(tank, "tank", "value")),
-			Kernel.read_output(tank, "valve"),
-			Kernel.read_output(tank, "level_switch"),
+			float(Kernel.read_state(tank, "store", "value")),
+			Kernel.read_output(tank, "gate"),
+			Kernel.read_output(tank, "controller"),
 		])
-	print("\n    deterministic state hash: %s" % Kernel.state_hash(tank))
+
+	var heater := Experiments.build_regulated_heater()
+	print("\n[5] SAME FEEDBACK PATTERN: HEATER")
+	for tick in range(6):
+		Kernel.step(heater)
+		print("    tick %d: temperature=%.1f rate=%.1f control=%.0f" % [
+			tick + 1,
+			float(Kernel.read_state(heater, "store", "value")),
+			Kernel.read_output(heater, "gate"),
+			Kernel.read_output(heater, "controller"),
+		])
+
+	var door := Experiments.build_proximity_door()
+	Kernel.step(door)
+	print("\n[6] CONTROL + STATE: PROXIMITY DOOR")
+	print("    no proximity -> position=%.1f" % float(Kernel.read_state(door, "position", "value")))
+	Kernel.set_source_value(door, "proximity", 1.0)
+	Kernel.step(door)
+	Kernel.step(door)
+	print("    proximity=1 -> position=%.1f" % float(Kernel.read_state(door, "position", "value")))
+
+	print("\n    deterministic tank hash: %s" % Kernel.state_hash(tank))
 	print("\nFABRIC0_PLAYGROUND_PASS")
 	quit(0)
