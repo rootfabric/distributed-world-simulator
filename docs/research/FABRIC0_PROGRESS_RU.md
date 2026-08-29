@@ -38,9 +38,7 @@
 
 ## FABRIC0.3 — Conservation Cell
 
-**Parent research head:** `6852d9f04c4403dda83f81895176be8a90eaaca1`  
-**Implementation start commit:** `ee7a643f3efec07804bbff96590616c7adcb7478`  
-**Evidence commit:** `93ac63d1f2680380d629993e50e26435a9868bf8`  
+**Historical research head:** `59b181b2fe215f84976cfbcc094108070f22dd46`  
 **Design:** `docs/research/FABRIC0_3_CONSERVATION_CELL_RU.md`  
 **Evidence:** `validation/fabric0-compositional-world-fabric-v3-validation.json`  
 **Result:** `PASS_RESEARCH_ONLY`.
@@ -48,60 +46,195 @@
 Validation:
 
 - FABRIC0.3 focused acceptance: `119/119 PASS`;
-- FABRIC0.3 playground: `FABRIC0_3_CONSERVATION_PLAYGROUND_PASS`;
-- error scan: CLEAN;
+- playground: `FABRIC0_3_CONSERVATION_PLAYGROUND_PASS`;
 - editor parse/compile scan: CLEAN;
 - previous FABRIC0.2 regression: `70/70 PASS`.
 
-Новая архитектурная форма:
+Главный результат:
 
-- physical ports больше не обязаны иметь causal input/output direction;
 - active bond topology автоматически компилируется в Conservation Cells;
 - domain объявляет пару `common_quantity × balance_quantity = power`;
-- внутри cell common quantity одинакова;
+- common quantity одинакова внутри cell;
 - balance quantities суммируются в ноль;
-- local constitutive laws stamp-ятся в equation island;
-- ideal common constraints получают неизвестную реакцию через Lagrange multiplier;
-- source/sink role определяется знаком solved balance, а не типом устройства;
-- multi-cell coupler переносит interaction между cells;
-- topology split/merge перекомпилирует equations и после восстановления topology возвращает тот же canonical state hash.
+- source/sink role возникает из solved sign;
+- topology split/merge перекомпилирует equations;
+- impossible/floating physics fail closed;
+- один solver работает в electrical-like и rotational domains.
 
-Ключевые опыты:
+## FABRIC0.4 — POWER MAP / mixed-domain living machine
 
-1. Two-source cell:
-   `common=5`, balances `+14,+1,-15`, power `+70,+5,-75`.
-2. Topology mutation:
-   `1 cell -> 2 cells -> 1 cell`, canonical state restored.
-3. Role reversal:
-   weak source при `common=8` получает balance `-4` и становится consumer без смены класса.
-4. Ideal constraint:
-   `common=10`, реакция ideal port `+30`.
-5. Impossible physics:
-   conflicting ideal constraints -> `CONSTRAINT_CONFLICT`.
-6. Floating physics:
-   unconstrained difference network -> `SINGULAR_FLOATING_ISLAND`.
-7. Two-cell bridge:
-   `9.6 -> 4.8`, coupler absorbed power `23.04`.
-8. Cross-domain reuse:
-   rotational domain использует те же cell semantics:
-   `omega=6.666666...`, torque `+6.666666.../-6.666666...`.
+**Parent research head:** `59b181b2fe215f84976cfbcc094108070f22dd46`  
+**Design:** `docs/research/FABRIC0_4_POWER_MAP_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v4-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
 
-Главный вывод:
+### Validation
 
-> topology теперь не просто соединяет вычислительные элементы — topology компилируется в физические уравнения.
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- Power Map focused acceptance: `89/89 PASS`;
+- V2 Conservation compatibility acceptance: `49/49 PASS`;
+- playground: `FABRIC0_4_POWER_MAP_PLAYGROUND_PASS`;
+- editor parse/compile scan: CLEAN;
+- error scan: CLEAN;
+- all five tested executable files are byte-identical between local test inputs and GitHub branch by Git blob SHA.
 
-Production promotion по-прежнему не заявляется. Текущий numerical backend линейный и dense; units пока metadata; dynamic storage, nonlinear laws, sparse solve и cross-domain power-preserving transforms остаются следующими research gates.
+### Новая архитектурная форма
+
+FABRIC0.4 вводит research successor:
+
+`scripts/research/fabric0/fabric0_conservation_fabric_v2.gd`
+
+FABRIC0.3 v1 не переписан и остаётся historical evidence.
+
+Power Map определяется как homogeneous constraint subspace:
+
+```text
+A q = 0
+b = -A^T lambda
+```
+
+Отсюда:
+
+```text
+P = q^T b
+  = -(A q)^T lambda
+  = 0
+```
+
+Power preservation становится свойством формы связи, а не специальной логикой устройства.
+
+### P1 — motor-like machine без Motor
+
+Состав:
+
+```text
+electrical-like equilibrium terminal
+        ↓
+Power Map: V - 2*omega = 0
+        ↓
+rotational generic storage J=2
+        ↓
+rotational drag
+```
+
+Наблюдаемая speed history:
+
+```text
+4.571428571
+5.442176871
+5.608033690
+5.639625465
+5.645642946
+5.646789133
+```
+
+На первом шаге:
+
+- `V=64/7`;
+- `omega=32/7`;
+- map current `-40/7`;
+- map torque `+80/7`;
+- map absorbed power `0`;
+- cell power residual `0`;
+- total absorbed power `0`.
+
+### P2 — open electrical topology
+
+После разрыва supply bond:
+
+```text
+omega: 5.646789133 -> 4.517431306
+V_open = 9.034862612
+I_open = 0
+tau_map = 0
+```
+
+То есть появляется back-EMF-like common state без current и без map reaction torque; storage замедляется только от drag.
+
+### P3 — reverse generator mode
+
+Та же Power Map, но энергия приходит с rotational side:
+
+```text
+V = 20/3
+omega = 10/3
+map current = +20/3
+map torque = -40/3
+```
+
+Electrical load поглощает `400/9`, shaft drive отдаёт `400/9`, Power Map поглощает `0`.
+
+Motor/generator direction стала solved state, а не отдельным device class.
+
+### P4 — differential без Differential
+
+Три rotational ports и одна relation:
+
+```text
+omega_left + omega_right - 2*omega_carrier = 0
+```
+
+Результат:
+
+```text
+omega_left    = 24/7
+omega_right   = 12/7
+omega_carrier = 18/7
+
+torque_left    = +24/7
+torque_right   = +24/7
+torque_carrier = -48/7
+```
+
+Power Map absorbed power = `0`.
+
+Один generic Power Map выразил motor-like transduction, reverse generator behavior и open-differential-like kinematics без kernel classes Motor / Generator / Gearbox / Differential.
+
+### Generic dynamic storage
+
+Добавлен `linear_storage_terminal`:
+
+```text
+balance = (capacity / dt) * (previous_common - common)
+```
+
+Для квадратичного storage:
+
+```text
+H = 0.5 * capacity * common^2
+```
+
+Backward-Euler numerical dissipation не скрывается:
+
+```text
+absorbed_work
+=
+delta_stored_energy
++
+numerical_dissipation
+```
+
+На первом machine-step:
+
+```text
+delta energy          = 1024/49
+absorbed work         = 2048/49
+numerical dissipation = 1024/49
+```
+
+### Главный вывод FABRIC0.4
+
+> Объект всё больше становится устойчивым pattern topology + constitutive laws + stored state + power constraints, а не исполняемым классом движка.
 
 ### Следующая фундаментальная граница
 
-`FABRIC0.4 POWER MAP`:
+`FABRIC0.5 NONLINEAR LAW + UNIT/DIMENSION CONTRACT`
 
-соединить два разных conservation domains универсальным power-preserving multi-port law:
+Цель:
 
-`electrical-like <-> rotational`
+1. generic nonlinear residual/Jacobian constitutive law;
+2. формальная dimension algebra для physical domains и Power Map coefficients;
+3. fail-closed dimensional mismatch;
+4. nonlinear unknown-machine experiments: saturation, diode-like one-way law, nonlinear spring, friction/contact precursor.
 
-с требованием:
-
-`P_left + P_right + P_loss = 0`
-
-и собрать motor-like machine без kernel-класса Motor.
+Production promotion пока не заявляется. PR остаётся Draft.
