@@ -323,6 +323,8 @@ Repair Map: PR #291. Bounded M5 harness repair: PR #292 @ `8c44ea1a...`. Linux e
 
 R5 observability proved a mutual `WAIT_CONVERGENCE_PEER` deadlock: both clients independently exhausted the full 150s stage timeout and self-exited code 1 while parent-side release coordination had already reported success.
 
-R6: PR #303 / #304. Exact implementation `796a84f097f54b009e9745353a28a294f2937a70`, tree `5c064747589f298cc35b8f33a66a4ba55ac833c5`.
+R6: PR #303 / #304. Exact implementation `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8`, tree `72192fd30c66df974b669ed38f47de353cdeee6c`.
 
 Convergence pair matching is now parent-owned; consumed release is monotonic; post-release regression fails explicitly; completed convergence survives expected teardown drift. B6/B7 remain BLOCKED pending decisive Windows validation.
+
+R6 final exact target: `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8` / `72192fd30c66df974b669ed38f47de353cdeee6c`. Convergence timeout evidence now names `WAIT_CONVERGENCE_COORDINATOR`, not the removed peer-wait stage.
