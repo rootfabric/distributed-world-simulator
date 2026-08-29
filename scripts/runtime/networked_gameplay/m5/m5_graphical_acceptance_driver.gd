@@ -70,8 +70,14 @@ func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
 func _process(_delta: float) -> void:
 	if _finished:
 		return
-	if Time.get_ticks_msec() - _started_ms > TIMEOUT_MS:
-		_fail("M5_ACCEPTANCE_TIMEOUT", {"stage": _stage})
+	var now_ms := Time.get_ticks_msec()
+	var stage_elapsed_ms := now_ms - _stage_started_ms
+	if stage_elapsed_ms > TIMEOUT_MS:
+		_fail("M5_ACCEPTANCE_TIMEOUT", {
+			"stage": _stage,
+			"stage_elapsed_ms": stage_elapsed_ms,
+			"total_elapsed_ms": now_ms - _started_ms,
+		})
 		return
 	var runtime = _runtime()
 	var shell = _shell(runtime)
