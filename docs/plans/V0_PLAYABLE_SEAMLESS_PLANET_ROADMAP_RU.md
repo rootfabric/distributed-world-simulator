@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 repair R3 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 diagnostic R4 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -348,3 +348,13 @@ Windows R2 passed 2 runs and failed run 3 at ~164.4s with historical `M5_ACCEPTA
 R3 Repair Map: PR #295. R3 implementation: PR #296 @ `17801cecab4861683bd0d0ee4eabbd1186ba7164`, tree `944543e15718d1d427edb35be78446bee7659e43`.
 
 Timeout value is unchanged; only clock scope is corrected. B6/B7 remain blocked until Windows 10/10 M5 stability and then one canonical full regression first-attempt PASS.
+
+### M5 R4 child-exit observability
+
+R3 exact candidate `17801cecab4861683bd0d0ee4eabbd1186ba7164` remains the preserved failed subject. Windows R3 first run failed in ~20.3s because A2 disappeared before first result JSON; no rerun and no canonical full regression were performed.
+
+Earlier AppHang attribution is withdrawn: WER events do not overlap the gate window. R4 is therefore diagnostic-only and targets termination origin.
+
+R4 Repair Map: PR #299. Diagnostic implementation: PR #300 @ `ba5e1509f078b4b7599f9390da7df819b7340c4d`, tree `471f86dc3d69fcef5bf50e89cdc80ff909798b24`.
+
+R4 captures direct stdout/stderr, actual child exit code, parent-kill attribution, first-death wait label and last result/control snapshots. It does not claim to fix correctness. B6/B7 stay blocked until diagnostic evidence identifies the next legal repair.
