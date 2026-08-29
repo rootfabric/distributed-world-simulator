@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 correctness R6 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 correctness R7 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -382,3 +382,15 @@ R6 делает parent единственным pair matcher, убирает pee
 Pure convergence monotonicity regression включён в `RUN_NETWORK_CONTRACT_TESTS.ps1`. B6/B7 остаются BLOCKED до Windows contracts + pure regression + pipe smoke + 10/10 stability; только затем допустим один canonical full regression first attempt.
 
 R6 final validation target after stage-name cleanup: `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8`, tree `72192fd30c66df974b669ed38f47de353cdeee6c`; obsolete `WAIT_CONVERGENCE_PEER` stage name removed in favor of `WAIT_CONVERGENCE_COORDINATOR`.
+
+### M5 R7 pinned observed-state identity
+
+Windows R6 decisive gate: runs 1–5 PASS, run 6 FAIL с `M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED / CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE`. Оба клиента увидели одинаковый новый player checksum, Item Graph остался стабильным.
+
+Root cause: `PlayerStateSnapshot.checksum` включает live `revision`, `server_tick`, position, velocity и player state revision; это observed-state identity, а не неподвижный convergence key.
+
+R7 Repair Map: PR #305. Implementation: PR #306 @ `baa0e192209e72aba5ae9d04663eea85b1099e82`, tree `08f01fd955c2d31c1ad49aa917e542c93e278241`.
+
+R7 пинит exact snapshot identity (checksum + revision + server_tick + authority owner/epoch) при PREPARE. После exact PREPARE live player state может двигаться только вперёд; revision/tick regression, authority change, control mutation и Item Graph drift остаются fail-closed.
+
+Без freeze, retry, timeout inflation и без изменений transport/player movement/PlayerStateSnapshot/SM1 runtime. B6/B7 остаются BLOCKED до Windows contracts + pure regression + pipe smoke + 10/10 stability; затем допустим один canonical full regression first attempt.
