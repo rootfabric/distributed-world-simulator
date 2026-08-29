@@ -70,6 +70,7 @@ static func evaluate_prepared_release(
 	current_item_checksum: String
 ) -> Dictionary:
 	var control_id := String(control_prepare.get("id", "")).strip_edges()
+	var control_player_checksum := String(control_prepare.get("player_checksum", ""))
 	var control_observation: Dictionary = Dictionary(control_prepare.get("player_observation", {}))
 	var control_item_checksum := String(control_prepare.get("item_checksum", ""))
 	var prepared_player_checksum := String(prepared_player_observation.get("checksum", ""))
@@ -78,7 +79,11 @@ static func evaluate_prepared_release(
 		return _client_decision(CLIENT_REVOKE, "PREPARED_TARGET_INCOMPLETE", current_player_checksum, current_item_checksum)
 	if control_id != prepared_id:
 		return _client_decision(CLIENT_REVOKE, "PREPARE_GENERATION_CHANGED", current_player_checksum, current_item_checksum)
-	if not observations_identical(control_observation, prepared_player_observation) or control_item_checksum != prepared_item_checksum:
+	if (
+		control_player_checksum != prepared_player_checksum
+		or not observations_identical(control_observation, prepared_player_observation)
+		or control_item_checksum != prepared_item_checksum
+	):
 		return _client_decision(CLIENT_REVOKE, "PREPARE_TARGET_CHANGED", current_player_checksum, current_item_checksum)
 	if current_item_checksum.is_empty() or current_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_REVOKE, "ITEM_GRAPH_ADVANCED_AFTER_PREPARE", current_player_checksum, current_item_checksum)
@@ -101,8 +106,10 @@ static func evaluate_consumed_release_integrity(
 	current_item_checksum: String
 ) -> Dictionary:
 	var control_id := String(control_prepare.get("id", "")).strip_edges()
+	var control_player_checksum := String(control_prepare.get("player_checksum", ""))
 	var control_observation: Dictionary = Dictionary(control_prepare.get("player_observation", {}))
 	var control_item_checksum := String(control_prepare.get("item_checksum", ""))
+	var prepared_player_checksum := String(prepared_player_observation.get("checksum", ""))
 	var current_player_checksum := String(current_player_observation.get("checksum", ""))
 	if consumed_id.is_empty():
 		return _client_decision(CLIENT_FAIL_RELEASE, "CONSUMED_GENERATION_EMPTY", current_player_checksum, current_item_checksum)
@@ -110,7 +117,11 @@ static func evaluate_consumed_release_integrity(
 		return _client_decision(CLIENT_FAIL_RELEASE, "CONTROL_GENERATION_REGRESSED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
 	if String(release_id).strip_edges() != consumed_id:
 		return _client_decision(CLIENT_FAIL_RELEASE, "RELEASE_ID_REGRESSED_AFTER_CONSUMPTION", current_player_checksum, current_item_checksum)
-	if not observations_identical(control_observation, prepared_player_observation) or control_item_checksum != prepared_item_checksum:
+	if (
+		control_player_checksum != prepared_player_checksum
+		or not observations_identical(control_observation, prepared_player_observation)
+		or control_item_checksum != prepared_item_checksum
+	):
 		return _client_decision(CLIENT_FAIL_RELEASE, "PREPARED_TARGET_CHANGED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
 	if current_item_checksum.is_empty() or current_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_FAIL_RELEASE, "ITEM_GRAPH_ADVANCED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
