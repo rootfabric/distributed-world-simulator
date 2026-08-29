@@ -29,7 +29,7 @@
       "regulated_heater_history": [19.0, 20.0, 21.0, 22.0, 22.0, 22.0, 22.0, 22.0],
       "proximity_door_position_without_signal": 0.0,
       "proximity_door_position_after_two_active_steps": 2.0,
-      "deterministic_state_hash": "3e48d526832a6ae641c91ba32e1954d9e2e2fe0d9574f006c5ca3f2be9981e4c"
+      "deterministic_state_hash": "482e54cbff0c896d644650cfa5757d9f929e1e0710cc42fd38135e23bd6b4b7b"
     }
   },
   "playground": {
