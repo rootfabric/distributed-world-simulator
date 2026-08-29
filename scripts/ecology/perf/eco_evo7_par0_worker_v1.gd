@@ -36,10 +36,15 @@ func _init() -> void:
 	_write_worker_file("HELLO")
 	var idle_started := Time.get_ticks_usec()
 	while true:
-		var chunk: PackedByteArray = OS.read_buffer_from_stdin()
-		if chunk.size() > 0:
+		## PAR0.1: read_string_from_stdin() proved reliable across hundreds of
+		## poll cycles (calib evidence), while read_buffer_from_stdin() can
+		## block forever even when data is pending in the pipe. The string
+		## variant returns whatever is currently available; the framing parser
+		## is CR/LF-tolerant and reassembles frames across chunk boundaries.
+		var chunk := OS.read_string_from_stdin()
+		if not chunk.is_empty():
 			idle_started = Time.get_ticks_usec()
-			_parser.feed(chunk)
+			_parser.feed(chunk.to_utf8_buffer())
 			for message in Transport.parse_lines(_parser):
 				var done := _handle_message(message)
 				if done:

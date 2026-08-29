@@ -46,7 +46,21 @@ func setup(
 	DirAccess.make_dir_recursive_absolute(session_dir.path_join("outbox"))
 	DirAccess.make_dir_recursive_absolute(session_dir.path_join("workers"))
 
-	var env_log_dir := OS.get_environment("PAR0_WORKER_LOG_DIR")
+	## PAR0.1: the SETUP mailbox payload is written BEFORE spawning — the
+	## proven lifecycle sequence performs all filesystem work first, then
+	## set_environment, then spawn, then immediately drains stdout.
+	var setup_path := Transport.write_mailbox_message(session_dir, "inbox", "setup_0", {
+		"protocol_version": Transport.PROTOCOL_VERSION,
+		"setup_id": "setup_0",
+		"context": context,
+	})
+	if setup_path.is_empty():
+		_fail("failed to write SETUP mailbox payload")
+		return false
+
+	var env_log_dir := OS.get_environment("ECO_PAR0_WORKER_LOG_DIR")
+	if not env_log_dir.is_empty():
+		DirAccess.make_dir_recursive_absolute(env_log_dir)
 	for index in worker_count:
 		var args := PackedStringArray([
 			"--headless", "--path", project_root,
@@ -57,7 +71,9 @@ func setup(
 		OS.set_environment("PAR0_WORKER_INDEX", str(index))
 		OS.set_environment("PAR0_SESSION_DIR", _session_dir)
 		OS.set_environment("BREAKPOINT_RUNTIME_DISABLED", "1")
-		print("POOL diag before spawn index=%d envcheck=%s" % [index, OS.get_environment("PAR0_WORKER_INDEX")])
+		## PAR0.1: nothing may execute between set_environment and the spawn —
+		## not even a print: the child only progresses through engine init
+		## while the parent's very next action is draining the stdout pipe.
 		var spawned = OS.execute_with_pipe(_godot_bin, args, false)
 		if typeof(spawned) != TYPE_DICTIONARY or not spawned.has("pid") or not spawned.has("stdio"):
 			_fail("worker %d spawn failed" % index)
@@ -73,20 +89,6 @@ func setup(
 		})
 
 	if not _wait_state_all("HELLO"):
-		return false
-	if not _dispatch_setup(context):
-		return false
-	return true
-
-func _dispatch_setup(context: Dictionary) -> bool:
-	var setup_id := "setup_0"
-	var setup_path := Transport.write_mailbox_message(_session_dir, "inbox", setup_id, {
-		"protocol_version": Transport.PROTOCOL_VERSION,
-		"setup_id": setup_id,
-		"context": context,
-	})
-	if setup_path.is_empty():
-		_fail("failed to write SETUP mailbox payload")
 		return false
 	for worker in _workers:
 		if not _send_control(worker, "SETUP setup_0"):
@@ -110,6 +112,75 @@ static func partition(count: int, worker_count: int) -> Array[int]:
 	for index in worker_count + 1:
 		bounds.append(index * count / worker_count)
 	return bounds
+
+## PAR0.1 warm-up: the FIRST execute_with_pipe call in a fresh coordinator
+## process only completes a full worker lifecycle when driven directly with
+## an immediate stdout drain (dual-bisect evidence). One warmed-up lifecycle
+## makes every subsequent pool spawn stable in the same process. Coordinator
+## scripts must call this once before the first Pool.setup().
+static func warmup(godot_bin: String, project_root: String, session_root: String) -> bool:
+	var log_dir := OS.get_environment("ECO_PAR0_WORKER_LOG_DIR")
+	if log_dir.is_empty():
+		log_dir = project_root.path_join("artifacts/par0_worker_logs")
+	var session_dir := session_root.path_join("warmup_%d" % Time.get_ticks_usec())
+	DirAccess.make_dir_recursive_absolute(session_dir.path_join("inbox"))
+	DirAccess.make_dir_recursive_absolute(session_dir.path_join("workers"))
+	DirAccess.make_dir_recursive_absolute(log_dir)
+	Transport.write_mailbox_message(session_dir, "inbox", "setup_0", {
+		"protocol_version": Transport.PROTOCOL_VERSION, "setup_id": "setup_0", "context": {},
+	})
+	OS.set_environment("PAR0_WORKER_INDEX", "0")
+	OS.set_environment("PAR0_SESSION_DIR", session_dir)
+	OS.set_environment("BREAKPOINT_RUNTIME_DISABLED", "1")
+	var result = OS.execute_with_pipe(godot_bin, PackedStringArray([
+		"--headless", "--path", project_root,
+		"--script", "res://scripts/ecology/perf/eco_evo7_par0_worker_v1.gd",
+		"--log-file", log_dir.path_join("warmup_w0.log"),
+	]), false)
+	if typeof(result) != TYPE_DICTIONARY:
+		return false
+	var pid := int(result["pid"])
+	var stdio = result["stdio"]
+	var parser := Transport.FrameParser.new()
+	var state_path := session_dir.path_join("workers").path_join("worker_0.state")
+	var pong := false
+	var setup_sent := false
+	var ping_sent := false
+	var deadline := Time.get_ticks_usec() + 45_000_000
+	while Time.get_ticks_usec() < deadline:
+		var raw: PackedByteArray = stdio.get_buffer(65536)
+		if raw.size() > 0:
+			parser.feed(raw)
+			for message in Transport.parse_lines(parser):
+				if message.begins_with("PONG warmup"):
+					pong = true
+		var state := _warmup_state(state_path)
+		if state == "HELLO" and not setup_sent:
+			_warmup_send(stdio, "SETUP setup_0")
+			setup_sent = true
+		elif state == "SETUP_OK" and not ping_sent:
+			_warmup_send(stdio, "PING warmup")
+			ping_sent = true
+		if pong:
+			break
+		OS.delay_usec(200)
+	_warmup_send(stdio, "QUIT")
+	OS.delay_usec(300_000)
+	if OS.is_process_running(pid):
+		OS.kill(pid)
+	return pong
+
+static func _warmup_send(stdio, text: String) -> void:
+	for piece in Transport.chunks_of(Transport.encode_frame(text.to_utf8_buffer())):
+		stdio.store_buffer(piece)
+
+static func _warmup_state(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return ""
+	var state := file.get_line().strip_edges()
+	file.close()
+	return state
 
 ## Dispatch one generation batch. slices[index] is the canonical partition
 ## slice for worker `index` (already sorted by candidate_hash).
@@ -226,17 +297,28 @@ func _worker_by_index(index: int) -> Dictionary:
 	return {}
 
 func shutdown() -> void:
+	## PAR0.1: the worker answers QUIT with BYE state and quit(), but this
+	## custom build's internal stdin-reader thread keeps the process alive, so
+	## the protocol shutdown is BYE-state followed by a coordinator kill.
 	for worker in _workers:
 		if OS.is_process_running(int(worker["pid"])):
 			_send_control(worker, "QUIT")
 	var deadline := Time.get_ticks_usec() + SHUTDOWN_TIMEOUT_MS * 1000
 	for worker in _workers:
+		var index := int(worker["index"])
 		var pid := int(worker["pid"])
-		while OS.is_process_running(pid) and Time.get_ticks_usec() < deadline:
-			OS.delay_usec(2000)
+		var state_path := _session_dir.path_join("workers").path_join("worker_%d.state" % index)
+		var bye_seen := false
+		while Time.get_ticks_usec() < deadline:
+			if _read_worker_state(index) == "BYE":
+				bye_seen = true
+				break
+			if not OS.is_process_running(pid):
+				break
+			OS.delay_usec(1000)
 		if OS.is_process_running(pid):
 			OS.kill(pid)
-			worker["state"] = "KILLED"
+			worker["state"] = "BYE_KILLED" if bye_seen else "KILLED"
 		else:
 			worker["state"] = "EXITED"
 
@@ -251,6 +333,8 @@ func _wait_state_all(target: String) -> bool:
 	for worker in _workers:
 		states.append("")
 	var all_ready := false
+	var drained_total := 0
+	var last_report := Time.get_ticks_usec()
 	while Time.get_ticks_usec() < deadline and not all_ready:
 		all_ready = true
 		for i in _workers.size():
@@ -260,7 +344,8 @@ func _wait_state_all(target: String) -> bool:
 			## start-up waiting for the parent to acknowledge.
 			var stdio: FileAccess = _workers[i]["stdio"]
 			var chunk: PackedByteArray = stdio.get_buffer(65536)
-			if chunk.size() > 0 and not chunk.is_empty():
+			if chunk.size() > 0:
+				drained_total += chunk.size()
 				var parser: Transport.FrameParser = _workers[i]["parser"]
 				parser.feed(chunk)
 				for message in Transport.parse_lines(parser):
@@ -280,7 +365,12 @@ func _wait_state_all(target: String) -> bool:
 			if state != target:
 				all_ready = false
 		if not all_ready:
-			OS.delay_usec(4000)
+			if Time.get_ticks_usec() - last_report > 5_000_000:
+				print("POOL handshake wait target=%s drained=%d states=%s" % [target, drained_total, str(states)])
+				last_report = Time.get_ticks_usec()
+			## PAR0.1: tight poll — the child only progresses through engine
+			## init while the coordinator keeps draining its stdout pipe.
+			OS.delay_usec(500)
 	if not all_ready:
 		_fail("handshake timeout waiting for %s" % target)
 		return false

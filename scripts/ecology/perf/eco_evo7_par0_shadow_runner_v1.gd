@@ -57,6 +57,14 @@ func _init() -> void:
 	var baseline: Dictionary = {}
 	var parity_rows: Array[Dictionary] = []
 
+	## PAR0.1: one direct worker warm-up lifecycle stabilises every
+	## subsequent pool spawn in this coordinator process (see Pool.warmup).
+	if not Pool.warmup(godot_bin, project_root, session_root):
+		failures.append("pool warm-up lifecycle failed")
+		print("ECO.EVO7 PAR0 Shadow Campaign: FAIL (warm-up)")
+		quit(1)
+		return
+
 	for recipe in recipes:
 		## 1) Serial oracle baseline (no pool, no shadow).
 		var serial_rows := _run_serial(recipe, generations, failures)
@@ -169,12 +177,14 @@ func _run_shadow(
 			continue
 
 		## Shadow-only parallel recruitment over the canonical candidates.
-		var ecology: Dictionary = workbench.get_ecology_snapshot()
-		var candidates: Array = ecology.get("last_candidates", [])
-		var routes: Array = ecology.get("last_routes", [])
+		## Canonical evidence lives in the LS3.3 core snapshot (the LS3.4
+		## snapshot proxies only the aggregate hashes).
+		var core_snapshot: Dictionary = workbench.ecology.core.get_snapshot()
+		var candidates: Array = core_snapshot.get("last_candidates", [])
+		var routes: Array = core_snapshot.get("last_routes", [])
 		var ls33 = workbench.ecology.core
-		var serial_events: Array = ecology.get("last_recruitment", [])
-		var generation := int(ecology.get("generation", -1))
+		var serial_events: Array = core_snapshot.get("last_recruitment", [])
+		var generation := int(core_snapshot.get("generation", -1))
 		if candidates.size() != routes.size() or candidates.size() != serial_events.size():
 			failures.append("%s wc=%d gen=%d canonical evidence size mismatch" % [recipe, worker_count, generation])
 			continue
@@ -222,9 +232,10 @@ func _run_shadow(
 		for response in collected["responses"]:
 			worker_compute_us += int(response.get("worker_compute_us", 0))
 		var total_us := Time.get_ticks_usec() - total_started
+		var record_count := int(core_snapshot.get("record_count", 0))
 		parity_rows.append({
 			"recipe": recipe, "worker_count": worker_count, "generation": generation,
-			"population": int(ecology.get("record_count", 0)),
+			"population": record_count,
 			"candidates": items.size(),
 			"serial_recruitment_ms": _ls33_recruitment_ms(workbench),
 			"worker_compute_ms": float(worker_compute_us) / 1000.0,
@@ -236,7 +247,7 @@ func _run_shadow(
 			"exact_parity": true,
 		})
 		print("PAR0 %s wc=%d gen=%d pop=%d candidates=%d serial=%.1fms parallel=%.1fms (ipc=%.1f merge=%.1f) EXACT" % [
-			recipe, worker_count, generation, int(ecology.get("record_count", 0)), items.size(),
+			recipe, worker_count, generation, record_count, items.size(),
 			_ls33_recruitment_ms(workbench), float(total_us) / 1000.0, float(ipc_us) / 1000.0, float(merge_us) / 1000.0])
 
 	pool.shutdown()

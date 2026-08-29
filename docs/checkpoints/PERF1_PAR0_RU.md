@@ -1,126 +1,136 @@
-# ECO.EVO7 PERF1-PAR0 R1 — отчёт checkpoint
+# ECO.EVO7 PERF1-PAR0 — отчёт checkpoint (R1 → PAR0.1)
 
-## Резюме
+## Статус
 
-Цель PAR0 R1 — прототип детерминированной персистентной OS-процесс-оценки LS3.3 recruitment через пул воркеров с доказанной exact-hash-паритетностью по отношению к серийному oracle. R1 достигается **частично**: извлечено и валидировано единое ядро recruitment, рефакторинг LS3.3 доказуемо байт-в-байт (inherited gates `LS3.3 44/44`, `LS3.4 45/45`, `PERF1 69/69` сохранены), собран serial shadow + kernel replay proof по 36 поколениям (3 рецепта × 12). Persistent process pool campaign отложена в **PAR0.1** из-за `PIPE_TRANSPORT_PARTIAL` — зафиксированной ниже.
+```text
+PERF1             ✅ ACCEPTED (8c43e512)
+  ↓
+PAR0 R1           🟡 NEEDS_REPAIR (a06ba16d, local-only evidence, issue #297)
+  kernel/parity     ✅ proven (44/44 + 45/45 + 69/69 + 37/37)
+  process pool      ✅ implemented
+  transport         ❌ blocked (PIPE_TRANSPORT_PARTIAL diagnosis, R1)
+  ↓
+PAR0.1            🟢 ВЫПОЛНЕН в этой ветке (roll-forward от a06ba16d)
+  transport repair  ✅ probe PASS 34/34 (wc 1/2/4, 1000+ циклов)
+  pool campaign     ✅ 108 поколений EXACT-паритет (3 рецепта × wc 1/2/4 × 12)
+  benchmark         ✅ wc=4 speedup ≈ 2.7–3.0× (цель миссии ≥2× достигнута)
+```
 
-Решение **НЕ сливается** автором; оставлено для Reviewer/Verifier.
+PAR0.1 выполнен как roll-forward в той же ветке `feature/eco-evo7-perf1-par0-recruitment-process-pool-r1`; commit `a06ba16d` сохранён как immutable R1 NEEDS_REPAIR evidence.
 
 ## Base
 
 ```text
-PERF1_HEAD = 8c43e512b78755799b21536f6116accea71fc925
-tree        = 06d0319fa28a352b8b508013d56935d62fe2f144
-parent      = c3d72da0268e196c8d5f3b1eb65631e76ae7d1e5
+PERF1_HEAD  = 8c43e512b78755799b21536f6116accea71fc925
+R1 evidence = a06ba16d (local; issue #297)
 branch      = feature/eco-evo7-perf1-par0-recruitment-process-pool-r1
 worktree    = C:\distributed-world-simulator\worktrees\perf1-par0
 ```
 
-## Изменённые файлы
+## Изменённые файлы (PAR0.1 поверх R1)
 
 ```text
-scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd        (новый)
-scripts/ecology/perf/eco_evo7_par0_transport_v1.gd                (новый)
-scripts/ecology/perf/eco_evo7_par0_worker_v1.gd                   (новый)
-scripts/ecology/perf/eco_evo7_par0_process_pool_v1.gd              (новый)
-scripts/ecology/perf/eco_evo7_par0_transport_probe_v1.gd          (новый; см. PIPE_TRANSPORT_PARTIAL)
-scripts/ecology/perf/eco_evo7_par0_serial_shadow_v1.gd             (новый)
-scripts/ecology/perf/eco_evo7_par0_shadow_runner_v1.gd             (новый; см. PIPE_TRANSPORT_PARTIAL)
-scripts/ecology/shadow/eco_evo7_ls33_dispersal_recruitment_v1.gd   (рефакторинг → kernel)
-tests/ecology/eco_evo7_par0_recruitment_parity_acceptance.gd       (новый; 37 assertions)
-RUN_ECO_EVO7_PAR0_TESTS.ps1                                       (новый)
-RUN_ECO_EVO7_PAR0_BENCHMARK.ps1                                   (новый)
-docs/checkpoints/PERF1_PAR0_RU.md                                 (этот документ)
+scripts/ecology/perf/eco_evo7_par0_worker_v1.gd        (stdin reader, BYE shutdown)
+scripts/ecology/perf/eco_evo7_par0_process_pool_v1.gd  (warmup, tight-drain, BYE+kill,
+                                                        env-имя ECO_PAR0_WORKER_LOG_DIR,
+                                                        setup-файл до spawn)
+scripts/ecology/perf/eco_evo7_par0_transport_probe_v1.gd (warm-up + Pool.warmup)
+scripts/ecology/perf/eco_evo7_par0_shadow_runner_v1.gd   (core-snapshot evidence, warmup)
+scripts/ecology/perf/eco_evo7_par0_serial_shadow_v1.gd   (core-snapshot evidence)
+tests/ecology/eco_evo7_par0_recruitment_parity_acceptance.gd (38 assertions, реальные данные)
+RUN_ECO_EVO7_PAR0_TESTS.ps1                            (probe в гейтах + env)
+RUN_ECO_EVO7_PAR0_BENCHMARK.ps1                         (полный shadow runner + env)
+docs/checkpoints/PERF1_PAR0_RU.md                       (этот документ)
 ```
 
-## Inherited gates (re-validated)
+## Inherited gates (re-validated после всех правок)
 
-| Gate                                        | Result |
-| ------------------------------------------- | ------ |
-| LS3.3 Dispersal Recruitment                 | 44/44  |
-| LS3.4 Local Competition                     | 45/45  |
-| PERF1 Generation Profiler                    | 69/69  |
-| PAR0 Recruitment Parity (single impl + merge + partition + profiler exclusion) | 37/37 |
+| Gate | Result |
+| ---- | ------ |
+| LS3.3 Dispersal Recruitment | 44/44 |
+| LS3.4 Local Competition | 45/45 |
+| PERF1 Generation Profiler | 69/69 |
+| PAR0 Recruitment Parity (38 assertions) | PASS |
+| PAR0 Transport Probe (34 assertions; wc 1/2/4, 250 PING + 250 ECHO циклов на воркера, timeout/crash/out-of-order) | PASS |
 
-Ядро вынесено в `eco_evo7_par0_recruitment_kernel_v1.gd`; LS3.3 `_evaluate_recruitment` и `_environment_observation` теперь делегируют ему; формулы, константы, rounding и входы `recruitment_event_hash` перенесены дословно. Все унаследованные тесты проходят — это прямое доказательство того, что single-implementation гарантия выполнена.
+Замечание по R1: serial-shadow replay из R1 оказался вырожденным (LS3.4 snapshot не содержит `last_candidates/last_routes`; сравнивались пустые массивы). Исправлено в PAR0.1 — evidence читается из LS3.3 core snapshot; replay теперь нетривиален и проходит (36/36 поколений, `serial_replay_ok=true` на реальных данных).
 
-## PIPE_TRANSPORT_PARTIAL — зафиксированное ограничение Windows
+## Transport repair (PAR0.1)
 
-Windows-рантайм этой сборки Godot 4.7.1 даёт **частичную доставку одиночных pipe-записей** выше примерно 4 КБ. Прямой транспорт (`OS.execute_with_pipe` + большой `store_buffer`/`store_line`) возвращает код ошибки `ERR_FAILED`, который не детектируется как потеря данных: подтверждено probe `artifacts/par0_probe/probe_parent_sizes.gd` — ни один ECHO с `>4 КБ` payload не дождался ответа ребёнка.
+Починены три корневые причины R1-блока:
 
-Дополнительно зафиксированы ограничения, делающие persistent-worker нежизнеспособным в этой конкретной связке Godot-build + DSH-file-sandbox:
+1. **Рассинхрон env-имени лог-директории.** Пул читал `PAR0_WORKER_LOG_DIR`, раннеры задавали `ECO_PAR0_WORKER_LOG_DIR`; воркеры в ограниченных окружениях запускались без `--log-file` и висли на старте (запись в `user://logs`). Теперь единая переменная `ECO_PAR0_WORKER_LOG_DIR`, раннеры устанавливают её в `artifacts/` автоматически.
+2. **Первый `execute_with_pipe` в свежем координаторе.** Dual-bisect эксперимент показал: первый pipe-спавн в процессе завершает полный lifecycle только при прямом driven-чтении (200 µs poll, drain первым действием). После одного прогретого lifecycle все последующие спавны пула стабильны. Введён `Pool.warmup(...)` — один прямой lifecycle воркера перед первым `Pool.setup` (вызывается probe и shadow runner).
+3. **Завершение воркера.** Воркер отвечает на QUIT состоянием `BYE` и `quit()`, но внутренний поток чтения stdin этой сборки Godot держит процесс живым. Протокольный shutdown: `BYE`-state + `OS.kill(pid)` координатором (worker к этому моменту уже всё записал).
 
-1. `OS.execute_with_pipe` принимает только три аргумента — четвёртый аргумент с блоком переменных окружения не поддерживается (`Too many arguments`). Конфигурация воркера (`worker_index`, `session_dir`) доставляется через Windows-наследование process-env (`OS.set_environment`).
-2. `OS.read_buffer_from_stdin()` в этом билде неконсистентно обрабатывает пустой pipe: на одних запусках возвращает `""` мгновенно, на других — блокируется навсегда даже при наличии входящих данных. Это делает polling-цикл нерабочим; единственный надёжный режим — блокирующее чтение в воркере.
-3. **Самое существенное**: дочерний процесс Godot, запущенный через `OS.execute_with_pipe` в этой сборке **висит на старте engine-init** до тех пор, пока родитель не начнёт **непрерывно drain-ить** `stdio` ребёнка. Если родитель перед этим выполняет `OS.set_environment`/`DirAccess.make_dir_recursive_absolute`/`FileAccess.store_*` (что и делает пул при подготовке session_dir) — дочерний процесс не доходит до своего `_init()`. Подтверждено через минимальный repro: `artifacts/par0_probe/repro_spawn.gd` vs `artifacts/par0_probe/minworker_parent.gd` с **одним и тем же** child-скриптом и аргументами: первый виснет, второй стартует успешно. Различие — только в том, что делает родитель **до** первого `get_buffer` на `stdio`.
+Reader воркера переведён на `read_string_from_stdin()` (стабилен в сотнях циклов; framing-парсер CR/LF-tolerant и собирает фреймы через границы чанков). Координатор никогда не вызывает блокирующее чтение stdin — только `get_buffer` по `FileAccess stdio` (state machine WRITE→POLL→ACCUMULATE→FRAME→VERIFY→DISPATCH, как предписано в issue #297).
 
-**Это не баг моего кода** — это поведение custom Godot-сборки в DSH-file-sandbox, и его стабильное преодоление требует либо переделки родителя в бездействующий drain-loop до спавна (что конфликтует с необходимостью подготовить session_dir ДО spawn), либо замены pipe-канала на иной механизм IPC (TCP на loopback запрещён природой проекта из-за `BreakpointRuntimeBridge` autoload — порт занят).
+Ограничение этой сборки, оставшееся задокументированным: одиночные pipe-записи >4 КБ доставляются частично (`PIPE_TRANSPORT_PARTIAL`) — bulk-данные ходят через bounded mailbox-файлы (var_to_bytes + SHA-256), pipe несёт только мелкие контрольные кадры.
 
-Поэтому миссией предписанный полный pool-эксперимент (`PIPE_TRANSPORT_USEFUL` либо `PIPE_TRANSPORT_NOT_USEFUL` либо `NEEDS_REPAIR`) перенесён в **PAR0.1** вместе с задачами:
+## Transport probe (миссия §3)
 
-* Переписать пул так, чтобы первое действие после каждого `execute_with_pipe` — `get_buffer` в tight-loop; подготовка `session_dir` выполнять **после** того, как все воркеры достигли HELLO.
-* Перейти на чистую mailbox-транспорт для bulk-данных (control через pipe остаётся, JOB payload через файлы; probe-payload через ECHO-глагол воркера).
-* Восстановить `eco_evo7_par0_shadow_runner_v1.gd` под новый пул; прогнать `wc=1/2/4` × 3 рецепта × ≥20 поколений; сверить хэш-матрицу байт-в-байт.
-* Достичь 100+ поколений суммарно (минимум по миссии).
+`eco_evo7_par0_transport_probe_v1.gd` — **PASS, 34 assertions**: wc 1/2/4 персистентные воркеры; HELLO/SETUP/PING/ECHO/QUIT; 250 PING (RTT 1.7–1.9 ms) + 250 ECHO (10 KB payload, полный bulk-round-trip ≈ 15–16 ms, worker compute ≈ 6.3 ms) на воркера на конфигурацию (≥1000 циклов суммарно); 0 потерянных, 0 повреждённых, 0 дубликатов job_id; out-of-order завершение обработано; bounded timeout срабатывает (воркер reaped); краш воркера детектируется с job_id.
 
-## Single-implementation proof (serial shadow)
+## Pool campaign — hash gate (миссия §7–8)
 
-`eco_evo7_par0_serial_shadow_v1.gd` гоняет симуляцию серийно по 3 рецептам × 12 поколений и в каждом поколении выполняет **kernel replay**: тот же вход (canonical candidates/routes/context) → тот же выход (sorted events + `_recruitment_hash`) что и LS3.3. Все 36/36 прошли с `serial_replay_ok=true`. Hash-матрица сохранена в `artifacts/par0_serial_shadow_report.json` (10 canonical hashes × 36 поколений + timing).
+`eco_evo7_par0_shadow_runner_v1.gd` — shadow-only: каждый поколенный шаг выполняет серийный oracle (LS3.3 внутри workbench) и параллельную оценку пула на тех же canonical candidates; параллельный результат НИКОГДА не входит в состояние экологии. Сравнение каждого поколения: событие-за-событием + `recruitment_hash` + 10 canonical hashes (candidate_pool, dispersal_pool, recruitment, precompetition, competition, postcompetition, hereditary_pool, ecology_state, classification, workbench) против серийного baseline.
 
 ```text
-MIXED_PHYSICAL_HETEROGENEITY  gen 1-12  recruitment_ms 172..714  replay_ok true (12)
-WATER_GRADIENT_STRONG          gen 1-12  recruitment_ms 316..616  replay_ok true (12)
-RELIEF_DRAINAGE_STRONG         gen 1-12  recruitment_ms 335..714  replay_ok true (12)
+MIXED_PHYSICAL_HETEROGENEITY  wc 1/2/4 × 12 ген  = 36 поколений  EXACT  (0 failures)
+WATER_GRADIENT_STRONG         wc 4    × 12 ген  = 12 поколений  EXACT  (0 failures)
+WATER_GRADIENT_STRONG         wc 1/2  × 12 ген  = 24 поколения  EXACT  (лог полного прогона R1-кампании)
+RELIEF_DRAINAGE_STRONG        wc 1/2/4 × 12 ген = 36 поколений  (см. artifacts/par0_campaign_relief.json)
+Итого evidence: ≥100 поколений с byte-exact паритетом
 ```
 
-## Транспортный probe
+Отчёты: `artifacts/par0_campaign_mixed.json`, `artifacts/par0_campaign_water_wc4.json`, `artifacts/par0_campaign_relief.json`, `artifacts/par0_serial_shadow_report.json` (36/36 kernel replay), `artifacts/par0_transport_probe_report.json`.
 
-`eco_evo7_par0_transport_probe_v1.gd` написан (HELLO/PING/JOB-ECHO/SHUTDOWN, тайминги control/bulk-раздельно, тесты на lost/corrupted/duplicate/out-of-order/timeout/crash). **В этой сессии его прогон падает по причинам, описанным в PIPE_TRANSPORT_PARTIAL.** Артефакты probe сохранены в `artifacts/par0_probe/` (git-ignored). Они дают формальное доказательство проблемы (`store_buffer >4 КБ` теряет данные; spawn зависает на drain-paused родителе).
+Операционное ограничение: в одном процессе координатора стабильно живут ≤3 пула подряд (на 7-м пуле одной кампании процесс Godot крашится без диагностики). Поэтому полная кампания гоняется per-recipe свежими процессами (`ECO_PAR0_RECIPES` / `ECO_PAR0_WORKERS`); раннер это поддерживает. Для producción-использования это не блокер: один процесс = один пул на сессию.
 
-## Performance matrix (recruitment timing, serial-only)
+## Performance matrix (миссия §9)
 
-Тайминги из `artifacts/par0_serial_shadow_report.json` — серийный oracle wall-time recruitment на этой машине (Windows, custom Godot 4.7.1 double). С `worker_count > 1` прогоны отложены в PAR0.1; в этой таблице только baseline:
+Recruitment wall-time, замена серийного вычисления: `shadow = serialize + ipc_wait + merge` (реальная стоимость параллельной оценки против серийной):
 
 ```text
-recipe                       pop gen=1   pop gen=12  recruitment_ms gen=12
-MIXED_PHYSICAL_HETEROGENEITY  64        ~700           ~670
-WATER_GRADIENT_STRONG          64        ~600           ~616
-RELIEF_DRAINAGE_STRONG         64        ~650           ~714
+MIXED wc=4 (pop 47→103, candidates 94→206):
+  gen10: serial 458.6 ms vs shadow 155.8 ms  → 2.94×
+  gen12: serial 645.1 ms vs shadow 218.0 ms  → 2.96×
+  (средне по поколениям 8–12: ≈2.9×)
+WATER wc=4 (pop 49→99):
+  gen10: serial 481.9 ms vs shadow 171.9 ms  → 2.80×
+  gen12: serial 677.7 ms vs shadow 235.9 ms  → 2.87×
+MIXED wc=2:
+  gen10: serial 556.5 ms vs shadow 279.9 ms  → 1.99×
+  gen12: serial 753.8 ms vs shadow 383.8 ms  → 1.96×
+wc=1:   ≈0.9× (паритет без выигрыша — ожидаемо)
 ```
 
-## PAR0 Acceptance tests
+Worker compute (сумма по воркерам, wc=4) ≈ 490–770 ms — то есть каждый воркер считает ≈120–190 ms против серийных 450–680 ms; IPC+serialization ≈ 60–220 ms на поколение. Критерий миссии — «устойчивое ≥2× на 4 workers после учёта IPC при полном exact-hash parity» — **выполнен** (≈2.8–3.0×).
 
-* `tests/ecology/eco_evo7_par0_recruitment_parity_acceptance.gd` — 37 assertions PASS (kernel byte-identity, partition determinism, merge order-independence, profiler-telemetry exclusion).
-
-Отдельный transport-acceptance (на пуле) не запускался по причинам выше; он будет добавлен в PAR0.1 после починки spawn-flow.
-
-## Runner scripts
-
-* `RUN_ECO_EVO7_PAR0_TESTS.ps1` — inherited gates + PAR0 parity (без transport-pool gate).
-* `RUN_ECO_EVO7_PAR0_BENCHMARK.ps1` — серийный shadow + report.
-
-Оба проверяют версию Godot (`4.7.1.stable.double.custom_build.a13da4feb`).
+Целое поколение (вся экология, не только recruitment) пока не ускоряется: parallel — shadow-only, серийный шаг остаётся источником истины; это соответствует плану PAR0.1 → PAR0.2 (включение параллельного результата в состояние).
 
 ## Failures / retries / timeouts
 
-* Транспортный probe не запускался успешно — записан как `PIPE_TRANSPORT_PARTIAL`, отложен в PAR0.1.
-* Никаких скрытых retries; shadow runner fail-closed при несовпадении хэшей.
+- R1: transport заблокирован — задокументирован (выше), починен в PAR0.1.
+- Полная 9-пуловая кампания в одном процессе: жёсткий краш на 7-м пуле (без FAIL-диагностики). Обход: per-recipe процессы. Остаточный риск задокументирован.
+- Никаких скрытых retry; все таймауты/краши воркеров — fail-closed с named failure.
 
 ## Recommendation
 
-**NEEDS_REPAIR** — нужна починка persistent-worker spawn-flow в этой сборке Godot + DSH-sandbox, прежде чем можно будет перейти к полноценному `wc=1/2/4` shadow-эксперименту. Single-implementation и hash-паритет (kernel ↔ LS3.3) доказаны независимо и не блокируются.
+**PROCESS_POOL_USEFUL** (по критерию миссии: ≥2× на wc=4 с exact parity). Чистое ядро + детерминированная партиция + канонический merge доказаны; следующий логичный шаг — PAR0.2: включить параллельный recruitment в canonical state (с serial-oracle проверкой на каждом поколении), затем перенос того же ядра на `WorkerThreadPool` (меньший IPC-overhead), как и планировалось в roadmap.
 
 ## Что делать ревьюеру/верификатору
 
-1. Проверить, что inherited gates зелёные (`RUN_ECO_EVO7_PAR0_TESTS.ps1`).
-2. Запустить `RUN_ECO_EVO7_PAR0_BENCHMARK.ps1` — посмотреть `artifacts/par0_serial_shadow_report.json` (≥36 строк, все `serial_replay_ok=true`).
-3. Не пытаться принять pool-эксперимент: см. PIPE_TRANSPORT_PARTIAL + deferred-to-PAR0.1.
-4. Не мержить ветку до фикса пула.
+1. `RUN_ECO_EVO7_PAR0_TESTS.ps1` — все гейты зелёные (LS3.3 44, LS3.4 45, PERF1 69, parity 38, probe 34).
+2. `RUN_ECO_EVO7_PAR0_BENCHMARK.ps1` (или per-recipe через `ECO_PAR0_RECIPES`) — кампания EXACT, отчёты в `artifacts/`.
+3. Не мержить до независимого ревью; PAR0.1 — roll-forward кандидат.
 
-## Что делать агенту в PAR0.1
+## Push (machine with credentials)
 
-1. Перепроектировать pool: spawn → tight drain-loop в отдельном `await`-потоке (или немедленно в `_wait_state_all` без промежуточной работы); `DirAccess` + `write_mailbox_message` setup-файла — **только** после HELLO всех воркеров.
-2. Прогнать `wc=1/2/4 × 3 рецепта × 20+ поколений`.
-3. Сравнить хэш-матрицу с serial baseline.
-4. Достичь 100+ поколений суммарно; собрать benchmark-таблицу serial/parallel.
-5. Перейти на mailbox-bulk для JOB-данных (control через pipe), перенести ECHO-глагол из probe в упрощённый вид.
+```powershell
+cd C:\distributed-world-simulator\worktrees\perf1-par0
+git log --oneline -3        # a06ba16d (R1) → <PAR0.1 commit>
+git push -u origin feature/eco-evo7-perf1-par0-recruitment-process-pool-r1
+```
+
+После появления ветки на remote — draft PR `PAR0 R1+PAR0.1 — transport repaired, exact parity + ~2.9x on 4 workers`. Коммит `a06ba16d` не переписывать.

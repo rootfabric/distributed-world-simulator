@@ -85,11 +85,12 @@ func _run_serial(recipe: String, generations: int, failures: Array[String], proj
 		row["population"] = int(snapshot.get("record_count", 0))
 		# Serial kernel replay: re-evaluate the SAME canonical candidates through
 		# the kernel directly (single-implementation proof). Compare event list
-		# and recruitment hash to the oracle.
-		var ecology: Dictionary = workbench.get_ecology_snapshot()
-		var candidates: Array = ecology.get("last_candidates", [])
-		var routes: Array = ecology.get("last_routes", [])
-		var serial_events: Array = ecology.get("last_recruitment", [])
+		# and recruitment hash to the oracle. Canonical evidence lives in the
+		# LS3.3 core snapshot (the LS3.4 snapshot proxies only aggregate hashes).
+		var core_snapshot: Dictionary = workbench.ecology.core.get_snapshot()
+		var candidates: Array = core_snapshot.get("last_candidates", [])
+		var routes: Array = core_snapshot.get("last_routes", [])
+		var serial_events: Array = core_snapshot.get("last_recruitment", [])
 		var replay_ok := _replay_kernel_parity(ls33, candidates, routes, _typed_events(serial_events), failures, recipe, step + 1)
 		row["serial_replay_ok"] = replay_ok
 		rows.append(row)

@@ -35,10 +35,12 @@ func _kernel_byte_identity() -> void:
 		_fail("generation 1 advance failed")
 		world.queue_free()
 		return
-	var ecology: Dictionary = workbench.get_ecology_snapshot()
+	var ecology: Dictionary = workbench.ecology.core.get_snapshot()
 	var candidates: Array = ecology.get("last_candidates", [])
 	var routes: Array = ecology.get("last_routes", [])
 	var serial_events: Array = ecology.get("last_recruitment", [])
+	_check(candidates.size() > 0 and routes.size() == candidates.size() and serial_events.size() == candidates.size(),
+		"canonical evidence is non-empty and sized consistently (got %d/%d/%d)" % [candidates.size(), routes.size(), serial_events.size()])
 	var context := Kernel.build_context(
 		String(ls33.SCHEMA), String(ls33.VERSION), String(ls33.REVISION),
 		int(ls33.environment_seed), String(ls33.environment_field_hash),

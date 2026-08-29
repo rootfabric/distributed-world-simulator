@@ -41,6 +41,10 @@ func _init() -> void:
 			configs.append(int(part))
 
 	var summaries: Array[Dictionary] = []
+	## PAR0.1 warm-up: the first execute_with_pipe in a fresh coordinator
+	## only completes a full lifecycle when driven directly (dual-bisect
+	## evidence); after one direct worker lifecycle the pool path is stable.
+	_check(Pool.warmup(godot_bin, project_root, session_root), "warm-up worker lifecycle")
 	for worker_count_value in configs:
 		var worker_count := int(worker_count_value)
 		var session_dir := session_root.path_join("probe_wc%d_%d" % [worker_count, Time.get_ticks_usec()])
@@ -69,6 +73,68 @@ func _init() -> void:
 		file.store_string(JSON.stringify(summary, "  "))
 		file.close()
 	_finish()
+
+func _warmup(godot_bin: String, project_root: String, session_root: String) -> void:
+	var log_dir := OS.get_environment("ECO_PAR0_WORKER_LOG_DIR")
+	if log_dir.is_empty():
+		log_dir = project_root.path_join("artifacts/par0_worker_logs")
+	var session_dir := session_root.path_join("warmup_%d" % Time.get_ticks_usec())
+	DirAccess.make_dir_recursive_absolute(session_dir.path_join("inbox"))
+	DirAccess.make_dir_recursive_absolute(session_dir.path_join("outbox"))
+	DirAccess.make_dir_recursive_absolute(session_dir.path_join("workers"))
+	DirAccess.make_dir_recursive_absolute(log_dir)
+	var TransportScript = load("res://scripts/ecology/perf/eco_evo7_par0_transport_v1.gd")
+	TransportScript.write_mailbox_message(session_dir, "inbox", "setup_0", {
+		"protocol_version": TransportScript.PROTOCOL_VERSION, "setup_id": "setup_0", "context": {},
+	})
+	OS.set_environment("PAR0_WORKER_INDEX", "0")
+	OS.set_environment("PAR0_SESSION_DIR", session_dir)
+	OS.set_environment("BREAKPOINT_RUNTIME_DISABLED", "1")
+	var result = OS.execute_with_pipe(godot_bin, PackedStringArray([
+		"--headless", "--path", project_root,
+		"--script", "res://scripts/ecology/perf/eco_evo7_par0_worker_v1.gd",
+		"--log-file", log_dir.path_join("warmup_w0.log"),
+	]), false)
+	if typeof(result) != TYPE_DICTIONARY:
+		push_error("PAR0 warm-up spawn failed")
+		return
+	var pid := int(result["pid"])
+	var stdio = result["stdio"]
+	var parser = TransportScript.FrameParser.new()
+	var state_path := session_dir.path_join("workers").path_join("worker_0.state")
+	var pong := false
+	var deadline := Time.get_ticks_usec() + 45_000_000
+	while Time.get_ticks_usec() < deadline:
+		var raw: PackedByteArray = stdio.get_buffer(65536)
+		if raw.size() > 0:
+			parser.feed(raw)
+			for message in TransportScript.parse_lines(parser):
+				if message.begins_with("PONG warmup"):
+					pong = true
+		var state := _warmup_state(state_path)
+		if state == "HELLO" and not pong:
+			for piece in TransportScript.chunks_of(TransportScript.encode_frame(PackedByteArray("SETUP setup_0".to_utf8_buffer()))):
+				stdio.store_buffer(piece)
+		elif state == "SETUP_OK" and not pong:
+			for piece in TransportScript.chunks_of(TransportScript.encode_frame(PackedByteArray("PING warmup".to_utf8_buffer()))):
+				stdio.store_buffer(piece)
+		if pong:
+			break
+		OS.delay_usec(200)
+	print("PAR0 warm-up pong=%s" % str(pong))
+	for piece in TransportScript.chunks_of(TransportScript.encode_frame(PackedByteArray("QUIT".to_utf8_buffer()))):
+		stdio.store_buffer(piece)
+	OS.delay_usec(300_000)
+	if OS.is_process_running(pid):
+		OS.kill(pid)
+
+func _warmup_state(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return ""
+	var state := file.get_line().strip_edges()
+	file.close()
+	return state
 
 func _ping_phase(pool: Pool, worker_count: int, cycles: int) -> Dictionary:
 	var total_us := 0
