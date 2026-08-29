@@ -289,7 +289,7 @@ func _move_authority_toward(target: Vector3, steps: int) -> Dictionary:
 		if direction.length_squared() <= 0.000001:
 			break
 		direction = direction.normalized()
-		playground.player.camera_yaw = atan2(-direction.x, -direction.z)
+		_set_automated_camera_yaw(atan2(-direction.x, -direction.z))
 		result = client.submit_movement_intent_blocking(
 			playground._create_m7_movement_intent(0.25, Vector2(0.0, -1.0), 0, 0)
 		)
@@ -306,12 +306,18 @@ func _move_authority_toward(target: Vector3, steps: int) -> Dictionary:
 	var final_direction := (target - final_position).slide(Vector3.UP)
 	if final_direction.length_squared() > 0.000001:
 		final_direction = final_direction.normalized()
-		playground.player.camera_yaw = atan2(-final_direction.x, -final_direction.z)
+		_set_automated_camera_yaw(atan2(-final_direction.x, -final_direction.z))
 		result = client.submit_movement_intent_blocking(
 			playground._create_m7_movement_intent(0.05, Vector2.ZERO, 0, 0)
 		)
 		await _wait_frames(4)
 	return result
+
+
+func _set_automated_camera_yaw(desired_yaw: float) -> void:
+	var current_yaw := float(playground.player.camera_yaw)
+	var yaw_delta := wrapf(desired_yaw - current_yaw, -PI, PI)
+	playground.player.adjust_view(yaw_delta, 0.0)
 
 
 func _approach_authority_interaction_position(target: Vector3) -> Dictionary:
@@ -346,7 +352,7 @@ func _wait_authoritative_interaction_ready(target: Vector3, timeout_ms: int) -> 
 			var to_target := target - _record_position(record)
 			to_target.y = 0.0
 			if to_target.length_squared() > 0.000001:
-				playground.player.camera_yaw = atan2(-to_target.x, -to_target.z)
+				_set_automated_camera_yaw(atan2(-to_target.x, -to_target.z))
 			var previous_sequence := int(record.get("last_input_sequence", 0))
 			var result: Dictionary = client.submit_movement_intent_blocking(
 				playground._create_m7_movement_intent(0.05, Vector2.ZERO, 0, 0)
