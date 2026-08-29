@@ -40,6 +40,9 @@ var _prepared_item_checksum := ""
 var _convergence_prepared := false
 var _convergence_release_id := ""
 var _convergence_release_consumed := false
+var _control_transient_recoveries := 0
+var _last_control_read_attempts := 0
+var _last_control_read_elapsed_ms := 0
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -154,7 +157,11 @@ func _process(_delta: float) -> void:
 				_write_report("READY_FOR_CONTENTION", false, world, shell)
 				_set_stage("WAIT_CONTENTION_GO")
 		"WAIT_CONTENTION_GO":
-			if not bool(Support.read(_control_file).get("go_contention", false)):
+			var contention_control_read := _read_control_consistent()
+			if not bool(contention_control_read.get("success", false)):
+				return
+			var contention_control: Dictionary = Dictionary(contention_control_read.get("value", {}))
+			if not bool(contention_control.get("go_contention", false)):
 				return
 			_contention_result = _ui_place_cursor(shell, "inventory/%s" % _client_id, 0)
 			_wait_replica_after_command(shell)
@@ -205,7 +212,11 @@ func _process(_delta: float) -> void:
 			else:
 				_set_stage("WAIT_A_CURSOR")
 		"WAIT_DISCONNECT_A":
-			if not bool(Support.read(_control_file).get("disconnect_a", false)):
+			var disconnect_control_read := _read_control_consistent()
+			if not bool(disconnect_control_read.get("success", false)):
+				return
+			var disconnect_control: Dictionary = Dictionary(disconnect_control_read.get("value", {}))
+			if not bool(disconnect_control.get("disconnect_a", false)):
 				return
 			_finish(true, "DISCONNECTED_WITH_TRANSIENT")
 		"WAIT_A_CURSOR":
@@ -244,7 +255,11 @@ func _process(_delta: float) -> void:
 				return
 			if int(world.get("remote_presenter_count", 0)) != 1:
 				return
-			var reconnect_peer_path := String(Support.read(_control_file).get("reconnect_peer_result_file", "")).strip_edges()
+			var reconnect_control_read := _read_control_consistent()
+			if not bool(reconnect_control_read.get("success", false)):
+				return
+			var reconnect_control: Dictionary = Dictionary(reconnect_control_read.get("value", {}))
+			var reconnect_peer_path := String(reconnect_control.get("reconnect_peer_result_file", "")).strip_edges()
 			if not reconnect_peer_path.is_empty():
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
@@ -253,7 +268,10 @@ func _process(_delta: float) -> void:
 			# clients publish only their own authoritative checksums. The parent
 			# coordinator is the sole matcher and generation writer; clients no
 			# longer form a second peer-to-peer barrier through result files.
-			var control := Support.read(_control_file)
+			var convergence_control_read := _read_control_consistent()
+			if not bool(convergence_control_read.get("success", false)):
+				return
+			var control: Dictionary = Dictionary(convergence_control_read.get("value", {}))
 			var prepare: Dictionary = control.get("convergence_prepare", {})
 			var prepare_id := String(prepare.get("id", "")).strip_edges()
 			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
@@ -474,6 +492,34 @@ func _verify_reconnect_state(shell) -> void:
 		_failures.append("Reconnect ownership epoch did not advance")
 
 
+func _read_control_consistent() -> Dictionary:
+	var result := Support.read_control_consistent(_control_file)
+	_last_control_read_attempts = int(result.get("attempts", 0))
+	_last_control_read_elapsed_ms = int(result.get("elapsed_ms", 0))
+	if bool(result.get("success", false)):
+		if _last_control_read_attempts > 1:
+			_control_transient_recoveries += 1
+		return {
+			"success": true,
+			"value": Dictionary(result.get("value", {})).duplicate(true),
+			"attempts": _last_control_read_attempts,
+			"elapsed_ms": _last_control_read_elapsed_ms,
+		}
+	_fail("M5_CONTROL_READ_UNAVAILABLE", {
+		"stage": _stage,
+		"error_code": String(result.get("error_code", "")),
+		"attempts": _last_control_read_attempts,
+		"elapsed_ms": _last_control_read_elapsed_ms,
+		"transient_exhausted": bool(result.get("transient_exhausted", false)),
+	})
+	return {
+		"success": false,
+		"value": {},
+		"attempts": _last_control_read_attempts,
+		"elapsed_ms": _last_control_read_elapsed_ms,
+	}
+
+
 func _player_observation_from_snapshot(snapshot: Dictionary) -> Dictionary:
 	return {
 		"checksum": String(snapshot.get("checksum", "")),
@@ -658,6 +704,11 @@ func _write_report(
 		"convergence_prepared": _convergence_prepared,
 		"convergence_release_id": _convergence_release_id,
 		"convergence_release_consumed": _convergence_release_consumed,
+		"control_read": {
+			"transient_recoveries": _control_transient_recoveries,
+			"last_attempts": _last_control_read_attempts,
+			"last_elapsed_ms": _last_control_read_elapsed_ms,
+		},
 		"client_runtime": _client.get_report() if _client != null else {},
 		"item_graph": _client.get_item_graph_snapshot() if _client != null else {},
 		"world": world.duplicate(true),
