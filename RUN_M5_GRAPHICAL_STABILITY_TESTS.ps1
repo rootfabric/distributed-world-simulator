@@ -191,7 +191,7 @@ for ($Run = 1; $Run -le $Runs; $Run++) {
 
     $Summary.passed_runs = $Run
     Save-Summary
-    Write-Host "M5 stability run $Run: PASS" -ForegroundColor Green
+    Write-Host "M5 stability run ${Run}: PASS" -ForegroundColor Green
 }
 
 $Summary.passed = $true
