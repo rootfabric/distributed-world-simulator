@@ -73,12 +73,15 @@ static func evaluate_consumed_release_integrity(
 		return _client_decision(CLIENT_FAIL_RELEASE, "RELEASE_ID_REGRESSED_AFTER_CONSUMPTION", current_player_checksum, current_item_checksum)
 	if control_player_checksum != prepared_player_checksum or control_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_FAIL_RELEASE, "PREPARED_TARGET_CHANGED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
+	# Once the coordinator durably completes this exact consumed generation,
+	# convergence is sealed. Expected serialized teardown (A2 leaves before B)
+	# may legitimately change the live player checksum and must not revoke it.
+	if String(complete_id).strip_edges() == consumed_id:
+		return _client_decision(CLIENT_COMPLETE_RELEASE, "EXACT_CONSUMED_GENERATION_COMPLETE", current_player_checksum, current_item_checksum)
 	if current_player_checksum.is_empty() or current_item_checksum.is_empty():
 		return _client_decision(CLIENT_FAIL_RELEASE, "CURRENT_AUTHORITATIVE_CHECKSUM_EMPTY_AFTER_RELEASE", current_player_checksum, current_item_checksum)
 	if current_player_checksum != prepared_player_checksum or current_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_FAIL_RELEASE, "CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
-	if String(complete_id).strip_edges() == consumed_id:
-		return _client_decision(CLIENT_COMPLETE_RELEASE, "EXACT_CONSUMED_GENERATION_COMPLETE", current_player_checksum, current_item_checksum)
 	return _client_decision(CLIENT_HOLD_RELEASE, "WAITING_FOR_COORDINATOR_COMPLETE", current_player_checksum, current_item_checksum)
 
 
