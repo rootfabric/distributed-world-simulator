@@ -41,8 +41,8 @@ SUBJECT_HEAD = b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
 SUBJECT_TREE = 7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68
 SUBJECT_BRANCH = repair/m7-camera-basis-sync-r9
 
-R8_HEAD = b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
-R8_TREE = 7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68
+R8_HEAD = 25f5ddf6280a39a44ddfc3bbec5245873021c0a1
+R8_TREE = 82c6567acdc735bc02a4808159328f00722b0b6b
 
 OLD_SUBJECT_HEAD = 6fdfc047f54e727e6b398370e576c746c7949441
 OLD_SUBJECT_TREE = b9b1202d959b3da4a0c73840091c7bf56070429e
@@ -106,13 +106,13 @@ if ($LASTEXITCODE -ne 0) { throw "OLD_SUBJECT_ANCESTRY_FAILED" }
 git merge-base --is-ancestor b270fb806038333c97fa1ed49655961adddd6a21 b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
 if ($LASTEXITCODE -ne 0) { throw "SOURCE_SM1_ANCESTRY_FAILED" }
 
-git merge-base --is-ancestor b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
+git merge-base --is-ancestor 25f5ddf6280a39a44ddfc3bbec5245873021c0a1 b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
 if ($LASTEXITCODE -ne 0) { throw "R8_BASE_ANCESTRY_FAILED" }
 
 git rev-list --count 6fdfc047f54e727e6b398370e576c746c7949441..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
 git rev-list --count baa0e192209e72aba5ae9d04663eea85b1099e82..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
-git rev-list --count b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
-git diff --name-only b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
+git rev-list --count 25f5ddf6280a39a44ddfc3bbec5245873021c0a1..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
+git diff --name-only 25f5ddf6280a39a44ddfc3bbec5245873021c0a1..b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
 ~~~
 
 Expected counts: 48, 9, 2, and exactly the two R9 paths above.
