@@ -148,6 +148,18 @@ func _init() -> void:
 	)
 	_assert(String(complete_g2.get("action", "")) == Barrier.CLIENT_COMPLETE_RELEASE, "exact consumed G2 completes only when coordinator completes the same generation")
 
+	var teardown_drift_after_complete := Barrier.evaluate_consumed_release_integrity(
+		g2,
+		PLAYER_G2,
+		ITEM_G1,
+		prepare_g2,
+		g2,
+		g2,
+		PLAYER_MISMATCH,
+		ITEM_G1
+	)
+	_assert(String(teardown_drift_after_complete.get("action", "")) == Barrier.CLIENT_COMPLETE_RELEASE, "post-COMPLETE teardown drift cannot revoke an already sealed convergence")
+
 	var drift_after_release := Barrier.evaluate_consumed_release_integrity(
 		g2,
 		PLAYER_G2,
