@@ -20,6 +20,8 @@ func dimensioned_map(element_id: String) -> Dictionary:
 
 func _init() -> void:
 	var checks := 0
+
+	# FABRIC0.3 static two-source cell.
 	var two := Fabric.new_network()
 	assert(register_electrical(two)); checks += 1
 	assert(Fabric.add_element(two, Fabric.equilibrium_terminal("a", "electrical", 12.0, 2.0))); checks += 1
@@ -36,6 +38,7 @@ func _init() -> void:
 	assert(Fabric.max_balance_residual(two) <= 1.0e-9); checks += 1
 	assert(Fabric.max_power_residual(two) <= 1.0e-9); checks += 1
 
+	# Topology split/rejoin remains equation recompilation.
 	var two_hash := Fabric.state_hash(two)
 	assert(Fabric.set_bond_active(two, "ab", false)); checks += 1
 	var split := Fabric.solve(two)
@@ -48,6 +51,7 @@ func _init() -> void:
 	assert(bool(Fabric.solve(two)["ok"])); checks += 1
 	assert(Fabric.state_hash(two) == two_hash); checks += 1
 
+	# Ideal reaction remains solved, not prescribed.
 	var ideal := Fabric.new_network()
 	assert(register_electrical(ideal)); checks += 1
 	assert(Fabric.add_element(ideal, Fabric.ideal_common_constraint("ideal", "electrical", 10.0))); checks += 1
@@ -59,6 +63,7 @@ func _init() -> void:
 	assert(is_equal_approx(float(Fabric.read_port_state(ideal, "ideal", "p")["common"]), 10.0)); checks += 1
 	assert(is_equal_approx(float(Fabric.read_port_state(ideal, "ideal", "p")["balance"]), 30.0)); checks += 1
 
+	# Floating linear network still gets the stronger historical diagnostic.
 	var floating := Fabric.new_network()
 	assert(register_rotational(floating)); checks += 1
 	assert(Fabric.add_element(floating, Fabric.linear_difference_coupler("link", "rotational", 1.0))); checks += 1
@@ -66,6 +71,7 @@ func _init() -> void:
 	assert(not bool(floating_result["ok"])); checks += 1
 	assert(String(floating["diagnostics"][0]["code"]) == "SINGULAR_FLOATING_ISLAND"); checks += 1
 
+	# FABRIC0.4 mixed-domain dynamic machine still works under V3.
 	var machine := Fabric.new_network()
 	assert(register_electrical(machine)); checks += 1
 	assert(register_rotational(machine)); checks += 1
@@ -95,6 +101,7 @@ func _init() -> void:
 	assert(is_equal_approx(float(Fabric.read_port_state(machine, "map", "e")["balance"]), 0.0)); checks += 1
 	assert(is_equal_approx(float(Fabric.read_port_state(machine, "map", "m")["balance"]), 0.0)); checks += 1
 
+	# V3 Power Map remains generic enough for a 3-port differential relation.
 	var diff := Fabric.new_network()
 	assert(register_rotational(diff)); checks += 1
 	assert(Fabric.add_element(diff, Fabric.equilibrium_terminal("left_load", "rotational", 0.0, 1.0))); checks += 1
