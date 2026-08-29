@@ -133,7 +133,7 @@ func _init() -> void:
 	var convergence_pair := _coordinate_convergence_pair(a2_path, b_path, control_path, CLIENT_TIMEOUT_MS, a2_pid, b_pid)
 	a2_ready = Dictionary(convergence_pair.get("a", a2_ready))
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
-	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for identical current player and Item Graph checksums")
+	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for the same pinned player observed-state identity and Item Graph checksum")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
 
 	# Convergence is already accepted once BOTH clients consumed the same release.
@@ -706,6 +706,8 @@ func _coordinate_convergence_pair(
 			return {"success": false, "a": a, "b": b, "prepare_id": active_id, "abandoned_ids": abandoned_ids}
 		var a_player := String(a.get("player_checksum", ""))
 		var b_player := String(b.get("player_checksum", ""))
+		var a_observation: Dictionary = Dictionary(a.get("player_observation", {}))
+		var b_observation: Dictionary = Dictionary(b.get("player_observation", {}))
 		var a_item := String(a.get("item_checksum", ""))
 		var b_item := String(b.get("item_checksum", ""))
 		if active_id.is_empty():
@@ -716,6 +718,8 @@ func _coordinate_convergence_pair(
 				and b_state in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]
 				and not a_player.is_empty()
 				and a_player == b_player
+				and Barrier.observations_identical(a_observation, b_observation)
+				and String(a_observation.get("checksum", "")) == a_player
 				and not a_item.is_empty()
 				and a_item == b_item
 			):
@@ -728,6 +732,7 @@ func _coordinate_convergence_pair(
 					"convergence_prepare": {
 						"id": active_id,
 						"player_checksum": target_player,
+						"player_observation": a_observation.duplicate(true),
 						"item_checksum": target_item,
 					},
 					"convergence_release_id": "",
