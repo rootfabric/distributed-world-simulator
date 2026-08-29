@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0017",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 17,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T11:38:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m7-repair-map-r9",
+  "head_sha": "c022d877eb3e14fa34ec1741796c52ee7195717e",
+  "summary": "R9 root cause classified as a regressed M7 graphical acceptance-worker camera basis synchronization defect. Historical Windows FIX3 proved direct scalar camera_yaw assignment does not rotate the CameraYaw/view basis; the current R8 worker again contains three direct assignments and no historical camera-sync fix file. Director authorizes a two-file test/runtime-driver repair only.",
+  "command": "AUTHORIZE_R9_M7_CAMERA_BASIS_SYNC_REPAIR",
+  "exit_code": 1,
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M7-REPAIR-MAP-009.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M7-R9-ROOT-CAUSE-001.v1.json"
+  ],
+  "blocker": "R9_M7_CAMERA_BASIS_SYNC_REPAIR_REQUIRED"
+}
