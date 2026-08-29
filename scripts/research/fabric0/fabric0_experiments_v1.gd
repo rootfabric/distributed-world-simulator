@@ -33,15 +33,39 @@ static func build_breakable_link(source_value: float = 10.0, capacity: float = 5
 	return graph
 
 static func build_auto_fill_tank() -> Dictionary:
+	return build_regulated_accumulator("flow", "level", 0.0, 2.0, 7.999, 10.0)
+
+static func build_regulated_heater() -> Dictionary:
+	return build_regulated_accumulator("temperature_rate", "temperature", 18.0, 1.0, 21.999, 30.0)
+
+static func build_regulated_accumulator(
+	flow_domain: String,
+	value_domain: String,
+	initial_value: float,
+	rate: float,
+	target: float,
+	maximum: float
+) -> Dictionary:
 	var graph := Kernel.new_graph()
-	Kernel.add_element(graph, Kernel.source("pump", "flow", 2.0))
-	Kernel.add_element(graph, Kernel.gate("valve", "flow"))
-	Kernel.add_element(graph, Kernel.integrator("tank", "flow", "level", 0.0, 0.0, 10.0))
-	Kernel.add_element(graph, Kernel.threshold("level_switch", "level", 7.999, "lte"))
-	assert(Kernel.link(graph, "pump_valve", "pump", "out", "valve", "in"))
-	assert(Kernel.link(graph, "level_switch_signal", "level_switch", "out", "valve", "control"))
-	assert(Kernel.link(graph, "valve_tank", "valve", "out", "tank", "flow"))
-	assert(Kernel.link(graph, "tank_sensor", "tank", "value", "level_switch", "in"))
+	Kernel.add_element(graph, Kernel.source("source", flow_domain, rate))
+	Kernel.add_element(graph, Kernel.gate("gate", flow_domain))
+	Kernel.add_element(graph, Kernel.integrator("store", flow_domain, value_domain, initial_value, -INF, maximum))
+	Kernel.add_element(graph, Kernel.threshold("controller", value_domain, target, "lte"))
+	assert(Kernel.link(graph, "source_gate", "source", "out", "gate", "in"))
+	assert(Kernel.link(graph, "controller_gate", "controller", "out", "gate", "control"))
+	assert(Kernel.link(graph, "gate_store", "gate", "out", "store", "flow"))
+	assert(Kernel.link(graph, "store_controller", "store", "value", "controller", "in"))
+	return graph
+
+static func build_proximity_door() -> Dictionary:
+	var graph := Kernel.new_graph()
+	Kernel.add_element(graph, Kernel.source("proximity", "signal", 0.0))
+	Kernel.add_element(graph, Kernel.source("drive_rate", "position_rate", 1.0))
+	Kernel.add_element(graph, Kernel.gate("drive", "position_rate"))
+	Kernel.add_element(graph, Kernel.integrator("position", "position_rate", "position", 0.0, 0.0, 3.0))
+	assert(Kernel.link(graph, "rate_drive", "drive_rate", "out", "drive", "in"))
+	assert(Kernel.link(graph, "proximity_drive", "proximity", "out", "drive", "control"))
+	assert(Kernel.link(graph, "drive_position", "drive", "out", "position", "flow"))
 	return graph
 
 static func run_all() -> Dictionary:
@@ -65,7 +89,21 @@ static func run_all() -> Dictionary:
 	var tank_history: Array = []
 	for _tick in range(8):
 		Kernel.step(tank)
-		tank_history.append(float(Kernel.read_state(tank, "tank", "value")))
+		tank_history.append(float(Kernel.read_state(tank, "store", "value")))
+
+	var heater := build_regulated_heater()
+	var heater_history: Array = []
+	for _tick in range(8):
+		Kernel.step(heater)
+		heater_history.append(float(Kernel.read_state(heater, "store", "value")))
+
+	var door := build_proximity_door()
+	Kernel.step(door)
+	var door_closed := float(Kernel.read_state(door, "position", "value"))
+	Kernel.set_source_value(door, "proximity", 1.0)
+	Kernel.step(door)
+	Kernel.step(door)
+	var door_opening := float(Kernel.read_state(door, "position", "value"))
 
 	return {
 		"lamp_off": lamp_off,
@@ -75,7 +113,11 @@ static func run_all() -> Dictionary:
 		"breaker_events": breaker["events"].duplicate(true),
 		"components_before": components_before,
 		"components_after": components_after,
-		"tank_level": float(Kernel.read_state(tank, "tank", "value")),
+		"tank_level": float(Kernel.read_state(tank, "store", "value")),
 		"tank_history": tank_history,
 		"tank_hash": Kernel.state_hash(tank),
+		"heater_temperature": float(Kernel.read_state(heater, "store", "value")),
+		"heater_history": heater_history,
+		"door_closed": door_closed,
+		"door_opening": door_opening,
 	}
