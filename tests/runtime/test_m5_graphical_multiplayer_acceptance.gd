@@ -709,9 +709,11 @@ func _coordinate_convergence_pair(
 		var a_item := String(a.get("item_checksum", ""))
 		var b_item := String(b.get("item_checksum", ""))
 		if active_id.is_empty():
+			# The parent is the single convergence pair matcher. Clients publish
+			# their own current checksums and do not wait on one another's report.
 			if (
-				a_state == "CONVERGENCE_LOCKED"
-				and b_state == "CONVERGENCE_LOCKED"
+				a_state in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]
+				and b_state in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]
 				and not a_player.is_empty()
 				and a_player == b_player
 				and not a_item.is_empty()

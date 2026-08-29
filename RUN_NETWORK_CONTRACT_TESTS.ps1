@@ -69,6 +69,7 @@ $Tests = @(
     "res://tests/runtime/test_m4_networked_playground_extension.gd",
     "res://tests/runtime/test_m5_graphical_acceptance_preparation.gd",
     "res://tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+    "res://tests/runtime/support/m5_convergence_release_guard_regression.gd",
     "res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
     "res://tests/runtime/test_m6_dedicated_recovery_contracts.gd",
     "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",

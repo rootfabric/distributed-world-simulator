@@ -246,10 +246,11 @@ func _process(_delta: float) -> void:
 			if not reconnect_peer_path.is_empty():
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
-		"WAIT_CONVERGENCE_PEER":
-			# A prepared acknowledgement remains revocable until release is actually
-			# consumed. Fresh authoritative checksums are read before any prepared
-			# short-circuit so a superseded generation can never complete.
+		"WAIT_CONVERGENCE_COORDINATOR":
+			# M5_CONVERGENCE_PAIR_MATCHING_PARENT_OWNED:
+			# clients publish only their own authoritative checksums. The parent
+			# coordinator is the sole matcher and generation writer; clients no
+			# longer form a second peer-to-peer barrier through result files.
 			var control := Support.read(_control_file)
 			var prepare: Dictionary = control.get("convergence_prepare", {})
 			var prepare_id := String(prepare.get("id", "")).strip_edges()
@@ -260,16 +261,37 @@ func _process(_delta: float) -> void:
 			var finish_client_id := String(control.get("convergence_finish_client_id", "")).strip_edges()
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
+
 			if _convergence_release_consumed:
-				# Release consumption is the exact convergence acceptance point. Keep
-				# the client connected until the coordinator observes both releases,
-				# preventing the first graceful leave from invalidating the peer.
-				if prepare_id != _convergence_prepare_id or release_id != _convergence_release_id:
-					_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
-					return
-				if complete_id == _convergence_release_id and finish_client_id == _client_id:
-					_finish(true)
-				return
+				# A consumed release is a durable acceptance event for this generation.
+				# It can no longer silently revoke back to READY; any control/checksum
+				# regression is an explicit fail-closed defect.
+				var consumed_decision := Barrier.evaluate_consumed_release_integrity(
+					_convergence_release_id,
+					_prepared_player_checksum,
+					_prepared_item_checksum,
+					prepare,
+					release_id,
+					complete_id,
+					latest_player_checksum,
+					latest_item_checksum
+				)
+				match String(consumed_decision.get("action", "")):
+					Barrier.CLIENT_FAIL_RELEASE:
+						_fail("M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED", {
+							"reason": String(consumed_decision.get("reason", "")),
+							"generation": _convergence_release_id,
+							"current_player_checksum": latest_player_checksum,
+							"current_item_checksum": latest_item_checksum,
+						})
+						return
+					Barrier.CLIENT_COMPLETE_RELEASE:
+						if finish_client_id == _client_id:
+							_finish(true)
+						return
+					_:
+						return
+
 			if _convergence_prepared:
 				var release_decision := Barrier.evaluate_prepared_release(
 					_convergence_prepare_id,
@@ -291,6 +313,7 @@ func _process(_delta: float) -> void:
 						return
 					_:
 						return
+
 			if (
 				not latest_player_checksum.is_empty()
 				and not latest_item_checksum.is_empty()
@@ -301,21 +324,15 @@ func _process(_delta: float) -> void:
 				_convergence_world = runtime.create_m3_graphical_client_report()
 				_convergence_locked = false
 				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
-			if not _convergence_locked:
-				var peer_ready := Support.read(_peer_result_file)
-				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "CONVERGENCE_PREPARED"]:
-					return
-				if String(peer_ready.get("player_checksum", "")) != _player_checksum:
-					return
-				if String(peer_ready.get("item_checksum", "")) != _item_checksum:
-					return
-				_convergence_locked = true
-				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
+
+			# PREPARE is authored only by the parent after it observed both current
+			# client reports with the same non-empty checksums.
 			if (
 				not prepare_id.is_empty()
-				and prepare_player_checksum == _player_checksum
-				and prepare_item_checksum == _item_checksum
+				and prepare_player_checksum == latest_player_checksum
+				and prepare_item_checksum == latest_item_checksum
 			):
+				_convergence_locked = true
 				_convergence_prepare_id = prepare_id
 				_prepared_player_checksum = prepare_player_checksum
 				_prepared_item_checksum = prepare_item_checksum
@@ -455,7 +472,7 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		_finish(false)
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
-	_set_stage("WAIT_CONVERGENCE_PEER")
+	_set_stage("WAIT_CONVERGENCE_COORDINATOR")
 
 
 func _revoke_convergence_prepare(
