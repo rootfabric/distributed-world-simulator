@@ -33,10 +33,10 @@ static func build_breakable_link(source_value: float = 10.0, capacity: float = 5
 	return graph
 
 static func build_auto_fill_tank() -> Dictionary:
-	return build_regulated_accumulator("flow", "level", 0.0, 2.0, 7.999, 10.0)
+	return build_regulated_accumulator("flow", "level", 0.0, 2.0, 8.0, 0.0, 10.0)
 
 static func build_regulated_heater() -> Dictionary:
-	return build_regulated_accumulator("temperature_rate", "temperature", 18.0, 1.0, 21.999, 30.0)
+	return build_regulated_accumulator("temperature_rate", "temperature", 18.0, 1.0, 22.0, -273.15, 30.0)
 
 static func build_regulated_accumulator(
 	flow_domain: String,
@@ -44,13 +44,14 @@ static func build_regulated_accumulator(
 	initial_value: float,
 	rate: float,
 	target: float,
+	minimum: float,
 	maximum: float
 ) -> Dictionary:
 	var graph := Kernel.new_graph()
 	Kernel.add_element(graph, Kernel.source("source", flow_domain, rate))
 	Kernel.add_element(graph, Kernel.gate("gate", flow_domain))
-	Kernel.add_element(graph, Kernel.integrator("store", flow_domain, value_domain, initial_value, -INF, maximum))
-	Kernel.add_element(graph, Kernel.threshold("controller", value_domain, target, "lte"))
+	Kernel.add_element(graph, Kernel.integrator("store", flow_domain, value_domain, initial_value, minimum, maximum))
+	Kernel.add_element(graph, Kernel.threshold("controller", value_domain, target, "lt"))
 	assert(Kernel.link(graph, "source_gate", "source", "out", "gate", "in"))
 	assert(Kernel.link(graph, "controller_gate", "controller", "out", "gate", "control"))
 	assert(Kernel.link(graph, "gate_store", "gate", "out", "store", "flow"))
