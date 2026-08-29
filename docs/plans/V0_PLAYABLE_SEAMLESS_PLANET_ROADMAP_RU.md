@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 correctness R7 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 control-read R8 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -394,3 +394,19 @@ R7 Repair Map: PR #305. Implementation: PR #306 @ `baa0e192209e72aba5ae9d04663ee
 R7 пинит exact snapshot identity (checksum + revision + server_tick + authority owner/epoch) при PREPARE. После exact PREPARE live player state может двигаться только вперёд; revision/tick regression, authority change, control mutation и Item Graph drift остаются fail-closed.
 
 Без freeze, retry, timeout inflation и без изменений transport/player movement/PlayerStateSnapshot/SM1 runtime. B6/B7 остаются BLOCKED до Windows contracts + pure regression + pipe smoke + 10/10 stability; затем допустим один canonical full regression first attempt.
+
+### M5 R8 bounded control-read continuity
+
+Windows R7 exact candidate `baa0e192209e72aba5ae9d04663eea85b1099e82` / tree `08f01fd955c2d31c1ad49aa917e542c93e278241` прошёл contracts `115/0`, R7 pure regression `31/0` и pipe smoke, но decisive series остановилась на run 1 с `CONTROL_GENERATION_REGRESSED_AFTER_RELEASE`.
+
+Forensics показал, что runtime/convergence state был корректен: final `control.json` содержал один и тот же prepare/release/complete generation, player observation двигался монотонно, Item Graph не менялся. Клиент попал в краткое окно отсутствия `control.json` во время AtomicJson replace.
+
+Важно: простой `DirAccess.rename(temp, target)` не гарантирует атомарную замену существующего файла на Windows — реализация Godot удаляет destination перед `MoveFileW`. Поэтому R8 не заявляет fake atomic replace.
+
+R8 Repair Map: PR #309. Implementation: PR #310 @ `25f5ddf6280a39a44ddfc3bbec5245873021c0a1`, tree `82c6567acdc735bc02a4808159328f00722b0b6b`.
+
+R8 добавляет bounded typed retry только для `ATOMIC_JSON_NOT_FOUND / OPEN_FAILED / EMPTY / INCOMPLETE`; valid JSON `{}` остаётся немедленным успешным чтением и не маскируется как transient. После исчерпания bounded window клиент завершает тест явным `M5_CONTROL_READ_UNAVAILABLE`. Все direct `Support.read(_control_file)` удалены; R7 convergence barrier не изменён.
+
+Author exact double-Godot regression: `M5 control read consistency regression: 25 assertions, 0 failures`.
+
+B6/B7 остаются BLOCKED до Windows R8: contracts + R7 regression + control-read regression + pipe smoke + 10/10 stability. Только после 10/10 разрешён один canonical full regression first attempt.
