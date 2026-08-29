@@ -38,18 +38,37 @@ func _init() -> void:
 	assert(String(breaker["events"][0]["type"]) == "bond_broken"); checks += 1
 
 	var tank := Experiments.build_auto_fill_tank()
-	var history: Array[float] = []
+	var tank_history: Array[float] = []
 	for _tick in range(8):
 		Kernel.step(tank)
-		history.append(float(Kernel.read_state(tank, "tank", "value")))
-	assert(history.size() == 8); checks += 1
-	assert(is_equal_approx(history[0], 2.0)); checks += 1
-	assert(is_equal_approx(history[1], 4.0)); checks += 1
-	assert(is_equal_approx(history[2], 6.0)); checks += 1
-	assert(is_equal_approx(history[3], 8.0)); checks += 1
-	assert(is_equal_approx(history[4], 8.0)); checks += 1
-	assert(is_equal_approx(history[5], 8.0)); checks += 1
-	assert(is_equal_approx(history[7], 8.0)); checks += 1
+		tank_history.append(float(Kernel.read_state(tank, "store", "value")))
+	assert(tank_history.size() == 8); checks += 1
+	assert(is_equal_approx(tank_history[0], 2.0)); checks += 1
+	assert(is_equal_approx(tank_history[1], 4.0)); checks += 1
+	assert(is_equal_approx(tank_history[2], 6.0)); checks += 1
+	assert(is_equal_approx(tank_history[3], 8.0)); checks += 1
+	assert(is_equal_approx(tank_history[4], 8.0)); checks += 1
+	assert(is_equal_approx(tank_history[7], 8.0)); checks += 1
+
+	var heater := Experiments.build_regulated_heater()
+	var heater_history: Array[float] = []
+	for _tick in range(8):
+		Kernel.step(heater)
+		heater_history.append(float(Kernel.read_state(heater, "store", "value")))
+	assert(is_equal_approx(heater_history[0], 19.0)); checks += 1
+	assert(is_equal_approx(heater_history[1], 20.0)); checks += 1
+	assert(is_equal_approx(heater_history[2], 21.0)); checks += 1
+	assert(is_equal_approx(heater_history[3], 22.0)); checks += 1
+	assert(is_equal_approx(heater_history[7], 22.0)); checks += 1
+	assert(tank["elements"].size() == heater["elements"].size()); checks += 1
+
+	var door := Experiments.build_proximity_door()
+	Kernel.step(door)
+	assert(is_equal_approx(float(Kernel.read_state(door, "position", "value")), 0.0)); checks += 1
+	assert(Kernel.set_source_value(door, "proximity", 1.0)); checks += 1
+	Kernel.step(door)
+	Kernel.step(door)
+	assert(is_equal_approx(float(Kernel.read_state(door, "position", "value")), 2.0)); checks += 1
 
 	var replay_a := Experiments.build_auto_fill_tank()
 	var replay_b := Experiments.build_auto_fill_tank()
@@ -64,13 +83,19 @@ func _init() -> void:
 	assert(is_equal_approx(float(summary["converted_power"]), 72.0)); checks += 1
 	assert(not bool(summary["breaker_active"])); checks += 1
 	assert(int(summary["components_after"]) == 2); checks += 1
+	assert(is_equal_approx(float(summary["tank_level"]), 8.0)); checks += 1
+	assert(is_equal_approx(float(summary["heater_temperature"]), 22.0)); checks += 1
+	assert(is_equal_approx(float(summary["door_closed"]), 0.0)); checks += 1
+	assert(is_equal_approx(float(summary["door_opening"]), 2.0)); checks += 1
 	assert(String(summary["tank_hash"]).length() == 64); checks += 1
 
-	print("FABRIC0 Acceptance: PASS (%d assertions) lamp=%.1f converted=%.1f tank=%.1f hash=%s" % [
+	print("FABRIC0 Acceptance: PASS (%d assertions) lamp=%.1f converted=%.1f tank=%.1f heater=%.1f door=%.1f hash=%s" % [
 		checks,
 		float(summary["lamp_on"]),
 		float(summary["converted_power"]),
 		float(summary["tank_level"]),
+		float(summary["heater_temperature"]),
+		float(summary["door_opening"]),
 		String(summary["tank_hash"]),
 	])
 	quit(0)
