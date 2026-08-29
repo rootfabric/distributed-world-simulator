@@ -14,7 +14,7 @@
   "acceptance": {
     "entrypoint": "res://tests/research/fabric0/fabric0_acceptance.gd",
     "exit_code": 0,
-    "assertions": 32,
+    "assertions": 44,
     "marker": "FABRIC0 Acceptance: PASS",
     "observations": {
       "switchable_function_off": 0.0,
@@ -26,7 +26,10 @@
       "connected_components_before_break": 1,
       "connected_components_after_break": 2,
       "closed_loop_level_history": [2.0, 4.0, 6.0, 8.0, 8.0, 8.0, 8.0, 8.0],
-      "deterministic_state_hash": "a35f0d7a22e718a8b4001aafa207830d1577b12f042dd23d920f4ab9ba2eb552"
+      "regulated_heater_history": [19.0, 20.0, 21.0, 22.0, 22.0, 22.0, 22.0, 22.0],
+      "proximity_door_position_without_signal": 0.0,
+      "proximity_door_position_after_two_active_steps": 2.0,
+      "deterministic_state_hash": "3e48d526832a6ae641c91ba32e1954d9e2e2fe0d9574f006c5ca3f2be9981e4c"
     }
   },
   "playground": {
@@ -40,6 +43,8 @@
     "cross-domain conversion composes from generic local laws",
     "bond overload mutates topology and splits connected components",
     "closed-loop feedback stabilizes state using generic primitives",
+    "the same regulated-accumulator topology stabilizes two semantic domains: level and temperature",
+    "control plus state composes a proximity-driven door without a Door kernel class",
     "identical graph and inputs produce identical canonical SHA-256 state hash"
   ],
   "non_claims": [
