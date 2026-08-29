@@ -112,15 +112,15 @@ static func evaluate_consumed_release_integrity(
 		return _client_decision(CLIENT_FAIL_RELEASE, "RELEASE_ID_REGRESSED_AFTER_CONSUMPTION", current_player_checksum, current_item_checksum)
 	if not observations_identical(control_observation, prepared_player_observation) or control_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_FAIL_RELEASE, "PREPARED_TARGET_CHANGED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
-	# Coordinator COMPLETE seals the exact pinned observation before serialized
-	# teardown can legitimately change connection/player presentation fields.
-	if String(complete_id).strip_edges() == consumed_id:
-		return _client_decision(CLIENT_COMPLETE_RELEASE, "PINNED_OBSERVED_STATE_IDENTITY_COMPLETE", current_player_checksum, current_item_checksum)
 	if current_item_checksum.is_empty() or current_item_checksum != prepared_item_checksum:
 		return _client_decision(CLIENT_FAIL_RELEASE, "ITEM_GRAPH_ADVANCED_AFTER_RELEASE", current_player_checksum, current_item_checksum)
 	var progress := evaluate_observed_state_progress(prepared_player_observation, current_player_observation)
 	if not bool(progress.get("success", false)):
 		return _client_decision(CLIENT_FAIL_RELEASE, String(progress.get("reason", "OBSERVED_STATE_PROGRESS_INVALID")), current_player_checksum, current_item_checksum)
+	# Exact COMPLETE seals the pinned observation checkpoint, while the live
+	# player snapshot is allowed to be a monotonic descendant of that checkpoint.
+	if String(complete_id).strip_edges() == consumed_id:
+		return _client_decision(CLIENT_COMPLETE_RELEASE, "PINNED_OBSERVED_STATE_IDENTITY_COMPLETE", current_player_checksum, current_item_checksum)
 	return _client_decision(CLIENT_HOLD_RELEASE, "WAITING_FOR_COORDINATOR_COMPLETE", current_player_checksum, current_item_checksum)
 
 
