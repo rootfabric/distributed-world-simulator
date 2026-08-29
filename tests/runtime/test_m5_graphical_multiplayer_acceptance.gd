@@ -133,7 +133,7 @@ func _init() -> void:
 	var convergence_pair := _coordinate_convergence_pair(a2_path, b_path, control_path, CLIENT_TIMEOUT_MS, a2_pid, b_pid)
 	a2_ready = Dictionary(convergence_pair.get("a", a2_ready))
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
-	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for identical current player and Item Graph checksums")
+	_assert(bool(convergence_pair.get("success", false)), "A and B consumed release for the same pinned player observed-state identity and Item Graph checksum")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
 
 	# Convergence is already accepted once BOTH clients consumed the same release.
