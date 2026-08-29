@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 diagnostic R5 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 correctness R6 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -368,3 +368,15 @@ R5 Repair Map: PR #301. Diagnostic implementation: PR #302 @ `b9bc54086e959e7d26
 R5 использует FileAccess pipe `get_length() -> get_buffer() -> get_error()` и обязует stability runner выполнить настоящий stdout+stderr pipe smoke до run 1. Exact double-Godot algorithm smoke локально PASS (stdout/stderr по 13 bytes, child exit 0).
 
 R5 остаётся diagnostic-only; canonical full regression из этой ветки не запускается автоматически. B6/B7 остаются BLOCKED.
+
+### M5 R6 centralized convergence repair
+
+R5 diagnostic gate на Windows полностью локализовал активный дефект: run 1 PASS, run 2 PASS, run 3 FAIL; A2 и B оба провели ~150s в `WAIT_CONVERGENCE_PEER`, затем сами завершились с exit=1 / `NOT_PARENT_INITIATED`. Parent-side prepare/release asserts при этом уже были зелёными.
+
+Root cause: convergence-клиенты формировали второй peer-to-peer barrier через result-файлы, а `CONVERGENCE_RELEASED` оставался revocable. Из-за последовательного чтения `a.json`/`b.json` parent мог собрать временно несовместимые RELEASED snapshots и ложно решить, что оба release consumed.
+
+R6 Repair Map: PR #303. Implementation: PR #304 @ `796a84f097f54b009e9745353a28a294f2937a70`, tree `5c064747589f298cc35b8f33a66a4ba55ac833c5`.
+
+R6 делает parent единственным pair matcher, убирает peer-result gating из convergence, делает consumed release monotonic для generation и превращает post-release drift/control regression в явный fail-closed. Exact COMPLETE запечатывает convergence до штатного serialized teardown.
+
+Pure convergence monotonicity regression включён в `RUN_NETWORK_CONTRACT_TESTS.ps1`. B6/B7 остаются BLOCKED до Windows contracts + pure regression + pipe smoke + 10/10 stability; только затем допустим один canonical full regression first attempt.
