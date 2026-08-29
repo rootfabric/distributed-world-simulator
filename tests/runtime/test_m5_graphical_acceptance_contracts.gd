@@ -118,6 +118,8 @@ func _test_source_and_runners(manifest: Dictionary) -> void:
 	_assert(driver.contains("stage_elapsed_ms := now_ms - _stage_started_ms"), "M5 acceptance timeout must be scoped to current stage")
 	_assert(not driver.contains("Time.get_ticks_msec() - _started_ms > TIMEOUT_MS"), "M5 acceptance timeout must not use process lifetime clock")
 	_assert(driver.contains("M5_CONVERGENCE_PAIR_MATCHING_PARENT_OWNED"), "M5 convergence pair matching must be parent-owned")
+	_assert(driver.contains("WAIT_CONVERGENCE_COORDINATOR"), "M5 convergence stage must name the parent coordinator")
+	_assert(not driver.contains("WAIT_CONVERGENCE_PEER"), "M5 convergence stage must not retain peer-wait semantics")
 	_assert(not driver.contains("var peer_ready := Support.read(_peer_result_file)"), "M5 convergence phase must not form a peer-to-peer result-file barrier")
 	_assert(driver.contains("evaluate_consumed_release_integrity"), "M5 consumed release must use monotonic post-release integrity guard")
 	_assert(driver.contains("M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED"), "M5 post-release regression must fail explicitly")
