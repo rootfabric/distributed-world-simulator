@@ -1269,4 +1269,297 @@ static func _apply_solution(network: Dictionary, model: Dictionary, x: Array, de
 				_set_port_state(element, "p", common, balance)
 			"fixed_balance_terminal":
 				var global_cell := int(cell_map[_port_ref(element_id, "p")])
-				_set_port_state(element, "p", float(x[int(loc
+				_set_port_state(element, "p", float(x[int(local_cell_unknown[global_cell])]), float(element["law"]["balance"]))
+			"linear_difference_coupler":
+				var a_global := int(cell_map[_port_ref(element_id, "a")])
+				var b_global := int(cell_map[_port_ref(element_id, "b")])
+				var common_a := float(x[int(local_cell_unknown[a_global])])
+				var common_b := float(x[int(local_cell_unknown[b_global])])
+				var transfer := float(element["law"]["response_gain"]) * (common_a - common_b)
+				_set_port_state(element, "a", common_a, -transfer)
+				_set_port_state(element, "b", common_b, transfer)
+			"ideal_common_constraint", "linear_power_map":
+				for port_name in port_names:
+					var global_cell := int(cell_map[_port_ref(element_id, String(port_name))])
+					var common := float(x[int(local_cell_unknown[global_cell])])
+					_set_port_state(element, String(port_name), common, float(reactions.get(element_id, {}).get(port_name, 0.0)))
+			"linear_storage_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				var common := float(x[int(local_cell_unknown[global_cell])])
+				var capacity := float(element["law"]["capacity"])
+				var previous := float(element["state"].get("common", 0.0))
+				_set_port_state(element, "p", common, capacity / delta * (previous - common))
+			"nonlinear_constitutive":
+				for port_name in port_names:
+					var global_cell := int(cell_map[_port_ref(element_id, String(port_name))])
+					var common := float(x[int(local_cell_unknown[global_cell])])
+					var balance_index := int(model["nonlinear_balance_indices"][_port_ref(element_id, String(port_name))])
+					_set_port_state(element, String(port_name), common, float(x[balance_index]))
+
+		var power_into_cells := 0.0
+		for port_name in port_names:
+			power_into_cells += float(element["state"]["ports"][port_name]["power_into_cell"])
+		element["state"]["absorbed_power"] = -power_into_cells
+
+static func _commit_dynamic_state(network: Dictionary, delta: float) -> void:
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var element: Dictionary = network["elements"][element_id]
+		if String(element["law"].get("op", "")) != "linear_storage_terminal":
+			continue
+		var previous := float(element["state"].get("common", 0.0))
+		var current := float(element["state"]["ports"]["p"]["common"])
+		var capacity := float(element["law"]["capacity"])
+		var before_energy := 0.5 * capacity * previous * previous
+		var after_energy := 0.5 * capacity * current * current
+		var absorbed_work := float(element["state"]["absorbed_power"]) * delta
+		var delta_energy := after_energy - before_energy
+		element["state"]["common"] = current
+		element["state"]["energy"] = after_energy
+		element["state"]["last_delta_energy"] = delta_energy
+		element["state"]["last_absorbed_work"] = absorbed_work
+		element["state"]["last_numerical_dissipation"] = absorbed_work - delta_energy
+
+static func _compute_cell_residuals(network: Dictionary, island: Array) -> void:
+	for global_cell in island:
+		var cell: Dictionary = network["cells"][global_cell]
+		var balance := 0.0
+		for ref in cell["ports"]:
+			var parts := String(ref).split("::", false, 1)
+			balance += float(network["elements"][String(parts[0])]["state"]["ports"][String(parts[1])]["balance"])
+		cell["balance_residual"] = balance
+		cell["power_residual"] = float(cell["common"]) * balance
+		cell["status"] = "SOLVED"
+
+# -----------------------------------------------------------------------------
+# Solver helpers.
+# -----------------------------------------------------------------------------
+
+static func _initial_cell_guess(network: Dictionary, global_cell: int, previous_port_states: Dictionary) -> float:
+	var cell: Dictionary = network["cells"][global_cell]
+	var domain: Dictionary = network["domains"][String(cell["domain"])]
+	var previous_values: Array[float] = []
+	for ref in cell["ports"]:
+		if previous_port_states.has(ref):
+			var value := float(previous_port_states[ref].get("common", 0.0))
+			if absf(value) > EPSILON:
+				previous_values.append(value)
+	if not previous_values.is_empty():
+		var sum := 0.0
+		for value in previous_values:
+			sum += value
+		return sum / float(previous_values.size())
+	# Prefer explicit storage state where available.
+	for ref in cell["ports"]:
+		var parts := String(ref).split("::", false, 1)
+		var element: Dictionary = network["elements"][String(parts[0])]
+		if String(element["law"].get("op", "")) == "linear_storage_terminal":
+			return float(element["state"].get("common", 0.0))
+	# Weighted equilibrium estimate is an excellent generic seed for static nets.
+	var weighted := 0.0
+	var weight := 0.0
+	for ref in cell["ports"]:
+		var parts := String(ref).split("::", false, 1)
+		var element: Dictionary = network["elements"][String(parts[0])]
+		if String(element["law"].get("op", "")) == "equilibrium_terminal":
+			var g := float(element["law"].get("response_gain", 0.0))
+			weighted += g * float(element["law"].get("preferred_common", 0.0))
+			weight += g
+	if weight > EPSILON:
+		return weighted / weight
+	return float(domain["common_nominal"])
+
+static func _validate_constraint_conflicts(network: Dictionary, constraints: Array) -> Dictionary:
+	var by_cell := {}
+	for constraint in constraints:
+		if String(constraint.get("kind", "")) != "ideal_common":
+			continue
+		var global_cell := int(constraint["terms"][0]["global_cell"])
+		if not by_cell.has(global_cell):
+			by_cell[global_cell] = []
+		by_cell[global_cell].append(constraint)
+	for global_cell in by_cell.keys():
+		var items: Array = by_cell[global_cell]
+		if items.size() <= 1:
+			continue
+		var first_value := float(items[0]["value"])
+		var element_ids: Array = []
+		for item in items:
+			element_ids.append(String(item["element_id"]))
+			if absf(float(item["value"]) - first_value) > EPSILON:
+				return {"ok": false, "code": "CONSTRAINT_CONFLICT", "cell_id": String(network["cells"][global_cell]["id"]), "elements": element_ids}
+		return {"ok": false, "code": "REDUNDANT_IDEAL_CONSTRAINT", "cell_id": String(network["cells"][global_cell]["id"]), "elements": element_ids}
+	return {"ok": true}
+
+static func _normalized_residual_norm(residual: Array, row_nominals: Array) -> float:
+	var result := 0.0
+	for index in range(residual.size()):
+		result = maxf(result, absf(float(residual[index])) / maxf(float(row_nominals[index]), EPSILON))
+	return result
+
+static func _grad_scaled(source: Dictionary, scale: float) -> Dictionary:
+	var result := {}
+	for key in source.keys():
+		result[key] = float(source[key]) * scale
+	return result
+
+static func _grad_combine(a: Dictionary, scale_a: float, b: Dictionary, scale_b: float) -> Dictionary:
+	var result := {}
+	for key in a.keys():
+		result[key] = float(result.get(key, 0.0)) + float(a[key]) * scale_a
+	for key in b.keys():
+		result[key] = float(result.get(key, 0.0)) + float(b[key]) * scale_b
+	return result
+
+static func _capture_port_states(network: Dictionary) -> Dictionary:
+	var result := {}
+	for element_id in network["elements"].keys():
+		var element: Dictionary = network["elements"][element_id]
+		for port_name in element["state"]["ports"].keys():
+			result[_port_ref(String(element_id), String(port_name))] = element["state"]["ports"][port_name].duplicate(true)
+	return result
+
+static func _set_port_state(element: Dictionary, port_name: String, common: float, balance: float) -> void:
+	element["state"]["ports"][port_name] = {
+		"common": common,
+		"balance": balance,
+		"power_into_cell": common * balance,
+	}
+
+static func _mark_island_failed(network: Dictionary, island: Array, code: String) -> void:
+	for cell_index in island:
+		network["cells"][cell_index]["status"] = code
+
+static func _reset_port_states(network: Dictionary) -> void:
+	for element in network["elements"].values():
+		element["state"]["absorbed_power"] = 0.0
+		if element["state"].has("constraint_lambdas"):
+			element["state"]["constraint_lambdas"] = []
+		for port_name in element["state"]["ports"].keys():
+			element["state"]["ports"][port_name] = {"common": 0.0, "balance": 0.0, "power_into_cell": 0.0}
+
+static func _physical_element(element_id: String, law: Dictionary, port_domains: Dictionary) -> Dictionary:
+	var ports := {}
+	var port_states := {}
+	var port_names: Array = port_domains.keys()
+	port_names.sort()
+	for port_name in port_names:
+		ports[port_name] = {"direction": "physical", "domain": String(port_domains[port_name])}
+		port_states[port_name] = {"common": 0.0, "balance": 0.0, "power_into_cell": 0.0}
+	return {
+		"id": element_id,
+		"law": law.duplicate(true),
+		"ports": ports,
+		"state": {"ports": port_states, "absorbed_power": 0.0},
+	}
+
+static func _solve_dense(matrix: Array, rhs: Array) -> Dictionary:
+	var size := rhs.size()
+	if matrix.size() != size:
+		return {"ok": false, "code": "BAD_MATRIX_SHAPE"}
+	if size == 0:
+		return {"ok": true, "x": []}
+	var a: Array = []
+	for row in range(size):
+		if matrix[row].size() != size:
+			return {"ok": false, "code": "BAD_MATRIX_SHAPE"}
+		var values: Array = []
+		for col in range(size):
+			values.append(float(matrix[row][col]))
+		a.append(values)
+	var b: Array = []
+	for value in rhs:
+		b.append(float(value))
+	for col in range(size):
+		var pivot := col
+		var pivot_abs := absf(float(a[col][col]))
+		for row in range(col + 1, size):
+			var candidate := absf(float(a[row][col]))
+			if candidate > pivot_abs:
+				pivot = row
+				pivot_abs = candidate
+		if pivot_abs <= PIVOT_EPSILON:
+			return {"ok": false, "code": "SINGULAR_MATRIX"}
+		if pivot != col:
+			var row_tmp = a[col]
+			a[col] = a[pivot]
+			a[pivot] = row_tmp
+			var b_tmp = b[col]
+			b[col] = b[pivot]
+			b[pivot] = b_tmp
+		var pivot_value := float(a[col][col])
+		for j in range(col, size):
+			a[col][j] = float(a[col][j]) / pivot_value
+		b[col] = float(b[col]) / pivot_value
+		for row in range(size):
+			if row == col:
+				continue
+			var factor := float(a[row][col])
+			if absf(factor) <= EPSILON:
+				continue
+			for j in range(col, size):
+				a[row][j] = float(a[row][j]) - factor * float(a[col][j])
+			b[row] = float(b[row]) - factor * float(b[col])
+	return {"ok": true, "x": b}
+
+static func _zero_matrix(rows: int, cols: int) -> Array:
+	var matrix: Array = []
+	for _row in range(rows):
+		var values: Array = []
+		values.resize(cols)
+		values.fill(0.0)
+		matrix.append(values)
+	return matrix
+
+static func _zero_vector(size: int) -> Array:
+	var values: Array = []
+	values.resize(size)
+	values.fill(0.0)
+	return values
+
+static func _cell_ids(network: Dictionary, island: Array) -> Array:
+	var result: Array = []
+	for cell_index in island:
+		result.append(String(network["cells"][cell_index]["id"]))
+	return result
+
+static func _find_bond_index(network: Dictionary, bond_id: String) -> int:
+	for index in range(network["bonds"].size()):
+		if String(network["bonds"][index].get("id", "")) == bond_id:
+			return index
+	return -1
+
+static func _port_ref(element_id: String, port_name: String) -> String:
+	return "%s::%s" % [element_id, port_name]
+
+static func _normalize_dimension(source: Dictionary) -> Dictionary:
+	var result := {}
+	for key in DIMENSION_KEYS:
+		result[key] = int(source.get(key, 0))
+	return result
+
+static func _sorted_dictionary(source: Dictionary) -> Dictionary:
+	var result := {}
+	var keys: Array = source.keys()
+	keys.sort()
+	for key in keys:
+		result[key] = _canonical_value(source[key])
+	return result
+
+static func _canonical_value(value: Variant) -> Variant:
+	if value is float:
+		var number := float(value)
+		if is_nan(number):
+			return "NaN"
+		if is_inf(number):
+			return "-Inf" if number < 0.0 else "Inf"
+		return number
+	if value is Dictionary:
+		return _sorted_dictionary(value)
+	if value is Array:
+		var items: Array = []
+		for item in value:
+			items.append(_canonical_value(item))
+		return items
+	return value
