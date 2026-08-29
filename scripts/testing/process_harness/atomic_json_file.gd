@@ -58,7 +58,9 @@ static func write_dictionary(path: String, value: Dictionary, pretty := true) ->
 
 
 static func read_dictionary(path: String) -> Dictionary:
-	if path.strip_edges().is_empty() or not FileAccess.file_exists(path):
+	if path.strip_edges().is_empty():
+		return {"success": false, "error_code": "ATOMIC_JSON_PATH_EMPTY", "value": {}}
+	if not FileAccess.file_exists(path):
 		return {"success": false, "error_code": "ATOMIC_JSON_NOT_FOUND", "value": {}}
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
