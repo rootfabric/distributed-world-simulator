@@ -170,21 +170,29 @@ static func evaluate_coordinator_generation(
 
 
 static func _report_prepared_for(report: Dictionary, generation: String) -> bool:
+	var observation: Dictionary = Dictionary(report.get("player_observation", {}))
+	var prepared_observation: Dictionary = Dictionary(report.get("prepared_player_observation", {}))
 	return (
 		String(report.get("state", "")) == "CONVERGENCE_PREPARED"
 		and bool(report.get("convergence_prepared", false))
 		and String(report.get("convergence_prepare_id", "")) == generation
 		and not bool(report.get("convergence_release_consumed", false))
+		and observations_identical(observation, prepared_observation)
+		and String(prepared_observation.get("checksum", "")) == String(report.get("player_checksum", ""))
 	)
 
 
 static func _report_released_for(report: Dictionary, generation: String) -> bool:
+	var observation: Dictionary = Dictionary(report.get("player_observation", {}))
+	var prepared_observation: Dictionary = Dictionary(report.get("prepared_player_observation", {}))
 	return (
 		String(report.get("state", "")) == "CONVERGENCE_RELEASED"
 		and bool(report.get("convergence_prepared", false))
 		and bool(report.get("convergence_release_consumed", false))
 		and String(report.get("convergence_prepare_id", "")) == generation
 		and String(report.get("convergence_release_id", "")) == generation
+		and observations_identical(observation, prepared_observation)
+		and String(prepared_observation.get("checksum", "")) == String(report.get("player_checksum", ""))
 	)
 
 
