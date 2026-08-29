@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0011",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 11,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T03:35:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r5",
+  "head_sha": "48b66d7a0f0395cd756a530e06fe8e4db414208b",
+  "summary": "R4 diagnostic run 2 failed because the instrumentation called StreamPeer-only get_available_bytes on FileAccess pipes. Director authorizes R5 to use FileAccess pipe get_length/get_buffer/get_error and to require a real stdout+stderr runtime pipe smoke before M5 run 1.",
+  "command": "AUTHORIZE_REPAIR_MAP_R5",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R5_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-005.v1.json"
+  ]
+}
