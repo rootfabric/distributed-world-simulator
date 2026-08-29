@@ -84,7 +84,7 @@ B2.5 manual seamless smoke demo                      CLOSED / WINDOWS MANUAL PAS
 B3. post-build critique                               CLOSED
 B4. Evidence Map                                      CLOSED
 B5. fresh exact-head Reviewer                          CLOSED / PASS
-B6. fresh Verifier                                     FAILED / BLOCKED — M5 repair R1 CURRENT
+B6. fresh Verifier                                     FAILED / BLOCKED — M5 repair R3 CURRENT
 B7. checkpoint proposal
 B8. human RUNTIME_FEATURE_MERGE
 ```
@@ -340,3 +340,11 @@ Fresh B6 Verifier на exact subject `6fdfc047...` выдал FAILED: canonical 
 B7 заблокирован. Director Repair Map: Draft PR #291. Bounded M5 harness repair: Draft PR #292, HEAD `8c44ea1aac6846502ce55e7ba9a61e2cfe154360`, tree `eff7a35411edca2ea71daf93fab90b706c4258e0`.
 
 Repair не меняет SM1 runtime и не ослабляет M5 gameplay/convergence assertions. Exact Linux double-Godot/Xvfb supporting evidence после repair: 5/5 consecutive PASS, 99 assertions / 0 failures each. Decisive next gate: Windows 10x M5 stability, then one canonical full regression and fresh B6 re-verification.
+
+### M5 R3 timeout-clock root cause
+
+Windows R2 passed 2 runs and failed run 3 at ~164.4s with historical `M5_ACCEPTANCE_TIMEOUT` in `WAIT_CONVERGENCE_PEER` on long-lived client B. Root cause: driver compared `TIMEOUT_MS=150000` against process `_started_ms`, not per-stage `_stage_started_ms`, despite `_set_stage()` already resetting the stage clock.
+
+R3 Repair Map: PR #295. R3 implementation: PR #296 @ `17801cecab4861683bd0d0ee4eabbd1186ba7164`, tree `944543e15718d1d427edb35be78446bee7659e43`.
+
+Timeout value is unchanged; only clock scope is corrected. B6/B7 remain blocked until Windows 10/10 M5 stability and then one canonical full regression first-attempt PASS.
