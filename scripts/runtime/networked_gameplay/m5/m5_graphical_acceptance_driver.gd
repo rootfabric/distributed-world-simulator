@@ -29,11 +29,13 @@ var _failures: Array[String] = []
 var _finished := false
 var _input_pressed := false
 var _player_checksum := ""
+var _player_observation: Dictionary = {}
 var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
 var _convergence_prepare_id := ""
 var _prepared_player_checksum := ""
+var _prepared_player_observation: Dictionary = {}
 var _prepared_item_checksum := ""
 var _convergence_prepared := false
 var _convergence_release_id := ""
@@ -255,11 +257,14 @@ func _process(_delta: float) -> void:
 			var prepare: Dictionary = control.get("convergence_prepare", {})
 			var prepare_id := String(prepare.get("id", "")).strip_edges()
 			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
+			var prepare_player_observation: Dictionary = Dictionary(prepare.get("player_observation", {}))
 			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
 			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
 			var complete_id := String(control.get("convergence_complete_id", "")).strip_edges()
 			var finish_client_id := String(control.get("convergence_finish_client_id", "")).strip_edges()
-			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
+			var latest_player_snapshot: Dictionary = _client.get_snapshot()
+			var latest_player_observation := _player_observation_from_snapshot(latest_player_snapshot)
+			var latest_player_checksum := String(latest_player_observation.get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
 
 			if _convergence_release_consumed:
@@ -268,12 +273,12 @@ func _process(_delta: float) -> void:
 				# regression is an explicit fail-closed defect.
 				var consumed_decision := Barrier.evaluate_consumed_release_integrity(
 					_convergence_release_id,
-					_prepared_player_checksum,
+					_prepared_player_observation,
 					_prepared_item_checksum,
 					prepare,
 					release_id,
 					complete_id,
-					latest_player_checksum,
+					latest_player_observation,
 					latest_item_checksum
 				)
 				match String(consumed_decision.get("action", "")):
@@ -281,6 +286,8 @@ func _process(_delta: float) -> void:
 						_fail("M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED", {
 							"reason": String(consumed_decision.get("reason", "")),
 							"generation": _convergence_release_id,
+							"prepared_player_observation": _prepared_player_observation.duplicate(true),
+							"current_player_observation": latest_player_observation.duplicate(true),
 							"current_player_checksum": latest_player_checksum,
 							"current_item_checksum": latest_item_checksum,
 						})
@@ -295,16 +302,16 @@ func _process(_delta: float) -> void:
 			if _convergence_prepared:
 				var release_decision := Barrier.evaluate_prepared_release(
 					_convergence_prepare_id,
-					_prepared_player_checksum,
+					_prepared_player_observation,
 					_prepared_item_checksum,
 					prepare,
 					release_id,
-					latest_player_checksum,
+					latest_player_observation,
 					latest_item_checksum
 				)
 				match String(release_decision.get("action", "")):
 					Barrier.CLIENT_REVOKE:
-						_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+						_revoke_convergence_prepare(latest_player_observation, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
 						return
 					Barrier.CLIENT_CONSUME_RELEASE:
 						_convergence_release_id = _convergence_prepare_id
@@ -320,6 +327,7 @@ func _process(_delta: float) -> void:
 				and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
 			):
 				_player_checksum = latest_player_checksum
+				_player_observation = latest_player_observation.duplicate(true)
 				_item_checksum = latest_item_checksum
 				_convergence_world = runtime.create_m3_graphical_client_report()
 				_convergence_locked = false
@@ -330,12 +338,17 @@ func _process(_delta: float) -> void:
 			if (
 				not prepare_id.is_empty()
 				and prepare_player_checksum == latest_player_checksum
+				and Barrier.observations_identical(prepare_player_observation, latest_player_observation)
 				and prepare_item_checksum == latest_item_checksum
 			):
 				_convergence_locked = true
 				_convergence_prepare_id = prepare_id
 				_prepared_player_checksum = prepare_player_checksum
+				_prepared_player_observation = prepare_player_observation.duplicate(true)
 				_prepared_item_checksum = prepare_item_checksum
+				_player_checksum = prepare_player_checksum
+				_player_observation = prepare_player_observation.duplicate(true)
+				_item_checksum = prepare_item_checksum
 				_convergence_prepared = true
 				_convergence_release_id = ""
 				_convergence_release_consumed = false
@@ -461,10 +474,22 @@ func _verify_reconnect_state(shell) -> void:
 		_failures.append("Reconnect ownership epoch did not advance")
 
 
+func _player_observation_from_snapshot(snapshot: Dictionary) -> Dictionary:
+	return {
+		"checksum": String(snapshot.get("checksum", "")),
+		"revision": int(snapshot.get("revision", -1)),
+		"server_tick": int(snapshot.get("server_tick", -1)),
+		"authority_owner_id": String(snapshot.get("authority_owner_id", "")),
+		"authority_epoch": int(snapshot.get("authority_epoch", 0)),
+	}
+
+
 func _begin_convergence(world: Dictionary, shell) -> void:
 	_clear_convergence_prepare_state()
 	_convergence_locked = false
-	_player_checksum = String(_client.get_snapshot().get("checksum", ""))
+	var player_snapshot: Dictionary = _client.get_snapshot()
+	_player_observation = _player_observation_from_snapshot(player_snapshot)
+	_player_checksum = String(_player_observation.get("checksum", ""))
 	_item_checksum = String(_client.get_item_graph_snapshot().get("checksum", ""))
 	_convergence_world = world.duplicate(true)
 	if _player_checksum.is_empty() or _item_checksum.is_empty():
@@ -476,12 +501,13 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 
 
 func _revoke_convergence_prepare(
-	current_player_checksum: String,
+	current_player_observation: Dictionary,
 	current_item_checksum: String,
 	world: Dictionary,
 	shell
 ) -> void:
-	_player_checksum = current_player_checksum
+	_player_observation = current_player_observation.duplicate(true)
+	_player_checksum = String(_player_observation.get("checksum", ""))
 	_item_checksum = current_item_checksum
 	_convergence_world = world.duplicate(true)
 	_convergence_locked = false
@@ -492,6 +518,7 @@ func _revoke_convergence_prepare(
 func _clear_convergence_prepare_state() -> void:
 	_convergence_prepare_id = ""
 	_prepared_player_checksum = ""
+	_prepared_player_observation = {}
 	_prepared_item_checksum = ""
 	_convergence_prepared = false
 	_convergence_release_id = ""
@@ -622,9 +649,11 @@ func _write_report(
 		"ore_pickup_result": _ore_pickup_result.duplicate(true),
 		"screenshot": _screenshot_result.duplicate(true),
 		"player_checksum": _player_checksum,
+		"player_observation": _player_observation.duplicate(true),
 		"item_checksum": _item_checksum,
 		"convergence_prepare_id": _convergence_prepare_id,
 		"prepared_player_checksum": _prepared_player_checksum,
+		"prepared_player_observation": _prepared_player_observation.duplicate(true),
 		"prepared_item_checksum": _prepared_item_checksum,
 		"convergence_prepared": _convergence_prepared,
 		"convergence_release_id": _convergence_release_id,
