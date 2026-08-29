@@ -672,4 +672,326 @@ static func _solve_network(network: Dictionary, delta: float, commit_dynamic: bo
 		return {"ok": false, "diagnostics": network["diagnostics"].duplicate(true)}
 	var cell_map: Dictionary = compiled["cell_map"]
 	network["cells"] = compiled["cells"]
-	var islands := _compile_is
+	var islands := _compile_islands(network, cell_map)
+	var all_ok := true
+	var total_iterations := 0
+	var worst_normalized_residual := 0.0
+	for island in islands:
+		var result := _solve_island_newton(network, cell_map, island, delta, previous_port_states)
+		total_iterations += int(result.get("iterations", 0))
+		worst_normalized_residual = maxf(worst_normalized_residual, float(result.get("normalized_residual", 0.0)))
+		if not bool(result.get("ok", false)):
+			all_ok = false
+	if all_ok and commit_dynamic:
+		_commit_dynamic_state(network, delta)
+	network["solver_stats"] = {
+		"islands": islands.size(),
+		"total_iterations": total_iterations,
+		"max_normalized_residual": worst_normalized_residual,
+	}
+	network["solve_revision"] = int(network.get("solve_revision", 0)) + 1
+	return {
+		"ok": all_ok,
+		"cell_count": network["cells"].size(),
+		"island_count": islands.size(),
+		"iterations": total_iterations,
+		"normalized_residual": worst_normalized_residual,
+		"diagnostics": network["diagnostics"].duplicate(true),
+	}
+
+static func _compile_cells(network: Dictionary) -> Dictionary:
+	var port_refs: Array = []
+	var port_domains := {}
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var ports: Dictionary = network["elements"][element_id]["ports"]
+		var port_names: Array = ports.keys()
+		port_names.sort()
+		for port_name in port_names:
+			var ref := _port_ref(element_id, String(port_name))
+			port_refs.append(ref)
+			port_domains[ref] = String(ports[port_name]["domain"])
+	var adjacency := {}
+	for ref in port_refs:
+		adjacency[ref] = []
+	for bond in network["bonds"]:
+		if not bool(bond.get("active", false)):
+			continue
+		var a := _port_ref(String(bond["a_element"]), String(bond["a_port"]))
+		var b := _port_ref(String(bond["b_element"]), String(bond["b_port"]))
+		if not adjacency.has(a) or not adjacency.has(b):
+			return {"ok": false, "code": "BROKEN_BOND_ENDPOINT", "bond_id": String(bond["id"])}
+		adjacency[a].append(b)
+		adjacency[b].append(a)
+	var visited := {}
+	var cells: Array = []
+	var cell_map := {}
+	for root in port_refs:
+		if visited.has(root):
+			continue
+		var queue: Array = [root]
+		var component: Array = []
+		visited[root] = true
+		while not queue.is_empty():
+			var current: String = queue.pop_front()
+			component.append(current)
+			var neighbours: Array = adjacency[current]
+			neighbours.sort()
+			for neighbour in neighbours:
+				if not visited.has(neighbour):
+					visited[neighbour] = true
+					queue.append(neighbour)
+		component.sort()
+		var domain := String(port_domains[component[0]])
+		for ref in component:
+			if String(port_domains[ref]) != domain:
+				return {"ok": false, "code": "MIXED_DOMAIN_CELL", "ports": component}
+		var cell_index := cells.size()
+		var cell_id := "cell/%s/%s" % [domain, String(component[0])]
+		cells.append({
+			"id": cell_id,
+			"domain": domain,
+			"ports": component,
+			"common": 0.0,
+			"balance_residual": 0.0,
+			"power_residual": 0.0,
+			"status": "UNSOLVED",
+		})
+		for ref in component:
+			cell_map[ref] = cell_index
+	return {"ok": true, "cells": cells, "cell_map": cell_map}
+
+static func _compile_islands(network: Dictionary, cell_map: Dictionary) -> Array:
+	var adjacency := {}
+	for cell_index in range(network["cells"].size()):
+		adjacency[cell_index] = []
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var element: Dictionary = network["elements"][element_id]
+		var indices: Array = []
+		var port_names: Array = element["ports"].keys()
+		port_names.sort()
+		for port_name in port_names:
+			var cell_index := int(cell_map[_port_ref(element_id, String(port_name))])
+			if cell_index not in indices:
+				indices.append(cell_index)
+		indices.sort()
+		for left in range(indices.size()):
+			for right in range(left + 1, indices.size()):
+				var a := int(indices[left])
+				var b := int(indices[right])
+				if b not in adjacency[a]:
+					adjacency[a].append(b)
+				if a not in adjacency[b]:
+					adjacency[b].append(a)
+	var visited := {}
+	var islands: Array = []
+	for root in range(network["cells"].size()):
+		if visited.has(root):
+			continue
+		var queue: Array = [root]
+		var island: Array = []
+		visited[root] = true
+		while not queue.is_empty():
+			var current: int = queue.pop_front()
+			island.append(current)
+			var neighbours: Array = adjacency[current]
+			neighbours.sort()
+			for neighbour in neighbours:
+				if not visited.has(neighbour):
+					visited[neighbour] = true
+					queue.append(neighbour)
+		island.sort()
+		islands.append(island)
+	islands.sort_custom(func(a: Array, b: Array) -> bool:
+		return String(network["cells"][a[0]]["id"]) < String(network["cells"][b[0]]["id"])
+	)
+	return islands
+
+static func _solve_island_newton(
+	network: Dictionary,
+	cell_map: Dictionary,
+	island: Array,
+	delta: float,
+	previous_port_states: Dictionary
+) -> Dictionary:
+	var model := _build_island_model(network, cell_map, island, delta, previous_port_states)
+	if not bool(model.get("ok", false)):
+		_mark_island_failed(network, island, String(model.get("code", "MODEL_BUILD_FAILED")))
+		network["diagnostics"].append(model)
+		return model
+	var x: Array = model["initial_x"]
+	var last_norm := INF
+	var converged := false
+	var iterations := 0
+	for iteration in range(NEWTON_MAX_ITERATIONS):
+		iterations = iteration + 1
+		var assembled := _assemble_residual_jacobian(network, model, x, delta)
+		if not bool(assembled.get("ok", false)):
+			_mark_island_failed(network, island, String(assembled.get("code", "NONLINEAR_EVALUATION_FAILED")))
+			network["diagnostics"].append(assembled)
+			return {"ok": false, "iterations": iterations, "normalized_residual": last_norm, "code": assembled.get("code", "NONLINEAR_EVALUATION_FAILED")}
+		var norm := _normalized_residual_norm(assembled["residual"], model["row_nominals"])
+		last_norm = norm
+		if norm <= NEWTON_TOLERANCE:
+			# A zero residual is not enough: an underdetermined/floating island can
+			# satisfy F(x)=0 at infinitely many x. Require a nonsingular tangent.
+			var rank_probe := _solve_dense(assembled["jacobian"], _zero_vector(x.size()))
+			if not bool(rank_probe.get("ok", false)):
+				var rank_code := "SINGULAR_FLOATING_ISLAND" if model["constraints"].is_empty() and model["nonlinear_elements"].is_empty() else "SINGULAR_SOLUTION_MANIFOLD"
+				var rank_failure := {
+					"ok": false,
+					"code": rank_code,
+					"cells": _cell_ids(network, island),
+					"iteration": iterations,
+					"normalized_residual": norm,
+				}
+				_mark_island_failed(network, island, rank_code)
+				network["diagnostics"].append(rank_failure)
+				return rank_failure
+			converged = true
+			break
+		var rhs: Array = []
+		for value in assembled["residual"]:
+			rhs.append(-float(value))
+		var step_result := _solve_dense(assembled["jacobian"], rhs)
+		if not bool(step_result.get("ok", false)):
+			var singular_code := "SINGULAR_FLOATING_ISLAND" if model["constraints"].is_empty() and model["nonlinear_elements"].is_empty() else "NEWTON_SINGULAR_JACOBIAN"
+			var singular := {
+				"ok": false,
+				"code": singular_code,
+				"cells": _cell_ids(network, island),
+				"iteration": iterations,
+				"normalized_residual": norm,
+			}
+			_mark_island_failed(network, island, String(singular["code"]))
+			network["diagnostics"].append(singular)
+			return singular
+		var dx: Array = step_result["x"]
+		var max_scaled_step := 0.0
+		for index in range(dx.size()):
+			var nominal := float(model["unknown_nominals"][index])
+			max_scaled_step = maxf(max_scaled_step, absf(float(dx[index])) / maxf(nominal, EPSILON))
+		var accepted := false
+		var alpha := 1.0
+		for _line_search in range(NEWTON_MAX_LINE_SEARCH):
+			var candidate := x.duplicate()
+			for index in range(candidate.size()):
+				candidate[index] = float(candidate[index]) + alpha * float(dx[index])
+			var candidate_assembled := _assemble_residual_jacobian(network, model, candidate, delta)
+			if bool(candidate_assembled.get("ok", false)):
+				var candidate_norm := _normalized_residual_norm(candidate_assembled["residual"], model["row_nominals"])
+				if candidate_norm < norm or candidate_norm <= NEWTON_TOLERANCE:
+					x = candidate
+					last_norm = candidate_norm
+					accepted = true
+					break
+			alpha *= 0.5
+		if not accepted:
+			var line_fail := {
+				"ok": false,
+				"code": "NEWTON_LINE_SEARCH_FAILED",
+				"cells": _cell_ids(network, island),
+				"iteration": iterations,
+				"normalized_residual": norm,
+			}
+			_mark_island_failed(network, island, String(line_fail["code"]))
+			network["diagnostics"].append(line_fail)
+			return line_fail
+	if not converged:
+		var failure := {
+			"ok": false,
+			"code": "NEWTON_NO_CONVERGENCE",
+			"cells": _cell_ids(network, island),
+			"iterations": iterations,
+			"normalized_residual": last_norm,
+		}
+		_mark_island_failed(network, island, String(failure["code"]))
+		network["diagnostics"].append(failure)
+		return failure
+	_apply_solution(network, model, x, delta)
+	_compute_cell_residuals(network, island)
+	return {"ok": true, "iterations": iterations, "normalized_residual": last_norm}
+
+static func _build_island_model(
+	network: Dictionary,
+	cell_map: Dictionary,
+	island: Array,
+	delta: float,
+	previous_port_states: Dictionary
+) -> Dictionary:
+	var local_cell_unknown := {}
+	var unknown_nominals: Array = []
+	var initial_x: Array = []
+	for local in range(island.size()):
+		var global_cell := int(island[local])
+		local_cell_unknown[global_cell] = initial_x.size()
+		var domain_id := String(network["cells"][global_cell]["domain"])
+		var domain: Dictionary = network["domains"][domain_id]
+		initial_x.append(_initial_cell_guess(network, global_cell, previous_port_states))
+		unknown_nominals.append(float(domain["common_nominal"]))
+
+	var constraints: Array = []
+	var nonlinear_balance_indices := {}
+	var nonlinear_elements: Array = []
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var element: Dictionary = network["elements"][element_id]
+		var port_names: Array = element["ports"].keys()
+		port_names.sort()
+		var global_cells: Array = []
+		for port_name in port_names:
+			var global_cell := int(cell_map[_port_ref(element_id, String(port_name))])
+			if global_cell in island:
+				global_cells.append(global_cell)
+		if global_cells.is_empty():
+			continue
+		if global_cells.size() != port_names.size():
+			return {"ok": false, "code": "ELEMENT_SPLIT_ACROSS_SOLVE_ISLAND", "element_id": element_id}
+		var op := String(element["law"].get("op", ""))
+		match op:
+			"linear_difference_coupler":
+				var a_domain := String(element["ports"]["a"]["domain"])
+				var b_domain := String(element["ports"]["b"]["domain"])
+				if a_domain != b_domain:
+					return {"ok": false, "code": "DIFFERENCE_COUPLER_DOMAIN_MISMATCH", "element_id": element_id}
+			"ideal_common_constraint":
+				var global_cell := int(global_cells[0])
+				var domain_id := String(network["cells"][global_cell]["domain"])
+				constraints.append({
+					"kind": "ideal_common",
+					"element_id": element_id,
+					"row_index": 0,
+					"value": float(element["law"].get("common", 0.0)),
+					"nominal": float(network["domains"][domain_id]["common_nominal"]),
+					"terms": [{
+						"cell": int(local_cell_unknown[global_cell]),
+						"global_cell": global_cell,
+						"port_name": "p",
+						"coefficient": 1.0,
+					}],
+				})
+			"linear_power_map":
+				var rows: Array = element["law"].get("constraint_rows", [])
+				for row_index in range(rows.size()):
+					var row: Dictionary = rows[row_index]
+					var terms: Array = []
+					for term in row["terms"]:
+						var port_name := String(term["port"])
+						var global_cell := int(cell_map[_port_ref(element_id, port_name)])
+						terms.append({
+							"cell": int(local_cell_unknown[global_cell]),
+							"global_cell": global_cell,
+							"port_name": port_name,
+							"coefficient": float(term["coefficient"]),
+						})
+					constraints.append({
+						"kind": "power_map",
+						"element_id": element_id,
+						"row_index": row_index,
+						"value": 0.0,
+						"nominal": float(row["nominal"]),
+						"terms": terms
