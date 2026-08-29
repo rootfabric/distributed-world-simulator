@@ -130,7 +130,6 @@ Write-Host "Editor import: PASS" -ForegroundColor Green
 
 $PipeSmokeProfile = Join-Path $ResultRoot "profile-pipe-smoke"
 $PipeSmokeLog = Join-Path $ResultRoot "pipe-smoke.log"
-$PipeSmokeCaptured = @()
 $PipeSmokeExitCode = 0
 Invoke-WithIsolatedProfile $PipeSmokeProfile {
     $PreviousErrorActionPreference = $ErrorActionPreference
@@ -142,7 +141,6 @@ Invoke-WithIsolatedProfile $PipeSmokeProfile {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
         }
         & $Godot --headless --path $Root --script res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd -- --m5-pipe-smoke-only 2>&1 |
-            Tee-Object -Variable PipeSmokeCaptured |
             Tee-Object -FilePath $PipeSmokeLog |
             ForEach-Object { Write-Host $_ }
         $script:PipeSmokeExitCode = $LASTEXITCODE
@@ -154,7 +152,7 @@ Invoke-WithIsolatedProfile $PipeSmokeProfile {
         }
     }
 }
-$PipeSmokeText = ($PipeSmokeCaptured | Out-String)
+$PipeSmokeText = if (Test-Path $PipeSmokeLog) { Get-Content $PipeSmokeLog -Raw } else { "" }
 $PipeSmokeMarker = $PipeSmokeText -match 'M5_CHILD_PIPE_OBSERVABILITY_PASS'
 $Summary.pipe_smoke = [ordered]@{
     exit_code = $PipeSmokeExitCode
@@ -166,7 +164,8 @@ Save-Summary
 if ($PipeSmokeExitCode -ne 0 -or -not $PipeSmokeMarker) {
     Write-Host "M5_CHILD_PIPE_OBSERVABILITY_GATE_FAIL exit=$PipeSmokeExitCode" -ForegroundColor Red
     Write-Host "Pipe smoke log: $PipeSmokeLog"
-    exit $(if ($PipeSmokeExitCode -ne 0) { $PipeSmokeExitCode } else { 1 })
+    $PipeSmokeEffectiveExit = if ($PipeSmokeExitCode -ne 0) { $PipeSmokeExitCode } else { 1 }
+    exit $PipeSmokeEffectiveExit
 }
 Write-Host "M5_CHILD_PIPE_OBSERVABILITY_GATE_PASS" -ForegroundColor Green
 
