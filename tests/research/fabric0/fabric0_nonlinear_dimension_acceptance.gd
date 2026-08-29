@@ -6,6 +6,7 @@ const Experiments = preload("res://scripts/research/fabric0/fabric0_nonlinear_di
 func _init() -> void:
 	var checks := 0
 
+	# --- Base dimension algebra -------------------------------------------------
 	assert(Fabric.dim_equal(Fabric.dim_mul(Fabric.dim_voltage(), Fabric.dim_current()), Fabric.dim_power())); checks += 1
 	assert(Fabric.dim_equal(Fabric.dim_mul(Fabric.dim_torque(), Fabric.dim_angular_velocity()), Fabric.dim_power())); checks += 1
 	assert(Fabric.dim_equal(Fabric.dim_mul(Fabric.dim_force(), Fabric.dim_velocity()), Fabric.dim_power())); checks += 1
@@ -14,6 +15,7 @@ func _init() -> void:
 	assert(not Fabric.dim_equal(Fabric.dim_voltage(), Fabric.dim_torque())); checks += 1
 	assert(Fabric.dim_string(Fabric.dim_dimensionless()) == "1"); checks += 1
 
+	# --- Domain power-conjugacy is fail-closed ---------------------------------
 	var domain_guard := Fabric.new_network()
 	assert(Fabric.register_domain(domain_guard, "electric", "voltage", "current", Fabric.dim_voltage(), Fabric.dim_current(), "V", "A")); checks += 1
 	assert(Fabric.register_domain(domain_guard, "rot", "angular_velocity", "torque", Fabric.dim_angular_velocity(), Fabric.dim_torque(), "rad/s", "N.m")); checks += 1
@@ -22,10 +24,12 @@ func _init() -> void:
 	assert(domain_guard["diagnostics"].size() == 1); checks += 1
 	assert(String(domain_guard["diagnostics"][0]["code"]) == "DOMAIN_NOT_POWER_CONJUGATE"); checks += 1
 
+	# Cross-domain bonds still cannot bypass an explicit transducer/map.
 	assert(Fabric.add_element(domain_guard, Fabric.equilibrium_terminal("e", "electric", 0.0, 1.0))); checks += 1
 	assert(Fabric.add_element(domain_guard, Fabric.equilibrium_terminal("r", "rot", 0.0, 1.0))); checks += 1
 	assert(not Fabric.link_ports(domain_guard, "illegal_wire", "e", "p", "r", "p")); checks += 1
 
+	# --- Power-map coefficient dimensions are explicit -------------------------
 	var bad_map_net := Fabric.new_network()
 	assert(Experiments.register_electrical(bad_map_net)); checks += 1
 	assert(Experiments.register_rotational(bad_map_net)); checks += 1
@@ -61,6 +65,7 @@ func _init() -> void:
 	assert(not Fabric.add_element(missing_dim_net, missing_dim_map)); checks += 1
 	assert(String(missing_dim_net["diagnostics"][0]["code"]) == "POWER_MAP_MISSING_COEFFICIENT_DIMENSION"); checks += 1
 
+	# --- Transcendental and add/sub dimensional errors are rejected ------------
 	var bad_expr_net := Fabric.new_network()
 	assert(Experiments.register_electrical(bad_expr_net)); checks += 1
 	var bad_exp := Fabric.nonlinear_constitutive(
@@ -90,6 +95,7 @@ func _init() -> void:
 	assert(not Fabric.add_element(bad_add_net, bad_add)); checks += 1
 	assert(String(bad_add_net["diagnostics"][0]["reason"]) == "ADD_SUB_DIMENSION_MISMATCH"); checks += 1
 
+	# --- Nonlinear exponential law: diode-like operating point -----------------
 	var diode := Experiments.build_diode_like_bias()
 	var diode_result := Fabric.solve(diode)
 	assert(bool(diode_result["ok"])); checks += 1
@@ -104,6 +110,7 @@ func _init() -> void:
 	assert(Fabric.max_power_residual(diode) <= 1.0e-9); checks += 1
 	assert(is_equal_approx(Fabric.read_element_absorbed_power(diode, "diode_like"), 3.0 * log(4.0))); checks += 1
 
+	# --- Smooth saturation law --------------------------------------------------
 	var saturation := Experiments.build_saturating_supply()
 	var saturation_result := Fabric.solve(saturation)
 	assert(bool(saturation_result["ok"])); checks += 1
@@ -116,6 +123,7 @@ func _init() -> void:
 	assert(float(saturation_port["balance"]) > 1.9); checks += 1
 	assert(Fabric.max_balance_residual(saturation) <= 1.0e-9); checks += 1
 
+	# --- Cubic nonlinear drag ---------------------------------------------------
 	var cubic := Experiments.build_cubic_rotational_drag()
 	var cubic_result := Fabric.solve(cubic)
 	assert(bool(cubic_result["ok"])); checks += 1
@@ -127,6 +135,7 @@ func _init() -> void:
 	assert(is_equal_approx(pow(float(cubic_port["common"]), 3.0), 3.0)); checks += 1
 	assert(Fabric.max_balance_residual(cubic) <= 1.0e-9); checks += 1
 
+	# --- Dimensioned cross-domain Power Map ------------------------------------
 	var cross := Experiments.build_dimensioned_cross_domain_map()
 	var cross_result := Fabric.solve(cross)
 	assert(bool(cross_result["ok"])); checks += 1
@@ -141,12 +150,14 @@ func _init() -> void:
 	assert(absf(Fabric.total_absorbed_power(cross)) <= 1.0e-9); checks += 1
 	assert(Fabric.max_power_residual(cross) <= 1.0e-9); checks += 1
 
+	# --- Impossible nonlinear physics fails closed ------------------------------
 	var impossible := Experiments.build_impossible_nonlinear_cell()
 	var impossible_result := Fabric.solve(impossible)
 	assert(not bool(impossible_result["ok"])); checks += 1
 	assert(impossible["diagnostics"].size() == 1); checks += 1
 	assert(String(impossible["diagnostics"][0]["code"]) == "NEWTON_SINGULAR_JACOBIAN"); checks += 1
 
+	# --- Deterministic nonlinear replay -----------------------------------------
 	var replay_a := Experiments.build_diode_like_bias()
 	var replay_b := Experiments.build_diode_like_bias()
 	assert(bool(Fabric.solve(replay_a)["ok"])); checks += 1
