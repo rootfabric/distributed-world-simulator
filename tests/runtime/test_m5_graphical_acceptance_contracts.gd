@@ -128,6 +128,7 @@ func _test_source_and_runners(manifest: Dictionary) -> void:
 	_assert(driver.contains("\"prepared_player_observation\": _prepared_player_observation"), "M5 reports must expose the prepared observed-state identity")
 	var barrier := _read("res://scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd")
 	_assert(barrier.contains("observations_identical"), "M5 barrier must compare pinned observed-state identities")
+	_assert(barrier.contains("control_player_checksum != prepared_player_checksum"), "M5 barrier must bind control checksum to pinned observed-state identity")
 	_assert(barrier.contains("PLAYER_REVISION_REGRESSED_AFTER_OBSERVATION"), "M5 barrier must reject player revision regression after observation")
 	_assert(barrier.contains("PLAYER_SERVER_TICK_REGRESSED_AFTER_OBSERVATION"), "M5 barrier must reject server tick regression after observation")
 	_assert(barrier.contains("AUTHORITY_OWNER_CHANGED_AFTER_OBSERVATION"), "M5 barrier must reject authority owner changes after observation")
