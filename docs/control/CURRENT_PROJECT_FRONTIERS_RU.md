@@ -311,10 +311,18 @@ Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fre
 
 Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
 
-**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 repair R1 is CURRENT.**
+**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 correctness repair R6 is CURRENT.**
 
 ## B6 Verifier failure
 
 Fresh verifier on `6fdfc047...` reproduced M5 graphical multiprocess instability and returned FAILED. B7 is blocked.
 
-Repair Map: PR #291. Bounded M5 harness repair: PR #292 @ `8c44ea1a...`. Linux exact-double supporting run after repair: 5/5 PASS; Windows 10x stability is the decisive next test.
+Repair Map: PR #291. Bounded M5 harness repair: PR #292 @ `8c44ea1a...`. Linux exact-double supporting run after repair: 5/5 PASS; Windows R6 contracts + pure convergence regression + pipe smoke + 10x stability are the decisive next tests.
+
+## M5 R6 centralized convergence
+
+R5 observability proved a mutual `WAIT_CONVERGENCE_PEER` deadlock: both clients independently exhausted the full 150s stage timeout and self-exited code 1 while parent-side release coordination had already reported success.
+
+R6: PR #303 / #304. Exact implementation `796a84f097f54b009e9745353a28a294f2937a70`, tree `5c064747589f298cc35b8f33a66a4ba55ac833c5`.
+
+Convergence pair matching is now parent-owned; consumed release is monotonic; post-release regression fails explicitly; completed convergence survives expected teardown drift. B6/B7 remain BLOCKED pending decisive Windows validation.
