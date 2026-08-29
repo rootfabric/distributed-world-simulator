@@ -90,5 +90,14 @@
     "Only after 10/10 may one canonical full world regression first attempt be run."
   ],
   "b6_status": "BLOCKED_PENDING_R7_VALIDATION",
-  "b7_status": "BLOCKED"
+  "b7_status": "BLOCKED",
+  "r7_candidate": {
+    "head_sha": "baa0e192209e72aba5ae9d04663eea85b1099e82",
+    "tree_sha": "08f01fd955c2d31c1ad49aa917e542c93e278241",
+    "base_sha": "d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8",
+    "ahead_by": 11,
+    "changed_files": 5,
+    "machine_execution": "PENDING_WINDOWS_DECISIVE_GATE",
+    "author_container_exact_godot": "NOT_RUN_REPOSITORY_MATERIALIZATION_BLOCKED"
+  }
 }
