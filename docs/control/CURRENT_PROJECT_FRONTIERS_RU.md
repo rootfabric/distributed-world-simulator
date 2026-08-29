@@ -311,7 +311,7 @@ Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fre
 
 Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
 
-**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 correctness repair R6 is CURRENT.**
+**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 correctness repair R7 is CURRENT.**
 
 ## B6 Verifier failure
 
@@ -328,3 +328,11 @@ R6: PR #303 / #304. Exact implementation `d0cc0d31b56544ad8a0a4557b23d49f9f23da6
 Convergence pair matching is now parent-owned; consumed release is monotonic; post-release regression fails explicitly; completed convergence survives expected teardown drift. B6/B7 remain BLOCKED pending decisive Windows validation.
 
 R6 final exact target: `d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8` / `72192fd30c66df974b669ed38f47de353cdeee6c`. Convergence timeout evidence now names `WAIT_CONVERGENCE_COORDINATOR`, not the removed peer-wait stage.
+
+## M5 R7 observed-state identity
+
+R6 Windows gate прошёл 5 последовательных прогонов и упал на 6-м из-за legitimate forward `PlayerStateSnapshot` progression после release. Full player checksum включает revision/server_tick/movement fields, поэтому его immobility была неверным test invariant.
+
+R7: PR #305 / #306. Exact implementation `baa0e192209e72aba5ae9d04663eea85b1099e82`, tree `08f01fd955c2d31c1ad49aa917e542c93e278241`.
+
+Exact snapshot identity доказывается и пинится при PREPARE; после этого разрешён только monotonic live progression под тем же authority, при exact Item Graph continuity. B6/B7 остаются BLOCKED до decisive Windows validation.
