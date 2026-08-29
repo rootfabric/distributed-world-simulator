@@ -108,5 +108,25 @@
   ],
   "director_decision": "AUTHORIZED_R8_BOUNDED_CONTROL_READ_CONTINUITY",
   "b6_status": "BLOCKED_PENDING_R8_VALIDATION",
-  "b7_status": "BLOCKED"
+  "b7_status": "BLOCKED",
+  "r8_candidate": {
+    "head_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "tree_sha": "82c6567acdc735bc02a4808159328f00722b0b6b",
+    "base_sha": "baa0e192209e72aba5ae9d04663eea85b1099e82",
+    "ahead_by": 7,
+    "changed_files": 6,
+    "changed_paths": [
+      "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_support.gd",
+      "scripts/testing/process_harness/atomic_json_file.gd",
+      "tests/runtime/support/m5_control_read_consistency_regression.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd"
+    ],
+    "r7_convergence_barrier_changed": false,
+    "author_exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "author_control_read_regression": "PASS_25_ASSERTIONS_0_FAILURES",
+    "source_invariant_audit": "PASS",
+    "windows_decisive_gate": "PENDING"
+  }
 }
