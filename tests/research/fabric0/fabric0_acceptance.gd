@@ -13,13 +13,18 @@ func _init() -> void:
 
 	var lamp := Experiments.build_switchable_lamp()
 	Kernel.settle(lamp)
-	assert(is_equal_approx(Kernel.read_input(lamp, "indicator"), 0.0)); checks += 1
-	assert(Kernel.set_source_value(lamp, "switch", 1.0)); checks += 1
+	assert(not bool(Kernel.read_state(lamp, "wall_switch", "closed"))); checks += 1
+	assert(is_equal_approx(Kernel.read_input(lamp, "lamp"), 0.0)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(lamp, "lamp"), 0.0)); checks += 1
+	assert(Kernel.set_switch_state(lamp, "wall_switch", true)); checks += 1
 	Kernel.settle(lamp)
-	assert(is_equal_approx(Kernel.read_input(lamp, "indicator"), 12.0)); checks += 1
-	assert(Kernel.set_source_value(lamp, "switch", 0.0)); checks += 1
+	assert(bool(Kernel.read_state(lamp, "wall_switch", "closed"))); checks += 1
+	assert(is_equal_approx(Kernel.read_input(lamp, "lamp"), 12.0)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(lamp, "lamp"), 1.0)); checks += 1
+	assert(not Kernel.set_switch_state(lamp, "battery", false)); checks += 1
+	assert(Kernel.set_switch_state(lamp, "wall_switch", false)); checks += 1
 	Kernel.settle(lamp)
-	assert(is_equal_approx(Kernel.read_input(lamp, "indicator"), 0.0)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(lamp, "lamp"), 0.0)); checks += 1
 
 	var converter := Experiments.build_energy_converter()
 	Kernel.settle(converter)
@@ -70,6 +75,33 @@ func _init() -> void:
 	Kernel.step(door)
 	assert(is_equal_approx(float(Kernel.read_state(door, "position", "value")), 2.0)); checks += 1
 
+	var rotation := Experiments.build_rotational_drive()
+	Kernel.settle(rotation)
+	assert(is_equal_approx(Kernel.read_input(rotation, "flywheel", "torque"), 4.0)); checks += 1
+	Kernel.step(rotation)
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "speed")), 2.0)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(rotation, "load", "reaction_torque"), -2.0)); checks += 1
+	assert(is_equal_approx(Kernel.read_input(rotation, "flywheel", "torque"), 2.0)); checks += 1
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "last_delta_energy")), 4.0)); checks += 1
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "last_work")), 4.0)); checks += 1
+	Kernel.step(rotation)
+	var second_delta_angle := float(Kernel.read_state(rotation, "flywheel", "last_delta_angle"))
+	var second_delta_energy := float(Kernel.read_state(rotation, "flywheel", "last_delta_energy"))
+	var drive_work := 4.0 * second_delta_angle
+	var load_work := -2.0 * second_delta_angle
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "speed")), 3.0)); checks += 1
+	assert(is_equal_approx(second_delta_angle, 2.5)); checks += 1
+	assert(is_equal_approx(second_delta_energy, 5.0)); checks += 1
+	assert(is_equal_approx(drive_work + load_work, second_delta_energy)); checks += 1
+	for _tick in range(6):
+		Kernel.step(rotation)
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "speed")), 3.984375)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(rotation, "load", "reaction_torque"), -3.984375)); checks += 1
+	assert(Kernel.set_switch_state(rotation, "motor_switch", false)); checks += 1
+	Kernel.step(rotation)
+	assert(is_equal_approx(float(Kernel.read_state(rotation, "flywheel", "speed")), 1.9921875)); checks += 1
+	assert(is_equal_approx(Kernel.read_output(rotation, "motor_switch"), 0.0)); checks += 1
+
 	var replay_a := Experiments.build_auto_fill_tank()
 	var replay_b := Experiments.build_auto_fill_tank()
 	for _tick in range(8):
@@ -78,8 +110,17 @@ func _init() -> void:
 	assert(Kernel.state_hash(replay_a).length() == 64); checks += 1
 	assert(Kernel.state_hash(replay_a) == Kernel.state_hash(replay_b)); checks += 1
 
+	var rotation_replay_a := Experiments.build_rotational_drive()
+	var rotation_replay_b := Experiments.build_rotational_drive()
+	for _tick in range(8):
+		Kernel.step(rotation_replay_a)
+		Kernel.step(rotation_replay_b)
+	assert(Kernel.state_hash(rotation_replay_a) == Kernel.state_hash(rotation_replay_b)); checks += 1
+
 	var summary := Experiments.run_all()
-	assert(is_equal_approx(float(summary["lamp_on"]), 12.0)); checks += 1
+	assert(is_equal_approx(float(summary["lamp_open_signal"]), 0.0)); checks += 1
+	assert(is_equal_approx(float(summary["lamp_closed_power"]), 12.0)); checks += 1
+	assert(is_equal_approx(float(summary["lamp_closed_signal"]), 1.0)); checks += 1
 	assert(is_equal_approx(float(summary["converted_power"]), 72.0)); checks += 1
 	assert(not bool(summary["breaker_active"])); checks += 1
 	assert(int(summary["components_after"]) == 2); checks += 1
@@ -87,15 +128,20 @@ func _init() -> void:
 	assert(is_equal_approx(float(summary["heater_temperature"]), 22.0)); checks += 1
 	assert(is_equal_approx(float(summary["door_closed"]), 0.0)); checks += 1
 	assert(is_equal_approx(float(summary["door_opening"]), 2.0)); checks += 1
+	assert(is_equal_approx(float(summary["rotation_loaded_speed"]), 3.984375)); checks += 1
+	assert(is_equal_approx(float(summary["rotation_coast_speed"]), 1.9921875)); checks += 1
 	assert(String(summary["tank_hash"]).length() == 64); checks += 1
+	assert(String(summary["rotation_hash"]).length() == 64); checks += 1
 
-	print("FABRIC0 Acceptance: PASS (%d assertions) lamp=%.1f converted=%.1f tank=%.1f heater=%.1f door=%.1f hash=%s" % [
+	print("FABRIC0 Acceptance: PASS (%d assertions) lamp=%s power=%.1f tank=%.1f heater=%.1f door=%.1f omega=%.6f coast=%.6f hash=%s" % [
 		checks,
-		float(summary["lamp_on"]),
-		float(summary["converted_power"]),
+		"ON" if is_equal_approx(float(summary["lamp_closed_signal"]), 1.0) else "OFF",
+		float(summary["lamp_closed_power"]),
 		float(summary["tank_level"]),
 		float(summary["heater_temperature"]),
 		float(summary["door_opening"]),
-		String(summary["tank_hash"]),
+		float(summary["rotation_loaded_speed"]),
+		float(summary["rotation_coast_speed"]),
+		String(summary["rotation_hash"]),
 	])
 	quit(0)

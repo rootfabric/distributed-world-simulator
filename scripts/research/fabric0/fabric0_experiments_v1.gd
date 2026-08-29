@@ -6,12 +6,10 @@ const Kernel = preload("res://scripts/research/fabric0/fabric0_kernel_v1.gd")
 static func build_switchable_lamp() -> Dictionary:
 	var graph := Kernel.new_graph()
 	Kernel.add_element(graph, Kernel.source("battery", "power", 12.0))
-	Kernel.add_element(graph, Kernel.source("switch", "signal", 0.0))
-	Kernel.add_element(graph, Kernel.gate("power_gate", "power"))
-	Kernel.add_element(graph, Kernel.sink("indicator", "power"))
-	assert(Kernel.link(graph, "battery_gate", "battery", "out", "power_gate", "in"))
-	assert(Kernel.link(graph, "switch_gate", "switch", "out", "power_gate", "control"))
-	assert(Kernel.link(graph, "gate_indicator", "power_gate", "out", "indicator", "in"))
+	Kernel.add_element(graph, Kernel.switch("wall_switch", "power", false))
+	Kernel.add_element(graph, Kernel.threshold("lamp", "power", 1.0, "gt"))
+	assert(Kernel.link(graph, "battery_switch", "battery", "out", "wall_switch", "in"))
+	assert(Kernel.link(graph, "switch_lamp", "wall_switch", "out", "lamp", "in"))
 	return graph
 
 static func build_energy_converter() -> Dictionary:
@@ -69,13 +67,27 @@ static func build_proximity_door() -> Dictionary:
 	assert(Kernel.link(graph, "drive_position", "drive", "out", "position", "flow"))
 	return graph
 
+static func build_rotational_drive() -> Dictionary:
+	var graph := Kernel.new_graph()
+	Kernel.add_element(graph, Kernel.source("motor", "torque", 4.0))
+	Kernel.add_element(graph, Kernel.switch("motor_switch", "torque", true))
+	Kernel.add_element(graph, Kernel.rotational_inertia("flywheel", 2.0))
+	Kernel.add_element(graph, Kernel.viscous_load("load", 1.0))
+	assert(Kernel.link(graph, "motor_switch_in", "motor", "out", "motor_switch", "in"))
+	assert(Kernel.link(graph, "drive_torque", "motor_switch", "out", "flywheel", "torque"))
+	assert(Kernel.link(graph, "flywheel_speed", "flywheel", "speed", "load", "speed"))
+	assert(Kernel.link(graph, "load_reaction", "load", "reaction_torque", "flywheel", "torque"))
+	return graph
+
 static func run_all() -> Dictionary:
 	var lamp := build_switchable_lamp()
 	Kernel.settle(lamp)
-	var lamp_off := Kernel.read_input(lamp, "indicator")
-	Kernel.set_source_value(lamp, "switch", 1.0)
+	var lamp_open_power := Kernel.read_input(lamp, "lamp")
+	var lamp_open_signal := Kernel.read_output(lamp, "lamp")
+	Kernel.set_switch_state(lamp, "wall_switch", true)
 	Kernel.settle(lamp)
-	var lamp_on := Kernel.read_input(lamp, "indicator")
+	var lamp_closed_power := Kernel.read_input(lamp, "lamp")
+	var lamp_closed_signal := Kernel.read_output(lamp, "lamp")
 
 	var converter := build_energy_converter()
 	Kernel.settle(converter)
@@ -106,9 +118,22 @@ static func run_all() -> Dictionary:
 	Kernel.step(door)
 	var door_opening := float(Kernel.read_state(door, "position", "value"))
 
+	var rotation := build_rotational_drive()
+	var speed_history: Array = []
+	for _tick in range(8):
+		Kernel.step(rotation)
+		speed_history.append(float(Kernel.read_state(rotation, "flywheel", "speed")))
+	var loaded_speed := float(Kernel.read_state(rotation, "flywheel", "speed"))
+	var reaction_torque := Kernel.read_output(rotation, "load", "reaction_torque")
+	Kernel.set_switch_state(rotation, "motor_switch", false)
+	Kernel.step(rotation)
+	var coast_speed := float(Kernel.read_state(rotation, "flywheel", "speed"))
+
 	return {
-		"lamp_off": lamp_off,
-		"lamp_on": lamp_on,
+		"lamp_open_power": lamp_open_power,
+		"lamp_open_signal": lamp_open_signal,
+		"lamp_closed_power": lamp_closed_power,
+		"lamp_closed_signal": lamp_closed_signal,
 		"converted_power": converted_power,
 		"breaker_active": Kernel.is_bond_active(breaker, "weak_bond"),
 		"breaker_events": breaker["events"].duplicate(true),
@@ -121,4 +146,9 @@ static func run_all() -> Dictionary:
 		"heater_history": heater_history,
 		"door_closed": door_closed,
 		"door_opening": door_opening,
+		"rotation_speed_history": speed_history,
+		"rotation_loaded_speed": loaded_speed,
+		"rotation_reaction_torque": reaction_torque,
+		"rotation_coast_speed": coast_speed,
+		"rotation_hash": Kernel.state_hash(rotation),
 	}

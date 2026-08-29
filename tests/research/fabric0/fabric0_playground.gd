@@ -5,15 +5,18 @@ const Experiments = preload("res://scripts/research/fabric0/fabric0_experiments_
 
 func _init() -> void:
 	print("=== FABRIC0 LOW-LEVEL PLAYGROUND ===")
-	print("No Lamp, Motor, Fuse, Tank, Thermostat or Door runtime classes exist here; only generic local laws and typed bonds.\n")
+	print("Device names live in experiments; the kernel still only knows generic local laws, typed ports, state and bonds.\n")
 
 	var lamp := Experiments.build_switchable_lamp()
 	Kernel.settle(lamp)
-	print("[1] SWITCHABLE FUNCTION")
-	print("    switch=0 -> indicator power = %.1f" % Kernel.read_input(lamp, "indicator"))
-	Kernel.set_source_value(lamp, "switch", 1.0)
+	print("[1] INLINE SWITCH -> LAMP")
+	print("    switch OPEN   -> lamp power=%.1f lit=%s" % [Kernel.read_input(lamp, "lamp"), str(Kernel.read_output(lamp, "lamp") > 0.5)])
+	Kernel.set_switch_state(lamp, "wall_switch", true)
 	Kernel.settle(lamp)
-	print("    switch=1 -> indicator power = %.1f" % Kernel.read_input(lamp, "indicator"))
+	print("    switch CLOSED -> lamp power=%.1f lit=%s" % [Kernel.read_input(lamp, "lamp"), str(Kernel.read_output(lamp, "lamp") > 0.5)])
+	Kernel.set_switch_state(lamp, "wall_switch", false)
+	Kernel.settle(lamp)
+	print("    switch OPEN   -> lamp power=%.1f lit=%s" % [Kernel.read_input(lamp, "lamp"), str(Kernel.read_output(lamp, "lamp") > 0.5)])
 
 	var converter := Experiments.build_energy_converter()
 	Kernel.settle(converter)
@@ -58,6 +61,32 @@ func _init() -> void:
 	Kernel.step(door)
 	print("    proximity=1 -> position=%.1f" % float(Kernel.read_state(door, "position", "value")))
 
-	print("\n    deterministic tank hash: %s" % Kernel.state_hash(tank))
+	var rotation := Experiments.build_rotational_drive()
+	print("\n[7] TWO-WAY ROTATIONAL WALL: TORQUE <-> SPEED")
+	print("    motor torque passes through the same generic Switch used by the lamp")
+	for tick in range(8):
+		Kernel.step(rotation)
+		print("    tick %d: omega=%.6f drive=%.6f reaction=%.6f net=%.6f energy=%.6f" % [
+			tick + 1,
+			float(Kernel.read_state(rotation, "flywheel", "speed")),
+			Kernel.read_output(rotation, "motor_switch"),
+			Kernel.read_output(rotation, "load", "reaction_torque"),
+			Kernel.read_input(rotation, "flywheel", "torque"),
+			float(Kernel.read_state(rotation, "flywheel", "energy")),
+		])
+	print("    opening motor switch...")
+	Kernel.set_switch_state(rotation, "motor_switch", false)
+	Kernel.step(rotation)
+	print("    coast: omega=%.6f drive=%.1f reaction=%.6f" % [
+		float(Kernel.read_state(rotation, "flywheel", "speed")),
+		Kernel.read_output(rotation, "motor_switch"),
+		Kernel.read_output(rotation, "load", "reaction_torque"),
+	])
+	print("    local discrete work == kinetic-energy delta: %s" % str(is_equal_approx(
+		float(Kernel.read_state(rotation, "flywheel", "last_work")),
+		float(Kernel.read_state(rotation, "flywheel", "last_delta_energy"))
+	)))
+
+	print("\n    deterministic rotational hash: %s" % Kernel.state_hash(rotation))
 	print("\nFABRIC0_PLAYGROUND_PASS")
 	quit(0)

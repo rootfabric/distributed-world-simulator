@@ -19,6 +19,17 @@ static func source(element_id: String, domain: String, value: float) -> Dictiona
 		{"out": _port("out", domain)},
 	)
 
+static func switch(element_id: String, domain: String, closed: bool = false) -> Dictionary:
+	return _element(
+		element_id,
+		{"op": "switch"},
+		{
+			"in": _port("in", domain),
+			"out": _port("out", domain),
+		},
+		{"closed": closed},
+	)
+
 static func gain(element_id: String, domain: String, factor: float) -> Dictionary:
 	return _element(
 		element_id,
@@ -68,6 +79,42 @@ static func integrator(
 			"value": _port("out", value_domain),
 		},
 		{"value": initial_value},
+	)
+
+static func rotational_inertia(
+	element_id: String,
+	inertia: float,
+	initial_speed: float = 0.0,
+	initial_angle: float = 0.0
+) -> Dictionary:
+	assert(inertia > EPSILON)
+	return _element(
+		element_id,
+		{"op": "rotational_inertia", "inertia": inertia},
+		{
+			"torque": _port("in", "torque"),
+			"speed": _port("out", "angular_velocity"),
+		},
+		{
+			"speed": initial_speed,
+			"angle": initial_angle,
+			"energy": 0.5 * inertia * initial_speed * initial_speed,
+			"last_net_torque": 0.0,
+			"last_delta_angle": 0.0,
+			"last_delta_energy": 0.0,
+			"last_work": 0.0,
+		},
+	)
+
+static func viscous_load(element_id: String, coefficient: float) -> Dictionary:
+	assert(coefficient >= 0.0)
+	return _element(
+		element_id,
+		{"op": "viscous_load", "coefficient": coefficient},
+		{
+			"speed": _port("in", "angular_velocity"),
+			"reaction_torque": _port("out", "torque"),
+		},
 	)
 
 static func sink(element_id: String, domain: String) -> Dictionary:
@@ -125,6 +172,15 @@ static func set_source_value(graph: Dictionary, element_id: String, value: float
 	if String(element["law"].get("op", "")) != "source":
 		return false
 	element["law"]["value"] = value
+	return true
+
+static func set_switch_state(graph: Dictionary, element_id: String, closed: bool) -> bool:
+	if not graph["elements"].has(element_id):
+		return false
+	var element: Dictionary = graph["elements"][element_id]
+	if String(element["law"].get("op", "")) != "switch":
+		return false
+	element["state"]["closed"] = closed
 	return true
 
 static func step(graph: Dictionary, delta: float = 1.0, settle_iterations: int = DEFAULT_SETTLE_ITERATIONS) -> Dictionary:
@@ -270,6 +326,8 @@ static func _evaluate_outputs(element: Dictionary) -> void:
 	match op:
 		"source":
 			element["outputs"]["out"] = float(element["law"].get("value", 0.0))
+		"switch":
+			element["outputs"]["out"] = float(element["inputs"].get("in", 0.0)) if bool(element["state"].get("closed", false)) else 0.0
 		"gain":
 			element["outputs"]["out"] = float(element["inputs"].get("in", 0.0)) * float(element["law"].get("factor", 1.0))
 		"threshold":
@@ -288,6 +346,10 @@ static func _evaluate_outputs(element: Dictionary) -> void:
 			element["outputs"]["out"] = float(element["inputs"].get("in", 0.0)) if enabled else 0.0
 		"integrator":
 			element["outputs"]["value"] = float(element["state"].get("value", 0.0))
+		"rotational_inertia":
+			element["outputs"]["speed"] = float(element["state"].get("speed", 0.0))
+		"viscous_load":
+			element["outputs"]["reaction_torque"] = -float(element["law"].get("coefficient", 0.0)) * float(element["inputs"].get("speed", 0.0))
 		"sink":
 			pass
 		_:
@@ -298,12 +360,31 @@ static func _advance_stateful_elements(graph: Dictionary, delta: float) -> void:
 	element_ids.sort()
 	for element_id in element_ids:
 		var element: Dictionary = graph["elements"][element_id]
-		if String(element["law"].get("op", "")) != "integrator":
-			continue
-		var value := float(element["state"].get("value", 0.0))
-		value += float(element["inputs"].get("flow", 0.0)) * delta
-		value = clampf(value, float(element["law"].get("minimum", -INF)), float(element["law"].get("maximum", INF)))
-		element["state"]["value"] = value
+		var op := String(element["law"].get("op", ""))
+		match op:
+			"integrator":
+				var value := float(element["state"].get("value", 0.0))
+				value += float(element["inputs"].get("flow", 0.0)) * delta
+				value = clampf(value, float(element["law"].get("minimum", -INF)), float(element["law"].get("maximum", INF)))
+				element["state"]["value"] = value
+			"rotational_inertia":
+				var inertia := float(element["law"].get("inertia", 1.0))
+				var speed := float(element["state"].get("speed", 0.0))
+				var angle := float(element["state"].get("angle", 0.0))
+				var net_torque := float(element["inputs"].get("torque", 0.0))
+				var acceleration := net_torque / inertia
+				var delta_angle := speed * delta + 0.5 * acceleration * delta * delta
+				var next_speed := speed + acceleration * delta
+				var before_energy := 0.5 * inertia * speed * speed
+				var after_energy := 0.5 * inertia * next_speed * next_speed
+				var work := net_torque * delta_angle
+				element["state"]["speed"] = next_speed
+				element["state"]["angle"] = angle + delta_angle
+				element["state"]["energy"] = after_energy
+				element["state"]["last_net_torque"] = net_torque
+				element["state"]["last_delta_angle"] = delta_angle
+				element["state"]["last_delta_energy"] = after_energy - before_energy
+				element["state"]["last_work"] = work
 
 static func _break_overloaded_bonds(graph: Dictionary) -> bool:
 	var changed := false
