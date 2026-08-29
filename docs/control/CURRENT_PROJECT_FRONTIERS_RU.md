@@ -311,7 +311,7 @@ Composite-head STANDARD/DIRECTIONAL PC0 remain explicit pending gaps for the fre
 
 Reviewed exact subject `6fdfc047f54e727e6b398370e576c746c7949441` / tree `b9b1202d959b3da4a0c73840091c7bf56070429e`; required_fixes empty. Remaining PC0/Verifier/checkpoint/human gates remain separate.
 
-**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 correctness repair R7 is CURRENT.**
+**B6 fresh exact-head Verifier = FAILED / BLOCKED. M5 control-read continuity repair R8 is CURRENT.**
 
 ## B6 Verifier failure
 
@@ -336,3 +336,13 @@ R6 Windows gate прошёл 5 последовательных прогонов
 R7: PR #305 / #306. Exact implementation `baa0e192209e72aba5ae9d04663eea85b1099e82`, tree `08f01fd955c2d31c1ad49aa917e542c93e278241`.
 
 Exact snapshot identity доказывается и пинится при PREPARE; после этого разрешён только monotonic live progression под тем же authority, при exact Item Graph continuity. B6/B7 остаются BLOCKED до decisive Windows validation.
+
+## M5 R8 control-read continuity
+
+R7 Windows decisive run 1 exposed a harness durability race, not a convergence semantic regression: `control.json` was sampled during AtomicJson's replacement gap, and legacy `Support.read()` collapsed the transient missing file to `{}`. Final control state was intact and retained the same prepare/release/complete generation.
+
+R8: PR #309 / #310. Exact implementation `25f5ddf6280a39a44ddfc3bbec5245873021c0a1`, tree `82c6567acdc735bc02a4808159328f00722b0b6b`.
+
+Bounded typed reads retry only missing/open/empty/incomplete JSON; valid empty JSON is not retried; persistent outage fails as `M5_CONTROL_READ_UNAVAILABLE`. R7 convergence barrier is unchanged. Exact double-Godot control-read regression PASS `25/25`.
+
+B6/B7 remain BLOCKED pending decisive Windows R8 10x stability validation and, only if that passes, one canonical full regression first attempt.
