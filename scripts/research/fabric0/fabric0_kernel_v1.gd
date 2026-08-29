@@ -34,7 +34,7 @@ static func transducer(element_id: String, input_domain: String, output_domain: 
 	)
 
 static func threshold(element_id: String, input_domain: String, threshold_value: float, mode: String = "gte") -> Dictionary:
-	assert(mode == "gte" or mode == "lte")
+	assert(mode == "gt" or mode == "gte" or mode == "lt" or mode == "lte")
 	return _element(
 		element_id,
 		{"op": "threshold", "threshold": threshold_value, "mode": mode},
@@ -217,9 +217,9 @@ static func canonical_snapshot(graph: Dictionary) -> Dictionary:
 			"to_element": String(bond["to_element"]),
 			"to_port": String(bond["to_port"]),
 			"domain": String(bond["domain"]),
-			"capacity": float(bond["capacity"]),
+			"capacity": _canonical_value(float(bond["capacity"])),
 			"active": bool(bond["active"]),
-			"last_transfer": float(bond["last_transfer"]),
+			"last_transfer": _canonical_value(float(bond["last_transfer"])),
 		})
 	bonds.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
 	return {"tick": int(graph["tick"]), "elements": elements, "bonds": bonds}
@@ -276,7 +276,12 @@ static func _evaluate_outputs(element: Dictionary) -> void:
 			var value := float(element["inputs"].get("in", 0.0))
 			var threshold_value := float(element["law"].get("threshold", 0.0))
 			var mode := String(element["law"].get("mode", "gte"))
-			var enabled := value >= threshold_value if mode == "gte" else value <= threshold_value
+			var enabled := false
+			match mode:
+				"gt": enabled = value > threshold_value
+				"gte": enabled = value >= threshold_value
+				"lt": enabled = value < threshold_value
+				"lte": enabled = value <= threshold_value
 			element["outputs"]["out"] = 1.0 if enabled else 0.0
 		"gate":
 			var enabled := float(element["inputs"].get("control", 0.0)) > 0.5
@@ -357,5 +362,22 @@ static func _sorted_dictionary(source: Dictionary) -> Dictionary:
 	var keys: Array = source.keys()
 	keys.sort()
 	for key in keys:
-		result[key] = source[key]
+		result[key] = _canonical_value(source[key])
 	return result
+
+static func _canonical_value(value: Variant) -> Variant:
+	if value is float:
+		var number := float(value)
+		if is_nan(number):
+			return "NaN"
+		if is_inf(number):
+			return "-Inf" if number < 0.0 else "Inf"
+		return number
+	if value is Dictionary:
+		return _sorted_dictionary(value)
+	if value is Array:
+		var items: Array = []
+		for item in value:
+			items.append(_canonical_value(item))
+		return items
+	return value
