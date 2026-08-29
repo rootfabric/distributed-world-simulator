@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v1",
+  "status": "PASS_RESEARCH_ONLY",
+  "base": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "branch": "main",
+    "commit": "e14f8b6e5b07709d18273cc7886fe660bc353ebf"
+  },
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 32,
+    "marker": "FABRIC0 Acceptance: PASS",
+    "observations": {
+      "switchable_function_off": 0.0,
+      "switchable_function_on": 12.0,
+      "cross_domain_input": 100.0,
+      "cross_domain_output": 72.0,
+      "breakable_bond_capacity": 5.0,
+      "breakable_bond_transfer_before_break": 10.0,
+      "connected_components_before_break": 1,
+      "connected_components_after_break": 2,
+      "closed_loop_level_history": [2.0, 4.0, 6.0, 8.0, 8.0, 8.0, 8.0, 8.0],
+      "deterministic_state_hash": "a35f0d7a22e718a8b4001aafa207830d1577b12f042dd23d920f4ab9ba2eb552"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_PLAYGROUND_PASS"
+  },
+  "claims": [
+    "typed domain mismatch is rejected",
+    "function can be switched by topology-connected signal without a device-specific class",
+    "cross-domain conversion composes from generic local laws",
+    "bond overload mutates topology and splits connected components",
+    "closed-loop feedback stabilizes state using generic primitives",
+    "identical graph and inputs produce identical canonical SHA-256 state hash"
+  ],
+  "non_claims": [
+    "not a production physics solver",
+    "no conservation-law proof",
+    "no acausal effort-flow solving",
+    "no rigid-body or field coupling",
+    "no production Construction or Item Graph integration",
+    "no network authority or persistence integration",
+    "no multiresolution reduction compiler"
+  ]
+}
