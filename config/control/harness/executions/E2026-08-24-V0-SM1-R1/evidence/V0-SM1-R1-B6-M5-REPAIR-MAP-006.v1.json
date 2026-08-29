@@ -41,7 +41,8 @@
       "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
       "tests/runtime/support/m5_convergence_release_guard_regression.gd",
       "RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1",
-      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**",
+      "RUN_NETWORK_CONTRACT_TESTS.ps1"
     ],
     "forbidden_paths": [
       "scripts/runtime/networked_gameplay/sm1/**",
@@ -58,7 +59,8 @@
     "Clients acknowledge only a parent-authored convergence_prepare matching their current authoritative checksums, then wait for parent release.",
     "Make convergence_release_consumed monotonic for its generation. After consumption, control-generation regression or authoritative checksum drift is a named FAIL-CLOSED condition, not a silent revoke/retry.",
     "Parent COMPLETE remains gated on both durable CONVERGENCE_RELEASED reports for the exact generation.",
-    "Add pure barrier regression coverage for post-release monotonic integrity and static contract guards proving convergence no longer reads peer result files."
+    "Add pure barrier regression coverage for post-release monotonic integrity and static contract guards proving convergence no longer reads peer result files.",
+    "Wire the pure convergence release guard regression into RUN_NETWORK_CONTRACT_TESTS.ps1 so monotonicity is exercised by the focused network belt."
   ],
   "non_goals": [
     "Do not add retries.",
@@ -74,7 +76,8 @@
     "Windows exact-Godot stability gate reaches 10/10 with no hidden reruns.",
     "No client may transition from CONVERGENCE_RELEASED back to READY_TO_CONVERGE for the same generation.",
     "If post-release state/control changes, failure must be explicit and immediate, not WAIT_CONVERGENCE_PEER timeout.",
-    "Only after Windows 10/10 may one canonical full world regression first attempt be considered."
+    "Only after Windows 10/10 may one canonical full world regression first attempt be considered.",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1 explicitly executes m5_convergence_release_guard_regression.gd."
   ],
   "escalation_rule": "If R6 still fails, preserve the first failure and exact a2/b/control/lifecycle reports. Any subsequent repair must follow the named failure; do not reintroduce peer-to-peer convergence waits or revocable consumed-release acknowledgements.",
   "director_decision": "AUTHORIZED_R6_CENTRALIZED_MONOTONIC_CONVERGENCE_REPAIR",
