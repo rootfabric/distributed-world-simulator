@@ -1,0 +1,187 @@
+name: M7 R9 Diagnostic Exact R8
+
+on:
+  push:
+    branches:
+      - "validation/m7-r9-diagnostic-25f5ddf"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m7-r9-diagnostic-25f5ddf
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: exact R8 M7 diagnostic only
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout immutable R8 subject
+        uses: actions/checkout@v4
+        with:
+          ref: 25f5ddf6280a39a44ddfc3bbec5245873021c0a1
+          fetch-depth: 0
+          clean: true
+
+      - name: Assert exact subject identity
+        run: |
+          $ExpectedHead = "25f5ddf6280a39a44ddfc3bbec5245873021c0a1"
+          $ExpectedTree = "82c6567acdc735bc02a4808159328f00722b0b6b"
+          $Head = (git rev-parse HEAD).Trim()
+          $Tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($Head -ne $ExpectedHead) { throw "HEAD_MISMATCH: $Head" }
+          if ($Tree -ne $ExpectedTree) { throw "TREE_MISMATCH: $Tree" }
+          if (@(git status --porcelain).Count -ne 0) { throw "DIRTY_SUBJECT" }
+          Write-Host "M7_DIAGNOSTIC_SUBJECT_OK head=$Head tree=$Tree"
+
+      - name: Resolve exact double Godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $Godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($Godot)) {
+            $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $Godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $Godot"
+          }
+          $VersionOutput = & $Godot --version 2>&1
+          $Version = ($VersionOutput | Select-Object -First 1).ToString().Trim()
+          Write-Host "Godot identity: $Version"
+          if ($Version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $Version"
+          }
+          $global:LASTEXITCODE = 0
+          "GODOT_BIN=$Godot" >> $env:GITHUB_ENV
+
+      - name: Run 10 standalone M7 diagnostic attempts
+        run: |
+          $Root = Join-Path $PWD "artifacts\test-results"
+          $Diag = Join-Path $Root "m7-r9-diagnostic"
+          New-Item -ItemType Directory -Force -Path $Diag | Out-Null
+          $Rows = @()
+
+          function Read-JsonSafe([string]$Path) {
+            if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+            try {
+              return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+            }
+            catch {
+              return [pscustomobject]@{
+                parse_error = $_.Exception.Message
+                raw_length = (Get-Item -LiteralPath $Path).Length
+              }
+            }
+          }
+
+          for ($Run = 1; $Run -le 10; $Run++) {
+            Write-Host "========== M7 DIAGNOSTIC RUN $Run / 10 =========="
+            $Before = @(Get-ChildItem -LiteralPath $Root -Directory -Filter "m7-playable-*" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+
+            $Log = Join-Path $Diag ("run-{0:D2}.log" -f $Run)
+            $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m7_playable_networked_processes.gd 2>&1
+            $ExitCode = $LASTEXITCODE
+            $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+
+            $AfterDirs = @(Get-ChildItem -LiteralPath $Root -Directory -Filter "m7-playable-*" -ErrorAction SilentlyContinue | Sort-Object LastWriteTimeUtc -Descending)
+            $NewDir = $null
+            foreach ($Candidate in $AfterDirs) {
+              if ($Before -notcontains $Candidate.FullName) {
+                $NewDir = $Candidate
+                break
+              }
+            }
+            if ($null -eq $NewDir -and $AfterDirs.Count -gt 0) { $NewDir = $AfterDirs[0] }
+
+            $RunEvidence = Join-Path $Diag ("run-{0:D2}-evidence" -f $Run)
+            New-Item -ItemType Directory -Force -Path $RunEvidence | Out-Null
+
+            $A = $null
+            $B = $null
+            $Server = $null
+            $SourceDir = ""
+
+            if ($null -ne $NewDir) {
+              $SourceDir = $NewDir.FullName
+              Copy-Item -Path (Join-Path $NewDir.FullName "*") -Destination $RunEvidence -Recurse -Force -ErrorAction SilentlyContinue
+              $A = Read-JsonSafe (Join-Path $NewDir.FullName "a.json")
+              $B = Read-JsonSafe (Join-Path $NewDir.FullName "b.json")
+              $Server = Read-JsonSafe (Join-Path $NewDir.FullName "server.json")
+            }
+
+            $SummaryLine = ($Output | Where-Object { $_ -match "M7 playable network processes:" } | Select-Object -Last 1)
+
+            $Row = [ordered]@{
+              run = $Run
+              exit_code = $ExitCode
+              summary_line = [string]$SummaryLine
+              source_dir = $SourceDir
+              a_state = if ($null -ne $A) { [string]$A.state } else { "" }
+              a_passed = if ($null -ne $A -and $null -ne $A.passed) { [bool]$A.passed } else { $false }
+              a_failures = if ($null -ne $A -and $null -ne $A.failures) { @($A.failures) } else { @() }
+              a_details = if ($null -ne $A) { $A.details } else { $null }
+              a_item_accepted = if ($null -ne $A -and $null -ne $A.world_report -and $null -ne $A.world_report.m7_item_bridge) { [int]$A.world_report.m7_item_bridge.accepted } else { -1 }
+              a_player_checksum = if ($null -ne $A) { [string]$A.player_checksum } else { "" }
+              a_convergence_player_checksum = if ($null -ne $A -and $null -ne $A.details) { [string]$A.details.convergence_player_checksum } else { "" }
+              a_convergence_server_checksum = if ($null -ne $A -and $null -ne $A.details) { [string]$A.details.convergence_server_player_checksum } else { "" }
+              b_state = if ($null -ne $B) { [string]$B.state } else { "" }
+              b_passed = if ($null -ne $B -and $null -ne $B.passed) { [bool]$B.passed } else { $false }
+              b_failures = if ($null -ne $B -and $null -ne $B.failures) { @($B.failures) } else { @() }
+              b_details = if ($null -ne $B) { $B.details } else { $null }
+              b_item_accepted = if ($null -ne $B -and $null -ne $B.world_report -and $null -ne $B.world_report.m7_item_bridge) { [int]$B.world_report.m7_item_bridge.accepted } else { -1 }
+              b_player_checksum = if ($null -ne $B) { [string]$B.player_checksum } else { "" }
+              b_convergence_player_checksum = if ($null -ne $B -and $null -ne $B.details) { [string]$B.details.convergence_player_checksum } else { "" }
+              b_convergence_server_checksum = if ($null -ne $B -and $null -ne $B.details) { [string]$B.details.convergence_server_player_checksum } else { "" }
+              server_state = if ($null -ne $Server) { [string]$Server.state } else { "" }
+              server_snapshot_checksum = if ($null -ne $Server -and $null -ne $Server.snapshot) { [string]$Server.snapshot.checksum } else { "" }
+            }
+            $Rows += [pscustomobject]$Row
+
+            $Row | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $RunEvidence "diagnostic-row.json") -Encoding UTF8
+            Write-Host ("M7_DIAGNOSTIC_RESULT run={0} exit={1} a_state={2} a_passed={3} b_state={4} b_passed={5} a_item={6} b_item={7}" -f $Run,$ExitCode,$Row.a_state,$Row.a_passed,$Row.b_state,$Row.b_passed,$Row.a_item_accepted,$Row.b_item_accepted)
+          }
+
+          $Passes = @($Rows | Where-Object { $_.exit_code -eq 0 }).Count
+          $Failures = @($Rows | Where-Object { $_.exit_code -ne 0 }).Count
+
+          $Summary = [ordered]@{
+            schema = "distributed_world_simulator.m7_r9_diagnostic.v1"
+            subject_head = "25f5ddf6280a39a44ddfc3bbec5245873021c0a1"
+            subject_tree = "82c6567acdc735bc02a4808159328f00722b0b6b"
+            mode = "DIAGNOSTIC_ONLY_NOT_ACCEPTANCE"
+            attempts = 10
+            passes = $Passes
+            failures = $Failures
+            canonical_verifier_failure_remains_authoritative = $true
+            runs = $Rows
+          }
+          $Summary | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $Diag "diagnostic-summary.json") -Encoding UTF8
+
+          Write-Host "M7_DIAGNOSTIC_COMPLETED passes=$Passes failures=$Failures"
+          if ($Rows.Count -ne 10) { throw "M7_DIAGNOSTIC_INCOMPLETE" }
+
+      - name: Verify subject remained immutable
+        run: |
+          $Head = (git rev-parse HEAD).Trim()
+          $Tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($Head -ne "25f5ddf6280a39a44ddfc3bbec5245873021c0a1") { throw "FINAL_HEAD_CHANGED" }
+          if ($Tree -ne "82c6567acdc735bc02a4808159328f00722b0b6b") { throw "FINAL_TREE_CHANGED" }
+          if ((git diff --name-only).Count -ne 0) { throw "TRACKED_SUBJECT_CHANGED" }
+          if ((git diff --cached --name-only).Count -ne 0) { throw "STAGED_SUBJECT_CHANGED" }
+
+      - name: Upload M7 diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m7-r9-diagnostic-exact-r8
+          path: |
+            artifacts/test-results/m7-r9-diagnostic/**
+          if-no-files-found: error
+          retention-days: 30
