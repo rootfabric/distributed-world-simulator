@@ -994,4 +994,279 @@ static func _build_island_model(
 						"row_index": row_index,
 						"value": 0.0,
 						"nominal": float(row["nominal"]),
-						"terms": terms
+						"terms": terms,
+					})
+			"linear_storage_terminal":
+				if delta <= 0.0:
+					return {"ok": false, "code": "DYNAMIC_ELEMENT_REQUIRES_STEP", "element_id": element_id}
+			"nonlinear_constitutive":
+				nonlinear_elements.append(element_id)
+				for port_name in port_names:
+					var global_cell := int(cell_map[_port_ref(element_id, String(port_name))])
+					var domain_id := String(network["cells"][global_cell]["domain"])
+					var key := _port_ref(element_id, String(port_name))
+					nonlinear_balance_indices[key] = initial_x.size()
+					var previous_balance := float(previous_port_states.get(key, {}).get("balance", 0.0))
+					initial_x.append(previous_balance)
+					unknown_nominals.append(float(network["domains"][domain_id]["balance_nominal"]))
+
+	var constraint_check := _validate_constraint_conflicts(network, constraints)
+	if not bool(constraint_check.get("ok", false)):
+		return constraint_check
+
+	# Lambda unknowns are appended after q and nonlinear balances. Their numeric
+	# nominal is inferred from power / row quantity only for scaling purposes;
+	# use 1.0 because coherent-SI values are already normalized by row residuals.
+	for constraint_index in range(constraints.size()):
+		constraints[constraint_index]["lambda_unknown"] = initial_x.size()
+		initial_x.append(0.0)
+		unknown_nominals.append(1.0)
+
+	var row_nominals: Array = []
+	for global_cell in island:
+		var domain_id := String(network["cells"][global_cell]["domain"])
+		row_nominals.append(float(network["domains"][domain_id]["balance_nominal"]))
+	for constraint in constraints:
+		row_nominals.append(float(constraint["nominal"]))
+	for element_id in nonlinear_elements:
+		var element: Dictionary = network["elements"][element_id]
+		for residual in element["law"]["residuals"]:
+			row_nominals.append(float(residual["nominal"]))
+
+	if row_nominals.size() != initial_x.size():
+		return {
+			"ok": false,
+			"code": "NON_SQUARE_ISLAND_MODEL",
+			"unknowns": initial_x.size(),
+			"equations": row_nominals.size(),
+		}
+
+	return {
+		"ok": true,
+		"island": island,
+		"cell_map": cell_map,
+		"local_cell_unknown": local_cell_unknown,
+		"constraints": constraints,
+		"nonlinear_balance_indices": nonlinear_balance_indices,
+		"nonlinear_elements": nonlinear_elements,
+		"initial_x": initial_x,
+		"unknown_nominals": unknown_nominals,
+		"row_nominals": row_nominals,
+	}
+
+static func _assemble_residual_jacobian(network: Dictionary, model: Dictionary, x: Array, delta: float) -> Dictionary:
+	var size := x.size()
+	var residual := _zero_vector(size)
+	var jacobian := _zero_matrix(size, size)
+	var island: Array = model["island"]
+	var cell_map: Dictionary = model["cell_map"]
+	var local_cell_unknown: Dictionary = model["local_cell_unknown"]
+	var nonlinear_balance_indices: Dictionary = model["nonlinear_balance_indices"]
+	var constraints: Array = model["constraints"]
+
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var element: Dictionary = network["elements"][element_id]
+		var port_names: Array = element["ports"].keys()
+		port_names.sort()
+		var touches := false
+		for port_name in port_names:
+			if int(cell_map[_port_ref(element_id, String(port_name))]) in island:
+				touches = true
+				break
+		if not touches:
+			continue
+		var op := String(element["law"].get("op", ""))
+		match op:
+			"equilibrium_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				var q_index := int(local_cell_unknown[global_cell])
+				var g := float(element["law"]["response_gain"])
+				var preferred := float(element["law"]["preferred_common"])
+				residual[q_index] += g * (preferred - float(x[q_index]))
+				jacobian[q_index][q_index] -= g
+			"fixed_balance_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				var q_index := int(local_cell_unknown[global_cell])
+				residual[q_index] += float(element["law"]["balance"])
+			"linear_difference_coupler":
+				var a_global := int(cell_map[_port_ref(element_id, "a")])
+				var b_global := int(cell_map[_port_ref(element_id, "b")])
+				var a := int(local_cell_unknown[a_global])
+				var b := int(local_cell_unknown[b_global])
+				if a != b:
+					var g := float(element["law"]["response_gain"])
+					var transfer := g * (float(x[a]) - float(x[b]))
+					residual[a] -= transfer
+					residual[b] += transfer
+					jacobian[a][a] -= g
+					jacobian[a][b] += g
+					jacobian[b][a] += g
+					jacobian[b][b] -= g
+			"linear_storage_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				var q_index := int(local_cell_unknown[global_cell])
+				var capacity := float(element["law"]["capacity"])
+				var previous := float(element["state"].get("common", 0.0))
+				var g := capacity / delta
+				residual[q_index] += g * (previous - float(x[q_index]))
+				jacobian[q_index][q_index] -= g
+			"nonlinear_constitutive":
+				for port_name in port_names:
+					var global_cell := int(cell_map[_port_ref(element_id, String(port_name))])
+					var q_index := int(local_cell_unknown[global_cell])
+					var balance_index := int(nonlinear_balance_indices[_port_ref(element_id, String(port_name))])
+					residual[q_index] += float(x[balance_index])
+					jacobian[q_index][balance_index] += 1.0
+
+	for constraint_index in range(constraints.size()):
+		var constraint: Dictionary = constraints[constraint_index]
+		var lambda_index := int(constraint["lambda_unknown"])
+		var lambda := float(x[lambda_index])
+		var row := island.size() + constraint_index
+		residual[row] -= float(constraint["value"])
+		for term in constraint["terms"]:
+			var q_index := int(term["cell"])
+			var coefficient := float(term["coefficient"])
+			residual[q_index] -= coefficient * lambda
+			jacobian[q_index][lambda_index] -= coefficient
+			residual[row] += coefficient * float(x[q_index])
+			jacobian[row][q_index] += coefficient
+
+	var nonlinear_row := island.size() + constraints.size()
+	for element_id in model["nonlinear_elements"]:
+		var element: Dictionary = network["elements"][element_id]
+		for residual_spec in element["law"]["residuals"]:
+			var evaluated := _eval_expr_dual(network, element, residual_spec["expr"], model, x)
+			if not bool(evaluated.get("ok", false)):
+				return evaluated
+			residual[nonlinear_row] = float(evaluated["value"])
+			for unknown_index in evaluated["grad"].keys():
+				jacobian[nonlinear_row][int(unknown_index)] += float(evaluated["grad"][unknown_index])
+			nonlinear_row += 1
+
+	return {"ok": true, "residual": residual, "jacobian": jacobian}
+
+static func _eval_expr_dual(network: Dictionary, element: Dictionary, expr: Dictionary, model: Dictionary, x: Array) -> Dictionary:
+	var op := String(expr.get("op", ""))
+	match op:
+		"constant":
+			return {"ok": true, "value": float(expr.get("value", 0.0)), "grad": {}}
+		"parameter":
+			var name := String(expr.get("name", ""))
+			return {"ok": true, "value": float(element["law"]["parameters"][name]["value"]), "grad": {}}
+		"common":
+			var port_name := String(expr.get("port", ""))
+			var global_cell := int(model["cell_map"][_port_ref(String(element["id"]), port_name)])
+			var index := int(model["local_cell_unknown"][global_cell])
+			return {"ok": true, "value": float(x[index]), "grad": {index: 1.0}}
+		"balance":
+			var port_name := String(expr.get("port", ""))
+			var index := int(model["nonlinear_balance_indices"][_port_ref(String(element["id"]), port_name)])
+			return {"ok": true, "value": float(x[index]), "grad": {index: 1.0}}
+		"neg":
+			var a := _eval_expr_dual(network, element, expr["a"], model, x)
+			if not bool(a.get("ok", false)):
+				return a
+			return {"ok": true, "value": -float(a["value"]), "grad": _grad_scaled(a["grad"], -1.0)}
+		"add", "sub", "mul", "div":
+			var a := _eval_expr_dual(network, element, expr["a"], model, x)
+			if not bool(a.get("ok", false)):
+				return a
+			var b := _eval_expr_dual(network, element, expr["b"], model, x)
+			if not bool(b.get("ok", false)):
+				return b
+			var av := float(a["value"])
+			var bv := float(b["value"])
+			match op:
+				"add":
+					return {"ok": true, "value": av + bv, "grad": _grad_combine(a["grad"], 1.0, b["grad"], 1.0)}
+				"sub":
+					return {"ok": true, "value": av - bv, "grad": _grad_combine(a["grad"], 1.0, b["grad"], -1.0)}
+				"mul":
+					return {"ok": true, "value": av * bv, "grad": _grad_combine(a["grad"], bv, b["grad"], av)}
+				"div":
+					if absf(bv) <= 1.0e-15:
+						return {"ok": false, "code": "NONLINEAR_DIVISION_BY_ZERO"}
+					return {"ok": true, "value": av / bv, "grad": _grad_combine(a["grad"], 1.0 / bv, b["grad"], -av / (bv * bv))}
+		"pow_int":
+			var a := _eval_expr_dual(network, element, expr["a"], model, x)
+			if not bool(a.get("ok", false)):
+				return a
+			var exponent := int(expr.get("exponent", 1))
+			var av := float(a["value"])
+			if exponent < 0 and absf(av) <= 1.0e-15:
+				return {"ok": false, "code": "NONLINEAR_NEGATIVE_POWER_ZERO"}
+			var value := pow(av, exponent)
+			var derivative := 0.0 if exponent == 0 else float(exponent) * pow(av, exponent - 1)
+			return {"ok": true, "value": value, "grad": _grad_scaled(a["grad"], derivative)}
+		"exp":
+			var a := _eval_expr_dual(network, element, expr["a"], model, x)
+			if not bool(a.get("ok", false)):
+				return a
+			var av := float(a["value"])
+			if av > 700.0:
+				return {"ok": false, "code": "NONLINEAR_EXP_OVERFLOW", "argument": av}
+			if av < -745.0:
+				return {"ok": true, "value": 0.0, "grad": {}}
+			var value := exp(av)
+			return {"ok": true, "value": value, "grad": _grad_scaled(a["grad"], value)}
+		"tanh":
+			var a := _eval_expr_dual(network, element, expr["a"], model, x)
+			if not bool(a.get("ok", false)):
+				return a
+			var value := tanh(float(a["value"]))
+			return {"ok": true, "value": value, "grad": _grad_scaled(a["grad"], 1.0 - value * value)}
+		_:
+			return {"ok": false, "code": "UNKNOWN_EXPRESSION_OP", "op": op}
+	return {"ok": false, "code": "UNKNOWN_EXPRESSION_OP", "op": op}
+
+static func _apply_solution(network: Dictionary, model: Dictionary, x: Array, delta: float) -> void:
+	var island: Array = model["island"]
+	var cell_map: Dictionary = model["cell_map"]
+	var local_cell_unknown: Dictionary = model["local_cell_unknown"]
+	for global_cell in island:
+		var q_index := int(local_cell_unknown[int(global_cell)])
+		network["cells"][global_cell]["common"] = float(x[q_index])
+		network["cells"][global_cell]["status"] = "SOLVED"
+
+	var reactions := {}
+	for constraint in model["constraints"]:
+		var lambda := float(x[int(constraint["lambda_unknown"])])
+		var element_id := String(constraint["element_id"])
+		if not reactions.has(element_id):
+			reactions[element_id] = {}
+		var lambdas: Array = network["elements"][element_id]["state"].get("constraint_lambdas", [])
+		while lambdas.size() <= int(constraint["row_index"]):
+			lambdas.append(0.0)
+		lambdas[int(constraint["row_index"])] = lambda
+		network["elements"][element_id]["state"]["constraint_lambdas"] = lambdas
+		for term in constraint["terms"]:
+			var port_name := String(term["port_name"])
+			var reaction := -float(term["coefficient"]) * lambda
+			reactions[element_id][port_name] = float(reactions[element_id].get(port_name, 0.0)) + reaction
+
+	var element_ids: Array = network["elements"].keys()
+	element_ids.sort()
+	for element_id in element_ids:
+		var element: Dictionary = network["elements"][element_id]
+		var port_names: Array = element["ports"].keys()
+		port_names.sort()
+		var touches := false
+		for port_name in port_names:
+			if int(cell_map[_port_ref(element_id, String(port_name))]) in island:
+				touches = true
+				break
+		if not touches:
+			continue
+		var op := String(element["law"].get("op", ""))
+		match op:
+			"equilibrium_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				var common := float(x[int(local_cell_unknown[global_cell])])
+				var balance := float(element["law"]["response_gain"]) * (float(element["law"]["preferred_common"]) - common)
+				_set_port_state(element, "p", common, balance)
+			"fixed_balance_terminal":
+				var global_cell := int(cell_map[_port_ref(element_id, "p")])
+				_set_port_state(element, "p", float(x[int(loc
