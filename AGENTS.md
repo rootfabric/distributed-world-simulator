@@ -93,12 +93,13 @@ H0.1 C22 only after H0.0
 docs/control/WINDOWS_LOCAL_WORKSPACE_AND_TEST_LAYOUT_RU.md
 ```
 
-Канонический layout:
+Канонический layout (flat worktree):
 
 ```text
 C:\distributed-world-simulator\
-  distributed-world-simulator\    # central checkout
-  worktrees\                       # all task worktrees
+  .git-store\repo.git              # bare git storage
+  main\                            # control worktree (main branch)
+  <worktree-name>\                 # all task worktrees as first-level siblings
 ```
 
 Канонический double Godot:
@@ -108,9 +109,9 @@ C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
 C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
 ```
 
-Новые Windows runner/instruction не должны вводить checkout-пути `C:\distributed-world-simulator-v0-*` или старый `C:\Godot\lunar-world-*` layout.
+Новые Windows runner/instruction не должны вводить checkout-пути `C:\distributed-world-simulator-v0-*`, старый `C:\Godot\lunar-world-*` layout или legacy-вложенность `worktrees\` / `distributed-world-simulator\distributed-world-simulator\`.
 
-PowerShell runners должны определять project root относительно собственного файла, поэтому работать как из центрального checkout, так и из worktree под `C:\distributed-world-simulator\worktrees\`.
+PowerShell runners должны определять project root относительно собственного файла, поэтому работать в любом worktree-сиблинге `C:\distributed-world-simulator\<worktree-name>\`; из корня `C:\distributed-world-simulator\` их запускать нельзя — там нет `project.godot`.
 
 ## Godot runtime / MCP
 

@@ -6,41 +6,44 @@
 
 Новые инструкции, runner-скрипты и отчёты не должны предполагать старые checkout-пути вроде `C:\distributed-world-simulator-v0-*` или `C:\Godot\lunar-world-*`.
 
-## Каноническая локальная структура
+## Каноническая локальная структура (flat worktree layout)
+
+Действующая ворктри-политика: единый bare-репозиторий в корне рабочей зоны, а все worktree — сиблинги первого уровня рядом с ним. Подкаталог `worktrees\` и выделенный центральный checkout `distributed-world-simulator\distributed-world-simulator\` больше не являются каноническими; существующие пути такого вида — legacy, новые инструкции и runner-скрипты их не вводят.
 
 ```text
 C:\distributed-world-simulator\
-  distributed-world-simulator\        # центральный checkout репозитория
-  worktrees\                           # все task/feature worktree
-    <worktree-name>\
-  artifacts\                           # необязательные внешние артефакты/архивы
+  .git-store\repo.git                  # bare-репозиторий (общий git storage)
+  main\                                # control worktree (ветка main)
+  <worktree-name>\                     # все task/feature worktree — сиблинги main
+  godot-userdata\                      # изолированные Godot user data
+  archive\                             # необязательные внешние артефакты/архивы
 ```
 
-Центральный checkout:
+Центральный control worktree:
 
 ```text
-C:\distributed-world-simulator\distributed-world-simulator\
+C:\distributed-world-simulator\main\
 ```
 
-Все новые worktree должны располагаться внутри:
+Все новые worktree создаются сиблингом первого уровня:
 
 ```text
-C:\distributed-world-simulator\worktrees\
+C:\distributed-world-simulator\<worktree-name>\
 ```
 
 Пример:
 
 ```powershell
-cd C:\distributed-world-simulator\distributed-world-simulator
+cd C:\distributed-world-simulator\main
 
 git fetch origin
 
 git worktree add `
-  C:\distributed-world-simulator\worktrees\sm0-two-authority-seamless-handoff-lab `
+  C:\distributed-world-simulator\sm0-two-authority-seamless-handoff-lab `
   origin/feature/sm0-two-authority-seamless-handoff-lab
 ```
 
-Не создавать новые рабочие checkout рядом с корнем диска (`C:\distributed-world-simulator-v0-*`).
+Не создавать новые рабочие checkout рядом с корнем диска (`C:\distributed-world-simulator-v0-*`) и не возвращать старый вложенный layout (`worktrees\`, `distributed-world-simulator\distributed-world-simulator\`).
 
 ## Канонический Godot 4.7.1 double build
 
@@ -75,24 +78,36 @@ Graphical runner должен использовать graphical executable и �
 3. не зависеть от current working directory;
 4. создавать runtime logs под `%LOCALAPPDATA%\DistributedWorldSimulator\...` либо под явно переданный artifact directory;
 5. печатать exact project root, git HEAD и log directory;
-6. не мутировать центральный checkout при запуске тестов;
+6. не мутировать control worktree `main\` (и любые чужие worktree-сиблинги) при запуске тестов;
 7. не выполнять `git reset --hard`, `git clean -fdx` или очистку чужих worktree;
 8. после теста позволять проверить `git status --short` и ожидать чистое дерево.
 
-## Центральный checkout и worktree
+## Центральный control worktree и worktree
 
-`C:\distributed-world-simulator\distributed-world-simulator\` — точка управления репозиторием: fetch, создание worktree, просмотр product frontier.
+`C:\distributed-world-simulator\main\` — точка управления репозиторием: fetch, создание worktree, просмотр product frontier. Git-хранилище общее: `.git-store\repo.git`, поэтому `git worktree list` доступен из любого worktree зоны.
 
-Feature-разработка предпочтительно выполняется в отдельном worktree внутри `C:\distributed-world-simulator\worktrees\`.
+Feature-разработка предпочтительно выполняется в отдельном worktree-сиблинге `C:\distributed-world-simulator\<worktree-name>\`.
 
-Если пользователь сознательно переключает центральный checkout на feature branch для локальной проверки, runner обязан работать и там, но инструкции агента не должны требовать этого как единственного способа.
+Если пользователь сознательно переключает worktree `main` на feature branch для локальной проверки, runner обязан работать и там, но инструкции агента не должны требовать этого как единственного способа.
+
+## Запуск из правильного worktree
+
+Перед запуском runner/Godot убедись, что команда выполняется из того worktree, над которым идёт работа:
+
+```powershell
+cd C:\distributed-world-simulator\<worktree-name>
+git branch --show-current
+git status --short
+```
+
+Runner-скрипты определяют project root относительно собственного файла, поэтому путь запуска (`.\RUN_*.ps1` из worktree или полный путь `C:\distributed-world-simulator\<worktree-name>\RUN_*.ps1`) задаёт Godot `--path` именно этого worktree. Нельзя запускать runner из `C:\distributed-world-simulator\` (корня зоны) — там нет `project.godot`.
 
 ## SM0
 
 Для seamless lab рекомендуемый worktree:
 
 ```text
-C:\distributed-world-simulator\worktrees\sm0-two-authority-seamless-handoff-lab\
+C:\distributed-world-simulator\sm0-two-authority-seamless-handoff-lab\
 ```
 
 Запуск тестов выполняется из этого каталога или по полному пути к runner; Godot остаётся в `C:\Godot\godot\bin\`.
