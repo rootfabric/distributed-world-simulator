@@ -108,6 +108,8 @@ func _test_source_and_runners(manifest: Dictionary) -> void:
 	_assert(not process_test.contains("get_available_bytes"), "M5 child pipe drain must not call StreamPeer-only get_available_bytes")
 	_assert(process_test.contains("--m5-pipe-smoke-only"), "M5 child pipe drain must have a runtime smoke mode")
 	_assert(process_test.contains("M5_CHILD_PIPE_OBSERVABILITY_PASS"), "M5 child pipe smoke must emit a durable PASS marker")
+	var network_runner := _read("res://RUN_NETWORK_CONTRACT_TESTS.ps1")
+	_assert(network_runner.contains("res://tests/runtime/support/m5_convergence_release_guard_regression.gd"), "M5 focused network belt must execute convergence monotonic regression")
 	var stability_runner := _read("res://RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1")
 	_assert(stability_runner.contains("--m5-pipe-smoke-only"), "M5 stability runner must execute runtime pipe smoke before run 1")
 	_assert(stability_runner.contains("M5_CHILD_PIPE_OBSERVABILITY_GATE_PASS"), "M5 stability runner must require pipe smoke PASS marker")
