@@ -1,0 +1,112 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-008",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-007",
+  "failed_r7_candidate": "baa0e192209e72aba5ae9d04663eea85b1099e82",
+  "failed_r7_tree": "08f01fd955c2d31c1ad49aa917e542c93e278241",
+  "windows_r7_result": {
+    "contracts": "PASS_115_0",
+    "release_guard": "PASS_31_0",
+    "pipe_smoke": "PASS",
+    "decisive_series": "FAIL_RUN_1_OF_10",
+    "run1_assertions": "101_ASSERTIONS_2_FAILURES",
+    "failure": "M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED",
+    "reason": "CONTROL_GENERATION_REGRESSED_AFTER_RELEASE",
+    "prepared_generation": "m5-convergence/1/9d5b02f1137c/fb502e0c2bb9",
+    "prepared_player_observation": {
+      "checksum_prefix": "9d5b02f1137c",
+      "revision": 47,
+      "server_tick": 815,
+      "authority_owner_id": "m5-dedicated-server",
+      "authority_epoch": 1
+    },
+    "current_player_observation": {
+      "checksum_prefix": "2c6fb6e0",
+      "revision": 48,
+      "server_tick": 815
+    },
+    "item_graph_stable": true,
+    "release_consumed_by_both": true,
+    "complete_written": true,
+    "a_reconnect_complete": true,
+    "b_leave_acknowledged": true,
+    "final_control_generation_matches_prepare_release_complete": true,
+    "reruns": 0,
+    "canonical_full_regression": "NOT_RUN_BY_DESIGN"
+  },
+  "classification": "M5_CONTROL_FILE_TRANSIENT_REPLACE_GAP",
+  "root_cause": [
+    "scripts/testing/process_harness/atomic_json_file.gd replaces an existing file by renaming target to a unique backup and then renaming temp to target. During that interval target is absent.",
+    "On Windows, Godot DirAccess.rename itself also removes an existing destination before MoveFileW, so a naive single temp->target rename through the same API would still contain a destination-absence window.",
+    "M5 Support.read collapses NOT_FOUND, OPEN_FAILED, EMPTY and INCOMPLETE reads into an empty Dictionary.",
+    "After convergence release becomes monotonic, the client integrity guard interprets one transient empty control read as a real control-generation regression.",
+    "R7 evidence shows the final control file is intact and prepare/release/complete all reference the same generation, proving the observed empty control was transient rather than a persistent semantic rollback."
+  ],
+  "design_decision": {
+    "rejected": [
+      "claiming DirAccess.rename(temp,target) is atomic on Windows",
+      "falling back indefinitely to stale backup control files",
+      "weakening CONTROL_GENERATION_REGRESSED_AFTER_RELEASE",
+      "retrying whole convergence generations"
+    ],
+    "selected": [
+      "Keep AtomicJson.read_dictionary as the typed one-shot primitive.",
+      "Add an explicit bounded typed read retry helper for continuity-sensitive readers. Only NOT_FOUND, OPEN_FAILED, EMPTY and INCOMPLETE are retryable.",
+      "Bound the retry horizon to the writer replacement budget: MAX_REPLACE_ATTEMPTS plus a small margin at RETRY_DELAY_MS.",
+      "A valid JSON empty Dictionary is a successful read and is never treated as transient; it therefore still triggers fail-closed convergence semantics.",
+      "M5 control reads use the bounded typed helper. If retryable read errors persist beyond the bounded window, the client fails explicitly with M5_CONTROL_READ_UNAVAILABLE.",
+      "Result/report polling remains on existing non-blocking Support.read behavior."
+    ]
+  },
+  "authorized_r8_scope": {
+    "allowed_paths": [
+      "scripts/testing/process_harness/atomic_json_file.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_support.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "tests/runtime/support/m5_control_read_consistency_regression.gd",
+      "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd",
+      "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Add AtomicJson.is_transient_read_error and read_dictionary_with_retry with explicit attempts/elapsed/error evidence.",
+    "Add Support.read_control_consistent as the only M5 control-plane bounded read entry point.",
+    "Replace direct Support.read(_control_file) in all M5 control-dependent driver stages with typed consistent reads and explicit M5_CONTROL_READ_UNAVAILABLE after retry exhaustion.",
+    "Add a deterministic regression that proves missing and incomplete JSON can recover within the bounded retry window, valid empty JSON succeeds immediately, and persistent missing reads exhaust with a typed error.",
+    "Wire the new regression into RUN_NETWORK_CONTRACT_TESTS.ps1 and contract guards."
+  ],
+  "non_goals": [
+    "Do not alter R7 observed-state identity or convergence barrier semantics.",
+    "Do not accept stale backup data as current control.",
+    "Do not add retries to gameplay/network operations or convergence generations.",
+    "Do not increase convergence timeout.",
+    "Do not change product runtime."
+  ],
+  "acceptance_r8": [
+    "M5 contracts PASS with control-read continuity guards.",
+    "m5_control_read_consistency_regression PASS, including real delayed recovery from NOT_FOUND and INCOMPLETE using the same helper.",
+    "R7 release-guard regression remains PASS 31/0 or greater with unchanged semantics.",
+    "R5 pipe smoke remains PASS.",
+    "Windows exact-Godot M5 stability gate reaches 10/10 with no hidden reruns.",
+    "A transient control replace gap must not produce CONTROL_GENERATION_REGRESSED_AFTER_RELEASE.",
+    "A valid persistent empty control or a persistent unreadable/missing control beyond the bounded horizon must still fail explicitly.",
+    "Only after Windows 10/10 may one canonical full world regression first attempt be run."
+  ],
+  "director_decision": "AUTHORIZED_R8_BOUNDED_CONTROL_READ_CONTINUITY",
+  "b6_status": "BLOCKED_PENDING_R8_VALIDATION",
+  "b7_status": "BLOCKED"
+}
