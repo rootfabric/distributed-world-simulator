@@ -246,7 +246,7 @@ func _process(_delta: float) -> void:
 			if not reconnect_peer_path.is_empty():
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
-		"WAIT_CONVERGENCE_PEER":
+		"WAIT_CONVERGENCE_COORDINATOR":
 			# M5_CONVERGENCE_PAIR_MATCHING_PARENT_OWNED:
 			# clients publish only their own authoritative checksums. The parent
 			# coordinator is the sole matcher and generation writer; clients no
@@ -472,7 +472,7 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		_finish(false)
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
-	_set_stage("WAIT_CONVERGENCE_PEER")
+	_set_stage("WAIT_CONVERGENCE_COORDINATOR")
 
 
 func _revoke_convergence_prepare(
