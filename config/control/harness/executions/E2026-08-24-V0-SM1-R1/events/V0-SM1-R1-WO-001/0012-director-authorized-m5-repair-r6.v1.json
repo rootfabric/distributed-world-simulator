@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0012",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 12,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T04:00:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r6",
+  "head_sha": "2853622abb1f246d862bab6ad4c7d1bece84b59d",
+  "summary": "R5 observability proved both clients independently timed out for a full 150s stage budget in WAIT_CONVERGENCE_PEER while parent-side release assertions had passed. Director authorizes R6 centralized convergence repair: parent-only pair matching and monotonic consumed-release acknowledgements with explicit fail-closed post-release integrity.",
+  "command": "AUTHORIZE_REPAIR_MAP_R6",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R6_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-006.v1.json"
+  ]
+}
