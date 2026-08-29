@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0016",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 16,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T11:30:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m7-repair-map-r9",
+  "head_sha": "b131153731630e501b392a6347c409678474b321",
+  "summary": "Fresh B6 R8 re-verification preserved M5 10/10 and all focused SM1 gates but the first and only canonical full world regression failed later at M7 playable networked processes (51 assertions / 4 failures). M5 R8 remains validated. Director authorizes a diagnostic-only exact-R8 M7 campaign and a bounded harness repair only after root-cause classification.",
+  "command": "AUTHORIZE_M7_DIAGNOSTIC_REPAIR_MAP_R9",
+  "exit_code": 1,
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M7-REPAIR-MAP-009.v1.json"
+  ],
+  "blocker": "M7_CANONICAL_FAILURE_REQUIRES_DIAGNOSTIC_CLASSIFICATION"
+}

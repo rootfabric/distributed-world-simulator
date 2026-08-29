@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_b6_m7_root_cause.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "finding_id": "V0-SM1-R1-B6-M7-R9-001",
+  "failed_subject": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+  "failed_tree": "82c6567acdc735bc02a4808159328f00722b0b6b",
+  "verifier_record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json",
+  "classification": "REGRESSED_M7_ACCEPTANCE_WORKER_CAMERA_BASIS_SYNC",
+  "severity": "HIGH",
+  "blocking": true,
+  "evidence": {
+    "fresh_verifier_failure": [
+      "M7 client A complete",
+      "M7 client B complete",
+      "M7 B network item actions accepted",
+      "M7 server and clients player replicas converge before disconnect"
+    ],
+    "historical_match": {
+      "pull_request": 21,
+      "comment_id": 5223341383,
+      "historical_head": "e2eda5db667229118f82e19ce40c4e4906697533",
+      "historical_symptom": "Two-client process lost one item action per client while Item Graph/player convergence remained otherwise healthy.",
+      "historical_root_cause": "The acceptance worker assigned player.camera_yaw directly. Authoritative look_yaw is derived from player.get_view_basis(), while direct scalar assignment does not rotate the CameraYaw node.",
+      "historical_fix": "m7_playable_network_client_camera_sync_fix.gd used player.adjust_view(...) to synchronize scalar yaw and camera basis before authoritative movement.",
+      "historical_test_binding": "test_m7_playable_networked_processes.gd at e2eda5d spawned the corrected camera-sync worker."
+    },
+    "current_subject_regression": {
+      "historical_fix_file_present": false,
+      "current_spawn_worker": "res://tools/runtime/m7_playable_network_client.gd",
+      "direct_scalar_yaw_assignments": [
+        "tools/runtime/m7_playable_network_client.gd:292",
+        "tools/runtime/m7_playable_network_client.gd:309",
+        "tools/runtime/m7_playable_network_client.gd:349"
+      ],
+      "current_authoritative_pose_check_uses_orientation_yaw": "tools/runtime/m7_playable_network_client.gd:382-397",
+      "conclusion": "The current worker again changes only the scalar camera_yaw while both authoritative movement and interaction visibility depend on the actual view/orientation basis. This reintroduces the previously proven Windows acceptance-driver defect."
+    }
+  },
+  "root_cause": "A previously proven test/runtime-driver camera basis synchronization fix was not carried into the current product lineage. Automated M7 steering directly assigns playground.player.camera_yaw instead of using the player's public adjust_view API. The scalar field can therefore diverge from the CameraYaw node/view basis used to derive authoritative orientation_yaw. Movement and item-interaction setup can aim along a stale direction, causing legitimate server spatial/visibility rejection and downstream convergence failure.",
+  "canonical_owner": "M7 graphical acceptance worker / test driver only",
+  "production_network_defect_proven": false,
+  "selected_repair": {
+    "branch_base": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "allowed_paths": [
+      "tools/runtime/m7_playable_network_client.gd",
+      "tests/runtime/test_m7_playable_networked_processes.gd"
+    ],
+    "changes": [
+      "Add _set_automated_camera_yaw(desired_yaw) using player.adjust_view(wrapped_delta, 0.0).",
+      "Replace every automated direct camera_yaw assignment in movement/final-facing/readiness paths with the helper.",
+      "Add source-level guard assertions to the existing M7 process test so direct camera_yaw assignment cannot silently return."
+    ],
+    "non_goals": [
+      "No network protocol change.",
+      "No server authority change.",
+      "No pickup range or visibility threshold change.",
+      "No retry-until-success for item actions.",
+      "No timeout increase.",
+      "No M5 change.",
+      "No SM1/P6 change."
+    ]
+  },
+  "diagnostic_campaign_status": "CORROBORATING_ONLY_IF_EXECUTED; ROOT_CAUSE_CLASSIFIED_FROM FRESH_FAILURE + EXACT_CURRENT_BYTES + PRIOR_PROVEN_WINDOWS_FIX",
+  "director_decision": "AUTHORIZE_R9_M7_CAMERA_BASIS_SYNC_REPAIR"
+}

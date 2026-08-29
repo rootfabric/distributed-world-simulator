@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-24-V0-SM1-R1",
   "program": "V0",
   "goal_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-  "state": "VERIFYING",
+  "state": "FIX_REQUIRED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "branch": "feature/v0-sm1-seamless-product-integration",

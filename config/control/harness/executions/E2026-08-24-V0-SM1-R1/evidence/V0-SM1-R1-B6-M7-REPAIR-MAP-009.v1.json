@@ -1,0 +1,116 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M7-REPAIR-MAP-009",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-008",
+  "failed_candidate": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+  "failed_tree": "82c6567acdc735bc02a4808159328f00722b0b6b",
+  "verifier_record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json",
+  "verifier_result": {
+    "m5_pre_gates": "PASS",
+    "m5_decisive": "PASS_10_OF_10_SINGLE_ATTEMPT",
+    "focused_sm1": "PASS_13_OF_13",
+    "impaired_network": "PASS_5_OF_5",
+    "r8_semantic_audit": "PASS",
+    "canonical_world_regression": "FAIL_FIRST_AND_ONLY_ATTEMPT",
+    "declared_test_count": 304,
+    "discovered_test_count": 304,
+    "steps_recorded": 51,
+    "bad_exits": 1,
+    "first_failure": {
+      "test": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "exit_code": 1,
+      "duration_seconds": 48.496,
+      "assertions": 51,
+      "failures": 4,
+      "failing_assertions": [
+        "M7 client A complete",
+        "M7 client B complete",
+        "M7 B network item actions accepted",
+        "M7 server and clients player replicas converge before disconnect"
+      ]
+    },
+    "canonical_reruns": 0
+  },
+  "classification": "M7_CANONICAL_FAILURE_REQUIRES_DIAGNOSTIC_CLASSIFICATION",
+  "current_evidence": [
+    "R8's M5 repair target is independently proven: fresh verifier M5 pre-gates and fresh decisive 10/10 all passed with no M5_CONTROL_READ_UNAVAILABLE and no M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED.",
+    "The canonical failure moved later to M7 and therefore must not be folded back into the closed M5 root-cause hypothesis.",
+    "A separate Windows R8 validation previously completed the same canonical 304/304, 307-step suite successfully, so the M7 failure is not yet proven deterministic.",
+    "M7 process reports are written through AtomicJson, while test_m7_playable_networked_processes.gd and tools/runtime/m7_playable_network_client.gd read peer/server/result JSON through direct FileAccess + JSON.parse_string without typed continuity.",
+    "R8 already proved on Windows that AtomicJson replacement windows are real; therefore transient M7 report-read discontinuity is a plausible harness hypothesis but is not yet established as root cause.",
+    "The canonical runner creates a fresh isolated world profile itself, so prior SM1 HOME/APPDATA isolation is not sufficient evidence for the failure."
+  ],
+  "hypotheses": [
+    {
+      "id": "H1",
+      "name": "M7_PROCESS_REPORT_TRANSIENT_READ_GAP",
+      "description": "M7 direct FileAccess reads sample an AtomicJson replacement gap or incomplete parse and temporarily collapse report state to an empty Dictionary, destabilizing peer/server convergence observation."
+    },
+    {
+      "id": "H2",
+      "name": "M7_REAL_ITEM_OR_PLAYER_CONVERGENCE_RACE",
+      "description": "The failure is a real process/gameplay synchronization race independent of JSON report continuity."
+    },
+    {
+      "id": "H3",
+      "name": "M7_WINDOWS_PROCESS_TIMING_VARIANCE",
+      "description": "The failure is environment/load-sensitive process timing with no deterministic semantic defect; diagnostic evidence must still identify a bounded hardening target before acceptance."
+    }
+  ],
+  "authorized_diagnostic": {
+    "subject": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "mode": "DIAGNOSTIC_ONLY_NOT_ACCEPTANCE",
+    "standalone_m7_attempts": 10,
+    "rules": [
+      "Do not rerun RUN_WORLD_REGRESSION_TESTS.ps1; the verifier's first canonical failure remains authoritative.",
+      "Standalone M7 repetitions are diagnostic only and can never replace VERIFICATION-002=FAILED.",
+      "Preserve every diagnostic attempt, including passes and failures.",
+      "Capture parent output plus server.json, a.json, b.json and server/a/b logs for each attempt.",
+      "Classify failure points and whether client reports are FAILED, COMPLETE with passed=false, missing, stale or internally inconsistent.",
+      "Do not modify runtime/test bytes during diagnostic execution."
+    ]
+  },
+  "authorized_repair_scope_if_diagnostic_supports_h1": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m3/m3_process_support.gd",
+      "tools/runtime/m7_playable_network_client.gd",
+      "tests/runtime/test_m7_playable_networked_processes.gd",
+      "tests/runtime/support/m7_process_report_read_consistency_regression.gd",
+      "RUN_NETWORK_CONTRACT_TESTS.ps1"
+    ],
+    "frozen_dependencies": [
+      "scripts/testing/process_harness/atomic_json_file.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
+    ],
+    "design_constraints": [
+      "Reuse the existing typed AtomicJson read primitive; do not invent stale backup truth.",
+      "Retry only typed transient report-read errors and keep the horizon bounded.",
+      "Valid JSON empty objects remain successful values and are not reclassified as transient.",
+      "No gameplay operation retry, no network protocol change, no authority change, no timeout increase.",
+      "Do not weaken item/player convergence assertions."
+    ]
+  },
+  "forbidden_paths": [
+    "scripts/network/transports/v2/**",
+    "scripts/network/gateway/runtime/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/runtime/networked_gameplay/p6/**",
+    "scripts/persistence/**",
+    "scripts/construction/**"
+  ],
+  "acceptance_after_repair": [
+    "Dedicated regression for M7 process-report read continuity PASS.",
+    "Standalone M7 diagnostic/stability campaign PASS without hidden reruns.",
+    "R8 M5 pre-gates remain PASS.",
+    "Fresh M5 decisive remains 10/10 on a single attempt.",
+    "Focused SM1 remains 13/13 and impaired network remains 5/5.",
+    "Fresh canonical world regression passes its first attempt with declared=304, discovered=304, steps=307, bad exits=0.",
+    "Fresh independent B6 Verifier must re-execute the exact new immutable subject."
+  ],
+  "director_decision": "AUTHORIZE_M7_DIAGNOSTIC_AND_BOUNDED_HARNESS_REPAIR_ONLY_AFTER_CLASSIFICATION",
+  "b6_status": "BLOCKED_PENDING_M7_DIAGNOSTIC_AND_REPAIR",
+  "b7_status": "BLOCKED"
+}
