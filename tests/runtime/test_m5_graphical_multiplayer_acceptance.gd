@@ -13,6 +13,7 @@ var failures: Array[String] = []
 var assertions := 0
 var child_pids: Array[int] = []
 var xvfb_pid := -1
+var process_observability: Dictionary = {}
 
 
 func _init() -> void:
@@ -70,7 +71,10 @@ func _init() -> void:
 			"--shutdown-after-ms=300000",
 		],
 		profiles[0],
-		""
+		"",
+		"server",
+		server_path,
+		control_path
 	)
 	child_pids.append(server_pid)
 	_assert(server_pid > 0, "M5 dedicated server process launched")
@@ -184,11 +188,22 @@ func _spawn_client(
 			"--m5-phase=%d" % phase,
 		],
 		profile,
-		display_name
+		display_name,
+		"client-%s-phase-%d" % [client_id, phase],
+		result_path,
+		control_path
 	)
 
 
-func _spawn(executable: String, args: Array[String], profile: Dictionary, display_name: String) -> int:
+func _spawn(
+	executable: String,
+	args: Array[String],
+	profile: Dictionary,
+	display_name: String,
+	process_label: String = "child",
+	result_path: String = "",
+	control_path: String = ""
+) -> int:
 	var environment: Dictionary = Dictionary(profile.get("environment", {})).duplicate(true)
 	if not display_name.is_empty():
 		environment["DISPLAY"] = display_name
@@ -200,7 +215,62 @@ func _spawn(executable: String, args: Array[String], profile: Dictionary, displa
 		OS.set_environment(name, String(environment[name]))
 	for path_key in ["HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]:
 		DirAccess.make_dir_recursive_absolute(String(environment.get(path_key, "")))
-	var pid := OS.create_process(executable, args, false)
+
+	var evidence_root := (
+		result_path.get_base_dir().path_join("process-observability")
+		if not result_path.is_empty()
+		else ProjectSettings.globalize_path("res://artifacts/test-results/m5-process-observability")
+	)
+	DirAccess.make_dir_recursive_absolute(evidence_root)
+	var safe_label := process_label.replace("/", "_").replace("\\", "_").replace(":", "_")
+	var stdout_path := evidence_root.path_join("%s.stdout.log" % safe_label)
+	var stderr_path := evidence_root.path_join("%s.stderr.log" % safe_label)
+	var lifecycle_path := evidence_root.path_join("%s.lifecycle.json" % safe_label)
+	var stdout_sink := FileAccess.open(stdout_path, FileAccess.WRITE)
+	var stderr_sink := FileAccess.open(stderr_path, FileAccess.WRITE)
+
+	# Direct child PID + redirected IO. No cmd.exe / PowerShell wrapper is inserted.
+	var pipe_result: Dictionary = OS.execute_with_pipe(executable, args, false)
+	var pid := int(pipe_result.get("pid", -1))
+	if pid > 0:
+		process_observability[pid] = {
+			"label": process_label,
+			"pid": pid,
+			"spawned_at_msec": Time.get_ticks_msec(),
+			"stdio": pipe_result.get("stdio"),
+			"stderr": pipe_result.get("stderr"),
+			"stdout_sink": stdout_sink,
+			"stderr_sink": stderr_sink,
+			"stdout_path": stdout_path,
+			"stderr_path": stderr_path,
+			"lifecycle_path": lifecycle_path,
+			"result_path": result_path,
+			"control_path": control_path,
+			"parent_kill_requested": false,
+			"parent_kill_reason": "",
+			"parent_kill_requested_at_msec": 0,
+			"exit_observed": false,
+			"exit_code": null,
+			"exit_observed_at_msec": 0,
+		}
+		_write_process_lifecycle(pid, "SPAWNED", "", {})
+	else:
+		if stdout_sink != null:
+			stdout_sink.close()
+		if stderr_sink != null:
+			stderr_sink.close()
+		Support.write(lifecycle_path, {
+			"schema": "distributed_world_simulator.m5_child_lifecycle.v1",
+			"label": process_label,
+			"pid": pid,
+			"state": "SPAWN_FAILED",
+			"spawned_at_msec": Time.get_ticks_msec(),
+			"stdout_path": stdout_path,
+			"stderr_path": stderr_path,
+			"result_path": result_path,
+			"control_path": control_path,
+		})
+
 	for name_value in captured.keys():
 		var name := String(name_value)
 		var value: Dictionary = captured[name]
@@ -209,6 +279,128 @@ func _spawn(executable: String, args: Array[String], profile: Dictionary, displa
 		else:
 			OS.unset_environment(name)
 	return pid
+
+
+func _drain_process_output(pid: int) -> void:
+	if not process_observability.has(pid):
+		return
+	var record: Dictionary = process_observability[pid]
+	_drain_pipe(record.get("stdio"), record.get("stdout_sink"))
+	_drain_pipe(record.get("stderr"), record.get("stderr_sink"))
+
+
+func _drain_all_process_output() -> void:
+	for pid_value in process_observability.keys():
+		_drain_process_output(int(pid_value))
+
+
+func _drain_pipe(pipe, sink) -> void:
+	if pipe == null or sink == null:
+		return
+	var available := int(pipe.get_available_bytes())
+	while available > 0:
+		var data: PackedByteArray = pipe.get_buffer(available)
+		if not data.is_empty():
+			sink.store_buffer(data)
+			sink.flush()
+		available = int(pipe.get_available_bytes())
+
+
+func _write_process_lifecycle(
+	pid: int,
+	state: String,
+	wait_label: String,
+	last_result: Dictionary
+) -> Dictionary:
+	if not process_observability.has(pid):
+		return {}
+	var record: Dictionary = process_observability[pid]
+	var control_path := String(record.get("control_path", ""))
+	var result_path := String(record.get("result_path", ""))
+	var snapshot := {
+		"schema": "distributed_world_simulator.m5_child_lifecycle.v1",
+		"label": String(record.get("label", "")),
+		"pid": pid,
+		"state": state,
+		"spawned_at_msec": int(record.get("spawned_at_msec", 0)),
+		"observed_at_msec": Time.get_ticks_msec(),
+		"running": OS.is_process_running(pid),
+		"exit_observed": bool(record.get("exit_observed", false)),
+		"exit_code": record.get("exit_code"),
+		"exit_observed_at_msec": int(record.get("exit_observed_at_msec", 0)),
+		"termination_origin": (
+			"PARENT_KILL_REQUESTED"
+			if bool(record.get("parent_kill_requested", false))
+			else "NOT_PARENT_INITIATED"
+			if bool(record.get("exit_observed", false))
+			else "RUNNING"
+		),
+		"parent_kill_requested": bool(record.get("parent_kill_requested", false)),
+		"parent_kill_reason": String(record.get("parent_kill_reason", "")),
+		"parent_kill_requested_at_msec": int(record.get("parent_kill_requested_at_msec", 0)),
+		"wait_label": wait_label,
+		"stdout_path": String(record.get("stdout_path", "")),
+		"stderr_path": String(record.get("stderr_path", "")),
+		"result_path": result_path,
+		"control_path": control_path,
+		"last_result": (
+			last_result.duplicate(true)
+			if not last_result.is_empty()
+			else Support.read(result_path)
+			if not result_path.is_empty()
+			else {}
+		),
+		"last_control": Support.read(control_path) if not control_path.is_empty() else {},
+	}
+	Support.write(String(record.get("lifecycle_path", "")), snapshot)
+	return snapshot
+
+
+func _observe_process_exit(pid: int, wait_label: String, last_result: Dictionary = {}) -> Dictionary:
+	if not process_observability.has(pid):
+		return {
+			"pid": pid,
+			"wait_label": wait_label,
+			"exit_code": OS.get_process_exit_code(pid),
+			"termination_origin": "UNTRACKED_CHILD",
+		}
+	_drain_process_output(pid)
+	OS.delay_msec(10)
+	_drain_process_output(pid)
+	var record: Dictionary = process_observability[pid]
+	if not bool(record.get("exit_observed", false)):
+		record["exit_observed"] = true
+		record["exit_code"] = OS.get_process_exit_code(pid)
+		record["exit_observed_at_msec"] = Time.get_ticks_msec()
+		process_observability[pid] = record
+	var snapshot := _write_process_lifecycle(pid, "EXITED", wait_label, last_result)
+	_close_process_capture(pid)
+	return snapshot
+
+
+func _mark_parent_kill(pid: int, reason: String) -> void:
+	if not process_observability.has(pid):
+		return
+	var record: Dictionary = process_observability[pid]
+	record["parent_kill_requested"] = true
+	record["parent_kill_reason"] = reason
+	record["parent_kill_requested_at_msec"] = Time.get_ticks_msec()
+	process_observability[pid] = record
+	_drain_process_output(pid)
+	_write_process_lifecycle(pid, "PARENT_KILL_REQUESTED", reason, {})
+
+
+func _close_process_capture(pid: int) -> void:
+	if not process_observability.has(pid):
+		return
+	var record: Dictionary = process_observability[pid]
+	for sink_key in ["stdout_sink", "stderr_sink"]:
+		var sink = record.get(sink_key)
+		if sink != null:
+			sink.flush()
+			sink.close()
+			record[sink_key] = null
+	process_observability[pid] = record
 
 
 func _validate_pre_finish(
@@ -315,6 +507,7 @@ func _wait_state(
 	var started := Time.get_ticks_msec()
 	var last: Dictionary = {}
 	while Time.get_ticks_msec() - started <= timeout_ms:
+		_drain_all_process_output()
 		last = Support.read(path)
 		if String(last.get("state", "")) in states:
 			return last
@@ -325,13 +518,17 @@ func _wait_state(
 
 
 func _process_exit_report(pid: int, wait_label: String, last: Dictionary) -> Dictionary:
+	var lifecycle := _observe_process_exit(pid, wait_label, last)
 	return {
 		"state": "FAILED",
 		"passed": false,
 		"failure_code": "PROCESS_EXITED_BEFORE_STATE",
 		"process_id": pid,
 		"wait_label": wait_label,
+		"exit_code": lifecycle.get("exit_code"),
+		"termination_origin": lifecycle.get("termination_origin", ""),
 		"last_report": last.duplicate(true),
+		"process_lifecycle": lifecycle,
 	}
 
 
@@ -353,25 +550,34 @@ func _coordinate_convergence_pair(
 	var release_sent := false
 	var abandoned_ids: Array[String] = []
 	while Time.get_ticks_msec() - started <= timeout_ms:
+		_drain_all_process_output()
 		a = Support.read(a_path)
 		b = Support.read(b_path)
 		if a_pid > 0 and not OS.is_process_running(a_pid):
+			var a_lifecycle := _observe_process_exit(a_pid, "convergence_a2", a)
 			return {
 				"success": false,
 				"failure_code": "PROCESS_EXITED_DURING_CONVERGENCE",
 				"dead_process": "a2",
 				"process_id": a_pid,
+				"exit_code": a_lifecycle.get("exit_code"),
+				"termination_origin": a_lifecycle.get("termination_origin", ""),
+				"process_lifecycle": a_lifecycle,
 				"a": a,
 				"b": b,
 				"prepare_id": active_id,
 				"abandoned_ids": abandoned_ids,
 			}
 		if b_pid > 0 and not OS.is_process_running(b_pid):
+			var b_lifecycle := _observe_process_exit(b_pid, "convergence_b", b)
 			return {
 				"success": false,
 				"failure_code": "PROCESS_EXITED_DURING_CONVERGENCE",
 				"dead_process": "b",
 				"process_id": b_pid,
+				"exit_code": b_lifecycle.get("exit_code"),
+				"termination_origin": b_lifecycle.get("termination_origin", ""),
+				"process_lifecycle": b_lifecycle,
 				"a": a,
 				"b": b,
 				"prepare_id": active_id,
@@ -475,7 +681,11 @@ func _wait_server_counts(path: String, joins: int, leaves: int, timeout_ms: int,
 func _wait_exit(pid: int, timeout_ms: int) -> void:
 	var started := Time.get_ticks_msec()
 	while pid > 0 and OS.is_process_running(pid) and Time.get_ticks_msec() - started <= timeout_ms:
+		_drain_all_process_output()
 		OS.delay_msec(POLL_MS)
+	_drain_all_process_output()
+	if pid > 0 and not OS.is_process_running(pid):
+		_observe_process_exit(pid, "wait_exit", {})
 
 
 func _start_virtual_display() -> String:
@@ -556,9 +766,19 @@ func _assert(condition: bool, message: String) -> void:
 
 
 func _finish() -> void:
+	_drain_all_process_output()
 	for pid in child_pids.duplicate():
-		if pid > 0 and OS.is_process_running(pid):
+		if pid <= 0:
+			continue
+		if OS.is_process_running(pid):
+			_mark_parent_kill(pid, "test_parent_cleanup")
 			OS.kill(pid)
+			var kill_started := Time.get_ticks_msec()
+			while OS.is_process_running(pid) and Time.get_ticks_msec() - kill_started <= 1000:
+				_drain_process_output(pid)
+				OS.delay_msec(10)
+		if not OS.is_process_running(pid) and process_observability.has(pid):
+			_observe_process_exit(pid, "test_parent_cleanup", {})
 	child_pids.clear()
 	print("M5 graphical multiplayer acceptance: %d assertions, %d failures" % [assertions, failures.size()])
 	quit(0 if failures.is_empty() else 1)
