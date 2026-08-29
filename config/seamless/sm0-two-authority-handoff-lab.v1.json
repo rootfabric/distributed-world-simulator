@@ -1,0 +1,218 @@
+{
+  "schema": "distributed_world_simulator.sm0_two_authority_handoff_lab.v1",
+  "checkpoint": "V0-SM0-TWO-AUTHORITY-SEAMLESS-HANDOFF-LAB",
+  "status": "FIRST_NETWORK_PROTOTYPE_IMPLEMENTED_WINDOWS_VERIFICATION_REQUIRED",
+  "branch": "feature/sm0-two-authority-seamless-handoff-lab",
+  "base_branch": "feature/v0-playable-product-frontier",
+  "base_sha": "d66378b98b69756fab6c2a93b80b74db9ccd1980",
+  "runtime_tested_ancestor_sha": "7f4177b32ce76191aecea60f2f8963c1b0ffd02e",
+  "world_id": "earth",
+  "current_executable_slice": {
+    "stage": "SM0_NETWORK_PROTOTYPE_BEFORE_GRAPHICAL_EARTH_INTEGRATION",
+    "server_processes": 2,
+    "automated_client_processes": 1,
+    "graphical_earth_client_integrated": false,
+    "network_transport": "LOCALHOST_PACKET_PEER_UDP",
+    "server_to_server_control_transport": "LOCALHOST_PACKET_PEER_UDP",
+    "stable_client_udp_port": 24780,
+    "gameplay_authority_reused": "MultiplayerGameplayAuthority/NetworkedGameplayService",
+    "developer_runner": "RUN_V0_SM0_ACCEPTANCE.ps1 -Handoffs 4 -Restart",
+    "stress_runner": "RUN_V0_SM0_ACCEPTANCE.ps1 -Final -Restart",
+    "windows_runtime_verification": "PENDING",
+    "contract_smoke_godot_4_7_1_double": "PASS_15_ASSERTIONS",
+    "next_stage_after_windows_pass": "GRAPHICAL_EARTH_M3_NX4_ROUTE_INTEGRATION"
+  },
+  "first_checkpoint_priority": {
+    "primary": "NETWORK_AND_AUTHORITY_CORRECTNESS",
+    "smooth_visual_transition_required": false,
+    "presentation_polish_deferred_until_after_correctness": true,
+    "automated_evidence_required_for_acceptance": true,
+    "allowed_initial_artifacts": [
+      "VISIBLE_HANDOFF_FREEZE",
+      "VISIBLE_POSITION_CORRECTION",
+      "NO_GHOST_OVERLAP",
+      "NO_PRODUCTION_LATENCY_HIDING"
+    ],
+    "never_allowed": [
+      "PLAYER_IDENTITY_CHANGE",
+      "DOUBLE_ACTIVE_WRITER",
+      "NON_MONOTONIC_AUTHORITY_EPOCH",
+      "SOURCE_MUTATION_AFTER_COMMIT",
+      "TARGET_MUTATION_BEFORE_COMMIT",
+      "CLIENT_PROCESS_RESTART_AS_HANDOFF",
+      "UNEXPECTED_RUNTIME_ERROR"
+    ]
+  },
+  "topology": {
+    "server_count": 2,
+    "graphical_client_count_at_final_checkpoint": 1,
+    "directory_mode": "SERVER_A_EMBEDDED_LAB_LEADER",
+    "server_a": {
+      "authority_id": "authority/sm0/a",
+      "zone_id": "zone/earth/sm0/west",
+      "gameplay_host": "127.0.0.1",
+      "gameplay_port": 24580,
+      "control_host": "127.0.0.1",
+      "control_port": 24680
+    },
+    "server_b": {
+      "authority_id": "authority/sm0/b",
+      "zone_id": "zone/earth/sm0/east",
+      "gameplay_host": "127.0.0.1",
+      "gameplay_port": 24581,
+      "control_host": "127.0.0.1",
+      "control_port": 24681
+    },
+    "automated_client": {
+      "host": "127.0.0.1",
+      "stable_udp_port": 24780
+    }
+  },
+  "zone_rule": {
+    "frame": "EARTH_LOCAL_ENU_AT_CANONICAL_MVP_SPAWN_TARGET_MODEL",
+    "first_network_prototype_axis": "PLAYER_STATE_X",
+    "canonical_boundary_east_offset_m": 0.0,
+    "zone_a_rule": "east_offset_m < 0",
+    "zone_b_rule": "east_offset_m >= 0",
+    "diagnostic_extent_east_m": [-100.0, 100.0],
+    "diagnostic_extent_north_m": [-100.0, 100.0],
+    "warm_route_distance_m": 10.0,
+    "prepare_distance_m": 2.0
+  },
+  "handoff_protocol": {
+    "mode": "FREEZE_PREPARE_COMMIT_ACTIVATE",
+    "single_active_player_writer": true,
+    "authority_epoch_increment_required": true,
+    "stable_logical_player_id": true,
+    "stable_player_entity_id": true,
+    "target_shadow_prepare": true,
+    "pre_commit_abort_compensation": true,
+    "post_commit_source_reactivation_forbidden": true,
+    "replay_safe_transfer_id": true,
+    "client_process_restart_allowed": false,
+    "source_completion_requires_target_commit_ack": true,
+    "source_completion_requires_client_redirect_ack": true
+  },
+  "required_state_continuity": [
+    "logical_player_id",
+    "player_entity_id",
+    "canonical_transform",
+    "last_processed_input_sequence"
+  ],
+  "diagnostic_state_continuity_before_graphical_integration": [
+    "velocity",
+    "movement_mode",
+    "presentation_correction"
+  ],
+  "deferred_until_later_sm0_stage": [
+    "player_owned_inventory_snapshot_transfer",
+    "GRAPHICAL_EARTH_M3_NX4_CLIENT_ROUTE",
+    "GHOST_OVERLAP_PRESENTATION",
+    "SEAMLESS_VISUAL_BLEND",
+    "PRODUCTION_HANDOFF_LATENCY_OPTIMIZATION"
+  ],
+  "explicit_non_goals": [
+    "N3_ACCEPTANCE",
+    "N4_ACCEPTANCE",
+    "N5_ACCEPTANCE",
+    "N6_ACCEPTANCE",
+    "NATS_REQUIRED",
+    "JETSTREAM_REQUIRED",
+    "DYNAMIC_ZONE_BALANCING",
+    "CROSS_ZONE_CONSTRUCTION",
+    "CROSS_ZONE_WORLD_ITEM_TRANSACTION",
+    "DISTRIBUTED_MATTER_MUTATION",
+    "ORBITAL_HANDOFF"
+  ],
+  "acceptance": {
+    "two_dedicated_server_processes": true,
+    "one_graphical_client_process_at_final_checkpoint": true,
+    "a_to_b_handoff": true,
+    "b_to_a_handoff": true,
+    "same_logical_player_id": true,
+    "same_player_entity_id": true,
+    "authority_epoch_monotonic": true,
+    "max_active_player_writers": 1,
+    "target_prepare_creates_active_player": false,
+    "smoothness_hard_gate_required": false,
+    "automated_handoffs_final": 20,
+    "automated_round_trips_final": 10,
+    "normal_v0_launcher_regression_required": true,
+    "clean_shutdown_required": true,
+    "unexpected_error_count": 0,
+    "invariant_violation_count": 0,
+    "stale_source_mutation_accepts": 0
+  },
+  "diagnostic_only_initial_targets": {
+    "target_localhost_handoff_ms": 500,
+    "target_position_gap_m": 0.5,
+    "hard_gate": false,
+    "must_be_recorded_after_graphical_integration": true
+  },
+  "windows_local_layout": {
+    "workspace_root": "C:\\distributed-world-simulator",
+    "central_checkout": "C:\\distributed-world-simulator\\distributed-world-simulator",
+    "worktrees_root": "C:\\distributed-world-simulator\\worktrees",
+    "godot_console": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+    "godot_graphical": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.exe"
+  },
+  "automated_test_evidence": {
+    "required_plan": "docs/plans/V0_SM0_AUTOMATED_HANDOFF_TEST_AND_EVIDENCE_RU.md",
+    "checkpoint_blocker": true,
+    "runner": "RUN_V0_SM0_ACCEPTANCE.ps1",
+    "log_analyzer": "ANALYZE_V0_SM0_LOGS.ps1",
+    "developer_handoffs": 4,
+    "final_handoffs": 20,
+    "final_round_trips": 10,
+    "deterministic_client_driver_required": true,
+    "os_keyboard_emulation_as_primary_driver_forbidden": true,
+    "real_multi_process_network_required": true,
+    "graphical_confirmation_required_after_headless_network_pass": true,
+    "structured_jsonl_required": true,
+    "correlation_key": "transfer_id",
+    "required_log_files": [
+      "contracts.log",
+      "server-a.log",
+      "server-b.log",
+      "client.log",
+      "client-result.json",
+      "control.jsonl",
+      "handoffs.jsonl",
+      "harness.log",
+      "summary.json"
+    ],
+    "hard_fail_patterns": [
+      "ERROR:",
+      "SCRIPT ERROR",
+      "CRASH",
+      "ASSERTION FAILED",
+      "SM0_INVARIANT_VIOLATION",
+      "MULTIPLAYER_SAME_REVISION_MUTATION"
+    ],
+    "hard_fail_semantics": [
+      "MISSING_SERVER_READY",
+      "MISSING_PEER_SYNCED",
+      "MISSING_DIRECTORY_READY",
+      "MISSING_HANDOFF_PHASE",
+      "NON_MONOTONIC_AUTHORITY_EPOCH",
+      "DIRECTORY_DIVERGENCE",
+      "PLAYER_IDENTITY_CHANGE",
+      "MORE_THAN_ONE_ACTIVE_WRITER",
+      "SOURCE_ACCEPTED_MOVEMENT_AFTER_COMMIT",
+      "TARGET_ACCEPTED_MOVEMENT_BEFORE_COMMIT",
+      "DUPLICATE_ACTIVE_PLAYER_ENTITY",
+      "CLIENT_PROCESS_RESTART",
+      "HANDOFF_TIMEOUT"
+    ],
+    "warning_token_alone_is_failure": false,
+    "logs_retained_on_failure": true,
+    "summary_schema": "distributed_world_simulator.sm0_acceptance_summary.v1"
+  },
+  "semantic_donors": [
+    {
+      "branch": "feature/mw8-regional-authority-handoff",
+      "commit": "2da7c91ad31fab887a4bcb9669e993958e339c48",
+      "reuse": "handoff invariants only; no wholesale merge"
+    }
+  ]
+}
