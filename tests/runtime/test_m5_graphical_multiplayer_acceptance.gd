@@ -17,6 +17,9 @@ var process_observability: Dictionary = {}
 
 
 func _init() -> void:
+	if "--m5-pipe-smoke-only" in OS.get_cmdline_user_args():
+		_run_pipe_observability_smoke()
+		return
 	var port := _find_available_port()
 	_assert(port > 0, "M5 ENet port allocated")
 	if port <= 0:
@@ -156,6 +159,85 @@ func _init() -> void:
 	_finish()
 
 
+func _run_pipe_observability_smoke() -> void:
+	var root := ProjectSettings.globalize_path(
+		"res://artifacts/test-results/m5-pipe-smoke-%d" % OS.get_process_id()
+	)
+	DirAccess.make_dir_recursive_absolute(root)
+	var stdout_path := root.path_join("stdout.log")
+	var stderr_path := root.path_join("stderr.log")
+	var stdout_sink := FileAccess.open(stdout_path, FileAccess.WRITE)
+	var stderr_sink := FileAccess.open(stderr_path, FileAccess.WRITE)
+	if stdout_sink == null or stderr_sink == null:
+		push_error("M5 pipe smoke could not open capture files")
+		quit(1)
+		return
+
+	var command := ""
+	var arguments: Array[String] = []
+	if OS.get_name() == "Windows":
+		command = "cmd.exe"
+		arguments = ["/c", "echo M5_R5_STDOUT & echo M5_R5_STDERR 1>&2"]
+	else:
+		command = "/bin/sh"
+		arguments = ["-c", "printf 'M5_R5_STDOUT\\n'; printf 'M5_R5_STDERR\\n' >&2"]
+
+	var pipe_result: Dictionary = OS.execute_with_pipe(command, arguments, false)
+	var pid := int(pipe_result.get("pid", -1))
+	if pid <= 0:
+		push_error("M5 pipe smoke could not spawn child: %s" % pipe_result)
+		stdout_sink.close()
+		stderr_sink.close()
+		quit(1)
+		return
+
+	var stdio = pipe_result.get("stdio")
+	var stderr = pipe_result.get("stderr")
+	var started := Time.get_ticks_msec()
+	while OS.is_process_running(pid) and Time.get_ticks_msec() - started <= 5000:
+		_drain_pipe(stdio, stdout_sink)
+		_drain_pipe(stderr, stderr_sink)
+		OS.delay_msec(10)
+	# Pipes can still contain unread bytes after the child exits.
+	for _i in range(8):
+		_drain_pipe(stdio, stdout_sink)
+		_drain_pipe(stderr, stderr_sink)
+		OS.delay_msec(5)
+
+	var exit_code := OS.get_process_exit_code(pid)
+	stdout_sink.close()
+	stderr_sink.close()
+	if stdio != null:
+		stdio.close()
+	if stderr != null:
+		stderr.close()
+
+	var stdout_text := FileAccess.get_file_as_string(stdout_path)
+	var stderr_text := FileAccess.get_file_as_string(stderr_path)
+	var stdout_bytes := FileAccess.get_file_as_bytes(stdout_path).size()
+	var stderr_bytes := FileAccess.get_file_as_bytes(stderr_path).size()
+	var ok := (
+		not OS.is_process_running(pid)
+		and exit_code == 0
+		and stdout_bytes > 0
+		and stderr_bytes > 0
+		and stdout_text.contains("M5_R5_STDOUT")
+		and stderr_text.contains("M5_R5_STDERR")
+	)
+	if not ok:
+		push_error(
+			"M5_CHILD_PIPE_OBSERVABILITY_FAIL pid=%d exit=%d stdout_bytes=%d stderr_bytes=%d stdout=%s stderr=%s"
+			% [pid, exit_code, stdout_bytes, stderr_bytes, stdout_text, stderr_text]
+		)
+		quit(1)
+		return
+	print(
+		"M5_CHILD_PIPE_OBSERVABILITY_PASS pid=%d exit=%d stdout_bytes=%d stderr_bytes=%d"
+		% [pid, exit_code, stdout_bytes, stderr_bytes]
+	)
+	quit(0)
+
+
 func _spawn_client(
 	executable: String,
 	project_root: String,
@@ -252,6 +334,10 @@ func _spawn(
 			"exit_observed": false,
 			"exit_code": null,
 			"exit_observed_at_msec": 0,
+			"stdout_last_drain_error": OK,
+			"stderr_last_drain_error": OK,
+			"stdout_drained_bytes": 0,
+			"stderr_drained_bytes": 0,
 		}
 		_write_process_lifecycle(pid, "SPAWNED", "", {})
 	else:
@@ -285,8 +371,13 @@ func _drain_process_output(pid: int) -> void:
 	if not process_observability.has(pid):
 		return
 	var record: Dictionary = process_observability[pid]
-	_drain_pipe(record.get("stdio"), record.get("stdout_sink"))
-	_drain_pipe(record.get("stderr"), record.get("stderr_sink"))
+	var stdout_drain := _drain_pipe(record.get("stdio"), record.get("stdout_sink"))
+	var stderr_drain := _drain_pipe(record.get("stderr"), record.get("stderr_sink"))
+	record["stdout_last_drain_error"] = int(stdout_drain.get("last_error", OK))
+	record["stderr_last_drain_error"] = int(stderr_drain.get("last_error", OK))
+	record["stdout_drained_bytes"] = int(record.get("stdout_drained_bytes", 0)) + int(stdout_drain.get("bytes", 0))
+	record["stderr_drained_bytes"] = int(record.get("stderr_drained_bytes", 0)) + int(stderr_drain.get("bytes", 0))
+	process_observability[pid] = record
 
 
 func _drain_all_process_output() -> void:
@@ -294,16 +385,29 @@ func _drain_all_process_output() -> void:
 		_drain_process_output(int(pid_value))
 
 
-func _drain_pipe(pipe, sink) -> void:
+func _drain_pipe(pipe, sink) -> Dictionary:
 	if pipe == null or sink == null:
-		return
-	var available := int(pipe.get_available_bytes())
-	while available > 0:
-		var data: PackedByteArray = pipe.get_buffer(available)
-		if not data.is_empty():
-			sink.store_buffer(data)
-			sink.flush()
-		available = int(pipe.get_available_bytes())
+		return {"bytes": 0, "last_error": ERR_INVALID_PARAMETER}
+	var drained := 0
+	var last_error := OK
+	var passes := 0
+	while passes < 64:
+		passes += 1
+		# FileAccess pipe get_length() is the currently readable byte count
+		# (PeekNamedPipe on Windows, FIONREAD on Unix), so get_buffer does not
+		# need to speculate or block waiting for bytes that are not present.
+		var available := int(pipe.get_length())
+		if available <= 0:
+			break
+		var request := available if available < 65536 else 65536
+		var data: PackedByteArray = pipe.get_buffer(request)
+		last_error = int(pipe.get_error())
+		if data.is_empty():
+			break
+		sink.store_buffer(data)
+		sink.flush()
+		drained += data.size()
+	return {"bytes": drained, "last_error": last_error}
 
 
 func _write_process_lifecycle(
@@ -352,6 +456,10 @@ func _write_process_lifecycle(
 		),
 		"stdout_bytes": FileAccess.get_file_as_bytes(String(record.get("stdout_path", ""))).size() if FileAccess.file_exists(String(record.get("stdout_path", ""))) else 0,
 		"stderr_bytes": FileAccess.get_file_as_bytes(String(record.get("stderr_path", ""))).size() if FileAccess.file_exists(String(record.get("stderr_path", ""))) else 0,
+		"stdout_drained_bytes": int(record.get("stdout_drained_bytes", 0)),
+		"stderr_drained_bytes": int(record.get("stderr_drained_bytes", 0)),
+		"stdout_last_drain_error": int(record.get("stdout_last_drain_error", OK)),
+		"stderr_last_drain_error": int(record.get("stderr_last_drain_error", OK)),
 		"last_control": Support.read(control_path) if not control_path.is_empty() else {},
 	}
 	Support.write(String(record.get("lifecycle_path", "")), snapshot)
@@ -404,6 +512,11 @@ func _close_process_capture(pid: int) -> void:
 			sink.flush()
 			sink.close()
 			record[sink_key] = null
+	for pipe_key in ["stdio", "stderr"]:
+		var pipe = record.get(pipe_key)
+		if pipe != null:
+			pipe.close()
+			record[pipe_key] = null
 	process_observability[pid] = record
 
 
