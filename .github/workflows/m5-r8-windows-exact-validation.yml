@@ -1,0 +1,255 @@
+name: M5 R8 Windows Exact Validation
+
+on:
+  push:
+    branches:
+      - "validation/m5-r8-windows-25f5ddf"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m5-r8-windows-exact-25f5ddf
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: immutable R8 Windows decisive gate
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 180
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout immutable R8 target
+        uses: actions/checkout@v4
+        with:
+          ref: 25f5ddf6280a39a44ddfc3bbec5245873021c0a1
+          fetch-depth: 0
+          clean: true
+
+      - name: Assert exact immutable identity
+        run: |
+          $ExpectedHead = "25f5ddf6280a39a44ddfc3bbec5245873021c0a1"
+          $ExpectedTree = "82c6567acdc735bc02a4808159328f00722b0b6b"
+
+          $Head = (git rev-parse HEAD).Trim()
+          $Tree = (git rev-parse 'HEAD^{tree}').Trim()
+          $Dirty = @(git status --porcelain)
+
+          Write-Host "R8_EXPECTED_HEAD=$ExpectedHead"
+          Write-Host "R8_ACTUAL_HEAD=$Head"
+          Write-Host "R8_EXPECTED_TREE=$ExpectedTree"
+          Write-Host "R8_ACTUAL_TREE=$Tree"
+
+          if ($Head -ne $ExpectedHead) {
+            throw "R8_EXACT_HEAD_MISMATCH: actual=$Head expected=$ExpectedHead"
+          }
+          if ($Tree -ne $ExpectedTree) {
+            throw "R8_EXACT_TREE_MISMATCH: actual=$Tree expected=$ExpectedTree"
+          }
+          if ($Dirty.Count -ne 0) {
+            throw "R8_WORKTREE_NOT_CLEAN: $($Dirty -join '; ')"
+          }
+
+      - name: Resolve exact double Godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $Godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($Godot)) {
+            $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $Godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $Godot"
+          }
+
+          $Version = (& $Godot --version 2>&1 | Select-Object -First 1).Trim()
+          Write-Host "Godot identity: $Version"
+          if ($Version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $Version"
+          }
+
+          "GODOT_BIN=$Godot" >> $env:GITHUB_ENV
+
+      - name: Prepare evidence directory
+        run: |
+          New-Item -ItemType Directory -Force -Path "artifacts/test-results/r8-windows-exact-gate" | Out-Null
+
+      - name: Gate 1 - M5 contracts
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/contracts.log"
+          $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m5_graphical_acceptance_contracts.gd 2>&1
+          $ExitCode = $LASTEXITCODE
+          $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $Text = $Output -join "`n"
+
+          if ($ExitCode -ne 0) {
+            throw "R8_CONTRACTS_EXIT_FAILED: exit=$ExitCode"
+          }
+          if ($Text -notmatch 'M5 graphical acceptance contracts:\s+\d+ assertions, 0 failures') {
+            throw "R8_CONTRACTS_PASS_MARKER_MISSING"
+          }
+          if ($Text -match '(: FAIL|SCRIPT ERROR:|Parse Error:|Compile Error:)') {
+            throw "R8_CONTRACTS_FAILURE_MARKER"
+          }
+
+      - name: Gate 2 - R7 convergence release guard regression
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/r7-guard-regression.log"
+          $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/support/m5_convergence_release_guard_regression.gd 2>&1
+          $ExitCode = $LASTEXITCODE
+          $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $Text = $Output -join "`n"
+
+          if ($ExitCode -ne 0) {
+            throw "R7_GUARD_REGRESSION_EXIT_FAILED: exit=$ExitCode"
+          }
+          if ($Text -notmatch 'M5 convergence release guard regression:\s+31 assertions, 0 failures') {
+            throw "R7_GUARD_REGRESSION_PASS_MARKER_MISSING"
+          }
+          if ($Text -match '(: FAIL|SCRIPT ERROR:|Parse Error:|Compile Error:)') {
+            throw "R7_GUARD_REGRESSION_FAILURE_MARKER"
+          }
+
+      - name: Gate 3 - R8 control read consistency regression
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/r8-control-read-regression.log"
+          $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/support/m5_control_read_consistency_regression.gd 2>&1
+          $ExitCode = $LASTEXITCODE
+          $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $Text = $Output -join "`n"
+
+          if ($ExitCode -ne 0) {
+            throw "R8_CONTROL_READ_REGRESSION_EXIT_FAILED: exit=$ExitCode"
+          }
+          if ($Text -notmatch 'M5 control read consistency regression:\s+25 assertions, 0 failures') {
+            throw "R8_CONTROL_READ_REGRESSION_PASS_MARKER_MISSING"
+          }
+          if ($Text -match '(: FAIL|SCRIPT ERROR:|Parse Error:|Compile Error:)') {
+            throw "R8_CONTROL_READ_REGRESSION_FAILURE_MARKER"
+          }
+
+      - name: Gate 4 - child pipe smoke
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/pipe-smoke.log"
+          $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd -- --m5-pipe-smoke-only 2>&1
+          $ExitCode = $LASTEXITCODE
+          $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $Text = $Output -join "`n"
+
+          if ($ExitCode -ne 0) {
+            throw "M5_PIPE_SMOKE_EXIT_FAILED: exit=$ExitCode"
+          }
+          $Match = [regex]::Match($Text, 'M5_CHILD_PIPE_OBSERVABILITY_PASS[^\r\n]*stdout_bytes=(\d+)[^\r\n]*stderr_bytes=(\d+)')
+          if (-not $Match.Success) {
+            throw "M5_PIPE_SMOKE_PASS_MARKER_MISSING"
+          }
+          $StdoutBytes = [int]$Match.Groups[1].Value
+          $StderrBytes = [int]$Match.Groups[2].Value
+          if ($StdoutBytes -le 0 -or $StderrBytes -le 0) {
+            throw "M5_PIPE_SMOKE_EMPTY_CHANNEL: stdout=$StdoutBytes stderr=$StderrBytes"
+          }
+
+      - name: Gate 5 - decisive M5 stability 10x
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/stability-wrapper.log"
+
+          & pwsh -NoProfile -File .\RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1 -GodotPath "$env:GODOT_BIN" -Runs 10 2>&1 |
+            Tee-Object -FilePath $Log |
+            ForEach-Object { Write-Host $_ }
+          $ExitCode = $LASTEXITCODE
+
+          if ($ExitCode -ne 0) {
+            throw "M5_R8_DECISIVE_GATE_FAILED: exit=$ExitCode; NO_RERUN"
+          }
+
+          $SummaryFile = Get-ChildItem -Path "artifacts/test-results" -Filter "summary.json" -Recurse |
+            Where-Object { $_.FullName -match 'm5-stability-' } |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+
+          if ($null -eq $SummaryFile) {
+            throw "M5_R8_STABILITY_SUMMARY_MISSING"
+          }
+
+          $Summary = Get-Content -LiteralPath $SummaryFile.FullName -Raw | ConvertFrom-Json
+          Write-Host "M5_STABILITY_SUMMARY=$($SummaryFile.FullName)"
+          Write-Host "M5_STABILITY_PASSED=$($Summary.passed)"
+          Write-Host "M5_STABILITY_COMPLETED=$($Summary.completed_runs)"
+          Write-Host "M5_STABILITY_PASSED_RUNS=$($Summary.passed_runs)"
+
+          if (-not [bool]$Summary.passed) {
+            throw "M5_R8_STABILITY_SUMMARY_NOT_PASSED"
+          }
+          if ([int]$Summary.requested_runs -ne 10 -or [int]$Summary.completed_runs -ne 10 -or [int]$Summary.passed_runs -ne 10) {
+            throw "M5_R8_STABILITY_NOT_10_OF_10"
+          }
+          if ($null -ne $Summary.failed_run) {
+            throw "M5_R8_STABILITY_RECORDED_FAILED_RUN"
+          }
+
+      - name: Gate 6 - canonical world regression
+        run: |
+          $Log = "artifacts/test-results/r8-windows-exact-gate/world-regression-wrapper.log"
+
+          & pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 |
+            Tee-Object -FilePath $Log |
+            ForEach-Object { Write-Host $_ }
+          $ExitCode = $LASTEXITCODE
+
+          if ($ExitCode -ne 0) {
+            throw "R8_CANONICAL_WORLD_REGRESSION_EXIT_FAILED: exit=$ExitCode"
+          }
+
+          $SummaryPath = "artifacts/test-results/world-regression-summary.json"
+          if (-not (Test-Path -LiteralPath $SummaryPath -PathType Leaf)) {
+            throw "R8_CANONICAL_WORLD_REGRESSION_SUMMARY_MISSING"
+          }
+
+          $Summary = Get-Content -LiteralPath $SummaryPath -Raw | ConvertFrom-Json
+          $BadExits = @($Summary.steps | Where-Object { [int]$_.exit_code -ne 0 }).Count
+
+          Write-Host "WORLD_REGRESSION_PASSED=$($Summary.passed)"
+          Write-Host "WORLD_REGRESSION_DECLARED=$($Summary.declared_test_count)"
+          Write-Host "WORLD_REGRESSION_DISCOVERED=$($Summary.discovered_test_count)"
+          Write-Host "WORLD_REGRESSION_STEPS=$(@($Summary.steps).Count)"
+          Write-Host "WORLD_REGRESSION_BAD_EXITS=$BadExits"
+
+          if (-not [bool]$Summary.passed) {
+            throw "R8_CANONICAL_WORLD_REGRESSION_NOT_PASSED"
+          }
+          if ([int]$Summary.declared_test_count -ne 304) {
+            throw "R8_CANONICAL_DECLARED_COUNT_MISMATCH: $($Summary.declared_test_count)"
+          }
+          if ([int]$Summary.discovered_test_count -ne 304) {
+            throw "R8_CANONICAL_DISCOVERED_COUNT_MISMATCH: $($Summary.discovered_test_count)"
+          }
+          if (@($Summary.steps).Count -ne 307) {
+            throw "R8_CANONICAL_STEP_COUNT_MISMATCH: $(@($Summary.steps).Count)"
+          }
+          if ($BadExits -ne 0) {
+            throw "R8_CANONICAL_BAD_EXIT_COUNT: $BadExits"
+          }
+
+      - name: Emit immutable R8 validation PASS
+        run: |
+          Write-Host "M5_R8_WINDOWS_EXACT_VALIDATION_PASS"
+          Write-Host "HEAD=25f5ddf6280a39a44ddfc3bbec5245873021c0a1"
+          Write-Host "TREE=82c6567acdc735bc02a4808159328f00722b0b6b"
+          Write-Host "DECISIVE=10/10"
+          Write-Host "CANONICAL=PASS"
+
+      - name: Upload R8 Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5-r8-windows-exact-validation-evidence
+          path: |
+            artifacts/test-results/r8-windows-exact-gate/**
+            artifacts/test-results/m5-stability-*/**
+            artifacts/test-results/world-regression-summary.json
+          if-no-files-found: warn
+          retention-days: 30
