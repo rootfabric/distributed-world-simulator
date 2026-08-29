@@ -1,0 +1,238 @@
+name: M7 R9 Windows Exact Validation
+
+on:
+  push:
+    branches:
+      - "validation/m7-r9-windows-b760a6c"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m7-r9-windows-b760a6c
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: exact R9 Windows validation
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 240
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout immutable R9 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
+          fetch-depth: 0
+          clean: true
+
+      - name: Assert exact identity
+        run: |
+          $ExpectedHead = "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f"
+          $ExpectedTree = "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68"
+          $Head = (git rev-parse HEAD).Trim()
+          $Tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($Head -ne $ExpectedHead) { throw "HEAD_MISMATCH: $Head" }
+          if ($Tree -ne $ExpectedTree) { throw "TREE_MISMATCH: $Tree" }
+          if (@(git status --porcelain).Count -ne 0) { throw "DIRTY_SUBJECT" }
+          Write-Host "R9_IDENTITY_PASS head=$Head tree=$Tree"
+
+      - name: Resolve exact double Godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $Godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($Godot)) {
+            $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $Godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $Godot"
+          }
+          $VersionOutput = & $Godot --version 2>&1
+          $Version = ($VersionOutput | Select-Object -First 1).ToString().Trim()
+          Write-Host "Godot identity: $Version"
+          if ($Version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $Version"
+          }
+          $global:LASTEXITCODE = 0
+          "GODOT_BIN=$Godot" >> $env:GITHUB_ENV
+
+      - name: Prepare evidence
+        run: |
+          New-Item -ItemType Directory -Force -Path "artifacts/test-results/r9-windows-exact" | Out-Null
+
+      - name: Gate 1 - M7 standalone stability 10x
+        run: |
+          for ($Run = 1; $Run -le 10; $Run++) {
+            Write-Host "========== R9 M7 RUN $Run / 10 =========="
+            $Log = "artifacts/test-results/r9-windows-exact/m7-run-{0:D2}.log" -f $Run
+            $Output = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m7_playable_networked_processes.gd 2>&1
+            $ExitCode = $LASTEXITCODE
+            $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+            $Text = $Output -join "`n"
+            if ($ExitCode -ne 0) {
+              throw "R9_M7_STABILITY_FAILED run=$Run exit=$ExitCode NO_RERUN"
+            }
+            if ($Text -notmatch 'M7 playable network processes:\s+54 assertions, 0 failures') {
+              throw "R9_M7_PASS_MARKER_MISSING run=$Run"
+            }
+          }
+          Write-Host "R9_M7_STABILITY_PASS 10/10"
+
+      - name: Gate 2 - M5 pre-gates
+        run: |
+          $Contracts = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m5_graphical_acceptance_contracts.gd 2>&1
+          $ContractsExit = $LASTEXITCODE
+          $Contracts | Set-Content -LiteralPath "artifacts/test-results/r9-windows-exact/m5-contracts.log" -Encoding UTF8
+          if ($ContractsExit -ne 0 -or (($Contracts -join "`n") -notmatch '126 assertions, 0 failures')) {
+            throw "R9_M5_CONTRACTS_FAILED"
+          }
+
+          $Guard = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/support/m5_convergence_release_guard_regression.gd 2>&1
+          $GuardExit = $LASTEXITCODE
+          $Guard | Set-Content -LiteralPath "artifacts/test-results/r9-windows-exact/m5-r7-guard.log" -Encoding UTF8
+          if ($GuardExit -ne 0 -or (($Guard -join "`n") -notmatch '31 assertions, 0 failures')) {
+            throw "R9_M5_R7_GUARD_FAILED"
+          }
+
+          $Read = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/support/m5_control_read_consistency_regression.gd 2>&1
+          $ReadExit = $LASTEXITCODE
+          $Read | Set-Content -LiteralPath "artifacts/test-results/r9-windows-exact/m5-r8-control-read.log" -Encoding UTF8
+          if ($ReadExit -ne 0 -or (($Read -join "`n") -notmatch '25 assertions, 0 failures')) {
+            throw "R9_M5_R8_CONTROL_READ_FAILED"
+          }
+
+          $Pipe = & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd -- --m5-pipe-smoke-only 2>&1
+          $PipeExit = $LASTEXITCODE
+          $Pipe | Set-Content -LiteralPath "artifacts/test-results/r9-windows-exact/m5-pipe-smoke.log" -Encoding UTF8
+          $PipeText = $Pipe -join "`n"
+          if ($PipeExit -ne 0 -or $PipeText -notmatch 'M5_CHILD_PIPE_OBSERVABILITY_PASS') {
+            throw "R9_M5_PIPE_SMOKE_FAILED"
+          }
+          $Match = [regex]::Match($PipeText, 'stdout_bytes=(\d+)[^\r\n]*stderr_bytes=(\d+)')
+          if (-not $Match.Success -or [int]$Match.Groups[1].Value -le 0 -or [int]$Match.Groups[2].Value -le 0) {
+            throw "R9_M5_PIPE_SMOKE_EMPTY_CHANNEL"
+          }
+
+      - name: Gate 3 - M5 decisive 10x
+        run: |
+          $Log = "artifacts/test-results/r9-windows-exact/m5-stability-wrapper.log"
+          & pwsh -NoProfile -File .\RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1 -GodotPath "$env:GODOT_BIN" -Runs 10 2>&1 | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $ExitCode = $LASTEXITCODE
+          if ($ExitCode -ne 0) { throw "R9_M5_DECISIVE_FAILED exit=$ExitCode NO_RERUN" }
+
+          $SummaryFile = Get-ChildItem -Path "artifacts/test-results" -Filter "summary.json" -Recurse |
+            Where-Object { $_.FullName -match 'm5-stability-' } |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+          if ($null -eq $SummaryFile) { throw "R9_M5_STABILITY_SUMMARY_MISSING" }
+
+          $Summary = Get-Content -LiteralPath $SummaryFile.FullName -Raw | ConvertFrom-Json
+          if (-not [bool]$Summary.passed) { throw "R9_M5_STABILITY_SUMMARY_FAILED" }
+          if ([int]$Summary.requested_runs -ne 10 -or [int]$Summary.completed_runs -ne 10 -or [int]$Summary.passed_runs -ne 10) {
+            throw "R9_M5_STABILITY_NOT_10_OF_10"
+          }
+          Write-Host "R9_M5_STABILITY_PASS 10/10"
+
+      - name: Gate 4 - focused SM1 13 of 13
+        run: |
+          $Profile = Join-Path $PWD ("artifacts\test-results\r9-sm1-profile-" + $PID)
+          $env:HOME = $Profile
+          $env:USERPROFILE = $Profile
+          $env:APPDATA = Join-Path $Profile "data"
+          $env:LOCALAPPDATA = Join-Path $Profile "data"
+          $env:XDG_DATA_HOME = Join-Path $Profile "data"
+          $env:XDG_CONFIG_HOME = Join-Path $Profile "config"
+          $env:XDG_CACHE_HOME = Join-Path $Profile "cache"
+          $env:PLANET_SIMULATOR_INVENTORY_PROFILE = "planet_default"
+          New-Item -ItemType Directory -Force -Path $env:APPDATA,$env:XDG_CONFIG_HOME,$env:XDG_CACHE_HOME | Out-Null
+
+          & $env:GODOT_BIN --headless --editor --path $PWD --quit
+          if ($LASTEXITCODE -ne 0) { throw "R9_EDITOR_IMPORT_FAILED" }
+
+          $Tests = @(
+            "tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd",
+            "tests/runtime/test_v0_sm1_owner_map_and_transfer.gd",
+            "tests/runtime/test_v0_sm1_graphical_handoff_processes.gd",
+            "tests/runtime/test_v0_sm1_fault_matrix_1_6.gd",
+            "tests/runtime/test_v0_sm1_concurrent_crossings.gd",
+            "tests/runtime/test_v0_sm1_reconnect_after_handoff.gd",
+            "tests/runtime/test_v0_sm1_gateway_failure_restart.gd",
+            "tests/runtime/test_v0_sm1_authority_recovery.gd",
+            "tests/runtime/test_v0_sm1_world_state_continuity.gd",
+            "tests/runtime/test_v0_sm1_world_mutations_around_handoff.gd",
+            "tests/runtime/test_v0_sm1_combined_carry_world_chain.gd",
+            "tests/runtime/test_v0_sm1_historical_activation_replay.gd",
+            "tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd"
+          )
+
+          $Index = 0
+          foreach ($Test in $Tests) {
+            $Index++
+            $Log = "artifacts/test-results/r9-windows-exact/sm1-{0:D2}.log" -f $Index
+            $Output = & $env:GODOT_BIN --headless --path $PWD --script ("res://" + $Test) 2>&1
+            $ExitCode = $LASTEXITCODE
+            $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+            if ($ExitCode -ne 0) { throw "R9_SM1_FOCUSED_FAILED test=$Test" }
+          }
+          Write-Host "R9_SM1_FOCUSED_PASS 13/13"
+
+      - name: Gate 5 - impaired network 5x
+        run: |
+          for ($Run = 1; $Run -le 5; $Run++) {
+            $Log = "artifacts/test-results/r9-windows-exact/impaired-{0:D2}.log" -f $Run
+            $Output = & $env:GODOT_BIN --headless --path $PWD --script res://tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd 2>&1
+            $ExitCode = $LASTEXITCODE
+            $Output | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+            if ($ExitCode -ne 0 -or (($Output -join "`n") -notmatch '69 assertions, 0 failures')) {
+              throw "R9_IMPAIRED_FAILED run=$Run"
+            }
+          }
+          Write-Host "R9_IMPAIRED_PASS 5/5"
+
+      - name: Gate 6 - canonical world regression first attempt
+        run: |
+          $Log = "artifacts/test-results/r9-windows-exact/world-regression-wrapper.log"
+          & pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | Tee-Object -FilePath $Log | ForEach-Object { Write-Host $_ }
+          $ExitCode = $LASTEXITCODE
+          if ($ExitCode -ne 0) { throw "R9_CANONICAL_FAILED exit=$ExitCode NO_RERUN" }
+
+          $SummaryPath = "artifacts/test-results/world-regression-summary.json"
+          if (-not (Test-Path -LiteralPath $SummaryPath -PathType Leaf)) { throw "R9_CANONICAL_SUMMARY_MISSING" }
+          $S = Get-Content -LiteralPath $SummaryPath -Raw | ConvertFrom-Json
+          $Bad = @($S.steps | Where-Object { [int]$_.exit_code -ne 0 })
+          Write-Host "passed=$($S.passed)"
+          Write-Host "declared=$($S.declared_test_count)"
+          Write-Host "discovered=$($S.discovered_test_count)"
+          Write-Host "steps=$(@($S.steps).Count)"
+          Write-Host "bad_exits=$($Bad.Count)"
+          if (-not [bool]$S.passed) { throw "R9_CANONICAL_NOT_PASSED" }
+          if ([int]$S.declared_test_count -ne 304 -or [int]$S.discovered_test_count -ne 304) { throw "R9_CANONICAL_COUNT_MISMATCH" }
+          if (@($S.steps).Count -ne 307) { throw "R9_CANONICAL_STEP_MISMATCH" }
+          if ($Bad.Count -ne 0) { throw "R9_CANONICAL_BAD_EXITS" }
+
+      - name: Verify immutable candidate after gates
+        run: |
+          $Head = (git rev-parse HEAD).Trim()
+          $Tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($Head -ne "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f") { throw "FINAL_HEAD_CHANGED" }
+          if ($Tree -ne "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68") { throw "FINAL_TREE_CHANGED" }
+          if ((git diff --name-only).Count -ne 0) { throw "TRACKED_DIFF_PRESENT" }
+          if ((git diff --cached --name-only).Count -ne 0) { throw "STAGED_DIFF_PRESENT" }
+          Write-Host "R9_WINDOWS_EXACT_VALIDATION_PASS"
+
+      - name: Upload R9 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m7-r9-windows-exact-validation
+          path: |
+            artifacts/test-results/r9-windows-exact/**
+            artifacts/test-results/m5-stability-*/**
+            artifacts/test-results/world-regression-summary.json
+          if-no-files-found: warn
+          retention-days: 30
