@@ -1935,3 +1935,300 @@ canonical causal physical history
 This is now one integrated research path rather than two separate demonstrations.
 
 Production ownership still remains with Construction.
+
+
+## 102. Coordinate frame is part of the executable physics contract
+
+A solver can be algebraically correct and physically wrong if its coordinate convention is implicit or inconsistent.
+
+FABRIC0.14 exposed this through a real bug:
+
+```text
+Godot UP = Y
+
+research world UP = Z
+```
+
+The wrong plane normal produced impossible geometry and artificial energy gain.
+
+Therefore every physical subsystem must make explicit:
+
+- world up axis;
+- handedness;
+- frame in which inertia/material tensors live;
+- frame in which contact normals/tangents are expressed;
+- conversions between body and world frames.
+
+## 103. Invariant failure should be treated as a search for missing semantics
+
+When a discrepancy does not shrink under refinement:
+
+```text
+refine timestep
+→ discrepancy stays
+```
+
+the default hypothesis should not be “need even smaller tolerance”.
+
+Likely classes of cause include:
+
+- missing jump;
+- wrong frame;
+- wrong sign;
+- missing work term;
+- hidden projection;
+- incorrect topology semantics.
+
+FABRIC0.14 used this discipline twice.
+
+## 104. Numerical projection cannot hide a physical impulse
+
+A projection that changes velocity changes momentum.
+
+Therefore:
+
+```text
+velocity projection with momentum change
+=
+physical jump
+```
+
+It must have:
+
+- event identity;
+- impulse value;
+- momentum audit;
+- energy audit;
+- causal ordering.
+
+Projection is allowed only after the physical jump that makes the projected constraint valid.
+
+## 105. Energy ledger must include continuous and discrete dissipation
+
+Hybrid frictional dynamics has at least two loss channels:
+
+### Flow loss
+
+```text
+integral of Coulomb friction power
+```
+
+### Jump loss
+
+```text
+impact / feature-transition kinetic loss
+```
+
+Therefore:
+
+```text
+-energy_delta
+=
+continuous dissipation
++
+discrete jump losses
++
+numerical residual
+```
+
+A ledger that ignores one class can look plausible while hiding physical work.
+
+## 106. Full 6DOF requires more than a quaternion
+
+A real 6DOF research claim needs:
+
+- three translational coordinates;
+- three linear velocity components;
+- quaternion orientation;
+- three angular velocity components;
+- anisotropic inertia;
+- gyroscopic coupling;
+- tests that excite all three rotation axes.
+
+A normalized quaternion alone proves only representation hygiene.
+
+## 107. Torque-free motion is a strong independent rotational audit
+
+Contact can mask bad rotational equations through reaction/stabilization.
+
+Therefore a full rigid-body checkpoint should include a contact-free torque-free test.
+
+Useful invariants:
+
+```text
+linear momentum
+world angular momentum
+rotational kinetic energy
+quaternion norm
+```
+
+This separates rigid-body integration correctness from contact correctness.
+
+## 108. Unilateral contact means the world cannot pull through a support constraint
+
+Normal reaction must satisfy:
+
+```text
+normal >= 0
+```
+
+If the constrained solution requires tensile normal force, the semantic result is separation.
+
+Returning a negative support force and continuing constrained flow is not merely a numerical oddity; it violates the contact law.
+
+## 109. Stick and slide are solved modes of one law
+
+Avoid device-like branches such as separate “static friction component” and “sliding friction component”.
+
+The generic contact law should decide:
+
+```text
+stick candidate inside cone
+→ stick
+
+otherwise
+→ slide on cone boundary
+```
+
+Mode is an emergent solved state.
+
+## 110. Feature hierarchy is physical topology, not collision-render metadata
+
+For convex support:
+
+```text
+vertex
+edge
+face
+```
+
+are different persistent physical relation structures.
+
+Changing between them can change:
+
+- contact point multiplicity;
+- effective mass;
+- admissible impulse/reaction;
+- warm-state lineage;
+- event history.
+
+Therefore feature classification belongs to the physical topology layer.
+
+## 111. A physical event can contain both lineage continuity and a new impulse
+
+When feature identity changes:
+
+```text
+old numerical history
+→ lineage remap
+```
+
+and simultaneously:
+
+```text
+new kinematic constraint
+→ physical transition impulse
+```
+
+These are different things.
+
+Warm-state continuity does not replace the physical impulse.
+
+The new warm impulse may be:
+
+```text
+remapped historical hint
++
+new physical event impulse
+```
+
+## 112. Multiple evidence families reduce self-deception
+
+A single scenario can accidentally validate itself through the same bug in both model and test.
+
+FABRIC0.14 deliberately uses:
+
+- sliding adaptive contact;
+- oblique impact;
+- torque-free rotation;
+- static stick probe;
+- separation probe;
+- feature hierarchy probe;
+- parallel audit.
+
+Future checkpoints should prefer orthogonal evidence families when feasible.
+
+## 113. Exact predecessor runtime regression is stronger than byte preservation
+
+Preserved predecessor blobs prove that old code was not edited.
+
+They do not prove the current environment still executes it correctly.
+
+When the successor lab can materialize the predecessor suite, run it.
+
+FABRIC0.14 therefore upgrades predecessor evidence to:
+
+```text
+FABRIC0.13 bytes preserved
++
+FABRIC0.13 95/95 runtime PASS
+```
+
+on the same exact engine.
+
+## 114. Next complexity should come from graph coupling, not another local law
+
+After FABRIC0.14, a single local rigid-body/plane law already supports:
+
+- 6DOF;
+- anisotropic inertia;
+- unilateral contact;
+- stick/slide;
+- impacts;
+- feature lineage;
+- adaptive events;
+- energy/momentum evidence.
+
+The biggest unknown is no longer the local law.
+
+It is the coupled graph:
+
+```text
+many free bodies
++
+many simultaneous contacts
++
+coupled complementarity
++
+coupled friction cones
++
+island merge/split
+```
+
+Therefore FABRIC0.15 should attack graph-wide nonsmooth coupling.
+
+## 115. Текущий образ FABRIC после 0.14
+
+```text
+Construction semantic truth
+        ↓
+persistent physical relation graph
+        ↓
+full rigid-body 6DOF local state
+        ↓
+adaptive smooth flow
+        ↓
+unilateral / frictional contact law
+        ↓
+explicit impact and feature-transition jumps
+        ↓
+lineage-preserving topology fixed point
+        ↓
+continuous + discrete energy ledger
+        ↓
+parallel numerical execution
+        ↓
+canonical causal physical history
+```
+
+Production ownership remains with Construction.
