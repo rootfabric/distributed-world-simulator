@@ -1050,3 +1050,218 @@ sparse/warm-start path
 ~~~
 
 Production promotion не заявляется. Draft PR сохраняется.
+
+
+## FABRIC0.9 — MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE
+
+**Parent research head:** `8b7b28e9b3e1a9641a2d20e8f89c540f08a2a1ec`  
+**Design:** `docs/research/FABRIC0_9_MULTICONTACT_GEOMETRIC_CONE_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v9-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused FABRIC0.9 acceptance: `136/136 PASS`;
+- FABRIC0.8 regression: `71/71 PASS`;
+- FABRIC0.7 regression: `88/88 PASS`;
+- FABRIC0.6 nonsmooth regression: `121/121 PASS`;
+- FABRIC0.6 compatibility regression: `42/42 PASS`;
+- playground: `FABRIC0_9_MULTICONTACT_CONE_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- all 4 executable FABRIC0.9 files byte-identical between local exact-double tests and GitHub blobs.
+
+### Geometry -> manifold
+
+Box одновременно касается двух static planes:
+
+```text
+floor
+wall
+```
+
+Geometry compiler автоматически создаёт 8 stable contacts:
+
+```text
+floor::mx_my_mz
+floor::mx_my_pz
+floor::px_my_mz
+floor::px_my_pz
+wall::mx_my_mz
+wall::mx_my_pz
+wall::mx_py_mz
+wall::mx_py_pz
+```
+
+Каждый contact получает:
+
+```text
+point
+r from center of mass
+normal
+tangent_1
+tangent_2
+gap
+friction
+restitution
+```
+
+### 6D rigid-body Jacobian
+
+Generalized velocity:
+
+```text
+[vx,vy,vz, wx,wy,wz]
+```
+
+Contact row:
+
+```text
+[d, r x d]
+```
+
+Поэтому angular velocity и torque coupling входят в тот же global solve.
+
+### True 2D Coulomb cone
+
+Каждый impulse:
+
+```text
+(j_n, j_t1, j_t2)
+```
+
+ограничен:
+
+```text
+j_n >= 0
+sqrt(j_t1^2+j_t2^2) <= mu*j_n
+```
+
+Не используются независимые tangent clamps.
+
+### Global solve
+
+Все contacts собираются в:
+
+```text
+A = J M^-1 J^T
+```
+
+и решаются одним convex cone problem через ADMM.
+
+Main experiment:
+
+```text
+contacts=8
+active=5
+sliding=5
+rank=6/24
+iterations=2395
+```
+
+Post linear:
+
+```text
+(0.589721054,
+ 0.776797774,
+ 0.238711754)
+```
+
+Post angular:
+
+```text
+(-0.074797351,
+ -0.022468940,
+  0.122242645)
+```
+
+### Impulse audit
+
+Total impulse:
+
+```text
+(5.17944211,
+ 7.55359555,
+-1.52257649)
+```
+
+Torque impulse:
+
+```text
+(-0.23739868,
+ -0.26696273,
+  0.57779412)
+```
+
+Linear/angular impulse residuals close at exact-double tolerance.
+
+Energy:
+
+```text
+14.208000000
+->
+1.015847883
+```
+
+Main dissipative case does not create kinetic energy.
+
+### Order invariance
+
+Проверены:
+
+- normal input order;
+- reversed contacts;
+- reversed planes + reversed contacts.
+
+Получены exact-equal:
+
+- post linear/angular state;
+- canonical per-contact impulse map;
+- state hash.
+
+Hash:
+
+`181d3a3cd0e4d0439c79b5ed6afd9939cc88c94276446e148ab8cdf0c453c7b5`.
+
+### Redundant reactions
+
+```text
+matrix rank = 6
+impulse coordinates = 24
+```
+
+Это означает, что per-contact reaction split на избыточном manifold не обязан быть уникальной physical truth.
+
+FABRIC теперь явно различает:
+
+```text
+generalized physical state / total impulse observables
+vs
+one deterministic internal reaction representative
+```
+
+Deterministic representation не объявляется mathematically unique.
+
+### Главный вывод FABRIC0.9
+
+> Geometry становится compiler input для global cone-constrained reaction problem; порядок contact records не является физической семантикой.
+
+### Следующая фундаментальная граница
+
+`FABRIC0.10 — PERSISTENT CONTACT GRAPH + SPARSE HYBRID DAE`.
+
+Нужно связать temporal DAE 0.8 и multi-contact cone 0.9:
+
+```text
+persistent contact identities across time
+dynamic body-body contacts
+contact appear/persist/disappear
+contact graph islands
+sparse assembly
+warm-start
+resting contact
+cone solve inside event-time DAE
+order-invariant island replay
+```
+
+Production promotion не заявляется.
