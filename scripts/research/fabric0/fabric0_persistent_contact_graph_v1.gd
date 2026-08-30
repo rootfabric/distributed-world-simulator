@@ -417,6 +417,7 @@ static func _solve_island(world: Dictionary, island: Dictionary, free: Dictionar
 		"dense_effective_mass_capacity": row_count * row_count,
 	}
 
+
 # =============================================================================
 # EVENT-AWARE CONTACT APPEARANCE BRIDGE
 # =============================================================================
@@ -693,4 +694,3 @@ static func world_hash(world: Dictionary) -> String:
 	var ctx:=HashingContext.new(); ctx.start(HashingContext.HASH_SHA256); ctx.update(payload.to_utf8_buffer()); return ctx.finish().hex_encode()
 
 static func _v(v: Vector3) -> Array: return [v.x,v.y,v.z]
-
