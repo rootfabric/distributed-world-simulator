@@ -1223,3 +1223,214 @@ remaining flow
 +
 order invariance
 ```
+
+
+## FABRIC0.11 — General Event-Localized Contact Islands + Sparse Backend
+
+После FABRIC0.10 существовали уже persistent contacts и contact islands, но temporal/event integration всё ещё имела loophole.
+
+Event bridge умел:
+
+```text
+contact-free world
+→ first contact
+```
+
+но не:
+
+```text
+already constrained world
+→ new contact during macrostep
+```
+
+Кроме того, sparse graph structure всё ещё заканчивалась dense Cholesky.
+
+### Вопрос checkpoint
+
+> Может ли новый contact event быть найден, не отпуская старые constraints, а после graph merge весь same-time solve и remaining flow пройти через genuinely sparse linear backend?
+
+Ответ research prototype: да.
+
+### Старые constraints остаются физически активными во время search
+
+Main world уже имеет A/B stack.
+
+Incoming C падает сверху.
+
+Каждая bisection probe продвигает candidate world через contact solve старого graph.
+
+На найденном event:
+
+```text
+A-B gap ~ 3.44e-12
+floor-A gap ~ 5.54e-12
+```
+
+Это критически важно.
+
+Если бы event search временно отключал stack constraints, event time и impact state были бы результатом искусственного другого мира.
+
+### Graph merge стал same-time causal operation
+
+До event:
+
+```text
+[A,B]
+```
+
+После:
+
+```text
+[A,B,C]
+```
+
+New relation:
+
+`pair:B|C`.
+
+Old relations продолжают существовать.
+
+Именно в event instant:
+
+- graph recompiles;
+- old warm-start state maps by contact identity;
+- new contact starts cold;
+- merged island solves before time continues.
+
+### Warm state переживает event-time topology mutation
+
+Event solve получает:
+
+`2 warm hits`
+
+от:
+
+```text
+pair:A|B
+floor|A
+```
+
+Это следующий уровень идеи FABRIC0.10:
+
+> relation-local numerical continuity должна переживать не только frame-boundary island merge, но и event-time graph mutation.
+
+### Sparse backend стал настоящим
+
+0.10:
+
+```text
+sparse A
+→ dense A
+→ Cholesky
+```
+
+0.11:
+
+```text
+sparse A
+→ sparse matvec
+→ Jacobi-PCG
+```
+
+ADMM linear subproblem больше не materialize-ит dense effective-mass matrix.
+
+Independent SPD unit test даёт exact solution за две PCG iterations.
+
+### Event solve evidence
+
+Merged A/B/C:
+
+```text
+A sparse entries = 21
+dense capacity   = 81
+
+ADMM = 31 iterations
+PCG calls = 31
+PCG iterations = 93
+dense materializations = 0
+```
+
+### Numerical honesty стала отдельной темой
+
+Bisection находит event root текущей discrete constrained trajectory с tolerance `1e-11`.
+
+Но trajectory сама построена fixed semi-implicit substeps `0.01 s`.
+
+Поэтому:
+
+```text
+discrete event_dt =
+0.35709945939307
+
+continuous reference =
+0.3609505622728941
+```
+
+Разница ~3.85 ms.
+
+Это не надо «лечить» красивой цифрой bisection tolerance.
+
+Нужно улучшать time integrator.
+
+Этот урок напрямую породил следующий wall.
+
+### Independent scheduling
+
+Два independent islands решаются forward и reverse schedule.
+
+Exact same hash:
+
+`e50cceb70dc4ecbd0100e5207ca5a58a2285c90a5085a6556b19db8ce8699078`.
+
+Это пока не actual parallel threads.
+
+Но доказано необходимое semantic property:
+
+```text
+schedule order
+!=
+physical truth
+```
+
+### Full event replay
+
+Reverse body insertion + contact order + island schedule дают тот же:
+
+- event time;
+- graph mutation;
+- history;
+- final state.
+
+Hash:
+
+`86d76fc7a4b93bdd27030e1b343151d008e2c2e62ddfa72bdc11cf46d4f6133b`.
+
+### Evidence
+
+```text
+FABRIC0.11 focused        120/120 PASS
+FABRIC0.10 regression      97/97 PASS
+playground                  PASS
+editor                      CLEAN
+byte identity               PASS
+```
+
+### Главный урок FABRIC0.11
+
+> Event search является частью constrained physics. Нельзя искать topology event в мире, где временно отключены уже существующие constraints.
+
+И второй:
+
+> Sparse topology должна оставаться sparse не только в compiler representation, но и в actual numerical linear solve.
+
+## FABRIC0.12 — Adaptive Multi-Event Manifold DAE
+
+0.11 выявил следующую artificial boundary:
+
+- fixed substep determines trajectory error;
+- one topology-change event per event-localized call;
+- old-contact disappearance fail-closed;
+- no orientation-aware feature manifold persistence;
+- no actual parallel execution.
+
+Следующий test должен заставить old contacts disappear и multiple new contacts appear в одном macrostep, при adaptive refinement и manifold event iteration.
