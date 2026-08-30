@@ -1,0 +1,50 @@
+name: P7.1 Exact Double Godot Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-1-exact-double-validation.yml"
+      - "scripts/runtime/networked_gameplay/p7/**"
+      - "tests/runtime/test_v0_p7_1_*"
+      - "RUN_V0_P7_1_TOOL_TO_MW4_GATE.ps1"
+
+permissions:
+  contents: read
+
+jobs:
+  exact-p7-1:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout validation carrier
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout exact frozen runtime head
+        run: |
+          git checkout --detach 30d50c1d047a2b36d3a50e862c239da0967dd8ac
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne "30d50c1d047a2b36d3a50e862c239da0967dd8ac") { throw "P7_1_RUNTIME_HEAD_MISMATCH:$head" }
+          Write-Host "P7_1_EXACT_RUNTIME_HEAD=$head"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe" }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw "Exact Godot binary not found: $godot" }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_IDENTITY_MISMATCH:$version" }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run exact P7.1 focused gate
+        run: |
+          .\RUN_V0_P7_1_TOOL_TO_MW4_GATE.ps1 -GodotExe "${{ steps.godot.outputs.path }}" -ExpectedHead "30d50c1d047a2b36d3a50e862c239da0967dd8ac"
