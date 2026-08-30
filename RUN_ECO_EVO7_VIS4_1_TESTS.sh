@@ -20,4 +20,4 @@ bash ./RUN_ECO_EVO7_VIS4_0_TESTS.sh
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd
 bash ./RUN_ECO_EVO7_VIS2_TESTS.sh
 
-echo "ECO.EVO7 VIS4.1 Source-Bound Morphology Evidence candidate: PASS"
+echo "ECO.EVO7 VIS4.1 R2 Source-Bound Morphology Evidence candidate: PASS"
