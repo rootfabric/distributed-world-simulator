@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: PLANNED / PARALLEL TO STREAM1 / IMPLEMENTATION NOT STARTED  
+Статус: ACTIVE PARALLEL DEVELOPMENT / STREAM1 + VIS4 / ROADMAP SPLIT CONFIRMED  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -25,6 +25,92 @@ VIS4 развивается параллельно STREAM1 от одного exa
 ~~~
 
 STREAM1 отвечает за bounded orchestration поколения. VIS4 отвечает только за read-only presentation уже существующей ecology. VIS4 не должен становиться дочерней веткой STREAM1 и не меняет biology.
+
+## Текущая parallel execution policy
+
+На 2026-08-30 обе линии уже ведутся параллельно:
+
+~~~text
+STREAM1 HEAD:
+4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4
+
+VIS4 HEAD до этого roadmap amendment:
+a6cedcd018a03740961c4b9d2798cba678f5009f
+~~~
+
+После принятия STREAM1 основная ECO-ветка НЕ ждёт завершения PLAY0.MORPH.
+
+Правильная execution graph:
+
+~~~text
+                         PAR3 R3.2
+                             |
+                +------------+------------+
+                |                         |
+                v                         v
+             STREAM1                    VIS4
+                |                         |
+                v                         v
+           PERF2.SIM                PLAY0.MORPH
+                |                         |
+                +------------+------------+
+                             |
+                             v
+                        PERF2.CONV
+                             |
+                             v
+                    PLAY1 LIVING REGION
+~~~
+
+### PERF2.SIM
+
+Разрешён сразу после независимой приёмки STREAM1, даже если VIS4/PLAY0.MORPH ещё не завершён.
+
+Scope:
+
+~~~text
+PERF2.0 measurement contract
+PERF2.1 STREAM1 generation profiling
+PERF2.2 working-set / memory
+PERF2.3 simulation scaling
+PERF2.4 runtime optimization
+~~~
+
+Здесь измеряются generation throughput, CPU time по фазам, memory/working-set, allocator pressure, proposal/commit cost, scaling по cells/population и simulation bottlenecks.
+
+### PERF2.CONV
+
+Финальный integrated performance gate разрешён только после:
+
+~~~text
+STREAM1 ACCEPTED
++
+VIS4 / PLAY0.MORPH ACCEPTED
+~~~
+
+Scope:
+
+~~~text
+PERF2.5 VIS4 materialization profiling
+PERF2.6 PH5 LOD / cache tuning
+PERF2.7 STREAM1 + VIS4 integrated load
+PERF2.8 PLAY1 performance acceptance
+~~~
+
+Только PERF2.CONV подтверждает реальную стоимость будущего PLAY1, потому что в этот момент одновременно присутствуют bounded generation execution и реальный PH5 morphology workload.
+
+Следовательно:
+
+~~~text
+STREAM1 done first
+-> continue immediately into PERF2.SIM
+
+PLAY0.MORPH still active
+-> does not block PERF2.SIM
+
+PLAY1 acceptance
+-> blocked until PERF2.CONV GREEN
+~~~
 
 ## Почему VIS4 нужен уже сейчас
 
@@ -224,6 +310,8 @@ LIVE_DIVERSITY_INSUFFICIENT
 
 Собирать visible plant/tier counts, graph build ms, materialization ms, cache hits, branch primitives, foliage instances, draw calls, FPS/frame time.
 
+Этот checkpoint даёт VIS4-local performance evidence, но НЕ заменяет PERF2.CONV. VIS4 может самостоятельно оптимизировать PH5 materialization и LOD, однако итоговая PLAY1 performance acceptance выполняется только на композиции STREAM1 + VIS4.
+
 ## Acceptance PLAY0.MORPH R1
 
 1. EVO7 biology unchanged.
@@ -249,19 +337,30 @@ LIVE_DIVERSITY_INSUFFICIENT
 
 ## Convergence
 
+Convergence теперь двухуровневый.
+
 ~~~text
-PAR3 R3.2
-  +-> STREAM1 independent acceptance
-  +-> VIS4 independent acceptance
-             |
-             v
-       convergence gate
-             |
-             v
-          PLAY1
+STREAM1 ACCEPTED
+      |
+      v
+  PERF2.SIM ------------------+
+                              |
+VIS4 -> PLAY0.MORPH ACCEPTED  |
+      |                       |
+      +-----------+-----------+
+                  |
+                  v
+             PERF2.CONV
+                  |
+                  v
+         PLAY1 LIVING REGION
 ~~~
 
-VIS4 читает только fully published generation. Partial STREAM1 work никогда не становится presentation source.
+PERF2.SIM может начаться раньше завершения VIS4.
+
+PERF2.CONV и PLAY1 не могут быть приняты раньше завершения обеих линий.
+
+VIS4 читает только fully published generation. Partial STREAM1 work никогда не становится presentation source. Renderer/materialization workload добавляется в performance acceptance только на PERF2.CONV.
 
 ## Следующие самостоятельные этапы
 
@@ -272,19 +371,46 @@ ECO.SPATIAL1 — настоящая continuous physical position растени�
 ## Обновлённая ECO-roadmap
 
 ~~~text
-PAR3 R3.2
-   +-------- STREAM1
-   +-------- VIS4 -> PLAY0.MORPH
-                 |
-          convergence / PERF2
-                 |
-         PLAY1 LIVING REGION
-                 |
-               MORPH1
-                 |
-            ECO.SPATIAL1
-                 |
-                LS4
+                         PAR3 R3.2
+                             |
+                +------------+------------+
+                |                         |
+                v                         v
+             STREAM1                    VIS4
+                |                         |
+                v                         v
+           PERF2.SIM                PLAY0.MORPH
+                |                         |
+                |                    VIS4.5-4.9
+                |                         |
+                +------------+------------+
+                             |
+                             v
+                        PERF2.CONV
+                             |
+                             v
+                    PLAY1 LIVING REGION
+                             |
+                             v
+                           MORPH1
+                             |
+                             v
+                        ECO.SPATIAL1
+                             |
+                             v
+                            LS4
 ~~~
 
-Первый рабочий пункт этой ветки: VIS4.0 Truth / Contract Audit.
+Execution rule:
+
+~~~text
+STREAM1 accepted earlier -> immediately continue PERF2.SIM.
+VIS4 continues independently.
+No waiting between STREAM1 and PERF2.SIM.
+Final PERF2.CONV waits for both lines.
+PLAY1 opens only after PERF2.CONV GREEN.
+~~~
+
+Текущая программа уже работает в parallel mode; этот roadmap amendment фиксирует это как каноническое execution rule для ECO track.
+
+Первый рабочий пункт VIS4-ветки: VIS4.0 Truth / Contract Audit.
