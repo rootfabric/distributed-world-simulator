@@ -557,3 +557,139 @@ static func _append_body_jacobian(row: Dictionary, world: Dictionary, body_index
 static func _island_inverse_mass(world: Dictionary, body_ids: Array) -> Array:
 	var result: Array = []
 	for id in body_ids:
+		var b: Dictionary = world["bodies"][id]
+		result.append(float(b["inv_mass"])); result.append(float(b["inv_mass"])); result.append(float(b["inv_mass"]))
+		var ii: Vector3 = b["inv_inertia"]
+		result.append(ii.x); result.append(ii.y); result.append(ii.z)
+	return result
+
+static func _assemble_sparse_effective_mass(rows: Array, minv: Array) -> Dictionary:
+	var result := {}
+	for i in range(rows.size()):
+		for j in range(i, rows.size()):
+			var sum := 0.0
+			# intersect sparse column keys
+			for k in rows[i].keys():
+				if rows[j].has(k): sum += float(rows[i][k]) * float(minv[int(k)]) * float(rows[j][k])
+			if absf(sum) > EPS:
+				result["%d:%d" % [i,j]] = sum
+				if i != j: result["%d:%d" % [j,i]] = sum
+	return result
+
+static func _sparse_to_dense(sparse: Dictionary, size: int) -> Array:
+	var result: Array = []
+	for r in range(size):
+		var row := _zero_vector(size); result.append(row)
+	for key in sparse.keys():
+		var parts := String(key).split(":")
+		result[int(parts[0])][int(parts[1])] = float(sparse[key])
+	return result
+
+static func _sparse_mat_t_vec(rows: Array, vector: Array, cols: int) -> Array:
+	var result := _zero_vector(cols)
+	for r in range(rows.size()):
+		for c in rows[r].keys(): result[int(c)] += float(rows[r][c]) * float(vector[r])
+	return result
+
+static func _sparse_row_entry_count(rows: Array) -> int:
+	var count := 0
+	for row in rows: count += row.size()
+	return count
+
+static func _relative_contact_component(world: Dictionary, free: Dictionary, c: Dictionary, d: Vector3) -> float:
+	var va := _point_velocity(world, free, String(c["body_a"]), c["r_a"])
+	var vb := _point_velocity(world, free, String(c["body_b"]), c["r_b"])
+	return d.dot(va - vb)
+
+static func _point_velocity(world: Dictionary, free: Dictionary, body_id: String, r: Vector3) -> Vector3:
+	if body_id.begins_with("@static/"): return Vector3.ZERO
+	var v: Dictionary = free[body_id]
+	return v["linear"] + v["angular"].cross(r)
+
+static func _project_cone(q: Vector3, mu: float) -> Vector3:
+	var n := q.x
+	var t := Vector2(q.y,q.z)
+	var tn := t.length()
+	if mu <= EPS: return Vector3(maxf(n,0.0),0.0,0.0)
+	if n >= 0.0 and tn <= mu*n: return q
+	var pn := (n + mu*tn) / (1.0 + mu*mu)
+	if pn <= 0.0: return Vector3.ZERO
+	if tn <= EPS: return Vector3(pn,0.0,0.0)
+	var s := mu*pn/tn
+	return Vector3(pn,t.x*s,t.y*s)
+
+static func _tangent_basis(n: Vector3) -> Array:
+	var normal := n.normalized()
+	var axes := [Vector3.RIGHT, Vector3.UP, Vector3.BACK]
+	var ref: Vector3 = axes[0]
+	var best := absf(normal.dot(ref))
+	for i in range(1,3):
+		var score := absf(normal.dot(axes[i]))
+		if score < best: best=score; ref=axes[i]
+	var t1 := normal.cross(ref).normalized()
+	var t2 := normal.cross(t1).normalized()
+	return [t1,t2]
+
+static func _contact_ids(contacts: Array) -> Array:
+	var ids: Array = []
+	for c in contacts: ids.append(String(c["id"]))
+	ids.sort(); return ids
+
+static func _cholesky(matrix: Array) -> Dictionary:
+	var n := matrix.size(); var l: Array = []
+	for r in range(n): l.append(_zero_vector(n))
+	for i in range(n):
+		for j in range(i+1):
+			var sum := float(matrix[i][j])
+			for k in range(j): sum -= float(l[i][k])*float(l[j][k])
+			if i==j:
+				if sum <= EPS: return {"ok":false}
+				l[i][j]=sqrt(sum)
+			else: l[i][j]=sum/float(l[j][j])
+	return {"ok":true,"l":l}
+
+static func _cholesky_solve(l: Array, rhs: Array) -> Array:
+	var n := rhs.size()
+	var y := _zero_vector(n)
+	for i in range(n):
+		var value := float(rhs[i])
+		for k in range(i):
+			value -= float(l[i][k]) * float(y[k])
+		y[i] = value / float(l[i][i])
+	var x := _zero_vector(n)
+	for ii in range(n):
+		var i := n - 1 - ii
+		var value := float(y[i])
+		for k in range(i + 1, n):
+			value -= float(l[k][i]) * float(x[k])
+		x[i] = value / float(l[i][i])
+	return x
+
+static func _zero_vector(size: int) -> Array:
+	var r:Array=[]; r.resize(size); r.fill(0.0); return r
+
+# =============================================================================
+# CANONICAL STATE / RECOVERY EVIDENCE
+# =============================================================================
+
+static func world_hash(world: Dictionary) -> String:
+	var bodies: Array = []
+	var ids: Array = world["bodies"].keys(); ids.sort()
+	for id in ids:
+		var b: Dictionary = world["bodies"][id]
+		if not bool(b["dynamic"]): continue
+		bodies.append({
+			"id":String(id),
+			"p":_v(b["position"]),
+			"v":_v(b["linear_velocity"]),
+			"w":_v(b["angular_velocity"]),
+		})
+	var contacts: Array=[]
+	var cids:Array=world["contact_cache"].keys(); cids.sort()
+	for cid in cids:
+		var c:Dictionary=world["contact_cache"][cid]
+		contacts.append({"id":String(cid),"age":int(c["age_steps"]),"warm":_v(c["warm_impulse"])})
+	var payload:=JSON.stringify({"time":float(world["time"]),"step":int(world["step"]),"bodies":bodies,"contacts":contacts},"",false)
+	var ctx:=HashingContext.new(); ctx.start(HashingContext.HASH_SHA256); ctx.update(payload.to_utf8_buffer()); return ctx.finish().hex_encode()
+
+static func _v(v: Vector3) -> Array: return [v.x,v.y,v.z]
