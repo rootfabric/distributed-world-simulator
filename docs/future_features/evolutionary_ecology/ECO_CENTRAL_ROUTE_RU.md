@@ -6,6 +6,21 @@
 
 **Живой статус на 2026-08-30 (ECO EVO7 performance + morphology split):** `LS3.0–LS3.FINAL CLOSED / VIS1–VIS3 ACCEPTED / PAR1–PAR3 COMPLETE LINEAGE / STREAM1 R1 ACCEPTED exact-Windows 4d0d95a / PERF2.SIM NEXT / VIS4 PLAY0.MORPH PARALLEL`.
 
+**PERF2.0 implementation status on 2026-08-30:** `MEASUREMENT CONTRACT R1 IMPLEMENTATION CANDIDATE / exact double-Godot verification required`.
+
+Current performance route:
+
+```text
+STREAM1 ACCEPTED
+→ PERF2.0 Measurement Contract       ← CURRENT
+→ PERF2.1 STREAM1 Profiling
+→ PERF2.2 Working-set / Memory
+→ PERF2.3 Simulation Scaling
+→ PERF2.4 Runtime Optimization
+```
+
+PERF2.0 freezes benchmark identity and correctness rules before any optimization claim.
+
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 
 ```text
