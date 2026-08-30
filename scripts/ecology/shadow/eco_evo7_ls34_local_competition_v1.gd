@@ -246,6 +246,17 @@ func validate_morphology_evidence(evidence: Dictionary) -> bool:
             return false
         if String(item.get("bundle_checksum", "")) != String(record.get("bundle_checksum", "")):
             return false
+        var bundle_value = record.get("hereditary_bundle")
+        if not bundle_value is Dictionary:
+            return false
+        var bundle: Dictionary = bundle_value
+        var lineage_value = bundle.get("lineage", bundle.get("lineage_record"))
+        if not lineage_value is Dictionary:
+            return false
+        if int(item.get("hereditary_individual_seed", -1)) != int(bundle.get("individual_seed", -2)):
+            return false
+        if String(item.get("lineage_id", "")) != String(Dictionary(lineage_value).get("lineage_id", "")):
+            return false
     return true
 
 func _elapsed_ms(start_usec: int) -> float:
