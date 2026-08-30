@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 R2 WINDOWS VERIFIED + CLOSED / VIS4.3 IMPLEMENTATION ACTIVE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 IMPLEMENTED CANDIDATE / EXACT WINDOWS VERIFICATION IN PROGRESS  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -744,3 +744,34 @@ docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_WINDOWS_VERIFIED_CLOSED_R2_RU.md
 ~~~
 
 VIS4.3 exact PH5 bridge is now unblocked.
+
+
+---
+
+## VIS4.3 implementation result — 2026-08-31
+
+VIS4.3 exact Live Phenotype -> PH5 bridge is implemented.
+
+Exact runtime/test subject currently under Windows verification:
+
+~~~text
+HEAD: 967692cb2781f20eeceffe43a014366567bd2586
+~~~
+
+Runtime architecture:
+
+~~~text
+same LS3.4 PH2 pass
+ -> exact reconstruction sidecar
+ -> validated realized DevelopmentTraits + development seed
+ -> accepted PlantGrowthGraphSkeleton.build()
+ -> exact graph_hash equality gate
+ -> accepted PlantRenderDescription
+ -> accepted PH5 multiscale representation/materializer
+~~~
+
+The bridge does not rerun CoupledDevelopment or FunctionalPhenotype and does not copy the GrowthGraph algorithm.
+
+Focused acceptance requires exact reconstruction for all 61 generation-one survivors, all PH5 tiers, rehashed traits_id/development-seed rejection, and deterministic replay.
+
+VIS4.4 remains blocked until exact Windows GREEN.
