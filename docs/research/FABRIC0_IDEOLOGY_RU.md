@@ -1229,3 +1229,213 @@ geometry
 Это уже похоже на долгоживущую physical substrate, но всё ещё research-only.
 
 Следующая проверка — сможет ли эта форма пережить event-localized graph merge при уже активных contacts.
+
+
+## 64. Event localization не имеет права временно отменять существующую физику
+
+Если macrostep начинается с active constraints, candidate trajectory для event search обязана учитывать эти constraints.
+
+Неправильно:
+
+```text
+disable old contacts
+→ find new collision
+→ restore old contacts
+```
+
+Правильно:
+
+```text
+old constrained graph
+→ constrained candidate flow
+→ topology predicate
+→ localized event
+```
+
+FABRIC0.11 делает этот принцип executable.
+
+## 65. У event localization есть несколько уровней точности
+
+Нельзя одной цифрой описывать всю accuracy.
+
+Минимально различаются:
+
+### Root-search tolerance
+
+Насколько точно найден crossing **данной trajectory**.
+
+### Integration error
+
+Насколько сама trajectory близка к continuous physical solution.
+
+### Constitutive/contact solve error
+
+Насколько точно решены algebraic/nonsmooth constraints.
+
+Поэтому:
+
+```text
+bisection 1e-11
+```
+
+не означает:
+
+```text
+physical event time accurate to 1e-11
+```
+
+если time integrator использует coarse substeps.
+
+Это теперь hard documentation rule.
+
+## 66. Sparse topology должна оставаться sparse through numerical solve
+
+Недостаточно хранить graph sparse, а затем делать:
+
+```text
+compile sparse
+→ densify everything
+```
+
+как постоянную архитектуру.
+
+FABRIC0.11 закрепляет целевую форму:
+
+```text
+sparse graph
+→ sparse Jacobian
+→ sparse effective mass
+→ sparse matvec / solve
+```
+
+Current PCG — research backend, но boundary теперь правильная.
+
+## 67. Preconditioner является numerical policy, не physical law
+
+Jacobi PCG chosen in 0.11.
+
+Future можно заменить на:
+
+- block Jacobi;
+- incomplete Cholesky;
+- multigrid;
+- domain decomposition.
+
+Если converged physical observables сохраняются, это numerical implementation choice.
+
+Preconditioner state не становится canonical world state.
+
+## 68. Event-time graph mutation требует warm-state remap до продолжения времени
+
+Если persistent contacts пережили graph merge:
+
+```text
+identity preserved
+→ numerical continuity may be preserved
+```
+
+New contacts:
+
+```text
+new identity
+→ cold numerical state
+```
+
+Это должно происходить в event instant, до remaining flow.
+
+## 69. Same-time graph recompile является physical transaction boundary
+
+New geometry relation может изменить contact island membership без продвижения clock.
+
+Поэтому:
+
+```text
+te:
+detect
+→ compile
+→ remap
+→ solve
+→ commit
+```
+
+является одной causal event transaction.
+
+Solver не должен продвинуть `t`, а затем поздно «заметить» новый island.
+
+## 70. Parallelism разрешён только после доказательства schedule invariance
+
+Independent islands естественно parallelizable.
+
+Но actual parallel implementation нельзя считать semantic-neutral автоматически.
+
+Перед parallel workers нужен gate:
+
+```text
+forward schedule
+reverse schedule
+other valid schedules
+→ same accepted state
+```
+
+FABRIC0.11 доказал prerequisite, но actual threads ещё не реализует.
+
+## 71. Solver iteration history является evidence, а не world state
+
+PCG calls, ADMM iterations, residual histories полезны как:
+
+- observability;
+- numerical regression;
+- performance evidence;
+- conditioning diagnostics.
+
+Но это не physical canonical state.
+
+Два backend implementation могут иметь разный iteration count и одинаковый accepted physical solution.
+
+## 72. Fail-closed на unsupported multi-event topology лучше sequential guess
+
+0.11 fail-closed, если old contact disappears during current new-event search.
+
+Это правильно до появления general event iteration.
+
+Нельзя silently решить:
+
+```text
+first array event
+then second array event
+```
+
+если mathematical result может зависеть от такого порядка.
+
+## 73. Следующая цель — convergence, а не ещё более маленькая bisection tolerance
+
+После 0.11 bottleneck event accuracy — не root finder.
+
+Он — constrained integration.
+
+Поэтому FABRIC0.12 должен проверять:
+
+```text
+refine time integration
+→ event time converges
+→ post-event state converges
+```
+
+а не просто уменьшать `EVENT_TIME_TOLERANCE`.
+
+## 74. Текущая temporal-contact форма
+
+После FABRIC0.11:
+
+```text
+persistent constrained graph
+→ sparse constrained flow
+→ event localization
+→ same-time graph mutation
+→ sparse reaction solve
+→ remaining constrained flow
+```
+
+Это уже единая research causal path.
+
+Следующая зрелость требует adaptive multi-event manifold semantics.
