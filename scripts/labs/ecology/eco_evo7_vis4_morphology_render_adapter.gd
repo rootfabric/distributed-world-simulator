@@ -245,6 +245,8 @@ func _record_identity(record: Dictionary) -> Dictionary:
 	if not bundle_value is Dictionary:
 		return {}
 	var bundle: Dictionary = bundle_value
+	if String(record.get("bundle_checksum", "")) != String(bundle.get("bundle_checksum", "")):
+		return {}
 	var lineage_value = bundle.get("lineage", bundle.get("lineage_record"))
 	if not lineage_value is Dictionary:
 		return {}
