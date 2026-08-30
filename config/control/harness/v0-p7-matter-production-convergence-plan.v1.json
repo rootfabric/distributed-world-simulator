@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_0_OWNER_MAP_R2_REVIEW_READY",
+  "status": "P7_0_ACCEPTED_PRE_DISPATCH",
   "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -31,9 +31,10 @@
       "name": "MATTER_PRODUCTION_OWNER_MAP",
       "runtime_mutation": false,
       "exit": "FRESH_OWNER_MAP_REVIEW_PASS",
-      "status": "R2_REVIEW_READY",
-      "evidence": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
-      "review_001": "FIX_REQUIRED_RESOLVED"
+      "status": "ACCEPTED",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
+      "review_001": "FIX_REQUIRED_RESOLVED",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json"
     },
     {
       "id": "P7.1",
@@ -95,5 +96,11 @@
     "reason": "MatterMaterialBatch is physical mass/composition while Item Graph trusted output is integer item quantity; P7.0 refuses to invent a hidden kg-per-item conversion.",
     "new_canonical_owner_required": false
   },
-  "owner_map_revision": "V0-P7-0-OWNER-MAP-2026-08-30-R2"
+  "owner_map_revision": "V0-P7-0-OWNER-MAP-2026-08-30-R2",
+  "owner_map_review": {
+    "verdict": "PASS",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+    "reviewed_head": "6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd",
+    "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
+  }
 }

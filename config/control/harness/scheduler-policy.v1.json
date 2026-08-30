@@ -74,10 +74,10 @@
       "MAIN_DECLARED_EXACT_SM1_SUCCESSOR_BASE",
       "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
       "FRESH_P7_EPOCH_AND_WORK_ORDER",
-      "MUTATION_LEASE_ROTATED_TO_P7"
+      "MUTATION_LEASE_ROTATED_TO_P7",
+      "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS"
     ],
     "p7_remaining_activation_prerequisites": [
-      "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
       "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
       "DIRECTOR_DISPATCH"
     ],
@@ -94,6 +94,12 @@
       "representation": "RL2_RL3",
       "material_output": "MatterMaterialBatch",
       "inventory_truth": "CANONICAL_ITEM_GRAPH"
+    },
+    "p7_0": {
+      "status": "ACCEPTED",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+      "owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
     }
   },
   "research_isolation": {

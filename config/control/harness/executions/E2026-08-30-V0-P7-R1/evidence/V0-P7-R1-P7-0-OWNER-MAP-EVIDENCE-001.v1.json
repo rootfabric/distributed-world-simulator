@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_0_owner_map_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.0_MATTER_PRODUCTION_OWNER_MAP",
+  "decision": "P7_0_OWNER_MAP_ACCEPTED",
+  "status": "ACCEPTED",
+  "source_main": "07d71da1d301a65d36f56ff8c7a42795becab88d",
+  "reviewed_head": "6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd",
+  "reviewed_owner_map_path": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
+  "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908",
+  "review_history": [
+    {
+      "review_id": "V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001",
+      "verdict": "FAIL",
+      "finding": "P7-0-RF-001_ACTOR_IDENTITY_MAPPING"
+    },
+    {
+      "review_id": "V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002",
+      "verdict": "PASS",
+      "required_fixes": 0
+    }
+  ],
+  "project_control": [
+    {
+      "head": "92ceabcba52de2a9139f7ba2a4d0e54e0ce3c214",
+      "run": 33293003436,
+      "result": "SUCCESS"
+    },
+    {
+      "head": "524b87125b2db446b231cea9b07f23571f50da71",
+      "run": 33293049865,
+      "result": "SUCCESS"
+    },
+    {
+      "head": "6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd",
+      "run": 33293163667,
+      "result": "SUCCESS"
+    }
+  ],
+  "source_findings": {
+    "duplicate_owner_count": 0,
+    "new_runtime_contract_required": false,
+    "new_identity_owner_required": false,
+    "new_persistence_owner_required": false,
+    "new_replication_owner_required": false,
+    "new_authority_owner_required": false,
+    "p7_1_boundary": "STATELESS_AUTHORIZE_MUTATION_COMPOSITION_GATE",
+    "p7_3_remaining_policy": "DETERMINISTIC_MASS_TO_ITEM_QUANTIZATION_AND_RESIDUAL_ACCOUNTING"
+  },
+  "runtime_mutation": false,
+  "accepted_at_utc": "2026-08-30T04:52:00Z"
+}

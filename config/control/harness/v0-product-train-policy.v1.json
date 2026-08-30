@@ -201,16 +201,17 @@
         "ONE_ACTIVE_RUNTIME_MUTATION_CHECKPOINT_PRE_H0_3"
       ],
       "activation_complete_except": [
-        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
         "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
         "DIRECTOR_DISPATCH"
       ],
       "p7_0": {
-        "status": "REVIEW_CANDIDATE",
+        "status": "ACCEPTED",
         "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
-        "exact_source_base": "07d71da1d301a65d36f56ff8c7a42795becab88d",
+        "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
         "runtime_mutation": false,
-        "selected_p7_1_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd"
+        "next": "P7.1_TOOL_TO_EXISTING_MW4_ADAPTER"
       }
     },
     {
