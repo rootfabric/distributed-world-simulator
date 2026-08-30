@@ -157,6 +157,10 @@ func _source_guard() -> void:
 	_check(_count(ls34, "CoupledDevelopment.realize(") == 1, "LS3.4 contains one PH2 realization call site")
 	_check(_count(ls34, "FunctionalPhenotype.compile(") == 1, "LS3.4 contains one FunctionalPhenotype compile call site")
 	_check(ls34.contains("MorphologyEvidence.build_record("), "LS3.4 packages evidence from already-computed PH2/functional values")
+	var evidence_build_at := ls34.find("var morphology_evidence := MorphologyEvidence.build_record(")
+	var provisional_at := ls34.find("provisional.append({", evidence_build_at)
+	var evidence_build_block := ls34.substr(evidence_build_at, provisional_at - evidence_build_at) if evidence_build_at >= 0 and provisional_at > evidence_build_at else ""
+	_check(not evidence_build_block.contains("return {}"), "morphology evidence packaging cannot abort ecology generation")
 	_check(ls34.contains("get_morphology_evidence"), "LS3.4 exposes separate sidecar API")
 	_check(not adapter.contains("plant_environment_coupled_development") and not adapter.contains("plant_functional_phenotype") and not adapter.contains("resource_model"), "Descriptor V2 imports no biology implementation")
 	_check(not evidence.contains("plant_environment_coupled_development") and not evidence.contains("plant_functional_phenotype") and not evidence.contains("resource_model"), "morphology evidence contract contains no biology implementation")
@@ -164,7 +168,8 @@ func _source_guard() -> void:
 		_check(not source.contains("reproduce_bundle(") and not source.contains("mutation_seed(") and not source.contains("dispersal_seed("), "VIS4.1 owns no mutation/reproduction/dispersal authority")
 		_check(not source.contains("fileaccess.open") and not source.contains("diraccess") and not source.contains("multiplayer"), "VIS4.1 owns no persistence/network authority")
 	_check(not adapter.contains("coupleddevelopment.realize") and not adapter.contains("functionalphenotype.compile"), "Descriptor V2 cannot recompute phenotype")
-	_check(not adapter.contains("tree") and not adapter.contains("bush") and not adapter.contains("grass"), "Descriptor V2 defines no canonical plant archetype classes")
+	for archetype_token in ["tree_type", "bush_type", "grass_type", "tree_class", "bush_class", "grass_class", "tree_bush_grass"]:
+		_check(not adapter.contains(archetype_token), "Descriptor V2 defines no canonical archetype token %s" % archetype_token)
 
 func _by_id(values: Array, key: String) -> Dictionary:
 	var out := {}
