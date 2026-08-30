@@ -43,18 +43,26 @@ $Tests = @(
     'res://tests/ecology/eco_evo7_play0_live_planet_playground_acceptance.gd'
 )
 
+$LogDir = Join-Path $Root 'artifacts/stream1_gate_logs'
+New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+
 $ErrorActionPreference = 'Continue'
 foreach ($Test in $Tests) {
     Write-Host "=== STREAM1 gate: $Test ==="
-    if ([string]::IsNullOrWhiteSpace($EngineLogFile)) {
-        & $GodotBin --headless --path $Root --script $Test 2>$null
+    $BaseName = [System.IO.Path]::GetFileNameWithoutExtension($Test)
+    $PerTestLog = if ([string]::IsNullOrWhiteSpace($EngineLogFile)) {
+        Join-Path $LogDir "$BaseName.log"
     } else {
-        & $GodotBin --headless --path $Root --log-file $EngineLogFile --script $Test 2>$null
+        $EngineLogFile
     }
+
+    & $GodotBin --headless --path $Root --log-file $PerTestLog --script $Test
     if ($LASTEXITCODE -ne 0) {
+        Write-Error "STREAM1 gate failed: $Test (exit=$LASTEXITCODE, log=$PerTestLog)"
         exit $LASTEXITCODE
     }
 }
 
+Write-Host "STREAM1 logs: $LogDir"
 Write-Host 'ECO.EVO7 STREAM1 transitive acceptance: PASS'
 exit 0
