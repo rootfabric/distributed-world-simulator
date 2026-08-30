@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-0-matter-owner-map-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.0 exact-source Matter Production owner-map convergence; control/docs/tests only.",
+  "purpose": "Prove exact existing owners and adapter boundaries before any P7 runtime mutation.",
+  "expected_outcome": "Reviewed machine-readable P7 owner map with zero duplicate owners and a narrow P7.1 stateless authorization/composition boundary.",
+  "current_stage": "P7.0 Matter Production Owner Map / Exact-Source Review",
+  "stage_status": "P7_0_OWNER_MAP_REVIEW_CANDIDATE_RUNTIME_BLOCKED",
+  "progress_note": "P7.0 exact-source owner map binds the product to existing P5/SM1/MW4-MW10/RL2-RL3/Item Graph owners. Zero runtime mutation; fresh review remains required.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "next_stage": "Fresh exact-source P7.0 review; merge only on NON_RED Project Control; then post-merge PC0 and Director dispatch P7.1.",
+  "parent_branch_or_checkpoint": "main @ 07d71da1d301a65d36f56ff8c7a42795becab88d / P7 PRE_DISPATCH",
+  "base_commit": "07d71da1d301a65d36f56ff8c7a42795becab88d",
+  "dependencies": [
+    "V0_SM1_CHECKPOINT_ACCEPTED",
+    "P7 pre-dispatch control canonical @ 07d71da1d301a65d36f56ff8c7a42795becab88d",
+    "MW4-MW10 accepted Matter stack",
+    "RL2/RL3 accepted representation stack",
+    "canonical M4 Item Graph"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-0-matter-owner-map-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R1_RU.md",
+    "tests/harness/test_v0_product_train_policy.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p5/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/simulation/matter/**",
+    "scripts/simulation/representation/**",
+    "config/control/architecture-ownership.v1.json"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p5/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/simulation/matter/**",
+    "config/control/architecture-ownership.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "DERIVED_PRESENTATION"
+  ],
+  "blockers": [
+    "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
+    "POST_MERGE_PC0_NON_RED_REQUIRED",
+    "DIRECTOR_DISPATCH_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

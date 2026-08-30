@@ -204,7 +204,14 @@
         "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
         "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
         "DIRECTOR_DISPATCH"
-      ]
+      ],
+      "p7_0": {
+        "status": "REVIEW_CANDIDATE",
+        "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
+        "exact_source_base": "07d71da1d301a65d36f56ff8c7a42795becab88d",
+        "runtime_mutation": false,
+        "selected_p7_1_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd"
+      }
     },
     {
       "id": "V0_P8_FIRST_MOBILE_CONSTRUCT",

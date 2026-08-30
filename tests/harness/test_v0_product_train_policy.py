@@ -104,6 +104,78 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "V0_P7_RUNTIME_DISPATCH_BLOCKED"):
             build_plan(contracts, self.work_order_p7, dispatched)
 
+
+    def test_p7_0_exact_source_owner_map_is_bound_to_existing_owners(self) -> None:
+        owner_map = _load(HARNESS / "v0-p7-matter-production-owner-map.v1.json")
+        self.assertEqual("REVIEW_CANDIDATE", owner_map["status"])
+        self.assertFalse(owner_map["runtime_mutation"])
+        self.assertEqual("PASS", owner_map["no_second_owner_audit"]["result"])
+        self.assertEqual(0, owner_map["no_second_owner_audit"]["duplicate_owner_count"])
+        decisions = owner_map["core_decisions"]
+        self.assertEqual("USE_EXISTING_MATTER_MUTATION_REQUEST_RESULT", decisions["mutation_contract"])
+        self.assertEqual("USE_EXISTING_MW6_MATTER_MUTATION_HANDLER", decisions["gateway_ingress"])
+        self.assertEqual("MW10_ONLY_WHEN_ONE_CANONICAL_MUTATION_SPANS_TWO_OR_MORE_MATTER_REGIONS", decisions["cross_region"])
+        self.assertFalse(decisions["new_canonical_state_owner"])
+
+        root = ROOT
+        source_assertions = {
+            "scripts/simulation/matter/mutation/matter_excavation_service.gd": [
+                "func create_excavation_request(",
+                "func execute(request: Dictionary)",
+                "MATTER_MUTATION_TARGET_SET_MISMATCH",
+                "BatchScript.create({",
+            ],
+            "scripts/simulation/matter/network/matter_authoritative_server.gd": [
+                'const COMMAND_TYPE: String = "MATTER_MUTATION"',
+                "func set_command_authority_gate(gate)",
+                "func register_gateway(gateway)",
+                "func handle_gateway_command(payload: Dictionary, envelope: Dictionary)",
+                "MATTER_COMMAND_OPERATION_MISMATCH",
+                "MATTER_COMMAND_ACTOR_NOT_OWNED",
+            ],
+            "scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd": [
+                "func authorize_write(authority_id: String, authority_epoch: int)",
+                "SM1_AUTHORITY_TRANSFER_WRITE_FENCED",
+            ],
+            "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd": [
+                "func get_equipped_item(",
+                'EQUIPMENT_SLOT_TOOL_MAIN := "tool/main"',
+                'MINING_TOOL_DEFINITION_ID := "item/tool/mining"',
+            ],
+            "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd": [
+                "func preflight_server_output(",
+                "func apply_server_output(",
+            ],
+            "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd": [
+                "func get_player(logical_player_id: String) -> Dictionary:",
+            ],
+            "scripts/simulation/matter/handoff/matter_regional_authority_gate.gd": [
+                "func authorize_mutation(request: Dictionary)",
+                "MATTER_CROSS_REGION_MUTATION_REQUIRES_COORDINATION",
+            ],
+            "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_plan.gd": [
+                "value[\"participants\"].size() < 2",
+                "MATTER_CROSS_REGION_TRANSACTION_REQUIRES_MULTIPLE_REGIONS",
+            ],
+        }
+        for relative, needles in source_assertions.items():
+            content = (root / relative).read_text(encoding="utf-8")
+            for needle in needles:
+                self.assertIn(needle, content, f"{relative} lost P7.0 binding: {needle}")
+
+    def test_p7_0_rejects_duplicate_terrain_and_resource_owners(self) -> None:
+        owner_map = _load(HARNESS / "v0-p7-matter-production-owner-map.v1.json")
+        forbidden = set(owner_map["no_second_owner_audit"]["forbidden_duplicates"])
+        self.assertIn("TerrainMutationRequest", forbidden)
+        self.assertIn("TerrainMutationResult", forbidden)
+        self.assertIn("P7Persistence", forbidden)
+        self.assertIn("P7AuthorityDirectory", forbidden)
+        self.assertIn("P7ResourceInventory", forbidden)
+        self.assertIn("P7InterestManager", forbidden)
+        delivery = owner_map["p7_3_material_delivery_boundary"]
+        self.assertFalse(delivery["new_delivery_receipt_store_allowed"])
+        self.assertEqual("Canonical Item Graph replay ledger using deterministic derived operation_id", delivery["exactly_once_owner"])
+
     def test_product_sequence_remains_unique(self) -> None:
         ids = [item["id"] for item in self.policy["checkpoint_sequence"]]
         self.assertEqual(len(ids), len(set(ids)))
