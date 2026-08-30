@@ -66,7 +66,23 @@ P7 runtime work
 ```
 
 The test ladder is locally observable, may run in parallel with P7, and owns no production
-runtime semantics. Missing production capability must remain `NOT_YET_PROVEN`, never be
+runtime semantics.
+
+The program-level client checkpoints are:
+
+```text
+C1  P7.2  PLANETARY SEAM VISUAL LAB
+C2  P7.5  TWO-CLIENT WORLD CONVERGENCE
+C3  P7.6  PLAYABLE SEAM + ITEMS        MANDATORY V0 PRODUCT ANCHOR
+C4  P7.6+ THREE-AUTHORITY STATIC CHAIN OPTIONAL SCALE LAB
+C5  P7.7  GRAPHICAL DIGGING
+```
+
+C3 requires two graphical clients, at least two Authority processes, one continuous planetary
+surface, items placed in multiple authority regions, cross-seam pickup/carry/drop, stable
+player/item identity and zero reconnect/respawn during authority handoff.
+
+Detailed client goals: `docs/plans/V0_CLIENT_FACING_MILESTONES_RU.md`. Missing production capability must remain `NOT_YET_PROVEN`, never be
 implemented inside test fixtures.
 
 Detailed plan: `docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
@@ -76,6 +92,7 @@ Primary current docs:
 - `docs/plans/V0_CURRENT_WORK_MAP_RU.md`
 - `docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md`
 - `docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`
+- `docs/plans/V0_CLIENT_FACING_MILESTONES_RU.md`
 - `docs/plans/DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`
 - `docs/architecture/adr/ADR-021-non-canonical-replication-plane.md`
 
