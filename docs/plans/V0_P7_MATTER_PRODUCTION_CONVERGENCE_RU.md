@@ -87,7 +87,7 @@ The first review rejected direct logical-player → Matter actor mapping because
 
 Machine owner map: `config/control/harness/v0-p7-matter-production-owner-map.v1.json`.
 
-## 5. P7.1 — Product Tool → MW4 adapter
+## 5. P7.1 — Product Tool → MW4 adapter — ✅ COMPLETE
 
 ```text
 equipped canonical tool
@@ -104,7 +104,29 @@ stale revision, duplicate fingerprint conflict.
 
 Exact replay must return the prior canonical result without a second mutation.
 
-## 6. P7.2 — Bounded planetary Matter bubble
+## 5.1 Parallel observable test lane
+
+P7 has a dedicated non-mutating test/composition companion:
+
+`docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
+
+The lane starts immediately and is allowed in parallel with P7 runtime work because it owns
+no runtime mutation lease and may not implement production semantics.
+
+Promotion points:
+
+```text
+V1 now              component graphical precheck / local observation
+V2 after P7.3       material → Item Graph evidence
+V3 at P7.5          one live two-client convergence topology
+V4 at P7.6          one live seam + items + Matter topology
+V5 at P7.7          graphical equip→aim→dig→hole→material
+FINAL                V0 PLAYABLE SEAMLESS PLANET composition acceptance
+```
+
+A green test fixture is never allowed to substitute for a missing production path.
+
+## 6. P7.2 — Bounded planetary Matter bubble — ← CURRENT
 
 Reuse the migration path in `DYNAMIC_MATTER_FABRIC_RU.md`.
 
