@@ -3036,3 +3036,116 @@ broadphase
 +
 refinement / momentum / energy evidence
 ```
+
+
+## DUAL-TRACK ROADMAP FREEZE — PHYSICAL CORE + FABRIC-BAKE
+
+**Pre-freeze FABRIC0.15 head:** `381e2216661d07aed898f3a2bff0b9590fb5b4f5`.  
+**FABRIC0.15 status:** `RESEARCH CANDIDATE CLOSED / EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.  
+**Roadmap:** `docs/research/FABRIC_BAKE_ROADMAP_RU.md`.  
+**Architecture:** `docs/research/FABRIC_BAKE_ARCHITECTURE_RU.md`.
+
+После FABRIC0.15 FABRIC formalized as two parallel research lines:
+
+```text
+MAIN PHYSICAL LINE
+FABRIC0.x
+    ↓
+FABRIC0.16 GENERAL CONVEX MULTIPOINT MCP
+    ↓
+future physical-core checkpoints
+
+PARALLEL REDUCTION LINE
+FABRIC-BAKE B0.x
+    ↓
+B0.0 BAKE FOUNDATION CONTRACTS
+    ↓
+B0.1 EXACT BOUNDARY REDUCTION
+    ↓
+B0.2 STRUCTURAL + REFINEMENT GUARDS + LOCAL UNBAKE
+    ↓
+B0.3 CONTACT/WRENCH BAKE
+    ↓
+B0.4 DYNAMIC ROM
+B0.5 HYBRID BAKE
+    ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+    ↓
+B0.7 UNSEEN MACHINE SCALE
+```
+
+The two lines meet through `BRIDGE-1/2/3` before FABRIC1.
+
+### Frozen BAKE invariants
+
+1. `PhysicalBakeArtifact != canonical world truth`.
+2. FABRIC is not added as a canonical source domain.
+3. Source binding uses sorted `CanonicalSourceFrontier[]`, not necessarily one source.
+4. `AuthorityEnvelope` forbids silent cross-authority mutable bake; unsafe case returns `NO_SAFE_BAKE`.
+5. Fundamental `PhysicalBoundaryContract` remains acausal.
+6. Physical `STALE` means execution forbidden.
+7. Correctness is boundary-observable error, not internal state equality.
+8. Approximate artifacts have deterministic `ValidatedDomain + ErrorEnvelope`; statistical “confidence” is not the authority contract.
+9. `RefinementGuard` must conservatively detect hidden detail that needs to return before missed authoritative failure/event.
+10. Reduction may legally return `NO_SAFE_BAKE`.
+11. Presentation LOD and physical fidelity are orthogonal.
+12. FABRIC-BAKE reports safe physical fidelity; global scheduler owns resource allocation.
+
+### Predecessor gates
+
+```text
+B0.0:
+FABRIC0.15 research checkpoint closed
++ RL0 provenance/invalidation semantics
++ Construction ownership boundary
+
+B0.1:
+FABRIC0.3–0.5 linear conservation/power foundations
+
+B0.2:
+FABRIC0.14 full 6DOF
+
+B0.3 FINAL:
+FABRIC0.16 general convex multipoint contact
++ stronger graph complementarity
+```
+
+### Parallel execution
+
+B0.0, B0.1 and B0.2 may proceed in parallel with FABRIC0.16.
+
+B0.3 prototype may use 0.15, but B0.3 final acceptance is blocked on 0.16.
+
+Physical-core development must not stop for BAKE.
+
+### FABRIC1 target
+
+```text
+FABRIC1
+=
+Constructible
++
+Composable
++
+Hybrid
++
+Persistent
++
+Reducible
++
+Refinable
++
+Deterministic
++
+Causally scalable
+```
+
+Current next executable checkpoints are therefore simultaneously:
+
+```text
+PHYSICAL CORE:
+FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP
+
+FABRIC-BAKE:
+B0.0 — BAKE FOUNDATION CONTRACTS
+```
