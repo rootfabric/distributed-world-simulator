@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_2_sampler_seam_amendment.v1",
+  "amendment_id": "V0-P7-R1-P7-2-SAMPLER-SEAM-AMENDMENT-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "substep": "P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "source_main": "2eb13fbdb70048f26469146a48998ba39fe877d9",
+  "decision": "AUTHORIZED_NARROW_PROCEDURAL_SAMPLER_INJECTION",
+  "reason": "Existing MW4/materializer/query bind directly to fixed_seed_asteroid_generator. Reusing that path for Moon would require a false body/asteroid identity or a duplicate P7 mutation service. The amendment permits a backward-compatible optional sampler dependency while preserving existing default behavior.",
+  "allowed_exact_paths": [
+    "scripts/simulation/matter/generation/moon_geology_sampler.gd",
+    "scripts/simulation/matter/generation/moon_surface_feature_catalog.gd",
+    "scripts/simulation/matter/storage/matter_brick_materializer.gd",
+    "scripts/simulation/matter/query/matter_continuous_query_service.gd",
+    "scripts/simulation/matter/mutation/matter_excavation_service.gd"
+  ],
+  "invariants": [
+    "MatterMutationRequest/Result contracts unchanged",
+    "MW4 commit/replay/mass semantics unchanged",
+    "default sampler remains fixed_seed_asteroid_generator",
+    "body/moon and body/moon/fixed remain canonical planetary identity",
+    "P7 creates no second Matter store/mutation/journal/persistence owner",
+    "legacy Moon remains outside bounded bubble"
+  ],
+  "required_regressions": [
+    "MW4 mutation",
+    "MW5 persistence",
+    "MW6 authority/replication",
+    "P7.1 Tool->MW4"
+  ],
+  "runtime_mutation_authorized": true,
+  "recorded_at_utc": "2026-08-31T00:28:00+10:00"
+}
