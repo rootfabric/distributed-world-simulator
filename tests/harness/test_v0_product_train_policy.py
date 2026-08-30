@@ -61,7 +61,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual([P7], self.epoch_p7["eligible_checkpoints"])
         self.assertEqual(SM1_BASE, self.work_order_p7["base_sha"])
         self.assertEqual(P7_BRANCH, self.work_order_p7["branch"])
-        self.assertEqual("PLANNED", self.work_order_p7["state"])
+        self.assertEqual("DISPATCHED", self.work_order_p7["state"])
         self.assertEqual("CRITICAL", self.work_order_p7["risk_class"])
         self.assertTrue(self.activation_p7["mutation_lease"]["runtime_mutation_authorized"])
         self.assertEqual("DISPATCHED", self.activation_p7["director_dispatch"]["status"])
