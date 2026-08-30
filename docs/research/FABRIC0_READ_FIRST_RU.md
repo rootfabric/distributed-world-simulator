@@ -43,6 +43,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.5: `FABRIC0_5_NONLINEAR_DIMENSIONS_RU.md`
    - FABRIC0.6: `FABRIC0_6_NONSMOOTH_WORLD_RU.md`
    - FABRIC0.7: `FABRIC0_7_STATEFUL_HYBRID_TIME_RU.md`
+   - FABRIC0.8: `FABRIC0_8_COUPLED_HYBRID_DAE_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -76,6 +77,10 @@ continuous state + event localization + reset + discrete mode + topology transac
 FABRIC0.8
 COUPLED HYBRID DAE / EVENT ITERATION
 unified temporal + algebraic physical solve
+        ↓
+FABRIC0.9
+MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE
+geometry-derived coupled multi-contact
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -222,67 +227,74 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.7 завершён как research candidate.
+FABRIC0.8 завершён как research candidate.
 
 Exact evidence:
 
 ```text
-FABRIC0.7 focused                  88/88 PASS
-FABRIC0.6 nonsmooth regression    121/121 PASS
-FABRIC0.6 compatibility            42/42 PASS
-playground                         PASS
+FABRIC0.8 Coupled Hybrid DAE       71/71 PASS
+FABRIC0.7 Hybrid Time              88/88 PASS
+FABRIC0.6 Nonsmooth              121/121 PASS
+FABRIC0.6 Compatibility            42/42 PASS
+FABRIC0.8 playground               PASS
 editor parse/compile               CLEAN
 remote/local executable bytes      IDENTICAL
 ```
 
-FABRIC0.7 доказал:
+FABRIC0.8 доказал:
 
-- event localization внутри timestep;
-- transactional macrostep;
-- simultaneous pre-state reset;
-- explicit mode transitions;
-- hysteresis;
-- irreversible topology mutation;
-- deterministic event ledger;
-- rollback invalid topology transaction;
-- Zeno/event-storm fail-closed.
+- semi-explicit differential + algebraic temporal solve;
+- algebraic solve на каждой RK stage;
+- topology-dependent algebraic residual;
+- event guard от solved algebraic reaction;
+- geometric event localization через repeatedly solved DAE;
+- generic branch-based impulse solve;
+- restitution + Coulomb sliding branch;
+- momentum audit through jump;
+- same-time event iteration;
+- solved impulse → topology break в том же physical instant;
+- immediate DAE re-solve after topology mutation;
+- remaining flow на новой topology;
+- singular DAE fail-closed;
+- deterministic event/impulse/topology replay.
 
 Следующая задача:
 
-**FABRIC0.8 — COUPLED HYBRID DAE / EVENT ITERATION**
+**FABRIC0.9 — MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE**
 
-Цель — перестать держать hybrid ODE и FABRIC physical equation islands рядом, но отдельно. Они должны стать одной coupled temporal system.
-
-Критический future experiment:
+Цель — убрать scalar-contact форму FABRIC0.8:
 
 ```text
-two masses
-+ geometry gap
-+ unilateral contact
-+ impact impulse
-+ restitution
-+ friction
-+ same-time event iteration
-+ topology mutation
+geometry-derived multiple contacts
+normal/tangent Jacobians
+angular velocity + inertia tensor
+2D friction cone
+simultaneous coupled impulses
+contact islands
+order-invariant solve
+sparse/warm-start numerical path
 ```
 
-без device-specific collision truth.
+Критический test: одно тело одновременно касается нескольких поверхностей и результат не зависит от порядка перечисления контактов.
 
 ## 9. Правило новой сессии
 
-Если новая сессия не может ответить на вопросы:
+Новая сессия должна уметь объяснить:
 
+- почему Construction остаётся canonical semantic owner;
 - почему physical ports acausal;
-- чем Conservation Cell отличается от object;
-- почему Power Map сохраняет power;
-- почему dimensions executable;
-- почему smooth law является частным случаем HybridRelation;
-- почему complementarity представлена branch manifolds;
+- как topology превращается в equations;
+- почему common*balance=power;
+- зачем dimensions executable;
+- почему residual=0 недостаточно без rank;
+- почему nonsmooth law = admissible branch manifolds;
 - почему FLOW / JUMP / TOPOLOGY TRANSACTION разделены;
-- почему reset RHS читают один pre-event snapshot;
-- почему macrostep rollback фундаментален;
-- почему device names запрещены в kernel;
-- кто canonical owner construct semantics;
-- какие non-claims всё ещё действуют;
+- почему macrostep transactional;
+- почему event time физически значим;
+- почему reset читает immutable pre-state;
+- почему differential и algebraic state должны решаться в одном timestep;
+- почему impulse является solved reaction, а не callback;
+- почему same-time topology mutation требует DAE re-solve до продолжения времени;
+- какие ограничения FABRIC0.8 ещё действуют.
 
-значит recovery прочитан недостаточно.
+Если это нельзя восстановить только из Git, recovery contract нарушен.
