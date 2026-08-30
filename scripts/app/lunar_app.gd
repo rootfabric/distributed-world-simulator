@@ -34,6 +34,7 @@ const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_s
 const NetworkContractUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
 const RemotePlayerPresenterScript = preload("res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd")
+const P7LunarMatterRuntimeScript = preload("res://scripts/world/matter/lunar_matter_bubble_runtime.gd")
 
 const PROJECT_VERSION: String = "16.10.6-architecture-a3-single-server-multiplayer"
 const BUILD_ID: String = "a3-single-server-multiplayer-architecture-freeze"
@@ -65,6 +66,7 @@ var item_world_root: Node3D
 var item_attachment_root: Node3D
 var item_gravity_field
 var item_gameplay
+var p7_lunar_matter_runtime
 
 var simulator_app
 var simulation_clock
@@ -170,6 +172,13 @@ func _ready() -> void:
 		_on_terrain_streaming_test_completed
 	)
 
+	if bool(runtime_world_definition.get("p7_matter_bubble_enabled", false)):
+		var p7_setup := enable_p7_lunar_matter_bubble(
+			Dictionary(runtime_world_definition.get("p7_matter_bubble", {}))
+		)
+		if not bool(p7_setup.get("success", false)):
+			push_error("P7 lunar Matter bubble setup failed: %s" % p7_setup)
+
 	zone_manager = LunarZoneManagerScript.new()
 	zone_manager.name = "LunarZoneManager"
 	add_child(zone_manager)
@@ -272,6 +281,45 @@ func _ready() -> void:
 	# the historical open-menu behavior.
 	_set_menu_visible(simulator_app == null)
 	call_deferred("_initialize_standalone_runtime_services")
+
+
+func enable_p7_lunar_matter_bubble(config: Dictionary = {}) -> Dictionary:
+	if moon_world == null:
+		return {"success": false, "error_code": "P7_MOON_WORLD_NOT_READY", "details": {}}
+	if p7_lunar_matter_runtime != null and is_instance_valid(p7_lunar_matter_runtime):
+		return {
+			"success": false,
+			"error_code": "P7_LUNAR_MATTER_BUBBLE_ALREADY_ENABLED",
+			"details": {},
+		}
+	var runtime = P7LunarMatterRuntimeScript.new()
+	runtime.name = "P7LunarMatterBubbleRuntime"
+	add_child(runtime)
+	var setup_config := config.duplicate(true)
+	setup_config["universe_id"] = runtime_universe_id
+	setup_config["instance_id"] = runtime_instance_id
+	var result: Dictionary = runtime.configure(moon_world, setup_config)
+	if not bool(result.get("success", false)):
+		runtime.queue_free()
+		return result
+	p7_lunar_matter_runtime = runtime
+	return result
+
+
+func disable_p7_lunar_matter_bubble() -> Dictionary:
+	if p7_lunar_matter_runtime == null or not is_instance_valid(p7_lunar_matter_runtime):
+		return {"success": true, "error_code": "", "details": {"already_disabled": true}}
+	var result: Dictionary = p7_lunar_matter_runtime.disable_and_restore_legacy()
+	if bool(result.get("success", false)):
+		p7_lunar_matter_runtime.queue_free()
+		p7_lunar_matter_runtime = null
+	return result
+
+
+func get_p7_lunar_matter_bubble():
+	if p7_lunar_matter_runtime == null or not is_instance_valid(p7_lunar_matter_runtime):
+		return null
+	return p7_lunar_matter_runtime.bubble()
 
 
 func create_playable_listen_host_config() -> Dictionary:
