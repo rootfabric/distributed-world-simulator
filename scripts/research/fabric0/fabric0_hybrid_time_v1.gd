@@ -238,3 +238,123 @@ static func add_transition(timeline: Dictionary, transition: Dictionary) -> bool
 		"priority": int(transition.get("priority", 0)),
 	}
 	timeline["transitions"].append(normalized)
+	return true
+
+static func read_state(timeline: Dictionary, name: String) -> float:
+	return float(timeline["states"][name]["value"])
+
+static func read_mode(timeline: Dictionary) -> String:
+	return String(timeline["mode"])
+
+# =============================================================================
+# ADVANCE: MACROSTEP TRANSACTION
+# =============================================================================
+
+static func advance(timeline: Dictionary, delta: float) -> Dictionary:
+	if delta < 0.0 or String(timeline["mode"]).is_empty():
+		return {"ok": false, "code": "BAD_ADVANCE_REQUEST"}
+	if delta <= TIME_EPSILON:
+		return {"ok": true, "events": 0, "time": float(timeline["time"])}
+	var snapshot := _capture_advance_snapshot(timeline)
+	timeline["diagnostics"] = []
+	var remaining := delta
+	var events_in_advance := 0
+	while remaining > TIME_EPSILON:
+		var segment_start_time := float(timeline["time"])
+		var segment_start_state := _state_values(timeline)
+		var end_state := _integrate_mode(timeline, segment_start_state, segment_start_time, remaining)
+		var candidate := _find_earliest_event(timeline, segment_start_state, end_state, segment_start_time, remaining)
+		if not bool(candidate.get("found", false)):
+			_commit_state_values(timeline, end_state)
+			timeline["time"] = segment_start_time + remaining
+			remaining = 0.0
+			break
+
+		var event_dt := float(candidate["dt"])
+		var transition: Dictionary = candidate["transition"]
+		var event_state := _integrate_mode(timeline, segment_start_state, segment_start_time, event_dt)
+		var event_time := segment_start_time + event_dt
+		_commit_state_values(timeline, event_state)
+		timeline["time"] = event_time
+
+		var jump_result := _apply_transition_transaction(timeline, transition, event_state, event_time)
+		if not bool(jump_result.get("ok", false)):
+			var diagnostic := jump_result.duplicate(true)
+			_restore_advance_snapshot(timeline, snapshot)
+			timeline["diagnostics"] = [diagnostic]
+			return {"ok": false, "code": String(diagnostic.get("code", "EVENT_TRANSACTION_FAILED")), "rolled_back": true}
+
+		events_in_advance += 1
+		if events_in_advance > MAX_EVENTS_PER_ADVANCE:
+			var diagnostic := {
+				"code": "ZENO_OR_EVENT_STORM",
+				"limit": MAX_EVENTS_PER_ADVANCE,
+				"requested_delta": delta,
+			}
+			_restore_advance_snapshot(timeline, snapshot)
+			timeline["diagnostics"] = [diagnostic]
+			return {"ok": false, "code": "ZENO_OR_EVENT_STORM", "rolled_back": true}
+
+		remaining -= event_dt
+		if remaining < TIME_EPSILON:
+			remaining = 0.0
+
+	timeline["step_revision"] = int(timeline["step_revision"]) + 1
+	return {
+		"ok": true,
+		"events": events_in_advance,
+		"time": float(timeline["time"]),
+		"step_revision": int(timeline["step_revision"]),
+	}
+
+# =============================================================================
+# EVENT LOCALIZATION / JUMP
+# =============================================================================
+
+static func _eligible_transitions(timeline: Dictionary) -> Array:
+	var result: Array = []
+	var mode := String(timeline["mode"])
+	for transition in timeline["transitions"]:
+		if mode in transition["from_modes"]:
+			result.append(transition)
+	return result
+
+static func _find_earliest_event(
+	timeline: Dictionary,
+	start_state: Dictionary,
+	end_state: Dictionary,
+	start_time: float,
+	delta: float
+) -> Dictionary:
+	var candidates: Array = []
+	for transition in _eligible_transitions(timeline):
+		var guard: Dictionary = transition["guard"]
+		var g0 := _eval_expr(timeline, guard["expr"], start_state, start_time)
+		var g1 := _eval_expr(timeline, guard["expr"], end_state, start_time + delta)
+		if not bool(g0.get("ok", false)) or not bool(g1.get("ok", false)):
+			continue
+		if not _crossed(float(g0["value"]), float(g1["value"]), int(guard["direction"]), float(guard["nominal"])):
+			continue
+		var event_dt := _localize_event(timeline, transition, start_state, start_time, delta)
+		candidates.append({"transition": transition, "dt": event_dt})
+	if candidates.is_empty():
+		return {"found": false}
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if absf(float(a["dt"]) - float(b["dt"])) > EVENT_TIME_TOLERANCE:
+			return float(a["dt"]) < float(b["dt"])
+		var pa := int(a["transition"]["priority"])
+		var pb := int(b["transition"]["priority"])
+		if pa != pb:
+			return pa < pb
+		return String(a["transition"]["id"]) < String(b["transition"]["id"])
+	)
+	return {"found": true, "transition": candidates[0]["transition"], "dt": float(candidates[0]["dt"])}
+
+static func _crossed(g0: float, g1: float, direction: int, nominal: float) -> bool:
+	var eps := GUARD_EPSILON * maxf(nominal, 1.0)
+	match direction:
+		1:
+			return g0 < -eps and g1 >= 0.0
+		-1:
+			return g0 > eps and g1 <= 0.0
+		_:
