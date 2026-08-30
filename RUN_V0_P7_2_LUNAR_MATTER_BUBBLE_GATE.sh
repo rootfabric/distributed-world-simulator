@@ -22,7 +22,7 @@ HEAD="$(git -C "$ROOT" rev-parse HEAD)"
   echo "P7_2_HEAD_MISMATCH actual=$HEAD expected=$EXPECTED_HEAD" >&2
   exit 4
 }
-[[ -z "$(git -C "$ROOT" status --porcelain)" ]] || {
+[[ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || {
   echo "P7.2 gate requires clean tracked checkout." >&2
   git -C "$ROOT" status --short
   exit 5
@@ -63,7 +63,7 @@ run_contract "mw4"   "res://tests/matter/mutation/test_mw4_matter_mutations.gd" 
 run_contract "mw5"   "res://tests/matter/persistence/test_mw5_matter_persistence.gd"   "MW5 matter persistence: PASS"
 run_contract "mw6"   "res://tests/matter/network/test_mw6_matter_network_replication.gd"   "MW6 matter network authority: PASS"
 
-[[ -z "$(git -C "$ROOT" status --porcelain)" ]] || {
+[[ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || {
   git -C "$ROOT" status --short
   echo "P7.2 gate changed tracked checkout." >&2
   exit 6

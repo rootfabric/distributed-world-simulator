@@ -250,7 +250,7 @@ func ensure_materialized_cell(cell_address: Dictionary, state_revision: int = 0)
 	)
 	if snapshot.is_empty():
 		return {}
-	var put := store.put(snapshot)
+	var put: Dictionary = store.put(snapshot)
 	return snapshot if bool(put.get("success", false)) else {}
 
 

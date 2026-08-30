@@ -98,7 +98,7 @@ func _process(_delta: float) -> void:
 
 
 func _build_snapshot_presenter(snapshot: Dictionary) -> Dictionary:
-	var grid := _bubble.grid_profile()
+	var grid: Dictionary = _bubble.grid_profile()
 	var mesh_data: Dictionary = MesherScript.build_mesh_data(snapshot, grid)
 	var validation := MeshDataScript.validate(mesh_data)
 	if not bool(validation.get("success", false)):

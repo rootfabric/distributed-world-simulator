@@ -17,7 +17,7 @@ $Head = (& git -C $Root rev-parse HEAD).Trim().ToLowerInvariant()
 if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and $Head -ne $ExpectedHead.Trim().ToLowerInvariant()) {
     throw "P7_2_HEAD_MISMATCH actual=$Head expected=$ExpectedHead"
 }
-if (git -C $Root status --porcelain) { throw "P7.2 gate requires clean tracked checkout." }
+if (git -C $Root status --porcelain --untracked-files=no) { throw "P7.2 gate requires clean tracked checkout." }
 
 function Assert-LogClean {
     param([string]$Path)
@@ -58,7 +58,7 @@ Invoke-Contract "mw4" "res://tests/matter/mutation/test_mw4_matter_mutations.gd"
 Invoke-Contract "mw5" "res://tests/matter/persistence/test_mw5_matter_persistence.gd" "MW5 matter persistence: PASS"
 Invoke-Contract "mw6" "res://tests/matter/network/test_mw6_matter_network_replication.gd" "MW6 matter network authority: PASS"
 
-if (git -C $Root status --porcelain) { git -C $Root status --short; throw "P7.2 gate changed tracked checkout." }
+if (git -C $Root status --porcelain --untracked-files=no) { git -C $Root status --short; throw "P7.2 gate changed tracked checkout." }
 Write-Host "V0-P7.2 BOUNDED LUNAR MATTER BUBBLE GATE GREEN" -ForegroundColor Green
 Write-Host "EXACT_HEAD=$Head"
 Write-Host "GODOT=$Version"
