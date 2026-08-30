@@ -816,19 +816,6 @@ func _refresh_population_hashes() -> void:
 func _route_hash(route: Dictionary) -> String:
     return Stream1RouteKernel.route_hash(route, SCHEMA, VERSION)
 
-func _recruitment_event_hash(event: Dictionary) -> String:
-    return "|".join(PackedStringArray([
-        SCHEMA, VERSION, "recruitment",
-        String(event.get("candidate_hash", "")), String(event.get("route_hash", "")),
-        str(int(event.get("generation", -1))), str(int(event.get("destination_cell_index", -1))),
-        String(event.get("environment_cell_hash", "")), String(event.get("evaluation_hash", "")),
-        "%.9f" % float(event.get("shadow_fitness", 0.0)),
-        "%.9f" % float(event.get("establishment_capacity", 0.0)),
-        "%.9f" % float(event.get("establishment_probability", 0.0)),
-        "%.9f" % float(event.get("establishment_gate", 0.0)),
-        "1" if bool(event.get("eligible", false)) else "0", String(event.get("reason", "")),
-    ])).sha256_text()
-
 func _record_hash(record: Dictionary) -> String:
     return "|".join(PackedStringArray([
         SCHEMA, VERSION, "record",
@@ -886,12 +873,6 @@ func _state_hash(snapshot: Dictionary) -> String:
         String(snapshot.get("recruitment_hash", "")), String(snapshot.get("occupied_map_hash", "")),
         String(snapshot.get("hereditary_pool_hash", "")), String(snapshot.get("population_hash", "")),
     ])).sha256_text()
-
-func _seed48(key: String) -> int:
-    return key.sha256_text().substr(0, 12).hex_to_int()
-
-func _unit01(key: String) -> float:
-    return float(key.sha256_text().substr(0, 12).hex_to_int()) / 281474976710655.0
 
 func _reset() -> void:
     initialized = false
