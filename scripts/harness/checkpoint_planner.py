@@ -11,30 +11,35 @@ _PRODUCT_CHECKPOINTS = {
     "V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS",
     "V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "V0_P7_BOUNDED_TERRAIN_MUTATION",
 }
 _PRODUCT_GATE_NAMES = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "v0_s1_gate",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "v0_p4_gate",
     "V0_P5_EQUIPMENT_TOOLS": "v0_p5_gate",
     "V0_P6_PERSISTENT_SHARED_OUTPOST": "v0_p6_gate",
+    "V0_P7_BOUNDED_TERRAIN_MUTATION": "v0_p7_gate",
 }
 _PRODUCT_BEGIN_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS": "BEGIN_V0_P5_EQUIPMENT_TOOLS",
     "V0_P6_PERSISTENT_SHARED_OUTPOST": "BEGIN_V0_P6_PERSISTENT_SHARED_OUTPOST",
+    "V0_P7_BOUNDED_TERRAIN_MUTATION": "BEGIN_V0_P7_MATTER_PRODUCTION_CONVERGENCE",
 }
 _PRODUCT_VERIFY_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "VERIFY_V0_S1_EXACT_HEAD",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "VERIFY_V0_P4_EXACT_HEAD",
     "V0_P5_EQUIPMENT_TOOLS": "VERIFY_V0_P5_EXACT_HEAD",
     "V0_P6_PERSISTENT_SHARED_OUTPOST": "VERIFY_V0_P6_EXACT_HEAD",
+    "V0_P7_BOUNDED_TERRAIN_MUTATION": "VERIFY_V0_P7_EXACT_HEAD",
 }
 _PRODUCT_DISPATCH_ACTIONS = {
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P5_EQUIPMENT_TOOLS": "DIRECTOR_DISPATCH_ACCEPTED_P4_BASE_V0_P5_WORK_ORDER",
     "V0_P6_PERSISTENT_SHARED_OUTPOST": "DIRECTOR_DISPATCH_ACCEPTED_P5_BASE_V0_P6_WORK_ORDER",
+    "V0_P7_BOUNDED_TERRAIN_MUTATION": "DIRECTOR_DISPATCH_ACCEPTED_SM1_BASE_V0_P7_WORK_ORDER",
 }
 
 
@@ -83,7 +88,7 @@ def _build_product_plan(
     gate_name = _PRODUCT_GATE_NAMES[current]
     gate = {
         "requested_checkpoint": current,
-        "risk_floor": "HIGH",
+        "risk_floor": "CRITICAL" if current == "V0_P7_BOUNDED_TERRAIN_MUTATION" else "HIGH",
         "network_baseline": "SERVER_PREDICTED",
         "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
         "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
@@ -122,6 +127,22 @@ def _build_product_plan(
                 "director_dispatch_required": True,
             }
         )
+    if current == "V0_P7_BOUNDED_TERRAIN_MUTATION":
+        routing = scheduler.get("v0_product_train_routing", {})
+        remaining = list(routing.get("p7_remaining_activation_prerequisites", []))
+        gate.update(
+            {
+                "accepted_predecessor_checkpoint": routing.get("accepted_predecessor_checkpoint"),
+                "accepted_predecessor_base": routing.get("accepted_predecessor_base"),
+                "matter_truth": "MW4_MW10_EXISTING_CANONICAL_FOUNDATION",
+                "item_truth": "CANONICAL_ITEM_GRAPH",
+                "multi_region_rule": "MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
+                "owner_map_review_required": "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS" in remaining,
+                "director_dispatch_required": True,
+            }
+        )
+        if mutating and remaining:
+            raise ValueError("V0_P7_RUNTIME_DISPATCH_BLOCKED:" + ",".join(remaining))
 
     return {
         "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
@@ -152,6 +173,8 @@ def _build_product_plan(
             "PRIVATE_V0_ITEM_GRAPH",
             "PRIVATE_V0_EQUIPMENT_TRUTH",
             "PRIVATE_V0_PERSISTENCE_OWNER",
+            "PRIVATE_V0_TERRAIN_TRUTH",
+            "SECOND_MATTER_FOUNDATION",
             "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
             "SHIP_FLIGHT",
             "SERVER_HANDOFF",

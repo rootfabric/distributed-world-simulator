@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-24-R5-SM1-PREDISPATCH",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-30-R7-P7-PREDISPATCH",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -26,10 +26,9 @@
   "parallel_product_checkpoints": {
     "enabled": true,
     "checkpoints": [
-      "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
+      "V0_P7_BOUNDED_TERRAIN_MUTATION"
     ],
     "future_checkpoints_not_yet_eligible": [
-      "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "V0_P8_FIRST_MOBILE_CONSTRUCT"
     ],
     "rules": {
@@ -51,57 +50,50 @@
     }
   },
   "v0_product_train_routing": {
-    "current_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-    "current_phase": "SM1_PRE_DISPATCH_CONTROL_READY",
+    "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "current_phase": "P7_OWNER_MAP_PRE_DISPATCH",
     "runtime_mutation_allowed_now": false,
-    "next_runtime_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-    "next_runtime_checkpoint_eligible": true,
-    "accepted_predecessor_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-    "accepted_predecessor_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
-    "p6_acceptance": {
-      "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
-      "accepted_runtime_head": "7a77c048caa680871d4895c09eca89e84136b154",
-      "accepted_product_lineage_head": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
-      "effective_repaired_product_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e"
+    "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "next_runtime_checkpoint_eligible": false,
+    "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "accepted_predecessor_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "sm1_acceptance": {
+      "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+      "accepted_runtime_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+      "accepted_product_lineage_head": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "formal_acceptance_merge": "9cc89e6e8c6cfc81fc32873a29743e443d8229e6"
     },
-    "post_p6_decision": {
-      "decision": "ACTIVATE_V0_SM1",
-      "source": "EXPLICIT_OWNER_DIRECTIVE_2026_08_24",
-      "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json"
+    "rf0_p7_roadmap": {
+      "canonical_merge": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+      "p7_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+      "runtime_changes": false
     },
-    "sm1_completed_activation_prerequisites": [
-      "V0_P6_EFFECTIVE_ACCEPTANCE_RECONCILED",
-      "MAIN_DECLARED_EXACT_REPAIRED_P6_SUCCESSOR_BASE",
-      "FRESH_SM1_EPOCH_AND_WORK_ORDER",
-      "OWNER_DECISION_ACTIVATE_V0_SM1",
-      "EG5_TELEMETRY_HYSTERESIS_REPAIR_REVIEWED",
-      "POST_P6_CONTROL_REVIEW_PASS",
-      "POST_P6_CONTROL_MERGED_TO_MAIN",
-      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
-      "SM1_EXACT_BASE_REFRESH_MERGED_TO_MAIN",
-      "MUTATION_LEASE_ROTATED_TO_SM1"
+    "p7_completed_activation_prerequisites": [
+      "V0_SM1_CHECKPOINT_ACCEPTED",
+      "MAIN_DECLARED_EXACT_SM1_SUCCESSOR_BASE",
+      "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
+      "FRESH_P7_EPOCH_AND_WORK_ORDER",
+      "MUTATION_LEASE_ROTATED_TO_P7"
     ],
-    "sm1_remaining_activation_prerequisites": [
+    "p7_remaining_activation_prerequisites": [
+      "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
+      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
       "DIRECTOR_DISPATCH"
     ],
-    "eg5_correctness_repair": {
-      "pr": 215,
-      "reviewed_head": "344027375800ce1837e7d2ea46f6b1123254e79c",
-      "main_merge": "21c74307812ffea56ef1aae263f029eec2549460",
-      "project_control_run": 32705312282,
-      "project_control_result": "SUCCESS"
-    },
-    "sm1_exact_base_refresh": {
-      "pr": 229,
-      "main_merge": "40545f0b70c4b4f7f79214a9ee3cf7e944a77112",
-      "repaired_product_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
-      "project_control_run": 32718918874,
-      "project_control_result": "SUCCESS"
-    },
-    "edge_gateway_foundation": {
-      "acceptance_record": "config/control/harness/acceptance/EDGE_GATEWAY_FOUNDATION_ACCEPTED-001.v1.json",
-      "accepted_at_utc": "2026-08-23T05:30:00Z",
-      "canonical_main_at_acceptance": "2021ee7ce8b4b66208f2da1ce142d36bcb356c53"
+    "p7_owner_map": {
+      "tool_equipment": "P5_EXISTING_OWNER",
+      "player_authority_route": "SM1_EXISTING_AUTHORITY_ROUTE",
+      "local_matter_mutation": "MW4",
+      "matter_persistence": "MW5",
+      "matter_replication": "MW6",
+      "matter_interest": "MW7",
+      "regional_authority": "MW8",
+      "durable_handoff_recovery": "MW9",
+      "true_multi_region_mutation": "MW10",
+      "representation": "RL2_RL3",
+      "material_output": "MatterMaterialBatch",
+      "inventory_truth": "CANONICAL_ITEM_GRAPH"
     }
   },
   "research_isolation": {
@@ -119,9 +111,9 @@
     "effective_registry_generation": 80,
     "capacity": 1,
     "holder_program": "V0",
-    "holder_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-    "holder_branch": "feature/v0-sm1-seamless-product-integration",
-    "state": "RESERVED_FOR_V0_SM1_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION",
+    "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "state": "RESERVED_FOR_V0_P7_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -132,7 +124,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P6 effective acceptance is reconciled onto repaired product base 72684bc9f243d7a458f4dbc6d460efc1c65d825e. Post-P6 control #214, EG5 correctness repair #215 and the exact SM1 base refresh #229 are integrated with exact-head Project Control SUCCESS. The single pre-H0.3 runtime mutation lease is therefore reserved for SM1. Runtime mutation remains forbidden until a committed Director DISPATCHED event for V0-SM1-R1-WO-001."
+    "reason": "SM1 is formally accepted. The single pre-H0.3 runtime mutation lease is rotated to P7 but runtime mutation remains forbidden until the P7 Matter owner map receives fresh review, post-merge Project Control is NON_RED, and Director dispatch is durably recorded."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,

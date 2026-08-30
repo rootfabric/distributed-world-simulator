@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-activation-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
+  "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
+  "expected_outcome": "A fresh CRITICAL P7 Work Order and exact accepted-SM1 execution base are canonical; runtime remains blocked until owner-map review, post-merge PC0 and Director dispatch.",
+  "current_stage": "P7 Matter Production Convergence Activation / Owner Map",
+  "stage_status": "CONTROL_READY_AWAITING_OWNER_MAP_REVIEW_AND_DISPATCH",
+  "progress_note": "SM1 is accepted. RF0/P7 roadmap R2 is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. This control branch rotates the single pre-H0.3 mutation lease to P7, issues the fresh P7 epoch/work order, and keeps runtime mutation fail-closed.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "next_stage": "Fresh independent P7 owner-map review; merge this control transition; post-merge PC0; Director dispatch P7.1 adapter implementation.",
+  "parent_branch_or_checkpoint": "main @ f7d3deb80b67a41880d736f83b132a9a7a5a0964 / V0_SM1_ACCEPTED",
+  "base_commit": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
+  "dependencies": [
+    "V0_SM1_CHECKPOINT_ACCEPTED @ acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "RF0/P7 roadmap canonical @ 7e80fe6ac409317d349cdeaa9602542c782893c1",
+    "fresh Project Control on this exact control candidate",
+    "fresh independent P7 owner-map review before runtime dispatch"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-activation-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/**",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/project-goals.v1.json",
+    "scripts/harness/checkpoint_planner.py",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
+  ],
+  "watched_paths": [
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/items/**",
+    "scripts/network/gateway/**",
+    "config/control/architecture-ownership.v1.json"
+  ],
+  "critical_watched_paths": [
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/items/**",
+    "config/control/architecture-ownership.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "AUTHORITY_FOUNDATION",
+    "CANONICAL_ITEM_GRAPH_OWNERSHIP",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_AUTHORITY_MODEL",
+    "WORLD_TRANSACTION_MODEL",
+    "MATERIAL_ONTOLOGY"
+  ],
+  "blockers": [
+    "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
+    "POST_MERGE_PC0_NON_RED_REQUIRED",
+    "DIRECTOR_DISPATCH_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

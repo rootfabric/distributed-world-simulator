@@ -22,10 +22,13 @@ P6_BRANCH = "feature/v0-p6-persistent-shared-outpost"
 POST_P6_GATE = "V0_POST_P6_SEAMLESS_INSERTION_GATE"
 SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
-CURRENT_V0_BRANCH = "control/post-p6-sm1-activation-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__post-p6-sm1-activation-r1.v1.json"
+P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
+P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
+CURRENT_V0_BRANCH = "control/v0-p7-activation-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-activation-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
-P6_ACCEPTED_MAIN = "9ade3233f8d9f16b77edcc8cf273fe8e649d5637"
+SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
+P7_CONTROL_BASE = "f7d3deb80b67a41880d736f83b132a9a7a5a0964"
 
 
 def load_json(path: str) -> dict:
@@ -108,7 +111,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(required), sorted(expected - required))
 
-    def test_goal_graph_preserves_p0_p8_order_and_routes_current_product_lane_to_sm1(self):
+    def test_goal_graph_preserves_p0_p8_order_and_routes_current_product_lane_to_p7(self):
         goals = {entry["id"]: entry for entry in self.goals["current_goal_graph"]}
         self.assertEqual(P4, goals["V0_P4_PRODUCT"]["target_checkpoint"])
         sequence = goals["V0_PRODUCT_TRAIN"]["sequence"]
@@ -144,13 +147,13 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             core_p_sequence,
         )
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
-        self.assertEqual([SM1], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
+        self.assertEqual([P7], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
-        self.assertEqual(SM1, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
-        self.assertTrue(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
+        self.assertEqual(P7, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
+        self.assertFalse(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
         self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
 
-    def test_registry_generation_80_points_to_current_post_p6_control_frontier(self):
+    def test_registry_generation_80_points_to_current_p7_control_frontier(self):
         self.assertEqual(80, self.registry["registry_generation"])
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
@@ -158,15 +161,15 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertTrue(v0["requires_passport"])
         self.assertEqual(CURRENT_V0_PASSPORT, v0["passport_path"])
         execution = v0["product_execution_base"]
-        self.assertEqual("main", execution["branch"])
-        self.assertEqual(P6_ACCEPTED_MAIN, execution["sha"])
+        self.assertEqual("accepted SM1 product lineage", execution["branch"])
+        self.assertEqual(SM1_ACCEPTED_BASE, execution["sha"])
         self.assertTrue(execution["declares_checkpoint_acceptance"])
         self.assertEqual(
-            "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
+            "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
             execution["acceptance_record"],
         )
         prebuild = v0["prebuild_state"]
-        self.assertEqual(SM1_BRANCH, prebuild["branch"])
+        self.assertEqual(P7_BRANCH, prebuild["branch"])
         self.assertEqual("NOT_CREATED", prebuild["head_at_refresh_input"])
         self.assertFalse(prebuild["runtime_mutation_present"])
 
@@ -180,7 +183,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(v0["stage_status"], passport["stage_status"])
         self.assertEqual(v0["blockers"], passport["blockers"])
         self.assertEqual(v0["health_declared"], passport["health_declared"])
-        self.assertEqual(P6_ACCEPTED_MAIN, passport["base_commit"])
+        self.assertEqual(P7_CONTROL_BASE, passport["base_commit"])
         self.assertEqual([], passport["ownership_claims"])
         self.assertEqual([], passport["runtime_paths"])
 
@@ -200,7 +203,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertTrue(passport["pre_dispatch_audit_gate"]["requires_committed_audit_evidence"])
         self.assertNotEqual(P4_BRANCH, self.registry["programs"]["V0"]["branch"])
 
-    def test_pre_h0_3_concurrency_is_one_main_owned_sm1_reserved_lease(self):
+    def test_pre_h0_3_concurrency_is_one_main_owned_p7_reserved_lease(self):
         concurrency = self.scheduler["concurrency"]
         rules = self.scheduler["parallel_product_checkpoints"]["rules"]
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
@@ -210,9 +213,9 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, rules["pre_h0_3_total_runtime_mutation_workers_max"])
         self.assertTrue(rules["v0_mutation_plus_nx_or_sm0_nontrivial_fix_mutation_forbidden"])
         self.assertEqual(1, lease["capacity"])
-        self.assertEqual(SM1, lease["holder_checkpoint"])
-        self.assertEqual(SM1_BRANCH, lease["holder_branch"])
-        self.assertEqual("RESERVED_FOR_V0_SM1_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual(P7, lease["holder_checkpoint"])
+        self.assertEqual(P7_BRANCH, lease["holder_branch"])
+        self.assertEqual("RESERVED_FOR_V0_P7_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION", lease["state"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):
@@ -233,7 +236,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{SM1}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P7}"):
             build_plan(self.contracts, work_order, dispatched)
 
         implemented = dict(dispatched, state="IMPLEMENTED")

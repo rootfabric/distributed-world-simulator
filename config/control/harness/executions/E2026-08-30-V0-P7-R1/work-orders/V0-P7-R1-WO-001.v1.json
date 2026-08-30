@@ -1,0 +1,161 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "PLANNED",
+  "work_order_type": "IMPLEMENTATION",
+  "base_sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "scope": "Compose the existing MW4-MW10 Matter stack into the accepted SM1 V0 product: first prove the owner map, then bind an equipped P5 tool/action to the existing MatterMutationRequest, integrate one bounded planetary Matter bubble, transfer MatterMaterialBatch output into the canonical Item Graph, prove MW5 restart/replay, MW6/MW7/RL2/RL3 two-client convergence, and compose SM1/MW8/MW9 seam authority with MW10 only when a single mutation spans multiple Matter regions.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/world/matter/**",
+    "scripts/world/terrain/procedural_moon_terrain.gd",
+    "scripts/app/**",
+    "tests/runtime/test_v0_p7_*",
+    "tests/matter/product/**",
+    "tests/fixtures/v0_p7/**",
+    "RUN_V0_P7_*",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/**",
+    "docs/checkpoints/2026-08-30_V0_P7_*",
+    "docs/evidence/2026-08-30_V0_P7_*"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "scripts/simulation/matter/contracts/**",
+    "scripts/simulation/matter/mutation/**",
+    "scripts/simulation/matter/handoff/**",
+    "scripts/network/gateway/**",
+    "scripts/network/transports/v2/**"
+  ],
+  "required_predicates": [
+    "PROJECT_EPOCH_CREATED",
+    "V0_P7_ACCEPTED_SM1_SUCCESSOR_BASE_EXACT",
+    "V0_P7_WORK_ORDER_ISSUED",
+    "V0_P7_RISK_CLASSIFIED_CRITICAL",
+    "V0_P7_DESIGN_BRIEF_READY",
+    "V0_P7_MATTER_OWNER_MAP_REVIEW_PASS",
+    "V0_P7_NO_SECOND_MATTER_TRUTH_PASS",
+    "V0_P7_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+    "V0_P7_TOOL_TO_MW4_ADAPTER_PASS",
+    "V0_P7_PLANETARY_MATTER_BUBBLE_PASS",
+    "V0_P7_MATERIAL_BATCH_ITEM_GRAPH_CONSERVATION_PASS",
+    "V0_P7_PERSISTENCE_RESTART_PASS",
+    "V0_P7_TWO_CLIENT_CONVERGENCE_PASS",
+    "V0_P7_SEAM_ROUTING_PASS",
+    "V0_P7_MW10_MULTI_REGION_ATOMICITY_PASS",
+    "V0_P7_GRAPHICAL_DIGGING_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+    "V0_P7_CHECKPOINT_PROPOSED"
+  ],
+  "required_outputs": [
+    "Fresh reviewed P7 Matter production owner map with zero second owners",
+    "Bounded P5 tool/action adapter to existing MatterMutationRequest/MatterExcavationService",
+    "One bounded planetary Matter bubble using existing Matter truth",
+    "MatterMaterialBatch to canonical Item Graph adapter with mass conservation",
+    "Restart/reconnect proof using MW5 and existing V0 persistence",
+    "Two-client convergence using MW6/MW7/RL2/RL3",
+    "Seam proof using SM1/MW8/MW9 and MW10 only for true multi-region mutation",
+    "Graphical equip-aim-dig-hole-material-inventory slice",
+    "Fresh review, verification and exact-head evidence before checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "Implementation proposes TerrainMutationRequest or TerrainMutationResult",
+    "Implementation requires a second Matter/terrain truth or P7-private Matter store",
+    "Implementation requires a P7-private persistence owner, resource inventory, replication protocol or authority directory",
+    "Implementation rewrites MW4-MW10 foundation semantics instead of consuming them",
+    "Actor seam crossing is incorrectly treated as MW10 without a true multi-region Matter mutation",
+    "More than one active runtime mutation checkpoint would execute before H0.3",
+    "Exact accepted SM1 product lineage cannot be proven"
+  ],
+  "risk_class": "CRITICAL",
+  "risk_reasons": [
+    "Mutates canonical Matter and transfers extracted mass into canonical Item Graph",
+    "Composes persistence, replication, representation and authority seam behavior",
+    "A duplicate owner or cross-region atomicity defect could corrupt world truth"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "The accepted product can equip tools and hand players seamlessly across A/B, while the Matter program already implements mutation through MW10. The missing product capability is production integration of those existing owners on a bounded planetary surface.",
+    "current_behavior": "Matter excavation is proven in its own foundation/lab lineage; the playable V0 planetary surface does not yet route equipped-tool gameplay into that canonical Matter pipeline.",
+    "desired_behavior": "A player digs a bounded planetary Matter region with the existing MW4 contract, receives canonical material in Item Graph, all clients converge, restart preserves the hole/accounting, and seam/multi-region cases reuse SM1/MW8-MW10 without duplicate protocols.",
+    "selected_design": "Treat P7 as production convergence. Add only bounded adapters and planetary integration; preserve all existing domain owners.",
+    "alternatives_considered": [
+      "Create a new TerrainMutationRequest/Result subsystem",
+      "Create a V0-private voxel/terrain persistence store",
+      "Route every seam-adjacent dig through a new P7 distributed protocol"
+    ],
+    "why_selected": "The existing Matter stack already owns these semantics; integration minimizes new truth and preserves proven failure/recovery behavior.",
+    "affected_owners": [
+      "V0",
+      "MATTER_MW4_MW10",
+      "CANONICAL_ITEM_GRAPH",
+      "PERSISTENCE",
+      "AUTHORITY",
+      "REPRESENTATION"
+    ],
+    "dependencies": [
+      "V0_SM1_CHECKPOINT_ACCEPTED",
+      "MW10 accepted stable Matter baseline",
+      "RL3 accepted representation chain",
+      "canonical Item Graph",
+      "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md"
+    ],
+    "non_goals": [
+      "No whole-planet Matter conversion",
+      "No dynamic authority split/merge",
+      "No RF1 runtime dependency",
+      "No P8 mobile construct",
+      "No new network foundation"
+    ],
+    "expected_risks": [
+      "Double accounting between removed Matter and Item Graph material",
+      "Legacy terrain/Matter overlap inside the bubble",
+      "Incorrect seam routing or misuse of MW10",
+      "Presentation lag mistaken for canonical state"
+    ],
+    "validation_plan": [
+      "Fresh owner-map review before runtime dispatch",
+      "Focused tool-to-MW4 adapter tests",
+      "Planetary bubble geometry/query/collision proof",
+      "Mass-conservation and Item Graph exactly-once tests",
+      "Restart/replay and two-client convergence",
+      "Single-region seam and true multi-region MW10 cases",
+      "Graphical two-client slice and full world/core regression"
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "RUNTIME_FEATURE_MERGE",
+    "MATTER_FOUNDATION_CHANGE_REQUIRED",
+    "NETWORK_FOUNDATION_CHANGE_REQUIRED",
+    "AUTHORITY_FOUNDATION_CHANGE_REQUIRED",
+    "DUPLICATE_CANONICAL_TRUTH_REQUIRED"
+  ],
+  "issued_at_utc": "2026-08-30T04:06:00Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE"
+  ],
+  "notes": "This Work Order is PLANNED only. The mutation lease is reserved to P7 but runtime mutation is not authorized until fresh owner-map review, post-merge Project Control NON_RED and a durable Director dispatch."
+}

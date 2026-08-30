@@ -459,6 +459,65 @@
         "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
         "P6_CHECKPOINT_ACCEPTANCE_WITHOUT_EXACT_REVIEW_AND_VERIFICATION"
       ]
+    },
+    "V0_P7_BOUNDED_TERRAIN_MUTATION": {
+      "kind": "PROJECT",
+      "program": "V0",
+      "default_risk_floor": "CRITICAL",
+      "description": "Compose the accepted MW4-MW10 Matter stack into the real V0 planetary product: equipped tool to existing Matter mutation, bounded planetary Matter bubble, canonical material yield into Item Graph, restart/reconnect, two-client convergence and seam-safe operation without a second terrain truth.",
+      "preconditions": [
+        "V0_SM1_CHECKPOINT_ACCEPTED",
+        "CANONICAL_MAIN_KNOWN",
+        "NO_GLOBAL_PROJECT_RED",
+        "MAIN_DECLARED_V0_PRODUCT_EXECUTION_BASE_PRESENT",
+        "V0_P7_EXECUTION_BASE_IS_EXACT_ACCEPTED_SM1_LINEAGE",
+        "V0_P7_CRITICAL_WORK_ORDER_PRESENT",
+        "V0_P7_MATTER_OWNER_MAP_REVIEWED",
+        "PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1"
+      ],
+      "required_predicates": [
+        "PROJECT_EPOCH_CREATED",
+        "V0_P7_ACCEPTED_SM1_SUCCESSOR_BASE_EXACT",
+        "V0_P7_WORK_ORDER_ISSUED",
+        "V0_P7_RISK_CLASSIFIED_CRITICAL",
+        "V0_P7_DESIGN_BRIEF_READY",
+        "V0_P7_MATTER_OWNER_MAP_REVIEW_PASS",
+        "V0_P7_NO_SECOND_MATTER_TRUTH_PASS",
+        "V0_P7_SINGLE_RUNTIME_IMPLEMENTATION_WORKER_PASS",
+        "V0_P7_TOOL_TO_MW4_ADAPTER_PASS",
+        "V0_P7_PLANETARY_MATTER_BUBBLE_PASS",
+        "V0_P7_MATERIAL_BATCH_ITEM_GRAPH_CONSERVATION_PASS",
+        "V0_P7_PERSISTENCE_RESTART_PASS",
+        "V0_P7_TWO_CLIENT_CONVERGENCE_PASS",
+        "V0_P7_SEAM_ROUTING_PASS",
+        "V0_P7_MW10_MULTI_REGION_ATOMICITY_PASS",
+        "V0_P7_GRAPHICAL_DIGGING_PASS",
+        "FULL_WORLD_CORE_REGRESSION_PASS",
+        "POST_BUILD_CRITIQUE_COMPLETED",
+        "EVIDENCE_MAP_COMPLETE",
+        "INDEPENDENT_REVIEWER_PASS",
+        "INDEPENDENT_VERIFIER_PASS",
+        "REVIEW_HEAD_EXACT_AND_FRESH",
+        "TESTED_HEADS_EXACT_AND_FRESH",
+        "STANDARD_PC0_NON_RED",
+        "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+        "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED",
+        "V0_P7_CHECKPOINT_PROPOSED"
+      ],
+      "success_state": "V0_P7_PASS",
+      "network_baseline": "SERVER_PREDICTED",
+      "blocked_state_if_network_foundation_change_required": "V0_BLOCKED_REQUIRES_NX",
+      "human_gate_after": "RUNTIME_FEATURE_MERGE",
+      "stop_before": [
+        "PRIVATE_V0_TERRAIN_TRUTH",
+        "SECOND_MATTER_FOUNDATION",
+        "P7_PRIVATE_PERSISTENCE_OWNER",
+        "P7_PRIVATE_RESOURCE_INVENTORY",
+        "P7_PRIVATE_REPLICATION_PROTOCOL",
+        "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
+        "P7_CHECKPOINT_ACCEPTANCE_WITHOUT_EXACT_REVIEW_AND_VERIFICATION"
+      ]
     }
   }
 }
