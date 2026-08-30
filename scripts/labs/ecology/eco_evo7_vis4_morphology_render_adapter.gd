@@ -215,6 +215,16 @@ func _evidence_descriptor(record: Dictionary, evidence_by_id: Dictionary, evalua
 		return {}
 	if String(evidence.get("bundle_checksum", "")) != String(record.get("bundle_checksum", "")) or String(evaluation.get("bundle_checksum", "")) != String(record.get("bundle_checksum", "")):
 		return {}
+	var identity := _record_identity(record)
+	if identity.is_empty():
+		return {}
+	if String(evidence.get("lineage_id", "")) != String(identity.get("lineage_id", "")):
+		return {}
+	if int(evidence.get("hereditary_individual_seed", -1)) != int(identity.get("hereditary_individual_seed", -2)):
+		return {}
+	var source_potential := _potential_from_record(record)
+	if source_potential.is_empty() or Dictionary(evidence.get("potential_morphology", {})) != source_potential:
+		return {}
 	if String(evidence.get("source_phenotype_hash", "")) != String(evaluation.get("phenotype_hash", "")):
 		return {}
 	var evaluation_hash := String(evaluation.get("evaluation_hash", ""))
