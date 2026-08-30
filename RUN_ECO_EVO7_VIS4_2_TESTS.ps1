@@ -7,7 +7,7 @@ $GitHead = (& git -C $RootDir rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($GitHead)) {
     throw "Unable to resolve VIS4.2 Git HEAD"
 }
-Write-Host "ECO.EVO7 VIS4.2 git_head=$GitHead"
+Write-Host "ECO.EVO7 VIS4.2 R2 git_head=$GitHead"
 
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     $GodotPath = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
@@ -17,7 +17,7 @@ if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
 }
 $Actual = (& $GodotPath --version | Select-Object -First 1).Trim()
 if ($Actual -ne $Expected) {
-    throw "ECO.EVO7 VIS4.2 BLOCKED: expected Godot '$Expected', got '$Actual'"
+    throw "ECO.EVO7 VIS4.2 R2 BLOCKED: expected Godot '$Expected', got '$Actual'"
 }
 
 $PreviousBreakpointDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
@@ -43,7 +43,7 @@ try {
         throw "VIS3 presentation regression failed with exit code $LASTEXITCODE"
     }
 
-    Write-Host "=== ECO VIS4.2 honest diagnostic morphology ==="
+    Write-Host "=== ECO VIS4.2 R2 honest diagnostic morphology ==="
     & $GodotPath --headless --path $RootDir --script "res://tests/ecology/eco_evo7_vis4_2_honest_diagnostic_morphology_acceptance.gd"
     if ($LASTEXITCODE -ne 0) {
         throw "VIS4.2 focused acceptance failed with exit code $LASTEXITCODE"
@@ -58,4 +58,4 @@ finally {
     }
 }
 
-Write-Host "ECO.EVO7 VIS4.2 Honest Diagnostic Morphology candidate: PASS"
+Write-Host "ECO.EVO7 VIS4.2 R2 Honest Diagnostic Morphology candidate: PASS"
