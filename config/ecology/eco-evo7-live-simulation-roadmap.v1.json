@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R13",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R14",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/STREAM1",
+  "current_checkpoint": "ECO.EVO7/LS4",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -106,15 +106,20 @@
     {
       "id": "STREAM1",
       "name": "Bounded Deterministic Generation Streaming",
-      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-      "detail": "Canonical parent chunks compute candidate→route→recruitment evidence into one full-generation proposal. LS3.3 alone validates base identity and atomically publishes the generation. R1 is in-process semantics foundation; exact-Windows verification required.",
+      "status": "ACCEPTED",
+      "detail": "STREAM1 R1 accepted after fresh exact-Windows verification on frozen target 4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4 / tree 68389ef9a491fc2f1e13efb92058029c9536f870: focused 195 assertions, 108/108 canonical comparisons, 11/11 transitive gate, immutable identity and clean tracked worktree.",
       "runtime_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
-      "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40"
+      "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+      "accepted_target_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+      "accepted_target_tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+      "accepted_immediate_parent": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md"
     },
     {
       "id": "LS4",
       "name": "Next ecology complexity stage",
-      "status": "AFTER_STREAM1_ACCEPTANCE"
+      "status": "READY_AFTER_STREAM1_ACCEPTED",
+      "detail": "STREAM1 predecessor gate is satisfied. LS4 ecology-complexity work is now unblocked; any separate distributed STREAM transport extension remains an independent architecture checkpoint."
     }
   ],
   "ls3_final": {
@@ -188,8 +193,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "STREAM1",
-    "status": "PAR2_PAR3_FOUNDATION_STREAM1_R1_LOCAL_CANDIDATE",
+    "next_checkpoint": "LS4",
+    "status": "PAR2_PAR3_FOUNDATION_STREAM1_R1_ACCEPTED",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -243,7 +248,18 @@
       },
       "validate_before_authority_mutation": true
     },
-    "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
+    "status": "ACCEPTED",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+    "accepted_target_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "accepted_target_tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+    "accepted_immediate_parent": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+    "par3_checkpoint_predecessor": "8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf",
+    "windows_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_assertions": 195,
+    "exact_canonical_comparisons": "108/108",
+    "transitive_gate": "11/11_PASS",
+    "import_exit_code": 0,
+    "legacy_import_parse_diagnostics": "PRE_EXISTING_BASELINE_NOT_STREAM1_REGRESSION",
+    "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md"
   }
 }
