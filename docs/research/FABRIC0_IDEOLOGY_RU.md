@@ -526,3 +526,186 @@ what was deliberately postponed
 Если гипотеза переживает новый тип сложности без появления device-specific exceptions — это meaningful evidence.
 
 FABRIC строится не от списка фич, а от последовательности falsification walls.
+
+
+## 26. FABRIC0.7 подтвердил temporal triad
+
+После реализации FABRIC0.7 прежние пункты о времени перестали быть только design намерением.
+
+Экспериментально подтверждена триада:
+
+```text
+FLOW
+JUMP
+TOPOLOGY TRANSACTION
+```
+
+Это теперь одна из центральных аксиом FABRIC.
+
+### FLOW
+
+Изменяет continuous state во времени.
+
+Не меняет discrete mode сам по себе.
+
+### JUMP
+
+Происходит в локализованный event instant.
+
+Имеет immutable pre-state и explicit post-state.
+
+### TOPOLOGY TRANSACTION
+
+Изменяет структуру physical graph.
+
+Обязана быть atomic.
+
+Эти категории имеют разную семантику causal history, поэтому kernel не должен снова склеить их в общий `update()`.
+
+## 27. Macrostep должен быть rollback boundary
+
+FABRIC0.7 показал практически важный принцип:
+
+> Временной macrostep является транзакционной recovery unit.
+
+Если event jump не может быть корректно завершён, нельзя сохранять flow, который привёл к событию, оставив неисполненный jump.
+
+Поэтому текущая research semantics:
+
+```text
+advance(dt)
+=
+all committed
+OR
+initial macrostep state restored
+```
+
+В production граница snapshot может быть оптимизирована через journal/delta transactions, но semantic atomicity должна сохраниться.
+
+## 28. Event time является физическим state coordinate
+
+Event timestamp не является telemetry metadata.
+
+Он определяет:
+
+- какой pre-state участвует в reset;
+- сколько remaining flow остаётся;
+- порядок причинных событий;
+- будущую reproducibility/authority semantics.
+
+Поэтому event localization является частью физической корректности.
+
+## 29. Reset map является математическим отображением, не script body
+
+Правильная модель:
+
+```text
+R : pre_state -> post_state
+```
+
+а не последовательность mutable statements.
+
+Это позволяет:
+
+- order-independent assignments;
+- deterministic replay;
+- validation до commit;
+- будущую symbolic/dimension analysis.
+
+## 30. History-dependent behavior не требует device class
+
+Schmitt experiment подтвердил:
+
+```text
+same continuous variable
++
+discrete mode
++
+different event surfaces
+=
+hysteresis
+```
+
+То есть память устройства может быть состоянием общей hybrid grammar.
+
+## 31. Failure может быть topology, а не флагом объекта
+
+Breaker experiment подтвердил важный архитектурный сдвиг.
+
+Failure не обязательно:
+
+```text
+device.broken = true
+```
+
+Он может быть:
+
+```text
+continuous degradation
+→ event
+→ mode transition
+→ topology transaction
+```
+
+Это особенно важно для будущих:
+
+- fuse;
+- structural bond break;
+- latch release;
+- cable failure;
+- material yield/failure.
+
+## 32. FABRIC0.7 выявил новую границу композиции
+
+До 0.7 FABRIC постепенно унифицировал:
+
+```text
+topology
+algebraic constraints
+energy
+dimensions
+nonlinear laws
+nonsmooth modes
+```
+
+0.7 добавил time, но temporal solver пока не является одним solver с algebraic fabric.
+
+Следующая красивая архитектура должна не строить «ODE subsystem рядом с circuit/contact subsystem», а приблизиться к:
+
+```text
+hybrid DAE fabric
+=
+continuous differential state
++
+algebraic conservation constraints
++
+nonsmooth admissible manifolds
++
+event surfaces
++
+jump maps
++
+mutable topology
+```
+
+Это текущий главный исследовательский горизонт.
+
+## 33. Сила FABRIC измеряется исчезновением special cases
+
+Каждый следующий checkpoint оценивается не числом добавленных behaviors, а тем, сколько разных явлений выразил один общий primitive.
+
+Хороший результат:
+
+```text
+one law
+→ many recognizable machines
+```
+
+Плохой результат:
+
+```text
+one new behavior
+→ one new kernel class
+```
+
+Этот критерий должен сохраняться при FABRIC0.8 и далее.
