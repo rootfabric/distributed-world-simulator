@@ -1,6 +1,6 @@
 # ECO.EVO7 STREAM1 R1 — Bounded Deterministic Generation Stream
 
-Статус: **LOCAL CANDIDATE / EXACT-WINDOWS VERIFICATION REQUIRED**.
+Статус: **ACCEPTED — fresh exact-Windows verification PASS**.
 
 Predecessor:
 
@@ -245,7 +245,7 @@ worktree clean
 exact HEAD/TREE recorded
 ```
 
-До этого статус остаётся **LOCAL CANDIDATE**, даже если code review зелёный.
+Acceptance gate выполнен на frozen target; STREAM1 R1 формально **ACCEPTED**.
 
 
 ## R1 authority hardening review
@@ -291,3 +291,56 @@ validation before mutation:  YES
 
 Windows mission:
 `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md`.
+
+
+## Final Windows acceptance evidence
+
+Acceptance checkpoint:
+
+`docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md`
+
+Frozen verified identity:
+
+```text
+HEAD:   4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4
+TREE:   68389ef9a491fc2f1e13efb92058029c9536f870
+PARENT: e0d2cda22a431c69a1b3eb4c650d79627d8aea40
+Godot:  4.7.1.stable.double.custom_build.a13da4feb
+```
+
+Архитектурный predecessor PAR3 R3.2:
+
+```text
+8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf
+```
+
+Он не является непосредственным git-parent final metadata HEAD; вместе с
+runtime anchor `8636a525c47b524e0ef597e46f37ffe6204d27ee` он подтверждён как ancestor.
+
+Fresh Windows result:
+
+```text
+import exit code:          0
+source guards:             PASS
+focused STREAM1:           PASS (195 assertions)
+exact comparisons:         108/108
+transitive gate:           PASS (11/11)
+final identity unchanged:  PASS
+tracked worktree clean:    YES
+```
+
+Legacy `Expected '['` diagnostics в трёх ECO.EVO5 scene-файлах сохранены как
+отдельное pre-existing baseline condition: они не появились в STREAM1 diff и
+были известны в предыдущих Windows verification runs. STREAM1 acceptance не
+объявляет их исправленными.
+
+Финальный verdict:
+
+```text
+ECO.EVO7 / STREAM1 R1 = ACCEPTED
+```
+
+После acceptance LS4 разблокирован как следующий ecology-complexity checkpoint.
+Отдельное вынесение STREAM execution в remote/distributed transport не входит в
+STREAM1 R1 и должно оформляться отдельным checkpoint без изменения canonical
+proposal identity и LS3.3 authority boundary.
