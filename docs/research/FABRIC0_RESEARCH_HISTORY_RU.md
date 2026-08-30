@@ -1434,3 +1434,269 @@ byte identity               PASS
 - no actual parallel execution.
 
 Следующий test должен заставить old contacts disappear и multiple new contacts appear в одном macrostep, при adaptive refinement и manifold event iteration.
+
+
+## FABRIC0.12 — Adaptive Multi-Event Manifold DAE
+
+FABRIC0.11 доказал, что persistent constrained graph можно менять прямо в event time и решать sparse до линейного backend.
+
+Но он же показал неприятный truth:
+
+```text
+bisection tolerance = 1e-11
+```
+
+не спасает, если constrained trajectory строится coarse fixed step.
+
+Следующий вопрос был поэтому не «как ещё уменьшить tolerance?», а:
+
+> Сходится ли сама физическая trajectory и event time при systematic integration refinement?
+
+### Reduced falsification model
+
+Чтобы измерить convergence независимо от сложностей 3D collision geometry, FABRIC0.12 использует oriented rectangle in floor+wall corner.
+
+Differential state:
+
+```text
+theta
+omega
+```
+
+Algebraic center следует active support constraints.
+
+Harmonic oscillator chosen because exact zero-event times known analytically.
+
+Это даёт rare luxury для FABRIC research:
+
+```text
+known continuous reference
+vs
+adaptive numerical event trajectory
+```
+
+### Adaptive convergence
+
+Tolerance:
+
+```text
+1e-5
+1e-7
+1e-9
+1e-11
+```
+
+Max event-time error:
+
+```text
+1.47e-5
+5.79e-7
+1.53e-8
+3.83e-10
+```
+
+Strict decrease.
+
+Energy drift также уменьшается примерно:
+
+```text
+3.4e-5
+6.7e-7
+7.0e-9
+7.1e-11
+```
+
+Это прямой ответ на numerical finding 0.11.
+
+### Multi-event semantics
+
+Один 1.2-second advance содержит два exact orientation crossings:
+
+```text
+PI/16
+
+5PI/16
+```
+
+Solver обрабатывает оба.
+
+После первого event интеграция реально restart from event fixed point и затем находит второй.
+
+Это не list of precomputed event times.
+
+### Manifold changes are not one rename
+
+При crossing support geometry имеет degenerate configuration.
+
+Negative side:
+
+```text
+floor BR vertex
+wall BL vertex
+```
+
+Exact zero:
+
+```text
+floor bottom edge
+wall left edge
+```
+
+Positive side:
+
+```text
+floor BL vertex
+wall TL vertex
+```
+
+Event instant therefore performs:
+
+```text
+vertices
+→ edges
+→ directed vertices
+→ fixed point
+```
+
+Три event iterations, две topology mutations.
+
+Второй crossing делает обратный переход.
+
+### Feature lineage
+
+String IDs здесь недостаточно.
+
+```text
+edge:bottom
+```
+
+физически связан и с BL, и с BR.
+
+Поэтому contact feature получил lineage.
+
+Warm numerical hint remaps по overlap lineage.
+
+Это позволило сохранить continuous numerical history даже когда exact active contact ID исчез.
+
+### Split / merge test
+
+Main corner path выбирает один support descendant per plane.
+
+Чтобы generic remapper не оказался красивым special case, добавлены synthetic gates.
+
+```text
+edge warm 4
+→
+BL 2 + BR 2
+```
+
+и:
+
+```text
+BL 2 + BR 3
+→
+edge 5
+```
+
+Это первая explicit feature split/merge numerical continuity semantics в FABRIC.
+
+### Pattern cache
+
+0.11 PCG rebuilt numerical hints each time.
+
+0.12 caches inverse diagonal by sparse structural pattern.
+
+Но critical check меняет matrix coefficients при той же sparsity.
+
+Cache still hits.
+
+PCG solves changed matrix.
+
+Result hash changes.
+
+Следовательно pattern cache не secretly owns physical state.
+
+### Actual threads
+
+0.11 only proved reverse scheduling invariance.
+
+0.12 starts two real Godot Thread workers.
+
+Cold:
+
+```text
+threads=2
+cache misses=2
+```
+
+Warm reverse-spawn:
+
+```text
+threads=2
+cache hits=2
+```
+
+Canonical hash identical:
+
+`40635ad181b0273659ffd0dacae622b7b7249427d5073c2f9ffb5913f43f7fe0`.
+
+Parallelism наконец стал executable, хотя scheduler всё ещё research-only.
+
+### Sleep/wake boundary
+
+0.12 adds sleep/wake only as derived scheduler state.
+
+Three quiet observations sleep island.
+
+Motion wakes it.
+
+Crucially sleep flag is absent from physical state hash.
+
+This continues the long-running FABRIC separation:
+
+```text
+physical truth
+!=
+solver optimization state
+```
+
+### Evidence
+
+```text
+FABRIC0.12 focused       115/115 PASS
+playground               PASS
+editor                   CLEAN
+byte identity            PASS
+```
+
+FABRIC0.11 runtime suite was not rerun in this isolated lab; predecessor executable blobs are preserved.
+
+### Главный урок FABRIC0.12
+
+> Numerical convergence itself is part of physical evidence.
+
+И второй:
+
+> Persistent feature identity should follow geometry lineage through manifold topology changes, not merely exact contact-ID equality.
+
+### Что 0.12 намеренно не делает
+
+Самое важное limitation:
+
+0.12 is a **reduced manifold DAE**, not a direct adaptive rewrite of the full 0.11 3D contact graph.
+
+Это сознательно.
+
+Мы сначала falsify semantics in a system with analytic references, затем должны carry them into real persistent contacts.
+
+## FABRIC0.13 — Unified Adaptive 3D Contact Graph
+
+Следующий checkpoint должен интегрировать strongest lines:
+
+```text
+0.11 persistent sparse 3D contacts
++
+0.12 adaptive multi-event manifold semantics
+```
+
+Если интеграция потребует отказаться от convergence/order/lineage principles, это будет важный architecture falsification, а не повод спрятать mismatch.
