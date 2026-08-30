@@ -51,7 +51,7 @@ jobs:
           if ($head -ne "${{ github.sha }}") {
             throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.sha }}"
           }
-          $tree = (git rev-parse HEAD^{tree}).Trim()
+          $tree = (git show -s --format=%T HEAD).Trim()
           Write-Host "exact_head=$head"
           Write-Host "exact_tree=$tree"
 
