@@ -211,6 +211,42 @@ CLIENT_COSMETIC
 
 Owner authority допустим только с server validation скорости, acceleration, distance per tick, collision envelope, region bounds, lease generation и object type.
 
+## 12.1 Relation to Replication Foundation RF0-RF2
+
+A new global Replication Foundation is planned in `ADR-021` and `DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`.
+
+Ownership stays explicit:
+
+```text
+RF:
+  post-commit publication semantics
+  bounded non-canonical retained replica
+  read-only distribution boundary
+
+NX8:
+  interest selection
+  per-consumer priority
+  bandwidth budget
+  dirty/update policy
+  starvation protection
+  interest hysteresis
+```
+
+RF does not replace NX8, and NX8 does not become a persistence or authority owner.
+
+The shared vocabulary may include spatial scope, representation class, LOD/detail requirement, priority, consistency requirement, update frequency, bandwidth budget and revision.
+
+`InterestSet != ActivationSet`.
+
+The latency-critical input path remains:
+
+```text
+Client -> Gateway -> Authority
+```
+
+RF MUST NOT become a mandatory ingress hop.
+
+
 ## 13. NX8 — Interest Management and Replication Budget
 
 - spatial interest grid;
