@@ -1,0 +1,31 @@
+{
+  "schema": "dws.fabric_bake_b0_0_closure.v1",
+  "checkpoint": "FABRIC-BAKE B0.0",
+  "qualification": "RESEARCH_CHECKPOINT_CLOSED_EXACT_HEAD_DOUBLE_PASS",
+  "implementation_head": "072d313e1ecf8434987245a8edc4f9d959a4cf80",
+  "implementation_tree": "4b1dfece0b38f3fae7053aeba363544988016b76",
+  "project_control": {
+    "run_id": 33319536344,
+    "conclusion": "SUCCESS"
+  },
+  "verifier": {
+    "type": "fresh_exact_dependency_snapshot",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "acceptance": {
+      "result": "PASS",
+      "assertions": 33
+    },
+    "playground": "PASS",
+    "dependency_blobs": {
+      "scripts/network/contracts/network_contract_utils.gd": "58b97f82ab09c699ae3c48060c6e0747579aa676",
+      "scripts/simulation/representation/contracts/representation_invalidation.gd": "ea2bc93ecae066eb394a08493822212c7a7a32c2",
+      "scripts/simulation/representation/contracts/representation_source_revision.gd": "7bdc2f2f49a781f9b9aebca3bb126f953e4c6b70",
+      "scripts/simulation/representation/representation_contract_utils.gd": "371e92f98671436e199b545ff1476510487b44e4",
+      "scripts/simulation/spatial/spatial_contract_utils.gd": "cdfea625bb05c7d6d274f8e5b69303fa68d01f0b"
+    }
+  },
+  "claims": {
+    "production_accepted": false,
+    "next_checkpoint": "B0.1"
+  }
+}

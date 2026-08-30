@@ -700,3 +700,38 @@ and BAKE-BRIDGE-0 over the existing Representation revision/invalidation semanti
 
 This does **not** promote B0.0 to production or canonical acceptance. B0.1 remains the first
 mathematical reduction checkpoint; FABRIC0.16 continues independently on Physical Core.
+
+
+---
+
+## B0.0 closure boundary — 2026-08-31
+
+```text
+implementation HEAD:
+072d313e1ecf8434987245a8edc4f9d959a4cf80
+
+implementation TREE:
+4b1dfece0b38f3fae7053aeba363544988016b76
+
+Project Control:
+33319536344 = SUCCESS
+
+fresh exact-dependency verifier:
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+FABRIC-BAKE B0.0 Acceptance = PASS (33/33)
+Playground = PASS
+```
+
+Verifier был создан в новой файловой области и использовал exact GitHub blobs implementation HEAD для всех B0.0 executable files и всех пяти predecessor dependency files, реально загружаемых acceptance-сценарием. Dependency blob identity была проверена до запуска.
+
+Закрытая квалификация:
+
+```text
+FABRIC-BAKE B0.0
+RESEARCH CHECKPOINT CLOSED
+EXACT-HEAD DOUBLE PASS
+PROJECT CONTROL PASS
+PRODUCTION ACCEPTANCE NOT CLAIMED
+```
+
+Следующий checkpoint — **B0.1 Exact Boundary Reduction / Schur elimination**. Physical Core остаётся независимой линией.

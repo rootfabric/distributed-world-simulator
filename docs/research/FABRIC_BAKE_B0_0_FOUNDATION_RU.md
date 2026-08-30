@@ -1,6 +1,6 @@
 # FABRIC-BAKE B0.0 — Bake Foundation Contracts
 
-**Статус:** IMPLEMENTED CANDIDATE / LOCAL DOUBLE FOCUSED PASS.  
+**Статус:** RESEARCH CHECKPOINT CLOSED / EXACT-HEAD DOUBLE PASS.  
 **Ветка:** `research/fabric-bake0-reducible-world-fabric-r1`.  
 **Base / dual-track fork:** `962b9c1bbf7f04c7853f1fb0e36480cf54f3250d`.  
 **Physical predecessor:** FABRIC0.15 — RESEARCH CANDIDATE CLOSED / EXACT DOUBLE PASS / DRAFT REVIEW CANDIDATE.  
@@ -360,7 +360,7 @@ production readiness
 
 ## 16. Следующий gate
 
-После independent exact-head verification B0.0 может считаться закрытым research checkpoint.
+Independent exact-head verification выполнен; B0.0 закрыт как research checkpoint.
 
 Следующий BAKE stage:
 
