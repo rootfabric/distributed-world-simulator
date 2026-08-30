@@ -133,7 +133,8 @@
       "id": "PERF2.1",
       "name": "STREAM1 Generation Profiling",
       "status": "AUTHORIZED_NOT_STARTED",
-      "detail": "Use accepted PERF2.0 R1 unchanged to produce repeatable STREAM1 generation profiles and a serial↔STREAM1 baseline on exact canonical-result parity. Profiling only; no optimization claim or runtime mutation in this checkpoint."
+      "detail": "Use accepted PERF2.0 R1 unchanged to produce repeatable STREAM1 generation profiles and a serial↔STREAM1 baseline on exact canonical-result parity. Profiling only; no optimization claim or runtime mutation in this checkpoint.",
+      "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md"
     },
     {
       "id": "PERF2.2",
@@ -357,7 +358,8 @@
       "measurement_contract_mutation_allowed": false,
       "speedup_claim_allowed": false,
       "optimization_changes_allowed": false,
-      "goal": "Establish exact repeatable STREAM1 and SERIAL_REFERENCE generation timing profiles under the accepted measurement contract before any PERF2.2/2.4 claims."
+      "goal": "Establish exact repeatable STREAM1 and SERIAL_REFERENCE generation timing profiles under the accepted measurement contract before any PERF2.2/2.4 claims.",
+      "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md"
     }
   }
 }
