@@ -137,7 +137,8 @@
       "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md",
       "profiler_runtime_head": "e4f887cf943249a6dc05ee456a337db8b9fcbde7",
       "acceptance_harness_head": "804a78aeaddb287c43a16154fd39fb5d2124f29b",
-      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md"
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
+      "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
     },
     {
       "id": "PERF2.2",
@@ -396,7 +397,8 @@
       "runtime_biology_changes": false,
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
       "canonical_entrypoint": "RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.1",
-      "transitive_runner": "RUN_ECO_EVO7_PERF2_1_TESTS.ps1"
+      "transitive_runner": "RUN_ECO_EVO7_PERF2_1_TESTS.ps1",
+      "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
     }
   }
 }
