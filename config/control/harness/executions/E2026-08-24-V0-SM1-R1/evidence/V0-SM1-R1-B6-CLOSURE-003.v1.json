@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_b6_closure_receipt.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "risk_class": "CRITICAL",
+  "verified_subject": {
+    "branch": "repair/m7-camera-basis-sync-r9",
+    "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68"
+  },
+  "verifier_record": {
+    "path": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "carrier_branch": "control/v0-sm1-b6-r9-verification-003-r1",
+    "carrier_commit": "40910472e48dd1e31db119b4414d493b970e8303",
+    "verdict": "VERIFIED",
+    "verifier": "INDEPENDENT_VERIFIER_B6_FRESH_SESSION_R3"
+  },
+  "machine_evidence": {
+    "isolated_editor_import": "PASS",
+    "r9_m7": "PASS_10_OF_10_54_ASSERTIONS_0_FAILURES_EACH",
+    "m5_contracts": "PASS_126_0",
+    "r7_convergence_guard": "PASS_31_0",
+    "r8_control_read": "PASS_25_0",
+    "pipe_smoke": "PASS_NONEMPTY_CHILD_STDOUT_STDERR",
+    "m5_decisive": "PASS_10_OF_10",
+    "focused_sm1": "PASS_13_OF_13",
+    "impaired_network": "PASS_5_OF_5_69_0_EACH",
+    "canonical_world_core": {
+      "passed": true,
+      "declared": 304,
+      "discovered": 304,
+      "steps": 307,
+      "bad_exits": 0,
+      "first_and_only_attempt": true
+    },
+    "semantic_audits": [
+      "R8_PASS",
+      "R9_PASS"
+    ],
+    "pc0": {
+      "standard_overall": "YELLOW",
+      "directional_overall": "YELLOW",
+      "cross_branch_overlaps": 0,
+      "candidate_specific_critical_hits": 0
+    },
+    "freshness": "PASS_EXACT_HEAD_TREE_TRACKED_STAGED_CLEAN"
+  },
+  "verifier_incident": {
+    "classification": "INVALID_VERIFIER_INVOCATION_NOT_CANDIDATE_RESULT",
+    "governed_test_executed": false,
+    "later_governed_pre_gates_each_executed_once": true,
+    "governed_rerun_after_failure": false
+  },
+  "historical_records": {
+    "verification_001": "PRESERVED_UNCHANGED",
+    "verification_002": "PRESERVED_UNCHANGED"
+  },
+  "director_assessment": {
+    "verifier_branch_is_direct_descendant_of_dispatch": true,
+    "verifier_branch_ahead_by": 1,
+    "verifier_branch_behind_by": 0,
+    "verifier_delta_files": [
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json"
+    ],
+    "verification_001_byte_identity_preserved": true,
+    "verification_002_byte_identity_preserved": true
+  },
+  "disposition": {
+    "b6": "CLOSED",
+    "r9": "VERIFIED_NOT_MERGED",
+    "b7": "BLOCKED_PENDING_FRESH_EXACT_HEAD_REVIEWER_AND_CONTROL_RECONCILIATION",
+    "p7": "BLOCKED",
+    "human_runtime_feature_merge": "UNTOUCHED"
+  },
+  "forbidden_conclusions": [
+    "SM1 is not accepted by B6 closure.",
+    "No checkpoint is proposed or accepted by B6 closure.",
+    "No runtime merge is authorized.",
+    "PC0 YELLOW is not relabeled GREEN.",
+    "Fresh exact-head Reviewer PASS is not yet established.",
+    "P7 remains blocked."
+  ]
+}
