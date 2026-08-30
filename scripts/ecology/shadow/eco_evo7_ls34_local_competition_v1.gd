@@ -17,6 +17,7 @@ const Contract = preload("res://scripts/research/ecology/plant_development_contr
 const CoupledDevelopment = preload("res://scripts/research/ecology/plant_environment_coupled_development_v1.gd")
 const FunctionalPhenotype = preload("res://scripts/research/ecology/plant_functional_phenotype_v1.gd")
 const MorphologyEvidence = preload("res://scripts/research/ecology/plant_morphology_evidence_v1.gd")
+const GraphReconstructionEvidence = preload("res://scripts/research/ecology/plant_growth_graph_reconstruction_evidence_v1.gd")
 const ResourceModel = preload("res://scripts/research/ecology/plant_resource_model_v1.gd")
 const LightField = preload("res://scripts/research/ecology/understory_light_field_v1.gd")
 const WaterField = preload("res://scripts/research/ecology/soil_water_field_v1.gd")
@@ -57,6 +58,8 @@ var last_profile: Dictionary = {}
 var last_competition_profile: Dictionary = {}
 var last_morphology_records: Array[Dictionary] = []
 var last_morphology_evidence: Dictionary = {}
+var last_graph_reconstruction_records: Array[Dictionary] = []
+var last_graph_reconstruction_evidence: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -90,6 +93,8 @@ func set_competition_enabled(value: bool) -> bool:
     if competition_enabled != value:
         last_morphology_records.clear()
         last_morphology_evidence.clear()
+        last_graph_reconstruction_records.clear()
+        last_graph_reconstruction_evidence.clear()
     competition_enabled = value
     return true
 
@@ -139,6 +144,10 @@ func step_generation() -> Dictionary:
     last_competition_profile.clear()
     last_morphology_records.clear()
     last_morphology_evidence.clear()
+    last_graph_reconstruction_records.clear()
+    last_graph_reconstruction_evidence.clear()
+    last_graph_reconstruction_records.clear()
+    last_graph_reconstruction_evidence.clear()
     last_survivor_count = int(pre["record_count"])
 
     var competition_pass_ms := 0.0
@@ -155,6 +164,7 @@ func step_generation() -> Dictionary:
             last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
             last_competition_hash = String(last_competition_field["field_hash"])
             last_morphology_records = Array(competition_result.get("morphology_records", [])).duplicate(true)
+            last_graph_reconstruction_records = Array(competition_result.get("graph_reconstruction_records", [])).duplicate(true)
             last_survivor_count = survivors.size()
             last_culled_count = int(pre["record_count"]) - survivors.size()
             core.records = survivors.duplicate(true)
@@ -177,6 +187,14 @@ func step_generation() -> Dictionary:
     if competition_enabled and int(pre.get("generation", 0)) > 0:
         last_morphology_evidence = MorphologyEvidence.seal_snapshot(
             last_morphology_records,
+            int(pre["generation"]),
+            last_precompetition_population_hash,
+            last_competition_hash,
+            last_postcompetition_population_hash,
+            int(post.get("record_count", -1))
+        )
+        last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(
+            last_graph_reconstruction_records,
             int(pre["generation"]),
             last_precompetition_population_hash,
             last_competition_hash,
