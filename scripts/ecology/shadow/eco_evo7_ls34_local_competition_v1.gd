@@ -346,10 +346,15 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         # VIS4.1 evidence is strictly non-causal. Packaging failure must never
         # abort the accepted ecology generation; it only makes the derived
         # presentation sidecar unavailable/fail-closed for this generation.
+        var ph2: Dictionary = phenotype_package["ph2"]
         var morphology_evidence := MorphologyEvidence.build_record(
             record,
-            Dictionary(phenotype_package["ph2"]),
+            ph2,
             fp
+        )
+        var graph_reconstruction_evidence := GraphReconstructionEvidence.build_record(
+            record,
+            ph2
         )
         var position := _record_position(record)
         var identity := String(record["record_id"])
@@ -360,6 +365,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
             "environment": env,
             "fp": fp,
             "morphology_evidence": morphology_evidence,
+            "graph_reconstruction_evidence": graph_reconstruction_evidence,
             "position": position,
         })
         light_records.append(_light_record(identity, position, fp, float(env_cell["incident_light"])))
@@ -406,6 +412,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
     var evaluations: Array[Dictionary] = []
     var survivors: Array[Dictionary] = []
     var morphology_records: Array[Dictionary] = []
+    var graph_reconstruction_records: Array[Dictionary] = []
     for item in provisional:
         var record: Dictionary = item["record"]
         var identity := String(item["identity"])
@@ -469,6 +476,9 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
             var morphology_value = item.get("morphology_evidence")
             if morphology_value is Dictionary and not Dictionary(morphology_value).is_empty():
                 morphology_records.append(Dictionary(morphology_value).duplicate(true))
+            var reconstruction_value = item.get("graph_reconstruction_evidence")
+            if reconstruction_value is Dictionary and not Dictionary(reconstruction_value).is_empty():
+                graph_reconstruction_records.append(Dictionary(reconstruction_value).duplicate(true))
 
     var evaluation_ms := _elapsed_ms(profile_phase_started)
     profile_phase_started = Time.get_ticks_usec()
@@ -511,7 +521,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         "finalize_validate_ms": finalize_validate_ms,
         "total_ms": _elapsed_ms(profile_total_started),
     }
-    return {"survivors": survivors, "field": field, "morphology_records": morphology_records}
+    return {"survivors": survivors, "field": field, "morphology_records": morphology_records, "graph_reconstruction_records": graph_reconstruction_records}
 
 func _empty_competition_field(generation_value: int) -> Dictionary:
     if generation_value < 1:
