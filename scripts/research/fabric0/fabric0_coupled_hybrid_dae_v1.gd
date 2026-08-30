@@ -638,3 +638,163 @@ static func _check_jump_inequalities(system: Dictionary, branch_spec: Dictionary
 		else: jump_values[key.substr(5)] = float(x[i])
 	for item in branch_spec["inequalities"]:
 		var evaluated := _eval_expr_value(system, item["expr"], pre_states, pre_algebraics, float(system["time"]), post, jump_values, pre_states)
+		if not bool(evaluated.get("ok",false)): return {"ok":false}
+		if float(evaluated["value"])/maxf(float(item["nominal"]),EPSILON) < -GUARD_TOLERANCE: return {"ok":false}
+	return {"ok":true}
+
+# =============================================================================
+# TOPOLOGY TRANSACTION
+# =============================================================================
+
+static func _validate_topology_transaction(system: Dictionary, ops: Array) -> Dictionary:
+	if ops.is_empty(): return {"ok":true}
+	var network: Dictionary = system["physical_network"]
+	if network.is_empty() or not network.has("bonds"): return {"ok":false, "code":"TOPOLOGY_TRANSACTION_NO_NETWORK"}
+	var seen := {}
+	for op in ops:
+		if String(op.get("op","")) != "set_bond_active": return {"ok":false, "code":"TOPOLOGY_TRANSACTION_UNSUPPORTED_OP"}
+		var bond_id := String(op.get("bond_id",""))
+		if bond_id.is_empty() or seen.has(bond_id): return {"ok":false, "code":"TOPOLOGY_TRANSACTION_DUPLICATE_OR_EMPTY_BOND"}
+		seen[bond_id] = true
+		if _find_bond_index(network,bond_id) < 0: return {"ok":false, "code":"TOPOLOGY_TRANSACTION_UNKNOWN_BOND", "bond_id":bond_id}
+	return {"ok":true}
+
+static func _commit_topology_transaction(system: Dictionary, ops: Array) -> bool:
+	var changed := false
+	for op in ops:
+		var index := _find_bond_index(system["physical_network"], String(op["bond_id"]))
+		var target := bool(op["active"])
+		if bool(system["physical_network"]["bonds"][index]["active"]) != target:
+			system["physical_network"]["bonds"][index]["active"] = target
+			changed = true
+	return changed
+
+# =============================================================================
+# DIMENSION INFERENCE
+# =============================================================================
+
+static func _infer_expr_dimension(system: Dictionary, expr: Dictionary, jump_dims: Dictionary) -> Dictionary:
+	var op := String(expr.get("op",""))
+	match op:
+		"constant": return {"ok":true, "dimension":expr.get("dimension",{}).duplicate(true)}
+		"state", "pre_state", "post_state":
+			var name := String(expr.get("name",""))
+			if not system["states"].has(name): return {"ok":false, "reason":"UNKNOWN_STATE", "name":name}
+			return {"ok":true, "dimension":system["states"][name]["dimension"]}
+		"algebraic":
+			var name := String(expr.get("name",""))
+			if not system["algebraics"].has(name): return {"ok":false, "reason":"UNKNOWN_ALGEBRAIC", "name":name}
+			return {"ok":true, "dimension":system["algebraics"][name]["dimension"]}
+		"jump":
+			var key := "jump:%s" % String(expr.get("name",""))
+			if not jump_dims.has(key): return {"ok":false, "reason":"UNKNOWN_JUMP_UNKNOWN", "name":String(expr.get("name",""))}
+			return {"ok":true, "dimension":jump_dims[key]}
+		"parameter":
+			var name := String(expr.get("name",""))
+			if not system["parameters"].has(name): return {"ok":false, "reason":"UNKNOWN_PARAMETER", "name":name}
+			return {"ok":true, "dimension":system["parameters"][name]["dimension"]}
+		"time": return {"ok":true, "dimension":dim_time()}
+		"bond_active": return {"ok":true, "dimension":dim_dimensionless()}
+		"neg": return _infer_expr_dimension(system, expr["a"], jump_dims)
+		"add", "sub":
+			var a := _infer_expr_dimension(system,expr["a"],jump_dims)
+			if not bool(a.get("ok",false)): return a
+			var b := _infer_expr_dimension(system,expr["b"],jump_dims)
+			if not bool(b.get("ok",false)): return b
+			if not dim_equal(a["dimension"],b["dimension"]): return {"ok":false, "reason":"ADD_SUB_DIMENSION_MISMATCH", "left":dim_string(a["dimension"]), "right":dim_string(b["dimension"])}
+			return {"ok":true, "dimension":a["dimension"]}
+		"mul", "div":
+			var a := _infer_expr_dimension(system,expr["a"],jump_dims)
+			if not bool(a.get("ok",false)): return a
+			var b := _infer_expr_dimension(system,expr["b"],jump_dims)
+			if not bool(b.get("ok",false)): return b
+			return {"ok":true, "dimension":dim_mul(a["dimension"],b["dimension"]) if op=="mul" else dim_div(a["dimension"],b["dimension"])}
+		"pow_int":
+			var a := _infer_expr_dimension(system,expr["a"],jump_dims)
+			if not bool(a.get("ok",false)): return a
+			return {"ok":true, "dimension":dim_pow(a["dimension"],int(expr.get("exponent",1)))}
+		_:
+			return {"ok":false, "reason":"UNKNOWN_EXPRESSION_OP", "op":op}
+
+# =============================================================================
+# EXPRESSION EVALUATION / AD
+# =============================================================================
+
+static func _eval_expr_value(system: Dictionary, expr: Dictionary, states: Dictionary, algebraics: Dictionary, time_value: float, post_states: Dictionary, jump_values: Dictionary, pre_states: Dictionary) -> Dictionary:
+	var op := String(expr.get("op",""))
+	match op:
+		"constant": return {"ok":true,"value":float(expr.get("value",0.0))}
+		"state": return {"ok":true,"value":float(states[String(expr["name"])])}
+		"pre_state": return {"ok":true,"value":float(pre_states[String(expr["name"])])}
+		"post_state": return {"ok":true,"value":float(post_states[String(expr["name"])])}
+		"algebraic": return {"ok":true,"value":float(algebraics[String(expr["name"])])}
+		"jump": return {"ok":true,"value":float(jump_values[String(expr["name"])])}
+		"parameter": return {"ok":true,"value":float(system["parameters"][String(expr["name"])]["value"])}
+		"time": return {"ok":true,"value":time_value}
+		"bond_active": return {"ok":true,"value":1.0 if _bond_active(system,String(expr["bond_id"])) else 0.0}
+		"neg":
+			var a := _eval_expr_value(system,expr["a"],states,algebraics,time_value,post_states,jump_values,pre_states)
+			return {"ok":bool(a.get("ok",false)),"value":-float(a.get("value",0.0))}
+		"add", "sub", "mul", "div":
+			var a := _eval_expr_value(system,expr["a"],states,algebraics,time_value,post_states,jump_values,pre_states)
+			var b := _eval_expr_value(system,expr["b"],states,algebraics,time_value,post_states,jump_values,pre_states)
+			if not bool(a.get("ok",false)) or not bool(b.get("ok",false)): return {"ok":false}
+			var av:=float(a["value"]); var bv:=float(b["value"])
+			if op=="add": return {"ok":true,"value":av+bv}
+			if op=="sub": return {"ok":true,"value":av-bv}
+			if op=="mul": return {"ok":true,"value":av*bv}
+			if absf(bv)<=1e-15: return {"ok":false,"code":"DIVISION_BY_ZERO"}
+			return {"ok":true,"value":av/bv}
+		"pow_int":
+			var a := _eval_expr_value(system,expr["a"],states,algebraics,time_value,post_states,jump_values,pre_states)
+			if not bool(a.get("ok",false)): return a
+			return {"ok":true,"value":pow(float(a["value"]),int(expr.get("exponent",1)))}
+	return {"ok":false,"code":"UNKNOWN_EXPRESSION_OP"}
+
+static func _eval_expr_dual_algebraic(system: Dictionary, expr: Dictionary, states: Dictionary, algebraics: Dictionary, time_value: float, index: Dictionary) -> Dictionary:
+	var op:=String(expr.get("op",""))
+	if op=="algebraic":
+		var name:=String(expr["name"]); var i:=int(index[name]); return {"ok":true,"value":float(algebraics[name]),"grad":{i:1.0}}
+	if op in ["constant","state","parameter","time","bond_active"]:
+		var v:=_eval_expr_value(system,expr,states,algebraics,time_value,{}, {}, states); return {"ok":bool(v.get("ok",false)),"value":float(v.get("value",0.0)),"grad":{}}
+	return _eval_dual_recursive(system,expr,func(child): return _eval_expr_dual_algebraic(system,child,states,algebraics,time_value,index))
+
+static func _eval_expr_dual_jump(system: Dictionary, expr: Dictionary, pre_states: Dictionary, post_states: Dictionary, jump_values: Dictionary, pre_algebraics: Dictionary, time_value: float, index: Dictionary) -> Dictionary:
+	var op:=String(expr.get("op",""))
+	if op=="post_state":
+		var key:="post:%s" % String(expr["name"]); return {"ok":true,"value":float(post_states[String(expr["name"])]),"grad":{int(index[key]):1.0}}
+	if op=="jump":
+		var key:="jump:%s" % String(expr["name"]); return {"ok":true,"value":float(jump_values[String(expr["name"])]),"grad":{int(index[key]):1.0}}
+	if op in ["constant","pre_state","parameter","time","bond_active","algebraic"]:
+		var v:=_eval_expr_value(system,expr,pre_states,pre_algebraics,time_value,post_states,jump_values,pre_states); return {"ok":bool(v.get("ok",false)),"value":float(v.get("value",0.0)),"grad":{}}
+	if op=="state":
+		# During a jump, plain state refers to pre-state to keep semantics explicit and stable.
+		return {"ok":true,"value":float(pre_states[String(expr["name"])]),"grad":{}}
+	return _eval_dual_recursive(system,expr,func(child): return _eval_expr_dual_jump(system,child,pre_states,post_states,jump_values,pre_algebraics,time_value,index))
+
+static func _eval_dual_recursive(_system: Dictionary, expr: Dictionary, recurse: Callable) -> Dictionary:
+	var op:=String(expr.get("op",""))
+	if op=="neg":
+		var a:Dictionary=recurse.call(expr["a"]); if not bool(a.get("ok",false)): return a
+		return {"ok":true,"value":-float(a["value"]),"grad":_grad_scaled(a["grad"],-1.0)}
+	if op in ["add","sub","mul","div"]:
+		var a:Dictionary=recurse.call(expr["a"]); if not bool(a.get("ok",false)): return a
+		var b:Dictionary=recurse.call(expr["b"]); if not bool(b.get("ok",false)): return b
+		var av:=float(a["value"]); var bv:=float(b["value"])
+		if op=="add": return {"ok":true,"value":av+bv,"grad":_grad_combine(a["grad"],1.0,b["grad"],1.0)}
+		if op=="sub": return {"ok":true,"value":av-bv,"grad":_grad_combine(a["grad"],1.0,b["grad"],-1.0)}
+		if op=="mul": return {"ok":true,"value":av*bv,"grad":_grad_combine(a["grad"],bv,b["grad"],av)}
+		if absf(bv)<=1e-15: return {"ok":false,"code":"DIVISION_BY_ZERO"}
+		return {"ok":true,"value":av/bv,"grad":_grad_combine(a["grad"],1.0/bv,b["grad"],-av/(bv*bv))}
+	if op=="pow_int":
+		var a:Dictionary=recurse.call(expr["a"]); if not bool(a.get("ok",false)): return a
+		var n:=int(expr.get("exponent",1)); var av:=float(a["value"])
+		if n<0 and absf(av)<=1e-15: return {"ok":false,"code":"NEGATIVE_POWER_ZERO"}
+		var value:=pow(av,n); var derivative:=0.0 if n==0 else float(n)*pow(av,n-1)
+		return {"ok":true,"value":value,"grad":_grad_scaled(a["grad"],derivative)}
+	return {"ok":false,"code":"UNKNOWN_EXPRESSION_OP","op":op}
+
+# =============================================================================
+# SNAPSHOT / HASH / HELPERS
+# =============================================================================
+
