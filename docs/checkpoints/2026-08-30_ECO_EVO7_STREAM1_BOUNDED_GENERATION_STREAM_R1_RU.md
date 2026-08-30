@@ -266,3 +266,28 @@ exact HEAD/TREE recorded
    попал ли candidate в next population. Отдельный fault удаляет обязательный
    nested field, сохраняя declared checksum/candidate hash, и должен быть
    отвергнут authority.
+
+
+## Freeze anchors before exact-Windows gate
+
+```text
+runtime_code_head:         8636a525c47b524e0ef597e46f37ffe6204d27ee
+verification_harness_head: e0d2cda22a431c69a1b3eb4c650d79627d8aea40
+```
+
+Final metadata tip содержит только roadmap/checkpoint/mission фиксацию поверх
+этих anchors. Fresh verifier обязан брать текущий origin/feature/eco-evo7-stream1-bounded-generation-stream-r1
+целиком и записать фактические HEAD/TREE.
+
+Source-review guards перед freeze:
+
+```text
+candidate reproduce literal: kernel=1, LS3.3=0
+route formula literal:       kernel=1, LS3.3=0
+recruitment hash definition: PAR0 kernel=1, LS3.3=0
+STREAM1 public facade:       LS3.3=1, LS3.4=1, LS3.6=1
+validation before mutation:  YES
+```
+
+Windows mission:
+`docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md`.

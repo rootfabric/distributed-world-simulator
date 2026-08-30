@@ -35,6 +35,10 @@
     "proposal_commit_authority": "LS3.3",
     "stage_executor_coexistence": false,
     "remote_s1_transport": false,
-    "canonical": false
+    "canonical": false,
+    "runtime_code_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
+    "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+    "status": "CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
   }
 }

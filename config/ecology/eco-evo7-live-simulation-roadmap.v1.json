@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R12",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R13",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/STREAM1",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -106,9 +106,10 @@
     {
       "id": "STREAM1",
       "name": "Bounded Deterministic Generation Streaming",
-      "status": "R1_LOCAL_CANDIDATE",
+      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
       "detail": "Canonical parent chunks compute candidate→route→recruitment evidence into one full-generation proposal. LS3.3 alone validates base identity and atomically publishes the generation. R1 is in-process semantics foundation; exact-Windows verification required.",
-      "runtime_head": "d70ddfeb3ae8b1d3268277c61d761af5f83af7a6"
+      "runtime_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
+      "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40"
     },
     {
       "id": "LS4",
@@ -219,6 +220,30 @@
     "stage_executor_coexistence": false,
     "remote_s1_transport": false,
     "production_promotion": false,
-    "acceptance_gate": "FRESH_EXACT_WINDOWS_TRANSITIVE_PASS_AND_108_PLUS_CANONICAL_PARITY"
+    "acceptance_gate": "FRESH_EXACT_WINDOWS_TRANSITIVE_PASS_AND_108_PLUS_CANONICAL_PARITY",
+    "runtime_code_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
+    "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+    "source_review": {
+      "candidate_reproduction_literal": {
+        "candidate_kernel": 1,
+        "ls33": 0
+      },
+      "route_formula_literal": {
+        "route_kernel": 1,
+        "ls33": 0
+      },
+      "recruitment_event_hash_definition": {
+        "par0_kernel": 1,
+        "ls33": 0
+      },
+      "public_stream_facades": {
+        "ls33": 1,
+        "ls34": 1,
+        "ls36": 1
+      },
+      "validate_before_authority_mutation": true
+    },
+    "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
   }
 }
