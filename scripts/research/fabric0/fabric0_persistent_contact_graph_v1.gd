@@ -417,3 +417,143 @@ static func _solve_island(world: Dictionary, island: Dictionary, free: Dictionar
 		"dense_effective_mass_capacity": row_count * row_count,
 	}
 
+# =============================================================================
+# EVENT-AWARE CONTACT APPEARANCE BRIDGE
+# =============================================================================
+
+# Research bridge back to FABRIC0.8 semantics. It localizes the first sphere-plane
+# contact while the world is contact-free, advances ballistic differential state
+# to that exact event time, then lets the persistent contact graph solve the
+# remaining macrostep. Existing active contact islands are deliberately rejected: a
+# general event-localized sparse hybrid DAE remains a later production-scale wall.
+static func advance_contact_free_to_first_plane_event(world: Dictionary, planes: Array, dt: float, options: Dictionary = {}) -> Dictionary:
+	if dt <= 0.0:
+		return {"ok": false, "code": "DT_NONPOSITIVE"}
+	var start_contacts := compile_sphere_contacts(world, planes, CONTACT_TOLERANCE)
+	if not bool(start_contacts.get("ok", false)):
+		return start_contacts
+	if not start_contacts["contacts"].is_empty():
+		return {"ok": false, "code": "EVENT_BRIDGE_REQUIRES_CONTACT_FREE_START"}
+	var candidate := _find_first_plane_event(world, planes, dt)
+	if not bool(candidate.get("found", false)):
+		return {"ok": false, "code": "NO_CONTACT_EVENT_IN_INTERVAL"}
+	var event_time := float(candidate["dt"])
+	# Exact constant-acceleration ballistic flow to event instant.
+	var ids: Array = world["bodies"].keys(); ids.sort()
+	for id in ids:
+		var body: Dictionary = world["bodies"][id]
+		if not bool(body["dynamic"]): continue
+		var v0: Vector3 = body["linear_velocity"]
+		body["position"] = body["position"] + v0 * event_time + 0.5 * world["gravity"] * event_time * event_time
+		body["linear_velocity"] = v0 + world["gravity"] * event_time
+	world["time"] = float(world["time"]) + event_time
+
+	var at_event := compile_sphere_contacts(world, planes, maxf(CONTACT_TOLERANCE, 1.0e-8))
+	if not bool(at_event.get("ok", false)) or at_event["contacts"].is_empty():
+		return {"ok": false, "code": "EVENT_LOCALIZATION_DID_NOT_COMPILE_CONTACT"}
+	var remaining := dt - event_time
+	var solve_result := step(world, at_event["contacts"], remaining, options)
+	if not bool(solve_result.get("ok", false)):
+		return solve_result
+	return {
+		"ok": true,
+		"event_time": event_time,
+		"event_body": String(candidate["body_id"]),
+		"event_plane": String(candidate["plane_id"]),
+		"event_contact_ids": _contact_ids(at_event["contacts"]),
+		"remaining_dt": remaining,
+		"contact_step": solve_result,
+		"state_hash": world_hash(world),
+	}
+
+static func _find_first_plane_event(world: Dictionary, planes: Array, dt: float) -> Dictionary:
+	var best_dt := INF
+	var best := {}
+	var ids: Array = world["bodies"].keys(); ids.sort()
+	var sorted_planes: Array = planes.duplicate(true)
+	sorted_planes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	for id in ids:
+		var body: Dictionary = world["bodies"][id]
+		if not bool(body["dynamic"]): continue
+		for plane in sorted_planes:
+			var normal: Vector3 = plane["normal"]
+			if normal.length() <= EPS: continue
+			normal = normal.normalized()
+			var gap0 := normal.dot(body["position"]) - float(plane["offset"]) - float(body["radius"])
+			if gap0 <= CONTACT_TOLERANCE: continue
+			var p_end: Vector3 = body["position"] + body["linear_velocity"] * dt + 0.5 * world["gravity"] * dt * dt
+			var gap1 := normal.dot(p_end) - float(plane["offset"]) - float(body["radius"])
+			if gap1 > 0.0: continue
+			var lo := 0.0
+			var hi := dt
+			for _iter in range(64):
+				if hi - lo <= 1.0e-11: break
+				var mid := 0.5 * (lo + hi)
+				var p_mid: Vector3 = body["position"] + body["linear_velocity"] * mid + 0.5 * world["gravity"] * mid * mid
+				var gap_mid := normal.dot(p_mid) - float(plane["offset"]) - float(body["radius"])
+				if gap_mid <= 0.0: hi = mid
+				else: lo = mid
+			if hi < best_dt:
+				best_dt = hi
+				best = {"found": true, "dt": hi, "body_id": String(id), "plane_id": String(plane["id"])}
+	return best if not best.is_empty() else {"found": false}
+
+# =============================================================================
+# ADMM + SPARSE HELPERS
+# =============================================================================
+
+static func _admm_cone(a: Array, b: Array, mu: Array, warm: Array, rho: float, tolerance: float, max_iterations: int) -> Dictionary:
+	if rho <= 0.0 or tolerance <= 0.0 or max_iterations < 1:
+		return {"ok": false, "code": "BAD_SOLVER_OPTIONS"}
+	var n := b.size()
+	var h: Array = []
+	for r in range(n):
+		var row: Array = a[r].duplicate(true)
+		row[r] = float(row[r]) + rho
+		h.append(row)
+	var chol := _cholesky(h)
+	if not bool(chol.get("ok", false)):
+		return {"ok": false, "code": "ADMM_FACTOR_FAILED"}
+	var lambda: Array = warm.duplicate(true)
+	var z: Array = warm.duplicate(true)
+	var u := _zero_vector(n)
+	# Ensure warm cache itself is admissible.
+	for ci in range(mu.size()):
+		var p := _project_cone(Vector3(z[3*ci],z[3*ci+1],z[3*ci+2]), float(mu[ci]))
+		z[3*ci]=p.x; z[3*ci+1]=p.y; z[3*ci+2]=p.z
+		lambda[3*ci]=p.x; lambda[3*ci+1]=p.y; lambda[3*ci+2]=p.z
+	var primal := INF
+	var dual := INF
+	var iterations := 0
+	for iteration in range(max_iterations):
+		iterations = iteration + 1
+		var rhs := _zero_vector(n)
+		for i in range(n): rhs[i] = rho * (float(z[i]) - float(u[i])) - float(b[i])
+		lambda = _cholesky_solve(chol["l"], rhs)
+		var old_z: Array = z.duplicate(true)
+		for ci in range(mu.size()):
+			var q := Vector3(lambda[3*ci]+u[3*ci], lambda[3*ci+1]+u[3*ci+1], lambda[3*ci+2]+u[3*ci+2])
+			var p := _project_cone(q, float(mu[ci]))
+			z[3*ci]=p.x; z[3*ci+1]=p.y; z[3*ci+2]=p.z
+		for i in range(n): u[i] = float(u[i]) + float(lambda[i]) - float(z[i])
+		primal = 0.0; dual = 0.0
+		for i in range(n):
+			primal = maxf(primal, absf(float(lambda[i]) - float(z[i])))
+			dual = maxf(dual, rho * absf(float(z[i]) - float(old_z[i])))
+		if maxf(primal, dual) <= tolerance: break
+	if maxf(primal, dual) > tolerance:
+		return {"ok": false, "code": "ADMM_NO_CONVERGENCE", "iterations": iterations, "primal_residual": primal, "dual_residual": dual}
+	return {"ok": true, "lambda": z, "iterations": iterations, "primal_residual": primal, "dual_residual": dual}
+
+static func _append_body_jacobian(row: Dictionary, world: Dictionary, body_index: Dictionary, body_id: String, d: Vector3, r: Vector3, sign: float) -> void:
+	if body_id.begins_with("@static/") or not body_index.has(body_id): return
+	var base := 6 * int(body_index[body_id])
+	var angular := r.cross(d)
+	var values := [d.x,d.y,d.z,angular.x,angular.y,angular.z]
+	for i in range(6):
+		var v := sign * float(values[i])
+		if absf(v) > EPS: row[base+i] = v
+
+static func _island_inverse_mass(world: Dictionary, body_ids: Array) -> Array:
+	var result: Array = []
+	for id in body_ids:
