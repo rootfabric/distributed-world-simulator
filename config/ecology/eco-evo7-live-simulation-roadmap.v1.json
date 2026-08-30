@@ -135,8 +135,8 @@
       "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
       "detail": "Measurement-only campaign: 1 accepted recipe × SERIAL_REFERENCE/STREAM1 × 3 repetitions, 2 warmup + 12 measured generations. Produces 6 PERF2.0-valid samples, requires 3/3 exact cross-mode canonical parity, measured-window STREAM1 telemetry, and 12 p50/p95 summary rows. No optimization claim.",
       "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md",
-      "profiler_runtime_head": "e1690106764cbcff536d939e87f1f65e9111937e",
-      "acceptance_harness_head": "9590ac289c8664a7857cebcecca5d5819450033e",
+      "profiler_runtime_head": "85b9e358dd2edc0213c37b6c5005569fb7f6f378",
+      "acceptance_harness_head": "314cacb607ba57e76986cea0b95c38fe1c2b81c8",
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
       "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
     },
@@ -364,8 +364,8 @@
       "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
       "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
       "measurement_contract_mutation_allowed": false,
-      "profiler_runtime_head": "e1690106764cbcff536d939e87f1f65e9111937e",
-      "acceptance_harness_head": "9590ac289c8664a7857cebcecca5d5819450033e",
+      "profiler_runtime_head": "85b9e358dd2edc0213c37b6c5005569fb7f6f378",
+      "acceptance_harness_head": "314cacb607ba57e76986cea0b95c38fe1c2b81c8",
       "campaign": {
         "recipes": [
           "MIXED_PHYSICAL_HETEROGENEITY"
@@ -411,6 +411,15 @@
         "profiler_reproduction_calls": 0,
         "profiler_mutation_seed_calls": 0,
         "profiler_dispersal_seed_calls": 0
+      },
+      "report_integrity": {
+        "raw_sample_timings_bound": true,
+        "raw_sample_counts_bound": true,
+        "raw_sample_memory_bound": true,
+        "raw_sample_stream_telemetry_bound": true,
+        "summary_values_bound": true,
+        "json_roundtrip_validation": true,
+        "raw_timing_tamper_fails_closed": true
       }
     }
   }
