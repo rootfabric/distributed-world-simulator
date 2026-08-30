@@ -73,8 +73,12 @@ if ($needsGodot -and -not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
     throw "Godot binary not found: $GodotPath"
 }
 
-$branch = (& git -C $gitFull branch --show-current).Trim()
+$branchRaw = [string](& git -C $gitFull branch --show-current)
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current branch" }
+$branch = $branchRaw.Trim()
+if ([string]::IsNullOrWhiteSpace($branch)) {
+    $branch = "<detached-head>"
+}
 $head = (& git -C $gitFull rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current HEAD" }
 $status = & git -C $gitFull status --porcelain
