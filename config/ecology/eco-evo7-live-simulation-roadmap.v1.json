@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R14",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R15",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF2.SIM",
+  "current_checkpoint": "ECO.EVO7/PERF2.0",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -117,8 +117,34 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "NEXT_AUTHORIZED_AFTER_STREAM1_ACCEPTANCE",
-      "detail": "May start immediately from accepted STREAM1 without waiting for VIS4/PLAY0.MORPH. Covers measurement contract, STREAM1 profiling, working-set/memory, simulation scaling and runtime optimization."
+      "status": "IN_PROGRESS_PERF2_0_MEASUREMENT_CONTRACT",
+      "detail": "Simulation-side PERF2 lane is active. PERF2.0 freezes benchmark identity/statistics/correctness boundaries before any PERF2.1 performance claim."
+    },
+    {
+      "id": "PERF2.0",
+      "name": "Measurement Contract",
+      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
+      "detail": "Freezes workload_hash, comparison_key, minimum repetitions/warmup, timing/memory units, canonical result parity and p50/p95 reporting. No performance claim yet."
+    },
+    {
+      "id": "PERF2.1",
+      "name": "STREAM1 Generation Profiling",
+      "status": "BLOCKED_WAIT_PERF2_0_ACCEPTANCE"
+    },
+    {
+      "id": "PERF2.2",
+      "name": "Working-set / Memory",
+      "status": "BLOCKED_WAIT_PERF2_1"
+    },
+    {
+      "id": "PERF2.3",
+      "name": "Simulation Scaling",
+      "status": "BLOCKED_WAIT_PERF2_2"
+    },
+    {
+      "id": "PERF2.4",
+      "name": "Runtime Optimization",
+      "status": "BLOCKED_WAIT_PERF2_3"
     },
     {
       "id": "PERF2.CONV",
@@ -204,8 +230,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.SIM",
-    "status": "STREAM1_ACCEPTED_PERF2_SIM_AUTHORIZED_VIS4_PARALLEL_ACTIVE",
+    "next_checkpoint": "PERF2.0",
+    "status": "PERF2_SIM_ACTIVE_PERF2_0_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -291,5 +317,17 @@
       "worktree_clean": true,
       "note": "Legacy scene parse warnings were verifier-classified as pre-existing and byte-unchanged relative to predecessor; not STREAM1 regression."
     }
+  },
+  "perf2": {
+    "revision": "ECO.EVO7-PERF2.0-R1",
+    "lane": "PERF2.SIM",
+    "current_step": "PERF2.0",
+    "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
+    "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
+    "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "production_promotion": false,
+    "canonical_metrics": false,
+    "perf2_1_blocked_until_perf2_0_acceptance": true,
+    "vis4_dependency": "NONE_FOR_PERF2_SIM__REQUIRED_ONLY_FOR_PERF2_CONV"
   }
 }
