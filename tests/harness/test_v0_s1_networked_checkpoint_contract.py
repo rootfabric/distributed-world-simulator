@@ -28,7 +28,7 @@ CURRENT_V0_BRANCH = "control/v0-p7-activation-r1"
 CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-activation-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "7e80fe6ac409317d349cdeaa9602542c782893c1"
+P7_CONTROL_BASE = "f7d3deb80b67a41880d736f83b132a9a7a5a0964"
 
 
 def load_json(path: str) -> dict:
