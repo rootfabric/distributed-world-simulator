@@ -24,6 +24,7 @@ class CorruptHashProvider:
 
 var assertions := 0
 var failures: Array[String] = []
+var temperate_founder_hash := ""
 
 func _init() -> void:
 	var world = EarthWorld.new()
@@ -122,6 +123,10 @@ func _deterministic_temperate_replay(world) -> Array[Dictionary]:
 	_check(forcing_b.setup("TEMPERATE_SEASONAL"), "temperate provider B initializes")
 	_check(first.set_environment_forcing_provider(forcing_a), "temperate provider A attaches")
 	_check(replay.set_environment_forcing_provider(forcing_b), "temperate provider B attaches")
+	temperate_founder_hash = String(first.get_workbench_snapshot().get("hereditary_pool_hash", ""))
+	_check(not temperate_founder_hash.is_empty(), "temperate founder hereditary pool is valid")
+	_check(String(replay.get_workbench_snapshot().get("hereditary_pool_hash", "")) == temperate_founder_hash,
+		"temperate replay starts from exact same founder heredity")
 
 	var rows: Array[Dictionary] = []
 	for generation in ECOLOGY_GENERATIONS:
@@ -142,6 +147,8 @@ func _counterfactual_divergence(world, temperate_rows: Array[Dictionary]) -> voi
 	_check(monsoon.set_environment_forcing_provider(forcing), "monsoon provider attaches")
 
 	var initial_heredity := String(monsoon.get_workbench_snapshot().get("hereditary_pool_hash", ""))
+	_check(initial_heredity == temperate_founder_hash,
+		"seasonal counterfactuals start from exact same founder heredity")
 	var environment_diverged := false
 	var ecology_diverged := false
 	for generation in ECOLOGY_GENERATIONS:
@@ -151,7 +158,12 @@ func _counterfactual_divergence(world, temperate_rows: Array[Dictionary]) -> voi
 		var reference: Dictionary = temperate_rows[generation]
 		if String(row["environment_field_hash"]) != String(reference["environment_field_hash"]):
 			environment_diverged = true
-		if String(row["ecology_state_hash"]) != String(reference["ecology_state_hash"]) 				or String(row["recruitment_hash"]) != String(reference["recruitment_hash"]) 				or String(row["population_hash"]) != String(reference["population_hash"]):
+		if (
+			String(row["recruitment_hash"]) != String(reference["recruitment_hash"])
+			or String(row["competition_hash"]) != String(reference["competition_hash"])
+			or String(row["population_hash"]) != String(reference["population_hash"])
+			or String(row["hereditary_pool_hash"]) != String(reference["hereditary_pool_hash"])
+		):
 			ecology_diverged = true
 
 	_check(environment_diverged, "counterfactual seasonal profiles create different physical forcing")
@@ -201,7 +213,9 @@ func _fail_closed_environment_proposal(world) -> void:
 	_check(String(after_ecology.get("state_hash", "")) == String(before_ecology.get("state_hash", "")),
 		"corrupt seasonal proposal cannot mutate ecology state")
 	_check(String(after_ecology.get("postcompetition_population_hash", "")) == String(before_ecology.get("postcompetition_population_hash", "")),
-		"corrupt seasonal proposal cannot mutate population")
+		"corrupt seasonal proposal cannot mutate postcompetition population hash")
+	_check(String(after_ecology.get("hereditary_pool_hash", "")) == String(before_ecology.get("hereditary_pool_hash", "")),
+		"corrupt seasonal proposal cannot mutate hereditary pool")
 	_check(wb.get_environment_field() == before_environment, "corrupt seasonal proposal leaves exact field bytes unchanged")
 
 func _rehashed_static_tamper_rejected(seed_workbench, base_environment: Dictionary) -> void:
