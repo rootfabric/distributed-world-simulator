@@ -51,6 +51,8 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.13: `FABRIC0_13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH_RU.md`
    - FABRIC0.14: `FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_RU.md`
    - FABRIC0.15: `FABRIC0_15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH_RU.md`
+   - dual-track BAKE roadmap: `FABRIC_BAKE_ROADMAP_RU.md`
+   - BAKE architecture: `FABRIC_BAKE_ARCHITECTURE_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -527,31 +529,102 @@ FABRIC0.15 still does not prove:
 - Construction/authority/persistence/network integration;
 - full DWS regression.
 
-Next task:
+## 8.1. Dual-track frontier after FABRIC0.15
 
-**FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP**
+FABRIC0.15 is **RESEARCH CANDIDATE CLOSED**, not production-accepted.
 
-Target:
+The roadmap now has two parallel research lines:
 
 ```text
-arbitrary convex support mapping
-+
-GJK / EPA
-+
-persistent multipoint manifold
-+
-graph-wide MCP/NCP or semismooth solve
-+
-coupled friction cones
-+
-adaptive contact/separation/stick-slide localization
-+
-same-world parallel islands
-+
-broadphase
-+
-refinement / momentum / energy evidence
+PHYSICAL CORE
+FABRIC0.x
+
+FABRIC0.15
+   ↓
+FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP
+   ↓
+future physical-core checkpoints
 ```
+
+and:
+
+```text
+PHYSICAL REDUCTION
+FABRIC-BAKE B0.x
+
+B0.0 — BAKE FOUNDATION CONTRACTS
+   ↓
+B0.1 — EXACT BOUNDARY REDUCTION
+   ↓
+B0.2 — STRUCTURAL + REFINEMENT GUARDS + LOCAL UNBAKE
+   ↓
+B0.3 — CONTACT/WRENCH BAKE
+   ↓
+B0.4 — DYNAMIC ROM
+B0.5 — HYBRID BAKE / LAZY MODES
+   ↓
+B0.6 — ADAPTIVE PHYSICAL FIDELITY
+   ↓
+B0.7 — UNSEEN MACHINE SCALE
+```
+
+Read before any BAKE work:
+
+```text
+docs/research/FABRIC_BAKE_ROADMAP_RU.md
+docs/research/FABRIC_BAKE_ARCHITECTURE_RU.md
+```
+
+### Frozen BAKE architecture
+
+A new session must understand these contracts:
+
+```text
+CanonicalSourceFrontier[]
+AuthorityEnvelope
+PhysicalBoundaryContract
+BakeSourceBinding
+PhysicalBakeArtifact
+ValidatedDomain
+ErrorEnvelope
+RuntimeErrorEstimator
+ConservationEnvelope
+RefinementGuard
+ReconstructionDescriptor
+BakeStateMapping
+BakeInvalidation
+NO_SAFE_BAKE
+```
+
+Critical rules:
+
+1. Construction/Matter remain canonical truth.
+2. FABRIC and Bake are derived physical representations.
+3. FABRIC is not added as a canonical source domain.
+4. Bake source binding may contain several sorted canonical sources.
+5. A bake cannot silently cross mutable authority domains.
+6. Physical STALE is immediately non-executable.
+7. Fundamental boundary semantics remain acausal effort/flow relations.
+8. Reduced internal state need not equal full internal state.
+9. Approximation correctness is deterministic boundary error inside ValidatedDomain.
+10. Hidden dangerous processes require conservative RefinementGuards.
+11. Reduction may legally return NO_SAFE_BAKE.
+12. Presentation LOD and physical fidelity are different axes.
+13. Global scheduling cannot request a fidelity below the physical minimum-safe fidelity.
+
+### Current parallel next checkpoints
+
+```text
+PHYSICAL CORE:
+FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP
+
+FABRIC-BAKE:
+B0.0 — BAKE FOUNDATION CONTRACTS
+```
+
+They may proceed in parallel.
+
+B0.3 final acceptance is explicitly blocked until FABRIC0.16 provides general convex multipoint contact and stronger complementarity semantics.
 
 ## 9. Правило новой сессии
 
@@ -576,5 +649,18 @@ refinement / momentum / energy evidence
 - почему predecessor runtime regression + byte preservation оба входят в evidence;
 - какие FABRIC0.15 non-claims остаются открытыми;
 - почему следующий wall — general convex multipoint MCP.
+
+- почему physical bake является sibling presentation artifact, а не видом mesh/impostor LOD;
+- почему CanonicalSourceFrontier должен поддерживать несколько canonical sources;
+- почему AuthorityEnvelope запрещает скрыто объединять authoritative writers;
+- почему physical STALE означает execution forbidden;
+- почему acausal PhysicalBoundaryContract фундаментальнее input/output API;
+- почему internal reduced state equality не является критерием bake correctness;
+- почему ValidatedDomain/ErrorEnvelope должны быть deterministic/falsifiable, а не statistical confidence;
+- почему RefinementGuard обязан вызвать detail обратно до скрытого authoritative failure/event;
+- почему NO_SAFE_BAKE является корректным compiler result;
+- почему BAKE определяет minimum safe physical fidelity, но не становится global scheduler;
+- почему B0.3 final заблокирован FABRIC0.16;
+- где лежат `FABRIC_BAKE_ROADMAP_RU.md` и `FABRIC_BAKE_ARCHITECTURE_RU.md`.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
