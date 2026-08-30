@@ -87,6 +87,16 @@ func set_competition_enabled(value: bool) -> bool:
     competition_enabled = value
     return true
 
+## LS4 public environment-forcing pass-through. LS3.4 updates its competition
+## input only after LS3.3 has accepted the exact same replacement field.
+func set_environment_field(environment_field: Dictionary) -> bool:
+    if not initialized or core == null:
+        return false
+    if not core.set_environment_field(environment_field):
+        return false
+    environment_cells = Array(environment_field["cells"]).duplicate(true)
+    return true
+
 ## PAR2 minimal pass-through: LS3.4 stays backend-ignorant; it only forwards
 ## the existing LS3.3 executor seam. No private-member tunneling beyond the
 ## public core handle LS3.4 itself owns.
