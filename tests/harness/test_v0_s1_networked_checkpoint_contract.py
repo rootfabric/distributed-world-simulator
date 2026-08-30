@@ -24,11 +24,11 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
-CURRENT_V0_BRANCH = "control/v0-p7-1-director-dispatch-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-1-director-dispatch-r1.v1.json"
+CURRENT_V0_BRANCH = "control/v0-p7-1-closure-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-1-closure-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "5bbb2dac67382dcc6afc889b1f158397994233f5"
+P7_CONTROL_BASE = "e86ec851b263ac6fca8177921b01cb7486fdff2f"
 
 
 def load_json(path: str) -> dict:
@@ -171,8 +171,8 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         )
         prebuild = v0["prebuild_state"]
         self.assertEqual(P7_BRANCH, prebuild["branch"])
-        self.assertEqual("NOT_CREATED_AT_DISPATCH_COMMIT", prebuild["head_at_refresh_input"])
-        self.assertFalse(prebuild["runtime_mutation_present"])
+        self.assertEqual("28c47e26969608b126e6097bc8a26bd9c593be8c", prebuild["head_at_refresh_input"])
+        self.assertTrue(prebuild["runtime_mutation_present"])
 
     def test_current_registry_and_current_passport_are_consistent(self):
         v0 = self.registry["programs"]["V0"]
@@ -216,7 +216,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P7, lease["holder_checkpoint"])
         self.assertEqual(P7_BRANCH, lease["holder_branch"])
-        self.assertEqual("ACTIVE_V0_P7_DISPATCHED_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual("ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION", lease["state"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):

@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-1-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.1 closure control carrier; records exact runtime merge and advances the same P7 work order to P7.2.",
+  "purpose": "Canonicalize P7.1 exact-head review/verification and runtime merge without accepting the whole P7 checkpoint or releasing the P7 mutation lease.",
+  "expected_outcome": "P7.1 COMPLETE_MERGED; P7 IN_PROGRESS; P7.2 NEXT on the same runtime branch and single mutation lease.",
+  "current_stage": "P7.2 Bounded Planetary Matter Bubble",
+  "stage_status": "P7_1_COMPLETE_MERGED_P7_2_NEXT",
+  "progress_note": "P7.1 stateless Tool→existing MW4 composition gate is merged via PR #341. Exact runtime subject 28c47e26969608b126e6097bc8a26bd9c593be8c / tree 99629227f66b15092df5d798f7706364bfaadf1d passed exact double-Godot P7.1 83/83, real Tool→MW4 integration 30/30 with MW4 COMMITTED, P5 36/36, MW6 130/130, and exact-head Project Control. P7 remains IN_PROGRESS under the same single mutation lease.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "next_stage": "Implement P7.2 bounded planetary Matter bubble by consuming existing Matter truth; do not create a second terrain/Matter owner.",
+  "parent_branch_or_checkpoint": "main @ e86ec851b263ac6fca8177921b01cb7486fdff2f / P7.1 runtime merged",
+  "base_commit": "e86ec851b263ac6fca8177921b01cb7486fdff2f",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 Director dispatch canonical",
+    "exact runtime subject reviewed/verified",
+    "PR #341 merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-1-closure-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-1-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-1-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-POST-BUILD-CRITIQUE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0003-p7-1-runtime-merged.v1.json",
+    "docs/checkpoints/2026-08-30_V0_P7_1_TOOL_TO_MW4_COMPLETE_R1_RU.md",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/sm1/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+    "focused": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-30-R7-P7-PREDISPATCH",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-30-R8-P7-P7_1_COMPLETE",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -51,7 +51,7 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_1_DISPATCHED",
+    "current_phase": "P7_2_NEXT",
     "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
@@ -106,11 +106,23 @@
       "run": 33293384467
     },
     "p7_1": {
-      "state": "DISPATCHED",
+      "state": "COMPLETE_MERGED",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "runtime_subject_head": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+      "runtime_subject_tree": "99629227f66b15092df5d798f7706364bfaadf1d",
+      "runtime_merge_commit": "e86ec851b263ac6fca8177921b01cb7486fdff2f",
       "selected_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
       "scope": "STATELESS_AUTHORIZE_MUTATION_COMPOSITION_GATE",
+      "runtime_mutation_authorized": true,
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-1-FINAL-REVIEW-001.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-1-VERIFICATION-001.v1.json",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json"
+    },
+    "p7_2": {
+      "state": "NEXT",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
       "runtime_mutation_authorized": true
     }
   },
@@ -131,7 +143,7 @@
     "holder_program": "V0",
     "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "ACTIVE_V0_P7_DISPATCHED_RUNTIME_MUTATION",
+    "state": "ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -142,7 +154,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "Director dispatch is durably recorded for P7.1 after P7.0 acceptance and post-merge PC0 NON_RED. Exactly one runtime mutation worker is authorized on the declared P7 branch; non-holder runtime dispatch remains forbidden."
+    "reason": "P7.1 is merged and P7 remains the single active runtime mutation checkpoint. The same feature/v0-p7-bounded-terrain-mutation lease continues into P7.2; non-holder runtime mutation remains forbidden."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
