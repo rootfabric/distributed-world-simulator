@@ -709,3 +709,159 @@ one new behavior
 ```
 
 Этот критерий должен сохраняться при FABRIC0.8 и далее.
+
+
+## 34. Differential и algebraic state — один физический timestep problem
+
+FABRIC0.8 подтвердил новую аксиому:
+
+> Reaction, которая влияет на trajectory, не должна вычисляться после движения. Она должна участвовать в вычислении derivative.
+
+Поэтому правильная форма:
+
+```text
+solve F(x,y)=0
+then evaluate xdot=f(x,y)
+```
+
+на каждой integration stage.
+
+Это сохраняет causal связь между constraints/reactions и continuous motion.
+
+## 35. Topology — вход математической программы
+
+Bond active/inactive больше нельзя считать только metadata.
+
+Topology определяет active equation structure.
+
+FABRIC0.8 экспериментально показал:
+
+```text
+bond changes
+→ algebraic equation changes
+→ solved reaction changes
+→ future trajectory changes
+```
+
+Следовательно topology mutation должна приводить к recompile/re-solve physics до продвижения времени.
+
+## 36. Impulse — reaction integrated across jump
+
+В continuous physics constraint reaction выражается force/flow balance.
+
+В impact jump аналогичная роль принадлежит impulse.
+
+Не:
+
+```text
+object.apply_impulse(value)
+```
+
+а:
+
+```text
+solve impulse as unknown
+subject to
+momentum + restitution + friction constraints
+```
+
+Это сохраняет device-agnostic grammar через continuous и discontinuous regimes.
+
+## 37. Event instant — это вычисление fixed point
+
+FABRIC0.7 ввёл localized jump.
+
+FABRIC0.8 уточнил:
+
+> Один timestamp не обязательно означает один transition.
+
+Jump может изменить state; state может активировать condition; condition может изменить topology; topology меняет algebraics; algebraics могут изменить новые guards.
+
+Поэтому event instant — локальный iteration problem:
+
+```text
+solve
+→ transition
+→ re-solve
+→ transition
+→ re-solve
+→ fixed point
+```
+
+Только после fixed point continuous time может продолжиться.
+
+## 38. Conservation audit через jump отделён от power audit во flow
+
+Continuous power relation:
+
+```text
+common * balance = power
+```
+
+не надо механически переносить на instantaneous impact, где natural integrated quantity — impulse.
+
+Для jump важны отдельные invariants:
+
+- linear/angular momentum balance;
+- restitution law;
+- friction admissibility;
+- noncreation of energy при dissipative law.
+
+FABRIC должен иметь explicit audit semantics для flow и jump, а не одну универсальную числовую проверку.
+
+## 39. Geometry должна стать генератором constraints, а не владельцем поведения
+
+FABRIC0.8 пока вручную задаёт scalar gap.
+
+Следующий шаг должен сделать:
+
+```text
+geometry
+→ contact manifold
+→ Jacobians
+→ generic constraints
+→ solve
+```
+
+а не:
+
+```text
+CollisionObject
+→ special collision callback
+```
+
+Geometry сообщает, где constraint возникает. Solver определяет reaction.
+
+## 40. Order invariance — новый критерий физической истины
+
+Для multi-contact мира порядок обхода contacts является implementation detail.
+
+Если:
+
+```text
+[A,B,C]
+```
+
+и:
+
+```text
+[C,A,B]
+```
+
+дают разные physical state при той же topology/geometry, это numerical/architectural defect, а не допустимая semantics.
+
+FABRIC0.9 должен сделать order-invariance явным acceptance criterion.
+
+## 41. Текущий образ FABRIC
+
+После FABRIC0.8 наиболее точный образ уже не:
+
+```text
+collection of generic components
+```
+
+а:
+
+> compiler of mutable semantic/physical topology into a dimension-aware hybrid differential-algebraic program with explicit continuous flows, reactions, jumps and structural transactions.
+
+Это остаётся research hypothesis. Production promotion требует масштабирования, ownership integration и гораздо более тяжёлых unknown-machine tests.
