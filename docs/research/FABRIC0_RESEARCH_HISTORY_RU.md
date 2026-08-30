@@ -1700,3 +1700,271 @@ FABRIC0.11 runtime suite was not rerun in this isolated lab; predecessor executa
 ```
 
 Если интеграция потребует отказаться от convergence/order/lineage principles, это будет важный architecture falsification, а не повод спрятать mismatch.
+
+
+## FABRIC0.13 — Unified Adaptive 3D Contact Graph
+
+FABRIC0.13 был принципиально другим checkpoint.
+
+До него можно было сказать:
+
+```text
+0.11 knows persistent sparse contacts
+
+0.12 knows adaptive multi-event manifolds
+```
+
+Но это ещё не доказывало, что эти abstractions совместимы.
+
+### Integration itself became the falsification test
+
+Вместо новой isolated primitive был построен единый stand:
+
+```text
+already-constrained A/B stack
++
+free falling and rotating C
+```
+
+В одном `0.7 s` run должны одновременно выжить:
+
+- old persistent relations;
+- impact localization;
+- island merge;
+- sparse reaction solve;
+- adaptive integration;
+- orientation-dependent geometry;
+- multipoint manifold transitions;
+- feature lineage;
+- deterministic replay;
+- actual threaded island solve;
+- refinement convergence.
+
+Если бы любой из принципов 0.11/0.12 ломался при объединении, это было бы architecture finding.
+
+Он не сломался на accepted stand.
+
+### Impact joins the already constrained world
+
+First event:
+
+`0.12770032218309 s`.
+
+Before:
+
+```text
+[A,B]
++
+free C
+```
+
+After:
+
+```text
+[A,B,C]
+```
+
+Existing support reactions:
+
+```text
+floor|A = 19.62
+A|B     = 9.81
+```
+
+survive graph merge by persistent relation identity.
+
+Это важнее, чем просто получить новый contact.
+
+It says:
+
+> entering topology must join the existing physical history rather than instantiate a replacement island with amnesia.
+
+### Rotation finally enters the same equation as translation
+
+0.12 had orientation-aware geometry, but 0.13 explicitly couples reaction to rotational coordinate.
+
+Contact Jacobian:
+
+```text
+[0, -1, +1, dr/dtheta]
+```
+
+and acceleration curvature term:
+
+```text
+d2r/dtheta2 * omega^2
+```
+
+This turned orientation from a feature selector into part of the constraint mechanics.
+
+### Multipoint feature topology is now in the persistent graph path
+
+Rocking gives:
+
+```text
+2-point edge
+→ 4-point face
+→ 2-point opposite edge
+```
+
+at one physical instant.
+
+Then later the reverse transition occurs.
+
+Each event needs:
+
+```text
+two topology mutations
+three event iterations
+fixed point
+```
+
+The 0.12 lineage idea therefore survived integration into a persistent contact relation.
+
+### The strongest result: convergence survived integration
+
+A common research failure mode is:
+
+```text
+subsystem A converges
+subsystem B works
+A+B becomes timestep-sensitive
+```
+
+FABRIC0.13 explicitly tested this.
+
+Against `1e-12` reference:
+
+Event-time max error:
+
+```text
+8.03e-8
+→ 3.11e-9
+→ 5.64e-11
+```
+
+Final-state error:
+
+```text
+6.45e-7
+→ 2.62e-8
+→ 4.79e-10
+```
+
+So adaptive refinement still converges after:
+
+- impact;
+- island merge;
+- contact projection;
+- sparse PCG;
+- manifold transitions.
+
+This is the central success of 0.13.
+
+### Actual threads stay outside physical mutation
+
+Main island `[A,B,C]` and independent `[D,E]` are solved by real Godot Threads.
+
+Forward/reverse spawn order:
+
+`same canonical hash`.
+
+Parallel audit also leaves physical world hash unchanged.
+
+This makes the execution boundary clearer:
+
+```text
+snapshot
+→ worker solve
+→ join
+→ canonical result
+```
+
+rather than workers owning world truth.
+
+### Quaternion is evidence with a scope warning
+
+The final quaternion is normalized to machine precision.
+
+But the experiment rotates only about X.
+
+So the history explicitly records:
+
+```text
+Quaternion exists
+!=
+general 6DOF solved
+```
+
+This prevents future sessions from accidentally inflating the claim.
+
+### Exact bytes exposed a repository-level lesson
+
+During durable persistence, five files matched immediately.
+
+Two large source files differed by exactly one trailing newline.
+
+The code was not declared remote-identical until GitHub blob SHA equaled local `git hash-object`.
+
+That persistence failure produced a useful principle:
+
+> Exact validation evidence names bytes, not intentions.
+
+If a checkpoint claims byte identity, a newline matters.
+
+### Evidence
+
+```text
+FABRIC0.13 focused       95/95 PASS
+playground               PASS
+editor                   CLEAN
+7 remote executable blobs IDENTICAL
+```
+
+Physical hash:
+
+`f486303b7f133d28148d63362ad368d82e946132f2a12f9c164ae5edc2819483`.
+
+Parallel hash:
+
+`6ef3fd35474a179a7bf02675d5bde9ecb457f235fdb7cc70f017a69757f92757`.
+
+FABRIC0.12 runtime suite was not rerun in this lab; its executable blobs remain preserved.
+
+### What remains deliberately unfinished
+
+0.13 still uses a constrained research stand with partial algebraic projection for A/B support.
+
+The demonstrated body C rotation is one-axis.
+
+Tangential friction cones from earlier FABRIC work are not yet unified into this adaptive multipoint successor.
+
+Therefore the next wall is physical, not merely infrastructural.
+
+## FABRIC0.14 — Full 6DOF Frictional Feature Manifold
+
+Next falsification should require:
+
+```text
+free 3D translation
++
+free 3D rotation
++
+quaternion/inertia tensor
++
+unilateral normal reaction
++
+Coulomb tangent cones
++
+persistent convex feature lineage
++
+adaptive appear/disappear events
++
+island merge/split
++
+parallel sparse execution
++
+refinement/invariant evidence
+```
+
+FABRIC0.13 closes the integration chapter; 0.14 should remove the remaining rigid-body/friction simplifications.
