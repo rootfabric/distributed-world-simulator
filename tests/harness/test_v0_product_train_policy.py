@@ -107,7 +107,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_0_exact_source_owner_map_is_bound_to_existing_owners(self) -> None:
         owner_map = _load(HARNESS / "v0-p7-matter-production-owner-map.v1.json")
-        self.assertEqual("REVIEW_CANDIDATE", owner_map["status"])
+        self.assertEqual("REVIEW_READY", owner_map["status"])
         self.assertFalse(owner_map["runtime_mutation"])
         self.assertEqual("PASS", owner_map["no_second_owner_audit"]["result"])
         self.assertEqual(0, owner_map["no_second_owner_audit"]["duplicate_owner_count"])

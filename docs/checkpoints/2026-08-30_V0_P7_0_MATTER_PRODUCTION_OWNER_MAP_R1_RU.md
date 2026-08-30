@@ -1,6 +1,6 @@
 # V0 P7.0 — Matter Production Owner Map / Convergence Gate
 
-**Status:** REVIEW CANDIDATE  
+**Status:** REVIEW READY  
 **Date:** 2026-08-30  
 **Reviewed source base:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **Runtime mutation:** NONE
@@ -219,7 +219,7 @@ Stop if P7.1 attempts any of:
 
 ## 12. P7.0 acceptance decision
 
-P7.0 is ready for fresh exact-source review.
+P7.0 owner-map content is frozen for fresh exact-source review.
 
 The owner map is machine-readable at:
 

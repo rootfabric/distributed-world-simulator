@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.v0_p7_matter_production_owner_map.v1",
   "revision": "V0-P7-0-OWNER-MAP-2026-08-30-R1",
-  "status": "REVIEW_CANDIDATE",
+  "status": "REVIEW_READY",
   "authored_against_main": "07d71da1d301a65d36f56ff8c7a42795becab88d",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "stage": "P7.0_MATTER_PRODUCTION_OWNER_MAP",
@@ -304,5 +304,10 @@
     "p7_3_conversion_policy_explicitly_deferred_and_bounded": true,
     "fresh_review_required": true
   },
-  "created_at_utc": "2026-08-30T04:33:00Z"
+  "created_at_utc": "2026-08-30T04:33:00Z",
+  "review_candidate_ci": {
+    "exact_head": "92ceabcba52de2a9139f7ba2a4d0e54e0ce3c214",
+    "project_control_run": 33293003436,
+    "result": "SUCCESS"
+  }
 }

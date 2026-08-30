@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_0_OWNER_MAP_REVIEW_CANDIDATE",
+  "status": "P7_0_OWNER_MAP_REVIEW_READY",
   "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -31,7 +31,7 @@
       "name": "MATTER_PRODUCTION_OWNER_MAP",
       "runtime_mutation": false,
       "exit": "FRESH_OWNER_MAP_REVIEW_PASS",
-      "status": "REVIEW_CANDIDATE",
+      "status": "REVIEW_READY",
       "evidence": "config/control/harness/v0-p7-matter-production-owner-map.v1.json"
     },
     {
