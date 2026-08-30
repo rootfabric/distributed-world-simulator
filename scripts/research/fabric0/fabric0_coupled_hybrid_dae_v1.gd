@@ -798,3 +798,141 @@ static func _eval_dual_recursive(_system: Dictionary, expr: Dictionary, recurse:
 # SNAPSHOT / HASH / HELPERS
 # =============================================================================
 
+static func _capture_snapshot(system: Dictionary) -> Dictionary:
+	var bonds := {}
+	if not system["physical_network"].is_empty() and system["physical_network"].has("bonds"):
+		for bond in system["physical_network"]["bonds"]: bonds[String(bond["id"])] = bool(bond["active"])
+	return {"time":float(system["time"]),"states":_state_values(system),"algebraics":_algebraic_values(system),"mode":String(system["mode"]),"events":system["events"].duplicate(true),"topology_revision":int(system["topology_revision"]),"step_revision":int(system["step_revision"]),"bonds":bonds,"solver_stats":system["solver_stats"].duplicate(true)}
+
+static func _restore_snapshot(system: Dictionary, snapshot: Dictionary) -> void:
+	system["time"]=float(snapshot["time"]); _commit_state_values(system,snapshot["states"]); _commit_algebraic_values(system,snapshot["algebraics"]); system["mode"]=String(snapshot["mode"]); system["events"]=snapshot["events"].duplicate(true); system["topology_revision"]=int(snapshot["topology_revision"]); system["step_revision"]=int(snapshot["step_revision"]); system["solver_stats"]=snapshot["solver_stats"].duplicate(true)
+	for bond_id in snapshot["bonds"].keys():
+		var i:=_find_bond_index(system["physical_network"],String(bond_id)); if i>=0: system["physical_network"]["bonds"][i]["active"]=bool(snapshot["bonds"][bond_id])
+
+static func state_hash(system: Dictionary) -> String:
+	var bonds: Array=[]
+	if not system["physical_network"].is_empty() and system["physical_network"].has("bonds"):
+		for bond in system["physical_network"]["bonds"]: bonds.append({"id":String(bond["id"]),"active":bool(bond["active"])})
+		bonds.sort_custom(func(a:Dictionary,b:Dictionary)->bool:return String(a["id"])<String(b["id"]))
+	var payload:=JSON.stringify({"time":float(system["time"]),"mode":String(system["mode"]),"states":_state_values(system),"algebraics":_algebraic_values(system),"topology_revision":int(system["topology_revision"]),"bonds":bonds},"",false)
+	var ctx:=HashingContext.new(); ctx.start(HashingContext.HASH_SHA256); ctx.update(payload.to_utf8_buffer()); return ctx.finish().hex_encode()
+
+static func _state_values(system: Dictionary) -> Dictionary:
+	var result := {}
+	var keys: Array = system["states"].keys()
+	keys.sort()
+	for key in keys:
+		result[key] = float(system["states"][key]["value"])
+	return result
+
+static func _algebraic_values(system: Dictionary) -> Dictionary:
+	var result := {}
+	var keys: Array = system["algebraics"].keys()
+	keys.sort()
+	for key in keys:
+		result[key] = float(system["algebraics"][key]["value"])
+	return result
+
+static func _commit_state_values(system: Dictionary, values: Dictionary) -> void:
+	for key in values.keys():
+		system["states"][key]["value"] = float(values[key])
+
+static func _commit_algebraic_values(system: Dictionary, values: Dictionary) -> void:
+	for key in values.keys():
+		system["algebraics"][key]["value"] = float(values[key])
+
+static func _state_plus_scaled(state: Dictionary, derivative: Dictionary, scale: float) -> Dictionary:
+	var result := state.duplicate(true)
+	for key in result.keys():
+		result[key] = float(state[key]) + scale * float(derivative[key])
+	return result
+
+static func _row_nominals(rows: Array) -> Array:
+	var result: Array = []
+	for row in rows:
+		result.append(float(row["nominal"]))
+	return result
+
+static func _normalized_norm(values: Array, nominals: Array) -> float:
+	var result := 0.0
+	for i in range(values.size()):
+		result = maxf(result, absf(float(values[i])) / maxf(float(nominals[i]), EPSILON))
+	return result
+
+static func _grad_scaled(source: Dictionary, scale: float) -> Dictionary:
+	var result := {}
+	for key in source.keys():
+		result[key] = float(source[key]) * scale
+	return result
+
+static func _grad_combine(a: Dictionary, sa: float, b: Dictionary, sb: float) -> Dictionary:
+	var result := {}
+	for key_a in a.keys():
+		result[key_a] = float(result.get(key_a, 0.0)) + float(a[key_a]) * sa
+	for key_b in b.keys():
+		result[key_b] = float(result.get(key_b, 0.0)) + float(b[key_b]) * sb
+	return result
+
+static func _zero_vector(size: int) -> Array:
+	var r:Array=[]; r.resize(size); r.fill(0.0); return r
+
+static func _zero_matrix(rows: int, cols: int) -> Array:
+	var result:Array=[]
+	for _r in range(rows): var row:Array=[]; row.resize(cols); row.fill(0.0); result.append(row)
+	return result
+
+static func _solve_dense(matrix: Array, rhs: Array) -> Dictionary:
+	var n := rhs.size()
+	if matrix.size() != n:
+		return {"ok": false}
+	if n == 0:
+		return {"ok": true, "x": []}
+	var a: Array = []
+	var b: Array = []
+	for r in range(n):
+		if matrix[r].size() != n:
+			return {"ok": false}
+		var row: Array = []
+		for c in range(n):
+			row.append(float(matrix[r][c]))
+		a.append(row)
+		b.append(float(rhs[r]))
+	for col in range(n):
+		var pivot := col
+		var pivot_abs := absf(float(a[col][col]))
+		for r in range(col + 1, n):
+			var candidate := absf(float(a[r][col]))
+			if candidate > pivot_abs:
+				pivot = r
+				pivot_abs = candidate
+		if pivot_abs <= PIVOT_EPSILON:
+			return {"ok": false}
+		if pivot != col:
+			var tmp_row = a[col]
+			a[col] = a[pivot]
+			a[pivot] = tmp_row
+			var tmp_b = b[col]
+			b[col] = b[pivot]
+			b[pivot] = tmp_b
+		var pv := float(a[col][col])
+		for c in range(col, n):
+			a[col][c] = float(a[col][c]) / pv
+		b[col] = float(b[col]) / pv
+		for r in range(n):
+			if r == col:
+				continue
+			var factor := float(a[r][col])
+			if absf(factor) <= EPSILON:
+				continue
+			for c in range(col, n):
+				a[r][c] = float(a[r][c]) - factor * float(a[col][c])
+			b[r] = float(b[r]) - factor * float(b[col])
+	return {"ok": true, "x": b}
+
+static func _find_bond_index(network: Dictionary, bond_id: String) -> int:
+	if network.is_empty() or not network.has("bonds"):return -1
+	for i in range(network["bonds"].size()): if String(network["bonds"][i].get("id",""))==bond_id:return i
+	return -1
+
+static func _bond_active(system: Dictionary, bond_id: String) -> bool:
+	var i:=_find_bond_index(system["physical_network"],bond_id); return i>=0 and bool(system["physical_network"]["bonds"][i]["active"])
