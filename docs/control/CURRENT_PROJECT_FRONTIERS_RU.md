@@ -1,7 +1,7 @@
 # Distributed World Simulator — Current Project Frontiers
 
 **Refresh date:** 2026-08-30  
-**P7.0 source main:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
+**Canonical main at refresh:** `7055aef6c163099101588d5252d90ff77e089330`  
 **Purpose:** human-readable routing snapshot. Machine truth remains in `config/control/**`.
 
 ## 1. Product frontier
@@ -19,7 +19,7 @@ SM1 ACCEPTED
  ↓
 RF0 architecture guardrail
  ↓
-P7 Matter Production Convergence      P7.0 ACCEPTED / RUNTIME BLOCKED
+P7 Matter Production Convergence      P7.1 COMPLETE / P7.2 NEXT
  ↓
 V0 PLAYABLE SEAMLESS PLANET           COMPOSITION ACCEPTANCE
 ```
@@ -52,7 +52,7 @@ MatterMaterialBatch → canonical Item Graph
 
 No second Matter/terrain truth is allowed.
 
-P7.0 owner-map R2 is accepted and post-merge standard+directional PC0 is NON_RED. The only remaining transition before runtime adapter code is Director dispatch.
+P7.0 owner-map R2 is accepted; P7.1 Tool→MW4 is complete and merged. The runtime frontier is P7.2 Bounded Planetary Matter Bubble.
 
 ## 3. Replication Foundation
 
@@ -99,18 +99,40 @@ P8 and RF1 are dependency-independent, but pre-H0.3 execution still obeys the on
 
 Do not restart these foundations inside P7 or RF.
 
-## 6. Parallel research
+## 6. Parallel playable test lane
+
+A dedicated non-mutating composition lane is canonical:
+
+`docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
+
+Current test stage:
+
+```text
+V1 PLAYABLE SEAMLESS PRECHECK
+```
+
+V1 must be locally runnable in AUTOMATED and OBSERVE modes and reuse the already accepted
+SM1 graphical, M5 graphical Item Graph and SM1+Item/P6 composition paths.
+
+It may add only runners/tests/fixtures/observation helpers. It MUST NOT create missing
+production semantics. Therefore it can run in parallel with P7.2 without consuming the
+single runtime mutation worker.
+
+Later promotions align with P7.3/P7.5/P7.6/P7.7 and converge into
+`V0 PLAYABLE SEAMLESS PLANET` composition acceptance.
+
+## 7. Parallel research
 
 ECO, FABRIC and NX.C1 remain independent lanes unless main registers a concrete dependency.
 They do not implicitly block P7.
 
-## 7. Immediate work
+## 8. Immediate work
 
 ```text
-1. P7.0 COMPLETE — owner map accepted + post-merge PC0 NON_RED.
-2. Director dispatch P7.
-3. P7.1 stateless Tool/SM1/MW8-9 authorization → existing MatterMutationRequest/MW4.
-5. P7.2 bounded planetary Matter bubble.
+1. P7.0 COMPLETE.
+2. P7.1 COMPLETE / MERGED.
+3. P7.2 bounded planetary Matter bubble.
+4. In parallel: implement V1 PLAYABLE SEAMLESS PRECHECK runners + coordinator + OBSERVE mode.
 6. P7.3 MatterMaterialBatch → Item Graph with explicit mass quantization/residual accounting.
 7. P7.4 persistence/restart composition.
 8. P7.5 two-client convergence.
@@ -119,7 +141,7 @@ They do not implicitly block P7.
 11. V0 PLAYABLE SEAMLESS PLANET composition acceptance.
 ```
 
-## 8. Stop conditions
+## 9. Stop conditions
 
 Stop if work creates a second canonical owner, duplicate Matter/terrain contracts,
 P7-private persistence/resources/network authority, cache-based authority activation,
