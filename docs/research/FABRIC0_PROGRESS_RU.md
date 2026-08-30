@@ -1827,3 +1827,276 @@ produce same accepted world state
 ```
 
 Production promotion не заявляется.
+
+
+## FABRIC0.12 — ADAPTIVE MULTI-EVENT MANIFOLD DAE
+
+**Parent research head:** `9e04333a27d01992be6740d7b817579980a254f0`  
+**Implementation commit:** `172549487a4637be122478df7b83b2049f531962`  
+**Design:** `docs/research/FABRIC0_12_ADAPTIVE_MULTIEVENT_MANIFOLD_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v12-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused FABRIC0.12 acceptance: `115/115 PASS`;
+- playground: `FABRIC0_12_ADAPTIVE_MULTIEVENT_MANIFOLD_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- all 4 executable FABRIC0.12 files byte-identical between local exact-double tests and GitHub branch blobs.
+
+### Predecessor evidence policy
+
+FABRIC0.11 runtime suite was not materialized in isolated FABRIC0.12 lab, therefore 0.11 runtime regression is **not** claimed.
+
+All 0.11 executable blobs are preserved exactly against v11 evidence.
+
+### Adaptive manifold DAE
+
+Reduced research model:
+
+```text
+2D oriented rectangle
+inside
+floor + wall corner
+```
+
+Differential:
+
+```text
+theta_dot = omega
+omega_dot = -frequency^2 * theta
+```
+
+Algebraic center is derived from active support feature constraints.
+
+### Orientation-aware features
+
+Negative orientation:
+
+```text
+floor|vertex:BR
+wall|vertex:BL
+```
+
+Degenerate event manifold:
+
+```text
+floor|edge:bottom
+wall|edge:left
+```
+
+Positive orientation:
+
+```text
+floor|vertex:BL
+wall|vertex:TL
+```
+
+Feature records carry geometric lineage.
+
+### Multiple event instants
+
+One `1.2 s` adaptive advance contains two zero crossings.
+
+Analytic references:
+
+```text
+PI/16
+= 0.19634954084936...
+
+5PI/16
+= 0.98174770424681...
+```
+
+At tolerance `1e-9`:
+
+```text
+0.19634954475054
+0.98174771949769
+```
+
+### Same-time manifold fixed point
+
+Each physical event performs:
+
+```text
+vertex manifold
+→ degenerate edge manifold
+→ directed post-event vertex manifold
+→ fixed point
+```
+
+Per event:
+
+```text
+iterations = 3
+topology mutations = 2
+fixed point = true
+```
+
+Two event instants therefore produce:
+
+`4 topology mutations`.
+
+### Adaptive convergence
+
+Tolerance refinement:
+
+```text
+1e-5
+1e-7
+1e-9
+1e-11
+```
+
+Max event-time error:
+
+```text
+1.467192298e-5
+5.7857693e-7
+1.525088e-8
+3.8339e-10
+```
+
+Strictly decreasing.
+
+Accepted steps:
+
+```text
+14
+33
+68
+167
+```
+
+Energy drift magnitude also decreases, reaching approximately `7e-11` at `1e-11` tolerance.
+
+This closes the FABRIC0.11 finding that bisection tolerance alone did not establish physical time convergence.
+
+### Feature-lineage warm remap
+
+Warm numerical state follows feature ancestry, not only exact string identity.
+
+Demonstrated:
+
+```text
+vertex → edge → different vertex
+```
+
+while floor/wall warm values `2` and `3` survive the manifold change.
+
+Generic split gate:
+
+```text
+edge warm=4
+→
+BL=2
+BR=2
+```
+
+Generic merge gate:
+
+```text
+BL=2
+BR=3
+→
+edge=5
+```
+
+### Sparse pattern/preconditioner cache
+
+Sparse pattern key:
+
+```text
+island id
++
+sorted nonzero row structure
+```
+
+Cold parallel solve:
+
+```text
+cache hits=0
+misses=2
+```
+
+Warm solve:
+
+```text
+hits=2
+misses=0
+```
+
+Changed coefficients with same pattern still hit cache, but physical result hash changes and PCG re-solves to tolerance.
+
+Therefore cached preconditioner remains numerical policy, not physical truth.
+
+### Actual Thread parallelism
+
+Unlike FABRIC0.11, FABRIC0.12 starts real Godot `Thread` workers.
+
+Two independent sparse systems run concurrently.
+
+```text
+threads_started=2
+```
+
+Canonical parallel hash:
+
+`40635ad181b0273659ffd0dacae622b7b7249427d5073c2f9ffb5913f43f7fe0`.
+
+Reverse spawn order produces exact same hash.
+
+### Derived sleep/wake
+
+After 3 quiet updates:
+
+```text
+sleeping=true
+```
+
+Nonzero motion:
+
+```text
+woke=true
+sleeping=false
+```
+
+Sleep state remains outside physical state hash.
+
+### Main hashes
+
+Physical adaptive state:
+
+`a0cad2efa4bed9d598fbaac147f177e11e4d2f4e5c8bac6d9876cec7c8ae3263`.
+
+Parallel sparse result:
+
+`40635ad181b0273659ffd0dacae622b7b7249427d5073c2f9ffb5913f43f7fe0`.
+
+### Главный вывод FABRIC0.12
+
+> Correct event semantics must demonstrate convergence under trajectory refinement, and persistent geometric identity must survive feature topology changes through lineage rather than array/string equality alone.
+
+### Next wall
+
+`FABRIC0.13 — UNIFIED ADAPTIVE 3D CONTACT GRAPH`.
+
+FABRIC0.12 deliberately proved adaptive/manifold semantics in a reduced model.
+
+Next step must integrate them back into the full persistent sparse contact graph of FABRIC0.11:
+
+```text
+adaptive persistent 3D contact stepping
+3D orientation/inertia
+real multipoint feature manifold
+multiple event fixed points
+feature lineage split/merge
+sparse pattern reuse
+real parallel contact islands
+derived sleep/wake
+refinement convergence on actual contact graph
+```
+
+Production promotion не заявляется.
