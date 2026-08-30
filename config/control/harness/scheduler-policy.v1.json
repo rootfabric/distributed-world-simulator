@@ -54,7 +54,7 @@
     "current_phase": "P7_OWNER_MAP_PRE_DISPATCH",
     "runtime_mutation_allowed_now": false,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "next_runtime_checkpoint_eligible": false,
+    "next_runtime_checkpoint_eligible": true,
     "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "accepted_predecessor_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "sm1_acceptance": {
@@ -75,10 +75,10 @@
       "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
       "FRESH_P7_EPOCH_AND_WORK_ORDER",
       "MUTATION_LEASE_ROTATED_TO_P7",
-      "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS"
+      "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
+      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED"
     ],
     "p7_remaining_activation_prerequisites": [
-      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
       "DIRECTOR_DISPATCH"
     ],
     "p7_owner_map": {
@@ -100,6 +100,11 @@
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
       "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
       "owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
+    },
+    "p7_post_merge_pc0": {
+      "status": "PASS_NON_RED",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+      "run": 33293384467
     }
   },
   "research_isolation": {

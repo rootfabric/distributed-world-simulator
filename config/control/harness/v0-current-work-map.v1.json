@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
   "revision": "V0-CURRENT-WORK-MAP-2026-08-30-R7-P7",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_0_ACCEPTED_PRE_DISPATCH",
+  "status": "PRIMARY_WORK_MAP_P7_READY_FOR_DIRECTOR_DISPATCH",
   "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -15,7 +15,6 @@
   "work_order_id": "V0-P7-R1-WO-001",
   "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
   "execution_order": [
-    "POST_MERGE_PROJECT_CONTROL_NON_RED",
     "DIRECTOR_DISPATCH_P7",
     "P7_1_TOOL_TO_EXISTING_MW4_ADAPTER",
     "P7_2_BOUNDED_PLANETARY_MATTER_BUBBLE",
@@ -70,7 +69,12 @@
     "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
     "runtime_mutation": false,
-    "next": "POST_MERGE_PROJECT_CONTROL_NON_RED",
-    "accepted_doc": "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md"
+    "next": "DIRECTOR_DISPATCH_P7",
+    "accepted_doc": "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md",
+    "post_merge_pc0": {
+      "status": "PASS_NON_RED",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+      "run": 33293384467
+    }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_0_post_merge_audit_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.0_MATTER_PRODUCTION_OWNER_MAP",
+  "canonical_main_audited": "6b0143281a4a2bedeff7889f0bd6470a5fcfd60d",
+  "canonical_main_tree": "fa83cdf08c0b487c6939aeaa4b7bbb3211365b64",
+  "audit_carrier_head": "83e894a1d453b6f34b291e9c5276f1e707452cfc",
+  "project_control_run": 33293384467,
+  "project_control_result": "SUCCESS",
+  "standard_pc0": "YELLOW_NON_RED",
+  "directional_pc0": "YELLOW_NON_RED",
+  "v0_standard_health": "YELLOW_NON_RED",
+  "canonical_v0_stage": "P7.0 ACCEPTED / P7 Pre-Dispatch",
+  "accepted_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908",
+  "runtime_mutation": false,
+  "decision": "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_PASS",
+  "audited_at_utc": "2026-08-30T05:04:00Z"
+}
