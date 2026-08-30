@@ -1265,3 +1265,292 @@ order-invariant island replay
 ```
 
 Production promotion не заявляется.
+
+
+## FABRIC0.10 — PERSISTENT CONTACT GRAPH + SPARSE HYBRID CONTACT STEP
+
+**Parent research head:** `87cf1889ad59e956dde884991af061faa423b8b9`  
+**Design:** `docs/research/FABRIC0_10_PERSISTENT_CONTACT_GRAPH_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v10-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused FABRIC0.10 acceptance: `97/97 PASS`;
+- playground: `FABRIC0_10_PERSISTENT_CONTACT_GRAPH_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- all 4 executable FABRIC0.10 files byte-identical between local exact-double tests and GitHub blobs.
+
+### Predecessor evidence policy
+
+В isolated FABRIC0.10 lab predecessor runtime suites **не запускались заново**.
+
+Вместо ложного regression claim проверено, что FABRIC0.9 executable blobs на ветке неизменны относительно v9 validation evidence:
+
+```text
+solver       630f9ad5048a7061010b6a5439f18f3654440d4d
+experiments  e7f0e5d23437ed142c119dd9dccc239ba0d9644c
+acceptance   e91a93ae643e1a414d0baa85e0ffa5d035f4f755
+playground   b7de22c76bef3f09e5db5ef498635870bb70f67b
+```
+
+То есть:
+
+```text
+predecessor bytes preserved
+!=
+predecessor runtime regression rerun
+```
+
+### Persistent contact graph
+
+Contact больше не только мгновенный impact record.
+
+Stable contact cache хранит:
+
+```text
+age_steps
+first_step
+last_step
+warm_impulse
+```
+
+Lifecycle:
+
+```text
+appeared
+persisted
+disappeared
+```
+
+Built-in research identities:
+
+```text
+plane:<plane_id>|body:<body_id>
+
+pair:<canonical_body_a>|<canonical_body_b>
+```
+
+### Dynamic body-body load
+
+Stack:
+
+```text
+B
+↕ pair:A|B
+A
+↕ floor
+```
+
+после пяти gravity steps сохраняет практически неизменные positions и near-zero velocities.
+
+Persistent cached normal impulses:
+
+```text
+pair:A|B                ~= 0.0981 N*s
+plane:floor|body:A      ~= 0.1962 N*s
+```
+
+То есть dynamic body-body contact реально передаёт load вниз.
+
+### Warm start
+
+Cold first solve:
+
+```text
+39 iterations
+0 warm hits
+```
+
+Следующий timestep с теми же четырьмя stable contacts:
+
+```text
+3 iterations
+4 warm hits
+```
+
+Warm state привязан к contact identity, не island id.
+
+### Island lifecycle
+
+Initial:
+
+```text
+island:A = [A,B]
+island:D = [D]
+island:E = [E]
+
+3 islands
+```
+
+Когда появляется dynamic contact:
+
+`pair:D|E`
+
+получаем:
+
+```text
+3 islands
+→
+2 islands
+```
+
+Lifecycle:
+
+```text
+appear pair:D|E
+persist pair:D|E
+disappear pair:D|E
+```
+
+После disappearance:
+
+```text
+2 islands
+→
+3 islands
+```
+
+При merge старые D/E floor contacts сохраняют warm-start state.
+
+### Static environment не склеивает graph
+
+D и E могут оба касаться одного floor и при отсутствии dynamic D-E edge оставаться разными solver islands.
+
+Static geometry — boundary condition, а не dynamic graph node.
+
+### Sparse structure
+
+Merged D/E island:
+
+```text
+3 contacts
+9 contact rows
+
+sparse effective-mass entries = 29
+dense local capacity          = 81
+```
+
+World sparse entries during merge:
+
+`41`.
+
+Текущий numerical backend после sparse assembly пока densify-ит island-local matrix для Cholesky. Это explicit non-claim, а не скрытая «sparse solver» претензия.
+
+### Independent island equivalence
+
+Полный world с A/B + изменяющейся D/E topology сравнивается с отдельным A/B-only world.
+
+После пяти steps:
+
+```text
+A/B positions
+A/B velocities
+```
+
+совпадают до `1e-12`.
+
+Unrelated island graph mutation не меняет local physical trajectory.
+
+### Order invariance через историю
+
+Run A:
+
+- normal body insertion;
+- normal contact order.
+
+Run B:
+
+- reversed body insertion;
+- reversed provider contact order.
+
+Exact match:
+
+- contact history JSON;
+- final physical states;
+- final contact cache;
+- final world hash.
+
+Hash:
+
+`4103da3235e4cdd7f1c63c809d3dd71ab39d10ec7f68094d6eef33eabfe6033d`.
+
+### Event bridge
+
+Contact-free falling sphere:
+
+```text
+y0=2
+radius=0.5
+vy0=-1
+g=-9.81
+dt=1
+```
+
+First floor crossing localized:
+
+```text
+te = 0.460381178993
+reference = 0.46038117899287667
+```
+
+At exactly `te` contact graph records:
+
+```text
+appeared:
+plane:floor|body:fall
+```
+
+Remaining macrostep проходит уже через persistent island solve.
+
+Final:
+
+```text
+t=1
+position ~= (0,0.5,0)
+velocity ~= 0
+```
+
+Event hash:
+
+`ac7c2758e89afb9798a3b2268c99877eb0795f33699e6fbf5a6dfe9034da6eb6`.
+
+Bridge сознательно fail-closed, если macrostep начинается с уже активных contacts:
+
+`EVENT_BRIDGE_REQUIRES_CONTACT_FREE_START`.
+
+### Главный вывод FABRIC0.10
+
+> Contact становится persistent graph relation с identity, lifecycle и numerical continuity, а solver locality следует topology динамических contact edges.
+
+### Следующая фундаментальная граница
+
+`FABRIC0.11 — GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND`.
+
+Нужно убрать два research shortcuts:
+
+1. event localization пока работает только из contact-free start;
+2. sparse assembly пока заканчивается dense island-local factorization.
+
+Критический test:
+
+```text
+resting stack already constrained
++
+new dynamic body impacts stack inside a large macrostep
++
+impact localized while old contacts remain active
++
+contact graph merges at event instant
++
+warm starts remap
++
+sparse island recompile
++
+remaining time continues
++
+input permutation leaves accepted state unchanged
+```
+
+Production promotion не заявляется.
