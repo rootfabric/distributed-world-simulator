@@ -119,7 +119,35 @@
       "same_final_population_hash",
       "same_final_classification_hash",
       "minimum_repetitions_satisfied"
-    ]
+    ],
+    "cross_mode_equivalence": {
+      "purpose": "SERIAL_REFERENCE_VS_STREAM1_SAME_SIMULATION_LOAD",
+      "simulation_workload_hash_includes": [
+        "workload_id",
+        "environment_recipe",
+        "warmup_generations",
+        "measured_generations",
+        "repetitions",
+        "initial_records",
+        "founder_seed",
+        "placement_seed",
+        "evolution_seed",
+        "environment_seed"
+      ],
+      "simulation_workload_hash_excludes": [
+        "execution_mode",
+        "parents_per_chunk",
+        "audit_interval_generations",
+        "audit_generation_1"
+      ],
+      "execution_comparison_key_includes": [
+        "simulation_workload_hash",
+        "godot_version",
+        "host_fingerprint",
+        "measurement_method_revision"
+      ],
+      "requires_exact_canonical_result_parity": true
+    }
   },
   "artifact_contract": {
     "report_schema": "distributed_world_simulator.ecology.evo7_perf2.measurement_report.v1",
