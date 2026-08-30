@@ -207,3 +207,4 @@ static func _physical_energy(world: Dictionary, state: Array) -> float:
 	var rot:=0.5*inertia*omega*omega+0.5*inertia*freq*freq*theta*theta
 	var vert:=0.5*float(world["mass"][2])*float(state[IDX_VC])*float(state[IDX_VC])+float(world["mass"][2])*G*float(state[IDX_ZC])
 	return rot+vert
+
