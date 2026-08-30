@@ -248,3 +248,253 @@ static func advance_event_localized(world: Dictionary, planes: Array, dt: float,
 	# Advance the real world while preserving only the old graph until te.
 	var pre_result := _advance_filtered_sparse(world, planes, event_dt, start_ids, options)
 	if not bool(pre_result.get("ok", false)):
+		return pre_result
+	var event_time := float(world["time"])
+	var event_compile := Prev.compile_sphere_contacts(world, planes, maxf(float(options.get("contact_tolerance", 1.0e-7)), 1.0e-7))
+	if not bool(event_compile.get("ok", false)):
+		return event_compile
+	var event_ids := _contact_id_set(event_compile["contacts"])
+	if _same_id_set(start_ids, event_ids):
+		return {"ok": false, "code": "EVENT011_LOCALIZATION_DID_NOT_CHANGE_GRAPH"}
+
+	var appeared := _set_difference(event_ids, start_ids)
+	var disappeared := _set_difference(start_ids, event_ids)
+	var old_gap_audit := _gap_audit(event_compile["contacts"], start_ids)
+	var appeared_set := {}
+	for contact_id in appeared:
+		appeared_set[String(contact_id)] = true
+	var appeared_gap_audit := _gap_audit(event_compile["contacts"], appeared_set)
+	var resolve := resolve_current_contacts_sparse(
+		world,
+		event_compile["contacts"],
+		float(options.get("impact_reference_dt", minf(DEFAULT_MAX_SUBSTEP, maxf(dt - event_dt, 1.0e-4)))),
+		options
+	)
+	if not bool(resolve.get("ok", false)):
+		return resolve
+	var event_islands: Array = resolve["islands"]
+	var warm_preserved := []
+	for contact_id in start_ids.keys():
+		if world["contact_cache"].has(contact_id) and start_warm.has(contact_id):
+			warm_preserved.append(String(contact_id))
+	warm_preserved.sort()
+
+	var remaining := dt - event_dt
+	var continuation := {"ok": true, "substeps": 0, "aggregate": _empty_stats()}
+	if remaining > EPS:
+		continuation = _advance_full_sparse(world, planes, remaining, options, {"skip_first_graph_update": true})
+		if not bool(continuation.get("ok", false)):
+			return continuation
+
+	return {
+		"ok": true,
+		"event_found": true,
+		"macrostep_start_time": start_time,
+		"macrostep_dt": dt,
+		"event_dt": event_dt,
+		"event_time": event_time,
+		"localization_probes": probes,
+		"start_contact_ids": _sorted_set_keys(start_ids),
+		"appeared": appeared,
+		"disappeared": disappeared,
+		"old_contact_gap_audit": old_gap_audit,
+		"appeared_contact_gap_audit": appeared_gap_audit,
+		"start_islands": _island_signature(start_islands),
+		"event_islands": _island_signature(event_islands),
+		"event_resolve": resolve,
+		"warm_contacts_preserved": warm_preserved,
+		"remaining_dt": remaining,
+		"continuation": continuation,
+		"start_hash": start_hash,
+		"final_hash": Prev.world_hash(world),
+	}
+
+# =============================================================================
+# INTERNAL EVENT ADVANCE HELPERS
+# =============================================================================
+
+static func _simulate_old_graph(source_world: Dictionary, planes: Array, dt: float, allowed_ids: Dictionary, options: Dictionary) -> Dictionary:
+	var trial: Dictionary = source_world.duplicate(true)
+	var result := _advance_filtered_sparse(trial, planes, dt, allowed_ids, options)
+	if not bool(result.get("ok", false)):
+		return result
+	return {"ok": true, "world": trial, "advance": result}
+
+static func _advance_filtered_sparse(world: Dictionary, planes: Array, dt: float, allowed_ids: Dictionary, options: Dictionary) -> Dictionary:
+	var remaining := dt
+	var substeps := 0
+	var aggregate := _empty_stats()
+	var max_substep := float(options.get("max_substep", DEFAULT_MAX_SUBSTEP))
+	if max_substep <= 0.0:
+		return {"ok": false, "code": "MAX_SUBSTEP_NONPOSITIVE"}
+	while remaining > EPS:
+		var h := minf(max_substep, remaining)
+		var compiled := Prev.compile_sphere_contacts(world, planes, float(options.get("contact_tolerance", 1.0e-7)))
+		if not bool(compiled.get("ok", false)):
+			return compiled
+		var filtered: Array = []
+		for contact in compiled["contacts"]:
+			if allowed_ids.has(String(contact["id"])):
+				filtered.append(contact)
+		if filtered.size() != allowed_ids.size():
+			return {"ok": false, "code": "EVENT011_OLD_CONTACT_DISAPPEARED_DURING_PROBE", "time": float(world["time"])}
+		var step_result := step_sparse(world, filtered, h, options)
+		if not bool(step_result.get("ok", false)):
+			return step_result
+		_accumulate_stats(aggregate, step_result["solver_stats"])
+		substeps += 1
+		remaining -= h
+	aggregate["linear_backend"] = "SPARSE_PCG"
+	aggregate["dense_materializations"] = 0
+	return {"ok": true, "substeps": substeps, "aggregate": aggregate}
+
+static func _advance_full_sparse(world: Dictionary, planes: Array, dt: float, options: Dictionary, extras: Dictionary) -> Dictionary:
+	var remaining := dt
+	var substeps := 0
+	var aggregate := _empty_stats()
+	var max_substep := float(options.get("max_substep", DEFAULT_MAX_SUBSTEP))
+	var first_substep := true
+	while remaining > EPS:
+		var h := minf(max_substep, remaining)
+		var compiled := Prev.compile_sphere_contacts(world, planes, float(options.get("contact_tolerance", 1.0e-7)))
+		if not bool(compiled.get("ok", false)):
+			return compiled
+		var step_options: Dictionary = options.duplicate(true)
+		if first_substep and bool(extras.get("skip_first_graph_update", false)):
+			step_options["_skip_graph_update"] = true
+		var step_result := step_sparse(world, compiled["contacts"], h, step_options)
+		if not bool(step_result.get("ok", false)):
+			return step_result
+		_accumulate_stats(aggregate, step_result["solver_stats"])
+		substeps += 1
+		first_substep = false
+		remaining -= h
+	aggregate["linear_backend"] = "SPARSE_PCG"
+	aggregate["dense_materializations"] = 0
+	var result := {"ok": true, "substeps": substeps, "aggregate": aggregate, "state_hash": Prev.world_hash(world)}
+	for key in extras.keys():
+		result[key] = extras[key]
+	return result
+
+# =============================================================================
+# SPARSE ISLAND SOLVER
+# =============================================================================
+
+static func _solve_island_sparse(world: Dictionary, island: Dictionary, free: Dictionary, dt: float, options: Dictionary) -> Dictionary:
+	var body_ids: Array = island["body_ids"]
+	var contacts: Array = island["contacts"]
+	var body_index := {}
+	for i in range(body_ids.size()):
+		body_index[body_ids[i]] = i
+	var dof := 6 * body_ids.size()
+	var rows: Array = []
+	var bvec: Array = []
+	var friction: Array = []
+	var warm := _zero_vector(3 * contacts.size())
+	var warm_contacts := 0
+
+	for contact_index in range(contacts.size()):
+		var contact: Dictionary = contacts[contact_index]
+		var directions := [contact["normal"], contact["tangent_1"], contact["tangent_2"]]
+		for local_row in range(3):
+			var sparse_row := {}
+			_append_body_jacobian(sparse_row, body_index, String(contact["body_a"]), directions[local_row], contact["r_a"], 1.0)
+			_append_body_jacobian(sparse_row, body_index, String(contact["body_b"]), directions[local_row], contact["r_b"], -1.0)
+			rows.append(sparse_row)
+		var vn := _relative_component(free, contact, contact["normal"])
+		var vt1 := _relative_component(free, contact, contact["tangent_1"])
+		var vt2 := _relative_component(free, contact, contact["tangent_2"])
+		var penetration_bias := BAUMGARTE * minf(float(contact["gap"]), 0.0) / dt
+		var restitution_term := float(contact["restitution"]) * vn if vn < -IMPACT_SPEED_THRESHOLD else 0.0
+		bvec.append(vn + restitution_term + penetration_bias)
+		bvec.append(vt1)
+		bvec.append(vt2)
+		friction.append(float(contact["friction"]))
+		var cache: Dictionary = world["contact_cache"].get(String(contact["id"]), {})
+		var previous: Vector3 = cache.get("warm_impulse", Vector3.ZERO)
+		if previous.length() > EPS:
+			warm_contacts += 1
+		warm[3 * contact_index] = previous.x
+		warm[3 * contact_index + 1] = previous.y
+		warm[3 * contact_index + 2] = previous.z
+
+	var minv := _inverse_mass(world, body_ids)
+	var sparse_a := _assemble_sparse_effective_mass(rows, minv)
+	var solved := _admm_sparse_pcg(sparse_a, bvec, friction, warm, options)
+	if not bool(solved.get("ok", false)):
+		solved["island_id"] = String(island["id"])
+		return solved
+
+	var lambda: Array = solved["lambda"]
+	var generalized_impulse := _sparse_mat_t_vec(rows, lambda, dof)
+	var post := {}
+	for body_i in range(body_ids.size()):
+		var id := String(body_ids[body_i])
+		var base := 6 * body_i
+		var current: Dictionary = free[id]
+		var body: Dictionary = world["bodies"][id]
+		post[id] = {
+			"linear": current["linear"] + Vector3(generalized_impulse[base], generalized_impulse[base + 1], generalized_impulse[base + 2]) * float(body["inv_mass"]),
+			"angular": current["angular"] + Vector3(generalized_impulse[base + 3], generalized_impulse[base + 4], generalized_impulse[base + 5]) * body["inv_inertia"],
+		}
+	var impulse_by_id := {}
+	var active_contacts := 0
+	for contact_index in range(contacts.size()):
+		var impulse := Vector3(lambda[3 * contact_index], lambda[3 * contact_index + 1], lambda[3 * contact_index + 2])
+		impulse_by_id[String(contacts[contact_index]["id"])] = impulse
+		if impulse.x > 1.0e-8:
+			active_contacts += 1
+
+	return {
+		"ok": true,
+		"island_id": String(island["id"]),
+		"body_ids": body_ids.duplicate(true),
+		"contact_ids": _sorted_contact_ids(contacts),
+		"post_velocities": post,
+		"impulse_by_id": impulse_by_id,
+		"active_contacts": active_contacts,
+		"iterations": int(solved["iterations"]),
+		"warm_start_contacts": warm_contacts,
+		"primal_residual": float(solved["primal_residual"]),
+		"dual_residual": float(solved["dual_residual"]),
+		"sparse_jacobian_entries": _sparse_row_entry_count(rows),
+		"sparse_effective_mass_entries": _sparse_matrix_entry_count(sparse_a),
+		"dense_effective_mass_capacity": bvec.size() * bvec.size(),
+		"pcg_calls": int(solved["pcg_calls"]),
+		"pcg_iterations": int(solved["pcg_iterations"]),
+		"pcg_max_iterations_one_call": int(solved["pcg_max_iterations_one_call"]),
+		"linear_backend": "SPARSE_PCG",
+		"dense_materializations": 0,
+	}
+
+static func _admm_sparse_pcg(a: Array, b: Array, friction: Array, warm: Array, options: Dictionary) -> Dictionary:
+	var rho := float(options.get("rho", DEFAULT_RHO))
+	var tolerance := float(options.get("tolerance", DEFAULT_ADMM_TOLERANCE))
+	var max_iterations := int(options.get("max_iterations", DEFAULT_ADMM_MAX_ITERATIONS))
+	var pcg_tolerance := float(options.get("pcg_tolerance", DEFAULT_PCG_TOLERANCE))
+	var pcg_max_iterations := int(options.get("pcg_max_iterations", DEFAULT_PCG_MAX_ITERATIONS))
+	if rho <= 0.0 or tolerance <= 0.0 or max_iterations < 1 or pcg_tolerance <= 0.0 or pcg_max_iterations < 1:
+		return {"ok": false, "code": "BAD_SPARSE_SOLVER_OPTIONS"}
+	var n := b.size()
+	var h := _sparse_add_diagonal(a, rho)
+	var diagonal := _sparse_diagonal(h, n)
+	for value in diagonal:
+		if float(value) <= EPS:
+			return {"ok": false, "code": "SPARSE_PCG_NONPOSITIVE_DIAGONAL"}
+
+	var lambda: Array = warm.duplicate(true)
+	var z: Array = warm.duplicate(true)
+	var u := _zero_vector(n)
+	for contact_index in range(friction.size()):
+		var projected := _project_cone(Vector3(z[3 * contact_index], z[3 * contact_index + 1], z[3 * contact_index + 2]), float(friction[contact_index]))
+		z[3 * contact_index] = projected.x
+		z[3 * contact_index + 1] = projected.y
+		z[3 * contact_index + 2] = projected.z
+		lambda[3 * contact_index] = projected.x
+		lambda[3 * contact_index + 1] = projected.y
+		lambda[3 * contact_index + 2] = projected.z
+
+	var primal := INF
+	var dual := INF
+	var iterations := 0
+	var pcg_calls := 0
