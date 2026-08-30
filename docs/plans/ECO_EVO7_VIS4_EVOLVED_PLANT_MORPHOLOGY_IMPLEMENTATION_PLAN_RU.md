@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 IMPLEMENTED CANDIDATE / VIS4.3 BLOCKED UNTIL VIS4.2 GREEN  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 R1 WINDOWS RED / R2 REPAIR CANDIDATE / VIS4.3 BLOCKED UNTIL R2 GREEN  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -640,3 +640,64 @@ VIS4.2 IMPLEMENTED CANDIDATE
 exact Windows verification required
 VIS4.3 blocked until VIS4.2 GREEN
 ~~~
+
+
+---
+
+## VIS4.2 Windows R1 RED -> R2 repair — 2026-08-31
+
+Fresh exact Windows verifier tested:
+
+~~~text
+HEAD: e74ffda554be177201542743f596b2c0bb272018
+TREE: a7090261af65b3f4a3313aa0c0275e18850f2435
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+~~~
+
+Result:
+
+~~~text
+VIS4.2 focused: FAIL
+1263 assertions / 2 failures
+full runner RC=1
+~~~
+
+All parent regressions and 1261 VIS4.2 assertions were GREEN.
+
+Single root cause:
+
+~~~text
+typed Array[Dictionary] set_descriptors boundary
+rejected untyped empty [] on generation-zero/fail-closed paths
+~~~
+
+R2 changes only the presentation input boundary:
+
+~~~text
+set_descriptors(Array)
+-> validates every element
+-> stores only Array[Dictionary]
+~~~
+
+Acceptance now explicitly proves:
+
+~~~text
+empty [] -> ACCEPT
+malformed generic array -> REJECT
+~~~
+
+New exact runnable R2 boundary:
+
+~~~text
+HEAD: 3ecee0f0fe491a6f76145eb8f2da133c820ae793
+TREE: 762806c32b43a1cc0740e7b5ab78be8e1cb108bd
+~~~
+
+Durable evidence:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_WINDOWS_VERIFICATION_RED_R1_RU.md
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_EMPTY_DESCRIPTOR_BOUNDARY_REPAIR_R2_RU.md
+~~~
+
+VIS4.3 runtime remains blocked until fresh exact Windows GREEN on R2.
