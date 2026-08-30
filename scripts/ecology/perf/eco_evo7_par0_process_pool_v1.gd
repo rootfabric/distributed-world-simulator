@@ -184,8 +184,11 @@ static func _warmup_state(path: String) -> String:
 
 ## Dispatch one generation batch. slices[index] is the canonical partition
 ## slice for worker `index` (already sorted by candidate_hash).
+## extra (PAR3): optional payload fields merged verbatim into every worker
+## request (e.g. "phase": "CANDIDATE_BUILD" plus its deterministic
+## parameters). Absent extra keeps the frozen PAR0 payload untouched.
 ## Returns the base job_id or "" on failure.
-func submit_generation(generation: int, slices: Array) -> String:
+func submit_generation(generation: int, slices: Array, extra: Dictionary = {}) -> String:
 	if not _pending.is_empty():
 		_fail("previous generation still pending")
 		return ""
@@ -204,6 +207,8 @@ func submit_generation(generation: int, slices: Array) -> String:
 			"worker_index": index,
 			"items": slices[index],
 		}
+		for key in extra.keys():
+			payload[key] = extra[key]
 		if Transport.write_mailbox_message(_session_dir, "inbox", job_id, payload).is_empty():
 			_fail("request mailbox write failed for %s" % job_id)
 			return ""

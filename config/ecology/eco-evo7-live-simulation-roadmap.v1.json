@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-29-R7",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R9",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF1",
+  "current_checkpoint": "ECO.EVO7/PAR3",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -64,12 +64,51 @@
     {
       "id": "PERF1",
       "name": "Generation Stage Profiling",
-      "status": "IMPLEMENTATION_CANDIDATE"
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PAR0",
+      "name": "Deterministic Parallel Recruitment Prototype (process pool)",
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PAR0.2",
+      "name": "Dual Serial+Parallel Recruitment Verification",
+      "status": "CLOSED_ACCEPTED_EVIDENCE"
+    },
+    {
+      "id": "PLAY0.FINAL",
+      "name": "Live Planet Playground R2",
+      "status": "ACCEPTED",
+      "head": "1e512b834a85ec985c270529686c4197f6df8042"
+    },
+    {
+      "id": "PAR1",
+      "name": "Parallel Backend Selection",
+      "status": "R2_LOCAL_CANDIDATE",
+      "detail": "ROLL_FORWARD_REPAIR; head 5332fb6575003192c434f8cb5bdb4726b7c90cd6; draft PR #323; fresh exact-Windows benchmark/verifier required"
+    },
+    {
+      "id": "PAR2",
+      "name": "Parallel-Only Recruitment with Bounded Audits",
+      "status": "R2_LOCAL_CANDIDATE",
+      "detail": "BLOCKED_PENDING_PAR1_R2_FORMAL_ACCEPTANCE; head 7e8ea27057831f6053f2dd706dcaf25055604024; draft PR #324; same-input perf gate"
+    },
+    {
+      "id": "PAR3",
+      "name": "Parallel Deterministic Candidate Reproduction",
+      "status": "R2_LOCAL_CANDIDATE",
+      "detail": "BLOCKED_PENDING_PAR2_R2_FORMAL_ACCEPTANCE; empty-slice + public facade + single candidate implementation repairs; exact head is the commit carrying this roadmap"
+    },
+    {
+      "id": "STREAM1",
+      "name": "Next stage after PAR3 acceptance",
+      "status": "AFTER_PAR3_ACCEPTANCE"
     },
     {
       "id": "LS4",
       "name": "Next ecology complexity stage",
-      "status": "AFTER_PERF1_PROFILE_DECISION"
+      "status": "AFTER_PAR3_ACCEPTANCE"
     }
   ],
   "ls3_final": {
@@ -109,7 +148,7 @@
       },
       "population_442": {
         "workbench_step_ms": 5406.8,
-        "vis3_refresh_ms": 73.0,
+        "vis3_refresh_ms": 73,
         "history_capture_ms": 209.49
       },
       "population_665": {

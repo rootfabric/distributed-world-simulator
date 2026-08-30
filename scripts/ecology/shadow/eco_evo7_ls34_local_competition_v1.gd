@@ -102,6 +102,20 @@ func clear_recruitment_executor() -> void:
 func has_recruitment_executor() -> bool:
     return core != null and core.has_recruitment_executor()
 
+## PAR3 public pass-through: candidate execution is composed above LS3.3
+## without exposing the core topology to PLAY0/runtime clients.
+func set_candidate_executor(executor) -> bool:
+    if not initialized or core == null:
+        return false
+    return core.set_candidate_executor(executor)
+
+func clear_candidate_executor() -> void:
+    if core != null:
+        core.clear_candidate_executor()
+
+func has_candidate_executor() -> bool:
+    return core != null and core.has_candidate_executor()
+
 func step_generation() -> Dictionary:
     if not initialized:
         return {}

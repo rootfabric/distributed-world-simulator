@@ -214,6 +214,20 @@ func clear_recruitment_executor() -> void:
 func has_recruitment_executor() -> bool:
     return ecology != null and ecology.has_recruitment_executor()
 
+## PAR3 public pass-through: PLAY0/runtime composition never reaches
+## workbench.ecology.core for candidate execution.
+func set_candidate_executor(executor) -> bool:
+    if not initialized or ecology == null:
+        return false
+    return ecology.set_candidate_executor(executor)
+
+func clear_candidate_executor() -> void:
+    if ecology != null:
+        ecology.clear_candidate_executor()
+
+func has_candidate_executor() -> bool:
+    return ecology != null and ecology.has_candidate_executor()
+
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
