@@ -1,0 +1,95 @@
+name: ECO EVO7 PERF2.0 Closure
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-stream1-bounded-generation-stream-r1
+    paths:
+      - "RUN_ECO_EVO7_PERF2_0_TESTS.ps1"
+      - "RUN_ECO_EVO7_PERF2_0_TESTS.sh"
+      - "RUN_ECO_TEST_WORKFLOW.ps1"
+      - "config/ecology/eco-evo7-perf2-measurement-contract.v1.json"
+      - "config/ecology/eco-evo7-live-simulation-roadmap.v1.json"
+      - "config/ecology/eco-evo7-parallel-runtime.v1.json"
+      - "scripts/ecology/perf/eco_evo7_perf2_measurement_contract_v1.gd"
+      - "scripts/ecology/perf/eco_evo7_perf2_measurement_probe_v1.gd"
+      - "tests/ecology/eco_evo7_perf2_measurement_contract_acceptance.gd"
+      - "docs/checkpoints/2026-08-30_ECO_EVO7_PERF2_0_MEASUREMENT_CONTRACT_R1_RU.md"
+      - "docs/checkpoints/2026-08-30_ECO_EVO7_PERF2_0_WINDOWS_VERIFICATION_MISSION_RU.md"
+      - ".github/workflows/evo7-perf2-0-closure.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-perf2-0-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  closure:
+    name: exact PERF2.0 measurement-contract closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact PR HEAD checkout
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($head -ne "${{ github.event.pull_request.head.sha }}") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}"
+          }
+          Write-Host "exact_head=$head"
+          Write-Host "exact_tree=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found. Configure DWS_GODOT_DOUBLE_BIN or install: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Import exact project
+        run: |
+          & "${{ steps.godot.outputs.path }}" --headless --editor --quit --path .
+          if ($LASTEXITCODE -ne 0) {
+            throw "GODOT_IMPORT_FAILED: $LASTEXITCODE"
+          }
+
+      - name: Run exact PERF2.0 transitive closure
+        run: |
+          .\RUN_ECO_EVO7_PERF2_0_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
+          if ($LASTEXITCODE -ne 0) {
+            throw "PERF2_0_CLOSURE_FAILED: $LASTEXITCODE"
+          }
+
+      - name: Assert tracked worktree clean
+        run: |
+          $status = @(git status --porcelain --untracked-files=no)
+          if ($status.Count -ne 0) {
+            $status | ForEach-Object { Write-Host $_ }
+            throw "TRACKED_WORKTREE_DIRTY_AFTER_PERF2_0"
+          }
+          Write-Host "TRACKED_WORKTREE_CLEAN=YES"
