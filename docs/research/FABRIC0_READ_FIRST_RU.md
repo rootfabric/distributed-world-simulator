@@ -49,6 +49,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.11: `FABRIC0_11_EVENT_LOCALIZED_SPARSE_ISLANDS_RU.md`
    - FABRIC0.12: `FABRIC0_12_ADAPTIVE_MULTIEVENT_MANIFOLD_RU.md`
    - FABRIC0.13: `FABRIC0_13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH_RU.md`
+   - FABRIC0.14: `FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -106,6 +107,10 @@ integrated adaptive manifold semantics + persistent sparse contact graph
 FABRIC0.14
 FULL 6DOF FRICTIONAL FEATURE MANIFOLD
 full rigid-body rotation + unilateral normal + Coulomb tangent cones
+        ↓
+FABRIC0.15
+MULTIBODY CONVEX COMPLEMENTARITY GRAPH
+multiple free 6DOF bodies + coupled nonsmooth contact graph
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -252,185 +257,225 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.13 завершён как research candidate.
+FABRIC0.14 завершён как research candidate.
 
 Exact evidence:
 
 ```text
-FABRIC0.13 Unified Adaptive 3D Contact Graph   95/95 PASS
-FABRIC0.13 playground                          PASS
-editor parse/compile                           CLEAN
-remote/local executable bytes                  7/7 IDENTICAL
+FABRIC0.14 Full 6DOF Frictional Feature Manifold   156/156 PASS
+FABRIC0.14 playground                               PASS
+editor parse/compile                                CLEAN
+remote/local executable bytes                       7/7 IDENTICAL
 
-FABRIC0.12 executable blobs                     PRESERVED
-FABRIC0.12 runtime regression rerun              NO
+FABRIC0.13 runtime regression                        95/95 PASS
+FABRIC0.13 executable blobs                          7/7 PRESERVED
 ```
 
 Exact runtime:
 
 `Godot 4.7.1.stable.double.custom_build.a13da4feb`.
 
-FABRIC0.13 впервые объединяет:
+Current design/evidence:
 
 ```text
-FABRIC0.11 persistent sparse contact graph
+docs/research/FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_RU.md
 
-+
-
-FABRIC0.12 adaptive multi-event manifold semantics
+validation/fabric0-compositional-world-fabric-v14-validation.json
 ```
 
-в одну accepted causal path.
-
-Main run:
+### Full rigid-body state
 
 ```text
-persistent [A,B] support island
-+
-free rotating/falling C
-        ↓
-impact at 0.12770032218309
-        ↓
-[A,B] -> [A,B,C]
-        ↓
-manifold fixed point at 0.15171711003539
-edge(2) -> face(4) -> opposite edge(2)
-        ↓
-reverse manifold fixed point at 0.58519759521384
-        ↓
-final t = 0.7
+position      3
+quaternion    4
+linear v      3
+angular omega 3
+------------------
+13 components
 ```
 
-Persistent pre-impact reactions survive island merge:
+Anisotropic body inertia:
+
+`(0.19, 0.31, 0.43)`.
+
+Torque-free 3-axis audit proves all angular components are live and checks:
 
 ```text
-floor|A = 19.62
-pair:A|B = 9.81
+linear momentum drift = 0
+world angular momentum drift < 1e-9
+rotational energy drift < 2e-10
+quaternion normalized
 ```
 
-Contact mechanics explicitly couple translation and rotation:
+### Unilateral + Coulomb modes
+
+One generic contact law now has executable:
 
 ```text
-J = [0, -1, +1, dr/dtheta]
-
-gamma =
-d2r/dtheta2 * omega^2
+separated
+stick
+slide
 ```
 
-Sparse evidence:
+Contact cannot provide tensile normal support.
+
+Stick is accepted inside the Coulomb cone.
+
+Slide lives on:
+
+`|Ft| = mu Fn`.
+
+### Dynamic feature topology
+
+Geometry-derived box support hierarchy:
 
 ```text
-PCG calls      = 38
-PCG iterations = 95
-pattern hits   = 36
-pattern misses = 2
-max constraint residual <= 2e-14
+vertex = 1 point
+edge   = 2 points
+face   = 4 points
 ```
 
-Unified refinement convergence against `1e-12` reference:
+Main sliding run:
 
 ```text
-max event-time error:
+0.25850330043665
+v:--- -> edge -> v:+--
 
-1e-7  -> 8.0345e-8
-1e-9  -> 3.1108e-9
-1e-11 -> 5.6382e-11
-
-max final-state error:
-
-1e-7  -> 6.4537e-7
-1e-9  -> 2.6241e-8
-1e-11 -> 4.7934e-10
+0.31322331523056
+v:+-- -> edge -> v:++-
 ```
 
-Both strictly decrease.
+Each event reaches fixed point in three iterations with two topology mutations.
 
-Actual parallel audit:
+### Critical falsification findings
+
+#### Coordinate-frame bug
+
+Wrong use of Godot `Vector3.UP` in a Z-up research world caused impossible geometry and energy gain.
+
+Rule:
 
 ```text
-2 Godot Threads
-
-[A,B,C]
-+
-[D,E]
-
-forward/reverse spawn
-→ exact same canonical hash
+coordinate convention
+=
+executable physics contract
 ```
 
-Parallel hash:
+#### Hidden projection impulse
 
-`6ef3fd35474a179a7bf02675d5bde9ecb457f235fdb7cc70f017a69757f92757`.
+Initial feature switch silently removed normal velocity by projection.
 
-Physical state hash:
+Energy discrepancy stayed approximately constant under refinement.
 
-`f486303b7f133d28148d63362ad368d82e946132f2a12f9c164ae5edc2819483`.
+This proved it was missing physical semantics, not truncation error.
 
-### Exact-byte evidence rule
-
-All seven current FABRIC0.13 executable files must continue to match the hashes in:
-
-`validation/fabric0-compositional-world-fabric-v13-validation.json`.
-
-During persistence two large files initially differed only by one missing trailing newline.
-
-They were **not accepted** until GitHub blob SHA exactly matched local `git hash-object`.
-
-Therefore:
+Now feature transition is:
 
 ```text
-semantic source equivalence
-!=
-exact-byte evidence equivalence
+lineage remap
+→ explicit frictional unilateral impulse
+→ linear/angular momentum audit
+→ kinetic-loss audit
+→ constraint projection
 ```
 
-when a validation artifact explicitly claims byte identity.
+### Energy ledger
+
+Main `1e-9` sliding run:
+
+```text
+continuous friction =
+1.2019943422435
+
+discrete feature losses =
+4.06330610007658
+
+energy delta =
+-5.26530042753262
+
+closure residual =
+1.4787455704379227e-8
+```
+
+Refinement:
+
+```text
+closure:
+3.8287e-7
+→ 1.4787e-8
+→ 3.3513e-10
+
+event-time error:
+6.5110e-8
+→ 1.5767e-9
+→ 3.3263e-11
+
+13D state error:
+5.4644e-7
+→ 1.2632e-8
+→ 2.5862e-10
+```
+
+All strictly decrease.
+
+### Main hashes
+
+```text
+sliding physical:
+2b52dc944cdc4a48152265db3e456c629bfb5f66969850563e39ec188147efe7
+
+impact:
+de5584cb0f2da6b788e8873eac1ff99e2a8bedd1f71c56727fe809eaae29efe9
+
+torque-free:
+e57d66d29b7de53757f5b4ba2d0d2a26f3c2a342086a63aebc93726b40666a99
+
+parallel:
+526844a8ca0629969477f2942853b3e7b9617b391e39fc54147d30d38852773c
+```
 
 ### Important scope
 
-FABRIC0.13 still does **not** prove:
+FABRIC0.14 still does not prove:
 
-- arbitrary free 6DOF rigid body;
-- three-axis angular velocity/inertia tensor dynamics;
-- arbitrary convex/mesh manifold;
-- adaptive tangential Coulomb cone integration;
-- general unilateral complementarity/separation in the unified path;
-- arbitrary simultaneous multi-body impacts;
-- production broadphase/thread pool/CSR;
-- full DWS production integration.
-
-Quaternion is normalized, but the accepted rotational motion is one-axis.
-
-A/B support is partially algebraically projected in this research stand.
+- several simultaneously free interacting 6DOF bodies;
+- coupled face-point complementarity;
+- persistent dynamic face manifold in the accepted trajectory;
+- arbitrary convex/GJK/EPA/mesh geometry;
+- localized dynamic separation;
+- localized stick/slide mode transitions;
+- coupled multi-contact friction cones;
+- rolling/torsional friction;
+- production broadphase/block-sparse/thread-pool;
+- production Construction/authority/persistence/network integration;
+- full DWS regression.
 
 Next task:
 
-**FABRIC0.14 — FULL 6DOF FRICTIONAL FEATURE MANIFOLD**
+**FABRIC0.15 — MULTIBODY CONVEX COMPLEMENTARITY GRAPH**
 
 Target:
 
 ```text
-free translation 3DOF
+multiple free 6DOF bodies
 +
-free rotation 3DOF
+convex feature graph
 +
-quaternion differential update
+simultaneous normal complementarity
 +
-body/world inertia tensor
+coupled Coulomb cones
 +
-unilateral normal complementarity
+dynamic separation
 +
-tangential Coulomb cones
-+
-persistent convex feature lineage
-+
-adaptive multi-event fixed points
+stick/slide events
 +
 island merge/split
 +
-sparse parallel execution
+adaptive multi-event fixed point
 +
-refinement + invariant evidence
+block-sparse parallel solve
++
+momentum / energy / refinement evidence
 ```
 
 ## 9. Правило новой сессии
@@ -438,27 +483,22 @@ refinement + invariant evidence
 Новая сессия должна уметь объяснить:
 
 - почему Construction остаётся canonical semantic owner;
-- почему physical ports acausal;
-- почему topology компилируется в equations;
-- почему dimensions executable;
-- почему residual=0 недостаточно без rank;
-- почему FLOW/JUMP/TOPOLOGY TRANSACTION разделены;
-- почему existing constraints remain active during event localization;
-- почему root-search accuracy и trajectory integration accuracy различны;
-- почему physical claims должны показывать convergence under refinement;
-- почему integration of previously accepted subsystems является отдельным falsification gate;
-- почему persistent reaction history должна переживать island merge по relation identity;
-- почему orientation-dependent contact требует rotational sensitivity inside Jacobian;
-- почему geometry curvature даёт acceleration-level term;
-- почему multipoint edge/face transitions принадлежат topology transaction layer;
-- почему contact feature identity требует lineage, а не только exact ID;
-- почему warm force/impulse cache является numerical continuity, а не world truth;
-- почему sparse pattern cache является computational hint;
-- почему worker threads должны решать snapshots и не мутировать physical world как побочный эффект;
-- почему quaternion representation не означает автоматически general 6DOF proof;
-- почему algebraic projection должна быть явно отмечена как research reduction;
-- почему exact-byte validation включает финальные newline/serialization bytes;
-- почему FABRIC0.14 должен возвращать unilateral + friction laws в unified adaptive path;
-- какие FABRIC0.13 non-claims остаются действующими.
+- почему physical ports acausal и topology компилируется в equations;
+- почему dimensions/rank/event identity остаются executable contracts;
+- почему convergence under refinement является частью physical evidence;
+- почему coordinate frame must be explicit in physics;
+- почему quaternion representation alone не означает full 6DOF;
+- почему anisotropic inertia + gyroscopic term обязаны проверяться отдельным torque-free audit;
+- почему unilateral normal contact запрещает tensile support;
+- почему stick/slide являются solved modes одной Coulomb law;
+- почему vertex/edge/face являются physical feature topology;
+- почему lineage remap и physical transition impulse — разные операции;
+- почему velocity projection не может скрывать physical impulse;
+- почему hybrid energy ledger должен учитывать continuous friction + discrete jump losses;
+- почему nonconvergent invariant discrepancy указывает на missing semantics/sign/frame before tighter tolerance;
+- почему parallel audit не должен мутировать physical state;
+- почему predecessor runtime regression сильнее простой byte preservation;
+- почему следующий wall — graph-wide coupled complementarity, а не ещё один isolated local law;
+- какие FABRIC0.14 non-claims остаются открытыми.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
