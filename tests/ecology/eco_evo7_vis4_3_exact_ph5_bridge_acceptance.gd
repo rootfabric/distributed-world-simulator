@@ -143,6 +143,12 @@ func _tamper_suite(bridge, descriptor: Dictionary, reconstruction: Dictionary) -
 	_check(ReconstructionEvidence.validate_snapshot(rehashed_traits_id), "rehashed traits_id tamper is internally valid reconstruction evidence")
 	_check(bridge.build(descriptor, rehashed_traits_id).is_empty(), "exact bridge rejects rehashed traits_id because reconstructed GrowthGraph hash diverges")
 
+	var competition_tamper: Dictionary = reconstruction.duplicate(true)
+	competition_tamper["source_competition_hash"] = "e".repeat(64)
+	competition_tamper["evidence_hash"] = ReconstructionEvidence.snapshot_hash(competition_tamper)
+	_check(ReconstructionEvidence.validate_snapshot(competition_tamper), "rehashed competition-seal tamper is internally valid reconstruction evidence")
+	_check(bridge.build(descriptor, competition_tamper).is_empty(), "bridge rejects reconstruction evidence from wrong competition field")
+
 	var seed_tamper: Dictionary = reconstruction.duplicate(true)
 	var seed_records: Array = Array(seed_tamper.get("records", []))
 	var seed_record: Dictionary = Dictionary(seed_records[0]).duplicate(true)
