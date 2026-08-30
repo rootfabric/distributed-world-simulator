@@ -139,8 +139,8 @@ func _test_real_p5_sm1_mw8_mw6_mw4_chain() -> void:
 
 	var fixture: Dictionary = _cluster["fixtures"][0]
 	var journal = _cluster["source_context"]["service"].mutation_journal()
-	var journal_before := journal.size()
-	var stream_before := _cluster["source"]["authority"].stream_sequence()
+	var journal_before: int = int(journal.size())
+	var stream_before: int = int(_cluster["source"]["authority"].stream_sequence())
 	var request := _request_with_tool(
 		fixture,
 		"operation/p7/matter/committed",
@@ -161,8 +161,8 @@ func _test_real_p5_sm1_mw8_mw6_mw4_chain() -> void:
 		{"item_id": tool_id, "slot_id": SLOT}
 	)
 	_assert_success(unequip, "unequip real canonical tool")
-	var journal_after_commit := journal.size()
-	var stream_after_commit := _cluster["source"]["authority"].stream_sequence()
+	var journal_after_commit: int = int(journal.size())
+	var stream_after_commit: int = int(_cluster["source"]["authority"].stream_sequence())
 	var missing_request := _request_with_tool(
 		fixture,
 		"operation/p7/matter/missing-tool",
