@@ -49,10 +49,10 @@ Implementation anchors before metadata-only freeze:
 
 ```text
 profiler runtime head:
-e4f887cf943249a6dc05ee456a337db8b9fcbde7
+e1690106764cbcff536d939e87f1f65e9111937e
 
 acceptance harness head:
-804a78aeaddb287c43a16154fd39fb5d2124f29b
+9590ac289c8664a7857cebcecca5d5819450033e
 ```
 
 Final branch HEAD/TREE must be resolved again by the independent Windows verifier.
