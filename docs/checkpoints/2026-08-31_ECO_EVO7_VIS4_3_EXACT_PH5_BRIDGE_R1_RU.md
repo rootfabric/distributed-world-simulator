@@ -17,8 +17,8 @@ VIS4.2 R2: ACCEPTED / WINDOWS VERIFIED / CLOSED
 ## Exact VIS4.3 runnable candidate
 
 ~~~text
-HEAD: 67503a833822154e200c8113ab0e9f99a366aca0
-TREE: f6fee460bf2239408809f35a931fd78326dc5f17
+HEAD: 967692cb2781f20eeceffe43a014366567bd2586
+TREE: pending exact tree from 967692cb verification subject
 ~~~
 
 ## Architecture
@@ -144,10 +144,45 @@ Exact Godot:
 VIS4.3 is NOT ACCEPTED until fresh exact Windows GREEN on:
 
 ~~~text
-67503a833822154e200c8113ab0e9f99a366aca0
-TREE f6fee460bf2239408809f35a931fd78326dc5f17
+967692cb2781f20eeceffe43a014366567bd2586
+TREE pending exact tree from 967692cb verification subject
 ~~~
 
 ## Next after GREEN
 
 VIS4.4 — PLAY0.MORPH
+
+## Verification infrastructure note
+
+Initial VIS4.3 workflow subject:
+
+~~~text
+67503a833822154e200c8113ab0e9f99a366aca0
+~~~
+
+failed in the identity step before Godot started.
+
+Cause:
+
+~~~text
+PowerShell 5.1 parsed:
+git rev-parse HEAD^{tree}
+
+and passed an invalid transformed argument to Git.
+~~~
+
+No VIS4.3 runtime or acceptance test executed in that run.
+
+Workflow repair:
+
+~~~text
+git show -s --format=%T HEAD
+~~~
+
+New exact verification subject:
+
+~~~text
+967692cb2781f20eeceffe43a014366567bd2586
+~~~
+
+Therefore 67503a83 is classified as CI-INFRA RED, not a VIS4.3 runtime RED.
