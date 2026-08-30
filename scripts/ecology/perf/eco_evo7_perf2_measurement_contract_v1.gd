@@ -105,9 +105,9 @@ static func validate_contract(contract: Dictionary) -> Dictionary:
 		errors.append("EXECUTION_MODES")
 
 	var comparison: Dictionary = Dictionary(contract.get("comparison_contract", {}))
-	if not "target_head" in Array(comparison.get("comparison_key_excludes", [])):
+	if "target_head" not in Array(comparison.get("comparison_key_excludes", [])):
 		errors.append("TARGET_HEAD_MUST_NOT_ENTER_COMPARISON_KEY")
-	if not "timings" in Array(comparison.get("comparison_key_excludes", [])):
+	if "timings" not in Array(comparison.get("comparison_key_excludes", [])):
 		errors.append("TIMINGS_MUST_NOT_ENTER_COMPARISON_KEY")
 	for required in ["count", "p50", "p95", "mean", "min", "max"]:
 		if required not in Array(comparison.get("required_summary_statistics", [])):
