@@ -513,3 +513,40 @@ NOT ecology rollback
 ~~~
 
 Это защищено focused source-gate: между MorphologyEvidence.build_record() и продолжением accepted competition path нет presentation-originated return/failure edge. Complete binding к survivor population проверяется уже на read side.
+
+
+---
+
+## VIS4.1 Windows R1 RED -> R2 repair
+
+Fresh exact Windows verifier на SHA:
+
+~~~text
+782ceb53d4bd2cf35dd2664d5c05928322b1306c
+~~~
+
+получил RED:
+
+~~~text
+full runner RC=1
+focused 121 assertions / 71 failures
+~~~
+
+Причина не в biology, а в неверном VIS4.1 identity assumption:
+
+~~~text
+bundle individual_seed
+!=
+SeedEnvelope / PH2 / GrowthGraph individual_seed
+~~~
+
+R2 разделяет:
+
+~~~text
+hereditary_individual_seed
+development_individual_seed
+~~~
+
+и делает positive evidence non-vacuous обязательным acceptance condition.
+
+VIS4.2 запрещено считать начатым каноническим следующим checkpoint, пока fresh Windows verifier не получит GREEN на R2 exact HEAD.
