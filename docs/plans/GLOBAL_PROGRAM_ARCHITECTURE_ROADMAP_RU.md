@@ -7,11 +7,11 @@
 
 ---
 
-## 0. Current amendment — 2026-08-30 / RF0 + P7 production convergence
+## 0. Current amendment — 2026-08-30 / P7.2 + playable seamless test ladder
 
-**Refresh base:** `main @ 9cc89e6e8c6cfc81fc32873a29743e443d8229e6`
+**Refresh base:** `main @ 7055aef6c163099101588d5252d90ff77e089330`
 
-SM1 is formally accepted. The next product transition is P7 activation and production convergence over the existing Matter stack.
+SM1 is formally accepted. P7.0 is accepted and P7.1 Tool→MW4 is complete/merged. The current product runtime frontier is P7.2 Bounded Planetary Matter Bubble, with a parallel non-mutating playable-seamless test ladder.
 
 Global invariants:
 
