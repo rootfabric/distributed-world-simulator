@@ -44,6 +44,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.6: `FABRIC0_6_NONSMOOTH_WORLD_RU.md`
    - FABRIC0.7: `FABRIC0_7_STATEFUL_HYBRID_TIME_RU.md`
    - FABRIC0.8: `FABRIC0_8_COUPLED_HYBRID_DAE_RU.md`
+   - FABRIC0.9: `FABRIC0_9_MULTICONTACT_GEOMETRIC_CONE_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -81,6 +82,10 @@ unified temporal + algebraic physical solve
 FABRIC0.9
 MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE
 geometry-derived coupled multi-contact
+        ↓
+FABRIC0.10
+PERSISTENT CONTACT GRAPH + SPARSE HYBRID DAE
+long-lived multi-body contact islands
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -227,55 +232,57 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.8 завершён как research candidate.
+FABRIC0.9 завершён как research candidate.
 
 Exact evidence:
 
 ```text
+FABRIC0.9 Multi-Contact Cone      136/136 PASS
 FABRIC0.8 Coupled Hybrid DAE       71/71 PASS
 FABRIC0.7 Hybrid Time              88/88 PASS
 FABRIC0.6 Nonsmooth              121/121 PASS
 FABRIC0.6 Compatibility            42/42 PASS
-FABRIC0.8 playground               PASS
+FABRIC0.9 playground               PASS
 editor parse/compile               CLEAN
 remote/local executable bytes      IDENTICAL
 ```
 
-FABRIC0.8 доказал:
+FABRIC0.9 доказал:
 
-- semi-explicit differential + algebraic temporal solve;
-- algebraic solve на каждой RK stage;
-- topology-dependent algebraic residual;
-- event guard от solved algebraic reaction;
-- geometric event localization через repeatedly solved DAE;
-- generic branch-based impulse solve;
-- restitution + Coulomb sliding branch;
-- momentum audit through jump;
-- same-time event iteration;
-- solved impulse → topology break в том же physical instant;
-- immediate DAE re-solve after topology mutation;
-- remaining flow на новой topology;
-- singular DAE fail-closed;
-- deterministic event/impulse/topology replay.
+- geometry-derived 8-contact manifold from floor+wall;
+- stable contact identity;
+- deterministic 2D tangent basis;
+- angular contact Jacobians;
+- global `J M^-1 J^T` coupling;
+- true 2D Coulomb cone constraint;
+- one simultaneous global impulse solve;
+- active contacts from multiple surfaces;
+- linear/angular impulse audit;
+- dissipative energy noncreation in the main case;
+- explicit detection of reaction redundancy `rank=6/24`;
+- exact order invariance under reversed plane/contact enumeration;
+- deterministic canonical reaction representative without false uniqueness claim.
 
 Следующая задача:
 
-**FABRIC0.9 — MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE**
+**FABRIC0.10 — PERSISTENT CONTACT GRAPH + SPARSE HYBRID DAE**
 
-Цель — убрать scalar-contact форму FABRIC0.8:
+Цель:
 
 ```text
-geometry-derived multiple contacts
-normal/tangent Jacobians
-angular velocity + inertia tensor
-2D friction cone
-simultaneous coupled impulses
-contact islands
-order-invariant solve
-sparse/warm-start numerical path
+generic contact-provider boundary
+persistent contact identity
+dynamic body-body contacts
+contact lifecycle
+contact graph islands
+sparse assembly
+warm-start
+resting-contact complementarity
+multi-contact cone solve inside FABRIC0.8 time
+deterministic island replay
 ```
 
-Критический test: одно тело одновременно касается нескольких поверхностей и результат не зависит от порядка перечисления контактов.
+Критический test: несколько dynamic bodies образуют stack/bridge, contacts появляются/живут/исчезают, independent islands решаются отдельно, warm-start использует stable identity, а перестановка body/contact enumeration не меняет physical result.
 
 ## 9. Правило новой сессии
 
@@ -283,18 +290,20 @@ sparse/warm-start numerical path
 
 - почему Construction остаётся canonical semantic owner;
 - почему physical ports acausal;
-- как topology превращается в equations;
-- почему common*balance=power;
-- зачем dimensions executable;
+- как topology становится equations;
+- почему dimensions executable;
 - почему residual=0 недостаточно без rank;
-- почему nonsmooth law = admissible branch manifolds;
-- почему FLOW / JUMP / TOPOLOGY TRANSACTION разделены;
-- почему macrostep transactional;
-- почему event time физически значим;
-- почему reset читает immutable pre-state;
-- почему differential и algebraic state должны решаться в одном timestep;
-- почему impulse является solved reaction, а не callback;
-- почему same-time topology mutation требует DAE re-solve до продолжения времени;
-- какие ограничения FABRIC0.8 ещё действуют.
+- почему nonsmooth law = admissible manifolds;
+- почему FLOW/JUMP/TOPOLOGY TRANSACTION разделены;
+- почему differential и algebraic state решаются coupled;
+- почему impulse является solved reaction;
+- почему event instant требует re-solve/fixed point;
+- почему geometry генерирует constraints, а не owns behavior;
+- почему contact tangent space двухмерный;
+- почему Coulomb friction — cone, а не два clamps;
+- почему all contacts должны собираться глобально;
+- почему order invariance — физический acceptance criterion;
+- почему deterministic reaction split не равен unique physical truth;
+- какие ограничения FABRIC0.9 ещё действуют.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
