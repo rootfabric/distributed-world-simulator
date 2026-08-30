@@ -544,11 +544,11 @@ func _summary_evidence_hash(summary: Dictionary) -> String:
 		String(summary.get("execution_mode", "")),
 		String(summary.get("metric_path", "")),
 		str(int(summary.get("count", 0))),
-		str(float(summary.get("p50", 0.0))),
-		str(float(summary.get("p95", 0.0))),
-		str(float(summary.get("mean", 0.0))),
-		str(float(summary.get("min", 0.0))),
-		str(float(summary.get("max", 0.0))),
+		"%.12f" % float(summary.get("p50", 0.0)),
+		"%.12f" % float(summary.get("p95", 0.0)),
+		"%.12f" % float(summary.get("mean", 0.0)),
+		"%.12f" % float(summary.get("min", 0.0)),
+		"%.12f" % float(summary.get("max", 0.0)),
 		String(summary.get("simulation_workload_hash", "")),
 	])).sha256_text()
 
