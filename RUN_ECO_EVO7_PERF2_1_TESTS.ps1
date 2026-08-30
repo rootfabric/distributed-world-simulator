@@ -23,10 +23,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve exact PERF2.1 HEAD' }
 $Tree = (& git -C $Root rev-parse 'HEAD^{tree}').Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve exact PERF2.1 TREE' }
 
-$ContractBlob = (& git -C $Root hash-object $ContractPath).Trim()
-if ($LASTEXITCODE -ne 0) { throw 'Unable to hash accepted PERF2.0 contract' }
+$ContractBlob = (& git -C $Root rev-parse "HEAD:$ContractPath").Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve accepted PERF2.0 contract blob' }
 if ($ContractBlob -ne $ExpectedContractBlob) {
     throw "PERF2.1 CONTRACT DRIFT: expected blob $ExpectedContractBlob, got $ContractBlob"
+}
+& git -C $Root diff --quiet -- $ContractPath
+if ($LASTEXITCODE -ne 0) {
+    throw 'PERF2.1 CONTRACT WORKTREE DRIFT: accepted contract has local modifications'
 }
 
 $Machine = [string]$env:COMPUTERNAME
