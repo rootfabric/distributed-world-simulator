@@ -787,3 +787,206 @@ FABRIC0.8 по-прежнему имеет scalar contact shape:
 > Может ли geometry породить несколько contact constraints, которые решаются одновременно и order-invariant, включая angular motion и friction cone?
 
 Если порядок contact enumeration начинает менять физический результат или kernel требует special CollisionObject logic, это будет важной falsification finding.
+
+
+## FABRIC0.9 — Multi-Contact Geometric Manifold + Cone Solve
+
+После FABRIC0.8 стало ясно, что scalar contact — следующая искусственная граница.
+
+Один normal + один tangent channel недостаточны, когда одно rigid body одновременно касается нескольких geometric features.
+
+### Вопрос checkpoint
+
+Может ли geometry автоматически породить несколько coupled contacts, которые решаются одним global cone problem и дают тот же physical result независимо от порядка перечисления contacts?
+
+Ответ research prototype: да для box против floor+wall.
+
+### Geometry перестала быть callback owner
+
+Первый provider:
+
+~~~text
+box vertices
+against
+static planes
+~~~
+
+генерирует stable contact records:
+
+~~~text
+plane id
+vertex id
+point
+r
+normal
+tangent1
+tangent2
+gap
+mu
+restitution
+~~~
+
+Contact id:
+
+~~~text
+plane::vertex
+~~~
+
+После canonical sorting geometry enumeration перестаёт влиять на assembly order.
+
+### Tangential friction стала двумерной
+
+FABRIC0.8 имел scalar tangential impulse.
+
+FABRIC0.9 contact имеет:
+
+~~~text
+j_n
+j_t1
+j_t2
+~~~
+
+с admissible cone:
+
+~~~text
+j_n >= 0
+sqrt(j_t1^2+j_t2^2) <= mu*j_n
+~~~
+
+Это устраняет hidden axis-by-axis friction semantics.
+
+### Global rigid-body coupling
+
+Для direction d:
+
+~~~text
+J_d=[d, r x d]
+~~~
+
+Все contacts собираются в:
+
+~~~text
+A=J M^-1 J^T
+~~~
+
+Поэтому impulse в одной точке меняет velocities всех других contact points через shared rigid-body translation/rotation.
+
+### Почему выбран ADMM
+
+Sequential PGS мог бы сделать порядок contacts скрытой physical variable.
+
+Вместо этого prototype решает global convex cone problem.
+
+ADMM:
+
+~~~text
+global linear lambda solve
++
+exact per-contact cone projection
++
+dual update
+~~~
+
+Matrix A+rho I Cholesky-factorized один раз.
+
+Это не production-performance решение, но хороший semantic test.
+
+### Main corner experiment
+
+Box одновременно касается floor и wall.
+
+Manifold: 8 contacts.  
+Impulse coordinates: 24.  
+Rank effective-mass matrix: 6.  
+Active: 5.  
+Sliding: 5.
+
+Post generalized state:
+
+~~~text
+linear =
+(0.589721054,
+ 0.776797774,
+ 0.238711754)
+
+angular =
+(-0.074797351,
+ -0.022468940,
+ 0.122242645)
+~~~
+
+Energy:
+
+~~~text
+14.208
+->
+1.015847883
+~~~
+
+Linear/angular impulse audits close.
+
+### Order invariance стала executable
+
+Acceptance решает тот же geometry state:
+
+1. original;
+2. reversed contacts;
+3. reversed planes + reversed contacts.
+
+Все варианты дают exact identical hash:
+
+181d3a3cd0e4d0439c79b5ed6afd9939cc88c94276446e148ab8cdf0c453c7b5
+
+Это первый checkpoint, где FABRIC прямо требует:
+
+> Enumeration order is not physical semantics.
+
+### Новый epistemic lesson — reactions can be redundant
+
+~~~text
+24 impulse coordinates
+but
+rank=6
+~~~
+
+Значит internal contact reaction split может иметь redundancy/gauge-like freedom.
+
+Очень важно не перепутать deterministic numerical representative с mathematically unique physical reaction truth.
+
+FABRIC должен в будущем решить, какие reaction details действительно canonical/persistent, а какие являются derived solve evidence.
+
+### Evidence
+
+~~~text
+FABRIC0.9 focused            136/136 PASS
+FABRIC0.8 regression          71/71 PASS
+FABRIC0.7 regression          88/88 PASS
+FABRIC0.6 nonsmooth          121/121 PASS
+FABRIC0.6 compatibility       42/42 PASS
+playground                    PASS
+editor                        CLEAN
+byte identity                 PASS
+~~~
+
+### Что осталось
+
+0.9 — event-instant multi-contact solver.
+
+Он пока не закрывает долгоживущую contact physics:
+
+- body-body contacts;
+- contact persistence;
+- resting contact;
+- warm start;
+- sparse islands;
+- automatic reintegration inside 0.8 time loop.
+
+Поэтому следующий wall должен быть не новым impact demo, а persistent contact graph.
+
+## FABRIC0.10 — Persistent Contact Graph + Sparse Hybrid DAE
+
+Следующая проверка:
+
+> Может ли несколько dynamic bodies долго жить в contact network, разбиваться на independent islands, сохранять stable contact identity/warm start и оставаться order-invariant при появлении/исчезновении contacts?
+
+Критический experiment: stack/bridge нескольких тел с stick/slide/contact lifecycle и sparse island solve.
