@@ -2442,3 +2442,150 @@ global MCP/NCP
 ```
 
 Production ownership remains with Construction.
+
+
+## 131. Physical complexity must be reducible as well as composable
+
+FABRIC is incomplete at world scale if complexity can only grow.
+
+A mature system needs both directions:
+
+```text
+generic composition
+→ emergent complexity
+
+safe physical compilation
+→ reduced complexity
+```
+
+Reduction is a physical semantics problem, not merely performance engineering.
+
+## 132. Bake artifacts are derived executable state, never truth
+
+```text
+Construction / Matter
+= canonical truth
+
+FABRIC
+= derived physical graph
+
+Bake
+= derived reduced executable graph/model
+```
+
+Deleting a bake must not delete world meaning.
+
+## 133. Source provenance is a frontier, not necessarily one object
+
+A reduced physical island may depend on multiple canonical sources.
+
+Use a sorted, unique, hashed canonical source frontier.
+
+Do not promote FABRIC itself to canonical source-domain status.
+
+## 134. Reduction cannot silently cross authority
+
+Mathematical connectivity does not grant write authority.
+
+A bake that would combine incompatible mutable authority envelopes must fail closed unless a dedicated distributed execution protocol exists.
+
+## 135. Physical STALE means non-executable
+
+Presentation may sometimes display stale cache under visual fences.
+
+Physics may not keep executing a stale approximation.
+
+Invalid source/compiler/boundary/policy binding immediately removes execution eligibility.
+
+## 136. Acausal boundary first, causal evaluator second
+
+Physical Boundary contracts should preserve conjugate effort/flow semantics.
+
+`input/output` form is a possible compiled causalization, not the fundamental physical ontology.
+
+## 137. Correctness lives at the boundary
+
+```text
+x_full != x_reduced
+```
+
+is expected.
+
+The relevant condition is bounded error in declared causally significant observables.
+
+## 138. Error bounds must be deterministic and falsifiable
+
+Separate:
+
+```text
+ValidatedDomain
+ErrorEnvelope
+RuntimeErrorEstimator
+```
+
+Do not use an undefined confidence scalar as an authoritative physical guarantee.
+
+## 139. Hidden detail needs a RefinementGuard
+
+If reduction removes the state that would reveal a future internal failure, the artifact must retain a conservative cheap guard that triggers refinement before that failure can be missed.
+
+Early false-positive unbake is safer than a false-negative hidden authoritative event.
+
+## 140. NO_SAFE_BAKE is a successful compiler outcome
+
+Some systems are not safely reducible within the requested budget/error envelope.
+
+Returning FULL execution is correct architecture.
+
+Forcing every subsystem into a cheap approximation is not.
+
+## 141. Presentation detail and physical fidelity are orthogonal axes
+
+Distance/screen error can choose visual representation.
+
+Causal dependency, energy flow, damage risk, validity margin and pending events determine minimum safe physical fidelity.
+
+## 142. Scheduler cannot overrule physical safety
+
+FABRIC-BAKE may report several safe fidelity choices and their costs.
+
+The global scheduler allocates resources among those choices.
+
+It must not force a lower fidelity than the physical layer declares safe.
+
+## 143. Local unbake is part of reduction semantics
+
+Unbake is not a fallback after architecture failure.
+
+It is a planned inverse lifecycle:
+
+```text
+FULL
+→ BAKE
+→ guard/validity event
+→ LOCAL UNBAKE
+→ revised physical topology
+```
+
+with conservation and event continuity.
+
+## 144. Final FABRIC image after the dual-track freeze
+
+```text
+                   canonical world truth
+                           │
+                           ▼
+                  derived FABRIC graph
+                           │
+               ┌───────────┴───────────┐
+               │                       │
+               ▼                       ▼
+       richer physical core      reduced physical artifacts
+          FABRIC0.x               FABRIC-BAKE B0.x
+               │                       │
+               └──────────┬────────────┘
+                          ▼
+                       FABRIC1
+```
+
+FABRIC1 must be composable **and** reducible without creating a second truth.
