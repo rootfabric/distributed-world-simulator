@@ -95,6 +95,31 @@ git diff --name-only 25f5ddf6280a39a44ddfc3bbec5245873021c0a1..HEAD
 
 Expected counts: 48, 9, 2.
 
+## 2.1 Deterministic reviewer preflight
+
+A control-only helper is provided:
+
+`config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-B7-REVIEWER-PREFLIGHT-002.ps1`
+
+Run it from the exact detached R9 checkout:
+
+```powershell
+& .\config\control\harness\executions\E2026-08-24-V0-SM1-R1\reviews\V0-SM1-R1-WO-001-B7-REVIEWER-PREFLIGHT-002.ps1 `
+  -GodotPath "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+```
+
+Required marker:
+
+`B7_R9_REVIEWER_PREFLIGHT_PASS`
+
+It writes:
+
+`artifacts/control/v0-sm1-b7-r9-reviewer-preflight.json`
+
+This helper checks exact identity, ancestry/counts, exact path sets, R7 barrier byte identity, R9 camera-basis source guards, VERIFICATION-003 integrity, exact Godot identity when supplied, current PC0 capture, and final freshness.
+
+Important: this helper is deterministic evidence only. It is NOT your Reviewer verdict and does not replace the independent semantic review required below.
+
 ## 3. Review historical B5 result but do not inherit it
 
 Read FINAL-REVIEW-001. It is evidence about OLD_REVIEW_HEAD only.
