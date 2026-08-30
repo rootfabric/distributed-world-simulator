@@ -180,7 +180,8 @@ func step_generation() -> Dictionary:
             int(pre["generation"]),
             last_precompetition_population_hash,
             last_competition_hash,
-            last_postcompetition_population_hash
+            last_postcompetition_population_hash,
+            int(post.get("record_count", -1))
         )
 
     phase_started = Time.get_ticks_usec()
