@@ -2100,3 +2100,294 @@ refinement convergence on actual contact graph
 ```
 
 Production promotion не заявляется.
+
+
+## FABRIC0.13 — UNIFIED ADAPTIVE 3D CONTACT GRAPH
+
+**Parent research head:** `fdcd3f5dc18a5f62a6335c954ddca794d0d79f21`  
+**Design:** `docs/research/FABRIC0_13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v13-validation.json`  
+**Status:** `IMPLEMENTED / EXACT_DOUBLE_PASS / REMOTE_BYTE_IDENTITY_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact Godot re-extracted from the user-provided archive: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused FABRIC0.13 acceptance: `95/95 PASS`;
+- playground: `FABRIC0_13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- all **7** executable FABRIC0.13 files byte-identical between current exact-tested local lab and GitHub branch.
+
+### Why 0.13 matters
+
+FABRIC0.13 is not another isolated capability.
+
+It closes the integration wall between:
+
+```text
+FABRIC0.11
+persistent sparse contact graph
+
++
+
+FABRIC0.12
+adaptive multi-event manifold semantics
+```
+
+The accepted causal path is now:
+
+```text
+persistent A/B support graph
+→ adaptive flow of free rotating C
+→ localized impact
+→ same-time island merge [A,B] -> [A,B,C]
+→ sparse constrained DAE
+→ adaptive rocking flow
+→ edge -> face -> opposite-edge manifold fixed point
+→ adaptive flow
+→ reverse manifold fixed point
+→ deterministic final state
+```
+
+### Three physical events in one 0.7 s advance
+
+```text
+impact:
+0.12770032218309
+
+manifold #1:
+0.15171711003539
+
+manifold #2:
+0.58519759521384
+```
+
+Impact:
+
+```text
+appeared:
+pair:B|C|edge:back_bottom
+
+persisted:
+floor|A
+pair:A|B
+
+island:
+[A,B] -> [A,B,C]
+```
+
+Pre-impact support reactions preserved:
+
+```text
+floor|A = 19.62
+pair:A|B = 9.81
+```
+
+### Multipoint feature topology
+
+Rocking event:
+
+```text
+edge:back_bottom
+2 points
+→
+face:bottom
+4 points
+→
+edge:front_bottom
+2 points
+→ fixed point
+```
+
+Reverse event returns through the same face lineage.
+
+Each manifold event:
+
+```text
+iterations = 3
+topology mutations = 2
+fixed point = true
+```
+
+Warm force and impulse survive both feature-ID changes through geometric lineage.
+
+### Translation + rotation in the same contact equation
+
+Rocking contact Jacobian contains:
+
+```text
+J =
+[0, -1, +1, dr/dtheta]
+```
+
+and curvature acceleration:
+
+```text
+gamma =
+d2r/dtheta2 * omega^2
+```
+
+Thus rotation is not presentation-only state; it contributes directly to contact reaction equations.
+
+### Sparse numerical evidence
+
+Main `1e-9` run:
+
+```text
+PCG calls       = 38
+PCG iterations  = 95
+
+pattern hits    = 36
+pattern misses  = 2
+
+max constraint residual
+<= 2e-14
+```
+
+Final support reactions:
+
+```text
+floor|A =
+26.5710523718944
+
+pair:A|B =
+16.7610523718944
+
+pair:B|C|edge:back_bottom =
+6.95105237189441
+```
+
+### Unified refinement convergence
+
+Reference:
+
+`tol = 1e-12`.
+
+Maximum event-time error:
+
+```text
+1e-7  -> 8.034517395838492e-8
+1e-9  -> 3.1108455811335034e-9
+1e-11 -> 5.63820101717738e-11
+```
+
+Maximum final-state error:
+
+```text
+1e-7  -> 6.4536567821738e-7
+1e-9  -> 2.6241198575194247e-8
+1e-11 -> 4.793412056169899e-10
+```
+
+Both strictly decrease.
+
+This is the key integration result:
+
+> convergence survives impact-time contact graph merge, sparse reaction solve and multipoint manifold topology mutation.
+
+### Quaternion audit
+
+Final normalized orientation quaternion:
+
+```text
+length = 1.0
+
+x = -0.01903164707883
+y = 0
+z = 0
+w = 0.99981888180283
+```
+
+Important scope:
+
+```text
+quaternion representation
+!=
+general arbitrary-axis 6DOF proof
+```
+
+The demonstrated rotational trajectory is one-axis.
+
+### Actual parallel contact-island audit
+
+Two actual Godot Threads solve:
+
+```text
+island:A = [A,B,C]
+island:D = [D,E]
+```
+
+Canonical hash:
+
+`6ef3fd35474a179a7bf02675d5bde9ecb457f235fdb7cc70f017a69757f92757`.
+
+Reverse thread spawn order gives the exact same hash.
+
+Parallel audit does not mutate physical world hash.
+
+### Deterministic physical hash
+
+`f486303b7f133d28148d63362ad368d82e946132f2a12f9c164ae5edc2819483`.
+
+Fresh `1e-9` replay reproduces exact event JSON and exact physical hash.
+
+### Exact-byte recovery boundary
+
+All 7 remote GitHub blobs equal local `git hash-object`.
+
+Two large files initially differed because persistence lost one trailing final newline.
+
+The checkpoint was **not** accepted until the trailing bytes were corrected and hashes matched.
+
+This records an important evidence rule:
+
+> When validation names exact executable bytes, formatting bytes are part of repository evidence. “Semantically identical source” is insufficient for an exact-byte claim.
+
+### Predecessor policy
+
+FABRIC0.12 runtime suite was not materialized in the current 0.13 lab, so no new 0.12 runtime regression is claimed.
+
+All four FABRIC0.12 executable blobs are preserved exactly against v12 evidence.
+
+### Main non-claims
+
+Still not proven:
+
+- general free 6DOF rigid body;
+- 3-axis angular velocity/inertia tensor integration;
+- arbitrary convex/mesh manifold;
+- adaptive tangential Coulomb cone in this successor;
+- general unilateral separation/complementarity for all multipoint rows;
+- arbitrary simultaneous multi-body impact fixed point;
+- production broadphase/thread pool/CSR;
+- full Construction/authority/persistence/replication integration;
+- full materialized DWS regression.
+
+A/B support coordinates are partially algebraically projected in the research stand and this remains an explicit scope boundary.
+
+### Next wall
+
+`FABRIC0.14 — FULL 6DOF FRICTIONAL FEATURE MANIFOLD`.
+
+Target:
+
+```text
+full translation 3DOF
++
+full rotation 3DOF
++
+quaternion differential update
++
+body/world inertia tensor
++
+normal unilateral complementarity
++
+tangential Coulomb cones
++
+persistent convex feature lineage
++
+adaptive multi-event fixed points
++
+sparse parallel islands
+```
+
+Production promotion не заявляется.
