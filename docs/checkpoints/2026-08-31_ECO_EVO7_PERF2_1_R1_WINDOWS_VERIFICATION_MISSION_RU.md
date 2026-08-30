@@ -75,10 +75,12 @@ Write-Host "GODOT=$Actual"
 
 ```powershell
 $Contract = 'config/ecology/eco-evo7-perf2-measurement-contract.v1.json'
-$Blob = (git hash-object $Contract).Trim()
+$Blob = (git rev-parse "HEAD:$Contract").Trim()
 if ($Blob -ne 'b076784f6b4016a0191e937c4e6ada1fe90c783b') {
     throw "PERF2.0 contract drift: $Blob"
 }
+git diff --quiet -- $Contract
+if ($LASTEXITCODE -ne 0) { throw 'local PERF2.0 contract drift' }
 $ContractDiff = @(git diff --name-only 73317ce3c35a70a9f8e882e733f23539761027a8..HEAD -- $Contract)
 if ($ContractDiff.Count -ne 0) { throw 'accepted PERF2.0 contract changed' }
 Write-Host "PERF2_0_CONTRACT_BLOB=$Blob"
