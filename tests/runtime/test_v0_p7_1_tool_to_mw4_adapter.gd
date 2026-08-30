@@ -169,7 +169,7 @@ func _test_real_p5_sm1_mw8_mw6_mw4_chain() -> void:
 		tool_id
 	)
 	var missing := _send(replica, missing_request, "message/p7/matter/missing-tool")
-	_assert_true(String(missing.get("status", "")) == "FAILED", "MW6 rejects missing-tool P7 command")
+	_assert_true(String(missing.get("status", "")) == "REJECTED", "MW6 rejects missing-tool P7 command")
 	_assert_true(String(missing.get("error_code", "")) == "P7_MINING_TOOL_REQUIRED", "P7 tool error survives MW6 boundary")
 	_assert_true(journal.size() == journal_after_commit, "tool rejection occurs before MW4 journal")
 	_assert_true(_cluster["source"]["authority"].stream_sequence() == stream_after_commit, "tool rejection publishes no Matter delta")
@@ -198,7 +198,7 @@ func _test_real_p5_sm1_mw8_mw6_mw4_chain() -> void:
 		tool_id
 	)
 	var frozen := _send(replica, frozen_request, "message/p7/matter/sm1-frozen")
-	_assert_true(String(frozen.get("status", "")) == "FAILED", "MW6 rejects SM1-frozen P7 command")
+	_assert_true(String(frozen.get("status", "")) == "REJECTED", "MW6 rejects SM1-frozen P7 command")
 	_assert_true(String(frozen.get("error_code", "")) == "SM1_AUTHORITY_TRANSFER_WRITE_FENCED", "SM1 one-writer error survives MW6 boundary")
 	_assert_true(journal.size() == journal_after_commit, "SM1 rejection occurs before MW4 journal")
 	_assert_true(_cluster["source"]["authority"].stream_sequence() == stream_after_commit, "SM1 rejection publishes no Matter delta")
