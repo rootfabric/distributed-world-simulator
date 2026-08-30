@@ -543,7 +543,11 @@ func _config_hash(config: Dictionary) -> String:
 	])).sha256_text()
 
 func _valid_target(target: Dictionary) -> bool:
-	return _is_git_sha(String(target.get("head", ""))) 		and _is_git_sha(String(target.get("tree", ""))) 		and String(target.get("godot_version", "")) == Contract.EXPECTED_GODOT
+	return (
+		_is_git_sha(String(target.get("head", "")))
+		and _is_git_sha(String(target.get("tree", "")))
+		and String(target.get("godot_version", "")) == Contract.EXPECTED_GODOT
+	)
 
 func _is_git_sha(value: String) -> bool:
 	if value.length() != 40:
