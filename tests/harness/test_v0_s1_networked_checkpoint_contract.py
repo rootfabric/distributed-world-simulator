@@ -28,7 +28,7 @@ CURRENT_V0_BRANCH = "control/v0-p7-1-director-dispatch-r1"
 CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-1-director-dispatch-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "07d71da1d301a65d36f56ff8c7a42795becab88d"
+P7_CONTROL_BASE = "5bbb2dac67382dcc6afc889b1f158397994233f5"
 
 
 def load_json(path: str) -> dict:
@@ -152,7 +152,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(P7, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
         self.assertTrue(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
         self.assertTrue(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
-        self.assertEqual(["DIRECTOR_DISPATCH"], self.scheduler["v0_product_train_routing"]["p7_remaining_activation_prerequisites"])
+        self.assertEqual([], self.scheduler["v0_product_train_routing"]["p7_remaining_activation_prerequisites"])
 
     def test_registry_generation_80_points_to_current_p7_control_frontier(self):
         self.assertEqual(80, self.registry["registry_generation"])
@@ -171,7 +171,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         )
         prebuild = v0["prebuild_state"]
         self.assertEqual(P7_BRANCH, prebuild["branch"])
-        self.assertEqual("NOT_CREATED", prebuild["head_at_refresh_input"])
+        self.assertEqual("NOT_CREATED_AT_DISPATCH_COMMIT", prebuild["head_at_refresh_input"])
         self.assertFalse(prebuild["runtime_mutation_present"])
 
     def test_current_registry_and_current_passport_are_consistent(self):
@@ -216,7 +216,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P7, lease["holder_checkpoint"])
         self.assertEqual(P7_BRANCH, lease["holder_branch"])
-        self.assertEqual("RESERVED_FOR_V0_P7_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual("ACTIVE_V0_P7_DISPATCHED_RUNTIME_MUTATION", lease["state"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):
