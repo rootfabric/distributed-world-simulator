@@ -359,6 +359,12 @@ func get_morphology_evidence() -> Dictionary:
 func validate_morphology_evidence(value: Dictionary) -> bool:
     return ecology != null and ecology.validate_morphology_evidence(value)
 
+func get_graph_reconstruction_evidence() -> Dictionary:
+    return {} if ecology == null else ecology.get_graph_reconstruction_evidence()
+
+func validate_graph_reconstruction_evidence(value: Dictionary) -> bool:
+    return ecology != null and ecology.validate_graph_reconstruction_evidence(value)
+
 func get_classification() -> Dictionary:
     return classification.duplicate(true)
 
