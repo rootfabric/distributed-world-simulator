@@ -3,7 +3,7 @@ extends RefCounted
 ## PERF2.0 process-local observation helper.
 ##
 ## This helper samples only noncanonical process/clock state. It has no reference
-## to ecology authorities and cannot mutate Workbench/LS3 state.
+## to ecology authorities and cannot mutate canonical ecology authority state.
 
 var _started_usec := 0
 var _engine_static_before := 0
