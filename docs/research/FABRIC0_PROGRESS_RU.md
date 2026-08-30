@@ -423,3 +423,236 @@ hysteresis
 The goal is again to express these as generic mathematical contracts rather than object classes.
 
 Production promotion is still not requested. PR remains Draft.
+
+
+## FABRIC0.6 — NONSMOOTH WORLD
+
+**Parent research head:** `a09ff2b7611af8fcd201de45622f3d1e6ff07c4e`  
+**Design:** `docs/research/FABRIC0_6_NONSMOOTH_WORLD_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v6-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused nonsmooth acceptance: `121/121 PASS`;
+- predecessor compatibility: `42/42 PASS`;
+- playground: `FABRIC0_6_NONSMOOTH_PLAYGROUND_PASS`;
+- editor parse/compile scan: CLEAN;
+- all five executable FABRIC0.6 files are byte-identical between local exact-double tests and GitHub by Git blob SHA.
+
+### Новый универсальный контракт
+
+Nonsmooth physical law теперь задаётся как finite union of branch manifolds:
+
+```text
+branch:
+  residuals = 0
+  inequalities >= 0
+```
+
+Exact complementarity:
+
+```text
+a >= 0 ⟂ b >= 0
+```
+
+компилируется dimension-preserving способом:
+
+```text
+{a=0, b>=0}
+UNION
+{b=0, a>=0}
+```
+
+Поэтому разные физические dimensions не приходится искусственно складывать в один scalar NCP residual.
+
+### Active-set semantics
+
+Для локального island solver:
+
+1. перечисляет branch assignments;
+2. решает каждую гладкую manifold через bounded damped Newton;
+3. проверяет inequality guards;
+4. отбрасывает inadmissible candidates;
+5. предпочитает previous active branch, если она всё ещё допустима;
+6. затем использует branch priority и deterministic order.
+
+Research cap:
+
+`MAX_BRANCH_COMBINATIONS = 256`.
+
+### One-way relation reused across domains
+
+Один exact complementarity pattern без device-specific op работает как:
+
+- electrical hard one-way element;
+- pressure/flow check-valve-like element;
+- rotational one-way stop/clutch-like element.
+
+Electrical:
+
+```text
+reverse: V=-5, I=0, blocked
+forward: V=0, I=-5, conducting
+```
+
+Fluid:
+
+```text
+reverse: pressure=-4, flow=0
+forward: pressure=0, flow=-4
+```
+
+Rotational:
+
+```text
+free: omega=-3, torque=0
+blocked direction: omega=0, torque=-3
+```
+
+### Unilateral contact
+
+Two-port contact candidate:
+
+```text
+separation_velocity >= 0
+    ⟂
+normal_reaction >= 0
+```
+
+plus:
+
+```text
+force_a + force_b = 0
+```
+
+Separated:
+
+```text
+va=-1
+vb=+1
+reaction=0
+```
+
+Approaching:
+
+```text
+va=0
+vb=0
+force_a=-1
+force_b=+1
+absorbed power=0
+```
+
+Discrete branch transition записывается как `nonsmooth_transition`.
+
+### Exact 1D Coulomb stick/slip
+
+Три branch-manifolds:
+
+```text
+stick:
+  v=0
+  -Fmax <= F <= +Fmax
+
+slide_pos:
+  F=-Fmax
+  v>=0
+
+slide_neg:
+  F=+Fmax
+  v<=0
+```
+
+Observed sequence:
+
+```text
+drive=+0.5, Fmax=1 -> stick, v=0, F=-0.5
+drive=+3,   Fmax=1 -> slide_pos, v=+2, F=-1, Pabs=2
+drive=+3,   Fmax=4 -> stick, v=0, F=-3
+drive=-3,   Fmax=1 -> slide_neg, v=-2, F=+1, Pabs=2
+```
+
+No Friction kernel class exists.
+
+### Boundary memory + events
+
+Если несколько branches допустимы на точной switching surface, previous active branch сохраняется.
+
+Это предотвращает arbitrary chatter на equality boundary.
+
+При реальном переходе записывается:
+
+```text
+nonsmooth_transition
+  from
+  to
+  revision
+```
+
+### Fail-closed
+
+Если ни одна branch не проходит equations + inequalities:
+
+`NO_ADMISSIBLE_NONSMOOTH_BRANCH`.
+
+Если active manifold вырождена:
+
+`SINGULAR_ACTIVE_SET_MANIFOLD`.
+
+Если branch product превышает research cap:
+
+`ACTIVE_SET_COMBINATION_LIMIT`.
+
+### Predecessor compatibility
+
+FABRIC0.5 smooth law доказан как одно-branch частный случай HybridRelation:
+
+```text
+I + Is*(exp(V/Vscale)-1)=0
+V=ln(4)
+I=-3
+```
+
+Dimension checker сохраняется.
+
+FABRIC0.4 dimensioned Power Map также сохраняется:
+
+```text
+V=32/3
+omega=16/3
+current=-8/3
+torque=+16/3
+P_map=0
+```
+
+Zero-hybrid Conservation Cell по-прежнему даёт:
+
+```text
+common=5
+balances=+14,+1,-15
+```
+
+### Главный вывод FABRIC0.6
+
+> Nonsmooth object is a set of dimensionally valid manifolds, guards and deterministic transitions — not a class full of object-specific if/else logic.
+
+### Следующая фундаментальная граница
+
+`FABRIC0.7 STATEFUL HYBRID TIME`
+
+Нужны generic:
+
+```text
+continuous state
+event surface
+discrete state
+guard
+reset map
+topology mutation transaction
+```
+
+чтобы выразить impact/restitution, hysteresis, yield/plasticity, breaker trip, bond break и latch без device-specific runtime classes.
+
+Production promotion по-прежнему не заявляется. PR остаётся Draft.
