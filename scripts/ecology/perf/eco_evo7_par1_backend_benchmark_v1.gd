@@ -274,64 +274,95 @@ func _percentile(sorted_values: Array, q: float) -> float:
 ## ---------- selection policy (PAR1 section 12) ----------
 
 func _selection(rows: Array[Dictionary]) -> Dictionary:
-	## Geometric-mean total recruitment wall time over the large fixtures
-	## (512/1024/2048), best worker count per backend; p95 guard.
-	var p50_by_backend := {"PROCESS_POOL": {}, "WORKER_THREAD_POOL": {}}
-	var p95_by_backend := {"PROCESS_POOL": {}, "WORKER_THREAD_POOL": {}}
+	## Intended PAR1 policy, implemented literally:
+	## - geometric mean p50 over large fixtures 512/1024/2048;
+	## - best worker count = lowest geometric-mean p50 for that backend;
+	## - a >=15% p50 winner is accepted only when its geometric-mean p95 is
+	##   not >20% worse than the other eligible backend;
+	## - otherwise the documented tie-break prefers WORKER_THREAD_POOL.
+	var samples := {
+		"PROCESS_POOL": {},
+		"WORKER_THREAD_POOL": {},
+	}
 	for row in rows:
 		if not LARGE_FIXTURES.has(int(row["parent_count"])):
 			continue
 		var backend := String(row["backend"])
-		if not p50_by_backend.has(backend):
+		if not samples.has(backend):
 			continue
 		var wc := int(row["worker_count"])
-		p50_by_backend[backend][wc] = float(row["total_ms"]["p50"])
-		p95_by_backend[backend][wc] = float(row["total_ms"]["p95"])
+		if not samples[backend].has(wc):
+			samples[backend][wc] = {"p50": [], "p95": []}
+		samples[backend][wc]["p50"].append(float(row["total_ms"]["p50"]))
+		samples[backend][wc]["p95"].append(float(row["total_ms"]["p95"]))
+
 	var best := {}
-	for backend in p50_by_backend.keys():
+	for backend in samples.keys():
 		var best_wc := -1
-		var best_mean := -1.0
-		for wc in p50_by_backend[backend].keys():
-			## Best wc = lowest mean p50 across the large fixtures.
-			var mean_p50 := 0.0
-			var have := 0
-			for row in rows:
-				if String(row["backend"]) == backend and int(row["worker_count"]) == wc and LARGE_FIXTURES.has(int(row["parent_count"])):
-					mean_p50 += float(row["total_ms"]["p50"])
-					have += 1
-			if have == LARGE_FIXTURES.size():
-				mean_p50 /= have
-				if best_wc < 0 or mean_p50 < best_mean:
-					best_wc = wc
-					best_mean = mean_p50
+		var best_p50 := -1.0
+		var best_p95 := -1.0
+		for wc in samples[backend].keys():
+			var p50_values: Array = samples[backend][wc]["p50"]
+			var p95_values: Array = samples[backend][wc]["p95"]
+			if p50_values.size() != LARGE_FIXTURES.size() or p95_values.size() != LARGE_FIXTURES.size():
+				continue
+			var geomean_p50 := _geomean(p50_values)
+			var geomean_p95 := _geomean(p95_values)
+			if geomean_p50 <= 0.0 or geomean_p95 <= 0.0:
+				continue
+			if best_wc < 0 or geomean_p50 < best_p50:
+				best_wc = int(wc)
+				best_p50 = geomean_p50
+				best_p95 = geomean_p95
 		if best_wc >= 0:
-			best[backend] = {"worker_count": best_wc, "mean_p50_large": best_mean,
-				"p95_large_worst": p95_by_backend[backend][best_wc]}
+			best[backend] = {
+				"worker_count": best_wc,
+				"geomean_p50_large": best_p50,
+				"geomean_p95_large": best_p95,
+			}
+
 	var out := {
-		"policy": "geomean>=15% faster on 512/1024/2048 wins; within 15% prefer WORKER_THREAD_POOL if thread-safe and stable",
+		"policy": "geomean p50 >=15% faster on 512/1024/2048 wins only if geomean p95 is not >20% worse; otherwise tie-break prefers WORKER_THREAD_POOL",
 		"candidates": best,
 	}
 	if best.has("PROCESS_POOL") and best.has("WORKER_THREAD_POOL"):
-		var process_p50 := float(best["PROCESS_POOL"]["mean_p50_large"])
-		var wtp_p50 := float(best["WORKER_THREAD_POOL"]["mean_p50_large"])
-		var advantage := (process_p50 - wtp_p50) / process_p50 if process_p50 > 0.0 else 0.0
-		out["wtp_advantage_vs_process"] = advantage
-		if advantage >= 0.15:
+		var process_p50 := float(best["PROCESS_POOL"]["geomean_p50_large"])
+		var process_p95 := float(best["PROCESS_POOL"]["geomean_p95_large"])
+		var wtp_p50 := float(best["WORKER_THREAD_POOL"]["geomean_p50_large"])
+		var wtp_p95 := float(best["WORKER_THREAD_POOL"]["geomean_p95_large"])
+		var wtp_advantage := (process_p50 - wtp_p50) / process_p50 if process_p50 > 0.0 else 0.0
+		var wtp_p95_guard := wtp_p95 <= process_p95 * 1.20
+		var process_p95_guard := process_p95 <= wtp_p95 * 1.20
+		out["wtp_advantage_vs_process"] = wtp_advantage
+		out["wtp_p95_guard"] = wtp_p95_guard
+		out["process_p95_guard"] = process_p95_guard
+		if wtp_advantage >= 0.15 and wtp_p95_guard:
 			out["selected_backend"] = "WORKER_THREAD_POOL"
-			out["reason"] = "WTP >=15%% faster in mean p50 on large fixtures (advantage %.1f%%)" % (advantage * 100.0)
-		elif advantage <= -0.15:
+			out["reason"] = "WTP >=15%% faster in geometric-mean p50 and passes p95 guard (advantage %.1f%%)" % (wtp_advantage * 100.0)
+		elif wtp_advantage <= -0.15 and process_p95_guard:
 			out["selected_backend"] = "PROCESS_POOL"
-			out["reason"] = "PROCESS_POOL >=15%% faster in mean p50 on large fixtures (advantage %.1f%%)" % (-advantage * 100.0)
+			out["reason"] = "PROCESS_POOL >=15%% faster in geometric-mean p50 and passes p95 guard (advantage %.1f%%)" % (-wtp_advantage * 100.0)
 		else:
 			out["selected_backend"] = "WORKER_THREAD_POOL"
-			out["reason"] = "within 15%% on large fixtures (advantage %.1f%%); tie-break prefers WORKER_THREAD_POOL pending thread-safety/contention PASS" % (advantage * 100.0)
+			out["reason"] = "no backend satisfies the >=15%% p50 winner + p95 guard rule; tie-break prefers WORKER_THREAD_POOL"
 	elif best.has("WORKER_THREAD_POOL"):
 		out["selected_backend"] = "WORKER_THREAD_POOL"
-		out["reason"] = "only WORKER_THREAD_POOL has complete large-fixture measurements"
+		out["reason"] = "only WORKER_THREAD_POOL has complete eligible large-fixture measurements"
 	elif best.has("PROCESS_POOL"):
 		out["selected_backend"] = "PROCESS_POOL"
-		out["reason"] = "only PROCESS_POOL has complete large-fixture measurements"
+		out["reason"] = "only PROCESS_POOL has complete eligible large-fixture measurements"
 	return out
+
+func _geomean(values: Array) -> float:
+	if values.is_empty():
+		return -1.0
+	var log_sum := 0.0
+	for value in values:
+		var sample := float(value)
+		if sample <= 0.0:
+			return -1.0
+		log_sum += log(sample)
+	return exp(log_sum / float(values.size()))
 
 func _compact(summary: Dictionary) -> Dictionary:
 	var rows: Array = []

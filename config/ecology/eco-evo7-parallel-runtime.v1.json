@@ -1,11 +1,11 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_parallel_runtime.v1",
   "version": "1.0.0",
-  "checkpoint": "ECO.EVO7_PAR1_PARALLEL_BACKEND_SELECTION_R1",
+  "checkpoint": "ECO.EVO7_PAR1_PARALLEL_BACKEND_SELECTION_R2",
   "par1_selected_backend": "PROCESS_POOL",
-  "par1_selection_status": "SELECTED_BY_BENCHMARK_2026-08-29",
+  "par1_selection_status": "R2_POLICY_REPAIRED_AWAITING_FRESH_BENCHMARK",
   "par1_worker_count": 8,
-  "par1_selection_reason": "PROCESS_POOL >=15% faster than WORKER_THREAD_POOL in mean p50 total recruitment wall time on large fixtures 512/1024/2048 at best worker count (1078.4 ms vs 1564.7 ms, advantage 45.1%); p95 also better (1994.9 vs 2965.7); parity exact on all 40 benchmark cells and 224 acceptance comparisons",
+  "par1_selection_reason": "PROCESS_POOL remains the provisional winner from the recorded R1 measurements; R2 fixes the selector to geometric-mean p50 plus enforced p95 guard. Fresh exact-Windows benchmark must reconfirm before acceptance.",
   "par1_benchmark_artifact": "artifacts/par1_backend_benchmark.json",
   "par1_benchmark_highlights": {
     "parents_2048_candidates_4096_serial_p50_ms": 7638.1,
@@ -20,6 +20,8 @@
   "notes": [
     "PAR1 chooses the production parallel recruitment backend only; canonical recruitment stays SERIAL until PAR2.",
     "Selection policy: >=15% mean-p50 advantage on fixtures 512/1024/2048 wins; within 15% prefer WORKER_THREAD_POOL if thread-safety audit and PLAY0 contention PASS.",
-    "This file is noncanonical runtime configuration; it never enters ecology hashes."
+    "This file is noncanonical runtime configuration; it never enters ecology hashes.",
+    "PAR1 R2 repairs the benchmark decision algorithm: geometric-mean p50 is implemented literally and the p95 <=20% worse guard is enforced.",
+    "Recorded R1 p50 values imply PROCESS_POOL geomean ~963.2 ms vs WTP ~1343.7 ms at wc=8; fresh R2 benchmark is still required before formal acceptance."
   ]
 }
