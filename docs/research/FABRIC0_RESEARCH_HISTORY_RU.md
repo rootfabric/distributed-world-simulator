@@ -362,110 +362,260 @@ stick → slide+ → stick → slide-
 
 Transition пока выбирается между статическими branch states. Нет ещё полноценной временной semantics момента события, reset map и transaction.
 
-## FABRIC0.7 — почему следующий wall именно Time
+## FABRIC0.7 — Stateful Hybrid Time
 
-Для persistent world недостаточно знать, что существуют две modes.
+После FABRIC0.6 стало ясно: статический выбор nonsmooth branch ещё не отвечает на вопрос времени.
 
-Нужно ответить:
+Нужно было доказать:
 
-```text
-когда именно произошёл переход?
-какое было pre-state?
-какой post-state?
-какие state variables reset?
-какие topology operations commit?
-что делать, если event случился внутри dt?
-что делать, если событий слишком много?
-```
+- crossing локализуется внутри timestep;
+- существует explicit pre-state/post-state;
+- reset order-independent;
+- discrete mode имеет causal history;
+- topology mutation atomic;
+- плохой jump не оставляет partial state;
+- event storm не зависает.
 
-Поэтому FABRIC0.7 должен ввести hybrid-time semantics.
+### Новая temporal ontology
 
-Базовая форма:
+Введено принципиальное разделение:
 
 ```text
-mode
-continuous state x
-flow dx/dt=f(mode,x,p,t)
-event surface g(x,p,t)=0
-direction
-guard
-reset x+ = R(x-,p)
-mode transition
-atomic topology transaction
-event identity/history
+FLOW
+JUMP
+TOPOLOGY TRANSACTION
 ```
 
-Главные experiments:
+FLOW:
 
-### bouncing impact
+```text
+dx/dt = f(mode,x,p,t)
+```
+
+JUMP:
+
+```text
+x+ = R(x-,p,te)
+mode+ = target
+```
+
+TOPOLOGY TRANSACTION:
+
+```text
+validate all operations
+commit all
+or none
+```
+
+Это стало новой важной парадигмой FABRIC: изменения мира нельзя сводить к одному procedural update callback.
+
+### Macrostep transaction
+
+`advance(dt)` теперь имеет recovery-safe форму:
+
+```text
+snapshot
+→ flow
+→ detect/localize event
+→ pre-event snapshot
+→ simultaneous reset + mode + topology commit
+→ post-event snapshot
+→ remaining flow
+```
+
+При невалидной event transaction весь macrostep rollback.
+
+### Impact experiment
+
+Ball:
+
+```text
+h0=1
+v0=-1
+g=9.81
+e=0.8
+```
+
+Flow:
 
 ```text
 h_dot=v
 v_dot=-g
-
-guard h=0 downward
-reset:
-  h=0
-  v=-e * pre(v)
 ```
 
-Проверить event-time localization и restitution energy ratio.
+Impact:
 
-### Schmitt hysteresis
+```text
+h=0 downward crossing
+v+ = -e*v-
+```
 
-Два thresholds и discrete mode.
+Event локализован внутри `dt=0.6`:
 
-Проверить отсутствие chatter внутри deadband.
+```text
+te=0.360950562279
+v-=-4.540925016
+v+=+3.632740013
+```
 
-### breaker/fuse
+Проверено:
 
-Continuous accumulated damage/clock.
+```text
+v+ = -0.8*v-
+KE+/KE- = 0.64 = e^2
+```
 
-При crossing:
+Это первый опыт FABRIC, где physical jump существует в собственном времени, а не на frame boundary.
 
-- mode -> tripped;
-- bond disabled atomic transaction;
-- event recorded exactly.
+### Hysteresis experiment
 
-### simultaneous reset
+Schmitt-like modes:
 
-Несколько reset RHS вычисляются из одного pre-event snapshot.
+```text
+off -> on at upper=1
+on  -> off at lower=0.2
+```
 
-### failed topology transaction
+После включения состояние прошло через deadband `x=0.7` без нового event.
 
-Все operations validate first.
+Значит history-dependent behavior возникло из discrete mode + separate guard surfaces, а не special device class.
 
-Ни одна не применяется при ошибке.
+### Irreversible topology experiment
 
-### event storm / Zeno protection
+Breaker-like experiment:
 
-Bounded event count.
+```text
+damage_dot=2/s
+trip=1
+```
 
-Fail-closed diagnostic.
+At `t=0.5`:
 
-## Research discipline
+```text
+armed -> tripped
+damage+=1
+disable fuse_link
+topology_revision 0->1
+```
 
-Каждый successor:
+После события bond остаётся disabled.
 
-- не переписывает исторический solver;
-- добавляет новый файл;
-- сохраняет predecessor validation;
-- явно пишет claims/non-claims;
-- не self-promote в production;
-- не меняет Construction ownership.
+Это первый FABRIC experiment, где continuous state crossing порождает irreversible topology mutation.
 
-## Current durable boundary before FABRIC0.7 implementation
+### Reset semantics experiment
 
-Branch:
+```text
+pre a=1,b=2
+a+=pre(b)
+b+=pre(a)
+post a=2,b=1
+```
 
-`research/fabric0-compositional-world-fabric-r1`
+Это доказало: reset assignments обязаны быть simultaneous mapping одного immutable pre-event state.
 
-FABRIC0.6 parent head:
+### Transaction failure experiment
 
-`549abed8c6ba5deeb5c68303ea7a2ce5c5a85522`
+Event пытался отключить:
 
-Draft PR:
+- существующий bond;
+- отсутствующий bond.
 
-`#317`
+Вместо half-applied topology:
 
-FABRIC remains research-only.
+`TOPOLOGY_TRANSACTION_UNKNOWN_BOND`.
+
+Полностью восстановлены:
+
+- time;
+- state;
+- mode;
+- event list;
+- bond state;
+- state hash.
+
+### Zeno/event-storm experiment
+
+Periodic reset каждые `0.01s` потребовал бы ~100 jumps за macrostep.
+
+Research cap `32`.
+
+Solver выдаёт:
+
+`ZENO_OR_EVENT_STORM`
+
+и полностью rollback macrostep.
+
+### Evidence
+
+Exact double-Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`.
+
+Results:
+
+```text
+FABRIC0.7 Hybrid Time       88/88 PASS
+FABRIC0.6 Nonsmooth       121/121 PASS
+FABRIC0.6 Compatibility    42/42 PASS
+Playground                 PASS
+Editor scan                CLEAN
+```
+
+Executable local/GitHub bytes совпали.
+
+### Главный урок FABRIC0.7
+
+> Время FABRIC — это не цикл обновления объектов. Это последовательность flow intervals и локализованных jump transactions над persistent state/topology.
+
+### Что осталось несвязанным
+
+Очень важный non-claim:
+
+FABRIC0.7 temporal ODE solver и FABRIC0.6 algebraic/nonsmooth physical solver пока живут рядом.
+
+Continuous RK4 stage не решает автоматически Conservation Cells/PowerMaps/contact reactions.
+
+Bouncing impact использует reset map, а не общий impulse complementarity solve.
+
+Поэтому следующий wall не должен добавлять ещё один тип устройства.
+
+## FABRIC0.8 — Coupled Hybrid DAE / Event Iteration
+
+Следующий вопрос:
+
+> Можно ли объединить continuous storage, algebraic physical network, nonsmooth constraints и event-time jumps в одну temporal equation system?
+
+Нужно доказать:
+
+- physical island solve на integration stages;
+- guards от solved algebraic reaction;
+- geometric gap + contact;
+- impulse/restitution solve;
+- friction inside impact/contact;
+- same-time event fixed-point iteration;
+- topology recompile at same event instant;
+- momentum/energy audit across jump.
+
+Критический unknown-machine experiment:
+
+```text
+two bodies
++ gap
++ contact
++ impact
++ restitution
++ friction
++ topology event
+```
+
+без device-specific CollisionObject как canonical physical truth.
+
+## Research discipline after 0.7
+
+FABRIC остаётся research-only.
+
+Historical solvers/evidence не переписываются.
+
+Construction остаётся canonical semantic owner.
+
+Следующий checkpoint обязан по-прежнему пытаться сломать гипотезу, а не просто расширять каталог features.
