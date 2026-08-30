@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-24-V0-SM1-R1",
   "program": "V0",
   "goal_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-  "state": "PLANNED",
+  "state": "DISPATCHED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
   "branch": "feature/v0-sm1-seamless-product-integration",
@@ -151,5 +151,5 @@
   ],
   "issued_at_utc": "2026-08-24T05:13:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "Control candidate only. Runtime mutation remains forbidden until this post-P6 reconciliation is independently reviewed, integrated into main, the single mutation lease is rotated to SM1, and a Director DISPATCHED event is committed."
+  "notes": "Director dispatch committed after post-P6 control integration and lease rotation. Runtime mutation is authorized only on feature/v0-sm1-seamless-product-integration and remains bounded to the declared first SM1 slice; merge to main still requires the configured human runtime-feature gate."
 }

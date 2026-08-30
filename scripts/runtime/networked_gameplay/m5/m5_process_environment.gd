@@ -23,11 +23,14 @@ static func create(
 	var cache_root := process_root.path_join("cache")
 	var environment := {
 		"HOME": process_root,
+		"USERPROFILE": process_root,
 		"APPDATA": data_root,
 		"LOCALAPPDATA": data_root,
 		"XDG_DATA_HOME": data_root,
 		"XDG_CONFIG_HOME": config_root,
 		"XDG_CACHE_HOME": cache_root,
+		"PLANET_SIMULATOR_INVENTORY_PROFILE": "planet_default",
+		"GODOT_SILENCE_ROOT_WARNING": "1",
 	}
 	var runtime_port := 0
 	if mode == "disabled":

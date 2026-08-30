@@ -1,10 +1,21 @@
 extends SceneTree
 
 const ClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+const ItemGraphBase = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
 const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_support.gd")
 
 const TIMEOUT_MS := 60000
+const SHARED_BEACON_POSITION := Vector3(1.2, 0.4, -3.4)
+# Conservative interaction approach readiness: stays inside the canonical
+# SANDBOX_PICKUP_RANGE_M with margin, mirroring the proven recovery-driver
+# seed approach threshold instead of walking onto the interaction target.
+const INTERACTION_READY_DISTANCE_M := 2.5
+const INTERACTION_APPROACH_MAX_STEPS := 64
+const INTERACTION_FENCE_TIMEOUT_MS := 5000
+# Server authority contexts lift the interaction origin above the ground
+# pose (networked gameplay service interaction origin height).
+const INTERACTION_ORIGIN_HEIGHT_M := 0.9
 
 var host := "127.0.0.1"
 var port := 0
@@ -99,9 +110,21 @@ func _run_a() -> void:
 	var moved: bool = await _wait_local_movement(before, 0.05, 3000)
 	_assert(moved, "A moved through InputMap and server simulation")
 	playground.set_m7_state_sync_enabled(false)
-	var move_result: Dictionary = await _move_authority_toward(Vector3(1.2, 0.4, -3.4), 2)
-	_assert(bool(move_result.get("success", false)), "A movement intent accepted by server simulation")
-	await _wait_frames(8)
+	var approach_result: Dictionary = await _approach_authority_interaction_position(
+		SHARED_BEACON_POSITION
+	)
+	_assert(
+		bool(approach_result.get("success", false)),
+		"A reached conservative beacon interaction approach readiness"
+	)
+	var interaction_ready := await _wait_authoritative_interaction_ready(
+		SHARED_BEACON_POSITION,
+		INTERACTION_FENCE_TIMEOUT_MS
+	)
+	_assert(
+		interaction_ready,
+		"A authoritative pose converged for beacon interaction"
+	)
 	var adapter = playground._m7_item_adapter
 	var shared_beacon: String = adapter.to_replica_item_id("item/shared/beacon/1")
 	var pickup_submission: Dictionary = playground.item_gameplay.pickup_world_item(shared_beacon)
@@ -266,7 +289,7 @@ func _move_authority_toward(target: Vector3, steps: int) -> Dictionary:
 		if direction.length_squared() <= 0.000001:
 			break
 		direction = direction.normalized()
-		playground.player.camera_yaw = atan2(-direction.x, -direction.z)
+		_set_automated_camera_yaw(atan2(-direction.x, -direction.z))
 		result = client.submit_movement_intent_blocking(
 			playground._create_m7_movement_intent(0.25, Vector2(0.0, -1.0), 0, 0)
 		)
@@ -283,12 +306,115 @@ func _move_authority_toward(target: Vector3, steps: int) -> Dictionary:
 	var final_direction := (target - final_position).slide(Vector3.UP)
 	if final_direction.length_squared() > 0.000001:
 		final_direction = final_direction.normalized()
-		playground.player.camera_yaw = atan2(-final_direction.x, -final_direction.z)
+		_set_automated_camera_yaw(atan2(-final_direction.x, -final_direction.z))
 		result = client.submit_movement_intent_blocking(
 			playground._create_m7_movement_intent(0.05, Vector2.ZERO, 0, 0)
 		)
 		await _wait_frames(4)
 	return result
+
+
+func _set_automated_camera_yaw(desired_yaw: float) -> void:
+	var current_yaw := float(playground.player.camera_yaw)
+	var yaw_delta := wrapf(desired_yaw - current_yaw, -PI, PI)
+	playground.player.adjust_view(yaw_delta, 0.0)
+
+
+func _approach_authority_interaction_position(target: Vector3) -> Dictionary:
+	var steps_used := 0
+	while steps_used < INTERACTION_APPROACH_MAX_STEPS:
+		var record: Dictionary = client.get_local_player_record()
+		var horizontal_distance := _record_horizontal_distance(record, target)
+		if horizontal_distance <= INTERACTION_READY_DISTANCE_M:
+			return {
+				"success": true,
+				"error_code": "",
+				"steps_used": steps_used,
+				"horizontal_distance_m": horizontal_distance,
+			}
+		var result: Dictionary = await _move_authority_toward(target, 1)
+		steps_used += 1
+		if not bool(result.get("success", false)):
+			return result
+	return {
+		"success": false,
+		"error_code": "M7_INTERACTION_APPROACH_NOT_REACHED",
+		"steps_used": steps_used,
+		"horizontal_distance_m": _record_horizontal_distance(client.get_local_player_record(), target),
+	}
+
+
+func _wait_authoritative_interaction_ready(target: Vector3, timeout_ms: int) -> bool:
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started < timeout_ms:
+		var record: Dictionary = client.get_local_player_record()
+		if not record.is_empty() and _record_horizontal_distance(record, target) <= INTERACTION_READY_DISTANCE_M:
+			var to_target := target - _record_position(record)
+			to_target.y = 0.0
+			if to_target.length_squared() > 0.000001:
+				_set_automated_camera_yaw(atan2(-to_target.x, -to_target.z))
+			var previous_sequence := int(record.get("last_input_sequence", 0))
+			var result: Dictionary = client.submit_movement_intent_blocking(
+				playground._create_m7_movement_intent(0.05, Vector2.ZERO, 0, 0)
+			)
+			if bool(result.get("success", false)):
+				var submitted_sequence := int(result.get("input_sequence", previous_sequence + 1))
+				if await _wait_authoritative_sequence_at_least(submitted_sequence, 2000):
+					if _authoritative_pose_satisfies_interaction(client.get_local_player_record(), target):
+						return true
+		await _wait_frames(2)
+	return false
+
+
+func _wait_authoritative_sequence_at_least(sequence: int, timeout_ms: int) -> bool:
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started < timeout_ms:
+		if int(client.get_local_player_record().get("last_input_sequence", 0)) >= sequence:
+			return true
+		await _wait_frames(1)
+	return false
+
+
+func _authoritative_pose_satisfies_interaction(record: Dictionary, target: Vector3) -> bool:
+	if record.is_empty():
+		return false
+	var origin := _record_position(record) + Vector3(0.0, INTERACTION_ORIGIN_HEIGHT_M, 0.0)
+	var to_target := target - origin
+	var distance := to_target.length()
+	if distance > ItemGraphBase.SANDBOX_PICKUP_RANGE_M:
+		return false
+	if distance <= 0.000001:
+		return true
+	var yaw := float(record.get("orientation_yaw", 0.0))
+	var view_direction := (-Basis(Vector3.UP, yaw).z).normalized()
+	var horizontal_target := Vector3(to_target.x, 0.0, to_target.z)
+	var horizontal_view := Vector3(view_direction.x, 0.0, view_direction.z)
+	if horizontal_target.length() > 0.25:
+		if horizontal_view.length_squared() <= 0.000001:
+			return false
+		if horizontal_view.normalized().dot(horizontal_target.normalized()) < ItemGraphBase.SANDBOX_VISIBILITY_DOT_MIN:
+			return false
+	var projected_distance := clampf(
+		to_target.dot(view_direction),
+		0.0,
+		ItemGraphBase.SANDBOX_PICKUP_RANGE_M
+	)
+	var closest_point := origin + view_direction * projected_distance
+	return target.distance_to(closest_point) <= ItemGraphBase.SANDBOX_TARGET_RAY_TOLERANCE_M
+
+
+func _record_position(record: Dictionary) -> Vector3:
+	var position_value: Dictionary = Dictionary(record.get("position", {}))
+	return Vector3(
+		float(position_value.get("x", 0.0)),
+		float(position_value.get("y", 0.0)),
+		float(position_value.get("z", 0.0))
+	)
+
+
+func _record_horizontal_distance(record: Dictionary, target: Vector3) -> float:
+	var to_target := target - _record_position(record)
+	return Vector3(to_target.x, 0.0, to_target.z).length()
 
 
 func _complete(details: Dictionary) -> void:

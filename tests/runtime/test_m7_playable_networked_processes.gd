@@ -12,6 +12,10 @@ func _init() -> void:
 	client_network_profile = OS.get_environment("NX4_TEST_CLIENT_NETWORK_PROFILE").strip_edges().to_upper()
 	if client_network_profile.is_empty():
 		client_network_profile = "LOCAL"
+	var worker_source := FileAccess.get_file_as_string("res://tools/runtime/m7_playable_network_client.gd")
+	_assert(worker_source.contains("func _set_automated_camera_yaw"), "M7 worker owns camera basis sync helper")
+	_assert(worker_source.contains("playground.player.adjust_view(yaw_delta, 0.0)"), "M7 worker synchronizes automated yaw through public view API")
+	_assert(not worker_source.contains("playground.player.camera_yaw ="), "M7 worker never assigns camera_yaw scalar directly")
 	var port := _find_port()
 	_assert(port > 0, "M7 port allocated")
 	if port <= 0:

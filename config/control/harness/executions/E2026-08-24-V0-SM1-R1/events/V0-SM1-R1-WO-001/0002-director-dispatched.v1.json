@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0002",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-24T11:08:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-sm1-seamless-product-integration",
+  "head_sha": "e14f8b6e5b07709d18273cc7886fe660bc353ebf",
+  "summary": "Director dispatches the first bounded production SM1 runtime slice after exact-head lease rotation and canonical post-P6 control integration. Scope is SM1.1 owner-port mapping plus SM1.2 one-writer authority transfer state machine; no Gateway/NX/P6 canonical owner is replaced.",
+  "command": "DIRECTOR_DISPATCH_SM1_AFTER_LEASE_ROTATION_PC0_GREEN",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/work-orders/V0-SM1-R1-WO-001.v1.json"
+  ]
+}

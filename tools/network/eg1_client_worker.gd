@@ -126,6 +126,11 @@ func _drive() -> bool:
 		_scenario_sent_up_to += 1
 		return false
 	if _scenario_sent_up_to == Support.SCENARIO_ITEM_COMMANDS.size() and not _movement_sent:
+		# WORLD_OPERATION replies use the reliable path, while movement uses
+		# the INPUT path. Do not emit the one-shot movement until the three
+		# reliable scenario operations have been observed by the client.
+		if _results.size() < Support.SCENARIO_ITEM_COMMANDS.size():
+			return false
 		_movement_sent = true
 		_send_movement()
 		return false

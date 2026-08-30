@@ -29,15 +29,20 @@ var _failures: Array[String] = []
 var _finished := false
 var _input_pressed := false
 var _player_checksum := ""
+var _player_observation: Dictionary = {}
 var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
 var _convergence_prepare_id := ""
 var _prepared_player_checksum := ""
+var _prepared_player_observation: Dictionary = {}
 var _prepared_item_checksum := ""
 var _convergence_prepared := false
 var _convergence_release_id := ""
 var _convergence_release_consumed := false
+var _control_transient_recoveries := 0
+var _last_control_read_attempts := 0
+var _last_control_read_elapsed_ms := 0
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -70,8 +75,14 @@ func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
 func _process(_delta: float) -> void:
 	if _finished:
 		return
-	if Time.get_ticks_msec() - _started_ms > TIMEOUT_MS:
-		_fail("M5_ACCEPTANCE_TIMEOUT", {"stage": _stage})
+	var now_ms := Time.get_ticks_msec()
+	var stage_elapsed_ms := now_ms - _stage_started_ms
+	if stage_elapsed_ms > TIMEOUT_MS:
+		_fail("M5_ACCEPTANCE_TIMEOUT", {
+			"stage": _stage,
+			"stage_elapsed_ms": stage_elapsed_ms,
+			"total_elapsed_ms": now_ms - _started_ms,
+		})
 		return
 	var runtime = _runtime()
 	var shell = _shell(runtime)
@@ -146,7 +157,11 @@ func _process(_delta: float) -> void:
 				_write_report("READY_FOR_CONTENTION", false, world, shell)
 				_set_stage("WAIT_CONTENTION_GO")
 		"WAIT_CONTENTION_GO":
-			if not bool(Support.read(_control_file).get("go_contention", false)):
+			var contention_control_read := _read_control_consistent()
+			if not bool(contention_control_read.get("success", false)):
+				return
+			var contention_control: Dictionary = Dictionary(contention_control_read.get("value", {}))
+			if not bool(contention_control.get("go_contention", false)):
 				return
 			_contention_result = _ui_place_cursor(shell, "inventory/%s" % _client_id, 0)
 			_wait_replica_after_command(shell)
@@ -197,7 +212,11 @@ func _process(_delta: float) -> void:
 			else:
 				_set_stage("WAIT_A_CURSOR")
 		"WAIT_DISCONNECT_A":
-			if not bool(Support.read(_control_file).get("disconnect_a", false)):
+			var disconnect_control_read := _read_control_consistent()
+			if not bool(disconnect_control_read.get("success", false)):
+				return
+			var disconnect_control: Dictionary = Dictionary(disconnect_control_read.get("value", {}))
+			if not bool(disconnect_control.get("disconnect_a", false)):
 				return
 			_finish(true, "DISCONNECTED_WITH_TRANSIENT")
 		"WAIT_A_CURSOR":
@@ -236,46 +255,81 @@ func _process(_delta: float) -> void:
 				return
 			if int(world.get("remote_presenter_count", 0)) != 1:
 				return
-			var reconnect_peer_path := String(Support.read(_control_file).get("reconnect_peer_result_file", "")).strip_edges()
+			var reconnect_control_read := _read_control_consistent()
+			if not bool(reconnect_control_read.get("success", false)):
+				return
+			var reconnect_control: Dictionary = Dictionary(reconnect_control_read.get("value", {}))
+			var reconnect_peer_path := String(reconnect_control.get("reconnect_peer_result_file", "")).strip_edges()
 			if not reconnect_peer_path.is_empty():
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
-		"WAIT_CONVERGENCE_PEER":
-			# A prepared acknowledgement remains revocable until release is actually
-			# consumed. Fresh authoritative checksums are read before any prepared
-			# short-circuit so a superseded generation can never complete.
-			var control := Support.read(_control_file)
+		"WAIT_CONVERGENCE_COORDINATOR":
+			# M5_CONVERGENCE_PAIR_MATCHING_PARENT_OWNED:
+			# clients publish only their own authoritative checksums. The parent
+			# coordinator is the sole matcher and generation writer; clients no
+			# longer form a second peer-to-peer barrier through result files.
+			var convergence_control_read := _read_control_consistent()
+			if not bool(convergence_control_read.get("success", false)):
+				return
+			var control: Dictionary = Dictionary(convergence_control_read.get("value", {}))
 			var prepare: Dictionary = control.get("convergence_prepare", {})
 			var prepare_id := String(prepare.get("id", "")).strip_edges()
 			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
+			var prepare_player_observation: Dictionary = Dictionary(prepare.get("player_observation", {}))
 			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
 			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
 			var complete_id := String(control.get("convergence_complete_id", "")).strip_edges()
-			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
+			var finish_client_id := String(control.get("convergence_finish_client_id", "")).strip_edges()
+			var latest_player_snapshot: Dictionary = _client.get_snapshot()
+			var latest_player_observation := _player_observation_from_snapshot(latest_player_snapshot)
+			var latest_player_checksum := String(latest_player_observation.get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
+
 			if _convergence_release_consumed:
-				# Release consumption is the exact convergence acceptance point. Keep
-				# the client connected until the coordinator observes both releases,
-				# preventing the first graceful leave from invalidating the peer.
-				if prepare_id != _convergence_prepare_id or release_id != _convergence_release_id:
-					_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
-					return
-				if complete_id == _convergence_release_id:
-					_finish(true)
-				return
-			if _convergence_prepared:
-				var release_decision := Barrier.evaluate_prepared_release(
-					_convergence_prepare_id,
-					_prepared_player_checksum,
+				# A consumed release is a durable acceptance event for this generation.
+				# It can no longer silently revoke back to READY; any control/checksum
+				# regression is an explicit fail-closed defect.
+				var consumed_decision := Barrier.evaluate_consumed_release_integrity(
+					_convergence_release_id,
+					_prepared_player_observation,
 					_prepared_item_checksum,
 					prepare,
 					release_id,
-					latest_player_checksum,
+					complete_id,
+					latest_player_observation,
+					latest_item_checksum
+				)
+				match String(consumed_decision.get("action", "")):
+					Barrier.CLIENT_FAIL_RELEASE:
+						_fail("M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED", {
+							"reason": String(consumed_decision.get("reason", "")),
+							"generation": _convergence_release_id,
+							"prepared_player_observation": _prepared_player_observation.duplicate(true),
+							"current_player_observation": latest_player_observation.duplicate(true),
+							"current_player_checksum": latest_player_checksum,
+							"current_item_checksum": latest_item_checksum,
+						})
+						return
+					Barrier.CLIENT_COMPLETE_RELEASE:
+						if finish_client_id == _client_id:
+							_finish(true)
+						return
+					_:
+						return
+
+			if _convergence_prepared:
+				var release_decision := Barrier.evaluate_prepared_release(
+					_convergence_prepare_id,
+					_prepared_player_observation,
+					_prepared_item_checksum,
+					prepare,
+					release_id,
+					latest_player_observation,
 					latest_item_checksum
 				)
 				match String(release_decision.get("action", "")):
 					Barrier.CLIENT_REVOKE:
-						_revoke_convergence_prepare(latest_player_checksum, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
+						_revoke_convergence_prepare(latest_player_observation, latest_item_checksum, runtime.create_m3_graphical_client_report(), shell)
 						return
 					Barrier.CLIENT_CONSUME_RELEASE:
 						_convergence_release_id = _convergence_prepare_id
@@ -284,34 +338,35 @@ func _process(_delta: float) -> void:
 						return
 					_:
 						return
+
 			if (
 				not latest_player_checksum.is_empty()
 				and not latest_item_checksum.is_empty()
 				and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
 			):
 				_player_checksum = latest_player_checksum
+				_player_observation = latest_player_observation.duplicate(true)
 				_item_checksum = latest_item_checksum
 				_convergence_world = runtime.create_m3_graphical_client_report()
 				_convergence_locked = false
 				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
-			if not _convergence_locked:
-				var peer_ready := Support.read(_peer_result_file)
-				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "CONVERGENCE_PREPARED"]:
-					return
-				if String(peer_ready.get("player_checksum", "")) != _player_checksum:
-					return
-				if String(peer_ready.get("item_checksum", "")) != _item_checksum:
-					return
-				_convergence_locked = true
-				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
+
+			# PREPARE is authored only by the parent after it observed both current
+			# client reports with the same non-empty checksums.
 			if (
 				not prepare_id.is_empty()
-				and prepare_player_checksum == _player_checksum
-				and prepare_item_checksum == _item_checksum
+				and prepare_player_checksum == latest_player_checksum
+				and Barrier.observations_identical(prepare_player_observation, latest_player_observation)
+				and prepare_item_checksum == latest_item_checksum
 			):
+				_convergence_locked = true
 				_convergence_prepare_id = prepare_id
 				_prepared_player_checksum = prepare_player_checksum
+				_prepared_player_observation = prepare_player_observation.duplicate(true)
 				_prepared_item_checksum = prepare_item_checksum
+				_player_checksum = prepare_player_checksum
+				_player_observation = prepare_player_observation.duplicate(true)
+				_item_checksum = prepare_item_checksum
 				_convergence_prepared = true
 				_convergence_release_id = ""
 				_convergence_release_consumed = false
@@ -437,10 +492,50 @@ func _verify_reconnect_state(shell) -> void:
 		_failures.append("Reconnect ownership epoch did not advance")
 
 
+func _read_control_consistent() -> Dictionary:
+	var result := Support.read_control_consistent(_control_file)
+	_last_control_read_attempts = int(result.get("attempts", 0))
+	_last_control_read_elapsed_ms = int(result.get("elapsed_ms", 0))
+	if bool(result.get("success", false)):
+		if _last_control_read_attempts > 1:
+			_control_transient_recoveries += 1
+		return {
+			"success": true,
+			"value": Dictionary(result.get("value", {})).duplicate(true),
+			"attempts": _last_control_read_attempts,
+			"elapsed_ms": _last_control_read_elapsed_ms,
+		}
+	_fail("M5_CONTROL_READ_UNAVAILABLE", {
+		"stage": _stage,
+		"error_code": String(result.get("error_code", "")),
+		"attempts": _last_control_read_attempts,
+		"elapsed_ms": _last_control_read_elapsed_ms,
+		"transient_exhausted": bool(result.get("transient_exhausted", false)),
+	})
+	return {
+		"success": false,
+		"value": {},
+		"attempts": _last_control_read_attempts,
+		"elapsed_ms": _last_control_read_elapsed_ms,
+	}
+
+
+func _player_observation_from_snapshot(snapshot: Dictionary) -> Dictionary:
+	return {
+		"checksum": String(snapshot.get("checksum", "")),
+		"revision": int(snapshot.get("revision", -1)),
+		"server_tick": int(snapshot.get("server_tick", -1)),
+		"authority_owner_id": String(snapshot.get("authority_owner_id", "")),
+		"authority_epoch": int(snapshot.get("authority_epoch", 0)),
+	}
+
+
 func _begin_convergence(world: Dictionary, shell) -> void:
 	_clear_convergence_prepare_state()
 	_convergence_locked = false
-	_player_checksum = String(_client.get_snapshot().get("checksum", ""))
+	var player_snapshot: Dictionary = _client.get_snapshot()
+	_player_observation = _player_observation_from_snapshot(player_snapshot)
+	_player_checksum = String(_player_observation.get("checksum", ""))
 	_item_checksum = String(_client.get_item_graph_snapshot().get("checksum", ""))
 	_convergence_world = world.duplicate(true)
 	if _player_checksum.is_empty() or _item_checksum.is_empty():
@@ -448,16 +543,17 @@ func _begin_convergence(world: Dictionary, shell) -> void:
 		_finish(false)
 		return
 	_write_report("READY_TO_CONVERGE", false, world, shell)
-	_set_stage("WAIT_CONVERGENCE_PEER")
+	_set_stage("WAIT_CONVERGENCE_COORDINATOR")
 
 
 func _revoke_convergence_prepare(
-	current_player_checksum: String,
+	current_player_observation: Dictionary,
 	current_item_checksum: String,
 	world: Dictionary,
 	shell
 ) -> void:
-	_player_checksum = current_player_checksum
+	_player_observation = current_player_observation.duplicate(true)
+	_player_checksum = String(_player_observation.get("checksum", ""))
 	_item_checksum = current_item_checksum
 	_convergence_world = world.duplicate(true)
 	_convergence_locked = false
@@ -468,6 +564,7 @@ func _revoke_convergence_prepare(
 func _clear_convergence_prepare_state() -> void:
 	_convergence_prepare_id = ""
 	_prepared_player_checksum = ""
+	_prepared_player_observation = {}
 	_prepared_item_checksum = ""
 	_convergence_prepared = false
 	_convergence_release_id = ""
@@ -552,12 +649,17 @@ func _finish(passed: bool, final_state: String = "COMPLETE") -> void:
 	if passed and not _convergence_world.is_empty():
 		world = _convergence_world.duplicate(true)
 	passed = passed and _failures.is_empty()
-	_write_report(final_state if passed else "FAILED", passed, world, shell)
+
+	# Terminal success is committed only after the server acknowledged LEAVE.
+	# The previous optimistic COMPLETE write could be observed by the parent and
+	# later be rewritten FAILED when LEAVE_ACK timed out.
+	_write_report("FINALIZING" if passed else "FAILING", false, world, shell)
 	var leave_result: Dictionary = _client.request_graceful_leave(4000)
 	if not bool(leave_result.get("success", false)):
 		_failures.append("Graceful leave failed: %s" % leave_result)
 		passed = false
-		_write_report("FAILED", false, world, shell, leave_result)
+	_write_report(final_state if passed else "FAILED", passed, world, shell, leave_result)
+
 	_finished = true
 	set_process(false)
 	print("M5_GRAPHICAL_CLIENT_RESULT %s" % JSON.stringify(Support.read(_result_file)))
@@ -593,13 +695,20 @@ func _write_report(
 		"ore_pickup_result": _ore_pickup_result.duplicate(true),
 		"screenshot": _screenshot_result.duplicate(true),
 		"player_checksum": _player_checksum,
+		"player_observation": _player_observation.duplicate(true),
 		"item_checksum": _item_checksum,
 		"convergence_prepare_id": _convergence_prepare_id,
 		"prepared_player_checksum": _prepared_player_checksum,
+		"prepared_player_observation": _prepared_player_observation.duplicate(true),
 		"prepared_item_checksum": _prepared_item_checksum,
 		"convergence_prepared": _convergence_prepared,
 		"convergence_release_id": _convergence_release_id,
 		"convergence_release_consumed": _convergence_release_consumed,
+		"control_read": {
+			"transient_recoveries": _control_transient_recoveries,
+			"last_attempts": _last_control_read_attempts,
+			"last_elapsed_ms": _last_control_read_elapsed_ms,
+		},
 		"client_runtime": _client.get_report() if _client != null else {},
 		"item_graph": _client.get_item_graph_snapshot() if _client != null else {},
 		"world": world.duplicate(true),
