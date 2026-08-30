@@ -91,7 +91,7 @@ func _m5_hereditary_record_sources(manifest: Dictionary) -> void:
 
 func _m6_evolution_mutability_truth(manifest: Dictionary) -> void:
 	var lineage := _source("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
-	var axes := _between(lineage, "const AXIS_NAMES", "]")
+	var axes := _between(lineage, "const AXIS_NAMES", "static func default_policy")
 	var kernel := _source("res://scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd")
 	var mutable: Dictionary = manifest.get("evolution_mutability", {})
 	for field_name in _strings(mutable.get("mutable_in_evo7_r1", [])):
@@ -104,7 +104,7 @@ func _m6_evolution_mutability_truth(manifest: Dictionary) -> void:
 
 func _m7_vis2_descriptor_gap(manifest: Dictionary) -> void:
 	var vis2 := _source("res://scripts/labs/ecology/eco_evo7_vis2_phenotype_render_adapter.gd")
-	var descriptor_fields := _between(vis2, "const DESCRIPTOR_FIELDS", "]")
+	var descriptor_fields := _between(vis2, "const DESCRIPTOR_FIELDS", "func build")
 	_check(not descriptor_fields.is_empty(), "VIS2 descriptor field block located")
 	for field_name in ["phenotype_hash", "realized_height_m", "leaf_area_index_proxy", "realized_root_depth_m", "realized_root_spread_m", "root_shoot_ratio"]:
 		_check(descriptor_fields.contains(field_name), "VIS2 currently carries %s" % field_name)
