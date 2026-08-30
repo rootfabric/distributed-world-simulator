@@ -121,6 +121,19 @@ single runtime mutation worker.
 Later promotions align with P7.3/P7.5/P7.6/P7.7 and converge into
 `V0 PLAYABLE SEAMLESS PLANET` composition acceptance.
 
+Client-facing anchors are separately protected in
+`docs/plans/V0_CLIENT_FACING_MILESTONES_RU.md`:
+
+```text
+C1 after P7.2  planet + two clients + A/B seam visual lab
+C2 at P7.5     strict two-client convergence
+C3 at P7.6     MANDATORY seam + items across A/B
+C4 optional    A↔B↔C static three-authority lab
+C5 at P7.7     graphical digging in the seamless world
+```
+
+The V0 client success criterion therefore cannot regress to foundation-only PASS.
+
 ## 7. Parallel research
 
 ECO, FABRIC and NX.C1 remain independent lanes unless main registers a concrete dependency.
