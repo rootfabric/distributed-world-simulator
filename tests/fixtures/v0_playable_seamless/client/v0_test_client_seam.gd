@@ -133,5 +133,12 @@ func _update_test_ui() -> void:
 		_reconnect_count,
 		_respawn_count,
 	]
-	_test_route.text = "route history: %s" % " → ".join(PackedStringArray(_route_history))
+	_test_route.text = "route history: %s" % _route_text()
 	_test_position.value = clampf(position_x, 0.0, 11.0)
+
+
+func _route_text() -> String:
+	var values := PackedStringArray()
+	for value in _route_history:
+		values.append(String(value))
+	return " → ".join(values)
