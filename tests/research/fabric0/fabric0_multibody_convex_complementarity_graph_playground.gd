@@ -1,0 +1,18 @@
+extends SceneTree
+const F=preload("res://scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_v1.gd")
+const E=preload("res://scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_experiments_v1.gd")
+func _init():
+	var x=E.graph_run(0.001,0.4)
+	print("=== FABRIC0.15 MULTIBODY CONVEX COMPLEMENTARITY GRAPH ===")
+	print("events=",x.world.events)
+	print("graph=",x.world.graph_events," modes=",x.world.mode_events)
+	print("components=",x.result.components," contacts=",x.world.contacts)
+	print("energy delta=",x.result.energy_delta," external_work=",x.result.external_work," contact_loss=",x.result.contact_dissipation," residual=",x.result.energy_ledger_residual)
+	print("normal_violation=",x.result.max_normal_violation," cone_violation=",x.result.max_cone_violation," penetration=",x.result.max_penetration)
+	print("normal_chain=",E.normal_chain_probe().solve.blocks)
+	print("mixed_friction=",E.mixed_friction_probe().solve.blocks)
+	var p=F.parallel_island_audit(x.world,false);var q=F.parallel_island_audit(x.world,true)
+	print("parallel=",p," reverse_same=",p.hash==q.hash)
+	print("state_hash=",x.result.state_hash)
+	print("FABRIC0_15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH_PLAYGROUND_PASS")
+	quit(0)
