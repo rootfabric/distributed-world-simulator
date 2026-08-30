@@ -142,9 +142,11 @@ func environment_for_generation(generation_value: int, base_environment_field: D
 		var wet_index := (phase_index + int(profile["wet_phase_offset"])) % CYCLE_GENERATIONS
 		var wet := float(WET_WAVE[wet_index])
 		var cells: Array = result["cells"]
+		var base_cells: Array = base_environment_field["cells"]
+		var hash_validator = EnvironmentField.new()
 		for index in cells.size():
-			var base_cell: Dictionary = Dictionary(Array(base_environment_field["cells"])[index])
-			var cell: Dictionary = Dictionary(cells[index])
+			var base_cell: Dictionary = base_cells[index]
+			var cell: Dictionary = cells[index]
 
 			var rainfall_delta := wet * float(profile["rainfall_amplitude"])
 			cell["temperature_c"] = snappedf(
@@ -170,10 +172,10 @@ func environment_for_generation(generation_value: int, base_environment_field: D
 				or not is_finite(float(cell["incident_light"]))
 			):
 				return {}
-			cell["cell_hash"] = EnvironmentField.new().call("_cell_hash", cell)
+			cell["cell_hash"] = hash_validator.call("_cell_hash", cell)
 			cells[index] = cell
 		result["cells"] = cells
-		result["field_hash"] = EnvironmentField.new().call("_field_hash", result)
+		result["field_hash"] = hash_validator.call("_field_hash", result)
 
 	if not validate_environment_field(result):
 		return {}
