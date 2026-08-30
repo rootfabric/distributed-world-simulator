@@ -34,6 +34,14 @@ func _init() -> void:
 	changed_chunk["parents_per_chunk"] = int(workload["parents_per_chunk"]) + 1
 	_check(Contract.workload_hash(changed_chunk) != hash_a, "workload hash changes when controlled chunk size changes")
 
+	var serial_workload := workload.duplicate(true)
+	serial_workload["execution_mode"] = "SERIAL_REFERENCE"
+	serial_workload["parents_per_chunk"] = 1
+	serial_workload["audit_interval_generations"] = 1
+	serial_workload["audit_generation_1"] = false
+	_check(Contract.workload_hash(serial_workload) != hash_a, "exact workload hash distinguishes execution backend")
+	_check(Contract.simulation_workload_hash(serial_workload) == Contract.simulation_workload_hash(workload), "simulation workload hash preserves serial-to-STREAM1 physical equivalence")
+
 	_test_probe()
 	_test_real_stream_identity()
 
@@ -60,6 +68,11 @@ func _init() -> void:
 	var different_host := base.duplicate(true)
 	different_host["host_fingerprint"] = "different-host"
 	_check(Contract.comparison_key(different_host) != base_key, "host fingerprint fences incomparable machines")
+
+	var serial_sample := _valid_sample(serial_workload, 40.0, "e".repeat(40))
+	_check(Contract.comparison_key(serial_sample) != base_key, "serial and STREAM1 exact comparison keys stay distinct")
+	_check(Contract.execution_comparison_key(serial_sample) == Contract.execution_comparison_key(base), "serial and STREAM1 share execution comparison key for the same simulation workload")
+	_check(bool(Contract.can_compare_execution_modes(serial_sample, base).get("success", false)), "serial-to-STREAM1 comparison allowed only through cross-mode equivalence gate")
 
 	var negative := base.duplicate(true)
 	var negative_metrics: Dictionary = Dictionary(negative["metrics"])
