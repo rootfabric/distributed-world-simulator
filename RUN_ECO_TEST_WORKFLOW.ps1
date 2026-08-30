@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("current", "accepted", "full", "p4.4", "p4.5", "p4.6", "p4.7", "p4.8")]
+    [ValidateSet("current", "accepted", "full", "perf2.0", "p4.4", "p4.5", "p4.6", "p4.7", "p4.8")]
     [string]$Suite = "current",
     [string]$GodotPath = $env:GODOT_BIN
 )
@@ -28,6 +28,7 @@ $definitions = [ordered]@{
     "p4.6" = @{ Path = "RUN_ECO_P4_6_TESTS.ps1"; NeedsGodot = $true }
     "p4.7" = @{ Path = "RUN_ECO_P4_7_PREACCEPTANCE_TESTS.ps1"; NeedsGodot = $true }
     "p4.8" = @{ Path = "RUN_ECO_P4_8_PREACCEPTANCE_TESTS.ps1"; NeedsGodot = $false }
+    "perf2.0" = @{ Path = "RUN_ECO_EVO7_PERF2_0_TESTS.ps1"; NeedsGodot = $true }
 }
 
 $suites = @{
@@ -39,6 +40,7 @@ $suites = @{
     "p4.6"     = @("p4.6")
     "p4.7"     = @("p4.7")
     "p4.8"     = @("p4.8")
+    "perf2.0"  = @("perf2.0")
 }
 
 function Assert-PowerShellParse([string]$Path) {
