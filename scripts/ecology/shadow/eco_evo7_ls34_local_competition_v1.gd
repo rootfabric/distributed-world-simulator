@@ -87,6 +87,21 @@ func set_competition_enabled(value: bool) -> bool:
     competition_enabled = value
     return true
 
+## PAR2 minimal pass-through: LS3.4 stays backend-ignorant; it only forwards
+## the existing LS3.3 executor seam. No private-member tunneling beyond the
+## public core handle LS3.4 itself owns.
+func set_recruitment_executor(executor) -> bool:
+    if not initialized or core == null:
+        return false
+    return core.set_recruitment_executor(executor)
+
+func clear_recruitment_executor() -> void:
+    if core != null:
+        core.clear_recruitment_executor()
+
+func has_recruitment_executor() -> bool:
+    return core != null and core.has_recruitment_executor()
+
 func step_generation() -> Dictionary:
     if not initialized:
         return {}
