@@ -3,7 +3,7 @@
   "revision": "V0-CURRENT-WORK-MAP-2026-08-30-R7-P7",
   "canonical_owner": "main",
   "status": "PRIMARY_WORK_MAP_P7_PRE_DISPATCH",
-  "authored_against_main": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+  "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -55,7 +55,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+  "control_main_base": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "runtime_mutation_authorized_by_this_pointer": false,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
