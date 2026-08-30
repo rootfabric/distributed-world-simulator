@@ -17,29 +17,29 @@ jobs:
       - name: Checkout frozen runtime head
         uses: actions/checkout@v4
         with:
-          ref: 20cdb4a4ebd1fe139ac4140e80800eb76b3a62cd
+          ref: 28c47e26969608b126e6097bc8a26bd9c593be8c
           fetch-depth: 0
 
       - name: Assert exact source head
         shell: bash
         run: |
-          test "$(git rev-parse HEAD)" = "20cdb4a4ebd1fe139ac4140e80800eb76b3a62cd"
+          test "$(git rev-parse HEAD)" = "28c47e26969608b126e6097bc8a26bd9c593be8c"
           echo "P7_1_EXACT_SOURCE_HEAD=$(git rev-parse HEAD)"
 
       - name: Build immutable source archive
         shell: bash
         run: |
           git archive --format=tar.gz --prefix=distributed-world-simulator/ \
-            -o p7-1-frozen-source-20cdb4a4.tar.gz \
-            20cdb4a4ebd1fe139ac4140e80800eb76b3a62cd
-          sha256sum p7-1-frozen-source-20cdb4a4.tar.gz | tee p7-1-frozen-source.sha256
+            -o p7-1-frozen-source-28c47e26.tar.gz \
+            28c47e26969608b126e6097bc8a26bd9c593be8c
+          sha256sum p7-1-frozen-source-28c47e26.tar.gz | tee p7-1-frozen-source.sha256
 
       - name: Upload exact source tree
         uses: actions/upload-artifact@v4
         with:
-          name: p7-1-frozen-source-20cdb4a4
+          name: p7-1-frozen-source-28c47e26
           path: |
-            p7-1-frozen-source-20cdb4a4.tar.gz
+            p7-1-frozen-source-28c47e26.tar.gz
             p7-1-frozen-source.sha256
           if-no-files-found: error
           retention-days: 7
