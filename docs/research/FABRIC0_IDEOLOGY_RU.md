@@ -1710,3 +1710,228 @@ semantic topology
 This remains a research hypothesis.
 
 Production ownership stays with Construction.
+
+
+## 90. Integration of proven research lines is itself a falsification gate
+
+Separate checkpoints can each be locally convincing and still be mutually incompatible.
+
+Therefore:
+
+```text
+A works
++
+B works
+```
+
+does not imply:
+
+```text
+A+B works
+```
+
+FABRIC0.13 treats integration as a first-class scientific test.
+
+If convergence, identity or conservation discipline disappears after composition, the architecture is incomplete.
+
+## 91. Convergence must survive topology mutation, not only smooth flow
+
+Adaptive convergence evidence is stronger when the refined trajectory crosses:
+
+- impact;
+- graph merge;
+- velocity projection;
+- manifold feature mutation;
+- sparse solve.
+
+A smooth-only convergence test cannot validate a hybrid contact architecture.
+
+FABRIC0.13 therefore compares both event times and final state after multiple topology events.
+
+## 92. Persistent support history must survive island merge
+
+When a new body joins an already constrained graph:
+
+```text
+old relation identity survives
+→ old relation-local numerical continuity may survive
+```
+
+The new island is not a replacement universe.
+
+Graph merge should preserve history for relations whose physical identity did not disappear.
+
+## 93. Rotational geometry must enter the constraint Jacobian
+
+If contact location depends on orientation, solving translation while using rotation only for rendering/feature labels is incomplete.
+
+The local law needs sensitivity such as:
+
+```text
+dr / dtheta
+```
+
+inside `J`.
+
+For acceleration-level constraints, geometry curvature may also contribute:
+
+```text
+d2r/dtheta2 * omega^2
+```
+
+This is a general lesson beyond the specific 0.13 one-axis stand.
+
+## 94. Multipoint feature changes belong to the topology transaction layer
+
+An edge becoming a face and then another edge is not merely a numerical row-count resize.
+
+It changes persistent physical feature identity.
+
+Therefore the event transaction must own:
+
+```text
+detect
+→ feature topology compile
+→ lineage remap
+→ reaction/velocity solve
+→ fixed point
+→ commit
+```
+
+Sparse matrix resizing is a consequence, not the semantic event itself.
+
+## 95. Exact-byte evidence includes formatting bytes
+
+If validation records:
+
+```text
+SHA-256
+git blob SHA
+remote byte identity
+```
+
+then the evidence object is the exact byte stream.
+
+A trailing newline is therefore material to that evidence claim.
+
+This does not make source formatting physical truth.
+
+It makes repository reproducibility exact.
+
+Rule:
+
+> Do not say remote/local bytes are identical until the repository blob hash actually matches the tested local blob hash.
+
+## 96. Thread audits must not mutate physical state as a side effect
+
+Parallel solver experiments should consume an explicit snapshot or copied task data.
+
+A diagnostic parallel solve that changes canonical world state would mix:
+
+- performance test;
+- physical transaction.
+
+FABRIC0.13 verifies that parallel island audit leaves physical world hash unchanged.
+
+## 97. Quaternion representation is not equivalent to general 6DOF dynamics
+
+A normalized quaternion proves a representation invariant.
+
+It does not prove:
+
+- three-axis angular velocity integration;
+- inertia tensor coupling;
+- gyroscopic term;
+- arbitrary-axis contact reaction;
+- robust normalization under long trajectories.
+
+Claims must state which rotational degrees of freedom were actually exercised.
+
+## 98. Algebraic projection is legitimate only when documented as a reduced boundary
+
+Research stands may project known support coordinates to isolate another question.
+
+But then one must not claim:
+
+```text
+fully free rigid body
+```
+
+FABRIC0.13 partially projects A/B support coordinates.
+
+This is explicitly a research simplification.
+
+The next checkpoint must remove more of it.
+
+## 99. Contact force positivity is an evidence observable, not sufficient unilateral semantics
+
+Seeing positive normal reactions along an accepted trajectory is useful.
+
+It can catch a bad constrained solution.
+
+But:
+
+```text
+lambda > 0 in one trajectory
+```
+
+does not replace general unilateral complementarity:
+
+```text
+gap >= 0
+lambda >= 0
+gap * lambda = 0
+```
+
+FABRIC0.14 must restore the stronger nonsmooth law in the unified adaptive path.
+
+## 100. The next frontier should remove physical simplifications, not add ornamental infrastructure
+
+After 0.13 the architecture already has:
+
+- persistent relations;
+- adaptive events;
+- lineage;
+- sparse PCG;
+- parallel boundary;
+- recovery/evidence.
+
+The biggest unknowns are now physical:
+
+```text
+full 6DOF
++
+inertia tensor
++
+unilateral normal contact
++
+Coulomb friction
++
+general convex feature manifolds
+```
+
+Therefore 0.14 should prioritize those rather than another isolated scheduler/cache abstraction.
+
+## 101. Текущий образ FABRIC после 0.13
+
+```text
+Construction semantic truth
+        ↓
+persistent physical relation graph
+        ↓
+adaptive constrained DAE flow
+        ↓
+event-time graph merge/split
+        ↓
+orientation-sensitive multipoint feature topology
+        ↓
+lineage-preserving manifold fixed point
+        ↓
+sparse parallel numerical solve
+        ↓
+canonical causal physical history
+```
+
+This is now one integrated research path rather than two separate demonstrations.
+
+Production ownership still remains with Construction.
