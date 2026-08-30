@@ -491,3 +491,25 @@ RUN_ECO_EVO7_VIS4_1_TESTS.sh
 ~~~
 
 VIS4.2 теперь может заниматься только diagnostic presentation mapping. Повторный вызов CoupledDevelopment/FunctionalPhenotype из presentation запрещён.
+
+
+### VIS4.1 non-causal hardening
+
+Implementation review выявил и закрыл дополнительный риск: derived morphology evidence не может быть обязательным условием успешного ecology generation.
+
+~~~text
+ecology / competition success
+          |
+          +-> optional complete morphology sidecar
+                         |
+                         v
+                  presentation consumer
+
+sidecar packaging failure
+          |
+          v
+presentation unavailable / fail-closed
+NOT ecology rollback
+~~~
+
+Это защищено focused source-gate: между MorphologyEvidence.build_record() и продолжением accepted competition path нет presentation-originated return/failure edge. Complete binding к survivor population проверяется уже на read side.
