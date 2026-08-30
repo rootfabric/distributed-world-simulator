@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_OWNER_MAP_PRE_DISPATCH",
+  "current_phase": "P7_READY_FOR_DIRECTOR_DISPATCH",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -201,7 +201,6 @@
         "ONE_ACTIVE_RUNTIME_MUTATION_CHECKPOINT_PRE_H0_3"
       ],
       "activation_complete_except": [
-        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
         "DIRECTOR_DISPATCH"
       ],
       "p7_0": {
@@ -211,7 +210,12 @@
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
         "runtime_mutation": false,
-        "next": "P7.1_TOOL_TO_EXISTING_MW4_ADAPTER"
+        "next": "P7.1_TOOL_TO_EXISTING_MW4_ADAPTER",
+        "post_merge_pc0": {
+          "status": "PASS_NON_RED",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+          "run": 33293384467
+        }
       }
     },
     {

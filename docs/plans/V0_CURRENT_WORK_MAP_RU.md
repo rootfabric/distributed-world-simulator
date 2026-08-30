@@ -3,7 +3,7 @@
 **Refresh:** 2026-08-30  
 **P7.0 source main:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **SM1:** ACCEPTED  
-**Current product gate:** P7.0 ACCEPTED → post-merge PC0 → Director dispatch  
+**Current product gate:** P7.0 COMPLETE → Director dispatch  
 **Next runtime checkpoint:** `V0_P7_BOUNDED_TERRAIN_MUTATION`
 
 > Human-readable routing map. Machine eligibility remains owned by `config/control/**`.
@@ -156,8 +156,8 @@ Eligibility may be parallel; execution is still serialized.
 
 ```text
 NOW
-  merge P7.0 accepted owner-map control
-  prove post-merge standard + directional PC0 NON_RED
+  P7.0 COMPLETE
+  post-merge standard + directional PC0 NON_RED ✅
   Director dispatch P7
 
 THEN
@@ -197,3 +197,24 @@ logical_player_id
 ```
 
 P7 does not create an identity projection store.
+
+
+## 11. P7.0 post-merge closure
+
+Canonical P7.0 merge:
+
+```text
+main  6b0143281a4a2bedeff7889f0bd6470a5fcfd60d
+tree  fa83cdf08c0b487c6939aeaa4b7bbb3211365b64
+```
+
+Canonical post-merge audit:
+
+```text
+Project Control  33293384467  SUCCESS
+standard PC0     YELLOW / NON_RED
+directional PC0  YELLOW / NON_RED
+runtime mutation 0
+```
+
+P7.0 is complete. The only remaining activation prerequisite for P7.1 is `DIRECTOR_DISPATCH`.

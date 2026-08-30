@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "PRE_DISPATCH_POST_MERGE_PC0_REQUIRED",
+  "state": "PRE_DISPATCH_DIRECTOR_REQUIRED",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,17 +52,24 @@
     "EXACT_SM1_SUCCESSOR_BASE_BOUND",
     "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
     "FRESH_P7_EPOCH_AND_WORK_ORDER",
-    "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_REQUIRED",
     "MUTATION_LEASE_ROTATED_TO_P7",
     "DIRECTOR_DISPATCH_REQUIRED"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-08-30T04:52:00Z",
+  "updated_at_utc": "2026-08-30T05:04:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
     "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
     "reviewed_head": "6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd",
     "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
+  },
+  "post_merge_pc0": {
+    "status": "PASS_NON_RED",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+    "canonical_main": "6b0143281a4a2bedeff7889f0bd6470a5fcfd60d",
+    "run": 33293384467,
+    "standard": "YELLOW_NON_RED",
+    "directional": "YELLOW_NON_RED"
   }
 }

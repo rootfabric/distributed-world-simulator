@@ -7,12 +7,12 @@
   "role": "COMPOSITION_FRONTIER",
   "short_description": "P7.0 exact-source Matter Production owner-map convergence; control/docs/tests only.",
   "purpose": "Prove exact existing owners and adapter boundaries before any P7 runtime mutation.",
-  "expected_outcome": "Reviewed machine-readable P7 owner map with zero duplicate owners and a narrow P7.1 stateless authorization/composition boundary.",
-  "current_stage": "P7.0 ACCEPTED / P7 Pre-Dispatch",
-  "stage_status": "P7_0_ACCEPTED_AWAITING_POST_MERGE_PC0_AND_DIRECTOR_DISPATCH",
-  "progress_note": "P7.0 exact-source owner map R2 accepted after REVIEW-001 FIX_REQUIRED and REVIEW-002 PASS. Actor identity uses existing canonical player_entity_id; zero duplicate owners. Runtime mutation remains forbidden.",
+  "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
+  "current_stage": "P7.0 COMPLETE / P7 Ready for Director Dispatch",
+  "stage_status": "P7_0_COMPLETE_AWAITING_DIRECTOR_DISPATCH",
+  "progress_note": "P7.0 R2 is accepted, canonical main 6b0143281a4a2bedeff7889f0bd6470a5fcfd60d was post-merge audited by Project Control run 33293384467 with standard and directional PC0 YELLOW/NON_RED. Zero runtime mutation. Only Director dispatch remains.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "next_stage": "Merge P7.0 control; prove post-merge standard+directional PC0 NON_RED; then Director may dispatch P7.1 stateless Tool→MW4 adapter.",
+  "next_stage": "Director dispatch P7.1 stateless Tool→existing MW4 authorization/composition adapter.",
   "parent_branch_or_checkpoint": "main @ 07d71da1d301a65d36f56ff8c7a42795becab88d / P7 PRE_DISPATCH",
   "base_commit": "07d71da1d301a65d36f56ff8c7a42795becab88d",
   "dependencies": [
@@ -39,7 +39,8 @@
     "docs/plans/V0_CURRENT_WORK_MAP_RU.md",
     "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
     "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
-    "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md"
+    "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/m4/**",
@@ -78,7 +79,6 @@
     "DERIVED_PRESENTATION"
   ],
   "blockers": [
-    "POST_MERGE_PC0_NON_RED_REQUIRED",
     "DIRECTOR_DISPATCH_REQUIRED"
   ],
   "health_declared": "YELLOW",

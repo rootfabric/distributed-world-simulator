@@ -150,8 +150,9 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual([P7], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
         self.assertEqual(P7, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
-        self.assertFalse(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
+        self.assertTrue(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
         self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
+        self.assertEqual(["DIRECTOR_DISPATCH"], self.scheduler["v0_product_train_routing"]["p7_remaining_activation_prerequisites"])
 
     def test_registry_generation_80_points_to_current_p7_control_frontier(self):
         self.assertEqual(80, self.registry["registry_generation"])
