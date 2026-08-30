@@ -1,5 +1,7 @@
 extends RefCounted
 
+const DescriptorV2 = preload("res://scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd")
+
 ## ECO.EVO7 VIS4.2 — pure diagnostic morphology mapper.
 ##
 ## Input is ONLY the sealed Descriptor V2 result produced by VIS4.1.
@@ -107,6 +109,8 @@ func _validate_source_envelope(source: Dictionary) -> bool:
 	if source.is_empty():
 		return false
 	if String(source.get("schema", "")) != SOURCE_SCHEMA or String(source.get("version", "")) != SOURCE_VERSION or String(source.get("revision", "")) != SOURCE_REVISION:
+		return false
+	if not DescriptorV2.new().validate_result(source):
 		return false
 	if int(source.get("generation", -1)) < 0:
 		return false
