@@ -1554,3 +1554,276 @@ input permutation leaves accepted state unchanged
 ```
 
 Production promotion не заявляется.
+
+
+## FABRIC0.11 — GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND
+
+**Parent research head:** `b1730170058d31c7fb53b1e42ff8425661797f01`  
+**Design:** `docs/research/FABRIC0_11_EVENT_LOCALIZED_SPARSE_ISLANDS_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v11-validation.json`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused FABRIC0.11 acceptance: `120/120 PASS`;
+- FABRIC0.10 runtime regression rerun: `97/97 PASS`;
+- playground: `FABRIC0_11_EVENT_SPARSE_ISLANDS_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- all 4 executable FABRIC0.11 files byte-identical between local exact-double tests and GitHub blobs.
+
+### Active-island event localization
+
+Macrostep starts with existing stack:
+
+```text
+B
+↕ pair:A|B
+A
+↕ floor
+```
+
+Incoming C is free.
+
+During every bisection probe FABRIC advances the candidate world while preserving only the contact IDs active at macrostep start.
+
+Old contacts therefore remain constrained while the new event is searched.
+
+At event:
+
+```text
+pair:A|B gap               ~= 3.44e-12
+plane:floor|body:A gap     ~= 5.54e-12
+pair:B|C new gap           ~= 9.997662e-8
+```
+
+with contact tolerance `1e-7`.
+
+### Event time
+
+Macrostep begins at:
+
+`0.04 s`.
+
+Relative localized event:
+
+`0.35709945939307 s`.
+
+Absolute event:
+
+`0.39709945939307 s`.
+
+Bisection probes:
+
+`36`.
+
+Bisection tolerance:
+
+`1e-11 s`.
+
+Continuous free-fall reference:
+
+`0.3609505622728941 s`.
+
+Discrete constrained integrator offset:
+
+`-0.0038511028798241 s`.
+
+Важно: это integration discretization error текущего `0.01 s` semi-implicit substep, а не bisection error.
+
+### Same-time island merge
+
+Before:
+
+```text
+[A,B]
+contacts:
+pair:A|B
+floor|A
+```
+
+At `te`:
+
+```text
+[A,B,C]
+contacts:
+pair:A|B
+pair:B|C
+floor|A
+```
+
+Appeared:
+
+`pair:B|C`.
+
+Old contacts persist.
+
+Warm-start remap:
+
+```text
+pair:A|B
+plane:floor|body:A
+```
+
+Event solve reports:
+
+`2 warm-start hits`.
+
+### Sparse PCG backend
+
+FABRIC0.10 sparse assembly no longer densifies before linear solve.
+
+FABRIC0.11 ADMM solves:
+
+```text
+(A + rho I) lambda
+=
+rho(z-u)-b
+```
+
+with Jacobi-preconditioned PCG over sparse row dictionaries.
+
+Independent unit solve:
+
+```text
+[4 1] x = [1]
+[1 3]     [2]
+```
+
+returns:
+
+```text
+x = [1/11, 7/11]
+```
+
+in exactly `2` PCG iterations.
+
+### Event sparse solve
+
+At merged A/B/C island:
+
+```text
+sparse A entries = 21
+dense capacity   = 81
+
+ADMM iterations = 31
+PCG calls       = 31
+PCG iterations  = 93
+max PCG/call    = 3
+
+dense materializations = 0
+```
+
+All 3 contacts active.
+
+Incoming impulse propagates through B→A→floor in the same event solve.
+
+### Remaining flow
+
+Remaining macrostep:
+
+`0.24290054060693 s`.
+
+Continuation:
+
+```text
+25 constrained substeps
+25 island solves
+80 PCG calls
+234 PCG iterations
+0 dense materializations
+```
+
+Final time:
+
+`0.64 s`.
+
+Final stack:
+
+```text
+A y ~= 0.50000000002449
+B y ~= 1.50000000004311
+C y ~= 2.50000010002817
+```
+
+Velocity norms:
+
+`< 2e-8`.
+
+Final world hash:
+
+`86d76fc7a4b93bdd27030e1b343151d008e2c2e62ddfa72bdc11cf46d4f6133b`.
+
+### Event history
+
+В exact event timestamp сохраняется ровно один topology lifecycle record:
+
+```text
+appeared:
+pair:B|C
+
+persisted:
+pair:A|B
+plane:floor|body:A
+```
+
+Continuation не создаёт artificial same-time persist record.
+
+### Independent-island scheduling contract
+
+Два independent stack islands решаются:
+
+- forward;
+- reverse island schedule;
+- reversed body insertion;
+- reversed provider contact order.
+
+Exact hash:
+
+`e50cceb70dc4ecbd0100e5207ca5a58a2285c90a5085a6556b19db8ce8699078`.
+
+Это semantic prerequisite для будущего parallel execution.
+
+Actual worker threads в FABRIC0.11 не заявляются.
+
+### Главный вывод FABRIC0.11
+
+> Persistent constrained graph, event-time topology mutation и genuinely sparse linear solve теперь находятся в одной causal execution path.
+
+### Следующая фундаментальная граница
+
+`FABRIC0.12 — ADAPTIVE MULTI-EVENT MANIFOLD DAE`.
+
+Нужно убрать следующие shortcuts:
+
+```text
+fixed 0.01 constrained substeps
+first topology-change event only
+fail-closed old-contact disappearance
+sphere/plane feature identity only
+Jacobi-only sparse preconditioner
+no actual parallel execution
+```
+
+Critical experiment:
+
+```text
+resting multi-contact structure
++
+tumbling body
++
+old contact disappears
+while multiple new feature contacts appear
+inside one macrostep
++
+adaptive event refinement converges
++
+manifold event iteration reaches fixed point
++
+warm starts remap
++
+parallel/reordered sparse islands
+produce same accepted world state
+```
+
+Production promotion не заявляется.
