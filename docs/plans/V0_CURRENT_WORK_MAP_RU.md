@@ -1,117 +1,178 @@
 # V0 — Current Primary Work Map
 
-**Статус:** `POST-P6 / SM1 ACTIVATION CONTROL CANDIDATE R6`  
-**Canonical accepted product baseline:** `main @ 9ade3233f8d9f16b77edcc8cf273fe8e649d5637`  
-**Accepted checkpoint:** `V0_P6_PERSISTENT_SHARED_OUTPOST`
+**Refresh:** 2026-08-30  
+**Canonical main at refresh:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`  
+**SM1:** ACCEPTED  
+**Current product gate:** P7 main-owned activation + Matter production ownership convergence  
+**Next runtime checkpoint:** `V0_P7_BOUNDED_TERRAIN_MUTATION`
 
-P6 завершён и принят. Pre-P6 Edge Gateway Foundation также принят и остаётся foundation, а не текущей кампанией.
+> Human-readable routing map. Machine eligibility remains owned by `config/control/**`.
 
-Текущая основная работа V0:
-
-```text
-P6 ACCEPTED
-    |
-    v
-POST-P6 CONTROL RECONCILIATION
-    |
-    +--> formal P6 acceptance record
-    +--> current-work-map / scheduler / product-train refresh
-    +--> EG5 telemetry+hysteresis repair before runtime dispatch
-    |
-    v
-ACTIVATE V0-SM1
-    |
-    v
-production A <-> B authority handoff on accepted P6
-    |
-    v
-P7 bounded terrain mutation
-    |
-    v
-P8 first mobile construct
-```
-
-## Current normative plan
-
-Human plan:
-
-`docs/plans/V0_SM1_PRODUCTION_HANDOFF_EXECUTION_RU.md`
-
-Machine plan:
-
-`config/control/harness/v0-sm1-production-handoff-plan.v1.json`
-
-Activation candidate:
-
-`config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json`
-
-Fresh epoch / Work Order:
+## 1. Product critical path
 
 ```text
-E2026-08-24-V0-SM1-R1
-V0-SM1-R1-WO-001
+P4 Real Resource Construction       ACCEPTED
+    ↓
+P5 Equipment / Tools                ACCEPTED
+    ↓
+P6 Persistent Shared Outpost        ACCEPTED
+    ↓
+Edge Gateway Foundation             ACCEPTED
+    ↓
+SM1 Seamless Product Integration    ACCEPTED
+    ↓
+RF0 Replication Semantic Boundary   ARCHITECTURE GUARDRAIL / NON-BLOCKING
+    ↓
+P7 Matter Production Convergence    NEXT PRODUCT RUNTIME
+    ↓
+V0 PLAYABLE SEAMLESS PLANET         COMPOSITION ACCEPTANCE
+    ↓
+    ├── P8 First Mobile Construct
+    └── RF1 Shadow Retained Cache → RF2 Read-Only Consumer
+            ↓
+       static N-authority
+            ↓
+       Placement Observatory / SHADOW
+            ↓
+       dynamic placement / split / merge later
 ```
 
-## Exact product base
-
-SM1 starts only from the accepted P6 main composition:
-
-`9ade3233f8d9f16b77edcc8cf273fe8e649d5637`
-
-Historical SM0 and research/SM1 branches are capability donors only. They must never become the product base and must not be merged wholesale.
-
-## First production target
-
-The first bounded SM1 checkpoint proves:
+## 2. Exact SM1 closure
 
 ```text
-2 graphical clients
-1 stable Edge Gateway endpoint per client
-2 authority processes A/B
-A ACTIVE + B WARM
-A -> B handoff
-B ACTIVE + A retired/drain
-B -> A return handoff
+runtime source      b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f
+runtime tree        7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68
+runtime merge       acb9379cacc413fc25a65117fb1627f5a01b9736  PR #327
+formal acceptance  9cc89e6e8c6cfc81fc32873a29743e443d8229e6  PR #329
 ```
 
-Hard invariants:
+Canonical acceptance record:
+`config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json`.
+
+PR #326 is historical proposal evidence and is not the current gate.
+
+## 3. RF0 boundary
+
+RF0 is accepted architecture only:
 
 ```text
-exactly one active canonical writer
-stable logical_player_id
-stable player_entity_id
-monotonic authority epoch
-OperationId continuity
-input sequence continuity
-one Item Graph
-one Construction truth
-one persistence owner
-WARM/SHADOW cannot write
-stale source fails closed
-normal crossing does not reconnect/respawn
-client Gateway endpoint does not change during authority pivot
+REPLICATION != AUTHORITY
+CACHE != PERSISTENCE
+INTEREST != ACTIVATION
+SERVER PROCESS != WORLD IDENTITY
 ```
 
-## Pre-dispatch repair
-
-Before SM1 runtime dispatch, EG5 must receive a separate reviewed repair:
-
-- `probe_failures` counter increments exactly by one per failed probe;
-- hysteresis compares fresh current-gateway score against fresh candidate score;
-- returned health/score metadata always belongs to the actually selected gateway.
-
-This is a bounded Edge locator correctness repair, not part of SM1 authority semantics.
-
-## Runtime authorization rule
-
-This pointer records direction only. Runtime mutation remains forbidden until:
+Replica hydration may prepare WARM/read-only state but cannot activate authority.
 
 ```text
-post-P6 control candidate reviewed PASS
--> integrated to main
--> post-merge Project Control NON_RED
--> mutation lease rotated to V0_SM1
--> Director DISPATCHED event
+cache evidence
+    ≠ authority proof
+
+WARM → ACTIVE requires
+Directory + owner/lease + AuthorityEpoch/fence + canonical recovery/handoff validation
 ```
 
-Do not start P7 before SM1 is accepted or an explicit later main-owned defer decision supersedes this route.
+## 4. P7 means integration, not a new terrain subsystem
+
+Canonical ownership map:
+
+```text
+Tool/equipment             → P5 / existing V0 action owner
+Player/seam authority      → SM1
+Local Matter mutation      → MW4
+Matter persistence         → MW5
+Matter network             → MW6
+Matter interest            → MW7
+Regional authority         → MW8
+Durable handoff/recovery   → MW9
+Multi-region mutation      → MW10
+Representation/meshing     → RL2/RL3
+Material output            → MatterMaterialBatch
+Inventory truth            → canonical Item Graph
+Gateway                    → existing Edge Gateway
+```
+
+P7 MUST NOT create `TerrainMutationRequest`, `TerrainMutationResult`, a second Matter
+truth, P7 persistence, P7 replication protocol, P7 authority directory or P7 resource store.
+
+## 5. P7 train
+
+```text
+P7.0 Matter Production Owner Map / Convergence Gate
+    ↓
+P7.1 Product Tool → existing MatterMutationRequest adapter
+    ↓
+P7.2 Bounded Planetary Matter Bubble
+    ↓
+P7.3 MatterMaterialBatch → canonical Item Graph
+    ↓
+P7.4 MW5 + V0 persistence/restart composition
+    ↓
+P7.5 MW6/MW7/RL2/RL3 two-client convergence
+    ↓
+P7.6 Seam composition:
+     SM1/MW8/MW9 for authority lifecycle
+     MW10 only when one mutation spans multiple regions
+    ↓
+P7.7 Graphical digging product slice
+```
+
+Detailed plan: `docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md`.
+
+## 6. V0 PLAYABLE SEAMLESS PLANET
+
+Classification:
+
+```text
+TYPE = COMPOSITION_ACCEPTANCE
+NEW FOUNDATION = FORBIDDEN
+```
+
+It composes P4+P5+P6+Gateway+SM1+P7 and proves two graphical clients can walk, equip,
+dig, obtain canonical material, build, cross A↔B seamlessly, reconnect and survive server
+restart with one canonical world truth.
+
+## 7. P8 and RF1
+
+After V0 composition acceptance:
+
+```text
+                 ┌── P8 PRODUCT LANE
+V0 PLAYABLE ─────┤
+                 └── RF1 SHADOW LANE → RF2
+```
+
+There is no architecture dependency `P8 → RF1`.
+
+However, until H0.3 multi-worker scheduling is accepted:
+
+```text
+one active runtime mutation checkpoint at a time
+```
+
+Eligibility may be parallel; execution is still serialized.
+
+## 8. Immediate execution order
+
+```text
+NOW
+  refresh/merge RF0 R2 docs
+  refresh machine control after SM1 acceptance
+
+THEN
+  activate P7
+  execute P7.0 ownership/convergence gate
+  implement P7.1 adapter
+  continue P7.2 → P7.7
+
+THEN
+  V0 PLAYABLE SEAMLESS PLANET composition acceptance
+```
+
+## 9. Stop conditions
+
+Stop and return to architecture/control if implementation attempts a second
+Item Graph/Construction/Matter/Persistence/Directory/Authority owner, Gateway canonical
+gameplay truth, cache-as-recovery-authority, Worker direct canonical publication,
+new terrain DTOs duplicating MW4, mandatory broker/database for RF0/RF1, or dynamic
+split/merge before static N-authority correctness.
