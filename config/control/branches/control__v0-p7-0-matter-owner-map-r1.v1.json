@@ -30,7 +30,8 @@
     "config/control/harness/v0-current-work-map.v1.json",
     "config/control/harness/v0-product-train-policy.v1.json",
     "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R1_RU.md",
-    "tests/harness/test_v0_product_train_policy.py"
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/m4/**",
@@ -50,7 +51,8 @@
   "runtime_paths": [],
   "validation_paths": [
     "tests/harness/test_v0_product_train_policy.py",
-    ".github/workflows/project-control.yml"
+    ".github/workflows/project-control.yml",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
   ],
   "tested_heads": {
     "runtime": "",
