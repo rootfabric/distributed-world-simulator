@@ -6,20 +6,20 @@
 
 **Живой статус на 2026-08-30 (ECO EVO7 performance + morphology split):** `LS3.0–LS3.FINAL CLOSED / VIS1–VIS3 ACCEPTED / PAR1–PAR3 COMPLETE LINEAGE / STREAM1 R1 ACCEPTED exact-Windows 4d0d95a / PERF2.SIM NEXT / VIS4 PLAY0.MORPH PARALLEL`.
 
-**PERF2.0 implementation status on 2026-08-30:** `MEASUREMENT CONTRACT R1 IMPLEMENTATION CANDIDATE / exact double-Godot verification required`.
+**PERF2.0 status on 2026-08-31:** `ACCEPTED / exact detached Windows + canonical CI closure 33317717717 / verified HEAD 5994598d / PERF2.1 AUTHORIZED`.
 
 Current performance route:
 
 ```text
 STREAM1 ACCEPTED
-→ PERF2.0 Measurement Contract       ← CURRENT
-→ PERF2.1 STREAM1 Profiling
+→ PERF2.0 Measurement Contract       ✅ ACCEPTED
+→ PERF2.1 STREAM1 Profiling          ← CURRENT / AUTHORIZED
 → PERF2.2 Working-set / Memory
 → PERF2.3 Simulation Scaling
 → PERF2.4 Runtime Optimization
 ```
 
-PERF2.0 freezes benchmark identity and correctness rules before any optimization claim.
+PERF2.0 has frozen benchmark identity and correctness rules. PERF2.1 is now the active simulation-side performance checkpoint.
 
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 
@@ -35,7 +35,8 @@ both accepted
 → PLAY1 LIVING REGION
 ```
 
-Acceptance checkpoint: `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md`.
+STREAM1 acceptance checkpoint: `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md`.
+PERF2.0 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md`.
 Live machine roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`.
 
 Текущий live machine-roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. PERF1 измеряет стоимость generation pipeline без изменения ecology truth; следующий возможный optimization checkpoint — `PERF1-PAR0`, только после exact serial/parallel determinism gate.
