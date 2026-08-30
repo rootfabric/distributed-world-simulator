@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R16",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R17",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PERF2.1",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -117,8 +117,8 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_1_STREAM1_GENERATION_PROFILING",
-      "detail": "PERF2.0 measurement contract R1 is accepted on exact fresh detached Windows. PERF2.1 is now authorized to profile accepted STREAM1 using the frozen contract without changing ecology truth."
+      "status": "IN_PROGRESS_PERF2_1_R1_CODE_COMPLETE_AWAITING_WINDOWS",
+      "detail": "PERF2.0 remains accepted/frozen. PERF2.1 R1 now implements repeatable SERIAL_REFERENCE↔STREAM1 generation profiling under the accepted contract; exact Windows verification is the remaining gate."
     },
     {
       "id": "PERF2.0",
@@ -132,9 +132,12 @@
     {
       "id": "PERF2.1",
       "name": "STREAM1 Generation Profiling",
-      "status": "AUTHORIZED_NOT_STARTED",
-      "detail": "Use accepted PERF2.0 R1 unchanged to produce repeatable STREAM1 generation profiles and a serial↔STREAM1 baseline on exact canonical-result parity. Profiling only; no optimization claim or runtime mutation in this checkpoint.",
-      "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md"
+      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+      "detail": "Measurement-only campaign: 1 accepted recipe × SERIAL_REFERENCE/STREAM1 × 3 repetitions, 2 warmup + 12 measured generations. Produces 6 PERF2.0-valid samples, requires 3/3 exact cross-mode canonical parity, measured-window STREAM1 telemetry, and 12 p50/p95 summary rows. No optimization claim.",
+      "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md",
+      "profiler_runtime_head": "e4f887cf943249a6dc05ee456a337db8b9fcbde7",
+      "acceptance_harness_head": "804a78aeaddb287c43a16154fd39fb5d2124f29b",
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md"
     },
     {
       "id": "PERF2.2",
@@ -235,8 +238,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.1",
-    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.1_EXACT_WINDOWS",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_R1_CODE_COMPLETE_AWAITING_WINDOWS_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -328,7 +331,7 @@
     "lane": "PERF2.SIM",
     "current_step": "PERF2.1",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
@@ -352,14 +355,48 @@
     },
     "perf2_1": {
       "name": "STREAM1 Generation Profiling",
-      "status": "AUTHORIZED_NOT_STARTED",
-      "predecessor_head": "5994598d317a55ddae2954f943021878a279afc9",
+      "revision": "ECO.EVO7-PERF2.1-R1",
+      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+      "predecessor_control_head": "73317ce3c35a70a9f8e882e733f23539761027a8",
+      "accepted_perf2_0_head": "5994598d317a55ddae2954f943021878a279afc9",
+      "accepted_perf2_0_tree": "a0241f89b6fd7546a27e4388992ffe371b4c5de6",
       "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
+      "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
       "measurement_contract_mutation_allowed": false,
+      "profiler_runtime_head": "e4f887cf943249a6dc05ee456a337db8b9fcbde7",
+      "acceptance_harness_head": "804a78aeaddb287c43a16154fd39fb5d2124f29b",
+      "campaign": {
+        "recipes": [
+          "MIXED_PHYSICAL_HETEROGENEITY"
+        ],
+        "execution_modes": [
+          "SERIAL_REFERENCE",
+          "STREAM1"
+        ],
+        "warmup_generations": 2,
+        "measured_generations": 12,
+        "repetitions": 3,
+        "initial_records": 64,
+        "stream1_parents_per_chunk": 64,
+        "audit_interval_generations": 10,
+        "audit_generation_1": true,
+        "total_generation_advances": 84
+      },
+      "sample_semantics": {
+        "wall_ms": "TOTAL_MEASURED_WINDOW",
+        "stage_timings": "MEAN_PER_MEASURED_GENERATION",
+        "stream_telemetry": "MEASURED_WINDOW_DELTA_AFTER_WARMUP"
+      },
+      "required_cross_mode_pairs": "3/3_EXACT_CANONICAL_RESULT_PARITY",
+      "required_summary_rows": 12,
+      "report_artifact": "artifacts/perf2/perf2-1-generation-profile-focused.json",
+      "report_authority": "MACHINE_LOCAL_NONCANONICAL_SIDE_CHANNEL_ONLY",
       "speedup_claim_allowed": false,
       "optimization_changes_allowed": false,
-      "goal": "Establish exact repeatable STREAM1 and SERIAL_REFERENCE generation timing profiles under the accepted measurement contract before any PERF2.2/2.4 claims.",
-      "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md"
+      "runtime_biology_changes": false,
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
+      "canonical_entrypoint": "RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.1",
+      "transitive_runner": "RUN_ECO_EVO7_PERF2_1_TESTS.ps1"
     }
   }
 }
