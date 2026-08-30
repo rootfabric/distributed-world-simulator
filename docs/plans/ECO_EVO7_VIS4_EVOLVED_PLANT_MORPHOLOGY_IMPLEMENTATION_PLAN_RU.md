@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.1 R2 WINDOWS VERIFIED + CLOSED / VIS4.2 NEXT  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 IMPLEMENTED CANDIDATE / VIS4.3 BLOCKED UNTIL VIS4.2 GREEN  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -583,4 +583,60 @@ Durable closure evidence:
 
 ~~~text
 docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_1_WINDOWS_VERIFIED_CLOSED_R2_RU.md
+~~~
+
+
+---
+
+## VIS4.2 implementation result — 2026-08-31
+
+VIS4.2 Honest Diagnostic Morphology реализован как отдельная diagnostic-only presentation surface поверх accepted VIS4.1 Descriptor V2.
+
+Новая цепочка:
+
+~~~text
+Workbench public read facade
+ -> VIS4.1 Descriptor V2
+ -> VIS4.2 DiagnosticMorphologyMapper
+ -> VIS4.2 DiagnosticMorphologyOverlay
+ -> diagnostic pixels
+~~~
+
+Критическое изменение presentation truth:
+
+~~~text
+OLD VIS2 diagnostic approximation:
+leaf_area_index_proxy -> crown radius heuristic
+
+VIS4.2 honest mapping:
+realized_crown_radius_m -> crown width
+realized_crown_density  -> crown visual density
+realized_topology       -> branch silhouette
+~~~
+
+VIS4.2 также добавляет neutral-color mode, чтобы shape diversity была видна без lineage color.
+
+Scope remains diagnostic:
+
+~~~text
+VIS4.2 does NOT replace PLAY0
+VIS4.2 does NOT invoke biology
+VIS4.2 does NOT add seed-driven individuality
+VIS4.2 does NOT create taxonomy classes
+~~~
+
+VIS4.2 focused acceptance validates exact source seals, morphology pass-through, controlled monotonic visual mappings, live silhouette diversity, neutral-color invariance, tamper rejection and deterministic replay.
+
+Durable checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_HONEST_DIAGNOSTIC_MORPHOLOGY_R1_RU.md
+~~~
+
+Formal status:
+
+~~~text
+VIS4.2 IMPLEMENTED CANDIDATE
+exact Windows verification required
+VIS4.3 blocked until VIS4.2 GREEN
 ~~~
