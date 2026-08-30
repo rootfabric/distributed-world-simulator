@@ -46,10 +46,36 @@ RF cache evidence can hydrate WARM/read-only state but can never authorize WARM�
 authority activation remains Directory + owner/lease + AuthorityEpoch/fence + canonical
 handoff/recovery validation.
 
+Observable product validation is now a first-class companion lane:
+
+```text
+P7 runtime work
+      │
+      ├──────── V1 PLAYABLE SEAMLESS PRECHECK  test/composition only
+      │              ↓
+      │         V2 at P7.3
+      │              ↓
+      │         V3 at P7.5
+      │              ↓
+      │         V4 at P7.6
+      │              ↓
+      └──────── V5 at P7.7
+                     ↓
+            V0 PLAYABLE SEAMLESS PLANET
+            COMPOSITION ACCEPTANCE
+```
+
+The test ladder is locally observable, may run in parallel with P7, and owns no production
+runtime semantics. Missing production capability must remain `NOT_YET_PROVEN`, never be
+implemented inside test fixtures.
+
+Detailed plan: `docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
+
 Primary current docs:
 
 - `docs/plans/V0_CURRENT_WORK_MAP_RU.md`
 - `docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md`
+- `docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`
 - `docs/plans/DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`
 - `docs/architecture/adr/ADR-021-non-canonical-replication-plane.md`
 
