@@ -116,6 +116,20 @@ func clear_candidate_executor() -> void:
 func has_candidate_executor() -> bool:
     return core != null and core.has_candidate_executor()
 
+## STREAM1 public pass-through. LS3.4 keeps competition authority only; it
+## does not inspect, mutate or partially commit generation-stream proposals.
+func set_generation_stream_executor(executor) -> bool:
+    if not initialized or core == null:
+        return false
+    return core.set_generation_stream_executor(executor)
+
+func clear_generation_stream_executor() -> void:
+    if core != null:
+        core.clear_generation_stream_executor()
+
+func has_generation_stream_executor() -> bool:
+    return core != null and core.has_generation_stream_executor()
+
 func step_generation() -> Dictionary:
     if not initialized:
         return {}

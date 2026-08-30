@@ -193,6 +193,7 @@ func step_generation() -> Dictionary:
     var candidate_build_ms := 0.0
     var route_build_ms := 0.0
     var recruitment_eval_ms := 0.0
+    var phase_started := 0
 
     if _generation_stream_executor != null:
         var streamed := _execute_generation_stream(next_generation)
@@ -209,7 +210,7 @@ func step_generation() -> Dictionary:
         route_build_ms = float(stream_timings.get("route_build_ms", 0.0))
         recruitment_eval_ms = float(stream_timings.get("recruitment_eval_ms", 0.0))
     else:
-        var phase_started := Time.get_ticks_usec()
+        phase_started = Time.get_ticks_usec()
         candidates = _build_candidates(records, next_generation)
         candidate_build_ms = _elapsed_ms(phase_started)
         if candidates.is_empty():
@@ -598,7 +599,7 @@ func _candidate_order_canonical(source: Array[Dictionary]) -> bool:
     var previous := ""
     for value in source:
         var current := String(value.get("candidate_hash", ""))
-        if current.is_empty() or (not previous.is_empty() and current <= previous):
+        if current.is_empty() or (not previous.is_empty() and (current == previous or current < previous)):
             return false
         previous = current
     return true
