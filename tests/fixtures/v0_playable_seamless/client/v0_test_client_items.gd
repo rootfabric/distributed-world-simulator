@@ -188,9 +188,9 @@ func _build_ui() -> void:
 	root.size = Vector2i(720, 420)
 	var screen_size := DisplayServer.screen_get_size()
 	if _client_id == "a":
-		root.position = Vector2i(40, 500)
+		root.position = Vector2i(40, 80)
 	else:
-		root.position = Vector2i(maxi(40, screen_size.x - 760), 500)
+		root.position = Vector2i(maxi(40, screen_size.x - 760), 80)
 
 	var background := ColorRect.new()
 	background.color = Color(0.045, 0.035, 0.055, 1.0)
