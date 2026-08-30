@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R15",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R16",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF2.0",
+  "current_checkpoint": "ECO.EVO7/PERF2.1",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -117,19 +117,23 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_0_MEASUREMENT_CONTRACT",
-      "detail": "Simulation-side PERF2 lane is active. PERF2.0 freezes benchmark identity/statistics/correctness boundaries before any PERF2.1 performance claim."
+      "status": "IN_PROGRESS_PERF2_1_STREAM1_GENERATION_PROFILING",
+      "detail": "PERF2.0 measurement contract R1 is accepted on exact fresh detached Windows. PERF2.1 is now authorized to profile accepted STREAM1 using the frozen contract without changing ecology truth."
     },
     {
       "id": "PERF2.0",
       "name": "Measurement Contract",
-      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
-      "detail": "Freezes workload_hash, comparison_key, minimum repetitions/warmup, timing/memory units, canonical result parity and p50/p95 reporting. No performance claim yet."
+      "status": "ACCEPTED_WINDOWS_5994598D",
+      "detail": "Measurement Contract R1 accepted after fresh detached Windows PowerShell 5.1 canonical workflow on exact HEAD 5994598d317a55ddae2954f943021878a279afc9 / TREE a0241f89b6fd7546a27e4388992ffe371b4c5de6: PERF1 69 PASS, STREAM1 195 PASS with 108 exact comparisons, PERF2.0 62/62 PASS, transitive marker PASS, workflow exit 0, tracked tree clean.",
+      "head": "5994598d317a55ddae2954f943021878a279afc9",
+      "tree": "a0241f89b6fd7546a27e4388992ffe371b4c5de6",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md"
     },
     {
       "id": "PERF2.1",
       "name": "STREAM1 Generation Profiling",
-      "status": "BLOCKED_WAIT_PERF2_0_ACCEPTANCE"
+      "status": "AUTHORIZED_NOT_STARTED",
+      "detail": "Use accepted PERF2.0 R1 unchanged to produce repeatable STREAM1 generation profiles and a serial↔STREAM1 baseline on exact canonical-result parity. Profiling only; no optimization claim or runtime mutation in this checkpoint."
     },
     {
       "id": "PERF2.2",
@@ -230,8 +234,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.0",
-    "status": "PERF2_SIM_ACTIVE_PERF2_0_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.1",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -319,15 +323,41 @@
     }
   },
   "perf2": {
-    "revision": "ECO.EVO7-PERF2.0-R1",
+    "revision": "ECO.EVO7-PERF2.0-R1-ACCEPTED",
     "lane": "PERF2.SIM",
-    "current_step": "PERF2.0",
+    "current_step": "PERF2.1",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
-    "perf2_1_blocked_until_perf2_0_acceptance": true,
-    "vis4_dependency": "NONE_FOR_PERF2_SIM__REQUIRED_ONLY_FOR_PERF2_CONV"
+    "perf2_1_blocked_until_perf2_0_acceptance": false,
+    "vis4_dependency": "NONE_FOR_PERF2_SIM__REQUIRED_ONLY_FOR_PERF2_CONV",
+    "accepted_perf2_0": {
+      "head": "5994598d317a55ddae2954f943021878a279afc9",
+      "tree": "a0241f89b6fd7546a27e4388992ffe371b4c5de6",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "powershell": "Windows PowerShell 5.1",
+      "fresh_detached_worktree": true,
+      "canonical_entrypoint": "RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.0",
+      "perf1": "PASS_69_ASSERTIONS",
+      "stream1": "PASS_195_ASSERTIONS_108_EXACT",
+      "perf2_0": "PASS_62_OF_62",
+      "transitive_marker": "PASS",
+      "workflow_exit": 0,
+      "final_identity_unchanged": true,
+      "tracked_worktree_clean": true,
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md"
+    },
+    "perf2_1": {
+      "name": "STREAM1 Generation Profiling",
+      "status": "AUTHORIZED_NOT_STARTED",
+      "predecessor_head": "5994598d317a55ddae2954f943021878a279afc9",
+      "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
+      "measurement_contract_mutation_allowed": false,
+      "speedup_claim_allowed": false,
+      "optimization_changes_allowed": false,
+      "goal": "Establish exact repeatable STREAM1 and SERIAL_REFERENCE generation timing profiles under the accepted measurement contract before any PERF2.2/2.4 claims."
+    }
   }
 }
