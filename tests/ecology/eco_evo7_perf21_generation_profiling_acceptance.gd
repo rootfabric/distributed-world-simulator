@@ -112,7 +112,7 @@ func _init() -> void:
 	_check(Contract.minimum_repetitions_satisfied(stream_samples), "STREAM1 summary satisfies accepted minimum repetitions")
 
 	var exact_pairs := 0
-	for repetition in 3:
+	for repetition in range(3):
 		var serial: Dictionary = _sample_for_repetition(serial_samples, repetition)
 		var streamed: Dictionary = _sample_for_repetition(stream_samples, repetition)
 		_check(not serial.is_empty() and not streamed.is_empty(), "cross-mode repetition %d is present" % repetition)
@@ -218,7 +218,7 @@ func _finite_nonnegative(value) -> bool:
 func _is_git_sha(value: String) -> bool:
 	if value.length() != 40:
 		return false
-	for index in value.length():
+	for index in range(value.length()):
 		var code := value.unicode_at(index)
 		if not (code >= 48 and code <= 57) and not (code >= 97 and code <= 102):
 			return false
