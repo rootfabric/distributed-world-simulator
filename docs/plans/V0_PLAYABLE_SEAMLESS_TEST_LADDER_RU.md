@@ -143,6 +143,32 @@ V0 PLAYABLE SEAMLESS PLANET
 
 The ladder is monotonic: every later version preserves the earlier proof and adds one new live composition property.
 
+## 4.1 Client-facing milestone anchors
+
+The test ladder is also the execution/evidence carrier for the explicit client goals in
+`docs/plans/V0_CLIENT_FACING_MILESTONES_RU.md`.
+
+```text
+P7.2 / V1-V2 → C1 PLANETARY SEAM VISUAL LAB
+P7.5 / V3    → C2 TWO-CLIENT WORLD CONVERGENCE
+P7.6 / V4    → C3 PLAYABLE SEAM + ITEMS
+                two clients
+                two authorities
+                planet
+                items on both sides
+                pickup in A
+                carry A→B
+                drop in B
+                second client picks it
+                no reconnect/respawn
+                stable player/item identity
+P7.6+ lab    → C4 THREE-AUTHORITY STATIC CHAIN (optional)
+P7.7 / V5    → C5 GRAPHICAL DIGGING
+```
+
+C3 is mandatory for the V0 product definition. C4 is an optional early scale lab and must
+not delay C3 or create new authority semantics.
+
 ---
 
 # 5. V1 — PLAYABLE SEAMLESS PRECHECK
