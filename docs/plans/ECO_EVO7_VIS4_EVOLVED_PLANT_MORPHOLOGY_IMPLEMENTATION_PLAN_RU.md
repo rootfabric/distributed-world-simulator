@@ -755,7 +755,7 @@ VIS4.3 exact Live Phenotype -> PH5 bridge is implemented.
 Exact runtime/test subject currently under Windows verification:
 
 ~~~text
-HEAD: 967692cb2781f20eeceffe43a014366567bd2586
+HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
 ~~~
 
 Runtime architecture:
@@ -775,3 +775,21 @@ The bridge does not rerun CoupledDevelopment or FunctionalPhenotype and does not
 Focused acceptance requires exact reconstruction for all 61 generation-one survivors, all PH5 tiers, rehashed traits_id/development-seed rejection, and deterministic replay.
 
 VIS4.4 remains blocked until exact Windows GREEN.
+
+
+VIS4.3 final pre-verification hardening also binds reconstruction evidence to the exact Descriptor V2 competition seal.
+
+Final runtime/test subject:
+
+~~~text
+HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
+~~~
+
+VIS4.4 preflight is documented in:
+
+~~~text
+docs/plans/ECO_EVO7_VIS4_4_PLAY0_MORPH_PREFLIGHT_RU.md
+~~~
+
+VIS4.4 runtime remains blocked until VIS4.3 exact Windows GREEN.
