@@ -54,6 +54,8 @@ func build(
 		return {}
 	if int(descriptor_snapshot.get("descriptor_count", -1)) != int(reconstruction_snapshot.get("record_count", -2)):
 		return {}
+	if String(descriptor_snapshot.get("source_competition_hash", "")) != String(reconstruction_snapshot.get("source_competition_hash", "")):
+		return {}
 
 	var reconstruction_by_id := {}
 	for value in Array(reconstruction_snapshot.get("records", [])):
