@@ -2197,3 +2197,245 @@ That becomes FABRIC0.15.
 The next falsification should make contact state a graph-wide coupled nonsmooth problem rather than several independent local probes.
 
 The checkpoint should be considered successful only if momentum, dissipation, topology and refinement evidence survive the multi-body coupling.
+
+
+## FABRIC0.15 — Multibody Convex Complementarity Graph
+
+FABRIC0.15 начал новый chapter.
+
+До 0.14 центральным объектом falsification был один rigid body и корректность его local nonsmooth contact law.
+
+После 0.14 главным неизвестным стало другое:
+
+> выдержат ли эти законы **graph coupling**, когда один body участвует сразу в нескольких contacts?
+
+### Первый design не был принят только потому, что выглядел «богато»
+
+Первый multibody stand делал D боковым incoming body.
+
+Это породило merge, slide, impacts и распад контактов.
+
+Но lateral impulse физически сдвигал нижний A и разрушал A-B-C stack.
+
+Такой сценарий был слишком смешанным: было трудно отделить solver coupling от естественного разрушения геометрии.
+
+Поэтому scenario был сознательно упрощён:
+
+```text
+stable vertical A-B-C stack
++
+D falls from above onto C
+```
+
+D сохраняет tangential motion и rotation, но основной merge направлен вдоль support chain.
+
+Это позволило проверить именно graph merge/hold/split.
+
+### Refinement отверг ложный hold
+
+Следующий prototype выглядел хорошо на coarse steps:
+
+```text
+D joins C
+→ merged island holds
+→ later split
+```
+
+Но fine run отделял D почти сразу.
+
+Такой narrative был rejected.
+
+Это закрепляет важную практику:
+
+> topology story должна существовать не только на выбранном timestep.
+
+### Penetration + Baumgarte оказался причиной
+
+Новый contact впервые появлялся уже с finite penetration.
+
+Baumgarte correction использовал эту penetration как velocity bias.
+
+В результате только что созданный contact получал positive separating velocity и исчезал.
+
+Solution:
+
+```text
+new negative gap
+→ configuration localization to zero gap
+→ no velocity change
+→ no momentum change
+→ then contact impulse
+```
+
+Это не возврат к скрытым projections.
+
+Наоборот, 0.14 научил разделять два класса correction:
+
+```text
+velocity-changing projection
+→ physical impulse
+
+configuration-only projection
+→ event localization
+```
+
+### Final scenario
+
+Исходно:
+
+```text
+[A,B,C] + [D]
+```
+
+D мягко падает сверху на C.
+
+Accepted `dt=0.001` merge:
+
+`0.18299031095859 s`.
+
+Contact:
+
+```text
+C|D
+stick
+
+Pn =
+0.59227588215158
+```
+
+После merge:
+
+```text
+[A,B,C,D]
+```
+
+Gravity удерживает graph compressive.
+
+At `t=0.32` external drive on D changes upward.
+
+Complementarity produces zero normal support + separating motion, therefore C|D disappears and graph splits:
+
+```text
+[A,B,C,D]
+→
+[A,B,C] + [D]
+```
+
+### Coupling was checked independently of the trajectory
+
+A separate analytic chain probe verified load transmission.
+
+If upper C weighs on B and B weighs on A, the solver should recover cumulative support impulses.
+
+It does within a few micro-units.
+
+Another probe puts:
+
+```text
+plane|A = stick
+A|B     = stick
+B|C     = slide
+```
+
+inside the same island.
+
+This is the first FABRIC evidence where stick and slide coexist in one graph solve.
+
+### PGS order was treated honestly
+
+Projected Gauss-Seidel depends on block order before convergence.
+
+Reverse order after 32 iterations produced:
+
+```text
+delta v ~ 1.86e-6
+delta omega ~ 2.13e-7
+```
+
+with same modes.
+
+The project deliberately does not rename this into “deterministic order independence”.
+
+Canonical order remains necessary for current replay.
+
+A stronger global complementarity solver remains future work.
+
+### Refinement moved from one body to the whole graph
+
+Reference:
+
+`dt=0.0005`.
+
+The checkpoint compares:
+
+- merge event time;
+- entire 52-component final body state;
+- energy-ledger residual.
+
+All improve from:
+
+```text
+0.004
+→ 0.002
+→ 0.001
+```
+
+This is the central numerical result of 0.15.
+
+### Internal and external momentum were separated
+
+Body-body impulses are internal and must preserve total dynamic-system momentum.
+
+Plane impulses are external.
+
+The accepted internal pair impulse audit gives exact recorded zero for linear and angular momentum error.
+
+This prevents accidentally “proving conservation” across external support reactions.
+
+### Actual threads remain a boundary, not a claim of production parallelism
+
+Two Godot Threads solve independent graph snapshots.
+
+Forward/reverse spawn order gives the same canonical joined hash.
+
+But this is still snapshot-level execution, not a same-world work-stealing contact scheduler.
+
+### Evidence
+
+```text
+FABRIC0.15 focused     103/103 PASS
+playground             PASS
+editor                 CLEAN
+remote bytes           7/7 IDENTICAL
+FABRIC0.14 regression  156/156 PASS
+```
+
+Main physical hash:
+
+`68e18b6a9a16b574aaf0b6ca30b3cf5160ea9a69ba8919df11f1b04fda92d29c`.
+
+Parallel hash:
+
+`49e8c7b2fa0e1177f0e19d36ee85c4e22239ad95556c2c0a7c909d24fb47b34b`.
+
+### What remains
+
+FABRIC0.15 still uses sphere/plane analytic convex geometry.
+
+The next hard problem is no longer adding a fifth body.
+
+It is:
+
+```text
+general convex geometry
++
+multipoint manifolds
++
+global nonsmooth complementarity
+```
+
+This becomes FABRIC0.16.
+
+## FABRIC0.16 — General Convex Multipoint MCP
+
+Next falsification should combine arbitrary convex support mapping, persistent multipoint manifold generation and a solver whose convergence semantics are stronger than finite-iteration PGS order robustness.
