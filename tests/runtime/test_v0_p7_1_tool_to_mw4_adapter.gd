@@ -50,6 +50,10 @@ const TARGET_AUTHORITY_ID := "authority/p7/matter-b"
 const AUTHORITY_EPOCH := 1
 const REGION_ID := "region/p7/positive"
 const CELL_LEVEL := 5
+# MW5 uses a deliberately large deterministic excavation fixture (~17 m sweep,
+# 4 m radius). This integration-only bound admits that accepted MW4 fixture;
+# focused P7.1 unit coverage separately proves a 4 m fail-closed reach policy.
+const INTEGRATION_MAX_REACH_M := 25.0
 
 var _assertions := 0
 var _failures := 0
@@ -159,6 +163,13 @@ func _test_real_p5_sm1_mw8_mw6_mw4_chain() -> void:
 	_assert_true(
 		String(committed.get("status", "")) == "SUCCEEDED",
 		"MW6 accepts P7-authorized command"
+	)
+	var accepted: Dictionary = replica.accept_command_result(committed)
+	_assert_success(accepted, "decode existing MW4 result through real Matter replica")
+	var domain_result: Dictionary = accepted.get("details", {}).get("result", {})
+	_assert_true(
+		String(domain_result.get("status", "")) == "COMMITTED",
+		"existing MW4 commits the admitted excavation fixture"
 	)
 	_assert_true(
 		int(journal.size()) == journal_before + 1,
@@ -332,7 +343,7 @@ func _create_matter_authority(gameplay, graph, sm1) -> Dictionary:
 		regional_gate,
 		AUTHORITY_ID,
 		AUTHORITY_EPOCH,
-		5.0,
+		INTEGRATION_MAX_REACH_M,
 		Callable(self, "_project_player_into_matter_frame")
 	)
 	if not bool(gate_setup.get("success", false)):
