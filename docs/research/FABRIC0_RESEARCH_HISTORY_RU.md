@@ -2439,3 +2439,99 @@ This becomes FABRIC0.16.
 ## FABRIC0.16 — General Convex Multipoint MCP
 
 Next falsification should combine arbitrary convex support mapping, persistent multipoint manifold generation and a solver whose convergence semantics are stronger than finite-iteration PGS order robustness.
+
+
+## Dual-track fork after FABRIC0.15 — Physical Core + FABRIC-BAKE
+
+FABRIC0.15 closed the first convincing graph-coupled multibody checkpoint, but also exposed the next system-level risk:
+
+```text
+generic physical expressiveness grows
+→ internal DOF/equations/events grow
+→ a correct physical kernel can become computationally unusable at world scale
+```
+
+The project therefore does not reinterpret future physical simplification as a mere distance/performance hack.
+
+It introduces a second research question:
+
+> Can composed physical complexity be compiled into a cheaper derived physical representation while preserving declared boundary causality, conservation, validity and deterministic refinement/unbake?
+
+### Why this is a sibling line
+
+Existing Representation LOD already proves useful provenance concepts:
+
+```text
+source revision/hash
+dependency hash
+authority epoch
+content addressing
+invalidation
+```
+
+But its artifact correctness is presentation-oriented.
+
+Physical Bake needs:
+
+```text
+effort/flow
+power/wrench
+momentum/energy
+events
+validity/error
+reconstruction
+```
+
+Therefore BAKE reuses provenance semantics but does not overload `RepresentationArtifactManifest`.
+
+### Five architecture corrections frozen before implementation
+
+#### Multi-source source binding
+
+A physical island can depend on several Construction/Matter sources.
+
+B0.0 therefore uses a canonical sorted `CanonicalSourceFrontier[]` rather than one required source revision.
+
+#### AuthorityEnvelope
+
+A mathematically connected graph must not silently merge authoritative writers.
+
+Initial cross-authority mutable bake is rejected as `NO_SAFE_BAKE`.
+
+#### RefinementGuard
+
+A reduced artifact must preserve enough conservative information to know when hidden internal detail could become causally important.
+
+Without this, “local unbake on damage” is not physically closed.
+
+#### NO_SAFE_BAKE
+
+Reduction is optional.
+
+If error/validity/authority/guard requirements cannot be certified, FULL execution remains the correct result.
+
+#### Deterministic error contract
+
+Authoritative physical approximation uses `ValidatedDomain + ErrorEnvelope + RuntimeErrorEstimator`, not a vague statistical confidence score.
+
+### Consequence for physical-core roadmap
+
+FABRIC0.16 remains exactly the next physical wall.
+
+It is not postponed.
+
+BAKE B0.0 starts from the same roadmap freeze in parallel.
+
+Final Contact/Wrench Bake B0.3 is deliberately gated on 0.16 general convex multipoint semantics so the reduction architecture is not permanently shaped around the temporary 0.15 sphere/single-contact family.
+
+### Final fork shape
+
+```text
+FABRIC0.15 research candidate closed
+        ↓
+dual-track roadmap freeze
+        ├── FABRIC0.16 → future physical core
+        └── B0.0 → B0.1 → B0.2 → ...
+```
+
+The lines rejoin through explicit bridge gates and a stronger FABRIC1 definition that includes reducibility and refinement.
