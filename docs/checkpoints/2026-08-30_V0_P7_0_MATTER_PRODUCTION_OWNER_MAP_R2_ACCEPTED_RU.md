@@ -1,6 +1,6 @@
 # V0 P7.0 — Matter Production Owner Map / Convergence Gate
 
-**Status:** HISTORICAL REVIEW WORKING NOTE — superseded by accepted R2  
+**Status:** ✅ ACCEPTED — REVIEW-002 PASS  
 **Date:** 2026-08-30  
 **Reviewed source base:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **Runtime mutation:** NONE
@@ -241,11 +241,26 @@ Stop if P7.1 attempts any of:
 
 ## 12. P7.0 acceptance decision
 
-P7.0 owner-map content is frozen for fresh exact-source review.
+P7.0 R2 is accepted. Runtime mutation remained zero.
 
 The owner map is machine-readable at:
 
 `config/control/harness/v0-p7-matter-production-owner-map.v1.json`.
 
 
-> Canonical accepted record: `docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md`.
+
+
+## 13. Acceptance evidence
+
+```text
+source main       07d71da1d301a65d36f56ff8c7a42795becab88d
+reviewed head     6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd
+owner-map blob    8867355fe2cb33dcf2ce3c70de252d245dcb9908
+review 001        FIX_REQUIRED — actor identity
+review 002        PASS
+Project Control   33293163667 SUCCESS
+runtime changes   0
+duplicate owners  0
+```
+
+P7.1 remains blocked until post-merge PC0 and Director dispatch.

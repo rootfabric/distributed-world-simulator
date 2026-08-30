@@ -39,7 +39,7 @@ P7 != TERRAIN FOUNDATION
 | inventory/resources | canonical Item Graph |
 | persistence owner | existing canonical persistence |
 
-Acceptance for P7.0 is zero duplicate owners.
+Acceptance for P7.0 is zero duplicate owners. **P7.0 R2 is ACCEPTED**: reviewed head `6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd`, owner-map blob `8867355fe2cb33dcf2ce3c70de252d245dcb9908`, REVIEW-002 PASS.
 
 ## 3. Hard stop conditions
 
@@ -61,7 +61,7 @@ second Matter truth
 A bounded adapter is allowed only when it translates an existing product command into an
 existing canonical owner contract.
 
-## 4. P7.0 — Matter Production Owner Map / Convergence Gate
+## 4. P7.0 — Matter Production Owner Map / Convergence Gate — ✅ ACCEPTED
 
 Deliverables:
 
@@ -73,15 +73,28 @@ Deliverables:
 6. persistence and representation boundaries;
 7. acceptance matrix for P7.1-P7.7.
 
-No gameplay runtime mutation is required for P7.0.
+P7.0 completed without gameplay runtime mutation.
+
+Accepted identity mapping:
+
+```text
+logical_player_id
+→ existing canonical player_entity_id ("player/<logical_player_id>")
+→ MatterMutationRequest.actor_id
+```
+
+The first review rejected direct logical-player → Matter actor mapping because single-segment V0 IDs do not satisfy the Matter canonical-ID contract. R2 corrects this without creating a new identity owner.
+
+Machine owner map: `config/control/harness/v0-p7-matter-production-owner-map.v1.json`.
 
 ## 5. P7.1 — Product Tool → MW4 adapter
 
 ```text
 equipped canonical tool
-→ authoritative player action
-→ Gateway/SM1 active Authority
-→ bounded P7 adapter
+→ canonical player_entity_id
+→ accepted MW6 Gateway MATTER_MUTATION ingress
+→ stateless P7 authorize_mutation gate
+→ SM1 ACTIVE tuple + MW8/MW9 fences
 → existing MatterMutationRequest
 → MatterExcavationService
 ```

@@ -35,7 +35,11 @@
     "tests/harness/test_v0_generation80_safety_guards.py",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json"
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
+    "docs/plans/V0_CURRENT_WORK_MAP_RU.md",
+    "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+    "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+    "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/m4/**",
