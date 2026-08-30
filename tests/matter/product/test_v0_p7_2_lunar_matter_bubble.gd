@@ -111,11 +111,12 @@ func _test_bounded_bubble_query_and_mutation() -> void:
 	var snapshots := bubble.materialize_presentation_level()
 	_assert_true(snapshots.size() == 8, "bounded presentation materializes exactly level-1 cells")
 	_assert_true(bubble.snapshot_store().size() == 8, "only bounded level-1 snapshots retained")
+	var body_hash := String(bubble.body_definition().get("checksum", ""))
 	for snapshot_value in snapshots:
 		var snapshot: Dictionary = snapshot_value
 		_assert_true(
-			String(snapshot.get("address", {}).get("body_id", "")) == "body/moon",
-			"materialized brick keeps Moon body identity"
+			String(snapshot.get("body_definition_hash", "")) == body_hash,
+			"materialized brick binds to the canonical Moon body definition"
 		)
 
 	var start := center + Vector3(2.5, -0.5, 0.0)
