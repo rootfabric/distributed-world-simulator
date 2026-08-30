@@ -859,3 +859,194 @@ topology revision before/after
 - energy/momentum audit проходит через jump.
 
 Production promotion не заявляется. PR остаётся Draft.
+
+
+## FABRIC0.8 — COUPLED HYBRID DAE / EVENT ITERATION
+
+**Parent research head:** 7a64988e8964e4488693b4cd202e02e94ae90075  
+**Design:** docs/research/FABRIC0_8_COUPLED_HYBRID_DAE_RU.md  
+**Evidence:** validation/fabric0-compositional-world-fabric-v8-validation.json  
+**Status:** IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE.
+
+### Validation
+
+- exact double-Godot: 4.7.1.stable.double.custom_build.a13da4feb;
+- focused coupled hybrid DAE acceptance: 71/71 PASS;
+- FABRIC0.7 regression: 88/88 PASS;
+- FABRIC0.6 nonsmooth regression: 121/121 PASS;
+- FABRIC0.6 predecessor compatibility: 42/42 PASS;
+- playground: FABRIC0_8_COUPLED_HYBRID_DAE_PLAYGROUND_PASS;
+- editor parse/compile/SCRIPT error scan: CLEAN;
+- all 4 executable FABRIC0.8 files byte-identical between local tested bytes and GitHub blobs.
+
+### Новая форма
+
+FABRIC0.8 впервые связывает differential и algebraic state:
+
+~~~text
+F(x,y,p,t,topology)=0
+xdot=f(x,y,p,t,topology)
+~~~
+
+Algebraic system решается на каждой RK4 stage до вычисления derivative.
+
+### Topology участвует в equations
+
+Expression bond_active(drive_link) может входить в algebraic residual.
+
+Пока bond active:
+
+~~~text
+f_a=2 N
+~~~
+
+После topology transaction:
+
+~~~text
+drive_link=false
+f_a=0
+~~~
+
+Mode name не содержит отдельной force logic.
+
+### Geometric impact
+
+Gap:
+
+~~~text
+x_b-x_a
+~~~
+
+локализован внутри macrostep:
+
+~~~text
+t_hit=0.472135955002
+reference=-4+sqrt(20)=0.4721359549995796
+~~~
+
+Pre relative normal:
+
+~~~text
+-4.472135955
+~~~
+
+Generic jump solve дал:
+
+~~~text
+j_n=4.472135955
+e=0.5
+
+v_a+=1.236067978
+v_b+=3.472135955
+~~~
+
+Normal momentum conserved, restitution relation PASS.
+
+### Coulomb tangential branch
+
+~~~text
+mu=0.3
+j_t=1.341640787
+mu*j_n=1.341640787
+branch=slide_neg
+~~~
+
+Tangential momentum conserved.
+
+Kinetic energy after jump lower than before; jump does not create energy.
+
+### Same-time event iteration
+
+Один event instant:
+
+~~~text
+impact
+→ algebraic re-solve: f_a=2
+→ break_on_impulse
+→ drive_link OFF
+→ topology revision 0→1
+→ algebraic re-solve: f_a=0
+~~~
+
+Оба transitions имеют один physical event time.
+
+После этого остаток macrostep интегрируется уже на broken topology.
+
+Final t=1:
+
+~~~text
+x_a=2.180339888
+x_b=3.360679775
+gap=1.180339888
+f_a=0
+~~~
+
+### Algebraic guard
+
+Отдельный test:
+
+~~~text
+reaction=k*x
+k=2 N/m
+x_dot=1 m/s
+
+guard:
+reaction=2 N
+~~~
+
+Event локализован в t=1.
+
+Это доказывает, что guard действительно зависит от repeatedly solved algebraic reaction.
+
+### Singular DAE
+
+~~~text
+0*y=0
+~~~
+
+отклоняется как:
+
+DAE_SINGULAR_ALGEBRAIC_MANIFOLD.
+
+Zero residual без determined tangent по-прежнему не считается physical solution.
+
+### Deterministic replay
+
+State/event hash:
+
+f564e9294b738d65783cefcbc03e18e54860c61541143be7dd2421d6223e9b19.
+
+Replay сохраняет:
+
+- event instant;
+- transition ordering;
+- impact branch;
+- impulses;
+- topology revision;
+- final differential/algebraic state.
+
+### Главный вывод FABRIC0.8
+
+> Differential state, algebraic reaction, jump impulse и mutable topology теперь могут участвовать в одном causal physical timestep.
+
+FABRIC начинает выглядеть как компилятор topology в hybrid differential-algebraic physical program.
+
+### Следующий фундаментальный барьер
+
+FABRIC0.9 — MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE.
+
+Нужно убрать scalar-contact special shape:
+
+~~~text
+multiple geometry contacts
+normal Jacobians
+2D tangent basis
+rotational inertia
+friction cone
+simultaneous coupled impulses
+contact-island solve
+order invariance
+sparse/warm-start path
+~~~
+
+Production promotion не заявляется. Draft PR сохраняется.
