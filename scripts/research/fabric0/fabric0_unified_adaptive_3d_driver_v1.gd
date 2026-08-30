@@ -173,3 +173,4 @@ static func update_sleep(tracker: Dictionary, id: String, speed: float, residual
 	var quiet := speed<=1.0e-8 and residual<=1.0e-8
 	var q := int(prev["quiet"])+1 if quiet else 0; var sleeping:=q>=quiet_required
 	var out={"quiet":q,"sleeping":sleeping,"slept":(not bool(prev["sleeping"]) and sleeping),"woke":(bool(prev["sleeping"]) and not sleeping)}; tracker["entries"][id]=out.duplicate(true); return out
+
