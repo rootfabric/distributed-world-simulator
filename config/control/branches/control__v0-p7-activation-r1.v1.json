@@ -13,8 +13,8 @@
   "progress_note": "SM1 is accepted. RF0/P7 roadmap R2 is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. This control branch rotates the single pre-H0.3 mutation lease to P7, issues the fresh P7 epoch/work order, and keeps runtime mutation fail-closed.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
   "next_stage": "Fresh independent P7 owner-map review; merge this control transition; post-merge PC0; Director dispatch P7.1 adapter implementation.",
-  "parent_branch_or_checkpoint": "main @ 7e80fe6ac409317d349cdeaa9602542c782893c1 / V0_SM1_ACCEPTED",
-  "base_commit": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+  "parent_branch_or_checkpoint": "main @ f7d3deb80b67a41880d736f83b132a9a7a5a0964 / V0_SM1_ACCEPTED",
+  "base_commit": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "dependencies": [
     "V0_SM1_CHECKPOINT_ACCEPTED @ acb9379cacc413fc25a65117fb1627f5a01b9736",
     "RF0/P7 roadmap canonical @ 7e80fe6ac409317d349cdeaa9602542c782893c1",
@@ -35,8 +35,7 @@
     "scripts/harness/checkpoint_planner.py",
     "tests/harness/test_v0_product_train_policy.py",
     "tests/harness/test_v0_generation80_safety_guards.py",
-    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
-    "tests/harness/test_h0_2_machine_checkpoint_contract.py"
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
   ],
   "watched_paths": [
     "scripts/simulation/matter/**",
@@ -56,7 +55,6 @@
     "tests/harness/test_v0_product_train_policy.py",
     "tests/harness/test_v0_generation80_safety_guards.py",
     "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
-    "tests/harness/test_h0_2_machine_checkpoint_contract.py",
     ".github/workflows/project-control.yml"
   ],
   "tested_heads": {
