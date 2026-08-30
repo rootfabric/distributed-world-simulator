@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 R1 WINDOWS RED / R2 REPAIR CANDIDATE / VIS4.3 BLOCKED UNTIL R2 GREEN  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.2 R2 WINDOWS VERIFIED + CLOSED / VIS4.3 IMPLEMENTATION ACTIVE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -701,3 +701,46 @@ docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_EMPTY_DESCRIPTOR_BOUNDARY_REPAIR_R2_
 ~~~
 
 VIS4.3 runtime remains blocked until fresh exact Windows GREEN on R2.
+
+
+---
+
+## VIS4.2 R2 closure — 2026-08-31
+
+Fresh exact Windows verification on:
+
+~~~text
+HEAD: 3ecee0f0fe491a6f76145eb8f2da133c820ae793
+TREE: 762806c32b43a1cc0740e7b5ab78be8e1cb108bd
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+~~~
+
+completed GREEN:
+
+~~~text
+VIS4.2 R2 focused: PASS (1265 assertions)
+full runner: PASS
+RC=0
+
+Descriptor V2 / diagnostic / overlay:
+61 / 61 / 61
+~~~
+
+Former VIS4.2-WIN-001 generation-zero and replay initialization paths are GREEN.
+
+Formal status:
+
+~~~text
+VIS4.2 R2
+ACCEPTED
+WINDOWS VERIFIED
+CLOSED
+~~~
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_WINDOWS_VERIFIED_CLOSED_R2_RU.md
+~~~
+
+VIS4.3 exact PH5 bridge is now unblocked.
