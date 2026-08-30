@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.2 — Honest Diagnostic Morphology R1
 
 Дата: 2026-08-31  
-Статус: IMPLEMENTED CANDIDATE / EXACT WINDOWS VERIFICATION REQUIRED  
+Статус: WINDOWS VERIFIED RED / SUPERSEDED BY VIS4.2 R2 REPAIR  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1
 
 Predecessor accepted boundary:
@@ -309,3 +309,45 @@ VIS4.3 — Live Phenotype -> PH5 Bridge
 ~~~
 
 VIS4.3 may reconstruct presentation geometry through accepted PH5 surfaces, but still cannot create new ecology truth.
+
+
+## Windows verification update
+
+R1 exact subject:
+
+~~~text
+e74ffda554be177201542743f596b2c0bb272018
+TREE a7090261af65b3f4a3313aa0c0275e18850f2435
+~~~
+
+received:
+
+~~~text
+VIS4.2 focused: FAIL (1263 assertions, 2 failures)
+full runner: FAIL
+RC=1
+~~~
+
+Finding:
+
+~~~text
+VIS4.2-WIN-001
+generation-zero/fail-closed empty [] rejected by typed Array[Dictionary] renderer input
+~~~
+
+The morphology mappings, 61/61/61 source completeness, tamper checks and non-empty deterministic replay were otherwise GREEN.
+
+This R1 candidate is not accepted.
+
+Repair is tracked in:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_EMPTY_DESCRIPTOR_BOUNDARY_REPAIR_R2_RU.md
+~~~
+
+R2 exact runnable boundary:
+
+~~~text
+3ecee0f0fe491a6f76145eb8f2da133c820ae793
+TREE 762806c32b43a1cc0740e7b5ab78be8e1cb108bd
+~~~
