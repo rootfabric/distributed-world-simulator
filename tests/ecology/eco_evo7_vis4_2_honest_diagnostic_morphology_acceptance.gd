@@ -60,6 +60,8 @@ func _identity_and_founder_gate(viewer) -> void:
 	_check(int(source0.get("founder_marker_count", -1)) == int(source0.get("descriptor_count", -2)), "generation-zero Descriptor V2 remains founder-only")
 	_check(viewer.get_diagnostic_snapshot().is_empty(), "VIS4.2 fabricates no realized diagnostic morphology at generation zero")
 	_check(viewer.get_diagnostic_descriptors().is_empty(), "generation-zero diagnostic descriptor set is empty")
+	_check(viewer.overlay.set_descriptors([]), "VIS4.2 overlay accepts untyped empty founder/fail-closed descriptor arrays")
+	_check(not viewer.overlay.set_descriptors([{"record_id": "invalid"}]), "VIS4.2 overlay still rejects malformed generic descriptor arrays")
 
 	_check(viewer.set_neutral_color(false), "lineage color mode toggles")
 	_check(viewer.set_camera_state(1.7, Vector2(31.0, -14.0)), "diagnostic camera state accepts bounded presentation transform")
