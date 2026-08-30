@@ -1,9 +1,9 @@
 # V0 — Current Primary Work Map
 
 **Refresh:** 2026-08-30  
-**Canonical main at refresh:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`  
+**P7.0 source main:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **SM1:** ACCEPTED  
-**Current product gate:** P7 main-owned activation + Matter production ownership convergence  
+**Current product gate:** P7.0 ACCEPTED → post-merge PC0 → Director dispatch  
 **Next runtime checkpoint:** `V0_P7_BOUNDED_TERRAIN_MUTATION`
 
 > Human-readable routing map. Machine eligibility remains owned by `config/control/**`.
@@ -23,7 +23,7 @@ SM1 Seamless Product Integration    ACCEPTED
     ↓
 RF0 Replication Semantic Boundary   ARCHITECTURE GUARDRAIL / NON-BLOCKING
     ↓
-P7 Matter Production Convergence    NEXT PRODUCT RUNTIME
+P7 Matter Production Convergence    P7.0 ACCEPTED / RUNTIME BLOCKED
     ↓
 V0 PLAYABLE SEAMLESS PLANET         COMPOSITION ACCEPTANCE
     ↓
@@ -98,7 +98,7 @@ truth, P7 persistence, P7 replication protocol, P7 authority directory or P7 res
 ## 5. P7 train
 
 ```text
-P7.0 Matter Production Owner Map / Convergence Gate
+P7.0 Matter Production Owner Map / Convergence Gate  ✅ ACCEPTED
     ↓
 P7.1 Product Tool → existing MatterMutationRequest adapter
     ↓
@@ -156,13 +156,12 @@ Eligibility may be parallel; execution is still serialized.
 
 ```text
 NOW
-  refresh/merge RF0 R2 docs
-  refresh machine control after SM1 acceptance
+  merge P7.0 accepted owner-map control
+  prove post-merge standard + directional PC0 NON_RED
+  Director dispatch P7
 
 THEN
-  activate P7
-  execute P7.0 ownership/convergence gate
-  implement P7.1 adapter
+  implement P7.1 stateless authorize_mutation adapter
   continue P7.2 → P7.7
 
 THEN
@@ -176,3 +175,25 @@ Item Graph/Construction/Matter/Persistence/Directory/Authority owner, Gateway ca
 gameplay truth, cache-as-recovery-authority, Worker direct canonical publication,
 new terrain DTOs duplicating MW4, mandatory broker/database for RF0/RF1, or dynamic
 split/merge before static N-authority correctness.
+
+
+## 10. P7.0 accepted exact-source result
+
+P7.0 owner map R2 is accepted by fresh review.
+
+- reviewed head: `6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd`;
+- owner-map blob: `8867355fe2cb33dcf2ce3c70de252d245dcb9908`;
+- REVIEW-001: FIX_REQUIRED on raw logical-player → Matter actor mapping;
+- REVIEW-002: PASS after switching to existing canonical `player_entity_id`;
+- exact-head Project Control: run `33293163667` SUCCESS;
+- runtime mutation: none.
+
+The P7.1 actor rule is now:
+
+```text
+logical_player_id
+→ existing player_entity_id = "player/<logical_player_id>"
+→ MatterMutationRequest.actor_id
+```
+
+P7 does not create an identity projection store.

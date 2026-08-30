@@ -1,0 +1,339 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_matter_production_owner_map.v1",
+  "revision": "V0-P7-0-OWNER-MAP-2026-08-30-R2",
+  "status": "REVIEW_READY",
+  "authored_against_main": "07d71da1d301a65d36f56ff8c7a42795becab88d",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.0_MATTER_PRODUCTION_OWNER_MAP",
+  "runtime_mutation": false,
+  "core_decisions": {
+    "p7_role": "STATELESS_PRODUCT_COMPOSITION_AND_ADAPTERS_ONLY",
+    "actor_identity": "MatterMutationRequest.actor_id = canonical V0 player_entity_id; logical_player_id remains gameplay lookup identity",
+    "tool_identity": "MatterMutationRequest.tool_id = canonical equipped Item Graph item_id, not definition_id",
+    "mutation_contract": "USE_EXISTING_MATTER_MUTATION_REQUEST_RESULT",
+    "gateway_ingress": "USE_EXISTING_MW6_MATTER_MUTATION_HANDLER",
+    "product_one_writer": "USE_SM1_AUTHORITY_TRANSFER_COORDINATOR_AUTHORIZE_WRITE",
+    "matter_region_authority": "USE_MW8_MATTER_REGIONAL_AUTHORITY_GATE",
+    "durable_matter_fence": "USE_MW9_DURABLE_REGIONAL_AUTHORITY_GATE_WHEN_DURABLE_TOPOLOGY_IS_ACTIVE",
+    "cross_region": "MW10_ONLY_WHEN_ONE_CANONICAL_MUTATION_SPANS_TWO_OR_MORE_MATTER_REGIONS",
+    "item_output": "USE_EXISTING_CANONICAL_ITEM_GRAPH_TRUSTED_SERVER_OUTPUT_SEAM",
+    "presentation": "RL2_RL3_DERIVED_ONLY",
+    "new_canonical_state_owner": false
+  },
+  "exact_bindings": [
+    {
+      "concern": "player_identity_and_position",
+      "canonical_owner": "networked-gameplay/player-ownership",
+      "component": "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+      "entry_points": [
+        "get_player(logical_player_id)",
+        "_validate_owner(logical_player_id, transport_session_id, ownership_epoch)"
+      ],
+      "p7_use": "resolve Matter actor_id as canonical player_entity_id; derive logical_player_id through verified player/ projection; read canonical player position/ownership; store no player identity",
+      "identity_invariant": "player_entity_id == \"player/%s\" % logical_player_id"
+    },
+    {
+      "concern": "equipped_tool_truth",
+      "canonical_owner": "item/m4-canonical-item-graph",
+      "component": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd",
+      "entry_points": [
+        "get_equipped_item(logical_player_id, slot_id)",
+        "has_equipped_mining_tool(logical_player_id)"
+      ],
+      "required_slot": "tool/main",
+      "required_definition_id": "item/tool/mining",
+      "p7_rule": "after verified actor_id -> logical_player_id round-trip, request.tool_id MUST equal equipped item_id"
+    },
+    {
+      "concern": "product_one_writer_fence",
+      "canonical_owner": "AUTHORITY",
+      "component": "scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd",
+      "entry_points": [
+        "authorize_write(authority_id, authority_epoch)"
+      ],
+      "p7_rule": "zero writes during SM1 transfer gap; exact active tuple only"
+    },
+    {
+      "concern": "matter_network_ingress",
+      "canonical_owner": "NX + MATTER adapter boundary",
+      "component": "scripts/simulation/matter/network/matter_authoritative_server.gd",
+      "entry_points": [
+        "register_gateway(gateway)",
+        "set_command_authority_gate(gate)",
+        "handle_gateway_command(payload, envelope)"
+      ],
+      "command_type": "MATTER_MUTATION",
+      "existing_checks": [
+        "network command envelope",
+        "peer/session binding",
+        "authority_epoch",
+        "body route",
+        "operation_id equality",
+        "actor_id equals connected peer actor",
+        "canonical MatterMutationRequest decode"
+      ]
+    },
+    {
+      "concern": "matter_mutation_contract",
+      "canonical_owner": "MATTER",
+      "component": "scripts/simulation/matter/contracts/matter_mutation_request.gd",
+      "entry_points": [
+        "create(data)",
+        "create_shape(...)",
+        "validate(value)"
+      ],
+      "p7_rule": "no TerrainMutationRequest; use operation_id/body_id/actor_id/tool_id/shape/targets/expected revisions"
+    },
+    {
+      "concern": "matter_mutation_result",
+      "canonical_owner": "MATTER",
+      "component": "scripts/simulation/matter/contracts/matter_mutation_result.gd",
+      "entry_points": [
+        "create(data)",
+        "validate(value)"
+      ],
+      "p7_rule": "no TerrainMutationResult; consume committed/rejected result, changed revisions and closed mass ledger"
+    },
+    {
+      "concern": "local_excavation",
+      "canonical_owner": "MATTER/MW4",
+      "component": "scripts/simulation/matter/mutation/matter_excavation_service.gd",
+      "entry_points": [
+        "create_excavation_request(...)",
+        "execute(request)"
+      ],
+      "invariants": [
+        "affected bricks are recomputed from swept capsule and must exactly equal request.target_bricks",
+        "expected revisions are checked against canonical store",
+        "journal replay returns prior result",
+        "store and receiver are compensated on downstream failure",
+        "MatterMaterialBatch is deterministic from operation_id"
+      ]
+    },
+    {
+      "concern": "matter_output_provenance",
+      "canonical_owner": "MATTER/MW4",
+      "component": "scripts/simulation/matter/contracts/matter_material_batch.gd",
+      "entry_points": [
+        "create(data)",
+        "validate(value)"
+      ],
+      "p7_rule": "batch is extraction provenance/staging input; it is not spendable gameplay inventory"
+    },
+    {
+      "concern": "matter_output_receiver",
+      "canonical_owner": "MATTER/MW4",
+      "component": "scripts/simulation/matter/mutation/matter_material_receiver.gd",
+      "entry_points": [
+        "reserve(operation_id, mass_kg, volume_m3)",
+        "commit_reserved(batch)",
+        "rollback_batch(batch_id, operation_id)",
+        "export_persistence_state()"
+      ],
+      "p7_rule": "do not reinterpret receiver as Item Graph; preserve MW4 compensation and MW5 persistence semantics"
+    },
+    {
+      "concern": "matter_persistence",
+      "canonical_owner": "R3_M0_MW/MW5",
+      "component": "scripts/simulation/matter/persistence/matter_state_coordinator.gd",
+      "entry_points": [
+        "save_next(server_tick)",
+        "restore_latest()"
+      ],
+      "p7_rule": "persist/restore Matter store + receiver + journal through existing checkpoint; no P7 persistence owner"
+    },
+    {
+      "concern": "matter_replication",
+      "canonical_owner": "NX/MW6",
+      "component": "scripts/simulation/matter/network/matter_authoritative_server.gd",
+      "entry_points": [
+        "_publish_delta(request, result)",
+        "register_replication_observer(observer)"
+      ],
+      "p7_rule": "new journal record publishes existing Matter delta exactly once"
+    },
+    {
+      "concern": "matter_interest",
+      "canonical_owner": "NX/MW7",
+      "component": "scripts/simulation/matter/interest/matter_interest_server.gd",
+      "entry_points": [
+        "on_authoritative_matter_delta(global_delta)",
+        "update_interest(peer_id, sync_request)"
+      ],
+      "p7_rule": "P7 creates no InterestManager"
+    },
+    {
+      "concern": "regional_matter_authority",
+      "canonical_owner": "AUTHORITY/MW8",
+      "component": "scripts/simulation/matter/handoff/matter_regional_authority_gate.gd",
+      "entry_points": [
+        "authorize_mutation(request)"
+      ],
+      "cross_region_signal": "MATTER_CROSS_REGION_MUTATION_REQUIRES_COORDINATION",
+      "p7_rule": "single-region request uses ordinary MW4 path only when exact active regional lease owns every target brick"
+    },
+    {
+      "concern": "matter_region_directory",
+      "canonical_owner": "AUTHORITY/MW8",
+      "component": "scripts/simulation/matter/handoff/matter_authority_directory.gd",
+      "entry_points": [
+        "resolve_brick_address(address)",
+        "resolve_region(region_id)",
+        "begin_handoff(...)",
+        "commit_handoff(transfer_id)"
+      ],
+      "p7_rule": "no P7 authority directory"
+    },
+    {
+      "concern": "durable_matter_authority",
+      "canonical_owner": "AUTHORITY + PERSISTENCE/MW9",
+      "component": "scripts/simulation/matter/handoff/durable/matter_durable_regional_authority_gate.gd",
+      "entry_points": [
+        "authorize(region_id, owner_id, authority_epoch, fencing_token, server_tick, request)"
+      ],
+      "p7_rule": "fencing token/server tick are server-side authority context and MUST NOT be added to client MatterMutationRequest"
+    },
+    {
+      "concern": "multi_region_atomic_mutation",
+      "canonical_owner": "MATTER/MW10",
+      "component": "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd",
+      "entry_points": [
+        "begin_transaction(plan, transition_id, server_tick)",
+        "prepare_all(...)",
+        "decide_commit(...)",
+        "commit_all(...)"
+      ],
+      "plan_component": "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_plan.gd",
+      "p7_rule": "plan requires >=2 regions and preserves one operation_id; actor crossing a seam alone does not select MW10"
+    },
+    {
+      "concern": "rl2_meshing",
+      "canonical_owner": "DOMAIN_ADAPTERS/RL2",
+      "component": "scripts/simulation/representation/matter/meshing/matter_multiresolution_mesher.gd",
+      "entry_points": [
+        "build(field, grid_profile)"
+      ],
+      "invalidation_component": "scripts/simulation/representation/matter/meshing/matter_meshing_invalidation_resolver.gd",
+      "p7_rule": "derived disposable representation only"
+    },
+    {
+      "concern": "rl3_streaming",
+      "canonical_owner": "DOMAIN_ADAPTERS/RL3",
+      "component": "scripts/simulation/representation/network/representation_stream_server.gd",
+      "entry_points": [
+        "open_stream(...)",
+        "next_chunks(...)",
+        "apply_invalidation(invalidation)"
+      ],
+      "p7_rule": "source-revision-fenced derived streaming; no canonical Matter mutation"
+    },
+    {
+      "concern": "canonical_item_output",
+      "canonical_owner": "ITEM",
+      "component": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd",
+      "entry_points": [
+        "preflight_server_output(...)",
+        "apply_server_output(...)"
+      ],
+      "p7_rule": "P7.3 derives deterministic output OperationId from Matter source operation/batch and uses this existing exactly-once Item Graph seam"
+    }
+  ],
+  "future_p7_1_composition_gate": {
+    "planned_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
+    "canonical_state_owned": false,
+    "required_method": "authorize_mutation(request)",
+    "configured_dependencies": [
+      "SM1AuthorityTransferCoordinator",
+      "NetworkedGameplayService read-only player port",
+      "Canonical M4 Item Graph read-only equipment port",
+      "MW8 regional authority gate",
+      "MW9 durable authority context when enabled"
+    ],
+    "validation_order": [
+      "request is canonical MatterMutationRequest (MW6 already validates)",
+      "SM1 exact active authority tuple",
+      "request.actor_id is a canonical V0 player_entity_id and round-trips through player/<logical_player_id> to canonical PlayerRegistry state",
+      "request.tool_id equals canonical equipped tool item_id in tool/main and definition item/tool/mining",
+      "request swept shape is within bounded product reach from canonical player position",
+      "MW8 single-region authority check",
+      "MW9 durable fence check when durable regional authority is active",
+      "then existing MW4 execute"
+    ],
+    "forbidden": [
+      "new replay ledger",
+      "new authority state",
+      "new player state",
+      "new item state",
+      "new terrain contract"
+    ]
+  },
+  "p7_3_material_delivery_boundary": {
+    "status": "IMPLEMENTATION_POLICY_REQUIRED_IN_P7_3_NOT_A_P7_0_BLOCKER",
+    "physical_source": "MatterMaterialBatch total_mass_kg + composition",
+    "existing_gameplay_sink": "Canonical Item Graph preflight_server_output/apply_server_output",
+    "exactly_once_owner": "Canonical Item Graph replay ledger using deterministic derived operation_id",
+    "matter_batch_role_after_delivery": "immutable extraction provenance; not spendable gameplay balance",
+    "new_delivery_receipt_store_allowed": false,
+    "unresolved_policy": [
+      "explicit material_id/composition -> item definition mapping",
+      "explicit kg-per-item or other deterministic quantization rule",
+      "bounded rounding/residual accounting",
+      "prove removed mass = delivered represented mass + explicitly accounted residual/loss"
+    ],
+    "initial_known_compatibility": "existing V0 resource catalog already maps resource/ore -> item/ore, but P7.0 intentionally does not invent a kg-per-item conversion"
+  },
+  "no_second_owner_audit": {
+    "result": "PASS",
+    "duplicate_owner_count": 0,
+    "forbidden_duplicates": [
+      "TerrainMutationRequest",
+      "TerrainMutationResult",
+      "P7MatterStore",
+      "P7TerrainStore",
+      "P7Persistence",
+      "P7ReplicationProtocol",
+      "P7AuthorityDirectory",
+      "P7ResourceInventory",
+      "P7ReplayLedger",
+      "P7InterestManager"
+    ]
+  },
+  "p7_0_exit_criteria": {
+    "exact_source_map_complete": true,
+    "no_second_owner_audit_pass": true,
+    "p7_1_adapter_boundary_resolved": true,
+    "p7_3_conversion_policy_explicitly_deferred_and_bounded": true,
+    "fresh_review_required": true
+  },
+  "created_at_utc": "2026-08-30T04:33:00Z",
+  "review_candidate_ci": {
+    "exact_head": "524b87125b2db446b231cea9b07f23571f50da71",
+    "project_control_run": 33293049865,
+    "result": "SUCCESS_BEFORE_REVIEW_FINDING_P7_0_RF_001"
+  },
+  "identity_projection": {
+    "canonical_gameplay_invariant": "player_entity_id == \"player/%s\" % logical_player_id",
+    "matter_actor_id": "player_entity_id",
+    "mw6_peer_actor_id": "player_entity_id",
+    "logical_player_resolution": [
+      "require request.actor_id begins with player/",
+      "derive candidate logical_player_id from the suffix after the first player/ prefix",
+      "read NetworkedGameplayService.get_player(candidate logical_player_id)",
+      "require returned player.player_entity_id exactly equals request.actor_id",
+      "require request.actor_id satisfies Matter canonical ID validation",
+      "fail closed on any mismatch"
+    ],
+    "new_identity_owner": false,
+    "new_identity_store": false
+  },
+  "review_history": [
+    {
+      "review_id": "V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001",
+      "reviewed_head_sha": "524b87125b2db446b231cea9b07f23571f50da71",
+      "reviewed_owner_map_blob_sha": "8c7952cbb317339cd5ffba6a05c877574ffa615f",
+      "verdict": "FAIL",
+      "finding": "P7-0-RF-001",
+      "resolution": "R2 maps Matter actor_id to existing canonical player_entity_id and adds fail-closed round-trip validation."
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
   "revision": "V0-CURRENT-WORK-MAP-2026-08-30-R7-P7",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_PRE_DISPATCH",
+  "status": "PRIMARY_WORK_MAP_P7_0_ACCEPTED_PRE_DISPATCH",
   "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -15,7 +15,6 @@
   "work_order_id": "V0-P7-R1-WO-001",
   "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
   "execution_order": [
-    "P7_0_MATTER_PRODUCTION_OWNER_MAP_FRESH_REVIEW",
     "POST_MERGE_PROJECT_CONTROL_NON_RED",
     "DIRECTOR_DISPATCH_P7",
     "P7_1_TOOL_TO_EXISTING_MW4_ADAPTER",
@@ -63,5 +62,15 @@
     "p8_and_rf1_architecture_dependency": false,
     "runtime_execution_pre_h0_3": "SERIALIZED"
   },
-  "sequencing_override": "POST_SM1_P7_R7_WINS_ON_CURRENT_CAMPAIGN_AND_EXECUTION_ORDER"
+  "sequencing_override": "POST_SM1_P7_R7_WINS_ON_CURRENT_CAMPAIGN_AND_EXECUTION_ORDER",
+  "p7_0": {
+    "status": "ACCEPTED",
+    "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
+    "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
+    "runtime_mutation": false,
+    "next": "POST_MERGE_PROJECT_CONTROL_NON_RED",
+    "accepted_doc": "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R2_ACCEPTED_RU.md"
+  }
 }

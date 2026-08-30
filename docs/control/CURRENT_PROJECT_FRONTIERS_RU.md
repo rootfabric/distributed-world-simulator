@@ -1,7 +1,7 @@
 # Distributed World Simulator — Current Project Frontiers
 
 **Refresh date:** 2026-08-30  
-**Canonical main at refresh:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`  
+**P7.0 source main:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **Purpose:** human-readable routing snapshot. Machine truth remains in `config/control/**`.
 
 ## 1. Product frontier
@@ -19,7 +19,7 @@ SM1 ACCEPTED
  ↓
 RF0 architecture guardrail
  ↓
-P7 Matter Production Convergence      NEXT RUNTIME
+P7 Matter Production Convergence      P7.0 ACCEPTED / RUNTIME BLOCKED
  ↓
 V0 PLAYABLE SEAMLESS PLANET           COMPOSITION ACCEPTANCE
 ```
@@ -52,8 +52,7 @@ MatterMaterialBatch → canonical Item Graph
 
 No second Matter/terrain truth is allowed.
 
-Next required transition is a main-owned P7 activation/control refresh, then P7.0 owner-map
-acceptance before runtime adapter code.
+P7.0 owner-map R2 is accepted. Next required transition is post-merge standard+directional PC0 NON_RED, then Director dispatch before any runtime adapter code.
 
 ## 3. Replication Foundation
 
@@ -108,12 +107,12 @@ They do not implicitly block P7.
 ## 7. Immediate work
 
 ```text
-1. Canonicalize RF0/P7 roadmap R2.
-2. Refresh machine control from accepted SM1 to P7 activation.
-3. P7.0 Matter Production Owner Map / convergence gate.
-4. P7.1 Tool → existing MatterMutationRequest.
+1. Merge accepted P7.0 owner-map control.
+2. Post-merge standard + directional PC0 NON_RED.
+3. Director dispatch P7.
+4. P7.1 stateless Tool/SM1/MW8-9 authorization → existing MatterMutationRequest/MW4.
 5. P7.2 bounded planetary Matter bubble.
-6. P7.3 MatterMaterialBatch → Item Graph.
+6. P7.3 MatterMaterialBatch → Item Graph with explicit mass quantization/residual accounting.
 7. P7.4 persistence/restart composition.
 8. P7.5 two-client convergence.
 9. P7.6 seam + MW10 only for real multi-region mutations.
@@ -126,3 +125,8 @@ They do not implicitly block P7.
 Stop if work creates a second canonical owner, duplicate Matter/terrain contracts,
 P7-private persistence/resources/network authority, cache-based authority activation,
 mandatory RF infrastructure without measured need, or dynamic placement before static correctness.
+
+
+### P7.0 accepted correction
+
+Fresh review rejected the first actor mapping because accepted P5 logical IDs can be single-segment while Matter requires canonical namespaced IDs. R2 uses the existing V0 `player_entity_id` and round-trips it to canonical PlayerRegistry state. No new identity owner was introduced.
