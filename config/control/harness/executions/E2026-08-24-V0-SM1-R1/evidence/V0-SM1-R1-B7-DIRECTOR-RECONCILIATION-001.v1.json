@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_b7_director_reconciliation.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "subject": {
+    "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+    "branch": "repair/m7-camera-basis-sync-r9",
+    "runtime_mutation_frozen": true
+  },
+  "fresh_review": {
+    "record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-002.v1.json",
+    "carrier_commit": "ddf8a0ad0c01368b860e56db511617be8c0d25f7",
+    "verdict": "PASS",
+    "exact_head": true,
+    "exact_tree": true,
+    "fresh": true,
+    "required_fixes": []
+  },
+  "fresh_verification": {
+    "record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "carrier_commit": "40910472e48dd1e31db119b4414d493b970e8303",
+    "verdict": "VERIFIED",
+    "exact_head": true,
+    "exact_tree": true
+  },
+  "pc0_reconciliation": {
+    "policy": "config/control/project-control-policy.v1.json",
+    "standard_overall": "YELLOW",
+    "policy_standard_interpretation": "NON_RED",
+    "rationale_standard": "Canonical PC0 policy defines YELLOW as development may continue with convergence/control review required before the next major acceptance; only RED blocks the next declared stage or acceptance. FINAL-REVIEW-002 is the required fresh convergence/control review, so current standard YELLOW satisfies STANDARD_PC0_NON_RED without being relabelled GREEN.",
+    "directional_overall": "YELLOW",
+    "policy_directional_interpretation": "NON_RED_FOR_CRITICAL_HITS",
+    "candidate_specific_critical_hits": 0,
+    "rationale_directional": "Canonical directional policy assigns RED to critical_watched_paths hits and YELLOW to ordinary watched hits. Fresh exact-head review observed zero critical hits intersecting the R9 candidate delta; therefore DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS is satisfied while overall remains honestly YELLOW.",
+    "cross_branch_overlaps": 0,
+    "critical_cross_branch_overlap_zero": true
+  },
+  "human_attention_reconciliation": {
+    "execution_human_attention_documents": 0,
+    "open_blocking_items": 0,
+    "unresolved_high_risk_review_disagreement": false,
+    "failed_composition_requiring_scope_change": false,
+    "authority_or_network_foundation_change_required": false,
+    "duplicate_canonical_truth_required": false,
+    "runtime_feature_merge_gate_status": "PENDING_SEPARATE_HUMAN_GATE",
+    "runtime_feature_merge_gate_blocks_checkpoint_proposal": false,
+    "rationale": "Harness state_builder treats blocking human attention only as OPEN human-attention documents with blocking=true. This execution contains no human-attention documents. The declared RUNTIME_FEATURE_MERGE approval is an A4 merge gate, while checkpoint proposal is preauthorized A3 control work and must not be conflated with the merge gate."
+  },
+  "ledger_reconciliation": {
+    "reason": "Early SM1 runtime execution proved the functional predicates but the later closure-control lineage did not append predicate events for most Work Order outcomes. Fresh VERIFICATION-003 and FINAL-REVIEW-002 now provide exact-head machine and semantic evidence sufficient to transcribe those predicates without rerunning or mutating runtime.",
+    "mode": "APPEND_ONLY_PREDICATE_TRANSCRIPTION",
+    "source_of_truth": [
+      "V0-SM1-R1-WO-001.v1.json",
+      "V0-SM1-R1-WO-001-EVIDENCE-MAP-001.v1.json",
+      "V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+      "V0-SM1-R1-WO-001-FINAL-REVIEW-002.v1.json",
+      "V0-SM1-R1-WO-001-CHECKPOINT-PROPOSAL-EVIDENCE-002.v1.json"
+    ],
+    "runtime_reexecution_required": false,
+    "runtime_mutation_required": false
+  },
+  "disposition": {
+    "independent_reviewer_pass": "PROVEN",
+    "review_head_exact_and_fresh": "PROVEN",
+    "standard_pc0_non_red": "PROVEN_YELLOW_NON_RED",
+    "directional_pc0_non_red_for_critical_hits": "PROVEN_YELLOW_ZERO_CRITICAL_HITS",
+    "critical_cross_branch_overlap_zero": "PROVEN",
+    "human_attention_queue_empty_or_resolved": "PROVEN_EMPTY",
+    "checkpoint_proposal": "ELIGIBLE_AFTER_REQUIRED_PREDICATE_LEDGER_TRANSCRIPTION_AND_AUDIT",
+    "runtime_merge": "NOT_AUTHORIZED",
+    "sm1_acceptance": "NOT_YET_CANONICAL",
+    "p7": "BLOCKED"
+  }
+}
