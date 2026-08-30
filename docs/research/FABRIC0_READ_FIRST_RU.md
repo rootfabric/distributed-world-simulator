@@ -47,6 +47,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.9: `FABRIC0_9_MULTICONTACT_GEOMETRIC_CONE_RU.md`
    - FABRIC0.10: `FABRIC0_10_PERSISTENT_CONTACT_GRAPH_RU.md`
    - FABRIC0.11: `FABRIC0_11_EVENT_LOCALIZED_SPARSE_ISLANDS_RU.md`
+   - FABRIC0.12: `FABRIC0_12_ADAPTIVE_MULTIEVENT_MANIFOLD_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -96,6 +97,10 @@ active-island event localization + sparse numerical solve
 FABRIC0.12
 ADAPTIVE MULTI-EVENT MANIFOLD DAE
 adaptive constrained time + manifold event iteration
+        ↓
+FABRIC0.13
+UNIFIED ADAPTIVE 3D CONTACT GRAPH
+integrate adaptive manifold semantics into persistent sparse 3D contacts
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -242,65 +247,73 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.11 завершён как research candidate.
+FABRIC0.12 завершён как research candidate.
 
 Exact evidence:
 
 ```text
-FABRIC0.11 Event Sparse Islands      120/120 PASS
-FABRIC0.10 runtime regression         97/97 PASS
-FABRIC0.11 playground                 PASS
-editor parse/compile                  CLEAN
-remote/local executable bytes         IDENTICAL
+FABRIC0.12 Adaptive Multi-Event Manifold   115/115 PASS
+FABRIC0.12 playground                      PASS
+editor parse/compile                       CLEAN
+remote/local executable bytes              IDENTICAL
+
+FABRIC0.11 executable blobs                 PRESERVED
+FABRIC0.11 runtime regression rerun          NO
 ```
 
-FABRIC0.11 доказал:
+FABRIC0.12 доказал:
 
-- event localization while old persistent island remains constrained;
-- old contacts retain near-zero gaps through localization;
-- free dynamic body joins existing island at localized event time;
-- same-time graph merge `[A,B] -> [A,B,C]`;
-- warm-start remap by stable relation identity;
-- incoming impulse propagates through existing constrained stack;
-- sparse effective-mass representation remains sparse through actual linear solve;
-- Jacobi-preconditioned PCG backend;
-- no dense effective-mass materialization in successor;
-- remaining macrostep continues through new constrained graph;
-- single causal lifecycle record at event time;
-- independent-island solve schedule can reverse without changing result;
-- full event history is order-invariant under tested body/contact/schedule permutations;
-- FABRIC0.10 exact-double regression remains green.
+- adaptive RK4 step-doubling with error-controlled accept/reject;
+- event-time convergence under tolerance refinement;
+- energy-drift convergence under the same refinement;
+- two physical event instants inside one macro advance;
+- multiple same-time manifold topology mutations per event;
+- event fixed point in 3 iterations;
+- orientation-aware support feature identity;
+- vertex/edge lineage;
+- warm-state remap through feature ID changes;
+- explicit feature split and merge remap;
+- sparse pattern/preconditioner cache;
+- cache hit does not freeze changed physical coefficients;
+- actual Godot Thread-based parallel sparse tasks;
+- reverse thread spawn order preserves canonical result;
+- sleep/wake implemented as derived computational state outside physical hash;
+- deterministic adaptive/manifold replay.
 
-Numerical honesty:
+Important scope:
 
 ```text
-bisection tolerance = 1e-11
-
-but
-constrained integrator substep = 0.01
-
-therefore
-event root accuracy relative to the discrete trajectory
+FABRIC0.12 reduced orientation-aware manifold DAE
 !=
-continuous trajectory accuracy
+full FABRIC0.11 persistent 3D contact graph
 ```
+
+0.12 proves the missing semantics in a controlled falsification model. Integration into the full contact graph is the next wall.
 
 Next task:
 
-**FABRIC0.12 — ADAPTIVE MULTI-EVENT MANIFOLD DAE**
+**FABRIC0.13 — UNIFIED ADAPTIVE 3D CONTACT GRAPH**
 
 Target:
 
 ```text
-adaptive/error-controlled constrained integration
-event-time convergence under refinement
-multiple appear/disappear topology events
-same-time manifold event iteration
-persistent orientation-aware feature identity
-manifold split/merge warm remap
-sparse pattern/preconditioner caching
-actual deterministic parallel island execution
-sleep/wake derived computational state
+persistent sparse 3D contact graph
++
+adaptive multi-event integration
++
+3D orientation / inertia evolution
++
+real multipoint feature lineage
++
+manifold split/merge fixed point
++
+sparse cache reuse through topology changes
++
+actual parallel island execution
++
+derived sleep/wake
++
+event-time/state convergence under refinement
 ```
 
 ## 9. Правило новой сессии
@@ -313,19 +326,16 @@ sleep/wake derived computational state
 - почему dimensions executable;
 - почему residual=0 недостаточно без rank;
 - почему FLOW/JUMP/TOPOLOGY TRANSACTION разделены;
-- почему algebraic reactions участвуют в timestep;
-- почему geometry генерирует constraints;
-- почему Coulomb friction — cone;
-- почему order invariance mandatory;
-- почему deterministic reaction split может быть non-unique;
-- почему contact является persistent relation;
-- почему warm cache не semantic truth;
-- почему static boundaries не склеивают dynamic islands;
-- почему active old contacts должны оставаться constrained during event localization;
-- почему event-time graph merge требует same-time re-solve;
-- почему sparse assembly обязана оставаться sparse through linear solve;
-- почему PCG/ADMM/scheduling остаются numerical machinery;
-- почему bisection tolerance нельзя выдавать за continuous trajectory accuracy;
-- какие non-claims FABRIC0.11 ещё действуют.
+- почему existing constraints must remain active during event localization;
+- почему root-search accuracy и integration accuracy различны;
+- почему physical claims должны демонстрировать convergence under refinement;
+- почему contact identity требует feature lineage, а не только exact ID equality;
+- почему same-time manifold event может требовать несколько topology mutations до fixed point;
+- почему warm cache/preconditioner cache остаются numerical hints;
+- почему sparse pattern cache не может замораживать physical coefficients;
+- почему actual parallel execution требует canonical prepare/commit boundaries;
+- почему sleep/wake — derived computational state;
+- почему FABRIC0.12 reduced model ещё не означает unified 3D contact solution;
+- какие non-claims FABRIC0.12 действуют.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
