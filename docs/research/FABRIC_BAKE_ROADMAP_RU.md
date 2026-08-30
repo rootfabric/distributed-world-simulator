@@ -1314,3 +1314,74 @@ Current BAKE status after this freeze:
 FABRIC-BAKE
 B0.0 = NEXT EXECUTABLE CHECKPOINT
 ```
+
+
+---
+
+## FABRIC-BAKE B0.0 implementation status
+
+```text
+B0.0
+BAKE FOUNDATION CONTRACTS
+IMPLEMENTED CANDIDATE
+LOCAL DOUBLE FOCUSED PASS: 33/33
+INDEPENDENT EXACT-HEAD VERIFICATION: PENDING
+PRODUCTION ACCEPTANCE: NOT CLAIMED
+```
+
+Implemented on `research/fabric-bake0-reducible-world-fabric-r1` from the common dual-track fork
+`962b9c1bbf7f04c7853f1fb0e36480cf54f3250d`.
+
+Recovery entrypoints:
+
+```text
+docs/research/FABRIC_BAKE_B0_0_FOUNDATION_RU.md
+validation/fabric-bake-b0-0-foundation-validation.json
+tests/research/fabric_bake0/fabric_bake_b0_0_acceptance.gd
+RUN_FABRIC_BAKE_B0_0_TESTS.ps1
+RUN_FABRIC_BAKE_B0_0_TESTS.sh
+```
+
+B0.0 now provides executable contracts for CanonicalSourceFrontier, AuthorityEnvelope,
+PhysicalBoundaryContract, source/dependency binding, ValidatedDomain, ErrorEnvelope,
+RuntimeErrorEstimator, ConservationEnvelope, RefinementGuard, reconstruction/state mapping,
+PhysicalBakeArtifact, BakeInvalidation, BAKE_READY/NO_SAFE_BAKE, a fail-closed execution gate,
+and BAKE-BRIDGE-0 over the existing Representation revision/invalidation semantics.
+
+This does **not** promote B0.0 to production or canonical acceptance. B0.1 remains the first
+mathematical reduction checkpoint; FABRIC0.16 continues independently on Physical Core.
+
+
+---
+
+## B0.0 closure boundary — 2026-08-31
+
+```text
+implementation HEAD:
+072d313e1ecf8434987245a8edc4f9d959a4cf80
+
+implementation TREE:
+4b1dfece0b38f3fae7053aeba363544988016b76
+
+Project Control:
+33319536344 = SUCCESS
+
+fresh exact-dependency verifier:
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+FABRIC-BAKE B0.0 Acceptance = PASS (33/33)
+Playground = PASS
+```
+
+Verifier был создан в новой файловой области и использовал exact GitHub blobs implementation HEAD для всех B0.0 executable files и всех пяти predecessor dependency files, реально загружаемых acceptance-сценарием. Dependency blob identity была проверена до запуска.
+
+Закрытая квалификация:
+
+```text
+FABRIC-BAKE B0.0
+RESEARCH CHECKPOINT CLOSED
+EXACT-HEAD DOUBLE PASS
+PROJECT CONTROL PASS
+PRODUCTION ACCEPTANCE NOT CLAIMED
+```
+
+Следующий checkpoint — **B0.1 Exact Boundary Reduction / Schur elimination**. Physical Core остаётся независимой линией.

@@ -1,0 +1,48 @@
+{
+  "schema": "dws.fabric_bake_b0_0_validation.v1",
+  "checkpoint": "FABRIC-BAKE B0.0",
+  "status": "IMPLEMENTED_CANDIDATE_LOCAL_DOUBLE_PASS",
+  "branch": "research/fabric-bake0-reducible-world-fabric-r1",
+  "base_sha": "962b9c1bbf7f04c7853f1fb0e36480cf54f3250d",
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double"
+  },
+  "focused_acceptance": {
+    "script": "res://tests/research/fabric_bake0/fabric_bake_b0_0_acceptance.gd",
+    "result": "PASS",
+    "assertions": 33,
+    "artifact_checksum": "cde434f9d055dfc597450c4ad1aff4076fd87349c948cb7fd39e39d8cc1c190a",
+    "frontier_hash": "138d1685648791985a25569760c28960d4e71c356ca01d75ab394aef8e0b0fc8",
+    "bridge_invalidation_checksum": "8b3e16cc7d24afe2a3e68862206e32bad43eb50eba3d792f2486b9303e611b6c"
+  },
+  "playground": {
+    "script": "res://tests/research/fabric_bake0/fabric_bake_b0_0_playground.gd",
+    "result": "PASS"
+  },
+  "required_negative_cases": {
+    "wrong_revision": "PASS",
+    "dependency_mismatch": "PASS",
+    "authority_rollback": "PASS",
+    "cross_authority_mutable": "PASS_NO_SAFE_BAKE",
+    "wrong_fabric_graph": "PASS",
+    "wrong_fabric_compiler": "PASS",
+    "wrong_boundary_contract": "PASS",
+    "stale_execution": "PASS_FORBIDDEN",
+    "validity_exit": "PASS_FORBIDDEN",
+    "missing_reconstruction": "PASS_INVALID",
+    "uncertifiable_hidden_state_guard": "PASS_NO_SAFE_BAKE"
+  },
+  "bridge0": {
+    "existing_representation_revision_semantics_reused": true,
+    "existing_representation_invalidation_semantics_reused": true,
+    "second_canonical_revision_system_created": false,
+    "old_artifact_non_executable_after_source_mutation": true
+  },
+  "claims": {
+    "research_candidate": true,
+    "production_accepted": false,
+    "independent_exact_head_verification_pending": true,
+    "fabric0_15_executable_bytes_modified": false
+  }
+}

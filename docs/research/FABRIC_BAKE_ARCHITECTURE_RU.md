@@ -595,3 +595,39 @@ Integration:
 dual-track roadmap frozen
 no B0.x executable implementation yet
 ```
+
+
+---
+
+## FABRIC-BAKE B0.0 implementation status
+
+```text
+B0.0
+BAKE FOUNDATION CONTRACTS
+IMPLEMENTED CANDIDATE
+LOCAL DOUBLE FOCUSED PASS: 33/33
+INDEPENDENT EXACT-HEAD VERIFICATION: PENDING
+PRODUCTION ACCEPTANCE: NOT CLAIMED
+```
+
+Implemented on `research/fabric-bake0-reducible-world-fabric-r1` from the common dual-track fork
+`962b9c1bbf7f04c7853f1fb0e36480cf54f3250d`.
+
+Recovery entrypoints:
+
+```text
+docs/research/FABRIC_BAKE_B0_0_FOUNDATION_RU.md
+validation/fabric-bake-b0-0-foundation-validation.json
+tests/research/fabric_bake0/fabric_bake_b0_0_acceptance.gd
+RUN_FABRIC_BAKE_B0_0_TESTS.ps1
+RUN_FABRIC_BAKE_B0_0_TESTS.sh
+```
+
+B0.0 now provides executable contracts for CanonicalSourceFrontier, AuthorityEnvelope,
+PhysicalBoundaryContract, source/dependency binding, ValidatedDomain, ErrorEnvelope,
+RuntimeErrorEstimator, ConservationEnvelope, RefinementGuard, reconstruction/state mapping,
+PhysicalBakeArtifact, BakeInvalidation, BAKE_READY/NO_SAFE_BAKE, a fail-closed execution gate,
+and BAKE-BRIDGE-0 over the existing Representation revision/invalidation semantics.
+
+This does **not** promote B0.0 to production or canonical acceptance. B0.1 remains the first
+mathematical reduction checkpoint; FABRIC0.16 continues independently on Physical Core.
