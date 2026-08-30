@@ -163,7 +163,12 @@ func environment_for_generation(generation_value: int, base_environment_field: D
 				- maxf(0.0, wet) * float(profile["cloud_dimming"]),
 				0.05, 1.0), 1e-12)
 
-			if not is_finite(float(cell["temperature_c"])) 					or not is_finite(float(cell["rainfall_forcing"])) 					or not is_finite(float(cell["soil_moisture"])) 					or not is_finite(float(cell["incident_light"])):
+			if (
+				not is_finite(float(cell["temperature_c"]))
+				or not is_finite(float(cell["rainfall_forcing"]))
+				or not is_finite(float(cell["soil_moisture"]))
+				or not is_finite(float(cell["incident_light"]))
+			):
 				return {}
 			cell["cell_hash"] = EnvironmentField.new().call("_cell_hash", cell)
 			cells[index] = cell
@@ -186,7 +191,11 @@ func environment_for_generation(generation_value: int, base_environment_field: D
 func validate_environment_field(value: Dictionary) -> bool:
 	if not _exact_keys(value, ENVIRONMENT_FIELD_KEYS):
 		return false
-	if String(value.get("schema", "")) != EnvironmentField.SCHEMA 			or String(value.get("version", "")) != EnvironmentField.VERSION 			or String(value.get("revision", "")) != EnvironmentField.REVISION:
+	if (
+		String(value.get("schema", "")) != EnvironmentField.SCHEMA
+		or String(value.get("version", "")) != EnvironmentField.VERSION
+		or String(value.get("revision", "")) != EnvironmentField.REVISION
+	):
 		return false
 	if String(value.get("source_patch_hash", "")).length() != 64:
 		return false
@@ -207,7 +216,14 @@ func validate_environment_field(value: Dictionary) -> bool:
 		var cell: Dictionary = cell_value
 		if not _exact_keys(cell, ENVIRONMENT_CELL_KEYS):
 			return false
-		if int(cell.get("index", -1)) != index 				or int(cell.get("x", -1)) != index % 32 				or int(cell.get("y", -1)) != index / 32:
+		if (
+			typeof(cell.get("index")) != TYPE_INT
+			or typeof(cell.get("x")) != TYPE_INT
+			or typeof(cell.get("y")) != TYPE_INT
+			or int(cell.get("index", -1)) != index
+			or int(cell.get("x", -1)) != index % 32
+			or int(cell.get("y", -1)) != index / 32
+		):
 			return false
 		for field_name in [
 			"east_m", "north_m", "land_mask", "surface_water_fraction",
@@ -216,14 +232,20 @@ func validate_environment_field(value: Dictionary) -> bool:
 			"incident_light", "elevation_m", "local_relief_m",
 			"drainage_index", "rainfall_forcing",
 		]:
-			if not is_finite(float(cell.get(field_name, NAN))):
+			var field_type := typeof(cell[field_name])
+			if field_type != TYPE_FLOAT and field_type != TYPE_INT:
+				return false
+			if not is_finite(float(cell[field_name])):
 				return false
 		if String(cell.get("cell_hash", "")) != String(validator.call("_cell_hash", cell)):
 			return false
 	return String(value.get("field_hash", "")) == String(validator.call("_field_hash", value))
 
 func validate_static_identity(base_environment_field: Dictionary, derived_environment_field: Dictionary) -> bool:
-	if not validate_environment_field(base_environment_field) 			or not validate_environment_field(derived_environment_field):
+	if (
+		not validate_environment_field(base_environment_field)
+		or not validate_environment_field(derived_environment_field)
+	):
 		return false
 	for key in [
 		"schema", "version", "revision", "source_patch_hash", "grid_size",
