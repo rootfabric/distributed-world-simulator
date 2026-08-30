@@ -135,7 +135,7 @@ func _tick_client_a(now: int) -> void:
 			_write_state("A_RUNNING")
 			_next_action_ms = now + _step_ms
 		"PUBLISH_A_DONE":
-			var snapshot := _client.get_item_graph_snapshot()
+			var snapshot: Dictionary = _client.get_item_graph_snapshot()
 			_target_checksum = String(snapshot.get("checksum", ""))
 			if _target_checksum.is_empty():
 				_finish(false, "EMPTY_ITEM_GRAPH_CHECKSUM")
