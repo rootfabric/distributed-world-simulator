@@ -2,6 +2,11 @@ param([string]$GodotPath = $env:GODOT_BIN)
 $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Expected = "4.7.1.stable.double.custom_build.a13da4feb"
+$GitHead = (& git -C $RootDir rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($GitHead)) {
+    throw "Unable to resolve VIS4.1 Git HEAD"
+}
+Write-Host "ECO.EVO7 VIS4.1 git_head=$GitHead"
 
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     $GodotPath = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
