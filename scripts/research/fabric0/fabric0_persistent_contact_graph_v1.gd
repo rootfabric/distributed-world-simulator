@@ -138,3 +138,143 @@ static func compile_sphere_contacts(world: Dictionary, planes: Array, tolerance:
 					"normal": normal,
 					"tangent_1": tangents[0],
 					"tangent_2": tangents[1],
+					"gap": gap,
+					"friction": sqrt(float(a["friction"]) * float(b["friction"])),
+					"restitution": maxf(float(a["restitution"]), float(b["restitution"])),
+				})
+	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	return {"ok": true, "contacts": contacts}
+
+# =============================================================================
+# PERSISTENT CONTACT GRAPH / LIFECYCLE
+# =============================================================================
+
+static func update_contact_graph(world: Dictionary, provider_contacts: Array) -> Dictionary:
+	var contacts: Array = []
+	var seen := {}
+	for source in provider_contacts:
+		var c: Dictionary = source.duplicate(true)
+		var id := String(c.get("id", ""))
+		if id.is_empty() or seen.has(id):
+			return {"ok": false, "code": "CONTACT_ID_INVALID_OR_DUPLICATE", "contact_id": id}
+		seen[id] = true
+		if not world["bodies"].has(String(c["body_a"])):
+			return {"ok": false, "code": "CONTACT_BODY_A_UNKNOWN", "contact_id": id}
+		var body_b := String(c["body_b"])
+		if not body_b.begins_with("@static/") and not world["bodies"].has(body_b):
+			return {"ok": false, "code": "CONTACT_BODY_B_UNKNOWN", "contact_id": id}
+		contacts.append(c)
+	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+
+	var previous: Dictionary = world["contact_cache"]
+	var next_cache := {}
+	var appeared: Array = []
+	var persisted: Array = []
+	var disappeared: Array = []
+	for c in contacts:
+		var id := String(c["id"])
+		var old: Dictionary = previous.get(id, {})
+		if old.is_empty():
+			appeared.append(id)
+			next_cache[id] = {
+				"age_steps": 1,
+				"first_step": int(world["step"]),
+				"last_step": int(world["step"]),
+				"warm_impulse": Vector3.ZERO,
+			}
+		else:
+			persisted.append(id)
+			next_cache[id] = {
+				"age_steps": int(old["age_steps"]) + 1,
+				"first_step": int(old["first_step"]),
+				"last_step": int(world["step"]),
+				"warm_impulse": old.get("warm_impulse", Vector3.ZERO),
+			}
+	for id in previous.keys():
+		if not next_cache.has(id):
+			disappeared.append(String(id))
+	appeared.sort(); persisted.sort(); disappeared.sort()
+	world["contact_cache"] = next_cache
+	var event := {
+		"step": int(world["step"]),
+		"time": float(world["time"]),
+		"appeared": appeared,
+		"persisted": persisted,
+		"disappeared": disappeared,
+	}
+	world["contact_history"].append(event)
+	return {"ok": true, "contacts": contacts, "lifecycle": event}
+
+# =============================================================================
+# CONTACT GRAPH -> INDEPENDENT ISLANDS
+# =============================================================================
+
+static func compile_islands(world: Dictionary, contacts: Array) -> Array:
+	var dynamic_ids: Array = []
+	for id in world["bodies"].keys():
+		if bool(world["bodies"][id]["dynamic"]): dynamic_ids.append(String(id))
+	dynamic_ids.sort()
+	var adjacency := {}
+	for id in dynamic_ids: adjacency[id] = []
+	for c in contacts:
+		var a := String(c["body_a"])
+		var b := String(c["body_b"])
+		if not b.begins_with("@static/"):
+			adjacency[a].append(b)
+			adjacency[b].append(a)
+	for id in adjacency.keys():
+		adjacency[id].sort()
+
+	var visited := {}
+	var islands: Array = []
+	for seed in dynamic_ids:
+		if visited.has(seed): continue
+		# Ignore completely unconstrained bodies; they are free-flow, not contact islands.
+		var has_contact := false
+		for c in contacts:
+			if String(c["body_a"]) == seed or String(c["body_b"]) == seed:
+				has_contact = true; break
+		if not has_contact: continue
+		var queue: Array = [seed]
+		visited[seed] = true
+		var bodies: Array = []
+		while not queue.is_empty():
+			var current := String(queue.pop_front())
+			bodies.append(current)
+			for neighbor in adjacency[current]:
+				if not visited.has(neighbor):
+					visited[neighbor] = true
+					queue.append(neighbor)
+		bodies.sort()
+		var body_set := {}
+		for id in bodies: body_set[id] = true
+		var island_contacts: Array = []
+		for c in contacts:
+			if body_set.has(String(c["body_a"])) or body_set.has(String(c["body_b"])):
+				island_contacts.append(c)
+		island_contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+		islands.append({
+			"id": "island:%s" % String(bodies[0]),
+			"body_ids": bodies,
+			"contacts": island_contacts,
+		})
+	islands.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	return islands
+
+# =============================================================================
+# SPARSE ISLAND ASSEMBLY + WARM-STARTED CONE SOLVE
+# =============================================================================
+
+static func step(world: Dictionary, provider_contacts: Array, dt: float, options: Dictionary = {}) -> Dictionary:
+	if dt <= 0.0:
+		return {"ok": false, "code": "DT_NONPOSITIVE"}
+	var graph := update_contact_graph(world, provider_contacts)
+	if not bool(graph.get("ok", false)): return graph
+	var contacts: Array = graph["contacts"]
+	var islands := compile_islands(world, contacts)
+	world["last_islands"] = islands.duplicate(true)
+
+	# Free velocity from external acceleration. This is the differential part of
+	# the velocity-level hybrid DAE step; contacts then solve algebraic impulses.
+	var free := {}
+	for id in world["bodies"].keys():
