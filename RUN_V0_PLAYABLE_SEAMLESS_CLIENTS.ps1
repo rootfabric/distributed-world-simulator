@@ -63,6 +63,8 @@ function Invoke-TestClientGate {
 }
 
 try {
+    Invoke-TestClientGate -Name "CONTRACTS / isolated client parses" -Script "res://tests/runtime/test_v0_test_client_contracts.gd"
+
     switch ($Scenario) {
         "Seam" {
             Invoke-TestClientGate -Name "SEAM / 2 clients + Gateway + Authority A/B" -Script "res://tests/runtime/test_v0_test_client_seam_processes.gd"
