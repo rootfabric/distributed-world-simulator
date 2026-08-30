@@ -478,3 +478,123 @@ static func _commit_topology_transaction(timeline: Dictionary, ops: Array) -> bo
 		var target := bool(op["active"])
 		if bool(network["bonds"][index]["active"]) != target:
 			network["bonds"][index]["active"] = target
+			changed = true
+	return changed
+
+# =============================================================================
+# CONTINUOUS FLOW / RK4
+# =============================================================================
+
+static func _integrate_mode(
+	timeline: Dictionary,
+	initial_state: Dictionary,
+	start_time: float,
+	delta: float
+) -> Dictionary:
+	if delta <= TIME_EPSILON:
+		return initial_state.duplicate(true)
+	var k1 := _flow_vector(timeline, initial_state, start_time)
+	var s2 := _state_plus_scaled(initial_state, k1, 0.5 * delta)
+	var k2 := _flow_vector(timeline, s2, start_time + 0.5 * delta)
+	var s3 := _state_plus_scaled(initial_state, k2, 0.5 * delta)
+	var k3 := _flow_vector(timeline, s3, start_time + 0.5 * delta)
+	var s4 := _state_plus_scaled(initial_state, k3, delta)
+	var k4 := _flow_vector(timeline, s4, start_time + delta)
+	var result := initial_state.duplicate(true)
+	for state_name in result.keys():
+		result[state_name] = float(initial_state[state_name]) + delta / 6.0 * (
+			float(k1[state_name]) + 2.0 * float(k2[state_name]) + 2.0 * float(k3[state_name]) + float(k4[state_name])
+		)
+	return result
+
+static func _flow_vector(timeline: Dictionary, state_values: Dictionary, time_value: float) -> Dictionary:
+	var result := {}
+	var flows: Dictionary = timeline["modes"][String(timeline["mode"])]["flows"]
+	for state_name in timeline["states"].keys():
+		if flows.has(state_name):
+			var evaluated := _eval_expr(timeline, flows[state_name], state_values, time_value)
+			result[state_name] = float(evaluated.get("value", 0.0))
+		else:
+			result[state_name] = 0.0
+	return result
+
+static func _state_plus_scaled(state_values: Dictionary, derivative: Dictionary, scale: float) -> Dictionary:
+	var result := state_values.duplicate(true)
+	for key in result.keys():
+		result[key] = float(state_values[key]) + scale * float(derivative[key])
+	return result
+
+# =============================================================================
+# EXPRESSION DIMENSIONS / EVALUATION
+# =============================================================================
+
+static func _infer_expr_dimension(timeline: Dictionary, expr: Dictionary) -> Dictionary:
+	var op := String(expr.get("op", ""))
+	match op:
+		"constant":
+			return {"ok": true, "dimension": expr.get("dimension", {}).duplicate(true)}
+		"state":
+			var name := String(expr.get("name", ""))
+			if not timeline["states"].has(name): return {"ok": false, "reason": "UNKNOWN_STATE", "name": name}
+			return {"ok": true, "dimension": timeline["states"][name]["dimension"]}
+		"parameter":
+			var name := String(expr.get("name", ""))
+			if not timeline["parameters"].has(name): return {"ok": false, "reason": "UNKNOWN_PARAMETER", "name": name}
+			return {"ok": true, "dimension": timeline["parameters"][name]["dimension"]}
+		"time":
+			return {"ok": true, "dimension": dim_time()}
+		"neg":
+			return _infer_expr_dimension(timeline, expr["a"])
+		"add", "sub":
+			var a := _infer_expr_dimension(timeline, expr["a"])
+			if not bool(a.get("ok", false)): return a
+			var b := _infer_expr_dimension(timeline, expr["b"])
+			if not bool(b.get("ok", false)): return b
+			if not dim_equal(a["dimension"], b["dimension"]):
+				return {"ok": false, "reason": "ADD_SUB_DIMENSION_MISMATCH", "left": dim_string(a["dimension"]), "right": dim_string(b["dimension"])}
+			return {"ok": true, "dimension": a["dimension"]}
+		"mul", "div":
+			var a := _infer_expr_dimension(timeline, expr["a"])
+			if not bool(a.get("ok", false)): return a
+			var b := _infer_expr_dimension(timeline, expr["b"])
+			if not bool(b.get("ok", false)): return b
+			return {"ok": true, "dimension": dim_mul(a["dimension"], b["dimension"]) if op == "mul" else dim_div(a["dimension"], b["dimension"])}
+		"pow_int":
+			var a := _infer_expr_dimension(timeline, expr["a"])
+			if not bool(a.get("ok", false)): return a
+			return {"ok": true, "dimension": Physical.dim_pow(a["dimension"], int(expr.get("exponent", 1)))}
+		_:
+			return {"ok": false, "reason": "UNKNOWN_EXPRESSION_OP", "op": op}
+
+static func _eval_expr(
+	timeline: Dictionary,
+	expr: Dictionary,
+	state_values: Dictionary,
+	time_value: float
+) -> Dictionary:
+	var op := String(expr.get("op", ""))
+	match op:
+		"constant": return {"ok": true, "value": float(expr.get("value", 0.0))}
+		"state": return {"ok": true, "value": float(state_values[String(expr["name"])])}
+		"parameter": return {"ok": true, "value": float(timeline["parameters"][String(expr["name"])]["value"])}
+		"time": return {"ok": true, "value": time_value}
+		"neg":
+			var a := _eval_expr(timeline, expr["a"], state_values, time_value)
+			return {"ok": bool(a.get("ok", false)), "value": -float(a.get("value", 0.0))}
+		"add", "sub", "mul", "div":
+			var a := _eval_expr(timeline, expr["a"], state_values, time_value)
+			var b := _eval_expr(timeline, expr["b"], state_values, time_value)
+			if not bool(a.get("ok", false)) or not bool(b.get("ok", false)): return {"ok": false}
+			var av := float(a["value"])
+			var bv := float(b["value"])
+			match op:
+				"add": return {"ok": true, "value": av + bv}
+				"sub": return {"ok": true, "value": av - bv}
+				"mul": return {"ok": true, "value": av * bv}
+				"div":
+					if absf(bv) <= 1.0e-15: return {"ok": false, "code": "DIVISION_BY_ZERO"}
+					return {"ok": true, "value": av / bv}
+		"pow_int":
+			var a := _eval_expr(timeline, expr["a"], state_values, time_value)
+			if not bool(a.get("ok", false)): return a
+			return {"ok": true, "value": pow(float(a["value"]), int(expr.get("exponent", 1)))}
