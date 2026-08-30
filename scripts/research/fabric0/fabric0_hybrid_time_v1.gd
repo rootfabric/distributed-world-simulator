@@ -598,3 +598,80 @@ static func _eval_expr(
 			var a := _eval_expr(timeline, expr["a"], state_values, time_value)
 			if not bool(a.get("ok", false)): return a
 			return {"ok": true, "value": pow(float(a["value"]), int(expr.get("exponent", 1)))}
+		_:
+			return {"ok": false, "code": "UNKNOWN_EXPRESSION_OP"}
+	return {"ok": false}
+
+# =============================================================================
+# TRANSACTION SNAPSHOT / HASH
+# =============================================================================
+
+static func _capture_advance_snapshot(timeline: Dictionary) -> Dictionary:
+	var bond_states := {}
+	var network: Dictionary = timeline["physical_network"]
+	if not network.is_empty() and network.has("bonds"):
+		for bond in network["bonds"]:
+			bond_states[String(bond["id"])] = bool(bond["active"])
+	return {
+		"time": float(timeline["time"]),
+		"state_values": _state_values(timeline),
+		"mode": String(timeline["mode"]),
+		"event_count": timeline["events"].size(),
+		"step_revision": int(timeline["step_revision"]),
+		"topology_revision": int(timeline["topology_revision"]),
+		"bond_states": bond_states,
+	}
+
+static func _restore_advance_snapshot(timeline: Dictionary, snapshot: Dictionary) -> void:
+	timeline["time"] = float(snapshot["time"])
+	_commit_state_values(timeline, snapshot["state_values"])
+	timeline["mode"] = String(snapshot["mode"])
+	while timeline["events"].size() > int(snapshot["event_count"]):
+		timeline["events"].pop_back()
+	timeline["step_revision"] = int(snapshot["step_revision"])
+	timeline["topology_revision"] = int(snapshot["topology_revision"])
+	var network: Dictionary = timeline["physical_network"]
+	if not network.is_empty() and network.has("bonds"):
+		for bond_id in snapshot["bond_states"].keys():
+			var index := _find_bond_index(network, String(bond_id))
+			if index >= 0:
+				network["bonds"][index]["active"] = bool(snapshot["bond_states"][bond_id])
+
+static func _state_values(timeline: Dictionary) -> Dictionary:
+	var result := {}
+	var keys: Array = timeline["states"].keys()
+	keys.sort()
+	for key in keys:
+		result[key] = float(timeline["states"][key]["value"])
+	return result
+
+static func _commit_state_values(timeline: Dictionary, values: Dictionary) -> void:
+	for key in values.keys():
+		timeline["states"][key]["value"] = float(values[key])
+
+static func state_hash(timeline: Dictionary) -> String:
+	var network_bonds: Array = []
+	var network: Dictionary = timeline["physical_network"]
+	if not network.is_empty() and network.has("bonds"):
+		for bond in network["bonds"]:
+			network_bonds.append({"id": String(bond["id"]), "active": bool(bond["active"])})
+		network_bonds.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	var payload := JSON.stringify({
+		"time": float(timeline["time"]),
+		"mode": String(timeline["mode"]),
+		"states": _state_values(timeline),
+		"topology_revision": int(timeline["topology_revision"]),
+		"bonds": network_bonds,
+	}, "", false)
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(payload.to_utf8_buffer())
+	return context.finish().hex_encode()
+
+static func _find_bond_index(network: Dictionary, bond_id: String) -> int:
+	if network.is_empty() or not network.has("bonds"):
+		return -1
+	for i in range(network["bonds"].size()):
+		if String(network["bonds"][i].get("id", "")) == bond_id:
+			return i
+	return -1
