@@ -34,6 +34,16 @@ VIS4 Morphology Descriptor V2
 
 LS3.4 ecology snapshot schema и его state_hash не расширяются morphology sidecar-ом. Evidence имеет отдельный hash и source binding.
 
+Дополнительный жёсткий инвариант после implementation review:
+
+~~~text
+morphology evidence failure
+        !=
+ecology generation failure
+~~~
+
+Если упаковка одного evidence record не удалась, accepted ecology generation продолжает выполняться. Неполный sidecar не проходит Workbench/Descriptor validation и presentation fail-closed. Таким образом derived presentation никогда не становится causal dependency ecology.
+
 ## Evidence contract
 
 Файл:
@@ -166,6 +176,8 @@ MorphologyEvidence.build_record(record, ph2, fp)
 ~~~
 
 То есть presentation evidence создаётся из уже рассчитанных объектов. Повторного biology pass нет.
+
+Важно: MorphologyEvidence.build_record() не имеет права прервать competition pass. В survivor set evidence добавляется только если record успешно упакован; затем complete sidecar проверяется против exact current survivor population. Любая неполнота блокирует только VIS4 consumer.
 
 Добавлены public read-only API:
 
