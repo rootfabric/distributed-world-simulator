@@ -2232,3 +2232,213 @@ canonical causal physical history
 ```
 
 Production ownership remains with Construction.
+
+
+## 116. Local contact correctness is not graph correctness
+
+A correct two-body contact law does not prove a correct multibody world.
+
+When one body participates in multiple contacts:
+
+```text
+impulse at relation A
+→ changes shared body velocity
+→ changes residual at relation B
+```
+
+Therefore graph coupling itself requires separate falsification.
+
+## 117. Contact islands are physical connected components, not scheduler buckets
+
+An island exists because active physical relations connect bodies.
+
+When a relation appears:
+
+```text
+components may merge
+```
+
+When complementarity deactivates a relation:
+
+```text
+components may split
+```
+
+The scheduler may use islands, but it must not own their physical identity.
+
+## 118. A richer scenario is not automatically a stronger experiment
+
+If a scenario simultaneously changes geometry, topology, loading and collision regime, failures become difficult to interpret.
+
+The 0.15 lateral-incoming-body prototype was rejected as the primary acceptance stand because it naturally destroyed the support stack.
+
+Falsification quality depends on isolating the property under test.
+
+## 119. A topology narrative must survive timestep refinement
+
+Claims such as:
+
+```text
+merge
+→ hold
+→ split
+```
+
+are physical only if they persist under refinement.
+
+A contact that exists only because a coarse step smears an event is not accepted relation history.
+
+## 120. Configuration localization and momentum jump are different semantic categories
+
+To correct a newly detected negative gap, one may move configuration to the event surface without changing velocity.
+
+That is:
+
+```text
+event localization
+```
+
+If an operation changes velocity/momentum, it is:
+
+```text
+physical jump
+```
+
+and must be represented as impulse/event history.
+
+This distinction joins the 0.14 and 0.15 findings into one rule.
+
+## 121. Baumgarte stabilization must not define topology by accident
+
+Penetration bias can be useful numerically.
+
+But it must not create a separating velocity that determines whether a newly born physical relation “really existed”.
+
+Topology/event localization should be resolved before stabilization artifacts are allowed to dominate active-set semantics.
+
+## 122. Complementarity owns separation
+
+A unilateral contact should disappear when the solved active set says support is no longer needed and relative motion is separating.
+
+Do not keep a contact merely because its relation object already exists.
+
+Persistent identity must coexist with physical deactivation.
+
+## 123. Friction modes are relation-local but graph-coupled
+
+Each contact can solve:
+
+```text
+stick
+or
+slide
+```
+
+locally.
+
+But the required impulse depends on shared body velocities, which are changed by other contacts.
+
+Thus:
+
+```text
+mode is relation-local
+solution is graph-coupled
+```
+
+## 124. Finite-iteration iterative solvers require an explicit canonical order
+
+PGS at finite iteration count is not order-independent.
+
+Therefore deterministic replay needs:
+
+- canonical relation ordering;
+- fixed iteration policy;
+- explicit tolerances.
+
+Do not confuse deterministic canonical ordering with mathematical uniqueness of the approximate iterate.
+
+## 125. Order robustness is weaker than order independence
+
+If forward and reverse solve order produce close states and identical modes, that is useful evidence.
+
+But it should be named:
+
+```text
+order robustness
+```
+
+not:
+
+```text
+exact order independence
+```
+
+A later globally converged MCP/NCP solver should strengthen this contract.
+
+## 126. Internal-pair conservation excludes world support
+
+Body-body contact impulses are internal to the chosen dynamic system.
+
+Plane/world reactions are external.
+
+Momentum audits must classify these correctly before making conservation claims.
+
+## 127. Whole-graph refinement is more meaningful than local residual refinement
+
+For multibody hybrid mechanics, refinement should observe at least:
+
+- graph event times;
+- whole N-body state;
+- energy/work ledger.
+
+A tiny one-contact residual does not guarantee correct graph trajectory.
+
+## 128. Exact source events are useful falsification controls
+
+An external source change can be intentionally exact in time to test whether active-set separation happens for the correct physical reason.
+
+This does not prove autonomous separation in every regime.
+
+It provides a controlled causal stimulus.
+
+Claims must preserve that distinction.
+
+## 129. Sphere contact is a valid graph falsifier but not general convexity
+
+Simple sphere/plane geometry is valuable when the research question is complementarity coupling.
+
+But it must not be renamed into general convex collision.
+
+The next checkpoint must separately falsify support mapping, GJK/EPA and multipoint manifold persistence.
+
+## 130. Текущий образ FABRIC после 0.15
+
+```text
+Construction semantic truth
+        ↓
+many full-6DOF bodies
+        ↓
+persistent contact relation graph
+        ↓
+graph-coupled unilateral + Coulomb blocks
+        ↓
+projected complementarity solve
+        ↓
+active-set merge / split
+        ↓
+whole-graph refinement evidence
+        ↓
+canonical causal history
+```
+
+Next physical wall:
+
+```text
+general convex geometry
++
+multipoint manifold
++
+global MCP/NCP
+```
+
+Production ownership remains with Construction.
