@@ -76,7 +76,10 @@ func build(ecology_snapshot: Dictionary, morphology_snapshot: Dictionary = {}) -
 		var field_value = ecology_snapshot.get("competition_field")
 		if not field_value is Dictionary:
 			return {}
-		for value in Array(Dictionary(field_value).get("evaluations", [])):
+		var field: Dictionary = field_value
+		if String(field.get("field_hash", "")) != source_competition_hash:
+			return {}
+		for value in Array(field.get("evaluations", [])):
 			if not value is Dictionary:
 				return {}
 			var evaluation: Dictionary = value
