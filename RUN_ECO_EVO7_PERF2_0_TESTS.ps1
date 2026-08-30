@@ -1,4 +1,5 @@
 param(
+    [Alias('GodotPath')]
     [string]$GodotBin = $env:GODOT_BIN
 )
 
