@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R15",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R16",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF2.0",
+  "current_checkpoint": "ECO.EVO7/PERF2.1",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -117,19 +117,23 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_0_MEASUREMENT_CONTRACT",
-      "detail": "Simulation-side PERF2 lane is active. PERF2.0 freezes benchmark identity/statistics/correctness boundaries before any PERF2.1 performance claim."
+      "status": "IN_PROGRESS_PERF2_1_STREAM1_GENERATION_PROFILING",
+      "detail": "PERF2.0 measurement contract is accepted. Simulation-side lane advances to PERF2.1 STREAM1 Generation Profiling; VIS4/PLAY0.MORPH remains independent until PERF2.CONV."
     },
     {
       "id": "PERF2.0",
       "name": "Measurement Contract",
-      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
-      "detail": "Freezes workload_hash, comparison_key, minimum repetitions/warmup, timing/memory units, canonical result parity and p50/p95 reporting. No performance claim yet."
+      "status": "ACCEPTED_WINDOWS_5994598",
+      "detail": "PERF2.0 R1 accepted after fresh detached exact-Windows PASS plus canonical CI closure run 33317717717 SUCCESS on exact PR HEAD 5994598d317a55ddae2954f943021878a279afc9. PERF1 69 PASS, STREAM1 195 PASS with 108 exact comparisons, PERF2.0 62 PASS, tracked tree clean.",
+      "head": "5994598d317a55ddae2954f943021878a279afc9",
+      "merge_commit": "ac69eb49dc0e96568ff7b8109a4c8822efc90c29",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md"
     },
     {
       "id": "PERF2.1",
       "name": "STREAM1 Generation Profiling",
-      "status": "BLOCKED_WAIT_PERF2_0_ACCEPTANCE"
+      "status": "NEXT_AUTHORIZED_AFTER_PERF2_0_ACCEPTANCE",
+      "detail": "Profile accepted STREAM1 generation execution under frozen PERF2.0 workload/comparison contract. No optimization claim until exact canonical parity and measurement-contract comparability hold."
     },
     {
       "id": "PERF2.2",
@@ -230,8 +234,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.0",
-    "status": "PERF2_SIM_ACTIVE_PERF2_0_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.1",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -321,13 +325,29 @@
   "perf2": {
     "revision": "ECO.EVO7-PERF2.0-R1",
     "lane": "PERF2.SIM",
-    "current_step": "PERF2.0",
+    "current_step": "PERF2.1",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_DOUBLE_GODOT",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
-    "perf2_1_blocked_until_perf2_0_acceptance": true,
-    "vis4_dependency": "NONE_FOR_PERF2_SIM__REQUIRED_ONLY_FOR_PERF2_CONV"
+    "perf2_1_blocked_until_perf2_0_acceptance": false,
+    "vis4_dependency": "NONE_FOR_PERF2_SIM__REQUIRED_ONLY_FOR_PERF2_CONV",
+    "perf2_0_acceptance": {
+      "verified_head": "5994598d317a55ddae2954f943021878a279afc9",
+      "verified_tree": "frozen_by_exact_windows_and_ci_subject",
+      "merge_commit": "ac69eb49dc0e96568ff7b8109a4c8822efc90c29",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "fresh_detached_windows": "PASS",
+      "project_control": "PASS",
+      "closure_run_id": 33317717717,
+      "closure": "SUCCESS",
+      "perf1_assertions": 69,
+      "stream1_assertions": 195,
+      "stream1_exact_comparisons": "108/108",
+      "perf2_0_assertions": 62,
+      "transitive": "PASS",
+      "tracked_worktree_clean": true
+    }
   }
 }
