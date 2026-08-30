@@ -173,6 +173,63 @@ not delay C3 or create new authority semantics.
 
 # 5. V1 — PLAYABLE SEAMLESS PRECHECK
 
+## 5.0 Test Client V0.1 implementation
+
+A reusable isolated graphical diagnostic client is implemented as the first V1 surface.
+
+Status:
+
+```text
+IMPLEMENTED CANDIDATE
+production runtime mutation = 0
+Windows exact-double verification = REQUIRED BEFORE ACCEPTANCE
+```
+
+Files:
+
+```text
+tests/fixtures/v0_playable_seamless/client/v0_test_client_seam.gd
+tests/fixtures/v0_playable_seamless/client/v0_test_client_items.gd
+tests/runtime/test_v0_test_client_contracts.gd
+tests/runtime/test_v0_test_client_seam_processes.gd
+tests/runtime/test_v0_test_client_items_processes.gd
+RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1
+RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.sh
+```
+
+The seam client subclasses the accepted SM1 graphical client and adds only a test HUD and
+optional pacing. The item client instantiates the accepted M3 graphical client runtime and
+executes canonical Item Graph commands; it does not implement a second inventory/network
+owner.
+
+Current V0.1 capability:
+
+```text
+SEAM mode:
+  2 graphical clients
+  Gateway
+  Authority A/B
+  A→B→A
+  stable identity
+  zero reconnect/respawn
+  visible authority/epoch/world-revision HUD
+
+ITEMS mode:
+  dedicated server
+  2 graphical diagnostic clients
+  canonical Item Graph
+  pickup/hotbar/mount/detach/container workflow
+  independent B replica
+  exact final checksum convergence
+
+single live topology containing seam + Item Graph = NOT_YET_PROVEN
+planet surface = WAIT P7.2/C1
+```
+
+Windows verification instructions are recorded in
+`docs/testing/V0_TEST_CLIENT_V0_1_WINDOWS_RU.md`.
+
+
 ## 5.1 Goal
 
 V1 must be implementable immediately and in parallel with P7 without changing P7 production code.
