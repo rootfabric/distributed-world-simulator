@@ -40,6 +40,26 @@ const AUTHORITY := {
     "biome_classifier_ecology_input": false,
 }
 
+## LS4 may replace only the dynamic shadow forcing fields between generations.
+## Terrain/substrate/address identity remains frozen to the LS3.1 field.
+const ENVIRONMENT_FIELD_KEYS: Array[String] = [
+    "schema", "version", "revision", "source_patch_hash", "grid_size",
+    "cell_size_m", "recipe_id", "environment_seed", "cells", "field_hash",
+]
+const ENVIRONMENT_CELL_KEYS: Array[String] = [
+    "index", "x", "y", "east_m", "north_m", "land_mask",
+    "surface_water_fraction", "soil_moisture", "soil_texture_sand",
+    "soil_texture_clay", "soil_texture_loam", "soil_water_retention",
+    "temperature_c", "incident_light", "elevation_m", "local_relief_m",
+    "drainage_index", "rainfall_forcing", "cell_hash",
+]
+const STATIC_ENVIRONMENT_CELL_FIELDS: Array[String] = [
+    "index", "x", "y", "east_m", "north_m", "land_mask",
+    "surface_water_fraction", "soil_texture_sand", "soil_texture_clay",
+    "soil_texture_loam", "soil_water_retention", "elevation_m",
+    "local_relief_m", "drainage_index",
+]
+
 var initialized := false
 var evolution_enabled := true
 var generation := 0
@@ -129,6 +149,68 @@ func set_evolution_enabled(value: bool) -> bool:
     if not initialized:
         return false
     evolution_enabled = value
+    return true
+
+## LS4 environment-forcing seam. This changes only the physical input used by
+## the NEXT generation. It cannot advance generation or touch population
+## identity, and it rejects any attempt to rewrite terrain/substrate/address
+## fields. The LS3.1 cell/field hash implementation remains the validator.
+func set_environment_field(environment_field: Dictionary) -> bool:
+    if not initialized or environment_field.is_empty():
+        return false
+    if not _exact_environment_keys(environment_field, ENVIRONMENT_FIELD_KEYS):
+        return false
+    if String(environment_field.get("schema", "")) != EnvironmentField.SCHEMA             or String(environment_field.get("version", "")) != EnvironmentField.VERSION             or String(environment_field.get("revision", "")) != EnvironmentField.REVISION:
+        return false
+    if String(environment_field.get("source_patch_hash", "")) != source_patch_hash:
+        return false
+    if int(environment_field.get("grid_size", 0)) != GRID_SIZE             or absf(float(environment_field.get("cell_size_m", 0.0)) - cell_size_m) > 1e-12:
+        return false
+    if String(environment_field.get("recipe_id", "")) != environment_recipe_id             or int(environment_field.get("environment_seed", 0)) != environment_seed:
+        return false
+
+    var cells_value = environment_field.get("cells")
+    if not cells_value is Array or Array(cells_value).size() != GRID_SIZE * GRID_SIZE:
+        return false
+    if environment_cells.size() != GRID_SIZE * GRID_SIZE:
+        return false
+
+    var validator = EnvironmentField.new()
+    var next_cells: Array[Dictionary] = []
+    for index in GRID_SIZE * GRID_SIZE:
+        var value = Array(cells_value)[index]
+        if not value is Dictionary:
+            return false
+        var cell: Dictionary = value
+        if not _exact_environment_keys(cell, ENVIRONMENT_CELL_KEYS):
+            return false
+        if int(cell.get("index", -1)) != index                 or int(cell.get("x", -1)) != index % GRID_SIZE                 or int(cell.get("y", -1)) != index / GRID_SIZE:
+            return false
+        var current: Dictionary = environment_cells[index]
+        for field_name in STATIC_ENVIRONMENT_CELL_FIELDS:
+            if cell.get(field_name) != current.get(field_name):
+                return false
+        for dynamic_name in ["soil_moisture", "temperature_c", "incident_light", "rainfall_forcing"]:
+            if not cell.has(dynamic_name) or not is_finite(float(cell[dynamic_name])):
+                return false
+        if String(cell.get("cell_hash", "")) != String(validator.call("_cell_hash", cell)):
+            return false
+        next_cells.append(cell.duplicate(true))
+
+    if String(environment_field.get("field_hash", "")) != String(validator.call("_field_hash", environment_field)):
+        return false
+
+    ## Mutation occurs only after the complete replacement field validates.
+    environment_field_hash = String(environment_field["field_hash"])
+    environment_cells = next_cells
+    return true
+
+func _exact_environment_keys(value: Dictionary, expected: Array[String]) -> bool:
+    if value.keys().size() != expected.size():
+        return false
+    for key in expected:
+        if not value.has(key):
+            return false
     return true
 
 ## PAR0.2: runtime-only dual-mode seam. The executor must implement
