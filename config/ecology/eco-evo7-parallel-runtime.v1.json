@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_parallel_runtime.v1",
   "version": "1.0.0",
-  "checkpoint": "ECO.EVO7_STREAM1_BOUNDED_GENERATION_STREAM_R1",
+  "checkpoint": "ECO.EVO7_STREAM1_BOUNDED_GENERATION_STREAM_R1_ACCEPTED",
   "par1_selected_backend": "PROCESS_POOL",
   "par1_selection_status": "SELECTED_PREDECESSOR_BACKEND",
   "par1_worker_count": 8,
@@ -38,7 +38,22 @@
     "canonical": false,
     "runtime_code_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
     "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
-    "status": "CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
+    "status": "ACCEPTED",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+    "accepted_target_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "accepted_target_tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+    "accepted_immediate_parent": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+    "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md",
+    "windows_verification": {
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "import_exit_code": 0,
+      "source_guards": "PASS",
+      "focused_assertions": 195,
+      "exact_canonical_comparisons": "108/108",
+      "transitive_gate": "11/11_PASS",
+      "final_identity_unchanged": true,
+      "tracked_worktree_clean": true,
+      "legacy_import_parse_diagnostics": "PRE_EXISTING_BASELINE_NOT_STREAM1_REGRESSION"
+    }
   }
 }
