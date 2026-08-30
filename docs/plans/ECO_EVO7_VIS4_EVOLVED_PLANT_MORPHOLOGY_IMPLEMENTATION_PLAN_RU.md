@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / STREAM1 + VIS4 / ROADMAP SPLIT CONFIRMED  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.1 R2 WINDOWS VERIFIED + CLOSED / VIS4.2 NEXT  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -549,4 +549,38 @@ development_individual_seed
 
 и делает positive evidence non-vacuous обязательным acceptance condition.
 
-VIS4.2 запрещено считать начатым каноническим следующим checkpoint, пока fresh Windows verifier не получит GREEN на R2 exact HEAD.
+Fresh Windows verifier получил GREEN на R2 exact-tested implementation:
+
+~~~text
+HEAD: c499a39ee3fa4c7b5ab871df7f89f7cb4b6ec436
+TREE: 4427bada5367f9b06d4b642a6ab9e73670821c2e
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.1 R2 focused: PASS (598 assertions)
+living/evidence/descriptor: 61 / 61 / 61
+full runner: PASS
+RC=0
+~~~
+
+Formal closure:
+
+~~~text
+VIS4.1 R2
+ACCEPTED
+WINDOWS VERIFIED
+CLOSED
+~~~
+
+Canonical next checkpoint:
+
+~~~text
+VIS4.2 — Honest Diagnostic Morphology
+~~~
+
+VIS4.2 теперь разблокирован. Он обязан читать только Descriptor V2 и не вызывать biology напрямую.
+
+Durable closure evidence:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_1_WINDOWS_VERIFIED_CLOSED_R2_RU.md
+~~~
