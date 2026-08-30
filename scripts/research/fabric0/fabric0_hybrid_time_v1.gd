@@ -358,3 +358,123 @@ static func _crossed(g0: float, g1: float, direction: int, nominal: float) -> bo
 		-1:
 			return g0 > eps and g1 <= 0.0
 		_:
+			return (g0 < -eps and g1 >= 0.0) or (g0 > eps and g1 <= 0.0)
+
+static func _localize_event(
+	timeline: Dictionary,
+	transition: Dictionary,
+	start_state: Dictionary,
+	start_time: float,
+	delta: float
+) -> float:
+	var guard: Dictionary = transition["guard"]
+	var low := 0.0
+	var high := delta
+	var g_low := float(_eval_expr(timeline, guard["expr"], start_state, start_time)["value"])
+	for _i in range(EVENT_LOCALIZATION_ITERATIONS):
+		if high - low <= EVENT_TIME_TOLERANCE:
+			break
+		var mid := 0.5 * (low + high)
+		var mid_state := _integrate_mode(timeline, start_state, start_time, mid)
+		var g_mid := float(_eval_expr(timeline, guard["expr"], mid_state, start_time + mid)["value"])
+		var direction := int(guard["direction"])
+		if direction > 0:
+			if g_mid >= 0.0: high = mid
+			else:
+				low = mid
+				g_low = g_mid
+		elif direction < 0:
+			if g_mid <= 0.0: high = mid
+			else:
+				low = mid
+				g_low = g_mid
+		else:
+			if (g_low <= 0.0 and g_mid >= 0.0) or (g_low >= 0.0 and g_mid <= 0.0):
+				high = mid
+			else:
+				low = mid
+				g_low = g_mid
+	return high
+
+static func _apply_transition_transaction(
+	timeline: Dictionary,
+	transition: Dictionary,
+	pre_state: Dictionary,
+	event_time: float
+) -> Dictionary:
+	# 1) Evaluate all resets against the same immutable pre-event snapshot.
+	var reset_values := {}
+	for state_name in transition["resets"].keys():
+		var evaluated := _eval_expr(timeline, transition["resets"][state_name], pre_state, event_time)
+		if not bool(evaluated.get("ok", false)):
+			return {"ok": false, "code": "RESET_EVALUATION_FAILED", "transition": String(transition["id"]), "state": String(state_name)}
+		reset_values[state_name] = float(evaluated["value"])
+
+	# 2) Validate all topology operations before changing anything.
+	var topology_validation := _validate_topology_transaction(timeline, transition["topology_ops"])
+	if not bool(topology_validation.get("ok", false)):
+		var failure := topology_validation.duplicate(true)
+		failure["transition"] = String(transition["id"])
+		return failure
+
+	var pre_hash := state_hash(timeline)
+	var pre_mode := String(timeline["mode"])
+	var pre_states := pre_state.duplicate(true)
+	var topology_before := int(timeline["topology_revision"])
+
+	# 3) Commit resets simultaneously.
+	for state_name in reset_values.keys():
+		timeline["states"][state_name]["value"] = float(reset_values[state_name])
+
+	# 4) Commit mode and topology transaction.
+	timeline["mode"] = String(transition["to_mode"])
+	var topology_changed := _commit_topology_transaction(timeline, transition["topology_ops"])
+	if topology_changed:
+		timeline["topology_revision"] = topology_before + 1
+
+	var post_states := _state_values(timeline)
+	var sequence: int = timeline["events"].size() + 1
+	var event := {
+		"event_id": "fabric0/event/%06d/%s" % [sequence, String(transition["id"])],
+		"sequence": sequence,
+		"transition_id": String(transition["id"]),
+		"time": event_time,
+		"pre_mode": pre_mode,
+		"post_mode": String(timeline["mode"]),
+		"pre_states": pre_states,
+		"post_states": post_states,
+		"pre_state_hash": pre_hash,
+		"topology_revision_before": topology_before,
+		"topology_revision_after": int(timeline["topology_revision"]),
+	}
+	event["post_state_hash"] = state_hash(timeline)
+	timeline["events"].append(event)
+	return {"ok": true, "event": event}
+
+static func _validate_topology_transaction(timeline: Dictionary, ops: Array) -> Dictionary:
+	if ops.is_empty():
+		return {"ok": true}
+	var network: Dictionary = timeline["physical_network"]
+	if network.is_empty() or not network.has("bonds"):
+		return {"ok": false, "code": "TOPOLOGY_TRANSACTION_NO_NETWORK"}
+	var seen := {}
+	for op in ops:
+		if String(op.get("op", "")) != "set_bond_active":
+			return {"ok": false, "code": "TOPOLOGY_TRANSACTION_UNSUPPORTED_OP"}
+		var bond_id := String(op.get("bond_id", ""))
+		if bond_id.is_empty() or seen.has(bond_id):
+			return {"ok": false, "code": "TOPOLOGY_TRANSACTION_DUPLICATE_OR_EMPTY_BOND", "bond_id": bond_id}
+		seen[bond_id] = true
+		if _find_bond_index(network, bond_id) < 0:
+			return {"ok": false, "code": "TOPOLOGY_TRANSACTION_UNKNOWN_BOND", "bond_id": bond_id}
+	return {"ok": true}
+
+static func _commit_topology_transaction(timeline: Dictionary, ops: Array) -> bool:
+	var changed := false
+	var network: Dictionary = timeline["physical_network"]
+	for op in ops:
+		var bond_id := String(op["bond_id"])
+		var index := _find_bond_index(network, bond_id)
+		var target := bool(op["active"])
+		if bool(network["bonds"][index]["active"]) != target:
+			network["bonds"][index]["active"] = target
