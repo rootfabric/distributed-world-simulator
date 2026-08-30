@@ -886,3 +886,60 @@ Rules возвращают proposals и имеют read/write sets и budgets.
 - World Directory строится на generic aggregate/shard routing, а не только на `world_item`.
 
 Полная последовательность описана в [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).
+
+
+## 23. Non-Canonical Replication Plane boundary — roadmap amendment 2026-08-30
+
+DWS formalizes a new logical boundary for realtime state distribution:
+
+```text
+canonical Authority commit
+        ↓
+ReplicationPublication
+        ↓
+bounded RetainedReplicaCache
+        ↓
+read-only consumers
+```
+
+This is a semantic boundary first. It does not require a new process, broker, database or network hop.
+
+Hard invariants:
+
+```text
+REPLICATION != AUTHORITY
+REPLICA CACHE != PERSISTENCE
+INTEREST != ACTIVATION
+SERVER PROCESS != WORLD IDENTITY
+```
+
+Existing `ReplicationTransportPort`, snapshot/delta envelopes, M0/M6 outbox semantics, MW6/MW7 replication, SM1 WARM/SHADOW, EG4 projection and RL representation contracts are reused rather than replaced.
+
+The cache is reconstructable. Deleting all replication cache state must leave canonical world correctness intact; the cache must be rebuildable from current Authority/Persistence state.
+
+Replica/cache hydration is not authority activation. Neither AUTHORITATIVE_VISIBLE nor DURABLE_COMMITTED evidence may promote WARM to ACTIVE by itself. Activation still requires Directory truth, exact owner/lease, AuthorityEpoch fencing and canonical handoff/recovery validation.
+
+The realtime input path remains `Client -> Edge Gateway -> Authority`. Replication is not inserted into gameplay command ingress.
+
+Detailed decision: `docs/architecture/adr/ADR-021-non-canonical-replication-plane.md`.
+
+Implementation sequencing: `docs/plans/DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`.
+
+
+## 21. P7 production convergence note — 2026-08-30
+
+The next V0 terrain checkpoint reuses the accepted Matter runtime rather than creating a new terrain authority.
+
+```text
+MW4 mutation
+MW5 persistence
+MW6 replication
+MW7 interest
+MW8/MW9 authority lifecycle
+MW10 multi-region atomic mutation
+RL2/RL3 representation
+MatterMaterialBatch → canonical Item Graph adapter
+```
+
+A player crossing an authority seam does not itself require MW10. MW10 is selected when
+one canonical Matter mutation spans two or more authority regions.

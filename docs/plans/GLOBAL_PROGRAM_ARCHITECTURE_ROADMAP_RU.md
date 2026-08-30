@@ -7,6 +7,56 @@
 
 ---
 
+## 0. Current amendment — 2026-08-30 / RF0 + P7 production convergence
+
+**Refresh base:** `main @ 9cc89e6e8c6cfc81fc32873a29743e443d8229e6`
+
+SM1 is formally accepted. The next product transition is P7 activation and production convergence over the existing Matter stack.
+
+Global invariants:
+
+```text
+REPLICATION != AUTHORITY
+REPLICA CACHE != PERSISTENCE
+INTEREST != ACTIVATION
+SERVER PROCESS != WORLD IDENTITY
+P7 != SECOND MATTER FOUNDATION
+```
+
+Current product sequencing:
+
+```text
+SM1 ACCEPTED
+→ RF0 semantic boundary (architecture-only, non-blocking)
+→ P7 Matter Production Convergence
+→ V0 PLAYABLE SEAMLESS PLANET / COMPOSITION ACCEPTANCE
+→ { P8 product lane | RF1→RF2 replication lane }
+→ static N-authority
+→ Placement Observatory / SHADOW
+→ dynamic placement / split / merge later
+```
+
+P7 reuses MW4-MW10 and RL2/RL3. It must not create new terrain mutation DTOs, a second Matter
+truth, a P7 persistence owner or a P7 resource inventory.
+
+P8 and RF1 have no architecture dependency on each other. Until H0.3 accepts multi-worker
+scheduling, eligible runtime lanes are still executed one at a time.
+
+RF cache evidence can hydrate WARM/read-only state but can never authorize WARM→ACTIVE;
+authority activation remains Directory + owner/lease + AuthorityEpoch/fence + canonical
+handoff/recovery validation.
+
+Primary current docs:
+
+- `docs/plans/V0_CURRENT_WORK_MAP_RU.md`
+- `docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md`
+- `docs/plans/DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`
+- `docs/architecture/adr/ADR-021-non-canonical-replication-plane.md`
+
+Do not infer that older active-sync/frontier examples later in this historical document are current operational truth.
+
+---
+
 ## 1. Назначение global plan
 
 Проект развивается несколькими параллельными программами:
