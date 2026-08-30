@@ -318,3 +318,163 @@ static func advance(system: Dictionary, delta: float) -> Dictionary:
 			_commit_algebraic_values(system, integrated["algebraic"])
 			system["time"] = start_time + remaining
 			remaining = 0.0
+			break
+
+		var event_dt := float(candidate["dt"])
+		var at_event := _integrate_segment(system, start_state, start_time, event_dt, stats)
+		if not bool(at_event.get("ok", false)):
+			_restore_snapshot(system, snapshot)
+			return {"ok":false, "code":String(at_event.get("code","DAE_EVENT_INTEGRATION_FAILED")), "rolled_back":true}
+		_commit_state_values(system, at_event["state"])
+		_commit_algebraic_values(system, at_event["algebraic"])
+		system["time"] = start_time + event_dt
+		var instant := _process_event_instant(system, candidate["transition"], stats)
+		if not bool(instant.get("ok", false)):
+			_restore_snapshot(system, snapshot)
+			system["diagnostics"] = [{"code":String(instant.get("code","EVENT_INSTANT_FAILED"))}]
+			return {"ok":false, "code":String(instant.get("code","EVENT_INSTANT_FAILED")), "rolled_back":true}
+		event_instants += 1
+		stats["localized_events"] = event_instants
+		if event_instants > MAX_EVENTS_PER_ADVANCE:
+			_restore_snapshot(system, snapshot)
+			system["diagnostics"] = [{"code":"ZENO_OR_EVENT_STORM", "limit":MAX_EVENTS_PER_ADVANCE}]
+			return {"ok":false, "code":"ZENO_OR_EVENT_STORM", "rolled_back":true}
+		remaining -= event_dt
+		if remaining < EPSILON: remaining = 0.0
+
+	system["step_revision"] = int(system["step_revision"]) + 1
+	system["solver_stats"] = stats
+	return {"ok":true, "events":event_instants, "time":float(system["time"]), "solver_stats":stats.duplicate(true)}
+
+static func _integrate_segment(system: Dictionary, initial_state: Dictionary, start_time: float, delta: float, stats: Dictionary) -> Dictionary:
+	if delta <= EPSILON:
+		var alg := _solve_algebraic_counted(system, initial_state, start_time, String(system["mode"]), _algebraic_values(system), stats)
+		if not bool(alg.get("ok", false)): return alg
+		return {"ok":true, "state":initial_state.duplicate(true), "algebraic":alg["values"]}
+	var mode_id := String(system["mode"])
+	var a1 := _solve_algebraic_counted(system, initial_state, start_time, mode_id, _algebraic_values(system), stats)
+	if not bool(a1.get("ok", false)): return a1
+	var k1 := _flow_vector(system, mode_id, initial_state, a1["values"], start_time)
+	var s2 := _state_plus_scaled(initial_state, k1, 0.5*delta)
+	var a2 := _solve_algebraic_counted(system, s2, start_time+0.5*delta, mode_id, a1["values"], stats)
+	if not bool(a2.get("ok", false)): return a2
+	var k2 := _flow_vector(system, mode_id, s2, a2["values"], start_time+0.5*delta)
+	var s3 := _state_plus_scaled(initial_state, k2, 0.5*delta)
+	var a3 := _solve_algebraic_counted(system, s3, start_time+0.5*delta, mode_id, a2["values"], stats)
+	if not bool(a3.get("ok", false)): return a3
+	var k3 := _flow_vector(system, mode_id, s3, a3["values"], start_time+0.5*delta)
+	var s4 := _state_plus_scaled(initial_state, k3, delta)
+	var a4 := _solve_algebraic_counted(system, s4, start_time+delta, mode_id, a3["values"], stats)
+	if not bool(a4.get("ok", false)): return a4
+	var k4 := _flow_vector(system, mode_id, s4, a4["values"], start_time+delta)
+	var result := initial_state.duplicate(true)
+	for state_name in result.keys():
+		result[state_name] = float(initial_state[state_name]) + delta/6.0*(float(k1[state_name])+2.0*float(k2[state_name])+2.0*float(k3[state_name])+float(k4[state_name]))
+	var afinal := _solve_algebraic_counted(system, result, start_time+delta, mode_id, a4["values"], stats)
+	if not bool(afinal.get("ok", false)): return afinal
+	return {"ok":true, "state":result, "algebraic":afinal["values"]}
+
+static func _solve_algebraic_counted(system: Dictionary, state_values: Dictionary, time_value: float, mode_id: String, initial: Dictionary, stats: Dictionary) -> Dictionary:
+	var result := _solve_algebraic_for(system, state_values, time_value, mode_id, initial)
+	stats["algebraic_solves"] = int(stats["algebraic_solves"]) + 1
+	stats["algebraic_iterations"] = int(stats["algebraic_iterations"]) + int(result.get("iterations",0))
+	return result
+
+static func _flow_vector(system: Dictionary, mode_id: String, states: Dictionary, algebraics: Dictionary, time_value: float) -> Dictionary:
+	var result := {}
+	var flows: Dictionary = system["modes"][mode_id]["flows"]
+	for state_name in system["states"].keys():
+		if flows.has(state_name):
+			var v := _eval_expr_value(system, flows[state_name], states, algebraics, time_value, {}, {}, {})
+			result[state_name] = float(v.get("value",0.0))
+		else: result[state_name] = 0.0
+	return result
+
+# =============================================================================
+# EVENT LOCALIZATION + SAME-TIME ITERATION
+# =============================================================================
+
+static func _find_earliest_crossing(system: Dictionary, start_state: Dictionary, end_state: Dictionary, start_time: float, delta: float, stats: Dictionary) -> Dictionary:
+	var candidates: Array = []
+	for transition in _eligible_transitions(system, "crossing"):
+		var start_alg := _solve_algebraic_counted(system, start_state, start_time, String(system["mode"]), _algebraic_values(system), stats)
+		var end_alg := _solve_algebraic_counted(system, end_state, start_time+delta, String(system["mode"]), start_alg.get("values",{}), stats)
+		if not bool(start_alg.get("ok",false)) or not bool(end_alg.get("ok",false)): continue
+		var g0 := _eval_expr_value(system, transition["guard"]["expr"], start_state, start_alg["values"], start_time, {}, {}, {})
+		var g1 := _eval_expr_value(system, transition["guard"]["expr"], end_state, end_alg["values"], start_time+delta, {}, {}, {})
+		if not bool(g0.get("ok",false)) or not bool(g1.get("ok",false)): continue
+		if not _crossed(float(g0["value"]), float(g1["value"]), int(transition["guard"]["direction"]), float(transition["guard"]["nominal"])): continue
+		var dt := _localize_crossing(system, transition, start_state, start_time, delta, stats)
+		candidates.append({"transition":transition, "dt":dt})
+	if candidates.is_empty(): return {"found":false}
+	candidates.sort_custom(func(a:Dictionary,b:Dictionary)->bool:
+		if absf(float(a["dt"])-float(b["dt"])) > EVENT_TIME_TOLERANCE: return float(a["dt"]) < float(b["dt"])
+		if int(a["transition"]["priority"]) != int(b["transition"]["priority"]): return int(a["transition"]["priority"]) < int(b["transition"]["priority"])
+		return String(a["transition"]["id"]) < String(b["transition"]["id"])
+	)
+	return {"found":true, "transition":candidates[0]["transition"], "dt":float(candidates[0]["dt"])}
+
+static func _localize_crossing(system: Dictionary, transition: Dictionary, start_state: Dictionary, start_time: float, delta: float, stats: Dictionary) -> float:
+	var low := 0.0
+	var high := delta
+	var start_alg := _solve_algebraic_counted(system, start_state, start_time, String(system["mode"]), _algebraic_values(system), stats)
+	var g_low := float(_eval_expr_value(system, transition["guard"]["expr"], start_state, start_alg["values"], start_time, {}, {}, {})["value"])
+	for _i in range(EVENT_LOCALIZATION_ITERATIONS):
+		if high-low <= EVENT_TIME_TOLERANCE: break
+		var mid := 0.5*(low+high)
+		var probe := _integrate_segment(system, start_state, start_time, mid, stats)
+		if not bool(probe.get("ok",false)): return high
+		var g_mid := float(_eval_expr_value(system, transition["guard"]["expr"], probe["state"], probe["algebraic"], start_time+mid, {}, {}, {})["value"])
+		var dir := int(transition["guard"]["direction"])
+		if dir > 0:
+			if g_mid >= 0.0: high = mid
+			else:
+				low = mid
+				g_low = g_mid
+		elif dir < 0:
+			if g_mid <= 0.0: high = mid
+			else:
+				low = mid
+				g_low = g_mid
+		else:
+			if (g_low <= 0.0 and g_mid >= 0.0) or (g_low >= 0.0 and g_mid <= 0.0): high = mid
+			else:
+				low = mid
+				g_low = g_mid
+	return high
+
+static func _process_event_instant(system: Dictionary, root_transition: Dictionary, stats: Dictionary) -> Dictionary:
+	var instant_time := float(system["time"])
+	var instant_index: int = system["events"].size() + 1
+	var instant := {"event_id":"fabric0/instant/%06d" % instant_index, "sequence":instant_index, "time":instant_time, "transitions":[], "pre_state_hash":state_hash(system), "topology_revision_before":int(system["topology_revision"])}
+	var fired := {}
+	var pending: Dictionary = root_transition
+	for iteration in range(MAX_EVENT_ITERATIONS):
+		stats["event_iterations"] = int(stats["event_iterations"])+1
+		if pending.is_empty():
+			pending = _next_enabled_condition_transition(system, fired)
+			if pending.is_empty():
+				instant["post_state_hash"] = state_hash(system)
+				instant["topology_revision_after"] = int(system["topology_revision"])
+				system["events"].append(instant)
+				return {"ok":true, "instant":instant}
+		var transition_id := String(pending["id"])
+		if fired.has(transition_id):
+			pending = {}
+			continue
+		var sub := _apply_transition(system, pending)
+		if not bool(sub.get("ok",false)): return sub
+		fired[transition_id] = true
+		instant["transitions"].append(sub["record"])
+		# Re-solve algebraics immediately after every jump/topology mutation at the same physical time.
+		var alg := _solve_algebraic_for(system, _state_values(system), instant_time, String(system["mode"]), _algebraic_values(system))
+		if not bool(alg.get("ok",false)): return {"ok":false, "code":"EVENT_POST_DAE_SOLVE_FAILED"}
+		_commit_algebraic_values(system, alg["values"])
+		instant["transitions"][instant["transitions"].size()-1]["post_algebraics"] = alg["values"].duplicate(true)
+		pending = {}
+	return {"ok":false, "code":"EVENT_ITERATION_NO_FIXED_POINT"}
+
+static func _next_enabled_condition_transition(system: Dictionary, fired: Dictionary) -> Dictionary:
+	var candidates: Array = []
+	for transition in _eligible_transitions(system, "condition"):
+		if fired.has(String(transition["id"])): continue
