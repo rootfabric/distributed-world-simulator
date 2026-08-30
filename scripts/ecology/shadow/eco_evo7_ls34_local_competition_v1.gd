@@ -313,13 +313,14 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         if phenotype_package.is_empty():
             return {}
         var fp: Dictionary = phenotype_package["functional_phenotype"]
+        # VIS4.1 evidence is strictly non-causal. Packaging failure must never
+        # abort the accepted ecology generation; it only makes the derived
+        # presentation sidecar unavailable/fail-closed for this generation.
         var morphology_evidence := MorphologyEvidence.build_record(
             record,
             Dictionary(phenotype_package["ph2"]),
             fp
         )
-        if morphology_evidence.is_empty():
-            return {}
         var position := _record_position(record)
         var identity := String(record["record_id"])
         provisional.append({
@@ -435,7 +436,9 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         evaluations.append(evaluation)
         if survives:
             survivors.append(record.duplicate(true))
-            morphology_records.append(Dictionary(item["morphology_evidence"]).duplicate(true))
+            var morphology_value = item.get("morphology_evidence")
+            if morphology_value is Dictionary and not Dictionary(morphology_value).is_empty():
+                morphology_records.append(Dictionary(morphology_value).duplicate(true))
 
     var evaluation_ms := _elapsed_ms(profile_phase_started)
     profile_phase_started = Time.get_ticks_usec()
