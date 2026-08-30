@@ -64,6 +64,10 @@ var planet_source = null
 var spec: Dictionary = {}
 var patch: Dictionary = {}
 var environment_field: Dictionary = {}
+## LS4 keeps the LS3.1-generated field immutable as the forcing baseline.
+## environment_field may then point at the validated per-generation derivative.
+var base_environment_field: Dictionary = {}
+var _environment_forcing_provider = null
 var ecology = null
 var classifier = null
 var observatory = null
@@ -163,10 +167,31 @@ func advance_generations(count: int) -> Dictionary:
     var result: Dictionary = {}
     for _index in count:
         var total_started := Time.get_ticks_usec()
+        var previous_environment: Dictionary = {}
+        var forcing_applied := false
+
+        ## LS4 forcing is a pre-generation input transaction. Invalid proposals
+        ## never reach ecology. If the generation itself fails before commit,
+        ## restore the exact previous field so the Workbench remains fail-closed.
+        if _environment_forcing_provider != null:
+            previous_environment = environment_field.duplicate(true)
+            var current_ecology: Dictionary = ecology.get_snapshot()
+            var next_generation := int(current_ecology.get("generation", -1)) + 1
+            var proposed_environment = _environment_forcing_provider.environment_for_generation(
+                next_generation, base_environment_field.duplicate(true))
+            if not proposed_environment is Dictionary or Dictionary(proposed_environment).is_empty():
+                return {}
+            if not ecology.set_environment_field(Dictionary(proposed_environment)):
+                return {}
+            environment_field = Dictionary(proposed_environment).duplicate(true)
+            forcing_applied = true
+
         var phase_started := Time.get_ticks_usec()
         result = ecology.step_generation()
         var ecology_step_ms := _elapsed_ms(phase_started)
         if result.is_empty():
+            if forcing_applied and ecology.set_environment_field(previous_environment):
+                environment_field = previous_environment
             return {}
 
         phase_started = Time.get_ticks_usec()
@@ -184,6 +209,7 @@ func advance_generations(count: int) -> Dictionary:
             "ecology_validation_ms": ecology_validation_ms,
             "observability": last_observability_profile.duplicate(true),
             "ecology": ecology.get_last_profile(),
+            "environment_forcing": _environment_forcing_provider.get_last_overlay() if _environment_forcing_provider != null and _environment_forcing_provider.has_method("get_last_overlay") else {},
             "total_ms": _elapsed_ms(total_started),
         }
         last_generation_profile = profile
@@ -241,6 +267,24 @@ func clear_generation_stream_executor() -> void:
 
 func has_generation_stream_executor() -> bool:
     return ecology != null and ecology.has_generation_stream_executor()
+
+## LS4 public research seam. The provider may propose only an LS3.1-compatible
+## environment field for the next generation. Workbench remains the experiment
+## controller; LS3.3/LS3.4 validate the field before causal use.
+func set_environment_forcing_provider(provider) -> bool:
+    if not initialized or provider == null or not provider.has_method("environment_for_generation"):
+        return false
+    _environment_forcing_provider = provider
+    return true
+
+func clear_environment_forcing_provider() -> void:
+    _environment_forcing_provider = null
+
+func has_environment_forcing_provider() -> bool:
+    return _environment_forcing_provider != null
+
+func get_base_environment_field() -> Dictionary:
+    return base_environment_field.duplicate(true)
 
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
@@ -383,6 +427,7 @@ func _rebuild() -> bool:
     environment_field = EnvironmentField.new().generate(patch, String(spec["environment_recipe"]), int(spec["environment_seed"]))
     if environment_field.is_empty():
         return false
+    base_environment_field = environment_field.duplicate(true)
     ecology = LS34.new()
     if not ecology.setup(
         patch, environment_field, FOUNDER_SEED, PLACEMENT_SEED, EVOLUTION_SEED,
@@ -525,7 +570,8 @@ func _reset_runtime() -> void:
     initialized = false
     playing = false
     planet_source = null
-    spec.clear(); patch.clear(); environment_field.clear(); classification.clear()
+    spec.clear(); patch.clear(); environment_field.clear(); base_environment_field.clear(); classification.clear()
+    _environment_forcing_provider = null
     ecology = null; classifier = null; observatory = null
     reset_count = 0; manual_step_count = 0
     last_generation_profile.clear(); generation_profile_history.clear(); last_observability_profile.clear()
