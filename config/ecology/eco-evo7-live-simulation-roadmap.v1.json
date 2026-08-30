@@ -135,8 +135,8 @@
       "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
       "detail": "Measurement-only campaign: 1 accepted recipe × SERIAL_REFERENCE/STREAM1 × 3 repetitions, 2 warmup + 12 measured generations. Produces 6 PERF2.0-valid samples, requires 3/3 exact cross-mode canonical parity, measured-window STREAM1 telemetry, and 12 p50/p95 summary rows. No optimization claim.",
       "plan_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_PLAN_RU.md",
-      "profiler_runtime_head": "e4f887cf943249a6dc05ee456a337db8b9fcbde7",
-      "acceptance_harness_head": "804a78aeaddb287c43a16154fd39fb5d2124f29b",
+      "profiler_runtime_head": "e1690106764cbcff536d939e87f1f65e9111937e",
+      "acceptance_harness_head": "9590ac289c8664a7857cebcecca5d5819450033e",
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
       "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
     },
@@ -364,8 +364,8 @@
       "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
       "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
       "measurement_contract_mutation_allowed": false,
-      "profiler_runtime_head": "e4f887cf943249a6dc05ee456a337db8b9fcbde7",
-      "acceptance_harness_head": "804a78aeaddb287c43a16154fd39fb5d2124f29b",
+      "profiler_runtime_head": "e1690106764cbcff536d939e87f1f65e9111937e",
+      "acceptance_harness_head": "9590ac289c8664a7857cebcecca5d5819450033e",
       "campaign": {
         "recipes": [
           "MIXED_PHYSICAL_HETEROGENEITY"
@@ -398,7 +398,20 @@
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R1_RU.md",
       "canonical_entrypoint": "RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.1",
       "transitive_runner": "RUN_ECO_EVO7_PERF2_1_TESTS.ps1",
-      "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
+      "windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+      "source_review": {
+        "accepted_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
+        "accepted_contract_changed": false,
+        "shadow_runtime_changed": false,
+        "stream1_runtime_changed": false,
+        "profiler_public_advance_calls": 2,
+        "profiler_stream1_seam_calls": 1,
+        "profiler_private_core_access": false,
+        "profiler_records_assignment": false,
+        "profiler_reproduction_calls": 0,
+        "profiler_mutation_seed_calls": 0,
+        "profiler_dispersal_seed_calls": 0
+      }
     }
   }
 }
