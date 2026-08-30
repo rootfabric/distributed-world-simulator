@@ -414,3 +414,24 @@ PLAY1 opens only after PERF2.CONV GREEN.
 Текущая программа уже работает в parallel mode; этот roadmap amendment фиксирует это как каноническое execution rule для ECO track.
 
 Первый рабочий пункт VIS4-ветки: VIS4.0 Truth / Contract Audit.
+
+
+---
+
+## VIS4.0 implementation result — 2026-08-30
+
+Truth / Contract Audit уточнил первоначальный roadmap.
+
+1. Exact live branch topology должен предпочитать PH2 realized_development_traits, а не raw hereditary dev_traits: PH2 реально изменяет internode, apical dominance, branch probability/angle/length и crown spread под environment plasticity.
+2. LS3.4 публикует height/LAI/root/resource evidence, но теряет realized crown radius/density, structural/leaf strategy seals и exact PH2 topology.
+3. VIS4.1 поэтому обязан делать source-bound pass-through/sidecar из уже вычисленного LS3.4/PH2 pass. Renderer-side biology recomputation запрещён.
+4. В EVO7 R1 генетически mutable из PH0 только max_height_m, crown_spread_m и apical_dominance; internode_length_m, branch_probability, branch_angle_deg, branch_length_ratio и branching_depth наследуются, но пока не входят в morphology mutation AXES. Это остаётся областью MORPH1.
+5. PH5 переиспользуется, но его current render description имеет fixed branch base radii и fixed foliage anchors per segment. structural_investment, realized_crown_density и leaf strategy требуют тонкой source-bound VIS4 presentation mapping поверх accepted PH5, а не второго tree renderer.
+
+Durable audit sources:
+
+~~~text
+docs/plans/ECO_EVO7_VIS4_0_TRUTH_CONTRACT_AUDIT_RU.md
+config/ecology/eco-evo7-vis4-truth-contract-audit.v1.json
+tests/ecology/eco_evo7_vis4_0_truth_contract_audit_acceptance.gd
+~~~
