@@ -1,0 +1,57 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_r9_validation_protocol_correction.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "candidate_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "candidate_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+  "reported_attempt": {
+    "gate": "M7_DECISIVE",
+    "run": 1,
+    "exit_code": 1,
+    "assertions": 54,
+    "failures": 7,
+    "rerun": false,
+    "canonical_run": false,
+    "primary_failures": [
+      "Seven Days inventory profile active",
+      "M7 A uses Seven Days UI",
+      "M7 B uses Seven Days UI",
+      "B sees shared container slots",
+      "M7 A clean shutdown",
+      "M7 B clean shutdown",
+      "M7 server clean shutdown"
+    ],
+    "camera_basis_repair_signals": {
+      "a_item_bridge_accepted": 7,
+      "b_item_bridge_accepted": 2,
+      "player_convergence_equal": true,
+      "a_state": "COMPLETE",
+      "b_state": "COMPLETE"
+    }
+  },
+  "classification": "INVALID_VALIDATION_ENVIRONMENT_NOT_CANDIDATE_VERDICT",
+  "reason": [
+    "The manual R9 instruction invoked test_m7_playable_networked_processes.gd directly from the ordinary Windows shell.",
+    "The repository-owned RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1 establishes an isolated HOME, USERPROFILE, APPDATA, LOCALAPPDATA, XDG_DATA_HOME, XDG_CONFIG_HOME and XDG_CACHE_HOME for every test process.",
+    "The repository-owned runner also performs a clean isolated editor import before runtime tests.",
+    "The manual instruction omitted both the isolated parent profile and the editor-import prerequisite.",
+    "The observed failure is entirely on UI/profile/shutdown predicates while the repaired M7 item acceptance target is 7/2 and player convergence checksums match, so the attempt does not demonstrate failure of the R9 camera-basis repair."
+  ],
+  "governing_effect": {
+    "r9_candidate_status": "UNVERIFIED_NOT_FAILED",
+    "r9_runtime_bytes_changed": false,
+    "previous_attempt_preserved": true,
+    "previous_attempt_may_not_be_relabelled_pass": true,
+    "previous_attempt_may_not_block_corrected_first_governed_series": true,
+    "corrected_series_is_not_a_rerun_of_a_valid_candidate_gate": true
+  },
+  "corrected_validation_preconditions": [
+    "Fresh isolated parent test profile for each M7 attempt including USERPROFILE.",
+    "Clean isolated editor import before the first M7 attempt.",
+    "Exact Godot 4.7.1.stable.double.custom_build.a13da4feb.",
+    "Exact immutable R9 HEAD/TREE.",
+    "No candidate source/test mutation."
+  ],
+  "source_of_truth": "RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1",
+  "director_decision": "AUTHORIZE_ONE_CORRECTED_GOVERNED_R9_WINDOWS_SERIES"
+}

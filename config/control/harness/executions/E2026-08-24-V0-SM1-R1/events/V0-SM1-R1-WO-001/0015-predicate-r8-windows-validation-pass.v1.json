@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0015",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 15,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-29T10:45:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-r8-verifier-dispatch-r2",
+  "head_sha": "1b1a2977d844a6c7bd605d7f0a188414a4b7f5c0",
+  "summary": "R8 Windows validation completed on immutable composite subject 25f5ddf6... / tree 82c6567a... with contracts 126/0, R7 guard 31/0, R8 control-read 25/0, pipe smoke PASS, one decisive 10/10 series, one canonical 304/304 and 307-step PASS, and real transient read recovery observed. Subject is authorized for a fresh independent B6 machine re-verification; B7 and merge remain blocked.",
+  "command": "DISPATCH_FRESH_B6_R8_REVERIFIER",
+  "exit_code": 0,
+  "predicate": "R8_WINDOWS_VALIDATION_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-R8-WINDOWS-VALIDATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-B6-FRESH-VERIFIER-INSTRUCTION-002.md"
+  ]
+}

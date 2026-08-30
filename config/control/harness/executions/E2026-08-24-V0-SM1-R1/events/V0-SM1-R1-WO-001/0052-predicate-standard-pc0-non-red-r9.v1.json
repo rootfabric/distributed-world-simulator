@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0052",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 52,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-30T03:15:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-final-reconciliation-r2",
+  "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "summary": "Fresh exact-head PC0 is YELLOW, which is NON_RED under canonical policy; the required convergence/control review before major acceptance is FINAL-REVIEW-002.",
+  "command": "RECONCILE_PREDICATE_FROM_FRESH_R9_REVIEW_AND_VERIFICATION",
+  "exit_code": 0,
+  "predicate": "STANDARD_PC0_NON_RED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-WO-001-CHECKPOINT-PROPOSAL-EVIDENCE-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B7-DIRECTOR-RECONCILIATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json"
+  ]
+}

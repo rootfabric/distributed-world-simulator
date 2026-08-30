@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0018",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 18,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-29T13:30:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-r9-verifier-dispatch-r3",
+  "head_sha": "0e71c28b6d48459168e5e9929d151fc3056f2d6e",
+  "summary": "R9 implementer-side Windows validation V2 passed on exact immutable R9: isolated editor import PASS; governed M7 10/10 at 54/0 each; M5 inherited pre-gates PASS; M5 decisive 10/10; focused SM1 13/13; impaired network 5/5 at 69/0; first and only canonical full world regression passed 304/304, 307 steps, zero bad exits. Candidate is ready for a new fresh independent B6 exact-head Verifier.",
+  "command": "AUTHORIZE_FRESH_B6_R9_EXACT_HEAD_REVERIFICATION",
+  "exit_code": 0,
+  "predicate": "R9_WINDOWS_VALIDATION_V2_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M7-R9-WINDOWS-VALIDATION-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-R9-WINDOWS-VALIDATION-PROTOCOL-CORRECTION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json"
+  ],
+  "blocker": ""
+}

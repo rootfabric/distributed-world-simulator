@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-005",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-004",
+  "failed_r4_candidate": "ba5e1509f078b4b7599f9390da7df819b7340c4d",
+  "failed_r4_tree": "471f86dc3d69fcef5bf50e89cdc80ff909798b24",
+  "windows_r4_result": {
+    "contract": "PASS_88_0",
+    "run1": "PASS",
+    "run2": "INVALID_DIAGNOSTIC_FAIL",
+    "failure": "R4_DRAIN_API_BUG",
+    "error": "Invalid call: FileAccess.get_available_bytes does not exist",
+    "a2_state": "CONVERGENCE_LOCKED",
+    "b_state": "CONVERGENCE_LOCKED",
+    "a2_silent_death_reproduced": false,
+    "reruns": 0,
+    "canonical_full_regression": "NOT_RUN"
+  },
+  "classification": "R4_OBSERVABILITY_IMPLEMENTATION_BUG",
+  "root_cause": "OS.execute_with_pipe returns FileAccess pipes. FileAccess has get_buffer/get_error/get_length but no get_available_bytes. The R4 drain path therefore threw on every poll and invalidated lifecycle updates. Godot pipe FileAccess implements get_length() as currently readable byte count (PeekNamedPipe on Windows, FIONREAD on Unix), so R5 can drain only available bytes without blocking.",
+  "authorized_r5_scope": {
+    "allowed_paths": [
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Replace invalid get_available_bytes drain logic with get_length -> get_buffer(available) on non-blocking FileAccess pipe and record get_error without treating an empty non-blocking read as a child failure.",
+    "Close pipe FileAccess handles when process capture is closed.",
+    "Add a runtime-only pipe smoke mode to the same M5 acceptance script. On Windows it spawns cmd.exe to emit one stdout and one stderr marker; on Unix it uses /bin/sh. The smoke must use the same _drain_pipe implementation.",
+    "Require RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1 to execute the pipe smoke successfully before run 1.",
+    "Strengthen M5 contracts to reject get_available_bytes and require get_length/get_buffer + runtime smoke hook."
+  ],
+  "non_goals": [
+    "Do not claim R4 invalid run disproves or reproduces the R3 silent A2 exit.",
+    "Do not rerun immutable R3 or R4.",
+    "Do not add M5 retries or timeout changes.",
+    "Do not modify convergence/LEAVE/network/SM1 semantics.",
+    "Do not run canonical full regression unless a later correctness candidate satisfies its own gate."
+  ],
+  "acceptance_r5": [
+    "Exact custom double Godot identity retained.",
+    "Contract test PASS.",
+    "Standalone --m5-pipe-smoke-only runtime smoke exits 0 and proves stdout marker bytes>0, stderr marker bytes>0, child exit_code=0.",
+    "Stability runner refuses to start run 1 if pipe smoke fails.",
+    "On a real M5 child death, lifecycle JSON is updated and stdout/stderr drain does not throw.",
+    "R5 remains diagnostic-only; stop on first M5 failure and preserve evidence."
+  ],
+  "director_decision": "AUTHORIZED_R5_PIPE_DRAIN_OBSERVABILITY_REPAIR",
+  "b6_status": "BLOCKED_PENDING_R5_DIAGNOSTIC_EVIDENCE",
+  "b7_status": "BLOCKED"
+}

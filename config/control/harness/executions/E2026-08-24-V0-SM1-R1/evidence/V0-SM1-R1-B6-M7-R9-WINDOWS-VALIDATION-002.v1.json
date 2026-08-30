@@ -1,0 +1,148 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_b6_m7_r9_windows_validation_receipt.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "risk_class": "CRITICAL",
+  "historical_verifier_failure": {
+    "record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json",
+    "verified_head_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "verified_tree_sha": "82c6567acdc735bc02a4808159328f00722b0b6b",
+    "verdict": "FAILED",
+    "failure_surface": "tests/runtime/test_m7_playable_networked_processes.gd",
+    "canonical_rerun": false
+  },
+  "r9_candidate": {
+    "branch": "repair/m7-camera-basis-sync-r9",
+    "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+    "base_r8_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "delta_commits": 2,
+    "delta_files": 2,
+    "changed_paths": [
+      "tools/runtime/m7_playable_network_client.gd",
+      "tests/runtime/test_m7_playable_networked_processes.gd"
+    ],
+    "camera_basis_repair": {
+      "helper": "_set_automated_camera_yaw",
+      "public_api": "playground.player.adjust_view(yaw_delta, 0.0)",
+      "direct_camera_yaw_assignment_absent": true
+    }
+  },
+  "previous_invalid_attempt": {
+    "preserved": true,
+    "classification": "INVALID_VALIDATION_ENVIRONMENT_NOT_CANDIDATE_VERDICT",
+    "governed_candidate_result": false,
+    "replacement_of_valid_run": false,
+    "reason": "The superseded direct-M7 protocol omitted the repository-owned parent profile isolation and isolated editor import. The corrected V2 series is the first governed candidate series."
+  },
+  "windows_validation_v2": {
+    "source": "fresh Windows R9 V2 validation report supplied by the Windows validation agent",
+    "worktree": "C:\\distributed-world-simulator\\repair-m7-r9-v2",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_editor_import": {
+      "result": "PASS",
+      "exit_code": 0,
+      "script_parse_compile_errors": 0
+    },
+    "scope_proof": {
+      "result": "PASS",
+      "commits": 2,
+      "files": 2,
+      "camera_basis_guards": "PASS"
+    },
+    "m7_governed_decisive": {
+      "result": "PASS_10_OF_10",
+      "assertions_each": 54,
+      "failures_each": 0,
+      "single_corrected_governed_series": true,
+      "replacement_runs": 0
+    },
+    "m5_contracts": {
+      "result": "PASS",
+      "assertions": 126,
+      "failures": 0
+    },
+    "r7_convergence_guard": {
+      "result": "PASS",
+      "assertions": 31,
+      "failures": 0
+    },
+    "r8_control_read_regression": {
+      "result": "PASS",
+      "assertions": 25,
+      "failures": 0
+    },
+    "pipe_smoke": {
+      "result": "PASS",
+      "marker": "M5_CHILD_PIPE_OBSERVABILITY_PASS",
+      "exit_code": 0,
+      "stdout_bytes": 15,
+      "stderr_bytes": 15,
+      "wrapper_note": "One non-governed PowerShell wrapper invocation raised NativeCommandError before a governed Godot exit code was captured. It is preserved as wrapper-only evidence and is not counted as a governed Gate E attempt. The first valid governed Gate E execution passed."
+    },
+    "m5_decisive": {
+      "result": "PASS_10_OF_10",
+      "single_series": true,
+      "reruns": 0
+    },
+    "focused_sm1": {
+      "result": "PASS_13_OF_13"
+    },
+    "impaired_network": {
+      "result": "PASS_5_OF_5",
+      "assertions_each": 69,
+      "failures_each": 0
+    },
+    "canonical_world_regression": {
+      "result": "PASS",
+      "passed": true,
+      "declared_test_count": 304,
+      "discovered_test_count": 304,
+      "steps": 307,
+      "bad_exit_count": 0,
+      "first_and_only_attempt": true,
+      "reruns": 0
+    },
+    "artifacts_preserved": [
+      "C:\\distributed-world-simulator\\repair-m7-r9-v2\\artifacts\\test-results\\r9-windows-v2\\editor-import.log",
+      "C:\\distributed-world-simulator\\repair-m7-r9-v2\\artifacts\\test-results\\r9-windows-v2\\m7-run-01.log .. m7-run-10.log",
+      "C:\\distributed-world-simulator\\repair-m7-r9-v2\\artifacts\\test-results\\r9-windows-v2\\sm1-*.log",
+      "C:\\distributed-world-simulator\\repair-m7-r9-v2\\artifacts\\test-results\\r9-windows-v2\\impaired-01.log .. impaired-05.log",
+      "C:\\distributed-world-simulator\\repair-m7-r9-v2\\artifacts\\test-results\\world-regression-summary.json"
+    ],
+    "post_run_identity": {
+      "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+      "tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+      "tracked_runtime_changes": false,
+      "staged_changes": false,
+      "untracked_qualification": "artifacts/ and Godot-generated .gd.uid only; not committed"
+    }
+  },
+  "supplementary_evidence": {
+    "project_control_run": 33250316990,
+    "project_control_conclusion": "SUCCESS",
+    "project_control_exact_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "project_control_artifact_id": 9714151584,
+    "project_control_artifact_digest": "sha256:38485eb077c00cae90931a39e9d0bc30056cd99af63a8fb9bf94c98de33a8a9a"
+  },
+  "verification_subject": {
+    "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+    "required_verifier_record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "fresh_independent_execution_required": true,
+    "windows_validation_is_prior_evidence_not_a_substitute_for_verifier_execution": true
+  },
+  "disposition": "R9_WINDOWS_VALIDATED_READY_FOR_FRESH_B6_REVERIFICATION_NOT_MERGED",
+  "b6_status": "READY_FOR_FRESH_REVERIFICATION",
+  "b7_status": "BLOCKED",
+  "forbidden_conclusions": [
+    "SM1 is not accepted.",
+    "B6 is not closed until a fresh independent Verifier records VERIFIED on exact R9.",
+    "Historical VERIFICATION-001 and VERIFICATION-002 remain untouched.",
+    "Fresh exact-head Reviewer PASS for R9 is not established by this receipt.",
+    "B7 is not started.",
+    "No runtime merge is authorized.",
+    "P7 is not activated."
+  ]
+}

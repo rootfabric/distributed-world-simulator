@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-006",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-005",
+  "failed_r5_candidate": "b9bc54086e959e7d26f79336c264a96f29f31a17",
+  "failed_r5_tree": "6c631f1517ce1f335fe2765fcdafcf5b1b39ef20",
+  "windows_r5_result": {
+    "pipe_smoke": "PASS",
+    "run1": "PASS",
+    "run2": "PASS",
+    "run3": "FAIL",
+    "run3_duration_seconds": 173,
+    "a2_failure": "M5_ACCEPTANCE_TIMEOUT WAIT_CONVERGENCE_PEER stage_elapsed_ms=150017 total_elapsed_ms=150674",
+    "b_failure": "M5_ACCEPTANCE_TIMEOUT WAIT_CONVERGENCE_PEER stage_elapsed_ms=150006 total_elapsed_ms=162480",
+    "a2_exit": {
+      "exit_code": 1,
+      "termination_origin": "NOT_PARENT_INITIATED",
+      "parent_kill_requested": false
+    },
+    "b_exit": {
+      "exit_code": 1,
+      "termination_origin": "NOT_PARENT_INITIATED",
+      "parent_kill_requested": false
+    },
+    "canonical_full_regression": "NOT_RUN"
+  },
+  "classification": "M5_MUTUAL_PEER_WAIT_AND_REVOCABLE_RELEASE_ACK",
+  "root_cause": [
+    "During WAIT_CONVERGENCE_PEER each client directly reads the other client's result file before coordinator PREPARE. This creates a distributed peer-to-peer barrier even though the parent already owns convergence coordination.",
+    "The client code documents release consumption as the exact convergence acceptance point, but a consumed release can later call _revoke_convergence_prepare() and clear convergence_release_consumed.",
+    "The parent reads a.json then b.json sequentially. If a consumed release is revocable, the parent can combine a stale A=CONVERGENCE_RELEASED snapshot with a later B=CONVERGENCE_RELEASED snapshot and falsely conclude BOTH_RELEASES_CONSUMED while neither current client state remains released.",
+    "R5's simultaneous 150s WAIT_CONVERGENCE_PEER timeouts plus green parent-side coordination assertions are consistent with this temporal-skew/revocation failure."
+  ],
+  "authorized_r6_scope": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd",
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "tests/runtime/support/m5_convergence_release_guard_regression.gd",
+      "RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**",
+      "RUN_NETWORK_CONTRACT_TESTS.ps1"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Remove direct peer-result gating from the convergence phase. Clients publish their own READY_TO_CONVERGE checksums; the parent is the sole pair matcher.",
+    "Allow the parent to create a convergence generation when both current client reports are READY_TO_CONVERGE or CONVERGENCE_LOCKED with identical non-empty player and Item Graph checksums.",
+    "Clients acknowledge only a parent-authored convergence_prepare matching their current authoritative checksums, then wait for parent release.",
+    "Make convergence_release_consumed monotonic for its generation. After consumption, control-generation regression or authoritative checksum drift is a named FAIL-CLOSED condition, not a silent revoke/retry.",
+    "Parent COMPLETE remains gated on both durable CONVERGENCE_RELEASED reports for the exact generation.",
+    "Add pure barrier regression coverage for post-release monotonic integrity and static contract guards proving convergence no longer reads peer result files.",
+    "Wire the pure convergence release guard regression into RUN_NETWORK_CONTRACT_TESTS.ps1 so monotonicity is exercised by the focused network belt."
+  ],
+  "non_goals": [
+    "Do not add retries.",
+    "Do not increase timeouts.",
+    "Do not weaken checksum equality, generation identity, release guards, graceful leave or final server assertions.",
+    "Do not change product network/LEAVE/SM1 runtime semantics.",
+    "Do not erase the dormant R3 silent-A2 failure; R5 shows the active reproducible defect is the convergence barrier deadlock."
+  ],
+  "acceptance_r6": [
+    "M5 contracts PASS including centralized-convergence guards.",
+    "m5_convergence_release_guard_regression PASS with explicit post-release monotonic/fail-closed cases.",
+    "R5 pipe smoke still PASS.",
+    "Windows exact-Godot stability gate reaches 10/10 with no hidden reruns.",
+    "No client may transition from CONVERGENCE_RELEASED back to READY_TO_CONVERGE for the same generation.",
+    "If post-release state/control changes, failure must be explicit and immediate, not WAIT_CONVERGENCE_PEER timeout.",
+    "Only after Windows 10/10 may one canonical full world regression first attempt be considered.",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1 explicitly executes m5_convergence_release_guard_regression.gd."
+  ],
+  "escalation_rule": "If R6 still fails, preserve the first failure and exact a2/b/control/lifecycle reports. Any subsequent repair must follow the named failure; do not reintroduce peer-to-peer convergence waits or revocable consumed-release acknowledgements.",
+  "director_decision": "AUTHORIZED_R6_CENTRALIZED_MONOTONIC_CONVERGENCE_REPAIR",
+  "b6_status": "BLOCKED_PENDING_R6_VALIDATION",
+  "b7_status": "BLOCKED"
+}

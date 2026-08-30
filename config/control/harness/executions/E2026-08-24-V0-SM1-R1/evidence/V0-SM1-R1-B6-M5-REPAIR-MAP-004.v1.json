@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-004",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-003",
+  "failed_r3_candidate": "17801cecab4861683bd0d0ee4eabbd1186ba7164",
+  "failed_r3_tree": "944543e15718d1d427edb35be78446bee7659e43",
+  "windows_r3_result": {
+    "decisive_series": "FAIL_RUN_1_OF_10",
+    "run1_duration_seconds": 20.3,
+    "failure": "A2_SILENT_EXIT_MINUS_1",
+    "a2_result_file": "ABSENT",
+    "a2_engine_log_bytes": 0,
+    "reruns": 0,
+    "canonical_full_regression": "NOT_RUN_BY_DESIGN",
+    "wer_window": "NO_APPHANG_OR_APPCRASH_DURING_GATE_WINDOW"
+  },
+  "correction": "Earlier attribution of the R3 A2 death to a Windows AppHang was invalid. Available WER AppHang/AppCrash timestamps do not overlap the validation window. The observed -1 therefore cannot currently be classified as native crash, OS kill, self-exit, or parent termination from existing evidence.",
+  "classification": "M5_CHILD_TERMINATION_ORIGIN_UNOBSERVABLE",
+  "purpose": "Make the next child disappearance attributable without changing M5 gameplay/network semantics or retry behavior.",
+  "authorized_r4_scope": {
+    "allowed_paths": [
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Spawn M5 child Godot processes directly with OS.execute_with_pipe(..., false) instead of OS.create_process so stdout/stderr remain attached to the real child PID with no shell wrapper.",
+    "Continuously drain stdout and stderr into per-child files so output exists even if the child dies before creating its JSON report or Godot --log-file.",
+    "Record per-child lifecycle JSON: pid, label, spawn timestamp, stdout/stderr paths, result path, observed running/dead transitions, actual get_process_exit_code value, parent_kill_requested flag, parent kill reason/timestamp, last result JSON, and last control JSON snapshot.",
+    "When a wait detects a dead child, include the lifecycle record in the returned failure report.",
+    "Before parent cleanup OS.kill, durably mark parent_kill_requested=true and the cleanup reason.",
+    "Add contract guards requiring direct pipe spawn, exit-code capture, and parent-kill attribution."
+  ],
+  "honesty_boundary": [
+    "R4 may prove NOT_PARENT_INITIATED termination when no parent kill was requested, but without WER dump/debugger it must not claim SELF_EXIT versus EXTERNAL_TERMINATE.",
+    "get_process_exit_code=-1 must be recorded literally; on Windows the API is implemented, but -1 alone is not sufficient to assign root cause.",
+    "R4 is diagnostic instrumentation, not by itself a correctness fix. Even a 10/10 R4 run does not erase the preserved R3 failure."
+  ],
+  "non_goals": [
+    "Do not rerun immutable R3.",
+    "Do not add retries.",
+    "Do not increase timeouts.",
+    "Do not change convergence, LEAVE, Item Graph, networking or SM1 runtime semantics.",
+    "Do not enable WER LocalDumps automatically because that mutates host registry outside repository scope."
+  ],
+  "acceptance_r4": [
+    "Exact Godot still 4.7.1.stable.double.custom_build.a13da4feb.",
+    "M5 contracts pass with observability guards.",
+    "A child that exits before report creation leaves non-empty stdout/stderr capture files if it emitted any bytes and always leaves a lifecycle JSON.",
+    "Dead-child failure report contains pid, label, actual exit_code, parent_kill_requested, wait_label, last_result and last_control.",
+    "Parent cleanup kills are explicitly distinguishable from non-parent-initiated exits.",
+    "Run the diagnostic stability gate only on the new R4 candidate; stop on first failure and preserve evidence."
+  ],
+  "escalation_rule": "If R4 captures a non-parent-initiated A2 exit, classify from stdout/stderr + exit code. If still ambiguous and reproducible on Windows, enable WER LocalDumps manually or attach debugger before an R5 protocol/runtime repair. If parent_kill_requested=true unexpectedly, fix the parent lifecycle path before any network changes.",
+  "director_decision": "AUTHORIZED_R4_CHILD_TERMINATION_OBSERVABILITY",
+  "b6_status": "BLOCKED_PENDING_R4_DIAGNOSTIC_EVIDENCE",
+  "b7_status": "BLOCKED"
+}

@@ -1,0 +1,175 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "verified_head_sha": "6fdfc047f54e727e6b398370e576c746c7949441",
+  "verified_tree_sha": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+  "verifier": "INDEPENDENT_VERIFIER_B6_FRESH_SESSION_R1",
+  "verdict": "FAILED",
+  "verified_at_utc": "2026-08-28T23:21:33Z",
+  "environment": "Windows; Godot C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe --version = 4.7.1.stable.double.custom_build.a13da4feb; fresh detached clone C:\\dws-sm1-b6-runtime at exact subject HEAD/TREE",
+  "checks": {
+    "focused_sm1": {
+      "result": "PASS",
+      "editor_import": "PASS",
+      "tests_total": 13,
+      "tests_passed": 13,
+      "tests": [
+        "tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd exit=0",
+        "tests/runtime/test_v0_sm1_owner_map_and_transfer.gd exit=0",
+        "tests/runtime/test_v0_sm1_graphical_handoff_processes.gd exit=0",
+        "tests/runtime/test_v0_sm1_fault_matrix_1_6.gd exit=0",
+        "tests/runtime/test_v0_sm1_concurrent_crossings.gd exit=0",
+        "tests/runtime/test_v0_sm1_reconnect_after_handoff.gd exit=0",
+        "tests/runtime/test_v0_sm1_gateway_failure_restart.gd exit=0",
+        "tests/runtime/test_v0_sm1_authority_recovery.gd exit=0",
+        "tests/runtime/test_v0_sm1_world_state_continuity.gd exit=0",
+        "tests/runtime/test_v0_sm1_world_mutations_around_handoff.gd exit=0",
+        "tests/runtime/test_v0_sm1_combined_carry_world_chain.gd exit=0",
+        "tests/runtime/test_v0_sm1_historical_activation_replay.gd exit=0",
+        "tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd exit=0"
+      ],
+      "log": "C:\\dws-sm1-b6-runtime-logs\\b6-focused-belt.log"
+    },
+    "repeated_impaired_network_5x": {
+      "result": "PASS_5_OF_5",
+      "runs": [
+        "run1 exit=0 assertions=69 failures=0 marker=SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS",
+        "run2 exit=0 assertions=69 failures=0 marker=SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS",
+        "run3 exit=0 assertions=69 failures=0 marker=SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS",
+        "run4 exit=0 assertions=69 failures=0 marker=SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS",
+        "run5 exit=0 assertions=69 failures=0 marker=SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS"
+      ],
+      "log": "C:\\dws-sm1-b6-runtime-logs\\b6-impaired-network-5x.log"
+    },
+    "full_world_core_regression": {
+      "result": "FAIL",
+      "canonical_first_attempt": true,
+      "warmup_full_runs_before_canonical": 0,
+      "runner": ".\\RUN_WORLD_REGRESSION_TESTS.ps1 with exact GODOT_BIN",
+      "summary": {
+        "path": "artifacts/test-results/world-regression-summary.json",
+        "passed": false,
+        "declared_test_count": 304,
+        "discovered_test_count": 304,
+        "steps_recorded": 46,
+        "steps_expected_on_pass": 307,
+        "bad_exit_code_steps": [
+          {
+            "name": "test_m5_graphical_multiplayer_acceptance",
+            "exit_code": -1,
+            "duration_seconds": 2.44,
+            "last_output": "PASS: M5 dedicated server process launched"
+          }
+        ],
+        "editor_import_parse": "PASS before failure point",
+        "main_scene_cli_all": "NOT_REACHED (suite aborted at first failure)"
+      },
+      "failure_classification_rule_section7": "REPEATED_FAILURE => FAILED",
+      "diagnostic_reruns_preserved_not_substituted": [
+        "canonical in-suite run 1: exit -1, silent death 2.44s after 'M5 dedicated server process launched' (no WAIT_CONVERGENCE_PEER, no timeout text)",
+        "standalone diag run A1: exit -1, silent death after 'A reconnect graphical process launched'",
+        "standalone diag run B1: exit 0 PASS (98 assertions, 0 failures)",
+        "standalone diag run B2: FAIL assertion 'ERROR: FAIL: A reconnect graphical acceptance completed'"
+      ],
+      "m5_failure_rate": "3 failures in 4 M5 attempts across two invocation contexts; failure point varies (early server launch, reconnect launch, reconnect acceptance assertion)",
+      "historical_wait_convergence_peer": "not reproduced verbatim (no 150s WAIT_CONVERGENCE_PEER timeout observed); the M5 graphical multi-process instability class the B5 record named as residual risk WAS independently reproduced",
+      "logs": [
+        "C:\\dws-sm1-b6-runtime-logs\\b6-full-regression.log",
+        "C:\\dws-sm1-b6-runtime-logs\\b6-m5-diagnostic.log",
+        "C:\\dws-sm1-b6-runtime-logs\\b6-m5-diag-run-1.log",
+        "C:\\dws-sm1-b6-runtime-logs\\b6-m5-diag-run-2.log"
+      ]
+    },
+    "pc0": {
+      "result": "CAPTURED",
+      "command": "git fetch origin --prune; .\\CONTROL_PROJECT.ps1 -NoFailOnRed (exit 0)",
+      "standard_overall_health": "YELLOW",
+      "standard_program_health": {
+        "HARNESS": "GREEN",
+        "TS": "GREEN",
+        "MATTER": "GREEN",
+        "S1": "GREEN",
+        "G": "YELLOW",
+        "T": "YELLOW",
+        "CH": "YELLOW",
+        "DOCTRINE": "YELLOW",
+        "NX": "YELLOW",
+        "V0": "YELLOW",
+        "ECO": "RED_ADVISORY_blocks_global_progress_false"
+      },
+      "directional_overall_health": "YELLOW",
+      "directional_watch_hits": [
+        "CH->NX YELLOW BLOCK: 4 paths",
+        "NX->ECO YELLOW ADVISORY: 1 path",
+        "NX->T YELLOW BLOCK: 1 path",
+        "V0->ECO YELLOW ADVISORY: 3 paths",
+        "V0->T YELLOW BLOCK: 3 paths"
+      ],
+      "critical_directional_hits_on_candidate_delta": [],
+      "cross_branch_overlaps": [],
+      "v0_relevant": {
+        "program": "V0 control/post-p6-sm1-activation-r1 YELLOW",
+        "blockers": [
+          "PROJECT_CONTROL_NON_RED_REQUIRED",
+          "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
+          "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED_BEFORE_SM1_RUNTIME_DISPATCH",
+          "POST_MERGE_PC0_NON_RED_REQUIRED",
+          "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
+          "DIRECTOR_DISPATCH_REQUIRED"
+        ],
+        "global_blocked_transitions_relevant": [
+          "V0-SM1 RUNTIME MUTATION START blocked",
+          "V0-SM1 CHECKPOINT ACCEPTANCE blocked (STATIC_A_B_A_GRAPHICAL_HANDOFF_PLUS_FAULT_RACE_REPEAT_PLUS_FULL_REGRESSION_PLUS_FRESH_REVIEW_VERIFIER_DIRECTOR_REQUIRED)",
+          "V0-P7 START blocked"
+        ]
+      },
+      "yellow_gate_interpretation": "No explicit NON_RED boolean gate field exists in either machine JSON. Machine contract scripts/control/project_control_core.py defines HEALTH_RANK {GREEN:0, YELLOW:1, RED:2} and states 'YELLOW - converge/review before next major acceptance; RED - blocked'; repo precedent records (e.g. H0-0-R3 PC0 evidence, V0-P5-R2 verifier record 'YELLOW NON_RED', P5-R2 final evidence map 'Project-wide health remains YELLOW/NON_RED and must not be relabeled GREEN') explicitly map YELLOW to NON_RED-but-not-GREEN. Recorded honestly as: overall YELLOW/NON_RED per machine contract and policy precedent, explicitly NOT GREEN, explicitly NOT claimed as satisfying STANDARD_PC0_NON_RED or DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS predicates; main_head observed e14f8b6e5b07709d18273cc7886fe660bc353ebf",
+      "reports": [
+        "artifacts/control/project-control-report.json",
+        "artifacts/control/directional-watch-report.json"
+      ]
+    },
+    "freshness": {
+      "head_match": true,
+      "tree_match": true,
+      "tracked_diff": "none (git diff --exit-code = 0)",
+      "staged_diff": "none (git diff --cached --exit-code = 0)",
+      "untracked_files_count": 36,
+      "untracked_files_qualification": "all 36 are Godot-generated .uid files (6 scripts/ecology/production/*, 16 scripts/runtime/networked_gameplay/sm1/*, 1 tests/network/test_eg5_correctness_repair.gd.uid, 13 tests/runtime/test_v0_sm1_*.gd.uid); none committed; tree is clean only with this qualification; artifacts/ directories are gitignored",
+      "head_sha": "6fdfc047f54e727e6b398370e576c746c7949441",
+      "tree_sha": "b9b1202d959b3da4a0c73840091c7bf56070429e"
+    },
+    "evidence_cross_check_b4_b5": {
+      "b4_carrier_head": "1325812152944385c49af2ffe4f6afe6548d3b22",
+      "b4_evidence_map_evidence_head_sha": "6fdfc047f54e727e6b398370e576c746c7949441 (== SUBJECT_HEAD)",
+      "b5_review_record_head": "8b4793d868eb81ff4786d51a4ba5ec90deb08a4e",
+      "b5_review_record_tree": "4df95dcd3c32e49539b074990095726ca5aa0b4f (matches pin)",
+      "b5_reviewed_head_sha": "6fdfc047f54e727e6b398370e576c746c7949441 (== SUBJECT_HEAD)",
+      "b5_reviewed_tree_sha": "b9b1202d959b3da4a0c73840091c7bf56070429e (== SUBJECT_TREE)",
+      "b5_verdict": "PASS",
+      "b5_required_fixes": [],
+      "subject_ancestor_of_b4_carrier": true,
+      "subject_ancestor_of_b5_carrier": true,
+      "b4_b5_change_no_runtime_subject_bytes": true,
+      "b4_changed_files": ["config/control/harness/executions/E2026-08-24-V0-SM1-R1/events/V0-SM1-R1-WO-001/0004-predicate-evidence-map-complete.v1.json"],
+      "b5_changed_files": ["config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-001.v1.json"],
+      "source_ancestor_of_subject": true,
+      "repair_layer": "exactly 4 commits (a17f8f37, 68eeaf13, e22a1ea1, 6fdfc047) / 10 files (6 eco .tscn, 2 SM1 process tests, eg1_client_worker.gd, m7_playable_network_client.gd)"
+    }
+  },
+  "notes": "B6 fresh exact-head machine verification FAILED on the canonical full world/core regression gate. Subject identity, repair-layer composition, exact custom double Godot, focused SM1 belt (13/13), impaired-network stability (5/5), B4/B5 binding, tracked-tree immutability and PC0 capture all verified clean. The FIRST canonical B6 run of RUN_WORLD_REGRESSION_TESTS.ps1 (no warmup full runs) failed at tests/runtime/test_m5_graphical_multiplayer_acceptance.gd with exit -1 after 2.44s (summary passed=false, 46/307 steps, declared=discovered=304). Per instruction section 7 the first failure is preserved as canonical and later reruns are diagnostic only: M5 instability reproduced in 3 of 4 independent attempts (two silent exit -1 process deaths at varying stages, one explicit assertion failure 'A reconnect graphical acceptance completed', one PASS 98/0). This is a REPEATED failure, not an unclassifiable one-off, so the section 7 rule yields FAILED. The historical WAIT_CONVERGENCE_PEER 150s timeout itself was not reproduced verbatim; what reproduced is the M5 graphical multi-process orchestration instability class that B5 named as a residual risk to harden upon independent reproduction. Root-cause attribution between subject code and verifier-machine environment is NOT claimed; per section 14 B6=BLOCKED, B7=BLOCKED, and no runtime repair may occur without a new authorized Repair Map / Director decision. This record is a verification verdict only: it does NOT accept SM1, does NOT propose or accept a checkpoint, does NOT authorize merge, does NOT satisfy the human RUNTIME_FEATURE_MERGE gate, and does NOT activate P7. Remaining explicit checkpoint-proposal gaps carried from B5 remain open (STANDARD_PC0_NON_RED and DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS formal closure, V0 control-truth reconciliation, control-plane bookkeeping outside WO allowed_paths, M5 instability now independently reproduced and requiring Director disposition).",
+  "forbidden_conclusions_respected": {
+    "sm1_accepted": false,
+    "checkpoint_accepted": false,
+    "checkpoint_proposed": false,
+    "merge_authorized": false,
+    "p7_activated": false,
+    "human_gate_satisfied": false,
+    "pc0_green_claimed": false
+  },
+  "next": {
+    "b6": "BLOCKED",
+    "b7": "BLOCKED",
+    "required_for_continuation": "new authorized Repair Map / Director decision addressing the reproduced M5 test_m5_graphical_multiplayer_acceptance instability before any fresh B6 re-verification"
+  }
+}

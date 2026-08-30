@@ -1,0 +1,103 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-007",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-006",
+  "failed_r6_candidate": "d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8",
+  "failed_r6_tree": "72192fd30c66df974b669ed38f47de353cdeee6c",
+  "windows_r6_result": {
+    "contracts": "PASS_103_0",
+    "release_guard": "PASS_24_0",
+    "pipe_smoke": "PASS",
+    "runs_1_to_5": "PASS",
+    "run6": "FAIL",
+    "failure": "M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED",
+    "reason": "CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE",
+    "generation": "m5-convergence/2/8c88fd40d9e5/0b4b39f19ad4",
+    "prepared_player_checksum_prefix": "8c88fd40d9e5",
+    "current_player_checksum_prefix": "d84eed3e0401",
+    "item_checksum_stable": true,
+    "reruns": 0,
+    "canonical_full_regression": "NOT_RUN_BY_DESIGN"
+  },
+  "classification": "M5_LIVE_PLAYER_SNAPSHOT_ADVANCES_AFTER_RELEASE",
+  "root_cause": [
+    "The convergence player checksum is the checksum of the full PlayerStateSnapshot.",
+    "PlayerStateSnapshot checksum covers authority/revision/server_tick plus all player records including position, velocity, last_input_sequence and state_revision.",
+    "Therefore requiring current player checksum to remain equal to the PREPARE checksum after release is not a valid invariant for a live 60Hz authoritative simulation.",
+    "R6 correctly removed peer deadlock and made release monotonic, but its post-release integrity guard still treated legitimate forward snapshot progression as corruption."
+  ],
+  "director_decision": "AUTHORIZED_R7_PINNED_OBSERVED_STATE_IDENTITY",
+  "design_decision": {
+    "rejected": [
+      "freeze/quiesce authoritative player simulation solely to satisfy a test barrier",
+      "bounded retry on every live snapshot advance",
+      "dropping player convergence evidence entirely"
+    ],
+    "selected": [
+      "Treat exact PlayerStateSnapshot checksum observed by both clients as a pinned observed-state identity for the convergence generation.",
+      "Pin revision, server_tick, authority_owner_id and authority_epoch together with that checksum in the generation PREPARE.",
+      "Before release, each client must still have the exact pinned snapshot identity current; this preserves the exact-point convergence proof.",
+      "After release consumption, current PlayerStateSnapshot may advance, but revision/server_tick must be monotonic and authority owner/epoch must remain unchanged.",
+      "Item Graph checksum remains exact-stable through convergence because the scenario performs no post-prepare Item Graph mutation.",
+      "Coordinator COMPLETE remains gated on both durable release acknowledgements for the same pinned generation."
+    ]
+  },
+  "authorized_r7_scope": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd",
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "tests/runtime/support/m5_convergence_release_guard_regression.gd",
+      "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd",
+      "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Add a compact player observation identity to M5 reports: checksum, revision, server_tick, authority_owner_id, authority_epoch.",
+    "Parent PREPARE must pin that exact observation identity when both clients report the same player checksum.",
+    "Client PREPARE acknowledgement must require the parent-pinned observation identity to equal its exact current PlayerStateSnapshot identity.",
+    "After release consumption, validate monotonic revision/server_tick and stable authority identity instead of requiring the full current player checksum to remain unchanged.",
+    "Keep current Item Graph checksum equal to the prepared Item Graph checksum until coordinator COMPLETE.",
+    "Add regression cases for legal forward snapshot advancement, illegal revision/tick regression, illegal authority change and illegal Item Graph drift."
+  ],
+  "non_goals": [
+    "Do not stop or freeze server player simulation.",
+    "Do not add retry loops or generation retries solely for normal movement progression.",
+    "Do not weaken the pre-release exact snapshot match.",
+    "Do not remove exact Item Graph convergence.",
+    "Do not change player/network/runtime semantics outside the M5 acceptance barrier."
+  ],
+  "acceptance_r7": [
+    "M5 contract test PASS with observed-state identity guards.",
+    "Pure convergence regression PASS covering forward player snapshot advancement after release.",
+    "R5 pipe smoke remains PASS.",
+    "Windows exact-Godot M5 stability 10/10 with no hidden reruns.",
+    "No WAIT_CONVERGENCE_COORDINATOR timeout and no CURRENT_AUTHORITATIVE_STATE_ADVANCED_AFTER_RELEASE for monotonic forward revision/tick movement.",
+    "Authority change, revision/tick regression or Item Graph drift after release must fail explicitly.",
+    "Only after 10/10 may one canonical full world regression first attempt be run."
+  ],
+  "b6_status": "BLOCKED_PENDING_R7_VALIDATION",
+  "b7_status": "BLOCKED",
+  "r7_candidate": {
+    "head_sha": "baa0e192209e72aba5ae9d04663eea85b1099e82",
+    "tree_sha": "08f01fd955c2d31c1ad49aa917e542c93e278241",
+    "base_sha": "d0cc0d31b56544ad8a0a4557b23d49f9f23da6d8",
+    "ahead_by": 11,
+    "changed_files": 5,
+    "machine_execution": "PENDING_WINDOWS_DECISIVE_GATE",
+    "author_container_exact_godot": "NOT_RUN_REPOSITORY_MATERIALIZATION_BLOCKED"
+  }
+}

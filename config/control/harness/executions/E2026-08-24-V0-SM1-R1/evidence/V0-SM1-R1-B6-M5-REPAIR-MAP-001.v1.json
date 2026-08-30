@@ -1,0 +1,90 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-001",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "failed_verification_record": "00337e8f6e7f3a212cbce6809b0adb6a11956336",
+  "immutable_failed_subject": "6fdfc047f54e727e6b398370e576c746c7949441",
+  "immutable_failed_subject_tree": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+  "finding": "Independent B6 reproduced intermittent failures in tests/runtime/test_m5_graphical_multiplayer_acceptance.gd on Windows exact double Godot: 3 failures in 4 attempts across varying lifecycle stages. Focused SM1 13/13 and impaired-network 5/5 remained green.",
+  "classification": "M5_GRAPHICAL_MULTIPROCESS_ORCHESTRATION_INSTABILITY",
+  "affected_module": "M5 graphical acceptance process harness",
+  "canonical_owner": "M5 graphical acceptance harness only; no change to SM1 authority/Gateway/canonical gameplay owners",
+  "entry_points": [
+    "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+    "scripts/runtime/networked_gameplay/m5/m5_process_environment.gd"
+  ],
+  "callers": [
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "standalone exact-Godot M5 graphical acceptance invocation"
+  ],
+  "callees": [
+    "OS.create_process",
+    "isolated Godot child profiles",
+    "m5_graphical_acceptance_driver.gd",
+    "atomic JSON process reports"
+  ],
+  "sibling_surfaces": [
+    "SM1 focused tests — must remain byte-unchanged",
+    "SM1 authority/Gateway runtime — forbidden",
+    "M5 gameplay/runtime semantics — forbidden unless a later Repair Map proves root cause there",
+    "RUN_WORLD_REGRESSION_TESTS.ps1 — no semantic weakening / no retry masking"
+  ],
+  "evidence": [
+    "B6 canonical first full regression failed at test_m5_graphical_multiplayer_acceptance with exit -1 after 2.44s",
+    "diagnostic M5 attempts: fail, fail, pass 98/98, fail",
+    "failure points varied: early dedicated-server lifecycle, reconnect launch, reconnect acceptance",
+    "historical WAIT_CONVERGENCE_PEER timeout was not reproduced verbatim",
+    "B6 verifier explicitly withheld root-cause attribution"
+  ],
+  "root_cause_hypothesis": [
+    "Windows child profile isolation is incomplete: M5 ProcessEnvironment does not set USERPROFILE while multiple Godot processes are launched concurrently/sequentially.",
+    "Current M5 parent harness waits only on JSON state and does not fail fast when a child process dies, making early process death indistinguishable from later orchestration/state failure.",
+    "The instability may still be deeper than profile/lifecycle harnessing; therefore the first repair must improve observability without changing gameplay semantics."
+  ],
+  "authorized_r1_scope": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m5/m5_process_environment.gd",
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "scripts/runtime/networked_gameplay/m4/**",
+      "scripts/runtime/networked_gameplay/p4/**",
+      "scripts/runtime/networked_gameplay/p5/**",
+      "scripts/runtime/networked_gameplay/p6/**",
+      "config/architecture/**",
+      "config/control/project-program-registry.v1.json"
+    ]
+  },
+  "r1_changes": [
+    "Add USERPROFILE and explicit inventory-profile isolation to each M5 child process profile.",
+    "Add fail-fast child-process liveness checks to M5 state waits and preserve the last observed report plus wait label on early death.",
+    "Add a deterministic Windows stability runner that executes the same standalone M5 acceptance 10 times and stops/preserves on first failure."
+  ],
+  "non_goals": [
+    "Do not increase M5 timeouts as the primary fix.",
+    "Do not add automatic reruns to RUN_WORLD_REGRESSION_TESTS.ps1.",
+    "Do not weaken M5 assertions or convergence semantics.",
+    "Do not change SM1 runtime or its already-reviewed candidate.",
+    "Do not claim environment root cause unless the repaired harness evidence supports it."
+  ],
+  "acceptance_r1": [
+    "Exact Godot identity remains 4.7.1.stable.double.custom_build.a13da4feb.",
+    "Standalone M5 graphical acceptance passes 10 consecutive first-attempt runs on the Windows verifier machine.",
+    "No hidden rerun after a failure.",
+    "Each run has isolated child profiles and no profile-collision/editor-settings crash markers.",
+    "If a child dies, the harness reports which process/wait stage died instead of only a generic timeout/exit -1.",
+    "SM1 focused belt remains green.",
+    "After 10/10 M5 stability, rerun canonical RUN_WORLD_REGRESSION_TESTS.ps1 once from a fresh checkout of the repaired candidate."
+  ],
+  "escalation_rule": "If R1 still fails, preserve the first failing run and create R2 from the new lifecycle evidence. Do not patch M5 gameplay/runtime semantics without a second Repair Map identifying a canonical root cause.",
+  "director_decision": "AUTHORIZED_R1_DIAGNOSTIC_HARDENING",
+  "b6_status": "BLOCKED_PENDING_REPAIR_AND_FRESH_REVERIFICATION",
+  "b7_status": "BLOCKED"
+}
