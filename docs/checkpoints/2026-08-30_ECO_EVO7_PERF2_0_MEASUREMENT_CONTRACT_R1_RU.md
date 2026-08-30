@@ -134,6 +134,27 @@ pair incomparable.
 Why host is included: a result from another machine is useful evidence but cannot silently
 be merged into the same before/after performance claim.
 
+For SERIAL_REFERENCE ↔ STREAM1 a second identity is frozen:
+
+```text
+simulation_workload_hash
+```
+
+It includes the physical/biological load (recipe, generation counts, initial records and
+all deterministic seeds) but excludes backend/chunk/audit controls. Therefore:
+
+```text
+exact workload_hash:
+  SERIAL_REFERENCE != STREAM1
+
+simulation_workload_hash:
+  SERIAL_REFERENCE == STREAM1
+  only when both execute the same simulation load
+```
+
+The cross-mode `execution_comparison_key` additionally binds exact Godot, host fingerprint
+and measurement-method revision. Canonical result parity remains mandatory.
+
 ## Correctness gate
 
 Performance improvement is invalid unless both sides produce exactly the same canonical
