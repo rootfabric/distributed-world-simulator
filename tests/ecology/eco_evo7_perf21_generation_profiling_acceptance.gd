@@ -136,6 +136,15 @@ func _init() -> void:
 	var summary_paths := {}
 	for value in summaries:
 		var summary: Dictionary = value
+		print("PERF2.1 PROFILE recipe=%s mode=%s metric=%s count=%d p50=%.6f p95=%.6f mean=%.6f" % [
+			String(summary.get("environment_recipe", "")),
+			String(summary.get("execution_mode", "")),
+			String(summary.get("metric_path", "")),
+			int(summary.get("count", 0)),
+			float(summary.get("p50", 0.0)),
+			float(summary.get("p95", 0.0)),
+			float(summary.get("mean", 0.0)),
+		])
 		_check(int(summary.get("count", 0)) == 3, "every summary uses all three passing repetitions")
 		for key in ["p50", "p95", "mean", "min", "max"]:
 			_check(_finite_nonnegative(summary.get(key)), "summary statistic %s is finite/nonnegative" % key)
@@ -167,7 +176,15 @@ func _sample_for_repetition(samples: Array[Dictionary], repetition: int) -> Dict
 	return {}
 
 func _all_authorities_safe(authorities: Dictionary) -> bool:
-	return authorities == Profiler.AUTHORITIES 		and not bool(authorities.get("canonical", true)) 		and not bool(authorities.get("world_write", true)) 		and not bool(authorities.get("ecology_truth_write", true)) 		and not bool(authorities.get("generation_commit", true)) 		and bool(authorities.get("measurement_only", false)) 		and bool(authorities.get("side_channel_only", false))
+	return (
+		authorities == Profiler.AUTHORITIES
+		and not bool(authorities.get("canonical", true))
+		and not bool(authorities.get("world_write", true))
+		and not bool(authorities.get("ecology_truth_write", true))
+		and not bool(authorities.get("generation_commit", true))
+		and bool(authorities.get("measurement_only", false))
+		and bool(authorities.get("side_channel_only", false))
+	)
 
 func _source_guards() -> void:
 	var profiler_source := FileAccess.get_file_as_string(
