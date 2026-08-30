@@ -161,8 +161,21 @@ func _init() -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(report_path))
 	_check(parsed is Dictionary, "written PERF2.1 report parses as JSON")
 	if parsed is Dictionary:
-		_check(String(Dictionary(parsed).get("report_hash", "")) == String(report.get("report_hash", "")),
+		var parsed_report: Dictionary = Dictionary(parsed)
+		_check(String(parsed_report.get("report_hash", "")) == String(report.get("report_hash", "")),
 			"written artifact preserves report evidence hash")
+		_check(profiler.validate_report(parsed_report), "written artifact round-trips through full report validation")
+		var tampered: Dictionary = parsed_report.duplicate(true)
+		var tampered_samples: Array = Array(tampered["samples"])
+		var tampered_sample: Dictionary = Dictionary(tampered_samples[0])
+		var tampered_metrics: Dictionary = Dictionary(tampered_sample["metrics"])
+		var tampered_timings: Dictionary = Dictionary(tampered_metrics["timings_ms"])
+		tampered_timings["generation_total_ms"] = float(tampered_timings["generation_total_ms"]) + 0.001
+		tampered_metrics["timings_ms"] = tampered_timings
+		tampered_sample["metrics"] = tampered_metrics
+		tampered_samples[0] = tampered_sample
+		tampered["samples"] = tampered_samples
+		_check(not profiler.validate_report(tampered), "raw timing tamper invalidates PERF2.1 report evidence hash")
 
 	_source_guards()
 	world.queue_free()
