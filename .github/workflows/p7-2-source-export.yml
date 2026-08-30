@@ -1,0 +1,45 @@
+name: P7.2 Frozen Source Export
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-2-source-export.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact P7.2 subject
+        uses: actions/checkout@v4
+        with:
+          ref: b4fe6a01af3fa0cc150f019750977da4309c4d59
+          fetch-depth: 0
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "b4fe6a01af3fa0cc150f019750977da4309c4d59"
+          echo "P7_2_EXACT_SOURCE_HEAD=$(git rev-parse HEAD)"
+
+      - name: Build immutable source archive
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ \
+            -o p7-2-frozen-source.tar.gz \
+            b4fe6a01af3fa0cc150f019750977da4309c4d59
+          sha256sum p7-2-frozen-source.tar.gz | tee p7-2-frozen-source.sha256
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-2-frozen-source-b4fe6a01
+          path: |
+            p7-2-frozen-source.tar.gz
+            p7-2-frozen-source.sha256
+          if-no-files-found: error
+          retention-days: 7
