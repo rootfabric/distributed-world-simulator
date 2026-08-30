@@ -478,3 +478,131 @@ static func _generalized_velocity(linear: Vector3, angular: Vector3) -> Array:
 	return [linear.x, linear.y, linear.z, angular.x, angular.y, angular.z]
 
 static func _jacobian_row(direction: Vector3, r: Vector3) -> Array:
+	var angular := r.cross(direction)
+	return [direction.x, direction.y, direction.z, angular.x, angular.y, angular.z]
+
+static func _effective_mass_matrix(jacobian: Array, minv: Array) -> Array:
+	var count := jacobian.size()
+	var result := _zero_matrix(count, count)
+	for i in range(count):
+		for j in range(i, count):
+			var value := 0.0
+			for k in range(6):
+				value += float(jacobian[i][k]) * float(minv[k]) * float(jacobian[j][k])
+			result[i][j] = value
+			result[j][i] = value
+	return result
+
+static func _mat_t_vec(matrix: Array, vector: Array) -> Array:
+	if matrix.is_empty():
+		return []
+	var cols: int = matrix[0].size()
+	var result := _zero_vector(cols)
+	for row in range(matrix.size()):
+		for col in range(cols):
+			result[col] = float(result[col]) + float(matrix[row][col]) * float(vector[row])
+	return result
+
+static func _dot(a: Array, b: Array) -> float:
+	var result := 0.0
+	for i in range(a.size()):
+		result += float(a[i]) * float(b[i])
+	return result
+
+static func _cholesky(matrix: Array) -> Dictionary:
+	var n := matrix.size()
+	var l := _zero_matrix(n, n)
+	for i in range(n):
+		for j in range(i + 1):
+			var sum := float(matrix[i][j])
+			for k in range(j):
+				sum -= float(l[i][k]) * float(l[j][k])
+			if i == j:
+				if sum <= EPSILON:
+					return {"ok": false}
+				l[i][j] = sqrt(sum)
+			else:
+				l[i][j] = sum / float(l[j][j])
+	return {"ok": true, "l": l}
+
+static func _cholesky_solve(l: Array, rhs: Array) -> Array:
+	var n := rhs.size()
+	var y := _zero_vector(n)
+	for i in range(n):
+		var value := float(rhs[i])
+		for k in range(i):
+			value -= float(l[i][k]) * float(y[k])
+		y[i] = value / float(l[i][i])
+	var x := _zero_vector(n)
+	for ii in range(n):
+		var i := n - 1 - ii
+		var value := float(y[i])
+		for k in range(i + 1, n):
+			value -= float(l[k][i]) * float(x[k])
+		x[i] = value / float(l[i][i])
+	return x
+
+static func _matrix_rank(matrix: Array, tolerance: float) -> int:
+	if matrix.is_empty():
+		return 0
+	var a: Array = []
+	for source_row in matrix:
+		var row: Array = []
+		for value in source_row:
+			row.append(float(value))
+		a.append(row)
+	var rows: int = a.size()
+	var cols: int = a[0].size()
+	var rank := 0
+	var col := 0
+	while rank < rows and col < cols:
+		var pivot := rank
+		var pivot_abs := absf(float(a[pivot][col]))
+		for r in range(rank + 1, rows):
+			var candidate := absf(float(a[r][col]))
+			if candidate > pivot_abs:
+				pivot = r
+				pivot_abs = candidate
+		if pivot_abs <= tolerance:
+			col += 1
+			continue
+		if pivot != rank:
+			var tmp = a[rank]
+			a[rank] = a[pivot]
+			a[pivot] = tmp
+		var pivot_value := float(a[rank][col])
+		for c in range(col, cols):
+			a[rank][c] = float(a[rank][c]) / pivot_value
+		for r in range(rows):
+			if r == rank:
+				continue
+			var factor := float(a[r][col])
+			if absf(factor) <= tolerance:
+				continue
+			for c in range(col, cols):
+				a[r][c] = float(a[r][c]) - factor * float(a[rank][c])
+		rank += 1
+		col += 1
+	return rank
+
+static func _kinetic_energy(mass: float, inertia: Vector3, linear: Vector3, angular: Vector3) -> float:
+	return 0.5 * mass * linear.length_squared() + 0.5 * (
+		inertia.x * angular.x * angular.x +
+		inertia.y * angular.y * angular.y +
+		inertia.z * angular.z * angular.z
+	)
+
+static func _zero_vector(size: int) -> Array:
+	var result: Array = []
+	result.resize(size)
+	result.fill(0.0)
+	return result
+
+static func _zero_matrix(rows: int, cols: int) -> Array:
+	var result: Array = []
+	for _row in range(rows):
+		var values: Array = []
+		values.resize(cols)
+		values.fill(0.0)
+		result.append(values)
+	return result
