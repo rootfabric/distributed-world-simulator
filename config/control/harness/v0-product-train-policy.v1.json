@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-08-24-R6-SM1-PREDISPATCH",
+  "policy_revision": "V0-P-2026-08-30-R7-P7-PREDISPATCH",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-  "current_phase": "SM1_PRE_DISPATCH_CONTROL_READY",
+  "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "current_phase": "P7_OWNER_MAP_PRE_DISPATCH",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -24,7 +24,9 @@
   },
   "research_isolation": {
     "research_frontiers_are_non_blocking_by_default": true,
-    "explicitly_non_blocking_programs_for_current_p_train": ["ECO"],
+    "explicitly_non_blocking_programs_for_current_p_train": [
+      "ECO"
+    ],
     "research_may_block_only_when": [
       "MAIN_REGISTERS_AN_EXPLICIT_PRODUCT_DEPENDENCY",
       "A_CANONICAL_FOUNDATION_OWNED_BY_THAT_PROGRAM_BECOMES_A_REQUIRED_PRECONDITION",
@@ -117,7 +119,7 @@
     {
       "id": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
       "short_name": "SM1",
-      "state": "CURRENT_PRE_DISPATCH",
+      "state": "ACCEPTED",
       "goal": "Port proven SM0 authority-handoff semantics into the exact accepted P6 product baseline and prove production A<->B static authority handoff while preserving current Gateway/NX and canonical gameplay owners.",
       "execution_base": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
       "control_execution_base": "40545f0b70c4b4f7f79214a9ee3cf7e944a77112",
@@ -127,7 +129,11 @@
       "risk_class": "CRITICAL",
       "activation_record": "config/control/harness/activation/V0-SM1-R1-ACTIVATION-001.v1.json",
       "machine_plan": "config/control/harness/v0-sm1-production-handoff-plan.v1.json",
-      "donors_are_not_product_bases": ["SM0", "RESEARCH_SM1", "MRPF"],
+      "donors_are_not_product_bases": [
+        "SM0",
+        "RESEARCH_SM1",
+        "MRPF"
+      ],
       "hard_invariants": [
         "EXACTLY_ONE_ACTIVE_AUTHORITY",
         "STABLE_PLAYER_AND_ENTITY_IDENTITY",
@@ -151,24 +157,54 @@
         "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_SM1",
         "DIRECTOR_DISPATCH"
       ],
-      "activation_complete_except": [
-        "DIRECTOR_DISPATCH"
-      ],
-      "next": "V0_P7_BOUNDED_TERRAIN_MUTATION"
+      "next": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+      "accepted_runtime_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+      "accepted_product_lineage_head": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "canonical_acceptance_merge": "9cc89e6e8c6cfc81fc32873a29743e443d8229e6"
     },
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "FUTURE",
-      "goal": "Add bounded authoritative terrain/material mutation to the playable product without creating V0-private Matter or terrain truth.",
+      "state": "CURRENT_PRE_DISPATCH",
+      "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
-        "V0_P6_CHECKPOINT_ACCEPTED",
-        "POST_P6_SEAMLESS_DECISION_RECORDED",
-        "V0_SM1_CHECKPOINT_ACCEPTED_OR_EXPLICIT_MAIN_DEFER",
-        "MAIN_DECLARED_EXACT_SUCCESSOR_BASE",
-        "FRESH_P7_WORK_ORDER_AND_OWNERSHIP_AUDIT"
+        "V0_SM1_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_SM1_SUCCESSOR_BASE",
+        "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
+        "FRESH_P7_EPOCH_AND_WORK_ORDER",
+        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
+        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+        "V0_PRODUCT_MUTATION_LEASE_ROTATED_TO_P7",
+        "DIRECTOR_DISPATCH"
       ],
-      "next": "V0_P8_FIRST_MOBILE_CONSTRUCT"
+      "next": "V0_P8_FIRST_MOBILE_CONSTRUCT",
+      "mandatory_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+      "execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "control_main_base": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+      "project_epoch": "E2026-08-30-V0-P7-R1",
+      "work_order_id": "V0-P7-R1-WO-001",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "risk_class": "CRITICAL",
+      "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+      "hard_invariants": [
+        "P7_IS_PRODUCTION_CONVERGENCE_NOT_A_NEW_TERRAIN_FOUNDATION",
+        "EXISTING_MATTER_MUTATION_OWNER_IS_MW4",
+        "EXISTING_MATTER_PERSISTENCE_OWNER_IS_MW5",
+        "EXISTING_MATTER_NETWORK_AND_INTEREST_OWNERS_ARE_MW6_MW7",
+        "EXISTING_MATTER_AUTHORITY_RECOVERY_OWNERS_ARE_MW8_MW9",
+        "MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
+        "ONE_CANONICAL_ITEM_GRAPH",
+        "NO_P7_RESOURCE_STORE",
+        "NO_TERRAIN_MUTATION_REQUEST_RESULT_DUPLICATION",
+        "ONE_ACTIVE_RUNTIME_MUTATION_CHECKPOINT_PRE_H0_3"
+      ],
+      "activation_complete_except": [
+        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
+        "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+        "DIRECTOR_DISPATCH"
+      ]
     },
     {
       "id": "V0_P8_FIRST_MOBILE_CONSTRUCT",
@@ -255,5 +291,25 @@
     "runtime_branch": "feature/v0-p5-equipment-tools",
     "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
     "runtime_mutation": "FORBIDDEN_UNTIL_DIRECTOR_DISPATCH"
+  },
+  "current_p7_activation_route": {
+    "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "accepted_predecessor_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "accepted_predecessor_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "control_main_base": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+    "project_epoch": "E2026-08-30-V0-P7-R1",
+    "work_order_id": "V0-P7-R1-WO-001",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation": "FORBIDDEN_UNTIL_OWNER_MAP_REVIEW_POST_MERGE_PC0_AND_DIRECTOR_DISPATCH"
+  },
+  "post_v0_lane_policy": {
+    "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",
+    "p8_and_rf1_architecture_dependency": false,
+    "p8_lane": "V0_P8_FIRST_MOBILE_CONSTRUCT",
+    "rf1_lane": "RF1_SHADOW_RETAINED_REPLICA_CACHE",
+    "pre_h0_3_runtime_execution": "SERIALIZED_ONE_RUNTIME_MUTATION_CHECKPOINT_AT_A_TIME"
   }
 }

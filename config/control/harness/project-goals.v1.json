@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_project_goals.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
+  "policy_amendment_revision": "H0-PTRAIN-2026-08-30-R7-P7-PREDISPATCH",
   "canonical_branch": "main",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "north_star": {
@@ -22,7 +22,9 @@
       "program": "HARNESS",
       "title": "H0.0 Restart-Safe Harness Scaffold",
       "priority": 110,
-      "depends_on": ["PC0_MAIN_INTEGRATED"],
+      "depends_on": [
+        "PC0_MAIN_INTEGRATED"
+      ],
       "target_checkpoint": "H0_0_SCAFFOLD_READY",
       "reason": "Before touching runtime code, prove that the executable harness can load canonical contracts, build/reduce state, plan work, detect epoch invalidation and resume from Git-only fixtures."
     },
@@ -31,7 +33,9 @@
       "program": "HARNESS",
       "title": "H0.1 Closed-Loop C22 Pilot",
       "priority": 100,
-      "depends_on": ["H0_0_SCAFFOLD_READY"],
+      "depends_on": [
+        "H0_0_SCAFFOLD_READY"
+      ],
       "target_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
       "project_checkpoint": "C22_CURRENT_MAIN_MERGE_READY",
       "reason": "First autonomous pilot must prove restart-safe branch creation, constrained implementation, independent verification, PC0 audit and checkpoint proposal on a high-value but bounded Construction convergence task."
@@ -62,38 +66,85 @@
         "C22_MAIN_INTEGRATED"
       ],
       "target_checkpoint": "V0_P4_REAL_RESOURCE_CONSTRUCTION",
-      "current_phase": "IMPLEMENTED_VERIFIED_CLOSURE_CONTROL",
-      "reason": "P4 runtime is already implemented and frozen. The critical path is now control closure: prove current Project Control after live-frontier repair, integrate the append-only closure-ledger repair, record remaining predicates, and accept P4 before any P5 runtime dispatch."
+      "current_phase": "ACCEPTED",
+      "reason": "P4 is accepted and frozen as the real-resource Construction predecessor.",
+      "status": "ACCEPTED"
     },
     {
       "id": "V0_P5_PRODUCT",
       "program": "V0",
       "title": "V0-P5 Equipment and Tools",
       "priority": 118,
-      "depends_on": ["V0_P4_CHECKPOINT_ACCEPTED"],
+      "depends_on": [
+        "V0_P4_CHECKPOINT_ACCEPTED"
+      ],
       "planned_checkpoint": "V0_P5_EQUIPMENT_TOOLS",
-      "eligibility": "NOT_ELIGIBLE_UNTIL_MAIN_OWNED_ACTIVATION_AFTER_P4_ACCEPTANCE",
-      "reason": "Bind equipment/tool use to canonical items and existing command authority. P5 must branch from the exact accepted P4 product lineage, not from bare main and not from a historical Character donor branch."
+      "eligibility": "ACCEPTED",
+      "reason": "P5 equipment/tools is accepted and consumed by later product composition.",
+      "status": "ACCEPTED"
     },
     {
       "id": "V0_P6_PRODUCT",
       "program": "V0",
       "title": "V0-P6 Persistent Shared Outpost",
       "priority": 116,
-      "depends_on": ["V0_P5_CHECKPOINT_ACCEPTED"],
+      "depends_on": [
+        "V0_P5_CHECKPOINT_ACCEPTED"
+      ],
       "planned_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST",
-      "eligibility": "NOT_ELIGIBLE_UNTIL_MAIN_OWNED_ACTIVATION_AFTER_P5_ACCEPTANCE",
-      "reason": "Create the first stable playable baseline containing mine -> inventory/container -> equipment/tool -> real-resource build -> disconnect/reconnect plus server-restart recovery and soak."
+      "eligibility": "ACCEPTED",
+      "reason": "P6 persistent shared outpost is accepted and consumed by SM1/P7.",
+      "status": "ACCEPTED"
     },
     {
       "id": "V0_POST_P6_GATE",
       "program": "V0",
       "title": "Post-P6 Seamless Insertion Decision",
       "priority": 115,
-      "depends_on": ["V0_P6_CHECKPOINT_ACCEPTED"],
+      "depends_on": [
+        "V0_P6_CHECKPOINT_ACCEPTED"
+      ],
       "planned_checkpoint": "V0_POST_P6_SEAMLESS_INSERTION_GATE",
       "human_gate": "V0_POST_P6_SEAMLESS_ACTIVATION_OR_DEFER",
-      "reason": "P7 must not auto-start after P6. Main must explicitly activate V0-SM1 from the accepted P6 baseline or record a deliberate defer decision before P7 can be activated."
+      "reason": "The post-P6 decision activated SM1, and SM1 is now formally accepted.",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "V0_SM1_PRODUCT",
+      "program": "V0",
+      "title": "V0-SM1 Seamless Product Integration",
+      "priority": 119,
+      "depends_on": [
+        "V0_P6_CHECKPOINT_ACCEPTED"
+      ],
+      "target_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+      "status": "ACCEPTED",
+      "reason": "SM1 is formally accepted via PR #329; exact R9 runtime and tree remain immutable provenance."
+    },
+    {
+      "id": "V0_P7_PRODUCT",
+      "program": "V0",
+      "title": "V0-P7 Matter Production Convergence",
+      "priority": 121,
+      "depends_on": [
+        "V0_SM1_CHECKPOINT_ACCEPTED"
+      ],
+      "target_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "current_phase": "OWNER_MAP_PRE_DISPATCH",
+      "eligibility": "CONTROL_READY_RUNTIME_BLOCKED",
+      "reason": "Integrate existing MW4-MW10/RL2-RL3 into the playable planetary product. Do not create new terrain mutation contracts or private Matter truth."
+    },
+    {
+      "id": "V0_PLAYABLE_SEAMLESS_PLANET",
+      "program": "V0",
+      "title": "V0 PLAYABLE SEAMLESS PLANET",
+      "priority": 122,
+      "depends_on": [
+        "V0_P7_CHECKPOINT_ACCEPTED"
+      ],
+      "planned_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+      "eligibility": "FUTURE_AFTER_P7",
+      "reason": "Composition acceptance only: P4+P5+P6+Gateway+SM1+P7, no new foundation."
     },
     {
       "id": "CONSTRUCTION_TRAIN",
@@ -101,22 +152,35 @@
       "title": "Construction convergence to real heterogeneous base",
       "priority": 95,
       "depends_on": [],
-      "sequence": ["C22_CURRENT_MAIN_MERGE_READY", "C22_MAIN_INTEGRATED", "V0_P4_REAL_RESOURCE_CONSTRUCTION", "TS0_4_CEILING_CLASSIFIED", "T2_0_ACTIVATED"]
+      "sequence": [
+        "C22_CURRENT_MAIN_MERGE_READY",
+        "C22_MAIN_INTEGRATED",
+        "V0_P4_REAL_RESOURCE_CONSTRUCTION",
+        "TS0_4_CEILING_CLASSIFIED",
+        "T2_0_ACTIVATED"
+      ]
     },
     {
       "id": "NETWORK_TRAIN",
       "program": "NX",
       "title": "Owner-authority runtime convergence",
       "priority": 80,
-      "depends_on": ["HARNESS_H0_2"],
-      "sequence": ["NX_C1_IMPLEMENTED_CANDIDATE", "NX_SOURCE_ACCEPTED"]
+      "depends_on": [
+        "HARNESS_H0_2"
+      ],
+      "sequence": [
+        "NX_C1_IMPLEMENTED_CANDIDATE",
+        "NX_SOURCE_ACCEPTED"
+      ]
     },
     {
       "id": "V0_PRODUCT_TRAIN",
       "program": "V0",
-      "title": "Playable persistent outpost product train",
+      "title": "Playable seamless planet product train",
       "priority": 120,
-      "depends_on": ["V0_P4_PRODUCT"],
+      "depends_on": [
+        "V0_P4_PRODUCT"
+      ],
       "policy": "config/control/harness/v0-product-train-policy.v1.json",
       "sequence": [
         "V0_P0_PLAYABLE_FRONTIER",
@@ -131,7 +195,7 @@
         "V0_P7_BOUNDED_TERRAIN_MUTATION",
         "V0_P8_FIRST_MOBILE_CONSTRUCT"
       ],
-      "selection_rule": "Only the current main-activated checkpoint is eligible for runtime dispatch. Future P checkpoints are plans, not dispatch permissions."
+      "selection_rule": "P7 is the current main-owned pre-dispatch checkpoint. Runtime stays forbidden until owner-map review, post-merge PC0 and Director dispatch."
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -139,7 +203,11 @@
       "title": "Refresh and promote GLOBAL-P0 R3",
       "priority": 85,
       "depends_on": [],
-      "sequence": ["R3_REFRESHED_CANDIDATE", "R3_PC0_NON_RED", "GLOBAL_P0_R3_CANONICAL"],
+      "sequence": [
+        "R3_REFRESHED_CANDIDATE",
+        "R3_PC0_NON_RED",
+        "GLOBAL_P0_R3_CANONICAL"
+      ],
       "human_gate": "ARCHITECTURE_PROMOTION"
     },
     {

@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_activation.v1",
+  "activation_id": "V0-P7-R1-ACTIVATION-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "PRE_DISPATCH_OWNER_MAP_REVIEW_REQUIRED",
+  "accepted_predecessor": {
+    "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+    "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_product_lineage_head": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "accepted_runtime_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68"
+  },
+  "main_control_base": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+  "main_declared_exact_successor_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "risk_class": "CRITICAL",
+  "owner_direction": {
+    "decision": "PREPARE_AND_ACTIVATE_P7_CONTROL_BOUNDARY",
+    "source": "EXPLICIT_USER_DIRECTIVE_2026_08_30_APPLY_ALL_IDENTIFIED_REPAIRS_AND_PREPARE_NEXT_WORK",
+    "recorded_at_utc": "2026-08-30T04:06:00Z"
+  },
+  "owner_map": {
+    "tool_equipment": "P5_EXISTING_OWNER",
+    "player_authority_route": "SM1_EXISTING_AUTHORITY_ROUTE",
+    "local_matter_mutation": "MW4",
+    "matter_persistence": "MW5",
+    "matter_replication": "MW6",
+    "matter_interest": "MW7",
+    "regional_authority": "MW8",
+    "durable_handoff_recovery": "MW9",
+    "true_multi_region_mutation": "MW10",
+    "representation": "RL2_RL3",
+    "material_output": "MatterMaterialBatch",
+    "inventory_truth": "CANONICAL_ITEM_GRAPH"
+  },
+  "mutation_lease": {
+    "required_holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "required_holder_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "rotation_status": "ROTATED_RESERVED_PRE_DISPATCH",
+    "runtime_mutation_authorized": false,
+    "capacity": 1
+  },
+  "director_dispatch": {
+    "status": "PENDING",
+    "runtime_mutation_authorized": false
+  },
+  "entry_gates": [
+    "SM1_FORMAL_ACCEPTANCE_CANONICAL",
+    "EXACT_SM1_SUCCESSOR_BASE_BOUND",
+    "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
+    "FRESH_P7_EPOCH_AND_WORK_ORDER",
+    "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
+    "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_REQUIRED",
+    "MUTATION_LEASE_ROTATED_TO_P7",
+    "DIRECTOR_DISPATCH_REQUIRED"
+  ],
+  "created_at_utc": "2026-08-30T04:06:00Z",
+  "updated_at_utc": "2026-08-30T04:06:00Z"
+}

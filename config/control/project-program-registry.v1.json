@@ -4,10 +4,10 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-24T05:30:00Z",
-  "control_checkpoint": "V0 post-P6 reconciliation: P6 accepted on main; production SM1 activation is the next bounded product gate and remains runtime-blocked pending fresh control review, EG5 repair, post-merge PC0, lease rotation and Director dispatch",
+  "updated_at_utc": "2026-08-30T04:06:00Z",
+  "control_checkpoint": "V0 post-SM1 reconciliation: SM1 accepted; P7 Matter Production Convergence is the current main-owned pre-dispatch gate with runtime blocked pending fresh owner-map review, post-merge Project Control and Director dispatch.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 remains canonical. V0 P6 Persistent Shared Outpost is accepted at main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637 with accepted runtime head 7a77c048caa680871d4895c09eca89e84136b154. The current V0 frontier is now a control-only post-P6 convergence branch preparing production SM1 A<->B seamless authority handoff from the exact accepted P6 baseline. Historical SM0/research branches are donor-only. The single pre-H0.3 runtime mutation lease is not silently transferred to SM1 and runtime stays blocked until explicit activation gates close.",
+  "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -19,11 +19,11 @@
       "short_description": "Restart-safe checkpoint-driven development control with risk routing, evidence review and human-exception compression.",
       "purpose": "Keep main as the project-state/authorization owner while allowing an explicitly main-declared exact product lineage to serve as a bounded runtime continuation input when restarting from bare main would discard demonstrated composition.",
       "expected_outcome": "H0.2/NX.C1 continues exact verification independently while V0 follows the explicitly declared sequential product lane.",
-      "current_stage": "H0.2 NX.C1 Verification + V0 Post-P6 Control Reconciliation",
-      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_POST_P6_SM1_CONTROL_CANDIDATE",
-      "progress_note": "Canonical R3 remains active. V0 has reached formal P6 acceptance and is reconciling stale control pointers before any SM1 runtime dispatch. The one-mutation-worker ceiling remains enforced.",
-      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + GLOBAL-P0 R3 canonical + V0 P6 ACCEPTED",
-      "next_stage": "Complete exact-head post-P6 Project Control and independent control review; only after canonical integration may the runtime mutation lease rotate to SM1 and Director dispatch occur.",
+      "current_stage": "H0.2 NX.C1 Verification + V0 P7 Pre-Dispatch",
+      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_P7_OWNER_MAP_REVIEW",
+      "progress_note": "SM1 is accepted. V0 has moved to P7 pre-dispatch control while the one-mutation-worker ceiling remains enforced; NX.C1 verification remains independent.",
+      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + V0 P4/P5/P6 ACCEPTED + V0 SM1 ACCEPTED",
+      "next_stage": "Fresh P7 owner-map review and post-merge Project Control; then Director may dispatch the bounded P7 runtime work order.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -43,16 +43,22 @@
       "last_accepted_checkpoint": "G8 Full Acceptance",
       "next_stage": "Keep G8 frozen. G9 remains off the V0 critical path and may start only after MAT0 canonical material identity.",
       "health_declared": "GREEN",
-      "blockers": ["G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "G",
-        "branch": "feature/g8-geomorphology",
-        "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "d7d7160b89878ba44204688686ad837bf6664d70",
-        "passport_blob_sha": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
-      }]
+      "blockers": [
+        "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"
+      ],
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "G",
+          "branch": "feature/g8-geomorphology",
+          "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "d7d7160b89878ba44204688686ad837bf6664d70",
+          "passport_blob_sha": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
+        }
+      ]
     },
     "ECO": {
       "program": "ECO",
@@ -79,15 +85,19 @@
         "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION",
         "PRODUCTION_ECO_REQUIRES_CANONICAL_WORLD_WORK_BUDGET"
       ],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "ECO",
-        "branch": "feature/eco-evolutionary-ecology",
-        "passport_path": "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "2cf7b9e1b56a6a3716481754a2ec1c42c20ba445",
-        "passport_blob_sha": "0424374e88f053070b72e1bcfc579915d0b9955f"
-      }]
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "ECO",
+          "branch": "feature/eco-evolutionary-ecology",
+          "passport_path": "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "2cf7b9e1b56a6a3716481754a2ec1c42c20ba445",
+          "passport_blob_sha": "0424374e88f053070b72e1bcfc579915d0b9955f"
+        }
+      ]
     },
     "T": {
       "program": "T",
@@ -106,28 +116,35 @@
       "next_stage": "Keep T1B frozen. T2.0 is off the V0 critical path and still waits post-R3 control plus TS0.4 ceiling evidence and PC0 convergence.",
       "health_declared": "GREEN",
       "blockers": [],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "T",
-        "branch": "feature/t1b-composition-failure-recovery",
-        "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
-        "passport_blob_sha": "a6c3094e72ce8a8bce3557b6db8366747a6d0f12"
-      }],
-      "historical_passport_ownership_transitions": [{
-        "program": "T",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "foundation": "WORLD_QUERY_FABRIC",
-        "historical_owner": "P1_FUTURE",
-        "canonical_owner": "WQ"
-      }, {
-        "program": "T",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "foundation": "WORLD_TRANSACTION_MODEL",
-        "historical_owner": "P0",
-        "canonical_owner": "WT"
-      }]
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "T",
+          "branch": "feature/t1b-composition-failure-recovery",
+          "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
+          "passport_blob_sha": "a6c3094e72ce8a8bce3557b6db8366747a6d0f12"
+        }
+      ],
+      "historical_passport_ownership_transitions": [
+        {
+          "program": "T",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "foundation": "WORLD_QUERY_FABRIC",
+          "historical_owner": "P1_FUTURE",
+          "canonical_owner": "WQ"
+        },
+        {
+          "program": "T",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "foundation": "WORLD_TRANSACTION_MODEL",
+          "historical_owner": "P0",
+          "canonical_owner": "WT"
+        }
+      ]
     },
     "TS": {
       "program": "TS",
@@ -164,15 +181,19 @@
       "next_stage": "Keep CH9.6 frozen. Any later Character runtime stage requires a fresh canonical declaration; preserve CH->NX as a future dependency revalidation gate.",
       "health_declared": "YELLOW",
       "blockers": [],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "CH",
-        "branch": "feature/ch9-6-playable-network-equipment-lab",
-        "passport_path": "config/control/branches/feature__ch9-6-playable-network-equipment-lab.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "59cd5f311adcb5b327634ce00a93e0ee044470db",
-        "passport_blob_sha": "68138e7ca9b790ab58fa0e1692d2476200926a9e"
-      }]
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "CH",
+          "branch": "feature/ch9-6-playable-network-equipment-lab",
+          "passport_path": "config/control/branches/feature__ch9-6-playable-network-equipment-lab.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "59cd5f311adcb5b327634ce00a93e0ee044470db",
+          "passport_blob_sha": "68138e7ca9b790ab58fa0e1692d2476200926a9e"
+        }
+      ]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -191,15 +212,19 @@
       "next_stage": "Continue only when new gameplay/system evidence appears",
       "health_declared": "GREEN",
       "blockers": [],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "DOCTRINE",
-        "branch": "feature/world-building-doctrine",
-        "passport_path": "config/control/branches/feature__world-building-doctrine.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "ae060dfe260d726f3a750a53d2802e0d87f8725f",
-        "passport_blob_sha": "c8e4f1212b789bbf407819cb606ae801cad3726d"
-      }]
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "DOCTRINE",
+          "branch": "feature/world-building-doctrine",
+          "passport_path": "config/control/branches/feature__world-building-doctrine.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "ae060dfe260d726f3a750a53d2802e0d87f8725f",
+          "passport_blob_sha": "c8e4f1212b789bbf407819cb606ae801cad3726d"
+        }
+      ]
     },
     "NX": {
       "program": "NX",
@@ -227,69 +252,66 @@
         "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE",
         "RUNTIME_FEATURE_MERGE_REMAINS_HUMAN_GATED"
       ],
-      "historical_passport_architecture_revisions": ["GLOBAL-P0-2026-08-10-R2"],
-      "historical_passport_identities": [{
-        "program": "NX",
-        "branch": "feature/nx-m7-owner-authority-convergence",
-        "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
-        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-        "pinned_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
-        "passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4"
-      }]
+      "historical_passport_architecture_revisions": [
+        "GLOBAL-P0-2026-08-10-R2"
+      ],
+      "historical_passport_identities": [
+        {
+          "program": "NX",
+          "branch": "feature/nx-m7-owner-authority-convergence",
+          "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
+          "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+          "pinned_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
+          "passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4"
+        }
+      ]
     },
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/post-p6-sm1-activation-r1",
-      "passport_path": "config/control/branches/control__post-p6-sm1-activation-r1.v1.json",
+      "branch": "control/v0-p7-activation-r1",
+      "passport_path": "config/control/branches/control__v0-p7-activation-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "Post-P6 V0 control convergence preparing production SM1 from exact accepted P6 main.",
-      "purpose": "Remove stale P4/P6-pre-dispatch control truth after P6 acceptance, preserve all canonical gameplay/network owners, and establish an exact reviewed entry boundary for production A<->B seamless handoff.",
-      "expected_outcome": "P6 is formally recorded ACCEPTED; the current V0 frontier becomes the post-P6 SM1 activation gate; runtime mutation stays disabled until independent review, main integration, post-merge PC0, EG5 repair, lease rotation and Director dispatch.",
-      "current_stage": "POST-P6 SM1 Activation Control Reconciliation",
-      "stage_status": "CONTROL_CANDIDATE_AWAITING_PROJECT_CONTROL_AND_FRESH_REVIEW",
-      "progress_note": "Canonical main already contains P6 ACCEPTED at 9ade3233. This control branch refreshes V0 registry/work-map/scheduler/product-train state, adds formal P6 acceptance and a fresh CRITICAL SM1 activation candidate. No runtime paths are mutated.",
-      "last_accepted_checkpoint": "V0_P6_PERSISTENT_SHARED_OUTPOST accepted @ main 9ade3233f8d9f16b77edcc8cf273fe8e649d5637; runtime head 7a77c048caa680871d4895c09eca89e84136b154",
-      "next_stage": "Fresh exact-head Project Control and independent control review; then merge, post-merge Project Control, reviewed EG5 repair, mutation-lease rotation and Director dispatch of feature/v0-sm1-seamless-product-integration.",
+      "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
+      "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
+      "expected_outcome": "A fresh CRITICAL P7 Work Order and exact accepted-SM1 execution base are canonical; runtime remains blocked until owner-map review, post-merge PC0 and Director dispatch.",
+      "current_stage": "P7 Matter Production Convergence Activation / Owner Map",
+      "stage_status": "CONTROL_READY_AWAITING_OWNER_MAP_REVIEW_AND_DISPATCH",
+      "progress_note": "SM1 is accepted. RF0/P7 roadmap R2 is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. This control branch rotates the single pre-H0.3 mutation lease to P7, issues the fresh P7 epoch/work order, and keeps runtime mutation fail-closed.",
+      "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "next_stage": "Fresh independent P7 owner-map review; merge this control transition; post-merge PC0; Director dispatch P7.1 adapter implementation.",
       "product_execution_base": {
-        "branch": "main",
-        "sha": "9ade3233f8d9f16b77edcc8cf273fe8e649d5637",
-        "declared_by_control_generation": 80,
+        "branch": "accepted SM1 product lineage",
+        "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+        "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+        "accepted_runtime_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
         "declares_checkpoint_acceptance": true,
-        "acceptance_record": "config/control/harness/acceptance/V0-P6-R2-CHECKPOINT-ACCEPTED-001.v1.json",
-        "reason": "P6 is accepted and canonical. Production SM1 must start from this exact product composition rather than from historical SM0/research ancestry."
+        "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+        "reason": "P7 must compose the exact accepted SM1 product runtime, while main-owned control/docs remain separate provenance."
       },
       "prebuild_state": {
-        "branch": "feature/v0-sm1-seamless-product-integration",
+        "branch": "feature/v0-p7-bounded-terrain-mutation",
         "head_at_refresh_input": "NOT_CREATED",
-        "passport_path": "config/control/branches/feature__v0-sm1-seamless-product-integration.v1.json",
-        "work_order_id": "V0-SM1-R1-WO-001",
+        "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": false,
-        "next_code_step": "Do not create/mutate the runtime branch until this control candidate is reviewed and merged, post-merge PC0 is NON_RED, EG5 repair is closed, the lease rotates to SM1, and Director dispatch is durably recorded."
+        "next_code_step": "Do not create/mutate the P7 runtime branch until fresh owner-map review, post-merge Project Control NON_RED and Director dispatch are durably recorded."
       },
       "implementation_blockers": [
-        "PROJECT_CONTROL_NON_RED_REQUIRED",
-        "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
-        "POST_P6_CONTROL_MAIN_INTEGRATION_REQUIRED",
+        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
         "POST_MERGE_PC0_NON_RED_REQUIRED",
-        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED",
-        "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
         "DIRECTOR_DISPATCH_REQUIRED"
       ],
       "acceptance_blockers": [
-        "SM1_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
-        "SM1_GRAPHICAL_A_B_A_HANDOFF_REQUIRED",
-        "SM1_FAULT_RACE_REPEAT_CLOSURE_REQUIRED",
-        "SM1_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
+        "P7_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
+        "P7_GRAPHICAL_DIGGING_REQUIRED",
+        "P7_PERSISTENCE_TWO_CLIENT_SEAM_MW10_CLOSURE_REQUIRED",
+        "P7_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
       ],
       "health_declared": "YELLOW",
       "blockers": [
-        "PROJECT_CONTROL_NON_RED_REQUIRED",
-        "FRESH_INDEPENDENT_CONTROL_REVIEW_REQUIRED",
-        "EG5_TELEMETRY_HYSTERESIS_REPAIR_REQUIRED_BEFORE_SM1_RUNTIME_DISPATCH",
+        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
         "POST_MERGE_PC0_NON_RED_REQUIRED",
-        "SM1_MUTATION_LEASE_ROTATION_REQUIRED",
         "DIRECTOR_DISPATCH_REQUIRED"
       ]
     },
@@ -333,10 +355,10 @@
   "convergence_order": {
     "principle": "Branches report facts; main declares project state, exact product execution inputs and the single pre-H0.3 mutation lease; the auditor checks consistency; bounded runtime work moves only between declared checkpoints.",
     "now_parallel": [
-      "V0 post-P6 control reconciliation / SM1 activation review",
+      "V0 P7 pre-dispatch owner-map/control review",
       "H0.2/NX.C1 exact runtime verification and review-only lifecycle work",
       "ECO research/design-only work",
-      "SM0/research seamless evidence remains donor-only"
+      "FABRIC research/design-only work"
     ],
     "harness_train": [
       "H0_0_SCAFFOLD_READY canonical",
@@ -365,17 +387,13 @@
       "post-SM1 EG6/EG6.5/EG7/EG8/EG9 follow independently"
     ],
     "v0_train": [
-      "V0_P0_PLAYABLE_FRONTIER",
-      "V0_P1_WORLD_ITEMS_CONTAINERS",
-      "V0_P2_RECONNECTABLE_SHARED_STATE",
-      "V0_P3_RESOURCE_MINING",
       "V0_P4_REAL_RESOURCE_CONSTRUCTION ACCEPTED",
       "V0_P5_EQUIPMENT_TOOLS ACCEPTED",
       "V0_P6_PERSISTENT_SHARED_OUTPOST ACCEPTED",
-      "V0_POST_P6_SEAMLESS_INSERTION_GATE CURRENT",
-      "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION NEXT",
-      "V0_P7_BOUNDED_TERRAIN_MUTATION",
-      "V0_P8_FIRST_MOBILE_CONSTRUCT"
+      "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION ACCEPTED",
+      "V0_P7_BOUNDED_TERRAIN_MUTATION CURRENT_PRE_DISPATCH",
+      "V0_PLAYABLE_SEAMLESS_PLANET COMPOSITION_ACCEPTANCE FUTURE",
+      "V0_P8_FIRST_MOBILE_CONSTRUCT FUTURE"
     ],
     "architecture_train": [
       "GLOBAL-P0 R3 canonical promotion",
@@ -387,17 +405,46 @@
     ]
   },
   "global_blocked_transitions": [
-    {"stage": "NX.C1 SOURCE ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
-    {"stage": "H0.3 IMPLEMENTATION", "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"},
-    {"stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS", "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"},
-    {"stage": "V0-SM1 RUNTIME MUTATION START", "blocked_by": "POST_P6_CONTROL_REVIEW_AND_MAIN_INTEGRATION_PLUS_POST_MERGE_PC0_PLUS_EG5_REPAIR_PLUS_SM1_MUTATION_LEASE_ROTATION_PLUS_DIRECTOR_DISPATCH_REQUIRED"},
-    {"stage": "V0-SM1 CHECKPOINT ACCEPTANCE", "blocked_by": "STATIC_A_B_A_GRAPHICAL_HANDOFF_PLUS_FAULT_RACE_REPEAT_PLUS_FULL_REGRESSION_PLUS_FRESH_REVIEW_VERIFIER_DIRECTOR_REQUIRED"},
-    {"stage": "V0-P7 START", "blocked_by": "V0_SM1_CHECKPOINT_ACCEPTED_OR_EXPLICIT_MAIN_OWNED_SM1_DEFER_REQUIRED"},
-    {"stage": "V0 NETWORK FOUNDATION CHANGE", "blocked_by": "V0_BLOCKED_REQUIRES_NX"},
-    {"stage": "G9 START", "blocked_by": "MAT0_REQUIRED"},
-    {"stage": "TS0.4 START", "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"},
-    {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
-    {"stage": "CH NEXT RUNTIME STAGE", "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"}
+    {
+      "stage": "NX.C1 SOURCE ACCEPTANCE",
+      "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"
+    },
+    {
+      "stage": "H0.3 IMPLEMENTATION",
+      "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"
+    },
+    {
+      "stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS",
+      "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"
+    },
+    {
+      "stage": "V0 NETWORK FOUNDATION CHANGE",
+      "blocked_by": "V0_BLOCKED_REQUIRES_NX"
+    },
+    {
+      "stage": "G9 START",
+      "blocked_by": "MAT0_REQUIRED"
+    },
+    {
+      "stage": "TS0.4 START",
+      "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"
+    },
+    {
+      "stage": "T2.0 START",
+      "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
+    },
+    {
+      "stage": "CH NEXT RUNTIME STAGE",
+      "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"
+    },
+    {
+      "stage": "V0-P7 RUNTIME MUTATION START",
+      "blocked_by": "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PLUS_POST_MERGE_PC0_PLUS_DIRECTOR_DISPATCH_REQUIRED"
+    },
+    {
+      "stage": "V0-P7 CHECKPOINT ACCEPTANCE",
+      "blocked_by": "P7_FULL_RUNTIME_GRAPHICAL_PERSISTENCE_TWO_CLIENT_SEAM_MW10_PLUS_FRESH_REVIEW_VERIFIER_REQUIRED"
+    }
   ],
   "audit_triggers": [
     "ANY_MAJOR_CHECKPOINT_ACCEPTED",
