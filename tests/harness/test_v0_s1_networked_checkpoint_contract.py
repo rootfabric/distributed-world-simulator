@@ -24,8 +24,8 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
-CURRENT_V0_BRANCH = "control/v0-p7-0-matter-owner-map-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-0-matter-owner-map-r1.v1.json"
+CURRENT_V0_BRANCH = "control/v0-p7-1-director-dispatch-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-1-director-dispatch-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
 P7_CONTROL_BASE = "07d71da1d301a65d36f56ff8c7a42795becab88d"
@@ -151,7 +151,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
         self.assertEqual(P7, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
         self.assertTrue(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
-        self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
+        self.assertTrue(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
         self.assertEqual(["DIRECTOR_DISPATCH"], self.scheduler["v0_product_train_routing"]["p7_remaining_activation_prerequisites"])
 
     def test_registry_generation_80_points_to_current_p7_control_frontier(self):

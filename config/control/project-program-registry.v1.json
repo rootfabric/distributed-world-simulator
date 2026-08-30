@@ -4,8 +4,8 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-30T06:54:00Z",
-  "control_checkpoint": "V0 P7.0 COMPLETE: owner map accepted and canonical post-merge PC0 NON_RED; only Director dispatch remains before P7.1 runtime.",
+  "updated_at_utc": "2026-08-30T06:58:00Z",
+  "control_checkpoint": "V0 P7.1 Director-dispatched: bounded stateless Tool/SM1/MW8/MW9 authorize_mutation adapter may execute on exact accepted SM1 lineage.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control rebased on main f7d3deb80b67a41880d736f83b132a9a7a5a0964: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
   "programs": {
@@ -269,18 +269,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-0-matter-owner-map-r1",
-      "passport_path": "config/control/branches/control__v0-p7-0-matter-owner-map-r1.v1.json",
+      "branch": "control/v0-p7-1-director-dispatch-r1",
+      "passport_path": "config/control/branches/control__v0-p7-1-director-dispatch-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
       "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
       "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
-      "current_stage": "P7.0 COMPLETE / P7 Ready for Director Dispatch",
-      "stage_status": "P7_0_COMPLETE_AWAITING_DIRECTOR_DISPATCH",
-      "progress_note": "P7.0 R2 is accepted, canonical main 6b0143281a4a2bedeff7889f0bd6470a5fcfd60d was post-merge audited by Project Control run 33293384467 with standard and directional PC0 YELLOW/NON_RED. Zero runtime mutation. Only Director dispatch remains.",
+      "current_stage": "P7.1 Tool → Existing MW4 Adapter",
+      "stage_status": "P7_1_DIRECTOR_DISPATCHED_RUNTIME_AUTHORIZED",
+      "progress_note": "P7.0 is complete. Director dispatch authorizes exactly one P7.1 runtime mutation worker on feature/v0-p7-bounded-terrain-mutation from exact accepted SM1 base acb9379cacc413fc25a65117fb1627f5a01b9736. Scope is a stateless authorize_mutation composition gate and focused tests only.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Director dispatch P7.1 stateless Tool→existing MW4 authorization/composition adapter.",
+      "next_stage": "Create exact-base runtime branch, implement P7.1 adapter, run focused double-Godot tests, freeze exact head for fresh review.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -292,14 +292,14 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "NOT_CREATED",
+        "head_at_refresh_input": "NOT_CREATED_AT_DISPATCH_COMMIT",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": false,
-        "next_code_step": "Do not mutate the P7 runtime branch until durable Director dispatch. P7.0 and post-merge PC0 are complete."
+        "runtime_mutation_authorized": true,
+        "exact_creation_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+        "next_code_step": "Create runtime branch from exact accepted SM1 base and implement only P7.1 stateless authorize_mutation adapter + focused tests."
       },
-      "implementation_blockers": [
-        "DIRECTOR_DISPATCH_REQUIRED"
-      ],
+      "implementation_blockers": [],
       "acceptance_blockers": [
         "P7_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
         "P7_GRAPHICAL_DIGGING_REQUIRED",
@@ -307,9 +307,7 @@
         "P7_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
       ],
       "health_declared": "YELLOW",
-      "blockers": [
-        "DIRECTOR_DISPATCH_REQUIRED"
-      ],
+      "blockers": [],
       "p7_0": {
         "status": "ACCEPTED",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -323,6 +321,12 @@
           "standard": "YELLOW_NON_RED",
           "directional": "YELLOW_NON_RED"
         }
+      },
+      "p7_1": {
+        "state": "DISPATCHED",
+        "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "selected_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd"
       }
     },
     "MATTER": {

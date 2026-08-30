@@ -43,14 +43,14 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_is_current_but_runtime_is_fail_closed(self) -> None:
         self.assertEqual(P7, self.policy["current_checkpoint"])
-        self.assertEqual("P7_READY_FOR_DIRECTOR_DISPATCH", self.policy["current_phase"])
+        self.assertEqual("P7_1_DISPATCHED", self.policy["current_phase"])
         routing = self.scheduler["v0_product_train_routing"]
         self.assertEqual(P7, routing["current_checkpoint"])
-        self.assertFalse(routing["runtime_mutation_allowed_now"])
+        self.assertTrue(routing["runtime_mutation_allowed_now"])
         self.assertTrue(routing["next_runtime_checkpoint_eligible"])
         self.assertNotIn("P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS", routing["p7_remaining_activation_prerequisites"])
         self.assertNotIn("POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED", routing["p7_remaining_activation_prerequisites"])
-        self.assertEqual(["DIRECTOR_DISPATCH"], routing["p7_remaining_activation_prerequisites"])
+        self.assertEqual([], routing["p7_remaining_activation_prerequisites"])
         self.assertEqual("ACCEPTED", routing["p7_0"]["status"])
         self.assertEqual("PASS_NON_RED", routing["p7_post_merge_pc0"]["status"])
 
@@ -63,8 +63,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(P7_BRANCH, self.work_order_p7["branch"])
         self.assertEqual("PLANNED", self.work_order_p7["state"])
         self.assertEqual("CRITICAL", self.work_order_p7["risk_class"])
-        self.assertFalse(self.activation_p7["mutation_lease"]["runtime_mutation_authorized"])
-        self.assertEqual("PENDING", self.activation_p7["director_dispatch"]["status"])
+        self.assertTrue(self.activation_p7["mutation_lease"]["runtime_mutation_authorized"])
+        self.assertEqual("DISPATCHED", self.activation_p7["director_dispatch"]["status"])
 
     def test_p7_catalog_and_work_order_predicates_are_exact(self) -> None:
         checkpoint = self.catalog["checkpoints"][P7]
@@ -94,7 +94,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P7, lease["holder_checkpoint"])
         self.assertEqual(P7_BRANCH, lease["holder_branch"])
-        self.assertEqual("RESERVED_FOR_V0_P7_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual("ACTIVE_V0_P7_DISPATCHED_RUNTIME_MUTATION", lease["state"])
         self.assertEqual(1, self.scheduler["concurrency"]["pre_h0_3_total_autonomous_runtime_mutation_workers"])
 
     def test_planner_exposes_p7_but_blocks_dispatch_until_control_gates_close(self) -> None:
@@ -105,8 +105,10 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertIn("v0_p7_gate", plan)
         self.assertEqual("MW4_MW10_EXISTING_CANONICAL_FOUNDATION", plan["v0_p7_gate"]["matter_truth"])
         dispatched = dict(planned, state="DISPATCHED")
-        with self.assertRaisesRegex(ValueError, "V0_P7_RUNTIME_DISPATCH_BLOCKED"):
-            build_plan(contracts, self.work_order_p7, dispatched)
+        dispatched_plan = build_plan(contracts, self.work_order_p7, dispatched)
+        self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", dispatched_plan["mode"])
+        self.assertEqual("AUTHORIZED_BY_DISPATCH", dispatched_plan["v0_p7_gate"]["runtime_mutation"])
+        self.assertEqual("BEGIN_V0_P7_MATTER_PRODUCTION_CONVERGENCE", dispatched_plan["next_action"])
 
 
     def test_p7_0_exact_source_owner_map_is_bound_to_existing_owners(self) -> None:

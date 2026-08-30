@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-30T04:06:00Z",
+  "head_sha": "5bbb2dac67382dcc6afc889b1f158397994233f5",
+  "summary": "P7 work order provenance is reconstructed into the append-only event ledger after P7.0 owner-map acceptance; exact runtime execution base remains the accepted SM1 product lineage.",
+  "command": "REGISTER_EXISTING_P7_WORK_ORDER_LEDGER_ORIGIN",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json"
+  ]
+}

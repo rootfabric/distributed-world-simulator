@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-1-director-dispatch-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.1 Director-dispatch control carrier; authorizes the exact bounded runtime branch without implementing runtime code.",
+  "purpose": "Durably authorize one P7.1 runtime mutation worker only after P7.0 acceptance and post-merge PC0 NON_RED.",
+  "expected_outcome": "Work Order V0-P7-R1-WO-001 is DISPATCHED, scheduler lease is active for the exact P7 runtime branch, and all other runtime mutation remains forbidden.",
+  "current_stage": "P7.1 Tool → Existing MW4 Adapter",
+  "stage_status": "P7_1_DIRECTOR_DISPATCHED_RUNTIME_AUTHORIZED",
+  "progress_note": "P7.0 is complete. Director dispatch authorizes exactly one P7.1 runtime mutation worker on feature/v0-p7-bounded-terrain-mutation from exact accepted SM1 base acb9379cacc413fc25a65117fb1627f5a01b9736. Scope is a stateless authorize_mutation composition gate and focused tests only.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "next_stage": "Create exact-base runtime branch, implement P7.1 adapter, run focused double-Godot tests, freeze exact head for fresh review.",
+  "parent_branch_or_checkpoint": "main @ 5bbb2dac67382dcc6afc889b1f158397994233f5 / P7.0 COMPLETE",
+  "base_commit": "5bbb2dac67382dcc6afc889b1f158397994233f5",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "post-merge standard+directional PC0 NON_RED",
+    "exact accepted SM1 product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "single pre-H0.3 runtime mutation lease reserved to P7"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-1-director-dispatch-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0001-work-order-created.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0002-director-dispatched.v1.json",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/simulation/matter/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/sm1/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "PRE_DISPATCH_DIRECTOR_REQUIRED",
+  "state": "DISPATCHED_P7_1",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -39,24 +39,28 @@
   "mutation_lease": {
     "required_holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "required_holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "rotation_status": "ROTATED_RESERVED_PRE_DISPATCH",
-    "runtime_mutation_authorized": false,
+    "rotation_status": "ACTIVE_DISPATCHED",
+    "runtime_mutation_authorized": true,
     "capacity": 1
   },
   "director_dispatch": {
-    "status": "PENDING",
-    "runtime_mutation_authorized": false
+    "status": "DISPATCHED",
+    "dispatched_at_utc": "2026-08-30T06:58:00Z",
+    "command": "DIRECTOR_DISPATCH_ACCEPTED_SM1_BASE_V0_P7_WORK_ORDER",
+    "source": "EXPLICIT_USER_DIRECTIVE_2026_08_30_IMPLEMENT_P7_1",
+    "runtime_mutation_authorized": true,
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736"
   },
   "entry_gates": [
     "SM1_FORMAL_ACCEPTANCE_CANONICAL",
     "EXACT_SM1_SUCCESSOR_BASE_BOUND",
     "RF0_P7_CONVERGENCE_ROADMAP_CANONICAL",
     "FRESH_P7_EPOCH_AND_WORK_ORDER",
-    "MUTATION_LEASE_ROTATED_TO_P7",
-    "DIRECTOR_DISPATCH_REQUIRED"
+    "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-08-30T05:04:00Z",
+  "updated_at_utc": "2026-08-30T06:58:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",

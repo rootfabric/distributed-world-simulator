@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-30-V0-P7-R1",
   "program": "V0",
   "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "PLANNED",
+  "state": "DISPATCHED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -157,5 +157,5 @@
   "human_approval_required_for": [
     "RUNTIME_FEATURE_MERGE"
   ],
-  "notes": "This Work Order is PLANNED only. The mutation lease is reserved to P7 but runtime mutation is not authorized until fresh owner-map review, post-merge Project Control NON_RED and a durable Director dispatch."
+  "notes": "Director dispatch recorded after P7.0 ACCEPTED and canonical post-merge standard+directional PC0 NON_RED. Runtime mutation is authorized only on feature/v0-p7-bounded-terrain-mutation from exact accepted SM1 base acb9379cacc413fc25a65117fb1627f5a01b9736. P7.1 scope is the stateless Tool/SM1/MW8/MW9 authorize_mutation adapter plus focused tests; no new Matter contract, persistence, replication, authority, replay or inventory owner."
 }

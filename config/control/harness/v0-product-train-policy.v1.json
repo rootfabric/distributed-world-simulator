@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_READY_FOR_DIRECTOR_DISPATCH",
+  "current_phase": "P7_1_DISPATCHED",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "CURRENT_PRE_DISPATCH",
+      "state": "DISPATCHED_P7_1",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -200,9 +200,7 @@
         "NO_TERRAIN_MUTATION_REQUEST_RESULT_DUPLICATION",
         "ONE_ACTIVE_RUNTIME_MUTATION_CHECKPOINT_PRE_H0_3"
       ],
-      "activation_complete_except": [
-        "DIRECTOR_DISPATCH"
-      ],
+      "activation_complete_except": [],
       "p7_0": {
         "status": "ACCEPTED",
         "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
@@ -216,6 +214,17 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
           "run": 33293384467
         }
+      },
+      "p7_1": {
+        "state": "DISPATCHED",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+        "selected_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
+        "allowed_runtime_scope": [
+          "stateless authorize_mutation composition gate",
+          "focused P7.1 runtime tests"
+        ],
+        "forbidden_foundation_changes": true
       }
     },
     {
@@ -314,8 +323,14 @@
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "mutation_lease": "ROTATED_RESERVED_PRE_DISPATCH",
-    "runtime_mutation": "FORBIDDEN_UNTIL_OWNER_MAP_REVIEW_POST_MERGE_PC0_AND_DIRECTOR_DISPATCH"
+    "mutation_lease": "ACTIVE_DISPATCHED",
+    "runtime_mutation": "AUTHORIZED_BY_DIRECTOR_DISPATCH_FOR_P7_1_BOUNDED_SCOPE",
+    "director_dispatch": {
+      "status": "DISPATCHED",
+      "at_utc": "2026-08-30T06:58:00Z",
+      "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
+    }
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",
