@@ -1,9 +1,11 @@
 # V0 — Current Primary Work Map
 
 **Refresh:** 2026-08-30  
-**P7.0 source main:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
+**Canonical main at this refresh:** `7055aef6c163099101588d5252d90ff77e089330`  
 **SM1:** ACCEPTED  
-**Current product gate:** P7.0 COMPLETE → Director dispatch  
+**P7.0:** ACCEPTED  
+**P7.1:** COMPLETE / MERGED  
+**Current product gate:** P7.2 Bounded Planetary Matter Bubble  
 **Next runtime checkpoint:** `V0_P7_BOUNDED_TERRAIN_MUTATION`
 
 > Human-readable routing map. Machine eligibility remains owned by `config/control/**`.
@@ -23,7 +25,7 @@ SM1 Seamless Product Integration    ACCEPTED
     ↓
 RF0 Replication Semantic Boundary   ARCHITECTURE GUARDRAIL / NON-BLOCKING
     ↓
-P7 Matter Production Convergence    P7.0 ACCEPTED / RUNTIME BLOCKED
+P7 Matter Production Convergence    P7.1 COMPLETE / P7.2 NEXT
     ↓
 V0 PLAYABLE SEAMLESS PLANET         COMPOSITION ACCEPTANCE
     ↓
@@ -100,9 +102,9 @@ truth, P7 persistence, P7 replication protocol, P7 authority directory or P7 res
 ```text
 P7.0 Matter Production Owner Map / Convergence Gate  ✅ ACCEPTED
     ↓
-P7.1 Product Tool → existing MatterMutationRequest adapter
+P7.1 Product Tool → existing MatterMutationRequest adapter  ✅ COMPLETE
     ↓
-P7.2 Bounded Planetary Matter Bubble
+P7.2 Bounded Planetary Matter Bubble  ← CURRENT PRODUCT RUNTIME
     ↓
 P7.3 MatterMaterialBatch → canonical Item Graph
     ↓
@@ -155,18 +157,31 @@ Eligibility may be parallel; execution is still serialized.
 ## 8. Immediate execution order
 
 ```text
-NOW
-  P7.0 COMPLETE
-  post-merge standard + directional PC0 NON_RED ✅
-  Director dispatch P7
+RUNTIME LANE
+  P7.1 COMPLETE
+  → P7.2 bounded planetary Matter bubble
+  → P7.3 → P7.7
+
+PARALLEL TEST / COMPOSITION LANE
+  V1 PLAYABLE SEAMLESS PRECHECK
+  → local AUTOMATED + OBSERVE modes
+  → two graphical clients for seam scenario
+  → two graphical clients for Item Graph scenario
+  → existing SM1+Item/P6 composition gate
+  → one exact-head summary
+  → production runtime changes = 0
 
 THEN
-  implement P7.1 stateless authorize_mutation adapter
-  continue P7.2 → P7.7
-
-THEN
-  V0 PLAYABLE SEAMLESS PLANET composition acceptance
+  promote test ladder at P7.3 / P7.5 / P7.6 / P7.7
+  → V0 PLAYABLE SEAMLESS PLANET composition acceptance
 ```
+
+Detailed test plan:
+`docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
+
+The test lane does not consume the pre-H0.3 runtime mutation worker. If a test requires
+new production behavior, that change is routed back to the owning P7 stage instead of
+being implemented in a fixture.
 
 ## 9. Stop conditions
 
