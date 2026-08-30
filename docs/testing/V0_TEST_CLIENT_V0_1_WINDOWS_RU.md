@@ -32,11 +32,7 @@ Expected exact first line:
 From repository root:
 
 ```powershell
-.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 \
-  -GodotPath "C:\path\to\godot.double.exe" \
-  -Scenario All \
-  -Observe \
-  -StepMs 1000
+.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 -GodotPath "C:\path\to\godot.double.exe" -Scenario All -Observe -StepMs 1000
 ```
 
 The runner first executes the headless contract compile gate, then launches the visual scenarios.
@@ -46,11 +42,7 @@ The runner first executes the headless contract compile gate, then launches the 
 Run only:
 
 ```powershell
-.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 \
-  -GodotPath "C:\path\to\godot.double.exe" \
-  -Scenario Seam \
-  -Observe \
-  -StepMs 1200
+.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 -GodotPath "C:\path\to\godot.double.exe" -Scenario Seam -Observe -StepMs 1200
 ```
 
 Expected visible result:
@@ -73,11 +65,7 @@ artifacts/test-results/v0-test-client-seam-*/
 Run only:
 
 ```powershell
-.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 \
-  -GodotPath "C:\path\to\godot.double.exe" \
-  -Scenario Items \
-  -Observe \
-  -StepMs 1000
+.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 -GodotPath "C:\path\to\godot.double.exe" -Scenario Items -Observe -StepMs 1000
 ```
 
 Expected visible result:
@@ -107,10 +95,7 @@ artifacts/test-results/v0-test-client-items-*/
 For a quicker machine check:
 
 ```powershell
-.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 \
-  -GodotPath "C:\path\to\godot.double.exe" \
-  -Scenario All \
-  -StepMs 150
+.\RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.ps1 -GodotPath "C:\path\to\godot.double.exe" -Scenario All -StepMs 150
 ```
 
 ## 6. Acceptance evidence to return
