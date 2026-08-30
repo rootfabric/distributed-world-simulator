@@ -52,7 +52,7 @@ MatterMaterialBatch → canonical Item Graph
 
 No second Matter/terrain truth is allowed.
 
-P7.0 owner-map R2 is accepted. Next required transition is post-merge standard+directional PC0 NON_RED, then Director dispatch before any runtime adapter code.
+P7.0 owner-map R2 is accepted and post-merge standard+directional PC0 is NON_RED. The only remaining transition before runtime adapter code is Director dispatch.
 
 ## 3. Replication Foundation
 
@@ -107,10 +107,9 @@ They do not implicitly block P7.
 ## 7. Immediate work
 
 ```text
-1. Merge accepted P7.0 owner-map control.
-2. Post-merge standard + directional PC0 NON_RED.
-3. Director dispatch P7.
-4. P7.1 stateless Tool/SM1/MW8-9 authorization → existing MatterMutationRequest/MW4.
+1. P7.0 COMPLETE — owner map accepted + post-merge PC0 NON_RED.
+2. Director dispatch P7.
+3. P7.1 stateless Tool/SM1/MW8-9 authorization → existing MatterMutationRequest/MW4.
 5. P7.2 bounded planetary Matter bubble.
 6. P7.3 MatterMaterialBatch → Item Graph with explicit mass quantization/residual accounting.
 7. P7.4 persistence/restart composition.
@@ -130,3 +129,14 @@ mandatory RF infrastructure without measured need, or dynamic placement before s
 ### P7.0 accepted correction
 
 Fresh review rejected the first actor mapping because accepted P5 logical IDs can be single-segment while Matter requires canonical namespaced IDs. R2 uses the existing V0 `player_entity_id` and round-trips it to canonical PlayerRegistry state. No new identity owner was introduced.
+
+
+### P7.0 canonical closure
+
+```text
+P7.0 merge       6b0143281a4a2bedeff7889f0bd6470a5fcfd60d
+post-merge audit 33293384467 SUCCESS
+standard PC0     YELLOW / NON_RED
+directional PC0  YELLOW / NON_RED
+remaining gate   DIRECTOR_DISPATCH
+```

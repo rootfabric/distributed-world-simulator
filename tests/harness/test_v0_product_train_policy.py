@@ -43,15 +43,16 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_is_current_but_runtime_is_fail_closed(self) -> None:
         self.assertEqual(P7, self.policy["current_checkpoint"])
-        self.assertEqual("P7_OWNER_MAP_PRE_DISPATCH", self.policy["current_phase"])
+        self.assertEqual("P7_READY_FOR_DIRECTOR_DISPATCH", self.policy["current_phase"])
         routing = self.scheduler["v0_product_train_routing"]
         self.assertEqual(P7, routing["current_checkpoint"])
         self.assertFalse(routing["runtime_mutation_allowed_now"])
-        self.assertFalse(routing["next_runtime_checkpoint_eligible"])
+        self.assertTrue(routing["next_runtime_checkpoint_eligible"])
         self.assertNotIn("P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS", routing["p7_remaining_activation_prerequisites"])
-        self.assertIn("POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED", routing["p7_remaining_activation_prerequisites"])
-        self.assertIn("DIRECTOR_DISPATCH", routing["p7_remaining_activation_prerequisites"])
+        self.assertNotIn("POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED", routing["p7_remaining_activation_prerequisites"])
+        self.assertEqual(["DIRECTOR_DISPATCH"], routing["p7_remaining_activation_prerequisites"])
         self.assertEqual("ACCEPTED", routing["p7_0"]["status"])
+        self.assertEqual("PASS_NON_RED", routing["p7_post_merge_pc0"]["status"])
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
         self.assertEqual(P7, self.activation_p7["checkpoint"])
