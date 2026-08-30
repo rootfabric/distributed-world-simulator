@@ -1,0 +1,131 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_perf2.measurement_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-PERF2.0-R1",
+  "checkpoint": "ECO.EVO7/PERF2.0",
+  "mode": "RESEARCH_SHADOW_PERFORMANCE_ONLY",
+  "accepted_stream1_subject": {
+    "head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "rules": {
+    "canonical": false,
+    "side_channel_only": true,
+    "ecology_truth_mutation_forbidden": true,
+    "timing_values_in_canonical_hash_forbidden": true,
+    "memory_values_in_canonical_hash_forbidden": true,
+    "failed_runs_excluded_from_performance_claims": true,
+    "best_of_n_reporting_forbidden": true,
+    "exact_state_hash_parity_required_for_optimization_claim": true
+  },
+  "workload_contract": {
+    "required_fields": [
+      "workload_id",
+      "execution_mode",
+      "environment_recipe",
+      "warmup_generations",
+      "measured_generations",
+      "repetitions",
+      "initial_records",
+      "parents_per_chunk",
+      "audit_interval_generations",
+      "audit_generation_1",
+      "founder_seed",
+      "placement_seed",
+      "evolution_seed",
+      "environment_seed"
+    ],
+    "execution_modes": [
+      "SERIAL_REFERENCE",
+      "STREAM1"
+    ],
+    "minimum_warmup_generations": 1,
+    "minimum_measured_generations": 12,
+    "minimum_repetitions": 3,
+    "allowed_environment_recipes": [
+      "MIXED_PHYSICAL_HETEROGENEITY",
+      "WATER_GRADIENT_STRONG",
+      "RELIEF_DRAINAGE_STRONG"
+    ],
+    "default_stream1": {
+      "warmup_generations": 2,
+      "measured_generations": 12,
+      "repetitions": 3,
+      "initial_records": 64,
+      "parents_per_chunk": 64,
+      "audit_interval_generations": 10,
+      "audit_generation_1": true
+    }
+  },
+  "metric_contract": {
+    "timing_unit": "milliseconds",
+    "memory_unit": "bytes",
+    "required_timing_fields": [
+      "wall_ms",
+      "generation_total_ms",
+      "ls33_total_ms",
+      "stream_total_ms",
+      "candidate_build_ms",
+      "route_build_ms",
+      "recruitment_eval_ms",
+      "audit_ms"
+    ],
+    "required_count_fields": [
+      "generation",
+      "population",
+      "parent_count",
+      "candidate_count",
+      "chunk_count",
+      "max_parent_chunk",
+      "max_candidate_chunk"
+    ],
+    "memory_fields": {
+      "engine_static_bytes": "Godot allocator/static memory at sample boundary",
+      "engine_static_peak_bytes": "Godot allocator/static peak memory",
+      "process_rss_bytes": "Optional external process resident set sample",
+      "process_peak_rss_bytes": "Optional external process peak resident set sample"
+    },
+    "optional_external_memory_fields": [
+      "process_rss_bytes",
+      "process_peak_rss_bytes"
+    ]
+  },
+  "comparison_contract": {
+    "comparison_key_includes": [
+      "workload_hash",
+      "godot_version",
+      "host_fingerprint",
+      "measurement_method_revision"
+    ],
+    "comparison_key_excludes": [
+      "target_head",
+      "target_tree",
+      "timings",
+      "memory_values",
+      "run_id"
+    ],
+    "required_summary_statistics": [
+      "count",
+      "p50",
+      "p95",
+      "mean",
+      "min",
+      "max"
+    ],
+    "optimization_claim_requires": [
+      "same_comparison_key",
+      "same_final_ecology_state_hash",
+      "same_final_population_hash",
+      "same_final_classification_hash",
+      "minimum_repetitions_satisfied"
+    ]
+  },
+  "artifact_contract": {
+    "report_schema": "distributed_world_simulator.ecology.evo7_perf2.measurement_report.v1",
+    "sample_schema": "distributed_world_simulator.ecology.evo7_perf2.measurement_sample.v1",
+    "suggested_path": "artifacts/perf2/perf2-measurement-<run-id>.json",
+    "machine_local_artifact": true,
+    "artifact_is_canonical_truth": false
+  }
+}
