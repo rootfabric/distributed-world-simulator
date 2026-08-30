@@ -138,6 +138,8 @@ func _init() -> void:
 	## ---------------- B. long campaign audit fraction -------------------
 	var long_executor := Executor.new()
 	_check(long_executor.setup(_config(4)), "long-campaign executor setup")
+	_check(not long_executor.is_audit_generation(0), "generation zero is never a candidate audit generation")
+	_check(long_executor.is_audit_generation(1) and long_executor.is_audit_generation(10) and not long_executor.is_audit_generation(2), "candidate audit schedule is gen1 + positive multiples of 10")
 	var long_sim = LS33.new()
 	_check(long_sim.setup(patch, fields[RECIPES[0]], FOUNDER_SEED, PLACEMENT_SEED, EVOLUTION_SEED, 64), "long-campaign sim initializes")
 	_check(long_sim.set_candidate_executor(long_executor), "long-campaign executor injected")

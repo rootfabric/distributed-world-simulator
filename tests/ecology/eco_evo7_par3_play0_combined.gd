@@ -33,6 +33,7 @@ var _generation_advances := 0
 var _stall_seconds := 0.0
 var _last_progress_msec := 0
 var _finished := false
+var _stop_requested := false
 
 func _init() -> void:
 	var project_root := ProjectSettings.globalize_path("res://")
@@ -96,6 +97,12 @@ func _init() -> void:
 func _on_frame() -> void:
 	if _finished:
 		return
+	if _stop_requested:
+		## Let the already-started generation finish and be published before
+		## reading PAR2/PAR3 telemetry. This removes phase-ahead cutoff races.
+		if not _playground.is_generation_running():
+			_finish()
+		return
 	var now := Time.get_ticks_msec()
 	if now - _last_sample_msec >= 500:
 		_last_sample_msec = now
@@ -110,7 +117,10 @@ func _on_frame() -> void:
 		if float(now - _last_progress_msec) > 60_000.0:
 			_stall_seconds = float(now - _last_progress_msec) / 1000.0
 	if float(now - _started_msec) >= MIN_SECONDS * 1000.0 or _stall_seconds > 0.0:
-		_finish()
+		_stop_requested = true
+		_playground.set_auto_evolution(false)
+		if not _playground.is_generation_running():
+			_finish()
 
 func _check(condition: bool, label: String) -> void:
 	assertions += 1

@@ -94,3 +94,20 @@ External review findings closed in this roll-forward:
 - LS3.3 evidence validation calls `Par3CandidateKernel.candidate_hash(...)`, so candidate construction + identity validation have one implementation.
 
 PAR3 R2 must be verified only after PAR2 R2 becomes accepted.
+
+
+## R2 exact-Windows rejection and R3 repair
+
+Fresh exact-Windows verification of R2 (`735b3fd40cf18337fa33f51c79578dd5c03aab42`) found two reproducible integration defects while the PAR3 focused kernel gate itself remained green:
+
+1. inherited LS3.3 acceptance still reflected the pre-PAR3 private `_mutation_seed` location and hung after an invalid reflective call;
+2. the 5-minute PLAY0 combined test sampled telemetry at the wall-clock cutoff while generation N+1 could be in flight, allowing candidate telemetry to be one phase ahead of the last published generation. The audit predicate also treated generation 0 as divisible by the interval.
+
+R3 repairs the integration boundary without changing candidate biology:
+- LS3.3 acceptance imports the single PAR3 candidate kernel and tests mutation-seed invariance there;
+- source guards follow the moved mutation/candidate-hash ownership into the kernel;
+- PAR3 audit schedule explicitly rejects generation <= 0;
+- combined PLAY0 first disables AUTO and waits until `is_generation_running()==false`, then evaluates exact audit counts against the fully published generation;
+- focused acceptance freezes generation-zero and gen1/gen10 schedule semantics.
+
+R2 remains immutable rejected evidence. R3 requires a fresh exact-Windows full regression and combined PLAY0 verification before acceptance.

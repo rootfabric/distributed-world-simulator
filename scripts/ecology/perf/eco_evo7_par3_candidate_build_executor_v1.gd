@@ -136,6 +136,10 @@ func set_test_fault_injection(kind: String, params: Dictionary = {}) -> void:
 	_fault_params = params.duplicate(true)
 
 func is_audit_generation(generation: int) -> bool:
+	## Generation zero is the pre-evolution founder snapshot, never a
+	## reproduction audit generation.
+	if generation <= 0:
+		return false
 	if _audit_generation_1 and generation == 1:
 		return true
 	return _audit_interval > 0 and generation % _audit_interval == 0

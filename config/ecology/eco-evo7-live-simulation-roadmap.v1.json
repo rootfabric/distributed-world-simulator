@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R9",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R10",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PAR3",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -85,20 +85,22 @@
     {
       "id": "PAR1",
       "name": "Parallel Backend Selection",
-      "status": "R2_LOCAL_CANDIDATE",
-      "detail": "ROLL_FORWARD_REPAIR; head 5332fb6575003192c434f8cb5bdb4726b7c90cd6; draft PR #323; fresh exact-Windows benchmark/verifier required"
+      "status": "ACCEPTED",
+      "detail": "PAR1 R2 accepted after fresh exact-Windows tests + benchmark + contention; PROCESS_POOL wc=8 selected.",
+      "head": "5332fb6575003192c434f8cb5bdb4726b7c90cd6"
     },
     {
       "id": "PAR2",
       "name": "Parallel-Only Recruitment with Bounded Audits",
-      "status": "R2_LOCAL_CANDIDATE",
-      "detail": "BLOCKED_PENDING_PAR1_R2_FORMAL_ACCEPTANCE; head 7e8ea27057831f6053f2dd706dcaf25055604024; draft PR #324; same-input perf gate"
+      "status": "ACCEPTED",
+      "detail": "PAR2 R2 accepted after fresh exact-Windows tests + same-input perf gate + PLAY0.",
+      "head": "7e8ea27057831f6053f2dd706dcaf25055604024"
     },
     {
       "id": "PAR3",
       "name": "Parallel Deterministic Candidate Reproduction",
-      "status": "R2_LOCAL_CANDIDATE",
-      "detail": "BLOCKED_PENDING_PAR2_R2_FORMAL_ACCEPTANCE; empty-slice + public facade + single candidate implementation repairs; exact head is the commit carrying this roadmap"
+      "status": "R3_LOCAL_CANDIDATE",
+      "detail": "R2 735b3fd40cf18337fa33f51c79578dd5c03aab42 rejected by exact-Windows integration gate; R3 repairs inherited LS3.3 acceptance ownership and PLAY0 telemetry quiescence/audit schedule. Exact R3 head is the commit carrying this roadmap."
     },
     {
       "id": "STREAM1",

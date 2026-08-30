@@ -4,6 +4,7 @@ const EarthWorld = preload("res://scripts/world/earth/procedural_earth_world.gd"
 const PlanetPatch = preload("res://scripts/ecology/shadow/eco_evo7_ls30_planet_patch_v1.gd")
 const EnvironmentField = preload("res://scripts/ecology/shadow/eco_evo7_ls31_environment_field_v1.gd")
 const LS33 = preload("res://scripts/ecology/shadow/eco_evo7_ls33_dispersal_recruitment_v1.gd")
+const Par3CandidateKernel = preload("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
 
 const FOUNDER_SEED := 20260832
 const PLACEMENT_SEED := 320032
@@ -82,7 +83,7 @@ func _init() -> void:
     var relocated_parent: Dictionary = mutation_parent.duplicate(true)
     relocated_parent["record_id"] = "relocated-spatial-record"
     relocated_parent["cell_index"] = (int(mutation_parent["cell_index"]) + 17) % 1024
-    _check(int(off.call("_mutation_seed", mutation_parent, 1, 0)) == int(off.call("_mutation_seed", relocated_parent, 1, 0)), "mutation seed ignores spatial record/address when reproductive identity is unchanged")
+    _check(int(Par3CandidateKernel._mutation_seed(String(LS33.SCHEMA), int(off.evolution_seed), mutation_parent, 1, 0)) == int(Par3CandidateKernel._mutation_seed(String(LS33.SCHEMA), int(off.evolution_seed), relocated_parent, 1, 0)), "mutation seed ignores spatial record/address when reproductive identity is unchanged")
 
     _check(_all_routes_valid(g1a), "generation-one route evidence is internally consistent")
     _check(_all_recruitment_routes_bound(g1a), "recruitment evidence binds to exact dispersal route")
@@ -141,9 +142,14 @@ func _all_recruitment_routes_bound(snapshot: Dictionary) -> bool:
 
 func _source_guard() -> void:
     var path := "res://scripts/ecology/shadow/eco_evo7_ls33_dispersal_recruitment_v1.gd"
+    var kernel_path := "res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd"
     var source := FileAccess.get_file_as_string(path)
+    var kernel_source := FileAccess.get_file_as_string(kernel_path)
     var lower := source.to_lower()
-    _check(source.count("LineageExtension.reproduce_bundle(") == 1, "LS3.3 has exactly one canonical reproduce_bundle call site")
+    var kernel_lower := kernel_source.to_lower()
+    _check(not source.contains("LineageExtension.reproduce_bundle("), "LS3.3 no longer owns candidate reproduction formula")
+    _check(kernel_source.count("LineageExtension.reproduce_bundle(") == 1, "PAR3 candidate kernel owns exactly one canonical reproduce_bundle call site")
+    _check(source.contains("Par3CandidateKernel.build_all(") and source.contains("Par3CandidateKernel.candidate_hash("), "LS3.3 delegates candidate build and candidate identity validation to one PAR3 kernel")
     _check(not lower.contains("biome_code") and not lower.contains("biome_name") and not lower.contains("tree_density"), "LS3.3 has no legacy biome/vegetation causal input")
     _check(not lower.contains("randomize(") and not lower.contains("randf(") and not lower.contains("randi("), "LS3.3 adds no RNG authority")
     _check(not lower.contains("fileaccess.open") and not lower.contains("diraccess"), "LS3.3 has no persistence write path")
@@ -153,14 +159,15 @@ func _source_guard() -> void:
     var founder_identity_end := source.find("\nfunc ", founder_identity_start + 1)
     var founder_identity_logic := source.substr(founder_identity_start, founder_identity_end - founder_identity_start).to_lower()
     _check(not founder_identity_logic.contains("cell_index") and not founder_identity_logic.contains("slot_index") and not founder_identity_logic.contains("record_id"), "founder reproductive identity excludes placement address")
-    var mutation_start := source.find("func _mutation_seed")
-    var mutation_end := source.find("\nfunc ", mutation_start + 1)
-    var mutation_logic := source.substr(mutation_start, mutation_end - mutation_start).to_lower()
-    _check(not mutation_logic.contains("environment") and not mutation_logic.contains("recipe") and not mutation_logic.contains("moisture") and not mutation_logic.contains("record_id") and not mutation_logic.contains("cell_index"), "mutation seed uses pre-environment reproductive identity, not spatial address")
-    var candidate_hash_start := source.find("func _candidate_hash")
-    var candidate_hash_end := source.find("\nfunc ", candidate_hash_start + 1)
-    var candidate_hash_logic := source.substr(candidate_hash_start, candidate_hash_end - candidate_hash_start).to_lower()
-    _check(not candidate_hash_logic.contains("parent_record_id") and not candidate_hash_logic.contains("parent_cell_index"), "mutation candidate identity excludes spatial parent address")
+    var mutation_start := kernel_source.find("static func _mutation_seed")
+    var mutation_end := kernel_source.find("\nstatic func ", mutation_start + 1)
+    var mutation_logic := kernel_source.substr(mutation_start, mutation_end - mutation_start).to_lower()
+    _check(mutation_start >= 0 and not mutation_logic.contains("environment") and not mutation_logic.contains("recipe") and not mutation_logic.contains("moisture") and not mutation_logic.contains("record_id") and not mutation_logic.contains("cell_index"), "mutation seed uses pre-environment reproductive identity, not spatial address")
+    var candidate_hash_start := kernel_source.find("static func candidate_hash")
+    var candidate_hash_end := kernel_source.find("\nstatic func ", candidate_hash_start + 1)
+    var candidate_hash_logic := kernel_source.substr(candidate_hash_start, candidate_hash_end - candidate_hash_start).to_lower()
+    _check(candidate_hash_start >= 0 and not candidate_hash_logic.contains("parent_record_id") and not candidate_hash_logic.contains("parent_cell_index"), "mutation candidate identity excludes spatial parent address")
+    _check(not kernel_lower.contains("randomize(") and not kernel_lower.contains("randf(") and not kernel_lower.contains("randi("), "candidate kernel adds no RNG authority")
     var dispersal_start := source.find("func _dispersal_seed")
     var dispersal_end := source.find("\nfunc ", dispersal_start + 1)
     var dispersal_logic := source.substr(dispersal_start, dispersal_end - dispersal_start).to_lower()
