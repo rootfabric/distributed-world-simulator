@@ -278,3 +278,142 @@ static func step(world: Dictionary, provider_contacts: Array, dt: float, options
 	# the velocity-level hybrid DAE step; contacts then solve algebraic impulses.
 	var free := {}
 	for id in world["bodies"].keys():
+		var body: Dictionary = world["bodies"][id]
+		if bool(body["dynamic"]):
+			free[id] = {
+				"linear": body["linear_velocity"] + world["gravity"] * dt,
+				"angular": body["angular_velocity"],
+			}
+
+	var island_results: Array = []
+	var total_iterations := 0
+	var warm_hits := 0
+	var sparse_entries := 0
+	for island in islands:
+		var solved := _solve_island(world, island, free, dt, options)
+		if not bool(solved.get("ok", false)):
+			return solved
+		island_results.append(solved)
+		total_iterations += int(solved["iterations"])
+		warm_hits += int(solved["warm_start_contacts"])
+		sparse_entries += int(solved["sparse_effective_mass_entries"])
+		for id in solved["post_velocities"].keys():
+			free[id] = solved["post_velocities"][id]
+		for cid in solved["impulse_by_id"].keys():
+			if world["contact_cache"].has(cid):
+				world["contact_cache"][cid]["warm_impulse"] = solved["impulse_by_id"][cid] * WARM_DECAY
+
+	# Bodies without islands retain free velocities. Then integrate positions.
+	for id in world["bodies"].keys():
+		var body: Dictionary = world["bodies"][id]
+		if not bool(body["dynamic"]): continue
+		body["linear_velocity"] = free[id]["linear"]
+		body["angular_velocity"] = free[id]["angular"]
+		body["position"] = body["position"] + body["linear_velocity"] * dt
+
+	world["time"] = float(world["time"]) + dt
+	world["step"] = int(world["step"]) + 1
+	world["solver_stats"] = {
+		"island_count": islands.size(),
+		"iterations": total_iterations,
+		"warm_start_contacts": warm_hits,
+		"sparse_effective_mass_entries": sparse_entries,
+	}
+	return {
+		"ok": true,
+		"lifecycle": graph["lifecycle"],
+		"islands": island_results,
+		"solver_stats": world["solver_stats"].duplicate(true),
+		"state_hash": world_hash(world),
+	}
+
+static func _solve_island(world: Dictionary, island: Dictionary, free: Dictionary, dt: float, options: Dictionary) -> Dictionary:
+	var body_ids: Array = island["body_ids"]
+	var contacts: Array = island["contacts"]
+	var body_index := {}
+	for i in range(body_ids.size()): body_index[body_ids[i]] = i
+	var dof := 6 * body_ids.size()
+	var row_count := 3 * contacts.size()
+	var rows: Array = []
+	var bvec: Array = []
+	var mu: Array = []
+	var warm := _zero_vector(row_count)
+	var warm_contacts := 0
+
+	for ci in range(contacts.size()):
+		var c: Dictionary = contacts[ci]
+		var dirs := [c["normal"], c["tangent_1"], c["tangent_2"]]
+		for local_row in range(3):
+			var sparse_row := {}
+			_append_body_jacobian(sparse_row, world, body_index, String(c["body_a"]), dirs[local_row], c["r_a"], 1.0)
+			_append_body_jacobian(sparse_row, world, body_index, String(c["body_b"]), dirs[local_row], c["r_b"], -1.0)
+			rows.append(sparse_row)
+		var vn := _relative_contact_component(world, free, c, c["normal"])
+		var vt1 := _relative_contact_component(world, free, c, c["tangent_1"])
+		var vt2 := _relative_contact_component(world, free, c, c["tangent_2"])
+		var penetration_bias := BAUMGARTE * minf(float(c["gap"]), 0.0) / dt
+		var restitution_term := float(c["restitution"]) * vn if vn < -IMPACT_SPEED_THRESHOLD else 0.0
+		bvec.append(vn + restitution_term + penetration_bias)
+		bvec.append(vt1)
+		bvec.append(vt2)
+		mu.append(float(c["friction"]))
+		var cache: Dictionary = world["contact_cache"].get(String(c["id"]), {})
+		var previous: Vector3 = cache.get("warm_impulse", Vector3.ZERO)
+		if previous.length() > EPS:
+			warm_contacts += 1
+		warm[3 * ci] = previous.x
+		warm[3 * ci + 1] = previous.y
+		warm[3 * ci + 2] = previous.z
+
+	var minv := _island_inverse_mass(world, body_ids)
+	var sparse_a := _assemble_sparse_effective_mass(rows, minv)
+	var dense_a := _sparse_to_dense(sparse_a, row_count)
+	var rho := float(options.get("rho", DEFAULT_RHO))
+	var tolerance := float(options.get("tolerance", DEFAULT_TOLERANCE))
+	var max_iterations := int(options.get("max_iterations", DEFAULT_MAX_ITERATIONS))
+	var solved := _admm_cone(dense_a, bvec, mu, warm, rho, tolerance, max_iterations)
+	if not bool(solved.get("ok", false)):
+		solved["island_id"] = String(island["id"])
+		return solved
+
+	var lambda: Array = solved["lambda"]
+	var generalized_impulse := _sparse_mat_t_vec(rows, lambda, dof)
+	var post := {}
+	for bi in range(body_ids.size()):
+		var id := String(body_ids[bi])
+		var base := 6 * bi
+		var current: Dictionary = free[id]
+		var body: Dictionary = world["bodies"][id]
+		post[id] = {
+			"linear": current["linear"] + Vector3(generalized_impulse[base], generalized_impulse[base+1], generalized_impulse[base+2]) * float(body["inv_mass"]),
+			"angular": current["angular"] + Vector3(generalized_impulse[base+3], generalized_impulse[base+4], generalized_impulse[base+5]) * body["inv_inertia"],
+		}
+	var impulse_by_id := {}
+	var active := 0
+	var sliding := 0
+	for ci in range(contacts.size()):
+		var j := Vector3(lambda[3*ci], lambda[3*ci+1], lambda[3*ci+2])
+		impulse_by_id[String(contacts[ci]["id"])] = j
+		if j.x > 1.0e-8:
+			active += 1
+			if absf(Vector2(j.y,j.z).length() - float(contacts[ci]["friction"]) * j.x) <= 1.0e-6:
+				sliding += 1
+
+	return {
+		"ok": true,
+		"island_id": String(island["id"]),
+		"body_ids": body_ids.duplicate(true),
+		"contact_ids": _contact_ids(contacts),
+		"post_velocities": post,
+		"impulse_by_id": impulse_by_id,
+		"active_contacts": active,
+		"sliding_contacts": sliding,
+		"iterations": int(solved["iterations"]),
+		"warm_start_contacts": warm_contacts,
+		"primal_residual": float(solved["primal_residual"]),
+		"dual_residual": float(solved["dual_residual"]),
+		"sparse_jacobian_entries": _sparse_row_entry_count(rows),
+		"sparse_effective_mass_entries": sparse_a.size(),
+		"dense_effective_mass_capacity": row_count * row_count,
+	}
+
