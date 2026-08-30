@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - current
+          - perf2.0
           - accepted
           - full
           - p4.4
