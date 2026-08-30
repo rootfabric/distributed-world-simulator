@@ -111,3 +111,8 @@ R3 repairs the integration boundary without changing candidate biology:
 - focused acceptance freezes generation-zero and gen1/gen10 schedule semantics.
 
 R2 remains immutable rejected evidence. R3 requires a fresh exact-Windows full regression and combined PLAY0 verification before acceptance.
+
+
+## R3.1 telemetry-finalization hardening
+
+Before external execution of R3, source review found one remaining race in the new quiescence logic: after the in-flight generation finished, the test could still use the last 500 ms sampled generation number. R3.1 synchronizes `_last_generation` directly from the final published snapshot after the bridge becomes idle, then requires exact one-to-one parallel call counts for both candidate and recruitment paths. This is test/evidence hardening only; runtime biology and parallel executors are unchanged.

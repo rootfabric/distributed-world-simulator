@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R10",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R11",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PAR3",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -99,8 +99,8 @@
     {
       "id": "PAR3",
       "name": "Parallel Deterministic Candidate Reproduction",
-      "status": "R3_LOCAL_CANDIDATE",
-      "detail": "R2 735b3fd40cf18337fa33f51c79578dd5c03aab42 rejected by exact-Windows integration gate; R3 repairs inherited LS3.3 acceptance ownership and PLAY0 telemetry quiescence/audit schedule. Exact R3 head is the commit carrying this roadmap."
+      "status": "R3_1_LOCAL_CANDIDATE",
+      "detail": "R2 rejected by exact-Windows gate; R3 repaired inherited LS3.3 ownership + audit/quiescence; R3.1 hardens final published-generation synchronization before telemetry acceptance. Exact R3.1 head is the commit carrying this roadmap."
     },
     {
       "id": "STREAM1",

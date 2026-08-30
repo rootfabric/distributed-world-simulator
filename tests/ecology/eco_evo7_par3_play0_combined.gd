@@ -99,8 +99,16 @@ func _on_frame() -> void:
 		return
 	if _stop_requested:
 		## Let the already-started generation finish and be published before
-		## reading PAR2/PAR3 telemetry. This removes phase-ahead cutoff races.
+		## reading PAR2/PAR3 telemetry. Then explicitly synchronize the final
+		## published generation instead of relying on the 500 ms sample clock.
 		if not _playground.is_generation_running():
+			var final_snapshot: Dictionary = _playground.get_published_snapshot()
+			var final_generation := int(final_snapshot.get("generation", -1))
+			if final_generation > _last_generation:
+				if _last_generation >= 0:
+					_generation_advances += final_generation - _last_generation
+				_last_generation = final_generation
+				_last_progress_msec = Time.get_ticks_msec()
 			_finish()
 		return
 	var now := Time.get_ticks_msec()
@@ -152,8 +160,9 @@ func _finish() -> void:
 		if not t2.is_empty() and not t3.is_empty():
 			var audits2 := int(t2.get("serial_audit_calls", 0))
 			var audits3 := int(t3.get("serial_audit_calls", 0))
-			_check(absi(int(t2.get("parallel_calls", 0)) - _last_generation) <= 1, "recruitment parallel every generation (%d/%d)" % [int(t2.get("parallel_calls", 0)), _last_generation])
-			_check(absi(int(t3.get("parallel_calls", 0)) - _last_generation) <= 1, "candidate build parallel every generation (%d/%d)" % [int(t3.get("parallel_calls", 0)), _last_generation])
+			_check(not _playground.is_generation_running(), "telemetry sampled only after generation bridge is quiescent")
+			_check(int(t2.get("parallel_calls", 0)) == _last_generation, "recruitment parallel exactly once per published generation (%d/%d)" % [int(t2.get("parallel_calls", 0)), _last_generation])
+			_check(int(t3.get("parallel_calls", 0)) == _last_generation, "candidate build parallel exactly once per published generation (%d/%d)" % [int(t3.get("parallel_calls", 0)), _last_generation])
 			_check(audits2 == 1 + (_last_generation / 10), "recruitment audits on schedule (%d over %d)" % [audits2, _last_generation])
 			_check(audits3 == 1 + (_last_generation / 10), "candidate audits on schedule (%d over %d)" % [audits3, _last_generation])
 			_check(bool(t3.get("last_audit_pass", false)), "last candidate audit passed live")
