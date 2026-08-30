@@ -16,6 +16,7 @@ const EnvironmentSample = preload("res://scripts/research/ecology/environment_sa
 const Contract = preload("res://scripts/research/ecology/plant_development_contract_v1.gd")
 const CoupledDevelopment = preload("res://scripts/research/ecology/plant_environment_coupled_development_v1.gd")
 const FunctionalPhenotype = preload("res://scripts/research/ecology/plant_functional_phenotype_v1.gd")
+const MorphologyEvidence = preload("res://scripts/research/ecology/plant_morphology_evidence_v1.gd")
 const ResourceModel = preload("res://scripts/research/ecology/plant_resource_model_v1.gd")
 const LightField = preload("res://scripts/research/ecology/understory_light_field_v1.gd")
 const WaterField = preload("res://scripts/research/ecology/soil_water_field_v1.gd")
@@ -54,6 +55,8 @@ var last_survivor_count := 0
 var last_culled_count := 0
 var last_profile: Dictionary = {}
 var last_competition_profile: Dictionary = {}
+var last_morphology_records: Array[Dictionary] = []
+var last_morphology_evidence: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -131,6 +134,10 @@ func step_generation() -> Dictionary:
     last_culled_count = 0
     last_profile.clear()
     last_competition_profile.clear()
+    last_morphology_records.clear()
+    last_morphology_evidence.clear()
+    last_morphology_records.clear()
+    last_morphology_evidence.clear()
     last_survivor_count = int(pre["record_count"])
 
     var competition_pass_ms := 0.0
@@ -146,6 +153,7 @@ func step_generation() -> Dictionary:
             var survivors: Array[Dictionary] = competition_result["survivors"]
             last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
             last_competition_hash = String(last_competition_field["field_hash"])
+            last_morphology_records = Array(competition_result.get("morphology_records", [])).duplicate(true)
             last_survivor_count = survivors.size()
             last_culled_count = int(pre["record_count"]) - survivors.size()
             core.records = survivors.duplicate(true)
@@ -165,6 +173,14 @@ func step_generation() -> Dictionary:
     var post: Dictionary = core.get_snapshot()
     last_postcompetition_population_hash = String(post["population_hash"])
     var post_snapshot_ms := _elapsed_ms(phase_started)
+    if competition_enabled and int(pre.get("generation", 0)) > 0:
+        last_morphology_evidence = MorphologyEvidence.seal_snapshot(
+            last_morphology_records,
+            int(pre["generation"]),
+            last_precompetition_population_hash,
+            last_competition_hash,
+            last_postcompetition_population_hash
+        )
 
     phase_started = Time.get_ticks_usec()
     var snapshot := get_snapshot()
@@ -187,6 +203,48 @@ func step_generation() -> Dictionary:
 
 func get_last_profile() -> Dictionary:
     return last_profile.duplicate(true)
+
+func get_morphology_evidence() -> Dictionary:
+    return last_morphology_evidence.duplicate(true)
+
+func validate_morphology_evidence(evidence: Dictionary) -> bool:
+    if not initialized or not MorphologyEvidence.validate_snapshot(evidence):
+        return false
+    if last_morphology_evidence.is_empty():
+        return false
+    if String(evidence.get("evidence_hash", "")) != String(last_morphology_evidence.get("evidence_hash", "")):
+        return false
+    var current: Dictionary = core.get_snapshot()
+    if int(evidence.get("generation", -1)) != int(current.get("generation", -2)):
+        return false
+    if String(evidence.get("source_precompetition_population_hash", "")) != last_precompetition_population_hash:
+        return false
+    if String(evidence.get("source_competition_hash", "")) != last_competition_hash:
+        return false
+    if String(evidence.get("source_postcompetition_population_hash", "")) != String(current.get("population_hash", "")):
+        return false
+    var current_records: Array = Array(current.get("records", []))
+    if int(evidence.get("record_count", -1)) != current_records.size():
+        return false
+    var evidence_by_id := {}
+    for value in Array(evidence.get("records", [])):
+        if not value is Dictionary:
+            return false
+        var item: Dictionary = value
+        evidence_by_id[String(item.get("record_id", ""))] = item
+    for value in current_records:
+        if not value is Dictionary:
+            return false
+        var record: Dictionary = value
+        var record_id := String(record.get("record_id", ""))
+        if not evidence_by_id.has(record_id):
+            return false
+        var item: Dictionary = evidence_by_id[record_id]
+        if int(item.get("cell_index", -1)) != int(record.get("cell_index", -2)):
+            return false
+        if String(item.get("bundle_checksum", "")) != String(record.get("bundle_checksum", "")):
+            return false
+    return true
 
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
@@ -250,8 +308,16 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         var env := _environment_sample(env_cell, generation_value, String(record["record_id"]))
         if env.is_empty():
             return {}
-        var fp := _functional_phenotype(record["hereditary_bundle"], env)
-        if fp.is_empty():
+        var phenotype_package := _phenotype_package(record["hereditary_bundle"], env)
+        if phenotype_package.is_empty():
+            return {}
+        var fp: Dictionary = phenotype_package["functional_phenotype"]
+        var morphology_evidence := MorphologyEvidence.build_record(
+            record,
+            Dictionary(phenotype_package["ph2"]),
+            fp
+        )
+        if morphology_evidence.is_empty():
             return {}
         var position := _record_position(record)
         var identity := String(record["record_id"])
@@ -261,6 +327,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
             "env_cell": env_cell,
             "environment": env,
             "fp": fp,
+            "morphology_evidence": morphology_evidence,
             "position": position,
         })
         light_records.append(_light_record(identity, position, fp, float(env_cell["incident_light"])))
@@ -306,6 +373,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
     profile_phase_started = Time.get_ticks_usec()
     var evaluations: Array[Dictionary] = []
     var survivors: Array[Dictionary] = []
+    var morphology_records: Array[Dictionary] = []
     for item in provisional:
         var record: Dictionary = item["record"]
         var identity := String(item["identity"])
@@ -366,6 +434,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         evaluations.append(evaluation)
         if survives:
             survivors.append(record.duplicate(true))
+            morphology_records.append(Dictionary(item["morphology_evidence"]).duplicate(true))
 
     var evaluation_ms := _elapsed_ms(profile_phase_started)
     profile_phase_started = Time.get_ticks_usec()
@@ -408,7 +477,7 @@ func _competition_pass(source_records: Array, generation_value: int) -> Dictiona
         "finalize_validate_ms": finalize_validate_ms,
         "total_ms": _elapsed_ms(profile_total_started),
     }
-    return {"survivors": survivors, "field": field}
+    return {"survivors": survivors, "field": field, "morphology_records": morphology_records}
 
 func _empty_competition_field(generation_value: int) -> Dictionary:
     if generation_value < 1:
@@ -543,20 +612,32 @@ func validate_snapshot(snapshot: Dictionary) -> bool:
         return false
     return true
 
-func _functional_phenotype(bundle: Dictionary, env: Dictionary) -> Dictionary:
+func _phenotype_package(bundle: Dictionary, env: Dictionary) -> Dictionary:
     var seed_tag := "ls34-phenotype|%d|%s" % [int(bundle["individual_seed"]), String(bundle["bundle_checksum"]).substr(0, 16)]
     var envelope := Contract.create_seed_envelope(
         bundle["genome"], bundle["dev_traits"], String(bundle["lineage"]["lineage_id"]), seed_tag, 0, 1.25)
     var ph2 := CoupledDevelopment.realize(envelope, bundle["dev_traits"], env)
     if ph2.is_empty():
         return {}
-    return FunctionalPhenotype.compile({
+    var fp := FunctionalPhenotype.compile({
         "genome": bundle["genome"],
         "ph2_realized": ph2,
         "traits_extension": bundle["ext_traits"],
         "environment_sample": env,
         "age_fraction": 1.0,
     })
+    if fp.is_empty():
+        return {}
+    return {
+        "ph2": ph2,
+        "functional_phenotype": fp,
+    }
+
+func _functional_phenotype(bundle: Dictionary, env: Dictionary) -> Dictionary:
+    ## Compatibility helper for focused tests/debug callers. The competition path
+    ## uses _phenotype_package() once so morphology evidence never recomputes biology.
+    var package := _phenotype_package(bundle, env)
+    return {} if package.is_empty() else Dictionary(package["functional_phenotype"]).duplicate(true)
 
 func _environment_sample(env_cell: Dictionary, generation_value: int, identity: String) -> Dictionary:
     return EnvironmentSample.create(
