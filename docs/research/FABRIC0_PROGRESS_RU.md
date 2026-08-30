@@ -2700,3 +2700,339 @@ block-sparse parallel solve
 +
 momentum/energy/refinement evidence
 ```
+
+
+## FABRIC0.15 — MULTIBODY CONVEX COMPLEMENTARITY GRAPH
+
+**Parent research head:** `e4962f067722008ac90993ba648a6f9d2a84f9ec`  
+**Exact executable commit:** `a8ff0d7360b4bba0f1b3e164f8c040d73622b1ee`  
+**Design:** `docs/research/FABRIC0_15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v15-validation.json`  
+**Status:** `IMPLEMENTED / EXACT_DOUBLE_PASS / REMOTE_BYTE_IDENTITY_PASS / PREDECESSOR_RUNTIME_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Exact validation
+
+- Godot `4.7.1.stable.double.custom_build.a13da4feb`;
+- FABRIC0.15 acceptance: `103/103 PASS`;
+- playground: `FABRIC0_15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- executable byte identity: `7/7 PASS`;
+- FABRIC0.14 runtime regression on the same engine: `156/156 PASS`;
+- all seven FABRIC0.14 executable blobs preserved.
+
+### Coupled multibody graph
+
+Main stand:
+
+```text
+plane
+  ↕
+  A
+  ↕
+  B
+  ↕
+  C
+
+D = free
+```
+
+All four bodies remain full 6DOF.
+
+Whole-system physical state:
+
+```text
+4 × 13 = 52 components
+```
+
+A projected block Gauss-Seidel contact solver updates shared body velocities, so solving one contact changes residuals at adjacent contacts.
+
+### Graph merge
+
+Main `dt=0.001` run:
+
+```text
+C|D appears
+t = 0.18299031095859
+
+mode = stick
+
+normal impulse =
+0.59227588215158
+
+tangent impulse =
+(
+ -0.00467806420921,
+ -0.03987303859427
+)
+```
+
+Topology:
+
+```text
+[A,B,C] + [D]
+        ↓
+[A,B,C,D]
+```
+
+### Complementarity split
+
+Exact source transition:
+
+```text
+t = 0.32
+
+drive:D
+(0,0,0)
+→
+(0,0,12)
+```
+
+After it:
+
+```text
+C|D
+Pn ~ 0
++
+separating velocity > 0
+→
+CONTACT_DISAPPEAR
+reason = COMPLEMENTARITY_SEPARATION
+```
+
+Topology:
+
+```text
+[A,B,C,D]
+        ↓
+[A,B,C] + [D]
+```
+
+### Coupled normal chain
+
+Analytic `dt=1/240` gravity-load expectations:
+
+```text
+B|C      0.0367875
+A|B      0.08379375
+plane|A  0.12466875
+```
+
+Solved:
+
+```text
+B|C      0.03678437280127
+A|B      0.08378662693623
+plane|A  0.12466162693623
+```
+
+This proves load propagation through shared contact state.
+
+### Mixed friction in one island
+
+Simultaneous modes:
+
+```text
+plane|A  stick
+A|B      stick
+B|C      slide
+```
+
+For `B|C`:
+
+```text
+Pn =
+0.03678437280127
+
+|Pt| =
+0.01250668675243
+
+|Pt| = mu Pn
+```
+
+### Configuration localization
+
+A new-contact penetration/ Baumgarte artifact made contact lifetime timestep-dependent during development.
+
+Accepted semantics:
+
+```text
+detect negative gap
+→ configuration-only correction to gap=0
+→ no velocity change
+→ no momentum change
+→ physical contact impulse solve
+```
+
+Main `dt=0.001`:
+
+```text
+projection distance =
+1.911595595e-5
+
+projection energy delta =
+0
+```
+
+This is explicitly different from FABRIC0.14 hidden velocity projection, which was a real physical impulse.
+
+### Refinement
+
+Reference:
+
+`dt=0.0005`.
+
+Merge-time error:
+
+```text
+0.004 -> 1.5902247457270924e-3
+0.002 -> 6.811752040176144e-4
+0.001 -> 2.2666409624433337e-4
+```
+
+52D state error:
+
+```text
+0.004 -> 4.257633804026106e-3
+0.002 -> 1.8033092993312572e-3
+0.001 -> 7.327864068812362e-4
+```
+
+Energy-ledger residual:
+
+```text
+0.004 -> 0.1863040594936023
+0.002 -> 0.09295272462256121
+0.001 -> 0.047009019436045296
+```
+
+All three strictly decrease.
+
+### Main numerical evidence
+
+```text
+contact solves =
+403
+
+PGS iterations =
+12896
+
+max normal violation =
+1.634842214e-4
+
+max cone violation =
+0
+
+max penetration =
+4.72630019e-6
+
+internal pair linear momentum error =
+0
+
+internal pair angular momentum error =
+0
+```
+
+Energy:
+
+```text
+contact dissipation =
+0.65570895032957
+
+contact gain =
+0
+
+external work =
+1.13448578288811
+
+projection energy delta =
+0
+
+energy delta =
+0.52578585199459
+
+ledger residual =
+0.04700901943605
+```
+
+### PGS order evidence
+
+Finite-iteration forward/reverse contact order is not exact-equal.
+
+Observed:
+
+```text
+max delta v =
+1.8593214664426525e-6
+
+max delta omega =
+2.1323642847629e-7
+```
+
+Same friction modes are recovered.
+
+Therefore current claim is **order robustness**, not exact order independence.
+
+### Parallel audit
+
+Two actual Godot Threads produce canonical joined hash:
+
+`49e8c7b2fa0e1177f0e19d36ee85c4e22239ad95556c2c0a7c909d24fb47b34b`.
+
+Reverse spawn order yields exactly the same hash and does not mutate physical world state.
+
+### Main state hash
+
+`68e18b6a9a16b574aaf0b6ca30b3cf5160ea9a69ba8919df11f1b04fda92d29c`.
+
+### Exact byte boundary
+
+Seven exact-tested local files were converted to Git blobs, committed in one tree on top of FABRIC0.14 and re-fetched from the branch.
+
+Result:
+
+`7/7 remote byte identity PASS`.
+
+### Main non-claims
+
+Still open:
+
+- arbitrary convex polytope collision;
+- GJK/EPA;
+- true multipoint face manifolds;
+- global MCP/NCP or semismooth solve;
+- exact PGS order independence;
+- production block-sparse backend;
+- adaptive error-controlled time integration;
+- exact simultaneous multi-impact localization;
+- root-localized stick/slide events;
+- fully autonomous main split without an explicit source change;
+- rolling/torsional friction;
+- production broadphase/thread pool;
+- Construction/authority/persistence/network integration;
+- full materialized DWS regression.
+
+### Next wall
+
+`FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP`.
+
+Target:
+
+```text
+arbitrary convex support mapping
++
+GJK / EPA
++
+persistent multipoint manifold
++
+graph-wide MCP/NCP
++
+coupled friction cones
++
+adaptive contact / separation / stick-slide localization
++
+same-world parallel islands
++
+broadphase
++
+refinement / momentum / energy evidence
+```
