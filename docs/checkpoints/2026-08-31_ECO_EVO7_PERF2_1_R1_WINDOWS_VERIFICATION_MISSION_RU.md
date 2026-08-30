@@ -16,10 +16,10 @@ acceptance control base:
 73317ce3c35a70a9f8e882e733f23539761027a8
 
 PERF2.1 profiler runtime:
-e1690106764cbcff536d939e87f1f65e9111937e
+85b9e358dd2edc0213c37b6c5005569fb7f6f378
 
 PERF2.1 acceptance harness:
-9590ac289c8664a7857cebcecca5d5819450033e
+314cacb607ba57e76986cea0b95c38fe1c2b81c8
 
 PERF2.0 contract revision:
 ECO.EVO7-PERF2.0-R1
@@ -51,10 +51,10 @@ $Tree = (git rev-parse 'HEAD^{tree}').Trim()
 
 if ($Head -ne $Target) { throw 'exact HEAD mismatch' }
 
-git merge-base --is-ancestor e1690106764cbcff536d939e87f1f65e9111937e HEAD
+git merge-base --is-ancestor 85b9e358dd2edc0213c37b6c5005569fb7f6f378 HEAD
 if ($LASTEXITCODE -ne 0) { throw 'runtime anchor mismatch' }
 
-git merge-base --is-ancestor 9590ac289c8664a7857cebcecca5d5819450033e HEAD
+git merge-base --is-ancestor 314cacb607ba57e76986cea0b95c38fe1c2b81c8 HEAD
 if ($LASTEXITCODE -ne 0) { throw 'acceptance harness mismatch' }
 
 Write-Host "HEAD=$Head"
