@@ -43,12 +43,18 @@ func _init() -> void:
 	_check(_is_hash(base_key), "comparison key is SHA-256")
 
 	var timing_only := base.duplicate(true)
-	Dictionary(timing_only["metrics"])["timings_ms"]["wall_ms"] = 999.0
+	var timing_metrics: Dictionary = Dictionary(timing_only["metrics"])
+	var timing_values: Dictionary = Dictionary(timing_metrics["timings_ms"])
+	timing_values["wall_ms"] = 999.0
+	timing_metrics["timings_ms"] = timing_values
+	timing_only["metrics"] = timing_metrics
 	_check(Contract.comparison_key(timing_only) == base_key, "timing values do not enter comparison key")
 
 	var different_target := base.duplicate(true)
-	Dictionary(different_target["target"])["head"] = "b".repeat(40)
-	Dictionary(different_target["target"])["tree"] = "c".repeat(40)
+	var changed_target: Dictionary = Dictionary(different_target["target"])
+	changed_target["head"] = "b".repeat(40)
+	changed_target["tree"] = "c".repeat(40)
+	different_target["target"] = changed_target
 	_check(Contract.comparison_key(different_target) == base_key, "source target is excluded from comparison key for before/after optimization")
 
 	var different_host := base.duplicate(true)
@@ -56,11 +62,17 @@ func _init() -> void:
 	_check(Contract.comparison_key(different_host) != base_key, "host fingerprint fences incomparable machines")
 
 	var negative := base.duplicate(true)
-	Dictionary(negative["metrics"])["timings_ms"]["wall_ms"] = -1.0
+	var negative_metrics: Dictionary = Dictionary(negative["metrics"])
+	var negative_timings: Dictionary = Dictionary(negative_metrics["timings_ms"])
+	negative_timings["wall_ms"] = -1.0
+	negative_metrics["timings_ms"] = negative_timings
+	negative["metrics"] = negative_metrics
 	_check(not bool(Contract.validate_sample(negative, contract).get("success", true)), "negative timing fails closed")
 
 	var changed_result := base.duplicate(true)
-	Dictionary(changed_result["canonical_result"])["final_population_hash"] = "d".repeat(64)
+	var divergent_result: Dictionary = Dictionary(changed_result["canonical_result"])
+	divergent_result["final_population_hash"] = "d".repeat(64)
+	changed_result["canonical_result"] = divergent_result
 	_check(not bool(Contract.can_compare(base, changed_result).get("success", true)), "canonical result divergence blocks optimization comparison")
 
 	var failed_sample := base.duplicate(true)
@@ -68,8 +80,10 @@ func _init() -> void:
 	_check(not bool(Contract.can_compare(base, failed_sample).get("success", true)), "failed sample is excluded from comparison claims")
 
 	var samples: Array[Dictionary] = []
-	for value in [10.0, 20.0, 30.0]:
-		samples.append(_valid_sample(workload, value, String.chr(97 + samples.size()).repeat(40)))
+	var sample_values := [10.0, 20.0, 30.0]
+	var sample_heads := ["a".repeat(40), "b".repeat(40), "c".repeat(40)]
+	for index in range(3):
+		samples.append(_valid_sample(workload, float(sample_values[index]), String(sample_heads[index])))
 	_check(Contract.minimum_repetitions_satisfied(samples, contract), "three repetitions satisfy minimum evidence")
 	var summary := Contract.summarize(samples, "timings_ms.wall_ms")
 	_check(not summary.is_empty(), "summary builds only from comparable passing samples")
