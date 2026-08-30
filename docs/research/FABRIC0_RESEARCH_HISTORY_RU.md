@@ -619,3 +619,171 @@ Historical solvers/evidence не переписываются.
 Construction остаётся canonical semantic owner.
 
 Следующий checkpoint обязан по-прежнему пытаться сломать гипотезу, а не просто расширять каталог features.
+
+
+## FABRIC0.8 — Coupled Hybrid DAE / Event Iteration
+
+После FABRIC0.7 главным нерешённым противоречием стало наличие двух соседних миров:
+
+```text
+temporal ODE
+и
+algebraic/nonsmooth physical fabric
+```
+
+Они уже могли взаимодействовать через topology, но ещё не составляли один timestep solve.
+
+### Вопрос checkpoint
+
+> Может ли differential trajectory реально зависеть от algebraic reaction, которая решается на каждой integration stage, а event/jump/topology mutation — заставлять physical equations перекомпилироваться до продолжения времени?
+
+Ответ prototype: да, на ограниченном semi-explicit стенде.
+
+### Новый temporal equation contract
+
+```text
+F(x,y,p,t,topology)=0
+xdot=f(x,y,p,t,topology)
+```
+
+На каждой RK4 stage FABRIC сначала решает y, затем вычисляет xdot.
+
+Это принципиально отличается от post-processing reaction после обычного ODE step.
+
+### Geometric event теперь зависит от coupled trajectory
+
+Two-body experiment:
+
+- тело A ускоряется algebraic force f_a;
+- f_a существует только при active physical bond;
+- gap x_b-x_a локализует impact;
+- поэтому contact time уже зависит от repeatedly solved DAE.
+
+Получено:
+
+```text
+t_hit=0.472135955002
+```
+
+при аналитическом reference:
+
+```text
+-4+sqrt(20)=0.4721359549995796
+```
+
+### Impulse стал solved unknown
+
+FABRIC0.7 bouncing-ball reset был explicit relation.
+
+FABRIC0.8 решает post velocities и impulses одновременно.
+
+Normal equations сохраняют momentum и задают restitution.
+
+Tangential branch выбирается из generic Coulomb manifolds.
+
+Result:
+
+```text
+j_n=4.472135955
+j_t=1.341640787
+branch=slide_neg
+```
+
+No ContactSolver/FrictionSolver device class introduced.
+
+### Event instant стал iterative physical solve
+
+Solved j_n превышает break threshold.
+
+Поэтому в том же physical instant:
+
+```text
+impact
+→ DAE re-solve
+→ break_on_impulse
+→ topology mutation
+→ DAE re-solve
+```
+
+До break:
+
+```text
+f_a=2
+```
+
+После break:
+
+```text
+f_a=0
+```
+
+Только после достижения local event fixed point время продолжает двигаться.
+
+### Отдельный reaction-guard test
+
+Чтобы не обмануть себя одним красивым impact demo, добавлен independent experiment:
+
+```text
+reaction = k*x
+x_dot = 1
+guard = reaction - 2N
+```
+
+Event локализован в t=1 через repeatedly solved algebraic reaction.
+
+### Старый singularity lesson сохранился
+
+DAE:
+
+```text
+0*y=0
+```
+
+имеет zero residual, но infinite solutions.
+
+FABRIC0.8 возвращает:
+
+`DAE_SINGULAR_ALGEBRAIC_MANIFOLD`.
+
+Таким образом принцип FABRIC0.5 пережил объединение со временем.
+
+### Evidence
+
+```text
+FABRIC0.8 focused             71/71 PASS
+FABRIC0.7 regression          88/88 PASS
+FABRIC0.6 nonsmooth          121/121 PASS
+FABRIC0.6 compatibility       42/42 PASS
+playground                    PASS
+editor                        CLEAN
+byte identity                 PASS
+```
+
+Deterministic hash:
+
+`f564e9294b738d65783cefcbc03e18e54860c61541143be7dd2421d6223e9b19`.
+
+### Главный урок FABRIC0.8
+
+> Reaction, impulse и topology перестают быть внешними побочными эффектами simulation loop. Они становятся неизвестными/структурными состояниями одной causal hybrid equation program.
+
+### Что ещё сломает текущую форму
+
+FABRIC0.8 по-прежнему имеет scalar contact shape:
+
+- один normal channel;
+- один tangential channel;
+- нет rotational inertia tensor;
+- нет нескольких simultaneous contact points;
+- нет friction cone solve;
+- branch enumeration не масштабируется.
+
+Поэтому следующий wall должен быть не ещё одним device experiment, а разрушением scalar-contact simplification.
+
+## FABRIC0.9 — Multi-contact Geometric Manifold + Cone Solve
+
+Следующая проверка:
+
+> Может ли geometry породить несколько contact constraints, которые решаются одновременно и order-invariant, включая angular motion и friction cone?
+
+Если порядок contact enumeration начинает менять физический результат или kernel требует special CollisionObject logic, это будет важной falsification finding.
