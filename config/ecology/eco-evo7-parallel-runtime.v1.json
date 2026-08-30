@@ -38,7 +38,21 @@
     "canonical": false,
     "runtime_code_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
     "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
-    "status": "CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
+    "status": "ACCEPTED_EXACT_WINDOWS",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+    "accepted_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "accepted_tree": "68389ef9a491fc2f1e13efb92058029c9536f870"
+  },
+  "perf2_measurement": {
+    "checkpoint": "ECO.EVO7/PERF2.0",
+    "status": "IMPLEMENTATION_CANDIDATE",
+    "contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
+    "canonical": false,
+    "side_channel_only": true,
+    "minimum_repetitions": 3,
+    "minimum_measured_generations": 12,
+    "default_warmup_generations": 2,
+    "comparison_requires_exact_canonical_result_parity": true,
+    "process_rss_external_optional": true
   }
 }
