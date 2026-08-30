@@ -222,16 +222,21 @@ func setup_spatial(environment_field: Dictionary, ecology_snapshot: Dictionary) 
 	return record_spatial_snapshot(environment_field, ecology_snapshot, {})
 
 func record_spatial_snapshot(environment_field: Dictionary, ecology_snapshot: Dictionary, classification: Dictionary = {}) -> bool:
-	if not spatial_initialized or String(environment_field.get("field_hash", "")) != spatial_environment_hash:
+	if not spatial_initialized:
+		return false
+	var current_environment_hash := String(environment_field.get("field_hash", ""))
+	if current_environment_hash.length() != 64:
 		return false
 	if ecology_snapshot.is_empty() or not bool(ecology_snapshot.get("shadow_only", false)):
+		return false
+	if String(ecology_snapshot.get("environment_field_hash", "")) != current_environment_hash:
 		return false
 	if String(ecology_snapshot.get("state_hash", "")).length() != 64:
 		return false
 	if int(ecology_snapshot.get("generation", 0)) > 0 and String(ecology_snapshot.get("postcompetition_population_hash", "")).length() != 64:
 		return false
 	if not classification.is_empty():
-		if String(classification.get("source_environment_field_hash", "")) != spatial_environment_hash:
+		if String(classification.get("source_environment_field_hash", "")) != current_environment_hash:
 			return false
 		if String(classification.get("source_ecology_state_hash", "")) != String(ecology_snapshot.get("state_hash", "")):
 			return false
@@ -247,6 +252,9 @@ func record_spatial_snapshot(environment_field: Dictionary, ecology_snapshot: Di
 	var entry := _spatial_entry(environment_field, ecology_snapshot, classification)
 	if entry.is_empty() or not validate_spatial_entry(entry):
 		return false
+	## LS4: the observatory follows the exact environment already bound into
+	## the accepted ecology snapshot; it never invents or writes that field.
+	spatial_environment_hash = current_environment_hash
 	if not spatial_history.is_empty() and generation == int(spatial_history[-1].get("generation", -2)):
 		spatial_history[-1] = entry
 	else:
