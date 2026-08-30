@@ -3,7 +3,7 @@
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
   "status": "PRE_DISPATCH_CONTROL_READY",
-  "authored_against_main": "7e80fe6ac409317d349cdeaa9602542c782893c1",
+  "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
