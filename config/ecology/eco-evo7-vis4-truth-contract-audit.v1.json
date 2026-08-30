@@ -1,0 +1,219 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_vis4_truth_contract_audit.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-VIS4.0.R1",
+  "status": "IMPLEMENTED_AUDIT_CANDIDATE",
+  "base": {
+    "checkpoint": "PAR3 R3.2",
+    "sha": "8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf",
+    "branch": "feature/eco-evo7-vis4-evolved-plant-morphology-r1"
+  },
+  "authority": {
+    "ecology_write": false,
+    "genome_write": false,
+    "mutation_write": false,
+    "population_write": false,
+    "generation_write": false,
+    "persistence_write": false,
+    "network_write": false,
+    "presentation_only": true
+  },
+  "live_published_fields": [
+    "phenotype_hash",
+    "realized_height_m",
+    "leaf_area_index_proxy",
+    "realized_root_depth_m",
+    "realized_root_spread_m",
+    "root_shoot_ratio",
+    "water_satisfaction",
+    "effective_light",
+    "realized_resource_balance"
+  ],
+  "functional_phenotype_computed_not_published": [
+    "realized_crown_radius_m",
+    "realized_crown_density",
+    "leaf_size_proxy",
+    "leaf_conservative_strategy",
+    "structural_investment",
+    "growth_graph_hash",
+    "plasticity_phenotype_hash"
+  ],
+  "realized_topology_computed_not_published": [
+    "max_height_m",
+    "internode_length_m",
+    "apical_dominance",
+    "branch_probability",
+    "branch_angle_deg",
+    "branch_length_ratio",
+    "branching_depth",
+    "crown_spread_m"
+  ],
+  "hereditary_record_fields": {
+    "dev_traits": [
+      "max_height_m",
+      "internode_length_m",
+      "apical_dominance",
+      "branch_probability",
+      "branch_angle_deg",
+      "branch_length_ratio",
+      "branching_depth",
+      "crown_spread_m"
+    ],
+    "ext_traits": [
+      "foliage_density",
+      "leaf_economics_proxy",
+      "structural_investment",
+      "root_spread_m",
+      "root_shoot_ratio"
+    ],
+    "identity": [
+      "individual_seed",
+      "bundle_checksum"
+    ]
+  },
+  "evolution_mutability": {
+    "mutable_in_evo7_r1": [
+      "max_height_m",
+      "crown_spread_m",
+      "apical_dominance",
+      "foliage_density",
+      "leaf_economics_proxy",
+      "structural_investment",
+      "root_spread_m",
+      "root_shoot_ratio",
+      "root_depth_m"
+    ],
+    "heritable_but_not_mutated_in_evo7_r1": [
+      "internode_length_m",
+      "branch_probability",
+      "branch_angle_deg",
+      "branch_length_ratio",
+      "branching_depth"
+    ]
+  },
+  "visual_mappings": [
+    {
+      "visual_property": "height",
+      "preferred_source": "realized_height_m",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "LS3.4_EVALUATION",
+      "status": "DIRECT"
+    },
+    {
+      "visual_property": "crown_width",
+      "preferred_source": "realized_crown_radius_m",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    },
+    {
+      "visual_property": "crown_density",
+      "preferred_source": "realized_crown_density",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    },
+    {
+      "visual_property": "leaf_area",
+      "preferred_source": "leaf_area_index_proxy",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "LS3.4_EVALUATION",
+      "status": "DIRECT"
+    },
+    {
+      "visual_property": "leaf_size",
+      "preferred_source": "leaf_size_proxy",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    },
+    {
+      "visual_property": "leaf_strategy",
+      "preferred_source": "leaf_conservative_strategy",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    },
+    {
+      "visual_property": "structural_cue",
+      "preferred_source": "structural_investment",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    },
+    {
+      "visual_property": "root_depth",
+      "preferred_source": "realized_root_depth_m",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "LS3.4_EVALUATION",
+      "status": "DIRECT_DEBUG"
+    },
+    {
+      "visual_property": "root_spread",
+      "preferred_source": "realized_root_spread_m",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "LS3.4_EVALUATION",
+      "status": "DIRECT_DEBUG"
+    },
+    {
+      "visual_property": "branch_topology",
+      "preferred_source": "PH2.realized_development_traits",
+      "owner": "EnvironmentCoupledDevelopment",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_REALIZED_TOPOLOGY_EVIDENCE_REQUIRED"
+    },
+    {
+      "visual_property": "individual_variation",
+      "preferred_source": "hereditary_bundle.individual_seed",
+      "owner": "MutationLineageExtension",
+      "publication": "RECORD_AVAILABLE",
+      "status": "DIRECT_IDENTITY"
+    },
+    {
+      "visual_property": "topology_seal",
+      "preferred_source": "growth_graph_hash",
+      "owner": "PlantFunctionalPhenotype",
+      "publication": "NOT_PUBLISHED",
+      "status": "VIS4_1_PASS_THROUGH_REQUIRED"
+    }
+  ],
+  "ph5_reuse": {
+    "components": [
+      "plant_growth_graph_skeleton_v1.gd",
+      "plant_render_description_v1.gd",
+      "plant_renderer_profile_v1.gd",
+      "plant_3d_materializer_v1.gd",
+      "plant_multiscale_representation_v1.gd",
+      "plant_multiscale_materializer_v1.gd"
+    ],
+    "accepted_capabilities": [
+      "deterministic_growth_graph",
+      "tapered_branch_geometry",
+      "instanced_foliage",
+      "canopy",
+      "impostor",
+      "multiscale_lod"
+    ],
+    "presentation_gaps": [
+      "plant_render_description_v1 uses fixed branch base radii and does not consume structural_investment",
+      "plant_render_description_v1 uses fixed per-segment leaf counts and does not consume realized_crown_density or leaf_area_index_proxy",
+      "plant_render_description_v1 does not consume leaf_economics_proxy or leaf_conservative_strategy"
+    ]
+  },
+  "vis4_1_required_actions": [
+    "publish source-bound realized crown radius and density without renderer recomputation",
+    "publish source-bound realized topology evidence or an equivalent exact PH2-derived sidecar",
+    "publish growth_graph_hash and plasticity_phenotype_hash for reconstruction validation",
+    "carry individual_seed and hereditary potential separately from realized topology",
+    "keep hereditary potential visible to inspector but do not substitute it for realized topology",
+    "preserve existing LS3.4 competition semantics and ecology_state_hash authority"
+  ],
+  "forbidden": [
+    "renderer recomputes functional phenotype",
+    "renderer recomputes environment competition",
+    "raw hereditary branch traits presented as exact realized topology without explicit potential label",
+    "TREE_BUSH_GRASS canonical classes",
+    "presentation LOD enters ecology identity",
+    "presentation scatter enters ecology position truth"
+  ]
+}
