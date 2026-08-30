@@ -121,7 +121,7 @@ func run_campaign(planet_source, config: Dictionary, target: Dictionary, host_fi
 	var samples: Array[Dictionary] = []
 	for recipe_value in Array(config["recipes"]):
 		var recipe := String(recipe_value)
-		for repetition in int(config["repetitions"]):
+		for repetition in range(int(config["repetitions"])):
 			var serial := _run_repetition(
 				planet_source, config, target, host_fingerprint,
 				recipe, "SERIAL_REFERENCE", repetition)
@@ -304,7 +304,7 @@ func _run_repetition(
 		if not wb.set_generation_stream_executor(executor):
 			return {}
 
-	for _warmup in int(config["warmup_generations"]):
+	for _warmup in range(int(config["warmup_generations"])):
 		if wb.advance_generations(1).is_empty():
 			return {}
 
@@ -334,7 +334,7 @@ func _run_repetition(
 		"audit_ms": 0.0,
 	}
 	var final_ls33: Dictionary = {}
-	for _measured in int(config["measured_generations"]):
+	for _measured in range(int(config["measured_generations"])):
 		if wb.advance_generations(1).is_empty():
 			return {}
 		var profile: Dictionary = wb.get_last_generation_profile()
@@ -552,7 +552,7 @@ func _valid_target(target: Dictionary) -> bool:
 func _is_git_sha(value: String) -> bool:
 	if value.length() != 40:
 		return false
-	for index in value.length():
+	for index in range(value.length()):
 		var code := value.unicode_at(index)
 		if not (code >= 48 and code <= 57) and not (code >= 97 and code <= 102):
 			return false
