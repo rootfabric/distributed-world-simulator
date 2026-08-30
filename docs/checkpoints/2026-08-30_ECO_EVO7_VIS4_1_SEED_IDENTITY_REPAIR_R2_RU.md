@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.1 R2 — Seed Identity Repair Candidate
 
 Дата: 2026-08-30  
-Статус: IMPLEMENTED REPAIR CANDIDATE / NOT ACCEPTED  
+Статус: IMPLEMENTED REPAIR / WINDOWS VERIFIED / CLOSED  
 Predecessor RED: VIS4.1-WIN-001..003  
 Repair base: 782ceb53d4bd2cf35dd2664d5c05928322b1306c
 
@@ -121,3 +121,45 @@ VIS1/VIS2 GREEN
 non-vacuous deterministic evidence GREEN
 clean tracked worktree
 ~~~
+
+
+## Closure update — 2026-08-31
+
+Fresh exact Windows verification completed GREEN on:
+
+~~~text
+HEAD: c499a39ee3fa4c7b5ab871df7f89f7cb4b6ec436
+TREE: 4427bada5367f9b06d4b642a6ab9e73670821c2e
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+~~~
+
+Decisive evidence:
+
+~~~text
+VIS4.1 R2 focused: PASS (598 assertions)
+living plants: 61
+evidence records: 61
+Descriptor V2 records: 61
+full runner: PASS
+runner RC: 0
+tracked tree: clean
+~~~
+
+Non-vacuous seed-domain separation, tamper rejection and deterministic replay all passed.
+
+Final closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_1_WINDOWS_VERIFIED_CLOSED_R2_RU.md
+~~~
+
+Formal status:
+
+~~~text
+VIS4.1 R2
+ACCEPTED
+WINDOWS VERIFIED
+CLOSED
+~~~
+
+VIS4.2 is unblocked.
