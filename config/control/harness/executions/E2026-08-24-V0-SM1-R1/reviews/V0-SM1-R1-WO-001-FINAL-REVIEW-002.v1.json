@@ -1,0 +1,119 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-SM1-R1-WO-001-FINAL-REVIEW-002",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "reviewed_tree_sha": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+  "reviewer": "INDEPENDENT_REVIEWER_B7_FRESH_SESSION_R2",
+  "verdict": "PASS",
+  "reviewed_at_utc": "2026-08-30T02:41:00Z",
+  "required_fixes": [],
+  "evidence_gaps": [
+    "STANDARD_PC0_NON_RED remains unproven: fresh capture at the exact subject shows standard overall = YELLOW (V0 program YELLOW BLOCK 'POST-P6 SM1 Activation Control Reconciliation' is the declared control frontier; ECO RED is ADVISORY and unrelated to the candidate). Actual NON_RED evidence must exist before checkpoint proposal.",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS remains formally unproven: directional overall = YELLOW with five WATCH_HIT groups (CH->NX 4 BLOCK, NX->ECO 1 ADVISORY, NX->T 1 BLOCK, V0->ECO 3 ADVISORY, V0->T 3 BLOCK); zero hit paths intersect the reviewed delta, but formal NON_RED clearance is still pending.",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED remains pending: V0 control reconciliation (dispatch/lease/review state into the control snapshot) is still open.",
+    "V0_SM1_CHECKPOINT_PROPOSED pending; checkpoint NOT accepted by this review.",
+    "Human RUNTIME_FEATURE_MERGE gate untouched and unsatisfied.",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO observed as zero at the reviewed head; formal closure at the control frontier remains a Director reconciliation step."
+  ],
+  "preflight": {
+    "script": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-B7-REVIEWER-PREFLIGHT-002.ps1 (from control/v0-sm1-b7-r9-reviewer-dispatch-r1, executed outside the immutable subject tree)",
+    "marker": "B7_R9_REVIEWER_PREFLIGHT_PASS",
+    "report": "artifacts/control/v0-sm1-b7-r9-reviewer-preflight.json",
+    "checks": "subject identity/composition (48/9/2, 13/2 file sets), R7 barrier byte identity R7->R9, R9 camera-basis source guards, VERIFICATION-003 integrity, exact Godot 4.7.1.stable.double.custom_build.a13da4feb, PC0 capture, final freshness: all PASS",
+    "qualification": "deterministic evidence only; not a substitute for this independent semantic review"
+  },
+  "subject_identity_proof": {
+    "checkout": "brand-new clone C:\\distributed-world-simulator\\b7-fresh-review-002, detached at exact subject; no prior worktree reused",
+    "head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+    "clean_before": true,
+    "old_review_head_ancestor": true,
+    "source_sm1_ancestor_b270fb8": true,
+    "r7_ancestor_baa0e19": true,
+    "r8_ancestor_25f5ddf": true,
+    "validation_carrier_d7fab9ef_direct_child_of_subject": true,
+    "freshness_recheck": { "head_match": true, "tree_match": true, "tracked_clean": true, "staged_clean": true, "untracked": "none (generated artifacts under ignored artifacts/ only)" }
+  },
+  "repair_classification": {
+    "old_review_to_r9": { "commits": 48, "files": 13 },
+    "r7_to_r9": { "commits": 9, "files": 8 },
+    "r8_to_r9": { "commits": 2, "files": 2, "paths": ["tools/runtime/m7_playable_network_client.gd", "tests/runtime/test_m7_playable_networked_processes.gd"] },
+    "R7_layer_m5_convergence_hardening": "PASS classification: centralized convergence pair matching, pinned observed-state identity (checksum+revision+server_tick+authority_owner_id+authority_epoch), monotonic observed-state progress evaluation, sealed completed convergence during serialized teardown, stage-scoped TIMEOUT_MS (constant unchanged at 150000 ms, now measured per stage - a strictness increase, not a weakening), CONTROL_GENERATION_REGRESSED_AFTER_RELEASE remains a hard CLIENT_FAIL_RELEASE failure; pipe-drain/child-exit observability and Windows profile isolation additions are test-infrastructure only.",
+    "R7_semantic_note": "evaluate_prepared_release intentionally replaces flat player-checksum equality with pinned-observed-state identity plus monotonic progress while keeping Item Graph checksum equality mandatory. This is a deliberate, Director-authorized (repair maps R1-R8) resolution of the M5 WAIT_CONVERGENCE_PEER residual risk named by FINAL-REVIEW-001, confined to the M5 graphical acceptance module; it does not alter any product authority, canonical truth or transport semantics. Machine evidence: M5 decisive 10/10 with zero M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED and zero M5_CONTROL_READ_UNAVAILABLE occurrences.",
+    "R8_layer_atomic_control_read": "PASS classification: read_dictionary_with_retry retries only the typed transient set {ATOMIC_JSON_NOT_FOUND, ATOMIC_JSON_OPEN_FAILED, ATOMIC_JSON_EMPTY, ATOMIC_JSON_INCOMPLETE}; ATOMIC_JSON_PATH_EMPTY is non-transient and breaks the loop; valid JSON {} is plain success; horizon bounded at 25 attempts x 5 ms; .bak consulted only in the write rollback path, never accepted as current control truth; exhaustion surfaces as M5_CONTROL_READ_UNAVAILABLE via _fail with stage/error_code/attempts/elapsed_ms/transient_exhausted (driver line 508); no convergence-generation retry introduced; convergence timeout not increased; R7 barrier blob byte-identical from R7 through R9 (independently re-proven).",
+    "R9_layer_camera_basis": "PASS classification: exactly three automated direct playground.player.camera_yaw scalar assignments replaced by _set_automated_camera_yaw(desired_yaw), which reads current scalar yaw, wraps the delta via wrapf(desired_yaw - current_yaw, -PI, PI) and applies playground.player.adjust_view(yaw_delta, 0.0) - the same public API as the historically proven Windows camera-sync fix (PR #21 lineage); the M7 process test gained source-level guard assertions (helper presence, public-API sync, direct-assignment ban); no network protocol, server authority, interaction range, visibility threshold, M5, SM1, P6 or P7 semantic surface touched (R8->R9 diff is exactly the two authorized files, matching the R9 repair map and root-cause record).",
+    "hidden_runtime_owner_or_protocol_or_scope_expansion": false,
+    "scope_authorization": "All 13 delta paths lie outside the original WO-001 allowed_paths fence but every layer is covered by explicit Director repair authorization on the record chain (B6 M5 repair maps R1-R8 commits d860b2ce/d75bed59/69d6a23a/1e8e3304/48b66d7a/8ac459cf/333033db/2b695bc5, M7 R9 events 0016/0017 + ROOT-CAUSE-001 + repair authorization fd7fea1d), consistent with Repair Doctrine inside the same checkpoint mission; recorded as authorized repair lineage, not silent scope expansion."
+  },
+  "semantic_review": {
+    "method": "Old core SM1 conclusions re-proven by exact byte identity: git diff 6fdfc047..b760a6cd is empty under scripts/runtime/networked_gameplay/sm1/**, scripts/app/**, scripts/network/** and scripts/runtime/networked_gameplay/p6/**, so every SM1 adapter, Gateway route, NX foundation and P6 owner byte reviewed by FINAL-REVIEW-001 is unchanged at R9; the B5 semantic conclusions therefore carry by identity, independently confirmed through the exact 13-path delta boundary.",
+    "exactly_one_active_canonical_writer": "PASS (unchanged bytes; transfer coordinator fail-closed zero-writer gap)",
+    "warm_target_zero_write": "PASS (unchanged bytes)",
+    "linearization_boundary_unique": "PASS (unchanged bytes; commit_ownership single point)",
+    "authority_epoch_monotonic": "PASS (unchanged bytes; additionally re-observed in the R7 barrier, which now rejects authority_owner_id/authority_epoch change after pinned observation)",
+    "stale_source_cannot_resurrect": "PASS (unchanged bytes)",
+    "target_cannot_authorize_before_commit_retire_activate": "PASS (unchanged bytes)",
+    "logical_player_and_entity_identity_stable": "PASS (unchanged bytes; focused SM1 belt 13/13 re-executed by B6 at this exact head)",
+    "input_sequence_and_operation_id_continuity": "PASS (unchanged bytes)",
+    "gateway_routing_only_endpoint_unchanged": "PASS (unchanged bytes; sm1-carry-route 89/0 re-executed at this head)",
+    "no_direct_client_to_authority_product_route": "PASS (unchanged bytes; R9 delta touches only the local M7 acceptance worker's camera call)",
+    "item_graph_construction_p6_owners_singular": "PASS (unchanged bytes; R7 barrier keeps Item Graph checksum equality mandatory across prepare/release/consume)",
+    "no_wholesale_sm0_or_research_merge_no_second_private_truth": "PASS (48-commit delta contains only the authorized M5/M7 repair commits; no merge of SM0/research lineage)",
+    "r7_fail_closed_no_predicate_weakening": "PASS (release generation regression is a hard failure; timeout constant unchanged; stage scoping tightens the clock)",
+    "r8_bounded_typed_reads_only": "PASS (typed transient set, bounded 25x5ms horizon, no .bak truth, explicit exhaustion marker, no convergence-generation retry, no timeout increase, R7 barrier bytes untouched by R8/R9)",
+    "r9_bounded_and_semantically_correct": "PASS (public adjust_view API with wrapped delta; direct scalar assignment absent; test-level source guards; two-file delta exactly as authorized)"
+  },
+  "verifier_evidence_assessment": {
+    "verification_003_on_exact_subject": true,
+    "verification_003_verdict": "VERIFIED (INDEPENDENT_VERIFIER_B6_FRESH_SESSION_R3)",
+    "carrier_structure_observation": "control/v0-sm1-b6-r9-verification-003-r1 head 40910472 sits two control-only commits ahead of the B6 dispatch 92a28fe0: an intermediate dispatch-instruction base-reference correction (07105b24, touches only the verifier instruction .md) plus the record itself. The instruction expected one control-only commit; the observed topology is still control-only, descendant of the dispatch, and does not mask any governed result.",
+    "verification_001_002_unchanged": true,
+    "governed_results": {
+      "r9_m7_decisive": "PASS_10_OF_10, 54 assertions / 0 failures each, single governed series, fresh isolated parent profile per attempt, zero replacement runs",
+      "m5_pre_gates": "contracts 126/0, R7 convergence guard 31/0, R8 control-read regression 25/0, governed pipe smoke with non-empty child stdout/stderr",
+      "m5_decisive": "PASS 10/10 single series, zero M5_CONTROL_READ_UNAVAILABLE, zero M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED",
+      "focused_sm1": "PASS_13_OF_13 with per-suite assertion tallies",
+      "impaired_network": "PASS_5_OF_5 at 69/0 each",
+      "canonical_world_core": "first and only attempt, passed=true, declared=discovered=304, steps=307, bad exits=0"
+    },
+    "invalid_environment_attempt": "The first direct-shell R9 attempt (54/7, UI/profile/shutdown predicates) is correctly classified INVALID_VALIDATION_ENVIRONMENT_NOT_CANDIDATE_VERDICT in V0-SM1-R1-R9-WINDOWS-VALIDATION-PROTOCOL-CORRECTION-001 (missing isolated parent profile and editor import; item-acceptance targets 7/2 and player convergence already matching); it was preserved, not relabelled, and the corrected V2 governed series is the first governed candidate series.",
+    "args_incident": "The disclosed PowerShell $args wrapper collision launched the game scene instead of governed tests, produced no governed exit code or assertions, and is correctly classified as an invalid verifier invocation; all four pre-gates were then executed exactly once and passed; no governed failure was replaced by a later pass anywhere in the record chain (VERIFICATION-001 FAILED on 6fdfc047 and VERIFICATION-002 FAILED on 25f5ddf are preserved as historical failures with root-cause records).",
+    "internally_consistent_no_masking": true
+  },
+  "pc0_observed": {
+    "command": "inside B7-REVIEWER-PREFLIGHT-002.ps1: git fetch origin --prune; .\\CONTROL_PROJECT.ps1 -NoFailOnRed, from the exact detached subject",
+    "standard_overall": "YELLOW",
+    "standard_program_health": { "HARNESS": "GREEN", "TS": "GREEN", "MATTER": "GREEN", "S1": "GREEN", "G": "YELLOW", "T": "YELLOW", "CH": "YELLOW", "DOCTRINE": "YELLOW", "NX": "YELLOW", "V0": "YELLOW", "ECO": "RED_ADVISORY" },
+    "directional_overall": "YELLOW",
+    "directional_watch_hits": ["CH->NX BLOCK: 4 paths", "NX->ECO ADVISORY: 1 path", "NX->T BLOCK: 1 path", "V0->ECO ADVISORY: 3 paths", "V0->T BLOCK: 3 paths"],
+    "candidate_specific_critical_hits_on_reviewed_delta": [],
+    "cross_branch_overlaps": 0,
+    "yellow_not_relabelled_green": true,
+    "predicate_assessment": {
+      "REVIEW_HEAD_EXACT_AND_FRESH": "PROVEN by this review record at b760a6cd/7af1fe08 with tracked/staged clean",
+      "STANDARD_PC0_NON_RED": "PENDING - observed YELLOW",
+      "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS": "PENDING - observed YELLOW overall, zero candidate-specific hits",
+      "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO": "OBSERVED ZERO at the reviewed head; formal control-frontier closure pending",
+      "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED": "PENDING - V0 control reconciliation open"
+    }
+  },
+  "forbidden_conclusions_respected": {
+    "sm1_accepted": false,
+    "checkpoint_accepted": false,
+    "checkpoint_proposed": false,
+    "merge_authorized": false,
+    "p7_activated": false,
+    "verifier_pass_claimed_by_reviewer": false,
+    "pc0_non_red_claimed": false,
+    "human_gate_satisfied": false
+  },
+  "next": {
+    "next_actor": "DIRECTOR",
+    "next_action": "CONTROL_RECONCILIATION_AND_CHECKPOINT_PROPOSAL_DECISION",
+    "subject": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "expected_state": "B6 = CLOSED; R9 = VERIFIED + REVIEWED / NOT MERGED; B7 = eligible for Director control reconciliation; checkpoint = NOT YET ACCEPTED; human RUNTIME_FEATURE_MERGE = untouched; P7 = BLOCKED"
+  }
+}
