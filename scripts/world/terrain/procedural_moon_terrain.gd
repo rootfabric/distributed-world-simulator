@@ -158,6 +158,7 @@ var last_spectator_anchor_distance: float = 0.0
 var last_streaming_status: String = "Ожидание"
 var logger
 var terrain_streamer
+var matter_surface_adapter = null
 var generation_only_initialized: bool = false
 var streaming_actors: Array[CharacterBody3D] = []
 var recent_surface_cache: Dictionary = {}
@@ -811,7 +812,7 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 	stage_started_usec = Time.get_ticks_usec()
 	local_cap = _create_cap_instance(
 		"LocalHighDetail",
-		0.0,
+		_get_matter_local_inner_radius_m(surface_center_direction),
 		LOCAL_CAP_RADIUS,
 		LOCAL_CAP_RINGS,
 		LOCAL_CAP_SEGMENTS,
@@ -902,7 +903,7 @@ func _rebuild_local_playable_surface(center_direction: Vector3) -> void:
 
 	local_cap = _create_cap_instance(
 		"LocalHighDetail",
-		0.0,
+		_get_matter_local_inner_radius_m(surface_center_direction),
 		LOCAL_CAP_RADIUS,
 		LOCAL_CAP_RINGS,
 		LOCAL_CAP_SEGMENTS,
@@ -951,7 +952,7 @@ func _rebuild_spectator_local_surface(center_direction: Vector3) -> void:
 
 	local_cap = _create_cap_instance(
 		"LocalHighDetail",
-		0.0,
+		_get_matter_local_inner_radius_m(surface_center_direction),
 		LOCAL_CAP_RADIUS,
 		LOCAL_CAP_RINGS,
 		LOCAL_CAP_SEGMENTS,
@@ -1803,6 +1804,43 @@ func render_to_world(render_position: Vector3) -> Vector3:
 
 func get_render_origin() -> Vector3:
 	return render_origin_world
+
+
+func set_matter_surface_adapter(adapter) -> Dictionary:
+	if adapter == null:
+		matter_surface_adapter = null
+		return {"success": true, "error_code": "", "details": {"installed": false}}
+	if not adapter.has_method("legacy_local_inner_radius_m") \
+		or not adapter.has_method("route_for_body_fixed_position") \
+		or not adapter.has_method("legacy_collision_enabled_at"):
+		return {
+			"success": false,
+			"error_code": "INVALID_MATTER_SURFACE_ADAPTER",
+			"details": {},
+		}
+	matter_surface_adapter = adapter
+	return {"success": true, "error_code": "", "details": {"installed": true}}
+
+
+func get_surface_source_at_world_position(world_position: Vector3) -> String:
+	if matter_surface_adapter == null:
+		return "LEGACY"
+	return String(matter_surface_adapter.route_for_body_fixed_position(world_position))
+
+
+func legacy_collision_enabled_at_world_position(world_position: Vector3) -> bool:
+	if matter_surface_adapter == null:
+		return true
+	return bool(matter_surface_adapter.legacy_collision_enabled_at(world_position))
+
+
+func _get_matter_local_inner_radius_m(center_direction: Vector3) -> float:
+	if matter_surface_adapter == null:
+		return 0.0
+	var requested := float(
+		matter_surface_adapter.legacy_local_inner_radius_m(center_direction)
+	)
+	return clampf(requested, 0.0, LOCAL_CAP_RADIUS * 0.95)
 
 
 func get_surface_anchor() -> Vector3:
