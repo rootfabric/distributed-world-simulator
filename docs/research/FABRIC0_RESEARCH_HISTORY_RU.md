@@ -1968,3 +1968,232 @@ refinement/invariant evidence
 ```
 
 FABRIC0.13 closes the integration chapter; 0.14 should remove the remaining rigid-body/friction simplifications.
+
+
+## FABRIC0.14 — Full 6DOF Frictional Feature Manifold
+
+FABRIC0.13 proved that adaptive manifold semantics and persistent sparse contact graphs can coexist.
+
+But it still left the strongest physical question unanswered:
+
+> Will that architecture survive when the body is actually allowed to rotate in all three axes, carries an anisotropic inertia tensor and friction becomes nonsmooth stick/slide/separation physics rather than a simplified normal constraint?
+
+FABRIC0.14 was built to answer that question.
+
+### Full rigid-body state became executable
+
+The successor moved to:
+
+```text
+3 translation coordinates
++
+normalized quaternion
++
+3 linear velocity components
++
+3 angular velocity components
+```
+
+with anisotropic body inertia:
+
+```text
+(0.19, 0.31, 0.43)
+```
+
+A torque-free experiment was added specifically so the rotational equations could not hide behind contact stabilization.
+
+All three angular components evolve and world angular momentum / rotational energy remain nearly invariant.
+
+### Coordinate convention produced the first falsification
+
+The first version produced impossible support geometry and artificial energy gain.
+
+The physics equations looked superficially plausible.
+
+The real error was coordinate convention:
+
+```text
+Godot Vector3.UP = Y-up
+
+research world = Z-up
+```
+
+Plane normal had silently used the wrong axis.
+
+Switching the explicit physical normal to:
+
+```text
+Vector3.BACK = (0,0,1)
+```
+
+fixed geometry and the energy pathology.
+
+This was important because no amount of smaller timestep would have repaired a wrong physical frame.
+
+### Coulomb law returned to the unified path
+
+The contact law now explicitly solves three outcomes:
+
+```text
+separated
+stick
+slide
+```
+
+The stick candidate is a full contact-space force.
+
+If it lies inside the cone and tangential velocity is quiet, the body sticks.
+
+Otherwise the tangential force lies on:
+
+```text
+|Ft| = mu Fn
+```
+
+The separation probe additionally refuses tensile normal support.
+
+This restores the nonsmooth law principles from earlier FABRIC checkpoints inside the newer adaptive 6DOF path.
+
+### Feature geometry became orientation-derived
+
+The plane normal is transformed into body space.
+
+Support topology follows component signs/zeros:
+
+```text
+generic orientation -> vertex
+one zero component   -> edge
+two zero components  -> face
+```
+
+That naturally provides vertex-edge-face lineage for a convex box.
+
+### Refinement discovered missing physical semantics
+
+The most important 0.14 development event was not a PASS.
+
+After the first frictional feature implementation:
+
+```text
+-energy_delta
+!=
+friction_work
+```
+
+The residual stayed near `0.1224` even as tolerance was refined.
+
+That was diagnostic:
+
+```text
+nonconvergent discrepancy
+→
+not truncation error
+→
+missing/incorrect physical semantics
+```
+
+The hidden operation was velocity projection at a new support feature.
+
+Projection removed normal velocity and therefore changed momentum and energy.
+
+In physical terms, an impulse had occurred.
+
+But the event history did not contain an impulse.
+
+### Projection was replaced by explicit jump semantics
+
+Feature transition became:
+
+```text
+old feature
+→ lineage remap
+→ degenerate feature
+→ new feature compile
+→ explicit unilateral/frictional impulse
+→ momentum audit
+→ kinetic-loss audit
+→ constraint projection
+→ fixed point
+```
+
+After this change, the energy ledger began converging under refinement.
+
+This is a major architecture lesson:
+
+> If a numerical operation changes physical momentum, it cannot remain merely a projection helper. It belongs to the physical jump semantics.
+
+### Three independent evidence families
+
+0.14 acceptance deliberately does not rely on one scenario.
+
+It contains:
+
+1. **sliding adaptive 6DOF feature-manifold run**  
+   Checks event convergence, state convergence, friction cone, feature impulses and energy closure.
+
+2. **oblique free-flight impact**  
+   Checks explicit impulse and exact linear/angular momentum accounting.
+
+3. **torque-free three-axis rotation**  
+   Checks quaternion/inertia tensor dynamics independently of contact.
+
+This prevents one stabilizing mechanism from masking errors in another.
+
+### Predecessor runtime regression became real again
+
+The 0.14 isolated lab materializes FABRIC0.13 files.
+
+So predecessor evidence is now:
+
+```text
+FABRIC0.13
+95/95 PASS
+```
+
+on the same exact-double Godot.
+
+All 0.13 branch blobs also remain unchanged.
+
+### Evidence
+
+```text
+FABRIC0.14 focused     156/156 PASS
+playground             PASS
+editor                 CLEAN
+remote bytes           7/7 IDENTICAL
+FABRIC0.13 regression  95/95 PASS
+```
+
+Sliding hash:
+
+`2b52dc944cdc4a48152265db3e456c629bfb5f66969850563e39ec188147efe7`.
+
+Parallel hash:
+
+`526844a8ca0629969477f2942853b3e7b9617b391e39fc54147d30d38852773c`.
+
+### What remains
+
+FABRIC0.14 is still one free body against an analytic plane/box feature family.
+
+It does not yet solve the genuinely harder coupled graph:
+
+```text
+several free 6DOF bodies
++
+simultaneous contacts
++
+coupled complementarity
++
+coupled friction cones
++
+separation and re-merge
+```
+
+That becomes FABRIC0.15.
+
+## FABRIC0.15 — Multibody Convex Complementarity Graph
+
+The next falsification should make contact state a graph-wide coupled nonsmooth problem rather than several independent local probes.
+
+The checkpoint should be considered successful only if momentum, dissipation, topology and refinement evidence survive the multi-body coupling.
