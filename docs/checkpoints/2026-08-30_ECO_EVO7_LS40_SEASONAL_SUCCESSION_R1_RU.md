@@ -32,10 +32,13 @@ Freeze anchors before exact-Windows verification:
 
 ```text
 runtime_code_head:
-fa63b7b680cac6bc25889d30ff99df86fc841df3
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
+
+acceptance_test_head:
+4328583fd5f01f7a22304cd4d354ca54a59ac4aa
 
 verification_harness_head:
-4328583fd5f01f7a22304cd4d354ca54a59ac4aa
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
 ```
 
 ## Зачем нужен LS4
