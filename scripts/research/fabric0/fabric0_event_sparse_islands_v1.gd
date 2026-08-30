@@ -498,3 +498,303 @@ static func _admm_sparse_pcg(a: Array, b: Array, friction: Array, warm: Array, o
 	var dual := INF
 	var iterations := 0
 	var pcg_calls := 0
+	var pcg_iterations := 0
+	var pcg_max_one := 0
+	for iteration in range(max_iterations):
+		iterations = iteration + 1
+		var rhs := _zero_vector(n)
+		for i in range(n):
+			rhs[i] = rho * (float(z[i]) - float(u[i])) - float(b[i])
+		var linear := _pcg(h, rhs, lambda, diagonal, pcg_tolerance, pcg_max_iterations)
+		if not bool(linear.get("ok", false)):
+			linear["code"] = "SPARSE_PCG_LINEAR_SOLVE_FAILED"
+			return linear
+		lambda = linear["x"]
+		pcg_calls += 1
+		pcg_iterations += int(linear["iterations"])
+		pcg_max_one = maxi(pcg_max_one, int(linear["iterations"]))
+		var old_z: Array = z.duplicate(true)
+		for contact_index in range(friction.size()):
+			var q := Vector3(lambda[3 * contact_index] + u[3 * contact_index], lambda[3 * contact_index + 1] + u[3 * contact_index + 1], lambda[3 * contact_index + 2] + u[3 * contact_index + 2])
+			var projected := _project_cone(q, float(friction[contact_index]))
+			z[3 * contact_index] = projected.x
+			z[3 * contact_index + 1] = projected.y
+			z[3 * contact_index + 2] = projected.z
+		for i in range(n):
+			u[i] = float(u[i]) + float(lambda[i]) - float(z[i])
+		primal = 0.0
+		dual = 0.0
+		for i in range(n):
+			primal = maxf(primal, absf(float(lambda[i]) - float(z[i])))
+			dual = maxf(dual, rho * absf(float(z[i]) - float(old_z[i])))
+		if maxf(primal, dual) <= tolerance:
+			break
+	if maxf(primal, dual) > tolerance:
+		return {"ok": false, "code": "SPARSE_ADMM_NO_CONVERGENCE", "iterations": iterations, "primal_residual": primal, "dual_residual": dual}
+	return {
+		"ok": true,
+		"lambda": z,
+		"iterations": iterations,
+		"primal_residual": primal,
+		"dual_residual": dual,
+		"pcg_calls": pcg_calls,
+		"pcg_iterations": pcg_iterations,
+		"pcg_max_iterations_one_call": pcg_max_one,
+	}
+
+# Jacobi-preconditioned Conjugate Gradient over sparse symmetric row dictionaries.
+static func _pcg(matrix: Array, rhs: Array, initial: Array, diagonal: Array, tolerance: float, max_iterations: int) -> Dictionary:
+	var n := rhs.size()
+	var x: Array = initial.duplicate(true)
+	if x.size() != n:
+		x = _zero_vector(n)
+	var ax := _sparse_mat_vec(matrix, x)
+	var r := _zero_vector(n)
+	var rhs_norm_sq := 0.0
+	for i in range(n):
+		r[i] = float(rhs[i]) - float(ax[i])
+		rhs_norm_sq += float(rhs[i]) * float(rhs[i])
+	var z := _zero_vector(n)
+	for i in range(n):
+		z[i] = float(r[i]) / float(diagonal[i])
+	var p: Array = z.duplicate(true)
+	var rz_old := _dot(r, z)
+	var target := tolerance * maxf(1.0, sqrt(rhs_norm_sq))
+	if sqrt(_dot(r, r)) <= target:
+		return {"ok": true, "x": x, "iterations": 0, "residual": sqrt(_dot(r, r))}
+	for iteration in range(max_iterations):
+		var ap := _sparse_mat_vec(matrix, p)
+		var denom := _dot(p, ap)
+		if denom <= 0.0:
+			return {"ok": false, "reason": "PCG_NONPOSITIVE_CURVATURE", "iterations": iteration}
+		var alpha := rz_old / denom
+		for i in range(n):
+			x[i] = float(x[i]) + alpha * float(p[i])
+			r[i] = float(r[i]) - alpha * float(ap[i])
+		var residual_norm := sqrt(_dot(r, r))
+		if residual_norm <= target:
+			return {"ok": true, "x": x, "iterations": iteration + 1, "residual": residual_norm}
+		for i in range(n):
+			z[i] = float(r[i]) / float(diagonal[i])
+		var rz_new := _dot(r, z)
+		if absf(rz_old) <= 1.0e-30:
+			return {"ok": false, "reason": "PCG_BREAKDOWN", "iterations": iteration + 1}
+		var beta := rz_new / rz_old
+		for i in range(n):
+			p[i] = float(z[i]) + beta * float(p[i])
+		rz_old = rz_new
+	return {"ok": false, "reason": "PCG_NO_CONVERGENCE", "iterations": max_iterations}
+
+# =============================================================================
+# SPARSE ALGEBRA / CONTACT HELPERS
+# =============================================================================
+
+static func _append_body_jacobian(row: Dictionary, body_index: Dictionary, body_id: String, direction: Vector3, r: Vector3, sign: float) -> void:
+	if body_id.begins_with("@static/") or not body_index.has(body_id):
+		return
+	var base := 6 * int(body_index[body_id])
+	var angular := r.cross(direction)
+	var values := [direction.x, direction.y, direction.z, angular.x, angular.y, angular.z]
+	for i in range(6):
+		var value := sign * float(values[i])
+		if absf(value) > EPS:
+			row[base + i] = value
+
+static func _inverse_mass(world: Dictionary, body_ids: Array) -> Array:
+	var result: Array = []
+	for id in body_ids:
+		var body: Dictionary = world["bodies"][id]
+		result.append(float(body["inv_mass"])); result.append(float(body["inv_mass"])); result.append(float(body["inv_mass"]))
+		var inv_i: Vector3 = body["inv_inertia"]
+		result.append(inv_i.x); result.append(inv_i.y); result.append(inv_i.z)
+	return result
+
+static func _assemble_sparse_effective_mass(rows: Array, minv: Array) -> Array:
+	var result: Array = []
+	for _i in range(rows.size()):
+		result.append({})
+	for i in range(rows.size()):
+		for j in range(i, rows.size()):
+			var value := 0.0
+			for key in rows[i].keys():
+				if rows[j].has(key):
+					value += float(rows[i][key]) * float(minv[int(key)]) * float(rows[j][key])
+			if absf(value) > EPS:
+				result[i][j] = value
+				if i != j:
+					result[j][i] = value
+	return result
+
+static func _sparse_add_diagonal(matrix: Array, value: float) -> Array:
+	var result: Array = []
+	for row_index in range(matrix.size()):
+		var row: Dictionary = matrix[row_index].duplicate(true)
+		row[row_index] = float(row.get(row_index, 0.0)) + value
+		result.append(row)
+	return result
+
+static func _sparse_diagonal(matrix: Array, size: int) -> Array:
+	var result := _zero_vector(size)
+	for i in range(size):
+		result[i] = float(matrix[i].get(i, 0.0))
+	return result
+
+static func _sparse_mat_vec(matrix: Array, vector: Array) -> Array:
+	var result := _zero_vector(matrix.size())
+	for row_index in range(matrix.size()):
+		var sum := 0.0
+		for column in matrix[row_index].keys():
+			sum += float(matrix[row_index][column]) * float(vector[int(column)])
+		result[row_index] = sum
+	return result
+
+static func _sparse_mat_t_vec(rows: Array, vector: Array, cols: int) -> Array:
+	var result := _zero_vector(cols)
+	for row_index in range(rows.size()):
+		for column in rows[row_index].keys():
+			result[int(column)] += float(rows[row_index][column]) * float(vector[row_index])
+	return result
+
+static func _relative_component(free: Dictionary, contact: Dictionary, direction: Vector3) -> float:
+	var va := _point_velocity(free, String(contact["body_a"]), contact["r_a"])
+	var vb := _point_velocity(free, String(contact["body_b"]), contact["r_b"])
+	return direction.dot(va - vb)
+
+static func _point_velocity(free: Dictionary, body_id: String, r: Vector3) -> Vector3:
+	if body_id.begins_with("@static/"):
+		return Vector3.ZERO
+	var velocity: Dictionary = free[body_id]
+	return velocity["linear"] + velocity["angular"].cross(r)
+
+static func _project_cone(value: Vector3, friction: float) -> Vector3:
+	var normal := value.x
+	var tangent := Vector2(value.y, value.z)
+	var tangent_norm := tangent.length()
+	if friction <= EPS:
+		return Vector3(maxf(normal, 0.0), 0.0, 0.0)
+	if normal >= 0.0 and tangent_norm <= friction * normal:
+		return value
+	var projected_normal := (normal + friction * tangent_norm) / (1.0 + friction * friction)
+	if projected_normal <= 0.0:
+		return Vector3.ZERO
+	if tangent_norm <= EPS:
+		return Vector3(projected_normal, 0.0, 0.0)
+	var scale := friction * projected_normal / tangent_norm
+	return Vector3(projected_normal, tangent.x * scale, tangent.y * scale)
+
+static func _zero_vector(size: int) -> Array:
+	var result: Array = []
+	result.resize(size)
+	result.fill(0.0)
+	return result
+
+static func _dot(a: Array, b: Array) -> float:
+	var result := 0.0
+	for i in range(a.size()):
+		result += float(a[i]) * float(b[i])
+	return result
+
+static func _sparse_row_entry_count(rows: Array) -> int:
+	var count := 0
+	for row in rows:
+		count += row.size()
+	return count
+
+static func _sparse_matrix_entry_count(matrix: Array) -> int:
+	var count := 0
+	for row in matrix:
+		count += row.size()
+	return count
+
+static func _sorted_contact_ids(contacts: Array) -> Array:
+	var ids: Array = []
+	for contact in contacts:
+		ids.append(String(contact["id"]))
+	ids.sort()
+	return ids
+
+# =============================================================================
+# EVIDENCE HELPERS
+# =============================================================================
+
+static func _contact_id_set(contacts: Array) -> Dictionary:
+	var result := {}
+	for contact in contacts:
+		result[String(contact["id"])] = true
+	return result
+
+static func _same_id_set(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for key in a.keys():
+		if not b.has(key):
+			return false
+	return true
+
+static func _set_difference(a: Dictionary, b: Dictionary) -> Array:
+	var result: Array = []
+	for key in a.keys():
+		if not b.has(key):
+			result.append(String(key))
+	result.sort()
+	return result
+
+static func _sorted_set_keys(values: Dictionary) -> Array:
+	var result: Array = []
+	for key in values.keys():
+		result.append(String(key))
+	result.sort()
+	return result
+
+static func _warm_snapshot(world: Dictionary, ids: Dictionary) -> Dictionary:
+	var result := {}
+	for id in ids.keys():
+		if world["contact_cache"].has(id):
+			result[id] = world["contact_cache"][id].get("warm_impulse", Vector3.ZERO)
+	return result
+
+static func _gap_audit(contacts: Array, ids: Dictionary) -> Dictionary:
+	var result := {}
+	for contact in contacts:
+		var id := String(contact["id"])
+		if ids.has(id):
+			result[id] = float(contact["gap"])
+	return result
+
+static func _island_signature(islands: Array) -> Array:
+	var result: Array = []
+	for island in islands:
+		result.append({
+			"id": String(island.get("island_id", island.get("id", ""))),
+			"body_ids": island["body_ids"].duplicate(true),
+			"contact_ids": island.get("contact_ids", _sorted_contact_ids(island.get("contacts", []))),
+			"warm_start_contacts": int(island.get("warm_start_contacts", 0)),
+			"linear_backend": String(island.get("linear_backend", "")),
+			"dense_materializations": int(island.get("dense_materializations", 0)),
+		})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	return result
+
+static func _empty_stats() -> Dictionary:
+	return {
+		"island_count": 0,
+		"iterations": 0,
+		"warm_start_contacts": 0,
+		"sparse_jacobian_entries": 0,
+		"sparse_effective_mass_entries": 0,
+		"dense_effective_mass_capacity": 0,
+		"pcg_calls": 0,
+		"pcg_iterations": 0,
+		"pcg_max_iterations_one_call": 0,
+		"dense_materializations": 0,
+		"max_island_count": 0,
+		"island_solve_count": 0,
+	}
+
+static func _accumulate_stats(target: Dictionary, source: Dictionary) -> void:
+	for key in ["iterations", "warm_start_contacts", "sparse_jacobian_entries", "sparse_effective_mass_entries", "dense_effective_mass_capacity", "pcg_calls", "pcg_iterations"]:
+		target[key] = int(target.get(key, 0)) + int(source.get(key, 0))
+	target["max_island_count"] = maxi(int(target.get("max_island_count", 0)), int(source.get("island_count", 0)))
+	target["island_solve_count"] = int(target.get("island_solve_count", 0)) + int(source.get("island_count", 0))
+	target["pcg_max_iterations_one_call"] = maxi(int(target.get("pcg_max_iterations_one_call", 0)), int(source.get("pcg_max_iterations_one_call", 0)))
+	target["dense_materializations"] = int(target.get("dense_materializations", 0)) + int(source.get("dense_materializations", 0))
