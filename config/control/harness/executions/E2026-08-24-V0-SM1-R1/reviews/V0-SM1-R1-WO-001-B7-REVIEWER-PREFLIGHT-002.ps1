@@ -11,6 +11,7 @@ $R7Head = "baa0e192209e72aba5ae9d04663eea85b1099e82"
 $R8Head = "25f5ddf6280a39a44ddfc3bbec5245873021c0a1"
 $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
 $VerificationPath = "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json"
+$VerificationRef = "origin/control/v0-sm1-b6-r9-verification-003-r1"
 $BarrierPath = "scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd"
 $WorkerPath = "tools/runtime/m7_playable_network_client.gd"
 $M7TestPath = "tests/runtime/test_m7_playable_networked_processes.gd"
@@ -108,10 +109,15 @@ if ($M7Test -notmatch 'adjust_view\(yaw_delta, 0\.0\)') { throw "R9_M7_SOURCE_GU
 if ($M7Test -notmatch 'camera_yaw =') { throw "R9_M7_SOURCE_GUARD_DIRECT_ASSIGNMENT_BAN_MISSING" }
 $Report.checks.r9_camera_basis = @{ result = "PASS"; direct_assignment_absent = $true; public_adjust_view = $true; source_guards = $true }
 
-# VERIFICATION-003 integrity
-if (-not (Test-Path -LiteralPath $VerificationPath)) { throw "VERIFICATION_003_MISSING" }
-$VerificationRaw = Get-Content -LiteralPath $VerificationPath -Raw
-$Verification = $VerificationRaw.TrimStart([char]0xFEFF) | ConvertFrom-Json
+# VERIFICATION-003 integrity. The record is control-only evidence and must not be
+# materialized into the immutable runtime subject. Read it directly from its
+# remote-tracking ref after fetch.
+git fetch origin --prune | Out-Host
+$VerificationRaw = git show "${VerificationRef}:$VerificationPath"
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace(($VerificationRaw -join "`n"))) {
+    throw "VERIFICATION_003_UNAVAILABLE_FROM_CONTROL_REF"
+}
+$Verification = (($VerificationRaw -join "`n").TrimStart([char]0xFEFF)) | ConvertFrom-Json
 Assert-Equal $Verification.verdict "VERIFIED" "VERIFICATION-003 verdict"
 Assert-Equal $Verification.verified_head_sha $SubjectHead "VERIFICATION-003 head"
 Assert-Equal $Verification.verified_tree_sha $SubjectTree "VERIFICATION-003 tree"
