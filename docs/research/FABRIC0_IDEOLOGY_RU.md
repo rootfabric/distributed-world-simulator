@@ -865,3 +865,179 @@ collection of generic components
 > compiler of mutable semantic/physical topology into a dimension-aware hybrid differential-algebraic program with explicit continuous flows, reactions, jumps and structural transactions.
 
 Это остаётся research hypothesis. Production promotion требует масштабирования, ownership integration и гораздо более тяжёлых unknown-machine tests.
+
+
+## 42. Geometry генерирует constraints; solver владеет reaction solve
+
+FABRIC0.9 превратил прежний design principle в executable evidence.
+
+Правильная граница:
+
+~~~text
+geometry
+→ manifold
+→ Jacobians
+→ constraints
+→ solve reactions
+~~~
+
+Geometry не должна владеть device-specific collision behavior.
+
+## 43. Contact space является локальной физической системой координат
+
+Каждый contact должен иметь:
+
+~~~text
+normal
++
+tangent basis
+~~~
+
+Friction является ограничением в этом contact space, а не набором world-axis hacks.
+
+В 3D:
+
+~~~text
+(j_n, j_t1, j_t2)
+~~~
+
+является более фундаментальной формой, чем friction_x / friction_z.
+
+## 44. Coulomb friction — геометрия admissible reaction set
+
+FABRIC0.9 использует:
+
+~~~text
+||j_t|| <= mu*j_n
+~~~
+
+как cone.
+
+Это важная смена мышления:
+
+> Friction law — не procedural clamp, а геометрия множества допустимых reactions.
+
+Stick/sliding могут возникать как interior/boundary cone state.
+
+## 45. Multi-contact надо решать globally
+
+Если несколько contacts принадлежат одному rigid-body/contact island, последовательный object order не должен становиться частью физики.
+
+Новая аксиома:
+
+> Сначала собрать coupled problem; затем решить его. Не решать physical truth callback-за-callback.
+
+Local iterative numerical method допустим только если его result semantics инвариантна к input enumeration или эта зависимость явно признана approximation.
+
+## 46. Order invariance — обязательный falsification gate
+
+После 0.9 любое multi-contact/multi-body checkpoint должен проверять permutations.
+
+Минимально:
+
+~~~text
+same geometry/topology
+different enumeration
+→ same canonical physical observables
+~~~
+
+Если нет — solver implementation detail просочился в world semantics.
+
+## 47. Deterministic не означает unique
+
+Это один из важнейших уроков 0.9.
+
+Redundant contact manifold может иметь много reaction vectors, дающих один и тот же generalized motion.
+
+Поэтому:
+
+~~~text
+canonical algorithm
++ stable sorting
++ deterministic initial state
+=
+deterministic representative
+~~~
+
+но не:
+
+~~~text
+proof of unique physical reaction distribution
+~~~
+
+Для persistent world canonicalization должна применяться осторожно.
+
+Можно канонизировать representation, не объявляя внутреннюю gauge-like variable фундаментальной сущностью.
+
+## 48. Physical observables имеют уровни значимости
+
+При redundant contact solve полезно различать:
+
+### Strong observables
+
+- body generalized state;
+- total impulse/momentum change;
+- total torque impulse;
+- contact admissibility;
+- topology/mode changes;
+- conservation/dissipation audit.
+
+### Internal solve evidence
+
+- конкретное распределение impulse между redundant contact coordinates;
+- dual/ADMM variables;
+- numerical splitting state.
+
+Не всё, что solver вычисляет, обязано становиться persistent canonical state.
+
+## 49. Numerical parameters не являются physics
+
+ADMM rho, iteration count, factorization strategy и warm-start policy — numerical machinery.
+
+Они не должны менять declared physical laws.
+
+Если изменение numerical parameter materially меняет accepted physical observable, это diagnostic повод проверить convergence/conditioning/model ambiguity.
+
+## 50. Contact identity нужна не только deterministic sorting
+
+Stable identity станет фундаментом для:
+
+- contact lifecycle;
+- warm start;
+- event correlation;
+- historical evidence;
+- sparse island caching;
+- deterministic distributed replay.
+
+Но identity должна происходить из stable geometry/semantic features, а не из transient array index.
+
+## 51. Следующая зрелая форма — persistent contact graph
+
+После 0.9 contact нельзя рассматривать только как мгновенный impact record.
+
+Нужен graph:
+
+~~~text
+bodies
+↕ contacts
+bodies
+~~~
+
+с lifecycle:
+
+~~~text
+appear
+persist
+change mode
+disappear
+~~~
+
+и decomposition:
+
+~~~text
+global world
+→ independent contact islands
+→ local sparse solves
+~~~
+
+Это главный путь FABRIC0.10.
