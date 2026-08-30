@@ -18,10 +18,13 @@ STREAM1 acceptance control base:
 5beb603ebdae2e89ad8f66f469e7ecc12312c29e
 
 LS4.0 runtime code:
-fa63b7b680cac6bc25889d30ff99df86fc841df3
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
 
-LS4.0 verification harness:
+LS4.0 acceptance test:
 4328583fd5f01f7a22304cd4d354ca54a59ac4aa
+
+LS4.0 verification harness freeze:
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
 ```
 
 Final metadata HEAD определяется через origin branch в момент fresh checkout.
@@ -61,11 +64,14 @@ Write-Host "TREE=$Tree"
 
 if ($Head -ne $Target) { throw "HEAD mismatch: $Head != $Target" }
 
-git merge-base --is-ancestor fa63b7b680cac6bc25889d30ff99df86fc841df3 HEAD
+git merge-base --is-ancestor c1ad4f1c4b1d8b1c37f7279f5365588c569ac637 HEAD
 if ($LASTEXITCODE -ne 0) { throw 'LS4 runtime anchor is not an ancestor of target' }
 
 git merge-base --is-ancestor 4328583fd5f01f7a22304cd4d354ca54a59ac4aa HEAD
-if ($LASTEXITCODE -ne 0) { throw 'LS4 verification harness anchor is not an ancestor of target' }
+if ($LASTEXITCODE -ne 0) { throw 'LS4 acceptance-test anchor is not an ancestor of target' }
+
+git merge-base --is-ancestor c1ad4f1c4b1d8b1c37f7279f5365588c569ac637 HEAD
+if ($LASTEXITCODE -ne 0) { throw 'LS4 verification harness freeze is not an ancestor of target' }
 ```
 
 Ничего не cherry-pick'ать и не исправлять в verification worktree.
@@ -344,10 +350,13 @@ BASE:
 5beb603ebdae2e89ad8f66f469e7ecc12312c29e
 
 RUNTIME ANCHOR:
-fa63b7b680cac6bc25889d30ff99df86fc841df3
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
 
-VERIFICATION HARNESS ANCHOR:
+ACCEPTANCE TEST ANCHOR:
 4328583fd5f01f7a22304cd4d354ca54a59ac4aa
+
+VERIFICATION HARNESS FREEZE:
+c1ad4f1c4b1d8b1c37f7279f5365588c569ac637
 
 Godot:
 4.7.1.stable.double.custom_build.a13da4feb
