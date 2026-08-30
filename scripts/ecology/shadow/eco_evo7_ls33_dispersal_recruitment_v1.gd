@@ -160,13 +160,23 @@ func set_environment_field(environment_field: Dictionary) -> bool:
         return false
     if not _exact_environment_keys(environment_field, ENVIRONMENT_FIELD_KEYS):
         return false
-    if String(environment_field.get("schema", "")) != EnvironmentField.SCHEMA             or String(environment_field.get("version", "")) != EnvironmentField.VERSION             or String(environment_field.get("revision", "")) != EnvironmentField.REVISION:
+    if (
+        String(environment_field.get("schema", "")) != EnvironmentField.SCHEMA
+        or String(environment_field.get("version", "")) != EnvironmentField.VERSION
+        or String(environment_field.get("revision", "")) != EnvironmentField.REVISION
+    ):
         return false
     if String(environment_field.get("source_patch_hash", "")) != source_patch_hash:
         return false
-    if int(environment_field.get("grid_size", 0)) != GRID_SIZE             or absf(float(environment_field.get("cell_size_m", 0.0)) - cell_size_m) > 1e-12:
+    if (
+        int(environment_field.get("grid_size", 0)) != GRID_SIZE
+        or absf(float(environment_field.get("cell_size_m", 0.0)) - cell_size_m) > 1e-12
+    ):
         return false
-    if String(environment_field.get("recipe_id", "")) != environment_recipe_id             or int(environment_field.get("environment_seed", 0)) != environment_seed:
+    if (
+        String(environment_field.get("recipe_id", "")) != environment_recipe_id
+        or int(environment_field.get("environment_seed", 0)) != environment_seed
+    ):
         return false
 
     var cells_value = environment_field.get("cells")
@@ -184,14 +194,26 @@ func set_environment_field(environment_field: Dictionary) -> bool:
         var cell: Dictionary = value
         if not _exact_environment_keys(cell, ENVIRONMENT_CELL_KEYS):
             return false
-        if int(cell.get("index", -1)) != index                 or int(cell.get("x", -1)) != index % GRID_SIZE                 or int(cell.get("y", -1)) != index / GRID_SIZE:
+        if (
+            typeof(cell.get("index")) != TYPE_INT
+            or typeof(cell.get("x")) != TYPE_INT
+            or typeof(cell.get("y")) != TYPE_INT
+            or int(cell.get("index", -1)) != index
+            or int(cell.get("x", -1)) != index % GRID_SIZE
+            or int(cell.get("y", -1)) != index / GRID_SIZE
+        ):
             return false
         var current: Dictionary = environment_cells[index]
         for field_name in STATIC_ENVIRONMENT_CELL_FIELDS:
             if cell.get(field_name) != current.get(field_name):
                 return false
         for dynamic_name in ["soil_moisture", "temperature_c", "incident_light", "rainfall_forcing"]:
-            if not cell.has(dynamic_name) or not is_finite(float(cell[dynamic_name])):
+            if not cell.has(dynamic_name):
+                return false
+            var dynamic_type := typeof(cell[dynamic_name])
+            if dynamic_type != TYPE_FLOAT and dynamic_type != TYPE_INT:
+                return false
+            if not is_finite(float(cell[dynamic_name])):
                 return false
         if String(cell.get("cell_hash", "")) != String(validator.call("_cell_hash", cell)):
             return false
