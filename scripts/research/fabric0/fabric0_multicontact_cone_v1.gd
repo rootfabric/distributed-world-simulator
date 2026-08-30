@@ -318,3 +318,163 @@ static func solve_impact(body: Dictionary, input_contacts: Array, options: Dicti
 	var generalized_impulse := _mat_t_vec(jacobian, z)
 	var post_generalized: Array = pre_generalized.duplicate(true)
 	for i in range(6):
+		post_generalized[i] = float(post_generalized[i]) + float(minv[i]) * float(generalized_impulse[i])
+	var post_linear := Vector3(float(post_generalized[0]), float(post_generalized[1]), float(post_generalized[2]))
+	var post_angular := Vector3(float(post_generalized[3]), float(post_generalized[4]), float(post_generalized[5]))
+
+	var contact_results: Array = []
+	var impulse_by_id := {}
+	var total_impulse := Vector3.ZERO
+	var total_torque_impulse := Vector3.ZERO
+	var max_cone_violation := 0.0
+	var active_count := 0
+	var sliding_count := 0
+	for contact_index in range(contacts.size()):
+		var contact: Dictionary = contacts[contact_index]
+		var base := 3 * contact_index
+		var jn := float(z[base])
+		var jt1 := float(z[base + 1])
+		var jt2 := float(z[base + 2])
+		var tangential_norm := sqrt(jt1 * jt1 + jt2 * jt2)
+		var cone_limit := float(contact["friction"]) * jn
+		max_cone_violation = maxf(max_cone_violation, maxf(-jn, tangential_norm - cone_limit))
+		var active := jn > ACTIVE_IMPULSE_EPSILON
+		var sliding := active and absf(tangential_norm - cone_limit) <= SLIDING_TOLERANCE * maxf(1.0, cone_limit)
+		if active:
+			active_count += 1
+		if sliding:
+			sliding_count += 1
+		var n: Vector3 = contact["normal"]
+		var t1: Vector3 = contact["tangent_1"]
+		var t2: Vector3 = contact["tangent_2"]
+		var world_impulse := n * jn + t1 * jt1 + t2 * jt2
+		var r: Vector3 = contact["r"]
+		total_impulse += world_impulse
+		total_torque_impulse += r.cross(world_impulse)
+		var pre_v: Vector3 = pre_contact_velocity[String(contact["id"])]
+		var post_v := Vector3(
+			_dot(jacobian[base], post_generalized),
+			_dot(jacobian[base + 1], post_generalized),
+			_dot(jacobian[base + 2], post_generalized)
+		)
+		var result := {
+			"id": String(contact["id"]),
+			"plane_id": String(contact["plane_id"]),
+			"vertex_id": String(contact["vertex_id"]),
+			"gap": float(contact["gap"]),
+			"j_n": jn,
+			"j_t1": jt1,
+			"j_t2": jt2,
+			"tangent_norm": tangential_norm,
+			"cone_limit": cone_limit,
+			"active": active,
+			"sliding": sliding,
+			"world_impulse": world_impulse,
+			"pre_contact_velocity": pre_v,
+			"post_contact_velocity": post_v,
+		}
+		contact_results.append(result)
+		impulse_by_id[String(contact["id"])] = {
+			"j_n": jn,
+			"j_t1": jt1,
+			"j_t2": jt2,
+		}
+
+	var delta_linear_momentum: Vector3 = mass * (post_linear - body_linear)
+	var delta_angular_momentum := Vector3(
+		inertia.x * (post_angular.x - body_angular.x),
+		inertia.y * (post_angular.y - body_angular.y),
+		inertia.z * (post_angular.z - body_angular.z)
+	)
+	var linear_impulse_residual: Vector3 = delta_linear_momentum - total_impulse
+	var angular_impulse_residual: Vector3 = delta_angular_momentum - total_torque_impulse
+	var energy_pre := _kinetic_energy(mass, inertia, body_linear, body_angular)
+	var energy_post := _kinetic_energy(mass, inertia, post_linear, post_angular)
+
+	var result := {
+		"ok": true,
+		"contacts": contact_results,
+		"contact_count": contacts.size(),
+		"active_contact_count": active_count,
+		"sliding_contact_count": sliding_count,
+		"post_linear_velocity": post_linear,
+		"post_angular_velocity": post_angular,
+		"total_impulse": total_impulse,
+		"total_torque_impulse": total_torque_impulse,
+		"linear_impulse_residual": linear_impulse_residual,
+		"angular_impulse_residual": angular_impulse_residual,
+		"energy_pre": energy_pre,
+		"energy_post": energy_post,
+		"energy_delta": energy_post - energy_pre,
+		"max_cone_violation": maxf(max_cone_violation, 0.0),
+		"matrix_rank": rank,
+		"impulse_unknown_count": size,
+		"redundant_impulse_manifold": rank < size,
+		"iterations": iterations,
+		"primal_residual": primal_residual,
+		"dual_residual": dual_residual,
+		"rho": rho,
+		"tolerance": tolerance,
+		"impulse_by_id": impulse_by_id,
+	}
+	result["state_hash"] = result_hash(result)
+	return result
+
+# Exact Euclidean projection onto {jn >= 0, ||jt|| <= mu*jn}.
+static func _project_friction_cone(value: Vector3, mu: float) -> Vector3:
+	var normal := value.x
+	var tangent := Vector2(value.y, value.z)
+	var tangent_norm := tangent.length()
+	if mu <= EPSILON:
+		return Vector3(maxf(normal, 0.0), 0.0, 0.0)
+	if normal >= 0.0 and tangent_norm <= mu * normal:
+		return value
+	var projected_normal := (normal + mu * tangent_norm) / (1.0 + mu * mu)
+	if projected_normal <= 0.0:
+		return Vector3.ZERO
+	if tangent_norm <= EPSILON:
+		return Vector3(projected_normal, 0.0, 0.0)
+	var scale := mu * projected_normal / tangent_norm
+	return Vector3(projected_normal, tangent.x * scale, tangent.y * scale)
+
+# =============================================================================
+# AUDIT / CANONICAL RESULT
+# =============================================================================
+
+static func result_hash(result: Dictionary) -> String:
+	var contacts: Array = []
+	for contact in result.get("contacts", []):
+		contacts.append({
+			"id": String(contact["id"]),
+			"j_n": float(contact["j_n"]),
+			"j_t1": float(contact["j_t1"]),
+			"j_t2": float(contact["j_t2"]),
+			"active": bool(contact["active"]),
+			"sliding": bool(contact["sliding"]),
+		})
+	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return String(a["id"]) < String(b["id"])
+	)
+	var payload := JSON.stringify({
+		"post_linear_velocity": _vector_array(result.get("post_linear_velocity", Vector3.ZERO)),
+		"post_angular_velocity": _vector_array(result.get("post_angular_velocity", Vector3.ZERO)),
+		"total_impulse": _vector_array(result.get("total_impulse", Vector3.ZERO)),
+		"total_torque_impulse": _vector_array(result.get("total_torque_impulse", Vector3.ZERO)),
+		"contacts": contacts,
+	}, "", false)
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(payload.to_utf8_buffer())
+	return context.finish().hex_encode()
+
+static func _vector_array(value: Vector3) -> Array:
+	return [value.x, value.y, value.z]
+
+# =============================================================================
+# LINEAR ALGEBRA
+# =============================================================================
+
+static func _generalized_velocity(linear: Vector3, angular: Vector3) -> Array:
+	return [linear.x, linear.y, linear.z, angular.x, angular.y, angular.z]
+
+static func _jacobian_row(direction: Vector3, r: Vector3) -> Array:
