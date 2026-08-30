@@ -1,0 +1,40 @@
+Checkpoint: FABRIC-BAKE B0.0 — Bake Foundation Contracts
+Status: IMPLEMENTED CANDIDATE / LOCAL DOUBLE FOCUSED PASS
+Base: dual-track fork 962b9c1bbf7f04c7853f1fb0e36480cf54f3250d
+Branch: research/fabric-bake0-reducible-world-fabric-r1
+
+New runtime/research contract files:
+scripts/research/fabric_bake0/AGENTS.md
+scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd
+scripts/research/fabric_bake0/canonical_source_frontier_v1.gd
+scripts/research/fabric_bake0/authority_envelope_v1.gd
+scripts/research/fabric_bake0/physical_boundary_contract_v1.gd
+scripts/research/fabric_bake0/bake_dependency_set_v1.gd
+scripts/research/fabric_bake0/validated_domain_v1.gd
+scripts/research/fabric_bake0/error_envelope_v1.gd
+scripts/research/fabric_bake0/runtime_error_estimator_v1.gd
+scripts/research/fabric_bake0/conservation_envelope_v1.gd
+scripts/research/fabric_bake0/refinement_guard_v1.gd
+scripts/research/fabric_bake0/reconstruction_descriptor_v1.gd
+scripts/research/fabric_bake0/bake_state_mapping_v1.gd
+scripts/research/fabric_bake0/bake_source_binding_v1.gd
+scripts/research/fabric_bake0/physical_bake_artifact_v1.gd
+scripts/research/fabric_bake0/bake_invalidation_v1.gd
+scripts/research/fabric_bake0/bake_compile_result_v1.gd
+scripts/research/fabric_bake0/fabric_bake_foundation_compiler_v1.gd
+scripts/research/fabric_bake0/bake_execution_gate_v1.gd
+scripts/research/fabric_bake0/fabric_bake_bridge0_v1.gd
+
+Tests/playground:
+tests/research/fabric_bake0/fabric_bake_b0_0_acceptance.gd
+tests/research/fabric_bake0/fabric_bake_b0_0_playground.gd
+
+Evidence/docs:
+docs/research/FABRIC_BAKE_B0_0_FOUNDATION_RU.md
+validation/fabric-bake-b0-0-foundation-validation.json
+fabric-bake-b0-0-foundation-files.txt
+
+Existing contracts intentionally reused, not modified:
+scripts/simulation/representation/contracts/representation_source_revision.gd
+scripts/simulation/representation/contracts/representation_invalidation.gd
+scripts/simulation/representation/representation_contract_utils.gd
