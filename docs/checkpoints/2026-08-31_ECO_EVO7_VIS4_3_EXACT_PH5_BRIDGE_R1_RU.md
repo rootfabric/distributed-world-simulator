@@ -17,8 +17,8 @@ VIS4.2 R2: ACCEPTED / WINDOWS VERIFIED / CLOSED
 ## Exact VIS4.3 runnable candidate
 
 ~~~text
-HEAD: 967692cb2781f20eeceffe43a014366567bd2586
-TREE: pending exact tree from 967692cb verification subject
+HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
 ~~~
 
 ## Architecture
@@ -144,8 +144,8 @@ Exact Godot:
 VIS4.3 is NOT ACCEPTED until fresh exact Windows GREEN on:
 
 ~~~text
-967692cb2781f20eeceffe43a014366567bd2586
-TREE pending exact tree from 967692cb verification subject
+b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+TREE 920454da5bb41959680e3309c690f4ef399f3e6d
 ~~~
 
 ## Next after GREEN
@@ -182,7 +182,27 @@ git show -s --format=%T HEAD
 New exact verification subject:
 
 ~~~text
-967692cb2781f20eeceffe43a014366567bd2586
+b8e8c2ffea260eea40ae3a451ec0c63d81028f76
 ~~~
 
 Therefore 67503a83 is classified as CI-INFRA RED, not a VIS4.3 runtime RED.
+
+
+## Competition-seal hardening
+
+Before decisive verification the bridge was additionally bound to:
+
+~~~text
+DescriptorV2.source_competition_hash
+==
+ReconstructionEvidence.source_competition_hash
+~~~
+
+A rehashed reconstruction snapshot with a forged competition seal remains internally valid to its standalone schema but is rejected by VIS4.3 bridge source binding.
+
+Final runtime/test subject for decisive verification:
+
+~~~text
+HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
+~~~
