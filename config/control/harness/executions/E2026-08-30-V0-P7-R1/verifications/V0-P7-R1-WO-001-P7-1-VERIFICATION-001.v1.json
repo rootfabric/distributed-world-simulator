@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "verified_head_sha": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+  "verified_tree_sha": "99629227f66b15092df5d798f7706364bfaadf1d",
+  "verifier": "INDEPENDENT_VERIFIER_P7_1_FRESH_EXACT_SOURCE_R1",
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-30T10:10:30Z",
+  "environment": "Linux isolated exact source artifact exported by GitHub-hosted runner; Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "checks": {
+    "subject_identity": {
+      "result": "PASS",
+      "head": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+      "tree": "99629227f66b15092df5d798f7706364bfaadf1d",
+      "accepted_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "source_export_run": 33305614883,
+      "source_artifact_id": 9730349477,
+      "source_archive_sha256": "abf05c2580ed669f609f77ec9cf729af471c3f9ec2f82f7f68be398cc83737fd"
+    },
+    "godot_identity": {
+      "result": "PASS",
+      "version": "4.7.1.stable.double.custom_build.a13da4feb"
+    },
+    "isolated_import": {
+      "result": "PASS",
+      "log_sha256": "5f65e4fed01a49484d2dcf876014cba5452ef6845c85f682dae5f2d2f7fdd611"
+    },
+    "p7_1_authority_gate": {
+      "result": "PASS",
+      "assertions": 83,
+      "failures": 0,
+      "log_sha256": "5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e"
+    },
+    "p7_1_real_tool_to_mw4": {
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0,
+      "mw4_result": "COMMITTED",
+      "log_sha256": "3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1"
+    },
+    "p5_mining_tool_regression": {
+      "result": "PASS",
+      "assertions": 36,
+      "failures": 0,
+      "log_sha256": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511"
+    },
+    "mw6_authority_replication_regression": {
+      "result": "PASS",
+      "assertions": 130,
+      "failures": 0,
+      "log_sha256": "ad770d46c505216074ec3d280f1801975a872a224ac4bf9949a801f86865e347"
+    },
+    "project_control": {
+      "result": "PASS",
+      "exact_head_runs": [
+        33305605035,
+        33305871495
+      ]
+    }
+  },
+  "repaired_validation_findings": [
+    "Explicit GDScript types added in integration test after fresh parser exposed inference failure.",
+    "Integration composition corrected to one MW6 command gate wrapping existing MW8; no second gate.",
+    "Integration-only reach bound raised to 25 m solely to admit the pre-existing large MW5 deterministic excavation fixture; focused 4 m fail-closed reach test remains."
+  ],
+  "forbidden_conclusions_respected": {
+    "p7_checkpoint_accepted": false,
+    "p7_checkpoint_proposed": false,
+    "p7_2_verified": false,
+    "whole_world_regression_claimed": false
+  },
+  "next": {
+    "p7_1": "CLOSED",
+    "p7": "IN_PROGRESS",
+    "next": "P7.2"
+  }
+}
