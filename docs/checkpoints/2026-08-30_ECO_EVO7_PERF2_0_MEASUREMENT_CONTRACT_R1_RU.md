@@ -1,7 +1,7 @@
 # ECO.EVO7 PERF2.0 R1 — Measurement Contract
 
 Дата: 2026-08-30  
-Статус: **IMPLEMENTATION CANDIDATE / EXACT DOUBLE-GODOT VERIFICATION REQUIRED**
+Статус: **ACCEPTED — exact fresh detached Windows PASS**
 
 ## Predecessor
 
@@ -339,9 +339,47 @@ tracked worktree clean
 exact HEAD/TREE recorded
 ```
 
-Until then:
+Final acceptance was completed on exact frozen subject:
 
 ```text
-PERF2.0 = IMPLEMENTATION CANDIDATE
-PERF2.1 = BLOCKED WAIT PERF2.0 ACCEPTANCE
+HEAD:
+5994598d317a55ddae2954f943021878a279afc9
+
+TREE:
+a0241f89b6fd7546a27e4388992ffe371b4c5de6
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+fresh detached Windows PowerShell 5.1:
+PASS
+
+PERF1:
+69 assertions PASS
+
+STREAM1:
+195 assertions PASS / 108 exact
+
+PERF2.0:
+62/62 PASS
+
+transitive marker:
+PASS
+
+canonical repository-local workflow:
+PASS
+
+tracked worktree:
+CLEAN
+```
+
+Formal acceptance evidence:
+
+`docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md`
+
+Therefore:
+
+```text
+PERF2.0 = ACCEPTED
+PERF2.1 = AUTHORIZED
 ```
