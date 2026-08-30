@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0020",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 20,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-30T01:36:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-r9-reviewer-dispatch-r1",
+  "head_sha": "40910472e48dd1e31db119b4414d493b970e8303",
+  "summary": "Fresh Verifier materialized exact R9 HEAD/TREE in a new checkout and rechecked the same HEAD/TREE after execution with tracked and staged diffs clean. The verifier carrier is a one-commit control-only descendant of the dispatch and historical verifier records are unchanged.",
+  "command": "CLOSE_TESTED_HEADS_EXACT_AND_FRESH_R9",
+  "exit_code": 0,
+  "predicate": "TESTED_HEADS_EXACT_AND_FRESH",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-CLOSURE-003.v1.json"
+  ],
+  "blocker": ""
+}
