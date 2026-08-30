@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0019",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 19,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-30T01:35:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-r9-reviewer-dispatch-r1",
+  "head_sha": "40910472e48dd1e31db119b4414d493b970e8303",
+  "summary": "Fresh independent B6 Verifier recorded VERIFIED on exact immutable R9 after one governed M7 10/10 series, one governed M5 10/10 series, focused SM1 13/13, impaired 5/5, first-and-only canonical 304/304 with 307 steps and zero bad exits, semantic audits and exact-head freshness.",
+  "command": "CLOSE_B6_INDEPENDENT_VERIFIER_PASS",
+  "exit_code": 0,
+  "predicate": "INDEPENDENT_VERIFIER_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-CLOSURE-003.v1.json"
+  ],
+  "blocker": ""
+}

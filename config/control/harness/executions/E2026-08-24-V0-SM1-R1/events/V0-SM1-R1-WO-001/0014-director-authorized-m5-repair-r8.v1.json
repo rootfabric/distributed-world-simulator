@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0014",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 14,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-29T09:18:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r8",
+  "head_sha": "d149105a13d2aac875e12383dcf2859f45b5b446",
+  "summary": "Windows R7 failed run 1 after both releases and coordinator COMPLETE because the client sampled control.json during AtomicJson's Windows replace gap and collapsed a transient missing file to an empty Dictionary. Director authorizes R8 bounded typed control-read continuity without weakening persistent control-generation fail-closed semantics.",
+  "command": "AUTHORIZE_REPAIR_MAP_R8",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_R8_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-008.v1.json"
+  ]
+}

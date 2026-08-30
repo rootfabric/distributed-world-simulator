@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-003",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-002",
+  "failed_r2_candidate": "08dee27de35c99363f3bc2a50f06d7d5b3c8e072",
+  "failed_r2_tree": "ca360fa091ed5017f8d257fe7d982e065bef6837",
+  "windows_r2_result": {
+    "decisive_series": "FAIL_RUN_3_OF_10",
+    "run1": "PASS",
+    "run2": "PASS",
+    "run3": "FAIL",
+    "duration_seconds": 164.4,
+    "failure_stage": "WAIT_CONVERGENCE_PEER",
+    "b_terminal": {
+      "state": "FAILED",
+      "passed": false,
+      "leave_result_success": true,
+      "convergence_release_consumed": false,
+      "failure": "M5_ACCEPTANCE_TIMEOUT"
+    },
+    "a2_terminal": {
+      "state": "COMPLETE",
+      "passed": true,
+      "leave_result_success": true,
+      "convergence_release_consumed": true
+    },
+    "full_regression": "NOT_RUN_BY_DESIGN"
+  },
+  "root_cause": "The driver labels TIMEOUT_MS failures with the current stage but compares the deadline against _started_ms (process lifetime), not _stage_started_ms. B is the longest-lived client, so it can exhaust the global 150 s budget while legitimately reaching WAIT_CONVERGENCE_PEER late in the scenario. A2 starts much later and retains most of the same 150 s budget. This exactly matches repeated Windows failures at ~163-164 s total runtime and the historical WAIT_CONVERGENCE_PEER marker.",
+  "classification": "M5_TIMEOUT_CLOCK_BOUND_TO_PROCESS_LIFETIME_INSTEAD_OF_STAGE",
+  "authorized_r3_scope": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "RUN_WORLD_REGRESSION_TESTS.ps1"
+    ]
+  },
+  "authorized_changes": [
+    "Keep TIMEOUT_MS at 150000.",
+    "Evaluate timeout against _stage_started_ms, which is already reset by _set_stage on every orchestration stage transition.",
+    "Include both stage_elapsed_ms and total_elapsed_ms in timeout evidence.",
+    "Add a contract assertion that the timeout clock is stage-scoped and not process-lifetime-scoped."
+  ],
+  "non_goals": [
+    "Do not increase timeout.",
+    "Do not add retries.",
+    "Do not weaken convergence/release/leave assertions.",
+    "Do not change runtime LEAVE or network protocol.",
+    "Do not modify SM1 runtime."
+  ],
+  "acceptance": [
+    "Existing M5 contracts PASS including timeout-clock regression assertion.",
+    "Windows exact-Godot M5 stability 10/10 with no hidden reruns.",
+    "No M5_ACCEPTANCE_TIMEOUT occurs solely because total process lifetime exceeds 150 s while current stage is still within 150 s.",
+    "Only after Windows 10/10, run one canonical full world regression first attempt."
+  ],
+  "director_decision": "AUTHORIZED_R3_STAGE_SCOPED_TIMEOUT_FIX",
+  "b6_status": "BLOCKED_PENDING_R3_AND_FRESH_REVERIFICATION",
+  "b7_status": "BLOCKED"
+}

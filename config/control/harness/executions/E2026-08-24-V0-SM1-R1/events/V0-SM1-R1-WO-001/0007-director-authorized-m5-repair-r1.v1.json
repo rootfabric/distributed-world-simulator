@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0007",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 7,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-28T23:32:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b6-m5-repair-map-r1",
+  "head_sha": "bb8bbad06443f8d7820865318e20b8067f82c1fc",
+  "summary": "Director authorizes bounded M5 R1 diagnostic hardening after independent reproduction: complete Windows profile isolation, fail-fast child lifecycle evidence, and a no-hidden-rerun 10x stability runner. SM1 runtime and M5 gameplay semantics remain out of scope.",
+  "command": "AUTHORIZE_REPAIR_MAP_R1",
+  "exit_code": 0,
+  "predicate": "REPAIR_MAP_AUTHORIZED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-M5-REPAIR-MAP-001.v1.json"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0004",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 4,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-28T15:55:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/v0-sm1-b4-evidence-map-r1",
+  "head_sha": "37d38dc7ce5a49ba82df86f86e53a1538ed2c94b",
+  "summary": "B4 Evidence Map frozen for exact composite closure candidate 6fdfc047...; remaining fresh Reviewer/Verifier and final review-head control predicates stay pending.",
+  "command": "RECORD_EVIDENCE_MAP_COMPLETE",
+  "exit_code": 0,
+  "predicate": "EVIDENCE_MAP_COMPLETE",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-WO-001-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-WO-001-POST-BUILD-CRITIQUE-001.v1.json"
+  ]
+}

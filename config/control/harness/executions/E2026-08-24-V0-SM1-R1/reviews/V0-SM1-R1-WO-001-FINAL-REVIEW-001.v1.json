@@ -1,0 +1,130 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-SM1-R1-WO-001-FINAL-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "6fdfc047f54e727e6b398370e576c746c7949441",
+  "reviewed_tree_sha": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+  "reviewer": "INDEPENDENT_REVIEWER_B5_FRESH_SESSION_R1",
+  "verdict": "PASS",
+  "reviewed_at_utc": "2026-08-28T16:32:00Z",
+  "required_fixes": [],
+  "rank_up_moves": [
+    "B6 Verifier must execute FRESH_EXACT_HEAD_MACHINE_VERIFICATION on 6fdfc047f54e727e6b398370e576c746c7949441 without mutation and re-prove the machine evidence independently.",
+    "STANDARD_PC0_NON_RED remains unproven: observed STANDARD PC0 overall = YELLOW at the reviewed head (ECO program RED is ADVISORY and unrelated to the SM1 candidate; V0 program YELLOW is the declared pre-acceptance control frontier). Actual NON_RED evidence must be produced before checkpoint proposal.",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS remains unproven: observed directional overall = YELLOW with five WATCH_HIT groups; no hit path lies inside the reviewed SM1 candidate delta, but formal NON_RED clearance must be produced before checkpoint proposal.",
+    "V0 control truth carried in the reviewed tree (control/post-p6-sm1-activation-r1 snapshot, blockers EG5 repair / lease rotation / Director dispatch) predates the executed SM1 dispatch; control reconciliation must record the executed dispatch state before checkpoint proposal.",
+    "Track the M5 WAIT_CONVERGENCE_PEER 150s timing observation as a named residual risk; harden only upon independent reproduction; B6 must not allow a single rerun to mask a deterministic defect.",
+    "Reconcile control-plane files committed on the feature lineage outside WO allowed_paths (harness policies, activation record, tests/harness, scripts/harness/acceptance_state.py, docs/evidence POST_P6 report) as Director-owned control-plane bookkeeping, so the WO write fence stays unambiguous for future work orders."
+  ],
+  "evidence_gaps": [
+    "INDEPENDENT_VERIFIER_PASS pending (B6)",
+    "STANDARD_PC0_NON_RED pending fresh NON_RED evidence",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS pending fresh NON_RED evidence",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO: observed empty at the reviewed head, formal closure check at the control frontier pending",
+    "V0_SM1_CHECKPOINT_PROPOSED pending",
+    "human RUNTIME_FEATURE_MERGE approval pending",
+    "B2 full-regression run logs (304/304, 307/307 steps) are not stored in-repo; claims are durable via PR #282 body and repair branch, but machine log artifacts were not located in the evidence carrier",
+    "docs/control/DEVELOPMENT_HARNESS_RU.md and docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md referenced by AGENTS.md mandatory read order are absent at the pinned heads",
+    "config/control/branches/feature__v0-sm1-seamless-product-integration.v1.json declared in WO allowed_paths was never committed"
+  ],
+  "risk_assessment": "Exact composite closure candidate 6fdfc047 (tree b9b1202d) verified byte-exact: fresh detached checkout HEAD/TREE/clean match the pins, PR #282 headRefOid equals the subject, subject is ancestor of B4 carrier 1325812, source b270fb8 is ancestor of subject with exactly 4 repair commits / 10 files. R1-R4 independently classified from full diff: six ECO .tscn BOM-strip-only, EG1 client-driver sequencing-only, M7 client-driver authoritative interaction fence referencing canonical ItemGraphBase thresholds, Windows-only detached spawn in two SM1 process tests with Unix path unchanged; no production owner or protocol change. WO scope holds: runtime mutations within allowed_paths, forbidden paths untouched, no second Item Graph/Construction/persistence/private truth, Gateway routing-only with immutable client identity and no simulation endpoint disclosure, no direct client-to-Authority transport in any SM1 script, NX foundation consumed not modified, no wholesale SM0 merge (only 2 control merge commits). Semantic falsification of the core adapters found no defect: transfer coordinator is fail-closed zero-writer during the gap, epoch strictly monotonic (rejects < and !=), commit/retire/activate exactly-once via transfer_id+tuple+commit_token with stable replay results, stale source permanently fenced post-commit with abort forbidden, target cannot authorize before commit+retire+activation; SM1.3/SM1.5 capture manifests only inside bracketed source-freeze proofs, hash-only over existing canonical owners, identity/input/OperationId continuity enforced (no identity change, no sequence regression, pending-operation freeze rejection, history preservation, WARM chain bound into commit token). Evidence map/critique/PR #282 claims are mutually consistent and honest: PC0 fields NOT_RUN are declared, not fabricated; Reviewer/Verifier/checkpoint/human predicates remain pending. M5 single 150s WAIT_CONVERGENCE_PEER timeout during B2 exploration assessed as a non-deterministic timing observation (passed on rerun and in final 307/307 suite; 10 consecutive M7 51/51 focused passes), non-blocking, named as residual risk. PC0 executed read-only from Checkout A at the exact subject: standard overall YELLOW, directional overall YELLOW, cross-branch overlaps empty, no critical SM1/V0 directional hit on the candidate delta; checkout A remained clean (HEAD/TREE re-verified after PC0). This PASS is an implementation/exact-head review verdict only: it is NOT SM1 acceptance, NOT checkpoint acceptance, NOT merge authorization, NOT P7 activation, NOT Verifier PASS, and does NOT claim STANDARD_PC0_NON_RED or DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS.",
+  "subject_identity_proof": {
+    "checkout_a_head": "6fdfc047f54e727e6b398370e576c746c7949441",
+    "checkout_a_tree": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+    "checkout_a_clean": true,
+    "checkout_b_head": "1325812152944385c49af2ffe4f6afe6548d3b22",
+    "checkout_b_tree": "5361a0b39df871d1c899a067647c276faa258abb",
+    "subject_ancestor_of_b4_carrier": true,
+    "source_ancestor_of_subject": true,
+    "pr_282_head_matches_subject": true,
+    "pr_282_state": "OPEN_DRAFT_UNMERGED",
+    "freshness_recheck_after_pc0": { "head_match": true, "tree_match": true, "dirty_entries": 0 }
+  },
+  "repair_classification": {
+    "delta_commits": 4,
+    "delta_files": 10,
+    "R1_eco_bom_only": true,
+    "R2_eg1_client_driver_sequencing_only": true,
+    "R3_m7_client_driver_authoritative_fence_server_thresholds_unchanged": true,
+    "R4_windows_detached_spawn_tests_only_unix_unchanged": true,
+    "hidden_production_owner_or_protocol_change": false
+  },
+  "wo_scope_review": {
+    "base_sha": "72684bc9f243d7a458f4dbc6d460efc1c65d825e",
+    "source_head": "b270fb806038333c97fa1ed49655961adddd6a21",
+    "lineage_commits": 65,
+    "changed_paths": 53,
+    "runtime_mutations_within_allowed_paths": true,
+    "forbidden_paths_untouched": true,
+    "second_item_graph_construction_persistence_or_private_world_truth": false,
+    "gateway_remains_routing_only": true,
+    "direct_client_to_authority_connection": false,
+    "nx_transport_foundation_modified": false,
+    "wholesale_sm0_or_research_merge": false,
+    "control_plane_observation": "12 non-runtime paths on the feature lineage fall outside WO allowed_paths (config/control/harness policies, activation record, executions control records, tests/harness/*.py, scripts/harness/acceptance_state.py, docs/evidence POST_P6 report). Classified as Director-owned control-plane/evidence bookkeeping on the execution branch, preauthorized by harness policy, no runtime/canonical impact; recorded as an observation, not a runtime scope violation."
+  },
+  "semantic_review": {
+    "exactly_one_active_canonical_writer": "PASS",
+    "warm_target_zero_write": "PASS (SHADOW mode enforced, fail-closed write counters attempts==rejections, zero-writer gap)",
+    "linearization_boundary": "PASS (commit_ownership single point, linearized_now flag, replays non-linearizing)",
+    "authority_epoch_monotonic": "PASS (target=source+1; rejects epoch< and epoch!=)",
+    "stale_source_cannot_resurrect": "PASS (permanent post-commit fencing, abort forbidden, token-gated retire/activate)",
+    "target_cannot_authorize_before_commit": "PASS (authorize_write requires ACTIVE state reached only after commit+retire+activate)",
+    "logical_player_id_stable": "PASS",
+    "player_entity_id_stable": "PASS",
+    "spawn_generation_not_reset": "PASS (drivers assert spawn_generation==1 across handoffs)",
+    "input_sequence_continuity": "PASS (no regression accepted; freeze bracketing)",
+    "operation_id_continuity_exactly_once": "PASS (pending-at-freeze rejected, history preserved, ALREADY_APPLIED replays counted, token-bound)",
+    "gateway_endpoint_unchanged": "PASS (immutable client route identity, EDGE_GATEWAY_ONLY, no endpoint disclosure)",
+    "gateway_not_owner": "PASS (ownership derived per command from coordinator, never cached)",
+    "item_graph_construction_p6_owner_continuity": "PASS (hash-only fingerprints, divergence rejections, existing owner ids enforced)",
+    "mutations_fenced_during_transfer_gap": "PASS (mutation gate + route frozen + authorize_write fail-closed)",
+    "recovery_fault_behaviors": "MACHINE_EVIDENCED_B2_PENDING_B6_FRESH_REEXECUTION (fault matrix 1..6, gateway restart 80 assertions, authority recovery 88 assertions, concurrent crossings, reconnect, impaired repeated crossings; PR #282 body durable claims)"
+  },
+  "m5_timing_assessment": "Non-deterministic timing observation, not a required fix and not insufficient evidence: one 150s WAIT_CONVERGENCE_PEER wall-clock timeout during B2 exploration, passed on rerun and in the final full suite, 10 consecutive M7 51/51 focused passes; not reproduced as a deterministic defect. Recorded as named residual risk; harden only upon independent reproduction; B6 must not accept a rerun that masks a deterministic failure.",
+  "pc0_observed": {
+    "command": "CONTROL_PROJECT.ps1 -NoFailOnRed from Checkout A at exact subject",
+    "standard_overall": "YELLOW",
+    "standard_program_health": { "HARNESS": "GREEN", "TS": "GREEN", "MATTER": "GREEN", "S1": "GREEN", "G": "YELLOW", "CH": "YELLOW", "DOCTRINE": "YELLOW", "NX": "YELLOW", "V0": "YELLOW", "ECO": "RED_ADVISORY" },
+    "eco_red_related_to_candidate": false,
+    "directional_overall": "YELLOW",
+    "directional_watch_hits": [
+      "CH->NX BLOCKING: 4 paths",
+      "NX->ECO ADVISORY: 1 path",
+      "NX->T BLOCKING: 1 path",
+      "V0->ECO ADVISORY: 3 paths",
+      "V0->T BLOCKING: 3 paths"
+    ],
+    "critical_sm1_v0_directional_hits_on_candidate_delta": [],
+    "cross_branch_overlaps": [],
+    "human_attention_items": [
+      "V0 control snapshot in reviewed tree predates executed dispatch (EG5 repair / lease rotation / Director dispatch listed as pending blockers)",
+      "V0-SM1 CHECKPOINT ACCEPTANCE blocked pending FRESH_REVIEW (this record) + VERIFIER + DIRECTOR",
+      "human RUNTIME_FEATURE_MERGE gate untouched"
+    ],
+    "standard_pc0_non_red_proven": false,
+    "directional_pc0_non_red_for_critical_hits_proven": false,
+    "report_paths": [
+      "artifacts/control/project-control-report.json",
+      "artifacts/control/directional-watch-report.json",
+      "artifacts/control/PROJECT_STATUS_RU.md",
+      "artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md"
+    ]
+  },
+  "forbidden_conclusions_respected": {
+    "sm1_accepted": false,
+    "checkpoint_accepted": false,
+    "merge_authorized": false,
+    "p7_activated": false,
+    "verifier_pass": false,
+    "pc0_non_red_claimed": false,
+    "human_gate_satisfied": false
+  },
+  "next": {
+    "next_actor": "VERIFIER",
+    "next_action": "FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+    "subject": "6fdfc047f54e727e6b398370e576c746c7949441"
+  }
+}

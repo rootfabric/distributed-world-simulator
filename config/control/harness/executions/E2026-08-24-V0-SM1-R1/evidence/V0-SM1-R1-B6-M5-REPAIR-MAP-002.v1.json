@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.repair_map.v1",
+  "repair_map_id": "V0-SM1-R1-B6-M5-REPAIR-MAP-002",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "blocked_gate": "B6_FRESH_EXACT_HEAD_MACHINE_VERIFICATION",
+  "parent_repair_map": "V0-SM1-R1-B6-M5-REPAIR-MAP-001",
+  "failed_r1_candidate": "ab363491526097638926e1295bf2e38304de2538",
+  "failed_r1_tree": "a7eb2213cbfd9318202986521464632b50192d8a",
+  "windows_r1_result": {
+    "ast_parse": "PASS",
+    "decisive_series": "FAIL_RUN_2_OF_10",
+    "run1": "PASS_98_0",
+    "run2": "FAIL_98_ASSERTIONS_2_FAILURES",
+    "failure_markers": [
+      "A reconnect graphical acceptance completed = PASS",
+      "B graphical acceptance completed = FAIL",
+      "final clients passed = FAIL"
+    ],
+    "full_regression": "NOT_RUN_BY_DESIGN"
+  },
+  "new_evidence": "R1 removed early silent-process-death ambiguity and reached successful convergence/reconnect; the remaining failure occurs after both clients consumed the same convergence generation, during final client acceptance.",
+  "code_local_root_cause_hypothesis": [
+    "m5_graphical_acceptance_driver.gd currently publishes terminal COMPLETE/passed=true before request_graceful_leave() receives LEAVE_ACK. The parent can therefore observe an optimistic terminal state that is later rewritten FAILED.",
+    "After coordinator observes both CONVERGENCE_RELEASED reports it writes one convergence_complete_id. Both clients then enter _finish(true) concurrently and issue LEAVE concurrently. This simultaneous finalization is not part of convergence semantics and creates a Windows-sensitive shutdown/ACK race."
+  ],
+  "classification": "M5_POST_CONVERGENCE_FINALIZATION_RACE",
+  "authorized_r2_scope": {
+    "allowed_paths": [
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "RUN_M5_GRAPHICAL_STABILITY_TESTS.ps1",
+      "config/control/harness/executions/E2026-08-24-V0-SM1-R1/**"
+    ],
+    "forbidden_paths": [
+      "scripts/runtime/networked_gameplay/sm1/**",
+      "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+      "scripts/network/**",
+      "scripts/persistence/**",
+      "scripts/construction/**",
+      "scripts/runtime/networked_gameplay/m4/**",
+      "scripts/runtime/networked_gameplay/p4/**",
+      "scripts/runtime/networked_gameplay/p5/**",
+      "scripts/runtime/networked_gameplay/p6/**",
+      "config/architecture/**",
+      "config/control/project-program-registry.v1.json"
+    ]
+  },
+  "authorized_changes": [
+    "Make client terminal report commit-after-leave: do not publish COMPLETE/passed=true until request_graceful_leave receives success; publish FAILED if graceful leave fails.",
+    "Add a control-plane-only finish permit so, after the existing convergence generation is fully consumed by both clients, parent finalizes A reconnect first and waits for its terminal report/process exit, then finalizes B.",
+    "Keep both clients connected until BOTH convergence releases are consumed exactly as today; serialization begins only after coordinator COMPLETE.",
+    "Preserve all existing server assertions: exactly 3 joins, 3 graceful leaves, zero connected peers, exact canonical Item Graph checksums."
+  ],
+  "non_goals": [
+    "Do not increase leave timeout.",
+    "Do not treat LEAVE_ACK timeout as success.",
+    "Do not weaken convergence checks, checksum equality, release generation checks or final server leave counts.",
+    "Do not modify GraphicalGameClientRuntime LEAVE protocol.",
+    "Do not modify SM1 runtime."
+  ],
+  "acceptance": [
+    "PowerShell runner AST parse PASS.",
+    "Windows exact-Godot M5 stability 10/10 with no hidden reruns.",
+    "Every terminal COMPLETE report contains successful leave_result rather than an optimistic pre-leave terminal state.",
+    "Server final report proves 3 joins, 3 leaves, connected_peer_count=0.",
+    "Exact Linux double-Godot M5 still passes as supporting cross-platform evidence.",
+    "Only after Windows 10/10: one fresh canonical RUN_WORLD_REGRESSION_TESTS.ps1 first attempt must pass 304/304, 307/307, bad=0."
+  ],
+  "escalation_rule": "If R2 fails, preserve first failure plus per-client result JSON/logs. Do not modify network/runtime LEAVE semantics until a new R3 Repair Map identifies a protocol-level defect.",
+  "director_decision": "AUTHORIZED_R2_POST_CONVERGENCE_FINALIZATION_HARDENING",
+  "b6_status": "BLOCKED_PENDING_R2_AND_FRESH_REVERIFICATION",
+  "b7_status": "BLOCKED"
+}

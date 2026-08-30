@@ -1,0 +1,137 @@
+{
+  "schema": "distributed_world_simulator.v0_sm1_b6_m5_r8_validation_receipt.v1",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "risk_class": "CRITICAL",
+  "historical_b6_subject": {
+    "head_sha": "6fdfc047f54e727e6b398370e576c746c7949441",
+    "tree_sha": "b9b1202d959b3da4a0c73840091c7bf56070429e",
+    "verifier_record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-001.v1.json",
+    "verdict": "FAILED",
+    "failure_surface": "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd"
+  },
+  "repaired_composite_subject": {
+    "head_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "tree_sha": "82c6567acdc735bc02a4808159328f00722b0b6b",
+    "branch": "repair/m5-control-read-continuity-r8",
+    "source_sm1_head": "b270fb806038333c97fa1ed49655961adddd6a21",
+    "previous_composite_subject": "6fdfc047f54e727e6b398370e576c746c7949441",
+    "previous_subject_is_ancestor": true,
+    "ahead_of_previous_subject_commits": 46,
+    "r7_base_sha": "baa0e192209e72aba5ae9d04663eea85b1099e82",
+    "r8_delta_commits": 7,
+    "r8_delta_files": 6,
+    "r8_changed_paths": [
+      "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+      "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_support.gd",
+      "scripts/testing/process_harness/atomic_json_file.gd",
+      "tests/runtime/support/m5_control_read_consistency_regression.gd",
+      "tests/runtime/test_m5_graphical_acceptance_contracts.gd"
+    ],
+    "r7_convergence_barrier_changed_by_r8": false
+  },
+  "windows_validation": {
+    "source": "fresh Windows validation agent report",
+    "worktree": "C:\\distributed-world-simulator\\repair-m5-r8",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "contracts": {
+      "result": "PASS",
+      "assertions": 126,
+      "failures": 0
+    },
+    "r7_convergence_guard": {
+      "result": "PASS",
+      "assertions": 31,
+      "failures": 0
+    },
+    "r8_control_read_regression": {
+      "result": "PASS",
+      "assertions": 25,
+      "failures": 0
+    },
+    "pipe_smoke": {
+      "result": "PASS",
+      "marker": "M5_CHILD_PIPE_OBSERVABILITY_PASS",
+      "pid": 15216,
+      "exit_code": 0,
+      "stdout_bytes": 15,
+      "stderr_bytes": 15
+    },
+    "m5_decisive": {
+      "result": "PASS_10_OF_10",
+      "marker": "M5_GRAPHICAL_STABILITY_PASS 10/10",
+      "single_attempt": true,
+      "reruns": 0
+    },
+    "canonical_world_regression": {
+      "result": "PASS",
+      "passed": true,
+      "declared_test_count": 304,
+      "discovered_test_count": 304,
+      "steps": 307,
+      "bad_exit_count": 0,
+      "single_attempt": true
+    },
+    "recovery_evidence": {
+      "reports_with_transient_recovery": 6,
+      "reports_examined": 30,
+      "max_recoveries_observed_per_report": 1,
+      "strongest_observation": {
+        "stability_run": 10,
+        "report": "a2.json",
+        "transient_recoveries": 1,
+        "last_attempts": 2,
+        "last_elapsed_ms": 5
+      },
+      "other_observations": [
+        "run 2 a2",
+        "run 4 a1",
+        "run 5 a2",
+        "run 5 b",
+        "run 8 b"
+      ],
+      "m5_control_read_unavailable_occurrences": 0,
+      "m5_convergence_release_integrity_failed_occurrences": 0,
+      "interpretation": "Windows sampled the real transient control replace window; bounded retry recovered on the second read and convergence remained valid."
+    },
+    "artifacts_preserved": [
+      "C:\\distributed-world-simulator\\repair-m5-r8\\artifacts\\test-results\\m5-stability-20260829-194603\\summary.json",
+      "C:\\distributed-world-simulator\\repair-m5-r8\\artifacts\\test-results\\m5-stability-20260829-194603\\pipe-smoke.log",
+      "C:\\distributed-world-simulator\\repair-m5-r8\\artifacts\\test-results\\m5-stability-20260829-194603\\run-01.log .. run-10.log",
+      "C:\\distributed-world-simulator\\repair-m5-r8\\artifacts\\test-results\\world-regression-summary.json"
+    ],
+    "post_run_identity": {
+      "head_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+      "tree_sha": "82c6567acdc735bc02a4808159328f00722b0b6b",
+      "tracked_runtime_changes": false,
+      "untracked_qualification": "artifacts and Godot-generated .gd.uid files only"
+    }
+  },
+  "supplementary_evidence": {
+    "project_control_run": 33244990342,
+    "project_control_conclusion": "SUCCESS",
+    "project_control_exact_head": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "project_control_standard_overall": "YELLOW",
+    "project_control_directional_overall": "YELLOW",
+    "independent_linux_double_control_read_regression": "PASS_25_ASSERTIONS_0_FAILURES"
+  },
+  "verification_subject": {
+    "head_sha": "25f5ddf6280a39a44ddfc3bbec5245873021c0a1",
+    "tree_sha": "82c6567acdc735bc02a4808159328f00722b0b6b",
+    "required_verifier_record": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-002.v1.json",
+    "fresh_independent_execution_required": true,
+    "windows_validation_is_prior_evidence_not_a_substitute_for_verifier_execution": true
+  },
+  "disposition": "R8_VALIDATED_READY_FOR_FRESH_B6_REVERIFICATION_NOT_MERGED",
+  "b6_status": "READY_FOR_FRESH_REVERIFICATION",
+  "b7_status": "BLOCKED",
+  "forbidden_conclusions": [
+    "SM1 is not accepted.",
+    "B6 is not closed until a fresh independent Verifier records VERIFIED on the exact repaired composite subject.",
+    "B7 is not started.",
+    "No merge is authorized.",
+    "P7 is not activated."
+  ]
+}

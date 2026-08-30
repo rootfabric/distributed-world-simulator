@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0021",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 21,
+  "event_type": "DIRECTOR_DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-30T01:38:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-r9-reviewer-dispatch-r1",
+  "head_sha": "54a23dcb4611105e56e70d82ba5634094aeb7164",
+  "summary": "B6 is closed on fresh exact-head VERIFICATION-003. Director dispatches a new fresh independent B7 exact-head Reviewer on immutable R9. Reviewer must independently classify the full 48-commit/13-file post-B5 delta, re-prove core SM1 invariants at exact R9, assess R7/R8/R9 repair semantics, verifier evidence integrity and current PC0/control gaps, and create FINAL-REVIEW-002 only.",
+  "command": "DISPATCH_FRESH_B7_R9_EXACT_HEAD_REVIEWER",
+  "exit_code": 0,
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B6-CLOSURE-003.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-B7-FRESH-REVIEWER-INSTRUCTION-002.md"
+  ],
+  "blocker": "FRESH_EXACT_HEAD_REVIEWER_RESULT_PENDING"
+}
