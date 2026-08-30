@@ -8,11 +8,11 @@
   "short_description": "P7.0 exact-source Matter Production owner-map convergence; control/docs/tests only.",
   "purpose": "Prove exact existing owners and adapter boundaries before any P7 runtime mutation.",
   "expected_outcome": "Reviewed machine-readable P7 owner map with zero duplicate owners and a narrow P7.1 stateless authorization/composition boundary.",
-  "current_stage": "P7.0 Matter Production Owner Map / Exact-Source Review",
-  "stage_status": "P7_0_OWNER_MAP_R2_REVIEW_READY_RUNTIME_BLOCKED",
-  "progress_note": "Fresh P7.0 review found and rejected R1 actor identity mapping. R2 now maps Matter actor_id to the existing canonical V0 player_entity_id with fail-closed round-trip to PlayerRegistry; no new identity owner. Runtime remains blocked pending PASS review, post-merge PC0 and Director dispatch.",
+  "current_stage": "P7.0 ACCEPTED / P7 Pre-Dispatch",
+  "stage_status": "P7_0_ACCEPTED_AWAITING_POST_MERGE_PC0_AND_DIRECTOR_DISPATCH",
+  "progress_note": "P7.0 exact-source owner map R2 accepted after REVIEW-001 FIX_REQUIRED and REVIEW-002 PASS. Actor identity uses existing canonical player_entity_id; zero duplicate owners. Runtime mutation remains forbidden.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "next_stage": "Fresh exact-source P7.0 review; merge only on NON_RED Project Control; then post-merge PC0 and Director dispatch P7.1.",
+  "next_stage": "Merge P7.0 control; prove post-merge standard+directional PC0 NON_RED; then Director may dispatch P7.1 stateless Tool→MW4 adapter.",
   "parent_branch_or_checkpoint": "main @ 07d71da1d301a65d36f56ff8c7a42795becab88d / P7 PRE_DISPATCH",
   "base_commit": "07d71da1d301a65d36f56ff8c7a42795becab88d",
   "dependencies": [
@@ -33,7 +33,9 @@
     "tests/harness/test_v0_product_train_policy.py",
     "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
     "tests/harness/test_v0_generation80_safety_guards.py",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001.v1.json"
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/m4/**",
@@ -72,7 +74,6 @@
     "DERIVED_PRESENTATION"
   ],
   "blockers": [
-    "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
     "POST_MERGE_PC0_NON_RED_REQUIRED",
     "DIRECTOR_DISPATCH_REQUIRED"
   ],

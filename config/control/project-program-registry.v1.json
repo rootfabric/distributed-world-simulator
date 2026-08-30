@@ -4,8 +4,8 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-30T04:47:00Z",
-  "control_checkpoint": "V0 P7.0 exact-source owner-map review candidate; runtime mutation remains blocked.",
+  "updated_at_utc": "2026-08-30T04:54:00Z",
+  "control_checkpoint": "V0 P7.0 owner map ACCEPTED; P7 runtime remains blocked pending post-merge PC0 and Director dispatch.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control rebased on main f7d3deb80b67a41880d736f83b132a9a7a5a0964: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
   "programs": {
@@ -276,11 +276,11 @@
       "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
       "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
       "expected_outcome": "A fresh CRITICAL P7 Work Order and exact accepted-SM1 execution base are canonical; runtime remains blocked until owner-map review, post-merge PC0 and Director dispatch.",
-      "current_stage": "P7.0 Matter Production Owner Map / Exact-Source Review",
-      "stage_status": "P7_0_OWNER_MAP_R2_REVIEW_READY_RUNTIME_BLOCKED",
-      "progress_note": "Fresh P7.0 review found and rejected R1 actor identity mapping. R2 now maps Matter actor_id to the existing canonical V0 player_entity_id with fail-closed round-trip to PlayerRegistry; no new identity owner. Runtime remains blocked pending PASS review, post-merge PC0 and Director dispatch.",
+      "current_stage": "P7.0 ACCEPTED / P7 Pre-Dispatch",
+      "stage_status": "P7_0_ACCEPTED_AWAITING_POST_MERGE_PC0_AND_DIRECTOR_DISPATCH",
+      "progress_note": "P7.0 exact-source owner map R2 accepted after REVIEW-001 FIX_REQUIRED and REVIEW-002 PASS. Actor identity uses existing canonical player_entity_id; zero duplicate owners. Runtime mutation remains forbidden.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Fresh exact-source P7.0 review; merge only on NON_RED Project Control; then post-merge PC0 and Director dispatch P7.1.",
+      "next_stage": "Merge P7.0 control; prove post-merge standard+directional PC0 NON_RED; then Director may dispatch P7.1 stateless Tool→MW4 adapter.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -295,10 +295,9 @@
         "head_at_refresh_input": "NOT_CREATED",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": false,
-        "next_code_step": "Do not create/mutate the P7 runtime branch until fresh owner-map review, post-merge Project Control NON_RED and Director dispatch are durably recorded."
+        "next_code_step": "Do not create/mutate the P7 runtime branch until post-merge Project Control NON_RED and durable Director dispatch. P7.0 owner map is accepted."
       },
       "implementation_blockers": [
-        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
         "POST_MERGE_PC0_NON_RED_REQUIRED",
         "DIRECTOR_DISPATCH_REQUIRED"
       ],
@@ -310,10 +309,15 @@
       ],
       "health_declared": "YELLOW",
       "blockers": [
-        "P7_MATTER_OWNER_MAP_FRESH_REVIEW_REQUIRED",
         "POST_MERGE_PC0_NON_RED_REQUIRED",
         "DIRECTOR_DISPATCH_REQUIRED"
-      ]
+      ],
+      "p7_0": {
+        "status": "ACCEPTED",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+        "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
+      }
     },
     "MATTER": {
       "program": "MATTER",

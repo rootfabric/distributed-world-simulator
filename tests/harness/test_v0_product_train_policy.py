@@ -48,7 +48,10 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(P7, routing["current_checkpoint"])
         self.assertFalse(routing["runtime_mutation_allowed_now"])
         self.assertFalse(routing["next_runtime_checkpoint_eligible"])
-        self.assertIn("P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS", routing["p7_remaining_activation_prerequisites"])
+        self.assertNotIn("P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS", routing["p7_remaining_activation_prerequisites"])
+        self.assertIn("POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED", routing["p7_remaining_activation_prerequisites"])
+        self.assertIn("DIRECTOR_DISPATCH", routing["p7_remaining_activation_prerequisites"])
+        self.assertEqual("ACCEPTED", routing["p7_0"]["status"])
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
         self.assertEqual(P7, self.activation_p7["checkpoint"])
