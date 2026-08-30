@@ -277,6 +277,62 @@ func validate_morphology_evidence(evidence: Dictionary) -> bool:
             return false
     return true
 
+func get_graph_reconstruction_evidence() -> Dictionary:
+    return last_graph_reconstruction_evidence.duplicate(true)
+
+func validate_graph_reconstruction_evidence(evidence: Dictionary) -> bool:
+    if not initialized or not GraphReconstructionEvidence.validate_snapshot(evidence):
+        return false
+    if last_graph_reconstruction_evidence.is_empty():
+        return false
+    if String(evidence.get("evidence_hash", "")) != String(last_graph_reconstruction_evidence.get("evidence_hash", "")):
+        return false
+    var current: Dictionary = core.get_snapshot()
+    if int(evidence.get("generation", -1)) != int(current.get("generation", -2)):
+        return false
+    if String(evidence.get("source_precompetition_population_hash", "")) != last_precompetition_population_hash:
+        return false
+    if String(evidence.get("source_competition_hash", "")) != last_competition_hash:
+        return false
+    if String(evidence.get("source_postcompetition_population_hash", "")) != String(current.get("population_hash", "")):
+        return false
+    var current_records: Array = Array(current.get("records", []))
+    if int(evidence.get("record_count", -1)) != current_records.size():
+        return false
+    var evidence_by_id := {}
+    for value in Array(evidence.get("records", [])):
+        if not value is Dictionary:
+            return false
+        var item: Dictionary = value
+        var record_id := String(item.get("record_id", ""))
+        if record_id.is_empty() or evidence_by_id.has(record_id):
+            return false
+        evidence_by_id[record_id] = item
+    for value in current_records:
+        if not value is Dictionary:
+            return false
+        var record: Dictionary = value
+        var record_id := String(record.get("record_id", ""))
+        if not evidence_by_id.has(record_id):
+            return false
+        var item: Dictionary = evidence_by_id[record_id]
+        if int(item.get("cell_index", -1)) != int(record.get("cell_index", -2)):
+            return false
+        if String(item.get("bundle_checksum", "")) != String(record.get("bundle_checksum", "")):
+            return false
+        var bundle_value = record.get("hereditary_bundle")
+        if not bundle_value is Dictionary:
+            return false
+        var bundle: Dictionary = bundle_value
+        var lineage_value = bundle.get("lineage", bundle.get("lineage_record"))
+        if not lineage_value is Dictionary:
+            return false
+        if int(item.get("hereditary_individual_seed", -1)) != int(bundle.get("individual_seed", -2)):
+            return false
+        if String(item.get("lineage_id", "")) != String(Dictionary(lineage_value).get("lineage_id", "")):
+            return false
+    return true
+
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
 
