@@ -154,6 +154,18 @@ static func recruitment_event_hash(event: Dictionary, schema: String, version: S
 		"1" if bool(event.get("eligible", false)) else "0", String(event.get("reason", "")),
 	])).sha256_text()
 
+## Canonical whole-generation recruitment evidence hash. STREAM1 and LS3.3
+## both call this function so chunking cannot introduce a second pool-hash
+## implementation.
+static func recruitment_pool_hash(source: Array, schema: String, version: String) -> String:
+	var hashes := PackedStringArray()
+	for value in source:
+		if not value is Dictionary:
+			return ""
+		hashes.append(String(Dictionary(value).get("recruitment_event_hash", "")))
+	hashes.sort()
+	return (schema + "|" + version + "|recruitment-pool|" + "|".join(hashes)).sha256_text()
+
 static func _shadow_observation_hash(observation: Dictionary) -> String:
 	return "|".join(PackedStringArray([
 		Shadow.SCHEMA, Shadow.VERSION, Shadow.MODE,
