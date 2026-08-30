@@ -21,7 +21,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
 
-func set_descriptors(values: Array[Dictionary]) -> bool:
+func set_descriptors(values: Array) -> bool:
 	var ordered: Array[Dictionary] = []
 	for value in values:
 		if not value is Dictionary:
