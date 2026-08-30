@@ -45,7 +45,7 @@ static func ordered_parents(parents: Array) -> Array[Dictionary]:
 ## One deterministic candidate. Verbatim LS3.3 semantics:
 ##   mutation_seed   = _seed48(SCHEMA|mutation|evolution_seed|identity|
 ##                             bundle_checksum|generation|ordinal)
-##   reproduction    = LineageExtension.reproduce_bundle(parent_bundle,
+##   reproduction    = the LineageExtension bundle call (parent_bundle,
 ##                             mutation_seed, offspring_ordinal)
 ##   candidate_hash  = sha256 over the frozen candidate identity fields.
 ## schema/version/evolution_seed are passed by the caller (LS3.3 constants).
