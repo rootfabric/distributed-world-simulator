@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.2 R2 — Empty Descriptor Boundary Repair
 
 Дата: 2026-08-31  
-Статус: IMPLEMENTED REPAIR CANDIDATE / WINDOWS RE-VERIFICATION REQUIRED
+Статус: ACCEPTED REPAIR / WINDOWS VERIFIED / CLOSED
 
 Predecessor RED:
 
@@ -141,3 +141,32 @@ tracked tree clean
 ## Next
 
 VIS4.3 runtime remains blocked until this R2 exact Windows gate is GREEN.
+
+
+## Closure update
+
+Exact Windows re-verification on R2 passed:
+
+~~~text
+HEAD: 3ecee0f0fe491a6f76145eb8f2da133c820ae793
+TREE: 762806c32b43a1cc0740e7b5ab78be8e1cb108bd
+
+VIS4.2 focused: PASS (1265)
+full runner: PASS
+RC=0
+~~~
+
+Formal status:
+
+~~~text
+VIS4.2 R2
+ACCEPTED
+WINDOWS VERIFIED
+CLOSED
+~~~
+
+Final closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_2_WINDOWS_VERIFIED_CLOSED_R2_RU.md
+~~~
