@@ -10,7 +10,7 @@ const MorphologyEvidence = preload("res://scripts/research/ecology/plant_morphol
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_vis4_morphology_render_adapter.v2"
 const VERSION := "2.0.0"
-const REVISION := "ECO.EVO7-VIS4.1.R1"
+const REVISION := "ECO.EVO7-VIS4.1.R2"
 const FOUNDER_EVIDENCE := "FOUNDER_RECORD_ONLY"
 const MORPHOLOGY_EVIDENCE := "LS3.4_SOURCE_BOUND_MORPHOLOGY"
 
@@ -21,7 +21,8 @@ const RESULT_FIELDS: Array[String] = [
 	"descriptors", "adapter_hash",
 ]
 const DESCRIPTOR_FIELDS: Array[String] = [
-	"record_id", "cell_index", "bundle_checksum", "lineage_id", "individual_seed",
+	"record_id", "cell_index", "bundle_checksum", "lineage_id",
+	"hereditary_individual_seed", "development_individual_seed",
 	"evidence_level", "phenotype_hash", "plasticity_phenotype_hash", "growth_graph_hash",
 	"source_evidence_record_hash", "source_evaluation_hash",
 	"potential_morphology", "realized_topology", "functional_morphology",
@@ -184,7 +185,8 @@ func _founder_descriptor(record: Dictionary) -> Dictionary:
 		"cell_index": int(record["cell_index"]),
 		"bundle_checksum": String(record["bundle_checksum"]),
 		"lineage_id": String(identity["lineage_id"]),
-		"individual_seed": int(identity["individual_seed"]),
+		"hereditary_individual_seed": int(identity["hereditary_individual_seed"]),
+		"development_individual_seed": -1,
 		"evidence_level": FOUNDER_EVIDENCE,
 		"phenotype_hash": "",
 		"plasticity_phenotype_hash": "",
@@ -228,7 +230,8 @@ func _evidence_descriptor(record: Dictionary, evidence_by_id: Dictionary, evalua
 		"cell_index": int(record["cell_index"]),
 		"bundle_checksum": String(record["bundle_checksum"]),
 		"lineage_id": String(evidence["lineage_id"]),
-		"individual_seed": int(evidence["individual_seed"]),
+		"hereditary_individual_seed": int(evidence["hereditary_individual_seed"]),
+		"development_individual_seed": int(evidence["development_individual_seed"]),
 		"evidence_level": MORPHOLOGY_EVIDENCE,
 		"phenotype_hash": String(evidence["source_phenotype_hash"]),
 		"plasticity_phenotype_hash": String(evidence["source_plasticity_phenotype_hash"]),
@@ -254,10 +257,10 @@ func _record_identity(record: Dictionary) -> Dictionary:
 	if not lineage_value is Dictionary:
 		return {}
 	var lineage_id := String(Dictionary(lineage_value).get("lineage_id", ""))
-	var individual_seed := int(bundle.get("individual_seed", -1))
-	if lineage_id.is_empty() or individual_seed < 0:
+	var hereditary_individual_seed := int(bundle.get("individual_seed", -1))
+	if lineage_id.is_empty() or hereditary_individual_seed < 0:
 		return {}
-	return {"lineage_id": lineage_id, "individual_seed": individual_seed}
+	return {"lineage_id": lineage_id, "hereditary_individual_seed": hereditary_individual_seed}
 
 func _potential_from_record(record: Dictionary) -> Dictionary:
 	var bundle_value = record.get("hereditary_bundle")
@@ -295,13 +298,17 @@ func _validate_descriptor(descriptor: Dictionary, generation: int) -> bool:
 		return false
 	if String(descriptor.get("record_id", "")).is_empty() or int(descriptor.get("cell_index", -1)) < 0 or int(descriptor.get("cell_index", -1)) >= 1024:
 		return false
-	if String(descriptor.get("bundle_checksum", "")).length() != 64 or String(descriptor.get("lineage_id", "")).is_empty() or int(descriptor.get("individual_seed", -1)) < 0:
+	if String(descriptor.get("bundle_checksum", "")).length() != 64 or String(descriptor.get("lineage_id", "")).is_empty():
+		return false
+	if int(descriptor.get("hereditary_individual_seed", -1)) < 0:
 		return false
 	var potential_value = descriptor.get("potential_morphology")
 	if not potential_value is Dictionary or not _validate_map(potential_value, MorphologyEvidence.POTENTIAL_FIELDS, ["branching_depth"]):
 		return false
 	var evidence_level := String(descriptor.get("evidence_level", ""))
 	if generation == 0:
+		if int(descriptor.get("development_individual_seed", -2)) != -1:
+			return false
 		if evidence_level != FOUNDER_EVIDENCE:
 			return false
 		for key in ["phenotype_hash", "plasticity_phenotype_hash", "growth_graph_hash", "source_evidence_record_hash", "source_evaluation_hash"]:
@@ -311,6 +318,8 @@ func _validate_descriptor(descriptor: Dictionary, generation: int) -> bool:
 			if not descriptor.get(key, {}) is Dictionary or not Dictionary(descriptor.get(key, {})).is_empty():
 				return false
 	else:
+		if int(descriptor.get("development_individual_seed", -1)) < 0:
+			return false
 		if evidence_level != MORPHOLOGY_EVIDENCE:
 			return false
 		for key in ["phenotype_hash", "plasticity_phenotype_hash", "growth_graph_hash", "source_evidence_record_hash", "source_evaluation_hash"]:
@@ -352,7 +361,8 @@ func _descriptor_hash(descriptor: Dictionary) -> String:
 		str(int(descriptor.get("cell_index", -1))),
 		String(descriptor.get("bundle_checksum", "")),
 		String(descriptor.get("lineage_id", "")),
-		str(int(descriptor.get("individual_seed", -1))),
+		str(int(descriptor.get("hereditary_individual_seed", -1))),
+		str(int(descriptor.get("development_individual_seed", -1))),
 		String(descriptor.get("evidence_level", "")),
 		String(descriptor.get("phenotype_hash", "")),
 		String(descriptor.get("plasticity_phenotype_hash", "")),
