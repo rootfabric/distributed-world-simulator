@@ -267,6 +267,8 @@ func report_hash(report: Dictionary) -> String:
 		String(target.get("godot_version", "")),
 		String(report.get("host_fingerprint", "")),
 		Contract.REVISION,
+		FROZEN_PERF2_CONTRACT_BLOB_SHA,
+		MODE,
 		_config_hash(config),
 		";".join(sample_hashes),
 		";".join(summary_hashes),
@@ -499,14 +501,42 @@ func _find_sample(samples: Array, recipe: String, execution_mode: String, repeti
 	return {}
 
 func _sample_evidence_hash(sample: Dictionary) -> String:
-	return "|".join(PackedStringArray([
+	var metrics: Dictionary = Dictionary(sample.get("metrics", {}))
+	var timings: Dictionary = Dictionary(metrics.get("timings_ms", {}))
+	var counts: Dictionary = Dictionary(metrics.get("counts", {}))
+	var memory: Dictionary = Dictionary(metrics.get("memory_bytes", {}))
+	var stream: Dictionary = Dictionary(metrics.get("stream", {}))
+	var parts := PackedStringArray([
+		"PERF2_1_SAMPLE_EVIDENCE_V1",
 		String(sample.get("run_id", "")),
 		String(sample.get("workload_hash", "")),
 		Contract.simulation_workload_hash(Dictionary(sample.get("workload", {}))),
 		Contract.canonical_result_fingerprint(sample),
 		Contract.comparison_key(sample),
 		Contract.execution_comparison_key(sample),
-	])).sha256_text()
+	])
+	for key in [
+		"wall_ms", "generation_total_ms", "ls33_total_ms", "stream_total_ms",
+		"candidate_build_ms", "route_build_ms", "recruitment_eval_ms", "audit_ms",
+	]:
+		parts.append("%s=%.12f" % [key, float(timings.get(key, -1.0))])
+	for key in [
+		"generation", "population", "parent_count", "candidate_count",
+		"chunk_count", "max_parent_chunk", "max_candidate_chunk",
+	]:
+		parts.append("%s=%d" % [key, int(counts.get(key, -1))])
+	for key in ["engine_static_bytes", "engine_static_peak_bytes"]:
+		parts.append("%s=%d" % [key, int(memory.get(key, -1))])
+	for key in ["process_rss_bytes", "process_peak_rss_bytes"]:
+		parts.append("%s=%s" % [key, _nullable_int_string(memory.get(key))])
+	for key in ["stream_calls", "chunks_processed", "serial_audit_calls", "oracle_elided_generations"]:
+		parts.append("%s=%d" % [key, int(stream.get(key, -1))])
+	return "|".join(parts).sha256_text()
+
+func _nullable_int_string(value) -> String:
+	if value == null:
+		return "null"
+	return str(int(value))
 
 func _summary_evidence_hash(summary: Dictionary) -> String:
 	return "|".join(PackedStringArray([
