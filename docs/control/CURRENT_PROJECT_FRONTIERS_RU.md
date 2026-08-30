@@ -1,219 +1,141 @@
 # Distributed World Simulator — Current Project Frontiers
 
-**Operational owner:** `main`  
-**Canonical main at this refresh:** `598e92bb29a147bf12208d8549ddecaa4c9781ab`  
-**Architecture baseline:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation:** `80`  
-**Control plane:** `PC0-2026-08-10-R1`  
-**Harness base revision:** `H0-2026-08-11-R1`  
-**Harness P-train amendment:** `H0-PTRAIN-2026-08-18-R1`
+**Refresh date:** 2026-08-30  
+**Canonical main:** `acb9379cacc413fc25a65117fb1627f5a01b9736`  
+**Main tree:** `7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68`  
+**Purpose:** human-readable routing snapshot. Machine acceptance truth remains in `config/control/**`.
 
-> Machine project-state truth remains `config/control/project-program-registry.v1.json`. Product-train succession rules are additionally owned by `config/control/harness/v0-product-train-policy.v1.json`.
+> Branch existence or an open PR does not mean that branch is an active product frontier. Historical repair/evidence carriers are grouped separately.
 
-## Owner-directed addendum — 2026-08-22 (control candidate)
-
-Факты, зафиксированные владельцем проекта после этой редакции снапшота:
-
-1. **P5 принят.** Accepted product lineage: `491ca7d058690d3de5fcea5e41aaee230a31b3ab`
-   («Merge V0-P5 equipment/tools accepted product candidate», ветка
-   `origin/accepted/v0-p4-real-resource-construction`). Это product base до явной
-   смены владельцем.
-2. **EG0–EG3 интегрированы в main** (PR #194 / #197 / #200); кампания
-   `PRE_P6_EDGE_GATEWAY_FOUNDATION` продолжается стадией EG4;
-   `EDGE_GATEWAY_FOUNDATION_ACCEPTED` остаётся блокером P6.
-3. **CONV-0 donor lane и Two-line rule** введены секциями §14–§15 в
-   `docs/plans/V0_PRE_P6_EDGE_GATEWAY_FOUNDATION_ROADMAP_RU.md`:
-   продуктовая база и сетевая база не смешиваются до P6; интеграционная
-   проверка выполняется лабораторией-донором.
-4. **Открыт трек генерации** `docs/plans/V0_GENERATION_TRACK_PLAN_RU.md`
-   (GEN-A PlanetDefinition + world hash handshake обязателен до P6.7).
-5. Рабочий чекаут воркспейса выровнен на accepted P5 lineage; устаревший снимок
-   v0-s1 заархивирован (stash + patch в workspace archive).
-
-Этот аддендум — control candidate: факты подлежат независимой проверке при ревью
-ветки `control/pre-p6-roadmap-amendments` перед канонизацией в main.
-
-## Главный продуктовый приоритет
-
-Основная playable линия сейчас — V0/P.
+## 1. Product critical path
 
 ```text
-P0 playable frontier
-→ P1 world items / containers
-→ P2 reconnectable shared state
-→ P3 resource mining
-→ P4 real-resource Construction       ← CURRENT CLOSURE
-→ P5 equipment / tools                 ← NOT ELIGIBLE YET
-→ P6 persistent shared outpost         ← NOT ELIGIBLE YET
-→ post-P6 seamless decision
-→ V0-SM1 or explicit defer
-→ P7 bounded terrain mutation
-→ P8 first mobile construct / ship
+P4 ACCEPTED
+  ↓
+P5 ACCEPTED
+  ↓
+P6 ACCEPTED
+  ↓
+Edge Gateway Foundation ACCEPTED
+  ↓
+SM1 runtime MERGED TO MAIN
+  ↓
+SM1 checkpoint acceptance / control reconciliation   CURRENT PRODUCT GATE
+  ↓
+RF0 semantic boundary                               architecture-only, non-blocking
+  ↓
+P7 bounded terrain mutation                         NEXT RUNTIME PRODUCT CHECKPOINT
+  ↓
+V0 PLAYABLE SEAMLESS PLANET                         key product milestone
+  ↓
+P8 first mobile construct
+  ↓
+RF1/RF2 retained replication adoption
+  ↓
+static N-authority scale
+  ↓
+dynamic placement later
 ```
 
-P — последовательный product train. Следующий checkpoint не получает runtime dispatch до принятия предыдущего checkpoint и отдельной main-owned successor activation.
+## 2. V0 / SM1 — current product frontier
 
-Подробные правила:
+Runtime R9 is already in canonical main through PR #327.
 
-`docs/control/V0_P_PRODUCT_TRAIN_RULES_RU.md`
+- merged source: `repair/m7-camera-basis-sync-r9`;
+- source HEAD: `b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f`;
+- main merge: `acb9379cacc413fc25a65117fb1627f5a01b9736`;
+- verified tree: `7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68`.
 
-## Current P4 state
+Formal checkpoint closure remains on PR #326:
 
-P4 runtime implementation завершён и заморожен.
-
-Historical generation-80 activation/pre-runtime subject remains immutable provenance:
+- branch `control/v0-sm1-b7-final-reconciliation-r2`;
+- HEAD `3c7b395d351fa520c144240561b75dd9ef34170d`;
+- OPEN / DRAFT at this refresh.
 
 ```text
-47ff18cf603bbf98bb67f7f62962e050f8606542
+runtime merged != checkpoint accepted
 ```
 
-Это dispatch/input snapshot, а не текущая runtime truth и не checkpoint acceptance claim.
+P7 must not start until SM1 acceptance is durably reconciled or main records an explicit superseding decision.
 
-Exact implementation/evidence target:
+Historical SM1 repair/control PRs #282-#322 remain evidence/forensics carriers. They are not independent active runtime frontiers after R9 merged to main.
+
+## 3. Replication Foundation — newly planned architecture lane
+
+Planning branch: `docs/dws-replication-foundation-roadmap-r1`.
+
+Scope: ADR-021 + RF roadmap amendment + work-map/frontier refresh + NX8/Distributed Runtime cross-links.
+
+No runtime mutation is authorized by this branch.
 
 ```text
-2a6721cdf02fa1134c59d1ab98bb7b597c66821d
+RF0 semantic boundary         NOW: plan/contracts only
+RF1 shadow retained cache     later
+RF2 first read-only consumer  later
+PO0 placement observer        later / independent / SHADOW
 ```
 
-Fresh independent P4 Reviewer и Verifier ранее проверили этот exact runtime/evidence target. Последующие проблемы относятся к Harness/control closure, а не к новому P4 runtime scope.
+RF0 is deliberately non-blocking for P7.
 
-Текущий closure repair:
+## 4. ECO — active research/performance frontier
+
+Current visible parallel chain:
 
 ```text
-PR #127
-branch: repair/v0-p4-closure-ledger-state-r1
-candidate: 11969a954ceb9baab1b4a55cb2162fa1069fb0b2
+PAR1 R2  PR #323  feature/eco-evo7-par1-parallel-backend-selection-r2
+   ↓
+PAR2 R2  PR #324  feature/eco-evo7-par2-parallel-only-recruitment-r2
+   ↓
+PAR3 R2  PR #325  feature/eco-evo7-par3-parallel-candidate-reproduction-r2
 ```
 
-Live-frontier routing repair уже интегрирован:
+Current PAR3 head at refresh: `735b3fd40cf18337fa33f51c79578dd5c03aab42`.
+
+ECO remains research/non-blocking for V0 unless main registers an explicit dependency.
+
+## 5. FABRIC — active research frontier
+
+PR #317: `research/fabric0-compositional-world-fabric-r1`, HEAD `e011a794ef2e631fc285c9958a17f3a6a050408f` at refresh.
+
+FABRIC experiments remain separate from V0/RF authority and persistence ownership.
+
+## 6. NX — bounded convergence candidate
+
+PR #97 remains open/draft: `feature/h0-2-nx-c1-owner-authority-r3`, HEAD `1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc`.
+
+NX.C1 remains opt-in and does not replace the current SERVER_PREDICTED V0 baseline until its own verification/acceptance closes.
+
+NX8 remains the future owner of interest-management and replication-budget policy. RF does not replace NX8; RF supplies publication/retention semantics that NX8 may consume.
+
+## 7. Stable/frozen foundations
+
+- Matter: MW10 accepted stable baseline;
+- S1 Distributed Compute: stable proposal-only worker foundation;
+- Construction composition T1B: accepted/frozen evidence;
+- G8 World Generation: accepted/frozen baseline in project registry;
+- Edge Gateway Foundation: accepted and consumed by P6/SM1.
+
+Do not restart these as new foundations when implementing P7/RF.
+
+## 8. Research donors, not product bases
+
+SM0 seamless handoff, historical research SM1-I2, MRPF/H and RL research may donate contracts/ideas/tests. Wholesale research merges into product lineage remain forbidden unless main explicitly selects a bounded integration.
+
+## 9. What is actually being done next
 
 ```text
-PR #130 merged
-main: 598e92bb29a147bf12208d8549ddecaa4c9781ab
+1. Close SM1 canonical acceptance/control reconciliation.
+2. Merge/review RF roadmap documentation; no runtime mutation.
+3. Activate P7 from the exact accepted SM1 successor base.
+4. Build bounded authoritative terrain/material mutation.
+5. Prove two-client + reconnect/restart + seam continuity.
+6. Reach V0 PLAYABLE SEAMLESS PLANET graphical checkpoint.
+7. Continue P8.
+8. Start RF1 shadow cache when product sequencing permits.
+9. RF2 migrates one read-only projection consumer.
+10. Only later evaluate static-N scale and dynamic placement.
 ```
 
-Следующий P4 control path:
+## 10. Stop conditions
 
-```text
-confirm exact-main Project Control NON_RED after #130
-→ rerun #127 Project Control against corrected main
-→ integrate #127 only if exact reviewed subject remains valid
-→ continue append-only P4 closure ledger
-→ record remaining predicates
-→ propose/accept V0_P4 checkpoint
-→ only then activate P5
-```
-
-До этого момента P5 runtime mutation запрещён.
-
-## Mutation lease
-
-До H0.3 разрешён максимум один autonomous runtime mutation worker.
-
-Сейчас lease остаётся fail-closed привязан к:
-
-```text
-program: V0
-checkpoint: V0_P4_REAL_RESOURCE_CONSTRUCTION
-branch: feature/v0-p4-construction-real-resources
-state: RESERVED_FOR_V0_P4_CLOSURE_NO_ACTIVE_RUNTIME_MUTATION
-```
-
-P4 closure не потребляет runtime worker, но lease не переводится автоматически на P5. После P4 acceptance main должен отдельным control update назначить P5 и exact accepted P4 successor base.
-
-## P5 target
-
-P5 делает canonical items реально используемыми equipment/tools.
-
-Минимальная вертикаль:
-
-```text
-canonical item
-→ server-authoritative equip / unequip
-→ replicated equipment state
-→ reconnect restores same equipment
-→ a real gameplay action requires/uses the equipped tool
-```
-
-Предпочтительный первый gameplay binding — mining tool. CH9.6 может быть donor presentation/equipment semantics, но не product base и не Item Graph authority.
-
-## P6 target
-
-P6 — первый стабильный persistent shared-outpost baseline:
-
-```text
-join
-→ mine
-→ inventory / container
-→ equip tool
-→ build from real resources
-→ second client converges
-→ reconnect
-→ server restart
-→ same canonical outpost reconstructed
-```
-
-Минимальные acceptance outcomes:
-
-- 5 чистых end-to-end повторов;
-- 30-minute two-client soak;
-- persistent inventory/equipment/Construction reconstruction;
-- zero duplicate canonical truth.
-
-## Post-P6 seamless insertion
-
-После P6 P7 не auto-dispatchится.
-
-Обязательные документы:
-
-- `docs/plans/V0_POST_P6_SEAMLESS_INTEGRATION_RU.md`
-- `docs/plans/V0_MULTI_ROUTE_PROJECTION_FABRIC_RU.md`
-
-Main должен записать одно решение:
-
-```text
-ACTIVATE_V0_SM1
-или
-DEFER_V0_SM1_WITH_EXPLICIT_HUMAN_DECISION
-```
-
-SM0/MRPF при этом используются как evidence/capability donors. Future V0-SM1 стартует от accepted P6 baseline, а не от historical lab branch.
-
-## NX
-
-NX/H0.2 остаётся самостоятельной HIGH-risk network-authority линией. V0/P продолжает использовать `SERVER_PREDICTED` как базовый network model, пока canonical NX acceptance/control явно не изменит это правило.
-
-Любая реальная потребность P в новом protocol ownership, authority transfer/reconciliation model или Character ownership change fail-closed маршрутизируется в NX. Это конкретная dependency, а не причина блокировать P всей NX веткой целиком.
-
-## ECO
-
-ECO — experimental/research frontier и сейчас **не блокирует V0/P**.
-
-Harness правило:
-
-```text
-research status alone != product blocker
-```
-
-Research branch становится P blocker только при явной main-registered dependency, обязательном canonical foundation precondition, доказанном ownership/directional-watch intersection или явном потреблении research capability в P Work Order.
-
-Следовательно, ECO может продолжать свои эксперименты независимо и не входит в P4/P5/P6 critical path.
-
-## Fail-closed boundaries for P
-
-Остановить текущий P checkpoint и перепланировать, если требуется:
-
-```text
-second Item Graph owner
-second Construction truth
-second persistence/durability owner
-private V0 network authority
-new network protocol/authority foundation without NX route
-successor runtime dispatch before predecessor checkpoint acceptance
-successor branch not based on exact main-declared accepted predecessor lineage
-second pre-H0.3 runtime mutation worker
-P7 dispatch after P6 without durable seamless activation/defer decision
-research branch used as implicit product blocker without a registered dependency
-```
-
-Historical branches remain evidence/capability donors unless main-owned control explicitly declares an exact head as the product execution input.
+Stop and return to architecture/control if implementation requires a second Item Graph/Construction/Persistence/Directory/Authority owner, Gateway canonical gameplay state, client-private terrain truth, S1 Worker authoritative publication, RF cache as recovery truth, mandatory new broker/database for RF0/RF1, dynamic split/merge before static correctness, or a successor runtime before predecessor acceptance.
