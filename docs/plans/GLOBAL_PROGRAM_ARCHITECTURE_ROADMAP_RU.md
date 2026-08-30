@@ -7,6 +7,60 @@
 
 ---
 
+## 0. Current amendment — 2026-08-30 / Replication Foundation
+
+**Refresh base:** `main @ acb9379cacc413fc25a65117fb1627f5a01b9736`
+
+This amendment is newer than the historical R2 operational examples below. Fast-moving frontier truth remains in `config/control/project-program-registry.v1.json` and `docs/control/CURRENT_PROJECT_FRONTIERS_RU.md`.
+
+New global invariants:
+
+```text
+REPLICATION != AUTHORITY
+REPLICA CACHE != PERSISTENCE
+INTEREST != ACTIVATION
+SERVER PROCESS != WORLD IDENTITY
+```
+
+DWS adds a logical non-canonical Replication Plane boundary, not a new canonical service. The detailed decision and train are:
+
+- `docs/architecture/adr/ADR-021-non-canonical-replication-plane.md`
+- `docs/plans/DWS_REPLICATION_FOUNDATION_ROADMAP_AMENDMENT_RU.md`
+
+Current product sequencing:
+
+```text
+SM1 runtime merged
+→ SM1 canonical acceptance/control reconciliation
+→ RF0 semantic boundary (architecture/contracts only; non-blocking)
+→ P7 bounded terrain mutation
+→ V0 PLAYABLE SEAMLESS PLANET
+→ P8 first mobile construct
+→ RF1 shadow retained cache
+→ RF2 first read-only consumer
+→ static N-authority scale
+→ dynamic placement only later
+```
+
+RF0 does not consume the V0 runtime mutation lease and adds no service, persistent database or gameplay network hop.
+
+NX8 remains the owner of interest-management and replication-budget policy. RF owns only post-commit publication/retention/read-only distribution semantics.
+
+Future placement follows:
+
+```text
+static correctness
+→ static N-authority
+→ Placement Observatory / SHADOW
+→ dynamic placement
+→ split/merge
+→ interaction-aware meshing
+```
+
+Do not infer that the older active-sync/frontier examples later in this document are current operational branch truth.
+
+---
+
 ## 1. Назначение global plan
 
 Проект развивается несколькими параллельными программами:
