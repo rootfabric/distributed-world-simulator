@@ -14,10 +14,10 @@ if [[ ! -f "$ROOT/.godot/uid_cache.bin" ]]; then
   "$GODOT_BIN" --headless --editor --path "$ROOT" --import
 fi
 
-./RUN_ECO_EVO7_VIS4_0_TESTS.sh
+bash ./RUN_ECO_EVO7_VIS4_0_TESTS.sh
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_ls34_local_competition_acceptance.gd
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_ls36_rule_workbench_acceptance.gd
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd
-./RUN_ECO_EVO7_VIS2_TESTS.sh
+bash ./RUN_ECO_EVO7_VIS2_TESTS.sh
 
 echo "ECO.EVO7 VIS4.1 Source-Bound Morphology Evidence candidate: PASS"
