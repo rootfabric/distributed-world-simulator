@@ -1,0 +1,45 @@
+name: P7.1 Frozen Source Export
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-1-source-export.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout frozen runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: 30d50c1d047a2b36d3a50e862c239da0967dd8ac
+          fetch-depth: 0
+
+      - name: Assert exact source head
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "30d50c1d047a2b36d3a50e862c239da0967dd8ac"
+          echo "P7_1_EXACT_SOURCE_HEAD=$(git rev-parse HEAD)"
+
+      - name: Build immutable source archive
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ \
+            -o p7-1-frozen-source-30d50c1d.tar.gz \
+            30d50c1d047a2b36d3a50e862c239da0967dd8ac
+          sha256sum p7-1-frozen-source-30d50c1d.tar.gz | tee p7-1-frozen-source.sha256
+
+      - name: Upload exact source tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-1-frozen-source-30d50c1d
+          path: |
+            p7-1-frozen-source-30d50c1d.tar.gz
+            p7-1-frozen-source.sha256
+          if-no-files-found: error
+          retention-days: 7
