@@ -308,6 +308,17 @@ func _run_repetition(
 		if wb.advance_generations(1).is_empty():
 			return {}
 
+	var telemetry_before := {
+		"stream_calls": 0,
+		"chunks_processed": 0,
+		"serial_audit_calls": 0,
+		"oracle_elided_generations": 0,
+	}
+	if execution_mode == "STREAM1":
+		var raw_before: Dictionary = executor.get_telemetry()
+		for key in telemetry_before.keys():
+			telemetry_before[key] = int(raw_before.get(key, 0))
+
 	var probe := Probe.new()
 	var started := probe.begin()
 	if not bool(started.get("success", false)):
@@ -378,7 +389,9 @@ func _run_repetition(
 	if execution_mode == "STREAM1":
 		var raw_telemetry: Dictionary = executor.get_telemetry()
 		for key in telemetry.keys():
-			telemetry[key] = int(raw_telemetry.get(key, 0))
+			telemetry[key] = int(raw_telemetry.get(key, 0)) - int(telemetry_before.get(key, 0))
+			if int(telemetry[key]) < 0:
+				return {}
 		chunk_count = int(final_ls33.get("stream_chunk_count", 0))
 		max_parent_chunk = int(raw_telemetry.get("max_parent_chunk_seen", 0))
 		max_candidate_chunk = int(raw_telemetry.get("max_candidate_chunk_seen", 0))
