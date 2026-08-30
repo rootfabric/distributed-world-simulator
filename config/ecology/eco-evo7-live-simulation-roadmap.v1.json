@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R14",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R15",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/LS4",
+  "current_checkpoint": "ECO.EVO7/LS4.0",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -116,10 +116,12 @@
       "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md"
     },
     {
-      "id": "LS4",
-      "name": "Next ecology complexity stage",
-      "status": "READY_AFTER_STREAM1_ACCEPTED",
-      "detail": "STREAM1 predecessor gate is satisfied. LS4 ecology-complexity work is now unblocked; any separate distributed STREAM transport extension remains an independent architecture checkpoint."
+      "id": "LS4.0",
+      "name": "Temporal Ecology — Deterministic Seasonal Forcing / Succession Response",
+      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+      "detail": "Opt-in 12-phase deterministic forcing derives LS3.1-compatible temperature/light/rainfall/soil-moisture fields from one immutable base environment. LS3.3/LS3.4 validate exact hashes and frozen terrain/substrate identity before causal use. Static control preserves legacy exact behavior; STREAM1 remains compatible.",
+      "runtime_code_head": "fa63b7b680cac6bc25889d30ff99df86fc841df3",
+      "verification_harness_head": "4328583fd5f01f7a22304cd4d354ca54a59ac4aa"
     }
   ],
   "ls3_final": {
@@ -193,8 +195,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "LS4",
-    "status": "PAR2_PAR3_FOUNDATION_STREAM1_R1_ACCEPTED",
+    "next_checkpoint": "LS4.0_USES_ACCEPTED_STREAM1_NO_BACKEND_CHANGE",
+    "status": "STREAM1_R1_ACCEPTED_LS4_0_TEMPORAL_INPUT_LAYER_CODE_COMPLETE",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -261,5 +263,70 @@
     "import_exit_code": 0,
     "legacy_import_parse_diagnostics": "PRE_EXISTING_BASELINE_NOT_STREAM1_REGRESSION",
     "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_ACCEPTANCE_RU.md"
+  },
+  "project_control_note": "This file is branch-local ECO.EVO7 research state. It does not override the main-owned canonical ECO frontier in config/control/project-program-registry.v1.json.",
+  "ls4": {
+    "revision": "ECO.EVO7-LS4.0-R1",
+    "mode": "RESEARCH_SHADOW_ONLY",
+    "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
+    "base_control_head": "5beb603ebdae2e89ad8f66f469e7ecc12312c29e",
+    "accepted_stream1_target_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "runtime_code_head": "fa63b7b680cac6bc25889d30ff99df86fc841df3",
+    "verification_harness_head": "4328583fd5f01f7a22304cd4d354ca54a59ac4aa",
+    "execution_model": "OPT_IN_DETERMINISTIC_PER_GENERATION_ENVIRONMENT_FORCING",
+    "temporal_semantics": "12_GENERATION_RESEARCH_PHASE_CYCLE_NOT_TIME_FABRIC",
+    "cycle_generations": 12,
+    "profiles": [
+      "STATIC_CONTROL",
+      "TEMPERATE_SEASONAL",
+      "MONSOON_SEASONAL"
+    ],
+    "dynamic_fields": [
+      "temperature_c",
+      "incident_light",
+      "rainfall_forcing",
+      "soil_moisture"
+    ],
+    "frozen_static_fields": [
+      "index",
+      "x",
+      "y",
+      "east_m",
+      "north_m",
+      "land_mask",
+      "surface_water_fraction",
+      "soil_texture_sand",
+      "soil_texture_clay",
+      "soil_texture_loam",
+      "soil_water_retention",
+      "elevation_m",
+      "local_relief_m",
+      "drainage_index"
+    ],
+    "source_hash_authority": "LS3.1_ENVIRONMENT_FIELD_CELL_AND_FIELD_HASHES",
+    "causal_order": [
+      "IMMUTABLE_LS3_1_BASE_FIELD",
+      "LS4_FORCING_PROPOSAL",
+      "LS33_LS34_EXACT_ENVIRONMENT_VALIDATION",
+      "STREAM1_OR_LEGACY_GENERATION_COMPUTE",
+      "LS33_ATOMIC_GENERATION_COMMIT",
+      "LS34_COMPETITION",
+      "LS35_AND_OBSERVATORY_POST_HOC"
+    ],
+    "authorities": {
+      "time_fabric_owner": false,
+      "environment_simulation_owner": false,
+      "terrain_owner": false,
+      "material_ontology_owner": false,
+      "production_world_write": false,
+      "ecology_generation_commit": false,
+      "persistence_write": false,
+      "network_write": false
+    },
+    "acceptance_gate": "FRESH_EXACT_WINDOWS_FOCUSED_PASS_STREAM1_SEASONAL_6_OF_6_TRANSITIVE_14_OF_14_IMMUTABLE_IDENTITY",
+    "focused_test": "tests/ecology/eco_evo7_ls40_seasonal_succession_acceptance.gd",
+    "transitive_runner": "RUN_ECO_EVO7_LS40_TESTS.ps1",
+    "checkpoint_doc": "docs/checkpoints/2026-08-30_ECO_EVO7_LS40_SEASONAL_SUCCESSION_R1_RU.md",
+    "canonical_main_relation": "BRANCH_LOCAL_RESEARCH_ONLY_DOES_NOT_OVERRIDE_MAIN_ECO_CONV0_CAL1_FRONTIER"
   }
 }
