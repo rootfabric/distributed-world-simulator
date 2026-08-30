@@ -1439,3 +1439,274 @@ persistent constrained graph
 Это уже единая research causal path.
 
 Следующая зрелость требует adaptive multi-event manifold semantics.
+
+
+## 75. Convergence under refinement является частью physical evidence
+
+FABRIC0.11 показал, что tiny event-root tolerance может сосуществовать с coarse trajectory error.
+
+FABRIC0.12 therefore adds a stronger rule:
+
+> Если observable physical result зависит от numerical resolution, checkpoint должен показывать convergence under systematic refinement или честно объявлять отсутствие convergence evidence.
+
+Не достаточно:
+
+```text
+solver residual small
+```
+
+Нужно смотреть:
+
+```text
+refine integration
+→ physical observable converges
+```
+
+где это возможно.
+
+## 76. Error budget нужно раскладывать по источникам
+
+Минимально:
+
+- integration truncation error;
+- event localization error;
+- algebraic/contact solve error;
+- geometric feature tolerance;
+- iterative linear-solve error;
+- floating-point roundoff.
+
+Одна цифра `tolerance` не описывает correctness мира.
+
+FABRIC docs/evidence должны сохранять это decomposition.
+
+## 77. Same-time manifold event может требовать topology fixed point
+
+At degenerate geometry exact contact set может быть neither left-limit nor right-limit manifold.
+
+Поэтому event semantics может требовать:
+
+```text
+pre manifold
+→ degenerate manifold
+→ directed/post manifold
+→ recompile
+→ fixed point
+```
+
+Это не лишняя procedural сложность.
+
+Это physical consequence geometry degeneracy.
+
+## 78. Feature identity является lineage graph, а не только stable string
+
+Stable exact ID works while same feature survives.
+
+Но real geometry can:
+
+```text
+vertex
+→ edge
+→ face
+
+or
+
+face
+→ several child features
+```
+
+Persistent relation identity therefore needs ancestry/overlap semantics.
+
+String equality is one special case of identity continuity.
+
+## 79. Warm-state remap должен быть conservative where the quantity permits it
+
+Если numerical hint represents an additive reaction-like quantity and one feature splits, preserving total value across descendants is a useful default research contract.
+
+If features merge, compatible child values can aggregate.
+
+Но не every solver variable is additive.
+
+Therefore lineage remap policy must be quantity-aware in future systems.
+
+0.12 demonstrates only scalar additive warm hints.
+
+## 80. Cache key describes numerical structure, not physics
+
+Sparse pattern cache may key on:
+
+```text
+island identity
++
+nonzero matrix structure
+```
+
+Coefficient values can change while pattern stays same.
+
+Therefore cache hit means:
+
+```text
+reuse numerical preparation
+```
+
+not:
+
+```text
+reuse solved physical answer
+```
+
+FABRIC0.12 explicitly verifies result changes under coefficient change.
+
+## 81. Real concurrency needs deterministic prepare and commit boundaries
+
+Actual worker threads introduce nondeterministic completion order.
+
+Physical semantics must not follow finish order.
+
+Research contract:
+
+```text
+canonical prepare
+→ concurrent solve
+→ join
+→ canonical commit/order
+```
+
+Threads can race in wall-clock completion, but not in semantic commit.
+
+## 82. Parallel reproducibility не означает deterministic performance
+
+FABRIC can require deterministic physical output.
+
+It should not claim:
+
+- same thread scheduling;
+- same solve duration;
+- same cache timing;
+- same OS wake order.
+
+Performance nondeterminism is compatible with physical determinism if computational state remains separated.
+
+## 83. Sleep/wake — derived scheduler state
+
+Sleeping object/island is not physically frozen because «sleep=true is world truth».
+
+Instead:
+
+```text
+physical observables satisfy quiet criteria
+→ scheduler may skip/reduce work
+```
+
+Any physical stimulus must wake/revalidate it.
+
+Sleep should remain reconstructible from physical state/history or disposable without changing canonical truth.
+
+## 84. Reduced models are legitimate falsification tools only with explicit scope
+
+A simplified model can isolate one architecture question better than the whole engine.
+
+Но запрещено делать:
+
+```text
+reduced proof
+→ silently claim full 3D production property
+```
+
+FABRIC0.12 explicitly proves adaptive/manifold semantics in reduced orientation-aware geometry.
+
+The full 3D persistent contact integration remains open.
+
+## 85. Analytical references are gold when available
+
+For synthetic research laws where exact solution exists, acceptance should use it.
+
+Analytic zero crossings in 0.12 give much stronger evidence than comparing one numerical run with another.
+
+When exact reference unavailable, future checkpoints should use:
+
+- refinement studies;
+- invariant audits;
+- cross-method comparison;
+- manufactured solutions.
+
+## 86. Multiple events must restart time integration from each event fixed point
+
+Wrong:
+
+```text
+take large candidate step
+find event A
+record it
+continue using end state from pre-event candidate
+```
+
+Right:
+
+```text
+localize A
+→ event fixed point
+→ restart flow
+→ later discover B
+```
+
+FABRIC0.12 processes two physical event instants this way.
+
+## 87. Adaptive work itself is evidence
+
+More accurate physical answer can require more accepted/rejected steps.
+
+Therefore validation should preserve:
+
+- accepted steps;
+- rejected steps;
+- min/max step;
+- solver work;
+- event localization iterations.
+
+Performance is not separate from numerical architecture.
+
+## 88. Unified integration is now the next architectural test
+
+FABRIC has two strong but partially separate lines:
+
+### Full contact graph line
+
+0.9–0.11:
+
+```text
+persistent sparse multi-body contacts
+event-time graph mutation
+PCG
+```
+
+### Adaptive manifold line
+
+0.12:
+
+```text
+adaptive convergence
+multiple events
+feature lineage
+actual threads
+```
+
+Next architecture must combine them.
+
+If they cannot be combined cleanly, the abstraction boundary is incomplete.
+
+## 89. Текущий образ FABRIC после 0.12
+
+```text
+semantic topology
+→ physical relation graph
+→ dimension/law compilation
+→ adaptive hybrid DAE flow
+→ geometry manifold events
+→ lineage-preserving topology iteration
+→ sparse parallel numerical execution
+→ causal evidence/history
+```
+
+This remains a research hypothesis.
+
+Production ownership stays with Construction.
