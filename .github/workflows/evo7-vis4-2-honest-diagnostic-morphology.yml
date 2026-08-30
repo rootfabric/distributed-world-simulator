@@ -1,4 +1,4 @@
-name: ECO EVO7 VIS4.2 Honest Diagnostic Morphology
+name: ECO EVO7 VIS4.2 R2 Honest Diagnostic Morphology
 
 on:
   push:
@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   closure:
-    name: exact VIS4.2 honest diagnostic morphology closure
+    name: exact VIS4.2 R2 honest diagnostic morphology closure
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
 
@@ -71,6 +71,6 @@ jobs:
           "path=$godot" >> $env:GITHUB_OUTPUT
           Write-Host "Godot identity: $version"
 
-      - name: Run VIS4.2 closure
+      - name: Run VIS4.2 R2 closure
         run: |
           .\RUN_ECO_EVO7_VIS4_2_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
