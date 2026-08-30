@@ -42,7 +42,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.4: `FABRIC0_4_POWER_MAP_RU.md`
    - FABRIC0.5: `FABRIC0_5_NONLINEAR_DIMENSIONS_RU.md`
    - FABRIC0.6: `FABRIC0_6_NONSMOOTH_WORLD_RU.md`
-   - FABRIC0.7: соответствующий design note после его появления
+   - FABRIC0.7: `FABRIC0_7_STATEFUL_HYBRID_TIME_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -72,6 +72,10 @@ nonsmooth HybridRelation + complementarity + contact/friction
 FABRIC0.7
 STATEFUL HYBRID TIME
 continuous state + event localization + reset + discrete mode + topology transaction
+        ↓
+FABRIC0.8
+COUPLED HYBRID DAE / EVENT ITERATION
+unified temporal + algebraic physical solve
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -218,33 +222,51 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-На момент создания этого recovery-файла FABRIC0.6 завершён как research candidate.
+FABRIC0.7 завершён как research candidate.
+
+Exact evidence:
+
+```text
+FABRIC0.7 focused                  88/88 PASS
+FABRIC0.6 nonsmooth regression    121/121 PASS
+FABRIC0.6 compatibility            42/42 PASS
+playground                         PASS
+editor parse/compile               CLEAN
+remote/local executable bytes      IDENTICAL
+```
+
+FABRIC0.7 доказал:
+
+- event localization внутри timestep;
+- transactional macrostep;
+- simultaneous pre-state reset;
+- explicit mode transitions;
+- hysteresis;
+- irreversible topology mutation;
+- deterministic event ledger;
+- rollback invalid topology transaction;
+- Zeno/event-storm fail-closed.
 
 Следующая задача:
 
-**FABRIC0.7 — STATEFUL HYBRID TIME**
+**FABRIC0.8 — COUPLED HYBRID DAE / EVENT ITERATION**
 
-Цель — добавить универсальную временную семантику:
+Цель — перестать держать hybrid ODE и FABRIC physical equation islands рядом, но отдельно. Они должны стать одной coupled temporal system.
+
+Критический future experiment:
 
 ```text
-continuous state
-event surface
-discrete mode
-guard
-reset map
-event-time localization
-atomic topology transaction
-deterministic event identity/history
+two masses
++ geometry gap
++ unilateral contact
++ impact impulse
++ restitution
++ friction
++ same-time event iteration
++ topology mutation
 ```
 
-Ключевые experiments:
-
-- bouncing impact + restitution;
-- Schmitt-like hysteresis;
-- irreversible breaker/bond break;
-- simultaneous reset semantics;
-- topology-transaction rollback;
-- event-storm/Zeno fail-closed.
+без device-specific collision truth.
 
 ## 9. Правило новой сессии
 
@@ -256,6 +278,9 @@ deterministic event identity/history
 - почему dimensions executable;
 - почему smooth law является частным случаем HybridRelation;
 - почему complementarity представлена branch manifolds;
+- почему FLOW / JUMP / TOPOLOGY TRANSACTION разделены;
+- почему reset RHS читают один pre-event snapshot;
+- почему macrostep rollback фундаментален;
 - почему device names запрещены в kernel;
 - кто canonical owner construct semantics;
 - какие non-claims всё ещё действуют;
