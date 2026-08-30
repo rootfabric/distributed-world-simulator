@@ -136,8 +136,6 @@ func step_generation() -> Dictionary:
     last_competition_profile.clear()
     last_morphology_records.clear()
     last_morphology_evidence.clear()
-    last_morphology_records.clear()
-    last_morphology_evidence.clear()
     last_survivor_count = int(pre["record_count"])
 
     var competition_pass_ms := 0.0
@@ -806,3 +804,5 @@ func _reset() -> void:
     last_culled_count = 0
     last_profile.clear()
     last_competition_profile.clear()
+    last_morphology_records.clear()
+    last_morphology_evidence.clear()
