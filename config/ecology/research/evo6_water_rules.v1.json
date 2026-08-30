@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo6_water_rules.v1",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "water-01-submerged-terrestrial-collapse",
+      "when": {"in_water": true},
+      "target": {"root_type": "terrestrial"},
+      "effect": {"vitality": -1.2, "death_chance": 0.18, "seed_establishment": -1.0}
+    },
+    {
+      "id": "water-02-submerged-amphibious-boom",
+      "when": {"in_water": true},
+      "target": {"root_type": "amphibious"},
+      "effect": {"vitality": 1.0, "seed_establishment": 1.0}
+    },
+    {
+      "id": "water-03-saturated-terrestrial-stress",
+      "when": {"soil_moisture_ppm": ">700000"},
+      "target": {"root_type": "terrestrial"},
+      "effect": {"vitality": -0.7, "death_chance": 0.08, "seed_establishment": -0.8}
+    },
+    {
+      "id": "water-04-riparian-amphibious-boom",
+      "when": {"water_dist_m": "<3"},
+      "target": {"root_type": "amphibious"},
+      "effect": {"vitality": 0.7, "seed_establishment": 0.8}
+    },
+    {
+      "id": "water-05-drought-amphibious-collapse",
+      "when": {"soil_moisture_ppm": "<250000"},
+      "target": {"root_type": "amphibious"},
+      "effect": {"vitality": -0.8, "death_chance": 0.12, "seed_establishment": -0.9}
+    },
+    {
+      "id": "water-06-drought-global-stress",
+      "when": {"soil_moisture_ppm": "<250000"},
+      "target": {"any": true},
+      "effect": {"vitality": -0.25, "seed_establishment": -0.35}
+    }
+  ]
+}
