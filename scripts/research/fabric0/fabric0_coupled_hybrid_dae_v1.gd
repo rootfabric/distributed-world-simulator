@@ -478,3 +478,163 @@ static func _next_enabled_condition_transition(system: Dictionary, fired: Dictio
 	var candidates: Array = []
 	for transition in _eligible_transitions(system, "condition"):
 		if fired.has(String(transition["id"])): continue
+		var value := _eval_expr_value(system, transition["guard"]["expr"], _state_values(system), _algebraic_values(system), float(system["time"]), {}, {}, {})
+		if not bool(value.get("ok",false)): continue
+		var normalized := float(value["value"])/maxf(float(transition["guard"]["nominal"]), EPSILON)
+		if normalized >= -GUARD_TOLERANCE: candidates.append(transition)
+	if candidates.is_empty(): return {}
+	candidates.sort_custom(func(a:Dictionary,b:Dictionary)->bool:
+		if int(a["priority"]) != int(b["priority"]): return int(a["priority"]) < int(b["priority"])
+		return String(a["id"]) < String(b["id"])
+	)
+	return candidates[0]
+
+static func _apply_transition(system: Dictionary, transition: Dictionary) -> Dictionary:
+	var pre_states := _state_values(system)
+	var pre_algebraics := _algebraic_values(system)
+	var pre_mode := String(system["mode"])
+	var pre_hash := state_hash(system)
+	var topology_before := int(system["topology_revision"])
+	var jump_branch_id := ""
+	var jump_values := {}
+	if not transition["jump"].is_empty():
+		var jump_result := _solve_jump(system, transition, pre_states, pre_algebraics)
+		if not bool(jump_result.get("ok",false)): return jump_result
+		jump_branch_id = String(jump_result["branch"])
+		jump_values = jump_result["jump_values"].duplicate(true)
+		for state_name in jump_result["post_states"].keys(): system["states"][state_name]["value"] = float(jump_result["post_states"][state_name])
+	var tx := _validate_topology_transaction(system, transition["topology_ops"])
+	if not bool(tx.get("ok",false)): return tx
+	system["mode"] = String(transition["to_mode"])
+	var topology_changed := _commit_topology_transaction(system, transition["topology_ops"])
+	if topology_changed: system["topology_revision"] = topology_before+1
+	var record := {
+		"transition_id":String(transition["id"]),
+		"pre_mode":pre_mode,
+		"post_mode":String(system["mode"]),
+		"pre_states":pre_states,
+		"post_states":_state_values(system),
+		"pre_algebraics":pre_algebraics,
+		"pre_state_hash":pre_hash,
+		"post_state_hash":state_hash(system),
+		"topology_revision_before":topology_before,
+		"topology_revision_after":int(system["topology_revision"]),
+		"jump_branch":jump_branch_id,
+		"jump_values":jump_values,
+	}
+	return {"ok":true, "record":record}
+
+static func _eligible_transitions(system: Dictionary, kind: String) -> Array:
+	var mode := String(system["mode"])
+	var result: Array = []
+	for transition in system["transitions"]:
+		if String(transition["guard"]["kind"]) == kind and mode in transition["from_modes"]: result.append(transition)
+	return result
+
+static func _crossed(g0: float, g1: float, direction: int, nominal: float) -> bool:
+	var eps := GUARD_TOLERANCE*maxf(nominal,1.0)
+	if direction > 0: return g0 < -eps and g1 >= 0.0
+	if direction < 0: return g0 > eps and g1 <= 0.0
+	return (g0 < -eps and g1 >= 0.0) or (g0 > eps and g1 <= 0.0)
+
+# =============================================================================
+# GENERIC BRANCH-BASED JUMP / IMPULSE SOLVE
+# =============================================================================
+
+static func _solve_jump(system: Dictionary, transition: Dictionary, pre_states: Dictionary, pre_algebraics: Dictionary) -> Dictionary:
+	var jump: Dictionary = transition["jump"]
+	var post_names: Array = jump["post_states"].duplicate(true)
+	post_names.sort()
+	var jump_names: Array = jump["unknowns"].keys()
+	jump_names.sort()
+	var unknown_keys: Array = []
+	var x0: Array = []
+	var nominals: Array = []
+	for state_name in post_names:
+		unknown_keys.append("post:%s" % String(state_name))
+		x0.append(float(pre_states[state_name]))
+		nominals.append(float(system["states"][state_name]["nominal"]))
+	for name in jump_names:
+		unknown_keys.append("jump:%s" % String(name))
+		x0.append(float(jump["unknowns"][name].get("initial",0.0)))
+		nominals.append(float(jump["unknowns"][name]["nominal"]))
+	var candidates: Array = []
+	for branch_spec in jump["branches"]:
+		var solved := _solve_jump_branch(system, branch_spec, unknown_keys, x0, pre_states, pre_algebraics)
+		if not bool(solved.get("ok",false)): continue
+		var guards := _check_jump_inequalities(system, branch_spec, unknown_keys, solved["x"], pre_states, pre_algebraics)
+		if not bool(guards.get("ok",false)): continue
+		candidates.append({"branch":String(branch_spec["id"]), "priority":int(branch_spec["priority"]), "x":solved["x"], "iterations":int(solved.get("iterations",0))})
+	if candidates.is_empty(): return {"ok":false, "code":"NO_ADMISSIBLE_JUMP_BRANCH", "transition":String(transition["id"])}
+	candidates.sort_custom(func(a:Dictionary,b:Dictionary)->bool:
+		if int(a["priority"]) != int(b["priority"]): return int(a["priority"]) < int(b["priority"])
+		return String(a["branch"]) < String(b["branch"])
+	)
+	var selected: Dictionary = candidates[0]
+	var post_states := {}
+	for state_name in system["states"].keys(): post_states[state_name] = float(pre_states[state_name])
+	var jump_values := {}
+	for i in range(unknown_keys.size()):
+		var key := String(unknown_keys[i])
+		if key.begins_with("post:"): post_states[key.substr(5)] = float(selected["x"][i])
+		else: jump_values[key.substr(5)] = float(selected["x"][i])
+	return {"ok":true, "branch":selected["branch"], "post_states":post_states, "jump_values":jump_values, "iterations":selected["iterations"]}
+
+static func _solve_jump_branch(system: Dictionary, branch_spec: Dictionary, unknown_keys: Array, initial: Array, pre_states: Dictionary, pre_algebraics: Dictionary) -> Dictionary:
+	var x := initial.duplicate(true)
+	var rows: Array = branch_spec["residuals"]
+	var row_nominals := _row_nominals(rows)
+	for iteration in range(NEWTON_MAX_ITERATIONS):
+		var assembled := _assemble_jump(system, rows, unknown_keys, x, pre_states, pre_algebraics)
+		if not bool(assembled.get("ok",false)): return assembled
+		var norm := _normalized_norm(assembled["residual"], row_nominals)
+		if norm <= NEWTON_TOLERANCE:
+			var rank := _solve_dense(assembled["jacobian"], _zero_vector(x.size()))
+			if not bool(rank.get("ok",false)): return {"ok":false, "code":"JUMP_SINGULAR_MANIFOLD"}
+			return {"ok":true, "x":x, "iterations":iteration+1}
+		var rhs: Array = []
+		for v in assembled["residual"]: rhs.append(-float(v))
+		var step := _solve_dense(assembled["jacobian"], rhs)
+		if not bool(step.get("ok",false)): return {"ok":false, "code":"JUMP_SINGULAR_JACOBIAN"}
+		var dx: Array = step["x"]
+		var alpha := 1.0
+		var accepted := false
+		for _ls in range(NEWTON_MAX_LINE_SEARCH):
+			var candidate := x.duplicate(true)
+			for i in range(candidate.size()): candidate[i] = float(candidate[i]) + alpha*float(dx[i])
+			var probe := _assemble_jump(system, rows, unknown_keys, candidate, pre_states, pre_algebraics)
+			if bool(probe.get("ok",false)) and _normalized_norm(probe["residual"], row_nominals) < norm:
+				x = candidate
+				accepted = true
+				break
+			alpha *= 0.5
+		if not accepted: return {"ok":false, "code":"JUMP_LINE_SEARCH_FAILED"}
+	return {"ok":false, "code":"JUMP_NO_CONVERGENCE"}
+
+static func _assemble_jump(system: Dictionary, rows: Array, unknown_keys: Array, x: Array, pre_states: Dictionary, pre_algebraics: Dictionary) -> Dictionary:
+	var index := {}
+	var post := pre_states.duplicate(true)
+	var jump_values := {}
+	for i in range(unknown_keys.size()):
+		index[unknown_keys[i]] = i
+		var key := String(unknown_keys[i])
+		if key.begins_with("post:"): post[key.substr(5)] = float(x[i])
+		else: jump_values[key.substr(5)] = float(x[i])
+	var residual_values: Array = []
+	var jacobian := _zero_matrix(rows.size(), unknown_keys.size())
+	for row_i in range(rows.size()):
+		var evaluated := _eval_expr_dual_jump(system, rows[row_i]["expr"], pre_states, post, jump_values, pre_algebraics, float(system["time"]), index)
+		if not bool(evaluated.get("ok",false)): return evaluated
+		residual_values.append(float(evaluated["value"]))
+		for key in evaluated["grad"].keys(): jacobian[row_i][int(key)] = float(evaluated["grad"][key])
+	return {"ok":true, "residual":residual_values, "jacobian":jacobian}
+
+static func _check_jump_inequalities(system: Dictionary, branch_spec: Dictionary, unknown_keys: Array, x: Array, pre_states: Dictionary, pre_algebraics: Dictionary) -> Dictionary:
+	var post := pre_states.duplicate(true)
+	var jump_values := {}
+	for i in range(unknown_keys.size()):
+		var key := String(unknown_keys[i])
+		if key.begins_with("post:"): post[key.substr(5)] = float(x[i])
+		else: jump_values[key.substr(5)] = float(x[i])
+	for item in branch_spec["inequalities"]:
+		var evaluated := _eval_expr_value(system, item["expr"], pre_states, pre_algebraics, float(system["time"]), post, jump_values, pre_states)
