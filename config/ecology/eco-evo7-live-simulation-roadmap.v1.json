@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R13",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-30-R14",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/STREAM1",
+  "current_checkpoint": "ECO.EVO7/PERF2.SIM",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -106,15 +106,31 @@
     {
       "id": "STREAM1",
       "name": "Bounded Deterministic Generation Streaming",
-      "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-      "detail": "Canonical parent chunks compute candidate→route→recruitment evidence into one full-generation proposal. LS3.3 alone validates base identity and atomically publishes the generation. R1 is in-process semantics foundation; exact-Windows verification required.",
+      "status": "ACCEPTED_WINDOWS_4D0D95A",
+      "detail": "STREAM1 R1 accepted after fresh exact-Windows verification on 4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4: exact Godot double, source guards PASS, focused 195 assertions PASS, 108/108 exact canonical comparisons, 11/11 transitive gate PASS, clean immutable worktree.",
       "runtime_head": "8636a525c47b524e0ef597e46f37ffe6204d27ee",
-      "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40"
+      "verification_harness_head": "e0d2cda22a431c69a1b3eb4c650d79627d8aea40",
+      "head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+      "tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md"
+    },
+    {
+      "id": "PERF2.SIM",
+      "name": "Simulation-side Performance Convergence",
+      "status": "NEXT_AUTHORIZED_AFTER_STREAM1_ACCEPTANCE",
+      "detail": "May start immediately from accepted STREAM1 without waiting for VIS4/PLAY0.MORPH. Covers measurement contract, STREAM1 profiling, working-set/memory, simulation scaling and runtime optimization."
+    },
+    {
+      "id": "PERF2.CONV",
+      "name": "Integrated Simulation + Morphology Performance Convergence",
+      "status": "BLOCKED_WAIT_STREAM1_ACCEPTED_PLUS_VIS4_PLAY0_MORPH_ACCEPTED",
+      "detail": "STREAM1 prerequisite is now satisfied. Remaining blocker is independent VIS4/PLAY0.MORPH acceptance. Only PERF2.CONV may open PLAY1 Living Region performance acceptance."
     },
     {
       "id": "LS4",
       "name": "Next ecology complexity stage",
-      "status": "AFTER_STREAM1_ACCEPTANCE"
+      "status": "DEFERRED_BEHIND_PERF2_CONVERGENCE_OR_SEPARATE_OWNER_DECISION",
+      "detail": "STREAM1 acceptance advances performance work to PERF2.SIM. PLAY0.MORPH/VIS4 continues independently; LS4 is not auto-dispatched by STREAM1 closure."
     }
   ],
   "ls3_final": {
@@ -188,8 +204,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "STREAM1",
-    "status": "PAR2_PAR3_FOUNDATION_STREAM1_R1_LOCAL_CANDIDATE",
+    "next_checkpoint": "PERF2.SIM",
+    "status": "STREAM1_ACCEPTED_PERF2_SIM_AUTHORIZED_VIS4_PARALLEL_ACTIVE",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -199,7 +215,22 @@
     ],
     "defer_target": "LS3.4_GEOMETRY_CURRENTLY_TOO_CHEAP",
     "determinism_gate": "EXACT_SERIAL_PARALLEL_HASH_PARITY_WORKER_COUNTS_1_2_4_N_OVER_100_PLUS_GENERATIONS",
-    "transport_gate": "PROVE_WINDOWS_LINUX_PERSISTENT_PROCESS_PROTOCOL_BEFORE_ADOPTION"
+    "transport_gate": "PROVE_WINDOWS_LINUX_PERSISTENT_PROCESS_PROTOCOL_BEFORE_ADOPTION",
+    "stream1_acceptance": {
+      "head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+      "tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "focused_assertions": 195,
+      "exact_generation_comparisons": "108/108",
+      "transitive_gate": "11/11 PASS",
+      "worktree_clean": true
+    },
+    "perf2_split": {
+      "perf2_sim": "AUTHORIZED_NOW_FROM_STREAM1_ACCEPTED",
+      "vis4_play0_morph": "PARALLEL_INDEPENDENT",
+      "perf2_conv": "WAIT_BOTH_STREAM1_AND_VIS4_PLAY0_MORPH_ACCEPTED",
+      "play1": "WAIT_PERF2_CONV_GREEN"
+    }
   },
   "stream1": {
     "revision": "ECO.EVO7-STREAM1-R1",
@@ -243,7 +274,22 @@
       },
       "validate_before_authority_mutation": true
     },
-    "status": "R1_CODE_COMPLETE_AWAITING_EXACT_WINDOWS",
-    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md"
+    "status": "R1_ACCEPTED_EXACT_WINDOWS",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+    "accepted_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
+    "accepted_tree": "68389ef9a491fc2f1e13efb92058029c9536f870",
+    "acceptance_checkpoint": "docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md",
+    "windows_verification": {
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "fresh_detached_worktree": "PASS",
+      "import_exit_code": 0,
+      "source_guards": "PASS",
+      "focused": "PASS_195_ASSERTIONS",
+      "exact_generation_comparisons": "108/108",
+      "transitive_gate": "PASS_11_OF_11",
+      "final_identity_unchanged": true,
+      "worktree_clean": true,
+      "note": "Legacy scene parse warnings were verifier-classified as pre-existing and byte-unchanged relative to predecessor; not STREAM1 regression."
+    }
   }
 }

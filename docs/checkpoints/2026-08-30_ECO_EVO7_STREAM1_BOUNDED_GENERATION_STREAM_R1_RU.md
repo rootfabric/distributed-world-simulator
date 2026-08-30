@@ -291,3 +291,39 @@ validation before mutation:  YES
 
 Windows mission:
 `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_WINDOWS_VERIFICATION_MISSION_RU.md`.
+
+
+## Acceptance addendum — exact Windows PASS
+
+Fresh independent Windows verification completed on:
+
+```text
+HEAD  4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4
+TREE  68389ef9a491fc2f1e13efb92058029c9536f870
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+```
+
+Result:
+
+```text
+focused STREAM1          PASS 195 assertions
+exact canonical parity   108/108
+transitive gate          PASS 11/11
+source guards            PASS
+identity unchanged       PASS
+worktree clean           YES
+```
+
+Therefore the earlier `LOCAL CANDIDATE / EXACT-WINDOWS VERIFICATION REQUIRED`
+state is superseded by:
+
+```text
+STREAM1 R1 ACCEPTED
+```
+
+Canonical closure:
+`docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md`.
+
+Successor:
+`PERF2.SIM` is authorized immediately; VIS4/PLAY0.MORPH remains parallel and is
+required only for the later `PERF2.CONV` join.
