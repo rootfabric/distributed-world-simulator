@@ -107,26 +107,9 @@ if ($ImportExit -ne 0) {
 `Expected '['` в старых ECO.EVO5 scene-файлах. Они сами по себе не являются
 LS4 regression при exit 0.
 
-Но Parse Error, указывающий на любой из изменённых LS4 runtime/test файлов,
-является **FAIL**.
-
-```powershell
-$ChangedLs4Names = @(
-    'eco_evo7_ls40_seasonal_forcing_v1.gd',
-    'eco_evo7_ls33_dispersal_recruitment_v1.gd',
-    'eco_evo7_ls34_local_competition_v1.gd',
-    'eco_evo7_ls36_rule_workbench_v1.gd',
-    'eco_evo7_evolution_observatory_v1.gd',
-    'eco_evo7_ls40_seasonal_succession_acceptance.gd'
-)
-
-$ImportText = Get-Content $ImportLog -Raw
-foreach ($Name in $ChangedLs4Names) {
-    if ($ImportText -match 'Parse Error' -and $ImportText -match [regex]::Escape($Name)) {
-        throw "LS4 changed file has import Parse Error: $Name"
-    }
-}
-```
+Legacy Parse Error в import log сохранить как baseline evidence. Новые LS4
+scripts окончательно проверяются focused запуском ниже: focused log не должен
+содержать ни одного `Parse Error`, а exit code обязан быть 0.
 
 ## 4. Source guards
 
@@ -178,12 +161,14 @@ if ($LS40Lower.Contains('fileaccess') -or $LS40Lower.Contains('diraccess') -or $
 }
 
 $LS33Text = Get-Content $LS33 -Raw
-$SetterStart = $LS33Text.IndexOf('func set_environment_field(')
-$SetterEnd = $LS33Text.IndexOf([Environment]::NewLine + 'func ', $SetterStart + 1)
-if ($SetterStart -lt 0 -or $SetterEnd -le $SetterStart) {
+$SetterMatch = [regex]::Match(
+    $LS33Text,
+    '(?ms)^func set_environment_field\(.*?(?=^func )'
+)
+if (-not $SetterMatch.Success) {
     throw 'Cannot isolate LS3.3 environment setter'
 }
-$SetterBody = $LS33Text.Substring($SetterStart, $SetterEnd - $SetterStart)
+$SetterBody = $SetterMatch.Value
 if ($SetterBody.Contains('generation =') -or $SetterBody.Contains('records =')) {
     throw 'LS3.3 environment setter contains generation/population mutation'
 }
@@ -207,6 +192,9 @@ Write-Host "LS40_FOCUSED_LOG=$FocusedLog"
 
 if ($FocusedExit -ne 0) {
     throw "LS4.0 focused acceptance failed: $FocusedExit"
+}
+if (Select-String -Path $FocusedLog -SimpleMatch 'Parse Error' -Quiet) {
+    throw 'LS4.0 focused log contains Parse Error'
 }
 ```
 
@@ -318,7 +306,7 @@ runtime anchor ancestor           PASS
 verification harness ancestor     PASS
 exact Godot                       PASS
 import exit 0                     PASS
-no LS4 changed-file parse error   PASS
+focused log parse-clean           PASS
 source guards                     PASS
 focused LS4                       PASS
 STREAM1 seasonal parity           6/6
