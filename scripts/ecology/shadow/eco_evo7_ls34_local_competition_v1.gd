@@ -87,6 +87,9 @@ func set_evolution_enabled(value: bool) -> bool:
 func set_competition_enabled(value: bool) -> bool:
     if not initialized:
         return false
+    if competition_enabled != value:
+        last_morphology_records.clear()
+        last_morphology_evidence.clear()
     competition_enabled = value
     return true
 
