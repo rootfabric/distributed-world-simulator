@@ -2391,3 +2391,312 @@ sparse parallel islands
 ```
 
 Production promotion не заявляется.
+
+
+## FABRIC0.14 — FULL 6DOF FRICTIONAL FEATURE MANIFOLD
+
+**Parent research head:** `1b4be82a4b092acbddcc4445444104c079293f91`  
+**Exact-tested implementation head before documentation:** `afe5e417d9787e082fecce8a635001f363417a48`  
+**Design:** `docs/research/FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v14-validation.json`  
+**Status:** `IMPLEMENTED / EXACT_DOUBLE_PASS / REMOTE_BYTE_IDENTITY_PASS / PREDECESSOR_RUNTIME_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Exact validation
+
+- Godot `4.7.1.stable.double.custom_build.a13da4feb`, re-extracted from the original user archive;
+- FABRIC0.14 acceptance: `156/156 PASS`;
+- playground: `FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_PLAYGROUND_PASS`;
+- editor parse/compile/SCRIPT scan: CLEAN;
+- executable byte identity: `7/7 PASS`;
+- FABRIC0.13 runtime regression on the same engine: `95/95 PASS`;
+- all seven FABRIC0.13 executable blobs preserved.
+
+### Physical state
+
+FABRIC0.14 uses a 13-component rigid-body state:
+
+```text
+position      3
+quaternion    4
+linear v      3
+angular omega 3
+```
+
+Body inertia:
+
+```text
+I_body =
+(0.19, 0.31, 0.43)
+```
+
+Torque-free three-axis audit:
+
+```text
+final omega =
+(
+ 0.64777572651907,
+-0.36223547345886,
+ 1.87243783476517
+)
+
+linear momentum drift =
+0
+
+world angular momentum drift =
+9.733960482902654e-10
+
+rotational energy drift =
+1.7629e-10
+```
+
+### Unilateral + Coulomb law
+
+Executable modes now include:
+
+```text
+separated
+stick
+slide
+```
+
+Stick probe:
+
+```text
+normal =
+12.2798501384264
+
+cone ratio =
+0.46507393858269
+```
+
+Separation probe:
+
+```text
+active = false
+normal = 0
+
+signed required normal =
+-4.3165743280206
+```
+
+Slide stays on:
+
+`|Ft| = mu Fn`.
+
+### Oblique impact
+
+Impact:
+
+```text
+t =
+0.16920086866594
+
+feature =
+plane|C|v:---
+
+mode =
+stick
+
+impulse =
+(
+-0.38652781487918,
+ 2.99430127860919,
+ 8.6621395387905
+)
+```
+
+Momentum audit:
+
+```text
+linear error  = 0
+angular error = 0
+```
+
+Kinetic delta:
+
+`-25.073057544238`.
+
+### Feature hierarchy
+
+Geometry-derived support classification:
+
+```text
+vertex = 1 point
+edge   = 2 points
+face   = 4 points
+```
+
+Face lineage probe:
+
+```text
+[
+  v:++-,
+  v:+--,
+  v:-+-,
+  v:---
+]
+```
+
+### Adaptive feature events
+
+Main `0.315 s` sliding run:
+
+```text
+0.25850330043665
+
+v:---
+→ edge:0:v:+--:v:---
+→ v:+--
+
+0.31322331523056
+
+v:+--
+→ edge:1:v:++-:v:+--
+→ v:++-
+```
+
+Each:
+
+```text
+iterations = 3
+topology mutations = 2
+fixed point = true
+```
+
+### Hidden projection impulse was removed
+
+During development, refinement exposed an energy discrepancy of about `0.1224` that did not shrink.
+
+Cause:
+
+```text
+feature switch
+→ silent normal-velocity projection
+→ physical impulse missing from causal history
+```
+
+Fix:
+
+```text
+lineage remap
+→ explicit frictional unilateral transition impulse
+→ momentum/energy audit
+→ only then constraint projection
+```
+
+This converted hidden numerical dissipation into explicit physical jump semantics.
+
+### Energy ledger
+
+Main `1e-9` sliding run:
+
+```text
+continuous friction dissipation =
+1.2019943422435
+
+discrete feature-event losses =
+4.06330610007658
+
+energy delta =
+-5.26530042753262
+
+closure residual =
+1.4787455704379227e-8
+```
+
+Closure refinement:
+
+```text
+1e-7  -> 3.8286514048024856e-7
+1e-9  -> 1.4787455704379227e-8
+1e-11 -> 3.3513192221334975e-10
+```
+
+### Unified convergence
+
+Event-time error:
+
+```text
+1e-7  -> 6.510981837015706e-8
+1e-9  -> 1.5766716265908087e-9
+1e-11 -> 3.3262503862374615e-11
+```
+
+Full 13D state error:
+
+```text
+1e-7  -> 5.464352880735213e-7
+1e-9  -> 1.2631674595198206e-8
+1e-11 -> 2.586177383356869e-10
+```
+
+Event time, state and energy ledger all converge.
+
+### Main hashes
+
+Sliding physical hash:
+
+`2b52dc944cdc4a48152265db3e456c629bfb5f66969850563e39ec188147efe7`.
+
+Impact-run hash:
+
+`de5584cb0f2da6b788e8873eac1ff99e2a8bedd1f71c56727fe809eaae29efe9`.
+
+Torque-free hash:
+
+`e57d66d29b7de53757f5b4ba2d0d2a26f3c2a342086a63aebc93726b40666a99`.
+
+Parallel hash:
+
+`526844a8ca0629969477f2942853b3e7b9617b391e39fc54147d30d38852773c`.
+
+### Exact byte boundary
+
+Seven GitHub executable blobs exactly equal current locally tested `git hash-object` values.
+
+This is now part of the durable v14 evidence.
+
+### Main non-claims
+
+Still open:
+
+- several simultaneously free interacting 6DOF bodies;
+- coupled face-point normal complementarity;
+- dynamic persistent face manifold;
+- arbitrary convex/GJK/EPA/mesh geometry;
+- dynamic separation localization;
+- dynamic stick/slide transition localization;
+- coupled multi-contact friction cones;
+- rolling/torsional friction;
+- simultaneous-impact solver;
+- production broadphase/block-sparse/thread-pool;
+- Construction/authority/persistence/network integration;
+- full materialized DWS regression.
+
+### Next wall
+
+`FABRIC0.15 — MULTIBODY CONVEX COMPLEMENTARITY GRAPH`.
+
+Target:
+
+```text
+multiple free 6DOF rigid bodies
++
+convex feature graph
++
+simultaneous normal complementarity
++
+coupled friction cones
++
+dynamic separation
++
+stick/slide events
++
+island merge/split
++
+adaptive fixed point
++
+block-sparse parallel solve
++
+momentum/energy/refinement evidence
+```
