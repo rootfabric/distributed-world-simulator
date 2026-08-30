@@ -158,3 +158,163 @@ static func add_transition(system: Dictionary, transition: Dictionary) -> bool:
 	var to_mode := String(transition.get("to_mode", ""))
 	if from_modes.is_empty() or not system["modes"].has(to_mode): return false
 	for mode_id in from_modes:
+		if not system["modes"].has(String(mode_id)): return false
+	var guard: Dictionary = transition.get("guard", {})
+	if not guard.has("expr") or float(guard.get("nominal",0.0)) <= 0.0: return false
+	var kind := String(guard.get("kind", "crossing"))
+	if kind != "crossing" and kind != "condition": return false
+	var direction := int(guard.get("direction", 0))
+	if direction < -1 or direction > 1: return false
+	var guard_dim := _infer_expr_dimension(system, guard["expr"], {})
+	if not bool(guard_dim.get("ok", false)):
+		system["diagnostics"].append({"code":"EVENT_GUARD_DIMENSION_ERROR", "transition":transition_id, "reason":guard_dim})
+		return false
+
+	var jump: Dictionary = transition.get("jump", {})
+	var normalized_jump := {}
+	if not jump.is_empty():
+		var post_states: Array = jump.get("post_states", [])
+		var jump_unknowns: Dictionary = jump.get("unknowns", {})
+		var jump_dims := {}
+		for state_name in post_states:
+			if not system["states"].has(String(state_name)): return false
+			jump_dims["post:%s" % String(state_name)] = system["states"][String(state_name)]["dimension"]
+		for unknown_name in jump_unknowns.keys():
+			var spec: Dictionary = jump_unknowns[unknown_name]
+			if not spec.has("dimension") or float(spec.get("nominal",0.0)) <= 0.0: return false
+			jump_dims["jump:%s" % String(unknown_name)] = spec["dimension"].duplicate(true)
+		var branches: Array = jump.get("branches", [])
+		if branches.is_empty(): return false
+		var expected_rows := post_states.size() + jump_unknowns.size()
+		var normalized_branches: Array = []
+		for branch_spec in branches:
+			if String(branch_spec.get("id","")) == "": return false
+			var rows: Array = branch_spec.get("residuals", [])
+			if rows.size() != expected_rows:
+				system["diagnostics"].append({"code":"JUMP_NON_SQUARE_BRANCH", "transition":transition_id, "branch":String(branch_spec.get("id","")), "rows":rows.size(), "unknowns":expected_rows})
+				return false
+			var normalized_rows: Array = []
+			for row in rows:
+				if not row.has("expr") or float(row.get("nominal",0.0)) <= 0.0: return false
+				var inferred := _infer_expr_dimension(system, row["expr"], jump_dims)
+				if not bool(inferred.get("ok", false)):
+					system["diagnostics"].append({"code":"JUMP_RESIDUAL_DIMENSION_ERROR", "transition":transition_id, "branch":String(branch_spec["id"]), "reason":inferred})
+					return false
+				normalized_rows.append({"expr":row["expr"].duplicate(true), "nominal":float(row["nominal"]), "dimension":inferred["dimension"]})
+			var normalized_ineq: Array = []
+			for item in branch_spec.get("inequalities", []):
+				if not item.has("expr") or float(item.get("nominal",0.0)) <= 0.0: return false
+				var inferred := _infer_expr_dimension(system, item["expr"], jump_dims)
+				if not bool(inferred.get("ok", false)):
+					system["diagnostics"].append({"code":"JUMP_INEQUALITY_DIMENSION_ERROR", "transition":transition_id, "branch":String(branch_spec["id"]), "reason":inferred})
+					return false
+				normalized_ineq.append({"expr":item["expr"].duplicate(true), "nominal":float(item["nominal"]), "label":String(item.get("label","")), "dimension":inferred["dimension"]})
+			normalized_branches.append({"id":String(branch_spec["id"]), "residuals":normalized_rows, "inequalities":normalized_ineq, "priority":int(branch_spec.get("priority",0))})
+		normalized_jump = {"post_states":post_states.duplicate(true), "unknowns":jump_unknowns.duplicate(true), "branches":normalized_branches}
+
+	for op in transition.get("topology_ops", []):
+		if String(op.get("op","")) != "set_bond_active": return false
+	system["transitions"].append({
+		"id":transition_id,
+		"from_modes":from_modes.duplicate(true),
+		"to_mode":to_mode,
+		"guard":{"expr":guard["expr"].duplicate(true), "nominal":float(guard["nominal"]), "direction":direction, "kind":kind, "dimension":guard_dim["dimension"]},
+		"jump":normalized_jump,
+		"topology_ops":transition.get("topology_ops", []).duplicate(true),
+		"priority":int(transition.get("priority",0)),
+	})
+	return true
+
+static func read_state(system: Dictionary, name: String) -> float: return float(system["states"][name]["value"])
+static func read_algebraic(system: Dictionary, name: String) -> float: return float(system["algebraics"][name]["value"])
+static func read_mode(system: Dictionary) -> String: return String(system["mode"])
+
+# =============================================================================
+# DAE ALGEBRAIC SOLVER
+# =============================================================================
+
+static func solve_algebraic(system: Dictionary) -> Dictionary:
+	var state_values := _state_values(system)
+	var initial := _algebraic_values(system)
+	var result := _solve_algebraic_for(system, state_values, float(system["time"]), String(system["mode"]), initial)
+	if bool(result.get("ok", false)):
+		_commit_algebraic_values(system, result["values"])
+	return result
+
+static func _solve_algebraic_for(system: Dictionary, state_values: Dictionary, time_value: float, mode_id: String, initial_values: Dictionary) -> Dictionary:
+	var names: Array = system["algebraics"].keys()
+	names.sort()
+	if names.is_empty(): return {"ok":true, "values":{}, "iterations":0}
+	var x: Array = []
+	for name in names: x.append(float(initial_values.get(name, system["algebraics"][name]["value"])))
+	var rows: Array = system["modes"][mode_id]["residuals"]
+	for iteration in range(NEWTON_MAX_ITERATIONS):
+		var assembled := _assemble_algebraic(system, state_values, time_value, names, x, rows)
+		if not bool(assembled.get("ok", false)): return {"ok":false, "code":assembled.get("code","DAE_ASSEMBLY_FAILED")}
+		var norm := _normalized_norm(assembled["residual"], _row_nominals(rows))
+		if norm <= NEWTON_TOLERANCE:
+			var rank := _solve_dense(assembled["jacobian"], _zero_vector(x.size()))
+			if not bool(rank.get("ok", false)): return {"ok":false, "code":"DAE_SINGULAR_ALGEBRAIC_MANIFOLD", "normalized_residual":norm}
+			var values := {}
+			for i in range(names.size()): values[names[i]] = float(x[i])
+			return {"ok":true, "values":values, "iterations":iteration+1, "normalized_residual":norm}
+		var rhs: Array = []
+		for value in assembled["residual"]: rhs.append(-float(value))
+		var step := _solve_dense(assembled["jacobian"], rhs)
+		if not bool(step.get("ok", false)): return {"ok":false, "code":"DAE_SINGULAR_JACOBIAN", "normalized_residual":norm}
+		var dx: Array = step["x"]
+		var alpha := 1.0
+		var accepted := false
+		for _ls in range(NEWTON_MAX_LINE_SEARCH):
+			var candidate := x.duplicate(true)
+			for i in range(candidate.size()): candidate[i] = float(candidate[i]) + alpha * float(dx[i])
+			var probe := _assemble_algebraic(system, state_values, time_value, names, candidate, rows)
+			if bool(probe.get("ok", false)) and _normalized_norm(probe["residual"], _row_nominals(rows)) < norm:
+				x = candidate
+				accepted = true
+				break
+			alpha *= 0.5
+		if not accepted: return {"ok":false, "code":"DAE_LINE_SEARCH_FAILED", "normalized_residual":norm}
+	return {"ok":false, "code":"DAE_NO_CONVERGENCE"}
+
+static func _assemble_algebraic(system: Dictionary, state_values: Dictionary, time_value: float, names: Array, x: Array, rows: Array) -> Dictionary:
+	var index := {}
+	var algebraics := {}
+	for i in range(names.size()):
+		index[names[i]] = i
+		algebraics[names[i]] = float(x[i])
+	var residual_values: Array = []
+	var jacobian := _zero_matrix(rows.size(), names.size())
+	for row_i in range(rows.size()):
+		var evaluated := _eval_expr_dual_algebraic(system, rows[row_i]["expr"], state_values, algebraics, time_value, index)
+		if not bool(evaluated.get("ok", false)): return evaluated
+		residual_values.append(float(evaluated["value"]))
+		for key in evaluated["grad"].keys(): jacobian[row_i][int(key)] = float(evaluated["grad"][key])
+	return {"ok":true, "residual":residual_values, "jacobian":jacobian}
+
+# =============================================================================
+# COUPLED RK4 ADVANCE
+# =============================================================================
+
+static func advance(system: Dictionary, delta: float) -> Dictionary:
+	if delta < 0.0 or String(system["mode"]).is_empty(): return {"ok":false, "code":"BAD_ADVANCE_REQUEST"}
+	if delta <= EPSILON: return {"ok":true, "events":0, "time":float(system["time"])}
+	var snapshot := _capture_snapshot(system)
+	system["diagnostics"] = []
+	var stats := {"algebraic_solves":0, "algebraic_iterations":0, "event_iterations":0, "localized_events":0}
+	var remaining := delta
+	var event_instants := 0
+	while remaining > EPSILON:
+		var start_time := float(system["time"])
+		var start_state := _state_values(system)
+		var integrated := _integrate_segment(system, start_state, start_time, remaining, stats)
+		if not bool(integrated.get("ok", false)):
+			_restore_snapshot(system, snapshot)
+			system["diagnostics"] = [{"code":String(integrated.get("code","DAE_INTEGRATION_FAILED"))}]
+			return {"ok":false, "code":String(integrated.get("code","DAE_INTEGRATION_FAILED")), "rolled_back":true}
+		var candidate := _find_earliest_crossing(system, start_state, integrated["state"], start_time, remaining, stats)
+		if not bool(candidate.get("found", false)):
+			_commit_state_values(system, integrated["state"])
+			_commit_algebraic_values(system, integrated["algebraic"])
+			system["time"] = start_time + remaining
+			remaining = 0.0
