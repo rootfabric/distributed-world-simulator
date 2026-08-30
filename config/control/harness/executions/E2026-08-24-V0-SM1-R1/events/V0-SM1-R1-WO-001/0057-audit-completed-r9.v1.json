@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0057",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 57,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-30T03:20:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-final-reconciliation-r2",
+  "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "summary": "Final B7 Director audit completed on exact immutable R9. All 39 required predicates are durably complete; fresh independent Reviewer PASS and Verifier VERIFIED are exact-head; standard PC0 remains YELLOW but is NON_RED under canonical policy after the required convergence/control review; directional PC0 remains YELLOW with zero candidate-specific critical hits; critical cross-branch overlaps are zero; no OPEN blocking human-attention item exists. Runtime merge and canonical checkpoint acceptance remain separate human/main-owned gates.",
+  "command": "RECORD_FINAL_SM1_DIRECTOR_AUDIT_COMPLETED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-WO-001-CHECKPOINT-PROPOSAL-EVIDENCE-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B7-DIRECTOR-RECONCILIATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json"
+  ]
+}
