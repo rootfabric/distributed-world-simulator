@@ -435,3 +435,59 @@ docs/plans/ECO_EVO7_VIS4_0_TRUTH_CONTRACT_AUDIT_RU.md
 config/ecology/eco-evo7-vis4-truth-contract-audit.v1.json
 tests/ecology/eco_evo7_vis4_0_truth_contract_audit_acceptance.gd
 ~~~
+
+
+---
+
+## VIS4.1 implementation result — 2026-08-30
+
+VIS4.1 закрыл publication gap, обнаруженный VIS4.0, без переноса biology в renderer.
+
+Новая цепочка:
+
+~~~text
+LS3.4 existing phenotype pass
+  |
+  +-> PH2 realized_development_traits
+  +-> exact GrowthGraph hash
+  +-> FunctionalPhenotype morphology scalars
+  |
+  v
+PlantMorphologyEvidence.v1
+  |
+  v
+separate sealed presentation sidecar
+  |
+  v
+Workbench.get_morphology_evidence()
+  |
+  v
+VIS4 Morphology Descriptor V2
+~~~
+
+Ключевой инвариант: ecology snapshot schema/state_hash не расширялись morphology sidecar-ом. Evidence живёт отдельно и связывается с generation, precompetition population hash, competition hash и postcompetition population hash.
+
+VIS4.1 публикует три явно разделённых слоя:
+
+~~~text
+GENETIC POTENTIAL
+REALIZED PH2 TOPOLOGY
+FUNCTIONAL MORPHOLOGY
+~~~
+
+и отдельно competition context.
+
+Реализованные durable surfaces:
+
+~~~text
+scripts/research/ecology/plant_morphology_evidence_v1.gd
+scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd
+scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd
+scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd
+tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd
+RUN_ECO_EVO7_VIS4_1_TESTS.ps1
+RUN_ECO_EVO7_VIS4_1_TESTS.sh
+.github/workflows/evo7-vis4-1-source-bound-morphology.yml
+~~~
+
+VIS4.2 теперь может заниматься только diagnostic presentation mapping. Повторный вызов CoupledDevelopment/FunctionalPhenotype из presentation запрещён.
