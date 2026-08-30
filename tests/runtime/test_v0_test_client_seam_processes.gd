@@ -188,11 +188,18 @@ func _wait_state(path: String, states: Array[String], timeout_ms: int) -> Dictio
 	var started := Time.get_ticks_msec()
 	var value: Dictionary = {}
 	while Time.get_ticks_msec() - started <= timeout_ms:
-		value = Support.read_json(path)
+		value = _read_json(path)
 		if String(value.get("state", "")) in states:
 			return value
 		OS.delay_msec(POLL_MS)
 	return value
+
+
+func _read_json(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return Dictionary(parsed) if parsed is Dictionary else {}
 
 
 func _strings(values) -> Array[String]:
