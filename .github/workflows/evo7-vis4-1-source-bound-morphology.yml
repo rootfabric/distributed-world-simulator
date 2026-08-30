@@ -1,4 +1,4 @@
-name: ECO EVO7 VIS4.1 Source-Bound Morphology
+name: ECO EVO7 VIS4.1 R2 Source-Bound Morphology
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - "scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd"
       - "tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd"
       - "RUN_ECO_EVO7_VIS4_1_TESTS.ps1"
+      - "RUN_ECO_EVO7_VIS4_1_TESTS.sh"
       - ".github/workflows/evo7-vis4-1-source-bound-morphology.yml"
   workflow_dispatch:
 
@@ -23,7 +24,7 @@ concurrency:
 
 jobs:
   closure:
-    name: exact VIS4.1 source-bound morphology closure
+    name: exact VIS4.1 R2 source-bound morphology closure
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
 
