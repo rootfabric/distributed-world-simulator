@@ -9,12 +9,13 @@ extends RefCounted
 
 const SCHEMA := "distributed_world_simulator.ecology.plant_morphology_evidence.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-VIS4.1.R1"
+const REVISION := "ECO.EVO7-VIS4.1.R2"
 const DERIVED_REPRESENTATION := true
 const PRESENTATION_ONLY := true
 
 const RECORD_FIELDS: Array[String] = [
-	"record_id", "cell_index", "bundle_checksum", "lineage_id", "individual_seed",
+	"record_id", "cell_index", "bundle_checksum", "lineage_id",
+	"hereditary_individual_seed", "development_individual_seed",
 	"source_phenotype_hash", "source_plasticity_phenotype_hash", "source_growth_graph_hash",
 	"source_inherited_traits_hash", "source_realized_traits_hash", "source_extension_traits_hash",
 	"potential_morphology", "realized_topology", "functional_morphology", "evidence_hash",
@@ -67,12 +68,13 @@ static func build_record(record: Dictionary, ph2: Dictionary, functional_phenoty
 	var cell_index := int(record.get("cell_index", -1))
 	var bundle_checksum := String(record.get("bundle_checksum", ""))
 	var lineage_id := String(lineage.get("lineage_id", ""))
-	var individual_seed := int(bundle.get("individual_seed", -1))
+	var hereditary_individual_seed := int(bundle.get("individual_seed", -1))
+	var development_individual_seed := int(ph2.get("individual_seed", -1))
 	if record_id.is_empty() or cell_index < 0 or cell_index >= 1024:
 		return {}
 	if bundle_checksum.length() != 64 or bundle_checksum != String(bundle.get("bundle_checksum", "")):
 		return {}
-	if lineage_id.is_empty() or individual_seed < 0:
+	if lineage_id.is_empty() or hereditary_individual_seed < 0 or development_individual_seed < 0:
 		return {}
 
 	var phenotype_hash := String(functional_phenotype.get("phenotype_hash", ""))
@@ -84,7 +86,9 @@ static func build_record(record: Dictionary, ph2: Dictionary, functional_phenoty
 	for hash_value in [phenotype_hash, plasticity_hash, growth_graph_hash, inherited_hash, realized_hash, extension_hash]:
 		if String(hash_value).length() != 64:
 			return {}
-	if individual_seed != int(ph2.get("individual_seed", -1)) or individual_seed != int(functional_phenotype.get("individual_seed", -1)):
+	if development_individual_seed != int(functional_phenotype.get("individual_seed", -1)):
+		return {}
+	if development_individual_seed != int(graph.get("individual_seed", -1)):
 		return {}
 	if inherited_hash != String(dev.get("checksum", "")):
 		return {}
@@ -139,7 +143,8 @@ static func build_record(record: Dictionary, ph2: Dictionary, functional_phenoty
 		"cell_index": cell_index,
 		"bundle_checksum": bundle_checksum,
 		"lineage_id": lineage_id,
-		"individual_seed": individual_seed,
+		"hereditary_individual_seed": hereditary_individual_seed,
+		"development_individual_seed": development_individual_seed,
 		"source_phenotype_hash": phenotype_hash,
 		"source_plasticity_phenotype_hash": plasticity_hash,
 		"source_growth_graph_hash": growth_graph_hash,
@@ -158,13 +163,18 @@ static func seal_snapshot(
 	generation: int,
 	precompetition_population_hash: String,
 	competition_hash: String,
-	postcompetition_population_hash: String
+	postcompetition_population_hash: String,
+	expected_record_count: int = -1
 ) -> Dictionary:
 	if generation < 1:
 		return {}
 	for hash_value in [precompetition_population_hash, competition_hash, postcompetition_population_hash]:
 		if hash_value.length() != 64:
 			return {}
+	if expected_record_count < -1:
+		return {}
+	if expected_record_count >= 0 and records.size() != expected_record_count:
+		return {}
 	var ordered: Array[Dictionary] = []
 	for value in records:
 		if not value is Dictionary or not validate_record(value):
@@ -194,7 +204,9 @@ static func validate_record(evidence: Dictionary) -> bool:
 		return false
 	if String(evidence.get("record_id", "")).is_empty() or int(evidence.get("cell_index", -1)) < 0 or int(evidence.get("cell_index", -1)) >= 1024:
 		return false
-	if String(evidence.get("bundle_checksum", "")).length() != 64 or String(evidence.get("lineage_id", "")).is_empty() or int(evidence.get("individual_seed", -1)) < 0:
+	if String(evidence.get("bundle_checksum", "")).length() != 64 or String(evidence.get("lineage_id", "")).is_empty():
+		return false
+	if int(evidence.get("hereditary_individual_seed", -1)) < 0 or int(evidence.get("development_individual_seed", -1)) < 0:
 		return false
 	for key in [
 		"source_phenotype_hash", "source_plasticity_phenotype_hash", "source_growth_graph_hash",
@@ -265,7 +277,8 @@ static func record_hash(evidence: Dictionary) -> String:
 		str(int(evidence.get("cell_index", -1))),
 		String(evidence.get("bundle_checksum", "")),
 		String(evidence.get("lineage_id", "")),
-		str(int(evidence.get("individual_seed", -1))),
+		str(int(evidence.get("hereditary_individual_seed", -1))),
+		str(int(evidence.get("development_individual_seed", -1))),
 		String(evidence.get("source_phenotype_hash", "")),
 		String(evidence.get("source_plasticity_phenotype_hash", "")),
 		String(evidence.get("source_growth_graph_hash", "")),
