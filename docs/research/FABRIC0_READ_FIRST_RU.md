@@ -46,6 +46,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.8: `FABRIC0_8_COUPLED_HYBRID_DAE_RU.md`
    - FABRIC0.9: `FABRIC0_9_MULTICONTACT_GEOMETRIC_CONE_RU.md`
    - FABRIC0.10: `FABRIC0_10_PERSISTENT_CONTACT_GRAPH_RU.md`
+   - FABRIC0.11: `FABRIC0_11_EVENT_LOCALIZED_SPARSE_ISLANDS_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -91,6 +92,10 @@ long-lived multi-body contact islands
 FABRIC0.11
 GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND
 active-island event localization + sparse numerical solve
+        ↓
+FABRIC0.12
+ADAPTIVE MULTI-EVENT MANIFOLD DAE
+adaptive constrained time + manifold event iteration
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -237,59 +242,65 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.10 завершён как research candidate.
+FABRIC0.11 завершён как research candidate.
 
 Exact evidence:
 
 ```text
-FABRIC0.10 Persistent Contact Graph    97/97 PASS
-FABRIC0.10 playground                  PASS
-editor parse/compile                   CLEAN
-remote/local executable bytes          IDENTICAL
-
-FABRIC0.9 executable blobs             PRESERVED
-FABRIC0.9 runtime regression rerun      NO
+FABRIC0.11 Event Sparse Islands      120/120 PASS
+FABRIC0.10 runtime regression         97/97 PASS
+FABRIC0.11 playground                 PASS
+editor parse/compile                  CLEAN
+remote/local executable bytes         IDENTICAL
 ```
 
-FABRIC0.10 доказал:
+FABRIC0.11 доказал:
 
-- dynamic body-body contact как persistent graph edge;
-- stable contact identity across time;
-- explicit lifecycle `appear/persist/disappear`;
-- warm-start previous impulse по contact identity;
-- demonstrated iteration reduction `39 -> 3`;
-- automatic island merge/split `3 -> 2 -> 3`;
-- static environment не склеивает unrelated dynamic islands;
-- warm-start survives island merge;
-- sparse Jacobian/effective-mass assembly;
-- merged island sparse structure `29/81`;
-- resting A/B stack под gravity;
-- independent-island trajectory equivalence;
-- exact order invariance across graph history;
-- contact-free first-contact event localization at `t=0.460381178993`;
-- persistent contact enters history at physical event time.
+- event localization while old persistent island remains constrained;
+- old contacts retain near-zero gaps through localization;
+- free dynamic body joins existing island at localized event time;
+- same-time graph merge `[A,B] -> [A,B,C]`;
+- warm-start remap by stable relation identity;
+- incoming impulse propagates through existing constrained stack;
+- sparse effective-mass representation remains sparse through actual linear solve;
+- Jacobi-preconditioned PCG backend;
+- no dense effective-mass materialization in successor;
+- remaining macrostep continues through new constrained graph;
+- single causal lifecycle record at event time;
+- independent-island solve schedule can reverse without changing result;
+- full event history is order-invariant under tested body/contact/schedule permutations;
+- FABRIC0.10 exact-double regression remains green.
 
-Важно:
-
-FABRIC0.10 не заявляет predecessor runtime rerun. FABRIC0.9 executable bytes только доказанно сохранились неизменными.
-
-Следующая задача:
-
-**FABRIC0.11 — GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND**
-
-Цель:
+Numerical honesty:
 
 ```text
-existing persistent islands remain constrained
-while
-new dynamic contact is localized inside macrostep
+bisection tolerance = 1e-11
 
-then:
-event-time island merge/recompile
-warm-start remap
-true sparse numerical backend
-remaining time continuation
-order-invariant replay
+but
+constrained integrator substep = 0.01
+
+therefore
+event root accuracy relative to the discrete trajectory
+!=
+continuous trajectory accuracy
+```
+
+Next task:
+
+**FABRIC0.12 — ADAPTIVE MULTI-EVENT MANIFOLD DAE**
+
+Target:
+
+```text
+adaptive/error-controlled constrained integration
+event-time convergence under refinement
+multiple appear/disappear topology events
+same-time manifold event iteration
+persistent orientation-aware feature identity
+manifold split/merge warm remap
+sparse pattern/preconditioner caching
+actual deterministic parallel island execution
+sleep/wake derived computational state
 ```
 
 ## 9. Правило новой сессии
@@ -302,18 +313,19 @@ order-invariant replay
 - почему dimensions executable;
 - почему residual=0 недостаточно без rank;
 - почему FLOW/JUMP/TOPOLOGY TRANSACTION разделены;
-- почему differential/algebraic state coupled;
-- почему impulse solved reaction;
+- почему algebraic reactions участвуют в timestep;
 - почему geometry генерирует constraints;
 - почему Coulomb friction — cone;
-- почему multi-contact order invariance mandatory;
+- почему order invariance mandatory;
 - почему deterministic reaction split может быть non-unique;
-- почему contact теперь persistent graph relation;
-- почему contact identity переживает island merge/split;
-- почему warm impulse — numerical continuity, не semantic truth;
-- почему static boundary не должна соединять dynamic islands;
-- почему sparse structure следует contact graph;
-- почему current event bridge честно ограничен contact-free start;
-- какие non-claims FABRIC0.10 ещё действуют.
+- почему contact является persistent relation;
+- почему warm cache не semantic truth;
+- почему static boundaries не склеивают dynamic islands;
+- почему active old contacts должны оставаться constrained during event localization;
+- почему event-time graph merge требует same-time re-solve;
+- почему sparse assembly обязана оставаться sparse through linear solve;
+- почему PCG/ADMM/scheduling остаются numerical machinery;
+- почему bisection tolerance нельзя выдавать за continuous trajectory accuracy;
+- какие non-claims FABRIC0.11 ещё действуют.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
