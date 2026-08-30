@@ -327,6 +327,19 @@
     "focused_test": "tests/ecology/eco_evo7_ls40_seasonal_succession_acceptance.gd",
     "transitive_runner": "RUN_ECO_EVO7_LS40_TESTS.ps1",
     "checkpoint_doc": "docs/checkpoints/2026-08-30_ECO_EVO7_LS40_SEASONAL_SUCCESSION_R1_RU.md",
-    "canonical_main_relation": "BRANCH_LOCAL_RESEARCH_ONLY_DOES_NOT_OVERRIDE_MAIN_ECO_CONV0_CAL1_FRONTIER"
+    "canonical_main_relation": "BRANCH_LOCAL_RESEARCH_ONLY_DOES_NOT_OVERRIDE_MAIN_ECO_CONV0_CAL1_FRONTIER",
+    "windows_mission": "docs/checkpoints/2026-08-30_ECO_EVO7_LS40_R1_WINDOWS_VERIFICATION_MISSION_RU.md",
+    "source_review": {
+      "seasonal_provider_step_generation_calls": 0,
+      "seasonal_provider_reproduction_calls": 0,
+      "ls33_environment_setter_count": 1,
+      "ls34_environment_setter_count": 1,
+      "workbench_forcing_provider_setter_count": 1,
+      "workbench_forcing_call_count": 1,
+      "observatory_exact_per_generation_environment_binding": true,
+      "static_physical_identity_fence": true,
+      "environment_setter_generation_or_records_mutation": false
+    },
+    "implementation_freeze": "RUNTIME_AND_TEST_HARNESS_FROZEN_BEFORE_METADATA_ONLY_COMMITS"
   }
 }
