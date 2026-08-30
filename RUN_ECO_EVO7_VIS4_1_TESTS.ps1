@@ -34,7 +34,7 @@ try {
     $Tests = @(
         @{ Name="LS3.4 local competition regression"; Script="res://tests/ecology/eco_evo7_ls34_local_competition_acceptance.gd" },
         @{ Name="LS3.6 Workbench regression"; Script="res://tests/ecology/eco_evo7_ls36_rule_workbench_acceptance.gd" },
-        @{ Name="VIS4.1 source-bound morphology evidence"; Script="res://tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd" }
+        @{ Name="VIS4.1 R2 source-bound morphology evidence"; Script="res://tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd" }
     )
     foreach ($Test in $Tests) {
         Write-Host "=== ECO $($Test.Name) ==="
@@ -53,4 +53,4 @@ finally {
         $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpointDisabled
     }
 }
-Write-Host "ECO.EVO7 VIS4.1 Source-Bound Morphology Evidence candidate: PASS"
+Write-Host "ECO.EVO7 VIS4.1 R2 Source-Bound Morphology Evidence candidate: PASS"
