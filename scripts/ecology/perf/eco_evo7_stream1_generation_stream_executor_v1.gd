@@ -51,6 +51,7 @@ const FAULT_KINDS := [
 	"FORCE_CHUNK_FAILURE",
 	"FORCE_AUDIT_MISMATCH",
 	"FORCE_STALE_BASE",
+	"FORCE_PARENT_BINDING_CORRUPTION",
 	"FORCE_PROPOSAL_HASH_CORRUPTION",
 ]
 
@@ -240,6 +241,14 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	}
 	if _fault_kind == "FORCE_STALE_BASE":
 		proposal["base_population_hash"] = _flip_hash(String(proposal["base_population_hash"]))
+	if _fault_kind == "FORCE_PARENT_BINDING_CORRUPTION" and not all_candidates.is_empty():
+		## candidate_hash intentionally does not include parent_record_id.
+		## This fault therefore stays internally hash-consistent and proves
+		## that LS3.3 authority validates the live parent binding explicitly.
+		var altered_parent_candidate: Dictionary = all_candidates[0].duplicate(true)
+		altered_parent_candidate["parent_record_id"] = "stream1/forged-parent"
+		all_candidates[0] = altered_parent_candidate
+		proposal["candidates"] = all_candidates
 	proposal["proposal_hash"] = proposal_hash(proposal)
 	if _fault_kind == "FORCE_PROPOSAL_HASH_CORRUPTION":
 		proposal["proposal_hash"] = _flip_hash(String(proposal["proposal_hash"]))

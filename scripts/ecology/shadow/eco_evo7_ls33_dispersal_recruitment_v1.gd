@@ -232,24 +232,34 @@ func step_generation() -> Dictionary:
     var next_records := _materialize_recruits(candidates, routes, recruitment, next_generation)
     var materialize_ms := _elapsed_ms(phase_started)
 
+    ## Validate the complete proposed generation BEFORE mutating authority
+    ## state. This closes the old validate-after-assignment window and makes
+    ## every validation failure genuinely fail-closed.
+    phase_started = Time.get_ticks_usec()
+    var next_candidate_pool_hash := _candidate_pool_hash(candidates)
+    var next_dispersal_pool_hash := _dispersal_pool_hash(routes)
+    var next_recruitment_hash := _recruitment_hash(recruitment)
+    if not _validate_generation_evidence_values(
+        candidates, routes, recruitment,
+        next_candidate_pool_hash, next_dispersal_pool_hash, next_recruitment_hash
+    ):
+        return {}
+    if not next_records.is_empty() and not _validate_current_records(next_records):
+        return {}
+    var validation_ms := _elapsed_ms(phase_started)
+
+    ## The only authoritative mutation point for a successful generation.
     phase_started = Time.get_ticks_usec()
     last_candidates = candidates.duplicate(true)
     last_routes = routes.duplicate(true)
     last_recruitment = recruitment.duplicate(true)
-    last_candidate_pool_hash = _candidate_pool_hash(last_candidates)
-    last_dispersal_pool_hash = _dispersal_pool_hash(last_routes)
-    last_recruitment_hash = _recruitment_hash(last_recruitment)
+    last_candidate_pool_hash = next_candidate_pool_hash
+    last_dispersal_pool_hash = next_dispersal_pool_hash
+    last_recruitment_hash = next_recruitment_hash
     generation = next_generation
     records = next_records
     _refresh_population_hashes()
     var commit_hash_ms := _elapsed_ms(phase_started)
-
-    phase_started = Time.get_ticks_usec()
-    if not _validate_generation_evidence():
-        return {}
-    if not records.is_empty() and not _validate_current_records(records):
-        return {}
-    var validation_ms := _elapsed_ms(phase_started)
 
     phase_started = Time.get_ticks_usec()
     var snapshot := get_snapshot()
@@ -564,26 +574,62 @@ func _validate_stream_proposal(proposal: Dictionary, next_generation: int) -> Di
         _last_stream_meta["failure_code"] = "STREAM1_NONCANONICAL_ORDER"
         return {}
 
+    var parent_by_record_id := {}
+    for parent in records:
+        parent_by_record_id[String(parent.get("record_id", ""))] = parent
+    var seen_parent_ordinals := {}
     var candidate_by_hash := {}
     for candidate in candidates:
         var candidate_hash := String(candidate.get("candidate_hash", ""))
         if candidate_hash.is_empty() or candidate_by_hash.has(candidate_hash)         or candidate_hash != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
             _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_HASH_INVALID"
             return {}
+        var parent_record_id := String(candidate.get("parent_record_id", ""))
+        if not parent_by_record_id.has(parent_record_id)         or not Par3CandidateKernel.validate_parent_binding(
+            parent_by_record_id[parent_record_id], candidate, next_generation,
+            SCHEMA, evolution_seed, OFFSPRING_PER_PARENT
+        ):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+            return {}
+        var parent_ordinal_key := "%s:%d" % [
+            parent_record_id, int(candidate.get("offspring_ordinal", -1))
+        ]
+        if seen_parent_ordinals.has(parent_ordinal_key):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+            return {}
+        seen_parent_ordinals[parent_ordinal_key] = true
         candidate_by_hash[candidate_hash] = candidate
+    if seen_parent_ordinals.size() != records.size() * OFFSPRING_PER_PARENT:
+        _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+        return {}
 
     var route_by_hash := {}
     for route in routes:
         var candidate_hash := String(route.get("candidate_hash", ""))
-        if not candidate_by_hash.has(candidate_hash) or route_by_hash.has(candidate_hash)         or int(route.get("generation", -1)) != next_generation         or String(route.get("route_hash", "")) != Stream1RouteKernel.route_hash(route, SCHEMA, VERSION):
+        if not candidate_by_hash.has(candidate_hash) or route_by_hash.has(candidate_hash)         or int(route.get("generation", -1)) != next_generation:
+            _last_stream_meta["failure_code"] = "STREAM1_ROUTE_HASH_INVALID"
+            return {}
+        var expected_route := Stream1RouteKernel.build_route(
+            candidate_by_hash[candidate_hash], next_generation,
+            SCHEMA, VERSION, evolution_seed, cell_size_m, GRID_SIZE
+        )
+        if expected_route.is_empty() or route != expected_route:
             _last_stream_meta["failure_code"] = "STREAM1_ROUTE_HASH_INVALID"
             return {}
         route_by_hash[candidate_hash] = route
 
     for event in recruitment:
         var candidate_hash := String(event.get("candidate_hash", ""))
-        if not candidate_by_hash.has(candidate_hash) or not route_by_hash.has(candidate_hash)         or int(event.get("generation", -1)) != next_generation         or String(event.get("route_hash", "")) != String(route_by_hash[candidate_hash].get("route_hash", ""))         or String(event.get("recruitment_event_hash", "")) != Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION):
+        if not candidate_by_hash.has(candidate_hash) or not route_by_hash.has(candidate_hash)         or int(event.get("generation", -1)) != next_generation         or String(event.get("route_hash", "")) != String(route_by_hash[candidate_hash].get("route_hash", ""))         or int(event.get("destination_cell_index", -2)) != int(route_by_hash[candidate_hash].get("destination_cell_index", -3))         or String(event.get("recruitment_event_hash", "")) != Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION):
             _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_HASH_INVALID"
+            return {}
+        var destination := int(event.get("destination_cell_index", -1))
+        if bool(route_by_hash[candidate_hash].get("in_patch", false)):
+            if destination < 0 or destination >= environment_cells.size()             or String(event.get("environment_cell_hash", "")) != String(environment_cells[destination].get("cell_hash", "")):
+                _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_ENV_BINDING_INVALID"
+                return {}
+        elif destination != -1 or not String(event.get("environment_cell_hash", "")).is_empty():
+            _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_ENV_BINDING_INVALID"
             return {}
 
     if String(proposal.get("candidate_pool_hash", "")) != _candidate_pool_hash(candidates)     or String(proposal.get("dispersal_pool_hash", "")) != _dispersal_pool_hash(routes)     or String(proposal.get("recruitment_hash", "")) != _recruitment_hash(recruitment)     or String(proposal.get("proposal_hash", "")) != Stream1Executor.proposal_hash(proposal):
@@ -673,24 +719,39 @@ func _population_record(record_id: String, reproductive_identity: String, cell_i
     return record
 
 func _validate_generation_evidence() -> bool:
-    if last_candidates.size() != last_routes.size() or last_routes.size() != last_recruitment.size():
+    return _validate_generation_evidence_values(
+        last_candidates, last_routes, last_recruitment,
+        last_candidate_pool_hash, last_dispersal_pool_hash, last_recruitment_hash
+    )
+
+func _validate_generation_evidence_values(
+    candidate_values: Array[Dictionary],
+    route_values: Array[Dictionary],
+    recruitment_values: Array[Dictionary],
+    candidate_pool_hash_value: String,
+    dispersal_pool_hash_value: String,
+    recruitment_hash_value: String
+) -> bool:
+    if candidate_values.size() != route_values.size() or route_values.size() != recruitment_values.size():
         return false
-    if last_candidate_pool_hash != _candidate_pool_hash(last_candidates):
+    if candidate_pool_hash_value != _candidate_pool_hash(candidate_values):
         return false
-    if last_dispersal_pool_hash != _dispersal_pool_hash(last_routes):
+    if dispersal_pool_hash_value != _dispersal_pool_hash(route_values):
         return false
-    if last_recruitment_hash != _recruitment_hash(last_recruitment):
+    if recruitment_hash_value != _recruitment_hash(recruitment_values):
         return false
     var candidate_by_hash := {}
-    for candidate_value in last_candidates:
-        var candidate: Dictionary = candidate_value
-        if String(candidate.get("candidate_hash", "")) != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
+    for candidate in candidate_values:
+        var candidate_hash := String(candidate.get("candidate_hash", ""))
+        if candidate_hash.is_empty() or candidate_by_hash.has(candidate_hash):
             return false
-        candidate_by_hash[String(candidate["candidate_hash"])] = candidate
-    for route_value in last_routes:
-        var route: Dictionary = route_value
+        if candidate_hash != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
+            return false
+        candidate_by_hash[candidate_hash] = candidate
+    var route_by_hash := {}
+    for route in route_values:
         var candidate_hash := String(route.get("candidate_hash", ""))
-        if not candidate_by_hash.has(candidate_hash):
+        if not candidate_by_hash.has(candidate_hash) or route_by_hash.has(candidate_hash):
             return false
         if String(route.get("route_hash", "")) != _route_hash(route):
             return false
@@ -700,6 +761,15 @@ func _validate_generation_evidence() -> bool:
         var expected_in_patch := expected_x >= 0 and expected_x < GRID_SIZE and expected_y >= 0 and expected_y < GRID_SIZE
         var expected_destination := expected_y * GRID_SIZE + expected_x if expected_in_patch else -1
         if bool(route["in_patch"]) != expected_in_patch or int(route["destination_cell_index"]) != expected_destination:
+            return false
+        route_by_hash[candidate_hash] = route
+    for event in recruitment_values:
+        var candidate_hash := String(event.get("candidate_hash", ""))
+        if not route_by_hash.has(candidate_hash):
+            return false
+        if String(event.get("route_hash", "")) != String(route_by_hash[candidate_hash].get("route_hash", "")):
+            return false
+        if String(event.get("recruitment_event_hash", "")) != Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION):
             return false
     return true
 

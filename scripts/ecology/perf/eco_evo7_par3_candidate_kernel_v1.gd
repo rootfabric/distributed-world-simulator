@@ -94,6 +94,46 @@ static func sort_candidates(candidates: Array[Dictionary]) -> Array[Dictionary]:
 	)
 	return candidates
 
+## Cheap authority-side binding validation. This deliberately does NOT
+## reproduce the child (that remains expensive worker/kernel work), but it
+## proves that a proposal candidate is attached to a current parent, the
+## canonical offspring ordinal and the exact deterministic mutation seed.
+## The child bundle itself is validated before LS3.3 commits next_records.
+static func validate_parent_binding(
+	parent: Dictionary,
+	candidate: Dictionary,
+	generation: int,
+	schema: String,
+	evolution_seed: int,
+	offspring_per_parent: int
+) -> bool:
+	if String(candidate.get("parent_record_id", "")) != String(parent.get("record_id", "")):
+		return false
+	if String(candidate.get("parent_reproductive_identity", "")) != String(parent.get("reproductive_identity", "")):
+		return false
+	if int(candidate.get("parent_cell_index", -1)) != int(parent.get("cell_index", -2)):
+		return false
+	if int(candidate.get("generation", -1)) != generation:
+		return false
+	var ordinal := int(candidate.get("offspring_ordinal", -1))
+	if ordinal < 0 or ordinal >= offspring_per_parent:
+		return false
+	if int(candidate.get("mutation_seed", -1)) != _mutation_seed(
+		schema, evolution_seed, parent, generation, ordinal):
+		return false
+	var bundle_value = candidate.get("child_bundle")
+	if not bundle_value is Dictionary:
+		return false
+	var bundle: Dictionary = bundle_value
+	if String(candidate.get("child_bundle_checksum", "")) != String(bundle.get("bundle_checksum", "")):
+		return false
+	var lineage_value = bundle.get("lineage")
+	if not lineage_value is Dictionary:
+		return false
+	if String(candidate.get("child_individual_id", "")) != String(Dictionary(lineage_value).get("individual_id", "")):
+		return false
+	return true
+
 ## Full serial build over ordered parents (audit oracle and default path).
 ## Returns [] on any failure (fail-closed).
 static func build_all(

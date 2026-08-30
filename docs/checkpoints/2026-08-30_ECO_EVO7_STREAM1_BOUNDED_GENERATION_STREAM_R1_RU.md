@@ -75,7 +75,9 @@ immutable base generation
 - полные counts;
 - canonical candidate order;
 - каждый `candidate_hash` через единый PAR3 kernel;
-- каждый `route_hash` через единый STREAM1 route kernel;
+- candidate → **current parent record** binding: record id, reproductive identity,
+  cell, offspring ordinal и deterministic mutation seed;
+- каждый route целиком пересчитывается через единый STREAM1 route kernel;
 - связь route → candidate;
 - каждый `recruitment_event_hash` через единый PAR0 kernel;
 - связь recruitment → route;
@@ -131,8 +133,10 @@ chunk=7, chunk=64 и любом будущем эквивалентном schedu
 - `STREAM1_COUNT_MISMATCH`;
 - `STREAM1_NONCANONICAL_ORDER`;
 - `STREAM1_CANDIDATE_HASH_INVALID`;
+- `STREAM1_CANDIDATE_PARENT_BINDING_INVALID`;
 - `STREAM1_ROUTE_HASH_INVALID`;
 - `STREAM1_RECRUITMENT_HASH_INVALID`;
+- `STREAM1_RECRUITMENT_ENV_BINDING_INVALID`;
 - `STREAM1_PROPOSAL_HASH_MISMATCH`.
 
 Любой отказ до publication оставляет generation и population state
@@ -184,7 +188,8 @@ tests/ecology/eco_evo7_stream1_generation_stream_acceptance.gd
    3 environment recipes × 3 chunk sizes × 12 generations = **108 exact
    canonical comparisons**;
 5. deterministic audits gen1 + gen10;
-6. chunk failure / audit mismatch / stale base / corrupted proposal hash;
+6. chunk failure / audit mismatch / stale base / forged parent binding /
+   corrupted proposal hash;
 7. generation/state hashes не меняются при fail-closed;
 8. mutual exclusion с PAR2/PAR3 executor seams;
 9. публичный Workbench → LS3.4 → LS3.3 путь.
@@ -238,3 +243,17 @@ exact HEAD/TREE recorded
 ```
 
 До этого статус остаётся **LOCAL CANDIDATE**, даже если code review зелёный.
+
+
+## R1 authority hardening review
+
+В финальном source-review до Windows gate дополнительно закрыты два риска:
+
+1. **Parent binding hole.** `candidate_hash` по frozen PAR3 contract не включает
+   `parent_record_id`/cell. Поэтому STREAM1 authority отдельно привязывает
+   candidate к текущему parent record и проверяет canonical mutation seed.
+   Acceptance содержит специально hash-consistent forged-parent fault.
+2. **Validate-before-mutate.** LS3.3 теперь валидирует proposed evidence и
+   materialized `next_records` до изменения `generation/records`. Это
+   убирает старое окно validate-after-assignment и делает failed validation
+   атомарно fail-closed для всех LS3.3 execution paths.
