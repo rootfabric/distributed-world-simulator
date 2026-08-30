@@ -1,0 +1,265 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v15",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH",
+  "parent_research_head": "e4962f067722008ac90993ba648a6f9d2a84f9ec",
+  "exact_tested_executable_commit": "a8ff0d7360b4bba0f1b3e164f8c040d73622b1ee",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "reused exact binary previously re-extracted from the original user-provided godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_multibody_convex_model_v1.gd": "329fe422a519c87cd43b2c43e30eb911e66069593f9334e9ead4400b59e5e320",
+    "scripts/research/fabric0/fabric0_multibody_complementarity_v1.gd": "437baa63df7cd8472721d0225f6784cb7403d8ffd2ca1f48e3298dfc7e5fcfde",
+    "scripts/research/fabric0/fabric0_multibody_driver_v1.gd": "170ea1f66534f83c92f5ee4b654f9ffeaf61e45017b3652af215555269932679",
+    "scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_v1.gd": "3ee576134e840faac0eca17301369f28e5ec3c3248da3c99b3ea380ca80657ab",
+    "scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_experiments_v1.gd": "413f05f1cd734a23def05da6c5808347b03a710e0e6033bc4615190e59f9b689",
+    "tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_acceptance.gd": "6203f521fdbc448acb4f5a0d9cdb0a970c34360cf0718ca09217bb6516ce687d",
+    "tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_playground.gd": "4c2591a3ebd86169c7b44c4d295e5eae3c0a5cffd3da9c1a71e10bbd9cc5d9f5"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_multibody_convex_model_v1.gd": "ef5b08656e6b747b62edbf973fddd2dfb3cece70",
+    "scripts/research/fabric0/fabric0_multibody_complementarity_v1.gd": "e9a731afefa0d86254ab8fec3b1bcfb0482192c3",
+    "scripts/research/fabric0/fabric0_multibody_driver_v1.gd": "7bcd1402ace822ee29f30d9f10c0b192c0c2abaf",
+    "scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_v1.gd": "60b4ca92c856d6b6aa63b185c25a5ff5aaa62bcd",
+    "scripts/research/fabric0/fabric0_multibody_convex_complementarity_graph_experiments_v1.gd": "7a5d8a7a94311a5d613b495c1976c8f4f15a23c1",
+    "tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_acceptance.gd": "5dd08bff21449615113f5890b795ca7420adc302",
+    "tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_playground.gd": "db94890564626ea0921e2bf5f73e49053c83a1a6"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "count": "7/7",
+    "method": "seven exact Git blobs were committed in one tree on top of FABRIC0.14 and every branch path was re-fetched; GitHub blob SHA equals local git hash-object for all seven files",
+    "executable_commit": "a8ff0d7360b4bba0f1b3e164f8c040d73622b1ee"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 103,
+    "marker": "FABRIC0.15 Multibody Convex Complementarity Graph Acceptance: PASS",
+    "state_contract": {
+      "dynamic_bodies": 4,
+      "state_components_per_body": 13,
+      "whole_state_components": 52,
+      "full_6dof_per_body": true
+    },
+    "main_run": {
+      "dt": 0.001,
+      "duration": 0.4,
+      "merge_contact": "C|D",
+      "merge_time": 0.18299031095859,
+      "merge_contact_mode": "stick",
+      "merge_normal_impulse": 0.59227588215158,
+      "merge_tangent_impulse": [-0.00467806420921, -0.03987303859427],
+      "island_before_merge": [["A","B","C"],["D"]],
+      "island_after_merge": [["A","B","C","D"]],
+      "source_change_time": 0.32,
+      "source_change_id": "drive:D",
+      "source_change_new_force": [0.0,0.0,12.0],
+      "split_time": 0.32,
+      "split_reason": "COMPLEMENTARITY_SEPARATION",
+      "island_before_split": [["A","B","C","D"]],
+      "island_after_split": [["A","B","C"],["D"]],
+      "contact_solves": 403,
+      "pgs_iterations": 12896,
+      "max_normal_velocity_violation": 0.0001634842214,
+      "max_cone_violation": 0.0,
+      "max_penetration": 0.00000472630019,
+      "contact_dissipation": 0.65570895032957,
+      "contact_gain": 0.0,
+      "external_work": 1.13448578288811,
+      "projection_energy_delta": 0.0,
+      "projection_distance": 0.00001911595595,
+      "energy_delta": 0.52578585199459,
+      "energy_ledger_residual": 0.04700901943605,
+      "internal_linear_momentum_error": 0.0,
+      "internal_angular_momentum_error": 0.0,
+      "state_hash": "68e18b6a9a16b574aaf0b6ca30b3cf5160ea9a69ba8919df11f1b04fda92d29c"
+    },
+    "fixed_step_refinement": {
+      "reference_dt": 0.0005,
+      "reference_merge_time": 0.18321697505484,
+      "reference_split_time": 0.32,
+      "tested_dt": [0.004,0.002,0.001],
+      "merge_time_errors": [
+        0.0015902247457270924,
+        0.0006811752040176144,
+        0.00022666409624433337
+      ],
+      "full_52d_state_errors": [
+        0.004257633804026106,
+        0.0018033092993312572,
+        0.0007327864068812362
+      ],
+      "energy_ledger_residuals": [
+        0.1863040594936023,
+        0.09295272462256121,
+        0.047009019436045296
+      ],
+      "merge_time_error_strictly_decreases": true,
+      "state_error_strictly_decreases": true,
+      "energy_residual_strictly_decreases": true,
+      "split_time_exactly_source_locked": true
+    },
+    "coupled_normal_chain": {
+      "dt": 0.004166666666666667,
+      "expected_impulses": {
+        "B|C": 0.0367875,
+        "A|B": 0.08379375,
+        "plane|A": 0.12466875
+      },
+      "solved_impulses": {
+        "B|C": 0.03678437280127,
+        "A|B": 0.08378662693623,
+        "plane|A": 0.12466162693623
+      },
+      "max_normal_velocity_violation": 0.00000347466525,
+      "max_cone_violation": 0.0
+    },
+    "mixed_friction_graph": {
+      "same_coupled_island": true,
+      "modes": {
+        "plane|A": "stick",
+        "A|B": "stick",
+        "B|C": "slide"
+      },
+      "sliding_contact": "B|C",
+      "sliding_normal_impulse": 0.03678437280127,
+      "sliding_tangent_impulse_norm": 0.01250668675243,
+      "coulomb_boundary_satisfied": true,
+      "max_cone_violation": 0.0
+    },
+    "contact_order_robustness": {
+      "solver": "projected block Gauss-Seidel",
+      "iterations": 32,
+      "forward_reverse_same_modes": true,
+      "max_linear_velocity_difference": 0.0000018593214664426525,
+      "max_angular_velocity_difference": 0.00000021323642847629,
+      "exact_order_independence_claimed": false
+    },
+    "configuration_localization": {
+      "new_contact_negative_gap_corrected_to_zero_before_impulse": true,
+      "changes_velocity": false,
+      "changes_momentum": false,
+      "projection_distance_main_dt_0_001": 0.00001911595595,
+      "projection_energy_delta_main_dt_0_001": 0.0,
+      "projection_distance_monotonic_refinement_claimed": false
+    },
+    "dynamic_mode_history": {
+      "contains_slide": true,
+      "contains_slide_to_stick": true,
+      "new_C_D_contact_stick": true,
+      "root_localized_stick_slide_transition_claimed": false
+    },
+    "parallel_island_audit": {
+      "actual_godot_threads": true,
+      "threads_started": 2,
+      "canonical_hash": "49e8c7b2fa0e1177f0e19d36ee85c4e22239ad95556c2c0a7c909d24fb47b34b",
+      "reverse_spawn_same_hash": true,
+      "does_not_mutate_physical_world": true,
+      "same_world_production_scheduler_claimed": false
+    },
+    "deterministic_replay": {
+      "state_hash_exact_match": true,
+      "event_json_exact_match": true,
+      "graph_event_json_exact_match": true
+    },
+    "fail_closed": {
+      "zero_step": "BAD_STEP",
+      "nonpositive_duration": "DURATION_NONPOSITIVE"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_multibody_convex_complementarity_graph_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH_PLAYGROUND_PASS"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "predecessor_regression": {
+    "checkpoint": "FABRIC0.14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD",
+    "runtime_rerun": true,
+    "runtime_result": "PASS",
+    "assertions": 156,
+    "marker": "FABRIC0.14 Full 6DOF Frictional Feature Manifold Acceptance: PASS",
+    "same_exact_double_runtime": true,
+    "executable_blobs_preserved_7_of_7": true,
+    "blobs": {
+      "scripts/research/fabric0/fabric0_full6dof_contact_v1.gd": "08e247d97f5fd261f8dfc6facda028ebca2727b3",
+      "scripts/research/fabric0/fabric0_full6dof_model_v1.gd": "c766a915a02b8269024ddd93e9a4fb1f9f210bd1",
+      "scripts/research/fabric0/fabric0_full6dof_driver_v1.gd": "6a8c2417b44b25d82038e7bdc3ca2c1ae5616eba",
+      "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_v1.gd": "ce2d2270af508e2fabe5ede2ccfdf884e7c6f6fb",
+      "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_experiments_v1.gd": "c914866af52b6dc595a076fb7c24cf30701d03fd",
+      "tests/research/fabric0/fabric0_full6dof_frictional_manifold_acceptance.gd": "97a27b68358aab2c6bfb9dc091786dd3524839b7",
+      "tests/research/fabric0/fabric0_full6dof_frictional_manifold_playground.gd": "97355e398262fbaad6d883e21fd69f80c9e4477a"
+    }
+  },
+  "falsification_findings": [
+    {
+      "id": "FABRIC0.15-FINDING-LATERAL-MERGE-SCENARIO",
+      "symptom": "lateral incoming D naturally broke the A-B-C stack",
+      "interpretation": "not sufficient evidence of solver failure; the geometry confounded graph-merge semantics with lateral destruction",
+      "fix": "use vertical D-on-C merge with mild tangential/rotational motion so gravity holds the merged graph",
+      "principle": "falsification scenarios should isolate the architecture property being tested"
+    },
+    {
+      "id": "FABRIC0.15-FINDING-TIMESTEP-DEPENDENT-HOLD",
+      "symptom": "coarse timesteps appeared to hold C|D while fine timesteps separated almost immediately",
+      "interpretation": "merge-hold narrative was not physically robust",
+      "fix": "scenario/event handling changed until compressive hold persisted under the finer reference",
+      "principle": "topology narratives that vanish under refinement are not accepted physical evidence"
+    },
+    {
+      "id": "FABRIC0.15-FINDING-PENETRATION-BAUMGARTE",
+      "symptom": "new contact was discovered after penetration; Baumgarte bias generated separating velocity and destroyed the just-created contact",
+      "fix": "configuration-only inverse-mass weighted localization to gap=0 before the contact impulse solve",
+      "principle": "configuration event localization and physical momentum jumps are separate semantic operations"
+    }
+  ],
+  "claims": [
+    "four simultaneously dynamic full-6DOF bodies participate in the research world",
+    "the accepted whole-system state has 52 physical components",
+    "shared body velocities make normal and tangential contact blocks graph-coupled",
+    "projected normal complementarity and projected 2D Coulomb tangent blocks execute in the same solver",
+    "an analytic three-contact chain demonstrates load propagation through the coupled graph",
+    "stick and slide coexist simultaneously in one coupled support island",
+    "a free body D merges into the existing A-B-C support island through C|D",
+    "the merged A-B-C-D island persists under compressive loading in the accepted refinement family",
+    "an exact external source change causes complementarity separation of C|D and island split",
+    "new-contact configuration localization changes no momentum and is distinguished from physical impulse",
+    "merge time, full 52D final state and energy-ledger residual improve under fixed-step refinement",
+    "demonstrated internal body-body impulse applications preserve total linear and angular momentum to the recorded audit tolerance",
+    "forward/reverse PGS block order yields the same friction modes with small finite-iteration state differences",
+    "dynamic friction mode history includes slide and slide-to-stick behavior",
+    "deterministic replay reproduces state/event/graph history",
+    "two actual Godot Threads produce a canonical order-independent joined snapshot hash",
+    "all seven FABRIC0.15 executable files are byte-identical between exact-tested local files and the GitHub branch",
+    "FABRIC0.14 runtime acceptance reruns and passes 156/156 on the same exact-double Godot"
+  ],
+  "non_claims": [
+    "current convex geometry is sphere/plane, not arbitrary convex polytope collision",
+    "no GJK or EPA",
+    "no mesh collision",
+    "no true multipoint face manifold",
+    "no globally converged graph-wide MCP/NCP or semismooth solve",
+    "PGS is not exactly contact-order independent at finite iteration count",
+    "no production block-sparse/CSR backend",
+    "time integration uses fixed-step refinement, not adaptive error control",
+    "no exact simultaneous multi-impact localization",
+    "stick/slide mode transitions are not root-localized",
+    "main accepted split is initiated by an explicit external source change",
+    "no rolling or torsional friction",
+    "no production broadphase",
+    "parallel evidence is snapshot-level, not a production same-world scheduler",
+    "no Construction/authority/persistence/replication integration",
+    "no full materialized DWS regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.16_GENERAL_CONVEX_MULTIPOINT_MCP",
+    "goal": "arbitrary convex support mapping with GJK/EPA, persistent multipoint manifolds, graph-wide MCP/NCP or semismooth complementarity, adaptive separation/stick-slide localization, same-world parallel islands and stronger sparse production-shaped evidence"
+  }
+}
