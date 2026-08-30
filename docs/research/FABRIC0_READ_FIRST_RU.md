@@ -45,6 +45,7 @@ Canonical semantic owner конструкций остаётся существ�
    - FABRIC0.7: `FABRIC0_7_STATEFUL_HYBRID_TIME_RU.md`
    - FABRIC0.8: `FABRIC0_8_COUPLED_HYBRID_DAE_RU.md`
    - FABRIC0.9: `FABRIC0_9_MULTICONTACT_GEOMETRIC_CONE_RU.md`
+   - FABRIC0.10: `FABRIC0_10_PERSISTENT_CONTACT_GRAPH_RU.md`
 5. validation evidence последней версии.
 6. historical predecessor evidence, если меняется фундаментальная семантика.
 
@@ -84,8 +85,12 @@ MULTI-CONTACT GEOMETRIC MANIFOLD + CONE SOLVE
 geometry-derived coupled multi-contact
         ↓
 FABRIC0.10
-PERSISTENT CONTACT GRAPH + SPARSE HYBRID DAE
+PERSISTENT CONTACT GRAPH + SPARSE HYBRID CONTACT STEP
 long-lived multi-body contact islands
+        ↓
+FABRIC0.11
+GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND
+active-island event localization + sparse numerical solve
 ```
 
 ## 4. Инварианты, которые нельзя случайно потерять
@@ -232,57 +237,60 @@ FABRIC не должен попадать в production только потом�
 
 ## 8. Текущая граница
 
-FABRIC0.9 завершён как research candidate.
+FABRIC0.10 завершён как research candidate.
 
 Exact evidence:
 
 ```text
-FABRIC0.9 Multi-Contact Cone      136/136 PASS
-FABRIC0.8 Coupled Hybrid DAE       71/71 PASS
-FABRIC0.7 Hybrid Time              88/88 PASS
-FABRIC0.6 Nonsmooth              121/121 PASS
-FABRIC0.6 Compatibility            42/42 PASS
-FABRIC0.9 playground               PASS
-editor parse/compile               CLEAN
-remote/local executable bytes      IDENTICAL
+FABRIC0.10 Persistent Contact Graph    97/97 PASS
+FABRIC0.10 playground                  PASS
+editor parse/compile                   CLEAN
+remote/local executable bytes          IDENTICAL
+
+FABRIC0.9 executable blobs             PRESERVED
+FABRIC0.9 runtime regression rerun      NO
 ```
 
-FABRIC0.9 доказал:
+FABRIC0.10 доказал:
 
-- geometry-derived 8-contact manifold from floor+wall;
-- stable contact identity;
-- deterministic 2D tangent basis;
-- angular contact Jacobians;
-- global `J M^-1 J^T` coupling;
-- true 2D Coulomb cone constraint;
-- one simultaneous global impulse solve;
-- active contacts from multiple surfaces;
-- linear/angular impulse audit;
-- dissipative energy noncreation in the main case;
-- explicit detection of reaction redundancy `rank=6/24`;
-- exact order invariance under reversed plane/contact enumeration;
-- deterministic canonical reaction representative without false uniqueness claim.
+- dynamic body-body contact как persistent graph edge;
+- stable contact identity across time;
+- explicit lifecycle `appear/persist/disappear`;
+- warm-start previous impulse по contact identity;
+- demonstrated iteration reduction `39 -> 3`;
+- automatic island merge/split `3 -> 2 -> 3`;
+- static environment не склеивает unrelated dynamic islands;
+- warm-start survives island merge;
+- sparse Jacobian/effective-mass assembly;
+- merged island sparse structure `29/81`;
+- resting A/B stack под gravity;
+- independent-island trajectory equivalence;
+- exact order invariance across graph history;
+- contact-free first-contact event localization at `t=0.460381178993`;
+- persistent contact enters history at physical event time.
+
+Важно:
+
+FABRIC0.10 не заявляет predecessor runtime rerun. FABRIC0.9 executable bytes только доказанно сохранились неизменными.
 
 Следующая задача:
 
-**FABRIC0.10 — PERSISTENT CONTACT GRAPH + SPARSE HYBRID DAE**
+**FABRIC0.11 — GENERAL EVENT-LOCALIZED CONTACT ISLANDS + SPARSE BACKEND**
 
 Цель:
 
 ```text
-generic contact-provider boundary
-persistent contact identity
-dynamic body-body contacts
-contact lifecycle
-contact graph islands
-sparse assembly
-warm-start
-resting-contact complementarity
-multi-contact cone solve inside FABRIC0.8 time
-deterministic island replay
-```
+existing persistent islands remain constrained
+while
+new dynamic contact is localized inside macrostep
 
-Критический test: несколько dynamic bodies образуют stack/bridge, contacts появляются/живут/исчезают, independent islands решаются отдельно, warm-start использует stable identity, а перестановка body/contact enumeration не меняет physical result.
+then:
+event-time island merge/recompile
+warm-start remap
+true sparse numerical backend
+remaining time continuation
+order-invariant replay
+```
 
 ## 9. Правило новой сессии
 
@@ -290,20 +298,22 @@ deterministic island replay
 
 - почему Construction остаётся canonical semantic owner;
 - почему physical ports acausal;
-- как topology становится equations;
+- почему topology компилируется в equations;
 - почему dimensions executable;
 - почему residual=0 недостаточно без rank;
-- почему nonsmooth law = admissible manifolds;
 - почему FLOW/JUMP/TOPOLOGY TRANSACTION разделены;
-- почему differential и algebraic state решаются coupled;
-- почему impulse является solved reaction;
-- почему event instant требует re-solve/fixed point;
-- почему geometry генерирует constraints, а не owns behavior;
-- почему contact tangent space двухмерный;
-- почему Coulomb friction — cone, а не два clamps;
-- почему all contacts должны собираться глобально;
-- почему order invariance — физический acceptance criterion;
-- почему deterministic reaction split не равен unique physical truth;
-- какие ограничения FABRIC0.9 ещё действуют.
+- почему differential/algebraic state coupled;
+- почему impulse solved reaction;
+- почему geometry генерирует constraints;
+- почему Coulomb friction — cone;
+- почему multi-contact order invariance mandatory;
+- почему deterministic reaction split может быть non-unique;
+- почему contact теперь persistent graph relation;
+- почему contact identity переживает island merge/split;
+- почему warm impulse — numerical continuity, не semantic truth;
+- почему static boundary не должна соединять dynamic islands;
+- почему sparse structure следует contact graph;
+- почему current event bridge честно ограничен contact-free start;
+- какие non-claims FABRIC0.10 ещё действуют.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
