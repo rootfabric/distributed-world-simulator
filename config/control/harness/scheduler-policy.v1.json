@@ -51,8 +51,8 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_OWNER_MAP_PRE_DISPATCH",
-    "runtime_mutation_allowed_now": false,
+    "current_phase": "P7_1_DISPATCHED",
+    "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
     "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
@@ -76,11 +76,10 @@
       "FRESH_P7_EPOCH_AND_WORK_ORDER",
       "MUTATION_LEASE_ROTATED_TO_P7",
       "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS",
-      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED"
-    ],
-    "p7_remaining_activation_prerequisites": [
+      "POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
       "DIRECTOR_DISPATCH"
     ],
+    "p7_remaining_activation_prerequisites": [],
     "p7_owner_map": {
       "tool_equipment": "P5_EXISTING_OWNER",
       "player_authority_route": "SM1_EXISTING_AUTHORITY_ROUTE",
@@ -105,6 +104,14 @@
       "status": "PASS_NON_RED",
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
       "run": 33293384467
+    },
+    "p7_1": {
+      "state": "DISPATCHED",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "exact_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+      "selected_component": "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
+      "scope": "STATELESS_AUTHORIZE_MUTATION_COMPOSITION_GATE",
+      "runtime_mutation_authorized": true
     }
   },
   "research_isolation": {
@@ -124,7 +131,7 @@
     "holder_program": "V0",
     "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "RESERVED_FOR_V0_P7_PRE_DISPATCH_NO_ACTIVE_RUNTIME_MUTATION",
+    "state": "ACTIVE_V0_P7_DISPATCHED_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -135,7 +142,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "SM1 is formally accepted. P7.0 owner-map review and canonical post-merge Project Control are complete and NON_RED. The single pre-H0.3 runtime mutation lease remains reserved to P7, but runtime mutation is still forbidden until Director dispatch is durably recorded."
+    "reason": "Director dispatch is durably recorded for P7.1 after P7.0 acceptance and post-merge PC0 NON_RED. Exactly one runtime mutation worker is authorized on the declared P7 branch; non-holder runtime dispatch remains forbidden."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,

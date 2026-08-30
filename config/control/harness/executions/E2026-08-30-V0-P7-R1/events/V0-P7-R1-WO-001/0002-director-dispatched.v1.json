@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0002",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-30T06:58:00Z",
+  "head_sha": "5bbb2dac67382dcc6afc889b1f158397994233f5",
+  "summary": "Director dispatches bounded P7.1 implementation after P7.0 owner-map acceptance and canonical post-merge PC0 NON_RED. Runtime scope is the stateless product authorization/composition gate only; existing MW4-MW10, SM1, Item Graph and persistence owners remain unchanged.",
+  "command": "DIRECTOR_DISPATCH_ACCEPTED_SM1_BASE_V0_P7_WORK_ORDER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json"
+  ]
+}

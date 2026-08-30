@@ -304,7 +304,7 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         current_v0 = self.registry["programs"]["V0"]
         self.assertTrue(current_v0["branch"].startswith("control/v0-p7-"), current_v0["branch"])
         self.assertEqual(P7_BRANCH, current_v0["prebuild_state"]["branch"])
-        self.assertEqual("NOT_CREATED", current_v0["prebuild_state"]["head_at_refresh_input"])
+        self.assertEqual("NOT_CREATED_AT_DISPATCH_COMMIT", current_v0["prebuild_state"]["head_at_refresh_input"])
         self.assertFalse(current_v0["prebuild_state"]["runtime_mutation_present"])
         self.assertNotEqual(P4_BRANCH, current_v0["branch"])
 
