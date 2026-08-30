@@ -73,6 +73,7 @@ jobs:
               Path("config/architecture/global-program-roadmap.v1.json"),
               Path("config/control/harness/project-goals.v1.json"),
               Path("config/control/harness/checkpoint-catalog.v1.json"),
+              Path("config/control/harness/rta0-realtime-action-temporal-foundation.v1.json"),
               Path("config/control/harness/harness-policy.v1.json"),
               Path("config/control/harness/scheduler-policy.v1.json"),
               Path("config/control/harness/v0-product-train-policy.v1.json"),
@@ -102,6 +103,9 @@ jobs:
 
       - name: Run Harness checkpoint-session regression
         run: python3 -m unittest tests.harness.test_harness_checkpoint_session
+
+      - name: Run RTA0 realtime-action temporal foundation regression
+        run: python3 -m unittest tests.harness.test_rta0_realtime_action_temporal_foundation
 
       - name: Run architecture and ownership passport compatibility regression
         run: |
