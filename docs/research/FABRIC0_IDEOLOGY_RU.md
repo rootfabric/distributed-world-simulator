@@ -1041,3 +1041,191 @@ global world
 ~~~
 
 Это главный путь FABRIC0.10.
+
+
+## 52. Contact является persistent relation, а не transient callback
+
+FABRIC0.10 подтверждает:
+
+> Если физическая связь живёт между timesteps, её identity и lifecycle должны существовать отдельно от конкретного solver invocation.
+
+Contact может:
+
+```text
+appear
+persist
+change reaction/mode
+disappear
+```
+
+Это causal history.
+
+## 53. Contact identity и numerical cache — разные уровни истины
+
+Stable contact identity имеет physical/history смысл.
+
+Previous impulse warm cache — numerical continuity.
+
+Поэтому:
+
+```text
+contact identity
+!=
+warm-start value
+```
+
+Identity может участвовать в history/replay.
+
+Warm impulse не должен автоматически становиться canonical semantic state.
+
+## 54. Warm start следует relation identity, а не solver partition
+
+Islands могут merge/split.
+
+Если contact продолжает существовать, его numerical continuity не должна исчезать только потому, что поменялся island id.
+
+Новая аксиома:
+
+> Persistent numerical hints привязываются к stable physical relation identity, а не transient computational partition.
+
+## 55. Static boundary не является dynamic graph connectivity
+
+Shared floor не должен связывать все resting objects в один global island.
+
+Static environment задаёт boundary constraints.
+
+Dynamic graph connectivity возникает от relations между dynamic DOF sets.
+
+Это фундаментально для world-scale locality.
+
+## 56. Island decomposition — не только optimization
+
+FABRIC0.10 проверяет independent-island equivalence:
+
+```text
+unrelated island mutations
+do not change local trajectory
+```
+
+Следовательно island decomposition выражает physical conditional independence, а не только performance trick.
+
+## 57. Sparse structure должна следовать topology
+
+Contact graph sparse.
+
+Jacobian sparse.
+
+Effective-mass coupling sparse/block-local.
+
+Правильная numerical architecture должна сохранять эту sparsity как можно глубже.
+
+FABRIC0.10 пока только:
+
+```text
+sparse assembly
+→ dense island-local factorization
+```
+
+Это переходный checkpoint.
+
+Нельзя объявлять его full sparse backend.
+
+## 58. Lifecycle events являются частью causal evidence
+
+```text
+appeared
+persisted
+disappeared
+```
+
+не просто debugging labels.
+
+Они важны для:
+
+- event history;
+- warm-start remap;
+- persistence;
+- future replication;
+- explainability;
+- deterministic replay.
+
+При production integration они должны стыковаться с уже существующими authority/time identity foundations, а не создавать второй owner.
+
+## 59. Persistent resting contact отличается от impact
+
+Impact law и resting constraint используют одну reaction grammar, но разные temporal regimes.
+
+Impact:
+
+```text
+finite impulse across jump
+```
+
+Resting contact:
+
+```text
+repeated constrained time steps
+supporting load
+```
+
+Нельзя считать, что хороший impact solve автоматически доказывает долгосрочную resting stability.
+
+FABRIC0.10 впервые проверяет второй режим отдельно.
+
+## 60. Event time и persistent graph должны быть одной будущей semantics
+
+FABRIC0.10 event bridge показывает правильную causal форму:
+
+```text
+continuous flow
+→ exact geometry crossing
+→ contact appears at te
+→ graph recompile
+→ constrained remaining flow
+```
+
+Но contact-free precondition показывает, что temporal и persistent graph solvers ещё не полностью слиты.
+
+Следующий mature form должна локализовать new events, пока old islands остаются constrained.
+
+## 61. Fail-closed limitation лучше ложной универсальности
+
+Если architecture ещё не умеет корректно локализовать event внутри already-constrained world, правильный результат:
+
+`EVENT_BRIDGE_REQUIRES_CONTACT_FREE_START`.
+
+Неправильный:
+
+- временно отключить old contacts;
+- snap event к frame end;
+- silently penetrate;
+- приблизительно «починить» topology после шага.
+
+FABRIC должен сохранять epistemic honesty даже ценой narrower API.
+
+## 62. Computational partitions не являются semantic owners
+
+Island ID, sparse matrix layout, Cholesky ordering, ADMM dual state — implementation structures.
+
+Они не должны становиться владельцами semantic construct/contact truth.
+
+Canonical semantic ownership остаётся выше в Construction и stable physical relation identities.
+
+## 63. Текущий образ contact fabric
+
+После FABRIC0.10:
+
+```text
+geometry
+→ stable contact relations
+→ persistent contact graph
+→ dynamic islands
+→ sparse constraint assembly
+→ warm-started nonsmooth solve
+→ physical state
+→ lifecycle history
+```
+
+Это уже похоже на долгоживущую physical substrate, но всё ещё research-only.
+
+Следующая проверка — сможет ли эта форма пережить event-localized graph merge при уже активных contacts.
