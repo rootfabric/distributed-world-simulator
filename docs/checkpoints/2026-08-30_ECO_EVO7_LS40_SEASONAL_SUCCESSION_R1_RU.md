@@ -479,3 +479,15 @@ LS4.0 R1 CODE COMPLETE
 AWAITING EXACT WINDOWS VERIFICATION
 NOT ACCEPTED
 ```
+
+
+## Fresh Windows mission
+
+Для независимого закрытия R1 использовать:
+
+`docs/checkpoints/2026-08-30_ECO_EVO7_LS40_R1_WINDOWS_VERIFICATION_MISSION_RU.md`
+
+Mission динамически резолвит текущий origin tip ветки, но отдельно требует,
+чтобы frozen runtime/harness anchors оставались его ancestors. Verification
+worktree является read-only evidence environment: при первом FAIL никаких
+repair-коммитов в нём делать нельзя.
