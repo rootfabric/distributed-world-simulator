@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "intent": "Final Director checkpoint-proposal evidence for exact R9 after fresh independent B6 verification and fresh independent B7 exact-head semantic review. Reconcile the append-only Work Order ledger to the exact verified/reviewed runtime subject without changing runtime bytes.",
+  "root_cause_or_reason": "The runtime candidate reached a valid exact-head state only after bounded R7/R8 M5 convergence/read-continuity repairs and the R9 M7 camera-basis repair. Fresh Windows V2 validation, independent VERIFICATION-003 and independent FINAL-REVIEW-002 all converge on exact R9. The remaining work is control-ledger reconciliation and checkpoint proposal; runtime merge remains a separate human gate.",
+  "changed_surfaces": [
+    "Exact SM1 product runtime and tests inherited from the previously reviewed composite subject; core SM1/P6/Gateway/NX product bytes remain unchanged across post-B5 repairs.",
+    "R7 M5 acceptance hardening: convergence barrier/process environment/test-harness strictness.",
+    "R8 M5 bounded typed control-read continuity: atomic JSON/support/driver/contracts/regression only.",
+    "R9 M7 graphical acceptance worker camera-basis synchronization: tools/runtime/m7_playable_network_client.gd + tests/runtime/test_m7_playable_networked_processes.gd only.",
+    "This reconciliation branch changes control/harness evidence/events/work-order snapshot only; no runtime subject mutation."
+  ],
+  "canonical_owner": "Exactly one active SM1 authority writer selected by the SM1 transfer coordinator; canonical gameplay truth remains with accepted M4 Item Graph, P4 Construction, P5 equipment/mining, P6 persistence/outpost owners and existing Gateway/NX transport owners.",
+  "entry_points": [
+    "scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_canonical_mutation_gate.gd",
+    "scripts/runtime/networked_gameplay/sm1/sm1_world_state_continuity.gd"
+  ],
+  "callers": [
+    "SM1 graphical/process A->B->A acceptance",
+    "SM1 fault/replay/concurrency/reconnect/restart/recovery acceptance",
+    "future accepted V0 product composition consuming SM1 authority routing"
+  ],
+  "callees": [
+    "accepted Gateway routing boundary",
+    "accepted NX transport/reconciliation foundation",
+    "accepted P6 identity/operation/persistence/outpost composition",
+    "canonical M4 Item Graph",
+    "P4 Construction",
+    "P5 equipment/mining"
+  ],
+  "sibling_surfaces_checked": [
+    "FINAL-REVIEW-002 independently proves no diff from old reviewed subject under scripts/runtime/networked_gameplay/sm1/**, scripts/app/**, scripts/network/** and scripts/runtime/networked_gameplay/p6/**.",
+    "R7 convergence barrier is byte-identical through R8/R9 after the authorized R7 layer.",
+    "R8 transient read set is typed and bounded; no stale .bak truth, convergence-generation retry or timeout increase.",
+    "R9 is exactly two files and restores camera basis through LunarPlayer.adjust_view without protocol/authority/range/timeout changes.",
+    "VERIFICATION-003 independently executed exact R9: M7 10/10, M5 10/10, focused SM1 13/13, impaired 5/5, canonical 304/304 with 307 steps and zero bad exits.",
+    "Fresh Reviewer preflight and semantic review captured standard PC0 YELLOW, directional YELLOW, zero cross-branch overlaps and zero candidate-specific critical hits."
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "R9 is the exact immutable product acceptance subject. Post-B5 runtime changes are only the Director-authorized M5 acceptance hardening/read-continuity layers and two-file M7 camera-basis acceptance-worker repair; no canonical owner, Gateway/NX product protocol, P6 owner, interaction authority, or SM1 core semantic bytes are expanded. This checkpoint-proposal carrier is control-only.",
+  "remaining_risks": [
+    "Project Control remains YELLOW rather than GREEN. This is explicitly NON_RED under canonical PC0 policy; the required convergence/control review before major acceptance has now been completed by FINAL-REVIEW-002.",
+    "Directional Project Control remains YELLOW because of unrelated/advisory or cross-program watch hits; exact reviewed R9 delta has zero candidate-specific critical hits.",
+    "Canonical main V0 registry/work-map still reflects the pre-dispatch SM1 control frontier and must be reconciled by the eventual main-owned acceptance/integration step.",
+    "Human RUNTIME_FEATURE_MERGE approval remains required before any runtime merge. Checkpoint proposal does not satisfy or bypass that gate.",
+    "P7 remains blocked until SM1 checkpoint acceptance is durably recorded on canonical main."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "After checkpoint proposal, obtain the declared human RUNTIME_FEATURE_MERGE approval before runtime integration.",
+    "During main-owned acceptance/integration, refresh V0 current work map/product train/registry to accepted SM1 exact lineage and declare the exact P7 successor base before any P7 runtime work."
+  ],
+  "evidence_gaps": [],
+  "review_verdict": "PASS"
+}
