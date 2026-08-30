@@ -990,3 +990,236 @@ byte identity                 PASS
 > Может ли несколько dynamic bodies долго жить в contact network, разбиваться на independent islands, сохранять stable contact identity/warm start и оставаться order-invariant при появлении/исчезновении contacts?
 
 Критический experiment: stack/bridge нескольких тел с stick/slide/contact lifecycle и sparse island solve.
+
+
+## FABRIC0.10 — Persistent Contact Graph + Sparse Hybrid Contact Step
+
+После FABRIC0.9 контактная физика впервые стала multi-contact и order-invariant, но contact всё ещё был в основном мгновенным solve object.
+
+Следующий вопрос был уже не про форму cone:
+
+> Что должно существовать между двумя solve instants, чтобы contact стал частью persistent world?
+
+### Contact получил историю
+
+FABRIC0.10 вводит contact cache keyed stable identity:
+
+```text
+age_steps
+first_step
+last_step
+warm_impulse
+```
+
+и lifecycle:
+
+```text
+appeared
+persisted
+disappeared
+```
+
+Это важный сдвиг от transient collision record к graph relation.
+
+### Dynamic-body graph стал solver topology
+
+Контакты dynamic↔dynamic являются graph edges.
+
+Static plane не становится общей graph вершиной.
+
+Поэтому:
+
+```text
+D touches floor
+E touches floor
+```
+
+не означает:
+
+```text
+D and E belong to one island
+```
+
+Но появление:
+
+`pair:D|E`
+
+автоматически merge-ит islands.
+
+### Warm start стал identity-local, а не island-local
+
+Первый solve четырёх persistent contacts:
+
+`39 iterations`.
+
+Следующий timestep:
+
+`3 iterations`.
+
+Warm hits:
+
+`4`.
+
+Самое важное: когда D/E islands merge, старые floor contact impulses остаются применимыми, потому что cache keyed contact identity.
+
+Это подтверждает, что numerical continuity должна следовать stable physical relation identity, а не transient solver partition.
+
+### Graph lifecycle experiment
+
+Sequence:
+
+```text
+3 islands
+↓
+pair:D|E appears
+↓
+2 islands
+↓
+pair:D|E persists
+↓
+pair:D|E disappears
+↓
+3 islands
+```
+
+Получен explicit lifecycle:
+
+```text
+appear
+persist
+disappear
+```
+
+без procedural contact callbacks.
+
+### Persistent resting load
+
+Stack A/B под gravity остаётся практически неподвижным пять steps.
+
+Cached impulses:
+
+```text
+A-B ~ 0.0981 N*s
+floor-A ~ 0.1962 N*s
+```
+
+Upper load передаётся через dynamic pair в floor.
+
+Это первый FABRIC checkpoint с долгоживущей body-body load path.
+
+### Sparse topology стала observable
+
+Jacobian rows и effective-mass entries сначала собираются sparse.
+
+Merged D/E island:
+
+```text
+sparse A entries = 29
+dense local capacity = 81
+```
+
+Но текущий solver после assembly всё ещё densify-ит local island matrix.
+
+Очень важно не называть это production sparse solver.
+
+### Independent islands проверены физически
+
+A/B trajectory в full world сравнивается с isolated A/B-only world.
+
+Несвязанные D/E merge/split не меняют A/B до `1e-12`.
+
+Это превращает island decomposition из optimization idea в executable locality invariant.
+
+### Order invariance пережила время и graph mutations
+
+Reverse:
+
+- body insertion;
+- contact provider output.
+
+Final world hash exact:
+
+`4103da3235e4cdd7f1c63c809d3dd71ab39d10ec7f68094d6eef33eabfe6033d`.
+
+Contact history JSON также identical.
+
+То есть order-invariance FABRIC0.9 пережила persistent lifecycle.
+
+### Event-time мост
+
+Чтобы contact graph не оказался purely frame-boundary abstraction, добавлен ограниченный event bridge.
+
+Falling sphere с contact-free start локализует floor crossing:
+
+`t=0.460381178993`.
+
+Именно в этот timestamp history получает:
+
+```text
+appeared:
+plane:floor|body:fall
+```
+
+Remaining macrostep решается уже persistent contact island.
+
+### Почему bridge сознательно ограничен
+
+Если world уже имеет active contacts, helper fail-closed:
+
+`EVENT_BRIDGE_REQUIRES_CONTACT_FREE_START`.
+
+Это не слабость, которую надо спрятать.
+
+General event localization при существующих constrained islands требует одновременно:
+
+- держать старые contacts constrained;
+- интегрировать differential state;
+- локализовать новый geometry crossing;
+- merge/recompile island в event instant;
+- remap warm starts;
+- продолжить remaining time.
+
+Это и есть следующий wall.
+
+### Evidence
+
+```text
+FABRIC0.10 focused       97/97 PASS
+playground               PASS
+editor                   CLEAN
+byte identity            PASS
+```
+
+Predecessor runtime suites в isolated 0.10 lab не rerun.
+
+FABRIC0.9 blobs доказанно preserved.
+
+### Главный урок FABRIC0.10
+
+> Contact для persistent world — это не collision callback и не только constraint row. Это stable graph relation с lifecycle, numerical continuity и island-local computational consequences.
+
+## FABRIC0.11 — General Event-Localized Contact Islands + Sparse Backend
+
+Следующая проверка должна слить temporal/event semantics 0.8 и persistent graph semantics 0.10 без contact-free shortcut.
+
+Critical experiment:
+
+```text
+resting constrained stack
++
+incoming dynamic body
++
+large macrostep
++
+localized impact while old contacts remain active
++
+same-time graph merge
++
+warm-start remap
++
+sparse re-solve
++
+remaining flow
++
+order invariance
+```
