@@ -1,0 +1,70 @@
+name: ECO EVO7 VIS4.1 Source-Bound Morphology
+
+on:
+  push:
+    branches:
+      - feature/eco-evo7-vis4-evolved-plant-morphology-r1
+    paths:
+      - "scripts/research/ecology/plant_morphology_evidence_v1.gd"
+      - "scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd"
+      - "scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd"
+      - "scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd"
+      - "tests/ecology/eco_evo7_vis4_1_source_bound_morphology_evidence_acceptance.gd"
+      - "RUN_ECO_EVO7_VIS4_1_TESTS.ps1"
+      - ".github/workflows/evo7-vis4-1-source-bound-morphology.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-vis4-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  closure:
+    name: exact VIS4.1 source-bound morphology closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact workflow HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact HEAD checkout
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne "${{ github.sha }}") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.sha }}"
+          }
+          Write-Host "exact_head=$head"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run VIS4.1 closure
+        run: |
+          .\RUN_ECO_EVO7_VIS4_1_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
