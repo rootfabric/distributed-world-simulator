@@ -31,6 +31,19 @@ const WORKLOAD_FIELDS := [
 	"environment_seed",
 ]
 
+const SIMULATION_WORKLOAD_FIELDS := [
+	"workload_id",
+	"environment_recipe",
+	"warmup_generations",
+	"measured_generations",
+	"repetitions",
+	"initial_records",
+	"founder_seed",
+	"placement_seed",
+	"evolution_seed",
+	"environment_seed",
+]
+
 const HASH_FIELDS := [
 	"final_workbench_hash",
 	"final_ecology_state_hash",
@@ -107,8 +120,16 @@ static func validate_contract(contract: Dictionary) -> Dictionary:
 	var comparison: Dictionary = Dictionary(contract.get("comparison_contract", {}))
 	if "target_head" not in Array(comparison.get("comparison_key_excludes", [])):
 		errors.append("TARGET_HEAD_MUST_NOT_ENTER_COMPARISON_KEY")
+	if "target_tree" not in Array(comparison.get("comparison_key_excludes", [])):
+		errors.append("TARGET_TREE_MUST_NOT_ENTER_COMPARISON_KEY")
 	if "timings" not in Array(comparison.get("comparison_key_excludes", [])):
 		errors.append("TIMINGS_MUST_NOT_ENTER_COMPARISON_KEY")
+	var cross_mode: Dictionary = Dictionary(comparison.get("cross_mode_equivalence", {}))
+	if Array(cross_mode.get("simulation_workload_hash_includes", [])) != SIMULATION_WORKLOAD_FIELDS:
+		errors.append("SIMULATION_WORKLOAD_FIELD_SET")
+	for excluded in ["execution_mode", "parents_per_chunk", "audit_interval_generations", "audit_generation_1"]:
+		if excluded not in Array(cross_mode.get("simulation_workload_hash_excludes", [])):
+			errors.append("SIMULATION_WORKLOAD_EXCLUDE_%s" % String(excluded).to_upper())
 	for required in ["count", "p50", "p95", "mean", "min", "max"]:
 		if required not in Array(comparison.get("required_summary_statistics", [])):
 			errors.append("SUMMARY_%s" % String(required).to_upper())
@@ -163,6 +184,20 @@ static func workload_hash(workload: Dictionary) -> String:
 	var parts := PackedStringArray()
 	parts.append("PERF2_WORKLOAD_V1")
 	for key in WORKLOAD_FIELDS:
+		var value = workload[key]
+		if value is bool:
+			parts.append("%s=%s" % [key, "true" if bool(value) else "false"])
+		else:
+			parts.append("%s=%s" % [key, str(value)])
+	return "|".join(parts).sha256_text()
+
+
+static func simulation_workload_hash(workload: Dictionary) -> String:
+	var validation := validate_workload(workload)
+	if not bool(validation.get("success", false)):
+		return ""
+	var parts := PackedStringArray(["PERF2_SIMULATION_WORKLOAD_V1"])
+	for key in SIMULATION_WORKLOAD_FIELDS:
 		var value = workload[key]
 		if value is bool:
 			parts.append("%s=%s" % [key, "true" if bool(value) else "false"])
@@ -246,6 +281,18 @@ static func comparison_key(sample: Dictionary) -> String:
 	])).sha256_text()
 
 
+static func execution_comparison_key(sample: Dictionary) -> String:
+	if not bool(validate_sample(sample).get("success", false)):
+		return ""
+	return "|".join(PackedStringArray([
+		"PERF2_EXECUTION_COMPARISON_V1",
+		simulation_workload_hash(Dictionary(sample["workload"])),
+		String(Dictionary(sample["target"]).get("godot_version", "")),
+		String(sample["host_fingerprint"]),
+		String(sample["measurement_method_revision"]),
+	])).sha256_text()
+
+
 static func canonical_result_fingerprint(sample: Dictionary) -> String:
 	if not bool(validate_sample(sample).get("success", false)):
 		return ""
@@ -268,6 +315,23 @@ static func can_compare(a: Dictionary, b: Dictionary) -> Dictionary:
 		errors.append("FAILED_SAMPLE")
 	if comparison_key(a) != comparison_key(b):
 		errors.append("COMPARISON_KEY_MISMATCH")
+	if canonical_result_fingerprint(a) != canonical_result_fingerprint(b):
+		errors.append("CANONICAL_RESULT_MISMATCH")
+	return _result(errors)
+
+
+static func can_compare_execution_modes(a: Dictionary, b: Dictionary) -> Dictionary:
+	var errors: Array[String] = []
+	if not bool(validate_sample(a).get("success", false)):
+		errors.append("BASELINE_INVALID")
+	if not bool(validate_sample(b).get("success", false)):
+		errors.append("CANDIDATE_INVALID")
+	if not errors.is_empty():
+		return _result(errors)
+	if not bool(a.get("passed", false)) or not bool(b.get("passed", false)):
+		errors.append("FAILED_SAMPLE")
+	if execution_comparison_key(a) != execution_comparison_key(b):
+		errors.append("EXECUTION_COMPARISON_KEY_MISMATCH")
 	if canonical_result_fingerprint(a) != canonical_result_fingerprint(b):
 		errors.append("CANONICAL_RESULT_MISMATCH")
 	return _result(errors)
