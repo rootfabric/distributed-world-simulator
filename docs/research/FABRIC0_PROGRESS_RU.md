@@ -656,3 +656,206 @@ topology mutation transaction
 чтобы выразить impact/restitution, hysteresis, yield/plasticity, breaker trip, bond break и latch без device-specific runtime classes.
 
 Production promotion по-прежнему не заявляется. PR остаётся Draft.
+
+
+## FABRIC0.7 — STATEFUL HYBRID TIME
+
+**Parent research head:** `549abed8c6ba5deeb5c68303ea7a2ce5c5a85522`  
+**Design:** `docs/research/FABRIC0_7_STATEFUL_HYBRID_TIME_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v7-validation.json`  
+**Recovery entrypoint:** `docs/research/FABRIC0_READ_FIRST_RU.md`  
+**Status:** `IMPLEMENTED / LOCAL_EXACT_DOUBLE_PASS / DRAFT_REVIEW_CANDIDATE`.
+
+### Recovery memory checkpoint
+
+Перед реализацией FABRIC0.7 в Git отдельно закреплена исследовательская память:
+
+- `FABRIC0_READ_FIRST_RU.md` — обязательная точка восстановления новой сессии;
+- `FABRIC0_IDEOLOGY_RU.md` — аксиомы, парадигмы, отвергнутые направления;
+- `FABRIC0_RESEARCH_HISTORY_RU.md` — narrative 0.1→текущий frontier;
+- `scripts/research/fabric0/AGENTS.md` — scoped правила для будущих агентов.
+
+Цель: FABRIC должен восстанавливаться из Git без истории чата.
+
+### Validation
+
+- exact double-Godot: `4.7.1.stable.double.custom_build.a13da4feb`;
+- focused hybrid-time acceptance: `88/88 PASS`;
+- FABRIC0.6 nonsmooth regression: `121/121 PASS`;
+- FABRIC0.6 predecessor compatibility regression: `42/42 PASS`;
+- playground: `FABRIC0_7_HYBRID_TIME_PLAYGROUND_PASS`;
+- editor parse/compile scan: CLEAN;
+- все 4 executable FABRIC0.7 файла byte-identical между локально протестированными файлами и GitHub.
+
+### Temporal triad
+
+FABRIC теперь различает три фундаментально разные операции:
+
+```text
+FLOW
+  dx/dt = f(...)
+
+JUMP
+  x+ = R(x-)
+  mode+ = target
+
+TOPOLOGY TRANSACTION
+  validate all
+  commit all
+  or commit none
+```
+
+Нельзя смешивать их в один device-specific `update()`.
+
+### Macrostep = transaction
+
+`advance(dt)`:
+
+```text
+snapshot
+→ flow до event
+→ localize event
+→ immutable pre-event snapshot
+→ simultaneous reset + mode + topology commit
+→ post-event snapshot
+→ flow остатка dt
+```
+
+При invalid topology transaction или event storm весь macrostep rollback.
+
+### T1 — impact + restitution
+
+```text
+h(0)=1
+v(0)=-1
+g=9.81
+e=0.8
+dt=0.6
+```
+
+Event локализован:
+
+```text
+te = 0.360950562279
+pre v  = -4.540925016
+post v = +3.632740013
+```
+
+Проверено:
+
+```text
+v+ = -e*v-
+KE+/KE- = e^2 = 0.64
+```
+
+После остатка macrostep:
+
+```text
+h=0.588110029
+v=1.287665029
+t=0.6
+```
+
+### T2 — Schmitt-like hysteresis
+
+```text
+off -> on at x=1, t=1
+deadband x=0.7 -> remains on, no event
+on -> off at x=0.2, total t=2.2
+```
+
+Hysteresis возникает из mode + different event surfaces, без Schmitt kernel class.
+
+### T3 — irreversible breaker
+
+Continuous damage crossing:
+
+```text
+damage_dot=2/s
+trip=1
+te=0.5
+```
+
+Jump:
+
+```text
+armed -> tripped
+damage+=1
+fuse_link active -> false
+topology_revision 0 -> 1
+```
+
+Bond остаётся отключён при дальнейшей эволюции.
+
+### T4 — simultaneous reset
+
+```text
+pre:  a=1,b=2
+reset: a+=pre(b), b+=pre(a)
+post: a=2,b=1
+```
+
+Все RHS читают один immutable pre-event snapshot.
+
+### T5 — topology transaction rollback
+
+Transaction с одним valid и одним missing bond даёт:
+
+`TOPOLOGY_TRANSACTION_UNKNOWN_BOND`.
+
+После rollback:
+
+```text
+time=0
+mode restored
+states restored
+valid bond still active
+events unchanged
+hash restored
+```
+
+### T6 — event storm / Zeno guard
+
+`MAX_EVENTS_PER_ADVANCE=32`.
+
+Система, требующая ~100 jumps за `advance(1)`, получает:
+
+`ZENO_OR_EVENT_STORM`
+
+и macrostep полностью откатывается.
+
+### Event identity
+
+Каждый jump хранит:
+
+```text
+event_id
+sequence
+transition_id
+time
+pre/post mode
+pre/post state
+pre/post hash
+topology revision before/after
+```
+
+Это локальная research identity, не canonical distributed authority identity.
+
+### Главный вывод FABRIC0.7
+
+> Persistent physical time следует моделировать не как последовательность device updates, а как чередование continuous flows, локализованных jumps и атомарных topology transactions.
+
+### Следующая фундаментальная граница
+
+`FABRIC0.8 COUPLED HYBRID DAE / EVENT ITERATION`.
+
+Нужно связать hybrid time и physical equations в одну систему:
+
+- algebraic FABRIC islands решаются на integration stages;
+- guards могут зависеть от solved reactions;
+- impact использует impulse/reaction solve;
+- same-time events итерируются до fixed point;
+- topology mutation перекомпилирует physical equations в том же event instant;
+- energy/momentum audit проходит через jump.
+
+Production promotion не заявляется. PR остаётся Draft.
