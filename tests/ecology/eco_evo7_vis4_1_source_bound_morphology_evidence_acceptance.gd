@@ -135,6 +135,11 @@ func _generation_one_evidence(wb) -> void:
 	_check(not wb.validate_morphology_evidence(wrong_source), "Workbench rejects internally valid evidence bound to wrong live population")
 	_check(adapter.build(ecology, wrong_source).is_empty(), "Descriptor V2 rejects wrong population binding")
 
+	var forged_competition: Dictionary = ecology.duplicate(true)
+	forged_competition["competition_field"] = Dictionary(forged_competition["competition_field"]).duplicate(true)
+	forged_competition["competition_field"]["field_hash"] = "e".repeat(64)
+	_check(adapter.build(forged_competition, evidence).is_empty(), "Descriptor V2 rejects competition field seal mismatch")
+
 func _deterministic_replay(world, reference_wb) -> void:
 	var reference_ecology: Dictionary = reference_wb.get_ecology_snapshot()
 	var reference_evidence: Dictionary = reference_wb.get_morphology_evidence()
