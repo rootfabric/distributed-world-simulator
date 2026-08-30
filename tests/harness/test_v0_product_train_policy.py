@@ -108,6 +108,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
     def test_p7_0_exact_source_owner_map_is_bound_to_existing_owners(self) -> None:
         owner_map = _load(HARNESS / "v0-p7-matter-production-owner-map.v1.json")
         self.assertEqual("REVIEW_READY", owner_map["status"])
+        self.assertEqual("V0-P7-0-OWNER-MAP-2026-08-30-R2", owner_map["revision"])
         self.assertFalse(owner_map["runtime_mutation"])
         self.assertEqual("PASS", owner_map["no_second_owner_audit"]["result"])
         self.assertEqual(0, owner_map["no_second_owner_audit"]["duplicate_owner_count"])
@@ -116,6 +117,15 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual("USE_EXISTING_MW6_MATTER_MUTATION_HANDLER", decisions["gateway_ingress"])
         self.assertEqual("MW10_ONLY_WHEN_ONE_CANONICAL_MUTATION_SPANS_TWO_OR_MORE_MATTER_REGIONS", decisions["cross_region"])
         self.assertFalse(decisions["new_canonical_state_owner"])
+        self.assertEqual("MatterMutationRequest.actor_id = canonical V0 player_entity_id; logical_player_id remains gameplay lookup identity", decisions["actor_identity"])
+        identity = owner_map["identity_projection"]
+        self.assertEqual("player_entity_id", identity["matter_actor_id"])
+        self.assertFalse(identity["new_identity_owner"])
+        self.assertFalse(identity["new_identity_store"])
+        player_registry = (ROOT / "scripts/runtime/networked_gameplay/services/player_registry.gd").read_text(encoding="utf-8")
+        self.assertIn('String(record.get("player_entity_id", "")) != "player/%s" % logical_id', player_registry)
+        matter_utils = (ROOT / "scripts/simulation/spatial/spatial_contract_utils.gd").read_text(encoding="utf-8")
+        self.assertIn("parts.size() < minimum_parts", matter_utils)
 
         root = ROOT
         source_assertions = {

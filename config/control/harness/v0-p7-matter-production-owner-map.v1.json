@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.v0_p7_matter_production_owner_map.v1",
-  "revision": "V0-P7-0-OWNER-MAP-2026-08-30-R1",
+  "revision": "V0-P7-0-OWNER-MAP-2026-08-30-R2",
   "status": "REVIEW_READY",
   "authored_against_main": "07d71da1d301a65d36f56ff8c7a42795becab88d",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
@@ -8,7 +8,7 @@
   "runtime_mutation": false,
   "core_decisions": {
     "p7_role": "STATELESS_PRODUCT_COMPOSITION_AND_ADAPTERS_ONLY",
-    "actor_identity": "MatterMutationRequest.actor_id = stable V0 logical_player_id",
+    "actor_identity": "MatterMutationRequest.actor_id = canonical V0 player_entity_id; logical_player_id remains gameplay lookup identity",
     "tool_identity": "MatterMutationRequest.tool_id = canonical equipped Item Graph item_id, not definition_id",
     "mutation_contract": "USE_EXISTING_MATTER_MUTATION_REQUEST_RESULT",
     "gateway_ingress": "USE_EXISTING_MW6_MATTER_MUTATION_HANDLER",
@@ -29,7 +29,8 @@
         "get_player(logical_player_id)",
         "_validate_owner(logical_player_id, transport_session_id, ownership_epoch)"
       ],
-      "p7_use": "read canonical player position/ownership; P7 stores no player state"
+      "p7_use": "resolve Matter actor_id as canonical player_entity_id; derive logical_player_id through verified player/ projection; read canonical player position/ownership; store no player identity",
+      "identity_invariant": "player_entity_id == \"player/%s\" % logical_player_id"
     },
     {
       "concern": "equipped_tool_truth",
@@ -41,7 +42,7 @@
       ],
       "required_slot": "tool/main",
       "required_definition_id": "item/tool/mining",
-      "p7_rule": "request.tool_id MUST equal equipped item_id"
+      "p7_rule": "after verified actor_id -> logical_player_id round-trip, request.tool_id MUST equal equipped item_id"
     },
     {
       "concern": "product_one_writer_fence",
@@ -251,7 +252,7 @@
     "validation_order": [
       "request is canonical MatterMutationRequest (MW6 already validates)",
       "SM1 exact active authority tuple",
-      "request.actor_id resolves to canonical logical player",
+      "request.actor_id is a canonical V0 player_entity_id and round-trips through player/<logical_player_id> to canonical PlayerRegistry state",
       "request.tool_id equals canonical equipped tool item_id in tool/main and definition item/tool/mining",
       "request swept shape is within bounded product reach from canonical player position",
       "MW8 single-region authority check",
@@ -306,8 +307,33 @@
   },
   "created_at_utc": "2026-08-30T04:33:00Z",
   "review_candidate_ci": {
-    "exact_head": "92ceabcba52de2a9139f7ba2a4d0e54e0ce3c214",
-    "project_control_run": 33293003436,
-    "result": "SUCCESS"
-  }
+    "exact_head": "524b87125b2db446b231cea9b07f23571f50da71",
+    "project_control_run": 33293049865,
+    "result": "SUCCESS_BEFORE_REVIEW_FINDING_P7_0_RF_001"
+  },
+  "identity_projection": {
+    "canonical_gameplay_invariant": "player_entity_id == \"player/%s\" % logical_player_id",
+    "matter_actor_id": "player_entity_id",
+    "mw6_peer_actor_id": "player_entity_id",
+    "logical_player_resolution": [
+      "require request.actor_id begins with player/",
+      "derive candidate logical_player_id from the suffix after the first player/ prefix",
+      "read NetworkedGameplayService.get_player(candidate logical_player_id)",
+      "require returned player.player_entity_id exactly equals request.actor_id",
+      "require request.actor_id satisfies Matter canonical ID validation",
+      "fail closed on any mismatch"
+    ],
+    "new_identity_owner": false,
+    "new_identity_store": false
+  },
+  "review_history": [
+    {
+      "review_id": "V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001",
+      "reviewed_head_sha": "524b87125b2db446b231cea9b07f23571f50da71",
+      "reviewed_owner_map_blob_sha": "8c7952cbb317339cd5ffba6a05c877574ffa615f",
+      "verdict": "FAIL",
+      "finding": "P7-0-RF-001",
+      "resolution": "R2 maps Matter actor_id to existing canonical player_entity_id and adds fail-closed round-trip validation."
+    }
+  ]
 }

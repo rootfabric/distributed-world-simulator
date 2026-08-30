@@ -1,6 +1,6 @@
 # V0 P7.0 — Matter Production Owner Map / Convergence Gate
 
-**Status:** REVIEW READY  
+**Status:** REVIEW READY — R2 after REVIEW-001 FIX_REQUIRED  
 **Date:** 2026-08-30  
 **Reviewed source base:** `07d71da1d301a65d36f56ff8c7a42795becab88d`  
 **Runtime mutation:** NONE
@@ -53,11 +53,29 @@ The future P7 gate is an adapter only. It owns **zero durable state**.
 
 ### Actor
 
-`MatterMutationRequest.actor_id` is the stable V0 `logical_player_id`.
+`MatterMutationRequest.actor_id` is the existing stable V0 `player_entity_id`, **not** the raw logical player id.
 
-This matches the existing MW6 peer actor binding and lets P7 read the canonical player state through:
+Accepted V0 already enforces:
 
-`NetworkedGameplayService.get_player(logical_player_id)`.
+`player_entity_id == "player/%s" % logical_player_id`.
+
+This matters because accepted P5 uses logical IDs such as `"b"`, while Matter requires a namespaced canonical ID with at least two segments. `player/b` satisfies the Matter contract without changing the gameplay identity model.
+
+P7 resolves the gameplay lookup identity fail-closed:
+
+```text
+request.actor_id = player_entity_id
+        ↓
+require prefix player/
+        ↓
+derive candidate logical_player_id
+        ↓
+NetworkedGameplayService.get_player(logical_player_id)
+        ↓
+require player.player_entity_id == request.actor_id
+```
+
+No P7 identity store or identity owner is created.
 
 ### Tool
 
@@ -68,13 +86,17 @@ It is **not** `item/tool/mining`; that value is the definition.
 Validation is:
 
 ```text
-get_equipped_item(actor_id, "tool/main")
+get_equipped_item(resolved_logical_player_id, "tool/main")
 item.item_id       == request.tool_id
 item.definition_id == "item/tool/mining"
 item.quantity      == 1
 ```
 
 No second equipment truth is created.
+
+### Review correction P7-0-RF-001
+
+R1 incorrectly mapped Matter `actor_id` directly to `logical_player_id`. Fresh review rejected that mapping. R2 uses the existing `player_entity_id` canonical projection and keeps the Matter ID contract unchanged.
 
 ## 4. Why SM1CanonicalMutationGate is not reused directly
 

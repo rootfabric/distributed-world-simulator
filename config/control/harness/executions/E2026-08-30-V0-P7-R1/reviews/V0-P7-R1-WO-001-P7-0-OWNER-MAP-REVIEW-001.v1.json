@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001",
+  "review_type": "PRE_DISPATCH_EXACT_SOURCE_OWNER_MAP_REVIEW",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "524b87125b2db446b231cea9b07f23571f50da71",
+  "reviewer": "INDEPENDENT_REVIEWER_P7_0_OWNER_MAP",
+  "verdict": "FAIL",
+  "reviewed_at_utc": "2026-08-30T04:46:00Z",
+  "required_fixes": [
+    "P7-0-RF-001: R1 mapped MatterMutationRequest.actor_id directly to V0 logical_player_id, but accepted P5 permits logical IDs such as 'b' while Matter requires a canonical namespaced ID with at least two segments. Use the existing stable player_entity_id (player/<logical_player_id>) as Matter actor_id and prove a fail-closed round-trip to canonical player state."
+  ],
+  "rank_up_moves": [],
+  "evidence_gaps": [],
+  "risk_assessment": "FIX_REQUIRED. The ownership map is otherwise consistent, but actor identity is a canonical request field and the R1 mapping would reject accepted P5 identities or tempt P7 to weaken the Matter contract. No runtime mutation is authorized."
+}

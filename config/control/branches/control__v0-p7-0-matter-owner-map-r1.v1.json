@@ -9,8 +9,8 @@
   "purpose": "Prove exact existing owners and adapter boundaries before any P7 runtime mutation.",
   "expected_outcome": "Reviewed machine-readable P7 owner map with zero duplicate owners and a narrow P7.1 stateless authorization/composition boundary.",
   "current_stage": "P7.0 Matter Production Owner Map / Exact-Source Review",
-  "stage_status": "P7_0_OWNER_MAP_REVIEW_READY_RUNTIME_BLOCKED",
-  "progress_note": "P7.0 exact-source owner map is frozen REVIEW_READY after full candidate Project Control SUCCESS; runtime remains forbidden pending fresh review, post-merge PC0 and Director dispatch.",
+  "stage_status": "P7_0_OWNER_MAP_R2_REVIEW_READY_RUNTIME_BLOCKED",
+  "progress_note": "Fresh P7.0 review found and rejected R1 actor identity mapping. R2 now maps Matter actor_id to the existing canonical V0 player_entity_id with fail-closed round-trip to PlayerRegistry; no new identity owner. Runtime remains blocked pending PASS review, post-merge PC0 and Director dispatch.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
   "next_stage": "Fresh exact-source P7.0 review; merge only on NON_RED Project Control; then post-merge PC0 and Director dispatch P7.1.",
   "parent_branch_or_checkpoint": "main @ 07d71da1d301a65d36f56ff8c7a42795becab88d / P7 PRE_DISPATCH",
@@ -32,7 +32,8 @@
     "docs/checkpoints/2026-08-30_V0_P7_0_MATTER_PRODUCTION_OWNER_MAP_R1_RU.md",
     "tests/harness/test_v0_product_train_policy.py",
     "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
-    "tests/harness/test_v0_generation80_safety_guards.py"
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/m4/**",
