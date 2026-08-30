@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.3 — PH5 Bridge Preflight / Exact Reconstruction Gap
 
 Дата: 2026-08-31  
-Статус: PREFLIGHT COMPLETE / IMPLEMENTATION BLOCKED UNTIL VIS4.2 GREEN  
+Статус: PREFLIGHT COMPLETE / VIS4.2 GREEN / VIS4.3 IMPLEMENTED CANDIDATE  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1
 
 ## Purpose
@@ -210,3 +210,28 @@ VIS4.3 reconstruction evidence + PH5 bridge implementation
 ~~~
 
 Until VIS4.2 GREEN this document is design evidence only; VIS4.3 runtime code must not start.
+
+
+## Implementation update — 2026-08-31
+
+VIS4.2 R2 is exact-Windows verified and closed.
+
+The separate reconstruction-evidence design from this preflight has been implemented.
+
+Current exact VIS4.3 verification subject:
+
+~~~text
+HEAD: 967692cb2781f20eeceffe43a014366567bd2586
+~~~
+
+The earlier workflow-only subject 67503a83 failed before Godot because PowerShell 5.1 corrupted the unquoted HEAD^{tree} expression. No VIS4.3 runtime test executed in that failed run.
+
+The workflow identity step is now PowerShell-safe and the new exact Windows run targets 967692cb.
+
+Durable candidate checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_3_EXACT_PH5_BRIDGE_R1_RU.md
+~~~
+
+VIS4.4 remains blocked until VIS4.3 exact Windows GREEN.
