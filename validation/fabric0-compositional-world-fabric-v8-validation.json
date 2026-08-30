@@ -1,0 +1,160 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v8",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.8_COUPLED_HYBRID_DAE_EVENT_ITERATION",
+  "parent_research_head": "7a64988e8964e4488693b4cd202e02e94ae90075",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_coupled_hybrid_dae_v1.gd": "6252f04ebaf3daada28842147273925602153783a26a1b703b4e3a36d48d026c",
+    "scripts/research/fabric0/fabric0_coupled_hybrid_dae_experiments_v1.gd": "2ca9e0e2c49fbc6f44169c8d32464a77ce6710c3befc87fb4314ac40001091ae",
+    "tests/research/fabric0/fabric0_coupled_hybrid_dae_acceptance.gd": "9860f6c2dcb57b068544bae21dc24e9b57de98fb82d510613db82ca46f16525a",
+    "tests/research/fabric0/fabric0_coupled_hybrid_dae_playground.gd": "09f0fe327817d9cb2ef01b596b8d07adbebd1079737ebfd66c5d58b3ec084761"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_coupled_hybrid_dae_v1.gd": "a72fe3a75e32fa88afd255c4a07fa9f2f7e7137d",
+    "scripts/research/fabric0/fabric0_coupled_hybrid_dae_experiments_v1.gd": "e7f0e5d23437ed142c119dd9dccc239ba0d9644c",
+    "tests/research/fabric0/fabric0_coupled_hybrid_dae_acceptance.gd": "1dd6b2dbba4408e41290fc236135790bee5f95a5",
+    "tests/research/fabric0/fabric0_coupled_hybrid_dae_playground.gd": "498a8573621c0c067f3876c2b22234e1aab29b1b"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all four tested FABRIC0.8 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_coupled_hybrid_dae_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 71,
+    "marker": "FABRIC0.8 Coupled Hybrid DAE Acceptance: PASS",
+    "observations": {
+      "initial_algebraic_force_a": 2.0,
+      "initial_algebraic_force_b": 0.0,
+      "impact_event_time": 0.472135955002,
+      "impact_event_time_reference": 0.4721359549995796,
+      "impact_position": 1.527864045,
+      "pre_normal_velocity_a": 3.472135955,
+      "pre_normal_velocity_b": -1.0,
+      "pre_normal_relative_velocity": -4.472135955,
+      "normal_impulse": 4.472135955,
+      "restitution": 0.5,
+      "post_normal_velocity_a": 1.236067978,
+      "post_normal_velocity_b": 3.472135955,
+      "post_normal_relative_velocity": 2.236067978,
+      "normal_momentum_conserved": true,
+      "friction_coefficient": 0.3,
+      "pre_tangential_relative_velocity": -3.0,
+      "tangential_impulse": 1.341640787,
+      "selected_jump_branch": "slide_neg",
+      "post_tangential_velocity_a": 1.329179607,
+      "post_tangential_velocity_b": 0.341640787,
+      "post_tangential_relative_velocity": -0.987538820,
+      "tangential_momentum_conserved": true,
+      "impact_kinetic_energy_noncreating": true,
+      "break_impulse_threshold": 4.0,
+      "same_time_transition_count": 2,
+      "same_time_transition_order": [
+        "impact",
+        "break_on_impulse"
+      ],
+      "algebraic_force_after_impact_before_break": 2.0,
+      "algebraic_force_after_break_recompile": 0.0,
+      "drive_link_active_after_break": false,
+      "topology_revision_after_break": 1,
+      "final_time": 1.0,
+      "final_x_a": 2.180339888,
+      "final_x_b": 3.360679775,
+      "final_gap": 1.180339888,
+      "final_normal_velocity_a": 1.236067978,
+      "final_normal_velocity_b": 3.472135955,
+      "final_algebraic_force_a": 0.0,
+      "algebraic_guard_event_time": 1.0,
+      "algebraic_guard_reaction_at_event": 2.0,
+      "algebraic_guard_final_reaction": 3.0,
+      "singular_dae_diagnostic": "DAE_SINGULAR_ALGEBRAIC_MANIFOLD",
+      "deterministic_state_hash": "f564e9294b738d65783cefcbc03e18e54860c61541143be7dd2421d6223e9b19"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_coupled_hybrid_dae_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_8_COUPLED_HYBRID_DAE_PLAYGROUND_PASS",
+    "algebraic_solve_calls": 203,
+    "event_iterations": 3,
+    "state_hash": "f564e9294b738d65783cefcbc03e18e54860c61541143be7dd2421d6223e9b19"
+  },
+  "predecessor_regression": {
+    "fabric0_7_hybrid_time": {
+      "exit_code": 0,
+      "assertions": 88,
+      "marker": "FABRIC0.7 Hybrid Time Acceptance: PASS"
+    },
+    "fabric0_6_nonsmooth": {
+      "exit_code": 0,
+      "assertions": 121,
+      "marker": "FABRIC0.6 Nonsmooth Acceptance: PASS",
+      "hash": "d20fa8d48d244b12c17e29a51911f50cc6b2accdbdb700ddfae748acf8dd5c19"
+    },
+    "fabric0_6_predecessor_compatibility": {
+      "exit_code": 0,
+      "assertions": 42,
+      "marker": "FABRIC0.6 Predecessor Compatibility: PASS"
+    }
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "solver_contract": {
+    "continuous_form": "semi-explicit F(x,y,p,t,topology)=0 with xdot=f(x,y,p,t,topology)",
+    "integration": "RK4",
+    "algebraic_stage_solve": "bounded dimension-normalized damped Newton at every RK stage plus final stage",
+    "algebraic_rank_validation": true,
+    "event_localization": "bisection over repeatedly integrated and algebraically solved coupled segments",
+    "event_time_tolerance": 1e-11,
+    "jump_form": "generic branch-based residual system over post-state plus impulse unknowns",
+    "same_time_iteration": "root jump, algebraic re-solve, condition transition, topology transaction, algebraic re-solve until no enabled condition",
+    "max_event_iterations": 16,
+    "max_event_instants_per_advance": 32
+  },
+  "claims": [
+    "differential and algebraic variables participate in one temporal solve",
+    "algebraic equations are re-solved at every RK stage before derivatives are evaluated",
+    "physical bond topology can directly change algebraic equations without device-specific mode force code",
+    "event guards can depend on solved algebraic reactions",
+    "event localization repeatedly solves the coupled DAE",
+    "impact post-state and normal/tangential impulses can be solved as a generic branch-based jump relation",
+    "normal and tangential momentum are conserved by the demonstrated jump equations",
+    "the demonstrated restitution relation and Coulomb sliding branch are satisfied",
+    "a solved impulse can enable a second transition at the same physical event instant",
+    "topology mutation triggers an immediate same-time algebraic re-solve before temporal integration resumes",
+    "remaining flow uses the mutated topology",
+    "rank-deficient algebraic physics fails closed even when residual is zero",
+    "deterministic replay preserves event ordering, jump branch, impulses, topology and final state hash",
+    "the four FABRIC0.8 executable files are byte-identical between exact-double local tests and GitHub"
+  ],
+  "non_claims": [
+    "not a general arbitrary-index production DAE solver",
+    "no symbolic index reduction",
+    "no adaptive error control or structure-preserving integrator",
+    "dense Newton and dense linear solves only",
+    "jump branch enumeration is not a scalable friction-cone solver",
+    "only one scalar normal and one scalar tangential contact channel are demonstrated",
+    "no 3D orientation or inertia tensor",
+    "no multi-point contact manifold",
+    "no simultaneous multiple geometric impact solve",
+    "same-time condition transitions are deterministically serialized rather than globally solved as one mixed complementarity system",
+    "historical Conservation Cell and Power Map graphs are not yet automatically compiled wholesale into v8 DAE residuals",
+    "no sparse graph compiler",
+    "no production Construction, persistence, authority or replication integration",
+    "no full materialized DWS checkout regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.9_MULTI_CONTACT_GEOMETRIC_MANIFOLD_CONE_SOLVE",
+    "goal": "remove the scalar-contact special shape using geometry-derived multi-contact Jacobians, rotational inertia and order-invariant friction-cone impulse solving"
+  }
+}
