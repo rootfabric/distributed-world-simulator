@@ -179,6 +179,25 @@ THEN
 Detailed test plan:
 `docs/plans/V0_PLAYABLE_SEAMLESS_TEST_LADDER_RU.md`.
 
+Client-facing product milestones:
+`docs/plans/V0_CLIENT_FACING_MILESTONES_RU.md`.
+
+Client-facing anchors are now explicit:
+
+```text
+P7.2 → C1 PLANETARY SEAM VISUAL LAB
+P7.5 → C2 TWO-CLIENT WORLD CONVERGENCE
+P7.6 → C3 PLAYABLE SEAM + ITEMS        MANDATORY
+       C4 THREE-AUTHORITY STATIC CHAIN OPTIONAL LAB
+P7.7 → C5 GRAPHICAL DIGGING
+       ↓
+V0 PLAYABLE SEAMLESS PLANET
+```
+
+The mandatory C3 scenario is two graphical clients + Authority A/B + one planetary surface
++ items in multiple authority regions + pickup/carry/drop across the seam with stable player
+and item identity and no reconnect/respawn.
+
 The test lane does not consume the pre-H0.3 runtime mutation worker. If a test requires
 new production behavior, that change is routed back to the owning P7 stage instead of
 being implemented in a fixture.
