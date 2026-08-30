@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-24-V0-SM1-R1-V0-SM1-R1-WO-001-0038",
+  "project_epoch": "E2026-08-24-V0-SM1-R1",
+  "work_order_id": "V0-SM1-R1-WO-001",
+  "sequence": 38,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-30T03:01:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-sm1-b7-final-reconciliation-r2",
+  "head_sha": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+  "summary": "Fresh exact-head machine and semantic evidence retain the B->A return handoff PASS.",
+  "command": "RECONCILE_PREDICATE_FROM_FRESH_R9_REVIEW_AND_VERIFICATION",
+  "exit_code": 0,
+  "predicate": "V0_SM1_B_TO_A_HANDOFF_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-WO-001-CHECKPOINT-PROPOSAL-EVIDENCE-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-B7-DIRECTOR-RECONCILIATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/reviews/V0-SM1-R1-WO-001-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/verifications/V0-SM1-R1-WO-001-VERIFICATION-003.v1.json"
+  ]
+}
