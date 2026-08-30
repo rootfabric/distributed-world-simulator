@@ -78,9 +78,9 @@ jobs:
             throw "GODOT_IMPORT_FAILED: $LASTEXITCODE"
           }
 
-      - name: Run exact PERF2.0 transitive closure
+      - name: Run exact PERF2.0 canonical repository workflow
         run: |
-          .\RUN_ECO_EVO7_PERF2_0_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
+          .\RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.0 -GodotPath "${{ steps.godot.outputs.path }}"
           if ($LASTEXITCODE -ne 0) {
             throw "PERF2_0_CLOSURE_FAILED: $LASTEXITCODE"
           }
