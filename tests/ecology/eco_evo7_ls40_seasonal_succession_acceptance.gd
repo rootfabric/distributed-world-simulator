@@ -82,6 +82,9 @@ func _direct_forcing_contract(base_environment: Dictionary) -> void:
 	var replay_b := temperate.environment_for_generation(9, base_environment)
 	_check(replay_a == replay_b, "same base/profile/generation replays exact derived field")
 	_check(String(replay_a["field_hash"]) == String(replay_b["field_hash"]), "direct forcing replay hash is exact")
+	var cycle_1 := temperate.environment_for_generation(1, base_environment)
+	var cycle_13 := temperate.environment_for_generation(13, base_environment)
+	_check(cycle_1 == cycle_13, "12-generation forcing cycle wraps exactly at generation 13")
 
 	var temperate_phase := temperate.environment_for_generation(10, base_environment)
 	var monsoon_phase := monsoon.environment_for_generation(10, base_environment)
@@ -243,12 +246,23 @@ func _rehashed_static_tamper_rejected(seed_workbench, base_environment: Dictiona
 		Workbench.FOUNDER_SEED, Workbench.PLACEMENT_SEED,
 		Workbench.EVOLUTION_SEED, Workbench.INITIAL_RECORDS
 	), "direct LS3.3 static-fence case initializes")
-	var before := core.get_snapshot()
+	var initial := core.get_snapshot()
+	_check(core.set_environment_field(valid_dynamic), "LS3.3 accepts a valid dynamic-only seasonal field")
+	var after_valid := core.get_snapshot()
+	_check(int(after_valid.get("generation", -1)) == int(initial.get("generation", -2)),
+		"valid environment replacement cannot advance generation")
+	_check(String(after_valid.get("population_hash", "")) == String(initial.get("population_hash", "")),
+		"valid environment replacement cannot mutate population")
+	_check(String(after_valid.get("hereditary_pool_hash", "")) == String(initial.get("hereditary_pool_hash", "")),
+		"valid environment replacement cannot mutate heredity")
+	_check(String(after_valid.get("environment_field_hash", "")) == String(valid_dynamic.get("field_hash", "")),
+		"valid environment replacement becomes the exact next causal input")
+
 	_check(not core.set_environment_field(tampered), "LS3.3 rejects rehashed static physical tamper")
 	var after := core.get_snapshot()
-	_check(String(after.get("state_hash", "")) == String(before.get("state_hash", "")),
+	_check(String(after.get("state_hash", "")) == String(after_valid.get("state_hash", "")),
 		"LS3.3 static-tamper rejection preserves state hash")
-	_check(String(after.get("population_hash", "")) == String(before.get("population_hash", "")),
+	_check(String(after.get("population_hash", "")) == String(after_valid.get("population_hash", "")),
 		"LS3.3 static-tamper rejection preserves population hash")
 
 func _canonical_row(wb) -> Dictionary:
