@@ -77,6 +77,8 @@ immutable base generation
 - каждый `candidate_hash` через единый PAR3 kernel;
 - candidate → **current parent record** binding: record id, reproductive identity,
   cell, offspring ordinal и deterministic mutation seed;
+- каждый child hereditary bundle проходит полный LS3.2 identity/checksum
+  validator, даже если candidate затем не будет recruited;
 - каждый route целиком пересчитывается через единый STREAM1 route kernel;
 - связь route → candidate;
 - каждый `recruitment_event_hash` через единый PAR0 kernel;
@@ -134,6 +136,7 @@ chunk=7, chunk=64 и любом будущем эквивалентном schedu
 - `STREAM1_NONCANONICAL_ORDER`;
 - `STREAM1_CANDIDATE_HASH_INVALID`;
 - `STREAM1_CANDIDATE_PARENT_BINDING_INVALID`;
+- `STREAM1_CANDIDATE_BUNDLE_INVALID`;
 - `STREAM1_ROUTE_HASH_INVALID`;
 - `STREAM1_RECRUITMENT_HASH_INVALID`;
 - `STREAM1_RECRUITMENT_ENV_BINDING_INVALID`;
@@ -257,3 +260,9 @@ exact HEAD/TREE recorded
    materialized `next_records` до изменения `generation/records`. Это
    убирает старое окно validate-after-assignment и делает failed validation
    атомарно fail-closed для всех LS3.3 execution paths.
+
+3. **Unrecruited bundle validation.** STREAM1 проверяет полный hereditary
+   bundle каждого candidate до materialization; валидность не зависит от того,
+   попал ли candidate в next population. Отдельный fault удаляет обязательный
+   nested field, сохраняя declared checksum/candidate hash, и должен быть
+   отвергнут authority.

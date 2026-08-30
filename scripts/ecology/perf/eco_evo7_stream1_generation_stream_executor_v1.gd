@@ -52,6 +52,7 @@ const FAULT_KINDS := [
 	"FORCE_AUDIT_MISMATCH",
 	"FORCE_STALE_BASE",
 	"FORCE_PARENT_BINDING_CORRUPTION",
+	"FORCE_CANDIDATE_BUNDLE_CORRUPTION",
 	"FORCE_PROPOSAL_HASH_CORRUPTION",
 ]
 
@@ -248,6 +249,16 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 		var altered_parent_candidate: Dictionary = all_candidates[0].duplicate(true)
 		altered_parent_candidate["parent_record_id"] = "stream1/forged-parent"
 		all_candidates[0] = altered_parent_candidate
+		proposal["candidates"] = all_candidates
+	if _fault_kind == "FORCE_CANDIDATE_BUNDLE_CORRUPTION" and not all_candidates.is_empty():
+		## candidate_hash contains the declared bundle checksum, not every
+		## nested field. Remove one required field while retaining that
+		## checksum so only full hereditary-bundle validation can catch it.
+		var altered_bundle_candidate: Dictionary = all_candidates[0].duplicate(true)
+		var altered_bundle: Dictionary = Dictionary(altered_bundle_candidate["child_bundle"]).duplicate(true)
+		altered_bundle.erase("dev_traits")
+		altered_bundle_candidate["child_bundle"] = altered_bundle
+		all_candidates[0] = altered_bundle_candidate
 		proposal["candidates"] = all_candidates
 	proposal["proposal_hash"] = proposal_hash(proposal)
 	if _fault_kind == "FORCE_PROPOSAL_HASH_CORRUPTION":

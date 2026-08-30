@@ -198,6 +198,12 @@ func _test_fail_closed(patch: Dictionary, field: Dictionary) -> void:
 	)
 	_forced_failure(
 		patch, field,
+		"FORCE_CANDIDATE_BUNDLE_CORRUPTION",
+		{},
+		"STREAM1_CANDIDATE_BUNDLE_INVALID"
+	)
+	_forced_failure(
+		patch, field,
 		"FORCE_PROPOSAL_HASH_CORRUPTION",
 		{},
 		"STREAM1_PROPOSAL_INVALID"

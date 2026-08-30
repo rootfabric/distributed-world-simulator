@@ -577,6 +577,7 @@ func _validate_stream_proposal(proposal: Dictionary, next_generation: int) -> Di
     var parent_by_record_id := {}
     for parent in records:
         parent_by_record_id[String(parent.get("record_id", ""))] = parent
+    var bundle_validator = Lattice.new()
     var seen_parent_ordinals := {}
     var candidate_by_hash := {}
     for candidate in candidates:
@@ -590,6 +591,10 @@ func _validate_stream_proposal(proposal: Dictionary, next_generation: int) -> Di
             SCHEMA, evolution_seed, OFFSPRING_PER_PARENT
         ):
             _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+            return {}
+        var child_bundle_value = candidate.get("child_bundle")
+        if not child_bundle_value is Dictionary         or not bool(bundle_validator.call("_valid_bundle_identity", child_bundle_value)):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_BUNDLE_INVALID"
             return {}
         var parent_ordinal_key := "%s:%d" % [
             parent_record_id, int(candidate.get("offspring_ordinal", -1))
