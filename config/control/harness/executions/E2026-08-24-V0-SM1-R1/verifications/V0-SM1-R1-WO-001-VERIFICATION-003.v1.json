@@ -1,0 +1,211 @@
+﻿{
+    "schema":  "distributed_world_simulator.harness_verification.v1",
+    "work_order_id":  "V0-SM1-R1-WO-001",
+    "verified_head_sha":  "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+    "verified_tree_sha":  "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+    "verifier":  "INDEPENDENT_VERIFIER_B6_FRESH_SESSION_R3",
+    "verdict":  "VERIFIED",
+    "verified_at_utc":  "2026-08-29T16:16:04Z",
+    "environment":  "Windows; fresh detached clone C:\\distributed-world-simulator\\b6-fresh-verify-003 at exact subject HEAD/TREE; Godot C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe --version = 4.7.1.stable.double.custom_build.a13da4feb",
+    "checks":  {
+                   "subject_identity":  {
+                                            "result":  "PASS",
+                                            "head":  "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+                                            "tree":  "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+                                            "clean_before_execution":  true,
+                                            "old_subject_ancestor":  true,
+                                            "source_sm1_ancestor":  true,
+                                            "r8_base_ancestor":  true,
+                                            "old_to_new_commits":  48,
+                                            "r7_to_new_commits":  9,
+                                            "r8_to_new_commits":  2,
+                                            "r9_delta_paths":  [
+                                                                   "tools/runtime/m7_playable_network_client.gd",
+                                                                   "tests/runtime/test_m7_playable_networked_processes.gd"
+                                                               ],
+                                            "godot_identity":  "4.7.1.stable.double.custom_build.a13da4feb",
+                                            "isolated_editor_import":  "PASS exit=0 (fresh isolated editor-import profile)"
+                                        },
+                   "r9_m7_decisive_10x":  {
+                                              "result":  "PASS_10_OF_10",
+                                              "assertions_each":  54,
+                                              "failures_each":  0,
+                                              "single_governed_series":  true,
+                                              "replacement_runs":  0,
+                                              "each_attempt_fresh_isolated_parent_profile":  true,
+                                              "marker_each":  "M7 playable network processes: 54 assertions, 0 failures"
+                                          },
+                   "r8_m5_pre_gates":  {
+                                           "result":  "PASS",
+                                           "contracts":  {
+                                                             "assertions":  126,
+                                                             "failures":  0,
+                                                             "exit":  0
+                                                         },
+                                           "r7_convergence_guard":  {
+                                                                        "assertions":  31,
+                                                                        "failures":  0,
+                                                                        "exit":  0
+                                                                    },
+                                           "r8_control_read_regression":  {
+                                                                              "assertions":  25,
+                                                                              "failures":  0,
+                                                                              "exit":  0
+                                                                          },
+                                           "pipe_smoke":  {
+                                                              "exit":  0,
+                                                              "marker":  "M5_CHILD_PIPE_OBSERVABILITY_PASS",
+                                                              "child_stdout_bytes":  15,
+                                                              "child_stderr_bytes":  15,
+                                                              "wrapper_stdout_nonempty":  true
+                                                          }
+                                       },
+                   "m5_decisive_10x":  {
+                                           "result":  "PASS",
+                                           "runs":  10,
+                                           "passed":  10,
+                                           "single_attempt":  true,
+                                           "summary":  "M5_GRAPHICAL_STABILITY_PASS 10/10",
+                                           "control_read_unavailable_occurrences":  0,
+                                           "convergence_release_integrity_failed_occurrences":  0,
+                                           "recovery_observations":  "none observed in retained artifacts; optional per instruction"
+                                       },
+                   "focused_sm1":  {
+                                       "result":  "PASS_13_OF_13",
+                                       "tests_total":  13,
+                                       "tests_passed":  13,
+                                       "isolated_profile":  true,
+                                       "editor_import_exit":  0,
+                                       "assertion_summaries":  [
+                                                                   "sm1-carry-route 89/0",
+                                                                   "sm1-l0 79/0",
+                                                                   "SM1.6 graphical handoff 57/0",
+                                                                   "SM1.7.1-7.6 fault matrix 157/0",
+                                                                   "SM1.7.7 concurrent crossings 78/0",
+                                                                   "SM1.7.8 reconnect after handoff 70/0",
+                                                                   "SM1.7.9 gateway failure/restart 80/0",
+                                                                   "SM1.7.10 authority recovery 88/0",
+                                                                   "sm1-world 77/0",
+                                                                   "SM1.7.11 mutations around handoff 145/0",
+                                                                   "sm1-combined 66/0",
+                                                                   "sm1-historical-activation 28/0",
+                                                                   "SM1.7.12 impaired network 69/0"
+                                                               ]
+                                   },
+                   "repeated_impaired_network_5x":  {
+                                                        "result":  "PASS_5_OF_5",
+                                                        "assertions_each":  69,
+                                                        "failures_each":  0,
+                                                        "marker_each":  "SM1_7_12_REPEATED_CROSSINGS_IMPAIRED_NETWORK_PASS",
+                                                        "replacement_runs":  0
+                                                    },
+                   "full_world_core_regression":  {
+                                                      "result":  "PASS",
+                                                      "first_and_only_attempt":  true,
+                                                      "warmup_full_runs_before_canonical":  0,
+                                                      "runner":  ".\\RUN_WORLD_REGRESSION_TESTS.ps1",
+                                                      "summary":  {
+                                                                      "passed":  true,
+                                                                      "declared_test_count":  304,
+                                                                      "discovered_test_count":  304,
+                                                                      "steps_recorded":  307,
+                                                                      "bad_exit_code_steps":  0
+                                                                  }
+                                                  },
+                   "r8_semantic_audit":  {
+                                             "result":  "PASS",
+                                             "barrier_unchanged_from_r7":  "no diff baa0e19..b760a6cd on scripts/runtime/networked_gameplay/m5/m5_convergence_barrier.gd (blob identical); TIMEOUT_MS 150000 lineage unchanged",
+                                             "support_read_control_file_absent_in_driver":  "Support.read used only for _peer_result_file/_result_file; control reads go through _read_control_consistent -\u003e Support.read_control_consistent",
+                                             "four_control_stages_use_bounded_typed_reads":  true,
+                                             "transient_errors_exactly":  [
+                                                                              "ATOMIC_JSON_NOT_FOUND",
+                                                                              "ATOMIC_JSON_OPEN_FAILED",
+                                                                              "ATOMIC_JSON_EMPTY",
+                                                                              "ATOMIC_JSON_INCOMPLETE"
+                                                                          ],
+                                             "valid_json_empty_object_succeeds_not_retried":  true,
+                                             "empty_path_non_transient":  "ATOMIC_JSON_PATH_EMPTY not in transient set, breaks retry loop",
+                                             "retry_horizon_bounded":  "CONTROL_READ_MAX_ATTEMPTS = MAX_READ_ATTEMPTS = 25, delay 5ms",
+                                             "no_stale_bak_accepted":  ".bak used only in write rollback path; reads use exact path only",
+                                             "exhaustion_marker":  "M5_CONTROL_READ_UNAVAILABLE raised via _fail with stage/error_code/attempts/elapsed_ms/transient_exhausted",
+                                             "control_generation_regressed_after_release_intact":  true,
+                                             "no_convergence_generation_retry_introduced":  true,
+                                             "convergence_timeout_not_increased":  true
+                                         },
+                   "r9_semantic_audit":  {
+                                             "result":  "PASS",
+                                             "helper_exists":  "func _set_automated_camera_yaw(desired_yaw: float) -\u003e void at tools/runtime/m7_playable_network_client.gd:317",
+                                             "wrapped_yaw_delta_from_current_scalar_yaw":  "var current_yaw := float(playground.player.camera_yaw); var yaw_delta := wrapf(desired_yaw - current_yaw, -PI, PI)",
+                                             "public_api_call":  "playground.player.adjust_view(yaw_delta, 0.0) at line 320",
+                                             "direct_camera_yaw_assignment_absent":  true,
+                                             "source_guards_in_m7_test":  "tests/runtime/test_m7_playable_networked_processes.gd lines 16-18 assert helper presence, public-API sync and direct-assignment ban",
+                                             "no_network_server_authority_range_timeout_semantics_changed":  "R9 delta limited to the two declared files; no M5/network/SM1/P6/P7 surface touched (git diff R8..R9 exactly 2 files)"
+                                         },
+                   "pc0":  {
+                               "result":  "CAPTURED",
+                               "command":  "git fetch origin --prune; .\\CONTROL_PROJECT.ps1 -NoFailOnRed (exit 0)",
+                               "standard_overall":  "YELLOW",
+                               "directional_overall":  "YELLOW",
+                               "cross_branch_overlaps":  0,
+                               "candidate_specific_critical_hits":  "none; no watch-hit file list includes the R9 delta paths",
+                               "directional_watch_hits":  [
+                                                              "CH-\u003eNX YELLOW BLOCK: 4 paths",
+                                                              "NX-\u003eECO YELLOW ADVISORY: 1 path",
+                                                              "NX-\u003eT YELLOW BLOCK: 1 path",
+                                                              "V0-\u003eECO YELLOW ADVISORY: 3 paths",
+                                                              "V0-\u003eT YELLOW BLOCK: 3 paths"
+                                                          ],
+                               "v0_relevant_blocked_transitions":  [
+                                                                       "V0-SM1 RUNTIME MUTATION START",
+                                                                       "V0-SM1 CHECKPOINT ACCEPTANCE",
+                                                                       "V0-P7 START",
+                                                                       "V0 NETWORK FOUNDATION CHANGE"
+                                                                   ],
+                               "human_attention":  "YELLOW must not be relabeled GREEN; canonical M7/M5 gates of this verification are machine PASS but control reconciliation remains open",
+                               "reports":  [
+                                               "artifacts/control/project-control-report.json",
+                                               "artifacts/control/directional-watch-report.json"
+                                           ],
+                               "prior_exact_r9_ci_reference":  "run 33250316990 SUCCESS, artifact 9714151584, digest sha256:38485eb077c00cae90931a39e9d0bc30056cd99af63a8fb9bf94c98de33a8a9a (historical; not inferred as GREEN)"
+                           },
+                   "freshness":  {
+                                     "result":  "PASS",
+                                     "final_head":  "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
+                                     "final_tree":  "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
+                                     "tracked_diff_exit":  0,
+                                     "staged_diff_exit":  0,
+                                     "untracked_files_count":  37,
+                                     "untracked_files_qualification":  "all 37 are Godot-generated .gd.uid files (6 ecology/production, 16 sm1 runtime, 15 test .gd.uid); plus gitignored artifacts/ test outputs; none committed; not part of the subject tree"
+                                 },
+                   "evidence_cross_check":  {
+                                                "verification_001":  "FAILED on OLD_SUBJECT 6fdfc047 (canonical M5 multiplayer exit -1) вЂ” historical, not inherited",
+                                                "verification_002":  "FAILED on R8 25f5ddf (canonical M7 51/4 failures) вЂ” historical, not inherited; root cause classified in V0-SM1-R1-B6-M7-R9-ROOT-CAUSE-001",
+                                                "windows_validation_002":  "R9 Windows V2 PASS read as prior evidence only; not a substitute for this execution",
+                                                "protocol_correction_001":  "first direct-shell R9 attempt classified INVALID_VALIDATION_ENVIRONMENT; not inherited as candidate verdict",
+                                                "windows_v2_wrapper_nuance":  "one NativeCommandError wrapper invocation without governed Godot exit code treated as wrapper-only evidence; this verifier executed its own governed pipe smoke once and judged that execution only"
+                                            },
+                   "verifier_incident_disclosure":  {
+                                                        "incident":  "One initial pre-gate wrapper invocation used a broken PowerShell argument-splat ($args automatic-variable collision) that launched the Godot game scene instead of the governed test scripts; no governed gate test executed in those invocations and no governed exit code or assertion result was produced",
+                                                        "classification":  "INVALID_VERIFIER_INVOCATION_NOT_CANDIDATE_RESULT (analogous to the documented Windows V2 wrapper NativeCommandError nuance)",
+                                                        "disposition":  "invocation log preserved under artifacts/test-results/b6-r9-pre-gates-profile-30656; all four pre-gates were then executed exactly once with correct governed invocation and all passed; no candidate test was rerun after a governed failure at any point in this verification"
+                                                    }
+               },
+    "notes":  "B6 fresh exact-head machine re-verification of R9 subject b760a6cd/7af1fe08 executed in a brand-new checkout (C:\\distributed-world-simulator\\b6-fresh-verify-003) with the exact double Godot 4.7.1.stable.double.custom_build.a13da4feb. All governed predicates PASS: subject identity and composition (48/9/2, exact two-file R9 delta), isolated editor import, fresh governed R9 M7 series 10/10 at 54 assertions / 0 failures each (single series, fresh isolated parent profile per attempt, zero replacement runs), R8 M5 pre-gates (contracts 126/0, R7 guard 31/0, R8 control-read 25/0, governed pipe smoke with non-empty child stdout/stderr 15/15 bytes), fresh M5 decisive 10/10 single series with zero M5_CONTROL_READ_UNAVAILABLE and zero M5_CONVERGENCE_RELEASE_INTEGRITY_FAILED occurrences, focused SM1 belt 13/13 under an isolated profile, impaired-network stability 5/5 at 69/0 with PASS marker each, first-and-only canonical full world/core regression PASS (passed=true, declared=discovered=304, steps=307, bad exits=0), R8 semantic audit (barrier byte-identical to R7, bounded typed control reads, transient error set exactly NOT_FOUND/OPEN_FAILED/EMPTY/INCOMPLETE, bounded retry horizon 25x5ms, no .bak truth, explicit exhaustion marker, no convergence weakening), R9 semantic audit (camera-basis helper with wrapped yaw delta through public adjust_view API, direct scalar assignment absent, source guards present, no network/authority/range/timeout semantics changed), PC0 capture (standard YELLOW, directional YELLOW, no cross-branch overlaps, no candidate-specific critical hits) and post-execution freshness (HEAD/TREE unchanged, tracked/staged clean, 37 generated .gd.uid untracked only). One verifier-side wrapper incident before any governed pre-gate execution is disclosed above and classified as invalid invocation, not a candidate result; every governed gate then executed exactly once and passed. Verdict: VERIFIED. This is a machine verdict only: it does NOT accept SM1, does NOT propose or accept a checkpoint, does NOT authorize any merge, does NOT satisfy the human RUNTIME_FEATURE_MERGE gate, does NOT establish a fresh exact-head Reviewer PASS on R9, does NOT declare PC0 GREEN, and leaves B7/checkpoint proposal blocked pending exact-head review freshness and remaining control reconciliation, and P7 blocked.",
+    "forbidden_conclusions_respected":  {
+                                            "sm1_accepted":  false,
+                                            "checkpoint_accepted":  false,
+                                            "checkpoint_proposed":  false,
+                                            "merge_authorized":  false,
+                                            "p7_activated":  false,
+                                            "human_gate_satisfied":  false,
+                                            "pc0_green_claimed":  false,
+                                            "fresh_reviewer_pass_on_r9_claimed":  false
+                                        },
+    "next":  {
+                 "b6":  "CLOSED (machine verification VERIFIED)",
+                 "r9":  "VERIFIED / NOT MERGED",
+                 "b7":  "BLOCKED pending exact-head Reviewer freshness + remaining control reconciliation",
+                 "p7":  "BLOCKED",
+                 "human_runtime_feature_merge":  "untouched"
+             }
+}
