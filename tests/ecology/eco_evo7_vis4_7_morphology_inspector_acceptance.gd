@@ -31,8 +31,8 @@ func _run() -> void:
 	_check(presentation != null, "VIS4.7 presentation exists")
 	_check(not playground.is_morphology_inspector_visible(), "VIS4.7 inspector starts hidden")
 
-	var panel = playground.get_node_or_null("Play0HUD/VIS47MorphologyInspectorPanel")
-	var label = playground.get_node_or_null("Play0HUD/VIS47MorphologyInspectorPanel/VIS47MorphologyInspectorText")
+	var panel: PanelContainer = playground.get_node_or_null("Play0HUD/VIS47MorphologyInspectorPanel") as PanelContainer
+	var label: Label = playground.get_node_or_null("Play0HUD/VIS47MorphologyInspectorPanel/VIS47MorphologyInspectorText") as Label
 	_check(panel is PanelContainer and not panel.visible, "VIS4.7 inspector panel starts hidden")
 	_check(label is Label, "VIS4.7 inspector label exists")
 	if panel is PanelContainer:
@@ -71,6 +71,11 @@ func _run() -> void:
 	_check(playground.is_morphology_inspector_visible(), "VIS4.7 live inspector visible")
 	var selected_index: int = playground.get_morphology_inspector_selected_index()
 	_check(selected_index >= 0 and selected_index < descriptors.size(), "VIS4.7 selects a live PH5 record")
+	if selected_index >= 0 and selected_index < descriptors.size():
+		_check(presentation.is_ph5_record_individual_materialized(selected_index), "VIS4.7 F6 selection prefers a visually materialized PH5 plant")
+	var status: Dictionary = playground.get_play0_status()
+	_check(bool(status.get("morphology_inspector_visible", false)), "VIS4.7 status reports inspector visible")
+	_check(int(status.get("morphology_inspector_selected_index", -1)) == selected_index, "VIS4.7 status reports selected index")
 	if selected_index < 0 or selected_index >= descriptors.size():
 		playground.queue_free()
 		await process_frame
