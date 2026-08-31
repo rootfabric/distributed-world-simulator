@@ -755,7 +755,11 @@ func set_morphology_inspector_visible(value: bool) -> bool:
 				morphology_inspector_panel.visible = true
 			if morphology_inspector_label != null:
 				morphology_inspector_label.text = "VIS4.7 MORPHOLOGY INSPECTOR\nUnavailable until a completed generation > 0 has PH5 morphology evidence."
-			return false
+			_morphology_inspector_index = -1
+			_morphology_inspector_record_id = ""
+			_morphology_inspector_state = {}
+			_refresh_hud_text()
+			return true
 		morphology_inspector_visible = true
 		if morphology_inspector_panel != null:
 			morphology_inspector_panel.visible = true
