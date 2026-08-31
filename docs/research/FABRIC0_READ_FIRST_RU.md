@@ -919,3 +919,49 @@ all event members
 The symmetric falsifier gives exact caller-order-independent coupled state, while pair-wise sequential processing has `max state delta = 4` between opposite orders.
 
 0.17-B remains frictionless at impact. Tangential/rolling/torsional generalized wrench is deliberately deferred to 0.17-C.
+
+
+## 15. FABRIC0.17-C — generalized contact wrench boundary
+
+Current exact executable:
+
+```text
+edc021230dadf62e9bf5ffb4c17cc5f2d0140ba0
+```
+
+State:
+
+```text
+0.17-A 77/77 PASS
+   ↓
+0.17-B 63/63 PASS
+   ↓
+0.17-C 76/76 PASS
+   ↓
+0.17-D NEXT
+
+FABRIC0.17 remains IN PROGRESS
+```
+
+C adds a 5DOF generalized friction wrench:
+
+```text
+tangent force (2)
+rolling moment (2)
+torsional moment (1)
+```
+
+with explicit geometry-scaled limits from an already-resolved normal support impulse.
+
+Important: C does not apply normal support a second time and does not yet solve normal+wrench coupling in one MCP.
+
+Read:
+
+```text
+docs/research/FABRIC0_17_SIMULTANEOUS_MULTI_IMPACT_GENERALIZED_WRENCH_RU.md
+validation/fabric0-compositional-world-fabric-v17-c-validation.json
+```
+
+Next closure-decision wall:
+
+`FABRIC0.17-D — UNIFIED MULTI-IMPACT WRENCH TRAJECTORY`.

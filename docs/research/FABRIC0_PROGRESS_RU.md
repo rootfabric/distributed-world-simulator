@@ -3478,3 +3478,69 @@ S1 8/8
 Next wall:
 
 `FABRIC0.17-C — GENERALIZED CONTACT WRENCH`.
+
+
+### 0.17-C current state
+
+```text
+executable HEAD:
+edc021230dadf62e9bf5ffb4c17cc5f2d0140ba0
+
+GENERALIZED CONTACT WRENCH
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+76/76 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+FABRIC0.17 NOT CLOSED
+```
+
+Generalized friction coordinates:
+
+```text
+2 tangent force impulse DOF
+2 rolling moment impulse DOF
+1 torsional moment impulse DOF
+```
+
+Geometry-derived patch radius on acceptance stand:
+
+```text
+R_eff = 0.70710678118655
+```
+
+Admissible limits:
+
+```text
+|Pt|    <= mu_t   * Pn
+|Mroll| <= mu_r   * Pn * R_eff
+|Mspin| <= mu_tau * Pn * R_eff
+```
+
+Saturated probe reaches all three limits and dissipates:
+
+```text
+Delta KE = -3.31742638415729
+energy ledger error = 2.220446049250313e-15
+linear momentum error = 0
+angular momentum error = 0
+```
+
+Pure-moment and pure-tangent falsifiers prove the moment and force channels are independent.
+
+Normal support is resolved externally in C; normal/wrench recoupling is intentionally deferred.
+
+Full regression:
+
+```text
+C 76/76
+B 63/63
+A 77/77
+0.16 S3 101/101
+0.16 S2 102/102
+0.16 S1 110/110
+editor CLEAN
+```
+
+Next:
+
+`FABRIC0.17-D — UNIFIED MULTI-IMPACT WRENCH TRAJECTORY`.

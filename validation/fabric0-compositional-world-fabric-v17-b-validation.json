@@ -188,5 +188,12 @@
     "PRODUCTION_SPARSE_IMPACT_BACKEND",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next_slice": "FABRIC0.17-C_GENERALIZED_CONTACT_WRENCH"
+  "next_slice": "FABRIC0.17-C_GENERALIZED_CONTACT_WRENCH",
+  "project_control": {
+    "run_id": 33354580680,
+    "run_number": 1818,
+    "status": "SUCCESS",
+    "exact_head": "7d51c6e691dcc9d9ef70529b9c5f5e29fe06d5dc",
+    "note": "Repository control gate for the B evidence HEAD completed successfully before C executable publication."
+  }
 }

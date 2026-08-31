@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.17",
+  "slice": "C_GENERALIZED_CONTACT_WRENCH",
+  "status": "IMPLEMENTED_CANDIDATE_NOT_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
+  "predecessor": {
+    "slice": "FABRIC0.17-B",
+    "executable_head": "6456ca4a5ce936c7b4c2b11906c696982a091e24",
+    "evidence_head": "7d51c6e691dcc9d9ef70529b9c5f5e29fe06d5dc",
+    "acceptance": "63/63_PASS",
+    "project_control_run": 1818,
+    "project_control": "SUCCESS"
+  },
+  "executable_head": "edc021230dadf62e9bf5ffb4c17cc5f2d0140ba0",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 76,
+    "script": "tests/research/fabric0/fabric0_generalized_contact_wrench_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_17_C_GENERALIZED_CONTACT_WRENCH_PLAYGROUND_PASS"
+  },
+  "model": {
+    "normal_support_semantics": "RESOLVED_EXTERNALLY_USED_AS_CAPACITY_BUDGET",
+    "generalized_velocity": [
+      "v_t1",
+      "v_t2",
+      "omega_roll_t1",
+      "omega_roll_t2",
+      "omega_spin_n"
+    ],
+    "generalized_impulse": [
+      "P_t1",
+      "P_t2",
+      "M_roll_t1",
+      "M_roll_t2",
+      "M_torsion"
+    ],
+    "effective_radius_definition": "MAX_PLANAR_DISTANCE_FROM_MANIFOLD_CENTROID_TO_MANIFOLD_POINT",
+    "admissible_limits": [
+      "norm(Pt) <= mu_tangent * Pn",
+      "norm(Mroll) <= mu_rolling * Pn * R_eff",
+      "abs(Mtorsion) <= mu_torsion * Pn * R_eff"
+    ],
+    "solve": "DETERMINISTIC_PROJECTED_MAXIMUM_DISSIPATION",
+    "objective": "u^T z + 0.5 z^T K z",
+    "admissible_set": "TANGENT_DISK_X_ROLLING_DISK_X_TORSION_INTERVAL"
+  },
+  "stick_probe": {
+    "patch_points": 4,
+    "effective_radius": 0.70710678118655,
+    "modes": {
+      "tangent": "stick",
+      "rolling": "stick",
+      "torsion": "stick"
+    },
+    "max_generalized_velocity_after_lt": 7e-12,
+    "projected_residual": 9.774542286677956e-13,
+    "energy_delta": -0.00747350907499,
+    "linear_momentum_error": 0,
+    "angular_momentum_error": 0
+  },
+  "saturated_probe": {
+    "normal_impulse": 2,
+    "limits": {
+      "tangent": 0.5,
+      "rolling": 0.11313708498985,
+      "torsion": 0.07071067811865
+    },
+    "modes": {
+      "tangent": "slide",
+      "rolling": "roll",
+      "torsion": "spin"
+    },
+    "generalized_impulse": [
+      -0.48801695881371,
+      -0.10880922713731,
+      0.0967152164043,
+      0.0587040621752,
+      -0.07071067811865
+    ],
+    "energy_delta": -3.31742638415729,
+    "energy_ledger_error": 2.220446049250313e-15,
+    "matrix_symmetry_error": 0,
+    "linear_momentum_error": 0,
+    "angular_momentum_error": 0,
+    "reversed_body_order": "EXACT_IDENTICAL",
+    "reversed_pair_order": "EXACT_IDENTICAL"
+  },
+  "channel_falsifiers": {
+    "pure_moment": {
+      "tangent_force": 0,
+      "explicit_contact_moment_nonzero": true,
+      "energy_delta": -1.003651515657
+    },
+    "pure_tangent": {
+      "tangent_force_nonzero": true,
+      "explicit_contact_moment": 0,
+      "energy_delta": -1.72318424821
+    },
+    "zero_normal_support": {
+      "all_limits": 0,
+      "generalized_impulse": "ALL_ZERO",
+      "energy_delta": 0
+    }
+  },
+  "exact_gate": {
+    "fabric0_17_c": "76/76_PASS",
+    "fabric0_17_b": "63/63_PASS",
+    "fabric0_17_a": "77/77_PASS",
+    "fabric0_16_s3": "101/101_PASS",
+    "fabric0_16_s2": "102/102_PASS",
+    "fabric0_16_s1": "110/110_PASS",
+    "editor_scan": "CLEAN"
+  },
+  "exact_remote_byte_identity": {
+    "fabric0_17_c": "4/4_PASS",
+    "fabric0_17_b": "PRESERVED",
+    "fabric0_17_a": "PRESERVED",
+    "fabric0_16_s3": "PRESERVED"
+  },
+  "files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_generalized_contact_wrench_v1.gd",
+      "git_blob": "b910db82df3d46528ba2a65c38e9292cbf6d73c6",
+      "sha256": "a1e815fd0a7adc6cad334913a4b55ab3e60a5373eb3b5f5924c84e8c496316cf"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_generalized_contact_wrench_experiments_v1.gd",
+      "git_blob": "af80403d36010e347b6061afed65e885a42014e1",
+      "sha256": "4cb6bc0de6c20d4351b2c53198e3f9a62e9485add2b7ecbd17b6456ea3b9067a"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_generalized_contact_wrench_acceptance.gd",
+      "git_blob": "b1ff38e5d8d6c12edc8deae7cfb11dcf1f90b1b4",
+      "sha256": "9394583de5498ab4340c96342197c2ffb520189e7a194193bdf17e24ed4c789a"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_generalized_contact_wrench_playground.gd",
+      "git_blob": "f90df6b4075e8d607bdbc6b8ebc768157f9a8aa6",
+      "sha256": "dc21c9a329d555d2e4f51710b35835c7eadace07675571dc2691ffa2770be5ce"
+    }
+  ],
+  "claims": [
+    "GENERIC_FIVE_DOF_PATCH_FRICTION_WRENCH",
+    "GEOMETRY_SCALED_ROLLING_AND_TORSIONAL_LIMITS",
+    "PROJECTED_MAXIMUM_DISSIPATION_FOR_FIXED_NORMAL_SUPPORT",
+    "INDEPENDENT_TANGENT_ROLLING_TORSION_CHANNELS",
+    "ENERGY_IMPULSE_WORK_LEDGER",
+    "LINEAR_AND_ANGULAR_MOMENTUM_PRESERVATION",
+    "CALLER_BODY_AND_PAIR_ORDER_INDEPENDENCE_ON_ACCEPTANCE_FIXTURES",
+    "ZERO_NORMAL_SUPPORT_ZERO_FRICTION_WRENCH"
+  ],
+  "non_claims": [
+    "FABRIC0_17_CLOSED",
+    "NORMAL_AND_GENERALIZED_FRICTION_ONE_COUPLED_MCP",
+    "EXACT_PRESSURE_DISTRIBUTION_WRENCH_CONE",
+    "CENTER_OF_PRESSURE_TIPPING_SOLVE",
+    "COUPLED_ELLIPSOIDAL_FORCE_MOMENT_FRICTION_LAW",
+    "MATERIAL_MICROPHYSICS_DERIVED_ROLLING_RESISTANCE",
+    "FRICTIONAL_SIMULTANEOUS_IMPACT",
+    "SUSTAINED_WRENCH_TRAJECTORY_MODE_EVENTS",
+    "GLOBALLY_CERTIFIED_MAXIMUM_DISSIPATION_SIGNORINI_COULOMB_WRENCH",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next_slice": "FABRIC0.17-D_UNIFIED_MULTI_IMPACT_WRENCH_TRAJECTORY"
+}

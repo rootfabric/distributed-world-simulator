@@ -10,9 +10,12 @@ IN PROGRESS
 IMPLEMENTED CANDIDATE / 77/77 PASS
 
 0.17-B — COUPLED SIMULTANEOUS IMPACT SOLVE
+IMPLEMENTED CANDIDATE / 63/63 PASS
+
+0.17-C — GENERALIZED CONTACT WRENCH
 IMPLEMENTED CANDIDATE
 EXACT LINUX DOUBLE PASS
-63/63 PASS
+76/76 PASS
 REMOTE BYTE IDENTITY PASS
 NOT CLOSED
 ```
@@ -635,3 +638,369 @@ one bounded admissible 6DOF contact wrench
 ```
 
 The next falsification question is whether rotational resistance can be expressed as generic contact-wrench limits derived from manifold geometry and normal support, without introducing wheel/bearing/device-specific kernel classes.
+
+
+## 14. 0.17-C — Generalized Contact Wrench
+
+**Exact-tested executable HEAD:** `edc021230dadf62e9bf5ffb4c17cc5f2d0140ba0`.
+
+0.17-C adds a generic patch-level friction wrench on top of an already resolved normal support budget.
+
+The five generalized friction coordinates are:
+
+```text
+u =
+[v_t1,
+ v_t2,
+ omega_roll_t1,
+ omega_roll_t2,
+ omega_spin_n]
+```
+
+and generalized impulse:
+
+```text
+z =
+[P_t1,
+ P_t2,
+ M_roll_t1,
+ M_roll_t2,
+ M_torsion]
+```
+
+No wheel, bearing, tire or device class appears in the kernel.
+
+### 14.1 Admissible wrench limits
+
+For resolved normal impulse `Pn` and geometry-derived patch radius `R_eff`:
+
+```text
+||Pt|| <= mu_t * Pn
+
+||Mroll|| <= mu_r * Pn * R_eff
+
+|Mtorsion| <= mu_tau * Pn * R_eff
+```
+
+`R_eff` is currently:
+
+> maximum planar distance from the clipped manifold centroid to a manifold point.
+
+On the 4-point box face probe:
+
+```text
+R_eff = 0.70710678118655
+```
+
+The coefficients are dimensionless research material parameters.
+
+### 14.2 Maximum-dissipation solve
+
+0.17-C constructs the real 5x5 generalized effective matrix `K` by applying unit generalized impulses through the full rigid-body inertia/lever-arm dynamics.
+
+The accepted bounded problem minimizes post-impulse kinetic energy increment:
+
+```text
+Delta T(z)
+=
+u^T z
++
+1/2 z^T K z
+```
+
+over the product admissible set:
+
+```text
+tangent disk
+x
+rolling disk
+x
+torsion interval
+```
+
+using deterministic projected gradient.
+
+This is a bounded maximum-dissipation research solve for the fixed normal support budget.
+
+Observed matrix symmetry error on the acceptance fixture:
+
+```text
+0
+```
+
+### 14.3 Important normal-support boundary
+
+`Pn` is **not applied by 0.17-C**.
+
+It is assumed to have already been resolved by the normal contact solve and is used only as the friction-wrench capacity budget.
+
+Therefore output distinguishes:
+
+```text
+applied_wrench_impulse
+=
+tangential force impulse
++
+rolling/torsional moment impulse
+```
+
+from:
+
+```text
+admissible_resultant_wrench_impulse
+=
+normal support budget
++
+applied friction wrench
+```
+
+This prevents double-applying normal support.
+
+Normal/friction/wrench recoupling remains an integration wall for 0.17-D.
+
+### 14.4 Stick falsifier
+
+With large admissible limits:
+
+```text
+modes:
+tangent = stick
+rolling = stick
+torsion = stick
+```
+
+Five generalized relative velocities after solve are all below approximately:
+
+```text
+6.4e-12
+```
+
+Projected iteration residual:
+
+```text
+9.774542286677956e-13
+```
+
+Energy:
+
+```text
+Delta KE = -0.00747350907499
+```
+
+The impulse-work prediction equals measured rigid-body kinetic-energy change within double precision.
+
+### 14.5 Saturated slide / roll / spin falsifier
+
+Normal support budget:
+
+```text
+Pn = 2
+```
+
+Limits:
+
+```text
+tangent = 0.5
+rolling = 0.11313708498985
+torsion = 0.07071067811865
+```
+
+All three channels saturate independently:
+
+```text
+tangent mode = slide
+rolling mode = roll
+torsion mode = spin
+```
+
+Solved generalized impulse:
+
+```text
+[-0.48801695881371,
+ -0.10880922713731,
+  0.09671521640430,
+  0.05870406217520,
+ -0.07071067811865]
+```
+
+Applied friction wrench:
+
+```text
+force =
+(0,
+ -0.10880922713731,
+  0.48801695881371)
+
+moment =
+(-0.07071067811865,
+  0.05870406217520,
+ -0.09671521640430)
+```
+
+Energy:
+
+```text
+Delta KE = -3.31742638415729
+
+energy ledger error
+= 2.220446049250313e-15
+```
+
+Linear and angular momentum errors:
+
+```text
+0
+0
+```
+
+### 14.6 Independent channel falsifiers
+
+Pure rotational resistance:
+
+```text
+mu_tangent = 0
+
+applied tangent force = 0
+applied rolling/torsional moment != 0
+
+Delta KE = -1.003651515657
+```
+
+This proves rolling/torsional channels are not encoded as hidden point force.
+
+Pure tangent friction:
+
+```text
+mu_rolling = 0
+mu_torsion = 0
+
+applied tangent force != 0
+explicit contact moment = 0
+
+Delta KE = -1.723184248210
+```
+
+Thus point friction and contact moments are independently controllable generalized coordinates.
+
+Zero normal support:
+
+```text
+Pn = 0
+→ all three limits = 0
+→ generalized impulse = 0
+→ state unchanged
+→ Delta KE = 0
+```
+
+### 14.7 Determinism and conservation
+
+Reversing:
+
+- caller body array order;
+- requested pair order `A|B <-> B|A`;
+
+produces exact-identical canonical signature/state.
+
+All acceptance probes preserve total internal:
+
+```text
+linear momentum
+angular momentum about world origin
+```
+
+at double-precision exact/roundoff scale.
+
+### 14.8 Exact validation
+
+Exact runtime:
+
+`Godot 4.7.1.stable.double.custom_build.a13da4feb`.
+
+```text
+0.17-C acceptance   76/76 PASS
+0.17-C playground   PASS
+
+0.17-B regression   63/63 PASS
+0.17-A regression   77/77 PASS
+
+0.16 S3 regression 101/101 PASS
+0.16 S2 regression 102/102 PASS
+0.16 S1 regression 110/110 PASS
+
+editor parse/compile CLEAN
+```
+
+Remote executable bytes:
+
+```text
+0.17-C 4/4 exact
+0.17-B preserved
+0.17-A preserved
+0.16 S3 predecessor preserved
+```
+
+Exact C blobs:
+
+```text
+runtime
+b910db82df3d46528ba2a65c38e9292cbf6d73c6
+sha256 a1e815fd0a7adc6cad334913a4b55ab3e60a5373eb3b5f5924c84e8c496316cf
+
+experiments
+af80403d36010e347b6061afed65e885a42014e1
+sha256 4cb6bc0de6c20d4351b2c53198e3f9a62e9485add2b7ecbd17b6456ea3b9067a
+
+acceptance
+b1ff38e5d8d6c12edc8deae7cfb11dcf1f90b1b4
+sha256 9394583de5498ab4340c96342197c2ffb520189e7a194193bdf17e24ed4c789a
+
+playground
+f90df6b4075e8d607bdbc6b8ebc768157f9a8aa6
+sha256 dc21c9a329d555d2e4f51710b35835c7eadace07675571dc2691ffa2770be5ce
+```
+
+## 15. 0.17-C non-claims
+
+0.17-C does **not** claim:
+
+- normal support and generalized friction solved in one coupled MCP;
+- exact pressure-distribution contact wrench cone;
+- center-of-pressure/tipping support polygon solve;
+- coupled ellipsoidal force/moment friction law;
+- rolling resistance derived from deformation/material microphysics;
+- frictional simultaneous impact;
+- sustained contact trajectory with mode events;
+- globally certified maximum-dissipation Signorini-Coulomb wrench solve;
+- production acceptance;
+- FABRIC0.17 closure.
+
+The current admissible set is an explicit product of tangent disk, rolling disk and torsion interval.
+
+## 16. Next slice — 0.17-D
+
+```text
+FABRIC0.17-D
+UNIFIED MULTI-IMPACT WRENCH TRAJECTORY
+
+0.17-A event-set localization
++
+0.17-B coupled impact jump
++
+0.17-C generalized sustained-contact wrench
+        ↓
+same-time event fixed point
+        ↓
+post-impact persistent manifold
+        ↓
+wrench mode evolution
+        ↓
+separation / topology mutation
+        ↓
+refinement
++
+momentum / energy
++
+deterministic replay
+```
+
+0.17-D is the closure-decision slice. It must show that temporal event identity, coupled normal impact and generalized rotational/tangential contact behavior coexist in one trajectory rather than only in isolated probes.
