@@ -134,6 +134,44 @@ static func validate_parent_binding(
 		return false
 	return true
 
+## PERF2.4 optimized chunk seam.
+##
+## The caller must already provide parents in canonical record_id order. This
+## avoids re-sorting every bounded STREAM1 chunk. Candidate formulas and hashes
+## are unchanged; the only difference is that chunk-local candidate_hash
+## canonicalization is deferred to the generation boundary.
+static func build_presorted_unsorted(
+	parents: Array,
+	generation: int,
+	schema: String,
+	version: String,
+	evolution_seed: int,
+	offspring_per_parent: int
+) -> Array[Dictionary]:
+	if generation < 1 or schema.is_empty() or version.is_empty() or offspring_per_parent < 1:
+		return []
+	var out: Array[Dictionary] = []
+	var previous_record_id := ""
+	var has_previous := false
+	for parent_value in parents:
+		if not parent_value is Dictionary:
+			return []
+		var parent: Dictionary = parent_value
+		var record_id := String(parent.get("record_id", ""))
+		if record_id.is_empty():
+			return []
+		if has_previous and record_id < previous_record_id:
+			return []
+		previous_record_id = record_id
+		has_previous = true
+		for offspring_ordinal in offspring_per_parent:
+			var candidate: Dictionary = build_candidate(
+				parent, generation, offspring_ordinal, schema, version, evolution_seed)
+			if candidate.is_empty():
+				return []
+			out.append(candidate)
+	return out
+
 ## Full serial build over ordered parents (audit oracle and default path).
 ## Returns [] on any failure (fail-closed).
 static func build_all(
@@ -144,16 +182,13 @@ static func build_all(
 	evolution_seed: int,
 	offspring_per_parent: int
 ) -> Array[Dictionary]:
-	var ordered := ordered_parents(parents)
-	var out: Array[Dictionary] = []
-	for parent_value in ordered:
-		var parent: Dictionary = parent_value
-		for offspring_ordinal in offspring_per_parent:
-			var candidate := build_candidate(
-				parent, generation, offspring_ordinal, schema, version, evolution_seed)
-			if candidate.is_empty():
-				return []
-			out.append(candidate)
+	var ordered: Array[Dictionary] = ordered_parents(parents)
+	if ordered.size() != parents.size():
+		return []
+	var out: Array[Dictionary] = build_presorted_unsorted(
+		ordered, generation, schema, version, evolution_seed, offspring_per_parent)
+	if out.size() != ordered.size() * offspring_per_parent:
+		return []
 	return sort_candidates(out)
 
 ## ---------- verbatim LS3.3 internals ----------

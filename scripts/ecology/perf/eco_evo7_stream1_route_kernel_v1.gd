@@ -12,7 +12,9 @@ class_name EcoEvo7Stream1RouteKernel
 const KERNEL_SCHEMA := "distributed_world_simulator.ecology.evo7_stream1_route_kernel.v1"
 const KERNEL_VERSION := "1.0.0"
 
-static func build_all(
+## PERF2.4 optimized chunk seam. Preserves input candidate order and
+## defers candidate_hash canonicalization to the full-generation boundary.
+static func build_in_input_order(
 	candidates: Array,
 	next_generation: int,
 	schema: String,
@@ -30,12 +32,28 @@ static func build_all(
 		if not candidate_value is Dictionary:
 			return []
 		var candidate: Dictionary = candidate_value
-		var route := build_route(
+		var route: Dictionary = build_route(
 			candidate, next_generation, schema, version,
 			evolution_seed, cell_size_m, grid_size)
 		if route.is_empty():
 			return []
 		out.append(route)
+	return out
+
+static func build_all(
+	candidates: Array,
+	next_generation: int,
+	schema: String,
+	version: String,
+	evolution_seed: int,
+	cell_size_m: float,
+	grid_size: int
+) -> Array[Dictionary]:
+	var out: Array[Dictionary] = build_in_input_order(
+		candidates, next_generation, schema, version,
+		evolution_seed, cell_size_m, grid_size)
+	if out.size() != candidates.size():
+		return []
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return String(a["candidate_hash"]) < String(b["candidate_hash"])
 	)

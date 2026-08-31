@@ -26,6 +26,10 @@ const SCHEMA := "distributed_world_simulator.ecology.evo7_stream1_generation_pro
 const VERSION := "1.0.0"
 const SOURCE := "STREAM1_BOUNDED_PROPOSAL"
 
+const PIPELINE_LEGACY := "LEGACY_PER_CHUNK_CANONICALIZATION"
+const PIPELINE_OPTIMIZED := "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"
+const PIPELINE_MODES: Array[String] = [PIPELINE_LEGACY, PIPELINE_OPTIMIZED]
+
 const FAIL_INPUTS := "STREAM1_INPUT_MISMATCH"
 const FAIL_CHUNK := "STREAM1_CHUNK_FAILURE"
 const FAIL_ROUTE := "STREAM1_ROUTE_FAILURE"
@@ -60,6 +64,7 @@ var _configured := false
 var _parents_per_chunk := 64
 var _audit_interval := 10
 var _audit_generation_1 := true
+var _pipeline_mode := PIPELINE_OPTIMIZED
 var _fault_kind := ""
 var _fault_params: Dictionary = {}
 
@@ -71,14 +76,46 @@ var max_parent_chunk_seen := 0
 var max_candidate_chunk_seen := 0
 var last_audit_generation := -1
 var last_audit_pass := false
+
+## PERF2.4 deterministic operation counters. These are side-channel only and
+## never enter proposal identity.
+var legacy_generation_calls := 0
+var optimized_generation_calls := 0
+var chunk_local_parent_sorts := 0
+var chunk_local_candidate_sorts := 0
+var chunk_local_route_sorts := 0
+var chunk_local_recruitment_sorts := 0
+var recruitment_context_builds := 0
+var generation_boundary_sorts := 0
+
 var _last_report: Dictionary = {}
 
 func setup(config: Dictionary) -> bool:
 	_configured = false
+	stream_calls = 0
+	chunks_processed = 0
+	serial_audit_calls = 0
+	oracle_elided_generations = 0
+	max_parent_chunk_seen = 0
+	max_candidate_chunk_seen = 0
+	last_audit_generation = -1
+	last_audit_pass = false
+	legacy_generation_calls = 0
+	optimized_generation_calls = 0
+	chunk_local_parent_sorts = 0
+	chunk_local_candidate_sorts = 0
+	chunk_local_route_sorts = 0
+	chunk_local_recruitment_sorts = 0
+	recruitment_context_builds = 0
+	generation_boundary_sorts = 0
+	_last_report = {}
 	_parents_per_chunk = int(config.get("parents_per_chunk", 64))
 	_audit_interval = int(config.get("audit_interval", 10))
 	_audit_generation_1 = bool(config.get("audit_generation_1", true))
+	_pipeline_mode = String(config.get("pipeline_mode", PIPELINE_OPTIMIZED))
 	if _parents_per_chunk < 1 or _audit_interval < 1:
+		return false
+	if _pipeline_mode not in PIPELINE_MODES:
 		return false
 	_configured = true
 	return true
@@ -94,6 +131,15 @@ func get_telemetry() -> Dictionary:
 		"max_candidate_chunk_seen": max_candidate_chunk_seen,
 		"last_audit_generation": last_audit_generation,
 		"last_audit_pass": last_audit_pass,
+		"pipeline_mode": _pipeline_mode,
+		"legacy_generation_calls": legacy_generation_calls,
+		"optimized_generation_calls": optimized_generation_calls,
+		"chunk_local_parent_sorts": chunk_local_parent_sorts,
+		"chunk_local_candidate_sorts": chunk_local_candidate_sorts,
+		"chunk_local_route_sorts": chunk_local_route_sorts,
+		"chunk_local_recruitment_sorts": chunk_local_recruitment_sorts,
+		"recruitment_context_builds": recruitment_context_builds,
+		"generation_boundary_sorts": generation_boundary_sorts,
 	}
 
 func get_last_report() -> Dictionary:
@@ -135,6 +181,20 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	var candidate_build_ms := 0.0
 	var route_build_ms := 0.0
 	var recruitment_eval_ms := 0.0
+
+	var optimized_recruitment_context: Dictionary = {}
+	if _pipeline_mode == PIPELINE_OPTIMIZED:
+		optimized_generation_calls += 1
+		optimized_recruitment_context = RecruitmentKernel.build_context(
+			String(immutable_context["schema"]), String(immutable_context["version"]),
+			String(immutable_context["revision"]), int(immutable_context["environment_seed"]),
+			String(immutable_context["environment_field_hash"]), Array(immutable_context["environment_cells"]))
+		recruitment_context_builds += 1
+		if optimized_recruitment_context.is_empty():
+			return _failure(FAIL_RECRUITMENT, "optimized recruitment context failed", generation)
+	else:
+		legacy_generation_calls += 1
+
 	var cursor := 0
 	while cursor < ordered.size():
 		var end := mini(cursor + _parents_per_chunk, ordered.size())
@@ -147,27 +207,52 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 		max_parent_chunk_seen = maxi(max_parent_chunk_seen, chunk.size())
 
 		var phase_started := Time.get_ticks_usec()
-		var candidates := CandidateKernel.build_all(
-			chunk, generation,
-			String(immutable_context["schema"]), String(immutable_context["version"]),
-			int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+		var candidates: Array[Dictionary] = []
+		if _pipeline_mode == PIPELINE_OPTIMIZED:
+			candidates = CandidateKernel.build_presorted_unsorted(
+				chunk, generation,
+				String(immutable_context["schema"]), String(immutable_context["version"]),
+				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+		else:
+			candidates = CandidateKernel.build_all(
+				chunk, generation,
+				String(immutable_context["schema"]), String(immutable_context["version"]),
+				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+			chunk_local_parent_sorts += 1
+			chunk_local_candidate_sorts += 1
 		candidate_build_ms += _elapsed_ms(phase_started)
 		if candidates.size() != chunk.size() * int(immutable_context["offspring_per_parent"]):
 			return _failure(FAIL_CHUNK, "candidate chunk count mismatch", generation)
 		max_candidate_chunk_seen = maxi(max_candidate_chunk_seen, candidates.size())
 
 		phase_started = Time.get_ticks_usec()
-		var routes := RouteKernel.build_all(
-			candidates, generation,
-			String(immutable_context["schema"]), String(immutable_context["version"]),
-			int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
-			int(immutable_context["grid_size"]))
+		var routes: Array[Dictionary] = []
+		if _pipeline_mode == PIPELINE_OPTIMIZED:
+			routes = RouteKernel.build_in_input_order(
+				candidates, generation,
+				String(immutable_context["schema"]), String(immutable_context["version"]),
+				int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
+				int(immutable_context["grid_size"]))
+		else:
+			routes = RouteKernel.build_all(
+				candidates, generation,
+				String(immutable_context["schema"]), String(immutable_context["version"]),
+				int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
+				int(immutable_context["grid_size"]))
+			chunk_local_route_sorts += 1
 		route_build_ms += _elapsed_ms(phase_started)
 		if routes.size() != candidates.size():
 			return _failure(FAIL_ROUTE, "route chunk count mismatch", generation)
 
 		phase_started = Time.get_ticks_usec()
-		var recruitment := _evaluate_recruitment_chunk(candidates, routes, immutable_context)
+		var recruitment: Array[Dictionary] = []
+		if _pipeline_mode == PIPELINE_OPTIMIZED:
+			recruitment = _evaluate_recruitment_chunk_input_order(
+				candidates, routes, optimized_recruitment_context, immutable_context)
+		else:
+			recruitment = _evaluate_recruitment_chunk_legacy(candidates, routes, immutable_context)
+			recruitment_context_builds += 1
+			chunk_local_recruitment_sorts += 1
 		recruitment_eval_ms += _elapsed_ms(phase_started)
 		if recruitment.size() != candidates.size():
 			return _failure(FAIL_RECRUITMENT, "recruitment chunk count mismatch", generation)
@@ -179,12 +264,15 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 		cursor = end
 
 	CandidateKernel.sort_candidates(all_candidates)
+	generation_boundary_sorts += 1
 	all_routes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return String(a["candidate_hash"]) < String(b["candidate_hash"])
 	)
+	generation_boundary_sorts += 1
 	all_recruitment.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return String(a["candidate_hash"]) < String(b["candidate_hash"])
 	)
+	generation_boundary_sorts += 1
 
 	if all_candidates.size() != ordered.size() * int(immutable_context["offspring_per_parent"]):
 		return _failure(FAIL_PROPOSAL, "global candidate count mismatch", generation)
@@ -279,7 +367,16 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 		"max_parent_chunk": mini(_parents_per_chunk, ordered.size()),
 		"max_candidate_chunk": mini(_parents_per_chunk, ordered.size()) * int(immutable_context["offspring_per_parent"]),
 		"audited": audited,
+		"pipeline_mode": _pipeline_mode,
 		"proposal_hash": String(proposal["proposal_hash"]),
+		"optimization": {
+			"chunk_local_parent_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
+			"chunk_local_candidate_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
+			"chunk_local_route_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
+			"chunk_local_recruitment_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
+			"recruitment_context_builds": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 1,
+			"generation_boundary_sorts": 3,
+		},
 		"timings_ms": {
 			"candidate_build_ms": candidate_build_ms,
 			"route_build_ms": route_build_ms,
@@ -365,7 +462,7 @@ func _validate_context(context: Dictionary, generation: int) -> bool:
 		return false
 	return true
 
-func _evaluate_recruitment_chunk(
+func _evaluate_recruitment_chunk_legacy(
 	candidates: Array[Dictionary],
 	routes: Array[Dictionary],
 	context: Dictionary
@@ -394,6 +491,33 @@ func _evaluate_recruitment_chunk(
 	)
 	return out
 
+## PERF2.4 optimized recruitment seam. Candidate and route arrays are produced
+## in the exact same chunk-local input order, so hash-map reconstruction and
+## chunk-local sorting are unnecessary. Full canonical sorting still occurs
+## once at the generation proposal boundary.
+func _evaluate_recruitment_chunk_input_order(
+	candidates: Array[Dictionary],
+	routes: Array[Dictionary],
+	recruitment_context: Dictionary,
+	context: Dictionary
+) -> Array[Dictionary]:
+	if candidates.size() != routes.size() or recruitment_context.is_empty():
+		return []
+	var out: Array[Dictionary] = []
+	for index in range(candidates.size()):
+		var candidate: Dictionary = candidates[index]
+		var route: Dictionary = routes[index]
+		if String(candidate.get("candidate_hash", "")) != String(route.get("candidate_hash", "")):
+			return []
+		var event: Dictionary = RecruitmentKernel.evaluate_recruitment_event(
+			candidate, route, recruitment_context)
+		if event.is_empty():
+			return []
+		event["recruitment_event_hash"] = RecruitmentKernel.recruitment_event_hash(
+			event, String(context["schema"]), String(context["version"]))
+		out.append(event)
+	return out
+
 func _monolithic_oracle(
 	ordered: Array[Dictionary],
 	generation: int,
@@ -409,7 +533,7 @@ func _monolithic_oracle(
 		int(context["evolution_seed"]), float(context["cell_size_m"]), int(context["grid_size"]))
 	if routes.size() != candidates.size():
 		return {}
-	var recruitment := _evaluate_recruitment_chunk(candidates, routes, context)
+	var recruitment: Array[Dictionary] = _evaluate_recruitment_chunk_legacy(candidates, routes, context)
 	if recruitment.size() != candidates.size():
 		return {}
 	return {

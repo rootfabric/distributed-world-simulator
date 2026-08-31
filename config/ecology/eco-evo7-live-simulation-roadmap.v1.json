@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R23",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R24",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PERF2.4",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -117,8 +117,8 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_4_RUNTIME_OPTIMIZATION",
-      "detail": "PERF2.3 R1 accepted on exact Ubuntu PASS. PERF2.4 Runtime Optimization is now authorized/current. Accepted scaling evidence: 27/27 exact parity, bounded STREAM1 structural pressure, no observed crossover, serial faster at all 9 tested scale/chunk points."
+      "status": "IN_PROGRESS_PERF2_4_R1_RUNTIME_OPTIMIZATION",
+      "detail": "PERF2.3 remains accepted. PERF2.4 R1 optimizes STREAM1 orchestration by removing per-chunk re-sorts/context rebuilds while preserving one generation-boundary canonicalization, exact audit oracle, LS3.3 authority and bounded working-set semantics."
     },
     {
       "id": "PERF2.0",
@@ -179,8 +179,18 @@
     {
       "id": "PERF2.4",
       "name": "Runtime Optimization",
-      "status": "CURRENT_AUTHORIZED_AFTER_PERF2_3_ACCEPTANCE",
-      "detail": "Optimize STREAM1 runtime overhead while preserving exact canonical parity and bounded structural working-set behavior. PERF2.3 accepted baseline shows no crossover and serial faster at all tested scale/chunk points; optimization must be evidence-driven and fail closed."
+      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "detail": "A/B legacy vs optimized STREAM1 on AGE_2/12/22 × chunks 1/7/64 × 3 reps: 54 samples, 27 exact A/B pairs. Claim requires >=1.02 wall geomean, >=1.03 stream geomean, >=6/9 improved points, 9/9 non-regressed points, exact parity and unchanged structural bounds.",
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_4_RUNTIME_OPTIMIZATION_R1_RU.md",
+      "local_runner": "RUN_ECO_EVO7_PERF2_4_TESTS.sh",
+      "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
+      "runtime_allowlist": [
+        "scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd",
+        "scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd",
+        "scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd"
+      ],
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33372208170
     },
     {
       "id": "PERF2.CONV",
@@ -266,8 +276,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.4",
-    "status": "PERF2_3_ACCEPTED_PERF2_4_AUTHORIZED_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.4_R1_ONE_EXACT_LOCAL_PASS",
+    "status": "PERF2_3_ACCEPTED_PERF2_4_R1_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -429,7 +439,7 @@
     "lane": "PERF2.SIM",
     "current_step": "PERF2.4",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "PERF2_3_ACCEPTED_PERF2_4_AUTHORIZED",
+    "status": "PERF2_3_ACCEPTED_PERF2_4_R1_IMPLEMENTATION_CANDIDATE",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
@@ -680,19 +690,71 @@
     },
     "perf2_4": {
       "name": "Runtime Optimization",
-      "status": "AUTHORIZED_CURRENT",
-      "predecessor": "PERF2.3_ACCEPTED_UBUNTU_34715AC",
-      "baseline": {
-        "exact_pairs": "27/27",
-        "crossover_observed": false,
-        "faster_side_all_points": "SERIAL_REFERENCE",
-        "structural_working_set": "STREAM1_BOUNDED",
-        "optimization_claim": false
+      "revision": "ECO.EVO7-PERF2.4-R1",
+      "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "accepted_perf2_3_control_base": "4997f7116d0e4ac40ed88fe8a41a7b5029621d71",
+      "accepted_perf2_3_tested_head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+      "accepted_perf2_3_tested_tree": "f97deaa1c3e8d31e1e5fc71394b7528426b1f585",
+      "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
+      "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
+      "runtime_change": {
+        "default_pipeline": "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION",
+        "retained_ab_baseline": "LEGACY_PER_CHUNK_CANONICALIZATION",
+        "candidate_chunk_seam": "build_presorted_unsorted",
+        "route_chunk_seam": "build_in_input_order",
+        "recruitment_alignment": "CANDIDATE_ROUTE_INPUT_INDEX",
+        "recruitment_context_builds": "ONE_PER_GENERATION",
+        "canonicalization": "ONE_FULL_GENERATION_BOUNDARY",
+        "audit_oracle": "UNCHANGED_MONOLITHIC"
       },
-      "optimization_changes_allowed": true,
-      "canonical_parity_must_remain_exact": true,
-      "bounded_working_set_must_not_regress": true,
-      "measurement_contract": "ECO.EVO7-PERF2.0-R1"
+      "runtime_allowlist": [
+        "scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd",
+        "scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd",
+        "scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd"
+      ],
+      "ab_campaign": {
+        "scale_points": [
+          2,
+          12,
+          22
+        ],
+        "chunks": [
+          1,
+          7,
+          64
+        ],
+        "repetitions": 3,
+        "pipelines": 2,
+        "samples": 54,
+        "exact_pairs": "27/27",
+        "total_generation_advances": 1296,
+        "balanced_order": "R0_LEGACY_FIRST__R1_OPTIMIZED_FIRST__R2_LEGACY_FIRST"
+      },
+      "acceptance_thresholds": {
+        "min_wall_geomean_speedup": 1.02,
+        "min_stream_geomean_speedup": 1.03,
+        "min_point_wall_ratio": 0.97,
+        "min_improved_wall_points": 6,
+        "required_nonregressed_wall_points": 9
+      },
+      "canonical_parity_required": true,
+      "bounded_working_set_regression_allowed": false,
+      "serial_crossover_required": false,
+      "optimization_claim_requires_thresholds": true,
+      "report_artifact": "artifacts/perf2/perf2-4-runtime-optimization-r1.json",
+      "local_runner": "RUN_ECO_EVO7_PERF2_4_TESTS.sh",
+      "acceptance_runtime_gate": {
+        "required_exact_local_passes": 1,
+        "accepted_os": [
+          "UBUNTU",
+          "WINDOWS"
+        ],
+        "dual_os_required": false,
+        "second_os": "OPTIONAL_NON_BLOCKING"
+      },
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_4_RUNTIME_OPTIMIZATION_R1_RU.md",
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33372208170
     }
   }
 }
