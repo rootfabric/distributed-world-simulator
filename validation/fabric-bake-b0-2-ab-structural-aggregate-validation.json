@@ -1,0 +1,71 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_2_ab_validation.v1",
+  "checkpoint": "B0.2-A/B",
+  "title": "Structural Aggregate Compiler + Exact Reconstruction Mapping",
+  "branch": "research/fabric-bake0-2-structural-aggregate-r1",
+  "predecessor": {
+    "checkpoint": "B0.1",
+    "closure_lineage_head_at_branch": "3fa6cf7367f4b5a62564bec072a9b90770949d77",
+    "executable_subject": "e854185f501cfc2658d5d1c5430be4eed3b070ee",
+    "status": "RESEARCH_CHECKPOINT_CLOSED_EXACT_HEAD_DOUBLE_PASS"
+  },
+  "candidate_status": "IMPLEMENTED_CANDIDATE",
+  "physical_bake_artifact_emitted": false,
+  "production_acceptance_claimed": false,
+  "platform_policy": {
+    "ubuntu_linux_double": "REQUIRED",
+    "windows": "PASS_BY_POLICY_NON_GATING"
+  },
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "implementation_scope": {
+    "minimum_part_count": 100,
+    "fixture_parts": 500,
+    "fixture_rigid_bonds": 499,
+    "fixture_regions": 25,
+    "fixture_boundary_anchors": 4,
+    "fixture_support_points": 4000,
+    "full_state_dof": 6500,
+    "reduced_state_dof": 13,
+    "state_reduction_ratio": 500
+  },
+  "development_evidence": {
+    "fresh_import": "PASS",
+    "b0_0_acceptance": {"status": "PASS", "assertions": 33},
+    "b0_1_acceptance": {"status": "PASS", "assertions": 64},
+    "b0_1_playground": "PASS",
+    "b0_2_ab_acceptance": {"status": "PASS", "assertions": 76},
+    "b0_2_ab_playground": "PASS",
+    "linear_momentum_error": 2.32e-12,
+    "angular_momentum_error": 3.32e-12,
+    "descriptor_hash": "ef955d6d449a1934ac5259066573fd2aab7401b560473edd4059b0374d058685",
+    "reconstruction_mapping_hash": "fbd7216e490450c5ca1a9a3ccaa683b07223acefcef9755cba368af63021f365"
+  },
+  "required_exact_head_evidence": {
+    "implementation_head": null,
+    "implementation_tree": null,
+    "ubuntu_linux_exact_double": "PENDING"
+  },
+  "claims": [
+    "deterministic 500-part rigid aggregate mass/COM/full-inertia compilation",
+    "exact rigid REDUCED-to-FULL reconstruction for pose and twist",
+    "fail-closed FULL-to-REDUCED projection rejects non-rigid state",
+    "linear and angular momentum equivalence at floating-point tolerance",
+    "deterministic boundary anchor transforms and rigid point Jacobians",
+    "finite support envelope derived from canonical part support vertices",
+    "deterministic canonical ordering and source-mutation identity change"
+  ],
+  "non_claims": [
+    "B0.2 closure",
+    "executable PhysicalBakeArtifact",
+    "RefinementGuard certification",
+    "local unbake execution",
+    "damage or bond failure prediction",
+    "topology split/rebake",
+    "general contact bake",
+    "production readiness"
+  ],
+  "next_required_stage": "B0.2-C_REFINEMENT_GUARDS"
+}

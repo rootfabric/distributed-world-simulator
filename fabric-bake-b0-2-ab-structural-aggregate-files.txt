@@ -1,0 +1,27 @@
+Checkpoint: FABRIC-BAKE B0.2-A/B — Structural Aggregate Compiler + Exact Reconstruction Mapping
+Status: IMPLEMENTED CANDIDATE / EXACT-HEAD UBUNTU VERIFICATION PENDING
+Predecessor lineage: B0.1 policy/closure head 3fa6cf7367f4b5a62564bec072a9b90770949d77
+Branch: research/fabric-bake0-2-structural-aggregate-r1
+
+Runtime/research:
+scripts/research/fabric_bake0/structural_aggregate_descriptor_v1.gd
+scripts/research/fabric_bake0/structural_reconstruction_mapping_v1.gd
+scripts/research/fabric_bake0/structural_aggregate_compiler_v1.gd
+
+Tests/playground:
+tests/research/fabric_bake0/fabric_bake_b0_2_ab_fixture.gd
+tests/research/fabric_bake0/fabric_bake_b0_2_ab_acceptance.gd
+tests/research/fabric_bake0/fabric_bake_b0_2_ab_playground.gd
+
+Canonical Ubuntu/Linux runner:
+RUN_FABRIC_BAKE_B0_2_AB_TESTS.sh
+
+Evidence/docs:
+docs/research/FABRIC_BAKE_B0_2_AB_STRUCTURAL_AGGREGATE_RECONSTRUCTION_RU.md
+validation/fabric-bake-b0-2-ab-structural-aggregate-validation.json
+fabric-bake-b0-2-ab-structural-aggregate-files.txt
+
+Important safety boundary:
+B0.2-A/B emits STRUCTURAL_AGGREGATE_READY_FOR_GUARDS, not PhysicalBakeArtifact.
+B0.2-C RefinementGuard certification is required before structural execution can become an approximate executable bake.
+Windows verification is PASS_BY_POLICY / NON-GATING under the FABRIC-BAKE platform policy.
