@@ -1,0 +1,67 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_1_validation.v1",
+  "checkpoint": "B0.1",
+  "title": "Exact Boundary Reduction / Schur elimination",
+  "branch": "research/fabric-bake0-1-exact-boundary-reduction-r1",
+  "predecessor": {
+    "checkpoint": "B0.0",
+    "closure_head": "d389b8ed72ffbed8949279b42089da3687125a90",
+    "status": "RESEARCH_CHECKPOINT_CLOSED_EXACT_HEAD_DOUBLE_PASS"
+  },
+  "candidate_status": "IMPLEMENTED_CANDIDATE",
+  "production_acceptance_claimed": false,
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "implementation_scope": {
+    "boundary_ports": [
+      2,
+      8
+    ],
+    "minimum_internal_variables": 100,
+    "fixture_boundary_ports": 4,
+    "fixture_internal_variables": 128,
+    "fixture_full_equations": 132,
+    "fixture_reduced_equations": 4,
+    "expected_internal_rank": 128,
+    "expected_reduced_rank": 3,
+    "runtime_work_ratio": 1089
+  },
+  "development_evidence": {
+    "numeric_acceptance": {
+      "status": "PASS",
+      "assertions": 27
+    },
+    "isolated_interface_contract_harness": {
+      "status": "PASS",
+      "assertions": 48,
+      "qualification": "NOT_FULL_REPOSITORY_EVIDENCE"
+    }
+  },
+  "required_exact_head_evidence": {
+    "implementation_head": null,
+    "implementation_tree": null,
+    "b0_0_predecessor_acceptance": "PENDING",
+    "b0_1_focused_acceptance": "PENDING",
+    "b0_1_playground": "PENDING",
+    "self_hosted_windows_verification": "PENDING"
+  },
+  "claims": [
+    "deterministic exact Schur reduction for a well-posed linear internal block",
+    "rank-deficient internal blocks fail closed",
+    "passive reciprocal boundary relation is preserved at machine-precision scale",
+    "reduction descriptor is content-bound to PhysicalBakeArtifact",
+    "reducer implementation and numerical policy participate in provenance",
+    "canonical source mutation invalidates old bake through B0.0 lifecycle"
+  ],
+  "non_claims": [
+    "checkpoint closure",
+    "production readiness",
+    "generic sparse reducer",
+    "rank-revealing QR or generalized nullspace reduction",
+    "DAE condensation",
+    "nonlinear/dynamic ROM",
+    "hybrid/contact bake"
+  ]
+}

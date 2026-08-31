@@ -1,0 +1,29 @@
+Checkpoint: FABRIC-BAKE B0.1 — Exact Boundary Reduction / Schur elimination
+Status: IMPLEMENTED CANDIDATE / EXACT-HEAD VERIFICATION PENDING
+Predecessor: B0.0 closure d389b8ed72ffbed8949279b42089da3687125a90
+Branch: research/fabric-bake0-1-exact-boundary-reduction-r1
+
+New runtime/research files:
+scripts/research/fabric_bake0/linear_boundary_system_v1.gd
+scripts/research/fabric_bake0/dense_linear_algebra_v1.gd
+scripts/research/fabric_bake0/exact_boundary_reduction_descriptor_v1.gd
+scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd
+scripts/research/fabric_bake0/exact_boundary_bake_compiler_v1.gd
+scripts/research/fabric_bake0/exact_boundary_runtime_v1.gd
+
+Tests/playground:
+tests/research/fabric_bake0/fabric_bake_b0_1_fixture.gd
+tests/research/fabric_bake0/fabric_bake_b0_1_acceptance.gd
+tests/research/fabric_bake0/fabric_bake_b0_1_playground.gd
+
+Runners:
+RUN_FABRIC_BAKE_B0_1_TESTS.sh
+RUN_FABRIC_BAKE_B0_1_TESTS.ps1
+
+Evidence/docs:
+docs/research/FABRIC_BAKE_B0_1_EXACT_BOUNDARY_REDUCTION_RU.md
+validation/fabric-bake-b0-1-exact-boundary-reduction-validation.json
+fabric-bake-b0-1-exact-boundary-reduction-files.txt
+.github/workflows/fabric-bake-b0-1-exact-head.yml
+
+B0.0 contracts are reused rather than forked.
