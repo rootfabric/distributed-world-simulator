@@ -3,9 +3,9 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.18",
   "slice": "D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
-  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
+  "status": "RESEARCH_CANDIDATE_CLOSED",
   "production_accepted": false,
-  "parent_status": "CLOSURE_READY_NOT_CLOSED",
+  "parent_status": "RESEARCH_CANDIDATE_CLOSED",
   "branch": "research/fabric0-18-persistent-contact-wrench-r1",
   "predecessor_slices": {
     "a": {
@@ -163,10 +163,18 @@
     "fabric0_17_d": "6/6_PRESERVED"
   },
   "project_control": {
-    "run_number": 1899,
-    "run_id": 33373310277,
-    "subject_head": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
-    "result": "SUCCESS"
+    "exact_d_executable": {
+      "run_number": 1899,
+      "run_id": 33373310277,
+      "subject_head": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+      "result": "SUCCESS"
+    },
+    "closure_control_carrier": {
+      "run_number": 1902,
+      "run_id": 33373554642,
+      "subject_head": "88ba8b61ec81928aedeae5777ee1380a6458f0f6",
+      "result": "SUCCESS"
+    }
   },
   "fail_closed": [
     "BAD_TRAJECTORY_ROOT_TOLERANCE",
@@ -203,8 +211,28 @@
     "PRODUCTION_EXTERNAL_FORCE_WORK_INTEGRATOR",
     "CONTINUOUS_FULL_TRAJECTORY_EXTERNAL_WORK_INTEGRAL",
     "PRODUCTION_SPARSE_BACKEND",
-    "FABRIC0_18_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next": "EXPLICIT_FABRIC0.18_CLOSURE_DECISION_THEN_BRIDGE1_SYNC"
+  "next": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNCHRONIZATION_REVIEW",
+  "closure": {
+    "decision": "RESEARCH_CANDIDATE_CLOSED",
+    "exact_physics_executable": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+    "exact_physics_tree": "c051cabd50343603efc509887f32fadf479f0f54",
+    "control_carrier": "88ba8b61ec81928aedeae5777ee1380a6458f0f6",
+    "control_carrier_project_control": {
+      "run_number": 1902,
+      "run_id": 33373554642,
+      "result": "SUCCESS"
+    },
+    "exact_d_bytes": "4/4_PRESERVED_ON_CLOSURE_CARRIER",
+    "predecessor_bytes": {
+      "fabric0_18_c": "4/4_PRESERVED",
+      "fabric0_18_b": "4/4_PRESERVED",
+      "fabric0_18_a": "3/3_PRESERVED",
+      "fabric0_17_d": "6/6_PRESERVED"
+    },
+    "no_implicit_successor": true,
+    "next": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNCHRONIZATION_REVIEW",
+    "note": "Research closure only. No FABRIC physics or production ownership semantics are changed by the closure boundary."
+  }
 }

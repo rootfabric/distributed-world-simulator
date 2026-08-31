@@ -1252,3 +1252,84 @@ PENDING EXPLICIT CLOSURE BOUNDARY
 ```
 
 Do not start an implicit 0.18-E. Before formalizing a post-0.18 successor, perform the planned Physical Core ↔ FABRIC-BAKE / BRIDGE-1 synchronization review.
+
+
+## 11. FABRIC0.18 closure decision
+
+The bounded A+B+C+D Persistent Contact Wrench Dynamics checkpoint is now closed as a research candidate.
+
+```text
+FABRIC0.18
+PERSISTENT CONTACT WRENCH DYNAMICS
+
+RESEARCH CANDIDATE CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+Exact physics executable remains immutable:
+
+```text
+e079565b4b9cd0dae530ff5042f057ce8fa0d0cc
+TREE c051cabd50343603efc509887f32fadf479f0f54
+```
+
+Closure control carrier:
+
+```text
+88ba8b61ec81928aedeae5777ee1380a6458f0f6
+Project Control #1902 SUCCESS
+run id 33373554642
+```
+
+The carrier changes only FABRIC research documentation/validation relative to the exact D executable. All four D executable blobs remain byte-identical, and C/B/A/0.17-D predecessor bytes remain preserved.
+
+### 11.1 Closed claims
+
+FABRIC0.18 research evidence now contains:
+
+- persistent contact identity/age/epoch continuity without treating history as accepted physical truth;
+- canonical 0.17 manifold identity bridge with no second contact-identity system;
+- localized stick→slide, stick→roll, stick→spin and support→separation event roots;
+- explicit temporal-resolution semantics for near-coincident persistent mode events;
+- one shared dynamic body coupled against multiple fixed-anchor persistent patches;
+- graph-wide normal support redistribution and support opening without tensile reaction;
+- mixed persistent modes and active slide/roll/spin generalized wrench channels;
+- sequential pair-callback order-dependence falsifier and unified graph order independence;
+- bounded 10,000-step physical static-contact no-creep evidence;
+- one unified free-flight→impact→persistent support→mode transitions→separation trajectory;
+- live B event localization over canonical fresh C physics;
+- strict whole-timeline event-time and event-resolved state refinement;
+- exact caller/event-spec presentation determinism;
+- passive bounded event-stage energy and normal-complementarity audits.
+
+### 11.2 Persistent non-claims
+
+Closure is research-only and does not claim:
+
+- production acceptance;
+- arbitrary multi-dynamic-body persistent-contact graphs/trajectories;
+- exact pressure-distribution wrench cones;
+- compliant/Hertz contact;
+- a production external-force/work integrator;
+- a continuous full-trajectory external-work integral;
+- production sparse backend/broadphase/thread-pool;
+- authority, persistence, networking or Construction ownership transfer.
+
+`production_accepted = false`.
+
+No `FABRIC0.18-E` is required for this bounded checkpoint.
+
+### 11.3 Successor boundary
+
+Do not implicitly start `FABRIC0.19`.
+
+Before formalizing the next Physical Core successor, perform the already-declared:
+
+```text
+Physical Core ↔ FABRIC-BAKE / BRIDGE-1 synchronization review
+```
+
+That review is an integration/roadmap synchronization boundary, not a prerequisite retroactively attached to the closed FABRIC0.18 research evidence.

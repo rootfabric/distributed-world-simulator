@@ -3780,3 +3780,46 @@ Important D orchestration invariant: physical event surfaces come from a fresh c
 The reported `-5.622853864835` dissipation value is a sum of event-stage contact kinetic deltas, not a claimed continuous external-work integral.
 
 All planned 0.18 slices are implemented. Next action is an explicit FABRIC0.18 closure decision, followed by the previously declared Physical Core ↔ BRIDGE-1 sync before any post-0.18 successor.
+
+
+### FABRIC0.18 final closure
+
+```text
+FABRIC0.18
+PERSISTENT CONTACT WRENCH DYNAMICS
+
+RESEARCH CANDIDATE CLOSED
+
+A  60/60 PASS
+B 108/108 PASS
+C 153/153 PASS
+D 113/113 PASS
+
+EXACT LINUX DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+EDITOR CLEAN
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+Exact physics executable:
+
+`e079565b4b9cd0dae530ff5042f057ce8fa0d0cc`.
+
+Exact physics tree:
+
+`c051cabd50343603efc509887f32fadf479f0f54`.
+
+Closure control carrier:
+
+`88ba8b61ec81928aedeae5777ee1380a6458f0f6`.
+
+Project Control on exact D executable: `#1899 SUCCESS`.
+
+Project Control on final D evidence/control carrier: `#1902 SUCCESS`.
+
+Closure does not modify FABRIC physics. D remains `4/4 exact`; C/B/A/0.17-D predecessor executable bytes remain preserved.
+
+No implicit `0.18-E` or `FABRIC0.19` is authorized by this closure.
+
+Next required work boundary: Physical Core ↔ FABRIC-BAKE / BRIDGE-1 synchronization review before formalizing a post-0.18 successor.

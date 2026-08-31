@@ -1224,3 +1224,54 @@ NOT PRODUCTION ACCEPTED
 ```
 
 Do not create an implicit 0.18-E. Next action is explicit 0.18 closure decision, then the planned Physical Core ↔ BRIDGE-1 synchronization review.
+
+
+## 23. FABRIC0.18 — CLOSED research candidate
+
+Current Physical Core boundary:
+
+```text
+FABRIC0.17
+RESEARCH CANDIDATE CLOSED
+        ↓
+FABRIC0.18
+RESEARCH CANDIDATE CLOSED
+```
+
+FABRIC0.18 exact physics executable:
+
+`e079565b4b9cd0dae530ff5042f057ce8fa0d0cc`.
+
+Exact physics tree:
+
+`c051cabd50343603efc509887f32fadf479f0f54`.
+
+Closure evidence:
+
+```text
+A  60/60 PASS
+B 108/108 PASS
+C 153/153 PASS
+D 113/113 PASS
+
+D 4/4 exact
+C/B/A/0.17-D predecessor bytes preserved
+
+Project Control #1899 SUCCESS
+Project Control #1902 SUCCESS
+```
+
+Status:
+
+```text
+RESEARCH CANDIDATE CLOSED
+NOT PRODUCTION ACCEPTED
+```
+
+Closure control carrier:
+
+`88ba8b61ec81928aedeae5777ee1380a6458f0f6`.
+
+Do not create an implicit `0.18-E` or `FABRIC0.19`.
+
+Next: perform the Physical Core ↔ FABRIC-BAKE / BRIDGE-1 synchronization review; only after that review may a post-0.18 Physical Core successor be formalized.
