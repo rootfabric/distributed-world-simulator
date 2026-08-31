@@ -209,3 +209,31 @@ IMPLEMENTATION UNBLOCKED
 NOT YET EXECUTABLE
 NOT CLOSED
 ```
+
+
+## BRIDGE-1 implementation result
+
+The implementation obligations declared by this synchronization review are now covered by
+exact executable candidate:
+
+`e128cf9d49f84691b8a5428c97ab7acd53b92d90`.
+
+Evidence:
+
+```text
+146/146 PASS
+7/7 remote exact bytes
+Project Control #1917 SUCCESS
+
+derived compiler mismatch rejects old execution
+persistent mode changes do not advance source frontier
+canonical mutation invalidates old bake
+500-part kinematics-only reconstruction
+fresh physical/contact state policy after rebuild
+topology mutation routed to B0.2-E
+reverse-input exact deterministic identities
+FULL fallback deterministic
+```
+
+This satisfies the sync-review implementation delta without changing its ownership
+decisions. BRIDGE-1 is closure-ready, not production accepted.
