@@ -167,7 +167,9 @@
       "detail": "Generation-age scaling matrix: 36 samples, 12 scaling points, 9 serial↔STREAM1 comparisons, 4 trends, 3 host-local crossover analyses, 27/27 exact pairs required. Audit cadence aligned one interval audit per window.",
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_SIMULATION_SCALING_R1_RU.md",
       "local_runner": "RUN_ECO_EVO7_PERF2_3_TESTS.sh",
-      "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json"
+      "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33364190059
     },
     {
       "id": "PERF2.4",
@@ -624,7 +626,9 @@
         "dual_os_required": false,
         "second_os": "OPTIONAL_NON_BLOCKING"
       },
-      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_SIMULATION_SCALING_R1_RU.md"
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_SIMULATION_SCALING_R1_RU.md",
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33364190059
     }
   }
 }
