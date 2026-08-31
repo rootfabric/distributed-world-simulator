@@ -5,9 +5,9 @@
 Статус:
 
 ~~~text
-VIS4.8 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED
+VIS4.8 R1
+UBUNTU EXACT-SOURCE DOUBLE-GODOT VERIFIED
+CLOSED
 ~~~
 
 ## Frozen executable subject
@@ -441,3 +441,78 @@ ECO.EVO7 VIS4.8 Diversity Evidence candidate: PASS
 
 One exact Ubuntu double-Godot GREEN on the frozen subject is sufficient for
 closure. A separate Windows acceptance gate is not required.
+
+
+## Ubuntu exact-source closure evidence
+
+The frozen executable subject above completed the canonical Ubuntu verification
+using the project-attached canonical double-Godot build.
+
+~~~text
+HEAD:
+32d9401d2ae7beb2a222b926f07ba44ec50dfe40
+
+TREE:
+09feb0705f2ae32f50d5e0e32db048648600e10f
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+~~~
+
+Source provenance:
+
+~~~text
+GitHub source-export run:
+33371467885 / SUCCESS
+
+canonical HEAD/TREE asserted before archive
+local git write-tree reproduced exact canonical TREE
+temporary validation PR #393 closed without merge
+~~~
+
+Canonical execution:
+
+~~~text
+VIS4.7 predecessor:
+PASS / 106 assertions
+
+VIS4.8 focused:
+PASS / 106 assertions
+
+VIS4.8 RENDERER FIDELITY:
+PASS
+
+VIS4.8 LIVE DIVERSITY:
+LIVE_DIVERSITY_SUFFICIENT
+
+final marker:
+PRESENT
+
+runner RC:
+0
+
+tracked reconstructed tree:
+clean
+~~~
+
+Full log SHA-256:
+
+~~~text
+06a76ce32c201c510238a2bf220b2467db9fa35b56a3211eb896a082b6616e13
+~~~
+
+Durable closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_8_DIVERSITY_EVIDENCE_UBUNTU_EXACT_SOURCE_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.8 CLOSED
+VIS4.9 PERFORMANCE / LOD UNBLOCKED
+~~~
