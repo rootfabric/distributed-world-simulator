@@ -13,13 +13,15 @@ Current performance route:
 ```text
 STREAM1 ACCEPTED
 → PERF2.0 Measurement Contract       ✅ ACCEPTED
-→ PERF2.1 STREAM1 Profiling          ← CURRENT / AUTHORIZED
+→ PERF2.1 STREAM1 Profiling R2       ← CURRENT / IMPLEMENTATION CANDIDATE
 → PERF2.2 Working-set / Memory
 → PERF2.3 Simulation Scaling
 → PERF2.4 Runtime Optimization
 ```
 
 PERF2.0 has frozen benchmark identity and correctness rules. PERF2.1 is now the active simulation-side performance checkpoint.
+
+**PERF2.1 R2 profiling matrix:** `SERIAL_REFERENCE + STREAM1 chunks 1/7/64`, each with `3 repetitions × (2 warmup + 12 measured generations)`. Required closure: `12 samples / 32 summaries / 3 diagnostic comparisons / 9 of 9 exact canonical pairs`. No optimization claim is allowed at PERF2.1.
 
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 
