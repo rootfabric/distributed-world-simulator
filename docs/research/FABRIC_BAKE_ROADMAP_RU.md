@@ -1749,3 +1749,82 @@ FABRIC0.18 ✅ CLOSED                  B0.2 ✅ CLOSED
 ```
 
 No implicit FABRIC0.19 dependency is created by this review.
+
+
+---
+
+## BRIDGE-1 executable candidate — 2026-08-31
+
+```text
+BRIDGE-1
+PHYSICAL SOURCE LIFECYCLE + BAKE RECONSTRUCTION
+
+exact executable:
+e128cf9d49f84691b8a5428c97ab7acd53b92d90
+
+TREE:
+f0deeb1848c6570d12364976f4fd07007657029d
+
+146/146 PASS
+7/7 exact remote bytes
+Project Control #1917 SUCCESS
+```
+
+Executable proof covers canonical source binding, derived graph/bake emission, execution
+gating, canonical invalidation, immediate stale rejection, exact 500-part kinematic
+reconstruction, same-topology rebuild, deterministic FULL fallback and fresh re-derivation
+of transient contact history.
+
+B0.2-D `609/609` and B0.2-E `2580/2580` remain green in the exact predecessor
+filesystem.
+
+Current state:
+
+```text
+B0.2       ✅ CLOSED
+SYNC REVIEW✅ PASS
+BRIDGE-1   🟢 CLOSURE-READY
+B0.3       ⚪ NEXT AFTER BRIDGE-1 CLOSURE
+```
+
+B0.3 final acceptance predecessor remains FABRIC0.18.
+
+
+---
+
+## BRIDGE-1 final closure status — 2026-08-31
+
+```text
+B0.2        ✅ RESEARCH CHECKPOINT CLOSED
+SYNC REVIEW ✅ PASS
+BRIDGE-1    ✅ RESEARCH INTEGRATION CHECKPOINT CLOSED
+B0.3        ⚪ NEXT
+```
+
+BRIDGE-1 exact executable:
+
+`e128cf9d49f84691b8a5428c97ab7acd53b92d90`
+
+TREE:
+
+`f0deeb1848c6570d12364976f4fd07007657029d`
+
+Acceptance/control:
+
+```text
+BRIDGE-1 146/146 PASS
+7/7 exact remote bytes
+B0.2-D 609/609 PASS
+B0.2-E 2580/2580 PASS
+
+Project Control #1917 SUCCESS — executable
+Project Control #1918 SUCCESS — evidence carrier
+```
+
+BRIDGE-1 is research integration closure only; production acceptance is not claimed.
+
+Next:
+
+`B0.3 CONTACT / WRENCH BAKE`.
+
+Final B0.3 acceptance remains gated by closed FABRIC0.18.

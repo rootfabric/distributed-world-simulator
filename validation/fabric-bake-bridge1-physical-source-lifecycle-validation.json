@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC-BAKE",
+  "checkpoint": "BRIDGE-1",
+  "name": "PHYSICAL_SOURCE_LIFECYCLE_BAKE_RECONSTRUCTION",
+  "status": "RESEARCH_INTEGRATION_CHECKPOINT_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric-bake-bridge1-physical-source-lifecycle-r2",
+  "exact_executable": {
+    "head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90",
+    "tree": "f0deeb1848c6570d12364976f4fd07007657029d"
+  },
+  "predecessors": {
+    "fabric_bake_b0_2": {
+      "closure_head": "f45801fc41ec4ddd067cc994b6de84a48cb88da1",
+      "exact_executable": "91a2f79bf6738efefa342589c44e4a0f0a6960d6",
+      "tree": "610288ea119e9f7508f711ce5b0468b272a9b489"
+    },
+    "synchronization_review": {
+      "final_evidence_head": "d71bb6bbfeb9ba210ec4f330f4c6f8ed1a18e245",
+      "result": "PASS"
+    },
+    "physical_core": {
+      "minimum_structural_dependency": "3307d553c1c3c79cd9c15a5c565af7fef3f0400c",
+      "reviewed_frontier_closure": "b9f4a11cb7c31e47884d12eaad2985811e0b6563",
+      "reviewed_frontier_exact_physics": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc"
+    }
+  },
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linux-x86_64",
+    "precision": "double"
+  },
+  "acceptance": {
+    "focused": {
+      "result": "PASS",
+      "assertions": 146
+    },
+    "playground": "PASS",
+    "fresh_focused_passes": 2,
+    "deterministic_summaries": true,
+    "predecessor_tail": {
+      "b0_2_d": "609/609_PASS",
+      "b0_2_e": "2580/2580_PASS",
+      "b0_2_e_playground": "PASS"
+    },
+    "import": {
+      "exit_code": 0,
+      "bridge_scripts_parse_editor": "CLEAN",
+      "global_clean_import_claim": false,
+      "note": "Inherited B0.2 exact tree prints known unrelated historical ECO scene diagnostics."
+    }
+  },
+  "outputs": {
+    "artifact": "7d9accdc4393f2cc041942b1a33f59651476d2d6e33b76217a8c5534484be0ad",
+    "physical_graph": "d81e27c550f83c8dd0fe75284e7aad8305f6d1d093d219899d345b21a05d0114",
+    "rebuilt_artifact": "bf8fccc033d13cbe25975c228113dc8199d7e40d1182c408bb8113df4dbba269",
+    "handoff_error": 2.0097183471152322e-14,
+    "full_state_hash": "d268103540016a9818a4aa75f1dcbb5fa54004643ca01ff541fedbac6a441178"
+  },
+  "remote_byte_identity": "7/7_PASS",
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric_bake0/physical_source_view_v1.gd",
+      "git_blob": "866d2eff719c9279b0bf6ed224ae1be4ab8a88c9",
+      "sha256": "c3e063542b1a5b2e7c2556233a9b7ab9e0f2cadb1c38523d9a92f05468cf6693"
+    },
+    {
+      "path": "scripts/research/fabric_bake0/physical_source_fabric_graph_v1.gd",
+      "git_blob": "a9da05ec5526bebd650cd406b9c4c854ea9c0389",
+      "sha256": "88ec674d667cbfe619f0c2bc0e1ffe689a77d46b56d89579613d8a78b025efd6"
+    },
+    {
+      "path": "scripts/research/fabric_bake0/physical_source_lifecycle_v1.gd",
+      "git_blob": "f9ab4ccc384c060017108db05a7ae4c76045e00d",
+      "sha256": "f20c6d0c1c6dbd30907bbc7e9bbff52a628f7e46df4085de4b8f0eb9b537d91c"
+    },
+    {
+      "path": "tests/research/fabric_bake0/fabric_bake_bridge1_fixture.gd",
+      "git_blob": "1b926d7208634fbf3ddb1488f2f2d95c457c72b0",
+      "sha256": "e550e65b4c19eed9b9f83d274d8eced8109290550b4fe807e3e26e4945f35954"
+    },
+    {
+      "path": "tests/research/fabric_bake0/fabric_bake_bridge1_acceptance.gd",
+      "git_blob": "7d374a6327519a4bc0b3b3af5a4ff0c91fe68372",
+      "sha256": "85b30f749c1ebda902d95939cd1740f8449cd2557178037282e191fc13fc6e96"
+    },
+    {
+      "path": "tests/research/fabric_bake0/fabric_bake_bridge1_playground.gd",
+      "git_blob": "57d82abc0175823a77c536c87226b6a287c7cee8",
+      "sha256": "ec6b07f1b346dc579dc38e6daa252b67a0dc7d47cbca5f803a60f1fdf0bc936d"
+    },
+    {
+      "path": "RUN_FABRIC_BAKE_BRIDGE1_TESTS.sh",
+      "git_blob": "00b06d8e1869f78a2ff759644d5b71464c90f8d5",
+      "sha256": "cf6c687065b8eeeae3a4fa2678378234a0d52236c9157949d93a604af3e7a97f"
+    }
+  ],
+  "project_control": {
+    "executable": {
+      "run_number": 1917,
+      "run_id": 33388409345,
+      "subject_head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90",
+      "result": "SUCCESS"
+    },
+    "evidence_carrier": {
+      "run_number": 1918,
+      "run_id": 33388671545,
+      "subject_head": "a10ced235113a0e1d8a29e452e4519b87ae0b443",
+      "result": "SUCCESS"
+    }
+  },
+  "claims": [
+    "CANONICAL_SOURCE_HASH_VALIDATED",
+    "SOURCE_FRONTIER_AUTHORITY_REUSED",
+    "DERIVED_PHYSICAL_GRAPH_BOUND_TO_CANONICAL_FRONTIER",
+    "STRUCTURAL_BAKE_EMITTED_FROM_CANONICAL_SOURCE",
+    "BAKE_EXECUTION_GATE_ENFORCED",
+    "DERIVED_COMPILER_MISMATCH_FAIL_CLOSED",
+    "CANONICAL_SOURCE_MUTATION_REQUIRES_INVALIDATION",
+    "STALE_ARTIFACT_EXECUTION_FORBIDDEN",
+    "EXACT_500_PART_KINEMATIC_RECONSTRUCTION",
+    "SAME_TOPOLOGY_REBUILD_WITH_FRESH_ARTIFACT",
+    "DETERMINISTIC_FULL_FALLBACK",
+    "TRANSIENT_CONTACT_STATE_NOT_CANONICAL",
+    "TRANSIENT_CONTACT_HISTORY_DISCARDED_AFTER_REBUILD",
+    "TOPOLOGY_CHANGE_ROUTED_TO_B0_2_E",
+    "DUPLICATE_INVALIDATION_CONSUMPTION_REJECTED",
+    "REVERSE_INPUT_DETERMINISM",
+    "CROSS_AUTHORITY_FAIL_CLOSED"
+  ],
+  "non_claims": [
+    "CONTACT_WRENCH_BAKE_B0_3",
+    "ARBITRARY_TOPOLOGY_REBUILD_INSIDE_BRIDGE1",
+    "PRODUCTION_SCHEDULER",
+    "PRODUCTION_ACCEPTANCE",
+    "FABRIC0_19",
+    "MULTI_AUTHORITY_MUTABLE_BAKE",
+    "PERSISTING_TRANSIENT_CONTACT_HISTORY_AS_TRUTH"
+  ],
+  "next": "B0.3_CONTACT_WRENCH_BAKE",
+  "closure": {
+    "decision": "RESEARCH_INTEGRATION_CHECKPOINT_CLOSED",
+    "exact_executable_head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90",
+    "exact_executable_tree": "f0deeb1848c6570d12364976f4fd07007657029d",
+    "evidence_control_carrier": "a10ced235113a0e1d8a29e452e4519b87ae0b443",
+    "runtime_changed_by_closure": false,
+    "production_accepted": false,
+    "next": "B0.3_CONTACT_WRENCH_BAKE",
+    "b0_3_final_predecessor": "FABRIC0.18_RESEARCH_CANDIDATE_CLOSED"
+  }
+}
