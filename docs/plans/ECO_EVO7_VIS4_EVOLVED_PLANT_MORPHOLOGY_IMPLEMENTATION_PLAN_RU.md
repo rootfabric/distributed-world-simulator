@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.6 CLOSED / NEXT: VIS4.7 MORPHOLOGY INSPECTOR  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.6 CLOSED / VIS4.7 IMPLEMENTED CANDIDATE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1262,4 +1262,86 @@ The next checkpoint is now unblocked:
 
 ~~~text
 VIS4.7 — Morphology Inspector
+~~~
+
+
+## VIS4.7 Morphology Inspector implementation result — 2026-08-31
+
+VIS4.7 is implemented on frozen runtime/test subject:
+
+~~~text
+HEAD: 7b3479156a6920083f6cc2c420fcb21834e6dc5e
+TREE: 8fedc29f3837f632d5c264080e8d5897beae1861
+~~~
+
+The checkpoint adds a read-only F6 morphology inspector directly to PLAY0.
+
+Selection semantics:
+
+~~~text
+F6 open
+ -> current player/spectator world position
+ -> nearest currently materialized PH5 plant by visual-world distance
+ -> source-bound inspector state
+~~~
+
+Each F6 reopening recomputes the nearest plant. If the inspector stays open
+across a completed generation, the same record_id is preserved when it survives;
+otherwise the nearest current PH5 record is selected.
+
+The inspector composes only already-published truth:
+
+~~~text
+VIS4.1 Descriptor V2
++ PH5 render identity
++ VIS4.5 individuality identity
++ VIS4.6 grid appearance identity
+ -> VIS4.7 InspectorModel
+ -> HUD
+~~~
+
+It displays generation, lineage, hereditary/development seeds, realized
+height/crown/density/LAI, branch topology, foliage/structural/root morphology,
+water/light/resource context, genetic potential, canonical versus
+presentation-only position, and full 64-character source/render seals.
+
+New durable model:
+
+~~~text
+scripts/labs/ecology/eco_evo7_vis4_7_morphology_inspector_model.gd
+~~~
+
+Focused acceptance:
+
+~~~text
+tests/ecology/eco_evo7_vis4_7_morphology_inspector_acceptance.gd
+~~~
+
+Canonical runner:
+
+~~~text
+RUN_ECO_EVO7_VIS4_7_TESTS.sh
+~~~
+
+The gate validates generation-zero no-fabrication behavior, exact nearest PH5
+selection, exact Descriptor/PH5/VIS4.5/VIS4.6 source pass-through, panel content,
+invalid-selection preservation, tampered binding rejection and invariance of
+ecology, geometry, individuality and grid-appearance identities.
+
+VIS4.7 does not add GrowthGraph/FunctionalPhenotype/CoupledDevelopment
+recomputation, reproduction/mutation/dispersal authority, persistence authority
+or network authority.
+
+Durable candidate:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_7_MORPHOLOGY_INSPECTOR_CANDIDATE_R1_RU.md
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.7 IMPLEMENTED CANDIDATE
+EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
+NOT CLOSED YET
 ~~~
