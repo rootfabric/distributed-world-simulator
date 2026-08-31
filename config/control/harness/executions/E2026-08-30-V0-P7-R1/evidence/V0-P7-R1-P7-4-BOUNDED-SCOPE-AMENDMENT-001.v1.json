@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.p7_4_bounded_scope_amendment.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "substep": "P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "trigger": "SAME_REVISION_AUTHORITATIVE_MUTATION after fresh P7.3 Item Graph output followed by canonical M6 checkpoint persistence",
+  "root_cause": "P7.3 adapter can mutate canonical Item Graph through trusted server.output outside NetworkedGameplayService.handle_canonical_item_command; therefore Item Graph revision advanced while aggregate gameplay revision did not.",
+  "authorized_path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+  "authorized_behavior": [
+    "delegate trusted output mutation to the existing canonical Item Graph",
+    "advance aggregate gameplay revision exactly once only when trusted output succeeds and is not replay",
+    "do not advance aggregate revision on replay or rejection"
+  ],
+  "forbidden": [
+    "M4 Item Graph foundation changes",
+    "M6 authoritative recovery changes",
+    "MW5 persistence changes",
+    "new replay ledger",
+    "new persistence schema/store",
+    "new network/authority owner",
+    "direct private revision mutation from P7 adapter"
+  ],
+  "validation_required": [
+    "three-process P7.4 seed/recover-deliver/recover-replay",
+    "fresh delivery increments aggregate revision by exactly one",
+    "post-delivery M6 checkpoint persists",
+    "restart restores Item Graph replay ledger",
+    "replay does not advance aggregate revision",
+    "P3 aggregate resource recovery regression"
+  ],
+  "state": "AUTHORIZED"
+}
