@@ -15,11 +15,11 @@ STREAM1 ACCEPTED
 → PERF2.0 Measurement Contract       ✅ ACCEPTED
 → PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
 → PERF2.2 Working-set / Memory        ✅ ACCEPTED Ubuntu c6bef3d
-→ PERF2.3 Simulation Scaling          ← CURRENT / R1 IMPLEMENTATION CANDIDATE
-→ PERF2.4 Runtime Optimization
+→ PERF2.3 Simulation Scaling          ✅ ACCEPTED Ubuntu 34715ac
+→ PERF2.4 Runtime Optimization        ← CURRENT / AUTHORIZED
 ```
 
-PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`. PERF2.2 R1 is accepted on exact local Ubuntu verification of `c6bef3d6c20d7b468f88f9aaabade2fe809b63e6`; PERF2.3 Simulation Scaling is now the active simulation-side performance checkpoint.
+PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`. PERF2.2 R1 is accepted on exact local Ubuntu verification of `c6bef3d6c20d7b468f88f9aaabade2fe809b63e6`; PERF2.3 R1 is accepted on exact Ubuntu verification of `34715ac5524d594003236ca6228c0b0ba5bb9e90`; PERF2.4 Runtime Optimization is now the active simulation-side performance checkpoint.
 
 **PERF2.1 R2 profiling matrix:** `SERIAL_REFERENCE + STREAM1 chunks 1/7/64`, each with `3 repetitions × (2 warmup + 12 measured generations)`. Required closure: `12 samples / 32 summaries / 3 diagnostic comparisons / 9 of 9 exact canonical pairs`. No optimization claim is allowed at PERF2.1.
 
@@ -49,6 +49,7 @@ STREAM1 acceptance checkpoint: `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_
 PERF2.0 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md`.
 PERF2.1 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_ACCEPTED_RU.md`.
 PERF2.2 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_2_R1_ACCEPTED_RU.md`.
+PERF2.3 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_R1_ACCEPTED_RU.md`.
 Live machine roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`.
 
 Текущий live machine-roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. PERF1 измеряет стоимость generation pipeline без изменения ecology truth; следующий возможный optimization checkpoint — `PERF1-PAR0`, только после exact serial/parallel determinism gate.
@@ -200,3 +201,6 @@ E3.FINAL Planetary Ecology Compiler Challenge
 `XFER1` остаётся `BLOCKED_WAIT_CANONICAL_G_ENV_MAT_WQ_SD_TF`.
 
 ECO research не получает production persistence, world transaction, network, authority, canonical environment/time/spatial или canonical species-taxonomy ownership. Production integration остаётся отдельной main-owned governance линией.
+
+
+**PERF2.3 accepted result:** exact Ubuntu PASS on `34715ac...` with `36 samples / 12 scaling points / 9 comparisons / 4 trends / 3 crossover analyses / 27 of 27 exact pairs`. No crossover was observed: serial remained faster at all nine tested scale/chunk points. At the same time, serial structural record pressure grew ~8.68× from AGE_2 to AGE_22 while all STREAM1 bounded proxies remained flat at 1.0×. PERF2.4 is therefore authorized to optimize execution overhead while preserving exact parity and bounded working-set semantics.
