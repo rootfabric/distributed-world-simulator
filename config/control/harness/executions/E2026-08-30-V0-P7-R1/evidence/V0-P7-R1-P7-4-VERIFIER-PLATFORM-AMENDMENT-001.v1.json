@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.p7_4_verifier_platform_amendment.v1",
+  "amendment_id": "V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "recorded_at_utc": "2026-08-31T19:33:54Z",
+  "recorded_by": "PROJECT_CONTROL_SESSION_UNDER_HUMAN_DIRECTIVE",
+  "human_directive": "The human operator of record directed, on 2026-08-31, that the P7.4 fresh-verifier dispatch contract be formally widened to admit the canonical Windows x86_64 exact double-Godot path, and that Fresh Verifier R3 be re-dispatched on that path instead of a third attempt to deliver the Linux Godot into WSL. This record is that directive's durable control artifact. Runtime scope, frozen subject, ownership and risk class are unchanged.",
+  "trigger": [
+    "Verifier R1 (result commit 38ddb506fed104ad419c1a94c9564a3ae6c654b4) and Verifier R2 (result commit bbe791580bdc36729668d15208cdf9902ee1ebc8) both ended NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT with zero gate execution: the canonical Ubuntu verifier host outenemy/192.168.0.15 denies SSH authentication for every available verifier credential, and the exact Linux double-Godot archive (godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz, SHA-256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92) never reached any verifier-reachable environment.",
+    "The frozen runtime HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 already contains a repository-owned canonical Windows runner, RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1, which enforces the same verification invariants as the Ubuntu .sh runner: exact Godot identity, exact-HEAD fence, tracked-clean fence before and after, fresh --import, 16 stages in separate processes, per-log fatal-marker scan, per-stage PASS-summary checks and the final V0-P7.4 PERSISTENCE RESTART COMPOSITION GATE GREEN banner.",
+    "docs/GODOT_LOCAL_TESTING_RU.md canonically documents the Windows double-Godot paths (C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe and the GUI binary) and the required version 4.7.1.stable.double.custom_build.a13da4feb.",
+    "Accepted Windows checkpoints (ECO_P4_4_PRODUCTION_PERSISTENCE, ECO_P4_5_REGION_OWNERSHIP, ECO_P4_6_CLIENT_READ_MODEL, ECO_P4_7_PRODUCTION_INTEGRATION_SOAK, status ACCEPTED_EXACT_WINDOWS_FULL_COMMITTED_CHAIN) and RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 establish Windows exact-Godot execution as accepted control evidence in this project.",
+    "V0-SM1-R1-R9-WINDOWS-VALIDATION-PROTOCOL-CORRECTION-001.v1.json (classification INVALID_VALIDATION_ENVIRONMENT_NOT_CANDIDATE_VERDICT) establishes the governing lesson: Windows verification is valid only when executed through the repository-owned .ps1 runner with its isolated profile environment (HOME/USERPROFILE/APPDATA/LOCALAPPDATA/XDG_*), never through manual reproduction of Linux commands from an ordinary shell."
+  ],
+  "amendment": {
+    "scope": "P7.4 fresh independent verifier dispatch contract for work order V0-P7-R1-WO-001, rounds R3 and later. Widens the authorized verifier execution environment; changes nothing in the frozen runtime subject, the gate content, the stage set, the verdict vocabulary, or the success boundary.",
+    "authorized_verifier_platforms": [
+      {
+        "platform": "ubuntu_x86_64_native_or_wsl2",
+        "status": "UNCHANGED_AND_PREFERRED_WHEN_AVAILABLE",
+        "engine": "exact godot.linuxbsd.editor.double.x86_64, version 4.7.1.stable.double.custom_build.a13da4feb, binary SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+        "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh"
+      },
+      {
+        "platform": "windows_x86_64",
+        "status": "AUTHORIZED_BY_THIS_AMENDMENT",
+        "engine": {
+          "canonical_console_binary": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+          "gui_binary_manual_interactive_only": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.exe",
+          "required_version": "4.7.1.stable.double.custom_build.a13da4feb",
+          "build_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+          "platform": "windows",
+          "target": "editor",
+          "arch": "x86_64",
+          "precision": "double",
+          "observed_sha256": {
+            "godot.windows.editor.double.x86_64.console.exe": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+            "godot.windows.editor.double.x86_64.exe": "6464da3576b51f5e2f7db74a20eb1d62507a8a7c8a2fa55b1e08e1a1d0d801a4"
+          },
+          "identity_note": "--version was verified exactly and SHA-256 values were observed on the control surface on 2026-08-31. The project documentation pins the Windows identity by exact version string at the canonical path, not by binary hash; the recorded hashes are durable identity evidence so that any engine change in a later round is detectable."
+        },
+        "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+        "runner_mandatory": true,
+        "runner_contract": "The gate must be invoked exactly as .\\RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1 -GodotExe <canonical console binary> -ExpectedHead 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 from the root of a fresh detached exact worktree. The runner itself enforces isolated HOME/XDG_DATA_HOME/XDG_CONFIG_HOME/XDG_CACHE_HOME/APPDATA/LOCALAPPDATA for every restart phase, separate Godot processes per phase, fatal-marker scan and PASS-summary checks."
+      }
+    ],
+    "invariants_mandatory_for_every_authorized_platform": [
+      "exact frozen HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 and TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef",
+      "fresh detached worktree created for this campaign only; no reuse of Implementer, Reviewer, or prior verifier worktrees",
+      "tracked-clean checkout before and after execution",
+      "fresh --import performed by the canonical runner",
+      "16/16 stages PASS with the runner's own PASS summaries",
+      "17/17 logs collected (1 import + 3 restart phases + 13 regression stages), each independently scanned for fatal markers and hashed with SHA-256",
+      "no external 180-second or other artificial timeout",
+      "zero execution evidence inherited from Implementer, Reviewer, R1, or R2",
+      "verdict vocabulary exactly VERIFIED or NOT_VERIFIED",
+      "VERIFIED opens only the Human RUNTIME_FEATURE_MERGE gate for exact runtime PR #396; no merge is performed by the verifier"
+    ],
+    "explicitly_not_permitted": [
+      "single-precision / standard Godot substitution on any platform",
+      "any engine whose --version differs from 4.7.1.stable.double.custom_build.a13da4feb",
+      "using the GUI executable as the gate runner on Windows",
+      "manual reproduction of the gate by invoking Godot test scripts directly from an ordinary shell, bypassing the repository-owned runner (INVALID_VALIDATION_ENVIRONMENT_NOT_CANDIDATE_VERDICT lesson)",
+      "reusing R1 or R2 as execution evidence",
+      "runtime source modification, rebase, repair, or merge by the verifier"
+    ],
+    "superseded_clauses": [
+      "R2 instruction section 'Allowed Ubuntu environment' sentence 'This does not permit Windows Godot. The Windows executable must not be used.' is superseded for verifier rounds R3 and later of this work order by this amendment. The R1 and R2 NOT_VERIFIED verdicts remain valid historical control evidence and are not relabelled."
+    ]
+  },
+  "unchanged": {
+    "frozen_runtime_subject": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef / PR #396",
+    "canonical_base": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+    "work_order_scope": "unchanged",
+    "risk_class": "CRITICAL",
+    "human_gates": "unchanged; runtime merge remains a human gate"
+  },
+  "evidence_precedents": [
+    "docs/GODOT_LOCAL_TESTING_RU.md",
+    "docs/checkpoints/ECO_P4_4_PRODUCTION_PERSISTENCE_ACCEPTED_WINDOWS_RU.md",
+    "docs/checkpoints/ECO_P4_5_REGION_OWNERSHIP_ACCEPTED_WINDOWS_RU.md",
+    "docs/checkpoints/ECO_P4_6_CLIENT_READ_MODEL_ACCEPTED_WINDOWS_RU.md",
+    "docs/checkpoints/ECO_P4_7_PRODUCTION_INTEGRATION_SOAK_ACCEPTED_WINDOWS_RU.md",
+    "RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1",
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/evidence/V0-SM1-R1-R9-WINDOWS-VALIDATION-PROTOCOL-CORRECTION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-002.v1.json"
+  ]
+}

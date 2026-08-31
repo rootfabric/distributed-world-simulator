@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0014",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 14,
+  "event_type": "CONTROL_AMENDMENT_RECORDED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T19:33:54Z",
+  "actor": "DIRECTOR_UNDER_HUMAN_DIRECTIVE",
+  "branch": "control/v0-p7-4-verifier-platform-amendment-r1",
+  "head_sha": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+  "predicate": "P7_4_VERIFIER_PLATFORM_AMENDMENT",
+  "command": "RECORD_P7_4_VERIFIER_PLATFORM_AMENDMENT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json"
+  ],
+  "summary": "P7.4 VERIFIER PLATFORM AMENDMENT recorded under direct human directive. The P7.4 fresh-verifier dispatch contract is widened for rounds R3+ to admit, alongside the unchanged preferred Ubuntu exact linuxbsd double Godot path, the canonical Windows x86_64 exact double-Godot path executed exclusively through the repository-owned RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1 at the frozen HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 with identical invariants: exact identity, fresh detached worktree, tracked-clean before/after, fresh import, 16/16 stages, 17 hashed logs with fatal scan, no external timeout, zero inheritance, VERIFIED opens only Human RUNTIME_FEATURE_MERGE. Trigger: R1 and R2 both NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT with zero execution; the project already operates an accepted canonical Windows verification model (accepted ECO_P4_4..P4_7 Windows checkpoints, GODOT_LOCAL_TESTING_RU.md, SM1 R9 protocol-correction lesson). No runtime scope, ownership, risk class or human gate is changed.",
+  "blocker": null
+}
