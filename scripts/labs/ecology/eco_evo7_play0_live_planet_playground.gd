@@ -778,16 +778,18 @@ func toggle_morphology_inspector() -> bool:
 
 
 func _can_inspect_morphology() -> bool:
+	if presentation == null:
+		return false
 	var generation := int(_published_snapshot.get("generation", -1))
 	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	var presentation_contract: Dictionary = presentation.get_contract()
 	return (
-		presentation != null
-		and generation > 0
+		generation > 0
 		and ecology_hash.length() == 64
 		and not _published_morphology_descriptors.is_empty()
 		and int(_published_morphology_descriptors.get("generation", -2)) == generation
 		and String(_published_morphology_descriptors.get("source_ecology_state_hash", "")) == ecology_hash
-		and bool(presentation.get_contract().get("ph5_active", false))
+		and bool(presentation_contract.get("ph5_active", false))
 	)
 
 
