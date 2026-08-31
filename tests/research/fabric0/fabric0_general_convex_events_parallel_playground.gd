@@ -1,0 +1,16 @@
+extends SceneTree
+const E=preload("res://scripts/research/fabric0/fabric0_general_convex_events_parallel_experiments_v1.gd")
+func _init()->void:
+	var contacts=E.contact_event_probe(1.0e-10)
+	var persistent=E.persistent_event_manifold_probe()
+	var mode=E.mode_transition_probe(1.0e-10)
+	var parallel=E.parallel_same_world_probe(false)
+	var reverse=E.parallel_same_world_probe(true)
+	print("=== FABRIC0.16 S2 ADAPTIVE CONVEX EVENTS + SAME-WORLD PARALLEL ISLANDS ===")
+	print("appear=",contacts.appear," disappear=",contacts.disappear)
+	print("persistent_ids=",persistent.second.manifold.points.map(func(p:Dictionary):return p.id)," lifetimes=",persistent.second.manifold.points.map(func(p:Dictionary):return p.lifetime))
+	print("mode_event=",mode.event)
+	print("islands=",parallel.parallel.islands.map(func(i:Dictionary):return i.body_ids)," threads=",parallel.parallel.threads_started," seq_error=",parallel.max_state_error)
+	print("reverse_spawn_same=",parallel.parallel.canonical_signature==reverse.parallel.canonical_signature)
+	print("FABRIC0_16_S2_ADAPTIVE_CONVEX_EVENTS_PARALLEL_ISLANDS_PLAYGROUND_PASS")
+	quit(0)
