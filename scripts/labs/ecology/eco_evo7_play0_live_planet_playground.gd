@@ -778,10 +778,15 @@ func toggle_morphology_inspector() -> bool:
 
 
 func _can_inspect_morphology() -> bool:
+	var generation := int(_published_snapshot.get("generation", -1))
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
 	return (
 		presentation != null
-		and int(_published_snapshot.get("generation", -1)) > 0
+		and generation > 0
+		and ecology_hash.length() == 64
 		and not _published_morphology_descriptors.is_empty()
+		and int(_published_morphology_descriptors.get("generation", -2)) == generation
+		and String(_published_morphology_descriptors.get("source_ecology_state_hash", "")) == ecology_hash
 		and bool(presentation.get_contract().get("ph5_active", false))
 	)
 
@@ -815,6 +820,7 @@ func _refresh_morphology_inspector(preserve_record: bool) -> bool:
 				and String(Dictionary(descriptors[index]).get("record_id", "")) == _morphology_inspector_record_id
 			):
 				return select_morphology_inspector_index(index)
+		return _select_nearest_morphology_inspector_record()
 	if _morphology_inspector_index >= 0 and _morphology_inspector_index < descriptors.size():
 		return select_morphology_inspector_index(_morphology_inspector_index)
 	return _select_nearest_morphology_inspector_record()
