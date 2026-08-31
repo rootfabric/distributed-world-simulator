@@ -1,0 +1,99 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_1_closure_validation.v1",
+  "checkpoint": "B0.1",
+  "date": "2026-08-31",
+  "status": "RESEARCH_CHECKPOINT_CLOSED",
+  "qualification": [
+    "EXACT_HEAD_DOUBLE_PASS",
+    "PROJECT_CONTROL_NON_BLOCKING"
+  ],
+  "production_acceptance_claimed": false,
+  "branch": "research/fabric-bake0-1-exact-boundary-reduction-r1",
+  "predecessor": {
+    "checkpoint": "B0.0",
+    "closure_head": "d389b8ed72ffbed8949279b42089da3687125a90"
+  },
+  "executable_subject": {
+    "head": "e854185f501cfc2658d5d1c5430be4eed3b070ee",
+    "tree": "0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0",
+    "commits_ahead_of_predecessor": 1
+  },
+  "exact_source": {
+    "export_run_id": 33348975423,
+    "export_run_conclusion": "success",
+    "archive_sha256": "548d832c6d042227c3b0df85b991519e1ae2702a7ef71770bdaa6f226ba3c0d1",
+    "tracked_file_count": 5025
+  },
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "exact_head_passes": [
+    {
+      "fresh_filesystem": true,
+      "fresh_import": true,
+      "b0_0_acceptance": {
+        "status": "PASS",
+        "assertions": 33
+      },
+      "b0_1_acceptance": {
+        "status": "PASS",
+        "assertions": 64
+      },
+      "playground": "PASS",
+      "full_equations": 132,
+      "reduced_equations": 4,
+      "internal_rank": 128,
+      "reduced_rank": 3,
+      "runtime_work_ratio": 1089,
+      "max_flow_error": 9e-14,
+      "max_power_error": 1.42e-12,
+      "descriptor_hash": "92c62af79e1c75889c846084711c6752e92489db1d1aa27a5f13aa832bbc00f6",
+      "artifact_hash": "a04a380833bf0f62ae0fc8f33da2cbc66d7520dd78fea193b34d9f21f6cd0300"
+    },
+    {
+      "fresh_filesystem": true,
+      "fresh_import": true,
+      "b0_0_acceptance": {
+        "status": "PASS",
+        "assertions": 33
+      },
+      "b0_1_acceptance": {
+        "status": "PASS",
+        "assertions": 64
+      },
+      "playground": "PASS",
+      "full_equations": 132,
+      "reduced_equations": 4,
+      "internal_rank": 128,
+      "reduced_rank": 3,
+      "runtime_work_ratio": 1089,
+      "max_flow_error": 9e-14,
+      "max_power_error": 1.42e-12,
+      "descriptor_hash": "92c62af79e1c75889c846084711c6752e92489db1d1aa27a5f13aa832bbc00f6",
+      "artifact_hash": "a04a380833bf0f62ae0fc8f33da2cbc66d7520dd78fea193b34d9f21f6cd0300"
+    }
+  ],
+  "post_run_tracked_byte_audit": {
+    "checked": 5025,
+    "missing": 0,
+    "changed": 0
+  },
+  "project_control": {
+    "run_id": 33349147651,
+    "conclusion": "success",
+    "exact_head_asserted": true,
+    "exact_tree_asserted": true,
+    "b0_0_ancestry_asserted": true,
+    "standard_auditor": "SUCCESS",
+    "directional_auditor": "SUCCESS",
+    "global_summary": "YELLOW",
+    "note": "Global YELLOW reflects unrelated active project frontiers and is not reclassified by B0.1 closure."
+  },
+  "auxiliary_windows_gate": {
+    "run_id": 33348754783,
+    "status_at_closure": "QUEUED",
+    "required_for_research_closure": false
+  },
+  "next_checkpoint": "B0.2_STRUCTURAL_AGGREGATE_BAKE_REFINEMENT_GUARDS_LOCAL_UNBAKE"
+}

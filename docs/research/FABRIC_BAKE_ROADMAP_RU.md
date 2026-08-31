@@ -1384,4 +1384,158 @@ PROJECT CONTROL PASS
 PRODUCTION ACCEPTANCE NOT CLAIMED
 ```
 
-Следующий checkpoint — **B0.1 Exact Boundary Reduction / Schur elimination**. Physical Core остаётся независимой линией.
+B0.0 closure remains immutable. B0.1 was implemented on its dedicated successor branch; Physical Core remains an independent line.
+
+
+---
+
+## B0.1 closure boundary — 2026-08-31
+
+Dedicated branch:
+
+```text
+research/fabric-bake0-1-exact-boundary-reduction-r1
+```
+
+Exact executable subject:
+
+```text
+implementation HEAD:
+e854185f501cfc2658d5d1c5430be4eed3b070ee
+
+implementation TREE:
+0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0
+
+direct parent / B0.0 closure:
+d389b8ed72ffbed8949279b42089da3687125a90
+
+ahead from B0.0 closure:
+1 implementation commit
+```
+
+Implemented scope:
+
+```text
+4 boundary ports
+128 internal variables
+132 full equations
+        ↓
+exact deterministic Schur elimination
+        ↓
+4 boundary equations
+
+internal rank = 128
+reduced rank  = 3
+arithmetic-work proxy reduction = 1089x
+```
+
+The implementation uses deterministic partial-pivot LU and repeated solves, not an
+explicit inverse. Singular internal blocks, uncertifiable passive/reciprocal scope,
+undersized accepted-domain candidates and foreign reduction descriptors fail closed.
+
+The reduced descriptor is content-bound to the existing B0.0 `PhysicalBakeArtifact`;
+runtime still passes through the B0.0 source/authority/dependency/validity/invalidation
+execution gate. B0.1 therefore does not create a second canonical truth or a parallel
+artifact lifecycle.
+
+### Exact source identity
+
+GitHub-hosted source-export run:
+
+```text
+33348975423 = SUCCESS
+
+HEAD:
+e854185f501cfc2658d5d1c5430be4eed3b070ee
+
+TREE:
+0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0
+
+exact git-archive SHA-256:
+548d832c6d042227c3b0df85b991519e1ae2702a7ef71770bdaa6f226ba3c0d1
+```
+
+### Exact-head double pass
+
+Two separate fresh filesystem extractions of that exact archive were imported and
+executed with the pinned double build:
+
+```text
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+binary SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+PASS #1:
+B0.0 Acceptance = PASS (33)
+B0.1 Acceptance = PASS (64)
+B0.1 Playground = PASS
+
+PASS #2:
+fresh extraction
+fresh .godot/import state
+B0.0 Acceptance = PASS (33)
+B0.1 Acceptance = PASS (64)
+B0.1 Playground = PASS
+```
+
+Both passes produced the same derived identities:
+
+```text
+descriptor:
+92c62af79e1c75889c846084711c6752e92489db1d1aa27a5f13aa832bbc00f6
+
+artifact:
+a04a380833bf0f62ae0fc8f33da2cbc66d7520dd78fea193b34d9f21f6cd0300
+
+max flow delta:
+9e-14
+
+max power delta:
+1.42e-12
+```
+
+Post-run tracked-byte audit:
+
+```text
+tracked files checked = 5025
+missing = 0
+changed = 0
+```
+
+### Project Control
+
+Exact implementation HEAD/TREE was independently checked by GitHub-hosted control run:
+
+```text
+33349147651 = SUCCESS
+```
+
+Both standard and directional Project Control commands completed successfully. The
+global project dashboard was YELLOW because of unrelated active frontiers, including an
+ECO advisory RED; B0.1 closure does not reinterpret those other programs as GREEN.
+
+### Final B0.1 qualification
+
+```text
+FABRIC-BAKE B0.1
+RESEARCH CHECKPOINT CLOSED
+EXACT-HEAD DOUBLE PASS
+PROJECT CONTROL NON-BLOCKING
+PRODUCTION ACCEPTANCE NOT CLAIMED
+```
+
+The queued self-hosted Windows run `33348754783` is additional cross-platform evidence
+and is not used as a prerequisite for this research closure.
+
+Next checkpoint:
+
+```text
+B0.2
+STRUCTURAL AGGREGATE BAKE
++ REFINEMENT GUARDS
++ LOCAL UNBAKE
+```
+
+Physical Core / FABRIC0.16 continues independently.

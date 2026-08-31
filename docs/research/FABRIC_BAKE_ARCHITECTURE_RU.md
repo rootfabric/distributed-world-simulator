@@ -586,14 +586,17 @@ Later BAKE checkpoints may acquire explicit predecessor gates when they depend o
 ```text
 Physical Core:
 FABRIC0.15 RESEARCH CANDIDATE CLOSED
-FABRIC0.16 NEXT
+FABRIC0.16 ACTIVE / INDEPENDENT
 
 FABRIC-BAKE:
-B0.0 BAKE FOUNDATION CONTRACTS NEXT
+B0.0 RESEARCH CHECKPOINT CLOSED
+B0.1 RESEARCH CHECKPOINT CLOSED
+B0.2 STRUCTURAL AGGREGATE BAKE + GUARDS + LOCAL UNBAKE NEXT
 
 Integration:
 dual-track roadmap frozen
-no B0.x executable implementation yet
+B0.1 exact boundary reduction is executable and closed
+production acceptance is not claimed
 ```
 
 
@@ -631,3 +634,122 @@ and BAKE-BRIDGE-0 over the existing Representation revision/invalidation semanti
 
 This does **not** promote B0.0 to production or canonical acceptance. B0.1 remains the first
 mathematical reduction checkpoint; FABRIC0.16 continues independently on Physical Core.
+
+
+---
+
+## FABRIC-BAKE B0.1 closure boundary — 2026-08-31
+
+Exact executable subject:
+
+```text
+branch:
+research/fabric-bake0-1-exact-boundary-reduction-r1
+
+implementation HEAD:
+e854185f501cfc2658d5d1c5430be4eed3b070ee
+
+implementation TREE:
+0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0
+
+parent:
+d389b8ed72ffbed8949279b42089da3687125a90
+(B0.0 closure)
+```
+
+B0.1 closes the first executable mathematical reduction checkpoint:
+
+```text
+4 boundary ports
++ 128 internal variables
+= 132 full equations
+
+exact Schur elimination
+        ↓
+4-equation boundary relation
+
+internal rank = 128
+reduced rank  = 3
+runtime arithmetic-work proxy ratio = 1089x
+```
+
+Rank 3 at the reduced boundary is expected for the passive Laplacian fixture because
+one common-potential gauge/nullspace mode remains at the boundary. The eliminated
+internal block itself is full rank 128.
+
+Exact-source identity was materialized by GitHub-hosted run `33348975423`:
+
+```text
+checkout HEAD = e854185f501cfc2658d5d1c5430be4eed3b070ee
+checkout TREE = 0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0
+git-archive SHA-256 =
+548d832c6d042227c3b0df85b991519e1ae2702a7ef71770bdaa6f226ba3c0d1
+```
+
+Two separate fresh-filesystem full-tree imports and canonical B0.0→B0.1 runs were
+then executed with:
+
+```text
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Linux binary SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+```
+
+Both passes produced:
+
+```text
+B0.0 Acceptance = PASS (33 assertions)
+B0.1 Acceptance = PASS (64 assertions)
+B0.1 Playground = PASS
+
+full equations       = 132
+reduced equations    = 4
+internal rank        = 128
+reduced rank         = 3
+work ratio           = 1089.0x
+max boundary flow Δ  = 9e-14
+max boundary power Δ = 1.42e-12
+
+descriptor:
+92c62af79e1c75889c846084711c6752e92489db1d1aa27a5f13aa832bbc00f6
+
+artifact:
+a04a380833bf0f62ae0fc8f33da2cbc66d7520dd78fea193b34d9f21f6cd0300
+```
+
+After the second import/run, all 5025 tracked archive files were compared byte-for-byte
+with a pristine extraction:
+
+```text
+tracked_files_checked = 5025
+missing               = 0
+changed               = 0
+```
+
+Exact-head Project Control run `33349147651` completed successfully for the same
+implementation HEAD/TREE. The global dashboard remained YELLOW because of unrelated
+active project frontiers; this is not a claim that the whole repository is globally GREEN.
+
+Closure qualification:
+
+```text
+FABRIC-BAKE B0.1
+RESEARCH CHECKPOINT CLOSED
+EXACT-HEAD DOUBLE PASS
+PROJECT CONTROL NON-BLOCKING
+PRODUCTION ACCEPTANCE NOT CLAIMED
+```
+
+B0.1 does not claim generic singular/nullspace reduction, DAE condensation,
+nonlinear ROM, hybrid bake, contact bake or production readiness.
+
+Next FABRIC-BAKE checkpoint:
+
+```text
+B0.2
+STRUCTURAL AGGREGATE BAKE
++ REFINEMENT GUARDS
++ LOCAL UNBAKE
+```
