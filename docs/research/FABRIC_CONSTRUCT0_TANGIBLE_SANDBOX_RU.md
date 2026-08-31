@@ -7,6 +7,7 @@ CONSTRUCT0
 C0.1 SEE THE MODEL CLOSED
 C0.2 SEE FABRIC MOVE IT CLOSED
 C0.3 BUILD IT CLOSED
+PLAY1 PHYSICAL TOYBOX CLOSED
 EXACT DOUBLE PASS
 PROJECT CONTROL PASS
 NOT PRODUCTION ACCEPTED
@@ -86,7 +87,7 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - every edit mutates canonical Construction first;
 - runtime projection rebuilt from canonical snapshot.
 
-### CONSTRUCT0.PLAY1 — Physical Toybox
+### CONSTRUCT0.PLAY1 — Physical Toybox — CLOSED
 - generic parts: BLOCK, PLATE, BEAM, CYLINDER, WHEEL, AXLE, WEIGHT, ANCHOR;
 - generic relations: RIGID_BOND, HINGE, AXLE/REVOLUTE, SLIDER, SPRING_DAMPER, BREAKABLE_BOND;
 - environment: FLOOR, adjustable RAMP, MOVING_SURFACE;
@@ -95,9 +96,43 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - mandatory experiments: INCLINED_PLANE, SEESAW, CART, CATAPULT, BREAKABLE_BRIDGE;
 - optional: PENDULUM, TOWER/DOMINO, SUSPENSION_CART, DOOR, PRESS/SLIDER;
 - ideal lab sources/sensors are allowed, but no Motor/Gearbox/Battery device-specific physics classes;
-- breakage must mutate canonical topology and route through existing local-unbake / split / re-bake mechanisms.
+- breakage mutates canonical Construction; local-unbake / split / re-bake remain C0.6 and are not claimed by PLAY1.
 
 PLAY1 is the first explicitly playable constructor milestone.
+
+Exact closure:
+
+```text
+branch:
+feature/fabric-construct0-play1-physical-toybox-r1
+
+HEAD:
+a141e7a3ec51b2fda6ab1227c5153ab4e32a6d4d
+
+TREE:
+969ec5cac28c9ed5de29b17e366c587402e7b7eb
+
+PLAY1:
+111/111 PASS
+
+full chain:
+232/232 PASS
+
+Project Control:
+33444067612 SUCCESS
+
+verdict:
+VERIFIED
+```
+
+Mandatory playable experiments now exist:
+- INCLINED_PLANE — B0.3-backed stick/slide ramp;
+- SEESAW — generic HINGE rotational DAE;
+- CART — generic AXLE/rolling-ratio translational DAE;
+- CATAPULT — HINGE + SPRING_DAMPER + BREAKABLE hybrid release;
+- BREAKABLE_BRIDGE — Construction structural load/failure with canonical bond break.
+
+All five pass deterministic twin-run and reset-to-initial-hash checks.
 
 ### C0.4 — FULL ↔ BAKED physical representation
 - force FULL / force supported BAKED / AUTO;

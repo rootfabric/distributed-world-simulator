@@ -42,8 +42,8 @@ CONSTRUCT0              authorized now
                   │                    C0.3 ✅
                   │                 BUILD IT
                   │                        │
-                  │                CONSTRUCT0.PLAY1
-                  │                 PHYSICAL TOYBOX
+                  │                CONSTRUCT0.PLAY1 ✅
+                  │              PHYSICAL TOYBOX CLOSED
                   │                        │
                   │                    C0.4
                   │              FULL / BAKED modes
@@ -172,9 +172,31 @@ CHAIN exit 0
 Project Control SUCCESS
 ```
 
-The next active tangible checkpoint is `CONSTRUCT0.PLAY1 PHYSICAL TOYBOX`.
+The next active tangible checkpoint after the verified toybox is `C0.4 FULL ↔ BAKED PHYSICAL REPRESENTATION`.
 
-### CONSTRUCT0.PLAY1 — PHYSICAL TOYBOX
+### CONSTRUCT0.PLAY1 — PHYSICAL TOYBOX — CLOSED / EXACT DOUBLE PASS
+
+Verified exact subject:
+
+```text
+HEAD:
+a141e7a3ec51b2fda6ab1227c5153ab4e32a6d4d
+
+TREE:
+969ec5cac28c9ed5de29b17e366c587402e7b7eb
+
+PLAY1:
+111/111 PASS
+
+C0.1→C0.3 + PLAY1:
+232/232 PASS
+
+Project Control:
+33444067612 SUCCESS
+```
+
+All five mandatory experiments have deterministic twin-run state-hash checks and RESET-to-initial-hash checks.
+
 Goal: make the constructor genuinely playable with a small generic vocabulary rather than a catalogue of device-specific objects.
 
 Entry expectation:
@@ -206,7 +228,7 @@ BREAKABLE_BOND must expose generic strength limits and canonical state:
 ```text
 INTACT → DEGRADED → BROKEN
 ```
-A break must route through canonical topology mutation and existing unbake/split/re-bake lifecycle, not through a Godot-only fracture shortcut.
+A break must mutate canonical Construction rather than using a Godot-only fracture shortcut. PLAY1 closes the canonical failure boundary; bounded local unbake / topology split / deterministic re-bake remain the explicit C0.6 checkpoint.
 
 #### Environment primitives
 - FLOOR;
@@ -240,8 +262,10 @@ At minimum:
 Five mandatory toybox scenes:
 
 1. INCLINED_PLANE
-   - block/cylinder on adjustable ramp;
-   - demonstrate stick→slide and, when supported, rolling behavior.
+   - canonical block on adjustable ramp;
+   - real B0.3 ramp support/friction boundary;
+   - demonstrate STICK → SLIDE under increased tangential FORCE.
+   - rolling is exercised separately through CART/AXLE in PLAY1; arbitrary rolling ramp bodies remain outside this slice.
 
 2. SEESAW
    - beam + hinge + movable calibrated weights;
@@ -258,8 +282,9 @@ Five mandatory toybox scenes:
 
 5. BREAKABLE_BRIDGE
    - multi-part deck/support structure;
-   - movable/addable loads;
-   - demonstrate bond load, failure, canonical topology split, local unbake and re-bake.
+   - ADD_LOAD through the existing Construction structural compiler;
+   - demonstrate bond utilization, overload, canonical BREAKABLE bond failure and source revision/checksum mutation;
+   - local unbake / topology split / re-bake are deliberately deferred to C0.6.
 
 Recommended additional presets after the mandatory five:
 - PENDULUM;
@@ -332,8 +357,8 @@ generic parts
 
 If a desired toy cannot be expressed with generic primitives, that is evidence for a missing FABRIC/Construction primitive and should feed back into SYNC-2 / later physical research.
 
-#### PLAY1 closure gate
-PLAY1 closes only when:
+#### PLAY1 closure gate — SATISFIED
+PLAY1 closed only after:
 - all five mandatory toybox experiments are runnable in the Godot lab;
 - they use canonical Construction identity/topology;
 - motion comes from FABRIC playback/runtime where the relevant capability exists;
@@ -342,6 +367,17 @@ PLAY1 closes only when:
 - unsupported physics remains explicit rather than silently approximated;
 - deterministic reset/replay exists for the reference experiments;
 - focused acceptance and Project Control pass.
+
+Exact result:
+
+```text
+PLAY1 111/111 PASS
+full chained acceptance 232/232 PASS
+fresh detached tracked-clean
+canonical double Godot identity PASS
+Project Control PASS
+VERIFIED
+```
 
 ### C0.4 — physical representation forcing
 Debug modes:

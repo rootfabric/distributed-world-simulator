@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/fabric_construct0/fabric_construct0_play1_lab.gd" id="1_play1"]
+
+[node name="FabricConstruct0Play1Lab" type="Node3D"]
+script = ExtResource("1_play1")
