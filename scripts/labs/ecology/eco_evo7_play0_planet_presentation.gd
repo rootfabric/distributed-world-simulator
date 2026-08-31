@@ -14,9 +14,11 @@ extends Node3D
 ## APIs and never recomputes phenotype evidence — it renders immutable,
 ## already-validated adapter descriptors only.
 
+const PH5RendererScript = preload("res://scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd")
+
 const SCHEMA := "distributed_world_simulator.ecology.evo7_play0_presentation.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-PLAY0.PRESENTATION.R1"
+const REVISION := "ECO.EVO7-PLAY0.PRESENTATION.R2-VIS4.4"
 
 const FOUNDER_EVIDENCE := "FOUNDER_RECORD_ONLY"
 const FOUNDER_STEM_HEIGHT_M := 0.34
@@ -56,9 +58,11 @@ var _overlay_colors: Array[Color] = []
 var _overlay_base_world: Array[Vector3] = []
 var _overlay_ups: Array[Vector3] = []
 var _last_render_origin := SENTINEL_ORIGIN
+var _ph5_active := false
 
 var stems_node: MultiMeshInstance3D
 var crowns_node: MultiMeshInstance3D
+var ph5_renderer: Node3D
 var biome_overlay_node: MultiMeshInstance3D
 
 
@@ -88,11 +92,67 @@ func setup(earth_world_reference, patch_value: Dictionary) -> bool:
 		return false
 	patch_center_direction = Vector3(center_value).normalized()
 	_build_nodes()
+	if ph5_renderer == null or not ph5_renderer.setup(earth_world, patch):
+		return false
 	initialized = true
 	return true
 
 
-func apply_snapshot(descriptors: Dictionary, classification: Dictionary) -> bool:
+func apply_snapshot(
+	descriptors: Dictionary,
+	classification: Dictionary,
+	morphology_descriptors: Dictionary = {},
+	reconstruction_snapshot: Dictionary = {}
+) -> bool:
+	## Generation zero keeps the honest founder fallback. Once realized
+	## morphology exists, PLAY0 fails closed unless the complete VIS4.1 +
+	## VIS4.3 source pair materializes successfully through PH5.
+	if not initialized or descriptors.is_empty():
+		return false
+	var new_hash := String(descriptors.get("source_ecology_state_hash", ""))
+	if new_hash.length() != 64:
+		return false
+	var legacy_founders := int(descriptors.get("founder_marker_count", 0))
+	var legacy_phenotypes := int(descriptors.get("phenotype_evidence_count", 0))
+	var live_snapshot := legacy_founders == 0 and legacy_phenotypes > 0
+	var ph5_requested := not morphology_descriptors.is_empty() or not reconstruction_snapshot.is_empty()
+
+	if live_snapshot or ph5_requested:
+		if morphology_descriptors.is_empty() or reconstruction_snapshot.is_empty():
+			return false
+		if String(morphology_descriptors.get("source_ecology_state_hash", "")) != new_hash:
+			return false
+		if ph5_renderer == null or not ph5_renderer.apply_snapshot(
+			morphology_descriptors,
+			reconstruction_snapshot
+		):
+			return false
+
+		source_ecology_hash = new_hash
+		descriptor_count = int(morphology_descriptors.get("descriptor_count", 0))
+		phenotype_count = int(morphology_descriptors.get("morphology_evidence_count", 0))
+		founder_count = int(morphology_descriptors.get("founder_marker_count", 0))
+		_ph5_active = true
+		stems_node.visible = false
+		crowns_node.visible = false
+		ph5_renderer.visible = true
+		_apply_overlay_colors(classification)
+		_fill_overlay_instances()
+		refresh_render_transform(true)
+		return true
+
+	if not _apply_legacy_snapshot(descriptors, classification):
+		return false
+	_ph5_active = false
+	if ph5_renderer != null:
+		ph5_renderer.clear_snapshot()
+		ph5_renderer.visible = false
+	stems_node.visible = true
+	crowns_node.visible = true
+	return true
+
+
+func _apply_legacy_snapshot(descriptors: Dictionary, classification: Dictionary) -> bool:
 	## Rebuilds presentation arrays from one immutable VIS2 adapter result.
 	if not initialized or descriptors.is_empty():
 		return false
@@ -183,6 +243,8 @@ func refresh_render_transform(force: bool = false) -> void:
 	var origin: Vector3 = earth_world.get_render_origin()
 	if not force and origin == _last_render_origin:
 		return
+	if _ph5_active and ph5_renderer != null:
+		ph5_renderer.refresh_render_transform(force)
 	var stems_multimesh: MultiMesh = stems_node.multimesh if stems_node != null else null
 	var crowns_multimesh: MultiMesh = crowns_node.multimesh if crowns_node != null else null
 	var overlay_multimesh: MultiMesh = (
@@ -215,12 +277,16 @@ func refresh_render_transform(force: bool = false) -> void:
 
 
 func get_stem_render_position(index: int) -> Vector3:
+	if _ph5_active and ph5_renderer != null:
+		return ph5_renderer.get_record_render_position(index)
 	if earth_world == null or index < 0 or index >= _stem_base_world.size():
 		return Vector3.ZERO
 	return _stem_base_world[index] - earth_world.get_render_origin()
 
 
 func get_stem_world_position(index: int) -> Vector3:
+	if _ph5_active and ph5_renderer != null:
+		return ph5_renderer.get_record_world_position(index)
 	if index < 0 or index >= _stem_base_world.size():
 		return Vector3.ZERO
 	return _stem_base_world[index]
@@ -235,6 +301,7 @@ func get_cell_count() -> int:
 
 
 func get_contract() -> Dictionary:
+	var ph5_contract: Dictionary = ph5_renderer.get_contract() if ph5_renderer != null else {}
 	return {
 		"schema": SCHEMA,
 		"version": VERSION,
@@ -246,14 +313,50 @@ func get_contract() -> Dictionary:
 		"descriptor_count": descriptor_count,
 		"phenotype_evidence_count": phenotype_count,
 		"founder_marker_count": founder_count,
-		"stem_instances": _stem_base_world.size(),
-		"crown_instances": _crown_centers_world.size(),
+		"stem_instances": int(ph5_contract.get("visible_individual_count", 0)) if _ph5_active else _stem_base_world.size(),
+		"crown_instances": 0 if _ph5_active else _crown_centers_world.size(),
 		"biome_overlay_instances": mini(_overlay_colors.size(), _directions.size()),
 		"biome_overlay_visible": biome_overlay_visible,
 		"placement_api": "ProceduralEarthWorld.get_surface_point(direction)",
 		"uses_vis2_adapter": true,
+		"uses_vis4_exact_ph5": _ph5_active,
+		"ph5_active": _ph5_active,
+		"legacy_founder_fallback": not _ph5_active,
+		"ph5": ph5_contract,
 		"multimesh": true,
 	}
+
+
+func set_view_world_position(value: Vector3) -> bool:
+	if ph5_renderer == null:
+		return false
+	return ph5_renderer.set_view_world_position(value)
+
+
+func set_neutral_color_mode(value: bool) -> bool:
+	if ph5_renderer == null:
+		return false
+	return ph5_renderer.set_neutral_color_mode(value)
+
+
+func get_ph5_record_identity(index: int) -> Dictionary:
+	return {} if ph5_renderer == null else ph5_renderer.get_record_identity(index)
+
+
+func get_ph5_record_tier(index: int) -> String:
+	return "" if ph5_renderer == null else ph5_renderer.get_record_tier(index)
+
+
+func get_ph5_record_height(index: int) -> float:
+	return 0.0 if ph5_renderer == null else ph5_renderer.get_record_height(index)
+
+
+func is_ph5_record_individual_materialized(index: int) -> bool:
+	return ph5_renderer != null and ph5_renderer.is_record_individual_materialized(index)
+
+
+func get_ph5_geometry_identity_hash() -> String:
+	return "" if ph5_renderer == null else ph5_renderer.get_geometry_identity_hash()
 
 
 func _build_nodes() -> void:
@@ -273,6 +376,11 @@ func _build_nodes() -> void:
 	crown_mesh.rings = 6
 	crowns_node.multimesh = _make_multimesh(crown_mesh, 0.8)
 	add_child(crowns_node)
+
+	ph5_renderer = PH5RendererScript.new()
+	ph5_renderer.name = "Play0PH5Morphology"
+	ph5_renderer.visible = false
+	add_child(ph5_renderer)
 
 	biome_overlay_node = MultiMeshInstance3D.new()
 	biome_overlay_node.name = "Play0BiomeOverlay"
