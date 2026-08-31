@@ -306,7 +306,11 @@ func _working_set_row(configuration_id: String, samples: Array) -> Dictionary:
 
 	var execution_mode := "SERIAL_REFERENCE" if configuration_id == "SERIAL_REFERENCE" else "STREAM1"
 	var chunk_size := 0
-	if execution_mode == "STREAM1":
+	if execution_mode == "SERIAL_REFERENCE":
+		for index in range(parent_values.size()):
+			if parent_values[index] < parent_count_values[index] or candidate_values[index] < candidate_count_values[index]:
+				return {}
+	else:
 		chunk_size = int(configuration_id.replace("STREAM1_CHUNK_", ""))
 		if chunk_size not in STREAM_CHUNK_SIZES:
 			return {}
@@ -539,6 +543,13 @@ func _validate_comparison(comparison: Dictionary) -> bool:
 		"engine_static_end_ratio_serial_over_stream",
 	]:
 		if not _finite_positive(comparison[key]):
+			return false
+	for key in [
+		"parent_record_reduction_factor_serial_over_stream",
+		"candidate_record_reduction_factor_serial_over_stream",
+		"record_proxy_reduction_factor_serial_over_stream",
+	]:
+		if float(comparison[key]) < 1.0:
 			return false
 	if String(comparison["engine_static_end_ratio_interpretation"]) != "DIAGNOSTIC_ONLY_PROCESS_LOCAL":
 		return false
