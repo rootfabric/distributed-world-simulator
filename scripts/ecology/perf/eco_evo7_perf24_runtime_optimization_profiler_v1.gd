@@ -757,7 +757,12 @@ func _validate_sample_flags(flags: Dictionary) -> bool:
 		return false
 	if String(flags.get("pipeline_mode", "")) not in PIPELINE_MODES:
 		return false
-	if not _integer_value_equals(flags.get("stream_chunk_size"), int(String(flags.get("configuration_id", "")).replace("STREAM1_CHUNK_", ""))):
+	if not _is_integral_number(flags.get("stream_chunk_size")):
+		return false
+	var chunk_size := int(flags.get("stream_chunk_size"))
+	if chunk_size not in STREAM_CHUNK_SIZES:
+		return false
+	if String(flags.get("configuration_id", "")) != "STREAM1_CHUNK_%d" % chunk_size:
 		return false
 	var operations: Dictionary = Dictionary(flags.get("optimization_operations", {}))
 	if operations.size() != 12:
@@ -1067,7 +1072,7 @@ func _p50(values: Array[float]) -> float:
 		return 0.0
 	var ordered: Array[float] = values.duplicate()
 	ordered.sort()
-	return ordered[ordered.size() / 2]
+	return ordered[int(ordered.size() / 2)]
 
 
 func _geometric_mean(values: Array[float]) -> float:
