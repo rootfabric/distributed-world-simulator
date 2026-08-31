@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "risk_class": "CRITICAL",
+  "reason": "P7.2 exact runtime candidate has completed independent Reviewer R2 and independent Verifier R1 with exact-head fresh evidence. Project policy requires explicit human approval before runtime feature merge for CRITICAL work.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for runtime PR #350 at exact HEAD 0292e0a97d980d5c384b0118999429f1e6f13c3d / TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for PR #350 at the exact verified HEAD/TREE.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE and keep PR #350 draft/unmerged."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for PR #350 at the exact verified HEAD/TREE.",
+  "recommendation_reason": "The exact candidate is independently reviewed and verified, all Reviewer conditions are resolved, canonical double-Godot gate is independently GREEN, fatal-log scan is clean, tracked checkout remains clean, and all relevant Project Control runs are SUCCESS. No unresolved technical blocker remains for P7.2 runtime merge.",
+  "blast_radius": [
+    "Merges the bounded lunar Matter bubble, Moon procedural sampler seam, body-fixed legacy/Matter physical seam clipping, and associated P7.2 tests into canonical main.",
+    "Preserves existing MW4-MW6 canonical owners and default asteroid behavior.",
+    "Does not accept whole P7 checkpoint; P7.3 and later predicates remain open.",
+    "Does not authorize architecture/foundation ownership transfer."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "runtime PR #350 HEAD 0292e0a97d980d5c384b0118999429f1e6f13c3d TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+    "Reviewer R2 result commit 37b140f21395e0195826afc0ee0fd3787719dbb1 / PR #363 / Project Control 33354295502 SUCCESS",
+    "Verifier result commit 2b75172ca3d3d3b6151aaf1b55d59f19f6fe5f9f / PR #366 / Project Control 33357034760 SUCCESS",
+    "runtime Project Control 33352528718 SUCCESS",
+    "review-source export run 33352617094 artifact 9744115039 reconstructed TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36"
+  ],
+  "status": "OPEN"
+}
