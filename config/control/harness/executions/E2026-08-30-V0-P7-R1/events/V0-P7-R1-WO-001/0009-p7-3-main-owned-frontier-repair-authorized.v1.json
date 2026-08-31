@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0009",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 9,
+  "event_type": "REPAIR_AUTHORIZED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-31T07:30:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-3-closure-r1",
+  "predicate": "MAIN_OWNED_FRONTIER_REPAIR_REQUIRED",
+  "command": "AUTHORIZE_CONTROL_ONLY_P7_3_MAIN_OWNED_FRONTIER_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-P7-3-MAIN-OWNED-FRONTIER-REPAIR-001.v1.json"
+  ],
+  "summary": "Pre-merge Project Control RED is caused by intentional origin/main authority: canonical main still registers the P7.2 V0 frontier after the already-human-approved P7.3 runtime merge. Director authorizes the bounded control-only closure merge, followed by mandatory post-merge Project Control. Runtime/auditor/dependency rules may not be changed.",
+  "blocker": "POST_MERGE_PROJECT_CONTROL_NON_RED_REQUIRED_BEFORE_P7_4"
+}

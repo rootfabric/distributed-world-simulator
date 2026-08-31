@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_3_NEXT",
+  "current_phase": "P7_4_NEXT",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "IN_PROGRESS_P7_3_NEXT",
+      "state": "IN_PROGRESS_P7_4_NEXT",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -229,10 +229,22 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json"
       },
       "p7_2": {
+        "state": "COMPLETE_MERGED",
+        "runtime_subject_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+        "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+        "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e"
+      },
+      "p7_3": {
+        "state": "COMPLETE_MERGED",
+        "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+        "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+        "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json"
+      },
+      "p7_4": {
         "state": "NEXT",
-        "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
-        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "rule": "CONSUME_EXISTING_MATTER_TRUTH_ONLY"
+        "scope": "PERSISTENCE_RESTART_COMPOSITION"
       }
     },
     {
@@ -327,7 +339,7 @@
     "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "accepted_predecessor_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
     "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-    "control_main_base": "6e604a68c6883595a637a089bf3f709219a1197e",
+    "control_main_base": "502d05fe24256fecd52f3092b8e056e74a8b4450",
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -340,8 +352,9 @@
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
     },
     "p7_1": "COMPLETE_MERGED",
-    "next": "P7_3_MATERIAL_BATCH_TO_ITEM_GRAPH",
-    "p7_2": "COMPLETE_MERGED"
+    "next": "P7_4_PERSISTENCE_RESTART_COMPOSITION",
+    "p7_2": "COMPLETE_MERGED",
+    "p7_3": "COMPLETE_MERGED"
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",

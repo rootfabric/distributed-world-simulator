@@ -4,8 +4,8 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-31T14:30:00+10:00",
-  "control_checkpoint": "V0 P7.2 COMPLETE_MERGED; P7.3 MATERIAL_BATCH_TO_ITEM_GRAPH is the next serialized P7 substep.",
+  "updated_at_utc": "2026-08-31T17:25:00+10:00",
+  "control_checkpoint": "V0 P7.3 COMPLETE_MERGED; P7.4 PERSISTENCE_RESTART_COMPOSITION is the next serialized P7 substep.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control rebased on main f7d3deb80b67a41880d736f83b132a9a7a5a0964: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
   "programs": {
@@ -271,18 +271,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-2-closure-r1",
-      "passport_path": "config/control/branches/control__v0-p7-2-closure-r1.v1.json",
+      "branch": "control/v0-p7-3-closure-r1",
+      "passport_path": "config/control/branches/control__v0-p7-3-closure-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
       "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
       "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
-      "current_stage": "P7.3 Material Batch to Canonical Item Graph",
-      "stage_status": "P7_2_COMPLETE_MERGED_P7_3_NEXT",
-      "progress_note": "P7.2 bounded planetary Matter bubble is independently reviewed, VERIFIED and merged. Exact runtime 0292e0a97d980d5c384b0118999429f1e6f13c3d / tree dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36; canonical merge 6e604a68c6883595a637a089bf3f709219a1197e. P7.3 is next under the same Work Order and mutation lease.",
+      "current_stage": "P7.4 Persistence Restart Composition",
+      "stage_status": "P7_3_COMPLETE_MERGED_P7_4_NEXT",
+      "progress_note": "P7.3 MatterMaterialBatch -> canonical Item Graph is independently reviewed, VERIFIED and merged. Exact runtime b4b11a69ef921c59b28208685cf26509c3b81907 / tree 99dea175fda7bacce936b15d30d9e25fa9e4af00; canonical merge 502d05fe24256fecd52f3092b8e056e74a8b4450. P7.4 is next under the same Work Order and mutation lease.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Implement P7.3 MatterMaterialBatch → canonical Item Graph with explicit mass conservation/exactly-once semantics and no second resource store.",
+      "next_stage": "Implement P7.4 persistence/restart composition: prove committed-undelivered MatterMaterialBatch survives restart and later delivers exactly once using existing MW5 and canonical Item Graph recovery only.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -294,14 +294,13 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+        "head_at_refresh_input": "b4b11a69ef921c59b28208685cf26509c3b81907",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
-        "exact_creation_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-        "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
-        "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
-        "next_code_step": "P7.3 MatterMaterialBatch to canonical Item Graph conservation adapter."
+        "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+        "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+        "next_code_step": "P7.4 persistence/restart composition over existing MW5 and canonical Item Graph."
       },
       "implementation_blockers": [],
       "acceptance_blockers": [
@@ -349,8 +348,21 @@
         "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
       },
       "p7_3": {
-        "state": "NEXT",
+        "state": "COMPLETE_MERGED",
         "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+        "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+        "runtime_merge_pr": 373,
+        "runtime_merge_carrier_pr": 387,
+        "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json"
+      },
+      "p7_4": {
+        "state": "NEXT",
+        "scope": "PERSISTENCE_RESTART_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
       }
     },
