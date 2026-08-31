@@ -2,7 +2,7 @@ extends SceneTree
 
 const AggregateScript = preload("res://scripts/construction/domain/construct_aggregate.gd")
 const PartScript = preload("res://scripts/construction/contracts/construction_part_record.gd")
-const EditorScript = preload("res://scripts/labs/fabric_construct0/construct0_editor.gd")
+const ConstructEditorScript = preload("res://scripts/labs/fabric_construct0/construct0_editor.gd")
 
 var _assertions := 0
 var _failures: Array[String] = []
@@ -75,7 +75,7 @@ func _test_generic_pose_mutation() -> void:
 	_check(not bool(stale.get("success", false)) and String(stale.get("error_code", "")) == "STALE_CONSTRUCT_REVISION", "stale pose edit rejected")
 
 func _test_editor_workflow() -> void:
-	var editor = EditorScript.new()
+	var editor = ConstructEditorScript.new()
 	var ready := editor.setup()
 	_check(bool(ready.get("success", false)), "editor setup")
 
