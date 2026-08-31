@@ -14,13 +14,17 @@
     "blocked_state_alone_is_not_hard_block_proof": true,
     "routine_git_write_is_not_human_gate": true,
     "role_boundary_does_not_revoke_git_authority": true,
-    "do_not_reask_human_for_pre_authorized_git_operations": true
+    "do_not_reask_human_for_pre_authorized_git_operations": true,
+    "terminal_user_report_is_machine_derived": true,
+    "finished_requires_mission_complete": true,
+    "local_execution_requires_durable_git_handoff": true
   },
   "mission_terminal_policy": {
     "allowed_terminals": [
       "MISSION_COMPLETE",
       "HUMAN_DECISION_REQUIRED",
-      "HARD_BLOCKED"
+      "HARD_BLOCKED",
+      "LOCAL_EXECUTION_REQUIRED"
     ],
     "mission_complete_requires": "CANONICAL_MAIN_CHECKPOINT_ACCEPTANCE_RECORD",
     "role_boundary_mission_exit_allowed": false,
@@ -28,7 +32,8 @@
     "checkpoint_proposed_mission_exit_allowed": false,
     "fix_required_mission_exit_allowed": false,
     "review_required_mission_exit_allowed": false,
-    "verification_required_mission_exit_allowed": false
+    "verification_required_mission_exit_allowed": false,
+    "local_execution_requires": "VALID_COMMITTED_OPEN_HANDOFF_FOR_EXACT_IMPLEMENTATION_HEAD"
   },
   "close_gates": {
     "close_role_command": "CONTROL_DEVELOPMENT.ps1 -CloseRole",
@@ -47,12 +52,31 @@
     "stop_only_on": [
       "MISSION_COMPLETE",
       "WAITING_HUMAN",
-      "HARD_BLOCKED"
+      "HARD_BLOCKED",
+      "LOCAL_EXECUTION_REQUIRED"
     ]
   },
   "self_closing_execution": {
     "max_same_defect_fix_required_events_before_takeover": 3,
     "takeover_actor": "DIRECTOR",
     "takeover_does_not_end_mission": true
+  },
+  "terminal_handoff_layer_revision": "H0-TERMINAL-HANDOFF-2026-08-31-R1",
+  "terminal_reporting": {
+    "required": true,
+    "finished_only_on": [
+      "MISSION_COMPLETE"
+    ],
+    "not_finished_on": [
+      "HUMAN_DECISION_REQUIRED",
+      "HARD_BLOCKED",
+      "LOCAL_EXECUTION_REQUIRED"
+    ],
+    "final_response_forbidden_on": [
+      "CONTINUE_REQUIRED"
+    ],
+    "next_step_required": true,
+    "local_execution_requires_durable_handoff": true,
+    "chat_only_local_instruction_forbidden": true
   }
 }

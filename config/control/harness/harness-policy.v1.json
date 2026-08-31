@@ -57,7 +57,12 @@
     "active_checkpoint_mission_pre_authorizes_routine_a0_a3_git_operations": true,
     "routine_git_write_operations_are_not_human_gates": true,
     "routine_git_write_confirmation_must_not_be_reasked": true,
-    "git_authority_survives_role_boundaries": true
+    "git_authority_survives_role_boundaries": true,
+    "terminal_user_report_must_declare_finished_state": true,
+    "finished_user_report_requires_mission_complete": true,
+    "terminal_user_report_requires_next_action": true,
+    "local_execution_requires_durable_git_handoff": true,
+    "chat_only_local_execution_handoff_is_forbidden": true
   },
   "roles": {
     "IMPLEMENTER": "Changes code within bounded Work Order scope.",
@@ -134,7 +139,7 @@
     "DIRECTOR_REQUIRES_PRODUCT_OR_ARCHITECT_CHOICE"
   ],
   "recovery_contract": {
-    "required_command_goal": "A fresh session/worktree must reconstruct active checkpoint mission, execution, epoch, branch/head, last completed predicate, open blocker, next actor/action, verification commands, review state, open human-attention items and human approvals using Git only.",
+    "required_command_goal": "A fresh session/worktree must reconstruct active checkpoint mission, execution, epoch, branch/head, last completed predicate, open blocker, next actor/action, verification commands, review state, open human-attention items, active local-execution handoff, terminal report and human approvals using Git only.",
     "recovery_drill_required_before_h0_1_acceptance": true,
     "chat_dependency_is_failure": true
   },
@@ -202,5 +207,7 @@
       "V0_POST_P6_SEAMLESS_ACTIVATION_OR_DEFER"
     ],
     "external_tool_boundary": "If an external platform itself blocks a write pending confirmation, report EXTERNAL_TOOL_AUTH_REQUIRED. Do not misclassify that platform requirement as a Harness human gate."
-  }
+  },
+  "terminal_handoff_layer_revision": "H0-TERMINAL-HANDOFF-2026-08-31-R1",
+  "local_execution_handoff_schema": "config/control/harness/local-execution-handoff.schema.v1.json"
 }

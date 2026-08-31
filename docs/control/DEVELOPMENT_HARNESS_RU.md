@@ -599,3 +599,40 @@ scripts/harness/**
 ```
 
 H0 scaffold implementation must conform to these canonical contracts rather than inventing a second state model.
+
+
+---
+
+## Terminal-report contract и локальное исполнение
+
+Разрешённый финальный ответ агента является частью Harness protocol, а не свободной формой отчёта.
+
+```text
+terminal_report.status = FINISHED
+  iff mission_complete == true
+
+terminal_report.status = NOT_FINISHED
+  for HUMAN_DECISION_REQUIRED / HARD_BLOCKED / LOCAL_EXECUTION_REQUIRED
+
+CONTINUE_REQUIRED
+  forbids final response and requires continuation
+```
+
+Последняя часть пользовательского отчёта всегда должна однозначно сообщать:
+
+```text
+СТАТУС: ЗАВЕРШЕНО.
+ДАЛЬШЕ: <следующий checkpoint/action>.
+```
+
+или:
+
+```text
+СТАТУС: НЕ ЗАВЕРШЕНО.
+ПРИЧИНА: <точная незакрытая причина>.
+ДАЛЬШЕ: <точная доделка текущего пункта / внешний шаг>.
+```
+
+Если необходим другой локальный executor, до выхода создаётся durable Local Execution Handoff в Git. Он обязан содержать exact subject, полные команды, environment, PASS/FAIL criteria, required evidence, evidence sink и resume condition. После commit + non-force push Harness может вернуть `LOCAL_EXECUTION_REQUIRED`; без committed valid handoff `-CloseMission` остаётся fail-closed.
+
+Локальному агенту передаётся отдельная человекочитаемая инструкция, но она рендерится из durable handoff. Чат не является источником истины для локальной передачи.
