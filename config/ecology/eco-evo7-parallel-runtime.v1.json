@@ -104,7 +104,7 @@
   "perf2_memory": {
     "checkpoint": "ECO.EVO7/PERF2.2",
     "revision": "ECO.EVO7-PERF2.2-R1",
-    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "status": "ACCEPTED_EXACT_UBUNTU",
     "predecessor_control_tip": "7044c13e8cd9b036f318192ba0d62c6f3393fb60",
     "source_profile_revision": "ECO.EVO7-PERF2.1-R2",
     "source_samples": 12,
@@ -117,6 +117,29 @@
     "engine_static_peak_claim": "PROCESS_LIFETIME_HIGH_WATERMARK_DIAGNOSTIC_ONLY",
     "memory_reduction_claim": false,
     "optimization_claim": false,
-    "local_runner": "RUN_ECO_EVO7_PERF2_2_TESTS.sh"
+    "local_runner": "RUN_ECO_EVO7_PERF2_2_TESTS.sh",
+    "accepted_head": "c6bef3d6c20d7b468f88f9aaabade2fe809b63e6",
+    "accepted_tree": "57d4807095e1e1096a13b665b1ef1a1a90d5dc98",
+    "merge_commit": "0331b24fd80e31c3ecd19f990af5e669f2154ab3",
+    "os": "UBUNTU",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "host_fingerprint": "ee428a6139f8b5260a6626f4f7f375193144f9b5a9f280c59431470087c47d12",
+    "perf2_2_assertions": 170,
+    "report_hash": "e03e4418eb2a91e5795b07565dbdb0f26b4cc6e494021a8d268d9c18df906a2b",
+    "record_proxy_reduction": {
+      "chunk_1": 108,
+      "chunk_7": 15.428571,
+      "chunk_64": 1.6875
+    },
+    "engine_static_peak_bytes": 72212481,
+    "process_rss_available_samples": 0,
+    "windows_required": false,
+    "perf2_3_authorized": true
+  },
+  "perf2_scaling": {
+    "checkpoint": "ECO.EVO7/PERF2.3",
+    "status": "AUTHORIZED_CURRENT",
+    "predecessor_head": "c6bef3d6c20d7b468f88f9aaabade2fe809b63e6",
+    "optimization_claim": false
   }
 }
