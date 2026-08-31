@@ -3,7 +3,7 @@
   "program": "FABRIC-BAKE",
   "checkpoint": "BRIDGE-1",
   "name": "PHYSICAL_SOURCE_LIFECYCLE_BAKE_RECONSTRUCTION",
-  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS_CLOSURE_READY",
+  "status": "RESEARCH_INTEGRATION_CHECKPOINT_CLOSED",
   "production_accepted": false,
   "branch": "research/fabric-bake-bridge1-physical-source-lifecycle-r2",
   "exact_executable": {
@@ -101,8 +101,14 @@
     "executable": {
       "run_number": 1917,
       "run_id": 33388409345,
-      "result": "SUCCESS",
-      "subject_head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90"
+      "subject_head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90",
+      "result": "SUCCESS"
+    },
+    "evidence_carrier": {
+      "run_number": 1918,
+      "run_id": 33388671545,
+      "subject_head": "a10ced235113a0e1d8a29e452e4519b87ae0b443",
+      "result": "SUCCESS"
     }
   },
   "claims": [
@@ -133,5 +139,15 @@
     "MULTI_AUTHORITY_MUTABLE_BAKE",
     "PERSISTING_TRANSIENT_CONTACT_HISTORY_AS_TRUTH"
   ],
-  "next": "BRIDGE1_CLOSURE_DECISION"
+  "next": "B0.3_CONTACT_WRENCH_BAKE",
+  "closure": {
+    "decision": "RESEARCH_INTEGRATION_CHECKPOINT_CLOSED",
+    "exact_executable_head": "e128cf9d49f84691b8a5428c97ab7acd53b92d90",
+    "exact_executable_tree": "f0deeb1848c6570d12364976f4fd07007657029d",
+    "evidence_control_carrier": "a10ced235113a0e1d8a29e452e4519b87ae0b443",
+    "runtime_changed_by_closure": false,
+    "production_accepted": false,
+    "next": "B0.3_CONTACT_WRENCH_BAKE",
+    "b0_3_final_predecessor": "FABRIC0.18_RESEARCH_CANDIDATE_CLOSED"
+  }
 }

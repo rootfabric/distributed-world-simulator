@@ -631,3 +631,84 @@ CLOSURE-READY
 NOT YET CLOSED
 NOT PRODUCTION ACCEPTED
 ```
+
+
+## BRIDGE-1 final closure
+
+```text
+BRIDGE-1
+PHYSICAL SOURCE LIFECYCLE + BAKE RECONSTRUCTION
+
+RESEARCH INTEGRATION CHECKPOINT CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+Exact executable remains:
+
+```text
+HEAD
+e128cf9d49f84691b8a5428c97ab7acd53b92d90
+
+TREE
+f0deeb1848c6570d12364976f4fd07007657029d
+```
+
+Evidence/control carrier:
+
+```text
+a10ced235113a0e1d8a29e452e4519b87ae0b443
+Project Control #1918 SUCCESS
+run id 33388671545
+```
+
+The exact executable itself passed:
+
+```text
+Project Control #1917 SUCCESS
+run id 33388409345
+```
+
+Closure changes no runtime bytes.
+
+Closed research/integration claims:
+
+- canonical source payload hash validation;
+- reuse of existing source frontier and authority envelope;
+- deterministic derived physical source graph;
+- B0.2 structural bake emission from canonical source;
+- stale execution fail-closed under source/dependency mismatch;
+- canonical invalidation → bake invalidation;
+- exact 500-part kinematic reconstruction;
+- same-topology rebuild with a fresh artifact;
+- deterministic FULL fallback;
+- transient contact state discarded/re-derived rather than persisted as truth;
+- topology changes routed to B0.2-E;
+- duplicate invalidation consumption rejected;
+- reverse-input exact deterministic identity;
+- cross-authority mutable bake rejected.
+
+Persistent non-claims:
+
+- B0.3 Contact/Wrench Bake;
+- arbitrary topology rebuild inside BRIDGE-1;
+- multi-authority mutable bake;
+- production scheduler ownership;
+- production acceptance;
+- FABRIC0.19.
+
+The next FABRIC-BAKE executable checkpoint is:
+
+```text
+B0.3
+CONTACT / WRENCH BAKE
+
+final Physical Core predecessor:
+FABRIC0.18
+RESEARCH CANDIDATE CLOSED
+```
+
+Do not reinterpret BRIDGE-1 closure as production acceptance or as ownership transfer from
+Construction/Matter.
