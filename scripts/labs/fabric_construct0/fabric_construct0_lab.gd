@@ -2,7 +2,7 @@ extends Node3D
 
 const Factory = preload("res://scripts/labs/fabric_construct0/construct0_preset_factory.gd")
 const PlaybackScript = preload("res://scripts/labs/fabric_construct0/construct0_fabric_playback.gd")
-const EditorScript = preload("res://scripts/labs/fabric_construct0/construct0_editor.gd")
+const ConstructEditorScript = preload("res://scripts/labs/fabric_construct0/construct0_editor.gd")
 const RuntimeNodeScript = preload("res://scripts/construction/runtime_projection/construction_runtime_construct_node.gd")
 
 var _construct_root: Node3D
@@ -26,7 +26,7 @@ var _playing := false
 var _playback_time := 0.0
 var _playback_speed := 1.0
 
-var _editor = EditorScript.new()
+var _editor = ConstructEditorScript.new()
 var _editor_active := false
 var _selected_part_index := 0
 
