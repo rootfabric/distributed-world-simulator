@@ -4,10 +4,11 @@
 
 ```text
 CONSTRUCT0
-C0.1 SEE THE MODEL IMPLEMENTED
-C0.2 SEE FABRIC MOVE IT IMPLEMENTED
-C0.3 BUILD IT IMPLEMENTED
-EXACT C0.1→C0.3 VERIFICATION PENDING
+C0.1 SEE THE MODEL CLOSED
+C0.2 SEE FABRIC MOVE IT CLOSED
+C0.3 BUILD IT CLOSED
+EXACT DOUBLE PASS
+PROJECT CONTROL PASS
 NOT PRODUCTION ACCEPTED
 ```
 
@@ -58,7 +59,7 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - debug-only representation forcing contract;
 - executable acceptance plan.
 
-### C0.1 — Tangible observatory — IMPLEMENTED / VERIFICATION PENDING
+### C0.1 — Tangible observatory — CLOSED
 - four compound presets: TABLE, BRIDGE, CART, PLANK;
 - canonical Construction parts + bonds;
 - existing Construction runtime projection for geometry;
@@ -68,7 +69,7 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - mode toggle: AUTO / FULL CONTACT VIEW / BAKED CONTACT VIEW;
 - no claim of full rigid-body time integration yet.
 
-### C0.2 — FABRIC driven rigid-body playback — IMPLEMENTED / VERIFICATION PENDING
+### C0.2 — FABRIC driven rigid-body playback — CLOSED
 - bounded PLANK reference scenario driven directly by closed FABRIC0.18 research runtime;
 - PLAY / PAUSE / STEP EVENT / RESET controls;
 - visible event timeline and FABRIC body velocities;
@@ -76,7 +77,7 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - Godot transform follows FABRIC state, never the reverse;
 - deterministic reset/replay.
 
-### C0.3 — Construction editor — IMPLEMENTED / VERIFICATION PENDING
+### C0.3 — Construction editor — CLOSED
 - create an empty canonical Construction;
 - add Block / Beam / Plate;
 - select/move/rotate;
@@ -159,3 +160,37 @@ CONSTRUCT0 does not yet claim:
 - production scheduler/fidelity policy;
 - networked collaborative building;
 - production acceptance.
+
+
+## C0.1–C0.3 exact closure evidence
+
+```text
+exact subject:
+837c46940acddbd841e7878dcfbfb68c0d5ac259
+
+TREE:
+8a554f9d7e45660aa6a4354c62742b4432633523
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+C0.1:
+58/58 PASS
+
+C0.2:
+33/33 PASS
+
+C0.3:
+30/30 PASS
+
+chained runner:
+PASS / exit 0
+
+Project Control:
+SUCCESS
+
+verdict:
+VERIFIED
+```
+
+Known historical ECO scene parse diagnostics remain outside the CONSTRUCT0 claim and did not prevent import exit 0.
