@@ -21,7 +21,7 @@ extends Node3D
 ## The whole runtime is presentation-only: no persistence writes, no network
 ## authority, no ecology-authority replacement.
 
-const REVISION := "ECO.EVO7-PLAY0.FINAL.R2"
+const REVISION := "ECO.EVO7-PLAY0.FINAL.R3-VIS4.4"
 const TITLE := "ECO EVO7 — PLAY0 Live Planet Playground"
 
 const EarthWorldScript = preload(
@@ -39,8 +39,20 @@ const WorkbenchScript = preload(
 const Vis2AdapterScript = preload(
 	"res://scripts/labs/ecology/eco_evo7_vis2_phenotype_render_adapter.gd"
 )
+const Vis4AdapterScript = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd"
+)
 const PresentationScript = preload(
 	"res://scripts/labs/ecology/eco_evo7_play0_planet_presentation.gd"
+)
+const MorphologyInspectorModel = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_7_morphology_inspector_model.gd"
+)
+const DiversityEvidence = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_8_diversity_evidence.gd"
+)
+const PerformanceLODEvidence = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_9_performance_lod_evidence.gd"
 )
 const LoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
@@ -74,6 +86,7 @@ var _spectator_body_visual: MeshInstance3D = null
 var _spectator_body_world_position := Vector3.ZERO
 var _spectator_body_basis := Basis.IDENTITY
 var vis2_adapter = null
+var vis4_adapter = null
 var presentation = null
 
 # PLAY0-local single-flight generation bridge state.
@@ -98,6 +111,8 @@ var _last_generation_ms := -1.0
 var _published_snapshot: Dictionary = {}
 var _published_ecology: Dictionary = {}
 var _published_descriptors: Dictionary = {}
+var _published_morphology_descriptors: Dictionary = {}
+var _published_reconstruction: Dictionary = {}
 
 # Terrain collision state.
 var _terrain_body: StaticBody3D = null
@@ -108,6 +123,23 @@ var _collision_refresh_count := 0
 var hud_layer: CanvasLayer
 var hud_label: Label
 var help_panel: PanelContainer
+var morphology_inspector_panel: PanelContainer
+var morphology_inspector_label: Label
+var morphology_inspector_visible := false
+var _morphology_inspector_index := -1
+var _morphology_inspector_record_id := ""
+var _morphology_inspector_state: Dictionary = {}
+var diversity_evidence_panel: PanelContainer
+var diversity_evidence_label: Label
+var diversity_evidence_visible := false
+var _diversity_evidence_state: Dictionary = {}
+var performance_lod_panel: PanelContainer
+var performance_lod_label: Label
+var performance_lod_visible := false
+var _vis49_frame_sample_count := 0
+var _vis49_frame_total_sec := 0.0
+var _vis49_frame_min_sec := INF
+var _vis49_frame_max_sec := 0.0
 var _hud_accumulator := 0.0
 
 
@@ -150,17 +182,24 @@ func initialize_runtime() -> bool:
 		logger.error("play0", "workbench_setup_failed", {})
 		return false
 	vis2_adapter = Vis2AdapterScript.new()
+	vis4_adapter = Vis4AdapterScript.new()
 	# Generation zero is published synchronously (no thread needed yet).
 	_publish_completed_snapshot(workbench.get_workbench_snapshot(), false)
+	if _published_descriptors.is_empty():
+		logger.error("play0", "initial_presentation_source_failed", {})
+		return false
 
-	# Presentation over the accepted VIS2 adapter result.
+	# Presentation over the accepted founder fallback. Generation > 0 switches
+	# atomically to exact VIS4.1 + VIS4.3 -> PH5.
 	presentation = PresentationScript.new()
 	presentation.name = "Play0PlanetPresentation"
 	add_child(presentation)
 	if not presentation.setup(earth_world, workbench.get_patch()):
 		logger.error("play0", "presentation_setup_failed", {})
 		return false
-	presentation.apply_snapshot(_published_descriptors, workbench.get_classification())
+	if not presentation.apply_snapshot(_published_descriptors, workbench.get_classification()):
+		logger.error("play0", "initial_presentation_apply_failed", {})
+		return false
 
 	# Spawn ground mode on the physical ecology patch so plants and terrain
 	# coincide for the player.
@@ -176,6 +215,7 @@ func initialize_runtime() -> bool:
 	player.setup(earth_world, logger, "earth_humanoid")
 	player.teleport_to_surface(patch_center)
 	player.activate_after_spawn()
+	presentation.set_view_world_position(player.get_world_position())
 
 	spectator = SpectatorScript.new()
 	spectator.name = "Play0Spectator"
@@ -201,6 +241,11 @@ func initialize_runtime() -> bool:
 func _process(delta: float) -> void:
 	if not ready_success:
 		return
+	if is_finite(delta) and delta > 0.0:
+		_vis49_frame_sample_count += 1
+		_vis49_frame_total_sec += delta
+		_vis49_frame_min_sec = minf(_vis49_frame_min_sec, delta)
+		_vis49_frame_max_sec = maxf(_vis49_frame_max_sec, delta)
 	_poll_generation_thread()
 	if auto_evolution and not _gen_in_flight:
 		request_generation()
@@ -276,16 +321,20 @@ func _apply_local_daylight(patch_center: Vector3) -> void:
 func _update_view(delta: float) -> void:
 	if earth_world == null:
 		return
+	var view_position := Vector3.ZERO
 	if mode == MODE_SPECTATOR and spectator != null:
-		var view_position: Vector3 = spectator.get_world_position()
+		view_position = spectator.get_world_position()
 		earth_world.update_for_view(view_position, view_position, true, delta)
 	elif player != null:
+		view_position = player.get_world_position()
 		earth_world.update_for_view(
-			player.get_world_position(),
+			view_position,
 			earth_world.get_render_origin(),
 			false,
 			delta
 		)
+	if presentation != null and view_position.length_squared() > 1.0:
+		presentation.set_view_world_position(view_position)
 
 
 # ------------------------------------------------------------------
@@ -530,6 +579,9 @@ func _poll_generation_thread() -> void:
 
 
 func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool) -> void:
+	## Atomically publishes only a complete presentation source. Generation zero
+	## uses the legacy founder fallback; generation > 0 must carry exact VIS4.1
+	## descriptors + VIS4.3 reconstruction evidence and materialize through PH5.
 	if workbench_snapshot.is_empty() or workbench == null:
 		return
 	var ecology_snapshot: Dictionary = workbench.get_ecology_snapshot()
@@ -541,14 +593,60 @@ func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool)
 				"generation": int(ecology_snapshot.get("generation", -1)),
 			})
 		return
+
+	var generation := int(ecology_snapshot.get("generation", -1))
+	var morphology_descriptors: Dictionary = {}
+	var reconstruction: Dictionary = {}
+	if generation > 0:
+		var morphology: Dictionary = workbench.get_morphology_evidence()
+		reconstruction = workbench.get_graph_reconstruction_evidence()
+		if (
+			morphology.is_empty()
+			or not workbench.validate_morphology_evidence(morphology)
+			or reconstruction.is_empty()
+			or not workbench.validate_graph_reconstruction_evidence(reconstruction)
+		):
+			if logger != null:
+				logger.error("play0", "vis4_source_evidence_incomplete", {
+					"generation": generation,
+				})
+			return
+		morphology_descriptors = vis4_adapter.build(ecology_snapshot, morphology)
+		if morphology_descriptors.is_empty():
+			if logger != null:
+				logger.error("play0", "vis4_descriptor_build_failed", {
+					"generation": generation,
+				})
+			return
+
+	# Presentation is committed first. If PH5 rejects any source record, all
+	# published state below stays on the previous completed generation.
+	if presentation != null and presentation.initialized:
+		if not presentation.apply_snapshot(
+			descriptors,
+			classification,
+			morphology_descriptors,
+			reconstruction
+		):
+			if logger != null:
+				logger.error("play0", "presentation_atomic_publish_rejected", {
+					"generation": generation,
+				})
+			return
+
 	_published_snapshot = workbench_snapshot.duplicate(true)
 	_published_ecology = ecology_snapshot.duplicate(true)
-	_published_descriptors = descriptors
+	_published_descriptors = descriptors.duplicate(true)
+	_published_morphology_descriptors = morphology_descriptors.duplicate(true)
+	_published_reconstruction = reconstruction.duplicate(true)
+	_refresh_diversity_evidence()
+	if performance_lod_visible:
+		_refresh_performance_lod_panel()
+	if morphology_inspector_visible:
+		_refresh_morphology_inspector(true)
 	if measured:
 		_completed_generations += 1
 		_last_generation_ms = float(Time.get_ticks_msec() - _gen_started_msec)
-	if presentation != null and presentation.initialized:
-		presentation.apply_snapshot(_published_descriptors, classification)
 	_refresh_hud_text()
 
 
@@ -629,6 +727,313 @@ func get_published_snapshot() -> Dictionary:
 	return _published_snapshot.duplicate(true)
 
 
+func get_published_descriptors() -> Dictionary:
+	return _published_descriptors.duplicate(true)
+
+
+func get_published_morphology_descriptors() -> Dictionary:
+	return _published_morphology_descriptors.duplicate(true)
+
+
+func get_published_reconstruction_evidence() -> Dictionary:
+	return _published_reconstruction.duplicate(true)
+
+
+func is_morphology_inspector_visible() -> bool:
+	return morphology_inspector_visible
+
+
+func get_morphology_inspector_state() -> Dictionary:
+	return _morphology_inspector_state.duplicate(true)
+
+
+func get_morphology_inspector_text() -> String:
+	return "" if morphology_inspector_label == null else morphology_inspector_label.text
+
+
+func get_morphology_inspector_selected_index() -> int:
+	return _morphology_inspector_index
+
+
+func get_frame_performance() -> Dictionary:
+	var average_sec := (
+		_vis49_frame_total_sec / float(_vis49_frame_sample_count)
+		if _vis49_frame_sample_count > 0 else 0.0
+	)
+	return {
+		"sample_count": _vis49_frame_sample_count,
+		"average_frame_ms": average_sec * 1000.0,
+		"min_frame_ms": (
+			_vis49_frame_min_sec * 1000.0
+			if _vis49_frame_sample_count > 0 else 0.0
+		),
+		"max_frame_ms": _vis49_frame_max_sec * 1000.0,
+		"estimated_fps": 1.0 / average_sec if average_sec > 0.0 else 0.0,
+		"observational_only": true,
+	}
+
+
+func get_performance_lod_state() -> Dictionary:
+	if presentation == null:
+		return {}
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	if ecology_hash.length() != 64:
+		return {}
+	var renderer_perf: Dictionary = presentation.get_ph5_performance_counters()
+	if String(renderer_perf.get("source_ecology_hash", "")) != ecology_hash:
+		return {}
+	return PerformanceLODEvidence.build(renderer_perf, get_frame_performance())
+
+
+func get_performance_lod_text() -> String:
+	return "" if performance_lod_label == null else performance_lod_label.text
+
+
+func is_performance_lod_visible() -> bool:
+	return performance_lod_visible
+
+
+func set_performance_lod_visible(value: bool) -> bool:
+	if value:
+		morphology_inspector_visible = false
+		diversity_evidence_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
+		if diversity_evidence_panel != null:
+			diversity_evidence_panel.visible = false
+	performance_lod_visible = value
+	if performance_lod_panel != null:
+		performance_lod_panel.visible = value
+	if value:
+		_refresh_performance_lod_panel()
+	_refresh_hud_text()
+	return performance_lod_visible
+
+
+func toggle_performance_lod() -> bool:
+	return set_performance_lod_visible(not performance_lod_visible)
+
+
+func _refresh_performance_lod_panel() -> bool:
+	if performance_lod_label == null:
+		return false
+	var state: Dictionary = get_performance_lod_state()
+	performance_lod_label.text = (
+		PerformanceLODEvidence.format_text(state)
+		if not state.is_empty()
+		else "VIS4.9 PERFORMANCE / LOD\nUnavailable until completed PH5 generation evidence exists."
+	)
+	return not state.is_empty()
+
+
+func is_diversity_evidence_visible() -> bool:
+	return diversity_evidence_visible
+
+
+func get_diversity_evidence_state() -> Dictionary:
+	return _diversity_evidence_state.duplicate(true)
+
+
+func get_diversity_evidence_text() -> String:
+	return "" if diversity_evidence_label == null else diversity_evidence_label.text
+
+
+func set_diversity_evidence_visible(value: bool) -> bool:
+	if value:
+		morphology_inspector_visible = false
+		performance_lod_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
+		if performance_lod_panel != null:
+			performance_lod_panel.visible = false
+	diversity_evidence_visible = value
+	if diversity_evidence_panel != null:
+		diversity_evidence_panel.visible = value
+	if value:
+		_refresh_diversity_evidence()
+		if diversity_evidence_label != null:
+			diversity_evidence_label.text = (
+				DiversityEvidence.format_text(_diversity_evidence_state)
+				if not _diversity_evidence_state.is_empty()
+				else "VIS4.8 DIVERSITY EVIDENCE\nUnavailable until a completed generation > 0 has exact Descriptor V2 + PH5 evidence."
+			)
+	_refresh_hud_text()
+	return diversity_evidence_visible
+
+
+func toggle_diversity_evidence() -> bool:
+	return set_diversity_evidence_visible(not diversity_evidence_visible)
+
+
+func _refresh_diversity_evidence() -> bool:
+	_diversity_evidence_state = {}
+	if presentation == null:
+		return false
+	var generation := int(_published_snapshot.get("generation", -1))
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	if generation < 1 or ecology_hash.length() != 64 or _published_morphology_descriptors.is_empty():
+		return false
+	if int(_published_morphology_descriptors.get("generation", -2)) != generation:
+		return false
+	if String(_published_morphology_descriptors.get("source_ecology_state_hash", "")) != ecology_hash:
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	var render_identities: Array = []
+	for index in range(descriptors.size()):
+		render_identities.append(presentation.get_ph5_record_identity(index))
+	_diversity_evidence_state = DiversityEvidence.build(
+		generation,
+		ecology_hash,
+		_published_morphology_descriptors,
+		render_identities
+	)
+	if diversity_evidence_visible and diversity_evidence_label != null:
+		diversity_evidence_label.text = (
+			DiversityEvidence.format_text(_diversity_evidence_state)
+			if not _diversity_evidence_state.is_empty()
+			else "VIS4.8 DIVERSITY EVIDENCE\nSource binding rejected / unavailable."
+		)
+	return not _diversity_evidence_state.is_empty()
+
+
+func select_morphology_inspector_index(index: int) -> bool:
+	if not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if index < 0 or index >= descriptors.size() or not descriptors[index] is Dictionary:
+		return false
+	var state: Dictionary = _build_morphology_inspector_state(index)
+	if state.is_empty():
+		return false
+	_morphology_inspector_index = index
+	_morphology_inspector_record_id = String(state.get("record_id", ""))
+	_morphology_inspector_state = state
+	if morphology_inspector_label != null:
+		morphology_inspector_label.text = MorphologyInspectorModel.format_text(state)
+	return true
+
+
+func set_morphology_inspector_visible(value: bool) -> bool:
+	if value:
+		diversity_evidence_visible = false
+		performance_lod_visible = false
+		if diversity_evidence_panel != null:
+			diversity_evidence_panel.visible = false
+		if performance_lod_panel != null:
+			performance_lod_panel.visible = false
+		if not _can_inspect_morphology():
+			morphology_inspector_visible = true
+			if morphology_inspector_panel != null:
+				morphology_inspector_panel.visible = true
+			if morphology_inspector_label != null:
+				morphology_inspector_label.text = "VIS4.7 MORPHOLOGY INSPECTOR\nUnavailable until a completed generation > 0 has PH5 morphology evidence."
+			_morphology_inspector_index = -1
+			_morphology_inspector_record_id = ""
+			_morphology_inspector_state = {}
+			_refresh_hud_text()
+			return true
+		morphology_inspector_visible = true
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = true
+		if not _select_nearest_morphology_inspector_record():
+			_morphology_inspector_index = -1
+			_morphology_inspector_record_id = ""
+			_morphology_inspector_state = {}
+			if morphology_inspector_label != null:
+				morphology_inspector_label.text = "VIS4.7 MORPHOLOGY INSPECTOR\nSource binding rejected / no inspectable PH5 record."
+	else:
+		morphology_inspector_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
+	_refresh_hud_text()
+	return morphology_inspector_visible
+
+
+func toggle_morphology_inspector() -> bool:
+	return set_morphology_inspector_visible(not morphology_inspector_visible)
+
+
+func _can_inspect_morphology() -> bool:
+	if presentation == null:
+		return false
+	var generation := int(_published_snapshot.get("generation", -1))
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	var presentation_contract: Dictionary = presentation.get_contract()
+	return (
+		generation > 0
+		and ecology_hash.length() == 64
+		and not _published_morphology_descriptors.is_empty()
+		and int(_published_morphology_descriptors.get("generation", -2)) == generation
+		and String(_published_morphology_descriptors.get("source_ecology_state_hash", "")) == ecology_hash
+		and bool(presentation_contract.get("ph5_active", false))
+	)
+
+
+func _build_morphology_inspector_state(index: int) -> Dictionary:
+	if not _can_inspect_morphology():
+		return {}
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if index < 0 or index >= descriptors.size() or not descriptors[index] is Dictionary:
+		return {}
+	var descriptor: Dictionary = Dictionary(descriptors[index])
+	var render_identity: Dictionary = presentation.get_ph5_record_identity(index)
+	var grid_appearance: Dictionary = presentation.get_ph5_record_grid_appearance(index)
+	return MorphologyInspectorModel.build(
+		int(_published_snapshot.get("generation", -1)),
+		String(_published_snapshot.get("ecology_state_hash", "")),
+		descriptor,
+		render_identity,
+		grid_appearance
+	)
+
+
+func _refresh_morphology_inspector(preserve_record: bool) -> bool:
+	if not morphology_inspector_visible or not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if preserve_record and not _morphology_inspector_record_id.is_empty():
+		for index in range(descriptors.size()):
+			if (
+				descriptors[index] is Dictionary
+				and String(Dictionary(descriptors[index]).get("record_id", "")) == _morphology_inspector_record_id
+			):
+				return select_morphology_inspector_index(index)
+		return _select_nearest_morphology_inspector_record()
+	if _morphology_inspector_index >= 0 and _morphology_inspector_index < descriptors.size():
+		return select_morphology_inspector_index(_morphology_inspector_index)
+	return _select_nearest_morphology_inspector_record()
+
+
+func _select_nearest_morphology_inspector_record() -> bool:
+	if not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	var view_world: Vector3 = _active_view_world_position()
+	var best_index := -1
+	var best_distance := INF
+	for index in range(descriptors.size()):
+		if not descriptors[index] is Dictionary:
+			continue
+		if not presentation.is_ph5_record_individual_materialized(index):
+			continue
+		var visual_world: Vector3 = presentation.get_ph5_record_visual_world_position(index)
+		var distance := visual_world.distance_squared_to(view_world)
+		if distance < best_distance:
+			best_distance = distance
+			best_index = index
+	if best_index < 0 and not descriptors.is_empty():
+		best_index = 0
+	return select_morphology_inspector_index(best_index)
+
+
+func _active_view_world_position() -> Vector3:
+	if mode == MODE_SPECTATOR and spectator != null:
+		return spectator.get_world_position()
+	if player != null:
+		return player.get_world_position()
+	return Vector3.ZERO
+
+
 func get_authorities() -> Dictionary:
 	var snapshot_authorities: Dictionary = _published_snapshot.get("authorities", {})
 	return {
@@ -653,6 +1058,7 @@ func get_play0_status() -> Dictionary:
 	var view_direction: Vector3 = (
 		view_position.normalized() if view_position.length_squared() > 1.0 else Vector3.UP
 	)
+	var presentation_contract: Dictionary = presentation.get_contract() if presentation != null else {}
 	return {
 		"revision": REVISION,
 		"mode": mode,
@@ -673,6 +1079,19 @@ func get_play0_status() -> Dictionary:
 		"mouse_captured": mouse_captured,
 		"player_camera_mode": player.get_camera_mode() if player != null else "",
 		"spectator_body_visible": is_spectator_body_visible(),
+		"ph5_active": bool(presentation_contract.get("ph5_active", false)),
+		"ph5": Dictionary(presentation_contract.get("ph5", {})).duplicate(true),
+		"morphology_inspector_visible": morphology_inspector_visible,
+		"morphology_inspector_selected_index": _morphology_inspector_index,
+		"morphology_inspector_record_id": _morphology_inspector_record_id,
+		"morphology_inspector_hash": String(_morphology_inspector_state.get("inspector_hash", "")),
+		"diversity_evidence_visible": diversity_evidence_visible,
+		"diversity_evidence_hash": String(_diversity_evidence_state.get("evidence_hash", "")),
+		"live_diversity_status": String(_diversity_evidence_state.get("live_diversity_status", "")),
+		"morphology_cluster_count": int(_diversity_evidence_state.get("cluster_count", 0)),
+		"morphology_varying_field_count": int(_diversity_evidence_state.get("varying_field_count", 0)),
+		"performance_lod_visible": performance_lod_visible,
+		"performance_lod_structural_hash": String(get_performance_lod_state().get("structural_evidence_hash", "")),
 	}
 
 
@@ -691,6 +1110,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F5:
 				toggle_player_camera()
+				get_viewport().set_input_as_handled()
+			KEY_F6:
+				toggle_morphology_inspector()
+				get_viewport().set_input_as_handled()
+			KEY_F7:
+				toggle_diversity_evidence()
+				get_viewport().set_input_as_handled()
+			KEY_F8:
+				toggle_performance_lod()
 				get_viewport().set_input_as_handled()
 			KEY_P:
 				set_auto_evolution(not auto_evolution)
@@ -783,11 +1211,59 @@ func _build_hud() -> void:
 		"P           live ecology AUTO / PAUSE",
 		"N           advance exactly one generation",
 		"B           biome overlay ON / OFF",
+		"F6          morphology inspector for nearest live PH5 plant",
+		"F7          diversity evidence (renderer gate + live variance)",
+		"F8          VIS4 performance / LOD evidence",
 		"F1          this help           Esc release/capture mouse",
 	]))
 	help_label.add_theme_font_size_override("font_size", 15)
 	help_panel.add_child(help_label)
 	hud_layer.add_child(help_panel)
+
+	morphology_inspector_panel = PanelContainer.new()
+	morphology_inspector_panel.name = "VIS47MorphologyInspectorPanel"
+	morphology_inspector_panel.position = Vector2(16, 335)
+	morphology_inspector_panel.size = Vector2(940, 610)
+	morphology_inspector_panel.visible = false
+	morphology_inspector_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	morphology_inspector_label = Label.new()
+	morphology_inspector_label.name = "VIS47MorphologyInspectorText"
+	morphology_inspector_label.custom_minimum_size = Vector2(920, 590)
+	morphology_inspector_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	morphology_inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	morphology_inspector_label.add_theme_font_size_override("font_size", 14)
+	morphology_inspector_panel.add_child(morphology_inspector_label)
+	hud_layer.add_child(morphology_inspector_panel)
+
+	diversity_evidence_panel = PanelContainer.new()
+	diversity_evidence_panel.name = "VIS48DiversityEvidencePanel"
+	diversity_evidence_panel.position = Vector2(16, 335)
+	diversity_evidence_panel.size = Vector2(940, 610)
+	diversity_evidence_panel.visible = false
+	diversity_evidence_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diversity_evidence_label = Label.new()
+	diversity_evidence_label.name = "VIS48DiversityEvidenceText"
+	diversity_evidence_label.custom_minimum_size = Vector2(920, 590)
+	diversity_evidence_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diversity_evidence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	diversity_evidence_label.add_theme_font_size_override("font_size", 13)
+	diversity_evidence_panel.add_child(diversity_evidence_label)
+	hud_layer.add_child(diversity_evidence_panel)
+
+	performance_lod_panel = PanelContainer.new()
+	performance_lod_panel.name = "VIS49PerformanceLODPanel"
+	performance_lod_panel.position = Vector2(16, 335)
+	performance_lod_panel.size = Vector2(940, 610)
+	performance_lod_panel.visible = false
+	performance_lod_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	performance_lod_label = Label.new()
+	performance_lod_label.name = "VIS49PerformanceLODText"
+	performance_lod_label.custom_minimum_size = Vector2(920, 590)
+	performance_lod_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	performance_lod_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	performance_lod_label.add_theme_font_size_override("font_size", 13)
+	performance_lod_panel.add_child(performance_lod_label)
+	hud_layer.add_child(performance_lod_panel)
 
 
 func _refresh_hud_text() -> void:
@@ -820,7 +1296,21 @@ func _refresh_hud_text() -> void:
 			int(status.get("collision_refresh_count", 0)),
 			"mouse captured" if bool(status.get("mouse_captured", true)) else "mouse free (Esc)",
 		],
+		"Inspector: %s    selected: %s    F6 toggle" % [
+			"ON" if morphology_inspector_visible else "OFF",
+			_morphology_inspector_record_id if not _morphology_inspector_record_id.is_empty() else "<none>",
+		],
+		"Diversity: %s    %s    clusters %d    F7 toggle" % [
+			"ON" if diversity_evidence_visible else "OFF",
+			String(_diversity_evidence_state.get("live_diversity_status", "<unavailable>")),
+			int(_diversity_evidence_state.get("cluster_count", 0)),
+		],
+		"Perf/LOD: %s    F8 toggle" % [
+			"ON" if performance_lod_visible else "OFF",
+		],
 	]))
+	if performance_lod_visible:
+		_refresh_performance_lod_panel()
 
 
 # ------------------------------------------------------------------

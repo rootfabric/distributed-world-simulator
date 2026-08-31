@@ -1,0 +1,89 @@
+name: ECO EVO7 VIS4.3 Exact PH5 Bridge
+
+on:
+  push:
+    branches:
+      - feature/eco-evo7-vis4-evolved-plant-morphology-r1
+    paths:
+      - "scripts/research/ecology/plant_growth_graph_reconstruction_evidence_v1.gd"
+      - "scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd"
+      - "scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd"
+      - "scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd"
+      - "scripts/labs/ecology/eco_evo7_vis4_3_exact_ph5_bridge.gd"
+      - "scripts/research/ecology/plant_development_traits_v1.gd"
+      - "scripts/research/ecology/plant_growth_graph_skeleton_v1.gd"
+      - "scripts/research/ecology/plant_render_description_v1.gd"
+      - "scripts/research/ecology/plant_multiscale_representation_v1.gd"
+      - "scripts/research/ecology/plant_multiscale_materializer_v1.gd"
+      - "tests/ecology/eco_evo7_vis4_3_exact_ph5_bridge_acceptance.gd"
+      - "RUN_ECO_EVO7_VIS4_3_TESTS.ps1"
+      - "RUN_ECO_EVO7_VIS4_3_TESTS.sh"
+      - ".github/workflows/evo7-vis4-3-exact-ph5-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-vis4-3-frozen-subject
+  cancel-in-progress: true
+
+env:
+  VIS4_3_SUBJECT_SHA: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+  VIS4_3_EXPECTED_TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
+
+jobs:
+  closure:
+    name: exact VIS4.3 Live Phenotype to PH5 bridge closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout frozen VIS4.3 executable subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VIS4_3_SUBJECT_SHA }}
+          fetch-depth: 0
+
+      - name: Assert exact frozen subject and tree
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne "$env:VIS4_3_SUBJECT_SHA") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=$env:VIS4_3_SUBJECT_SHA"
+          }
+
+          $tree = (git show -s --format=%T HEAD).Trim()
+          if ($tree -ne "$env:VIS4_3_EXPECTED_TREE") {
+            throw "EXACT_TREE_MISMATCH: actual=$tree expected=$env:VIS4_3_EXPECTED_TREE"
+          }
+
+          Write-Host "closure_carrier=${{ github.sha }}"
+          Write-Host "exact_head=$head"
+          Write-Host "exact_tree=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $godot"
+          }
+          $version = (& $godot --version | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run VIS4.3 closure
+        run: |
+          .\\RUN_ECO_EVO7_VIS4_3_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
