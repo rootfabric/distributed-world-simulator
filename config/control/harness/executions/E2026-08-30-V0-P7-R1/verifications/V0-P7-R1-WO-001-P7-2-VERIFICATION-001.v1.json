@@ -1,0 +1,145 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-2-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "verified_head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+  "verified_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+  "verifier": "INDEPENDENT_VERIFIER_P7_2_FRESH_EXACT_SOURCE_R1",
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-31T04:23:00Z",
+  "environment": {
+    "os": "Ubuntu Linux local agent",
+    "repo_checkout": "/home/yurig/distributed-world-simulator",
+    "verifier_worktree": "fresh detached worktree at exact HEAD; no Implementer or Reviewer worktree reused",
+    "godot_binary": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "dispatch": {
+    "dispatch_pr": 364,
+    "dispatch_branch": "control/v0-p7-2-fresh-verifier-dispatch-r1",
+    "dispatch_head_sha": "4ae4255a0e58ef166febd49da3a71d44da7063c9",
+    "dispatch_project_control": "33354389149 = SUCCESS",
+    "instruction": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-FRESH-VERIFIER-INSTRUCTION-001.md"
+  },
+  "checks": {
+    "subject_identity": {
+      "result": "PASS",
+      "head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+      "tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+      "origin_feature_branch": "origin/feature/v0-p7-bounded-terrain-mutation == 0292e0a97d980d5c384b0118999429f1e6f13c3d",
+      "current_main": "d96ed71a917f7a28fb59856b1914eec0bdb89a42",
+      "tracked_clean_before_execution": true
+    },
+    "godot_identity": {
+      "result": "PASS",
+      "version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "exact_match_required": true,
+      "substitution_used": false
+    },
+    "import": {
+      "result": "PASS",
+      "log": "artifacts/runtime/v0-p7-2-lunar-matter-bubble/import.log",
+      "log_sha256": "1e9f0c400a680d04691715f2f5f6dc374ee25b1a74c9515e83986c641734bf61"
+    },
+    "p7_2_bubble": {
+      "result": "PASS",
+      "assertions": 53,
+      "failures": 0,
+      "verdict_line": "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)",
+      "log_sha256": "411deaa17c5c4310ca03d3d552d195f609485d0ac9bae1b926a7fec1633c7c28"
+    },
+    "p7_2_seam": {
+      "result": "PASS",
+      "assertions": 50,
+      "failures": 0,
+      "verdict_line": "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)",
+      "log_sha256": "1f36fa85ae7adc731e29e1797bea5301aba3ff6ca435e7fc0c171ea993c3fb32"
+    },
+    "p7_1_authority": {
+      "result": "PASS",
+      "assertions": 83,
+      "failures": 0,
+      "verdict_line": "V0-P7.1 authority gate: PASS (83 assertions, 0 failures)",
+      "log_sha256": "5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e"
+    },
+    "p7_1_tool_to_mw4": {
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0,
+      "verdict_line": "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)",
+      "log_sha256": "3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1"
+    },
+    "mw4": {
+      "result": "PASS",
+      "assertions": 187,
+      "failures": 0,
+      "verdict_line": "MW4 matter mutations: PASS (187 assertions / 16.634 s)",
+      "log_sha256": "198baf1554fa07d1fd513072d18cd9e721c125dfbf4eb1d0ff505f5d781b3648"
+    },
+    "mw5": {
+      "result": "PASS",
+      "assertions": 142,
+      "failures": 0,
+      "verdict_line": "MW5 matter persistence: PASS (142 assertions / 45.864 s)",
+      "log_sha256": "1e8db2d983aa9a6bdddafedb5641dfe42a64603491a792600b26bdd76e57a997"
+    },
+    "mw6": {
+      "result": "PASS",
+      "assertions": 130,
+      "failures": 0,
+      "verdict_line": "MW6 matter network authority: PASS (130 assertions / 28.125 s)",
+      "log_sha256": "8054c75bfbc9b12fbe2dcf1d069f825848f9718f5c4fce16059484df18f503cf"
+    },
+    "canonical_runner": {
+      "result": "PASS",
+      "command": "RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.sh <exact double Godot> 0292e0a97d980d5c384b0118999429f1e6f13c3d",
+      "exit_code": 0,
+      "gate_banner": "V0-P7.2 BOUNDED LUNAR MATTER BUBBLE GATE GREEN"
+    },
+    "fatal_log_scan": {
+      "result": "PASS",
+      "method": "independent grep -F of every generated log for SCRIPT ERROR:, Parse Error:, Compile Error:, Failed to instantiate an autoload, Failed to load script",
+      "logs_scanned": 8,
+      "matches_found": 0
+    },
+    "tracked_clean_after_execution": {
+      "result": "PASS",
+      "command": "git status --porcelain --untracked-files=no",
+      "tracked_mutations": 0,
+      "untracked_observation": "54 Godot .uid import sidecars only (explicitly allowed, not tracked mutation); artifacts directory is gitignored"
+    },
+    "project_control": {
+      "result": "PASS",
+      "exact_head_run": 33352528718,
+      "status": "SUCCESS",
+      "evidence_source": "V0-P7-R1-P7-2-REVIEW-REFRESH-EVIDENCE-MAP-002.v1.json exact_validation.runtime_project_control_run bound to evidence HEAD 0292e0a9 / TREE dc39d42c"
+    },
+    "reviewer_r2": {
+      "result": "PASS",
+      "review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002",
+      "reviewer": "INDEPENDENT_REVIEWER_P7_2_FRESH_EXACT_SOURCE_R2",
+      "review_commit": "37b140f21395e0195826afc0ee0fd3787719dbb1",
+      "review_pr": 363,
+      "verdict": "PASS",
+      "review_project_control": "33354295502 = SUCCESS",
+      "reviewed_head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+      "reviewed_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36"
+    }
+  },
+  "findings": [
+    "Canonical gate script is tracked with git mode 100644 at the verified HEAD; it was therefore invoked through the bash interpreter (identical shebang semantics) instead of chmod +x, because a chmod would have created a tracked-mode mutation and failed the gate's own clean-checkout fence.",
+    "Determinism cross-check: p7-1-authority.log (5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e) and p7-1-tool-to-mw4.log (3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1) are SHA-256-identical to the corresponding logs recorded by the independent P7.1 verifier in V0-P7-R1-WO-001-P7-1-VERIFICATION-001, an independent reproducibility signal across verifier runs.",
+    "Verifier is read-only with respect to runtime source: no runtime file repaired, modified, or reverted; the only artifacts written are untracked import sidecars, gitignored run artifacts, and this verification record on the control result branch."
+  ],
+  "forbidden_conclusions_respected": {
+    "runtime_feature_merge_performed": false,
+    "pr_350_merged": false,
+    "merge_authorized_by_this_verification": false
+  },
+  "next": {
+    "p7_2": "VERIFIED",
+    "p7": "IN_PROGRESS",
+    "next": "human RUNTIME_FEATURE_MERGE gate on runtime PR #350; this verification opens only that human gate and does not itself authorize or perform merge"
+  }
+}
