@@ -19,4 +19,18 @@ if [[ -f "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.sh" ]]; then
     GODOT_BIN="$godot_bin" bash "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.sh"
 fi
 
-"$godot_bin" --headless --path "$repo_root" --script res://tests/research/fabric_construct0/fabric_construct0_play1_acceptance.gd
+play1_log="$(mktemp)"
+set +e
+"$godot_bin" --headless --path "$repo_root" --script res://tests/research/fabric_construct0/fabric_construct0_play1_acceptance.gd 2>&1 | tee "$play1_log"
+play1_status=${PIPESTATUS[0]}
+set -e
+if [[ "$play1_status" -ne 0 ]]; then
+    rm -f "$play1_log"
+    exit "$play1_status"
+fi
+if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$play1_log"; then
+    echo "PLAY1 fatal script marker detected" >&2
+    rm -f "$play1_log"
+    exit 4
+fi
+rm -f "$play1_log"
