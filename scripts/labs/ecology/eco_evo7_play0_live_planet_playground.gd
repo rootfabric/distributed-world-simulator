@@ -48,6 +48,9 @@ const PresentationScript = preload(
 const MorphologyInspectorModel = preload(
 	"res://scripts/labs/ecology/eco_evo7_vis4_7_morphology_inspector_model.gd"
 )
+const DiversityEvidence = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_8_diversity_evidence.gd"
+)
 const LoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
 )
@@ -123,6 +126,10 @@ var morphology_inspector_visible := false
 var _morphology_inspector_index := -1
 var _morphology_inspector_record_id := ""
 var _morphology_inspector_state: Dictionary = {}
+var diversity_evidence_panel: PanelContainer
+var diversity_evidence_label: Label
+var diversity_evidence_visible := false
+var _diversity_evidence_state: Dictionary = {}
 var _hud_accumulator := 0.0
 
 
@@ -617,6 +624,7 @@ func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool)
 	_published_descriptors = descriptors.duplicate(true)
 	_published_morphology_descriptors = morphology_descriptors.duplicate(true)
 	_published_reconstruction = reconstruction.duplicate(true)
+	_refresh_diversity_evidence()
 	if morphology_inspector_visible:
 		_refresh_morphology_inspector(true)
 	if measured:
@@ -728,6 +736,69 @@ func get_morphology_inspector_text() -> String:
 
 func get_morphology_inspector_selected_index() -> int:
 	return _morphology_inspector_index
+
+
+func is_diversity_evidence_visible() -> bool:
+	return diversity_evidence_visible
+
+
+func get_diversity_evidence_state() -> Dictionary:
+	return _diversity_evidence_state.duplicate(true)
+
+
+func get_diversity_evidence_text() -> String:
+	return "" if diversity_evidence_label == null else diversity_evidence_label.text
+
+
+func set_diversity_evidence_visible(value: bool) -> bool:
+	diversity_evidence_visible = value
+	if diversity_evidence_panel != null:
+		diversity_evidence_panel.visible = value
+	if value:
+		_refresh_diversity_evidence()
+		if diversity_evidence_label != null:
+			diversity_evidence_label.text = (
+				DiversityEvidence.format_text(_diversity_evidence_state)
+				if not _diversity_evidence_state.is_empty()
+				else "VIS4.8 DIVERSITY EVIDENCE\nUnavailable until a completed generation > 0 has exact Descriptor V2 + PH5 evidence."
+			)
+	_refresh_hud_text()
+	return diversity_evidence_visible
+
+
+func toggle_diversity_evidence() -> bool:
+	return set_diversity_evidence_visible(not diversity_evidence_visible)
+
+
+func _refresh_diversity_evidence() -> bool:
+	_diversity_evidence_state = {}
+	if presentation == null:
+		return false
+	var generation := int(_published_snapshot.get("generation", -1))
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	if generation < 1 or ecology_hash.length() != 64 or _published_morphology_descriptors.is_empty():
+		return false
+	if int(_published_morphology_descriptors.get("generation", -2)) != generation:
+		return false
+	if String(_published_morphology_descriptors.get("source_ecology_state_hash", "")) != ecology_hash:
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	var render_identities: Array = []
+	for index in range(descriptors.size()):
+		render_identities.append(presentation.get_ph5_record_identity(index))
+	_diversity_evidence_state = DiversityEvidence.build(
+		generation,
+		ecology_hash,
+		_published_morphology_descriptors,
+		render_identities
+	)
+	if diversity_evidence_visible and diversity_evidence_label != null:
+		diversity_evidence_label.text = (
+			DiversityEvidence.format_text(_diversity_evidence_state)
+			if not _diversity_evidence_state.is_empty()
+			else "VIS4.8 DIVERSITY EVIDENCE\nSource binding rejected / unavailable."
+		)
+	return not _diversity_evidence_state.is_empty()
 
 
 func select_morphology_inspector_index(index: int) -> bool:
@@ -913,6 +984,11 @@ func get_play0_status() -> Dictionary:
 		"morphology_inspector_selected_index": _morphology_inspector_index,
 		"morphology_inspector_record_id": _morphology_inspector_record_id,
 		"morphology_inspector_hash": String(_morphology_inspector_state.get("inspector_hash", "")),
+		"diversity_evidence_visible": diversity_evidence_visible,
+		"diversity_evidence_hash": String(_diversity_evidence_state.get("evidence_hash", "")),
+		"live_diversity_status": String(_diversity_evidence_state.get("live_diversity_status", "")),
+		"morphology_cluster_count": int(_diversity_evidence_state.get("cluster_count", 0)),
+		"morphology_varying_field_count": int(_diversity_evidence_state.get("varying_field_count", 0)),
 	}
 
 
@@ -934,6 +1010,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F6:
 				toggle_morphology_inspector()
+				get_viewport().set_input_as_handled()
+			KEY_F7:
+				toggle_diversity_evidence()
 				get_viewport().set_input_as_handled()
 			KEY_P:
 				set_auto_evolution(not auto_evolution)
@@ -1027,6 +1106,7 @@ func _build_hud() -> void:
 		"N           advance exactly one generation",
 		"B           biome overlay ON / OFF",
 		"F6          morphology inspector for nearest live PH5 plant",
+		"F7          diversity evidence (renderer gate + live variance)",
 		"F1          this help           Esc release/capture mouse",
 	]))
 	help_label.add_theme_font_size_override("font_size", 15)
@@ -1047,6 +1127,21 @@ func _build_hud() -> void:
 	morphology_inspector_label.add_theme_font_size_override("font_size", 14)
 	morphology_inspector_panel.add_child(morphology_inspector_label)
 	hud_layer.add_child(morphology_inspector_panel)
+
+	diversity_evidence_panel = PanelContainer.new()
+	diversity_evidence_panel.name = "VIS48DiversityEvidencePanel"
+	diversity_evidence_panel.position = Vector2(16, 335)
+	diversity_evidence_panel.size = Vector2(940, 610)
+	diversity_evidence_panel.visible = false
+	diversity_evidence_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diversity_evidence_label = Label.new()
+	diversity_evidence_label.name = "VIS48DiversityEvidenceText"
+	diversity_evidence_label.custom_minimum_size = Vector2(920, 590)
+	diversity_evidence_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diversity_evidence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	diversity_evidence_label.add_theme_font_size_override("font_size", 13)
+	diversity_evidence_panel.add_child(diversity_evidence_label)
+	hud_layer.add_child(diversity_evidence_panel)
 
 
 func _refresh_hud_text() -> void:
@@ -1082,6 +1177,11 @@ func _refresh_hud_text() -> void:
 		"Inspector: %s    selected: %s    F6 toggle" % [
 			"ON" if morphology_inspector_visible else "OFF",
 			_morphology_inspector_record_id if not _morphology_inspector_record_id.is_empty() else "<none>",
+		],
+		"Diversity: %s    %s    clusters %d    F7 toggle" % [
+			"ON" if diversity_evidence_visible else "OFF",
+			String(_diversity_evidence_state.get("live_diversity_status", "<unavailable>")),
+			int(_diversity_evidence_state.get("cluster_count", 0)),
 		],
 	]))
 
