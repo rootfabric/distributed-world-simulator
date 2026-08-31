@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_SUBSTEP_REVIEW",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+
+  "reviewed_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "reviewed_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+
+  "reviewer": "INDEPENDENT_REVIEWER_P7_3_FRESH_EXACT_SOURCE_R1",
+
+  "reviewed_at_utc": "2026-08-31T06:38:20Z",
+  "verdict": "PASS",
+
+  "required_fixes": [],
+  "rank_up_moves": [
+    "P7.4 persistence/restart must prove a committed but undelivered MatterMaterialBatch survives restart and later delivers exactly once against a restored canonical Item Graph replay ledger.",
+    "When future Item definitions become composition-specific or mass-bearing, evolve only p7/matter-material-delivery policy mapping; never add a second Item Graph, Matter balance, or receipt store.",
+    "P7.5/P7.7 wiring should route the coordinator through the verified player actor_id -> logical_player_id projection and equipped-tool checks from the P7.0 owner map rather than a new identity path.",
+    "Consider asserting in later stages that no product code calls the adapter directly with a fabricated batch; keep the coordinator (MW4 receiver lookup + COMMITTED result binding) the only production entry."
+  ],
+  "evidence_gaps": [
+    "Implementer did not complete a fresh standalone P7.2 bubble process shutdown in its container (P7.2 files are unchanged in this delta); the fresh independent Verifier must run the full RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh including the P7.2 bubble stage.",
+    "Runtime Project Control run 33360078991 = SUCCESS and the immutable-source export identity (PR #375, artifact 9747515061, reconstructed TREE 99dea175...) were accepted from recorded control evidence; this Reviewer independently confirmed the exact git HEAD/TREE and six-file delta locally but did not re-execute Project Control pipelines."
+  ],
+  "findings": [
+    {
+      "id": "P7.3-R1-F001",
+      "severity": "INFO",
+      "summary": "Adapter-level direct delivery with a locally constructed valid batch is technically possible because the adapter is a low-level port, but the guarded production entry (coordinator) enforces MW4 receiver retrieval, COMMITTED result, operation-id, mass, and actor binding, matching the owner-map architecture of the existing trusted server-output seam. Not blocking."
+    },
+    {
+      "id": "P7.3-R1-F002",
+      "severity": "INFO",
+      "summary": "Cross-player redirect is rejected by the canonical replay fingerprint (player is part of the fingerprint hash in lookup_replay), yielding OPERATION_REPLAY_CONFLICT without mutation; verified in item graph base service source and covered behaviorally by the cross-player test. Not blocking."
+    },
+    {
+      "id": "P7.3-R1-F003",
+      "severity": "INFO",
+      "summary": "QUANTIZATION_EPSILON_KG (1e-12) only stabilizes values already integral within Matter contract tolerance; the over-representation guard (represented_mass_kg > total_mass_kg + 1e-9 fails closed) prevents any round-up of a genuine fractional remainder. Not blocking."
+    }
+  ],
+  "checked_items": [
+    "exact identity: fetched origin branches; runtime HEAD b4b11a69ef921c59b28208685cf26509c3b81907, TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00, dispatch HEAD d840095f..., validation carrier HEAD 5bfb31c... all match; runtime worktree clean (status --porcelain --untracked-files=no empty) = PASS",
+    "six-file delta: git diff --check clean; name-only diff from canonical main 8ae419bb equals exactly the six declared files (all additions); no changes under scripts/simulation/matter/contracts, scripts/simulation/matter/mutation, scripts/runtime/networked_gameplay/m4, scripts/network, config/architecture, architecture-ownership = PASS",
+    "canonical ownership: MatterMaterialBatch stays immutable provenance (contract validate + full-payload checksum); only spendable inventory is the existing canonical Item Graph; policy is static, adapter holds only an item_graph reference, coordinator holds only matter_service/adapter references; no P7ResourceInventory/P7MatterBalance/P7DeliveryReceiptStore/P7ReplayLedger/second Item Graph/persistence owner; grep for receipt/ledger/balance/_batches/_delivered finds only contract_report declarations = PASS",
+    "1 kg -> item/ore policy: explicit POLICY_ID p7/matter-material-delivery/r1, OUTPUT item/ore, KG_PER_ITEM_UNIT 1.0, bounded to the four supported lunar geological material IDs, undeclared materials fail closed with P7_UNSUPPORTED_MATTER_MATERIAL; Item Graph is not claimed to store physical mass = ACCEPT",
+    "mass conservation: floor quantization with explicit represented/residual split, over-representation guard, residual clamp >= 0, conservation error check within 1e-9; 12.75 -> 12 + 0.75 and 0.75 -> RESIDUAL_ONLY covered behaviorally = PASS",
+    "residual accounting: residual stays inside the immutable batch plan/provenance, never becomes spendable inventory or a P7 balance = PASS",
+    "unsupported materials: matter/water-ice fixture rejected with P7_UNSUPPORTED_MATTER_MATERIAL = PASS",
+    "Item Graph exactly-once ownership: adapter calls only preflight_server_output/apply_server_output on the existing canonical service; deterministic operation id (sha256 of batch_id); source_id = batch_id + FULL batch checksum (checksum computed by matter_contract_utils.compute_checksum over the entire payload minus checksum); replay owned solely by the existing _ledger/lookup_replay = PASS",
+    "full batch checksum replay binding: fingerprint payload includes source_id; same batch_id with changed mass (4.4 -> 4.8, same floored quantity) fails with cause OPERATION_REPLAY_CONFLICT and byte-identical Item Graph snapshot = PASS",
+    "cross-player/content replay conflict: fingerprint includes player id; redirect of same batch to second player fails OPERATION_REPLAY_CONFLICT mutation-free = PASS",
+    "committed-Matter failure/retry: coordinator validates request/result contracts, same operation_id, status COMMITTED, exactly one created aggregate, batch fetched via matter_service.material_receiver().get_batch, source_operation_id match, mass within 0.001 kg, actor player/<logical_id> canonical form; full-inventory CONTAINER_FULL leaves Item Graph snapshot and MW4 receiver export byte-identical; later same-batch delivery succeeds once; further retry is byte-stable replay = PASS",
+    "behavioral tests: real LunarMatterBubble, real MW4 excavation, real committed batch, canonical Item Graph snapshots compared byte-wise, tampered actor request rejected by checksum validation; no FileAccess/get_file_as_string/contains tautologies found = PASS",
+    "stage boundary: convergence plan defines P7.3 exit as MASS_CONSERVATION_AND_ITEM_GRAPH_PASS with P7.4 persistence, P7.5 two-client convergence, P7.7 graphical slice as later stages; focused real-chain LunarMatterBubble -> MW4 -> batch -> coordinator -> canonical Item Graph satisfies the staged exit; deferral is explicit in evidence, not hidden = ACCEPT",
+    "no hidden P7 state: NONE FOUND"
+  ],
+  "risk_assessment": "Runtime risk is LOW for the staged P7.3 boundary. The change is purely additive composition (three small P7 classes + tests + gate scripts) over unchanged Matter contracts, MW4 receiver, and canonical Item Graph. Exactly-once correctness rests entirely on the existing canonical replay ledger with a full-immutable-batch-checksum binding, so content-tamper and cross-player redirects fail closed without mutation. Residual semantic risk (generic item/ore collapsing lunar composition) is an explicit product policy that later stages can revise in the policy file alone. Execution risk is concentrated in the not-yet-freshly-run P7.2 bubble stage, which the independent Verifier must cover via the full canonical gate before any merge decision.",
+  "summary": "Fresh independent read-only review of exact HEAD b4b11a69ef921c59b28208685cf26509c3b81907 (TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00). Exact identity and the six-file additive delta from canonical main 8ae419bb verified locally. All P7.3 invariants hold in exact source: immutable Matter batch provenance is preserved, the canonical Item Graph remains the only spendable inventory and the only exactly-once replay owner, the delivery plan conserves mass with explicit bounded residual, unsupported materials fail closed, the replay fingerprint binds the full batch checksum plus player identity so content-tamper and redirect conflicts are mutation-free, and the coordinator enforces the MW4 receiver/COMMITTED-result provenance boundary so fabricated batches cannot enter production delivery. Behavioral tests exercise the real LunarMatterBubble -> MW4 -> Item Graph chain with byte-stable snapshot comparisons. Deferring production caller wiring to P7.5/P7.7 matches the recorded convergence plan and is accepted as a valid staged boundary. No blocking findings. PASS opens the fresh independent Verifier only; no merge authorization."
+}
