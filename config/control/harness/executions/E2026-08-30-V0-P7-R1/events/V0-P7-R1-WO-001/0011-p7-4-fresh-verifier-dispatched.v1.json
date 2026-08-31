@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0011",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 11,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T11:42:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-fresh-verifier-dispatch-r1",
+  "head_sha": "1b1769e1938d82fde0091315dd4b26a96c0085bc",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE",
+  "command": "DISPATCH_FRESH_P7_4_INDEPENDENT_UBUNTU_VERIFIER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-DISPATCH-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-INSTRUCTION-001.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json"
+  ],
+  "summary": "Fresh independent Reviewer R1 PASS is durable at abd753941f2bc4f9ff771e8501f261505b61c7de and Project Control-green (33388053145). Fresh independent Ubuntu Verifier is dispatched for exact frozen P7.4 runtime HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef. The Verifier must execute the complete 16-stage canonical P7.4 gate in a fresh detached Ubuntu worktree with exact double Godot, no external 180-second cap, all 17 logs scanned and hashed, and must freshly close P7.2 bubble, MW4, MW5, MW6, and M6 recovery processes.",
+  "blocker": "FRESH_INDEPENDENT_UBUNTU_VERIFIER_P7_4_RESULT_PENDING"
+}
