@@ -1,5 +1,5 @@
 Checkpoint: FABRIC-BAKE B0.1 — Exact Boundary Reduction / Schur elimination
-Status: IMPLEMENTED CANDIDATE / EXACT-HEAD VERIFICATION PENDING
+Status: RESEARCH CHECKPOINT CLOSED / EXACT-HEAD DOUBLE PASS
 Predecessor: B0.0 closure d389b8ed72ffbed8949279b42089da3687125a90
 Branch: research/fabric-bake0-1-exact-boundary-reduction-r1
 
@@ -24,6 +24,6 @@ Evidence/docs:
 docs/research/FABRIC_BAKE_B0_1_EXACT_BOUNDARY_REDUCTION_RU.md
 validation/fabric-bake-b0-1-exact-boundary-reduction-validation.json
 fabric-bake-b0-1-exact-boundary-reduction-files.txt
-.github/workflows/fabric-bake-b0-1-exact-head.yml
 
 B0.0 contracts are reused rather than forked.
+Platform policy: Ubuntu/Linux exact-double is authoritative; Windows is PASS_BY_POLICY / NON-GATING.

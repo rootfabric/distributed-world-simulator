@@ -142,6 +142,24 @@ The current whole-project control summary was YELLOW because of unrelated active
 frontiers. This closure only records that the exact B0.1 subject did not introduce a
 control-command failure; it does not declare the entire project GREEN.
 
+
+## Platform verification policy
+
+For FABRIC-BAKE, Ubuntu/Linux exact-double verification is the required and sufficient
+platform gate for research checkpoint closure.
+
+```text
+Ubuntu/Linux exact-double = REQUIRED / AUTHORITATIVE
+Windows                   = PASS_BY_POLICY / NON-GATING
+Windows execution evidence = NOT REQUIRED
+```
+
+The former queued Windows run `33348754783` is obsolete as closure evidence and is not
+part of the B0.1 chain. Its queue/offline state has no status effect.
+
+`PASS_BY_POLICY` records the accepted compatibility policy; it is not a claim that the
+specific Windows workflow actually executed.
+
 ## What was proven
 
 ```text

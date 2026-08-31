@@ -8,7 +8,7 @@
     "closure_head": "d389b8ed72ffbed8949279b42089da3687125a90",
     "status": "RESEARCH_CHECKPOINT_CLOSED_EXACT_HEAD_DOUBLE_PASS"
   },
-  "candidate_status": "IMPLEMENTED_CANDIDATE",
+  "candidate_status": "CLOSED_BY_SEPARATE_CLOSURE_RECORD",
   "production_acceptance_claimed": false,
   "runtime": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
@@ -40,12 +40,15 @@
     }
   },
   "required_exact_head_evidence": {
-    "implementation_head": null,
-    "implementation_tree": null,
-    "b0_0_predecessor_acceptance": "PENDING",
-    "b0_1_focused_acceptance": "PENDING",
-    "b0_1_playground": "PENDING",
-    "self_hosted_windows_verification": "PENDING"
+    "implementation_head": "e854185f501cfc2658d5d1c5430be4eed3b070ee",
+    "implementation_tree": "0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0",
+    "b0_0_predecessor_acceptance": "PASS",
+    "b0_1_focused_acceptance": "PASS",
+    "b0_1_playground": "PASS",
+    "platform_policy": {
+      "ubuntu_linux_double": "REQUIRED_PASS",
+      "windows": "PASS_BY_POLICY_NON_GATING"
+    }
   },
   "claims": [
     "deterministic exact Schur reduction for a well-posed linear internal block",

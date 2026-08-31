@@ -194,11 +194,14 @@ Linux:
 ./RUN_FABRIC_BAKE_B0_1_TESTS.sh
 ```
 
-Windows:
+Windows (optional manual portability check, non-gating):
 
 ```powershell
 .\RUN_FABRIC_BAKE_B0_1_TESTS.ps1
 ```
+
+FABRIC-BAKE closure does not require a Windows run. Windows is `PASS_BY_POLICY` unless a
+checkpoint explicitly introduces a platform-specific exception.
 
 Runner выполняет:
 
@@ -221,7 +224,7 @@ RESEARCH CHECKPOINT CLOSED
 EXACT-HEAD DOUBLE PASS
 ```
 
-только после fresh full-repository exact-HEAD execution B0.0→B0.1, exact HEAD/TREE evidence и отдельной closure фиксации.
+только после fresh full-repository exact-HEAD execution B0.0→B0.1 на canonical Ubuntu/Linux double-Godot path, exact HEAD/TREE evidence и отдельной closure фиксации. Отдельный Windows run не требуется.
 
 Следующий roadmap checkpoint после закрытия B0.1:
 

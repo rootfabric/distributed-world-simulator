@@ -90,10 +90,15 @@
     "global_summary": "YELLOW",
     "note": "Global YELLOW reflects unrelated active project frontiers and is not reclassified by B0.1 closure."
   },
-  "auxiliary_windows_gate": {
-    "run_id": 33348754783,
-    "status_at_closure": "QUEUED",
-    "required_for_research_closure": false
-  },
-  "next_checkpoint": "B0.2_STRUCTURAL_AGGREGATE_BAKE_REFINEMENT_GUARDS_LOCAL_UNBAKE"
+  "next_checkpoint": "B0.2_STRUCTURAL_AGGREGATE_BAKE_REFINEMENT_GUARDS_LOCAL_UNBAKE",
+  "platform_verification_policy": {
+    "required_platform": "UBUNTU_LINUX_DOUBLE",
+    "required_platform_status": "PASS",
+    "windows_default_result": "PASS_BY_POLICY",
+    "windows_execution_evidence_required": false,
+    "windows_is_closure_gate": false,
+    "legacy_windows_run_id": 33348754783,
+    "legacy_windows_run_role": "OBSOLETE_NON_GATING",
+    "note": "PASS_BY_POLICY is a compatibility policy result, not evidence that a Windows binary was executed."
+  }
 }

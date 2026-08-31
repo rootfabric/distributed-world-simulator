@@ -1539,3 +1539,56 @@ STRUCTURAL AGGREGATE BAKE
 ```
 
 Physical Core / FABRIC0.16 continues independently.
+
+
+---
+
+## FABRIC-BAKE platform verification policy — 2026-08-31
+
+Для FABRIC-BAKE B0.x обязательная acceptance-цепь теперь платформенно нейтральна и
+опирается на canonical Ubuntu/Linux double-Godot verification:
+
+```text
+exact Git HEAD/TREE
+        ↓
+fresh Ubuntu/Linux tracked tree
+        ↓
+pinned Godot double identity
+        ↓
+fresh import
+        ↓
+predecessor regression
+        ↓
+focused checkpoint acceptance
+        ↓
+fresh repeat / exact-head evidence
+        ↓
+CLOSED
+```
+
+Windows verification удалена из обязательной цепи.
+
+Policy semantics:
+
+```text
+Ubuntu/Linux exact-double:
+REQUIRED
+AUTHORITATIVE FOR FABRIC-BAKE CHECKPOINT CLOSURE
+
+Windows:
+PASS_BY_POLICY
+NON-GATING
+NO SEPARATE EXECUTION EVIDENCE REQUIRED
+```
+
+`PASS_BY_POLICY` означает принятое cross-platform compatibility assumption для
+FABRIC-BAKE и не должно интерпретироваться как утверждение, что конкретный Windows
+binary действительно был запущен.
+
+Windows runner/script может использоваться вручную для диагностики или portability
+investigation, но его отсутствие, offline state, queue state или отсутствие Windows
+evidence не переводят checkpoint в PENDING/RED и не блокируют следующий B0.x.
+
+Если в будущем появится Windows-specific код, platform-specific native dependency или
+расхождение поведения, отдельная Windows verification может быть возвращена только как
+явно объявленный exception для конкретного checkpoint.
