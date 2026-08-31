@@ -664,3 +664,72 @@ B0.3 final acceptance is explicitly blocked until FABRIC0.16 provides general co
 - где лежат `FABRIC_BAKE_ROADMAP_RU.md` и `FABRIC_BAKE_ARCHITECTURE_RU.md`.
 
 Если это нельзя восстановить только из Git, recovery contract нарушен.
+
+
+## 10. FABRIC0.16 — active Physical Core successor
+
+После dual-track frontier Physical Core действительно стартовал отдельным successor slice.
+
+Current durable state:
+
+```text
+FABRIC0.15
+RESEARCH CANDIDATE CLOSED
+        ↓
+FABRIC0.16
+S1 — GENERAL CONVEX MANIFOLD + GRAPH LCP
+IMPLEMENTED
+EXACT LINUX DOUBLE PASS
+110/110
+IN PROGRESS
+NOT CLOSED
+```
+
+Читать:
+
+```text
+docs/research/FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_RU.md
+docs/research/FABRIC0_16_PROGRESS_RU.md
+validation/fabric0-compositional-world-fabric-v16-s1-validation.json
+```
+
+S1 уже переносит Physical Core через следующие стены FABRIC0.15:
+
+```text
+explicit convex polytope support mapping
+→ deterministic GJK / EPA
+→ clipped persistent 1..4 point face manifold
+→ deterministic sweep-and-prune research broadphase
+→ graph-wide 8-row regularized active-set normal LCP
+→ coupled Coulomb normal/tangent fixed point
+→ canonical caller-order-independent solution
+```
+
+Important numerical boundary:
+
+```text
+normal_regularization = 1e-9
+```
+
+Она явная и observable. S1 не выдаёт regularized active-set solve + converged friction outer loop за универсально сертифицированный монолитный Signorini-Coulomb MCP/NCP.
+
+Current open walls before FABRIC0.16 can be considered for closure:
+
+```text
+adaptive contact/separation localization
+root-localized stick/slide
+persistent manifold evolution through events
+same-world parallel island execution
+refinement across those events
+```
+
+Next bounded slice:
+
+```text
+FABRIC0.16 S2
+ADAPTIVE CONVEX CONTACT EVENTS
++
+SAME-WORLD PARALLEL ISLANDS
+```
+
+Construction remains canonical semantic owner. FABRIC0.16 remains research physical execution substrate.

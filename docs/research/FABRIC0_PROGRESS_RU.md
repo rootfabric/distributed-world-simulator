@@ -3149,3 +3149,111 @@ FABRIC0.16 — GENERAL CONVEX MULTIPOINT MCP
 FABRIC-BAKE:
 B0.0 — BAKE FOUNDATION CONTRACTS
 ```
+
+
+## FABRIC0.16 S1 — GENERAL CONVEX MANIFOLD + GRAPH LCP
+
+**Predecessor frontier:** `962b9c1bbf7f04c7853f1fb0e36480cf54f3250d`  
+**Design:** `docs/research/FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_RU.md`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v16-s1-validation.json`  
+**Recovery note:** `docs/research/FABRIC0_16_PROGRESS_RU.md`  
+**Status:** `IMPLEMENTED / EXACT_LINUX_DOUBLE_PASS / 110_110_PASS / RESEARCH_SLICE_ONLY / NOT_CLOSED`.
+
+### S1 executable boundary
+
+```text
+convex vertices/faces
++
+support mapping
++
+GJK intersection
++
+EPA penetration/witness
++
+persistent clipped 1..4 point manifold
++
+research sweep-and-prune broadphase
++
+graph-wide normal active-set LCP
++
+coupled Coulomb friction fixed point
+```
+
+Main graph falsifier:
+
+```text
+A
+↕ 4 manifold rows
+B
+↕ 4 manifold rows
+C
+
+8 global normal rows
+W[0,4] = -3.5
+```
+
+Frictionless pair impulses:
+
+```text
+A|B = 0.99999999975
+B|C = 0.99999999975
+```
+
+Strong sliding falsifier:
+
+```text
+8/8 slide
+coupling iterations = 253
+max complementarity violation = 3.8684533357081426e-11
+max cone violation = 6.938893903907228e-18
+linear momentum error = 8.921809491438631e-16
+angular momentum error = 3.553147333202946e-15
+kinetic energy delta = -3.48593081473464
+```
+
+Exact runtime:
+
+`Godot 4.7.1.stable.double.custom_build.a13da4feb`.
+
+Acceptance:
+
+```text
+FABRIC0.16 General Convex Multipoint MCP S1 Acceptance:
+PASS
+110/110
+```
+
+Playground:
+
+`FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_S1_PLAYGROUND_PASS`.
+
+Editor parse/compile scan: `CLEAN`.
+
+### Findings closed in S1
+
+- redundant face rows made the first semismooth generalized Jacobian singular;
+- compact GDScript pivot control flow contained a hidden bug;
+- one-pass tangent solve reopened normal complementarity;
+- separate penetration witness lever arms could create artificial internal torque.
+
+Accepted S1 uses explicit canonical active-set normal LCP, observable `1e-9` diagonal regularization, explicit pivot blocks, outer normal/tangent fixed point, and shared manifold impulse points.
+
+### S1 non-claims
+
+FABRIC0.16 is **not closed**. Still open:
+
+- adaptive contact/separation event localization;
+- root-localized stick/slide;
+- same-world parallel island execution;
+- refinement across event-driven convex manifold evolution;
+- monolithic globally certified Signorini-Coulomb MCP/NCP;
+- production broadphase/block-sparse/thread-pool backend.
+
+### Next slice
+
+```text
+FABRIC0.16 S2
+ADAPTIVE CONVEX CONTACT EVENTS
++
+SAME-WORLD PARALLEL ISLANDS
+```
