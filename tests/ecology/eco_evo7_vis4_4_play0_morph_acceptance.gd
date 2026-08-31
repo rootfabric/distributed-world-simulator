@@ -59,6 +59,8 @@ func _run() -> void:
 	_check(bool(contract.get("uses_vis4_exact_ph5", false)), "presentation reports exact VIS4 PH5")
 	_check(not bool(contract.get("legacy_founder_fallback", true)), "legacy fallback disabled for live plants")
 	_check(not presentation.stems_node.visible and not presentation.crowns_node.visible, "Box/Sphere nodes hidden on live generation")
+	_check(presentation.stems_node.multimesh.instance_count == 0, "legacy stem MultiMesh emptied on live generation")
+	_check(presentation.crowns_node.multimesh.instance_count == 0, "legacy crown MultiMesh emptied on live generation")
 	_check(String(contract.get("source_ecology_hash", "")) == ecology_hash, "PH5 presentation binds ecology hash")
 	_check(String(ph5.get("source_ecology_hash", "")) == ecology_hash, "PH5 renderer binds exact ecology hash")
 	_check(String(ph5.get("source_adapter_hash", "")) == String(morph.get("adapter_hash", "")), "PH5 binds Descriptor V2 adapter hash")
