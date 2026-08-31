@@ -21,7 +21,7 @@ extends Node3D
 ## The whole runtime is presentation-only: no persistence writes, no network
 ## authority, no ecology-authority replacement.
 
-const REVISION := "ECO.EVO7-PLAY0.FINAL.R2"
+const REVISION := "ECO.EVO7-PLAY0.FINAL.R3-VIS4.4"
 const TITLE := "ECO EVO7 — PLAY0 Live Planet Playground"
 
 const EarthWorldScript = preload(
@@ -38,6 +38,9 @@ const WorkbenchScript = preload(
 )
 const Vis2AdapterScript = preload(
 	"res://scripts/labs/ecology/eco_evo7_vis2_phenotype_render_adapter.gd"
+)
+const Vis4AdapterScript = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd"
 )
 const PresentationScript = preload(
 	"res://scripts/labs/ecology/eco_evo7_play0_planet_presentation.gd"
@@ -74,6 +77,7 @@ var _spectator_body_visual: MeshInstance3D = null
 var _spectator_body_world_position := Vector3.ZERO
 var _spectator_body_basis := Basis.IDENTITY
 var vis2_adapter = null
+var vis4_adapter = null
 var presentation = null
 
 # PLAY0-local single-flight generation bridge state.
@@ -98,6 +102,8 @@ var _last_generation_ms := -1.0
 var _published_snapshot: Dictionary = {}
 var _published_ecology: Dictionary = {}
 var _published_descriptors: Dictionary = {}
+var _published_morphology_descriptors: Dictionary = {}
+var _published_reconstruction: Dictionary = {}
 
 # Terrain collision state.
 var _terrain_body: StaticBody3D = null
@@ -150,6 +156,7 @@ func initialize_runtime() -> bool:
 		logger.error("play0", "workbench_setup_failed", {})
 		return false
 	vis2_adapter = Vis2AdapterScript.new()
+	vis4_adapter = Vis4AdapterScript.new()
 	# Generation zero is published synchronously (no thread needed yet).
 	_publish_completed_snapshot(workbench.get_workbench_snapshot(), false)
 
@@ -176,6 +183,7 @@ func initialize_runtime() -> bool:
 	player.setup(earth_world, logger, "earth_humanoid")
 	player.teleport_to_surface(patch_center)
 	player.activate_after_spawn()
+	presentation.set_view_world_position(player.get_world_position())
 
 	spectator = SpectatorScript.new()
 	spectator.name = "Play0Spectator"
@@ -276,16 +284,20 @@ func _apply_local_daylight(patch_center: Vector3) -> void:
 func _update_view(delta: float) -> void:
 	if earth_world == null:
 		return
+	var view_position := Vector3.ZERO
 	if mode == MODE_SPECTATOR and spectator != null:
-		var view_position: Vector3 = spectator.get_world_position()
+		view_position = spectator.get_world_position()
 		earth_world.update_for_view(view_position, view_position, true, delta)
 	elif player != null:
+		view_position = player.get_world_position()
 		earth_world.update_for_view(
-			player.get_world_position(),
+			view_position,
 			earth_world.get_render_origin(),
 			false,
 			delta
 		)
+	if presentation != null and view_position.length_squared() > 1.0:
+		presentation.set_view_world_position(view_position)
 
 
 # ------------------------------------------------------------------
@@ -530,6 +542,9 @@ func _poll_generation_thread() -> void:
 
 
 func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool) -> void:
+	## Atomically publishes only a complete presentation source. Generation zero
+	## uses the legacy founder fallback; generation > 0 must carry exact VIS4.1
+	## descriptors + VIS4.3 reconstruction evidence and materialize through PH5.
 	if workbench_snapshot.is_empty() or workbench == null:
 		return
 	var ecology_snapshot: Dictionary = workbench.get_ecology_snapshot()
@@ -541,14 +556,55 @@ func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool)
 				"generation": int(ecology_snapshot.get("generation", -1)),
 			})
 		return
+
+	var generation := int(ecology_snapshot.get("generation", -1))
+	var morphology_descriptors: Dictionary = {}
+	var reconstruction: Dictionary = {}
+	if generation > 0:
+		var morphology: Dictionary = workbench.get_morphology_evidence()
+		reconstruction = workbench.get_graph_reconstruction_evidence()
+		if (
+			morphology.is_empty()
+			or not workbench.validate_morphology_evidence(morphology)
+			or reconstruction.is_empty()
+			or not workbench.validate_graph_reconstruction_evidence(reconstruction)
+		):
+			if logger != null:
+				logger.error("play0", "vis4_source_evidence_incomplete", {
+					"generation": generation,
+				})
+			return
+		morphology_descriptors = vis4_adapter.build(ecology_snapshot, morphology)
+		if morphology_descriptors.is_empty():
+			if logger != null:
+				logger.error("play0", "vis4_descriptor_build_failed", {
+					"generation": generation,
+				})
+			return
+
+	# Presentation is committed first. If PH5 rejects any source record, all
+	# published state below stays on the previous completed generation.
+	if presentation != null and presentation.initialized:
+		if not presentation.apply_snapshot(
+			descriptors,
+			classification,
+			morphology_descriptors,
+			reconstruction
+		):
+			if logger != null:
+				logger.error("play0", "presentation_atomic_publish_rejected", {
+					"generation": generation,
+				})
+			return
+
 	_published_snapshot = workbench_snapshot.duplicate(true)
 	_published_ecology = ecology_snapshot.duplicate(true)
-	_published_descriptors = descriptors
+	_published_descriptors = descriptors.duplicate(true)
+	_published_morphology_descriptors = morphology_descriptors.duplicate(true)
+	_published_reconstruction = reconstruction.duplicate(true)
 	if measured:
 		_completed_generations += 1
 		_last_generation_ms = float(Time.get_ticks_msec() - _gen_started_msec)
-	if presentation != null and presentation.initialized:
-		presentation.apply_snapshot(_published_descriptors, classification)
 	_refresh_hud_text()
 
 
@@ -629,6 +685,18 @@ func get_published_snapshot() -> Dictionary:
 	return _published_snapshot.duplicate(true)
 
 
+func get_published_descriptors() -> Dictionary:
+	return _published_descriptors.duplicate(true)
+
+
+func get_published_morphology_descriptors() -> Dictionary:
+	return _published_morphology_descriptors.duplicate(true)
+
+
+func get_published_reconstruction_evidence() -> Dictionary:
+	return _published_reconstruction.duplicate(true)
+
+
 func get_authorities() -> Dictionary:
 	var snapshot_authorities: Dictionary = _published_snapshot.get("authorities", {})
 	return {
@@ -653,6 +721,7 @@ func get_play0_status() -> Dictionary:
 	var view_direction: Vector3 = (
 		view_position.normalized() if view_position.length_squared() > 1.0 else Vector3.UP
 	)
+	var presentation_contract: Dictionary = presentation.get_contract() if presentation != null else {}
 	return {
 		"revision": REVISION,
 		"mode": mode,
@@ -673,6 +742,8 @@ func get_play0_status() -> Dictionary:
 		"mouse_captured": mouse_captured,
 		"player_camera_mode": player.get_camera_mode() if player != null else "",
 		"spectator_body_visible": is_spectator_body_visible(),
+		"ph5_active": bool(presentation_contract.get("ph5_active", false)),
+		"ph5": Dictionary(presentation_contract.get("ph5", {})).duplicate(true),
 	}
 
 
