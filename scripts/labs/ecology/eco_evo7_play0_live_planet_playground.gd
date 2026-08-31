@@ -1026,9 +1026,11 @@ func _build_hud() -> void:
 	morphology_inspector_panel.position = Vector2(16, 335)
 	morphology_inspector_panel.size = Vector2(940, 610)
 	morphology_inspector_panel.visible = false
+	morphology_inspector_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	morphology_inspector_label = Label.new()
 	morphology_inspector_label.name = "VIS47MorphologyInspectorText"
 	morphology_inspector_label.custom_minimum_size = Vector2(920, 590)
+	morphology_inspector_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	morphology_inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	morphology_inspector_label.add_theme_font_size_override("font_size", 14)
 	morphology_inspector_panel.add_child(morphology_inspector_label)
