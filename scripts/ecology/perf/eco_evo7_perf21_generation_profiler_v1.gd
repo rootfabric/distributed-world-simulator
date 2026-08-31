@@ -131,28 +131,28 @@ func validate_campaign_config(config: Dictionary) -> Dictionary:
 		errors.append("R2_MEASURED_DRIFT")
 	if int(config["repetitions"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("repetitions", 3)):
 		errors.append("R2_REPETITIONS_DRIFT")
-	if int(config["initial_records"]) != Workbench.INITIAL_RECORDS:
+	if not _integer_value_equals(config["initial_records"], Workbench.INITIAL_RECORDS):
 		errors.append("R2_INITIAL_RECORDS_DRIFT")
-	if Array(config["stream_chunk_sizes"]) != STREAM_CHUNK_SIZES:
+	if not _integer_array_equals(Array(config["stream_chunk_sizes"]), STREAM_CHUNK_SIZES):
 		errors.append("R2_CHUNK_SWEEP_DRIFT")
 	if int(config["audit_interval_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("audit_interval_generations", 10)):
 		errors.append("R2_AUDIT_INTERVAL_DRIFT")
 	if bool(config["audit_generation_1"]) != bool(Dictionary(workload_policy.get("default_stream1", {})).get("audit_generation_1", true)):
 		errors.append("R2_AUDIT_GENERATION_1_DRIFT")
 
-	if int(config["founder_seed"]) != Workbench.FOUNDER_SEED:
+	if not _integer_value_equals(config["founder_seed"], Workbench.FOUNDER_SEED):
 		errors.append("R2_FOUNDER_SEED_DRIFT")
-	if int(config["placement_seed"]) != Workbench.PLACEMENT_SEED:
+	if not _integer_value_equals(config["placement_seed"], Workbench.PLACEMENT_SEED):
 		errors.append("R2_PLACEMENT_SEED_DRIFT")
-	if int(config["evolution_seed"]) != Workbench.EVOLUTION_SEED:
+	if not _integer_value_equals(config["evolution_seed"], Workbench.EVOLUTION_SEED):
 		errors.append("R2_EVOLUTION_SEED_DRIFT")
-	if int(config["environment_seed"]) != Workbench.DEFAULT_ENVIRONMENT_SEED:
+	if not _integer_value_equals(config["environment_seed"], Workbench.DEFAULT_ENVIRONMENT_SEED):
 		errors.append("R2_ENVIRONMENT_SEED_DRIFT")
-	if int(config["world_seed"]) != Workbench.DEFAULT_WORLD_SEED:
+	if not _integer_value_equals(config["world_seed"], Workbench.DEFAULT_WORLD_SEED):
 		errors.append("R2_WORLD_SEED_DRIFT")
 	if typeof(config["competition_enabled"]) != TYPE_BOOL or not bool(config["competition_enabled"]):
 		errors.append("R2_COMPETITION_MODE_DRIFT")
-	if int(config["grid_size"]) != Workbench.GRID_SIZE:
+	if not _integer_value_equals(config["grid_size"], Workbench.GRID_SIZE):
 		errors.append("R2_GRID_SIZE_DRIFT")
 	if not is_equal_approx(float(config["cell_size_m"]), Workbench.CELL_SIZE_M):
 		errors.append("R2_CELL_SIZE_DRIFT")
@@ -292,9 +292,11 @@ func validate_report(report: Dictionary) -> bool:
 	if not bool(validate_campaign_config(config).get("success", false)):
 		return false
 	var context: Dictionary = Dictionary(report["campaign_context"])
-	if context != campaign_context(config):
+	var expected_context := campaign_context(config)
+	var context_hash := campaign_context_hash(context)
+	if context_hash.is_empty() or context_hash != campaign_context_hash(expected_context):
 		return false
-	if String(report["campaign_context_hash"]) != campaign_context_hash(context):
+	if String(report["campaign_context_hash"]) != context_hash:
 		return false
 	if Dictionary(report["authorities"]) != AUTHORITIES:
 		return false
@@ -306,21 +308,26 @@ func validate_report(report: Dictionary) -> bool:
 	var expected_samples := int(config["repetitions"]) * (1 + STREAM_CHUNK_SIZES.size()) * Array(config["recipes"]).size()
 	if samples.size() != expected_samples:
 		return false
+	var normalized_samples: Array[Dictionary] = []
 	for value in samples:
 		if not value is Dictionary:
 			return false
 		var sample: Dictionary = value
-		if not bool(Contract.validate_sample(sample).get("success", false)) or not bool(sample.get("passed", false)):
+		var normalized_sample := _normalize_sample_for_contract(sample)
+		if normalized_sample.is_empty():
 			return false
-		if String(Dictionary(sample["flags"]).get("campaign_context_hash", "")) != String(report["campaign_context_hash"]):
+		if not bool(Contract.validate_sample(normalized_sample).get("success", false)) or not bool(normalized_sample.get("passed", false)):
 			return false
+		if String(Dictionary(normalized_sample["flags"]).get("campaign_context_hash", "")) != String(report["campaign_context_hash"]):
+			return false
+		normalized_samples.append(normalized_sample)
 
 	for repetition in range(int(config["repetitions"])):
-		var serial := _find_sample(samples, DEFAULT_RECIPE, "SERIAL_REFERENCE", 0, repetition)
+		var serial := _find_sample(normalized_samples, DEFAULT_RECIPE, "SERIAL_REFERENCE", 0, repetition)
 		if serial.is_empty():
 			return false
 		for chunk_size in STREAM_CHUNK_SIZES:
-			var streamed := _find_sample(samples, DEFAULT_RECIPE, "STREAM1", chunk_size, repetition)
+			var streamed := _find_sample(normalized_samples, DEFAULT_RECIPE, "STREAM1", chunk_size, repetition)
 			if streamed.is_empty():
 				return false
 			if not bool(Contract.can_compare_execution_modes(serial, streamed).get("success", false)):
@@ -700,21 +707,24 @@ func _configuration_id(execution_mode: String, chunk_size: int) -> String:
 
 
 func _sample_evidence_hash(sample: Dictionary) -> String:
-	var metrics: Dictionary = Dictionary(sample.get("metrics", {}))
+	var normalized := _normalize_sample_for_contract(sample)
+	if normalized.is_empty():
+		return ""
+	var metrics: Dictionary = Dictionary(normalized.get("metrics", {}))
 	var timings: Dictionary = Dictionary(metrics.get("timings_ms", {}))
 	var counts: Dictionary = Dictionary(metrics.get("counts", {}))
 	var memory: Dictionary = Dictionary(metrics.get("memory_bytes", {}))
 	var stream: Dictionary = Dictionary(metrics.get("stream", {}))
 	var window: Dictionary = Dictionary(metrics.get("window", {}))
-	var flags: Dictionary = Dictionary(sample.get("flags", {}))
+	var flags: Dictionary = Dictionary(normalized.get("flags", {}))
 	var parts := PackedStringArray([
 		"PERF2_1_SAMPLE_EVIDENCE_R2",
-		String(sample.get("run_id", "")),
-		String(sample.get("workload_hash", "")),
-		Contract.simulation_workload_hash(Dictionary(sample.get("workload", {}))),
-		Contract.canonical_result_fingerprint(sample),
-		Contract.comparison_key(sample),
-		Contract.execution_comparison_key(sample),
+		String(normalized.get("run_id", "")),
+		String(normalized.get("workload_hash", "")),
+		Contract.simulation_workload_hash(Dictionary(normalized.get("workload", {}))),
+		Contract.canonical_result_fingerprint(normalized),
+		Contract.comparison_key(normalized),
+		Contract.execution_comparison_key(normalized),
 		String(flags.get("configuration_id", "")),
 		String(flags.get("campaign_context_hash", "")),
 		str(int(flags.get("stream_chunk_size", 0))),
@@ -797,6 +807,91 @@ func _config_hash(config: Dictionary) -> String:
 		"%.9f" % float(config.get("cell_size_m", 0.0)),
 		String(config.get("planet_source_kind", "")),
 	])).sha256_text()
+
+
+func _normalize_sample_for_contract(sample: Dictionary) -> Dictionary:
+	var normalized: Dictionary = sample.duplicate(true)
+	if not normalized.has("workload") or not normalized["workload"] is Dictionary:
+		return {}
+	var workload: Dictionary = Dictionary(normalized["workload"])
+	for key in [
+		"warmup_generations", "measured_generations", "repetitions",
+		"initial_records", "parents_per_chunk", "audit_interval_generations",
+		"founder_seed", "placement_seed", "evolution_seed", "environment_seed",
+	]:
+		if not workload.has(key) or not _is_integral_number(workload[key]):
+			return {}
+		workload[key] = int(workload[key])
+	normalized["workload"] = workload
+
+	if not normalized.has("metrics") or not normalized["metrics"] is Dictionary:
+		return {}
+	var metrics: Dictionary = Dictionary(normalized["metrics"])
+	if not metrics.has("counts") or not metrics["counts"] is Dictionary:
+		return {}
+	var counts: Dictionary = Dictionary(metrics["counts"])
+	for key in [
+		"generation", "population", "parent_count", "candidate_count",
+		"chunk_count", "max_parent_chunk", "max_candidate_chunk",
+	]:
+		if not counts.has(key) or not _is_integral_number(counts[key]):
+			return {}
+		counts[key] = int(counts[key])
+	metrics["counts"] = counts
+
+	if not metrics.has("stream") or not metrics["stream"] is Dictionary:
+		return {}
+	var stream: Dictionary = Dictionary(metrics["stream"])
+	for key in ["stream_calls", "chunks_processed", "serial_audit_calls", "oracle_elided_generations"]:
+		if not stream.has(key) or not _is_integral_number(stream[key]):
+			return {}
+		stream[key] = int(stream[key])
+	metrics["stream"] = stream
+
+	if not metrics.has("memory_bytes") or not metrics["memory_bytes"] is Dictionary:
+		return {}
+	var memory: Dictionary = Dictionary(metrics["memory_bytes"])
+	for key in ["engine_static_bytes", "engine_static_peak_bytes"]:
+		if not memory.has(key) or not _is_integral_number(memory[key]):
+			return {}
+		memory[key] = int(memory[key])
+	for key in ["process_rss_bytes", "process_peak_rss_bytes"]:
+		if memory.has(key) and memory[key] != null:
+			if not _is_integral_number(memory[key]):
+				return {}
+			memory[key] = int(memory[key])
+	metrics["memory_bytes"] = memory
+
+	if metrics.has("window") and metrics["window"] is Dictionary:
+		var window: Dictionary = Dictionary(metrics["window"])
+		if window.has("measured_generations"):
+			if not _is_integral_number(window["measured_generations"]):
+				return {}
+			window["measured_generations"] = int(window["measured_generations"])
+		metrics["window"] = window
+
+	normalized["metrics"] = metrics
+	return normalized
+
+
+func _integer_array_equals(actual: Array, expected: Array[int]) -> bool:
+	if actual.size() != expected.size():
+		return false
+	for index in range(expected.size()):
+		if not _integer_value_equals(actual[index], expected[index]):
+			return false
+	return true
+
+
+func _integer_value_equals(value, expected: int) -> bool:
+	return _is_integral_number(value) and int(value) == expected
+
+
+func _is_integral_number(value) -> bool:
+	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+		return false
+	var number := float(value)
+	return is_finite(number) and number == floor(number)
 
 
 func _valid_target(target: Dictionary) -> bool:
