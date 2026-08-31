@@ -1,0 +1,43 @@
+name: FABRIC-BAKE B0.2-D Materialize Exact Payload
+on:
+  push:
+    branches: [research/fabric-bake0-2-d-commit-helper-r1]
+    paths:
+      - ".github/workflows/fabric-bake-b0-2-d-commit-helper.yml"
+      - ".github/payloads/fabric-bake-b0-2-d-exact.tar.gz"
+permissions:
+  contents: write
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Materialize and commit exact tested B0.2-D payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .github/payloads/fabric-bake-b0-2-d-exact.tar.gz /tmp/b02d.tar.gz
+          echo "b4af7d65a48aec654a5f07860587b49c848c4d40ce9c9a737ee8d8b87c49c441  /tmp/b02d.tar.gz" | sha256sum -c -
+          git fetch origin research/fabric-bake0-2-d-bounded-local-unbake-r1
+          git checkout -B research/fabric-bake0-2-d-bounded-local-unbake-r1 origin/research/fabric-bake0-2-d-bounded-local-unbake-r1
+          test "$(git rev-parse HEAD)" = "da90331f83e94ca71d8979304c084b072a082634"
+          tar -xzf /tmp/b02d.tar.gz -C .
+          test "$(git hash-object scripts/research/fabric_bake0/structural_local_unbake_plan_v1.gd)" = "5a92787285636ae90bbfb25c2d9ae9e71edd8b8c"
+          test "$(git hash-object scripts/research/fabric_bake0/structural_local_unbake_compiler_v1.gd)" = "252095291aedc707a095f556f30224ccb38ac917"
+          test "$(git hash-object scripts/research/fabric_bake0/structural_local_unbake_runtime_v1.gd)" = "41e57fb607b7fef22ee7dac3681e6bbe6343463d"
+          test "$(git hash-object tests/research/fabric_bake0/fabric_bake_b0_2_d_fixture.gd)" = "38cfbecdd02d37a28a04d6bd454469cf2400aa16"
+          test "$(git hash-object tests/research/fabric_bake0/fabric_bake_b0_2_d_acceptance.gd)" = "27e2482dd1fb01bc4d7440c21d18a25d81cc2706"
+          test "$(git hash-object tests/research/fabric_bake0/fabric_bake_b0_2_d_playground.gd)" = "f47cb00aedeb147cae919e45177c21e4e0a86d6f"
+          test "$(git hash-object RUN_FABRIC_BAKE_B0_2_D_TESTS.sh)" = "ed659212c6416c34069f0158416a9fc27bdb9052"
+          git config user.name "rootfabric-bake-bot"
+          git config user.email "rootfabric-bake-bot@users.noreply.github.com"
+          git add --             scripts/research/fabric_bake0/structural_local_unbake_plan_v1.gd             scripts/research/fabric_bake0/structural_local_unbake_compiler_v1.gd             scripts/research/fabric_bake0/structural_local_unbake_runtime_v1.gd             tests/research/fabric_bake0/fabric_bake_b0_2_d_fixture.gd             tests/research/fabric_bake0/fabric_bake_b0_2_d_acceptance.gd             tests/research/fabric_bake0/fabric_bake_b0_2_d_playground.gd             RUN_FABRIC_BAKE_B0_2_D_TESTS.sh
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 7
+          git commit -m "feat(fabric-bake): implement B0.2-D bounded local unbake"
+          git push origin HEAD:research/fabric-bake0-2-d-bounded-local-unbake-r1
+          echo "implementation_head=$(git rev-parse HEAD)"
+          echo "implementation_tree=$(git rev-parse HEAD^{tree})"
