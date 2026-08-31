@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_4_NEXT",
+  "state": "IN_PROGRESS_P7_5_NEXT",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-08-31T17:25:00+10:00",
+  "updated_at_utc": "2026-09-01T07:50:00+10:00",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -127,9 +127,25 @@
     }
   },
   "p7_4": {
-    "status": "NEXT",
-    "scope": "PERSISTENCE_RESTART_COMPOSITION",
+    "status": "COMPLETE_MERGED",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "note": "Prove committed-but-undelivered MatterMaterialBatch survives restart and later delivers exactly once using existing MW5 persistence and canonical Item Graph recovery. No P7-private persistence owner or delivery receipt store."
+    "runtime_subject_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "runtime_merge_pr": 396,
+    "runtime_merge_carrier_pr": 425,
+    "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+    "runtime_merge_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "human_gate": "RUNTIME_FEATURE_MERGE APPROVED"
+  },
+  "p7_5": {
+    "status": "NEXT",
+    "scope": "TWO_CLIENT_CONVERGENCE",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "note": "Prove two-client canonical convergence over existing MW6/MW7/RL2/RL3 while preserving P7.4 restart/replay semantics and the single NetworkedGameplayService aggregate revision owner.",
+    "control_precondition": "Repair pre-existing E2026-08-30-V0-P7-R1 transition-table.v1.json gap before relying on automated -Drive/-Close."
   }
 }

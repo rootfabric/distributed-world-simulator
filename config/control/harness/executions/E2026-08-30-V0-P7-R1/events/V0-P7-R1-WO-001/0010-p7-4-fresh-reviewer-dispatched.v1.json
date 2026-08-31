@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0010",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 10,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T10:53:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-fresh-reviewer-dispatch-r1",
+  "head_sha": "b99c5ecad39ffbf1e25e7c764628c3b0e154853f",
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "command": "DISPATCH_FRESH_P7_4_INDEPENDENT_REVIEWER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-POST-BUILD-CRITIQUE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-REVIEW-SOURCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FRESH-REVIEWER-INSTRUCTION-001.md"
+  ],
+  "summary": "P7.4 exact runtime candidate 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef has runtime Project Control SUCCESS, immutable exact-source export, independent TREE reconstruction, and exact-source three-process restart evidence. Fresh independent Reviewer is dispatched to review persistence ownership, exact MW4 replay, canonical Item Graph exactly-once recovery, aggregate revision progression, the Work Order amendment boundary, and the explicit seed-fixture realism question. Fresh Ubuntu Verifier remains blocked until Reviewer PASS.",
+  "blocker": "FRESH_INDEPENDENT_REVIEWER_P7_4_RESULT_PENDING"
+}

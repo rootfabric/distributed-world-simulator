@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.harness_control_gap.v1",
+  "gap_id": "V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "classification": "PRE_EXISTING_CONTROL_PLANE_GAP",
+  "discovered_during": "P7.4 Fresh Verifier R3 control checks",
+  "symptom": {
+    "drive": "exit 3",
+    "close": "exit 3",
+    "missing_path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/transition-table.v1.json"
+  },
+  "provenance": "The file is absent from the epoch lineage; R1/R2 verifier workflows also operated without it. No P7.4 runtime source introduced or removed this path.",
+  "scope_impact": {
+    "p7_4_runtime_correctness": "NO_PROVEN_IMPACT",
+    "p7_4_review": "UNCHANGED",
+    "p7_4_verification": "UNCHANGED",
+    "p7_4_merge": "UNCHANGED",
+    "automated_drive_close": "BLOCKED",
+    "p7_5_manual_control": "POSSIBLE_BUT_NOT_PREFERRED",
+    "p7_5_automated_control": "REPAIR_REQUIRED_FIRST"
+  },
+  "repair_rule": "Reconstruct or author the epoch transition-table contract as a separate Harness/control task using precedent from prior valid epochs. Do not infer transitions ad hoc from P7.4 runtime evidence and do not retroactively mutate R1/R2/R3 verification records.",
+  "status": "OPEN",
+  "next": "REPAIR_BEFORE_P7_5_AUTOMATED_DRIVE_CLOSE",
+  "blocking_p7_4_closure": false,
+  "blocking_whole_p7_acceptance": false,
+  "blocking_automated_p7_5_drive_close": true
+}

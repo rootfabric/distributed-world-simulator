@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0013",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 13,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T12:48:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-fresh-verifier-dispatch-r2",
+  "head_sha": "0fc65d8bdcd78e7680e9e862ac0f8821d84c27cc",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE_R2",
+  "command": "DISPATCH_FRESH_P7_4_INDEPENDENT_UBUNTU_VERIFIER_R2",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-R2-DISPATCH-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-R2-INSTRUCTION-001.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-001.v1.json"
+  ],
+  "summary": "Fresh Ubuntu Verifier R2 is dispatched for the same frozen P7.4 runtime subject after R1 ended NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT without execution. Exact Linux double Godot availability is repaired by a validated project archive: archive SHA256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92, internal binary SHA256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7, version 4.7.1.stable.double.custom_build.a13da4feb. R2 must run a fully fresh 16-stage/17-log campaign and may inherit no execution evidence from R1.",
+  "blocker": "FRESH_INDEPENDENT_UBUNTU_VERIFIER_P7_4_R2_RESULT_PENDING"
+}

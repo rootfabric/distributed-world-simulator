@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "reason": "P7.4 exact runtime candidate completed Fresh Independent Reviewer R1 PASS and Fresh Independent Verifier R3 VERIFIED under the formal platform amendment, so policy requires an explicit Human RUNTIME_FEATURE_MERGE decision.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for exact runtime PR #396 subject HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for the exact reviewed/verified P7.4 HEAD/TREE.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE and leave the runtime subject unmerged."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for the exact reviewed/verified P7.4 HEAD/TREE.",
+  "recommendation_reason": "Reviewer R1 PASS; Verifier R3 VERIFIED; canonical Windows gate GREEN with 16/16 stages, 1384 assertions / 0 failures, 17/17 logs fatal-clean, exact double Godot identity, tracked-clean before/after; runtime/reviewer/verifier/merge-carrier Project Control runs SUCCESS.",
+  "blast_radius": [
+    "Adds P7.4 persistence/restart composition over existing MW5, M6/V0 recovery, MW4 journal replay, canonical Item Graph replay ledger, and NetworkedGameplayService aggregate revision owner.",
+    "Keeps Matter, Item Graph, persistence, authority and network ownership unchanged.",
+    "Does not accept whole P7; P7.5-P7.7 remain open.",
+    "Does not create a P7-private persistence store, delivery receipt ledger, replay ledger, second Item Graph, or hidden Matter balance.",
+    "The pre-existing missing transition-table.v1.json Harness gap is outside this runtime merge and remains separate control-plane debt."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json"
+  ],
+  "status": "RESOLVED",
+  "resolution": "Human operator explicitly delegated the P7.4 Human RUNTIME_FEATURE_MERGE decision to the control session ('решение за тобой'). The control session selected APPROVE after independently re-checking the exact R3 evidence chain and mergeability. Exact runtime subject entered canonical main via non-draft exact-subject carrier PR #425; GitHub recognizes original PR #396 as merged/closed.",
+  "resolved_at_utc": "2026-08-31T21:43:28Z"
+}

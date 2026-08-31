@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0016",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 16,
+  "event_type": "HUMAN_APPROVAL_RECORDED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-31T21:42:30Z",
+  "actor": "HUMAN",
+  "branch": "control/v0-p7-4-closure-r1",
+  "head_sha": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "predicate": "RUNTIME_FEATURE_MERGE_HUMAN_APPROVAL",
+  "command": "RUNTIME_FEATURE_MERGE APPROVED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json"
+  ],
+  "summary": "Human operator delegated the P7.4 merge decision to the control session; after exact R3 re-check the session approved RUNTIME_FEATURE_MERGE for exact runtime HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef. Approval applies only to P7.4; whole P7 remains IN_PROGRESS.",
+  "blocker": ""
+}

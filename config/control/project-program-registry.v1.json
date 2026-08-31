@@ -271,18 +271,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-3-closure-r1",
-      "passport_path": "config/control/branches/control__v0-p7-3-closure-r1.v1.json",
+      "branch": "control/v0-p7-4-closure-r1",
+      "passport_path": "config/control/branches/control__v0-p7-4-closure-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
       "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
       "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
-      "current_stage": "P7.4 Persistence Restart Composition",
-      "stage_status": "P7_3_COMPLETE_MERGED_P7_4_NEXT",
-      "progress_note": "P7.3 MatterMaterialBatch -> canonical Item Graph is independently reviewed, VERIFIED and merged. Exact runtime b4b11a69ef921c59b28208685cf26509c3b81907 / tree 99dea175fda7bacce936b15d30d9e25fa9e4af00; canonical merge 502d05fe24256fecd52f3092b8e056e74a8b4450. P7.4 is next under the same Work Order and mutation lease.",
+      "current_stage": "P7.5 Two-Client Convergence",
+      "stage_status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
+      "progress_note": "P7.4 persistence/restart composition is independently reviewed PASS, Fresh Windows Verifier R3 VERIFIED under the formal platform amendment, human-approved and merged. Exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73. P7.5 two-client convergence is next under the same Work Order and mutation lease. The missing epoch transition-table is tracked separately as nonblocking P7.4 closure debt and remains a prerequisite only for automated P7.5 -Drive/-Close use.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Implement P7.4 persistence/restart composition: prove committed-undelivered MatterMaterialBatch survives restart and later delivers exactly once using existing MW5 and canonical Item Graph recovery only.",
+      "next_stage": "Repair the pre-existing missing epoch transition-table control contract before relying on automated -Drive/-Close, then implement P7.5 two-client convergence over accepted P7.4 semantics.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -294,13 +294,13 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "b4b11a69ef921c59b28208685cf26509c3b81907",
+        "head_at_refresh_input": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
-        "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
-        "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
-        "next_code_step": "P7.4 persistence/restart composition over existing MW5 and canonical Item Graph."
+        "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+        "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+        "next_code_step": "P7.5 two-client convergence over existing MW6/MW7/RL2/RL3 with canonical Item Graph replay and the accepted P7.4 aggregate revision seam."
       },
       "implementation_blockers": [],
       "acceptance_blockers": [
@@ -369,9 +369,23 @@
         }
       },
       "p7_4": {
-        "state": "NEXT",
+        "state": "COMPLETE_MERGED",
         "scope": "PERSISTENCE_RESTART_COMPOSITION",
-        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_subject_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+        "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+        "runtime_merge_pr": 396,
+        "runtime_merge_carrier_pr": 425,
+        "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
+      },
+      "p7_5": {
+        "state": "NEXT",
+        "scope": "TWO_CLIENT_CONVERGENCE",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "hard_rule": "REUSE_MW6_MW7_RL2_RL3_AND_CANONICAL_REPLAY_NO_SECOND_AGGREGATE_REVISION_OR_RECEIPT_PATH"
       }
     },
     "MATTER": {

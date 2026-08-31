@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0017",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 17,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-08-31T21:43:28Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "summary": "P7.4 exact runtime subject is Reviewer PASS, Verifier R3 VERIFIED, human-approved and merged to canonical main as bfd2d8efec6f499311dea81d9b602f30b3ac6a73. Original draft PR #396 and non-draft exact-subject carrier PR #425 both resolve as merged against the same exact verified subject. P7 remains IN_PROGRESS and advances to P7.5 TWO_CLIENT_CONVERGENCE under the same serialized mutation lease.",
+  "command": "DIRECTOR_RECORD_P7_4_RUNTIME_MERGE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
+  ]
+}

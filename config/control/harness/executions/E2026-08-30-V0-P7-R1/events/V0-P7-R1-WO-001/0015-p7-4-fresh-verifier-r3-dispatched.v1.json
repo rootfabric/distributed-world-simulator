@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0015",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 15,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T19:40:00Z",
+  "actor": "DIRECTOR_UNDER_HUMAN_DIRECTIVE",
+  "branch": "control/v0-p7-4-fresh-verifier-dispatch-r3",
+  "head_sha": "b31d657c9f6987167da233e1d6f212884a095a88",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE_R3",
+  "command": "DISPATCH_FRESH_P7_4_INDEPENDENT_WINDOWS_VERIFIER_R3",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-R3-DISPATCH-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-R3-INSTRUCTION-001.md"
+  ],
+  "summary": "Fresh Verifier R3 is dispatched for the same frozen P7.4 runtime subject 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / TREE 1efad34a075af63169c48dd5055c2537c8d7e6ef (PR #396) on the Windows x86_64 exact double-Godot path authorized by V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001. The campaign must run the repository-owned RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1 with C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe (version 4.7.1.stable.double.custom_build.a13da4feb, observed SHA-256 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5) in a fresh detached exact worktree, fresh import, 16/16 stages, 17 hashed logs with fatal scan, tracked-clean before/after, no external timeout, zero inherited execution evidence from Implementer, Reviewer, R1 or R2. VERIFIED opens only the Human RUNTIME_FEATURE_MERGE gate for PR #396.",
+  "blocker": "FRESH_INDEPENDENT_WINDOWS_VERIFIER_P7_4_R3_RESULT_PENDING"
+}
