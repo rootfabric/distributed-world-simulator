@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 IMPLEMENTED CANDIDATE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 R2 CLOSED / NEXT: VIS4.5  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -887,10 +887,72 @@ Canonical candidate runner:
 RUN_ECO_EVO7_VIS4_4_TESTS.sh
 ~~~
 
+R1 was RED in the focused acceptance parser only. R2 changed only explicit
+local type annotations in the acceptance script; runtime production files were
+unchanged.
+
+Canonical verified R2:
+
+~~~text
+HEAD: 6ec628ad125114c1588f543d877ec83b1dfc81ed
+TREE: 2f2cfd8c1893f0c9b76f8e98b936253a92d8bd18
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.3 predecessor: PASS / 752 assertions
+PLAY0 regression: PASS / 103 assertions
+VIS4.4 focused: PASS / 74 assertions
+final marker: PRESENT
+tracked worktree: clean
+~~~
+
 Current qualification:
 
 ~~~text
-VIS4.4 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED YET
+VIS4.4 EXACT UBUNTU GREEN
+VIS4.4 R2 CLOSED
+NEXT: VIS4.5 DETERMINISTIC INDIVIDUALITY
 ~~~
+
+
+## VIS4.4 R2 durable closure
+
+The original R1 candidate `ac9a0bf7ea260eea40ae3a451ec0c63d81028f76`
+was not accepted because Godot 4.7.1 double reported 12 parse errors in the new
+focused acceptance test. The runtime implementation itself had already passed
+the VIS4.3 predecessor and existing PLAY0 regression.
+
+The test-only repair:
+
+~~~text
+6ec628ad125114c1588f543d877ec83b1dfc81ed
+fix(eco): explicit type annotations in VIS4.4 PLAY0.MORPH acceptance script
+~~~
+
+adds explicit `Dictionary`, `Vector3` and `String` annotations for values
+returned through untyped references. No runtime production path changed.
+
+Exact R2 verification:
+
+~~~text
+HEAD: 6ec628ad125114c1588f543d877ec83b1dfc81ed
+TREE: 2f2cfd8c1893f0c9b76f8e98b936253a92d8bd18
+
+VIS4.3 predecessor PASS
+PLAY0 regression PASS / 103 assertions
+VIS4.4 focused PASS / 74 assertions
+canonical VIS4.4 marker PRESENT
+HEAD/TREE unchanged
+tracked worktree clean
+~~~
+
+The durable morphology branch was fast-forwarded directly from its former tip
+`6f982f1d...` to the exact tested R2 commit. Therefore the tested commit SHA is
+preserved as the canonical executable boundary.
+
+Closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_4_PLAY0_MORPH_UBUNTU_VERIFIED_CLOSED_R2_RU.md
+~~~
+
+VIS4.4 is CLOSED. The morphology track may continue with VIS4.5.
