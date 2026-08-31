@@ -17,6 +17,7 @@ func _init() -> void:
 	_test_catapult()
 	_test_breakable_bridge()
 	_test_determinism()
+	_test_all_experiment_determinism()
 	_test_scene()
 	_finish()
 
@@ -179,6 +180,50 @@ func _test_determinism() -> void:
 		a.advance(1.0 / 120.0)
 		b.advance(1.0 / 120.0)
 	_check(a.state_hash() == b.state_hash(), "fixed-step toybox state deterministic")
+
+
+func _test_all_experiment_determinism() -> void:
+	for experiment_id in Contract.EXPERIMENTS:
+		var built := Factory.build(experiment_id)
+		var a = Runtime.new()
+		var b = Runtime.new()
+		var ready_a: Dictionary = a.setup(built)
+		var ready_b: Dictionary = b.setup(built)
+		_check(bool(ready_a.get("success", false)), "%s deterministic setup A" % experiment_id)
+		_check(bool(ready_b.get("success", false)), "%s deterministic setup B" % experiment_id)
+		if not bool(ready_a.get("success", false)) or not bool(ready_b.get("success", false)):
+			continue
+		var initial_hash := a.state_hash()
+		_drive_reference_sequence(experiment_id, a)
+		_drive_reference_sequence(experiment_id, b)
+		_check(a.state_hash() == b.state_hash(), "%s deterministic reference sequence" % experiment_id)
+		var reset_a: Dictionary = a.reset()
+		_check(bool(reset_a.get("success", false)), "%s deterministic reset succeeds" % experiment_id)
+		if bool(reset_a.get("success", false)):
+			_check(a.state_hash() == initial_hash, "%s reset returns initial hash" % experiment_id)
+
+func _drive_reference_sequence(experiment_id: String, runtime) -> void:
+	match experiment_id:
+		"INCLINED_PLANE":
+			runtime.apply_tool("FORCE", 100.0)
+			for _i in range(20):
+				runtime.advance(0.01)
+		"SEESAW":
+			runtime.apply_tool("TORQUE", 40.0)
+			for _i in range(20):
+				runtime.advance(0.01)
+		"CART":
+			runtime.apply_tool("FORCE", 30.0)
+			runtime.apply_tool("IMPULSE", 5.0)
+			runtime.apply_tool("ADD_LOAD", 100.0)
+			for _i in range(20):
+				runtime.advance(0.01)
+		"CATAPULT":
+			for _i in range(160):
+				runtime.advance(0.005)
+		"BREAKABLE_BRIDGE":
+			for _i in range(3):
+				runtime.apply_tool("ADD_LOAD", 250.0)
 
 func _test_scene() -> void:
 	var packed = load("res://scenes/labs/fabric_construct0_play1_lab.tscn")
