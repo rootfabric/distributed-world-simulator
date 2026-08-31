@@ -321,25 +321,20 @@ static func format_text(value: Dictionary) -> String:
 			visual.x, visual.y, visual.z,
 		],
 		"",
-		"HASHES",
-		"ecology: %s" % _short_hash(String(value["source_ecology_hash"])),
-		"descriptor: %s    phenotype: %s" % [
-			_short_hash(String(value["descriptor_hash"])),
-			_short_hash(String(value["phenotype_hash"])),
-		],
-		"growth graph: %s    individuality: %s" % [
-			_short_hash(String(value["growth_graph_hash"])),
-			_short_hash(String(value["individuality_hash"])),
-		],
-		"render description: %s" % _short_hash(String(value["render_description_hash"])),
-		"representation: %s    materialization: %s" % [
-			_short_hash(String(value["representation_hash"])),
-			_short_hash(String(value["materialization_hash"])),
-		],
-		"appearance: %s    inspector: %s" % [
-			_short_hash(String(value["appearance_hash"])),
-			_short_hash(String(value["inspector_hash"])),
-		],
+		"HASHES / SOURCE SEALS",
+		"ecology: %s" % String(value["source_ecology_hash"]),
+		"descriptor: %s" % String(value["descriptor_hash"]),
+		"phenotype: %s" % String(value["phenotype_hash"]),
+		"plasticity: %s" % String(value["plasticity_phenotype_hash"]),
+		"evidence record: %s" % String(value["source_evidence_record_hash"]),
+		"evaluation: %s" % String(value["source_evaluation_hash"]),
+		"growth graph: %s" % String(value["growth_graph_hash"]),
+		"individuality: %s" % String(value["individuality_hash"]),
+		"render description: %s" % String(value["render_description_hash"]),
+		"representation: %s" % String(value["representation_hash"]),
+		"materialization: %s" % String(value["materialization_hash"]),
+		"appearance: %s" % String(value["appearance_hash"]),
+		"inspector: %s" % String(value["inspector_hash"]),
 	]))
 
 
@@ -413,5 +408,4 @@ static func _finite_vec(value: Vector3) -> bool:
 	)
 
 
-static func _short_hash(value: String) -> String:
-	return value.substr(0, 16) + "…" if value.length() >= 16 else value
+
