@@ -32,7 +32,7 @@ func _process(delta: float) -> void:
 		return
 	_fixed_accumulator += minf(delta, 0.10)
 	while _fixed_accumulator >= 1.0 / 120.0:
-		var advanced := _runtime.advance(1.0 / 120.0)
+		var advanced: Dictionary = _runtime.advance(1.0 / 120.0)
 		if not bool(advanced.get("success", false)):
 			_playing = false
 			_status_label.text = "ADVANCE FAILED\n%s" % str(advanced)
@@ -182,12 +182,12 @@ func _load_experiment(experiment_id: String) -> void:
 	_playing = false
 	_fixed_accumulator = 0.0
 	_experiment_id = experiment_id
-	var built := ToyboxFactory.build(experiment_id)
+	var built: Dictionary = ToyboxFactory.build(experiment_id)
 	if not bool(built.get("success", false)):
 		_status_label.text = "EXPERIMENT BUILD FAILED\n%s" % str(built)
 		return
 	_experiment = built
-	var ready := _runtime.setup(built)
+	var ready: Dictionary = _runtime.setup(built)
 	if not bool(ready.get("success", false)):
 		_status_label.text = "RUNTIME SETUP FAILED\n%s" % str(ready)
 		return
@@ -201,7 +201,7 @@ func _materialize_snapshot(snapshot: Dictionary) -> void:
 		_construct_root.remove_child(child)
 		child.free()
 
-	var request := ProjectionRequest.create(
+	var request: Dictionary = ProjectionRequest.create(
 		snapshot,
 		[],
 		{},
@@ -211,14 +211,14 @@ func _materialize_snapshot(snapshot: Dictionary) -> void:
 		1,
 		1
 	)
-	var compiled := ProjectionCompiler.compile(request)
+	var compiled: Dictionary = ProjectionCompiler.compile(request)
 	if not bool(compiled.get("success", false)):
 		_status_label.text = "PROJECTION COMPILE FAILED\n%s" % str(compiled)
 		return
 	_construct_node = RuntimeNodeScript.new()
 	_construct_node.name = "RuntimeConstruction"
 	_construct_root.add_child(_construct_node)
-	var applied := _construct_node.apply_descriptor(compiled["descriptor"])
+	var applied: Dictionary = _construct_node.apply_descriptor(compiled["descriptor"])
 	if not bool(applied.get("success", false)):
 		_status_label.text = "PROJECTION APPLY FAILED\n%s" % str(applied)
 		return
@@ -293,7 +293,7 @@ func _apply_runtime_state(state: Dictionary) -> void:
 
 	# Canonical bond breaks change the source revision. Re-materialize to keep
 	# the visual tree bound to the latest canonical snapshot.
-	var current_snapshot := _runtime.canonical_snapshot()
+	var current_snapshot: Dictionary = _runtime.canonical_snapshot()
 	if _construct_node != null and int(state["canonical_revision"]) > 0:
 		# Re-materialization is cheap at PLAY1 scale and avoids a hidden visual truth.
 		if String(current_snapshot["checksum"]) == String(state["canonical_checksum"]):
@@ -302,7 +302,7 @@ func _apply_runtime_state(state: Dictionary) -> void:
 	_refresh_status(state)
 
 func _refresh_status(state: Dictionary) -> void:
-	var snapshot := _runtime.canonical_snapshot()
+	var snapshot: Dictionary = _runtime.canonical_snapshot()
 	var metrics: Dictionary = state["metrics"]
 	_title_label.text = "%s  |  %s" % [
 		_experiment_id.replace("_", " "),
@@ -348,7 +348,7 @@ func _toggle_play() -> void:
 
 func _step_once() -> void:
 	_playing = false
-	var result := _runtime.advance(1.0 / 30.0)
+	var result: Dictionary = _runtime.advance(1.0 / 30.0)
 	if not bool(result.get("success", false)):
 		_status_label.text = "STEP FAILED\n%s" % str(result)
 		return
@@ -356,7 +356,7 @@ func _step_once() -> void:
 
 func _reset() -> void:
 	_playing = false
-	var ready := _runtime.reset()
+	var ready: Dictionary = _runtime.reset()
 	if not bool(ready.get("success", false)):
 		_status_label.text = "RESET FAILED\n%s" % str(ready)
 		return
@@ -365,7 +365,7 @@ func _reset() -> void:
 	_apply_runtime_state(_runtime.state())
 
 func _apply_tool(tool: String, magnitude: float) -> void:
-	var result := _runtime.apply_tool(tool, magnitude)
+	var result: Dictionary = _runtime.apply_tool(tool, magnitude)
 	if not bool(result.get("success", false)):
 		_status_label.text = "%s FAILED\n%s" % [tool, str(result)]
 		return
