@@ -19,6 +19,24 @@ const SCHEMA := "distributed_world_simulator.ecology.evo7_vis4_3_ph5_bridge.v1"
 const VERSION := "1.0.0"
 const REVISION := "ECO.EVO7-VIS4.3.R1"
 
+var _perf_chain_build_count := 0
+var _perf_growth_graph_usec := 0
+var _perf_render_description_usec := 0
+var _perf_representation_usec := 0
+var _perf_materializer_usec := 0
+
+
+func get_performance_counters() -> Dictionary:
+	return {
+		"chain_build_count": _perf_chain_build_count,
+		"growth_graph_ms": float(_perf_growth_graph_usec) / 1000.0,
+		"render_description_ms": float(_perf_render_description_usec) / 1000.0,
+		"representation_ms": float(_perf_representation_usec) / 1000.0,
+		"materializer_ms": float(_perf_materializer_usec) / 1000.0,
+		"timings_diagnostic_only": true,
+	}
+
+
 const RESULT_FIELDS: Array[String] = [
 	"schema", "version", "revision", "generation", "tier",
 	"source_descriptor_adapter_hash", "source_ecology_state_hash",
@@ -141,7 +159,9 @@ func materialize_record(
 		return {}
 	var description: Dictionary = chain["render_description"]
 	var representation: Dictionary = chain["representation"]
+	var materializer_started := Time.get_ticks_usec()
 	var materialization := Materializer.build(description, representation)
+	_perf_materializer_usec += Time.get_ticks_usec() - materializer_started
 	if not bool(materialization.get("success", false)):
 		return {}
 	if String(materialization.get("ecological_truth_hash", "")) != String(source_descriptor.get("growth_graph_hash", "")):
@@ -215,7 +235,10 @@ func _build_exact_chain(source: Dictionary, reconstruction: Dictionary, tier: St
 		return {}
 
 	# Exact reconstruction through the accepted PH5 GrowthGraph implementation.
+	var graph_started := Time.get_ticks_usec()
 	var graph := GrowthGraph.build(realized, int(reconstruction.get("development_individual_seed", -1)))
+	_perf_growth_graph_usec += Time.get_ticks_usec() - graph_started
+	_perf_chain_build_count += 1
 	if graph.is_empty():
 		return {}
 	if String(graph.get("graph_hash", "")) != String(source.get("growth_graph_hash", "")):
@@ -225,13 +248,17 @@ func _build_exact_chain(source: Dictionary, reconstruction: Dictionary, tier: St
 	if String(graph.get("traits_id", "")) != String(realized.get("traits_id", "")):
 		return {}
 
+	var description_started := Time.get_ticks_usec()
 	var description := RenderDescription.build(graph)
+	_perf_render_description_usec += Time.get_ticks_usec() - description_started
 	if description.is_empty() or not bool(RenderDescription.validate(description).get("success", false)):
 		return {}
 	if String(description.get("source_graph_hash", "")) != String(source.get("growth_graph_hash", "")):
 		return {}
 
+	var representation_started := Time.get_ticks_usec()
 	var representation := Representation.build(description, tier)
+	_perf_representation_usec += Time.get_ticks_usec() - representation_started
 	if not bool(representation.get("success", false)):
 		return {}
 	if String(representation.get("ecological_truth_hash", "")) != String(source.get("growth_graph_hash", "")):
