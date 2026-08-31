@@ -55,7 +55,8 @@ Required markers:
 ```text
 branch=<detached-head>
 PERF1 PASS
-STREAM1 PASS
+STREAM1 exact generation comparisons: 108
+ECO.EVO7 STREAM1 Bounded Generation Stream: PASS (195 assertions)
 PERF2.0 PASS
 PERF2.1 R2 PASS
 PERF2.1 cross-configuration exact result pairs: 9/9
@@ -155,3 +156,13 @@ PERF2.1 R2 may be marked ACCEPTED; PERF2.2 may start
 ```
 
 No local repair in the verification worktree.
+
+
+## JSON numeric round-trip regression
+
+The verifier must require the PERF2.1 focused test to pass the artifact write → parse →
+validate round-trip. Godot JSON may represent integral numbers as floating-point Variant
+values after parsing; integer-equivalent values such as `7.0` are valid, while fractional
+(`7.5`) or string (`"7"`) pseudo-integers must fail closed.
+
+Do not repair the artifact manually.
