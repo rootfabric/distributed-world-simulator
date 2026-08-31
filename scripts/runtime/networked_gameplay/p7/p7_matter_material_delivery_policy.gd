@@ -65,7 +65,7 @@ static func plan(batch: Dictionary) -> Dictionary:
 	# not only batch_id. If a corrupted/reconstructed batch reuses the same id
 	# with different physical contents, the canonical Item Graph ledger must fail
 	# closed with OPERATION_REPLAY_CONFLICT instead of treating it as a replay.
-	var source_id := "%s/%s" % [batch_id, batch_checksum.left(16)]
+	var source_id := "%s/%s" % [batch_id, batch_checksum]
 	return _success({
 		"policy_id": POLICY_ID,
 		"batch_id": batch_id,
