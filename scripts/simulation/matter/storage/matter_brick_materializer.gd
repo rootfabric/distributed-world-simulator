@@ -15,9 +15,11 @@ static func materialize(
 	feature_catalog: Dictionary,
 	grid_profile: Dictionary,
 	cell_address: Dictionary,
-	state_revision: int = 0
+	state_revision: int = 0,
+	procedural_sampler = null
 ) -> Dictionary:
-	if not bool(GeneratorScript.validate_configuration(
+	var sampler = GeneratorScript if procedural_sampler == null else procedural_sampler
+	if not bool(sampler.validate_configuration(
 		body, material_catalog, generator_profile, feature_catalog
 	).get("success", false)):
 		return {}
@@ -43,7 +45,7 @@ static func materialize(
 				if not is_finite(local_position_m.x) or not is_finite(local_position_m.y) \
 					or not is_finite(local_position_m.z):
 					return {}
-				samples.append(GeneratorScript.sample_validated(
+				samples.append(sampler.sample_validated(
 					material_catalog,
 					generator_profile,
 					feature_catalog,

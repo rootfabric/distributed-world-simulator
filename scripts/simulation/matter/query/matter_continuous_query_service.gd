@@ -16,6 +16,7 @@ var _generator_profile: Dictionary = {}
 var _feature_catalog: Dictionary = {}
 var _grid_profile: Dictionary = {}
 var _store = null
+var _procedural_sampler = GeneratorScript
 
 
 func configure(
@@ -24,13 +25,15 @@ func configure(
 	generator_profile: Dictionary,
 	feature_catalog: Dictionary,
 	grid_profile: Dictionary,
-	snapshot_store
+	snapshot_store,
+	procedural_sampler = null
 ) -> Dictionary:
+	var sampler = GeneratorScript if procedural_sampler == null else procedural_sampler
 	if snapshot_store == null or not snapshot_store.has_method("get_snapshot") \
 		or not snapshot_store.has_method("has") \
 		or not bool(BodyScript.validate(body).get("success", false)) \
 		or not bool(GridProfileScript.validate(grid_profile).get("success", false)) \
-		or not bool(GeneratorScript.validate_configuration(
+		or not bool(sampler.validate_configuration(
 			body, material_catalog, generator_profile, feature_catalog
 		).get("success", false)):
 		return MatterUtilsScript.failure("INVALID_CONTINUOUS_MATTER_QUERY_CONFIGURATION")
@@ -40,6 +43,7 @@ func configure(
 	_feature_catalog = feature_catalog.duplicate(true)
 	_grid_profile = grid_profile.duplicate(true)
 	_store = snapshot_store
+	_procedural_sampler = sampler
 	_configured = true
 	return MatterUtilsScript.success()
 
@@ -58,7 +62,7 @@ func sample(local_position_m: Vector3, level: int) -> Dictionary:
 		return SnapshotSamplerScript.sample_continuous(
 			_store.get_snapshot(brick_address), _grid_profile, local_position_m
 		)
-	return GeneratorScript.sample_validated(
+	return _procedural_sampler.sample_validated(
 		_material_catalog, _generator_profile, _feature_catalog, local_position_m
 	)
 
@@ -191,7 +195,7 @@ func _sample_for_operation(
 		return SnapshotSamplerScript.sample_continuous_validated(
 			snapshot_cache_by_address_id[address_id], _grid_profile, local_position_m
 		)
-	return GeneratorScript.sample_validated(
+	return _procedural_sampler.sample_validated(
 		_material_catalog, _generator_profile, _feature_catalog, local_position_m
 	)
 

@@ -10,6 +10,9 @@ const TerrainStreamingManagerScript = preload(
 const GravityMathScript = preload(
 	"res://scripts/simulation/gravity/gravity_math.gd"
 )
+const LegacyMatterSeamClipperScript = preload(
+	"res://scripts/world/matter/legacy_moon_matter_seam_clipper.gd"
+)
 
 const MOON_RADIUS: float = 1_737_400.0
 const MOON_GRAVITY: float = 1.62
@@ -158,6 +161,7 @@ var last_spectator_anchor_distance: float = 0.0
 var last_streaming_status: String = "Ожидание"
 var logger
 var terrain_streamer
+var matter_surface_adapter = null
 var generation_only_initialized: bool = false
 var streaming_actors: Array[CharacterBody3D] = []
 var recent_surface_cache: Dictionary = {}
@@ -1088,6 +1092,29 @@ func _build_radial_cap_mesh(
 			var next_start: int = current_start + segment_count
 			_add_ring_indices(indices, current_start, next_start, segment_count)
 
+	var exclusion_bounds := _get_matter_exclusion_bounds()
+	if not exclusion_bounds.is_empty():
+		var clipped: Dictionary = LegacyMatterSeamClipperScript.clip_mesh_arrays(
+			vertices,
+			uvs,
+			indices,
+			surface_anchor_world,
+			exclusion_bounds
+		)
+		if clipped.is_empty():
+			push_error("Matter seam clipping failed; legacy cap was not published.")
+			return ArrayMesh.new()
+		vertices = clipped["vertices"]
+		uvs = clipped["uvs"]
+		indices = clipped["indices"]
+		directions = PackedVector3Array()
+		heights = PackedFloat64Array()
+		for clipped_vertex in vertices:
+			var body_position: Vector3 = surface_anchor_world + Vector3(clipped_vertex)
+			var clipped_direction := body_position.normalized()
+			directions.append(clipped_direction)
+			heights.append(body_position.length() - MOON_RADIUS)
+
 	var normals := _calculate_normals(vertices, indices, directions)
 	var colors := PackedColorArray()
 	for vertex_index in range(vertices.size()):
@@ -1805,6 +1832,53 @@ func get_render_origin() -> Vector3:
 	return render_origin_world
 
 
+func set_matter_surface_adapter(adapter) -> Dictionary:
+	if adapter != null \
+		and (
+			not adapter.has_method("legacy_exclusion_bounds")
+			or not adapter.has_method("route_for_body_fixed_position")
+			or not adapter.has_method("legacy_collision_enabled_at")
+		):
+		return {
+			"success": false,
+			"error_code": "INVALID_MATTER_SURFACE_ADAPTER",
+			"details": {},
+		}
+	if terrain_streamer != null:
+		terrain_streamer.cancel_all("matter_surface_adapter_changed")
+	recent_surface_cache.clear()
+	recent_surface_cache_order.clear()
+	matter_surface_adapter = adapter
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {"installed": adapter != null, "surface_cache_invalidated": true},
+	}
+
+
+func get_surface_source_at_world_position(world_position: Vector3) -> String:
+	if matter_surface_adapter == null:
+		return "LEGACY"
+	return String(matter_surface_adapter.route_for_body_fixed_position(world_position))
+
+
+func legacy_collision_enabled_at_world_position(world_position: Vector3) -> bool:
+	if matter_surface_adapter == null:
+		return true
+	return bool(matter_surface_adapter.legacy_collision_enabled_at(world_position))
+
+
+func get_streaming_matter_exclusion_bounds() -> Dictionary:
+	return _get_matter_exclusion_bounds()
+
+
+func _get_matter_exclusion_bounds() -> Dictionary:
+	if matter_surface_adapter == null:
+		return {}
+	var value = matter_surface_adapter.legacy_exclusion_bounds()
+	return value.duplicate(true) if value is Dictionary else {}
+
+
 func get_surface_anchor() -> Vector3:
 	return surface_anchor_world
 
@@ -2361,12 +2435,17 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 	surface_anchor_world = get_surface_point(surface_center_direction)
 	timings["crater_catalogs_and_anchor_ms"] = _elapsed_ms(stage_started_usec)
 
+	var matter_exclusion_bounds: Dictionary = request.get(
+		"matter_exclusion_bounds",
+		{}
+	)
 	var local_profile: Dictionary = _profiled_radial_cap_data(
 		0.0,
 		LOCAL_CAP_RADIUS,
 		LOCAL_CAP_RINGS,
 		LOCAL_CAP_SEGMENTS,
-		false
+		false,
+		matter_exclusion_bounds
 	)
 	var local_data: Dictionary = local_profile.get("data", {})
 	_merge_prefixed_timings(timings, "local_", local_profile.get("timings_ms", {}))
@@ -2390,7 +2469,8 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 			MEDIUM_CAP_RADIUS,
 			MEDIUM_CAP_RINGS,
 			CAP_SEGMENTS,
-			true
+			true,
+			matter_exclusion_bounds
 		)
 		medium_annulus_data = annulus_profile.get("data", {})
 		_merge_prefixed_timings(
@@ -2403,7 +2483,8 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 			MEDIUM_CAP_RADIUS,
 			MEDIUM_CAP_RINGS,
 			CAP_SEGMENTS,
-			true
+			true,
+			matter_exclusion_bounds
 		)
 		medium_full_data = full_profile.get("data", {})
 		_merge_prefixed_timings(
@@ -2451,7 +2532,8 @@ func _profiled_radial_cap_data(
 	outer_radius: float,
 	ring_count: int,
 	segment_count: int,
-	blend_to_global: bool
+	blend_to_global: bool,
+	exclusion_bounds: Dictionary = {}
 ) -> Dictionary:
 	var timings: Dictionary = {}
 	var started_usec: int = Time.get_ticks_usec()
@@ -2539,6 +2621,26 @@ func _profiled_radial_cap_data(
 			var current_start: int = ring_index * segment_count
 			var next_start: int = current_start + segment_count
 			_add_ring_indices(indices, current_start, next_start, segment_count)
+	if not exclusion_bounds.is_empty():
+		var clipped: Dictionary = LegacyMatterSeamClipperScript.clip_mesh_arrays(
+			vertices,
+			uvs,
+			indices,
+			surface_anchor_world,
+			exclusion_bounds
+		)
+		if clipped.is_empty():
+			return {"data": {}, "timings_ms": timings, "error": "matter_seam_clip_failed"}
+		vertices = clipped["vertices"]
+		uvs = clipped["uvs"]
+		indices = clipped["indices"]
+		directions = PackedVector3Array()
+		heights = PackedFloat64Array()
+		for clipped_vertex in vertices:
+			var body_position: Vector3 = surface_anchor_world + Vector3(clipped_vertex)
+			var clipped_direction := body_position.normalized()
+			directions.append(clipped_direction)
+			heights.append(body_position.length() - MOON_RADIUS)
 	timings["sampling_and_indices_ms"] = _elapsed_ms(started_usec)
 
 	started_usec = Time.get_ticks_usec()

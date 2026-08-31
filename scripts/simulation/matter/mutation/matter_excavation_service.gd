@@ -31,6 +31,7 @@ var _cell_level: int = 0
 var _store = null
 var _receiver = null
 var _journal = null
+var _procedural_sampler = GeneratorScript
 
 
 func configure(
@@ -45,12 +46,14 @@ func configure(
 	maximum_receiver_volume_m3: float,
 	snapshot_store = null,
 	material_receiver = null,
-	mutation_journal = null
+	mutation_journal = null,
+	procedural_sampler = null
 ) -> Dictionary:
+	var sampler = GeneratorScript if procedural_sampler == null else procedural_sampler
 	if not bool(BodyScript.validate(body).get("success", false)) \
 		or not bool(MaterialCatalogScript.validate(material_catalog).get("success", false)) \
 		or not bool(GridProfileScript.validate(grid_profile).get("success", false)) \
-		or not bool(GeneratorScript.validate_configuration(
+		or not bool(sampler.validate_configuration(
 			body, material_catalog, generator_profile, feature_catalog
 		).get("success", false)) \
 		or cell_level < 1 or cell_level > int(grid_profile.get("max_level", -1)):
@@ -64,6 +67,7 @@ func configure(
 	_feature_catalog = feature_catalog.duplicate(true)
 	_grid_profile = grid_profile.duplicate(true)
 	_cell_level = cell_level
+	_procedural_sampler = sampler
 	if snapshot_store == null:
 		_store = SparseStoreScript.new()
 		var store_configuration: Dictionary = _store.configure(_body, _grid_profile)
@@ -191,7 +195,8 @@ func execute(request: Dictionary) -> Dictionary:
 				_feature_catalog,
 				_grid_profile,
 				address["cell_address"],
-				0
+				0,
+				_procedural_sampler
 			)
 		if source_snapshot.is_empty() or int(source_snapshot["state_revision"]) != expected_revision:
 			return _rejected_result(request, "MATTER_MUTATION_SOURCE_SNAPSHOT_FAILED", true)
