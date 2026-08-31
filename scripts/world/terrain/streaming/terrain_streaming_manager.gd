@@ -478,6 +478,10 @@ func request_surface(
 		"extra": extra.duplicate(true),
 		"collision_triangles_per_tile": collision_triangles_per_tile,
 	}
+	if terrain != null and terrain.has_method("get_streaming_matter_exclusion_bounds"):
+		var exclusion_bounds = terrain.get_streaming_matter_exclusion_bounds()
+		if exclusion_bounds is Dictionary and not exclusion_bounds.is_empty():
+			request["matter_exclusion_bounds"] = exclusion_bounds.duplicate(true)
 
 	var cache_available: bool = (
 		not force

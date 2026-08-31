@@ -45,8 +45,7 @@ func configure(moon_world, data: Dictionary = {}) -> Dictionary:
 	var adapter = LegacyAdapterScript.new()
 	var adapter_setup := adapter.configure(
 		bubble,
-		float(data.get("legacy_mask_radius_m", 0.0)),
-		float(data.get("legacy_center_tolerance_m", 2.0))
+		float(data.get("legacy_seam_clearance_m", 0.02))
 	)
 	if not bool(adapter_setup.get("success", false)):
 		return adapter_setup

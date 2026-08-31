@@ -175,21 +175,31 @@ func _test_legacy_route_contract() -> void:
 		"max_level": 3,
 	}), "adapter bubble configure")
 	var adapter = LegacyAdapterScript.new()
-	_assert_success(adapter.configure(bubble, 16.0, 2.0), "legacy adapter configure")
+	_assert_success(adapter.configure(bubble, 0.02), "legacy adapter configure")
+	var exclusion: Dictionary = adapter.legacy_exclusion_bounds()
+	_assert_true(not exclusion.is_empty(), "legacy adapter exposes body-fixed root exclusion")
 	_assert_true(
-		absf(adapter.legacy_local_inner_radius_m(ANCHOR) - 16.0) < 0.000001,
-		"legacy central cap receives Matter hole only at fixed bubble anchor"
+		absf(float(exclusion.get("clearance_m", -1.0)) - 0.02) < 0.000001,
+		"legacy exclusion carries explicit seam clearance"
 	)
-	var shifted_direction := (ANCHOR + Vector3.RIGHT * (4.0 / SURFACE_RADIUS_M)).normalized()
 	_assert_true(
-		adapter.legacy_local_inner_radius_m(shifted_direction) == 0.0,
-		"off-center recenter does not create a false concentric hole"
+		String(exclusion.get("body_id", "")) == "body/moon",
+		"legacy exclusion preserves Moon body identity"
 	)
 	var inside := bubble.anchor_body_fixed_m()
+	var corner_inside := inside + Vector3(HALF_EXTENT_M - 0.5, 0.0, HALF_EXTENT_M - 0.5)
 	var outside := inside + Vector3(HALF_EXTENT_M + 2.0, 0.0, 0.0)
 	_assert_true(not adapter.legacy_collision_enabled_at(inside), "legacy collision disabled inside Matter")
+	_assert_true(
+		not adapter.legacy_collision_enabled_at(corner_inside),
+		"legacy collision disabled at root corner beyond former circular mask"
+	)
 	_assert_true(adapter.legacy_collision_enabled_at(outside), "legacy collision preserved outside")
 	var contract := adapter.contract_report()
+	_assert_true(
+		String(contract.get("seam_strategy", "")) == "BODY_FIXED_AABB_TRIANGLE_CLIP",
+		"legacy seam is body-fixed and observer-independent"
+	)
 	_assert_true(not bool(contract.get("double_collision_allowed", true)), "double collision forbidden")
 	_assert_true(not bool(contract.get("canonical_state_owned", true)), "legacy adapter owns no canonical state")
 
