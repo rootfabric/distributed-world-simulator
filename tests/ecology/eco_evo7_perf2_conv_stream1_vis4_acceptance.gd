@@ -64,6 +64,11 @@ func _run() -> void:
 		_check(String(contract.get("accepted_stream1_head", "")) == Composition.ACCEPTED_STREAM1_HEAD, "PERF2.CONV accepted STREAM1 anchor exact")
 		_check(String(contract.get("vis4_9_executable_head", "")) == Composition.VIS49_ACCEPTED_EXECUTABLE_HEAD, "PERF2.CONV VIS4.9 executable anchor exact")
 		_check(String(contract.get("ancestry_merge_head", "")) == Composition.ANCESTRY_MERGE_HEAD, "PERF2.CONV ancestry merge anchor exact")
+		var contract_authorities: Dictionary = Dictionary(contract.get("authorities", {}))
+		_check(not bool(contract_authorities.get("ecology_truth_write", true)), "PERF2.CONV owns no ecology truth authority")
+		_check(not bool(contract_authorities.get("presentation_truth_write", true)), "PERF2.CONV owns no presentation truth authority")
+		_check(not bool(contract_authorities.get("persistence_write", true)), "PERF2.CONV owns no persistence authority")
+		_check(not bool(contract_authorities.get("network_write", true)), "PERF2.CONV owns no network authority")
 
 		for _warmup in range(Report.WARMUP_GENERATIONS):
 			var warmup_result: Dictionary = await _advance_one(playground, false)
@@ -393,7 +398,7 @@ func _source_guard() -> void:
 	_check(report_source.contains("same_run_simulation_baseline"), "PERF2.CONV uses same-run simulation baseline")
 	_check(renderer_source.contains("_begin_cache_transaction"), "PERF2.CONV PH5 cache uses snapshot transaction")
 	_check(renderer_source.contains("_prune_cache_to_current_generation"), "PERF2.CONV PH5 cache prunes stale generations")
-	_check(not composition_source.contains("persistence") or composition_source.contains(""persistence_write": false"), "PERF2.CONV has no persistence authority")
+	_check(not composition_source.contains("fileaccess.open") and not composition_source.contains("diraccess"), "PERF2.CONV has no persistence execution path")
 	_check(not composition_source.contains("multiplayer"), "PERF2.CONV has no network execution path")
 
 
