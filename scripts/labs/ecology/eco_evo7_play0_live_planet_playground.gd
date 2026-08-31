@@ -45,6 +45,9 @@ const Vis4AdapterScript = preload(
 const PresentationScript = preload(
 	"res://scripts/labs/ecology/eco_evo7_play0_planet_presentation.gd"
 )
+const MorphologyInspectorModel = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_7_morphology_inspector_model.gd"
+)
 const LoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
 )
@@ -114,6 +117,12 @@ var _collision_refresh_count := 0
 var hud_layer: CanvasLayer
 var hud_label: Label
 var help_panel: PanelContainer
+var morphology_inspector_panel: PanelContainer
+var morphology_inspector_label: Label
+var morphology_inspector_visible := false
+var _morphology_inspector_index := -1
+var _morphology_inspector_record_id := ""
+var _morphology_inspector_state: Dictionary = {}
 var _hud_accumulator := 0.0
 
 
@@ -608,6 +617,8 @@ func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool)
 	_published_descriptors = descriptors.duplicate(true)
 	_published_morphology_descriptors = morphology_descriptors.duplicate(true)
 	_published_reconstruction = reconstruction.duplicate(true)
+	if morphology_inspector_visible:
+		_refresh_morphology_inspector(true)
 	if measured:
 		_completed_generations += 1
 		_last_generation_ms = float(Time.get_ticks_msec() - _gen_started_msec)
@@ -703,6 +714,138 @@ func get_published_reconstruction_evidence() -> Dictionary:
 	return _published_reconstruction.duplicate(true)
 
 
+func is_morphology_inspector_visible() -> bool:
+	return morphology_inspector_visible
+
+
+func get_morphology_inspector_state() -> Dictionary:
+	return _morphology_inspector_state.duplicate(true)
+
+
+func get_morphology_inspector_text() -> String:
+	return "" if morphology_inspector_label == null else morphology_inspector_label.text
+
+
+func get_morphology_inspector_selected_index() -> int:
+	return _morphology_inspector_index
+
+
+func select_morphology_inspector_index(index: int) -> bool:
+	if not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if index < 0 or index >= descriptors.size() or not descriptors[index] is Dictionary:
+		return false
+	var state: Dictionary = _build_morphology_inspector_state(index)
+	if state.is_empty():
+		return false
+	_morphology_inspector_index = index
+	_morphology_inspector_record_id = String(state.get("record_id", ""))
+	_morphology_inspector_state = state
+	if morphology_inspector_label != null:
+		morphology_inspector_label.text = MorphologyInspectorModel.format_text(state)
+	return true
+
+
+func set_morphology_inspector_visible(value: bool) -> bool:
+	if value:
+		if not _can_inspect_morphology():
+			morphology_inspector_visible = true
+			if morphology_inspector_panel != null:
+				morphology_inspector_panel.visible = true
+			if morphology_inspector_label != null:
+				morphology_inspector_label.text = "VIS4.7 MORPHOLOGY INSPECTOR\nUnavailable until a completed generation > 0 has PH5 morphology evidence."
+			return false
+		morphology_inspector_visible = true
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = true
+		if not _refresh_morphology_inspector(false):
+			_select_nearest_morphology_inspector_record()
+	else:
+		morphology_inspector_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
+	_refresh_hud_text()
+	return morphology_inspector_visible
+
+
+func toggle_morphology_inspector() -> bool:
+	return set_morphology_inspector_visible(not morphology_inspector_visible)
+
+
+func _can_inspect_morphology() -> bool:
+	return (
+		presentation != null
+		and int(_published_snapshot.get("generation", -1)) > 0
+		and not _published_morphology_descriptors.is_empty()
+		and bool(presentation.get_contract().get("ph5_active", false))
+	)
+
+
+func _build_morphology_inspector_state(index: int) -> Dictionary:
+	if not _can_inspect_morphology():
+		return {}
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if index < 0 or index >= descriptors.size() or not descriptors[index] is Dictionary:
+		return {}
+	var descriptor: Dictionary = Dictionary(descriptors[index])
+	var render_identity: Dictionary = presentation.get_ph5_record_identity(index)
+	var grid_appearance: Dictionary = presentation.get_ph5_record_grid_appearance(index)
+	return MorphologyInspectorModel.build(
+		int(_published_snapshot.get("generation", -1)),
+		String(_published_snapshot.get("ecology_state_hash", "")),
+		descriptor,
+		render_identity,
+		grid_appearance
+	)
+
+
+func _refresh_morphology_inspector(preserve_record: bool) -> bool:
+	if not morphology_inspector_visible or not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	if preserve_record and not _morphology_inspector_record_id.is_empty():
+		for index in range(descriptors.size()):
+			if (
+				descriptors[index] is Dictionary
+				and String(Dictionary(descriptors[index]).get("record_id", "")) == _morphology_inspector_record_id
+			):
+				return select_morphology_inspector_index(index)
+	if _morphology_inspector_index >= 0 and _morphology_inspector_index < descriptors.size():
+		return select_morphology_inspector_index(_morphology_inspector_index)
+	return _select_nearest_morphology_inspector_record()
+
+
+func _select_nearest_morphology_inspector_record() -> bool:
+	if not _can_inspect_morphology():
+		return false
+	var descriptors: Array = Array(_published_morphology_descriptors.get("descriptors", []))
+	var view_world: Vector3 = _active_view_world_position()
+	var best_index := -1
+	var best_distance := INF
+	for index in range(descriptors.size()):
+		if not descriptors[index] is Dictionary:
+			continue
+		if not presentation.is_ph5_record_individual_materialized(index):
+			continue
+		var visual_world: Vector3 = presentation.get_ph5_record_visual_world_position(index)
+		var distance := visual_world.distance_squared_to(view_world)
+		if distance < best_distance:
+			best_distance = distance
+			best_index = index
+	if best_index < 0 and not descriptors.is_empty():
+		best_index = 0
+	return select_morphology_inspector_index(best_index)
+
+
+func _active_view_world_position() -> Vector3:
+	if mode == MODE_SPECTATOR and spectator != null:
+		return spectator.get_world_position()
+	if player != null:
+		return player.get_world_position()
+	return Vector3.ZERO
+
+
 func get_authorities() -> Dictionary:
 	var snapshot_authorities: Dictionary = _published_snapshot.get("authorities", {})
 	return {
@@ -768,6 +911,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F5:
 				toggle_player_camera()
+				get_viewport().set_input_as_handled()
+			KEY_F6:
+				toggle_morphology_inspector()
 				get_viewport().set_input_as_handled()
 			KEY_P:
 				set_auto_evolution(not auto_evolution)
@@ -860,11 +1006,25 @@ func _build_hud() -> void:
 		"P           live ecology AUTO / PAUSE",
 		"N           advance exactly one generation",
 		"B           biome overlay ON / OFF",
+		"F6          morphology inspector for nearest live PH5 plant",
 		"F1          this help           Esc release/capture mouse",
 	]))
 	help_label.add_theme_font_size_override("font_size", 15)
 	help_panel.add_child(help_label)
 	hud_layer.add_child(help_panel)
+
+	morphology_inspector_panel = PanelContainer.new()
+	morphology_inspector_panel.name = "VIS47MorphologyInspectorPanel"
+	morphology_inspector_panel.position = Vector2(16, 335)
+	morphology_inspector_panel.size = Vector2(940, 610)
+	morphology_inspector_panel.visible = false
+	morphology_inspector_label = Label.new()
+	morphology_inspector_label.name = "VIS47MorphologyInspectorText"
+	morphology_inspector_label.custom_minimum_size = Vector2(920, 590)
+	morphology_inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	morphology_inspector_label.add_theme_font_size_override("font_size", 14)
+	morphology_inspector_panel.add_child(morphology_inspector_label)
+	hud_layer.add_child(morphology_inspector_panel)
 
 
 func _refresh_hud_text() -> void:
@@ -896,6 +1056,10 @@ func _refresh_hud_text() -> void:
 			int(status.get("rejected_requests", 0)),
 			int(status.get("collision_refresh_count", 0)),
 			"mouse captured" if bool(status.get("mouse_captured", true)) else "mouse free (Esc)",
+		],
+		"Inspector: %s    selected: %s    F6 toggle" % [
+			"ON" if morphology_inspector_visible else "OFF",
+			_morphology_inspector_record_id if not _morphology_inspector_record_id.is_empty() else "<none>",
 		],
 	]))
 
