@@ -751,6 +751,10 @@ func get_diversity_evidence_text() -> String:
 
 
 func set_diversity_evidence_visible(value: bool) -> bool:
+	if value:
+		morphology_inspector_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
 	diversity_evidence_visible = value
 	if diversity_evidence_panel != null:
 		diversity_evidence_panel.visible = value
@@ -820,6 +824,9 @@ func select_morphology_inspector_index(index: int) -> bool:
 
 func set_morphology_inspector_visible(value: bool) -> bool:
 	if value:
+		diversity_evidence_visible = false
+		if diversity_evidence_panel != null:
+			diversity_evidence_panel.visible = false
 		if not _can_inspect_morphology():
 			morphology_inspector_visible = true
 			if morphology_inspector_panel != null:
