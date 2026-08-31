@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.5 CLOSED / NEXT: VIS4.6 GRID APPEARANCE BOUNDARY  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.5 CLOSED / VIS4.6 IMPLEMENTED CANDIDATE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1100,3 +1100,97 @@ ecological / canonical plant position
 The 32x32 Spatial Cohort Lattice remains ecology truth. Any deterministic visual
 scatter is presentation-only. True continuous physical plant positions remain
 reserved for ECO.SPATIAL1.
+
+
+## VIS4.6 Grid Appearance Boundary implementation result — 2026-08-31
+
+VIS4.6 is implemented on frozen runtime/test subject:
+
+~~~text
+HEAD: 8edc9b9767e8d163b020ac9c7407d385d99bed3b
+TREE: 5493dca15e47c23ca939403a98244fd345b37e8b
+~~~
+
+The implementation preserves the architectural boundary:
+
+~~~text
+visual presentation offset
+!=
+ecological / canonical plant position
+~~~
+
+The accepted 32x32 Spatial Cohort Lattice remains ecology truth.
+
+VIS4.6 reuses the exact accepted VIS2 stable-jitter semantics:
+
+~~~text
+record_id.sha256_text()
+first 24-bit chunk -> x
+second 24-bit chunk -> y
+
+x span: 0.48 cell  (+/-0.24)
+y span: 0.30 cell  (+/-0.15)
+~~~
+
+In PLAY0 the cell fractions are scaled by local physical neighbor spacing,
+applied in the canonical cell tangent plane, then reprojected through
+`ProceduralEarthWorld.get_surface_point(scattered_direction)`.
+
+The PH5 record now carries two explicit positions:
+
+~~~text
+base_world
+= canonical ecology cell point
+
+visual_base_world
+= presentation-only scattered Earth-surface point
+~~~
+
+The actual rendered Node3D translation uses `visual_base_world`, while the old
+canonical APIs and source identity continue to expose `base_world`.
+
+New durable contract:
+
+~~~text
+scripts/labs/ecology/eco_evo7_vis4_6_grid_appearance_boundary.gd
+~~~
+
+Focused acceptance:
+
+~~~text
+tests/ecology/eco_evo7_vis4_6_grid_appearance_boundary_acceptance.gd
+~~~
+
+Canonical runner:
+
+~~~text
+RUN_ECO_EVO7_VIS4_6_TESTS.sh
+~~~
+
+The focused gate proves exact VIS2 jitter reuse, bounded offsets, canonical
+cell-position preservation, Earth-surface reprojection, actual PH5 visual-node
+translation, deterministic replay, color/render-origin/LOD invariance and
+ecology-state invariance.
+
+VIS4.6 does not introduce process RNG, biology recomputation, generation,
+reproduction/mutation/dispersal, persistence or network authority.
+
+Durable candidate:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_6_GRID_APPEARANCE_BOUNDARY_CANDIDATE_R1_RU.md
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.6 IMPLEMENTED CANDIDATE
+EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
+NOT CLOSED YET
+~~~
+
+True continuous physical plant positions remain reserved for:
+
+~~~text
+ECO.SPATIAL1
+~~~
