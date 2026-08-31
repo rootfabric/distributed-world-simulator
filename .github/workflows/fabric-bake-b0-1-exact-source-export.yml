@@ -1,0 +1,39 @@
+name: FABRIC-BAKE B0.1 Exact Source Export
+
+on:
+  push:
+    branches:
+      - research/fabric-bake0-1-source-export-r1
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact implementation HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: e854185f501cfc2658d5d1c5430be4eed3b070ee
+          fetch-depth: 0
+
+      - name: Assert exact identity
+        run: |
+          test "$(git rev-parse HEAD)" = "e854185f501cfc2658d5d1c5430be4eed3b070ee"
+          test "$(git rev-parse 'HEAD^{tree}')" = "0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0"
+          printf 'head=%s\n' "$(git rev-parse HEAD)"
+          printf 'tree=%s\n' "$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Export exact tracked tree
+        run: |
+          git archive --format=tar.gz --output=b0-1-exact-source.tar.gz e854185f501cfc2658d5d1c5430be4eed3b070ee
+          sha256sum b0-1-exact-source.tar.gz
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-1-exact-source-e854185f
+          path: b0-1-exact-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
