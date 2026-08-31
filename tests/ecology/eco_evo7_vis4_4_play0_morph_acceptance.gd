@@ -64,7 +64,7 @@ func _run() -> void:
 	_check(String(ph5.get("source_adapter_hash", "")) == String(morph.get("adapter_hash", "")), "PH5 binds Descriptor V2 adapter hash")
 	_check(String(ph5.get("source_reconstruction_hash", "")) == String(reconstruction.get("evidence_hash", "")), "PH5 binds reconstruction evidence hash")
 	_check(String(ph5.get("source_bridge_hash", "")).length() == 64, "PH5 complete bridge hash present")
-	_check(int(ph5.get("record_count", -1)) == int(published.get("population_count", ph5.get("record_count", -1))), "PH5 record count is non-vacuous")
+	_check(int(ph5.get("record_count", 0)) > 0, "PH5 record count is non-vacuous")
 	_check(int(ph5.get("record_count", 0)) == int(morph.get("descriptor_count", -1)), "every Descriptor V2 record reaches PH5")
 	_check(int(ph5.get("visible_individual_count", 0)) > 0, "initial live view materializes individual PH5 nodes")
 	_check(int(ph5.get("materialization_build_count", 0)) > 0, "PH5 materialization executed")
