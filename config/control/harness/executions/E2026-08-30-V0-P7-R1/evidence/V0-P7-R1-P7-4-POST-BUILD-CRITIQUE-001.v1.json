@@ -1,0 +1,106 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "V0-P7-R1-P7-4-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "exact_subject_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "exact_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+  "runtime_pr": 396,
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED_BEFORE_REVIEW",
+  "strengths": [
+    "The runtime delta is bounded to six files and preserves existing Matter, Item Graph, persistence, authority, and network foundations.",
+    "P7.4 composes existing MW5 Matter recovery and existing M6/V0 gameplay recovery instead of introducing a P7-private persistence repository or save format.",
+    "The accepted P7.3 MatterMaterialBatch -> canonical Item Graph coordinator is reused directly; no second delivery path or receipt ledger is introduced.",
+    "Recovered MW4 replay is checked against the persisted COMMITTED result and additionally fenced by receiver hash, journal hash, and batch-count equality.",
+    "The aggregate gameplay revision defect was fixed in the existing NetworkedGameplayService owner, under a canonical Work Order amendment, rather than hidden inside a P7-private revision counter.",
+    "The aggregate revision seam is replay-aware: successful fresh canonical output advances once, while canonical replay does not advance.",
+    "The focused acceptance is a real three-process sequence using durable user:// state with separate seed, recover-deliver, and recover-replay invocations."
+  ],
+  "findings": [
+    {
+      "id": "P7.4-C001",
+      "severity": "HIGH",
+      "status": "FIXED",
+      "summary": "Initial restart delivery changed the canonical Item Graph without advancing the enclosing NetworkedGameplayService authoritative revision, producing SAME_REVISION_AUTHORITATIVE_MUTATION.",
+      "resolution": "A canonical P7.4 Work Order amendment authorized the existing NetworkedGameplayService path. Final HEAD delegates server-output preflight/apply to the canonical Item Graph and calls _advance() exactly once only after successful non-replay output."
+    },
+    {
+      "id": "P7.4-C002",
+      "severity": "IMPORTANT",
+      "status": "REVIEW_REQUIRED",
+      "summary": "The new aggregate revision seam wraps canonical Item Graph mutation and aggregate _advance() in one synchronous call, but the two owners still expose separate internal revisions.",
+      "resolution": "Reviewer must verify there is no alternate P7.4 path that can bypass the wrapper, no failure/replay path advances the aggregate, and the existing single-threaded synchronous call boundary is sufficient for the current persistence model."
+    },
+    {
+      "id": "P7.4-C003",
+      "severity": "IMPORTANT",
+      "status": "ACCEPTANCE_QUESTION",
+      "summary": "The restart-focused seed constructs one valid committed MW5 state through public canonical MW4 contracts and receiver/journal rather than executing full excavation geometry in the seed process.",
+      "resolution": "The full P7.4 runner separately preserves the real P7.3 LunarMatterBubble -> MW4 -> Item Graph regression. Reviewer must explicitly judge whether this separation is valid for the P7.4 persistence/restart boundary or whether a full real-excavation seed is required."
+    },
+    {
+      "id": "P7.4-C004",
+      "severity": "ENVIRONMENT",
+      "status": "VERIFIER_OWNED",
+      "summary": "The Implementer container did not freshly complete every canonical regression stage: P7.2 bubble, MW4 and MW6 are not promoted as fresh PASS, and M6 recovery processes exceeded the 180-second execution window.",
+      "resolution": "No assertion RED is being reclassified. Fresh independent Ubuntu Verifier must execute the complete canonical P7.4 gate and is the only actor allowed to close these gaps."
+    }
+  ],
+  "bounded_questions": {
+    "unnecessary_complexity": "The separate authoritative Item Graph output port is a small stateless adapter that keeps P7.4 from calling NetworkedGameplayService internals directly and makes aggregate-revision ownership explicit. Removing it would couple the restart coordinator directly to the aggregate service surface.",
+    "duplicate_truth": "None intended. Matter durability remains MW5-owned, gameplay durability remains M6/V0-owned, Item Graph exactly-once remains canonical Item Graph-owned, and aggregate revision remains NetworkedGameplayService-owned.",
+    "implicit_owner": "No new durable owner. P7.4 objects hold runtime references only; all persisted state is delegated to existing repositories/coordinators.",
+    "coupling_reduction": "The only cross-domain coupling added to NetworkedGameplayService is the Work Order-approved canonical server-output wrapper. P7.4 otherwise depends on public recovery/service methods.",
+    "sibling_surface_fix": "P3 aggregate recovery and M6 recovery contracts were freshly rerun on exact frozen source; the fresh Verifier still owns complete sibling closure.",
+    "removable_code": "No previous runtime owner or persistence path is replaced or bypassed.",
+    "design_regression": "The primary design question is test-boundary realism, not owner structure: whether contract-built committed MW5 seed state plus separate real P7.3 regression is sufficient evidence for restart composition.",
+    "refactor_if_redesigned": "If future gameplay persistence exposes a first-class atomic domain-output transaction, move the aggregate-revision coupling behind that canonical transaction rather than adding any P7-local transaction or receipt state."
+  },
+  "production_scope_review": {
+    "second_matter_truth": false,
+    "second_item_graph": false,
+    "second_resource_inventory": false,
+    "second_replay_ledger": false,
+    "second_persistence_owner": false,
+    "private_save_format": false,
+    "network_foundation_change": false,
+    "authority_foundation_change": false,
+    "matter_contract_change": false,
+    "canonical_item_graph_implementation_change": false,
+    "canonical_networked_gameplay_service_change": true,
+    "canonical_networked_gameplay_service_change_authorized_by_work_order_amendment": true
+  },
+  "exact_validation": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "restart_seed": "PASS 21/21",
+    "restart_recover_deliver": "PASS 25/25",
+    "restart_recover_replay": "PASS 17/17",
+    "p7_3_focused": "PASS 116/116",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "p5_mining_tool": "PASS 36/36",
+    "p3_resource_domain": "PASS 79/79",
+    "p3_aggregate_recovery": "PASS 33/33",
+    "m6_recovery_contracts": "PASS 126/126",
+    "p7_2_bubble": "NOT_CLAIMED_AS_FRESH_PASS",
+    "mw4_standalone": "NOT_CLAIMED_AS_FRESH_PASS",
+    "mw5_standalone": "NOT_PROMOTED_AS_FRESH_PASS_IN_THIS_CRITIQUE",
+    "mw6_standalone": "NOT_CLAIMED_AS_FRESH_PASS",
+    "m6_recovery_processes": "NOT_CLAIMED: execution exceeded 180-second container window",
+    "runtime_project_control_run": 33374295322,
+    "runtime_project_control": "SUCCESS"
+  },
+  "open_blockers": [
+    "Fresh independent Reviewer verdict.",
+    "Fresh independent Verifier after Reviewer PASS.",
+    "Human RUNTIME_FEATURE_MERGE gate."
+  ],
+  "nonblocking_followups": [
+    "P7.5 must prove two-client convergence using accepted P7.4 restart semantics.",
+    "P7.7 must compose the accepted chain into the graphical equip-aim-dig-material-inventory product slice."
+  ],
+  "p7_checkpoint_accepted": false,
+  "p7_4_closed": false,
+  "recorded_at_utc": "2026-08-31T10:58:00Z"
+}
