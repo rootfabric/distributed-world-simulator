@@ -2,8 +2,8 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_3_COMPLETE_MERGED_P7_4_NEXT",
-  "authored_against_main": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+  "status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
+  "authored_against_main": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
@@ -69,12 +69,20 @@
       "id": "P7.4",
       "name": "PERSISTENCE_RESTART_COMPOSITION",
       "exit": "MW5_RESTART_REPLAY_PASS",
-      "status": "NEXT"
+      "status": "COMPLETE_MERGED",
+      "runtime_subject_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+      "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
     },
     {
       "id": "P7.5",
       "name": "TWO_CLIENT_CONVERGENCE",
-      "exit": "MW6_MW7_RL_CONVERGENCE_PASS"
+      "exit": "MW6_MW7_RL_CONVERGENCE_PASS",
+      "status": "NEXT",
+      "control_precondition": "REPAIR_PRE_EXISTING_EPOCH_TRANSITION_TABLE_BEFORE_AUTOMATED_DRIVE_CLOSE"
     },
     {
       "id": "P7.6",
@@ -123,5 +131,21 @@
     "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
     "reviewed_head": "6b4b6573d002ea7550b6e5f84bb7571a03d9a5cd",
     "reviewed_owner_map_blob_sha": "8867355fe2cb33dcf2ce3c70de252d245dcb9908"
+  },
+  "p7_4_restart_boundary": {
+    "status": "RESOLVED_COMPLETE_MERGED",
+    "aggregate_revision_owner": "NETWORKED_GAMEPLAY_SERVICE",
+    "matter_persistence_owner": "MW5_MATTER_STATE_COORDINATOR",
+    "gameplay_persistence_owner": "M6_AUTHORITATIVE_RECOVERY_COORDINATOR",
+    "matter_replay_owner": "MW4_MATERIAL_RECEIVER_AND_JOURNAL",
+    "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "runtime_subject_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+    "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_WINDOWS_EXACT_SOURCE_R3",
+    "verification": "VERIFIED",
+    "total_assertions": 1384,
+    "total_failures": 0,
+    "fatal_logs": "17/17 clean",
+    "new_canonical_owner_required": false
   }
 }
