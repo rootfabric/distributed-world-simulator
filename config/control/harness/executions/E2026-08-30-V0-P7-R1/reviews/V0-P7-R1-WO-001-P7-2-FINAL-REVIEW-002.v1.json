@@ -1,0 +1,60 @@
+{
+	"schema": "distributed_world_simulator.harness_review_result.v1",
+	"review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002",
+	"review_type": "POST_BUILD_EXACT_HEAD_SUBSTEP_REVIEW_REFRESH",
+	"work_order_id": "V0-P7-R1-WO-001",
+	"risk_class": "CRITICAL",
+	"reviewed_head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+	"reviewed_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+	"reviewer": "INDEPENDENT_REVIEWER_P7_2_FRESH_EXACT_SOURCE_R2",
+	"reviewed_at_utc": "2026-08-31T03:32:41Z",
+	"verdict": "PASS",
+	"required_fixes": [],
+	"rank_up_moves": [],
+	"evidence_gaps": [],
+	"findings": [],
+	"checked_items": [
+		{
+			"id": "IDENTITY",
+			"result": "PASS",
+			"detail": "All three commits (prior reviewed cc98bee, new HEAD 0292e0a, control HEAD 2819477) exist; trees verified via rev-parse ^{tree} (c58c9ec and dc39d42); origin/feature branch and origin control-refresh-r2 branch match expected SHAs exactly."
+		},
+		{
+			"id": "BOUNDED_DELTA",
+			"result": "PASS",
+			"detail": "git diff --name-status cc98bee..0292e0a shows exactly four files: +REVIEW-FIX-RESOLUTION-001.v1.json, +STREAMING-BOUNDS-AMENDMENT-001.v1.json, M work-orders/V0-P7-R1-WO-001.v1.json, M tests/runtime/test_v0_p7_2_lunar_surface_seam.gd. No scripts/ or any production runtime file changed. git diff --check clean; runtime worktree status clean."
+		},
+		{
+			"id": "RF-001_WORK_ORDER_SCOPE",
+			"result": "RESOLVED",
+			"detail": "Work Order on main d96ed71a (PR #359, Project Control 33351900922 SUCCESS) now lists scripts/world/terrain/streaming/terrain_streaming_manager.gd in allowed_paths. Amendment V0-P7-R1-P7-2-STREAMING-BOUNDS-ALLOWED-PATH-001 authorizes only immutable duplicate forwarding of get_streaming_matter_exclusion_bounds() into the existing terrain build request, and explicitly forbids streaming ownership change, scheduler/cache redesign, persistence/network/authority foundation, Matter DTO change, and new canonical state owner. Amendment is narrow and sufficient."
+		},
+		{
+			"id": "RF-002_DOUBLE_PRECISION_PREMISE",
+			"result": "REFUTED_FOR_EXACT_ACCEPTANCE_BUILD",
+			"detail": "Prior finding assumed standard float32 Vector3. Exact acceptance Godot is 4.7.1.stable.double.custom_build.a13da4feb (double-precision build); evidence map records executable probe delta 0.020000000019 m at 1737400 m. New behavioral gate in _test_production_behavioral_guards() computes Vector3(1737400.02,0,0).x - Vector3(1737400.0,0,0).x and requires absf(delta-0.02) < 1e-9, which cannot pass on a float32 engine (ULP at lunar radius ~0.125 m), so the premise is fail-closed pinned. The original float32 premise was wrong for this exact build; 0.25 m clearance demand withdrawn for exact acceptance build."
+		},
+		{
+			"id": "RF-003_SOURCE_STRING_ASSERTIONS",
+			"result": "RESOLVED",
+			"detail": "grep confirms FileAccess.get_file_as_string and _test_production_hook_guards fully removed. Replacement _test_production_behavioral_guards() (registered in _run()) is genuinely behavioral: (A) real TerrainStreamingManagerScript.new(), manager.setup(...), request_surface() -> pending_request observation; (B) immutable bounds forwarding — mutates source bounds after request and asserts forwarded deep copy unchanged (duplicate(true) behavior); (C) collision from final clipped mesh via _build_collision_from_local_mesh() producing ConcavePolygonShape3D with face-by-face is_equal_approx comparison against clipped_mesh.get_faces(), not just triangle count; (D) LunarApp public API: default disabled, disable idempotent (already_disabled detail), enable fails closed with P7_MOON_WORLD_NOT_READY; (E) lunar-radius double precision guard per RF-002."
+		},
+		{
+			"id": "NO_NEW_TAUTOLOGY",
+			"result": "PASS",
+			"detail": "Every replacement assertion observes independently produced output (pending_request dictionary, ConcavePolygonShape3D faces, LunarApp returned result dictionaries, numeric resolution). No source-text contains() matching remains; no production helper is used to prove its own correctness."
+		},
+		{
+			"id": "ARCHITECTURE_CARRY_FORWARD",
+			"result": "PASS",
+			"detail": "Since OLD_HEAD..NEW_HEAD touches only four control/test files, the production implementation reviewed at cc98bee (commit b5de5d1, PASS) is bit-identical. All prior architectural findings (single Matter truth, single Terrain truth, sampler defaults, Moon body/frame identity, deterministic sampler, physical AABB clipper, crossing-triangle handling, winding/UV/degenerate logic, sync/worker/legacy/Matter production paths, feature-OFF rollback, MW4/MW5/MW6 ownership) carry forward unchanged."
+		},
+		{
+			"id": "EXECUTION_EVIDENCE_BINDING",
+			"result": "PASS",
+			"detail": "Evidence map V0-P7-R1-P7-2-REVIEW-REFRESH-EVIDENCE-MAP-002.v1.json is bound to exactly reviewed HEAD 0292e0a9 / TREE dc39d42c. Reported gates: P7.2 bubble 53/53, P7.2 seam 50/50, P7.1 authority 83/83, P7.1 Tool-to-MW4 30/30, MW4 187, MW5 142, MW6 130, canonical runner exit 0; runtime Project Control 33352528718 SUCCESS on Godot 4.7.1.stable.double.custom_build.a13da4feb. Immutable source export: PR #361, run 33352617094, artifact 9744115039, ZIP SHA-256 4259a92184a4e2d7d5fa7977f19879a70215f4cf3faa6105446872e93b293bef, source tar SHA-256 1a7067ae17fded8c561ed358b8096bf8dab283481f7a624687ae7c8a79c44c93, reconstructed TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36 matching reviewed tree. Reviewer refresh control evidence: PR #362, control HEAD 281947750d1e44ebcaa043cdc72fac982e982c5a. Independent execution re-run deferred to the independent Verifier per protocol."
+		}
+	],
+	"risk_assessment": "LOW for this refresh scope. The delta from the previously independently reviewed HEAD is limited to control/test files; production runtime SHA-content is unchanged, so the prior architectural PASS carries forward in full. All three prior PASS conditions are closed: RF-001 by a narrow recorded Work Order amendment on main, RF-002 by refutation of the float32 premise against the exact double-precision acceptance build with a fail-closed behavioral precision gate, RF-003 by complete replacement of tautological source-string checks with behavioral assertions on real production surfaces. Remaining risk is execution regression at the new HEAD, which is the independent Verifier's scope, not the Reviewer's.",
+	"summary": "Fresh independent exact-source reviewer refresh R2 for P7.2. Identity of new HEAD 0292e0a97d980d5c384b0118999429f1e6f13c3d / TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36 verified exactly against origin refs. Bounded delta from prior reviewed HEAD cc98bee is exactly the four declared control/test files; production runtime code unchanged, so the prior Reviewer PASS (b5de5d1) architectural findings carry forward. RF-001 RESOLVED via narrow allowed-path amendment (PR #359 / d96ed71a, control 33351900922). RF-002 REFUTED for the exact acceptance build: Godot 4.7.1.stable.double.custom_build.a13da4feb resolves 0.02 m at lunar radius (observed 0.020000000019 m) and the new 1e-9 behavioral gate fail-closes against any float32 engine; the float32 premise of the original finding does not hold for this build. RF-003 RESOLVED: source-string assertions removed and replaced by behavioral checks on real TerrainStreamingManager request construction, immutable deep-copy bounds forwarding, face-exact collision trimesh equality against the final clipped mesh, and LunarApp public fail-closed API. Execution and immutable-source evidence are bound to the exact new HEAD/TREE. Verdict: PASS, opening the fresh independent Verifier only; no merge authorization."
+}

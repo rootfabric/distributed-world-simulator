@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-08-30-R8-P7_1_COMPLETE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-08-31-R9-P7_2_COMPLETE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_1_COMPLETE_P7_2_NEXT",
-  "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
+  "status": "PRIMARY_WORK_MAP_P7_2_COMPLETE_P7_3_NEXT",
+  "authored_against_main": "6e604a68c6883595a637a089bf3f709219a1197e",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "e86ec851b263ac6fca8177921b01cb7486fdff2f",
+  "control_main_base": "6e604a68c6883595a637a089bf3f709219a1197e",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -97,9 +97,32 @@
     }
   },
   "p7_2": {
+    "state": "COMPLETE_MERGED",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "runtime_subject_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+    "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+    "runtime_merge_pr": 350,
+    "runtime_merge_carrier_pr": 368,
+    "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
+    "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
+    "hard_rule": "NO_SECOND_MATTER_OR_TERRAIN_TRUTH",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "test_summary": {
+      "p7_2_bubble": "53/53",
+      "p7_2_seam": "50/50",
+      "p7_1_authority": "83/83",
+      "p7_1_tool_to_mw4": "30/30",
+      "mw4": "187",
+      "mw5": "142",
+      "mw6": "130"
+    }
+  },
+  "p7_3": {
     "state": "NEXT",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
-    "hard_rule": "NO_SECOND_MATTER_OR_TERRAIN_TRUTH"
+    "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+    "hard_rule": "CANONICAL_ITEM_GRAPH_ONLY_AND_EXPLICIT_MASS_CONSERVATION"
   }
 }

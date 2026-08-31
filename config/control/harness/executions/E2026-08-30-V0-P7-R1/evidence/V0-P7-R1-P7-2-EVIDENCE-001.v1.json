@@ -1,0 +1,71 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+  "intent": "Close P7.2 only: compose one bounded lunar Matter bubble into the accepted V0 planetary surface while preserving existing MW4-MW10 Matter ownership and legacy terrain outside the body-fixed Matter root.",
+  "root_cause_or_reason": "The product needed a production planetary Matter surface region, but the accepted Matter foundation was asteroid-oriented and the legacy Moon surface renderer could overlap Matter geometry/collision. P7.2 adds only a Moon sampler injection seam, a bounded Matter bubble, derived presentation, and body-fixed legacy/Matter seam clipping.",
+  "changed_surfaces": [
+    "scripts/simulation/matter/generation/moon_geology_sampler.gd",
+    "scripts/simulation/matter/generation/moon_surface_feature_catalog.gd",
+    "scripts/simulation/matter/storage/matter_brick_materializer.gd",
+    "scripts/simulation/matter/query/matter_continuous_query_service.gd",
+    "scripts/simulation/matter/mutation/matter_excavation_service.gd",
+    "scripts/world/matter/**",
+    "scripts/world/terrain/procedural_moon_terrain.gd",
+    "scripts/world/terrain/streaming/terrain_streaming_manager.gd",
+    "scripts/app/lunar_app.gd",
+    "tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd",
+    "tests/runtime/test_v0_p7_2_lunar_surface_seam.gd",
+    "RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.*"
+  ],
+  "canonical_owner": "Matter mutation remains MW4, persistence MW5, replication/authority existing MW6-MW10; legacy surface adapter/clipper own no canonical state. Canonical Moon identity is body/moon / body/moon/fixed and Item Graph is untouched until P7.3.",
+  "entry_points": [
+    "LunarMatterBubbleRuntime.configure()",
+    "LunarMatterBubble",
+    "LegacyMoonSurfaceAdapter",
+    "LegacyMoonMatterSeamClipper",
+    "ProceduralMoonTerrain.set_matter_surface_adapter()"
+  ],
+  "callers": [
+    "existing LunarApp / procedural Moon world",
+    "existing MW4/query/materializer services through optional procedural_sampler injection"
+  ],
+  "callees": [
+    "existing Matter snapshot store and MW4 mutation service",
+    "existing Matter query/materializer",
+    "existing procedural Moon terrain sync/worker paths"
+  ],
+  "sibling_surfaces_checked": [
+    "default fixed_seed_asteroid_generator behavior preserved when no Moon sampler is injected",
+    "P7.1 authority gate 83/83",
+    "P7.1 Tool→MW4 30/30",
+    "MW4 187",
+    "MW5 142",
+    "MW6 130",
+    "body-fixed AABB seam and worker parity independently reviewed"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Exact runtime subject 0292e0a97d980d5c384b0118999429f1e6f13c3d / tree dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36. Independent Reviewer R2 PASS and fresh independent Verifier R1 VERIFIED. Exact double-Godot canonical runner GREEN. Human RUNTIME_FEATURE_MERGE explicitly approved; exact subject merged to main as 6e604a68c6883595a637a089bf3f709219a1197e.",
+  "remaining_risks": [
+    "P7.3 must define MatterMaterialBatch→canonical Item Graph conversion with explicit mass conservation and exactly-once semantics; no hidden kg-per-item truth is permitted.",
+    "P7.4 persistence restart, P7.5 two-client convergence, P7.6 seam/multi-region composition, P7.7 graphical digging and whole-P7 full regression remain open."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Proceed to P7.3 on the same serialized P7 Work Order/mutation lease.",
+    "Do not declare whole P7 accepted until P7.3-P7.7 and checkpoint-level evidence close."
+  ],
+  "evidence_gaps": [
+    "Whole-P7 full world/core regression pending.",
+    "Whole-P7 checkpoint proposal/acceptance pending."
+  ],
+  "review_verdict": "PASS"
+}

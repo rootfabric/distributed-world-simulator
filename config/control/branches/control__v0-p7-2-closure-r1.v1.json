@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-2-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.2 closure control carrier; records exact verified lunar Matter bubble merge and advances the same P7 Work Order to P7.3.",
+  "purpose": "Canonicalize P7.2 exact-head review/verification/human runtime merge without accepting the whole P7 checkpoint or releasing the P7 mutation lease.",
+  "expected_outcome": "P7.2 COMPLETE_MERGED; P7 IN_PROGRESS; P7.3 NEXT on the same runtime branch and single mutation lease.",
+  "current_stage": "P7.3 Material Batch to Canonical Item Graph",
+  "stage_status": "P7_2_COMPLETE_MERGED_P7_3_NEXT",
+  "progress_note": "P7.2 exact runtime 0292e0a97d980d5c384b0118999429f1e6f13c3d / tree dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36 passed bubble 53/53, seam 50/50, P7.1 83/83 + 30/30, MW4 187, MW5 142 and MW6 130 on exact double Godot; Reviewer R2 PASS and Verifier VERIFIED. Human merge approved; canonical merge 6e604a68c6883595a637a089bf3f709219a1197e.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "next_stage": "Implement P7.3 MatterMaterialBatch→canonical Item Graph with explicit mass conservation/exactly-once semantics; do not invent a P7 resource store or hidden conversion truth.",
+  "parent_branch_or_checkpoint": "main @ 6e604a68c6883595a637a089bf3f709219a1197e / P7.2 runtime merged",
+  "base_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 independent Reviewer R2 PASS",
+    "P7.2 fresh independent Verifier VERIFIED",
+    "human RUNTIME_FEATURE_MERGE APPROVED",
+    "exact runtime subject merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-2-closure-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0004-p7-2-runtime-merged.v1.json",
+    "docs/checkpoints/2026-08-31_V0_P7_2_BOUNDED_PLANETARY_MATTER_BUBBLE_COMPLETE_R1_RU.md",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/world/matter/**",
+    "scripts/world/terrain/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/sm1/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/world/matter/**",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+    "focused": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

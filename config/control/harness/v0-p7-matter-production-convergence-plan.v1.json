@@ -2,8 +2,8 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_0_ACCEPTED_PRE_DISPATCH",
-  "authored_against_main": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
+  "status": "P7_2_COMPLETE_MERGED_P7_3_NEXT",
+  "authored_against_main": "6e604a68c6883595a637a089bf3f709219a1197e",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
@@ -39,17 +39,25 @@
     {
       "id": "P7.1",
       "name": "TOOL_TO_EXISTING_MW4_ADAPTER",
-      "exit": "TOOL_TO_MW4_PASS"
+      "exit": "TOOL_TO_MW4_PASS",
+      "status": "COMPLETE_MERGED"
     },
     {
       "id": "P7.2",
       "name": "BOUNDED_PLANETARY_MATTER_BUBBLE",
-      "exit": "PLANETARY_MATTER_BUBBLE_PASS"
+      "exit": "PLANETARY_MATTER_BUBBLE_PASS",
+      "status": "COMPLETE_MERGED",
+      "runtime_subject_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+      "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+      "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
     },
     {
       "id": "P7.3",
       "name": "MATERIAL_BATCH_TO_ITEM_GRAPH",
-      "exit": "MASS_CONSERVATION_AND_ITEM_GRAPH_PASS"
+      "exit": "MASS_CONSERVATION_AND_ITEM_GRAPH_PASS",
+      "status": "NEXT"
     },
     {
       "id": "P7.4",
