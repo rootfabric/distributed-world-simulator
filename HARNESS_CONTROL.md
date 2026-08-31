@@ -178,3 +178,39 @@ EXCEPTIONS    = human attention units
 ```
 
 Risk routing, exact-head freshness, Evidence Map, Repair Doctrine, PC0/directional audit, runtime merge human gates и запрет Implementer self-accept остаются действующими.
+
+
+## Terminal report + Local Execution Handoff
+
+Каждый разрешённый выход из пользовательской checkpoint-session обязан иметь machine-derived `terminal_report`.
+
+```text
+MISSION_COMPLETE
+  -> СТАТУС: ЗАВЕРШЕНО.
+  -> обязательно указать следующий checkpoint/action
+
+HUMAN_DECISION_REQUIRED
+  -> СТАТУС: НЕ ЗАВЕРШЕНО.
+  -> указать решение/действие, которое разблокирует продолжение
+
+HARD_BLOCKED
+  -> СТАТУС: НЕ ЗАВЕРШЕНО.
+  -> указать blocker и resume condition
+
+LOCAL_EXECUTION_REQUIRED
+  -> СТАТУС: НЕ ЗАВЕРШЕНО.
+  -> указать durable Git handoff и отдельную инструкцию локальному агенту
+
+CONTINUE_REQUIRED
+  -> финальный пользовательский ответ запрещён; mission продолжается
+```
+
+`FINISHED` разрешён только при `mission_complete=true`, то есть после canonical-main acceptance exact checkpoint. Локальные `IMPLEMENTED`, `VERIFIED`, `AUDITED` и `CHECKPOINT_PROPOSED` не могут рендериться как «завершено».
+
+Если текущая среда не может выполнить обязательный локальный шаг (например exact Ubuntu/Windows/Godot verification), агент обязан до выхода создать и закоммитить:
+
+```text
+config/control/harness/executions/<execution>/handoffs/<handoff-id>.v1.json
+```
+
+Файл валидируется `config/control/harness/local-execution-handoff.schema.v1.json` и содержит exact source branch/head, environment, commands, success/failure criteria, evidence sink, resume condition и действия после PASS/FAIL. Только валидный committed OPEN handoff для exact implementation head создаёт terminal `LOCAL_EXECUTION_REQUIRED`. Handoff только в чате не считается передачей работы.

@@ -68,3 +68,20 @@ python -m unittest discover -s tests/harness -v
 An active checkpoint mission is project-preauthorized for routine Git operations through `A3_INTEGRATE_CANDIDATE`: scoped branch/worktree creation, scoped staging, commit, non-force push, durable evidence publication, draft PR creation/update and independent-review request. These operations are not Harness Human Attention gates and must not trigger a repeated user permission prompt.
 
 Merge, direct push to canonical `main`, force-push/history rewrite, destructive remote branch deletion and architecture/foundation authority changes remain explicit human gates. If the hosting/tool platform imposes a separate confirmation requirement, report `EXTERNAL_TOOL_AUTH_REQUIRED`; do not reinterpret it as a project-level Harness gate.
+
+
+## Terminal reporting and local execution
+
+Every continuation result includes a machine-derived `terminal_report`. A
+user-visible final response may say `FINISHED` only when
+`mission_complete=true`. Non-terminal `CONTINUE_REQUIRED` returns
+`final_response_allowed=false`.
+
+When the current environment cannot execute a required local step, create a
+schema-valid committed OPEN handoff under
+`config/control/harness/executions/<execution>/handoffs/`. The handoff must
+bind the exact implementation head and contain executable commands, PASS/FAIL
+criteria, evidence destination, and resume behavior. Only then may
+`LOCAL_EXECUTION_REQUIRED` authorize mission-session exit. The separate
+local-agent instruction is rendered from this Git-owned handoff; chat-only
+handoffs are invalid.

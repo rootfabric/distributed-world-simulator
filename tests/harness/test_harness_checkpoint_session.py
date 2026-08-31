@@ -32,6 +32,7 @@ def make_state(
     repair_count: int = 0,
     attention: list[dict] | None = None,
     hard_block_proof: dict | None = None,
+    local_handoff: dict | None = None,
 ) -> dict:
     value = {
         "active_work_order": {
@@ -54,6 +55,10 @@ def make_state(
         "findings": findings or [],
         "repair": {"same_defect_fix_required_count": repair_count},
         "human_attention": {"open_items": attention or []},
+        "local_execution": {
+            "active_handoff": local_handoff,
+            "all_handoffs": [local_handoff] if local_handoff else [],
+        },
         "checkpoint_acceptance": acceptance,
     }
     if hard_block_proof is not None:
@@ -159,6 +164,61 @@ class CheckpointSessionContinuationTests(unittest.TestCase):
         result = build_continuation(make_state(state_name="WAITING_HUMAN"), POLICY)
         self.assertTrue(result["human_decision_required"])
         self.assertTrue(result["mission_exit_allowed"])
+
+
+    def test_nonterminal_terminal_report_forbids_final_response(self) -> None:
+        result = build_continuation(make_state(state_name="FIX_REQUIRED"), POLICY)
+        report = result["terminal_report"]
+        self.assertFalse(report["work_finished"])
+        self.assertEqual("NOT_FINISHED", report["status"])
+        self.assertFalse(report["final_response_allowed"])
+        self.assertEqual("CONTINUE_CURRENT", report["next_step_kind"])
+
+    def test_mission_complete_terminal_report_is_finished(self) -> None:
+        acceptance = {
+            "checkpoint": "V0_P5_EQUIPMENT_TOOLS",
+            "status": "ACCEPTED",
+            "path": "config/control/harness/acceptance/P5.v1.json",
+        }
+        result = build_continuation(make_state(acceptance=acceptance), POLICY)
+        report = result["terminal_report"]
+        self.assertTrue(report["work_finished"])
+        self.assertEqual("FINISHED", report["status"])
+        self.assertTrue(report["final_response_allowed"])
+        self.assertEqual("NEXT_CHECKPOINT", report["next_step_kind"])
+
+    def test_durable_local_handoff_is_not_finished_terminal(self) -> None:
+        local_handoff = {
+            "handoff_id": "P5-UBUNTU-VERIFY-001",
+            "source_branch": "feature/test",
+            "source_head_sha": "a" * 40,
+            "target_environment": "UBUNTU_GODOT_DOUBLE",
+            "purpose": "Run exact-head Ubuntu verification.",
+            "requirements": ["Fresh detached worktree"],
+            "commands": ["python -m unittest tests.harness.test_harness_checkpoint_session"],
+            "success_criteria": ["exit code 0"],
+            "failure_criteria": ["non-zero exit code"],
+            "required_evidence": ["exact HEAD", "command output"],
+            "evidence_sink": "config/control/harness/executions/E/evidence/local.json",
+            "resume_condition": "LOCAL_VERIFICATION_RECORDED_DURABLY",
+            "next_action_on_pass": "Resume checkpoint closure.",
+            "next_action_on_fail": "Route FIX_REQUIRED.",
+            "path": "config/control/harness/executions/E/handoffs/P5-UBUNTU-VERIFY-001.v1.json",
+        }
+        result = build_continuation(make_state(local_handoff=local_handoff), POLICY)
+        self.assertEqual("LOCAL_EXECUTION_REQUIRED", result["handoff_class"])
+        self.assertTrue(result["mission_exit_allowed"])
+        self.assertTrue(result["local_execution_required"])
+        report = result["terminal_report"]
+        self.assertFalse(report["work_finished"])
+        self.assertEqual("NOT_FINISHED", report["status"])
+        self.assertTrue(report["final_response_allowed"])
+        self.assertEqual("LOCAL_EXECUTION", report["next_step_kind"])
+        self.assertEqual(local_handoff["path"], report["git_handoff_path"])
+        self.assertEqual(
+            "P5-UBUNTU-VERIFY-001",
+            report["local_agent_instruction"]["handoff_id"],
+        )
 
     def test_role_boundary_property_never_authorizes_parent_session_exit(self) -> None:
         states = [
@@ -309,6 +369,7 @@ class ContractRegressionTests(unittest.TestCase):
 
         for relative in (
             "config/control/harness/work-order.schema.v1.json",
+            "config/control/harness/local-execution-handoff.schema.v1.json",
             "validation/harness/control-development-output.schema.v1.json",
         ):
             value = json.loads((ROOT / relative).read_text(encoding="utf-8"))
@@ -331,6 +392,11 @@ class ContractRegressionTests(unittest.TestCase):
         )
         self.assertTrue(harness["principles"]["role_boundary_is_not_mission_boundary"])
         self.assertTrue(harness["principles"]["checkpoint_is_user_session_unit"])
+        self.assertTrue(harness["principles"]["finished_user_report_requires_mission_complete"])
+        self.assertEqual(
+            "config/control/harness/local-execution-handoff.schema.v1.json",
+            harness["local_execution_handoff_schema"],
+        )
 
 
     def test_default_git_authority_is_pre_authorized_through_a3(self) -> None:

@@ -24,6 +24,78 @@ def _threshold(policy: dict[str, Any]) -> int:
     return max(1, int(closing.get("max_same_defect_fix_required_events_before_takeover", 3)))
 
 
+
+def _terminal_report(
+    *,
+    mission_complete: bool,
+    mission_exit_allowed: bool,
+    handoff_class: str,
+    next_action: str,
+    reason: str,
+    hard_blocked: bool,
+    local_handoff: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if mission_complete:
+        return {
+            "work_finished": True,
+            "status": "FINISHED",
+            "status_text_ru": "СТАТУС: ЗАВЕРШЕНО.",
+            "final_response_allowed": True,
+            "reason": reason,
+            "next_step_kind": "NEXT_CHECKPOINT",
+            "next_step": "RUN_CONTROL_DEVELOPMENT_PLAN_FOR_NEXT_ELIGIBLE_CHECKPOINT",
+            "git_handoff_path": None,
+            "local_agent_instruction": None,
+        }
+
+    if handoff_class == "LOCAL_EXECUTION_REQUIRED" and local_handoff is not None:
+        instruction = {
+            "handoff_id": local_handoff["handoff_id"],
+            "subject": f'{local_handoff["source_branch"]}@{local_handoff["source_head_sha"]}',
+            "target_environment": local_handoff["target_environment"],
+            "purpose": local_handoff["purpose"],
+            "requirements": local_handoff["requirements"],
+            "commands": local_handoff["commands"],
+            "success_criteria": local_handoff["success_criteria"],
+            "failure_criteria": local_handoff["failure_criteria"],
+            "required_evidence": local_handoff["required_evidence"],
+            "evidence_sink": local_handoff["evidence_sink"],
+            "resume_condition": local_handoff["resume_condition"],
+            "next_action_on_pass": local_handoff["next_action_on_pass"],
+            "next_action_on_fail": local_handoff["next_action_on_fail"],
+        }
+        return {
+            "work_finished": False,
+            "status": "NOT_FINISHED",
+            "status_text_ru": "СТАТУС: НЕ ЗАВЕРШЕНО.",
+            "final_response_allowed": True,
+            "reason": reason,
+            "next_step_kind": "LOCAL_EXECUTION",
+            "next_step": next_action,
+            "git_handoff_path": local_handoff["path"],
+            "local_agent_instruction": instruction,
+        }
+
+    if handoff_class == "HUMAN_DECISION_REQUIRED":
+        kind = "HUMAN_DECISION"
+    elif hard_blocked:
+        kind = "HARD_BLOCK"
+    else:
+        kind = "CONTINUE_CURRENT"
+
+    return {
+        "work_finished": False,
+        "status": "NOT_FINISHED",
+        "status_text_ru": "СТАТУС: НЕ ЗАВЕРШЕНО.",
+        "final_response_allowed": mission_exit_allowed,
+        "reason": reason,
+        "next_step_kind": kind,
+        "next_step": next_action,
+        "git_handoff_path": None,
+        "local_agent_instruction": None,
+    }
+
+
 def _transition(
     *,
     mission: dict[str, Any],
@@ -37,10 +109,21 @@ def _transition(
     stop_obligation: str,
     evidence_sink: str | None = "EXECUTION_LEDGER",
     hard_blocked: bool = False,
+    local_handoff: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     human_required = handoff_class == "HUMAN_DECISION_REQUIRED"
+    local_required = handoff_class == "LOCAL_EXECUTION_REQUIRED"
     mission_exit_allowed = bool(
-        mission["mission_complete"] or human_required or hard_blocked
+        mission["mission_complete"] or human_required or hard_blocked or local_required
+    )
+    terminal_report = _terminal_report(
+        mission_complete=bool(mission["mission_complete"]),
+        mission_exit_allowed=mission_exit_allowed,
+        handoff_class=handoff_class,
+        next_action=next_action,
+        reason=reason,
+        hard_blocked=hard_blocked,
+        local_handoff=local_handoff,
     )
     return {
         **mission,
@@ -52,6 +135,8 @@ def _transition(
         "evidence_sink": evidence_sink,
         "human_decision_required": human_required,
         "hard_blocked": hard_blocked,
+        "local_execution_required": local_required,
+        "terminal_report": terminal_report,
         "role_exit_allowed": role_exit_allowed,
         "mission_exit_allowed": mission_exit_allowed,
         # Compatibility alias: a user-visible session is the checkpoint mission.
@@ -119,6 +204,22 @@ def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[st
             closure_loop_required=False,
             stop_obligation="PERSIST_HARD_BLOCK_PROOF_AND_RESUME_CONDITION",
             hard_blocked=True,
+        )
+
+    local_handoff = state.get("local_execution", {}).get("active_handoff")
+    if isinstance(local_handoff, dict):
+        return _transition(
+            mission=mission,
+            handoff_class="LOCAL_EXECUTION_REQUIRED",
+            next_actor="LOCAL_AGENT",
+            next_action=f'EXECUTE_LOCAL_HANDOFF:{local_handoff["handoff_id"]}',
+            resume_condition=str(local_handoff["resume_condition"]),
+            reason="The current environment cannot complete the required step; a durable exact-head local execution handoff is committed in Git.",
+            role_exit_allowed=True,
+            closure_loop_required=False,
+            stop_obligation="REPORT_NOT_FINISHED_AND_RENDER_DURABLE_LOCAL_AGENT_INSTRUCTION",
+            evidence_sink=str(local_handoff["evidence_sink"]),
+            local_handoff=local_handoff,
         )
 
     if state_name == "PLANNED":

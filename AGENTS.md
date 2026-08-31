@@ -37,6 +37,11 @@ HUMAN IS NOT A ROUTINE RESULT COURIER
 ACTIVE CHECKPOINT MISSION PRE-AUTHORIZES ROUTINE A0-A3 GIT OPERATIONS
 DO NOT ASK FOR BRANCH / COMMIT / NON-FORCE-PUSH / DRAFT-PR CONFIRMATION
 GIT AUTHORITY SURVIVES ROUTINE ROLE BOUNDARIES
+EVERY TERMINAL USER REPORT DECLARES FINISHED OR NOT FINISHED
+FINISHED MEANS MISSION_COMPLETE, NOT IMPLEMENTED / VERIFIED / AUDITED
+EVERY TERMINAL USER REPORT DECLARES THE NEXT ACTION
+LOCAL EXECUTION REQUIRES A DURABLE GIT HANDOFF BEFORE SESSION EXIT
+CHAT-ONLY LOCAL EXECUTION INSTRUCTIONS ARE NOT A VALID HANDOFF
 ```
 
 Scoped instructions may add local conventions, traps, launch commands and tests, but may not override architecture ownership, PC0 policy, main-owned registry, checkpoint catalog, risk minimums, review requirements, autonomy ceiling or human gates.
@@ -60,6 +65,9 @@ For every checkpoint mission:
 13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
 14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
 15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
+16. Before any final user response, use the machine-derived `terminal_report`. Never claim completion unless `terminal_report.status=FINISHED` and `mission_complete=true`.
+17. Every allowed terminal response must end with an explicit finished/not-finished declaration and an exact next action. `CONTINUE_REQUIRED` is not a terminal response: continue the mission instead.
+18. If execution must move to a local machine/agent, first persist a valid Local Execution Handoff under the active execution, commit and non-force push it, then report `NOT_FINISHED` and render the separate local-agent instruction from that durable handoff. Chat-only local instructions are forbidden.
 
 ## Checkpoint-session control surface
 
