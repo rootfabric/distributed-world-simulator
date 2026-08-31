@@ -198,68 +198,110 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	var cursor := 0
 	while cursor < ordered.size():
 		var end := mini(cursor + _parents_per_chunk, ordered.size())
-		var chunk: Array = ordered.slice(cursor, end)
 		var chunk_index := chunk_count
 		chunk_count += 1
 		if _fault_kind == "FORCE_CHUNK_FAILURE" and int(_fault_params.get("chunk_index", 0)) == chunk_index:
 			return _failure(FAIL_CHUNK, "forced chunk failure (test)", generation)
 
-		max_parent_chunk_seen = maxi(max_parent_chunk_seen, chunk.size())
+		var chunk_parent_count := end - cursor
+		max_parent_chunk_seen = maxi(max_parent_chunk_seen, chunk_parent_count)
 
-		var phase_started := Time.get_ticks_usec()
-		var candidates: Array[Dictionary] = []
 		if _pipeline_mode == PIPELINE_OPTIMIZED:
-			candidates = CandidateKernel.build_presorted_unsorted(
-				chunk, generation,
-				String(immutable_context["schema"]), String(immutable_context["version"]),
-				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+			## PERF2.4 R4: avoid transient chunk/candidate/route/recruitment
+			## arrays on the optimized path. The same pure kernels are called,
+			## but their exact outputs are appended directly into the full
+			## generation proposal arrays using the bounded cursor range.
+			var candidate_start := all_candidates.size()
+			var phase_started := Time.get_ticks_usec()
+			for parent_index in range(cursor, end):
+				var parent: Dictionary = ordered[parent_index]
+				for offspring_ordinal in int(immutable_context["offspring_per_parent"]):
+					var candidate: Dictionary = CandidateKernel.build_candidate(
+						parent, generation, offspring_ordinal,
+						String(immutable_context["schema"]), String(immutable_context["version"]),
+						int(immutable_context["evolution_seed"]))
+					if candidate.is_empty():
+						return _failure(FAIL_CHUNK, "optimized candidate build failed", generation)
+					all_candidates.append(candidate)
+			candidate_build_ms += _elapsed_ms(phase_started)
+
+			var candidate_end := all_candidates.size()
+			var candidate_count := candidate_end - candidate_start
+			if candidate_count != chunk_parent_count * int(immutable_context["offspring_per_parent"]):
+				return _failure(FAIL_CHUNK, "candidate chunk count mismatch", generation)
+			max_candidate_chunk_seen = maxi(max_candidate_chunk_seen, candidate_count)
+
+			var route_start := all_routes.size()
+			phase_started = Time.get_ticks_usec()
+			for candidate_index in range(candidate_start, candidate_end):
+				var route: Dictionary = RouteKernel.build_route(
+					all_candidates[candidate_index], generation,
+					String(immutable_context["schema"]), String(immutable_context["version"]),
+					int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
+					int(immutable_context["grid_size"]))
+				if route.is_empty():
+					return _failure(FAIL_ROUTE, "optimized route build failed", generation)
+				all_routes.append(route)
+			route_build_ms += _elapsed_ms(phase_started)
+			if all_routes.size() - route_start != candidate_count:
+				return _failure(FAIL_ROUTE, "route chunk count mismatch", generation)
+
+			var recruitment_start := all_recruitment.size()
+			phase_started = Time.get_ticks_usec()
+			for offset in range(candidate_count):
+				var candidate: Dictionary = all_candidates[candidate_start + offset]
+				var route: Dictionary = all_routes[route_start + offset]
+				if String(candidate.get("candidate_hash", "")) != String(route.get("candidate_hash", "")):
+					return _failure(FAIL_RECRUITMENT, "optimized candidate/route alignment failed", generation)
+				var event: Dictionary = RecruitmentKernel.evaluate_recruitment_event(
+					candidate, route, optimized_recruitment_context)
+				if event.is_empty():
+					return _failure(FAIL_RECRUITMENT, "optimized recruitment evaluation failed", generation)
+				event["recruitment_event_hash"] = RecruitmentKernel.recruitment_event_hash(
+					event, String(immutable_context["schema"]), String(immutable_context["version"]))
+				all_recruitment.append(event)
+			recruitment_eval_ms += _elapsed_ms(phase_started)
+			if all_recruitment.size() - recruitment_start != candidate_count:
+				return _failure(FAIL_RECRUITMENT, "recruitment chunk count mismatch", generation)
 		else:
-			candidates = CandidateKernel.build_all(
+			var chunk: Array = ordered.slice(cursor, end)
+
+			var phase_started := Time.get_ticks_usec()
+			var candidates: Array[Dictionary] = CandidateKernel.build_all(
 				chunk, generation,
 				String(immutable_context["schema"]), String(immutable_context["version"]),
 				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
 			chunk_local_parent_sorts += 1
 			chunk_local_candidate_sorts += 1
-		candidate_build_ms += _elapsed_ms(phase_started)
-		if candidates.size() != chunk.size() * int(immutable_context["offspring_per_parent"]):
-			return _failure(FAIL_CHUNK, "candidate chunk count mismatch", generation)
-		max_candidate_chunk_seen = maxi(max_candidate_chunk_seen, candidates.size())
+			candidate_build_ms += _elapsed_ms(phase_started)
+			if candidates.size() != chunk.size() * int(immutable_context["offspring_per_parent"]):
+				return _failure(FAIL_CHUNK, "candidate chunk count mismatch", generation)
+			max_candidate_chunk_seen = maxi(max_candidate_chunk_seen, candidates.size())
 
-		phase_started = Time.get_ticks_usec()
-		var routes: Array[Dictionary] = []
-		if _pipeline_mode == PIPELINE_OPTIMIZED:
-			routes = RouteKernel.build_in_input_order(
-				candidates, generation,
-				String(immutable_context["schema"]), String(immutable_context["version"]),
-				int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
-				int(immutable_context["grid_size"]))
-		else:
-			routes = RouteKernel.build_all(
+			phase_started = Time.get_ticks_usec()
+			var routes: Array[Dictionary] = RouteKernel.build_all(
 				candidates, generation,
 				String(immutable_context["schema"]), String(immutable_context["version"]),
 				int(immutable_context["evolution_seed"]), float(immutable_context["cell_size_m"]),
 				int(immutable_context["grid_size"]))
 			chunk_local_route_sorts += 1
-		route_build_ms += _elapsed_ms(phase_started)
-		if routes.size() != candidates.size():
-			return _failure(FAIL_ROUTE, "route chunk count mismatch", generation)
+			route_build_ms += _elapsed_ms(phase_started)
+			if routes.size() != candidates.size():
+				return _failure(FAIL_ROUTE, "route chunk count mismatch", generation)
 
-		phase_started = Time.get_ticks_usec()
-		var recruitment: Array[Dictionary] = []
-		if _pipeline_mode == PIPELINE_OPTIMIZED:
-			recruitment = _evaluate_recruitment_chunk_input_order(
-				candidates, routes, optimized_recruitment_context, immutable_context)
-		else:
-			recruitment = _evaluate_recruitment_chunk_legacy(candidates, routes, immutable_context)
+			phase_started = Time.get_ticks_usec()
+			var recruitment: Array[Dictionary] = _evaluate_recruitment_chunk_legacy(
+				candidates, routes, immutable_context)
 			recruitment_context_builds += 1
 			chunk_local_recruitment_sorts += 1
-		recruitment_eval_ms += _elapsed_ms(phase_started)
-		if recruitment.size() != candidates.size():
-			return _failure(FAIL_RECRUITMENT, "recruitment chunk count mismatch", generation)
+			recruitment_eval_ms += _elapsed_ms(phase_started)
+			if recruitment.size() != candidates.size():
+				return _failure(FAIL_RECRUITMENT, "recruitment chunk count mismatch", generation)
 
-		all_candidates.append_array(candidates)
-		all_routes.append_array(routes)
-		all_recruitment.append_array(recruitment)
+			all_candidates.append_array(candidates)
+			all_routes.append_array(routes)
+			all_recruitment.append_array(recruitment)
+
 		chunks_processed += 1
 		cursor = end
 
