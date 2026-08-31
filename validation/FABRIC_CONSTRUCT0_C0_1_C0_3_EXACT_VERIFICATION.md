@@ -9,10 +9,10 @@ branch:
 feature/fabric-construct0-tangible-sandbox-r1
 
 HEAD:
-d126f211a4b7749d6c80d0495740bcfb366f5d0d
+837c46940acddbd841e7878dcfbfb68c0d5ac259
 
 TREE:
-00fdb9ea041ae4a912037e4292c4c51fb270f676
+8a554f9d7e45660aa6a4354c62742b4432633523
 
 base B0.3 closure:
 9575a63d6aeb4c455f8beade7588505e600c12d6
@@ -55,7 +55,7 @@ precision double
 
 ```bash
 git fetch origin --prune
-git worktree add --detach ../dws-construct0-c03-verify d126f211a4b7749d6c80d0495740bcfb366f5d0d
+git worktree add --detach ../dws-construct0-c03-verify 837c46940acddbd841e7878dcfbfb68c0d5ac259
 cd ../dws-construct0-c03-verify
 
 git rev-parse HEAD
@@ -73,8 +73,8 @@ GODOT_BIN="$GODOT_BIN" bash ./RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.sh
 Required identity:
 
 ```text
-HEAD d126f211a4b7749d6c80d0495740bcfb366f5d0d
-TREE 00fdb9ea041ae4a912037e4292c4c51fb270f676
+HEAD 837c46940acddbd841e7878dcfbfb68c0d5ac259
+TREE 8a554f9d7e45660aa6a4354c62742b4432633523
 tracked worktree clean
 ```
 
@@ -82,7 +82,7 @@ tracked worktree clean
 
 ```powershell
 git fetch origin --prune
-git worktree add --detach C:\distributed-world-simulator\construct0-c03-verify d126f211a4b7749d6c80d0495740bcfb366f5d0d
+git worktree add --detach C:\distributed-world-simulator\construct0-c03-verify 837c46940acddbd841e7878dcfbfb68c0d5ac259
 Set-Location C:\distributed-world-simulator\construct0-c03-verify
 
 git rev-parse HEAD
@@ -90,7 +90,7 @@ git rev-parse "HEAD^{tree}"
 git status --short
 
 $env:GODOT_BIN = "C:\path\to\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.ps1 -GodotPath $env:GODOT_BIN -ExpectedHead d126f211a4b7749d6c80d0495740bcfb366f5d0d
+.\RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.ps1 -GodotPath $env:GODOT_BIN -ExpectedHead 837c46940acddbd841e7878dcfbfb68c0d5ac259
 ```
 
 ## Required acceptance
@@ -141,21 +141,67 @@ Must prove:
 
 Project Control must PASS on the exact implementation/test subject or an evidence-only descendant that contains it unchanged.
 
-## Verdict
+## Exact verification result
 
-Only these verdicts are allowed:
+Verification was executed from a fresh detached worktree reconstructed from an exact Git bundle produced by a GitHub Actions carrier that checked out the subject SHA explicitly.
+
+```text
+SUBJECT HEAD:
+837c46940acddbd841e7878dcfbfb68c0d5ac259
+
+SUBJECT TREE:
+8a554f9d7e45660aa6a4354c62742b4432633523
+
+tracked status:
+clean
+
+bundle SHA-256:
+dc54bdfbbb8c6272090ce9e1629320ca6aa14f508d3a332e8812203ddf8cb46c
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot binary SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+Godot archive SHA-256:
+d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92
+
+import:
+PASS, exit 0
+
+known unrelated historical ECO scene diagnostics:
+present, non-fatal, unchanged
+
+C0.1:
+PASS (58 assertions)
+
+C0.2:
+PASS (33 assertions)
+
+C0.3:
+PASS (30 assertions)
+
+chained runner:
+PASS, exit 0
+
+Project Control exact subject:
+run 33431191889
+SUCCESS
+
+Exact source carrier:
+run 33431220738
+SUCCESS
+artifact 9772649470
+```
+
+Verdict:
 
 ```text
 VERIFIED
 ```
 
-or
-
-```text
-NOT_VERIFIED
-```
-
-Do not mark C0.1/C0.2/C0.3 CLOSED from code review alone.
+C0.1/C0.2/C0.3 may now be qualified CLOSED as research/demo checkpoints. Production acceptance is not claimed.
 
 ## Next after VERIFIED
 
