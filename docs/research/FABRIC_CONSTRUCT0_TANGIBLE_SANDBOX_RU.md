@@ -4,8 +4,10 @@
 
 ```text
 CONSTRUCT0
-AUTHORIZED
-IMPLEMENTATION IN PROGRESS
+C0.1 SEE THE MODEL IMPLEMENTED
+C0.2 SEE FABRIC MOVE IT IMPLEMENTED
+C0.3 BUILD IT IMPLEMENTED
+EXACT C0.1→C0.3 VERIFICATION PENDING
 NOT PRODUCTION ACCEPTED
 ```
 
@@ -56,8 +58,8 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - debug-only representation forcing contract;
 - executable acceptance plan.
 
-### C0.1 — Tangible observatory
-- three compound presets: TABLE, BRIDGE, CART;
+### C0.1 — Tangible observatory — IMPLEMENTED / VERIFICATION PENDING
+- four compound presets: TABLE, BRIDGE, CART, PLANK;
 - canonical Construction parts + bonds;
 - existing Construction runtime projection for geometry;
 - actual B0.3 contact/wrench artifact compiled for the active support patch;
@@ -66,16 +68,20 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - mode toggle: AUTO / FULL CONTACT VIEW / BAKED CONTACT VIEW;
 - no claim of full rigid-body time integration yet.
 
-### C0.2 — FABRIC driven rigid-body playback
-- bounded prebuilt scenarios driven by closed FABRIC0.18 research runtime;
+### C0.2 — FABRIC driven rigid-body playback — IMPLEMENTED / VERIFICATION PENDING
+- bounded PLANK reference scenario driven directly by closed FABRIC0.18 research runtime;
+- PLAY / PAUSE / STEP EVENT / RESET controls;
+- visible event timeline and FABRIC body velocities;
 - impact → persistent support → slide/roll/spin → separation;
 - Godot transform follows FABRIC state, never the reverse;
 - deterministic reset/replay.
 
-### C0.3 — Construction editor
+### C0.3 — Construction editor — IMPLEMENTED / VERIFICATION PENDING
+- create an empty canonical Construction;
 - add Block / Beam / Plate;
 - select/move/rotate;
 - create/break rigid bonds;
+- generic canonical `update_part_pose` with replay and stale-revision rejection;
 - every edit mutates canonical Construction first;
 - runtime projection rebuilt from canonical snapshot.
 
