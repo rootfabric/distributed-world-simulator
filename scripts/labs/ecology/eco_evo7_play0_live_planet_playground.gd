@@ -893,6 +893,10 @@ func get_play0_status() -> Dictionary:
 		"spectator_body_visible": is_spectator_body_visible(),
 		"ph5_active": bool(presentation_contract.get("ph5_active", false)),
 		"ph5": Dictionary(presentation_contract.get("ph5", {})).duplicate(true),
+		"morphology_inspector_visible": morphology_inspector_visible,
+		"morphology_inspector_selected_index": _morphology_inspector_index,
+		"morphology_inspector_record_id": _morphology_inspector_record_id,
+		"morphology_inspector_hash": String(_morphology_inspector_state.get("inspector_hash", "")),
 	}
 
 
