@@ -80,7 +80,7 @@ func _run() -> void:
 
 		for measured_index in range(Report.MEASURED_GENERATIONS):
 			var before_generation := int(playground.get_published_snapshot().get("generation", -1))
-			var before_rejections := playground.get_generation_rejections()
+			var before_rejections: int = playground.get_generation_rejections()
 
 			_check(
 				playground.request_generation(),
@@ -129,7 +129,7 @@ func _run() -> void:
 			var workbench = playground.get_workbench()
 			var profile: Dictionary = workbench.get_last_generation_profile()
 			var simulation_ms := float(profile.get("total_ms", -1.0))
-			var combined_ms := playground.get_last_generation_duration_ms()
+			var combined_ms: float = playground.get_last_generation_duration_ms()
 			var simulation_valid := is_finite(simulation_ms) and simulation_ms > 0.0
 			var combined_valid := is_finite(combined_ms) and combined_ms > 0.0
 			_check(simulation_valid, "PERF2.CONV simulation timing valid")
