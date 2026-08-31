@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC-BAKE",
+  "checkpoint": "B0.3",
+  "name": "CONTACT_WRENCH_BAKE",
+  "status": "RESEARCH_CHECKPOINT_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric-bake0-3-contact-wrench-r1",
+  "exact_executable": {
+    "head": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
+    "tree": "f8247e39494c00d2d065ed4c4b121e103f32ab0a"
+  },
+  "predecessors": {
+    "bridge1": {
+      "closure_head": "82a44ac8f6e362456cb2f8c150145e73afb17157"
+    },
+    "fabric0_18": {
+      "closure_head": "b9f4a11cb7c31e47884d12eaad2985811e0b6563",
+      "exact_physics": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc"
+    }
+  },
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linux-x86_64",
+    "precision": "double"
+  },
+  "acceptance": {
+    "focused": {
+      "result": "PASS",
+      "assertions": 319
+    },
+    "playground": "PASS",
+    "fresh_deterministic_passes": 2,
+    "full_member_count": 441,
+    "generator_count": 4,
+    "reduction_ratio": 110.25,
+    "max_support_error": 0,
+    "max_projection_error": 1.4210854715202004e-14,
+    "max_contact_power": -6.0351378875996975
+  },
+  "outputs": {
+    "model": "95554e75f2dc485cfacdbe59c8a0d64c5c81f4878e041bc8c562a9e5e3f5662e"
+  },
+  "remote_byte_identity": "6/6_PASS",
+  "fabric0_18_predecessor_byte_identity": "6/6_PASS",
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric_bake0/contact_wrench_bake_compiler_v1.gd",
+      "git_blob": "5dac75ea7473d595795eea98b4ad379d2b3a0928",
+      "sha256": "31e8a1a44a3c260c14936b6641e2451f640e6aff5840566d87016bda180b1530"
+    },
+    {
+      "path": "scripts/research/fabric_bake0/contact_wrench_bake_runtime_v1.gd",
+      "git_blob": "5d71baf606bf782cbe897ab686045daea584e53a",
+      "sha256": "699e5d3c94da9c5c89c8c8bd62701ae16711aa5c913d5d94321c41a358aad008"
+    },
+    {
+      "path": "scripts/research/fabric_bake0/contact_wrench_bake_bridge_v1.gd",
+      "git_blob": "e6366a66f2e4e38f4883506ce3f128d26ca548f0",
+      "sha256": "6cf975a351283170b7c1c31bcb49c9353eb8e2643a5182ee4f3feabba59461bf"
+    },
+    {
+      "path": "tests/research/fabric_bake0/fabric_bake_b0_3_acceptance.gd",
+      "git_blob": "663e6a800a6058e6b64d2bae2118306d1ac2ef42",
+      "sha256": "0e0ef8fb73746437d11f100acc1c0c947dd8f96485540bab457c9b281f6140f9"
+    },
+    {
+      "path": "tests/research/fabric_bake0/fabric_bake_b0_3_playground.gd",
+      "git_blob": "e305b06310f43926d03cb92088d25ec3359f895a",
+      "sha256": "fe6918f2be443eb34bc1c1ba261b8ebd3d41f410f4a4b606467cfe7ef8051f60"
+    },
+    {
+      "path": "RUN_FABRIC_BAKE_B0_3_TESTS.sh",
+      "git_blob": "527e73740aeea421c2ae5be3da0ef21061bf56f6",
+      "sha256": "6ceed3acbb7ddf679d8745cc5894244f1ab37f3c447ae9e47aa6adada36814ec"
+    }
+  ],
+  "project_control": {
+    "executable": {
+      "run_number": 1928,
+      "run_id": 33399124353,
+      "subject_head": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
+      "result": "SUCCESS"
+    },
+    "evidence_carrier": {
+      "run_number": 1930,
+      "run_id": 33399573089,
+      "subject_head": "c303b5c44621cae1dd073b12aef2de037fec8a74",
+      "result": "SUCCESS"
+    }
+  },
+  "claims": [
+    "EXACT_ACCEPTED_DOMAIN_6D_WRENCH_SUPPORT_PRESERVATION",
+    "CONVEX_HULL_EXTREME_GENERATOR_REDUCTION",
+    "PASSIVE_MAXIMUM_DISSIPATION_WRENCH",
+    "TIPPING_AND_SUPPORT_LOSS_GUARDS",
+    "TRANSIENT_CONTACT_HISTORY_NOT_CANONICAL",
+    "NO_SAFE_BAKE_OUTSIDE_ACCEPTED_DOMAIN",
+    "B0_0_PHYSICAL_BAKE_ARTIFACT_BINDING",
+    "BRIDGE1_PARENT_GATE_PRESERVED"
+  ],
+  "non_claims": [
+    "ARBITRARY_NONCOPLANAR_CONTACT_BAKE",
+    "PRESSURE_RESOLVED_CONTACT_PDE",
+    "CROSS_AUTHORITY_MUTABLE_CONTACT_BAKE",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next": "B0.4_DYNAMIC_ROM_AND_B0.5_HYBRID_BAKE",
+  "closure": {
+    "decision": "RESEARCH_CHECKPOINT_CLOSED",
+    "exact_executable_head": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
+    "exact_executable_tree": "f8247e39494c00d2d065ed4c4b121e103f32ab0a",
+    "evidence_control_carrier": "c303b5c44621cae1dd073b12aef2de037fec8a74",
+    "runtime_changed_after_executable": false,
+    "production_accepted": false,
+    "next": "B0.4_DYNAMIC_ROM_AND_B0.5_HYBRID_BAKE"
+  }
+}
