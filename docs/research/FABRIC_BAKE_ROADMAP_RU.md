@@ -833,11 +833,15 @@ BRIDGE-1 does not require contact/wrench bake.
 
 Prototype experiments may use FABRIC0.15.
 
-**Final B0.3 acceptance is blocked on FABRIC0.16**, because the intended claim requires:
+**Final B0.3 acceptance is blocked on FABRIC0.18**, because the intended claim now requires the complete closed persistent-contact wrench boundary:
 
-- arbitrary convex support;
-- persistent multipoint manifolds;
-- stronger graph-wide complementarity semantics.
+- arbitrary convex support and persistent multipoint manifolds;
+- graph-wide normal/wrench coupling;
+- generalized tangent/rolling/torsional wrench limits;
+- persistent support redistribution;
+- localized stick→slide / roll / spin transitions;
+- support-loss/contact-separation event semantics;
+- passive persistent-contact trajectory evidence.
 
 ## Goal
 
@@ -1222,12 +1226,12 @@ B0.5 contract/design exploration
 Requires:
 
 ```text
-FABRIC0.16 general convex
-+
-persistent multipoint manifold
-+
-stronger complementarity
+FABRIC0.18
+PERSISTENT CONTACT WRENCH DYNAMICS
+RESEARCH CANDIDATE CLOSED
 ```
+
+This supersedes the older 0.16-only final-acceptance gate.
 
 ### Advanced hybrid/contact bake scenarios
 
@@ -1680,3 +1684,68 @@ BRIDGE-1 is the roadmap gate immediately after the B0.1/B0.2 foundation. B0.3
 Contact/Wrench Bake follows under its own Physical Core dependency rule.
 
 Windows remains `PASS_BY_POLICY / NON-GATING`.
+
+
+---
+
+## Physical Core ↔ FABRIC-BAKE synchronization review — 2026-08-31
+
+Reviewed exact boundaries:
+
+```text
+Physical Core:
+FABRIC0.18 closure HEAD
+b9f4a11cb7c31e47884d12eaad2985811e0b6563
+
+FABRIC0.18 exact physics
+e079565b4b9cd0dae530ff5042f057ce8fa0d0cc
+
+FABRIC-BAKE B0.2 closure
+f45801fc41ec4ddd067cc994b6de84a48cb88da1
+
+B0.2 final executable
+91a2f79bf6738efefa342589c44e4a0f0a6960d6
+
+BRIDGE-1 design
+56d316283ea34ccb70fc97f97a7493a60b577b94
+```
+
+The branches intentionally diverge from common fork
+`962b9c1bbf7f04c7853f1fb0e36480cf54f3250d`; no implicit physics merge is required.
+
+Synchronization decisions:
+
+```text
+Construction/Matter source frontier     unchanged
+FABRIC as canonical source              FORBIDDEN
+BRIDGE-1 min structural dependency      FABRIC0.16
+Physical Core reviewed frontier         FABRIC0.18
+persistent contact history in bake      FORBIDDEN AS TRUTH
+mode transition → source revision       NO
+canonical mutation → bake invalidation  YES
+compiler/graph mismatch → execution     FORBIDDEN
+B0.3 final predecessor                  FABRIC0.18
+```
+
+BRIDGE-1 is now design-synchronized and implementation-unblocked, but it is not yet an
+executable or closed checkpoint.
+
+Updated integration map:
+
+```text
+PHYSICAL CORE                              FABRIC-BAKE
+
+FABRIC0.18 ✅ CLOSED                  B0.2 ✅ CLOSED
+       │                                    │
+       └──────────── SYNC REVIEW ✅ ─────────┤
+                                            │
+                                      BRIDGE-1
+                                      🔵 IMPLEMENT NEXT
+                                            │
+                                            ▼
+                                          B0.3
+                               CONTACT / WRENCH BAKE
+                               final gate = FABRIC0.18
+```
+
+No implicit FABRIC0.19 dependency is created by this review.

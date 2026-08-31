@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "checkpoint": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNC_REVIEW",
+  "status": "PASS_CONTRACTS_SYNCHRONIZED",
+  "production_accepted": false,
+  "branch": "research/fabric-bridge1-sync-review-r1",
+  "subjects": {
+    "fabric0_18": {
+      "closure_head": "b9f4a11cb7c31e47884d12eaad2985811e0b6563",
+      "exact_physics_head": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+      "exact_physics_tree": "c051cabd50343603efc509887f32fadf479f0f54",
+      "qualification": "RESEARCH_CANDIDATE_CLOSED"
+    },
+    "fabric_bake_b0_2": {
+      "closure_head": "f45801fc41ec4ddd067cc994b6de84a48cb88da1",
+      "final_executable_head": "91a2f79bf6738efefa342589c44e4a0f0a6960d6",
+      "final_executable_tree": "610288ea119e9f7508f711ce5b0468b272a9b489",
+      "qualification": "RESEARCH_CHECKPOINT_CLOSED"
+    },
+    "bridge1_design": {
+      "head": "56d316283ea34ccb70fc97f97a7493a60b577b94",
+      "qualification": "DESIGN_BRIEF_NOT_EXECUTABLE"
+    },
+    "common_merge_base": "962b9c1bbf7f04c7853f1fb0e36480cf54f3250d",
+    "histories": "INTENTIONALLY_DIVERGED"
+  },
+  "compatibility": {
+    "canonical_owners": "UNCHANGED_CONSTRUCTION_MATTER",
+    "fabric_as_canonical_source": "FORBIDDEN",
+    "source_frontier_model": "COMPATIBLE",
+    "authority_envelope": "COMPATIBLE",
+    "bake_stale_rule": "COMPATIBLE_FAIL_CLOSED",
+    "reconstruction_schema": "KEEP_KINEMATICS_ONLY",
+    "persistent_contact_state": "DERIVED_NOT_CANONICAL",
+    "topology_event_owner": "CANONICAL_B0_2_E_PATH",
+    "critical_contract_conflicts": 0
+  },
+  "lifecycle_decisions": {
+    "mode_transition_advances_source_revision": false,
+    "support_loss_advances_source_revision_by_itself": false,
+    "canonical_property_mutation_invalidates_bake": true,
+    "canonical_topology_mutation_routes_through_b0_2_e": true,
+    "fabric_graph_or_compiler_mismatch_forbids_old_execution": true,
+    "rebuild_requires_fresh_physical_core_solve": true,
+    "accepted_contact_impulse_reconstruction_forbidden": true,
+    "warm_start_as_post_rebuild_truth_forbidden": true
+  },
+  "dependencies": {
+    "bridge1_reviewed_physical_core_frontier": "FABRIC0.18",
+    "bridge1_minimum_structural_dependency": {
+      "checkpoint": "FABRIC0.16",
+      "exact_executable": "3307d553c1c3c79cd9c15a5c565af7fef3f0400c"
+    },
+    "b0_3_final_acceptance_predecessor": "FABRIC0.18",
+    "implicit_fabric0_19_created": false
+  },
+  "bridge1_required_acceptance_additions": [
+    "DERIVED_COMPILER_CHANGE_REJECTS_OLD_ARTIFACT_WITHOUT_CANONICAL_REVISION",
+    "PERSISTENT_MODE_CHANGE_DOES_NOT_ADVANCE_SOURCE_FRONTIER",
+    "CANONICAL_MUTATION_INVALIDATES_EXACTLY_ONCE",
+    "KINEMATICS_ONLY_RECONSTRUCTION_BEFORE_REBUILD",
+    "FRESH_PHYSICAL_SOLVE_AFTER_REBUILD",
+    "OLD_ACCEPTED_CONTACT_IMPULSE_NOT_REUSED_AS_TRUTH",
+    "TOPOLOGY_EVENT_OWNED_BY_B0_2_E",
+    "DETERMINISTIC_REVERSE_INPUT_REPLAY",
+    "DETERMINISTIC_FULL_FALLBACK_WITH_FRESH_CONTACT_STATE"
+  ],
+  "decision": {
+    "sync_review": "PASS",
+    "bridge1": "DESIGN_SYNCHRONIZED_IMPLEMENTATION_UNBLOCKED_NOT_CLOSED",
+    "next": "IMPLEMENT_BRIDGE_1_PHYSICAL_SOURCE_LIFECYCLE_BAKE_RECONSTRUCTION"
+  }
+}
