@@ -491,7 +491,7 @@ func _run_repetition(
 			measured_max_candidate_chunk = maxi(measured_max_candidate_chunk, int(ls33.get("candidate_count", 0)))
 		final_ls33 = ls33.duplicate(true)
 
-	var observed := probe.finish()
+	var observed: Dictionary = probe.finish()
 	if not bool(observed.get("success", false)):
 		return {}
 	var measured_count := float(int(config["measured_generations"]))
