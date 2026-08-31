@@ -393,6 +393,14 @@ func get_ph5_grid_appearance_identity_hash() -> String:
 	return "" if ph5_renderer == null else ph5_renderer.get_grid_appearance_identity_hash()
 
 
+func get_ph5_performance_counters() -> Dictionary:
+	return {} if ph5_renderer == null else ph5_renderer.get_performance_counters()
+
+
+func get_ph5_record_performance(index: int) -> Dictionary:
+	return {} if ph5_renderer == null else ph5_renderer.get_record_performance(index)
+
+
 func _build_nodes() -> void:
 	stems_node = MultiMeshInstance3D.new()
 	stems_node.name = "Play0Stems"
