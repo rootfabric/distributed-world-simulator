@@ -12,29 +12,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: d126f211a4b7749d6c80d0495740bcfb366f5d0d
+          ref: 837c46940acddbd841e7878dcfbfb68c0d5ac259
 
       - name: Verify exact source identity
         run: |
-          test "$(git rev-parse HEAD)" = "d126f211a4b7749d6c80d0495740bcfb366f5d0d"
-          test "$(git rev-parse 'HEAD^{tree}')" = "00fdb9ea041ae4a912037e4292c4c51fb270f676"
+          test "$(git rev-parse HEAD)" = "837c46940acddbd841e7878dcfbfb68c0d5ac259"
+          test "$(git rev-parse 'HEAD^{tree}')" = "8a554f9d7e45660aa6a4354c62742b4432633523"
           git status --short --untracked-files=no
           echo "HEAD=$(git rev-parse HEAD)"
           echo "TREE=$(git rev-parse 'HEAD^{tree}')"
 
       - name: Create exact Git bundle
         run: |
-          git branch construct0-exact-d126 d126f211a4b7749d6c80d0495740bcfb366f5d0d
-          git bundle create construct0-c0-1-c0-3-d126.bundle refs/heads/construct0-exact-d126
-          git bundle verify construct0-c0-1-c0-3-d126.bundle
-          sha256sum construct0-c0-1-c0-3-d126.bundle > construct0-c0-1-c0-3-d126.bundle.sha256
+          git branch construct0-exact-837c 837c46940acddbd841e7878dcfbfb68c0d5ac259
+          git bundle create construct0-c0-1-c0-3-837c.bundle refs/heads/construct0-exact-837c
+          git bundle verify construct0-c0-1-c0-3-837c.bundle
+          sha256sum construct0-c0-1-c0-3-837c.bundle > construct0-c0-1-c0-3-837c.bundle.sha256
 
       - name: Upload exact source carrier
         uses: actions/upload-artifact@v4
         with:
-          name: construct0-c0-1-c0-3-exact-source-d126
+          name: construct0-c0-1-c0-3-exact-source-837c
           path: |
-            construct0-c0-1-c0-3-d126.bundle
-            construct0-c0-1-c0-3-d126.bundle.sha256
+            construct0-c0-1-c0-3-837c.bundle
+            construct0-c0-1-c0-3-837c.bundle.sha256
           if-no-files-found: error
           retention-days: 3
