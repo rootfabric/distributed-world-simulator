@@ -129,10 +129,10 @@ static func unsupported_non_coplanar_probe(preset: String = "TABLE") -> Dictiona
 	var snapshot: Dictionary = built["snapshot"]
 	var spec: Dictionary = built["spec"]
 	var points: Array = Array(built["contact_points"]).duplicate(true)
-	var changed: Dictionary = Dictionary(points[points.size() / 2]).duplicate(true)
+	var middle_index := int(points.size() / 2)\n\tvar changed: Dictionary = Dictionary(points[middle_index]).duplicate(true)
 	var p: Vector3 = changed["position"]
 	changed["position"] = Vector3(p.x, p.y + 0.01, p.z)
-	points[points.size() / 2] = changed
+	points[middle_index] = changed
 	return ContactCompiler.compile(_contact_request(snapshot, preset, spec, points))
 
 static func _contact_request(snapshot: Dictionary, preset: String, spec: Dictionary, points: Array) -> Dictionary:
@@ -147,7 +147,7 @@ static func _contact_request(snapshot: Dictionary, preset: String, spec: Diction
 		"origin": Vector3.ZERO,
 		"normal": Vector3.UP,
 		"t1": Vector3.RIGHT,
-		"t2": Vector3.BACK,
+		"t2": Vector3.FORWARD,
 		"points": points,
 		"normal_support_limit": normal_support,
 		"mu_tangent": float(spec.get("mu_tangent", 0.65)),
