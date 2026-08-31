@@ -1,0 +1,38 @@
+name: FABRIC-BAKE B0.2-D Exact Source Export
+on:
+  push:
+    branches: [research/fabric-bake0-2-d-commit-helper-r1]
+    paths:
+      - ".github/workflows/fabric-bake-b0-2-d-exact-source-export.yml"
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8da6ec6b7c2983b127f4c0607edeb9be900825c3
+          fetch-depth: 0
+      - name: Assert exact subject and archive tracked tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "8da6ec6b7c2983b127f4c0607edeb9be900825c3"
+          test "$(git rev-parse HEAD^{tree})" = "285240dcc8a08a3a676897792659dfcad43bf410"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git archive --format=tar.gz --output=/tmp/fabric-bake-b0-2-d-exact.tar.gz HEAD
+          sha256sum /tmp/fabric-bake-b0-2-d-exact.tar.gz | tee /tmp/SHA256SUMS.txt
+          printf 'head=%s\ntree=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse HEAD^{tree})" > /tmp/IDENTITY.txt
+          git ls-tree -r --name-only HEAD | wc -l | tee /tmp/TRACKED_FILE_COUNT.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-2-d-exact-source-8da6ec6b
+          path: |
+            /tmp/fabric-bake-b0-2-d-exact.tar.gz
+            /tmp/SHA256SUMS.txt
+            /tmp/IDENTITY.txt
+            /tmp/TRACKED_FILE_COUNT.txt
+          if-no-files-found: error
+          retention-days: 7
