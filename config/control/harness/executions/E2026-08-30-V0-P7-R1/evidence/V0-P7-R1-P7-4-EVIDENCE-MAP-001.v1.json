@@ -1,0 +1,142 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "evidence_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+  "intent": "Prove that an already committed but not yet delivered MatterMaterialBatch survives MW5 process restart, replays through the existing MW4 journal without mutation, delivers exactly once into the canonical Item Graph, persists through the existing V0/M6 recovery path, and becomes a byte-stable replay after a second process restart.",
+  "exact_delta_from_main": {
+    "base_head": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+    "new_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "changed_files": [
+      "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+      "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh",
+      "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_authoritative_item_graph_output_port.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_persistence_restart_composition.gd",
+      "tests/runtime/test_v0_p7_4_persistence_restart_composition.gd"
+    ],
+    "changed_file_count": 6,
+    "additions": 1030,
+    "deletions": 0,
+    "p7_4_work_order_amendment": "V0-P7-R1-P7-4-WORK-ORDER-AMENDMENT-001",
+    "foundation_files_changed": false,
+    "matter_contracts_changed": false,
+    "canonical_item_graph_implementation_changed": false,
+    "persistence_repository_or_schema_changed": false,
+    "authority_or_network_foundation_changed": false
+  },
+  "ownership": {
+    "matter_persistence_owner": "MW5_MATTER_STATE_COORDINATOR",
+    "gameplay_persistence_owner": "M6_AUTHORITATIVE_RECOVERY_COORDINATOR",
+    "matter_replay_owner": "MW4_MATERIAL_RECEIVER_AND_JOURNAL",
+    "item_owner": "CANONICAL_ITEM_GRAPH",
+    "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "aggregate_revision_owner": "NETWORKED_GAMEPLAY_SERVICE",
+    "new_canonical_state_owner": false,
+    "p7_private_persistence_store": false,
+    "p7_private_replay_ledger": false,
+    "p7_private_delivery_receipt_store": false,
+    "p7_private_save_format": false
+  },
+  "restart_chain": {
+    "phase_1_seed": [
+      "Create deterministic P7.4 lunar request.",
+      "Construct one valid committed Matter result/batch/journal state through existing canonical MW4 contracts and receiver/journal.",
+      "Persist Matter through existing MW5 coordinator before Item Graph delivery.",
+      "Persist gameplay through existing V0/M6 recovery coordinator before Item Graph delivery.",
+      "Terminate the process."
+    ],
+    "phase_2_recover_deliver": [
+      "Fresh process restores latest MW5 Matter checkpoint.",
+      "Fresh process restores latest gameplay checkpoint.",
+      "Existing MW4 execute(request) returns the exact persisted COMMITTED result.",
+      "Matter receiver/journal hashes and batch count remain unchanged by replay.",
+      "Existing P7.3 coordinator delivers the recovered batch through the canonical Item Graph.",
+      "NetworkedGameplayService aggregate revision advances exactly once only for the fresh Item Graph mutation.",
+      "Persist Matter generation 2 and gameplay generation 2.",
+      "Terminate the process."
+    ],
+    "phase_3_recover_replay": [
+      "Second fresh process restores generation 2 state.",
+      "MW4 replay remains exact and mutation-free.",
+      "The same P7.3 delivery is recognized by the canonical Item Graph replay ledger.",
+      "Item Graph snapshot is byte-stable.",
+      "No duplicate Matter batch or inventory item is created.",
+      "NetworkedGameplayService aggregate revision does not advance on replay."
+    ]
+  },
+  "aggregate_revision_amendment": {
+    "trigger": "Initial exact P7.4 restart composition exposed SAME_REVISION_AUTHORITATIVE_MUTATION because canonical Item Graph server.output mutation did not advance the enclosing NetworkedGameplayService revision.",
+    "canonical_control_authorization": "Merged P7.4 Work Order amendment on main before final candidate base.",
+    "bounded_runtime_change": "NetworkedGameplayService delegates preflight/apply to the existing canonical Item Graph and calls _advance() once only when apply_server_output succeeds and result.replay is false.",
+    "replay_revision_advance": false,
+    "new_item_graph_owner": false,
+    "new_revision_owner": false
+  },
+  "exact_process_restart_execution": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "seed": "PASS 21/21",
+    "recover_deliver": "PASS 25/25",
+    "recover_replay": "PASS 17/17",
+    "exact_frozen_source": true,
+    "fresh_import_before_execution": true
+  },
+  "implementer_exact_source_regressions": {
+    "p7_3_material_delivery": "PASS 116/116",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "p5_mining_tool": "PASS 36/36",
+    "p3_resource_domain": "PASS 79/79",
+    "p3_aggregate_recovery": "PASS 33/33",
+    "m6_recovery_contracts": "PASS 126/126",
+    "p7_2_bubble": "NOT_CLAIMED_AS_FRESH_PASS_IN_IMPLEMENTER_CONTAINER",
+    "mw4_standalone": "NOT_CLAIMED_AS_FRESH_PASS_IN_IMPLEMENTER_CONTAINER",
+    "mw5_standalone": "NOT_PROMOTED_AS_FRESH_PASS_IN_THIS_EVIDENCE_PACKAGE",
+    "mw6_standalone": "NOT_CLAIMED_AS_FRESH_PASS_IN_IMPLEMENTER_CONTAINER",
+    "m6_recovery_processes": "NOT_CLAIMED: exact-source rerun exceeded the 180-second execution window; no assertion RED was observed, but incomplete execution is not PASS",
+    "canonical_gate_status": "PENDING_FRESH_INDEPENDENT_UBUNTU_VERIFIER"
+  },
+  "runtime_project_control": {
+    "run": 33374295322,
+    "result": "SUCCESS"
+  },
+  "immutable_source": {
+    "validation_pr": 397,
+    "validation_branch": "validation/v0-p7-4-exact-source-r1",
+    "carrier_head": "8e5520db6cae05a816740b00b387f273e757096b",
+    "export_run": 33374385318,
+    "export_result": "SUCCESS",
+    "carrier_project_control_run": 33374385340,
+    "carrier_project_control": "SUCCESS",
+    "artifact_id": 9751287742,
+    "artifact_zip_sha256": "71a833cb3b7f99133d81e309d2e22b329704fd4e5d3dbb2ee409b1ab94a99e9a",
+    "source_tar_sha256": "b422f8ba9dec229d53ea3e63325355d286bf96bb248376703047492cffbc147e",
+    "reconstructed_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "reconstruction_result": "EXACT_MATCH"
+  },
+  "required_reviewer_scope": [
+    "Verify exact runtime HEAD/TREE and the exact six-file delta from canonical main.",
+    "Confirm the NetworkedGameplayService change is exactly the Work Order-authorized aggregate-revision seam and does not create a second Item Graph, replay owner, persistence owner, authority owner, or network protocol.",
+    "Verify _advance() occurs exactly once for successful non-replay canonical server output and never for failed output or canonical replay.",
+    "Verify P7.4 recovery composes only existing MW5 Matter recovery, existing M6/V0 gameplay recovery, existing MW4 receiver/journal, and the accepted P7.3 delivery coordinator.",
+    "Verify restored MW4 replay is exact and that receiver hash, journal hash, and batch count are mutation-free before Item Graph delivery.",
+    "Verify first post-restart delivery mutates the canonical Item Graph once and advances aggregate gameplay revision exactly once.",
+    "Verify second restart restores the canonical Item Graph replay ledger so the same delivery is a byte-stable replay with no duplicate item/batch and no aggregate revision advance.",
+    "Review crash/retry semantics and confirm P7.4 introduces no hidden durable receipt or private filesystem/save format.",
+    "Judge whether the P7.4 seed fixture, which builds one canonical committed MW5 state through public MW4 contracts instead of rerunning excavation geometry in the restart phase itself, is sufficient when the same canonical runner separately retains the real P7.3 LunarMatterBubble -> MW4 -> Item Graph regression.",
+    "Confirm all execution gaps remain explicitly delegated to the fresh independent Ubuntu Verifier rather than being promoted to PASS."
+  ],
+  "remaining_risks": [
+    "Fresh independent Reviewer pending.",
+    "Fresh independent Verifier blocked until Reviewer PASS.",
+    "Verifier must run the complete P7.4 canonical gate on a fresh detached Ubuntu exact-double checkout, including P7.2 bubble, M6 recovery processes, MW4, MW5 and MW6.",
+    "The restart-focused seed uses canonical MW4 contract state construction rather than full excavation geometry; Reviewer must explicitly accept or reject that test boundary.",
+    "Human RUNTIME_FEATURE_MERGE remains closed.",
+    "P7.5-P7.7 and whole-P7 regression remain open."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
