@@ -1,33 +1,22 @@
-name: ECO EVO7 PERF2.0 Closure
+name: ECO EVO7 PERF2.0 Optional Windows Evidence
 
 on:
-  pull_request:
-    branches:
-      - feature/eco-evo7-stream1-bounded-generation-stream-r1
-    paths:
-      - "RUN_ECO_EVO7_PERF2_0_TESTS.ps1"
-      - "RUN_ECO_EVO7_PERF2_0_TESTS.sh"
-      - "RUN_ECO_TEST_WORKFLOW.ps1"
-      - "config/ecology/eco-evo7-perf2-measurement-contract.v1.json"
-      - "config/ecology/eco-evo7-live-simulation-roadmap.v1.json"
-      - "config/ecology/eco-evo7-parallel-runtime.v1.json"
-      - "scripts/ecology/perf/eco_evo7_perf2_measurement_contract_v1.gd"
-      - "scripts/ecology/perf/eco_evo7_perf2_measurement_probe_v1.gd"
-      - "tests/ecology/eco_evo7_perf2_measurement_contract_acceptance.gd"
-      - "docs/checkpoints/2026-08-30_ECO_EVO7_PERF2_0_MEASUREMENT_CONTRACT_R1_RU.md"
-      - "docs/checkpoints/2026-08-30_ECO_EVO7_PERF2_0_WINDOWS_VERIFICATION_MISSION_RU.md"
-      - ".github/workflows/evo7-perf2-0-closure.yml"
-
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: Exact PERF2.0-compatible commit SHA to verify
+        required: true
+        type: string
 permissions:
   contents: read
 
 concurrency:
-  group: eco-evo7-perf2-0-${{ github.event.pull_request.number }}
+  group: eco-evo7-perf2-0-optional-windows-${{ inputs.target_sha }}
   cancel-in-progress: true
 
 jobs:
   closure:
-    name: exact PERF2.0 measurement-contract closure
+    name: optional exact PERF2.0 Windows evidence
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
 
@@ -36,18 +25,18 @@ jobs:
         shell: powershell
 
     steps:
-      - name: Checkout exact PR HEAD
+      - name: Checkout requested exact subject
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ inputs.target_sha }}
           fetch-depth: 0
 
-      - name: Assert exact PR HEAD checkout
+      - name: Assert requested exact subject checkout
         run: |
           $head = (git rev-parse HEAD).Trim()
           $tree = (git rev-parse 'HEAD^{tree}').Trim()
-          if ($head -ne "${{ github.event.pull_request.head.sha }}") {
-            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}"
+          if ($head -ne "${{ inputs.target_sha }}") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ inputs.target_sha }}"
           }
           Write-Host "exact_head=$head"
           Write-Host "exact_tree=$tree"
@@ -82,7 +71,7 @@ jobs:
         run: |
           .\RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.0 -GodotPath "${{ steps.godot.outputs.path }}"
           if ($LASTEXITCODE -ne 0) {
-            throw "PERF2_0_CLOSURE_FAILED: $LASTEXITCODE"
+            throw "PERF2_0_OPTIONAL_WINDOWS_EVIDENCE_FAILED: $LASTEXITCODE"
           }
 
       - name: Assert tracked worktree clean
