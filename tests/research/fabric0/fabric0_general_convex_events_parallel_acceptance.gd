@@ -11,6 +11,7 @@ func close(a:float,b:float,tolerance:float=1.0e-10)->bool:
 func _init()->void:
 	var checks:=0
 
+	# --- Conservative motion candidate envelope. ---
 	var shape:=F.box_shape("candidate_box",Vector3(0.5,0.5,0.5))
 	var candidate_a:=F.new_body("A",shape,Vector3.ZERO)
 	var candidate_b:=F.new_body("B",shape,Vector3(2,0,0),Quaternion.IDENTITY,1.0,Vector3(0.2,0.2,0.2),Vector3(-2,0,0),Vector3(0.3,0.1,0.2))
@@ -20,6 +21,7 @@ func _init()->void:
 	var swept:=Events.swept_aabb(candidate_b,0.0,0.75)
 	assert(swept.size.x>2.0 and swept.size.y>1.0 and swept.size.z>1.0);checks+=1
 
+	# --- GJK/EPA-normal-guided contact transition localization + refinement. ---
 	var c4:=E.contact_event_probe(1.0e-4)
 	var c6:=E.contact_event_probe(1.0e-6)
 	var c8:=E.contact_event_probe(1.0e-8)
@@ -46,6 +48,7 @@ func _init()->void:
 	assert(float(c8["appear"]["bracket_width"])<1.0e-8);checks+=1
 	assert(float(c8["disappear"]["bracket_width"])<1.0e-8);checks+=1
 
+	# --- Persistent four-point manifold survives after localized appearance. ---
 	var persistence:=E.persistent_event_manifold_probe()
 	assert(bool(persistence["first"]["ok"]) and bool(persistence["second"]["ok"]));checks+=1
 	var first_points:Array=persistence["first"]["manifold"]["points"]
@@ -61,6 +64,7 @@ func _init()->void:
 	assert(String(persistence["first"]["manifold"]["feature_key"])==String(persistence["second"]["manifold"]["feature_key"]));checks+=1
 	assert(float(persistence["second"]["collision"]["depth"])>float(persistence["first"]["collision"]["depth"]));checks+=1
 
+	# --- Root localization of the S1 solved stick -> slide mode surface. ---
 	var m4:=E.mode_transition_probe(1.0e-4)
 	var m6:=E.mode_transition_probe(1.0e-6)
 	var m8:=E.mode_transition_probe(1.0e-8)
@@ -79,6 +83,7 @@ func _init()->void:
 	assert(String(target_block["mode"])=="slide");checks+=1
 	assert(Vector2(target_block["pt"]).length()>0.049);checks+=1
 
+	# --- Same-world actual Thread islands equal one sequential block-diagonal solve. ---
 	var forward:=E.parallel_same_world_probe(false)
 	var reverse:=E.parallel_same_world_probe(true)
 	assert(bool(forward["sequential"]["ok"]) and bool(forward["parallel"]["ok"]));checks+=1
@@ -98,12 +103,14 @@ func _init()->void:
 	assert(F.total_linear_momentum(forward["parallel_bodies"]).distance_to(F.total_linear_momentum(forward["initial_bodies"]))<=1.0e-14);checks+=1
 	assert(F.total_angular_momentum_origin(forward["parallel_bodies"]).distance_to(F.total_angular_momentum_origin(forward["initial_bodies"]))<=1.0e-14);checks+=1
 
+	# --- Parallel island failure is transactional: original world receives no partial join. ---
 	var failure:=E.parallel_failure_atomicity_probe()
 	assert(not bool(failure["result"]["ok"]));checks+=1
 	assert(String(failure["result"]["code"])=="ISLAND_SOLVE_FAILED");checks+=1
 	assert(String(failure["result"]["island"]["solve"]["code"])=="BAD_SOLVER_BUDGET");checks+=1
 	assert(String(failure["before"])==String(failure["after"]));checks+=1
 
+	# --- Explicit fail-closed event boundaries. ---
 	var bad_interval:=Events.transition_event(candidate_a,candidate_b,1.0,0.0,true)
 	assert(not bool(bad_interval["ok"]) and String(bad_interval["code"])=="BAD_INTERVAL");checks+=1
 	var no_transition:=Events.transition_event(candidate_a,far,0.0,0.5,true)
