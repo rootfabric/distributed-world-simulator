@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_2_NEXT",
+  "current_phase": "P7_3_NEXT",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "IN_PROGRESS_P7_2_NEXT",
+      "state": "IN_PROGRESS_P7_3_NEXT",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -327,7 +327,7 @@
     "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "accepted_predecessor_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
     "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-    "control_main_base": "f7d3deb80b67a41880d736f83b132a9a7a5a0964",
+    "control_main_base": "6e604a68c6883595a637a089bf3f709219a1197e",
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -340,7 +340,8 @@
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
     },
     "p7_1": "COMPLETE_MERGED",
-    "next": "P7_2_BOUNDED_PLANETARY_MATTER_BUBBLE"
+    "next": "P7_3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+    "p7_2": "COMPLETE_MERGED"
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",
