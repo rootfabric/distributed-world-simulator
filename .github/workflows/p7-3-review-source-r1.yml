@@ -1,0 +1,45 @@
+name: P7.3 Review Source Export R1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-3-review-source-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact P7.3 subject
+        uses: actions/checkout@v4
+        with:
+          ref: b4b11a69ef921c59b28208685cf26509c3b81907
+          fetch-depth: 0
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "b4b11a69ef921c59b28208685cf26509c3b81907"
+          test "$(git rev-parse HEAD^{tree})" = "99dea175fda7bacce936b15d30d9e25fa9e4af00"
+          echo "P7_3_REVIEW_HEAD=$(git rev-parse HEAD)"
+          echo "P7_3_REVIEW_TREE=$(git rev-parse HEAD^{tree})"
+
+      - name: Build immutable exact source archive
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/             -o p7-3-review-source.tar.gz             b4b11a69ef921c59b28208685cf26509c3b81907
+          sha256sum p7-3-review-source.tar.gz | tee p7-3-review-source.sha256
+
+      - name: Upload exact review source
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-3-review-source-b4b11a69ef92
+          path: |
+            p7-3-review-source.tar.gz
+            p7-3-review-source.sha256
+          if-no-files-found: error
+          retention-days: 14
