@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.4 R2 CLOSED / VIS4.5 IMPLEMENTED CANDIDATE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.5 CLOSED / NEXT: VIS4.6 GRID APPEARANCE BOUNDARY  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1012,10 +1012,91 @@ Canonical runner:
 RUN_ECO_EVO7_VIS4_5_TESTS.sh
 ~~~
 
+Exact Ubuntu double-Godot verification completed GREEN on the frozen subject.
+
+~~~text
+HEAD: 1389c897d5a17ab0986e0c1d65602d705479e859
+TREE: 27f61dc56f87b893f8370b7523841e2ee806f6b1
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.4 predecessor runner: PASS
+VIS4.5 focused: PASS / 491 assertions
+final marker: PRESENT
+HEAD/TREE unchanged
+tracked worktree clean
+~~~
+
 Current qualification:
 
 ~~~text
-VIS4.5 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED YET
+VIS4.5 EXACT UBUNTU GREEN
+VIS4.5 CLOSED
+NEXT: VIS4.6 GRID APPEARANCE BOUNDARY
 ~~~
+
+
+## VIS4.5 durable closure — 2026-08-31
+
+Canonical executable subject:
+
+~~~text
+HEAD: 1389c897d5a17ab0986e0c1d65602d705479e859
+TREE: 27f61dc56f87b893f8370b7523841e2ee806f6b1
+~~~
+
+Exact Ubuntu double-Godot verification passed the full predecessor chain and the
+new deterministic-individuality focused gate.
+
+~~~text
+VIS4.4 canonical predecessor: PASS
+VIS4.5 focused: PASS / 491 assertions
+canonical VIS4.5 final marker: PRESENT
+HEAD unchanged: YES
+TREE unchanged: YES
+tracked worktree: clean
+~~~
+
+The verified result proves both controlled and live behavior:
+
+~~~text
+same seed -> exact GrowthGraph / branch / foliage replay
+different seed -> bounded accepted branch/foliage individuality
+
+all live PH5 records bind development_individual_seed
+all live records expose sealed individuality_hash
+
+PLAY0 visual basis =
+surface-up basis x deterministic seed-derived local yaw
+
+color, render-origin and LOD changes
+do not change individuality identity or ecology truth
+~~~
+
+No process RNG, biology, generation, mutation, persistence or network authority
+was added to VIS4.5 runtime.
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_5_DETERMINISTIC_INDIVIDUALITY_UBUNTU_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+VIS4.5 is CLOSED.
+
+The next morphology checkpoint is now unblocked:
+
+~~~text
+VIS4.6 — Grid Appearance Boundary
+~~~
+
+VIS4.6 must preserve the explicit architecture rule:
+
+~~~text
+visual presentation offset
+!=
+ecological / canonical plant position
+~~~
+
+The 32x32 Spatial Cohort Lattice remains ecology truth. Any deterministic visual
+scatter is presentation-only. True continuous physical plant positions remain
+reserved for ECO.SPATIAL1.
