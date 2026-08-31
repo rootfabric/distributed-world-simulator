@@ -1,0 +1,40 @@
+{
+  "schema": "distributed_world_simulator.review_fix_resolution.v1",
+  "resolution_id": "V0-P7-R1-P7-2-REVIEW-FIX-RESOLUTION-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "source_review": {
+    "review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-001",
+    "review_commit": "b5de5d192d443cd15a43c8a55e8af9258f64455c",
+    "reviewed_head": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+    "reviewed_tree": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd",
+    "verdict": "PASS_WITH_CONDITIONS"
+  },
+  "resolutions": [
+    {
+      "finding_id": "P7.2-RF-001",
+      "status": "RESOLVED",
+      "resolution": "Merged control PR #359 adds scripts/world/terrain/streaming/terrain_streaming_manager.gd to WO-001 allowed_paths strictly for immutable P7.2 exclusion-bounds forwarding only.",
+      "merge_commit": "d96ed71a917f7a28fb59856b1914eec0bdb89a42",
+      "project_control_run": 33351900922
+    },
+    {
+      "finding_id": "P7.2-RF-002",
+      "status": "REFUTED_FOR_EXACT_ACCEPTANCE_BUILD",
+      "resolution": "The reviewer caveat assumed standard float32 Vector3. P7.2 acceptance is pinned to Godot 4.7.1.stable.double.custom_build.a13da4feb, where Vector3/real_t uses double precision. An executable probe at 1,737,400 m measured Vector3(1737400.02).x - Vector3(1737400.0).x = 0.020000000019 m and also resolved a 1 micrometre delta. The adversarial seam test now behaviorally requires 0.02 m to resolve at lunar radius, so a float32 build fails the acceptance gate rather than silently weakening clearance.",
+      "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "probe_delta_m": 0.020000000019,
+      "probe_tolerance_m": 1e-09,
+      "production_clearance_changed": false
+    },
+    {
+      "finding_id": "P7.2-RF-003",
+      "status": "RESOLVED",
+      "resolution": "Removed source-string production-hook assertions. Replaced them with behavioral checks through TerrainStreamingManager.request_surface(), immutable deep-copy verification, collision-face equality against the final clipped mesh, LunarApp public activation/rollback behavior, and the exact-double lunar-scale precision guard."
+    }
+  ],
+  "requires_fresh_reviewer": true,
+  "requires_fresh_verifier_after_reviewer": true,
+  "runtime_feature_merge_authorized": false,
+  "p7_2_closed": false
+}

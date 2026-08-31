@@ -9,6 +9,10 @@ const TerrainScript = preload(
 const SeamClipperScript = preload(
 	"res://scripts/world/matter/legacy_moon_matter_seam_clipper.gd"
 )
+const TerrainStreamingManagerScript = preload(
+	"res://scripts/world/terrain/streaming/terrain_streaming_manager.gd"
+)
+const LunarAppScript = preload("res://scripts/app/lunar_app.gd")
 
 var _assertions := 0
 var _failures := 0
@@ -67,6 +71,29 @@ class FakeClipAdapter:
 		return Vector3(float(value[0]), float(value[1]), float(value[2]))
 
 
+class FakeStreamingTerrain:
+	extends RefCounted
+
+	var bounds: Dictionary = {}
+
+	func get_moon_radius() -> float:
+		return 1737400.0
+
+	func get_streaming_matter_exclusion_bounds() -> Dictionary:
+		return bounds.duplicate(true)
+
+
+class FakeWorkerSampler:
+	extends RefCounted
+
+	func build_streaming_payload(request: Dictionary) -> Dictionary:
+		return {
+			"request_id": request.get("request_id", -1),
+			"generation_revision": request.get("generation_revision", -1),
+			"cell_id": request.get("cell_id", "-"),
+		}
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -75,7 +102,7 @@ func _run() -> void:
 	_test_runtime_wiring_and_rollback()
 	_test_adversarial_triangle_clipper()
 	_test_off_center_terrain_clip()
-	_test_production_hook_guards()
+	_test_production_behavioral_guards()
 	print("V0-P7.2 lunar surface seam: PASS (%d assertions, %d failures)" % [
 		_assertions, _failures,
 	])
@@ -288,6 +315,15 @@ func _test_off_center_terrain_clip() -> void:
 			bounds,
 			"off-center terrain integration"
 		)
+		terrain.local_cap = MeshInstance3D.new()
+		terrain.local_cap.name = "BehavioralClippedLocalCap"
+		terrain.local_cap.mesh = clipped_mesh
+		terrain.add_child(terrain.local_cap)
+		terrain.collision_root = Node3D.new()
+		terrain.collision_root.name = "BehavioralCollisionRoot"
+		terrain.add_child(terrain.collision_root)
+		terrain.call("_build_collision_from_local_mesh")
+		_assert_collision_matches_mesh(terrain, clipped_mesh)
 	var worker_profile: Dictionary = terrain.call(
 		"_profiled_radial_cap_data",
 		0.0,
@@ -311,50 +347,108 @@ func _test_off_center_terrain_clip() -> void:
 	terrain.free()
 
 
-func _test_production_hook_guards() -> void:
-	var terrain_source := FileAccess.get_file_as_string(
-		"res://scripts/world/terrain/procedural_moon_terrain.gd"
-	)
+func _test_production_behavioral_guards() -> void:
+	# Acceptance uses the exact double-precision Godot build. Pin the numeric
+	# premise behind the 0.02 m seam clearance at lunar-scale coordinates so a
+	# float32 engine cannot silently satisfy this gate.
+	var lunar_base := Vector3(1737400.0, 0.0, 0.0)
+	var lunar_shifted := Vector3(1737400.02, 0.0, 0.0)
+	var resolved_clearance := lunar_shifted.x - lunar_base.x
 	_assert_true(
-		terrain_source.contains("func set_matter_surface_adapter(adapter) -> Dictionary:"),
-		"Moon terrain exposes production Matter surface adapter hook"
+		absf(resolved_clearance - 0.02) < 0.000000001,
+		"exact acceptance Vector3 precision resolves 0.02 m at lunar radius"
 	)
+
+	# Exercise the real TerrainStreamingManager request construction instead of
+	# source-text matching. Keep the request queued so no worker thread is needed.
+	var stream_anchor := Vector3(0.0, 1737425.0, 0.0)
+	var source_bounds := {
+		"minimum_m": [-16.0, stream_anchor.y - 16.0, -16.0],
+		"maximum_m": [16.0, stream_anchor.y + 16.0, 16.0],
+		"clearance_m": 0.02,
+	}
+	var fake_terrain := FakeStreamingTerrain.new()
+	fake_terrain.bounds = source_bounds.duplicate(true)
+	var manager = TerrainStreamingManagerScript.new()
+	manager.setup(fake_terrain, FakeWorkerSampler.new())
+	manager.enabled = true
+	manager.accepting_requests = true
+	manager.stop_requested = false
+	manager.commit_stage = 0
+	var request_id: int = manager.request_surface(
+		Vector3.UP,
+		true,
+		false,
+		"p7_2_behavioral_seam_forwarding",
+		0,
+		true
+	)
+	_assert_true(request_id > 0, "real streaming manager accepts forced seam request")
+	var pending: Dictionary = manager.pending_request
 	_assert_true(
-		terrain_source.count("LegacyMatterSeamClipperScript.clip_mesh_arrays(") == 2,
-		"same body-fixed clipper protects synchronous and worker-generated legacy meshes"
+		pending.has("matter_exclusion_bounds"),
+		"real streaming request carries body-fixed Matter exclusion bounds"
 	)
+	var forwarded: Dictionary = pending.get("matter_exclusion_bounds", {})
+	_assert_true(forwarded == source_bounds, "streaming request preserves exact exclusion bounds")
+	fake_terrain.bounds["minimum_m"][0] = -999.0
 	_assert_true(
-		not terrain_source.contains("_get_matter_local_inner_radius_m"),
-		"observer-centered circular seam implementation is removed"
+		float(Array(forwarded.get("minimum_m", []))[0]) == -16.0,
+		"streaming request owns an immutable deep copy of exclusion bounds"
 	)
+	manager.commit_stage = -1
+	manager.free()
+
+	# Exercise LunarApp's public rollback/activation API without entering _ready.
+	var app = LunarAppScript.new()
+	app.configure_runtime({"world_definition": {}})
 	_assert_true(
-		terrain_source.contains("recent_surface_cache.clear()"),
-		"adapter changes invalidate stale unmasked legacy surface cache"
+		not bool(app.runtime_world_definition.get("p7_matter_bubble_enabled", false)),
+		"LunarApp runtime definition defaults P7.2 bubble off"
 	)
+	var disabled: Dictionary = app.disable_p7_lunar_matter_bubble()
+	_assert_success(disabled, "LunarApp disable is idempotent before activation")
 	_assert_true(
-		terrain_source.contains("terrain_shape := local_mesh.create_trimesh_shape()"),
-		"legacy collision still derives from the exact clipped local mesh"
+		bool(disabled.get("details", {}).get("already_disabled", false)),
+		"LunarApp reports already-disabled rollback state"
 	)
-	var streaming_source := FileAccess.get_file_as_string(
-		"res://scripts/world/terrain/streaming/terrain_streaming_manager.gd"
-	)
+	var premature_enable: Dictionary = app.enable_p7_lunar_matter_bubble()
 	_assert_true(
-		streaming_source.contains('request["matter_exclusion_bounds"] = exclusion_bounds.duplicate(true)'),
-		"streaming worker receives immutable body-fixed exclusion bounds"
+		String(premature_enable.get("error_code", "")) == "P7_MOON_WORLD_NOT_READY",
+		"LunarApp activation fails closed until Moon world is ready"
 	)
-	var app_source := FileAccess.get_file_as_string("res://scripts/app/lunar_app.gd")
+	app.free()
+
+
+func _assert_collision_matches_mesh(terrain, clipped_mesh: ArrayMesh) -> void:
 	_assert_true(
-		app_source.contains('runtime_world_definition.get("p7_matter_bubble_enabled", false)'),
-		"LunarApp feature flag defaults bubble off"
+		terrain.collision_root.get_child_count() == 1,
+		"legacy collision body is created from clipped local mesh"
 	)
+	if terrain.collision_root.get_child_count() != 1:
+		return
+	var body := terrain.collision_root.get_child(0) as StaticBody3D
+	_assert_true(body != null and body.get_child_count() == 1, "legacy collision has one shape child")
+	if body == null or body.get_child_count() != 1:
+		return
+	var collision_shape := body.get_child(0) as CollisionShape3D
+	var shape := collision_shape.shape as ConcavePolygonShape3D if collision_shape != null else null
+	_assert_true(shape != null, "legacy collision uses a concave trimesh shape")
+	if shape == null:
+		return
+	var mesh_faces: PackedVector3Array = clipped_mesh.get_faces()
+	var collision_faces: PackedVector3Array = shape.get_faces()
 	_assert_true(
-		app_source.contains("func enable_p7_lunar_matter_bubble(config: Dictionary = {})"),
-		"LunarApp exposes production bubble activation"
+		collision_faces.size() == mesh_faces.size(),
+		"legacy collision triangle count exactly matches clipped visible mesh"
 	)
-	_assert_true(
-		app_source.contains("func disable_p7_lunar_matter_bubble() -> Dictionary:"),
-		"LunarApp exposes rollback to legacy presentation"
-	)
+	if collision_faces.size() != mesh_faces.size():
+		return
+	var mismatch := 0
+	for index in range(mesh_faces.size()):
+		if not collision_faces[index].is_equal_approx(mesh_faces[index]):
+			mismatch += 1
+	_assert_true(mismatch == 0, "legacy collision faces exactly match clipped visible mesh")
 
 
 func _count_not_fully_outside(
