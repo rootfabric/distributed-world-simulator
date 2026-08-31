@@ -1067,3 +1067,87 @@ Until Project Control is green, or an explicit project-policy external-blocker e
 D does not claim finite-duration persistent-contact wrench-mode evolution, torsional activation in the D trajectory, exact pressure-distribution wrench cone, globally unique arbitrary rigid multi-impact solution, universal monolithic Signorini-Coulomb impact+wrench MCP, production sparse backend, or production acceptance.
 
 The bounded A+B+C+D physical target is executable and exact-tested; final research-candidate closure remains gated by repository control.
+
+
+## 19. FABRIC0.17 closure decision
+
+The bounded A+B+C+D Physical Core checkpoint is now closed as a research candidate.
+
+```text
+FABRIC0.17
+SIMULTANEOUS MULTI-IMPACT
++
+GENERALIZED CONTACT WRENCH
+
+RESEARCH CANDIDATE CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+Exact physics executable remains immutable:
+
+```text
+643b4bdc5d33756819869c3faacc1dccf1251a1f
+TREE 3d531be386502c34ad7c30da8a00c5df8f152906
+```
+
+Closure control carrier:
+
+```text
+3cc14e0ff7a1e6ef1e456c0e428e4caff1dd3555
+```
+
+The carrier changes only the two harness regression tests already merged to canonical main by PR #377; all six D executable blobs remain byte-identical.
+
+Harness recovery:
+
+```text
+PR #377
+MERGED
+
+main merge:
+718a9767da8b2bda986e1cadee3f7bc6d729f0d4
+
+Project Control on fix head:
+#1851 SUCCESS
+#1852 SUCCESS
+
+Project Control on FABRIC closure carrier:
+#1855 SUCCESS
+```
+
+This closes the previously external control blocker without modifying FABRIC physics, G/ECO passports, registry health declarations, or critical dependency semantics.
+
+### 19.1 Closed claims
+
+FABRIC0.17 research evidence now contains:
+
+- deterministic simultaneous-impact event-set identity with temporal-resolution semantics;
+- one immutable pre-impact state for coupled simultaneous normal impact;
+- coupled multipoint normal restitution LCP;
+- generalized 5DOF tangential/rolling/torsional contact wrench;
+- graph-wide shared-body wrench coupling;
+- same-instant normal ↔ wrench fixed point;
+- two causally ordered simultaneous-impact groups in one trajectory;
+- strict whole-state and event-time refinement;
+- linear/angular momentum closure;
+- energy ledger closure;
+- exact replay and caller-order determinism.
+
+### 19.2 Persistent non-claims
+
+Closure is research-only and does not claim:
+
+- production acceptance;
+- globally unique arbitrary rigid multi-impact solution;
+- universal monolithic Signorini-Coulomb impact+wrench MCP;
+- exact pressure-distribution wrench cone;
+- finite-duration persistent-contact wrench-mode trajectory;
+- production sparse backend/broadphase/thread-pool;
+- authority, persistence, networking or Construction ownership transfer.
+
+`production_accepted = false`.
+
+No `FABRIC0.17-E` is required for this bounded checkpoint.

@@ -3566,3 +3566,44 @@ Full exact regression: `D 157/157; C 76/76; B 63/63; A 77/77; 0.16 S3 101/101; S
 Project Control `#1836` failed twice on the exact D executable HEAD at architecture/ownership passport compatibility. D changes exactly six FABRIC research/test files from the previously green C boundary; failure reports unrelated G/ECO critical dependency drift in Matter/control paths. Classification: `EXTERNAL_CROSS_REF_CONTROL_DRIFT`.
 
 Closure is intentionally withheld. Next action for 0.17 is repository-control recovery/recheck, not a fabricated 0.17-E.
+
+
+### FABRIC0.17 final closure
+
+```text
+FABRIC0.17
+RESEARCH CANDIDATE CLOSED
+
+A  77/77 PASS
+B  63/63 PASS
+C  76/76 PASS
+D 157/157 PASS
+
+0.16 S3 101/101 PASS
+0.16 S2 102/102 PASS
+0.16 S1 110/110 PASS
+
+EXACT LINUX DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+EDITOR CLEAN
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+Exact physics executable:
+
+`643b4bdc5d33756819869c3faacc1dccf1251a1f`.
+
+Exact physics tree:
+
+`3d531be386502c34ad7c30da8a00c5df8f152906`.
+
+Closure carrier:
+
+`3cc14e0ff7a1e6ef1e456c0e428e4caff1dd3555`.
+
+Harness regression repair was merged independently to main via PR #377, merge `718a9767da8b2bda986e1cadee3f7bc6d729f0d4`. Project Control #1851/#1852 on the harness fix and #1855 on the FABRIC closure carrier are SUCCESS.
+
+The former G/ECO RED was a stale-checkout harness-regression bug, not a FABRIC physics failure. The fix changed only the two harness regression tests and did not weaken critical dependency semantics.
+
+Next Physical Core checkpoint is not implicitly named here; it must be formalized separately in the roadmap before implementation.

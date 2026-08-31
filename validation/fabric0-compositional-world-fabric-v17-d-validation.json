@@ -3,7 +3,7 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.17",
   "slice": "D_UNIFIED_MULTI_IMPACT_WRENCH_TRAJECTORY",
-  "status": "IMPLEMENTED_CANDIDATE_CONTROL_BLOCKED_EXTERNAL_NOT_CLOSED",
+  "status": "RESEARCH_CANDIDATE_CLOSED",
   "production_accepted": false,
   "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
   "executable_head": "643b4bdc5d33756819869c3faacc1dccf1251a1f",
@@ -171,8 +171,7 @@
       "result": "FAILURE",
       "failed_step": "architecture and ownership passport compatibility regression",
       "repeated_on_same_exact_executable_head": true
-    },
-    "closure_policy": "DO_NOT_CLOSE_UNTIL_PROJECT_CONTROL_GREEN_OR_EXPLICIT_EXTERNAL_BLOCKER_EXCEPTION"
+    }
   },
   "claims": [
     "TWO_CAUSALLY_ORDERED_SIMULTANEOUS_IMPACT_EVENT_SETS",
@@ -191,5 +190,37 @@
     "EXACT_PRESSURE_DISTRIBUTION_WRENCH_CONE",
     "PRODUCTION_SPARSE_BACKEND",
     "PRODUCTION_ACCEPTANCE"
-  ]
+  ],
+  "closure": {
+    "decision": "RESEARCH_CANDIDATE_CLOSED",
+    "exact_physics_executable": "643b4bdc5d33756819869c3faacc1dccf1251a1f",
+    "exact_physics_tree": "3d531be386502c34ad7c30da8a00c5df8f152906",
+    "control_carrier": "3cc14e0ff7a1e6ef1e456c0e428e4caff1dd3555",
+    "harness_fix": {
+      "pull_request": 377,
+      "main_merge": "718a9767da8b2bda986e1cadee3f7bc6d729f0d4",
+      "changed_files": [
+        "tests/harness/test_project_control_architecture_compatibility.py",
+        "tests/harness/test_project_control_proposed_r3_ownership_projection.py"
+      ],
+      "project_control_runs": [
+        {
+          "run_number": 1851,
+          "result": "SUCCESS"
+        },
+        {
+          "run_number": 1852,
+          "result": "SUCCESS"
+        }
+      ]
+    },
+    "project_control": {
+      "run_number": 1855,
+      "run_id": 33363968126,
+      "result": "SUCCESS",
+      "subject_head": "3cc14e0ff7a1e6ef1e456c0e428e4caff1dd3555"
+    },
+    "exact_d_bytes": "6/6_PRESERVED_ON_CONTROL_CARRIER",
+    "note": "Closure removes only the stale-checkout harness regression blocker. No FABRIC physics, G/ECO passport, registry policy, or critical dependency semantics were changed."
+  }
 }

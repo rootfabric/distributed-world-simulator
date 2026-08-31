@@ -985,3 +985,42 @@ Do not repair G/ECO/Matter control state from this FABRIC branch and do not trea
 D non-claims: no finite-duration persistent-contact wrench-mode trajectory, no active torsion in the D fixture itself, no universal monolithic impact+wrench MCP, no production sparse backend or production acceptance.
 
 Evidence: `validation/fabric0-compositional-world-fabric-v17-d-validation.json`.
+
+
+## 17. FABRIC0.17 — CLOSED research candidate
+
+Current Physical Core boundary:
+
+```text
+FABRIC0.16
+RESEARCH CANDIDATE CLOSED
+        ↓
+FABRIC0.17
+RESEARCH CANDIDATE CLOSED
+```
+
+FABRIC0.17 exact physics executable:
+
+`643b4bdc5d33756819869c3faacc1dccf1251a1f`.
+
+Closure evidence:
+
+```text
+A  77/77
+B  63/63
+C  76/76
+D 157/157
+
+Project Control #1855 SUCCESS
+```
+
+The closure control carrier is `3cc14e0ff7a1e6ef1e456c0e428e4caff1dd3555`. It carries only the two harness test repairs already merged to main by PR #377; D executable bytes remain exact.
+
+Status:
+
+```text
+RESEARCH CANDIDATE CLOSED
+NOT PRODUCTION ACCEPTED
+```
+
+Do not create an implicit 0.17-E. Any successor Physical Core checkpoint must first be explicitly formalized in the roadmap.
