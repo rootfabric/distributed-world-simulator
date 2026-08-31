@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_SUBSTEP_REVIEW",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+  "reviewed_tree_sha": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd",
+  "reviewed_base_sha": "3a396232235d46cc2c6fb1a3960553c624f951bf",
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "runtime_pr": 350,
+  "reviewer": "INDEPENDENT_REVIEWER_P7_2_FRESH_EXACT_SOURCE_R1",
+  "reviewer_execution": "fresh independent read-only subagent, separate worktrees, no implementer-session conclusions used as evidence",
+  "identity_check": {
+    "head_commit_present": true,
+    "head_tree_sha": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd",
+    "expected_tree_sha": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd",
+    "origin_feature_head_matches": true,
+    "origin_control_head_matches": true,
+    "result": "PASS"
+  },
+  "verdict": "PASS",
+  "verdict_conditions": [
+    "Required fix RF-1 (work-order allowed_paths amendment for terrain_streaming_manager.gd) must be recorded before checkpoint proposal.",
+    "Required fix RF-2 (float32 seam-clearance caveat recorded; anchor-local clipping or enlarged clearance chosen by implementer) must be recorded before checkpoint proposal."
+  ],
+  "blocking_findings": [
+    {
+      "id": "P7.2-RF-001",
+      "severity": "GOVERNANCE_BLOCKING",
+      "summary": "scripts/world/terrain/streaming/terrain_streaming_manager.gd is modified (+4 lines, immutable matter_exclusion_bounds forwarding) but matches no allowed_paths entry in V0-P7-R1-WO-001.v1.json. The change itself is behavior-preserving when no adapter is installed; no forbidden path is touched.",
+      "resolution": "Amend V0-P7-R1-WO-001.v1.json allowed_paths to include the file with the same narrow restriction pattern as the mutation-dir entry (exclusion-bounds forwarding only), or relocate the forwarding into an already-allowed file. Not a code revert."
+    },
+    {
+      "id": "P7.2-RF-002",
+      "severity": "NUMERIC_CAVEAT_BLOCKING_RECORD",
+      "summary": "0.02 m seam clearance is numerically thinner than claimed at lunar magnitudes: Godot Vector3 is float32; at radius ~1.7374e6 m the representable quantum is ~0.125-0.25 m, i.e. 6-12x the clearance. Clipper math (legacy_moon_matter_seam_clipper.gd:55-56,169-172) runs on body-fixed positions of magnitude ~1.7e6, so seam intersection vertices can be quantized beyond clearance_m; strict non-coincidence of legacy/Matter seam geometry is not guaranteed by the code.",
+      "resolution": "Record the caveat in checkpoint evidence and either (a) raise DEFAULT_SEAM_CLEARANCE_M to >= float32 epsilon at lunar radius (~0.25 m) or (b) clip in anchor-local coordinates before adding the anchor. Small local change; does not refute any core claim."
+    }
+  ],
+  "required_fixes": [
+    "RF-1: Amend V0-P7-R1-WO-001.v1.json allowed_paths to include scripts/world/terrain/streaming/terrain_streaming_manager.gd (exclusion-bounds forwarding only) or move the forwarding into an already-allowed file; re-run review evidence after the amendment.",
+    "RF-2: Record the float32/lunar-radius seam-clearance caveat and either bump clearance to ~0.25 m or clip anchor-local.",
+    "RF-3: Replace source-string assertions in tests/runtime/test_v0_p7_2_lunar_surface_seam.gd _test_production_hook_guards() (~lines 330-372, FileAccess.get_file_as_string + contains()) with behavioral checks; that block is tautological."
+  ],
+  "rank_up_moves": [
+    "Clip outside fragments against remaining planes too, or compute all clipping anchor-local, to make the no-sliver-loss invariant explicit (_split_polygon early-break, legacy_moon_matter_seam_clipper.gd:120-122).",
+    "Apply _deduplicate_polygon treatment to UV interpolation as well.",
+    "Add a cross-instance determinism test for MoonSamplerScript.sample() at the same body-fixed point from different bubble instances.",
+    "Add a seam test asserting winding of clipped fragments matches the source triangle normal (code does this at legacy_moon_matter_seam_clipper.gd:143-151 but no test pins it)."
+  ],
+  "evidence_gaps": [
+    "No runtime (godot) execution was performed by the reviewer; test-pass evidence must come from implementer/verifier gate runs (RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.sh) on this exact HEAD.",
+    "No test exercises build_streaming_payload end-to-end through the real terrain_streaming_manager request path; worker parity is proven by calling _profiled_radial_cap_data directly with the same bounds (adequate but not the full worker pipeline).",
+    "Fresh independent Verifier after this Reviewer PASS remains open; whole-P7 full world/core regression and checkpoint acceptance remain outside P7.2 substep closure."
+  ],
+  "risk_assessment": "Core seam architecture is sound and genuinely body-fixed: exclusion AABB derives solely from the Matter grid profile (root_center_m = anchor x radius), never from the spectator; the clipper is a correct 6-plane Sutherland-Hodgman partition with outside fragments each provably outside at least one halfspace, fan triangulation winding-corrected against the source normal, and UVs sharing the exact interpolation parameter t. Sync and worker paths call the identical static clipper with identical bounds; collision is built from the exact clipped mesh in both paths; stale-cache invalidation is handled at adapter install/remove. Second-truth risk is low: bubble/adapter/presenter/clipper own no store; snapshot store, journal and mutation service are existing MW4 objects wrapped read-only; feature-off preserves snapshots. Dominant residual risks: (1) unresolved work-order path breach for terrain_streaming_manager.gd (governance, not correctness); (2) float32 quantization at lunar radius eroding the 0.02 m seam guarantee, potentially a hairline gap or marginal double-collision band at the seam - cosmetic/physics-nuisance severity, not truth corruption. Neither undermines mutation, identity, determinism, or ownership properties.",
+  "checked_items": [
+    {"item": 1, "claim": "No second canonical Matter/Terrain truth", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:6-20 stateless; legacy_moon_surface_adapter.gd:9-12,78 canonical_state_owned=false; lunar_matter_bubble.gd:141-171,285-290,322-325 delegates to existing MW4 services; no TerrainMutationRequest/Result in diff"},
+    {"item": 2, "claim": "fixed_seed_asteroid_generator default preserved", "result": "CONFIRMED", "evidence": "matter_excavation_service.gd:34,49-50; matter_continuous_query_service.gd:19,28-29; matter_brick_materializer.gd:23-24; trailing optional params, pre-existing call sites source-compatible"},
+    {"item": 3, "claim": "Moon identity body/moon + body/moon/fixed, deterministic", "result": "CONFIRMED", "evidence": "moon_geology_sampler.gd:13-14,163-167; test_v0_p7_2_lunar_matter_bubble.gd:74-77"},
+    {"item": 4, "claim": "Canonical geology independent of camera/observer/streaming", "result": "CONFIRMED", "evidence": "moon_geology_sampler.gd:157-225 pure function of body-fixed position+profile; terrain_streaming_manager.gd:481-484 passes only exclusion bounds"},
+    {"item": 5, "claim": "Matter root is body-fixed AABB", "result": "CONFIRMED", "evidence": "lunar_matter_bubble.gd:205-222 closed AABB test; :92 root center frozen at configure"},
+    {"item": 6, "claim": "Crossing triangle (all vertices outside) clipped", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:218-241 geometry-overlap test, :66-71; test...seam.gd:170-207"},
+    {"item": 7, "claim": "Fully-inside triangles removed", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:122-125; test...seam.gd:209-228"},
+    {"item": 8, "claim": "Outside fragments preserved", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:127-153; test...seam.gd:191-207 _assert_all_triangles_outside"},
+    {"item": 9, "claim": "Six-plane subtraction mathematically correct", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:55-70 plane set, :163-171 symmetric split, :177-181 guarded t, :186-203 dedupe; no off-by-one/plane-order bug found"},
+    {"item": 10, "claim": "Winding preserved", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:73,141-151 winding correction; procedural_moon_terrain.gd:1190-1197"},
+    {"item": 11, "claim": "Degenerate triangles removed", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:139-141 AREA_EPSILON_SQUARED skip"},
+    {"item": 12, "claim": "UV uses same interpolation t", "result": "CONFIRMED", "evidence": "legacy_moon_matter_seam_clipper.gd:179-184 single t for position and UV lerp"},
+    {"item": 13, "claim": "Intersection vertices get correct normals/heights", "result": "CONFIRMED", "evidence": "procedural_moon_terrain.gd:1103-1113 sync, :2625-2643 worker rebuild directions/heights for all vertices; :1171-1209 normals from final indices"},
+    {"item": 14, "claim": "0.02 m clearance excludes coincident/double collision", "result": "CONFIRMED BY DESIGN, NUMERIC CAVEAT", "evidence": "legacy_moon_matter_seam_clipper.gd:49-50,158-161; legacy_moon_surface_adapter.gd:31-34; see P7.2-RF-002 float32 caveat"},
+    {"item": 15, "claim": "Off-center/recenter stays body-fixed", "result": "CONFIRMED", "evidence": "legacy_moon_surface_adapter.gd:48-66 world-space bounds; legacy_moon_matter_seam_clipper.gd:66-71; test...seam.gd:232-316 off-center box clipped"},
+    {"item": 16, "claim": "Sync and worker paths share clipping semantics", "result": "CONFIRMED", "evidence": "procedural_moon_terrain.gd:1095-1113 vs :2624-2643, same static clipper; bounds immutable in request, terrain_streaming_manager.gd:481-484"},
+    {"item": 17, "claim": "Stale worker/cache cannot return unmasked terrain", "result": "CONFIRMED", "evidence": "procedural_moon_terrain.gd:1837-1861 cancel_all + cache clear on adapter change; terrain_streaming_manager.gd:491-496; test...seam.gd:272-281 stale-cache purge assertion"},
+    {"item": 18, "claim": "Legacy collision from exact final clipped mesh", "result": "CONFIRMED", "evidence": "procedural_moon_terrain.gd:1300-1328 trimesh from clipped local_cap.mesh; :2451-2461,2682-2699 worker partition from post-clip data"},
+    {"item": 19, "claim": "Matter collision and presentation share one Matter mesh", "result": "CONFIRMED", "evidence": "matter_mesh_resource_factory.gd:60-77; lunar_matter_bubble_presenter.gd:88-95,108"},
+    {"item": 20, "claim": "Feature OFF restores legacy, keeps Matter snapshots", "result": "CONFIRMED", "evidence": "lunar_matter_bubble_runtime.gd:106-122 canonical_matter_state_deleted=false; test_v0_p7_2_lunar_matter_bubble.gd:186-193; test...seam.gd:131-144; lunar_app.gd:175-181 default off"},
+    {"item": 21, "claim": "Tests exercise production paths, non-tautological", "result": "CONFIRMED WITH ONE WEAK BLOCK", "evidence": "Real runtime/mesh assertions throughout; exception: _test_production_hook_guards() source-string matching, test...seam.gd:321-372 (RF-3)"},
+    {"item": "SCOPE", "claim": "Changed paths within allowed_paths", "result": "REFUTED (one path)", "evidence": "terrain_streaming_manager.gd matches no allowed path; all other 16 changed files covered; matter_excavation_service.gd change is exactly the authorized optional procedural_sampler injection; no forbidden path touched"}
+  ],
+  "scope_check": {
+    "changed_files": 17,
+    "forbidden_paths_touched": false,
+    "allowed_paths_violations": ["scripts/world/terrain/streaming/terrain_streaming_manager.gd"],
+    "second_matter_truth": false,
+    "second_terrain_truth": false,
+    "matter_contract_change": false,
+    "architecture_ownership_change": false
+  },
+  "p7_checkpoint_accepted": false,
+  "p7_2_merged": false,
+  "runtime_feature_merge_authorized": false,
+  "opens": "FRESH_INDEPENDENT_VERIFIER_ONLY",
+  "notes": "P7.2 Reviewer PASS opens fresh independent Verifier only. No merge authorization. PR #350 untouched.",
+  "recorded_at_utc": "2026-08-31T00:00:00Z"
+}
