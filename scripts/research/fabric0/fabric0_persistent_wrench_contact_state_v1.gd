@@ -5,6 +5,41 @@ const EPS := 1.0e-12
 const DEFAULT_VELOCITY_TOLERANCE := 1.0e-10
 const DEFAULT_SATURATION_TOLERANCE := 1.0e-9
 
+static func observation_from_fabric_manifold(manifold: Dictionary) -> Dictionary:
+	if not bool(manifold.get("ok", false)):
+		return {"ok": false, "code": "BAD_FABRIC_MANIFOLD"}
+	var pair_id := String(manifold.get("pair_id", ""))
+	var split := pair_id.split("|")
+	if split.size() != 2 or String(split[0]).is_empty() or String(split[1]).is_empty():
+		return {"ok": false, "code": "BAD_FABRIC_MANIFOLD_PAIR_ID"}
+	var points = manifold.get("points", [])
+	if not (points is Array) or Array(points).is_empty():
+		return {"ok": false, "code": "EMPTY_FABRIC_MANIFOLD"}
+	var members: Array = []
+	for point_any in Array(points):
+		if not (point_any is Dictionary):
+			return {"ok": false, "code": "BAD_FABRIC_MANIFOLD_POINT"}
+		var point: Dictionary = point_any
+		var id := String(point.get("id", ""))
+		if id.is_empty():
+			return {"ok": false, "code": "FABRIC_MANIFOLD_POINT_ID_MISSING"}
+		members.append(id)
+	return {"ok": true, "body_a": String(split[0]), "body_b": String(split[1]), "members": members}
+
+static func solved_from_generalized_wrench(result: Dictionary) -> Dictionary:
+	if not bool(result.get("ok", false)):
+		return {"ok": false, "code": "BAD_GENERALIZED_WRENCH_RESULT"}
+	for key in ["normal_impulse", "generalized_impulse", "generalized_velocity_after", "limits"]:
+		if not result.has(key):
+			return {"ok": false, "code": "INCOMPLETE_GENERALIZED_WRENCH_RESULT", "missing": key}
+	return {
+		"ok": true,
+		"normal_support": result["normal_impulse"],
+		"generalized_impulse": Array(result["generalized_impulse"]).duplicate(),
+		"generalized_velocity_after": Array(result["generalized_velocity_after"]).duplicate(),
+		"limits": Dictionary(result["limits"]).duplicate(true),
+	}
+
 static func begin(observation: Dictionary, solved: Dictionary, time: float, options: Dictionary = {}) -> Dictionary:
 	var checked := _validate_common(observation, solved, time, options)
 	if not bool(checked.get("ok", false)):

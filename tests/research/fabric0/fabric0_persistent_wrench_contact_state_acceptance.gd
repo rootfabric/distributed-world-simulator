@@ -11,6 +11,27 @@ func solved(normal := 2.0, impulse := [0.1, 0.0, 0.02, 0.0, 0.01], velocity := [
 func _init() -> void:
 	var checks := 0
 
+	# Direct bridge from canonical 0.17 persistent manifold + generalized wrench result.
+	var fabric_manifold := {
+		"ok": true, "pair_id": "A|B", "feature_key": "A|ra:A:1|ib:B:2",
+		"points": [
+			{"id": "A|ra:A:1|ib:B:2|p3"}, {"id": "A|ra:A:1|ib:B:2|p1"},
+			{"id": "A|ra:A:1|ib:B:2|p0"}, {"id": "A|ra:A:1|ib:B:2|p2"},
+		]
+	}
+	var bridged_observation := S.observation_from_fabric_manifold(fabric_manifold)
+	assert(bool(bridged_observation["ok"])); checks += 1
+	assert(bridged_observation["body_a"] == "A" and bridged_observation["body_b"] == "B"); checks += 1
+	assert(bridged_observation["members"].size() == 4); checks += 1
+	var c_result := {"ok": true, "normal_impulse": 2.0, "generalized_impulse": [0.1,0.0,0.02,0.0,0.01], "generalized_velocity_after": [0.0,0.0,0.0,0.0,0.0], "limits": {"tangent":0.5,"rolling":0.1,"torsion":0.05}}
+	var bridged_solved := S.solved_from_generalized_wrench(c_result)
+	assert(bool(bridged_solved["ok"])); checks += 1
+	var bridged_state := S.begin(bridged_observation, bridged_solved, 0.5)
+	assert(bool(bridged_state["ok"])); checks += 1
+	assert(String(bridged_state["manifold_identity"]).contains("|p0") and String(bridged_state["manifold_identity"]).contains("|p3")); checks += 1
+	var missing_point_id := S.observation_from_fabric_manifold({"ok":true,"pair_id":"A|B","points":[{}]})
+	assert(not bool(missing_point_id["ok"]) and missing_point_id["code"] == "FABRIC_MANIFOLD_POINT_ID_MISSING"); checks += 1
+
 	# Canonical pair + manifold identity is independent of caller/member order.
 	var a := S.begin(obs("B", "A", ["p3", "p1", "p0", "p2"]), solved(), 1.0)
 	var b := S.begin(obs("A", "B", ["p0", "p1", "p2", "p3"]), solved(), 1.0)
