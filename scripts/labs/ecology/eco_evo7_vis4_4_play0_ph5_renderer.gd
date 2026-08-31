@@ -296,6 +296,7 @@ func get_record_grid_appearance(index: int) -> Dictionary:
 	return {
 		"record_id": String(record.get("record_id", "")),
 		"cell_index": int(record.get("cell_index", -1)),
+		"source_descriptor_hash": String(record.get("source_descriptor_hash", "")),
 		"appearance_hash": String(record.get("appearance_hash", "")),
 		"jitter_x_cell": float(record.get("jitter_x_cell", 0.0)),
 		"jitter_y_cell": float(record.get("jitter_y_cell", 0.0)),
@@ -650,10 +651,10 @@ func _tier_counts() -> Dictionary:
 func _cell_spacing_m(cell_index: int) -> Vector2:
 	if earth_world == null or _grid_size <= 1 or cell_index < 0 or cell_index >= _directions.size():
 		return Vector2.ZERO
-	var row := cell_index / _grid_size
-	var col := cell_index % _grid_size
-	var x_neighbor := cell_index + 1 if col < _grid_size - 1 else cell_index - 1
-	var y_neighbor := cell_index + _grid_size if row < _grid_size - 1 else cell_index - _grid_size
+	var row: int = floori(float(cell_index) / float(_grid_size))
+	var col: int = cell_index % _grid_size
+	var x_neighbor: int = cell_index + 1 if col < _grid_size - 1 else cell_index - 1
+	var y_neighbor: int = cell_index + _grid_size if row < _grid_size - 1 else cell_index - _grid_size
 	if x_neighbor < 0 or y_neighbor < 0 or x_neighbor >= _directions.size() or y_neighbor >= _directions.size():
 		return Vector2.ZERO
 	var center: Vector3 = earth_world.get_surface_point(_directions[cell_index])
