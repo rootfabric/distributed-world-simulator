@@ -900,3 +900,355 @@ SUCCESS
 All control steps passed, including architecture/ownership compatibility, H0.2, V0 product checkpoint, generation-80 authorization safety, canonical-main PC0 and directional watch.
 
 This qualifies 0.18-C as an implemented candidate. FABRIC0.18 remains IN PROGRESS; 0.18-D is still required for the parent closure decision.
+
+
+## 10. 0.18-D — Unified Persistent Contact Trajectory
+
+Exact-tested executable:
+
+```text
+HEAD
+e079565b4b9cd0dae530ff5042f057ce8fa0d0cc
+
+TREE
+c051cabd50343603efc509887f32fadf479f0f54
+```
+
+Status:
+
+```text
+FABRIC0.18-D
+UNIFIED PERSISTENT CONTACT TRAJECTORY
+
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+113/113 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+PROJECT CONTROL PASS
+FABRIC0.18 CLOSURE-READY
+NOT PRODUCTION ACCEPTED
+```
+
+### 10.1 Unified timeline
+
+D composes A+B+C into one bounded fixed-anchor persistent-contact trajectory.
+
+```text
+FREE FLIGHT
+    ↓
+IMPACT / PERSISTENT SUPPORT ACQUISITION
+    ↓
+STICK
+    ↓
+STICK → SLIDE
+    ↓
+STICK → ROLL
+    ↓
+STICK → SPIN
+    ↓
+LEFT SUPPORT LOSS / SEPARATION
+    ↓
+RIGHT SUPPORT REMAINS ACTIVE
+SLIDE + ROLL + SPIN
+```
+
+Canonical timeline at root tolerance `1e-9`:
+
+```text
+impact:ACQUIRE_PERSISTENT_SUPPORT  0.10000000000000
+tangent:STICK_TO_SLIDE             0.48125000086923
+rolling:STICK_TO_ROLL              0.49970956301937
+torsion:STICK_TO_SPIN              0.69090909902006
+support:SUPPORT_TO_SEPARATION      1.14444444458932
+```
+
+The first impact is localized from the free-flight height guard. All persistent mode/support events are localized by B on signed KKT/feasibility guards derived from live C graph solves.
+
+### 10.2 Impact → persistent support acquisition
+
+Reference body:
+
+```text
+mass = 10
+initial height = 0.1
+initial vy = -1
+```
+
+At impact:
+
+```text
+L normal impulse ≈ 5
+R normal impulse ≈ 5
+
+post |v| < 2e-11
+post |w| < 2e-11
+
+kinetic:
+5 → ~0
+
+energy ledger error < 1e-14
+```
+
+Both A persistent states start as:
+
+`stick / stick / stick`.
+
+### 10.3 Live C/B event surface
+
+D does not reuse the synthetic B ramp stand.
+
+At every B probe time it executes the C multicontact graph and derives a signed left-contact guard from the solved KKT state:
+
+```text
+tangent:
+  current tangent capacity
+  - accepted |Pt|
+  + mode velocity tolerance
+  - post-solve tangent speed
+
+rolling:
+  current rolling capacity
+  - accepted |Mroll|
+  + tolerance
+  - post-solve rolling speed
+
+torsion:
+  current torsion capacity
+  - accepted |Mtors|
+  + tolerance
+  - post-solve spin speed
+
+support:
+  Pn - max(0, opening normal velocity)
+```
+
+B then performs its normal root bracketing/refinement and A validates the semantic state around the localized boundary.
+
+Acceptance independently checks that each live guard is positive at `event_time-1e-6` and negative at `event_time+1e-6`.
+
+### 10.4 Canonical fresh-physics / history rule
+
+Near a mode boundary, a tolerance-level warm start can otherwise delay the visible classification by a small amount.
+
+D therefore makes the A invariant explicit at trajectory level:
+
+```text
+canonical zero-init C solve
+        ↓
+fresh accepted physics / event surface
+        ↓
+ONLY AFTER acceptance
+apply previous A persistent state
+        ↓
+identity/age/history update
+```
+
+Persistent history is never allowed to own the physical event surface.
+
+This does not rewrite C. It is a D orchestration rule enforcing A's original contract:
+
+`history = solver assistance / continuity, not physical truth`.
+
+### 10.5 Event-resolved persistent states
+
+After slide root:
+
+```text
+L = slide / stick / stick
+R active
+```
+
+After rolling root:
+
+```text
+L = slide / roll / stick
+R active
+```
+
+After torsion root:
+
+```text
+L = slide / roll / spin
+R active
+```
+
+After support-loss root:
+
+```text
+L inactive
+L = open / open / open
+R active
+```
+
+At final `t=1.2`:
+
+```text
+L inactive / open
+R active = slide / roll / spin
+R normal support > 1.05
+open-contact normal velocity > 0.01
+```
+
+Contact identity remains in epoch 0 and first-seen time remains the impact boundary.
+
+### 10.6 Refinement
+
+Reference trajectory:
+
+`root_tolerance = 1e-11`.
+
+Runs:
+
+`[1e-8, 1e-9, 1e-10]`.
+
+Maximum whole-timeline event-time error:
+
+```text
+1e-8  → 4.33793e-9
+1e-9  → 5.7092e-10
+1e-10 → 6.936e-11
+```
+
+Maximum event-resolved/final-state error:
+
+```text
+1e-8  → 1.66561e-9
+1e-9  → 1.9932e-10
+1e-10 → 7.49e-11
+```
+
+Both sequences are strictly decreasing.
+
+Every refinement run preserves the exact five-event causal identity.
+
+### 10.7 Determinism
+
+Acceptance verifies:
+
+```text
+reverse contact presentation
+  signature identical
+  state error = 0
+
+reverse event-spec presentation
+  signature identical
+  state error = 0
+```
+
+Timeline times are exact-identical under both presentation reversals.
+
+### 10.8 Energy / complementarity ledgers
+
+Across impact, event-resolution stages and final state:
+
+```text
+max energy ledger error < 1e-14
+max normal complementarity error ≈ 1.79330578165e-11
+max matrix symmetry error = 0
+```
+
+Reported:
+
+`contact_dissipation ≈ -5.622853864835`.
+
+This is explicitly the **sum of bounded event-stage contact kinetic deltas** used by the research stand. It is not claimed to be the continuous integral of all external work over the full trajectory.
+
+Every accepted contact graph stage is passive (`kinetic_delta <= 0`).
+
+### 10.9 Fail-closed resolution
+
+D refuses to run with:
+
+- zero/non-finite/negative root tolerance;
+- root tolerance coarser than the declared trajectory resolution boundary.
+
+Representative coarse request `1e-3` returns:
+
+`TRAJECTORY_ROOT_TOLERANCE_TOO_COARSE`.
+
+### 10.10 Exact gate
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+SHA-256:
+
+`bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7`
+
+```text
+0.18-D 113/113 PASS
+0.18-C 153/153 PASS
+0.18-B 108/108 PASS
+0.18-A  60/60 PASS
+
+D playground PASS
+import CLEAN
+editor parse/compile CLEAN
+
+D 4/4 exact
+C 4/4 preserved
+B 4/4 preserved
+A 3/3 preserved
+0.17-D 6/6 preserved
+```
+
+Exact D files:
+
+```text
+fabric0_persistent_contact_trajectory_v1.gd
+blob   eb8ef239bd887bd31a74e01ede14e76a008712f4
+sha256 ca2274552bb0295bca4c3491488130373829460b2c7c1a5932cc942967477c09
+
+fabric0_persistent_contact_trajectory_experiments_v1.gd
+blob   112dd6b172cc11d0a328e381c04d2af1456d748f
+sha256 bb1a454428edb24283a41dd9fe20ad276a3bb1b16358ca81f96908b135a52e82
+
+fabric0_persistent_contact_trajectory_acceptance.gd
+blob   76aac08d43e592b925c1fa21eea9c04dc1e5d0bb
+sha256 a44db92a12271ee6a80754fea41aabe1fbeac4e90339fa2593837145c6229893
+
+fabric0_persistent_contact_trajectory_playground.gd
+blob   bff0aa79774996a433534771efaa0794d7e4a7c5
+sha256 591d5730702140b177eaee29af440e7c96bb5b47ca91e35440b4b50fabeeca42
+```
+
+### 10.11 Project Control
+
+Repository-level control on the exact D executable:
+
+```text
+Project Control #1899
+run id 33373310277
+SUCCESS
+```
+
+### 10.12 D scope boundary / parent decision
+
+D proves the planned bounded 0.18 composition for:
+
+`one dynamic rigid body + multiple fixed anchors`.
+
+It does not claim:
+
+- arbitrary multi-dynamic-body persistent-contact graphs;
+- pressure-resolved wrench cones;
+- compliant/Hertz contact;
+- a production external-force/work integrator;
+- a full continuous external-work integral;
+- production sparse backend;
+- production acceptance.
+
+All planned A/B/C/D implementation slices are now present and green.
+
+Therefore:
+
+```text
+FABRIC0.18
+CLOSURE-READY
+
+closure decision:
+PENDING EXPLICIT CLOSURE BOUNDARY
+```
+
+Do not start an implicit 0.18-E. Before formalizing a post-0.18 successor, perform the planned Physical Core ↔ FABRIC-BAKE / BRIDGE-1 synchronization review.

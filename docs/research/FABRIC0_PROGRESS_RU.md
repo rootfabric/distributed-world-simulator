@@ -3737,3 +3737,46 @@ Next: `FABRIC0.18-D — UNIFIED PERSISTENT CONTACT TRAJECTORY`.
 
 
 0.18-C repository control: `Project Control #1893 SUCCESS`. C is an implemented candidate; FABRIC0.18 remains IN PROGRESS and 0.18-D is next.
+
+
+### 0.18-D current state
+
+```text
+FABRIC0.18-A  ✅  60/60 PASS
+FABRIC0.18-B  ✅ 108/108 PASS
+FABRIC0.18-C  ✅ 153/153 PASS
+FABRIC0.18-D  ✅ 113/113 PASS
+
+FABRIC0.18
+CLOSURE-READY
+NOT YET CLOSED
+NOT PRODUCTION ACCEPTED
+```
+
+D exact executable:
+
+`e079565b4b9cd0dae530ff5042f057ce8fa0d0cc`
+
+TREE:
+
+`c051cabd50343603efc509887f32fadf479f0f54`
+
+D composes free-flight impact acquisition, A persistent identity/state, B live mode/support root localization and the C multicontact graph in one ordered trajectory:
+
+```text
+impact ~0.1
+→ slide ~0.48125
+→ roll ~0.49971
+→ spin ~0.69091
+→ left support separation ~1.14444
+```
+
+Event-time and resolved-state refinement are both strictly decreasing through `1e-10` against a `1e-11` reference. Reverse contact and event-spec presentation are exact-identical.
+
+Exact gate: D `113/113`, C `153/153`, B `108/108`, A `60/60`; D bytes `4/4 exact`, all predecessor bytes preserved. Project Control `#1899 SUCCESS`.
+
+Important D orchestration invariant: physical event surfaces come from a fresh canonical zero-init C solve; A history is applied only after the fresh physics is accepted. Warm-start history cannot own event timing.
+
+The reported `-5.622853864835` dissipation value is a sum of event-stage contact kinetic deltas, not a claimed continuous external-work integral.
+
+All planned 0.18 slices are implemented. Next action is an explicit FABRIC0.18 closure decision, followed by the previously declared Physical Core ↔ BRIDGE-1 sync before any post-0.18 successor.

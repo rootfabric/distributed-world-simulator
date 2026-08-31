@@ -1172,3 +1172,55 @@ Next: `0.18-D UNIFIED PERSISTENT CONTACT TRAJECTORY`.
 
 
 0.18-C Project Control #1893 SUCCESS. C is an implemented candidate; do not close FABRIC0.18 before 0.18-D.
+
+
+## 22. FABRIC0.18-D — implemented candidate
+
+Exact executable:
+
+`e079565b4b9cd0dae530ff5042f057ce8fa0d0cc`
+
+TREE:
+
+`c051cabd50343603efc509887f32fadf479f0f54`
+
+```text
+0.18-A  60/60 PASS
+0.18-B 108/108 PASS
+0.18-C 153/153 PASS
+0.18-D 113/113 PASS
+
+D 4/4 exact
+C/B/A/0.17-D bytes preserved
+Project Control #1899 SUCCESS
+```
+
+Unified bounded timeline:
+
+```text
+free
+→ impact / persistent support
+→ stick
+→ slide
+→ roll
+→ spin
+→ one support separation
+→ remaining support slide+roll+spin
+```
+
+B localizes transition roots directly from live C KKT/feasibility guards. A persistent history is attached only after a fresh canonical C solve, so warm-start history cannot shift the physical event surface.
+
+Both event-time and event-resolved state refinement are strict; contact/event-spec ordering is exact deterministic.
+
+Scope remains one dynamic body against multiple fixed anchors.
+
+Parent status:
+
+```text
+FABRIC0.18
+CLOSURE-READY
+NOT YET CLOSED
+NOT PRODUCTION ACCEPTED
+```
+
+Do not create an implicit 0.18-E. Next action is explicit 0.18 closure decision, then the planned Physical Core ↔ BRIDGE-1 synchronization review.
