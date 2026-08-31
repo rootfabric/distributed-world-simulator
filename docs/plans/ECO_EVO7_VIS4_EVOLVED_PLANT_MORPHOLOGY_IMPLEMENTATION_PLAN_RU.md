@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 R2 CLOSED / NEXT: VIS4.5  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.4 R2 CLOSED / VIS4.5 IMPLEMENTED CANDIDATE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -956,3 +956,66 @@ docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_4_PLAY0_MORPH_UBUNTU_VERIFIED_CLOSED_R
 ~~~
 
 VIS4.4 is CLOSED. The morphology track may continue with VIS4.5.
+
+
+## VIS4.5 Deterministic Individuality implementation result — 2026-08-31
+
+VIS4.5 is implemented on frozen runtime/test subject:
+
+~~~text
+HEAD: 1389c897d5a17ab0986e0c1d65602d705479e859
+TREE: 27f61dc56f87b893f8370b7523841e2ee806f6b1
+~~~
+
+The implementation intentionally reuses existing PH5 seed behavior instead of
+creating a second stochastic morphology generator.
+
+Accepted GrowthGraph already uses `development_individual_seed` for branch
+selection, azimuth, bounded angle jitter and bounded length jitter.
+RenderDescription derives foliage placement deterministically from the resulting
+GrowthGraph identity.
+
+VIS4.5 adds an explicit presentation-only individuality contract:
+
+~~~text
+development_individual_seed
++ source descriptor hash
++ source GrowthGraph hash
+    |
+    v
+stable local yaw
++ sealed individuality_hash
+    |
+    v
+PLAY0 PH5 transform:
+surface-up basis x local-yaw
+~~~
+
+The orientation rotates the accepted PH5 representation as one object. It does
+not change GrowthGraph, RenderDescription, materialization geometry, ecology
+state, fitness or physical cell position.
+
+Focused acceptance includes controlled same-seed replay and different-seed
+branch/foliage divergence, complete live seed binding, applied visual basis,
+neutral-color invariance, render-origin invariance, LOD invariance and ecology
+state-hash invariance.
+
+Durable candidate:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_5_DETERMINISTIC_INDIVIDUALITY_CANDIDATE_R1_RU.md
+~~~
+
+Canonical runner:
+
+~~~text
+RUN_ECO_EVO7_VIS4_5_TESTS.sh
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.5 IMPLEMENTED CANDIDATE
+EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
+NOT CLOSED YET
+~~~
