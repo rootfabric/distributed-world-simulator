@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.control_amendment.v1",
+  "amendment_id": "V0-P7-R1-P7-2-STREAMING-BOUNDS-ALLOWED-PATH-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "subject": "P7.2 terrain streaming immutable Matter exclusion-bounds forwarding",
+  "trigger": {
+    "reviewer_result_commit": "b5de5d192d443cd15a43c8a55e8af9258f64455c",
+    "finding_id": "P7.2-RF-001",
+    "reviewed_runtime_head": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+    "reviewed_runtime_tree": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd"
+  },
+  "decision": "APPROVED_NARROW_ALLOWED_PATH_AMENDMENT",
+  "added_allowed_path": "scripts/world/terrain/streaming/terrain_streaming_manager.gd",
+  "authorized_change": "Forward an immutable duplicate of get_streaming_matter_exclusion_bounds() into the existing terrain build request so the existing worker path applies the same P7.2 body-fixed seam clip as synchronous generation.",
+  "forbidden_expansion": [
+    "No terrain streaming ownership change",
+    "No scheduler or cache policy redesign",
+    "No persistence/network/authority foundation",
+    "No Matter DTO/contract change",
+    "No new canonical state owner"
+  ],
+  "rationale": "The final physical seam repair must remain valid after local-cap recenter and worker generation. The four-line forwarding is behavior-preserving when no Matter adapter is installed and is required to keep sync/worker seam semantics identical.",
+  "runtime_feature_merge_authorized": false,
+  "p7_checkpoint_accepted": false
+}
