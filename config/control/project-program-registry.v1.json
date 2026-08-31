@@ -39,12 +39,13 @@
       "expected_outcome": "Stable accepted G8 truth; no further G8 mutation.",
       "current_stage": "G8 Aggregate Full Acceptance",
       "stage_status": "SOURCE_ACCEPTED_FROZEN_WAITING_MAT0",
-      "progress_note": "G8.0-G8.6 and G8 Full Acceptance are accepted. Automated, manual graphical, aggregate exact-Windows, PC0 and full world/core gates passed. Branch is frozen accepted evidence.",
+      "progress_note": "G8.0-G8.6 and G8 Full Acceptance are accepted. Automated, manual graphical, aggregate exact-Windows, PC0 and full world/core gates passed. Branch is frozen accepted evidence. P7.2 merged new Moon/Matter generation integration under unchanged Matter ownership; G's frozen branch now has visible Matter watched-dependency drift. Because G is SOURCE_ACCEPTED_FROZEN_WAITING_MAT0 and off the active V0 critical path, this drift is advisory to global progress and must be revalidated before G is reactivated.",
       "last_accepted_checkpoint": "G8 Full Acceptance",
       "next_stage": "Keep G8 frozen. G9 remains off the V0 critical path and may start only after MAT0 canonical material identity.",
       "health_declared": "GREEN",
       "blockers": [
-        "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"
+        "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY",
+        "P7_2_MATTER_DEPENDENCY_REVALIDATION_REQUIRED_BEFORE_G_REACTIVATION"
       ],
       "historical_passport_architecture_revisions": [
         "GLOBAL-P0-2026-08-10-R2"
@@ -58,7 +59,8 @@
           "pinned_head_sha": "d7d7160b89878ba44204688686ad837bf6664d70",
           "passport_blob_sha": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
         }
-      ]
+      ],
+      "blocks_global_progress": false
     },
     "ECO": {
       "program": "ECO",
