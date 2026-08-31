@@ -342,7 +342,7 @@ static func _validate_sample(sample: Dictionary) -> bool:
 		"max_parent_chunk_seen",
 		"max_candidate_chunk_seen",
 	]:
-		if typeof(sample.get(key)) != TYPE_INT or int(sample.get(key)) < 0:
+		if not _is_integral_number(sample.get(key)) or int(sample.get(key)) < 0:
 			return false
 	for key in ["simulation_ms", "combined_ms", "presentation_overhead_ms", "combined_to_sim_ratio"]:
 		var number := float(sample.get(key, NAN))
@@ -390,7 +390,7 @@ static func _validate_repetition_summary(summary: Dictionary) -> bool:
 		"cache_eviction_count",
 		"record_count",
 	]:
-		if typeof(summary.get(key)) != TYPE_INT or int(summary.get(key)) < 0:
+		if not _is_integral_number(summary.get(key)) or int(summary.get(key)) < 0:
 			return false
 	for key in [
 		"optimized_stream_contract",
@@ -429,3 +429,10 @@ static func _max_value(values: Array[float]) -> float:
 
 static func _stable_float(value: float) -> String:
 	return "%.9f" % value
+
+
+static func _is_integral_number(value) -> bool:
+	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+		return false
+	var number := float(value)
+	return is_finite(number) and number == floor(number)
