@@ -1832,7 +1832,7 @@ Final B0.3 acceptance remains gated by closed FABRIC0.18.
 
 ---
 
-## FABRIC-BAKE B0.3 exact executable candidate — 2026-08-31
+## FABRIC-BAKE B0.3 closure boundary — 2026-08-31
 
 ```text
 branch:
@@ -1867,4 +1867,24 @@ B0.3 preserves the accepted-domain 6D boundary admissible wrench support functio
 
 Out-of-domain geometry fails closed with `NO_SAFE_BAKE`. Support loss and directional wrench-capacity exits are explicit event/refinement surfaces.
 
-Formal closure awaits the evidence-carrier Project Control result. Production acceptance is not claimed.
+Evidence carrier:
+
+```text
+c303b5c44621cae1dd073b12aef2de037fec8a74
+Project Control #1930 = SUCCESS
+```
+
+Final qualification:
+
+```text
+FABRIC-BAKE B0.3
+RESEARCH CHECKPOINT CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE AUDIT PASS
+PROJECT CONTROL PASS
+PRODUCTION ACCEPTANCE NOT CLAIMED
+```
+
+Runtime/test bytes remain frozen at executable HEAD `acc72c1fb216bea56bc44547bc3e1eec7a37af08`.
+
+Next research stages are B0.4 Dynamic ROM and B0.5 Hybrid Bake; BRIDGE-2 follows their maturity.

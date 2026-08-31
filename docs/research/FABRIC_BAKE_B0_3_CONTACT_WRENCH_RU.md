@@ -1,6 +1,6 @@
 # FABRIC-BAKE B0.3 — CONTACT / WRENCH BAKE
 
-**Статус evidence carrier:** exact executable candidate; production acceptance не заявляется.
+**Статус:** **RESEARCH CHECKPOINT CLOSED / EXACT DOUBLE PASS / PROJECT CONTROL PASS / NOT PRODUCTION ACCEPTED**.
 
 ## 1. Frozen predecessors
 
@@ -222,3 +222,42 @@ B0.3 does not claim:
 - production acceptance.
 
 The next roadmap stage after formal B0.3 closure is B0.4 Dynamic ROM and B0.5 Hybrid Bake research, converging later at BRIDGE-2.
+
+
+## 10. Closure boundary
+
+```text
+exact executable HEAD:
+acc72c1fb216bea56bc44547bc3e1eec7a37af08
+
+exact executable TREE:
+f8247e39494c00d2d065ed4c4b121e103f32ab0a
+
+executable Project Control:
+#1928
+run id 33399124353
+SUCCESS
+
+evidence carrier:
+c303b5c44621cae1dd073b12aef2de037fec8a74
+
+evidence Project Control:
+#1930
+run id 33399573089
+SUCCESS
+```
+
+Closure commits after the executable boundary change only documentation/validation evidence. Runtime and test bytes remain frozen at the exact executable HEAD.
+
+Final qualification:
+
+```text
+FABRIC-BAKE B0.3
+CONTACT / WRENCH BAKE
+
+RESEARCH CHECKPOINT CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE AUDIT PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```

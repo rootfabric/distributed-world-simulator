@@ -3,7 +3,7 @@
   "program": "FABRIC-BAKE",
   "checkpoint": "B0.3",
   "name": "CONTACT_WRENCH_BAKE",
-  "status": "EXACT_EXECUTABLE_CANDIDATE",
+  "status": "RESEARCH_CHECKPOINT_CLOSED",
   "production_accepted": false,
   "branch": "research/fabric-bake0-3-contact-wrench-r1",
   "exact_executable": {
@@ -82,6 +82,12 @@
       "run_id": 33399124353,
       "subject_head": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
       "result": "SUCCESS"
+    },
+    "evidence_carrier": {
+      "run_number": 1930,
+      "run_id": 33399573089,
+      "subject_head": "c303b5c44621cae1dd073b12aef2de037fec8a74",
+      "result": "SUCCESS"
     }
   },
   "claims": [
@@ -102,7 +108,12 @@
   ],
   "next": "B0.4_DYNAMIC_ROM_AND_B0.5_HYBRID_BAKE",
   "closure": {
-    "decision": "PENDING_EVIDENCE_CONTROL",
-    "production_accepted": false
+    "decision": "RESEARCH_CHECKPOINT_CLOSED",
+    "exact_executable_head": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
+    "exact_executable_tree": "f8247e39494c00d2d065ed4c4b121e103f32ab0a",
+    "evidence_control_carrier": "c303b5c44621cae1dd073b12aef2de037fec8a74",
+    "runtime_changed_after_executable": false,
+    "production_accepted": false,
+    "next": "B0.4_DYNAMIC_ROM_AND_B0.5_HYBRID_BAKE"
   }
 }
