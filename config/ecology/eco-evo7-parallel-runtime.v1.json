@@ -64,7 +64,7 @@
   "perf2_profiling": {
     "checkpoint": "ECO.EVO7/PERF2.1",
     "revision": "ECO.EVO7-PERF2.1-R2",
-    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_EXACT_WINDOWS",
+    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
     "accepted_perf2_0_contract_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
     "execution_configs": [
       "SERIAL_REFERENCE",
@@ -78,6 +78,16 @@
     "canonical_pair_requirement": "9/9",
     "optimization_claim": false,
     "canonical": false,
-    "side_channel_only": true
-  }
+    "side_channel_only": true,
+    "runtime_gate": {
+      "required_local_exact_passes": 1,
+      "accepted_os": [
+        "UBUNTU",
+        "WINDOWS"
+      ],
+      "dual_os_required": false,
+      "second_os": "OPTIONAL_NON_BLOCKING"
+    }
+  },
+  "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json"
 }
