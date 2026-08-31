@@ -1314,3 +1314,27 @@ Current BAKE status after this freeze:
 FABRIC-BAKE
 B0.0 = NEXT EXECUTABLE CHECKPOINT
 ```
+
+
+## FABRIC0.16 prerequisite status for B0.3
+
+Physical Core prerequisite previously written as:
+
+```text
+B0.3 FINAL:
+FABRIC0.16 general convex multipoint contact
++ stronger graph complementarity
+```
+
+is now satisfied at the FABRIC0.16 exact-tested executable boundary:
+
+`3307d553c1c3c79cd9c15a5c565af7fef3f0400c`.
+
+Status:
+
+```text
+FABRIC0.16 prerequisite for B0.3 FINAL  ✅ SATISFIED
+B0.3 itself                              ⛔ NOT AUTO-CLOSED
+```
+
+This only unlocks the physical-core dependency. B0.3 must still pass its own BAKE contracts, boundary-observable correctness, refinement/unbake and authority gates.

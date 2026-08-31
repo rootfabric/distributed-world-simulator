@@ -3288,3 +3288,45 @@ S1 8/8 PRESERVED
 Next wall:
 
 `FABRIC0.16 S3 — UNIFIED EVENT-DRIVEN CONVEX TRAJECTORY + REFINEMENT`.
+
+
+## FABRIC0.16 — RESEARCH CANDIDATE CLOSED
+
+**Exact-tested executable head:** `3307d553c1c3c79cd9c15a5c565af7fef3f0400c`  
+**Final evidence:** `validation/fabric0-compositional-world-fabric-v16-validation.json`  
+**Status:** `RESEARCH_CANDIDATE_CLOSED / EXACT_DOUBLE_PASS / REMOTE_BYTE_IDENTITY_PASS / PROJECT_CONTROL_PASS`.
+
+Closure gates:
+
+```text
+S1 110/110 PASS
+S2 102/102 PASS
+S3 101/101 PASS
+editor CLEAN
+Project Control SUCCESS
+
+S3 3/3 exact remote
+S2 5/5 preserved
+S1 8/8 preserved
+FABRIC0.15 7/7 preserved
+```
+
+Unified S3 topology:
+
+```text
+2 islands -> 1 -> 2
+8 contact rows -> 12 -> 8
+2 actual threads -> 1 -> 2
+```
+
+Reference event boundaries:
+
+```text
+CONTACT_APPEAR    ~0.51000000000058
+SOURCE_RELEASE     0.7
+CONTACT_DISAPPEAR ~0.70000000004948
+```
+
+Full-state and event-time errors strictly decrease from `1e-3` through `1e-9` against a `1e-11` reference. Energy ledger residual is zero; linear/angular momentum errors are zero on the closure trajectory.
+
+FABRIC0.16 is closed as a research candidate only; production integration and stronger non-claims remain open.

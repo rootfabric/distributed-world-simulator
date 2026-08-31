@@ -768,3 +768,54 @@ validation/fabric0-compositional-world-fabric-v16-s2-validation.json
 Important: exact-touch EPA degeneracy is handled only as bracketed zero-measure boundary evidence; it is not globally reclassified as penetration.
 
 FABRIC0.16 is still **NOT CLOSED**. Next wall is a single unified event-driven trajectory with graph topology changes and refinement.
+
+
+## 12. FABRIC0.16 — RESEARCH CANDIDATE CLOSED
+
+Current Physical Core recovery boundary:
+
+```text
+branch:
+research/fabric0-compositional-world-fabric-r1
+
+exact-tested executable head:
+3307d553c1c3c79cd9c15a5c565af7fef3f0400c
+
+status:
+FABRIC0.16
+RESEARCH CANDIDATE CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+PROJECT CONTROL PASS
+```
+
+Closure suite:
+
+```text
+S1 110/110
+S2 102/102
+S3 101/101
+editor CLEAN
+```
+
+Read:
+
+```text
+docs/research/FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_RU.md
+docs/research/FABRIC0_16_PROGRESS_RU.md
+validation/fabric0-compositional-world-fabric-v16-validation.json
+```
+
+The decisive S3 result is a unified general-convex trajectory with actual contact graph topology mutation:
+
+```text
+[A,B] + [C,D]
+      ↓ contact appear
+[A,B,C,D]
+      ↓ contact disappear
+[A,B] + [C,D]
+```
+
+with `8 -> 12 -> 8` manifold rows and `2 -> 1 -> 2` actual Godot Threads.
+
+Do not upgrade this status to production acceptance. In particular, the checkpoint does not claim a monolithic certified Signorini-Coulomb MCP/NCP, simultaneous multi-impact closure, rolling/torsional friction or production broadphase/block-sparse/thread-pool infrastructure.

@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.16",
+  "title": "GENERAL CONVEX MULTIPOINT MCP",
+  "status": "RESEARCH_CANDIDATE_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric0-compositional-world-fabric-r1",
+  "predecessor_frontier": "962b9c1bbf7f04c7853f1fb0e36480cf54f3250d",
+  "predecessor_checkpoint": "FABRIC0.15_RESEARCH_CANDIDATE_CLOSED",
+  "slices": {
+    "s1": {
+      "executable_head": "33c5a00703b215cddb0994172869f2ec3b7d3d3c",
+      "acceptance_assertions": 110,
+      "result": "PASS"
+    },
+    "s2": {
+      "accepted_executable_head": "92588ac05a7fa5b3cedd64bb567436e82e3a0a0e",
+      "acceptance_assertions": 102,
+      "result": "PASS"
+    },
+    "s3": {
+      "executable_head": "3307d553c1c3c79cd9c15a5c565af7fef3f0400c",
+      "acceptance_assertions": 101,
+      "result": "PASS"
+    }
+  },
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "post_push_closure_gate": {
+    "s3_acceptance": "101/101_PASS",
+    "s2_regression": "102/102_PASS",
+    "s1_regression": "110/110_PASS",
+    "s3_playground": "PASS",
+    "editor_scan": "CLEAN",
+    "project_control": {
+      "status": "SUCCESS",
+      "run_id": 33350916275
+    }
+  },
+  "s3": {
+    "scenario": "TWO_ISLANDS_MERGE_BY_LOCALIZED_CONVEX_CONTACT_THEN_SPLIT_BY_LOCALIZED_PERSISTENT_MANIFOLD_SEPARATION",
+    "topology": [
+      "2_ISLANDS",
+      "1_ISLAND",
+      "2_ISLANDS"
+    ],
+    "contact_rows": [
+      8,
+      12,
+      8
+    ],
+    "actual_godot_threads": [
+      2,
+      1,
+      2
+    ],
+    "reference_tolerance": 1e-11,
+    "contact_appear_time_approx": 0.51000000000058,
+    "source_release_time": 0.7,
+    "contact_disappear_time_approx": 0.70000000004948,
+    "bridge_manifold_points": 4,
+    "bridge_feature_key": "B|C|ra:B:5|ib:C:4",
+    "bridge_lifetime_before_split": 2,
+    "surviving_manifold_point_lifetime": 4,
+    "state_refinement_errors": [
+      0.00015624999646912663,
+      0.000003662105882096256,
+      3.814348059627548e-8,
+      1.4551937432827344e-10
+    ],
+    "event_refinement_errors": [
+      0.0003906249505234438,
+      0.00000305170833592161,
+      4.763423933074051e-8,
+      3.230524736608231e-10
+    ],
+    "energy": {
+      "initial_kinetic": 2,
+      "contact_dissipation": 2,
+      "external_source_work": 2,
+      "final_kinetic": 2,
+      "closure_residual": 0
+    },
+    "momentum": {
+      "linear_error": 0,
+      "angular_error": 0
+    },
+    "determinism": {
+      "same_tolerance_replay": "EXACT_IDENTICAL",
+      "reverse_thread_spawn": "EXACT_IDENTICAL"
+    }
+  },
+  "exact_remote_byte_identity": {
+    "s3": "3/3_PASS",
+    "s2": "5/5_PRESERVED",
+    "s1": "8/8_PRESERVED",
+    "fabric0_15": "7/7_PRESERVED"
+  },
+  "s3_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_trajectory_v1.gd",
+      "sha256": "f83ef5c04d652cb239cb438b635c036e4ab51f5eb656663a668f2f1b7334fd9b",
+      "git_blob": "122844c6b10d8e44cba40e766d5bb12fca447cc0"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_trajectory_acceptance.gd",
+      "sha256": "702aede846c9bbcfe81497a3fd3f17e91299e097b46c7efb7eb5ca65849ce990",
+      "git_blob": "a47dd07c54eb019f2765ff3ba92f699798d0779b"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_trajectory_playground.gd",
+      "sha256": "5102fe458cfae859f78e0e4bf38c7991703657e424245fd4747b2ab11d6cbf97",
+      "git_blob": "758bf70cc92d279a53cf9fdd5dd7f3162f77ba92"
+    }
+  ],
+  "closed_claims": [
+    "SUPPORT_MAPPED_CONVEX_POLYTOPES",
+    "DETERMINISTIC_GJK_EPA_WITH_EXPLICIT_ZERO_MEASURE_EVENT_BOUNDARY",
+    "PERSISTENT_CLIPPED_MULTIPOINT_MANIFOLDS",
+    "RESEARCH_SWEEP_AND_PRUNE_BROADPHASE",
+    "GRAPH_WIDE_MULTIPOINT_REGULARIZED_NORMAL_COMPLEMENTARITY",
+    "COUPLED_COULOMB_FRICTION_FIXED_POINT",
+    "ADAPTIVE_CONTACT_SEPARATION_AND_STICK_SLIDE_LOCALIZATION",
+    "ACTUAL_SAME_WORLD_PARALLEL_ISLANDS",
+    "EVENT_DRIVEN_ISLAND_MERGE_SPLIT_TRAJECTORY",
+    "FULL_STATE_AND_EVENT_TIME_REFINEMENT",
+    "MOMENTUM_AND_ENERGY_LEDGER_EVIDENCE"
+  ],
+  "non_claims": [
+    "PRODUCTION_ACCEPTANCE",
+    "MONOLITHIC_GLOBALLY_CERTIFIED_SIGNORINI_COULOMB_MCP_NCP",
+    "EXACT_SIMULTANEOUS_MULTI_IMPACT_FIXED_POINT",
+    "ROLLING_TORSIONAL_FRICTION",
+    "CURVED_ANALYTIC_SUPPORT_PRIMITIVES",
+    "ARBITRARY_NONCONVEX_MESH_DECOMPOSITION",
+    "PRODUCTION_DYNAMIC_BROADPHASE",
+    "PRODUCTION_BLOCK_SPARSE_BACKEND",
+    "PRODUCTION_THREAD_POOL_SCHEDULER",
+    "CONSTRUCTION_OWNERSHIP_TRANSFER",
+    "AUTHORITY_PERSISTENCE_NETWORK_INTEGRATION",
+    "FULL_MATERIALIZED_DWS_REGRESSION"
+  ],
+  "construction_ownership": "UNCHANGED_CANONICAL_SEMANTIC_OWNER",
+  "bake_dependency": "B0.3_FINAL_FABRIC0.16_PREREQUISITE_SATISFIED"
+}

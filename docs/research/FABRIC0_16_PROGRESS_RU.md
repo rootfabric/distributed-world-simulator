@@ -13,7 +13,7 @@ FABRIC0.15:
 CLOSED
 
 FABRIC0.16:
-IN PROGRESS
+RESEARCH CANDIDATE CLOSED
 ```
 
 ## Completed S1
@@ -119,3 +119,59 @@ UNIFIED EVENT-DRIVEN CONVEX TRAJECTORY + REFINEMENT
 ```
 
 FABRIC0.16 remains IN PROGRESS / NOT CLOSED.
+
+
+## FABRIC0.16 CLOSURE
+
+```text
+exact-tested S3 executable head:
+3307d553c1c3c79cd9c15a5c565af7fef3f0400c
+
+FABRIC0.16:
+RESEARCH CANDIDATE CLOSED
+```
+
+Closure chain:
+
+```text
+S1  GENERAL CONVEX MANIFOLD + GRAPH LCP
+    110/110 PASS
+
+S2  ADAPTIVE CONVEX EVENTS + SAME-WORLD PARALLEL ISLANDS
+    102/102 PASS
+
+S3  UNIFIED EVENT-DRIVEN CONVEX TRAJECTORY
+    101/101 PASS
+```
+
+S3 proves in one trajectory:
+
+```text
+2 islands -> 1 -> 2
+8 rows -> 12 -> 8
+2 threads -> 1 -> 2
+localized appear -> graph merge -> source release -> localized disappear -> graph split
+```
+
+Refinement against `1e-11` reference is strictly decreasing for both complete rigid-body state and event times.
+
+Energy/momentum:
+
+```text
+energy residual = 0
+linear momentum error = 0
+angular momentum error = 0
+```
+
+Exact remote preservation:
+
+```text
+S3 3/3 PASS
+S2 5/5 PRESERVED
+S1 8/8 PRESERVED
+FABRIC0.15 7/7 PRESERVED
+```
+
+Project Control run `33350916275`: SUCCESS.
+
+The checkpoint is closed only as a **research candidate**. Production promotion and the explicit non-claims in the design note remain open.

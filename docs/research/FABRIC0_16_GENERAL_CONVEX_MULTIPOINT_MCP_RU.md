@@ -4,11 +4,10 @@
 
 ```text
 FABRIC0.16
-S1 — GENERAL CONVEX MANIFOLD + GRAPH LCP
-IMPLEMENTED
+GENERAL CONVEX MULTIPOINT MCP
+RESEARCH CANDIDATE CLOSED
 EXACT LINUX DOUBLE PASS
-RESEARCH SLICE ONLY
-NOT CLOSED
+S1 + S2 + S3 CLOSURE CHAIN
 ```
 
 **Physical branch:** `research/fabric0-compositional-world-fabric-r1`  
@@ -583,3 +582,252 @@ candidate interval
 Primary closure question for S3:
 
 > Do event times, complete rigid-body state and energy/momentum ledger converge together when the general-convex multipoint graph changes topology?
+
+
+## 16. S3 — Unified Event-Driven Convex Trajectory
+
+**Exact-tested executable head:** `3307d553c1c3c79cd9c15a5c565af7fef3f0400c`.
+
+S3 объединяет ранее раздельные S1/S2 primitives в одну trajectory:
+
+```text
+2 independent islands
+[A,B] [C,D]
+        ↓
+localized B|C CONTACT_APPEAR
+        ↓
+persistent 4-point bridge manifold
+        ↓
+12-row graph solve
+        ↓
+1 merged island
+[A,B,C,D]
+        ↓
+SOURCE_RELEASE at t=0.7
+        ↓
+localized B|C CONTACT_DISAPPEAR
+        ↓
+8-row split graph
+        ↓
+2 independent islands
+[A,B] [C,D]
+```
+
+### Exact event/topology evidence
+
+Reference run uses `tolerance=1e-11`.
+
+```text
+merge boundary:
+0.51000000000058 approximately
+
+split boundary:
+0.70000000004948 approximately
+
+topology:
+2 -> 1 -> 2 islands
+
+manifold rows:
+8 -> 12 -> 8
+
+actual Godot Threads:
+2 -> 1 -> 2
+```
+
+At the merge boundary the ordinary volumetric EPA representation can remain degenerate even though the zero-measure contact boundary is already localized. S3 therefore does **not** inject an arbitrary penetration epsilon.
+
+Accepted boundary-manifold semantics:
+
+```text
+localized zero-measure boundary
++
+transition normal
++
+opposed support points / signed support gap
+        ↓
+synthetic zero-depth collision witness
+        ↓
+ordinary persistent clipped manifold builder
+```
+
+This fallback is local to boundary materialization. It does not redefine a separated configuration as penetrating.
+
+For an already persistent manifold, separation localization uses its stored normal and the signed support gap. This removes an unnecessary requirement to reconstruct a volumetric EPA polytope at the left endpoint of a separation bracket.
+
+### Persistent lineage through the unified trajectory
+
+At merge:
+
+```text
+B|C manifold points = 4
+feature = B|C|ra:B:5|ib:C:4
+```
+
+Before split:
+
+```text
+B|C point lifetime = 2
+```
+
+At final time the surviving manifolds:
+
+```text
+A|B = 4 points, lifetime 4
+C|D = 4 points, lifetime 4
+```
+
+Thus manifold identity survives actual event-driven topology mutation, not only isolated rebuild probes.
+
+### Full-state and event refinement
+
+Against the `1e-11` reference:
+
+```text
+full-state max error
+
+1e-3 -> 1.5624999646912663e-4
+1e-5 -> 3.662105882096256e-6
+1e-7 -> 3.814348059627548e-8
+1e-9 -> 1.4551937432827344e-10
+```
+
+```text
+maximum event-time error
+
+1e-3 -> 3.906249505234438e-4
+1e-5 -> 3.05170833592161e-6
+1e-7 -> 4.763423933074051e-8
+1e-9 -> 3.230524736608231e-10
+```
+
+Both sequences are strictly decreasing.
+
+Fresh same-tolerance replay is exact identical. Reversing initial/final island thread spawn order also gives exact identical trajectory signature and zero state/event delta.
+
+### Energy and momentum ledger
+
+Reference trajectory:
+
+```text
+initial kinetic energy = 2
+contact dissipation    = 2
+external source work   = 2
+final kinetic energy   = 2
+energy closure residual = 0
+
+linear momentum error  = 0
+angular momentum error = 0
+```
+
+Energy residual is zero at every tested refinement level.
+
+### Exact closure gate
+
+Engine:
+
+`Godot 4.7.1.stable.double.custom_build.a13da4feb`.
+
+Post-push exact rerun:
+
+```text
+S3 unified trajectory  101/101 PASS
+S2 adaptive events     102/102 PASS
+S1 convex MCP          110/110 PASS
+S3 playground          PASS
+editor parse/compile   CLEAN
+Project Control        SUCCESS
+```
+
+Remote byte identity at S3 executable head:
+
+```text
+S3                         3/3 PASS
+S2                         5/5 PRESERVED
+S1                         8/8 PRESERVED
+FABRIC0.15 predecessor     7/7 PRESERVED
+```
+
+S3 exact blobs:
+
+```text
+trajectory
+122844c6b10d8e44cba40e766d5bb12fca447cc0
+
+acceptance
+a47dd07c54eb019f2765ff3ba92f699798d0779b
+
+playground
+758bf70cc92d279a53cf9fdd5dd7f3162f77ba92
+```
+
+## 17. FABRIC0.16 closure
+
+The bounded research question for FABRIC0.16 is now satisfied by the S1 -> S2 -> S3 chain:
+
+```text
+support-mapped general convex polytopes
++
+GJK / EPA
++
+persistent multipoint face manifolds
++
+research broadphase
++
+graph-wide multipoint normal complementarity
++
+coupled Coulomb friction cones
++
+adaptive contact / separation / stick-slide localization
++
+same-world actual parallel islands
++
+event-driven island merge/split trajectory
++
+state/event refinement
++
+momentum/energy evidence
+```
+
+Closure status:
+
+```text
+FABRIC0.16
+GENERAL CONVEX MULTIPOINT MCP
+
+RESEARCH CANDIDATE CLOSED
+EXACT DOUBLE PASS
+REMOTE BYTE IDENTITY PASS
+PROJECT CONTROL PASS
+```
+
+This is **not production acceptance**.
+
+### Closure non-claims
+
+The closure does not claim:
+
+- a single monolithic globally certified Signorini-Coulomb MCP/NCP algorithm;
+- exact simultaneous multi-impact fixed point;
+- rolling/torsional friction;
+- curved analytic support primitives;
+- arbitrary non-convex mesh decomposition;
+- production dynamic broadphase;
+- production block-sparse linear algebra;
+- a bounded worker pool/thread scheduler suitable for large production worlds;
+- Construction ownership transfer;
+- authority/persistence/network integration;
+- full materialized DWS regression.
+
+The accepted numerical kernel remains explicit:
+
+```text
+regularized graph normal active-set LCP
++
+converged normal/tangent Coulomb fixed point
+```
+
+Construction remains the canonical semantic owner.
+
+Final closure evidence:
+
+`validation/fabric0-compositional-world-fabric-v16-validation.json`.
