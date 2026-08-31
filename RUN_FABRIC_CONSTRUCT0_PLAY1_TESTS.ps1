@@ -53,8 +53,13 @@ try {
         "res://tests/research/fabric_construct0/fabric_construct0_play1_acceptance.gd"
     )) {
         Write-Host "RUN $script"
-        & $GodotPath --headless --path $RootDir --script $script
-        if ($LASTEXITCODE -ne 0) { throw "Acceptance failed: $script exit $LASTEXITCODE" }
+        $output = @(& $GodotPath --headless --path $RootDir --script $script 2>&1)
+        $exitCode = $LASTEXITCODE
+        $output | ForEach-Object { Write-Host $_ }
+        if ($exitCode -ne 0) { throw "Acceptance failed: $script exit $exitCode" }
+        if (($output -join "`n") -match "SCRIPT ERROR:|ERROR: Failed to load script") {
+            throw "Acceptance emitted fatal script marker: $script"
+        }
     }
 }
 finally {
