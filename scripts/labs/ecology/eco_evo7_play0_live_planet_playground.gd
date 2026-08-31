@@ -51,6 +51,9 @@ const MorphologyInspectorModel = preload(
 const DiversityEvidence = preload(
 	"res://scripts/labs/ecology/eco_evo7_vis4_8_diversity_evidence.gd"
 )
+const PerformanceLODEvidence = preload(
+	"res://scripts/labs/ecology/eco_evo7_vis4_9_performance_lod_evidence.gd"
+)
 const LoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
 )
@@ -130,6 +133,13 @@ var diversity_evidence_panel: PanelContainer
 var diversity_evidence_label: Label
 var diversity_evidence_visible := false
 var _diversity_evidence_state: Dictionary = {}
+var performance_lod_panel: PanelContainer
+var performance_lod_label: Label
+var performance_lod_visible := false
+var _vis49_frame_sample_count := 0
+var _vis49_frame_total_sec := 0.0
+var _vis49_frame_min_sec := INF
+var _vis49_frame_max_sec := 0.0
 var _hud_accumulator := 0.0
 
 
@@ -231,6 +241,11 @@ func initialize_runtime() -> bool:
 func _process(delta: float) -> void:
 	if not ready_success:
 		return
+	if is_finite(delta) and delta > 0.0:
+		_vis49_frame_sample_count += 1
+		_vis49_frame_total_sec += delta
+		_vis49_frame_min_sec = minf(_vis49_frame_min_sec, delta)
+		_vis49_frame_max_sec = maxf(_vis49_frame_max_sec, delta)
 	_poll_generation_thread()
 	if auto_evolution and not _gen_in_flight:
 		request_generation()
@@ -625,6 +640,8 @@ func _publish_completed_snapshot(workbench_snapshot: Dictionary, measured: bool)
 	_published_morphology_descriptors = morphology_descriptors.duplicate(true)
 	_published_reconstruction = reconstruction.duplicate(true)
 	_refresh_diversity_evidence()
+	if performance_lod_visible:
+		_refresh_performance_lod_panel()
 	if morphology_inspector_visible:
 		_refresh_morphology_inspector(true)
 	if measured:
@@ -738,6 +755,77 @@ func get_morphology_inspector_selected_index() -> int:
 	return _morphology_inspector_index
 
 
+func get_frame_performance() -> Dictionary:
+	var average_sec := (
+		_vis49_frame_total_sec / float(_vis49_frame_sample_count)
+		if _vis49_frame_sample_count > 0 else 0.0
+	)
+	return {
+		"sample_count": _vis49_frame_sample_count,
+		"average_frame_ms": average_sec * 1000.0,
+		"min_frame_ms": (
+			_vis49_frame_min_sec * 1000.0
+			if _vis49_frame_sample_count > 0 else 0.0
+		),
+		"max_frame_ms": _vis49_frame_max_sec * 1000.0,
+		"estimated_fps": 1.0 / average_sec if average_sec > 0.0 else 0.0,
+		"observational_only": true,
+	}
+
+
+func get_performance_lod_state() -> Dictionary:
+	if presentation == null:
+		return {}
+	var ecology_hash := String(_published_snapshot.get("ecology_state_hash", ""))
+	if ecology_hash.length() != 64:
+		return {}
+	var renderer_perf: Dictionary = presentation.get_ph5_performance_counters()
+	if String(renderer_perf.get("source_ecology_hash", "")) != ecology_hash:
+		return {}
+	return PerformanceLODEvidence.build(renderer_perf, get_frame_performance())
+
+
+func get_performance_lod_text() -> String:
+	return "" if performance_lod_label == null else performance_lod_label.text
+
+
+func is_performance_lod_visible() -> bool:
+	return performance_lod_visible
+
+
+func set_performance_lod_visible(value: bool) -> bool:
+	if value:
+		morphology_inspector_visible = false
+		diversity_evidence_visible = false
+		if morphology_inspector_panel != null:
+			morphology_inspector_panel.visible = false
+		if diversity_evidence_panel != null:
+			diversity_evidence_panel.visible = false
+	performance_lod_visible = value
+	if performance_lod_panel != null:
+		performance_lod_panel.visible = value
+	if value:
+		_refresh_performance_lod_panel()
+	_refresh_hud_text()
+	return performance_lod_visible
+
+
+func toggle_performance_lod() -> bool:
+	return set_performance_lod_visible(not performance_lod_visible)
+
+
+func _refresh_performance_lod_panel() -> bool:
+	if performance_lod_label == null:
+		return false
+	var state: Dictionary = get_performance_lod_state()
+	performance_lod_label.text = (
+		PerformanceLODEvidence.format_text(state)
+		if not state.is_empty()
+		else "VIS4.9 PERFORMANCE / LOD\nUnavailable until completed PH5 generation evidence exists."
+	)
+	return not state.is_empty()
+
+
 func is_diversity_evidence_visible() -> bool:
 	return diversity_evidence_visible
 
@@ -753,8 +841,11 @@ func get_diversity_evidence_text() -> String:
 func set_diversity_evidence_visible(value: bool) -> bool:
 	if value:
 		morphology_inspector_visible = false
+		performance_lod_visible = false
 		if morphology_inspector_panel != null:
 			morphology_inspector_panel.visible = false
+		if performance_lod_panel != null:
+			performance_lod_panel.visible = false
 	diversity_evidence_visible = value
 	if diversity_evidence_panel != null:
 		diversity_evidence_panel.visible = value
@@ -825,8 +916,11 @@ func select_morphology_inspector_index(index: int) -> bool:
 func set_morphology_inspector_visible(value: bool) -> bool:
 	if value:
 		diversity_evidence_visible = false
+		performance_lod_visible = false
 		if diversity_evidence_panel != null:
 			diversity_evidence_panel.visible = false
+		if performance_lod_panel != null:
+			performance_lod_panel.visible = false
 		if not _can_inspect_morphology():
 			morphology_inspector_visible = true
 			if morphology_inspector_panel != null:
@@ -996,6 +1090,8 @@ func get_play0_status() -> Dictionary:
 		"live_diversity_status": String(_diversity_evidence_state.get("live_diversity_status", "")),
 		"morphology_cluster_count": int(_diversity_evidence_state.get("cluster_count", 0)),
 		"morphology_varying_field_count": int(_diversity_evidence_state.get("varying_field_count", 0)),
+		"performance_lod_visible": performance_lod_visible,
+		"performance_lod_structural_hash": String(get_performance_lod_state().get("structural_evidence_hash", "")),
 	}
 
 
@@ -1020,6 +1116,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F7:
 				toggle_diversity_evidence()
+				get_viewport().set_input_as_handled()
+			KEY_F8:
+				toggle_performance_lod()
 				get_viewport().set_input_as_handled()
 			KEY_P:
 				set_auto_evolution(not auto_evolution)
@@ -1114,6 +1213,7 @@ func _build_hud() -> void:
 		"B           biome overlay ON / OFF",
 		"F6          morphology inspector for nearest live PH5 plant",
 		"F7          diversity evidence (renderer gate + live variance)",
+		"F8          VIS4 performance / LOD evidence",
 		"F1          this help           Esc release/capture mouse",
 	]))
 	help_label.add_theme_font_size_override("font_size", 15)
@@ -1149,6 +1249,21 @@ func _build_hud() -> void:
 	diversity_evidence_label.add_theme_font_size_override("font_size", 13)
 	diversity_evidence_panel.add_child(diversity_evidence_label)
 	hud_layer.add_child(diversity_evidence_panel)
+
+	performance_lod_panel = PanelContainer.new()
+	performance_lod_panel.name = "VIS49PerformanceLODPanel"
+	performance_lod_panel.position = Vector2(16, 335)
+	performance_lod_panel.size = Vector2(940, 610)
+	performance_lod_panel.visible = false
+	performance_lod_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	performance_lod_label = Label.new()
+	performance_lod_label.name = "VIS49PerformanceLODText"
+	performance_lod_label.custom_minimum_size = Vector2(920, 590)
+	performance_lod_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	performance_lod_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	performance_lod_label.add_theme_font_size_override("font_size", 13)
+	performance_lod_panel.add_child(performance_lod_label)
+	hud_layer.add_child(performance_lod_panel)
 
 
 func _refresh_hud_text() -> void:
@@ -1190,7 +1305,12 @@ func _refresh_hud_text() -> void:
 			String(_diversity_evidence_state.get("live_diversity_status", "<unavailable>")),
 			int(_diversity_evidence_state.get("cluster_count", 0)),
 		],
+		"Perf/LOD: %s    F8 toggle" % [
+			"ON" if performance_lod_visible else "OFF",
+		],
 	]))
+	if performance_lod_visible:
+		_refresh_performance_lod_panel()
 
 
 # ------------------------------------------------------------------
