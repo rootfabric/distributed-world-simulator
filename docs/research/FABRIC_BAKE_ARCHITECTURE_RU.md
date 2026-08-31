@@ -591,7 +591,7 @@ FABRIC0.16 ACTIVE / INDEPENDENT
 FABRIC-BAKE:
 B0.0 RESEARCH CHECKPOINT CLOSED
 B0.1 RESEARCH CHECKPOINT CLOSED
-B0.2 STRUCTURAL AGGREGATE BAKE + GUARDS + LOCAL UNBAKE NEXT
+B0.2-A/B STRUCTURAL AGGREGATE + EXACT RECONSTRUCTION IMPLEMENTED / EXACT-HEAD DOUBLE PASS\nB0.2-C REFINEMENT GUARDS NEXT\nB0.2 CHECKPOINT REMAINS OPEN
 
 Integration:
 dual-track roadmap frozen
@@ -806,3 +806,43 @@ evidence не переводят checkpoint в PENDING/RED и не блокир�
 Если в будущем появится Windows-specific код, platform-specific native dependency или
 расхождение поведения, отдельная Windows verification может быть возвращена только как
 явно объявленный exception для конкретного checkpoint.
+
+
+---
+
+## B0.2-A/B implementation boundary — 2026-08-31
+
+```text
+branch:
+research/fabric-bake0-2-structural-aggregate-r1
+
+executable implementation HEAD:
+b417066a048d3c85bf766eb239d4111335c66602
+
+TREE:
+da87230e3dd247d2fd662bf5f8ec3926c055f4d3
+
+qualification:
+IMPLEMENTED CANDIDATE
+EXACT-HEAD DOUBLE PASS
+B0.0/B0.1 REGRESSION PASS
+TRACKED TREE BYTE-CLEAN
+```
+
+B0.2-A/B compiles a connected rigid canonical structure into deterministic aggregate
+mass/COM/full-inertia, boundary-anchor and finite-support descriptors, plus exact rigid
+REDUCED↔FULL reconstruction mapping.
+
+Safety boundary remains:
+
+```text
+B0.2-A/B
+→ STRUCTURAL_AGGREGATE_READY_FOR_GUARDS
+→ no executable PhysicalBakeArtifact yet
+
+B0.2-C
+→ RefinementGuard certification
+→ NEXT
+```
+
+Therefore B0.2 itself is **not closed**.

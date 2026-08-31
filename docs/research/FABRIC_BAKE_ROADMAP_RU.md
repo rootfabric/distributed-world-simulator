@@ -1592,3 +1592,60 @@ evidence не переводят checkpoint в PENDING/RED и не блокир�
 Если в будущем появится Windows-specific код, platform-specific native dependency или
 расхождение поведения, отдельная Windows verification может быть возвращена только как
 явно объявленный exception для конкретного checkpoint.
+
+
+---
+
+## B0.2 current implementation status — 2026-08-31
+
+```text
+B0.2-A  STRUCTURAL AGGREGATE COMPILER     ✅ IMPLEMENTED
+B0.2-B  EXACT RECONSTRUCTION MAPPING      ✅ IMPLEMENTED
+
+exact executable HEAD:
+b417066a048d3c85bf766eb239d4111335c66602
+
+TREE:
+da87230e3dd247d2fd662bf5f8ec3926c055f4d3
+
+Ubuntu/Linux exact-double:
+fresh pass #1  ✅
+fresh pass #2  ✅
+
+B0.2-C  REFINEMENT GUARD FIELD            ◀ NEXT
+B0.2-D  BOUNDED LOCAL UNBAKE               pending
+B0.2-E  TOPOLOGY SPLIT / REBAKE            pending
+
+B0.2 checkpoint                            OPEN
+```
+
+Implemented A/B evidence:
+
+```text
+500 rigid parts
+499 rigid bonds
+25 canonical regions
+4 boundary anchors
+4000 support vertices
+
+6500 full rigid-state DOF
+→ 13 aggregate DOF
+= 500x state reduction
+```
+
+A/B intentionally does not emit an executable `PhysicalBakeArtifact`. Structural
+execution remains fail-closed until B0.2-C supplies conservative RefinementGuards that
+map an approaching hidden failure/load limit back to a canonical region.
+
+Immediate next task:
+
+```text
+B0.2-C
+REFINEMENT GUARD FIELD
+
+boundary/local load
+→ conservative regional bound
+→ guard margin
+→ canonical region
+→ early refinement request
+```
