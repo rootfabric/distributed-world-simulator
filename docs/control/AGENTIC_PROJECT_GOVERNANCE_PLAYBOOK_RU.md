@@ -686,6 +686,78 @@ VALIDATION_STALE = RED
 
 Если изменились только docs/control metadata, runtime evidence может остаться действительным согласно policy.
 
+### 17.1. Один exact local runtime pass достаточен для OS-neutral кода
+
+Для runtime-кода, у которого implementation и execution semantics не зависят от ОС,
+не требуется обязательный двойной прогон Windows + Ubuntu.
+
+Базовое правило:
+
+```text
+ONE OS-NEUTRAL RUNTIME SUBJECT
++
+ONE FRESH EXACT LOCAL EXECUTION
+ON
+UBUNTU OR WINDOWS
+=
+SUFFICIENT RUNTIME ACCEPTANCE EVIDENCE
+```
+
+Поддерживаемые варианты эквивалентны:
+
+```text
+fresh detached Ubuntu PASS
+OR
+fresh detached Windows PASS
+```
+
+Второй OS-run может использоваться как дополнительное cross-platform evidence, но не
+является blocking acceptance gate по умолчанию.
+
+Обязательные условия единственного локального прогона:
+
+```text
+exact tested HEAD
+exact tested TREE
+required runtime/tool identity
+fresh or otherwise verifier-controlled worktree
+focused acceptance PASS
+required regression PASS
+final HEAD/TREE unchanged
+tracked worktree clean
+```
+
+Project Control, ownership, dependency и architecture gates остаются отдельными
+governance dimensions и не заменяются runtime pass.
+
+Исключение — реально OS-specific scope. Если stage меняет или проверяет:
+
+```text
+PowerShell-only / Bash-only behavior
+filesystem/path semantics
+native libraries or drivers
+process spawning / IPC with OS-specific behavior
+platform-specific renderer/input/network integration
+packaging/install/service integration
+OS-specific external tooling
+```
+
+то требуется execution именно на затронутой платформе. Если затронуты обе платформы,
+их проверки определяются work order отдельно.
+
+Главный default:
+
+```text
+DO NOT REQUIRE WINDOWS + UBUNTU
+WHEN THE CODE PATH IS THE SAME.
+
+REQUIRE ONE EXACT LOCAL EXECUTION
+ON EITHER SUPPORTED OS.
+```
+
+Исторические checkpoints, уже принятые по более строгой double-OS/Windows-only policy,
+не переписываются задним числом.
+
 ---
 
 ## 18. Тесты должны проверять не только happy path
