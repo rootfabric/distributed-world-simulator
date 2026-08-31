@@ -25,8 +25,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: eco-evo7-vis4-3-${{ github.ref }}
+  group: eco-evo7-vis4-3-frozen-subject
   cancel-in-progress: true
+
+env:
+  VIS4_3_SUBJECT_SHA: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+  VIS4_3_EXPECTED_TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
 
 jobs:
   closure:
@@ -39,19 +43,25 @@ jobs:
         shell: powershell
 
     steps:
-      - name: Checkout exact workflow HEAD
+      - name: Checkout frozen VIS4.3 executable subject
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.VIS4_3_SUBJECT_SHA }}
           fetch-depth: 0
 
-      - name: Assert exact HEAD checkout
+      - name: Assert exact frozen subject and tree
         run: |
           $head = (git rev-parse HEAD).Trim()
-          if ($head -ne "${{ github.sha }}") {
-            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.sha }}"
+          if ($head -ne "$env:VIS4_3_SUBJECT_SHA") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=$env:VIS4_3_SUBJECT_SHA"
           }
+
           $tree = (git show -s --format=%T HEAD).Trim()
+          if ($tree -ne "$env:VIS4_3_EXPECTED_TREE") {
+            throw "EXACT_TREE_MISMATCH: actual=$tree expected=$env:VIS4_3_EXPECTED_TREE"
+          }
+
+          Write-Host "closure_carrier=${{ github.sha }}"
           Write-Host "exact_head=$head"
           Write-Host "exact_tree=$tree"
 
@@ -62,7 +72,7 @@ jobs:
         run: |
           $godot = $env:CONFIGURED_GODOT_BIN
           if ([string]::IsNullOrWhiteSpace($godot)) {
-            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+            $godot = "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe"
           }
           if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
             throw "Exact Godot binary not found: $godot"
@@ -76,4 +86,4 @@ jobs:
 
       - name: Run VIS4.3 closure
         run: |
-          .\RUN_ECO_EVO7_VIS4_3_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
+          .\\RUN_ECO_EVO7_VIS4_3_TESTS.ps1 -GodotPath "${{ steps.godot.outputs.path }}"
