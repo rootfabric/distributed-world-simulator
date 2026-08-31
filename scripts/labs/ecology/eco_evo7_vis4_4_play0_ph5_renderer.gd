@@ -10,11 +10,12 @@ extends Node3D
 const DescriptorV2 = preload("res://scripts/labs/ecology/eco_evo7_vis4_morphology_render_adapter.gd")
 const ReconstructionEvidence = preload("res://scripts/research/ecology/plant_growth_graph_reconstruction_evidence_v1.gd")
 const Bridge = preload("res://scripts/labs/ecology/eco_evo7_vis4_3_exact_ph5_bridge.gd")
+const Individuality = preload("res://scripts/labs/ecology/eco_evo7_vis4_5_deterministic_individuality.gd")
 const Representation = preload("res://scripts/research/ecology/plant_multiscale_representation_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_vis4_4_play0_ph5_renderer.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-VIS4.4.R1"
+const REVISION := "ECO.EVO7-VIS4.5.R1"
 
 const REFERENCE_VIEWPORT_HEIGHT_PX := 1080.0
 const REFERENCE_VERTICAL_FOV_DEG := 70.0
@@ -123,8 +124,11 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 		var height_m := float(Dictionary(functional_value).get("realized_height_m", NAN))
 		if not is_finite(height_m) or height_m <= 0.0:
 			return false
+		var individuality: Dictionary = Individuality.build(source)
+		if individuality.is_empty():
+			return false
 		var tier := _select_tier(height_m, base_world, "")
-		var materialization := _materialize_record(bridge, source, reconstruction, tier)
+		var materialization: Dictionary = _materialize_record(bridge, source, reconstruction, tier)
 		if materialization.is_empty():
 			return false
 		pending_records.append({
@@ -133,6 +137,9 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 			"lineage_id": String(source.get("lineage_id", "")),
 			"source_descriptor_hash": String(source.get("descriptor_hash", "")),
 			"source_growth_graph_hash": String(source.get("growth_graph_hash", "")),
+			"development_individual_seed": int(individuality.get("development_individual_seed", -1)),
+			"orientation_yaw_deg": float(individuality.get("orientation_yaw_deg", 0.0)),
+			"individuality_hash": String(individuality.get("individuality_hash", "")),
 			"height_m": height_m,
 			"base_world": base_world,
 			"up": up,
@@ -195,8 +202,12 @@ func refresh_render_transform(force: bool = false) -> void:
 		if node == null or not is_instance_valid(node):
 			continue
 		var record: Dictionary = _records[index]
+		var local_yaw := Basis(
+			Vector3.UP,
+			deg_to_rad(float(record.get("orientation_yaw_deg", 0.0)))
+		)
 		node.transform = Transform3D(
-			_up_basis(Vector3(record["up"])),
+			_up_basis(Vector3(record["up"])) * local_yaw,
 			Vector3(record["base_world"]) - origin
 		)
 	_last_render_origin = origin
@@ -253,11 +264,39 @@ func get_record_identity(index: int) -> Dictionary:
 		"record_id": String(record.get("record_id", "")),
 		"source_descriptor_hash": String(record.get("source_descriptor_hash", "")),
 		"source_growth_graph_hash": String(record.get("source_growth_graph_hash", "")),
+		"development_individual_seed": int(record.get("development_individual_seed", -1)),
+		"orientation_yaw_deg": float(record.get("orientation_yaw_deg", 0.0)),
+		"individuality_hash": String(record.get("individuality_hash", "")),
 		"render_description_hash": String(record.get("render_description_hash", "")),
 		"representation_hash": String(record.get("representation_hash", "")),
 		"materialization_hash": String(record.get("materialization_hash", "")),
 		"tier": String(record.get("tier", "")),
 	}
+
+
+func get_individuality_identity_hash() -> String:
+	var tokens := PackedStringArray([
+		Individuality.SCHEMA,
+		Individuality.VERSION,
+		str(source_generation),
+		source_ecology_hash,
+	])
+	for record in _records:
+		tokens.append("|".join(PackedStringArray([
+			String(record.get("record_id", "")),
+			str(int(record.get("development_individual_seed", -1))),
+			String(record.get("source_descriptor_hash", "")),
+			String(record.get("source_growth_graph_hash", "")),
+			"%.9f" % float(record.get("orientation_yaw_deg", 0.0)),
+			String(record.get("individuality_hash", "")),
+		])))
+	return "\n".join(tokens).sha256_text()
+
+
+func get_record_presentation_yaw_deg(index: int) -> float:
+	if index < 0 or index >= _records.size():
+		return NAN
+	return float(_records[index].get("orientation_yaw_deg", NAN))
 
 
 func get_geometry_identity_hash() -> String:
@@ -294,6 +333,9 @@ func get_contract() -> Dictionary:
 		"materialization_build_count": _materialization_build_count,
 		"lod_switch_count": _lod_switch_count,
 		"neutral_color_mode": neutral_color_mode,
+		"deterministic_individuality": true,
+		"seed_bound_record_count": _records.size(),
+		"individuality_identity_hash": get_individuality_identity_hash(),
 		"geometry_identity_hash": get_geometry_identity_hash(),
 		"placement_api": "ProceduralEarthWorld.get_surface_point(direction)",
 		"render_origin_rebuilds_geometry": false,
@@ -393,6 +435,9 @@ func _create_visual(index: int, materialization: Dictionary):
 	root.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	root.set_meta("record_id", String(record.get("record_id", "")))
 	root.set_meta("source_growth_graph_hash", String(record.get("source_growth_graph_hash", "")))
+	root.set_meta("development_individual_seed", int(record.get("development_individual_seed", -1)))
+	root.set_meta("orientation_yaw_deg", float(record.get("orientation_yaw_deg", 0.0)))
+	root.set_meta("individuality_hash", String(record.get("individuality_hash", "")))
 	root.set_meta("render_description_hash", String(materialization.get("render_description_hash", "")))
 	root.set_meta("representation_hash", String(materialization.get("representation_hash", "")))
 	root.set_meta("materialization_hash", String(materialization.get("materialization_hash", "")))
