@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0004",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 4,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T01:52:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-2-fresh-reviewer-dispatch-r1",
+  "head_sha": "f20e07c9cc037727d2480c4af6430716c685173b",
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "command": "DISPATCH_FRESH_P7_2_EXACT_HEAD_REVIEWER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-POST-BUILD-CRITIQUE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FRESH-REVIEWER-INSTRUCTION-001.md"
+  ],
+  "summary": "P7.2 exact runtime subject cc98bee7109118e4aecab6df5a6f112edab4d35c / tree c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd is frozen, exact double-Godot gate and Project Control are green, immutable review source artifact 9742839583 reconstructs the same tree, and Director dispatches a fresh independent read-only CRITICAL-risk Reviewer. Verifier and merge remain blocked until Reviewer PASS.",
+  "blocker": "FRESH_EXACT_HEAD_REVIEWER_RESULT_PENDING"
+}
