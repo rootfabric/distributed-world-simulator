@@ -1599,56 +1599,62 @@ evidence не переводят checkpoint в PENDING/RED и не блокир�
 ## B0.2 current implementation status — 2026-08-31
 
 ```text
-B0.2-A  STRUCTURAL AGGREGATE COMPILER     ✅ IMPLEMENTED
-B0.2-B  EXACT RECONSTRUCTION MAPPING      ✅ IMPLEMENTED
+B0.2-A  STRUCTURAL AGGREGATE COMPILER       ✅ CLOSED
+B0.2-B  EXACT RECONSTRUCTION MAPPING        ✅ CLOSED
+B0.2-C  REFINEMENT GUARD FIELD              ✅ CLOSED
+B0.2-D  BOUNDED LOCAL UNBAKE                ✅ CLOSED
+B0.2-E  TOPOLOGY SPLIT / REBAKE             ◀ NEXT
 
-exact executable HEAD:
-b417066a048d3c85bf766eb239d4111335c66602
-
-TREE:
-da87230e3dd247d2fd662bf5f8ec3926c055f4d3
-
-Ubuntu/Linux exact-double:
-fresh pass #1  ✅
-fresh pass #2  ✅
-
-B0.2-C  REFINEMENT GUARD FIELD            ✅ CLOSED
-B0.2-D  BOUNDED LOCAL UNBAKE               ✅ CLOSED
-B0.2-E  TOPOLOGY SPLIT / REBAKE            ◀ NEXT
-
-B0.2 checkpoint                            OPEN
+B0.2 checkpoint                              OPEN
 ```
 
-Implemented A/B evidence:
+Executable slice boundaries:
 
 ```text
-500 rigid parts
-499 rigid bonds
-25 canonical regions
-4 boundary anchors
-4000 support vertices
+B0.2-A/B:
+HEAD  b417066a048d3c85bf766eb239d4111335c66602
+TREE  da87230e3dd247d2fd662bf5f8ec3926c055f4d3
 
-6500 full rigid-state DOF
-→ 13 aggregate DOF
-= 500x state reduction
+B0.2-C:
+HEAD  ffd53302d891b4d64b88589c434c56e76aef1eaa
+TREE  754bdd8a38246afe7bbd85eba74615ef7f0bb3e7
+
+B0.2-D:
+HEAD  8da6ec6b7c2983b127f4c0607edeb9be900825c3
+TREE  285240dcc8a08a3a676897792659dfcad43bf410
 ```
 
-A/B intentionally does not emit an executable `PhysicalBakeArtifact`. Structural
-execution remains fail-closed until B0.2-C supplies conservative RefinementGuards that
-map an approaching hidden failure/load limit back to a canonical region.
+All three executable slice boundaries have Ubuntu/Linux exact-double evidence.
+B0.2-D exact-head verification includes two fresh imports, full B0.0→D regression,
+`609/609` focused D acceptance in each pass, and `5054/5054` tracked-byte clean audit.
 
-Immediate next task:
+Current structural capability:
 
 ```text
-B0.2-C
-REFINEMENT GUARD FIELD
-
-boundary/local load
-→ conservative regional bound
-→ guard margin
-→ canonical region
-→ early refinement request
+500-part rigid aggregate
+→ 13-DOF baked representation
+→ conservative regional refinement guard
+→ exact guard-selected bounded local unbake
+→ 20 FULL parts + 2 residual BAKED aggregates
+→ explicit FULL ↔ BAKED cut interfaces
+→ conservation and continuity reconciliation
 ```
+
+The remaining B0.2 work is not another reconstruction step. It is the topology lifecycle:
+
+```text
+B0.2-E
+TOPOLOGY SPLIT / RE-BAKE
+
+derived mixed graph
+→ canonical topology/event change
+→ invalidate affected reduced pieces
+→ split physical representation safely
+→ recompile eligible surviving components
+→ deterministic provenance / state handoff
+```
+
+B0.2 remains OPEN until B0.2-E is complete. No production acceptance is claimed.
 
 
 ## B0.2 execution slices — current frontier
