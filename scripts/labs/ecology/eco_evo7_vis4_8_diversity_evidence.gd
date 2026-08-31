@@ -54,6 +54,9 @@ static func build(
 		return {}
 	if String(descriptor_snapshot.get("source_ecology_state_hash", "")) != source_ecology_hash:
 		return {}
+	for seal in ["adapter_hash", "source_competition_hash", "source_morphology_evidence_hash"]:
+		if String(descriptor_snapshot.get(seal, "")).length() != 64:
+			return {}
 	var descriptor_values = descriptor_snapshot.get("descriptors")
 	if not descriptor_values is Array:
 		return {}
@@ -139,6 +142,8 @@ static func build(
 		"generation": generation,
 		"source_ecology_hash": source_ecology_hash,
 		"source_descriptor_adapter_hash": String(descriptor_snapshot.get("adapter_hash", "")),
+		"source_competition_hash": String(descriptor_snapshot.get("source_competition_hash", "")),
+		"source_morphology_evidence_hash": String(descriptor_snapshot.get("source_morphology_evidence_hash", "")),
 		"population": descriptors.size(),
 		"metric_count": METRICS.size(),
 		"metrics": stats,
@@ -180,6 +185,9 @@ static func validate(value: Dictionary) -> bool:
 		return false
 	if int(value.get("generation", -1)) < 1 or String(value.get("source_ecology_hash", "")).length() != 64:
 		return false
+	for seal in ["source_descriptor_adapter_hash", "source_competition_hash", "source_morphology_evidence_hash"]:
+		if String(value.get(seal, "")).length() != 64:
+			return false
 	if int(value.get("population", 0)) <= 0 or int(value.get("metric_count", -1)) != METRICS.size():
 		return false
 	if not value.get("metrics") is Dictionary or not value.get("cluster_histogram") is Array:
@@ -262,6 +270,8 @@ static func compute_hash(value: Dictionary) -> String:
 		str(int(value.get("generation", -1))),
 		String(value.get("source_ecology_hash", "")),
 		String(value.get("source_descriptor_adapter_hash", "")),
+		String(value.get("source_competition_hash", "")),
+		String(value.get("source_morphology_evidence_hash", "")),
 		str(int(value.get("population", 0))),
 		str(int(value.get("metric_count", 0))),
 		str(int(value.get("varying_field_count", 0))),
