@@ -151,12 +151,14 @@ func _build_samples(run: Dictionary) -> Array:
 	position += current_v * final_dt
 	orientation = _integrate_orientation(orientation, current_w, final_dt)
 	var final_body: Dictionary = run["final_body"]
+	var final_v: Vector3 = final_body["v"]
+	var final_w: Vector3 = final_body["w"]
 	result.append({
 		"time": final_time,
 		"position": position,
 		"orientation": orientation,
-		"v": Vector3(final_body["v"]),
-		"w": Vector3(final_body["w"]),
+		"v": final_v,
+		"w": final_w,
 		"event_id": "FINAL",
 		"phase": "POST_EVENTS",
 	})
