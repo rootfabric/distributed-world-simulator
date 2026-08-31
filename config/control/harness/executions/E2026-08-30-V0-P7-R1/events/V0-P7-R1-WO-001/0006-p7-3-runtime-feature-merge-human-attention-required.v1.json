@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0006",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 6,
+  "event_type": "HUMAN_ATTENTION_REQUIRED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-31T07:20:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-3-runtime-merge-human-gate-r1",
+  "head_sha": "0be9e002ec8ae09b4397b1f74cae6a6151ae1fe5",
+  "predicate": "RUNTIME_FEATURE_MERGE_HUMAN_APPROVAL",
+  "command": "OPEN_P7_3_RUNTIME_FEATURE_MERGE_HUMAN_GATE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-RUNTIME-MERGE-GATE-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001.v1.json"
+  ],
+  "summary": "P7.3 exact runtime subject b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00 is independently reviewed PASS and VERIFIED. Current-main drift has no direct P7.3 overlap. The only remaining runtime integration blocker is explicit Human RUNTIME_FEATURE_MERGE approval for PR #373.",
+  "blocker": "HUMAN_RUNTIME_FEATURE_MERGE_APPROVAL_PENDING"
+}
