@@ -6,7 +6,7 @@ var _assertions := 0
 var _failures: Array[String] = []
 
 func _init() -> void:
-	_check(Factory.PRESETS == ["TABLE", "BRIDGE", "CART"], "preset order")
+	_check(Factory.PRESETS == ["TABLE", "BRIDGE", "CART", "PLANK"], "preset order")
 	for preset in Factory.PRESETS:
 		var built := Factory.build(preset)
 		_check(bool(built.get("success", false)), "%s builds" % preset)
