@@ -176,6 +176,13 @@ static func validate(report: Dictionary) -> bool:
 	if Dictionary(report.get("authorities", {})) != AUTHORITIES:
 		return false
 
+	var target_value = report.get("target")
+	if not target_value is Dictionary:
+		return false
+	var target: Dictionary = target_value
+	if String(target.get("head", "")).length() != 40 or String(target.get("tree", "")).length() != 40:
+		return false
+
 	var policy_value = report.get("policy")
 	if not policy_value is Dictionary:
 		return false
@@ -209,12 +216,100 @@ static func validate(report: Dictionary) -> bool:
 	var reps: Array = reps_value
 	if samples.size() != TOTAL_SAMPLES or reps.size() != REPETITIONS:
 		return false
-	for sample in samples:
-		if not sample is Dictionary or not _validate_sample(sample):
+
+	var ratios: Array[float] = []
+	var combined_values: Array[float] = []
+	var simulation_values: Array[float] = []
+	var overhead_values: Array[float] = []
+	var max_cache_entries := 0
+	var max_record_count := 0
+	var min_foreground_frames := 1 << 30
+	var source_seals_green := true
+	var single_flight_green := true
+	var foreground_progress_green := true
+
+	for sample_value in samples:
+		if not sample_value is Dictionary:
 			return false
-	for summary in reps:
-		if not summary is Dictionary or not _validate_repetition_summary(summary):
+		var sample: Dictionary = sample_value
+		if not _validate_sample(sample):
 			return false
+		ratios.append(float(sample["combined_to_sim_ratio"]))
+		combined_values.append(float(sample["combined_ms"]))
+		simulation_values.append(float(sample["simulation_ms"]))
+		overhead_values.append(float(sample["presentation_overhead_ms"]))
+		max_cache_entries = maxi(max_cache_entries, int(sample["cache_entries"]))
+		max_record_count = maxi(max_record_count, int(sample["record_count"]))
+		min_foreground_frames = mini(min_foreground_frames, int(sample["foreground_frames"]))
+		source_seals_green = source_seals_green and (
+			String(sample["ecology_state_hash"]).length() == 64
+			and String(sample["presentation_source_hash"]) == String(sample["ecology_state_hash"])
+		)
+		single_flight_green = single_flight_green and bool(sample["single_flight_rejected"])
+		foreground_progress_green = foreground_progress_green and int(sample["foreground_frames"]) >= MIN_FOREGROUND_FRAMES_PER_GENERATION
+
+	var stream_contract_green := true
+	var cache_bounded_green := true
+	var cache_eviction_observed := false
+	var expected_calls := WARMUP_GENERATIONS + MEASURED_GENERATIONS
+	for rep_value in reps:
+		if not rep_value is Dictionary:
+			return false
+		var rep: Dictionary = rep_value
+		if not _validate_repetition_summary(rep):
+			return false
+		var expected_stream := (
+			int(rep["stream_calls"]) == expected_calls
+			and int(rep["optimized_generation_calls"]) == expected_calls
+			and int(rep["legacy_generation_calls"]) == 0
+			and int(rep["chunk_local_parent_sorts"]) == 0
+			and int(rep["chunk_local_candidate_sorts"]) == 0
+			and int(rep["chunk_local_route_sorts"]) == 0
+			and int(rep["chunk_local_recruitment_sorts"]) == 0
+			and int(rep["recruitment_context_builds"]) == expected_calls
+			and int(rep["generation_boundary_sorts"]) == expected_calls * 3
+		)
+		var expected_cache := (
+			int(rep["record_count"]) > 0
+			and int(rep["cache_entries"]) >= 0
+			and int(rep["cache_entries"]) <= int(rep["record_count"]) * MAX_CACHE_ENTRIES_PER_RECORD
+			and int(rep["cache_lookup_entries"]) == int(rep["cache_entries"])
+		)
+		if bool(rep["optimized_stream_contract"]) != expected_stream:
+			return false
+		if bool(rep["cache_bounded"]) != expected_cache:
+			return false
+		if not bool(rep["source_seals"]) or not bool(rep["single_flight"]) or not bool(rep["foreground_progress"]):
+			return false
+		stream_contract_green = stream_contract_green and expected_stream
+		cache_bounded_green = cache_bounded_green and expected_cache
+		cache_eviction_observed = cache_eviction_observed or int(rep["cache_eviction_count"]) > 0
+
+	var expected_summary := {
+		"p50_combined_to_sim_ratio": _percentile(ratios, 0.50),
+		"p95_combined_to_sim_ratio": _percentile(ratios, 0.95),
+		"p50_combined_ms": _percentile(combined_values, 0.50),
+		"p95_combined_ms": _percentile(combined_values, 0.95),
+		"p50_simulation_ms": _percentile(simulation_values, 0.50),
+		"p95_simulation_ms": _percentile(simulation_values, 0.95),
+		"p50_presentation_overhead_ms": _percentile(overhead_values, 0.50),
+		"p95_presentation_overhead_ms": _percentile(overhead_values, 0.95),
+		"max_combined_ms": _max_value(combined_values),
+		"max_cache_entries": max_cache_entries,
+		"max_record_count": max_record_count,
+		"min_foreground_frames": min_foreground_frames,
+		"stream_contract_green": stream_contract_green,
+		"cache_bounded_green": cache_bounded_green,
+		"cache_eviction_observed": cache_eviction_observed,
+		"source_seals_green": source_seals_green,
+		"single_flight_green": single_flight_green,
+		"foreground_progress_green": foreground_progress_green,
+	}
+	expected_summary["timing_budget_green"] = (
+		float(expected_summary["p50_combined_to_sim_ratio"]) <= MAX_P50_COMBINED_TO_SIM_RATIO
+		and float(expected_summary["p95_combined_to_sim_ratio"]) <= MAX_P95_COMBINED_TO_SIM_RATIO
+		and float(expected_summary["max_combined_ms"]) <= MAX_SINGLE_COMBINED_GENERATION_MS
+	)
 
 	var summary_value = report.get("summary")
 	if not summary_value is Dictionary:
@@ -231,38 +326,49 @@ static func validate(report: Dictionary) -> bool:
 		"p95_presentation_overhead_ms",
 		"max_combined_ms",
 	]:
-		var number := float(summary.get(key, NAN))
-		if not is_finite(number) or number < 0.0:
+		var actual := float(summary.get(key, NAN))
+		if not is_finite(actual) or not is_equal_approx(actual, float(expected_summary[key])):
+			return false
+	for key in ["max_cache_entries", "max_record_count", "min_foreground_frames"]:
+		if int(summary.get(key, -1)) != int(expected_summary[key]):
+			return false
+	for key in [
+		"stream_contract_green",
+		"cache_bounded_green",
+		"cache_eviction_observed",
+		"source_seals_green",
+		"single_flight_green",
+		"foreground_progress_green",
+		"timing_budget_green",
+	]:
+		if typeof(summary.get(key)) != TYPE_BOOL or bool(summary[key]) != bool(expected_summary[key]):
 			return false
 
+	var expected_claims := {
+		"perf2_5_vis4_materialization_profiling": true,
+		"perf2_6_ph5_lod_cache_bounded": cache_bounded_green and cache_eviction_observed,
+		"perf2_7_stream1_vis4_integrated_load": (
+			stream_contract_green
+			and source_seals_green
+			and single_flight_green
+			and foreground_progress_green
+		),
+		"perf2_8_play1_performance_acceptance": (
+			bool(expected_summary["timing_budget_green"])
+			and stream_contract_green
+			and cache_bounded_green
+			and cache_eviction_observed
+			and source_seals_green
+			and single_flight_green
+			and foreground_progress_green
+		),
+	}
 	var claims_value = report.get("claims")
 	if not claims_value is Dictionary:
 		return false
 	var claims: Dictionary = claims_value
-	for key in [
-		"perf2_5_vis4_materialization_profiling",
-		"perf2_6_ph5_lod_cache_bounded",
-		"perf2_7_stream1_vis4_integrated_load",
-		"perf2_8_play1_performance_acceptance",
-	]:
-		if typeof(claims.get(key)) != TYPE_BOOL:
-			return false
-
-	if bool(claims["perf2_8_play1_performance_acceptance"]):
-		if not bool(summary.get("timing_budget_green", false)):
-			return false
-		if not bool(summary.get("stream_contract_green", false)):
-			return false
-		if not bool(summary.get("cache_bounded_green", false)):
-			return false
-		if not bool(summary.get("cache_eviction_observed", false)):
-			return false
-		if not bool(summary.get("source_seals_green", false)):
-			return false
-		if not bool(summary.get("single_flight_green", false)):
-			return false
-		if not bool(summary.get("foreground_progress_green", false)):
-			return false
+	if claims != expected_claims:
+		return false
 
 	return String(report.get("report_hash", "")) == compute_hash(report)
 
@@ -289,6 +395,7 @@ static func compute_hash(report: Dictionary) -> String:
 				_stable_float(float(sample.get("combined_ms", 0.0))),
 				_stable_float(float(sample.get("combined_to_sim_ratio", 0.0))),
 				str(int(sample.get("foreground_frames", 0))),
+				str(bool(sample.get("single_flight_rejected", false))),
 				str(int(sample.get("record_count", 0))),
 				str(int(sample.get("cache_entries", 0))),
 				str(int(sample.get("stream_calls", 0))),
@@ -324,8 +431,7 @@ static func compute_hash(report: Dictionary) -> String:
 	for key in claim_keys:
 		parts.append("%s=%s" % [String(key), str(bool(claims[key]))])
 
-	return "
-".join(parts).sha256_text()
+	return "\\n".join(parts).sha256_text()
 
 
 static func _validate_sample(sample: Dictionary) -> bool:
@@ -351,6 +457,14 @@ static func _validate_sample(sample: Dictionary) -> bool:
 	if float(sample.get("simulation_ms", 0.0)) <= 0.0 or float(sample.get("combined_ms", 0.0)) <= 0.0:
 		return false
 	if float(sample.get("combined_to_sim_ratio", 0.0)) <= 0.0:
+		return false
+	var expected_ratio := float(sample.get("combined_ms", 0.0)) / float(sample.get("simulation_ms", 1.0))
+	var expected_overhead := maxf(0.0, float(sample.get("combined_ms", 0.0)) - float(sample.get("simulation_ms", 0.0)))
+	if not is_equal_approx(float(sample.get("combined_to_sim_ratio", NAN)), expected_ratio):
+		return false
+	if not is_equal_approx(float(sample.get("presentation_overhead_ms", NAN)), expected_overhead):
+		return false
+	if typeof(sample.get("single_flight_rejected")) != TYPE_BOOL or not bool(sample.get("single_flight_rejected", false)):
 		return false
 	if int(sample.get("foreground_frames", 0)) < MIN_FOREGROUND_FRAMES_PER_GENERATION:
 		return false
