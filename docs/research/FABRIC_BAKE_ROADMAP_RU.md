@@ -1338,3 +1338,36 @@ B0.3 itself                              ⛔ NOT AUTO-CLOSED
 ```
 
 This only unlocks the physical-core dependency. B0.3 must still pass its own BAKE contracts, boundary-observable correctness, refinement/unbake and authority gates.
+
+
+## Post-freeze Physical Core successor — FABRIC0.17
+
+The historical dual-track freeze above is preserved as historical evidence. Physical Core did not stop after FABRIC0.16.
+
+```text
+FABRIC0.16
+GENERAL CONVEX MULTIPOINT MCP
+RESEARCH CANDIDATE CLOSED
+        ↓
+FABRIC0.17
+SIMULTANEOUS MULTI-IMPACT
++
+GENERALIZED CONTACT WRENCH
+        ↓
+future physical-core checkpoints
+```
+
+FABRIC0.17 slices:
+
+```text
+A — Simultaneous Impact Event Set
+B — Coupled Simultaneous Impact Solve
+C — Generalized Contact Wrench
+D — Unified Multi-Impact Wrench Trajectory
+```
+
+0.17 is independent of B0.2 structural bake work and may proceed in parallel.
+
+Current 0.17-A executable head: `9139a213ccee64d3bf1bb95ea32170027421b3b3`.
+
+This does not change the already satisfied FABRIC0.16 prerequisite for B0.3 FINAL. Future B0.x features that depend on simultaneous impact or rolling/torsional contact must name FABRIC0.17 explicitly rather than silently inheriting it.

@@ -819,3 +819,56 @@ The decisive S3 result is a unified general-convex trajectory with actual contac
 with `8 -> 12 -> 8` manifold rows and `2 -> 1 -> 2` actual Godot Threads.
 
 Do not upgrade this status to production acceptance. In particular, the checkpoint does not claim a monolithic certified Signorini-Coulomb MCP/NCP, simultaneous multi-impact closure, rolling/torsional friction or production broadphase/block-sparse/thread-pool infrastructure.
+
+
+## 13. FABRIC0.17 — active Physical Core successor
+
+FABRIC0.16 remains immutable as a closed research candidate.
+
+```text
+branch:
+research/fabric0-17-simultaneous-impact-event-set-r1
+
+predecessor closure:
+ae781ab78f2e0688641f6a332a131b3fb759994f
+
+0.17-A executable:
+9139a213ccee64d3bf1bb95ea32170027421b3b3
+```
+
+Current status:
+
+```text
+FABRIC0.17
+IN PROGRESS
+
+0.17-A
+SIMULTANEOUS IMPACT EVENT SET
+77/77 PASS
+remote byte identity 4/4
+```
+
+Read:
+
+```text
+docs/research/FABRIC0_17_SIMULTANEOUS_MULTI_IMPACT_GENERALIZED_WRENCH_RU.md
+validation/fabric0-compositional-world-fabric-v17-a-validation.json
+```
+
+Critical new semantics:
+
+```text
+simultaneous != exact float timestamp equality
+
+simultaneous =
+impact roots indistinguishable
+at declared temporal resolution
+```
+
+Refinement must split a merely near-coincident later impact from a stable simultaneous set.
+
+Current stable set: `[C|L,C|R]` at approximately `0.5`. Near later event: `P|Q` at approximately `0.5002`.
+
+0.17-A does not solve impulses.
+
+Next: `FABRIC0.17-B — COUPLED SIMULTANEOUS IMPACT SOLVE`.

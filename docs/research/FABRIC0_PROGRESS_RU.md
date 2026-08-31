@@ -3330,3 +3330,69 @@ CONTACT_DISAPPEAR ~0.70000000004948
 Full-state and event-time errors strictly decrease from `1e-3` through `1e-9` against a `1e-11` reference. Energy ledger residual is zero; linear/angular momentum errors are zero on the closure trajectory.
 
 FABRIC0.16 is closed as a research candidate only; production integration and stronger non-claims remain open.
+
+
+## FABRIC0.17 — SIMULTANEOUS MULTI-IMPACT + GENERALIZED CONTACT WRENCH
+
+**Successor branch:** `research/fabric0-17-simultaneous-impact-event-set-r1`  
+**Predecessor closure:** FABRIC0.16 @ `ae781ab78f2e0688641f6a332a131b3fb759994f`.  
+**Design:** `docs/research/FABRIC0_17_SIMULTANEOUS_MULTI_IMPACT_GENERALIZED_WRENCH_RU.md`.
+
+```text
+0.17-A SIMULTANEOUS IMPACT EVENT SET
+0.17-B COUPLED SIMULTANEOUS IMPACT SOLVE
+0.17-C GENERALIZED CONTACT WRENCH
+0.17-D UNIFIED MULTI-IMPACT WRENCH TRAJECTORY
+```
+
+### 0.17-A current state
+
+```text
+executable HEAD:
+9139a213ccee64d3bf1bb95ea32170027421b3b3
+
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+77/77 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+FABRIC0.17 NOT CLOSED
+```
+
+Main falsifier:
+
+```text
+true roots:
+C|L = 0.5
+C|R = 0.5
+P|Q = 0.5002
+
+coarse 1e-3:
+[C|L,C|R,P|Q]
+
+1e-5 and finer:
+simultaneous = [C|L,C|R]
+deferred     = [P|Q]
+```
+
+Reference event `0.50000000000146`, deferred `0.50019999999931`.
+
+Refinement error:
+
+```text
+1.5258774510584772e-6
+→ 1.192238407998758e-8
+→ 9.167711034763215e-11
+```
+
+Body-order reversal is exact identical at event-set identity/time boundary. Impact membership requires positive normal approach speed using full point velocity.
+
+Regressions:
+
+```text
+0.16 S3 101/101
+0.16 S2 102/102
+0.16 S1 110/110
+editor CLEAN
+```
+
+Next wall: `FABRIC0.17-B — COUPLED SIMULTANEOUS IMPACT SOLVE`.
