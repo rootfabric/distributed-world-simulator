@@ -16,7 +16,7 @@ const Representation = preload("res://scripts/research/ecology/plant_multiscale_
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_vis4_4_play0_ph5_renderer.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-VIS4.6.R1"
+const REVISION := "ECO.EVO7-VIS4.9.R1"
 
 const REFERENCE_VIEWPORT_HEIGHT_PX := 1080.0
 const REFERENCE_VERTICAL_FOV_DEG := 70.0
@@ -48,7 +48,22 @@ var _cache_lookup: Dictionary = {}
 var _view_world_position := Vector3.ZERO
 var _last_render_origin := SENTINEL_ORIGIN
 var _materialization_build_count := 0
+var _materialization_cache_hit_count := 0
+var _materialization_cache_miss_count := 0
+var _materialization_total_usec := 0
+var _materialization_max_usec := 0
+var _snapshot_apply_count := 0
+var _snapshot_apply_total_usec := 0
+var _snapshot_apply_max_usec := 0
+var _lod_update_count := 0
+var _lod_update_total_usec := 0
+var _lod_update_max_usec := 0
 var _lod_switch_count := 0
+var _bridge_chain_build_count := 0
+var _bridge_growth_graph_ms := 0.0
+var _bridge_render_description_ms := 0.0
+var _bridge_representation_ms := 0.0
+var _bridge_materializer_ms := 0.0
 
 
 func setup(earth_world_reference, patch: Dictionary) -> bool:
@@ -83,6 +98,7 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 	## Any invalid/missing record fails closed and preserves the last presentation.
 	if not initialized:
 		return false
+	var snapshot_started := Time.get_ticks_usec()
 	var descriptor_adapter := DescriptorV2.new()
 	if not descriptor_adapter.validate_result(descriptor_snapshot):
 		return false
@@ -177,6 +193,12 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 			"render_description_hash": String(materialization.get("render_description_hash", "")),
 			"representation_hash": String(materialization.get("representation_hash", "")),
 			"materialization_hash": String(materialization.get("materialization_hash", "")),
+			"branch_primitive_count": int(materialization.get("branch_primitive_count", 0)),
+			"foliage_instance_count": int(materialization.get("foliage_instance_count", 0)),
+			"far_primitive_count": int(materialization.get("far_primitive_count", 0)),
+			"individual_node_required": bool(materialization.get("individual_node_required", false)),
+			"cost_units": int(Representation.COST_UNITS.get(tier, 0)),
+			"draw_call_proxy": _draw_call_proxy(materialization),
 			"source": source.duplicate(true),
 			"reconstruction": reconstruction.duplicate(true),
 		})
@@ -192,6 +214,11 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 	_plant_nodes.clear()
 	for index in range(_records.size()):
 		_plant_nodes.append(_create_visual(index, pending_materializations[index]))
+	_accumulate_bridge_performance(bridge)
+	var snapshot_usec := Time.get_ticks_usec() - snapshot_started
+	_snapshot_apply_count += 1
+	_snapshot_apply_total_usec += snapshot_usec
+	_snapshot_apply_max_usec = maxi(_snapshot_apply_max_usec, snapshot_usec)
 	refresh_render_transform(true)
 	return true
 
@@ -329,6 +356,76 @@ func is_record_individual_materialized(index: int) -> bool:
 	return node != null and is_instance_valid(node)
 
 
+func get_record_performance(index: int) -> Dictionary:
+	if index < 0 or index >= _records.size():
+		return {}
+	var record: Dictionary = _records[index]
+	return {
+		"record_id": String(record.get("record_id", "")),
+		"tier": String(record.get("tier", "")),
+		"branch_primitive_count": int(record.get("branch_primitive_count", 0)),
+		"foliage_instance_count": int(record.get("foliage_instance_count", 0)),
+		"far_primitive_count": int(record.get("far_primitive_count", 0)),
+		"individual_node_required": bool(record.get("individual_node_required", false)),
+		"cost_units": int(record.get("cost_units", 0)),
+		"draw_call_proxy": int(record.get("draw_call_proxy", 0)),
+	}
+
+
+func get_performance_counters() -> Dictionary:
+	var workload := _workload_totals()
+	var cache_lookups := _materialization_cache_hit_count + _materialization_cache_miss_count
+	return {
+		"presentation_only": PRESENTATION_ONLY,
+		"timings_diagnostic_only": true,
+		"draw_calls_are_proxy": true,
+		"generation": source_generation,
+		"source_ecology_hash": source_ecology_hash,
+		"record_count": _records.size(),
+		"visible_individual_count": get_visible_individual_count(),
+		"tier_counts": _tier_counts(),
+		"materialization_cache_entries": _materialization_cache.size(),
+		"materialization_cache_hit_count": _materialization_cache_hit_count,
+		"materialization_cache_miss_count": _materialization_cache_miss_count,
+		"materialization_cache_hit_rate": (
+			float(_materialization_cache_hit_count) / float(cache_lookups)
+			if cache_lookups > 0 else 0.0
+		),
+		"materialization_build_count": _materialization_build_count,
+		"materialization_total_ms": float(_materialization_total_usec) / 1000.0,
+		"materialization_avg_ms": (
+			float(_materialization_total_usec) / 1000.0 / float(_materialization_build_count)
+			if _materialization_build_count > 0 else 0.0
+		),
+		"materialization_max_ms": float(_materialization_max_usec) / 1000.0,
+		"snapshot_apply_count": _snapshot_apply_count,
+		"snapshot_apply_total_ms": float(_snapshot_apply_total_usec) / 1000.0,
+		"snapshot_apply_avg_ms": (
+			float(_snapshot_apply_total_usec) / 1000.0 / float(_snapshot_apply_count)
+			if _snapshot_apply_count > 0 else 0.0
+		),
+		"snapshot_apply_max_ms": float(_snapshot_apply_max_usec) / 1000.0,
+		"lod_update_count": _lod_update_count,
+		"lod_update_total_ms": float(_lod_update_total_usec) / 1000.0,
+		"lod_update_avg_ms": (
+			float(_lod_update_total_usec) / 1000.0 / float(_lod_update_count)
+			if _lod_update_count > 0 else 0.0
+		),
+		"lod_update_max_ms": float(_lod_update_max_usec) / 1000.0,
+		"lod_switch_count": _lod_switch_count,
+		"bridge_chain_build_count": _bridge_chain_build_count,
+		"growth_graph_ms": _bridge_growth_graph_ms,
+		"render_description_ms": _bridge_render_description_ms,
+		"representation_ms": _bridge_representation_ms,
+		"bridge_materializer_ms": _bridge_materializer_ms,
+		"branch_primitive_count": int(workload.get("branch_primitive_count", 0)),
+		"foliage_instance_count": int(workload.get("foliage_instance_count", 0)),
+		"far_primitive_count": int(workload.get("far_primitive_count", 0)),
+		"cost_units": int(workload.get("cost_units", 0)),
+		"draw_call_proxy": int(workload.get("draw_call_proxy", 0)),
+	}
+
+
 func get_record_identity(index: int) -> Dictionary:
 	if index < 0 or index >= _records.size():
 		return {}
@@ -431,7 +528,11 @@ func get_contract() -> Dictionary:
 		"tier_counts": _tier_counts(),
 		"materialization_cache_entries": _materialization_cache.size(),
 		"materialization_build_count": _materialization_build_count,
+		"materialization_cache_hit_count": _materialization_cache_hit_count,
+		"materialization_cache_miss_count": _materialization_cache_miss_count,
+		"lod_update_count": _lod_update_count,
 		"lod_switch_count": _lod_switch_count,
+		"performance": get_performance_counters(),
 		"neutral_color_mode": neutral_color_mode,
 		"deterministic_individuality": true,
 		"seed_bound_record_count": _records.size(),
@@ -453,6 +554,7 @@ func get_contract() -> Dictionary:
 func _update_lod() -> bool:
 	if _records.is_empty():
 		return true
+	var lod_started := Time.get_ticks_usec()
 	var bridge := Bridge.new()
 	var updates: Array[Dictionary] = []
 	for index in range(_records.size()):
@@ -482,8 +584,19 @@ func _update_lod() -> bool:
 		_records[index]["render_description_hash"] = String(materialization.get("render_description_hash", ""))
 		_records[index]["representation_hash"] = String(materialization.get("representation_hash", ""))
 		_records[index]["materialization_hash"] = String(materialization.get("materialization_hash", ""))
+		_records[index]["branch_primitive_count"] = int(materialization.get("branch_primitive_count", 0))
+		_records[index]["foliage_instance_count"] = int(materialization.get("foliage_instance_count", 0))
+		_records[index]["far_primitive_count"] = int(materialization.get("far_primitive_count", 0))
+		_records[index]["individual_node_required"] = bool(materialization.get("individual_node_required", false))
+		_records[index]["cost_units"] = int(Representation.COST_UNITS.get(String(update["tier"]), 0))
+		_records[index]["draw_call_proxy"] = _draw_call_proxy(materialization)
 		_replace_visual(index, materialization)
 		_lod_switch_count += 1
+	_accumulate_bridge_performance(bridge)
+	var lod_usec := Time.get_ticks_usec() - lod_started
+	_lod_update_count += 1
+	_lod_update_total_usec += lod_usec
+	_lod_update_max_usec = maxi(_lod_update_max_usec, lod_usec)
 	refresh_render_transform(true)
 	return true
 
@@ -512,8 +625,14 @@ func _materialize_record(bridge, source: Dictionary, reconstruction: Dictionary,
 	if _cache_lookup.has(lookup_key):
 		var cached_key := String(_cache_lookup[lookup_key])
 		if _materialization_cache.has(cached_key):
+			_materialization_cache_hit_count += 1
 			return Dictionary(_materialization_cache[cached_key])
+	_materialization_cache_miss_count += 1
+	var materialization_started := Time.get_ticks_usec()
 	var materialization: Dictionary = bridge.materialize_record(source, reconstruction, tier)
+	var materialization_usec := Time.get_ticks_usec() - materialization_started
+	_materialization_total_usec += materialization_usec
+	_materialization_max_usec = maxi(_materialization_max_usec, materialization_usec)
 	if materialization.is_empty() or not bool(materialization.get("success", false)):
 		return {}
 	for key in ["ecological_truth_hash", "render_description_hash", "representation_hash", "materialization_hash"]:
@@ -635,6 +754,42 @@ func _clear_visual_nodes() -> void:
 		if node != null and is_instance_valid(node):
 			remove_child(node)
 			node.queue_free()
+
+
+func _draw_call_proxy(materialization: Dictionary) -> int:
+	var calls := 0
+	if int(materialization.get("branch_primitive_count", 0)) > 0:
+		calls += 1
+	if int(materialization.get("foliage_instance_count", 0)) > 0:
+		calls += 1
+	if int(materialization.get("far_primitive_count", 0)) > 0:
+		calls += 1
+	return calls
+
+
+func _workload_totals() -> Dictionary:
+	var out := {
+		"branch_primitive_count": 0,
+		"foliage_instance_count": 0,
+		"far_primitive_count": 0,
+		"cost_units": 0,
+		"draw_call_proxy": 0,
+	}
+	for record in _records:
+		for key in out.keys():
+			out[key] = int(out[key]) + int(record.get(key, 0))
+	return out
+
+
+func _accumulate_bridge_performance(bridge) -> void:
+	if bridge == null:
+		return
+	var perf: Dictionary = bridge.get_performance_counters()
+	_bridge_chain_build_count += int(perf.get("chain_build_count", 0))
+	_bridge_growth_graph_ms += float(perf.get("growth_graph_ms", 0.0))
+	_bridge_render_description_ms += float(perf.get("render_description_ms", 0.0))
+	_bridge_representation_ms += float(perf.get("representation_ms", 0.0))
+	_bridge_materializer_ms += float(perf.get("materializer_ms", 0.0))
 
 
 func _tier_counts() -> Dictionary:
