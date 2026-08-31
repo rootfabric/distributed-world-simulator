@@ -1,0 +1,53 @@
+name: FABRIC-BAKE B0.1 Exact Project Control
+
+on:
+  push:
+    branches:
+      - research/fabric-bake0-1-source-export-r1
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact B0.1 implementation HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: e854185f501cfc2658d5d1c5430be4eed3b070ee
+          fetch-depth: 0
+
+      - name: Assert exact identity
+        run: |
+          test "$(git rev-parse HEAD)" = "e854185f501cfc2658d5d1c5430be4eed3b070ee"
+          test "$(git rev-parse 'HEAD^{tree}')" = "0114ed1973e7bcd1d6225381d07f1ad1ade6b9a0"
+          git merge-base --is-ancestor d389b8ed72ffbed8949279b42089da3687125a90 HEAD
+          printf 'head=%s\n' "$(git rev-parse HEAD)"
+          printf 'tree=%s\n' "$(git rev-parse 'HEAD^{tree}')"
+          printf 'b0_0_closure_ancestor=YES\n'
+
+      - name: Fetch current project refs
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+
+      - name: Install pinned control dependencies
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Run standard Project Control
+        run: python3 scripts/control/project_control.py --no-fetch
+
+      - name: Run directional Project Control
+        run: python3 scripts/control/project_control_directional_watch.py
+
+      - name: Upload Project Control evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-1-project-control-e854185f
+          path: |
+            artifacts/control/PROJECT_STATUS_RU.md
+            artifacts/control/project-control-report.json
+            artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
+            artifacts/control/directional-watch-report.json
+          if-no-files-found: warn
+          retention-days: 7
