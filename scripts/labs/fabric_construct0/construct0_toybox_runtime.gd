@@ -328,7 +328,7 @@ func _build_catapult() -> Dictionary:
 func _compile_ramp_contact(normal_support: float, mu: float, angle: float) -> Dictionary:
 	var tangent := Vector3(cos(angle), -sin(angle), 0.0).normalized()
 	var normal := Vector3(sin(angle), cos(angle), 0.0).normalized()
-	var t2 := Vector3(0.0, 0.0, 1.0)
+	var t2 := Vector3(0.0, 0.0, -1.0)
 	var points: Array = []
 	for iz in range(5):
 		for ix in range(5):
