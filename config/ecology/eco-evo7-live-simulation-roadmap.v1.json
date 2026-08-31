@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R19",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R20",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PERF2.2",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -117,8 +117,8 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_2_WORKING_SET_MEMORY",
-      "detail": "PERF2.1 R2 accepted on exact local Ubuntu PASS under ECO-RUNTIME-VERIFY-2026-08-31-R1. PERF2.2 Working-set / Memory is now authorized and current."
+      "status": "IN_PROGRESS_PERF2_2_R1_WORKING_SET_MEMORY",
+      "detail": "PERF2.1 remains accepted. PERF2.2 R1 derives deterministic working-set record-pressure bounds plus honest process-local allocator diagnostics from a fresh validated PERF2.1 report. No runtime optimization or memory-reduction claim."
     },
     {
       "id": "PERF2.0",
@@ -147,13 +147,17 @@
     {
       "id": "PERF2.2",
       "name": "Working-set / Memory",
-      "status": "CURRENT_AUTHORIZED_AFTER_PERF2_1_ACCEPTANCE",
-      "detail": "Profile working-set and memory behavior under the frozen PERF2.0 measurement contract using PERF2.1 accepted evidence as predecessor. No optimization changes yet."
+      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "detail": "Derived measurement-only layer: 4 working-set rows, 4 memory rows, 3 serial↔STREAM1 comparisons. Structural record proxy is comparable; engine peak is process-lifetime diagnostic only. One exact Ubuntu OR Windows pass is sufficient.",
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_2_WORKING_SET_MEMORY_R1_RU.md",
+      "local_runner": "RUN_ECO_EVO7_PERF2_2_TESTS.sh",
+      "optional_windows_runner": "RUN_ECO_EVO7_PERF2_2_TESTS.ps1",
+      "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json"
     },
     {
       "id": "PERF2.3",
       "name": "Simulation Scaling",
-      "status": "BLOCKED_WAIT_PERF2_2"
+      "status": "BLOCKED_WAIT_PERF2_2_ACCEPTANCE"
     },
     {
       "id": "PERF2.4",
@@ -244,8 +248,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.2",
-    "status": "PERF2_1_ACCEPTED_PERF2_2_AUTHORIZED_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.2_R1_ONE_EXACT_LOCAL_PASS",
+    "status": "PERF2_1_ACCEPTED_PERF2_2_R1_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -357,7 +361,7 @@
     "lane": "PERF2.SIM",
     "current_step": "PERF2.2",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "PERF2_1_ACCEPTED_PERF2_2_AUTHORIZED",
+    "status": "PERF2_1_ACCEPTED_PERF2_2_R1_IMPLEMENTATION_CANDIDATE",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
@@ -460,10 +464,47 @@
     "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
     "perf2_2": {
       "name": "Working-set / Memory",
-      "status": "AUTHORIZED_CURRENT",
-      "predecessor": "PERF2.1_ACCEPTED_UBUNTU_FCCF4F9",
-      "optimization_changes_allowed": false,
-      "measurement_contract": "ECO.EVO7-PERF2.0-R1"
+      "revision": "ECO.EVO7-PERF2.2-R1",
+      "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "accepted_perf2_1_control_base": "7044c13e8cd9b036f318192ba0d62c6f3393fb60",
+      "accepted_perf2_1_tested_head": "fccf4f99fd3c257abf90c37e584b965e2cddfa6a",
+      "accepted_perf2_1_tested_tree": "cdedc4686ebb85a07782a0065ee44d598e78ef9f",
+      "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
+      "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
+      "source_report": "artifacts/perf2/perf2-1-generation-profile-r2.json",
+      "report_artifact": "artifacts/perf2/perf2-2-working-set-memory-r1.json",
+      "working_set_semantics": {
+        "unit": "RECORD_PROXY_UPPER_BOUND",
+        "formula": "max_parent_chunk + max_candidate_chunk",
+        "bytes_claim": false,
+        "simultaneous_allocation_claim": false
+      },
+      "memory_semantics": {
+        "engine_static_end": "DIAGNOSTIC_ONLY",
+        "engine_static_peak": "PROCESS_LIFETIME_HIGH_WATERMARK_DIAGNOSTIC_ONLY",
+        "engine_static_peak_cross_config_comparable": false,
+        "process_rss_optional": true
+      },
+      "required_rows": {
+        "working_set": 4,
+        "memory": 4,
+        "comparisons": 3
+      },
+      "canonical_pair_requirement": "9/9_SOURCE_PERF2_1",
+      "working_set_bound_claim_allowed": true,
+      "memory_reduction_claim_allowed": false,
+      "optimization_claim_allowed": false,
+      "runtime_changes_allowed": false,
+      "acceptance_runtime_gate": {
+        "required_exact_local_passes": 1,
+        "accepted_os": [
+          "UBUNTU",
+          "WINDOWS"
+        ],
+        "dual_os_required": false,
+        "second_os": "OPTIONAL_NON_BLOCKING"
+      },
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_2_WORKING_SET_MEMORY_R1_RU.md"
     }
   }
 }
