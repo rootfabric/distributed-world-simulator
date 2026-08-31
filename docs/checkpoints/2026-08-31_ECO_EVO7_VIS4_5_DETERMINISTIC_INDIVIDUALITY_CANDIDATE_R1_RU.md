@@ -5,9 +5,9 @@
 Статус:
 
 ~~~text
-VIS4.5 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED
+VIS4.5 R1
+EXACT UBUNTU DOUBLE-GODOT VERIFIED
+CLOSED
 ~~~
 
 ## Frozen executable subject
@@ -158,3 +158,34 @@ ECO.EVO7 VIS4.5 Deterministic Individuality candidate: PASS
 
 One exact Ubuntu double-Godot GREEN on the frozen subject is sufficient for
 closure; a separate Windows gate is not required.
+
+
+## Exact Ubuntu closure evidence
+
+The frozen executable subject above completed the canonical Ubuntu double-Godot
+verification without modification.
+
+~~~text
+HEAD: 1389c897d5a17ab0986e0c1d65602d705479e859
+TREE: 27f61dc56f87b893f8370b7523841e2ee806f6b1
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.4 predecessor runner: PASS
+VIS4.5 focused: PASS / 491 assertions
+VIS4.5 final marker: PRESENT
+HEAD/TREE unchanged
+tracked worktree clean
+~~~
+
+Durable closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_5_DETERMINISTIC_INDIVIDUALITY_UBUNTU_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.5 CLOSED
+VIS4.6 GRID APPEARANCE BOUNDARY UNBLOCKED
+~~~
