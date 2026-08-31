@@ -79,6 +79,19 @@ The demo must never claim that Godot RigidBody3D is the authoritative FABRIC sol
 - every edit mutates canonical Construction first;
 - runtime projection rebuilt from canonical snapshot.
 
+### CONSTRUCT0.PLAY1 — Physical Toybox
+- generic parts: BLOCK, PLATE, BEAM, CYLINDER, WHEEL, AXLE, WEIGHT, ANCHOR;
+- generic relations: RIGID_BOND, HINGE, AXLE/REVOLUTE, SLIDER, SPRING_DAMPER, BREAKABLE_BOND;
+- environment: FLOOR, adjustable RAMP, MOVING_SURFACE;
+- interaction tools: FORCE, IMPULSE, TORQUE, ADD_LOAD, BREAK_BOND;
+- tunable parameters: mass, dimensions, contact/rolling/torsional friction, bond strength, spring stiffness/damping;
+- mandatory experiments: INCLINED_PLANE, SEESAW, CART, CATAPULT, BREAKABLE_BRIDGE;
+- optional: PENDULUM, TOWER/DOMINO, SUSPENSION_CART, DOOR, PRESS/SLIDER;
+- ideal lab sources/sensors are allowed, but no Motor/Gearbox/Battery device-specific physics classes;
+- breakage must mutate canonical topology and route through existing local-unbake / split / re-bake mechanisms.
+
+PLAY1 is the first explicitly playable constructor milestone.
+
 ### C0.4 — FULL ↔ BAKED physical representation
 - force FULL / force supported BAKED / AUTO;
 - compare boundary observables;
