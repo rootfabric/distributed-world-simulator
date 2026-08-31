@@ -1,0 +1,18 @@
+extends SceneTree
+const E=preload("res://scripts/research/fabric0/fabric0_generalized_contact_wrench_experiments_v1.gd")
+func _init()->void:
+	var stick:=E.stick_probe()
+	var saturated:=E.saturated_probe()
+	var moment:=E.pure_moment_probe()
+	var tangent:=E.pure_tangent_probe()
+	print("=== FABRIC0.17-C GENERALIZED CONTACT WRENCH ===")
+	print("patch radius=",saturated.patch.effective_radius," points=",saturated.patch.point_count)
+	print("stick modes=",stick.modes," u_after=",stick.generalized_velocity_after," z=",stick.generalized_impulse)
+	print("saturated modes=",saturated.modes," limits=",saturated.limits," z=",saturated.generalized_impulse)
+	print("wrench force/moment=",saturated.applied_wrench_impulse.force,",",saturated.applied_wrench_impulse.moment)
+	print("pure moment force/moment=",moment.applied_wrench_impulse.force,",",moment.applied_wrench_impulse.moment)
+	print("pure tangent force/moment=",tangent.applied_wrench_impulse.force,",",tangent.applied_wrench_impulse.moment)
+	print("energy delta/ledger=",saturated.energy_delta,",",saturated.energy_ledger_error)
+	print("momentum linear/angular=",saturated.linear_momentum_error,",",saturated.angular_momentum_error)
+	print("FABRIC0_17_C_GENERALIZED_CONTACT_WRENCH_PLAYGROUND_PASS")
+	quit(0)
