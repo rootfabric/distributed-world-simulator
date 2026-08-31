@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P7-R1-WO-001-P7-3-MAIN-OWNED-FRONTIER-REPAIR-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "trigger": {
+    "project_control_run": 33368413576,
+    "result": "RED",
+    "failing_tests": [
+      "tests.harness.test_project_control_architecture_compatibility.ProjectControlArchitectureCompatibilityTests.test_x_historical_r2_and_refreshed_r3_passports_use_correct_compatibility_mode",
+      "tests.harness.test_project_control_proposed_r3_ownership_projection.ProposedR3OwnershipProjectionTests.test_live_proposed_r3_standard_and_directional_are_non_red"
+    ],
+    "blocking_program": "V0",
+    "blocking_finding": "CRITICAL_DEPENDENCY_DRIFT",
+    "paths": [
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_coordinator.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_policy.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_item_graph_adapter.gd"
+    ]
+  },
+  "affected_module": "main-owned V0 program registry / active branch passport frontier after exact P7.3 runtime merge",
+  "canonical_owner": "main-owned config/control/project-program-registry.v1.json plus the registered V0 closure passport",
+  "entry_points": [
+    "scripts/control/project_control_core.py::load_main_owned",
+    "scripts/control/project_control_core.py::audit_program",
+    "tests/harness/test_project_control_architecture_compatibility.py::_load_main_owned_json"
+  ],
+  "callers": [
+    ".github/workflows/project-control.yml pull_request regression",
+    "Project Control standard/directional auditors"
+  ],
+  "callees": [
+    "origin/main:config/control/project-program-registry.v1.json",
+    "origin/control/v0-p7-2-closure-r1 passport",
+    "origin/control/v0-p7-3-closure-r1 passport after repair merge"
+  ],
+  "sibling_paths": [
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json"
+  ],
+  "existing_tests": [
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    "tests/harness/test_project_control_proposed_r3_ownership_projection.py",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py"
+  ],
+  "missing_tests": [],
+  "public_or_internal_contracts": [
+    "Feature/control PR Project Control must read project state from origin/main, never self-authorize from candidate registry.",
+    "Runtime merge may temporarily make current main RED until main-owned frontier pointers are advanced.",
+    "A control-plane repair may update main-owned frontier state, after which exact post-merge Project Control must be NON_RED before next runtime substep."
+  ],
+  "expected_shipped_behavior": "After the P7.3 closure control commit is merged, origin/main registers control/v0-p7-3-closure-r1 as V0 frontier. Its merge-base with canonical main is the P7.3 runtime merge and therefore the already-reviewed P7.3 files are no longer reported as unconsumed dependency drift. P7.4 remains blocked until post-merge Project Control proves NON_RED.",
+  "relevant_history_or_evidence": [
+    "Runtime merge 502d05fe24256fecd52f3092b8e056e74a8b4450",
+    "Human approval durable main 5d641e3195e1a43f1ec01c56977b62b4286ea7d7",
+    "Reviewer PASS b9c638b1721edfe24537e264bd562e96ca224116",
+    "Verifier VERIFIED 2fadad48635c04e21b4de8acff4a13c8c5e27b88",
+    "Pre-merge closure Project Control RED 33368413576"
+  ],
+  "root_cause_hypothesis": "Not a runtime or closure-data defect. The accepted harness regression intentionally resolves main-owned state through origin/main. Before the closure repair is merged, origin/main still registers the P7.2 closure passport, whose merge-base predates the newly merged P7.3 runtime files. Therefore Project Control correctly reports those files as V0 CRITICAL_DEPENDENCY_DRIFT. A candidate PR cannot make this particular finding disappear by editing its local registry because doing so would violate main-owned-state authority.",
+  "canonical_fix_location": "Merge the already-bounded control-only P7.3 closure state into main via PR, then perform an exact post-merge Project Control audit against the new origin/main. Do not change runtime, auditor dependency rules, or load_main_owned semantics.",
+  "why_not_symptom_patch": "Changing tests to read the candidate registry, suppressing V0 critical watched paths, setting V0 blocks_global_progress=false, or rebasing the frozen runtime would weaken critical dependency rules or invalidate exact Reviewer/Verifier freshness. None are permitted.",
+  "repair_scope": [
+    "control/evidence/docs/harness-test expectation updates only",
+    "no runtime source",
+    "no architecture ownership",
+    "no dependency-rule weakening"
+  ],
+  "state": "REPAIR_MAP_READY"
+}
