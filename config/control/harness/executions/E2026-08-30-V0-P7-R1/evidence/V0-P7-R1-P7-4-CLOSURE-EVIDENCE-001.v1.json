@@ -1,0 +1,133 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "evidence_id": "V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "evidence_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+  "intent": "Close P7.4 only after exact-head review, formal verifier-platform authorization, fresh independent full-gate verification, explicit Human runtime merge approval, and canonical integration.",
+  "runtime_subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "original_pr": 396,
+    "exact_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "exact_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "base": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+    "delta_commits": 7,
+    "delta_files": 6,
+    "additions": 1030,
+    "deletions": 0,
+    "runtime_project_control": "33374295322 = SUCCESS"
+  },
+  "ownership": {
+    "matter_persistence": "MW5_MATTER_STATE_COORDINATOR",
+    "gameplay_persistence": "M6_AUTHORITATIVE_RECOVERY_COORDINATOR",
+    "matter_replay": "MW4_MATERIAL_RECEIVER_AND_JOURNAL",
+    "inventory_truth": "CANONICAL_ITEM_GRAPH",
+    "exactly_once": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "aggregate_revision": "NETWORKED_GAMEPLAY_SERVICE",
+    "p7_private_persistence_owner": false,
+    "p7_private_delivery_receipt": false,
+    "p7_private_replay_ledger": false,
+    "second_item_graph": false
+  },
+  "independent_review": {
+    "result": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+    "commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+    "project_control": "33388053145 = SUCCESS",
+    "verdict": "PASS",
+    "required_fixes": 0,
+    "blocking_findings": 0
+  },
+  "verifier_history": {
+    "r1": {
+      "commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+      "verdict": "NOT_VERIFIED",
+      "reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false,
+      "project_control": "33393399665 = SUCCESS"
+    },
+    "r2": {
+      "commit": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+      "verdict": "NOT_VERIFIED",
+      "reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false,
+      "project_control": "33399175472 = SUCCESS"
+    },
+    "historical_rounds_inherited_as_runtime_execution": false
+  },
+  "platform_amendment": {
+    "record": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+    "commit": "b31d657c9f6987167da233e1d6f212884a095a88",
+    "effect": "Authorized canonical Windows x86_64 exact-double-Godot verifier path alongside unchanged Ubuntu path for R3 and later, with identical invariant set; runtime subject and gate content unchanged."
+  },
+  "independent_verification": {
+    "result": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+    "dispatch_head": "5247d3426475070f531f6d4dece873f186f448dd",
+    "dispatch_project_control": "33431640700 = SUCCESS",
+    "commit": "8b106a6057672de7972c0e779efeb4ccb9abb186",
+    "project_control": "33432608471 = SUCCESS",
+    "verdict": "VERIFIED",
+    "platform": "Windows x86_64",
+    "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_console_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "canonical_runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+    "runner_exit": 0,
+    "stages": "16/16 PASS",
+    "total_assertions": 1384,
+    "total_failures": 0,
+    "logs": "17/17",
+    "fatal_log_matches": 0,
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "external_timeout_used": false,
+    "inherited_execution_evidence": false
+  },
+  "human_gate": {
+    "decision_id": "V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001",
+    "decision": "RUNTIME_FEATURE_MERGE APPROVED",
+    "authority": "Human operator delegated decision to control session; control session selected APPROVE after independent exact-chain re-check.",
+    "approval_record": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001.v1.json"
+  },
+  "runtime_integration": {
+    "original_pr": 396,
+    "exact_subject_carrier_pr": 425,
+    "carrier_branch": "merge/v0-p7-4-runtime-feature-merge-carrier-r1",
+    "carrier_project_control": "33442744229 = SUCCESS",
+    "merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+    "merge_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "merge_tree_equals_verified_tree": true,
+    "merge_parents": [
+      "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+      "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292"
+    ],
+    "original_pr_recognized_merged_closed": true,
+    "carrier_pr_merged": true,
+    "exact_subject_ancestor_of_main": true
+  },
+  "nonfatal_observations": [
+    "Verifier R3 recorded Godot exit-time stderr notices '8 ObjectDB instances were leaked at exit' and '4 resources still in use at exit'. They were outside the 17 campaign logs, matched none of the five fatal markers, and all in-stage leak predicates passed. They remain transparency notes, not a P7.4 blocker."
+  ],
+  "control_plane_debt": {
+    "id": "P7-CONTROL-TRANSITION-TABLE-MISSING-001",
+    "classification": "PRE_EXISTING_HARNESS_CONTROL_GAP_OUTSIDE_P7_4_RUNTIME_SCOPE",
+    "symptom": "Epoch E2026-08-30-V0-P7-R1 -Drive/-Close flows exit 3 because transition-table.v1.json is absent.",
+    "runtime_correctness_impact": "NONE_PROVEN",
+    "p7_4_closure_blocking": false,
+    "p7_5_automated_drive_risk": true,
+    "next_action": "Repair or reconstruct the missing epoch transition-table contract before relying on automated -Drive/-Close for P7.5; do not retroactively alter P7.4 verifier evidence."
+  },
+  "remaining_risks": [
+    "P7.5 must prove two-client convergence over accepted P7.4 restart semantics, preserving the single NetworkedGameplayService aggregate revision path and canonical Item Graph replay ledger.",
+    "P7.6 seam/multi-region composition remains open; MW10 only when one canonical mutation spans multiple authority regions.",
+    "P7.7 graphical digging slice remains open.",
+    "Whole-P7 full regression and checkpoint acceptance remain open."
+  ],
+  "required_fixes": [],
+  "review_verdict": "PASS",
+  "p7_4_closed": true,
+  "p7_4_status": "COMPLETE_MERGED",
+  "whole_p7_accepted": false,
+  "next": "P7.5_TWO_CLIENT_CONVERGENCE"
+}
