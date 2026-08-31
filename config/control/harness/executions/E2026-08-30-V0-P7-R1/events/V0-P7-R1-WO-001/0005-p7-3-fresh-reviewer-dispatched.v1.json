@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0005",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 5,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T06:24:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-3-fresh-reviewer-dispatch-r1",
+  "head_sha": "57035d8b5f3098bcadc22a48c26caa6ce77bf65e",
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "command": "DISPATCH_FRESH_P7_3_INDEPENDENT_REVIEWER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-POST-BUILD-CRITIQUE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-REVIEW-SOURCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FRESH-REVIEWER-INSTRUCTION-001.md"
+  ],
+  "summary": "P7.3 exact runtime candidate b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00 has Project Control SUCCESS and an independently reconstructed immutable source artifact. Fresh independent Reviewer is dispatched to review explicit MatterMaterialBatch -> canonical Item Graph conversion, mass conservation/residual accounting, exactly-once ownership, and staged production-boundary scope.",
+  "blocker": "FRESH_INDEPENDENT_REVIEWER_P7_3_RESULT_PENDING"
+}
