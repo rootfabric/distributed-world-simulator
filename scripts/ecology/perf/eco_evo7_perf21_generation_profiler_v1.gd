@@ -125,6 +125,19 @@ func validate_campaign_config(config: Dictionary) -> Dictionary:
 			errors.append("RECIPE_%s" % String(value))
 
 	var workload_policy: Dictionary = Dictionary(contract.get("workload_contract", {}))
+	for key in [
+		"warmup_generations", "measured_generations", "repetitions", "initial_records",
+		"audit_interval_generations", "founder_seed", "placement_seed",
+		"evolution_seed", "environment_seed", "world_seed", "grid_size",
+	]:
+		if not _is_integral_number(config[key]):
+			errors.append("CONFIG_%s_NOT_INTEGER" % key.to_upper())
+	for value in Array(config["stream_chunk_sizes"]):
+		if not _is_integral_number(value):
+			errors.append("CONFIG_STREAM_CHUNK_SIZE_NOT_INTEGER")
+	if typeof(config["cell_size_m"]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(config["cell_size_m"])):
+		errors.append("CONFIG_CELL_SIZE_NOT_NUMERIC")
+
 	if int(config["warmup_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("warmup_generations", 2)):
 		errors.append("R2_WARMUP_DRIFT")
 	if int(config["measured_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("measured_generations", 12)):
@@ -180,6 +193,16 @@ func campaign_context_hash(context: Dictionary) -> String:
 	for key in CONTEXT_FIELDS:
 		if not context.has(key):
 			return ""
+	if typeof(context["planet_source_kind"]) != TYPE_STRING:
+		return ""
+	if not _is_integral_number(context["world_seed"]):
+		return ""
+	if typeof(context["competition_enabled"]) != TYPE_BOOL:
+		return ""
+	if not _is_integral_number(context["grid_size"]):
+		return ""
+	if typeof(context["cell_size_m"]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(context["cell_size_m"])):
+		return ""
 	return "|".join(PackedStringArray([
 		"PERF2_1_CAMPAIGN_CONTEXT_V1",
 		String(context["planet_source_kind"]),
