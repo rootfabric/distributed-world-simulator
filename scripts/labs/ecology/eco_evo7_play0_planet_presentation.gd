@@ -369,6 +369,10 @@ func get_ph5_record_presentation_yaw_deg(index: int) -> float:
 	return NAN if ph5_renderer == null else ph5_renderer.get_record_presentation_yaw_deg(index)
 
 
+func get_ph5_record_visual_basis(index: int) -> Basis:
+	return Basis.IDENTITY if ph5_renderer == null else ph5_renderer.get_record_visual_basis(index)
+
+
 func _build_nodes() -> void:
 	stems_node = MultiMeshInstance3D.new()
 	stems_node.name = "Play0Stems"
