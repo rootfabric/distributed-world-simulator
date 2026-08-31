@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0015",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 15,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T13:59:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-verifier-environment-repair-r1",
+  "head_sha": "5bbf710f5d6233589bc82391c529de62c9b6d765",
+  "predicate": "VERIFIER_ENVIRONMENT_READY_PREFLIGHT",
+  "command": "DISPATCH_P7_4_VERIFIER_ENVIRONMENT_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-ENVIRONMENT-REPAIR-DISPATCH-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFIER-ENVIRONMENT-READY-INSTRUCTION-001.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-002.v1.json"
+  ],
+  "summary": "After two environment-only NOT_VERIFIED rounds with zero runtime execution, R3 dispatch is intentionally blocked. Environment repair is dispatched first. The preparation actor must physically transfer the exact Linux double Godot archive into a reachable Ubuntu environment, verify archive SHA, binary SHA and exact version, materialize a fresh detached exact P7.4 worktree, prove tracked-clean and runner presence, and stop before executing the runtime gate. Only a durable ENVIRONMENT_READY status READY plus Project Control SUCCESS may open fresh Ubuntu Verifier R3.",
+  "blocker": "P7_4_VERIFIER_ENVIRONMENT_READY_RESULT_PENDING"
+}
