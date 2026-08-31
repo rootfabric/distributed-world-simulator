@@ -21,11 +21,22 @@ if [[ ! -f "$ROOT/.godot/uid_cache.bin" ]]; then
   "$GODOT_BIN" --headless --editor --path "$ROOT" --import
 fi
 
-TARGET_HEAD="$(git rev-parse HEAD)"
-TARGET_TREE="$(git rev-parse HEAD^{tree})"
+LOCAL_HEAD="$(git rev-parse HEAD)"
+LOCAL_TREE="$(git rev-parse HEAD^{tree})"
+TARGET_HEAD="${ECO_PERF2_CONV_TARGET_HEAD:-$LOCAL_HEAD}"
+TARGET_TREE="${ECO_PERF2_CONV_TARGET_TREE:-$LOCAL_TREE}"
+if [[ "$TARGET_TREE" != "$LOCAL_TREE" ]]; then
+  echo "PERF2.CONV BLOCKED: target TREE $TARGET_TREE != local TREE $LOCAL_TREE" >&2
+  exit 3
+fi
+if [[ ! "$TARGET_HEAD" =~ ^[0-9a-f]{40}$ || ! "$TARGET_TREE" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "PERF2.CONV BLOCKED: invalid target HEAD/TREE identity" >&2
+  exit 3
+fi
 export ECO_PERF2_CONV_TARGET_HEAD="$TARGET_HEAD"
 export ECO_PERF2_CONV_TARGET_TREE="$TARGET_TREE"
 
+echo "PERF2.CONV local HEAD=$LOCAL_HEAD"
 echo "PERF2.CONV target HEAD=$TARGET_HEAD"
 echo "PERF2.CONV target TREE=$TARGET_TREE"
 
