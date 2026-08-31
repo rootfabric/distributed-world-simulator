@@ -229,8 +229,24 @@ func _init() -> void:
 	_check(parsed is Dictionary, "written PERF2.1 report parses as JSON")
 	if parsed is Dictionary:
 		var parsed_report: Dictionary = Dictionary(parsed)
-		_check(String(parsed_report.get("report_hash", "")) == String(report.get("report_hash", "")), "written artifact preserves report evidence hash")
+		_check(String(parsed_report.get("report_hash", "")) == String(report.get("report_hash", "")), "written artifact preserves stored report evidence hash")
+		_check(profiler.report_hash(parsed_report) == String(report.get("report_hash", "")),
+			"recomputed report hash survives JSON float round-trip")
 		_check(profiler.validate_report(parsed_report), "written artifact round-trips through full report validation")
+
+		var timing_tampered: Dictionary = parsed_report.duplicate(true)
+		var timing_samples: Array = Array(timing_tampered["samples"])
+		var timing_sample: Dictionary = Dictionary(timing_samples[0])
+		var timing_metrics: Dictionary = Dictionary(timing_sample["metrics"])
+		var timing_values: Dictionary = Dictionary(timing_metrics["timings_ms"])
+		timing_values["generation_total_ms"] = float(timing_values["generation_total_ms"]) + 0.001
+		timing_metrics["timings_ms"] = timing_values
+		timing_sample["metrics"] = timing_metrics
+		timing_samples[0] = timing_sample
+		timing_tampered["samples"] = timing_samples
+		_check(not profiler.validate_report(timing_tampered),
+			"one-microsecond timing tamper still invalidates report evidence")
+
 		var tampered: Dictionary = parsed_report.duplicate(true)
 		var tampered_context: Dictionary = Dictionary(tampered["campaign_context"])
 		tampered_context["world_seed"] = int(tampered_context["world_seed"]) + 1
