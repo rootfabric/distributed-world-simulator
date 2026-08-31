@@ -103,8 +103,20 @@
   "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
   "perf2_memory": {
     "checkpoint": "ECO.EVO7/PERF2.2",
-    "status": "AUTHORIZED_CURRENT",
-    "predecessor_head": "fccf4f99fd3c257abf90c37e584b965e2cddfa6a",
-    "optimization_claim": false
+    "revision": "ECO.EVO7-PERF2.2-R1",
+    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "predecessor_control_tip": "7044c13e8cd9b036f318192ba0d62c6f3393fb60",
+    "source_profile_revision": "ECO.EVO7-PERF2.1-R2",
+    "source_samples": 12,
+    "working_set_rows": 4,
+    "memory_rows": 4,
+    "comparisons": 3,
+    "record_proxy": "max_parent_chunk + max_candidate_chunk",
+    "record_proxy_bytes_claim": false,
+    "engine_static_end_claim": "DIAGNOSTIC_ONLY",
+    "engine_static_peak_claim": "PROCESS_LIFETIME_HIGH_WATERMARK_DIAGNOSTIC_ONLY",
+    "memory_reduction_claim": false,
+    "optimization_claim": false,
+    "local_runner": "RUN_ECO_EVO7_PERF2_2_TESTS.sh"
   }
 }

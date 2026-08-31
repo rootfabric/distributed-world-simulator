@@ -14,7 +14,7 @@ Current performance route:
 STREAM1 ACCEPTED
 → PERF2.0 Measurement Contract       ✅ ACCEPTED
 → PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
-→ PERF2.2 Working-set / Memory        ← CURRENT / AUTHORIZED
+→ PERF2.2 Working-set / Memory        ← CURRENT / R1 IMPLEMENTATION CANDIDATE
 → PERF2.3 Simulation Scaling
 → PERF2.4 Runtime Optimization
 ```
@@ -24,6 +24,8 @@ PERF2.0 remains the frozen measurement contract. PERF2.1 R2 is accepted on exact
 **PERF2.1 R2 profiling matrix:** `SERIAL_REFERENCE + STREAM1 chunks 1/7/64`, each with `3 repetitions × (2 warmup + 12 measured generations)`. Required closure: `12 samples / 32 summaries / 3 diagnostic comparisons / 9 of 9 exact canonical pairs`. No optimization claim is allowed at PERF2.1.
 
 **Runtime verification policy R18:** для OS-neutral ECO GDScript достаточно одного fresh exact local PASS на **Ubuntu OR Windows**. Второй OS-run — optional/non-blocking cross-platform evidence. Windows CI не является обязательным blocker для PERF2.1. Policy: `config/ecology/eco-runtime-verification-policy.v1.json`.
+
+**PERF2.2 R1 semantics:** structural working-set is reported as a deterministic record-pressure upper-bound proxy `max_parent_chunk + max_candidate_chunk`, explicitly not bytes. `engine_static_bytes` is diagnostic process-local allocator evidence; `engine_static_peak_bytes` is a process-lifetime high-water mark and is not cross-config peak-memory proof. PERF2.2 allows a structural bound claim but forbids memory-reduction and optimization claims.
 
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 
