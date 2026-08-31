@@ -1,4 +1,6 @@
-# ECO.EVO7 PERF2.1 R2 — Exact Windows Verification Mission
+# ECO.EVO7 PERF2.1 R2 — Optional Windows Cross-Platform Evidence Mission
+
+> Governance R18: Windows verification is **optional/non-blocking** for PERF2.1. One fresh exact local PASS on Ubuntu **or** Windows is sufficient for runtime acceptance because this stage executes the same OS-neutral GDScript path. Use this mission only when additional Windows cross-platform evidence is desired.
 
 Target branch:
 
@@ -152,7 +154,7 @@ VERDICT:
 PASS / FAIL
 
 RECOMMENDATION:
-PERF2.1 R2 may be marked ACCEPTED; PERF2.2 may start
+Record this as optional Windows cross-platform evidence. Acceptance does not require a second OS pass if an exact Ubuntu PASS already exists.
 ```
 
 No local repair in the verification worktree.
