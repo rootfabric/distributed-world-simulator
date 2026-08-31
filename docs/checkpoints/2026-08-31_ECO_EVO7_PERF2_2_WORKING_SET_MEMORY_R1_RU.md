@@ -318,7 +318,7 @@ PERF2.2 is a derived measurement layer over accepted evidence.
 Ubuntu / primary local path:
 
 ```bash
-GODOT_BIN=/path/to/exact-double-godot ./RUN_ECO_EVO7_PERF2_2_TESTS.sh
+GODOT_BIN=/path/to/exact-double-godot bash ./RUN_ECO_EVO7_PERF2_2_TESTS.sh
 ```
 
 Windows / optional equivalent:
