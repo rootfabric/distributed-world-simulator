@@ -69,7 +69,7 @@ func _run() -> void:
 
 	_check(playground.set_morphology_inspector_visible(true), "VIS4.7 opens live morphology inspector")
 	_check(playground.is_morphology_inspector_visible(), "VIS4.7 live inspector visible")
-	var selected_index := playground.get_morphology_inspector_selected_index()
+	var selected_index: int = playground.get_morphology_inspector_selected_index()
 	_check(selected_index >= 0 and selected_index < descriptors.size(), "VIS4.7 selects a live PH5 record")
 	if selected_index < 0 or selected_index >= descriptors.size():
 		playground.queue_free()
@@ -106,7 +106,7 @@ func _run() -> void:
 	_check(Vector3(state.get("visual_world", Vector3.ZERO)).distance_to(Vector3(grid_appearance.get("visual_world", Vector3.ZERO))) < 0.000001, "VIS4.7 visual position exact")
 	_check(not bool(state.get("visual_offset_is_canonical", true)), "VIS4.7 labels VIS4.6 scatter noncanonical")
 
-	var text_value := playground.get_morphology_inspector_text()
+	var text_value: String = playground.get_morphology_inspector_text()
 	for required in [
 		"VIS4.7 MORPHOLOGY INSPECTOR",
 		"REALIZED",
@@ -277,9 +277,19 @@ func _source_guard() -> void:
 	_check(not model_source.contains("functionalphenotype"), "VIS4.7 does not recompute FunctionalPhenotype")
 	_check(not model_source.contains("coupleddevelopment"), "VIS4.7 does not rerun PH2 biology")
 
-	for source in [model_source, playground_source]:
-		_check(not source.contains("reproduce_bundle(") and not source.contains("mutation_seed(") and not source.contains("dispersal_seed("), "VIS4.7 owns no reproduction/mutation/dispersal")
-		_check(not source.contains("fileaccess.open") and not source.contains("diraccess") and not source.contains("multiplayer"), "VIS4.7 owns no persistence/network authority")
+	_check(
+		not model_source.contains("reproduce_bundle(")
+		and not model_source.contains("mutation_seed(")
+		and not model_source.contains("dispersal_seed("),
+		"VIS4.7 model owns no reproduction/mutation/dispersal"
+	)
+	_check(
+		not model_source.contains("fileaccess.open")
+		and not model_source.contains("diraccess")
+		and not model_source.contains("multiplayer"),
+		"VIS4.7 model owns no persistence/network authority"
+	)
+	_check(not playground_source.contains("morphologyinspectormodel.new"), "VIS4.7 uses static read model without hidden mutable inspector service")
 
 
 func _wait_generation(playground, timeout_msec: int) -> bool:
