@@ -3694,3 +3694,43 @@ Next: `FABRIC0.18-C — MULTICONTACT PERSISTENT WRENCH GRAPH`.
 
 
 0.18-B repository control: `Project Control #1888 SUCCESS`. FABRIC0.18 remains IN PROGRESS; 0.18-C is the next declared slice.
+
+
+### 0.18-C current state
+
+```text
+FABRIC0.18-A
+✅ PERSISTENT WRENCH CONTACT STATE
+60/60 PASS
+        ↓
+FABRIC0.18-B
+✅ MODE TRANSITION LOCALIZATION
+108/108 PASS
+        ↓
+FABRIC0.18-C
+✅ MULTICONTACT PERSISTENT WRENCH GRAPH
+153/153 PASS
+        ↓
+FABRIC0.18-D
+⚪ UNIFIED PERSISTENT CONTACT TRAJECTORY
+
+FABRIC0.18 NOT CLOSED
+```
+
+C exact executable:
+
+`5b37312bd986c5dc4951ebe13ac670df0af11073`
+
+TREE:
+
+`76eff3e6ab0cd206420a68ed2fc1fa3b40f663e4`
+
+C adds one shared-body projected 6DOF persistent-contact graph with support redistribution, support opening, mixed slide/stick contacts, active slide+roll+spin channels, explicit external reaction, sequential-order falsifier and strict solver refinement.
+
+It also provides the first physical no-creep result in 0.18: 10,000 gravity-support solves over 10 seconds with max speed `~1.74e-13` and effectively zero position/orientation drift.
+
+Exact gate: C `153/153`, B `108/108`, A `60/60`; C bytes `4/4` exact; B/A/0.17-D predecessor bytes preserved.
+
+Important boundary: C is a one-dynamic-body/multiple-fixed-anchor research graph, not yet an arbitrary multi-dynamic-body persistent graph.
+
+Next: `FABRIC0.18-D — UNIFIED PERSISTENT CONTACT TRAJECTORY`.

@@ -1126,3 +1126,46 @@ Next: `0.18-C MULTICONTACT PERSISTENT WRENCH GRAPH`.
 
 
 0.18-B Project Control #1888 SUCCESS. B is an implemented candidate; FABRIC0.18 remains open and 0.18-C is next.
+
+
+## 21. FABRIC0.18-C — implemented candidate
+
+Exact executable:
+
+`5b37312bd986c5dc4951ebe13ac670df0af11073`
+
+TREE:
+
+`76eff3e6ab0cd206420a68ed2fc1fa3b40f663e4`
+
+```text
+0.18-A  60/60 PASS
+0.18-B 108/108 PASS
+0.18-C 153/153 PASS
+
+C bytes 4/4 exact
+B bytes 4/4 preserved
+A bytes 3/3 preserved
+0.17-D bytes 6/6 preserved
+
+FABRIC0.18 NOT CLOSED
+```
+
+C solves multiple fixed-anchor persistent patches of one shared dynamic rigid body as one coupled 6DOF wrench graph.
+
+Key evidence:
+
+```text
+support redistribution   exact to ~2e-11
+support loss             opens contact, no tensile normal
+mixed graph modes        FLOOR slide / WALL stick
+active generalized modes slide + roll + spin
+reverse contact order    exact identical
+sequential callbacks     state delta ~0.03125
+10k-step physical creep  max speed ~1.74e-13
+solver refinement        strictly decreasing
+```
+
+Do not generalize C into an arbitrary multi-dynamic-body persistent graph claim.
+
+Next: `0.18-D UNIFIED PERSISTENT CONTACT TRAJECTORY`.

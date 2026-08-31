@@ -600,3 +600,288 @@ SUCCESS
 All steps passed, including architecture/ownership compatibility, H0.2, V0 product checkpoint, generation-80 authorization safety, canonical-main PC0 and directional watch.
 
 FABRIC0.18 remains IN PROGRESS. This pass qualifies 0.18-B as an implemented candidate; it does not close the parent checkpoint.
+
+
+## 9. 0.18-C — Multicontact Persistent Wrench Graph
+
+Exact-tested executable:
+
+```text
+HEAD
+5b37312bd986c5dc4951ebe13ac670df0af11073
+
+TREE
+76eff3e6ab0cd206420a68ed2fc1fa3b40f663e4
+```
+
+Status:
+
+```text
+FABRIC0.18-C
+MULTICONTACT PERSISTENT WRENCH GRAPH
+
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+153/153 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+FABRIC0.18 NOT CLOSED
+```
+
+### 9.1 Graph solve
+
+C solves all persistent patches of one dynamic rigid body against multiple fixed anchors in one projected maximum-dissipation graph.
+
+Per contact unknowns:
+
+```text
+[Pn, Pt1, Pt2, Mroll1, Mroll2, Mtorsion]
+```
+
+Projection:
+
+```text
+Pn >= 0
+||Pt||    <= mu_t   * Pn
+||Mroll|| <= mu_r   * Pn * R_eff
+|Mtors|   <= mu_tau * Pn * R_eff
+```
+
+The full effective matrix is assembled from unit generalized impulses, so shared-body coupling between contacts is explicit. Contacts are canonicalized by `contact_id`; caller order is not physical.
+
+### 9.2 Support redistribution and support loss
+
+Two-support plank at x=-1/+1 with total downward free impulse 1:
+
+```text
+load x     L support      R support
+0.00       ~0.500         ~0.500
+0.25       ~0.375         ~0.625
+0.50       ~0.250         ~0.750
+0.75       ~0.125         ~0.875
+1.00       0              ~1.000
+```
+
+The result follows:
+
+```text
+L = (1-x)/2
+R = (1+x)/2
+```
+
+within approximately `2e-11`.
+
+At `load_x=1.1` the weak left support does not become negative:
+
+```text
+L Pn = 0
+L persistent state = open
+L normal separation velocity ≈ +0.0125
+post angular velocity z ≈ -0.00625
+normal complementarity error ≈ 1.7e-12
+```
+
+Thus the graph opens the support and permits tipping instead of creating a tensile contact reaction.
+
+### 9.3 Persistent support-loss continuity
+
+A previous two-support state is advanced from `load_x=0.9` to `1.1`.
+
+Left support:
+
+```text
+active=false
+contact transition hypothesis=SEPARATION_CANDIDATE
+warm start=0
+current wrench limits=0
+```
+
+Right support:
+
+```text
+identity_continued=true
+update_count=1
+contact_age=0.01
+first_seen_time preserved
+```
+
+C therefore uses the A persistent-state lifecycle directly instead of inventing a graph-specific history model.
+
+### 9.4 Mixed modes in one graph
+
+A floor+wall corner stand demonstrates simultaneous different modes on one shared body:
+
+```text
+FLOOR tangent = slide
+WALL  tangent = stick
+```
+
+Both supports remain active.
+
+Audit:
+
+```text
+max cross-contact coupling >= 1.0
+normal complementarity error < 6e-12
+energy ledger error < 1e-14
+kinetic delta < 0
+```
+
+Reversing contact input order produces an exact-identical signature.
+
+A separate generalized-wrench drive activates, on both plank contacts:
+
+```text
+tangent = slide
+rolling = roll
+torsion = spin
+```
+
+Each active channel lies on its corresponding current support-scaled wrench bound.
+
+### 9.5 Sequential pair-callback falsifier
+
+Unified graph:
+
+```text
+reverse contact order
+state error = 0
+signature identical
+```
+
+Naive sequential one-contact callbacks:
+
+```text
+L→R vs R→L
+max state delta ≈ 0.03125
+```
+
+Representative outputs:
+
+```text
+forward:
+v_y ≈ -0.025
+w_z ≈ +0.025
+
+reverse:
+v_y ≈ -0.00625
+w_z ≈ -0.00625
+```
+
+This is the decisive C falsifier against pair-by-pair mutation.
+
+### 9.6 Solver refinement
+
+For `load_x=0.6`, relative to a `1e-14` reference:
+
+```text
+solver tolerance      max support error
+1e-6                  8.71521294e-6
+1e-8                  8.450098e-8
+1e-10                 8.1938e-10
+1e-12                 8.74e-12
+```
+
+The sequence is strictly decreasing.
+
+### 9.7 Physical static-contact no-creep
+
+C upgrades the earlier A bookkeeping probe to an actual physical graph test.
+
+For 10,000 steps, `dt=0.001`, the stand repeatedly applies a downward gravity-like free impulse, solves both supports as one graph, advances the persistent A states, and integrates the resulting body state.
+
+After 10 simulated seconds:
+
+```text
+max linear speed ≈ 1.7390949791362686e-13
+max angular speed = 0
+position drift < 2e-12
+angle drift < 2e-12
+
+L support = 0.5
+R support = 0.5
+
+both contacts:
+tangent/rolling/torsion = stick/stick/stick
+identity_epoch = 0
+update_count = 9999
+contact_age = 9.999
+```
+
+This is a physical no-creep claim for the bounded two-support research stand.
+
+### 9.8 Reaction and energy ledgers
+
+For the offset-load stand:
+
+```text
+reaction force impulse y ≈ 1.0
+reaction moment impulse z ≈ load_x
+```
+
+The graph reports the anchored external reaction explicitly.
+
+Acceptance probes require passive contact not to increase kinetic energy, matrix symmetry near machine precision, and energy-ledger error below `1e-14`.
+
+### 9.9 Exact gate
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`
+
+SHA-256:
+
+`bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7`
+
+```text
+0.18-C 153/153 PASS
+0.18-B 108/108 PASS
+0.18-A  60/60 PASS
+
+C playground PASS
+import CLEAN
+editor parse/compile CLEAN
+
+C 4/4 exact
+B 4/4 preserved
+A 3/3 preserved
+0.17-D 6/6 preserved
+```
+
+Exact C files:
+
+```text
+fabric0_persistent_wrench_graph_v1.gd
+blob   b8de00010fd227104898a6b17b7aac9aad5eec17
+sha256 def2ea1a2177fd7911cf3525fd084739dcd02533da3809842639599023a1ab98
+
+fabric0_persistent_wrench_graph_experiments_v1.gd
+blob   d051401b24c72954e10be125110e5314012a7a91
+sha256 5098d07aebd2ec6d621a85f2eb0170c30b545bae2a9a635cdfbb2a771166558b
+
+fabric0_persistent_wrench_graph_acceptance.gd
+blob   3e65306655f6dc797062b4bda06d3ba56b66ae2a
+sha256 5b90533df23e9388084b71c2a4d6d8dd6e09ba6890f23492253312b17d685b17
+
+fabric0_persistent_wrench_graph_playground.gd
+blob   7ec0277958810969506da9651f7021d3fd5b5e85
+sha256 9f0c77062e8beda3bbf086935a552c847b635517e61ef893ce3283194abd0fda
+```
+
+### 9.10 C non-claims
+
+C proves one dynamic rigid body coupled against multiple fixed-anchor persistent patches.
+
+It does not yet prove:
+
+- unified impact → persistent → localized mode-transition → separation trajectory;
+- B event localization integrated into a live C trajectory;
+- arbitrary multi-dynamic-body persistent wrench graphs;
+- pressure-distribution wrench cones;
+- compliant/Hertz contact;
+- production sparse backend;
+- FABRIC0.18 closure;
+- production acceptance.
+
+Next declared slice:
+
+`FABRIC0.18-D — UNIFIED PERSISTENT CONTACT TRAJECTORY`.
