@@ -56,6 +56,8 @@ static func build(renderer_perf: Dictionary, frame_perf: Dictionary) -> Dictiona
 	for key in [
 		"visible_individual_count",
 		"materialization_cache_entries",
+		"materialization_cache_lookup_entries",
+		"materialization_cache_eviction_count",
 		"materialization_cache_hit_count",
 		"materialization_cache_miss_count",
 		"materialization_build_count",
@@ -112,6 +114,8 @@ static func build(renderer_perf: Dictionary, frame_perf: Dictionary) -> Dictiona
 		"visible_individual_count": int(renderer_perf["visible_individual_count"]),
 		"tier_counts": tier_counts,
 		"materialization_cache_entries": int(renderer_perf["materialization_cache_entries"]),
+		"materialization_cache_lookup_entries": int(renderer_perf["materialization_cache_lookup_entries"]),
+		"materialization_cache_eviction_count": int(renderer_perf["materialization_cache_eviction_count"]),
 		"materialization_cache_hit_count": int(renderer_perf["materialization_cache_hit_count"]),
 		"materialization_cache_miss_count": int(renderer_perf["materialization_cache_miss_count"]),
 		"materialization_cache_hit_rate": float(renderer_perf["materialization_cache_hit_rate"]),
@@ -190,6 +194,8 @@ static func validate(value: Dictionary) -> bool:
 
 	for key in [
 		"materialization_cache_entries",
+		"materialization_cache_lookup_entries",
+		"materialization_cache_eviction_count",
 		"materialization_cache_hit_count",
 		"materialization_cache_miss_count",
 		"materialization_build_count",
@@ -278,8 +284,12 @@ static func format_text(value: Dictionary) -> String:
 		],
 		"",
 		"CACHE / LOD",
-		"cache entries: %d    hits: %d    misses/builds: %d    hit rate: %.3f" % [
+		"cache materializations/lookups: %d / %d    evictions: %d" % [
 			int(value["materialization_cache_entries"]),
+			int(value["materialization_cache_lookup_entries"]),
+			int(value["materialization_cache_eviction_count"]),
+		],
+		"hits: %d    misses/builds: %d    hit rate: %.3f" % [
 			int(value["materialization_cache_hit_count"]),
 			int(value["materialization_cache_miss_count"]),
 			float(value["materialization_cache_hit_rate"]),
@@ -337,6 +347,8 @@ static func compute_structural_hash(value: Dictionary) -> String:
 			tokens.append("%s=%d" % [tier, int(Dictionary(tiers).get(tier, 0))])
 	for key in [
 		"materialization_cache_entries",
+		"materialization_cache_lookup_entries",
+		"materialization_cache_eviction_count",
 		"materialization_cache_hit_count",
 		"materialization_cache_miss_count",
 		"materialization_build_count",
