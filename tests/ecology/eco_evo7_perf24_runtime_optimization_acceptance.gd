@@ -122,7 +122,11 @@ func _init() -> void:
 		_check(int(stream.get("oracle_elided_generations", -1)) == 11, "measured A/B sample elides oracle on eleven generations")
 		_check(int(counts.get("max_parent_chunk", 0)) <= chunk_size, "parent working-set bound preserved")
 		_check(int(counts.get("max_candidate_chunk", 0)) <= chunk_size * 2, "candidate working-set bound preserved")
-		_check(int(operations.get("generation_boundary_sorts", -1)) == 36, "every measured sample canonicalizes three full arrays per generation")
+		var expected_boundary_sorts := 12 if pipeline_mode == StreamExecutor.PIPELINE_OPTIMIZED else 36
+		_check(
+			int(operations.get("generation_boundary_sorts", -1)) == expected_boundary_sorts,
+			"measured sample uses expected generation-boundary sort count"
+		)
 
 		if pipeline_mode == StreamExecutor.PIPELINE_LEGACY:
 			legacy_samples += 1
@@ -290,6 +294,8 @@ func _source_guards() -> void:
 	_check(route_source.contains("static func build_in_input_order("), "route kernel exposes input-order chunk seam")
 	_check(executor_source.contains("_evaluate_recruitment_chunk_input_order("), "executor uses aligned recruitment chunk seam")
 	_check(executor_source.contains("generation_boundary_sorts += 1"), "generation-boundary canonicalization remains explicit")
+	_check(executor_source.contains("_ordered_parents_fast_path"), "optimized path can preserve already-canonical parent order without sorting")
+	_check(executor_source.contains("_canonicalize_aligned_generation"), "optimized path canonicalizes aligned candidate/route/recruitment arrays with one permutation")
 	_check(executor_source.contains("_monolithic_oracle("), "independent monolithic audit oracle remains present")
 	_check(not ls33_source.contains("perf2.4") and not ls33_source.contains("perf24"), "PERF2.4 fields do not enter LS3.3 authority")
 	_check(not candidate_source.to_lower().contains("time.") and not route_source.to_lower().contains("time."), "pure candidate/route kernels remain free of wall-clock identity")
