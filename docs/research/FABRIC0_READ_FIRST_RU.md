@@ -965,3 +965,23 @@ validation/fabric0-compositional-world-fabric-v17-c-validation.json
 Next closure-decision wall:
 
 `FABRIC0.17-D — UNIFIED MULTI-IMPACT WRENCH TRAJECTORY`.
+
+## 16. FABRIC0.17-D — implemented, control-blocked boundary
+
+Exact executable: `643b4bdc5d33756819869c3faacc1dccf1251a1f`.
+
+Current chain:
+
+`0.17-A 77/77 -> 0.17-B 63/63 -> 0.17-C 76/76 -> 0.17-D 157/157`.
+
+D integrates two ordered simultaneous event sets, graph-wide generalized wrench coupling and a same-instant normal↔wrench fixed point. Naive one-pass normal→wrench composition is explicitly rejected because it reopens the normal impact law by about `0.34`; accepted recoupling reduces residual below `5e-10`.
+
+Whole-state/event refinement is strict, energy ledger closes at `~1.78e-15`, linear/angular momentum errors are zero, and replay/body/member order determinism is exact.
+
+Important current status: `FABRIC0.17 NOT CLOSED`. Project Control run `#1836` fails at repository architecture/ownership compatibility due unrelated live G/ECO passport/dependency drift. The D delta from the previously green C evidence boundary contains exactly six FABRIC research/test files and no G/ECO/Matter/control-registry changes.
+
+Do not repair G/ECO/Matter control state from this FABRIC branch and do not treat the external RED as a FABRIC physics failure. Re-run Project Control after repository control recovery; only then decide research-candidate closure.
+
+D non-claims: no finite-duration persistent-contact wrench-mode trajectory, no active torsion in the D fixture itself, no universal monolithic impact+wrench MCP, no production sparse backend or production acceptance.
+
+Evidence: `validation/fabric0-compositional-world-fabric-v17-d-validation.json`.
