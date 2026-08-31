@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 IMPLEMENTED CANDIDATE / EXACT WINDOWS VERIFICATION IN PROGRESS  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 PLAY0.MORPH UNBLOCKED  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -752,7 +752,7 @@ VIS4.3 exact PH5 bridge is now unblocked.
 
 VIS4.3 exact Live Phenotype -> PH5 bridge is implemented.
 
-Exact runtime/test subject currently under Windows verification:
+Exact runtime/test subject:
 
 ~~~text
 HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
@@ -774,7 +774,7 @@ The bridge does not rerun CoupledDevelopment or FunctionalPhenotype and does not
 
 Focused acceptance requires exact reconstruction for all 61 generation-one survivors, all PH5 tiers, rehashed traits_id/development-seed rejection, and deterministic replay.
 
-VIS4.4 remains blocked until exact Windows GREEN.
+VIS4.3 verification is platform-neutral for this checkpoint; the exact Ubuntu double-Godot PASS below is the canonical closure evidence. VIS4.4 is unblocked.
 
 
 VIS4.3 final pre-verification hardening also binds reconstruction evidence to the exact Descriptor V2 competition seal.
@@ -792,7 +792,7 @@ VIS4.4 preflight is documented in:
 docs/plans/ECO_EVO7_VIS4_4_PLAY0_MORPH_PREFLIGHT_RU.md
 ~~~
 
-VIS4.4 runtime remains blocked until VIS4.3 exact Windows GREEN.
+VIS4.4 runtime is unblocked by the accepted exact Ubuntu double-Godot verification.
 
 
 ## VIS4.3 Ubuntu exact pre-verification — GREEN
@@ -812,11 +812,20 @@ All canonical VIS4.2 -> PH5 -> VIS4.3 regressions passed; the final VIS4.3 focus
 acceptance reported 752 assertions and the canonical PASS marker. HEAD and TREE
 remained unchanged and tracked status remained clean.
 
-This is pre-verification only:
+Closure qualification:
 
 ~~~text
-VIS4.3 UBUNTU EXACT PRE-VERIFICATION GREEN
-VIS4.3 WINDOWS EXACT VERIFICATION REQUIRED
-VIS4.3 NOT CLOSED
-VIS4.4 PLAY0.MORPH RUNTIME BLOCKED
+VIS4.3 EXACT UBUNTU DOUBLE-GODOT VERIFICATION GREEN
+EXACT SUBJECT VERIFIED
+EXACT TREE VERIFIED
+CANONICAL VIS4.2 -> PH5 -> VIS4.3 CHAIN GREEN
+TRACKED STATUS CLEAN
+VIS4.3 CLOSED
+VIS4.4 PLAY0.MORPH RUNTIME UNBLOCKED
 ~~~
+
+Owner acceptance rule for this checkpoint: VIS4.3 contains no platform-specific
+runtime branch, native extension, OS-specific API or path-dependent computation.
+Therefore a second Windows execution is optional cross-platform regression
+evidence, not a closure prerequisite. The exact double-Godot Ubuntu run is
+sufficient canonical verification for VIS4.3.
