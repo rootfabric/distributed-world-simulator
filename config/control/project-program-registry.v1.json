@@ -280,7 +280,7 @@
       "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
       "current_stage": "P7.5 Two-Client Convergence",
       "stage_status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
-      "progress_note": "P7.4 persistence/restart composition is independently reviewed PASS, Fresh Windows Verifier R3 VERIFIED under the formal platform amendment, human-approved and merged. Exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73. P7.5 two-client convergence is next under the same Work Order and mutation lease.",
+      "progress_note": "P7.4 persistence/restart composition is independently reviewed PASS, Fresh Windows Verifier R3 VERIFIED under the formal platform amendment, human-approved and merged. Exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73. P7.5 two-client convergence is next under the same Work Order and mutation lease. The missing epoch transition-table is tracked separately as nonblocking P7.4 closure debt and remains a prerequisite only for automated P7.5 -Drive/-Close use.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
       "next_stage": "Repair the pre-existing missing epoch transition-table control contract before relying on automated -Drive/-Close, then implement P7.5 two-client convergence over accepted P7.4 semantics.",
       "product_execution_base": {
@@ -310,9 +310,7 @@
         "P7_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
       ],
       "health_declared": "YELLOW",
-      "blockers": [
-        "PRE_EXISTING_EPOCH_TRANSITION_TABLE_MISSING_FOR_DRIVE_CLOSE_AUTOMATION"
-      ],
+      "blockers": [],
       "p7_0": {
         "status": "ACCEPTED",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
