@@ -299,6 +299,15 @@ func get_record_presentation_yaw_deg(index: int) -> float:
 	return float(_records[index].get("orientation_yaw_deg", NAN))
 
 
+func get_record_visual_basis(index: int) -> Basis:
+	if index < 0 or index >= _plant_nodes.size():
+		return Basis.IDENTITY
+	var node = _plant_nodes[index]
+	if node == null or not is_instance_valid(node):
+		return Basis.IDENTITY
+	return node.basis
+
+
 func get_geometry_identity_hash() -> String:
 	var tokens := PackedStringArray([SCHEMA, VERSION, str(source_generation), source_ecology_hash])
 	for record in _records:
