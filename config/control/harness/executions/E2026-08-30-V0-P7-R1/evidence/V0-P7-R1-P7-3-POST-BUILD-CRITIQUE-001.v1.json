@@ -1,0 +1,95 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "V0-P7-R1-P7-3-POST-BUILD-CRITIQUE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "exact_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "exact_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "runtime_pr": 373,
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED_BEFORE_REVIEW",
+  "strengths": [
+    "The implementation adds only P7 composition adapters and leaves Matter contracts, MW4 receiver/journal, canonical Item Graph implementation, persistence, network, and authority foundations unchanged.",
+    "Mass quantization is explicit: one generic V0 item/ore unit represents one kilogram; fractional remainder is exposed as residual_mass_kg rather than rounded away.",
+    "The existing canonical Item Graph replay ledger remains the sole exactly-once owner; no P7 replay or receipt ledger exists.",
+    "Replay fingerprint binds full immutable MatterMaterialBatch checksum, so a reused batch_id with altered physical contents fails closed.",
+    "A real MW4 lunar batch is delivered through the adapter in focused tests, including failure after Matter commit and retry against a different available Item Graph.",
+    "Unsupported material IDs fail closed instead of being silently coerced."
+  ],
+  "findings": [
+    {
+      "id": "P7.3-C001",
+      "severity": "HIGH",
+      "status": "FIXED",
+      "summary": "Initial candidate bound only a checksum prefix into server-output source identity.",
+      "resolution": "Final runtime HEAD binds the full immutable MatterMaterialBatch checksum into Item Graph replay fingerprint."
+    },
+    {
+      "id": "P7.3-C002",
+      "severity": "IMPORTANT",
+      "status": "ACCEPTANCE_QUESTION",
+      "summary": "Current V0 Item Graph quantity is integer and generic item/ore has no physical mass field.",
+      "resolution": "P7.3 defines the conversion explicitly as product policy (1 kg/item unit), keeps fractional mass as immutable batch residual provenance, and does not claim Item Graph itself becomes a physical-mass store. Reviewer must judge this policy boundary."
+    },
+    {
+      "id": "P7.3-C003",
+      "severity": "IMPORTANT",
+      "status": "DEFERRED_BY_ROADMAP",
+      "summary": "P7.3 coordinator is not yet wired into the live graphical/two-client product path.",
+      "resolution": "Focused P7.3 exercises real MW4 + canonical Item Graph. P7.5 owns two-client convergence and P7.7 owns graphical digging/inventory composition; Reviewer must confirm this is a valid staged boundary rather than a missing P7.3 production caller."
+    },
+    {
+      "id": "P7.3-C004",
+      "severity": "ENVIRONMENT",
+      "status": "VERIFIER_OWNED",
+      "summary": "Implementer container did not complete a fresh standalone P7.2 bubble process shutdown.",
+      "resolution": "No P7.2 production files changed in P7.3. Independent Verifier must run the full canonical P7.3 gate on fresh Ubuntu exact-double Godot before any merge decision."
+    }
+  ],
+  "bounded_questions": {
+    "unnecessary_complexity": "Three small components separate conversion policy, canonical Item Graph port, and request/result/batch provenance validation. Combining them would make product policy and owner boundary less auditable.",
+    "duplicate_truth": "None intended. Item Graph owns spendable integer inventory; MatterMaterialBatch remains immutable extraction provenance including any fractional residual.",
+    "implicit_owner": "No new stateful owner. Coordinator and adapter hold references only; policy is static.",
+    "coupling_reduction": "The adapter calls only the existing preflight_server_output/apply_server_output seam; no changes were made inside M4 Item Graph.",
+    "sibling_surface_fix": "P3 mining output, P5 tool mining, P7.1 authority, P7.2 seam, MW4, MW5 and MW6 were rerun by Implementer.",
+    "removable_code": "No prior production code was replaced or bypassed.",
+    "design_regression": "Primary review question is semantic, not structural: whether current V0 generic ore should intentionally collapse supported lunar geological composition under the explicit 1 kg/item policy.",
+    "refactor_if_redesigned": "If future Item definitions become composition-specific or mass-bearing, change only the P7 delivery policy mapping; do not add a second Item Graph or Matter balance."
+  },
+  "production_scope_review": {
+    "second_matter_truth": false,
+    "second_item_graph": false,
+    "second_resource_inventory": false,
+    "second_replay_ledger": false,
+    "second_persistence_owner": false,
+    "network_foundation_change": false,
+    "authority_foundation_change": false,
+    "matter_contract_change": false,
+    "canonical_item_graph_implementation_change": false
+  },
+  "exact_validation": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_3_focused": "PASS 116/116",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "p5_mining_tool": "PASS 36/36",
+    "p3_resource_domain": "PASS 79/79",
+    "mw4": "PASS 187",
+    "mw5": "PASS 142",
+    "mw6": "PASS 130",
+    "runtime_project_control_run": 33360078991,
+    "runtime_project_control": "SUCCESS"
+  },
+  "open_blockers": [
+    "Fresh independent Reviewer verdict.",
+    "Fresh independent Verifier after Reviewer PASS.",
+    "Human RUNTIME_FEATURE_MERGE gate."
+  ],
+  "nonblocking_followups": [
+    "P7.4 persistence restart must prove a committed undelivered batch can survive restart and later deliver exactly once.",
+    "P7.5/P7.7 must wire the accepted conversion boundary into two-client and graphical product composition."
+  ],
+  "p7_checkpoint_accepted": false,
+  "p7_3_closed": false,
+  "recorded_at_utc": "2026-08-31T06:22:00Z"
+}
