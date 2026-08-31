@@ -171,3 +171,30 @@ This preserves the existing PLAY0 completed-snapshot philosophy.
 ## Runtime gate
 
 Do not implement VIS4.4 runtime until VIS4.3 exact Windows verification is GREEN.
+
+## VIS4.3 exact closure carrier
+
+VIS4.4 remains runtime-blocked until a successful exact Windows closure is recorded.
+
+Frozen executable predecessor:
+
+~~~text
+VIS4.3 SUBJECT:
+b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+
+EXPECTED TREE:
+920454da5bb41959680e3309c690f4ef399f3e6d
+~~~
+
+The durable Windows closure carrier is:
+
+~~~text
+1d0c8cf9de23349f2a5df410e11da7e5c32af318
+ci(eco): pin VIS4.3 closure to frozen subject
+~~~
+
+Its workflow checks out the frozen executable subject rather than the moving durable branch HEAD, verifies both exact HEAD and exact TREE, verifies Godot identity
+`4.7.1.stable.double.custom_build.a13da4feb`, and only then runs
+`RUN_ECO_EVO7_VIS4_3_TESTS.ps1`.
+
+A documentation/closure-carrier commit after the executable subject is therefore not acceptance evidence by itself. VIS4.3 may become GREEN only when the Windows job reports SUCCESS for the frozen subject and expected tree.
