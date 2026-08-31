@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.5 CLOSED / VIS4.6 IMPLEMENTED CANDIDATE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.6 CLOSED / NEXT: VIS4.7 MORPHOLOGY INSPECTOR  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1181,16 +1181,85 @@ Durable candidate:
 docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_6_GRID_APPEARANCE_BOUNDARY_CANDIDATE_R1_RU.md
 ~~~
 
+Exact Ubuntu double-Godot verification completed GREEN on the frozen subject.
+
+~~~text
+HEAD: 8edc9b9767e8d163b020ac9c7407d385d99bed3b
+TREE: 5493dca15e47c23ca939403a98244fd345b37e8b
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.5 predecessor: PASS
+VIS4.6 focused: PASS / 796 assertions
+final marker: PRESENT
+canonical runner exit: 0
+HEAD/TREE unchanged
+tracked worktree clean
+~~~
+
 Current qualification:
 
 ~~~text
-VIS4.6 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED YET
+VIS4.6 EXACT UBUNTU GREEN
+VIS4.6 CLOSED
+NEXT: VIS4.7 MORPHOLOGY INSPECTOR
 ~~~
 
 True continuous physical plant positions remain reserved for:
 
 ~~~text
 ECO.SPATIAL1
+~~~
+
+
+## VIS4.6 durable closure — 2026-08-31
+
+Canonical executable subject:
+
+~~~text
+HEAD: 8edc9b9767e8d163b020ac9c7407d385d99bed3b
+TREE: 5493dca15e47c23ca939403a98244fd345b37e8b
+~~~
+
+Exact Ubuntu double-Godot verification passed the full VIS4.5 predecessor chain
+and the VIS4.6 Grid Appearance Boundary focused gate.
+
+~~~text
+VIS4.5 predecessor: PASS
+VIS4.6 focused: PASS / 796 assertions
+canonical VIS4.6 marker: PRESENT
+canonical runner exit: 0
+HEAD unchanged: YES
+TREE unchanged: YES
+tracked worktree: clean
+~~~
+
+The accepted architecture now explicitly distinguishes:
+
+~~~text
+base_world
+= canonical ecology cell position
+
+visual_base_world
+= bounded presentation-only scattered Earth-surface position
+~~~
+
+Exact VIS2 stable-jitter semantics are reused, bounded to +/-0.24 cell on one
+axis and +/-0.15 cell on the other. Canonical cell direction and ecology state
+remain unchanged.
+
+Color, render-origin and LOD operations preserve grid appearance identity.
+Geometry identity and VIS4.5 individuality identity remain intact.
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_6_GRID_APPEARANCE_BOUNDARY_UBUNTU_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+VIS4.6 is CLOSED.
+
+The next checkpoint is now unblocked:
+
+~~~text
+VIS4.7 — Morphology Inspector
 ~~~
