@@ -705,6 +705,7 @@ func _sample_evidence_hash(sample: Dictionary) -> String:
 	var counts: Dictionary = Dictionary(metrics.get("counts", {}))
 	var memory: Dictionary = Dictionary(metrics.get("memory_bytes", {}))
 	var stream: Dictionary = Dictionary(metrics.get("stream", {}))
+	var window: Dictionary = Dictionary(metrics.get("window", {}))
 	var flags: Dictionary = Dictionary(sample.get("flags", {}))
 	var parts := PackedStringArray([
 		"PERF2_1_SAMPLE_EVIDENCE_R2",
@@ -716,6 +717,10 @@ func _sample_evidence_hash(sample: Dictionary) -> String:
 		Contract.execution_comparison_key(sample),
 		String(flags.get("configuration_id", "")),
 		String(flags.get("campaign_context_hash", "")),
+		str(int(flags.get("stream_chunk_size", 0))),
+		String(flags.get("timing_aggregation", "")),
+		str(int(window.get("measured_generations", 0))),
+		"%.12f" % float(window.get("total_wall_ms", -1.0)),
 	])
 	for key in [
 		"wall_ms", "generation_total_ms", "ls33_total_ms", "stream_total_ms",
