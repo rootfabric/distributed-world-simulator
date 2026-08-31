@@ -3,7 +3,7 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.17",
   "slice": "D_UNIFIED_MULTI_IMPACT_WRENCH_TRAJECTORY",
-  "status": "IMPLEMENTED_CANDIDATE_CONTROL_RECHECK",
+  "status": "IMPLEMENTED_CANDIDATE_CONTROL_BLOCKED_EXTERNAL_NOT_CLOSED",
   "production_accepted": false,
   "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
   "executable_head": "643b4bdc5d33756819869c3faacc1dccf1251a1f",
@@ -164,7 +164,15 @@
       "G",
       "ECO"
     ],
-    "rerun_status": "REQUESTED"
+    "rerun_status": "FAILED_SAME_EXTERNAL_CLASS",
+    "rerun_result": {
+      "run_number": 1836,
+      "run_id": 33357807534,
+      "result": "FAILURE",
+      "failed_step": "architecture and ownership passport compatibility regression",
+      "repeated_on_same_exact_executable_head": true
+    },
+    "closure_policy": "DO_NOT_CLOSE_UNTIL_PROJECT_CONTROL_GREEN_OR_EXPLICIT_EXTERNAL_BLOCKER_EXCEPTION"
   },
   "claims": [
     "TWO_CAUSALLY_ORDERED_SIMULTANEOUS_IMPACT_EVENT_SETS",
