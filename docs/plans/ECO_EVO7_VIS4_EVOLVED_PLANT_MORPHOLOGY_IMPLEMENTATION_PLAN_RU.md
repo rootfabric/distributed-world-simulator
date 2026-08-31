@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.7 CLOSED / NEXT: VIS4.8 DIVERSITY EVIDENCE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.7 CLOSED / VIS4.8 IMPLEMENTED CANDIDATE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1496,3 +1496,169 @@ LIVE_DIVERSITY_INSUFFICIENT
 ~~~
 
 It must not be hidden by random TREE/BUSH/GRASS decoration.
+
+
+## VIS4.8 Diversity Evidence implementation result — 2026-08-31
+
+VIS4.8 is implemented on frozen runtime/test subject:
+
+~~~text
+HEAD:
+32d9401d2ae7beb2a222b926f07ba44ec50dfe40
+
+TREE:
+09feb0705f2ae32f50d5e0e32db048648600e10f
+~~~
+
+VIS4.8 explicitly separates:
+
+~~~text
+RENDERER FIDELITY
+!=
+LIVE POPULATION DIVERSITY
+~~~
+
+A correct evidence system may therefore report:
+
+~~~text
+RENDERER_PASS
+LIVE_DIVERSITY_INSUFFICIENT
+~~~
+
+without inventing random decorative morphology.
+
+New read-only live evidence model:
+
+~~~text
+scripts/labs/ecology/eco_evo7_vis4_8_diversity_evidence.gd
+~~~
+
+It is sealed to the exact completed source:
+
+~~~text
+ecology_state_hash
+Descriptor V2 adapter_hash
+source_competition_hash
+source_morphology_evidence_hash
+~~~
+
+and every Descriptor V2 record is exact-bound to its PH5 render identity.
+
+The live diversity vector contains only morphology fields:
+
+~~~text
+realized height
+realized crown radius/density
+LAI
+structural investment
+realized roots
+apical dominance
+branch probability/angle/length ratio/depth
+crown spread
+foliage density
+~~~
+
+The following do NOT count as morphology diversity:
+
+~~~text
+lineage
+individual seed
+VIS4.5 yaw
+VIS4.6 visual scatter
+~~~
+
+VIS4.8 reports deterministic per-field mean/variance/stddev/range/relative
+spread and deterministic quantized morphology clusters.
+
+R1 evidence thresholds are fixed at:
+
+~~~text
+population >= 8
+cluster_count >= 3
+varying morphology fields >= 4
+per-field relative spread threshold = 0.05
+~~~
+
+Qualification is evidence-derived and independently recomputed by validate().
+
+New PLAY0 surface:
+
+~~~text
+F7 — Diversity Evidence
+~~~
+
+The F7 panel exposes:
+
+~~~text
+live diversity qualification
+cluster count
+varying-field count
+identity diagnostics
+per-field morphology variance
+full evidence hash
+explicit no-archetype / no-decoration policy
+~~~
+
+F6 Morphology Inspector and F7 Diversity Evidence share one diagnostic HUD slot
+and are visually mutually exclusive.
+
+Focused acceptance:
+
+~~~text
+tests/ecology/eco_evo7_vis4_8_diversity_evidence_acceptance.gd
+~~~
+
+Controlled renderer fidelity uses the already accepted PH5 core with fixed seed
+and proves:
+
+~~~text
+tall / low
+narrow / wide
+vertical / bushy
+structurally sparse / dense
+different branch angles
+~~~
+
+The accepted VIS4.2 realized-crown-density cue is also checked independently.
+
+The anti-cheat fixture deliberately uses eight distinct lineages and eight
+distinct render identities with identical morphology. Required result:
+
+~~~text
+cluster_count = 1
+varying_field_count = 0
+LIVE_DIVERSITY_INSUFFICIENT
+~~~
+
+A second controlled population varies real morphology and must produce
+LIVE_DIVERSITY_SUFFICIENT.
+
+The focused live gate prints independently:
+
+~~~text
+VIS4.8 RENDERER FIDELITY: PASS
+VIS4.8 LIVE DIVERSITY: <LIVE_DIVERSITY_SUFFICIENT | LIVE_DIVERSITY_INSUFFICIENT>
+~~~
+
+Canonical runner:
+
+~~~text
+RUN_ECO_EVO7_VIS4_8_TESTS.sh
+~~~
+
+VIS4.8 does not add biology recomputation, process RNG, generation/reproduction/
+mutation/dispersal authority, persistence authority or network authority.
+
+Durable candidate:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_8_DIVERSITY_EVIDENCE_CANDIDATE_R1_RU.md
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.8 IMPLEMENTED CANDIDATE
+EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
+NOT CLOSED YET
+~~~
