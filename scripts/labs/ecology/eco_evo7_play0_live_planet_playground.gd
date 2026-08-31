@@ -763,8 +763,12 @@ func set_morphology_inspector_visible(value: bool) -> bool:
 		morphology_inspector_visible = true
 		if morphology_inspector_panel != null:
 			morphology_inspector_panel.visible = true
-		if not _refresh_morphology_inspector(false):
-			_select_nearest_morphology_inspector_record()
+		if not _select_nearest_morphology_inspector_record():
+			_morphology_inspector_index = -1
+			_morphology_inspector_record_id = ""
+			_morphology_inspector_state = {}
+			if morphology_inspector_label != null:
+				morphology_inspector_label.text = "VIS4.7 MORPHOLOGY INSPECTOR\nSource binding rejected / no inspectable PH5 record."
 	else:
 		morphology_inspector_visible = false
 		if morphology_inspector_panel != null:
