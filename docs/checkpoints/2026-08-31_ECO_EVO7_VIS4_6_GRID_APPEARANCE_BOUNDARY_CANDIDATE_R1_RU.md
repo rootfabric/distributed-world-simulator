@@ -5,9 +5,9 @@
 Статус:
 
 ~~~text
-VIS4.6 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED
+VIS4.6 R1
+EXACT UBUNTU DOUBLE-GODOT VERIFIED
+CLOSED
 ~~~
 
 ## Frozen executable subject
@@ -254,3 +254,35 @@ ECO.EVO7 VIS4.6 Grid Appearance Boundary candidate: PASS
 
 One exact Ubuntu double-Godot GREEN on the frozen subject is sufficient for
 closure. A separate Windows acceptance gate is not required.
+
+
+## Exact Ubuntu closure evidence
+
+The frozen executable subject above completed exact Ubuntu double-Godot
+verification without modification.
+
+~~~text
+HEAD: 8edc9b9767e8d163b020ac9c7407d385d99bed3b
+TREE: 5493dca15e47c23ca939403a98244fd345b37e8b
+Godot: 4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.5 predecessor: PASS
+VIS4.6 focused: PASS / 796 assertions
+VIS4.6 final marker: PRESENT
+canonical runner exit: 0
+HEAD/TREE unchanged
+tracked worktree clean
+~~~
+
+Durable closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_6_GRID_APPEARANCE_BOUNDARY_UBUNTU_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.6 CLOSED
+VIS4.7 MORPHOLOGY INSPECTOR UNBLOCKED
+~~~
