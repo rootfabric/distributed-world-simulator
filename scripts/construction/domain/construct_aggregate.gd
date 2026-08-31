@@ -44,6 +44,49 @@ func add_part(operation_id: String, base_revision: int, part: Dictionary) -> Dic
 	_commit_operation(operation_id, String(replay.get("fingerprint", "")))
 	return _success({"state_revision": state_revision})
 
+func update_part_pose(
+	operation_id: String,
+	base_revision: int,
+	part_id: String,
+	local_position_m: Array,
+	local_rotation_quaternion: Array
+) -> Dictionary:
+	var payload := {
+		"part_id": part_id,
+		"local_position_m": local_position_m.duplicate(true),
+		"local_rotation_quaternion": local_rotation_quaternion.duplicate(true),
+	}
+	var replay: Dictionary = _begin_operation(operation_id, base_revision, "update_part_pose", payload)
+	if not bool(replay.get("success", false)) or bool(replay.get("replay", false)):
+		return replay
+	if not _parts.has(part_id):
+		return _failure("PART_NOT_FOUND")
+	if local_position_m.size() != 3:
+		return _failure("INVALID_LOCAL_POSITION")
+	for component in local_position_m:
+		if typeof(component) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(component)):
+			return _failure("INVALID_LOCAL_POSITION")
+	if local_rotation_quaternion.size() != 4:
+		return _failure("INVALID_LOCAL_ROTATION")
+	var norm_squared := 0.0
+	for component in local_rotation_quaternion:
+		if typeof(component) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(component)):
+			return _failure("INVALID_LOCAL_ROTATION")
+		norm_squared += float(component) * float(component)
+	if absf(sqrt(norm_squared) - 1.0) > 0.000001:
+		return _failure("LOCAL_ROTATION_NOT_NORMALIZED")
+	var part: Dictionary = _parts[part_id].duplicate(true)
+	part["local_position_m"] = local_position_m.duplicate(true)
+	var metadata: Dictionary = Dictionary(part.get("metadata", {})).duplicate(true)
+	metadata["local_rotation_quaternion"] = local_rotation_quaternion.duplicate(true)
+	part["metadata"] = metadata
+	var validation: Dictionary = PartScript.validate(part)
+	if not bool(validation.get("success", false)):
+		return validation
+	_parts[part_id] = part
+	_commit_operation(operation_id, String(replay.get("fingerprint", "")))
+	return _success({"state_revision": state_revision, "part_id": part_id})
+
 func add_bond(operation_id: String, base_revision: int, bond: Dictionary) -> Dictionary:
 	var replay: Dictionary = _begin_operation(operation_id, base_revision, "add_bond", bond)
 	if not bool(replay.get("success", false)) or bool(replay.get("replay", false)):
