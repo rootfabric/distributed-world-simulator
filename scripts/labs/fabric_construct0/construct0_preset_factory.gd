@@ -10,7 +10,7 @@ const ProjectionCompilerScript = preload("res://scripts/construction/runtime_pro
 const ContactCompiler = preload("res://scripts/research/fabric_bake0/contact_wrench_bake_compiler_v1.gd")
 const ContactRuntime = preload("res://scripts/research/fabric_bake0/contact_wrench_bake_runtime_v1.gd")
 
-const PRESETS: Array[String] = ["TABLE", "BRIDGE", "CART"]
+const PRESETS: Array[String] = ["TABLE", "BRIDGE", "CART", "PLANK"]
 const CONTACT_GRID: int = 21
 const AUTHORITY_HASH := "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
 
@@ -187,6 +187,8 @@ static func _spec(preset: String) -> Dictionary:
 			return _bridge_spec()
 		"CART":
 			return _cart_spec()
+		"PLANK":
+			return _plank_spec()
 		_:
 			return {}
 
@@ -227,6 +229,21 @@ static func _bridge_spec() -> Dictionary:
 		"mu_tangent": 0.66,
 		"mu_rolling": 0.035,
 		"mu_torsion": 0.03,
+	}
+
+static func _plank_spec() -> Dictionary:
+	var parts: Array = [
+		_part("part/construct0/plank/body", "PLATE", "structure", [0.0, 0.16, 0.0], [2.4, 0.20, 0.8], 8.0),
+		_part("part/construct0/plank/left-pad", "BLOCK", "support", [-0.9, 0.055, 0.0], [0.35, 0.11, 0.7], 1.0),
+		_part("part/construct0/plank/right-pad", "BLOCK", "support", [0.9, 0.055, 0.0], [0.35, 0.11, 0.7], 1.0),
+	]
+	return {
+		"parts": parts,
+		"bonds": _star_bonds("plank", "part/construct0/plank/body", parts),
+		"patch_size": [2.4, 0.8],
+		"mu_tangent": 0.70,
+		"mu_rolling": 0.05,
+		"mu_torsion": 0.04,
 	}
 
 static func _cart_spec() -> Dictionary:
