@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.7 CLOSED / VIS4.8 IMPLEMENTED CANDIDATE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.8 CLOSED / NEXT: VIS4.9 PERFORMANCE / LOD  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1655,10 +1655,163 @@ Durable candidate:
 docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_8_DIVERSITY_EVIDENCE_CANDIDATE_R1_RU.md
 ~~~
 
+Ubuntu exact-source verification completed GREEN on the frozen VIS4.8 executable subject.
+
+~~~text
+HEAD:
+32d9401d2ae7beb2a222b926f07ba44ec50dfe40
+
+TREE:
+09feb0705f2ae32f50d5e0e32db048648600e10f
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+VIS4.8 focused:
+PASS / 106 assertions
+
+renderer fidelity:
+PASS
+
+live diversity:
+LIVE_DIVERSITY_SUFFICIENT
+
+runner:
+RC=0
+
+tracked reconstructed tree:
+clean
+~~~
+
 Current qualification:
 
 ~~~text
-VIS4.8 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED YET
+VIS4.8 UBUNTU EXACT-SOURCE GREEN
+VIS4.8 CLOSED
+NEXT: VIS4.9 PERFORMANCE / LOD
 ~~~
+
+
+## VIS4.8 durable closure — 2026-08-31
+
+Canonical executable subject:
+
+~~~text
+HEAD:
+32d9401d2ae7beb2a222b926f07ba44ec50dfe40
+
+TREE:
+09feb0705f2ae32f50d5e0e32db048648600e10f
+~~~
+
+Verification used the project-attached canonical double-Godot archive. Because
+the local execution environment did not contain a DWS checkout, the frozen
+subject was exported through a temporary validation-only GitHub workflow.
+
+Exact provenance:
+
+~~~text
+GitHub workflow run:
+33371467885 / SUCCESS
+
+canonical HEAD/TREE asserted before archive
+ -> immutable git archive
+ -> local extraction
+ -> local git write-tree
+ -> exact canonical TREE reproduced
+ -> RUN_ECO_EVO7_VIS4_8_TESTS.sh
+~~~
+
+Temporary validation PR:
+
+~~~text
+#393
+CLOSED WITHOUT MERGE
+~~~
+
+Local canonical run:
+
+~~~text
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+full predecessor chain:
+PASS
+
+VIS4.8:
+PASS / 106 assertions
+
+VIS4.8 RENDERER FIDELITY:
+PASS
+
+VIS4.8 LIVE DIVERSITY:
+LIVE_DIVERSITY_SUFFICIENT
+
+final candidate marker:
+PRESENT
+
+runner:
+RC=0
+
+tracked tree:
+clean
+~~~
+
+The checkpoint therefore proves both independent claims:
+
+~~~text
+renderer can faithfully express controlled morphology differences
+AND
+the actual published generation-one population contains sufficient
+quantitative morphology diversity under the fixed VIS4.8 R1 evidence thresholds
+~~~
+
+The anti-cheat boundary remains accepted:
+
+~~~text
+lineage != morphology diversity
+seed != morphology diversity
+VIS4.5 yaw != morphology diversity
+VIS4.6 visual scatter != morphology diversity
+render identity != morphology diversity
+~~~
+
+No random TREE/BUSH/GRASS forms or taxonomy classes were added.
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_8_DIVERSITY_EVIDENCE_UBUNTU_EXACT_SOURCE_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+VIS4.8 is CLOSED.
+
+The next morphology checkpoint is now unblocked:
+
+~~~text
+VIS4.9 — Performance / LOD
+~~~
+
+VIS4.9 scope remains local to the morphology presentation stack:
+
+~~~text
+visible plant counts
+PH5 tier counts
+GrowthGraph / bridge / materialization timing
+cache hit/miss evidence
+branch primitive counts
+foliage instance counts
+draw-call / render workload proxies
+frame time / FPS evidence
+LOD transition stability
+~~~
+
+VIS4.9 may optimize VIS4-local PH5 materialization and LOD behavior, but it does
+not replace PERF2.CONV. Final PLAY1 performance acceptance still belongs to the
+combined STREAM1 + VIS4 convergence gate.
