@@ -4,7 +4,7 @@ on:
     branches: [research/fabric-bake0-2-e-commit-helper-r1]
     paths:
       - ".github/workflows/fabric-bake-b0-2-e-commit-helper.yml"
-      - ".github/payloads/fabric-bake-b0-2-e-exact.tar.gz"
+      - ".github/payloads/b02e.*.b64"
 permissions:
   contents: write
 jobs:
@@ -15,11 +15,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Materialize and commit exact tested B0.2-E payload
+      - name: Reconstruct and commit exact tested B0.2-E payload
         shell: bash
         run: |
           set -euo pipefail
-          cp .github/payloads/fabric-bake-b0-2-e-exact.tar.gz /tmp/b02e.tar.gz
+          cat .github/payloads/b02e.00.b64 .github/payloads/b02e.01.b64 .github/payloads/b02e.02.b64 .github/payloads/b02e.03.b64 | base64 -d > /tmp/b02e.tar.gz
           echo "4a7bd287c7f7feff1913a526c56313f6c765270822230e528e18e93c2be2ee34  /tmp/b02e.tar.gz" | sha256sum -c -
           git fetch origin research/fabric-bake0-2-e-topology-split-rebake-r1
           git checkout -B research/fabric-bake0-2-e-topology-split-rebake-r1 origin/research/fabric-bake0-2-e-topology-split-rebake-r1
@@ -34,7 +34,7 @@ jobs:
           test "$(git hash-object tests/research/fabric_bake0/fabric_bake_b0_2_e_playground.gd)" = "b668e92852ae9db061a0819bf9ab880123f5b6fa"
           git config user.name "rootfabric-bake-bot"
           git config user.email "rootfabric-bake-bot@users.noreply.github.com"
-          git add --             RUN_FABRIC_BAKE_B0_2_E_TESTS.sh             scripts/research/fabric_bake0/structural_topology_rebake_transaction_v1.gd             scripts/research/fabric_bake0/structural_topology_rebake_compiler_v1.gd             scripts/research/fabric_bake0/structural_topology_rebake_runtime_v1.gd             tests/research/fabric_bake0/fabric_bake_b0_2_e_fixture.gd             tests/research/fabric_bake0/fabric_bake_b0_2_e_acceptance.gd             tests/research/fabric_bake0/fabric_bake_b0_2_e_playground.gd
+          git add -- RUN_FABRIC_BAKE_B0_2_E_TESTS.sh scripts/research/fabric_bake0/structural_topology_rebake_transaction_v1.gd scripts/research/fabric_bake0/structural_topology_rebake_compiler_v1.gd scripts/research/fabric_bake0/structural_topology_rebake_runtime_v1.gd tests/research/fabric_bake0/fabric_bake_b0_2_e_fixture.gd tests/research/fabric_bake0/fabric_bake_b0_2_e_acceptance.gd tests/research/fabric_bake0/fabric_bake_b0_2_e_playground.gd
           git diff --cached --check
           test "$(git diff --cached --name-only | wc -l)" -eq 7
           git commit -m "feat(fabric-bake): implement B0.2-E topology split and rebake"
