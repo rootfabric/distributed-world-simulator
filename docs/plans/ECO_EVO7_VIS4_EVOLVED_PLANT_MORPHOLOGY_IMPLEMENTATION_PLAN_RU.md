@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.8 CLOSED / VIS4.9 IMPLEMENTED CANDIDATE / EXACT UBUNTU GREEN  
+Статус: VIS4 MORPHOLOGY LINE COMPLETE / VIS4.9 CLOSED / NEXT: PERF2.CONV STREAM1 + VIS4 CONVERGENCE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1948,3 +1948,58 @@ EXACT UBUNTU DOUBLE-GODOT GREEN
 FULL CANONICAL RUNNER GREEN
 READY TO CLOSE
 ~~~
+
+
+## VIS4.9 durable closure — 2026-08-31
+
+Canonical executable subject:
+
+~~~text
+HEAD:
+ab44617d8961add81a6c9f245c99d0b68eaeab52
+
+TREE:
+9d543a3db4f54a676e9f25152785c36a72c56a30
+~~~
+
+Exact Ubuntu verification used the project-attached canonical double-Godot:
+
+~~~text
+4.7.1.stable.double.custom_build.a13da4feb
+SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+~~~
+
+Canonical runner result:
+
+~~~text
+RUN_ECO_EVO7_VIS4_9_TESTS.sh
+RC=0
+
+VIS4.9 focused:
+PASS / 116 assertions
+
+final candidate marker:
+PRESENT
+
+tracked source tree:
+clean
+~~~
+
+VIS4.9 closure therefore satisfies all checkpoint requirements.
+
+~~~text
+VIS4.9 CLOSED
+VIS4 MORPHOLOGY LINE COMPLETE THROUGH VIS4.9
+~~~
+
+The next project-level step is not another VIS4.x checkpoint.
+
+~~~text
+NEXT:
+PERF2.CONV
+STREAM1 + VIS4 convergence
+~~~
+
+This future gate must evaluate the combined PLAY1 workload. VIS4.9 local
+wall-clock/FPS data remain diagnostic-only and do not replace PERF2.CONV.
