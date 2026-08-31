@@ -1004,3 +1004,66 @@ deterministic replay
 ```
 
 0.17-D is the closure-decision slice. It must show that temporal event identity, coupled normal impact and generalized rotational/tangential contact behavior coexist in one trajectory rather than only in isolated probes.
+
+## 17. 0.17-D — Unified Multi-Impact Wrench Trajectory
+
+**Exact-tested executable HEAD:** `643b4bdc5d33756819869c3faacc1dccf1251a1f`  
+**TREE:** `3d531be386502c34ad7c30da8a00c5df8f152906`.
+
+Current bounded status: `IMPLEMENTED CANDIDATE / EXACT LINUX DOUBLE PASS / 157/157 PASS / REMOTE BYTE IDENTITY 6/6 PASS / PROJECT CONTROL RECHECK / FABRIC0.17 NOT CLOSED`.
+
+### 17.1 Integration finding: one-pass B → C is invalid
+
+A naive coupled-normal-impact followed once by generalized wrench reopens the normal restitution/complementarity law through shared rigid-body coupling. Measured reopened residuals were `0.3411080670192037` and `0.3373959971736645` for the two event groups.
+
+D therefore introduces `Fabric0ImpactWrenchFixedPointV1`. Every outer iteration starts from the same immutable pre-impact state, applies the current normal impulses, solves the graph-wide generalized wrench, measures the full-post normal law, then re-solves the normal LCP with the wrench cross-bias. Stopping is based on the physical full-post normal residual, not only on small `lambda/z` change.
+
+Accepted residual limit is `5e-10`. Reference accepted residuals are `4.4365353630363876e-10` and `2.2960234509547496e-10`.
+
+### 17.2 Graph-wide generalized wrench
+
+`Fabric0GeneralizedContactWrenchGraphV1` assembles all 5DOF patch coordinates of one simultaneous event set in one shared-body effective matrix. The reference cross-patch coupling is approximately `3.33333333333333` for the first event and `3.44827586206897` for the second, so the acceptance stand is not block-diagonal.
+
+### 17.3 Unified two-event trajectory
+
+The six-body trajectory contains two causally ordered simultaneous groups: first `[C|L,C|R]` near `0.5`, then `[P|Q,Q|S]` near `0.5002`. Each group materializes two four-point manifolds, therefore eight normal rows, and executes a recoupled normal-impact + generalized-wrench jump.
+
+At `1e-11` localization the reference event times are `0.50000000000255` and `0.50020000000273`. Maximum tangential impulses are approximately `0.328386` and `0.341175`; explicit rolling/torsional moment impulse magnitude is nonzero (about `0.004823` and `0.007338`). The torsional channel is supported by C but is not itself active in this D trajectory.
+
+Both impacts separate immediately after restitution (`persistent_after=false`), so this trajectory does not claim finite-duration persistent-contact wrench-mode evolution.
+
+At coarse `1e-3`, A aliases both physical instants into `[C|L,C|R,P|Q,Q|S]`; D fails closed with `EVENT_SET_NOT_REFINED_ENOUGH_FOR_TRAJECTORY` before executing any jump.
+
+### 17.4 Refinement, conservation, determinism
+
+Whole-state error against the `1e-11` reference strictly decreases: `7.492319276325432e-6 → 5.04126098643809e-8 → 5.950968606782681e-10` for `1e-5,1e-7,1e-9`.
+
+Maximum event-time error strictly decreases: `2.8655978531189064e-6 → 1.9476065094004014e-8 → 2.1209412004452588e-10`.
+
+Reference energy is `9.66625 → 2.07687223207214`; whole-trajectory energy-ledger error is `1.7763568394002505e-15`. Linear and angular momentum errors are zero.
+
+Same-tolerance replay, reverse caller body order, and reverse event-member order produce exact-identical state, event times and signature.
+
+### 17.5 Exact gate
+
+Exact Godot: `4.7.1.stable.double.custom_build.a13da4feb`.
+
+`D 157/157`, `C 76/76`, `B 63/63`, `A 77/77`, `0.16 S3 101/101`, `S2 102/102`, `S1 110/110`; editor parse/compile `CLEAN`.
+
+Remote executable boundary: D `6/6 exact`; C/B/A and 0.16 S3 predecessor bytes preserved.
+
+Exact D blobs: graph `b309a9d47bfec9128206fb6d93a54f8fbdea6cd6`; fixed-point `438722f3af3db2284e15ff707380ebb2730dc831`; trajectory `3afa66115c59a1d8e88ff289d91eed3cbd584319`; experiments `3bb52758b02a22709335f5554491ee7a77a09651`; acceptance `f5565a183e869524ed607f83006566d805a3b1b0`; playground `2f45649b09ffa66843957cec604b3f4e59d7fd75`.
+
+### 17.6 Project Control external blocker record
+
+First Project Control on exact D executable HEAD: run `#1836`, id `33357807534`, `FAILURE` at `architecture and ownership passport compatibility regression`.
+
+The D delta from the previously successful C evidence HEAD is exactly six added FABRIC research/test files. It changes no G/ECO/Matter/control-registry file. The failing harness tests instead report repository-wide RED passport/dependency drift in `G` and `ECO`, including Matter generation/query/storage paths. This is recorded as `EXTERNAL_CROSS_REF_CONTROL_DRIFT` and the same exact D HEAD is being rechecked.
+
+Until Project Control is green, or an explicit project-policy external-blocker exception exists, FABRIC0.17 is not declared CLOSED.
+
+## 18. D non-claims and closure boundary
+
+D does not claim finite-duration persistent-contact wrench-mode evolution, torsional activation in the D trajectory, exact pressure-distribution wrench cone, globally unique arbitrary rigid multi-impact solution, universal monolithic Signorini-Coulomb impact+wrench MCP, production sparse backend, or production acceptance.
+
+The bounded A+B+C+D physical target is executable and exact-tested; final research-candidate closure remains gated by repository control.
