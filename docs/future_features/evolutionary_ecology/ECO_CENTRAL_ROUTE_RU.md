@@ -14,18 +14,20 @@ Current performance route:
 STREAM1 ACCEPTED
 → PERF2.0 Measurement Contract       ✅ ACCEPTED
 → PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
-→ PERF2.2 Working-set / Memory        ← CURRENT / R1 IMPLEMENTATION CANDIDATE
-→ PERF2.3 Simulation Scaling
+→ PERF2.2 Working-set / Memory        ✅ ACCEPTED Ubuntu c6bef3d
+→ PERF2.3 Simulation Scaling          ← CURRENT / AUTHORIZED
 → PERF2.4 Runtime Optimization
 ```
 
-PERF2.0 remains the frozen measurement contract. PERF2.1 R2 is accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`; PERF2.2 Working-set / Memory is now the active simulation-side performance checkpoint.
+PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`. PERF2.2 R1 is accepted on exact local Ubuntu verification of `c6bef3d6c20d7b468f88f9aaabade2fe809b63e6`; PERF2.3 Simulation Scaling is now the active simulation-side performance checkpoint.
 
 **PERF2.1 R2 profiling matrix:** `SERIAL_REFERENCE + STREAM1 chunks 1/7/64`, each with `3 repetitions × (2 warmup + 12 measured generations)`. Required closure: `12 samples / 32 summaries / 3 diagnostic comparisons / 9 of 9 exact canonical pairs`. No optimization claim is allowed at PERF2.1.
 
 **Runtime verification policy R18:** для OS-neutral ECO GDScript достаточно одного fresh exact local PASS на **Ubuntu OR Windows**. Второй OS-run — optional/non-blocking cross-platform evidence. Windows CI не является обязательным blocker для PERF2.1. Policy: `config/ecology/eco-runtime-verification-policy.v1.json`.
 
 **PERF2.2 R1 semantics:** structural working-set is reported as a deterministic record-pressure upper-bound proxy `max_parent_chunk + max_candidate_chunk`, explicitly not bytes. `engine_static_bytes` is diagnostic process-local allocator evidence; `engine_static_peak_bytes` is a process-lifetime high-water mark and is not cross-config peak-memory proof. PERF2.2 allows a structural bound claim but forbids memory-reduction and optimization claims.
+
+**PERF2.2 accepted result:** exact Ubuntu PASS on `c6bef3d...`; deterministic record-proxy reduction is `108x` for chunk1, `15.43x` for chunk7 and `1.69x` for chunk64 with 9/9 canonical parity. Allocator terminal memory stayed effectively flat and engine peak was identical across rows, confirming that the process-lifetime high-water metric is diagnostic-only. PERF2.3 must therefore study scaling of the structural-memory/time tradeoff rather than assume a byte-memory win.
 
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 
@@ -44,6 +46,7 @@ both accepted
 STREAM1 acceptance checkpoint: `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md`.
 PERF2.0 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md`.
 PERF2.1 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_ACCEPTED_RU.md`.
+PERF2.2 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_2_R1_ACCEPTED_RU.md`.
 Live machine roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`.
 
 Текущий live machine-roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. PERF1 измеряет стоимость generation pipeline без изменения ecology truth; следующий возможный optimization checkpoint — `PERF1-PAR0`, только после exact serial/parallel determinism gate.
