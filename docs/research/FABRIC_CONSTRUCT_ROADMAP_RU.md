@@ -99,10 +99,18 @@ CONSTRUCT0              authorized now
 ### C0.0 — architecture / branch freeze
 Complete when branch, predecessor identity, invariants and acceptance boundary are documented.
 
-### C0.1 — tangible observatory — IMPLEMENTED / VERIFICATION PENDING
+### C0.1 — tangible observatory — CLOSED / EXACT DOUBLE PASS
 Goal: make a compound Construction and B0.3 reduction visible.
 
-Implementation now includes TABLE / BRIDGE / CART plus a PLANK playback preset, canonical runtime projection and direct B0.3 contact/wrench compilation. Closure still requires exact full-worktree execution and Project Control.
+Implementation includes TABLE / BRIDGE / CART plus a PLANK playback preset, canonical runtime projection and direct B0.3 contact/wrench compilation.
+
+Verified exact subject:
+`837c46940acddbd841e7878dcfbfb68c0d5ac259`.
+
+Acceptance:
+`58/58 PASS`.
+Project Control:
+`SUCCESS`.
 
 Visible presets:
 - TABLE;
@@ -121,7 +129,7 @@ Must show:
 
 C0.1 explicitly does not claim time integration.
 
-### C0.2 — FABRIC-driven playback — IMPLEMENTED / VERIFICATION PENDING
+### C0.2 — FABRIC-driven playback — CLOSED / EXACT DOUBLE PASS
 Goal: Godot becomes a viewer for closed FABRIC0.18 dynamics.
 
 Implemented playback directly invokes `fabric0_persistent_contact_trajectory_v1.gd`. The Godot pose is a deterministic display projection of FABRIC event times and body velocities; Godot physics state is never fed back into FABRIC. Controls: PLAY / PAUSE / STEP EVENT / RESET and 0.5× / 1× / 2×.
@@ -136,7 +144,7 @@ Reference trajectories:
 Rule:
 `FABRIC state → Godot transform`, never `Godot RigidBody state → FABRIC truth`.
 
-### C0.3 — canonical construction editor — IMPLEMENTED / VERIFICATION PENDING
+### C0.3 — canonical construction editor — CLOSED / EXACT DOUBLE PASS
 The lab now has a BUILD IT tab backed by `ConstructAggregate`. A generic `update_part_pose` operation was added to the canonical aggregate with revision/replay/stale-write semantics.
 
 User can:
@@ -154,7 +162,17 @@ Acceptance runners:
 - `RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh`;
 - `RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.sh`.
 
-The three implementation slices are not declared CLOSED until the exact chain and Project Control execute on a complete repository worktree.
+Exact fresh detached verification completed on the pinned double Godot build:
+
+```text
+C0.1 58/58 PASS
+C0.2 33/33 PASS
+C0.3 30/30 PASS
+CHAIN exit 0
+Project Control SUCCESS
+```
+
+The next active tangible checkpoint is `CONSTRUCT0.PLAY1 PHYSICAL TOYBOX`.
 
 ### CONSTRUCT0.PLAY1 — PHYSICAL TOYBOX
 Goal: make the constructor genuinely playable with a small generic vocabulary rather than a catalogue of device-specific objects.
