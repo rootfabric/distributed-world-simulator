@@ -5,9 +5,9 @@
 Статус:
 
 ~~~text
-VIS4.9 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT GREEN
-READY TO CLOSE
+VIS4.9 R1
+UBUNTU EXACT-SOURCE DOUBLE-GODOT VERIFIED
+CLOSED
 ~~~
 
 ## Frozen executable subject
@@ -295,4 +295,47 @@ FOCUSED 116/116
 TRACKED TREE CLEAN
 
 VIS4.9 READY TO CLOSE
+~~~
+
+
+## Closure status
+
+VIS4.9 is closed on the frozen executable subject:
+
+~~~text
+HEAD:
+ab44617d8961add81a6c9f245c99d0b68eaeab52
+
+TREE:
+9d543a3db4f54a676e9f25152785c36a72c56a30
+~~~
+
+Accepted evidence:
+
+~~~text
+full canonical runner:
+RC=0
+
+VIS4.9 focused:
+PASS / 116 assertions
+
+final candidate marker:
+PRESENT
+
+tracked source tree:
+clean
+~~~
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_9_PERFORMANCE_LOD_UBUNTU_EXACT_SOURCE_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.9 CLOSED
+VIS4 MORPHOLOGY LINE COMPLETE THROUGH VIS4.9
+NEXT: PERF2.CONV / STREAM1 + VIS4 CONVERGENCE
 ~~~
