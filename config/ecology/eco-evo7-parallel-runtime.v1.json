@@ -139,7 +139,7 @@
   "perf2_scaling": {
     "checkpoint": "ECO.EVO7/PERF2.3",
     "revision": "ECO.EVO7-PERF2.3-R1",
-    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "status": "ACCEPTED_EXACT_UBUNTU",
     "predecessor_control_tip": "922b8b377faf19e36e58cf111c5dc917e83e09e1",
     "scale_axis": "GENERATION_AGE_PRECONDITION",
     "precondition_generations": [
@@ -161,6 +161,31 @@
     "crossover_classification": "HOST_LOCAL_DIAGNOSTIC_ONLY",
     "memory_reduction_claim": false,
     "optimization_claim": false,
-    "local_runner": "RUN_ECO_EVO7_PERF2_3_TESTS.sh"
+    "local_runner": "RUN_ECO_EVO7_PERF2_3_TESTS.sh",
+    "accepted_head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+    "accepted_tree": "f97deaa1c3e8d31e1e5fc71394b7528426b1f585",
+    "merge_commit": "49df8196a59c57c35ba34dd8e0331cb420c894a0",
+    "os": "UBUNTU",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "host_fingerprint": "f991491a82661a9fb4acdde311eb58ec9c5e105e9980475986c91b0de91e1042",
+    "perf2_3_assertions": 1079,
+    "report_hash": "385415ed6db1328c7fbc3fefe737d431c801ac0feb5db539b343825cc4906a97",
+    "exact_pairs": "27/27",
+    "crossover_observed": false,
+    "windows_required": false,
+    "perf2_4_authorized": true
+  },
+  "perf2_optimization": {
+    "checkpoint": "ECO.EVO7/PERF2.4",
+    "status": "AUTHORIZED_CURRENT",
+    "predecessor_head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+    "accepted_baseline": {
+      "no_crossover": true,
+      "faster_side_all_points": "SERIAL_REFERENCE",
+      "exact_pairs": "27/27",
+      "structural_bound": "STREAM1_BOUNDED"
+    },
+    "runtime_changes_allowed": true,
+    "optimization_claim_requires_new_exact_evidence": true
   }
 }
