@@ -11,6 +11,7 @@ on:
         options:
           - current
           - perf2.0
+          - perf2.1
           - accepted
           - full
           - p4.4
