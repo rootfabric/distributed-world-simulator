@@ -449,3 +449,37 @@ Successful PERF2.4 closes the PERF2.SIM lane.
 
 The next route transition is PERF2.CONV, gated separately by the accepted VIS4 /
 PLAY0.MORPH presentation lane.
+
+
+## Project Control candidate status
+
+Project Control run:
+
+```text
+33372208170
+```
+
+Subject-local control stages:
+
+```text
+exact checkout                         PASS
+control candidate syntax/generation    PASS
+checkpoint-session regression          PASS
+```
+
+The global architecture/ownership compatibility stage remains RED because of concurrent
+project-wide drift outside PERF2.4, including the known Matter runtime files and
+`config/control/project-program-registry.v1.json`.
+
+Classification:
+
+```text
+GLOBAL PROJECT CONTROL
+RED — EXTERNAL CONCURRENT DRIFT
+
+PERF2.4 SUBJECT-LOCAL PREFLIGHT
+PASS
+```
+
+This does not relabel the global RED as green and does not repair unrelated Matter/main
+ownership drift from the ECO optimization branch.
