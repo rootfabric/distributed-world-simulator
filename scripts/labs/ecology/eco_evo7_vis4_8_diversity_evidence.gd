@@ -87,7 +87,9 @@ static func build(
 			var value := _metric_value(descriptor, spec)
 			if not is_finite(value):
 				return {}
-			Array(metric_values[name]).append(value)
+			var bucket: Array = metric_values[name]
+			bucket.append(value)
+			metric_values[name] = bucket
 			var bin_width := float(spec["bin"])
 			var quantized := int(round(value / bin_width))
 			signature_tokens.append("%s=%d" % [name, quantized])
