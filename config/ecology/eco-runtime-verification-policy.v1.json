@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.ecology.runtime_verification_policy.v1",
+  "version": "1.0.0",
+  "revision": "ECO-RUNTIME-VERIFY-2026-08-31-R1",
+  "status": "ACTIVE",
+  "default_policy": {
+    "os_neutral_runtime": {
+      "required_local_exact_passes": 1,
+      "accepted_operating_systems": [
+        "UBUNTU",
+        "WINDOWS"
+      ],
+      "either_os_satisfies_runtime_gate": true,
+      "dual_os_required": false,
+      "second_os_evidence": "OPTIONAL_NON_BLOCKING"
+    },
+    "required_evidence": [
+      "EXACT_HEAD",
+      "EXACT_TREE",
+      "REQUIRED_RUNTIME_IDENTITY",
+      "VERIFIER_CONTROLLED_WORKTREE",
+      "FOCUSED_ACCEPTANCE_PASS",
+      "REQUIRED_REGRESSION_PASS",
+      "FINAL_HEAD_TREE_UNCHANGED",
+      "TRACKED_WORKTREE_CLEAN"
+    ],
+    "governance_dimensions_not_replaced": [
+      "PROJECT_CONTROL",
+      "OWNERSHIP",
+      "DEPENDENCY_DRIFT",
+      "ARCHITECTURE_GATES"
+    ]
+  },
+  "os_specific_exception": {
+    "require_affected_platform_execution": true,
+    "examples": [
+      "POWERSHELL_OR_BASH_SPECIFIC_BEHAVIOR",
+      "FILESYSTEM_OR_PATH_SEMANTICS",
+      "NATIVE_LIBRARY_OR_DRIVER",
+      "OS_SPECIFIC_PROCESS_OR_IPC",
+      "PLATFORM_RENDERER_INPUT_NETWORK_INTEGRATION",
+      "PACKAGING_INSTALL_SERVICE_INTEGRATION",
+      "OS_SPECIFIC_EXTERNAL_TOOLING"
+    ]
+  },
+  "historical_policy": "DO_NOT_REWRITE_ALREADY_ACCEPTED_CHECKPOINTS"
+}

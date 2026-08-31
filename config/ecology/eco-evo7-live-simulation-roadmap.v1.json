@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R16",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R18",
   "mode": "RESEARCH_SHADOW_ONLY",
   "current_checkpoint": "ECO.EVO7/PERF2.1",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
@@ -117,8 +117,8 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_1_STREAM1_GENERATION_PROFILING",
-      "detail": "PERF2.0 measurement contract is accepted. Simulation-side lane advances to PERF2.1 STREAM1 Generation Profiling; VIS4/PLAY0.MORPH remains independent until PERF2.CONV."
+      "status": "IN_PROGRESS_PERF2_1_R2_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "detail": "PERF2.0 remains accepted/frozen. PERF2.1 R2 requires one fresh exact local runtime execution on either Ubuntu or Windows under ECO-RUNTIME-VERIFY-2026-08-31-R1. Dual-OS verification is optional for OS-neutral code."
     },
     {
       "id": "PERF2.0",
@@ -132,8 +132,12 @@
     {
       "id": "PERF2.1",
       "name": "STREAM1 Generation Profiling",
-      "status": "NEXT_AUTHORIZED_AFTER_PERF2_0_ACCEPTANCE",
-      "detail": "Profile accepted STREAM1 generation execution under frozen PERF2.0 workload/comparison contract. No optimization claim until exact canonical parity and measurement-contract comparability hold."
+      "status": "R2_IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "detail": "Measurement-only matrix remains unchanged. Acceptance runtime gate is one fresh exact local PASS on Ubuntu OR Windows; second-OS evidence is optional/non-blocking for this OS-neutral GDScript path.",
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R2_RU.md",
+      "windows_mission": "OPTIONAL_CROSS_PLATFORM_EVIDENCE_ONLY",
+      "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
+      "optional_windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_WINDOWS_VERIFICATION_MISSION_RU.md"
     },
     {
       "id": "PERF2.2",
@@ -234,8 +238,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.1",
-    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.1_ONE_EXACT_LOCAL_PASS",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_R2_AWAITING_ONE_LOCAL_OS_PASS_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -327,7 +331,7 @@
     "lane": "PERF2.SIM",
     "current_step": "PERF2.1",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "PERF2_0_ACCEPTED_PERF2_1_AUTHORIZED",
+    "status": "PERF2_0_ACCEPTED_PERF2_1_R2_AWAITING_ONE_EXACT_LOCAL_PASS",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
@@ -348,6 +352,70 @@
       "perf2_0_assertions": 62,
       "transitive": "PASS",
       "tracked_worktree_clean": true
-    }
+    },
+    "perf2_1": {
+      "name": "STREAM1 Generation Profiling",
+      "revision": "ECO.EVO7-PERF2.1-R2",
+      "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "accepted_perf2_0_control_base": "07bffc0e7f30bac4479f1b7e53dee3fee3a818f6",
+      "accepted_perf2_0_head": "5994598d317a55ddae2954f943021878a279afc9",
+      "measurement_contract_revision": "ECO.EVO7-PERF2.0-R1",
+      "measurement_contract_git_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
+      "measurement_contract_mutation_allowed": false,
+      "campaign": {
+        "recipes": [
+          "MIXED_PHYSICAL_HETEROGENEITY"
+        ],
+        "execution_configs": [
+          "SERIAL_REFERENCE",
+          "STREAM1_CHUNK_1",
+          "STREAM1_CHUNK_7",
+          "STREAM1_CHUNK_64"
+        ],
+        "warmup_generations": 2,
+        "measured_generations": 12,
+        "repetitions": 3,
+        "total_generation_advances": 168,
+        "samples": 12,
+        "exact_cross_configuration_pairs": "9/9",
+        "summary_rows": 32,
+        "comparison_rows": 3
+      },
+      "context_identity": {
+        "fields": [
+          "planet_source_kind",
+          "world_seed",
+          "competition_enabled",
+          "grid_size",
+          "cell_size_m"
+        ],
+        "hash": "RUNTIME_COMPUTED_CAMPAIGN_CONTEXT_SHA256",
+        "drift_policy": "FAIL_CLOSED"
+      },
+      "timing_semantics": {
+        "required_timings": "MEAN_PER_MEASURED_GENERATION",
+        "measured_window_wall": "metrics.window.total_wall_ms"
+      },
+      "speedup_claim_allowed": false,
+      "optimization_changes_allowed": false,
+      "runtime_biology_changes": false,
+      "report_artifact": "artifacts/perf2/perf2-1-generation-profile-r2.json",
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R2_RU.md",
+      "canonical_entrypoint": "RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.1",
+      "transitive_runner": "RUN_ECO_EVO7_PERF2_1_TESTS.ps1",
+      "windows_mission": "OPTIONAL_CROSS_PLATFORM_EVIDENCE_ONLY",
+      "acceptance_runtime_gate": {
+        "required_exact_local_passes": 1,
+        "accepted_os": [
+          "UBUNTU",
+          "WINDOWS"
+        ],
+        "dual_os_required": false,
+        "second_os": "OPTIONAL_NON_BLOCKING",
+        "os_specific_scope": false
+      },
+      "optional_windows_mission": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_WINDOWS_VERIFICATION_MISSION_RU.md"
+    },
+    "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json"
   }
 }
