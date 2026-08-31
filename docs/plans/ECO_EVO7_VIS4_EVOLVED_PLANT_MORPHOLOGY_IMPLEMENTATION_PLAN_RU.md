@@ -793,3 +793,30 @@ docs/plans/ECO_EVO7_VIS4_4_PLAY0_MORPH_PREFLIGHT_RU.md
 ~~~
 
 VIS4.4 runtime remains blocked until VIS4.3 exact Windows GREEN.
+
+
+## VIS4.3 Ubuntu exact pre-verification — GREEN
+
+Frozen executable subject:
+
+~~~text
+HEAD: b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+TREE: 920454da5bb41959680e3309c690f4ef399f3e6d
+~~~
+
+Ubuntu exact pre-verification passed with the canonical double Godot
+`4.7.1.stable.double.custom_build.a13da4feb` and the verified Linux binary
+SHA-256 `bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7`.
+
+All canonical VIS4.2 -> PH5 -> VIS4.3 regressions passed; the final VIS4.3 focused
+acceptance reported 752 assertions and the canonical PASS marker. HEAD and TREE
+remained unchanged and tracked status remained clean.
+
+This is pre-verification only:
+
+~~~text
+VIS4.3 UBUNTU EXACT PRE-VERIFICATION GREEN
+VIS4.3 WINDOWS EXACT VERIFICATION REQUIRED
+VIS4.3 NOT CLOSED
+VIS4.4 PLAY0.MORPH RUNTIME BLOCKED
+~~~
