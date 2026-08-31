@@ -1,0 +1,91 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+  "intent": "Close P7.2 only: integrate one bounded body-fixed lunar Matter bubble into the accepted Moon runtime using the existing MW4-MW6 Matter truth, while physically excluding legacy geometry/collision from the same bounded region and preserving legacy behavior outside or when the feature is disabled.",
+  "root_cause_or_reason": "The accepted Moon runtime rendered/collided only through legacy terrain while Matter foundations were asteroid-sampler-bound. P7.2 required a backward-compatible procedural sampler seam plus one bounded lunar Matter composition. Initial circular legacy masking was insufficient because Matter owns a box-shaped body-fixed root and recentered/worker-generated legacy caps could overlap it; the final repair clips legacy triangles against the full body-fixed Matter AABB with 0.02 m clearance.",
+  "changed_surfaces": [
+    "RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.ps1",
+    "RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.sh",
+    "scripts/app/lunar_app.gd",
+    "scripts/simulation/matter/generation/moon_geology_sampler.gd",
+    "scripts/simulation/matter/generation/moon_surface_feature_catalog.gd",
+    "scripts/simulation/matter/mutation/matter_excavation_service.gd",
+    "scripts/simulation/matter/query/matter_continuous_query_service.gd",
+    "scripts/simulation/matter/storage/matter_brick_materializer.gd",
+    "scripts/world/matter/legacy_moon_matter_seam_clipper.gd",
+    "scripts/world/matter/legacy_moon_surface_adapter.gd",
+    "scripts/world/matter/lunar_matter_bubble.gd",
+    "scripts/world/matter/lunar_matter_bubble_presenter.gd",
+    "scripts/world/matter/lunar_matter_bubble_runtime.gd",
+    "scripts/world/terrain/procedural_moon_terrain.gd",
+    "scripts/world/terrain/streaming/terrain_streaming_manager.gd",
+    "tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd",
+    "tests/runtime/test_v0_p7_2_lunar_surface_seam.gd"
+  ],
+  "canonical_owner": "Canonical Matter state/mutation remains the existing Matter foundation: MW4 SparseStore/excavation/journal owns mutation, MW5 owns persistence, MW6 owns network authority/replication. P7.2 adapters/presenters own no canonical state. Legacy Moon remains presentation/collision outside the bounded Matter root.",
+  "entry_points": [
+    "LunarApp feature-gated P7.2 activation/disable API",
+    "LunarMatterBubbleRuntime.configure(moon_world, data)",
+    "LunarMatterBubble.create_excavation_request()/execute()",
+    "ProceduralMoonTerrain.set_matter_surface_adapter(adapter)",
+    "TerrainStreamingManager request construction with immutable matter_exclusion_bounds"
+  ],
+  "callers": [
+    "LunarApp production bootstrap when p7_matter_bubble_enabled is true",
+    "existing Moon terrain local-cap and streaming rebuild paths",
+    "P7.1 authorized Tool→MW4 command path for bounded mutation",
+    "P7.2 exact runtime product/seam tests"
+  ],
+  "callees": [
+    "existing MatterBrickMaterializer with optional procedural_sampler injection",
+    "existing MatterContinuousQueryService with optional procedural_sampler injection",
+    "existing MatterExcavationService/MW4 with optional procedural_sampler injection",
+    "existing SparseStore, Matter mutation journal and receiver",
+    "existing Matter tetrahedral mesher and mesh resource factory",
+    "legacy Moon terrain mesh/collision construction using the same clipped local mesh"
+  ],
+  "sibling_surfaces_checked": [
+    "default fixed_seed_asteroid_generator behavior remains default without sampler injection",
+    "Moon identity body/moon and body/moon/fixed; deterministic seed 20260724",
+    "inside root MATTER / outside root LEGACY; mutation cannot escape root",
+    "complete body-fixed AABB legacy geometry/collision clipping replaces circular mask",
+    "crossing triangles with all source vertices outside box are partitioned; outside fragments preserved",
+    "fully Matter-owned legacy triangles are removed",
+    "off-center/recentered local caps use same body-fixed exclusion",
+    "streaming-worker receives immutable exclusion bounds and uses same clipper",
+    "adapter change cancels active streaming work and invalidates stale unmasked surface cache",
+    "Matter presentation/collision share same Matter mesh",
+    "feature disable restores legacy-only presentation/collision without deleting Matter snapshots",
+    "P7.1 authority 83/83 and Tool→MW4 30/30 remain green",
+    "MW4 187, MW5 142 and MW6 130 remain green"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "P7.2 adds deterministic Moon sampler/catalog, bounded lunar Matter composition/runtime/presenter, body-fixed legacy seam clipping, feature-gated LunarApp integration, and exact runtime tests. Three Matter services gain only optional procedural_sampler injection; default asteroid sampler and Matter DTO/commit/replay/persistence/authority contracts remain unchanged. Final runtime HEAD cc98bee7109118e4aecab6df5a6f112edab4d35c / TREE c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd.",
+  "remaining_risks": [
+    "Fresh independent exact-head P7.2 Reviewer verdict pending; Implementer cannot self-accept.",
+    "Independent Verifier blocked until Reviewer PASS.",
+    "RUNTIME_FEATURE_MERGE is an explicit human gate; PR #350 remains draft and unmerged.",
+    "P7.3-P7.7 remain open under the same P7 checkpoint.",
+    "Whole-P7 FULL_WORLD_CORE_REGRESSION_PASS and checkpoint-level Reviewer/Verifier/Director acceptance remain pending."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Profile clipping only if future streaming workloads show measurable cost; do not expand current foundation scope preemptively.",
+    "Carry the body-fixed exclusion invariant into future P7.6 seam/multi-region composition tests."
+  ],
+  "evidence_gaps": [
+    "Fresh independent Reviewer PASS on exact runtime HEAD cc98bee7109118e4aecab6df5a6f112edab4d35c / TREE c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd.",
+    "Fresh independent Verifier after Reviewer PASS.",
+    "Whole-P7 full world/core regression and checkpoint acceptance are outside P7.2 substep closure."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
