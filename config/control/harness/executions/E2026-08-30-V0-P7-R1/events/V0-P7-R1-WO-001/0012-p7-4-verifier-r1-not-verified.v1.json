@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0012",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 12,
+  "event_type": "VERIFICATION_RESULT_RECORDED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T12:47:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-fresh-verifier-result-r1",
+  "head_sha": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE",
+  "command": "RECORD_P7_4_VERIFIER_R1_NOT_VERIFIED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-001.v1.json"
+  ],
+  "summary": "Fresh Independent Ubuntu Verifier R1 recorded NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT. No canonical gate stage was executed or inherited, so this is not a runtime RED. Result commit 38ddb506fed104ad419c1a94c9564a3ae6c654b4 is exactly one verification JSON on top of R1 dispatch head and its Project Control run 33393399665 is SUCCESS.",
+  "blocker": "ENVIRONMENT_REPAIR_THEN_FRESH_UBUNTU_VERIFIER_R2"
+}
