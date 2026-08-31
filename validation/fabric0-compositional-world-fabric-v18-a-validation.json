@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.18",
+  "slice": "A_PERSISTENT_WRENCH_CONTACT_STATE",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "production_accepted": false,
+  "branch": "research/fabric0-18-persistent-contact-wrench-r1",
+  "predecessor_closure": "751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0",
+  "executable_head": "ee8658eefb8abe2e66e199678380c32b71c1f8dd",
+  "executable_tree": "15afdfdfaa6316afa4bf723c32bef9c3957ba5d3",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 53,
+    "script": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_18_A_PERSISTENT_WRENCH_CONTACT_STATE_PLAYGROUND_PASS"
+  },
+  "editor_scan": "CLEAN",
+  "remote_byte_identity": "3/3_PASS",
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_wrench_contact_state_v1.gd",
+      "git_blob": "2014791d77ed341c09820f19e8bae052ecf4eff1",
+      "sha256": "b5839e45755e9921b9f844286b253810c2c2d03c44b4eb7e8cbe47e1de9de8d3"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_acceptance.gd",
+      "git_blob": "5f5ab3958b4148e92134e2d5b70400ce93226d23",
+      "sha256": "1ceecc9063a7560dd6e2c38849365d8cb1fae4961caa82783373229fde72e308"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_playground.gd",
+      "git_blob": "a27c8148ba4bcac7ad265844069d569206672e88",
+      "sha256": "8693926c99e5cf8f9feee51aba4cdb2bbf37dbe8682273732e9b091c82fc174e"
+    }
+  ],
+  "claims": [
+    "CANONICAL_PAIR_AND_MANIFOLD_IDENTITY",
+    "CALLER_AND_MEMBER_ORDER_INVARIANT_IDENTITY",
+    "IDENTITY_EPOCH_AND_CONTACT_AGE",
+    "PROJECTED_WARM_START_IS_PROPOSAL_ONLY",
+    "FRESH_SOLVE_OWNS_ACCEPTED_GENERALIZED_IMPULSE",
+    "POST_SOLVE_STICK_SLIDE_ROLL_SPIN_MODE_CLASSIFICATION",
+    "MODE_CONSTRAINT_INCONSISTENCY_FAILS_CLOSED",
+    "SEPARATION_CLEARS_PHYSICAL_AND_WARM_START_IMPULSE_STATE",
+    "TEN_THOUSAND_UPDATE_BOOKKEEPING_NO_HIDDEN_IMPULSE_CARRYOVER"
+  ],
+  "non_claims": [
+    "PHYSICAL_STATIC_CONTACT_NO_CREEP",
+    "MODE_TRANSITION_TIME_LOCALIZATION",
+    "MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
+    "UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
+    "FABRIC0_18_CLOSED",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next": "FABRIC0.18-B_MODE_TRANSITION_LOCALIZATION"
+}

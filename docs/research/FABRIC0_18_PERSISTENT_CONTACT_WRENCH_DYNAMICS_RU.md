@@ -149,3 +149,121 @@ FABRIC0.18 does not imply:
 - Construction/authority/persistence/network ownership transfer.
 
 A pressure-resolved wrench model is intentionally left beyond 0.18.
+
+
+## 6. 0.18-A implemented candidate
+
+Exact-tested executable:
+
+```text
+HEAD
+ee8658eefb8abe2e66e199678380c32b71c1f8dd
+
+TREE
+15afdfdfaa6316afa4bf723c32bef9c3957ba5d3
+```
+
+Files:
+
+- `scripts/research/fabric0/fabric0_persistent_wrench_contact_state_v1.gd`
+- `tests/research/fabric0/fabric0_persistent_wrench_contact_state_acceptance.gd`
+- `tests/research/fabric0/fabric0_persistent_wrench_contact_state_playground.gd`
+
+Exact engine:
+
+`Godot 4.7.1.stable.double.custom_build.a13da4feb`.
+
+Gate:
+
+```text
+0.18-A acceptance 53/53 PASS
+0.18-A playground PASS
+editor parse/compile CLEAN
+remote byte identity 3/3 PASS
+```
+
+### 6.1 State semantics
+
+A persistent contact state contains canonical pair/manifold identity, stable member ordering, first/last seen time, contact age, update count, identity epoch, current normal support, current 5DOF generalized impulse, current generalized velocity, current wrench limits and current mode classification.
+
+The key anti-stale invariant is executable:
+
+```text
+previous accepted impulse
+        ↓
+project into CURRENT limits
+        ↓
+warm_start_proposal
+        ↓
+NEVER accepted directly
+        ↓
+fresh solve required
+        ↓
+current accepted_generalized_impulse
+```
+
+`solver_refresh_required=true` is explicit state.
+
+Changing manifold membership increments the identity epoch, resets age/update continuity and clears warm start. Reordering bodies or manifold member IDs does not change canonical identity/signature.
+
+### 6.2 Mode hypothesis boundary
+
+A classifies post-solve generalized modes:
+
+- tangent: stick / slide / unconstrained;
+- rolling: stick / roll / unconstrained;
+- torsion: stick / spin / unconstrained.
+
+A moving constrained DOF must lie on its corresponding wrench boundary. Moving-but-unsaturated input fails closed with `MODE_CONSTRAINT_UNRESOLVED`.
+
+Mode changes are emitted only as hypotheses, e.g. `STICK_TO_SLIDE_CANDIDATE`. A does not claim transition time; exact localization belongs to 0.18-B.
+
+### 6.3 Long bookkeeping probe
+
+10,000 continued updates over 10 seconds preserve:
+
+```text
+identity_epoch = 0
+update_count = 10000
+contact_age = 10.0
+accepted impulse = 0
+warm-start proposal = 0
+```
+
+This proves persistence bookkeeping itself has no hidden impulse carryover. It is not yet a physical static-contact/no-creep proof.
+
+### 6.4 Fail-closed cases
+
+Acceptance covers:
+
+- time reversal;
+- negative/non-finite normal support;
+- malformed generalized dimensions;
+- duplicate/empty manifold identity;
+- invalid wrench limits;
+- impulse outside admissible limit;
+- moving constrained DOF without saturation.
+
+### 6.5 Exact files
+
+```text
+runtime
+git blob 2014791d77ed341c09820f19e8bae052ecf4eff1
+sha256 b5839e45755e9921b9f844286b253810c2c2d03c44b4eb7e8cbe47e1de9de8d3
+
+acceptance
+git blob 5f5ab3958b4148e92134e2d5b70400ce93226d23
+sha256 1ceecc9063a7560dd6e2c38849365d8cb1fae4961caa82783373229fde72e308
+
+playground
+git blob a27c8148ba4bcac7ad265844069d569206672e88
+sha256 8693926c99e5cf8f9feee51aba4cdb2bbf37dbe8682273732e9b091c82fc174e
+```
+
+## 7. 0.18-A non-claims / next wall
+
+0.18-A does not solve persistent contact forces through time, does not localize stick/slide/roll/spin transitions, does not prove physical no-creep, does not solve a multicontact persistent graph, and does not close FABRIC0.18.
+
+Next wall:
+
+`FABRIC0.18-B — MODE TRANSITION LOCALIZATION`.

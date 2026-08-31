@@ -1054,3 +1054,29 @@ Critical A rule: persistent state may retain identity, age, mode hypothesis and 
 Read `docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md`.
 
 0.18 remains research-only and not production accepted.
+
+
+## 19. FABRIC0.18-A — implemented candidate
+
+Exact executable:
+
+`ee8658eefb8abe2e66e199678380c32b71c1f8dd`.
+
+```text
+0.18-A 53/53 PASS
+playground PASS
+editor CLEAN
+remote bytes 3/3 exact
+FABRIC0.18 NOT CLOSED
+```
+
+Critical invariant:
+
+```text
+persistent history may propose a warm start
+but only the fresh current solve may own accepted impulse
+```
+
+Stable pair/member reordering preserves identity. Manifold membership mutation resets identity epoch and warm-start continuity. Mode changes are candidates only; 0.18-B must localize their event time.
+
+Next: `0.18-B MODE TRANSITION LOCALIZATION`.

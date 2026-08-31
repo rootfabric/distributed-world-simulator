@@ -3628,3 +3628,25 @@ Predecessor closure: `751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0`.
 Read: `docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md`.
 
 BRIDGE-1 is not a prerequisite for 0.18. Perform a Physical Core ↔ BAKE synchronization review before formalizing a post-0.18 successor.
+
+
+### 0.18-A current state
+
+```text
+FABRIC0.18-A
+PERSISTENT WRENCH CONTACT STATE
+
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+53/53 PASS
+REMOTE BYTE IDENTITY 3/3 PASS
+FABRIC0.18 NOT CLOSED
+```
+
+Executable HEAD: `ee8658eefb8abe2e66e199678380c32b71c1f8dd`.
+
+A establishes canonical persistent contact identity, age/epoch continuity, projected warm-start proposals, fresh-solve ownership of accepted impulse, post-solve mode classification and fail-closed mode consistency.
+
+A 10,000-update bookkeeping probe remains exact with no hidden impulse carryover. This is not yet a physical no-creep proof.
+
+Next: `FABRIC0.18-B — MODE TRANSITION LOCALIZATION`.
