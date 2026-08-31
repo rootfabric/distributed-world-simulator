@@ -90,6 +90,8 @@ func _init() -> void:
 		if configuration_id == "SERIAL_REFERENCE":
 			_check(String(row.get("execution_mode", "")) == "SERIAL_REFERENCE", "serial row preserves serial mode")
 			_check(int(row.get("stream_chunk_size", -1)) == 0, "serial row has zero stream chunk size")
+			_check(float(Dictionary(row["max_parent_chunk_records"]).get("min", 0.0)) >= float(Dictionary(row["final_parent_count"]).get("min", 0.0)), "serial parent pressure remains monolithic")
+			_check(float(Dictionary(row["max_candidate_chunk_records"]).get("min", 0.0)) >= float(Dictionary(row["final_candidate_count"]).get("min", 0.0)), "serial candidate pressure remains monolithic")
 		else:
 			var chunk_size := int(row.get("stream_chunk_size", 0))
 			_check(String(row.get("execution_mode", "")) == "STREAM1", "stream row preserves STREAM1 mode")
