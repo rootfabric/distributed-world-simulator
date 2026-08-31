@@ -177,15 +177,29 @@
   },
   "perf2_optimization": {
     "checkpoint": "ECO.EVO7/PERF2.4",
-    "status": "AUTHORIZED_CURRENT",
-    "predecessor_head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
-    "accepted_baseline": {
-      "no_crossover": true,
-      "faster_side_all_points": "SERIAL_REFERENCE",
-      "exact_pairs": "27/27",
-      "structural_bound": "STREAM1_BOUNDED"
-    },
-    "runtime_changes_allowed": true,
-    "optimization_claim_requires_new_exact_evidence": true
+    "revision": "ECO.EVO7-PERF2.4-R1",
+    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "predecessor_control_tip": "4997f7116d0e4ac40ed88fe8a41a7b5029621d71",
+    "default_pipeline": "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION",
+    "ab_baseline_pipeline": "LEGACY_PER_CHUNK_CANONICALIZATION",
+    "optimization_targets": [
+      "ELIMINATE_PER_CHUNK_PARENT_RESORT",
+      "ELIMINATE_PER_CHUNK_CANDIDATE_SORT",
+      "ELIMINATE_PER_CHUNK_ROUTE_SORT",
+      "ELIMINATE_PER_CHUNK_RECRUITMENT_SORT",
+      "BUILD_RECRUITMENT_CONTEXT_ONCE_PER_GENERATION",
+      "REMOVE_CHUNK_RECRUITMENT_HASH_MAP"
+    ],
+    "samples": 54,
+    "exact_pair_requirement": "27/27",
+    "min_wall_geomean_speedup": 1.02,
+    "min_stream_geomean_speedup": 1.03,
+    "min_improved_wall_points": 6,
+    "required_nonregressed_wall_points": 9,
+    "serial_crossover_required": false,
+    "canonical_parity_required": true,
+    "bounded_working_set_must_not_regress": true,
+    "optimization_claim": "PENDING_EXACT_RUNTIME_EVIDENCE",
+    "local_runner": "RUN_ECO_EVO7_PERF2_4_TESTS.sh"
   }
 }
