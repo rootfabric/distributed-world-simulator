@@ -109,7 +109,7 @@ static func orientation_yaw_deg(individual_seed: int) -> float:
 static func _unit(seed: int, key: String) -> float:
 	var digest := (str(seed) + "|" + key).sha256_text()
 	var value := digest.substr(0, 12).hex_to_int()
-	return float(value) / 281474976710655.0
+	return float(value) / 281474976710656.0
 
 
 static func _is_sha256_hex(value: String) -> bool:
