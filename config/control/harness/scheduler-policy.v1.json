@@ -51,7 +51,7 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_3_NEXT",
+    "current_phase": "P7_4_NEXT",
     "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
@@ -131,9 +131,21 @@
       "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
     },
     "p7_3": {
+      "state": "COMPLETE_MERGED",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+      "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+      "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+      "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+      "runtime_mutation_authorized": true,
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json"
+    },
+    "p7_4": {
       "state": "NEXT",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-      "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+      "scope": "PERSISTENCE_RESTART_COMPOSITION",
       "runtime_mutation_authorized": true
     }
   },
