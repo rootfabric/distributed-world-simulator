@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-08-31-R9-P7_2_COMPLETE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-08-31-R10-P7_3_COMPLETE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_2_COMPLETE_P7_3_NEXT",
-  "authored_against_main": "6e604a68c6883595a637a089bf3f709219a1197e",
+  "status": "PRIMARY_WORK_MAP_P7_3_COMPLETE_P7_4_NEXT",
+  "authored_against_main": "502d05fe24256fecd52f3092b8e056e74a8b4450",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "6e604a68c6883595a637a089bf3f709219a1197e",
+  "control_main_base": "502d05fe24256fecd52f3092b8e056e74a8b4450",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -120,9 +120,45 @@
     }
   },
   "p7_3": {
+    "state": "COMPLETE_MERGED",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+    "runtime_merge_pr": 373,
+    "runtime_merge_carrier_pr": 387,
+    "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+    "runtime_merge_tree": "012eccfcf196f4d8d6ca49696b9b39504c4e3763",
+    "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+    "hard_rule": "CANONICAL_ITEM_GRAPH_ONLY_AND_EXPLICIT_MASS_CONSERVATION",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "selected_policy": {
+      "policy_id": "p7/matter-material-delivery/r1",
+      "output_definition_id": "item/ore",
+      "kg_per_item_unit": 1,
+      "quantization": "FLOOR_WITH_EXPLICIT_RESIDUAL",
+      "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER"
+    },
+    "test_summary": {
+      "p7_3": "116/116",
+      "p7_2_bubble": "53/53",
+      "p7_2_seam": "50/50",
+      "p7_1_authority": "83/83",
+      "p7_1_tool_to_mw4": "30/30",
+      "p5": "36/36",
+      "p3": "79/79",
+      "mw4": "187",
+      "mw5": "142",
+      "mw6": "130",
+      "fatal_logs": "11/11 clean"
+    }
+  },
+  "p7_4": {
     "state": "NEXT",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
-    "hard_rule": "CANONICAL_ITEM_GRAPH_ONLY_AND_EXPLICIT_MASS_CONSERVATION"
+    "scope": "PERSISTENCE_RESTART_COMPOSITION",
+    "hard_rule": "EXISTING_MW5_AND_CANONICAL_ITEM_GRAPH_RECOVERY_ONLY_NO_P7_PERSISTENCE_OWNER"
   }
 }
