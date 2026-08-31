@@ -1,0 +1,79 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-3-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.3 closure control carrier; records exact verified MatterMaterialBatch -> canonical Item Graph integration and advances the same P7 Work Order to P7.4.",
+  "purpose": "Canonicalize P7.3 review/verification/human merge evidence without accepting whole P7 or releasing the P7 mutation lease.",
+  "expected_outcome": "P7.3 COMPLETE_MERGED; P7 IN_PROGRESS; P7.4 NEXT.",
+  "current_stage": "P7.4 Persistence Restart Composition",
+  "stage_status": "P7_3_COMPLETE_MERGED_P7_4_NEXT",
+  "progress_note": "P7.3 exact runtime b4b11a69ef921c59b28208685cf26509c3b81907 / tree 99dea175fda7bacce936b15d30d9e25fa9e4af00 passed fresh Reviewer PASS and Verifier VERIFIED on exact double Godot; human merge approved; canonical merge 502d05fe24256fecd52f3092b8e056e74a8b4450.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted",
+  "next_stage": "Implement P7.4 persistence/restart composition using existing MW5 and canonical Item Graph recovery only.",
+  "parent_branch_or_checkpoint": "main @ 502d05fe24256fecd52f3092b8e056e74a8b4450 / P7.3 runtime merged",
+  "base_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 Reviewer PASS",
+    "P7.3 Verifier VERIFIED",
+    "human RUNTIME_FEATURE_MERGE APPROVED",
+    "exact P7.3 runtime subject merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-3-closure-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-CLOSURE-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0008-p7-3-runtime-merged.v1.json",
+    "docs/checkpoints/2026-08-31_V0_P7_3_MATERIAL_BATCH_TO_ITEM_GRAPH_COMPLETE_R1_RU.md",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/simulation/matter/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "focused": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
