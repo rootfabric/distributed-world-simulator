@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-4-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.4 closure control carrier; records exact verified persistence/restart composition and advances the same P7 Work Order to P7.5.",
+  "purpose": "Canonicalize P7.4 review/platform-amendment/verification/human-merge evidence without accepting whole P7 or releasing the P7 mutation lease.",
+  "expected_outcome": "P7.4 COMPLETE_MERGED; P7 IN_PROGRESS; P7.5 NEXT.",
+  "current_stage": "P7.5 Two-Client Convergence",
+  "stage_status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
+  "progress_note": "P7.4 exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef passed Fresh Reviewer R1 PASS and Fresh Windows Verifier R3 VERIFIED under formal platform amendment; Human RUNTIME_FEATURE_MERGE approved; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted",
+  "next_stage": "Repair the pre-existing P7 epoch transition-table control gap before relying on automated -Drive/-Close, then implement P7.5 two-client convergence over accepted P7.4 semantics.",
+  "parent_branch_or_checkpoint": "main @ bfd2d8efec6f499311dea81d9b602f30b3ac6a73 / P7.4 runtime merged",
+  "base_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 COMPLETE_MERGED",
+    "P7.4 Reviewer PASS",
+    "P7.4 Verifier R3 VERIFIED",
+    "P7.4 verifier platform amendment authorized",
+    "human RUNTIME_FEATURE_MERGE APPROVED",
+    "exact P7.4 runtime subject merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-4-closure-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0017-p7-4-runtime-merged.v1.json",
+    "docs/checkpoints/2026-09-01_V0_P7_4_PERSISTENCE_RESTART_COMPOSITION_COMPLETE_R1_RU.md"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/simulation/matter/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "focused": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION"
+  ],
+  "blockers": [
+    "PRE_EXISTING_EPOCH_TRANSITION_TABLE_MISSING_FOR_DRIVE_CLOSE_AUTOMATION"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
