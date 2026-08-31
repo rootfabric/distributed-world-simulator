@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.4 — PLAY0.MORPH Preflight
 
 Дата: 2026-08-31
-Статус: PREFLIGHT COMPLETE / VIS4.3 CLOSED / RUNTIME UNBLOCKED
+Статус: IMPLEMENTED CANDIDATE / EXACT UBUNTU VERIFICATION REQUIRED
 
 ## Current PLAY0 seam
 
@@ -261,3 +261,74 @@ VIS4.3 contains no platform-specific runtime branches, native extensions,
 OS-specific APIs or path-dependent computation in its bridge/PH5 acceptance
 scope. Windows execution is therefore optional cross-platform regression
 coverage, not a required acceptance gate for this checkpoint.
+
+
+## VIS4.4 implementation candidate
+
+Runtime implementation is complete on the frozen executable subject:
+
+~~~text
+HEAD:
+ac9a0bf7ea7e794b4c3d6c884fc59e812516d17a
+
+TREE:
+7d13219874d3d02c2c84b4f278db2c385ba252fd
+~~~
+
+Implemented path:
+
+~~~text
+completed Workbench snapshot
+  + VIS4.1 morphology evidence
+  + VIS4.3 graph reconstruction evidence
+        |
+        v
+VIS4 Descriptor V2
+        |
+        v
+Play0PlanetPresentation atomic publish gate
+        |
+        v
+VIS4.4 PH5 live renderer
+        |
+        +-> TIER0/1 accepted branch_mesh + foliage_multimesh
+        +-> TIER2/3 accepted PH5 far_mesh
+        +-> TIER4 no individual node
+~~~
+
+Generation zero retains the legacy founder fallback. Generation > 0 cannot use
+the BoxMesh/SphereMesh path: legacy live instances are emptied and hidden once
+the exact PH5 path activates.
+
+The new renderer does not rebuild GrowthGraph or implement its own branch/leaf
+placement. It delegates per-record geometry to
+`eco_evo7_vis4_3_exact_ph5_bridge.gd::materialize_record()`.
+
+Publication is fail-closed: VIS4.1 Descriptor V2 and VIS4.3 reconstruction
+evidence must both validate and every record must materialize before the
+published PLAY0 snapshot advances. A rejected/tampered bridge leaves the last
+completed presentation in place.
+
+LOD is deterministic projected-height + accepted PH5 hysteresis. Render-origin
+changes update transforms only. Geometry/materialization is cached by source
+identity and PH5 representation identity. Neutral/lineage colors are
+presentation-only and do not participate in geometry identity hashes.
+
+Focused gate:
+
+~~~text
+RUN_ECO_EVO7_VIS4_4_TESTS.sh
+RUN_ECO_EVO7_VIS4_4_TESTS.ps1
+tests/ecology/eco_evo7_vis4_4_play0_morph_acceptance.gd
+~~~
+
+The canonical runner executes:
+
+~~~text
+VIS4.3 predecessor
+-> existing PLAY0 regression
+-> VIS4.4 focused acceptance
+~~~
+
+VIS4.4 is not CLOSED until the exact executable subject above passes the Ubuntu
+double-Godot runner.
