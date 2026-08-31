@@ -25,7 +25,7 @@ func _init() -> void:
 	_check(Contract.REVISION == "ECO.EVO7-PERF2.0-R1", "PERF2.0 measurement revision remains frozen")
 
 	var profiler = Profiler.new()
-	var config := profiler.default_campaign_config()
+	var config: Dictionary = profiler.default_campaign_config()
 	_check(bool(profiler.validate_campaign_config(config).get("success", false)), "default PERF2.1 R2 campaign config validates")
 	_check(Array(config["recipes"]) == ["MIXED_PHYSICAL_HETEROGENEITY"], "R2 uses one frozen physical recipe")
 	_check(int(config["warmup_generations"]) == 2, "R2 uses two-generation warmup")
@@ -37,20 +37,20 @@ func _init() -> void:
 	_check(int(config["grid_size"]) == Workbench.GRID_SIZE, "R2 binds exact Workbench grid size")
 	_check(is_equal_approx(float(config["cell_size_m"]), Workbench.CELL_SIZE_M), "R2 binds exact Workbench cell size")
 
-	var context := profiler.campaign_context(config)
+	var context: Dictionary = profiler.campaign_context(config)
 	var context_hash := profiler.campaign_context_hash(context)
 	_check(context.size() == Profiler.CONTEXT_FIELDS.size(), "campaign context has frozen exact field set")
 	_check(_is_hash(context_hash), "campaign context has deterministic SHA-256 identity")
 
-	var changed_world := config.duplicate(true)
+	var changed_world: Dictionary = config.duplicate(true)
 	changed_world["world_seed"] = int(changed_world["world_seed"]) + 1
 	_check(not bool(profiler.validate_campaign_config(changed_world).get("success", true)), "world-seed drift fails closed")
 
-	var changed_competition := config.duplicate(true)
+	var changed_competition: Dictionary = config.duplicate(true)
 	changed_competition["competition_enabled"] = false
 	_check(not bool(profiler.validate_campaign_config(changed_competition).get("success", true)), "competition-mode drift fails closed")
 
-	var changed_chunks := config.duplicate(true)
+	var changed_chunks: Dictionary = config.duplicate(true)
 	changed_chunks["stream_chunk_sizes"] = [64]
 	_check(not bool(profiler.validate_campaign_config(changed_chunks).get("success", true)), "chunk-sweep drift fails closed")
 
@@ -64,7 +64,7 @@ func _init() -> void:
 	root.add_child(world)
 	_check(world.setup(null), "real Earth source initializes for PERF2.1")
 
-	var report := profiler.run_campaign(world, config, target, host)
+	var report: Dictionary = profiler.run_campaign(world, config, target, host)
 	_check(not report.is_empty(), "real PERF2.1 R2 profiling campaign completes")
 	if report.is_empty():
 		world.queue_free()
@@ -98,7 +98,9 @@ func _init() -> void:
 		var configuration_id := String(flags.get("configuration_id", ""))
 		_check(groups.has(configuration_id), "sample configuration id is recognized: %s" % configuration_id)
 		if groups.has(configuration_id):
-			Array(groups[configuration_id]).append(sample)
+			var group: Array = groups[configuration_id]
+			group.append(sample)
+			groups[configuration_id] = group
 		_check(String(flags.get("campaign_context_hash", "")) == context_hash, "sample carries exact campaign context identity")
 		_check(String(flags.get("timing_aggregation", "")) == "MEAN_PER_MEASURED_GENERATION", "sample timing aggregation is explicit")
 
@@ -209,7 +211,7 @@ func _init() -> void:
 		var parsed_report: Dictionary = Dictionary(parsed)
 		_check(String(parsed_report.get("report_hash", "")) == String(report.get("report_hash", "")), "written artifact preserves report evidence hash")
 		_check(profiler.validate_report(parsed_report), "written artifact round-trips through full report validation")
-		var tampered := parsed_report.duplicate(true)
+		var tampered: Dictionary = parsed_report.duplicate(true)
 		var tampered_context: Dictionary = Dictionary(tampered["campaign_context"])
 		tampered_context["world_seed"] = int(tampered_context["world_seed"]) + 1
 		tampered["campaign_context"] = tampered_context
