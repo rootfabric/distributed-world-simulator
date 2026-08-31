@@ -1,0 +1,186 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-3-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+
+  "verified_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "verified_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+
+  "verifier": "INDEPENDENT_VERIFIER_P7_3_FRESH_EXACT_SOURCE_R1",
+
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-08-31T07:12:00Z",
+
+  "environment": {
+    "os": "Ubuntu (verifier host /home/yurig)",
+    "repo_checkout": "/home/yurig/distributed-world-simulator (git store .git-store/repo.git)",
+    "fresh_verifier_worktree": "/home/yurig/dws-p7-3-verifier-r1 (detached, not implementer/reviewer worktree)",
+    "godot_binary": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "gate_runner": "RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh (blob 576454a32f464dffd7ee4f4ebf248c38358ef7ab, sha256 ed648648a6d48b4ea0c07b140adcd6a3edaf23287282160a96f7a5aceea9b6b3)",
+    "test_file_sha256": "d5a30dbaca113260cbf6ea7d84fec3cbb93a3137e038e6b6975280e4ed55a8c0",
+    "gate_ps1_sha256": "b370cb14f524531f67ffc7805f43e5bbe08a6a0f513dd1e7e15ae18839363cb6"
+  },
+  "dispatch": {
+    "dispatch_pr": 381,
+    "dispatch_branch": "control/v0-p7-3-fresh-verifier-dispatch-r1",
+    "dispatch_head": "cdea9cde55cc18e805b868b0a4521eace0bc37c6",
+    "dispatch_project_control_run": 33365598589,
+    "dispatch_project_control": "SUCCESS"
+  },
+  "checks": {
+    "subject_identity": {
+      "result": "PASS",
+      "head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+      "tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+      "origin_runtime_branch": "feature/v0-p7-bounded-terrain-mutation == b4b11a69ef921c59b28208685cf26509c3b81907",
+      "fresh_detached_worktree_tracked_clean_before": true
+    },
+    "godot_identity": {
+      "result": "PASS",
+      "version_line": "4.7.1.stable.double.custom_build.a13da4feb"
+    },
+    "import": {
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_markers": 0,
+      "outer_import_log": "/home/yurig/p7-3-verifier-r1-import.log",
+      "outer_import_log_sha256": "7c0ee279492a194718c966f47c416a652f7f546226efdf972cd491c88b0141d8",
+      "log_sha256": "f44a39fc53563adcf13b709e160fdba0dad9ff47aa675a59f401b154e5f1dc5f"
+    },
+    "p7_3_material_delivery": {
+      "result": "PASS",
+      "assertions": 116,
+      "failures": 0,
+      "verdict_line": "V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)",
+      "log_sha256": "ecbbe14aecd801481de4f26bab2ed8b4b033a09c8177ca9086babeafd04a480e"
+    },
+    "p7_2_bubble": {
+      "result": "PASS",
+      "assertions": 53,
+      "failures": 0,
+      "verdict_line": "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)",
+      "note": "Fresh gap left open by the Implementer container; independently closed here by the full canonical gate.",
+      "log_sha256": "411deaa17c5c4310ca03d3d552d195f609485d0ac9bae1b926a7fec1633c7c28"
+    },
+    "p7_2_seam": {
+      "result": "PASS",
+      "assertions": 50,
+      "failures": 0,
+      "verdict_line": "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)",
+      "log_sha256": "1f36fa85ae7adc731e29e1797bea5301aba3ff6ca435e7fc0c171ea993c3fb32"
+    },
+    "p7_1_authority": {
+      "result": "PASS",
+      "assertions": 83,
+      "failures": 0,
+      "verdict_line": "V0-P7.1 authority gate: PASS (83 assertions, 0 failures)",
+      "log_sha256": "5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e"
+    },
+    "p7_1_tool_to_mw4": {
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0,
+      "verdict_line": "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)",
+      "log_sha256": "3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1"
+    },
+    "p5_mining_tool": {
+      "result": "PASS",
+      "assertions": 36,
+      "failures": 0,
+      "verdict_line": "V0-P5 mining tool gate: 36 assertions, 0 failures",
+      "log_sha256": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511"
+    },
+    "p3_resource_domain": {
+      "result": "PASS",
+      "assertions": 79,
+      "failures": 0,
+      "verdict_line": "V0-P3 resource/mining domain: 79 assertions, 0 failures",
+      "log_sha256": "d0879d6f30742b23bc80a43134b471a962d2e8b62f600e455176807e81da6237"
+    },
+    "mw4": {
+      "result": "PASS",
+      "assertions": 187,
+      "failures": 0,
+      "verdict_line": "MW4 matter mutations: PASS (187 assertions)",
+      "log_sha256": "1afc843e6af13eec83e4eed460590da61a1e825d52acc591491474975280435c"
+    },
+    "mw5": {
+      "result": "PASS",
+      "assertions": 142,
+      "failures": 0,
+      "verdict_line": "MW5 matter persistence: PASS (142 assertions / 41.934 s)",
+      "log_sha256": "a600e605c30adfe115803aacbba41de6d4a709f5d13f918050a53f95a7eeb697"
+    },
+    "mw6": {
+      "result": "PASS",
+      "assertions": 130,
+      "failures": 0,
+      "verdict_line": "MW6 matter network authority: PASS (130 assertions / 26.447 s)",
+      "log_sha256": "4f4ed9a1abab4de3cc189a4063b0b9169c885a1dd5f6c7a898d8e8bfbc9b0e65"
+    },
+    "canonical_runner": {
+      "result": "PASS",
+      "exit_code": 0,
+      "banner": "V0-P7.3 MATERIAL BATCH TO ITEM GRAPH GATE GREEN",
+      "exact_head_line": "EXACT_HEAD=b4b11a69ef921c59b28208685cf26509c3b81907",
+      "godot_line": "GODOT=4.7.1.stable.double.custom_build.a13da4feb",
+      "stdout_log": "/home/yurig/p7-3-verifier-r1.stdout.log",
+      "stdout_log_sha256": "ebff0e5bc72687b7b8f54c200a0bf9924d90861f3aaad8d6d25a36f68b2910f7",
+      "post_run_tracked_clean_fence_clean": true
+    },
+    "fatal_log_scan": {
+      "result": "PASS",
+      "logs_scanned": 11,
+      "fatal_matches": 0,
+      "markers": ["SCRIPT ERROR:", "Parse Error:", "Compile Error:", "Failed to instantiate an autoload", "Failed to load script"]
+    },
+    "tracked_clean_after_execution": {
+      "result": "PASS",
+      "status_porcelain_untracked_no": "",
+      "diff_check_clean": true,
+      "diff_exit_code_clean": true,
+      "diff_cached_exit_code_clean": true,
+      "post_run_head_exact": true,
+      "post_run_tree_exact": true
+    },
+    "project_control": {
+      "result": "PASS",
+      "runtime_project_control_run": 33360078991,
+      "runtime_project_control": "SUCCESS"
+    },
+    "reviewer_r1": {
+      "result": "PASS",
+      "review_id": "V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001",
+      "reviewer": "INDEPENDENT_REVIEWER_P7_3_FRESH_EXACT_SOURCE_R1",
+      "review_branch": "control/v0-p7-3-fresh-reviewer-result-r1",
+      "review_commit": "b9c638b1721edfe24537e264bd562e96ca224116",
+      "review_pr": 380,
+      "reviewer_project_control_run": 33365405527,
+      "reviewer_project_control": "SUCCESS",
+      "review_verdict": "PASS",
+      "reviewed_head_sha_matches_subject": true,
+      "reviewed_tree_sha_matches_subject": true
+    }
+  },
+  "findings": [
+    "All ten canonical stages plus import passed on the exact double Godot build against the exact frozen HEAD/TREE with a clean tracked fence before and after execution.",
+    "The standalone P7.2 bubble stage — the fresh execution gap explicitly left open by the Implementer container — completed in this verifier run with PASS (53 assertions, 0 failures) and no fatal markers, closing the recorded Reviewer evidence gap.",
+    "No runtime repair, rebase, or tracked mutation was performed by the Verifier; the runtime branch remains unmerged."
+  ],
+
+  "forbidden_conclusions_respected": {
+    "runtime_feature_merge_performed": false,
+    "pr_373_merged_by_verifier": false,
+    "merge_authorized_by_this_verification": false
+  },
+
+  "next": {
+    "opens": "HUMAN_RUNTIME_FEATURE_MERGE_GATE_ONLY",
+    "merge_authorized": false,
+    "p7_3_complete_merged_declared": false,
+    "whole_p7_accepted_declared": false,
+    "remaining_stages": ["P7.4 persistence/restart", "P7.5 two-client convergence", "P7.6 seam/multi-region", "P7.7 graphical digging slice"]
+  }
+}
