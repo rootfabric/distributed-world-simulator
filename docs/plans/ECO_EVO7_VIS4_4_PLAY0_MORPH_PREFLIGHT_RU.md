@@ -198,3 +198,61 @@ Its workflow checks out the frozen executable subject rather than the moving dur
 `RUN_ECO_EVO7_VIS4_3_TESTS.ps1`.
 
 A documentation/closure-carrier commit after the executable subject is therefore not acceptance evidence by itself. VIS4.3 may become GREEN only when the Windows job reports SUCCESS for the frozen subject and expected tree.
+
+
+## VIS4.3 Ubuntu exact pre-verification evidence
+
+Exact Ubuntu pre-verification completed GREEN against the frozen executable predecessor.
+
+~~~text
+SUBJECT:
+b8e8c2ffea260eea40ae3a451ec0c63d81028f76
+
+TREE:
+920454da5bb41959680e3309c690f4ef399f3e6d
+
+GODOT:
+4.7.1.stable.double.custom_build.a13da4feb
+
+LINUX BINARY SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+FRESH IMPORT:
+PASS / exit 0
+
+TRACKED STATUS AFTER TESTS:
+clean
+~~~
+
+Canonical chain evidence:
+
+~~~text
+VIS4.2 predecessor                         PASS / 1265 assertions
+PH5 render description                    PASS / 720 assertions
+PH5-S2 3D materialization                 PASS / 387 assertions
+PH5-S3 multiscale policy                  PASS / 49 assertions
+PH5-S3 multiscale materialization         PASS / 61 assertions
+PH5-S4 representation robustness          PASS / 5026 assertions
+PH5-S4 phenotype x tier matrix            PASS / 430 assertions
+VIS4.3 exact Live Phenotype -> PH5 bridge PASS / 752 assertions
+canonical VIS4.3 PASS marker              PRESENT
+~~~
+
+Fresh import also reproduced three legacy pre-existing ECO.EVO5 scene parse warnings
+(`eco_evo5_probe2_tree_lab.tscn`, `eco_evo5_t51_creature_lab.tscn`,
+`eco_evo5_terrain_fly_lab.tscn`: `Parse Error: Expected '['.`). Import still
+returned exit 0 and no VIS4.3-related warning was reported. These warnings do not
+promote or weaken VIS4.3 acceptance.
+
+Qualification remains strict:
+
+~~~text
+UBUNTU PRE-VERIFICATION GREEN
+EXACT SUBJECT VERIFIED
+EXACT TREE VERIFIED
+DOUBLE GODOT VERIFIED
+CANONICAL VIS4.3 TEST CHAIN GREEN
+WINDOWS ACCEPTANCE STILL REQUIRED
+VIS4.3 NOT CLOSED YET
+VIS4.4 RUNTIME REMAINS BLOCKED
+~~~
