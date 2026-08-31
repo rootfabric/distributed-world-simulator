@@ -3396,3 +3396,85 @@ editor CLEAN
 ```
 
 Next wall: `FABRIC0.17-B — COUPLED SIMULTANEOUS IMPACT SOLVE`.
+
+
+### 0.17-B current state
+
+```text
+executable HEAD:
+6456ca4a5ce936c7b4c2b11906c696982a091e24
+
+COUPLED SIMULTANEOUS IMPACT SOLVE
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+63/63 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+FABRIC0.17 NOT CLOSED
+```
+
+Accepted physical jump:
+
+```text
+one localized event set
+→ one immutable pre-impact state
+→ 8-row coupled manifold graph
+→ one restitution LCP
+→ one post-impact state
+```
+
+Symmetric elastic falsifier:
+
+```text
+C|L impulse ≈ 4
+C|R impulse ≈ 4
+
+L:+2, C:0, R:-2
+→
+L:-2, C:0, R:+2
+
+linear momentum error  = 0
+angular momentum error = 0
+```
+
+Sequential pair solve is falsified:
+
+```text
+forward != reverse
+max state delta = 4
+```
+
+Off-center 6DOF stand produces non-zero angular velocities while preserving total linear/angular momentum.
+
+Restitution evidence:
+
+```text
+e=0.0 -> final KE ≈ 0
+e=0.5 -> final KE / initial KE ≈ 0.25
+e=1.0 -> final KE ≈ initial KE
+```
+
+Under-refined near-coincident event sets fail closed with `EVENT_SET_NOT_REFINED_ENOUGH`.
+
+Exact regression chain:
+
+```text
+0.17-A 77/77
+0.16 S3 101/101
+0.16 S2 102/102
+0.16 S1 110/110
+editor CLEAN
+```
+
+Exact remote preservation:
+
+```text
+B 4/4
+A 4/4
+S3 3/3
+S2 5/5
+S1 8/8
+```
+
+Next wall:
+
+`FABRIC0.17-C — GENERALIZED CONTACT WRENCH`.

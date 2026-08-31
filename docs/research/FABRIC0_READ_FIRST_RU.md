@@ -872,3 +872,50 @@ Current stable set: `[C|L,C|R]` at approximately `0.5`. Near later event: `P|Q` 
 0.17-A does not solve impulses.
 
 Next: `FABRIC0.17-B — COUPLED SIMULTANEOUS IMPACT SOLVE`.
+
+
+## 14. FABRIC0.17-B — coupled simultaneous impact boundary
+
+Current executable boundary:
+
+```text
+6456ca4a5ce936c7b4c2b11906c696982a091e24
+```
+
+State:
+
+```text
+FABRIC0.17-A
+77/77 PASS
+        ↓
+FABRIC0.17-B
+63/63 PASS
+        ↓
+FABRIC0.17-C NEXT
+
+FABRIC0.17 remains IN PROGRESS
+```
+
+Read:
+
+```text
+docs/research/FABRIC0_17_SIMULTANEOUS_MULTI_IMPACT_GENERALIZED_WRENCH_RU.md
+validation/fabric0-compositional-world-fabric-v17-b-validation.json
+```
+
+Critical B semantics:
+
+```text
+simultaneous event set
+!=
+sequence of pair impacts
+
+all event members
+→ one immutable pre-impact state
+→ one coupled multipoint restitution LCP
+→ one post-impact state
+```
+
+The symmetric falsifier gives exact caller-order-independent coupled state, while pair-wise sequential processing has `max state delta = 4` between opposite orders.
+
+0.17-B remains frictionless at impact. Tangential/rolling/torsional generalized wrench is deliberately deferred to 0.17-C.
