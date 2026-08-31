@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0006",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 6,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T03:40:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-2-fresh-verifier-dispatch-r1",
+  "head_sha": "462811c9e576c35233d3322b30bf15ba828a14a9",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE",
+  "command": "DISPATCH_FRESH_P7_2_INDEPENDENT_VERIFIER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-VERIFIER-DISPATCH-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-FRESH-VERIFIER-INSTRUCTION-001.md"
+  ],
+  "summary": "Independent Reviewer R2 PASS is durable at 37b140f21395e0195826afc0ee0fd3787719dbb1 with Project Control 33354295502 SUCCESS. Fresh independent Verifier is dispatched for exact P7.2 runtime HEAD 0292e0a97d980d5c384b0118999429f1e6f13c3d / TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36; verifier must independently execute the exact double-Godot canonical gate and may not repair runtime source.",
+  "blocker": "FRESH_INDEPENDENT_VERIFIER_RESULT_PENDING"
+}
