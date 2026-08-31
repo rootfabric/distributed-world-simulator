@@ -373,6 +373,26 @@ func get_ph5_record_visual_basis(index: int) -> Basis:
 	return Basis.IDENTITY if ph5_renderer == null else ph5_renderer.get_record_visual_basis(index)
 
 
+func get_ph5_record_visual_world_position(index: int) -> Vector3:
+	return Vector3.ZERO if ph5_renderer == null else ph5_renderer.get_record_visual_world_position(index)
+
+
+func get_ph5_record_visual_render_position(index: int) -> Vector3:
+	return Vector3.ZERO if ph5_renderer == null else ph5_renderer.get_record_visual_render_position(index)
+
+
+func get_ph5_record_applied_render_position(index: int) -> Vector3:
+	return Vector3.ZERO if ph5_renderer == null else ph5_renderer.get_record_applied_render_position(index)
+
+
+func get_ph5_record_grid_appearance(index: int) -> Dictionary:
+	return {} if ph5_renderer == null else ph5_renderer.get_record_grid_appearance(index)
+
+
+func get_ph5_grid_appearance_identity_hash() -> String:
+	return "" if ph5_renderer == null else ph5_renderer.get_grid_appearance_identity_hash()
+
+
 func _build_nodes() -> void:
 	stems_node = MultiMeshInstance3D.new()
 	stems_node.name = "Play0Stems"
