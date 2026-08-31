@@ -170,7 +170,11 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	if parents.is_empty() or not _validate_context(immutable_context, generation):
 		return _failure(FAIL_INPUTS, "parents/context invalid", generation)
 
-	var ordered: Array[Dictionary] = CandidateKernel.ordered_parents(parents)
+	var ordered: Array[Dictionary] = []
+	if _pipeline_mode == PIPELINE_OPTIMIZED:
+		ordered = _ordered_parents_fast_path(parents)
+	else:
+		ordered = CandidateKernel.ordered_parents(parents)
 	if ordered.size() != parents.size():
 		return _failure(FAIL_INPUTS, "parent records invalid", generation)
 
@@ -263,16 +267,22 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 		chunks_processed += 1
 		cursor = end
 
-	CandidateKernel.sort_candidates(all_candidates)
-	generation_boundary_sorts += 1
-	all_routes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return String(a["candidate_hash"]) < String(b["candidate_hash"])
-	)
-	generation_boundary_sorts += 1
-	all_recruitment.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return String(a["candidate_hash"]) < String(b["candidate_hash"])
-	)
-	generation_boundary_sorts += 1
+	if _pipeline_mode == PIPELINE_OPTIMIZED:
+		if not _canonicalize_aligned_generation(
+			all_candidates, all_routes, all_recruitment):
+			return _failure(FAIL_PROPOSAL, "optimized boundary canonicalization failed", generation)
+		generation_boundary_sorts += 1
+	else:
+		CandidateKernel.sort_candidates(all_candidates)
+		generation_boundary_sorts += 1
+		all_routes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return String(a["candidate_hash"]) < String(b["candidate_hash"])
+		)
+		generation_boundary_sorts += 1
+		all_recruitment.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return String(a["candidate_hash"]) < String(b["candidate_hash"])
+		)
+		generation_boundary_sorts += 1
 
 	if all_candidates.size() != ordered.size() * int(immutable_context["offspring_per_parent"]):
 		return _failure(FAIL_PROPOSAL, "global candidate count mismatch", generation)
@@ -375,7 +385,7 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 			"chunk_local_route_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
 			"chunk_local_recruitment_sorts": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 0,
 			"recruitment_context_builds": chunk_count if _pipeline_mode == PIPELINE_LEGACY else 1,
-			"generation_boundary_sorts": 3,
+			"generation_boundary_sorts": 1 if _pipeline_mode == PIPELINE_OPTIMIZED else 3,
 		},
 		"timings_ms": {
 			"candidate_build_ms": candidate_build_ms,
@@ -440,6 +450,70 @@ static func proposal_hash(proposal: Dictionary) -> String:
 		String(proposal.get("dispersal_pool_hash", "")),
 		String(proposal.get("recruitment_hash", "")),
 	])).sha256_text()
+
+func _ordered_parents_fast_path(parents: Array) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var previous_record_id := ""
+	var has_previous := false
+	var already_ordered := true
+	for parent_value in parents:
+		if not parent_value is Dictionary:
+			return []
+		var parent: Dictionary = parent_value
+		var record_id := String(parent.get("record_id", ""))
+		if record_id.is_empty():
+			return []
+		if has_previous and record_id < previous_record_id:
+			already_ordered = false
+		previous_record_id = record_id
+		has_previous = true
+		out.append(parent)
+	if already_ordered:
+		return out
+	return CandidateKernel.ordered_parents(parents)
+
+
+func _canonicalize_aligned_generation(
+	candidates: Array[Dictionary],
+	routes: Array[Dictionary],
+	recruitment: Array[Dictionary]
+) -> bool:
+	if candidates.size() != routes.size() or candidates.size() != recruitment.size():
+		return false
+
+	var order: Array[int] = []
+	for index in range(candidates.size()):
+		order.append(index)
+	order.sort_custom(func(a: int, b: int) -> bool:
+		return String(candidates[a].get("candidate_hash", "")) < String(candidates[b].get("candidate_hash", ""))
+	)
+
+	var ordered_candidates: Array[Dictionary] = []
+	var ordered_routes: Array[Dictionary] = []
+	var ordered_recruitment: Array[Dictionary] = []
+	for source_index in order:
+		var candidate: Dictionary = candidates[source_index]
+		var route: Dictionary = routes[source_index]
+		var event: Dictionary = recruitment[source_index]
+		var candidate_hash := String(candidate.get("candidate_hash", ""))
+		if candidate_hash.is_empty():
+			return false
+		if String(route.get("candidate_hash", "")) != candidate_hash:
+			return false
+		if String(event.get("candidate_hash", "")) != candidate_hash:
+			return false
+		ordered_candidates.append(candidate)
+		ordered_routes.append(route)
+		ordered_recruitment.append(event)
+
+	candidates.clear()
+	routes.clear()
+	recruitment.clear()
+	candidates.append_array(ordered_candidates)
+	routes.append_array(ordered_routes)
+	recruitment.append_array(ordered_recruitment)
+	return true
+
 
 func _validate_context(context: Dictionary, generation: int) -> bool:
 	if context.size() != CONTEXT_FIELDS.size():
