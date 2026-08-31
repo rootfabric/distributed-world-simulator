@@ -1,0 +1,47 @@
+name: P7.2 Final Review Source Export R1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-2-final-review-source-export-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact P7.2 final subject
+        uses: actions/checkout@v4
+        with:
+          ref: cc98bee7109118e4aecab6df5a6f112edab4d35c
+          fetch-depth: 0
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "cc98bee7109118e4aecab6df5a6f112edab4d35c"
+          test "$(git rev-parse HEAD^{tree})" = "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd"
+          echo "P7_2_REVIEW_HEAD=$(git rev-parse HEAD)"
+          echo "P7_2_REVIEW_TREE=$(git rev-parse HEAD^{tree})"
+
+      - name: Build immutable exact source archive
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ \
+            -o p7-2-final-review-source.tar.gz \
+            cc98bee7109118e4aecab6df5a6f112edab4d35c
+          sha256sum p7-2-final-review-source.tar.gz | tee p7-2-final-review-source.sha256
+
+      - name: Upload exact review source
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-2-final-review-source-cc98bee710
+          path: |
+            p7-2-final-review-source.tar.gz
+            p7-2-final-review-source.sha256
+          if-no-files-found: error
+          retention-days: 14
