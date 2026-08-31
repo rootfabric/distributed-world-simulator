@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0005",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 5,
+  "event_type": "DISPATCHED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T06:52:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-3-fresh-verifier-dispatch-r1",
+  "head_sha": "efca932589f53eabc062a7afe54335d10e52b578",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE",
+  "command": "DISPATCH_FRESH_P7_3_INDEPENDENT_VERIFIER_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-VERIFIER-DISPATCH-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-FRESH-VERIFIER-INSTRUCTION-001.md"
+  ],
+  "summary": "Fresh independent Reviewer R1 PASS is durable and Project Control-green. Fresh independent Verifier is dispatched for exact P7.3 runtime HEAD b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00, including the previously unclosed fresh P7.2 bubble execution gap.",
+  "blocker": "FRESH_INDEPENDENT_VERIFIER_P7_3_RESULT_PENDING"
+}
