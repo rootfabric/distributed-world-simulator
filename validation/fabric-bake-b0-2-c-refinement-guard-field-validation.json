@@ -1,0 +1,71 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_2_c_validation.v1",
+  "checkpoint": "B0.2-C",
+  "title": "Refinement Guard Field",
+  "branch": "research/fabric-bake0-2-refinement-guards-r1",
+  "qualification": "RESEARCH_SLICE_CLOSED_EXACT_HEAD_DOUBLE_PASS",
+  "production_acceptance_claimed": false,
+  "b0_2_overall_closed": false,
+  "exact_executable_subject": {
+    "head": "ffd53302d891b4d64b88589c434c56e76aef1eaa",
+    "tree": "754bdd8a38246afe7bbd85eba74615ef7f0bb3e7",
+    "parent": "a1b8631a86b9bb896a6ca9a4871a5f0d2cee5b2a"
+  },
+  "platform_policy": {
+    "required_platform": "UBUNTU_LINUX_DOUBLE",
+    "required_platform_status": "PASS",
+    "windows_default_result": "PASS_BY_POLICY",
+    "windows_execution_evidence_required": false,
+    "windows_is_closure_gate": false
+  },
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "source_export": {
+    "workflow_run_id": 33357380503,
+    "artifact_id": 9745553457,
+    "artifact_name": "fabric-bake-b0-2-c-exact-source-ffd53302",
+    "artifact_digest": "sha256:bba17f89324308083b3a2cdacfe29665709afdb9f849d77faa98bf6cbf8f32cc",
+    "tracked_archive_sha256": "f8d690545e49d22fa02daca2f5e86465aedcf2b2f40a351d4d0b221fb2a5a79f"
+  },
+  "acceptance": {
+    "fresh_exact_runs": 2,
+    "b0_0": {"status": "PASS", "assertions": 33},
+    "b0_1": {"status": "PASS", "assertions": 64},
+    "b0_1_playground": "PASS",
+    "b0_2_ab": {"status": "PASS", "assertions": 76},
+    "b0_2_ab_playground": "PASS",
+    "b0_2_c": {"status": "PASS", "assertions": 118},
+    "b0_2_c_playground": "PASS",
+    "fixture_parts": 500,
+    "fixture_bonds": 499,
+    "fixture_regions": 25,
+    "first_refinement_trigger_load": 30,
+    "certified_capacity_crossing_load": 40,
+    "peak_region": "region/b0-2-012",
+    "guard_field_hash": "d3bbb115fb79d3159f1446eb2d589754c50b99892fd8b96c682de65e85d1243a"
+  },
+  "tracked_byte_audit": {
+    "tracked_files": 5043,
+    "fresh_run_1": {"missing": 0, "changed": 0},
+    "fresh_run_2": {"missing": 0, "changed": 0}
+  },
+  "certified_scope": {
+    "structural_graph": "CONNECTED_RIGID_TREE",
+    "cyclic_or_redundant_graph": "NO_SAFE_GUARD",
+    "complete_external_wrench_inventory_required": true,
+    "dynamics_residual_fail_closed": true
+  },
+  "non_claims": [
+    "B0.2 overall closure",
+    "local unbake execution",
+    "mixed FULL/BAKED topology",
+    "topology split/rebake",
+    "damage constitutive model",
+    "safe cyclic/redundant internal-load inference",
+    "final executable structural PhysicalBakeArtifact",
+    "production readiness"
+  ],
+  "next_required_stage": "B0.2-D_BOUNDED_LOCAL_UNBAKE"
+}

@@ -1649,3 +1649,22 @@ boundary/local load
 → canonical region
 → early refinement request
 ```
+
+
+## B0.2 execution slices — current frontier
+
+```text
+B0.2-A  Structural Aggregate Compiler       CLOSED / EXACT LINEAGE
+B0.2-B  Exact Reconstruction Mapping        CLOSED / EXACT LINEAGE
+B0.2-C  Refinement Guard Field              CLOSED / EXACT-HEAD DOUBLE PASS
+B0.2-D  Bounded Local Unbake                NEXT
+B0.2-E  Topology Split / Re-bake            FUTURE
+
+B0.2 overall                                OPEN
+```
+
+B0.2-C exact executable subject is `ffd53302d891b4d64b88589c434c56e76aef1eaa`
+with tree `754bdd8a38246afe7bbd85eba74615ef7f0bb3e7`.
+The C guard field proves deterministic early regional refinement before certified hidden-bond
+capacity crossing; it does not itself execute unbake. Windows remains
+`PASS_BY_POLICY / NON-GATING` under the FABRIC-BAKE platform policy.
