@@ -16,7 +16,7 @@ STREAM1 ACCEPTED
 → PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
 → PERF2.2 Working-set / Memory        ✅ ACCEPTED Ubuntu c6bef3d
 → PERF2.3 Simulation Scaling          ✅ ACCEPTED Ubuntu 34715ac
-→ PERF2.4 Runtime Optimization        ← CURRENT / AUTHORIZED
+→ PERF2.4 Runtime Optimization        ← CURRENT / R1 IMPLEMENTATION CANDIDATE
 ```
 
 PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`. PERF2.2 R1 is accepted on exact local Ubuntu verification of `c6bef3d6c20d7b468f88f9aaabade2fe809b63e6`; PERF2.3 R1 is accepted on exact Ubuntu verification of `34715ac5524d594003236ca6228c0b0ba5bb9e90`; PERF2.4 Runtime Optimization is now the active simulation-side performance checkpoint.
@@ -204,3 +204,6 @@ ECO research не получает production persistence, world transaction, ne
 
 
 **PERF2.3 accepted result:** exact Ubuntu PASS on `34715ac...` with `36 samples / 12 scaling points / 9 comparisons / 4 trends / 3 crossover analyses / 27 of 27 exact pairs`. No crossover was observed: serial remained faster at all nine tested scale/chunk points. At the same time, serial structural record pressure grew ~8.68× from AGE_2 to AGE_22 while all STREAM1 bounded proxies remained flat at 1.0×. PERF2.4 is therefore authorized to optimize execution overhead while preserving exact parity and bounded working-set semantics.
+
+
+**PERF2.4 R1 optimization:** STREAM1 now has an optimized default pipeline that defers candidate/route/recruitment canonicalization to one full-generation boundary, reuses one immutable recruitment context per generation and evaluates aligned candidate/route chunk pairs without rebuilding a hash map. The legacy per-chunk canonicalization path is retained only for same-HEAD A/B evidence. Acceptance requires 54 samples / 27 exact A/B pairs, preserved bounded working-set semantics, deterministic elimination of chunk-local sorts, wall geomean speedup >= 1.02, STREAM1-total geomean speedup >= 1.03, at least 6/9 wall points improved and no point worse than a 3% regression budget. Serial crossover is not required.
