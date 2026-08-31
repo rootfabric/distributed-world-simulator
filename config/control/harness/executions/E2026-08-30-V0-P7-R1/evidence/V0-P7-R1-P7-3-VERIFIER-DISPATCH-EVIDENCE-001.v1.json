@@ -1,0 +1,119 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_dispatch_evidence.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "risk_class": "CRITICAL",
+  "runtime_pr": 373,
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "runtime_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "runtime_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "runtime_project_control": {
+    "run_id": 33360078991,
+    "status": "SUCCESS"
+  },
+  "reviewer": {
+    "review_id": "V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001",
+    "reviewer": "INDEPENDENT_REVIEWER_P7_3_FRESH_EXACT_SOURCE_R1",
+    "result_branch": "control/v0-p7-3-fresh-reviewer-result-r1",
+    "result_commit": "b9c638b1721edfe24537e264bd562e96ca224116",
+    "result_pr": 380,
+    "result_project_control": "33365405527 = SUCCESS",
+    "reviewed_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "reviewed_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+    "verdict": "PASS",
+    "blocking_findings": 0,
+    "required_fixes": 0
+  },
+  "immutable_source": {
+    "validation_pr": 375,
+    "validation_branch": "validation/v0-p7-3-review-source-r1",
+    "carrier_head": "5bfb31c5c4940a365385717d756ed15a62737bd0",
+    "export_run": 33363652803,
+    "export_result": "SUCCESS",
+    "artifact_id": 9747515061,
+    "artifact_name": "p7-3-review-source-b4b11a69ef92",
+    "artifact_zip_sha256": "b6f2be94c8dbe371468ccfbee0064dcf354007b8ae0b4db6ac1176b37e008853",
+    "source_tar_sha256": "f5cb57e6d953b6f9dcf3d4cc0014e2c3759e9b461d5bcf638a2dcc0681ed1f98",
+    "reconstructed_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00"
+  },
+  "exact_execution_required": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "runner": "RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh",
+    "expected_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "fresh_detached_worktree": true,
+    "carry_forward_implementer_execution_prohibited": true,
+    "stages": [
+      {
+        "id": "p7-3-material-delivery",
+        "assertions": 116,
+        "failures": 0
+      },
+      {
+        "id": "p7-2-bubble",
+        "assertions": 53,
+        "failures": 0
+      },
+      {
+        "id": "p7-2-seam",
+        "assertions": 50,
+        "failures": 0
+      },
+      {
+        "id": "p7-1-authority",
+        "assertions": 83,
+        "failures": 0
+      },
+      {
+        "id": "p7-1-tool-to-mw4",
+        "assertions": 30,
+        "failures": 0
+      },
+      {
+        "id": "p5-mining-tool",
+        "assertions": 36,
+        "failures": 0
+      },
+      {
+        "id": "p3-resource-domain",
+        "assertions": 79,
+        "failures": 0
+      },
+      {
+        "id": "mw4",
+        "assertions": 187,
+        "failures": 0
+      },
+      {
+        "id": "mw5",
+        "assertions": 142,
+        "failures": 0
+      },
+      {
+        "id": "mw6",
+        "assertions": 130,
+        "failures": 0
+      }
+    ],
+    "fatal_log_markers": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to instantiate an autoload",
+      "Failed to load script"
+    ],
+    "tracked_clean_required": true,
+    "log_sha256_required": true
+  },
+  "verifier_must_not": [
+    "modify or repair runtime source",
+    "reuse Implementer or Reviewer worktree",
+    "substitute a non-exact Godot build",
+    "treat Reviewer PASS as execution evidence",
+    "merge runtime PR #373",
+    "authorize RUNTIME_FEATURE_MERGE",
+    "claim P7.3 COMPLETE_MERGED",
+    "claim whole P7 accepted"
+  ],
+  "success_opens_only": "human RUNTIME_FEATURE_MERGE gate for exact runtime PR #373 subject"
+}
