@@ -42,6 +42,26 @@ func _init() -> void:
 	_check(context.size() == Profiler.CONTEXT_FIELDS.size(), "campaign context has frozen exact field set")
 	_check(_is_hash(context_hash), "campaign context has deterministic SHA-256 identity")
 
+	var parsed_config_value = JSON.parse_string(JSON.stringify(config))
+	_check(parsed_config_value is Dictionary, "campaign config survives JSON parse as Dictionary")
+	if parsed_config_value is Dictionary:
+		var parsed_config: Dictionary = Dictionary(parsed_config_value)
+		_check(bool(profiler.validate_campaign_config(parsed_config).get("success", false)),
+			"JSON numeric coercion preserves valid campaign config")
+		var parsed_context: Dictionary = profiler.campaign_context(parsed_config)
+		_check(profiler.campaign_context_hash(parsed_context) == context_hash,
+			"JSON numeric coercion preserves campaign context identity")
+
+	var fractional_chunk: Dictionary = config.duplicate(true)
+	fractional_chunk["stream_chunk_sizes"] = [1.5, 7.0, 64.0]
+	_check(not bool(profiler.validate_campaign_config(fractional_chunk).get("success", true)),
+		"fractional JSON-like chunk value fails closed")
+
+	var string_world_seed: Dictionary = config.duplicate(true)
+	string_world_seed["world_seed"] = str(Workbench.DEFAULT_WORLD_SEED)
+	_check(not bool(profiler.validate_campaign_config(string_world_seed).get("success", true)),
+		"string pseudo-integer world seed fails closed")
+
 	var changed_world: Dictionary = config.duplicate(true)
 	changed_world["world_seed"] = int(changed_world["world_seed"]) + 1
 	_check(not bool(profiler.validate_campaign_config(changed_world).get("success", true)), "world-seed drift fails closed")
