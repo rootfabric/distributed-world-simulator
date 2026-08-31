@@ -42,6 +42,9 @@ CONSTRUCT0              authorized now
                   │                    C0.3
                   │              construction editor
                   │                        │
+                  │                CONSTRUCT0.PLAY1
+                  │                 PHYSICAL TOYBOX
+                  │                        │
                   │                    C0.4
                   │              FULL / BAKED modes
                   │                        │
@@ -137,6 +140,175 @@ User can:
 - inspect part identity and canonical revision.
 
 Every edit goes through Construction first.
+
+### CONSTRUCT0.PLAY1 — PHYSICAL TOYBOX
+Goal: make the constructor genuinely playable with a small generic vocabulary rather than a catalogue of device-specific objects.
+
+Entry expectation:
+- C0.2 FABRIC-driven playback is available for bounded scenarios;
+- C0.3 canonical editing is usable enough to create/move/connect parts;
+- PLAY1 may start earlier with prebuilt presets, but closes only on the real editor/playback path.
+
+#### Generic parts
+Initial palette:
+- BLOCK — generic mass/body;
+- PLATE — platforms, doors, decks;
+- BEAM — frames, levers, bridge members;
+- CYLINDER — roller/shaft-like geometry;
+- WHEEL — wheel-shaped convex part, with no wheel-specific solver;
+- AXLE — shaft/rotation carrier;
+- WEIGHT — convenient calibrated load;
+- ANCHOR — world attachment/reference part.
+
+#### Generic relations
+Initial relation set:
+- RIGID_BOND;
+- HINGE / revolute;
+- AXLE / rotational relation;
+- SLIDER / prismatic relation;
+- SPRING_DAMPER;
+- BREAKABLE_BOND.
+
+BREAKABLE_BOND must expose generic strength limits and canonical state:
+```text
+INTACT → DEGRADED → BROKEN
+```
+A break must route through canonical topology mutation and existing unbake/split/re-bake lifecycle, not through a Godot-only fracture shortcut.
+
+#### Environment primitives
+- FLOOR;
+- adjustable RAMP;
+- MOVING_SURFACE / conveyor-like boundary condition.
+
+These are boundary conditions / environment primitives, not special device classes.
+
+#### Interaction tools
+The user must be able to apply:
+- FORCE;
+- IMPULSE;
+- TORQUE;
+- ADD_LOAD / calibrated weight;
+- BREAK_BOND debug action.
+
+The inspector should show application point, magnitude, resulting force/torque contribution and affected canonical/physical IDs where available.
+
+#### Tunable physical parameters
+At minimum:
+- part mass;
+- dimensions;
+- contact friction;
+- rolling friction;
+- torsional friction;
+- bond strength;
+- hinge axis / limits / friction where supported;
+- spring rest length / stiffness / damping.
+
+#### First PLAY1 experiments
+Five mandatory toybox scenes:
+
+1. INCLINED_PLANE
+   - block/cylinder on adjustable ramp;
+   - demonstrate stick→slide and, when supported, rolling behavior.
+
+2. SEESAW
+   - beam + hinge + movable calibrated weights;
+   - demonstrate torque, balance, support redistribution and tipping.
+
+3. CART
+   - frame + wheel-shaped parts / axle relations;
+   - movable payload;
+   - demonstrate center-of-mass sensitivity, support, friction and rolling/contact behavior.
+
+4. CATAPULT
+   - beam + hinge + spring/damper + projectile/load;
+   - demonstrate stored energy → rotation → release.
+
+5. BREAKABLE_BRIDGE
+   - multi-part deck/support structure;
+   - movable/addable loads;
+   - demonstrate bond load, failure, canonical topology split, local unbake and re-bake.
+
+Recommended additional presets after the mandatory five:
+- PENDULUM;
+- TOWER / DOMINO stack;
+- SUSPENSION_CART;
+- DOOR;
+- simple PRESS / SLIDER mechanism.
+
+#### Minimal ideal sources and sensors
+Allowed as laboratory primitives:
+- IDEAL_FORCE_SOURCE;
+- IDEAL_TORQUE_SOURCE;
+- IDEAL_VELOCITY_SOURCE;
+- IDEAL_ANGULAR_VELOCITY_SOURCE;
+- FORCE_SENSOR;
+- TORQUE_SENSOR;
+- VELOCITY_SENSOR;
+- ANGULAR_VELOCITY_SENSOR.
+
+These are explicitly ideal boundary/source/sensor primitives. They must not be presented as physical motors, gearboxes or batteries.
+
+#### Optional ratio relation
+A generic kinematic ratio relation may be prototyped:
+```text
+omega_b = ratio * omega_a
+```
+This is a generic constraint for experimenting with transmission-like compositions. It must not introduce a Gearbox class.
+
+#### Inspector requirements
+For a selected part:
+- mass;
+- linear/angular velocity;
+- net force;
+- net torque;
+- active contacts;
+- current physical representation.
+
+For a selected bond/relation:
+- current force/torque load where available;
+- configured capacity/limit;
+- utilization percentage;
+- state: INTACT / DEGRADED / BROKEN.
+
+For the whole Construction:
+- canonical part/bond count;
+- FULL estimated physical complexity;
+- current reduced complexity;
+- FULL contact members;
+- BAKED generators;
+- reduction ratio;
+- active refinement / validity guard state.
+
+#### PLAY1 architecture rule
+Do not add:
+- MotorPhysics;
+- GearboxPhysics;
+- BatteryPhysics;
+- ClutchPhysics;
+- WheelPhysics;
+- device-specific solver shortcuts.
+
+The intended composition rule remains:
+```text
+generic parts
++ generic relations
++ generic sources
++ generic material/contact laws
+→ emergent device behavior
+```
+
+If a desired toy cannot be expressed with generic primitives, that is evidence for a missing FABRIC/Construction primitive and should feed back into SYNC-2 / later physical research.
+
+#### PLAY1 closure gate
+PLAY1 closes only when:
+- all five mandatory toybox experiments are runnable in the Godot lab;
+- they use canonical Construction identity/topology;
+- motion comes from FABRIC playback/runtime where the relevant capability exists;
+- no Godot RigidBody state is promoted to canonical physical truth;
+- breakable structures use canonical topology mutation;
+- unsupported physics remains explicit rather than silently approximated;
+- deterministic reset/replay exists for the reference experiments;
+- focused acceptance and Project Control pass.
 
 ### C0.4 — physical representation forcing
 Debug modes:
