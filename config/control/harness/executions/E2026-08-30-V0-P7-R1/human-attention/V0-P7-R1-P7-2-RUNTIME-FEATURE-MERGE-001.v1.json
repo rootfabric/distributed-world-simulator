@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "risk_class": "CRITICAL",
+  "reason": "P7.2 required explicit human approval before runtime feature merge.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for exact runtime HEAD 0292e0a97d980d5c384b0118999429f1e6f13c3d / TREE dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for the exact verified subject.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for the exact verified subject.",
+  "recommendation_reason": "Independent Reviewer R2 PASS, fresh Verifier VERIFIED, exact double-Godot gate GREEN and Project Control evidence were all complete.",
+  "blast_radius": [
+    "Bounded lunar Matter bubble and body-fixed physical seam become canonical main runtime.",
+    "Existing MW4-MW10 and Item Graph owners remain unchanged.",
+    "Whole P7 remains IN_PROGRESS; P7.3-P7.7 remain open."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
+  ],
+  "status": "RESOLVED",
+  "resolution": "Human explicitly approved RUNTIME_FEATURE_MERGE. Connector could not mark draft PR #350 ready, so exact non-draft carrier PR #368 was created at identical HEAD/TREE and merged as 6e604a68c6883595a637a089bf3f709219a1197e. Merge commit parents are current main d96ed71a917f7a28fb59856b1914eec0bdb89a42 and exact verified runtime 0292e0a97d980d5c384b0118999429f1e6f13c3d; merge tree is exactly dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36. GitHub subsequently reports original PR #350 as merged/closed."
+}
