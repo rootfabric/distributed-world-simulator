@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.17",
+  "slice": "D_UNIFIED_MULTI_IMPACT_WRENCH_TRAJECTORY",
+  "status": "IMPLEMENTED_CANDIDATE_CONTROL_RECHECK",
+  "production_accepted": false,
+  "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
+  "executable_head": "643b4bdc5d33756819869c3faacc1dccf1251a1f",
+  "executable_tree": "3d531be386502c34ad7c30da8a00c5df8f152906",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 157,
+    "script": "tests/research/fabric0/fabric0_multi_impact_wrench_trajectory_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_17_D_UNIFIED_MULTI_IMPACT_WRENCH_TRAJECTORY_PLAYGROUND_PASS"
+  },
+  "integrated_falsifier": {
+    "first_event": {
+      "pairs": [
+        "C|L",
+        "C|R"
+      ],
+      "reference_time": 0.50000000000255,
+      "normal_rows": 8,
+      "initial_reopened_normal_residual": 0.3411080670192037,
+      "accepted_residual": 4.4365353630363876e-10
+    },
+    "second_event": {
+      "pairs": [
+        "P|Q",
+        "Q|S"
+      ],
+      "reference_time": 0.50020000000273,
+      "normal_rows": 8,
+      "initial_reopened_normal_residual": 0.3373959971736645,
+      "accepted_residual": 2.2960234509547496e-10
+    },
+    "same_instant_recoupling": "NORMAL_IMPACT_X_GRAPH_WIDE_GENERALIZED_WRENCH_FIXED_POINT",
+    "cross_patch_coupling_approx": [
+      3.33333333333333,
+      3.44827586206897
+    ],
+    "max_tangent_impulse_approx": [
+      0.328386,
+      0.341175
+    ],
+    "max_moment_impulse_approx": [
+      0.004823,
+      0.007338
+    ],
+    "persistent_after": [
+      false,
+      false
+    ]
+  },
+  "refinement": {
+    "reference_tolerance": 1e-11,
+    "state_errors": [
+      0.000007492319276325432,
+      5.04126098643809e-8,
+      5.950968606782681e-10
+    ],
+    "event_time_errors": [
+      0.0000028655978531189064,
+      1.9476065094004014e-8,
+      2.1209412004452588e-10
+    ],
+    "strictly_decreasing": true
+  },
+  "conservation": {
+    "initial_energy": 9.66625,
+    "final_energy": 2.07687223207214,
+    "energy_ledger_error": 1.7763568394002505e-15,
+    "linear_momentum_error": 0,
+    "angular_momentum_error": 0
+  },
+  "determinism": {
+    "replay": "EXACT_IDENTICAL",
+    "reverse_body_order": "EXACT_IDENTICAL_STATE_EVENTS_SIGNATURE",
+    "reverse_event_member_order": "EXACT_IDENTICAL_STATE_EVENTS_SIGNATURE"
+  },
+  "fail_closed": {
+    "under_refined_pairs": [
+      "C|L",
+      "C|R",
+      "P|Q",
+      "Q|S"
+    ],
+    "under_refined_code": "EVENT_SET_NOT_REFINED_ENOUGH_FOR_TRAJECTORY",
+    "control_codes": [
+      "BAD_OUTER_TOLERANCE",
+      "BAD_OUTER_ITERATION_BUDGET",
+      "BAD_OUTER_RELAXATION"
+    ]
+  },
+  "exact_gate": {
+    "fabric0_17_d": "157/157_PASS",
+    "fabric0_17_c": "76/76_PASS",
+    "fabric0_17_b": "63/63_PASS",
+    "fabric0_17_a": "77/77_PASS",
+    "fabric0_16_s3": "101/101_PASS",
+    "fabric0_16_s2": "102/102_PASS",
+    "fabric0_16_s1": "110/110_PASS",
+    "editor_scan": "CLEAN"
+  },
+  "exact_remote_byte_identity": {
+    "fabric0_17_d": "6/6_PASS",
+    "fabric0_17_c": "PRESERVED",
+    "fabric0_17_b": "PRESERVED",
+    "fabric0_17_a": "PRESERVED",
+    "fabric0_16_s3": "PRESERVED"
+  },
+  "files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_generalized_contact_wrench_graph_v1.gd",
+      "git_blob": "b309a9d47bfec9128206fb6d93a54f8fbdea6cd6",
+      "sha256": "0a11f498f50fc39108b8b87e849012007805be3b744755cfadf31bd910ffae0d"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_impact_wrench_fixed_point_v1.gd",
+      "git_blob": "438722f3af3db2284e15ff707380ebb2730dc831",
+      "sha256": "f603890d581dd4caa7cf632f6e695c82cd77a46c225ddcbdc5e6ae12dade1559"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_multi_impact_wrench_trajectory_v1.gd",
+      "git_blob": "3afa66115c59a1d8e88ff289d91eed3cbd584319",
+      "sha256": "73ae7334cf5a720b2410497215da4715808846291b941a1333c94b3b914c61b5"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_multi_impact_wrench_trajectory_experiments_v1.gd",
+      "git_blob": "3bb52758b02a22709335f5554491ee7a77a09651",
+      "sha256": "2987bf68b9110bda9bd384320faa31a728ce5d25ef4b009c8ad6b8ecac31b41d"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_multi_impact_wrench_trajectory_acceptance.gd",
+      "git_blob": "f5565a183e869524ed607f83006566d805a3b1b0",
+      "sha256": "46030db94a98889ca690987fc4a09ba1b6b4017777f3e47000a26301d6a911c3"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_multi_impact_wrench_trajectory_playground.gd",
+      "git_blob": "2f45649b09ffa66843957cec604b3f4e59d7fd75",
+      "sha256": "bb7b84171c530e97e0f6c20a27916d45cb1c34c12e3f315e46b60da3595e3bee"
+    }
+  ],
+  "project_control": {
+    "first_run": {
+      "run_number": 1836,
+      "run_id": 33357807534,
+      "result": "FAILURE",
+      "failed_step": "architecture and ownership passport compatibility regression",
+      "classification": "EXTERNAL_CROSS_REF_CONTROL_DRIFT"
+    },
+    "evidence": "D delta from C evidence HEAD changes exactly six FABRIC research/test files; no G/ECO/Matter/control registry files changed.",
+    "unrelated_red_programs": [
+      "G",
+      "ECO"
+    ],
+    "rerun_status": "REQUESTED"
+  },
+  "claims": [
+    "TWO_CAUSALLY_ORDERED_SIMULTANEOUS_IMPACT_EVENT_SETS",
+    "SAME_INSTANT_NORMAL_WRENCH_RECOUPLING",
+    "GRAPH_WIDE_SHARED_BODY_GENERALIZED_WRENCH_COUPLING",
+    "STRICT_WHOLE_STATE_AND_EVENT_TIME_REFINEMENT",
+    "ENERGY_AND_MOMENTUM_LEDGER_CLOSURE",
+    "EXACT_REPLAY_AND_CALLER_ORDER_DETERMINISM",
+    "UNDER_REFINED_TEMPORAL_ALIAS_FAILS_CLOSED"
+  ],
+  "non_claims": [
+    "FABRIC0_17_CLOSED_WHILE_PROJECT_CONTROL_RED",
+    "FINITE_DURATION_PERSISTENT_CONTACT_WRENCH_MODE_EVOLUTION",
+    "TORSIONAL_CHANNEL_ACTIVE_IN_D_TRAJECTORY",
+    "UNIVERSAL_MONOLITHIC_SIGNORINI_COULOMB_IMPACT_WRENCH_MCP",
+    "EXACT_PRESSURE_DISTRIBUTION_WRENCH_CONE",
+    "PRODUCTION_SPARSE_BACKEND",
+    "PRODUCTION_ACCEPTANCE"
+  ]
+}
