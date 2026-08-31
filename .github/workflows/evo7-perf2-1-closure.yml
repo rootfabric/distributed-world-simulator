@@ -1,0 +1,103 @@
+name: ECO EVO7 PERF2.1 Closure
+
+on:
+  pull_request:
+    branches:
+      - feature/eco-evo7-stream1-bounded-generation-stream-r1
+    paths:
+      - "RUN_ECO_EVO7_PERF2_1_TESTS.ps1"
+      - "RUN_ECO_TEST_WORKFLOW.ps1"
+      - "scripts/ecology/perf/eco_evo7_perf21_generation_profiler_v1.gd"
+      - "tests/ecology/eco_evo7_perf21_generation_profiling_acceptance.gd"
+      - "config/ecology/eco-evo7-live-simulation-roadmap.v1.json"
+      - "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_STREAM1_GENERATION_PROFILING_R2_RU.md"
+      - "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_WINDOWS_VERIFICATION_MISSION_RU.md"
+      - ".github/workflows/evo7-perf2-1-closure.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-perf2-1-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  closure:
+    name: exact PERF2.1 generation-profiling closure
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact PR HEAD checkout
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($head -ne "${{ github.event.pull_request.head.sha }}") {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}"
+          }
+          Write-Host "exact_head=$head"
+          Write-Host "exact_tree=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found. Configure DWS_GODOT_DOUBLE_BIN or install: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Import exact project
+        env:
+          BREAKPOINT_RUNTIME_DISABLED: "1"
+        run: |
+          & "${{ steps.godot.outputs.path }}" --headless --import --path .
+          if ($LASTEXITCODE -ne 0) {
+            throw "GODOT_IMPORT_FAILED: $LASTEXITCODE"
+          }
+
+      - name: Run exact PERF2.1 canonical repository workflow
+        run: |
+          .\RUN_ECO_TEST_WORKFLOW.ps1 -Suite perf2.1 -GodotPath "${{ steps.godot.outputs.path }}"
+          if ($LASTEXITCODE -ne 0) {
+            throw "PERF2_1_CLOSURE_FAILED: $LASTEXITCODE"
+          }
+
+      - name: Assert tracked worktree clean
+        run: |
+          $status = @(git status --porcelain --untracked-files=no)
+          if ($status.Count -ne 0) {
+            $status | ForEach-Object { Write-Host $_ }
+            throw "TRACKED_WORKTREE_DIRTY_AFTER_PERF2_1"
+          }
+          Write-Host "TRACKED_WORKTREE_CLEAN=YES"
+
+      - name: Upload PERF2.1 profiling evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-evo7-perf2-1-profile-${{ github.event.pull_request.head.sha }}
+          if-no-files-found: warn
+          path: |
+            artifacts/perf2/perf2-1-generation-profile-r2.json
+            artifacts/perf21_gate_logs/*.log
