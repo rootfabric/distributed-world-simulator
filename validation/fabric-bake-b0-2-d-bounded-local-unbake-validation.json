@@ -1,0 +1,113 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_2_d_validation.v1",
+  "checkpoint": "B0.2-D",
+  "title": "Bounded Local Unbake",
+  "branch": "research/fabric-bake0-2-d-bounded-local-unbake-r1",
+  "qualification": "RESEARCH_SLICE_CLOSED_EXACT_HEAD_DOUBLE_PASS",
+  "production_acceptance_claimed": false,
+  "b0_2_overall_closed": false,
+  "exact_executable_subject": {
+    "head": "8da6ec6b7c2983b127f4c0607edeb9be900825c3",
+    "tree": "285240dcc8a08a3a676897792659dfcad43bf410",
+    "parent": "da90331f83e94ca71d8979304c084b072a082634"
+  },
+  "implementation_boundary": {
+    "commits_ahead_of_parent": 1,
+    "changed_runtime_files": 7,
+    "predecessor_files_modified": 0
+  },
+  "platform_policy": {
+    "required_platform": "UBUNTU_LINUX_DOUBLE",
+    "required_platform_status": "PASS",
+    "windows_default_result": "PASS_BY_POLICY",
+    "windows_is_closure_gate": false
+  },
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "source_export": {
+    "workflow_run_id": 33365726226,
+    "artifact_id": 9748204242,
+    "artifact_name": "fabric-bake-b0-2-d-exact-source-8da6ec6b",
+    "artifact_digest": "sha256:9f5dd67be50d79d7bcad6665781b5074117894da75f61a7c126b57e7ff1f660d",
+    "tracked_archive_sha256": "a15594210e395082b2186cb630e425535184f539115e470052cbc6914648f24d",
+    "tracked_file_count": 5054
+  },
+  "acceptance": {
+    "fresh_exact_runs": 2,
+    "b0_0": {
+      "status": "PASS",
+      "assertions": 33
+    },
+    "b0_1": {
+      "status": "PASS",
+      "assertions": 64
+    },
+    "b0_2_ab": {
+      "status": "PASS",
+      "assertions": 76
+    },
+    "b0_2_c": {
+      "status": "PASS",
+      "assertions": 118
+    },
+    "b0_2_d": {
+      "status": "PASS",
+      "assertions": 609
+    },
+    "playgrounds": {
+      "b0_1": "PASS",
+      "b0_2_ab": "PASS",
+      "b0_2_c": "PASS",
+      "b0_2_d": "PASS"
+    },
+    "target_region": "region/b0-2-012",
+    "full_parts": 20,
+    "retained_parts": 480,
+    "residual_components": 2,
+    "cut_interfaces": 2,
+    "fully_full_dof": 6500,
+    "mixed_dof": 286,
+    "retained_reduction_ratio": 22.727273,
+    "mass_error": 0,
+    "linear_momentum_error": 2.3e-13,
+    "angular_momentum_error": 5.39e-12,
+    "max_interface_position_error": 1e-14,
+    "max_interface_velocity_error": 0,
+    "plan_hash": "733cbe36eb3f98c72f893d83793ec6fe444899a32d7b7dc28d8cc991ac01ba8f"
+  },
+  "tracked_byte_audit": {
+    "checked": 5054,
+    "fresh_run_1": {
+      "missing": 0,
+      "changed": 0
+    },
+    "fresh_run_2": {
+      "missing": 0,
+      "changed": 0
+    }
+  },
+  "fail_closed": [
+    "guard not triggered",
+    "different region requested",
+    "bounded full-part limit exceeded",
+    "retained residual below safe aggregate minimum",
+    "canonical source mutation under stale parent binding",
+    "foreign guard binding",
+    "tampered part/bond ownership coverage",
+    "non-rigid source bond",
+    "stale descriptor/reconstruction/source binding",
+    "guard topology mismatch"
+  ],
+  "non_claims": [
+    "B0.2 overall closure",
+    "canonical topology mutation",
+    "bond break/damage semantics",
+    "arbitrary simultaneous multi-region unbake",
+    "topology split/re-bake lifecycle completion",
+    "final executable structural PhysicalBakeArtifact",
+    "production readiness"
+  ],
+  "next_required_stage": "B0.2-E_TOPOLOGY_SPLIT_REBAKE"
+}

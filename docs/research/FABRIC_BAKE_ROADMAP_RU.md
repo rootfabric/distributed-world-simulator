@@ -1612,9 +1612,9 @@ Ubuntu/Linux exact-double:
 fresh pass #1  ✅
 fresh pass #2  ✅
 
-B0.2-C  REFINEMENT GUARD FIELD            ◀ NEXT
-B0.2-D  BOUNDED LOCAL UNBAKE               pending
-B0.2-E  TOPOLOGY SPLIT / REBAKE            pending
+B0.2-C  REFINEMENT GUARD FIELD            ✅ CLOSED
+B0.2-D  BOUNDED LOCAL UNBAKE               ✅ CLOSED
+B0.2-E  TOPOLOGY SPLIT / REBAKE            ◀ NEXT
 
 B0.2 checkpoint                            OPEN
 ```
@@ -1657,14 +1657,20 @@ boundary/local load
 B0.2-A  Structural Aggregate Compiler       CLOSED / EXACT LINEAGE
 B0.2-B  Exact Reconstruction Mapping        CLOSED / EXACT LINEAGE
 B0.2-C  Refinement Guard Field              CLOSED / EXACT-HEAD DOUBLE PASS
-B0.2-D  Bounded Local Unbake                NEXT
-B0.2-E  Topology Split / Re-bake            FUTURE
+B0.2-D  Bounded Local Unbake                CLOSED / EXACT-HEAD DOUBLE PASS
+B0.2-E  Topology Split / Re-bake            NEXT
 
 B0.2 overall                                OPEN
 ```
 
-B0.2-C exact executable subject is `ffd53302d891b4d64b88589c434c56e76aef1eaa`
-with tree `754bdd8a38246afe7bbd85eba74615ef7f0bb3e7`.
-The C guard field proves deterministic early regional refinement before certified hidden-bond
-capacity crossing; it does not itself execute unbake. Windows remains
-`PASS_BY_POLICY / NON-GATING` under the FABRIC-BAKE platform policy.
+B0.2-D exact executable subject is `8da6ec6b7c2983b127f4c0607edeb9be900825c3`
+with tree `285240dcc8a08a3a676897792659dfcad43bf410`.
+
+The C-requested `region/b0-2-012` is expanded to exactly 20 FULL parts while two
+240-part connected residuals remain BAKED. The mixed state retains a 22.727273x
+reduction versus fully FULL representation, with deterministic cut-interface continuity
+and mass/linear/angular momentum reconciliation.
+
+D does not mutate canonical topology and does not complete topology split/re-bake.
+That lifecycle is the responsibility of B0.2-E. Windows remains
+`PASS_BY_POLICY / NON-GATING`.

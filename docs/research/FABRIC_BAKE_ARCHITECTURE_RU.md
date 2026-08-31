@@ -846,3 +846,52 @@ B0.2-C
 ```
 
 Therefore B0.2 itself is **not closed**.
+
+
+---
+
+## FABRIC-BAKE B0.2-D closure boundary — 2026-08-31
+
+```text
+branch:
+research/fabric-bake0-2-d-bounded-local-unbake-r1
+
+executable HEAD:
+8da6ec6b7c2983b127f4c0607edeb9be900825c3
+
+TREE:
+285240dcc8a08a3a676897792659dfcad43bf410
+
+qualification:
+RESEARCH SLICE CLOSED
+EXACT-HEAD DOUBLE PASS
+TRACKED TREE BYTE-CLEAN
+```
+
+B0.2-D implements the first bounded mixed structural representation transition:
+
+```text
+BAKED parent
+→ C guard selects canonical region
+→ exact B0.2-B reconstruction
+→ selected region FULL
+→ unaffected connected residuals recompiled BAKED
+→ explicit FULL ↔ BAKED cut interfaces
+→ conservation + continuity reconciliation
+```
+
+The 500-part acceptance fixture expands only 20 parts and retains 480 parts in two
+240-part residual aggregates:
+
+```text
+6500 fully-FULL DOF
+→ 286 mixed DOF
+= 22.727273x retained reduction
+```
+
+The transition is derived only. Construction/Matter part and bond topology remains
+canonical and unchanged. D fails closed instead of silently widening an unsafe local
+unbake.
+
+B0.2-D does not yet define post-break topology ownership, persistent split lifecycle,
+or re-bake after topology changes. Those are B0.2-E.
