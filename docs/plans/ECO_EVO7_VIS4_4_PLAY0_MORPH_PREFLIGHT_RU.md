@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.4 — PLAY0.MORPH Preflight
 
 Дата: 2026-08-31
-Статус: IMPLEMENTED CANDIDATE / EXACT UBUNTU VERIFICATION REQUIRED
+Статус: VIS4.4 R2 CLOSED / EXACT UBUNTU DOUBLE-GODOT VERIFIED
 
 ## Current PLAY0 seam
 
@@ -330,5 +330,83 @@ VIS4.3 predecessor
 -> VIS4.4 focused acceptance
 ~~~
 
-VIS4.4 is not CLOSED until the exact executable subject above passes the Ubuntu
-double-Godot runner.
+The original R1 subject above was RED because the focused acceptance script did not parse under Godot 4.7.1 double. R2 repaired only explicit local type annotations in the acceptance script. The runtime implementation was unchanged.
+
+
+## VIS4.4 R1 RED -> R2 closure
+
+Original R1 executable subject:
+
+~~~text
+HEAD: ac9a0bf7ea7e794b4c3d6c884fc59e812516d17a
+TREE: 7d13219874d3d02c2c84b4f278db2c385ba252fd
+~~~
+
+R1 canonical chain:
+
+~~~text
+VIS4.3 predecessor: PASS
+PLAY0 regression: PASS
+VIS4.4 focused: RED before execution
+12 GDScript parse errors in the acceptance script
+~~~
+
+Root cause:
+
+~~~text
+Godot 4.7.1 double could not infer local variable types
+from calls through untyped references.
+~~~
+
+R2 repair was test-only:
+
+~~~text
+HEAD: 6ec628ad125114c1588f543d877ec83b1dfc81ed
+TREE: 2f2cfd8c1893f0c9b76f8e98b936253a92d8bd18
+
+changed:
+tests/ecology/eco_evo7_vis4_4_play0_morph_acceptance.gd
+
+repair:
+12 explicit Dictionary / Vector3 / String annotations
+~~~
+
+Full canonical runner was rerun on R2 with exact double Godot
+`4.7.1.stable.double.custom_build.a13da4feb`.
+
+~~~text
+VIS4.3 predecessor: PASS / 752 assertions
+PLAY0 regression: PASS / 103 assertions
+VIS4.4 focused: PASS / 74 assertions
+final VIS4.4 marker: PRESENT
+
+HEAD unchanged: YES
+TREE unchanged: YES
+tracked worktree: clean
+~~~
+
+Verified VIS4.4 runtime properties include exact Descriptor V2/reconstruction/
+GrowthGraph binding, PH5 primary live path, legacy Box/Sphere retirement,
+TIER0/TIER2/TIER3/TIER4 behavior, population-only no-node semantics,
+render-origin transform-only behavior, neutral-color geometry invariance and
+tampered reconstruction fail-closed preservation.
+
+Canonical accepted subject:
+
+~~~text
+HEAD: 6ec628ad125114c1588f543d877ec83b1dfc81ed
+TREE: 2f2cfd8c1893f0c9b76f8e98b936253a92d8bd18
+~~~
+
+Durable closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_4_PLAY0_MORPH_UBUNTU_VERIFIED_CLOSED_R2_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.4 EXACT UBUNTU GREEN
+VIS4.4 R2 CLOSED
+~~~
