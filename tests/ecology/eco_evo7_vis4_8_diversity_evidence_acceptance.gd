@@ -257,6 +257,8 @@ func _controlled_live_diversity_contract() -> void:
 	var collapsed_snapshot := {
 		"generation": 1,
 		"source_ecology_state_hash": "a".repeat(64),
+		"source_competition_hash": "1".repeat(64),
+		"source_morphology_evidence_hash": "2".repeat(64),
 		"adapter_hash": "b".repeat(64),
 		"descriptor_count": collapsed_descriptors.size(),
 		"descriptors": collapsed_descriptors,
@@ -278,6 +280,8 @@ func _controlled_live_diversity_contract() -> void:
 	var diverse_snapshot := {
 		"generation": 1,
 		"source_ecology_state_hash": "c".repeat(64),
+		"source_competition_hash": "3".repeat(64),
+		"source_morphology_evidence_hash": "4".repeat(64),
 		"adapter_hash": "d".repeat(64),
 		"descriptor_count": diverse_descriptors.size(),
 		"descriptors": diverse_descriptors,
