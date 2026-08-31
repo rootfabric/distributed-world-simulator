@@ -67,10 +67,23 @@ func _run() -> void:
 	_check(individuality_hash_before.length() == 64, "VIS4.7 individuality identity available")
 	_check(appearance_hash_before.length() == 64, "VIS4.7 grid appearance identity available")
 
+	var active_view: Vector3 = playground.get_player().get_world_position()
+	var expected_nearest := -1
+	var expected_distance := INF
+	for index in range(descriptors.size()):
+		if not presentation.is_ph5_record_individual_materialized(index):
+			continue
+		var candidate_world: Vector3 = presentation.get_ph5_record_visual_world_position(index)
+		var candidate_distance := candidate_world.distance_squared_to(active_view)
+		if candidate_distance < expected_distance:
+			expected_distance = candidate_distance
+			expected_nearest = index
+
 	_check(playground.set_morphology_inspector_visible(true), "VIS4.7 opens live morphology inspector")
 	_check(playground.is_morphology_inspector_visible(), "VIS4.7 live inspector visible")
 	var selected_index: int = playground.get_morphology_inspector_selected_index()
 	_check(selected_index >= 0 and selected_index < descriptors.size(), "VIS4.7 selects a live PH5 record")
+	_check(expected_nearest >= 0 and selected_index == expected_nearest, "VIS4.7 F6 selects the exact nearest materialized PH5 plant")
 	if selected_index >= 0 and selected_index < descriptors.size():
 		_check(presentation.is_ph5_record_individual_materialized(selected_index), "VIS4.7 F6 selection prefers a visually materialized PH5 plant")
 	var status: Dictionary = playground.get_play0_status()
