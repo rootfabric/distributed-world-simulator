@@ -112,3 +112,42 @@ C emits a deterministic region refinement request. It does not execute unbake an
 ```text
 B0.2-D — BOUNDED LOCAL UNBAKE
 ```
+
+
+## Independent Ubuntu verification R1
+
+A separate Ubuntu verifier subsequently repeated the exact executable subject in two fresh detached worktrees with fresh imports.
+
+```text
+HEAD:
+ffd53302d891b4d64b88589c434c56e76aef1eaa
+
+TREE:
+754bdd8a38246afe7bbd85eba74615ef7f0bb3e7
+
+PASS #1:
+B0.0 33/33
+B0.1 64/64
+B0.2-A/B 76/76
+B0.2-C 118/118
+runner exit 0
+
+PASS #2:
+same assertion counts and deterministic summary evidence
+runner exit 0
+
+first_trigger=30
+capacity_cross=40
+peak_region=region/b0-2-012
+guard_field=d3bbb115fb79d3159f1446eb2d589754c50b99892fd8b96c682de65e85d1243a
+
+tracked status:
+CLEAN in both runs
+
+runtime changes:
+NONE
+verification commits:
+NONE
+```
+
+This independently confirms the existing `RESEARCH SLICE CLOSED / EXACT-HEAD DOUBLE PASS` qualification. It does not extend the scope or claim B0.2 overall closure.

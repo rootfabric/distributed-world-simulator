@@ -3,7 +3,7 @@
   "checkpoint": "B0.2-C",
   "title": "Refinement Guard Field",
   "branch": "research/fabric-bake0-2-refinement-guards-r1",
-  "qualification": "RESEARCH_SLICE_CLOSED_EXACT_HEAD_DOUBLE_PASS",
+  "qualification": "RESEARCH_SLICE_CLOSED_EXACT_HEAD_DOUBLE_PASS_INDEPENDENTLY_CONFIRMED",
   "production_acceptance_claimed": false,
   "b0_2_overall_closed": false,
   "exact_executable_subject": {
@@ -31,12 +31,24 @@
   },
   "acceptance": {
     "fresh_exact_runs": 2,
-    "b0_0": {"status": "PASS", "assertions": 33},
-    "b0_1": {"status": "PASS", "assertions": 64},
+    "b0_0": {
+      "status": "PASS",
+      "assertions": 33
+    },
+    "b0_1": {
+      "status": "PASS",
+      "assertions": 64
+    },
     "b0_1_playground": "PASS",
-    "b0_2_ab": {"status": "PASS", "assertions": 76},
+    "b0_2_ab": {
+      "status": "PASS",
+      "assertions": 76
+    },
     "b0_2_ab_playground": "PASS",
-    "b0_2_c": {"status": "PASS", "assertions": 118},
+    "b0_2_c": {
+      "status": "PASS",
+      "assertions": 118
+    },
     "b0_2_c_playground": "PASS",
     "fixture_parts": 500,
     "fixture_bonds": 499,
@@ -48,8 +60,14 @@
   },
   "tracked_byte_audit": {
     "tracked_files": 5043,
-    "fresh_run_1": {"missing": 0, "changed": 0},
-    "fresh_run_2": {"missing": 0, "changed": 0}
+    "fresh_run_1": {
+      "missing": 0,
+      "changed": 0
+    },
+    "fresh_run_2": {
+      "missing": 0,
+      "changed": 0
+    }
   },
   "certified_scope": {
     "structural_graph": "CONNECTED_RIGID_TREE",
@@ -67,5 +85,42 @@
     "final executable structural PhysicalBakeArtifact",
     "production readiness"
   ],
-  "next_required_stage": "B0.2-D_BOUNDED_LOCAL_UNBAKE"
+  "next_required_stage": "B0.2-D_BOUNDED_LOCAL_UNBAKE",
+  "independent_ubuntu_verification": {
+    "status": "PASS",
+    "verifier_role": "INDEPENDENT_UBUNTU_AGENT",
+    "exact_subject": {
+      "head": "ffd53302d891b4d64b88589c434c56e76aef1eaa",
+      "tree": "754bdd8a38246afe7bbd85eba74615ef7f0bb3e7"
+    },
+    "fresh_detached_runs": 2,
+    "fresh_import_exit_code": 0,
+    "runner_exit_code": 0,
+    "deterministic_summary_byte_identical": true,
+    "b0_0": {
+      "status": "PASS",
+      "assertions": 33
+    },
+    "b0_1": {
+      "status": "PASS",
+      "assertions": 64
+    },
+    "b0_2_ab": {
+      "status": "PASS",
+      "assertions": 76
+    },
+    "b0_2_c": {
+      "status": "PASS",
+      "assertions": 118
+    },
+    "first_refinement_trigger_load": 30,
+    "certified_capacity_crossing_load": 40,
+    "safety_invariant": "30 < 40",
+    "peak_region": "region/b0-2-012",
+    "guard_field_hash": "d3bbb115fb79d3159f1446eb2d589754c50b99892fd8b96c682de65e85d1243a",
+    "tracked_status": "CLEAN",
+    "runtime_changes": false,
+    "verification_commits": false,
+    "temporary_worktrees_removed": true
+  }
 }
