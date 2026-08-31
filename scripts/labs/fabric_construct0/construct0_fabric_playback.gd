@@ -166,11 +166,13 @@ func _sample_from(base: Dictionary, time: float) -> Dictionary:
 	var dt := maxf(0.0, time - float(base["time"]))
 	var v: Vector3 = base["v"]
 	var w: Vector3 = base["w"]
+	var base_position: Vector3 = base["position"]
+	var base_orientation: Quaternion = base["orientation"]
 	return {
 		"success": true,
 		"time": time,
-		"position": Vector3(base["position"]) + v * dt,
-		"orientation": _integrate_orientation(Quaternion(base["orientation"]), w, dt),
+		"position": base_position + v * dt,
+		"orientation": _integrate_orientation(base_orientation, w, dt),
 		"linear_velocity": v,
 		"angular_velocity": w,
 		"event_id": String(base["event_id"]),
