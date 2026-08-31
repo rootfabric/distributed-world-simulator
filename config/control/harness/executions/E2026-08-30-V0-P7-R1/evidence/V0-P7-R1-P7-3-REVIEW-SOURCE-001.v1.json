@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.p7_3_review_source.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "exact_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "exact_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "runtime_pr": 373,
+  "validation_pr": 375,
+  "validation_branch": "validation/v0-p7-3-review-source-r1",
+  "validation_carrier_head": "5bfb31c5c4940a365385717d756ed15a62737bd0",
+  "export_run": 33363652803,
+  "export_result": "SUCCESS",
+  "validation_project_control_run": 33363652835,
+  "validation_project_control": "SUCCESS",
+  "artifact_id": 9747515061,
+  "artifact_name": "p7-3-review-source-b4b11a69ef92",
+  "artifact_zip_sha256": "b6f2be94c8dbe371468ccfbee0064dcf354007b8ae0b4db6ac1176b37e008853",
+  "source_tar_sha256": "f5cb57e6d953b6f9dcf3d4cc0014e2c3759e9b461d5bcf638a2dcc0681ed1f98",
+  "independently_reconstructed_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "reconstruction_result": "EXACT_MATCH"
+}
