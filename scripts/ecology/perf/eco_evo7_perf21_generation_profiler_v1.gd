@@ -1,6 +1,6 @@
 extends RefCounted
 
-## ECO.EVO7 PERF2.1 R1 — STREAM1 generation profiling campaign.
+## ECO.EVO7 PERF2.1 R2 — STREAM1 generation profiling campaign.
 ##
 ## Measurement-only orchestration over the accepted public Workbench facade.
 ## It consumes the frozen PERF2.0 measurement contract unchanged and never
@@ -12,23 +12,58 @@ const Probe = preload("res://scripts/ecology/perf/eco_evo7_perf2_measurement_pro
 const Workbench = preload("res://scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd")
 const StreamExecutor = preload("res://scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd")
 
-const SCHEMA := "distributed_world_simulator.ecology.evo7_perf2_1.generation_profile.v1"
-const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-PERF2.1-R1"
+const SCHEMA := "distributed_world_simulator.ecology.evo7_perf2.measurement_report.v1"
+const PROFILE_SCHEMA := "distributed_world_simulator.ecology.evo7_perf2_1.generation_profile.v2"
+const VERSION := "1.1.0"
+const REVISION := "ECO.EVO7-PERF2.1-R2"
 const MODE := "RESEARCH_SHADOW_PERFORMANCE_ONLY"
 const FROZEN_PERF2_CONTRACT_REVISION := "ECO.EVO7-PERF2.0-R1"
 const FROZEN_PERF2_CONTRACT_BLOB_SHA := "b076784f6b4016a0191e937c4e6ada1fe90c783b"
 
 const DEFAULT_RECIPE := "MIXED_PHYSICAL_HETEROGENEITY"
+const STREAM_CHUNK_SIZES: Array[int] = [1, 7, 64]
+const EXECUTION_CONFIG_IDS: Array[String] = [
+	"SERIAL_REFERENCE",
+	"STREAM1_CHUNK_1",
+	"STREAM1_CHUNK_7",
+	"STREAM1_CHUNK_64",
+]
 const REQUIRED_METRICS: Array[String] = [
+	"timings_ms.wall_ms",
 	"timings_ms.generation_total_ms",
 	"timings_ms.ls33_total_ms",
+	"timings_ms.stream_total_ms",
 	"timings_ms.candidate_build_ms",
 	"timings_ms.route_build_ms",
 	"timings_ms.recruitment_eval_ms",
 	"timings_ms.audit_ms",
 ]
-const EXECUTION_MODES: Array[String] = ["SERIAL_REFERENCE", "STREAM1"]
+const CONFIG_FIELDS: Array[String] = [
+	"recipes",
+	"warmup_generations",
+	"measured_generations",
+	"repetitions",
+	"initial_records",
+	"stream_chunk_sizes",
+	"audit_interval_generations",
+	"audit_generation_1",
+	"founder_seed",
+	"placement_seed",
+	"evolution_seed",
+	"environment_seed",
+	"world_seed",
+	"competition_enabled",
+	"grid_size",
+	"cell_size_m",
+	"planet_source_kind",
+]
+const CONTEXT_FIELDS: Array[String] = [
+	"planet_source_kind",
+	"world_seed",
+	"competition_enabled",
+	"grid_size",
+	"cell_size_m",
+]
 
 const AUTHORITIES := {
 	"canonical": false,
@@ -42,6 +77,7 @@ const AUTHORITIES := {
 	"side_channel_only": true,
 }
 
+
 func default_campaign_config() -> Dictionary:
 	var contract := Contract.load_contract()
 	var defaults: Dictionary = Dictionary(Dictionary(contract.get("workload_contract", {})).get("default_stream1", {}))
@@ -50,15 +86,21 @@ func default_campaign_config() -> Dictionary:
 		"warmup_generations": int(defaults.get("warmup_generations", 2)),
 		"measured_generations": int(defaults.get("measured_generations", 12)),
 		"repetitions": int(defaults.get("repetitions", 3)),
-		"initial_records": int(defaults.get("initial_records", 64)),
-		"parents_per_chunk": int(defaults.get("parents_per_chunk", 64)),
+		"initial_records": Workbench.INITIAL_RECORDS,
+		"stream_chunk_sizes": STREAM_CHUNK_SIZES.duplicate(),
 		"audit_interval_generations": int(defaults.get("audit_interval_generations", 10)),
 		"audit_generation_1": bool(defaults.get("audit_generation_1", true)),
 		"founder_seed": Workbench.FOUNDER_SEED,
 		"placement_seed": Workbench.PLACEMENT_SEED,
 		"evolution_seed": Workbench.EVOLUTION_SEED,
 		"environment_seed": Workbench.DEFAULT_ENVIRONMENT_SEED,
+		"world_seed": Workbench.DEFAULT_WORLD_SEED,
+		"competition_enabled": true,
+		"grid_size": Workbench.GRID_SIZE,
+		"cell_size_m": Workbench.CELL_SIZE_M,
+		"planet_source_kind": "PROCEDURAL_EARTH_WORLD",
 	}
+
 
 func validate_campaign_config(config: Dictionary) -> Dictionary:
 	var errors: Array[String] = []
@@ -67,45 +109,86 @@ func validate_campaign_config(config: Dictionary) -> Dictionary:
 		errors.append("PERF2_CONTRACT_INVALID")
 	if Contract.REVISION != FROZEN_PERF2_CONTRACT_REVISION:
 		errors.append("PERF2_CONTRACT_REVISION_DRIFT")
+	if config.size() != CONFIG_FIELDS.size():
+		errors.append("CONFIG_EXACT_FIELD_COUNT")
+	for key in CONFIG_FIELDS:
+		if not config.has(key):
+			errors.append("CONFIG_MISSING_%s" % key.to_upper())
+	if not errors.is_empty():
+		return {"success": false, "errors": errors}
 
-	var recipes_value = config.get("recipes")
-	if not recipes_value is Array or Array(recipes_value).is_empty():
-		errors.append("RECIPES")
-	else:
-		var allowed: Array = Array(Dictionary(contract.get("workload_contract", {})).get("allowed_environment_recipes", []))
-		for value in Array(recipes_value):
-			if String(value) not in allowed:
-				errors.append("RECIPE_%s" % String(value))
-
-	for key in ["warmup_generations", "measured_generations", "repetitions", "initial_records", "parents_per_chunk", "audit_interval_generations"]:
-		if typeof(config.get(key)) != TYPE_INT or int(config.get(key, 0)) < 1:
-			errors.append("CONFIG_%s" % key.to_upper())
-	if typeof(config.get("audit_generation_1")) != TYPE_BOOL:
-		errors.append("CONFIG_AUDIT_GENERATION_1")
-	for key in ["founder_seed", "placement_seed", "evolution_seed", "environment_seed"]:
-		if typeof(config.get(key)) != TYPE_INT:
-			errors.append("CONFIG_%s" % key.to_upper())
+	var allowed: Array = Array(Dictionary(contract.get("workload_contract", {})).get("allowed_environment_recipes", []))
+	if Array(config["recipes"]) != [DEFAULT_RECIPE]:
+		errors.append("R2_RECIPE_SET_DRIFT")
+	for value in Array(config["recipes"]):
+		if String(value) not in allowed:
+			errors.append("RECIPE_%s" % String(value))
 
 	var workload_policy: Dictionary = Dictionary(contract.get("workload_contract", {}))
-	if int(config.get("warmup_generations", 0)) < int(workload_policy.get("minimum_warmup_generations", 1)):
-		errors.append("MIN_WARMUP")
-	if int(config.get("measured_generations", 0)) < int(workload_policy.get("minimum_measured_generations", 12)):
-		errors.append("MIN_MEASURED")
-	if int(config.get("repetitions", 0)) < int(workload_policy.get("minimum_repetitions", 3)):
-		errors.append("MIN_REPETITIONS")
+	if int(config["warmup_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("warmup_generations", 2)):
+		errors.append("R2_WARMUP_DRIFT")
+	if int(config["measured_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("measured_generations", 12)):
+		errors.append("R2_MEASURED_DRIFT")
+	if int(config["repetitions"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("repetitions", 3)):
+		errors.append("R2_REPETITIONS_DRIFT")
+	if int(config["initial_records"]) != Workbench.INITIAL_RECORDS:
+		errors.append("R2_INITIAL_RECORDS_DRIFT")
+	if Array(config["stream_chunk_sizes"]) != STREAM_CHUNK_SIZES:
+		errors.append("R2_CHUNK_SWEEP_DRIFT")
+	if int(config["audit_interval_generations"]) != int(Dictionary(workload_policy.get("default_stream1", {})).get("audit_interval_generations", 10)):
+		errors.append("R2_AUDIT_INTERVAL_DRIFT")
+	if bool(config["audit_generation_1"]) != bool(Dictionary(workload_policy.get("default_stream1", {})).get("audit_generation_1", true)):
+		errors.append("R2_AUDIT_GENERATION_1_DRIFT")
 
-	## PERF2.1 R1 deliberately refuses to mutate the Workbench public contract
-	## merely to benchmark alternate seeds/population sizes.
-	if int(config.get("initial_records", -1)) != Workbench.INITIAL_RECORDS:
-		errors.append("R1_WORKBENCH_INITIAL_RECORDS_UNSUPPORTED")
-	if int(config.get("founder_seed", -1)) != Workbench.FOUNDER_SEED:
-		errors.append("R1_WORKBENCH_FOUNDER_SEED_UNSUPPORTED")
-	if int(config.get("placement_seed", -1)) != Workbench.PLACEMENT_SEED:
-		errors.append("R1_WORKBENCH_PLACEMENT_SEED_UNSUPPORTED")
-	if int(config.get("evolution_seed", -1)) != Workbench.EVOLUTION_SEED:
-		errors.append("R1_WORKBENCH_EVOLUTION_SEED_UNSUPPORTED")
+	if int(config["founder_seed"]) != Workbench.FOUNDER_SEED:
+		errors.append("R2_FOUNDER_SEED_DRIFT")
+	if int(config["placement_seed"]) != Workbench.PLACEMENT_SEED:
+		errors.append("R2_PLACEMENT_SEED_DRIFT")
+	if int(config["evolution_seed"]) != Workbench.EVOLUTION_SEED:
+		errors.append("R2_EVOLUTION_SEED_DRIFT")
+	if int(config["environment_seed"]) != Workbench.DEFAULT_ENVIRONMENT_SEED:
+		errors.append("R2_ENVIRONMENT_SEED_DRIFT")
+	if int(config["world_seed"]) != Workbench.DEFAULT_WORLD_SEED:
+		errors.append("R2_WORLD_SEED_DRIFT")
+	if typeof(config["competition_enabled"]) != TYPE_BOOL or not bool(config["competition_enabled"]):
+		errors.append("R2_COMPETITION_MODE_DRIFT")
+	if int(config["grid_size"]) != Workbench.GRID_SIZE:
+		errors.append("R2_GRID_SIZE_DRIFT")
+	if not is_equal_approx(float(config["cell_size_m"]), Workbench.CELL_SIZE_M):
+		errors.append("R2_CELL_SIZE_DRIFT")
+	if String(config["planet_source_kind"]) != "PROCEDURAL_EARTH_WORLD":
+		errors.append("R2_PLANET_SOURCE_DRIFT")
 
 	return {"success": errors.is_empty(), "errors": errors}
+
+
+func campaign_context(config: Dictionary) -> Dictionary:
+	if not bool(validate_campaign_config(config).get("success", false)):
+		return {}
+	return {
+		"planet_source_kind": String(config["planet_source_kind"]),
+		"world_seed": int(config["world_seed"]),
+		"competition_enabled": bool(config["competition_enabled"]),
+		"grid_size": int(config["grid_size"]),
+		"cell_size_m": float(config["cell_size_m"]),
+	}
+
+
+func campaign_context_hash(context: Dictionary) -> String:
+	if context.size() != CONTEXT_FIELDS.size():
+		return ""
+	for key in CONTEXT_FIELDS:
+		if not context.has(key):
+			return ""
+	return "|".join(PackedStringArray([
+		"PERF2_1_CAMPAIGN_CONTEXT_V1",
+		String(context["planet_source_kind"]),
+		str(int(context["world_seed"])),
+		"true" if bool(context["competition_enabled"]) else "false",
+		str(int(context["grid_size"])),
+		"%.9f" % float(context["cell_size_m"]),
+	])).sha256_text()
+
 
 func run_campaign(planet_source, config: Dictionary, target: Dictionary, host_fingerprint: String) -> Dictionary:
 	var validation := validate_campaign_config(config)
@@ -118,32 +201,45 @@ func run_campaign(planet_source, config: Dictionary, target: Dictionary, host_fi
 	if host_fingerprint.strip_edges().is_empty():
 		return _failure("HOST_FINGERPRINT", [])
 
+	var context := campaign_context(config)
+	var context_hash := campaign_context_hash(context)
+	if context.is_empty() or not _is_hash(context_hash):
+		return _failure("CAMPAIGN_CONTEXT_INVALID", [])
+
 	var samples: Array[Dictionary] = []
 	for recipe_value in Array(config["recipes"]):
 		var recipe := String(recipe_value)
 		for repetition in range(int(config["repetitions"])):
 			var serial := _run_repetition(
 				planet_source, config, target, host_fingerprint,
-				recipe, "SERIAL_REFERENCE", repetition)
+				context_hash, recipe, "SERIAL_REFERENCE", 0, repetition)
 			if serial.is_empty():
 				return _failure("SERIAL_REPETITION_FAILED", [recipe, repetition])
-			var streamed := _run_repetition(
-				planet_source, config, target, host_fingerprint,
-				recipe, "STREAM1", repetition)
-			if streamed.is_empty():
-				return _failure("STREAM1_REPETITION_FAILED", [recipe, repetition])
-			var parity := Contract.can_compare_execution_modes(serial, streamed)
-			if not bool(parity.get("success", false)):
-				return _failure("CROSS_MODE_PARITY_FAILED", parity.get("errors", []))
 			samples.append(serial)
-			samples.append(streamed)
+			for chunk_value in Array(config["stream_chunk_sizes"]):
+				var chunk_size := int(chunk_value)
+				var streamed := _run_repetition(
+					planet_source, config, target, host_fingerprint,
+					context_hash, recipe, "STREAM1", chunk_size, repetition)
+				if streamed.is_empty():
+					return _failure("STREAM1_REPETITION_FAILED", [recipe, chunk_size, repetition])
+				var parity := Contract.can_compare_execution_modes(serial, streamed)
+				if not bool(parity.get("success", false)):
+					return _failure("CROSS_MODE_PARITY_FAILED", [chunk_size, parity.get("errors", [])])
+				if String(Dictionary(serial["flags"]).get("campaign_context_hash", "")) != String(Dictionary(streamed["flags"]).get("campaign_context_hash", "")):
+					return _failure("CAMPAIGN_CONTEXT_PARITY_FAILED", [chunk_size])
+				samples.append(streamed)
 
 	var summaries := _build_summaries(samples, config)
 	if summaries.is_empty():
 		return _failure("SUMMARY_BUILD_FAILED", [])
+	var comparisons := _build_comparisons(samples, summaries, config)
+	if comparisons.size() != STREAM_CHUNK_SIZES.size():
+		return _failure("COMPARISON_BUILD_FAILED", [])
 
 	var report := {
 		"schema": SCHEMA,
+		"profile_schema": PROFILE_SCHEMA,
 		"version": VERSION,
 		"revision": REVISION,
 		"mode": MODE,
@@ -152,8 +248,11 @@ func run_campaign(planet_source, config: Dictionary, target: Dictionary, host_fi
 		"target": target.duplicate(true),
 		"host_fingerprint": host_fingerprint,
 		"config": config.duplicate(true),
+		"campaign_context": context.duplicate(true),
+		"campaign_context_hash": context_hash,
 		"samples": samples.duplicate(true),
 		"summaries": summaries.duplicate(true),
+		"comparisons": comparisons.duplicate(true),
 		"authorities": AUTHORITIES.duplicate(true),
 	}
 	report["report_hash"] = report_hash(report)
@@ -161,22 +260,25 @@ func run_campaign(planet_source, config: Dictionary, target: Dictionary, host_fi
 		return _failure("REPORT_VALIDATION_FAILED", [])
 	return report
 
+
 func validate_report(report: Dictionary) -> bool:
 	var required := [
-		"schema", "version", "revision", "mode",
-		"accepted_measurement_contract_revision",
-		"accepted_measurement_contract_blob_sha",
-		"target", "host_fingerprint", "config", "samples",
-		"summaries", "authorities", "report_hash",
+		"schema", "profile_schema", "version", "revision", "mode",
+		"accepted_measurement_contract_revision", "accepted_measurement_contract_blob_sha",
+		"target", "host_fingerprint", "config",
+		"campaign_context", "campaign_context_hash",
+		"samples", "summaries", "comparisons", "authorities", "report_hash",
 	]
-	if report.keys().size() != required.size():
+	if report.size() != required.size():
 		return false
 	for key in required:
 		if not report.has(key):
 			return false
-	if String(report["schema"]) != SCHEMA or String(report["version"]) != VERSION or String(report["revision"]) != REVISION:
+	if String(report["schema"]) != Contract.REPORT_SCHEMA:
 		return false
-	if String(report["mode"]) != MODE:
+	if String(report["profile_schema"]) != PROFILE_SCHEMA:
+		return false
+	if String(report["version"]) != VERSION or String(report["revision"]) != REVISION or String(report["mode"]) != MODE:
 		return false
 	if String(report["accepted_measurement_contract_revision"]) != Contract.REVISION:
 		return false
@@ -186,55 +288,75 @@ func validate_report(report: Dictionary) -> bool:
 		return false
 	if String(report["host_fingerprint"]).strip_edges().is_empty():
 		return false
-	if not bool(validate_campaign_config(Dictionary(report["config"])).get("success", false)):
+	var config: Dictionary = Dictionary(report["config"])
+	if not bool(validate_campaign_config(config).get("success", false)):
 		return false
-	var auth: Dictionary = Dictionary(report["authorities"])
-	if auth != AUTHORITIES:
+	var context: Dictionary = Dictionary(report["campaign_context"])
+	if context != campaign_context(config):
+		return false
+	if String(report["campaign_context_hash"]) != campaign_context_hash(context):
+		return false
+	if Dictionary(report["authorities"]) != AUTHORITIES:
 		return false
 
 	var samples_value = report["samples"]
-	if not samples_value is Array or Array(samples_value).is_empty():
+	if not samples_value is Array:
 		return false
 	var samples: Array = samples_value
-	for sample_value in samples:
-		if not sample_value is Dictionary:
-			return false
-		var sample: Dictionary = sample_value
-		if not bool(Contract.validate_sample(sample).get("success", false)):
-			return false
-		if not bool(sample.get("passed", false)):
-			return false
-
-	var expected_count := Array(Dictionary(report["config"])["recipes"]).size() * int(Dictionary(report["config"])["repetitions"]) * EXECUTION_MODES.size()
-	if samples.size() != expected_count:
+	var expected_samples := int(config["repetitions"]) * (1 + STREAM_CHUNK_SIZES.size()) * Array(config["recipes"]).size()
+	if samples.size() != expected_samples:
 		return false
+	for value in samples:
+		if not value is Dictionary:
+			return false
+		var sample: Dictionary = value
+		if not bool(Contract.validate_sample(sample).get("success", false)) or not bool(sample.get("passed", false)):
+			return false
+		if String(Dictionary(sample["flags"]).get("campaign_context_hash", "")) != String(report["campaign_context_hash"]):
+			return false
 
-	for recipe_value in Array(Dictionary(report["config"])["recipes"]):
-		var recipe := String(recipe_value)
-		for repetition in int(Dictionary(report["config"])["repetitions"]):
-			var serial := _find_sample(samples, recipe, "SERIAL_REFERENCE", repetition)
-			var streamed := _find_sample(samples, recipe, "STREAM1", repetition)
-			if serial.is_empty() or streamed.is_empty():
-				return false
-			if Contract.simulation_workload_hash(Dictionary(serial["workload"])) != Contract.simulation_workload_hash(Dictionary(streamed["workload"])):
+	for repetition in range(int(config["repetitions"])):
+		var serial := _find_sample(samples, DEFAULT_RECIPE, "SERIAL_REFERENCE", 0, repetition)
+		if serial.is_empty():
+			return false
+		for chunk_size in STREAM_CHUNK_SIZES:
+			var streamed := _find_sample(samples, DEFAULT_RECIPE, "STREAM1", chunk_size, repetition)
+			if streamed.is_empty():
 				return false
 			if not bool(Contract.can_compare_execution_modes(serial, streamed).get("success", false)):
 				return false
 
 	var summaries_value = report["summaries"]
-	if not summaries_value is Array or Array(summaries_value).is_empty():
+	if not summaries_value is Array or Array(summaries_value).size() != EXECUTION_CONFIG_IDS.size() * REQUIRED_METRICS.size():
 		return false
-	for summary_value in Array(summaries_value):
-		if not summary_value is Dictionary:
+	for value in Array(summaries_value):
+		if not value is Dictionary:
 			return false
-		var summary: Dictionary = summary_value
-		if int(summary.get("count", 0)) < int(Dictionary(report["config"])["repetitions"]):
+		var summary: Dictionary = value
+		if int(summary.get("count", 0)) != int(config["repetitions"]):
 			return false
 		for key in ["p50", "p95", "mean", "min", "max"]:
 			if not _finite_nonnegative(summary.get(key)):
 				return false
 
+	var comparisons_value = report["comparisons"]
+	if not comparisons_value is Array or Array(comparisons_value).size() != STREAM_CHUNK_SIZES.size():
+		return false
+	for value in Array(comparisons_value):
+		if not value is Dictionary:
+			return false
+		var comparison: Dictionary = value
+		if int(comparison.get("exact_pairs", 0)) != int(config["repetitions"]):
+			return false
+		if not _finite_nonnegative(comparison.get("observed_wall_ratio_serial_over_stream")):
+			return false
+		if not _finite_nonnegative(comparison.get("observed_generation_ratio_serial_over_stream")):
+			return false
+		if bool(comparison.get("optimization_claim", true)):
+			return false
+
 	return String(report["report_hash"]) == report_hash(report)
+
 
 func write_report(report: Dictionary, path: String) -> bool:
 	if not validate_report(report) or path.strip_edges().is_empty():
@@ -249,48 +371,56 @@ func write_report(report: Dictionary, path: String) -> bool:
 	file.close()
 	return true
 
+
 func report_hash(report: Dictionary) -> String:
 	var target: Dictionary = Dictionary(report.get("target", {}))
-	var config: Dictionary = Dictionary(report.get("config", {}))
 	var sample_hashes := PackedStringArray()
 	for value in Array(report.get("samples", [])):
-		var sample: Dictionary = value
-		sample_hashes.append(_sample_evidence_hash(sample))
+		sample_hashes.append(_sample_evidence_hash(Dictionary(value)))
 	var summary_hashes := PackedStringArray()
 	for value in Array(report.get("summaries", [])):
-		var summary: Dictionary = value
-		summary_hashes.append(_summary_evidence_hash(summary))
+		summary_hashes.append(_summary_evidence_hash(Dictionary(value)))
+	var comparison_hashes := PackedStringArray()
+	for value in Array(report.get("comparisons", [])):
+		comparison_hashes.append(_comparison_evidence_hash(Dictionary(value)))
 	return "|".join(PackedStringArray([
-		"PERF2_1_REPORT_V1",
+		"PERF2_1_REPORT_R2",
 		String(target.get("head", "")),
 		String(target.get("tree", "")),
 		String(target.get("godot_version", "")),
 		String(report.get("host_fingerprint", "")),
 		Contract.REVISION,
 		FROZEN_PERF2_CONTRACT_BLOB_SHA,
-		MODE,
-		_config_hash(config),
+		REVISION,
+		String(report.get("campaign_context_hash", "")),
+		_config_hash(Dictionary(report.get("config", {}))),
 		";".join(sample_hashes),
 		";".join(summary_hashes),
+		";".join(comparison_hashes),
 	])).sha256_text()
+
 
 func _run_repetition(
 	planet_source,
 	config: Dictionary,
 	target: Dictionary,
 	host_fingerprint: String,
+	context_hash: String,
 	recipe: String,
 	execution_mode: String,
+	chunk_size: int,
 	repetition: int
 ) -> Dictionary:
-	var workload := _workload(config, recipe, execution_mode)
+	var workload := _workload(config, recipe, execution_mode, chunk_size)
 	if not bool(Contract.validate_workload(workload).get("success", false)):
 		return {}
 
 	var wb = Workbench.new()
 	var requested_spec := Workbench.default_spec()
+	requested_spec["world_seed"] = int(config["world_seed"])
 	requested_spec["environment_seed"] = int(config["environment_seed"])
 	requested_spec["environment_recipe"] = recipe
+	requested_spec["competition_enabled"] = bool(config["competition_enabled"])
 	if not wb.setup(planet_source, requested_spec):
 		return {}
 
@@ -298,7 +428,7 @@ func _run_repetition(
 	if execution_mode == "STREAM1":
 		executor = StreamExecutor.new()
 		if not executor.setup({
-			"parents_per_chunk": int(config["parents_per_chunk"]),
+			"parents_per_chunk": chunk_size,
 			"audit_interval": int(config["audit_interval_generations"]),
 			"audit_generation_1": bool(config["audit_generation_1"]),
 		}):
@@ -322,8 +452,7 @@ func _run_repetition(
 			telemetry_before[key] = int(raw_before.get(key, 0))
 
 	var probe := Probe.new()
-	var started := probe.begin()
-	if not bool(started.get("success", false)):
+	if not bool(probe.begin().get("success", false)):
 		return {}
 
 	var timing_sums := {
@@ -336,6 +465,8 @@ func _run_repetition(
 		"audit_ms": 0.0,
 	}
 	var final_ls33: Dictionary = {}
+	var measured_max_parent_chunk := 0
+	var measured_max_candidate_chunk := 0
 	for _measured in range(int(config["measured_generations"])):
 		if wb.advance_generations(1).is_empty():
 			return {}
@@ -353,15 +484,19 @@ func _run_repetition(
 			var stream_timings: Dictionary = Dictionary(ls33.get("timings_ms", {}))
 			timing_sums["stream_total_ms"] += float(stream_timings.get("total_ms", -1.0))
 			timing_sums["audit_ms"] += float(stream_timings.get("audit_ms", -1.0))
+			measured_max_parent_chunk = maxi(measured_max_parent_chunk, int(ls33.get("stream_max_parent_chunk", 0)))
+			measured_max_candidate_chunk = maxi(measured_max_candidate_chunk, int(ls33.get("stream_max_candidate_chunk", 0)))
+		else:
+			measured_max_parent_chunk = maxi(measured_max_parent_chunk, int(ls33.get("parent_count", 0)))
+			measured_max_candidate_chunk = maxi(measured_max_candidate_chunk, int(ls33.get("candidate_count", 0)))
 		final_ls33 = ls33.duplicate(true)
 
 	var observed := probe.finish()
 	if not bool(observed.get("success", false)):
 		return {}
-
 	var measured_count := float(int(config["measured_generations"]))
 	var timings := {
-		"wall_ms": float(observed.get("wall_ms", -1.0)),
+		"wall_ms": float(observed.get("wall_ms", -1.0)) / measured_count,
 		"generation_total_ms": float(timing_sums["generation_total_ms"]) / measured_count,
 		"ls33_total_ms": float(timing_sums["ls33_total_ms"]) / measured_count,
 		"stream_total_ms": float(timing_sums["stream_total_ms"]) / measured_count,
@@ -385,9 +520,7 @@ func _run_repetition(
 		"serial_audit_calls": 0,
 		"oracle_elided_generations": 0,
 	}
-	var chunk_count := 0
-	var max_parent_chunk := 0
-	var max_candidate_chunk := 0
+	var chunk_count := 1
 	if execution_mode == "STREAM1":
 		var raw_telemetry: Dictionary = executor.get_telemetry()
 		for key in telemetry.keys():
@@ -395,15 +528,14 @@ func _run_repetition(
 			if int(telemetry[key]) < 0:
 				return {}
 		chunk_count = int(final_ls33.get("stream_chunk_count", 0))
-		max_parent_chunk = int(raw_telemetry.get("max_parent_chunk_seen", 0))
-		max_candidate_chunk = int(raw_telemetry.get("max_candidate_chunk_seen", 0))
 
 	var memory: Dictionary = Dictionary(observed.get("memory_bytes", {}))
+	var configuration_id := _configuration_id(execution_mode, chunk_size)
 	var sample := {
 		"schema": Contract.SAMPLE_SCHEMA,
 		"version": Contract.VERSION,
 		"revision": Contract.REVISION,
-		"run_id": "perf2-1-%s-%s-r%d" % [recipe.to_lower(), execution_mode.to_lower(), repetition],
+		"run_id": "perf2-1-r2-%s-%s-r%d" % [recipe.to_lower(), configuration_id.to_lower(), repetition],
 		"target": target.duplicate(true),
 		"host_fingerprint": host_fingerprint,
 		"measurement_method_revision": Contract.REVISION,
@@ -424,8 +556,8 @@ func _run_repetition(
 				"parent_count": int(final_ls33.get("parent_count", 0)),
 				"candidate_count": int(final_ls33.get("candidate_count", 0)),
 				"chunk_count": chunk_count,
-				"max_parent_chunk": max_parent_chunk,
-				"max_candidate_chunk": max_candidate_chunk,
+				"max_parent_chunk": measured_max_parent_chunk,
+				"max_candidate_chunk": measured_max_candidate_chunk,
 			},
 			"memory_bytes": {
 				"engine_static_bytes": int(memory.get("engine_static_bytes", 0)),
@@ -434,28 +566,37 @@ func _run_repetition(
 				"process_peak_rss_bytes": memory.get("process_peak_rss_bytes"),
 			},
 			"stream": telemetry,
+			"window": {
+				"measured_generations": int(config["measured_generations"]),
+				"total_wall_ms": float(observed.get("wall_ms", -1.0)),
+			},
 		},
 		"flags": {
 			"canonical": false,
 			"side_channel_only": true,
 			"measurement_only": true,
+			"configuration_id": configuration_id,
+			"stream_chunk_size": chunk_size if execution_mode == "STREAM1" else 0,
+			"campaign_context_hash": context_hash,
+			"timing_aggregation": "MEAN_PER_MEASURED_GENERATION",
 		},
 	}
 	if not bool(Contract.validate_sample(sample).get("success", false)):
 		return {}
 	return sample
 
-func _workload(config: Dictionary, recipe: String, execution_mode: String) -> Dictionary:
+
+func _workload(config: Dictionary, recipe: String, execution_mode: String, chunk_size: int) -> Dictionary:
 	return {
-		"workload_id": "PERF2_STREAM1_STANDARD_R1",
+		"workload_id": "PERF2_1_WORKBENCH_STANDARD_R2",
 		"execution_mode": execution_mode,
 		"environment_recipe": recipe,
 		"warmup_generations": int(config["warmup_generations"]),
 		"measured_generations": int(config["measured_generations"]),
 		"repetitions": int(config["repetitions"]),
 		"initial_records": int(config["initial_records"]),
-		"parents_per_chunk": int(config["parents_per_chunk"]) if execution_mode == "STREAM1" else 1,
-		"audit_interval_generations": int(config["audit_interval_generations"]) if execution_mode == "STREAM1" else 1,
+		"parents_per_chunk": chunk_size if execution_mode == "STREAM1" else int(config["initial_records"]),
+		"audit_interval_generations": int(config["audit_interval_generations"]),
 		"audit_generation_1": bool(config["audit_generation_1"]) if execution_mode == "STREAM1" else false,
 		"founder_seed": int(config["founder_seed"]),
 		"placement_seed": int(config["placement_seed"]),
@@ -463,42 +604,100 @@ func _workload(config: Dictionary, recipe: String, execution_mode: String) -> Di
 		"environment_seed": int(config["environment_seed"]),
 	}
 
+
 func _build_summaries(samples: Array[Dictionary], config: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for recipe_value in Array(config["recipes"]):
-		var recipe := String(recipe_value)
-		for mode in EXECUTION_MODES:
-			var group: Array[Dictionary] = []
-			for sample in samples:
-				var workload: Dictionary = Dictionary(sample.get("workload", {}))
-				if String(workload.get("environment_recipe", "")) == recipe and String(workload.get("execution_mode", "")) == mode:
-					group.append(sample)
-			if group.size() != int(config["repetitions"]) or not Contract.minimum_repetitions_satisfied(group):
+	for configuration_id in EXECUTION_CONFIG_IDS:
+		var group: Array[Dictionary] = []
+		for sample in samples:
+			if String(Dictionary(sample.get("flags", {})).get("configuration_id", "")) == configuration_id:
+				group.append(sample)
+		if group.size() != int(config["repetitions"]) or not Contract.minimum_repetitions_satisfied(group):
+			return []
+		for metric_path in REQUIRED_METRICS:
+			var summary := Contract.summarize(group, metric_path)
+			if summary.is_empty():
 				return []
-			for metric_path in REQUIRED_METRICS:
-				var summary := Contract.summarize(group, metric_path)
-				if summary.is_empty():
-					return []
-				summary["environment_recipe"] = recipe
-				summary["execution_mode"] = mode
-				summary["simulation_workload_hash"] = Contract.simulation_workload_hash(Dictionary(group[0]["workload"]))
-				result.append(summary)
+			summary["configuration_id"] = configuration_id
+			summary["execution_mode"] = String(Dictionary(group[0]["workload"]).get("execution_mode", ""))
+			summary["stream_chunk_size"] = int(Dictionary(group[0]["flags"]).get("stream_chunk_size", 0))
+			summary["environment_recipe"] = DEFAULT_RECIPE
+			summary["simulation_workload_hash"] = Contract.simulation_workload_hash(Dictionary(group[0]["workload"]))
+			result.append(summary)
 	return result
 
-func _find_sample(samples: Array, recipe: String, execution_mode: String, repetition: int) -> Dictionary:
+
+func _build_comparisons(samples: Array[Dictionary], summaries: Array[Dictionary], config: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var serial_wall := _find_summary(summaries, "SERIAL_REFERENCE", "timings_ms.wall_ms")
+	var serial_generation := _find_summary(summaries, "SERIAL_REFERENCE", "timings_ms.generation_total_ms")
+	if serial_wall.is_empty() or serial_generation.is_empty():
+		return []
+	for chunk_size in STREAM_CHUNK_SIZES:
+		var configuration_id := "STREAM1_CHUNK_%d" % chunk_size
+		var stream_wall := _find_summary(summaries, configuration_id, "timings_ms.wall_ms")
+		var stream_generation := _find_summary(summaries, configuration_id, "timings_ms.generation_total_ms")
+		if stream_wall.is_empty() or stream_generation.is_empty():
+			return []
+		var exact_pairs := 0
+		for repetition in range(int(config["repetitions"])):
+			var serial := _find_sample(samples, DEFAULT_RECIPE, "SERIAL_REFERENCE", 0, repetition)
+			var streamed := _find_sample(samples, DEFAULT_RECIPE, "STREAM1", chunk_size, repetition)
+			if serial.is_empty() or streamed.is_empty():
+				return []
+			if bool(Contract.can_compare_execution_modes(serial, streamed).get("success", false)):
+				exact_pairs += 1
+		if exact_pairs != int(config["repetitions"]):
+			return []
+		var stream_wall_p50 := float(stream_wall["p50"])
+		var stream_generation_p50 := float(stream_generation["p50"])
+		result.append({
+			"configuration_id": configuration_id,
+			"stream_chunk_size": chunk_size,
+			"exact_pairs": exact_pairs,
+			"serial_wall_p50_ms": float(serial_wall["p50"]),
+			"stream_wall_p50_ms": stream_wall_p50,
+			"observed_wall_ratio_serial_over_stream": float(serial_wall["p50"]) / stream_wall_p50 if stream_wall_p50 > 0.0 else 0.0,
+			"serial_generation_p50_ms": float(serial_generation["p50"]),
+			"stream_generation_p50_ms": stream_generation_p50,
+			"observed_generation_ratio_serial_over_stream": float(serial_generation["p50"]) / stream_generation_p50 if stream_generation_p50 > 0.0 else 0.0,
+			"optimization_claim": false,
+			"note": "Observed execution ratio only; PERF2.1 does not accept an optimization.",
+		})
+	return result
+
+
+func _find_sample(samples: Array, recipe: String, execution_mode: String, chunk_size: int, repetition: int) -> Dictionary:
 	var suffix := "-r%d" % repetition
 	for value in samples:
 		if not value is Dictionary:
 			continue
 		var sample: Dictionary = value
 		var workload: Dictionary = Dictionary(sample.get("workload", {}))
+		var flags: Dictionary = Dictionary(sample.get("flags", {}))
 		if String(workload.get("environment_recipe", "")) != recipe:
 			continue
 		if String(workload.get("execution_mode", "")) != execution_mode:
 			continue
+		if execution_mode == "STREAM1" and int(flags.get("stream_chunk_size", -1)) != chunk_size:
+			continue
 		if String(sample.get("run_id", "")).ends_with(suffix):
 			return sample
 	return {}
+
+
+func _find_summary(summaries: Array[Dictionary], configuration_id: String, metric_path: String) -> Dictionary:
+	for summary in summaries:
+		if String(summary.get("configuration_id", "")) == configuration_id and String(summary.get("metric_path", "")) == metric_path:
+			return summary
+	return {}
+
+
+func _configuration_id(execution_mode: String, chunk_size: int) -> String:
+	if execution_mode == "SERIAL_REFERENCE":
+		return "SERIAL_REFERENCE"
+	return "STREAM1_CHUNK_%d" % chunk_size
+
 
 func _sample_evidence_hash(sample: Dictionary) -> String:
 	var metrics: Dictionary = Dictionary(sample.get("metrics", {}))
@@ -506,14 +705,17 @@ func _sample_evidence_hash(sample: Dictionary) -> String:
 	var counts: Dictionary = Dictionary(metrics.get("counts", {}))
 	var memory: Dictionary = Dictionary(metrics.get("memory_bytes", {}))
 	var stream: Dictionary = Dictionary(metrics.get("stream", {}))
+	var flags: Dictionary = Dictionary(sample.get("flags", {}))
 	var parts := PackedStringArray([
-		"PERF2_1_SAMPLE_EVIDENCE_V1",
+		"PERF2_1_SAMPLE_EVIDENCE_R2",
 		String(sample.get("run_id", "")),
 		String(sample.get("workload_hash", "")),
 		Contract.simulation_workload_hash(Dictionary(sample.get("workload", {}))),
 		Contract.canonical_result_fingerprint(sample),
 		Contract.comparison_key(sample),
 		Contract.execution_comparison_key(sample),
+		String(flags.get("configuration_id", "")),
+		String(flags.get("campaign_context_hash", "")),
 	])
 	for key in [
 		"wall_ms", "generation_total_ms", "ls33_total_ms", "stream_total_ms",
@@ -533,15 +735,10 @@ func _sample_evidence_hash(sample: Dictionary) -> String:
 		parts.append("%s=%d" % [key, int(stream.get(key, -1))])
 	return "|".join(parts).sha256_text()
 
-func _nullable_int_string(value) -> String:
-	if value == null:
-		return "null"
-	return str(int(value))
 
 func _summary_evidence_hash(summary: Dictionary) -> String:
 	return "|".join(PackedStringArray([
-		String(summary.get("environment_recipe", "")),
-		String(summary.get("execution_mode", "")),
+		String(summary.get("configuration_id", "")),
 		String(summary.get("metric_path", "")),
 		str(int(summary.get("count", 0))),
 		"%.12f" % float(summary.get("p50", 0.0)),
@@ -552,25 +749,50 @@ func _summary_evidence_hash(summary: Dictionary) -> String:
 		String(summary.get("simulation_workload_hash", "")),
 	])).sha256_text()
 
+
+func _comparison_evidence_hash(comparison: Dictionary) -> String:
+	return "|".join(PackedStringArray([
+		String(comparison.get("configuration_id", "")),
+		str(int(comparison.get("stream_chunk_size", 0))),
+		str(int(comparison.get("exact_pairs", 0))),
+		"%.12f" % float(comparison.get("serial_wall_p50_ms", 0.0)),
+		"%.12f" % float(comparison.get("stream_wall_p50_ms", 0.0)),
+		"%.12f" % float(comparison.get("observed_wall_ratio_serial_over_stream", 0.0)),
+		"%.12f" % float(comparison.get("serial_generation_p50_ms", 0.0)),
+		"%.12f" % float(comparison.get("stream_generation_p50_ms", 0.0)),
+		"%.12f" % float(comparison.get("observed_generation_ratio_serial_over_stream", 0.0)),
+		"0" if not bool(comparison.get("optimization_claim", true)) else "1",
+	])).sha256_text()
+
+
 func _config_hash(config: Dictionary) -> String:
 	var recipe_parts := PackedStringArray()
 	for value in Array(config.get("recipes", [])):
 		recipe_parts.append(String(value))
+	var chunk_parts := PackedStringArray()
+	for value in Array(config.get("stream_chunk_sizes", [])):
+		chunk_parts.append(str(int(value)))
 	return "|".join(PackedStringArray([
-		"PERF2_1_CONFIG_V1",
+		"PERF2_1_CONFIG_R2",
 		",".join(recipe_parts),
 		str(int(config.get("warmup_generations", -1))),
 		str(int(config.get("measured_generations", -1))),
 		str(int(config.get("repetitions", -1))),
 		str(int(config.get("initial_records", -1))),
-		str(int(config.get("parents_per_chunk", -1))),
+		",".join(chunk_parts),
 		str(int(config.get("audit_interval_generations", -1))),
 		"true" if bool(config.get("audit_generation_1", false)) else "false",
 		str(int(config.get("founder_seed", 0))),
 		str(int(config.get("placement_seed", 0))),
 		str(int(config.get("evolution_seed", 0))),
 		str(int(config.get("environment_seed", 0))),
+		str(int(config.get("world_seed", 0))),
+		"true" if bool(config.get("competition_enabled", false)) else "false",
+		str(int(config.get("grid_size", 0))),
+		"%.9f" % float(config.get("cell_size_m", 0.0)),
+		String(config.get("planet_source_kind", "")),
 	])).sha256_text()
+
 
 func _valid_target(target: Dictionary) -> bool:
 	return (
@@ -578,6 +800,17 @@ func _valid_target(target: Dictionary) -> bool:
 		and _is_git_sha(String(target.get("tree", "")))
 		and String(target.get("godot_version", "")) == Contract.EXPECTED_GODOT
 	)
+
+
+func _is_hash(value: String) -> bool:
+	if value.length() != 64:
+		return false
+	for index in range(value.length()):
+		var code := value.unicode_at(index)
+		if not (code >= 48 and code <= 57) and not (code >= 97 and code <= 102):
+			return false
+	return true
+
 
 func _is_git_sha(value: String) -> bool:
 	if value.length() != 40:
@@ -588,11 +821,19 @@ func _is_git_sha(value: String) -> bool:
 			return false
 	return true
 
+
 func _finite_nonnegative(value) -> bool:
 	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
 		return false
 	var number := float(value)
 	return is_finite(number) and number >= 0.0
+
+
+func _nullable_int_string(value) -> String:
+	if value == null:
+		return "null"
+	return str(int(value))
+
 
 func _failure(code: String, detail) -> Dictionary:
 	return {
