@@ -33,14 +33,14 @@ CONSTRUCT0              authorized now
                   │                    C0.0 ✅
                   │                 architecture
                   │                        │
-                  │                    C0.1 🟡
-                  │                 observatory
+                  │                    C0.1 ✅
+                  │                 SEE THE MODEL
                   │                        │
-                  │                    C0.2
-                  │             FABRIC-driven playback
+                  │                    C0.2 ✅
+                  │             SEE FABRIC MOVE IT
                   │                        │
-                  │                    C0.3
-                  │              construction editor
+                  │                    C0.3 ✅
+                  │                 BUILD IT
                   │                        │
                   │                CONSTRUCT0.PLAY1
                   │                 PHYSICAL TOYBOX
@@ -99,8 +99,10 @@ CONSTRUCT0              authorized now
 ### C0.0 — architecture / branch freeze
 Complete when branch, predecessor identity, invariants and acceptance boundary are documented.
 
-### C0.1 — tangible observatory
+### C0.1 — tangible observatory — IMPLEMENTED / VERIFICATION PENDING
 Goal: make a compound Construction and B0.3 reduction visible.
+
+Implementation now includes TABLE / BRIDGE / CART plus a PLANK playback preset, canonical runtime projection and direct B0.3 contact/wrench compilation. Closure still requires exact full-worktree execution and Project Control.
 
 Visible presets:
 - TABLE;
@@ -119,8 +121,10 @@ Must show:
 
 C0.1 explicitly does not claim time integration.
 
-### C0.2 — FABRIC-driven playback
+### C0.2 — FABRIC-driven playback — IMPLEMENTED / VERIFICATION PENDING
 Goal: Godot becomes a viewer for closed FABRIC0.18 dynamics.
+
+Implemented playback directly invokes `fabric0_persistent_contact_trajectory_v1.gd`. The Godot pose is a deterministic display projection of FABRIC event times and body velocities; Godot physics state is never fed back into FABRIC. Controls: PLAY / PAUSE / STEP EVENT / RESET and 0.5× / 1× / 2×.
 
 Reference trajectories:
 - drop / impact / persistent support;
@@ -132,14 +136,25 @@ Reference trajectories:
 Rule:
 `FABRIC state → Godot transform`, never `Godot RigidBody state → FABRIC truth`.
 
-### C0.3 — canonical construction editor
+### C0.3 — canonical construction editor — IMPLEMENTED / VERIFICATION PENDING
+The lab now has a BUILD IT tab backed by `ConstructAggregate`. A generic `update_part_pose` operation was added to the canonical aggregate with revision/replay/stale-write semantics.
+
 User can:
+- create a new canonical Construction;
 - add Block / Beam / Plate;
 - select / move / rotate;
-- create and break rigid bonds;
+- create rigid bonds to another/root part;
+- break rigid bonds;
 - inspect part identity and canonical revision.
 
-Every edit goes through Construction first.
+Every edit goes through Construction first, advances the canonical revision/checksum, then recompiles the existing runtime projection.
+
+Acceptance runners:
+- `RUN_FABRIC_CONSTRUCT0_C0_1_TESTS.sh`;
+- `RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh`;
+- `RUN_FABRIC_CONSTRUCT0_C0_3_TESTS.sh`.
+
+The three implementation slices are not declared CLOSED until the exact chain and Project Control execute on a complete repository worktree.
 
 ### CONSTRUCT0.PLAY1 — PHYSICAL TOYBOX
 Goal: make the constructor genuinely playable with a small generic vocabulary rather than a catalogue of device-specific objects.
