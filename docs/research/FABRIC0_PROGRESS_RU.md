@@ -3257,3 +3257,34 @@ ADAPTIVE CONVEX CONTACT EVENTS
 +
 SAME-WORLD PARALLEL ISLANDS
 ```
+
+
+## FABRIC0.16 S2 — ADAPTIVE CONVEX EVENTS + SAME-WORLD PARALLEL ISLANDS
+
+**Accepted executable head:** `92588ac05a7fa5b3cedd64bb567436e82e3a0a0e`  
+**Evidence:** `validation/fabric0-compositional-world-fabric-v16-s2-validation.json`  
+**Status:** `IMPLEMENTED / EXACT_DOUBLE_PASS / 102_102_PASS / S1_110_110_REGRESSION / REMOTE_BYTE_IDENTITY_PASS / NOT_CLOSED`.
+
+Highlights:
+
+```text
+CONTACT_APPEAR    t=0.50000000001455
+CONTACT_DISAPPEAR t=0.10000000004657
+STICK->SLIDE      t=0.15798543221899
+
+persistent post-event manifold = 4 points
+two same-world Godot Threads
+parallel state error vs sequential = 0
+reverse spawn signature = exact equal
+```
+
+Remote exact blobs:
+
+```text
+S2 5/5 PASS
+S1 8/8 PRESERVED
+```
+
+Next wall:
+
+`FABRIC0.16 S3 — UNIFIED EVENT-DRIVEN CONVEX TRAJECTORY + REFINEMENT`.

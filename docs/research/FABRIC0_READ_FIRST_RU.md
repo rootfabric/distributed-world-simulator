@@ -733,3 +733,38 @@ SAME-WORLD PARALLEL ISLANDS
 ```
 
 Construction remains canonical semantic owner. FABRIC0.16 remains research physical execution substrate.
+
+
+## 11. FABRIC0.16 S2 — current verified Physical Core boundary
+
+Accepted executable HEAD:
+
+```text
+92588ac05a7fa5b3cedd64bb567436e82e3a0a0e
+```
+
+State:
+
+```text
+FABRIC0.15 CLOSED
+  ↓
+FABRIC0.16 S1 110/110 PASS
+  ↓
+FABRIC0.16 S2 102/102 PASS
+  ↓
+FABRIC0.16 S3 NEXT
+```
+
+S2 adds adaptive convex contact/separation localization, solver-surface stick/slide localization and actual same-world parallel islands.
+
+Recovery evidence:
+
+```text
+docs/research/FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_RU.md
+docs/research/FABRIC0_16_PROGRESS_RU.md
+validation/fabric0-compositional-world-fabric-v16-s2-validation.json
+```
+
+Important: exact-touch EPA degeneracy is handled only as bracketed zero-measure boundary evidence; it is not globally reclassified as penetration.
+
+FABRIC0.16 is still **NOT CLOSED**. Next wall is a single unified event-driven trajectory with graph topology changes and refinement.

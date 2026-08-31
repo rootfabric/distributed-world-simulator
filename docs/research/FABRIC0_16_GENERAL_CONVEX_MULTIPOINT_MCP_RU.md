@@ -362,3 +362,224 @@ broadphase candidate interval
 ```
 
 После S2 нужно снова решить, достаточно ли evidence для final FABRIC0.16 closure или нужен отдельный S3 для stronger monolithic MCP / simultaneous-impact wall.
+
+
+## 14. S2 — Adaptive Convex Events + Same-World Parallel Islands
+
+S2 executable boundary:
+
+```text
+first executable commit:
+451bb9d09c527e3bf715c485f8929274157b7e1d
+
+exact-byte repair / accepted executable head:
+92588ac05a7fa5b3cedd64bb567436e82e3a0a0e
+```
+
+Status:
+
+```text
+IMPLEMENTED
+EXACT LINUX DOUBLE PASS
+102/102
+S1 REGRESSION 110/110
+REMOTE BYTE IDENTITY 5/5
+S1 PREDECESSOR BLOBS PRESERVED 8/8
+RESEARCH SLICE ONLY
+FABRIC0.16 NOT CLOSED
+```
+
+### Contact/separation localization
+
+S2 добавляет motion-aware candidate envelope и event localization поверх реального S1 GJK/EPA.
+
+Exact contact boundary выявил важный numerical case: при zero-measure touch GJK может подтвердить boundary, но EPA не обязан построить объёмный tetrahedron. Поэтому коды:
+
+```text
+GJK_DEGENERATE_SIMPLEX
+GJK_DEGENERATE_TETRAHEDRON
+EPA_DEGENERATE_INITIAL_POLYTOPE
+```
+
+разрешены **только внутри bracketed event localization** как zero-measure boundary evidence при наличии normal hint. Они не превращены в общий collision success.
+
+Accepted semantics:
+
+```text
+separated      support gap > 0
+exact boundary support gap = 0
+penetrating    -EPA depth < 0
+```
+
+Reference event times:
+
+```text
+CONTACT_APPEAR    0.50000000001455
+CONTACT_DISAPPEAR 0.10000000004657
+```
+
+Contact appearance refinement errors:
+
+```text
+1e-4 -> 1.5258774510584772e-05
+1e-6 -> 1.1922384146600962e-07
+1e-8 -> 9.167706593871117e-10
+```
+
+Они строго уменьшаются.
+
+### Persistent manifold across event
+
+После localized appearance строится реальный S1 clipped manifold. На двух последовательных post-event samples:
+
+```text
+points = 4
+IDs preserved
+lifetime 1 -> 2
+feature key preserved
+penetration depth increases
+```
+
+То есть persistence теперь проверена не только arbitrary rebuild, но и после event boundary.
+
+### Root-localized stick -> slide
+
+S2 локализует transition surface по фактическому S1 graph solve, а не по заранее заданной кинематической формуле.
+
+Reference:
+
+```text
+stick -> slide
+t = 0.15798543221899
+```
+
+Refinement errors:
+
+```text
+1e-4 -> 4.0697341319173574e-06
+1e-6 -> 2.2180029191076756e-07
+1e-8 -> 2.0081643015146255e-09
+```
+
+Strictly decreasing.
+
+### Same-world parallel islands
+
+`Fabric0GeneralConvexParallelIslandsV1` выполняет:
+
+```text
+contact graph
+-> deterministic connected components
+-> canonical island snapshots
+-> local contact index remap
+-> actual Godot Thread per independent island
+-> solve through S1 graph MCP
+-> join only after all islands PASS
+```
+
+Acceptance world:
+
+```text
+island 1 = [A,B]
+island 2 = [D,E]
+contacts = 8 total manifold rows
+threads started = 2
+```
+
+Parallel result equals one sequential block-diagonal solve exactly:
+
+```text
+parallel state error = 0
+```
+
+Reverse thread spawn order gives exact identical canonical signature.
+
+### Transactional and lifecycle hardening
+
+S2 explicitly fails closed on:
+
+- duplicate body IDs;
+- malformed/out-of-range contact body indices;
+- self-contact;
+- zero/bad thread budget;
+- island count above allowed thread budget;
+- worker solver failure.
+
+Physical world state is committed only after every island result succeeds.
+
+If one worker fails, original world state remains byte-equivalent at the velocity signature boundary.
+
+If `Thread.start()` fails after earlier workers started, already started threads are joined before returning failure.
+
+### Exact validation
+
+Engine:
+
+`Godot 4.7.1.stable.double.custom_build.a13da4feb`.
+
+S2:
+
+```text
+102 / 102 PASS
+FABRIC0_16_S2_ADAPTIVE_CONVEX_EVENTS_PARALLEL_ISLANDS_PLAYGROUND_PASS
+```
+
+S1 regression:
+
+```text
+110 / 110 PASS
+```
+
+Editor parse/compile scan:
+
+```text
+CLEAN
+```
+
+Exact S2 Git blobs:
+
+```text
+event driver      287be7f45dc3fbb7abca583d6e5269f91a06cd6a
+parallel islands  33c996cd2ba75403b17290c41205ae746cb18fd8
+experiments       4ab61d8ded43e966dd4577e3c9a10d99aa920dab
+acceptance        9a0a92063bf133aad2503acfbb3db302fdf76dea
+playground        25cdec5bbb632d9b5f9990501ed34f97bdb57325
+```
+
+Remote byte identity is 5/5 PASS. All eight S1 executable blobs are preserved exactly.
+
+One acceptance file initially landed with a different blob despite equivalent intended content. S2 was **not** accepted until a repair commit restored the exact locally tested blob and remote verification returned 5/5.
+
+### S2 non-claims
+
+S2 does not yet prove a full time trajectory in which these pieces all interact in one adaptive loop.
+
+Still open before FABRIC0.16 closure:
+
+- unified event-driven trajectory over contact appear/disappear + manifold rebuild + graph solve;
+- island merge/split during that same trajectory;
+- refinement of full trajectory state across event boundaries;
+- energy ledger across localized contact/mode events;
+- simultaneous multi-impact fixed point;
+- stronger monolithic/global Signorini-Coulomb MCP/NCP claim;
+- production broadphase/block-sparse/thread-pool backend.
+
+## 15. Next slice — S3 Unified Event-Driven Convex Trajectory
+
+```text
+FABRIC0.16 S3
+
+candidate interval
+-> localize next contact/mode event
+-> advance exactly to event boundary
+-> rebuild/persist manifold
+-> mutate contact graph
+-> island merge/split
+-> solve graph MCP
+-> continue
+-> compare refined trajectories
+```
+
+Primary closure question for S3:
+
+> Do event times, complete rigid-body state and energy/momentum ledger converge together when the general-convex multipoint graph changes topology?

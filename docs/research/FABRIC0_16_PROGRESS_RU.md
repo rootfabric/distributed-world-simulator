@@ -65,3 +65,57 @@ Primary design/evidence:
 docs/research/FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_RU.md
 validation/fabric0-compositional-world-fabric-v16-s1-validation.json
 ```
+
+
+## Completed S2
+
+```text
+S2 ADAPTIVE CONVEX EVENTS + SAME-WORLD PARALLEL ISLANDS
+
+accepted executable head:
+92588ac05a7fa5b3cedd64bb567436e82e3a0a0e
+
+motion candidate envelope                 ✅
+GJK/EPA contact appearance localization  ✅
+GJK/EPA separation localization          ✅
+zero-measure exact-touch boundary repair ✅
+persistent 4-point manifold post-event   ✅
+root-localized stick -> slide             ✅
+same-world deterministic island split    ✅
+actual Godot Thread island solves         ✅
+parallel == sequential reference          ✅ exact
+reverse spawn determinism                 ✅ exact
+transactional failure                     ✅
+thread lifecycle hardening                ✅
+exact Linux double acceptance             ✅ 102/102
+S1 regression                             ✅ 110/110
+remote S2 byte identity                   ✅ 5/5
+S1 predecessor blob preservation          ✅ 8/8
+editor parse/compile                      ✅ CLEAN
+```
+
+Important exact-touch rule discovered in S2:
+
+```text
+GJK boundary + EPA volume degeneracy
+!= collision failure inside a bracketed zero-measure event search
+```
+
+The boundary is represented by support gap = 0 and remains fail-closed outside the event-localization context.
+
+Reference events:
+
+```text
+appear    0.50000000001455
+disappear 0.10000000004657
+stick->slide 0.15798543221899
+```
+
+Next:
+
+```text
+FABRIC0.16 S3
+UNIFIED EVENT-DRIVEN CONVEX TRAJECTORY + REFINEMENT
+```
+
+FABRIC0.16 remains IN PROGRESS / NOT CLOSED.
