@@ -67,7 +67,8 @@ func _run() -> void:
 	_check(individuality_hash_before.length() == 64, "VIS4.7 individuality identity available")
 	_check(appearance_hash_before.length() == 64, "VIS4.7 grid appearance identity available")
 
-	var active_view: Vector3 = playground.get_player().get_world_position()
+	var player = playground.get_player()
+	var active_view: Vector3 = player.get_world_position()
 	var expected_nearest := -1
 	var expected_distance := INF
 	for index in range(descriptors.size()):
