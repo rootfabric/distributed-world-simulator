@@ -1,0 +1,220 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-4-VERIFICATION-003",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+
+  "verified_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "verified_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+
+  "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_WINDOWS_EXACT_SOURCE_R3",
+
+  "verdict": "VERIFIED",
+  "verdict_reason": "FULL_CANONICAL_GATE_EXECUTION_GREEN_ON_AUTHORIZED_WINDOWS_PLATFORM",
+  "verified_at_utc": "2026-08-31T19:45:06Z",
+
+  "execution_performed": true,
+
+  "platform_amendment": "V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001",
+  "platform_amendment_path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+  "platform_amendment_commit": "b31d657c9f6987167da233e1d6f212884a095a88",
+
+  "environment": {
+    "type": "Windows x86_64 (canonical workspace layout per docs/GODOT_LOCAL_TESTING_RU.md)",
+    "verifier_session_host": "Windows x86_64 DSH session (workspace C:\\distributed-world-simulator, git store .git-store/repo.git, safe.bareRepository=explicit honored via --git-dir)",
+    "godot": {
+      "path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "exists": true,
+      "version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "version_check": "--version output first line equals exactly 4.7.1.stable.double.custom_build.a13da4feb",
+      "sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+      "sha256_matches_control_surface_identity": true,
+      "build_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+      "platform": "windows",
+      "target": "editor",
+      "arch": "x86_64",
+      "precision": "double",
+      "gui_binary_used": false
+    },
+    "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+    "fresh_detached_worktree": {
+      "path": "C:\\dws-p7-4-verifier-r3-windows",
+      "created_from": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "reused_prior_worktree": false,
+      "worktree_add_exit_code": 0
+    }
+  },
+
+  "dispatch": {
+    "dispatch_branch": "control/v0-p7-4-fresh-verifier-dispatch-r3",
+    "dispatch_head": "5247d3426475070f531f6d4dece873f186f448dd",
+    "instruction_file": "C:\\distributed-world-simulator\\p74-fresh-verifier-r2\\config\\control\\harness\\executions\\E2026-08-30-V0-P7-R1\\verifications\\V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-R3-INSTRUCTION-001.md",
+    "instruction_followed_exactly": true,
+    "dispatch_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-R3-DISPATCH-EVIDENCE-001.v1.json"
+  },
+
+  "source_identity_proofs": {
+    "head": { "expected": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292", "actual": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292", "result": "PASS" },
+    "tree": { "expected": "1efad34a075af63169c48dd5055c2537c8d7e6ef", "actual": "1efad34a075af63169c48dd5055c2537c8d7e6ef", "result": "PASS" },
+    "origin_branch": { "ref": "origin/feature/v0-p7-bounded-terrain-mutation", "expected": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292", "actual": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292", "result": "PASS" },
+    "tracked_clean_before_execution": { "command": "git status --porcelain --untracked-files=no", "result": "PASS (empty)" }
+  },
+
+  "control_checks": {
+    "runtime_pr_396": {
+      "result": "PASS",
+      "command": "gh pr view 396 --json state,headRefName,headRefOid",
+      "state": "OPEN",
+      "head_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292"
+    },
+    "runtime_project_control": { "result": "PASS", "identity": "33374295322 = SUCCESS", "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292" },
+    "origin_runtime_branch_local_ref": { "result": "PASS", "ref": "origin/feature/v0-p7-bounded-terrain-mutation", "sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292" },
+    "reviewer_r1": {
+      "result": "PASS",
+      "commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+      "verdict": "PASS",
+      "project_control": "33388053145 = SUCCESS"
+    },
+    "verifier_r1_historical": {
+      "result": "PASS",
+      "commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+      "verdict": "NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false,
+      "project_control": "33393399665 = SUCCESS",
+      "inherited_as_execution_evidence": false
+    },
+    "verifier_r2_historical": {
+      "result": "PASS",
+      "commit": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+      "verdict": "NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false,
+      "inherited_as_execution_evidence": false
+    },
+    "immutable_export": { "result": "PASS", "identity": "33374385318 = SUCCESS" },
+    "carrier_project_control": { "result": "PASS", "identity": "33374385340 = SUCCESS" },
+    "platform_amendment_authority": { "result": "PASS", "identity": "V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001 (HUMAN_DIRECTIVE 2026-08-31), present at dispatch head 5247d3426475070f531f6d4dece873f186f448dd" }
+  },
+
+  "execution": {
+    "performed": true,
+    "canonical_runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+    "runner_invocation": ".\\RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1 -GodotExe \"C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe\" -ExpectedHead \"9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292\"",
+    "workdir": "C:\\dws-p7-4-verifier-r3-windows",
+    "external_timeout_used": false,
+    "runner_exit_code": 0,
+    "final_banner_lines": [
+      "V0-P7.4 PERSISTENCE RESTART COMPOSITION GATE GREEN",
+      "EXACT_HEAD=9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "GODOT=4.7.1.stable.double.custom_build.a13da4feb"
+    ],
+    "fresh_import": true,
+    "fresh_import_evidence": "import.log records a fresh first_scan_filesystem import under the Godot v4.7.1.stable.double.custom_build.a13da4feb banner",
+    "stages_executed": 16,
+    "stages_required": 16,
+    "pass_markers_observed": 16,
+    "logs_collected": 17,
+    "logs_required": 17,
+    "log_directory": "C:\\dws-p7-4-verifier-r3-windows\\artifacts\\runtime\\v0-p7-4-persistence-restart",
+    "log_directory_file_count": 17,
+    "missing_logs": [],
+    "unexpected_logs": [],
+    "gate_console_output_preserved_at": "C:\\dws-p7-4-verifier-r3-windows\\artifacts\\gate-console-r3-full.log",
+
+    "stage_actual_assertion_counts": [
+      { "stage": "P7.4 seed", "log": "p7-4-seed.log", "summary": "V0-P7.4 seed: PASS (21 assertions, 0 failures)", "assertions": 21, "failures": 0, "prior_canonical": "21 / 0", "deviation": false },
+      { "stage": "P7.4 recover-deliver", "log": "p7-4-recover-deliver.log", "summary": "V0-P7.4 recover-deliver: PASS (25 assertions, 0 failures)", "assertions": 25, "failures": 0, "prior_canonical": "25 / 0", "deviation": false },
+      { "stage": "P7.4 recover-replay", "log": "p7-4-recover-replay.log", "summary": "V0-P7.4 recover-replay: PASS (17 assertions, 0 failures)", "assertions": 17, "failures": 0, "prior_canonical": "17 / 0", "deviation": false },
+      { "stage": "P7.3 material delivery", "log": "p7-3-material-delivery.log", "summary": "V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)", "assertions": 116, "failures": 0, "prior_canonical": "116 / 0", "deviation": false },
+      { "stage": "P7.2 bubble", "log": "p7-2-bubble.log", "summary": "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)", "assertions": 53, "failures": 0, "prior_canonical": "53 / 0", "deviation": false },
+      { "stage": "P7.2 seam", "log": "p7-2-seam.log", "summary": "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)", "assertions": 50, "failures": 0, "prior_canonical": "50 / 0", "deviation": false },
+      { "stage": "P7.1 authority", "log": "p7-1-authority.log", "summary": "V0-P7.1 authority gate: PASS (83 assertions, 0 failures)", "assertions": 83, "failures": 0, "prior_canonical": "83 / 0", "deviation": false },
+      { "stage": "P7.1 Tool-to-MW4", "log": "p7-1-tool-to-mw4.log", "summary": "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)", "assertions": 30, "failures": 0, "prior_canonical": "30 / 0", "deviation": false },
+      { "stage": "P5 mining tool", "log": "p5-mining-tool.log", "summary": "V0-P5 mining tool gate: 36 assertions, 0 failures", "assertions": 36, "failures": 0, "prior_canonical": "36 / 0", "deviation": false },
+      { "stage": "P3 resource domain", "log": "p3-resource-domain.log", "summary": "V0-P3 resource/mining domain: 79 assertions, 0 failures", "assertions": 79, "failures": 0, "prior_canonical": "79 / 0", "deviation": false },
+      { "stage": "P3 aggregate recovery", "log": "p3-aggregate-recovery.log", "summary": "V0-P3 aggregate resource recovery: 33 assertions, 0 failures", "assertions": 33, "failures": 0, "prior_canonical": "33 / 0", "deviation": false },
+      { "stage": "M6 recovery contracts", "log": "m6-recovery-contracts.log", "summary": "M6 dedicated recovery contracts: 126 assertions, 0 failures", "assertions": 126, "failures": 0, "prior_canonical": "126 / 0", "deviation": false },
+      { "stage": "M6 recovery processes", "log": "m6-recovery-processes.log", "summary": "M6 dedicated recovery processes: 128 assertions, 0 failures", "assertions": 128, "failures": 0, "prior_canonical": "128 / 0", "deviation": false },
+      { "stage": "MW4", "log": "mw4.log", "summary": "MW4 matter mutations: PASS (187 assertions / 10.739 s)", "assertions": 187, "failures": 0, "prior_canonical": "187 / 0", "deviation": false },
+      { "stage": "MW5", "log": "mw5.log", "summary": "MW5 matter persistence: PASS (142 assertions / 32.194 s)", "assertions": 142, "failures": 0, "prior_canonical": "142 / 0", "deviation": false },
+      { "stage": "MW6", "log": "mw6.log", "summary": "MW6 matter network authority: PASS (130 assertions / 18.436 s)", "assertions": 130, "failures": 0, "prior_canonical": "130 / 0", "deviation": false }
+    ],
+    "total_assertions": 1384,
+    "total_failures": 0,
+
+    "log_sha256": [
+      { "log": "import.log", "sha256": "5dde6e32de56144e979d05e95619684f8a5d7330a5f886332a2c196ce577cc86" },
+      { "log": "p7-4-seed.log", "sha256": "0f3a1dec90d6a4fe83a89a9e06e1263c74faa81d7e86f7357bbf04edde62423d" },
+      { "log": "p7-4-recover-deliver.log", "sha256": "fd58ea4d1ead7c1ae293efcbeffb07a0e5c2b36a0ce9258e7998023d9023aa4c" },
+      { "log": "p7-4-recover-replay.log", "sha256": "8a22b4a4cf2cf140592f6c78b349a680db3fe25cafa05debfa8aa59576efa421" },
+      { "log": "p7-3-material-delivery.log", "sha256": "ecbbe14aecd801481de4f26bab2ed8b4b033a09c8177ca9086babeafd04a480e" },
+      { "log": "p7-2-bubble.log", "sha256": "411deaa17c5c4310ca03d3d552d195f609485d0ac9bae1b926a7fec1633c7c28" },
+      { "log": "p7-2-seam.log", "sha256": "1f36fa85ae7adc731e29e1797bea5301aba3ff6ca435e7fc0c171ea993c3fb32" },
+      { "log": "p7-1-authority.log", "sha256": "5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e" },
+      { "log": "p7-1-tool-to-mw4.log", "sha256": "3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1" },
+      { "log": "p5-mining-tool.log", "sha256": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511" },
+      { "log": "p3-resource-domain.log", "sha256": "d0879d6f30742b23bc80a43134b471a962d2e8b62f600e455176807e81da6237" },
+      { "log": "p3-aggregate-recovery.log", "sha256": "74fd97b4139fee8c631e7d4b421bf56883baba1aad97d738c345c70f759e7795" },
+      { "log": "m6-recovery-contracts.log", "sha256": "fb6a6c58e1cd3ea34eb835af86f0e42f9e9da0eca01ff9b3e271d007926ad229" },
+      { "log": "m6-recovery-processes.log", "sha256": "8062713ff356227e2fb534bc5548a737017d2a2151841f73d7d853638677a647" },
+      { "log": "mw4.log", "sha256": "a71dbe170bc19fffe9bded8cfc61acfbf94de629811971683139fb8ac23510b0" },
+      { "log": "mw5.log", "sha256": "a9f47f3a7fa0bcfdef1915e4f9070a9ac2bb0d93f511fec4d67323862a4afa90" },
+      { "log": "mw6.log", "sha256": "ddc8c73b5388602a7a91aa367ccf6564a5c3418bda75fc2a2464ddaba4318a41" }
+    ],
+
+    "fatal_log_scan": {
+      "performed": true,
+      "patterns": ["SCRIPT ERROR:", "Parse Error:", "Compile Error:", "Failed to instantiate an autoload", "Failed to load script"],
+      "method": "Select-String -SimpleMatch per pattern over each of the 17 logs",
+      "total_matches": 0,
+      "result": "PASS"
+    },
+
+    "tracked_clean_after_execution": {
+      "head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+      "diff_exit_code": 0,
+      "diff_cached_exit_code": 0,
+      "status_porcelain_untracked_files_no": "empty",
+      "untracked_entries": 61,
+      "untracked_note": "Godot-generated .uid sidecars and artifacts\\ only; none staged or committed"
+    }
+  },
+
+  "r1_r2_inheritance": {
+    "stages_inherited_from_r1_r2_implementer_or_reviewer": 0,
+    "execution_evidence_inherited": false,
+    "r1_r2_treated_as_historical_control_evidence_only": true
+  },
+
+  "findings": [
+    "All 16 stages PASSed with 0 failures; every stage's actual assertion count matches the prior canonical count exactly (total 1384 assertions / 0 failures). No material deviation.",
+    "The runner enforced and passed the full invariant set: exact Godot identity, exact-HEAD fence, tracked-clean fence before and after, fresh --import, 16 stages in separate processes, per-log fatal-marker scan, per-stage PASS summaries, and the final GREEN banner with exit code 0.",
+    "Non-fatal observation: the runner's own stderr stream (outside stdout and outside the 17 campaign logs) carried engine exit-time notices 'WARNING: 8 ObjectDB instances were leaked at exit' and 'ERROR: 4 resources still in use at exit'. These strings appear in none of the 17 logs, are not among the five fatal patterns, and every in-stage leak check (e.g. 'server-X.log has no ObjectDB leak') PASSed. The runner declared GREEN with exit code 0; recorded here for transparency only.",
+    "The gate console output (446734 bytes) is preserved untracked at C:\\dws-p7-4-verifier-r3-windows\\artifacts\\gate-console-r3-full.log.",
+    "All control identities were re-verified independently in this session: gh pr view 396 => OPEN / feature/v0-p7-bounded-terrain-mutation / 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292; origin/feature/v0-p7-bounded-terrain-mutation = 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292; prior-round commits abd753941f2bc4f9ff771e8501f261505b61c7de (Reviewer R1 PASS), 38ddb506fed104ad419c1a94c9564a3ae6c654b4 (Verifier R1 NOT_VERIFIED), bbe791580bdc36729668d15208cdf9902ee1ebc8 (Verifier R2 NOT_VERIFIED) all resolve in the bare store.",
+    "No runtime source, branch, PR, dispatch or amendment file was modified, rebased, repaired, or merged by the Verifier; nothing under C:\\distributed-world-simulator\\p74-fresh-verifier-r2 was modified."
+  ],
+
+  "forbidden_conclusions_respected": {
+    "runtime_feature_merge_performed": false,
+    "pr_396_merged_by_verifier": false,
+    "merge_authorized_by_this_verification": false,
+    "runtime_branch_modified_or_rebased": false,
+    "gui_godot_executable_used": false,
+    "manual_bypass_of_repository_owned_runner": false,
+    "single_precision_godot_substituted": false,
+    "external_timeout_imposed": false,
+    "r1_r2_evidence_inherited_as_execution": false,
+    "pr_opened_by_verifier": false
+  },
+
+  "next": {
+    "opens": "Human RUNTIME_FEATURE_MERGE for exact runtime PR #396 only",
+    "merge_authorized": false,
+    "human_runtime_feature_merge_gate": "OPENS_FOR_HUMAN_DECISION",
+    "p7_4_status": "VERIFIED",
+    "success_boundary_statement": "P7.4 Fresh Windows Verifier R3 VERIFIED opens Human RUNTIME_FEATURE_MERGE only. No merge performed.",
+    "remaining_stages": ["P7.5 two-client convergence", "P7.6 seam/multi-region", "P7.7 graphical digging slice"]
+  }
+}
