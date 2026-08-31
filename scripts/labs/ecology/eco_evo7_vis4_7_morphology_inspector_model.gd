@@ -181,6 +181,16 @@ static func validate(value: Dictionary) -> bool:
 		return false
 	if int(value.get("development_individual_seed", -1)) < 0:
 		return false
+	if String(value.get("evidence_level", "")).is_empty():
+		return false
+	if String(value.get("tier", "")).is_empty():
+		return false
+	var canonical = value.get("canonical_world")
+	var visual = value.get("visual_world")
+	if not canonical is Vector3 or not visual is Vector3:
+		return false
+	if not _finite_vec(Vector3(canonical)) or not _finite_vec(Vector3(visual)):
+		return false
 	for key in [
 		"descriptor_hash",
 		"phenotype_hash",
@@ -393,6 +403,14 @@ static func _has_fields(value: Dictionary, fields: Array[String]) -> bool:
 		elif typeof(raw) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(raw)):
 			return false
 	return true
+
+
+static func _finite_vec(value: Vector3) -> bool:
+	return (
+		is_finite(value.x)
+		and is_finite(value.y)
+		and is_finite(value.z)
+	)
 
 
 static func _short_hash(value: String) -> String:
