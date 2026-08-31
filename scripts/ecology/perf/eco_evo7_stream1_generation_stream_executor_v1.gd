@@ -92,6 +92,23 @@ var _last_report: Dictionary = {}
 
 func setup(config: Dictionary) -> bool:
 	_configured = false
+	stream_calls = 0
+	chunks_processed = 0
+	serial_audit_calls = 0
+	oracle_elided_generations = 0
+	max_parent_chunk_seen = 0
+	max_candidate_chunk_seen = 0
+	last_audit_generation = -1
+	last_audit_pass = false
+	legacy_generation_calls = 0
+	optimized_generation_calls = 0
+	chunk_local_parent_sorts = 0
+	chunk_local_candidate_sorts = 0
+	chunk_local_route_sorts = 0
+	chunk_local_recruitment_sorts = 0
+	recruitment_context_builds = 0
+	generation_boundary_sorts = 0
+	_last_report = {}
 	_parents_per_chunk = int(config.get("parents_per_chunk", 64))
 	_audit_interval = int(config.get("audit_interval", 10))
 	_audit_generation_1 = bool(config.get("audit_generation_1", true))
