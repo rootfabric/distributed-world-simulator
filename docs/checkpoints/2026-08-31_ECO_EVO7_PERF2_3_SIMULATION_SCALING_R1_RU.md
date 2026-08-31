@@ -463,3 +463,37 @@ PERF2.3 SIMULATION SCALING
       ↓
 PERF2.4 RUNTIME OPTIMIZATION
 ```
+
+
+## Project Control candidate status
+
+Project Control run:
+
+```text
+33364190059
+```
+
+Subject-local stages:
+
+```text
+exact checkout                         PASS
+control candidate syntax/generation    PASS
+checkpoint-session regression          PASS
+```
+
+The global architecture/ownership compatibility stage is RED because of concurrent
+project-wide dependency drift outside the PERF2.3 delta, including Matter runtime files
+and `config/control/project-program-registry.v1.json`.
+
+Classification:
+
+```text
+GLOBAL PROJECT CONTROL
+RED — EXTERNAL CONCURRENT DRIFT
+
+PERF2.3 SUBJECT-LOCAL PREFLIGHT
+PASS
+```
+
+This classification does not relabel the global RED as green and does not waive or repair
+the unrelated Matter/main drift from the ECO branch.
