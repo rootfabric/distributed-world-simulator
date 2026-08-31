@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_4_post_merge_audit_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-4-POST-MERGE-AUDIT-EVIDENCE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "control_closure_merge": "7a46dd107275ef9f83f70f4e02776dea216348dc",
+  "canonical_main_audited": "7a46dd107275ef9f83f70f4e02776dea216348dc",
+  "audit_request_head": "26f865c6e413e3e17edd167adef0caf033610684",
+  "project_control_run": 33443988797,
+  "project_control_result": "SUCCESS",
+  "artifact_id": 9777318633,
+  "artifact_name": "project-control-report",
+  "artifact_zip_sha256": "42aaf3324f8fe57cccd852e4416f4230f9b4bedabcce96f26b29cec8aec20ef3",
+  "github_artifact_digest": "sha256:42aaf3324f8fe57cccd852e4416f4230f9b4bedabcce96f26b29cec8aec20ef3",
+  "standard_pc0": "YELLOW_NON_RED",
+  "directional_pc0": "YELLOW_NON_RED",
+  "standard_overall_health": "YELLOW",
+  "directional_overall_health": "YELLOW",
+  "workflow_steps": {
+    "architecture_and_ownership_passport_compatibility": "PASS",
+    "h0_2_machine_checkpoint": "PASS",
+    "v0_product_checkpoint": "PASS",
+    "generation80_authorization_safety": "PASS",
+    "canonical_main_pc0_auditor": "PASS",
+    "canonical_main_directional_watch": "PASS"
+  },
+  "v0": {
+    "health": "YELLOW",
+    "blocks_global_progress": true,
+    "branch": "control/v0-p7-4-closure-r1",
+    "current_stage": "P7.5 Two-Client Convergence",
+    "stage_status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
+    "findings": [],
+    "blockers": [],
+    "dependency_drift": [],
+    "critical_dependency_drift": [],
+    "architecture_compatibility": "EXACT_CANONICAL_REVISION",
+    "runtime_validation_freshness": "NOT_APPLICABLE"
+  },
+  "advisory_nonblocking_findings": {
+    "G": {
+      "health": "RED",
+      "blocks_global_progress": false,
+      "reason": "Previously recorded Matter/P7 dependency drift remains advisory until G reactivation."
+    },
+    "ECO": {
+      "health": "RED",
+      "blocks_global_progress": false,
+      "reason": "Research-design frontier dependency drift remains advisory to global progress."
+    }
+  },
+  "blocking_non_red_programs": {
+    "T": "YELLOW",
+    "CH": "YELLOW",
+    "DOCTRINE": "YELLOW",
+    "NX": "YELLOW",
+    "V0": "YELLOW"
+  },
+  "directional_findings": [
+    "YELLOW CH -> NX WATCH_HIT BLOCK",
+    "YELLOW NX -> ECO WATCH_HIT ADVISORY",
+    "YELLOW NX -> T WATCH_HIT BLOCK"
+  ],
+  "stale_harness_expectations_repaired": [
+    "tests/harness/test_v0_product_train_policy.py: current_phase P7_4_NEXT -> P7_5_NEXT",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py: current V0 branch/passport/base/prebuild head advanced from P7.3 to P7.4 closure",
+    "tests/harness/test_v0_generation80_safety_guards.py: current V0 prebuild head advanced to exact P7.4 runtime subject"
+  ],
+  "runtime_mutation_during_post_merge_audit": false,
+  "auditor_rules_changed": false,
+  "watched_paths_weakened": false,
+  "dependency_rules_weakened": false,
+  "transition_table_debt": {
+    "status": "OPEN_SEPARATE_CONTROL_DEBT",
+    "record": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001.v1.json",
+    "p7_4_closure_impact": "NONE",
+    "p7_5_automated_drive_close": "REPAIR_BEFORE_USE"
+  },
+  "decision": "P7_4_POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_PASS",
+  "p7_4": "COMPLETE_MERGED",
+  "p7": "IN_PROGRESS",
+  "next": "P7_5_TWO_CLIENT_CONVERGENCE",
+  "audited_at_utc": "2026-08-31T21:58:48Z"
+}

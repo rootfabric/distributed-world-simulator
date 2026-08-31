@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_4_post_merge_audit_request.v1",
+  "request_id": "V0-P7-R1-P7-4-POST-MERGE-AUDIT-REQUEST-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "canonical_main_to_audit": "7a46dd107275ef9f83f70f4e02776dea216348dc",
+  "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "control_closure_merge": "7a46dd107275ef9f83f70f4e02776dea216348dc",
+  "purpose": "Force Project Control in PR context to fetch and audit the already-updated canonical origin/main after the bounded P7.4 main-owned frontier repair. P7.5 must remain blocked unless the resulting blocking standard/directional health is NON_RED.",
+  "runtime_mutation": false,
+  "requested_at_utc": "2026-08-31T22:07:00Z",
+  "pre_existing_control_debt": "E2026-08-30-V0-P7-R1 transition-table.v1.json remains separately OPEN and blocks automated -Drive/-Close only; it must not be converted into a P7.4 runtime finding."
+}
