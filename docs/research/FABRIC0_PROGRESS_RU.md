@@ -3656,3 +3656,38 @@ A now bridges canonical 0.17 manifold IDs (`feature_key|pN`) and the existing C 
 
 
 0.18-A repository control: `Project Control #1867 SUCCESS`. Closed FABRIC0.17 D bytes are preserved `6/6 exact` on the 0.18 branch.
+
+
+### 0.18-B current state
+
+```text
+FABRIC0.18-A
+PERSISTENT WRENCH CONTACT STATE
+✅ IMPLEMENTED CANDIDATE
+60/60 PASS
+        ↓
+FABRIC0.18-B
+MODE TRANSITION LOCALIZATION
+✅ IMPLEMENTED CANDIDATE
+108/108 PASS
+        ↓
+FABRIC0.18-C
+MULTICONTACT PERSISTENT WRENCH GRAPH
+⚪ NEXT
+
+FABRIC0.18 NOT CLOSED
+```
+
+B exact executable:
+
+`649d7a9d62384a6d3cdfe2efbd92534bc52573e7`.
+
+B localizes continuous feasibility roots for stick→slide, stick→roll, stick→spin and support→separation; each family has strict event-time refinement through `1e-10`.
+
+Near roots at `1.0` and `1.0002` group at `1e-3` temporal resolution and split at `1e-5`.
+
+Exact gate: B `108/108`, A `60/60`, playground PASS, import/editor CLEAN, B remote bytes `4/4`, A `3/3` and 0.17-D `6/6` preserved.
+
+Important non-claim: B's deterministic ramp evaluators prove the generic event-localization boundary, not yet a full physical no-creep persistent-contact trajectory.
+
+Next: `FABRIC0.18-C — MULTICONTACT PERSISTENT WRENCH GRAPH`.

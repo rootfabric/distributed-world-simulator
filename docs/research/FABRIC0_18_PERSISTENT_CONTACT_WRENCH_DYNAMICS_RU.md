@@ -313,3 +313,275 @@ All control steps passed, including architecture/ownership compatibility, H0.2 m
 Closed FABRIC0.17 D executable bytes remain preserved 6/6 on the 0.18 branch.
 
 0.18-A remains an implemented research candidate; FABRIC0.18 itself remains IN PROGRESS.
+
+
+## 8. 0.18-B — Mode Transition Localization
+
+Exact-tested executable:
+
+```text
+HEAD
+649d7a9d62384a6d3cdfe2efbd92534bc52573e7
+
+TREE
+f9f19abf98c5b338261ac2e1e03d98b70a59aaf2
+```
+
+Status:
+
+```text
+FABRIC0.18-B
+MODE TRANSITION LOCALIZATION
+
+IMPLEMENTED CANDIDATE
+EXACT LINUX DOUBLE PASS
+108/108 PASS
+REMOTE BYTE IDENTITY 4/4 PASS
+FABRIC0.18 NOT CLOSED
+```
+
+### 8.1 Root quantity
+
+B does not infer transition time merely from a mode label changing between discrete samples.
+
+It localizes a continuous feasibility guard:
+
+```text
+tangent:
+  admissible tangent wrench capacity
+  -
+  hypothetical stick demand
+
+rolling:
+  admissible rolling moment capacity
+  -
+  hypothetical roll-stick demand
+
+torsion:
+  admissible torsional moment capacity
+  -
+  hypothetical spin-stick demand
+
+support:
+  normal support margin
+```
+
+Semantics:
+
+```text
+guard > 0   persistent constraint feasible
+guard = 0   mode boundary
+guard < 0   old mode infeasible
+```
+
+This distinction matters because after a stick→motion transition the accepted friction/moment impulse remains saturated at the wrench limit. Therefore the accepted impulse itself is not a signed root quantity.
+
+### 8.2 Event locator
+
+New runtime:
+
+`Fabric0PersistentWrenchModeEventLocatorV1`.
+
+Pipeline:
+
+```text
+continuous feasibility guard
+        ↓
+deterministic horizon scan
+        ↓
+first positive → nonpositive bracket
+        ↓
+bisection refinement
+        ↓
+explicit bracket uncertainty
+        ↓
+semantic probes around root
+        ↓
+0.18-A state validation
+        ↓
+localized mode event
+```
+
+Supported events:
+
+```text
+tangent  STICK_TO_SLIDE
+rolling  STICK_TO_ROLL
+torsion  STICK_TO_SPIN
+support  SUPPORT_TO_SEPARATION
+```
+
+For tangent/rolling/torsion, A verifies:
+
+```text
+pre-state  = stick
+post-state = slide / roll / spin
+```
+
+For support:
+
+```text
+pre-state active
+post-state separated/open
+accepted generalized impulse cleared
+```
+
+### 8.3 Reference transition stand
+
+Reference roots:
+
+```text
+tangent  0.812345679
+rolling  1.012345679
+torsion  1.212345679
+support  1.412345679
+```
+
+Exact-localized values at the acceptance tolerance:
+
+```text
+tangent  0.812345679034
+rolling  1.012345679046
+torsion  1.212345679058
+support  1.412345679011
+```
+
+### 8.4 Refinement
+
+For each of the four transition families, against exact root `1.123456789`:
+
+```text
+root tolerance     absolute event-time error
+1e-4               1.79891516e-5
+1e-6               6.8808292e-7
+1e-8               6.11608e-9
+1e-10              6.823e-11
+```
+
+Bracket uncertainty also strictly decreases:
+
+```text
+5.03303816e-5
+7.8641221e-7
+6.14385e-9
+~9.6e-11
+```
+
+For every refinement level:
+
+`event-time error <= reported bracket uncertainty`.
+
+### 8.5 Temporal-resolution event sets
+
+Near-coincident roots:
+
+```text
+tangent = 1.0000
+rolling = 1.0002
+```
+
+At declared resolution `1e-3`:
+
+```text
+simultaneous:
+rolling:STICK_TO_ROLL
+tangent:STICK_TO_SLIDE
+
+deferred:
+none
+```
+
+At `1e-5`:
+
+```text
+current:
+tangent:STICK_TO_SLIDE
+
+deferred:
+rolling:STICK_TO_ROLL
+```
+
+So mode-event simultaneity follows the same explicit temporal-resolution principle established by 0.17-A: near coincidence is not silently converted into exact simultaneity.
+
+### 8.6 Determinism
+
+Acceptance verifies exact identity under:
+
+- same-tolerance replay;
+- reversed body/member presentation;
+- reversed event-spec order.
+
+Event-set signature, event IDs, root time and canonical manifold identity remain exact.
+
+### 8.7 Fail-closed boundary
+
+B refuses:
+
+- unknown transition channel;
+- channel/kind mismatch;
+- invalid start/horizon/tolerance/scan budget;
+- transition already passed at the start;
+- no transition in requested horizon;
+- incomplete evaluator result;
+- missing/non-finite guard;
+- evaluator state rejected by 0.18-A;
+- wrong guard direction;
+- semantic pre/post mode mismatch;
+- empty event-spec set;
+- invalid simultaneous resolution.
+
+### 8.8 Exact gate
+
+Exact Godot:
+
+`4.7.1.stable.double.custom_build.a13da4feb`.
+
+```text
+0.18-B 108/108 PASS
+0.18-A  60/60 PASS
+B playground PASS
+import CLEAN
+editor parse/compile CLEAN
+```
+
+Remote exact bytes:
+
+```text
+B 4/4 exact
+A 3/3 preserved
+0.17-D 6/6 preserved
+```
+
+Exact B files:
+
+```text
+fabric0_persistent_wrench_mode_event_locator_v1.gd
+blob   9c34645ff11c3a33222e993fad3607c41fefa448
+sha256 543851a6393abaee2f468173000cd84b4fe332a0e5bc52f1677dbf4b0928b02b
+
+fabric0_persistent_wrench_mode_transition_experiments_v1.gd
+blob   833506434b254a11115a7f89b548e8c6f74070b3
+sha256 16908605215be31e4ffe4edf56025e4ed9dcc8155bb6c8f46f152199da32da69
+
+fabric0_persistent_wrench_mode_transition_acceptance.gd
+blob   66435982de3127574dbe524ee55891262f05c690
+sha256 180f7d1ac7966de36ce02c2ef03ad1ecf098a14b951420039f29a93435bfb81e
+
+fabric0_persistent_wrench_mode_transition_playground.gd
+blob   cfb176fccc86b2500a0df3f175a632d9c5275e46
+sha256 7a8c502201cb615a2408fe80a5b03553d261c9f07de5085f533607975ee550c2
+```
+
+### 8.9 B non-claims
+
+0.18-B proves generic mode-boundary localization and its coupling to the persistent-state contract. It does not yet prove:
+
+- physical static-contact no-creep under gravity;
+- a production external-force integrator;
+- multicontact persistent wrench coupling;
+- graph-wide support redistribution;
+- a unified impact→persistent→transition→separation trajectory;
+- FABRIC0.18 closure;
+- production acceptance.
+
+Those remain later slices, beginning with 0.18-C.

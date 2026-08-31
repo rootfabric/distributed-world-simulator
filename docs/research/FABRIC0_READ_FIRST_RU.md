@@ -1086,3 +1086,40 @@ A consumes the existing 0.17 persistent manifold point IDs directly and normaliz
 
 
 0.18-A control boundary: `Project Control #1867 SUCCESS`; FABRIC0.17 D predecessor bytes remain `6/6 exact`.
+
+
+## 20. FABRIC0.18-B — implemented candidate
+
+Exact executable:
+
+`649d7a9d62384a6d3cdfe2efbd92534bc52573e7`.
+
+```text
+0.18-A  60/60 PASS
+0.18-B 108/108 PASS
+
+B remote bytes 4/4 exact
+A bytes 3/3 preserved
+0.17-D bytes 6/6 preserved
+
+FABRIC0.18 NOT CLOSED
+```
+
+Critical B semantics:
+
+```text
+mode transition time
+!=
+first discrete sample whose label changed
+
+mode transition time
+=
+root of a continuous feasibility guard
+validated by 0.18-A semantics on both sides
+```
+
+Events: `STICK_TO_SLIDE`, `STICK_TO_ROLL`, `STICK_TO_SPIN`, `SUPPORT_TO_SEPARATION`.
+
+Near-coincident mode roots obey explicit temporal-resolution grouping exactly as impact roots do in 0.17.
+
+Next: `0.18-C MULTICONTACT PERSISTENT WRENCH GRAPH`.
