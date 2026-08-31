@@ -3607,3 +3607,24 @@ Harness regression repair was merged independently to main via PR #377, merge `7
 The former G/ECO RED was a stale-checkout harness-regression bug, not a FABRIC physics failure. The fix changed only the two harness regression tests and did not weaken critical dependency semantics.
 
 Next Physical Core checkpoint is not implicitly named here; it must be formalized separately in the roadmap before implementation.
+
+
+### FABRIC0.18 roadmap frozen
+
+```text
+FABRIC0.17 ✅ RESEARCH CANDIDATE CLOSED
+        ↓
+FABRIC0.18 PERSISTENT CONTACT WRENCH DYNAMICS
+        ├─ 0.18-A Persistent Wrench Contact State        🔵 STARTED
+        ├─ 0.18-B Mode Transition Localization          ⚪
+        ├─ 0.18-C Multicontact Persistent Wrench Graph  ⚪
+        └─ 0.18-D Unified Persistent Contact Trajectory ⚪
+```
+
+Branch: `research/fabric0-18-persistent-contact-wrench-r1`.
+
+Predecessor closure: `751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0`.
+
+Read: `docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md`.
+
+BRIDGE-1 is not a prerequisite for 0.18. Perform a Physical Core ↔ BAKE synchronization review before formalizing a post-0.18 successor.

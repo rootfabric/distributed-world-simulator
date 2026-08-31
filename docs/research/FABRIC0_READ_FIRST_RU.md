@@ -1024,3 +1024,33 @@ NOT PRODUCTION ACCEPTED
 ```
 
 Do not create an implicit 0.17-E. Any successor Physical Core checkpoint must first be explicitly formalized in the roadmap.
+
+
+## 18. FABRIC0.18 — active successor
+
+```text
+FABRIC0.18
+PERSISTENT CONTACT WRENCH DYNAMICS
+IN PROGRESS
+
+branch:
+research/fabric0-18-persistent-contact-wrench-r1
+
+base:
+751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0
+```
+
+Slices:
+
+```text
+0.18-A Persistent Wrench Contact State        STARTED
+0.18-B Mode Transition Localization           NEXT
+0.18-C Multicontact Persistent Wrench Graph   LATER
+0.18-D Unified Persistent Contact Trajectory  CLOSURE DECISION
+```
+
+Critical A rule: persistent state may retain identity, age, mode hypothesis and projected warm-start proposal, but it must never carry a previous impulse forward as accepted physical truth. Every accepted state requires a fresh solve.
+
+Read `docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md`.
+
+0.18 remains research-only and not production accepted.
