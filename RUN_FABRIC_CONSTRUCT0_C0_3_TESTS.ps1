@@ -1,4 +1,4 @@
-param([string]$GodotPath = $env:GODOT_BIN)
+param(\n    [string]$GodotPath = $env:GODOT_BIN,\n    [string]$ExpectedHead = ""\n)
 $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ExpectedBranch = "feature/fabric-construct0-tangible-sandbox-r1"
@@ -6,7 +6,14 @@ $ExpectedVersion = "4.7.1.stable.double.custom_build.a13da4feb"
 
 $currentBranch = (& git -C $RootDir branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch" }
-if ($currentBranch -ne $ExpectedBranch) {
+$head = (& git -C $RootDir rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0) { throw "Unable to determine HEAD" }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedHead)) {
+    if ($head -ne $ExpectedHead) {
+        throw "WRONG_HEAD: expected $ExpectedHead actual $head"
+    }
+}
+elseif ($currentBranch -ne $ExpectedBranch) {
     throw "WRONG_BRANCH: expected $ExpectedBranch actual $currentBranch"
 }
 
@@ -29,7 +36,6 @@ if ($actualVersion -ne $ExpectedVersion) {
     throw "Unexpected Godot version: $actualVersion expected $ExpectedVersion"
 }
 
-$head = (& git -C $RootDir rev-parse HEAD).Trim()
 $tree = (& git -C $RootDir rev-parse "HEAD^{tree}").Trim()
 Write-Host "FABRIC CONSTRUCT0 C0.1-C0.3 EXACT WINDOWS VERIFICATION"
 Write-Host "branch: $currentBranch"
