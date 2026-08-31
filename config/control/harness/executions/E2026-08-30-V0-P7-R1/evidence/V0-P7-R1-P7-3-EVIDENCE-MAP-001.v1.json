@@ -1,0 +1,111 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "evidence_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "intent": "Convert an existing committed MatterMaterialBatch into the existing canonical Item Graph without introducing a second resource store, replay ledger, persistence owner, or hidden mass truth.",
+  "exact_delta_from_main": {
+    "base_head": "8ae419bb4c726a3c616e84dd11047d9b91a8cb7d",
+    "new_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "changed_files": [
+      "RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.ps1",
+      "RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh",
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_coordinator.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_policy.gd",
+      "scripts/runtime/networked_gameplay/p7/p7_matter_material_item_graph_adapter.gd",
+      "tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd"
+    ],
+    "foundation_files_changed": false,
+    "matter_contracts_changed": false,
+    "canonical_item_graph_code_changed": false
+  },
+  "selected_policy": {
+    "policy_id": "p7/matter-material-delivery/r1",
+    "output_definition_id": "item/ore",
+    "kg_per_item_unit": 1,
+    "supported_material_ids": [
+      "matter/basalt",
+      "matter/fractured-basalt",
+      "matter/regolith-compacted",
+      "matter/regolith-loose"
+    ],
+    "quantization": "FLOOR_WITH_EXPLICIT_RESIDUAL",
+    "conservation_invariant": "total_mass_kg == represented_mass_kg + residual_mass_kg within 1e-9 kg",
+    "residual_owner": "IMMUTABLE_MATTER_MATERIAL_BATCH_PROVENANCE",
+    "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "delivery_receipt_store": false,
+    "new_canonical_state_owner": false
+  },
+  "exactly_once_binding": {
+    "output_operation_id": "deterministic SHA-256 derivation from batch_id",
+    "output_source_id": "batch_id + full immutable MatterMaterialBatch checksum",
+    "replay_owner": "existing Canonical Item Graph server.output ledger",
+    "cross_player_redirect": "fails closed as OPERATION_REPLAY_CONFLICT",
+    "same_batch_id_different_contents": "fails closed as OPERATION_REPLAY_CONFLICT"
+  },
+  "failure_safety": [
+    "Item Graph preflight precedes Item Graph mutation.",
+    "Full inventory rejects with canonical CONTAINER_FULL and does not mutate Item Graph.",
+    "If Matter is already COMMITTED and Item Graph rejects, the existing MW4 material receiver batch remains byte-identical and available for retry.",
+    "There are no P7-private delivery receipts or balances; crash/retry identity is carried by immutable Matter batch provenance plus the existing Item Graph replay ledger."
+  ],
+  "integration_scope": {
+    "real_mw4_batch_exercised": true,
+    "real_lunar_matter_bubble_exercised": true,
+    "canonical_item_graph_exercised": true,
+    "live_graphical_app_wiring": false,
+    "live_graphical_app_wiring_reason": "P7.3 exit is the conversion boundary itself; two-client/live convergence and graphical equip-aim-dig-material-inventory composition remain explicit P7.5/P7.7 stages."
+  },
+  "implementer_validation": {
+    "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_3_focused": "PASS 116/116",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "p5_mining_tool": "PASS 36/36",
+    "p3_resource_domain": "PASS 79/79",
+    "mw4": "PASS 187",
+    "mw5": "PASS 142",
+    "mw6": "PASS 130",
+    "p7_2_bubble_fresh_rerun": "NOT_CLAIMED: implementer container reached assertions but hung during shutdown; P7.2 runtime subtree itself is unchanged from previously independently VERIFIED main.",
+    "runtime_project_control_run": 33360078991,
+    "runtime_project_control": "SUCCESS"
+  },
+  "immutable_source": {
+    "validation_pr": 375,
+    "validation_branch": "validation/v0-p7-3-review-source-r1",
+    "carrier_head": "5bfb31c5c4940a365385717d756ed15a62737bd0",
+    "export_run": 33363652803,
+    "export_result": "SUCCESS",
+    "carrier_project_control_run": 33363652835,
+    "carrier_project_control": "SUCCESS",
+    "artifact_id": 9747515061,
+    "artifact_name": "p7-3-review-source-b4b11a69ef92",
+    "artifact_zip_sha256": "b6f2be94c8dbe371468ccfbee0064dcf354007b8ae0b4db6ac1176b37e008853",
+    "source_tar_sha256": "f5cb57e6d953b6f9dcf3d4cc0014e2c3759e9b461d5bcf638a2dcc0681ed1f98",
+    "reconstructed_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00"
+  },
+  "required_reviewer_scope": [
+    "Verify exact runtime HEAD/TREE and six-file delta from canonical main.",
+    "Confirm all runtime changes remain inside existing P7 adapter scope and no foundation/canonical owner changed.",
+    "Judge whether the explicit 1 kg -> 1 item/ore product conversion is sufficiently explicit and bounded for current V0 generic ore semantics.",
+    "Prove mass conservation including residual accounting; no rounding-up or silent mass disappearance.",
+    "Verify unsupported materials fail closed and supported material mapping is explicit.",
+    "Verify exactly-once is owned only by canonical Item Graph replay ledger, with deterministic operation identity and full batch checksum in fingerprint.",
+    "Verify replay conflicts prevent same batch from being redirected to another player or reused with changed physical contents.",
+    "Verify inventory-full failure is mutation-free on Item Graph and preserves the committed MW4 batch for retry.",
+    "Verify adapter/coordinator are stateless and introduce no P7-private receipt store, resource inventory, persistence owner, or second Item Graph.",
+    "Review whether deferring live graphical/two-client wiring to P7.5/P7.7 is consistent with P7.3 stage boundary."
+  ],
+  "remaining_risks": [
+    "Fresh independent Reviewer pending.",
+    "Fresh independent Verifier blocked until Reviewer PASS.",
+    "Verifier must run the full P7.3 canonical gate on fresh Ubuntu exact-double Godot, including P7.2 bubble which the implementer container did not freshly close.",
+    "Human RUNTIME_FEATURE_MERGE remains closed.",
+    "P7.4-P7.7 and whole-P7 regression remain open."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
