@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_dispatch_evidence.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "risk_class": "CRITICAL",
+  "runtime_subject": {
+    "pr": 350,
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+    "tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+    "draft": true
+  },
+  "independent_review": {
+    "review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002",
+    "review_commit": "37b140f21395e0195826afc0ee0fd3787719dbb1",
+    "reviewer": "INDEPENDENT_REVIEWER_P7_2_FRESH_EXACT_SOURCE_R2",
+    "verdict": "PASS",
+    "project_control_run": 33354295502,
+    "project_control": "SUCCESS",
+    "required_fixes": [],
+    "evidence_gaps": []
+  },
+  "exact_source": {
+    "validation_pr": 361,
+    "export_run": 33352617094,
+    "artifact_id": 9744115039,
+    "artifact_zip_sha256": "4259a92184a4e2d7d5fa7977f19879a70215f4cf3faa6105446872e93b293bef",
+    "source_tar_sha256": "1a7067ae17fded8c561ed358b8096bf8dab283481f7a624687ae7c8a79c44c93",
+    "reconstructed_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36"
+  },
+  "exact_runtime_evidence_from_implementer": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_2_bubble": "PASS 53/53",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "mw4": "PASS 187",
+    "mw5": "PASS 142",
+    "mw6": "PASS 130",
+    "canonical_gate_exit": 0,
+    "project_control_run": 33352528718,
+    "project_control": "SUCCESS"
+  },
+  "verifier_requirements": [
+    "Use a fresh detached checkout or reconstructed immutable exact source of runtime HEAD/TREE.",
+    "Independently verify HEAD/TREE identity before executing tests.",
+    "Use only Godot 4.7.1.stable.double.custom_build.a13da4feb; any other build is a hard identity failure.",
+    "Run isolated Godot import.",
+    "Run RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.sh with exact Godot binary and exact expected HEAD.",
+    "Require runner exit 0 and all seven declared stage PASS summaries.",
+    "Independently inspect generated logs for fatal parser/compile/load markers.",
+    "Record SHA-256 for import and all seven stage logs.",
+    "Require tracked worktree clean after execution; untracked .gd.uid import sidecars do not count as tracked mutation.",
+    "Do not repair runtime code in Verifier role. Any failure yields NOT_VERIFIED and returns to Implementer.",
+    "Do not rely on Implementer execution as substitute for fresh Verifier execution."
+  ],
+  "forbidden_conclusions": [
+    "Verifier PASS does not itself authorize RUNTIME_FEATURE_MERGE.",
+    "Verifier PASS does not merge PR #350.",
+    "Verifier PASS does not accept whole P7 checkpoint.",
+    "Verifier PASS does not claim P7.3 or later work complete."
+  ],
+  "status": "READY_FOR_FRESH_INDEPENDENT_VERIFIER"
+}
