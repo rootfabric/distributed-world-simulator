@@ -3544,3 +3544,25 @@ editor CLEAN
 Next:
 
 `FABRIC0.17-D — UNIFIED MULTI-IMPACT WRENCH TRAJECTORY`.
+
+### 0.17-D current state
+
+`executable HEAD = 643b4bdc5d33756819869c3faacc1dccf1251a1f`
+
+Status: `IMPLEMENTED CANDIDATE / EXACT DOUBLE PASS / 157/157 PASS / D 6/6 REMOTE EXACT / CONTROL BLOCKED EXTERNALLY / FABRIC0.17 NOT CLOSED`.
+
+Integrated trajectory: first simultaneous set `[C|L,C|R]` near `0.5`, second `[P|Q,Q|S]` near `0.5002`; 8 normal rows per event.
+
+Key integration falsifier: one-pass B→C reopens normal law by about `0.341108067` / `0.337395997`. The same-instant normal↔wrench fixed point reduces the full-post residual to `4.436535363e-10` / `2.296023451e-10`.
+
+Graph-wide wrench cross-patch coupling is nonzero and strong (`~3.33` / `~3.45`). Whole-state and event-time refinement are strictly decreasing through `1e-9` against `1e-11` reference.
+
+Reference whole-trajectory energy: `9.66625 -> 2.07687223207214`; ledger error `1.7763568394002505e-15`; linear/angular momentum errors `0`.
+
+Exact replay, reverse body order and reverse event-member order are identical.
+
+Full exact regression: `D 157/157; C 76/76; B 63/63; A 77/77; 0.16 S3 101/101; S2 102/102; S1 110/110; editor CLEAN`.
+
+Project Control `#1836` failed twice on the exact D executable HEAD at architecture/ownership passport compatibility. D changes exactly six FABRIC research/test files from the previously green C boundary; failure reports unrelated G/ECO critical dependency drift in Matter/control paths. Classification: `EXTERNAL_CROSS_REF_CONTROL_DRIFT`.
+
+Closure is intentionally withheld. Next action for 0.17 is repository-control recovery/recheck, not a fabricated 0.17-E.
