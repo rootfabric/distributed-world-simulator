@@ -26,7 +26,7 @@ func setup(experiment: Dictionary) -> Dictionary:
 	_initial_experiment = experiment.duplicate(true)
 	_experiment = experiment.duplicate(true)
 	_aggregate = AggregateScript.new()
-	var loaded := _aggregate.load_snapshot(_experiment["snapshot"])
+	var loaded: Dictionary = _aggregate.load_snapshot(_experiment["snapshot"])
 	if not bool(loaded.get("success", false)):
 		return loaded
 	_time = 0.0
@@ -62,7 +62,7 @@ func advance(delta: float) -> Dictionary:
 		return _success_state()
 	if _system.is_empty():
 		return _failure("TOYBOX_DAE_NOT_BUILT")
-	var result := Fabric.advance(_system, delta)
+	var result: Dictionary = Fabric.advance(_system, delta)
 	if not bool(result.get("ok", false)):
 		return _failure("TOYBOX_DAE_ADVANCE_FAILED", {"fabric": result})
 	_time = float(_system["time"])
@@ -338,8 +338,8 @@ func _compile_ramp_contact(normal_support: float, mu: float, angle: float) -> Di
 				"id": "ramp/%02d/%02d" % [iz, ix],
 				"position": tangent * u + t2 * v,
 			})
-	var snapshot := _aggregate.export_snapshot()
-	var request := {
+	var snapshot: Dictionary = _aggregate.export_snapshot()
+	var request: Dictionary = {
 		"model_id": "artifact/construct0/play1/ramp",
 		"patch_id": "patch/construct0/play1/ramp",
 		"source_frontier_hash": String(snapshot["checksum"]),
@@ -358,7 +358,7 @@ func _compile_ramp_contact(normal_support: float, mu: float, angle: float) -> Di
 		"effective_radius": 0.35,
 		"minimum_reduction_ratio": 2.0,
 	}
-	var baked := ContactCompiler.compile(request)
+	var baked: Dictionary = ContactCompiler.compile(request)
 	if not bool(baked.get("ok", false)):
 		return _failure("TOYBOX_RAMP_B0_3_FAILED", {"b0_3": baked})
 	var model: Dictionary = baked["model"]
@@ -371,11 +371,11 @@ func _compile_ramp_contact(normal_support: float, mu: float, angle: float) -> Di
 
 func _evaluate_bridge(allow_break: bool) -> Dictionary:
 	var params: Dictionary = _experiment["runtime_params"]
-	var snapshot := _aggregate.export_snapshot()
+	var snapshot: Dictionary = _aggregate.export_snapshot()
 	var external := {
 		String(params["load_part_id"]): float(params["initial_external_load_n"]) + _added_load_n,
 	}
-	var load_case := StructuralLoadCase.create(
+	var load_case: Dictionary = StructuralLoadCase.create(
 		"load-case/construct0/toybox/breakable-bridge",
 		String(snapshot["construct_id"]),
 		String(snapshot["checksum"]),
@@ -385,7 +385,7 @@ func _evaluate_bridge(allow_break: bool) -> Dictionary:
 		float(params["safety_factor"]),
 		float(params["degraded_capacity_factor"])
 	)
-	var compiled := StructuralCompiler.compile(snapshot, load_case)
+	var compiled: Dictionary = StructuralCompiler.compile(snapshot, load_case)
 	if not bool(compiled.get("success", false)):
 		return compiled
 	var profile: Dictionary = compiled["profile"]
@@ -401,8 +401,8 @@ func _evaluate_bridge(allow_break: bool) -> Dictionary:
 		if String(state["state"]) == "OVERLOADED" and overloaded_bond_id.is_empty():
 			overloaded_bond_id = String(state["bond_id"])
 	if allow_break and not overloaded_bond_id.is_empty():
-		var before_revision := _aggregate.state_revision
-		var broken := _aggregate.break_bond(
+		var before_revision: int = int(_aggregate.state_revision)
+		var broken: Dictionary = _aggregate.break_bond(
 			"toybox/bridge/auto-break/%06d" % before_revision,
 			before_revision,
 			overloaded_bond_id
@@ -443,8 +443,8 @@ func _after_dae_advance() -> void:
 	var kind := String(_experiment["runtime_kind"])
 	if kind == "HINGE_OSCILLATOR":
 		var params: Dictionary = _experiment["runtime_params"]
-		var q := Fabric.read_state(_system, "q")
-		var qd := Fabric.read_state(_system, "qd")
+		var q: float = Fabric.read_state(_system, "q")
+		var qd: float = Fabric.read_state(_system, "qd")
 		var min_q := float(params["min_angle_rad"])
 		var max_q := float(params["max_angle_rad"])
 		if q < min_q or q > max_q:
@@ -455,7 +455,7 @@ func _after_dae_advance() -> void:
 	if kind == "HINGE_SPRING_RELEASE" and not _released and Fabric.read_mode(_system) == "released":
 		_released = true
 		var latch_id := String(_experiment["runtime_params"]["latch_bond_id"])
-		var broken := _aggregate.break_bond(
+		var broken: Dictionary = _aggregate.break_bond(
 			"toybox/catapult/release/%06d" % _aggregate.state_revision,
 			_aggregate.state_revision,
 			latch_id
@@ -487,8 +487,8 @@ func _apply_impulse(impulse: float) -> Dictionary:
 
 func _rebuild_preserving_dynamic_state(reason: String) -> Dictionary:
 	if String(_experiment["runtime_kind"]) == "HINGE_OSCILLATOR":
-		var q := Fabric.read_state(_system, "q") if not _system.is_empty() else float(_experiment["runtime_params"]["initial_angle_rad"])
-		var qd := Fabric.read_state(_system, "qd") if not _system.is_empty() else float(_experiment["runtime_params"]["initial_omega_rad_s"])
+		var q: float = Fabric.read_state(_system, "q") if not _system.is_empty() else float(_experiment["runtime_params"]["initial_angle_rad"])
+		var qd: float = Fabric.read_state(_system, "qd") if not _system.is_empty() else float(_experiment["runtime_params"]["initial_omega_rad_s"])
 		_experiment["runtime_params"]["initial_angle_rad"] = q
 		_experiment["runtime_params"]["initial_omega_rad_s"] = qd
 	elif String(_experiment["runtime_kind"]) in ["SLIDER_FRICTION", "ROLLING_CART"]:
@@ -503,14 +503,14 @@ func _rebuild_preserving_dynamic_state(reason: String) -> Dictionary:
 	return _success_state()
 
 func _break_selected_bond() -> Dictionary:
-	var snapshot := _aggregate.export_snapshot()
+	var snapshot: Dictionary = _aggregate.export_snapshot()
 	for bond_any in snapshot["bonds"]:
 		var bond: Dictionary = bond_any
 		if String(bond["state"]) == "BROKEN":
 			continue
 		if String(bond["bond_kind"]) != "BREAKABLE":
 			continue
-		var result := _aggregate.break_bond(
+		var result: Dictionary = _aggregate.break_bond(
 			"toybox/debug-break/%06d" % _aggregate.state_revision,
 			_aggregate.state_revision,
 			String(bond["bond_id"])
@@ -534,7 +534,7 @@ func _compose_state() -> Dictionary:
 	if kind == "SLIDER_FRICTION" and not _system.is_empty():
 		var params: Dictionary = _experiment["runtime_params"]
 		var environment: Dictionary = _experiment["environment"]["parameters"]
-		var q := Fabric.read_state(_system, "q")
+		var q: float = Fabric.read_state(_system, "q")
 		var angle := deg_to_rad(float(environment["angle_deg"]))
 		var base := _base_position(String(params["moving_part_id"]))
 		overrides[String(params["moving_part_id"])] = {
@@ -545,14 +545,14 @@ func _compose_state() -> Dictionary:
 		metrics["velocity_m_s"] = Fabric.read_state(_system, "qd")
 	elif kind == "HINGE_OSCILLATOR" and not _system.is_empty():
 		var params: Dictionary = _experiment["runtime_params"]
-		var q := Fabric.read_state(_system, "q")
+		var q: float = Fabric.read_state(_system, "q")
 		_hinge_overrides(overrides, params, q)
 		metrics["angle_rad"] = q
 		metrics["omega_rad_s"] = Fabric.read_state(_system, "qd")
 	elif kind == "ROLLING_CART" and not _system.is_empty():
 		var params: Dictionary = _experiment["runtime_params"]
-		var q := Fabric.read_state(_system, "q")
-		var wheel_q := Fabric.read_state(_system, "wheel_q")
+		var q: float = Fabric.read_state(_system, "q")
+		var wheel_q: float = Fabric.read_state(_system, "wheel_q")
 		var moving_ids: Array = [String(params["moving_part_id"])]
 		moving_ids.append_array(Array(params.get("dependent_part_ids", [])))
 		moving_ids.append_array(Array(params.get("wheel_part_ids", [])))
@@ -567,7 +567,7 @@ func _compose_state() -> Dictionary:
 		metrics["wheel_angle_rad"] = wheel_q
 	elif kind == "HINGE_SPRING_RELEASE" and not _system.is_empty():
 		var params: Dictionary = _experiment["runtime_params"]
-		var q := Fabric.read_state(_system, "q")
+		var q: float = Fabric.read_state(_system, "q")
 		_hinge_overrides(overrides, params, q)
 		var payload_id := String(params["payload_part_id"])
 		if _released:
