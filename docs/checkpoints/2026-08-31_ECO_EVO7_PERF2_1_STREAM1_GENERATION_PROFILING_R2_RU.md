@@ -1,7 +1,7 @@
 # ECO.EVO7 PERF2.1 R2 — STREAM1 Generation Profiling
 
 Дата: 2026-08-31  
-Статус: **IMPLEMENTATION CANDIDATE / EXACT WINDOWS CLOSURE REQUIRED**
+Статус: **IMPLEMENTATION CANDIDATE / ONE EXACT LOCAL PASS REQUIRED — UBUNTU OR WINDOWS**
 
 ## Predecessor
 
@@ -320,11 +320,13 @@ ECO.EVO7 PERF2.1 transitive generation-profiling R2 acceptance: PASS
 
 ## Acceptance
 
-PERF2.1 R2 may be accepted only when one immutable HEAD has:
+PERF2.1 R2 may be accepted when one immutable runtime subject has:
 
 ```text
+ONE fresh exact local execution     PASS
+operating system                    UBUNTU OR WINDOWS
 exact Godot                         PASS
-fresh import                        PASS
+fresh/verifier-controlled worktree  PASS
 protected runtime diff              PASS
 PERF1                               PASS 69
 STREAM1                             PASS 195 / 108 exact
@@ -335,11 +337,20 @@ samples                             12
 summaries                           32
 comparisons                         3
 artifact roundtrip/hash             PASS
-canonical repository workflow       PASS
 tracked tree                        clean
 Project Control                     PASS
-exact Windows CI closure            SUCCESS
 ```
+
+For this OS-neutral GDScript/runtime path:
+
+```text
+Ubuntu PASS  == sufficient runtime evidence
+Windows PASS == sufficient runtime evidence
+
+Ubuntu + Windows == optional additional cross-platform evidence
+```
+
+An automatic Windows CI closure is not required for PERF2.1 acceptance.
 
 Until then:
 
@@ -416,3 +427,29 @@ recomputed report_hash after JSON round-trip    PASS
 full parsed report validation                   PASS
 one-microsecond timing tamper                    REJECT
 ```
+
+
+## Verification governance R18
+
+PERF2.1 adopts the repository rule defined in:
+
+```text
+docs/control/AGENTIC_PROJECT_GOVERNANCE_PLAYBOOK_RU.md §17.1
+config/ecology/eco-runtime-verification-policy.v1.json
+```
+
+Because PERF2.1 runtime code is OS-neutral GDScript and executes the same Godot code path
+on supported desktop platforms, one exact local execution is sufficient:
+
+```text
+fresh exact Ubuntu PASS
+OR
+fresh exact Windows PASS
+```
+
+The second OS is optional evidence and must not block acceptance.
+
+This does not apply automatically to OS-specific PowerShell/Bash/native/path/driver/process
+integration; such work must still test the affected platform.
+
+Historical PERF2.0/STREAM1 acceptance evidence remains unchanged.
