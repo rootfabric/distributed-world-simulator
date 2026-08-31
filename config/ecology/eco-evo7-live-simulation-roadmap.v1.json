@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_live_simulation_roadmap.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R22",
+  "revision": "ECO.EVO7-LIVE-ROADMAP-2026-08-31-R23",
   "mode": "RESEARCH_SHADOW_ONLY",
-  "current_checkpoint": "ECO.EVO7/PERF2.3",
+  "current_checkpoint": "ECO.EVO7/PERF2.4",
   "visualization_gate": "VIS3_ACCEPTED_C3D72DA",
   "route": [
     {
@@ -117,8 +117,8 @@
     {
       "id": "PERF2.SIM",
       "name": "Simulation-side Performance Convergence",
-      "status": "IN_PROGRESS_PERF2_3_R1_SIMULATION_SCALING",
-      "detail": "PERF2.2 remains accepted. PERF2.3 R1 measures generation-aged scaling at preconditions 2/12/22 with identical 12-generation windows, three repetitions, serial + STREAM1 chunks 1/7/64, 27/27 exact parity required. No optimization changes."
+      "status": "IN_PROGRESS_PERF2_4_RUNTIME_OPTIMIZATION",
+      "detail": "PERF2.3 R1 accepted on exact Ubuntu PASS. PERF2.4 Runtime Optimization is now authorized/current. Accepted scaling evidence: 27/27 exact parity, bounded STREAM1 structural pressure, no observed crossover, serial faster at all 9 tested scale/chunk points."
     },
     {
       "id": "PERF2.0",
@@ -163,19 +163,24 @@
     {
       "id": "PERF2.3",
       "name": "Simulation Scaling",
-      "status": "R1_IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
-      "detail": "Generation-age scaling matrix: 36 samples, 12 scaling points, 9 serial↔STREAM1 comparisons, 4 trends, 3 host-local crossover analyses, 27/27 exact pairs required. Audit cadence aligned one interval audit per window.",
+      "status": "ACCEPTED_UBUNTU_34715AC",
+      "detail": "Accepted on exact fresh detached Ubuntu verification of 34715ac5524d594003236ca6228c0b0ba5bb9e90: PERF2.3 1079 PASS, 36 samples, 12 scaling points, 9 comparisons, 4 trends, 3 crossovers, 864 generation advances, 27/27 exact canonical pairs, JSON round-trip/tamper PASS, tracked clean. No crossover observed; optimization claim remains false.",
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_SIMULATION_SCALING_R1_RU.md",
       "local_runner": "RUN_ECO_EVO7_PERF2_3_TESTS.sh",
       "local_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
       "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
-      "project_control_run": 33364190059
+      "project_control_run": 33364190059,
+      "head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+      "tree": "f97deaa1c3e8d31e1e5fc71394b7528426b1f585",
+      "merge_commit": "49df8196a59c57c35ba34dd8e0331cb420c894a0",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_R1_ACCEPTED_RU.md",
+      "second_os_evidence": "OPTIONAL_NON_BLOCKING"
     },
     {
       "id": "PERF2.4",
       "name": "Runtime Optimization",
-      "status": "BLOCKED_WAIT_PERF2_3_ACCEPTANCE",
-      "detail": "Runtime Optimization cannot start until PERF2.3 scaling evidence is accepted."
+      "status": "CURRENT_AUTHORIZED_AFTER_PERF2_3_ACCEPTANCE",
+      "detail": "Optimize STREAM1 runtime overhead while preserving exact canonical parity and bounded structural working-set behavior. PERF2.3 accepted baseline shows no crossover and serial faster at all tested scale/chunk points; optimization must be evidence-driven and fail closed."
     },
     {
       "id": "PERF2.CONV",
@@ -261,8 +266,8 @@
     "renderer_as_truth": false
   },
   "parallel_execution": {
-    "next_checkpoint": "PERF2.3_R1_ONE_EXACT_LOCAL_PASS",
-    "status": "PERF2_2_ACCEPTED_PERF2_3_R1_IMPLEMENTATION_CANDIDATE_VIS4_PARALLEL",
+    "next_checkpoint": "PERF2.4",
+    "status": "PERF2_3_ACCEPTED_PERF2_4_AUTHORIZED_VIS4_PARALLEL",
     "process_model": "PERSISTENT_WORKERS_ONLY",
     "candidate_targets": [
       "LS3.3_RECRUITMENT_EVALUATION",
@@ -336,6 +341,27 @@
       "tracked_worktree_clean": true,
       "windows_required": false,
       "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS"
+    },
+    "perf2_3_acceptance": {
+      "head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+      "tree": "f97deaa1c3e8d31e1e5fc71394b7528426b1f585",
+      "merge_commit": "49df8196a59c57c35ba34dd8e0331cb420c894a0",
+      "os": "UBUNTU",
+      "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+      "host_fingerprint": "f991491a82661a9fb4acdde311eb58ec9c5e105e9980475986c91b0de91e1042",
+      "perf2_3_assertions": 1079,
+      "samples": 36,
+      "scaling_points": 12,
+      "comparisons": 9,
+      "trends": 4,
+      "crossovers": 3,
+      "total_generation_advances": 864,
+      "exact_pairs": "27/27",
+      "report_hash": "385415ed6db1328c7fbc3fefe737d431c801ac0feb5db539b343825cc4906a97",
+      "crossover_observed": false,
+      "optimization_claim": false,
+      "tracked_worktree_clean": true,
+      "windows_required": false
     }
   },
   "stream1": {
@@ -401,9 +427,9 @@
   "perf2": {
     "revision": "ECO.EVO7-PERF2.0-R1",
     "lane": "PERF2.SIM",
-    "current_step": "PERF2.3",
+    "current_step": "PERF2.4",
     "measurement_contract": "config/ecology/eco-evo7-perf2-measurement-contract.v1.json",
-    "status": "PERF2_2_ACCEPTED_PERF2_3_R1_IMPLEMENTATION_CANDIDATE",
+    "status": "PERF2_3_ACCEPTED_PERF2_4_AUTHORIZED",
     "predecessor_stream1_head": "4d0d95a2f0cf8aeb9642765c17a071f039e0f1c4",
     "production_promotion": false,
     "canonical_metrics": false,
@@ -576,7 +602,7 @@
     "perf2_3": {
       "name": "Simulation Scaling",
       "revision": "ECO.EVO7-PERF2.3-R1",
-      "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+      "status": "ACCEPTED_UBUNTU_34715AC",
       "accepted_perf2_2_control_base": "922b8b377faf19e36e58cf111c5dc917e83e09e1",
       "accepted_perf2_2_tested_head": "c6bef3d6c20d7b468f88f9aaabade2fe809b63e6",
       "accepted_perf2_2_tested_tree": "57d4807095e1e1096a13b665b1ef1a1a90d5dc98",
@@ -628,7 +654,45 @@
       },
       "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_SIMULATION_SCALING_R1_RU.md",
       "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
-      "project_control_run": 33364190059
+      "project_control_run": 33364190059,
+      "accepted_head": "34715ac5524d594003236ca6228c0b0ba5bb9e90",
+      "accepted_tree": "f97deaa1c3e8d31e1e5fc71394b7528426b1f585",
+      "merge_commit": "49df8196a59c57c35ba34dd8e0331cb420c894a0",
+      "acceptance_checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_R1_ACCEPTED_RU.md",
+      "acceptance_evidence": {
+        "os": "UBUNTU",
+        "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+        "host_fingerprint": "f991491a82661a9fb4acdde311eb58ec9c5e105e9980475986c91b0de91e1042",
+        "perf2_3_assertions": 1079,
+        "samples": 36,
+        "scaling_points": 12,
+        "comparisons": 9,
+        "trends": 4,
+        "crossovers": 3,
+        "exact_pairs": "27/27",
+        "report_hash": "385415ed6db1328c7fbc3fefe737d431c801ac0feb5db539b343825cc4906a97",
+        "crossover_observed": false,
+        "faster_side_all_points": "SERIAL_REFERENCE",
+        "memory_reduction_claim": false,
+        "optimization_claim": false,
+        "windows_required": false
+      }
+    },
+    "perf2_4": {
+      "name": "Runtime Optimization",
+      "status": "AUTHORIZED_CURRENT",
+      "predecessor": "PERF2.3_ACCEPTED_UBUNTU_34715AC",
+      "baseline": {
+        "exact_pairs": "27/27",
+        "crossover_observed": false,
+        "faster_side_all_points": "SERIAL_REFERENCE",
+        "structural_working_set": "STREAM1_BOUNDED",
+        "optimization_claim": false
+      },
+      "optimization_changes_allowed": true,
+      "canonical_parity_must_remain_exact": true,
+      "bounded_working_set_must_not_regress": true,
+      "measurement_contract": "ECO.EVO7-PERF2.0-R1"
     }
   }
 }
