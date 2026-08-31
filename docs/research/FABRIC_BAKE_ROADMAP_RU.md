@@ -1828,3 +1828,43 @@ Next:
 `B0.3 CONTACT / WRENCH BAKE`.
 
 Final B0.3 acceptance remains gated by closed FABRIC0.18.
+
+
+---
+
+## FABRIC-BAKE B0.3 exact executable candidate — 2026-08-31
+
+```text
+branch:
+research/fabric-bake0-3-contact-wrench-r1
+
+exact executable:
+acc72c1fb216bea56bc44547bc3e1eec7a37af08
+
+TREE:
+f8247e39494c00d2d065ed4c4b121e103f32ab0a
+
+Project Control #1928:
+SUCCESS
+
+focused:
+319/319 PASS
+
+FULL contact members:
+441
+
+BAKED generators:
+4
+
+reduction:
+110.25x
+
+FULL-vs-BAKED support error:
+0
+```
+
+B0.3 preserves the accepted-domain 6D boundary admissible wrench support function, not pointwise redundant contact reaction history. Internal lambda, warm start, contact age and mode history remain transient and are discarded/re-derived after reconstruction.
+
+Out-of-domain geometry fails closed with `NO_SAFE_BAKE`. Support loss and directional wrench-capacity exits are explicit event/refinement surfaces.
+
+Formal closure awaits the evidence-carrier Project Control result. Production acceptance is not claimed.
