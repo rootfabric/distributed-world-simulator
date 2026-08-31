@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+  "evidence_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+  "review_refresh": true,
+  "prior_independent_review": {
+    "review_id": "V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-001",
+    "review_commit": "b5de5d192d443cd15a43c8a55e8af9258f64455c",
+    "reviewed_head_sha": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+    "reviewed_tree_sha": "c58c9ec74f09ff83dfbbb149c8e9ab67746f8fcd",
+    "verdict": "PASS",
+    "conditions": [
+      "P7.2-RF-001",
+      "P7.2-RF-002",
+      "P7.2-RF-003"
+    ]
+  },
+  "exact_delta_from_prior_review": {
+    "base_head": "cc98bee7109118e4aecab6df5a6f112edab4d35c",
+    "new_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+    "changed_files": [
+      "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-REVIEW-FIX-RESOLUTION-001.v1.json",
+      "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-STREAMING-BOUNDS-AMENDMENT-001.v1.json",
+      "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+      "tests/runtime/test_v0_p7_2_lunar_surface_seam.gd"
+    ],
+    "production_runtime_code_changed": false
+  },
+  "condition_resolution": {
+    "P7.2-RF-001": "RESOLVED: control PR #359 merged as d96ed71a917f7a28fb59856b1914eec0bdb89a42; Project Control 33351900922 SUCCESS; terrain_streaming_manager.gd now explicitly allowed for narrow immutable exclusion-bounds forwarding.",
+    "P7.2-RF-002": "REFUTED FOR EXACT ACCEPTANCE BUILD: exact Godot is 4.7.1.stable.double.custom_build.a13da4feb. Executable probe at 1,737,400 m resolves 0.02 m as 0.020000000019 m; new behavioral seam test pins that precision requirement.",
+    "P7.2-RF-003": "RESOLVED: source-string guards removed. Behavioral checks now exercise real TerrainStreamingManager.request_surface(), deep-copy bounds forwarding, collision-face equality with final clipped mesh, LunarApp API behavior, and lunar-scale precision."
+  },
+  "exact_validation": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_2_bubble": "PASS 53/53",
+    "p7_2_seam": "PASS 50/50",
+    "p7_1_authority": "PASS 83/83",
+    "p7_1_tool_to_mw4": "PASS 30/30",
+    "mw4": "PASS 187",
+    "mw5": "PASS 142",
+    "mw6": "PASS 130",
+    "canonical_gate_exit": 0,
+    "runtime_project_control_run": 33352528718,
+    "runtime_project_control": "SUCCESS"
+  },
+  "immutable_source": {
+    "validation_pr": 361,
+    "export_run": 33352617094,
+    "artifact_id": 9744115039,
+    "artifact_zip_sha256": "4259a92184a4e2d7d5fa7977f19879a70215f4cf3faa6105446872e93b293bef",
+    "source_tar_sha256": "1a7067ae17fded8c561ed358b8096bf8dab283481f7a624687ae7c8a79c44c93",
+    "reconstructed_tree_sha": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36"
+  },
+  "required_reviewer_scope": [
+    "Confirm exact identity HEAD/TREE.",
+    "Confirm cc98bee..0292e0a delta is limited to the four declared control/test files and no production runtime code changed.",
+    "Re-check RF-001 scope amendment is narrow and sufficient.",
+    "Re-check RF-002 against exact double Godot acceptance identity and behavioral precision assertion; do not assume standard float32 Vector3.",
+    "Re-check RF-003 source-string assertions are gone and replacements are genuinely behavioral/non-tautological.",
+    "Confirm prior PASS architectural findings remain unaffected by the bounded delta."
+  ],
+  "remaining_risks": [
+    "Fresh exact-head Reviewer refresh pending.",
+    "Fresh independent Verifier blocked until Reviewer refresh PASS.",
+    "Human RUNTIME_FEATURE_MERGE gate remains closed."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
