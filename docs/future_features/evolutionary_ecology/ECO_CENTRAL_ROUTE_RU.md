@@ -15,7 +15,7 @@ STREAM1 ACCEPTED
 → PERF2.0 Measurement Contract       ✅ ACCEPTED
 → PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
 → PERF2.2 Working-set / Memory        ✅ ACCEPTED Ubuntu c6bef3d
-→ PERF2.3 Simulation Scaling          ← CURRENT / AUTHORIZED
+→ PERF2.3 Simulation Scaling          ← CURRENT / R1 IMPLEMENTATION CANDIDATE
 → PERF2.4 Runtime Optimization
 ```
 
@@ -28,6 +28,8 @@ PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on 
 **PERF2.2 R1 semantics:** structural working-set is reported as a deterministic record-pressure upper-bound proxy `max_parent_chunk + max_candidate_chunk`, explicitly not bytes. `engine_static_bytes` is diagnostic process-local allocator evidence; `engine_static_peak_bytes` is a process-lifetime high-water mark and is not cross-config peak-memory proof. PERF2.2 allows a structural bound claim but forbids memory-reduction and optimization claims.
 
 **PERF2.2 accepted result:** exact Ubuntu PASS on `c6bef3d...`; deterministic record-proxy reduction is `108x` for chunk1, `15.43x` for chunk7 and `1.69x` for chunk64 with 9/9 canonical parity. Allocator terminal memory stayed effectively flat and engine peak was identical across rows, confirming that the process-lifetime high-water metric is diagnostic-only. PERF2.3 must therefore study scaling of the structural-memory/time tradeoff rather than assume a byte-memory win.
+
+**PERF2.3 R1 scaling matrix:** generation-age preconditions `2 / 12 / 22`, each followed by `12 measured generations × 3 repetitions`, across serial + STREAM1 chunks `1/7/64`. The +10 generation spacing aligns one interval audit in every measured window. Required evidence: `36 samples / 12 scaling points / 9 comparisons / 4 trends / 3 host-local crossover analyses / 27 of 27 exact canonical pairs`. Crossover evidence is diagnostic only; optimization remains forbidden until PERF2.4.
 
 STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
 

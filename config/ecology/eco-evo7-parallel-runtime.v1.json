@@ -138,8 +138,29 @@
   },
   "perf2_scaling": {
     "checkpoint": "ECO.EVO7/PERF2.3",
-    "status": "AUTHORIZED_CURRENT",
-    "predecessor_head": "c6bef3d6c20d7b468f88f9aaabade2fe809b63e6",
-    "optimization_claim": false
+    "revision": "ECO.EVO7-PERF2.3-R1",
+    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "predecessor_control_tip": "922b8b377faf19e36e58cf111c5dc917e83e09e1",
+    "scale_axis": "GENERATION_AGE_PRECONDITION",
+    "precondition_generations": [
+      2,
+      12,
+      22
+    ],
+    "measured_generations": 12,
+    "repetitions": 3,
+    "execution_configs": [
+      "SERIAL_REFERENCE",
+      "STREAM1_CHUNK_1",
+      "STREAM1_CHUNK_7",
+      "STREAM1_CHUNK_64"
+    ],
+    "total_samples": 36,
+    "exact_pair_requirement": "27/27",
+    "audit_alignment": "ONE_INTERVAL_AUDIT_PER_MEASURED_WINDOW",
+    "crossover_classification": "HOST_LOCAL_DIAGNOSTIC_ONLY",
+    "memory_reduction_claim": false,
+    "optimization_claim": false,
+    "local_runner": "RUN_ECO_EVO7_PERF2_3_TESTS.sh"
   }
 }
