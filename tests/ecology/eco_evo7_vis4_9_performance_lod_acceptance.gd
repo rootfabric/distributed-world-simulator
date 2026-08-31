@@ -86,7 +86,7 @@ func _run() -> void:
 	_check(bool(evidence.get("perf2_convergence_required", false)), "VIS4.9 cannot replace PERF2.CONV")
 	_check(int(evidence.get("frame_sample_count", 0)) > 0, "VIS4.9 evidence carries frame samples")
 
-	var text_value := playground.get_performance_lod_text()
+	var text_value: String = playground.get_performance_lod_text()
 	for required in [
 		"VIS4.9 PERFORMANCE / LOD",
 		"WORKLOAD",
@@ -99,7 +99,7 @@ func _run() -> void:
 	]:
 		_check(text_value.contains(required), "VIS4.9 panel exposes %s" % required)
 
-	var record_count := int(evidence.get("record_count", 0))
+	var record_count: int = int(evidence.get("record_count", 0))
 	var tiers: Dictionary = Dictionary(evidence.get("tier_counts", {}))
 	var tier_sum := 0
 	for tier in PerformanceLODEvidence.TIER_ORDER:
@@ -111,11 +111,11 @@ func _run() -> void:
 		"VIS4.9 visible count matches non-T4 population"
 	)
 
-	var index := 0
+	var index: int = 0
 	var canonical: Vector3 = presentation.get_stem_world_position(index)
-	var height := maxf(0.1, presentation.get_ph5_record_height(index))
-	var up := canonical.normalized()
-	var focal_px := 1080.0 / (2.0 * tan(deg_to_rad(70.0) * 0.5))
+	var height: float = maxf(0.1, presentation.get_ph5_record_height(index))
+	var up: Vector3 = canonical.normalized()
+	var focal_px: float = 1080.0 / (2.0 * tan(deg_to_rad(70.0) * 0.5))
 
 	# TIER0: high projected height.
 	_check(
