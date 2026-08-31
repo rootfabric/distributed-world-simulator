@@ -39,8 +39,10 @@ T_TRANSITIONS = [
 
 
 class ProposedR3OwnershipProjectionTests(unittest.TestCase):
-    def _load_local_json(self, path: str) -> dict:
-        return json.loads((ROOT / path).read_text(encoding="utf-8"))
+    def _load_main_owned_json(self, path: str) -> dict:
+        value = pc._core.load_main_owned(path)
+        self.assertIsInstance(value, dict)
+        return value
 
     def _load_git_json(self, ref: str, path: str) -> dict:
         raw = pc._core.git("show", f"{ref}:{path}", allow_fail=True)
@@ -53,8 +55,8 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         if os.environ.get("GITHUB_ACTIONS") != "true":
             self.skipTest("live proposed-R3 projection requires GitHub Actions with all remote refs fetched")
 
-        registry = copy.deepcopy(self._load_local_json("config/control/project-program-registry.v1.json"))
-        policy = copy.deepcopy(self._load_local_json("config/control/project-control-policy.v1.json"))
+        registry = copy.deepcopy(self._load_main_owned_json("config/control/project-program-registry.v1.json"))
+        policy = copy.deepcopy(self._load_main_owned_json("config/control/project-control-policy.v1.json"))
 
         ownership_blob = pc._core.git("rev-parse", f"{FROZEN_R3_TARGET}:{FROZEN_R3_OWNERSHIP_PATH}", allow_fail=True)
         self.assertEqual(FROZEN_R3_OWNERSHIP_BLOB, ownership_blob)
@@ -90,7 +92,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         self.assertGreaterEqual(generation, R3_CANONICAL_MIN_REGISTRY_GENERATION)
         self.assertEqual(R3, registry.get("architecture_revision"))
         self.assertEqual(R3, policy.get("architecture_revision"))
-        ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
+        ownership = self._load_main_owned_json("config/control/architecture-ownership.v1.json")
         self.assertEqual(R3, ownership.get("architecture_revision"))
         self.assertEqual(frozen_ownership.get("foundations"), ownership.get("foundations"))
         for key in LEGACY_PROGRAMS:
