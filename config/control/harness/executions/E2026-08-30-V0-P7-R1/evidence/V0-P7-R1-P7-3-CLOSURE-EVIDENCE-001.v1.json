@@ -1,0 +1,74 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "evidence_tree_sha": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "intent": "Close P7.3 only after exact-head review, fresh independent verification, explicit human runtime merge approval, and canonical integration.",
+  "canonical_owners": {
+    "physical_extraction_provenance": "MatterMaterialBatch / existing MW4 material receiver",
+    "spendable_inventory": "CANONICAL_ITEM_GRAPH",
+    "exactly_once": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "persistence": "MW5 existing owner"
+  },
+  "selected_policy": {
+    "policy_id": "p7/matter-material-delivery/r1",
+    "output_definition_id": "item/ore",
+    "kg_per_item_unit": 1,
+    "quantization": "FLOOR_WITH_EXPLICIT_RESIDUAL",
+    "residual_owner": "IMMUTABLE_MATTER_MATERIAL_BATCH_PROVENANCE",
+    "new_canonical_owner": false
+  },
+  "independent_review": {
+    "result": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+    "commit": "b9c638b1721edfe24537e264bd562e96ca224116",
+    "project_control": 33365405527,
+    "verdict": "PASS"
+  },
+  "independent_verification": {
+    "result": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+    "commit": "2fadad48635c04e21b4de8acff4a13c8c5e27b88",
+    "project_control": 33366918481,
+    "verdict": "VERIFIED",
+    "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_3": "116/116",
+    "p7_2_bubble": "53/53",
+    "p7_2_seam": "50/50",
+    "p7_1_authority": "83/83",
+    "p7_1_tool_to_mw4": "30/30",
+    "p5": "36/36",
+    "p3": "79/79",
+    "mw4": 187,
+    "mw5": 142,
+    "mw6": 130,
+    "fatal_logs": "11/11 clean",
+    "tracked_clean": true,
+    "canonical_runner_exit": 0
+  },
+  "human_gate": {
+    "decision_id": "V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001",
+    "decision": "RUNTIME_FEATURE_MERGE APPROVED",
+    "durable_main_premerge": "5d641e3195e1a43f1ec01c56977b62b4286ea7d7"
+  },
+  "runtime_integration": {
+    "original_pr": 373,
+    "exact_subject_carrier_pr": 387,
+    "merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+    "merge_tree": "012eccfcf196f4d8d6ca49696b9b39504c4e3763",
+    "merge_parents": [
+      "5d641e3195e1a43f1ec01c56977b62b4286ea7d7",
+      "b4b11a69ef921c59b28208685cf26509c3b81907"
+    ],
+    "original_pr_recognized_merged_closed": true
+  },
+  "remaining_risks": [
+    "P7.4 must prove committed-undelivered batch survives restart and later delivers exactly once using existing MW5 and canonical Item Graph recovery.",
+    "P7.5 two-client convergence, P7.6 seam/multi-region composition, P7.7 graphical digging slice, whole-P7 full regression and checkpoint acceptance remain open."
+  ],
+  "required_fixes": [],
+  "review_verdict": "PASS",
+  "p7_3_closed": true,
+  "whole_p7_accepted": false
+}
