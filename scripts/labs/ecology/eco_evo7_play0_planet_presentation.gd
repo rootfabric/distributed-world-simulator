@@ -2,10 +2,11 @@ extends Node3D
 
 ## ECO.EVO7 PLAY0 — live planet ecology presentation (READ-ONLY).
 ##
-## Consumes the accepted VIS2 phenotype render adapter result built from the
-## accepted LS3.6 Workbench snapshot and translates it into 3D presentation:
-## MultiMesh stems, crowns, lineage colours and a biome overlay. Plants are
-## placed by physical patch cell direction through
+## Generation zero consumes the accepted VIS2 founder descriptors. Generation
+## > 0 consumes exact VIS4.1 Descriptor V2 + VIS4.3 reconstruction evidence and
+## delegates live plant geometry to PH5. Legacy Box/Sphere MultiMeshes are
+## emptied and hidden once PH5 is active. Plants are placed by physical patch
+## cell direction through
 ## ProceduralEarthWorld.get_surface_point(direction) and track render-origin
 ## shifts every frame.
 ##
@@ -133,6 +134,7 @@ func apply_snapshot(
 		phenotype_count = int(morphology_descriptors.get("morphology_evidence_count", 0))
 		founder_count = int(morphology_descriptors.get("founder_marker_count", 0))
 		_ph5_active = true
+		_clear_legacy_plant_instances()
 		stems_node.visible = false
 		crowns_node.visible = false
 		ph5_renderer.visible = true
@@ -432,6 +434,21 @@ func _fill_crown_instances() -> void:
 	crowns_multimesh.instance_count = _crown_centers_world.size()
 	for index in _crown_colors.size():
 		crowns_multimesh.set_instance_color(index, _crown_colors[index])
+
+
+func _clear_legacy_plant_instances() -> void:
+	_stem_base_world.clear()
+	_stem_ups.clear()
+	_stem_heights.clear()
+	_stem_colors.clear()
+	_crown_centers_world.clear()
+	_crown_ups.clear()
+	_crown_radii.clear()
+	_crown_colors.clear()
+	if stems_node != null and stems_node.multimesh != null:
+		stems_node.multimesh.instance_count = 0
+	if crowns_node != null and crowns_node.multimesh != null:
+		crowns_node.multimesh.instance_count = 0
 
 
 func _apply_overlay_colors(classification: Dictionary) -> void:
