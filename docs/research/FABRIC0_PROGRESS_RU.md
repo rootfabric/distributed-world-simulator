@@ -3638,15 +3638,18 @@ PERSISTENT WRENCH CONTACT STATE
 
 IMPLEMENTED CANDIDATE
 EXACT LINUX DOUBLE PASS
-53/53 PASS
+60/60 PASS
 REMOTE BYTE IDENTITY 3/3 PASS
 FABRIC0.18 NOT CLOSED
 ```
 
-Executable HEAD: `ee8658eefb8abe2e66e199678380c32b71c1f8dd`.
+Executable HEAD: `c7f20c51794690930d059d10747d1a1c3e4e2c52`.
 
 A establishes canonical persistent contact identity, age/epoch continuity, projected warm-start proposals, fresh-solve ownership of accepted impulse, post-solve mode classification and fail-closed mode consistency.
 
 A 10,000-update bookkeeping probe remains exact with no hidden impulse carryover. This is not yet a physical no-creep proof.
 
 Next: `FABRIC0.18-B — MODE TRANSITION LOCALIZATION`.
+
+
+A now bridges canonical 0.17 manifold IDs (`feature_key|pN`) and the existing C generalized-wrench result directly. No second contact identity representation is introduced.

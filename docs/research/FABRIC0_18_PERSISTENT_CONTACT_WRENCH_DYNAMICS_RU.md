@@ -157,10 +157,10 @@ Exact-tested executable:
 
 ```text
 HEAD
-ee8658eefb8abe2e66e199678380c32b71c1f8dd
+c7f20c51794690930d059d10747d1a1c3e4e2c52
 
 TREE
-15afdfdfaa6316afa4bf723c32bef9c3957ba5d3
+56588245f5b15bfb2ad929ae843e4dc48e326e64
 ```
 
 Files:
@@ -176,7 +176,7 @@ Exact engine:
 Gate:
 
 ```text
-0.18-A acceptance 53/53 PASS
+0.18-A acceptance 60/60 PASS
 0.18-A playground PASS
 editor parse/compile CLEAN
 remote byte identity 3/3 PASS
@@ -248,12 +248,12 @@ Acceptance covers:
 
 ```text
 runtime
-git blob 2014791d77ed341c09820f19e8bae052ecf4eff1
-sha256 b5839e45755e9921b9f844286b253810c2c2d03c44b4eb7e8cbe47e1de9de8d3
+git blob a30a16ed51193138332d1cb69d8950521fb531ee
+sha256 209702774c1e21a72e82b4249b419d5b5a5197f34d73e49be3ff0e134e945cae
 
 acceptance
-git blob 5f5ab3958b4148e92134e2d5b70400ce93226d23
-sha256 1ceecc9063a7560dd6e2c38849365d8cb1fae4961caa82783373229fde72e308
+git blob d2bfe98bce39fc667ee988c54d872a108e76337d
+sha256 c525e41f1a56b680f0b1d41064a60066de8a0dddcf5debf80da6d25e1aa385cf
 
 playground
 git blob a27c8148ba4bcac7ad265844069d569206672e88
@@ -267,3 +267,32 @@ sha256 8693926c99e5cf8f9feee51aba4cdb2bbf37dbe8682273732e9b091c82fc174e
 Next wall:
 
 `FABRIC0.18-B — MODE TRANSITION LOCALIZATION`.
+
+
+### 6.6 Direct 0.17 representation bridge
+
+0.18-A consumes the existing canonical research representation directly:
+
+```text
+Fabric0PersistentMultipointManifoldV1
+  pair_id
+  points[*].id = feature_key|pN
+        ↓
+observation_from_fabric_manifold(...)
+        ↓
+Persistent Wrench Contact State
+```
+
+It also normalizes the existing C output:
+
+```text
+GENERALIZED_CONTACT_WRENCH
+  normal_impulse
+  generalized_impulse[5]
+  generalized_velocity_after[5]
+  limits
+        ↓
+solved_from_generalized_wrench(...)
+```
+
+The bridge fails closed if a canonical manifold point has no persistent ID. This prevents 0.18-A from inventing a second contact identity system.

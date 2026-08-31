@@ -1060,10 +1060,10 @@ Read `docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md`.
 
 Exact executable:
 
-`ee8658eefb8abe2e66e199678380c32b71c1f8dd`.
+`c7f20c51794690930d059d10747d1a1c3e4e2c52`.
 
 ```text
-0.18-A 53/53 PASS
+0.18-A 60/60 PASS
 playground PASS
 editor CLEAN
 remote bytes 3/3 exact
@@ -1080,3 +1080,6 @@ but only the fresh current solve may own accepted impulse
 Stable pair/member reordering preserves identity. Manifold membership mutation resets identity epoch and warm-start continuity. Mode changes are candidates only; 0.18-B must localize their event time.
 
 Next: `0.18-B MODE TRANSITION LOCALIZATION`.
+
+
+A consumes the existing 0.17 persistent manifold point IDs directly and normalizes the existing generalized-wrench result; do not create a parallel contact-identity scheme.

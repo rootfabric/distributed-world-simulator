@@ -7,8 +7,8 @@
   "production_accepted": false,
   "branch": "research/fabric0-18-persistent-contact-wrench-r1",
   "predecessor_closure": "751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0",
-  "executable_head": "ee8658eefb8abe2e66e199678380c32b71c1f8dd",
-  "executable_tree": "15afdfdfaa6316afa4bf723c32bef9c3957ba5d3",
+  "executable_head": "c7f20c51794690930d059d10747d1a1c3e4e2c52",
+  "executable_tree": "56588245f5b15bfb2ad929ae843e4dc48e326e64",
   "engine": {
     "identity": "4.7.1.stable.double.custom_build.a13da4feb",
     "precision": "double",
@@ -17,7 +17,7 @@
   },
   "acceptance": {
     "result": "PASS",
-    "assertions": 53,
+    "assertions": 60,
     "script": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_acceptance.gd"
   },
   "playground": {
@@ -29,13 +29,13 @@
   "exact_files": [
     {
       "path": "scripts/research/fabric0/fabric0_persistent_wrench_contact_state_v1.gd",
-      "git_blob": "2014791d77ed341c09820f19e8bae052ecf4eff1",
-      "sha256": "b5839e45755e9921b9f844286b253810c2c2d03c44b4eb7e8cbe47e1de9de8d3"
+      "git_blob": "a30a16ed51193138332d1cb69d8950521fb531ee",
+      "sha256": "209702774c1e21a72e82b4249b419d5b5a5197f34d73e49be3ff0e134e945cae"
     },
     {
       "path": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_acceptance.gd",
-      "git_blob": "5f5ab3958b4148e92134e2d5b70400ce93226d23",
-      "sha256": "1ceecc9063a7560dd6e2c38849365d8cb1fae4961caa82783373229fde72e308"
+      "git_blob": "d2bfe98bce39fc667ee988c54d872a108e76337d",
+      "sha256": "c525e41f1a56b680f0b1d41064a60066de8a0dddcf5debf80da6d25e1aa385cf"
     },
     {
       "path": "tests/research/fabric0/fabric0_persistent_wrench_contact_state_playground.gd",
@@ -52,7 +52,10 @@
     "POST_SOLVE_STICK_SLIDE_ROLL_SPIN_MODE_CLASSIFICATION",
     "MODE_CONSTRAINT_INCONSISTENCY_FAILS_CLOSED",
     "SEPARATION_CLEARS_PHYSICAL_AND_WARM_START_IMPULSE_STATE",
-    "TEN_THOUSAND_UPDATE_BOOKKEEPING_NO_HIDDEN_IMPULSE_CARRYOVER"
+    "TEN_THOUSAND_UPDATE_BOOKKEEPING_NO_HIDDEN_IMPULSE_CARRYOVER",
+    "DIRECT_CANONICAL_0_17_MANIFOLD_POINT_ID_BRIDGE",
+    "DIRECT_GENERALIZED_WRENCH_RESULT_NORMALIZATION",
+    "NO_SECOND_CONTACT_IDENTITY_SYSTEM"
   ],
   "non_claims": [
     "PHYSICAL_STATIC_CONTACT_NO_CREEP",
