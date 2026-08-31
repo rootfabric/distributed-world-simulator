@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_3_NEXT",
+  "state": "IN_PROGRESS_P7_4_NEXT",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-08-31T14:30:00+10:00",
+  "updated_at_utc": "2026-08-31T17:25:00+10:00",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -101,9 +101,27 @@
     "human_gate": "RUNTIME_FEATURE_MERGE APPROVED"
   },
   "p7_3": {
-    "status": "NEXT",
-    "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
+    "status": "COMPLETE_MERGED",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "note": "Continue under the same serialized P7 Work Order/mutation lease. Define and prove the MatterMaterialBatch -> canonical Item Graph conversion without inventing a second resource store or hidden mass truth."
+    "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+    "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+    "runtime_merge_pr": 373,
+    "runtime_merge_carrier_pr": 387,
+    "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+    "runtime_merge_tree": "012eccfcf196f4d8d6ca49696b9b39504c4e3763",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "human_gate": "RUNTIME_FEATURE_MERGE APPROVED",
+    "policy": "p7/matter-material-delivery/r1",
+    "output_definition_id": "item/ore",
+    "kg_per_item_unit": 1
+  },
+  "p7_4": {
+    "status": "NEXT",
+    "scope": "PERSISTENCE_RESTART_COMPOSITION",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "note": "Prove committed-but-undelivered MatterMaterialBatch survives restart and later delivers exactly once using existing MW5 persistence and canonical Item Graph recovery. No P7-private persistence owner or delivery receipt store."
   }
 }
