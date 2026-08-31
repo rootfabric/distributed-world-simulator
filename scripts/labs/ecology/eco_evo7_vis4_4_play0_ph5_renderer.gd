@@ -45,6 +45,10 @@ var _records: Array[Dictionary] = []
 var _plant_nodes: Array = []
 var _materialization_cache: Dictionary = {}
 var _cache_lookup: Dictionary = {}
+var _cache_transaction_active := false
+var _pending_materialization_cache: Dictionary = {}
+var _pending_cache_lookup: Dictionary = {}
+var _materialization_cache_eviction_count := 0
 var _view_world_position := Vector3.ZERO
 var _last_render_origin := SENTINEL_ORIGIN
 var _materialization_build_count := 0
@@ -94,10 +98,23 @@ func setup(earth_world_reference, patch: Dictionary) -> bool:
 
 
 func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Dictionary) -> bool:
-	## Fully materializes a pending generation before replacing the visible one.
-	## Any invalid/missing record fails closed and preserves the last presentation.
+	## PERF2.CONV cache transaction: a rejected pending snapshot must not leak
+	## materializations into the active cache. Successful publication keeps only
+	## entries reachable from the newly committed generation.
 	if not initialized:
 		return false
+	_begin_cache_transaction()
+	var success := _apply_snapshot_transaction(descriptor_snapshot, reconstruction_snapshot)
+	if success:
+		_commit_cache_transaction()
+	else:
+		_discard_cache_transaction()
+	return success
+
+
+func _apply_snapshot_transaction(descriptor_snapshot: Dictionary, reconstruction_snapshot: Dictionary) -> bool:
+	## Fully materializes a pending generation before replacing the visible one.
+	## Any invalid/missing record fails closed and preserves the last presentation.
 	var snapshot_started := Time.get_ticks_usec()
 	var descriptor_adapter := DescriptorV2.new()
 	if not descriptor_adapter.validate_result(descriptor_snapshot):
@@ -385,6 +402,8 @@ func get_performance_counters() -> Dictionary:
 		"visible_individual_count": get_visible_individual_count(),
 		"tier_counts": _tier_counts(),
 		"materialization_cache_entries": _materialization_cache.size(),
+		"materialization_cache_lookup_entries": _cache_lookup.size(),
+		"materialization_cache_eviction_count": _materialization_cache_eviction_count,
 		"materialization_cache_hit_count": _materialization_cache_hit_count,
 		"materialization_cache_miss_count": _materialization_cache_miss_count,
 		"materialization_cache_hit_rate": (
@@ -622,6 +641,11 @@ func _materialize_record(bridge, source: Dictionary, reconstruction: Dictionary,
 		String(reconstruction.get("reconstruction_evidence_hash", "")),
 		tier,
 	]))
+	if _pending_cache_lookup.has(lookup_key):
+		var pending_cached_key := String(_pending_cache_lookup[lookup_key])
+		if _pending_materialization_cache.has(pending_cached_key):
+			_materialization_cache_hit_count += 1
+			return Dictionary(_pending_materialization_cache[pending_cached_key])
 	if _cache_lookup.has(lookup_key):
 		var cached_key := String(_cache_lookup[lookup_key])
 		if _materialization_cache.has(cached_key):
@@ -647,8 +671,12 @@ func _materialize_record(bridge, source: Dictionary, reconstruction: Dictionary,
 		tier,
 		String(materialization.get("representation_hash", "")),
 	]))
-	_materialization_cache[cache_key] = materialization
-	_cache_lookup[lookup_key] = cache_key
+	if _cache_transaction_active:
+		_pending_materialization_cache[cache_key] = materialization
+		_pending_cache_lookup[lookup_key] = cache_key
+	else:
+		_materialization_cache[cache_key] = materialization
+		_cache_lookup[lookup_key] = cache_key
 	_materialization_build_count += 1
 	return materialization
 
@@ -754,6 +782,71 @@ func _clear_visual_nodes() -> void:
 		if node != null and is_instance_valid(node):
 			remove_child(node)
 			node.queue_free()
+
+
+func _begin_cache_transaction() -> void:
+	_cache_transaction_active = true
+	_pending_materialization_cache.clear()
+	_pending_cache_lookup.clear()
+
+
+func _discard_cache_transaction() -> void:
+	_pending_materialization_cache.clear()
+	_pending_cache_lookup.clear()
+	_cache_transaction_active = false
+
+
+func _commit_cache_transaction() -> void:
+	for key in _pending_materialization_cache.keys():
+		_materialization_cache[key] = _pending_materialization_cache[key]
+	for key in _pending_cache_lookup.keys():
+		_cache_lookup[key] = _pending_cache_lookup[key]
+	_pending_materialization_cache.clear()
+	_pending_cache_lookup.clear()
+	_cache_transaction_active = false
+	_prune_cache_to_current_generation()
+
+
+func _prune_cache_to_current_generation() -> void:
+	var allowed_prefixes: Array[String] = []
+	for record in _records:
+		var source_value = record.get("source")
+		var reconstruction_value = record.get("reconstruction")
+		if not source_value is Dictionary or not reconstruction_value is Dictionary:
+			continue
+		var source: Dictionary = source_value
+		var reconstruction: Dictionary = reconstruction_value
+		allowed_prefixes.append("|".join(PackedStringArray([
+			String(source.get("record_id", "")),
+			String(source.get("growth_graph_hash", "")),
+			String(source.get("descriptor_hash", "")),
+			String(reconstruction.get("reconstruction_evidence_hash", "")),
+		])) + "|")
+
+	var remove_lookup: Array = []
+	for lookup_value in _cache_lookup.keys():
+		var lookup_key := String(lookup_value)
+		var keep := false
+		for prefix in allowed_prefixes:
+			if lookup_key.begins_with(prefix):
+				keep = true
+				break
+		if not keep:
+			remove_lookup.append(lookup_value)
+
+	for lookup_value in remove_lookup:
+		_cache_lookup.erase(lookup_value)
+		_materialization_cache_eviction_count += 1
+
+	var referenced_cache_keys := {}
+	for cache_key_value in _cache_lookup.values():
+		referenced_cache_keys[String(cache_key_value)] = true
+	var remove_materialization: Array = []
+	for cache_key_value in _materialization_cache.keys():
+		if not referenced_cache_keys.has(String(cache_key_value)):
+			remove_materialization.append(cache_key_value)
+	for cache_key_value in remove_materialization:
+		_materialization_cache.erase(cache_key_value)
 
 
 func _draw_call_proxy(materialization: Dictionary) -> int:
