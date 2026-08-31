@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.8 CLOSED / NEXT: VIS4.9 PERFORMANCE / LOD  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.8 CLOSED / VIS4.9 IMPLEMENTED CANDIDATE / EXACT UBUNTU GREEN  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1815,3 +1815,136 @@ LOD transition stability
 VIS4.9 may optimize VIS4-local PH5 materialization and LOD behavior, but it does
 not replace PERF2.CONV. Final PLAY1 performance acceptance still belongs to the
 combined STREAM1 + VIS4 convergence gate.
+
+
+## VIS4.9 Performance / LOD implementation result — 2026-08-31
+
+Frozen executable subject:
+
+~~~text
+HEAD:
+ab44617d8961add81a6c9f245c99d0b68eaeab52
+
+TREE:
+9d543a3db4f54a676e9f25152785c36a72c56a30
+~~~
+
+VIS4.9 instruments the accepted VIS4.3 / PH5 / PLAY0 presentation path rather
+than introducing another renderer or profiler.
+
+New evidence includes:
+
+~~~text
+visible plant + tier counts
+
+GrowthGraph / RenderDescription / Representation / Materializer timing
+materialization build timing
+snapshot-apply timing
+LOD-update timing
+
+materialization cache:
+entries / hits / misses / hit rate / build count
+
+branch primitives
+foliage instances
+far primitives
+PH5 cost units
+draw-call workload proxy
+
+PLAY0 frame average/min/max
+estimated FPS
+~~~
+
+Wall-clock and FPS values are diagnostic-only and excluded from deterministic
+structural evidence.
+
+The new F8 Performance / LOD observatory is read-only. F6/F7/F8 use one
+diagnostic HUD slot.
+
+Focused live campaign proves:
+
+~~~text
+T0 -> T2 -> T0(cache hit) -> T4 -> T0
+
+stable T0:
+no LOD thrash
+no cache lookup
+no rebuild
+
+T2:
+reduced structural workload
+cost 250
+
+T4:
+no individual node
+zero draw workload proxy
+cost 1
+
+T0 return:
+exact previous materialization_hash restored from cache
+~~~
+
+VIS4.9 explicitly keeps:
+
+~~~text
+perf2_convergence_required = true
+~~~
+
+Therefore this checkpoint does not replace PERF2.CONV and does not by itself
+constitute final PLAY1 performance acceptance.
+
+Exact Ubuntu local verification used the project-attached canonical
+double-Godot and completed the full canonical runner:
+
+~~~text
+HEAD:
+ab44617d8961add81a6c9f245c99d0b68eaeab52
+
+TREE:
+9d543a3db4f54a676e9f25152785c36a72c56a30
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+full runner:
+RC=0
+
+VIS4.8:
+PASS / 106
+RENDERER FIDELITY PASS
+LIVE_DIVERSITY_SUFFICIENT
+
+VIS4.9:
+PASS / 116
+
+tracked source tree:
+clean
+~~~
+
+Observed execution diagnostics:
+
+~~~text
+cache hit rate: 0.282
+aggregate cost units: 12280
+observational frame ms: 7.530
+~~~
+
+These are evidence, not portable performance thresholds.
+
+Durable candidate:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_9_PERFORMANCE_LOD_CANDIDATE_R1_RU.md
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.9 IMPLEMENTED
+EXACT UBUNTU DOUBLE-GODOT GREEN
+FULL CANONICAL RUNNER GREEN
+READY TO CLOSE
+~~~
