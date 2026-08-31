@@ -4,8 +4,8 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-31T00:28:00+10:00",
-  "control_checkpoint": "V0 P7.2 sampler-seam amendment: authorize only optional procedural sampler injection required to preserve canonical Moon body identity; no Matter semantic rewrite.",
+  "updated_at_utc": "2026-08-31T14:30:00+10:00",
+  "control_checkpoint": "V0 P7.2 COMPLETE_MERGED; P7.3 MATERIAL_BATCH_TO_ITEM_GRAPH is the next serialized P7 substep.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control rebased on main f7d3deb80b67a41880d736f83b132a9a7a5a0964: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
   "programs": {
@@ -269,18 +269,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-1-closure-r1",
-      "passport_path": "config/control/branches/control__v0-p7-1-closure-r1.v1.json",
+      "branch": "control/v0-p7-2-closure-r1",
+      "passport_path": "config/control/branches/control__v0-p7-2-closure-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
       "short_description": "Post-SM1 P7 activation/control convergence over the accepted Matter stack.",
       "purpose": "Move V0 from formally accepted SM1 to a bounded P7 production integration without duplicating Matter, Item Graph, persistence, network or authority owners.",
       "expected_outcome": "P7.0 ownership convergence is accepted and post-merge control is NON_RED. P7 runtime remains fail-closed until Director dispatch.",
-      "current_stage": "P7.2 Bounded Planetary Matter Bubble",
-      "stage_status": "P7_1_COMPLETE_MERGED_P7_2_NEXT",
-      "progress_note": "P7.1 is complete and merged. P7.2 is the active runtime frontier. A narrow behavior-preserving procedural sampler injection seam is authorized by V0-P7-R1-P7-2-SAMPLER-SEAM-AMENDMENT-001 so Moon integration can retain canonical body/moon identity while reusing existing MW4/query/materializer.",
+      "current_stage": "P7.3 Material Batch to Canonical Item Graph",
+      "stage_status": "P7_2_COMPLETE_MERGED_P7_3_NEXT",
+      "progress_note": "P7.2 bounded planetary Matter bubble is independently reviewed, VERIFIED and merged. Exact runtime 0292e0a97d980d5c384b0118999429f1e6f13c3d / tree dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36; canonical merge 6e604a68c6883595a637a089bf3f709219a1197e. P7.3 is next under the same Work Order and mutation lease.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Implement P7.2 bounded planetary Matter bubble with canonical Moon sampler, bounded body-fixed Matter root, and Matter-inside/legacy-outside routing.",
+      "next_stage": "Implement P7.3 MatterMaterialBatch → canonical Item Graph with explicit mass conservation/exactly-once semantics and no second resource store.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -292,14 +292,14 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "28c47e26969608b126e6097bc8a26bd9c593be8c",
+        "head_at_refresh_input": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
         "exact_creation_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-        "runtime_subject_tree": "99629227f66b15092df5d798f7706364bfaadf1d",
-        "runtime_merge_commit": "e86ec851b263ac6fca8177921b01cb7486fdff2f",
-        "next_code_step": "P7.2 bounded planetary Matter bubble over existing MW4-MW10 truth."
+        "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+        "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
+        "next_code_step": "P7.3 MatterMaterialBatch to canonical Item Graph conservation adapter."
       },
       "implementation_blockers": [],
       "acceptance_blockers": [
@@ -335,8 +335,20 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json"
       },
       "p7_2": {
-        "state": "NEXT",
+        "state": "COMPLETE_MERGED",
         "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_subject_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
+        "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
+        "runtime_merge_pr": 350,
+        "runtime_merge_carrier_pr": 368,
+        "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
+      },
+      "p7_3": {
+        "state": "NEXT",
+        "scope": "MATERIAL_BATCH_TO_ITEM_GRAPH",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
       }
     },
