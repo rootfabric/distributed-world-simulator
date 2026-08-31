@@ -186,6 +186,7 @@ func _run() -> void:
 				"presentation_overhead_ms": overhead_ms,
 				"combined_to_sim_ratio": ratio,
 				"foreground_frames": foreground_frames,
+				"single_flight_rejected": concurrent_rejected,
 				"record_count": record_count,
 				"cache_entries": cache_entries,
 				"cache_lookup_entries": cache_lookup_entries,
