@@ -1,5 +1,5 @@
 Checkpoint: FABRIC-BAKE B0.2-A/B — Structural Aggregate Compiler + Exact Reconstruction Mapping
-Status: IMPLEMENTED CANDIDATE / EXACT-HEAD UBUNTU VERIFICATION PENDING
+Status: IMPLEMENTED CANDIDATE / EXACT-HEAD DOUBLE PASS
 Predecessor lineage: B0.1 policy/closure head 3fa6cf7367f4b5a62564bec072a9b90770949d77
 Branch: research/fabric-bake0-2-structural-aggregate-r1
 
@@ -25,3 +25,16 @@ Important safety boundary:
 B0.2-A/B emits STRUCTURAL_AGGREGATE_READY_FOR_GUARDS, not PhysicalBakeArtifact.
 B0.2-C RefinementGuard certification is required before structural execution can become an approximate executable bake.
 Windows verification is PASS_BY_POLICY / NON-GATING under the FABRIC-BAKE platform policy.
+
+
+Exact executable subject:
+HEAD b417066a048d3c85bf766eb239d4111335c66602
+TREE da87230e3dd247d2fd662bf5f8ec3926c055f4d3
+Exact-source export run: 33352749817 SUCCESS
+Exact archive SHA-256: d4732532a2b5763c8296e717db0eabd848e0e0949e56ac4cd358df4c02ab716c
+Tracked files: 5036
+Ubuntu/Linux double exact-head fresh pass #1: PASS
+Ubuntu/Linux double exact-head fresh pass #2: PASS
+Post-run tracked byte audit: checked=5036 missing=0 changed=0
+B0.2 closure: NOT CLAIMED
+Next required stage: B0.2-C_REFINEMENT_GUARDS

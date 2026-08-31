@@ -9,7 +9,7 @@
     "executable_subject": "e854185f501cfc2658d5d1c5430be4eed3b070ee",
     "status": "RESEARCH_CHECKPOINT_CLOSED_EXACT_HEAD_DOUBLE_PASS"
   },
-  "candidate_status": "IMPLEMENTED_CANDIDATE",
+  "candidate_status": "IMPLEMENTED_CANDIDATE_EXACT_HEAD_DOUBLE_PASS",
   "physical_bake_artifact_emitted": false,
   "production_acceptance_claimed": false,
   "platform_policy": {
@@ -33,10 +33,19 @@
   },
   "development_evidence": {
     "fresh_import": "PASS",
-    "b0_0_acceptance": {"status": "PASS", "assertions": 33},
-    "b0_1_acceptance": {"status": "PASS", "assertions": 64},
+    "b0_0_acceptance": {
+      "status": "PASS",
+      "assertions": 33
+    },
+    "b0_1_acceptance": {
+      "status": "PASS",
+      "assertions": 64
+    },
     "b0_1_playground": "PASS",
-    "b0_2_ab_acceptance": {"status": "PASS", "assertions": 76},
+    "b0_2_ab_acceptance": {
+      "status": "PASS",
+      "assertions": 76
+    },
     "b0_2_ab_playground": "PASS",
     "linear_momentum_error": 2.32e-12,
     "angular_momentum_error": 3.32e-12,
@@ -44,9 +53,68 @@
     "reconstruction_mapping_hash": "fbd7216e490450c5ca1a9a3ccaa683b07223acefcef9755cba368af63021f365"
   },
   "required_exact_head_evidence": {
-    "implementation_head": null,
-    "implementation_tree": null,
-    "ubuntu_linux_exact_double": "PENDING"
+    "implementation_head": "b417066a048d3c85bf766eb239d4111335c66602",
+    "implementation_tree": "da87230e3dd247d2fd662bf5f8ec3926c055f4d3",
+    "exact_source_export": {
+      "run_id": 33352749817,
+      "conclusion": "success",
+      "archive_sha256": "d4732532a2b5763c8296e717db0eabd848e0e0949e56ac4cd358df4c02ab716c",
+      "artifact_id": 9744152415,
+      "artifact_zip_sha256": "5808a6801449320bea56ad79552e94e7dec119af966e3b7c1bf7bd845ae4bbf8",
+      "tracked_file_count": 5036
+    },
+    "ubuntu_linux_exact_double": "DOUBLE_PASS",
+    "exact_head_passes": [
+      {
+        "fresh_filesystem": true,
+        "fresh_import": true,
+        "b0_0_acceptance": {
+          "status": "PASS",
+          "assertions": 33
+        },
+        "b0_1_acceptance": {
+          "status": "PASS",
+          "assertions": 64
+        },
+        "b0_1_playground": "PASS",
+        "b0_2_ab_acceptance": {
+          "status": "PASS",
+          "assertions": 76
+        },
+        "b0_2_ab_playground": "PASS",
+        "linear_momentum_error": 2.32e-12,
+        "angular_momentum_error": 3.32e-12,
+        "descriptor_hash": "ef955d6d449a1934ac5259066573fd2aab7401b560473edd4059b0374d058685",
+        "reconstruction_mapping_hash": "fbd7216e490450c5ca1a9a3ccaa683b07223acefcef9755cba368af63021f365"
+      },
+      {
+        "fresh_filesystem": true,
+        "fresh_import": true,
+        "b0_0_acceptance": {
+          "status": "PASS",
+          "assertions": 33
+        },
+        "b0_1_acceptance": {
+          "status": "PASS",
+          "assertions": 64
+        },
+        "b0_1_playground": "PASS",
+        "b0_2_ab_acceptance": {
+          "status": "PASS",
+          "assertions": 76
+        },
+        "b0_2_ab_playground": "PASS",
+        "linear_momentum_error": 2.32e-12,
+        "angular_momentum_error": 3.32e-12,
+        "descriptor_hash": "ef955d6d449a1934ac5259066573fd2aab7401b560473edd4059b0374d058685",
+        "reconstruction_mapping_hash": "fbd7216e490450c5ca1a9a3ccaa683b07223acefcef9755cba368af63021f365"
+      }
+    ],
+    "post_run_tracked_byte_audit": {
+      "checked": 5036,
+      "missing": 0,
+      "changed": 0
+    }
   },
   "claims": [
     "deterministic 500-part rigid aggregate mass/COM/full-inertia compilation",

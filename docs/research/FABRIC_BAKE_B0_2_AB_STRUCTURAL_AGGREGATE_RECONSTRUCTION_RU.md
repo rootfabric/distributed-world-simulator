@@ -1,6 +1,6 @@
 # FABRIC-BAKE B0.2-A/B — Structural Aggregate Compiler + Exact Reconstruction Mapping
 
-**Статус:** IMPLEMENTED CANDIDATE / local Ubuntu exact-double chain PASS.  
+**Статус:** IMPLEMENTED CANDIDATE / EXACT-HEAD DOUBLE PASS (Ubuntu/Linux double).  
 **Branch:** `research/fabric-bake0-2-structural-aggregate-r1`.  
 **Predecessor:** закрытый B0.1 lineage; production acceptance не заявляется.
 
@@ -331,7 +331,62 @@ linear_momentum_error=2.32e-12
 angular_momentum_error=3.32e-12
 ```
 
-Exact implementation-head verification is recorded separately after Git commit; this development pass is not itself a checkpoint closure.
+Exact implementation-head verification completed against immutable Git subject:
+
+```text
+implementation HEAD:
+b417066a048d3c85bf766eb239d4111335c66602
+
+implementation TREE:
+da87230e3dd247d2fd662bf5f8ec3926c055f4d3
+
+exact-source export run:
+33352749817 = SUCCESS
+
+archive SHA-256:
+d4732532a2b5763c8296e717db0eabd848e0e0949e56ac4cd358df4c02ab716c
+
+tracked files:
+5036
+```
+
+Two independent fresh-filesystem extractions were imported with the pinned double Godot
+and executed through the canonical B0.0 → B0.1 → B0.2-A/B runner.
+
+Both exact-head passes produced:
+
+```text
+B0.0 Acceptance       PASS 33 assertions
+B0.1 Acceptance       PASS 64 assertions
+B0.1 Playground       PASS
+B0.2-A/B Acceptance   PASS 76 assertions
+B0.2-A/B Playground   PASS
+
+parts=500
+state=6500->13
+ratio=500.0x
+regions=25
+supports=4000
+linear_momentum_error=2.32e-12
+angular_momentum_error=3.32e-12
+
+descriptor:
+ef955d6d449a1934ac5259066573fd2aab7401b560473edd4059b0374d058685
+
+reconstruction mapping:
+fbd7216e490450c5ca1a9a3ccaa683b07223acefcef9755cba368af63021f365
+```
+
+Post-run byte audit against a pristine extraction:
+
+```text
+tracked_files_checked = 5036
+missing               = 0
+changed               = 0
+```
+
+This proves the A/B executable implementation boundary itself. It does **not** close B0.2;
+B0.2-C Refinement Guards remain mandatory before structural physical bake execution.
 
 ## 13. Non-claims
 
