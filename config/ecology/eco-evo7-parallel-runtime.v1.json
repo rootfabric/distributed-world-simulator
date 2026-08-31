@@ -64,7 +64,7 @@
   "perf2_profiling": {
     "checkpoint": "ECO.EVO7/PERF2.1",
     "revision": "ECO.EVO7-PERF2.1-R2",
-    "status": "IMPLEMENTATION_CANDIDATE_AWAITING_ONE_EXACT_LOCAL_PASS",
+    "status": "ACCEPTED_EXACT_UBUNTU",
     "accepted_perf2_0_contract_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
     "execution_configs": [
       "SERIAL_REFERENCE",
@@ -87,7 +87,24 @@
       ],
       "dual_os_required": false,
       "second_os": "OPTIONAL_NON_BLOCKING"
-    }
+    },
+    "accepted_head": "fccf4f99fd3c257abf90c37e584b965e2cddfa6a",
+    "accepted_tree": "cdedc4686ebb85a07782a0065ee44d598e78ef9f",
+    "merge_commit": "406e37b95b6b4969b0128df9f6fb35ab28c8bd38",
+    "os": "UBUNTU",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "host_fingerprint": "ee428a6139f8b5260a6626f4f7f375193144f9b5a9f280c59431470087c47d12",
+    "perf2_1_assertions": 861,
+    "report_hash": "789c520d32656a70e1fcc86ac66096f7ceecaeccbd4ab8cd35a78172214b6ff1",
+    "campaign_context_hash": "020c301296261bc88e8fd403bd99f6ef8f4c287a5ca9ab7116ecfddec3e7495e",
+    "windows_required": false,
+    "perf2_2_authorized": true
   },
-  "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json"
+  "runtime_verification_policy": "config/ecology/eco-runtime-verification-policy.v1.json",
+  "perf2_memory": {
+    "checkpoint": "ECO.EVO7/PERF2.2",
+    "status": "AUTHORIZED_CURRENT",
+    "predecessor_head": "fccf4f99fd3c257abf90c37e584b965e2cddfa6a",
+    "optimization_claim": false
+  }
 }
