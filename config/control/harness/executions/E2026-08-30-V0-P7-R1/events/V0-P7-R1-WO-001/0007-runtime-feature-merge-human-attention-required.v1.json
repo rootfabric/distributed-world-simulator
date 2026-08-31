@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0007",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 7,
+  "event_type": "HUMAN_ATTENTION_REQUIRED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-31T04:30:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-2-runtime-merge-human-gate-r1",
+  "head_sha": "d87b6eebddf16b7683b30757fbfd9b1c0b67c6fc",
+  "predicate": "RUNTIME_FEATURE_MERGE_HUMAN_APPROVAL",
+  "command": "OPEN_P7_2_RUNTIME_FEATURE_MERGE_HUMAN_GATE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001.v1.json"
+  ],
+  "summary": "P7.2 exact runtime subject is independently reviewed and VERIFIED. The only remaining P7.2 runtime integration blocker is the explicit CRITICAL-risk human RUNTIME_FEATURE_MERGE approval for PR #350.",
+  "blocker": "HUMAN_RUNTIME_FEATURE_MERGE_APPROVAL_PENDING"
+}
