@@ -25,8 +25,10 @@ Write-Host "Opening FABRIC CONSTRUCT0 tangible sandbox"
 Write-Host "Branch: $ExpectedBranch"
 Write-Host "Godot: $GuiGodot"
 Write-Host "Scene: res://scenes/labs/fabric_construct0_lab.tscn"
-Write-Host "C0.1 shows canonical compound presets and actual B0.3 FULL/Baked contact reduction."
-Write-Host "Time-driven FABRIC0.18 playback is intentionally the next C0.2 slice."
+Write-Host "Tabs: SEE THE MODEL / SEE FABRIC MOVE IT / BUILD IT"
+Write-Host "C0.1: canonical Construction + real B0.3 reduction."
+Write-Host "C0.2: closed FABRIC0.18 trajectory playback."
+Write-Host "C0.3: canonical Block/Plate/Beam editor with move/rotate/bond/break."
 
 $hadRuntimeDisabled = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
 $previousRuntimeDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
