@@ -885,3 +885,18 @@ It does not yet prove:
 Next declared slice:
 
 `FABRIC0.18-D — UNIFIED PERSISTENT CONTACT TRAJECTORY`.
+
+
+### 9.11 Project Control
+
+Repository-level gate on the 0.18-C evidence boundary:
+
+```text
+Project Control #1893
+run id 33371423075
+SUCCESS
+```
+
+All control steps passed, including architecture/ownership compatibility, H0.2, V0 product checkpoint, generation-80 authorization safety, canonical-main PC0 and directional watch.
+
+This qualifies 0.18-C as an implemented candidate. FABRIC0.18 remains IN PROGRESS; 0.18-D is still required for the parent closure decision.

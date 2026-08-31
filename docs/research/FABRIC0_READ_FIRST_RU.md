@@ -1169,3 +1169,6 @@ solver refinement        strictly decreasing
 Do not generalize C into an arbitrary multi-dynamic-body persistent graph claim.
 
 Next: `0.18-D UNIFIED PERSISTENT CONTACT TRAJECTORY`.
+
+
+0.18-C Project Control #1893 SUCCESS. C is an implemented candidate; do not close FABRIC0.18 before 0.18-D.

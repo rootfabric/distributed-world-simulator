@@ -3,7 +3,7 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.18",
   "slice": "C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
   "production_accepted": false,
   "branch": "research/fabric0-18-persistent-contact-wrench-r1",
   "predecessor_slices": {
@@ -227,5 +227,11 @@
     "FABRIC0_18_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next": "FABRIC0.18-D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY"
+  "next": "FABRIC0.18-D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
+  "project_control": {
+    "run_number": 1893,
+    "run_id": 33371423075,
+    "subject_head": "768f19fe309de246126e123cab849ebdaa8e6c0e",
+    "result": "SUCCESS"
+  }
 }

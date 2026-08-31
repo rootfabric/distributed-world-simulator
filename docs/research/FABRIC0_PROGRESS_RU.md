@@ -3734,3 +3734,6 @@ Exact gate: C `153/153`, B `108/108`, A `60/60`; C bytes `4/4` exact; B/A/0.17-D
 Important boundary: C is a one-dynamic-body/multiple-fixed-anchor research graph, not yet an arbitrary multi-dynamic-body persistent graph.
 
 Next: `FABRIC0.18-D — UNIFIED PERSISTENT CONTACT TRAJECTORY`.
+
+
+0.18-C repository control: `Project Control #1893 SUCCESS`. C is an implemented candidate; FABRIC0.18 remains IN PROGRESS and 0.18-D is next.
