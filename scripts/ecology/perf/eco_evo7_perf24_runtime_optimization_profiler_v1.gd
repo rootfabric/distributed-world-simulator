@@ -236,6 +236,13 @@ func validate_report(report: Dictionary) -> bool:
 	if seen.size() != 9:
 		return false
 
+	var recomputed_comparisons: Array[Dictionary] = _build_comparisons(normalized_samples)
+	if recomputed_comparisons.size() != comparisons.size():
+		return false
+	for index in range(comparisons.size()):
+		if _comparison_hash(Dictionary(comparisons[index])) != _comparison_hash(recomputed_comparisons[index]):
+			return false
+
 	var summary: Dictionary = Dictionary(report["optimization_summary"])
 	if not _validate_optimization_summary(summary, comparisons):
 		return false
@@ -1036,20 +1043,30 @@ func _sample_hash(sample: Dictionary) -> String:
 
 
 func _comparison_hash(comparison: Dictionary) -> String:
-	var keys := [
-		"wall_speedup_legacy_over_optimized", "stream_speedup_legacy_over_optimized",
-		"record_proxy_p50", "context_build_reduction_factor",
+	var numeric_keys := [
+		"legacy_wall_p50_ms", "optimized_wall_p50_ms",
+		"wall_speedup_legacy_over_optimized",
+		"legacy_stream_p50_ms", "optimized_stream_p50_ms",
+		"stream_speedup_legacy_over_optimized",
+		"legacy_recruitment_p50_ms", "optimized_recruitment_p50_ms",
+		"record_proxy_p50", "legacy_chunks_processed_p50",
+		"legacy_recruitment_context_builds_p50",
+		"optimized_recruitment_context_builds_p50",
+		"context_build_reduction_factor",
 		"legacy_chunk_local_sorts_p50", "optimized_chunk_local_sorts_p50",
 	]
 	var parts := PackedStringArray([
 		String(comparison.get("scale_id", "")),
+		str(int(comparison.get("precondition_generations", 0))),
 		str(int(comparison.get("stream_chunk_size", 0))),
 		str(int(comparison.get("exact_pairs", 0))),
 	])
-	for key in keys:
+	for key in numeric_keys:
 		parts.append("%s=%s" % [key, _stable_float_token(comparison.get(key, 0.0))])
-	parts.append("ops=%d" % (1 if bool(comparison.get("operation_reduction_proven", false)) else 0))
 	parts.append("bound=%d" % (1 if bool(comparison.get("bounded_working_set_preserved", false)) else 0))
+	parts.append("ops=%d" % (1 if bool(comparison.get("operation_reduction_proven", false)) else 0))
+	parts.append("nonregressed=%d" % (1 if bool(comparison.get("wall_point_nonregressed", false)) else 0))
+	parts.append("improved=%d" % (1 if bool(comparison.get("wall_point_improved", false)) else 0))
 	return "|".join(parts).sha256_text()
 
 
