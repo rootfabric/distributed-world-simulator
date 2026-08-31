@@ -307,7 +307,7 @@ func _working_set_row(configuration_id: String, samples: Array) -> Dictionary:
 	var execution_mode := "SERIAL_REFERENCE" if configuration_id == "SERIAL_REFERENCE" else "STREAM1"
 	var chunk_size := 0
 	if execution_mode == "STREAM1":
-		chunk_size = int(configuration_id.trim_prefix("STREAM1_CHUNK_"))
+		chunk_size = int(configuration_id.replace("STREAM1_CHUNK_", ""))
 		if chunk_size not in STREAM_CHUNK_SIZES:
 			return {}
 		for index in range(parent_values.size()):
@@ -433,6 +433,8 @@ func _validate_working_row(row: Dictionary) -> bool:
 		return false
 	if not _integer_value_equals(row["repetitions"], 3):
 		return false
+	if not _is_integral_number(row["stream_chunk_size"]):
+		return false
 	if not bool(row["bound_proven"]) or bool(row["bytes_claim"]):
 		return false
 	for key in [
@@ -521,6 +523,8 @@ func _validate_comparison(comparison: Dictionary) -> bool:
 	for key in required:
 		if not comparison.has(key):
 			return false
+	if not _is_integral_number(comparison["stream_chunk_size"]):
+		return false
 	var chunk_size := int(comparison["stream_chunk_size"])
 	if chunk_size not in STREAM_CHUNK_SIZES:
 		return false
