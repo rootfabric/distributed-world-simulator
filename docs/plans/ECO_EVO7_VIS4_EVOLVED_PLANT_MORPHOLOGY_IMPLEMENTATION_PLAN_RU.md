@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 PLAY0.MORPH UNBLOCKED  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.3 CLOSED / VIS4.4 IMPLEMENTED CANDIDATE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -829,3 +829,68 @@ runtime branch, native extension, OS-specific API or path-dependent computation.
 Therefore a second Windows execution is optional cross-platform regression
 evidence, not a closure prerequisite. The exact double-Godot Ubuntu run is
 sufficient canonical verification for VIS4.3.
+
+
+## VIS4.4 PLAY0.MORPH implementation result — 2026-08-31
+
+VIS4.4 runtime integration is implemented on exact executable candidate:
+
+~~~text
+HEAD: ac9a0bf7ea7e794b4c3d6c884fc59e812516d17a
+TREE: 7d13219874d3d02c2c84b4f278db2c385ba252fd
+~~~
+
+The primary live-plant path for generation > 0 is now:
+
+~~~text
+Workbench completed generation
+ -> VIS4.1 Descriptor V2
+ -> VIS4.3 exact reconstruction / PH5 bridge
+ -> VIS4.4 PH5 renderer
+ -> branch MeshInstance3D
+ + foliage MultiMeshInstance3D
+ + accepted PH5 far tiers
+~~~
+
+Generation-zero founders keep the legacy BoxMesh/SphereMesh fallback because no
+realized PH2 morphology exists yet. Once a live generation activates PH5, legacy
+stem/crown MultiMesh instances are emptied and hidden.
+
+The integration keeps the existing physical placement and render-origin
+contracts:
+
+~~~text
+cell direction -> ProceduralEarthWorld.get_surface_point(direction)
+render-origin change -> transform update only
+camera/view movement -> PH5 tier selection only
+~~~
+
+No second GrowthGraph, branch generator, foliage placer, ecology authority,
+persistence owner or network authority is introduced.
+
+Atomic failure behavior:
+
+~~~text
+complete VIS4.1 + VIS4.3 source -> PH5 publish
+missing/tampered/incomplete source -> reject publish
+                                  -> keep last completed presentation
+~~~
+
+Focused verification covers exact source hashes, TIER0/2/3/4 behavior,
+population-only no-node semantics, neutral-color geometry invariance,
+render-origin no-rebuild, tamper fail-closed, legacy instance retirement and the
+existing PLAY0 regression.
+
+Canonical candidate runner:
+
+~~~text
+RUN_ECO_EVO7_VIS4_4_TESTS.sh
+~~~
+
+Current qualification:
+
+~~~text
+VIS4.4 IMPLEMENTED CANDIDATE
+EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
+NOT CLOSED YET
+~~~
