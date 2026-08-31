@@ -122,8 +122,8 @@ func _run() -> void:
 	var expected_basis := _up_basis(first_up) * Basis(Vector3.UP, deg_to_rad(expected_yaw))
 	_check(_basis_equal(actual_basis, expected_basis, 0.00001), "PLAY0 plant basis applies surface-up x deterministic local yaw")
 
-	var individuality_before := presentation.get_ph5_individuality_identity_hash()
-	var geometry_before := presentation.get_ph5_geometry_identity_hash()
+	var individuality_before: String = presentation.get_ph5_individuality_identity_hash()
+	var geometry_before: String = presentation.get_ph5_geometry_identity_hash()
 	_check(individuality_before.length() == 64 and geometry_before.length() == 64, "identity hashes available before presentation changes")
 
 	presentation.set_neutral_color_mode(false)
