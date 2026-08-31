@@ -38,7 +38,7 @@ func _init() -> void:
 	_check(is_equal_approx(float(config["cell_size_m"]), Workbench.CELL_SIZE_M), "R2 binds exact Workbench cell size")
 
 	var context: Dictionary = profiler.campaign_context(config)
-	var context_hash := profiler.campaign_context_hash(context)
+	var context_hash: String = profiler.campaign_context_hash(context)
 	_check(context.size() == Profiler.CONTEXT_FIELDS.size(), "campaign context has frozen exact field set")
 	_check(_is_hash(context_hash), "campaign context has deterministic SHA-256 identity")
 
