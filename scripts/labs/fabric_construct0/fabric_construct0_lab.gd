@@ -516,6 +516,8 @@ func _play() -> void:
 	if not bool(ready.get("success", false)):
 		_move_status_label.text = "FABRIC trajectory failed: %s" % str(ready)
 		return
+	_clear_contacts()
+	_mode_label.text = "C0.2 playback active — B0.3 observatory markers hidden."
 	_playing = true
 	_apply_playback_sample(_playback.sample(_playback_time))
 
@@ -530,6 +532,8 @@ func _step_event() -> void:
 	if not bool(ready.get("success", false)):
 		_move_status_label.text = "FABRIC trajectory failed: %s" % str(ready)
 		return
+	_clear_contacts()
+	_mode_label.text = "C0.2 playback active — B0.3 observatory markers hidden."
 	_playing = false
 	_playback_time = _playback.next_event_time(_playback_time)
 	_apply_playback_sample(_playback.sample(_playback_time))
@@ -541,6 +545,8 @@ func _reset_playback() -> void:
 	if not bool(ready.get("success", false)):
 		_move_status_label.text = "FABRIC trajectory failed: %s" % str(ready)
 		return
+	_clear_contacts()
+	_mode_label.text = "C0.2 playback active — B0.3 observatory markers hidden."
 	_playing = false
 	_playback_time = 0.0
 	_apply_playback_sample(_playback.reset())
@@ -601,7 +607,7 @@ func _editor_new() -> void:
 	if not bool(ready.get("success", false)):
 		_build_status_label.text = "EDITOR SETUP FAILED\n%s" % str(ready)
 		return
-	_refresh_editor_scene()
+	_build_status_label.text = "Empty canonical Construction ready. Add BLOCK / PLATE / BEAM."
 
 func _editor_add(kind: String) -> void:
 	if not _editor_active:
