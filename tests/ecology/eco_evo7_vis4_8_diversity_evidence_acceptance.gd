@@ -200,6 +200,7 @@ func _controlled_renderer_fidelity() -> void:
 	var dense_crown := {"realized_crown_density": 0.90}
 	_check(overlay.crown_alpha(dense_crown) > overlay.crown_alpha(sparse_crown), "controlled realized crown density changes accepted visual alpha")
 	_check(overlay.foliage_cluster_count(dense_crown) > overlay.foliage_cluster_count(sparse_crown), "controlled realized crown density changes accepted foliage cluster cue")
+	overlay.free()
 
 
 func _ph5_probe(
