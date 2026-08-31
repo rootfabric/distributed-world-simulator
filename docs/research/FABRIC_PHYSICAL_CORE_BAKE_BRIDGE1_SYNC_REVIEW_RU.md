@@ -143,3 +143,69 @@ NOT CREATED BY THIS REVIEW
 ```
 
 Next executable integration work is BRIDGE-1 itself.
+
+
+## Project Control evidence
+
+Initial Project Control on the pure review commit:
+
+```text
+review HEAD:
+8a3bafd0044460f766346ff394db53e44a9dd56d
+
+#1908 FAILURE
+#1909 FAILURE
+
+failed step:
+architecture and ownership passport compatibility regression
+```
+
+This was not a synchronization-contract failure. The review branch is descended from the
+older FABRIC-BAKE lineage and therefore still contained the pre-fix versions of two harness
+regression tests.
+
+Exact stale → current-main blobs:
+
+```text
+tests/harness/test_project_control_architecture_compatibility.py
+old  4f2da340b52f9145fa0daddefbf606bf4e6fa290
+main 9a0233aa9e913d204e4ba23e525593638e3dc37b
+
+tests/harness/test_project_control_proposed_r3_ownership_projection.py
+old  923ca8844d0cb325b0d3e41ba1473ac80308cfee
+main e0fb773e8c7b93698ccc7d41a86f567795b0dc08
+```
+
+The main versions delegate main-owned registry/policy reads through
+`pc._core.load_main_owned(...)`, i.e. to canonical `origin/main` state.
+
+A control carrier copied exactly those two current-main test blobs and changed no
+FABRIC/FABRIC-BAKE runtime, G/ECO passport, registry declaration or critical dependency rule:
+
+```text
+control carrier:
+8f0e01c8dd611e615ecfd6b49d4748d749b2f730
+
+Project Control #1910
+run id 33383353852
+SUCCESS
+```
+
+All Project Control steps passed, including architecture/ownership compatibility, H0.2,
+V0, generation-80 authorization safety, canonical-main PC0 and directional watch.
+
+Therefore the synchronization review qualification is:
+
+```text
+PHYSICAL CORE ↔ FABRIC-BAKE / BRIDGE-1 SYNC REVIEW
+PASS
+
+PROJECT CONTROL PASS
+CRITICAL CONTRACT CONFLICTS 0
+
+BRIDGE-1
+DESIGN SYNCHRONIZED
+IMPLEMENTATION UNBLOCKED
+NOT YET EXECUTABLE
+NOT CLOSED
+```

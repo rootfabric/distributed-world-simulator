@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "checkpoint": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNC_REVIEW",
-  "status": "PASS_CONTRACTS_SYNCHRONIZED",
+  "status": "PASS_CONTRACTS_SYNCHRONIZED_PROJECT_CONTROL_PASS",
   "production_accepted": false,
   "branch": "research/fabric-bridge1-sync-review-r1",
   "subjects": {
@@ -69,5 +69,45 @@
     "sync_review": "PASS",
     "bridge1": "DESIGN_SYNCHRONIZED_IMPLEMENTATION_UNBLOCKED_NOT_CLOSED",
     "next": "IMPLEMENT_BRIDGE_1_PHYSICAL_SOURCE_LIFECYCLE_BAKE_RECONSTRUCTION"
+  },
+  "project_control": {
+    "initial_review_runs": [
+      {
+        "run_number": 1908,
+        "run_id": 33383208720,
+        "result": "FAILURE",
+        "classification": "STALE_BAKE_BRANCH_HARNESS_REGRESSION_TESTS"
+      },
+      {
+        "run_number": 1909,
+        "run_id": 33383245698,
+        "result": "FAILURE",
+        "classification": "STALE_BAKE_BRANCH_HARNESS_REGRESSION_TESTS"
+      }
+    ],
+    "harness_control_carrier": {
+      "head": "8f0e01c8dd611e615ecfd6b49d4748d749b2f730",
+      "changed_files": [
+        {
+          "path": "tests/harness/test_project_control_architecture_compatibility.py",
+          "old_blob": "4f2da340b52f9145fa0daddefbf606bf4e6fa290",
+          "main_blob": "9a0233aa9e913d204e4ba23e525593638e3dc37b"
+        },
+        {
+          "path": "tests/harness/test_project_control_proposed_r3_ownership_projection.py",
+          "old_blob": "923ca8844d0cb325b0d3e41ba1473ac80308cfee",
+          "main_blob": "e0fb773e8c7b93698ccc7d41a86f567795b0dc08"
+        }
+      ],
+      "runtime_changed": false,
+      "passports_changed": false,
+      "dependency_rules_weakened": false
+    },
+    "successful_run": {
+      "run_number": 1910,
+      "run_id": 33383353852,
+      "subject_head": "8f0e01c8dd611e615ecfd6b49d4748d749b2f730",
+      "result": "SUCCESS"
+    }
   }
 }
