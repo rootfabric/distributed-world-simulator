@@ -10,7 +10,7 @@
   "expected_outcome": "P7.4 COMPLETE_MERGED; P7 IN_PROGRESS; P7.5 NEXT.",
   "current_stage": "P7.5 Two-Client Convergence",
   "stage_status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
-  "progress_note": "P7.4 exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef passed Fresh Reviewer R1 PASS and Fresh Windows Verifier R3 VERIFIED under formal platform amendment; Human RUNTIME_FEATURE_MERGE approved; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73.",
+  "progress_note": "P7.4 exact runtime 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / tree 1efad34a075af63169c48dd5055c2537c8d7e6ef passed Fresh Reviewer R1 PASS and Fresh Windows Verifier R3 VERIFIED under formal platform amendment; Human RUNTIME_FEATURE_MERGE approved; canonical merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73. The missing epoch transition-table is recorded separately as non-runtime control debt and is not a P7.4 closure blocker.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted",
   "next_stage": "Repair the pre-existing P7 epoch transition-table control gap before relying on automated -Drive/-Close, then implement P7.5 two-client convergence over accepted P7.4 semantics.",
   "parent_branch_or_checkpoint": "main @ bfd2d8efec6f499311dea81d9b602f30b3ac6a73 / P7.4 runtime merged",
@@ -73,9 +73,7 @@
     "NETWORK_REPLICATION_POLICY",
     "AUTHORITY_FOUNDATION"
   ],
-  "blockers": [
-    "PRE_EXISTING_EPOCH_TRANSITION_TABLE_MISSING_FOR_DRIVE_CLOSE_AUTOMATION"
-  ],
+  "blockers": [],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
