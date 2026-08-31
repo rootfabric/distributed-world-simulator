@@ -385,3 +385,34 @@ ECO.EVO7 STREAM1 Bounded Generation Stream: PASS (195 assertions)
 
 Verification must check these two markers independently; no combined
 `PASS (195 assertions, 108 comparisons)` line is required.
+
+
+## Repair note — JSON float hash stability
+
+The second independent Ubuntu verification of exact candidate
+`a0ce7de334a09fe16a89976a1aa57eec9a56afa1` proved that config/context numeric
+normalization was fixed, but the parsed artifact still failed the final full report
+validation.
+
+The remaining boundary was the recomputed evidence hash: raw timing, summary and ratio
+floats were formatted with 12 decimal places. Godot JSON serialization may preserve the
+semantic measurement while restoring a slightly different final binary mantissa; the
+stored report_hash string therefore survived, while recomputing it from the parsed
+artifact could differ.
+
+PERF2.1 now canonicalizes float evidence tokens to six decimal places in milliseconds /
+ratio space. This is substantially finer than the microsecond-resolution source clock
+while removing meaningless JSON binary-float tail sensitivity.
+
+Tamper detection remains fail-closed: the acceptance test changes
+`generation_total_ms` by `+0.001 ms` (one microsecond) and requires the parsed report
+to become invalid.
+
+The acceptance test now distinguishes:
+
+```text
+stored report_hash preserved                    PASS
+recomputed report_hash after JSON round-trip    PASS
+full parsed report validation                   PASS
+one-microsecond timing tamper                    REJECT
+```
