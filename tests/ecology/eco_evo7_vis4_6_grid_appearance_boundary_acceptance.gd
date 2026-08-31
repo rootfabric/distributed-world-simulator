@@ -142,12 +142,12 @@ func _run() -> void:
 	var visual_before: Vector3 = presentation.get_ph5_record_visual_world_position(0)
 	var appearance_before: Dictionary = presentation.get_ph5_record_grid_appearance(0)
 	var grid_hash_before: String = presentation.get_ph5_grid_appearance_identity_hash()
-	var geometry_before: String = presentation.get_ph5_geometry_identity_hash()
 	var individuality_before: String = presentation.get_ph5_individuality_identity_hash()
 	var height := maxf(0.1, presentation.get_ph5_record_height(0))
 
 	_check(presentation.set_view_world_position(canonical_before + first_up * height * 2.0), "VIS4.6 forces first record near")
 	_check(presentation.get_ph5_record_tier(0) == Representation.TIER_0_FULL, "VIS4.6 first record reaches TIER0")
+	var geometry_before: String = presentation.get_ph5_geometry_identity_hash()
 	var applied_render: Vector3 = presentation.get_ph5_record_applied_render_position(0)
 	var expected_visual_render: Vector3 = presentation.get_ph5_record_visual_render_position(0)
 	_check(applied_render.distance_to(expected_visual_render) < 0.001, "actual PH5 node transform uses visual position")
