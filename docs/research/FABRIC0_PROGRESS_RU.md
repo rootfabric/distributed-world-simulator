@@ -3691,3 +3691,6 @@ Exact gate: B `108/108`, A `60/60`, playground PASS, import/editor CLEAN, B remo
 Important non-claim: B's deterministic ramp evaluators prove the generic event-localization boundary, not yet a full physical no-creep persistent-contact trajectory.
 
 Next: `FABRIC0.18-C — MULTICONTACT PERSISTENT WRENCH GRAPH`.
+
+
+0.18-B repository control: `Project Control #1888 SUCCESS`. FABRIC0.18 remains IN PROGRESS; 0.18-C is the next declared slice.

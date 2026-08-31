@@ -1123,3 +1123,6 @@ Events: `STICK_TO_SLIDE`, `STICK_TO_ROLL`, `STICK_TO_SPIN`, `SUPPORT_TO_SEPARATI
 Near-coincident mode roots obey explicit temporal-resolution grouping exactly as impact roots do in 0.17.
 
 Next: `0.18-C MULTICONTACT PERSISTENT WRENCH GRAPH`.
+
+
+0.18-B Project Control #1888 SUCCESS. B is an implemented candidate; FABRIC0.18 remains open and 0.18-C is next.

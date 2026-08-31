@@ -585,3 +585,18 @@ sha256 7a8c502201cb615a2408fe80a5b03553d261c9f07de5085f533607975ee550c2
 - production acceptance.
 
 Those remain later slices, beginning with 0.18-C.
+
+
+### 8.10 Project Control
+
+Repository-level gate on the 0.18-B evidence boundary:
+
+```text
+Project Control #1888
+run id 33369362645
+SUCCESS
+```
+
+All steps passed, including architecture/ownership compatibility, H0.2, V0 product checkpoint, generation-80 authorization safety, canonical-main PC0 and directional watch.
+
+FABRIC0.18 remains IN PROGRESS. This pass qualifies 0.18-B as an implemented candidate; it does not close the parent checkpoint.

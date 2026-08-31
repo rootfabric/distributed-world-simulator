@@ -3,7 +3,7 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.18",
   "slice": "B_MODE_TRANSITION_LOCALIZATION",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
   "production_accepted": false,
   "branch": "research/fabric0-18-persistent-contact-wrench-r1",
   "predecessor_slice": {
@@ -194,5 +194,11 @@
     "FABRIC0_18_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next": "FABRIC0.18-C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH"
+  "next": "FABRIC0.18-C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
+  "project_control": {
+    "run_number": 1888,
+    "run_id": 33369362645,
+    "subject_head": "beca5117c88321fa93c509650159f590ebd38656",
+    "result": "SUCCESS"
+  }
 }
