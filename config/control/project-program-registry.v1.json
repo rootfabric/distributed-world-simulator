@@ -358,7 +358,15 @@
         "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
         "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
-        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json"
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+        "post_merge_pc0": {
+          "status": "PASS_NON_RED",
+          "run": 33368937050,
+          "standard": "YELLOW_NON_RED",
+          "directional": "YELLOW_NON_RED",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+          "canonical_main": "b1b703c1de581f2dc1564c5bda4bbb8e935a170b"
+        }
       },
       "p7_4": {
         "state": "NEXT",
