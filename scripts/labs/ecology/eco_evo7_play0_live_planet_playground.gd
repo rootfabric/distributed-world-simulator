@@ -159,15 +159,21 @@ func initialize_runtime() -> bool:
 	vis4_adapter = Vis4AdapterScript.new()
 	# Generation zero is published synchronously (no thread needed yet).
 	_publish_completed_snapshot(workbench.get_workbench_snapshot(), false)
+	if _published_descriptors.is_empty():
+		logger.error("play0", "initial_presentation_source_failed", {})
+		return false
 
-	# Presentation over the accepted VIS2 adapter result.
+	# Presentation over the accepted founder fallback. Generation > 0 switches
+	# atomically to exact VIS4.1 + VIS4.3 -> PH5.
 	presentation = PresentationScript.new()
 	presentation.name = "Play0PlanetPresentation"
 	add_child(presentation)
 	if not presentation.setup(earth_world, workbench.get_patch()):
 		logger.error("play0", "presentation_setup_failed", {})
 		return false
-	presentation.apply_snapshot(_published_descriptors, workbench.get_classification())
+	if not presentation.apply_snapshot(_published_descriptors, workbench.get_classification()):
+		logger.error("play0", "initial_presentation_apply_failed", {})
+		return false
 
 	# Spawn ground mode on the physical ecology patch so plants and terrain
 	# coincide for the player.
