@@ -753,13 +753,13 @@ func _sample_evidence_hash(sample: Dictionary) -> String:
 		str(int(flags.get("stream_chunk_size", 0))),
 		String(flags.get("timing_aggregation", "")),
 		str(int(window.get("measured_generations", 0))),
-		"%.12f" % float(window.get("total_wall_ms", -1.0)),
+		_stable_float_token(window.get("total_wall_ms", -1.0)),
 	])
 	for key in [
 		"wall_ms", "generation_total_ms", "ls33_total_ms", "stream_total_ms",
 		"candidate_build_ms", "route_build_ms", "recruitment_eval_ms", "audit_ms",
 	]:
-		parts.append("%s=%.12f" % [key, float(timings.get(key, -1.0))])
+		parts.append("%s=%s" % [key, _stable_float_token(timings.get(key, -1.0))])
 	for key in [
 		"generation", "population", "parent_count", "candidate_count",
 		"chunk_count", "max_parent_chunk", "max_candidate_chunk",
@@ -779,11 +779,11 @@ func _summary_evidence_hash(summary: Dictionary) -> String:
 		String(summary.get("configuration_id", "")),
 		String(summary.get("metric_path", "")),
 		str(int(summary.get("count", 0))),
-		"%.12f" % float(summary.get("p50", 0.0)),
-		"%.12f" % float(summary.get("p95", 0.0)),
-		"%.12f" % float(summary.get("mean", 0.0)),
-		"%.12f" % float(summary.get("min", 0.0)),
-		"%.12f" % float(summary.get("max", 0.0)),
+		_stable_float_token(summary.get("p50", 0.0)),
+		_stable_float_token(summary.get("p95", 0.0)),
+		_stable_float_token(summary.get("mean", 0.0)),
+		_stable_float_token(summary.get("min", 0.0)),
+		_stable_float_token(summary.get("max", 0.0)),
 		String(summary.get("simulation_workload_hash", "")),
 	])).sha256_text()
 
@@ -793,12 +793,12 @@ func _comparison_evidence_hash(comparison: Dictionary) -> String:
 		String(comparison.get("configuration_id", "")),
 		str(int(comparison.get("stream_chunk_size", 0))),
 		str(int(comparison.get("exact_pairs", 0))),
-		"%.12f" % float(comparison.get("serial_wall_p50_ms", 0.0)),
-		"%.12f" % float(comparison.get("stream_wall_p50_ms", 0.0)),
-		"%.12f" % float(comparison.get("observed_wall_ratio_serial_over_stream", 0.0)),
-		"%.12f" % float(comparison.get("serial_generation_p50_ms", 0.0)),
-		"%.12f" % float(comparison.get("stream_generation_p50_ms", 0.0)),
-		"%.12f" % float(comparison.get("observed_generation_ratio_serial_over_stream", 0.0)),
+		_stable_float_token(comparison.get("serial_wall_p50_ms", 0.0)),
+		_stable_float_token(comparison.get("stream_wall_p50_ms", 0.0)),
+		_stable_float_token(comparison.get("observed_wall_ratio_serial_over_stream", 0.0)),
+		_stable_float_token(comparison.get("serial_generation_p50_ms", 0.0)),
+		_stable_float_token(comparison.get("stream_generation_p50_ms", 0.0)),
+		_stable_float_token(comparison.get("observed_generation_ratio_serial_over_stream", 0.0)),
 		"0" if not bool(comparison.get("optimization_claim", true)) else "1",
 	])).sha256_text()
 
@@ -950,6 +950,16 @@ func _finite_nonnegative(value) -> bool:
 		return false
 	var number := float(value)
 	return is_finite(number) and number >= 0.0
+
+
+func _stable_float_token(value) -> String:
+	if not _finite_nonnegative(value):
+		return "INVALID"
+	## PERF2 timing sources ultimately originate from microsecond-resolution clocks.
+	## Six decimal places in milliseconds are already three orders of magnitude
+	## finer than source resolution and remain stable across Godot JSON float
+	## stringify/parse round-trips.
+	return "%.6f" % float(value)
 
 
 func _nullable_int_string(value) -> String:
