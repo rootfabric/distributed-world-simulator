@@ -3,7 +3,7 @@
   "program": "FABRIC0",
   "checkpoint": "FABRIC0.18",
   "slice": "A_PERSISTENT_WRENCH_CONTACT_STATE",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
   "production_accepted": false,
   "branch": "research/fabric0-18-persistent-contact-wrench-r1",
   "predecessor_closure": "751c55e76f57b7a9ceef8f5bbda3dcf6d4fad1a0",
@@ -65,5 +65,15 @@
     "FABRIC0_18_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next": "FABRIC0.18-B_MODE_TRANSITION_LOCALIZATION"
+  "next": "FABRIC0.18-B_MODE_TRANSITION_LOCALIZATION",
+  "project_control": {
+    "run_number": 1867,
+    "run_id": 33367039128,
+    "subject_head": "2eabb10ada4052baf38bce11cd505b41d264c0e8",
+    "result": "SUCCESS"
+  },
+  "predecessor_byte_identity": {
+    "fabric0_17_d": "6/6_PRESERVED",
+    "note": "Predecessor executable was not modified by FABRIC0.18-A."
+  }
 }

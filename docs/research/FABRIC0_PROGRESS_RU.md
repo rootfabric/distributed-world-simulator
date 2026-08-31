@@ -3653,3 +3653,6 @@ Next: `FABRIC0.18-B — MODE TRANSITION LOCALIZATION`.
 
 
 A now bridges canonical 0.17 manifold IDs (`feature_key|pN`) and the existing C generalized-wrench result directly. No second contact identity representation is introduced.
+
+
+0.18-A repository control: `Project Control #1867 SUCCESS`. Closed FABRIC0.17 D bytes are preserved `6/6 exact` on the 0.18 branch.

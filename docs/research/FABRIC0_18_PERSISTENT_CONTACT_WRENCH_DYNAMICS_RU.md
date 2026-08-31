@@ -296,3 +296,20 @@ solved_from_generalized_wrench(...)
 ```
 
 The bridge fails closed if a canonical manifold point has no persistent ID. This prevents 0.18-A from inventing a second contact identity system.
+
+
+### 6.7 Project Control
+
+Repository-level control on the 0.18-A evidence boundary:
+
+```text
+Project Control #1867
+run id 33367039128
+SUCCESS
+```
+
+All control steps passed, including architecture/ownership compatibility, H0.2 machine checkpoint, V0 product checkpoint, generation-80 authorization safety, canonical-main PC0 and directional watch.
+
+Closed FABRIC0.17 D executable bytes remain preserved 6/6 on the 0.18 branch.
+
+0.18-A remains an implemented research candidate; FABRIC0.18 itself remains IN PROGRESS.

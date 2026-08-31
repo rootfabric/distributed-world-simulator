@@ -1083,3 +1083,6 @@ Next: `0.18-B MODE TRANSITION LOCALIZATION`.
 
 
 A consumes the existing 0.17 persistent manifold point IDs directly and normalizes the existing generalized-wrench result; do not create a parallel contact-identity scheme.
+
+
+0.18-A control boundary: `Project Control #1867 SUCCESS`; FABRIC0.17 D predecessor bytes remain `6/6 exact`.
