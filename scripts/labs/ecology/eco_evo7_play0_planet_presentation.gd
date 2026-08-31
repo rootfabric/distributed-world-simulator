@@ -361,6 +361,14 @@ func get_ph5_geometry_identity_hash() -> String:
 	return "" if ph5_renderer == null else ph5_renderer.get_geometry_identity_hash()
 
 
+func get_ph5_individuality_identity_hash() -> String:
+	return "" if ph5_renderer == null else ph5_renderer.get_individuality_identity_hash()
+
+
+func get_ph5_record_presentation_yaw_deg(index: int) -> float:
+	return NAN if ph5_renderer == null else ph5_renderer.get_record_presentation_yaw_deg(index)
+
+
 func _build_nodes() -> void:
 	stems_node = MultiMeshInstance3D.new()
 	stems_node.name = "Play0Stems"
