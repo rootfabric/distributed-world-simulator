@@ -1,0 +1,43 @@
+name: FABRIC-BAKE B0.2-A/B Exact Source Export
+
+on:
+  push:
+    branches:
+      - research/fabric-bake0-2-ab-source-export-r1
+    paths:
+      - ".github/workflows/fabric-bake-b0-2-ab-source-export.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout helper
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout exact B0.2-A/B subject
+        run: |
+          git checkout --detach b417066a048d3c85bf766eb239d4111335c66602
+          test "$(git rev-parse HEAD)" = "b417066a048d3c85bf766eb239d4111335c66602"
+          test "$(git rev-parse HEAD^{tree})" = "da87230e3dd247d2fd662bf5f8ec3926c055f4d3"
+          echo "head=$(git rev-parse HEAD)"
+          echo "tree=$(git rev-parse HEAD^{tree})"
+
+      - name: Export exact tracked source
+        run: |
+          git archive --format=tar.gz --output=fabric-bake-b0-2-ab-exact-source.tar.gz HEAD
+          sha256sum fabric-bake-b0-2-ab-exact-source.tar.gz
+          git ls-tree -r --name-only HEAD | wc -l
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-2-ab-exact-source-b417066a
+          path: fabric-bake-b0-2-ab-exact-source.tar.gz
+          if-no-files-found: error
