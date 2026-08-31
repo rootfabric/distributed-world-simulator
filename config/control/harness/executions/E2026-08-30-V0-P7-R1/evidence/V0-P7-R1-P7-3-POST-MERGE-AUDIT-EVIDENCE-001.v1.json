@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_3_post_merge_audit_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-3-POST-MERGE-AUDIT-EVIDENCE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
+  "control_closure_merge": "b1b703c1de581f2dc1564c5bda4bbb8e935a170b",
+  "canonical_main_audited": "b1b703c1de581f2dc1564c5bda4bbb8e935a170b",
+  "audit_request_head": "559483066d2b0e6bc7a1603a46d832c1b038a4b5",
+  "project_control_run": 33368937050,
+  "project_control_result": "SUCCESS",
+  "artifact_id": 9749298641,
+  "artifact_name": "project-control-report",
+  "artifact_zip_sha256": "8e48fd67601a2cdbcf57886e7efde5299edcc9f7e8e8d32c5b2fc3e1206b3772",
+  "standard_pc0": "YELLOW_NON_RED",
+  "directional_pc0": "YELLOW_NON_RED",
+  "standard_overall_health": "YELLOW",
+  "directional_overall_health": "YELLOW",
+  "v0": {
+    "health": "YELLOW",
+    "blocks_global_progress": true,
+    "findings": []
+  },
+  "advisory_nonblocking_findings": {
+    "G": {
+      "health": "RED",
+      "blocks_global_progress": false,
+      "reason": "Previously recorded P7.2 Matter dependency drift remains visible until G reactivation."
+    },
+    "ECO": {
+      "health": "RED",
+      "blocks_global_progress": false,
+      "reason": "Research-design frontier dependency drift remains visible and advisory to global progress."
+    }
+  },
+  "decision": "P7_3_POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_PASS",
+  "p7_3": "COMPLETE_MERGED",
+  "p7": "IN_PROGRESS",
+  "next": "P7_4_PERSISTENCE_RESTART_COMPOSITION",
+  "audited_at_utc": "2026-08-31T07:34:16Z"
+}
