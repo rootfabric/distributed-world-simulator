@@ -1,0 +1,114 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_2_e_validation.v1",
+  "checkpoint": "B0.2-E",
+  "title": "Topology Split / Re-bake",
+  "branch": "research/fabric-bake0-2-e-topology-split-rebake-r1",
+  "qualification": "RESEARCH_SLICE_CLOSED_EXACT_HEAD_DOUBLE_PASS",
+  "b0_2_overall_closed": true,
+  "production_acceptance_claimed": false,
+  "exact_executable_subject": {
+    "head": "91a2f79bf6738efefa342589c44e4a0f0a6960d6",
+    "tree": "610288ea119e9f7508f711ce5b0468b272a9b489",
+    "parent": "762ef5d4b3094d021b3f9f956b3d0cf049a2a38c"
+  },
+  "implementation_boundary": {
+    "commits_ahead_of_parent": 1,
+    "changed_e_files": 7,
+    "predecessor_files_modified": 0
+  },
+  "platform_policy": {
+    "required_platform": "UBUNTU_LINUX_DOUBLE",
+    "required_platform_status": "PASS",
+    "windows_default_result": "PASS_BY_POLICY",
+    "windows_is_closure_gate": false
+  },
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "source_export": {
+    "workflow_run_id": 33370961820,
+    "artifact_id": 9750024058,
+    "artifact_name": "fabric-bake-b0-2-e-exact-source-91a2f79b",
+    "artifact_digest": "sha256:b26d0f49c6a5e0235c5d8e235c274ee201437154158fe78f23646426b69872c4",
+    "tracked_archive_sha256": "d700bd6212913693c4d48e02db08a0fa7bde46013642ee5b75f479aaa19c07fc",
+    "tracked_file_count": 5064
+  },
+  "acceptance": {
+    "fresh_exact_runs": 2,
+    "b0_0": {
+      "status": "PASS",
+      "assertions": 33
+    },
+    "b0_1": {
+      "status": "PASS",
+      "assertions": 64
+    },
+    "b0_2_ab": {
+      "status": "PASS",
+      "assertions": 76
+    },
+    "b0_2_c": {
+      "status": "PASS",
+      "assertions": 118
+    },
+    "b0_2_d": {
+      "status": "PASS",
+      "assertions": 609
+    },
+    "b0_2_e": {
+      "status": "PASS",
+      "assertions": 2580
+    },
+    "all_playgrounds": "PASS",
+    "split_components": 2,
+    "component_sizes": [
+      243,
+      257
+    ],
+    "invalidated_reduced_pieces": 3,
+    "executable_rebaked_artifacts": 2,
+    "fully_full_dof": 6500,
+    "d_mixed_dof": 286,
+    "post_split_rebaked_dof": 26,
+    "post_split_reduction_ratio": 250,
+    "mass_error": 0,
+    "linear_momentum_error": 1.7e-13,
+    "angular_momentum_error": 1.475e-11,
+    "max_state_handoff_error": 2e-14,
+    "event_hash": "2265ae95b31918ea728015c8ffdcc39076c0928834a9e041927f09f7d78e6287",
+    "transaction_hash": "e9c42a971c1f562ccb156743245611ce5f837337f473452715f412422640063a",
+    "b0_2_complete_marker": true
+  },
+  "tracked_byte_audit": {
+    "checked": 5064,
+    "fresh_run_1": {
+      "missing": 0,
+      "changed": 0
+    },
+    "fresh_run_2": {
+      "missing": 0,
+      "changed": 0
+    }
+  },
+  "b0_2_closure": {
+    "status": "RESEARCH_CHECKPOINT_CLOSED",
+    "certified_domain": "CONNECTED_RIGID_TREE_R1",
+    "slices": {
+      "B0.2-A": "CLOSED",
+      "B0.2-B": "CLOSED",
+      "B0.2-C": "CLOSED_EXACT_HEAD_DOUBLE_PASS",
+      "B0.2-D": "CLOSED_EXACT_HEAD_DOUBLE_PASS",
+      "B0.2-E": "CLOSED_EXACT_HEAD_DOUBLE_PASS"
+    }
+  },
+  "non_claims": [
+    "production readiness",
+    "arbitrary cyclic/redundant guard load inference",
+    "arbitrary simultaneous multi-region unbake",
+    "generic fracture/damage constitutive physics",
+    "contact/wrench bake",
+    "cross-authority bake"
+  ],
+  "next_required_stage": "BRIDGE-1_PHYSICAL_SOURCE_LIFECYCLE_BAKE_RECONSTRUCTION"
+}

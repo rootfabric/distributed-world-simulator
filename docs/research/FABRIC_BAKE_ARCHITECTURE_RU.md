@@ -895,3 +895,70 @@ unbake.
 
 B0.2-D does not yet define post-break topology ownership, persistent split lifecycle,
 or re-bake after topology changes. Those are B0.2-E.
+
+
+---
+
+## FABRIC-BAKE B0.2-E and B0.2 overall closure — 2026-08-31
+
+```text
+branch:
+research/fabric-bake0-2-e-topology-split-rebake-r1
+
+final executable HEAD:
+91a2f79bf6738efefa342589c44e4a0f0a6960d6
+
+TREE:
+610288ea119e9f7508f711ce5b0468b272a9b489
+
+B0.2-E:
+RESEARCH SLICE CLOSED
+EXACT-HEAD DOUBLE PASS
+
+B0.2:
+RESEARCH CHECKPOINT CLOSED
+
+production acceptance:
+NOT CLAIMED
+```
+
+B0.2-E completes the topology lifecycle that B0.2-D intentionally left open:
+
+```text
+D mixed FULL/BAKED state
+→ canonical BOND_BREAK in the FULL region
+→ source frontier revision
+→ all stale reduced representations invalidated
+→ canonical graph split
+→ connected surviving components identified
+→ A/B+C rebuilt per component
+→ two fresh BAKE_READY PhysicalBakeArtifact instances
+→ exact-once state/event ownership handoff
+```
+
+The 500-part R1 fixture splits into 257 and 243 part components. The final representation
+contains two 13-DOF aggregates:
+
+```text
+6500 fully-FULL DOF
+→ 286 bounded-unbake DOF
+→ 26 post-split re-baked DOF
+= 250x reduction versus fully FULL
+```
+
+Exact final errors are within the certified deterministic tolerances:
+
+```text
+mass error             = 0
+linear momentum error  = 1.7e-13
+angular momentum error = 1.475e-11
+state handoff error    = 2e-14
+```
+
+The event and transaction are content-addressed and replay is rejected.
+
+This closes B0.2 for the certified connected rigid-tree R1 domain. It does not extend the
+claim to arbitrary cyclic/redundant guard inference, arbitrary multi-region unbake,
+generic fracture physics, contact/wrench bake, cross-authority bake, or production use.
+
+The next roadmap gate is BRIDGE-1: Physical source lifecycle + bake reconstruction.
