@@ -71,7 +71,7 @@ func _run() -> void:
 	_check(int(ph5.get("visible_individual_count", 0)) > 0, "initial live view materializes individual PH5 nodes")
 	_check(int(ph5.get("materialization_build_count", 0)) > 0, "PH5 materialization executed")
 
-	var identity := presentation.get_ph5_record_identity(0)
+	var identity: Dictionary = presentation.get_ph5_record_identity(0)
 	_check(not identity.is_empty(), "first PH5 record identity observable")
 	for key in ["source_descriptor_hash", "source_growth_graph_hash", "render_description_hash", "representation_hash", "materialization_hash"]:
 		_check(String(identity.get(key, "")).length() == 64, "first PH5 identity has %s" % key)
@@ -90,10 +90,10 @@ func _run() -> void:
 		var expected_world: Vector3 = earth.get_surface_point(direction)
 		_check(presentation.get_stem_world_position(0).distance_to(expected_world) < 0.001, "PH5 uses physical get_surface_point placement")
 
-	var world_base := presentation.get_stem_world_position(0)
-	var up := world_base.normalized()
+	var world_base: Vector3 = presentation.get_stem_world_position(0)
+	var up: Vector3 = world_base.normalized()
 	var height := maxf(0.1, presentation.get_ph5_record_height(0))
-	var tangent := up.cross(Vector3.UP)
+	var tangent: Vector3 = up.cross(Vector3.UP)
 	if tangent.length_squared() < 0.000001:
 		tangent = up.cross(Vector3.RIGHT)
 	tangent = tangent.normalized()
@@ -117,23 +117,23 @@ func _run() -> void:
 
 	# Restore an individual tier for transform/color checks.
 	_check(presentation.set_view_world_position(world_base + up * height * 2.0), "restore near PH5 tier")
-	var before_color_hash := presentation.get_ph5_geometry_identity_hash()
+	var before_color_hash: String = presentation.get_ph5_geometry_identity_hash()
 	var ecology_before_color := String(playground.get_published_snapshot().get("ecology_state_hash", ""))
 	presentation.set_neutral_color_mode(false)
-	var lineage_hash := presentation.get_ph5_geometry_identity_hash()
+	var lineage_hash: String = presentation.get_ph5_geometry_identity_hash()
 	presentation.set_neutral_color_mode(true)
-	var neutral_hash := presentation.get_ph5_geometry_identity_hash()
+	var neutral_hash: String = presentation.get_ph5_geometry_identity_hash()
 	_check(before_color_hash == lineage_hash and lineage_hash == neutral_hash, "neutral/lineage color does not change geometry hashes")
 	_check(String(playground.get_published_snapshot().get("ecology_state_hash", "")) == ecology_before_color, "color mode cannot mutate ecology")
 
 	var ph5_before_origin: Dictionary = Dictionary(presentation.get_contract().get("ph5", {}))
 	var builds_before := int(ph5_before_origin.get("materialization_build_count", -1))
-	var render_before := presentation.get_stem_render_position(0)
-	var world_before := presentation.get_stem_world_position(0)
+	var render_before: Vector3 = presentation.get_stem_render_position(0)
+	var world_before: Vector3 = presentation.get_stem_world_position(0)
 	var origin_before: Vector3 = earth.get_render_origin()
 	earth.set_render_origin(origin_before + Vector3(1500.0, 0.0, 0.0))
 	presentation.refresh_render_transform(true)
-	var render_after := presentation.get_stem_render_position(0)
+	var render_after: Vector3 = presentation.get_stem_render_position(0)
 	var ph5_after_origin: Dictionary = Dictionary(presentation.get_contract().get("ph5", {}))
 	_check(absf((render_after - render_before).length() - 1500.0) < 1.0, "render-origin shift reprojects PH5 transform")
 	_check(world_before.distance_to(earth.render_to_world(render_after)) < 0.01, "PH5 world position invariant under render-origin shift")
@@ -143,11 +143,11 @@ func _run() -> void:
 
 	# Incomplete/tampered live bridge must preserve the last complete presentation.
 	var legacy_descriptors := playground.get_published_descriptors()
-	var classification := workbench.get_classification()
+	var classification: Dictionary = workbench.get_classification()
 	var tampered: Dictionary = reconstruction.duplicate(true)
 	tampered["evidence_hash"] = "0".repeat(64)
 	var bridge_before := String(Dictionary(presentation.get_contract().get("ph5", {})).get("source_bridge_hash", ""))
-	var geometry_before := presentation.get_ph5_geometry_identity_hash()
+	var geometry_before: String = presentation.get_ph5_geometry_identity_hash()
 	_check(not presentation.apply_snapshot(legacy_descriptors, classification, morph, tampered), "tampered reconstruction fails closed")
 	var bridge_after := String(Dictionary(presentation.get_contract().get("ph5", {})).get("source_bridge_hash", ""))
 	_check(bridge_after == bridge_before, "tampered bridge cannot replace source bridge identity")
