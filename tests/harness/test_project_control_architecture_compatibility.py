@@ -341,8 +341,18 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
         self.assertEqual("YELLOW", result["health"])
         self.assertTrue(any(f.get("code") == "OTHER_YELLOW" for f in result["findings"]))
 
-    def _load_json(self, relative: str) -> dict:
-        return json.loads((ROOT / relative).read_text(encoding="utf-8"))
+    def _load_main_owned_json(self, relative: str) -> dict:
+        value = pc._core.load_main_owned(relative)
+        self.assertIsInstance(value, dict)
+        return value
+
+    def test_live_projection_main_owned_input_delegates_to_origin_main_loader(self):
+        path = "config/control/project-program-registry.v1.json"
+        sentinel = {"source": "origin/main"}
+        with patch.object(pc._core, "load_main_owned", return_value=sentinel) as loader:
+            value = self._load_main_owned_json(path)
+        self.assertIs(value, sentinel)
+        loader.assert_called_once_with(path)
 
     def _live_refs_available(self, registry: dict) -> bool:
         for key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION:
@@ -392,20 +402,14 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
         return registry, passports
 
     def _synthetic_r3_inputs(self):
-        registry_path = ROOT / "config/control/project-program-registry.v1.json"
-        policy_path = ROOT / "config/control/project-control-policy.v1.json"
-        ownership_path = ROOT / "config/control/architecture-ownership.v1.json"
-        if not (registry_path.exists() and policy_path.exists() and ownership_path.exists()):
-            return None
-
-        registry = copy.deepcopy(self._load_json("config/control/project-program-registry.v1.json"))
+        registry = copy.deepcopy(self._load_main_owned_json("config/control/project-program-registry.v1.json"))
         if not self._live_refs_available(registry):
             if os.environ.get("GITHUB_ACTIONS") == "true":
                 self.fail("GitHub Actions must fetch all historical branch refs for the live R3 regression")
             return None
 
-        policy = copy.deepcopy(self._load_json("config/control/project-control-policy.v1.json"))
-        ownership = copy.deepcopy(self._load_json("config/control/architecture-ownership.v1.json"))
+        policy = copy.deepcopy(self._load_main_owned_json("config/control/project-control-policy.v1.json"))
+        ownership = copy.deepcopy(self._load_main_owned_json("config/control/architecture-ownership.v1.json"))
         registry["architecture_revision"] = R3
         policy["architecture_revision"] = R3
         ownership["architecture_revision"] = R3
