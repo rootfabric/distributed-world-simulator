@@ -1138,6 +1138,16 @@ func _finite_positive(value) -> bool:
 	return _finite_nonnegative(value) and float(value) > 0.0
 
 
+func _stable_float_token(value) -> String:
+	if not _finite_nonnegative(value):
+		return "INVALID"
+	## PERF2 timing sources ultimately originate from microsecond-resolution clocks.
+	## Six decimal places in milliseconds are already three orders of magnitude
+	## finer than source resolution and remain stable across Godot JSON float
+	## stringify/parse round-trips.
+	return "%.6f" % float(value)
+
+
 func _valid_target(target: Dictionary) -> bool:
 	return (
 		_is_git_sha(String(target.get("head", "")))
