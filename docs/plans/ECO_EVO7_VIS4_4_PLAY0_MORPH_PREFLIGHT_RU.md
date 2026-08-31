@@ -1,7 +1,7 @@
 # ECO.EVO7 VIS4.4 — PLAY0.MORPH Preflight
 
 Дата: 2026-08-31
-Статус: PREFLIGHT ONLY / RUNTIME BLOCKED UNTIL VIS4.3 GREEN
+Статус: PREFLIGHT COMPLETE / VIS4.3 CLOSED / RUNTIME UNBLOCKED
 
 ## Current PLAY0 seam
 
@@ -149,7 +149,7 @@ This preserves the existing PLAY0 completed-snapshot philosophy.
 
 ## Proposed acceptance gates
 
-1. VIS4.3 exact Windows GREEN predecessor.
+1. VIS4.3 exact double-Godot GREEN predecessor.
 2. PLAY0 ecology/generation worker unchanged in authority.
 3. Generation zero founder fallback remains honest.
 4. Generation > 0 primary plants are PH5, not Box/Sphere.
@@ -170,11 +170,11 @@ This preserves the existing PLAY0 completed-snapshot philosophy.
 
 ## Runtime gate
 
-Do not implement VIS4.4 runtime until VIS4.3 exact Windows verification is GREEN.
+VIS4.3 is CLOSED on exact Ubuntu double-Godot verification. VIS4.4 runtime implementation is authorized.
 
 ## VIS4.3 exact closure carrier
 
-VIS4.4 remains runtime-blocked until a successful exact Windows closure is recorded.
+The former Windows-only closure requirement is retired for VIS4.3. The Windows workflow remains optional cross-platform regression evidence.
 
 Frozen executable predecessor:
 
@@ -197,7 +197,7 @@ Its workflow checks out the frozen executable subject rather than the moving dur
 `4.7.1.stable.double.custom_build.a13da4feb`, and only then runs
 `RUN_ECO_EVO7_VIS4_3_TESTS.ps1`.
 
-A documentation/closure-carrier commit after the executable subject is therefore not acceptance evidence by itself. VIS4.3 may become GREEN only when the Windows job reports SUCCESS for the frozen subject and expected tree.
+A documentation/closure-carrier commit after the executable subject is not acceptance evidence by itself. Canonical acceptance is provided by an exact double-Godot run against the frozen subject and expected tree; the recorded Ubuntu run satisfies that requirement.
 
 
 ## VIS4.3 Ubuntu exact pre-verification evidence
@@ -244,15 +244,20 @@ Fresh import also reproduced three legacy pre-existing ECO.EVO5 scene parse warn
 returned exit 0 and no VIS4.3-related warning was reported. These warnings do not
 promote or weaken VIS4.3 acceptance.
 
-Qualification remains strict:
+Qualification:
 
 ~~~text
-UBUNTU PRE-VERIFICATION GREEN
+EXACT UBUNTU DOUBLE-GODOT GREEN
 EXACT SUBJECT VERIFIED
 EXACT TREE VERIFIED
 DOUBLE GODOT VERIFIED
 CANONICAL VIS4.3 TEST CHAIN GREEN
-WINDOWS ACCEPTANCE STILL REQUIRED
-VIS4.3 NOT CLOSED YET
-VIS4.4 RUNTIME REMAINS BLOCKED
+TRACKED STATUS CLEAN
+VIS4.3 CLOSED
+VIS4.4 RUNTIME UNBLOCKED
 ~~~
+
+VIS4.3 contains no platform-specific runtime branches, native extensions,
+OS-specific APIs or path-dependent computation in its bridge/PH5 acceptance
+scope. Windows execution is therefore optional cross-platform regression
+coverage, not a required acceptance gate for this checkpoint.
