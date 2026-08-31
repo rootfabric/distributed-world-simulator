@@ -739,8 +739,14 @@ func _build_comparisons(samples: Array[Dictionary], points: Array[Dictionary]) -
 			var stream_parents := float(Dictionary(stream_point["final_parent_count"]).get("p50", 0.0))
 			var serial_candidates := float(Dictionary(serial_point["final_candidate_count"]).get("p50", 0.0))
 			var stream_candidates := float(Dictionary(stream_point["final_candidate_count"]).get("p50", 0.0))
-			if minf(stream_wall, stream_generation, stream_proxy, stream_parents, stream_candidates) <= 0.0:
-				return {}
+			if (
+				stream_wall <= 0.0
+				or stream_generation <= 0.0
+				or stream_proxy <= 0.0
+				or stream_parents <= 0.0
+				or stream_candidates <= 0.0
+			):
+				return []
 			var wall_ratio := serial_wall / stream_wall
 			var generation_ratio := serial_generation / stream_generation
 			result.append({
@@ -785,7 +791,7 @@ func _build_trends(points: Array[Dictionary]) -> Array[Dictionary]:
 		var high_population := float(Dictionary(high["final_population"]).get("p50", 0.0))
 		var low_proxy := float(Dictionary(low["record_proxy_upper_bound"]).get("p50", 0.0))
 		var high_proxy := float(Dictionary(high["record_proxy_upper_bound"]).get("p50", 0.0))
-		if minf(low_wall, low_generation, low_population, low_proxy) <= 0.0:
+		if low_wall <= 0.0 or low_generation <= 0.0 or low_population <= 0.0 or low_proxy <= 0.0:
 			return []
 		result.append({
 			"configuration_id": configuration_id,
@@ -1085,8 +1091,12 @@ func _validate_crossover(crossover: Dictionary) -> bool:
 		return false
 	if int(crossover["stream_chunk_size"]) not in STREAM_CHUNK_SIZES:
 		return false
-	if Array(crossover["scale_ids"]).map(func(v): return String(v)) != SCALE_IDS:
+	var scale_values: Array = Array(crossover["scale_ids"])
+	if scale_values.size() != SCALE_IDS.size():
 		return false
+	for index in range(SCALE_IDS.size()):
+		if String(scale_values[index]) != SCALE_IDS[index]:
+			return false
 	var ratios: Array = Array(crossover["wall_ratios_serial_over_stream"])
 	var sides: Array = Array(crossover["observed_faster_sides"])
 	if ratios.size() != SCALE_IDS.size() or sides.size() != SCALE_IDS.size():
