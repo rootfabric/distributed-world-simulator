@@ -15,5 +15,7 @@ if [[ "$actual_version" != "$expected_version" ]]; then
     exit 3
 fi
 
-if [[ -f "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh" ]]; then\n    GODOT_BIN="$godot_bin" bash "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh"\nfi
+if [[ -f "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh" ]]; then
+    GODOT_BIN="$godot_bin" bash "$repo_root/RUN_FABRIC_CONSTRUCT0_C0_2_TESTS.sh"
+fi
 "$godot_bin" --headless --path "$repo_root" --script res://tests/research/fabric_construct0/fabric_construct0_c0_3_acceptance.gd
