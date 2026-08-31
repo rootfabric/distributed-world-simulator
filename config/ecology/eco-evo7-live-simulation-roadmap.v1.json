@@ -188,7 +188,9 @@
         "scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd",
         "scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd",
         "scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd"
-      ]
+      ],
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33372208170
     },
     {
       "id": "PERF2.CONV",
@@ -750,7 +752,9 @@
         "dual_os_required": false,
         "second_os": "OPTIONAL_NON_BLOCKING"
       },
-      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_4_RUNTIME_OPTIMIZATION_R1_RU.md"
+      "checkpoint": "docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_4_RUNTIME_OPTIMIZATION_R1_RU.md",
+      "project_control": "GLOBAL_RED_EXTERNAL_CONCURRENT_DRIFT__SUBJECT_LOCAL_PREFLIGHT_PASS",
+      "project_control_run": 33372208170
     }
   }
 }
