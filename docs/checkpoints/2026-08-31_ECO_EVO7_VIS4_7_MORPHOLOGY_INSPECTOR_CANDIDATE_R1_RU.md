@@ -5,9 +5,9 @@
 Статус:
 
 ~~~text
-VIS4.7 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED
+VIS4.7 R1
+UBUNTU EXACT-SOURCE DOUBLE-GODOT VERIFIED
+CLOSED
 ~~~
 
 ## Frozen executable subject
@@ -306,3 +306,68 @@ ECO.EVO7 VIS4.7 Morphology Inspector candidate: PASS
 
 One exact Ubuntu double-Godot GREEN on the frozen subject is sufficient for
 closure. A separate Windows acceptance gate is not required.
+
+
+## Ubuntu exact-source closure evidence
+
+The frozen executable subject above completed local Ubuntu verification using an
+immutable exact source archive exported by a validation-only GitHub workflow.
+
+Before archive creation GitHub independently asserted:
+
+~~~text
+HEAD:
+7b3479156a6920083f6cc2c420fcb21834e6dc5e
+
+TREE:
+8fedc29f3837f632d5c264080e8d5897beae1861
+~~~
+
+The downloaded archive reconstructed locally to the same exact TREE:
+
+~~~text
+git write-tree:
+8fedc29f3837f632d5c264080e8d5897beae1861
+~~~
+
+Canonical local execution:
+
+~~~text
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+RUN_ECO_EVO7_VIS4_7_TESTS.sh:
+RC=0
+
+VIS4.6 predecessor:
+PASS / 796 assertions
+
+VIS4.7 focused:
+PASS / 106 assertions
+
+VIS4.7 final marker:
+PRESENT
+
+tracked reconstructed tree:
+clean
+~~~
+
+Temporary source-export PR #385 was closed without merge after artifact
+retrieval. The VIS4.7 executable branch was never modified by that validation
+workflow.
+
+Durable closure checkpoint:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_7_MORPHOLOGY_INSPECTOR_UBUNTU_EXACT_SOURCE_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+Final status:
+
+~~~text
+VIS4.7 CLOSED
+VIS4.8 DIVERSITY EVIDENCE UNBLOCKED
+~~~
