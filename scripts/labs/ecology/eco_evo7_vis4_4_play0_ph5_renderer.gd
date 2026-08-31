@@ -11,11 +11,12 @@ const DescriptorV2 = preload("res://scripts/labs/ecology/eco_evo7_vis4_morpholog
 const ReconstructionEvidence = preload("res://scripts/research/ecology/plant_growth_graph_reconstruction_evidence_v1.gd")
 const Bridge = preload("res://scripts/labs/ecology/eco_evo7_vis4_3_exact_ph5_bridge.gd")
 const Individuality = preload("res://scripts/labs/ecology/eco_evo7_vis4_5_deterministic_individuality.gd")
+const GridAppearance = preload("res://scripts/labs/ecology/eco_evo7_vis4_6_grid_appearance_boundary.gd")
 const Representation = preload("res://scripts/research/ecology/plant_multiscale_representation_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_vis4_4_play0_ph5_renderer.v1"
 const VERSION := "1.0.0"
-const REVISION := "ECO.EVO7-VIS4.5.R1"
+const REVISION := "ECO.EVO7-VIS4.6.R1"
 
 const REFERENCE_VIEWPORT_HEIGHT_PX := 1080.0
 const REFERENCE_VERTICAL_FOV_DEG := 70.0
@@ -39,6 +40,7 @@ var source_bridge_hash := ""
 var neutral_color_mode := true
 
 var _directions: Array[Vector3] = []
+var _grid_size := 0
 var _records: Array[Dictionary] = []
 var _plant_nodes: Array = []
 var _materialization_cache: Dictionary = {}
@@ -65,6 +67,9 @@ func setup(earth_world_reference, patch: Dictionary) -> bool:
 		if not direction_value is Vector3:
 			return false
 		_directions.append(Vector3(direction_value).normalized())
+	_grid_size = int(round(sqrt(float(_directions.size()))))
+	if _grid_size <= 1 or _grid_size * _grid_size != _directions.size():
+		return false
 	var center_value = patch.get("center_direction")
 	if center_value is Vector3:
 		_view_world_position = earth_world.get_surface_point(Vector3(center_value).normalized())
@@ -118,6 +123,22 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 			return false
 		var up: Vector3 = _directions[cell_index]
 		var base_world: Vector3 = earth_world.get_surface_point(up)
+		var spacing_m: Vector2 = _cell_spacing_m(cell_index)
+		var appearance: Dictionary = GridAppearance.build(
+			record_id,
+			cell_index,
+			String(source.get("descriptor_hash", "")),
+			spacing_m
+		)
+		if appearance.is_empty():
+			return false
+		var tangent_basis: Basis = _up_basis(up)
+		var tangent_offset: Vector3 = (
+			tangent_basis.x * float(appearance.get("offset_x_m", 0.0))
+			+ tangent_basis.z * float(appearance.get("offset_y_m", 0.0))
+		)
+		var visual_direction: Vector3 = (base_world + tangent_offset).normalized()
+		var visual_base_world: Vector3 = earth_world.get_surface_point(visual_direction)
 		var functional_value = source.get("functional_morphology")
 		if not functional_value is Dictionary:
 			return false
@@ -142,6 +163,15 @@ func apply_snapshot(descriptor_snapshot: Dictionary, reconstruction_snapshot: Di
 			"individuality_hash": String(individuality.get("individuality_hash", "")),
 			"height_m": height_m,
 			"base_world": base_world,
+			"visual_base_world": visual_base_world,
+			"visual_direction": visual_direction,
+			"appearance_hash": String(appearance.get("appearance_hash", "")),
+			"jitter_x_cell": float(appearance.get("jitter_x_cell", 0.0)),
+			"jitter_y_cell": float(appearance.get("jitter_y_cell", 0.0)),
+			"offset_x_m": float(appearance.get("offset_x_m", 0.0)),
+			"offset_y_m": float(appearance.get("offset_y_m", 0.0)),
+			"cell_spacing_x_m": float(appearance.get("cell_spacing_x_m", 0.0)),
+			"cell_spacing_y_m": float(appearance.get("cell_spacing_y_m", 0.0)),
 			"up": up,
 			"tier": tier,
 			"render_description_hash": String(materialization.get("render_description_hash", "")),
@@ -208,7 +238,7 @@ func refresh_render_transform(force: bool = false) -> void:
 		)
 		node.transform = Transform3D(
 			_up_basis(Vector3(record["up"])) * local_yaw,
-			Vector3(record["base_world"]) - origin
+			Vector3(record["visual_base_world"]) - origin
 		)
 	_last_render_origin = origin
 
@@ -232,9 +262,51 @@ func get_record_world_position(index: int) -> Vector3:
 
 
 func get_record_render_position(index: int) -> Vector3:
+	# Legacy/canonical API: intentionally remains the exact ecology cell point.
 	if earth_world == null:
 		return Vector3.ZERO
 	return get_record_world_position(index) - earth_world.get_render_origin()
+
+
+func get_record_visual_world_position(index: int) -> Vector3:
+	if index < 0 or index >= _records.size():
+		return Vector3.ZERO
+	return Vector3(_records[index].get("visual_base_world", Vector3.ZERO))
+
+
+func get_record_visual_render_position(index: int) -> Vector3:
+	if earth_world == null:
+		return Vector3.ZERO
+	return get_record_visual_world_position(index) - earth_world.get_render_origin()
+
+
+func get_record_applied_render_position(index: int) -> Vector3:
+	if index < 0 or index >= _plant_nodes.size():
+		return Vector3.ZERO
+	var node = _plant_nodes[index]
+	if node == null or not is_instance_valid(node):
+		return Vector3.ZERO
+	return node.position
+
+
+func get_record_grid_appearance(index: int) -> Dictionary:
+	if index < 0 or index >= _records.size():
+		return {}
+	var record: Dictionary = _records[index]
+	return {
+		"record_id": String(record.get("record_id", "")),
+		"cell_index": int(record.get("cell_index", -1)),
+		"appearance_hash": String(record.get("appearance_hash", "")),
+		"jitter_x_cell": float(record.get("jitter_x_cell", 0.0)),
+		"jitter_y_cell": float(record.get("jitter_y_cell", 0.0)),
+		"offset_x_m": float(record.get("offset_x_m", 0.0)),
+		"offset_y_m": float(record.get("offset_y_m", 0.0)),
+		"cell_spacing_x_m": float(record.get("cell_spacing_x_m", 0.0)),
+		"cell_spacing_y_m": float(record.get("cell_spacing_y_m", 0.0)),
+		"canonical_world": Vector3(record.get("base_world", Vector3.ZERO)),
+		"visual_world": Vector3(record.get("visual_base_world", Vector3.ZERO)),
+		"visual_direction": Vector3(record.get("visual_direction", Vector3.UP)),
+	}
 
 
 func get_record_height(index: int) -> float:
@@ -267,6 +339,7 @@ func get_record_identity(index: int) -> Dictionary:
 		"development_individual_seed": int(record.get("development_individual_seed", -1)),
 		"orientation_yaw_deg": float(record.get("orientation_yaw_deg", 0.0)),
 		"individuality_hash": String(record.get("individuality_hash", "")),
+		"appearance_hash": String(record.get("appearance_hash", "")),
 		"render_description_hash": String(record.get("render_description_hash", "")),
 		"representation_hash": String(record.get("representation_hash", "")),
 		"materialization_hash": String(record.get("materialization_hash", "")),
@@ -308,6 +381,23 @@ func get_record_visual_basis(index: int) -> Basis:
 	return node.basis
 
 
+func get_grid_appearance_identity_hash() -> String:
+	var tokens := PackedStringArray([
+		GridAppearance.SCHEMA,
+		GridAppearance.VERSION,
+		str(source_generation),
+		source_ecology_hash,
+	])
+	for record in _records:
+		tokens.append("|".join(PackedStringArray([
+			String(record.get("record_id", "")),
+			str(int(record.get("cell_index", -1))),
+			String(record.get("source_descriptor_hash", "")),
+			String(record.get("appearance_hash", "")),
+		])))
+	return "\n".join(tokens).sha256_text()
+
+
 func get_geometry_identity_hash() -> String:
 	var tokens := PackedStringArray([SCHEMA, VERSION, str(source_generation), source_ecology_hash])
 	for record in _records:
@@ -345,8 +435,16 @@ func get_contract() -> Dictionary:
 		"deterministic_individuality": true,
 		"seed_bound_record_count": _records.size(),
 		"individuality_identity_hash": get_individuality_identity_hash(),
+		"grid_appearance_boundary": true,
+		"grid_size": _grid_size,
+		"visual_offset_is_canonical": false,
+		"max_jitter_x_cell": GridAppearance.X_HALF_EXTENT_CELL,
+		"max_jitter_y_cell": GridAppearance.Y_HALF_EXTENT_CELL,
+		"grid_appearance_identity_hash": get_grid_appearance_identity_hash(),
 		"geometry_identity_hash": get_geometry_identity_hash(),
 		"placement_api": "ProceduralEarthWorld.get_surface_point(direction)",
+		"canonical_position_api": "cell direction -> get_surface_point(direction)",
+		"visual_position_api": "VIS2 stable jitter -> tangent offset -> get_surface_point(scattered_direction)",
 		"render_origin_rebuilds_geometry": false,
 	}
 
@@ -447,6 +545,8 @@ func _create_visual(index: int, materialization: Dictionary):
 	root.set_meta("development_individual_seed", int(record.get("development_individual_seed", -1)))
 	root.set_meta("orientation_yaw_deg", float(record.get("orientation_yaw_deg", 0.0)))
 	root.set_meta("individuality_hash", String(record.get("individuality_hash", "")))
+	root.set_meta("appearance_hash", String(record.get("appearance_hash", "")))
+	root.set_meta("visual_offset_is_canonical", false)
 	root.set_meta("render_description_hash", String(materialization.get("render_description_hash", "")))
 	root.set_meta("representation_hash", String(materialization.get("representation_hash", "")))
 	root.set_meta("materialization_hash", String(materialization.get("materialization_hash", "")))
@@ -545,6 +645,21 @@ func _tier_counts() -> Dictionary:
 		if counts.has(tier):
 			counts[tier] = int(counts[tier]) + 1
 	return counts
+
+
+func _cell_spacing_m(cell_index: int) -> Vector2:
+	if earth_world == null or _grid_size <= 1 or cell_index < 0 or cell_index >= _directions.size():
+		return Vector2.ZERO
+	var row := cell_index / _grid_size
+	var col := cell_index % _grid_size
+	var x_neighbor := cell_index + 1 if col < _grid_size - 1 else cell_index - 1
+	var y_neighbor := cell_index + _grid_size if row < _grid_size - 1 else cell_index - _grid_size
+	if x_neighbor < 0 or y_neighbor < 0 or x_neighbor >= _directions.size() or y_neighbor >= _directions.size():
+		return Vector2.ZERO
+	var center: Vector3 = earth_world.get_surface_point(_directions[cell_index])
+	var x_world: Vector3 = earth_world.get_surface_point(_directions[x_neighbor])
+	var y_world: Vector3 = earth_world.get_surface_point(_directions[y_neighbor])
+	return Vector2(center.distance_to(x_world), center.distance_to(y_world))
 
 
 func _by_id(values: Array) -> Dictionary:
