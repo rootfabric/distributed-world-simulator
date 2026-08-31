@@ -207,6 +207,7 @@ static func validate(value: Dictionary) -> bool:
 		if bool(value.get(key, true)):
 			return false
 	var metrics: Dictionary = value["metrics"]
+	var varying_count := 0
 	for spec in METRICS:
 		var name := String(spec["name"])
 		if not metrics.get(name) is Dictionary:
@@ -215,6 +216,59 @@ static func validate(value: Dictionary) -> bool:
 		for key in ["mean", "variance", "stddev", "min", "max", "range", "relative_spread", "bin_width"]:
 			if not is_finite(float(stat.get(key, NAN))):
 				return false
+		if not is_equal_approx(float(stat.get("bin_width", 0.0)), float(spec["bin"])):
+			return false
+		if bool(stat.get("varying", false)):
+			varying_count += 1
+	if varying_count != int(value.get("varying_field_count", -1)):
+		return false
+
+	var histogram: Array = value["cluster_histogram"]
+	if histogram.size() != int(value.get("cluster_count", -1)):
+		return false
+	var histogram_total := 0
+	var previous_signature := ""
+	for item_value in histogram:
+		if not item_value is Dictionary:
+			return false
+		var item: Dictionary = item_value
+		var signature := String(item.get("signature", ""))
+		var count := int(item.get("count", 0))
+		if signature.length() != 64 or count <= 0:
+			return false
+		if not previous_signature.is_empty() and signature <= previous_signature:
+			return false
+		previous_signature = signature
+		histogram_total += count
+	if histogram_total != int(value.get("population", -1)):
+		return false
+
+	for count_key in ["unique_descriptor_count", "unique_growth_graph_count", "unique_render_description_count"]:
+		var count := int(value.get(count_key, 0))
+		if count < 1 or count > int(value.get("population", 0)):
+			return false
+
+	var thresholds_value = value.get("thresholds")
+	if not thresholds_value is Dictionary:
+		return false
+	var thresholds: Dictionary = thresholds_value
+	if int(thresholds.get("min_population", -1)) != MIN_POPULATION:
+		return false
+	if int(thresholds.get("min_cluster_count", -1)) != MIN_CLUSTER_COUNT:
+		return false
+	if int(thresholds.get("min_varying_fields", -1)) != MIN_VARYING_FIELDS:
+		return false
+	if not is_equal_approx(float(thresholds.get("min_relative_spread", NAN)), MIN_RELATIVE_SPREAD):
+		return false
+
+	var sufficient := (
+		int(value.get("population", 0)) >= MIN_POPULATION
+		and int(value.get("cluster_count", 0)) >= MIN_CLUSTER_COUNT
+		and varying_count >= MIN_VARYING_FIELDS
+	)
+	var expected_status := LIVE_STATUS_SUFFICIENT if sufficient else LIVE_STATUS_INSUFFICIENT
+	if String(value.get("live_diversity_status", "")) != expected_status:
+		return false
 	return String(value.get("evidence_hash", "")) == compute_hash(value)
 
 
