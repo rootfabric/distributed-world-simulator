@@ -347,3 +347,41 @@ Until then:
 PERF2.1 = IMPLEMENTATION CANDIDATE
 PERF2.2 = BLOCKED
 ```
+
+
+## Repair note — JSON round-trip numeric normalization
+
+Independent Ubuntu verification of exact candidate
+`2ec97b13101edf0f27bd5fe5b62700893dd25ffd` proved all 12 samples,
+9/9 cross-configuration canonical pairs and profiling ratios, but found the artifact
+round-trip validator was not tolerant of Godot JSON numeric coercion.
+
+Godot `JSON.parse_string` materialized integral JSON numbers as floating-point Variant
+values in parsed config/context/sample structures. Strict Variant comparisons therefore
+rejected semantically identical evidence after write → parse.
+
+Repair policy:
+
+```text
+7      accepted as integer
+7.0    accepted as integer-equivalent JSON value
+7.5    rejected
+"7"    rejected
+```
+
+PERF2.0 remains frozen. PERF2.1 now creates a contract-compatible normalized validation
+view for integral workload/count/memory/telemetry fields while leaving the raw JSON
+artifact and measured values unchanged.
+
+The report hash uses the same normalized contract view so in-memory and parsed artifacts
+produce identical evidence identity.
+
+The accepted STREAM1 regression emits two canonical markers:
+
+```text
+STREAM1 exact generation comparisons: 108
+ECO.EVO7 STREAM1 Bounded Generation Stream: PASS (195 assertions)
+```
+
+Verification must check these two markers independently; no combined
+`PASS (195 assertions, 108 comparisons)` line is required.
