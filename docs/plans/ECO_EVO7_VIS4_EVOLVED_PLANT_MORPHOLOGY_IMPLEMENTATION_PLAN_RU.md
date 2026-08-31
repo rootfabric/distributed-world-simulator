@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS4 — Evolved Plant Morphology / PLAY0.MORPH
 
-Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.6 CLOSED / VIS4.7 IMPLEMENTED CANDIDATE  
+Статус: ACTIVE PARALLEL DEVELOPMENT / VIS4.7 CLOSED / NEXT: VIS4.8 DIVERSITY EVIDENCE  
 Дата: 2026-08-30  
 Ветка: feature/eco-evo7-vis4-evolved-plant-morphology-r1  
 Exact base: PAR3 R3.2 — 8ca0fcc65752c3b748c793deb3b4a9f9ca4f17bf  
@@ -1338,10 +1338,161 @@ Durable candidate:
 docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_7_MORPHOLOGY_INSPECTOR_CANDIDATE_R1_RU.md
 ~~~
 
+Ubuntu exact-source double-Godot verification completed GREEN on the frozen subject.
+
+~~~text
+HEAD:
+7b3479156a6920083f6cc2c420fcb21834e6dc5e
+
+TREE:
+8fedc29f3837f632d5c264080e8d5897beae1861
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+VIS4.6 predecessor:
+PASS / 796 assertions
+
+VIS4.7 focused:
+PASS / 106 assertions
+
+canonical runner:
+RC=0
+
+final marker:
+PRESENT
+
+local reconstructed TREE:
+exact
+
+tracked reconstructed tree:
+clean
+~~~
+
+Verification provenance:
+
+~~~text
+GitHub source-export workflow
+ -> independently asserted canonical HEAD/TREE
+ -> immutable git archive
+ -> local git write-tree reproduced exact canonical TREE
+ -> canonical VIS4.7 runner on exact double Godot
+~~~
+
 Current qualification:
 
 ~~~text
-VIS4.7 IMPLEMENTED CANDIDATE
-EXACT UBUNTU DOUBLE-GODOT VERIFICATION REQUIRED
-NOT CLOSED YET
+VIS4.7 UBUNTU EXACT-SOURCE GREEN
+VIS4.7 CLOSED
+NEXT: VIS4.8 DIVERSITY EVIDENCE
 ~~~
+
+
+## VIS4.7 durable closure — 2026-08-31
+
+Canonical executable subject:
+
+~~~text
+HEAD:
+7b3479156a6920083f6cc2c420fcb21834e6dc5e
+
+TREE:
+8fedc29f3837f632d5c264080e8d5897beae1861
+~~~
+
+Because the local Ubuntu execution environment had no DWS checkout and no
+outbound git access, the frozen source was delivered through a temporary
+validation-only GitHub export workflow.
+
+The provenance chain remained exact:
+
+~~~text
+GitHub checkout exact HEAD
+ -> assert exact HEAD/TREE
+ -> git archive exact subject
+ -> local archive extraction
+ -> git write-tree
+ -> exact canonical TREE reproduced
+ -> RUN_ECO_EVO7_VIS4_7_TESTS.sh
+~~~
+
+Validation source-export run:
+
+~~~text
+GitHub Actions run:
+33367245920
+
+result:
+SUCCESS
+
+temporary PR:
+#385
+CLOSED WITHOUT MERGE
+~~~
+
+Local verification:
+
+~~~text
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+Godot SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+full canonical chain:
+PASS
+
+VIS4.6:
+PASS / 796 assertions
+
+VIS4.7:
+PASS / 106 assertions
+
+final marker:
+PRESENT
+
+runner RC:
+0
+
+tracked reconstructed tree:
+clean
+~~~
+
+The verification proved the F6 Morphology Inspector is read-only, source-bound,
+selects the exact nearest currently materialized PH5 plant, exposes the required
+morphology/resource/source seals, rejects tampered bindings and preserves
+ecology, geometry, individuality and grid-appearance identities.
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-08-31_ECO_EVO7_VIS4_7_MORPHOLOGY_INSPECTOR_UBUNTU_EXACT_SOURCE_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+VIS4.7 is CLOSED.
+
+The next checkpoint is now unblocked:
+
+~~~text
+VIS4.8 — Diversity Evidence
+~~~
+
+VIS4.8 must keep two independent gates:
+
+~~~text
+1. RENDERER FIDELITY
+controlled fixtures prove that source morphology differences render differently
+
+2. LIVE DIVERSITY
+real population diversity is measured quantitatively
+~~~
+
+If renderer fidelity is GREEN but live population has collapsed morphology,
+the result must be reported honestly as:
+
+~~~text
+RENDERER_PASS
+LIVE_DIVERSITY_INSUFFICIENT
+~~~
+
+It must not be hidden by random TREE/BUSH/GRASS decoration.
