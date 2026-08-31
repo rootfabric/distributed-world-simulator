@@ -574,7 +574,12 @@ func _operation_contract_valid(sample: Dictionary) -> bool:
 	var chunks := int(stream.get("chunks_processed", 0))
 	if chunks <= 0:
 		return false
-	if int(operations.get("generation_boundary_sorts", -1)) != MEASURED_GENERATIONS * 3:
+	var expected_boundary_sorts := (
+		MEASURED_GENERATIONS
+		if pipeline_mode == StreamExecutor.PIPELINE_OPTIMIZED
+		else MEASURED_GENERATIONS * 3
+	)
+	if int(operations.get("generation_boundary_sorts", -1)) != expected_boundary_sorts:
 		return false
 
 	if pipeline_mode == StreamExecutor.PIPELINE_LEGACY:
