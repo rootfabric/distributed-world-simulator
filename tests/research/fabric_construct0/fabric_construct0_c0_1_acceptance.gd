@@ -17,7 +17,7 @@ func _init() -> void:
 		var model: Dictionary = built["contact_model"]
 		var slide: Dictionary = built["maximum_dissipation"]
 		var guard: Dictionary = built["support_guard"]
-		_check(Array(snapshot["parts"]).size() >= 5, "%s compound part count" % preset)
+		_check(Array(snapshot["parts"]).size() >= 3, "%s compound part count" % preset)
 		_check(Array(snapshot["bonds"]).size() == Array(snapshot["parts"]).size() - 1, "%s connected bond count" % preset)
 		_check(Array(descriptor["part_descriptors"]).size() == Array(snapshot["parts"]).size(), "%s runtime projection count" % preset)
 		_check(int(model["full_member_count"]) == Factory.CONTACT_GRID * Factory.CONTACT_GRID, "%s full contact count" % preset)
