@@ -129,7 +129,8 @@ static func unsupported_non_coplanar_probe(preset: String = "TABLE") -> Dictiona
 	var snapshot: Dictionary = built["snapshot"]
 	var spec: Dictionary = built["spec"]
 	var points: Array = Array(built["contact_points"]).duplicate(true)
-	var middle_index := int(points.size() / 2)\n\tvar changed: Dictionary = Dictionary(points[middle_index]).duplicate(true)
+	var middle_index := int(points.size() / 2)
+	var changed: Dictionary = Dictionary(points[middle_index]).duplicate(true)
 	var p: Vector3 = changed["position"]
 	changed["position"] = Vector3(p.x, p.y + 0.01, p.z)
 	points[middle_index] = changed
