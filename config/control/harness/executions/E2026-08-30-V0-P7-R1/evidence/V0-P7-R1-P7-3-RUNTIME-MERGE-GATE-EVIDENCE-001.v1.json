@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.p7_3_runtime_merge_gate_evidence.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "risk_class": "CRITICAL",
+  "runtime_pr": 373,
+  "exact_runtime_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
+  "exact_runtime_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
+  "current_main": "718a9767da8b2bda986e1cadee3f7bc6d729f0d4",
+  "runtime_project_control": "33360078991 = SUCCESS",
+  "reviewer": {
+    "verdict": "PASS",
+    "commit": "b9c638b1721edfe24537e264bd562e96ca224116",
+    "pr": 380,
+    "project_control": "33365405527 = SUCCESS"
+  },
+  "verifier": {
+    "verdict": "VERIFIED",
+    "commit": "2fadad48635c04e21b4de8acff4a13c8c5e27b88",
+    "pr": 383,
+    "project_control": "33366918481 = SUCCESS"
+  },
+  "exact_verifier_matrix": {
+    "p7_3": "116/116",
+    "p7_2_bubble": "53/53",
+    "p7_2_seam": "50/50",
+    "p7_1_authority": "83/83",
+    "p7_1_tool_to_mw4": "30/30",
+    "p5": "36/36",
+    "p3": "79/79",
+    "mw4": 187,
+    "mw5": 142,
+    "mw6": 130,
+    "canonical_runner_exit": 0,
+    "fatal_logs": "11/11 clean",
+    "tracked_clean": true,
+    "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "current_main_drift_check": {
+    "base_main": "8ae419bb4c726a3c616e84dd11047d9b91a8cb7d",
+    "current_main": "718a9767da8b2bda986e1cadee3f7bc6d729f0d4",
+    "changed_files": [
+      "tests/harness/test_project_control_architecture_compatibility.py",
+      "tests/harness/test_project_control_proposed_r3_ownership_projection.py"
+    ],
+    "direct_overlap_with_p7_3_six_file_delta": [],
+    "runtime_pr_mergeable": true,
+    "runtime_subject_rebased": false,
+    "reviewer_verifier_freshness_preserved": true
+  },
+  "conclusion": "All technical gates for the exact P7.3 runtime subject are complete. Current-main movement is limited to unrelated Project Control harness tests and does not overlap the P7.3 six-file runtime/test delta. The remaining required gate is explicit Human RUNTIME_FEATURE_MERGE approval."
+}
