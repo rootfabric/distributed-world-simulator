@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0007",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 7,
+  "event_type": "HUMAN_APPROVAL_RECORDED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-31T07:17:00Z",
+  "actor": "HUMAN",
+  "branch": "control/v0-p7-3-runtime-merge-human-gate-r1",
+  "head_sha": "ec65d0de60fcaaefc22d6c3ec2db7e2222af0ec8",
+  "predicate": "RUNTIME_FEATURE_MERGE_HUMAN_APPROVAL",
+  "command": "RUNTIME_FEATURE_MERGE APPROVED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001.v1.json"
+  ],
+  "summary": "Human explicitly approved RUNTIME_FEATURE_MERGE for exact P7.3 runtime PR #373 subject b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00. Approval does not accept whole P7.",
+  "blocker": ""
+}

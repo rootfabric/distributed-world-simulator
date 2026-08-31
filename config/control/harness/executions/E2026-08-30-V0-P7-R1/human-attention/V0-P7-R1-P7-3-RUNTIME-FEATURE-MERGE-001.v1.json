@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.3_MATERIAL_BATCH_TO_ITEM_GRAPH",
+  "risk_class": "CRITICAL",
+  "reason": "P7.3 exact runtime candidate has completed fresh independent Reviewer PASS and fresh independent Verifier VERIFIED. Policy requires explicit Human approval before runtime feature merge.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for runtime PR #373 at exact HEAD b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for PR #373 at the exact reviewed/verified HEAD/TREE.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE and leave PR #373 unmerged."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for PR #373 at the exact reviewed/verified HEAD/TREE.",
+  "recommendation_reason": "Reviewer R1 PASS, Verifier R1 VERIFIED, full exact-double canonical gate GREEN, all 11 logs clean, tracked source clean, runtime/reviewer/verifier Project Control SUCCESS, and current-main drift has no direct overlap with the six P7.3 files.",
+  "blast_radius": [
+    "Adds the explicit MatterMaterialBatch -> existing canonical Item Graph conversion boundary and its acceptance gates.",
+    "Keeps Matter batch provenance, canonical Item Graph ownership, replay ledger, persistence, network, and authority foundations unchanged.",
+    "Does not accept whole P7; P7.4-P7.7 remain open.",
+    "Does not authorize a second resource store, receipt ledger, or hidden mass truth."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-RUNTIME-MERGE-GATE-EVIDENCE-001.v1.json"
+  ],
+  "status": "RESOLVED",
+  "resolution": "Human explicitly approved RUNTIME_FEATURE_MERGE for runtime PR #373 at exact independently reviewed and VERIFIED HEAD b4b11a69ef921c59b28208685cf26509c3b81907 / TREE 99dea175fda7bacce936b15d30d9e25fa9e4af00 on 2026-08-31. Approval authorizes only this exact P7.3 runtime integration; whole P7 remains IN_PROGRESS.",
+  "resolved_at_utc": "2026-08-31T07:17:00Z"
+}
