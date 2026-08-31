@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.p7_4_work_order_amendment.v1",
+  "amendment_id": "V0-P7-R1-P7-4-WORK-ORDER-AMENDMENT-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "stage": "P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "trigger": "P7.4 exact-double three-process restart test found SAME_REVISION_AUTHORITATIVE_MUTATION after a fresh P7.3 Item Graph delivery because the enclosing NetworkedGameplayService revision did not advance.",
+  "authorized_path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+  "authorized_change": [
+    "Delegate preflight_canonical_server_output to the existing canonical Item Graph.",
+    "Delegate apply_canonical_server_output to the existing canonical Item Graph.",
+    "Call existing NetworkedGameplayService _advance() exactly once only when apply_server_output succeeds and is not replay."
+  ],
+  "forbidden_change": [
+    "No canonical Item Graph implementation change.",
+    "No M6 recovery/repository change.",
+    "No persistence schema/store change.",
+    "No authority or network foundation change.",
+    "No P7-private state or receipt ledger.",
+    "Replay must not advance aggregate revision."
+  ],
+  "validation_required": [
+    "Fresh P7.4 delivery after restart advances aggregate gameplay revision exactly once.",
+    "Second restart Item Graph replay leaves aggregate gameplay revision unchanged.",
+    "Existing P3 aggregate resource recovery remains PASS.",
+    "Existing M6 dedicated recovery contracts/processes remain PASS."
+  ],
+  "new_owner": false,
+  "foundation_change": false,
+  "human_foundation_gate_required": false
+}
