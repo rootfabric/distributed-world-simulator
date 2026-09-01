@@ -4,6 +4,7 @@ const Utils = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_
 const CompilerA = preload("res://scripts/research/fabric_bake0/dynamic_full_model_compiler_v1.gd")
 const FullModel = preload("res://scripts/research/fabric_bake0/dynamic_full_model_descriptor_v1.gd")
 const FullSolver = preload("res://scripts/research/fabric_bake0/dynamic_full_reference_solver_v1.gd")
+const FullValidation = preload("res://scripts/research/fabric_bake0/dynamic_rom_full_validation_reference_v1.gd")
 const CompilerB = preload("res://scripts/research/fabric_bake0/dynamic_rom_compiler_v1.gd")
 const Descriptor = preload("res://scripts/research/fabric_bake0/dynamic_rom_descriptor_v1.gd")
 const Binding = preload("res://scripts/research/fabric_bake0/dynamic_rom_artifact_binding_v1.gd")
@@ -27,7 +28,7 @@ func _init() -> void:
 	var descriptor: Dictionary = reduction["descriptor"]
 
 	_test_descriptor_contract(full_model, reduction)
-	_test_order_determinism()
+	_test_order_determinism(descriptor)
 	_test_fail_closed(full_model, descriptor)
 	_test_dynamic_response(full_model, descriptor)
 	_test_rom_passivity_after_drive(descriptor)
@@ -95,21 +96,20 @@ func _test_descriptor_contract(full_model: Dictionary, reduction: Dictionary) ->
 	_check(String(binding["reduced_state_schema_hash"]) == String(descriptor["reduced_state_schema_hash"]), "artifact binding reduced schema exact")
 	_check(binding["required_before_execution"] == Binding.REQUIRED_BEFORE_EXECUTION, "B0.4-C/D execution prerequisites frozen")
 
-func _test_order_determinism() -> void:
+func _test_order_determinism(baseline_descriptor: Dictionary) -> void:
 	var fixture := Fixture.build("ZERO")
-	var full_a := CompilerA.compile(fixture["request"])
-	var full_b := CompilerA.compile(Fixture.reversed_request(fixture))
-	_check(bool(full_a.get("success", false)) and bool(full_b.get("success", false)), "forward/reversed FULL compile")
-	if not bool(full_a.get("success", false)) or not bool(full_b.get("success", false)):
+	var full_reversed := CompilerA.compile(Fixture.reversed_request(fixture))
+	_check(bool(full_reversed.get("success", false)), "reversed FULL compile")
+	if not bool(full_reversed.get("success", false)):
 		return
-	var rom_a := CompilerB.compile(full_a["model"])
-	var rom_b := CompilerB.compile(full_b["model"])
-	_check(bool(rom_a.get("success", false)) and bool(rom_b.get("success", false)), "forward/reversed ROM compile")
-	if not bool(rom_a.get("success", false)) or not bool(rom_b.get("success", false)):
+	var rom_reversed := CompilerB.compile(full_reversed["model"])
+	_check(bool(rom_reversed.get("success", false)), "reversed ROM compile")
+	if not bool(rom_reversed.get("success", false)):
 		return
-	_check(String(rom_a["descriptor"]["descriptor_hash"]) == String(rom_b["descriptor"]["descriptor_hash"]), "presentation order does not change ROM identity")
-	_check(String(rom_a["descriptor"]["basis_hash"]) == String(rom_b["descriptor"]["basis_hash"]), "presentation order does not change basis")
-	_check(String(rom_a["artifact_binding"]["binding_hash"]) == String(rom_b["artifact_binding"]["binding_hash"]), "presentation order does not change artifact binding")
+	_check(String(baseline_descriptor["descriptor_hash"]) == String(rom_reversed["descriptor"]["descriptor_hash"]), "presentation order does not change ROM identity")
+	_check(String(baseline_descriptor["basis_hash"]) == String(rom_reversed["descriptor"]["basis_hash"]), "presentation order does not change basis")
+	var baseline_binding := Binding.create(baseline_descriptor)
+	_check(String(baseline_binding["binding_hash"]) == String(rom_reversed["artifact_binding"]["binding_hash"]), "presentation order does not change artifact binding")
 
 func _test_fail_closed(full_model: Dictionary, descriptor: Dictionary) -> void:
 	var target25 := CompilerB.compile(full_model, 25)
@@ -162,11 +162,11 @@ func _test_dynamic_response(full_model: Dictionary, descriptor: Dictionary) -> v
 	])
 
 func _compare_probe(full_model: Dictionary, descriptor: Dictionary, probe: String, steps: int) -> Dictionary:
-	var full_initial := FullSolver.initial_state(full_model)
+	var full_prepared := FullValidation.prepare(full_model, DT)
 	var rom_initial := RomRuntime.initial_state(descriptor)
-	if not bool(full_initial.get("success", false)) or not bool(rom_initial.get("success", false)):
+	if not bool(full_prepared.get("success", false)) or not bool(rom_initial.get("success", false)):
 		return {"success": false}
-	var full_state: Dictionary = full_initial["state"]
+	var full_values: Array = FullValidation.zero_state(full_prepared)
 	var rom_state: Dictionary = rom_initial["state"]
 	var prepared := RomRuntime.prepare_step(descriptor, DT)
 	if not bool(prepared.get("success", false)):
@@ -177,11 +177,11 @@ func _compare_probe(full_model: Dictionary, descriptor: Dictionary, probe: Strin
 	var max_rom_unaccounted := 0.0
 	for step_index in range(steps):
 		var flows := _probe_flows(descriptor["port_ids"], probe, step_index, steps)
-		var full_step := FullSolver.step(full_model, full_state, flows, DT)
+		var full_step := FullValidation.step(full_prepared, full_values, flows)
 		var rom_step := RomRuntime.step_prepared(descriptor, rom_state, flows, DT, prepared)
 		if not bool(full_step.get("success", false)) or not bool(rom_step.get("success", false)):
 			return {"success": false}
-		full_state = full_step["state"]
+		full_values = full_step["values"]
 		rom_state = rom_step["state"]
 		max_rom_unaccounted = maxf(max_rom_unaccounted, float(rom_step["energy"]["unaccounted_energy_creation"]))
 		for port_index in range(descriptor["port_ids"].size()):
