@@ -80,14 +80,15 @@ func _run() -> void:
 		_finish()
 		return
 
-	var bubble = setup["bubble"]
-	var authority = setup["authority"]
-	var interest_server = setup["interest_server"]
-	var replication = setup["replication_adapter"]
-	var client_a = setup["client_a"]
-	var client_b = setup["client_b"]
-	var request: Dictionary = setup["request"]
-	var center_cell: Dictionary = setup["center_cell"]
+	var context: Dictionary = Dictionary(setup.get("details", {}))
+	var bubble = context["bubble"]
+	var authority = context["authority"]
+	var interest_server = context["interest_server"]
+	var replication = context["replication_adapter"]
+	var client_a = context["client_a"]
+	var client_b = context["client_b"]
+	var request: Dictionary = context["request"]
+	var center_cell: Dictionary = context["center_cell"]
 
 	# Real two-client MW7 subscriptions over the exact same lunar region.
 	_assert_success(
@@ -137,7 +138,7 @@ func _run() -> void:
 	# Client A performs one real canonical Matter mutation through existing MW6.
 	var command: Dictionary = client_a.create_mutation_command(request, MESSAGE_ID)
 	_assert_true(not command.is_empty(), "client A builds canonical MW6 Matter command")
-	var transported: Dictionary = setup["command_transport"].send(command)
+	var transported: Dictionary = context["command_transport"].send(command)
 	_assert_success(transported, "MW6 loopback transport accepts client A dig")
 	var result_envelope: Dictionary = transported.get("result", {})
 	var accepted_result: Dictionary = client_a.accept_command_result(result_envelope)
