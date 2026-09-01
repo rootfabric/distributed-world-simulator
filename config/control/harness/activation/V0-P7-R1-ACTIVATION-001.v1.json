@@ -153,7 +153,8 @@
       "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
       "project_control_run": 33508057451,
       "drive": "PASS_EXIT_0",
-      "close": "PASS_EXIT_8_MISSION_STILL_OPEN"
+      "close": "PASS_EXIT_8_MISSION_STILL_OPEN",
+      "resolution": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json"
     },
     "runtime_rules": [
       "NO_SECOND_NETWORK_PROTOCOL",
