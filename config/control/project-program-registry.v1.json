@@ -296,7 +296,7 @@
         "branch": "feature/v0-p7-bounded-terrain-mutation",
         "head_at_refresh_input": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
         "work_order_id": "V0-P7-R1-WO-001",
-        "runtime_mutation_present": false,
+        "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
         "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
         "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
