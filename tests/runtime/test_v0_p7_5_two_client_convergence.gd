@@ -599,7 +599,7 @@ func _away_cell(grid_profile: Dictionary, center_cell: Dictionary) -> Dictionary
 	var axis_count := 1 << level
 	if axis_count < 2:
 		return {}
-	var x := (int(indices[0]) + maxi(1, axis_count / 2)) % axis_count
+	var x := (int(indices[0]) + maxi(1, axis_count >> 1)) % axis_count
 	return MatterInterestRegionScript.cell_for_indices(
 		grid_profile,
 		level,
