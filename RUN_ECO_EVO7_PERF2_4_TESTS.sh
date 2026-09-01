@@ -30,19 +30,22 @@ if [[ "$CONTRACT_BLOB" != "$EXPECTED_CONTRACT_BLOB" ]]; then
   exit 4
 fi
 
-# Runtime optimization is allowed only in the three STREAM1 execution files
-# below. All accepted ecology/shadow truth and PERF2.0-2.3 measurement code
-# remain frozen.
+# Runtime optimization is allowed only in the STREAM1 execution/profiling
+# files below plus the shared pure recruitment kernel used by both oracle and
+# STREAM1. R5 adds only an optimized immutable EnvironmentSample cache seam;
+# recruitment formulas/hashes and all accepted ecology/shadow truth remain
+# frozen.
 ALLOWED_RUNTIME_1="scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd"
 ALLOWED_RUNTIME_2="scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd"
 ALLOWED_RUNTIME_3="scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd"
 ALLOWED_RUNTIME_4="scripts/ecology/perf/eco_evo7_perf24_runtime_optimization_profiler_v1.gd"
+ALLOWED_RUNTIME_5="scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd"
 
 RUNTIME_DIFF="$(git diff --name-only "$EXPECTED_BASE...$HEAD" -- scripts/ecology scripts/research/ecology)"
 if [[ -n "$RUNTIME_DIFF" ]]; then
   while IFS= read -r path; do
     case "$path" in
-      "$ALLOWED_RUNTIME_1"|"$ALLOWED_RUNTIME_2"|"$ALLOWED_RUNTIME_3"|"$ALLOWED_RUNTIME_4")
+      "$ALLOWED_RUNTIME_1"|"$ALLOWED_RUNTIME_2"|"$ALLOWED_RUNTIME_3"|"$ALLOWED_RUNTIME_4"|"$ALLOWED_RUNTIME_5")
         ;;
       *)
         echo "PERF2.4 UNAUTHORIZED RUNTIME DIFF: $path" >&2
@@ -52,7 +55,7 @@ if [[ -n "$RUNTIME_DIFF" ]]; then
   done <<< "$RUNTIME_DIFF"
 fi
 
-for required in "$ALLOWED_RUNTIME_1" "$ALLOWED_RUNTIME_2" "$ALLOWED_RUNTIME_3" "$ALLOWED_RUNTIME_4"; do
+for required in "$ALLOWED_RUNTIME_1" "$ALLOWED_RUNTIME_2" "$ALLOWED_RUNTIME_3" "$ALLOWED_RUNTIME_4" "$ALLOWED_RUNTIME_5"; do
   if ! git diff --name-only "$EXPECTED_BASE...$HEAD" -- "$required" | grep -Fxq "$required"; then
     echo "PERF2.4 EXPECTED IMPLEMENTATION DIFF MISSING: $required" >&2
     exit 6
