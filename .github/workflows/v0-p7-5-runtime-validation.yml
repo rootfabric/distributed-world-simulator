@@ -12,6 +12,47 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  export-exact-source:
+    name: Export exact P7.5 runtime checkout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout exact frozen runtime subject
+        uses: actions/checkout@v4
+        with:
+          ref: bd9395f075559b8eeeeb4bebbf915b488903adc4
+          fetch-depth: 0
+
+      - name: Verify exact runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD="$(git rev-parse HEAD)"
+          TREE="$(git rev-parse 'HEAD^{tree}')"
+          test "$HEAD" = "bd9395f075559b8eeeeb4bebbf915b488903adc4"
+          test "$TREE" = "407b3eae5f559e86e6ad924f45353a386c697999"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "P7_5_RUNTIME_HEAD=$HEAD"
+          echo "P7_5_RUNTIME_TREE=$TREE"
+
+      - name: Pack exact checkout with Git metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar             --exclude='./artifacts'             --exclude='./.godot'             -czf ../v0-p7-5-exact-runtime-bd9395f.tar.gz .
+          sha256sum ../v0-p7-5-exact-runtime-bd9395f.tar.gz             > ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+          cat ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+
+      - name: Upload exact source checkout
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p7-5-exact-runtime-bd9395f
+          path: |
+            ../v0-p7-5-exact-runtime-bd9395f.tar.gz
+            ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+          if-no-files-found: error
+
   p7-5-runtime:
     name: P7.5 exact runtime gate
     runs-on: [self-hosted, Windows, X64]
