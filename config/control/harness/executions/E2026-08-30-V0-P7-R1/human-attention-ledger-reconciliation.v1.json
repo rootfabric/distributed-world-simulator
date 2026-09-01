@@ -11,7 +11,8 @@
     "quarantine_exact_paths_only": true,
     "git_blob_pin_required": true,
     "quarantined_file_must_remain_present": true,
-    "quarantined_file_must_have_single_add_commit": true,
+    "full_git_history_pin_required": true,
+    "add_commit_must_be_oldest_pinned_history_commit": true,
     "wildcard_paths_forbidden": true,
     "current_human_attention_schema_unchanged": true,
     "only_resolved_items_may_be_quarantined": true,
@@ -21,17 +22,27 @@
     {
       "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001.v1.json",
       "git_blob_sha": "0a73767b2a9b5ffa20b4f0a93e41af7ee9321c27",
-      "reason": "RESOLVED_STAGE_LEVEL_SUBSTEP_CHECKPOINT_IDENTITY"
+      "reason": "RESOLVED_STAGE_LEVEL_SUBSTEP_CHECKPOINT_IDENTITY",
+      "git_history_commits": [
+        "a82e9ee568f9ad9d11d4de2f93192e066b38d2b4"
+      ]
     },
     {
       "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001.v1.json",
       "git_blob_sha": "3d613409166b4f7f874014d67db4daaa254c77dc",
-      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD"
+      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD",
+      "git_history_commits": [
+        "ec65d0de60fcaaefc22d6c3ec2db7e2222af0ec8",
+        "0be9e002ec8ae09b4397b1f74cae6a6151ae1fe5"
+      ]
     },
     {
       "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001.v1.json",
       "git_blob_sha": "d026a25b4ca4a0245cd225719e2abd7269f0e43f",
-      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD"
+      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD",
+      "git_history_commits": [
+        "c67720371a3701fbdd301e58740d3f31eced9b19"
+      ]
     }
   ],
   "status": "ACTIVE_RECONCILIATION"
