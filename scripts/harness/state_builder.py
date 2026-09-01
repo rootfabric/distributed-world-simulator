@@ -24,6 +24,14 @@ _EVIDENCE_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_ev
 _EVIDENCE_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_MISTYPED_EVIDENCE_MAPS"
 _EVIDENCE_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVIDENCE"
 
+_REVIEW_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_review_ledger_reconciliation.v1"
+_REVIEW_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_LEGACY_REVIEW_FORMATS"
+_REVIEW_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_REVIEWS"
+
+_HUMAN_ATTENTION_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_human_attention_ledger_reconciliation.v1"
+_HUMAN_ATTENTION_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_RESOLVED_LEGACY_HUMAN_ATTENTION"
+_HUMAN_ATTENTION_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_HUMAN_ATTENTION"
+
 
 def _git_head(root: Path) -> str:
     output = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=False)
@@ -362,6 +370,93 @@ def _validate_repair_map(
     return latest
 
 
+def _select_authoritative_review_paths(
+    root: Path,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+) -> list[Path]:
+    """Return current-contract review paths after exact-pinned legacy quarantine."""
+
+    review_dir = execution_dir / "reviews"
+    raw_paths = _json_files(review_dir)
+    manifest_path = execution_dir / "review-ledger-reconciliation.v1.json"
+    if not manifest_path.exists():
+        return raw_paths
+
+    reconciliation = read_json(manifest_path)
+    if reconciliation.get("schema") != _REVIEW_LEDGER_RECONCILIATION_SCHEMA:
+        raise ContractValidationError("REVIEW_RECONCILIATION_SCHEMA_INVALID")
+    if reconciliation.get("version") != 1:
+        raise ContractValidationError("REVIEW_RECONCILIATION_VERSION_INVALID")
+    if reconciliation.get("project_epoch") != work_order["project_epoch"]:
+        raise ContractValidationError("REVIEW_RECONCILIATION_EPOCH_MISMATCH")
+    if reconciliation.get("work_order_id") != work_order["work_order_id"]:
+        raise ContractValidationError("REVIEW_RECONCILIATION_WORK_ORDER_MISMATCH")
+    if reconciliation.get("authority") != _REVIEW_LEDGER_RECONCILIATION_AUTHORITY:
+        raise ContractValidationError("REVIEW_RECONCILIATION_AUTHORITY_INVALID")
+    if reconciliation.get("mode") != _REVIEW_LEDGER_RECONCILIATION_MODE:
+        raise ContractValidationError("REVIEW_RECONCILIATION_MODE_INVALID")
+
+    required_constraints = {
+        "quarantine_exact_paths_only": True,
+        "git_blob_pin_required": True,
+        "quarantined_file_must_remain_present": True,
+        "quarantined_file_must_have_single_add_commit": True,
+        "wildcard_paths_forbidden": True,
+        "current_review_contract_unchanged": True,
+        "future_unlisted_reviews_are_authoritative": True,
+    }
+    if reconciliation.get("constraints") != required_constraints:
+        raise ContractValidationError("REVIEW_RECONCILIATION_CONSTRAINTS_INVALID")
+
+    records = reconciliation.get("quarantined_reviews")
+    if not isinstance(records, list) or not records:
+        raise ContractValidationError("REVIEW_RECONCILIATION_QUARANTINE_EMPTY")
+
+    raw_by_resolved = {path.resolve(): path for path in raw_paths}
+    quarantined: set[Path] = set()
+    for item in records:
+        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "reason"}:
+            raise ContractValidationError("REVIEW_RECONCILIATION_RECORD_INVALID")
+        relative = item.get("path")
+        blob_pin = item.get("git_blob_sha")
+        reason = item.get("reason")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or any(marker in relative for marker in ("*", "?", "["))
+            or not isinstance(blob_pin, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", blob_pin)
+            or not isinstance(reason, str)
+            or not reason
+        ):
+            raise ContractValidationError("REVIEW_RECONCILIATION_RECORD_INVALID")
+
+        candidate = (root / relative).resolve()
+        if candidate.parent != review_dir.resolve() or candidate not in raw_by_resolved:
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_PATH_INVALID:{relative}")
+        if candidate in quarantined:
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_PATH_DUPLICATE:{relative}")
+
+        code, observed_blob = _git(root, "rev-parse", f"HEAD:{relative}")
+        if code != 0 or observed_blob != blob_pin:
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_BLOB_MISMATCH:{relative}")
+        code, history = _git(root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
+        code, add_commit = _git(root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        if code != 0 or add_commit != commits[0]:
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
+
+        value = read_json(candidate)
+        if value.get("schema") != "distributed_world_simulator.harness_review_result.v1":
+            raise ContractValidationError(f"REVIEW_RECONCILIATION_SCHEMA_MISUSE_NOT_PRESENT:{relative}")
+        quarantined.add(candidate)
+
+    return [path for path in raw_paths if path.resolve() not in quarantined]
+
+
 def _load_reviews(
     root: Path,
     execution_dir: Path,
@@ -385,7 +480,7 @@ def _load_reviews(
         "evidence_gaps",
         "risk_assessment",
     }
-    for path in _json_files(execution_dir / "reviews"):
+    for path in _select_authoritative_review_paths(root, execution_dir, work_order):
         value = read_json(path)
         if value.get("schema") != "distributed_world_simulator.harness_review_result.v1" or required - value.keys():
             raise ContractValidationError(f"REVIEW_RESULT_INVALID:{path.name}")
@@ -543,6 +638,98 @@ def _select_authoritative_evidence_paths(
     return [path for path in raw_paths if path.resolve() not in quarantined_paths]
 
 
+def _select_authoritative_human_attention_paths(
+    bundle: ContractBundle,
+    execution_dir: Path,
+    work_order_id: str,
+) -> list[Path]:
+    """Return active-attention candidates after exact-pinned resolved legacy quarantine."""
+
+    attention_dir = execution_dir / "human-attention"
+    raw_paths = _json_files(attention_dir)
+    manifest_path = execution_dir / "human-attention-ledger-reconciliation.v1.json"
+    if not manifest_path.exists():
+        return raw_paths
+
+    reconciliation = read_json(manifest_path)
+    if reconciliation.get("schema") != _HUMAN_ATTENTION_LEDGER_RECONCILIATION_SCHEMA:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_SCHEMA_INVALID")
+    if reconciliation.get("version") != 1:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_VERSION_INVALID")
+    if reconciliation.get("project_epoch") != execution_dir.name:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_EPOCH_MISMATCH")
+    if reconciliation.get("work_order_id") != work_order_id:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_WORK_ORDER_MISMATCH")
+    if reconciliation.get("authority") != _HUMAN_ATTENTION_LEDGER_RECONCILIATION_AUTHORITY:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_AUTHORITY_INVALID")
+    if reconciliation.get("mode") != _HUMAN_ATTENTION_LEDGER_RECONCILIATION_MODE:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_MODE_INVALID")
+
+    required_constraints = {
+        "quarantine_exact_paths_only": True,
+        "git_blob_pin_required": True,
+        "quarantined_file_must_remain_present": True,
+        "quarantined_file_must_have_single_add_commit": True,
+        "wildcard_paths_forbidden": True,
+        "current_human_attention_schema_unchanged": True,
+        "only_resolved_items_may_be_quarantined": True,
+        "future_unlisted_attention_is_authoritative": True,
+    }
+    if reconciliation.get("constraints") != required_constraints:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_CONSTRAINTS_INVALID")
+
+    records = reconciliation.get("quarantined_items")
+    if not isinstance(records, list) or not records:
+        raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_QUARANTINE_EMPTY")
+
+    raw_by_resolved = {path.resolve(): path for path in raw_paths}
+    quarantined: set[Path] = set()
+    for item in records:
+        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "reason"}:
+            raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_RECORD_INVALID")
+        relative = item.get("path")
+        blob_pin = item.get("git_blob_sha")
+        reason = item.get("reason")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or any(marker in relative for marker in ("*", "?", "["))
+            or not isinstance(blob_pin, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", blob_pin)
+            or not isinstance(reason, str)
+            or not reason
+        ):
+            raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_RECORD_INVALID")
+
+        candidate = (bundle.root / relative).resolve()
+        if candidate.parent != attention_dir.resolve() or candidate not in raw_by_resolved:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_PATH_INVALID:{relative}")
+        if candidate in quarantined:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_PATH_DUPLICATE:{relative}")
+
+        code, observed_blob = _git(bundle.root, "rev-parse", f"HEAD:{relative}")
+        if code != 0 or observed_blob != blob_pin:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_BLOB_MISMATCH:{relative}")
+        code, history = _git(bundle.root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
+        code, add_commit = _git(
+            bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
+        )
+        if code != 0 or add_commit != commits[0]:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
+
+        value = read_json(candidate)
+        if value.get("schema") != "distributed_world_simulator.harness_human_attention.v1":
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_SCHEMA_MISUSE_NOT_PRESENT:{relative}")
+        if value.get("status") != "RESOLVED":
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_OPEN_ITEM_FORBIDDEN:{relative}")
+        quarantined.add(candidate)
+
+    return [path for path in raw_paths if path.resolve() not in quarantined]
+
+
 def _load_evidence_maps(
     bundle: ContractBundle,
     evidence_dir: Path,
@@ -623,7 +810,9 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     reviews = _load_reviews(root, execution_dir, active["definition"])
 
     attention: list[dict[str, Any]] = []
-    for path in _json_files(execution_dir / "human-attention"):
+    for path in _select_authoritative_human_attention_paths(
+        bundle, execution_dir, active_id
+    ):
         value = read_json(path)
         bundle.validate("human_attention_schema", value, f"human_attention:{path.name}")
         attention.append(value)
