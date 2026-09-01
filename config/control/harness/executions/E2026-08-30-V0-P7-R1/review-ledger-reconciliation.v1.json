@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.harness_review_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-08-30-V0-P7-R1-WO-001-REVIEW-RECONCILIATION-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_REVIEWS",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_LEGACY_REVIEW_FORMATS",
+  "reason": "P7.0-P7.4 review receipts predate the current canonical review_type vocabulary; one P7.1 receipt also predates current required review sections. Preserve all receipts byte-identically as historical stage evidence while requiring fresh P7.5 review records to use the current review contract.",
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "current_review_contract_unchanged": true,
+    "future_unlisted_reviews_are_authoritative": true
+  },
+  "quarantined_reviews": [
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-001.v1.json",
+      "git_blob_sha": "b31444ecca47e7d90068e73d4626c33aff553336",
+      "reason": "LEGACY_PRE_DISPATCH_REVIEW_TYPE"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-0-OWNER-MAP-REVIEW-002.v1.json",
+      "git_blob_sha": "74c9abe91abede12266332e9d487be03b60fce03",
+      "reason": "LEGACY_PRE_DISPATCH_REVIEW_TYPE"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-1-FINAL-REVIEW-001.v1.json",
+      "git_blob_sha": "42a48686579e1082c70088fd8a4d06f6d9bb38d8",
+      "reason": "LEGACY_SUBSTEP_REVIEW_TYPE_AND_SECTIONS"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
+      "git_blob_sha": "392f3f18d7c6ea25dab5843adf2cc4589b18341b",
+      "reason": "LEGACY_SUBSTEP_REVIEW_REFRESH_TYPE"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
+      "git_blob_sha": "f0c19c49a8dba494f360edb2618a82e5da44b46b",
+      "reason": "LEGACY_SUBSTEP_REVIEW_TYPE"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
+      "git_blob_sha": "23c0a6249c616c9bdb55a35d6d01c3518e898521",
+      "reason": "LEGACY_SUBSTEP_REVIEW_TYPE"
+    }
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}
