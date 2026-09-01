@@ -154,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
                 "next_actor": continuation["next_actor"],
                 "next_action": continuation["next_action"],
                 "resume_condition": continuation["resume_condition"],
+                "terminal_report": continuation["terminal_report"],
             }
         elif args.mode == "drive":
             if continuation["mission_complete"]:
@@ -162,6 +163,8 @@ def main(argv: list[str] | None = None) -> int:
                 drive_status = "WAITING_HUMAN"
             elif continuation["hard_blocked"]:
                 drive_status = "HARD_BLOCKED"
+            elif continuation["local_execution_required"]:
+                drive_status = "LOCAL_EXECUTION_REQUIRED"
             else:
                 drive_status = "CONTINUE_REQUIRED"
             state["drive"] = {
@@ -170,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
                 "next_actor": continuation["next_actor"],
                 "next_action": continuation["next_action"],
                 "resume_condition": continuation["resume_condition"],
+                "terminal_report": continuation["terminal_report"],
                 "instruction": (
                     "Execute the returned next role/action inside the same parent checkpoint session, "
                     "using pre-authorized routine A0-A3 Git operations within Work Order scope; "

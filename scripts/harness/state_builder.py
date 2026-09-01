@@ -155,6 +155,87 @@ def _json_files(directory: Path) -> list[Path]:
     return sorted(directory.rglob("*.json")) if directory.exists() else []
 
 
+def _load_local_execution_handoffs(
+    bundle: ContractBundle,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+    implementation_head: str,
+    current_head: str,
+) -> dict[str, Any]:
+    """Load committed local-execution handoffs and select one active exact-head handoff."""
+    handoffs: list[dict[str, Any]] = []
+    handoff_ids: set[str] = set()
+    for path in _json_files(execution_dir / "handoffs"):
+        value = read_json(path)
+        bundle.validate(
+            "local_execution_handoff_schema",
+            value,
+            f"local_execution_handoff:{path.name}",
+        )
+        handoff_id = value["handoff_id"]
+        if handoff_id in handoff_ids:
+            raise ContractValidationError("LOCAL_EXECUTION_HANDOFF_ID_NOT_UNIQUE")
+        handoff_ids.add(handoff_id)
+
+        relative = _repo_relative(bundle.root, path)
+        code, dirty = _git(bundle.root, "status", "--porcelain", "--", relative)
+        if code != 0 or dirty:
+            raise ContractValidationError(
+                f"LOCAL_EXECUTION_HANDOFF_WORKTREE_MUTATION_DETECTED:{relative}"
+            )
+        code, add_commit = _git(
+            bundle.root,
+            "log",
+            "--diff-filter=A",
+            "-1",
+            "--format=%H",
+            "--",
+            relative,
+        )
+        if code != 0 or len(add_commit) != 40:
+            raise ContractValidationError(
+                f"LOCAL_EXECUTION_HANDOFF_NOT_COMMITTED:{relative}"
+            )
+        code, _ = _git(
+            bundle.root,
+            "merge-base",
+            "--is-ancestor",
+            add_commit,
+            current_head,
+        )
+        if code != 0:
+            raise ContractValidationError(
+                f"LOCAL_EXECUTION_HANDOFF_NOT_REACHABLE:{relative}"
+            )
+        handoffs.append({**value, "path": relative, "commit_sha": add_commit})
+
+    active = [
+        item
+        for item in handoffs
+        if item["work_order_id"] == work_order["work_order_id"]
+        and item["status"] == "OPEN"
+    ]
+    if len(active) > 1:
+        raise ContractValidationError("LOCAL_EXECUTION_HANDOFF_AMBIGUOUS")
+    if active:
+        item = active[0]
+        if (
+            item["project_epoch"] != work_order["project_epoch"]
+            or item["program"] != work_order["program"]
+            or item["checkpoint"] != work_order["goal_checkpoint"]
+            or item["source_branch"] != work_order["branch"]
+        ):
+            raise ContractValidationError("LOCAL_EXECUTION_HANDOFF_IDENTITY_MISMATCH")
+        if item["source_head_sha"] != implementation_head:
+            raise ContractValidationError("LOCAL_EXECUTION_HANDOFF_SOURCE_HEAD_STALE")
+
+    return {
+        "active_handoff": active[0] if active else None,
+        "all_handoffs": handoffs,
+    }
+
+
+
 def _validate_semantics(bundle: ContractBundle, epoch: dict[str, Any], work_order: dict[str, Any]) -> None:
     if epoch["epoch_id"] != work_order["project_epoch"] or epoch["base_sha"] != work_order["base_sha"]:
         raise ContractValidationError("EPOCH_WORK_ORDER_IDENTITY_OR_BASE_MISMATCH")
@@ -414,6 +495,13 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
     implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
+    local_execution = _load_local_execution_handoffs(
+        bundle,
+        execution_dir,
+        active["definition"],
+        implementation_head,
+        current_head,
+    )
     ledger_head = _validate_event_git_provenance(
         root,
         active["event_paths"],
@@ -551,6 +639,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "open_items": [item for item in attention if item["status"] == "OPEN"],
             "all_items": attention,
         },
+        "local_execution": local_execution,
         "findings": findings,
         "continuation_blocked": bool(findings)
         or active["reduced"]["state"]

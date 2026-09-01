@@ -2,6 +2,49 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "distributed_world_simulator.control_development_output.schema.v1",
   "title": "CONTROL_DEVELOPMENT command envelope",
+  "$defs": {
+    "localAgentInstruction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["handoff_id", "subject", "target_environment", "purpose", "requirements", "commands", "success_criteria", "failure_criteria", "required_evidence", "evidence_sink", "resume_condition", "next_action_on_pass", "next_action_on_fail"],
+      "properties": {
+        "handoff_id": {"type": "string", "minLength": 1},
+        "subject": {"type": "string", "minLength": 1},
+        "target_environment": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "requirements": {"type": "array", "items": {"type": "string"}},
+        "commands": {"type": "array", "items": {"type": "string"}},
+        "success_criteria": {"type": "array", "items": {"type": "string"}},
+        "failure_criteria": {"type": "array", "items": {"type": "string"}},
+        "required_evidence": {"type": "array", "items": {"type": "string"}},
+        "evidence_sink": {"type": "string", "minLength": 1},
+        "resume_condition": {"type": "string", "minLength": 1},
+        "next_action_on_pass": {"type": "string", "minLength": 1},
+        "next_action_on_fail": {"type": "string", "minLength": 1}
+      }
+    },
+    "terminalReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["work_finished", "status", "status_text_ru", "final_response_allowed", "reason", "next_step_kind", "next_step", "git_handoff_path", "local_agent_instruction"],
+      "properties": {
+        "work_finished": {"type": "boolean"},
+        "status": {"enum": ["FINISHED", "NOT_FINISHED"]},
+        "status_text_ru": {"enum": ["СТАТУС: ЗАВЕРШЕНО.", "СТАТУС: НЕ ЗАВЕРШЕНО."]},
+        "final_response_allowed": {"type": "boolean"},
+        "reason": {"type": "string", "minLength": 1},
+        "next_step_kind": {"enum": ["NEXT_CHECKPOINT", "CONTINUE_CURRENT", "HUMAN_DECISION", "LOCAL_EXECUTION", "HARD_BLOCK"]},
+        "next_step": {"type": "string", "minLength": 1},
+        "git_handoff_path": {"type": ["string", "null"]},
+        "local_agent_instruction": {
+          "anyOf": [
+            {"$ref": "#/$defs/localAgentInstruction"},
+            {"type": "null"}
+          ]
+        }
+      }
+    }
+  },
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -75,6 +118,15 @@
     "reduced_work_order": {"type": "object"},
     "review": {"type": "object"},
     "human_attention": {"type": "object"},
+    "local_execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_handoff", "all_handoffs"],
+      "properties": {
+        "active_handoff": {"type": ["object", "null"]},
+        "all_handoffs": {"type": "array", "items": {"type": "object"}}
+      }
+    },
     "findings": {"type": "array", "items": {"type": "string"}},
     "continuation_blocked": {"type": "boolean"},
     "checkpoint_proposal_blocked": {"type": "boolean"},
@@ -100,6 +152,8 @@
         "session_exit_allowed",
         "human_decision_required",
         "hard_blocked",
+        "local_execution_required",
+        "terminal_report",
         "mission_driver_required",
         "stop_obligation",
         "checkpoint",
@@ -119,6 +173,7 @@
             "ROLE_BOUNDARY",
             "HUMAN_DECISION_REQUIRED",
             "SYSTEM_BLOCKED",
+            "LOCAL_EXECUTION_REQUIRED",
             "MISSION_COMPLETE"
           ]
         },
@@ -130,6 +185,8 @@
         "session_exit_allowed": {"type": "boolean"},
         "human_decision_required": {"type": "boolean"},
         "hard_blocked": {"type": "boolean"},
+        "local_execution_required": {"type": "boolean"},
+        "terminal_report": {"$ref": "#/$defs/terminalReport"},
         "mission_driver_required": {"type": "boolean"},
         "stop_obligation": {"type": "string", "minLength": 1},
         "checkpoint": {"type": "string", "minLength": 1},
@@ -264,7 +321,8 @@
         "mission_exit_allowed",
         "next_actor",
         "next_action",
-        "resume_condition"
+        "resume_condition",
+        "terminal_report"
       ],
       "properties": {
         "active_epoch": {"type": "string"},
@@ -283,7 +341,8 @@
         "mission_exit_allowed": {"type": "boolean"},
         "next_actor": {"type": "string", "minLength": 1},
         "next_action": {"type": "string", "minLength": 1},
-        "resume_condition": {"type": "string", "minLength": 1}
+        "resume_condition": {"type": "string", "minLength": 1},
+        "terminal_report": {"$ref": "#/$defs/terminalReport"}
       }
     },
     "drive": {
@@ -295,15 +354,17 @@
         "next_actor",
         "next_action",
         "resume_condition",
+        "terminal_report",
         "instruction",
         "git_authority"
       ],
       "properties": {
-        "status": {"enum": ["CONTINUE_REQUIRED", "MISSION_COMPLETE", "WAITING_HUMAN", "HARD_BLOCKED"]},
+        "status": {"enum": ["CONTINUE_REQUIRED", "MISSION_COMPLETE", "WAITING_HUMAN", "HARD_BLOCKED", "LOCAL_EXECUTION_REQUIRED"]},
         "auto_continue_required": {"type": "boolean"},
         "next_actor": {"type": "string", "minLength": 1},
         "next_action": {"type": "string", "minLength": 1},
         "resume_condition": {"type": "string", "minLength": 1},
+        "terminal_report": {"$ref": "#/$defs/terminalReport"},
         "instruction": {"type": "string", "minLength": 1},
         "git_authority": {
           "type": "object",
@@ -347,6 +408,7 @@
           "reduced_work_order",
           "review",
           "human_attention",
+          "local_execution",
           "findings",
           "continuation_blocked",
           "checkpoint_proposal_blocked",

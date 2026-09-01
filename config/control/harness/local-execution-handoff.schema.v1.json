@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.local_execution_handoff.schema.v1",
+  "title": "Distributed World Simulator Local Execution Handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "handoff_id",
+    "project_epoch",
+    "work_order_id",
+    "program",
+    "checkpoint",
+    "status",
+    "executor",
+    "target_environment",
+    "source_branch",
+    "source_head_sha",
+    "purpose",
+    "requirements",
+    "commands",
+    "success_criteria",
+    "failure_criteria",
+    "required_evidence",
+    "evidence_sink",
+    "resume_condition",
+    "next_action_on_pass",
+    "next_action_on_fail",
+    "created_at_utc"
+  ],
+  "properties": {
+    "schema": {
+      "const": "distributed_world_simulator.local_execution_handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_epoch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "program": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checkpoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "OPEN",
+        "CLOSED",
+        "CANCELLED"
+      ]
+    },
+    "executor": {
+      "const": "LOCAL_AGENT"
+    },
+    "target_environment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "success_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "failure_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "evidence_sink": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resume_condition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "next_action_on_pass": {
+      "type": "string",
+      "minLength": 1
+    },
+    "next_action_on_fail": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "closed_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "result_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CLOSED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "closed_at_utc",
+          "result_path"
+        ]
+      }
+    }
+  ]
+}

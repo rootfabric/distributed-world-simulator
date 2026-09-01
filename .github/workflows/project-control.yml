@@ -60,6 +60,7 @@ jobs:
             scripts/harness/continuation.py \
             scripts/harness/git_authority.py \
             scripts/harness/contracts.py \
+            scripts/harness/state_builder.py \
             scripts/harness/cli.py
           python3 - <<'PY'
           import json
@@ -85,6 +86,7 @@ jobs:
               Path("config/control/harness/repair-doctrine.v1.json"),
               Path("config/control/harness/evidence-map.schema.v1.json"),
               Path("config/control/harness/human-attention.schema.v1.json"),
+              Path("config/control/harness/local-execution-handoff.schema.v1.json"),
               Path("validation/harness/control-development-output.schema.v1.json"),
           ]
           for path in required_json:
