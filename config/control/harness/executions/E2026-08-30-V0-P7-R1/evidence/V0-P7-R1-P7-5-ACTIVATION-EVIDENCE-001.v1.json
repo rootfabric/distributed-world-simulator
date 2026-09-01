@@ -1,0 +1,63 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_5_activation_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-5-ACTIVATION-EVIDENCE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "substep": "P7.5_TWO_CLIENT_CONVERGENCE",
+  "activation_branch": "control/v0-p7-5-activation-r1",
+  "activation_candidate_head": "d6b5b50ebf2efa03fba69077edada2175b7a3aa9",
+  "activation_base_main": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+  "transition_ledger_repair": {
+    "status": "RESOLVED_CANONICAL",
+    "repair_pr": 432,
+    "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+    "resolution": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json",
+    "drive": "PASS_EXIT_0_CONTINUE_REQUIRED",
+    "close": "PASS_EXIT_8_MISSION_EXIT_FORBIDDEN"
+  },
+  "runtime_subject_before_p7_5": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "p7_4_status": "COMPLETE_MERGED",
+    "mutation_in_activation_pr": false
+  },
+  "activated_contract": {
+    "work_order_state": "IN_PROGRESS",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "mutation_lease": "SAME_SINGLE_P7_LEASE",
+    "scope": "TWO_CLIENT_CONVERGENCE",
+    "required_existing_owners": [
+      "MW6",
+      "MW7",
+      "RL2",
+      "RL3",
+      "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+      "NETWORKED_GAMEPLAY_SERVICE_AGGREGATE_REVISION"
+    ],
+    "forbidden_new_owners": [
+      "P7_REPLICATION_PROTOCOL",
+      "P7_INTEREST_MANAGER",
+      "P7_RECEIPT_LEDGER",
+      "P7_REPLAY_LEDGER",
+      "P7_AGGREGATE_REVISION_OWNER",
+      "SECOND_ITEM_GRAPH",
+      "SECOND_MATTER_TRUTH"
+    ]
+  },
+  "project_control": {
+    "run": 33512023556,
+    "exact_head": "d6b5b50ebf2efa03fba69077edada2175b7a3aa9",
+    "result": "SUCCESS",
+    "checkpoint_session": "PASS",
+    "architecture_ownership": "PASS",
+    "h0_2_machine": "PASS",
+    "v0_product_checkpoint": "PASS",
+    "generation80_safety": "PASS",
+    "canonical_pc0": "PASS",
+    "directional_pc0": "PASS"
+  },
+  "verdict": "P7_5_ACTIVATION_GREEN",
+  "next": "CANONICALIZE_CONTROL_PR_433_THEN_FAST_FORWARD_RUNTIME_BRANCH_AND_IMPLEMENT_P7_5"
+}
