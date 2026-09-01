@@ -13,7 +13,7 @@ FABRIC0.18              ✅ CLOSED
 BRIDGE-1                ✅ CLOSED
 B0.3 CONTACT/WRENCH     ✅ CLOSED
 POST-B0.3 SYNC          current architectural boundary
-CONSTRUCT0              authorized now
+CONSTRUCT0              ✅ CLOSED
 ```
 
 ## Roadmap
@@ -45,16 +45,16 @@ CONSTRUCT0              authorized now
                   │                CONSTRUCT0.PLAY1 ✅
                   │              PHYSICAL TOYBOX CLOSED
                   │                        │
-                  │                    C0.4
+                  │                    C0.4 ✅
                   │              FULL / BAKED modes
                   │                        │
-                  │                    C0.5
+                  │                    C0.5 ✅
                   │          invalidation / reconstruction
                   │                        │
-                  │                    C0.6
+                  │                    C0.6 ✅
                   │           local unbake / topology split
                   │                        │
-                  │                  CONSTRUCT0 CLOSED
+                  │                CONSTRUCT0 ✅ CLOSED
                   │                        │
           ┌───────┴────────┐               │
           ▼                ▼               │
@@ -379,33 +379,79 @@ Project Control PASS
 VERIFIED
 ```
 
-### C0.4 — physical representation forcing
+### C0.4 — physical representation forcing — CLOSED / EXACT DOUBLE PASS
+
+The lifecycle lab drives the exact 500-part BRIDGE-1 subject.
+
 Debug modes:
 - AUTO;
 - FORCE FULL;
 - FORCE BAKED where certified.
 
-NO_SAFE_BAKE remains visible and legal.
+Verified:
+```text
+500 canonical parts
+FULL  6500 DOF
+BAKED   13 DOF
+reduction 500x
+boundary anchor mismatch <= 1e-9
+```
 
-### C0.5 — source mutation lifecycle
-Visible proof:
+AUTO chooses certified BAKED. Representation forcing does not mutate canonical source identity. NO_SAFE_BAKE remains explicit and fail-closed.
+
+Acceptance:
+`26/26 PASS`.
+
+### C0.5 — source mutation lifecycle — CLOSED / EXACT DOUBLE PASS
+
+Visible and verified:
 - canonical property edit;
-- old bake immediately stale/non-executable;
-- reconstruct kinematics;
-- rebuild graph/artifact;
-- transient contact history discarded/re-derived.
+- RepresentationInvalidation;
+- BakeInvalidation;
+- old bake immediately STALE/non-executable;
+- exact 500-part kinematic reconstruction;
+- `DISCARD_AND_REDERIVE` transient contact policy;
+- fresh graph/artifact rebuild;
+- build generation increments exactly once;
+- bounded state handoff;
+- explicit FULL fallback remains legal.
 
-### C0.6 — topology mutation lifecycle
-Visible proof:
-- local bond break;
-- bounded local unbake;
-- canonical split;
-- stale invalidation;
-- deterministic component re-bake.
+Acceptance:
+`23/23 PASS`.
 
-## CONSTRUCT0 closure gate
+### C0.6 — topology mutation lifecycle — CLOSED / EXACT DOUBLE PASS
 
-CONSTRUCT0 closes only when one Godot lab demonstrates:
+The lifecycle lab executes the already closed B0.2-D and B0.2-E implementations on the exact 500-part structural subject.
+
+B0.2-D:
+```text
+20 / 500 parts locally FULL
+480 retained reduced
+2 retained reduced components
+2 cut interfaces
+6500 → 286 DOF
+>22.7x preserved reduction
+4% unbaked
+```
+
+B0.2-E:
+```text
+bond break APPLIED
+2 split components
+3 predecessor reduced pieces invalidated
+2 fresh executable PhysicalBakeArtifacts
+6500 → 286 → 26 DOF
+250x post-split reduction
+```
+
+Conservation and handoff remain within the frozen B0.2-D/E tolerances.
+
+Acceptance:
+`44/44 PASS`.
+
+## CONSTRUCT0 closure gate — SATISFIED
+
+A single integrated Godot entrypoint now demonstrates:
 
 ```text
 build compound object
@@ -419,6 +465,37 @@ build compound object
 ```
 
 with no second truth, no device-specific physics shortcut and deterministic acceptance evidence.
+
+Integrated entrypoint:
+`res://scenes/labs/fabric_construct0_complete_lab.tscn`
+
+Exact final subject:
+```text
+HEAD:
+afcd564b631a2f48283dfefef17f4d6542f558a3
+
+TREE:
+36064f8ad9f09e86cb242f4202f2e068044b6a2b
+
+C0.1 58/58 PASS
+C0.2 33/33 PASS
+C0.3 30/30 PASS
+PLAY1 111/111 PASS
+C0.4 26/26 PASS
+C0.5 23/23 PASS
+C0.6 44/44 PASS
+
+TOTAL:
+325/325 PASS
+
+Project Control:
+33507347220 SUCCESS
+
+verdict:
+VERIFIED
+```
+
+`CONSTRUCT0` is therefore CLOSED as a research/tangible checkpoint. Production acceptance is not claimed.
 
 ## Later tangible stages
 
