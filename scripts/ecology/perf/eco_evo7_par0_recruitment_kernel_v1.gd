@@ -73,7 +73,7 @@ static func evaluate_recruitment_event(
 	if destination_index < 0 or destination_index >= environment_cells.size():
 		return {}
 	var env_cell: Dictionary = environment_cells[destination_index]
-	var prepared_environment_sample: Dictionary = {}
+	var observation: Dictionary = {}
 	var cache_value = context.get("environment_sample_cache")
 	if cache_value is Dictionary:
 		var cache: Dictionary = cache_value
@@ -84,34 +84,30 @@ static func evaluate_recruitment_event(
 			var cached_value = cache[cell_hash]
 			if not cached_value is Dictionary:
 				return {}
-			prepared_environment_sample = cached_value
+			observation = build_observation(
+				env_cell, context, next_generation, candidate_hash, Dictionary(cached_value))
 		else:
-			var cold_observation := build_observation(
+			observation = build_observation(
 				env_cell, context, next_generation, candidate_hash)
-			if cold_observation.is_empty():
+			if observation.is_empty():
 				return {}
-			var sample_value = cold_observation.get("environment_sample")
+			var sample_value = observation.get("environment_sample")
 			if not sample_value is Dictionary:
 				return {}
-			prepared_environment_sample = sample_value
 			if cache.size() >= environment_cells.size():
 				return {}
-			cache[cell_hash] = prepared_environment_sample
-			var cold_evaluation_result := Shadow.evaluate_bundle_against_observation(
-				candidate["child_bundle"], cold_observation)
-			if not bool(cold_evaluation_result.get("success", false)):
-				return {}
-			return _finish_recruitment_event(
-				candidate, route, env_cell, cold_evaluation_result["details"])
-	var observation := build_observation(
-		env_cell, context, next_generation, candidate_hash, prepared_environment_sample)
+			cache[cell_hash] = Dictionary(sample_value)
+	else:
+		observation = build_observation(
+			env_cell, context, next_generation, candidate_hash)
 	if observation.is_empty():
 		return {}
-	var evaluation_result := Shadow.evaluate_bundle_against_observation(candidate["child_bundle"], observation)
+	var evaluation_result := Shadow.evaluate_bundle_against_observation(
+		candidate["child_bundle"], observation)
 	if not bool(evaluation_result.get("success", false)):
 		return {}
 	return _finish_recruitment_event(
-		candidate, route, env_cell, evaluation_result["details"])
+		candidate, route, env_cell, Dictionary(evaluation_result["details"]))
 
 
 static func _finish_recruitment_event(
