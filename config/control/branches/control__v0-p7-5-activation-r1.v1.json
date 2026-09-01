@@ -33,9 +33,9 @@
     "config/control/harness/v0-current-work-map.v1.json",
     "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-ACTIVATION-EVIDENCE-001.v1.json",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0006-p7-5-recovery-resumed.v1.json"
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0006-p7-5-recovery-resumed.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/p7/**",
