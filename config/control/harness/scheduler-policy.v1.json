@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-09-01-R9-P7-P7_4_COMPLETE",
+  "policy_amendment_revision": "H0-PTRAIN-2026-09-01-R10-P7-P7_5_ACTIVE",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -51,7 +51,7 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_5_NEXT",
+    "current_phase": "P7_5_IN_PROGRESS",
     "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
@@ -155,11 +155,13 @@
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
     },
     "p7_5": {
-      "state": "NEXT",
+      "state": "IN_PROGRESS",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "scope": "TWO_CLIENT_CONVERGENCE",
       "runtime_mutation_authorized": true,
-      "control_precondition": "REPAIR_PRE_EXISTING_EPOCH_TRANSITION_TABLE_BEFORE_AUTOMATED_DRIVE_CLOSE"
+      "control_precondition": "RESOLVED_BY_PR_432",
+      "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+      "hard_rule": "REUSE_MW6_MW7_RL2_RL3_CANONICAL_ITEM_GRAPH_REPLAY_AND_P7_4_AGGREGATE_REVISION_SEAM"
     }
   },
   "research_isolation": {
@@ -179,7 +181,7 @@
     "holder_program": "V0",
     "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION",
+    "state": "ACTIVE_V0_P7_P7_5_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -190,7 +192,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P7.4 is COMPLETE_MERGED and P7 remains the single active runtime mutation checkpoint. The same feature/v0-p7-bounded-terrain-mutation lease continues into P7.5; non-holder runtime mutation remains forbidden."
+    "reason": "P7.4 is COMPLETE_MERGED; transition-ledger control debt is repaired and canonical. P7.5 is now the active substep under the same single P7 runtime mutation lease and feature/v0-p7-bounded-terrain-mutation branch."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
