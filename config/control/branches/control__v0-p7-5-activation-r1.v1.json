@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-5-activation-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.5 activation control carrier after canonical transition-ledger recovery.",
+  "purpose": "Move the same P7 Work Order from P7.4 COMPLETE_MERGED / P7.5 NEXT to P7.5 TWO_CLIENT_CONVERGENCE IN_PROGRESS without creating a new runtime owner or lease.",
+  "expected_outcome": "P7.5 IN_PROGRESS on feature/v0-p7-bounded-terrain-mutation with repaired Drive/Close control surface and unchanged MW6/MW7/RL2/RL3/Item Graph ownership.",
+  "current_stage": "P7.5 Two-Client Convergence",
+  "stage_status": "P7_5_IN_PROGRESS",
+  "progress_note": "The pre-existing P7 transition-table and legacy-ledger recovery defect is FIX_VERIFIED and canonical via PR #432 / main 2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93. Drive=0 CONTINUE_REQUIRED; Close=8 MISSION_EXIT_FORBIDDEN while whole P7 remains open. P7.5 is activated under the existing P7 Work Order, runtime branch and single mutation lease.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.4 substeps COMPLETE_MERGED",
+  "next_stage": "Implement and exact-test P7.5 two-client convergence using existing MW6/MW7/RL2/RL3, canonical Item Graph replay, and P7.4 NetworkedGameplayService aggregate revision seam.",
+  "parent_branch_or_checkpoint": "main @ 2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93 / transition-ledger repair canonical",
+  "base_commit": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 COMPLETE_MERGED",
+    "P7.4 COMPLETE_MERGED",
+    "P7 transition-ledger repair PR #432 MERGED",
+    "Drive/Close recovery Project Control 33508057451 SUCCESS"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-5-activation-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-ACTIVATION-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0006-p7-5-recovery-resumed.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/simulation/matter/**",
+    "scripts/world/matter/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "focused": "PENDING_P7_5",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION",
+    "AGGREGATE_REVISION_OWNERSHIP"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

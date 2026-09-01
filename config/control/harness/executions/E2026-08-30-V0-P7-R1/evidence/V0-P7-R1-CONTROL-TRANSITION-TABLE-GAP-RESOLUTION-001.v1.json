@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.harness_control_gap_resolution.v1",
+  "resolution_id": "V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001",
+  "gap_id": "V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "original_gap_path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001.v1.json",
+  "original_gap_status": "OPEN_HISTORICAL_RECORD",
+  "resolution_status": "RESOLVED",
+  "repair": {
+    "pr": 432,
+    "repair_head": "5b12d35798702c28df7ad58099dc9b3c132be78e",
+    "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-TRANSITION-LEDGER-REPAIR-EVIDENCE-001.v1.json",
+    "project_control_run": 33508057451,
+    "project_control": "SUCCESS"
+  },
+  "proof": {
+    "transition_table_restored": true,
+    "drive": "PASS_EXIT_0_CONTINUE_REQUIRED",
+    "close": "PASS_EXIT_8_MISSION_EXIT_FORBIDDEN",
+    "event_schema_changed": false,
+    "reducer_transition_semantics_changed": false,
+    "historical_event_files_rewritten": false,
+    "runtime_changed": false
+  },
+  "effect": {
+    "p7_4_runtime_evidence": "UNCHANGED",
+    "p7_5_automated_drive_close": "UNBLOCKED",
+    "whole_p7_mission": "REMAINS_OPEN"
+  },
+  "resolved_at_utc": "2026-09-01T12:31:04Z",
+  "next": "P7_5_TWO_CLIENT_CONVERGENCE"
+}

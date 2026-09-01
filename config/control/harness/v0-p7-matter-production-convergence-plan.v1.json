@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_4_COMPLETE_MERGED_P7_5_NEXT",
+  "status": "P7_5_IN_PROGRESS",
   "authored_against_main": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -81,8 +81,19 @@
       "id": "P7.5",
       "name": "TWO_CLIENT_CONVERGENCE",
       "exit": "MW6_MW7_RL_CONVERGENCE_PASS",
-      "status": "NEXT",
-      "control_precondition": "REPAIR_PRE_EXISTING_EPOCH_TRANSITION_TABLE_BEFORE_AUTOMATED_DRIVE_CLOSE"
+      "status": "IN_PROGRESS",
+      "control_precondition": "RESOLVED_BY_PR_432",
+      "entry_control_main": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "hard_rule": "REUSE_MW6_MW7_RL2_RL3_CANONICAL_ITEM_GRAPH_REPLAY_AND_P7_4_AGGREGATE_REVISION_SEAM",
+      "required_proofs": [
+        "CLIENT_A_AND_B_CONVERGE_TO_CANONICAL_MATTER_STATE",
+        "CLIENT_A_AND_B_CONVERGE_TO_CANONICAL_ITEM_GRAPH_STATE",
+        "CLIENT_A_AND_B_CONVERGE_TO_NETWORKED_GAMEPLAY_AGGREGATE_REVISION",
+        "MW7_INTEREST_EXIT_REENTRY_RECONVERGES",
+        "REPLAY_OR_DUPLICATE_DELIVERY_DOES_NOT_ADVANCE_AGGREGATE_REVISION",
+        "NO_PRIVATE_P7_REPLICATION_OR_RECEIPT_TRUTH"
+      ]
     },
     {
       "id": "P7.6",

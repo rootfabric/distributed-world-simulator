@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_5_NEXT",
+  "state": "IN_PROGRESS_P7_5",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -142,10 +142,27 @@
     "human_gate": "RUNTIME_FEATURE_MERGE APPROVED"
   },
   "p7_5": {
-    "status": "NEXT",
+    "status": "IN_PROGRESS",
     "scope": "TWO_CLIENT_CONVERGENCE",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "note": "Prove two-client canonical convergence over existing MW6/MW7/RL2/RL3 while preserving P7.4 restart/replay semantics and the single NetworkedGameplayService aggregate revision owner.",
-    "control_precondition": "Repair pre-existing E2026-08-30-V0-P7-R1 transition-table.v1.json gap before relying on automated -Drive/-Close."
-  }
+    "control_precondition": "RESOLVED",
+    "control_repair": {
+      "repair_pr": 432,
+      "repair_head": "5b12d35798702c28df7ad58099dc9b3c132be78e",
+      "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+      "project_control_run": 33508057451,
+      "drive": "PASS_EXIT_0",
+      "close": "PASS_EXIT_8_MISSION_STILL_OPEN",
+      "resolution": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json"
+    },
+    "runtime_rules": [
+      "NO_SECOND_NETWORK_PROTOCOL",
+      "NO_SECOND_ITEM_GRAPH",
+      "NO_P7_RECEIPT_LEDGER",
+      "NO_SECOND_AGGREGATE_REVISION_OWNER",
+      "MW6_MW7_RL2_RL3_ARE_CONSUMED_NOT_REWRITTEN"
+    ]
+  },
+  "control_main_base": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93"
 }
