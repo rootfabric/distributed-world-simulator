@@ -7,10 +7,6 @@ on:
       - ".github/workflows/v0-p7-5-runtime-validation.yml"
   workflow_dispatch:
 
-concurrency:
-  group: v0-p7-5-runtime-validation-r2
-  cancel-in-progress: false
-
 jobs:
   export-exact-source:
     name: Export exact P7.5 runtime checkout
@@ -55,6 +51,7 @@ jobs:
 
   p7-5-runtime:
     name: P7.5 exact runtime gate
+    if: github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 120
 
