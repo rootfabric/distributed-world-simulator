@@ -94,6 +94,7 @@ static func compile(
 		reduced_input,
 		reduced_output,
 		port_data["port_ids"],
+		port_data["signs"],
 		n,
 		passivity,
 		interpolation
