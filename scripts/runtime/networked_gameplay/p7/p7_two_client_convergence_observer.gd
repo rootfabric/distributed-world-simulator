@@ -212,10 +212,10 @@ func _representation_converged(
 		if not bool(checked.get("success", false)):
 			return _failure("P7_5_RL3_STREAM_REQUEST_INVALID")
 	var source_a: Dictionary = Dictionary(
-		Dictionary(request_a.get("interest_request", {})).get("source_revision", {})
+		Dictionary(request_a.get("interest_request", {})).get("required_source_revision", {})
 	)
 	var source_b: Dictionary = Dictionary(
-		Dictionary(request_b.get("interest_request", {})).get("source_revision", {})
+		Dictionary(request_b.get("interest_request", {})).get("required_source_revision", {})
 	)
 	if not bool(RepresentationSource.validate(source_a).get("success", false)) 		or not bool(RepresentationSource.validate(source_b).get("success", false)):
 		return _failure("P7_5_REPRESENTATION_SOURCE_INVALID")
