@@ -88,6 +88,13 @@ var chunk_local_recruitment_sorts := 0
 var recruitment_context_builds := 0
 var generation_boundary_sorts := 0
 
+## PERF2.4 R5 optimized-only cache. EnvironmentSample is a pure immutable
+## projection of one environment cell plus the frozen field identity, so it
+## can be reused across generations while that identity is unchanged.
+## The cache is hard-bounded by the fixed environment cell count.
+var _optimized_environment_sample_cache: Dictionary = {}
+var _optimized_environment_cache_identity := ""
+
 var _last_report: Dictionary = {}
 
 func setup(config: Dictionary) -> bool:
@@ -108,6 +115,8 @@ func setup(config: Dictionary) -> bool:
 	chunk_local_recruitment_sorts = 0
 	recruitment_context_builds = 0
 	generation_boundary_sorts = 0
+	_optimized_environment_sample_cache = {}
+	_optimized_environment_cache_identity = ""
 	_last_report = {}
 	_parents_per_chunk = int(config.get("parents_per_chunk", 64))
 	_audit_interval = int(config.get("audit_interval", 10))
@@ -185,10 +194,21 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	var optimized_recruitment_context: Dictionary = {}
 	if _pipeline_mode == PIPELINE_OPTIMIZED:
 		optimized_generation_calls += 1
+		var environment_cache_identity := "%s|%d|%s" % [
+			String(immutable_context["revision"]),
+			int(immutable_context["environment_seed"]),
+			String(immutable_context["environment_field_hash"]),
+		]
+		if _optimized_environment_cache_identity != environment_cache_identity:
+			_optimized_environment_sample_cache.clear()
+			_optimized_environment_cache_identity = environment_cache_identity
+		if _optimized_environment_sample_cache.size() > Array(immutable_context["environment_cells"]).size():
+			return _failure(FAIL_RECRUITMENT, "optimized environment cache bound exceeded", generation)
 		optimized_recruitment_context = RecruitmentKernel.build_context(
 			String(immutable_context["schema"]), String(immutable_context["version"]),
 			String(immutable_context["revision"]), int(immutable_context["environment_seed"]),
 			String(immutable_context["environment_field_hash"]), Array(immutable_context["environment_cells"]))
+		optimized_recruitment_context["environment_sample_cache"] = _optimized_environment_sample_cache
 		recruitment_context_builds += 1
 		if optimized_recruitment_context.is_empty():
 			return _failure(FAIL_RECRUITMENT, "optimized recruitment context failed", generation)
