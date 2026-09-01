@@ -360,16 +360,15 @@ func _run() -> void:
 	var replay_command: Dictionary = client_a.accept_command_result(
 		replay_transport.get("result", {})
 	)
-	_assert_success(replay_command, "client A accepts exact MW6 replay result")
+	_assert_success(replay_command, "client A accepts exact gateway/MW6 replay result")
 	_assert_true(
-		bool(replay_command.get("details", {}).get("replay", false)),
-		"MW6 reports exact operation replay"
+		Dictionary(replay_command.get("details", {}).get("result", {})) == matter_result,
+		"exact network replay returns the same canonical Matter result"
 	)
 	_assert_true(
-		not bool(replay_command.get("details", {}).get("replication_published", true)),
-		"MW6 replay publishes no new Matter replication"
+		authority.stream_sequence() == matter_cursor_before_replay,
+		"exact network replay leaves Matter cursor unchanged"
 	)
-	_assert_true(authority.stream_sequence() == matter_cursor_before_replay, "MW6 replay leaves Matter cursor unchanged")
 	_assert_true(interest_server.outbound_count(PEER_A) == 0, "MW6 replay queues no A interest delta")
 	_assert_true(interest_server.outbound_count(PEER_B) == 0, "MW6 replay queues no B interest delta")
 
@@ -526,7 +525,12 @@ func _connect_interest(
 		return activated
 	var authority_connected: Dictionary = authority.connect_interest_peer(
 		peer_id,
-		String(client.subscription().get("client_id", "")),
+		String(
+			client.subscription().get(
+				"client_id",
+				client.pending_subscription().get("client_id", "")
+			)
+		),
 		session_id,
 		actor_id
 	)
