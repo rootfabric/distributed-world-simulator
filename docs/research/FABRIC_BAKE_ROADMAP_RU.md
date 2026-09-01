@@ -2016,3 +2016,110 @@ B0.5 executable authorization?
 FABRIC0.19 necessity?
 BRIDGE-2 executable authorization?
 ```
+
+
+---
+
+## FABRIC-BAKE B0.4-A closure boundary — 2026-09-01
+
+```text
+B0.4-A
+DYNAMIC MODEL / PORT CONTRACT
+✅ RESEARCH CHECKPOINT CLOSED
+
+branch:
+research/fabric-bake0-4-dynamic-rom-r1
+
+exact executable HEAD:
+1fbfffe30f5758a1bbb3c65db23edf06ecf3dae4
+
+TREE:
+79bedac6b6668ffcf29629238a5c055fb55d5f3c
+```
+
+B0.4-A freezes the FULL reference side of Dynamic ROM:
+
+```text
+CanonicalSourceFrontier
++
+AuthorityEnvelope
++
+DependencySet
++
+PhysicalBoundaryContract
+        ↓
+512-state generic passive dynamic model
+        ↓
+deterministic FULL reference solver
+        ↓
+boundary effort / flow / power
++
+stored energy
++
+physical dissipation
++
+numerical dissipation
+```
+
+Reference fixture:
+
+```text
+512 dynamic states
+4 generic effort/flow ports
+511 internal dissipative couplings
+512 positive shunts
+strict structural passivity/stability certificate
+```
+
+Exact evidence:
+
+```text
+B0.4-A:
+609/609 PASS
+
+fresh exact bundle pass #1:
+PASS
+
+fresh exact bundle pass #2:
+PASS
+
+model identity:
+5a75707e8d34bccd24c86ef325ccfb24ca53f5485889cc47fa32dd209490c46f
+
+predecessor + B0.4-A acceptance:
+4554/4554 PASS
+
+Project Control:
+33517363373 SUCCESS
+```
+
+B0.4-A does **not** emit a ROM and does not satisfy the parent B0.4 reduction/error
+closure gate.
+
+Current B0.4 state:
+
+```text
+B0.4-A DYNAMIC MODEL / PORT CONTRACT     ✅ CLOSED
+B0.4-B CERTIFIED REDUCTION               ★ NEXT
+B0.4-C RUNTIME ERROR / REFINEMENT        ⚪
+B0.4-D RECONSTRUCTION / LIFECYCLE        ⚪
+
+B0.4 parent                              IN PROGRESS
+```
+
+Next executable wall:
+
+```text
+B0.4-B
+CERTIFIED REDUCTION
+
+512 FULL dynamic states
+        ↓
+structure/passivity-preserving ROM
+        ↓
+<= 24 reduced states
+>= 20x reduction
+```
+
+B0.5 P0 may continue in parallel under the SYNC-2 authorization, but B0.5 executable
+hybrid reduction remains blocked on a stable B0.4 mode-local ROM artifact interface.
