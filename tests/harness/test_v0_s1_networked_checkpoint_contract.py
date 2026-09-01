@@ -24,11 +24,11 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
-CURRENT_V0_BRANCH = "control/v0-p7-4-closure-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-4-closure-r1.v1.json"
+CURRENT_V0_BRANCH = "control/v0-p7-5-activation-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-5-activation-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "bfd2d8efec6f499311dea81d9b602f30b3ac6a73"
+P7_CONTROL_BASE = "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93"
 
 
 def load_json(path: str) -> dict:
