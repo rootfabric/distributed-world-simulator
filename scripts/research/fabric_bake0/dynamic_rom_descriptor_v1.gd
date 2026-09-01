@@ -21,7 +21,7 @@ const FIELDS: Array[String] = [
 	"full_state_schema_hash", "reduced_state_schema_hash",
 	"basis_method", "laplace_shifts", "basis_matrix", "basis_hash",
 	"reduced_mass_matrix", "reduced_dissipation_matrix",
-	"reduced_input_matrix", "reduced_output_matrix", "port_ids",
+	"reduced_input_matrix", "reduced_output_matrix", "port_ids", "port_orientation_signs",
 	"full_state_count", "reduced_state_count", "reduction_ratio",
 	"passivity_certificate", "interpolation_certificate",
 	"descriptor_hash", "checksum",
@@ -42,6 +42,7 @@ static func create(
 	reduced_input_matrix: Array,
 	reduced_output_matrix: Array,
 	port_ids: Array,
+	port_orientation_signs: Array,
 	full_state_count: int,
 	passivity_certificate: Dictionary,
 	interpolation_certificate: Dictionary
@@ -65,6 +66,7 @@ static func create(
 		"reduced_input_matrix": _float_matrix(reduced_input_matrix),
 		"reduced_output_matrix": _float_matrix(reduced_output_matrix),
 		"port_ids": Utils.sorted_strings(port_ids),
+		"port_orientation_signs": _float_array(port_orientation_signs),
 		"full_state_count": full_state_count,
 		"reduced_state_count": reduced_state_count,
 		"reduction_ratio": float(full_state_count) / float(reduced_state_count),
@@ -131,6 +133,11 @@ static func validate(value: Dictionary) -> Dictionary:
 	if not bool(checked.get("success", false)):
 		return checked
 	var p := value["port_ids"].size()
+	if typeof(value.get("port_orientation_signs")) != TYPE_ARRAY or value["port_orientation_signs"].size() != p:
+		return Utils.failure("INVALID_DYNAMIC_ROM_PORT_ORIENTATION_SIGNS")
+	for index in range(p):
+		if not Utils.is_finite_number(value["port_orientation_signs"][index]) or absf(absf(float(value["port_orientation_signs"][index])) - 1.0) > 1.0e-12:
+			return Utils.failure("INVALID_DYNAMIC_ROM_PORT_ORIENTATION_SIGN", {"index": index})
 	checked = _validate_matrix(value.get("reduced_input_matrix"), r, p, "INPUT")
 	if not bool(checked.get("success", false)):
 		return checked
