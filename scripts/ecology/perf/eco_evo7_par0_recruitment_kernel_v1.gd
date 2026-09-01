@@ -106,19 +106,7 @@ static func evaluate_recruitment_event(
 		candidate["child_bundle"], observation)
 	if not bool(evaluation_result.get("success", false)):
 		return {}
-	return _finish_recruitment_event(
-		candidate, route, env_cell, Dictionary(evaluation_result["details"]))
-
-
-static func _finish_recruitment_event(
-	candidate: Dictionary,
-	route: Dictionary,
-	env_cell: Dictionary,
-	evaluation: Dictionary
-) -> Dictionary:
-	var candidate_hash := String(candidate["candidate_hash"])
-	var destination_index := int(route["destination_cell_index"])
-	var next_generation := int(route["generation"])
+	var evaluation: Dictionary = evaluation_result["details"]
 	var fitness := float(evaluation["shadow_fitness"])
 	var establishment_capacity := float(evaluation["establishment_capacity"])
 	var resource_open := clampf(1.0 - float(env_cell["surface_water_fraction"]), 0.0, 1.0)
