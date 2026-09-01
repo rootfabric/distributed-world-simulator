@@ -16,6 +16,10 @@ _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
 _EVIDENCE_MAP_SCHEMA_PREFIX = "distributed_world_simulator.harness_evidence_map"
 _H0_0_CHECKPOINT_DOC = "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R3_RU.md"
 
+_EVENT_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_event_ledger_reconciliation.v1"
+_EVENT_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS"
+_EVENT_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS"
+
 
 def _git_head(root: Path) -> str:
     output = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=False)
@@ -153,6 +157,132 @@ def _validate_event_git_provenance(
 
 def _json_files(directory: Path) -> list[Path]:
     return sorted(directory.rglob("*.json")) if directory.exists() else []
+
+
+def _select_authoritative_event_paths(
+    root: Path,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+    event_dir: Path,
+    raw_event_paths: list[Path],
+) -> tuple[list[Path], dict[str, Any] | None]:
+    """Return reducer-authoritative event paths after strict legacy reconciliation.
+
+    Historical files are never edited or deleted. A reconciliation may quarantine
+    only exact event paths whose current Git blob identity is pinned in the
+    execution-local manifest. Unlisted/future events always remain authoritative.
+    """
+
+    manifest_path = execution_dir / "event-ledger-reconciliation.v1.json"
+    if not manifest_path.exists():
+        return raw_event_paths, None
+
+    reconciliation = read_json(manifest_path)
+    if reconciliation.get("schema") != _EVENT_LEDGER_RECONCILIATION_SCHEMA:
+        raise ContractValidationError("EVENT_RECONCILIATION_SCHEMA_INVALID")
+    if reconciliation.get("version") != 1:
+        raise ContractValidationError("EVENT_RECONCILIATION_VERSION_INVALID")
+    if reconciliation.get("project_epoch") != work_order["project_epoch"]:
+        raise ContractValidationError("EVENT_RECONCILIATION_EPOCH_MISMATCH")
+    if reconciliation.get("work_order_id") != work_order["work_order_id"]:
+        raise ContractValidationError("EVENT_RECONCILIATION_WORK_ORDER_MISMATCH")
+    if reconciliation.get("authority") != _EVENT_LEDGER_RECONCILIATION_AUTHORITY:
+        raise ContractValidationError("EVENT_RECONCILIATION_AUTHORITY_INVALID")
+    if reconciliation.get("mode") != _EVENT_LEDGER_RECONCILIATION_MODE:
+        raise ContractValidationError("EVENT_RECONCILIATION_MODE_INVALID")
+
+    constraints = reconciliation.get("constraints")
+    required_constraints = {
+        "quarantine_exact_paths_only": True,
+        "git_blob_pin_required": True,
+        "quarantined_file_must_remain_present": True,
+        "quarantined_file_must_have_single_add_commit": True,
+        "wildcard_paths_forbidden": True,
+        "event_schema_unchanged": True,
+        "reducer_transition_table_unchanged": True,
+        "future_unlisted_events_are_authoritative": True,
+    }
+    if constraints != required_constraints:
+        raise ContractValidationError("EVENT_RECONCILIATION_CONSTRAINTS_INVALID")
+
+    canonical_next_sequence = reconciliation.get("canonical_next_sequence")
+    if not isinstance(canonical_next_sequence, int) or canonical_next_sequence < 2:
+        raise ContractValidationError("EVENT_RECONCILIATION_NEXT_SEQUENCE_INVALID")
+
+    raw_by_resolved = {path.resolve(): path for path in raw_event_paths}
+    quarantined_paths: set[Path] = set()
+    records = reconciliation.get("quarantined_events")
+    if not isinstance(records, list) or not records:
+        raise ContractValidationError("EVENT_RECONCILIATION_QUARANTINE_EMPTY")
+
+    for item in records:
+        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "reasons"}:
+            raise ContractValidationError("EVENT_RECONCILIATION_RECORD_INVALID")
+        relative = item.get("path")
+        blob_pin = item.get("git_blob_sha")
+        reasons = item.get("reasons")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or any(marker in relative for marker in ("*", "?", "["))
+            or not isinstance(blob_pin, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", blob_pin)
+            or not isinstance(reasons, list)
+            or not reasons
+            or any(not isinstance(reason, str) or not reason for reason in reasons)
+        ):
+            raise ContractValidationError("EVENT_RECONCILIATION_RECORD_INVALID")
+
+        candidate = (root / relative).resolve()
+        if candidate.parent != event_dir.resolve() or candidate not in raw_by_resolved:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_PATH_INVALID:{relative}")
+        if candidate in quarantined_paths:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_PATH_DUPLICATE:{relative}")
+
+        code, observed_blob = _git(root, "rev-parse", f"HEAD:{relative}")
+        if code != 0 or observed_blob != blob_pin:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_BLOB_MISMATCH:{relative}")
+
+        code, history = _git(root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
+        code, add_commit = _git(root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        if code != 0 or add_commit != commits[0]:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
+
+        raw_event = read_json(candidate)
+        sequence = raw_event.get("sequence")
+        if not isinstance(sequence, int) or sequence < canonical_next_sequence:
+            raise ContractValidationError(f"EVENT_RECONCILIATION_SEQUENCE_INVALID:{relative}")
+        quarantined_paths.add(candidate)
+
+    authoritative = [
+        path for path in raw_event_paths if path.resolve() not in quarantined_paths
+    ]
+    if not authoritative:
+        raise ContractValidationError("EVENT_RECONCILIATION_REMOVED_ALL_EVENTS")
+
+    canonical_relative = reconciliation.get("canonical_reconstruction_event")
+    if not isinstance(canonical_relative, str) or not canonical_relative:
+        raise ContractValidationError("EVENT_RECONCILIATION_CANONICAL_EVENT_INVALID")
+    canonical_path = (root / canonical_relative).resolve()
+    if canonical_path not in {path.resolve() for path in authoritative}:
+        raise ContractValidationError("EVENT_RECONCILIATION_CANONICAL_EVENT_MISSING")
+    canonical_event = read_json(canonical_path)
+    if canonical_event.get("sequence") != canonical_next_sequence - 1:
+        raise ContractValidationError("EVENT_RECONCILIATION_CANONICAL_SEQUENCE_INVALID")
+
+    return authoritative, {
+        "active": True,
+        "schema": reconciliation["schema"],
+        "reconciliation_id": reconciliation.get("reconciliation_id"),
+        "mode": reconciliation["mode"],
+        "quarantined_event_count": len(quarantined_paths),
+        "authoritative_event_count": len(authoritative),
+        "canonical_next_sequence": canonical_next_sequence,
+        "canonical_reconstruction_event": canonical_relative,
+    }
 
 
 def _validate_semantics(bundle: ContractBundle, epoch: dict[str, Any], work_order: dict[str, Any]) -> None:
@@ -364,13 +494,21 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         bundle.validate("work_order_schema", work_order, f"work_order:{path.name}")
         _validate_semantics(bundle, epoch, work_order)
         event_dir = execution_dir / "events" / work_order["work_order_id"]
-        event_paths = _json_files(event_dir)
+        raw_event_paths = _json_files(event_dir)
+        event_paths, reconciliation = _select_authoritative_event_paths(
+            root,
+            execution_dir,
+            work_order,
+            event_dir,
+            raw_event_paths,
+        )
         events = [read_json(event) for event in event_paths]
         work_orders.append(
             {
                 "definition": work_order,
                 "events": events,
                 "event_paths": event_paths,
+                "event_ledger_reconciliation": reconciliation,
                 "reduced": reduce_events(
                     bundle,
                     work_order,
@@ -533,6 +671,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         "epoch": {**epoch, "validation": epoch_validation},
         "active_work_order": active["definition"],
         "reduced_work_order": active["reduced"],
+        "event_ledger_reconciliation": active.get("event_ledger_reconciliation"),
         "review": {
             "required": active["definition"]["review_required"],
             "roles": active["definition"].get("required_review_roles", []),
