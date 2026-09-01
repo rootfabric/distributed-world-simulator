@@ -74,7 +74,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var setup := _build_lunar_network()
+	var setup: Dictionary = _build_lunar_network()
 	_assert_success(setup, "build lunar MW6/MW7 network")
 	if not bool(setup.get("success", false)):
 		_finish()
@@ -190,14 +190,14 @@ func _run() -> void:
 		material_delivery.configure(bubble.excavation_service(), output_port),
 		"bind P7.3 material delivery to P7.4 aggregate seam"
 	)
-	var aggregate_before := int(gameplay.get_report().get("revision", -1))
+	var aggregate_before: int = int(gameplay.get_report().get("revision", -1))
 	var delivered: Dictionary = material_delivery.deliver_committed(request, matter_result)
 	_assert_success(delivered, "deliver exact Matter batch to canonical Item Graph")
 	var delivery: Dictionary = delivered.get("details", {}).get("delivery", {})
 	_assert_true(not bool(delivery.get("replay", true)), "first material delivery is fresh")
 	_assert_true(bool(delivery.get("item_graph_mutated", false)), "fresh delivery mutates Item Graph once")
 	_assert_true(int(delivery.get("output_quantity", 0)) > 0, "real lunar dig yields canonical ore")
-	var aggregate_after := int(gameplay.get_report().get("revision", -1))
+	var aggregate_after: int = int(gameplay.get_report().get("revision", -1))
 	_assert_true(
 		aggregate_after == aggregate_before + 1,
 		"P7.4 aggregate revision advances exactly once on fresh delivery"
@@ -238,17 +238,17 @@ func _run() -> void:
 		"A/B Item Graph canonical checksums converge"
 	)
 
-	var source := _representation_source(bubble, client_a)
+	var source: Dictionary = _representation_source(bubble, client_a)
 	_assert_true(not source.is_empty(), "build shared Matter representation source revision")
-	var representation_a := _project_representation(client_a.subscription(), source)
-	var representation_b := _project_representation(client_b.subscription(), source)
+	var representation_a: Dictionary = _project_representation(client_a.subscription(), source)
+	var representation_b: Dictionary = _project_representation(client_b.subscription(), source)
 	_assert_success(representation_a, "RL3 projection for client A")
 	_assert_success(representation_b, "RL3 projection for client B")
 	var request_a: Dictionary = representation_a.get("details", {}).get("stream_request", {})
 	var request_b: Dictionary = representation_b.get("details", {}).get("stream_request", {})
 
 	var observer = ObserverScript.new()
-	var contract := observer.contract_report()
+	var contract: Dictionary = observer.contract_report()
 	_assert_true(not bool(contract.get("canonical_state_owned", true)), "P7.5 observer owns no canonical state")
 	_assert_true(not bool(contract.get("network_frames_sent", true)), "P7.5 observer sends no network frames")
 	_assert_true(not bool(contract.get("delivery_receipt_store", true)), "P7.5 owns no delivery receipt store")
@@ -285,7 +285,7 @@ func _run() -> void:
 
 	# Interest exit must break shared-region convergence; re-entry must restore it
 	# using existing MW7 snapshot/replay semantics, not a P7 cache.
-	var away_cell := _away_cell(bubble.grid_profile(), center_cell)
+	var away_cell: Dictionary = _away_cell(bubble.grid_profile(), center_cell)
 	_assert_true(not away_cell.is_empty(), "build distinct MW7 away cell")
 	_assert_success(
 		client_b.set_interest("subscription/p7-5/b/away", 2, away_cell, 0),
@@ -336,7 +336,7 @@ func _run() -> void:
 		client_b.source_global_stream_sequence() == client_a.source_global_stream_sequence(),
 		"client B reconverges to authoritative Matter cursor after re-entry"
 	)
-	var representation_b_reentered := _project_representation(client_b.subscription(), source)
+	var representation_b_reentered: Dictionary = _project_representation(client_b.subscription(), source)
 	_assert_success(representation_b_reentered, "RL3 projection after client B re-entry")
 	var reconverged: Dictionary = observer.evaluate(
 		client_a,
@@ -353,8 +353,8 @@ func _run() -> void:
 
 	# Exact duplicate command and material delivery are mutation-free at the
 	# existing owners. No new MW7 delta or aggregate revision may appear.
-	var matter_cursor_before_replay := authority.stream_sequence()
-	var gameplay_revision_before_replay := int(gameplay.get_report().get("revision", -1))
+	var matter_cursor_before_replay: int = int(authority.stream_sequence())
+	var gameplay_revision_before_replay: int = int(gameplay.get_report().get("revision", -1))
 	var replay_transport: Dictionary = setup["command_transport"].send(command)
 	_assert_success(replay_transport, "replay exact MW6 command")
 	var replay_command: Dictionary = client_a.accept_command_result(
@@ -429,7 +429,7 @@ func _build_lunar_network() -> Dictionary:
 	})
 	if not bool(configured.get("success", false)):
 		return configured
-	var center := bubble.anchor_body_fixed_m()
+	var center: Vector3 = bubble.anchor_body_fixed_m()
 	var request: Dictionary = bubble.create_excavation_request(
 		OPERATION_ID,
 		ACTOR_A,
@@ -553,8 +553,8 @@ func _dispatch_and_poll(interest_server, replication, client, peer_id: String) -
 
 
 func _representation_source(bubble, client) -> Dictionary:
-	var store_hash := String(client.snapshot_store().content_hash())
-	var dependency_hash := String(bubble.grid_profile().get("checksum", ""))
+	var store_hash: String = String(client.snapshot_store().content_hash())
+	var dependency_hash: String = String(bubble.grid_profile().get("checksum", ""))
 	return RepresentationSourceScript.create(
 		"MATTER",
 		String(bubble.body_definition().get("body_id", "")),
@@ -599,11 +599,11 @@ func _away_cell(grid_profile: Dictionary, center_cell: Dictionary) -> Dictionary
 	var indices: Array = MatterInterestRegionScript.indices_for_cell(center_cell)
 	if indices.size() != 3:
 		return {}
-	var level := int(center_cell.get("level", -1))
-	var axis_count := 1 << level
+	var level: int = int(center_cell.get("level", -1))
+	var axis_count: int = 1 << level
 	if axis_count < 2:
 		return {}
-	var x := (int(indices[0]) + maxi(1, axis_count >> 1)) % axis_count
+	var x: int = (int(indices[0]) + maxi(1, axis_count >> 1)) % axis_count
 	return MatterInterestRegionScript.cell_for_indices(
 		grid_profile,
 		level,
