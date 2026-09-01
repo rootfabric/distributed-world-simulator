@@ -24,7 +24,7 @@ static func compile(
 	if not bool(checked.get("success", false)):
 		return _no_safe(String(checked.get("error_code", "B0_4_B_INVALID_FULL_MODEL")))
 	var n := int(full_model["full_state_schema"]["state_count"])
-	var port_count := full_model["boundary_contract"]["ports"].size()
+	var port_count: int = int(full_model["boundary_contract"]["ports"].size())
 	if n < 512:
 		return _no_safe("B0_4_B_FULL_STATE_REFERENCE_BELOW_512")
 	if target_reduced_states != TARGET_REDUCED_STATES:
