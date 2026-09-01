@@ -17,25 +17,14 @@
     "p7_4_review": "UNCHANGED",
     "p7_4_verification": "UNCHANGED",
     "p7_4_merge": "UNCHANGED",
-    "automated_drive_close": "RESTORED",
-    "p7_5_manual_control": "AVAILABLE",
-    "p7_5_automated_control": "AVAILABLE"
+    "automated_drive_close": "BLOCKED",
+    "p7_5_manual_control": "POSSIBLE_BUT_NOT_PREFERRED",
+    "p7_5_automated_control": "REPAIR_REQUIRED_FIRST"
   },
   "repair_rule": "Reconstruct or author the epoch transition-table contract as a separate Harness/control task using precedent from prior valid epochs. Do not infer transitions ad hoc from P7.4 runtime evidence and do not retroactively mutate R1/R2/R3 verification records.",
-  "status": "RESOLVED",
-  "next": "P7_5_TWO_CLIENT_CONVERGENCE",
+  "status": "OPEN",
+  "next": "REPAIR_BEFORE_P7_5_AUTOMATED_DRIVE_CLOSE",
   "blocking_p7_4_closure": false,
   "blocking_whole_p7_acceptance": false,
-  "blocking_automated_p7_5_drive_close": false,
-  "resolution": {
-    "repair_pr": 432,
-    "repair_head": "5b12d35798702c28df7ad58099dc9b3c132be78e",
-    "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
-    "repair_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-TRANSITION-LEDGER-REPAIR-EVIDENCE-001.v1.json",
-    "project_control_run": 33508057451,
-    "project_control": "SUCCESS",
-    "drive": "PASS_EXIT_0_CONTINUE_REQUIRED",
-    "close": "PASS_EXIT_8_MISSION_EXIT_FORBIDDEN",
-    "resolved_at_utc": "2026-09-01T12:31:04Z"
-  }
+  "blocking_automated_p7_5_drive_close": true
 }
