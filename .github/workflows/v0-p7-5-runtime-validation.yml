@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: v0-p7-5-runtime-validation
+  group: v0-p7-5-runtime-validation-r2
   cancel-in-progress: false
 
 jobs:
