@@ -7,8 +7,8 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -Er
 
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
-$Perf24Head = "8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"
-$Perf24Tree = "17635bb35101715205a960fdc41d16c179909101"
+$Perf24Head = "e6550f1fe929a9767c34ff64378e9c64761ad925"
+$Perf24Tree = "edfd2ffeb3848f9ba1cdb6b4948f2be101c06ffb"
 $Vis49Head = "ab44617d8961add81a6c9f245c99d0b68eaeab52"
 $Vis49Tree = "9d543a3db4f54a676e9f25152785c36a72c56a30"
 
