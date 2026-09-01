@@ -875,7 +875,7 @@ Acceptance compares FULL vs BAKED boundary observables, not pointwise redundant 
 
 ---
 
-# 18. B0.4 — DYNAMIC STATE REDUCTION / ROM
+# 18. B0.4 — DYNAMIC STATE REDUCTION / ROM — AUTHORIZED BY FABRIC.SYNC2
 
 ## Goal
 
@@ -932,7 +932,7 @@ B0.4 requires explicit:
 
 ---
 
-# 19. B0.5 — HYBRID MODE BAKE + LAZY MODE COMPILATION
+# 19. B0.5 — HYBRID MODE BAKE + LAZY MODE COMPILATION — P0 CONTRACT/PREFLIGHT AUTHORIZED
 
 Use existing FABRIC semantics:
 
@@ -989,9 +989,27 @@ FULL / NO_SAFE_BAKE
 
 ---
 
-# 20. BRIDGE-2 — Mixed FULL ↔ BAKED physical graph
+# 20. BRIDGE-2 — Mixed FULL ↔ BAKED physical graph — EXECUTABLE NOT YET AUTHORIZED
 
-After B0.3/B0.4 maturity:
+After B0.3/B0.4 maturity.
+
+FABRIC.SYNC2 refines this entry gate:
+
+```text
+B0.3 CLOSED
++
+B0.4 CLOSED
++
+B0.5 P0 CLOSED
++
+generic B0.5 mode candidate consumes B0.4 artifact interface
++
+mixed state/authority ownership explicit
+```
+
+Until then BRIDGE-2 executable work is blocked.
+
+Target composition:
 
 ```text
 FULL subsystem
@@ -1888,3 +1906,113 @@ PRODUCTION ACCEPTANCE NOT CLAIMED
 Runtime/test bytes remain frozen at executable HEAD `acc72c1fb216bea56bc44547bc3e1eec7a37af08`.
 
 Next research stages are B0.4 Dynamic ROM and B0.5 Hybrid Bake; BRIDGE-2 follows their maturity.
+
+
+---
+
+# 31. FABRIC.SYNC2 — POST-B0.3 DEVELOPMENT AUTHORIZATION — 2026-09-01
+
+Formal review branch:
+
+```text
+research/fabric-sync2-post-b0-3-development-review-r1
+```
+
+Formal base:
+
+```text
+B0.3 closure:
+9575a63d6aeb4c455f8beade7588505e600c12d6
+
+B0.3 exact executable:
+acc72c1fb216bea56bc44547bc3e1eec7a37af08
+```
+
+Additional tangible evidence:
+
+```text
+CONSTRUCT0 exact:
+afcd564b631a2f48283dfefef17f4d6542f558a3
+
+CONSTRUCT0 closure:
+1b1e237a4dfd3706d5375023d7832f5dc42687d1
+
+acceptance:
+325/325 PASS
+```
+
+SYNC-2 concludes that the dominant remaining reduction wall is dynamic state count,
+not a currently demonstrated missing contact primitive.
+
+Decision:
+
+```text
+PHYSICAL CORE:
+FABRIC0.18 remains frozen
+
+FABRIC0.19:
+NOT AUTHORIZED
+
+B0.4 DYNAMIC ROM:
+EXECUTABLE RESEARCH AUTHORIZED
+PRIMARY NEXT EXECUTABLE
+
+authorized branch:
+research/fabric-bake0-4-dynamic-rom-r1
+
+initial reference target:
+FULL >= 512 dynamic states
+REDUCED <= 24 states
+reduction >= 20x
+relative boundary response error <= 1e-3
+passivity / no invented energy required
+ValidatedDomain / ErrorEnvelope / RuntimeErrorEstimator / RefinementGuard required
+
+B0.5 HYBRID BAKE:
+P0 CONTRACT / PREFLIGHT AUTHORIZED
+
+authorized branch:
+research/fabric-bake0-5-hybrid-bake-preflight-r1
+
+B0.5 executable:
+NOT AUTHORIZED until stable B0.4 mode-local ROM interface
+
+BRIDGE-2 executable:
+NOT AUTHORIZED
+```
+
+B0.5 P0 may define only generic mode/cache/transition/reset/fallback contracts over
+existing FABRIC FLOW/JUMP/TOPOLOGY TRANSACTION/complementarity/hybrid-DAE semantics.
+
+Unknown or uncertifiable dynamic/hybrid cases retain the legal path:
+
+```text
+FULL
+or
+NO_SAFE_BAKE
+```
+
+A later FABRIC0.19 proposal requires a concrete downstream falsifier showing that a
+missing generic Physical Core primitive makes the accepted B0.4/B0.5/BRIDGE-2 goal
+impossible, not merely slower in FULL mode.
+
+Detailed contracts:
+
+- `docs/research/FABRIC_SYNC2_POST_B0_3_DEVELOPMENT_REVIEW_RU.md`;
+- `docs/research/FABRIC_BAKE_B0_4_DYNAMIC_ROM_AUTHORIZATION_RU.md`;
+- `docs/research/FABRIC_BAKE_B0_5_HYBRID_BAKE_PREFLIGHT_RU.md`;
+- `validation/fabric_sync2_authorization.v1.json`.
+
+Next synchronization:
+
+```text
+B0.4 CLOSED
++
+B0.5 P0 CLOSED
+        ↓
+FABRIC synchronization review
+        ↓
+B0.5 executable authorization?
+FABRIC0.19 necessity?
+BRIDGE-2 executable authorization?
+```
