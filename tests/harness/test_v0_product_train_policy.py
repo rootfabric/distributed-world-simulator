@@ -239,7 +239,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(5, reconciliation["authoritative_event_count"])
         self.assertEqual(6, reconciliation["canonical_next_sequence"])
         self.assertEqual("CONTINUE_REQUIRED", payload["drive"]["status"])
-        self.assertFalse(payload["drive"]["auto_continue_required"] is False and payload["next"]["mission_exit_allowed"])
+        self.assertTrue(payload["drive"]["auto_continue_required"])
+        self.assertFalse(payload["next"]["mission_exit_allowed"])
 
     def test_p7_transition_ledger_repair_keeps_close_mission_fail_closed_until_p7_acceptance(self) -> None:
         completed, payload = self._run_p7_control_cli("close-mission")
@@ -257,7 +258,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(14, len(manifest["quarantined_events"]))
         for record in manifest["quarantined_events"]:
             relative = record["path"]
-            self.assertNotRegex(relative, r"[*?[]")
+            self.assertFalse(any(marker in relative for marker in ("*", "?", "[")), relative)
             observed = subprocess.check_output(
                 ["git", "rev-parse", f"HEAD:{relative}"],
                 cwd=ROOT,
