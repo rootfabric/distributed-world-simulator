@@ -1,0 +1,78 @@
+{
+  "schema": "planet_simulator.fabric_sync2_authorization.v1",
+  "review_id": "fabric-sync2-post-b0-3-r1",
+  "base": {
+    "b0_3_closure": "9575a63d6aeb4c455f8beade7588505e600c12d6",
+    "b0_3_exact_executable": "acc72c1fb216bea56bc44547bc3e1eec7a37af08",
+    "fabric0_18_closure": "b9f4a11cb7c31e47884d12eaad2985811e0b6563",
+    "fabric0_18_exact_physics": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+    "bridge1_closure": "82a44ac8f6e362456cb2f8c150145e73afb17157",
+    "b0_2_final_executable": "91a2f79bf6738efefa342589c44e4a0f0a6960d6"
+  },
+  "additional_evidence": {
+    "construct0_exact_subject": "afcd564b631a2f48283dfefef17f4d6542f558a3",
+    "construct0_closure": "1b1e237a4dfd3706d5375023d7832f5dc42687d1",
+    "construct0_acceptance": "325/325 PASS"
+  },
+  "decisions": {
+    "fabric0_19": {
+      "authorized": false,
+      "reason": "No concrete B0.4 or B0.5-P0 falsifier requires a new Physical Core primitive; FULL/NO_SAFE_BAKE remains legal for unsupported domains."
+    },
+    "b0_4": {
+      "authorized": true,
+      "authorization_level": "EXECUTABLE_RESEARCH",
+      "branch": "research/fabric-bake0-4-dynamic-rom-r1",
+      "priority": "PRIMARY_NEXT_EXECUTABLE",
+      "initial_full_dynamic_states_min": 512,
+      "initial_reduced_dynamic_states_max": 24,
+      "initial_state_reduction_min": 20,
+      "initial_relative_boundary_error_max": 0.001,
+      "requires": [
+        "ValidatedDomain",
+        "ErrorEnvelope",
+        "RuntimeErrorEstimator",
+        "RefinementGuard",
+        "ReconstructionDescriptor",
+        "StateMapping",
+        "PhysicalBakeArtifact",
+        "passivity/no-invented-energy"
+      ]
+    },
+    "b0_5": {
+      "authorized": true,
+      "authorization_level": "CONTRACT_PREFLIGHT_P0",
+      "executable_authorized": false,
+      "branch": "research/fabric-bake0-5-hybrid-bake-preflight-r1",
+      "requires_existing_semantics": [
+        "FLOW",
+        "JUMP",
+        "TOPOLOGY_TRANSACTION",
+        "complementarity",
+        "hybrid_DAE"
+      ],
+      "fallback": [
+        "FULL",
+        "NO_SAFE_BAKE"
+      ],
+      "executable_unlock": [
+        "B0.4 stable mode-local Dynamic ROM artifact interface",
+        "B0.4 projection/reconstruction contract",
+        "B0.5 P0 CLOSED",
+        "generic two-mode falsifier selected"
+      ]
+    },
+    "bridge2": {
+      "executable_authorized": false,
+      "design_preflight_allowed": true,
+      "unlock": [
+        "B0.4 CLOSED",
+        "B0.5 P0 CLOSED",
+        "generic B0.5 mode candidate consumes B0.4 interface",
+        "explicit mixed state ownership and authority"
+      ]
+    }
+  },
+  "next_sync": "after B0.4 CLOSED + B0.5 P0 CLOSED, before BRIDGE-2 executable authorization",
+  "production_accepted": false
+}
