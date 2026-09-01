@@ -97,6 +97,7 @@ if ($LASTEXITCODE -ne 0) {
 Assert-LogClean $ImportLog
 
 Invoke-Contract "p7-5-two-client" "res://tests/runtime/test_v0_p7_5_two_client_convergence.gd" "V0-P7.5 two-client convergence: PASS ("
+Invoke-Contract "m7-aggregate-replica" "res://tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd" "M7 aggregate replica compatibility: PASS ("
 Invoke-RestartPhase "seed"
 Invoke-RestartPhase "recover-deliver"
 Invoke-RestartPhase "recover-replay"
