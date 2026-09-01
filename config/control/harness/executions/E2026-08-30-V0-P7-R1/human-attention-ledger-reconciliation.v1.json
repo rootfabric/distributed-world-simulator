@@ -6,7 +6,7 @@
   "work_order_id": "V0-P7-R1-WO-001",
   "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_HUMAN_ATTENTION",
   "mode": "QUARANTINE_EXACT_IMMUTABLE_RESOLVED_LEGACY_HUMAN_ATTENTION",
-  "reason": "P7.3/P7.4 resolved Human merge receipts contain legacy resolved_at_utc metadata not admitted by the current strict schema. Their decisions are already durably bound by stage closure evidence; preserve the files unchanged and exclude only these exact resolved receipts from current active-attention parsing.",
+  "reason": "P7.2-P7.4 runtime-merge Human receipts are already RESOLVED stage-level decisions. P7.3/P7.4 also contain legacy resolved_at_utc metadata, while all three use substep checkpoint identities that the current whole-Work-Order active-attention loader intentionally rejects. Preserve the files unchanged; exclude only these exact resolved stage receipts from current active-attention parsing.",
   "constraints": {
     "quarantine_exact_paths_only": true,
     "git_blob_pin_required": true,
@@ -18,6 +18,11 @@
     "future_unlisted_attention_is_authoritative": true
   },
   "quarantined_items": [
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-2-RUNTIME-FEATURE-MERGE-001.v1.json",
+      "git_blob_sha": "0a73767b2a9b5ffa20b4f0a93e41af7ee9321c27",
+      "reason": "RESOLVED_STAGE_LEVEL_SUBSTEP_CHECKPOINT_IDENTITY"
+    },
     {
       "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001.v1.json",
       "git_blob_sha": "3d613409166b4f7f874014d67db4daaa254c77dc",
