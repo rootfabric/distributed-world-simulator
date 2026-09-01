@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-08-30-V0-P7-R1-WO-001-EVIDENCE-RECONCILIATION-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVIDENCE",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_MISTYPED_EVIDENCE_MAPS",
+  "reason": "P7.3/P7.4 closure-support documents reused the canonical harness_evidence_map.v1 schema identity while carrying stage-specific closure structures. Preserve those immutable files as historical evidence, but do not let the false schema identity enter current Evidence Map authorization.",
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "canonical_evidence_map_schema_unchanged": true,
+    "future_unlisted_evidence_is_authoritative": true
+  },
+  "quarantined_evidence": [
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-CLOSURE-EVIDENCE-001.v1.json",
+      "git_blob_sha": "366de2832f178e52d78c60e48118e0f5a2dade8f",
+      "reason": "STAGE_CLOSURE_RECEIPT_MISTYPED_AS_CANONICAL_EVIDENCE_MAP"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
+      "git_blob_sha": "32299838919522317040f7895345705cf5fe3c43",
+      "reason": "STAGE_SPECIFIC_EVIDENCE_STRUCTURE_MISTYPED_AS_CANONICAL_EVIDENCE_MAP"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json",
+      "git_blob_sha": "61d819879d9215b3f75a06ccf970e1a144c9e45d",
+      "reason": "STAGE_CLOSURE_RECEIPT_MISTYPED_AS_CANONICAL_EVIDENCE_MAP"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-EVIDENCE-MAP-001.v1.json",
+      "git_blob_sha": "99e1d64f558156626b7f9f67c3b2c8fa7af19446",
+      "reason": "STAGE_SPECIFIC_EVIDENCE_STRUCTURE_MISTYPED_AS_CANONICAL_EVIDENCE_MAP"
+    }
+  ],
+  "canonical_evidence_maps_retained": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-2-EVIDENCE-001.v1.json"
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}

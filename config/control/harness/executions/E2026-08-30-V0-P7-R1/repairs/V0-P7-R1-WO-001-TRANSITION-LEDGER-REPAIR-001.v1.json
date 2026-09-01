@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "V0-P7-R1-WO-001-TRANSITION-LEDGER-REPAIR-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "trigger": "P7 epoch CONTROL_DEVELOPMENT -Drive/-Close returns CONTRACT_OR_DEPENDENCY_INVALID because transition-table.v1.json is absent; inspection proves the raw event directory also contains immutable noncanonical control observations that cannot be reduced by the canonical event schema.",
+  "affected_module": "P7 Harness execution recovery surface: transition table + authoritative event-ledger projection",
+  "canonical_owner": "H0 restart-safe Harness; main-owned control contracts; P7 execution remains one bounded checkpoint mission",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Drive",
+    "CONTROL_DEVELOPMENT.ps1 -Close",
+    "scripts/harness/cli.py::main",
+    "scripts/harness/state_builder.py::build_state",
+    "scripts/harness/event_reducer.py::reduce_events"
+  ],
+  "callers": [
+    "root AGENTS.md checkpoint-session protocol",
+    "P7 Director/Implementer/Reviewer/Verifier continuation",
+    "Project Control V0 product regression"
+  ],
+  "callees": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/event-ledger-reconciliation.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/**"
+  ],
+  "sibling_paths": [
+    "config/control/harness/executions/E2026-08-24-V0-SM1-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-08-24-V0-P6-R3/transition-table.v1.json",
+    "scripts/harness/event_reducer.py",
+    "scripts/harness/state_builder.py",
+    "tests/harness/test_v0_product_train_policy.py"
+  ],
+  "existing_tests": [
+    "tests/harness/test_harness_checkpoint_session.py",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "missing_tests": [
+    "Actual P7 execution drive must return exit 0 instead of contract exit 3.",
+    "Actual P7 execution close-mission must fail with exit 8 MISSION_EXIT_FORBIDDEN while P7 remains unaccepted.",
+    "A reconciliation manifest must be unable to hide an event whose Git blob no longer matches its pinned identity."
+  ],
+  "public_or_internal_contracts": [
+    "Git event files are immutable; historical invalid files must not be edited or deleted.",
+    "Append-only authoritative reducer state must remain contiguous and schema-valid.",
+    "A legacy reconciliation may quarantine only explicitly pinned immutable paths and must never act as a wildcard or future-event suppressor.",
+    "P7 remains IN_PROGRESS after P7.4; CloseMission must stay forbidden until canonical P7 checkpoint acceptance.",
+    "No runtime, ownership, watched-path or review predicate is weakened by this repair."
+  ],
+  "expected_shipped_behavior": "The P7 execution contains the canonical transition table. State recovery selects a strict canonical projection consisting of valid event 0001-0004 plus reconstructed event 0005 summarizing already-proven P7.3/P7.4 merged progress; immutable malformed 0006-0019 remain preserved and pinned in a reconciliation manifest but are not authoritative reducer input. CONTROL_DEVELOPMENT -Drive returns a normal continuation result and -Close returns MISSION_EXIT_FORBIDDEN rather than contract exit 3.",
+  "relevant_history_or_evidence": [
+    "V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001",
+    "P7.3 COMPLETE_MERGED evidence",
+    "P7.4 Reviewer R1 PASS",
+    "P7.4 Verifier R3 VERIFIED",
+    "P7.4 runtime merge bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+    "P7.4 post-merge PC0 NON_RED run 33443988797",
+    "Canonical main 28ba1bdc54af6dc730949ee3546ec572aec7d623"
+  ],
+  "root_cause_hypothesis": "The P7 execution was created without the canonical transition table. Later control lifecycle observations were written into the same event directory using event types, branches, heads and sequencing that were never part of harness_event.schema.v1; because the missing table failed first, this latent ledger incompatibility remained masked.",
+  "canonical_fix_location": "Restore the exact latest accepted transition-table contract in the P7 execution and add a narrowly scoped immutable-ledger reconciliation layer in state_builder that is activated only by an explicit per-execution manifest with exact Git blob pins.",
+  "why_not_symptom_patch": "Copying only transition-table.v1.json would merely move failure from missing-file exit 3 to event schema/sequence/provenance failures. Editing/deleting old events would violate Git durable-memory/immutability rules. Globally accepting arbitrary control branches/event types would weaken the canonical event contract. The strict pinned projection repairs recovery without changing runtime truth or generic event semantics.",
+  "state": "REPAIR_MAP_READY"
+}

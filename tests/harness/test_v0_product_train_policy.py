@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -13,6 +15,7 @@ from harness.checkpoint_planner import build_plan
 
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
+P7_EXECUTION = HARNESS / "executions/E2026-08-30-V0-P7-R1"
 SM1_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
 
 
@@ -198,6 +201,105 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(ids[-2:], [P7, "V0_P8_FIRST_MOBILE_CONSTRUCT"])
         train = next(item for item in self.goals["current_goal_graph"] if item["id"] == "V0_PRODUCT_TRAIN")
         self.assertIn(P7, train["sequence"])
+
+
+    def _run_p7_control_cli(self, mode: str):
+        env = dict(os.environ)
+        scripts = str(ROOT / "scripts")
+        env["PYTHONPATH"] = scripts + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+
+        original_head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+        original_branch = subprocess.check_output(
+            ["git", "branch", "--show-current"], cwd=ROOT, text=True
+        ).strip()
+        rebound_detached_head = not original_branch
+        if rebound_detached_head:
+            # Project Control checks out the exact PR subject detached. The Harness
+            # intentionally requires an active Work Order branch, so bind the same
+            # exact commit to the P7 branch name for this CLI probe only.
+            subprocess.check_call(
+                ["git", "branch", "-f", P7_BRANCH, original_head],
+                cwd=ROOT,
+            )
+            subprocess.check_call(
+                ["git", "symbolic-ref", "HEAD", f"refs/heads/{P7_BRANCH}"],
+                cwd=ROOT,
+            )
+        try:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "harness.cli",
+                    mode,
+                    "--root",
+                    str(ROOT),
+                    "--execution",
+                    str(P7_EXECUTION),
+                ],
+                cwd=ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        finally:
+            if rebound_detached_head:
+                subprocess.check_call(
+                    ["git", "checkout", "--detach", original_head],
+                    cwd=ROOT,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+        payload = json.loads(completed.stdout.strip().splitlines()[-1])
+        return completed, payload
+
+    def test_p7_transition_ledger_repair_restores_drive_without_contract_exit_3(self) -> None:
+        completed, payload = self._run_p7_control_cli("drive")
+        self.assertEqual(0, completed.returncode, completed.stderr or completed.stdout)
+        self.assertTrue(payload["ok"])
+        self.assertEqual("DRIVE", payload["command"])
+        self.assertEqual("IN_PROGRESS", payload["reduced_work_order"]["state"])
+        reconciliation = payload["event_ledger_reconciliation"]
+        self.assertTrue(reconciliation["active"])
+        self.assertEqual(14, reconciliation["quarantined_event_count"])
+        self.assertEqual(5, reconciliation["authoritative_event_count"])
+        self.assertEqual(6, reconciliation["canonical_next_sequence"])
+        self.assertEqual("CONTINUE_REQUIRED", payload["drive"]["status"])
+        self.assertTrue(payload["drive"]["auto_continue_required"])
+        self.assertFalse(payload["next"]["mission_exit_allowed"])
+
+    def test_p7_transition_ledger_repair_keeps_close_mission_fail_closed_until_p7_acceptance(self) -> None:
+        completed, payload = self._run_p7_control_cli("close-mission")
+        self.assertEqual(8, completed.returncode, completed.stderr or completed.stdout)
+        self.assertFalse(payload["ok"])
+        self.assertEqual("MISSION_EXIT_FORBIDDEN", payload["error"]["code"])
+        self.assertIn("CHECKPOINT_MISSION_STILL_OPEN", payload["error"]["detail"])
+
+    def test_p7_reconciliation_blob_pins_match_current_immutable_event_files(self) -> None:
+        manifest = _load(P7_EXECUTION / "event-ledger-reconciliation.v1.json")
+        self.assertEqual(
+            "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
+            manifest["mode"],
+        )
+        self.assertEqual(14, len(manifest["quarantined_events"]))
+        for record in manifest["quarantined_events"]:
+            relative = record["path"]
+            self.assertFalse(any(marker in relative for marker in ("*", "?", "[")), relative)
+            observed = subprocess.check_output(
+                ["git", "rev-parse", f"HEAD:{relative}"],
+                cwd=ROOT,
+                text=True,
+            ).strip()
+            self.assertEqual(record["git_blob_sha"], observed, relative)
+            history = subprocess.check_output(
+                ["git", "log", "--format=%H", "--", relative],
+                cwd=ROOT,
+                text=True,
+            ).splitlines()
+            self.assertEqual(1, len(history), relative)
 
 
 if __name__ == "__main__":

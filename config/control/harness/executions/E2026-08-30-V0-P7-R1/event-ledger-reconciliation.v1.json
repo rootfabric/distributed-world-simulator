@@ -1,0 +1,149 @@
+{
+  "schema": "distributed_world_simulator.harness_event_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-08-30-V0-P7-R1-WO-001-LEDGER-RECONCILIATION-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
+  "reason": "The execution was missing its transition table and later mixed noncanonical control observations into the runtime Work Order event directory. Preserve those files byte-identically as evidence, but exclude only the exact pinned files from authoritative reducer input.",
+  "canonical_reconstruction_event": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0005-p7-3-p7-4-runtime-progress-reconciled.v1.json",
+  "canonical_next_sequence": 6,
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "event_schema_unchanged": true,
+    "reducer_transition_table_unchanged": true,
+    "future_unlisted_events_are_authoritative": true
+  },
+  "quarantined_events": [
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0006-p7-3-runtime-feature-merge-human-attention-required.v1.json",
+      "git_blob_sha": "d497db54519def283d733ea4e275a48cc60f3b91",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "STATE_TRANSITION_NOT_CANONICAL",
+        "SEQUENCE_DEPENDS_ON_MISSING_0005"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0007-p7-3-runtime-feature-merge-approved.v1.json",
+      "git_blob_sha": "cfeaa616b7ae648e582ab0cb9aa60981f3053e81",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "TIMESTAMP_DECREASES"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0008-p7-3-runtime-merged.v1.json",
+      "git_blob_sha": "98eaa43de51e1584e1dd8489b87079bdf4fde12a",
+      "reasons": [
+        "NONCANONICAL_SEQUENCE_CHAIN_AFTER_QUARANTINED_EVENTS"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0009-p7-3-main-owned-frontier-repair-authorized.v1.json",
+      "git_blob_sha": "db3c950716362fb7563a068da0687495ab9e8491",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "HEAD_SHA_MISSING"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0010-p7-4-fresh-reviewer-dispatched.v1.json",
+      "git_blob_sha": "40f768575129f71a1449c2282da29d1bb8289c3a",
+      "reasons": [
+        "EVENT_TYPE_STATE_PAIR_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "CONTROL_ROLE_OBSERVATION_NOT_RUNTIME_LEDGER_STATE"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0011-p7-4-fresh-verifier-dispatched.v1.json",
+      "git_blob_sha": "d130fcac2df4f9785138e8c38febff0fe914de08",
+      "reasons": [
+        "EVENT_TYPE_STATE_PAIR_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "CONTROL_ROLE_OBSERVATION_NOT_RUNTIME_LEDGER_STATE"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0012-p7-4-verifier-r1-not-verified.v1.json",
+      "git_blob_sha": "c94fb487b3f6ff979c79f2bfa7a766a3a604b0a0",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0013-p7-4-fresh-verifier-r2-dispatched.v1.json",
+      "git_blob_sha": "cb5f915aaef255d870e42d840a49eef34ad2d955",
+      "reasons": [
+        "EVENT_TYPE_STATE_PAIR_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "CONTROL_ROLE_OBSERVATION_NOT_RUNTIME_LEDGER_STATE"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0014-p7-4-verifier-platform-amendment.v1.json",
+      "git_blob_sha": "805c35638eca205ca9891d70c7315fae26c6cb49",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0015-p7-4-fresh-verifier-r3-dispatched.v1.json",
+      "git_blob_sha": "0bf5af018791e0fefdd6161db7b8049407e6f78d",
+      "reasons": [
+        "EVENT_TYPE_STATE_PAIR_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "CONTROL_ROLE_OBSERVATION_NOT_RUNTIME_LEDGER_STATE"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0016-p7-4-runtime-feature-merge-approved.v1.json",
+      "git_blob_sha": "b8ad423f1d1dbc9a22c23905898e5ea08843c35d",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0017-p7-4-runtime-merged.v1.json",
+      "git_blob_sha": "61ec56610231c4a9a7c3589017c9ef923fb581f4",
+      "reasons": [
+        "NONCANONICAL_SEQUENCE_CHAIN_AFTER_QUARANTINED_EVENTS"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0018-p7-4-main-owned-frontier-repair-authorized.v1.json",
+      "git_blob_sha": "5bdfbecec468d6b929b25e33f7be21e450f87384",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "HEAD_SHA_MISSING"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0019-p7-4-post-merge-project-control-non-red.v1.json",
+      "git_blob_sha": "e1be07d8333216c991f2968f6d1fa2d3ff988185",
+      "reasons": [
+        "EVENT_TYPE_NOT_CANONICAL",
+        "WORK_ORDER_BRANCH_MISMATCH",
+        "TIMESTAMP_DECREASES"
+      ]
+    }
+  ],
+  "evidence": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-TRANSITION-LEDGER-REPAIR-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-POST-MERGE-AUDIT-EVIDENCE-001.v1.json"
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_transition_ledger_repair_evidence.v1",
+  "evidence_id": "V0-P7-R1-TRANSITION-LEDGER-REPAIR-EVIDENCE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "repair_id": "V0-P7-R1-WO-001-TRANSITION-LEDGER-REPAIR-001",
+  "repair_head": "9e5da20950bd39df4f36895f7f91ae1e5769b83d",
+  "base_main": "28ba1bdc54af6dc730949ee3546ec572aec7d623",
+  "transition_table": {
+    "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/transition-table.v1.json",
+    "source_contract": "config/control/harness/executions/E2026-08-24-V0-SM1-R1/transition-table.v1.json",
+    "restored": true,
+    "canonical_event_schema_changed": false,
+    "reducer_transition_semantics_changed": false
+  },
+  "legacy_reconciliation": {
+    "historical_files_edited_or_deleted": false,
+    "event_ledger": {
+      "manifest": "config/control/harness/executions/E2026-08-30-V0-P7-R1/event-ledger-reconciliation.v1.json",
+      "exact_blob_pinned_legacy_events": 14,
+      "canonical_reconstruction_event": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0005-p7-3-p7-4-runtime-progress-reconciled.v1.json",
+      "future_unlisted_events_authoritative": true
+    },
+    "evidence_ledger": {
+      "manifest": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence-ledger-reconciliation.v1.json",
+      "exact_blob_pinned_mistyped_legacy_evidence": 4,
+      "future_unlisted_evidence_authoritative": true
+    },
+    "review_ledger": {
+      "manifest": "config/control/harness/executions/E2026-08-30-V0-P7-R1/review-ledger-reconciliation.v1.json",
+      "exact_blob_pinned_legacy_reviews": 6,
+      "future_unlisted_reviews_authoritative": true
+    },
+    "human_attention_ledger": {
+      "manifest": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention-ledger-reconciliation.v1.json",
+      "exact_blob_and_full_history_pinned_resolved_stage_receipts": 3,
+      "only_resolved_items_quarantinable": true,
+      "future_unlisted_attention_authoritative": true
+    }
+  },
+  "work_order_contract_repair": {
+    "critical_required_review_roles": [
+      "IMPLEMENTER",
+      "REVIEWER",
+      "VERIFIER",
+      "DIRECTOR",
+      "HUMAN"
+    ],
+    "risk_policy_weakened": false,
+    "runtime_scope_expanded": false,
+    "architecture_ownership_changed": false
+  },
+  "drive_close_proof": {
+    "test_file": "tests/harness/test_v0_product_train_policy.py",
+    "drive": {
+      "expected_exit": 0,
+      "expected_command": "DRIVE",
+      "expected_reduced_state": "IN_PROGRESS",
+      "expected_status": "CONTINUE_REQUIRED",
+      "mission_exit_allowed": false,
+      "result": "PASS"
+    },
+    "close_mission": {
+      "expected_exit": 8,
+      "expected_error": "MISSION_EXIT_FORBIDDEN",
+      "expected_detail_contains": "CHECKPOINT_MISSION_STILL_OPEN",
+      "result": "PASS"
+    },
+    "interpretation": "The original exit 3 CONTRACT_OR_DEPENDENCY_INVALID recovery failure is removed. Close remains intentionally fail-closed because whole P7 is not accepted."
+  },
+  "project_control": {
+    "run": 33507905150,
+    "result": "SUCCESS",
+    "exact_tested_head": "9e5da20950bd39df4f36895f7f91ae1e5769b83d",
+    "checkpoint_session": "PASS",
+    "architecture_ownership": "PASS",
+    "h0_2_machine": "PASS",
+    "v0_product_checkpoint": "PASS",
+    "generation80_safety": "PASS",
+    "canonical_pc0": "PASS",
+    "directional_pc0": "PASS"
+  },
+  "runtime_changed": false,
+  "status": "FIX_VERIFIED",
+  "next": "MERGE_CONTROL_REPAIR_THEN_BEGIN_P7_5_TWO_CLIENT_CONVERGENCE"
+}
