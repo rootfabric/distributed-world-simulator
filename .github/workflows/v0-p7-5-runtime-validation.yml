@@ -1,0 +1,100 @@
+name: V0 P7.5 Runtime Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/v0-p7-5-runtime-validation.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: v0-p7-5-runtime-validation
+  cancel-in-progress: false
+
+jobs:
+  p7-5-runtime:
+    name: P7.5 exact runtime gate
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact frozen runtime subject
+        uses: actions/checkout@v4
+        with:
+          ref: bd9395f075559b8eeeeb4bebbf915b488903adc4
+          fetch-depth: 0
+
+      - name: Verify exact runtime identity
+        run: |
+          $head = (& git rev-parse HEAD).Trim().ToLowerInvariant()
+          $tree = (& git rev-parse "HEAD^{tree}").Trim().ToLowerInvariant()
+          if ($head -ne "bd9395f075559b8eeeeb4bebbf915b488903adc4") {
+            throw "P7_5_RUNTIME_HEAD_MISMATCH actual=$head"
+          }
+          if ($tree -ne "407b3eae5f559e86e6ad924f45353a386c697999") {
+            throw "P7_5_RUNTIME_TREE_MISMATCH actual=$tree"
+          }
+          if (git status --porcelain --untracked-files=no) {
+            git status --short
+            throw "P7_5_RUNTIME_TRACKED_CHECKOUT_NOT_CLEAN"
+          }
+          Write-Host "P7_5_RUNTIME_HEAD=$head"
+          Write-Host "P7_5_RUNTIME_TREE=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+            throw "Exact Godot binary not found: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+            throw "GODOT_IDENTITY_MISMATCH actual=$version"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "Godot identity: $version"
+
+      - name: Run canonical P7.5 convergence gate
+        run: |
+          .\RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1 -GodotExe "${{ steps.godot.outputs.path }}" -ExpectedHead "bd9395f075559b8eeeeb4bebbf915b488903adc4"
+
+      - name: Build log SHA256 manifest
+        if: always()
+        run: |
+          $root = "artifacts\runtime\v0-p7-5-two-client-convergence"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $manifest = Join-Path $root "SHA256SUMS.txt"
+          if (Test-Path $manifest) { Remove-Item -Force $manifest }
+          Get-ChildItem -Path $root -Filter "*.log" -File -ErrorAction SilentlyContinue |
+            Sort-Object Name |
+            ForEach-Object {
+              $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+              "$hash  $($_.Name)" | Out-File -FilePath $manifest -Encoding ascii -Append
+            }
+          if (Test-Path $manifest) { Get-Content $manifest }
+
+      - name: Verify tracked tree remains clean
+        if: always()
+        run: |
+          if (git status --porcelain --untracked-files=no) {
+            git status --short
+            throw "P7_5_RUNTIME_GATE_CHANGED_TRACKED_TREE"
+          }
+
+      - name: Upload P7.5 runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p7-5-runtime-validation-bd9395f
+          path: artifacts/runtime/v0-p7-5-two-client-convergence/
+          if-no-files-found: warn
