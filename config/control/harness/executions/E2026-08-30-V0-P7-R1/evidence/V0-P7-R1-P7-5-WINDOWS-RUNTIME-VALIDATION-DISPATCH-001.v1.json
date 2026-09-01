@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_dispatch.v1",
+  "dispatch_id": "V0-P7-R1-P7-5-WINDOWS-RUNTIME-VALIDATION-DISPATCH-001",
+  "work_order": "V0-P7-R1-WO-001",
+  "stage": "P7.5",
+  "scope": "TWO_CLIENT_CONVERGENCE",
+  "platform": "Windows x86_64",
+  "runtime_subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "pr": 435,
+    "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "project_control_run": 33523992483,
+    "project_control_conclusion": "SUCCESS"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "windows_console_path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+    "windows_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
+  },
+  "execution": {
+    "fresh_detached_worktree_required": true,
+    "canonical_gate": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1",
+    "external_timeout_forbidden": true,
+    "expected_stage_logs": 16,
+    "expected_total_logs_including_import": 17,
+    "runtime_mutation_forbidden": true,
+    "merge_forbidden": true
+  },
+  "diagnostic_context": {
+    "focused_p7_5_linux": "PASS (85 assertions, 0 failures)",
+    "m7_aggregate_replica_linux": "PASS",
+    "full_linux_gate": "INCOMPLETE due container execution window while entering inherited P7.4 seed; not a runtime verdict"
+  }
+}
