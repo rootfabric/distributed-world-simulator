@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-09-01-R11-P7_4_COMPLETE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-09-01-R12-P7_5_ACTIVE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_4_COMPLETE_P7_5_NEXT",
-  "authored_against_main": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "status": "PRIMARY_WORK_MAP_P7_5_IN_PROGRESS",
+  "authored_against_main": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+  "control_main_base": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -202,10 +202,20 @@
     }
   },
   "p7_5": {
-    "state": "NEXT",
+    "state": "IN_PROGRESS",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "TWO_CLIENT_CONVERGENCE",
     "hard_rule": "REUSE_MW6_MW7_RL2_RL3_CANONICAL_ITEM_GRAPH_REPLAY_AND_P7_4_AGGREGATE_REVISION_SEAM_NO_SECOND_REVISION_OR_RECEIPT_PATH",
-    "control_precondition": "REPAIR_PRE_EXISTING_EPOCH_TRANSITION_TABLE_BEFORE_AUTOMATED_DRIVE_CLOSE"
+    "control_precondition": "RESOLVED",
+    "control_repair": {
+      "transition_table": "RESTORED",
+      "repair_pr": 432,
+      "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+      "project_control_run": 33508057451,
+      "drive": "PASS_EXIT_0",
+      "close": "PASS_EXIT_8_MISSION_STILL_OPEN"
+    },
+    "target": "CLIENT_A_EQUALS_CLIENT_B_EQUALS_AUTHORITATIVE_MATTER_ITEM_GRAPH_AND_AGGREGATE_REVISION_AFTER_FRESH_DELIVERY_REPLAY_AND_RECONNECT",
+    "next": "P7_6_SEAM_AND_TRUE_MULTI_REGION_MW10_COMPOSITION"
   }
 }
