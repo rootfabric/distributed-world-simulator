@@ -62,6 +62,7 @@ static func prepare_step(descriptor: Dictionary, delta_s: float) -> Dictionary:
 	return {
 		"success": true,
 		"delta_s": delta_s,
+		"descriptor_hash": String(descriptor["descriptor_hash"]),
 		"factor": factor,
 		"operator_hash": Utils.canonical_hash(operator),
 	}
@@ -73,10 +74,9 @@ static func step_prepared(
 	delta_s: float,
 	prepared: Dictionary
 ) -> Dictionary:
-	var checked := Descriptor.validate(descriptor)
-	if not bool(checked.get("success", false)):
-		return _failure(String(checked.get("error_code", "B0_4_B_INVALID_ROM_DESCRIPTOR")))
-	checked = _validate_state(descriptor, state)
+	if String(prepared.get("descriptor_hash", "")) != String(descriptor.get("descriptor_hash", "")):
+		return _failure("B0_4_B_ROM_PREPARED_DESCRIPTOR_MISMATCH")
+	var checked := _validate_state(descriptor, state)
 	if not bool(checked.get("success", false)):
 		return checked
 	checked = _validate_port_flows(descriptor, port_flows)
