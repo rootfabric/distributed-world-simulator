@@ -17,7 +17,7 @@ jobs:
       - name: Checkout exact frozen runtime subject
         uses: actions/checkout@v4
         with:
-          ref: bd9395f075559b8eeeeb4bebbf915b488903adc4
+          ref: c00e7604890660e7601d192af7f0cbb42629e196
           fetch-depth: 0
 
       - name: Verify exact runtime identity
@@ -26,8 +26,8 @@ jobs:
           set -euo pipefail
           HEAD="$(git rev-parse HEAD)"
           TREE="$(git rev-parse 'HEAD^{tree}')"
-          test "$HEAD" = "bd9395f075559b8eeeeb4bebbf915b488903adc4"
-          test "$TREE" = "407b3eae5f559e86e6ad924f45353a386c697999"
+          test "$HEAD" = "c00e7604890660e7601d192af7f0cbb42629e196"
+          test "$TREE" = "009c1b60e368a8ffaa134438b7d70f4d134a8ea0"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "P7_5_RUNTIME_HEAD=$HEAD"
           echo "P7_5_RUNTIME_TREE=$TREE"
@@ -37,17 +37,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p source-export
-          tar --exclude='./artifacts' --exclude='./.godot' --exclude='./source-export' -czf source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz .
-          sha256sum source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz > source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
-          cat source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+          tar --exclude='./artifacts' --exclude='./.godot' --exclude='./source-export' -czf source-export/v0-p7-5-exact-runtime-c00e760.tar.gz .
+          sha256sum source-export/v0-p7-5-exact-runtime-c00e760.tar.gz > source-export/v0-p7-5-exact-runtime-c00e760.tar.gz.sha256
+          cat source-export/v0-p7-5-exact-runtime-c00e760.tar.gz.sha256
 
       - name: Upload exact source checkout
         uses: actions/upload-artifact@v4
         with:
-          name: v0-p7-5-exact-runtime-bd9395f
+          name: v0-p7-5-exact-runtime-c00e760
           path: |
-            source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz
-            source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+            source-export/v0-p7-5-exact-runtime-c00e760.tar.gz
+            source-export/v0-p7-5-exact-runtime-c00e760.tar.gz.sha256
           if-no-files-found: error
 
   p7-5-runtime:
@@ -64,17 +64,17 @@ jobs:
       - name: Checkout exact frozen runtime subject
         uses: actions/checkout@v4
         with:
-          ref: bd9395f075559b8eeeeb4bebbf915b488903adc4
+          ref: c00e7604890660e7601d192af7f0cbb42629e196
           fetch-depth: 0
 
       - name: Verify exact runtime identity
         run: |
           $head = (& git rev-parse HEAD).Trim().ToLowerInvariant()
           $tree = (& git rev-parse "HEAD^{tree}").Trim().ToLowerInvariant()
-          if ($head -ne "bd9395f075559b8eeeeb4bebbf915b488903adc4") {
+          if ($head -ne "c00e7604890660e7601d192af7f0cbb42629e196") {
             throw "P7_5_RUNTIME_HEAD_MISMATCH actual=$head"
           }
-          if ($tree -ne "407b3eae5f559e86e6ad924f45353a386c697999") {
+          if ($tree -ne "009c1b60e368a8ffaa134438b7d70f4d134a8ea0") {
             throw "P7_5_RUNTIME_TREE_MISMATCH actual=$tree"
           }
           if (git status --porcelain --untracked-files=no) {
@@ -105,7 +105,7 @@ jobs:
 
       - name: Run canonical P7.5 convergence gate
         run: |
-          .\RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1 -GodotExe "${{ steps.godot.outputs.path }}" -ExpectedHead "bd9395f075559b8eeeeb4bebbf915b488903adc4"
+          .\RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1 -GodotExe "${{ steps.godot.outputs.path }}" -ExpectedHead "c00e7604890660e7601d192af7f0cbb42629e196"
 
       - name: Build log SHA256 manifest
         if: always()
@@ -134,6 +134,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v0-p7-5-runtime-validation-bd9395f
+          name: v0-p7-5-runtime-validation-c00e760
           path: artifacts/runtime/v0-p7-5-two-client-convergence/
           if-no-files-found: warn
