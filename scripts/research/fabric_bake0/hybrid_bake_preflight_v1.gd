@@ -10,6 +10,8 @@ const FALLBACKS: Array[String] = ["FULL", "NO_SAFE_BAKE"]
 
 static func validate_bundle(mode_descriptors: Array, transitions: Array, cache_entries: Array) -> Dictionary:
 	var modes_by_hash := {}
+	var transition_ids := {}
+	var transition_hashes := {}
 	var cache_keys := {}
 	for index in range(mode_descriptors.size()):
 		var raw = mode_descriptors[index]
@@ -31,6 +33,14 @@ static func validate_bundle(mode_descriptors: Array, transitions: Array, cache_e
 		var checked: Dictionary = Transition.validate(transition)
 		if not bool(checked.get("success", false)):
 			return checked
+		var transition_id := String(transition["transition_id"])
+		var transition_hash := String(transition["transition_hash"])
+		if transition_ids.has(transition_id):
+			return Utils.failure("DUPLICATE_B0_5_TRANSITION_ID")
+		if transition_hashes.has(transition_hash):
+			return Utils.failure("DUPLICATE_B0_5_TRANSITION_HASH")
+		transition_ids[transition_id] = true
+		transition_hashes[transition_hash] = true
 		if not modes_by_hash.has(String(transition["from_mode_hash"])):
 			return Utils.failure("B0_5_TRANSITION_FROM_MODE_UNKNOWN")
 		if not modes_by_hash.has(String(transition["to_mode_hash"])):
