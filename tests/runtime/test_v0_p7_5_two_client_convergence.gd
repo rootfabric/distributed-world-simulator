@@ -356,7 +356,7 @@ func _run() -> void:
 	# existing owners. No new MW7 delta or aggregate revision may appear.
 	var matter_cursor_before_replay: int = int(authority.stream_sequence())
 	var gameplay_revision_before_replay: int = int(gameplay.get_report().get("revision", -1))
-	var replay_transport: Dictionary = setup["command_transport"].send(command)
+	var replay_transport: Dictionary = context["command_transport"].send(command)
 	_assert_success(replay_transport, "replay exact MW6 command")
 	var replay_command: Dictionary = client_a.accept_command_result(
 		replay_transport.get("result", {})
