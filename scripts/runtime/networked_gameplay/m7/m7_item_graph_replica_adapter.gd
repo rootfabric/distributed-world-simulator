@@ -39,7 +39,7 @@ func convert(canonical_snapshot: Dictionary) -> Dictionary:
 		"authority_owner_id": String(canonical_snapshot.get("authority_owner_id", "network-authority")),
 		"authority_epoch": int(canonical_snapshot.get("authority_epoch", 1)),
 	})
-	_register_definitions(domain)
+	_register_definitions(domain, canonical_snapshot)
 	var container_map: Dictionary = _build_containers(domain, canonical_snapshot)
 	var mount_map: Dictionary = _mount_map(canonical_snapshot)
 	var inventory_map: Dictionary = Dictionary(canonical_snapshot.get("inventories", {}))
@@ -258,7 +258,12 @@ func _add_mount_sockets(domain: Dictionary, mount_map: Dictionary) -> Dictionary
 	for mount_id_value in mount_map.keys():
 		var mount_id := String(mount_id_value)
 		var mount: Dictionary = mount_map[mount_id]
-		var parent_item_id := _replica_item_id(String(mount.get("parent_item_id", "")))
+		var canonical_parent_id := String(mount.get("parent_item_id", ""))
+		if canonical_parent_id.is_empty():
+			if not String(mount.get("item_id", "")).is_empty():
+				return _failure("M7_MOUNT_PARENT_REQUIRED", {"mount_id": mount_id})
+			continue
+		var parent_item_id := _replica_item_id(canonical_parent_id)
 		if parent_item_id.is_empty() or domain.items.get_item(parent_item_id) == null:
 			return _failure("M7_MOUNT_PARENT_NOT_FOUND", {"mount_id": mount_id, "parent_item_id": parent_item_id})
 		domain.attachments.ensure_socket(
@@ -346,7 +351,8 @@ func _remote_inventory_id(player_id: String) -> String:
 	return "network_remote_inventory_%s" % player_id.replace("/", "_")
 
 
-func _register_definitions(domain: Dictionary) -> void:
+func _register_definitions(domain: Dictionary, canonical_snapshot: Dictionary) -> void:
+	var replica_max_stacks: Dictionary = _replica_max_stacks(canonical_snapshot)
 	for data in [
 		{"id":"survey_beacon","display_name":"Полевой маяк","max_stack":5,"unit_mass_kg":2.5,"external_volume_l":3.0,"tags":["beacon","mountable","electronic"],"metadata":{"size":[0.32,0.58,0.32],"icon_color":[1.0,0.34,0.05]}},
 		{"id":"battery_pack","display_name":"Аккумулятор","max_stack":4,"unit_mass_kg":8.0,"external_volume_l":6.0,"tags":["battery","power"],"metadata":{"size":[0.42,0.28,0.30],"icon_color":[0.20,0.82,0.32]}},
@@ -362,7 +368,27 @@ func _register_definitions(domain: Dictionary) -> void:
 			}}
 		},
 	]:
-		domain.items.register_definition(Definition.new(data))
+		var definition_data: Dictionary = Dictionary(data).duplicate(true)
+		var definition_id := String(definition_data.get("id", ""))
+		definition_data["max_stack"] = maxi(
+			int(definition_data.get("max_stack", 1)),
+			int(replica_max_stacks.get(definition_id, 1))
+		)
+		domain.items.register_definition(Definition.new(definition_data))
+
+
+func _replica_max_stacks(canonical_snapshot: Dictionary) -> Dictionary:
+	var result: Dictionary = {}
+	for item_value in canonical_snapshot.get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var row: Dictionary = item_value
+		var definition_id := _definition_id(String(row.get("definition_id", "")))
+		if definition_id.is_empty():
+			continue
+		var quantity := maxi(1, int(row.get("quantity", 1)))
+		result[definition_id] = maxi(int(result.get(definition_id, 1)), quantity)
+	return result
 
 
 func get_report() -> Dictionary:
