@@ -49,8 +49,8 @@ jobs:
         with:
           name: v0-p7-5-exact-runtime-bd9395f
           path: |
-            ../v0-p7-5-exact-runtime-bd9395f.tar.gz
-            ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+            source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz
+            source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
           if-no-files-found: error
 
   p7-5-runtime:
