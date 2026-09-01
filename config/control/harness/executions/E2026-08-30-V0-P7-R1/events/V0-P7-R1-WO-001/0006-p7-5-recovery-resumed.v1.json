@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0006",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 6,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-01T12:34:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "predicate": "V0_P7_P7_5_TWO_CLIENT_CONVERGENCE_ACTIVATED",
+  "command": "RESUME_P7_AFTER_CANONICAL_TRANSITION_LEDGER_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-TRANSITION-LEDGER-REPAIR-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-001.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json"
+  ],
+  "summary": "The pre-existing P7 Harness transition-table and legacy-ledger recovery debt is FIX_VERIFIED and canonical via PR #432. The same P7 Work Order resumes IN_PROGRESS at P7.5 TWO_CLIENT_CONVERGENCE, retaining the existing runtime branch and mutation lease. Runtime must consume existing MW6/MW7/RL2/RL3, canonical Item Graph replay, and the accepted P7.4 NetworkedGameplayService aggregate revision seam; no second revision, receipt, replay or network owner is authorized."
+}
