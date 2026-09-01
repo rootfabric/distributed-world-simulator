@@ -20,6 +20,10 @@ _EVENT_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_event
 _EVENT_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS"
 _EVENT_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS"
 
+_EVIDENCE_LEDGER_RECONCILIATION_SCHEMA = "distributed_world_simulator.harness_evidence_ledger_reconciliation.v1"
+_EVIDENCE_LEDGER_RECONCILIATION_MODE = "QUARANTINE_EXACT_IMMUTABLE_MISTYPED_EVIDENCE_MAPS"
+_EVIDENCE_LEDGER_RECONCILIATION_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVIDENCE"
+
 
 def _git_head(root: Path) -> str:
     output = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=False)
@@ -449,6 +453,96 @@ def _select_epoch_audit(
     return audits[-1] if audits else None
 
 
+def _select_authoritative_evidence_paths(
+    bundle: ContractBundle,
+    evidence_dir: Path,
+    work_order_id: str | None,
+) -> list[Path]:
+    """Return Evidence Map candidates after strict exact-pinned legacy quarantine."""
+
+    raw_paths = _json_files(evidence_dir)
+    manifest_path = evidence_dir.parent / "evidence-ledger-reconciliation.v1.json"
+    if not manifest_path.exists():
+        return raw_paths
+
+    reconciliation = read_json(manifest_path)
+    if reconciliation.get("schema") != _EVIDENCE_LEDGER_RECONCILIATION_SCHEMA:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_SCHEMA_INVALID")
+    if reconciliation.get("version") != 1:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_VERSION_INVALID")
+    if reconciliation.get("project_epoch") != evidence_dir.parent.name:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_EPOCH_MISMATCH")
+    if work_order_id is not None and reconciliation.get("work_order_id") != work_order_id:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_WORK_ORDER_MISMATCH")
+    if reconciliation.get("authority") != _EVIDENCE_LEDGER_RECONCILIATION_AUTHORITY:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_AUTHORITY_INVALID")
+    if reconciliation.get("mode") != _EVIDENCE_LEDGER_RECONCILIATION_MODE:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_MODE_INVALID")
+
+    constraints = reconciliation.get("constraints")
+    required_constraints = {
+        "quarantine_exact_paths_only": True,
+        "git_blob_pin_required": True,
+        "quarantined_file_must_remain_present": True,
+        "quarantined_file_must_have_single_add_commit": True,
+        "wildcard_paths_forbidden": True,
+        "canonical_evidence_map_schema_unchanged": True,
+        "future_unlisted_evidence_is_authoritative": True,
+    }
+    if constraints != required_constraints:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_CONSTRAINTS_INVALID")
+
+    records = reconciliation.get("quarantined_evidence")
+    if not isinstance(records, list) or not records:
+        raise ContractValidationError("EVIDENCE_RECONCILIATION_QUARANTINE_EMPTY")
+
+    raw_by_resolved = {path.resolve(): path for path in raw_paths}
+    quarantined_paths: set[Path] = set()
+    for item in records:
+        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "reason"}:
+            raise ContractValidationError("EVIDENCE_RECONCILIATION_RECORD_INVALID")
+        relative = item.get("path")
+        blob_pin = item.get("git_blob_sha")
+        reason = item.get("reason")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or any(marker in relative for marker in ("*", "?", "["))
+            or not isinstance(blob_pin, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", blob_pin)
+            or not isinstance(reason, str)
+            or not reason
+        ):
+            raise ContractValidationError("EVIDENCE_RECONCILIATION_RECORD_INVALID")
+
+        candidate = (bundle.root / relative).resolve()
+        if candidate.parent != evidence_dir.resolve() or candidate not in raw_by_resolved:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_PATH_INVALID:{relative}")
+        if candidate in quarantined_paths:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_PATH_DUPLICATE:{relative}")
+
+        code, observed_blob = _git(bundle.root, "rev-parse", f"HEAD:{relative}")
+        if code != 0 or observed_blob != blob_pin:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_BLOB_MISMATCH:{relative}")
+
+        code, history = _git(bundle.root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
+        code, add_commit = _git(
+            bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
+        )
+        if code != 0 or add_commit != commits[0]:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
+
+        value = read_json(candidate)
+        if value.get("schema") != _EVIDENCE_MAP_SCHEMA:
+            raise ContractValidationError(f"EVIDENCE_RECONCILIATION_SCHEMA_MISUSE_NOT_PRESENT:{relative}")
+        quarantined_paths.add(candidate)
+
+    return [path for path in raw_paths if path.resolve() not in quarantined_paths]
+
+
 def _load_evidence_maps(
     bundle: ContractBundle,
     evidence_dir: Path,
@@ -461,7 +555,7 @@ def _load_evidence_maps(
     closed before Work Order filtering.
     """
     evidence_maps: list[dict[str, Any]] = []
-    for path in _json_files(evidence_dir):
+    for path in _select_authoritative_evidence_paths(bundle, evidence_dir, work_order_id):
         value = read_json(path)
         schema_identity = value.get("schema")
         if schema_identity == _EVIDENCE_MAP_SCHEMA:
