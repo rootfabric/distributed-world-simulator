@@ -75,6 +75,14 @@ func _init() -> void:
 		_check(instance is Node3D, "lifecycle lab scene instantiates")
 		instance.free()
 
+	var complete = load("res://scenes/labs/fabric_construct0_complete_lab.tscn")
+	_check(complete is PackedScene, "complete CONSTRUCT0 lab parses")
+	if complete is PackedScene:
+		var hub = complete.instantiate()
+		_check(hub is Node3D, "complete CONSTRUCT0 lab instantiates")
+		_check(int(hub.call("stage_count")) == 3, "complete lab exposes three integrated stages")
+		hub.free()
+
 	_finish()
 
 func _finish() -> void:
