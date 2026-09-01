@@ -66,6 +66,24 @@ static func prepare_step(descriptor: Dictionary, delta_s: float) -> Dictionary:
 		"operator_hash": Utils.canonical_hash(operator),
 	}
 
+static func step_prepared(
+	descriptor: Dictionary,
+	state: Dictionary,
+	port_flows: Dictionary,
+	delta_s: float,
+	prepared: Dictionary
+) -> Dictionary:
+	var checked := Descriptor.validate(descriptor)
+	if not bool(checked.get("success", false)):
+		return _failure(String(checked.get("error_code", "B0_4_B_INVALID_ROM_DESCRIPTOR")))
+	checked = _validate_state(descriptor, state)
+	if not bool(checked.get("success", false)):
+		return checked
+	checked = _validate_port_flows(descriptor, port_flows)
+	if not bool(checked.get("success", false)):
+		return checked
+	return _step_prepared(descriptor, state, port_flows, delta_s, prepared)
+
 static func advance_sequence(
 	descriptor: Dictionary,
 	state: Dictionary,
