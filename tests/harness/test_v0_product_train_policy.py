@@ -207,23 +207,52 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         env = dict(os.environ)
         scripts = str(ROOT / "scripts")
         env["PYTHONPATH"] = scripts + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "harness.cli",
-                mode,
-                "--root",
-                str(ROOT),
-                "--execution",
-                str(P7_EXECUTION),
-            ],
-            cwd=ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+
+        original_head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+        original_branch = subprocess.check_output(
+            ["git", "branch", "--show-current"], cwd=ROOT, text=True
+        ).strip()
+        rebound_detached_head = not original_branch
+        if rebound_detached_head:
+            # Project Control checks out the exact PR subject detached. The Harness
+            # intentionally requires an active Work Order branch, so bind the same
+            # exact commit to the P7 branch name for this CLI probe only.
+            subprocess.check_call(
+                ["git", "branch", "-f", P7_BRANCH, original_head],
+                cwd=ROOT,
+            )
+            subprocess.check_call(
+                ["git", "symbolic-ref", "HEAD", f"refs/heads/{P7_BRANCH}"],
+                cwd=ROOT,
+            )
+        try:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "harness.cli",
+                    mode,
+                    "--root",
+                    str(ROOT),
+                    "--execution",
+                    str(P7_EXECUTION),
+                ],
+                cwd=ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        finally:
+            if rebound_detached_head:
+                subprocess.check_call(
+                    ["git", "checkout", "--detach", original_head],
+                    cwd=ROOT,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
         payload = json.loads(completed.stdout.strip().splitlines()[-1])
         return completed, payload
 
