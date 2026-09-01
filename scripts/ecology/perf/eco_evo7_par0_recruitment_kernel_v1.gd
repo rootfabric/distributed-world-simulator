@@ -73,13 +73,56 @@ static func evaluate_recruitment_event(
 	if destination_index < 0 or destination_index >= environment_cells.size():
 		return {}
 	var env_cell: Dictionary = environment_cells[destination_index]
-	var observation := build_observation(env_cell, context, next_generation, candidate_hash)
+	var prepared_environment_sample: Dictionary = {}
+	var cache_value = context.get("environment_sample_cache")
+	if cache_value is Dictionary:
+		var cache: Dictionary = cache_value
+		var cell_hash := String(env_cell.get("cell_hash", ""))
+		if cell_hash.is_empty():
+			return {}
+		if cache.has(cell_hash):
+			var cached_value = cache[cell_hash]
+			if not cached_value is Dictionary:
+				return {}
+			prepared_environment_sample = cached_value
+		else:
+			var cold_observation := build_observation(
+				env_cell, context, next_generation, candidate_hash)
+			if cold_observation.is_empty():
+				return {}
+			var sample_value = cold_observation.get("environment_sample")
+			if not sample_value is Dictionary:
+				return {}
+			prepared_environment_sample = sample_value
+			if cache.size() >= environment_cells.size():
+				return {}
+			cache[cell_hash] = prepared_environment_sample
+			var cold_evaluation_result := Shadow.evaluate_bundle_against_observation(
+				candidate["child_bundle"], cold_observation)
+			if not bool(cold_evaluation_result.get("success", false)):
+				return {}
+			return _finish_recruitment_event(
+				candidate, route, env_cell, cold_evaluation_result["details"])
+	var observation := build_observation(
+		env_cell, context, next_generation, candidate_hash, prepared_environment_sample)
 	if observation.is_empty():
 		return {}
 	var evaluation_result := Shadow.evaluate_bundle_against_observation(candidate["child_bundle"], observation)
 	if not bool(evaluation_result.get("success", false)):
 		return {}
-	var evaluation: Dictionary = evaluation_result["details"]
+	return _finish_recruitment_event(
+		candidate, route, env_cell, evaluation_result["details"])
+
+
+static func _finish_recruitment_event(
+	candidate: Dictionary,
+	route: Dictionary,
+	env_cell: Dictionary,
+	evaluation: Dictionary
+) -> Dictionary:
+	var candidate_hash := String(candidate["candidate_hash"])
+	var destination_index := int(route["destination_cell_index"])
+	var next_generation := int(route["generation"])
 	var fitness := float(evaluation["shadow_fitness"])
 	var establishment_capacity := float(evaluation["establishment_capacity"])
 	var resource_open := clampf(1.0 - float(env_cell["surface_water_fraction"]), 0.0, 1.0)
@@ -107,7 +150,8 @@ static func build_observation(
 	env_cell: Dictionary,
 	context: Dictionary,
 	next_generation: int,
-	candidate_hash: String
+	candidate_hash: String,
+	prepared_environment_sample: Dictionary = {}
 ) -> Dictionary:
 	var sand := float(env_cell["soil_texture_sand"])
 	var clay := float(env_cell["soil_texture_clay"])
@@ -115,16 +159,18 @@ static func build_observation(
 	var revision := String(context["revision"])
 	var environment_seed := int(context["environment_seed"])
 	var environment_field_hash := String(context["environment_field_hash"])
-	var env := EnvironmentSample.create(
-		float(env_cell["east_m"]), float(env_cell["north_m"]),
-		float(env_cell["temperature_c"]), float(env_cell["soil_moisture"]),
-		float(env_cell["incident_light"]), 0.50,
-		clampf(float(env_cell["surface_water_fraction"]), 0.0, 1.0),
-		environment_seed,
-		"%s|field=%s|cell=%s" % [revision, environment_field_hash, String(env_cell["cell_hash"])]
-	)
-	if not bool(EnvironmentSample.validate(env).get("success", false)):
-		return {}
+	var env: Dictionary = prepared_environment_sample
+	if env.is_empty():
+		env = EnvironmentSample.create(
+			float(env_cell["east_m"]), float(env_cell["north_m"]),
+			float(env_cell["temperature_c"]), float(env_cell["soil_moisture"]),
+			float(env_cell["incident_light"]), 0.50,
+			clampf(float(env_cell["surface_water_fraction"]), 0.0, 1.0),
+			environment_seed,
+			"%s|field=%s|cell=%s" % [revision, environment_field_hash, String(env_cell["cell_hash"])]
+		)
+		if not bool(EnvironmentSample.validate(env).get("success", false)):
+			return {}
 	var obs := {
 		"schema": Shadow.SCHEMA,
 		"version": Shadow.VERSION,
