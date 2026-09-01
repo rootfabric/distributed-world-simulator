@@ -669,7 +669,8 @@ def _select_authoritative_human_attention_paths(
         "quarantine_exact_paths_only": True,
         "git_blob_pin_required": True,
         "quarantined_file_must_remain_present": True,
-        "quarantined_file_must_have_single_add_commit": True,
+        "full_git_history_pin_required": True,
+        "add_commit_must_be_oldest_pinned_history_commit": True,
         "wildcard_paths_forbidden": True,
         "current_human_attention_schema_unchanged": True,
         "only_resolved_items_may_be_quarantined": True,
@@ -685,10 +686,11 @@ def _select_authoritative_human_attention_paths(
     raw_by_resolved = {path.resolve(): path for path in raw_paths}
     quarantined: set[Path] = set()
     for item in records:
-        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "reason"}:
+        if not isinstance(item, dict) or set(item) != {"path", "git_blob_sha", "git_history_commits", "reason"}:
             raise ContractValidationError("HUMAN_ATTENTION_RECONCILIATION_RECORD_INVALID")
         relative = item.get("path")
         blob_pin = item.get("git_blob_sha")
+        history_pin = item.get("git_history_commits")
         reason = item.get("reason")
         if (
             not isinstance(relative, str)
@@ -696,6 +698,9 @@ def _select_authoritative_human_attention_paths(
             or any(marker in relative for marker in ("*", "?", "["))
             or not isinstance(blob_pin, str)
             or not re.fullmatch(r"[0-9a-f]{40}", blob_pin)
+            or not isinstance(history_pin, list)
+            or not history_pin
+            or any(not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit) for commit in history_pin)
             or not isinstance(reason, str)
             or not reason
         ):
@@ -712,12 +717,12 @@ def _select_authoritative_human_attention_paths(
             raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_BLOB_MISMATCH:{relative}")
         code, history = _git(bundle.root, "log", "--format=%H", "--", relative)
         commits = [line for line in history.splitlines() if line]
-        if code != 0 or len(commits) != 1:
-            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
+        if code != 0 or commits != history_pin:
+            raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_HISTORY_MISMATCH:{relative}")
         code, add_commit = _git(
             bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
         )
-        if code != 0 or add_commit != commits[0]:
+        if code != 0 or add_commit != history_pin[-1]:
             raise ContractValidationError(f"HUMAN_ATTENTION_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
 
         value = read_json(candidate)
