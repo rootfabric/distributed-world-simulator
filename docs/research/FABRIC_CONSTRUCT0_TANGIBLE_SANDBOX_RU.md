@@ -8,14 +8,28 @@ C0.1 SEE THE MODEL CLOSED
 C0.2 SEE FABRIC MOVE IT CLOSED
 C0.3 BUILD IT CLOSED
 PLAY1 PHYSICAL TOYBOX CLOSED
+C0.4 FULL ↔ BAKED CLOSED
+C0.5 MUTATION / INVALIDATION / REBUILD CLOSED
+C0.6 LOCAL UNBAKE / TOPOLOGY SPLIT CLOSED
+CONSTRUCT0 CLOSED
 EXACT DOUBLE PASS
 PROJECT CONTROL PASS
 NOT PRODUCTION ACCEPTED
 ```
 
-Branch:
+Current closure branch:
 
-`feature/fabric-construct0-tangible-sandbox-r1`
+`feature/fabric-construct0-c0-4-c0-6-lifecycle-r1`
+
+Lineage:
+
+```text
+feature/fabric-construct0-tangible-sandbox-r1
+        ↓
+feature/fabric-construct0-play1-physical-toybox-r1
+        ↓
+feature/fabric-construct0-c0-4-c0-6-lifecycle-r1
+```
 
 Frozen base:
 
@@ -134,28 +148,128 @@ Mandatory playable experiments now exist:
 
 All five pass deterministic twin-run and reset-to-initial-hash checks.
 
-### C0.4 — FULL ↔ BAKED physical representation
-- force FULL / force supported BAKED / AUTO;
-- compare boundary observables;
-- show NO_SAFE_BAKE explicitly rather than silently approximating;
-- show current physical representation and reduction ratio.
+### C0.4 — FULL ↔ BAKED physical representation — CLOSED
 
-### C0.5 — Mutation / invalidation / rebuild
-- edit mass/material/property;
-- old physical artifact becomes STALE and non-executable;
-- exact reconstruction;
-- fresh physical graph/bake;
-- contact history DISCARD_AND_REDERIVE.
+The lifecycle lab runs the exact 500-part BRIDGE-1 structural subject.
 
-### C0.6 — Local unbake / topology split
-- break one bond in a larger compound object;
-- bounded local unbake through B0.2-D;
-- canonical topology break through B0.2-E;
-- stale invalidation and deterministic re-bake.
+Verified:
 
-### C0 closure
-One Godot lab must make the end-to-end model visible:
-Construction → physical representation → contact behavior → bake reduction → invalidation → rebuild/unbake.
+```text
+AUTO            → certified BAKED
+FORCE FULL      → exact 500-part reconstruction
+FORCE BAKED     → existing PhysicalBakeArtifact
+
+canonical parts: 500
+FULL DOF:        6500
+BAKED DOF:         13
+reduction:        500x
+boundary mismatch <= 1e-9
+```
+
+Representation forcing does not mutate the canonical source frontier. The UI exposes artifact identity, build generation, guard margin, current physical complexity and reduction ratio.
+
+Unsupported reduction remains explicit:
+
+```text
+NO_SAFE_BOUNDED_LOCAL_UNBAKE_LIMIT
+→ NO_SAFE_BAKE
+→ FAIL_CLOSED_OR_FULL
+```
+
+Acceptance: `26/26 PASS`.
+
+### C0.5 — Mutation / invalidation / rebuild — CLOSED
+
+Verified lifecycle:
+
+```text
+canonical property mutation
+→ RepresentationInvalidation
+→ BakeInvalidation
+→ old artifact STALE
+→ stale execution forbidden
+→ exact 500-part reconstruction
+→ DISCARD_AND_REDERIVE transient contact state
+→ fresh graph/artifact
+→ build_generation + 1
+→ fresh execution gate PASS
+```
+
+An explicit FULL reconstruction fallback remains legal.
+
+Acceptance: `23/23 PASS`.
+
+### C0.6 — Local unbake / topology split — CLOSED
+
+The lab directly executes the already closed B0.2-D and B0.2-E implementations.
+
+B0.2-D bounded local unbake:
+
+```text
+500 canonical parts
+20 locally FULL
+480 retained reduced
+2 retained components
+2 cut interfaces
+6500 → 286 DOF
+>22.7x preserved reduction
+4% unbaked
+```
+
+B0.2-E topology split / re-bake:
+
+```text
+bond break event APPLIED
+2 split components
+3 predecessor reduced pieces invalidated
+2 fresh executable PhysicalBakeArtifacts
+6500 → 286 → 26 DOF
+250x post-split reduction
+```
+
+Mass, linear momentum, angular momentum and state/interface handoff remain within the frozen B0.2-D/E tolerances.
+
+Acceptance: `44/44 PASS`.
+
+### C0 closure — SATISFIED
+
+Single entrypoint:
+
+`res://scenes/labs/fabric_construct0_complete_lab.tscn`
+
+Launcher:
+
+`OPEN_FABRIC_CONSTRUCT0_COMPLETE_LAB.ps1`
+
+It links the three verified tangible views:
+
+```text
+C0.1-C0.3
+SEE / MOVE / BUILD
+        ↓
+PLAY1
+PHYSICAL TOYBOX
+        ↓
+C0.4-C0.6
+FULL / BAKE / REBUILD / SPLIT
+```
+
+End-to-end visible lifecycle:
+
+```text
+Construction
+→ physical execution
+→ FULL / BAKED comparison
+→ canonical mutation
+→ stale invalidation
+→ reconstruction / rebuild
+→ bounded local unbake
+→ topology break
+→ split
+→ deterministic component re-bake
+```
+
+Godot remains presentation/interaction only.
 
 ## First presets
 
@@ -229,3 +343,65 @@ VERIFIED
 ```
 
 Known historical ECO scene parse diagnostics remain outside the CONSTRUCT0 claim and did not prevent import exit 0.
+
+
+## C0.4–C0.6 / CONSTRUCT0 final exact closure evidence
+
+```text
+exact implementation/test HEAD:
+afcd564b631a2f48283dfefef17f4d6542f558a3
+
+TREE:
+36064f8ad9f09e86cb242f4202f2e068044b6a2b
+
+Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+C0.1:
+58/58 PASS
+
+C0.2:
+33/33 PASS
+
+C0.3:
+30/30 PASS
+
+PLAY1:
+111/111 PASS
+
+C0.4:
+26/26 PASS
+
+C0.5:
+23/23 PASS
+
+C0.6:
+44/44 PASS
+
+TOTAL:
+325/325 PASS
+
+full chained runner:
+PASS / exit 0
+
+Project Control exact subject:
+33507347220 SUCCESS
+
+source carrier:
+33507346997 SUCCESS
+
+verdict:
+VERIFIED
+```
+
+The exact implementation/test subject is frozen. All later closure changes are documentation/evidence only.
+
+Final qualification:
+
+```text
+CONSTRUCT0
+RESEARCH / TANGIBLE CHECKPOINT CLOSED
+EXACT DOUBLE PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
