@@ -6,10 +6,10 @@
 B0.5 HYBRID MODE BAKE + LAZY MODE COMPILATION
 
 P0 CONTRACT / PREFLIGHT:
-AUTHORIZED
+CLOSED / EXACT DOUBLE PASS / PROJECT CONTROL PASS
 
 EXECUTABLE HYBRID REDUCTION:
-NOT YET AUTHORIZED
+STILL NOT AUTHORIZED
 
 PRODUCTION ACCEPTANCE:
 NO
@@ -304,7 +304,7 @@ NOT AUTHORIZED
 
 ```text
 B0.5 P0
-AUTHORIZED TO START CONTRACT / PREFLIGHT
+CLOSED
 
 branch:
 research/fabric-bake0-5-hybrid-bake-preflight-r1
@@ -318,3 +318,68 @@ NOT AUTHORIZED
 dependency:
 stable B0.4 mode-local Dynamic ROM artifact interface
 ```
+
+
+## 15. P0 exact closure — 2026-09-01
+
+```text
+predecessor:
+FABRIC.SYNC2 closure
+be419fb695221917df0f6026ed335e1355f72840
+
+exact implementation/test HEAD:
+8c2a7db2a10e721546540e97ef8d2876f3dd41b4
+
+TREE:
+82d2819ac3c06ee34494d98eecf236a2664c052e
+
+acceptance:
+63/63 PASS
+
+Project Control:
+33516591870 SUCCESS
+
+source carrier:
+33516591916 SUCCESS
+
+bundle SHA-256:
+eaa70c0a808fd6d69a87ce9de8cf8b3f64424a3ab43a8d2891eae0426016f975
+```
+
+Implemented contracts:
+
+```text
+HybridModeSignature
+HybridBakeModeDescriptor
+HybridTransitionDescriptor
+LazyModeCacheEntry
+HybridBakePreflight
+```
+
+Verified properties:
+
+- exact physical-mode identity is deterministic and presentation-order invariant;
+- source-frontier/topology/dependency/B0.4-interface changes invalidate derived cache state;
+- physical event ownership is exactly once and remains FABRIC-owned;
+- reset/handoff cannot advance canonical source revision;
+- unresolved B0.4 interface is PRELIGHT_ONLY and cannot claim runtime hashes/execution;
+- unknown modes fall back to FULL / NO_SAFE_BAKE;
+- nearest cached active-set reuse is forbidden;
+- device-specific MOTOR/GEARBOX/CLUTCH/VALVE kernel identities are rejected;
+- existing FABRIC FLOW/JUMP semantics remain authoritative.
+
+Final qualification:
+
+```text
+B0.5-P0
+RESEARCH CONTRACT/PREFLIGHT CHECKPOINT CLOSED
+EXACT DOUBLE PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+
+B0.5 EXECUTABLE HYBRID REDUCTION:
+BLOCKED
+```
+
+Executable B0.5 still requires the stable executable B0.4 mode-local Dynamic ROM
+PhysicalBakeArtifact interface and a new synchronization/authorization review.

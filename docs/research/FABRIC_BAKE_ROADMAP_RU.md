@@ -932,7 +932,7 @@ B0.4 requires explicit:
 
 ---
 
-# 19. B0.5 — HYBRID MODE BAKE + LAZY MODE COMPILATION — P0 CONTRACT/PREFLIGHT AUTHORIZED
+# 19. B0.5 — HYBRID MODE BAKE + LAZY MODE COMPILATION — P0 CLOSED / EXECUTABLE BLOCKED
 
 Use existing FABRIC semantics:
 
@@ -2015,4 +2015,75 @@ FABRIC synchronization review
 B0.5 executable authorization?
 FABRIC0.19 necessity?
 BRIDGE-2 executable authorization?
+```
+
+
+---
+
+## FABRIC-BAKE B0.5-P0 closure — 2026-09-01
+
+```text
+branch:
+research/fabric-bake0-5-hybrid-bake-preflight-r1
+
+predecessor:
+FABRIC.SYNC2 closure
+be419fb695221917df0f6026ed335e1355f72840
+
+exact implementation/test HEAD:
+8c2a7db2a10e721546540e97ef8d2876f3dd41b4
+
+TREE:
+82d2819ac3c06ee34494d98eecf236a2664c052e
+
+B0.5-P0:
+63/63 PASS
+
+Project Control:
+33516591870 SUCCESS
+```
+
+P0 now provides executable fail-closed contracts/validation for:
+
+```text
+HybridModeSignature
+HybridBakeModeDescriptor
+HybridTransitionDescriptor
+LazyModeCacheEntry
+HybridBakePreflight
+```
+
+The cache is derived-only; unknown/stale/unresolved modes never nearest-match a
+cached physical regime and instead route to FULL / NO_SAFE_BAKE.
+
+Exactly-once JUMP/topology event ownership remains with FABRIC physical semantics.
+Canonical source revision remains externally owned.
+
+Current post-SYNC2 state:
+
+```text
+B0.4 Dynamic ROM:
+EXECUTABLE RESEARCH ACTIVE / NOT YET CLOSED
+
+B0.5 P0:
+CLOSED
+
+B0.5 executable:
+BLOCKED ON B0.4 STABLE MODE-LOCAL ROM INTERFACE
+
+FABRIC0.19:
+NOT AUTHORIZED
+
+BRIDGE-2 executable:
+NOT AUTHORIZED
+```
+
+Next mandatory synchronization remains:
+
+```text
+B0.4 CLOSED
++
+B0.5 P0 CLOSED
+        ↓
+FABRIC synchronization review
 ```
