@@ -181,7 +181,7 @@
     "holder_program": "V0",
     "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "ACTIVE_V0_P7_P7_5_RUNTIME_MUTATION",
+    "state": "ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
