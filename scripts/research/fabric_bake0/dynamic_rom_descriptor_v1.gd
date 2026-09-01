@@ -132,7 +132,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	checked = Utils.validate_sorted_unique_strings(value["port_ids"], false)
 	if not bool(checked.get("success", false)):
 		return checked
-	var p := value["port_ids"].size()
+	var p: int = int(value["port_ids"].size())
 	if typeof(value.get("port_orientation_signs")) != TYPE_ARRAY or value["port_orientation_signs"].size() != p:
 		return Utils.failure("INVALID_DYNAMIC_ROM_PORT_ORIENTATION_SIGNS")
 	for index in range(p):
