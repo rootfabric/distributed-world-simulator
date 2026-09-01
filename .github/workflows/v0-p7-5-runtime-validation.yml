@@ -36,9 +36,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar             --exclude='./artifacts'             --exclude='./.godot'             -czf ../v0-p7-5-exact-runtime-bd9395f.tar.gz .
-          sha256sum ../v0-p7-5-exact-runtime-bd9395f.tar.gz             > ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
-          cat ../v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+          mkdir -p source-export
+          tar --exclude='./artifacts' --exclude='./.godot' --exclude='./source-export' -czf source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz .
+          sha256sum source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz > source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
+          cat source-export/v0-p7-5-exact-runtime-bd9395f.tar.gz.sha256
 
       - name: Upload exact source checkout
         uses: actions/upload-artifact@v4
