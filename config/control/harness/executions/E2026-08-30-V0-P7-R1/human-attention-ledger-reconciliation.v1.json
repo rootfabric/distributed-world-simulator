@@ -1,0 +1,33 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-08-30-V0-P7-R1-WO-001-HUMAN-ATTENTION-RECONCILIATION-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_HUMAN_ATTENTION",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_RESOLVED_LEGACY_HUMAN_ATTENTION",
+  "reason": "P7.3/P7.4 resolved Human merge receipts contain legacy resolved_at_utc metadata not admitted by the current strict schema. Their decisions are already durably bound by stage closure evidence; preserve the files unchanged and exclude only these exact resolved receipts from current active-attention parsing.",
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "current_human_attention_schema_unchanged": true,
+    "only_resolved_items_may_be_quarantined": true,
+    "future_unlisted_attention_is_authoritative": true
+  },
+  "quarantined_items": [
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-3-RUNTIME-FEATURE-MERGE-001.v1.json",
+      "git_blob_sha": "3d613409166b4f7f874014d67db4daaa254c77dc",
+      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-4-RUNTIME-FEATURE-MERGE-001.v1.json",
+      "git_blob_sha": "d026a25b4ca4a0245cd225719e2abd7269f0e43f",
+      "reason": "RESOLVED_LEGACY_EXTRA_TIMESTAMP_FIELD"
+    }
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}
