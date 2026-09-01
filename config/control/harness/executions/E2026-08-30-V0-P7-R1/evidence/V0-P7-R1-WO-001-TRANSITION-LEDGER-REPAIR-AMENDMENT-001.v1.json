@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_work_order_amendment.v1",
+  "amendment_id": "V0-P7-R1-WO-001-TRANSITION-LEDGER-REPAIR-AMENDMENT-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "authority": "DIRECTOR_UNDER_EXPLICIT_HUMAN_DIRECTIVE",
+  "reason": "User explicitly directed restoration of the missing P7 transition table, verification of -Drive/-Close, and only then commencement of P7.5. The repair requires one narrow Harness recovery seam because the latent raw event ledger contains immutable noncanonical records masked by the missing-table failure.",
+  "added_allowed_paths": [
+    "scripts/harness/state_builder.py",
+    "tests/harness/test_v0_product_train_policy.py"
+  ],
+  "unchanged_forbidden_paths": true,
+  "runtime_scope_expanded": false,
+  "architecture_ownership_changed": false,
+  "event_schema_changed": false,
+  "reducer_transition_semantics_changed": false,
+  "purpose": "Allow a strict per-execution reconciliation loader and exact CLI recovery regression without broadening runtime or foundation ownership.",
+  "stop_conditions": [
+    "Any solution edits or deletes historical P7 event files.",
+    "Any solution permits wildcard quarantine or unpinned event suppression.",
+    "Any solution changes canonical event.schema.v1 or event_reducer state transitions.",
+    "Any solution makes P7 CloseMission succeed before whole-P7 acceptance."
+  ],
+  "status": "AUTHORIZED"
+}
