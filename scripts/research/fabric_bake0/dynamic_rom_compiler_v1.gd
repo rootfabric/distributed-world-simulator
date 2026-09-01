@@ -5,6 +5,7 @@ const Dense = preload("res://scripts/research/fabric_bake0/dense_linear_algebra_
 const FullModel = preload("res://scripts/research/fabric_bake0/dynamic_full_model_descriptor_v1.gd")
 const Descriptor = preload("res://scripts/research/fabric_bake0/dynamic_rom_descriptor_v1.gd")
 const ArtifactBinding = preload("res://scripts/research/fabric_bake0/dynamic_rom_artifact_binding_v1.gd")
+const ReducedStateSchema = preload("res://scripts/research/fabric_bake0/dynamic_rom_state_schema_v1.gd")
 
 const COMPILER_VERSION := "FABRIC-BAKE/B0.4-B/R1"
 const STATUS_READY := "ROM_REDUCTION_READY_NOT_RUNTIME_CERTIFIED"
@@ -74,11 +75,10 @@ static func compile(
 		return _no_safe("B0_4_B_INTERPOLATION_CERTIFICATE_FAILED", interpolation)
 
 	var basis_hash := Utils.canonical_hash(basis_matrix)
-	var reduced_state_schema_hash := Utils.canonical_hash({
-		"schema": "planet_simulator.fabric_bake_dynamic_rom_state_schema.r1",
-		"basis_hash": basis_hash,
-		"states": _reduced_state_ids(target_reduced_states),
-	})
+	var reduced_state_schema := ReducedStateSchema.create(target_reduced_states)
+	if reduced_state_schema.is_empty():
+		return _no_safe("B0_4_B_REDUCED_STATE_SCHEMA_CREATE_FAILED")
+	var reduced_state_schema_hash := String(reduced_state_schema["schema_hash"])
 	var descriptor := Descriptor.create(
 		"dynamic-rom/b0-4-r1",
 		COMPILER_VERSION,
@@ -113,6 +113,7 @@ static func compile(
 		"status": STATUS_READY,
 		"reason": "",
 		"descriptor": descriptor,
+		"reduced_state_schema": reduced_state_schema,
 		"artifact_binding": binding,
 		"diagnostics": {
 			"full_state_count": n,
