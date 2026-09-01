@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-09-01-R9-P7-P7_4_COMPLETE",
+  "policy_revision": "V0-P-2026-09-01-R10-P7-P7_5_ACTIVE",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_5_NEXT",
+  "current_phase": "P7_5_IN_PROGRESS",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "IN_PROGRESS_P7_5_NEXT",
+      "state": "IN_PROGRESS_P7_5",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -182,7 +182,7 @@
       "next": "V0_P8_FIRST_MOBILE_CONSTRUCT",
       "mandatory_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
       "execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "control_main_base": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
+      "control_main_base": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
       "project_epoch": "E2026-08-30-V0-P7-R1",
       "work_order_id": "V0-P7-R1-WO-001",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -258,11 +258,21 @@
         "verifier_platform_amendment": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json"
       },
       "p7_5": {
-        "state": "NEXT",
+        "state": "IN_PROGRESS",
         "scope": "TWO_CLIENT_CONVERGENCE",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
         "runtime_mutation_authorized": true,
-        "hard_rule": "REUSE_EXISTING_MW6_MW7_RL2_RL3_AND_CANONICAL_ITEM_GRAPH_REPLAY_WITH_P7_4_AGGREGATE_REVISION_SEAM"
+        "hard_rule": "REUSE_EXISTING_MW6_MW7_RL2_RL3_AND_CANONICAL_ITEM_GRAPH_REPLAY_WITH_P7_4_AGGREGATE_REVISION_SEAM",
+        "control_precondition": "RESOLVED_BY_PR_432",
+        "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
+        "minimum_outcomes": [
+          "TWO_CLIENT_CANONICAL_MATTER_CONVERGENCE",
+          "TWO_CLIENT_CANONICAL_ITEM_GRAPH_CONVERGENCE",
+          "TWO_CLIENT_AGGREGATE_REVISION_CONVERGENCE",
+          "INTEREST_EXIT_REENTRY_RECONVERGENCE",
+          "DUPLICATE_DELIVERY_REPLAY_MUTATION_FREE",
+          "NO_SECOND_REVISION_OR_RECEIPT_OWNER"
+        ]
       }
     },
     {
