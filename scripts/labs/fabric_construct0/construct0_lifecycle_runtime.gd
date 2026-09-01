@@ -47,6 +47,15 @@ func setup() -> Dictionary:
 func state() -> Dictionary:
 	return _state.duplicate(true)
 
+func visual_subject() -> Dictionary:
+	if _initial.is_empty():
+		return {}
+	return {
+		"parts": Array(_initial["construction_payload"]["parts"]).duplicate(true),
+		"bonds": Array(_initial["construction_payload"]["bonds"]).duplicate(true),
+		"anchors": Array(_initial["construction_payload"]["boundary_anchors"]).duplicate(true),
+	}
+
 func switch_representation(mode: String) -> Dictionary:
 	if not REPRESENTATIONS.has(mode):
 		return _failure("C0_4_UNKNOWN_REPRESENTATION")
@@ -202,7 +211,9 @@ func trigger_local_unbake(load_magnitude: float = 30.0) -> Dictionary:
 			"next_required_stage": String(result["diagnostics"]["next_required_stage"]),
 		},
 		"events": _events.duplicate(true),
+		"full_part_ids": result["full_part_states"].keys(),
 	}
+	_state["full_part_ids"].sort()
 	return {"success": true, "state": state(), "result": result, "fixture": fixture, "compiled": compiled}
 
 func break_split_and_rebake() -> Dictionary:
@@ -257,7 +268,15 @@ func break_split_and_rebake() -> Dictionary:
 			"physical_bake_artifact_emitted": bool(result["diagnostics"]["physical_bake_artifact_emitted"]),
 		},
 		"events": _events.duplicate(true),
+		"rebaked_components": [],
 	}
+	for component_any in transaction["rebaked_components"]:
+		var component: Dictionary = component_any
+		_state["rebaked_components"].append({
+			"component_id": String(component["component_id"]),
+			"part_ids": Array(component["part_ids"]).duplicate(true),
+			"artifact_id": String(component["physical_bake_artifact"]["artifact_id"]),
+		})
 	return {"success": true, "state": state(), "result": result, "transaction": transaction}
 
 func reset() -> Dictionary:
