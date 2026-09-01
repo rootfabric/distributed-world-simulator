@@ -172,21 +172,48 @@ static func validate(value: Dictionary) -> Dictionary:
 	return Utils.validate_checksum(value)
 
 static func dynamic_graph_hash(value: Dictionary) -> String:
+	return graph_hash_from_components(
+		value.get("full_state_schema", {}),
+		value.get("storage_nodes", []),
+		value.get("edges", []),
+		value.get("shunts", []),
+		value.get("port_bindings", [])
+	)
+
+static func graph_hash_from_components(
+	full_state_schema: Dictionary,
+	storage_nodes: Array,
+	edges: Array,
+	shunts: Array,
+	port_bindings: Array
+) -> String:
 	var storage_graph: Array = []
-	for raw in value.get("storage_nodes", []):
+	for raw in storage_nodes:
 		if typeof(raw) != TYPE_DICTIONARY:
 			storage_graph.append(raw)
 			continue
 		var node: Dictionary = raw.duplicate(true)
 		node.erase("initial_value")
 		storage_graph.append(node)
+	var canonical_edges: Array = []
+	for raw in edges:
+		if typeof(raw) != TYPE_DICTIONARY:
+			canonical_edges.append(raw)
+			continue
+		var edge: Dictionary = raw.duplicate(true)
+		var a := String(edge.get("state_a_id", ""))
+		var b := String(edge.get("state_b_id", ""))
+		if b < a:
+			edge["state_a_id"] = b
+			edge["state_b_id"] = a
+		canonical_edges.append(edge)
 	return Utils.canonical_hash({
-		"model_class": value.get("model_class"),
-		"full_state_schema_hash": value.get("full_state_schema", {}).get("schema_hash", ""),
-		"storage_nodes": storage_graph,
-		"edges": value.get("edges", []),
-		"shunts": value.get("shunts", []),
-		"port_bindings": value.get("port_bindings", []),
+		"model_class": MODEL_CLASS,
+		"full_state_schema_hash": full_state_schema.get("schema_hash", ""),
+		"storage_nodes": Utils.sorted_dicts(storage_graph, "state_id"),
+		"edges": Utils.sorted_dicts(canonical_edges, "edge_id"),
+		"shunts": Utils.sorted_dicts(shunts, "shunt_id"),
+		"port_bindings": Utils.sorted_dicts(port_bindings, "port_id"),
 	})
 
 static func state_index(value: Dictionary) -> Dictionary:
