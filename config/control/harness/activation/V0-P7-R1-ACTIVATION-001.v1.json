@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_5",
+  "state": "IN_PROGRESS_P7_6_NEXT",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-09-01T07:50:00+10:00",
+  "updated_at_utc": "2026-09-02T13:45:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -142,27 +142,36 @@
     "human_gate": "RUNTIME_FEATURE_MERGE APPROVED"
   },
   "p7_5": {
-    "status": "IN_PROGRESS",
+    "status": "COMPLETE_MERGED",
     "scope": "TWO_CLIENT_CONVERGENCE",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "note": "Prove two-client canonical convergence over existing MW6/MW7/RL2/RL3 while preserving P7.4 restart/replay semantics and the single NetworkedGameplayService aggregate revision owner.",
-    "control_precondition": "RESOLVED",
-    "control_repair": {
-      "repair_pr": 432,
-      "repair_head": "5b12d35798702c28df7ad58099dc9b3c132be78e",
-      "canonical_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
-      "project_control_run": 33508057451,
-      "drive": "PASS_EXIT_0",
-      "close": "PASS_EXIT_8_MISSION_STILL_OPEN",
-      "resolution": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-CONTROL-TRANSITION-TABLE-GAP-RESOLUTION-001.v1.json"
-    },
-    "runtime_rules": [
-      "NO_SECOND_NETWORK_PROTOCOL",
-      "NO_SECOND_ITEM_GRAPH",
-      "NO_P7_RECEIPT_LEDGER",
-      "NO_SECOND_AGGREGATE_REVISION_OWNER",
-      "MW6_MW7_RL2_RL3_ARE_CONSUMED_NOT_REWRITTEN"
-    ]
+    "runtime_subject_head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "runtime_subject_tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "runtime_merge_pr": 435,
+    "runtime_merge_carrier_pr": 461,
+    "runtime_merge_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
+    "runtime_merge_commit_tree": "ee8bf98be2b1e8da56d2127171e65cb76c26f0f5",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "exact_linux_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "human_gate": "RUNTIME_FEATURE_MERGE APPROVED",
+    "test_summary": {
+      "stages": "16/16",
+      "assertions": 1140,
+      "failures": 0,
+      "logs": "17/17",
+      "fatal_matches": 0
+    }
   },
-  "control_main_base": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93"
+  "control_main_base": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "p7_6": {
+    "status": "NEXT",
+    "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
+    "runtime_started": false,
+    "note": "Separate Director activation/implementation dispatch required; P7.5 closure does not start P7.6."
+  }
 }
