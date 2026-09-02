@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.harness_evidence_map.v1",
   "work_order_id": "V0-P7-R1-WO-001",
   "program": "V0",
-  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
   "intent": "Prove two independent client projections converge to the same canonical Matter cursor/store, gameplay aggregate revision, Item Graph revision/checksum, and representation source identity through existing MW6/MW7/M7/RL3 seams, including interest exit/re-entry and exact replay mutation-freedom.",
