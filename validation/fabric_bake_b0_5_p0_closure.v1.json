@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_5_p0_closure.v1",
+  "qualification": "CLOSED",
+  "predecessor_sync2": "be419fb695221917df0f6026ed335e1355f72840",
+  "exact_subject": {
+    "head": "8c2a7db2a10e721546540e97ef8d2876f3dd41b4",
+    "tree": "82d2819ac3c06ee34494d98eecf236a2664c052e",
+    "tracked_clean": true,
+    "detached_verification": true
+  },
+  "acceptance": {
+    "assertions": 63,
+    "pass": 63,
+    "fail": 0,
+    "exit_code": 0,
+    "fatal_script_markers": 0
+  },
+  "project_control": {
+    "run_id": 33516591870,
+    "conclusion": "SUCCESS"
+  },
+  "source_carrier": {
+    "run_id": 33516591916,
+    "artifact_id": 9803836553,
+    "bundle_sha256": "eaa70c0a808fd6d69a87ce9de8cf8b3f64424a3ab43a8d2891eae0426016f975"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92"
+  },
+  "contracts": [
+    "HybridModeSignature",
+    "HybridBakeModeDescriptor",
+    "HybridTransitionDescriptor",
+    "LazyModeCacheEntry",
+    "HybridBakePreflight"
+  ],
+  "guarantees": {
+    "deterministic_mode_identity": true,
+    "input_order_invariance": true,
+    "source_invalidation": true,
+    "topology_invalidation": true,
+    "dependency_invalidation": true,
+    "b0_4_interface_invalidation": true,
+    "exactly_once_event_ownership": true,
+    "external_canonical_revision_ownership": true,
+    "unknown_mode_full_or_no_safe_bake": true,
+    "nearest_mode_reuse": false,
+    "unresolved_b0_4_execution_authorized": false
+  },
+  "executable_hybrid_reduction_authorized": false,
+  "next_dependency": "B0.4 stable executable mode-local Dynamic ROM PhysicalBakeArtifact interface",
+  "production_accepted": false
+}
