@@ -26,10 +26,10 @@ jobs:
         run: |
           set -Eeuo pipefail
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends             build-essential pkg-config libarchive-dev libtalloc-dev
+          sudo apt-get install -y --no-install-recommends             build-essential pkg-config libtalloc-dev
           cd proot-src
           make -C src clean loader.elf loader-m32.elf build.h
-          LDFLAGS="${LDFLAGS:-} -static" make -C src proot GIT=false
+          PYTHON=/nonexistent/python LDFLAGS="${LDFLAGS:-} -static"             make -C src proot GIT=false
           file src/proot
           ldd src/proot || true
           src/proot --version | head -n 4
