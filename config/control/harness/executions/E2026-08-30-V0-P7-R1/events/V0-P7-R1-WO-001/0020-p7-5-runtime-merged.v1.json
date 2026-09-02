@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0020",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 20,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-02T13:45:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+  "predicate": "P7_5_COMPLETE_MERGED",
+  "command": "DIRECTOR_RECORD_P7_5_RUNTIME_MERGE_AND_ADVANCE_FRONTIER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/human-attention/V0-P7-R1-P7-5-RUNTIME-FEATURE-MERGE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
+  ],
+  "summary": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 is Reviewer R2 PASS, Fresh Linux Verifier R1 VERIFIED, Human RUNTIME_FEATURE_MERGE approved, and merged to canonical main as f039acf94efd72bbdf34dd68a5801195ca282999 via exact-subject carrier PR #461. Original PR #435 is merged/closed. P7 remains IN_PROGRESS under the same serialized mutation lease; P7.6 is NEXT but not started.",
+  "blocker": ""
+}

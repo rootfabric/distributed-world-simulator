@@ -271,18 +271,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-5-activation-r1",
-      "passport_path": "config/control/branches/control__v0-p7-5-activation-r1.v1.json",
+      "branch": "control/v0-p7-5-closure-r1",
+      "passport_path": "config/control/branches/control__v0-p7-5-closure-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "P7.5 two-client convergence activation over the repaired P7 Harness and accepted P7.4 runtime semantics.",
-      "purpose": "Continue the same P7 production convergence Work Order into two-client canonical convergence without duplicating Matter, Item Graph, replication, representation or aggregate-revision ownership.",
-      "expected_outcome": "P7.5 TWO_CLIENT_CONVERGENCE exact runtime candidate using existing MW6/MW7/RL2/RL3 and P7.4 revision/replay semantics.",
-      "current_stage": "P7.5 Two-Client Convergence",
-      "stage_status": "P7_5_IN_PROGRESS",
-      "progress_note": "The transition-table/legacy-ledger control debt is resolved and canonical via PR #432 / main 2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93; recovery Project Control 33508057451 SUCCESS proves Drive=0 and Close=8 mission-open semantics. P7.5 is now active under the same P7 Work Order, runtime branch and mutation lease. Runtime implementation must consume existing MW6/MW7/RL2/RL3, canonical Item Graph replay, and the P7.4 NetworkedGameplayService aggregate revision seam.",
+      "short_description": "P7.5 two-client convergence closure; exact verified runtime merged and P7.6 is the next bounded composition frontier.",
+      "purpose": "Canonicalize P7.5 convergence evidence and move the same P7 Work Order to P7.6 NEXT without starting new runtime work or changing canonical owners.",
+      "expected_outcome": "P7.5 COMPLETE_MERGED; P7.6 SEAM_AND_MULTI_REGION_COMPOSITION NEXT.",
+      "current_stage": "P7.6 Seam + Multi-Region Composition",
+      "stage_status": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
+      "progress_note": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 is Reviewer R2 PASS, Fresh Linux Verifier R1 VERIFIED, Human RUNTIME_FEATURE_MERGE approved and merged as f039acf94efd72bbdf34dd68a5801195ca282999. P7.6 is NEXT under the same Work Order and mutation lease but has not started.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Implement P7.5 two-client convergence, run exact double-Godot focused/regression gates, then fresh independent Reviewer and Verifier.",
+      "next_stage": "Separately activate P7.6 and prove seam routing with existing SM1/MW8/MW9 plus MW10 only for true multi-region Matter mutation.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -294,14 +294,13 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+        "head_at_refresh_input": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
-        "runtime_subject_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
-        "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
-        "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
-        "next_code_step": "P7.5 two-client canonical convergence over existing MW6/MW7/RL2/RL3 with canonical Item Graph replay and the accepted P7.4 aggregate revision seam."
+        "runtime_subject_tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+        "runtime_merge_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
+        "next_code_step": "P7.6 seam and true multi-region composition after separate Director activation."
       },
       "implementation_blockers": [],
       "acceptance_blockers": [
@@ -383,18 +382,24 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_5": {
-        "state": "IN_PROGRESS",
+        "state": "COMPLETE_MERGED",
         "scope": "TWO_CLIENT_CONVERGENCE",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "hard_rule": "REUSE_MW6_MW7_RL2_RL3_AND_CANONICAL_REPLAY_NO_SECOND_AGGREGATE_REVISION_OR_RECEIPT_PATH",
-        "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93",
-        "required_outcomes": [
-          "CLIENT_A_B_CANONICAL_MATTER_CONVERGENCE",
-          "CLIENT_A_B_CANONICAL_ITEM_GRAPH_CONVERGENCE",
-          "CLIENT_A_B_AGGREGATE_REVISION_CONVERGENCE",
-          "MW7_INTEREST_REENTRY_RECONVERGENCE",
-          "REPLAY_DUPLICATE_MUTATION_FREE"
-        ]
+        "runtime_subject_head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+        "runtime_subject_tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+        "runtime_merge_pr": 435,
+        "runtime_merge_carrier_pr": 461,
+        "runtime_merge_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
+      },
+      "p7_6": {
+        "state": "NEXT",
+        "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_started": false,
+        "hard_rule": "SM1_MW8_MW9_FOR_SEAM_AND_MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION"
       }
     },
     "MATTER": {

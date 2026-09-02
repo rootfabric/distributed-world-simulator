@@ -1,0 +1,79 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-5-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.5 closure control carrier; records exact verified two-client convergence and advances the same P7 Work Order to P7.6 NEXT.",
+  "purpose": "Canonicalize P7.5 Reviewer R2 PASS, Fresh Linux Verifier R1 VERIFIED, explicit Human runtime merge approval and exact runtime integration without accepting whole P7 or starting P7.6 runtime work.",
+  "expected_outcome": "P7.5 COMPLETE_MERGED; P7 IN_PROGRESS; P7.6 NEXT.",
+  "current_stage": "P7.6 Seam + Multi-Region Composition",
+  "stage_status": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
+  "progress_note": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot, 16/16 stages, 17/17 logs and zero fatal matches. Human RUNTIME_FEATURE_MERGE approved; exact-subject carrier PR #461 merged canonical runtime as f039acf94efd72bbdf34dd68a5801195ca282999.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.5 substeps COMPLETE_MERGED",
+  "next_stage": "P7.6 SEAM_AND_MULTI_REGION_COMPOSITION is NEXT only. A separate Director activation/implementation dispatch is required before P7.6 runtime mutation starts.",
+  "parent_branch_or_checkpoint": "main @ f039acf94efd72bbdf34dd68a5801195ca282999 / P7.5 runtime merged",
+  "base_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 COMPLETE_MERGED",
+    "P7.4 COMPLETE_MERGED",
+    "P7.5 Reviewer R2 PASS",
+    "P7.5 Fresh Linux Verifier R1 VERIFIED",
+    "P7.5 Human RUNTIME_FEATURE_MERGE APPROVED",
+    "exact P7.5 runtime subject merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-5-closure-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0020-p7-5-runtime-merged.v1.json",
+    "docs/checkpoints/2026-09-02_V0_P7_5_TWO_CLIENT_CONVERGENCE_COMPLETE_R1_RU.md"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m7/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/simulation/matter/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/m7/**",
+    "scripts/simulation/matter/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "focused": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION",
+    "AGGREGATE_REVISION_OWNERSHIP"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
