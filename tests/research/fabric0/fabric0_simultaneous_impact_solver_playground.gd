@@ -1,0 +1,18 @@
+extends SceneTree
+const E=preload("res://scripts/research/fabric0/fabric0_simultaneous_impact_solver_experiments_v1.gd")
+func _init()->void:
+	var coupled:=E.coupled_three_body_probe(1.0,1.0e-9)
+	var half:=E.restitution_probe(0.5)
+	var seq_f:=E.sequential_reference(false,1.0)
+	var seq_r:=E.sequential_reference(true,1.0)
+	print("=== FABRIC0.17-B COUPLED SIMULTANEOUS IMPACT SOLVE ===")
+	print("event_time=",coupled.event_time," rows=",coupled.contact_rows," manifolds=",coupled.manifolds.keys())
+	print("pair_impulses=",coupled.pair_impulses," state=",coupled.state)
+	print("elastic energy=",coupled.energy_before," -> ",coupled.energy_after," residual delta=",coupled.energy_delta)
+	print("half restitution energy=",half.energy_before," -> ",half.energy_after)
+	print("momentum errors linear/angular=",coupled.linear_momentum_error,",",coupled.angular_momentum_error)
+	print("sequential forward=",seq_f.state)
+	print("sequential reverse=",seq_r.state)
+	print("coupled vs sequential order delta=",E.state_error(seq_f.state,seq_r.state))
+	print("FABRIC0_17_B_COUPLED_SIMULTANEOUS_IMPACT_SOLVE_PLAYGROUND_PASS")
+	quit(0)

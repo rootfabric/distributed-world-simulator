@@ -1,0 +1,184 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v10",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.10_PERSISTENT_CONTACT_GRAPH_SPARSE_HYBRID_CONTACT_STEP",
+  "parent_research_head": "87cf1889ad59e956dde884991af061faa423b8b9",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_persistent_contact_graph_v1.gd": "e81048f4a1951825c5e88a0da7296009b957fd309805d1f2085db187f098ebee",
+    "scripts/research/fabric0/fabric0_persistent_contact_graph_experiments_v1.gd": "f754034b8fa94b0ea64098b1533e0660130c264092f4da4e9994a7f35b2d2192",
+    "tests/research/fabric0/fabric0_persistent_contact_graph_acceptance.gd": "f61de1949bf59219c42bcf2d706584339c12228c62372776c35288b1ceba0cf7",
+    "tests/research/fabric0/fabric0_persistent_contact_graph_playground.gd": "0713b2c2952ceadd61b4498244d8674c1f705b5eb5b8402717433748a2ce3feb"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_persistent_contact_graph_v1.gd": "65566cde148ebe598da406bcf008454e2215c8f6",
+    "scripts/research/fabric0/fabric0_persistent_contact_graph_experiments_v1.gd": "e7b8fd4e43132587ebd233af947377b71276488e",
+    "tests/research/fabric0/fabric0_persistent_contact_graph_acceptance.gd": "d3a90d53cde1844470634d2ca35aafce8278e244",
+    "tests/research/fabric0/fabric0_persistent_contact_graph_playground.gd": "cfe58ddda4feacaf26b0e1ce1916ea747874569c"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all four tested FABRIC0.10 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_persistent_contact_graph_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 97,
+    "marker": "FABRIC0.10 Persistent Contact Graph Acceptance: PASS",
+    "observations": {
+      "cold_first_step_iterations": 39,
+      "warm_second_step_iterations": 3,
+      "warm_second_step_contact_hits": 4,
+      "initial_island_count": 3,
+      "merged_island_count": 2,
+      "split_island_count": 3,
+      "dynamic_pair_lifecycle": [
+        "appear:pair:D|E",
+        "persist:pair:D|E",
+        "disappear:pair:D|E"
+      ],
+      "merged_de_island": {
+        "body_ids": ["D", "E"],
+        "contact_ids": [
+          "pair:D|E",
+          "plane:floor|body:D",
+          "plane:floor|body:E"
+        ],
+        "warm_start_hits_when_pair_appears": 2,
+        "warm_start_hits_after_pair_persists": 3,
+        "iterations": 1,
+        "sparse_effective_mass_entries": 29,
+        "dense_effective_mass_capacity": 81
+      },
+      "world_sparse_effective_mass_entries_during_merge": 41,
+      "resting_stack_after_5_steps": {
+        "a_position": [0.0, 0.49999999999533, 0.0],
+        "b_position": [0.0, 1.49999999999244, 0.0],
+        "a_velocity_norm_below": 2e-8,
+        "b_velocity_norm_below": 2e-8,
+        "pair_ab_cached_normal_impulse": 0.0981,
+        "floor_a_cached_normal_impulse": 0.1962
+      },
+      "independent_island_equivalence_tolerance": 1e-12,
+      "order_invariance": {
+        "reversed_body_insertion": "PASS",
+        "reversed_contact_input": "PASS",
+        "contact_history_json_exact_match": true,
+        "final_world_hash_exact_match": true
+      },
+      "persistent_world_hash": "4103da3235e4cdd7f1c63c809d3dd71ab39d10ec7f68094d6eef33eabfe6033d",
+      "event_bridge": {
+        "precondition": "contact-free macrostep start",
+        "body": "fall",
+        "plane": "floor",
+        "macrostep_dt": 1.0,
+        "localized_event_time": 0.460381178993,
+        "reference_event_time": 0.46038117899287667,
+        "appeared_contact": "plane:floor|body:fall",
+        "contact_history_timestamp_is_event_time": true,
+        "final_time": 1.0,
+        "final_position": [0.0, 0.49999999955294, 0.0],
+        "final_velocity_norm_below": 2e-8,
+        "event_world_hash": "ac7c2758e89afb9798a3b2268c99877eb0795f33699e6fbf5a6dfe9034da6eb6"
+      },
+      "fail_closed_invalid_provider_body": "CONTACT_BODY_A_UNKNOWN"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_persistent_contact_graph_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_10_PERSISTENT_CONTACT_GRAPH_PLAYGROUND_PASS"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "predecessor_preservation": {
+    "runtime_regressions_rerun": false,
+    "statement": "Predecessor runtime suites were not rerun in the isolated FABRIC0.10 lab. Predecessor executable blobs were verified unchanged on the branch.",
+    "fabric0_9_executable_blobs": {
+      "scripts/research/fabric0/fabric0_multicontact_cone_v1.gd": "630f9ad5048a7061010b6a5439f18f3654440d4d",
+      "scripts/research/fabric0/fabric0_multicontact_cone_experiments_v1.gd": "2f482c27b6facd47db44a567737a685272c3025f",
+      "tests/research/fabric0/fabric0_multicontact_cone_acceptance.gd": "e91a93ae643e1a414d0baa85e0ffa5d035f4f755",
+      "tests/research/fabric0/fabric0_multicontact_cone_playground.gd": "b7de22c76bef3f09e5db5ef498635870bb70f67b"
+    },
+    "all_fabric0_9_blobs_match_v9_evidence": true
+  },
+  "contact_provider_contract": {
+    "built_in_research_provider": "sphere-sphere plus sphere-plane",
+    "stable_static_contact_id": "plane:<plane_id>|body:<body_id>",
+    "stable_dynamic_pair_id": "pair:<canonical_body_a>|<canonical_body_b>",
+    "provider_output_canonical_sort": true
+  },
+  "persistent_graph_contract": {
+    "per_contact_state": [
+      "age_steps",
+      "first_step",
+      "last_step",
+      "warm_impulse"
+    ],
+    "lifecycle": [
+      "appeared",
+      "persisted",
+      "disappeared"
+    ],
+    "static_features_bridge_dynamic_islands": false,
+    "dynamic_edges_merge_islands": true,
+    "edge_disappearance_splits_islands": true
+  },
+  "solver_contract": {
+    "time_form": "velocity-level free differential flow followed by algebraic contact impulse solve and position advance",
+    "contact_reaction_set": "3D Coulomb cone per contact",
+    "warm_start": "previous contact-local impulse keyed by stable contact identity",
+    "sparse_jacobian": true,
+    "sparse_effective_mass_assembly": true,
+    "local_factorization": "dense Cholesky after island-local sparse assembly",
+    "cone_algorithm": "ADMM with exact per-contact cone projection",
+    "event_bridge": "contact-free sphere-plane first event localization by bisection, then persistent contact solve for remaining macrostep"
+  },
+  "claims": [
+    "dynamic body-body contacts can persist as stable graph edges across time steps",
+    "contact lifecycle appear/persist/disappear is explicit and deterministic",
+    "warm-start state is keyed by stable contact identity rather than current island identity",
+    "demonstrated warm start reduces total solver iterations from 39 to 3 for unchanged persistent contacts",
+    "static environment does not merge unrelated dynamic solver islands",
+    "a dynamic contact edge merges independent islands and its disappearance splits them again",
+    "warm-start state for existing contacts survives island merge",
+    "sparse Jacobian and effective-mass structure is assembled before island-local dense factorization",
+    "the demonstrated two-sphere stack supports gravity load over five steps",
+    "unrelated island graph mutations do not change the independent A/B trajectory",
+    "reversing body insertion and provider contact order preserves lifecycle history and final world hash",
+    "a new contact can be localized inside a contact-free macrostep and enter persistent history at physical event time",
+    "the four FABRIC0.10 executable files are byte-identical between exact-double local tests and GitHub"
+  ],
+  "non_claims": [
+    "not a production persistent contact system",
+    "built-in dynamic geometry provider is sphere-sphere only",
+    "static geometry provider is plane only",
+    "no arbitrary convex or mesh feature matching",
+    "no broadphase acceleration structure",
+    "no full rotated inertia tensor path",
+    "no orientation integration for persistent contact points",
+    "sparse assembly still densifies island-local matrices for Cholesky",
+    "no true sparse factorization or Krylov backend",
+    "no parallel island scheduling",
+    "no sleep/wake semantics",
+    "no persistent explicit stick/slip discrete mode beyond warm impulse state",
+    "warm impulse is numerical cache/evidence and not claimed canonical semantic truth",
+    "event-aware bridge rejects worlds with already-active contacts",
+    "general event-localized sparse hybrid DAE with existing constrained islands is not yet implemented",
+    "predecessor runtime regressions were not rerun in this isolated FABRIC0.10 lab",
+    "no production Construction, authority, persistence or replication integration",
+    "no full materialized DWS checkout regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.11_GENERAL_EVENT_LOCALIZED_CONTACT_ISLANDS_SPARSE_BACKEND",
+    "goal": "localize new dynamic contacts while persistent islands remain constrained, recompile islands at the same event instant, remap warm starts, and keep the numerical path sparse through the linear solve"
+  }
+}

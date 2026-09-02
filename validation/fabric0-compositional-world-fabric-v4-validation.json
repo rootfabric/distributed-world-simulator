@@ -1,0 +1,120 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v4",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.4_POWER_MAP",
+  "parent_research_head": "59b181b2fe215f84976cfbcc094108070f22dd46",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_conservation_fabric_v2.gd": "ca476fe1f21c6cb4e87c1e5c449020de127a6cf68c07d3b305ca8e1e51a47b2b",
+    "scripts/research/fabric0/fabric0_power_map_experiments_v1.gd": "98a53bc7ec070ae3274bc7c1725843111323527a1d5074e4afe000bd2b73f42e",
+    "tests/research/fabric0/fabric0_power_map_acceptance.gd": "95c2aefc2feef545d0f527404e6d83cbdfde92bf4704227061506986230927f3",
+    "tests/research/fabric0/fabric0_conservation_v2_compat_acceptance.gd": "4f24949172fa7c4b36a7e663a25449552700bfc6672461314e7039b6b862333b",
+    "tests/research/fabric0/fabric0_power_map_playground.gd": "f44bf020eb38ee5499f1b95f5b735ceb07e020e5546e233caf4a70fe2b213e4e"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_conservation_fabric_v2.gd": "2ac8c619a67e749dc7c171536de1fdfac10a0e65",
+    "scripts/research/fabric0/fabric0_power_map_experiments_v1.gd": "5a81b8617d06e0b47f2d97db6d9319a3e127638d",
+    "tests/research/fabric0/fabric0_power_map_acceptance.gd": "720f201a0b003d857196619806992d81537ac3bf",
+    "tests/research/fabric0/fabric0_conservation_v2_compat_acceptance.gd": "2a114d0931862fa4a5239402b7def2ba2134cf62",
+    "tests/research/fabric0/fabric0_power_map_playground.gd": "45168358fc686a65b39ac7daaebef04f2b02f9b2"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all five tested executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_power_map_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 89,
+    "marker": "FABRIC0.4 Power Map Acceptance: PASS",
+    "observations": {
+      "forward_first_voltage": 9.142857142857142,
+      "forward_first_omega": 4.571428571428571,
+      "forward_first_map_current": -5.714285714285714,
+      "forward_first_map_torque": 11.428571428571429,
+      "forward_power_map_absorbed_power": 0.0,
+      "forward_speed_history": [
+        4.571428571428571,
+        5.442176870748299,
+        5.6080336896663425,
+        5.639625464698351,
+        5.645642945656829,
+        5.646789132506062
+      ],
+      "storage_first_delta_energy": 20.89795918367347,
+      "storage_first_absorbed_work": 41.79591836734694,
+      "storage_first_numerical_dissipation": 20.89795918367347,
+      "open_circuit_omega_before": 5.646789132506062,
+      "open_circuit_omega_after": 4.51743130600485,
+      "open_circuit_voltage": 9.0348626120097,
+      "open_circuit_current": 0.0,
+      "open_circuit_map_torque": 0.0,
+      "reverse_voltage": 6.666666666666667,
+      "reverse_omega": 3.3333333333333335,
+      "reverse_map_current": 6.666666666666667,
+      "reverse_map_torque": -13.333333333333334,
+      "reverse_electrical_load_absorbed_power": 44.44444444444444,
+      "reverse_shaft_drive_absorbed_power": -44.44444444444444,
+      "differential_left_omega": 3.4285714285714284,
+      "differential_right_omega": 1.7142857142857142,
+      "differential_carrier_omega": 2.5714285714285716,
+      "differential_left_torque": 3.4285714285714284,
+      "differential_right_torque": 3.4285714285714284,
+      "differential_carrier_torque": -6.857142857142857,
+      "differential_map_absorbed_power": 0.0,
+      "differential_state_hash": "c35d820e816e5fea90b0cef0a9983443c845beafacdc5f0ba9d77e2fc0abb78e"
+    }
+  },
+  "compatibility": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_conservation_v2_compat_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 49,
+    "marker": "FABRIC0.4 V2 Compatibility: PASS",
+    "covers": [
+      "two-source conservation cell",
+      "ideal common constraint reaction",
+      "constraint conflict",
+      "floating island",
+      "two-cell difference coupler",
+      "topology split/rejoin canonical hash restoration"
+    ]
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_power_map_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_4_POWER_MAP_PLAYGROUND_PASS",
+    "error_scan": "CLEAN"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "parse_compile_error_scan": "CLEAN"
+  },
+  "claims": [
+    "mixed-domain equation islands are supported while each conservation cell remains single-domain",
+    "homogeneous linear power-map constraints generate reactions through the transpose constraint Jacobian",
+    "power-map absorbed power is zero by construction within numerical tolerance",
+    "the same power map operates in forward motor-like and reverse generator-like directions",
+    "open electrical topology produces back-EMF-like common state with zero current and zero map torque",
+    "a three-port power map expresses differential-like kinematics and conjugate torque reactions",
+    "generic implicit linear storage creates deterministic dynamics without a device-specific inertia solver",
+    "backward-Euler numerical dissipation is explicitly accounted rather than hidden",
+    "the v2 conservation solver preserves the essential FABRIC0.3 static semantics",
+    "all five tested executable files are byte-identical between local exact-double test inputs and the GitHub branch"
+  ],
+  "non_claims": [
+    "not a production sparse solver",
+    "no formal dimensional algebra for power-map coefficients yet",
+    "no nonlinear residual/Jacobian constitutive laws yet",
+    "no adaptive or structure-preserving higher-order integration",
+    "no thermal entropy-flow domain yet",
+    "no vector or spatial physical ports",
+    "no contact or complementarity solver",
+    "no full DWS checkout regression executed in the isolated local research lab",
+    "no production Construction, Item Graph, authority, persistence or network integration"
+  ]
+}

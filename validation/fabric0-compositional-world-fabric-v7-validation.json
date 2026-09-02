@@ -1,0 +1,168 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v7",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.7_STATEFUL_HYBRID_TIME",
+  "parent_research_head": "549abed8c6ba5deeb5c68303ea7a2ce5c5a85522",
+  "recovery_memory_commits": {
+    "read_first": "0feaaa871fa56f1a5f4192e60eb75621634c3c57",
+    "ideology": "05c7800cd733f0907a3df6465e893fc6a8164038",
+    "research_history": "555efaeb4c3bb36afc8154f75ee92d8089b23060",
+    "scoped_agents": "d4de927fe4ec14cfa7002e359c350cc8b8131fca"
+  },
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_hybrid_time_v1.gd": "f3f6e33a01c7864c53f88cf9d2fc9a052677e360646eb0119e30d455cc28515e",
+    "scripts/research/fabric0/fabric0_hybrid_time_experiments_v1.gd": "bd5743a7829e970ac4f5d6e0a343dff2c99e1c30489003e9211967837f4052a2",
+    "tests/research/fabric0/fabric0_hybrid_time_acceptance.gd": "665a306ec5a9d0599a76a59b108455a7822f5a2ecd1bbcf6606bac9240eabed1",
+    "tests/research/fabric0/fabric0_hybrid_time_playground.gd": "cd933dd1a98599b94f9c19466fcf4306b5463932d223d2df9751ce3a0e0f3a89"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_hybrid_time_v1.gd": "c5f5605c1b06828cead0d38dae2dd379678b5dfc",
+    "scripts/research/fabric0/fabric0_hybrid_time_experiments_v1.gd": "7a1abee9f2241bcf4b269fe9ac238e51736e0da9",
+    "tests/research/fabric0/fabric0_hybrid_time_acceptance.gd": "bd9f4e2dc60cdbedf120d1940cef31f5a4ba0787",
+    "tests/research/fabric0/fabric0_hybrid_time_playground.gd": "adb07e11a2bc3caeef5b093f36ce23227ad45063"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all four tested FABRIC0.7 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_hybrid_time_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 88,
+    "marker": "FABRIC0.7 Hybrid Time Acceptance: PASS",
+    "observations": {
+      "impact": {
+        "localized_event_time": 0.360950562279,
+        "reference_event_time": 0.3609505622728941,
+        "pre_velocity": -4.540925015897091,
+        "post_velocity": 3.632740012717673,
+        "restitution": 0.8,
+        "kinetic_energy_ratio": 0.64,
+        "final_height_at_t_0_6": 0.5881100292600682,
+        "final_velocity_at_t_0_6": 1.2876650286147648,
+        "event_id": "fabric0/event/000001/impact"
+      },
+      "schmitt_hysteresis": {
+        "turn_on_time": 1.0,
+        "deadband_value": 0.7,
+        "deadband_mode": "on",
+        "deadband_event_count": 0,
+        "turn_off_time": 2.2,
+        "final_mode": "off"
+      },
+      "breaker": {
+        "trip_time": 0.5,
+        "damage_at_trip": 1.0,
+        "post_mode": "tripped",
+        "bond_active_after_trip": false,
+        "topology_revision_before": 0,
+        "topology_revision_after": 1,
+        "irreversible_over_followup_advance": true
+      },
+      "simultaneous_reset": {
+        "pre_a": 1.0,
+        "pre_b": 2.0,
+        "post_a": 2.0,
+        "post_b": 1.0,
+        "final_clock": 0.1,
+        "pre_snapshot_semantics": true
+      },
+      "invalid_topology_transaction": {
+        "diagnostic": "TOPOLOGY_TRANSACTION_UNKNOWN_BOND",
+        "macrostep_rolled_back": true,
+        "valid_bond_remained_active": true,
+        "time_restored": 0.0,
+        "events_restored_empty": true,
+        "state_hash_restored": true
+      },
+      "event_storm": {
+        "diagnostic": "ZENO_OR_EVENT_STORM",
+        "event_limit": 32,
+        "macrostep_rolled_back": true,
+        "time_restored": 0.0,
+        "events_restored_empty": true,
+        "state_hash_restored": true
+      },
+      "deterministic_replay": {
+        "event_lists_equal": true,
+        "final_state_hash_equal": true,
+        "focused_hash": "3cf1455cbf333d971d2c2f19aca391636e902b66db11cf2cde6fc6924e594bd9"
+      }
+    }
+  },
+  "predecessor_regression": {
+    "fabric0_6_nonsmooth": {
+      "entrypoint": "res://tests/research/fabric0/fabric0_nonsmooth_acceptance.gd",
+      "exit_code": 0,
+      "assertions": 121,
+      "marker": "FABRIC0.6 Nonsmooth Acceptance: PASS",
+      "hash": "d20fa8d48d244b12c17e29a51911f50cc6b2accdbdb700ddfae748acf8dd5c19"
+    },
+    "fabric0_6_predecessor_compatibility": {
+      "entrypoint": "res://tests/research/fabric0/fabric0_nonsmooth_v1_compat_acceptance.gd",
+      "exit_code": 0,
+      "assertions": 42,
+      "marker": "FABRIC0.6 Predecessor Compatibility: PASS"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_hybrid_time_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_7_HYBRID_TIME_PLAYGROUND_PASS",
+    "deterministic_ball_hash": "4d7eb56220bdb10376bc8aad724e3f6cc87aad5d33017584103eafc078440e6f"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_error_scan": "CLEAN"
+  },
+  "time_semantics": {
+    "macrostep": "transactional",
+    "continuous_flow": "RK4",
+    "event_detection": "directional guard crossing",
+    "event_localization": "bisection",
+    "event_time_tolerance": 1e-11,
+    "max_localization_iterations": 64,
+    "reset_semantics": "all RHS evaluate from one immutable pre-event snapshot, then assignments commit simultaneously",
+    "topology_transaction": "validate all supported bond operations then commit all or none",
+    "same_time_order": "event time, numeric priority, lexical transition id",
+    "event_limit_per_advance": 32
+  },
+  "claims": [
+    "continuous hybrid state flows are dimension-checked against state_dimension/time",
+    "guard crossings are localized inside a macrostep instead of being snapped to its end",
+    "reset maps have order-independent pre-state snapshot semantics",
+    "discrete modes can express hysteresis without a device-specific hysteresis class",
+    "a localized event can atomically commit a persistent physical bond topology mutation",
+    "topology revisions and deterministic local event identities are recorded in the event ledger",
+    "invalid topology transactions roll back the entire macrostep",
+    "event-storm/Zeno-like behavior fails closed and rolls back the entire macrostep",
+    "deterministic replay preserves event records and final state hash",
+    "FABRIC0.6 nonsmooth and predecessor compatibility suites remain green after adding the separate hybrid-time successor",
+    "the four FABRIC0.7 executable files are byte-identical between local exact-double tests and GitHub"
+  ],
+  "non_claims": [
+    "not an adaptive, symplectic or structure-preserving production integrator",
+    "continuous RK stages do not yet re-solve FABRIC algebraic/nonsmooth physical islands",
+    "the hybrid timeline and physical network are not yet one unified DAE",
+    "bouncing impact uses an explicit reset map rather than a multi-body impulse complementarity solve",
+    "no general geometric contact gap state in the coupled FABRIC physical network",
+    "no same-time event fixed-point iteration; exact ties are deterministically serialized",
+    "no arbitrary algebraic state variables inside the hybrid timeline",
+    "topology transactions currently support only set_bond_active",
+    "macrostep rollback currently snapshots timeline state and bound bond active states, not arbitrary production world state",
+    "event identity is local research identity, not canonical distributed authority identity",
+    "no persistence or replication integration",
+    "no full materialized DWS checkout regression executed in this isolated research lab"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.8_COUPLED_HYBRID_DAE_EVENT_ITERATION",
+    "goal": "solve continuous storage, algebraic physical islands, nonsmooth relations and event iteration as one temporal system"
+  }
+}

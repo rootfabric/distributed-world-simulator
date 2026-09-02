@@ -1,0 +1,272 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v12",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.12_ADAPTIVE_MULTI_EVENT_MANIFOLD_DAE",
+  "parent_research_head": "9e04333a27d01992be6740d7b817579980a254f0",
+  "implementation_commit": "172549487a4637be122478df7b83b2049f531962",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_v1.gd": "7f3630e572ff14deb4c8d480c385fa132fcdaf12725a1cfc72527f30afc8089a",
+    "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_experiments_v1.gd": "5dedfbbcfe90be1010e3dfb149b97109c25256058ee2ae794bf853d9ce813f12",
+    "tests/research/fabric0/fabric0_adaptive_multievent_manifold_acceptance.gd": "9f850c79636924e53bd2363e1c46cda34878d0a9379af112c84713543a86ed78",
+    "tests/research/fabric0/fabric0_adaptive_multievent_manifold_playground.gd": "6e6e2a99d30073909113aff9cab9b73161d2dd2247f859fb059f32e9f6773577"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_v1.gd": "d88c5e3a30284985e6bf66328921280fafe6990f",
+    "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_experiments_v1.gd": "fb4fa7a9bad103ec61ca466ede56a5713eb3139b",
+    "tests/research/fabric0/fabric0_adaptive_multievent_manifold_acceptance.gd": "59ab0eb3acb8b9cef668716e730ff859bdb05208",
+    "tests/research/fabric0/fabric0_adaptive_multievent_manifold_playground.gd": "16d535693a7f54d3d8de17f453c38f33b8605491"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub branch blob SHA for all four exact-tested FABRIC0.12 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_adaptive_multievent_manifold_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 115,
+    "marker": "FABRIC0.12 Adaptive Multi-Event Manifold Acceptance: PASS",
+    "main_run": {
+      "tolerance": 1e-9,
+      "event_times": [
+        0.19634954475054,
+        0.98174771949769
+      ],
+      "analytic_event_times": [
+        0.19634954084936,
+        0.98174770424681
+      ],
+      "event_errors": [
+        3.90117e-9,
+        1.525088e-8
+      ],
+      "accepted_steps": 68,
+      "rejected_steps": 1,
+      "energy_drift": -7.03302e-9,
+      "max_constraint_residual": 0.0,
+      "physical_event_count": 2,
+      "event_iterations_each": 3,
+      "topology_mutations_each": 2,
+      "total_manifold_topology_mutations": 4,
+      "final_state_hash": "a0cad2efa4bed9d598fbaac147f177e11e4d2f4e5c8bac6d9876cec7c8ae3263"
+    },
+    "adaptive_refinement": {
+      "tolerances": [
+        1e-5,
+        1e-7,
+        1e-9,
+        1e-11
+      ],
+      "max_event_time_errors": [
+        1.467192298e-5,
+        5.7857693e-7,
+        1.525088e-8,
+        3.8339e-10
+      ],
+      "accepted_steps": [
+        14,
+        33,
+        68,
+        167
+      ],
+      "rejected_steps": [
+        2,
+        1,
+        1,
+        2
+      ],
+      "energy_drifts_approx": [
+        -3.402e-5,
+        -6.6837e-7,
+        -7.03302e-9,
+        -7.051e-11
+      ],
+      "event_error_strictly_decreases": true,
+      "energy_drift_magnitude_strictly_decreases": true
+    },
+    "manifold_event_iteration": {
+      "pre_negative_contacts": [
+        "floor|vertex:BR",
+        "wall|vertex:BL"
+      ],
+      "degenerate_contacts": [
+        "floor|edge:bottom",
+        "wall|edge:left"
+      ],
+      "post_positive_contacts": [
+        "floor|vertex:BL",
+        "wall|vertex:TL"
+      ],
+      "return_negative_contacts": [
+        "floor|vertex:BR",
+        "wall|vertex:BL"
+      ],
+      "event_fixed_point_iteration_count": 3,
+      "event_topology_mutations": 2,
+      "physical_events_in_macro_advance": 2
+    },
+    "feature_lineage_warm_remap": {
+      "initial_floor_value": 2.0,
+      "initial_wall_value": 3.0,
+      "vertex_to_edge_preserves_lineage_value": true,
+      "edge_to_directed_vertex_preserves_lineage_value": true,
+      "second_event_restores_negative_side_values": true,
+      "synthetic_split": {
+        "old": "floor|edge:bottom",
+        "old_value": 4.0,
+        "new": {
+          "floor|vertex:BL": 2.0,
+          "floor|vertex:BR": 2.0
+        }
+      },
+      "synthetic_merge": {
+        "old": {
+          "floor|vertex:BL": 2.0,
+          "floor|vertex:BR": 3.0
+        },
+        "new": {
+          "floor|edge:bottom": 5.0
+        }
+      }
+    },
+    "parallel_sparse_backend": {
+      "actual_godot_threads": true,
+      "threads_started": 2,
+      "independent_task_count": 2,
+      "cold_cache_hits": 0,
+      "cold_cache_misses": 2,
+      "warm_reverse_spawn_cache_hits": 2,
+      "warm_reverse_spawn_cache_misses": 0,
+      "cumulative_cache_hits_after_changed_coefficients": 4,
+      "cumulative_cache_misses": 2,
+      "canonical_hash": "40635ad181b0273659ffd0dacae622b7b7249427d5073c2f9ffb5913f43f7fe0",
+      "reverse_spawn_same_hash": true,
+      "fresh_cache_reverse_spawn_same_hash": true,
+      "changed_coefficients_same_pattern_cache_hit": true,
+      "changed_coefficients_result_hash_changes": true,
+      "changed_coefficients_pcg_residual_below": 1e-11
+    },
+    "parallel_alpha_exact_solution": {
+      "matrix": [
+        [4.0, 1.0, 0.0],
+        [1.0, 3.0, 1.0],
+        [0.0, 1.0, 2.0]
+      ],
+      "rhs": [1.0, 2.0, 3.0],
+      "solution": [
+        0.2222222222222222,
+        0.1111111111111111,
+        1.4444444444444444
+      ],
+      "pcg_iterations": 3
+    },
+    "derived_sleep_wake": {
+      "quiet_updates_to_sleep": 3,
+      "sleeping_after_quiet_updates": true,
+      "wake_on_speed_metric_1": true,
+      "quiet_steps_after_wake": 0,
+      "included_in_physical_state_hash": false
+    },
+    "fail_closed": {
+      "invalid_adaptive_options": "BAD_ADAPTIVE_OPTIONS",
+      "nonpositive_pattern_diagonal": "PATTERN_NONPOSITIVE_DIAGONAL"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_adaptive_multievent_manifold_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_12_ADAPTIVE_MULTIEVENT_MANIFOLD_PLAYGROUND_PASS",
+    "observed_parallel_threads": 2,
+    "observed_sleep": true,
+    "observed_wake": true
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "predecessor_preservation": {
+    "runtime_regression_rerun": false,
+    "reason": "the isolated FABRIC0.12 lab did not materialize the FABRIC0.11 runtime suite",
+    "statement": "Predecessor runtime regression is not claimed. All FABRIC0.11 executable blobs were verified unchanged against v11 evidence.",
+    "fabric0_11_executable_blobs": {
+      "scripts/research/fabric0/fabric0_event_sparse_islands_v1.gd": "87647dac2d46836800ba39f0fe098c08e88c5722",
+      "scripts/research/fabric0/fabric0_event_sparse_islands_experiments_v1.gd": "b62ffed0f0657187033bf595321af8e89c8851da",
+      "tests/research/fabric0/fabric0_event_sparse_islands_acceptance.gd": "49db9e2cf6b6f08eebc219e0c2deddc30f84c900",
+      "tests/research/fabric0/fabric0_event_sparse_islands_playground.gd": "17e33ad106a9fb54ddde69ba7d620187b4460a47"
+    },
+    "all_fabric0_11_blobs_match_v11_evidence": true
+  },
+  "adaptive_time_contract": {
+    "integrator": "RK4 step doubling",
+    "accepted_state": "two half RK4 steps",
+    "error_estimate": "full-step vs two-half-step difference divided by 15",
+    "normalized_error": "atol + rtol * state scale",
+    "event_detection": "theta sign crossing",
+    "event_localization": "bisection inside accepted adaptive candidate",
+    "event_time_tolerance": 1e-12,
+    "max_event_bisection_iterations": 80,
+    "remaining_step_policy": "restart adaptive integration from event fixed point"
+  },
+  "manifold_contract": {
+    "geometry": "2D oriented rectangle constrained in floor+wall corner",
+    "differential_state": ["theta", "omega"],
+    "algebraic_state": "center derived from active support feature constraints",
+    "negative_side_features": ["floor vertex BR", "wall vertex BL"],
+    "zero_degenerate_features": ["floor bottom edge", "wall left edge"],
+    "positive_side_features": ["floor vertex BL", "wall vertex TL"],
+    "same_time_event_iteration": "vertex manifold -> degenerate edge manifold -> directed vertex manifold -> fixed point",
+    "feature_identity_continuity": "lineage overlap"
+  },
+  "sparse_parallel_contract": {
+    "storage": "sparse row dictionaries",
+    "linear_solver": "PCG",
+    "preconditioner": "cached inverse diagonal / Jacobi",
+    "pattern_cache_key": "island identity plus sorted nonzero row pattern",
+    "threading": "actual Godot Thread per independent research task",
+    "cache_prepare_order": "canonical island ID order before spawning",
+    "commit_order": "canonical island ID order after join",
+    "thread_spawn_order_can_reverse": true
+  },
+  "claims": [
+    "adaptive error-controlled integration reduces event-time error under refinement on the demonstrated manifold DAE",
+    "energy drift magnitude also decreases under refinement in the demonstrated conservative oscillator",
+    "more than one physical manifold event is processed inside one macro advance",
+    "each demonstrated event performs multiple same-time contact-feature topology mutations and reaches a fixed point",
+    "orientation-aware feature identity can move through vertex-edge-vertex support changes",
+    "lineage-based remapping can preserve/distribute numerical warm state through demonstrated feature split and merge",
+    "sparse pattern/preconditioner cache remains a numerical hint when coefficients change",
+    "actual Godot Threads solve independent sparse PCG tasks concurrently",
+    "reversing thread spawn order preserves canonical result for the demonstrated tasks",
+    "sleep/wake is implemented as derived computational state outside the physical system hash",
+    "deterministic replay reproduces event history and state hashes",
+    "the four FABRIC0.12 executable files are byte-identical between exact-double local tests and GitHub"
+  ],
+  "non_claims": [
+    "not a production adaptive contact DAE",
+    "the adaptive manifold model is a reduced 2D orientation-aware corner system, not the full FABRIC0.11 3D persistent contact graph",
+    "FABRIC0.11 persistent sphere contact graph has not yet been converted to adaptive integration",
+    "no full 3D quaternion orientation or arbitrary inertia update",
+    "no arbitrary convex/mesh persistent feature matching",
+    "no noisy-tolerance robust production feature lineage",
+    "no general mixed complementarity multi-body event fixed point",
+    "no guarantee that every possible dual/contact warm quantity can be conservatively remapped by lineage overlap",
+    "thread-per-task execution is research evidence, not a production thread pool or scheduler",
+    "no cross-platform deterministic performance claim",
+    "sparse storage remains dictionary-based rather than CSR/CSC",
+    "preconditioner is Jacobi/inverse diagonal only",
+    "sleep/wake is not a production policy",
+    "FABRIC0.11 runtime regression was not rerun in this isolated lab",
+    "no production Construction, authority, persistence or replication integration",
+    "no full materialized DWS checkout regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH",
+    "goal": "apply adaptive multi-event manifold semantics to the persistent sparse 3D contact graph, including real multipoint feature identity, orientation/inertia integration, event fixed points, sparse cache reuse and deterministic parallel island execution"
+  }
+}

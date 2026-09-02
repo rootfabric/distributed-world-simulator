@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.16",
+  "slice": "S1_GENERAL_CONVEX_MANIFOLD_GRAPH_LCP",
+  "status": "PASS_RESEARCH_SLICE_ONLY_NOT_CLOSED",
+  "branch": "research/fabric0-compositional-world-fabric-r1",
+  "predecessor_frontier": "962b9c1bbf7f04c7853f1fb0e36480cf54f3250d",
+  "predecessor_checkpoint": "FABRIC0.15_RESEARCH_CANDIDATE_CLOSED",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "script": "tests/research/fabric0/fabric0_general_convex_multipoint_mcp_acceptance.gd",
+    "result": "PASS",
+    "assertions": 110,
+    "marker": "FABRIC0.16 General Convex Multipoint MCP S1 Acceptance: PASS",
+    "metrics": {
+      "rotated_box_epa_depth": 0.24741879096243,
+      "persistent_face_manifold_points": 4,
+      "graph_normal_rows": 8,
+      "graph_cross_manifold_w_0_4": -3.5,
+      "pair_ab_normal_impulse": 0.99999999975,
+      "pair_bc_normal_impulse": 0.99999999975,
+      "sliding_rows": 8,
+      "sliding_coupling_iterations": 253,
+      "sliding_max_complementarity_violation": 3.8684533357081426e-11,
+      "sliding_max_cone_violation": 6.938893903907228e-18,
+      "sliding_linear_momentum_error": 8.921809491438631e-16,
+      "sliding_angular_momentum_error": 3.553147333202946e-15,
+      "sliding_kinetic_energy_delta": -3.48593081473464
+    }
+  },
+  "playground": {
+    "script": "tests/research/fabric0/fabric0_general_convex_multipoint_mcp_playground.gd",
+    "result": "PASS",
+    "marker": "FABRIC0_16_GENERAL_CONVEX_MULTIPOINT_MCP_S1_PLAYGROUND_PASS"
+  },
+  "editor_scan": {
+    "result": "CLEAN",
+    "script_errors": 0,
+    "parse_errors": 0,
+    "compile_errors": 0
+  },
+  "executable_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_model_v1.gd",
+      "sha256": "59a2abb72c87278584d7a723c97e4640834eeb754014d74cad3df2be7722dbf4",
+      "git_blob": "69010d7114ebf8c93dfc0cd1b7db71bb94e5ed2e"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_gjk_epa_v1.gd",
+      "sha256": "687c36dc471eba043d182bdce39d3e4b9f9900fbbbd279de50dbf5ac59059e09",
+      "git_blob": "675c9f5041ff866b34c6df1332a438db1f10a27b"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_multipoint_manifold_v1.gd",
+      "sha256": "17266d47116917752ad9207ca7140dab824d78c44e176a2ccd2c5040977ac2e0",
+      "git_blob": "4f168387629fce70c46c39fed76f63ae689b9ac7"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_graph_mcp_v1.gd",
+      "sha256": "60b8d8cb353dd8c007fbe8bee275a5ee2223e5ee2d3c7b16cb51974d75ba919f",
+      "git_blob": "d4a34fd7cb9324794e02d955ad5479f7aac5a589"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_multipoint_mcp_v1.gd",
+      "sha256": "b2cf6eaa3e666a8218a4606840920b6f4e68d2a97f6d943435ef3e04312e4a42",
+      "git_blob": "6654e8c19202e78141a3f0c0968bd4cbb0a086cb"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_multipoint_mcp_experiments_v1.gd",
+      "sha256": "2f832a074076a97fda764dab9b833342c4c4fd968161f6932324d7b603391cd4",
+      "git_blob": "c6d985ea2699e44cefe48e17cceebd663af71a28"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_multipoint_mcp_acceptance.gd",
+      "sha256": "95dfab5dc0dbdc352d64f4c67c7f883385e828c2d2f9247e4e1ae4f42fb693b8",
+      "git_blob": "7d951a7401467b978f06410cde0b84cc3e6b0694"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_multipoint_mcp_playground.gd",
+      "sha256": "3747f090c8e7cad2ab4f0f62ae170a249f4e0fa5f60e01a8f149653be847ceb6",
+      "git_blob": "cf2f1f7ab920ba616f34d0a2fc6976234c3d7320"
+    }
+  ],
+  "fixed_findings": [
+    "SEMISMOOTH_GENERALIZED_JACOBIAN_SINGULAR_ON_REDUNDANT_FACE_ROWS",
+    "COMPACT_GDSCRIPT_PIVOT_CONTROL_FLOW_BUG",
+    "ONE_PASS_FRICTION_REOPENED_NORMAL_CONSTRAINTS",
+    "DISTINCT_PENETRATION_WITNESS_LEVER_ARMS_CAN_CREATE_ARTIFICIAL_INTERNAL_TORQUE"
+  ],
+  "claims": [
+    "VERTEX_FACE_CONVEX_SUPPORT_MAPPING",
+    "DETERMINISTIC_GJK_EPA",
+    "PERSISTENT_CLIPPED_FOUR_POINT_FACE_MANIFOLD",
+    "RESEARCH_SWEEP_AND_PRUNE_BROADPHASE",
+    "GRAPH_WIDE_REGULARIZED_NORMAL_ACTIVE_SET_LCP",
+    "COUPLED_COULOMB_FRICTION_OUTER_FIXED_POINT",
+    "CANONICAL_CALLER_CONTACT_ORDER_INDEPENDENCE",
+    "INTERNAL_LINEAR_ANGULAR_MOMENTUM_ROUNDOFF_LEVEL"
+  ],
+  "non_claims": [
+    "FABRIC0_16_CLOSED",
+    "ADAPTIVE_CONTACT_SEPARATION_STICK_SLIDE_EVENT_LOCALIZATION",
+    "SAME_WORLD_PARALLEL_ISLAND_EXECUTION",
+    "MONOLITHIC_GLOBALLY_CERTIFIED_SIGNORINI_COULOMB_MCP_NCP",
+    "PRODUCTION_BROADPHASE_BLOCK_SPARSE_THREAD_POOL",
+    "ROLLING_TORSIONAL_FRICTION",
+    "SIMULTANEOUS_MULTI_IMPACT_FIXED_POINT",
+    "CURVED_ANALYTIC_SUPPORT_PRIMITIVES",
+    "NONCONVEX_MESH_DECOMPOSITION",
+    "CONSTRUCTION_AUTHORITY_PERSISTENCE_NETWORK_INTEGRATION",
+    "FULL_MATERIALIZED_DWS_REGRESSION"
+  ],
+  "next_slice": "FABRIC0.16_S2_ADAPTIVE_CONVEX_CONTACT_EVENTS_AND_SAME_WORLD_PARALLEL_ISLANDS"
+}

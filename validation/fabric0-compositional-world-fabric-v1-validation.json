@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v1",
+  "status": "PASS_RESEARCH_ONLY",
+  "base": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "branch": "main",
+    "commit": "e14f8b6e5b07709d18273cc7886fe660bc353ebf"
+  },
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 44,
+    "marker": "FABRIC0 Acceptance: PASS",
+    "observations": {
+      "switchable_function_off": 0.0,
+      "switchable_function_on": 12.0,
+      "cross_domain_input": 100.0,
+      "cross_domain_output": 72.0,
+      "breakable_bond_capacity": 5.0,
+      "breakable_bond_transfer_before_break": 10.0,
+      "connected_components_before_break": 1,
+      "connected_components_after_break": 2,
+      "closed_loop_level_history": [2.0, 4.0, 6.0, 8.0, 8.0, 8.0, 8.0, 8.0],
+      "regulated_heater_history": [19.0, 20.0, 21.0, 22.0, 22.0, 22.0, 22.0, 22.0],
+      "proximity_door_position_without_signal": 0.0,
+      "proximity_door_position_after_two_active_steps": 2.0,
+      "deterministic_state_hash": "482e54cbff0c896d644650cfa5757d9f929e1e0710cc42fd38135e23bd6b4b7b"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_PLAYGROUND_PASS"
+  },
+  "claims": [
+    "typed domain mismatch is rejected",
+    "function can be switched by topology-connected signal without a device-specific class",
+    "cross-domain conversion composes from generic local laws",
+    "bond overload mutates topology and splits connected components",
+    "closed-loop feedback stabilizes state using generic primitives",
+    "the same regulated-accumulator topology stabilizes two semantic domains: level and temperature",
+    "control plus state composes a proximity-driven door without a Door kernel class",
+    "identical graph and inputs produce identical canonical SHA-256 state hash"
+  ],
+  "non_claims": [
+    "not a production physics solver",
+    "no conservation-law proof",
+    "no acausal effort-flow solving",
+    "no rigid-body or field coupling",
+    "no production Construction or Item Graph integration",
+    "no network authority or persistence integration",
+    "no multiresolution reduction compiler"
+  ]
+}

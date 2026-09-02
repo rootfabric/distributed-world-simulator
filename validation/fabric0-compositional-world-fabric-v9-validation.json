@@ -1,0 +1,192 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v9",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.9_MULTI_CONTACT_GEOMETRIC_MANIFOLD_CONE_SOLVE",
+  "parent_research_head": "8b7b28e9b3e1a9641a2d20e8f89c540f08a2a1ec",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_multicontact_cone_v1.gd": "9d5aed723a0a0019adffab40fc7f0be02c249c357012722edd7d3ee842c130f6",
+    "scripts/research/fabric0/fabric0_multicontact_cone_experiments_v1.gd": "5f9651d4907b3ef396032e8e2e124a5515150635319957be9e8319bd779ecb0e",
+    "tests/research/fabric0/fabric0_multicontact_cone_acceptance.gd": "320be8d1eda05351b4120e0feb6e51233f270ba0ef463b523cf9b0dbe71b168a",
+    "tests/research/fabric0/fabric0_multicontact_cone_playground.gd": "6e25c73d9b73db4ca741f4c593808066a30e27ac6b78fd102110fd93594750ed"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_multicontact_cone_v1.gd": "630f9ad5048a7061010b6a5439f18f3654440d4d",
+    "scripts/research/fabric0/fabric0_multicontact_cone_experiments_v1.gd": "2f482c27b6facd47db44a567737a685272c3025f",
+    "tests/research/fabric0/fabric0_multicontact_cone_acceptance.gd": "e91a93ae643e1a414d0baa85e0ffa5d035f4f755",
+    "tests/research/fabric0/fabric0_multicontact_cone_playground.gd": "b7de22c76bef3f09e5db5ef498635870bb70f67b"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all four tested FABRIC0.9 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_multicontact_cone_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 136,
+    "marker": "FABRIC0.9 Multi-Contact Cone Acceptance: PASS",
+    "observations": {
+      "geometry_contact_count": 8,
+      "canonical_contact_ids": [
+        "floor::mx_my_mz",
+        "floor::mx_my_pz",
+        "floor::px_my_mz",
+        "floor::px_my_pz",
+        "wall::mx_my_mz",
+        "wall::mx_my_pz",
+        "wall::mx_py_mz",
+        "wall::mx_py_pz"
+      ],
+      "active_contacts": 5,
+      "sliding_contacts": 5,
+      "effective_mass_rank": 6,
+      "impulse_unknown_count": 24,
+      "redundant_impulse_manifold": true,
+      "admm_iterations": 2395,
+      "primal_residual": 9.43e-10,
+      "dual_residual": 7.70e-10,
+      "max_cone_violation": 0.0,
+      "post_linear_velocity": [
+        0.589721054,
+        0.776797774,
+        0.238711754
+      ],
+      "post_angular_velocity": [
+        -0.074797351,
+        -0.022468940,
+        0.122242645
+      ],
+      "total_impulse": [
+        5.17944211,
+        7.55359555,
+        -1.52257649
+      ],
+      "total_torque_impulse": [
+        -0.23739868,
+        -0.26696273,
+        0.57779412
+      ],
+      "linear_impulse_residual": 0.0,
+      "angular_impulse_residual": 0.0,
+      "energy_pre": 14.208,
+      "energy_post": 1.015847883,
+      "energy_delta": -13.192152117,
+      "all_post_contact_normal_velocities_nonnegative": true,
+      "floor_has_active_contacts": true,
+      "wall_has_active_contacts": true,
+      "order_invariance": {
+        "reversed_contacts": "PASS",
+        "reversed_planes_and_contacts": "PASS",
+        "post_generalized_velocity_exact_match": true,
+        "canonical_impulse_map_exact_match": true,
+        "state_hash_exact_match": true
+      },
+      "deterministic_state_hash": "181d3a3cd0e4d0439c79b5ed6afd9939cc88c94276446e148ab8cdf0c453c7b5"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_multicontact_cone_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_9_MULTICONTACT_CONE_PLAYGROUND_PASS",
+    "runtime_errors": 0,
+    "state_hash": "181d3a3cd0e4d0439c79b5ed6afd9939cc88c94276446e148ab8cdf0c453c7b5"
+  },
+  "predecessor_regression": {
+    "fabric0_8_coupled_hybrid_dae": {
+      "exit_code": 0,
+      "assertions": 71,
+      "marker": "FABRIC0.8 Coupled Hybrid DAE Acceptance: PASS",
+      "hash": "f564e9294b738d65783cefcbc03e18e54860c61541143be7dd2421d6223e9b19"
+    },
+    "fabric0_7_hybrid_time": {
+      "exit_code": 0,
+      "assertions": 88,
+      "marker": "FABRIC0.7 Hybrid Time Acceptance: PASS",
+      "hash": "3cf1455cbf333d971d2c2f19aca391636e902b66db11cf2cde6fc6924e594bd9"
+    },
+    "fabric0_6_nonsmooth": {
+      "exit_code": 0,
+      "assertions": 121,
+      "marker": "FABRIC0.6 Nonsmooth Acceptance: PASS",
+      "hash": "d20fa8d48d244b12c17e29a51911f50cc6b2accdbdb700ddfae748acf8dd5c19"
+    },
+    "fabric0_6_predecessor_compatibility": {
+      "exit_code": 0,
+      "assertions": 42,
+      "marker": "FABRIC0.6 Predecessor Compatibility: PASS"
+    }
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "geometry_contract": {
+    "provider": "box vertices against static planes",
+    "contact_identity": "<plane_id>::<stable_vertex_id>",
+    "contact_tolerance": 1e-9,
+    "tangent_basis": "deterministic orthonormal 2D basis per normal",
+    "deep_penetration_policy": "observable diagnostic, not heuristic correction"
+  },
+  "cone_solver_contract": {
+    "generalized_velocity_dof": 6,
+    "contact_impulse_dof": 3,
+    "contact_impulse_components": [
+      "normal",
+      "tangent_1",
+      "tangent_2"
+    ],
+    "constraint": "j_n >= 0 and sqrt(j_t1^2+j_t2^2) <= mu*j_n",
+    "global_matrix": "A = J M^-1 J^T",
+    "objective": "0.5*lambda^T*A*lambda + b^T*lambda",
+    "normal_linear_term": "(1+restitution)*pre_normal_velocity",
+    "tangential_linear_term": "pre_tangential_velocity",
+    "algorithm": "global ADMM with exact per-contact Coulomb-cone projection",
+    "rho": 0.1,
+    "tolerance": 1e-9,
+    "max_iterations": 12000,
+    "linear_subproblem": "single Cholesky factorization of A + rho I, reused each iteration",
+    "input_order_policy": "contacts canonical-sorted by stable identity before assembly"
+  },
+  "claims": [
+    "geometry can generate a simultaneous multi-surface contact manifold without contact-specific device classes",
+    "each contact has a deterministic normal plus two-dimensional tangent basis",
+    "angular velocity and contact offsets participate through rigid-body contact Jacobians",
+    "all contact impulses are solved in one globally coupled effective-mass problem",
+    "two-dimensional Coulomb friction is represented as a true cone constraint rather than independent axis clamps",
+    "the demonstrated corner impact activates contacts from both floor and wall in one solve",
+    "linear and angular impulse-momentum audits close to exact-double tolerance",
+    "the demonstrated dissipative multi-contact impact does not create kinetic energy",
+    "reversing plane/contact enumeration does not change the canonical solved result",
+    "redundant reaction coordinates are detected explicitly through matrix rank",
+    "deterministic reaction distribution is not claimed to imply mathematically unique physical reaction split",
+    "the four FABRIC0.9 executable files are byte-identical between local exact-double tests and GitHub"
+  ],
+  "non_claims": [
+    "not a production contact solver",
+    "only one dynamic body against static planes is demonstrated",
+    "geometry provider is box-plane only",
+    "no dynamic body-body contact",
+    "inertia path is world-space diagonal, not arbitrary full rotated inertia tensor",
+    "no persistent contact lifecycle across timesteps",
+    "no resting-contact complementarity integrated with FABRIC0.8 time loop",
+    "no warm-start cache",
+    "no sparse contact-island assembly",
+    "ADMM and Cholesky are dense",
+    "2395 iterations is semantic evidence, not a production performance result",
+    "the multi-contact restitution objective is a research candidate, not a universally proven impact law",
+    "per-contact reaction distribution is not proven unique on redundant manifolds",
+    "FABRIC0.9 is not yet embedded back into FABRIC0.8 coupled hybrid DAE event integration",
+    "no production Construction, authority, persistence or replication integration",
+    "no full materialized DWS checkout regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.10_PERSISTENT_CONTACT_GRAPH_SPARSE_HYBRID_DAE",
+    "goal": "combine persistent geometry contacts, dynamic body-body contact islands, warm-started sparse cone solving and FABRIC0.8 temporal DAE semantics"
+  }
+}

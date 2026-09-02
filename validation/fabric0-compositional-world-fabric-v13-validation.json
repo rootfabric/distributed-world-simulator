@@ -1,0 +1,237 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v13",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH",
+  "parent_research_head": "fdcd3f5dc18a5f62a6335c954ddca794d0d79f21",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "re-extracted from user-provided godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_v1.gd": "4e37dd9896c4324e4644f3e85a6dd7c015e895f64b92881d8cec436931094857",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_model_v1.gd": "0c24947e7c70ba8ad23923ac523add979903403eddc5a962745339feab9ff0d8",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_driver_v1.gd": "f3bc5e0a67463b1e55f608fb47c59942894c58b7d2662aa3a4d256df91809c5b",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_sparse_v1.gd": "2f171d768dc2d9ee6b20f64eaddd19ea413c964a42cfe7ea102d836b813e2226",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_experiments_v1.gd": "98ff85f065fa639941f271768fb2e36b311dcc8d2bf5d6fa3c7cae93fe8c48f3",
+    "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_acceptance.gd": "2543f7e5c6c038706ae7fdb58253f14cd7c750fc075c453b0af615d96ae6e4ce",
+    "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_playground.gd": "636cab2c46564dbefe0598f326a298330f657b91c5e679096c7d70cae0e2096b"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_v1.gd": "2f7e7b393ffc931f69e8f79c9cf156714acf2d04",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_model_v1.gd": "c5c0650b29a732b37539ca1f789e5d72d251592a",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_driver_v1.gd": "6b0b73f8418fc428b866433173c987ab8d2965c8",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_sparse_v1.gd": "cb7f9c86993cecab44b7ac7dbb09f1114eb01f58",
+    "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_experiments_v1.gd": "dcf7be2eb80a35f84f81fdde4c384f6a2fc5d028",
+    "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_acceptance.gd": "6334a9cb5fc4eff6be1b55da0a288e81ef675ef8",
+    "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_playground.gd": "c783dbbc4c6b9b0d319e3431fb69131eecaadf05"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "GitHub fetch_file blob SHA equals local git hash-object for all seven exact-tested files",
+    "note": "two large files initially differed by one missing final newline; branch files were corrected and accepted only after exact blob identity passed"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 95,
+    "marker": "FABRIC0.13 Unified Adaptive 3D Contact Graph Acceptance: PASS",
+    "main_run": {
+      "duration": 0.7,
+      "tolerance": 1e-9,
+      "event_times": [
+        0.12770032218309,
+        0.15171711003539,
+        0.58519759521384
+      ],
+      "event_kinds": [
+        "CONTACT_APPEAR",
+        "MANIFOLD_FIXED_POINT",
+        "MANIFOLD_FIXED_POINT"
+      ],
+      "accepted_steps": 37,
+      "rejected_steps": 1,
+      "pcg_calls": 38,
+      "pcg_iterations": 95,
+      "pattern_hits": 36,
+      "pattern_misses": 2,
+      "max_constraint_residual_below": 2e-14,
+      "min_contact_force_above": 2.9,
+      "physical_state_hash": "f486303b7f133d28148d63362ad368d82e946132f2a12f9c164ae5edc2819483"
+    },
+    "impact_merge": {
+      "event_time": 0.12770032218309,
+      "appeared": ["pair:B|C|edge:back_bottom"],
+      "persisted": ["floor|A", "pair:A|B"],
+      "island_before": ["A", "B"],
+      "island_after": ["A", "B", "C"],
+      "point_count": 2,
+      "old_force_preserved": {
+        "floor|A": 19.62,
+        "pair:A|B": 9.81
+      }
+    },
+    "manifold_fixed_points": [
+      {
+        "time": 0.15171711003539,
+        "iterations": 3,
+        "topology_mutations": 2,
+        "path": [
+          "pair:B|C|edge:back_bottom",
+          "pair:B|C|face:bottom",
+          "pair:B|C|edge:front_bottom"
+        ],
+        "point_counts": [2, 4, 2],
+        "warm_force_before_after": [3.19540765718406, 3.19540765718406],
+        "warm_impulse_before_after": [2.79582739473921, 2.79582739473921]
+      },
+      {
+        "time": 0.58519759521384,
+        "iterations": 3,
+        "topology_mutations": 2,
+        "path": [
+          "pair:B|C|edge:front_bottom",
+          "pair:B|C|face:bottom",
+          "pair:B|C|edge:back_bottom"
+        ],
+        "point_counts": [2, 4, 2],
+        "warm_force_before_after": [6.37715467034077, 6.37715467034077],
+        "warm_impulse_before_after": [2.30680300608927, 2.30680300608927]
+      }
+    ],
+    "refinement": {
+      "reference_tolerance": 1e-12,
+      "tested_tolerances": [1e-7, 1e-9, 1e-11],
+      "max_event_time_errors": [
+        8.034517395838492e-8,
+        3.1108455811335034e-9,
+        5.63820101717738e-11
+      ],
+      "max_final_state_errors": [
+        6.4536567821738e-7,
+        2.6241198575194247e-8,
+        4.793412056169899e-10
+      ],
+      "event_time_error_strictly_decreases": true,
+      "final_state_error_strictly_decreases": true
+    },
+    "final_state": {
+      "state": [
+        0.5,
+        1.5,
+        2.31500523792666,
+        -0.03806559230923,
+        0.0,
+        0.0,
+        -0.03391269895384,
+        0.08733783833833
+      ],
+      "contacts": [
+        "floor|A",
+        "pair:A|B",
+        "pair:B|C|edge:back_bottom"
+      ],
+      "support_gap_abs_below": 1e-12,
+      "warm_forces": {
+        "floor|A": 26.5710523718944,
+        "pair:A|B": 16.7610523718944,
+        "pair:B|C|edge:back_bottom": 6.95105237189441
+      }
+    },
+    "quaternion": {
+      "length": 1.0,
+      "x": -0.01903164707883,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.99981888180283,
+      "normalization_tolerance": 1e-14,
+      "demonstrated_rotation_axis": "X"
+    },
+    "parallel_islands": {
+      "actual_godot_threads": true,
+      "threads_started": 2,
+      "main_island": ["A", "B", "C"],
+      "side_island": ["D", "E"],
+      "main_solution": [
+        26.5710523718944,
+        16.7610523718944,
+        6.95105237189441
+      ],
+      "side_solution": [19.62, 9.81],
+      "main_pcg_iterations": 3,
+      "side_pcg_iterations": 2,
+      "canonical_hash": "6ef3fd35474a179a7bf02675d5bde9ecb457f235fdb7cc70f017a69757f92757",
+      "reverse_spawn_same_hash": true,
+      "parallel_audit_does_not_change_physical_hash": true
+    },
+    "sleep_wake": {
+      "quiet_updates_to_sleep": 3,
+      "sleep_after_third_quiet_update": true,
+      "wake_on_motion": true,
+      "included_in_physical_hash": false
+    },
+    "deterministic_replay": {
+      "event_json_exact_match": true,
+      "physical_state_hash_exact_match": true
+    },
+    "fail_closed": {
+      "invalid_adaptive_options": "BAD_ADAPTIVE_OPTIONS",
+      "nonpositive_sparse_diagonal": "PATTERN_NONPOSITIVE_DIAGONAL"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH_PLAYGROUND_PASS"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "predecessor_preservation": {
+    "fabric0_12_runtime_rerun": false,
+    "reason": "the current isolated FABRIC0.13 lab does not materialize the FABRIC0.12 runtime suite",
+    "fabric0_12_executable_blobs_preserved": {
+      "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_v1.gd": "d88c5e3a30284985e6bf66328921280fafe6990f",
+      "scripts/research/fabric0/fabric0_adaptive_multievent_manifold_experiments_v1.gd": "fb4fa7a9bad103ec61ca466ede56a5713eb3139b",
+      "tests/research/fabric0/fabric0_adaptive_multievent_manifold_acceptance.gd": "59ab0eb3acb8b9cef668716e730ff859bdb05208",
+      "tests/research/fabric0/fabric0_adaptive_multievent_manifold_playground.gd": "16d535693a7f54d3d8de17f453c38f33b8605491"
+    }
+  },
+  "claims": [
+    "adaptive multi-event semantics are integrated with a persistent sparse contact graph in the demonstrated successor",
+    "impact merges a free rotating body into an already constrained support island while preserving old relation reaction state",
+    "orientation directly enters the contact Jacobian and curvature acceleration term",
+    "multipoint feature topology transitions edge-face-opposite-edge occur as same-time fixed-point transactions",
+    "lineage preserves demonstrated warm force and impulse through contact feature identity changes",
+    "sparse PCG runs inside the adaptive constrained trajectory",
+    "event-time and final-state errors both decrease under tolerance refinement",
+    "normalized quaternion orientation representation is maintained for the demonstrated one-axis rotational motion",
+    "actual Godot Threads solve independent contact islands and reverse spawn order preserves canonical output",
+    "sleep/wake remains derived computational state outside the physical hash",
+    "deterministic replay reproduces the accepted event history and physical state hash",
+    "all seven executable FABRIC0.13 files are byte-identical between current exact-double local tests and the GitHub branch"
+  ],
+  "non_claims": [
+    "not a production 6DOF rigid-body solver",
+    "demonstrated rotation is one-axis despite quaternion representation",
+    "no general three-axis angular velocity and inertia tensor integration",
+    "no arbitrary convex or mesh manifold",
+    "no adaptive tangential Coulomb cone integration in this successor",
+    "no general unilateral complementarity/separation for every multipoint row",
+    "no arbitrary simultaneous multi-body impact fixed point",
+    "no production broadphase",
+    "sparse storage remains dictionary-based",
+    "no production thread pool or work-stealing scheduler",
+    "A/B support coordinates are partially algebraically projected in the research stand",
+    "FABRIC0.12 runtime suite was not rerun in the current lab",
+    "no production Construction, authority, persistence or replication integration",
+    "no full materialized DWS checkout regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD",
+    "goal": "combine full translational and rotational 6DOF dynamics, quaternion/inertia tensor integration, unilateral normal complementarity, tangential Coulomb cones, persistent convex feature lineage, adaptive multi-event topology fixed points and sparse parallel islands"
+  }
+}
