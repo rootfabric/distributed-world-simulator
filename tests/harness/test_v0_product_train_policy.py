@@ -56,7 +56,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual([], routing["p7_remaining_activation_prerequisites"])
         self.assertEqual("ACCEPTED", routing["p7_0"]["status"])
         self.assertEqual("PASS_NON_RED", routing["p7_post_merge_pc0"]["status"])
-        self.assertEqual("IN_PROGRESS", routing["p7_5"]["state"])
+        self.assertEqual("COMPLETE_MERGED", routing["p7_5"]["state"])
         self.assertEqual("RESOLVED_BY_PR_432", routing["p7_5"]["control_precondition"])
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
