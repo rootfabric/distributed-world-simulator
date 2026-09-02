@@ -92,7 +92,6 @@ static func observe(
 		"execution_allowed": true,
 	})
 
-
 static func invalidate(monitor: Dictionary, reason: String, step_index: int) -> Dictionary:
 	var checked := validate(monitor)
 	if not bool(checked.get("success", false)):
