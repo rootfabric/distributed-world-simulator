@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.harness_human_attention.v1",
   "decision_id": "V0-P7-R1-P7-5-RUNTIME-FEATURE-MERGE-001",
   "program": "V0",
-  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "reason": "P7.5 exact runtime candidate completed Fresh Independent Reviewer R2 PASS and Fresh Independent Linux Verifier R1 VERIFIED with canonical Linux double Godot and full repository-owned gate GREEN, so policy requires an explicit Human RUNTIME_FEATURE_MERGE decision.",
   "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for exact runtime PR #435 subject HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 / TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53.",
