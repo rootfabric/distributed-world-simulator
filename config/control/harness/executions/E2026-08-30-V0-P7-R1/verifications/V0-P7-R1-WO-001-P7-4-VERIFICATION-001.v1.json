@@ -1,0 +1,211 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-4-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+
+  "verified_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "verified_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+
+  "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_UBUNTU_EXACT_SOURCE_R1",
+
+  "verdict": "NOT_VERIFIED",
+  "verdict_reason": "INSUFFICIENT_ENVIRONMENT",
+  "verified_at_utc": "2026-08-31T12:39:42Z",
+
+  "execution_performed": false,
+  "blocker": "FRESH_INDEPENDENT_UBUNTU_VERIFIER_ENVIRONMENT_UNAVAILABLE",
+  "blocker_detail": "No reachable Ubuntu environment holding the exact double Godot 4.7.1.stable.double.custom_build.a13da4feb (godot.linuxbsd.editor.double.x86_64) was available to the Verifier session. The instruction's mandated outcome for unavailable exact Godot is NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT. No gate stage was executed; no claim is made about runtime correctness.",
+
+  "environment": {
+    "verifier_session_host": "Windows x86_64 DSH session (workspace C:\\distributed-world-simulator, git store .git-store/repo.git); WSL2 Ubuntu available",
+    "canonical_ubuntu_verifier_host": {
+      "hostname": "outenemy (outenemy.local via mDNS -> 192.168.0.15)",
+      "ssh_probe": "192.168.0.15:22 reachable; authentication denied (publickey,password) for users root, yurig, dsh, agent, ubuntu, yuri with the only available local key (ed25519 dsh-agent@telegram-inventory)",
+      "alternate_probes": "192.168.0.15:50000 connection refused; 95.154.71.53:50000 reachable but auth denied (yurig); 95.154.71.53:22 timed out",
+      "result": "UNREACHABLE_FOR_VERIFIER_LOGIN",
+      "worktree_created": false
+    },
+    "local_wsl_ubuntu": {
+      "distro": "Ubuntu 24.04.2 LTS (WSL2), user yurig",
+      "repo_checkout_present": false,
+      "canonical_godot_binary_present": false,
+      "sudo": "password required; no packages or binaries could be installed",
+      "usable_for_campaign": false
+    },
+    "exact_godot_binary_search": {
+      "expected_binary": "godot.linuxbsd.editor.double.x86_64",
+      "expected_version_line": "4.7.1.stable.double.custom_build.a13da4feb",
+      "expected_sha256_from_project_docs": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "expected_archive": "godot-4.7.1-linux-double-x86_64-a13da4f*.tar.gz (project-provided, per docs/GODOT_LOCAL_TESTING_RU.md)",
+      "searched_locations": [
+        "C:\\distributed-world-simulator (workspace incl. runner dirs)",
+        "C:\\Godot (incl. godot\\bin; only Windows double editor binaries present)",
+        "C:\\Users\\root\\Downloads, Desktop, Documents",
+        "C:\\Users\\Public",
+        "D:\\ (top levels)",
+        "WSL Ubuntu filesystem (/home/yurig, /usr/local, /opt)"
+      ],
+      "found": false,
+      "result": "EXACT_LINUX_DOUBLE_GODOT_UNAVAILABLE"
+    },
+    "windows_double_godot_present_but_not_usable": {
+      "path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "version_line": "4.7.1.stable.double.custom_build.a13da4feb",
+      "not_usable_reason": "Dispatch requires exact_execution_required.os=Ubuntu with godot.linuxbsd.editor.double.x86_64; substituting a non-exact platform build is explicitly forbidden (verifier_must_not). It was NOT used."
+    }
+  },
+
+  "dispatch": {
+    "dispatch_pr": 406,
+    "dispatch_branch": "control/v0-p7-4-fresh-verifier-dispatch-r1",
+    "dispatch_head": "3c162759cc0fd7d5114bb749bdf518256136c339",
+    "dispatch_project_control_run": 33388238543,
+    "dispatch_project_control": "SUCCESS",
+    "instruction_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-INSTRUCTION-001.md"
+  },
+
+  "checks": {
+    "subject_identity": {
+      "result": "PASS",
+      "method": "verified from local git store after fresh fetch (no runtime worktree materialized, runtime untouched)",
+      "head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+      "origin_runtime_branch": "feature/v0-p7-bounded-terrain-mutation == 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "canonical_p7_4_base": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1"
+    },
+    "fresh_detached_verifier_worktree": {
+      "result": "NOT_PERFORMED",
+      "reason": "Ubuntu campaign environment unavailable (see environment block); creating the worktree without the exact Ubuntu Godot would have produced no valid evidence",
+      "implementer_or_reviewer_worktree_reused": false
+    },
+    "fresh_import": {
+      "result": "NOT_RUN",
+      "reason": "environment unavailable"
+    },
+    "canonical_runner": {
+      "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh",
+      "result": "NOT_RUN",
+      "exit_code": null,
+      "banner": null,
+      "reason": "environment unavailable; no external 180-second cap was imposed because the runner was never started"
+    },
+    "required_16_stages": {
+      "result": "NOT_RUN",
+      "note": "No stage was freshly executed and none inherited from Implementer or Reviewer. Expected assertion minimums from the dispatch are recorded for the R2 re-run only.",
+      "expected": {
+        "p7_4_seed": "21 / 0",
+        "p7_4_recover_deliver": "25 / 0",
+        "p7_4_recover_replay": "17 / 0",
+        "p7_3_material_delivery": "116 / 0",
+        "p7_2_bubble": "53 / 0",
+        "p7_2_seam": "50 / 0",
+        "p7_1_authority": "83 / 0",
+        "p7_1_tool_to_mw4": "30 / 0",
+        "p5_mining_tool": "36 / 0",
+        "p3_resource_domain": "79 / 0",
+        "p3_aggregate_recovery": "33 / 0",
+        "m6_recovery_contracts": "126 / 0",
+        "m6_recovery_processes": "128 / 0",
+        "mw4": "187 / 0",
+        "mw5": "142 / 0",
+        "mw6": "130 / 0"
+      },
+      "freshly_required_gaps_for_r2": ["p7_2_bubble", "mw4", "mw5", "mw6", "m6_recovery_processes"]
+    },
+    "log_integrity": {
+      "result": "NOT_RUN",
+      "expected_log_count": 17,
+      "campaign_logs_found": 0,
+      "log_sha256_map": {},
+      "reason": "no campaign logs were produced; nothing was hashed"
+    },
+    "independent_fatal_log_scan": {
+      "result": "NOT_PERFORMED",
+      "fatal_matches": null,
+      "markers": ["SCRIPT ERROR:", "Parse Error:", "Compile Error:", "Failed to instantiate an autoload", "Failed to load script"]
+    },
+    "tracked_clean_fence": {
+      "result": "NOT_APPLICABLE_NO_VERIFIER_WORKTREE",
+      "before": "no verifier campaign worktree was created",
+      "after": "runtime branch refs unchanged by Verifier; origin/feature/v0-p7-bounded-terrain-mutation still == 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 at result-recording time",
+      "tracked_runtime_mutation_by_verifier": false
+    },
+    "project_control": {
+      "result": "PASS",
+      "runtime_project_control_run": 33374295322,
+      "runtime_project_control": "SUCCESS",
+      "verification_method": "GitHub API independently queried by Verifier: completed/success, head_sha 9deb31b8..."
+    },
+    "runtime_pr": {
+      "result": "PASS",
+      "pr": 396,
+      "state": "open",
+      "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+      "merged": false,
+      "verification_method": "GitHub API independently queried by Verifier"
+    },
+    "reviewer_r1": {
+      "result": "PASS",
+      "review_id": "V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001",
+      "reviewer": "INDEPENDENT_REVIEWER_P7_4_FRESH_EXACT_SOURCE_R1",
+      "review_branch": "control/v0-p7-4-fresh-reviewer-result-r1",
+      "review_commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+      "review_pr": 404,
+      "reviewer_project_control_run": 33388053145,
+      "reviewer_project_control": "SUCCESS",
+      "review_verdict": "PASS",
+      "reviewed_head_sha_matches_subject": true,
+      "reviewed_tree_sha_matches_subject": true,
+      "verification_method": "review result commit read from git store (verdict/subject fields) + GitHub API run status"
+    },
+    "immutable_source": {
+      "result": "PASS",
+      "validation_pr": 397,
+      "validation_branch": "validation/v0-p7-4-exact-source-r1",
+      "carrier_head": "8e5520db6cae05a816740b00b387f273e757096b",
+      "export_run": 33374385318,
+      "export_result": "SUCCESS",
+      "carrier_project_control_run": 33374385340,
+      "carrier_project_control": "SUCCESS",
+      "artifact_id": 9751287742,
+      "artifact_zip_sha256_recorded_in_dispatch": "71a833cb3b7f99133d81e309d2e22b329704fd4e5d3dbb2ee409b1ab94a99e9a",
+      "source_tar_sha256_recorded_in_dispatch": "b422f8ba9dec229d53ea3e63325355d286bf96bb248376703047492cffbc147e",
+      "reconstructed_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+      "note": "carrier HEAD and run conclusions independently verified; archive hashes recorded from dispatch evidence and not independently re-hashed because no re-materialization was performed"
+    }
+  },
+
+  "findings": [
+    "F-V-001 (blocking, environment): the canonical Ubuntu verifier host outenemy/192.168.0.15:22 refused authentication for every available Verifier credential; the host identity was confirmed via mDNS, so the blocker is access, not reachability.",
+    "F-V-002 (blocking, environment): the exact Linux double Godot 4.7.1.stable.double.custom_build.a13da4feb binary and its project-provided archive are absent from every location reachable by this Verifier session; local WSL Ubuntu exists but is empty and cannot install anything (sudo requires a password). Per instruction: NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT.",
+    "F-V-003 (scope): this NOT_VERIFIED is exclusively an INSUFFICIENT_ENVIRONMENT verdict of the Verifier campaign. The canonical gate was NOT executed; no stage failed; no claim is made either way about P7.4 runtime correctness. The runtime candidate remains frozen at 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292.",
+    "F-V-004 (preserved): Reviewer INFO findings P7.4-R1-F001/F002/F003 remain preserved and were not evaluated because no execution occurred."
+  ],
+
+  "environment_repair_required_for_r2": [
+    "Restore verifier access to an Ubuntu host holding the exact engine: e.g., authorize a verifier SSH key for yurig@192.168.0.15 (outenemy), or provide an equivalent reachable Ubuntu host.",
+    "Ensure the exact double Godot is installed there at the canonical path and verify it: /home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64, version line exactly 4.7.1.stable.double.custom_build.a13da4feb (project-documented binary sha256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7), or provide the project-provided archive godot-4.7.1-linux-double-x86_64-a13da4f*.tar.gz for canonical installation.",
+    "Then re-dispatch a fresh independent Ubuntu verifier (R2) for the same frozen subject 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 / 1efad34a075af63169c48dd5055c2537c8d7e6ef with the full 16-stage gate, 17-log scan/hash, and tracked-clean fence; this R1 result must not be inherited as execution evidence."
+  ],
+
+  "forbidden_conclusions_respected": {
+    "runtime_feature_merge_performed": false,
+    "pr_396_merged_by_verifier": false,
+    "merge_authorized_by_this_verification": false,
+    "p7_4_complete_merged_declared": false,
+    "whole_p7_accepted_declared": false,
+    "p7_5_started": false,
+    "runtime_source_repaired_or_rebased": false,
+    "non_exact_or_windows_godot_substituted": false,
+    "external_180_second_cap_imposed": false,
+    "implementer_or_reviewer_execution_inherited": false,
+    "reviewer_result_modified": false
+  },
+
+  "next": {
+    "opens": "ENVIRONMENT_REPAIR_THEN_FRESH_UBUNTU_VERIFIER_R2",
+    "human_attention": "Provide Ubuntu verifier host access and/or the exact Linux double Godot binary/archive; then re-dispatch R2. HUMAN RUNTIME_FEATURE_MERGE gate for PR #396 stays closed until a fresh verifier campaign records VERIFIED.",
+    "runtime_merge_performed": false
+  }
+}

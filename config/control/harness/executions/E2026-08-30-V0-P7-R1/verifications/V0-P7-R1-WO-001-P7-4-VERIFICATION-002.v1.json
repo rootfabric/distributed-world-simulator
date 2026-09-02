@@ -1,0 +1,159 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-4-VERIFICATION-002",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+
+  "verified_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "verified_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+
+  "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_UBUNTU_EXACT_SOURCE_R2",
+
+  "verdict": "NOT_VERIFIED",
+  "verdict_reason": "INSUFFICIENT_ENVIRONMENT",
+  "verified_at_utc": "2026-08-31T13:48:31Z",
+
+  "execution_performed": false,
+  "blocker": "FRESH_INDEPENDENT_UBUNTU_VERIFIER_ENVIRONMENT_UNAVAILABLE",
+  "blocker_detail": "R2 environment repair did not reach the Verifier session. (1) The exact project-provided Linux double Godot archive godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz (archive SHA-256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92, binary SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7) is absent from every location reachable by this Verifier session, so the mandated no-sudo installation could not start and no archive/binary SHA or --version identity could be produced. (2) The canonical Ubuntu verifier host outenemy (outenemy.local -> 192.168.0.15) again denied SSH authentication (publickey,password) for user yurig with the only available local key, unchanged from R1. (3) The local WSL2 Ubuntu satisfies the os-release/uname/git preconditions but holds no exact Godot, no archive, no canonical checkout, and cannot install anything (sudo requires a password), so it cannot satisfy 'the exact linuxbsd double Godot executes directly inside Ubuntu'. Per instruction: any of these alone mandates NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT. No gate stage was executed; no claim is made about runtime correctness; zero evidence is inherited from R1.",
+
+  "environment": {
+    "verifier_session_host": "Windows x86_64 DSH session (workspace C:\\distributed-world-simulator, git store .git-store/repo.git)",
+    "local_wsl2_ubuntu": {
+      "distro": "Ubuntu 24.04.2 LTS (WSL2)",
+      "kernel_userland": "Linux x86_64, user yurig, git 2.43.0",
+      "os_release_identifies_ubuntu": true,
+      "uname_s_linux": true,
+      "uname_m_x86_64": true,
+      "ubuntu_git_materializes_worktree": true,
+      "exact_linux_double_godot_executes": false,
+      "canonical_godot_binary_present": false,
+      "canonical_godot_path_checked": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+      "canonical_ubuntu_checkout_present": false,
+      "home_downloads_present": false,
+      "sudo": "password required; no packages or binaries could be installed",
+      "usable_for_campaign": false,
+      "note": "WSL2 was permitted as the R2 environment only with the exact linuxbsd double Godot executing inside Ubuntu; that condition cannot be met without the archive/binary."
+    },
+    "canonical_ubuntu_verifier_host": {
+      "hostname": "outenemy (outenemy.local via mDNS -> 192.168.0.15, re-resolved 2026-08-31)",
+      "probe_192_168_0_15_22": "reachable; authentication denied (publickey,password) for yurig with the only available local key ed25519 dsh-agent@telegram-inventory",
+      "probe_192_168_0_15_50000": "connection refused",
+      "probe_95_154_71_53_50000": "reachable; authentication denied (publickey,password) for yurig",
+      "probe_95_154_71_53_22": "connection timed out",
+      "result": "UNREACHABLE_FOR_VERIFIER_LOGIN",
+      "worktree_created": false,
+      "note": "Identical access blocker as recorded by Verifier R1; the R1-recommended repair (authorize a verifier SSH key for yurig@192.168.0.15) was not applied to any key reachable by this session."
+    },
+    "exact_godot_archive_search": {
+      "expected_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz",
+      "expected_archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+      "expected_binary": "tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+      "expected_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "expected_version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "searched_locations": [
+        "Windows workspace C:\\distributed-world-simulator (all session dirs, runner dirs incl. a-runner _work/_tool, .dsh attachments)",
+        "C:\\Godot (godot source checkout at exact build commit a13da4feb8d8aefc283c3763d33a2f170a18d541; bin holds only Windows double editor binaries)",
+        "C:\\Users\\root Downloads, Desktop, Documents, .ssh, .dsh; C:\\Users\\Public",
+        "C:\\ and D:\\ recursive filename searches for *a13da4f*.gz / godot-4.7.1* archives",
+        "WSL2 Ubuntu filesystem (/home/yurig incl. .local/opt, /root, /opt, /srv, /tmp, /var/tmp)",
+        "OneDrive; Recycle Bin; GitHub releases of all reachable rootfabric repos (none exist); GitHub Actions artifacts (1867 scanned, no Godot archive artifact)"
+      ],
+      "found": false,
+      "result": "EXACT_LINUX_DOUBLE_GODOT_ARCHIVE_ABSENT",
+      "dispatch_evidence_note": "R2 dispatch evidence V0-P7-R1-P7-4-VERIFIER-R2-DISPATCH-EVIDENCE-001.v1.json records controller_validation of the recovered archive on the control surface, but no copy of the archive (or the binary) was transferred to any location reachable by this Verifier session (no $HOME/Downloads on Windows or Ubuntu contains it)."
+    },
+    "windows_double_godot_present_but_not_usable": {
+      "path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "not_usable_reason": "Ubuntu verifier dispatch forbids Windows Godot substitution; it was NOT used."
+    }
+  },
+
+  "dispatch": {
+    "dispatch_pr": 413,
+    "dispatch_branch": "control/v0-p7-4-fresh-verifier-dispatch-r2",
+    "dispatch_head": "a2b3e610818f3e4bdd56f4ed1dfe60e0a970efd6",
+    "dispatch_project_control": "33393636323 = SUCCESS",
+    "instruction_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-FRESH-VERIFIER-R2-INSTRUCTION-001.md",
+    "instruction_followed_exactly": true
+  },
+
+  "control_checks": {
+    "runtime_pr_396_open_and_exact": {
+      "result": "PASS",
+      "state": "OPEN",
+      "head_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292"
+    },
+    "runtime_project_control": { "result": "PASS", "identity": "33374295322 = SUCCESS", "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292" },
+    "reviewer_r1": {
+      "result": "PASS",
+      "commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+      "commit_subject": "control(p7.4): record fresh independent Reviewer R1 PASS",
+      "verdict": "PASS",
+      "project_control": "33388053145 = SUCCESS"
+    },
+    "verifier_r1_historical": {
+      "result": "PASS",
+      "commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+      "commit_subject": "verify(p7.4): record fresh Ubuntu verifier R1 NOT_VERIFIED (insufficient environment)",
+      "verdict": "NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false,
+      "project_control": "33393399665 = SUCCESS",
+      "inherited_as_execution_evidence": false
+    },
+    "immutable_export": { "result": "PASS", "identity": "33374385318 = SUCCESS (P7.4 Exact Source Export R1)" },
+    "carrier_project_control": { "result": "PASS", "identity": "33374385340 = SUCCESS" },
+    "dispatch_project_control": { "result": "PASS", "identity": "33393636323 = SUCCESS", "head_sha": "a2b3e610818f3e4bdd56f4ed1dfe60e0a970efd6" }
+  },
+
+  "execution": {
+    "performed": false,
+    "canonical_runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh",
+    "runner_executed": false,
+    "fresh_detached_ubuntu_worktree_created": false,
+    "fresh_import_performed": false,
+    "stages_executed": 0,
+    "stages_required": 16,
+    "logs_collected": 0,
+    "logs_required": 17,
+    "fatal_log_scan_performed": false,
+    "log_sha256_recorded": false,
+    "tracked_clean_before_after": "NOT_APPLICABLE_NO_EXECUTION",
+    "reason": "Canonical install of the exact Linux double Godot was impossible; the instruction forbids running without the exact engine and forbids every substitution or repair."
+  },
+
+  "r1_inheritance": {
+    "stages_inherited_from_r1_implementer_or_reviewer": 0,
+    "r1_treated_as_historical_control_evidence_only": true
+  },
+
+  "findings": [
+    "All control identities re-verified independently on 2026-08-31: runtime PR #396 is OPEN at exactly HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292; Project Control runs 33374295322 (runtime), 33388053145 (Reviewer R1 PASS), 33393399665 (Verifier R1 NOT_VERIFIED), 33393636323 (R2 dispatch), 33374385318 (immutable export), 33374385340 (carrier) all report SUCCESS.",
+    "The R2 environment repair is real at the control surface (dispatch evidence records archive extraction, SHA256SUMS match, binary SHA match, exact --version) but the repaired artifact never reached any environment this Verifier session can execute in; the canonical Ubuntu verifier host remains SSH-auth-denied and the local WSL2 Ubuntu remains empty.",
+    "Per the R2 instruction, with neither the archive nor a running exact engine available, the only permitted outcome is NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT with zero execution; R1 contributes zero runtime execution evidence, and this R2 campaign likewise contributes zero runtime execution evidence.",
+    "No runtime source, branch, or PR was modified, rebased, repaired, or merged by the Verifier."
+  ],
+
+  "required_repair_for_next_round": [
+    "Authorize a verifier SSH key for yurig@192.168.0.15 (outenemy), or provide an equivalent reachable Ubuntu x86_64 host holding /home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64 (binary SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7, version 4.7.1.stable.double.custom_build.a13da4feb).",
+    "and/or transfer the project-provided archive godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz (SHA-256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92) to a $HOME/Downloads reachable by the Verifier session (Ubuntu host or local WSL2 Ubuntu) so the mandated no-sudo install can run; then re-dispatch a fresh R3 with zero inherited execution evidence."
+  ],
+
+  "forbidden_conclusions_respected": {
+    "runtime_feature_merge_performed": false,
+    "pr_396_merged_by_verifier": false,
+    "merge_authorized_by_this_verification": false,
+    "runtime_branch_modified_or_rebased": false,
+    "windows_godot_substituted": false,
+    "r1_evidence_inherited_as_execution": false
+  },
+
+  "next": {
+    "opens": "REENVIRONMENT_REPAIR_AND_FRESH_VERIFIER_REDISPATCH_ONLY",
+    "merge_authorized": false,
+    "human_runtime_feature_merge_gate": "STAYS_CLOSED",
+    "p7_4_status": "NOT_VERIFIED",
+    "remaining_stages": ["P7.4 persistence/restart (this dispatch)", "P7.5 two-client convergence", "P7.6 seam/multi-region", "P7.7 graphical digging slice"]
+  }
+}
