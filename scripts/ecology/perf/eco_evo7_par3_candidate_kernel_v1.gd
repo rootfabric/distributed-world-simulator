@@ -56,14 +56,23 @@ static func build_candidate(
 	offspring_ordinal: int,
 	schema: String,
 	version: String,
-	evolution_seed: int
+	evolution_seed: int,
+	adopt_reproduction_bundle: bool = false
 ) -> Dictionary:
 	var parent_bundle: Dictionary = parent["hereditary_bundle"]
 	var mutation_seed := _mutation_seed(schema, evolution_seed, parent, generation, offspring_ordinal)
 	var reproduction := _canonical_reproduce(parent_bundle, mutation_seed, offspring_ordinal)
 	if reproduction.is_empty():
 		return {}
-	var child_bundle: Dictionary = Dictionary(reproduction["bundle"]).duplicate(true)
+	## PERF2.4 R6: reproduce_bundle() returns a freshly-created child bundle.
+	## Optimized STREAM1 may adopt that owned value directly instead of deep
+	## copying the whole genome/traits/lineage tree once more. Legacy keeps the
+	## historical defensive copy for an honest same-run A/B baseline.
+	var child_bundle: Dictionary = (
+		Dictionary(reproduction["bundle"])
+		if adopt_reproduction_bundle
+		else Dictionary(reproduction["bundle"]).duplicate(true)
+	)
 	var candidate := {
 		"parent_record_id": String(parent["record_id"]),
 		"parent_reproductive_identity": String(parent["reproductive_identity"]),
@@ -146,7 +155,8 @@ static func build_presorted_unsorted(
 	schema: String,
 	version: String,
 	evolution_seed: int,
-	offspring_per_parent: int
+	offspring_per_parent: int,
+	adopt_reproduction_bundle: bool = false
 ) -> Array[Dictionary]:
 	if generation < 1 or schema.is_empty() or version.is_empty() or offspring_per_parent < 1:
 		return []
@@ -166,7 +176,8 @@ static func build_presorted_unsorted(
 		has_previous = true
 		for offspring_ordinal in offspring_per_parent:
 			var candidate: Dictionary = build_candidate(
-				parent, generation, offspring_ordinal, schema, version, evolution_seed)
+				parent, generation, offspring_ordinal, schema, version, evolution_seed,
+				adopt_reproduction_bundle)
 			if candidate.is_empty():
 				return []
 			out.append(candidate)
