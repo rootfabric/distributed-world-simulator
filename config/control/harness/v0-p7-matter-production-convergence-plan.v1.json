@@ -2,8 +2,8 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
-  "authored_against_main": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "status": "P7_6_IN_PROGRESS",
+  "authored_against_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
@@ -105,9 +105,19 @@
       "id": "P7.6",
       "name": "SEAM_AND_MULTI_REGION_COMPOSITION",
       "exit": "SM1_MW8_MW9_AND_MW10_ROUTING_PASS",
-      "status": "NEXT",
-      "runtime_started": false,
-      "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION"
+      "status": "IN_PROGRESS",
+      "runtime_started": true,
+      "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
+      "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "required_proofs": [
+        "ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITHOUT_MW10",
+        "SINGLE_REGION_MUTATION_AFTER_HANDOFF_USES_ORDINARY_MW4_PATH",
+        "ZERO_WRITER_TRANSFER_GAP_FENCES_MATTER_MUTATION",
+        "TRUE_MULTI_REGION_MUTATION_USES_MW10",
+        "MW10_RESERVATION_INTERLOCKS_WITH_HANDOFF_AND_SINGLE_REGION_MUTATION",
+        "NO_NEW_P7_COORDINATION_PROTOCOL_OR_OWNER"
+      ]
     },
     {
       "id": "P7.7",

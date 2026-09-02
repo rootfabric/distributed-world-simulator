@@ -271,18 +271,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-5-closure-r1",
-      "passport_path": "config/control/branches/control__v0-p7-5-closure-r1.v1.json",
+      "branch": "control/v0-p7-6-activation-r1",
+      "passport_path": "config/control/branches/control__v0-p7-6-activation-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "P7.5 two-client convergence closure; exact verified runtime merged and P7.6 is the next bounded composition frontier.",
-      "purpose": "Canonicalize P7.5 convergence evidence and move the same P7 Work Order to P7.6 NEXT without starting new runtime work or changing canonical owners.",
-      "expected_outcome": "P7.5 COMPLETE_MERGED; P7.6 SEAM_AND_MULTI_REGION_COMPOSITION NEXT.",
+      "short_description": "P7.6 seam and true multi-region Matter composition activation.",
+      "purpose": "Continue the same P7 Work Order into seam/multi-region routing using existing SM1/MW8/MW9/MW10 owners only.",
+      "expected_outcome": "P7.6 runtime candidate proves actor seam handoff and true multi-region mutation routing without a P7 coordination protocol.",
       "current_stage": "P7.6 Seam + Multi-Region Composition",
-      "stage_status": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
-      "progress_note": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 is Reviewer R2 PASS, Fresh Linux Verifier R1 VERIFIED, Human RUNTIME_FEATURE_MERGE approved and merged as f039acf94efd72bbdf34dd68a5801195ca282999. P7.6 is NEXT under the same Work Order and mutation lease but has not started.",
+      "stage_status": "P7_6_IN_PROGRESS",
+      "progress_note": "P7.5 is COMPLETE_MERGED. Human explicitly directed P7.6 implementation on canonical main 86b7264dfc1a362c223468e21ece0da7d6de1c67; P7.6 is active under the same runtime branch and single mutation lease.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Separately activate P7.6 and prove seam routing with existing SM1/MW8/MW9 plus MW10 only for true multi-region Matter mutation.",
+      "next_stage": "Implement a stateless P7.6 routing composition: actor handoff via SM1/MW8/MW9, ordinary single-region mutation via existing P7.1→MW4 path, MW10 only for one mutation spanning multiple authority regions.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -395,11 +395,12 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_6": {
-        "state": "NEXT",
+        "state": "IN_PROGRESS",
         "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "runtime_started": false,
-        "hard_rule": "SM1_MW8_MW9_FOR_SEAM_AND_MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION"
+        "runtime_started": true,
+        "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+        "hard_rule": "SM1_MW8_MW9_FOR_SEAM; MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION; NO_NEW_P7_COORDINATION_OWNER"
       }
     },
     "MATTER": {

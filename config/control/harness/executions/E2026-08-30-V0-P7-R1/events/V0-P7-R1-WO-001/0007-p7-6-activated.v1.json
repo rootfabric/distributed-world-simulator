@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0007",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 7,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-02T14:31:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+  "predicate": "V0_P7_P7_6_SEAM_AND_MULTI_REGION_COMPOSITION_ACTIVATED",
+  "command": "CONTINUE_P7_AT_P7_6_AFTER_P7_5_COMPLETE_MERGED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-ACTIVATION-EVIDENCE-001.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json"
+  ],
+  "summary": "P7.6 is activated under the same P7 Work Order, runtime branch and serialized mutation lease after P7.5 COMPLETE_MERGED. Actor seam uses SM1/MW8/MW9; ordinary one-region mutation remains the existing P7.1→MW4 path; MW10 is allowed only for one canonical mutation spanning two or more authority regions. No P7 coordination/durable/replay owner is authorized.",
+  "blocker": ""
+}
