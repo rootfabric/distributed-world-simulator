@@ -166,12 +166,13 @@ func _init() -> void:
 	if failures.is_empty():
 		print("V0-P7.6 seam + multi-region composition: PASS (%d assertions, 0 failures)" % assertions)
 		quit(0)
-	for failure in failures:
-		push_error(failure)
-	print("V0-P7.6 seam + multi-region composition: FAIL (%d assertions, %d failures)" % [
-		assertions, failures.size()
-	])
-	quit(1)
+	else:
+		for failure in failures:
+			push_error(failure)
+		print("V0-P7.6 seam + multi-region composition: FAIL (%d assertions, %d failures)" % [
+			assertions, failures.size()
+		])
+		quit(1)
 
 
 func _test_configuration() -> void:
