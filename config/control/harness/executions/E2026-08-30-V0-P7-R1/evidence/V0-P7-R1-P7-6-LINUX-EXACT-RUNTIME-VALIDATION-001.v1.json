@@ -1,0 +1,156 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-6-LINUX-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "actor": "EXTERNAL_LINUX_RUNTIME_EXECUTION_AGENT_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "host": {
+    "os": "Ubuntu 26.04 LTS",
+    "kernel": "Linux",
+    "arch": "x86_64"
+  },
+  "subject": {
+    "branch_state": "DETACHED_FRESH_WORKTREE",
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "5e3ecef5e0e27849a2180258fb3d00f3ad949eb2",
+    "tree": "758863475efd093002ce39c7ce6a93e1f8d55520",
+    "activation_base": "aca907022bf3a3239ae53ae0583c6aff8004da98",
+    "runtime_pr": 466,
+    "runtime_project_control_run": 33670387232,
+    "runtime_project_control": "SUCCESS"
+  },
+  "godot": {
+    "archive_source": "~/Downloads/01-godot-4.7.1-linux-double-x86_64-a13da4f.tar-1-.gz",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "binary_path": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0
+    },
+    {
+      "name": "P7.1 authority gate",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 88,
+      "failures": 0
+    },
+    {
+      "name": "P7.6 seam + multi-region composition",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 71,
+      "failures": 0,
+      "note": "PASS plus process exit 0; the earlier test-harness PASS-then-exit-1 defect does not reproduce at the frozen subject."
+    },
+    {
+      "name": "SM1 world mutations around handoff",
+      "result": "PASS",
+      "exit_code": 0,
+      "marker": "SM1_7_11_WORLD_MUTATIONS_AROUND_HANDOFF_PASS"
+    },
+    {
+      "name": "MW8 regional authority handoff",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 98,
+      "duration_seconds": 42.994,
+      "stages": [
+        "contracts-freeze-abort DONE",
+        "successful-handoff-reconnect DONE",
+        "split-brain-cross-region DONE"
+      ]
+    },
+    {
+      "name": "MW9 durable handoff recovery",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 203
+    },
+    {
+      "name": "MW9 lock release retry",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 12
+    },
+    {
+      "name": "MW9 durable handoff processes",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 225
+    },
+    {
+      "name": "MW9 race stress",
+      "result": "PASS",
+      "exit_code": 0,
+      "iterations": 100,
+      "batches": 13,
+      "batch_size": 8,
+      "batch_timeout_seconds": 600,
+      "marker": "MW9 race stress runner: PASS (100 rounds in 13 batches)"
+    },
+    {
+      "name": "MW10 cross-region Matter transactions",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 184
+    },
+    {
+      "name": "MW10 cross-region Matter processes",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 51
+    },
+    {
+      "name": "MW10 runner",
+      "result": "PASS",
+      "exit_code": 0,
+      "marker": "MW10 runner: PASS (2/2 suites)"
+    }
+  ],
+  "fatal_patterns_checked": [
+    "SCRIPT ERROR:",
+    "Parse Error:",
+    "Failed to load"
+  ],
+  "local_logs": [
+    "/tmp/p76_import.log",
+    "/tmp/p71.log",
+    "/tmp/p76.log",
+    "/tmp/sm1b.log",
+    "/tmp/mw8.log",
+    "/tmp/mw9.log",
+    "/tmp/mw9race.log",
+    "/tmp/mw10.log"
+  ],
+  "cleanliness": {
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "final_status_command": "git status --porcelain --untracked-files=no",
+    "final_status_empty": true,
+    "final_head": "5e3ecef5e0e27849a2180258fb3d00f3ad949eb2",
+    "final_tree": "758863475efd093002ce39c7ce6a93e1f8d55520",
+    "observations": [
+      "The first SM1 runner invocation stopped with SM1_7_11_CHECKOUT_NOT_CLEAN because Godot import generated untracked .uid sidecars.",
+      "Generated untracked .uid sidecars were removed; tracked .uid files were restored where applicable before the successful runner invocation.",
+      "Executable mode changes introduced locally by chmod on runner scripts were restored before final cleanliness verification.",
+      "No runtime source mutation was retained."
+    ]
+  },
+  "github_self_hosted_validation": {
+    "workflow_run": 33670639963,
+    "status_at_dispatch_preparation": "QUEUED",
+    "conclusion_at_dispatch_preparation": null,
+    "evidence_role": "NOT_USED_AS_PASS_EVIDENCE"
+  },
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
