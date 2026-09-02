@@ -1,0 +1,47 @@
+name: P7.4 Exact Source Export R1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-4-exact-source-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact P7.4 runtime subject
+        uses: actions/checkout@v4
+        with:
+          ref: 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292
+          fetch-depth: 0
+
+      - name: Assert exact identity
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292"
+          test "$(git rev-parse HEAD^{tree})" = "1efad34a075af63169c48dd5055c2537c8d7e6ef"
+          echo "P7_4_HEAD=$(git rev-parse HEAD)"
+          echo "P7_4_TREE=$(git rev-parse HEAD^{tree})"
+
+      - name: Build immutable source
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ \
+            -o p7-4-exact-source.tar.gz \
+            9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292
+          sha256sum p7-4-exact-source.tar.gz | tee p7-4-exact-source.sha256
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-4-exact-source-9deb31b85a5f
+          path: |
+            p7-4-exact-source.tar.gz
+            p7-4-exact-source.sha256
+          if-no-files-found: error
+          retention-days: 14
