@@ -1,0 +1,47 @@
+name: P7.5 Modern PRoot 5.4.0 Static Handoff
+
+on:
+  push:
+    branches:
+      - validation/p7-5-ubuntu-rootfs-handoff-r1
+
+permissions:
+  contents: read
+
+jobs:
+  build-proot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout PRoot 5.4.0
+        uses: actions/checkout@v4
+        with:
+          repository: proot-me/proot
+          ref: v5.4.0
+          submodules: recursive
+          path: proot-src
+
+      - name: Build static PRoot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends             build-essential pkg-config libarchive-dev libtalloc-dev
+          cd proot-src
+          make -C src clean loader.elf loader-m32.elf build.h
+          LDFLAGS="${LDFLAGS:-} -static" make -C src proot GIT=false
+          file src/proot
+          ldd src/proot || true
+          src/proot --version | head -n 4
+          mkdir -p ../output
+          cp src/proot ../output/proot-5.4.0-static-x86_64
+          chmod +x ../output/proot-5.4.0-static-x86_64
+          sha256sum ../output/proot-5.4.0-static-x86_64             | tee ../output/proot-5.4.0-static-x86_64.sha256
+
+      - name: Upload modern PRoot
+        uses: actions/upload-artifact@v4
+        with:
+          name: proot-5.4.0-static-x86_64
+          path: output/
+          if-no-files-found: error
+          retention-days: 1
