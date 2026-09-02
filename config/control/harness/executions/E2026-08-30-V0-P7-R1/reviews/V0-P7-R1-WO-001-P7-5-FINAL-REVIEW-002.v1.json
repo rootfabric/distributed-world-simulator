@@ -1,35 +1,29 @@
 {
   "schema": "distributed_world_simulator.harness_review_result.v1",
   "review_id": "V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002",
-  "review_type": "POST_BUILD_EXACT_HEAD_FRESH_INDEPENDENT_REVIEWER_R2",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
   "work_order_id": "V0-P7-R1-WO-001",
   "risk_class": "CRITICAL",
-
   "reviewed_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
   "reviewed_tree_sha": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
   "activation_base_sha": "1107eb81c4ff28a7ba4dda768312847ef345a448",
   "reviewer_dispatch_head_sha": "3e4e945d1984219b0b83dcd95b2a753a42cae29b",
   "runtime_pr": 435,
-
   "reviewer": "FRESH_INDEPENDENT_REVIEWER_P7_5_R2",
   "reviewed_at_utc": "2026-09-02T10:04:47Z",
   "verdict": "PASS",
-
   "required_fixes": [],
-
   "rank_up_moves": [
     "Fresh Independent Verifier must still freshly execute the full canonical 16-stage P7.5 gate (17 logs) on a brand-new detached exact worktree at HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 / TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 with exact double Godot; this Reviewer executed only the two focused P7.5/M7 tests as corroboration and inherits nothing as PASS.",
     "Future P7.6 seam/multi-region work must keep the same convergence discipline: MW7 projection_hash (which embeds subscription_id/interest_revision/subscription_checksum) must never be compared between clients; only the shared authoritative stream cursor and sparse-store canonical content are valid cross-client Matter identities.",
     "Any future item-projection compatibility work must stay inside the existing M7 replica adapter and must never relax canonical Item Graph or ItemRegistry authoritative stack validation to accommodate presentation limits.",
     "Human RUNTIME_FEATURE_MERGE for runtime PR #435 remains closed and may open only after an independent fresh Verifier VERIFIED result; this review does not pre-authorize any merge."
   ],
-
   "evidence_gaps": [
     "The 17 Linux execution logs are represented durably only by their SHA-256 manifest in V0-P7-R1-P7-5-LINUX-EXACT-RUNTIME-VALIDATION-001.v1.json; raw log files are not committed into Git (carried from the P7.5 evidence map).",
     "The fresh Linux exact runtime gate was executed by a separate execution agent; this Reviewer independently re-executed only the two focused tests (85/0 and 5/0) on the local Windows exact double build 4.7.1.stable.double.custom_build.a13da4feb (SHA-256 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5) as corroboration, not as Verifier execution.",
     "Project Control runs 33603238195 (dispatch) and 33523992483 (runtime) were verified completed/success via the GitHub API at the exact recorded head SHAs; the pipelines were not re-executed locally."
   ],
-
   "findings": [
     {
       "id": "P7.5-R2-F001",
@@ -50,7 +44,6 @@
       "nonblocking": true
     }
   ],
-
   "checked_items": [
     "exact identity: runtime HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 resolves locally with tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 computed by git (exact); PR #451 head via GitHub API = 3e4e945d1984219b0b83dcd95b2a753a42cae29b = origin/control/v0-p7-5-fresh-reviewer-dispatch-r2 = local dispatch worktree HEAD; activation base 1107eb81c4ff28a7ba4dda768312847ef345a448 is a git ancestor of the runtime HEAD = PASS",
     "exact delta: rev-list count 1107eb81..ba8210a8 = 15 commits; diff --name-status = exactly the six declared files (A RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1, A RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh, M scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd, A scripts/runtime/networked_gameplay/p7/p7_two_client_convergence_observer.gd, A tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd, A tests/runtime/test_v0_p7_5_two_client_convergence.gd); numstat = 1272 insertions / 4 deletions, matching the recorded delta exactly; no changes to Matter contracts, MW4-MW10 foundation, canonical Item Graph implementation, NetworkedGameplayService, gateway/transports, authority foundation, or architecture ownership = PASS",
@@ -72,8 +65,14 @@
     "GitHub control runs via API: 33603238195 completed/success at head 3e4e945d1984219b0b83dcd95b2a753a42cae29b on control/v0-p7-5-fresh-reviewer-dispatch-r2; 33523992483 completed/success at head ba8210a8d3cddf084a573f2e862982d3f76c37c9 on feature/v0-p7-bounded-terrain-mutation; PR #451 state open (draft) with head = exact dispatch HEAD = PASS",
     "no hidden P7 durability/receipt state: NONE FOUND"
   ],
-
   "risk_assessment": "Runtime risk is LOW for the staged P7.5 boundary. The delta is six files (+1272/-4) of which five are purely additive P7.5 observer/test/gate surfaces and one is a bounded, amendment-authorized M7 replica-adapter representation repair. The P7.5 observer is provably stateless (zero member state, read-only client surface, fail-closed evaluation) and introduces no second owner of Matter truth, Item Graph, receipts, replay, persistence, interest, replication, or aggregate revision. Convergence is bound to shared canonical identities only: MW6 authoritative stream cursor, MW7 sparse-store content hash, the existing NetworkedGameplayService aggregate revision/checksum, the canonical Item Graph revision/checksum through the existing M7 adapter, and RL3 required_source_revision bound to Matter revision/hash; the client-identity-bearing MW7 projection_hash is explicitly excluded from comparison. Interest exit/re-entry divergence/recovery and exact-replay mutation-freedom are asserted end-to-end against the real MW6/MW7/P7.3/P7.4/M7/RL3 surfaces. The M7 repair is representation-only: replica max_stack grows at most to the maximum observed canonical quantity of the current snapshot inside a freshly built replica domain, never touching canonical stack semantics, and empty-mount placeholder omission keeps fail-closed behavior for any non-empty mount without a parent. Residual risk is execution coverage, which stays explicitly owned by the fresh independent Verifier full-gate run; the human RUNTIME_FEATURE_MERGE gate remains closed.",
-
-  "summary": "Fresh independent read-only review R2 of exact runtime HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 (TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53, PR #435) dispatched from control/v0-p7-5-fresh-reviewer-dispatch-r2 at exact HEAD 3e4e945d1984219b0b83dcd95b2a753a42cae29b. Independently verified: exact identity (local tree computation, PR #451 head and both Project Control runs 33603238195/33523992483 via GitHub API), the exact six-file delta (15 commits, +1272/-4, activation base an ancestor), P7.5 observer statelessness with zero canonical ownership, convergence identities limited to shared canonical Matter cursor + sparse-store content (projection_hash excluded for its client/subscription identity), gameplay convergence on the single existing NetworkedGameplayService revision/checksum path, Item Graph convergence on canonical revision/checksum through the existing M7 replica adapter, RL3 required_source_revision bound to Matter revision/hash, MW7 interest exit divergence and deterministic re-entry reconvergence, and exact replay that advances neither the Matter stream nor MW7 deltas nor the canonical Item Graph nor the aggregate revision. The bounded M7 repair is explicitly judged representation-only (replica-only max_stack expansion to the maximum observed canonical quantity of the current snapshot inside a freshly built replica domain; canonical stack semantics untouched), and empty-mount placeholder omission preserves fail-closed behavior for non-empty mounts without a parent. The amendment authorizes exactly the two M7 paths. Both canonical gate scripts compose all 16 required stages fresh with hard failure paths and tracked-clean fences. The Reviewer freshly reproduced the two focused tests on the exact local double Godot (85/0 and 5/0, exit 0, zero fatal patterns, tracked-clean). P7.6 remains open and Human RUNTIME_FEATURE_MERGE for PR #435 remains closed. No blocking findings. Verdict PASS with required_fixes empty; next actor is the fresh independent Verifier full-gate execution only."
+  "summary": "Fresh independent read-only review R2 of exact runtime HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 (TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53, PR #435) dispatched from control/v0-p7-5-fresh-reviewer-dispatch-r2 at exact HEAD 3e4e945d1984219b0b83dcd95b2a753a42cae29b. Independently verified: exact identity (local tree computation, PR #451 head and both Project Control runs 33603238195/33523992483 via GitHub API), the exact six-file delta (15 commits, +1272/-4, activation base an ancestor), P7.5 observer statelessness with zero canonical ownership, convergence identities limited to shared canonical Matter cursor + sparse-store content (projection_hash excluded for its client/subscription identity), gameplay convergence on the single existing NetworkedGameplayService revision/checksum path, Item Graph convergence on canonical revision/checksum through the existing M7 replica adapter, RL3 required_source_revision bound to Matter revision/hash, MW7 interest exit divergence and deterministic re-entry reconvergence, and exact replay that advances neither the Matter stream nor MW7 deltas nor the canonical Item Graph nor the aggregate revision. The bounded M7 repair is explicitly judged representation-only (replica-only max_stack expansion to the maximum observed canonical quantity of the current snapshot inside a freshly built replica domain; canonical stack semantics untouched), and empty-mount placeholder omission preserves fail-closed behavior for non-empty mounts without a parent. The amendment authorizes exactly the two M7 paths. Both canonical gate scripts compose all 16 required stages fresh with hard failure paths and tracked-clean fences. The Reviewer freshly reproduced the two focused tests on the exact local double Godot (85/0 and 5/0, exit 0, zero fatal patterns, tracked-clean). P7.6 remains open and Human RUNTIME_FEATURE_MERGE for PR #435 remains closed. No blocking findings. Verdict PASS with required_fixes empty; next actor is the fresh independent Verifier full-gate execution only.",
+  "format_correction": {
+    "reason": "Project Control requires canonical review_type vocabulary; the prior value POST_BUILD_EXACT_HEAD_FRESH_INDEPENDENT_REVIEWER_R2 encoded actor/round metadata in review_type instead of reviewer/review_id fields.",
+    "prior_review_type": "POST_BUILD_EXACT_HEAD_FRESH_INDEPENDENT_REVIEWER_R2",
+    "semantic_content_changed": false,
+    "verdict_changed": false,
+    "reviewed_head_changed": false,
+    "reviewed_tree_changed": false
+  }
 }
