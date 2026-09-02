@@ -9,6 +9,10 @@ const RuntimeMonitor = preload("res://scripts/research/fabric_bake0/dynamic_rom_
 const ExecutionArtifact = preload("res://scripts/research/fabric_bake0/dynamic_rom_execution_artifact_v1.gd")
 const Lifecycle = preload("res://scripts/research/fabric_bake0/dynamic_rom_execution_lifecycle_v1.gd")
 const ExecutionRuntime = preload("res://scripts/research/fabric_bake0/dynamic_rom_execution_runtime_v1.gd")
+const PhysicalBridge = preload("res://scripts/research/fabric_bake0/dynamic_rom_physical_bake_bridge_v1.gd")
+const PhysicalArtifact = preload("res://scripts/research/fabric_bake0/physical_bake_artifact_v1.gd")
+const ReconstructionDescriptor = preload("res://scripts/research/fabric_bake0/reconstruction_descriptor_v1.gd")
+const StateMapping = preload("res://scripts/research/fabric_bake0/bake_state_mapping_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_bake_b0_4_a_fixture.gd")
 
 const DT := 0.01
@@ -20,6 +24,10 @@ func _init() -> void:
 	if built.is_empty():
 		_finish()
 		return
+	_test_common_physical_bake_artifact(built)
+	_test_state_mapping_roundtrip(built)
+	_test_common_physical_gate(built)
+	_test_physical_invalidation_and_rebuild(built)
 	_test_execution_artifact(built)
 	_test_lifecycle_contract(built)
 	_test_governed_runtime(built)
@@ -46,21 +54,142 @@ func _build() -> Dictionary:
 	_check(not certification.is_empty(), "B0.4-D C certification creates")
 	if certification.is_empty():
 		return {}
-	var artifact := ExecutionArtifact.create(
+	var physical_compiled := PhysicalBridge.compile_bundle(
 		full["model"], reduced["descriptor"], reduced["artifact_binding"], certification,
-		"artifact/dynamic-rom-b0-4-d-r1", 1
+		"bake/dynamic-rom-b0-4-d-r1", "artifact/dynamic-rom-b0-4-d-r1", 1
 	)
-	_check(not artifact.is_empty(), "B0.4-D execution artifact creates")
-	if artifact.is_empty():
+	_check(bool(physical_compiled.get("success", false)), "B0.4-D common PhysicalBakeArtifact bundle creates")
+	if not bool(physical_compiled.get("success", false)):
 		return {}
+	var physical_bundle: Dictionary = physical_compiled["details"]["bundle"]
+	var artifact: Dictionary = physical_bundle["execution_artifact"]
+	_check(not artifact.is_empty(), "B0.4-D execution artifact creates")
 	return {
 		"fixture": fixture,
 		"full_model": full["model"],
 		"descriptor": reduced["descriptor"],
 		"binding": reduced["artifact_binding"],
 		"certification": certification,
+		"physical_bundle": physical_bundle,
+		"physical_artifact": physical_bundle["physical_artifact"],
 		"artifact": artifact,
 	}
+
+func _test_common_physical_bake_artifact(built: Dictionary) -> void:
+	var bundle: Dictionary = built["physical_bundle"]
+	var physical: Dictionary = built["physical_artifact"]
+	_check(bool(PhysicalBridge.validate(
+		bundle, built["full_model"], built["descriptor"], built["binding"], built["certification"]
+	).get("success", false)), "common Dynamic ROM physical bundle validates")
+	_check(bool(PhysicalArtifact.validate(physical).get("success", false)), "common PhysicalBakeArtifact validates")
+	_check(String(physical["reduction_class"]) == "APPROXIMATE", "PhysicalBakeArtifact reduction class approximate")
+	_check(String(physical["source_binding"]["checksum"]) == String(built["full_model"]["source_binding"]["checksum"]), "PhysicalBakeArtifact binds exact A source binding")
+	_check(String(physical["reduced_model_descriptor_hash"]) == String(built["descriptor"]["descriptor_hash"]), "PhysicalBakeArtifact binds exact B ROM descriptor")
+	_check(String(physical["reduced_state_schema_hash"]) == String(built["descriptor"]["reduced_state_schema_hash"]), "PhysicalBakeArtifact binds exact reduced schema")
+	_check(String(physical["validated_domain"]["checksum"]) == String(built["certification"]["validated_domain"]["checksum"]), "PhysicalBakeArtifact consumes exact C ValidatedDomain")
+	_check(String(physical["error_envelope"]["checksum"]) == String(built["certification"]["error_envelope"]["checksum"]), "PhysicalBakeArtifact consumes exact C ErrorEnvelope")
+	_check(String(physical["conservation_envelope"]["checksum"]) == String(built["certification"]["conservation_envelope"]["checksum"]), "PhysicalBakeArtifact consumes exact C ConservationEnvelope")
+	_check(physical["refinement_guards"].size() == built["certification"]["refinement_guards"].size(), "PhysicalBakeArtifact consumes all C RefinementGuards")
+	_check(bool(ReconstructionDescriptor.validate(physical["reconstruction_descriptor"]).get("success", false)), "PhysicalBakeArtifact ReconstructionDescriptor validates")
+	_check(bool(StateMapping.validate(physical["state_mapping"]).get("success", false)), "PhysicalBakeArtifact StateMapping validates")
+	_check(String(physical["reconstruction_descriptor"]["mapping_hash"]) == String(bundle["mapping_contract_hash"]), "ReconstructionDescriptor binds executable mapping contract")
+	_check(String(physical["state_mapping"]["projection_hash"]) == String(bundle["mapping_contract_hash"]), "StateMapping binds executable projection contract")
+	_check(String(physical["state_mapping"]["reconstruction_descriptor_hash"]) == String(physical["reconstruction_descriptor"]["checksum"]), "StateMapping binds exact reconstruction descriptor")
+	_check(int(physical["build_generation"]) == 1, "PhysicalBakeArtifact generation one")
+	_check(String(bundle["execution_artifact"]["source_binding_checksum"]) == String(physical["source_binding"]["checksum"]), "execution sidecar and common artifact bind same source")
+
+func _test_state_mapping_roundtrip(built: Dictionary) -> void:
+	var descriptor: Dictionary = built["descriptor"]
+	var reduced: Array = []
+	for index in range(int(descriptor["reduced_state_count"])):
+		reduced.append(0.02 * sin(float(index + 1) * 0.37))
+	var reconstructed := PhysicalBridge.reconstruct_values(descriptor, reduced)
+	_check(bool(reconstructed.get("success", false)), "StateMapping deterministic ROM->FULL reconstruction executes")
+	if not bool(reconstructed.get("success", false)):
+		return
+	var projected := PhysicalBridge.project_full_values(
+		built["full_model"], descriptor, reconstructed["details"]["full_values"]
+	)
+	_check(bool(projected.get("success", false)), "StateMapping deterministic FULL->ROM projection executes")
+	if not bool(projected.get("success", false)):
+		return
+	_check(float(projected["details"]["projection_error_c_norm"]) <= 1.0e-10, "ROM subspace reconstruction projects back inside C-norm tolerance")
+	_check(_max_abs_delta(projected["details"]["reduced_values"], reduced) <= 1.0e-10, "ROM->FULL->ROM mapping preserves reduced coordinates")
+	_check(String(projected["details"]["projection_hash"]) == String(built["physical_bundle"]["mapping_contract_hash"]), "runtime projection implementation matches StateMapping hash")
+
+func _test_common_physical_gate(built: Dictionary) -> void:
+	var started := PhysicalBridge.start_execution(
+		built["physical_bundle"], built["full_model"], built["descriptor"], built["binding"], built["certification"]
+	)
+	_check(bool(started.get("success", false)), "common PhysicalBakeArtifact governed execution starts")
+	if not bool(started.get("success", false)):
+		return
+	var session: Dictionary = started["details"]["session"]
+	var source_hash := String(built["artifact"]["source_binding_checksum"])
+	for step_index in range(6):
+		var result := PhysicalBridge.governed_step(
+			built["physical_bundle"], session, built["full_model"], built["descriptor"], built["binding"], built["certification"],
+			_safe_flows(step_index), DT, source_hash, [], false
+		)
+		_check(bool(result.get("success", false)), "common PhysicalBakeArtifact gate accepts safe step %d" % step_index)
+		if not bool(result.get("success", false)):
+			return
+		_check(String(result["details"]["physical_artifact_id"]) == String(built["physical_artifact"]["artifact_id"]), "accepted step identifies common PhysicalBakeArtifact")
+		_check(String(result["details"]["physical_bake_gate"]["minimum_safe_fidelity"]) == "APPROXIMATE", "common bake gate preserves minimum safe fidelity")
+		session = result["details"]["session"]
+
+func _test_physical_invalidation_and_rebuild(built: Dictionary) -> void:
+	var started := PhysicalBridge.start_execution(
+		built["physical_bundle"], built["full_model"], built["descriptor"], built["binding"], built["certification"]
+	)
+	_check(bool(started.get("success", false)), "physical invalidation session starts")
+	if not bool(started.get("success", false)):
+		return
+	var session: Dictionary = started["details"]["session"]
+	var flows := _safe_flows(0)
+	var low_step := ExecutionRuntime.step(
+		session, built["artifact"], built["full_model"], built["descriptor"], built["binding"], built["certification"],
+		flows, DT, String(built["artifact"]["source_binding_checksum"]), false
+	)
+	_check(bool(low_step.get("success", false)), "pre-invalidation candidate available")
+	if not bool(low_step.get("success", false)):
+		return
+	var next_session: Dictionary = low_step["details"]["session"]
+	var estimate := Certification.estimate_after_step(
+		built["certification"], built["full_model"], built["descriptor"],
+		float(session["error_c_norm_bound"]), session["rom_state"]["values"], next_session["rom_state"]["values"],
+		flows, DT, float(next_session["elapsed_s"])
+	)
+	_check(bool(estimate.get("success", false)), "pre-invalidation common gate estimate available")
+	if not bool(estimate.get("success", false)):
+		return
+	var mutated_frontier_hash := Utils.canonical_hash({"mutated_frontier": 2})
+	var invalidation := PhysicalBridge.create_source_invalidation(built["physical_bundle"], mutated_frontier_hash, 42)
+	_check(not invalidation.is_empty(), "canonical source mutation creates common BakeInvalidation")
+	var stale_gate := PhysicalBridge.can_execute(
+		built["physical_bundle"], built["full_model"], estimate["details"], [invalidation]
+	)
+	_check(not bool(stale_gate.get("success", false)), "invalidated PhysicalBakeArtifact cannot execute")
+	_check(String(stale_gate.get("error_code", "")) == "STALE_PHYSICAL_BAKE_EXECUTION_FORBIDDEN", "common bake invalidation uses canonical stale gate")
+
+	var rebuilt := PhysicalBridge.compile_bundle(
+		built["full_model"], built["descriptor"], built["binding"], built["certification"],
+		"bake/dynamic-rom-b0-4-d-rebuild-r2", "artifact/dynamic-rom-b0-4-d-rebuild-r2", 2
+	)
+	_check(bool(rebuilt.get("success", false)), "common PhysicalBakeArtifact deterministic rebuild creates generation two")
+	if not bool(rebuilt.get("success", false)):
+		return
+	var rebuilt_bundle: Dictionary = rebuilt["details"]["bundle"]
+	_check(int(rebuilt_bundle["physical_artifact"]["build_generation"]) == 2, "rebuilt PhysicalBakeArtifact generation increments")
+	_check(String(rebuilt_bundle["physical_artifact"]["checksum"]) != String(built["physical_artifact"]["checksum"]), "rebuild has fresh PhysicalBakeArtifact identity")
+	_check(String(rebuilt_bundle["mapping_contract_hash"]) == String(built["physical_bundle"]["mapping_contract_hash"]), "rebuild preserves exact state mapping contract")
+	var rebuilt_again := PhysicalBridge.compile_bundle(
+		built["full_model"], built["descriptor"], built["binding"], built["certification"],
+		"bake/dynamic-rom-b0-4-d-rebuild-r2", "artifact/dynamic-rom-b0-4-d-rebuild-r2", 2
+	)
+	_check(bool(rebuilt_again.get("success", false)), "same rebuild inputs compile deterministically")
+	if bool(rebuilt_again.get("success", false)):
+		_check(String(rebuilt_again["details"]["bundle"]["checksum"]) == String(rebuilt_bundle["checksum"]), "rebuild bundle identity deterministic")
 
 func _test_execution_artifact(built: Dictionary) -> void:
 	var artifact: Dictionary = built["artifact"]
