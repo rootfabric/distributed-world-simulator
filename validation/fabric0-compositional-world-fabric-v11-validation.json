@@ -1,0 +1,208 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v11",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.11_GENERAL_EVENT_LOCALIZED_CONTACT_ISLANDS_SPARSE_BACKEND",
+  "parent_research_head": "b1730170058d31c7fb53b1e42ff8425661797f01",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_event_sparse_islands_v1.gd": "037d6729db40f74562040333ac59ae38ca58ea297a0ec8164285cc19cf9962c9",
+    "scripts/research/fabric0/fabric0_event_sparse_islands_experiments_v1.gd": "b392e9e60139e1ee6334dd3d77ad10f8580dfe78b9b8d6906429552fa97e01bd",
+    "tests/research/fabric0/fabric0_event_sparse_islands_acceptance.gd": "5bfad421ea7fac8a41f77f2a368ade94809d29118e771b844e02e1ada64ed085",
+    "tests/research/fabric0/fabric0_event_sparse_islands_playground.gd": "bc2c9f8f6b9cfde513b0bc14575d231562ed0ed4118c3d5a21e089a2b30a9112"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_event_sparse_islands_v1.gd": "87647dac2d46836800ba39f0fe098c08e88c5722",
+    "scripts/research/fabric0/fabric0_event_sparse_islands_experiments_v1.gd": "b62ffed0f0657187033bf595321af8e89c8851da",
+    "tests/research/fabric0/fabric0_event_sparse_islands_acceptance.gd": "49db9e2cf6b6f08eebc219e0c2deddc30f84c900",
+    "tests/research/fabric0/fabric0_event_sparse_islands_playground.gd": "17e33ad106a9fb54ddde69ba7d620187b4460a47"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all four tested FABRIC0.11 executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_event_sparse_islands_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 120,
+    "marker": "FABRIC0.11 Event-Localized Sparse Islands Acceptance: PASS",
+    "observations": {
+      "sparse_pcg_unit": {
+        "matrix": [[4.0,1.0],[1.0,3.0]],
+        "rhs": [1.0,2.0],
+        "solution": [0.09090909090909,0.63636363636364],
+        "iterations": 2,
+        "residual": 0.0
+      },
+      "independent_island_schedule": {
+        "island_count": 2,
+        "sparse_effective_mass_entries": 24,
+        "dense_capacity_reference": 72,
+        "pcg_calls": 34,
+        "pcg_iterations": 68,
+        "dense_materializations": 0,
+        "forward_and_reverse_hash_exact_match": true,
+        "hash": "e50cceb70dc4ecbd0100e5207ca5a58a2285c90a5085a6556b19db8ce8699078"
+      },
+      "warm_stack_before_event": {
+        "warmup_steps": 4,
+        "cold_iterations": 17,
+        "next_iterations": 1,
+        "warm_start_contacts": 2
+      },
+      "event_localization": {
+        "macrostep_start_time": 0.04,
+        "macrostep_dt": 0.6,
+        "relative_event_time": 0.35709945939307,
+        "absolute_event_time": 0.39709945939307,
+        "bisection_probes": 36,
+        "bisection_time_tolerance": 1e-11,
+        "constrained_probe_max_substep": 0.01,
+        "continuous_free_fall_reference": 0.3609505622728941,
+        "integration_discretization_offset": -0.0038511028798241,
+        "old_pair_ab_gap_at_event": 3.44e-12,
+        "old_floor_a_gap_at_event": 5.54e-12,
+        "new_pair_bc_gap_at_event": 9.997662e-8,
+        "contact_tolerance": 1e-7
+      },
+      "same_time_graph_recompile": {
+        "before_bodies": ["A","B"],
+        "before_contacts": ["pair:A|B","plane:floor|body:A"],
+        "after_bodies": ["A","B","C"],
+        "after_contacts": ["pair:A|B","pair:B|C","plane:floor|body:A"],
+        "appeared": ["pair:B|C"],
+        "disappeared": [],
+        "warm_contacts_preserved": ["pair:A|B","plane:floor|body:A"],
+        "warm_start_hits": 2,
+        "active_contacts": 3
+      },
+      "event_sparse_solve": {
+        "linear_backend": "SPARSE_PCG",
+        "sparse_effective_mass_entries": 21,
+        "dense_capacity_reference": 81,
+        "admm_iterations": 31,
+        "pcg_calls": 31,
+        "pcg_iterations": 93,
+        "pcg_max_iterations_one_call": 3,
+        "dense_materializations": 0
+      },
+      "remaining_flow": {
+        "remaining_dt": 0.24290054060693,
+        "substeps": 25,
+        "island_solves": 25,
+        "pcg_calls": 80,
+        "pcg_iterations": 234,
+        "dense_materializations": 0,
+        "final_world_time": 0.64,
+        "final_a_position": [0.0,0.50000000002449,0.0],
+        "final_b_position": [0.0,1.50000000004311,0.0],
+        "final_c_position": [0.0,2.50000010002817,0.0],
+        "all_final_velocity_norm_below": 2e-8
+      },
+      "event_history": {
+        "single_lifecycle_record_at_event_timestamp": true,
+        "appeared": ["pair:B|C"],
+        "persisted": ["pair:A|B","plane:floor|body:A"]
+      },
+      "order_invariance": {
+        "reversed_body_insertion": "PASS",
+        "reversed_provider_contact_order": "PASS",
+        "reversed_island_schedule": "PASS",
+        "event_time_exact_match": true,
+        "contact_history_json_exact_match": true,
+        "final_world_hash_exact_match": true
+      },
+      "final_world_hash": "86d76fc7a4b93bdd27030e1b343151d008e2c2e62ddfa72bdc11cf46d4f6133b",
+      "fail_closed": {
+        "no_existing_island": "EVENT011_REQUIRES_EXISTING_CONTACT_ISLAND",
+        "invalid_sparse_options": "BAD_SPARSE_SOLVER_OPTIONS"
+      }
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_event_sparse_islands_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_11_EVENT_SPARSE_ISLANDS_PLAYGROUND_PASS"
+  },
+  "predecessor_regression": {
+    "fabric0_10_persistent_contact_graph": {
+      "entrypoint": "res://tests/research/fabric0/fabric0_persistent_contact_graph_acceptance.gd",
+      "exit_code": 0,
+      "assertions": 97,
+      "marker": "FABRIC0.10 Persistent Contact Graph Acceptance: PASS",
+      "hash": "4103da3235e4cdd7f1c63c809d3dd71ab39d10ec7f68094d6eef33eabfe6033d",
+      "event_hash": "ac7c2758e89afb9798a3b2268c99877eb0795f33699e6fbf5a6dfe9034da6eb6"
+    },
+    "fabric0_10_executable_blobs_preserved": {
+      "scripts/research/fabric0/fabric0_persistent_contact_graph_v1.gd": "65566cde148ebe598da406bcf008454e2215c8f6",
+      "scripts/research/fabric0/fabric0_persistent_contact_graph_experiments_v1.gd": "e7b8fd4e43132587ebd233af947377b71276488e",
+      "tests/research/fabric0/fabric0_persistent_contact_graph_acceptance.gd": "d3a90d53cde1844470634d2ca35aafce8278e244",
+      "tests/research/fabric0/fabric0_persistent_contact_graph_playground.gd": "cfe58ddda4feacaf26b0e1ce1916ea747874569c"
+    }
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "sparse_backend_contract": {
+    "storage": "sparse row dictionaries",
+    "effective_mass": "sparse A = J M^-1 J^T",
+    "admm_linear_system": "(A + rho I) lambda = rho(z-u)-b",
+    "linear_solver": "Jacobi-preconditioned Conjugate Gradient",
+    "pcg_initial_guess": "previous ADMM lambda",
+    "dense_effective_mass_materialization": false,
+    "dense_factorization": false,
+    "parallel_execution": "not implemented; schedule-order invariance established as prerequisite"
+  },
+  "event_contract": {
+    "start_state": "existing persistent constrained contacts required",
+    "probe_semantics": "candidate world repeatedly advances with only old contact IDs constrained",
+    "topology_predicate": "full provider contact-ID set differs from macrostep-start set",
+    "event_recompile": "full contact graph compiled at localized event time",
+    "warm_start_remap": "by stable contact identity",
+    "same_time_solve": "new merged island solved before remaining time advances",
+    "current_multi_event_policy": "first topology change only; old-contact disappearance during probe fails closed"
+  },
+  "claims": [
+    "a new dynamic contact can be localized while an existing persistent contact island remains constrained",
+    "demonstrated old contact gaps remain near zero at localized event time",
+    "a previously free body can merge into an existing solver island at the same physical event instant",
+    "old warm-start impulses remap across island topology change by stable contact identity",
+    "incoming impulse propagates through the already constrained stack in the demonstrated same-time solve",
+    "the FABRIC0.11 ADMM linear path uses sparse PCG without dense effective-mass materialization",
+    "independent PCG unit solve matches the exact SPD solution",
+    "remaining macrostep continues through the recompiled persistent island",
+    "the lifecycle event is recorded once at the event timestamp",
+    "independent island scheduling order can change without changing accepted physical result",
+    "full event history and final state are invariant under tested body/contact/schedule permutations",
+    "FABRIC0.10 acceptance remains green under the exact-double runtime",
+    "the four FABRIC0.11 executable files are byte-identical between exact-double local tests and GitHub"
+  ],
+  "non_claims": [
+    "not a production sparse contact solver",
+    "geometry provider remains sphere-sphere plus sphere-plane",
+    "only the first contact-set topology change in one advance_event_localized call is localized",
+    "old-contact disappearance during localization is fail-closed rather than generally event-iterated",
+    "multiple simultaneous appear/disappear changes are not a general fixed-point event solve",
+    "constrained probe integration uses fixed semi-implicit substeps and therefore has observable integration-discretization error",
+    "bisection tolerance must not be interpreted as full continuous-trajectory accuracy",
+    "sparse representation is research dictionaries rather than CSR/CSC",
+    "PCG uses only Jacobi preconditioning",
+    "no actual worker-thread parallel island execution",
+    "no sleep/wake semantics",
+    "no arbitrary convex/mesh persistent feature manifold",
+    "no orientation-aware multi-point feature tracking",
+    "no sparse symbolic-pattern or preconditioner cache",
+    "no production Construction, authority, persistence or replication integration",
+    "no full materialized DWS regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.12_ADAPTIVE_MULTI_EVENT_MANIFOLD_DAE",
+    "goal": "make constrained event time converge under adaptive refinement, handle multiple appear/disappear topology events with same-time manifold iteration, preserve persistent feature identity through manifold split/merge, and add deterministic real parallel sparse island execution"
+  }
+}

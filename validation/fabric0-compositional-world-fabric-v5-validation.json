@@ -1,0 +1,126 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v5",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.5_NONLINEAR_LAW_DIMENSIONS",
+  "parent_research_head": "d67e8c4887f176f451c3bb1206f545375af60019",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_conservation_fabric_v3.gd": "dc792dbdffac97884edbbc5158c8f5b3d111c38a43d9bea90903928d157fb77a",
+    "scripts/research/fabric0/fabric0_nonlinear_dimension_experiments_v1.gd": "8b64eb3991f6c3363949470fd614f6f45d8eb3d6979e58f1992f04ef46b6f239",
+    "tests/research/fabric0/fabric0_nonlinear_dimension_acceptance.gd": "0189d2f284a98dfa88831e561607a2ad550d7da55bfb543a1850b0d323e3be6a",
+    "tests/research/fabric0/fabric0_conservation_v3_compat_acceptance.gd": "dd354ab56079406bfeb20c3e371335a06aeb7142feb6b9888e33527c09f2dc04",
+    "tests/research/fabric0/fabric0_nonlinear_dimension_playground.gd": "f1eefdf6b5c3815fd0ccb90a614baff99345ce8ec44d0a319c168399cd02047d"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_conservation_fabric_v3.gd": "e4a496573a37a9d64c4c4587c6249801c3002f3c",
+    "scripts/research/fabric0/fabric0_nonlinear_dimension_experiments_v1.gd": "43e2bc0ca1e034cb9af65a60215f0b7264f64a0a",
+    "tests/research/fabric0/fabric0_nonlinear_dimension_acceptance.gd": "476c0f60533486301e4fdeb9307def9c7de545c3",
+    "tests/research/fabric0/fabric0_conservation_v3_compat_acceptance.gd": "2b82260ef564d35901e03343100a2de511911094",
+    "tests/research/fabric0/fabric0_nonlinear_dimension_playground.gd": "8ec7379b98789be26bf1592abcbd40d3d9570055"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all five tested executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_nonlinear_dimension_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 86,
+    "marker": "FABRIC0.5 Nonlinear+Dimensions Acceptance: PASS",
+    "observations": {
+      "diode_like_voltage": 1.3862943611198906,
+      "diode_like_balance": -3.0,
+      "diode_like_newton_iterations": 5,
+      "saturation_common": 1.9902990904610843,
+      "saturation_balance": 1.9902990904610843,
+      "saturation_newton_iterations": 4,
+      "cubic_drag_omega": 1.4422495703074083,
+      "cubic_drag_torque": -3.0,
+      "cubic_drag_newton_iterations": 6,
+      "dimensioned_map_voltage": 10.666666666666666,
+      "dimensioned_map_omega": 5.333333333333333,
+      "dimensioned_map_current": -2.6666666666666665,
+      "dimensioned_map_torque": 5.333333333333333,
+      "dimensioned_map_absorbed_power": 0.0,
+      "hidden_cross_domain_conversion_rejected": true,
+      "exp_of_dimensioned_quantity_rejected": true,
+      "non_power_conjugate_domain_rejected": true,
+      "impossible_nonlinear_diagnostic": "NEWTON_SINGULAR_JACOBIAN",
+      "deterministic_cross_domain_hash": "b515eca8dad6ba308d76291131736a6458f757cad136d34b62555ec440309e6e"
+    }
+  },
+  "compatibility": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_conservation_v3_compat_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 78,
+    "marker": "FABRIC0.5 V3 Compatibility: PASS",
+    "covers": [
+      "FABRIC0.3 two-source conservation cell",
+      "topology split/rejoin canonical hash restoration",
+      "ideal constraint reaction",
+      "floating island fail-closed diagnostic",
+      "FABRIC0.4 mixed-domain dynamic machine",
+      "open electrical topology",
+      "dimension-aware three-port differential Power Map"
+    ]
+  },
+  "historical_regression": {
+    "fabric0_4_power_map": {
+      "exit_code": 0,
+      "assertions": 89,
+      "marker": "FABRIC0.4 Power Map Acceptance: PASS"
+    },
+    "fabric0_4_v2_compatibility": {
+      "exit_code": 0,
+      "assertions": 49,
+      "marker": "FABRIC0.4 V2 Compatibility: PASS"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_nonlinear_dimension_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_5_NONLINEAR_DIMENSIONS_PLAYGROUND_PASS",
+    "error_scan": "CLEAN"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_error_scan": "CLEAN"
+  },
+  "solver_invariants": [
+    "domain common_dimension multiplied by balance_dimension must equal power_dimension",
+    "Power Map coefficient dimensions must make every term in a constraint row dimensionally homogeneous",
+    "transcendental expression arguments must be dimensionless",
+    "nonlinear residuals are statically dimension-checked before solve",
+    "residual near zero is not sufficient for acceptance; tangent Jacobian must also be nonsingular",
+    "Newton solve has finite iteration and line-search budgets and fails closed"
+  ],
+  "claims": [
+    "seven-base SI dimension exponent algebra is executable inside the research solver",
+    "power-conjugate domain registration rejects dimensionally invalid physical domains",
+    "hidden mixed-domain numerical conversion is rejected unless coefficient dimensions are explicit",
+    "generic nonlinear residual expressions support automatic forward-mode Jacobian differentiation",
+    "dimension-aware normalized damped Newton solves smooth nonlinear equation islands",
+    "exponential diode-like, smooth saturation and cubic rotational drag laws are expressed without device-specific solver classes",
+    "impossible smooth nonlinear physics fails closed",
+    "underdetermined zero-residual floating physics is rejected by tangent-rank validation",
+    "FABRIC0.3 and FABRIC0.4 semantics remain compatible under the V3 successor",
+    "all five tested executable files are byte-identical between local exact-double test inputs and the GitHub branch"
+  ],
+  "non_claims": [
+    "not a production sparse nonlinear solver",
+    "no general unit string parser or conversion database",
+    "no affine temperature conversion semantics",
+    "no fractional dimension exponents",
+    "no arbitrary DAE internal-state residual system yet",
+    "no nonsmooth complementarity or exact contact/friction",
+    "no adaptive timestep or structure-preserving higher-order integrator",
+    "no full DWS materialized-checkout regression",
+    "no production Construction, Item Graph, authority, persistence or replication integration"
+  ]
+}
