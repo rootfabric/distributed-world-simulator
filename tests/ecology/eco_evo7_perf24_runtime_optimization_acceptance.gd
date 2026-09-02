@@ -314,6 +314,8 @@ func _source_guards() -> void:
 	_check(not lineage_kernel_source.contains("reproduce_fast"), "R8 does not add a parallel fast genome mutator")
 	_check(lineage_extension_source.contains("validate_policy(effective_policy)"), "R8 prepared EVO7 path retains canonical per-offspring policy validation")
 	_check(lineage_kernel_source.contains("validate_policy(effective_policy)"), "R8 prepared genome path retains canonical per-offspring policy validation")
+	_check(lineage_extension_source.contains("using_prepared_context and effective_policy != default_policy()"), "R8 EVO7 prepared context is bound to exact frozen default policy")
+	_check(lineage_kernel_source.contains("using_prepared_context and effective_policy != default_policy()"), "R8 genome prepared context is bound to exact frozen default policy")
 	_check(route_source.contains("static func build_in_input_order("), "route kernel exposes input-order chunk seam")
 	_check(executor_source.contains("_evaluate_recruitment_chunk_input_order("), "executor uses aligned recruitment chunk seam")
 	_check(executor_source.contains("_optimized_environment_sample_cache"), "R5 optimized path owns a persistent environment-sample cache")
