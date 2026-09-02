@@ -1,0 +1,46 @@
+name: ECO PERF2.CONV Final Git Bundle R2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/eco-perf2-conv-final-bundle-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout full repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Fetch frozen subject explicitly
+        shell: bash
+        run: |
+          git fetch origin ac1019c909abefb5b680b08e46e4bd8ed9082f97
+          test "$(git rev-parse ac1019c909abefb5b680b08e46e4bd8ed9082f97^{tree})" = "3c95f876114d3b7ffbce867737670efcb35c2f6e"
+          git merge-base --is-ancestor 4997f7116d0e4ac40ed88fe8a41a7b5029621d71 ac1019c909abefb5b680b08e46e4bd8ed9082f97
+          echo "subject=ac1019c909abefb5b680b08e46e4bd8ed9082f97"
+          echo "tree=$(git rev-parse ac1019c909abefb5b680b08e46e4bd8ed9082f97^{tree})"
+
+      - name: Create provenance-complete bundle
+        shell: bash
+        run: |
+          git bundle create perf2-conv-final.bundle --all
+          sha256sum perf2-conv-final.bundle | tee perf2-conv-final.bundle.sha256
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf2-conv-final-bundle-ac1019c909ab
+          path: |
+            perf2-conv-final.bundle
+            perf2-conv-final.bundle.sha256
+          retention-days: 1
+          if-no-files-found: error
