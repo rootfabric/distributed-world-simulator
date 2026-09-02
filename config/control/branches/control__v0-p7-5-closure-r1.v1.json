@@ -10,7 +10,7 @@
   "expected_outcome": "P7.5 COMPLETE_MERGED; P7 IN_PROGRESS; P7.6 NEXT.",
   "current_stage": "P7.6 Seam + Multi-Region Composition",
   "stage_status": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
-  "progress_note": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot, 16/16 stages, 17/17 logs and zero fatal matches. Human RUNTIME_FEATURE_MERGE approved; exact-subject carrier PR #461 merged canonical runtime as f039acf94efd72bbdf34dd68a5801195ca282999.",
+  "progress_note": "P7.5 exact runtime ba8210a8d3cddf084a573f2e862982d3f76c37c9 / tree f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot, 16/16 stages, 17/17 logs and zero fatal matches. Human RUNTIME_FEATURE_MERGE approved; exact-subject carrier PR #461 merged canonical runtime as f039acf94efd72bbdf34dd68a5801195ca282999. Pre-merge closure Project Control 33638952687 is RED only on the established main-owned frontier authority pattern: origin/main still registers the pre-P7.5 frontier, so the already-merged P7.5 runtime is reported as dependency drift. Bounded control repair requires merging this closure and then an exact post-merge Project Control audit before P7.6 may start.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.5 substeps COMPLETE_MERGED",
   "next_stage": "P7.6 SEAM_AND_MULTI_REGION_COMPOSITION is NEXT only. A separate Director activation/implementation dispatch is required before P7.6 runtime mutation starts.",
   "parent_branch_or_checkpoint": "main @ f039acf94efd72bbdf34dd68a5801195ca282999 / P7.5 runtime merged",
@@ -39,7 +39,8 @@
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0020-p7-5-runtime-merged.v1.json",
-    "docs/checkpoints/2026-09-02_V0_P7_5_TWO_CLIENT_CONVERGENCE_COMPLETE_R1_RU.md"
+    "docs/checkpoints/2026-09-02_V0_P7_5_TWO_CLIENT_CONVERGENCE_COMPLETE_R1_RU.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-P7-5-MAIN-OWNED-FRONTIER-REPAIR-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/p7/**",
