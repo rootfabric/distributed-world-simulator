@@ -1,0 +1,130 @@
+name: V0 P7.6 Runtime Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/v0-p7-6-runtime-validation.yml"
+  workflow_dispatch:
+
+jobs:
+  p7-6-runtime:
+    name: P7.6 exact Linux runtime gate
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout exact P7.6 runtime subject
+        uses: actions/checkout@v4
+        with:
+          ref: 5e3ecef5e0e27849a2180258fb3d00f3ad949eb2
+          fetch-depth: 0
+
+      - name: Verify exact runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "5e3ecef5e0e27849a2180258fb3d00f3ad949eb2"
+          test "$tree" = "758863475efd093002ce39c7ce6a93e1f8d55520"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "P7_6_RUNTIME_HEAD=$head"
+          echo "P7_6_RUNTIME_TREE=$tree"
+
+      - name: Resolve canonical double Godot
+        id: godot
+        shell: bash
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT_BIN:-}"
+          if [[ -z "$godot" ]]; then
+            godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          fi
+          test -x "$godot"
+          version="$("$godot" --version | head -n1 | tr -d '\r')"
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          test "$sha" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "Godot=$version"
+          echo "Godot_SHA256=$sha"
+
+      - name: Import exact runtime subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --editor --path "$GITHUB_WORKSPACE" --quit
+
+      - name: P7.1 authority regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd
+
+      - name: P7.6 seam and multi-region composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd
+
+      - name: SM1 mutations around handoff regression
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -euo pipefail
+          ./RUN_V0_SM1_WORLD_MUTATIONS_AROUND_HANDOFF.sh
+
+      - name: MW8 full regression
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          MW8_TIMEOUT_SECONDS: "900"
+        run: |
+          set -euo pipefail
+          ./RUN_MW8_MATTER_HANDOFF_TESTS.sh
+
+      - name: MW9 durable recovery regression
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          MW9_TIMEOUT_SECONDS: "900"
+        run: |
+          set -euo pipefail
+          ./RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.sh
+
+      - name: MW9 race stress regression
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          MW9_RACE_ITERATIONS: "100"
+          MW9_RACE_BATCH_SIZE: "8"
+          MW9_RACE_BATCH_TIMEOUT_SECONDS: "600"
+        run: |
+          set -euo pipefail
+          ./RUN_MW9_RACE_STRESS_TESTS.sh
+
+      - name: MW10 full regression
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          MW10_TIMEOUT_SECONDS: "900"
+        run: |
+          set -euo pipefail
+          ./RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.sh
+
+      - name: Verify tracked tree remains clean
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+            git status --short
+            exit 1
+          fi
