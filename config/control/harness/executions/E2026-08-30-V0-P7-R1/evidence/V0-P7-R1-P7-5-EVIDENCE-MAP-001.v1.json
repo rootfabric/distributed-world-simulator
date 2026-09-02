@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+  "intent": "Prove two independent client projections converge to the same canonical Matter cursor/store, gameplay aggregate revision, Item Graph revision/checksum, and representation source identity through existing MW6/MW7/M7/RL3 seams, including interest exit/re-entry and exact replay mutation-freedom.",
+  "root_cause_or_reason": "P7.5 composes accepted P7.4 restart/replay semantics into real two-client convergence. Exact execution additionally exposed two representation-only M7 compatibility gaps: canonical aggregate quantities may exceed local presentation max_stack, and empty canonical mount placeholders have no parent item. The bounded M7 repair preserves canonical truth and only adapts replica materialization.",
+  "changed_surfaces": [
+    "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1",
+    "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh",
+    "scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd",
+    "scripts/runtime/networked_gameplay/p7/p7_two_client_convergence_observer.gd",
+    "tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd",
+    "tests/runtime/test_v0_p7_5_two_client_convergence.gd"
+  ],
+  "canonical_owner": "Existing MW6 Matter authority + MW7 interest + canonical Item Graph/M7 replica adapter + NetworkedGameplayService aggregate revision + RL2/RL3 representation; P7.5 observer owns no canonical state.",
+  "entry_points": [
+    "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh",
+    "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1",
+    "tests/runtime/test_v0_p7_5_two_client_convergence.gd",
+    "p7_two_client_convergence_observer.gd::evaluate"
+  ],
+  "callers": [
+    "P7.5 canonical runtime gate",
+    "P7.5 real lunar two-client integration test"
+  ],
+  "callees": [
+    "MW6 matter_authoritative_server",
+    "MW7 matter_interest_server / matter_interest_replica_client",
+    "P7.3 matter material delivery coordinator",
+    "P7.4 authoritative Item Graph output / NetworkedGameplayService revision seam",
+    "M7 item graph replica adapter",
+    "RL3 Matter representation interest adapter"
+  ],
+  "sibling_surfaces_checked": [
+    "P7.4 seed/recover-deliver/recover-replay",
+    "P7.3 material delivery",
+    "P7.2 bubble/seam",
+    "P7.1 authority/Tool->MW4",
+    "P5 two-client/mining",
+    "MW6",
+    "MW7",
+    "RL2",
+    "RL3"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "15 commits from P7.5 activation base 1107eb81c4ff28a7ba4dda768312847ef345a448; 6 files; +1272/-4. New P7.5 observer/test/gates are additive. Existing M7 adapter change is bounded representation repair authorized by V0-P7-R1-WO-001-P7-5-M7-REPLICA-REPAIR-AMENDMENT-001.",
+  "remaining_risks": [
+    "Fresh Independent Reviewer has not yet judged the bounded M7 repair and P7.5 observer semantics.",
+    "Fresh Independent Verifier remains blocked until Reviewer PASS.",
+    "Human RUNTIME_FEATURE_MERGE remains closed.",
+    "P7.6 and whole-P7 acceptance remain open."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Reviewer must explicitly judge that replica-only dynamic max_stack does not mutate or redefine canonical Item Graph stack semantics.",
+    "Reviewer must explicitly judge empty mount placeholder omission while preserving fail-closed behavior for non-empty mounts missing a parent.",
+    "Verifier must freshly rerun all 16 canonical stages at exact HEAD/TREE with exact double Godot."
+  ],
+  "evidence_gaps": [
+    "The 17 execution logs are represented durably by their SHA-256 manifest in the Linux validation receipt; raw log files are not committed into Git.",
+    "Linux runtime execution is execution evidence, not an independent Reviewer or Verifier verdict."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}

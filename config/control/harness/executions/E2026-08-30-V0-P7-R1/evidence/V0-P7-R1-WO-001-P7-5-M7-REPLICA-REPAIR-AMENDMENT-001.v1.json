@@ -1,0 +1,34 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_work_order_amendment.v1",
+  "amendment_id": "V0-P7-R1-WO-001-P7-5-M7-REPLICA-REPAIR-AMENDMENT-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "stage": "P7.5_TWO_CLIENT_CONVERGENCE",
+  "authority": "DIRECTOR_UNDER_EXPLICIT_HUMAN_COMPLETION_DIRECTIVE",
+  "timing": "RECORDED_AFTER_EXACT_EXECUTION_DEFECT_DISCOVERY_BEFORE_INDEPENDENT_REVIEW_AND_RUNTIME_MERGE",
+  "trigger": [
+    "Exact Linux focused execution initially exposed M7_REPLICA_ITEM_ADD_FAILED for canonical item/ore quantity greater than the local presentation definition max_stack.",
+    "After stack representation repair, exact execution exposed M7_MOUNT_PARENT_NOT_FOUND for an empty canonical mount placeholder with item_id empty and no parent_item_id."
+  ],
+  "added_allowed_paths": [
+    "scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd",
+    "tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd"
+  ],
+  "authorized_behavior": [
+    "Replica-only definition max_stack may expand to the maximum observed canonical quantity for that presentation definition in the current canonical snapshot.",
+    "An empty canonical mount placeholder with no attached item may be omitted from replica socket materialization.",
+    "A non-empty canonical mount item without a parent remains fail-closed.",
+    "Add a dedicated M7 regression proving oversized canonical aggregate quantity and empty placeholder compatibility."
+  ],
+  "forbidden_behavior": [
+    "No change to canonical Item Graph or ItemRegistry authoritative semantics.",
+    "No chunking or mutation of canonical server-output quantities.",
+    "No second Item Graph, inventory truth, receipt ledger, replay ledger, or aggregate revision owner.",
+    "No authorization of any other M7 runtime path."
+  ],
+  "runtime_subject": {
+    "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "pr": 435
+  },
+  "status": "AUTHORIZED_FOR_REVIEW"
+}
