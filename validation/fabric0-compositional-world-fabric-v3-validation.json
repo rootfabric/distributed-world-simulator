@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v3",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.3_CONSERVATION_CELL",
+  "parent_research_head": "6852d9f04c4403dda83f81895176be8a90eaaca1",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_conservation_fabric_v1.gd": "cfe073db88009b49a0005ed3c70b54d84825275a3ebb4af568ceeb74f0a4261a",
+    "scripts/research/fabric0/fabric0_conservation_experiments_v1.gd": "a1d4a2fd7df09a283ad100dca4976b2af8e9004eef84f74a820075aee424c6f6",
+    "tests/research/fabric0/fabric0_conservation_acceptance.gd": "93ec96812ea2e8384ab6c1059541273f4908862762c4353a0df865ef6baa7297",
+    "tests/research/fabric0/fabric0_conservation_playground.gd": "6df34bb946bc7b576f941e0b2404adcef2ebafbdabc1a445b805a01de4694410"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_conservation_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 119,
+    "marker": "FABRIC0.3 Conservation Acceptance: PASS",
+    "observations": {
+      "two_source_common": 5.0,
+      "two_source_balances": [14.0, 1.0, -15.0],
+      "two_source_power_terms": [70.0, 5.0, -75.0],
+      "two_source_balance_residual": 0.0,
+      "two_source_power_residual": 0.0,
+      "topology_split_cell_count": 2,
+      "topology_split_island_count": 2,
+      "topology_split_source_a_common": 12.0,
+      "topology_split_source_b_load_common": 1.5,
+      "topology_rejoin_common": 5.0,
+      "topology_rejoin_hash_restored": true,
+      "role_reversal_common": 8.0,
+      "role_reversal_weak_balance": -4.0,
+      "role_reversal_weak_absorbed_power": 32.0,
+      "ideal_common": 10.0,
+      "ideal_constraint_balance": 30.0,
+      "constraint_conflict_diagnostic": "CONSTRAINT_CONFLICT",
+      "floating_network_diagnostic": "SINGULAR_FLOATING_ISLAND",
+      "two_cell_source_common": 9.6,
+      "two_cell_load_common": 4.8,
+      "two_cell_coupler_absorbed_power": 23.04,
+      "rotational_common_angular_velocity": 6.666666666666667,
+      "rotational_drive_torque": 6.666666666666667,
+      "rotational_drag_torque": -6.666666666666667,
+      "rotational_state_hash": "91bc6a3588dc37789684aa026dff3ee393c7f18893877db26a665ce62e932e77"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_conservation_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_3_CONSERVATION_PLAYGROUND_PASS",
+    "error_scan": "CLEAN"
+  },
+  "regression": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 70,
+    "marker": "FABRIC0 Acceptance: PASS"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "parse_compile_error_scan": "CLEAN"
+  },
+  "claims": [
+    "topology-derived physical cells equalize a domain-declared common quantity",
+    "the paired balance quantity sums to zero at solved cells",
+    "cell power residual follows from common times balance residual",
+    "source and sink roles can reverse from solved state without changing element class",
+    "ideal common constraints obtain their unknown balance reaction from the augmented solve",
+    "conflicting ideal constraints fail closed",
+    "floating unconstrained islands fail closed",
+    "bond split and merge recompiles equation cells and deterministically restores canonical state",
+    "multi-cell difference coupling solves shared state and dissipated power",
+    "the same conservation semantics works for voltage/current-like and angular-velocity/torque domains"
+  ],
+  "non_claims": [
+    "not a production sparse solver",
+    "not a nonlinear constitutive solver",
+    "not a global proof of energy conservation",
+    "no formal dimension analysis yet",
+    "no dynamic storage inside the conservation solver yet",
+    "no power-preserving cross-domain transformer yet",
+    "no full DWS regression executed in the isolated local research project",
+    "no production Construction, Item Graph, authority, persistence or network integration"
+  ]
+}

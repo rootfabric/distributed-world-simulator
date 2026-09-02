@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.16",
+  "slice": "S2_ADAPTIVE_CONVEX_EVENTS_SAME_WORLD_PARALLEL_ISLANDS",
+  "status": "PASS_RESEARCH_SLICE_ONLY_NOT_CLOSED",
+  "branch": "research/fabric0-compositional-world-fabric-r1",
+  "predecessor_s1_head": "33c5a00703b215cddb0994172869f2ec3b7d3d3c",
+  "first_s2_executable_commit": "451bb9d09c527e3bf715c485f8929274157b7e1d",
+  "accepted_s2_executable_head": "92588ac05a7fa5b3cedd64bb567436e82e3a0a0e",
+  "exact_byte_repair": {
+    "reason": "initial remote acceptance blob differed from exact-tested local blob",
+    "repaired_path": "tests/research/fabric0/fabric0_general_convex_events_parallel_acceptance.gd",
+    "accepted_blob": "9a0a92063bf133aad2503acfbb3db302fdf76dea"
+  },
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "script": "tests/research/fabric0/fabric0_general_convex_events_parallel_acceptance.gd",
+    "result": "PASS",
+    "assertions": 102,
+    "metrics": {
+      "contact_appear_time": 0.50000000001455,
+      "contact_disappear_time": 0.10000000004657,
+      "stick_to_slide_time": 0.15798543221899,
+      "contact_appearance_refinement_errors": [
+        0.000015258774510584772,
+        1.1922384146600962e-7,
+        9.167706593871117e-10
+      ],
+      "stick_slide_refinement_errors": [
+        0.0000040697341319173574,
+        2.2180029191076756e-7,
+        2.0081643015146255e-9
+      ],
+      "post_event_manifold_points": 4,
+      "same_world_threads": 2,
+      "parallel_state_error": 0
+    }
+  },
+  "playground": {
+    "script": "tests/research/fabric0/fabric0_general_convex_events_parallel_playground.gd",
+    "result": "PASS",
+    "marker": "FABRIC0_16_S2_ADAPTIVE_CONVEX_EVENTS_PARALLEL_ISLANDS_PLAYGROUND_PASS"
+  },
+  "predecessor_regression": {
+    "slice": "FABRIC0.16_S1",
+    "assertions": 110,
+    "result": "PASS"
+  },
+  "editor_scan": {
+    "result": "CLEAN",
+    "script_errors": 0,
+    "parse_errors": 0,
+    "compile_errors": 0
+  },
+  "executable_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_event_driver_v1.gd",
+      "sha256": "bd1920e662e6da9f226afea1c78dd95064209e9db38dd13c55b4691586c1e3ee",
+      "git_blob": "287be7f45dc3fbb7abca583d6e5269f91a06cd6a"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_parallel_islands_v1.gd",
+      "sha256": "6f8889660408bbf9331ac3e3e803ed7664ec4b6ef3e64a892988c2c1abf9e0d7",
+      "git_blob": "33c996cd2ba75403b17290c41205ae746cb18fd8"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_general_convex_events_parallel_experiments_v1.gd",
+      "sha256": "729e7aca6f11dd5063ffc638cb232f4f9f132eaea5e74936d064b54e783b036c",
+      "git_blob": "4ab61d8ded43e966dd4577e3c9a10d99aa920dab"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_events_parallel_acceptance.gd",
+      "sha256": "5f491410ed455bc55e43e9543e8b09569086b82616ce271446017988ba5d0275",
+      "git_blob": "9a0a92063bf133aad2503acfbb3db302fdf76dea"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_general_convex_events_parallel_playground.gd",
+      "sha256": "1e76bdf73b52cd58c286512aa9f0ab2f69753923930c96fd15a81369e67dc825",
+      "git_blob": "25cdec5bbb632d9b5f9990501ed34f97bdb57325"
+    }
+  ],
+  "remote_byte_identity": {
+    "s2": "5/5_PASS",
+    "s1_predecessor": "8/8_PRESERVED"
+  },
+  "claims": [
+    "BRACKETED_GJK_EPA_CONTACT_APPEARANCE_LOCALIZATION",
+    "BRACKETED_GJK_EPA_SEPARATION_LOCALIZATION",
+    "ZERO_MEASURE_EXACT_TOUCH_BOUNDARY_HANDLING",
+    "PERSISTENT_FOUR_POINT_MANIFOLD_AFTER_LOCALIZED_EVENT",
+    "ROOT_LOCALIZED_SOLVED_STICK_SLIDE_TRANSITION",
+    "DETERMINISTIC_SAME_WORLD_ISLAND_PARTITION",
+    "ACTUAL_GODOT_THREAD_ISLAND_SOLVES",
+    "PARALLEL_EXACTLY_EQUALS_SEQUENTIAL_REFERENCE_ON_ACCEPTANCE_WORLD",
+    "TRANSACTIONAL_PARALLEL_JOIN"
+  ],
+  "non_claims": [
+    "FABRIC0_16_CLOSED",
+    "UNIFIED_EVENT_DRIVEN_FULL_TRAJECTORY",
+    "FULL_TRAJECTORY_STATE_REFINEMENT",
+    "ENERGY_LEDGER_ACROSS_EVENT_GRAPH_MUTATIONS",
+    "SIMULTANEOUS_MULTI_IMPACT_FIXED_POINT",
+    "MONOLITHIC_GLOBALLY_CERTIFIED_SIGNORINI_COULOMB_MCP_NCP",
+    "PRODUCTION_BROADPHASE_BLOCK_SPARSE_THREAD_POOL"
+  ],
+  "next_slice": "FABRIC0.16_S3_UNIFIED_EVENT_DRIVEN_CONVEX_TRAJECTORY_REFINEMENT"
+}

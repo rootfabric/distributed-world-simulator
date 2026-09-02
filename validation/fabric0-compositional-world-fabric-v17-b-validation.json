@@ -1,0 +1,199 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.17",
+  "slice": "B_COUPLED_SIMULTANEOUS_IMPACT_SOLVE",
+  "status": "IMPLEMENTED_CANDIDATE_NOT_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
+  "predecessor": {
+    "slice": "FABRIC0.17-A",
+    "executable_head": "9139a213ccee64d3bf1bb95ea32170027421b3b3",
+    "evidence_head": "9dd700d4bff0f80b5c1ee7d35970f9aa6215268d",
+    "acceptance": "77/77_PASS"
+  },
+  "executable_head": "6456ca4a5ce936c7b4c2b11906c696982a091e24",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 63,
+    "script": "tests/research/fabric0/fabric0_simultaneous_impact_solver_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_17_B_COUPLED_SIMULTANEOUS_IMPACT_SOLVE_PLAYGROUND_PASS"
+  },
+  "mathematical_contract": {
+    "form": "REGULARIZED_NORMAL_RESTITUTION_LCP",
+    "equations": [
+      "lambda >= 0",
+      "w = J*v_plus + e*J*v_minus + epsilon*lambda >= 0",
+      "lambda perpendicular w",
+      "v_plus = v_minus + M^-1*J^T*lambda"
+    ],
+    "rhs": "q_i = (1 + restitution) * vn_before_i",
+    "normal_regularization": 1e-9
+  },
+  "symmetric_falsifier": {
+    "event_time": 0.50000000009313,
+    "pairs": [
+      "C|L",
+      "C|R"
+    ],
+    "manifold_rows_per_pair": 4,
+    "total_rows": 8,
+    "restitution": 1,
+    "pair_impulses": {
+      "C|L": 3.999999999,
+      "C|R": 3.999999999
+    },
+    "initial_velocities": {
+      "L": 2,
+      "C": 0,
+      "R": -2
+    },
+    "final_velocities_approx": {
+      "L": -1.999999999,
+      "C": 0,
+      "R": 1.999999999
+    },
+    "energy_before": 4,
+    "energy_after_approx": 3.999999996,
+    "max_complementarity_approx": 3.0356146592764785e-15,
+    "max_restitution_error_approx": 1.00000274727563e-9,
+    "linear_momentum_error": 0,
+    "angular_momentum_error": 0,
+    "body_order": "EXACT_IDENTICAL",
+    "event_member_order": "EXACT_IDENTICAL"
+  },
+  "sequential_counterexample": {
+    "forward_state": {
+      "C": -2,
+      "L": 0,
+      "R": 2
+    },
+    "reverse_state": {
+      "C": 2,
+      "L": -2,
+      "R": 0
+    },
+    "max_state_delta": 4,
+    "both_conserve_linear_momentum": true,
+    "conclusion": "PAIRWISE_SEQUENTIAL_IMPACT_IS_NOT_ACCEPTED_SIMULTANEOUS_SEMANTICS"
+  },
+  "restitution_evidence": [
+    {
+      "e": 0,
+      "final_energy_approx": 0
+    },
+    {
+      "e": 0.5,
+      "initial_energy": 4,
+      "final_energy_approx": 0.9999999985,
+      "ratio_approx": 0.25
+    },
+    {
+      "e": 1,
+      "initial_energy": 4,
+      "final_energy_approx": 3.999999996
+    }
+  ],
+  "off_center_6dof_falsifier": {
+    "restitution": 0.35,
+    "contact_rows": 8,
+    "pair_impulses": {
+      "C|L": 2.32041018805662,
+      "C|R": 2.41419120032416
+    },
+    "angular_velocity_z_approx": {
+      "C": -1.47370162073111,
+      "L": -1.47370162051047,
+      "R": -1.47370162043639
+    },
+    "energy_before": 4.5,
+    "energy_after": 1.03020302603508,
+    "energy_delta": -3.46979697396492,
+    "max_complementarity_approx": 3e-14,
+    "max_restitution_error_approx": 7.5093e-10,
+    "linear_momentum_error": 0,
+    "angular_momentum_error": 0,
+    "reversed_orders": "EXACT_IDENTICAL_SIGNATURE_AND_STATE"
+  },
+  "refinement_guard": {
+    "coarse_near_coincident_event_set": "REJECTED",
+    "error_code": "EVENT_SET_NOT_REFINED_ENOUGH",
+    "default_max_event_uncertainty": 0.000001
+  },
+  "exact_gate": {
+    "fabric0_17_b": "63/63_PASS",
+    "fabric0_17_a": "77/77_PASS",
+    "fabric0_16_s3": "101/101_PASS",
+    "fabric0_16_s2": "102/102_PASS",
+    "fabric0_16_s1": "110/110_PASS",
+    "editor_scan": "CLEAN"
+  },
+  "exact_remote_byte_identity": {
+    "fabric0_17_b": "4/4_PASS",
+    "fabric0_17_a": "4/4_PRESERVED",
+    "fabric0_16_s3": "3/3_PRESERVED",
+    "fabric0_16_s2": "5/5_PRESERVED",
+    "fabric0_16_s1": "8/8_PRESERVED"
+  },
+  "files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_simultaneous_impact_solver_v1.gd",
+      "git_blob": "01ab5dd2bd1ad0743562f4608827f8c1bfcbd4e5",
+      "sha256": "2f87326e9815f2f6f0ae5d26413ec4c26f4664db6076bd04f13a6f8b2757ac8c"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_simultaneous_impact_solver_experiments_v1.gd",
+      "git_blob": "176e4af2b01e9efefc347bc20ffcafac2f3df2cd",
+      "sha256": "6eb9a9c52087fc8e675b52cfef564a813dd21e50c60814d023ca5fa6b75bc348"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_simultaneous_impact_solver_acceptance.gd",
+      "git_blob": "228d4b2d88b2b94762f58aaccbd5d6012f234932",
+      "sha256": "8c1cf6fb2c8820719944dfb9dc4a89ea20c8c6a79bf42ee3aa30e8882b3fa0c3"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_simultaneous_impact_solver_playground.gd",
+      "git_blob": "fc283ea79973553299bd464f1530d79ac06c83fc",
+      "sha256": "898ecea5501d0ddf3f2cce5bed628f8e1c2e352e82ea863fc8ba153eafa3bd33"
+    }
+  ],
+  "claims": [
+    "ONE_COMMON_PRE_IMPACT_STATE_FOR_SIMULTANEOUS_EVENT_SET",
+    "COUPLED_MULTIPOINT_NORMAL_RESTITUTION_LCP",
+    "PAIR_AND_BODY_ORDER_INDEPENDENT_ACCEPTED_STATE_ON_FALSIFIERS",
+    "FULL_6DOF_OFF_CENTER_IMPACT_COUPLING",
+    "LINEAR_AND_ANGULAR_MOMENTUM_AUDIT",
+    "EXPLICIT_REGULARIZATION_AND_RESTITUTION_RESIDUAL",
+    "UNDER_REFINED_EVENT_SET_FAILS_CLOSED",
+    "SEQUENTIAL_PAIRWISE_IMPACT_ORDER_DEPENDENCE_FALSIFIED"
+  ],
+  "non_claims": [
+    "FABRIC0_17_CLOSED",
+    "GLOBALLY_UNIQUE_ARBITRARY_RIGID_MULTI_IMPACT_SOLUTION",
+    "MAXIMUM_DISSIPATION_IMPACT_LAW",
+    "TANGENTIAL_IMPACT_FRICTION",
+    "ROLLING_TORSIONAL_IMPACT_FRICTION",
+    "COMPLIANT_FINITE_DURATION_COLLISION",
+    "SAME_TIME_POST_IMPACT_TOPOLOGY_FIXED_POINT",
+    "UNIVERSAL_MONOLITHIC_SIGNORINI_COULOMB_IMPACT_MCP",
+    "PRODUCTION_SPARSE_IMPACT_BACKEND",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next_slice": "FABRIC0.17-C_GENERALIZED_CONTACT_WRENCH",
+  "project_control": {
+    "run_id": 33354580680,
+    "run_number": 1818,
+    "status": "SUCCESS",
+    "exact_head": "7d51c6e691dcc9d9ef70529b9c5f5e29fe06d5dc",
+    "note": "Repository control gate for the B evidence HEAD completed successfully before C executable publication."
+  }
+}

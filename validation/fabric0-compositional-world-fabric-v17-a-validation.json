@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.17",
+  "slice": "A_SIMULTANEOUS_IMPACT_EVENT_SET",
+  "status": "IMPLEMENTED_CANDIDATE_NOT_CLOSED",
+  "production_accepted": false,
+  "branch": "research/fabric0-17-simultaneous-impact-event-set-r1",
+  "predecessor": {
+    "checkpoint": "FABRIC0.16",
+    "closure_head": "ae781ab78f2e0688641f6a332a131b3fb759994f",
+    "exact_tested_executable": "3307d553c1c3c79cd9c15a5c565af7fef3f0400c",
+    "status": "RESEARCH_CANDIDATE_CLOSED"
+  },
+  "executable_head": "9139a213ccee64d3bf1bb95ea32170027421b3b3",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 77,
+    "script": "tests/research/fabric0/fabric0_simultaneous_impact_event_set_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_17_A_SIMULTANEOUS_IMPACT_EVENT_SET_PLAYGROUND_PASS"
+  },
+  "predecessor_regressions": {
+    "fabric0_16_s3": "101/101_PASS",
+    "fabric0_16_s2": "102/102_PASS",
+    "fabric0_16_s1": "110/110_PASS"
+  },
+  "editor_scan": "CLEAN",
+  "main_falsifier": {
+    "exact_roots": {
+      "C|L": 0.5,
+      "C|R": 0.5,
+      "P|Q": 0.5002
+    },
+    "coarse_resolution": {
+      "tolerance": 0.001,
+      "set": [
+        "C|L",
+        "C|R",
+        "P|Q"
+      ]
+    },
+    "stable_from_tolerance": 0.00001,
+    "stable_set": [
+      "C|L",
+      "C|R"
+    ],
+    "deferred_pair": "P|Q",
+    "reference_tolerance": 1e-11,
+    "reference_event_time": 0.50000000000146,
+    "reference_deferred_time": 0.50019999999931,
+    "event_time_refinement_errors": [
+      0.0000015258774510584772,
+      1.192238407998758e-8,
+      9.167711034763215e-11
+    ],
+    "reverse_body_order": "EXACT_IDENTICAL_EVENT_SET_SIGNATURE_AND_TIMES",
+    "approach_speed_rule": "FULL_POINT_VELOCITY_NORMAL_APPROACH_MUST_EXCEED_EXPLICIT_THRESHOLD"
+  },
+  "exact_remote_byte_identity": "4/4_PASS",
+  "files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_simultaneous_impact_event_set_v1.gd",
+      "git_blob": "593cd671c9144819199685eeb222df7b06399c76",
+      "sha256": "4c4ecddb1675b65d52308490854bcd9334bce90291d215d8a98ba4c3950ca0d6"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_simultaneous_impact_event_set_experiments_v1.gd",
+      "git_blob": "a76d2e99165c69058e2d4da5a859a6cbc32f2bc0",
+      "sha256": "276d5354ad2a090c31b9fc9b73d3500641618f3791f081c1bfbc3b644701051c"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_simultaneous_impact_event_set_acceptance.gd",
+      "git_blob": "440ce7a1e1c48456d33a8d43aeb776a979afe02e",
+      "sha256": "e1fc369b8342dc4a43b847c60a99aa7ed26d2813faf7ddcf1f1db94f38284da8"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_simultaneous_impact_event_set_playground.gd",
+      "git_blob": "ecf16b7e6c87f50038357443d2fd0b82e4fc73c9",
+      "sha256": "83bcb3365f0b3a450de38c0d9f5a14361d0af3a26937bf8b17cbba27dd6b0985"
+    }
+  ],
+  "claims": [
+    "DETERMINISTIC_EARLIEST_MULTI_IMPACT_EVENT_SET",
+    "LOCALIZED_ROOT_INTERVAL_BASED_TEMPORAL_GROUPING",
+    "EXPLICIT_TEMPORAL_RESOLUTION_AND_UNCERTAINTY",
+    "POSITIVE_NORMAL_APPROACH_SPEED_IMPACT_FILTER",
+    "REFINEMENT_SEPARATES_NEAR_COINCIDENT_LATER_EVENT",
+    "CALLER_BODY_ORDER_INDEPENDENT_EVENT_SET_IDENTITY"
+  ],
+  "non_claims": [
+    "FABRIC0_17_CLOSED",
+    "COUPLED_SIMULTANEOUS_IMPACT_IMPULSE_SOLVE",
+    "MULTI_IMPACT_RESTITUTION_CLOSURE",
+    "EXACT_MATHEMATICAL_EQUALITY_OF_ROOT_TIMES",
+    "SAME_TIME_POST_IMPACT_TOPOLOGY_FIXED_POINT",
+    "ROLLING_TORSIONAL_FRICTION",
+    "TRANSIENT_APPEAR_DISAPPEAR_WITH_SAME_ENDPOINT_STATE",
+    "PRODUCTION_BROADPHASE",
+    "SUBQUADRATIC_PAIR_DISCOVERY",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next_slice": "FABRIC0.17-B_COUPLED_SIMULTANEOUS_IMPACT_SOLVE"
+}

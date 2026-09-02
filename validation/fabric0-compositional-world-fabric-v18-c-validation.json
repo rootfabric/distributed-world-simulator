@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.18",
+  "slice": "C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
+  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
+  "production_accepted": false,
+  "branch": "research/fabric0-18-persistent-contact-wrench-r1",
+  "predecessor_slices": {
+    "a": {
+      "exact_executable": "c7f20c51794690930d059d10747d1a1c3e4e2c52",
+      "acceptance": "60/60_PASS"
+    },
+    "b": {
+      "exact_executable": "649d7a9d62384a6d3cdfe2efbd92534bc52573e7",
+      "acceptance": "108/108_PASS"
+    }
+  },
+  "executable_head": "5b37312bd986c5dc4951ebe13ac670df0af11073",
+  "executable_tree": "76eff3e6ab0cd206420a68ed2fc1fa3b40f663e4",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 153,
+    "script": "tests/research/fabric0/fabric0_persistent_wrench_graph_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_18_C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH_PLAYGROUND_PASS"
+  },
+  "import": "CLEAN",
+  "editor_scan": "CLEAN",
+  "graph_contract": {
+    "dynamic_bodies": 1,
+    "fixed_anchor_patches": "2_OR_MORE",
+    "dof_per_contact": 6,
+    "unknown_order": [
+      "Pn",
+      "Pt1",
+      "Pt2",
+      "Mroll1",
+      "Mroll2",
+      "Mtorsion"
+    ],
+    "objective": "PROJECTED_MAXIMUM_DISSIPATION",
+    "canonical_contact_order": "contact_id",
+    "support_scaled_wrench_bounds": true
+  },
+  "support_redistribution": {
+    "contacts": {
+      "L": -1,
+      "R": 1
+    },
+    "expected_formula": {
+      "L": "(1-x)/2",
+      "R": "(1+x)/2"
+    },
+    "max_error_approx": 2e-11,
+    "support_loss_probe": {
+      "load_x": 1.1,
+      "left_normal_impulse": 0,
+      "left_persistent_active": false,
+      "left_modes": [
+        "open",
+        "open",
+        "open"
+      ],
+      "min_open_normal_velocity_approx": 0.0125,
+      "post_wz_approx": -0.00625,
+      "complementarity_error_approx": 1.7e-12
+    }
+  },
+  "persistent_continuity": {
+    "before_load_x": 0.9,
+    "after_load_x": 1.1,
+    "lost_support": {
+      "id": "L",
+      "active": false,
+      "hypothesis": "SEPARATION_CANDIDATE",
+      "warm_start_zero": true,
+      "current_limits_zero": true
+    },
+    "retained_support": {
+      "id": "R",
+      "identity_continued": true,
+      "update_count": 1,
+      "contact_age": 0.01
+    }
+  },
+  "mixed_modes": {
+    "floor_tangent": "slide",
+    "wall_tangent": "stick",
+    "both_supports_active": true,
+    "min_cross_contact_coupling": 1,
+    "normal_complementarity_error_lt": 6e-12,
+    "passive_energy": true,
+    "reverse_contact_order": "EXACT_IDENTICAL_SIGNATURE"
+  },
+  "generalized_active_modes": {
+    "both_contacts": {
+      "tangent": "slide",
+      "rolling": "roll",
+      "torsion": "spin"
+    },
+    "limits_saturated": true,
+    "energy_ledger_error_lt": 1e-14
+  },
+  "sequential_falsifier": {
+    "unified_reverse_order_state_error": 0,
+    "sequential_state_delta_approx": 0.03125,
+    "forward": {
+      "vy_approx": -0.025,
+      "wz_approx": 0.025
+    },
+    "reverse": {
+      "vy_approx": -0.00625,
+      "wz_approx": -0.00625
+    }
+  },
+  "refinement": {
+    "tolerances": [
+      0.000001,
+      1e-8,
+      1e-10,
+      1e-12
+    ],
+    "reference_tolerance": 1e-14,
+    "max_support_errors": [
+      0.00000871521294,
+      8.450098e-8,
+      8.1938e-10,
+      8.74e-12
+    ],
+    "strictly_decreasing": true
+  },
+  "physical_no_creep": {
+    "steps": 10000,
+    "dt": 0.001,
+    "simulated_seconds": 10,
+    "max_linear_speed": 1.7390949791362686e-13,
+    "max_angular_speed": 0,
+    "position_drift_lt": 2e-12,
+    "angle_drift_lt": 2e-12,
+    "supports": {
+      "L": 0.5,
+      "R": 0.5
+    },
+    "modes": "stick/stick/stick",
+    "identity_epoch": 0,
+    "final_update_count": 9999,
+    "final_contact_age": 9.999
+  },
+  "reaction_and_energy": {
+    "load_x_0_5": {
+      "reaction_force_y_approx": 1,
+      "reaction_moment_z_approx": 0.5
+    },
+    "passive_contact_never_increases_kinetic_energy": true,
+    "matrix_symmetry_error_lt": 1e-14,
+    "energy_ledger_error_lt": 1e-14
+  },
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_wrench_graph_v1.gd",
+      "git_blob": "b8de00010fd227104898a6b17b7aac9aad5eec17",
+      "sha256": "def2ea1a2177fd7911cf3525fd084739dcd02533da3809842639599023a1ab98"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_wrench_graph_experiments_v1.gd",
+      "git_blob": "d051401b24c72954e10be125110e5314012a7a91",
+      "sha256": "5098d07aebd2ec6d621a85f2eb0170c30b545bae2a9a635cdfbb2a771166558b"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_graph_acceptance.gd",
+      "git_blob": "3e65306655f6dc797062b4bda06d3ba56b66ae2a",
+      "sha256": "5b90533df23e9388084b71c2a4d6d8dd6e09ba6890f23492253312b17d685b17"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_graph_playground.gd",
+      "git_blob": "7ec0277958810969506da9651f7021d3fd5b5e85",
+      "sha256": "9f0c77062e8beda3bbf086935a552c847b635517e61ef893ce3283194abd0fda"
+    }
+  ],
+  "remote_byte_identity": {
+    "fabric0_18_c": "4/4_PASS",
+    "fabric0_18_b": "4/4_PRESERVED",
+    "fabric0_18_a": "3/3_PRESERVED",
+    "fabric0_17_d": "6/6_PRESERVED"
+  },
+  "fail_closed": [
+    "TOO_FEW_CONTACTS",
+    "BAD_MASS",
+    "BAD_INERTIA",
+    "DUPLICATE_CONTACT_ID",
+    "NEGATIVE_WRENCH_COEFFICIENT",
+    "NONUNIT_CONTACT_FRAME",
+    "BAD_TOLERANCE",
+    "BAD_ITERATION_BUDGET"
+  ],
+  "claims": [
+    "ONE_SHARED_DYNAMIC_BODY_MULTICONTACT_6DOF_WRENCH_GRAPH",
+    "NORMAL_SUPPORT_REDISTRIBUTION",
+    "SUPPORT_LOSS_WITH_OPEN_COMPLEMENTARITY",
+    "PERSISTENT_STATE_CONTINUITY_THROUGH_SUPPORT_LOSS",
+    "MIXED_CONTACT_MODES_IN_ONE_GRAPH",
+    "ACTIVE_SLIDE_ROLL_SPIN_CHANNELS",
+    "UNIFIED_GRAPH_CALLER_ORDER_INDEPENDENCE",
+    "SEQUENTIAL_PAIR_MUTATION_ORDER_DEPENDENCE_FALSIFIER",
+    "STRICT_SOLVER_TOLERANCE_REFINEMENT",
+    "PHYSICAL_STATIC_CONTACT_NO_CREEP_10000_STEP_STAND",
+    "EXPLICIT_EXTERNAL_REACTION_LEDGER",
+    "PASSIVE_ENERGY_LEDGER"
+  ],
+  "non_claims": [
+    "UNIFIED_IMPACT_PERSISTENT_TRANSITION_SEPARATION_TRAJECTORY",
+    "B_EVENT_LOCALIZATION_INTEGRATED_WITH_LIVE_C_TRAJECTORY",
+    "ARBITRARY_MULTI_DYNAMIC_BODY_PERSISTENT_WRENCH_GRAPH",
+    "PRESSURE_DISTRIBUTION_WRENCH_CONE",
+    "COMPLIANT_HERTZ_CONTACT",
+    "PRODUCTION_SPARSE_BACKEND",
+    "FABRIC0_18_CLOSED",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next": "FABRIC0.18-D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
+  "project_control": {
+    "run_number": 1893,
+    "run_id": 33371423075,
+    "subject_head": "768f19fe309de246126e123cab849ebdaa8e6c0e",
+    "result": "SUCCESS"
+  }
+}

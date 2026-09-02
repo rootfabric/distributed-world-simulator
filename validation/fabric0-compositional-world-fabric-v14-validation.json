@@ -1,0 +1,323 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v14",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD",
+  "parent_research_head": "1b4be82a4b092acbddcc4445444104c079293f91",
+  "exact_tested_implementation_head_before_documentation": "afe5e417d9787e082fecce8a635001f363417a48",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "re-extracted from the original user-provided godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_full6dof_contact_v1.gd": "79cc324b9a7def6cb90ace97799085e158d134dabde2b30443e2386a4e63ae33",
+    "scripts/research/fabric0/fabric0_full6dof_model_v1.gd": "2d2144615f340111e516a5246a67a294a0868f206bb7a48487f4354dc840f7a8",
+    "scripts/research/fabric0/fabric0_full6dof_driver_v1.gd": "2a320ea36d498391a8260509a4a222850052a7ea2b7b48352a01efd2a795ecfb",
+    "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_v1.gd": "84136c5568a4a51a68f04ed10949db3eb8b8efa6bea36d570578cd9112391532",
+    "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_experiments_v1.gd": "2a90b64bbd0824b7c04b67b3b613406abcb3f0f5f50d8942638433cb5a117321",
+    "tests/research/fabric0/fabric0_full6dof_frictional_manifold_acceptance.gd": "5376947be3ee00c7b9122d7b9cdcb212dcd55a0c0910aa5f6ca92abe9cde2faa",
+    "tests/research/fabric0/fabric0_full6dof_frictional_manifold_playground.gd": "fd8c6ec319807837862a7f9f8c9915b1b74ad205a4e4425c921bc485979ad253"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_full6dof_contact_v1.gd": "08e247d97f5fd261f8dfc6facda028ebca2727b3",
+    "scripts/research/fabric0/fabric0_full6dof_model_v1.gd": "c766a915a02b8269024ddd93e9a4fb1f9f210bd1",
+    "scripts/research/fabric0/fabric0_full6dof_driver_v1.gd": "6a8c2417b44b25d82038e7bdc3ca2c1ae5616eba",
+    "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_v1.gd": "ce2d2270af508e2fabe5ede2ccfdf884e7c6f6fb",
+    "scripts/research/fabric0/fabric0_full6dof_frictional_manifold_experiments_v1.gd": "c914866af52b6dc595a076fb7c24cf30701d03fd",
+    "tests/research/fabric0/fabric0_full6dof_frictional_manifold_acceptance.gd": "97a27b68358aab2c6bfb9dc091786dd3524839b7",
+    "tests/research/fabric0/fabric0_full6dof_frictional_manifold_playground.gd": "97355e398262fbaad6d883e21fd69f80c9e4477a"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "count": "7/7",
+    "method": "GitHub branch blob SHA equals local git hash-object for every exact-tested FABRIC0.14 executable file"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_full6dof_frictional_manifold_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 156,
+    "marker": "FABRIC0.14 Full 6DOF Frictional Feature Manifold Acceptance: PASS",
+    "full_state_contract": {
+      "state_components": 13,
+      "position_dof": 3,
+      "quaternion_components": 4,
+      "linear_velocity_dof": 3,
+      "angular_velocity_dof": 3,
+      "inertia_body": [0.19, 0.31, 0.43]
+    },
+    "sliding_main_run": {
+      "duration": 0.315,
+      "tolerance": 1e-9,
+      "event_times": [
+        0.25850330043665,
+        0.31322331523056
+      ],
+      "event_kinds": [
+        "FEATURE_FIXED_POINT",
+        "FEATURE_FIXED_POINT"
+      ],
+      "event_paths": [
+        [
+          "plane|C|v:---",
+          "plane|C|edge:0:v:+--:v:---",
+          "plane|C|v:+--"
+        ],
+        [
+          "plane|C|v:+--",
+          "plane|C|edge:1:v:++-:v:+--",
+          "plane|C|v:++-"
+        ]
+      ],
+      "point_counts_each": [1, 2, 1],
+      "iterations_each": 3,
+      "topology_mutations_each": 2,
+      "accepted_steps": 24,
+      "rejected_steps": 1,
+      "contact_force_calls": 22,
+      "slide_force_calls": 22,
+      "stick_force_calls": 0,
+      "min_normal_force_above": 5.0,
+      "max_coulomb_cone_ratio": 1.0,
+      "max_support_gap_below": 1e-13,
+      "max_quaternion_normalization_error_below": 1e-14,
+      "continuous_friction_dissipation": 1.2019943422435,
+      "discrete_feature_event_losses": 4.06330610007658,
+      "energy_delta": -5.26530042753262,
+      "energy_closure_residual": 1.4787455704379227e-8,
+      "state_hash": "2b52dc944cdc4a48152265db3e456c629bfb5f66969850563e39ec188147efe7"
+    },
+    "sliding_refinement": {
+      "reference_tolerance": 1e-12,
+      "tested_tolerances": [1e-7, 1e-9, 1e-11],
+      "max_event_time_errors": [
+        6.510981837015706e-8,
+        1.5766716265908087e-9,
+        3.3262503862374615e-11
+      ],
+      "max_final_13d_state_errors": [
+        5.464352880735213e-7,
+        1.2631674595198206e-8,
+        2.586177383356869e-10
+      ],
+      "energy_closure_residuals": [
+        3.8286514048024856e-7,
+        1.4787455704379227e-8,
+        3.3513192221334975e-10
+      ],
+      "event_time_error_strictly_decreases": true,
+      "state_error_strictly_decreases": true,
+      "energy_closure_residual_strictly_decreases": true
+    },
+    "feature_transition_impulses": [
+      {
+        "time": 0.25850330043665,
+        "mode": "slide",
+        "cone_ratio": 1.0,
+        "impulse": [
+          -0.31924747565365,
+          0.33309207021759,
+          1.53792529060373
+        ],
+        "linear_momentum_error": 0.0,
+        "angular_momentum_error": 0.0,
+        "kinetic_delta": -2.38784108026821,
+        "warm_lineage_remap_preserved": true
+      },
+      {
+        "time": 0.31322331523056,
+        "mode": "slide",
+        "cone_ratio": 1.0,
+        "impulse": [
+          -0.27757117602471,
+          0.21178194248111,
+          1.16379336138726
+        ],
+        "linear_momentum_error": 0.0,
+        "angular_momentum_error": 0.0,
+        "kinetic_delta": -1.67546501980837,
+        "warm_lineage_remap_preserved": true
+      }
+    ],
+    "oblique_impact": {
+      "run_tolerance": 1e-6,
+      "impact_time": 0.16920086866594,
+      "impact_feature": "plane|C|v:---",
+      "mode": "stick",
+      "impulse": [
+        -0.38652781487918,
+        2.99430127860919,
+        8.6621395387905
+      ],
+      "cone_ratio": 0.82986926603547,
+      "linear_momentum_error": 0.0,
+      "angular_momentum_error": 0.0,
+      "kinetic_delta": -25.073057544238,
+      "next_feature_event_time": 0.29569829052867,
+      "next_feature_event_mode": "slide",
+      "next_feature_event_cone_ratio": 1.0,
+      "state_hash": "de5584cb0f2da6b788e8873eac1ff99e2a8bedd1f71c56727fe809eaae29efe9"
+    },
+    "torque_free_three_axis_audit": {
+      "duration": 0.6,
+      "tolerance": 1e-10,
+      "initial_angular_velocity": [1.1, -0.9, 1.4],
+      "final_angular_velocity": [
+        0.64777572651907,
+        -0.36223547345886,
+        1.87243783476517
+      ],
+      "linear_momentum_drift": 0.0,
+      "world_angular_momentum_drift": 9.733960482902654e-10,
+      "rotational_energy_drift": 1.7629e-10,
+      "quaternion_normalized": true,
+      "state_hash": "e57d66d29b7de53757f5b4ba2d0d2a26f3c2a342086a63aebc93726b40666a99"
+    },
+    "feature_hierarchy": {
+      "vertex_point_count": 1,
+      "edge_point_count": 2,
+      "face_point_count": 4,
+      "face_lineage": [
+        "v:++-",
+        "v:+--",
+        "v:-+-",
+        "v:---"
+      ],
+      "face_local_point": [0.0, 0.0, -0.25],
+      "lineage_value_preserved_vertex_to_edge_to_face": true
+    },
+    "stick_probe": {
+      "active": true,
+      "mode": "stick",
+      "force": [
+        4.94533979338218,
+        4.74453306530079,
+        12.2798501384264
+      ],
+      "normal": 12.2798501384264,
+      "cone_ratio": 0.46507393858269,
+      "tangential_contact_speed_near_zero": true
+    },
+    "separation_probe": {
+      "active": false,
+      "mode": "separated",
+      "normal": 0.0,
+      "signed_required_normal": -4.3165743280206,
+      "free_normal_acceleration_above": 5.0
+    },
+    "parallel_contact_audit": {
+      "actual_godot_threads": true,
+      "threads_started": 2,
+      "canonical_hash": "526844a8ca0629969477f2942853b3e7b9617b391e39fc54147d30d38852773c",
+      "reverse_spawn_same_hash": true,
+      "main_result": {
+        "mode": "slide",
+        "force": [
+          -1.70130933446569,
+          0.19586342431757,
+          5.70848874000184
+        ],
+        "cone_ratio": 1.0
+      },
+      "side_result": {
+        "mode": "slide",
+        "force": [
+          2.4830692348853,
+          -2.13104100828383,
+          7.79083441814543
+        ],
+        "cone_ratio": 1.0
+      },
+      "does_not_mutate_physical_hash": true
+    },
+    "deterministic_replay": {
+      "sliding_event_json_exact_match": true,
+      "sliding_state_hash_exact_match": true
+    },
+    "fail_closed": {
+      "invalid_adaptive_options": "BAD_ADAPTIVE_OPTIONS",
+      "negative_friction": "BAD_FRICTION_COEFFICIENT",
+      "nonpositive_mass": "BAD_MASS",
+      "nonpositive_inertia": "BAD_INERTIA"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_full6dof_frictional_manifold_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_14_FULL_6DOF_FRICTIONAL_FEATURE_MANIFOLD_PLAYGROUND_PASS"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_script_error_scan": "CLEAN"
+  },
+  "predecessor_regression": {
+    "checkpoint": "FABRIC0.13_UNIFIED_ADAPTIVE_3D_CONTACT_GRAPH",
+    "runtime_rerun": true,
+    "runtime_result": "PASS",
+    "assertions": 95,
+    "marker": "FABRIC0.13 Unified Adaptive 3D Contact Graph Acceptance: PASS",
+    "same_exact_double_runtime": true,
+    "executable_blobs_preserved": {
+      "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_v1.gd": "2f7e7b393ffc931f69e8f79c9cf156714acf2d04",
+      "scripts/research/fabric0/fabric0_unified_adaptive_3d_model_v1.gd": "c5c0650b29a732b37539ca1f789e5d72d251592a",
+      "scripts/research/fabric0/fabric0_unified_adaptive_3d_driver_v1.gd": "6b0b73f8418fc428b866433173c987ab8d2965c8",
+      "scripts/research/fabric0/fabric0_unified_adaptive_3d_sparse_v1.gd": "cb7f9c86993cecab44b7ac7dbb09f1114eb01f58",
+      "scripts/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_experiments_v1.gd": "dcf7be2eb80a35f84f81fdde4c384f6a2fc5d028",
+      "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_acceptance.gd": "6334a9cb5fc4eff6be1b55da0a288e81ef675ef8",
+      "tests/research/fabric0/fabric0_unified_adaptive_3d_contact_graph_playground.gd": "c783dbbc4c6b9b0d319e3431fb69131eecaadf05"
+    }
+  },
+  "falsification_findings": [
+    {
+      "id": "FABRIC0.14-FINDING-COORDINATE-CONVENTION",
+      "symptom": "impossible support geometry and artificial energy gain",
+      "cause": "Godot Vector3.UP is Y-up while the research world was Z-up",
+      "fix": "plane normal made explicit as Vector3.BACK = (0,0,1)",
+      "principle": "coordinate convention is an executable physics contract"
+    },
+    {
+      "id": "FABRIC0.14-FINDING-HIDDEN-PROJECTION-IMPULSE",
+      "symptom": "energy ledger discrepancy about 0.1224 did not decrease under refinement",
+      "cause": "feature switch silently projected new support-point normal velocity",
+      "fix": "feature transition now solves and records an explicit frictional unilateral impulse before projection",
+      "principle": "a physical jump must be explicit in causal history; nonconvergent invariant discrepancy is evidence of missing semantics, not a reason to only tighten tolerance"
+    }
+  ],
+  "claims": [
+    "a 13-component rigid-body state with 3D translation, quaternion and 3D angular velocity is advanced by the successor",
+    "anisotropic inertia and gyroscopic torque-free three-axis dynamics are executable and audited",
+    "unilateral normal contact includes a separated branch when tensile support would be required",
+    "Coulomb stick and slide branches are executable in one generic contact law",
+    "oblique impact records explicit impulse with zero demonstrated linear and angular momentum audit errors",
+    "box-plane support features are derived as vertex, edge or face from body orientation and carry lineage",
+    "adaptive sliding evolution crosses two feature topology fixed points",
+    "feature transitions use explicit physical impulses rather than hidden velocity projection",
+    "continuous friction dissipation plus discrete jump losses close the energy ledger under refinement",
+    "event time, full 13D state and energy closure all converge under refinement",
+    "actual Godot Threads execute independent contact snapshot solves and reverse spawn order preserves canonical output",
+    "deterministic replay reproduces the accepted sliding event history and state hash",
+    "all seven FABRIC0.14 executable files are byte-identical between current exact-double local tests and GitHub",
+    "FABRIC0.13 runtime acceptance is rerun and passes 95/95 on the same exact-double Godot"
+  ],
+  "non_claims": [
+    "not yet a multi-free-body coupled 6DOF contact graph",
+    "no coupled multipoint normal complementarity across all face points",
+    "the dynamic accepted trajectory does not remain on a full face manifold",
+    "no arbitrary convex GJK/EPA or mesh contact geometry",
+    "no localized dynamic separation event in the main accepted trajectory",
+    "no localized dynamic stick-to-slide or slide-to-stick event",
+    "no coupled multi-contact Coulomb friction cones",
+    "no rolling or torsional friction",
+    "no arbitrary simultaneous-impact solver",
+    "no production broadphase",
+    "no production block-sparse/CSR solver",
+    "no production thread pool/work stealing",
+    "no Construction/authority/persistence/replication integration",
+    "no full materialized DWS regression"
+  ],
+  "next_research_wall": {
+    "checkpoint": "FABRIC0.15_MULTIBODY_CONVEX_COMPLEMENTARITY_GRAPH",
+    "goal": "multiple free 6DOF convex bodies with simultaneous normal complementarity, coupled friction cones, dynamic separation and stick/slide events, island merge/split, adaptive topology fixed points and block-sparse parallel evidence"
+  }
+}

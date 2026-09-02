@@ -1,0 +1,172 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v6",
+  "status": "PASS_RESEARCH_ONLY",
+  "checkpoint": "FABRIC0.6_NONSMOOTH_WORLD",
+  "parent_research_head": "a09ff2b7611af8fcd201de45622f3d1e6ff07c4e",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_source": "user-supplied godot-4.7.1-linux-double-x86_64-a13da4f archive"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_nonsmooth_fabric_v1.gd": "e5eff446a6de81535bb3da8bc1cb69145ff6ee27c6c2a65b3c6ba208f66a3405",
+    "scripts/research/fabric0/fabric0_nonsmooth_experiments_v1.gd": "9b5b87968139de668b685b1edd876756c1a28083f7a6e825f17e1315d30b1a16",
+    "tests/research/fabric0/fabric0_nonsmooth_acceptance.gd": "39d0d481cfae20422f526c2c8da8ba921ba7d16d6fbe2460ce34d99ade98856e",
+    "tests/research/fabric0/fabric0_nonsmooth_v1_compat_acceptance.gd": "7d02e96fb7873b333b76f8234f9e49c0f7f6cc67941f67410c5e83935369ea8f",
+    "tests/research/fabric0/fabric0_nonsmooth_playground.gd": "0f60a1e7f453e9b7a81d413242617636cd1442dde80b6bb0c60fe59d95b6f76f"
+  },
+  "tested_files_git_blob_sha": {
+    "scripts/research/fabric0/fabric0_nonsmooth_fabric_v1.gd": "b37556da2f1573fa809954c1e3f3cd84c7d90cea",
+    "scripts/research/fabric0/fabric0_nonsmooth_experiments_v1.gd": "3b818e483c209d39b51fb07d33e5ac1166edcb88",
+    "tests/research/fabric0/fabric0_nonsmooth_acceptance.gd": "d6c42c908fd37b953139053529697d36bd2ff456",
+    "tests/research/fabric0/fabric0_nonsmooth_v1_compat_acceptance.gd": "76429f37a19af6417e2840e5f0d28bfac759e53d",
+    "tests/research/fabric0/fabric0_nonsmooth_playground.gd": "aeb88d3e76c69119844890d860dc109dd2fc6f8b"
+  },
+  "remote_byte_identity": {
+    "status": "PASS",
+    "method": "local git hash-object equals GitHub blob SHA for all five tested executable files"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_nonsmooth_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 121,
+    "marker": "FABRIC0.6 Nonsmooth Acceptance: PASS",
+    "observations": {
+      "electrical_one_way_reverse": {
+        "branch": "oneway:b_zero",
+        "common": -5.0,
+        "balance": 0.0
+      },
+      "electrical_one_way_forward": {
+        "branch": "oneway:a_zero",
+        "common": 0.0,
+        "balance": -5.0
+      },
+      "boundary_previous_branch_retained": true,
+      "boundary_ambiguity_detected": true,
+      "fluid_one_way_forward": {
+        "branch": "oneway:a_zero",
+        "pressure": 0.0,
+        "volume_flow": -4.0
+      },
+      "rotational_one_way_forward": {
+        "branch": "clutch:a_zero",
+        "angular_velocity": 0.0,
+        "torque": -3.0
+      },
+      "contact_open": {
+        "branch": "contact:b_zero",
+        "velocity_a": -1.0,
+        "velocity_b": 1.0,
+        "reaction": 0.0
+      },
+      "contact_closed": {
+        "branch": "contact:a_zero",
+        "velocity_a": 0.0,
+        "velocity_b": 0.0,
+        "force_a": -1.0,
+        "force_b": 1.0,
+        "absorbed_power": 0.0
+      },
+      "friction_sequence": [
+        {
+          "branch": "stick",
+          "drive": 0.5,
+          "velocity": 0.0,
+          "force": -0.5,
+          "absorbed_power": 0.0
+        },
+        {
+          "branch": "slide_pos",
+          "drive": 3.0,
+          "fmax": 1.0,
+          "velocity": 2.0,
+          "force": -1.0,
+          "absorbed_power": 2.0
+        },
+        {
+          "branch": "stick",
+          "drive": 3.0,
+          "fmax": 4.0,
+          "velocity": 0.0,
+          "force": -3.0
+        },
+        {
+          "branch": "slide_neg",
+          "drive": -3.0,
+          "fmax": 1.0,
+          "velocity": -2.0,
+          "force": 1.0,
+          "absorbed_power": 2.0
+        }
+      ],
+      "no_admissible_branch_diagnostic": "NO_ADMISSIBLE_NONSMOOTH_BRANCH",
+      "deterministic_acceptance_friction_hash": "d20fa8d48d244b12c17e29a51911f50cc6b2accdbdb700ddfae748acf8dd5c19"
+    }
+  },
+  "predecessor_compatibility": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_nonsmooth_v1_compat_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 42,
+    "marker": "FABRIC0.6 Predecessor Compatibility: PASS",
+    "covers": [
+      "FABRIC0.5 smooth exponential law as a one-branch HybridRelation",
+      "dimension rejection of exp(dimensioned quantity)",
+      "FABRIC0.4 dimensioned mixed-domain Power Map",
+      "zero-hybrid Conservation Cell behavior",
+      "deterministic smooth replay"
+    ],
+    "observations": {
+      "smooth_exponential_common": 1.3862943611198906,
+      "dimensioned_power_map_voltage": 10.666666666666666,
+      "dimensioned_power_map_omega": 5.333333333333333,
+      "power_map_absorbed_power": 0.0
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_nonsmooth_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_6_NONSMOOTH_PLAYGROUND_PASS",
+    "final_transition_friction_hash": "95ce6e9900fa48b61a2c8566d04d51f13c5f60806f44791b6997f1eb98694d11"
+  },
+  "editor_scan": {
+    "mode": "--headless --editor --quit",
+    "exit_code": 0,
+    "parse_compile_error_scan": "CLEAN"
+  },
+  "solver_contract": {
+    "relation_form": "finite union of smooth residual manifolds with inequality guards",
+    "complementarity_compilation": "a>=0 perpendicular b>=0 becomes {a=0,b>=0} union {b=0,a>=0}",
+    "branch_selection": "minimum transition count, then priority, then deterministic lexical order",
+    "boundary_memory": "previous active branch wins while still admissible",
+    "event_type": "nonsmooth_transition",
+    "max_branch_combinations": 256,
+    "inner_solver": "dimension-normalized bounded damped Newton with tangent-rank validation"
+  },
+  "claims": [
+    "exact scalar complementarity can be represented without smoothing as dimension-preserving branch manifolds",
+    "the same one-way relation works across electrical, pressure/flow and rotational power-conjugate domains",
+    "two-port unilateral velocity-level contact produces zero reaction when separated and equal/opposite reaction when active",
+    "exact 1D Coulomb-like stick/slip works as a three-branch set-valued relation without friction-specific solver code",
+    "nonsmooth branch transitions are recorded as deterministic discrete events",
+    "ambiguous switching surfaces retain the previous admissible branch",
+    "smooth FABRIC0.5 constitutive laws are a one-branch special case of HybridRelation",
+    "dimensioned FABRIC0.4 Power Maps remain compatible",
+    "impossible hybrid physics fails closed when no branch is admissible",
+    "all five executable FABRIC0.6 files are byte-identical between local exact-double tests and GitHub"
+  ],
+  "non_claims": [
+    "not a production-scale complementarity solver",
+    "active-set enumeration is exponential and capped at 256 combinations",
+    "no 2D or 3D Coulomb friction cone",
+    "no second-order cone complementarity",
+    "contact is velocity-level and has no geometric gap state",
+    "no impact impulse or restitution",
+    "no event-time localization inside a timestep",
+    "no arbitrary internal hybrid unknowns",
+    "no topology mutation from yield/break yet",
+    "no full materialized DWS checkout regression",
+    "no production Construction, Item Graph, authority, persistence or replication integration"
+  ]
+}

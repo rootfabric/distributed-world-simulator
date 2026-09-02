@@ -1,0 +1,68 @@
+{
+  "schema": "distributed_world_simulator.fabric0_research_validation.v2",
+  "status": "PASS_RESEARCH_ONLY",
+  "branch": "research/fabric0-compositional-world-fabric-r1",
+  "parent_research_head": "2306ad446f7b6f0ee13b0986e38df3ee6d274dee",
+  "runtime": {
+    "engine": "Godot",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double"
+  },
+  "tested_files_sha256": {
+    "scripts/research/fabric0/fabric0_kernel_v1.gd": "cf1d1235ec5f9ec94f66a128167f0c6dd3c7e0010b87f65b97436d6f43a5c8f0",
+    "scripts/research/fabric0/fabric0_experiments_v1.gd": "beb10f47eb02f7f955bf445a18da5fdbe704f982c06a8d68b0884ec598732907",
+    "tests/research/fabric0/fabric0_acceptance.gd": "4066555af4d1e59b1c5496be8ac2c1328671b4dc987e9a03c79efc0ee10540fe",
+    "tests/research/fabric0/fabric0_playground.gd": "b71dea9966383fcf7e51937d8741f1ad9e5811512848e94580c8e34e615ef87a"
+  },
+  "acceptance": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_acceptance.gd",
+    "exit_code": 0,
+    "assertions": 70,
+    "marker": "FABRIC0 Acceptance: PASS",
+    "observations": {
+      "switch_lamp_open_power": 0.0,
+      "switch_lamp_open_lit": false,
+      "switch_lamp_closed_power": 12.0,
+      "switch_lamp_closed_lit": true,
+      "cross_domain_output": 72.0,
+      "connected_components_before_break": 1,
+      "connected_components_after_break": 2,
+      "tank_level": 8.0,
+      "heater_temperature": 22.0,
+      "proximity_door_position": 2.0,
+      "rotational_speed_history": [2.0, 3.0, 3.5, 3.75, 3.875, 3.9375, 3.96875, 3.984375],
+      "rotational_reaction_torque_after_8_steps": -3.984375,
+      "rotational_speed_after_motor_switch_open": 1.9921875,
+      "second_step_delta_angle": 2.5,
+      "second_step_drive_work": 10.0,
+      "second_step_load_work": -5.0,
+      "second_step_kinetic_delta": 5.0,
+      "local_work_energy_identity": true,
+      "deterministic_rotational_state_hash_after_switch_off": "a1b3e87a92bc9dc3d0a2ca409991dc5133eec0a799824dfe98f91ff3d2feedd3"
+    }
+  },
+  "playground": {
+    "entrypoint": "res://tests/research/fabric0/fabric0_playground.gd",
+    "exit_code": 0,
+    "marker": "FABRIC0_PLAYGROUND_PASS"
+  },
+  "new_claims": [
+    "switch is a standalone stateful inline element rather than a signal-source shortcut",
+    "the same generic switch law works in power and torque domains",
+    "a lamp element becomes lit only when power traverses the closed switch",
+    "rotational inertia preserves speed state when drive torque is disconnected",
+    "viscous load observes angular velocity and returns reaction torque through a bond",
+    "reaction torque reduces net torque through graph composition rather than a motor-specific controller",
+    "piecewise-constant rotational integration satisfies local work equals kinetic-energy delta",
+    "the coupled rotational graph replays deterministically"
+  ],
+  "non_claims": [
+    "not an acausal bond-graph solver",
+    "no junction or Kirchhoff equations",
+    "no source impedance or back-EMF",
+    "no formal physical unit system",
+    "no global conservation proof",
+    "no stiff-solver stability contract",
+    "no production Construction, Item Graph, network or persistence integration"
+  ]
+}

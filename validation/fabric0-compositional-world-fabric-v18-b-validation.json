@@ -1,0 +1,204 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.18",
+  "slice": "B_MODE_TRANSITION_LOCALIZATION",
+  "status": "IMPLEMENTED_CANDIDATE_PROJECT_CONTROL_PASS",
+  "production_accepted": false,
+  "branch": "research/fabric0-18-persistent-contact-wrench-r1",
+  "predecessor_slice": {
+    "name": "FABRIC0.18-A_PERSISTENT_WRENCH_CONTACT_STATE",
+    "exact_executable": "c7f20c51794690930d059d10747d1a1c3e4e2c52",
+    "acceptance": "60/60_PASS"
+  },
+  "executable_head": "649d7a9d62384a6d3cdfe2efbd92534bc52573e7",
+  "executable_tree": "f9f19abf98c5b338261ac2e1e03d98b70a59aaf2",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 108,
+    "script": "tests/research/fabric0/fabric0_persistent_wrench_mode_transition_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_18_B_MODE_TRANSITION_LOCALIZATION_PLAYGROUND_PASS"
+  },
+  "import": "CLEAN",
+  "editor_scan": "CLEAN",
+  "transition_families": {
+    "tangent": {
+      "kind": "STICK_TO_SLIDE",
+      "reference_root": 0.812345679,
+      "localized": 0.812345679034
+    },
+    "rolling": {
+      "kind": "STICK_TO_ROLL",
+      "reference_root": 1.012345679,
+      "localized": 1.012345679046
+    },
+    "torsion": {
+      "kind": "STICK_TO_SPIN",
+      "reference_root": 1.212345679,
+      "localized": 1.212345679058
+    },
+    "support": {
+      "kind": "SUPPORT_TO_SEPARATION",
+      "reference_root": 1.412345679,
+      "localized": 1.412345679011
+    }
+  },
+  "refinement": {
+    "reference_root": 1.123456789,
+    "root_tolerances": [
+      0.0001,
+      0.000001,
+      1e-8,
+      1e-10
+    ],
+    "per_channel_errors": {
+      "tangent": [
+        0.0000179891516,
+        6.8808292e-7,
+        6.11608e-9,
+        6.823e-11
+      ],
+      "rolling": [
+        0.0000179891516,
+        6.8808292e-7,
+        6.11608e-9,
+        6.823e-11
+      ],
+      "torsion": [
+        0.0000179891516,
+        6.8808292e-7,
+        6.11608e-9,
+        6.823e-11
+      ],
+      "support": [
+        0.0000179891516,
+        6.8808292e-7,
+        6.11608e-9,
+        6.823e-11
+      ]
+    },
+    "bracket_uncertainties": [
+      0.0000503303816,
+      7.8641221e-7,
+      6.14385e-9,
+      9.6e-11
+    ],
+    "strictly_decreasing": true,
+    "error_bounded_by_reported_uncertainty": true
+  },
+  "temporal_resolution": {
+    "roots": {
+      "tangent": 1,
+      "rolling": 1.0002
+    },
+    "coarse_1e_3": {
+      "event_ids": [
+        "rolling:STICK_TO_ROLL",
+        "tangent:STICK_TO_SLIDE"
+      ],
+      "deferred_count": 0
+    },
+    "fine_1e_5": {
+      "event_ids": [
+        "tangent:STICK_TO_SLIDE"
+      ],
+      "deferred_event_ids": [
+        "rolling:STICK_TO_ROLL"
+      ]
+    }
+  },
+  "determinism": {
+    "same_tolerance_replay": "EXACT_IDENTICAL_SIGNATURE",
+    "reverse_body_and_member_presentation": "EXACT_IDENTICAL",
+    "reverse_event_spec_order": "EXACT_IDENTICAL"
+  },
+  "root_semantics": {
+    "quantity": "CONTINUOUS_FEASIBILITY_GUARD",
+    "old_mode_feasible": "guard > 0",
+    "boundary": "guard = 0",
+    "old_mode_infeasible": "guard < 0",
+    "accepted_impulse_is_not_root_quantity": true
+  },
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_wrench_mode_event_locator_v1.gd",
+      "git_blob": "9c34645ff11c3a33222e993fad3607c41fefa448",
+      "sha256": "543851a6393abaee2f468173000cd84b4fe332a0e5bc52f1677dbf4b0928b02b"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_wrench_mode_transition_experiments_v1.gd",
+      "git_blob": "833506434b254a11115a7f89b548e8c6f74070b3",
+      "sha256": "16908605215be31e4ffe4edf56025e4ed9dcc8155bb6c8f46f152199da32da69"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_mode_transition_acceptance.gd",
+      "git_blob": "66435982de3127574dbe524ee55891262f05c690",
+      "sha256": "180f7d1ac7966de36ce02c2ef03ad1ecf098a14b951420039f29a93435bfb81e"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_wrench_mode_transition_playground.gd",
+      "git_blob": "cfb176fccc86b2500a0df3f175a632d9c5275e46",
+      "sha256": "7a8c502201cb615a2408fe80a5b03553d261c9f07de5085f533607975ee550c2"
+    }
+  ],
+  "remote_byte_identity": {
+    "fabric0_18_b": "4/4_PASS",
+    "fabric0_18_a": "3/3_PRESERVED",
+    "fabric0_17_d": "6/6_PRESERVED"
+  },
+  "fail_closed": [
+    "BAD_TRANSITION_CHANNEL",
+    "TRANSITION_KIND_CHANNEL_MISMATCH",
+    "BAD_START_TIME",
+    "BAD_HORIZON",
+    "BAD_ROOT_TOLERANCE",
+    "BAD_SCAN_STEPS",
+    "TRANSITION_ALREADY_REACHED",
+    "NO_TRANSITION_IN_HORIZON",
+    "EVALUATOR_INCOMPLETE",
+    "EVALUATOR_GUARD_MISSING",
+    "EVALUATOR_GUARD_NONFINITE",
+    "EVALUATOR_STATE_INVALID",
+    "TRANSITION_GUARD_DIRECTION_INVALID",
+    "PRE_POST_MODE_SEMANTIC_MISMATCH",
+    "EMPTY_EVENT_SPEC_SET",
+    "BAD_SIMULTANEOUS_RESOLUTION"
+  ],
+  "claims": [
+    "CONTINUOUS_FEASIBILITY_GUARD_ROOT_LOCALIZATION",
+    "STICK_TO_SLIDE_EVENT",
+    "STICK_TO_ROLL_EVENT",
+    "STICK_TO_SPIN_EVENT",
+    "SUPPORT_TO_SEPARATION_EVENT",
+    "STRICT_EVENT_TIME_REFINEMENT",
+    "EXPLICIT_TEMPORAL_RESOLUTION_FOR_NEAR_COINCIDENT_MODE_EVENTS",
+    "A_STATE_SEMANTICS_VALIDATED_AROUND_ROOT",
+    "CALLER_AND_EVENT_SPEC_ORDER_DETERMINISM"
+  ],
+  "non_claims": [
+    "PHYSICAL_STATIC_CONTACT_NO_CREEP",
+    "PRODUCTION_EXTERNAL_FORCE_INTEGRATOR",
+    "MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
+    "GRAPH_WIDE_SUPPORT_REDISTRIBUTION",
+    "UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
+    "FABRIC0_18_CLOSED",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next": "FABRIC0.18-C_MULTICONTACT_PERSISTENT_WRENCH_GRAPH",
+  "project_control": {
+    "run_number": 1888,
+    "run_id": 33369362645,
+    "subject_head": "beca5117c88321fa93c509650159f590ebd38656",
+    "result": "SUCCESS"
+  }
+}

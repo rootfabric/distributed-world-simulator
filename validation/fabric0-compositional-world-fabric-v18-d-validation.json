@@ -1,0 +1,238 @@
+{
+  "schema_version": "1.0",
+  "program": "FABRIC0",
+  "checkpoint": "FABRIC0.18",
+  "slice": "D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY",
+  "status": "RESEARCH_CANDIDATE_CLOSED",
+  "production_accepted": false,
+  "parent_status": "RESEARCH_CANDIDATE_CLOSED",
+  "branch": "research/fabric0-18-persistent-contact-wrench-r1",
+  "predecessor_slices": {
+    "a": {
+      "exact_executable": "c7f20c51794690930d059d10747d1a1c3e4e2c52",
+      "acceptance": "60/60_PASS"
+    },
+    "b": {
+      "exact_executable": "649d7a9d62384a6d3cdfe2efbd92534bc52573e7",
+      "acceptance": "108/108_PASS"
+    },
+    "c": {
+      "exact_executable": "5b37312bd986c5dc4951ebe13ac670df0af11073",
+      "acceptance": "153/153_PASS"
+    }
+  },
+  "executable_head": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+  "executable_tree": "c051cabd50343603efc509887f32fadf479f0f54",
+  "engine": {
+    "identity": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "headless": true
+  },
+  "acceptance": {
+    "result": "PASS",
+    "assertions": 113,
+    "script": "tests/research/fabric0/fabric0_persistent_contact_trajectory_acceptance.gd"
+  },
+  "playground": {
+    "result": "PASS",
+    "marker": "FABRIC0_18_D_UNIFIED_PERSISTENT_CONTACT_TRAJECTORY_PLAYGROUND_PASS"
+  },
+  "import": "CLEAN",
+  "editor_scan": "CLEAN",
+  "timeline": {
+    "ids": [
+      "impact:ACQUIRE_PERSISTENT_SUPPORT",
+      "tangent:STICK_TO_SLIDE",
+      "rolling:STICK_TO_ROLL",
+      "torsion:STICK_TO_SPIN",
+      "support:SUPPORT_TO_SEPARATION"
+    ],
+    "times": [
+      0.1,
+      0.48125000086923,
+      0.49970956301937,
+      0.69090909902006,
+      1.14444444458932
+    ],
+    "final_time": 1.2
+  },
+  "impact_acquisition": {
+    "initial_height": 0.1,
+    "initial_vy": -1,
+    "mass": 10,
+    "left_normal_impulse_approx": 5,
+    "right_normal_impulse_approx": 5,
+    "kinetic_before": 5,
+    "kinetic_after_approx": 0,
+    "energy_ledger_error_lt": 1e-14
+  },
+  "live_event_surface": {
+    "source": "SIGNED_KKT_FEASIBILITY_GUARDS_FROM_CANONICAL_C_SOLVE",
+    "synthetic_B_ramp_used": false,
+    "guard_sign_check_probe": 0.000001,
+    "history_rule": "ZERO_INIT_C_PHYSICS_FIRST_THEN_APPLY_A_PERSISTENT_HISTORY"
+  },
+  "refinement": {
+    "reference_tolerance": 1e-11,
+    "tolerances": [
+      1e-8,
+      1e-9,
+      1e-10
+    ],
+    "max_time_errors": [
+      4.33793e-9,
+      5.7092e-10,
+      6.936e-11
+    ],
+    "max_state_errors": [
+      1.66561e-9,
+      1.9932e-10,
+      7.49e-11
+    ],
+    "time_errors_strictly_decreasing": true,
+    "state_errors_strictly_decreasing": true
+  },
+  "determinism": {
+    "reverse_contact_presentation": {
+      "signature": "EXACT_IDENTICAL",
+      "state_error": 0
+    },
+    "reverse_event_spec_presentation": {
+      "signature": "EXACT_IDENTICAL",
+      "state_error": 0
+    }
+  },
+  "final_state": {
+    "left": {
+      "active": false,
+      "modes": [
+        "open",
+        "open",
+        "open"
+      ],
+      "accepted_impulse_zero": true,
+      "current_limits_zero": true
+    },
+    "right": {
+      "active": true,
+      "modes": [
+        "slide",
+        "roll",
+        "spin"
+      ],
+      "normal_support_gt": 1.05
+    },
+    "min_open_normal_velocity_gt": 0.01
+  },
+  "ledgers": {
+    "max_energy_ledger_error_lt": 1e-14,
+    "max_normal_complementarity_error": 1.7933057816499343e-11,
+    "max_matrix_symmetry_error": 0,
+    "event_stage_contact_dissipation_sum": -5.622853864835,
+    "dissipation_note": "Sum of bounded event-stage contact kinetic deltas; not a continuous full-trajectory external-work integral."
+  },
+  "exact_files": [
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_contact_trajectory_v1.gd",
+      "git_blob": "eb8ef239bd887bd31a74e01ede14e76a008712f4",
+      "sha256": "ca2274552bb0295bca4c3491488130373829460b2c7c1a5932cc942967477c09"
+    },
+    {
+      "path": "scripts/research/fabric0/fabric0_persistent_contact_trajectory_experiments_v1.gd",
+      "git_blob": "112dd6b172cc11d0a328e381c04d2af1456d748f",
+      "sha256": "bb1a454428edb24283a41dd9fe20ad276a3bb1b16358ca81f96908b135a52e82"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_contact_trajectory_acceptance.gd",
+      "git_blob": "76aac08d43e592b925c1fa21eea9c04dc1e5d0bb",
+      "sha256": "a44db92a12271ee6a80754fea41aabe1fbeac4e90339fa2593837145c6229893"
+    },
+    {
+      "path": "tests/research/fabric0/fabric0_persistent_contact_trajectory_playground.gd",
+      "git_blob": "bff0aa79774996a433534771efaa0794d7e4a7c5",
+      "sha256": "591d5730702140b177eaee29af440e7c96bb5b47ca91e35440b4b50fabeeca42"
+    }
+  ],
+  "remote_byte_identity": {
+    "fabric0_18_d": "4/4_PASS",
+    "fabric0_18_c": "4/4_PRESERVED",
+    "fabric0_18_b": "4/4_PRESERVED",
+    "fabric0_18_a": "3/3_PRESERVED",
+    "fabric0_17_d": "6/6_PRESERVED"
+  },
+  "project_control": {
+    "exact_d_executable": {
+      "run_number": 1899,
+      "run_id": 33373310277,
+      "subject_head": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+      "result": "SUCCESS"
+    },
+    "closure_control_carrier": {
+      "run_number": 1902,
+      "run_id": 33373554642,
+      "subject_head": "88ba8b61ec81928aedeae5777ee1380a6458f0f6",
+      "result": "SUCCESS"
+    }
+  },
+  "fail_closed": [
+    "BAD_TRAJECTORY_ROOT_TOLERANCE",
+    "TRAJECTORY_ROOT_TOLERANCE_TOO_COARSE",
+    "IMPACT_NOT_BRACKETED",
+    "IMPACT_DID_NOT_ACQUIRE_PERSISTENT_SUPPORT",
+    "LIVE_MODE_EVENT_LOCALIZATION_FAILED",
+    "NONCAUSAL_EVENT_ORDER",
+    "EVENT_RESOLVE_GRAPH_FAILED",
+    "TRAJECTORY_PERSISTENT_STATE_REJECTED",
+    "TRAJECTORY_POST_MODE_MISMATCH",
+    "TRAJECTORY_SUPPORT_EVENT_DID_NOT_OPEN",
+    "FINAL_LEFT_SUPPORT_NOT_SEPARATED",
+    "FINAL_RIGHT_SUPPORT_LOST",
+    "FINAL_RIGHT_MODES_WRONG"
+  ],
+  "claims": [
+    "UNIFIED_FREE_IMPACT_PERSISTENT_MODE_SEPARATION_TIMELINE",
+    "IMPACT_TO_PERSISTENT_SUPPORT_ACQUISITION",
+    "LIVE_C_GRAPH_DERIVED_B_EVENT_ROOTS",
+    "A_HISTORY_DOES_NOT_OWN_EVENT_SURFACE",
+    "STICK_TO_SLIDE_ROLL_SPIN_CAUSAL_ORDER",
+    "SUPPORT_TO_SEPARATION_IN_SAME_TRAJECTORY",
+    "STRICT_WHOLE_TIMELINE_EVENT_TIME_REFINEMENT",
+    "STRICT_EVENT_RESOLVED_STATE_REFINEMENT",
+    "CONTACT_AND_EVENT_SPEC_PRESENTATION_DETERMINISM",
+    "PASSIVE_EVENT_STAGE_ENERGY_LEDGER",
+    "NORMAL_COMPLEMENTARITY_AUDIT"
+  ],
+  "non_claims": [
+    "ARBITRARY_MULTI_DYNAMIC_BODY_PERSISTENT_CONTACT_TRAJECTORY",
+    "PRESSURE_RESOLVED_WRENCH_CONE",
+    "COMPLIANT_HERTZ_CONTACT",
+    "PRODUCTION_EXTERNAL_FORCE_WORK_INTEGRATOR",
+    "CONTINUOUS_FULL_TRAJECTORY_EXTERNAL_WORK_INTEGRAL",
+    "PRODUCTION_SPARSE_BACKEND",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNCHRONIZATION_REVIEW",
+  "closure": {
+    "decision": "RESEARCH_CANDIDATE_CLOSED",
+    "exact_physics_executable": "e079565b4b9cd0dae530ff5042f057ce8fa0d0cc",
+    "exact_physics_tree": "c051cabd50343603efc509887f32fadf479f0f54",
+    "control_carrier": "88ba8b61ec81928aedeae5777ee1380a6458f0f6",
+    "control_carrier_project_control": {
+      "run_number": 1902,
+      "run_id": 33373554642,
+      "result": "SUCCESS"
+    },
+    "exact_d_bytes": "4/4_PRESERVED_ON_CLOSURE_CARRIER",
+    "predecessor_bytes": {
+      "fabric0_18_c": "4/4_PRESERVED",
+      "fabric0_18_b": "4/4_PRESERVED",
+      "fabric0_18_a": "3/3_PRESERVED",
+      "fabric0_17_d": "6/6_PRESERVED"
+    },
+    "no_implicit_successor": true,
+    "next": "PHYSICAL_CORE_FABRIC_BAKE_BRIDGE1_SYNCHRONIZATION_REVIEW",
+    "note": "Research closure only. No FABRIC physics or production ownership semantics are changed by the closure boundary."
+  }
+}
