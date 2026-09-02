@@ -299,8 +299,13 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 	if all_routes.size() != all_candidates.size() or all_recruitment.size() != all_candidates.size():
 		return _failure(FAIL_PROPOSAL, "global stage count mismatch", generation)
 
-	var candidate_pool_hash := CandidateKernel.candidate_pool_hash(
-		all_candidates, String(immutable_context["schema"]), String(immutable_context["version"]))
+	var candidate_pool_hash := (
+		CandidateKernel.candidate_pool_hash_from_canonical_order(
+			all_candidates, String(immutable_context["schema"]), String(immutable_context["version"]))
+		if _pipeline_mode == PIPELINE_OPTIMIZED
+		else CandidateKernel.candidate_pool_hash(
+			all_candidates, String(immutable_context["schema"]), String(immutable_context["version"]))
+	)
 	var dispersal_pool_hash := RouteKernel.route_pool_hash(
 		all_routes, String(immutable_context["schema"]), String(immutable_context["version"]))
 	var recruitment_hash := RecruitmentKernel.recruitment_pool_hash(
