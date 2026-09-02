@@ -92,6 +92,22 @@ static func observe(
 		"execution_allowed": true,
 	})
 
+static func invalidate(monitor: Dictionary, reason: String, step_index: int) -> Dictionary:
+	var checked := validate(monitor)
+	if not bool(checked.get("success", false)):
+		return checked
+	if not Utils.is_upper_kind(reason) or reason == "NONE":
+		return Utils.failure("INVALID_DYNAMIC_ROM_EXTERNAL_INVALIDATION_REASON")
+	if not Utils.is_json_integer(step_index) or step_index < 0:
+		return Utils.failure("INVALID_DYNAMIC_ROM_EXTERNAL_INVALIDATION_STEP")
+	if String(monitor["state"]) == ROM_INVALID:
+		return Utils.success({
+			"monitor": monitor.duplicate(true),
+			"transition": "ROM_INVALID->ROM_INVALID",
+			"execution_allowed": false,
+		})
+	return _invalidated(monitor, reason, step_index)
+
 static func can_execute(monitor: Dictionary) -> Dictionary:
 	var checked := validate(monitor)
 	if not bool(checked.get("success", false)):
