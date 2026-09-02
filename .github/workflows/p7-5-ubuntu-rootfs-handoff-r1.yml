@@ -1,0 +1,71 @@
+name: P7.5 Ubuntu Rootfs Handoff R1
+
+on:
+  push:
+    branches:
+      - validation/p7-5-ubuntu-rootfs-handoff-r1
+
+permissions:
+  contents: read
+
+jobs:
+  build-rootfs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Build verified Ubuntu 26.04.1 amd64 verifier rootfs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          image="ubuntu-base-26.04.1-base-amd64.tar.gz"
+          base_url="https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release"
+
+          mkdir -p download rootfs output
+          cd download
+          curl --fail --location --retry 3 --silent --show-error -O "$base_url/$image"
+          curl --fail --location --retry 3 --silent --show-error -O "$base_url/SHA256SUMS"
+          grep " $image$" SHA256SUMS | sha256sum --check -
+          cd ..
+
+          sudo tar -xzf "download/$image" -C rootfs
+          sudo cp --remove-destination /etc/resolv.conf rootfs/etc/resolv.conf
+
+          cleanup() {
+            sudo umount -R rootfs/dev 2>/dev/null || true
+            sudo umount rootfs/proc 2>/dev/null || true
+            sudo umount rootfs/sys 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          sudo mount --rbind /dev rootfs/dev
+          sudo mount --make-rslave rootfs/dev
+          sudo mount -t proc proc rootfs/proc
+          sudo mount -t sysfs sysfs rootfs/sys
+
+          sudo chroot rootfs /bin/bash -lc '
+            set -Eeuo pipefail
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update
+            apt-get install -y --no-install-recommends git ca-certificates
+            apt-get clean
+            rm -rf /var/lib/apt/lists/*
+            uname -m
+            cat /etc/os-release
+            git --version
+          '
+
+          cleanup
+          trap - EXIT
+
+          sudo rm -f rootfs/etc/resolv.conf
+          sudo tar --numeric-owner -C rootfs -czf output/ubuntu-26.04.1-p7-5-verifier-rootfs-amd64.tar.gz .
+          sudo chown "$(id -u):$(id -g)" output/ubuntu-26.04.1-p7-5-verifier-rootfs-amd64.tar.gz
+          sha256sum output/ubuntu-26.04.1-p7-5-verifier-rootfs-amd64.tar.gz             | tee output/ubuntu-26.04.1-p7-5-verifier-rootfs-amd64.tar.gz.sha256
+
+      - name: Upload verifier rootfs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-26.04.1-p7-5-verifier-rootfs-amd64
+          path: output/
+          if-no-files-found: error
+          retention-days: 1
