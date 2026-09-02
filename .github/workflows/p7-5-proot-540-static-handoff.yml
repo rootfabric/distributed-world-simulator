@@ -21,15 +21,16 @@ jobs:
           submodules: recursive
           path: proot-src
 
-      - name: Build static PRoot
+      - name: Build static PRoot without Python extension
         shell: bash
         run: |
           set -Eeuo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends             build-essential pkg-config libtalloc-dev
           cd proot-src
-          make -C src clean loader.elf loader-m32.elf build.h
-          PYTHON=/nonexistent/python LDFLAGS="${LDFLAGS:-} -static"             make -C src proot GIT=false
+          make -C src clean
+          make -C src HAS_SWIG= HAS_PYTHON_CONFIG= loader.elf loader-m32.elf build.h
+          LDFLAGS="${LDFLAGS:-} -static"             make -C src HAS_SWIG= HAS_PYTHON_CONFIG= proot GIT=false
           file src/proot
           ldd src/proot || true
           src/proot --version | head -n 4
