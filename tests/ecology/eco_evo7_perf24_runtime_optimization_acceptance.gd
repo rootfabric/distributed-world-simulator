@@ -59,6 +59,28 @@ func _init() -> void:
 		"pipeline_mode": "UNKNOWN_PIPELINE",
 	}), "unknown pipeline mode fails closed")
 
+	var canonical_hash_probe: Array[Dictionary] = [
+		{"candidate_hash": "0001"},
+		{"candidate_hash": "0002"},
+		{"candidate_hash": "0003"},
+	]
+	_check(
+		CandidateKernel.candidate_pool_hash_from_canonical_order(
+			canonical_hash_probe, "probe-schema", "probe-version")
+		== CandidateKernel.candidate_pool_hash(
+			canonical_hash_probe, "probe-schema", "probe-version"),
+		"R7 canonical-order candidate pool hash is byte-identical to frozen sorter path"
+	)
+	var noncanonical_hash_probe: Array[Dictionary] = [
+		{"candidate_hash": "0002"},
+		{"candidate_hash": "0001"},
+	]
+	_check(
+		CandidateKernel.candidate_pool_hash_from_canonical_order(
+			noncanonical_hash_probe, "probe-schema", "probe-version").is_empty(),
+		"R7 canonical-order candidate pool hash fails closed on unsorted input"
+	)
+
 	var world = EarthWorld.new()
 	root.add_child(world)
 	_check(world.setup(null), "real Earth source initializes for PERF2.4")
