@@ -1,0 +1,42 @@
+name: ECO PERF2.CONV Final Source Export R1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/eco-perf2-conv-final-source-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout frozen PERF2.CONV subject
+        uses: actions/checkout@v4
+        with:
+          ref: 350581c9584abe8ef7dcd53d8a68c5f451bc9016
+          fetch-depth: 0
+      - name: Assert exact frozen subject
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "350581c9584abe8ef7dcd53d8a68c5f451bc9016"
+          test "$(git rev-parse HEAD^{tree})" = "dfc59a8cfec74073dd0ad87332f9d510be11d93e"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse HEAD^{tree})"
+      - name: Build immutable source archive
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ -o perf2-conv-final-source.tar.gz 350581c9584abe8ef7dcd53d8a68c5f451bc9016
+          sha256sum perf2-conv-final-source.tar.gz | tee perf2-conv-final-source.sha256
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf2-conv-final-350581c9584a
+          path: |
+            perf2-conv-final-source.tar.gz
+            perf2-conv-final-source.sha256
+          retention-days: 1
+          if-no-files-found: error
