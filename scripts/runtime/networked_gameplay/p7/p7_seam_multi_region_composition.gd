@@ -265,7 +265,7 @@ func _executor_result(value, fallback_error: String) -> Dictionary:
 	if typeof(value) != TYPE_DICTIONARY:
 		return _failure(fallback_error)
 	var result: Dictionary = value
-	if result.has("success") and not bool(result.get("success", false)):
+	if not bool(result.get("success", false)):
 		return result.duplicate(true) if not String(result.get("error_code", "")).is_empty() \
 			else _failure(fallback_error)
 	return _success({"value": result.duplicate(true)})
