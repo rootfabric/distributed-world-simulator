@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 45
 
     env:
-      TARGET_HEAD: 412fc9bb38873dbe17671677fc1d0f44748b7889
-      TARGET_TREE: fe81908fa44b3f8810b0d1d0908327faf0d845e2
+      TARGET_HEAD: 6d997d36443ba4fc8157ec8fee85b4e56103ffb3
+      TARGET_TREE: d6ed9caf5b551c387f84e64e2d35a30b36f18e13
       EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
       EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
 
