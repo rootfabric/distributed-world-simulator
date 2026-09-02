@@ -164,7 +164,9 @@
       "runtime_mutation_authorized": true,
       "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
       "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
-      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json",
+      "control_precondition": "RESOLVED_BY_PR_432",
+      "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93"
     },
     "p7_6": {
       "state": "NEXT",

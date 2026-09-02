@@ -6,7 +6,7 @@
   "work_order_id": "V0-P7-R1-WO-001",
   "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS",
   "mode": "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
-  "reason": "The execution was missing its transition table and later mixed noncanonical control observations into the runtime Work Order event directory. Preserve those files byte-identically as evidence, but exclude only the exact pinned files from authoritative reducer input.",
+  "reason": "The execution was missing its transition table and later mixed noncanonical control observations into the runtime Work Order event directory. Preserve those files byte-identically as evidence, exclude only exact pinned files from authoritative reducer input, and quarantine the P7.5 closure observation that was accidentally appended at sequence 20 after the repaired authoritative sequence 6.",
   "canonical_reconstruction_event": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0005-p7-3-p7-4-runtime-progress-reconciled.v1.json",
   "canonical_next_sequence": 6,
   "constraints": {
@@ -138,6 +138,15 @@
         "EVENT_TYPE_NOT_CANONICAL",
         "WORK_ORDER_BRANCH_MISMATCH",
         "TIMESTAMP_DECREASES"
+      ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0020-p7-5-runtime-merged.v1.json",
+      "git_blob_sha": "d458cd8bc54c3a5872b022887ac4953ee67fd8b6",
+      "reasons": [
+        "NONCANONICAL_SEQUENCE_GAP_AFTER_RECONSTRUCTED_LEDGER",
+        "CLOSURE_CONTROL_OBSERVATION_NOT_REQUIRED_FOR_RUNTIME_WORK_ORDER_STATE",
+        "PRESERVE_IMMUTABLE_FILE_AS_EVIDENCE"
       ]
     }
   ],
