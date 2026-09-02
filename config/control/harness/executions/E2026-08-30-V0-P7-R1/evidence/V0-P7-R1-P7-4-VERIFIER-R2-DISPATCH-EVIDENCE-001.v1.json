@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_dispatch_evidence.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "verifier_round": "R2",
+  "runtime": {
+    "pr": 396,
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "base_sha": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+    "project_control": "33374295322 = SUCCESS",
+    "frozen": true
+  },
+  "reviewer_r1": {
+    "result_commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+    "verdict": "PASS",
+    "project_control": "33388053145 = SUCCESS"
+  },
+  "verifier_r1": {
+    "result_branch": "control/v0-p7-4-fresh-verifier-result-r1",
+    "result_commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+    "result_pr": 412,
+    "result_project_control": "33393399665 = SUCCESS",
+    "verdict": "NOT_VERIFIED",
+    "verdict_reason": "INSUFFICIENT_ENVIRONMENT",
+    "execution_performed": false,
+    "inherited_as_execution_evidence": false
+  },
+  "environment_repair": {
+    "exact_linux_godot_archive": {
+      "filename": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz",
+      "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+      "internal_binary": "tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+      "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "required_version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "build_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+      "platform": "linuxbsd",
+      "target": "editor",
+      "arch": "x86_64",
+      "precision": "double",
+      "controller_validation": "archive extracted; internal SHA256SUMS matched binary; binary sha256 matched project-documented value; --version matched exactly"
+    },
+    "install_requires_sudo": false,
+    "canonical_install_path": "$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "permitted_ubuntu_environments": [
+      "reachable native Ubuntu x86_64 host",
+      "WSL2 Ubuntu x86_64 only if /etc/os-release identifies Ubuntu, uname reports Linux, the exact linuxbsd binary executes directly, Git can materialize a fresh detached exact worktree, and all other verifier invariants are satisfied"
+    ],
+    "forbidden": [
+      "Windows Godot substitution",
+      "standard/single-precision Godot substitution",
+      "reusing R1 as execution evidence",
+      "running from a non-Ubuntu userspace",
+      "external 180-second timeout"
+    ]
+  },
+  "exact_execution_required": {
+    "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh",
+    "expected_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "expected_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "fresh_detached_worktree": true,
+    "fresh_import": true,
+    "stages_required": 16,
+    "logs_required": 17,
+    "fatal_log_scan": true,
+    "log_sha256_required": true,
+    "tracked_clean_before_after": true
+  },
+  "result_required": {
+    "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-002.v1.json",
+    "schema": "distributed_world_simulator.harness_verification.v1",
+    "verification_id": "V0-P7-R1-WO-001-P7-4-VERIFICATION-002",
+    "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_UBUNTU_EXACT_SOURCE_R2",
+    "verdicts": [
+      "VERIFIED",
+      "NOT_VERIFIED"
+    ],
+    "result_branch": "control/v0-p7-4-fresh-verifier-result-r2"
+  },
+  "success_opens_only": "Human RUNTIME_FEATURE_MERGE for exact runtime PR #396"
+}

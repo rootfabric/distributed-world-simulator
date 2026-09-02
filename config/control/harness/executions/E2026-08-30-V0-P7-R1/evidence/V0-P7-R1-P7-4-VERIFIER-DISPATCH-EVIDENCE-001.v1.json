@@ -1,0 +1,172 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_dispatch_evidence.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "runtime_pr": 396,
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "runtime_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+  "runtime_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+  "runtime_base_sha": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+  "runtime_project_control": {
+    "run_id": 33374295322,
+    "status": "SUCCESS"
+  },
+  "reviewer": {
+    "review_id": "V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001",
+    "reviewer": "INDEPENDENT_REVIEWER_P7_4_FRESH_EXACT_SOURCE_R1",
+    "result_branch": "control/v0-p7-4-fresh-reviewer-result-r1",
+    "result_commit": "abd753941f2bc4f9ff771e8501f261505b61c7de",
+    "result_pr": 404,
+    "result_project_control": "33388053145 = SUCCESS",
+    "reviewed_head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "reviewed_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "verdict": "PASS",
+    "blocking_findings": 0,
+    "required_fixes": 0,
+    "accepted_seed_fixture_boundary": true
+  },
+  "immutable_source": {
+    "validation_pr": 397,
+    "validation_branch": "validation/v0-p7-4-exact-source-r1",
+    "carrier_head": "8e5520db6cae05a816740b00b387f273e757096b",
+    "export_run": 33374385318,
+    "export_result": "SUCCESS",
+    "carrier_project_control_run": 33374385340,
+    "carrier_project_control": "SUCCESS",
+    "artifact_id": 9751287742,
+    "artifact_zip_sha256": "71a833cb3b7f99133d81e309d2e22b329704fd4e5d3dbb2ee409b1ab94a99e9a",
+    "source_tar_sha256": "b422f8ba9dec229d53ea3e63325355d286bf96bb248376703047492cffbc147e",
+    "reconstructed_tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "reviewer_byte_exact_file_count": 5095
+  },
+  "exact_execution_required": {
+    "os": "Ubuntu",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh",
+    "expected_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "expected_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "fresh_detached_worktree": true,
+    "fresh_import": true,
+    "carry_forward_implementer_or_reviewer_execution_prohibited": true,
+    "external_180_second_cap_prohibited": true,
+    "stages": [
+      {
+        "id": "p7-4-seed",
+        "assertions": 21,
+        "failures": 0
+      },
+      {
+        "id": "p7-4-recover-deliver",
+        "assertions": 25,
+        "failures": 0
+      },
+      {
+        "id": "p7-4-recover-replay",
+        "assertions": 17,
+        "failures": 0
+      },
+      {
+        "id": "p7-3-material-delivery",
+        "assertions": 116,
+        "failures": 0
+      },
+      {
+        "id": "p7-2-bubble",
+        "assertions": 53,
+        "failures": 0
+      },
+      {
+        "id": "p7-2-seam",
+        "assertions": 50,
+        "failures": 0
+      },
+      {
+        "id": "p7-1-authority",
+        "assertions": 83,
+        "failures": 0
+      },
+      {
+        "id": "p7-1-tool-to-mw4",
+        "assertions": 30,
+        "failures": 0
+      },
+      {
+        "id": "p5-mining-tool",
+        "assertions": 36,
+        "failures": 0
+      },
+      {
+        "id": "p3-resource-domain",
+        "assertions": 79,
+        "failures": 0
+      },
+      {
+        "id": "p3-aggregate-recovery",
+        "assertions": 33,
+        "failures": 0
+      },
+      {
+        "id": "m6-recovery-contracts",
+        "assertions": 126,
+        "failures": 0
+      },
+      {
+        "id": "m6-recovery-processes",
+        "assertions": 128,
+        "failures": 0
+      },
+      {
+        "id": "mw4",
+        "assertions": 187,
+        "failures": 0
+      },
+      {
+        "id": "mw5",
+        "assertions": 142,
+        "failures": 0
+      },
+      {
+        "id": "mw6",
+        "assertions": 130,
+        "failures": 0
+      }
+    ],
+    "expected_log_count": 17,
+    "fatal_log_markers": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to instantiate an autoload",
+      "Failed to load script"
+    ],
+    "tracked_clean_required": true,
+    "log_sha256_required": true
+  },
+  "verifier_must_explicitly_close": [
+    "fresh P7.2 bubble execution",
+    "fresh MW4 standalone execution",
+    "fresh MW5 standalone execution",
+    "fresh MW6 standalone execution",
+    "fresh M6 recovery processes execution without the Implementer container's 180-second cap"
+  ],
+  "reviewer_info_findings_to_preserve": [
+    "P7.4-R1-F001: unchanged P3 resource mining direct Item Graph output seam is nonblocking and outside P7.4; do not expand scope during verification.",
+    "P7.4-R1-F002: a hypothetical post-delivery Matter provenance fence failure happens after canonical Item Graph mutation; exactly-once replay makes retry safe. Do not repair unless an actual verifier failure proves otherwise.",
+    "P7.4-R1-F003: contract-built committed MW5 seed fixture is accepted for P7.4; do not rewrite it during verification."
+  ],
+  "verifier_must_not": [
+    "modify or repair runtime source",
+    "modify the accepted Reviewer result",
+    "reuse Implementer or Reviewer worktree",
+    "substitute a non-exact Godot build",
+    "run with an external 180-second process cap that can truncate M6 recovery processes",
+    "treat Reviewer PASS or prior focused passes as fresh Verifier execution",
+    "merge runtime PR #396",
+    "authorize RUNTIME_FEATURE_MERGE",
+    "claim P7.4 COMPLETE_MERGED",
+    "start P7.5 before P7.4 merge"
+  ],
+  "success_opens_only": "human RUNTIME_FEATURE_MERGE gate for exact runtime PR #396 subject"
+}
