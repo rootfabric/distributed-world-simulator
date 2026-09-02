@@ -232,7 +232,8 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 			candidates = CandidateKernel.build_presorted_unsorted(
 				chunk, generation,
 				String(immutable_context["schema"]), String(immutable_context["version"]),
-				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]),
+				true)
 		else:
 			candidates = CandidateKernel.build_all(
 				chunk, generation,
