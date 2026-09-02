@@ -46,7 +46,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_is_current_but_runtime_is_fail_closed(self) -> None:
         self.assertEqual(P7, self.policy["current_checkpoint"])
-        self.assertEqual("P7_5_IN_PROGRESS", self.policy["current_phase"])
+        self.assertEqual("P7_5_COMPLETE_MERGED_P7_6_NEXT", self.policy["current_phase"])
         routing = self.scheduler["v0_product_train_routing"]
         self.assertEqual(P7, routing["current_checkpoint"])
         self.assertTrue(routing["runtime_mutation_allowed_now"])
