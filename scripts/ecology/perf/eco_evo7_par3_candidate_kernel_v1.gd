@@ -87,6 +87,35 @@ static func candidate_pool_hash(candidates: Array, schema: String, version: Stri
 	hashes.sort()
 	return (schema + "|" + version + "|candidate-pool|" + "|".join(hashes)).sha256_text()
 
+
+## PERF2.4 R7 optimized seam.
+##
+## The generation executor has already canonicalized the full candidate array
+## by candidate_hash immediately before pool hashing. Re-sorting the extracted
+## hashes here is therefore redundant. This function preserves the exact
+## canonical payload while validating monotonic candidate_hash order and then
+## hashes that already-canonical sequence directly.
+static func candidate_pool_hash_from_canonical_order(
+	candidates: Array,
+	schema: String,
+	version: String
+) -> String:
+	var hashes := PackedStringArray()
+	var previous_hash := ""
+	var has_previous := false
+	for value in candidates:
+		if not value is Dictionary:
+			return ""
+		var candidate_hash_value := String(Dictionary(value).get("candidate_hash", ""))
+		if candidate_hash_value.is_empty():
+			return ""
+		if has_previous and candidate_hash_value < previous_hash:
+			return ""
+		hashes.append(candidate_hash_value)
+		previous_hash = candidate_hash_value
+		has_previous = true
+	return (schema + "|" + version + "|candidate-pool|" + "|".join(hashes)).sha256_text()
+
 ## Canonical sort: by candidate_hash (frozen LS3.3 ordering).
 static func sort_candidates(candidates: Array[Dictionary]) -> Array[Dictionary]:
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
