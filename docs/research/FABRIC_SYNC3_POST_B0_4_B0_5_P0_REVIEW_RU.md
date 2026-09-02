@@ -6,7 +6,9 @@
 FABRIC.SYNC3
 B0.4-D / B0.5-P0 INTERFACE SYNCHRONIZATION
 
-DECISION CANDIDATE
+REVIEW CLOSED
+EXACT-HEAD CANONICAL DOUBLE PASS
+PROJECT CONTROL PASS
 
 B0.4 DYNAMIC ROM:
 CLOSED / HUMAN ACCEPTED
@@ -15,7 +17,7 @@ B0.5-P0 HYBRID PREFLIGHT:
 CLOSED
 
 B0.5 EXECUTABLE HYBRID REDUCTION:
-AUTHORIZED AFTER THIS SYNC CLOSES
+AUTHORIZED
 
 BRIDGE-2 EXECUTABLE:
 CONDITIONALLY AUTHORIZED AFTER B0.5-A CLOSES
@@ -251,3 +253,73 @@ B0.5-A EXECUTABLE HYBRID BAKE
 ```
 
 This is a research architecture authorization, not production acceptance.
+
+
+## 10. Closure evidence — 2026-09-03
+
+```text
+SYNC-3 implementation/test HEAD:
+fb996d3692ea147749fc655636749d6db276a842
+
+TREE:
+34e5cf62efb44a6caae0136f1564c156b1b1520d
+
+Project Control:
+33643607663 SUCCESS
+
+Exact Source Carrier:
+33643607859 SUCCESS
+artifact 9851825435
+
+exact bundle SHA-256:
+8332d10fbbb5ce3ff5f6184eada8dd4fc5b0d8eb2e78a628c4c189871f07f5f8
+
+Portable Godot smoke:
+33643607671 SUCCESS
+
+canonical Linux double:
+4.7.1.stable.double.custom_build.a13da4feb
+
+binary SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+fresh import:
+PASS / exit 0 / fatal markers 0
+
+B0.4-D focused:
+233/233 PASS
+
+B0.5-P0 focused:
+63/63 PASS
+
+SYNC-3 focused:
+66/66 PASS
+
+SYNC-3 deterministic second run:
+66/66 PASS
+
+tracked status:
+CLEAN
+
+git diff --check:
+PASS
+```
+
+Final qualification:
+
+```text
+FABRIC.SYNC3
+POST-B0.4 / B0.5-P0 SYNCHRONIZATION REVIEW
+CLOSED
+
+B0.5-A EXECUTABLE HYBRID BAKE:
+AUTHORIZED / NEXT
+
+FABRIC0.19:
+NOT AUTHORIZED
+
+BRIDGE-2:
+CONDITIONALLY AUTHORIZED AFTER B0.5-A CLOSED
+
+NOT PRODUCTION ACCEPTED
+```
