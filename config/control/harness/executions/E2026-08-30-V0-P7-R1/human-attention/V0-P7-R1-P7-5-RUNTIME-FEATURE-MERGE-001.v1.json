@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-5-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "risk_class": "CRITICAL",
+  "reason": "P7.5 exact runtime candidate completed Fresh Independent Reviewer R2 PASS and Fresh Independent Linux Verifier R1 VERIFIED with canonical Linux double Godot and full repository-owned gate GREEN, so policy requires an explicit Human RUNTIME_FEATURE_MERGE decision.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for exact runtime PR #435 subject HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 / TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for PR #435 at the exact reviewed/verified HEAD/TREE.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE and leave PR #435 unmerged."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for PR #435 at the exact reviewed/verified HEAD/TREE.",
+  "recommendation_reason": "Reviewer R2 PASS; Fresh Independent Linux Verifier R1 VERIFIED; canonical Linux gate exit 0 with 16/16 required stages PASS, 17/17 logs, zero five-pattern fatal matches, exact Linux double Godot identity, tracked-clean before/after; runtime/reviewer/verifier Project Control runs SUCCESS.",
+  "blast_radius": [
+    "Adds P7.5 two-client convergence composition over existing canonical Matter, Item Graph, MW6/MW7, M7 replica and RL2/RL3 representation seams.",
+    "Includes only the already-reviewed bounded M7 replica compatibility repair authorized for scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd and tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd.",
+    "Keeps canonical Matter, Item Graph, authority, persistence, receipt/replay, interest and representation ownership unchanged.",
+    "Does not accept whole P7; P7.6 and later checkpoints remain closed until separate control authorization."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-WO-001-P7-5-M7-REPLICA-REPAIR-AMENDMENT-001.v1.json"
+  ],
+  "status": "RESOLVED",
+  "resolution": "Human operator explicitly approved the P7.5 RUNTIME_FEATURE_MERGE decision in the control session by directing 'делай мердж'. Approval authorizes merge only for exact runtime PR #435 at HEAD ba8210a8d3cddf084a573f2e862982d3f76c37c9 / TREE f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53 after the recorded Reviewer R2 PASS and Fresh Independent Linux Verifier R1 VERIFIED gates. Whole P7 remains IN_PROGRESS and P7.6 is not authorized by this approval."
+}
