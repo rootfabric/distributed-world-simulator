@@ -1,0 +1,176 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-5-LINUX-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "actor": "EXTERNAL_LINUX_RUNTIME_EXECUTION_AGENT_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "host": {
+    "os": "Ubuntu 26.04 LTS (Resolute Raccoon)",
+    "kernel": "Linux",
+    "arch": "x86_64",
+    "git": "2.53.0"
+  },
+  "subject": {
+    "branch_state": "DETACHED_FRESH_WORKTREE",
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "runtime_pr": 435,
+    "runtime_project_control_run": 33523992483,
+    "runtime_project_control": "SUCCESS"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "command": "bash RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh \"$GODOT_BIN\" \"ba8210a8d3cddf084a573f2e862982d3f76c37c9\"",
+  "external_timeout_used": false,
+  "exit_code": 0,
+  "stages": [
+    {
+      "name": "P7.5 two-client convergence",
+      "result": "PASS",
+      "assertions": 85,
+      "failures": 0
+    },
+    {
+      "name": "M7 aggregate replica compatibility",
+      "result": "PASS",
+      "assertions": 5,
+      "failures": 0
+    },
+    {
+      "name": "P7.4 seed",
+      "result": "PASS",
+      "assertions": 21,
+      "failures": 0
+    },
+    {
+      "name": "P7.4 recover-deliver",
+      "result": "PASS",
+      "assertions": 25,
+      "failures": 0
+    },
+    {
+      "name": "P7.4 recover-replay",
+      "result": "PASS",
+      "assertions": 17,
+      "failures": 0
+    },
+    {
+      "name": "P7.3 material batch to Item Graph",
+      "result": "PASS",
+      "assertions": 116,
+      "failures": 0
+    },
+    {
+      "name": "P7.2 lunar Matter bubble",
+      "result": "PASS",
+      "assertions": 53,
+      "failures": 0
+    },
+    {
+      "name": "P7.2 lunar surface seam",
+      "result": "PASS",
+      "assertions": 50,
+      "failures": 0
+    },
+    {
+      "name": "P7.1 authority gate",
+      "result": "PASS",
+      "assertions": 83,
+      "failures": 0
+    },
+    {
+      "name": "P7.1 Tool->MW4 integration",
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0
+    },
+    {
+      "name": "P5 two-client replication/reconnect",
+      "result": "PASS",
+      "assertions": null,
+      "failures": 0
+    },
+    {
+      "name": "P5 mining tool",
+      "result": "PASS",
+      "assertions": 36,
+      "failures": 0
+    },
+    {
+      "name": "MW6 matter network authority",
+      "result": "PASS",
+      "assertions": 130,
+      "failures": 0
+    },
+    {
+      "name": "MW7 matter interest replication",
+      "result": "PASS",
+      "assertions": 114,
+      "failures": 0
+    },
+    {
+      "name": "RL2 Matter multiresolution meshing",
+      "result": "PASS",
+      "assertions": 153,
+      "failures": 0
+    },
+    {
+      "name": "RL3 representation-aware network streaming",
+      "result": "PASS",
+      "assertions": 175,
+      "failures": 0
+    }
+  ],
+  "logs": {
+    "expected": 17,
+    "present": 17,
+    "fatal_patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to instantiate an autoload",
+      "Failed to load script"
+    ],
+    "fatal_matches": 0,
+    "sha256": {
+      "import.log": "bdf725a7103de2914890536c0080d9a37b2964a50a0cf86a486bdf20a5ac20a2",
+      "m7-aggregate-replica.log": "6352c11a243c95ed140842b5f6d959c1671d81f5ee9e08183a733bcbc1f73ed9",
+      "mw6.log": "28b3ed9ab60e85da8a5e8d306a55cc533edf3a1879fedbd57be27276a52b4cea",
+      "mw7.log": "c0e1444fd7948905c4c5e2dd46c62df661d752752dced8cfe9eaa5e130f9336b",
+      "p5-mining-tool.log": "1374baf2629311b68f27ce482c5be1bab43eaa4d532f2f0db2b43fdb70f9504f",
+      "p5-two-client.log": "986ca712797b277e9f91d4a7230f762a88741e6ef6898417aabdfaa7ee3befde",
+      "p7-1-authority.log": "77ffd429e7d03433166095c434a1b367145dea0bd4c6a9ab64251baf89d1ed5a",
+      "p7-1-tool-to-mw4.log": "72ad94ff3f393ef625c9e9099f0b3b6bd4b824006d70d2bcac1cc24ebc8e4120",
+      "p7-2-bubble.log": "0ca8f6a1c13b9cde46159fe120724f4faf7f2aad9f7ae074eb6bc3176b2a21b0",
+      "p7-2-seam.log": "b192fa141012d7bc00e14d1d98389e6a968eb78917a83f65d2bb73116393a520",
+      "p7-3-material-delivery.log": "d62533fd082eff19d8162a00926ba9f402754935413f29ace50fd9b8fe969e11",
+      "p7-4-recover-deliver.log": "216b9d5451840e4bdd91ff5c0782bf994869ef613f5279d969741cad99bd88",
+      "p7-4-recover-replay.log": "e1082c6ad8e00d03d7f5c442186662a4af028ab39acdf71f6d1d8a557e06840d",
+      "p7-4-seed.log": "b234d78140c270f32c8d637fbd11caf212d106b7fb27c16b316d3a1477a235ce",
+      "p7-5-two-client.log": "f666f42d72588f211bc23472f783d8434b855ba7eea93ee9f40cf57a0b6f7ad5",
+      "rl2.log": "000eeea911e6ddb1274e19f752506875d1b917d0a5d2c67c7091328b0c8b42ee",
+      "rl3.log": "359329cb88546fa12761b55c1690dc8f936a3e5ae923dcf4dc90bc3f58ca6665"
+    }
+  },
+  "final_banner": [
+    "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN",
+    "EXACT_HEAD=ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "GODOT=4.7.1.stable.double.custom_build.a13da4feb"
+  ],
+  "tracked_clean_before": true,
+  "tracked_clean_after": true,
+  "untracked_only": [
+    "Godot-generated .gd.uid sidecars"
+  ],
+  "nonfatal_observations": [
+    "[breakpoint_runtime] could not listen on 127.0.0.1:9081 from breakpoint_mcp addon; not in fatal patterns and did not affect gate result."
+  ],
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
