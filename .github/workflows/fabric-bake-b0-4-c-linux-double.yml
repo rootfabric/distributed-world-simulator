@@ -1,0 +1,92 @@
+name: FABRIC-BAKE B0.4-C Linux Double Verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+
+    env:
+      TARGET_HEAD: 412fc9bb38873dbe17671677fc1d0f44748b7889
+      TARGET_TREE: fe81908fa44b3f8810b0d1d0908327faf0d845e2
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+    steps:
+      - name: Checkout exact frozen runtime subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.TARGET_HEAD }}
+
+      - name: Assert exact Git subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$TARGET_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TARGET_TREE"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          godot_bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot_bin"
+          version="$("$godot_bin" --version | head -n1 | tr -d '\r')"
+          test "$version" = "$EXPECTED_GODOT_VERSION"
+          sha="$(sha256sum "$godot_bin" | awk '{print $1}')"
+          test "$sha" = "$EXPECTED_GODOT_SHA256"
+          echo "path=$godot_bin" >> "$GITHUB_OUTPUT"
+          echo "GODOT=$version"
+          echo "GODOT_SHA256=$sha"
+
+      - name: Fresh exact import
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifacts/fabric-bake-b0-4-c-linux-double
+          BREAKPOINT_RUNTIME_DISABLED=1 "$GODOT_BIN"             --headless             --editor             --path .             --log-file artifacts/fabric-bake-b0-4-c-linux-double/import.log             --import
+
+      - name: Run authoritative B0.4-C closure chain
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -Eeuo pipefail
+          export GODOT="$GODOT_BIN"
+          ./RUN_FABRIC_BAKE_B0_4_C_CLOSURE_TESTS.sh 2>&1 | tee artifacts/fabric-bake-b0-4-c-linux-double/closure.log
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' artifacts/fabric-bake-b0-4-c-linux-double/closure.log; then
+            echo "fatal Godot script marker detected" >&2
+            exit 4
+          fi
+
+      - name: Verify final exact clean state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test "$(git rev-parse HEAD)" = "$TARGET_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TARGET_TREE"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo "FABRIC-BAKE B0.4-C LINUX DOUBLE VERIFICATION: PASS"
+
+      - name: Upload verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-4-c-linux-double-logs
+          path: artifacts/fabric-bake-b0-4-c-linux-double
+          if-no-files-found: warn
+          retention-days: 7
