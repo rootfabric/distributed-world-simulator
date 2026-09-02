@@ -42,6 +42,28 @@ class RegionResolver extends RefCounted:
 		return {} if region_id.is_empty() else {"region_id": region_id}
 
 
+class VariantResolver extends RefCounted:
+	var response = null
+
+	func _init(value) -> void:
+		response = value
+
+	func resolve_brick_address(_address: Dictionary):
+		return response
+
+
+class VariantSingleExecutor extends RefCounted:
+	var response = null
+	var calls := 0
+
+	func _init(value) -> void:
+		response = value
+
+	func execute(_request: Dictionary):
+		calls += 1
+		return response
+
+
 class ReservationInterlock extends RefCounted:
 	var reservations: Dictionary = {}
 
@@ -163,6 +185,8 @@ func _init() -> void:
 	_test_true_multi_region_routes_only_to_mw10()
 	_test_reservation_interlocks()
 	_test_plan_binding_and_zero_ownership()
+	_test_invalid_resolver_results_fail_closed()
+	_test_malformed_downstream_results_fail_closed()
 	if failures.is_empty():
 		print("V0-P7.6 seam + multi-region composition: PASS (%d assertions, 0 failures)" % assertions)
 		quit(0)
@@ -304,6 +328,21 @@ func _test_plan_binding_and_zero_ownership() -> void:
 		"P7_6_MW10_PLAN_REGION_SET_MISMATCH",
 		"MW10 plan exact region-set binding"
 	)
+	var wrong_body_request := _request(
+		[fx.address_a, fx.address_b],
+		"matter-operation/p7-6-wrong-body",
+		"body/p7-6-other"
+	)
+	var correct_body_plan: Dictionary = MW10Fixture.plan_ab(
+		"matter-transaction/p7-6-wrong-body",
+		wrong_body_request.operation_id,
+		30
+	)
+	_assert_error(
+		fx.router.execute_mutation(wrong_body_request, correct_body_plan, 30),
+		"P7_6_MW10_PLAN_BODY_MISMATCH",
+		"MW10 plan exact body binding"
+	)
 	_assert(fx.mw10.calls == 0, "invalid plans never reach MW10 coordinator")
 
 	var report: Dictionary = fx.router.contract_report()
@@ -315,6 +354,64 @@ func _test_plan_binding_and_zero_ownership() -> void:
 		_assert(not bool(report.get(field, true)), "P7.6 owns no %s" % field)
 	_assert(not bool(report.get("actor_seam_implies_mw10", true)), "contract forbids seam=>MW10 shortcut")
 	_assert(int(report.get("mw10_minimum_target_regions", 0)) == 2, "MW10 requires at least two target regions")
+
+
+func _test_invalid_resolver_results_fail_closed() -> void:
+	var fx := _fixture()
+	var cases: Array = [
+		{"response": null, "error": "P7_6_MW8_REGION_RESOLUTION_INVALID_RESULT", "label": "null resolver result"},
+		{"response": [], "error": "P7_6_MW8_REGION_RESOLUTION_INVALID_RESULT", "label": "array resolver result"},
+		{"response": {}, "error": "P7_6_MATTER_TARGET_OUTSIDE_AUTHORITY_REGIONS", "label": "empty resolver result"},
+	]
+	for case in cases:
+		var resolver := VariantResolver.new(case["response"])
+		var router := Router.new()
+		var configured: Dictionary = router.configure(
+			fx.product_gate,
+			resolver,
+			Callable(fx.single, "execute"),
+			Callable(fx.handoff, "execute"),
+			fx.mw10,
+			fx.interlock
+		)
+		_assert_ok(configured, "%s config" % String(case["label"]))
+		var result: Dictionary = router.execute_mutation(_request([fx.address_a]))
+		_assert_error(result, String(case["error"]), String(case["label"]))
+	_assert(fx.single.calls == 0, "invalid resolver results never reach single-region executor")
+	_assert(fx.mw10.calls == 0, "invalid resolver results never reach MW10")
+
+
+func _test_malformed_downstream_results_fail_closed() -> void:
+	var fx := _fixture()
+	var malformed: Array = [
+		{"response": null, "label": "null executor result"},
+		{"response": [], "label": "array executor result"},
+		{"response": {"status": "ok"}, "label": "dictionary without success"},
+	]
+	for index in range(malformed.size()):
+		var case: Dictionary = malformed[index]
+		var executor := VariantSingleExecutor.new(case["response"])
+		var router := Router.new()
+		var configured: Dictionary = router.configure(
+			fx.product_gate,
+			fx.resolver,
+			Callable(executor, "execute"),
+			Callable(fx.handoff, "execute"),
+			fx.mw10,
+			fx.interlock
+		)
+		_assert_ok(configured, "%s config" % String(case["label"]))
+		var result: Dictionary = router.execute_mutation(_request(
+			[fx.address_a],
+			"matter-operation/p7-6-malformed-%d" % index
+		))
+		_assert_error(
+			result,
+			"P7_6_SINGLE_REGION_EXECUTOR_INVALID_RESULT",
+			String(case["label"])
+		)
+		_assert(executor.calls == 1, "%s reaches executor exactly once" % String(case["label"]))
+	_assert(fx.mw10.calls == 0, "malformed single-region executor results never invoke MW10")
 
 
 func _fixture() -> Dictionary:
@@ -362,7 +459,8 @@ func _fixture() -> Dictionary:
 
 func _request(
 	targets: Array,
-	operation_id: String = "matter-operation/p7-6-single"
+	operation_id: String = "matter-operation/p7-6-single",
+	body_id: String = MW10Fixture.BODY_ID
 ) -> Dictionary:
 	var expected: Dictionary = {}
 	for raw_address in targets:
@@ -370,7 +468,7 @@ func _request(
 		expected[String(address["address_id"])] = 0
 	var value: Dictionary = MatterRequest.create({
 		"operation_id": operation_id,
-		"body_id": MW10Fixture.BODY_ID,
+		"body_id": body_id,
 		"actor_id": PLAYER_ENTITY,
 		"tool_id": TOOL,
 		"operation_type": "EXCAVATE",
