@@ -3,10 +3,12 @@
 ## Статус
 
 ```text
-IMPLEMENTATION CANDIDATE
+RESEARCH CHECKPOINT CLOSED
+HUMAN ACCEPTED
+EXACT-HEAD CANONICAL DOUBLE PASS
+PROJECT CONTROL PASS
 B0.4-A/B/C CONTRACTS PRESERVED
 CANONICAL PHYSICAL SOURCE OWNERSHIP PRESERVED
-INDEPENDENT EXACT-HEAD DOUBLE VERIFICATION REQUIRED FOR CLOSED
 NOT PRODUCTION ACCEPTED
 ```
 
@@ -157,3 +159,45 @@ B0.4-D не означает:
 - ownership canonical state внутри ROM.
 
 После независимого закрытия B0.4-D следующий архитектурный checkpoint — `FABRIC SYNC-3`, затем `B0.5-A Executable Hybrid Bake`.
+
+
+## Closure boundary — 2026-09-03
+
+```text
+exact implementation/test HEAD:
+6ffae6ee61fd1b7b33ad3da9de0d4f15b86a5aeb
+
+TREE:
+a20d545cfb9fc9d887230b8ee1abd2f5222841e5
+
+B0.4-D focused:
+233/233 PASS
+
+second focused exact run:
+233/233 PASS
+
+full B0.4-D closure chain:
+PASS
+
+Project Control:
+33638883780 attempt 3 SUCCESS
+
+Exact Source Carrier:
+33638883790 SUCCESS
+artifact 9849947301
+
+canonical Linux double Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+binary SHA-256:
+bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+```
+
+Human project authorization explicitly accepted this research checkpoint after the exact
+technical evidence above. This is not production acceptance.
+
+Parent B0.4 Dynamic ROM R1 is therefore considered CLOSED for the purposes of the next
+architecture synchronization checkpoint.
+
+Next:
+`FABRIC SYNC-3`.
