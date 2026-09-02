@@ -8,6 +8,7 @@ const ErrorEnvelope = preload("res://scripts/research/fabric_bake0/error_envelop
 const ConservationEnvelope = preload("res://scripts/research/fabric_bake0/conservation_envelope_v1.gd")
 const RuntimeErrorEstimator = preload("res://scripts/research/fabric_bake0/runtime_error_estimator_v1.gd")
 const RefinementGuard = preload("res://scripts/research/fabric_bake0/refinement_guard_v1.gd")
+const RuntimeCertificate = preload("res://scripts/research/fabric_bake0/rom_runtime_certificate_v1.gd")
 
 const SCHEMA := "planet_simulator.fabric_bake_dynamic_rom_runtime_certification.v1"
 const MODE := "DYNAMIC_ROM_R1"
@@ -25,6 +26,10 @@ const MAX_STEP_S := 0.02
 const EFFORT_ERROR_ABS_MAX := 0.01
 const ERROR_GUARD_TRIGGER := 0.008
 const ERROR_GUARD_UNCERTAINTY := 0.0005
+const STATE_ERROR_C_NORM_MAX := 0.01
+const PORT_ERROR_ABS_MAX := ERROR_GUARD_TRIGGER
+const ENERGY_ERROR_ABS_MAX := 0.02
+const CONSTRAINT_ERROR_ABS_MAX := 1.0e-12
 
 const FIELDS: Array[String] = [
 	"schema", "rom_descriptor_hash", "full_model_hash", "source_binding_checksum",
@@ -276,6 +281,8 @@ static func estimate_after_step(
 		"residual_dual_c_norm": residual_dual_c_norm,
 		"flow_l1": flow_l1,
 		"elapsed_s": elapsed_s,
+		"constraint_error_bound": 0.0,
+		"constraint_mode": "NO_ACTIVE_CONSTRAINTS",
 		"runtime_domain": {
 			"source_frontier_hash": String(full_model["source_binding"]["frontier_hash"]),
 			"fabric_graph_hash": String(full_model["source_binding"]["fabric_graph_hash"]),
@@ -290,10 +297,61 @@ static func estimate_after_step(
 		},
 	})
 
+
+static func runtime_component_thresholds() -> Dictionary:
+	return {
+		"state": STATE_ERROR_C_NORM_MAX,
+		"port": PORT_ERROR_ABS_MAX,
+		"energy": ENERGY_ERROR_ABS_MAX,
+		"constraint": CONSTRAINT_ERROR_ABS_MAX,
+	}
+
+static func build_runtime_certificate(certification: Dictionary, estimate_details: Dictionary) -> Dictionary:
+	var checked := validate(certification)
+	if not bool(checked.get("success", false)):
+		return checked
+	if typeof(estimate_details.get("estimator")) != TYPE_DICTIONARY:
+		return Utils.failure("DYNAMIC_ROM_RUNTIME_CERTIFICATE_ESTIMATOR_MISSING")
+	checked = RuntimeErrorEstimator.validate(estimate_details["estimator"])
+	if not bool(checked.get("success", false)):
+		return checked
+	for field in ["error_c_norm_bound", "residual_dual_c_norm", "elapsed_s", "constraint_error_bound"]:
+		if not Utils.is_non_negative_number(estimate_details.get(field)):
+			return Utils.failure("DYNAMIC_ROM_RUNTIME_CERTIFICATE_OBSERVABLE_MISSING", {"field": field})
+	var estimator: Dictionary = estimate_details["estimator"]
+	var runtime_certificate := RuntimeCertificate.create(
+		String(certification["source_binding_checksum"]),
+		String(certification["rom_descriptor_hash"]),
+		float(estimate_details["residual_dual_c_norm"]),
+		float(estimate_details["error_c_norm_bound"]),
+		float(estimator["effort_error_bound"]),
+		float(estimator["energy_drift_bound"]),
+		float(estimate_details["constraint_error_bound"]),
+		runtime_component_thresholds(),
+		float(estimate_details["elapsed_s"])
+	)
+	if runtime_certificate.is_empty():
+		return Utils.failure("DYNAMIC_ROM_RUNTIME_CERTIFICATE_CREATE_FAILED")
+	return Utils.success({"certificate": runtime_certificate})
+
 static func evaluate_runtime(certification: Dictionary, estimate_details: Dictionary) -> Dictionary:
 	var checked := validate(certification)
 	if not bool(checked.get("success", false)):
 		return checked
+	var built_runtime_certificate := build_runtime_certificate(certification, estimate_details)
+	if not bool(built_runtime_certificate.get("success", false)):
+		return Utils.failure("DYNAMIC_ROM_RUNTIME_CERTIFICATE_UNAVAILABLE", {
+			"cause": built_runtime_certificate.get("error_code", "CERTIFICATE_UNAVAILABLE"),
+			"fallback": "FULL_OR_LOCAL_UNBAKE",
+		})
+	var runtime_certificate: Dictionary = built_runtime_certificate["details"]["certificate"]
+	if not bool(runtime_certificate["valid"]):
+		return Utils.failure("DYNAMIC_ROM_RUNTIME_CERTIFICATE_INVALID", {
+			"cause": runtime_certificate["reason"],
+			"worst_component": runtime_certificate["worst_component"],
+			"relative_residual": runtime_certificate["relative_residual"],
+			"fallback": "FULL_OR_LOCAL_UNBAKE",
+		})
 	if typeof(estimate_details.get("runtime_domain")) != TYPE_DICTIONARY:
 		return Utils.failure("INVALID_DYNAMIC_ROM_RUNTIME_DOMAIN")
 	checked = ValidatedDomain.contains(certification["validated_domain"], estimate_details["runtime_domain"])
@@ -324,6 +382,7 @@ static func evaluate_runtime(certification: Dictionary, estimate_details: Dictio
 		"minimum_safe_fidelity": "APPROXIMATE",
 		"remaining_validity_margin": estimate_details["estimator"]["remaining_validity_margin"],
 		"guard_margin": estimate_details["estimator"]["guard_margin"],
+		"runtime_certificate": runtime_certificate,
 	})
 
 static func _reconstruct(rom: Dictionary, reduced_values: Array) -> Array:
