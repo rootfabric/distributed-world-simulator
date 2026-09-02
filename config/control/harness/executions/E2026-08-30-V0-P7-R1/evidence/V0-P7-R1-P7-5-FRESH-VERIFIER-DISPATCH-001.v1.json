@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.verifier_dispatch.v1",
+  "dispatch_id": "V0-P7-R1-P7-5-FRESH-VERIFIER-DISPATCH-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "stage": "P7.5_TWO_CLIENT_CONVERGENCE",
+  "verifier_role": "FRESH_INDEPENDENT_VERIFIER_P7_5_R1",
+  "platform": "LINUX_X86_64_EXACT_DOUBLE_GODOT",
+  "parent_reviewer_result": {
+    "canonical_commit": "d4c1b36556140e8338482c251442fd8d12806022",
+    "semantic_result_commit": "572134032e824c4c03806dca3056da252b461cdd",
+    "reviewer": "FRESH_INDEPENDENT_REVIEWER_P7_5_R2",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "project_control_run": 33618553668,
+    "project_control": "SUCCESS"
+  },
+  "runtime_subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "pr": 435,
+    "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "project_control_run": 33523992483,
+    "project_control": "SUCCESS"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "execution_contract": {
+    "fresh_detached_worktree": true,
+    "canonical_runner": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh",
+    "required_stage_count": 16,
+    "required_log_count": 17,
+    "fatal_pattern_count": 5,
+    "external_timeout_forbidden": true,
+    "inherited_execution_evidence_forbidden": true,
+    "tracked_clean_before_after": true
+  },
+  "result_contract": {
+    "branch": "control/v0-p7-5-fresh-verifier-result-r1",
+    "file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "only_result_file_may_be_added": true,
+    "merge_authorized": false
+  },
+  "status": "DISPATCHED_PENDING_PROJECT_CONTROL"
+}
