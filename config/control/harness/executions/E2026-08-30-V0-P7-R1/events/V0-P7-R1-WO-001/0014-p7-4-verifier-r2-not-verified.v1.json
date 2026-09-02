@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0014",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 14,
+  "event_type": "VERIFICATION_RESULT_RECORDED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-31T13:58:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/v0-p7-4-fresh-verifier-result-r2",
+  "head_sha": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+  "predicate": "INDEPENDENT_VERIFIER_FRESH_EXACT_SOURCE_R2",
+  "command": "RECORD_P7_4_VERIFIER_R2_NOT_VERIFIED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-002.v1.json"
+  ],
+  "summary": "Fresh Independent Ubuntu Verifier R2 recorded NOT_VERIFIED / INSUFFICIENT_ENVIRONMENT with execution_performed=false. Exact single-file result commit bbe791580bdc36729668d15208cdf9902ee1ebc8 is Project Control-green (33399175472). This is not runtime RED and contributes zero runtime execution evidence.",
+  "blocker": "VERIFIER_ENVIRONMENT_NOT_READY"
+}

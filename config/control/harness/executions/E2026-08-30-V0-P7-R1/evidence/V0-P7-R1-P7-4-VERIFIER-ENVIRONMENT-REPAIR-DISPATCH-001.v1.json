@@ -1,0 +1,90 @@
+{
+  "schema": "distributed_world_simulator.harness_environment_repair_dispatch.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_VERIFIER_ENVIRONMENT_REPAIR",
+  "risk_class": "CRITICAL",
+  "runtime_subject": {
+    "pr": 396,
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "frozen": true
+  },
+  "verifier_history": [
+    {
+      "round": "R1",
+      "result_commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+      "verdict": "NOT_VERIFIED",
+      "reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false
+    },
+    {
+      "round": "R2",
+      "result_commit": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+      "result_pr": 416,
+      "result_project_control": "33399175472 = SUCCESS",
+      "verdict": "NOT_VERIFIED",
+      "reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false
+    }
+  ],
+  "root_cause": "Exact Linux double Godot was validated on the controller but not physically transferred into any verifier-reachable Ubuntu environment before R2 dispatch.",
+  "controller_artifact": {
+    "filename": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "binary_relative_path": "tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "controller_revalidated_after_r2": true
+  },
+  "required_environment_ready_predicates": [
+    "Ubuntu userspace is reachable by the environment-preparation actor.",
+    "Exact archive is physically present in that Ubuntu environment at a recorded path.",
+    "Archive SHA-256 equals d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92.",
+    "Exact linuxbsd double Godot is installed without substitution.",
+    "Installed binary SHA-256 equals bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7.",
+    "Installed binary --version first line equals 4.7.1.stable.double.custom_build.a13da4feb.",
+    "Ubuntu git can access rootfabric/distributed-world-simulator.",
+    "A fresh detached worktree for runtime HEAD 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 can be materialized.",
+    "Detached worktree tree equals 1efad34a075af63169c48dd5055c2537c8d7e6ef.",
+    "Tracked worktree is clean.",
+    "The canonical runner file RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh is present and executable.",
+    "No P7.4 runtime gate stage is executed during environment repair."
+  ],
+  "environment_ready_result": {
+    "required_path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-ENVIRONMENT-READY-001.v1.json",
+    "required_branch": "control/v0-p7-4-verifier-environment-ready-r1",
+    "branch_base_rule": "Create from exact final environment-repair dispatch HEAD.",
+    "allowed_statuses": [
+      "READY",
+      "NOT_READY"
+    ],
+    "required_ready_fields": [
+      "ubuntu_environment_type",
+      "ubuntu_release",
+      "kernel",
+      "archive_path",
+      "archive_sha256",
+      "godot_path",
+      "godot_sha256",
+      "godot_version",
+      "repo_path",
+      "detached_worktree_path",
+      "runtime_head_sha",
+      "runtime_tree_sha",
+      "tracked_clean",
+      "runner_present",
+      "runtime_gate_executed"
+    ]
+  },
+  "r3_dispatch_rule": "Fresh Ubuntu Verifier R3 MUST NOT be dispatched until ENVIRONMENT-READY-001 is durable with status READY and Project Control is SUCCESS.",
+  "forbidden": [
+    "dispatch R3 based only on controller-side archive existence",
+    "claim R1 or R2 as runtime execution evidence",
+    "use Windows Godot",
+    "modify runtime source",
+    "run the P7.4 gate during environment preparation",
+    "authorize merge"
+  ]
+}
