@@ -150,6 +150,8 @@ static func reproduce_bundle(
 	## repeated policy creation/deep-copy and repeated canonical SHA work only.
 	if not bool(validate_policy(effective_policy).get("success", false)):
 		return {}
+	if using_prepared_context and effective_policy != default_policy():
+		return {}
 
 	var kernel_context: Dictionary = {}
 	var evo7_policy_id := ""
