@@ -1,0 +1,49 @@
+name: P7.5 Ubuntu 24.04 Rootfs Handoff R1
+
+on:
+  push:
+    branches:
+      - validation/p7-5-ubuntu-rootfs-handoff-r1
+
+permissions:
+  contents: read
+
+jobs:
+  build-rootfs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Build Ubuntu 24.04.4 amd64 verifier rootfs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          image="ubuntu-base-24.04.4-base-amd64.tar.gz"
+          base_url="https://cdimages.ubuntu.com/ubuntu-base/releases/24.04/release"
+
+          mkdir -p download rootfs output
+          cd download
+          curl --fail --location --retry 3 --silent --show-error -O "$base_url/$image"
+          curl --fail --location --retry 3 --silent --show-error -O "$base_url/SHA256SUMS"
+          expected="$(awk -v f="$image" '$2 == f || $2 == ("*" f) { print $1; exit }' SHA256SUMS)"
+          test -n "$expected"
+          printf '%s  %s\n' "$expected" "$image" | sha256sum --check -
+          cd ..
+
+          tar --no-same-owner -xzf "download/$image" -C rootfs
+
+          install -D -m 0755 /usr/bin/git rootfs/usr/bin/git
+          while IFS= read -r lib; do
+            test -f "$lib" || continue
+            install -D -m 0755 "$lib" "rootfs$lib"
+          done < <(ldd /usr/bin/git | awk '/=> \/.* \(/ { print $3 } /^\// { print $1 }')
+
+          tar -C rootfs -czf output/ubuntu-24.04.4-p7-5-verifier-rootfs-amd64.tar.gz .
+          sha256sum output/ubuntu-24.04.4-p7-5-verifier-rootfs-amd64.tar.gz             | tee output/ubuntu-24.04.4-p7-5-verifier-rootfs-amd64.tar.gz.sha256
+
+      - name: Upload verifier rootfs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-24.04.4-p7-5-verifier-rootfs-amd64
+          path: output/
+          if-no-files-found: error
+          retention-days: 1
