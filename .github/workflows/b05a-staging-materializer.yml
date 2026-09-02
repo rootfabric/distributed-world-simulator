@@ -1,0 +1,36 @@
+name: B0.5-A staging materializer
+
+on:
+  push:
+    branches:
+      - research/fabric-bake0-5-a-staging-r1
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize tested B0.5-A patch
+        run: |
+          set -Eeuo pipefail
+          if [[ ! -f .tmp/b05a.patch.gz.b64 ]]; then
+            echo "patch payload not present yet"
+            exit 0
+          fi
+          base64 -d .tmp/b05a.patch.gz.b64 | gzip -dc > /tmp/b05a.patch
+          echo "patch_sha256=$(sha256sum /tmp/b05a.patch | awk '{print $1}')"
+          test "$(sha256sum /tmp/b05a.patch | awk '{print $1}')" = "0e587d04304352c074903cb8abb8ca5db65123e1c6f6d1f3838e4532782ae2f7"
+          git apply --index /tmp/b05a.patch
+          git rm -f .tmp/b05a.patch.gz.b64
+          git rm -f .github/workflows/b05a-staging-materializer.yml
+          git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "feat(fabric-bake): materialize B0.5-A executable hybrid bake"
+          git push origin HEAD:research/fabric-bake0-5-a-staging-r1
