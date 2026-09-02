@@ -4,6 +4,8 @@ const EarthWorld = preload("res://scripts/world/earth/procedural_earth_world.gd"
 const Contract = preload("res://scripts/ecology/perf/eco_evo7_perf2_measurement_contract_v1.gd")
 const StreamExecutor = preload("res://scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd")
 const CandidateKernel = preload("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
+const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
+const LineageKernel = preload("res://scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd")
 const RouteKernel = preload("res://scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd")
 const Profiler = preload("res://scripts/ecology/perf/eco_evo7_perf24_runtime_optimization_profiler_v1.gd")
 const Workbench = preload("res://scripts/ecology/shadow/eco_evo7_ls36_rule_workbench_v1.gd")
@@ -58,6 +60,20 @@ func _init() -> void:
 		"audit_generation_1": true,
 		"pipeline_mode": "UNKNOWN_PIPELINE",
 	}), "unknown pipeline mode fails closed")
+
+	var prepared_reproduction := CandidateKernel.prepare_default_reproduction_context()
+	_check(not prepared_reproduction.is_empty(), "R8 prepares frozen default reproduction context")
+	if not prepared_reproduction.is_empty():
+		var prepared_policy: Dictionary = Dictionary(prepared_reproduction.get("policy", {}))
+		var kernel_context: Dictionary = Dictionary(prepared_reproduction.get("kernel_context", {}))
+		var genome_policy: Dictionary = Dictionary(prepared_policy.get("genome_policy", {}))
+		_check(bool(LineageExtension.validate_policy(prepared_policy).get("success", false)), "R8 prepared EVO7 policy remains canonically valid")
+		_check(LineageExtension.policy_hash(prepared_policy) == String(prepared_reproduction.get("evo7_policy_hash", "")), "R8 prepared EVO7 policy hash equals canonical recomputation")
+		_check(bool(LineageKernel.validate_policy(genome_policy).get("success", false)), "R8 prepared genome policy remains canonically valid")
+		_check(LineageKernel.policy_hash(genome_policy) == String(kernel_context.get("policy_hash", "")), "R8 prepared genome policy hash equals canonical recomputation")
+		var malformed_policy := prepared_policy.duplicate(true)
+		malformed_policy["morphology_probability"] = 2.0
+		_check(not bool(LineageExtension.validate_policy(malformed_policy).get("success", false)), "R8 malformed prepared EVO7 policy fails canonical validation")
 
 	var world = EarthWorld.new()
 	root.add_child(world)
@@ -283,11 +299,21 @@ func _source_guards() -> void:
 	var candidate_source := FileAccess.get_file_as_string("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
 	var route_source := FileAccess.get_file_as_string("res://scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd")
 	var recruitment_source := FileAccess.get_file_as_string("res://scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd")
+	var lineage_extension_source := FileAccess.get_file_as_string("res://scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd")
+	var lineage_kernel_source := FileAccess.get_file_as_string("res://scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd")
 	var ls33_source := FileAccess.get_file_as_string("res://scripts/ecology/shadow/eco_evo7_ls33_dispersal_recruitment_v1.gd").to_lower()
 
 	_check(executor_source.contains('const PIPELINE_OPTIMIZED := "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"'), "optimized pipeline identifier source-frozen")
 	_check(executor_source.contains('config.get("pipeline_mode", PIPELINE_OPTIMIZED)'), "optimized pipeline is default setup mode")
 	_check(candidate_source.contains("static func build_presorted_unsorted("), "candidate kernel exposes presorted unsorted chunk seam")
+	_check(candidate_source.contains("static func prepare_default_reproduction_context()"), "R8 candidate kernel exposes prepared default reproduction context")
+	_check(executor_source.contains("_optimized_reproduction_context"), "R8 optimized executor owns prepared reproduction context")
+	_check(lineage_extension_source.count("static func reproduce_bundle(") == 1, "R8 retains one canonical EVO7 reproduce_bundle implementation")
+	_check(lineage_kernel_source.count("static func reproduce(") == 1, "R8 retains one canonical genome reproduce implementation")
+	_check(not lineage_extension_source.contains("reproduce_bundle_fast"), "R8 does not add a parallel fast EVO7 mutator")
+	_check(not lineage_kernel_source.contains("reproduce_fast"), "R8 does not add a parallel fast genome mutator")
+	_check(lineage_extension_source.contains("validate_policy(effective_policy)"), "R8 prepared EVO7 path retains canonical per-offspring policy validation")
+	_check(lineage_kernel_source.contains("validate_policy(effective_policy)"), "R8 prepared genome path retains canonical per-offspring policy validation")
 	_check(route_source.contains("static func build_in_input_order("), "route kernel exposes input-order chunk seam")
 	_check(executor_source.contains("_evaluate_recruitment_chunk_input_order("), "executor uses aligned recruitment chunk seam")
 	_check(executor_source.contains("_optimized_environment_sample_cache"), "R5 optimized path owns a persistent environment-sample cache")
