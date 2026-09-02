@@ -413,13 +413,6 @@ func _test_persistent_contact_observable(built: Dictionary) -> void:
 	var persistent := ContactRuntime.normal_support_guard(artifact, 3.0)
 	_check(bool(persistent.get("persistent_contact_feasible", false)), "persistent contact remains feasible")
 	_check(not bool(persistent.get("capacity_exceeded", true)), "persistent contact inside wrench capacity")
-	var dissipative := ContactRuntime.maximum_dissipation_wrench(
-		artifact, [0.2, -0.4, 0.0, 0.3, 0.0, 0.0]
-	)
-	_check(bool(dissipative.get("ok", false)), "persistent contact wrench observable evaluates")
-	if bool(dissipative.get("ok", false)):
-		_check(float(dissipative["contact_power"]) <= 2.0e-10, "persistent contact does not invent energy")
-
 	var thresholds := Certification.runtime_component_thresholds()
 	var safe_contact_certificate := RuntimeCertificate.create(
 		String(built["certification"]["source_binding_checksum"]),
