@@ -2,11 +2,11 @@
   "schema": "distributed_world_simulator.harness_evidence_map.v1",
   "work_order_id": "V0-P7-R1-WO-001",
   "program": "V0",
-  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
   "intent": "Close P7.5 only after exact-head Reviewer PASS, fresh independent canonical Linux full-gate verification, explicit Human RUNTIME_FEATURE_MERGE approval, and exact-subject canonical integration.",
-  "root_cause_or_reason": "P7.5 supplies production convergence proof over existing owners and introduces no new canonical owner.",
+  "root_cause_or_reason": "P7.5 supplies production convergence proof over existing owners and introduces no new canonical owner. Stage identity is recorded in the evidence intent and production summary while checkpoint identity remains the canonical Work Order checkpoint required by the Harness.",
   "changed_surfaces": [
     "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1",
     "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh",
