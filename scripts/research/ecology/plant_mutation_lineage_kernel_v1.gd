@@ -162,6 +162,8 @@ static func reproduce(
 	## by policy_hash(). This keeps malformed prepared policy fail-closed.
 	if not bool(validate_policy(effective_policy).get("success", false)):
 		return {}
+	if using_prepared_context and effective_policy != default_policy():
+		return {}
 
 	var policy_id := ""
 	if using_prepared_context:
