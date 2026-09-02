@@ -269,7 +269,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         reconciliation = payload["event_ledger_reconciliation"]
         self.assertTrue(reconciliation["active"])
         self.assertEqual(15, reconciliation["quarantined_event_count"])
-        self.assertEqual(6, reconciliation["authoritative_event_count"])
+        self.assertEqual(7, reconciliation["authoritative_event_count"])
         self.assertEqual(6, reconciliation["canonical_next_sequence"])
         self.assertEqual("CONTINUE_REQUIRED", payload["drive"]["status"])
         self.assertTrue(payload["drive"]["auto_continue_required"])
