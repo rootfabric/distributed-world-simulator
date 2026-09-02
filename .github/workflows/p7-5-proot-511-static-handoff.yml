@@ -1,0 +1,33 @@
+name: P7.5 PRoot 5.1.1 Static Handoff
+
+on:
+  push:
+    branches:
+      - validation/p7-5-ubuntu-rootfs-handoff-r1
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-proot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Fetch upstream static PRoot 5.1.1
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p output
+          url="https://github.com/proot-me/proot-static-build/releases/download/v5.1.1/proot_5.1.1_x86_64_rc2--no-seccomp"
+          curl --fail --location --retry 3 --silent --show-error "$url" -o output/proot_5.1.1_x86_64_rc2--no-seccomp
+          chmod +x output/proot_5.1.1_x86_64_rc2--no-seccomp
+          output/proot_5.1.1_x86_64_rc2--no-seccomp --version | head -n 3
+          sha256sum output/proot_5.1.1_x86_64_rc2--no-seccomp | tee output/proot_5.1.1_x86_64_rc2--no-seccomp.sha256
+
+      - name: Upload PRoot
+        uses: actions/upload-artifact@v4
+        with:
+          name: proot-5.1.1-static-x86_64
+          path: output/
+          if-no-files-found: error
+          retention-days: 1
