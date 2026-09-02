@@ -1,0 +1,46 @@
+name: P7.4 Dev Source Export R1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p7-4-dev-source-export-r1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact P7.4 development base
+        uses: actions/checkout@v4
+        with:
+          ref: e82278f482f6c9173bd93b8d696590f80f5dce30
+          fetch-depth: 0
+
+      - name: Assert exact base
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "e82278f482f6c9173bd93b8d696590f80f5dce30"
+          echo "P7_4_DEV_BASE=$(git rev-parse HEAD)"
+          echo "P7_4_DEV_TREE=$(git rev-parse HEAD^{tree})"
+
+      - name: Export full tracked source
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix=distributed-world-simulator/ \
+            -o p7-4-dev-source.tar.gz \
+            e82278f482f6c9173bd93b8d696590f80f5dce30
+          sha256sum p7-4-dev-source.tar.gz | tee p7-4-dev-source.sha256
+
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-4-dev-source-e82278f482f6
+          path: |
+            p7-4-dev-source.tar.gz
+            p7-4-dev-source.sha256
+          if-no-files-found: error
+          retention-days: 7
