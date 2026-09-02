@@ -286,7 +286,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
             "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
             manifest["mode"],
         )
-        self.assertEqual(14, len(manifest["quarantined_events"]))
+        self.assertEqual(15, len(manifest["quarantined_events"]))
         for record in manifest["quarantined_events"]:
             relative = record["path"]
             self.assertFalse(any(marker in relative for marker in ("*", "?", "[")), relative)
