@@ -1,4 +1,4 @@
-# V0 P7.5 — Fresh Independent Reviewer R1
+# V0 P7.5 — Fresh Independent Reviewer R2
 
 Role: FRESH_INDEPENDENT_REVIEWER. Read-only review. Do not act as Implementer or Verifier.
 
@@ -91,11 +91,11 @@ For PASS: required_fixes must be empty. INFO/nonblocking findings are allowed bu
 ## Durable result
 
 Create result branch:
-`control/v0-p7-5-fresh-reviewer-result-r1`
+`control/v0-p7-5-fresh-reviewer-result-r2`
 
 Create it from the exact reviewer dispatch HEAD, not from main or runtime.
 
 Add only:
-`config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-001.v1.json`
+`config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json`
 
 Do not change runtime. Do not merge PR #435. Do not start Verifier unless verdict is PASS.
