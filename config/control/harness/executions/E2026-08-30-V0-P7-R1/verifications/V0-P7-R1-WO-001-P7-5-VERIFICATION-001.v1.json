@@ -1,0 +1,223 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-5-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.5_TWO_CLIENT_CONVERGENCE",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_P7_5_R1",
+  "verifier_role_is_not_implementer_not_reviewer": true,
+  "inherited_execution_evidence": false,
+  "verdict": "NOT_VERIFIED",
+  "verdict_reason": "PLATFORM_DEVIATION_OPERATOR_DIRECTED_WINDOWS_CORROBORATION: the durable instruction requires a fresh canonical gate on Linux x86_64/Ubuntu userspace with the canonical Linux Godot double binary SHA256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7. That exact Linux binary/archive (godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz, archive SHA256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92) was not present in any reachable environment: WSL Ubuntu 24.04.2 userspace is clean (no archive, no installed binary), exhaustive local disk search (C:, D:, WSL ext4, Downloads, Recycle Bin, Docker images, harness caches) found no copy, GitHub releases have no artifacts, and the known LAN Linux host outenemy/192.168.0.15 refused key auth for root and yurig. On operator instruction the canonical gate was freshly executed on the Windows host with the exact-version Windows double build (wrapper SHA256 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5, matching the SHA the canonical Reviewer R2 recorded for the local Windows double build). The gate fully GREENed fresh in this Verifier session (16/16 stages, 17/17 logs, zero fatal matches, tracked-clean before/after, final banner exact), but because the required Linux platform and canonical Linux binary identity could not be satisfied, VERIFIED is not permitted. No runtime correctness RED was observed; this NOT_VERIFIED is an environment/identity completion failure, not a runtime FAIL.",
+  "is_runtime_fail": false,
+  "verdict_semantics_source": "V0-P7-R1-WO-001-P7-5-FRESH-VERIFIER-R1-INSTRUCTION-001.md: NOT_VERIFIED = environment/identity/execution could not be completed without a runtime correctness RED",
+  "dispatch": {
+    "branch": "control/v0-p7-5-fresh-verifier-dispatch-r1",
+    "head_sha": "2b74fed8020a0c35f70108187b2a035955a5bab0",
+    "pr": 454,
+    "pr_state": "open",
+    "instruction_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-FRESH-VERIFIER-R1-INSTRUCTION-001.md",
+    "dispatch_project_control": { "run_id": 33618810532, "status": "completed", "conclusion": "success", "head_sha": "2b74fed8020a0c35f70108187b2a035955a5bab0", "head_branch": "control/v0-p7-5-fresh-verifier-dispatch-r1" }
+  },
+  "control_parent_reviewer_gate": {
+    "reviewer_result_commit": "d4c1b36556140e8338482c251442fd8d12806022",
+    "reviewer_semantic_pass_source_commit": "572134032e824c4c03806dca3056da252b461cdd",
+    "reviewer_result_commit_is_child_of_semantic_source": true,
+    "reviewer_result_diff_scope": "exactly one file (config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json): review_type normalized to POST_BUILD_EXACT_HEAD_REVIEW plus format_correction block; verdict, required_fixes, reviewed HEAD/TREE unchanged",
+    "reviewer_dispatch_head": "3e4e945d1984219b0b83dcd95b2a753a42cae29b",
+    "reviewer_verdict": "PASS",
+    "reviewer_required_fixes": [],
+    "reviewer_result_project_control": { "run_id": 33618553668, "status": "completed", "conclusion": "success", "head_sha": "d4c1b36556140e8338482c251442fd8d12806022", "head_branch": "control/v0-p7-5-fresh-reviewer-result-r2" },
+    "reviewer_pass_not_inherited_as_verifier_pass": true
+  },
+  "subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "runtime_pr": 435,
+    "expected_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "expected_tree_sha": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "verified_head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "verified_tree_sha": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "origin_branch_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "origin_branch_is_not_newer_head": true,
+    "runtime_project_control": { "run_id": 33523992483, "status": "completed", "conclusion": "success", "head_sha": "ba8210a8d3cddf084a573f2e862982d3f76c37c9", "head_branch": "feature/v0-p7-bounded-terrain-mutation" },
+    "runtime_pr_unchanged": true,
+    "runtime_pr_state": "open",
+    "runtime_pr_merged": false,
+    "merge_performed": false
+  },
+  "required_platform": {
+    "required": "fresh Linux x86_64 / Ubuntu userspace",
+    "satisfied": false,
+    "available_linux_userspace": {
+      "type": "WSL2 Ubuntu",
+      "uname_s": "Linux",
+      "uname_m": "x86_64",
+      "os_release_pretty_name": "Ubuntu 24.04.2 LTS",
+      "os_release_id": "ubuntu",
+      "os_release_version_id": "24.04",
+      "git_version": "git version 2.43.0",
+      "state": "clean userspace; no distributed-world-simulator clone, no Godot archive, no Godot binary installed",
+      "github_connectivity": "verified HTTP 200 direct"
+    },
+    "canonical_linux_godot_binary_available": false,
+    "canonical_linux_godot_sha256_expected": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "canonical_linux_archive_expected_name": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz",
+    "canonical_linux_archive_sha256_expected": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "search_performed": [
+      "WSL Ubuntu ext4 filesystem (find / -xdev for godot archives/binaries): NONE",
+      "Windows C:\\ and D:\\ recursive searches for godot linuxbsd binaries, a13da4f archives, linux double tarballs: NONE",
+      "C:\\Users\\root\\Downloads, WSL ~/Downloads, Recycle Bin, Docker images/daemon, harness tool caches: NONE",
+      "GitHub releases for rootfabric/distributed-world-simulator: NO RELEASES",
+      "remote Linux host outenemy (192.168.0.15, mDNS confirmed): ssh key auth denied for root@ and yurig@"
+    ],
+    "operator_directive": "operator answered the binary-source question with: use the Windows build at C:\\Godot\\godot\\bin\\",
+    "deviation_accepted_by": "direct operator instruction during Verifier session"
+  },
+  "actual_execution_platform": {
+    "os": "Windows 10/11 x86_64 host (build details not kernel-relevant for this record)",
+    "platform_class": "WINDOWS_NOT_LINUX",
+    "is_required_platform": false,
+    "linux_user_space_used_for_gate": false
+  },
+  "godot": {
+    "required_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "required_platform_binary": "linuxbsd x86_64 double",
+    "required_sha256_canonical_linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "used_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "used_version_verified": true,
+    "used_platform_binary": "windows x86_64 double (custom_build a13da4feb, same custom build source tree C:\\Godot\\godot at Godot commit a13da4feb8d8aefc283c3763d33a2f170a18d541)",
+    "used_engine_binary_path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.exe",
+    "used_engine_binary_sha256": "6464da3576b51f5e2f7db74a20eb1d62507a8a7c8a2fa55b1e08e1a1d0d801a4",
+    "used_launcher_binary_path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+    "used_launcher_binary_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "used_launcher_matches_reviewer_recorded_windows_sha256": true,
+    "identity_check": "version exact-match PASSED; SHA256 equals the canonical Reviewer-recorded Windows double build launcher, does NOT equal the canonical Linux binary SHA256",
+    "identity_vs_instruction": "DEVIATION (platform binary, not Linux; SHA differs from canonical Linux value)",
+    "system_godot_used": false,
+    "single_precision_used": false,
+    "wine_used": false
+  },
+  "fresh_detached_worktree": {
+    "path": "C:\\distributed-world-simulator\\dws-p7-5-verifier-r1-win",
+    "created_fresh_this_session": true,
+    "reused_implementer_worktree": false,
+    "reused_prior_linux_runtime_validation_worktree": false,
+    "reused_reviewer_worktree": false,
+    "reused_p7_4_verifier_worktree": false,
+    "reused_prior_p7_5_worktree": false,
+    "note": "created via git worktree add --detach at exact frozen HEAD; removed and re-created once (identical recipe) so the recorded gate run started from a pristine checkout; first launcher attempt was aborted before any stage executed and left tracked tree clean"
+  },
+  "gate": {
+    "canonical_command_from_instruction": "export GODOT_BIN=\"$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64\" && bash RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh \"$GODOT_BIN\" \"ba8210a8d3cddf084a573f2e862982d3f76c37c9\"",
+    "canonical_command_executed": false,
+    "canonical_command_not_executed_reason": "canonical Linux binary unavailable in every reachable environment; operator directed Windows binary",
+    "repository_owned_runner_executed": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1 (repository-owned Windows twin of the canonical gate, same 16 stages, same five fatal patterns, same identity and tracked-clean fences, added by the exact runtime delta under review)",
+    "actual_command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\distributed-world-simulator\\dws-p7-5-verifier-r1-win\\RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.ps1 -GodotExe C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe -ExpectedHead ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "external_timeout_used": false,
+    "started_at_utc": "2026-09-02T11:33:21Z",
+    "finished_at_utc": "2026-09-02T11:37:18Z",
+    "exit_code": 0,
+    "exit_code_evidence_basis": "gate script reached its final statements (all three banner lines printed after the post-gate tracked-clean fence); stderr contains no PowerShell terminating error record (only nonfatal Godot exit-time resource notices); direct exit-code capture of the detached top-level shell was unavailable (Get-Process handle limitation), so exit 0 is established by PowerShell -File completion semantics plus banner-after-final-fence evidence",
+    "final_banner": [
+      "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN",
+      "EXACT_HEAD=ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+      "GODOT=4.7.1.stable.double.custom_build.a13da4feb"
+    ],
+    "final_banner_complete_and_exact": true,
+    "stage_subsets_instead_of_repository_gate": false,
+    "launcher_incident_recorded": "first launch with the GUI-subsystem engine exe returned control to the gate script before the import process created import.log, aborting the script before any stage; no stage executed in that attempt; worktree was force-removed and re-created fresh, and the gate was relaunched with the console-subsystem wrapper exe which blocks and relays exit codes correctly"
+  },
+  "stage_results": [
+    { "index": 1, "name": "P7.5 two-client convergence", "result": "PASS", "assertions": 85, "failures": 0, "log": "p7-5-two-client.log" },
+    { "index": 2, "name": "M7 aggregate replica compatibility", "result": "PASS", "assertions": 5, "failures": 0, "log": "m7-aggregate-replica.log" },
+    { "index": 3, "name": "P7.4 seed", "result": "PASS", "assertions": 21, "failures": 0, "log": "p7-4-seed.log" },
+    { "index": 4, "name": "P7.4 recover-deliver", "result": "PASS", "assertions": 25, "failures": 0, "log": "p7-4-recover-deliver.log" },
+    { "index": 5, "name": "P7.4 recover-replay", "result": "PASS", "assertions": 17, "failures": 0, "log": "p7-4-recover-replay.log" },
+    { "index": 6, "name": "P7.3 material batch to Item Graph", "result": "PASS", "assertions": 116, "failures": 0, "log": "p7-3-material-delivery.log" },
+    { "index": 7, "name": "P7.2 lunar Matter bubble", "result": "PASS", "assertions": 53, "failures": 0, "log": "p7-2-bubble.log" },
+    { "index": 8, "name": "P7.2 lunar surface seam", "result": "PASS", "assertions": 50, "failures": 0, "log": "p7-2-seam.log" },
+    { "index": 9, "name": "P7.1 authority gate", "result": "PASS", "assertions": 83, "failures": 0, "log": "p7-1-authority.log" },
+    { "index": 10, "name": "P7.1 Tool->MW4 integration", "result": "PASS", "assertions": 30, "failures": 0, "log": "p7-1-tool-to-mw4.log" },
+    { "index": 11, "name": "P5 two-client replication/reconnect", "result": "PASS", "assertions": 47, "failures": 0, "log": "p5-two-client.log", "note": "summary line not count-pinned by the gate runner (reviewer finding P7.5-R2-F001 class); log summary: 'V0-P5 two-client replication/reconnect: 47 assertions, 0 failures'" },
+    { "index": 12, "name": "P5 mining tool", "result": "PASS", "assertions": 36, "failures": 0, "log": "p5-mining-tool.log" },
+    { "index": 13, "name": "MW6 matter network authority", "result": "PASS", "assertions": 130, "failures": 0, "log": "mw6.log" },
+    { "index": 14, "name": "MW7 matter interest replication", "result": "PASS", "assertions": 114, "failures": 0, "log": "mw7.log" },
+    { "index": 15, "name": "RL2 Matter multiresolution meshing", "result": "PASS", "assertions": 153, "failures": 0, "log": "rl2.log" },
+    { "index": 16, "name": "RL3 representation-aware network streaming", "result": "PASS", "assertions": 175, "failures": 0, "log": "rl3.log" }
+  ],
+  "stage_results_all_match_required_counts": true,
+  "logs": {
+    "expected": 17,
+    "present": 17,
+    "artifact_dir": "C:\\distributed-world-simulator\\dws-p7-5-verifier-r1-win\\artifacts\\runtime\\v0-p7-5-two-client-convergence",
+    "fatal_patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to instantiate an autoload",
+      "Failed to load script"
+    ],
+    "fatal_matches": 0,
+    "fatal_scan_method": "independent Select-String -SimpleMatch scan over all 17 logs by the Verifier, in addition to the gate runner's own per-stage Assert-LogClean fences",
+    "sha256": {
+      "import.log": "b6aa575450fc15aedd4bb43449cb2bd545c54c38d526fba6d245af6f4bb123b7",
+      "m7-aggregate-replica.log": "ddb694d9f6f48f2b1d3c32d7db2310a33d6bd11f2a9cb467f27ac62f8aaf52ce",
+      "mw6.log": "5e9af681fead5a83c70772ab7930e0449a67eac847c7eb64a08d8a21be7c80d6",
+      "mw7.log": "d62de70f2a345ecad631902b0fcd9ef529dac0e0b859ba961ef6915ba5a631a4",
+      "p5-mining-tool.log": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511",
+      "p5-two-client.log": "1cbbb3a39a89b04075142e7fe0e1f10d0843a87bed8dd9b9d633badef5321528",
+      "p7-1-authority.log": "5b34c1a9f3ec7128d2fb082017ee5a84abca534809db25ebf550b6257060755e",
+      "p7-1-tool-to-mw4.log": "3b39acb8f9a0b9da37309b68b69e649f575c12cbe493ea4401c6b94c7ca2deb1",
+      "p7-2-bubble.log": "411deaa17c5c4310ca03d3d552d195f609485d0ac9bae1b926a7fec1633c7c28",
+      "p7-2-seam.log": "1f36fa85ae7adc731e29e1797bea5301aba3ff6ca435e7fc0c171ea993c3fb32",
+      "p7-3-material-delivery.log": "ecbbe14aecd801481de4f26bab2ed8b4b033a09c8177ca9086babeafd04a480e",
+      "p7-4-recover-deliver.log": "fd58ea4d1ead7c1ae293efcbeffb07a0e5c2b36a0ce9258e7998023d9023aa4c",
+      "p7-4-recover-replay.log": "8a22b4a4cf2cf140592f6c78b349a680db3fe25cafa05debfa8aa59576efa421",
+      "p7-4-seed.log": "0f3a1dec90d6a4fe83a89a9e06e1263c74faa81d7e86f7357bbf04edde62423d",
+      "p7-5-two-client.log": "e172d72b3eb591fef8b6cce3d1e95b4c51c45aedd96c4d577dbe26dc6b3be159",
+      "rl2.log": "7aa256ffbdee7d919ccf4adc92db5547d9acdaa8e9a3e3d4ac4a0d30a09e2cf7",
+      "rl3.log": "5df3e777bf19eabb4b04d9b069cbee4091e8ab6776ca3bf82856426abbeb9e56"
+    },
+    "nonfatal_observations": [
+      "exit-time ObjectDB/resource notices from some stage processes (WARNING: ObjectDB instances leaked at exit; ERROR: N resources still in use at exit) — same nonfatal class as reviewer finding P7.5-R2-F002; not in the fatal pattern set; did not affect any stage exit code or gate result"
+    ]
+  },
+  "cleanliness": {
+    "before_gate": { "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9", "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53", "tracked_clean": true },
+    "after_gate": { "head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9", "tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53", "tracked_clean": true },
+    "untracked_only": "Godot-generated .gd.uid sidecars, .godot cache, gate artifacts/ runtime outputs; no tracked mutation, no staging"
+  },
+  "independent_checks": {
+    "reviewer_r2_pass_exists_at_canonical_commit": true,
+    "reviewer_required_fixes_empty": true,
+    "runtime_pr_435_open_unmerged_head_exact": true,
+    "runtime_project_control_success_on_exact_head": true,
+    "reviewer_result_project_control_success_on_exact_commit": true,
+    "m7_repair_amendment_scope_exact": {
+      "amendment_id": "V0-P7-R1-WO-001-P7-5-M7-REPLICA-REPAIR-AMENDMENT-001",
+      "added_allowed_paths": [
+        "scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd",
+        "tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd"
+      ],
+      "broader_m7_surface_authorized": false
+    },
+    "human_runtime_feature_merge_for_pr_435_exists": false,
+    "human_attention_note": "only P7.2/P7.3/P7.4 RUNTIME_FEATURE_MERGE receipts exist (all quarantined as RESOLVED legacy stage-level decisions); no RUNTIME_FEATURE_MERGE approval for PR #435 anywhere in the control tree at dispatch HEAD",
+    "verifier_opened_human_approval": false
+  },
+  "boundaries_respected": {
+    "runtime_edited": false,
+    "runtime_repaired": false,
+    "runtime_rebased": false,
+    "pr_435_merged": false,
+    "human_approval_created": false,
+    "p7_5_complete_merged_declared": false,
+    "p7_6_started": false,
+    "result_branch_created_from": "dispatch HEAD 2b74fed8020a0c35f70108187b2a035955a5bab0 (not main, not runtime)"
+  },
+  "execution_performed": "FRESH_LOCAL_WINDOWS_CORROBORATION_FULL_GATE (all 16 stages + import executed fresh in this Verifier session on the Windows double build; nothing inherited from Implementer, prior Linux runtime execution agent, Reviewer, or any P7.4 verifier)",
+  "opened_by_verified_intent": null,
+  "note_on_VERIFIED_effect": "VERIFIED was not granted; therefore this result does NOT open the Human RUNTIME_FEATURE_MERGE decision for PR #435. A future fresh independent Linux Verifier execution with the canonical Linux binary (SHA256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7) remains REQUIRED before RUNTIME_FEATURE_MERGE can be considered.",
+  "verified_at_utc": "2026-09-02T11:40:31Z",
+  "verifier_session": "DSH session-81e399aa-cb65-431a-9165-1f97f03df9c7"
+}
