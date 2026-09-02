@@ -1,0 +1,74 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-6-activation-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.6 seam and true multi-region composition activation carrier.",
+  "purpose": "Activate P7.6 under the existing P7 Work Order and mutation lease without creating a second runtime worker, authority owner or transaction protocol.",
+  "expected_outcome": "P7.6 IN_PROGRESS on feature/v0-p7-bounded-terrain-mutation; runtime must route actor seam through SM1/MW8/MW9 and true multi-region mutation through MW10 only.",
+  "current_stage": "P7.6 Seam + Multi-Region Composition",
+  "stage_status": "P7_6_IN_PROGRESS",
+  "progress_note": "P7.5 is COMPLETE_MERGED; explicit human directive activates P7.6 from canonical main 86b7264dfc1a362c223468e21ece0da7d6de1c67.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.5 COMPLETE_MERGED",
+  "next_stage": "Implement and exact-test stateless P7.6 routing composition, then fresh independent Reviewer and Verifier.",
+  "parent_branch_or_checkpoint": "main @ 86b7264dfc1a362c223468e21ece0da7d6de1c67 / P7.5 closure + post-merge audit canonical",
+  "base_commit": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 COMPLETE_MERGED",
+    "P7.4 COMPLETE_MERGED",
+    "P7.5 COMPLETE_MERGED",
+    "P7.5 post-merge Project Control 33640168468 SUCCESS"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-6-activation-r1.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/v0-product-train-policy.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-ACTIVATION-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0007-p7-6-activated.v1.json"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/simulation/matter/handoff/**",
+    "scripts/simulation/matter/transactions/distributed/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/handoff/**",
+    "scripts/simulation/matter/transactions/distributed/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "focused": "PENDING_P7_6",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION",
+    "CROSS_REGION_TRANSACTION_DURABILITY",
+    "AGGREGATE_REVISION_OWNERSHIP"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

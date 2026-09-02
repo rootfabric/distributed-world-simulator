@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_6_activation_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-6-ACTIVATION-EVIDENCE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "substep": "P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "activation_branch": "control/v0-p7-6-activation-r1",
+  "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "explicit_human_directive": true,
+  "predecessor": {
+    "p7_5": "COMPLETE_MERGED",
+    "runtime_subject": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "runtime_merge": "f039acf94efd72bbdf34dd68a5801195ca282999",
+    "post_merge_audit_run": 33640168468
+  },
+  "activated_contract": {
+    "work_order_state": "IN_PROGRESS",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "mutation_lease": "SAME_SINGLE_P7_LEASE",
+    "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
+    "required_existing_owners": [
+      "SM1",
+      "MW4",
+      "MW8",
+      "MW9",
+      "MW10"
+    ],
+    "routing_rules": [
+      "ACTOR_HANDOFF_ONLY => SM1_MW8_MW9",
+      "ONE_TARGET_REGION => EXISTING_P7_1_TO_MW4",
+      "TWO_OR_MORE_TARGET_REGIONS => MW10",
+      "MW10_RESERVATION_INTERLOCK_REQUIRED"
+    ],
+    "forbidden_new_owners": [
+      "P7_AUTHORITY_DIRECTORY",
+      "P7_HANDOFF_COORDINATOR",
+      "P7_TRANSACTION_JOURNAL",
+      "P7_REPLAY_LEDGER",
+      "P7_PERSISTENCE",
+      "SECOND_MATTER_TRUTH"
+    ]
+  },
+  "verdict": "P7_6_ACTIVATION_DISPATCHED",
+  "next": "PROJECT_CONTROL_GREEN_THEN_RUNTIME_IMPLEMENTATION"
+}

@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_6_NEXT",
+  "state": "IN_PROGRESS_P7_6",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-09-02T13:45:00Z",
+  "updated_at_utc": "2026-09-02T14:31:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -165,13 +165,21 @@
       "fatal_matches": 0
     }
   },
-  "control_main_base": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
   "p7_6": {
-    "status": "NEXT",
+    "status": "IN_PROGRESS",
     "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "runtime_started": true,
+    "activated_by": "EXPLICIT_HUMAN_DIRECTIVE",
+    "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
     "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
-    "runtime_started": false,
-    "note": "Separate Director activation/implementation dispatch required; P7.5 closure does not start P7.6."
+    "routing_rules": [
+      "ACTOR_HANDOFF_ALONE_NEVER_STARTS_MW10",
+      "SINGLE_REGION_MUTATION_USES_EXISTING_P7_1_TO_MW4_PATH",
+      "MULTI_REGION_MUTATION_USES_EXISTING_MW10_TRANSACTION",
+      "MW10_RESERVATIONS_BLOCK_CONFLICTING_SINGLE_REGION_MUTATION_AND_HANDOFF",
+      "NO_P7_COORDINATION_PROTOCOL_OR_DURABLE_STATE"
+    ]
   }
 }

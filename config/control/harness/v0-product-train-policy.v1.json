@@ -1,12 +1,12 @@
 {
   "schema": "distributed_world_simulator.v0_product_train_policy.v1",
-  "policy_revision": "V0-P-2026-09-02-R11-P7-P7_5_COMPLETE",
+  "policy_revision": "V0-P-2026-09-02-R12-P7-P7_6_ACTIVE",
   "canonical_owner": "main",
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_5_COMPLETE_MERGED_P7_6_NEXT",
+  "current_phase": "P7_6_IN_PROGRESS",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "IN_PROGRESS_P7_6_NEXT",
+      "state": "IN_PROGRESS_P7_6",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -182,7 +182,7 @@
       "next": "V0_P8_FIRST_MOBILE_CONSTRUCT",
       "mandatory_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
       "execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "control_main_base": "f039acf94efd72bbdf34dd68a5801195ca282999",
+      "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
       "project_epoch": "E2026-08-30-V0-P7-R1",
       "work_order_id": "V0-P7-R1-WO-001",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -272,12 +272,13 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_6": {
-        "state": "NEXT",
+        "state": "IN_PROGRESS",
         "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
         "runtime_mutation_authorized": true,
-        "runtime_started": false,
-        "hard_rule": "SM1_MW8_MW9_FOR_SEAM_AND_MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION"
+        "runtime_started": true,
+        "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+        "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_WHEN_ONE_CANONICAL_MUTATION_SPANS_TWO_OR_MORE_REGIONS"
       }
     },
     {
@@ -372,7 +373,7 @@
     "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "accepted_predecessor_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
     "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-    "control_main_base": "f039acf94efd72bbdf34dd68a5801195ca282999",
+    "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -390,7 +391,7 @@
     "p7_3": "COMPLETE_MERGED",
     "p7_4": "COMPLETE_MERGED",
     "p7_5": "COMPLETE_MERGED",
-    "p7_6": "NEXT"
+    "p7_6": "IN_PROGRESS"
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",

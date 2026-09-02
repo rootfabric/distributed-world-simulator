@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-09-02-R13-P7_5_COMPLETE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-09-02-R14-P7_6_ACTIVE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_5_COMPLETE_P7_6_NEXT",
-  "authored_against_main": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "status": "PRIMARY_WORK_MAP_P7_6_IN_PROGRESS",
+  "authored_against_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "f039acf94efd72bbdf34dd68a5801195ca282999",
+  "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -239,10 +239,20 @@
     }
   },
   "p7_6": {
-    "state": "NEXT",
+    "state": "IN_PROGRESS",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
-    "hard_rule": "SM1_MW8_MW9_FOR_SEAM_AND_MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION",
-    "runtime_started": false
+    "runtime_started": true,
+    "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+    "hard_rule": "SM1_MW8_MW9_FOR_ACTOR_SEAM_AND_SINGLE_REGION_AUTHORITY; MW10_ONLY_FOR_ONE_MUTATION_TOUCHING_TWO_OR_MORE_REGIONS",
+    "required_proofs": [
+      "ACTOR_A_TO_B_HANDOFF_DOES_NOT_INVOKE_MW10",
+      "POST_HANDOFF_SINGLE_REGION_MUTATION_EXECUTES_ON_TARGET_REGION_VIA_EXISTING_MW4_PATH",
+      "TRANSFER_GAP_FENCES_SINGLE_AND_MULTI_REGION_MUTATIONS",
+      "TRUE_TWO_REGION_MUTATION_ROUTES_TO_EXISTING_MW10",
+      "MW10_RESERVATION_BLOCKS_CONFLICTING_HANDOFF_AND_SINGLE_REGION_MUTATION",
+      "MW10_PLAN_BOUND_TO_EXACT_OPERATION_BODY_AND_REGION_SET",
+      "NO_PRIVATE_P7_HANDOFF_TRANSACTION_DURABILITY_OR_REPLAY_STATE"
+    ]
   }
 }
