@@ -1,0 +1,99 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_dispatch_evidence.v1",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.4_PERSISTENCE_RESTART_COMPOSITION",
+  "risk_class": "CRITICAL",
+  "verifier_round": "R3",
+  "platform_amendment": {
+    "amendment_id": "V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001",
+    "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-VERIFIER-PLATFORM-AMENDMENT-001.v1.json",
+    "amendment_commit": "b31d657c9f6987167da233e1d6f212884a095a88",
+    "authority": "HUMAN_DIRECTIVE recorded 2026-08-31; widens the authorized verifier execution environment only"
+  },
+  "runtime": {
+    "pr": 396,
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "head_sha": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "tree_sha": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "base_sha": "0ad8c41f04b1d115da7de4a24a1c0390761c3ae1",
+    "project_control": "33374295322 = SUCCESS",
+    "origin_branch_head_reverified": "origin/feature/v0-p7-bounded-terrain-mutation = 9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292 (fetch 2026-08-31T19:32Z)",
+    "frozen": true
+  },
+  "prior_rounds": {
+    "verifier_r1": {
+      "result_commit": "38ddb506fed104ad419c1a94c9564a3ae6c654b4",
+      "verdict": "NOT_VERIFIED",
+      "verdict_reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false
+    },
+    "verifier_r2": {
+      "result_commit": "bbe791580bdc36729668d15208cdf9902ee1ebc8",
+      "verdict": "NOT_VERIFIED",
+      "verdict_reason": "INSUFFICIENT_ENVIRONMENT",
+      "execution_performed": false
+    },
+    "inherited_as_execution_evidence": false
+  },
+  "authorized_platforms": [
+    {
+      "platform": "windows_x86_64",
+      "selected_for_r3": true,
+      "engine": {
+        "canonical_console_binary": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "required_version": "4.7.1.stable.double.custom_build.a13da4feb",
+        "build_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+        "platform": "windows",
+        "target": "editor",
+        "arch": "x86_64",
+        "precision": "double",
+        "observed_sha256_console": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+        "control_surface_validation": "--version verified exactly and SHA-256 observed on the control surface on 2026-08-31"
+      },
+      "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+      "runner_mandatory": true
+    },
+    {
+      "platform": "ubuntu_x86_64_native_or_wsl2",
+      "selected_for_r3": false,
+      "status": "remains authorized and preferred for future rounds when an exact linuxbsd double engine is reachable",
+      "engine": "exact godot.linuxbsd.editor.double.x86_64, version 4.7.1.stable.double.custom_build.a13da4feb, binary SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.sh"
+    }
+  ],
+  "exact_execution_required": {
+    "runner": "RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1",
+    "runner_invocation": ".\\RUN_V0_P7_4_PERSISTENCE_RESTART_GATE.ps1 -GodotExe \"C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe\" -ExpectedHead \"9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292\"",
+    "expected_head": "9deb31b85a5f46ae30b5eeaa6e2e3a1f6a37f292",
+    "expected_tree": "1efad34a075af63169c48dd5055c2537c8d7e6ef",
+    "fresh_detached_worktree": true,
+    "fresh_import": true,
+    "stages_required": 16,
+    "logs_required": 17,
+    "fatal_log_scan": true,
+    "log_sha256_required": true,
+    "tracked_clean_before_after": true,
+    "no_external_timeout": true
+  },
+  "forbidden": [
+    "single-precision / standard Godot substitution",
+    "GUI executable as gate runner",
+    "manual invocation of Godot test scripts bypassing the repository-owned .ps1 runner",
+    "reusing R1 or R2 as execution evidence",
+    "runtime source modification, rebase, repair, or merge by the verifier",
+    "external 180-second timeout"
+  ],
+  "result_required": {
+    "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+    "schema": "distributed_world_simulator.harness_verification.v1",
+    "verification_id": "V0-P7-R1-WO-001-P7-4-VERIFICATION-003",
+    "verifier": "INDEPENDENT_VERIFIER_P7_4_FRESH_WINDOWS_EXACT_SOURCE_R3",
+    "verdicts": [
+      "VERIFIED",
+      "NOT_VERIFIED"
+    ],
+    "result_branch": "control/v0-p7-4-fresh-verifier-result-r3"
+  },
+  "success_opens_only": "Human RUNTIME_FEATURE_MERGE for exact runtime PR #396"
+}
