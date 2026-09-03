@@ -33,6 +33,7 @@ jobs:
           set -Eeuo pipefail
           for script in \
             res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd \
+            res://tests/research/fabric_bake0/fabric_bake_complex0_2000_exact_closure.gd \
             res://tests/research/fabric_bake0/fabric_bake_complex0_perf1_acceptance.gd \
             res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd
           do
