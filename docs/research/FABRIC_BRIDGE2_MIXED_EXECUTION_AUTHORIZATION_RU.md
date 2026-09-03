@@ -93,3 +93,43 @@ This authorization does not claim:
 - FABRIC0.19 necessity;
 - device-specific solver kernels;
 - production acceptance.
+
+---
+
+## Final exact closure — 2026-09-03
+
+```text
+exact review HEAD:
+6e0eae86860128dab47dc19375a20d40a21ad819
+
+TREE:
+1711636ee0028390c4ad65767ac90a57d3498814
+
+SYNC4 acceptance:
+122/122 PASS
+
+Project Control:
+33717946953 SUCCESS
+
+exact source carrier:
+33717947039 SUCCESS
+
+bundle SHA-256:
+ccd5d433ed6b089677e257eea9f43b2485627354dd18533f17aae1b1e280d80f
+```
+
+Final decision:
+
+```text
+FABRIC.SYNC4
+✅ CLOSED
+
+BRIDGE-2 EXECUTABLE RESEARCH
+✅ AUTHORIZED
+
+FABRIC0.19
+⛔ NOT AUTHORIZED
+```
+
+Canonical BRIDGE-2 implementation branch is created from the final SYNC4 closure
+carrier after docs/validation-only closure control passes.
