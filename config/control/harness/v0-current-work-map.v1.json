@@ -292,8 +292,8 @@
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
     ],
-    "runtime_head": "c9e758ecfe738f771fa261fa91df2627f91be686",
-    "runtime_tree": "6cbc2d2192f5a7fd30b5866ca4a670f7f9c2d1ad",
+    "runtime_head": "3410d4819baba5f28d67c826d609a1aa5d8ebc1a",
+    "runtime_tree": "5e75bc1f254cc9910f71591972b94a8c2eb3243b",
     "runtime_pr": 487,
     "substeps": {
       "P7.7-A": {
@@ -340,9 +340,21 @@
         "aggregate_batch_synthesized": false
       },
       "P7.7-C3": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "TRUE_A_B_END_TO_END_DIG",
-        "required_result": "REAL_CANONICAL_AIM_P7_6_CLASSIFICATION_MW10_REAL_PARTICIPANT_MATTER_COMMITS_DURABLE_PHYSICAL_OUTPUT_P7_3_ITEM_GRAPH_AND_A_B_VISIBLE_INVALIDATION"
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "real_moon_matter": true,
+        "real_p7_6": true,
+        "real_mw10": true,
+        "real_regional_mw4_commits": 2,
+        "shared_canonical_matter_store": true,
+        "p7_3_item_graph_delivery": true,
+        "replay_no_recommit": true
+      },
+      "P7.7-D": {
+        "status": "NEXT",
+        "scope": "MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+        "required_result": "CONFLICTING_DIG_DURING_ACTIVE_A_B_RESERVATION_FAILS_CLOSED_WITH_NO_PARTIAL_MATTER_MUTATION_NO_MATERIAL_DELIVERY_AND_NO_VISUAL_SUCCESS"
       }
     }
   }
