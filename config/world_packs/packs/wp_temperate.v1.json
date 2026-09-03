@@ -1,0 +1,54 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-TEMPERATE",
+  "version": "R1",
+  "display_name": "Temperate",
+  "environment": {
+    "sky_profile": "soft_blue_partly_clear",
+    "lighting_profile": "warm_neutral_sunlight",
+    "fog_profile": "light_atmosphere"
+  },
+  "materials": {
+    "surface_catalog": [
+      "soil_loam",
+      "grass_cover",
+      "river_rock",
+      "wet_soil_variant"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "simple_tree",
+      "grass_tuft",
+      "rounded_boulder",
+      "crate_wood"
+    ],
+    "scatter_profiles": [
+      "meadow_debris_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "wet_patch",
+      "worn_trail"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "landing_pad",
+      "tiny_outpost",
+      "wreck"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "day_breeze_placeholder",
+    "particle_profile": "pollen_drift_placeholder"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh"
+    ]
+  }
+}
