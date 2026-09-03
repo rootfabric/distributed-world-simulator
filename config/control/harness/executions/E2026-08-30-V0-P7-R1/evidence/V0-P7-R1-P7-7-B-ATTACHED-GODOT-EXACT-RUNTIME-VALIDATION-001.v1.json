@@ -1,0 +1,85 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-B-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-B",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "ecda8b68d53c01aa1a6ab960618bf0fdc5082d57",
+    "tree": "7d5a00e0d16baa3224d5d8a6937186e3d660c9bb",
+    "activation_base": "3853082f412d696fcb4790003a748983ebc56d42",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33719512472,
+    "runtime_project_control": "SUCCESS"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "stages": [
+    {
+      "name": "P7.7-B seam-near single-region",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 20,
+      "failures": 0,
+      "proofs": [
+        "x=-2.40 canonical target set remains only region A",
+        "x=-2.35 neighboring control target spans A+B",
+        "near-seam route is MW4_SINGLE_REGION",
+        "MW10 invocation count is zero"
+      ]
+    },
+    {
+      "name": "P7.7-A live Digging Playground regression",
+      "result": "PASS",
+      "assertions": 20,
+      "failures": 0
+    },
+    {
+      "name": "P7.7 focused regression",
+      "result": "PASS",
+      "assertions": 52,
+      "failures": 0
+    },
+    {
+      "name": "P7.1 authority regression",
+      "result": "PASS",
+      "assertions": 88,
+      "failures": 0
+    },
+    {
+      "name": "P7.3 material delivery regression",
+      "result": "PASS",
+      "assertions": 116,
+      "failures": 0
+    },
+    {
+      "name": "P7.6 seam/multi-region regression",
+      "result": "PASS",
+      "assertions": 106,
+      "failures": 0
+    }
+  ],
+  "logs": {
+    "p7_7_b_sha256": "f1648faeebccf73a3d2876d1f90fc57403bf8642a942a85ea5f5b38b5b23e6f2",
+    "fatal_patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "fatal_matches": 0
+  },
+  "final_head": "ecda8b68d53c01aa1a6ab960618bf0fdc5082d57",
+  "final_tree": "7d5a00e0d16baa3224d5d8a6937186e3d660c9bb",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
