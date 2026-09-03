@@ -1,0 +1,142 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_vis5_terrain_ecosystem_composition_audit.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-VIS5.0.R1",
+  "status": "IMPLEMENTED_AUDIT_CANDIDATE",
+  "base": {
+    "checkpoint": "VIS4.9 CLOSED",
+    "branch": "feature/eco-evo7-vis4-evolved-plant-morphology-r1",
+    "closure_head": "8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3",
+    "closure_tree": "8c423ea3579465cae398dd3297c97f0512acf825",
+    "exact_tested_vis4_9_head": "ab44617d8961add81a6c9f245c99d0b68eaeab52",
+    "exact_tested_vis4_9_tree": "9d543a3db4f54a676e9f25152785c36a72c56a30"
+  },
+  "authority": {
+    "presentation_only": true,
+    "ecology_write": false,
+    "genome_write": false,
+    "mutation_write": false,
+    "population_write": false,
+    "generation_write": false,
+    "terrain_write": false,
+    "persistence_write": false,
+    "network_write": false,
+    "perf2_4_write": false
+  },
+  "parallel_policy": {
+    "may_develop_while_perf2_4_verifies": true,
+    "perf2_sim_contract_unchanged": true,
+    "perf2_4_thresholds_unchanged": true,
+    "perf2_conv_final_join_required": true,
+    "play1_acceptance_before_perf2_conv": false
+  },
+  "accepted_truth_sources": [
+    {
+      "layer": "evolved_individual_plants",
+      "source": "VIS4.1 Descriptor V2 + VIS4.3 reconstruction + VIS4.4/4.9 PH5 renderer",
+      "canonical": true
+    },
+    {
+      "layer": "terrain_surface",
+      "source": "ProceduralEarthWorld.get_surface_point/get_surface_state",
+      "canonical": true
+    },
+    {
+      "layer": "visual_scatter",
+      "source": "VIS4.6 Grid Appearance Boundary",
+      "canonical": false
+    }
+  ],
+  "capability_donors": [
+    {
+      "id": "EARTH_PLACEMENT_GRASS",
+      "path": "scripts/world/vegetation/earth_placement_system.gd",
+      "reuse": [
+        "terrain-following transform generation",
+        "grass MultiMesh batching",
+        "grass asset/material path",
+        "local radius and LOD visibility mechanics"
+      ],
+      "truth_status": "PRESENTATION_DONOR_ONLY"
+    },
+    {
+      "id": "EVO4_B6_REGION",
+      "path": "scripts/labs/ecology/eco_evo4_b6_region_lab.gd",
+      "reuse": [
+        "dense MultiMesh region composition pattern",
+        "per-variant batching pattern"
+      ],
+      "truth_status": "LEGACY_PRESENTATION_DONOR_ONLY"
+    },
+    {
+      "id": "VIS4_PH5",
+      "path": "scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd",
+      "reuse": [
+        "source-bound evolved individual geometry",
+        "PH5 LOD and materialization cache",
+        "terrain surface placement",
+        "deterministic visual scatter"
+      ],
+      "truth_status": "ACCEPTED_EVOLVED_PLANT_PRESENTATION"
+    }
+  ],
+  "current_gaps": [
+    "procedural Earth grass_density is environment/scenery density, not an ECO.EVO7 evolved population count",
+    "procedural Earth tree placement would duplicate source-bound VIS4 PH5 plants if enabled in the same composition",
+    "legacy EVO4 B6 region materialization is manifest-driven and flat-plane based, not current EVO7 truth",
+    "VIS4 evolved plants follow terrain elevation but do not yet compose with dense ground-cover scenery in one controlled visual bridge",
+    "final PLAY1 performance acceptance remains owned by PERF2.CONV"
+  ],
+  "composition_policy": {
+    "canonical_macro_plants": "VIS4 PH5 only",
+    "procedural_trees_in_vis5": "FORBIDDEN_UNTIL_EXPLICIT_SOURCE_BINDING",
+    "ground_cover_before_ecological_binding": "ALLOWED_ONLY_AS_EXPLICIT_NONCANONICAL_SCENERY",
+    "rocks_before_ecological_binding": "ALLOWED_AS_TERRAIN_SCENERY",
+    "terrain_source": "ProceduralEarthWorld",
+    "surface_position": "get_surface_point(direction)",
+    "surface_state": "get_surface_state(direction, lod)",
+    "no_tree_bush_grass_taxonomy": true,
+    "no_random_shape_used_as_ecology_diversity": true
+  },
+  "implementation_ladder": [
+    {
+      "checkpoint": "VIS5.0",
+      "name": "Terrain / Ecosystem Composition Contract Audit",
+      "status": "CURRENT"
+    },
+    {
+      "checkpoint": "VIS5.1",
+      "name": "Terrain Surface Frame Adapter",
+      "status": "BLOCKED_BY_VIS5_0"
+    },
+    {
+      "checkpoint": "VIS5.2",
+      "name": "Noncanonical Ground-Cover Presentation Bridge",
+      "status": "BLOCKED_BY_VIS5_1"
+    },
+    {
+      "checkpoint": "VIS5.3",
+      "name": "Mixed-Strata Composition Lab",
+      "status": "BLOCKED_BY_VIS5_2"
+    },
+    {
+      "checkpoint": "VIS5.4",
+      "name": "Composition LOD / Streaming Local Gate",
+      "status": "BLOCKED_BY_VIS5_3"
+    },
+    {
+      "checkpoint": "VIS5.5",
+      "name": "Visual Evidence / Handoff to Integrated PLAY1 Gate",
+      "status": "BLOCKED_BY_VIS5_4_AND_PERF2_CONV_FOR_FINAL_ACCEPTANCE"
+    }
+  ],
+  "forbidden": [
+    "modify PERF2.4 thresholds or benchmark subject",
+    "replace VIS4 Descriptor V2 with procedural vegetation density",
+    "render procedural Earth trees as if they were evolved VIS4 individuals",
+    "treat decorative grass instances as biological individuals",
+    "introduce TREE_BUSH_GRASS canonical ecology classes",
+    "feed presentation RNG, LOD, grass placement or visual scatter back into ecology state",
+    "claim PLAY1 performance acceptance before PERF2.CONV"
+  ]
+}
