@@ -299,20 +299,20 @@ func _committed_pair() -> Dictionary:
 	var configured: Dictionary = bubble.configure({
 		"anchor_direction": [0.0, 1.0, 0.0],
 		"canonical_surface_radius_m": SURFACE_RADIUS_M,
-		"half_extent_m": 32.0,
-		"mutation_level": 2,
+		"half_extent_m": 8.0,
+		"mutation_level": 1,
 		"presentation_level": 1,
-		"max_level": 3,
-		"brick_interior_resolution": 8,
+		"max_level": 2,
+		"brick_interior_resolution": 4,
 		"ghost_border_samples": 1,
 	})
 	if not bool(configured.get("success", false)):
 		return {}
 	var center: Vector3 = bubble.anchor_body_fixed_m()
 	var query_result: Dictionary = bubble.query_service().raycast(
-		center + Vector3(0.0, 12.0, 0.0),
+		center + Vector3(0.0, 6.0, 0.0),
 		Vector3.DOWN,
-		24.0,
+		12.0,
 		bubble.mutation_level(),
 		0.25,
 		0.25,
