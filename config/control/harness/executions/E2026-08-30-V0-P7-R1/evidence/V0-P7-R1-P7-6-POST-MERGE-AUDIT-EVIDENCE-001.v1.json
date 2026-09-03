@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_6_post_merge_audit_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-6-POST-MERGE-AUDIT-EVIDENCE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+  "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+  "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "control_closure_merge": "3cbef7372bada7b0eda9c96c749167ed721141c3",
+  "canonical_main_audited": "3cbef7372bada7b0eda9c96c749167ed721141c3",
+  "audit_request_head": "8bf9035081ed43897e9629056d85668c5bb7426e",
+  "project_control_run": 33710956525,
+  "project_control_result": "SUCCESS",
+  "artifact_id": 9876880656,
+  "artifact_name": "project-control-report",
+  "github_artifact_digest": "sha256:e294c81e76e7fabc7c4ec6ff61536c9c6459b1b6d9c966b272f6f48c71641e0d",
+  "standard_pc0": "YELLOW_NON_RED",
+  "directional_pc0": "YELLOW_NON_RED",
+  "standard_overall_health": "YELLOW",
+  "directional_overall_health": "YELLOW",
+  "workflow_steps": {
+    "architecture_and_ownership_passport_compatibility": "PASS",
+    "h0_2_machine_checkpoint": "PASS",
+    "v0_product_checkpoint": "PASS",
+    "generation80_authorization_safety": "PASS",
+    "canonical_main_pc0_auditor": "PASS",
+    "canonical_main_directional_watch": "PASS"
+  },
+  "v0": {
+    "health": "YELLOW",
+    "branch": "control/v0-p7-6-closure-r1",
+    "current_stage": "P7.7 Graphical Digging Slice",
+    "stage_status": "P7_6_COMPLETE_MERGED_P7_7_NEXT",
+    "p7_6_dependency_drift_present": false,
+    "p7_6_critical_dependency_drift_present": false
+  },
+  "directional_findings": [
+    "YELLOW CH -> NX WATCH_HIT BLOCK",
+    "YELLOW NX -> ECO WATCH_HIT ADVISORY",
+    "YELLOW NX -> T WATCH_HIT BLOCK"
+  ],
+  "p7_6_control_repairs": {
+    "main_owned_frontier_repair": "V0-P7-R1-WO-001-P7-6-MAIN-OWNED-FRONTIER-REPAIR-001",
+    "noncanonical_closure_event_path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0021-p7-6-runtime-merged.v1.json",
+    "noncanonical_closure_event_action": "PRESERVED_BYTE_IDENTICALLY_AND_EXACT_PIN_QUARANTINED",
+    "event_blob_sha": "8aa4e83d7084fada714eaa6cfa4ab87699a7ad38",
+    "authoritative_event_ledger": "CONTIGUOUS_AND_VALID_AFTER_RECONCILIATION",
+    "drive": "PASS_EXIT_0_CONTINUE_REQUIRED",
+    "close": "PASS_EXIT_8_MISSION_EXIT_FORBIDDEN",
+    "closure_evidence_checkpoint_identity": "CANONICAL_V0_P7_BOUNDED_TERRAIN_MUTATION"
+  },
+  "runtime_mutation_during_closure_or_audit": false,
+  "auditor_rules_changed": false,
+  "watched_paths_weakened": false,
+  "dependency_rules_weakened": false,
+  "decision": "P7_6_POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED_PASS",
+  "p7_6": "COMPLETE_MERGED",
+  "p7": "IN_PROGRESS",
+  "next": "P7_7_GRAPHICAL_DIGGING_SLICE_NEXT_NOT_STARTED",
+  "audited_at_utc": "2026-09-03T03:19:59Z"
+}
