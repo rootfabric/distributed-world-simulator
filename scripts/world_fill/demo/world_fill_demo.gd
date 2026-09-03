@@ -7,6 +7,7 @@ const AtmosphereScript = preload("res://scripts/world_fill/ambience/world_fill_a
 const FeedbackScript = preload("res://scripts/world_fill/feedback/world_fill_event_feedback.gd")
 const PoiKitScript = preload("res://scripts/world_fill/landmarks/world_fill_poi_kit.gd")
 const MemoryScript = preload("res://scripts/world_fill/memory/world_fill_local_memory.gd")
+const SignKitScript = preload("res://scripts/world_fill/labels/world_fill_sign_kit.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -17,6 +18,7 @@ func _ready() -> void:
 	_build_feedback()
 	_build_landmarks()
 	_build_local_memory()
+	_build_signs()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -71,6 +73,14 @@ func _build_local_memory() -> void:
 	memory.record_observed({"type": "VISIT", "position": Vector3.ZERO}, 1)
 	memory.save()
 	print("WORLD_FILL_LOCAL_MEMORY=%d" % int(memory.memory_report().get("active", 0)))
+
+func _build_signs() -> void:
+	var kit := SignKitScript.new()
+	kit.name = "WorldFillSignKit"
+	add_child(kit)
+	kit.create_sign("MARE FRIGORIS-7 OUTPOST", Vector3(0.0, 0.0, -12.0), "location_name")
+	kit.create_sign("CRATE A-113", Vector3(4.0, 0.0, 2.0), "container_label")
+	print("WORLD_FILL_SIGNS=%d" % int(kit.sign_report().get("active", 0)))
 
 func _build_environment() -> void:
 	var atmosphere := AtmosphereScript.new()
