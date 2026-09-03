@@ -21,7 +21,7 @@ func spec() -> Dictionary:
 		},
 		"ambient": {
 			"color": Color(0.18, 0.2, 0.26),
-			"energy": 0.35,
+			"energy": 0.42,
 		},
 		"sun": {
 			"color": Color(1.0, 0.96, 0.9),

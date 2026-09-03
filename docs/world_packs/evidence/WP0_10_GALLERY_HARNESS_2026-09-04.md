@@ -44,7 +44,37 @@ Godot: `4.7.1.stable.double.custom_build.a13da4feb`, GL Compatibility, headless.
 
 ## Pending
 
-- screenshots and draw-call counts require a graphical run (MCP runtime
-  capture); recorded in the capture record as
-  `pending_graphical_mcp_capture`. Headless values above cover node/object
-  budgets only.
+- ~~screenshots and draw-call counts require a graphical run~~ — screenshots
+  captured 2026-09-04 via the sanctioned MCP path (see below); draw-call
+  counters still require a graphics-profiling pass and stay pending.
+
+## MCP graphical capture (2026-09-04)
+
+Managed runtime session through `breakpoint-mcp` (loopback bridges only,
+double console binary):
+
+- gallery booted graphically, pads mode captured; live `focus_pack(<id>)`
+  switching driven via `runtime_call_method`; one screenshot per pack saved to
+  `artifacts/world_packs_mcp/` (gitignored temp evidence):
+  `gallery_pads.png`, `focus_wp_moon_industrial.png`, `focus_wp_mars_dust.png`,
+  `focus_wp_frozen.png`, `focus_wp_volcanic.png`, `focus_wp_temperate.png`,
+  `focus_wp_alien_wetland.png`;
+- all six focus sentinels `WORLD_PACKS_GALLERY_FOCUS=<pack>` observed in the
+  managed process console output; `runtime_get_tree` confirmed pad nodes.
+
+### Findings and fixes applied the same day
+
+1. Moon star dome was invisible (albedo color multiplied the noise texture to
+   black) — replaced by deterministic MultiMesh star points (`WP_Stars`).
+2. `Label3D.font_outline_color` does not exist (`outline_modulate` is the
+   actual property); the invalid assignment silently killed every label —
+   fixed with `outline_modulate` + dark outline for readability on light skies.
+3. Volcanic fog density (0.028) swallowed the pad at gallery camera range —
+   reduced to 0.01, sun/ambient raised; Frozen 0.02→0.012, Wetland
+   0.035→0.022, Temperate sky wash reduced (sky_affect 0.6→0.35).
+4. Focus-mode camera moved closer (0,13,20) so a pad fills the frame.
+5. Scatter rocks read as "eggs" — y-flattening strengthened and Mars/Volcanic
+   scale_max reduced.
+
+Post-fix headless gates all PASS (`WORLD PACKS WP0.10: PASS`), and the
+re-capture confirmed labels, stars and per-pack readability.

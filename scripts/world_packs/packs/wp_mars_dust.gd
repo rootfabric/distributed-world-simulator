@@ -46,7 +46,7 @@ func spec() -> Dictionary:
 			"count": 120,
 			"area": Vector2(12.0, 12.0),
 			"scale_min": 0.15,
-			"scale_max": 1.0,
+			"scale_max": 0.7,
 			"color_a": Color(0.42, 0.18, 0.08),
 			"color_b": Color(0.6, 0.3, 0.14),
 			"roughness": 1.0,

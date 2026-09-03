@@ -33,6 +33,7 @@ func _ready() -> void:
 			return
 		_build_focus(_focus_pack)
 		print("WORLD_PACKS_GALLERY_PACKS=1")
+		_build_camera(true)
 	else:
 		_build_neutral_environment()
 		var offset: int = 0
@@ -40,8 +41,23 @@ func _ready() -> void:
 			_build_pad(pack_ids.size(), offset, pack_id)
 			offset += 1
 		print("WORLD_PACKS_GALLERY_PACKS=%d" % pack_ids.size())
-	_build_camera()
+		_build_camera(false)
 	print("WORLD_PACKS_GALLERY_READY")
+
+
+## MCP driver entry (WP0.10 graphical capture): rebuild the gallery live in
+## focus mode for one pack and report via stdout sentinel.
+func focus_pack(pack_id: String) -> bool:
+	if not RegistryScript.has(pack_id):
+		return false
+	for child in get_children():
+		remove_child(child)
+		child.free()
+	_focus_pack = pack_id
+	_build_focus(pack_id)
+	_build_camera(true)
+	print("WORLD_PACKS_GALLERY_FOCUS=%s" % pack_id)
+	return true
 
 
 func _build_focus(pack_id: String) -> void:
@@ -94,13 +110,19 @@ func _add_label(position: Vector3, text: String) -> void:
 	label.font_size = 96
 	label.pixel_size = 0.01
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.outline_size = 32
+	label.outline_modulate = Color(0.0, 0.0, 0.0, 0.85)
 	label.position = position
 	add_child(label)
 
 
-func _build_camera() -> void:
+func _build_camera(focus: bool = false) -> void:
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 24.0, 34.0)
-	camera.look_at_from_position(camera.position, Vector3(0.0, 0.5, 0.0))
+	if focus:
+		camera.position = Vector3(0.0, 13.0, 20.0)
+		camera.look_at_from_position(camera.position, Vector3(0.0, 1.2, 0.0))
+	else:
+		camera.position = Vector3(0.0, 24.0, 34.0)
+		camera.look_at_from_position(camera.position, Vector3(0.0, 0.5, 0.0))
 	camera.current = true
 	add_child(camera)

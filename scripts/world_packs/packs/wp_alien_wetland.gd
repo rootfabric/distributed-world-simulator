@@ -32,8 +32,8 @@ func spec() -> Dictionary:
 		"fog": {
 			"enabled": true,
 			"color": Color(0.2, 0.35, 0.3),
-			"density": 0.035,
-			"sky_affect": 1.0,
+			"density": 0.022,
+			"sky_affect": 0.9,
 		},
 		"ground": {
 			"size": Vector2(14.0, 14.0),

@@ -81,11 +81,39 @@ func apply_environment(root: Node3D) -> void:
 		dome.mesh = dome_mesh
 		var dome_material := StandardMaterial3D.new()
 		dome_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		dome_material.albedo_texture = _noise_texture(int(s["seed"]) + 17, 0.045)
-		dome_material.albedo_color = Color(0.02, 0.02, 0.035)
+		dome_material.albedo_color = Color(0.012, 0.014, 0.022)
 		dome_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 		dome.material_override = dome_material
 		root.add_child(dome)
+
+		var star_count := int(sky.get("star_count", 240))
+		if star_count > 0:
+			var star_rng := RandomNumberGenerator.new()
+			star_rng.seed = int(s["seed"]) + 17
+			var star_mesh := SphereMesh.new()
+			star_mesh.radius = 0.55
+			star_mesh.height = 1.1
+			star_mesh.radial_segments = 6
+			star_mesh.rings = 3
+			var star_multi := MultiMesh.new()
+			star_multi.transform_format = MultiMesh.TRANSFORM_3D
+			star_multi.mesh = star_mesh
+			star_multi.instance_count = star_count
+			for index in range(star_count):
+				var direction := Vector3(
+					star_rng.randf_range(-1.0, 1.0),
+					star_rng.randf_range(0.05, 1.0),
+					star_rng.randf_range(-1.0, 1.0)
+				).normalized()
+				var star_basis := Basis().scaled(Vector3.ONE * star_rng.randf_range(0.5, 1.6))
+				star_multi.set_instance_transform(index, Transform3D(star_basis, direction * 205.0))
+			var stars := MultiMeshInstance3D.new()
+			stars.name = "WP_Stars"
+			stars.multimesh = star_multi
+			var star_material := StandardMaterial3D.new()
+			star_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			stars.material_override = star_material
+			root.add_child(stars)
 
 	var sun := DirectionalLight3D.new()
 	sun.name = "WP_Sun"
@@ -190,7 +218,7 @@ func _build_scatter(pad: Node3D, s: Dictionary) -> void:
 		var basis := Basis(
 			Vector3.UP,
 			rng.randf_range(0.0, TAU)
-		).scaled(Vector3(scale, scale * rng.randf_range(0.45, 0.8), scale))
+		).scaled(Vector3(scale, scale * rng.randf_range(0.35, 0.6), scale))
 		multi_mesh.set_instance_transform(index, Transform3D(basis, position))
 		multi_mesh.set_instance_color(index, color_a.lerp(color_b, rng.randf()))
 

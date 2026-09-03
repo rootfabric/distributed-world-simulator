@@ -21,19 +21,19 @@ func spec() -> Dictionary:
 		},
 		"ambient": {
 			"color": Color(0.35, 0.18, 0.12),
-			"energy": 0.45,
+			"energy": 0.55,
 		},
 		"sun": {
 			"color": Color(1.0, 0.5, 0.3),
-			"energy": 0.55,
+			"energy": 0.85,
 			"rotation_degrees": Vector3(-35.0, 10.0, 0.0),
 			"shadow": true,
 		},
 		"fog": {
 			"enabled": true,
 			"color": Color(0.12, 0.06, 0.05),
-			"density": 0.028,
-			"sky_affect": 1.0,
+			"density": 0.01,
+			"sky_affect": 0.9,
 		},
 		"ground": {
 			"size": Vector2(14.0, 14.0),
