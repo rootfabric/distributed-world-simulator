@@ -83,3 +83,4 @@ See:
 - `AGENT_CONTENT_SCOUT.md`
 - `config/world_packs/pack_schema.v1.json`
 - `evidence/WP0_1_SCHEMA_VALIDATION_2026-09-03.md`
+- `licenses/LEDGER.md` — mandatory provenance for any third-party asset

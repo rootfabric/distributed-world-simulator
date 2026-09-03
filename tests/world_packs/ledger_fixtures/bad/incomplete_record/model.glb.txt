@@ -1,0 +1,1 @@
+placeholder asset file whose directory has an incomplete SOURCE.md
