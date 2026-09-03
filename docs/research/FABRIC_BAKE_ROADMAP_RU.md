@@ -27,8 +27,8 @@ PRODUCTION                              ⛔ NOT ACCEPTED
 NEXT:
 BRIDGE-2 executable
   ├─ BRIDGE-2-A Mixed Representation Ownership Contract ✅ IMPLEMENTED CANDIDATE
-  ├─ BRIDGE-2-B Executable Mixed Subject ← NEXT
-  ├─ BRIDGE-2-C Cross-Representation Event Routing
+  ├─ BRIDGE-2-B Executable Mixed Subject ✅ IMPLEMENTED CANDIDATE
+  ├─ BRIDGE-2-C Cross-Representation Event Routing ← NEXT
   ├─ BRIDGE-2-D Invalidation / Refinement Ordering
   ├─ BRIDGE-2-E Deterministic Mixed Replay
   └─ BRIDGE-2-F / COMPLEX1B Powered Fence Mixed
