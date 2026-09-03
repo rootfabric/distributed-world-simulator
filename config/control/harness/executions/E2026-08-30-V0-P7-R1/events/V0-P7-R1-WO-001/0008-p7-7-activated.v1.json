@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-30-V0-P7-R1-V0-P7-R1-WO-001-0008-P7-7",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "sequence": 8,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-03T04:06:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-p7-bounded-terrain-mutation",
+  "head_sha": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+  "predicate": "V0_P7_P7_7_GRAPHICAL_DIGGING_SLICE_ACTIVATED",
+  "command": "CONTINUE_P7_AT_P7_7_AFTER_P7_6_COMPLETE_MERGED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-ACTIVATION-EVIDENCE-001.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md"
+  ],
+  "summary": "P7.7 GRAPHICAL_DIGGING_SLICE is activated under the same P7 Work Order, runtime branch and serialized mutation lease after P7.6 COMPLETE_MERGED and post-merge Project Control NON_RED. Digging Playground is mandatory with A-H matrix covering single-region MW4, seam-near single-region, true A+B MW10, reservation conflict, actor handoff without false MW10, exactly-once material delivery, second-client convergence, and replay/reconnect/restart stability. No new terrain, Matter, Item Graph, persistence, authority, transaction or network owner is authorized.",
+  "blocker": ""
+}

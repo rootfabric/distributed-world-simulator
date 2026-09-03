@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-09-03-R13-P7-P7_6_COMPLETE",
+  "policy_amendment_revision": "H0-PTRAIN-2026-09-03-R14-P7-P7_7_ACTIVE",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -51,7 +51,7 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_7_NEXT",
+    "current_phase": "P7_7_IN_PROGRESS",
     "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
@@ -181,11 +181,14 @@
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
     },
     "p7_7": {
-      "state": "NEXT",
+      "state": "IN_PROGRESS",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "scope": "GRAPHICAL_DIGGING_SLICE",
       "runtime_mutation_authorized": true,
-      "runtime_started": false,
+      "runtime_started": true,
+      "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+      "acceptance_stand": "DIGGING_PLAYGROUND",
+      "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
       "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH"
     }
   },
@@ -217,7 +220,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P7.5 is COMPLETE_MERGED. P7.6 is explicitly activated under the same single P7 runtime mutation lease and feature/v0-p7-bounded-terrain-mutation branch; no second runtime worker or canonical owner is introduced."
+    "reason": "P7.6 is COMPLETE_MERGED. P7.7 is explicitly activated under the same single P7 runtime mutation lease and feature/v0-p7-bounded-terrain-mutation branch; Digging Playground is the bounded acceptance stand and no second runtime worker or canonical owner is introduced."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
