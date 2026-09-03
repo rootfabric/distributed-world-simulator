@@ -54,7 +54,10 @@ jobs:
           "$GODOT" --headless --path . \
             --script res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd \
             2>&1 | tee /tmp/complex0.log
-          ! grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex0.log
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex0.log; then
+            echo "fatal Godot script marker detected in COMPLEX0" >&2
+            exit 4
+          fi
           grep -Fq 'FABRIC-BAKE COMPLEX0 Acceptance: PASS' /tmp/complex0.log
 
       - name: Run COMPLEX1A portable causal smoke
@@ -65,7 +68,10 @@ jobs:
           "$GODOT" --headless --path . \
             --script res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd \
             2>&1 | tee /tmp/complex1a.log
-          ! grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex1a.log
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex1a.log; then
+            echo "fatal Godot script marker detected in COMPLEX1A" >&2
+            exit 4
+          fi
           grep -Fq 'FABRIC-BAKE COMPLEX1A Acceptance: PASS' /tmp/complex1a.log
 
       - name: Record exact smoke identity
