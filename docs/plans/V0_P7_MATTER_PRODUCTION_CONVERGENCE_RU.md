@@ -5,7 +5,8 @@
 **Predecessor:** V0 SM1 ACCEPTED  
 **Accepted SM1 runtime:** `b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f`  
 **SM1 runtime merge:** `acb9379cacc413fc25a65117fb1627f5a01b9736`  
-**SM1 formal acceptance:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`
+**SM1 formal acceptance:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`  
+**Current canonical P7 stage:** `P7.6 SEAM_AND_MULTI_REGION_COMPOSITION`
 
 ## 1. Purpose
 
@@ -126,7 +127,7 @@ FINAL                V0 PLAYABLE SEAMLESS PLANET composition acceptance
 
 A green test fixture is never allowed to substitute for a missing production path.
 
-## 6. P7.2 — Bounded planetary Matter bubble — ← CURRENT
+## 6. P7.2 — Bounded planetary Matter bubble — ✅ COMPLETE_MERGED
 
 Reuse the migration path in `DYNAMIC_MATTER_FABRIC_RU.md`.
 
@@ -141,7 +142,7 @@ legacy planetary presentation remains unchanged.
 
 Do not convert the whole planet in P7.
 
-## 7. P7.3 — MatterMaterialBatch → canonical Item Graph
+## 7. P7.3 — MatterMaterialBatch → canonical Item Graph — ✅ COMPLETE_MERGED
 
 ```text
 removed canonical Matter
@@ -160,7 +161,7 @@ removed mass
 
 No hidden deletion and no P7-private resource store.
 
-## 8. P7.4 — Persistence / restart composition
+## 8. P7.4 — Persistence / restart composition — ✅ COMPLETE_MERGED
 
 Reuse MW5 and existing V0 recovery owners.
 
@@ -176,7 +177,7 @@ dig
 → same Item Graph accounting
 ```
 
-## 9. P7.5 — Two-client convergence
+## 9. P7.5 — Two-client convergence — ✅ COMPLETE_MERGED
 
 Reuse MW6/MW7 and RL2/RL3.
 
@@ -189,7 +190,7 @@ Client A digs
 
 No client-private terrain truth.
 
-## 10. P7.6 — Seam composition
+## 10. P7.6 — Seam composition — ← CURRENT
 
 Distinguish actor handoff from mutation transaction scope.
 
@@ -243,3 +244,53 @@ V0 PLAYABLE ─────┤
 
 The lanes are dependency-independent. Until H0.3 multi-worker scheduling is accepted,
 only one runtime mutation checkpoint may execute at a time.
+
+
+## 14. WORLDGEN1 successor research frontier
+
+P7 deliberately does not attempt to turn the bounded Moon Matter bubble into a universal terrain generator while its production mutation/convergence path is still being closed.
+
+The planned successor research lane is:
+
+`docs/plans/WORLDGEN1_PROCEDURAL_MATTER_TERRAIN_ROADMAP_RU.md`.
+
+Its core rule is:
+
+```text
+WORLDGEN1 = deterministic procedural revision-0 Matter
+P7/MW4/MW10 = runtime mutation of that same Matter
+RL2/RL3 = derived representation
+```
+
+WORLDGEN1 is intended to extend the current near-spherical sampler into composable terrain fields for mountains, hills, ridges, craters, canyons, ravines, cliffs, overhangs, caves, lava tubes and geological stratification.
+
+It must reuse the existing lazy materialization model:
+
+```text
+no stored mutated brick
+    → deterministic generator/materializer
+    → revision 0
+
+stored mutated brick
+    → canonical persisted snapshot
+```
+
+This keeps a huge procedural planet representable as generator identity + profiles + feature catalogs + only changed brick snapshots.
+
+Activation boundary:
+
+```text
+NOW
+  WORLDGEN1 design/documentation and fixture-only research are allowed.
+
+P7.7 COMPLETE_MERGED
++ formal P7 checkpoint ACCEPTED
+  WORLDGEN1 executable research becomes eligible,
+  subject to scheduler/runtime-mutation capacity.
+
+V0 PLAYABLE SEAMLESS PLANET ACCEPTED
+  WORLDGEN1 may be considered for product promotion/default-world integration
+  after its own exact LOD/performance/persistence verification.
+```
+
+WORLDGEN1 must not become an implicit blocker for P7 or the first V0 composition acceptance.
