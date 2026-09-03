@@ -19,7 +19,7 @@ const REGION_A := "matter-region/p7-7-a"
 
 @export var drill_radius_m := 0.75
 @export var drill_depth_m := 3.0
-@export var max_aim_distance_m := 40.0
+@export var max_aim_distance_m := 20.0
 @export var energy_budget_j := 1000000000.0
 
 var _bubble = null
@@ -198,11 +198,11 @@ func _configure_runtime() -> Dictionary:
 	var bubble_setup: Dictionary = _bubble.configure({
 		"anchor_direction": [0.0, 1.0, 0.0],
 		"canonical_surface_radius_m": 1737425.0,
-		"half_extent_m": 32.0,
-		"mutation_level": 2,
-		"presentation_level": 2,
-		"max_level": 3,
-		"brick_interior_resolution": 8,
+		"half_extent_m": 8.0,
+		"mutation_level": 1,
+		"presentation_level": 1,
+		"max_level": 2,
+		"brick_interior_resolution": 4,
 		"ghost_border_samples": 1,
 	})
 	if not bool(bubble_setup.get("success", false)):
@@ -290,7 +290,7 @@ func _configure_runtime() -> Dictionary:
 	_camera = Camera3D.new()
 	_camera.name = "Camera3D"
 	_camera.current = true
-	_camera.position = Vector3(0.0, 8.0, 14.0)
+	_camera.position = Vector3(0.0, 5.0, 7.0)
 	add_child(_camera)
 	_camera.look_at(Vector3.ZERO, Vector3.UP)
 	_update_player_position()
@@ -395,13 +395,15 @@ func _project_player_position(
 	_request: Dictionary
 ) -> Dictionary:
 	var position: Dictionary = player.get("position", {})
-	return MatterUtils.success({
+	return {
+		"success": true,
+		"error_code": "",
 		"position_m": [
 			float(position.get("x", 0.0)),
 			float(position.get("y", 0.0)),
 			float(position.get("z", 0.0)),
 		],
-	})
+	}
 
 
 func _update_player_position() -> void:
