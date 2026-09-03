@@ -161,8 +161,8 @@
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
       ],
-      "runtime_head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
-      "runtime_tree": "aae7f3444e1958ea2899cc7007b1bb8d3faf7d38",
+      "runtime_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+      "runtime_tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
       "runtime_pr": 487,
       "substeps": {
         "P7.7-A": {
@@ -201,8 +201,18 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-D-MW10-RESERVATION-CONFLICT-EXACT-RUNTIME-VALIDATION-001.v1.json"
         },
         "P7.7-E": {
+          "status": "EXACT_VALIDATED",
+          "proof": "A_TO_B_ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_THEN_B_ONLY_DIG_USES_EXISTING_MW4_WITH_MW10_ZERO",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-E-ACTOR-HANDOFF-NO-FALSE-MW10-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-F": {
+          "status": "EXACT_VALIDATED",
+          "proof": "C2_DURABLE_MW10_PARTICIPANT_BATCHES_DELIVER_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITH_SECOND_IDENTICAL_DELIVERY_AS_REPLAY",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-G": {
           "status": "NEXT",
-          "proof": "A_TO_B_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_THEN_B_ONLY_DIG_USES_EXISTING_MW4"
+          "proof": "SECOND_CLIENT_CONVERGES_TO_SAME_CANONICAL_HOLE_AND_AUTHORITATIVE_INVENTORY_WITH_NO_CLIENT_PRIVATE_TRUTH"
         }
       }
     }
