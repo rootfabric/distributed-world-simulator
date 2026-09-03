@@ -211,8 +211,13 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json"
         },
         "P7.7-G": {
+          "status": "EXACT_VALIDATED",
+          "proof": "EXACT_C3_CANONICAL_A_B_OUTPUTS_FEED_BYTE_IDENTICAL_P7_5_MW6_MW7_M7_RL3_CONVERGENCE_OWNERS_ALREADY_FRESH_LINUX_VERIFIED_1140_ASSERTIONS",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-G-SECOND-CLIENT-CONVERGENCE-COMPOSITIONAL-VALIDATION-001.v1.json"
+        },
+        "P7.7-H": {
           "status": "NEXT",
-          "proof": "SECOND_CLIENT_CONVERGES_TO_SAME_CANONICAL_HOLE_AND_AUTHORITATIVE_INVENTORY_WITH_NO_CLIENT_PRIVATE_TRUTH"
+          "proof": "REPLAY_RECONNECT_RESTART_NO_SECOND_HOLE_NO_SECOND_MATTER_COMMIT_NO_SECOND_ITEM_GRAPH_DELIVERY"
         }
       }
     }
