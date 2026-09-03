@@ -2,11 +2,11 @@
   "schema": "distributed_world_simulator.harness_evidence_map.v1",
   "work_order_id": "V0-P7-R1-WO-001",
   "program": "V0",
-  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
   "intent": "Close P7.6 only after exact-head Reviewer PASS, fresh independent Linux verification, explicit Human RUNTIME_FEATURE_MERGE approval, exact runtime integration, and post-merge blob identity confirmation.",
-  "root_cause_or_reason": "P7.6 supplies the missing production composition between actor seam authority and true multi-region Matter mutation while preserving all existing SM1/MW8/MW9/MW10 and P7.1/MW4 owners.",
+  "root_cause_or_reason": "P7.6 supplies the missing production composition between actor seam authority and true multi-region Matter mutation while preserving all existing SM1/MW8/MW9/MW10 and P7.1/MW4 owners. Stage identity is carried by the evidence intent/summary while checkpoint identity remains the canonical Work Order checkpoint required by the Harness.",
   "changed_surfaces": [
     "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
     "scripts/runtime/networked_gameplay/p7/p7_seam_multi_region_composition.gd",
