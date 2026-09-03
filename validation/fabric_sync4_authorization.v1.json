@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.fabric_sync4_authorization.v1",
-  "qualification": "AUTHORIZATION_CANDIDATE",
+  "qualification": "CLOSED",
   "predecessor": {
     "b0_5_a_exact_head": "d819fffa0dc86cc09cda0000f20c310aec23c799",
     "b0_5_a_exact_tree": "c92c1ff22c683ba348ac8596d2e6b3212a381b57",
@@ -37,5 +37,33 @@
       "future_trigger": "CONCRETE_FULL_REFERENCE_FAILURE_NOT_EXPRESSIBLE_WITH_FABRIC0_18_GENERIC_FLOW_JUMP_TOPOLOGY_CONTACT_SEMANTICS"
     }
   },
-  "production_accepted": false
+  "production_accepted": false,
+  "exact_subject": {
+    "head": "6e0eae86860128dab47dc19375a20d40a21ad819",
+    "tree": "1711636ee0028390c4ad65767ac90a57d3498814",
+    "tracked_clean": true,
+    "diff_check": "PASS"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "acceptance": {
+    "pass": 122,
+    "total": 122,
+    "exit_code": 0
+  },
+  "source_carrier": {
+    "run_id": 33717947039,
+    "artifact_id": 9879178919,
+    "bundle_sha256": "ccd5d433ed6b089677e257eea9f43b2485627354dd18533f17aae1b1e280d80f",
+    "zip_sha256": "3cc210993928d801db7312c757fbbc24af1719e934eef78eb26e89ffb9fb1135"
+  },
+  "control": {
+    "project_control": {
+      "run_id": 33717946953,
+      "conclusion": "SUCCESS"
+    }
+  },
+  "next_executable": "BRIDGE-2 MIXED REPRESENTATION R1"
 }
