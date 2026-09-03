@@ -161,8 +161,8 @@
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
       ],
-      "runtime_head": "18fb18a5cd6dc49a317eccd43e84f03944b4f4f4",
-      "runtime_tree": "0af962f7b7962a77915b6b0c8d8f2dc4f5f01d0b",
+      "runtime_head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
+      "runtime_tree": "d448644626492fc93da58bd3452e62361baf5960",
       "runtime_pr": 487,
       "substeps": {
         "P7.7-A": {
@@ -181,8 +181,13 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-VALIDATION-001.v1.json"
         },
         "P7.7-C1": {
+          "status": "EXACT_VALIDATED",
+          "proof": "MW10_V2_TRANSACTION_RECORD_DURABLY_JOURNALS_PARTICIPANT_PHYSICAL_OUTPUTS_AND_TERMINAL_ENVELOPE_THROUGH_RESTART_RECOVERY_AND_EXACT_REPLAY",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001.v1.json"
+        },
+        "P7.7-C2": {
           "status": "NEXT",
-          "proof": "DURABLY_PERSIST_AND_REPLAY_THE_CANONICAL_PHYSICAL_OUTPUT_ENVELOPE_THROUGH_EXISTING_MW10_COORDINATOR_RECOVERY"
+          "proof": "DURABLE_MW10_PHYSICAL_OUTPUT_TO_EXISTING_P7_3_CANONICAL_ITEM_GRAPH_DELIVERY_EXACTLY_ONCE"
         }
       }
     }
