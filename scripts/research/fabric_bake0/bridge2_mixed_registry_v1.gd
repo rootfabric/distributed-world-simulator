@@ -126,7 +126,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		var b := String(interface.get("region_b", ""))
 		if a == b or not by_id.has(a) or not by_id.has(b):
 			return Utils.failure("BRIDGE2_INTERFACE_REGION_INVALID")
-		var pair_key := min(a, b) + "|" + max(a, b)
+		var pair_key := (a + "|" + b) if a < b else (b + "|" + a)
 		if pair_keys.has(pair_key):
 			return Utils.failure("BRIDGE2_DUPLICATE_REGION_INTERFACE")
 		pair_keys[pair_key] = true
