@@ -384,3 +384,58 @@ FABRIC0.18
 FABRIC0.19 dependency:
 NONE
 ```
+
+---
+
+## 16. Final B0.4 R1 closure
+
+The authorization contract is now satisfied.
+
+```text
+exact implementation/test HEAD:
+e33ac10ac94d8b70f1387d442a3ae9d3801bb08a
+
+TREE:
+f3d47eedd42f827a859d1763e8b46762696b99dd
+
+FULL dynamic states:
+512
+
+ROM states:
+24
+
+reduction:
+21.333333x
+
+A:
+609/609 PASS
+
+B:
+83/83 PASS
+
+C:
+1533/1533 PASS
+
+D:
+287/287 PASS
+
+full closure chain:
+PASS / exit 0
+
+Project Control:
+33696130121 SUCCESS
+```
+
+Final D materializes the required common `PhysicalBakeArtifact`,
+`ReconstructionDescriptor` and `StateMapping` lifecycle and verifies stale
+invalidation plus deterministic generation rebuild.
+
+```text
+B0.4 DYNAMIC ROM
+CLOSED
+EXACT DOUBLE PASS
+NOT PRODUCTION ACCEPTED
+
+next:
+FABRIC.SYNC3
+```
