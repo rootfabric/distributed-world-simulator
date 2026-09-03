@@ -10,7 +10,7 @@
     "b0_5_a": {
       "authorized": true,
       "level": "EXECUTABLE_RESEARCH",
-      "branch": "research/fabric-bake0-5-a-executable-hybrid-r1",
+      "branch": "research/fabric-bake0-5-a-executable-hybrid-r2",
       "subject": "generic two passive modes + localized FLOW/JUMP + B0.4 state handoff + lazy mode-B cache + unknown mode-C fallback"
     },
     "fabric0_19": {
@@ -35,5 +35,10 @@
       "conclusion": "SUCCESS"
     }
   },
-  "next_executable": "B0.5-A EXECUTABLE HYBRID BAKE"
+  "next_executable": "B0.5-A EXECUTABLE HYBRID BAKE",
+  "supersedes": {
+    "pr": 464,
+    "reason": "pre-final B0.4 interface seam"
+  },
+  "canonical_next_branch": "research/fabric-bake0-5-a-executable-hybrid-r2"
 }
