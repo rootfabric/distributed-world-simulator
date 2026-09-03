@@ -6,7 +6,7 @@
 **Accepted SM1 runtime:** `b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f`  
 **SM1 runtime merge:** `acb9379cacc413fc25a65117fb1627f5a01b9736`  
 **SM1 formal acceptance:** `9cc89e6e8c6cfc81fc32873a29743e443d8229e6`  
-**Current canonical P7 stage:** `P7.6 SEAM_AND_MULTI_REGION_COMPOSITION`
+**Current canonical P7 stage:** `P7.7 GRAPHICAL_DIGGING_SLICE`
 
 ## 1. Purpose
 
@@ -190,7 +190,7 @@ Client A digs
 
 No client-private terrain truth.
 
-## 10. P7.6 — Seam composition — ← CURRENT
+## 10. P7.6 — Seam composition — ✅ COMPLETE_MERGED
 
 Distinguish actor handoff from mutation transaction scope.
 
@@ -207,7 +207,14 @@ one canonical swept mutation touches region A + region B
 
 Do not introduce a P7 coordination protocol.
 
-## 11. P7.7 — Graphical product slice
+## 11. P7.7 — Graphical product slice — ← CURRENT
+
+Mandatory visible acceptance stand: `Digging Playground`.
+
+Detailed contract and A–H test matrix:
+`docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md`.
+
+The stand must prove both visual behavior and canonical ownership. A visible crater produced by private presentation state is a FAIL.
 
 ```text
 equip
