@@ -28,7 +28,7 @@ static func create(plan: Dictionary, participant_outputs: Array) -> Dictionary:
 	for raw_output in participant_outputs:
 		if typeof(raw_output) != TYPE_DICTIONARY:
 			return {}
-		var output: Dictionary = _normalize_participant_output(raw_output)
+		var output: Dictionary = create_participant_output(plan, raw_output)
 		if output.is_empty():
 			return {}
 		outputs.append(output)
@@ -53,6 +53,100 @@ static func create(plan: Dictionary, participant_outputs: Array) -> Dictionary:
 	}
 	value["checksum"] = MatterUtils.compute_checksum(value)
 	return value if bool(validate(value).get("success", false)) else {}
+
+
+
+
+static func output_required(plan: Dictionary) -> bool:
+	if not bool(Plan.validate(plan).get("success", false)):
+		return false
+	return not Array(Dictionary(plan["mass_ledger"]).get("external_outputs", [])).is_empty()
+
+
+static func create_participant_output(plan: Dictionary, raw_output: Dictionary) -> Dictionary:
+	if not bool(Plan.validate(plan).get("success", false)):
+		return {}
+	var value: Dictionary = _normalize_participant_output(raw_output)
+	return value if bool(validate_participant_output(plan, value).get("success", false)) else {}
+
+
+static func validate_participant_output(plan: Dictionary, output: Dictionary) -> Dictionary:
+	var checked: Dictionary = Plan.validate(plan)
+	if not bool(checked.get("success", false)):
+		return checked
+	checked = MatterUtils.validate_exact_fields(output, PARTICIPANT_FIELDS)
+	if not bool(checked.get("success", false)):
+		return checked
+	var region_id := String(output.get("region_id", ""))
+	if not MatterUtils.is_canonical_id(region_id, 2):
+		return MatterUtils.failure("INVALID_MATTER_CROSS_REGION_PHYSICAL_REGION_ID")
+	var participant: Dictionary = Plan.participant_by_region(plan, region_id)
+	if participant.is_empty():
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_NOT_IN_PLAN", {"region_id": region_id})
+	if String(output.get("participant_checksum", "")) != String(participant.get("checksum", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_CHECKSUM_MISMATCH", {"region_id": region_id})
+	var commit_receipt_value = output.get("commit_receipt", null)
+	if typeof(commit_receipt_value) != TYPE_DICTIONARY:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_COMMIT_RECEIPT_REQUIRED", {"region_id": region_id})
+	var commit_receipt: Dictionary = commit_receipt_value
+	checked = Receipt.validate(commit_receipt)
+	if not bool(checked.get("success", false)):
+		return checked
+	if String(commit_receipt.get("action", "")) != Receipt.ACTION_COMMIT \
+			or String(commit_receipt.get("transaction_id", "")) != String(plan.get("transaction_id", "")) \
+			or String(commit_receipt.get("region_id", "")) != region_id \
+			or String(commit_receipt.get("participant_checksum", "")) != String(participant.get("checksum", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_COMMIT_RECEIPT_BINDING_MISMATCH", {"region_id": region_id})
+	var result_value = output.get("matter_result", null)
+	if typeof(result_value) != TYPE_DICTIONARY:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_MATTER_RESULT_REQUIRED", {"region_id": region_id})
+	var matter_result: Dictionary = result_value
+	checked = MatterResult.validate(matter_result)
+	if not bool(checked.get("success", false)):
+		return checked
+	if String(matter_result.get("status", "")) != "COMMITTED" \
+			or String(matter_result.get("operation_id", "")) != String(plan.get("operation_id", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_MATTER_RESULT_BINDING_MISMATCH", {"region_id": region_id})
+	var batch_value = output.get("material_batch", null)
+	if typeof(batch_value) != TYPE_DICTIONARY:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_MATERIAL_BATCH_REQUIRED", {"region_id": region_id})
+	var batch: Dictionary = batch_value
+	checked = MaterialBatch.validate(batch)
+	if not bool(checked.get("success", false)):
+		return checked
+	if String(batch.get("source_operation_id", "")) != String(plan.get("operation_id", "")) \
+			or String(batch.get("source_body_id", "")) != String(plan.get("body_id", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_BINDING_MISMATCH", {"region_id": region_id})
+	var aggregate_ids: Array = matter_result.get("created_aggregate_ids", [])
+	if aggregate_ids.size() != 1 or String(aggregate_ids[0]) != String(batch.get("batch_id", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_RESULT_ID_MISMATCH", {"region_id": region_id})
+	if absf(float(batch.get("total_mass_kg", 0.0)) - float(matter_result.get("removed_mass_kg", 0.0))) > MASS_TOLERANCE_KG:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_RESULT_MASS_MISMATCH", {"region_id": region_id})
+	if Dictionary(batch.get("composition", {})) != Dictionary(matter_result.get("extracted_composition", {})):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_RESULT_COMPOSITION_MISMATCH", {"region_id": region_id})
+	if float(matter_result.get("deposited_mass_kg", 0.0)) != 0.0:
+		return MatterUtils.failure("MATTER_CROSS_REGION_EXTRACTION_RESULT_HAS_DEPOSIT", {"region_id": region_id})
+	var ledger: Dictionary = plan["mass_ledger"]
+	var participant_entry: Dictionary = _ledger_participant_entry(ledger, region_id)
+	if participant_entry.is_empty():
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_LEDGER_PARTICIPANT_MISSING", {"region_id": region_id})
+	if not Array(participant_entry.get("added", [])).is_empty():
+		return MatterUtils.failure("MATTER_CROSS_REGION_EXTRACTION_LEDGER_HAS_REGION_ADDITION", {"region_id": region_id})
+	var batch_material_mass: Dictionary = _batch_material_masses(batch)
+	var removed_material_mass: Dictionary = _quantity_map(Array(participant_entry.get("removed", [])))
+	if not _quantity_maps_equal(batch_material_mass, removed_material_mass, float(ledger.get("tolerance_kg", 0.0))):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_REGION_LEDGER_MISMATCH", {"region_id": region_id})
+	var expected_checksum := MatterUtils.compute_checksum({
+		"region_id": region_id,
+		"participant_checksum": output["participant_checksum"],
+		"commit_receipt": commit_receipt,
+		"matter_result": matter_result,
+		"material_batch": batch,
+		"checksum": "",
+	})
+	if not MatterUtils.is_lower_hex_64(output.get("checksum")) or String(output["checksum"]) != expected_checksum:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_OUTPUT_CHECKSUM_MISMATCH", {"region_id": region_id})
+	return MatterUtils.success()
 
 
 static func validate(value: Dictionary) -> Dictionary:
