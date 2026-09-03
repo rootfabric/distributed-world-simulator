@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.fabric_sync3_authorization.v1",
+  "integration": {
+    "b0_4_closure": "1e8324407f60b4536bf9497e0a7c8a6874ae93ca",
+    "b0_5_p0_closure": "d280096e0b64c03ac613e586881e43c816f471f0",
+    "merge_commit": "91132efab20579fa2e64dc2fb9e0dc074c66179e",
+    "tree": "fd745f5e0c6d37db6b468c8695361af43d891245"
+  },
+  "decisions": {
+    "b0_5_a": {
+      "authorized": true,
+      "level": "EXECUTABLE_RESEARCH",
+      "branch": "research/fabric-bake0-5-a-executable-hybrid-r1",
+      "subject": "generic two passive modes + localized FLOW/JUMP + B0.4 state handoff + lazy mode-B cache + unknown mode-C fallback"
+    },
+    "fabric0_19": {
+      "authorized": false
+    },
+    "bridge2": {
+      "executable_authorized": false,
+      "design_preflight_allowed": true,
+      "unlock": [
+        "B0.5-A CLOSED",
+        "actual B0.4-backed lazy mode transition evidence",
+        "explicit mixed representation ownership",
+        "deterministic mixed replay"
+      ]
+    }
+  },
+  "production_accepted": false
+}
