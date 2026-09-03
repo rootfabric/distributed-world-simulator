@@ -62,6 +62,12 @@ var last_competition_profile: Dictionary = {}
 ## a second time. Legacy keeps the historical defensive copy.
 var _stream1_owned_survivor_adoption := false
 
+## PERF2.4 R12: optimized STREAM1 may elide the redundant intermediate
+## post-competition core snapshot and adopt the already-fresh records array
+## produced by the one remaining core.get_snapshot() call. Legacy retains both
+## historical snapshot/copy layers for the exact A/B baseline.
+var _stream1_post_snapshot_elision := false
+
 func setup(
     patch: Dictionary,
     environment_field: Dictionary,
@@ -131,16 +137,20 @@ func set_generation_stream_executor(executor) -> bool:
     if not core.set_generation_stream_executor(executor):
         return false
     _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
     if executor.has_method("get_telemetry"):
         var telemetry: Dictionary = executor.get_telemetry()
-        _stream1_owned_survivor_adoption = (
+        var optimized_stream := (
             String(telemetry.get("pipeline_mode", ""))
             == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"
         )
+        _stream1_owned_survivor_adoption = optimized_stream
+        _stream1_post_snapshot_elision = optimized_stream
     return true
 
 func clear_generation_stream_executor() -> void:
     _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
     if core != null:
         core.clear_generation_stream_executor()
 
@@ -197,8 +207,16 @@ func step_generation() -> Dictionary:
             last_competition_hash = String(last_competition_field["field_hash"])
 
     phase_started = Time.get_ticks_usec()
-    var post: Dictionary = core.get_snapshot()
-    last_postcompetition_population_hash = String(post["population_hash"])
+    var post_record_count := 0
+    if _stream1_post_snapshot_elision:
+        last_postcompetition_population_hash = String(core.population_hash)
+        post_record_count = core.records.size()
+    else:
+        var post: Dictionary = core.get_snapshot()
+        last_postcompetition_population_hash = String(post["population_hash"])
+        post_record_count = int(post.get("record_count", 0))
+    if last_postcompetition_population_hash.is_empty():
+        return {}
     var post_snapshot_ms := _elapsed_ms(phase_started)
 
     phase_started = Time.get_ticks_usec()
@@ -208,7 +226,7 @@ func step_generation() -> Dictionary:
         "schema": PROFILE_SCHEMA,
         "generation": int(pre.get("generation", -1)),
         "record_count_precompetition": int(pre.get("record_count", 0)),
-        "record_count_postcompetition": int(post.get("record_count", 0)),
+        "record_count_postcompetition": post_record_count,
         "ls33_total_ms": ls33_total_ms,
         "competition_pass_ms": competition_pass_ms,
         "survivor_apply_ms": survivor_apply_ms,
@@ -253,7 +271,11 @@ func get_snapshot() -> Dictionary:
         "hereditary_pool_hash": String(base.get("hereditary_pool_hash", "")),
         "survivor_count": last_survivor_count,
         "culled_count": last_culled_count,
-        "records": Array(base.get("records", [])).duplicate(true),
+        "records": (
+            Array(base.get("records", []))
+            if _stream1_post_snapshot_elision
+            else Array(base.get("records", [])).duplicate(true)
+        ),
         "competition_field": last_competition_field.duplicate(true),
         "authorities": AUTHORITY.duplicate(true),
     }
@@ -761,3 +783,4 @@ func _reset() -> void:
     last_profile.clear()
     last_competition_profile.clear()
     _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
