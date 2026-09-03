@@ -2680,3 +2680,66 @@ BRIDGE-2 CLOSED
   ↓
 B0.6 ADAPTIVE PHYSICAL FIDELITY
 ```
+
+---
+
+## BRIDGE-2 MIXED REPRESENTATION R1 exact closure — 2026-09-03
+
+```text
+predecessor:
+FABRIC.SYNC4
+51403977606f6f88fa8d31b3505a6c83361a4a3f
+
+exact implementation/test HEAD:
+05fc7b9de77a21239e953d2dfd1a0451f5820caf
+
+TREE:
+d9c2070ef2ba49791eb5e890b58bc2acc0f80255
+
+BRIDGE-2:
+125/125 PASS
+
+SYNC4→BRIDGE2 closure chain:
+PASS / exit 0
+
+mixed/FULL state delta:
+0
+
+Project Control:
+33725617349 SUCCESS
+```
+
+Established mixed baseline:
+
+```text
+one master PhysicalSource frontier
+├─ STRUCTURAL_BAKE
+├─ FULL
+├─ CONTACT_BAKE
+├─ DYNAMIC_ROM
+└─ HYBRID_BAKE
+```
+
+with regional exact source slices, non-overlapping state/source ownership,
+PhysicalBoundaryContract-only coupling, FABRIC-owned representation events,
+selective invalidation fan-out, stale rejection, exact local rebuild and
+deterministic FULL-reference equivalence.
+
+Updated roadmap:
+
+```text
+B0.5-A ✅
+  ↓
+SYNC4 ✅
+  ↓
+BRIDGE-2 ✅ CLOSED
+  ↓
+★ COMPLEX1B MIXED CAUSAL LAB — NOW OPEN ★
+  ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+  ↓
+BRIDGE-3 local unbake / FULL cycle
+```
+
+FABRIC0.19 remains blocked pending a genuine FULL-reference missing-physics
+falsifier.
