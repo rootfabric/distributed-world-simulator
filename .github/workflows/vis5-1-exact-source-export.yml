@@ -1,0 +1,46 @@
+name: VIS5.1 Exact Source Export R1
+
+on:
+  push:
+    branches:
+      - validation/eco-vis5-1-source-export-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation carrier
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Export exact VIS5.1 subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="25ead34b89453a3e61a0b9b0ef48928bc73c6ea3"
+          EXPECTED_TREE="e6f42c6fbc351a9fbf30f53b8a5336445a74ae59"
+          git cat-file -e "$TARGET^{commit}"
+          ACTUAL_TREE="$(git rev-parse "$TARGET^{tree}")"
+          if [[ "$ACTUAL_TREE" != "$EXPECTED_TREE" ]]; then
+            echo "TREE_MISMATCH actual=$ACTUAL_TREE expected=$EXPECTED_TREE" >&2
+            exit 1
+          fi
+          git archive --format=tar.gz --output=vis5-1-exact-source.tar.gz "$TARGET"
+          sha256sum vis5-1-exact-source.tar.gz | tee vis5-1-exact-source.sha256
+          printf 'HEAD=%s\nTREE=%s\n' "$TARGET" "$ACTUAL_TREE" > vis5-1-exact-source.identity.txt
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: vis5-1-exact-source-r1
+          path: |
+            vis5-1-exact-source.tar.gz
+            vis5-1-exact-source.sha256
+            vis5-1-exact-source.identity.txt
+          if-no-files-found: error
+          retention-days: 1
