@@ -5,7 +5,7 @@ on:
     branches:
       - feature/v0-p7-bounded-terrain-mutation
     paths:
-      - ".github/workflows/v0-p7-7-runtime-validation.yml"
+      - ".github/workflows/v0-p7-7-runtime-validation-r2.yml"
   workflow_dispatch:
 
 jobs:
