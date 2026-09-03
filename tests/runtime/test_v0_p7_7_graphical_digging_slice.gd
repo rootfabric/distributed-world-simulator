@@ -53,6 +53,16 @@ class Delivery extends RefCounted:
 		last_result = result.duplicate(true)
 		return response.duplicate(true)
 
+
+	func deliver_cross_region_committed(
+		request: Dictionary,
+		physical_output: Dictionary
+	) -> Dictionary:
+		calls += 1
+		last_request = request.duplicate(true)
+		last_result = physical_output.duplicate(true)
+		return response.duplicate(true)
+
 	func contract_report() -> Dictionary:
 		return {
 			"canonical_state_owned": false,
@@ -113,8 +123,8 @@ func _test_configuration_and_zero_ownership() -> void:
 	]:
 		_assert(not bool(contract.get(key, true)), "P7.7 owns no %s" % key)
 	_assert(
-		String(contract.get("multi_region_material_projection", "")) 			== "FAIL_CLOSED_UNTIL_CANONICAL_PHYSICAL_OUTPUT_AVAILABLE",
-		"MW10 material gap is explicit rather than guessed"
+		String(contract.get("multi_region_material_projection", "")) 			== "MW10_CANONICAL_PHYSICAL_OUTPUT_TO_P7_3",
+		"MW10 material projection uses canonical physical output"
 	)
 
 
@@ -254,8 +264,8 @@ func _test_multi_region_without_canonical_physical_material_result_fails_closed(
 	var result: Dictionary = fx.slice.execute_aimed_dig(fx.binding)
 	_assert_error(
 		result,
-		"P7_7_MULTI_REGION_MATERIAL_RESULT_REQUIRED",
-		"MW10 route without physical batch-compatible Matter result"
+		"P7_7_MULTI_REGION_PHYSICAL_OUTPUT_REQUIRED",
+		"MW10 route without durable canonical physical output"
 	)
 	_assert(fx.router.calls == 1, "true multi route reaches P7.6 router")
 	_assert(fx.delivery.calls == 0, "P7.7 never invents multi-region material delivery")
