@@ -134,7 +134,7 @@ func _run() -> void:
 	)
 
 	gameplay.position_body_fixed_m = near["query_result"]["details"]["position_m"]
-	var before := graph.create_snapshot()
+	var before: Dictionary = graph.create_snapshot()
 	var result: Dictionary = slice.execute_aimed_dig({
 		"query_result": near["query_result"],
 		"request": near["request"],
@@ -157,7 +157,7 @@ func _run() -> void:
 	var delivery_result: Dictionary = Dictionary(material.get("delivery", {}))
 	_assert(int(delivery_result.get("output_quantity", 0)) > 0, "material reaches canonical Item Graph")
 	_assert(not bool(delivery_result.get("replay", true)), "first near-seam material delivery is fresh")
-	var after := graph.create_snapshot()
+	var after: Dictionary = graph.create_snapshot()
 	_assert(int(after.get("revision", -1)) > int(before.get("revision", -1)), "Item Graph revision advances")
 	_assert(String(after.get("checksum", "")) != String(before.get("checksum", "")), "Item Graph checksum changes")
 
