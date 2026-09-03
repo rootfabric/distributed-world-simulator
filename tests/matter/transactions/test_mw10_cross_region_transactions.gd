@@ -16,6 +16,7 @@ const Checkpoint = preload("res://scripts/simulation/matter/transactions/distrib
 const AuthorityGate = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_authority_gate.gd")
 const Coordinator = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd")
 const HandoffInterlock = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_handoff_interlock.gd")
+const PhysicalOutput = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd")
 
 var assertions := 0
 var failures: Array[String] = []
@@ -32,6 +33,7 @@ class FakeRuntime extends RefCounted:
 	var reject_commit_region := ""
 	var reject_rollback_region := ""
 	var reject_publish := false
+	var omit_physical_region := ""
 
 	func prepare_region(participant: Dictionary, context: Dictionary) -> Dictionary:
 		var region_id: String = String(participant["region_id"])
@@ -61,10 +63,19 @@ class FakeRuntime extends RefCounted:
 		if not prepared_by_key.has(key):
 			return MatterUtils.failure("FAKE_PREPARE_MISSING")
 		committed_by_key[key] = prepare_receipt["source_revision"].duplicate(true)
-		return MatterUtils.success({
-			"source_revision": committed_by_key[key],
-			"runtime_state_hash": MatterUtils.payload_hash([key, "committed-state", context["global_commit_hash"]]),
-		})
+		var physical: Dictionary = Fixture.physical_commit_details(
+			participant, prepare_receipt, context
+		)
+		if physical.is_empty():
+			return MatterUtils.failure("FAKE_PHYSICAL_OUTPUT_CREATION_FAILED")
+		if region_id == omit_physical_region:
+			physical.erase("matter_result")
+			physical.erase("material_batch")
+		physical["source_revision"] = committed_by_key[key]
+		physical["runtime_state_hash"] = MatterUtils.payload_hash([
+			key, "committed-state", context["global_commit_hash"]
+		])
+		return MatterUtils.success(physical)
 
 	func rollback_region(participant: Dictionary, prepare_receipt: Dictionary, context: Dictionary) -> Dictionary:
 		var region_id: String = String(participant["region_id"])
@@ -102,6 +113,7 @@ class FlappingAuthorityGate extends RefCounted:
 func _init() -> void:
 	_test_config_and_contracts()
 	_test_successful_commit_and_replay()
+	_test_physical_output_required_fail_closed()
 	_test_abort_and_predecision_recovery()
 	_test_commit_and_outbox_recovery()
 	_test_authority_and_reservation_fences()
@@ -185,6 +197,8 @@ func _test_successful_commit_and_replay() -> void:
 	var progress: Dictionary = coordinator.latest_record(String(plan["transaction_id"]))
 	_assert(String(progress["phase"]) == Record.PHASE_COMMITTING, "First commit did not enter COMMITTING")
 	_assert(String(progress["commit_receipts"][0]["region_id"]) == Fixture.REGION_A, "Commit order is not deterministic")
+	_assert(Array(progress.get("participant_physical_outputs", [])).size() == 1, "First commit physical output not persisted")
+	_assert(Dictionary(progress.get("physical_output", {})).is_empty(), "Terminal physical envelope appeared before global commit")
 	_assert(Array(coordinator.checkpoint()["invalidation_outbox"]).is_empty(), "Outbox created before global commit")
 	_assert(runtime.published_by_id.is_empty(), "Invalidation published before global commit")
 	_assert_ok(coordinator.commit_next(String(plan["transaction_id"]), "transition/mw10-success-commit-b", 36), "Commit B failed")
@@ -194,6 +208,9 @@ func _test_successful_commit_and_replay() -> void:
 	_assert(Array(coordinator.checkpoint()["invalidation_outbox"]).size() == 1, "Committed transaction did not create outbox")
 	_assert(not bool(coordinator.checkpoint()["invalidation_outbox"][0]["published"]), "Outbox published inside global commit")
 	_assert(Array(terminal["invalidation_batch"]["invalidations"]).size() == 2, "Global invalidation batch does not cover both regions")
+	_assert(Array(terminal.get("participant_physical_outputs", [])).size() == 2, "Committed record did not retain both participant physical outputs")
+	_assert_ok(PhysicalOutput.validate(Dictionary(terminal.get("physical_output", {}))), "Committed physical envelope rejected")
+	_assert(Dictionary(coordinator.physical_output(String(plan["operation_id"]))) == Dictionary(terminal["physical_output"]), "Coordinator physical output lookup drifted")
 	_assert(runtime.published_by_id.is_empty(), "Runtime saw invalidation before outbox publication")
 	_assert_ok(coordinator.publish_pending_invalidations(37), "Invalidation publication failed")
 	_assert(runtime.published_by_id.size() == 1, "Invalidation batch was not published exactly once")
@@ -202,9 +219,38 @@ func _test_successful_commit_and_replay() -> void:
 	var replay: Dictionary = coordinator.execute_transaction(plan, "transition/mw10-success-replay", 50)
 	_assert_ok(replay, "Exact transaction replay failed")
 	_assert(bool(replay["details"].get("replay", false)), "Exact operation replay was not reported")
+	_assert(Dictionary(replay["details"].get("physical_output", {})) == Dictionary(terminal["physical_output"]), "Exact replay did not return same physical envelope")
 	_assert(runtime.calls.size() == call_count, "Exact replay invoked runtime twice")
 	_assert(String(coordinator.operation_result(String(plan["operation_id"]))["outcome"]) == "COMMITTED", "Committed operation result missing")
 	_assert_ok(Checkpoint.validate(coordinator.checkpoint()), "Committed checkpoint rejected")
+
+
+func _test_physical_output_required_fail_closed() -> void:
+	var root: String = _root("physical-required")
+	var runtime := FakeRuntime.new()
+	runtime.omit_physical_region = Fixture.REGION_A
+	var coordinator = _new_coordinator(root, runtime)
+	_assert_ok(coordinator.initialize(Fixture.CHECKPOINT_ID, 20), "Physical-required initialize failed")
+	var plan: Dictionary = Fixture.plan_ab(
+		"matter-transaction/mw10-physical-required",
+		"matter-operation/mw10-physical-required"
+	)
+	_assert_ok(coordinator.begin_transaction(plan, "transition/mw10-physical-required-begin", 30), "Physical-required begin failed")
+	_assert_ok(coordinator.prepare_all(String(plan["transaction_id"]), "transition/mw10-physical-required-prepare", 31), "Physical-required prepare failed")
+	_assert_ok(coordinator.decide_commit(String(plan["transaction_id"]), "transition/mw10-physical-required-decision", 35), "Physical-required decision failed")
+	var committed: Dictionary = coordinator.commit_next(
+		String(plan["transaction_id"]), "transition/mw10-physical-required-commit", 36
+	)
+	_assert_fail(committed, "Commit without canonical physical output succeeded")
+	_assert(
+		String(committed.get("error_code", "")) == "MATTER_CROSS_REGION_COMMIT_PHYSICAL_OUTPUT_INVALID",
+		"Missing physical output returned wrong error"
+	)
+	var latest: Dictionary = coordinator.latest_record(String(plan["transaction_id"]))
+	_assert(String(latest.get("phase", "")) == Record.PHASE_COMMIT_DECIDED, "Failed physical output advanced durable commit frontier")
+	_assert(Array(latest.get("commit_receipts", [])).is_empty(), "Failed physical output persisted commit receipt")
+	_assert(Array(latest.get("participant_physical_outputs", [])).is_empty(), "Failed physical output persisted participant output")
+
 
 
 func _test_abort_and_predecision_recovery() -> void:
