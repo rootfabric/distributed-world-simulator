@@ -248,16 +248,17 @@ func _run() -> void:
 	var execution: Dictionary = Dictionary(
 		b_only.get("details", {}).get("execution_result", {})
 	)
+	var execution_details: Dictionary = Dictionary(execution.get("details", {}))
 	_assert(
-		String(execution.get("owner", "")) == "MW4",
+		String(execution_details.get("owner", "")) == "MW4",
 		"E downstream owner is MW4"
 	)
 	_assert(
-		String(execution.get("active_authority_id", "")) == AUTHORITY_B,
+		String(execution_details.get("active_authority_id", "")) == AUTHORITY_B,
 		"E MW4 executes under post-handoff authority B"
 	)
 	_assert(
-		int(execution.get("authority_epoch", 0)) == 2,
+		int(execution_details.get("authority_epoch", 0)) == 2,
 		"E MW4 executes under post-handoff epoch 2"
 	)
 
