@@ -1,0 +1,54 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-VOLCANIC",
+  "version": "R1",
+  "display_name": "Volcanic World",
+  "environment": {
+    "sky_profile": "ash_dark_red_glow",
+    "lighting_profile": "dim_orange_sun",
+    "fog_profile": "ash_haze"
+  },
+  "materials": {
+    "surface_catalog": [
+      "dark_igneous_basalt",
+      "scorched_slab",
+      "ash_covered_plate"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "lava_crack_presentation",
+      "basalt_boulder",
+      "basalt_shard",
+      "industrial_pipe"
+    ],
+    "scatter_profiles": [
+      "igneous_debris_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "ash_deposit",
+      "scorch_mark"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "beacon",
+      "cave_marker",
+      "broken_pipeline"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "rumbling_placeholder",
+    "particle_profile": "ash_fall_placeholder"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh",
+      "wf.ambience.particles"
+    ]
+  }
+}
