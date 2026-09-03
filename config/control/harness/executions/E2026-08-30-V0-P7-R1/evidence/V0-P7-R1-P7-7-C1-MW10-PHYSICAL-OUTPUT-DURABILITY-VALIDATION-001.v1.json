@@ -1,0 +1,131 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-C1",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "host": {
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "kernel": "Linux 6.18.35",
+    "arch": "x86_64"
+  },
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
+    "tree": "d448644626492fc93da58bd3452e62361baf5960",
+    "base_c0_head": "18fb18a5cd6dc49a317eccd43e84f03944b4f4f4",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33739237263,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33739283402,
+    "source_export_artifact_id": 9887027826,
+    "source_export_artifact_digest": "sha256:5e1ec2d36383f1c025a2dc2f4d7028f40d82a56a96681438a0c0ae14ed4f0cf0"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "implementation": {
+    "transaction_record_schema": "planet_simulator.matter_cross_region_transaction_record.v2",
+    "legacy_record_schema_readable": "planet_simulator.matter_cross_region_transaction_record.v1",
+    "checkpoint_schema_changed": false,
+    "receipt_schema_changed": false,
+    "operation_result_schema_changed": false,
+    "participant_physical_outputs_persisted_with_commit_records": true,
+    "terminal_physical_output_persisted_with_committed_record": true,
+    "external_mass_output_requires_canonical_physical_output": true,
+    "missing_physical_output_fails_closed_before_durable_commit_frontier": true,
+    "exact_replay_returns_same_physical_output": true,
+    "partial_commit_restart_preserves_prior_participant_output": true,
+    "recovery_skips_already_journaled_participant_commit": true,
+    "p7_3_delivery_wired": false
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "log_sha256": "f26b847e404933960825f1caa9ae1542c759386ffe913339d9cf4ae5ad705116"
+    },
+    {
+      "name": "MW10 C1 physical output durability",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 60,
+      "failures": 0,
+      "log_sha256": "3eb0da2d80b67c6e286b33f0862613b94fa8cae108e898a9cd1803c530ee9bd8"
+    },
+    {
+      "name": "MW10 C0 canonical physical output regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 30,
+      "failures": 0,
+      "log_sha256": "d484d307a017deaf9c54c4ecdd83c14cefa676b8a4338833da4e85a6e1b63a5d"
+    },
+    {
+      "name": "MW10 canonical transaction suite",
+      "result": "PASS",
+      "assertions": 201,
+      "log_sha256": "42712858abe017b31758ef9a3ee7b9176dfa0dc517c0a40811db9d19cfee8ae6"
+    },
+    {
+      "name": "MW10 multi-process recovery",
+      "result": "PASS",
+      "assertions": 53,
+      "log_sha256": "15f5b061f5ad63643f8a73fb241f0f3f25e009752e16a89dad6a6bd43e0c0db8"
+    },
+    {
+      "name": "P7.7-A Digging Playground regression",
+      "result": "PASS",
+      "assertions": 20,
+      "failures": 0,
+      "log_sha256": "3c2e4d8cd265c23dfcb7a304eefa08161f3c931255fc575603ed6014b3dd5a29"
+    },
+    {
+      "name": "P7.7-B seam-near single-region regression",
+      "result": "PASS",
+      "assertions": 20,
+      "failures": 0,
+      "log_sha256": "f1648faeebccf73a3d2876d1f90fc57403bf8642a942a85ea5f5b38b5b23e6f2"
+    },
+    {
+      "name": "P7.6 seam and multi-region regression",
+      "result": "PASS",
+      "assertions": 106,
+      "failures": 0,
+      "log_sha256": "b3d3da4055ad40c82bacdaebf095101798079a546371a9eaee34a6d402a41ec3"
+    },
+    {
+      "name": "P7.3 material delivery regression",
+      "result": "PASS",
+      "assertions": 116,
+      "failures": 0,
+      "log_sha256": "422c0e78e799af13a33c04f9cd037229def1902c376c0e949c23caab6cea6801"
+    }
+  ],
+  "fatal_scan": {
+    "patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "matches": 0
+  },
+  "next_boundary": {
+    "id": "P7.7-C2",
+    "scope": "MW10_PHYSICAL_OUTPUT_TO_P7_3_DELIVERY",
+    "required_result": "DURABLE_MW10_PHYSICAL_OUTPUT_DELIVERED_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITHOUT_NEW_OWNER"
+  },
+  "final_head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
+  "final_tree": "d448644626492fc93da58bd3452e62361baf5960",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
