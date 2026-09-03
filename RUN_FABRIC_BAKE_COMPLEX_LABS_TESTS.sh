@@ -94,12 +94,16 @@ run_script() {
   rm -f "$log" "$status_file"
 }
 
-for scale in 50 100 500 2000; do
+for scale in 50 100 500; do
   run_script \
     res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd \
     "FABRIC-BAKE COMPLEX0 Acceptance: PASS" \
     "COMPLEX0_SCALE=$scale"
 done
+
+run_script \
+  res://tests/research/fabric_bake0/fabric_bake_complex0_2000_exact_closure.gd \
+  "FABRIC-BAKE COMPLEX0 2000 Exact Closure: PASS"
 
 run_script \
   res://tests/research/fabric_bake0/fabric_bake_complex0_perf1_acceptance.gd \
