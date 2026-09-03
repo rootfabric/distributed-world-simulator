@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.fabric_sync4_authorization.v1",
+  "qualification": "AUTHORIZATION_CANDIDATE",
+  "predecessor": {
+    "b0_5_a_exact_head": "d819fffa0dc86cc09cda0000f20c310aec23c799",
+    "b0_5_a_exact_tree": "c92c1ff22c683ba348ac8596d2e6b3212a381b57",
+    "b0_5_a_closure_head": "8e76960be1fb75490ab4467bd39e2bffe66d9175",
+    "review_base_head": "2115dc0d26f77ce43a9a8efef1d339efd87fa2cd"
+  },
+  "evidence": {
+    "bridge1_structural_closed": true,
+    "b0_3_contact_wrench_closed": true,
+    "b0_4_dynamic_rom_closed": true,
+    "b0_5_a_executable_hybrid_closed": true,
+    "common_physical_bake_artifact": true,
+    "common_bake_execution_gate": true,
+    "reconstruction_state_mapping_available": true,
+    "exactly_once_fabric_event_proven": true,
+    "canonical_invalidation_stale_rejection_proven": true
+  },
+  "decisions": {
+    "bridge2": {
+      "executable_research_authorized": true,
+      "branch": "research/fabric-bridge2-mixed-representation-r1",
+      "first_falsifier": "MIXED_GENERIC_MACHINE_R1",
+      "representation_kinds": [
+        "FULL",
+        "STRUCTURAL_BAKE",
+        "CONTACT_BAKE",
+        "DYNAMIC_ROM",
+        "HYBRID_BAKE"
+      ]
+    },
+    "fabric0_19": {
+      "authorized": false,
+      "reason": "NO_MISSING_GENERIC_PHYSICAL_CORE_PRIMITIVE_OBSERVED",
+      "future_trigger": "CONCRETE_FULL_REFERENCE_FAILURE_NOT_EXPRESSIBLE_WITH_FABRIC0_18_GENERIC_FLOW_JUMP_TOPOLOGY_CONTACT_SEMANTICS"
+    }
+  },
+  "production_accepted": false
+}
