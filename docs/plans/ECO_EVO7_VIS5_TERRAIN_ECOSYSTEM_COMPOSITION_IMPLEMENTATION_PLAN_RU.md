@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CURRENT  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 IMPLEMENTED CANDIDATE  
 Дата: 2026-09-03  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -244,6 +244,53 @@ no ecology count/fitness/mutation meaning
 no effect on Descriptor V2 or ecology_state_hash
 ~~~
 
+### VIS5.2 implementation candidate — 2026-09-03
+
+В ветке материализован отдельный executable bridge:
+
+~~~text
+scripts/labs/ecology/
+  eco_evo7_vis5_2_noncanonical_ground_cover_bridge.gd
+
+tests/ecology/
+  eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
+
+RUN_ECO_EVO7_VIS5_2_TESTS.sh
+RUN_ECO_EVO7_VIS5_2_TESTS.ps1
+
+.github/workflows/
+  evo7-vis5-2-noncanonical-ground-cover.yml
+~~~
+
+Исполняемая граница:
+
+~~~text
+ProceduralEarthWorld
+  get_surface_state()
+  get_surface_point()
+        |
+        v
+VIS5.1 Terrain Surface Frame
+  terrain_basis / geometric slope
+        |
+        v
+VIS5.2 deterministic ground-cover sampler
+        |
+        +-- grass MultiMesh/assets only
+        +-- local yaw around terrain-normal Y
+        +-- explicit NONCANONICAL_SCENERY
+        +-- deterministic generation_hash
+        |
+        X no procedural trees
+        X no ecology individuals
+        X no count / fitness / mutation semantics
+        X no Descriptor V2 / ecology_state_hash writes
+~~~
+
+Критическая orientation boundary зафиксирована явно: yaw применяется **в локальном terrain frame**, а не world-space вращением уже ориентированного Basis. Это сохраняет Y каждой planned transform вдоль derived terrain normal и готовит bridge к существенно более сложным WORLDGEN-поверхностям.
+
+До формального CLOSED требуется exact branch regression на canonical double-Godot.
+
 ## VIS5.3 — Mixed-Strata Composition Lab
 
 Цель:
@@ -309,9 +356,13 @@ PLAY1 integrated acceptance
 ~~~text
 VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
 VIS5.1 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
+VIS5.2 🟡 IMPLEMENTED / focused exact GREEN / branch exact regression pending
 
 CURRENT:
-VIS5.2 Noncanonical Ground-Cover Presentation Bridge
+VIS5.2 exact branch regression + formal closure
+
+NEXT AFTER GREEN:
+VIS5.3 Mixed-Strata Composition Lab
 ~~~
 
 Durable closures:
