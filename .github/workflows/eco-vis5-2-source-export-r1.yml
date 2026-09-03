@@ -16,13 +16,13 @@ jobs:
       - name: Checkout exact VIS5.2 target
         uses: actions/checkout@v4
         with:
-          ref: a3f50986cc3f1ef6a1823ab2f415b618f833dd70
+          ref: e8ad5ad9f36eba45ff533918c2a97730d766aa17
           fetch-depth: 0
 
       - name: Assert exact target and archive
         run: |
           set -euo pipefail
-          expected="a3f50986cc3f1ef6a1823ab2f415b618f833dd70"
+          expected="e8ad5ad9f36eba45ff533918c2a97730d766aa17"
           actual="$(git rev-parse HEAD)"
           tree="$(git rev-parse HEAD^{tree})"
           test "$actual" = "$expected"
