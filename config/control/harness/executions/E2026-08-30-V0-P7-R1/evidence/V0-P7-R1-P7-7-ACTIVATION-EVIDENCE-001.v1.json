@@ -1,0 +1,61 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_7_activation_evidence.v1",
+  "evidence_id": "V0-P7-R1-P7-7-ACTIVATION-EVIDENCE-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "substep": "P7.7_GRAPHICAL_DIGGING_SLICE",
+  "activation_branch": "control/v0-p7-7-activation-r1",
+  "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+  "explicit_human_directive": true,
+  "predecessor": {
+    "p7_6": "COMPLETE_MERGED",
+    "runtime_subject": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "runtime_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+    "runtime_merge": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+    "post_merge_audit_run": 33710956525,
+    "post_merge_standard": "YELLOW_NON_RED",
+    "post_merge_directional": "YELLOW_NON_RED"
+  },
+  "activated_contract": {
+    "work_order_state": "IN_PROGRESS",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "mutation_lease": "SAME_SINGLE_P7_LEASE",
+    "scope": "GRAPHICAL_DIGGING_SLICE",
+    "acceptance_stand": "DIGGING_PLAYGROUND",
+    "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
+    "required_existing_owners": [
+      "P5_CANONICAL_EQUIPMENT",
+      "P7_1_PRODUCT_INTENT_AND_SINGLE_REGION_MW4_PATH",
+      "P7_3_MATERIAL_TO_CANONICAL_ITEM_GRAPH",
+      "P7_4_PERSISTENCE_RESTART_COMPOSITION",
+      "P7_5_TWO_CLIENT_CONVERGENCE",
+      "P7_6_SEAM_MULTI_REGION_ROUTER",
+      "SM1_MW8_MW9",
+      "MW10",
+      "RL2_RL3"
+    ],
+    "test_matrix": [
+      "A_SINGLE_REGION_MW4_NO_MW10",
+      "B_SEAM_NEAR_SINGLE_REGION_STILL_MW4",
+      "C_TRUE_A_B_MULTI_REGION_MW10",
+      "D_MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+      "E_ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+      "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
+      "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+      "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
+    ],
+    "forbidden_new_owners": [
+      "P7_TERRAIN_STORE",
+      "P7_MATTER_STORE",
+      "P7_RESOURCE_STORE",
+      "P7_AIM_TRUTH_STORE",
+      "P7_TRANSACTION_JOURNAL",
+      "P7_REPLAY_LEDGER",
+      "P7_PERSISTENCE",
+      "P7_REPLICATION_PROTOCOL"
+    ]
+  },
+  "verdict": "P7_7_ACTIVATION_DISPATCHED",
+  "next": "PROJECT_CONTROL_GREEN_THEN_RUNTIME_IMPLEMENTATION"
+}
