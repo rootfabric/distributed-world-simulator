@@ -1,0 +1,40 @@
+name: V0 P7.7 Formal Source Snapshot R2
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-p7-bounded-terrain-mutation
+    paths:
+      - ".github/workflows/v0-p7-7-formal-source-snapshot-r2.yml"
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: acbf4fd3c5b6205584d8c2d139011894034408ed
+          fetch-depth: 0
+      - name: Verify exact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "acbf4fd3c5b6205584d8c2d139011894034408ed"
+          test "$(git rev-parse 'HEAD^{tree}')" = "311b7779f1a9eaa67c77406fe1604fdb0f9d5b00"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Archive exact worktree with Git metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/runtime/v0-p7-7-graphical-digging
+          tar --exclude='./artifacts/runtime/v0-p7-7-graphical-digging' \
+              -czf /tmp/dws-p7-7-formal-acbf4fd3-git.tar.gz .
+          sha256sum /tmp/dws-p7-7-formal-acbf4fd3-git.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dws-p7-7-formal-acbf4fd3-git
+          path: /tmp/dws-p7-7-formal-acbf4fd3-git.tar.gz
+          if-no-files-found: error
+          retention-days: 1
