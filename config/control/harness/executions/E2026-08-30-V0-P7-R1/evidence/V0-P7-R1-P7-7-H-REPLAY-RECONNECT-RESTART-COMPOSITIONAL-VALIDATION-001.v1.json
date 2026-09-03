@@ -1,0 +1,107 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-H-REPLAY-RECONNECT-RESTART-COMPOSITIONAL-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-H",
+  "actor": "CHATGPT_CONTROL_COMPOSITION_R1",
+  "independence_class": "COMPOSITIONAL_EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "current_runtime": {
+    "head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+    "runtime_pr": 487
+  },
+  "replay_proof": {
+    "c3_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001.v1.json",
+    "c2_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+    "facts": [
+      "real A+B exact replay does not recommit regional MW4 A",
+      "real A+B exact replay does not recommit regional MW4 B",
+      "real A+B exact replay does not change canonical Matter store hash",
+      "same durable MW10 physical output redelivery is two Item Graph replays",
+      "same durable MW10 physical output redelivery leaves Item Graph byte-identical"
+    ]
+  },
+  "restart_proof": {
+    "c1_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001.v1.json",
+    "p7_4_closure_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json",
+    "p7_4_independent_verifier": {
+      "verdict": "VERIFIED",
+      "platform": "Windows x86_64 canonical exact double Godot",
+      "stages": "16/16",
+      "assertions": 1384,
+      "failures": 0
+    },
+    "p7_5_fresh_linux_reverification": {
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+      "p7_4_seed": "21/21 PASS",
+      "p7_4_recover_deliver": "25/25 PASS",
+      "p7_4_recover_replay": "17/17 PASS"
+    },
+    "facts": [
+      "MW10 partial A commit survives process restart with identical participant physical-output checksum",
+      "MW10 recovery commits only missing B and never recommits already journaled A",
+      "terminal MW10 physical-output envelope remains durable",
+      "MW5 restores one canonical Matter batch rather than creating a second batch",
+      "second gameplay restart restores Item Graph replay ledger",
+      "second restart delivery is replay and does not mutate Item Graph or advance gameplay revision"
+    ]
+  },
+  "reconnect_proof": {
+    "fresh_linux_verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+    "stages": [
+      {
+        "name": "P5 two-client replication/reconnect",
+        "result": "PASS",
+        "assertions": 47,
+        "failures": 0
+      },
+      {
+        "name": "MW7 matter interest replication",
+        "result": "PASS",
+        "assertions": 114,
+        "failures": 0,
+        "contains_stage": "reconnect-replay-snapshot"
+      }
+    ],
+    "mw7_test_blob_identity": {
+      "tests/matter/interest/test_mw7_matter_interest_replication.gd": "68ff2aef0d4972a9853e80cfbc4a5119634d58e3",
+      "tests/matter/interest/mw7_test_fixture.gd": "2909d1f4f29fed1a527ec1336b2c123e6c5c6c11",
+      "same_on_current_p7_7": true
+    },
+    "facts": [
+      "reconnected MW7 client reuses authoritative persistent Matter state",
+      "MW7 reconnect supports replay/snapshot fallback and detects sequence gaps without partial store mutation",
+      "reconnect does not invoke canonical Matter mutation",
+      "reconnect does not invoke P7.3 material delivery"
+    ]
+  },
+  "p7_4_owner_blob_identity_on_current_p7_7": [
+    {"path":"scripts/simulation/matter/persistence/matter_state_repository.gd","sha":"098c62964cd8dc7497d49162e4d1ce99ac2f0d3f"},
+    {"path":"scripts/simulation/matter/persistence/matter_state_coordinator.gd","sha":"f2f116f662a41ce966046375c870ee1011b67307"},
+    {"path":"scripts/persistence/authoritative_recovery_repository.gd","sha":"cd6cf725adf4c7c42bb5b866c0d19155439d0e9e"},
+    {"path":"scripts/persistence/authoritative_recovery_coordinator.gd","sha":"20a84c1aafc5311846306a9bdef784c309d69ca7"},
+    {"path":"scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd","sha":"0c5efc8d5f68890f78b0c6dc3e7e9fc03ed7f1d4"},
+    {"path":"scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd","sha":"6e9abdd33ed9a805274c218147c1ca1681f3d85c"},
+    {"path":"scripts/runtime/networked_gameplay/p7/p7_persistence_restart_composition.gd","sha":"3d94a3fcc2068f3dbfd4557a41b69b9f1fc592e1"},
+    {"path":"scripts/simulation/matter/mutation/matter_material_receiver.gd","sha":"33ebd5c50093c9b3ec46c6bfb78ccf9efdaea788"},
+    {"path":"scripts/simulation/matter/mutation/matter_mutation_journal.gd","sha":"35b7bf9c2d9f225b2e4a972141fc8f5098a9020f"},
+    {"path":"scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd","sha":"c3c46986260188e3a51a5bcbebbda40b6ddfef73"}
+  ],
+  "acceptance": {
+    "second_hole_after_replay": false,
+    "second_regional_matter_commit_after_replay": false,
+    "second_matter_batch_after_restart": false,
+    "second_item_graph_delivery_after_restart_or_replay": false,
+    "client_private_reconnect_truth": false,
+    "new_persistence_owner": false,
+    "new_replay_ledger": false
+  },
+  "next_boundary": {
+    "id": "P7.7-FORMAL-CLOSURE",
+    "scope": "FREEZE_FULL_REGRESSION_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE",
+    "required_result": "A_THROUGH_H_ACCEPTED_ON_ONE_FROZEN_RUNTIME_HEAD_TREE_THEN_INDEPENDENT_REVIEW_VERIFICATION_AND_HUMAN_RUNTIME_FEATURE_MERGE"
+  },
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
