@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  parser-and-complex1a:
+  complex-labs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -31,7 +31,9 @@ jobs:
           GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
         run: |
           set -Eeuo pipefail
-          for script in             res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd             res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd
+          for script in \
+            res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd \
+            res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd
           do
             log="$(mktemp)"
             set +e
@@ -44,12 +46,25 @@ jobs:
             rm -f "$log"
           done
 
+      - name: Run COMPLEX0 portable lifecycle smoke
+        env:
+          GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+        run: |
+          set -Eeuo pipefail
+          "$GODOT" --headless --path . \
+            --script res://tests/research/fabric_bake0/fabric_bake_complex0_acceptance.gd \
+            2>&1 | tee /tmp/complex0.log
+          ! grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex0.log
+          grep -Fq 'FABRIC-BAKE COMPLEX0 Acceptance: PASS' /tmp/complex0.log
+
       - name: Run COMPLEX1A portable causal smoke
         env:
           GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
         run: |
           set -Eeuo pipefail
-          "$GODOT" --headless --path .             --script res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd             2>&1 | tee /tmp/complex1a.log
+          "$GODOT" --headless --path . \
+            --script res://tests/research/fabric_bake0/fabric_bake_complex1a_acceptance.gd \
+            2>&1 | tee /tmp/complex1a.log
           ! grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' /tmp/complex1a.log
           grep -Fq 'FABRIC-BAKE COMPLEX1A Acceptance: PASS' /tmp/complex1a.log
 
