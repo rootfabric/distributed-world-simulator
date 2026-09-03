@@ -8,42 +8,76 @@ const Lifecycle = preload("res://scripts/research/fabric_bake0/physical_source_l
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_bake_complex0_fixture.gd")
 
 var _checks := 0
+var _failed := false
 var _scale_summaries: Array = []
 
 func _initialize() -> void:
 	_test_50_full_floor()
+	if _failed:
+		_finish()
+		return
 	_test_100_bake_floor_and_safe_split_refusal()
+	if _failed:
+		_finish()
+		return
 	_test_full_lifecycle(500)
+	if _failed:
+		_finish()
+		return
 	_test_full_lifecycle(2000)
+	_finish()
+
+func _finish() -> void:
+	if _failed:
+		printerr("FABRIC-BAKE COMPLEX0 Acceptance: FAIL (%d successful assertions) scales=%s" % [_checks, str(_scale_summaries)])
+		quit(1)
+		return
 	print("FABRIC-BAKE COMPLEX0 Acceptance: PASS (%d assertions) scales=%s" % [_checks, str(_scale_summaries)])
 	quit(0)
 
 func _test_50_full_floor() -> void:
 	var subject := Fixture.build(50)
-	_check(bool(subject.get("success", false)))
+	if not _require(bool(subject.get("success", false)), "50 subject build", subject):
+		return
 	var parent := Lifecycle.compile(subject["view_request"], Fixture.lifecycle_options(subject))
-	_check(bool(parent.get("success", false)))
-	_check(String(parent.get("status", "")) == Lifecycle.STATUS_FULL)
-	_check(String(parent.get("reason", "")) == "INSUFFICIENT_COMPLEXITY_REDUCTION")
-	_check(not parent.has("artifact"))
+	if not _require(bool(parent.get("success", false)), "50 lifecycle compile", parent):
+		return
+	if not _require(String(parent.get("status", "")) == Lifecycle.STATUS_FULL, "50 remains FULL", parent):
+		return
+	if not _require(String(parent.get("reason", "")) == "INSUFFICIENT_COMPLEXITY_REDUCTION", "50 full reason", parent):
+		return
+	if not _require(not parent.has("artifact"), "50 must not fabricate bake artifact", parent):
+		return
 	_scale_summaries.append({"parts": 50, "mode": "FULL_FLOOR", "safe_bake": false})
 
 func _test_100_bake_floor_and_safe_split_refusal() -> void:
 	var subject := Fixture.build(100)
-	_check(bool(subject.get("success", false)))
+	if not _require(bool(subject.get("success", false)), "100 subject build", subject):
+		return
 	var parent := Lifecycle.compile(subject["view_request"], Fixture.lifecycle_options(subject))
-	_check(bool(parent.get("success", false)))
-	_check(String(parent.get("status", "")) == Lifecycle.STATUS_READY)
-	_check(bool(Artifact.validate(parent["artifact"]).get("success", false)))
+	if not _require(bool(parent.get("success", false)), "100 lifecycle compile", parent):
+		return
+	if not _require(String(parent.get("status", "")) == Lifecycle.STATUS_READY, "100 parent BAKE_READY", parent):
+		return
+	if not _require(parent.has("artifact"), "100 parent artifact present", parent):
+		return
+	if not _require(bool(Artifact.validate(parent["artifact"]).get("success", false)), "100 parent artifact validates", parent["artifact"]):
+		return
 	var executed := Lifecycle.execute(parent, Fixture.reduced_state())
-	_check(bool(executed.get("success", false)))
-	_check(String(executed.get("status", "")) == "BRIDGE1_EXECUTED")
+	if not _require(bool(executed.get("success", false)), "100 parent executes", executed):
+		return
+	if not _require(String(executed.get("status", "")) == "BRIDGE1_EXECUTED", "100 execution status", executed):
+		return
 
 	var structural := Fixture.compile_structural(subject)
-	_check(bool(structural["aggregate"].get("success", false)))
-	_check(bool(structural["guard"].get("success", false)))
-	_check(not bool(structural["local"].get("success", false)))
-	_check(String(structural["local"].get("error_code", "")) == "NO_SAFE_BOUNDED_LOCAL_UNBAKE_RESIDUAL_TOO_SMALL")
+	if not _require(bool(structural["aggregate"].get("success", false)), "100 aggregate compile", structural["aggregate"]):
+		return
+	if not _require(bool(structural["guard"].get("success", false)), "100 guard compile", structural["guard"]):
+		return
+	if not _require(not bool(structural["local"].get("success", false)), "100 local split must fail closed", structural["local"]):
+		return
+	if not _require(String(structural["local"].get("error_code", "")) == "NO_SAFE_BOUNDED_LOCAL_UNBAKE_RESIDUAL_TOO_SMALL", "100 split refusal reason", structural["local"]):
+		return
 	_scale_summaries.append({
 		"parts": 100,
 		"mode": "BAKE_READY",
@@ -53,60 +87,91 @@ func _test_100_bake_floor_and_safe_split_refusal() -> void:
 
 func _test_full_lifecycle(count: int) -> void:
 	var subject := Fixture.build(count)
-	_check(bool(subject.get("success", false)))
+	if not _require(bool(subject.get("success", false)), "%d subject build" % count, subject):
+		return
 	var parent := Lifecycle.compile(subject["view_request"], Fixture.lifecycle_options(subject))
-	_check(bool(parent.get("success", false)))
-	_check(String(parent.get("status", "")) == Lifecycle.STATUS_READY)
-	_check(bool(Artifact.validate(parent["artifact"]).get("success", false)))
+	if not _require(bool(parent.get("success", false)), "%d lifecycle compile" % count, parent):
+		return
+	if not _require(String(parent.get("status", "")) == Lifecycle.STATUS_READY, "%d parent BAKE_READY" % count, parent):
+		return
+	if not _require(parent.has("artifact"), "%d parent artifact present" % count, parent):
+		return
+	if not _require(bool(Artifact.validate(parent["artifact"]).get("success", false)), "%d parent artifact validates" % count, parent["artifact"]):
+		return
 	var reduced_state := Fixture.reduced_state()
 	var parent_execution := Lifecycle.execute(parent, reduced_state)
-	_check(bool(parent_execution.get("success", false)))
+	if not _require(bool(parent_execution.get("success", false)), "%d parent executes" % count, parent_execution):
+		return
 
 	var structural := Fixture.compile_structural(subject)
-	_check(bool(structural.get("success", false)))
-	_check(bool(structural["aggregate"].get("success", false)))
-	_check(bool(structural["guard"].get("success", false)))
-	_check(bool(structural["local"].get("success", false)))
-	_check(int(structural["local"]["diagnostics"]["full_part_count"]) == Fixture.REGION_SIZE)
-	_check(int(structural["local"]["diagnostics"]["retained_component_count"]) == 2)
+	if not _require(bool(structural.get("success", false)), "%d structural pipeline" % count, structural):
+		return
+	if not _require(bool(structural["aggregate"].get("success", false)), "%d aggregate" % count, structural["aggregate"]):
+		return
+	if not _require(bool(structural["guard"].get("success", false)), "%d guard" % count, structural["guard"]):
+		return
+	if not _require(bool(structural["local"].get("success", false)), "%d local unbake plan" % count, structural["local"]):
+		return
+	if not _require(int(structural["local"]["diagnostics"]["full_part_count"]) == Fixture.REGION_SIZE, "%d local full region size" % count, structural["local"]["diagnostics"]):
+		return
+	if not _require(int(structural["local"]["diagnostics"]["retained_component_count"]) == 2, "%d retained components" % count, structural["local"]["diagnostics"]):
+		return
 
 	var guard_result := Fixture.evaluate_guard(subject, structural)
-	_check(bool(guard_result.get("success", false)))
-	_check(String(guard_result.get("status", "")) == "STRUCTURAL_REFINEMENT_REQUIRED")
-	_check(guard_result["refinement_requests"].size() == 1)
-	_check(String(guard_result["refinement_requests"][0]["mapped_source_region"]) == String(subject["target_region_id"]))
-	_check(String(guard_result["refinement_requests"][0]["peak_bond_id"]) == String(subject["break_bond_id"]))
+	if not _require(bool(guard_result.get("success", false)), "%d guard runtime" % count, guard_result):
+		return
+	if not _require(String(guard_result.get("status", "")) == "STRUCTURAL_REFINEMENT_REQUIRED", "%d guard requires refinement" % count, guard_result):
+		return
+	if not _require(guard_result["refinement_requests"].size() == 1, "%d single-region refinement" % count, guard_result):
+		return
+	if not _require(String(guard_result["refinement_requests"][0]["mapped_source_region"]) == String(subject["target_region_id"]), "%d target region identity" % count, guard_result):
+		return
+	if not _require(String(guard_result["refinement_requests"][0]["peak_bond_id"]) == String(subject["break_bond_id"]), "%d peak weak bond identity" % count, guard_result):
+		return
 
 	var break_bundle := Fixture.make_break(subject, structural)
-	_check(bool(break_bundle.get("success", false)))
-	_check(not break_bundle["source_invalidation"].is_empty())
+	if not _require(bool(break_bundle.get("success", false)), "%d canonical break bundle" % count, break_bundle):
+		return
+	if not _require(not break_bundle["source_invalidation"].is_empty(), "%d source invalidation present" % count, break_bundle):
+		return
 	var bake_invalidation := Fixture.make_bake_invalidation(parent, break_bundle)
-	_check(bool(BakeInvalidation.validate(bake_invalidation).get("success", false)))
-	_check(String(bake_invalidation["artifact_id"]) == String(parent["artifact"]["artifact_id"]))
-	_check(String(bake_invalidation["reason"]) == "SOURCE_REVISION")
+	if not _require(bool(BakeInvalidation.validate(bake_invalidation).get("success", false)), "%d bake invalidation validates" % count, bake_invalidation):
+		return
+	if not _require(String(bake_invalidation["artifact_id"]) == String(parent["artifact"]["artifact_id"]), "%d invalidation binds parent artifact" % count, bake_invalidation):
+		return
 
 	var stale := Lifecycle.execute(parent, reduced_state, 0.0, [bake_invalidation])
-	_check(not bool(stale.get("success", false)))
-	_check(String(stale.get("error_code", "")) == "STALE_PHYSICAL_BAKE_EXECUTION_FORBIDDEN")
+	if not _require(not bool(stale.get("success", false)), "%d stale parent rejected" % count, stale):
+		return
+	if not _require(String(stale.get("error_code", "")) == "STALE_PHYSICAL_BAKE_EXECUTION_FORBIDDEN", "%d stale rejection code" % count, stale):
+		return
 
 	var compiled := Fixture.compile_transaction(break_bundle)
-	_check(bool(compiled.get("success", false)))
-	_check(String(compiled.get("status", "")) == "STRUCTURAL_TOPOLOGY_REBAKE_TRANSACTION_READY")
+	if not _require(bool(compiled.get("success", false)), "%d topology transaction compile" % count, compiled):
+		return
+	if not _require(String(compiled.get("status", "")) == "STRUCTURAL_TOPOLOGY_REBAKE_TRANSACTION_READY", "%d topology transaction status" % count, compiled):
+		return
 	var transaction: Dictionary = compiled["transaction"]
-	_check(transaction["invalidated_pieces"].size() == 3)
-	_check(transaction["rebaked_components"].size() == 2)
+	if not _require(transaction["invalidated_pieces"].size() == 3, "%d invalidated reduced pieces" % count, transaction):
+		return
+	if not _require(transaction["rebaked_components"].size() == 2, "%d rebaked components" % count, transaction):
+		return
 	var component_sizes: Array = []
 	for component in transaction["rebaked_components"]:
 		component_sizes.append(component["part_ids"].size())
-		_check(bool(Artifact.validate(component["physical_bake_artifact"]).get("success", false)))
+		if not _require(bool(Artifact.validate(component["physical_bake_artifact"]).get("success", false)), "%d component artifact validates" % count, component["physical_bake_artifact"]):
+			return
 	component_sizes.sort()
 	var expected_sizes := [int(subject["break_index"]), count - int(subject["break_index"])]
 	expected_sizes.sort()
-	_check(component_sizes == expected_sizes)
+	if not _require(component_sizes == expected_sizes, "%d split component sizes" % count, {"actual": component_sizes, "expected": expected_sizes}):
+		return
 
 	var deterministic := Fixture.compile_transaction(break_bundle)
-	_check(bool(deterministic.get("success", false)))
-	_check(String(deterministic["transaction"]["checksum"]) == String(transaction["checksum"]))
+	if not _require(bool(deterministic.get("success", false)), "%d deterministic recompile" % count, deterministic):
+		return
+	if not _require(String(deterministic["transaction"]["checksum"]) == String(transaction["checksum"]), "%d deterministic transaction hash" % count, deterministic):
+		return
 
 	var result := TopologyRuntime.execute(
 		transaction,
@@ -121,23 +186,39 @@ func _test_full_lifecycle(count: int) -> void:
 		break_bundle["dependencies"],
 		[]
 	)
-	_check(bool(result.get("success", false)))
-	_check(String(result.get("status", "")) == TopologyRuntime.READY)
-	_check(String(result["event_commit"]["state"]) == "APPLIED")
-	_check(String(result["event_commit"]["event_id"]) == String(break_bundle["event"]["event_id"]))
-	_check(int(result["diagnostics"]["split_component_count"]) == 2)
-	_check(int(result["diagnostics"]["invalidated_reduced_piece_count"]) == 3)
-	_check(int(result["diagnostics"]["executable_physical_bake_artifact_count"]) == 2)
-	_check(int(result["diagnostics"]["full_dof"]) == count * 13)
-	_check(int(result["diagnostics"]["mixed_before_event_dof"]) == Fixture.REGION_SIZE * 13 + 2 * 13)
-	_check(int(result["diagnostics"]["rebaked_dof"]) == 2 * 13)
-	_check(absf(float(result["diagnostics"]["post_split_reduction_ratio"]) - float(count) / 2.0) <= 1.0e-12)
-	_check(float(result["diagnostics"]["mass_error"]) <= Fixture.CONSERVATION_TOLERANCE)
-	_check(float(result["diagnostics"]["linear_momentum_error"]) <= Fixture.CONSERVATION_TOLERANCE)
-	_check(float(result["diagnostics"]["angular_momentum_error"]) <= Fixture.CONSERVATION_TOLERANCE)
-	_check(float(result["diagnostics"]["max_state_handoff_error"]) <= Fixture.CONTINUITY_TOLERANCE)
+	if not _require(bool(result.get("success", false)), "%d topology runtime" % count, result):
+		return
+	if not _require(String(result.get("status", "")) == TopologyRuntime.READY, "%d topology runtime status" % count, result):
+		return
+	if not _require(String(result["event_commit"]["state"]) == "APPLIED", "%d event commit state" % count, result["event_commit"]):
+		return
+	if not _require(String(result["event_commit"]["event_id"]) == String(break_bundle["event"]["event_id"]), "%d event identity" % count, result["event_commit"]):
+		return
+	if not _require(int(result["diagnostics"]["split_component_count"]) == 2, "%d split count" % count, result["diagnostics"]):
+		return
+	if not _require(int(result["diagnostics"]["invalidated_reduced_piece_count"]) == 3, "%d invalidated count" % count, result["diagnostics"]):
+		return
+	if not _require(int(result["diagnostics"]["executable_physical_bake_artifact_count"]) == 2, "%d executable rebakes" % count, result["diagnostics"]):
+		return
+	if not _require(int(result["diagnostics"]["full_dof"]) == count * 13, "%d full dof" % count, result["diagnostics"]):
+		return
+	if not _require(int(result["diagnostics"]["mixed_before_event_dof"]) == Fixture.REGION_SIZE * 13 + 2 * 13, "%d mixed dof" % count, result["diagnostics"]):
+		return
+	if not _require(int(result["diagnostics"]["rebaked_dof"]) == 2 * 13, "%d rebaked dof" % count, result["diagnostics"]):
+		return
+	if not _require(absf(float(result["diagnostics"]["post_split_reduction_ratio"]) - float(count) / 2.0) <= 1.0e-12, "%d reduction ratio" % count, result["diagnostics"]):
+		return
+	if not _require(float(result["diagnostics"]["mass_error"]) <= Fixture.CONSERVATION_TOLERANCE, "%d mass conservation" % count, result["diagnostics"]):
+		return
+	if not _require(float(result["diagnostics"]["linear_momentum_error"]) <= Fixture.CONSERVATION_TOLERANCE, "%d linear momentum" % count, result["diagnostics"]):
+		return
+	if not _require(float(result["diagnostics"]["angular_momentum_error"]) <= Fixture.CONSERVATION_TOLERANCE, "%d angular momentum" % count, result["diagnostics"]):
+		return
+	if not _require(float(result["diagnostics"]["max_state_handoff_error"]) <= Fixture.CONTINUITY_TOLERANCE, "%d state handoff" % count, result["diagnostics"]):
+		return
 
-	_verify_reconstruction(count, transaction, result, structural, reduced_state)
+	if not _verify_reconstruction(count, transaction, result, structural, reduced_state):
+		return
 
 	var replay := TopologyRuntime.execute(
 		transaction,
@@ -152,8 +233,10 @@ func _test_full_lifecycle(count: int) -> void:
 		break_bundle["dependencies"],
 		[String(break_bundle["event"]["event_id"])]
 	)
-	_check(not bool(replay.get("success", false)))
-	_check(String(replay.get("error_code", "")) == "STRUCTURAL_TOPOLOGY_EVENT_ALREADY_APPLIED")
+	if not _require(not bool(replay.get("success", false)), "%d duplicate event rejected" % count, replay):
+		return
+	if not _require(String(replay.get("error_code", "")) == "STRUCTURAL_TOPOLOGY_EVENT_ALREADY_APPLIED", "%d duplicate event code" % count, replay):
+		return
 
 	_scale_summaries.append({
 		"parts": count,
@@ -163,9 +246,10 @@ func _test_full_lifecycle(count: int) -> void:
 		"post_split_reduction_ratio": float(result["diagnostics"]["post_split_reduction_ratio"]),
 	})
 
-func _verify_reconstruction(count: int, transaction: Dictionary, result: Dictionary, structural: Dictionary, reduced_state: Dictionary) -> void:
+func _verify_reconstruction(count: int, transaction: Dictionary, result: Dictionary, structural: Dictionary, reduced_state: Dictionary) -> bool:
 	var parent_full := Reconstruction.reconstruct(structural["aggregate"]["reconstruction_mapping"], reduced_state)
-	_check(bool(parent_full.get("success", false)))
+	if not _require(bool(parent_full.get("success", false)), "%d reconstruct parent" % count, parent_full):
+		return false
 	var expected: Dictionary = parent_full["details"]["full_states"]
 	var state_by_component: Dictionary = {}
 	for entry in result["rebaked_component_states"]:
@@ -173,18 +257,24 @@ func _verify_reconstruction(count: int, transaction: Dictionary, result: Diction
 	var rebuilt_parts: Dictionary = {}
 	for component in transaction["rebaked_components"]:
 		var component_id := String(component["component_id"])
-		_check(state_by_component.has(component_id))
+		if not _require(state_by_component.has(component_id), "%d component runtime state exists" % count, {"component_id": component_id}):
+			return false
 		var rebuilt := Reconstruction.reconstruct(
 			component["reconstruction_mapping"],
 			state_by_component[component_id]["reduced_state"]
 		)
-		_check(bool(rebuilt.get("success", false)))
+		if not _require(bool(rebuilt.get("success", false)), "%d reconstruct component" % count, rebuilt):
+			return false
 		for part_id in component["part_ids"]:
 			var key := String(part_id)
-			_check(not rebuilt_parts.has(key))
+			if not _require(not rebuilt_parts.has(key), "%d no duplicate reconstructed part" % count, {"part_id": key}):
+				return false
 			rebuilt_parts[key] = true
-			_check(_state_error(rebuilt["details"]["full_states"][key], expected[key]) <= Fixture.CONTINUITY_TOLERANCE)
-	_check(rebuilt_parts.size() == count)
+			if not _require(_state_error(rebuilt["details"]["full_states"][key], expected[key]) <= Fixture.CONTINUITY_TOLERANCE, "%d reconstructed state continuity" % count, {"part_id": key}):
+				return false
+	if not _require(rebuilt_parts.size() == count, "%d reconstructed canonical coverage" % count, {"actual": rebuilt_parts.size(), "expected": count}):
+		return false
+	return true
 
 func _state_error(left: Dictionary, right: Dictionary) -> float:
 	return maxf(
@@ -204,6 +294,10 @@ func _vec3(value: Array) -> Vector3:
 func _quat(value: Array) -> Quaternion:
 	return Quaternion(float(value[0]), float(value[1]), float(value[2]), float(value[3])).normalized()
 
-func _check(condition: bool) -> void:
-	assert(condition)
-	_checks += 1
+func _require(condition: bool, label: String, details = null) -> bool:
+	if condition:
+		_checks += 1
+		return true
+	_failed = true
+	printerr("FABRIC-BAKE COMPLEX0 FAILURE: %s details=%s" % [label, str(details)])
+	return false
