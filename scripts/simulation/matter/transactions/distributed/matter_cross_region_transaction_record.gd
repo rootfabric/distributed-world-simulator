@@ -4,8 +4,10 @@ const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_uti
 const Plan = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_plan.gd")
 const Receipt = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_receipt.gd")
 const InvalidationBatch = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_invalidation_batch.gd")
+const PhysicalOutput = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd")
 
-const SCHEMA := "planet_simulator.matter_cross_region_transaction_record.v1"
+const LEGACY_SCHEMA := "planet_simulator.matter_cross_region_transaction_record.v1"
+const SCHEMA := "planet_simulator.matter_cross_region_transaction_record.v2"
 
 const PHASE_BEGIN := "BEGIN"
 const PHASE_PREPARING := "PREPARING"
@@ -25,11 +27,17 @@ const DECISION_COMMIT := "COMMIT"
 const DECISION_ABORT := "ABORT"
 const DECISIONS: Array[String] = [DECISION_NONE, DECISION_COMMIT, DECISION_ABORT]
 const TERMINAL_PHASES: Array[String] = [PHASE_COMMITTED, PHASE_ABORTED]
-const FIELDS: Array[String] = [
+const LEGACY_FIELDS: Array[String] = [
 	"schema", "transaction_id", "operation_id", "plan", "phase", "decision",
 	"record_sequence", "transition_id", "created_tick", "prepare_receipts",
 	"commit_receipts", "rollback_receipts", "global_commit_hash", "invalidation_batch",
 	"previous_record_checksum", "checksum",
+]
+const FIELDS: Array[String] = [
+	"schema", "transaction_id", "operation_id", "plan", "phase", "decision",
+	"record_sequence", "transition_id", "created_tick", "prepare_receipts",
+	"commit_receipts", "rollback_receipts", "participant_physical_outputs", "physical_output",
+	"global_commit_hash", "invalidation_batch", "previous_record_checksum", "checksum",
 ]
 
 
@@ -44,6 +52,8 @@ static func create_begin(plan: Dictionary, transition_id: String, created_tick: 
 		"prepare_receipts": [],
 		"commit_receipts": [],
 		"rollback_receipts": [],
+		"participant_physical_outputs": [],
+		"physical_output": {},
 		"global_commit_hash": "",
 		"invalidation_batch": {},
 		"previous_record_checksum": "",
@@ -63,6 +73,10 @@ static func advance(previous: Dictionary, phase: String, transition_id: String, 
 		"prepare_receipts": updates.get("prepare_receipts", previous["prepare_receipts"]),
 		"commit_receipts": updates.get("commit_receipts", previous["commit_receipts"]),
 		"rollback_receipts": updates.get("rollback_receipts", previous["rollback_receipts"]),
+		"participant_physical_outputs": updates.get(
+			"participant_physical_outputs", previous.get("participant_physical_outputs", [])
+		),
+		"physical_output": updates.get("physical_output", previous.get("physical_output", {})),
 		"global_commit_hash": updates.get("global_commit_hash", previous["global_commit_hash"]),
 		"invalidation_batch": updates.get("invalidation_batch", previous["invalidation_batch"]),
 		"previous_record_checksum": previous["checksum"],
@@ -86,10 +100,12 @@ static func compute_global_commit_hash(plan: Dictionary, prepare_receipts: Array
 
 
 static func validate(value: Dictionary) -> Dictionary:
-	var checked: Dictionary = MatterUtils.validate_exact_fields(value, FIELDS)
+	var schema := String(value.get("schema", ""))
+	var fields: Array[String] = LEGACY_FIELDS if schema == LEGACY_SCHEMA else FIELDS
+	var checked: Dictionary = MatterUtils.validate_exact_fields(value, fields)
 	if not bool(checked.get("success", false)):
 		return checked
-	if value.get("schema") != SCHEMA:
+	if not schema in [LEGACY_SCHEMA, SCHEMA]:
 		return MatterUtils.failure("UNSUPPORTED_MATTER_CROSS_REGION_TRANSACTION_RECORD_SCHEMA")
 	for field in ["transaction_id", "operation_id", "transition_id"]:
 		if not MatterUtils.is_canonical_id(value.get(field), 2):
@@ -136,6 +152,9 @@ static func validate(value: Dictionary) -> Dictionary:
 	if commit_count > prepare_count or rollback_count > prepare_count:
 		return MatterUtils.failure("MATTER_CROSS_REGION_RECEIPT_WITHOUT_PREPARE")
 	checked = _validate_receipt_bindings(value, plan)
+	if not bool(checked.get("success", false)):
+		return checked
+	checked = _validate_physical_outputs(value, plan, commit_count)
 	if not bool(checked.get("success", false)):
 		return checked
 	var global_hash: String = String(value.get("global_commit_hash", ""))
@@ -232,6 +251,15 @@ static func validate_progression(current: Dictionary, previous: Dictionary) -> D
 	checked = _validate_array_append_only(previous["commit_receipts"], current["commit_receipts"], "COMMIT")
 	if not bool(checked.get("success", false)):
 		return checked
+	checked = _validate_physical_append_only(
+		Array(previous.get("participant_physical_outputs", [])),
+		Array(current.get("participant_physical_outputs", []))
+	)
+	if not bool(checked.get("success", false)):
+		return checked
+	if not Dictionary(previous.get("physical_output", {})).is_empty() \
+			and Dictionary(current.get("physical_output", {})) != Dictionary(previous.get("physical_output", {})):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUT_MUTATED")
 	checked = _validate_receipt_set_append_only(previous["rollback_receipts"], current["rollback_receipts"], "ROLLBACK")
 	if not bool(checked.get("success", false)):
 		return checked
@@ -271,6 +299,10 @@ static func _create(data: Dictionary) -> Dictionary:
 		"prepare_receipts": _sorted_receipts(Array(data.get("prepare_receipts", []))),
 		"commit_receipts": _sorted_receipts(Array(data.get("commit_receipts", []))),
 		"rollback_receipts": _sorted_receipts(Array(data.get("rollback_receipts", []))),
+		"participant_physical_outputs": _sorted_physical_outputs(
+			Array(data.get("participant_physical_outputs", []))
+		),
+		"physical_output": Dictionary(data.get("physical_output", {})).duplicate(true),
 		"global_commit_hash": String(data.get("global_commit_hash", "")).strip_edges().to_lower(),
 		"invalidation_batch": Dictionary(data.get("invalidation_batch", {})).duplicate(true),
 		"previous_record_checksum": String(data.get("previous_record_checksum", "")).strip_edges().to_lower(),
@@ -286,6 +318,72 @@ static func _sorted_receipts(receipts: Array) -> Array:
 		return String(a.get("region_id", "")) < String(b.get("region_id", ""))
 	)
 	return result
+
+
+static func _sorted_physical_outputs(values: Array) -> Array:
+	var result: Array = values.duplicate(true)
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return String(a.get("region_id", "")) < String(b.get("region_id", ""))
+	)
+	return result
+
+
+static func _validate_physical_outputs(value: Dictionary, plan: Dictionary, commit_count: int) -> Dictionary:
+	var schema := String(value.get("schema", ""))
+	if schema == LEGACY_SCHEMA:
+		return MatterUtils.success()
+	var outputs_value = value.get("participant_physical_outputs", null)
+	var terminal_value = value.get("physical_output", null)
+	if typeof(outputs_value) != TYPE_ARRAY or typeof(terminal_value) != TYPE_DICTIONARY:
+		return MatterUtils.failure("INVALID_MATTER_CROSS_REGION_PHYSICAL_OUTPUT_STATE")
+	var outputs: Array = outputs_value
+	var physical_output: Dictionary = terminal_value
+	var required := PhysicalOutput.output_required(plan)
+	if not required:
+		if not outputs.is_empty() or not physical_output.is_empty():
+			return MatterUtils.failure("MATTER_CROSS_REGION_UNEXPECTED_PHYSICAL_OUTPUT")
+		return MatterUtils.success()
+	if outputs.size() != commit_count:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUT_FRONTIER_MISMATCH")
+	var previous_region_id := ""
+	for index in range(outputs.size()):
+		var raw_output = outputs[index]
+		if typeof(raw_output) != TYPE_DICTIONARY:
+			return MatterUtils.failure("INVALID_MATTER_CROSS_REGION_PARTICIPANT_PHYSICAL_OUTPUT")
+		var checked: Dictionary = PhysicalOutput.validate_participant_output(plan, raw_output)
+		if not bool(checked.get("success", false)):
+			return checked
+		var region_id := String(raw_output.get("region_id", ""))
+		if index > 0 and region_id <= previous_region_id:
+			return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_PHYSICAL_OUTPUTS_NOT_SORTED_UNIQUE")
+		var receipt: Dictionary = receipt_by_region(value["commit_receipts"], region_id)
+		if receipt.is_empty() or Dictionary(raw_output.get("commit_receipt", {})) != receipt:
+			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUT_RECEIPT_FRONTIER_MISMATCH")
+		previous_region_id = region_id
+	var phase := String(value.get("phase", ""))
+	if phase == PHASE_COMMITTED:
+		if physical_output.is_empty():
+			return MatterUtils.failure("MATTER_CROSS_REGION_COMMITTED_PHYSICAL_OUTPUT_REQUIRED")
+		var checked: Dictionary = PhysicalOutput.validate(physical_output)
+		if not bool(checked.get("success", false)):
+			return checked
+		var expected := PhysicalOutput.create(plan, outputs)
+		if expected.is_empty() or physical_output != expected:
+			return MatterUtils.failure("MATTER_CROSS_REGION_COMMITTED_PHYSICAL_OUTPUT_BINDING_MISMATCH")
+	elif not physical_output.is_empty():
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUT_BEFORE_TERMINAL_COMMIT")
+	return MatterUtils.success()
+
+
+static func _validate_physical_append_only(previous: Array, current: Array) -> Dictionary:
+	if current.size() < previous.size():
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUTS_TRUNCATED")
+	if current.size() > previous.size() + 1:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUTS_SKIPPED_JOURNAL_STEP")
+	for index in range(previous.size()):
+		if previous[index] != current[index]:
+			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_OUTPUT_HISTORY_MUTATED")
+	return MatterUtils.success()
 
 
 static func _validate_receipt_array(value, expected_action: String, plan: Dictionary) -> Dictionary:
