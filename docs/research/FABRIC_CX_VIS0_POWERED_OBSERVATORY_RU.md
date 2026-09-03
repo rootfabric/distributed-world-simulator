@@ -1,6 +1,6 @@
 # FABRIC CX-VIS0 / CX-VIS1 — Break / Local Unbake / Split / Rebake Observatory
 
-**Статус:** IMPLEMENTED / EXACT DOUBLE VERIFICATION PENDING  
+**Статус:** IMPLEMENTED / LOCAL EXACT DOUBLE VERIFIED / DRAFT VISUAL LAB  
 **Дата:** 2026-09-03  
 **Ветка:** `feature/fabric-cx-vis0-powered-observatory-r1`  
 **Predecessor:** `research/fabric-bake0-5-a-executable-hybrid-r2 @ d63821c7044ddbae33895ea9afb4fd2af7d1344d`  
@@ -319,7 +319,7 @@ Workflow:
 .github/workflows/fabric-cx-vis-linux-double.yml
 ```
 
-The workflow performs fresh import, prerequisite exact gates, CX-VIS acceptance, fatal script-marker scan and final clean-tree check.
+The workflow performs fresh import, prerequisite exact gates, CX-VIS acceptance, fatal script-marker scan and final clean-tree check.\n\nLocal full-source exact verification on the attached canonical double Godot is GREEN. Permanent evidence: `validation/FABRIC_CX_VIS0_POWERED_OBSERVATORY_EXACT_EVIDENCE.md`.
 
 ---
 
