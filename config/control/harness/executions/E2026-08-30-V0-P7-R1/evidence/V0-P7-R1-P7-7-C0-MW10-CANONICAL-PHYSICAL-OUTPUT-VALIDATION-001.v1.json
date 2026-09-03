@@ -1,0 +1,83 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-C0",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "18fb18a5cd6dc49a317eccd43e84f03944b4f4f4",
+    "tree": "0af962f7b7962a77915b6b0c8d8f2dc4f5f01d0b",
+    "base_p7_7_b_head": "ecda8b68d53c01aa1a6ab960618bf0fdc5082d57",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33725869345,
+    "runtime_project_control": "SUCCESS"
+  },
+  "delta_from_p7_7_b": {
+    "existing_runtime_files_modified": 0,
+    "new_files": [
+      "config/matter/mw10-canonical-physical-output.v1.json",
+      "scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd",
+      "tests/matter/transactions/test_mw10_canonical_physical_output.gd"
+    ],
+    "coordinator_changed": false,
+    "receipt_schema_changed": false,
+    "checkpoint_schema_changed": false,
+    "operation_result_schema_changed": false,
+    "p7_3_changed": false
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0,
+      "log_sha256": "00bae9aa48c6a77f74ea34a752fc967276c9825d088dc8e1cf762ab59934b191"
+    },
+    {
+      "name": "MW10 canonical physical output contract",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 30,
+      "failures": 0,
+      "log_sha256": "7ac777219c4df6eda530029d1edcccec9087272af379aa3e30019a67074140d5"
+    }
+  ],
+  "contract_proofs": [
+    "physical output owner remains MW10",
+    "one envelope retains per-region canonical MatterMutationResult and MatterMaterialBatch",
+    "commit receipt binds transaction, region and participant checksum",
+    "batch binds operation and body",
+    "batch mass and composition bind to region MatterMutationResult",
+    "per-region batch material masses bind to distributed mass ledger removed quantities",
+    "aggregate participant material masses bind to distributed ledger external_outputs",
+    "participant temperatures and volumes are preserved, not synthesized",
+    "aggregate temperature synthesis is forbidden",
+    "aggregate density synthesis is forbidden",
+    "mass ledger is validation, not physical-property reconstruction"
+  ],
+  "delivery_boundary": {
+    "c0_contract_implemented": true,
+    "c1_coordinator_durable_wiring_implemented": false,
+    "p7_3_delivery_wired": false,
+    "true_a_b_dig_implemented": false
+  },
+  "remaining_risks": [
+    "P7.7-C1 must durably carry participant physical outputs through MW10 coordinator/recovery without changing ownership.",
+    "P7.7-C2 must connect the committed physical output envelope to P7.3 exactly-once delivery.",
+    "A long non-C0 regression batch showed variable execution duration in the local container; C0 correctness was validated independently and C0 changed no existing runtime source file."
+  ],
+  "final_head": "18fb18a5cd6dc49a317eccd43e84f03944b4f4f4",
+  "final_tree": "0af962f7b7962a77915b6b0c8d8f2dc4f5f01d0b",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
