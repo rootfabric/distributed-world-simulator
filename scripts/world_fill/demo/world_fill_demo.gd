@@ -4,6 +4,7 @@ const DressingScript = preload("res://scripts/world_fill/dressing/world_fill_dre
 const ScatterScript = preload("res://scripts/world_fill/scatter/world_fill_prop_scatter.gd")
 const ScarLayerScript = preload("res://scripts/world_fill/decals/world_fill_scar_layer.gd")
 const AtmosphereScript = preload("res://scripts/world_fill/ambience/world_fill_atmosphere.gd")
+const FeedbackScript = preload("res://scripts/world_fill/feedback/world_fill_event_feedback.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -11,6 +12,7 @@ func _ready() -> void:
 	_build_rocks()
 	_build_scatter()
 	_build_scar_history()
+	_build_feedback()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -41,6 +43,14 @@ func _build_scar_history() -> void:
 		event["normal"] = Vector3.UP
 		scars.record_event(event, 1000 + index)
 	print("WORLD_FILL_SCARS_ACTIVE=%d" % int(scars.scar_report().get("active", 0)))
+
+func _build_feedback() -> void:
+	var feedback := FeedbackScript.new()
+	var ui_events := [0]
+	feedback.configure("ui", func(_event: Dictionary) -> void: ui_events[0] += 1)
+	feedback.dispatch({"type": "PICKUP", "position": Vector3.ZERO})
+	feedback.dispatch({"type": "SOMETHING_UNAVAILABLE", "position": Vector3.ZERO})
+	print("WORLD_FILL_FEEDBACK_UI=%d" % int(ui_events[0]))
 
 func _build_environment() -> void:
 	var atmosphere := AtmosphereScript.new()
