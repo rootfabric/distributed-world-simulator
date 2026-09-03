@@ -2641,3 +2641,42 @@ B0.6 ADAPTIVE PHYSICAL FIDELITY
 FABRIC0.19 remains blocked until a concrete FULL-reference falsifier demonstrates a
 missing generic Physical Core primitive that cannot be expressed by FABRIC0.18
 FLOW/JUMP/topology/contact semantics.
+
+---
+
+## FABRIC.SYNC4 exact closure — 2026-09-03
+
+This supersedes the SYNC4 candidate status above.
+
+```text
+SYNC4 exact acceptance:
+122/122 PASS
+
+Project Control:
+33717946953 SUCCESS
+
+FABRIC.SYNC4:
+✅ CLOSED
+
+BRIDGE-2 executable research:
+✅ AUTHORIZED
+
+FABRIC0.19:
+⛔ NOT AUTHORIZED
+```
+
+Roadmap:
+
+```text
+B0.5-A ✅
+  ↓
+FABRIC.SYNC4 ✅
+  ↓
+★ BRIDGE-2 MIXED REPRESENTATION R1 — NEXT ★
+  ↓
+COMPLEX1B / powered breakable mixed lab
+  ↓
+BRIDGE-2 CLOSED
+  ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+```
