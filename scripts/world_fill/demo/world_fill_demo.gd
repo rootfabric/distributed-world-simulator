@@ -6,6 +6,7 @@ const ScarLayerScript = preload("res://scripts/world_fill/decals/world_fill_scar
 const AtmosphereScript = preload("res://scripts/world_fill/ambience/world_fill_atmosphere.gd")
 const FeedbackScript = preload("res://scripts/world_fill/feedback/world_fill_event_feedback.gd")
 const PoiKitScript = preload("res://scripts/world_fill/landmarks/world_fill_poi_kit.gd")
+const MemoryScript = preload("res://scripts/world_fill/memory/world_fill_local_memory.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -15,6 +16,7 @@ func _ready() -> void:
 	_build_scar_history()
 	_build_feedback()
 	_build_landmarks()
+	_build_local_memory()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -61,6 +63,14 @@ func _build_landmarks() -> void:
 	poi_kit.spawn_poi("landing_site", Vector3(-10.0, 0.0, 6.0))
 	poi_kit.spawn_poi("radio_beacon", Vector3(12.0, 0.0, -8.0))
 	print("WORLD_FILL_POIS=%d" % int(poi_kit.poi_report().get("active", 0)))
+
+func _build_local_memory() -> void:
+	var memory := MemoryScript.new()
+	memory.configure_storage("demo_session")
+	memory.load_memory()
+	memory.record_observed({"type": "VISIT", "position": Vector3.ZERO}, 1)
+	memory.save()
+	print("WORLD_FILL_LOCAL_MEMORY=%d" % int(memory.memory_report().get("active", 0)))
 
 func _build_environment() -> void:
 	var atmosphere := AtmosphereScript.new()
