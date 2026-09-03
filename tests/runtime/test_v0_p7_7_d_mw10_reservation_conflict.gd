@@ -164,6 +164,7 @@ func _run() -> void:
 
 	var b_request := _request(
 		"matter-operation/p7-7-d-b-only",
+		String(active_plan["body_id"]),
 		[address_b]
 	)
 	var before_checkpoint: Dictionary = mw10.checkpoint()
@@ -187,6 +188,7 @@ func _run() -> void:
 	_assert(not conflict_plan.is_empty(), "D second A+B plan created")
 	var ab_request := _request(
 		String(conflict_plan["operation_id"]),
+		String(conflict_plan["body_id"]),
 		[address_a, address_b]
 	)
 	var multi_before: Dictionary = mw10.checkpoint()
@@ -237,14 +239,14 @@ func _address(plan: Dictionary, region_id: String, x: int) -> Dictionary:
 	)
 
 
-func _request(operation_id: String, addresses: Array) -> Dictionary:
+func _request(operation_id: String, body_id: String, addresses: Array) -> Dictionary:
 	var expected: Dictionary = {}
 	for raw_address in addresses:
 		var address: Dictionary = raw_address
 		expected[String(address["address_id"])] = 0
 	return MatterRequest.create({
 		"operation_id": operation_id,
-		"body_id": "body/moon",
+		"body_id": body_id,
 		"actor_id": ACTOR,
 		"tool_id": TOOL,
 		"operation_type": "EXCAVATE",
