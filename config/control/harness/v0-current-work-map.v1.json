@@ -262,6 +262,14 @@
       "mw10": "184+51; 2/2 suites",
       "logs": "8/8",
       "fatal_matches": 0
+    },
+    "post_merge_pc0": {
+      "status": "PASS_NON_RED",
+      "run": 33710956525,
+      "standard": "YELLOW_NON_RED",
+      "directional": "YELLOW_NON_RED",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+      "canonical_main": "3cbef7372bada7b0eda9c96c749167ed721141c3"
     }
   },
   "p7_7": {

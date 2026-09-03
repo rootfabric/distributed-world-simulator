@@ -2,11 +2,11 @@
   "schema": "distributed_world_simulator.harness_evidence_map.v1",
   "work_order_id": "V0-P7-R1-WO-001",
   "program": "V0",
-  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
   "intent": "Close P7.6 only after exact-head Reviewer PASS, fresh independent Linux verification, explicit Human RUNTIME_FEATURE_MERGE approval, exact runtime integration, and post-merge blob identity confirmation.",
-  "root_cause_or_reason": "P7.6 supplies the missing production composition between actor seam authority and true multi-region Matter mutation while preserving all existing SM1/MW8/MW9/MW10 and P7.1/MW4 owners.",
+  "root_cause_or_reason": "P7.6 supplies the missing production composition between actor seam authority and true multi-region Matter mutation while preserving all existing SM1/MW8/MW9/MW10 and P7.1/MW4 owners. Stage identity is carried by the evidence intent/summary while checkpoint identity remains the canonical Work Order checkpoint required by the Harness.",
   "changed_surfaces": [
     "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
     "scripts/runtime/networked_gameplay/p7/p7_seam_multi_region_composition.gd",
@@ -47,8 +47,8 @@
   "architecture_ownership_changed": false,
   "focused_validation": "PASS",
   "full_regression": "PASS",
-  "pc0": "NON_RED_REQUIRED_ON_P7_6_CLOSURE_PR",
-  "directional_pc0": "NON_RED_REQUIRED_ON_P7_6_CLOSURE_PR",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
   "production_diff_summary": "Exact runtime PR #466 HEAD c2e056980eed4ae20849154b1dacc71af0ce8bdf / TREE 2df40d13610b5a93cd1549d8c1bc89205026e1f5; four-file delta +847/-13. Reviewer R2 PASS 033866ea8e077727aeabc87ba6f40b7b9e983f0c / PC 33706513500 SUCCESS. Fresh Linux Verifier R1 VERIFIED 49b3617a27b5b915eb0ee84aa2fb56d17ec08296 / PC 33708933001 SUCCESS: 8/8 fresh top-level stages, P7.1 88/0, P7.6 106/0, SM1 145/0, MW8 98/0, MW9 durable 203+12+225 PASS, MW9 race 100/100 rounds, MW10 184+51 and 2/2 suites, 8/8 logs, zero fatal matches. Human approval entered main as 6a0106dd4ddfa01422a9914e5b27c9e3e7aee741. Exact runtime merged through PR #466 as 8b866f32419eb5b9bedebd458ee2f9117a916020. Post-merge check proved all four runtime/test blobs in main are exactly identical to the verified subject.",
   "remaining_risks": [
     "P7.7 graphical digging slice remains open and must be activated separately.",
@@ -57,7 +57,8 @@
   ],
   "required_fixes": [],
   "rank_up_moves": [
-    "Activate P7.7 separately and prove the graphical equip-aim-dig-hole-material-inventory slice over the already-canonical P7.1-P7.6 owners without new truth."
+    "Activate P7.7 separately and prove the graphical equip-aim-dig-hole-material-inventory slice over the already-canonical P7.1-P7.6 owners without new truth.",
+    "P7.6 post-merge Project Control 33710956525 is SUCCESS with standard and directional YELLOW_NON_RED; P7.7 may now be separately activated."
   ],
   "evidence_gaps": [
     "Raw verifier logs remain external runtime artifacts; their exact SHA256 manifest is durable in the P7.6 verification result."

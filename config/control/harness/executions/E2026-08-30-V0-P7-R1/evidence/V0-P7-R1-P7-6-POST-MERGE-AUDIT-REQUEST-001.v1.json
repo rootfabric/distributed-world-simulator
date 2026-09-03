@@ -1,0 +1,13 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_6_post_merge_audit_request.v1",
+  "request_id": "V0-P7-R1-P7-6-POST-MERGE-AUDIT-REQUEST-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "stage": "P7.6_SEAM_AND_MULTI_REGION_COMPOSITION",
+  "canonical_main_to_audit": "3cbef7372bada7b0eda9c96c749167ed721141c3",
+  "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "control_closure_merge": "3cbef7372bada7b0eda9c96c749167ed721141c3",
+  "purpose": "Force Project Control in PR context to fetch and audit the already-updated canonical origin/main after the bounded P7.6 main-owned frontier repair. P7.7 must remain not-started unless blocking standard/directional health is NON_RED.",
+  "runtime_mutation": false,
+  "requested_at_utc": "2026-09-03T03:16:00Z"
+}

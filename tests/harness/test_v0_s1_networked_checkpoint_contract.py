@@ -24,11 +24,11 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
-CURRENT_V0_BRANCH = "control/v0-p7-6-activation-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-6-activation-r1.v1.json"
+CURRENT_V0_BRANCH = "control/v0-p7-6-closure-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-6-closure-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "86b7264dfc1a362c223468e21ece0da7d6de1c67"
+P7_CONTROL_BASE = "8b866f32419eb5b9bedebd458ee2f9117a916020"
 
 
 def load_json(path: str) -> dict:
@@ -171,7 +171,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         )
         prebuild = v0["prebuild_state"]
         self.assertEqual(P7_BRANCH, prebuild["branch"])
-        self.assertEqual("ba8210a8d3cddf084a573f2e862982d3f76c37c9", prebuild["head_at_refresh_input"])
+        self.assertEqual("c2e056980eed4ae20849154b1dacc71af0ce8bdf", prebuild["head_at_refresh_input"])
         self.assertTrue(prebuild["runtime_mutation_present"])
 
     def test_current_registry_and_current_passport_are_consistent(self):

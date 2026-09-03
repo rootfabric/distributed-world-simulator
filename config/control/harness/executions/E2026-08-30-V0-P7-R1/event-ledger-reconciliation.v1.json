@@ -6,7 +6,7 @@
   "work_order_id": "V0-P7-R1-WO-001",
   "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS",
   "mode": "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
-  "reason": "The execution was missing its transition table and later mixed noncanonical control observations into the runtime Work Order event directory. Preserve those files byte-identically as evidence, exclude only exact pinned files from authoritative reducer input, and quarantine the P7.5 closure observation that was accidentally appended at sequence 20 after the repaired authoritative sequence 6.",
+  "reason": "The execution was missing its transition table and later mixed noncanonical control observations into the runtime Work Order event directory. Preserve those files byte-identically as evidence, exclude only exact pinned files from authoritative reducer input, and quarantine the P7.5 and P7.6 closure observations appended after the repaired authoritative sequence.",
   "canonical_reconstruction_event": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0005-p7-3-p7-4-runtime-progress-reconciled.v1.json",
   "canonical_next_sequence": 6,
   "constraints": {
@@ -148,11 +148,21 @@
         "CLOSURE_CONTROL_OBSERVATION_NOT_REQUIRED_FOR_RUNTIME_WORK_ORDER_STATE",
         "PRESERVE_IMMUTABLE_FILE_AS_EVIDENCE"
       ]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0021-p7-6-runtime-merged.v1.json",
+      "git_blob_sha": "8aa4e83d7084fada714eaa6cfa4ab87699a7ad38",
+      "reasons": [
+        "NONCANONICAL_SEQUENCE_GAP_AFTER_RECONSTRUCTED_LEDGER",
+        "CLOSURE_CONTROL_OBSERVATION_NOT_REQUIRED_FOR_RUNTIME_WORK_ORDER_STATE",
+        "PRESERVE_IMMUTABLE_FILE_AS_EVIDENCE"
+      ]
     }
   ],
   "evidence": [
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-TRANSITION-LEDGER-REPAIR-001.v1.json",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-POST-MERGE-AUDIT-EVIDENCE-001.v1.json"
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-POST-MERGE-AUDIT-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-P7-6-MAIN-OWNED-FRONTIER-REPAIR-001.v1.json"
   ],
   "status": "ACTIVE_RECONCILIATION"
 }

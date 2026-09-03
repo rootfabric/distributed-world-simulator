@@ -10,7 +10,7 @@
   "expected_outcome": "P7.6 COMPLETE_MERGED; P7 IN_PROGRESS; P7.7 NEXT.",
   "current_stage": "P7.7 Graphical Digging Slice",
   "stage_status": "P7_6_COMPLETE_MERGED_P7_7_NEXT",
-  "progress_note": "P7.6 exact runtime c2e056980eed4ae20849154b1dacc71af0ce8bdf / tree 2df40d13610b5a93cd1549d8c1bc89205026e1f5 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot. Human RUNTIME_FEATURE_MERGE approved; original PR #466 merged exact runtime as 8b866f32419eb5b9bedebd458ee2f9117a916020. Post-merge blob identity confirmed exact. Pre-merge closure Project Control 33710370131 is RED only on the established main-owned frontier transition pattern: origin/main still registers the pre-closure P7.6 activation frontier, so the already-merged P7.6 runtime appears as V0 critical dependency drift. The bounded repair updates only main-owned control/frontier pointers; exact post-merge Project Control NON_RED is required before P7.7 activation.",
+  "progress_note": "P7.6 exact runtime c2e056980eed4ae20849154b1dacc71af0ce8bdf / tree 2df40d13610b5a93cd1549d8c1bc89205026e1f5 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot. Human RUNTIME_FEATURE_MERGE approved; original PR #466 merged exact runtime as 8b866f32419eb5b9bedebd458ee2f9117a916020. Post-merge blob identity confirmed exact. Pre-merge closure Project Control 33710370131 is RED only on the established main-owned frontier transition pattern: origin/main still registers the pre-closure P7.6 activation frontier, so the already-merged P7.6 runtime appears as V0 critical dependency drift. The bounded repair updates only main-owned control/frontier pointers; exact post-merge Project Control NON_RED is required before P7.7 activation. Exact post-merge Project Control 33710956525 = SUCCESS; standard PC0 YELLOW_NON_RED and directional PC0 YELLOW_NON_RED. P7.6 closure is control-complete and P7.7 is eligible for separate activation.",
   "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.6 substeps COMPLETE_MERGED",
   "next_stage": "P7.7 GRAPHICAL_DIGGING_SLICE is NEXT only. A separate Director activation/implementation dispatch is required before P7.7 runtime mutation starts.",
   "parent_branch_or_checkpoint": "main @ 8b866f32419eb5b9bedebd458ee2f9117a916020 / P7.6 runtime merged",
@@ -38,7 +38,8 @@
     "config/control/project-program-registry.v1.json",
     "config/control/harness/scheduler-policy.v1.json",
     "config/control/harness/v0-product-train-policy.v1.json",
-    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-P7-6-MAIN-OWNED-FRONTIER-REPAIR-001.v1.json"
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/repairs/V0-P7-R1-WO-001-P7-6-MAIN-OWNED-FRONTIER-REPAIR-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-POST-MERGE-AUDIT-EVIDENCE-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/p7/**",
