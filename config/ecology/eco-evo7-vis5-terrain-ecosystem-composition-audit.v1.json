@@ -102,22 +102,22 @@
     {
       "checkpoint": "VIS5.0",
       "name": "Terrain / Ecosystem Composition Contract Audit",
-      "status": "CURRENT"
+      "status": "CLOSED"
     },
     {
       "checkpoint": "VIS5.1",
       "name": "Terrain Surface Frame Adapter",
-      "status": "BLOCKED_BY_VIS5_0"
+      "status": "CLOSED"
     },
     {
       "checkpoint": "VIS5.2",
       "name": "Noncanonical Ground-Cover Presentation Bridge",
-      "status": "BLOCKED_BY_VIS5_1"
+      "status": "IMPLEMENTED_CANDIDATE_EXACT_PENDING"
     },
     {
       "checkpoint": "VIS5.3",
       "name": "Mixed-Strata Composition Lab",
-      "status": "BLOCKED_BY_VIS5_2"
+      "status": "BLOCKED_BY_VIS5_2_EXACT_CLOSURE"
     },
     {
       "checkpoint": "VIS5.4",
@@ -138,5 +138,8 @@
     "introduce TREE_BUSH_GRASS canonical ecology classes",
     "feed presentation RNG, LOD, grass placement or visual scatter back into ecology state",
     "claim PLAY1 performance acceptance before PERF2.CONV"
-  ]
+  ],
+  "current_checkpoint": "VIS5.2",
+  "current_checkpoint_state": "IMPLEMENTED_CANDIDATE_EXACT_PENDING",
+  "next_checkpoint_after_green": "VIS5.3"
 }
