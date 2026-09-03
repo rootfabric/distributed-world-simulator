@@ -1,0 +1,93 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-E-ACTOR-HANDOFF-NO-FALSE-MW10-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-E",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+    "base_d_head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33750546026,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33750607325,
+    "source_export_artifact_id": 9891370833,
+    "source_export_artifact_digest": "sha256:3418466c564f5849fb7036567eb51c5bbfd7a8bb328245158e3990d3b9098a64",
+    "source_tar_sha256": "efe227334a8e65e89d8dbff407b75e0f2870c7f8db3981601b724ccecc913809"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "delta_from_d": {
+    "production_runtime_files_modified": 0,
+    "new_test_files": [
+      "tests/runtime/test_v0_p7_7_e_actor_handoff_no_false_mw10.gd"
+    ]
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0,
+      "log_sha256": "598c8d2dfcd7afefbd06b7e7d927b19580407f22776ed4207558131de43f78db"
+    },
+    {
+      "name": "P7.7-E actor handoff no false MW10",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 24,
+      "failures": 0,
+      "log_sha256": "f493664267028baa0f58a31ea3ec55149cdbecefdb3632acb6d57b5bd3ab58ec",
+      "proofs": [
+        "actor starts under authority A epoch 1",
+        "A→B actor seam uses P7.6 actor-handoff route backed by SM1 transfer lifecycle",
+        "actor handoff reports mw10_invoked=false and MW10 call count remains zero",
+        "active authority becomes B epoch 2",
+        "post-handoff B-only canonical Matter request routes to existing single-region MW4 path",
+        "B-only dig reports mw10_invoked=false and MW10 call count remains zero",
+        "MW4 receives the exact canonical B-only request and executes under B epoch 2"
+      ]
+    },
+    {
+      "name": "P7.6 seam multi-region regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 106,
+      "failures": 0,
+      "log_sha256": "b3d3da4055ad40c82bacdaebf095101798079a546371a9eaee34a6d402a41ec3"
+    }
+  ],
+  "f_material_exactly_once_reuse": {
+    "status": "SATISFIED_BY_C2_EXACT_EVIDENCE",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+    "proof": "FIRST_MW10_PHYSICAL_OUTPUT_DELIVERY_HAS_TWO_FRESH_BATCHES_SECOND_IDENTICAL_DELIVERY_HAS_TWO_ITEM_GRAPH_REPLAYS_AND_BYTE_IDENTICAL_GRAPH"
+  },
+  "fatal_scan": {
+    "patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "matches": 0
+  },
+  "next_boundary": {
+    "id": "P7.7-G",
+    "scope": "SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+    "required_result": "SECOND_CLIENT_CONVERGES_TO_SAME_CANONICAL_HOLE_REVISION_AND_AUTHORITATIVE_INVENTORY_WITHOUT_CLIENT_PRIVATE_TERRAIN_OR_INVENTORY_TRUTH"
+  },
+  "final_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+  "final_tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
