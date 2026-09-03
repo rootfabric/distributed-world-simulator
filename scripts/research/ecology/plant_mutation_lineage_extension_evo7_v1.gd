@@ -109,6 +109,34 @@ static func prepare_default_reproduction_context() -> Dictionary:
 	}
 
 
+## PERF2.4 R9 certification seam. This proves the exact frozen default context
+## once at a chunk boundary. The same reproduce_bundle() implementation then
+## consumes the certified context without repeating policy/hash validation for
+## every offspring.
+static func validate_prepared_reproduction_context(context: Dictionary) -> bool:
+	if context.keys().size() != 3:
+		return false
+	var policy_value = context.get("policy")
+	var kernel_value = context.get("kernel_context")
+	if not policy_value is Dictionary or not kernel_value is Dictionary:
+		return false
+	var policy: Dictionary = policy_value
+	var kernel_context: Dictionary = kernel_value
+	if policy != default_policy():
+		return false
+	if not bool(validate_policy(policy).get("success", false)):
+		return false
+	if not Kernel.validate_prepared_policy_context(kernel_context):
+		return false
+	if Dictionary(policy.get("genome_policy", {})) != Dictionary(kernel_context.get("policy", {})):
+		return false
+	var declared_hash := String(context.get("evo7_policy_hash", ""))
+	return (
+		_is_lower_hex_64(declared_hash)
+		and declared_hash == policy_hash(policy)
+	)
+
+
 
 ## Ancestor bundle: one deterministic individual carrying genome v1 + PH0 traits +
 ## EVO7 extension traits under a single v1 lineage record.
@@ -134,36 +162,38 @@ static func reproduce_bundle(
 	mutation_seed: int,
 	offspring_index: int,
 	policy: Dictionary = {},
-	prepared_context: Dictionary = {}
+	prepared_context: Dictionary = {},
+	prepared_context_validated: bool = false
 ) -> Dictionary:
 	if offspring_index < 0:
 		return {}
 	if not bool(_validate_bundle(parent_bundle).get("success", false)):
 		return {}
 	var using_prepared_context := not prepared_context.is_empty()
+	if using_prepared_context and not prepared_context_validated:
+		if not validate_prepared_reproduction_context(prepared_context):
+			return {}
+		prepared_context_validated = true
 	var effective_policy: Dictionary = (
 		Dictionary(prepared_context.get("policy", {}))
 		if using_prepared_context
 		else (default_policy() if policy.is_empty() else policy.duplicate(true))
 	)
-	## Prepared mode still runs canonical validation every offspring. R8 removes
-	## repeated policy creation/deep-copy and repeated canonical SHA work only.
-	if not bool(validate_policy(effective_policy).get("success", false)):
-		return {}
-	if using_prepared_context and effective_policy != default_policy():
-		return {}
+	if not using_prepared_context:
+		if not bool(validate_policy(effective_policy).get("success", false)):
+			return {}
 
 	var kernel_context: Dictionary = {}
 	var evo7_policy_id := ""
 	if using_prepared_context:
+		if not prepared_context_validated:
+			return {}
 		kernel_context = Dictionary(prepared_context.get("kernel_context", {}))
 		evo7_policy_id = String(prepared_context.get("evo7_policy_hash", ""))
-		if kernel_context.is_empty() or not _is_lower_hex_64(evo7_policy_id):
-			return {}
 
 	var genome_result := Kernel.reproduce(
 		parent_bundle["genome"], parent_bundle["lineage"], mutation_seed, offspring_index,
-		effective_policy["genome_policy"], kernel_context)
+		effective_policy["genome_policy"], kernel_context, prepared_context_validated)
 	if genome_result.is_empty():
 		return {}
 	var child_genome: Dictionary = genome_result["genome"]
