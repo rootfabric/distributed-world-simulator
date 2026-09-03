@@ -3,6 +3,7 @@ extends Node3D
 const DressingScript = preload("res://scripts/world_fill/dressing/world_fill_dressing.gd")
 const ScatterScript = preload("res://scripts/world_fill/scatter/world_fill_prop_scatter.gd")
 const ScarLayerScript = preload("res://scripts/world_fill/decals/world_fill_scar_layer.gd")
+const AtmosphereScript = preload("res://scripts/world_fill/ambience/world_fill_atmosphere.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -42,21 +43,11 @@ func _build_scar_history() -> void:
 	print("WORLD_FILL_SCARS_ACTIVE=%d" % int(scars.scar_report().get("active", 0)))
 
 func _build_environment() -> void:
-	var world_environment := WorldEnvironment.new()
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color(0.008, 0.01, 0.018)
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color(0.18, 0.2, 0.26)
-	environment.ambient_light_energy = 0.45
-	world_environment.environment = environment
-	add_child(world_environment)
-
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-42.0, -28.0, 0.0)
-	sun.light_energy = 1.7
-	sun.shadow_enabled = true
-	add_child(sun)
+	var atmosphere := AtmosphereScript.new()
+	atmosphere.name = "WorldFillAtmosphere"
+	add_child(atmosphere)
+	var report := atmosphere.apply_clock({"day_fraction": 0.42, "tick": 0})
+	print("WORLD_FILL_AMBIENCE=%s" % String(report.get("preset", "")))
 
 func _build_ground() -> void:
 	var ground := MeshInstance3D.new()
