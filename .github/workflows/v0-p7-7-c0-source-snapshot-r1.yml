@@ -1,0 +1,39 @@
+name: V0 P7.7 C0 Source Snapshot R1
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-p7-bounded-terrain-mutation
+    paths:
+      - ".github/workflows/v0-p7-7-c0-source-snapshot-r1.yml"
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 204d09054ffac42b41bf3e678309156be31d3e7c
+          fetch-depth: 0
+      - name: Verify exact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "204d09054ffac42b41bf3e678309156be31d3e7c"
+          test "$(git rev-parse 'HEAD^{tree}')" = "c0b6dfdd301d3ee57a90fe3915734333be5a6d09"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Archive source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .git
+          tar -czf /tmp/dws-p7-7-c0-204d0905.tar.gz .
+          sha256sum /tmp/dws-p7-7-c0-204d0905.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dws-p7-7-c0-204d0905-source
+          path: /tmp/dws-p7-7-c0-204d0905.tar.gz
+          if-no-files-found: error
+          retention-days: 1
