@@ -2179,3 +2179,87 @@ FABRIC.SYNC3 ★ NEXT
 
 SYNC-3 must decide executable B0.5 authorization, FABRIC0.19 necessity and BRIDGE-2
 executable authorization.
+
+---
+
+## FABRIC.SYNC3 — post-B0.4 + B0.5-P0 authorization — 2026-09-03
+
+Integration parents:
+
+```text
+B0.4 closure:
+1e8324407f60b4536bf9497e0a7c8a6874ae93ca
+
+B0.5-P0 closure:
+d280096e0b64c03ac613e586881e43c816f471f0
+
+integration commit:
+91132efab20579fa2e64dc2fb9e0dc074c66179e
+```
+
+Decision:
+
+```text
+B0.4 DYNAMIC ROM:
+✅ CLOSED
+
+B0.5-P0:
+✅ CLOSED
+
+B0.5-A EXECUTABLE HYBRID BAKE:
+✅ EXECUTABLE RESEARCH AUTHORIZED
+
+FABRIC0.19:
+⛔ NOT AUTHORIZED
+
+BRIDGE-2 EXECUTABLE:
+⛔ NOT AUTHORIZED
+
+BRIDGE-2 DESIGN/PREFLIGHT:
+✅ ALLOWED
+```
+
+Current roadmap:
+
+```text
+B0.4 ✅ CLOSED
+  +
+B0.5-P0 ✅ CLOSED
+        ↓
+FABRIC.SYNC3 ✅
+        ↓
+B0.5-A EXECUTABLE HYBRID BAKE ★ NEXT
+        ↓
+B0.5-A CLOSED
+        ↓
+BRIDGE-2 authorization review
+        ↓
+BRIDGE-2 executable?
+FABRIC0.19 necessity?
+```
+
+B0.5-A must consume the common B0.4 PhysicalBakeArtifact interface and prove a
+generic two-mode FLOW→JUMP transition with B0.4 StateMapping/ReconstructionDescriptor
+handoff, lazy mode-B compilation/cache, exactly-once physical event ownership and
+unknown mode-C FULL/NO_SAFE_BAKE fallback.
+
+BRIDGE-2 executable work remains blocked until that falsifier is closed.
+
+## Canonical B0.5-A branch correction
+
+An older parallel `research/fabric-bake0-5-a-executable-hybrid-r1` branch already
+existed from the superseded pre-final B0.4 SYNC-3 attempt (PR #464).
+
+It is not the child of this final SYNC-3 closure and is therefore not canonical.
+
+Canonical authorized branch:
+
+```text
+research/fabric-bake0-5-a-executable-hybrid-r2
+
+base:
+3cf8e6689b8b7d20593f134a8a1eb0ce79db1ca1
+(final FABRIC.SYNC3 closure)
+```
+
+PR #464 is closed as superseded by PR #473.
