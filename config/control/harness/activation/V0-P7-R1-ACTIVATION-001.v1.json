@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_6",
+  "state": "IN_PROGRESS_P7_7_NEXT",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-09-02T14:31:00Z",
+  "updated_at_utc": "2026-09-03T03:05:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -165,21 +165,41 @@
       "fatal_matches": 0
     }
   },
-  "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
   "p7_6": {
-    "status": "IN_PROGRESS",
+    "status": "COMPLETE_MERGED",
     "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "runtime_started": true,
-    "activated_by": "EXPLICIT_HUMAN_DIRECTIVE",
-    "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
-    "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
-    "routing_rules": [
-      "ACTOR_HANDOFF_ALONE_NEVER_STARTS_MW10",
-      "SINGLE_REGION_MUTATION_USES_EXISTING_P7_1_TO_MW4_PATH",
-      "MULTI_REGION_MUTATION_USES_EXISTING_MW10_TRANSACTION",
-      "MW10_RESERVATIONS_BLOCK_CONFLICTING_SINGLE_REGION_MUTATION_AND_HANDOFF",
-      "NO_P7_COORDINATION_PROTOCOL_OR_DURABLE_STATE"
-    ]
+    "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+    "runtime_merge_pr": 466,
+    "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+    "runtime_merge_commit_tree": "1fa7532c4544284fa2d704da5139e030862afcd5",
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "exact_linux_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "human_gate": "RUNTIME_FEATURE_MERGE APPROVED",
+    "test_summary": {
+      "stages": "8/8",
+      "p7_1": "88/88",
+      "p7_6": "106/106",
+      "sm1": "145/145",
+      "mw8": "98/98",
+      "mw9_durable": "203+12+225 PASS",
+      "mw9_race": "100/100 rounds",
+      "mw10": "184+51; 2/2 suites",
+      "logs": "8/8",
+      "fatal_matches": 0
+    }
+  },
+  "p7_7": {
+    "status": "NEXT",
+    "scope": "GRAPHICAL_DIGGING_SLICE",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
+    "runtime_started": false,
+    "note": "Separate Director activation/implementation dispatch required; P7.6 closure does not start P7.7 runtime work."
   }
 }
