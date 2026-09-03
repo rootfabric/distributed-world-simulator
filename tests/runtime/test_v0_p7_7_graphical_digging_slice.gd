@@ -120,22 +120,40 @@ func _test_configuration_and_zero_ownership() -> void:
 
 func _test_aim_binding_fails_closed_before_route() -> void:
 	var fx := _fixture()
-	var wrong_source: Dictionary = fx.binding.duplicate(true)
-	wrong_source["aim_source"] = "PRESENTATION_RAYCAST"
+	var missing_query: Dictionary = fx.binding.duplicate(true)
+	missing_query.erase("query_result")
 	_assert_error(
-		fx.slice.execute_aimed_dig(wrong_source),
-		"P7_7_CANONICAL_MATTER_AIM_REQUIRED",
-		"presentation-private aim source"
+		fx.slice.execute_aimed_dig(missing_query),
+		"P7_7_CANONICAL_MATTER_QUERY_RESULT_REQUIRED",
+		"missing canonical Matter query result"
 	)
-	_assert(fx.router.calls == 0, "invalid aim source never reaches router")
+	_assert(fx.router.calls == 0, "missing query never reaches router")
+
 	var miss: Dictionary = fx.binding.duplicate(true)
-	miss["canonical_surface_hit"] = false
+	var miss_query: Dictionary = Dictionary(miss["query_result"]).duplicate(true)
+	var miss_details: Dictionary = Dictionary(miss_query["details"]).duplicate(true)
+	miss_details["hit"] = false
+	miss_query["details"] = miss_details
+	miss["query_result"] = miss_query
 	_assert_error(
 		fx.slice.execute_aimed_dig(miss),
 		"P7_7_CANONICAL_SURFACE_HIT_REQUIRED",
 		"canonical query miss"
 	)
 	_assert(fx.router.calls == 0, "query miss never reaches router")
+
+	var drift: Dictionary = fx.binding.duplicate(true)
+	var drift_query: Dictionary = Dictionary(drift["query_result"]).duplicate(true)
+	var drift_details: Dictionary = Dictionary(drift_query["details"]).duplicate(true)
+	drift_details["position_m"] = Vector3(1000000.0, 1000000.0, 1000000.0)
+	drift_query["details"] = drift_details
+	drift["query_result"] = drift_query
+	_assert_error(
+		fx.slice.execute_aimed_dig(drift),
+		"P7_7_QUERY_HIT_OUTSIDE_REQUEST_SHAPE",
+		"query/request target drift"
+	)
+	_assert(fx.router.calls == 0, "query/request drift never reaches router")
 
 
 func _test_single_region_committed_result_drives_material_and_visual_invalidation() -> void:
@@ -267,8 +285,7 @@ func _fixture() -> Dictionary:
 		"request": request,
 		"result": result,
 		"binding": {
-			"aim_source": Slice.AIM_SOURCE_CANONICAL_MATTER_QUERY,
-			"canonical_surface_hit": true,
+			"query_result": pair.get("query_result", {}),
 			"request": request,
 			"mw10_plan": {},
 			"server_tick": 1,
@@ -292,12 +309,25 @@ func _committed_pair() -> Dictionary:
 	if not bool(configured.get("success", false)):
 		return {}
 	var center: Vector3 = bubble.anchor_body_fixed_m()
+	var query_result: Dictionary = bubble.query_service().raycast(
+		center + Vector3(0.0, 12.0, 0.0),
+		Vector3.DOWN,
+		24.0,
+		bubble.mutation_level(),
+		0.25,
+		0.25,
+		256
+	)
+	if not bool(query_result.get("success", false)) \
+			or not bool(Dictionary(query_result.get("details", {})).get("hit", false)):
+		return {}
+	var hit_position_m: Vector3 = Dictionary(query_result["details"])["position_m"]
 	var request: Dictionary = bubble.create_excavation_request(
 		"operation/p7-7/single",
 		ACTOR,
 		TOOL,
-		center + Vector3(2.5, -0.5, 0.0),
-		center + Vector3(3.5, -0.5, 0.0),
+		hit_position_m + Vector3.UP * 0.5,
+		hit_position_m + Vector3.DOWN * 2.0,
 		0.75,
 		1000000000.0,
 		1
@@ -307,7 +337,11 @@ func _committed_pair() -> Dictionary:
 	var result: Dictionary = bubble.execute(request)
 	if String(result.get("status", "")) != "COMMITTED":
 		return {}
-	return {"request": request, "result": result}
+	return {
+		"query_result": query_result,
+		"request": request,
+		"result": result,
+	}
 
 
 func _assert_ok(result: Dictionary, message: String) -> void:
