@@ -31,11 +31,12 @@ if [[ "$CONTRACT_BLOB" != "$EXPECTED_CONTRACT_BLOB" ]]; then
 fi
 
 # Runtime optimization is allowed only in the STREAM1 execution/profiling
-# files below, the shared pure recruitment kernel used by both oracle and
-# STREAM1, and the two canonical lineage mutation authority files. R5 adds the
-# immutable EnvironmentSample cache seam. R8 adds only an optional prepared
-# default-policy context through the SAME reproduce_bundle()/reproduce()
-# implementations; mutation formulas/hashes remain frozen.
+# files below, the shared pure recruitment kernel, the two canonical lineage
+# mutation authority files, and LS3.4's survivor ownership seam. R5 adds the
+# immutable EnvironmentSample cache, R9 certifies the frozen mutation context,
+# and R10 removes one redundant post-competition deep copy only on the
+# optimized STREAM1 path. Biology/competition formulas and hashes remain
+# frozen.
 ALLOWED_RUNTIME_1="scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd"
 ALLOWED_RUNTIME_2="scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd"
 ALLOWED_RUNTIME_3="scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd"
@@ -43,12 +44,13 @@ ALLOWED_RUNTIME_4="scripts/ecology/perf/eco_evo7_perf24_runtime_optimization_pro
 ALLOWED_RUNTIME_5="scripts/ecology/perf/eco_evo7_par0_recruitment_kernel_v1.gd"
 ALLOWED_RUNTIME_6="scripts/research/ecology/plant_mutation_lineage_extension_evo7_v1.gd"
 ALLOWED_RUNTIME_7="scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd"
+ALLOWED_RUNTIME_8="scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd"
 
 RUNTIME_DIFF="$(git diff --name-only "$EXPECTED_BASE...$HEAD" -- scripts/ecology scripts/research/ecology)"
 if [[ -n "$RUNTIME_DIFF" ]]; then
   while IFS= read -r path; do
     case "$path" in
-      "$ALLOWED_RUNTIME_1"|"$ALLOWED_RUNTIME_2"|"$ALLOWED_RUNTIME_3"|"$ALLOWED_RUNTIME_4"|"$ALLOWED_RUNTIME_5"|"$ALLOWED_RUNTIME_6"|"$ALLOWED_RUNTIME_7")
+      "$ALLOWED_RUNTIME_1"|"$ALLOWED_RUNTIME_2"|"$ALLOWED_RUNTIME_3"|"$ALLOWED_RUNTIME_4"|"$ALLOWED_RUNTIME_5"|"$ALLOWED_RUNTIME_6"|"$ALLOWED_RUNTIME_7"|"$ALLOWED_RUNTIME_8")
         ;;
       *)
         echo "PERF2.4 UNAUTHORIZED RUNTIME DIFF: $path" >&2
@@ -58,7 +60,7 @@ if [[ -n "$RUNTIME_DIFF" ]]; then
   done <<< "$RUNTIME_DIFF"
 fi
 
-for required in "$ALLOWED_RUNTIME_1" "$ALLOWED_RUNTIME_2" "$ALLOWED_RUNTIME_3" "$ALLOWED_RUNTIME_4" "$ALLOWED_RUNTIME_5" "$ALLOWED_RUNTIME_6" "$ALLOWED_RUNTIME_7"; do
+for required in "$ALLOWED_RUNTIME_1" "$ALLOWED_RUNTIME_2" "$ALLOWED_RUNTIME_3" "$ALLOWED_RUNTIME_4" "$ALLOWED_RUNTIME_5" "$ALLOWED_RUNTIME_6" "$ALLOWED_RUNTIME_7" "$ALLOWED_RUNTIME_8"; do
   if ! git diff --name-only "$EXPECTED_BASE...$HEAD" -- "$required" | grep -Fxq "$required"; then
     echo "PERF2.4 EXPECTED IMPLEMENTATION DIFF MISSING: $required" >&2
     exit 6
