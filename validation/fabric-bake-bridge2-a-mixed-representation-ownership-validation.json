@@ -57,5 +57,39 @@
     "BRIDGE2_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next_checkpoint": "BRIDGE_2_B_EXECUTABLE_MIXED_SUBJECT"
+  "next_checkpoint": "BRIDGE_2_B_EXECUTABLE_MIXED_SUBJECT",
+  "exact_implementation_subject": {
+    "head": "67715c401480bc28c3d9bc90c0711b127956d95b",
+    "tree": "cb4c7ac311d080edbb13e9858b1271fde588cce5",
+    "tracked_clean": true
+  },
+  "exact_source_carrier": {
+    "run_id": 33760133442,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9895075448
+  },
+  "exact_double_replay": {
+    "result": "PASS",
+    "acceptance": {
+      "pass": 71,
+      "total": 71
+    },
+    "playground": "PASS",
+    "log_sha256": "7d0e4a719ce66c369b40f67b43ef173a744d429bd658f5064ad66cbbf9b1e108",
+    "contract_hash": "5b58cdb94b959be41d7b8450f423e540ca393ac8a7469ea1e81002c6a214ec42"
+  },
+  "control": {
+    "implementation_project_control": {
+      "run_id": 33760133558,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_portable_smoke": {
+      "run_id": 33760133653,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_linux_double_self_hosted": {
+      "run_id": 33760133543,
+      "status": "QUEUED_AT_EVIDENCE_RECORD"
+    }
+  }
 }
