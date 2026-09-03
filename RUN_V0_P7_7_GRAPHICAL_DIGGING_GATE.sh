@@ -99,7 +99,7 @@ run_contract "p7-7-e-actor-handoff" \
 
 run_contract "p7-6-seam-composition" \
   "res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd" \
-  "V0-P7.6 seam and multi-region composition: PASS (106 assertions, 0 failures)"
+  "V0-P7.6 seam + multi-region composition: PASS (106 assertions, 0 failures)"
 
 run_contract "mw10-transactions" \
   "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd" \
@@ -107,11 +107,11 @@ run_contract "mw10-transactions" \
 
 run_contract "mw10-process-recovery" \
   "res://tests/matter/transactions/test_mw10_cross_region_processes.gd" \
-  "MW10 cross-region process recovery: PASS"
+  "MW10 cross-region Matter processes: PASS"
 
 run_contract "mw4" \
-  "res://tests/matter/mutation/test_mw4_matter_excavation.gd" \
-  "MW4 Matter excavation: PASS"
+  "res://tests/matter/mutation/test_mw4_matter_mutations.gd" \
+  "MW4 matter mutations: PASS"
 
 P7_5_LOG="$ARTIFACT_ROOT/p7-5-subgate.log"
 bash "$ROOT/RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh" "$GODOT_BIN" "$HEAD" >"$P7_5_LOG" 2>&1
