@@ -241,3 +241,67 @@ NOT PRODUCTION ACCEPTED
 ```
 
 BRIDGE-2 executable remains blocked pending the next synchronization review.
+
+
+---
+
+## Post-closure complex-system handoff
+
+B0.5-A closure opens the first complexity laboratories without changing the research
+qualification of B0.5-A itself.
+
+Detailed plan:
+
+docs/research/FABRIC_BAKE_COMPLEX_SYSTEMS_EXPERIMENTAL_LADDER_RU.md
+
+Immediately available as post-closure labs:
+
+~~~text
+COMPLEX0
+BREAKABLE STRUCTURE LAB
+
+COMPLEX1A
+POWERED BREAKABLE STRUCTURE
+FULL CAUSAL BASELINE
+~~~
+
+COMPLEX0 verifies:
+
+~~~text
+complex structure
+→ bake
+→ local damage
+→ canonical topology mutation
+→ invalidation
+→ split/reconstruction
+→ rebake
+~~~
+
+COMPLEX1A adds a functional consequence:
+
+~~~text
+battery
+→ wire attached to breakable structure
+→ lamp
+
+critical mechanical/topology break
+→ wire connectivity break
+→ electrical path opens
+→ lamp OFF
+~~~
+
+This consequence must emerge from generic topology and effort/flow semantics; direct
+fixture logic such as "broken fence => lamp off" is forbidden.
+
+The mixed FULL/BAKED repeat of this experiment is intentionally gated later:
+
+~~~text
+POST-B0.5-A FABRIC SYNC
+→ BRIDGE-2 executable authorization
+→ mixed path available
+→ COMPLEX1B
+~~~
+
+Thus B0.5-A is the point where complex-system experiments begin, while BRIDGE-2 is the
+point where the same causal systems become a test of simultaneous mixed physical
+representations.
