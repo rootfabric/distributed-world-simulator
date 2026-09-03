@@ -127,6 +127,28 @@ static func prepare_default_policy_context() -> Dictionary:
 	}
 
 
+## PERF2.4 R9 certification seam. Certification is intentionally separate from
+## reproduce() so optimized STREAM1 can prove the frozen context once at the
+## chunk boundary instead of rebuilding/validating it for every offspring.
+static func validate_prepared_policy_context(context: Dictionary) -> bool:
+	if context.keys().size() != 2:
+		return false
+	var policy_value = context.get("policy")
+	if not policy_value is Dictionary:
+		return false
+	var policy: Dictionary = policy_value
+	if policy != default_policy():
+		return false
+	if not bool(validate_policy(policy).get("success", false)):
+		return false
+	var expected_hash := policy_hash(policy)
+	var declared_hash := String(context.get("policy_hash", ""))
+	return (
+		_is_lower_hex_64(declared_hash)
+		and declared_hash == expected_hash
+	)
+
+
 
 
 static func create_ancestor(genome: Dictionary, lineage_seed: int) -> Dictionary:
@@ -141,9 +163,14 @@ static func reproduce(
 	mutation_seed: int,
 	offspring_index: int,
 	policy: Dictionary = {},
-	prepared_context: Dictionary = {}
+	prepared_context: Dictionary = {},
+	prepared_context_validated: bool = false
 ) -> Dictionary:
 	var using_prepared_context := not prepared_context.is_empty()
+	if using_prepared_context and not prepared_context_validated:
+		if not validate_prepared_policy_context(prepared_context):
+			return {}
+		prepared_context_validated = true
 	var effective_policy: Dictionary = (
 		Dictionary(prepared_context.get("policy", {}))
 		if using_prepared_context
@@ -157,19 +184,15 @@ static func reproduce(
 		return {}
 	if String(parent_lineage.get("genome_checksum", "")) != String(parent_genome.get("checksum", "")):
 		return {}
-	## Prepared mode still validates the policy on every call. R8 only removes
-	## repeated construction/deep-copy and the second validation+SHA performed
-	## by policy_hash(). This keeps malformed prepared policy fail-closed.
-	if not bool(validate_policy(effective_policy).get("success", false)):
-		return {}
-	if using_prepared_context and effective_policy != default_policy():
-		return {}
+	if not using_prepared_context:
+		if not bool(validate_policy(effective_policy).get("success", false)):
+			return {}
 
 	var policy_id := ""
 	if using_prepared_context:
-		policy_id = String(prepared_context.get("policy_hash", ""))
-		if not _is_lower_hex_64(policy_id):
+		if not prepared_context_validated:
 			return {}
+		policy_id = String(prepared_context.get("policy_hash", ""))
 	else:
 		policy_id = policy_hash(effective_policy)
 	var generation := int(parent_lineage.get("generation", 0)) + 1
