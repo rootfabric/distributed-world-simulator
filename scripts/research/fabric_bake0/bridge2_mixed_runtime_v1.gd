@@ -278,6 +278,111 @@ static func consume_representation_event(
 		"status": "BRIDGE2_REPRESENTATION_EVENT_ACCEPTED",
 	})
 
+static func consume_representation_swap_event(
+	session: Dictionary,
+	registry: Dictionary,
+	fabric_event: Dictionary,
+	region_a_id: String,
+	replacement_a: Dictionary,
+	region_b_id: String,
+	replacement_b: Dictionary
+) -> Dictionary:
+	var checked := validate_session(session, registry)
+	if not bool(checked.get("success", false)):
+		return checked
+	if region_a_id == region_b_id:
+		return Utils.failure("BRIDGE2_SWAP_REQUIRES_DISTINCT_REGIONS")
+	var event_id := String(fabric_event.get("event_id", ""))
+	if event_id.is_empty():
+		return Utils.failure("BRIDGE2_FABRIC_EVENT_ID_REQUIRED")
+	if not Utils.is_finite_number(fabric_event.get("time")) or absf(float(fabric_event["time"]) - float(session["time_s"])) > 1.0e-8:
+		return Utils.failure("BRIDGE2_FABRIC_EVENT_TIME_MISMATCH")
+	if typeof(fabric_event.get("transitions")) != TYPE_ARRAY or fabric_event["transitions"].is_empty():
+		return Utils.failure("BRIDGE2_FABRIC_PHYSICAL_TRANSITION_REQUIRED")
+	for record in session["event_ledger"]:
+		if String(record["event_id"]) == event_id:
+			return Utils.failure("BRIDGE2_DUPLICATE_FABRIC_EVENT")
+	var old_a := Registry.region_by_id(registry, region_a_id)
+	var old_b := Registry.region_by_id(registry, region_b_id)
+	if old_a.is_empty() or old_b.is_empty():
+		return Utils.failure("BRIDGE2_SWAP_REGION_NOT_FOUND")
+	for pair in [[old_a, replacement_a], [old_b, replacement_b]]:
+		var old_region: Dictionary = pair[0]
+		var replacement: Dictionary = pair[1]
+		checked = Adapter.validate(replacement)
+		if not bool(checked.get("success", false)):
+			return checked
+		if String(replacement["region_id"]) != String(old_region["region_id"]) or String(replacement["state_id"]) != String(old_region["state_id"]):
+			return Utils.failure("BRIDGE2_SWAP_REPLACEMENT_BINDING_MISMATCH")
+		if String(replacement["source_slice"]["frontier"]["frontier_hash"]) != String(old_region["adapter"]["source_slice"]["frontier"]["frontier_hash"]):
+			return Utils.failure("BRIDGE2_SWAP_SOURCE_MISMATCH")
+	var regions: Array = []
+	for region in registry["regions"]:
+		var region_id := String(region["region_id"])
+		if region_id == region_a_id:
+			regions.append({
+				"region_id": region_a_id,
+				"representation_kind": String(replacement_a["representation_kind"]),
+				"state_id": String(replacement_a["state_id"]),
+				"adapter": replacement_a,
+			})
+		elif region_id == region_b_id:
+			regions.append({
+				"region_id": region_b_id,
+				"representation_kind": String(replacement_b["representation_kind"]),
+				"state_id": String(replacement_b["state_id"]),
+				"adapter": replacement_b,
+			})
+		else:
+			regions.append(Dictionary(region).duplicate(true))
+	var next_registry := Registry.create(
+		registry["master_frontier"], registry["master_authority"], regions, registry["interfaces"]
+	)
+	if next_registry.is_empty():
+		return Utils.failure("BRIDGE2_SWAP_REGISTRY_REBUILD_FAILED")
+	var next := session.duplicate(true)
+	next["registry_hash"] = String(next_registry["registry_hash"])
+	next["artifact_states"][region_a_id] = "FULL" if String(replacement_a["representation_kind"]) == "FULL" else "READY"
+	next["artifact_states"][region_b_id] = "FULL" if String(replacement_b["representation_kind"]) == "FULL" else "READY"
+	next["invalidations_by_region"][region_a_id] = []
+	next["invalidations_by_region"][region_b_id] = []
+	var event_hash := Utils.canonical_hash(fabric_event)
+	next["event_ledger"].append({
+		"event_id": event_id,
+		"event_hash": event_hash,
+		"region_id": region_a_id + "|" + region_b_id,
+		"from_kind": String(old_a["representation_kind"]) + "|" + String(old_b["representation_kind"]),
+		"to_kind": String(replacement_a["representation_kind"]) + "|" + String(replacement_b["representation_kind"]),
+	})
+	next["checksum"] = Utils.compute_checksum(next)
+	checked = validate_session(next, next_registry)
+	if not bool(checked.get("success", false)):
+		return checked
+	return Utils.success({
+		"session": next,
+		"registry": next_registry,
+		"event_hash": event_hash,
+		"handoffs": [
+			{
+				"region_id": region_a_id,
+				"from_kind": String(old_a["representation_kind"]),
+				"to_kind": String(replacement_a["representation_kind"]),
+				"reconstruction_required": String(old_a["representation_kind"]) != "FULL",
+				"projection_required": String(replacement_a["representation_kind"]) != "FULL",
+				"state_error": 0.0,
+			},
+			{
+				"region_id": region_b_id,
+				"from_kind": String(old_b["representation_kind"]),
+				"to_kind": String(replacement_b["representation_kind"]),
+				"reconstruction_required": String(old_b["representation_kind"]) != "FULL",
+				"projection_required": String(replacement_b["representation_kind"]) != "FULL",
+				"state_error": 0.0,
+			},
+		],
+		"status": "BRIDGE2_REPRESENTATION_SWAP_ACCEPTED",
+	})
+
 static func apply_master_update(
 	session: Dictionary,
 	registry: Dictionary,
