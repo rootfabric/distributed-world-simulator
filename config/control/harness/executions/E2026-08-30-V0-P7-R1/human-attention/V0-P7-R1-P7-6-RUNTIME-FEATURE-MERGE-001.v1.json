@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "V0-P7-R1-P7-6-RUNTIME-FEATURE-MERGE-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "risk_class": "CRITICAL",
+  "reason": "P7.6 exact repaired runtime candidate completed Fresh Independent Reviewer R2 PASS and Fresh Independent Linux Verifier R1 VERIFIED with canonical Linux double Godot and all required fresh P7.6/SM1/MW8/MW9/MW10 stages GREEN, so policy now requires an explicit Human RUNTIME_FEATURE_MERGE decision.",
+  "decision_required": "Approve or reject RUNTIME_FEATURE_MERGE for exact runtime PR #466 subject HEAD c2e056980eed4ae20849154b1dacc71af0ce8bdf / TREE 2df40d13610b5a93cd1549d8c1bc89205026e1f5.",
+  "options": [
+    "APPROVE RUNTIME_FEATURE_MERGE for PR #466 at the exact reviewed/verified HEAD/TREE.",
+    "REJECT or HOLD RUNTIME_FEATURE_MERGE and leave PR #466 unmerged."
+  ],
+  "recommended_option": "APPROVE RUNTIME_FEATURE_MERGE for PR #466 at the exact reviewed/verified HEAD/TREE.",
+  "recommendation_reason": "Reviewer R2 PASS with required_fixes=[] and both R1 blockers FIX_VERIFIED; Fresh Independent Linux Verifier R1 VERIFIED; exact Ubuntu x86_64 execution completed all 8 required top-level stages with all runtime assertions PASS, MW9 race 100/100 rounds, 8/8 logs, zero fatal-pattern matches, canonical Linux double Godot identity, tracked-clean before/after; runtime/reviewer/verifier/dispatch Project Control runs are SUCCESS.",
+  "blast_radius": [
+    "Adds P7.6 stateless seam and true multi-region Matter routing over existing SM1/MW8/MW9 actor handoff, existing P7.1->MW4 single-region mutation, and existing MW10 cross-region transactions.",
+    "Includes the reviewed fail-closed repair for malformed downstream executor results and focused negative coverage for resolver/result/body binding failures.",
+    "Keeps canonical Matter, authority, durability, replay, persistence, Item Graph, network protocol, MW8/MW9/MW10 foundation, and architecture ownership unchanged.",
+    "Authorizes merge only for exact runtime PR #466 at HEAD c2e056980eed4ae20849154b1dacc71af0ce8bdf / TREE 2df40d13610b5a93cd1549d8c1bc89205026e1f5.",
+    "Does not by itself declare whole P7 complete or authorize any subsequent runtime checkpoint."
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-EVIDENCE-MAP-002.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-REPAIR-R1-LINUX-EXACT-RUNTIME-VALIDATION-002.v1.json"
+  ],
+  "status": "OPEN"
+}
