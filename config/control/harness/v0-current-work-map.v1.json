@@ -378,9 +378,18 @@
         "new_delivery_receipt_store": false
       },
       "P7.7-G": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
-        "required_result": "SECOND_CLIENT_CONVERGES_TO_SAME_CANONICAL_HOLE_REVISION_AND_AUTHORITATIVE_INVENTORY_WITHOUT_CLIENT_PRIVATE_TERRAIN_OR_INVENTORY_TRUTH"
+        "proof_type": "COMPOSITIONAL_REUSE_OF_EXACT_P7_5_PLUS_EXACT_C3_C2",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-G-SECOND-CLIENT-CONVERGENCE-COMPOSITIONAL-VALIDATION-001.v1.json",
+        "client_private_terrain_truth": false,
+        "client_private_inventory_truth": false,
+        "new_network_owner": false
+      },
+      "P7.7-H": {
+        "status": "NEXT",
+        "scope": "REPLAY_RECONNECT_RESTART_NO_DUPLICATION",
+        "required_result": "REPLAY_RECONNECT_AND_RESTART_DO_NOT_CREATE_SECOND_HOLE_SECOND_MATTER_COMMIT_OR_SECOND_ITEM_GRAPH_DELIVERY"
       }
     }
   }
