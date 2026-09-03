@@ -3,7 +3,7 @@ extends RefCounted
 ## P7.7 graphical digging product composition.
 ##
 ## This adapter owns no canonical state. It consumes:
-## - a canonical Matter aim binding produced by an existing Matter query/target path;
+## - the exact result returned by the existing continuous Matter query plus the\n##   canonical Matter request whose swept shape contains that query hit;
 ## - the P7.6 route executor, which preserves P7.1->MW4 for one region and MW10
 ##   for true multi-region operations;
 ## - the existing P7.3 material delivery coordinator;
@@ -157,7 +157,7 @@ func contract_report() -> Dictionary:
 		"replay_ledger_owned": false,
 		"network_protocol_owned": false,
 		"aim_truth_owned": false,
-		"aim_source_required": AIM_SOURCE_CANONICAL_MATTER_QUERY,
+		"aim_binding_owner": "EXISTING_CONTINUOUS_MATTER_QUERY_RESULT",
 		"single_region_owner": "P7_1_TO_MW4",
 		"multi_region_owner": "P7_6_TO_MW10",
 		"material_owner": "P7_3_TO_CANONICAL_ITEM_GRAPH",
@@ -169,10 +169,34 @@ func contract_report() -> Dictionary:
 
 
 func _validate_aim_binding(value: Dictionary) -> Dictionary:
-	if String(value.get("aim_source", "")) != AIM_SOURCE_CANONICAL_MATTER_QUERY:
-		return _failure("P7_7_CANONICAL_MATTER_AIM_REQUIRED")
-	if not bool(value.get("canonical_surface_hit", false)):
+	var query_value = value.get("query_result", null)
+	if typeof(query_value) != TYPE_DICTIONARY:
+		return _failure("P7_7_CANONICAL_MATTER_QUERY_RESULT_REQUIRED")
+	var query: Dictionary = query_value
+	if not bool(query.get("success", false)):
+		return _failure("P7_7_CANONICAL_MATTER_QUERY_FAILED")
+	var query_details_value = query.get("details", null)
+	if typeof(query_details_value) != TYPE_DICTIONARY:
+		return _failure("P7_7_CANONICAL_MATTER_QUERY_DETAILS_REQUIRED")
+	var query_details: Dictionary = query_details_value
+	if not bool(query_details.get("hit", false)):
 		return _failure("P7_7_CANONICAL_SURFACE_HIT_REQUIRED")
+	var hit_value = query_details.get("position_m", null)
+	if typeof(hit_value) != TYPE_VECTOR3:
+		return _failure("P7_7_CANONICAL_HIT_POSITION_REQUIRED")
+	var hit_position_m: Vector3 = hit_value
+	if not _finite_vector(hit_position_m):
+		return _failure("P7_7_CANONICAL_HIT_POSITION_INVALID")
+	var sample_value = query_details.get("sample", null)
+	if typeof(sample_value) != TYPE_DICTIONARY or Dictionary(sample_value).is_empty():
+		return _failure("P7_7_CANONICAL_HIT_SAMPLE_REQUIRED")
+	var sdf_value = Dictionary(sample_value).get("signed_distance_m", null)
+	var sdf_type := typeof(sdf_value)
+	if sdf_type != TYPE_INT and sdf_type != TYPE_FLOAT:
+		return _failure("P7_7_CANONICAL_HIT_SAMPLE_INVALID")
+	if not is_finite(float(sdf_value)):
+		return _failure("P7_7_CANONICAL_HIT_SAMPLE_INVALID")
+
 	var request_value = value.get("request", null)
 	if typeof(request_value) != TYPE_DICTIONARY:
 		return _failure("P7_7_MATTER_REQUEST_REQUIRED")
@@ -182,6 +206,12 @@ func _validate_aim_binding(value: Dictionary) -> Dictionary:
 		return _failure("P7_7_MATTER_REQUEST_INVALID", {"cause": request_check})
 	if String(request.get("operation_type", "")) != "EXCAVATE":
 		return _failure("P7_7_EXCAVATION_REQUEST_REQUIRED")
+	var shape: Dictionary = request["shape"]
+	if String(shape.get("kind", "")) != "CAPSULE":
+		return _failure("P7_7_CAPSULE_EXCAVATION_REQUIRED")
+	if not _query_hit_inside_capsule(hit_position_m, shape):
+		return _failure("P7_7_QUERY_HIT_OUTSIDE_REQUEST_SHAPE")
+
 	var plan_value = value.get("mw10_plan", {})
 	if typeof(plan_value) != TYPE_DICTIONARY:
 		return _failure("P7_7_MW10_PLAN_INVALID")
@@ -191,6 +221,40 @@ func _validate_aim_binding(value: Dictionary) -> Dictionary:
 	if typeof(value.get("transition_prefix", "")) != TYPE_STRING:
 		return _failure("P7_7_TRANSITION_PREFIX_INVALID")
 	return _success()
+
+
+func _query_hit_inside_capsule(hit_position_m: Vector3, shape: Dictionary) -> bool:
+	var start_array: Array = Array(shape.get("start_position_m", []))
+	var end_array: Array = Array(shape.get("end_position_m", []))
+	if start_array.size() != 3 or end_array.size() != 3:
+		return false
+	var start_m := _vector3(start_array)
+	var end_m := _vector3(end_array)
+	if not _finite_vector(start_m) or not _finite_vector(end_m):
+		return false
+	var radius_m := float(shape.get("radius_m", 0.0))
+	if radius_m <= 0.0:
+		return false
+	var segment := end_m - start_m
+	var closest := start_m
+	if segment.length_squared() > 0.000000000001:
+		var t := clampf(
+			(hit_position_m - start_m).dot(segment) / segment.length_squared(),
+			0.0,
+			1.0
+		)
+		closest = start_m + segment * t
+	return hit_position_m.distance_to(closest) <= radius_m + 0.000001
+
+
+func _finite_vector(value: Vector3) -> bool:
+	return is_finite(value.x) and is_finite(value.y) and is_finite(value.z)
+
+
+func _vector3(value: Array) -> Vector3:
+	if value.size() != 3:
+		return Vector3(INF, INF, INF)
+	return Vector3(float(value[0]), float(value[1]), float(value[2]))
 
 
 func _find_matter_result(value):
