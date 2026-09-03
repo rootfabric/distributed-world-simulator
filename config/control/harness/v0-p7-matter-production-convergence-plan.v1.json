@@ -161,8 +161,8 @@
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
       ],
-      "runtime_head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
-      "runtime_tree": "d448644626492fc93da58bd3452e62361baf5960",
+      "runtime_head": "c9e758ecfe738f771fa261fa91df2627f91be686",
+      "runtime_tree": "6cbc2d2192f5a7fd30b5866ca4a670f7f9c2d1ad",
       "runtime_pr": 487,
       "substeps": {
         "P7.7-A": {
@@ -186,8 +186,13 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001.v1.json"
         },
         "P7.7-C2": {
+          "status": "EXACT_VALIDATED",
+          "proof": "DURABLE_MW10_PARTICIPANT_BATCHES_DELIVER_THROUGH_EXISTING_P7_3_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITH_NO_NEW_RECEIPT_STORE",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-C3": {
           "status": "NEXT",
-          "proof": "DURABLE_MW10_PHYSICAL_OUTPUT_TO_EXISTING_P7_3_CANONICAL_ITEM_GRAPH_DELIVERY_EXACTLY_ONCE"
+          "proof": "TRUE_A_B_CANONICAL_DIG_THROUGH_REAL_P7_6_MW10_PARTICIPANT_MATTER_COMMITS_P7_3_AND_VISIBLE_INVALIDATION"
         }
       }
     }

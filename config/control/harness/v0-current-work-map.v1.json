@@ -292,8 +292,8 @@
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
     ],
-    "runtime_head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
-    "runtime_tree": "d448644626492fc93da58bd3452e62361baf5960",
+    "runtime_head": "c9e758ecfe738f771fa261fa91df2627f91be686",
+    "runtime_tree": "6cbc2d2192f5a7fd30b5866ca4a670f7f9c2d1ad",
     "runtime_pr": 487,
     "substeps": {
       "P7.7-A": {
@@ -333,9 +333,16 @@
         "p7_3_delivery_wired": false
       },
       "P7.7-C2": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "MW10_PHYSICAL_OUTPUT_TO_P7_3_DELIVERY",
-        "required_result": "DURABLE_MW10_PHYSICAL_OUTPUT_DELIVERED_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITHOUT_NEW_OWNER"
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+        "aggregate_batch_synthesized": false
+      },
+      "P7.7-C3": {
+        "status": "NEXT",
+        "scope": "TRUE_A_B_END_TO_END_DIG",
+        "required_result": "REAL_CANONICAL_AIM_P7_6_CLASSIFICATION_MW10_REAL_PARTICIPANT_MATTER_COMMITS_DURABLE_PHYSICAL_OUTPUT_P7_3_ITEM_GRAPH_AND_A_B_VISIBLE_INVALIDATION"
       }
     }
   }
