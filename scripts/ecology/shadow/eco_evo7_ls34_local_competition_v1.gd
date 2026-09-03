@@ -55,6 +55,13 @@ var last_culled_count := 0
 var last_profile: Dictionary = {}
 var last_competition_profile: Dictionary = {}
 
+## STREAM1 optimized ownership seam. _competition_pass() already creates each
+## surviving record as a fresh deep copy. When the attached generation-stream
+## executor is the optimized pipeline, LS3.4 may transfer that fresh survivor
+## array directly into the core instead of deep-copying the whole population
+## a second time. Legacy keeps the historical defensive copy.
+var _stream1_owned_survivor_adoption := false
+
 func setup(
     patch: Dictionary,
     environment_field: Dictionary,
@@ -121,9 +128,19 @@ func has_candidate_executor() -> bool:
 func set_generation_stream_executor(executor) -> bool:
     if not initialized or core == null:
         return false
-    return core.set_generation_stream_executor(executor)
+    if not core.set_generation_stream_executor(executor):
+        return false
+    _stream1_owned_survivor_adoption = false
+    if executor.has_method("get_telemetry"):
+        var telemetry: Dictionary = executor.get_telemetry()
+        _stream1_owned_survivor_adoption = (
+            String(telemetry.get("pipeline_mode", ""))
+            == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"
+        )
+    return true
 
 func clear_generation_stream_executor() -> void:
+    _stream1_owned_survivor_adoption = false
     if core != null:
         core.clear_generation_stream_executor()
 
@@ -162,7 +179,11 @@ func step_generation() -> Dictionary:
             last_competition_hash = String(last_competition_field["field_hash"])
             last_survivor_count = survivors.size()
             last_culled_count = int(pre["record_count"]) - survivors.size()
-            core.records = survivors.duplicate(true)
+            core.records = (
+                survivors
+                if _stream1_owned_survivor_adoption
+                else survivors.duplicate(true)
+            )
             core.call("_refresh_population_hashes")
             if not survivors.is_empty() and not bool(core.call("_validate_current_records", survivors)):
                 return {}
@@ -739,3 +760,4 @@ func _reset() -> void:
     last_culled_count = 0
     last_profile.clear()
     last_competition_profile.clear()
+    _stream1_owned_survivor_adoption = false
