@@ -2574,3 +2574,70 @@ while runtime physical complexity stays sparse,
 and can local physical changes still produce
 the correct global functional consequences?
 ~~~
+
+---
+
+## FABRIC.SYNC4 — post-B0.5-A BRIDGE-2 authorization — 2026-09-03
+
+```text
+B0.5-A executable hybrid:
+✅ CLOSED
+
+FABRIC.SYNC4:
+🟡 AUTHORIZATION CANDIDATE
+
+BRIDGE-2 executable research:
+✅ AUTHORIZED by review, pending SYNC4 exact/control closure
+
+FABRIC0.19:
+⛔ NOT AUTHORIZED
+```
+
+Reason for BRIDGE-2 authorization:
+
+- structural BRIDGE-1 already emits common PhysicalBakeArtifact;
+- B0.3 contact bake emits common PhysicalBakeArtifact;
+- B0.4 Dynamic ROM emits common PhysicalBakeArtifact with StateMapping/ReconstructionDescriptor;
+- B0.5-A proves actual B0.4-backed FLOW→FABRIC JUMP→state handoff→mode-B execution;
+- common BakeExecutionGate, invalidation and stale rejection already exist across the bake family.
+
+Frozen first falsifier:
+
+```text
+MIXED_GENERIC_MACHINE_R1
+
+region A → STRUCTURAL_BAKE
+region B → FULL
+region C → CONTACT_BAKE
+region D → DYNAMIC_ROM
+region E → HYBRID_BAKE
+```
+
+All five regions must share one canonical PhysicalSource frontier with explicit
+non-overlapping representation ownership and PhysicalBoundaryContract coupling.
+
+Current direction:
+
+```text
+B0.4 ✅
+  +
+B0.5-P0 ✅
+  ↓
+SYNC-3 ✅
+  ↓
+B0.5-A ✅
+  ↓
+SYNC-4 ★ CURRENT
+  ↓
+BRIDGE-2 MIXED REPRESENTATION R1
+  ↓
+COMPLEX1B / powered breakable mixed lab
+  ↓
+BRIDGE-2 CLOSED
+  ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+```
+
+FABRIC0.19 remains blocked until a concrete FULL-reference falsifier demonstrates a
+missing generic Physical Core primitive that cannot be expressed by FABRIC0.18
+FLOW/JUMP/topology/contact semantics.
