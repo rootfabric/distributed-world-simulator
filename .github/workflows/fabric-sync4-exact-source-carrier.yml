@@ -1,0 +1,42 @@
+name: FABRIC.SYNC4 Exact Source Carrier
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact subject
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -z "$(git status --short --untracked-files=no)"
+          git diff --check
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Bundle
+        run: |
+          git branch fabric-sync4-exact "$(git rev-parse HEAD)"
+          git bundle create fabric-sync4-exact.bundle refs/heads/fabric-sync4-exact
+          git bundle verify fabric-sync4-exact.bundle
+          sha256sum fabric-sync4-exact.bundle > fabric-sync4-exact.bundle.sha256
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-sync4-exact-source
+          path: |
+            fabric-sync4-exact.bundle
+            fabric-sync4-exact.bundle.sha256
+          if-no-files-found: error
+          retention-days: 3
