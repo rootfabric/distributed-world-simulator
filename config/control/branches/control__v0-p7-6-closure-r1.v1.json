@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "control/v0-p7-6-closure-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "P7.6 closure control carrier; records exact verified seam/multi-region composition and advances the same P7 Work Order to P7.7 NEXT.",
+  "purpose": "Canonicalize P7.6 Reviewer R2 PASS, Fresh Linux Verifier R1 VERIFIED, explicit Human runtime merge approval and exact runtime integration without accepting whole P7 or starting P7.7 runtime work.",
+  "expected_outcome": "P7.6 COMPLETE_MERGED; P7 IN_PROGRESS; P7.7 NEXT.",
+  "current_stage": "P7.7 Graphical Digging Slice",
+  "stage_status": "P7_6_COMPLETE_MERGED_P7_7_NEXT",
+  "progress_note": "P7.6 exact runtime c2e056980eed4ae20849154b1dacc71af0ce8bdf / tree 2df40d13610b5a93cd1549d8c1bc89205026e1f5 passed Fresh Reviewer R2 PASS and Fresh Linux Verifier R1 VERIFIED with canonical Linux double Godot. Human RUNTIME_FEATURE_MERGE approved; original PR #466 merged exact runtime as 8b866f32419eb5b9bedebd458ee2f9117a916020. Post-merge blob identity confirmed exact.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.6 substeps COMPLETE_MERGED",
+  "next_stage": "P7.7 GRAPHICAL_DIGGING_SLICE is NEXT only. A separate Director activation/implementation dispatch is required before P7.7 runtime mutation starts.",
+  "parent_branch_or_checkpoint": "main @ 8b866f32419eb5b9bedebd458ee2f9117a916020 / P7.6 runtime merged",
+  "base_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "dependencies": [
+    "P7.0 ACCEPTED",
+    "P7.1 COMPLETE_MERGED",
+    "P7.2 COMPLETE_MERGED",
+    "P7.3 COMPLETE_MERGED",
+    "P7.4 COMPLETE_MERGED",
+    "P7.5 COMPLETE_MERGED",
+    "P7.6 Reviewer R2 PASS",
+    "P7.6 Fresh Linux Verifier R1 VERIFIED",
+    "P7.6 Human RUNTIME_FEATURE_MERGE APPROVED",
+    "exact P7.6 runtime subject merged"
+  ],
+  "owned_paths": [
+    "config/control/branches/control__v0-p7-6-closure-r1.v1.json",
+    "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
+    "config/control/harness/v0-current-work-map.v1.json",
+    "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/work-orders/V0-P7-R1-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0021-p7-6-runtime-merged.v1.json",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/sm1/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/sm1/**"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "focused": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "full_regression": "PENDING_WHOLE_P7"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION",
+    "AGGREGATE_REVISION_OWNERSHIP"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
