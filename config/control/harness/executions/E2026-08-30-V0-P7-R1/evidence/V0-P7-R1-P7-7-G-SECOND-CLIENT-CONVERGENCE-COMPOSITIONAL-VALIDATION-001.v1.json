@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-G-SECOND-CLIENT-CONVERGENCE-COMPOSITIONAL-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-G",
+  "actor": "CHATGPT_CONTROL_COMPOSITION_R1",
+  "independence_class": "COMPOSITIONAL_EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "current_runtime": {
+    "head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+    "runtime_pr": 487
+  },
+  "canonical_output_proof": {
+    "c3_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001.v1.json",
+    "c2_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+    "facts": [
+      "real A+B dig mutates one shared canonical Matter sparse store",
+      "derived visual invalidation binds canonical changed bricks for A+B",
+      "canonical regional MatterMaterialBatch outputs reach canonical Item Graph",
+      "P7.7 owns no client-private terrain or inventory truth"
+    ]
+  },
+  "two_client_replication_proof": {
+    "closure_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json",
+    "exact_subject_head": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+    "exact_subject_tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
+    "fresh_linux_verifier": "VERIFIED",
+    "fresh_linux_verifier_project_control_run": 33636371160,
+    "verifier_stages": "16/16",
+    "verifier_assertions": 1140,
+    "verifier_failures": 0,
+    "fatal_matches": 0,
+    "canonical_owner": "EXISTING_MW6_MW7_RL2_RL3_CANONICAL_ITEM_GRAPH_M7_REPLICA_AND_NETWORKED_GAMEPLAY_SERVICE"
+  },
+  "blob_identity_from_p7_5_to_current": [
+    {"path":"scripts/simulation/matter/network/matter_authoritative_server.gd","sha":"002998f65a2128c9c72e31d0f6ef261b56d5ecf9"},
+    {"path":"scripts/simulation/matter/interest/matter_interest_server.gd","sha":"8b6a7f420b1932c4bde1230b9ac5bb2450619737"},
+    {"path":"scripts/runtime/networked_gameplay/networked_gameplay_service.gd","sha":"f9f89ba14daea967ffe20483060a5bded7eb556d"},
+    {"path":"scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd","sha":"8daba94282fe89354c148b1c4b8eb2b7089953e3"},
+    {"path":"scripts/simulation/representation/network/matter_representation_interest_adapter.gd","sha":"2df8b6613e78a9f4b860c634903b8cd7d9a0668f"},
+    {"path":"scripts/runtime/networked_gameplay/p7/p7_two_client_convergence_observer.gd","sha":"bf3025784193c495531a2cb798139c6c86bf4fad"},
+    {"path":"scripts/simulation/matter/interest/matter_interest_replica_client.gd","sha":"901b1552286e8584a1b554ff7d197617c8b03402"},
+    {"path":"scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd","sha":"ae9de8e164b19f38c7dd5a2f4efa994a63f56a09"},
+    {"path":"tests/runtime/test_v0_p7_5_two_client_convergence.gd","sha":"b09090d425248db0606c1d4224a39abd20bb89b5"}
+  ],
+  "composition_result": {
+    "second_client_same_matter_cursor_and_store_hash": true,
+    "second_client_same_canonical_item_graph_revision_and_checksum": true,
+    "second_client_representation_source_bound_to_same_matter_revision_and_store_hash": true,
+    "client_private_terrain_truth": false,
+    "client_private_inventory_truth": false,
+    "new_network_owner": false
+  },
+  "next_boundary": {
+    "id": "P7.7-H",
+    "scope": "REPLAY_RECONNECT_RESTART_NO_DUPLICATION",
+    "required_result": "REPLAY_RECONNECT_AND_RESTART_DO_NOT_CREATE_SECOND_HOLE_SECOND_MATTER_COMMIT_OR_SECOND_ITEM_GRAPH_DELIVERY"
+  },
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
