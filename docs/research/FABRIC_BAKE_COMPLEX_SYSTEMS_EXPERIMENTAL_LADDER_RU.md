@@ -1,8 +1,9 @@
 # FABRIC-BAKE — Complex Systems Experimental Ladder
 
-**Статус:** roadmap companion / experimental stand plan.  
+**Статус:** executable experimental ladder; COMPLEX0 + COMPLEX1A ✅ CLOSED through exact 2000-part proof.  
 **Канонический predecessor:** B0.5-A EXECUTABLE HYBRID BAKE ✅ CLOSED.  
-**Текущая decision boundary:** POST-B0.5-A FABRIC SYNC.  
+**FABRIC.SYNC4:** POST-B0.5-A FABRIC SYNC ✅ CLOSED.  
+**Текущая decision boundary:** BRIDGE-2 EXECUTABLE RESEARCH ✅ AUTHORIZED; COMPLEX1B / CX2 next.  
 **Назначение:** фиксировать, когда после очередного архитектурного gate уже можно строить наглядный стенд и проверять не отдельный primitive, а возникновение и сохранение сложности целой системы.
 
 ---
@@ -512,20 +513,26 @@ SYNC-3 ✅
         ↓
 B0.5-A Executable Hybrid ✅
         ↓
-┌──────────────────────────────────────┐
-│ ★ COMPLEX0 / COMPLEX1A LABS OPEN ★  │
-│ breakable + causal FULL baselines    │
-└──────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ ★ COMPLEX0 / COMPLEX1A CLOSED ★             │
+│ CX0 exact ladder: 50 → 100 → 500 → 2000 ✅  │
+│ CX1A FULL causal baseline: 93/93 ✅          │
+└──────────────────────────────────────────────┘
+        ↓
+COMPLEX0-PERF1 ✅
+B0.2-E @ 2000:
+8.647 s transaction compile
+4.396x growth for 4x parts
         ↓
 ════════════════════════════════════
-★ POST-B0.5-A FABRIC SYNC — NEXT ★
+★ FABRIC.SYNC4 — CLOSED ★
 ════════════════════════════════════
         │
-        ├── BRIDGE-2 executable authorization?
-        └── FABRIC0.19 necessity?
+        ├── FABRIC0.19 → NOT AUTHORIZED
+        └── BRIDGE-2 executable → RESEARCH AUTHORIZED
         │
         ▼
-BRIDGE-2 executable
+★ BRIDGE-2 EXECUTABLE — NEXT ★
         ↓
 ┌──────────────────────────────────────┐
 │ ★ COMPLEX1B / CX2 MIXED LABS ★      │
