@@ -62,6 +62,12 @@ var last_competition_profile: Dictionary = {}
 ## a second time. Legacy keeps the historical defensive copy.
 var _stream1_owned_survivor_adoption := false
 
+## PERF2.4 R11: _competition_pass() also returns a freshly-created competition
+## field (including its evaluation/water arrays). Optimized STREAM1 may adopt
+## that fresh field directly instead of deep-copying the whole field once more.
+## Legacy retains the historical defensive deep copy.
+var _stream1_owned_field_adoption := false
+
 func setup(
     patch: Dictionary,
     environment_field: Dictionary,
@@ -131,16 +137,20 @@ func set_generation_stream_executor(executor) -> bool:
     if not core.set_generation_stream_executor(executor):
         return false
     _stream1_owned_survivor_adoption = false
+    _stream1_owned_field_adoption = false
     if executor.has_method("get_telemetry"):
         var telemetry: Dictionary = executor.get_telemetry()
-        _stream1_owned_survivor_adoption = (
+        var optimized_stream := (
             String(telemetry.get("pipeline_mode", ""))
             == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"
         )
+        _stream1_owned_survivor_adoption = optimized_stream
+        _stream1_owned_field_adoption = optimized_stream
     return true
 
 func clear_generation_stream_executor() -> void:
     _stream1_owned_survivor_adoption = false
+    _stream1_owned_field_adoption = false
     if core != null:
         core.clear_generation_stream_executor()
 
@@ -175,7 +185,11 @@ func step_generation() -> Dictionary:
                 return {}
             phase_started = Time.get_ticks_usec()
             var survivors: Array[Dictionary] = competition_result["survivors"]
-            last_competition_field = Dictionary(competition_result["field"]).duplicate(true)
+            last_competition_field = (
+                Dictionary(competition_result["field"])
+                if _stream1_owned_field_adoption
+                else Dictionary(competition_result["field"]).duplicate(true)
+            )
             last_competition_hash = String(last_competition_field["field_hash"])
             last_survivor_count = survivors.size()
             last_culled_count = int(pre["record_count"]) - survivors.size()
@@ -761,3 +775,4 @@ func _reset() -> void:
     last_profile.clear()
     last_competition_profile.clear()
     _stream1_owned_survivor_adoption = false
+    _stream1_owned_field_adoption = false
