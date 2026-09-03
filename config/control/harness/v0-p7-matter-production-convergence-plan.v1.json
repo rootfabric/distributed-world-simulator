@@ -2,8 +2,8 @@
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
   "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
   "canonical_owner": "main",
-  "status": "P7_6_IN_PROGRESS",
-  "authored_against_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "status": "P7_7_NEXT",
+  "authored_against_main": "8b866f32419eb5b9bedebd458ee2f9117a916020",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
@@ -105,7 +105,7 @@
       "id": "P7.6",
       "name": "SEAM_AND_MULTI_REGION_COMPOSITION",
       "exit": "SM1_MW8_MW9_AND_MW10_ROUTING_PASS",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETE_MERGED",
       "runtime_started": true,
       "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION",
       "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
@@ -117,12 +117,32 @@
         "TRUE_MULTI_REGION_MUTATION_USES_MW10",
         "MW10_RESERVATION_INTERLOCKS_WITH_HANDOFF_AND_SINGLE_REGION_MUTATION",
         "NO_NEW_P7_COORDINATION_PROTOCOL_OR_OWNER"
-      ]
+      ],
+      "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+      "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+      "runtime_merge_pr": 466,
+      "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
     },
     {
       "id": "P7.7",
       "name": "GRAPHICAL_DIGGING_SLICE",
-      "exit": "GRAPHICAL_DIGGING_PASS"
+      "exit": "GRAPHICAL_DIGGING_PASS",
+      "status": "NEXT",
+      "runtime_started": false,
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
+      "required_proofs": [
+        "PLAYER_EQUIPS_EXISTING_CANONICAL_TOOL",
+        "PLAYER_AIMS_AT_BOUNDARY_MATTER_SURFACE",
+        "DIG_ACTION_ROUTES_THROUGH_EXISTING_P7_1_TO_MW4_PATH_OR_P7_6_MULTI_REGION_ROUTER_AS_CLASSIFIED",
+        "VISIBLE_HOLE_MATCHES_CANONICAL_MATTER_MUTATION",
+        "EXTRACTED_MATERIAL_APPEARS_IN_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE",
+        "SECOND_CLIENT_CONVERGES_TO_HOLE_AND_INVENTORY_STATE",
+        "NO_PRESENTATION_PRIVATE_TERRAIN_OR_INVENTORY_TRUTH"
+      ]
     }
   ],
   "multi_region_rule": "ACTOR_SEAM_CROSSING_DOES_NOT_IMPLY_MW10; MW10_ONLY_WHEN_ONE_CANONICAL_MATTER_MUTATION_SPANS_TWO_OR_MORE_AUTHORITY_REGIONS",
@@ -197,6 +217,27 @@
     "total_assertions": 1140,
     "total_failures": 0,
     "fatal_logs": "17/17 clean",
+    "new_canonical_owner_required": false
+  },
+  "p7_6_seam_multi_region_boundary": {
+    "status": "RESOLVED_COMPLETE_MERGED",
+    "actor_handoff_owner": "SM1_MW8_MW9",
+    "single_region_owner": "EXISTING_P7_1_TO_MW4_PATH",
+    "true_multi_region_owner": "MW10",
+    "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+    "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+    "verifier": "FRESH_INDEPENDENT_VERIFIER_P7_6_R1",
+    "verification": "VERIFIED",
+    "platform": "Ubuntu 26.04 LTS x86_64",
+    "exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "p7_1_assertions": 88,
+    "p7_6_assertions": 106,
+    "sm1_assertions": 145,
+    "mw8_assertions": 98,
+    "mw9_race_rounds": 100,
+    "mw10_suites": "2/2",
+    "fatal_logs": "8/8 clean",
     "new_canonical_owner_required": false
   }
 }
