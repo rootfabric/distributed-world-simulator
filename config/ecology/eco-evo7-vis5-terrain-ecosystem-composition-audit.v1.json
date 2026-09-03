@@ -117,12 +117,12 @@
     {
       "checkpoint": "VIS5.3",
       "name": "Mixed-Strata Composition Lab",
-      "status": "CURRENT"
+      "status": "IMPLEMENTED_CANDIDATE_EXACT_PENDING"
     },
     {
       "checkpoint": "VIS5.4",
       "name": "Composition LOD / Streaming Local Gate",
-      "status": "BLOCKED_BY_VIS5_3"
+      "status": "BLOCKED_BY_VIS5_3_EXACT_CLOSURE"
     },
     {
       "checkpoint": "VIS5.5",
@@ -140,7 +140,7 @@
     "claim PLAY1 performance acceptance before PERF2.CONV"
   ],
   "current_checkpoint": "VIS5.3",
-  "current_checkpoint_state": "CURRENT",
+  "current_checkpoint_state": "IMPLEMENTED_CANDIDATE_EXACT_PENDING",
   "next_checkpoint_after_green": "VIS5.4",
   "vis5_2_closure": {
     "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
@@ -151,5 +151,22 @@
     "vis5_0_assertions": 87,
     "vis5_1_assertions": 70,
     "vis5_2_assertions": 57
+  },
+  "vis5_3_candidate": {
+    "world_seed": 360055,
+    "truth_layers": {
+      "terrain": "ProceduralEarthWorld",
+      "macro_plants": "CANONICAL_ECO_VIS4_PH5",
+      "ground_cover": "NONCANONICAL_SCENERY",
+      "rocks": "TERRAIN_SCENERY"
+    },
+    "built_in_earth_placement_suppressed": true,
+    "focused_assertions": 101,
+    "default_profile_observation": {
+      "macro_plants": 63,
+      "ground_cover": 4500,
+      "terrain_rocks": 146,
+      "terrain_relief_range_m": 57.2468787839384
+    }
   }
 }
