@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/fabric/cx_vis_observatory.gd" id="1_cx"]
+
+[node name="CXVIS0BreakObservatory" type="Node3D"]
+script = ExtResource("1_cx")
+powered_chain_enabled = false
+auto_play = true
+stage_interval_seconds = 1.75
