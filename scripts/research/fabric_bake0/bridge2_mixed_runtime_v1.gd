@@ -218,6 +218,15 @@ static func consume_representation_event(
 	var event_id := String(fabric_event.get("event_id", ""))
 	if event_id.is_empty():
 		return Utils.failure("BRIDGE2_FABRIC_EVENT_ID_REQUIRED")
+	if not Utils.is_finite_number(fabric_event.get("time")):
+		return Utils.failure("BRIDGE2_FABRIC_EVENT_TIME_REQUIRED")
+	if absf(float(fabric_event["time"]) - float(session["time_s"])) > 1.0e-8:
+		return Utils.failure("BRIDGE2_FABRIC_EVENT_TIME_MISMATCH", {
+			"event_time": fabric_event["time"],
+			"session_time": session["time_s"],
+		})
+	if typeof(fabric_event.get("transitions")) != TYPE_ARRAY or fabric_event["transitions"].is_empty():
+		return Utils.failure("BRIDGE2_FABRIC_PHYSICAL_TRANSITION_REQUIRED")
 	for record in session["event_ledger"]:
 		if String(record["event_id"]) == event_id:
 			return Utils.failure("BRIDGE2_DUPLICATE_FABRIC_EVENT")
