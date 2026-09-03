@@ -2,12 +2,14 @@ extends Node3D
 
 const DressingScript = preload("res://scripts/world_fill/dressing/world_fill_dressing.gd")
 const ScatterScript = preload("res://scripts/world_fill/scatter/world_fill_prop_scatter.gd")
+const ScarLayerScript = preload("res://scripts/world_fill/decals/world_fill_scar_layer.gd")
 
 func _ready() -> void:
 	_build_environment()
 	_build_ground()
 	_build_rocks()
 	_build_scatter()
+	_build_scar_history()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -23,6 +25,21 @@ func _build_scatter() -> void:
 	add_child(scatter)
 	var report := scatter.build_from_decision(decision, Vector2(76.0, 76.0), 0x57464C30)
 	print("WORLD_FILL_SCATTER_INSTANCES=%d" % int(report.get("total_instances", 0)))
+
+func _build_scar_history() -> void:
+	var scars := ScarLayerScript.new()
+	scars.name = "WorldFillScarLayer"
+	add_child(scars)
+	var observed_events := [
+		{"type": "DIG_SUCCESS", "position": Vector3(-6.0, 0.0, -4.0)},
+		{"type": "DIG_IMPACT", "position": Vector3(-4.5, 0.0, -2.5)},
+		{"type": "CONTACT_TRACE", "position": Vector3(6.0, 0.0, 6.0)},
+	]
+	for index in observed_events.size():
+		var event: Dictionary = observed_events[index]
+		event["normal"] = Vector3.UP
+		scars.record_event(event, 1000 + index)
+	print("WORLD_FILL_SCARS_ACTIVE=%d" % int(scars.scar_report().get("active", 0)))
 
 func _build_environment() -> void:
 	var world_environment := WorldEnvironment.new()
