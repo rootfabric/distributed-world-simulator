@@ -2244,3 +2244,22 @@ handoff, lazy mode-B compilation/cache, exactly-once physical event ownership an
 unknown mode-C FULL/NO_SAFE_BAKE fallback.
 
 BRIDGE-2 executable work remains blocked until that falsifier is closed.
+
+## Canonical B0.5-A branch correction
+
+An older parallel `research/fabric-bake0-5-a-executable-hybrid-r1` branch already
+existed from the superseded pre-final B0.4 SYNC-3 attempt (PR #464).
+
+It is not the child of this final SYNC-3 closure and is therefore not canonical.
+
+Canonical authorized branch:
+
+```text
+research/fabric-bake0-5-a-executable-hybrid-r2
+
+base:
+3cf8e6689b8b7d20593f134a8a1eb0ce79db1ca1
+(final FABRIC.SYNC3 closure)
+```
+
+PR #464 is closed as superseded by PR #473.
