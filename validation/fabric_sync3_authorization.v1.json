@@ -27,5 +27,13 @@
       ]
     }
   },
-  "production_accepted": false
+  "production_accepted": false,
+  "qualification": "CLOSED",
+  "control": {
+    "project_control": {
+      "run_id": 33704262729,
+      "conclusion": "SUCCESS"
+    }
+  },
+  "next_executable": "B0.5-A EXECUTABLE HYBRID BAKE"
 }
