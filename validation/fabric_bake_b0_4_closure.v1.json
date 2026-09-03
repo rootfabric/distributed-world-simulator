@@ -1,0 +1,81 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_4_closure.v1",
+  "qualification": "CLOSED",
+  "production_accepted": false,
+  "predecessor_sync2": "be419fb695221917df0f6026ed335e1355f72840",
+  "exact_subject": {
+    "head": "e33ac10ac94d8b70f1387d442a3ae9d3801bb08a",
+    "tree": "f3d47eedd42f827a859d1763e8b46762696b99dd",
+    "detached": true,
+    "tracked_clean": true
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92"
+  },
+  "source_carrier": {
+    "run_id": 33696130137,
+    "artifact_id": 9871826260,
+    "bundle_sha256": "830b4b36911d3028fe59473ccdf50fed6d6e0dd91384cfeb43c82fa321ad0427"
+  },
+  "focused_acceptance": {
+    "b0_4_a": {
+      "pass": 609,
+      "total": 609
+    },
+    "b0_4_b": {
+      "pass": 83,
+      "total": 83
+    },
+    "b0_4_c": {
+      "pass": 1533,
+      "total": 1533
+    },
+    "b0_4_d": {
+      "pass": 287,
+      "total": 287
+    }
+  },
+  "dynamic_rom": {
+    "full_state_count": 512,
+    "reduced_state_count": 24,
+    "reduction_ratio": 21.333333333333332,
+    "method": "PASSIVE_RATIONAL_BLOCK_KRYLOV_R1",
+    "passivity_certified": true
+  },
+  "runtime_certification": {
+    "actual_max_boundary_error": 7.654765343811931e-8,
+    "conservative_estimated_max_boundary_error": 0.00038656587223579337,
+    "parent_relative_boundary_target": 0.001
+  },
+  "lifecycle": {
+    "common_physical_bake_artifact": true,
+    "reconstruction_descriptor": true,
+    "state_mapping": true,
+    "canonical_source_invalidation": true,
+    "stale_execution_fail_closed": true,
+    "deterministic_generation_rebuild": true
+  },
+  "full_closure_regression": {
+    "runner": "RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh",
+    "pass": true,
+    "exit_code": 0,
+    "fatal_script_markers": 0
+  },
+  "control": {
+    "project_control": {
+      "run_id": 33696130121,
+      "conclusion": "SUCCESS"
+    },
+    "c_portable_smoke": {
+      "run_id": 33696130128,
+      "conclusion": "SUCCESS"
+    },
+    "d_portable_smoke": {
+      "run_id": 33696130098,
+      "conclusion": "SUCCESS"
+    }
+  },
+  "next_checkpoint": "FABRIC.SYNC3"
+}

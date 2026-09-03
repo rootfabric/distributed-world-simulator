@@ -1,0 +1,136 @@
+name: FABRIC-BAKE B0.4-C Windows Double Runtime
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-bake-b0-4-c-windows-double-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exact-double:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Assert exact Git identity
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne $env:EXPECTED_SHA) {
+              throw "EXACT_HEAD_MISMATCH: actual=$head expected=$env:EXPECTED_SHA"
+          }
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          $dirty = @(git status --short --untracked-files=no)
+          if ($dirty.Count -ne 0) {
+              throw "TRACKED_WORKTREE_NOT_CLEAN: $($dirty -join '; ')"
+          }
+          Write-Host "HEAD=$head"
+          Write-Host "TREE=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+              $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) {
+              throw "EXACT_GODOT_NOT_FOUND: $godot"
+          }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") {
+              throw "GODOT_IDENTITY_MISMATCH: $version"
+          }
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $godot).Hash.ToLowerInvariant()
+          "path=$godot" >> $env:GITHUB_OUTPUT
+          Write-Host "GODOT=$version"
+          Write-Host "GODOT_SHA256=$sha"
+
+      - name: Fresh Godot import
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          New-Item -ItemType Directory -Force -Path "artifacts\fabric-bake-b0-4-c-windows-double" | Out-Null
+          $previous = $env:BREAKPOINT_RUNTIME_DISABLED
+          try {
+              $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+              & $env:GODOT_BIN --headless --editor --path . --log-file "artifacts\fabric-bake-b0-4-c-windows-double\import.log" --import
+              if ($LASTEXITCODE -ne 0) {
+                  Get-Content "artifacts\fabric-bake-b0-4-c-windows-double\import.log" -Tail 200
+                  throw "GODOT_IMPORT_FAILED: $LASTEXITCODE"
+              }
+          }
+          finally {
+              if ($null -eq $previous) {
+                  Remove-Item Env:\BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+              }
+              else {
+                  $env:BREAKPOINT_RUNTIME_DISABLED = $previous
+              }
+          }
+
+      - name: Run exact double B0.3 and B0.4 A B C
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          $scripts = @(
+              "res://tests/research/fabric_bake0/fabric_bake_b0_3_acceptance.gd",
+              "res://tests/research/fabric_bake0/fabric_bake_b0_4_a_acceptance.gd",
+              "res://tests/research/fabric_bake0/fabric_bake_b0_4_b_acceptance.gd",
+              "res://tests/research/fabric_bake0/fabric_bake_b0_4_c_acceptance.gd"
+          )
+          foreach ($script in $scripts) {
+              $name = [IO.Path]::GetFileNameWithoutExtension($script)
+              $log = "artifacts\fabric-bake-b0-4-c-windows-double\$name.log"
+              Write-Host "=== $script ==="
+              & $env:GODOT_BIN --headless --path . --log-file $log --script $script
+              $code = $LASTEXITCODE
+              if ($code -ne 0) {
+                  Get-Content $log -Tail 300
+                  throw "GODOT_TEST_FAILED: script=$script exit=$code"
+              }
+              $fatal = Select-String -Path $log -Pattern "SCRIPT ERROR:","ERROR: Failed to load script" -SimpleMatch
+              if ($null -ne $fatal) {
+                  Get-Content $log -Tail 300
+                  throw "GODOT_FATAL_MARKER: script=$script"
+              }
+          }
+
+      - name: Verify final clean identity
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          $dirty = @(git status --short --untracked-files=no)
+          if ($dirty.Count -ne 0) {
+              throw "TRACKED_WORKTREE_DIRTY_AFTER_TESTS: $($dirty -join '; ')"
+          }
+          Write-Host "FINAL_HEAD=$head"
+          Write-Host "FINAL_TREE=$tree"
+          Write-Host "FABRIC-BAKE B0.4-C WINDOWS DOUBLE RUNTIME: PASS"
+
+      - name: Upload runtime logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-4-c-windows-double-logs
+          path: artifacts/fabric-bake-b0-4-c-windows-double
+          if-no-files-found: warn
+          retention-days: 7

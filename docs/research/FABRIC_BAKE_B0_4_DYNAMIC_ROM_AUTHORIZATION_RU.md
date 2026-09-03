@@ -267,13 +267,42 @@ not silent extrapolation.
 
 ## 12. Suggested executable slices
 
-### B0.4-A — Dynamic model / port contract
+### B0.4-A — Dynamic model / port contract — CLOSED
 
+Exact executable:
+
+```text
+HEAD:
+1fbfffe30f5758a1bbb3c65db23edf06ecf3dae4
+
+TREE:
+79bedac6b6668ffcf29629238a5c055fb55d5f3c
+```
+
+Implemented and verified:
 - canonical dynamic-state descriptor;
 - dimension/frame/sign validation;
-- stable/passive reference fixture;
+- generic 512-state stable/passive reference fixture;
 - deterministic FULL boundary reference solver;
-- source/dependency binding.
+- source/dependency binding;
+- structural passivity/stability certificate;
+- explicit boundary/storage/dissipation/numerical energy accounting;
+- fail-closed unsafe domain;
+- presentation-order and twin-run determinism.
+
+Evidence:
+
+```text
+B0.4-A 609/609 PASS
+two fresh exact-bundle filesystem passes
+predecessor + A acceptance total 4554/4554 PASS
+Project Control 33517363373 SUCCESS
+```
+
+Detailed closure:
+`docs/research/FABRIC_BAKE_B0_4_A_DYNAMIC_MODEL_PORT_CONTRACT_RU.md`.
+
+B0.4 parent remains IN PROGRESS. No ROM reduction claim is made by A.
 
 ### B0.4-B — Certified reduction
 
@@ -354,4 +383,59 @@ FABRIC0.18
 
 FABRIC0.19 dependency:
 NONE
+```
+
+---
+
+## 16. Final B0.4 R1 closure
+
+The authorization contract is now satisfied.
+
+```text
+exact implementation/test HEAD:
+e33ac10ac94d8b70f1387d442a3ae9d3801bb08a
+
+TREE:
+f3d47eedd42f827a859d1763e8b46762696b99dd
+
+FULL dynamic states:
+512
+
+ROM states:
+24
+
+reduction:
+21.333333x
+
+A:
+609/609 PASS
+
+B:
+83/83 PASS
+
+C:
+1533/1533 PASS
+
+D:
+287/287 PASS
+
+full closure chain:
+PASS / exit 0
+
+Project Control:
+33696130121 SUCCESS
+```
+
+Final D materializes the required common `PhysicalBakeArtifact`,
+`ReconstructionDescriptor` and `StateMapping` lifecycle and verifies stale
+invalidation plus deterministic generation rebuild.
+
+```text
+B0.4 DYNAMIC ROM
+CLOSED
+EXACT DOUBLE PASS
+NOT PRODUCTION ACCEPTED
+
+next:
+FABRIC.SYNC3
 ```

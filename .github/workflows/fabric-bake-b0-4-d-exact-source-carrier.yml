@@ -1,0 +1,47 @@
+name: FABRIC-BAKE B0.4-D Exact Source Carrier
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact source identity
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -x RUN_FABRIC_BAKE_B0_4_D_TESTS.sh
+          test -x RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh
+          bash -n RUN_FABRIC_BAKE_B0_4_D_TESTS.sh
+          bash -n RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Create exact Git bundle
+        run: |
+          git branch fabric-bake-b0-4-d-exact "$(git rev-parse HEAD)"
+          git bundle create fabric-bake-b0-4-d-exact-source.bundle refs/heads/fabric-bake-b0-4-d-exact
+          git bundle verify fabric-bake-b0-4-d-exact-source.bundle
+          sha256sum fabric-bake-b0-4-d-exact-source.bundle > fabric-bake-b0-4-d-exact-source.bundle.sha256
+
+      - name: Upload exact source carrier
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-b0-4-d-exact-source
+          path: |
+            fabric-bake-b0-4-d-exact-source.bundle
+            fabric-bake-b0-4-d-exact-source.bundle.sha256
+          if-no-files-found: error
+          retention-days: 3
