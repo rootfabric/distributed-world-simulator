@@ -133,3 +133,50 @@ FABRIC0.19
 
 Canonical BRIDGE-2 implementation branch is created from the final SYNC4 closure
 carrier after docs/validation-only closure control passes.
+
+---
+
+## Final exact closure — 2026-09-03
+
+```text
+exact implementation/test HEAD:
+05fc7b9de77a21239e953d2dfd1a0451f5820caf
+
+TREE:
+d9c2070ef2ba49791eb5e890b58bc2acc0f80255
+
+SYNC4:
+122/122 PASS
+
+BRIDGE-2:
+125/125 PASS
+
+closure chain:
+PASS / exit 0
+
+mixed-vs-FULL max state delta:
+0
+
+Project Control:
+33725617349 SUCCESS
+
+exact source carrier:
+33725617411 SUCCESS
+
+bundle SHA-256:
+746c1609591b19f062cca638402702ac61de5c8c1db93031a1f490a92a6c504b
+```
+
+Final R1 additionally introduces exact regional source slices under one master
+PhysicalSource frontier so canonical local mutation can invalidate only causally
+affected derived regions while unrelated regions remain executable.
+
+```text
+BRIDGE-2 MIXED REPRESENTATION R1
+CLOSED
+EXACT DOUBLE PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+FABRIC0.19 remains NOT AUTHORIZED.
