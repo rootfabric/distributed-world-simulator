@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.mw10_canonical_physical_output_config.v1",
+  "contract": "planet_simulator.matter_cross_region_physical_output.v1",
+  "checkpoint": "P7.7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-CONTRACT",
+  "owner": "MW10",
+  "accepted_mw10_base": "v17.12.0-simulation-mw10-cross-region-matter-transactions",
+  "contract_path": "scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd",
+  "semantics": {
+    "output_kind": "EXTRACTED_MATERIAL",
+    "one_envelope_per_committed_cross_region_operation": true,
+    "participant_order": "LEXICOGRAPHIC_REGION_ID",
+    "participant_output_requires_commit_receipt": true,
+    "participant_output_requires_matter_mutation_result": true,
+    "participant_output_requires_material_batch": true,
+    "participant_batch_preserves_temperature": true,
+    "participant_batch_preserves_bulk_volume": true,
+    "participant_batch_preserves_composition": true,
+    "aggregate_temperature_synthesized": false,
+    "aggregate_density_synthesized": false,
+    "mass_ledger_is_validation_not_reconstruction": true,
+    "per_region_mass_must_match_distributed_ledger": true,
+    "aggregate_material_mass_must_match_external_outputs": true
+  },
+  "ownership": {
+    "new_canonical_truth_owner": false,
+    "p7_private_material_truth": false,
+    "item_graph_owner_changed": false,
+    "mw10_transaction_owner_changed": false
+  },
+  "delivery_boundary": {
+    "p7_3_delivery_wired": false,
+    "coordinator_durable_wiring_implemented": false,
+    "receipt_schema_changed": false,
+    "checkpoint_schema_changed": false,
+    "operation_result_schema_changed": false,
+    "next_step": "P7.7-C1-MW10-PHYSICAL-OUTPUT-DURABLE-WIRING"
+  }
+}
