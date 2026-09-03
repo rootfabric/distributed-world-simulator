@@ -144,7 +144,7 @@
   "next_checkpoint_after_green": "VIS5.4",
   "vis5_2_closure": {
     "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
-    "exact_subject_tree": "4f8e00d6c9bd902d1abe14b03e2f5bf81835b0f9",
+    "exact_subject_tree": "31d97747b097146b652a56ba6d5a36c73bdbe496",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "exact_runner_exit_code": 0,
