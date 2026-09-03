@@ -38,6 +38,10 @@ static func build(count: int) -> Dictionary:
 	if count < 2:
 		return Utils.failure("COMPLEX0_INVALID_PART_COUNT")
 	var parts := ABFixture.make_parts(count, 0)
+	# COMPLEX0 is a topology/lifecycle falsifier, not an orientation-precision test.
+	# Keep the canonical source exactly unit-normalized even on portable single Godot.
+	for index in range(parts.size()):
+		parts[index]["orientation"] = [0.0, 0.0, 0.0, 1.0]
 	var bonds := ABFixture.make_bonds(count)
 	var anchors := ABFixture.make_anchors(count)
 	var break_index := count / 2 + 7
@@ -301,7 +305,12 @@ static func evaluate_guard(subject: Dictionary, structural: Dictionary) -> Dicti
 	return GuardRuntime.evaluate(structural["guard"]["guard_field"], guard_context(subject, structural))
 
 static func reduced_state() -> Dictionary:
-	return ABFixture.reduced_state()
+	return {
+		"position": [104.25, -87.5, 32.125],
+		"orientation": [0.0, 0.0, 0.0, 1.0],
+		"linear_velocity": [4.75, -1.25, 0.625],
+		"angular_velocity": [0.35, -0.17, 0.22],
+	}
 
 static func _authority(frontier: Dictionary) -> Dictionary:
 	var authority_records: Array = []
