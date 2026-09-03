@@ -10,17 +10,19 @@ extends RefCounted
 ## - a presentation invalidation callback which must only invalidate derived
 ##   representation after a canonical Matter commit.
 ##
-## P7.7-A intentionally supports the complete single-region visible/material
-## path first. A true MW10 route must expose a canonical MatterMaterialBatch-
-## compatible committed output before P7.7 may deliver inventory material.
-## Current MW10 terminal operation results do not carry that physical batch
-## metadata, so the adapter fails closed instead of inventing it.
+## Single-region delivery remains P7.1 -> MW4 -> P7.3. True multi-region
+## delivery consumes the durable MW10 canonical physical-output envelope and
+## forwards its immutable regional MatterMaterialBatch values through the same
+## P7.3 Item Graph adapter. No aggregate thermodynamic batch is synthesized.
 
 const MatterRequest = preload(
 	"res://scripts/simulation/matter/contracts/matter_mutation_request.gd"
 )
 const MatterResult = preload(
 	"res://scripts/simulation/matter/contracts/matter_mutation_result.gd"
+)
+const CrossRegionPhysicalOutput = preload(
+	"res://scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd"
 )
 
 const AIM_SOURCE_CANONICAL_MATTER_QUERY := "CANONICAL_MATTER_QUERY"
@@ -80,43 +82,85 @@ func execute_aimed_dig(aim_binding: Dictionary) -> Dictionary:
 	if route not in [ROUTE_SINGLE_REGION, ROUTE_MULTI_REGION]:
 		return _failure("P7_7_MUTATION_ROUTE_UNSUPPORTED", {"route": route})
 
-	var result_value = _find_matter_result(route_details.get("execution_result", null))
-	if typeof(result_value) != TYPE_DICTIONARY:
-		if route == ROUTE_MULTI_REGION:
-			return _failure("P7_7_MULTI_REGION_MATERIAL_RESULT_REQUIRED", {
+	var delivered: Dictionary = {}
+	var changed_addresses: Array = []
+	var removed_mass_kg := 0.0
+	var visible_hole_source := "CANONICAL_MATTER_RESULT"
+
+	if route == ROUTE_SINGLE_REGION:
+		var result_value = _find_matter_result(route_details.get("execution_result", null))
+		if typeof(result_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_CANONICAL_MATTER_RESULT_REQUIRED")
+		var result: Dictionary = result_value
+		var result_check: Dictionary = MatterResult.validate(result)
+		if not bool(result_check.get("success", false)):
+			return _failure("P7_7_CANONICAL_MATTER_RESULT_INVALID", {"cause": result_check})
+		if String(result.get("operation_id", "")) != String(request.get("operation_id", "")):
+			return _failure("P7_7_MATTER_RESULT_OPERATION_MISMATCH")
+		if String(result.get("status", "")) != "COMMITTED":
+			return _failure("P7_7_MATTER_RESULT_NOT_COMMITTED")
+
+		var delivered_value = _material_delivery.deliver_committed(
+			request.duplicate(true),
+			result.duplicate(true)
+		)
+		if typeof(delivered_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_MATERIAL_DELIVERY_INVALID_RESULT")
+		delivered = delivered_value
+		if not bool(delivered.get("success", false)):
+			return delivered.duplicate(true)
+		var addresses_result := _append_changed_addresses(
+			changed_addresses,
+			Array(result.get("changed_bricks", []))
+		)
+		if not bool(addresses_result.get("success", false)):
+			return addresses_result
+		removed_mass_kg = float(result.get("removed_mass_kg", 0.0))
+	else:
+		var physical_value = _find_physical_output(route_details.get("execution_result", null))
+		if typeof(physical_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_MULTI_REGION_PHYSICAL_OUTPUT_REQUIRED", {
 				"route": route,
 				"mw10_invoked": bool(route_details.get("mw10_invoked", false)),
-				"reason": "MW10 terminal output has no canonical MatterMaterialBatch-compatible physical output yet",
 			})
-		return _failure("P7_7_CANONICAL_MATTER_RESULT_REQUIRED")
-	var result: Dictionary = result_value
-	var result_check: Dictionary = MatterResult.validate(result)
-	if not bool(result_check.get("success", false)):
-		return _failure("P7_7_CANONICAL_MATTER_RESULT_INVALID", {"cause": result_check})
-	if String(result.get("operation_id", "")) != String(request.get("operation_id", "")):
-		return _failure("P7_7_MATTER_RESULT_OPERATION_MISMATCH")
-	if String(result.get("status", "")) != "COMMITTED":
-		return _failure("P7_7_MATTER_RESULT_NOT_COMMITTED")
-
-	var delivered_value = _material_delivery.deliver_committed(
-		request.duplicate(true),
-		result.duplicate(true)
-	)
-	if typeof(delivered_value) != TYPE_DICTIONARY:
-		return _failure("P7_7_MATERIAL_DELIVERY_INVALID_RESULT")
-	var delivered: Dictionary = delivered_value
-	if not bool(delivered.get("success", false)):
-		return delivered.duplicate(true)
-
-	var changed_addresses: Array = []
-	for changed_value in Array(result.get("changed_bricks", [])):
-		if typeof(changed_value) != TYPE_DICTIONARY:
-			return _failure("P7_7_CHANGED_BRICK_INVALID")
-		var changed: Dictionary = changed_value
-		var address_value = changed.get("address", null)
-		if typeof(address_value) != TYPE_DICTIONARY:
-			return _failure("P7_7_CHANGED_BRICK_ADDRESS_REQUIRED")
-		changed_addresses.append(Dictionary(address_value).duplicate(true))
+		var physical_output: Dictionary = physical_value
+		var physical_check: Dictionary = CrossRegionPhysicalOutput.validate(physical_output)
+		if not bool(physical_check.get("success", false)):
+			return _failure("P7_7_MULTI_REGION_PHYSICAL_OUTPUT_INVALID", {
+				"cause": physical_check,
+			})
+		var physical_plan: Dictionary = physical_output["plan"]
+		if String(physical_plan.get("operation_id", "")) != String(request.get("operation_id", "")):
+			return _failure("P7_7_MULTI_REGION_PHYSICAL_OUTPUT_OPERATION_MISMATCH")
+		if String(physical_plan.get("body_id", "")) != String(request.get("body_id", "")):
+			return _failure("P7_7_MULTI_REGION_PHYSICAL_OUTPUT_BODY_MISMATCH")
+		if not _material_delivery.has_method("deliver_cross_region_committed"):
+			return _failure("P7_7_MULTI_REGION_MATERIAL_DELIVERY_REQUIRED")
+		var delivered_value = _material_delivery.deliver_cross_region_committed(
+			request.duplicate(true),
+			physical_output.duplicate(true)
+		)
+		if typeof(delivered_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_MULTI_REGION_MATERIAL_DELIVERY_INVALID_RESULT")
+		delivered = delivered_value
+		if not bool(delivered.get("success", false)):
+			return delivered.duplicate(true)
+		for raw_output in Array(physical_output.get("participant_outputs", [])):
+			if typeof(raw_output) != TYPE_DICTIONARY:
+				return _failure("P7_7_MULTI_REGION_PARTICIPANT_OUTPUT_INVALID")
+			var participant_output: Dictionary = raw_output
+			var result_value = participant_output.get("matter_result", null)
+			if typeof(result_value) != TYPE_DICTIONARY:
+				return _failure("P7_7_MULTI_REGION_PARTICIPANT_MATTER_RESULT_REQUIRED")
+			var participant_result: Dictionary = result_value
+			var addresses_result := _append_changed_addresses(
+				changed_addresses,
+				Array(participant_result.get("changed_bricks", []))
+			)
+			if not bool(addresses_result.get("success", false)):
+				return addresses_result
+		removed_mass_kg = float(physical_output.get("total_mass_kg", 0.0))
+		visible_hole_source = "CANONICAL_MW10_PHYSICAL_OUTPUT"
 
 	var invalidated_value = _representation_invalidator.call(changed_addresses.duplicate(true))
 	if typeof(invalidated_value) != TYPE_DICTIONARY:
@@ -132,10 +176,10 @@ func execute_aimed_dig(aim_binding: Dictionary) -> Dictionary:
 		"mw10_invoked": bool(route_details.get("mw10_invoked", false)),
 		"changed_brick_count": changed_addresses.size(),
 		"changed_brick_addresses": changed_addresses,
-		"removed_mass_kg": float(result.get("removed_mass_kg", 0.0)),
+		"removed_mass_kg": removed_mass_kg,
 		"material_delivery": delivery_details,
 		"representation_invalidation": Dictionary(invalidated.get("details", {})).duplicate(true),
-		"visible_hole_source": "CANONICAL_MATTER_RESULT",
+		"visible_hole_source": visible_hole_source,
 		"inventory_source": "CANONICAL_ITEM_GRAPH",
 		"aim_source": AIM_SOURCE_CANONICAL_MATTER_QUERY,
 	})
@@ -162,7 +206,7 @@ func contract_report() -> Dictionary:
 		"multi_region_owner": "P7_6_TO_MW10",
 		"material_owner": "P7_3_TO_CANONICAL_ITEM_GRAPH",
 		"visible_hole_owner": "CANONICAL_MATTER_PLUS_RL2_RL3",
-		"multi_region_material_projection": "FAIL_CLOSED_UNTIL_CANONICAL_PHYSICAL_OUTPUT_AVAILABLE",
+		"multi_region_material_projection": "MW10_CANONICAL_PHYSICAL_OUTPUT_TO_P7_3",
 		"router_contract": router_contract.duplicate(true),
 		"material_delivery_contract": delivery_contract.duplicate(true),
 	}
@@ -255,6 +299,36 @@ func _vector3(value: Array) -> Vector3:
 	if value.size() != 3:
 		return Vector3(INF, INF, INF)
 	return Vector3(float(value[0]), float(value[1]), float(value[2]))
+
+
+func _append_changed_addresses(target: Array, changed_bricks: Array) -> Dictionary:
+	for changed_value in changed_bricks:
+		if typeof(changed_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_CHANGED_BRICK_INVALID")
+		var changed: Dictionary = changed_value
+		var address_value = changed.get("address", null)
+		if typeof(address_value) != TYPE_DICTIONARY:
+			return _failure("P7_7_CHANGED_BRICK_ADDRESS_REQUIRED")
+		target.append(Dictionary(address_value).duplicate(true))
+	return _success()
+
+
+func _find_physical_output(value):
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var candidate: Dictionary = value
+	if String(candidate.get("schema", "")) == CrossRegionPhysicalOutput.SCHEMA:
+		return candidate.duplicate(true)
+	var direct = candidate.get("physical_output", null)
+	if typeof(direct) == TYPE_DICTIONARY \
+			and String(Dictionary(direct).get("schema", "")) == CrossRegionPhysicalOutput.SCHEMA:
+		return Dictionary(direct).duplicate(true)
+	var details_value = candidate.get("details", null)
+	if typeof(details_value) == TYPE_DICTIONARY:
+		var nested = _find_physical_output(details_value)
+		if typeof(nested) == TYPE_DICTIONARY:
+			return nested
+	return null
 
 
 func _find_matter_result(value):
