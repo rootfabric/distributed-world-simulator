@@ -287,9 +287,14 @@ func _mw10(root: String, runtime: Runtime):
 func _ore_quantity(snapshot: Dictionary) -> int:
 	var total := 0
 	for raw_item in Array(snapshot.get("items", [])):
-		if typeof(raw_item) == TYPE_DICTIONARY \
-				and String(raw_item.get("definition_id", "")) == "item/ore":
-			total += int(raw_item.get("quantity", 0))
+		if typeof(raw_item) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = raw_item
+		var location: Dictionary = Dictionary(item.get("location", {}))
+		if String(item.get("definition_id", "")) == "item/ore" \
+				and String(location.get("kind", "")) == "INVENTORY" \
+				and String(location.get("player_id", "")) == PLAYER:
+			total += int(item.get("quantity", 0))
 	return total
 
 
