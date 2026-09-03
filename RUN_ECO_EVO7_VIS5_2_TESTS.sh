@@ -21,7 +21,15 @@ if [[ ! -f "$ROOT/.godot/uid_cache.bin" ]]; then
 fi
 
 echo "=== ECO VIS5.1 closed predecessor regression ==="
-"$ROOT/RUN_ECO_EVO7_VIS5_1_TESTS.sh"
+# VIS5.0 and VIS4.9 are historically tracked as 100644 but are invoked
+# directly inside the closed predecessor runners. Make only those two
+# temporarily executable and restore their exact tracked mode on every exit.
+restore_predecessor_modes() {
+  chmod -x "$ROOT/RUN_ECO_EVO7_VIS5_0_TESTS.sh" "$ROOT/RUN_ECO_EVO7_VIS4_9_TESTS.sh" 2>/dev/null || true
+}
+trap restore_predecessor_modes EXIT
+chmod +x "$ROOT/RUN_ECO_EVO7_VIS5_0_TESTS.sh" "$ROOT/RUN_ECO_EVO7_VIS4_9_TESTS.sh"
+bash "$ROOT/RUN_ECO_EVO7_VIS5_1_TESTS.sh"
 
 echo "=== ECO VIS5.2 noncanonical ground-cover bridge focused acceptance ==="
 "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
