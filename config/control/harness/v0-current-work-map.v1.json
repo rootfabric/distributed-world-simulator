@@ -292,8 +292,8 @@
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
     ],
-    "runtime_head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
-    "runtime_tree": "aae7f3444e1958ea2899cc7007b1bb8d3faf7d38",
+    "runtime_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "runtime_tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
     "runtime_pr": 487,
     "substeps": {
       "P7.7-A": {
@@ -362,9 +362,25 @@
         "visual_success": false
       },
       "P7.7-E": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
-        "required_result": "A_TO_B_ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_AND_POST_HANDOFF_B_ONLY_DIG_USES_MW4"
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-E-ACTOR-HANDOFF-NO-FALSE-MW10-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "handoff_route": "SM1_MW8_MW9_HANDOFF",
+        "handoff_mw10_invoked": false,
+        "post_handoff_route": "MW4_SINGLE_REGION",
+        "post_handoff_mw10_invoked": false
+      },
+      "P7.7-F": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+        "new_delivery_receipt_store": false
+      },
+      "P7.7-G": {
+        "status": "NEXT",
+        "scope": "SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+        "required_result": "SECOND_CLIENT_CONVERGES_TO_SAME_CANONICAL_HOLE_REVISION_AND_AUTHORITATIVE_INVENTORY_WITHOUT_CLIENT_PRIVATE_TERRAIN_OR_INVENTORY_TRUTH"
       }
     }
   }
