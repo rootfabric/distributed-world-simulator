@@ -160,7 +160,21 @@
         "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
-      ]
+      ],
+      "runtime_head": "c3caea93fecd20fd41a0d3aa753e332d347aed2a",
+      "runtime_tree": "8e48024a80f70a0b15e693af027da075ea27179d",
+      "runtime_pr": 487,
+      "substeps": {
+        "P7.7-A": {
+          "status": "EXACT_VALIDATED",
+          "proof": "CANONICAL_RAYCAST_TO_MW4_TO_P7_3_TO_ITEM_GRAPH_TO_VISIBLE_PRESENTER_REBUILD",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-B": {
+          "status": "NEXT",
+          "proof": "SEAM_PROXIMITY_WITH_SINGLE_REGION_TARGET_STILL_USES_MW4_AND_MW10_ZERO"
+        }
+      }
     }
   ],
   "multi_region_rule": "ACTOR_SEAM_CROSSING_DOES_NOT_IMPLY_MW10; MW10_ONLY_WHEN_ONE_CANONICAL_MATTER_MUTATION_SPANS_TWO_OR_MORE_AUTHORITY_REGIONS",
