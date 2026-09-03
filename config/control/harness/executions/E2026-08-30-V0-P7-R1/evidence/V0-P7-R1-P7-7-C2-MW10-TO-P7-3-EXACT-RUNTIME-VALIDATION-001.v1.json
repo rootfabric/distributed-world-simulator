@@ -1,0 +1,137 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-C2",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "c9e758ecfe738f771fa261fa91df2627f91be686",
+    "tree": "6cbc2d2192f5a7fd30b5866ca4a670f7f9c2d1ad",
+    "base_c1_head": "5a914e5c425e3de0c80589575666aff5be3c29bb",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33745678651,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33745707810,
+    "source_export_artifact_id": 9889517987,
+    "source_export_artifact_digest": "sha256:ab4f4925d47701335b0d47a28fba0339fc902aef4063ba628f173135d34c59e5"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "implementation": {
+    "mw10_physical_output_to_existing_p7_3": true,
+    "delivery_mode": "CANONICAL_PARTICIPANT_BATCHES_IN_REGION_ORDER",
+    "aggregate_thermodynamic_batch_synthesized": false,
+    "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+    "new_delivery_receipt_store": false,
+    "same_envelope_second_delivery_is_replay": true,
+    "cross_player_redirection_fails_closed": true,
+    "visible_hole_source": "CANONICAL_MW10_PHYSICAL_OUTPUT",
+    "inventory_source": "CANONICAL_ITEM_GRAPH"
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0,
+      "log_sha256": "a1d2fa033e65e7fde01ed91d0056e4ee78b0b5c4b3ab6f687eccd88d0cf2453f"
+    },
+    {
+      "name": "P7.7-C2 MW10 physical output to P7.3",
+      "result": "PASS",
+      "assertions": 42,
+      "failures": 0,
+      "log_sha256": "21eae11a07ba958ec4a58dcd8782964c4657e660b9bdce55624ca8430f0067db",
+      "proofs": {
+        "region_a_output_quantity": 7,
+        "region_b_output_quantity": 3,
+        "first_total_output_quantity": 10,
+        "first_fresh_delivery_count": 2,
+        "first_replay_delivery_count": 0,
+        "second_fresh_delivery_count": 0,
+        "second_replay_delivery_count": 2,
+        "item_graph_replay_byte_identical": true
+      }
+    },
+    {
+      "name": "P7.7 graphical digging slice",
+      "result": "PASS",
+      "assertions": 52,
+      "failures": 0,
+      "log_sha256": "0a5b47e3e267f28403bed06b6b54ef4f18e0bd880965a76a34b39903f57ecce9"
+    },
+    {
+      "name": "P7.3 material delivery",
+      "result": "PASS",
+      "assertions": 116,
+      "failures": 0,
+      "log_sha256": "422c0e78e799af13a33c04f9cd037229def1902c376c0e949c23caab6cea6801"
+    },
+    {
+      "name": "MW10 C1 durability",
+      "result": "PASS",
+      "assertions": 60,
+      "failures": 0,
+      "log_sha256": "3eb0da2d80b67c6e286b33f0862613b94fa8cae108e898a9cd1803c530ee9bd8"
+    },
+    {
+      "name": "MW10 C0 physical output",
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0,
+      "log_sha256": "0d829235434c2ed9ae7556fb83edf49e88f3101f6c782d137bd4ad950e40c70c"
+    },
+    {
+      "name": "P7.6 seam multi-region regression",
+      "result": "PASS",
+      "assertions": 106,
+      "failures": 0,
+      "log_sha256": "6c9a29677fb10301d0f2b33c566d53ad1592b529fbb8b41c027f1dcc001e87bd"
+    },
+    {
+      "name": "P7.7-A playground regression",
+      "result": "PASS",
+      "assertions": 20,
+      "failures": 0,
+      "log_sha256": "9388a229061ca620838154768e653558e1272dfc587cbc23159054cc3dbd1ef0"
+    },
+    {
+      "name": "P7.7-B seam-near regression",
+      "result": "PASS",
+      "assertions": 20,
+      "failures": 0,
+      "log_sha256": "caa697adc8d09ab32a851e0a39db6630e51ff77bc36d8674cb716112cd4814f5"
+    }
+  ],
+  "fatal_scan": {
+    "patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "matches": 0
+  },
+  "known_test_repair": {
+    "product_defect": false,
+    "description": "Initial C2 acceptance helper counted preexisting world item/ore quantity 8 together with player inventory. Helper was corrected to count only INVENTORY items for player miner. Product delivery already showed 7 + 3 fresh and 2 + 2 replay semantics."
+  },
+  "next_boundary": {
+    "id": "P7.7-C3",
+    "scope": "TRUE_A_B_END_TO_END_DIG",
+    "required_result": "REAL_CANONICAL_AIM_P7_6_CLASSIFICATION_MW10_REAL_PARTICIPANT_MATTER_COMMITS_DURABLE_PHYSICAL_OUTPUT_P7_3_ITEM_GRAPH_AND_A_B_VISIBLE_INVALIDATION"
+  },
+  "final_head": "c9e758ecfe738f771fa261fa91df2627f91be686",
+  "final_tree": "6cbc2d2192f5a7fd30b5866ca4a670f7f9c2d1ad",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
