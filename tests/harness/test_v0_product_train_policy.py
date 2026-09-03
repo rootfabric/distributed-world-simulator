@@ -59,7 +59,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual("COMPLETE_MERGED", routing["p7_5"]["state"])
         self.assertEqual("RESOLVED_BY_PR_432", routing["p7_5"]["control_precondition"])
         self.assertEqual("COMPLETE_MERGED", routing["p7_6"]["state"])
-        self.assertEqual("NEXT", routing["p7_7"]["state"])\n        self.assertFalse(routing["p7_7"]["runtime_started"])
+        self.assertEqual("NEXT", routing["p7_7"]["state"])
+        self.assertFalse(routing["p7_7"]["runtime_started"])
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
         self.assertEqual(P7, self.activation_p7["checkpoint"])
