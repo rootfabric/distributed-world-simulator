@@ -9,6 +9,7 @@ extends RefCounted
 const PROFILES: Dictionary = {
 	"WP-MOON-INDUSTRIAL": "res://scripts/world_packs/packs/wp_moon_industrial.gd",
 	"WP-MARS-DUST": "res://scripts/world_packs/packs/wp_mars_dust.gd",
+	"WP-FROZEN": "res://scripts/world_packs/packs/wp_frozen.gd",
 }
 
 

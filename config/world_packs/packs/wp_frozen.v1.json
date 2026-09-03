@@ -1,0 +1,54 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-FROZEN",
+  "version": "R1",
+  "display_name": "Frozen World",
+  "environment": {
+    "sky_profile": "pale_cold_sky",
+    "lighting_profile": "low_sun_cold_ambient",
+    "fog_profile": "snow_haze"
+  },
+  "materials": {
+    "surface_catalog": [
+      "snow_ice_surface",
+      "exposed_dark_rock",
+      "frost_metal_plate"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "ice_shard",
+      "exposed_boulder",
+      "antenna_mast",
+      "crate_industrial"
+    ],
+    "scatter_profiles": [
+      "icy_debris_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "frost_patch",
+      "ice_sheen"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "beacon",
+      "cave_marker",
+      "research_station_module"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "cold_wind_placeholder",
+    "particle_profile": "snow_drift_placeholder"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh",
+      "wf.ambience.particles"
+    ]
+  }
+}
