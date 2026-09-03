@@ -291,6 +291,26 @@
       "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
-    ]
+    ],
+    "runtime_head": "c3caea93fecd20fd41a0d3aa753e332d347aed2a",
+    "runtime_tree": "8e48024a80f70a0b15e693af027da075ea27179d",
+    "runtime_pr": 487,
+    "substeps": {
+      "P7.7-A": {
+        "status": "EXACT_VALIDATED",
+        "scope": "CANONICAL_AIM_SINGLE_REGION_DIG_MATERIAL_VISIBLE_HOLE",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+        "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+        "route": "MW4_SINGLE_REGION",
+        "mw10_invoked": false,
+        "next": "P7.7-B"
+      },
+      "P7.7-B": {
+        "status": "NEXT",
+        "scope": "SEAM_NEAR_BUT_CANONIC_TARGET_REMAINS_SINGLE_REGION",
+        "required_result": "MW4_SINGLE_REGION_AND_MW10_ZERO"
+      }
+    }
   }
 }
