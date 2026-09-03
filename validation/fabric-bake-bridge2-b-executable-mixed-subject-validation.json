@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.fabric_bake_bridge2_b_executable_mixed_subject_validation.v1",
-  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
+  "qualification": "IMPLEMENTED_CANDIDATE_EXACT_GITHUB_DOUBLE_PASS",
   "production_accepted": false,
   "predecessor": {
     "checkpoint": "BRIDGE_2_A",
@@ -76,5 +76,45 @@
     "BRIDGE2_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "next_checkpoint": "BRIDGE_2_C_CROSS_REPRESENTATION_EVENT_ROUTING"
+  "next_checkpoint": "BRIDGE_2_C_CROSS_REPRESENTATION_EVENT_ROUTING",
+  "exact_implementation_subject": {
+    "head": "a251ae1e39c403ed070b903eeb6c778593d90d5d",
+    "tree": "23e79b309aee5c3b55ef5fc6d971fef0a455f245",
+    "tracked_clean": true
+  },
+  "exact_source_carrier": {
+    "run_id": 33765372594,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9897248429
+  },
+  "exact_double_replay": {
+    "result": "PASS",
+    "bridge2_a": {
+      "pass": 71,
+      "total": 71
+    },
+    "bridge2_b": {
+      "pass": 57,
+      "total": 57
+    },
+    "playground": "PASS",
+    "exit_code": 0,
+    "tracked_clean": true,
+    "log_sha256": "d3dbe92f7dfee45976e92108efb3ee3ff7e8bd542a0d986c05a6e9120e327ef3",
+    "subject_hash": "3687aced4eaaed0a42eaee2470348792242c138a5c6ba4880c4157d488751dd9"
+  },
+  "control": {
+    "implementation_project_control": {
+      "run_id": 33765371892,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_portable_smoke": {
+      "run_id": 33765371955,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_linux_double_self_hosted": {
+      "run_id": 33765371868,
+      "status": "QUEUED_AT_EVIDENCE_RECORD"
+    }
+  }
 }
