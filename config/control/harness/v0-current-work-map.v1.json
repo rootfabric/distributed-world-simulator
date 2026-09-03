@@ -387,9 +387,19 @@
         "new_network_owner": false
       },
       "P7.7-H": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "REPLAY_RECONNECT_RESTART_NO_DUPLICATION",
-        "required_result": "REPLAY_RECONNECT_AND_RESTART_DO_NOT_CREATE_SECOND_HOLE_SECOND_MATTER_COMMIT_OR_SECOND_ITEM_GRAPH_DELIVERY"
+        "proof_type": "COMPOSITIONAL_REUSE_OF_EXACT_C1_C2_C3_P7_4_AND_FRESH_LINUX_P7_5_MW7_RECONNECT",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-H-REPLAY-RECONNECT-RESTART-COMPOSITIONAL-VALIDATION-001.v1.json",
+        "second_hole": false,
+        "second_matter_commit": false,
+        "second_item_graph_delivery": false,
+        "new_persistence_owner": false
+      },
+      "P7.7-FORMAL-CLOSURE": {
+        "status": "NEXT",
+        "scope": "FREEZE_FULL_REGRESSION_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE",
+        "required_result": "A_THROUGH_H_ACCEPTED_ON_ONE_FROZEN_RUNTIME_HEAD_TREE_THEN_INDEPENDENT_REVIEW_VERIFICATION_AND_HUMAN_RUNTIME_FEATURE_MERGE"
       }
     }
   }
