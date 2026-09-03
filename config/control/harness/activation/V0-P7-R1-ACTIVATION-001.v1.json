@@ -3,7 +3,7 @@
   "activation_id": "V0-P7-R1-ACTIVATION-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "state": "IN_PROGRESS_P7_7_NEXT",
+  "state": "IN_PROGRESS_P7_7",
   "accepted_predecessor": {
     "checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -60,7 +60,7 @@
     "MUTATION_LEASE_ROTATED_TO_P7"
   ],
   "created_at_utc": "2026-08-30T04:06:00Z",
-  "updated_at_utc": "2026-09-03T03:05:00Z",
+  "updated_at_utc": "2026-09-03T04:06:00Z",
   "p7_0": {
     "status": "ACCEPTED",
     "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-0-OWNER-MAP-EVIDENCE-001.v1.json",
@@ -165,7 +165,7 @@
       "fatal_matches": 0
     }
   },
-  "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "control_main_base": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
   "p7_6": {
     "status": "COMPLETE_MERGED",
     "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
@@ -203,11 +203,30 @@
     }
   },
   "p7_7": {
-    "status": "NEXT",
+    "status": "IN_PROGRESS",
     "scope": "GRAPHICAL_DIGGING_SLICE",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
-    "runtime_started": false,
-    "note": "Separate Director activation/implementation dispatch required; P7.6 closure does not start P7.7 runtime work."
+    "runtime_started": true,
+    "activated_by": "EXPLICIT_HUMAN_DIRECTIVE",
+    "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+    "acceptance_stand": "DIGGING_PLAYGROUND",
+    "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
+    "test_matrix": [
+      "A_SINGLE_REGION_MW4_NO_MW10",
+      "B_SEAM_NEAR_SINGLE_REGION_STILL_MW4",
+      "C_TRUE_A_B_MULTI_REGION_MW10",
+      "D_MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+      "E_ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+      "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
+      "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+      "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
+    ],
+    "planned_runtime_surfaces": [
+      "scripts/runtime/networked_gameplay/p7/p7_graphical_digging_slice.gd",
+      "tests/runtime/test_v0_p7_7_graphical_digging_slice.gd",
+      "scenes/labs/p7/p7_7_digging_playground.tscn"
+    ],
+    "note": "Activated after P7.6 COMPLETE_MERGED + post-merge NON_RED. Runtime implementation must remain a bounded product composition over existing owners."
   }
 }
