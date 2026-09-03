@@ -2123,3 +2123,59 @@ structure/passivity-preserving ROM
 
 B0.5 P0 may continue in parallel under the SYNC-2 authorization, but B0.5 executable
 hybrid reduction remains blocked on a stable B0.4 mode-local ROM artifact interface.
+
+---
+
+## FABRIC-BAKE B0.4 final authoritative closure — 2026-09-03
+
+This section supersedes older intermediate B0.4-A/B/C/D status blocks above.
+
+```text
+exact implementation/test HEAD:
+e33ac10ac94d8b70f1387d442a3ae9d3801bb08a
+
+TREE:
+f3d47eedd42f827a859d1763e8b46762696b99dd
+
+B0.4-A:
+609/609 PASS
+
+B0.4-B:
+83/83 PASS
+
+B0.4-C:
+1533/1533 PASS
+
+B0.4-D:
+287/287 PASS
+
+full parent closure regression:
+PASS / exit 0
+
+Project Control:
+33696130121 SUCCESS
+
+B0.4 DYNAMIC ROM:
+✅ CLOSED
+```
+
+The final D boundary uses the common FABRIC-BAKE `PhysicalBakeArtifact` architecture
+with real `ReconstructionDescriptor` and `StateMapping`; it is not a private ROM
+execution artifact path.
+
+Current roadmap:
+
+```text
+B0.3 ✅
+  ↓
+FABRIC.SYNC2 ✅
+  ↓
+B0.4 DYNAMIC ROM ✅ CLOSED
+  +
+B0.5-P0 ✅ CLOSED
+  ↓
+FABRIC.SYNC3 ★ NEXT
+```
+
+SYNC-3 must decide executable B0.5 authorization, FABRIC0.19 necessity and BRIDGE-2
+executable authorization.
