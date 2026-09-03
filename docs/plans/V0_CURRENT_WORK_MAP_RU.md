@@ -1,12 +1,12 @@
 # V0 — Current Primary Work Map
 
-**Refresh:** 2026-08-30  
-**Canonical main at this refresh:** `7055aef6c163099101588d5252d90ff77e089330`  
+**Refresh:** 2026-09-03  
+**Canonical main at this refresh:** `aca907022bf3a3239ae53ae0583c6aff8004da98`  
 **SM1:** ACCEPTED  
 **P7.0:** ACCEPTED  
-**P7.1:** COMPLETE / MERGED  
-**Current product gate:** P7.2 Bounded Planetary Matter Bubble  
-**Next runtime checkpoint:** `V0_P7_BOUNDED_TERRAIN_MUTATION`
+**P7.1-P7.5:** COMPLETE / MERGED  
+**Current product gate:** P7.6 Seam + Multi-Region Composition  
+**Next runtime checkpoint:** `P7.6_SEAM_AND_MULTI_REGION_COMPOSITION`
 
 > Human-readable routing map. Machine eligibility remains owned by `config/control/**`.
 
@@ -25,18 +25,27 @@ SM1 Seamless Product Integration    ACCEPTED
     ↓
 RF0 Replication Semantic Boundary   ARCHITECTURE GUARDRAIL / NON-BLOCKING
     ↓
-P7 Matter Production Convergence    P7.1 COMPLETE / P7.2 NEXT
+P7 Matter Production Convergence    P7.6 IN PROGRESS
+    ↓
+P7.7 Graphical Digging
+    ↓
+P7 CHECKPOINT ACCEPTANCE
+    ├── WORLDGEN1 Procedural Matter Terrain
+    │      executable research eligible after P7 acceptance
+    │      (subject to scheduler/runtime-mutation slot)
     ↓
 V0 PLAYABLE SEAMLESS PLANET         COMPOSITION ACCEPTANCE
     ↓
     ├── P8 First Mobile Construct
-    └── RF1 Shadow Retained Cache → RF2 Read-Only Consumer
-            ↓
-       static N-authority
-            ↓
-       Placement Observatory / SHADOW
-            ↓
-       dynamic placement / split / merge later
+    ├── RF1 Shadow Retained Cache → RF2 Read-Only Consumer
+    │       ↓
+    │  static N-authority
+    │       ↓
+    │  Placement Observatory / SHADOW
+    │       ↓
+    │  dynamic placement / split / merge later
+    └── WORLDGEN1 product promotion
+           only after V0 PLAYABLE acceptance + WG1 verification
 ```
 
 ## 2. Exact SM1 closure
@@ -104,19 +113,19 @@ P7.0 Matter Production Owner Map / Convergence Gate  ✅ ACCEPTED
     ↓
 P7.1 Product Tool → existing MatterMutationRequest adapter  ✅ COMPLETE
     ↓
-P7.2 Bounded Planetary Matter Bubble  ← CURRENT PRODUCT RUNTIME
+P7.2 Bounded Planetary Matter Bubble                       ✅ COMPLETE_MERGED
     ↓
-P7.3 MatterMaterialBatch → canonical Item Graph
+P7.3 MatterMaterialBatch → canonical Item Graph             ✅ COMPLETE_MERGED
     ↓
-P7.4 MW5 + V0 persistence/restart composition
+P7.4 MW5 + V0 persistence/restart composition               ✅ COMPLETE_MERGED
     ↓
-P7.5 MW6/MW7/RL2/RL3 two-client convergence
+P7.5 MW6/MW7/RL2/RL3 two-client convergence                 ✅ COMPLETE_MERGED
     ↓
-P7.6 Seam composition:
+P7.6 Seam composition                                       ← CURRENT PRODUCT RUNTIME
      SM1/MW8/MW9 for authority lifecycle
      MW10 only when one mutation spans multiple regions
     ↓
-P7.7 Graphical digging product slice
+P7.7 Graphical digging product slice                        NEXT
 ```
 
 Detailed plan: `docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md`.
@@ -134,17 +143,31 @@ It composes P4+P5+P6+Gateway+SM1+P7 and proves two graphical clients can walk, e
 dig, obtain canonical material, build, cross A↔B seamlessly, reconnect and survive server
 restart with one canonical world truth.
 
-## 7. P8 and RF1
+## 7. P8, RF1 and WORLDGEN1
 
-After V0 composition acceptance:
+WORLDGEN1 has a deliberately staged activation boundary.
 
 ```text
-                 ┌── P8 PRODUCT LANE
-V0 PLAYABLE ─────┤
-                 └── RF1 SHADOW LANE → RF2
+NOW
+  └── WORLDGEN1 design/docs/fixture-only research allowed
+
+P7.7 COMPLETE_MERGED
++ formal P7 checkpoint ACCEPTED
+  └── WORLDGEN1 executable research becomes eligible
+      only when scheduler/runtime-mutation capacity permits
+
+V0 PLAYABLE SEAMLESS PLANET ACCEPTED
+  ├── P8 PRODUCT LANE
+  ├── RF1 SHADOW LANE → RF2
+  └── WORLDGEN1 PRODUCT-PROMOTION LANE
 ```
 
-There is no architecture dependency `P8 → RF1`.
+WORLDGEN1 does not block P7 or first V0 composition acceptance.
+
+There is no architecture dependency `P8 → RF1`, and WORLDGEN1 is not an architecture prerequisite for either P8 or RF1 unless a future main-owned control update explicitly registers such a dependency.
+
+Detailed WORLDGEN1 plan:
+`docs/plans/WORLDGEN1_PROCEDURAL_MATTER_TERRAIN_ROADMAP_RU.md`.
 
 However, until H0.3 multi-worker scheduling is accepted:
 
@@ -158,9 +181,10 @@ Eligibility may be parallel; execution is still serialized.
 
 ```text
 RUNTIME LANE
-  P7.1 COMPLETE
-  → P7.2 bounded planetary Matter bubble
-  → P7.3 → P7.7
+  P7.1-P7.5 COMPLETE_MERGED
+  → P7.6 seam + multi-region composition
+  → P7.7 graphical digging
+  → P7 checkpoint acceptance
 
 PARALLEL TEST / COMPOSITION LANE
   V1 PLAYABLE SEAMLESS PRECHECK
@@ -252,3 +276,59 @@ runtime mutation 0
 ```
 
 P7.0 is complete. The only remaining activation prerequisite for P7.1 is `DIRECTOR_DISPATCH`.
+
+
+## 12. WORLDGEN1 — Procedural Matter Terrain
+
+WORLDGEN1 is now recorded as the future general terrain-generation lane.
+
+The key architectural decision is:
+
+```text
+WORLDGEN1 creates deterministic revision-0 Matter.
+MW4/MW10 mutate the same Matter at runtime.
+RL2/RL3 derive meshes/representation.
+Mesh is never canonical terrain truth.
+```
+
+The current Matter architecture already provides the important leverage:
+
+- `MatterBrickMaterializer` lazily materializes a missing brick from a procedural sampler;
+- `moon_geology_sampler.gd` already emits `signed_distance_m`;
+- `moon_surface_feature_catalog.gd` already provides a seed/hash-bound extension point;
+- sparse persistence can retain only mutated brick snapshots while untouched regions regenerate from seed/profile/catalog;
+- runtime excavation already proves useful volumetric swept-shape semantics that can inspire generation operators without replaying fake gameplay digs.
+
+WORLDGEN1 targets:
+
+```text
+macro planet relief
+→ mountains / ridges / hills / basins
+→ craters / ravines / canyons
+→ cliffs / overhangs / arches
+→ caves / chambers / lava tubes
+→ geological material stratification
+→ multi-LOD Matter representation
+→ planet archetype profiles
+→ ECO derived terrain fields
+→ procedural Construction placement
+```
+
+Activation:
+
+```text
+DESIGN_NOW
+  docs/design/fixture-only experiments allowed
+
+EXECUTABLE_WORLDGEN1
+  after P7.7 COMPLETE_MERGED
+  + formal V0_P7_BOUNDED_TERRAIN_MUTATION acceptance
+  + exact Matter boundaries frozen
+  + scheduler slot available
+
+PRODUCT_PROMOTION
+  after V0 PLAYABLE SEAMLESS PLANET acceptance
+  + required WG1 verification/performance/LOD/persistence gates
+```
+
+WORLDGEN1 must remain non-blocking to the current P7 train until explicitly activated by main-owned control.
