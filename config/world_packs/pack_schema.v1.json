@@ -1,0 +1,48 @@
+{
+  "schema": "dws.world_pack.v1",
+  "required": [
+    "pack_id",
+    "version",
+    "display_name",
+    "environment",
+    "materials",
+    "props",
+    "decals",
+    "poi",
+    "ambience"
+  ],
+  "fields": {
+    "pack_id": "string",
+    "version": "string",
+    "display_name": "string",
+    "environment": {
+      "sky_profile": "string",
+      "lighting_profile": "string",
+      "fog_profile": "string"
+    },
+    "materials": {
+      "surface_catalog": "array[string]"
+    },
+    "props": {
+      "catalog": "array[string]",
+      "scatter_profiles": "array[string]"
+    },
+    "decals": {
+      "catalog": "array[string]"
+    },
+    "poi": {
+      "catalog": "array[string]"
+    },
+    "ambience": {
+      "audio_profile": "string",
+      "particle_profile": "string"
+    },
+    "compatibility": {
+      "godot_min": "string",
+      "renderer": "string",
+      "requires_world_fill_features": "array[string]"
+    }
+  },
+  "canonical_state": false,
+  "unknown_optional_fields": "ignore"
+}
