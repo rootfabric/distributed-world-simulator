@@ -5,6 +5,7 @@ const ScatterScript = preload("res://scripts/world_fill/scatter/world_fill_prop_
 const ScarLayerScript = preload("res://scripts/world_fill/decals/world_fill_scar_layer.gd")
 const AtmosphereScript = preload("res://scripts/world_fill/ambience/world_fill_atmosphere.gd")
 const FeedbackScript = preload("res://scripts/world_fill/feedback/world_fill_event_feedback.gd")
+const PoiKitScript = preload("res://scripts/world_fill/landmarks/world_fill_poi_kit.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -13,6 +14,7 @@ func _ready() -> void:
 	_build_scatter()
 	_build_scar_history()
 	_build_feedback()
+	_build_landmarks()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -51,6 +53,14 @@ func _build_feedback() -> void:
 	feedback.dispatch({"type": "PICKUP", "position": Vector3.ZERO})
 	feedback.dispatch({"type": "SOMETHING_UNAVAILABLE", "position": Vector3.ZERO})
 	print("WORLD_FILL_FEEDBACK_UI=%d" % int(ui_events[0]))
+
+func _build_landmarks() -> void:
+	var poi_kit := PoiKitScript.new()
+	poi_kit.name = "WorldFillPoiKit"
+	add_child(poi_kit)
+	poi_kit.spawn_poi("landing_site", Vector3(-10.0, 0.0, 6.0))
+	poi_kit.spawn_poi("radio_beacon", Vector3(12.0, 0.0, -8.0))
+	print("WORLD_FILL_POIS=%d" % int(poi_kit.poi_report().get("active", 0)))
 
 func _build_environment() -> void:
 	var atmosphere := AtmosphereScript.new()
