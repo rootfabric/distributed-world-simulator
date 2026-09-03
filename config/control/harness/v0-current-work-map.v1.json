@@ -292,8 +292,8 @@
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
     ],
-    "runtime_head": "3410d4819baba5f28d67c826d609a1aa5d8ebc1a",
-    "runtime_tree": "5e75bc1f254cc9910f71591972b94a8c2eb3243b",
+    "runtime_head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
+    "runtime_tree": "aae7f3444e1958ea2899cc7007b1bb8d3faf7d38",
     "runtime_pr": 487,
     "substeps": {
       "P7.7-A": {
@@ -352,9 +352,19 @@
         "replay_no_recommit": true
       },
       "P7.7-D": {
-        "status": "NEXT",
+        "status": "EXACT_VALIDATED",
         "scope": "MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
-        "required_result": "CONFLICTING_DIG_DURING_ACTIVE_A_B_RESERVATION_FAILS_CLOSED_WITH_NO_PARTIAL_MATTER_MUTATION_NO_MATERIAL_DELIVERY_AND_NO_VISUAL_SUCCESS"
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-D-MW10-RESERVATION-CONFLICT-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "b_only_conflict_blocks_before_mw4": true,
+        "ab_conflict_blocks_before_prepare_commit": true,
+        "partial_matter_mutation": false,
+        "material_delivery": false,
+        "visual_success": false
+      },
+      "P7.7-E": {
+        "status": "NEXT",
+        "scope": "ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+        "required_result": "A_TO_B_ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_AND_POST_HANDOFF_B_ONLY_DIG_USES_MW4"
       }
     }
   }
