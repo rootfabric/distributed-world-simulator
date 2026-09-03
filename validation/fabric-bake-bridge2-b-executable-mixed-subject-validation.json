@@ -1,0 +1,80 @@
+{
+  "schema": "planet_simulator.fabric_bake_bridge2_b_executable_mixed_subject_validation.v1",
+  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
+  "production_accepted": false,
+  "predecessor": {
+    "checkpoint": "BRIDGE_2_A",
+    "evidence_head": "d63821c7044ddbae33895ea9afb4fd2af7d1344d",
+    "contract_hash": "5b58cdb94b959be41d7b8450f423e540ca393ac8a7469ea1e81002c6a214ec42"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "mixed_subject": {
+    "subject_hash": "3687aced4eaaed0a42eaee2470348792242c138a5c6ba4880c4157d488751dd9",
+    "frontier_hash": "1d9d5b8e1f6ff0ad53a5ee5fd4d5107adb08d63edd4586624d77838cbad3ea73",
+    "authority_epoch_binding": "fa900764fe8f6b38b08951136ec68d2bb259152847cd8722ff8ff6e128dea643",
+    "execution_owner": "server/complex0",
+    "representations": {
+      "FULL": {
+        "witness": "FULL_REFERENCE_EXECUTION",
+        "execution_identity": "816bb599144bb8cab1d9097a435650a6b8fd70792eae494a27c4f7f37b2c52c7"
+      },
+      "STRUCTURAL_BAKE": {
+        "witness": "BRIDGE1_STRUCTURAL_EXECUTION",
+        "physical_artifact": "36eea27c321efb623eb7364597cffe29cf92d43397f6af8116d4510ee5696173"
+      },
+      "CONTACT_BAKE": {
+        "witness": "B0_3_CONTACT_EXECUTION",
+        "physical_artifact": "05d0547081182fb5bfd9e250094e5c21efdb005a1f80652b0c58aa18f026405f"
+      },
+      "DYNAMIC_ROM": {
+        "witness": "B0_4_DYNAMIC_ROM_SESSION",
+        "physical_artifact": "8bf556b7b02bd9faf1b1dbc629fae65abbf35456577301b428aecc7231814e05",
+        "execution_identity": "c063cec2d0d3f717736c3cdff781010162a5d0044421f9bfbb7ca7573e7db65b"
+      },
+      "HYBRID_BAKE": {
+        "witness": "B0_5_A_HYBRID_SESSION",
+        "underlying_physical_artifact": "8bf556b7b02bd9faf1b1dbc629fae65abbf35456577301b428aecc7231814e05",
+        "execution_identity": "d63a90b1fad436c7b421412fcb43db01b4d82af75c882575a9d7f7e881e6fa52"
+      }
+    }
+  },
+  "acceptance": {
+    "pass": 57,
+    "total": 57,
+    "playground": "PASS",
+    "bridge2_a_regression": {
+      "pass": 71,
+      "total": 71
+    }
+  },
+  "local_log_sha256": {
+    "acceptance": "342bcdf79c9b54262876edcd40e8073264aa3111cb3f1497d9083a233cc699f2",
+    "playground": "881d17597f94ca0b1f5a2d83b5387f6cd32a2f360a8e8e1e60fb41033e706181",
+    "bridge2_a_regression": "7f6a44af2e1b0d88cf4cca6bdb969968a1350b65ffe73cadfe37c88a76442131"
+  },
+  "guarantees": {
+    "one_canonical_frontier": true,
+    "one_authority_envelope": true,
+    "all_five_active_slots_have_real_executable_witness": true,
+    "full_is_not_fake_bake": true,
+    "contact_derived_from_structural_parent": true,
+    "dynamic_rom_is_real_physical_bake_artifact": true,
+    "hybrid_reuses_dynamic_physical_artifact": true,
+    "foreign_frontier_witness_rejected": true,
+    "wrong_region_witness_rejected": true,
+    "deterministic_subject_identity": true
+  },
+  "non_claims": [
+    "CROSS_REPRESENTATION_EVENT_ROUTING",
+    "INVALIDATION_REFINEMENT_ORDERING",
+    "COMMON_MIXED_TIME_ADVANCE",
+    "POST_EVENT_DETERMINISTIC_MIXED_REPLAY",
+    "COMPLEX1B",
+    "BRIDGE2_CLOSED",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next_checkpoint": "BRIDGE_2_C_CROSS_REPRESENTATION_EVENT_ROUTING"
+}
