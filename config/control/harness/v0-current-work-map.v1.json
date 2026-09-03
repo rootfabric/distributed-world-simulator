@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-09-02-R14-P7_6_ACTIVE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-09-03-R15-P7_6_COMPLETE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_6_IN_PROGRESS",
-  "authored_against_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "status": "PRIMARY_WORK_MAP_P7_6_COMPLETE_P7_7_NEXT",
+  "authored_against_main": "8b866f32419eb5b9bedebd458ee2f9117a916020",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+  "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -239,20 +239,38 @@
     }
   },
   "p7_6": {
-    "state": "IN_PROGRESS",
+    "state": "COMPLETE_MERGED",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
-    "runtime_started": true,
-    "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+    "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+    "runtime_merge_pr": 466,
+    "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
     "hard_rule": "SM1_MW8_MW9_FOR_ACTOR_SEAM_AND_SINGLE_REGION_AUTHORITY; MW10_ONLY_FOR_ONE_MUTATION_TOUCHING_TWO_OR_MORE_REGIONS",
-    "required_proofs": [
-      "ACTOR_A_TO_B_HANDOFF_DOES_NOT_INVOKE_MW10",
-      "POST_HANDOFF_SINGLE_REGION_MUTATION_EXECUTES_ON_TARGET_REGION_VIA_EXISTING_MW4_PATH",
-      "TRANSFER_GAP_FENCES_SINGLE_AND_MULTI_REGION_MUTATIONS",
-      "TRUE_TWO_REGION_MUTATION_ROUTES_TO_EXISTING_MW10",
-      "MW10_RESERVATION_BLOCKS_CONFLICTING_HANDOFF_AND_SINGLE_REGION_MUTATION",
-      "MW10_PLAN_BOUND_TO_EXACT_OPERATION_BODY_AND_REGION_SET",
-      "NO_PRIVATE_P7_HANDOFF_TRANSACTION_DURABILITY_OR_REPLAY_STATE"
-    ]
+    "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+    "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json",
+    "exact_double_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "exact_linux_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "test_summary": {
+      "p7_1": "88/88",
+      "p7_6": "106/106",
+      "sm1": "145/145",
+      "mw8": "98/98",
+      "mw9_durable": "203+12+225 PASS",
+      "mw9_race": "100/100 rounds",
+      "mw10": "184+51; 2/2 suites",
+      "logs": "8/8",
+      "fatal_matches": 0
+    }
+  },
+  "p7_7": {
+    "state": "NEXT",
+    "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+    "scope": "GRAPHICAL_DIGGING_SLICE",
+    "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
+    "runtime_started": false,
+    "required_outcome": "GRAPHICAL_EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_SLICE",
+    "note": "Separate activation is required before runtime mutation."
   }
 }

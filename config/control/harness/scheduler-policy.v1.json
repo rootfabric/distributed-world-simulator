@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-09-02-R12-P7-P7_6_ACTIVE",
+  "policy_amendment_revision": "H0-PTRAIN-2026-09-03-R13-P7-P7_6_COMPLETE",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -51,7 +51,7 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_6_IN_PROGRESS",
+    "current_phase": "P7_7_NEXT",
     "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "next_runtime_checkpoint_eligible": true,
@@ -169,13 +169,24 @@
       "control_repair_merge": "2c3b8b183a07cb7be7c60ca4e6bbbfbc767ada93"
     },
     "p7_6": {
-      "state": "IN_PROGRESS",
+      "state": "COMPLETE_MERGED",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+      "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+      "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
       "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
       "runtime_mutation_authorized": true,
-      "runtime_started": true,
-      "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
-      "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_FOR_TRUE_MULTI_REGION_MATTER_MUTATION"
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
+    },
+    "p7_7": {
+      "state": "NEXT",
+      "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+      "scope": "GRAPHICAL_DIGGING_SLICE",
+      "runtime_mutation_authorized": true,
+      "runtime_started": false,
+      "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH"
     }
   },
   "research_isolation": {

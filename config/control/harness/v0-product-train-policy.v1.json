@@ -6,7 +6,7 @@
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
   "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_6_IN_PROGRESS",
+  "current_phase": "P7_7_NEXT",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -167,7 +167,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "IN_PROGRESS_P7_6",
+      "state": "IN_PROGRESS_P7_7_NEXT",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -182,7 +182,7 @@
       "next": "V0_P8_FIRST_MOBILE_CONSTRUCT",
       "mandatory_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
       "execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+      "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
       "project_epoch": "E2026-08-30-V0-P7-R1",
       "work_order_id": "V0-P7-R1-WO-001",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -272,13 +272,25 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_6": {
-        "state": "IN_PROGRESS",
+        "state": "COMPLETE_MERGED",
         "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
         "runtime_mutation_authorized": true,
-        "runtime_started": true,
-        "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
-        "hard_rule": "REUSE_SM1_MW8_MW9_AND_USE_MW10_ONLY_WHEN_ONE_CANONICAL_MUTATION_SPANS_TWO_OR_MORE_REGIONS"
+        "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+        "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+        "runtime_merge_pr": 466,
+        "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
+      },
+      "p7_7": {
+        "state": "NEXT",
+        "scope": "GRAPHICAL_DIGGING_SLICE",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_mutation_authorized": true,
+        "runtime_started": false,
+        "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH"
       }
     },
     {
@@ -373,7 +385,7 @@
     "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "accepted_predecessor_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
     "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-    "control_main_base": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
+    "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -386,12 +398,13 @@
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
     },
     "p7_1": "COMPLETE_MERGED",
-    "next": "P7_6_SEAM_AND_MULTI_REGION_COMPOSITION",
+    "next": "P7_7_GRAPHICAL_DIGGING_SLICE",
     "p7_2": "COMPLETE_MERGED",
     "p7_3": "COMPLETE_MERGED",
     "p7_4": "COMPLETE_MERGED",
     "p7_5": "COMPLETE_MERGED",
-    "p7_6": "IN_PROGRESS"
+    "p7_6": "COMPLETE_MERGED",
+    "p7_7": "NEXT"
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",

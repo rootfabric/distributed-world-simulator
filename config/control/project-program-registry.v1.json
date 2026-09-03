@@ -4,10 +4,10 @@
   "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-31T17:25:00+10:00",
-  "control_checkpoint": "V0 P7.3 COMPLETE_MERGED; P7.4 PERSISTENCE_RESTART_COMPOSITION is the next serialized P7 substep.",
+  "updated_at_utc": "2026-09-03T03:11:00Z",
+  "control_checkpoint": "V0 P7.6 COMPLETE_MERGED; P7.7 GRAPHICAL_DIGGING_SLICE is the next serialized P7 substep.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is formally accepted with runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f and accepted product lineage acb9379cacc413fc25a65117fb1627f5a01b9736. RF0/P7 architecture convergence is canonical at 7e80fe6ac409317d349cdeaa9602542c782893c1. The current V0 frontier is P7 pre-dispatch control rebased on main f7d3deb80b67a41880d736f83b132a9a7a5a0964: reuse MW4-MW10/RL2-RL3 and canonical Item Graph; no second Matter/terrain truth.",
+  "project_summary": "GLOBAL-P0 R3 remains canonical. SM1 is accepted. P7.1-P7.6 are COMPLETE_MERGED under the same serialized P7 mutation lease. The current V0 control frontier records exact P7.6 seam/multi-region composition merged at 8b866f32419eb5b9bedebd458ee2f9117a916020; P7.7 GRAPHICAL_DIGGING_SLICE is NEXT only and has not started.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -271,18 +271,18 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/v0-p7-6-activation-r1",
-      "passport_path": "config/control/branches/control__v0-p7-6-activation-r1.v1.json",
+      "branch": "control/v0-p7-6-closure-r1",
+      "passport_path": "config/control/branches/control__v0-p7-6-closure-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "P7.6 seam and true multi-region Matter composition activation.",
-      "purpose": "Continue the same P7 Work Order into seam/multi-region routing using existing SM1/MW8/MW9/MW10 owners only.",
-      "expected_outcome": "P7.6 runtime candidate proves actor seam handoff and true multi-region mutation routing without a P7 coordination protocol.",
-      "current_stage": "P7.6 Seam + Multi-Region Composition",
-      "stage_status": "P7_6_IN_PROGRESS",
-      "progress_note": "P7.5 is COMPLETE_MERGED. Human explicitly directed P7.6 implementation on canonical main 86b7264dfc1a362c223468e21ece0da7d6de1c67; P7.6 is active under the same runtime branch and single mutation lease.",
+      "short_description": "P7.6 seam and true multi-region Matter composition COMPLETE_MERGED; P7.7 graphical digging is NEXT.",
+      "purpose": "Preserve the exact reviewed/verified P7.6 composition in canonical main and advance the same P7 Work Order to a separately activated graphical digging slice.",
+      "expected_outcome": "P7.6 remains canonical with no new owner; P7.7 proves the playable equip-aim-dig-hole-material-inventory loop over existing owners.",
+      "current_stage": "P7.7 Graphical Digging Slice",
+      "stage_status": "P7_6_COMPLETE_MERGED_P7_7_NEXT",
+      "progress_note": "P7.6 exact runtime c2e056980eed4ae20849154b1dacc71af0ce8bdf passed Reviewer R2 and Fresh Linux Verifier R1, received explicit Human RUNTIME_FEATURE_MERGE approval, and merged via PR #466 as 8b866f32419eb5b9bedebd458ee2f9117a916020. P7.7 is NEXT but not activated.",
       "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Implement a stateless P7.6 routing composition: actor handoff via SM1/MW8/MW9, ordinary single-region mutation via existing P7.1→MW4 path, MW10 only for one mutation spanning multiple authority regions.",
+      "next_stage": "Activate P7.7 separately, then implement the graphical equip-aim-dig-hole-material-inventory slice without new canonical terrain, Matter, Item Graph, authority, persistence or network truth.",
       "product_execution_base": {
         "branch": "accepted SM1 product lineage",
         "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -294,13 +294,13 @@
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
-        "head_at_refresh_input": "ba8210a8d3cddf084a573f2e862982d3f76c37c9",
+        "head_at_refresh_input": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
         "work_order_id": "V0-P7-R1-WO-001",
         "runtime_mutation_present": true,
         "runtime_mutation_authorized": true,
-        "runtime_subject_tree": "f35e3a1acbe587de6a8f9bb9cef1f3949d5eea53",
-        "runtime_merge_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
-        "next_code_step": "P7.6 seam and true multi-region composition after separate Director activation."
+        "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+        "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+        "next_code_step": "P7.7 graphical digging only after separate Director activation."
       },
       "implementation_blockers": [],
       "acceptance_blockers": [
@@ -395,12 +395,23 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_6": {
-        "state": "IN_PROGRESS",
+        "state": "COMPLETE_MERGED",
         "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "runtime_started": true,
-        "activation_base_main": "86b7264dfc1a362c223468e21ece0da7d6de1c67",
-        "hard_rule": "SM1_MW8_MW9_FOR_SEAM; MW10_ONLY_FOR_TRUE_MULTI_REGION_MUTATION; NO_NEW_P7_COORDINATION_OWNER"
+        "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+        "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+        "runtime_merge_pr": 466,
+        "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
+      },
+      "p7_7": {
+        "state": "NEXT",
+        "scope": "GRAPHICAL_DIGGING_SLICE",
+        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+        "runtime_started": false,
+        "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH"
       }
     },
     "MATTER": {
