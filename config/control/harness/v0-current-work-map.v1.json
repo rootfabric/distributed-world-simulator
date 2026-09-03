@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-09-03-R15-P7_6_COMPLETE",
+  "revision": "V0-CURRENT-WORK-MAP-2026-09-03-R16-P7_7_ACTIVE",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_6_COMPLETE_P7_7_NEXT",
-  "authored_against_main": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "status": "PRIMARY_WORK_MAP_P7_7_IN_PROGRESS",
+  "authored_against_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
@@ -52,7 +52,7 @@
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "8b866f32419eb5b9bedebd458ee2f9117a916020",
+  "control_main_base": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
   "runtime_mutation_authorized_by_this_pointer": true,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -273,12 +273,24 @@
     }
   },
   "p7_7": {
-    "state": "NEXT",
+    "state": "IN_PROGRESS",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "GRAPHICAL_DIGGING_SLICE",
     "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
-    "runtime_started": false,
-    "required_outcome": "GRAPHICAL_EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_SLICE",
-    "note": "Separate activation is required before runtime mutation."
+    "runtime_started": true,
+    "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+    "acceptance_stand": "DIGGING_PLAYGROUND",
+    "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
+    "target": "GRAPHICAL_EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_AND_TWO_CLIENT_SEAM_CONVERGENCE",
+    "test_matrix": [
+      "A_SINGLE_REGION_MW4_NO_MW10",
+      "B_SEAM_NEAR_SINGLE_REGION_STILL_MW4",
+      "C_TRUE_A_B_MULTI_REGION_MW10",
+      "D_MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+      "E_ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+      "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
+      "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+      "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
+    ]
   }
 }
