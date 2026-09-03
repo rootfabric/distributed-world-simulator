@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 IMPLEMENTED AUDIT CANDIDATE  
+Статус: VIS5.0 CLOSED / VIS5.1 CURRENT  
 Дата: 2026-09-03  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -157,7 +157,7 @@ VIS5.4 Composition LOD / Streaming Local Gate
 VIS5.5 Visual Evidence / Integrated PLAY1 Handoff
 ~~~
 
-## VIS5.0 — текущий checkpoint
+## VIS5.0 — CLOSED
 
 VIS5.0 фиксирует authority и donor boundaries до изменения rendering path.
 
@@ -307,9 +307,14 @@ PLAY1 integrated acceptance
 ## Текущий следующий шаг
 
 ~~~text
-CURRENT:
-VIS5.0 exact verification
+VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
 
-AFTER GREEN:
+CURRENT:
 VIS5.1 Terrain Surface Frame Adapter
+~~~
+
+Durable closure:
+
+~~~text
+docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_0_TERRAIN_ECOSYSTEM_COMPOSITION_UBUNTU_VERIFIED_CLOSED_R1_RU.md
 ~~~
