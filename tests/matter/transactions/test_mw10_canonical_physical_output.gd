@@ -17,6 +17,7 @@ var failures: Array[String] = []
 
 
 func _init() -> void:
+	_test_config_boundary()
 	_test_valid_contract_and_determinism()
 	_test_receipt_and_result_bindings()
 	_test_region_and_external_mass_binding()
@@ -31,6 +32,39 @@ func _init() -> void:
 			assertions, failures.size()
 		])
 		quit(1)
+
+
+func _test_config_boundary() -> void:
+	var file := FileAccess.open(
+		"res://config/matter/mw10-canonical-physical-output.v1.json",
+		FileAccess.READ
+	)
+	_assert(file != null, "C0 physical output config exists")
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	_assert(typeof(parsed) == TYPE_DICTIONARY, "C0 physical output config parses")
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var config: Dictionary = parsed
+	_assert(String(config.get("owner", "")) == "MW10", "physical output owner remains MW10")
+	_assert(
+		bool(config.get("semantics", {}).get("mass_ledger_is_validation_not_reconstruction", false)),
+		"mass ledger is validation, not physical reconstruction"
+	)
+	_assert(
+		not bool(config.get("semantics", {}).get("aggregate_temperature_synthesized", true)),
+		"aggregate temperature synthesis remains forbidden"
+	)
+	_assert(
+		not bool(config.get("delivery_boundary", {}).get("coordinator_durable_wiring_implemented", true)),
+		"C0 does not claim C1 durable wiring"
+	)
+	_assert(
+		not bool(config.get("delivery_boundary", {}).get("p7_3_delivery_wired", true)),
+		"C0 does not claim P7.3 delivery wiring"
+	)
 
 
 func _test_valid_contract_and_determinism() -> void:
