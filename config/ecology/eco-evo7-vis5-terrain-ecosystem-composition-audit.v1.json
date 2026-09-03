@@ -112,12 +112,12 @@
     {
       "checkpoint": "VIS5.2",
       "name": "Noncanonical Ground-Cover Presentation Bridge",
-      "status": "IMPLEMENTED_CANDIDATE_EXACT_PENDING"
+      "status": "CLOSED"
     },
     {
       "checkpoint": "VIS5.3",
       "name": "Mixed-Strata Composition Lab",
-      "status": "BLOCKED_BY_VIS5_2_EXACT_CLOSURE"
+      "status": "CURRENT"
     },
     {
       "checkpoint": "VIS5.4",
@@ -139,7 +139,17 @@
     "feed presentation RNG, LOD, grass placement or visual scatter back into ecology state",
     "claim PLAY1 performance acceptance before PERF2.CONV"
   ],
-  "current_checkpoint": "VIS5.2",
-  "current_checkpoint_state": "IMPLEMENTED_CANDIDATE_EXACT_PENDING",
-  "next_checkpoint_after_green": "VIS5.3"
+  "current_checkpoint": "VIS5.3",
+  "current_checkpoint_state": "CURRENT",
+  "next_checkpoint_after_green": "VIS5.4",
+  "vis5_2_closure": {
+    "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
+    "exact_subject_tree": "4f8e00d6c9bd902d1abe14b03e2f5bf81835b0f9",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "vis5_0_assertions": 87,
+    "vis5_1_assertions": 70,
+    "vis5_2_assertions": 57
+  }
 }

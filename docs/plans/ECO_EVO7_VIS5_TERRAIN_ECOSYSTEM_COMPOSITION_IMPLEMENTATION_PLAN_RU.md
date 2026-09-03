@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 IMPLEMENTED CANDIDATE  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 CURRENT  
 Дата: 2026-09-03  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -289,7 +289,7 @@ VIS5.2 deterministic ground-cover sampler
 
 Критическая orientation boundary зафиксирована явно: yaw применяется **в локальном terrain frame**, а не world-space вращением уже ориентированного Basis. Это сохраняет Y каждой planned transform вдоль derived terrain normal и готовит bridge к существенно более сложным WORLDGEN-поверхностям.
 
-До формального CLOSED требуется exact branch regression на canonical double-Godot.
+Exact branch regression на canonical double-Godot завершён GREEN; VIS5.2 формально CLOSED.
 
 ## VIS5.3 — Mixed-Strata Composition Lab
 
@@ -356,13 +356,13 @@ PLAY1 integrated acceptance
 ~~~text
 VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
 VIS5.1 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
-VIS5.2 🟡 IMPLEMENTED / focused exact GREEN / branch exact regression pending
+VIS5.2 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
 
 CURRENT:
-VIS5.2 exact branch regression + formal closure
-
-NEXT AFTER GREEN:
 VIS5.3 Mixed-Strata Composition Lab
+
+NEXT:
+VIS5.4 Composition LOD / Streaming Local Gate
 ~~~
 
 Durable closures:
