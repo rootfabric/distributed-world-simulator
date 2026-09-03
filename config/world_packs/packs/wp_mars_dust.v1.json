@@ -1,0 +1,55 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-MARS-DUST",
+  "version": "R1",
+  "display_name": "Mars Dust",
+  "environment": {
+    "sky_profile": "butterscotch_haze",
+    "lighting_profile": "diffuse_warm_sunlight",
+    "fog_profile": "dust_haze"
+  },
+  "materials": {
+    "surface_catalog": [
+      "red_dust_regolith",
+      "layered_sedimentary_rock",
+      "oxidized_metal_plate"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "weathered_boulder",
+      "crate_industrial",
+      "scrap_pile",
+      "industrial_pipe"
+    ],
+    "scatter_profiles": [
+      "dense_dust_rock_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "dust_scar",
+      "wind_streak"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "beacon",
+      "landing_pad",
+      "wreck",
+      "broken_pipeline"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "thin_wind_placeholder",
+    "particle_profile": "dust_drift_placeholder"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh",
+      "wf.ambience.particles"
+    ]
+  }
+}
