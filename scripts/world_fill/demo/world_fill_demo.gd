@@ -8,6 +8,7 @@ const FeedbackScript = preload("res://scripts/world_fill/feedback/world_fill_eve
 const PoiKitScript = preload("res://scripts/world_fill/landmarks/world_fill_poi_kit.gd")
 const MemoryScript = preload("res://scripts/world_fill/memory/world_fill_local_memory.gd")
 const SignKitScript = preload("res://scripts/world_fill/labels/world_fill_sign_kit.gd")
+const ShowcaseScript = preload("res://scripts/world_fill/showcase/world_fill_showcase_kit.gd")
 
 func _ready() -> void:
 	_build_environment()
@@ -19,6 +20,7 @@ func _ready() -> void:
 	_build_landmarks()
 	_build_local_memory()
 	_build_signs()
+	_build_showcase_record()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
@@ -81,6 +83,18 @@ func _build_signs() -> void:
 	kit.create_sign("MARE FRIGORIS-7 OUTPOST", Vector3(0.0, 0.0, -12.0), "location_name")
 	kit.create_sign("CRATE A-113", Vector3(4.0, 0.0, 2.0), "container_label")
 	print("WORLD_FILL_SIGNS=%d" % int(kit.sign_report().get("active", 0)))
+
+func _build_showcase_record() -> void:
+	var kit := ShowcaseScript.new()
+	var record := kit.capture_observation({
+		"simulation_tick": 0,
+		"world_fill_preset": "clear",
+		"scene_id": "world_fill_demo",
+		"region_id": "lab/world_fill_demo",
+	})
+	var saved := kit.save_observation("demo_last_run", record)
+	print("WORLD_FILL_SHOWCASE_COMPLETE=%s" % str(bool(record.get("complete", false))))
+	print("WORLD_FILL_SHOWCASE_SAVED=%s" % str(saved))
 
 func _build_environment() -> void:
 	var atmosphere := AtmosphereScript.new()
