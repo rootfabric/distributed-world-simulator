@@ -1,0 +1,36 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "wp-broken-bad-identity",
+  "version": "1.0",
+  "display_name": "Broken: bad pack_id and version patterns",
+  "environment": {
+    "sky_profile": "black_sky_stars",
+    "lighting_profile": "hard_sunlight_low_fill",
+    "fog_profile": "none"
+  },
+  "materials": {
+    "surface_catalog": [
+      "regolith_grey_basalt"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "crate_industrial"
+    ],
+    "scatter_profiles": []
+  },
+  "decals": {
+    "catalog": [
+      "dust_scar"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "beacon"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "silent_vacuum_placeholder",
+    "particle_profile": "none"
+  }
+}

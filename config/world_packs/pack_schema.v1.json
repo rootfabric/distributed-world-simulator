@@ -1,6 +1,11 @@
 {
-  "schema": "dws.world_pack.v1",
+  "$schema": "http://json-schema.org/draft-07#",
+  "$id": "dws.world_pack.v1",
+  "title": "DWS World Pack Manifest",
+  "description": "WP0.1 pack contract. A world pack declares presentation and content identity (environment, materials, props, scatter, decals, POI, ambience) for an unchanged canonical simulation. It never carries canonical state: terrain truth, ECO truth, matter, items, authority, persistence, networking and gameplay remain outside the pack.",
+  "type": "object",
   "required": [
+    "schema",
     "pack_id",
     "version",
     "display_name",
@@ -11,38 +16,166 @@
     "poi",
     "ambience"
   ],
-  "fields": {
-    "pack_id": "string",
-    "version": "string",
-    "display_name": "string",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "dws.world_pack.v1"
+    },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^WP-[A-Z0-9]+(-[A-Z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(R[0-9]+|[0-9]+\\.[0-9]+\\.[0-9]+)$"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
     "environment": {
-      "sky_profile": "string",
-      "lighting_profile": "string",
-      "fog_profile": "string"
+      "type": "object",
+      "required": [
+        "sky_profile",
+        "lighting_profile",
+        "fog_profile"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "sky_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lighting_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fog_profile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "materials": {
-      "surface_catalog": "array[string]"
+      "type": "object",
+      "required": [
+        "surface_catalog"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "surface_catalog": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "props": {
-      "catalog": "array[string]",
-      "scatter_profiles": "array[string]"
+      "type": "object",
+      "required": [
+        "catalog",
+        "scatter_profiles"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "catalog": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "scatter_profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
     },
     "decals": {
-      "catalog": "array[string]"
+      "type": "object",
+      "required": [
+        "catalog"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "catalog": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "poi": {
-      "catalog": "array[string]"
+      "type": "object",
+      "required": [
+        "catalog"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "catalog": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "ambience": {
-      "audio_profile": "string",
-      "particle_profile": "string"
+      "type": "object",
+      "required": [
+        "audio_profile",
+        "particle_profile"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "audio_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "particle_profile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "compatibility": {
-      "godot_min": "string",
-      "renderer": "string",
-      "requires_world_fill_features": "array[string]"
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "godot_min": {
+          "type": "string"
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "requires_world_fill_features": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^wf\\.[a-z0-9]+(\\.[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      }
     }
   },
-  "canonical_state": false,
-  "unknown_optional_fields": "ignore"
+  "x-canonical-state": false,
+  "x-unknown-optional-fields": "ignore"
 }

@@ -1,0 +1,54 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-MOON-INDUSTRIAL",
+  "version": "R1",
+  "display_name": "Moon Industrial",
+  "environment": {
+    "sky_profile": "black_sky_stars",
+    "lighting_profile": "hard_sunlight_low_fill",
+    "fog_profile": "none"
+  },
+  "materials": {
+    "surface_catalog": [
+      "regolith_grey_basalt",
+      "basalt_slab",
+      "scrap_metal_plate"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "crate_industrial",
+      "scrap_pile",
+      "antenna_mast",
+      "beacon_light"
+    ],
+    "scatter_profiles": [
+      "sparse_rock_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "dust_scar",
+      "oil_stain"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "beacon",
+      "tiny_outpost",
+      "landing_pad"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "silent_vacuum_placeholder",
+    "particle_profile": "none"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh"
+    ]
+  },
+  "presentation_notes": "Unknown optional field: validators must ignore it per the WP0.1 contract."
+}

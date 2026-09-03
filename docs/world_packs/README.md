@@ -63,7 +63,23 @@ WORLDGEN may later say "basalt plain, slope 0.12, temperature X". A pack can cho
 The first implementation target is a gallery scene:
 `scenes/labs/world_packs/world_packs_gallery.tscn`
 
+## Pack manifest validation (WP0.1)
+
+Pack manifests under `config/world_packs/packs/` are JSON documents validated
+against `config/world_packs/pack_schema.v1.json` (draft-07 subset) by
+`tools/world_packs/validate_pack.gd`:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_WORLD_PACKS_WP0_1_TESTS.ps1
+```
+
+Exit codes: `0` valid, `1` invalid manifest, `2` usage/IO error.
+Unknown optional manifest fields are ignored by contract; a pack never carries
+canonical state. Promotion gate 1 ("schema validates") is checked with this tool.
+
 See:
 - `WORLD_PACKS_ROADMAP.md`
 - `AGENT_CONTENT_SCOUT.md`
 - `config/world_packs/pack_schema.v1.json`
+- `evidence/WP0_1_SCHEMA_VALIDATION_2026-09-03.md`

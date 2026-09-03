@@ -1,0 +1,31 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-BROKEN-MISSING-REQUIRED",
+  "version": "R1",
+  "display_name": "Broken: missing required decals section",
+  "environment": {
+    "sky_profile": "black_sky_stars",
+    "lighting_profile": "hard_sunlight_low_fill",
+    "fog_profile": "none"
+  },
+  "materials": {
+    "surface_catalog": [
+      "regolith_grey_basalt"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "crate_industrial"
+    ],
+    "scatter_profiles": []
+  },
+  "poi": {
+    "catalog": [
+      "beacon"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "silent_vacuum_placeholder",
+    "particle_profile": "none"
+  }
+}
