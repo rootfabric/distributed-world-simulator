@@ -10,6 +10,7 @@ const Reservation = preload("res://scripts/simulation/matter/transactions/distri
 const InvalidationBatch = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_invalidation_batch.gd")
 const OutboxRecord = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_invalidation_outbox_record.gd")
 const OperationResult = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_operation_result.gd")
+const PhysicalOutput = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd")
 const Checkpoint = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_checkpoint.gd")
 const Repository = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd")
 
@@ -100,6 +101,16 @@ func operation_result(operation_id: String) -> Dictionary:
 	return {}
 
 
+func physical_output(operation_id: String) -> Dictionary:
+	var normalized := operation_id.strip_edges().to_lower()
+	for raw_record in Array(_checkpoint.get("transaction_records", [])):
+		var record: Dictionary = raw_record
+		if String(record.get("operation_id", "")) == normalized \
+				and String(record.get("phase", "")) == Record.PHASE_COMMITTED:
+			return Dictionary(record.get("physical_output", {})).duplicate(true)
+	return {}
+
+
 func begin_transaction(plan: Dictionary, transition_id: String, server_tick: int) -> Dictionary:
 	if _checkpoint.is_empty():
 		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_NOT_INITIALIZED")
@@ -110,7 +121,11 @@ func begin_transaction(plan: Dictionary, transition_id: String, server_tick: int
 	if not replay_result.is_empty():
 		if String(replay_result["plan_checksum"]) != String(plan["checksum"]):
 			return MatterUtils.failure("MATTER_CROSS_REGION_OPERATION_ID_CONFLICT")
-		return MatterUtils.success({"replay": true, "result": replay_result})
+		return MatterUtils.success({
+			"replay": true,
+			"result": replay_result,
+			"physical_output": physical_output(String(plan["operation_id"])),
+		})
 	var existing: Dictionary = latest_record(String(plan["transaction_id"]))
 	if not existing.is_empty():
 		if String(existing["plan"]["checksum"]) != String(plan["checksum"]):
@@ -279,22 +294,52 @@ func commit_next(transaction_id: String, transition_id: String, server_tick: int
 	var checked: Dictionary = _validate_commit_receipt(receipt, prepare_receipt, participant)
 	if not bool(checked.get("success", false)):
 		return checked
+	var participant_physical_outputs: Array = Array(
+		current.get("participant_physical_outputs", [])
+	).duplicate(true)
+	if PhysicalOutput.output_required(current["plan"]):
+		var participant_output: Dictionary = PhysicalOutput.create_participant_output(
+			current["plan"], {
+				"region_id": participant["region_id"],
+				"participant_checksum": participant["checksum"],
+				"commit_receipt": receipt,
+				"matter_result": details.get("matter_result", {}),
+				"material_batch": details.get("material_batch", {}),
+			}
+		)
+		if participant_output.is_empty():
+			return MatterUtils.failure("MATTER_CROSS_REGION_COMMIT_PHYSICAL_OUTPUT_INVALID", {
+				"region_id": participant["region_id"],
+			})
+		participant_physical_outputs.append(participant_output)
 	var receipts: Array = Array(current["commit_receipts"]).duplicate(true)
 	receipts.append(receipt)
 	var participant_count: int = Array(current["plan"]["participants"]).size()
 	if receipts.size() < participant_count:
 		var progress: Dictionary = Record.advance(
-			current, Record.PHASE_COMMITTING, transition_id, server_tick,
-			{"decision": Record.DECISION_COMMIT, "commit_receipts": receipts}
+			current, Record.PHASE_COMMITTING, transition_id, server_tick, {
+				"decision": Record.DECISION_COMMIT,
+				"commit_receipts": receipts,
+				"participant_physical_outputs": participant_physical_outputs,
+			}
 		)
 		return _append_record(progress, server_tick, {"receipt": receipt})
 	var invalidation_batch: Dictionary = _build_invalidation_batch(current, receipts, server_tick)
 	if invalidation_batch.is_empty():
 		return MatterUtils.failure("MATTER_CROSS_REGION_INVALIDATION_BATCH_CREATION_FAILED")
+	var terminal_physical_output: Dictionary = {}
+	if PhysicalOutput.output_required(current["plan"]):
+		terminal_physical_output = PhysicalOutput.create(
+			current["plan"], participant_physical_outputs
+		)
+		if terminal_physical_output.is_empty():
+			return MatterUtils.failure("MATTER_CROSS_REGION_TERMINAL_PHYSICAL_OUTPUT_CREATION_FAILED")
 	var terminal: Dictionary = Record.advance(
 		current, Record.PHASE_COMMITTED, transition_id, server_tick, {
 			"decision": Record.DECISION_COMMIT,
 			"commit_receipts": receipts,
+			"participant_physical_outputs": participant_physical_outputs,
+			"physical_output": terminal_physical_output,
 			"invalidation_batch": invalidation_batch,
 		}
 	)
@@ -332,6 +377,7 @@ func commit_next(transaction_id: String, transition_id: String, server_tick: int
 		"replay": false,
 		"record": terminal,
 		"result": result,
+		"physical_output": terminal_physical_output,
 		"outbox": outbox,
 		"receipt": receipt,
 	})
@@ -348,7 +394,11 @@ func commit_all(transaction_id: String, transition_prefix: String, server_tick: 
 				var published: Dictionary = publish_pending_invalidations(tick)
 				if not bool(published.get("success", false)):
 					return published
-			return MatterUtils.success({"record": current, "result": operation_result(String(current["operation_id"]))})
+			return MatterUtils.success({
+				"record": current,
+				"result": operation_result(String(current["operation_id"])),
+				"physical_output": Dictionary(current.get("physical_output", {})).duplicate(true),
+			})
 		var committed: Dictionary = commit_next(
 			transaction_id, "%s-%d" % [transition_prefix, int(current["record_sequence"]) + 1], tick
 		)
@@ -700,6 +750,7 @@ func _runtime_context(current: Dictionary, server_tick: int) -> Dictionary:
 		"record_sequence": current["record_sequence"],
 		"global_commit_hash": current["global_commit_hash"],
 		"server_tick": server_tick,
+		"plan": current["plan"].duplicate(true),
 	}
 
 
