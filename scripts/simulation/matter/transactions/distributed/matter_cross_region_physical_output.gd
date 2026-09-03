@@ -6,6 +6,8 @@ const Receipt = preload("res://scripts/simulation/matter/transactions/distribute
 const MassLedger = preload("res://scripts/simulation/matter/transactions/distributed/matter_distributed_mass_ledger.gd")
 const MatterResult = preload("res://scripts/simulation/matter/contracts/matter_mutation_result.gd")
 const MaterialBatch = preload("res://scripts/simulation/matter/contracts/matter_material_batch.gd")
+const MatterRequest = preload("res://scripts/simulation/matter/contracts/matter_mutation_request.gd")
+const CellAddress = preload("res://scripts/simulation/spatial/simulation_cell_address.gd")
 
 const SCHEMA := "planet_simulator.matter_cross_region_physical_output.v1"
 const OUTPUT_KIND_EXTRACTED_MATERIAL := "EXTRACTED_MATERIAL"
@@ -85,6 +87,10 @@ static func validate_participant_output(plan: Dictionary, output: Dictionary) ->
 		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_NOT_IN_PLAN", {"region_id": region_id})
 	if String(output.get("participant_checksum", "")) != String(participant.get("checksum", "")):
 		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_CHECKSUM_MISMATCH", {"region_id": region_id})
+	var operation_binding: Dictionary = _participant_operation_binding(plan, participant)
+	if not bool(operation_binding.get("success", false)):
+		return operation_binding
+	var expected_operation_id := String(operation_binding["details"]["operation_id"])
 	var commit_receipt_value = output.get("commit_receipt", null)
 	if typeof(commit_receipt_value) != TYPE_DICTIONARY:
 		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_COMMIT_RECEIPT_REQUIRED", {"region_id": region_id})
@@ -105,7 +111,7 @@ static func validate_participant_output(plan: Dictionary, output: Dictionary) ->
 	if not bool(checked.get("success", false)):
 		return checked
 	if String(matter_result.get("status", "")) != "COMMITTED" \
-			or String(matter_result.get("operation_id", "")) != String(plan.get("operation_id", "")):
+			or String(matter_result.get("operation_id", "")) != expected_operation_id:
 		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_MATTER_RESULT_BINDING_MISMATCH", {"region_id": region_id})
 	var batch_value = output.get("material_batch", null)
 	if typeof(batch_value) != TYPE_DICTIONARY:
@@ -114,7 +120,7 @@ static func validate_participant_output(plan: Dictionary, output: Dictionary) ->
 	checked = MaterialBatch.validate(batch)
 	if not bool(checked.get("success", false)):
 		return checked
-	if String(batch.get("source_operation_id", "")) != String(plan.get("operation_id", "")) \
+	if String(batch.get("source_operation_id", "")) != expected_operation_id \
 			or String(batch.get("source_body_id", "")) != String(plan.get("body_id", "")):
 		return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_BINDING_MISMATCH", {"region_id": region_id})
 	var aggregate_ids: Array = matter_result.get("created_aggregate_ids", [])
@@ -204,6 +210,10 @@ static func validate(value: Dictionary) -> Dictionary:
 			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_NOT_IN_PLAN", {"region_id": region_id})
 		if String(output.get("participant_checksum", "")) != String(participant.get("checksum", "")):
 			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_PARTICIPANT_CHECKSUM_MISMATCH", {"region_id": region_id})
+		var operation_binding: Dictionary = _participant_operation_binding(plan, participant)
+		if not bool(operation_binding.get("success", false)):
+			return operation_binding
+		var expected_operation_id := String(operation_binding["details"]["operation_id"])
 
 		var commit_receipt_value = output.get("commit_receipt", null)
 		if typeof(commit_receipt_value) != TYPE_DICTIONARY:
@@ -222,7 +232,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		checked = MatterResult.validate(matter_result)
 		if not bool(checked.get("success", false)):
 			return checked
-		if String(matter_result.get("status", "")) != "COMMITTED" 				or String(matter_result.get("operation_id", "")) != String(plan.get("operation_id", "")):
+		if String(matter_result.get("status", "")) != "COMMITTED" 				or String(matter_result.get("operation_id", "")) != expected_operation_id:
 			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_MATTER_RESULT_BINDING_MISMATCH", {"region_id": region_id})
 
 		var batch_value = output.get("material_batch", null)
@@ -232,7 +242,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		checked = MaterialBatch.validate(batch)
 		if not bool(checked.get("success", false)):
 			return checked
-		if String(batch.get("source_operation_id", "")) != String(plan.get("operation_id", "")) 				or String(batch.get("source_body_id", "")) != String(plan.get("body_id", "")):
+		if String(batch.get("source_operation_id", "")) != expected_operation_id 				or String(batch.get("source_body_id", "")) != String(plan.get("body_id", "")):
 			return MatterUtils.failure("MATTER_CROSS_REGION_PHYSICAL_BATCH_BINDING_MISMATCH", {"region_id": region_id})
 		var aggregate_ids: Array = matter_result.get("created_aggregate_ids", [])
 		if aggregate_ids.size() != 1 or String(aggregate_ids[0]) != String(batch.get("batch_id", "")):
@@ -288,6 +298,33 @@ static func validate(value: Dictionary) -> Dictionary:
 	if not bool(safe.get("success", false)):
 		return safe
 	return MatterUtils.validate_checksum(value)
+
+
+static func _participant_operation_binding(plan: Dictionary, participant: Dictionary) -> Dictionary:
+	var operation_id := String(plan.get("operation_id", ""))
+	var payload: Dictionary = Dictionary(participant.get("mutation_payload", {}))
+	if not payload.has("matter_request"):
+		return MatterUtils.success({"operation_id": operation_id})
+	var request_value = payload.get("matter_request", null)
+	if typeof(request_value) != TYPE_DICTIONARY:
+		return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_MATTER_REQUEST_REQUIRED")
+	var request: Dictionary = request_value
+	var checked: Dictionary = MatterRequest.validate(request)
+	if not bool(checked.get("success", false)):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_MATTER_REQUEST_INVALID", {"cause": checked})
+	if String(request.get("body_id", "")) != String(plan.get("body_id", "")):
+		return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_MATTER_REQUEST_BODY_MISMATCH")
+	var root: Dictionary = Dictionary(participant.get("region_root_address", {}))
+	for raw_address in Array(request.get("target_bricks", [])):
+		if typeof(raw_address) != TYPE_DICTIONARY:
+			return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_MATTER_REQUEST_TARGET_INVALID")
+		var cell: Dictionary = Dictionary(raw_address.get("cell_address", {}))
+		if cell != root and not CellAddress.is_ancestor(root, cell):
+			return MatterUtils.failure("MATTER_CROSS_REGION_PARTICIPANT_MATTER_REQUEST_OUTSIDE_REGION", {
+				"region_id": String(participant.get("region_id", "")),
+				"address_id": String(raw_address.get("address_id", "")),
+			})
+	return MatterUtils.success({"operation_id": String(request.get("operation_id", ""))})
 
 
 static func participant_output_by_region(value: Dictionary, region_id: String) -> Dictionary:
