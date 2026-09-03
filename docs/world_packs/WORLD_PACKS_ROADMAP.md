@@ -1,5 +1,26 @@
 # WORLD PACKS Roadmap
 
+## Status (2026-09-04)
+
+| Milestone | Status | Evidence |
+|---|---|---|
+| WP0.0 Constitution + Gallery | done | `evidence/WP0_0_GODOT_VALIDATION_2026-09-03.md` |
+| WP0.1 Pack Contract / Schema | done | `evidence/WP0_1_SCHEMA_VALIDATION_2026-09-03.md` |
+| WP0.2 Content License Ledger | done (enforced-empty) | `evidence/WP0_2_LICENSE_LEDGER_2026-09-03.md` |
+| WP0.3 Moon Industrial R1 | done | `evidence/WP0_3_MOON_INDUSTRIAL_2026-09-03.md` |
+| WP0.4 Mars Dust R1 | done | `evidence/WP0_4_MARS_DUST_2026-09-03.md` |
+| WP0.5 Frozen World R1 | done | `evidence/WP0_5_FROZEN_2026-09-03.md` |
+| WP0.6 Volcanic World R1 | done | `evidence/WP0_6_VOLCANIC_2026-09-03.md` |
+| WP0.7 Temperate R1 | done | `evidence/WP0_7_TEMPERATE_2026-09-03.md` |
+| WP0.8 Alien Wetland R1 | done | `evidence/WP0_8_ALIEN_WETLAND_2026-09-03.md` |
+| WP0.9 Shared POI Library | done | `evidence/WP0_9_POI_LIBRARY_2026-09-03.md` |
+| WP0.10 Gallery + Comparison Harness | done | `evidence/WP0_10_GALLERY_HARNESS_2026-09-04.md` |
+
+All R1 packs are asset-free procedural presentations; screenshots and
+draw-call capture remain a pending graphical (MCP) run recorded in the WP0.10
+capture record. External CC0 content integration proceeds through the WP0.2
+ledger and the content-scout work orders.
+
 ## WP0.0 — Pack Constitution + Gallery Scaffold
 Freeze scope and provide a runnable asset-free gallery.
 

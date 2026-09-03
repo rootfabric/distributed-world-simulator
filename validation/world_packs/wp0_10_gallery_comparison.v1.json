@@ -1,0 +1,152 @@
+{
+	"capture": {
+		"screenshot": "pending_graphical_mcp_capture"
+	},
+	"engine": {
+		"build": "4.7.1.stable.a13da4feb",
+		"mode": "headless",
+		"precision": "double",
+		"renderer": "gl_compatibility",
+		"version_string": "4.7.1-stable (custom_build)"
+	},
+	"gallery_boot": {
+		"nodes": 394,
+		"ok": true,
+		"pads": 6
+	},
+	"gallery_scene": "res://scenes/labs/world_packs/world_packs_gallery.tscn",
+	"generated": "2026-09-04",
+	"packs": [
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Alien Wetland",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 48,
+			"multimesh_instances": 80,
+			"nodes": 69,
+			"object_budget": 128,
+			"pack_id": "WP-ALIEN-WETLAND",
+			"poi_catalog": [
+				"research_station_module",
+				"cave_marker",
+				"beacon"
+			],
+			"surface_catalog": [
+				"wet_dark_ground",
+				"bio_film_cover",
+				"alien_silt"
+			],
+			"version": "R1"
+		},
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Frozen World",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 31,
+			"multimesh_instances": 70,
+			"nodes": 49,
+			"object_budget": 101,
+			"pack_id": "WP-FROZEN",
+			"poi_catalog": [
+				"beacon",
+				"cave_marker",
+				"research_station_module"
+			],
+			"surface_catalog": [
+				"snow_ice_surface",
+				"exposed_dark_rock",
+				"frost_metal_plate"
+			],
+			"version": "R1"
+		},
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Mars Dust",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 39,
+			"multimesh_instances": 120,
+			"nodes": 59,
+			"object_budget": 159,
+			"pack_id": "WP-MARS-DUST",
+			"poi_catalog": [
+				"beacon",
+				"landing_pad",
+				"wreck",
+				"broken_pipeline"
+			],
+			"surface_catalog": [
+				"red_dust_regolith",
+				"layered_sedimentary_rock",
+				"oxidized_metal_plate"
+			],
+			"version": "R1"
+		},
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Moon Industrial",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 50,
+			"multimesh_instances": 90,
+			"nodes": 75,
+			"object_budget": 140,
+			"pack_id": "WP-MOON-INDUSTRIAL",
+			"poi_catalog": [
+				"beacon",
+				"tiny_outpost",
+				"landing_pad",
+				"wreck",
+				"broken_pipeline"
+			],
+			"surface_catalog": [
+				"regolith_grey_basalt",
+				"basalt_slab",
+				"scrap_metal_plate"
+			],
+			"version": "R1"
+		},
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Temperate",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 69,
+			"multimesh_instances": 60,
+			"nodes": 95,
+			"object_budget": 129,
+			"pack_id": "WP-TEMPERATE",
+			"poi_catalog": [
+				"landing_pad",
+				"tiny_outpost",
+				"wreck"
+			],
+			"surface_catalog": [
+				"soil_loam",
+				"grass_cover",
+				"river_rock",
+				"wet_soil_variant"
+			],
+			"version": "R1"
+		},
+		{
+			"asset_set": "asset-free-procedural-r1",
+			"display_name": "Volcanic World",
+			"draw_calls": "pending_graphical_run",
+			"mesh_instances": 29,
+			"multimesh_instances": 110,
+			"nodes": 50,
+			"object_budget": 139,
+			"pack_id": "WP-VOLCANIC",
+			"poi_catalog": [
+				"beacon",
+				"cave_marker",
+				"broken_pipeline"
+			],
+			"surface_catalog": [
+				"dark_igneous_basalt",
+				"scorched_slab",
+				"ash_covered_plate"
+			],
+			"version": "R1"
+		}
+	],
+	"schema": "planet_simulator.world_packs_gallery_comparison.v1"
+}

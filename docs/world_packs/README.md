@@ -60,8 +60,26 @@ WORLDGEN may later say "basalt plain, slope 0.12, temperature X". A pack can cho
 - WP-TEMPERATE
 - WP-ALIEN-WETLAND
 
-The first implementation target is a gallery scene:
+The gallery scene:
 `scenes/labs/world_packs/world_packs_gallery.tscn`
+
+## Gallery (WP0.10)
+
+Pads mode (all registered packs, neutral shared environment):
+
+```powershell
+& "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe" --path <project_dir> res://scenes/labs/world_packs/world_packs_gallery.tscn
+```
+
+Focus mode (single pack with its full environment):
+
+```powershell
+& "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe" --path <project_dir> res://scenes/labs/world_packs/world_packs_gallery.tscn -- --pack=WP-MOON-INDUSTRIAL
+```
+
+The comparison harness (`RUN_WORLD_PACKS_WP0_10_HARNESS.ps1`) chains all
+promotion-gate checks and writes
+`validation/world_packs/wp0_10_gallery_comparison.v1.json`.
 
 ## Pack manifest validation (WP0.1)
 
