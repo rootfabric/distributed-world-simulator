@@ -2312,3 +2312,265 @@ ReconstructionDescriptor/StateMapping handoff, lazy mode-B hybrid wrapper/cache,
 exact cache replay, stale/unknown fail-closed behavior.
 
 This does not yet authorize BRIDGE-2 executable mixed-representation integration.
+
+
+---
+
+## COMPLEX SYSTEMS EXPERIMENTAL LADDER — post-B0.5-A insertion
+
+Detailed stand plan:
+
+docs/research/FABRIC_BAKE_COMPLEX_SYSTEMS_EXPERIMENTAL_LADDER_RU.md
+
+The roadmap now explicitly includes executable experimental stands. The purpose is to
+validate not only individual reduction primitives but progressively more complex systems
+with physical destruction, functional dependencies, mixed fidelity and local refinement.
+
+### Updated path
+
+~~~text
+B0.4 Dynamic ROM             ✅ CLOSED
+B0.5-P0 contracts/preflight  ✅ CLOSED
+FABRIC.SYNC3                 ✅ CLOSED
+B0.5-A executable hybrid     ✅ CLOSED
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX0 — BREAKABLE STRUCTURE LAB ★    │
+│ ★ COMPLEX1A — POWERED FENCE FULL ★        │
+└────────────────────────────────────────────┘
+        ↓
+══════════════════════════════════════════════
+★ POST-B0.5-A FABRIC SYNC — NEXT ★
+══════════════════════════════════════════════
+        │
+        ├── BRIDGE-2 executable authorization?
+        └── FABRIC0.19 necessity?
+        │
+        ▼
+BRIDGE-2 executable path
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX1B — POWERED FENCE MIXED ★       │
+│ ★ CX2 — REDUNDANT POWER FENCE ★           │
+└────────────────────────────────────────────┘
+        ↓
+BRIDGE-2 CLOSED
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX2 — MODULAR MACHINE LAB ★        │
+│ FULL + STRUCTURAL + CONTACT + ROM + HYBRID │
+└────────────────────────────────────────────┘
+        ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+        +
+BRIDGE-3 FULL → BAKE → GUARD → UNBAKE → FULL
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX3 — ADAPTIVE DAMAGE LAB ★        │
+│ ★ CX5 — LARGE POWERED STRUCTURE ★         │
+└────────────────────────────────────────────┘
+        ↓
+B0.7 UNSEEN MACHINE SCALE CHALLENGE
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX4 — UNSEEN FUNCTIONAL MACHINE ★  │
+└────────────────────────────────────────────┘
+~~~
+
+### COMPLEX0 — first executable complexity stand
+
+Gate:
+
+~~~text
+B0.5-A CLOSED
+~~~
+
+Subject:
+
+~~~text
+50 → 100 → 500 → 2000 part fence / wall
+construct
+→ bake
+→ local impact
+→ topology failure
+→ invalidation
+→ split
+→ reconstruction
+→ rebake
+~~~
+
+This stand deliberately avoids requiring BRIDGE-2. It proves the structural lifecycle
+before mixed-domain execution is introduced.
+
+### COMPLEX1A — powered breakable structure FULL baseline
+
+Gate:
+
+~~~text
+B0.5-A CLOSED
+~~~
+
+Reference system:
+
+~~~text
+battery ─── wire attached to fence ─── lamp
+
+intact wire:
+lamp ON
+
+critical fence/wire topology break:
+circuit opens
+→ lamp OFF
+~~~
+
+The lamp outcome must emerge from generic physical connectivity. A direct rule such as
+"fence broken => lamp off" is forbidden.
+
+Mandatory anti-hardcode variants:
+
+~~~text
+break unrelated fence segment
+→ lamp remains ON
+
+two independent power paths
+→ break one path
+→ lamp remains ON if alternate path is valid
+
+two loads on separate branches
+→ only causally dependent load changes
+~~~
+
+This FULL baseline becomes the causal oracle for the later mixed/baked test.
+
+### COMPLEX1B — powered breakable structure mixed bake
+
+Gate:
+
+~~~text
+POST-B0.5-A SYNC
+→ BRIDGE-2 executable authorized
+→ working mixed FULL ↔ BAKED path
+~~~
+
+Target:
+
+~~~text
+structure         → STRUCTURAL_BAKE
+local impact      → FULL
+stable dynamics   → DYNAMIC_ROM
+functional path   → FULL or validated reduction
+~~~
+
+After a physical break, the same canonical wire connectivity mutation and lamp outcome
+must occur as in COMPLEX1A.
+
+Primary falsifier:
+
+~~~text
+FULL causal outcome
+==
+MIXED FULL/BAKED causal outcome
+~~~
+
+If the mechanics look correct but the lamp remains powered after the canonical wire path
+is broken, the mixed architecture fails.
+
+### COMPLEX2 — modular machine
+
+Gate:
+
+~~~text
+BRIDGE-2 CLOSED
+~~~
+
+Initial target:
+
+~~~text
+500–2000 canonical elements
+20–50 structural modules
+4–8 moving subsystems
+2–4 active contact zones
+1–3 functional paths
+~~~
+
+The object should simultaneously exercise:
+
+~~~text
+FULL
++
+STRUCTURAL_BAKE
++
+CONTACT_BAKE
++
+DYNAMIC_ROM
++
+HYBRID_BAKE
+~~~
+
+without duplicate state ownership.
+
+### COMPLEX3 — adaptive damage / local unbake
+
+Gate:
+
+~~~text
+B0.6
++
+BRIDGE-3
+~~~
+
+Scale target:
+
+~~~text
+5k → 20k → 100k canonical elements
+~~~
+
+Only the causally affected region should refine to FULL during damage. Functional
+consequences such as a broken electrical path must propagate while unaffected regions
+remain reduced. Stable fragments must be rebake-able.
+
+### COMPLEX4 — unseen functional systems
+
+Gate:
+
+~~~text
+B0.7
+~~~
+
+Build previously unseen machines only from frozen generic primitives. Required pattern:
+
+~~~text
+generic composition
+→ emergent function
+→ reduction
+→ topology/failure event
+→ correct downstream functional consequence
+~~~
+
+No stand-specific solver primitive or hand-written bake class may be introduced only to
+pass a fixture.
+
+### COMPLEX acceptance rule
+
+Every COMPLEX stand must compare a FULL reference with its reduced/mixed/adaptive subject
+and record at least:
+
+- canonical topology/damage outcome;
+- functional connectivity and downstream state;
+- effort/flow and power/energy envelope;
+- exactly-once events;
+- stale-artifact rejection;
+- deterministic reconstruction/rebuild/replay;
+- canonical element count vs active FULL count;
+- reduced state count;
+- CPU/memory/event work;
+- local refinement size where applicable.
+
+The strategic target is therefore no longer merely "can we bake a complex object?" but:
+
+~~~text
+can canonical complexity grow
+while runtime physical complexity stays sparse,
+and can local physical changes still produce
+the correct global functional consequences?
+~~~
