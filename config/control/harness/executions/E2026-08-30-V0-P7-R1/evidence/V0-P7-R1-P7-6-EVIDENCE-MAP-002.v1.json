@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+  "intent": "Prove that P7.6 composes the existing SM1/MW8/MW9 actor-handoff path with existing MW10 true multi-region Matter transactions without creating a second authority, transaction, persistence, replay, Item Graph, Matter-contract, or network owner, and prove the Reviewer R1 fail-closed findings are repaired.",
+  "root_cause_or_reason": "Fresh Reviewer R1 rejected the previous frozen subject because _executor_result accepted Dictionary results without an explicit success=true field and mandatory negative coverage was missing for body mismatch, invalid resolver outputs, and malformed executor outputs. The repair changes only the P7.6 routing helper and its focused test: malformed downstream results now fail closed, and the missing negative cases are exact-tested. Reviewer R1 dispatch itself was separately aborted because its evidence map violated the canonical harness_evidence_map.v1 schema; R2 recreates control evidence from canonical main with the exact schema.",
+  "changed_surfaces": [
+    "scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd",
+    "scripts/runtime/networked_gameplay/p7/p7_seam_multi_region_composition.gd",
+    "tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd",
+    "tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd"
+  ],
+  "canonical_owner": "Existing P7.1 product authorization plus MW4 single-region execution; existing SM1/MW8/MW9 actor handoff; existing MW10 cross-region coordinator and reservation interlock. P7.6 remains a stateless routing adapter and owns no canonical or durable state.",
+  "entry_points": [
+    "p7_matter_command_authority_gate.gd::authorize_product_intent",
+    "p7_matter_command_authority_gate.gd::authorize_mutation",
+    "p7_seam_multi_region_composition.gd::execute_actor_handoff",
+    "p7_seam_multi_region_composition.gd::execute_mutation"
+  ],
+  "callers": [
+    "V0 P7.6 product composition",
+    "tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd",
+    "existing P7.1 single-region product path"
+  ],
+  "callees": [
+    "existing P7.1 product intent / single-region authorization",
+    "existing SM1/MW8/MW9 actor-handoff path",
+    "existing MW8 region resolver",
+    "existing MW10 cross-region transaction plan/coordinator",
+    "existing MW10 reservation interlock",
+    "existing MW4 single-region mutation execution path"
+  ],
+  "sibling_surfaces_checked": [
+    "P7.1 authority gate",
+    "SM1 world mutations around handoff",
+    "MW8 regional authority handoff",
+    "MW9 durable handoff recovery",
+    "MW9 lock release retry",
+    "MW9 durable handoff processes",
+    "MW9 100-round race stress",
+    "MW10 cross-region Matter transactions",
+    "MW10 cross-region Matter processes"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Repaired candidate is 4 commits ahead of P7.6 activation base aca907022bf3a3239ae53ae0583c6aff8004da98 and changes exactly 4 authorized P7.6 runtime/test files, +847/-13. Reviewer R1 repair itself changes only p7_seam_multi_region_composition.gd and test_v0_p7_6_seam_multi_region_composition.gd relative to the previous frozen subject.",
+  "remaining_risks": [
+    "Fresh Independent Reviewer R2 has not yet judged the repaired exact runtime subject.",
+    "Fresh Independent Verifier remains blocked until Reviewer R2 PASS and Reviewer-result Project Control SUCCESS.",
+    "Human RUNTIME_FEATURE_MERGE remains closed.",
+    "P7.6 and whole-P7 completion remain open."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Reviewer R2 must independently confirm the previous fail-open malformed executor defect is closed for null, Array, and Dictionary-without-success results.",
+    "Reviewer R2 must confirm body mismatch and invalid resolver-output negative coverage is semantically meaningful and not merely assertion-count growth.",
+    "Reviewer R2 must re-check actor-seam != MW10, single-region P7.1/MW4 authority preservation, exact MW10 participant binding, reservation interlocks, stateless ownership, and fail-closed downstream handling.",
+    "Verifier must freshly execute the repaired exact HEAD/TREE on canonical Linux double Godot with no inherited execution evidence."
+  ],
+  "evidence_gaps": [
+    "Raw local /tmp execution logs are not committed; the durable Linux validation receipt records the observed stage results and fatal scan.",
+    "Reviewer R1 produced no official review-result JSON because its dispatch Project Control was RED; its findings were reported externally and used only as repair input.",
+    "Linux runtime execution is execution evidence, not an independent Reviewer or Verifier verdict."
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}
