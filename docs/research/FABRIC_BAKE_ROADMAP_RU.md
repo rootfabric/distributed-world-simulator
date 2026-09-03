@@ -2263,3 +2263,52 @@ base:
 ```
 
 PR #464 is closed as superseded by PR #473.
+
+---
+
+## FABRIC-BAKE B0.5-A exact closure — 2026-09-03
+
+```text
+predecessor:
+FABRIC.SYNC3
+28fdc16d12ddf1233a82103cb290c831342a3022
+
+exact implementation/test HEAD:
+d819fffa0dc86cc09cda0000f20c310aec23c799
+
+TREE:
+c92c1ff22c683ba348ac8596d2e6b3212a381b57
+
+B0.5-P0:
+63/63 PASS
+
+B0.5-A:
+67/67 PASS
+
+closure chain:
+PASS / exit 0
+
+Project Control:
+33708036538 SUCCESS
+```
+
+Current roadmap:
+
+```text
+B0.4 Dynamic ROM             ✅ CLOSED
+B0.5-P0 contracts/preflight  ✅ CLOSED
+FABRIC.SYNC3                 ✅ CLOSED
+B0.5-A executable hybrid     ✅ CLOSED
+        ↓
+POST-B0.5-A FABRIC SYNC ★ NEXT
+        ↓
+BRIDGE-2 executable authorization?
+FABRIC0.19 necessity?
+```
+
+The first executable hybrid falsifier now exists:
+two generic passive B0.4-backed modes, FABRIC-owned localized JUMP, exact B0.4
+ReconstructionDescriptor/StateMapping handoff, lazy mode-B hybrid wrapper/cache,
+exact cache replay, stale/unknown fail-closed behavior.
+
+This does not yet authorize BRIDGE-2 executable mixed-representation integration.
