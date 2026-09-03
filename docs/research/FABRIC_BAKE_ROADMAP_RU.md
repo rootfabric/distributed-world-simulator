@@ -7,6 +7,46 @@
 **Parallel research line:** `FABRIC-BAKE B0.x`.  
 **Recommended implementation branch:** `research/fabric-bake0-reducible-world-fabric-r1`.
 
+## Current executable frontier — FABRIC.SYNC4
+
+```text
+B0.4 Dynamic ROM                         ✅ CLOSED
+B0.5-P0                                 ✅ CLOSED
+FABRIC.SYNC3                            ✅ CLOSED
+B0.5-A Executable Hybrid Bake           ✅ CLOSED
+COMPLEX0 Breakable Structure            ✅ CLOSED
+COMPLEX0-PERF1 B0.2-E Scaling           ✅ CLOSED
+COMPLEX0 @ 2000 exact double            ✅ CLOSED
+COMPLEX1A Powered Fence FULL baseline   ✅ CLOSED
+FABRIC.SYNC4 POST-B0.5-A                ✅ CLOSED
+
+FABRIC0.19                              ⛔ NOT AUTHORIZED
+BRIDGE-2 executable research            ✅ AUTHORIZED
+PRODUCTION                              ⛔ NOT ACCEPTED
+
+NEXT:
+BRIDGE-2 executable
+→ COMPLEX1B Powered Fence Mixed
+→ CX2 Redundant Power Fence
+```
+
+Exact SYNC4 implementation subject:
+
+```text
+HEAD:
+5f1d2dc997ecce5cf1f188a6f65d7b1c2ba0ecd9
+
+TREE:
+d094c969a4252eb77f697d142271b9f74c3f1589
+```
+
+The 2000-part COMPLEX0 exact closure proves canonical break → invalidation →
+stale rejection → topology split → two fresh bake artifacts → runtime →
+reconstruction with fragments 993 + 1007 and ~2e-14 maximum reconstructed
+state error. PERF1 measures B0.2-E topology transaction compilation at 8.647 s
+for 2000 parts and freezes a <60 s budget plus an <=8x growth bound for 4x part
+growth.
+
 ---
 
 ## 1. Зачем существует FABRIC-BAKE
