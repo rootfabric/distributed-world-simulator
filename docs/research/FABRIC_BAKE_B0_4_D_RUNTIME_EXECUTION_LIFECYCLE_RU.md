@@ -201,3 +201,33 @@ architecture synchronization checkpoint.
 
 Next:
 `FABRIC SYNC-3`.
+
+---
+
+## Final superseding exact D boundary — 2026-09-03
+
+The earlier 233-assertion/private-sidecar boundary documented above is superseded.
+
+```text
+exact implementation/test HEAD:
+e33ac10ac94d8b70f1387d442a3ae9d3801bb08a
+
+TREE:
+f3d47eedd42f827a859d1763e8b46762696b99dd
+
+focused D:
+287/287 PASS
+
+full B0.4 closure chain:
+PASS / exit 0
+
+Project Control:
+33696130121 SUCCESS
+```
+
+The final D additionally requires and verifies the common FABRIC-BAKE
+`PhysicalBakeArtifact`, real `ReconstructionDescriptor`, real `StateMapping`,
+common `BakeExecutionGate`, canonical `BakeInvalidation`, and deterministic
+generation rebuild.
+
+This is the authoritative D boundary used to close parent B0.4.
