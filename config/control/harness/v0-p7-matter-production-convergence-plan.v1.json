@@ -161,8 +161,8 @@
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
       ],
-      "runtime_head": "c3caea93fecd20fd41a0d3aa753e332d347aed2a",
-      "runtime_tree": "8e48024a80f70a0b15e693af027da075ea27179d",
+      "runtime_head": "18fb18a5cd6dc49a317eccd43e84f03944b4f4f4",
+      "runtime_tree": "0af962f7b7962a77915b6b0c8d8f2dc4f5f01d0b",
       "runtime_pr": 487,
       "substeps": {
         "P7.7-A": {
@@ -171,8 +171,18 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json"
         },
         "P7.7-B": {
+          "status": "EXACT_VALIDATED",
+          "proof": "SEAM_PROXIMITY_WITH_SINGLE_REGION_TARGET_STILL_USES_MW4_AND_MW10_ZERO",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-B-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-C0": {
+          "status": "EXACT_VALIDATED",
+          "proof": "MW10_CANONICAL_PHYSICAL_OUTPUT_ENVELOPE_BINDS_PLAN_COMMIT_RECEIPTS_MATTER_RESULTS_MATERIAL_BATCHES_AND_DISTRIBUTED_LEDGER_WITHOUT_SYNTHESIZED_PHYSICAL_PROPERTIES",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-VALIDATION-001.v1.json"
+        },
+        "P7.7-C1": {
           "status": "NEXT",
-          "proof": "SEAM_PROXIMITY_WITH_SINGLE_REGION_TARGET_STILL_USES_MW4_AND_MW10_ZERO"
+          "proof": "DURABLY_PERSIST_AND_REPLAY_THE_CANONICAL_PHYSICAL_OUTPUT_ENVELOPE_THROUGH_EXISTING_MW10_COORDINATOR_RECOVERY"
         }
       }
     }
