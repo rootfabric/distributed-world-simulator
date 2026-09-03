@@ -1,0 +1,57 @@
+{
+  "schema": "planet_simulator.fabric_bake_b0_5_a_closure.v1",
+  "qualification": "CLOSED",
+  "production_accepted": false,
+  "predecessor_sync3": "28fdc16d12ddf1233a82103cb290c831342a3022",
+  "exact_subject": {
+    "head": "d819fffa0dc86cc09cda0000f20c310aec23c799",
+    "tree": "c92c1ff22c683ba348ac8596d2e6b3212a381b57",
+    "detached": true,
+    "tracked_clean": true,
+    "diff_check": "PASS"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92"
+  },
+  "source_carrier": {
+    "run_id": 33708036610,
+    "artifact_id": 9875925635,
+    "bundle_sha256": "b8388880e4c2f2a2e1165bb4a9c8cc5532661c8aefb493de07fd3bf190d1bd22",
+    "zip_digest_sha256": "dd0042af7a6132f0c300496beb4e45ae9502c2f4ea3cae08424af048e94af4fc"
+  },
+  "acceptance": {
+    "b0_5_p0": {
+      "pass": 63,
+      "total": 63
+    },
+    "b0_5_a": {
+      "pass": 67,
+      "total": 67
+    },
+    "closure_chain": "PASS",
+    "exit_code": 0,
+    "fatal_script_markers": 0
+  },
+  "guarantees": {
+    "common_b0_4_physical_bake_artifact": true,
+    "fabric_owned_localized_jump": true,
+    "exactly_once_event_ledger": true,
+    "b0_4_reconstruction_to_state_mapping_handoff": true,
+    "first_mode_b_action": "LAZY_COMPILED",
+    "replay_mode_b_action": "EXACT_CACHE_HIT",
+    "executable_cache_derived_only": true,
+    "stale_cache_fallback": "FULL",
+    "unknown_mode_fallback": "FULL",
+    "nearest_mode_reuse": false,
+    "b0_4_runtime_guard_authoritative": true
+  },
+  "project_control": {
+    "run_id": 33708036538,
+    "conclusion": "SUCCESS"
+  },
+  "bridge2_executable_authorized": false,
+  "fabric0_19_authorized": false,
+  "next_checkpoint": "POST_B0_5_A_FABRIC_SYNC_BRIDGE2_AUTHORIZATION"
+}
