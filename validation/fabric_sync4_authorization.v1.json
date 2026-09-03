@@ -1,0 +1,129 @@
+{
+  "schema": "planet_simulator.fabric_sync4_authorization.v1",
+  "qualification": "CLOSED",
+  "production_accepted": false,
+  "predecessor": "POST_B0_5_A_FABRIC_SYNC",
+  "exact_implementation_subject": {
+    "head": "5f1d2dc997ecce5cf1f188a6f65d7b1c2ba0ecd9",
+    "tree": "d094c969a4252eb77f697d142271b9f74c3f1589",
+    "branch": "research/fabric-bake0-5-a-executable-hybrid-r2",
+    "tracked_clean": true
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92"
+  },
+  "source_carrier": {
+    "run_id": 33727368693,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9882476413,
+    "downloaded_zip_sha256": "28f8b39d01c845dfa2b3663add0c5eef590d3d39b34b36ccc8d01a9d924175a1",
+    "bundle_sha256": "e93db23407b727b6c7ac88d66190b215ef6bfbf1f3cf265d3466f9a2f3bfd4ef"
+  },
+  "exact_acceptance": {
+    "complex0_50": {
+      "pass": 5,
+      "total": 5
+    },
+    "complex0_100": {
+      "pass": 11,
+      "total": 11
+    },
+    "complex0_500": {
+      "pass": 54,
+      "total": 54,
+      "fragments": [
+        243,
+        257
+      ],
+      "post_split_reduction_ratio": 250
+    },
+    "complex0_2000": {
+      "pass": 25,
+      "total": 25,
+      "fragments": [
+        993,
+        1007
+      ],
+      "post_split_reduction_ratio": 1000,
+      "transaction_checksum": "b421928b2a5db9e700476d9d70e2be6b6ecde8bfe778b2511a1efaf85d082ebd",
+      "max_reconstruction_state_error": 2e-14
+    },
+    "complex0_perf1": {
+      "pass": 19,
+      "total": 19,
+      "budgets_ms": {
+        "500": 10000,
+        "2000": 60000
+      },
+      "measured_transaction_ms": {
+        "500": 1967,
+        "2000": 8647
+      },
+      "transaction_growth_factor": 4.39603457041179,
+      "maximum_growth_factor": 8,
+      "checksums": {
+        "500": "a606954658e0ab87eca2cb1b6ff2280b4ad7ebd56f125e3fbad3767e103ed828",
+        "2000": "b421928b2a5db9e700476d9d70e2be6b6ecde8bfe778b2511a1efaf85d082ebd"
+      }
+    },
+    "complex1a": {
+      "pass": 93,
+      "total": 93,
+      "causal_chain": "mechanical_support->functional_connectivity->effort_flow->load_power"
+    }
+  },
+  "implementation_control": {
+    "project_control": {
+      "run_id": 33727368612,
+      "conclusion": "SUCCESS"
+    },
+    "portable_smoke": {
+      "run_id": 33727368928,
+      "conclusion": "SUCCESS"
+    },
+    "linux_double_self_hosted": {
+      "run_id": 33727368671,
+      "conclusion": "QUEUED_AT_SYNC4_REVIEW"
+    }
+  },
+  "decisions": {
+    "b0_5_a": {
+      "closed": true
+    },
+    "complex0": {
+      "closed": true,
+      "max_exact_parts": 2000
+    },
+    "complex0_perf1": {
+      "closed": true
+    },
+    "complex1a": {
+      "closed": true
+    },
+    "fabric0_19": {
+      "authorized": false,
+      "reason": "NO_MISSING_GENERIC_PHYSICAL_CORE_PRIMITIVE_FALSIFIED"
+    },
+    "bridge2": {
+      "executable_authorized": true,
+      "level": "EXECUTABLE_RESEARCH",
+      "production_authorized": false,
+      "required_invariants": [
+        "CANONICAL_CONSTRUCTION_MATTER_REMAINS_TRUTH",
+        "ONE_EVENT_ONE_OWNER",
+        "COMMON_INVALIDATION_REFINEMENT_ORDERING",
+        "PHYSICAL_STALE_NEVER_EXECUTES",
+        "DETERMINISTIC_MIXED_REPLAY",
+        "NO_HIDDEN_AUTHORITY_CROSSING",
+        "UNSUPPORTED_REGION_FAILS_CLOSED_TO_FULL_OR_NO_SAFE_BAKE"
+      ]
+    }
+  },
+  "next_executable": [
+    "BRIDGE2_EXECUTABLE_MIXED_REPRESENTATION",
+    "COMPLEX1B_POWERED_FENCE_MIXED",
+    "CX2_REDUNDANT_POWER_FENCE"
+  ]
+}
