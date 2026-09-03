@@ -34,6 +34,7 @@ var _status: Label
 var _tool_id := ""
 var _sequence := 0
 var _player_port = null
+var _last_dig_result: Dictionary = {}
 
 
 class GameplayPort extends RefCounted:
@@ -151,6 +152,29 @@ func render_to_world(render_position: Vector3) -> Vector3:
 	if _bubble == null:
 		return render_position
 	return _bubble.anchor_body_fixed_m() + render_position
+
+
+func execute_single_region_dig_for_test() -> Dictionary:
+	_execute_dig()
+	return playground_report()
+
+
+func playground_report() -> Dictionary:
+	var graph_snapshot: Dictionary = _graph.create_snapshot() if _graph != null else {}
+	var store_hash := ""
+	if _bubble != null and _bubble.snapshot_store() != null \
+			and _bubble.snapshot_store().has_method("content_hash"):
+		store_hash = String(_bubble.snapshot_store().content_hash())
+	return {
+		"configured": _slice != null and _presenter != null and _graph != null,
+		"tool_id": _tool_id,
+		"tool_equipped": _graph.has_equipped_mining_tool(PLAYER) if _graph != null else false,
+		"matter_store_hash": store_hash,
+		"item_graph_revision": int(graph_snapshot.get("revision", -1)),
+		"item_graph_checksum": String(graph_snapshot.get("checksum", "")),
+		"presenter_count": _presenter.presenter_count() if _presenter != null else 0,
+		"last_dig_result": _last_dig_result.duplicate(true),
+	}
 
 
 func contract_report() -> Dictionary:
@@ -320,6 +344,7 @@ func _execute_dig() -> void:
 	if not bool(result.get("success", false)):
 		_set_status("Dig rejected: %s" % String(result.get("error_code", "UNKNOWN")))
 		return
+	_last_dig_result = result.duplicate(true)
 	var details: Dictionary = result.get("details", {})
 	var delivery_details: Dictionary = Dictionary(details.get("material_delivery", {}))
 	var item_delivery: Dictionary = Dictionary(delivery_details.get("delivery", {}))
