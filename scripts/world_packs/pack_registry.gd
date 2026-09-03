@@ -12,6 +12,7 @@ const PROFILES: Dictionary = {
 	"WP-FROZEN": "res://scripts/world_packs/packs/wp_frozen.gd",
 	"WP-VOLCANIC": "res://scripts/world_packs/packs/wp_volcanic.gd",
 	"WP-TEMPERATE": "res://scripts/world_packs/packs/wp_temperate.gd",
+	"WP-ALIEN-WETLAND": "res://scripts/world_packs/packs/wp_alien_wetland.gd",
 }
 
 

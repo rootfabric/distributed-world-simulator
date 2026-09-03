@@ -1,0 +1,54 @@
+{
+  "schema": "dws.world_pack.v1",
+  "pack_id": "WP-ALIEN-WETLAND",
+  "version": "R1",
+  "display_name": "Alien Wetland",
+  "environment": {
+    "sky_profile": "non_earth_violet_teal",
+    "lighting_profile": "pale_green_sun",
+    "fog_profile": "dense_bio_haze"
+  },
+  "materials": {
+    "surface_catalog": [
+      "wet_dark_ground",
+      "bio_film_cover",
+      "alien_silt"
+    ]
+  },
+  "props": {
+    "catalog": [
+      "shallow_water_presentation",
+      "alien_reed",
+      "crystalline_growth",
+      "dark_boulder"
+    ],
+    "scatter_profiles": [
+      "wetland_cover_field"
+    ]
+  },
+  "decals": {
+    "catalog": [
+      "bio_film_pool",
+      "wet_streak"
+    ]
+  },
+  "poi": {
+    "catalog": [
+      "research_station_module",
+      "cave_marker",
+      "beacon"
+    ]
+  },
+  "ambience": {
+    "audio_profile": "humid_drone_placeholder",
+    "particle_profile": "spore_drift_placeholder"
+  },
+  "compatibility": {
+    "godot_min": "4.7.1",
+    "renderer": "gl_compatibility",
+    "requires_world_fill_features": [
+      "wf.scatter.multimesh",
+      "wf.ambience.particles"
+    ]
+  }
+}
