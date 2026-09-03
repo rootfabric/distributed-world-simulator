@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CURRENT  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CURRENT  
 Дата: 2026-09-03  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -196,7 +196,7 @@ PERF2.4 thresholds untouched
 PERF2.CONV remains final integrated performance gate
 ~~~
 
-## VIS5.1 — Terrain Surface Frame Adapter
+## VIS5.1 — CLOSED — Terrain Surface Frame Adapter
 
 После VIS5.0 GREEN следующий кодовый checkpoint должен добавить один read-only surface adapter.
 
@@ -308,13 +308,15 @@ PLAY1 integrated acceptance
 
 ~~~text
 VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
+VIS5.1 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
 
 CURRENT:
-VIS5.1 Terrain Surface Frame Adapter
+VIS5.2 Noncanonical Ground-Cover Presentation Bridge
 ~~~
 
-Durable closure:
+Durable closures:
 
 ~~~text
 docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_0_TERRAIN_ECOSYSTEM_COMPOSITION_UBUNTU_VERIFIED_CLOSED_R1_RU.md
+docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_1_TERRAIN_SURFACE_FRAME_ADAPTER_EXACT_VERIFIED_CLOSED_R1_RU.md
 ~~~
