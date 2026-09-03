@@ -38,6 +38,12 @@ Runner summary (machine-readable):
 `artifacts/test-results/world-fill-wf0-1-summary.json` (not committed;
 generated per-run).
 
+Cross-process determinism supplement (2026-09-03, probe
+`artifacts/wf0_1_determinism_probe.gd`, not committed): two independent
+Godot processes derived the identical `determinism_key` `1642221827:42` for
+the same fixed descriptor, so contract outputs are stable across engine
+restarts, not only within one process.
+
 ## Constitutional gates
 
 - CANON-INDEPENDENT: contract is pure derivation over caller-supplied

@@ -1,12 +1,28 @@
 extends Node3D
 
+const DressingScript = preload("res://scripts/world_fill/dressing/world_fill_dressing.gd")
+const ScatterScript = preload("res://scripts/world_fill/scatter/world_fill_prop_scatter.gd")
+
 func _ready() -> void:
 	_build_environment()
 	_build_ground()
 	_build_rocks()
+	_build_scatter()
 	_build_outpost_marker()
 	_build_camera()
 	print("WORLD_FILL_DEMO_READY")
+
+func _build_scatter() -> void:
+	var decision := DressingScript.derive({
+		"surface_type": "regolith",
+		"position": Vector3.ZERO,
+		"seed": 0x57464C30,
+	})
+	var scatter := ScatterScript.new()
+	scatter.name = "WorldFillPropScatter"
+	add_child(scatter)
+	var report := scatter.build_from_decision(decision, Vector2(76.0, 76.0), 0x57464C30)
+	print("WORLD_FILL_SCATTER_INSTANCES=%d" % int(report.get("total_instances", 0)))
 
 func _build_environment() -> void:
 	var world_environment := WorldEnvironment.new()
