@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 CURRENT  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 IMPLEMENTED CANDIDATE  
 Дата: 2026-09-03  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -307,6 +307,70 @@ rocks / terrain scenery
 
 В этой точке уже можно будет визуально оценивать развитую экосистему на неровном ландшафте без подмены biology декоративной растительностью.
 
+### VIS5.3 implementation candidate — 2026-09-03
+
+Реализована отдельная executable scene:
+
+~~~text
+ProceduralEarthWorld
+        +
+LS3.6 Rule Workbench
+        |
+        v
+VIS4 Descriptor V2 + exact reconstruction
+        |
+        v
+VIS4 PH5 canonical macro plants
+        +
+VIS5.2 NONCANONICAL_SCENERY ground cover
+        +
+VIS5.3 TERRAIN_SCENERY rocks
+        |
+        v
+one mixed real-terrain scene
+~~~
+
+Для visual lab выбран deterministic world seed:
+
+~~~text
+360055
+~~~
+
+Причина выбора не косметическая: прежний default patch 360036 детерминированно попадал в rocky terrain с grass_density = 0, поэтому mixed-strata сцена была бы фактически без ground cover. Seed 360055 проходит через тот же canonical RuleWorkbench/ProceduralEarth pipeline, но даёт land patch с плотной травой и ненулевой rock density.
+
+Критическая boundary:
+
+~~~text
+EarthPlacementSystem built-in strata:
+near trees = 0
+billboard trees = 0
+grass = 0
+rocks = 0
+subtree hidden
+
+canonical macro plants:
+VIS4 PH5 only
+~~~
+
+Таким образом legacy procedural trees не могут визуально дублировать evolved PH5 population.
+
+Default visual profile уже локально materialized:
+
+~~~text
+PH5 macro plants: 63
+ground cover: 4500
+terrain rocks: 146
+local 220m relief: 57.25 m
+~~~
+
+Focused acceptance:
+
+~~~text
+101 / 101 PASS
+~~~
+
+До формального CLOSED требуется fresh exact branch regression на canonical double-Godot.
+
 ## VIS5.4 — Local LOD / Streaming
 
 VIS5-local gate может измерять:
@@ -357,11 +421,12 @@ PLAY1 integrated acceptance
 VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
 VIS5.1 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
 VIS5.2 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
+VIS5.3 🟡 IMPLEMENTED / focused 101/101 GREEN / exact branch regression pending
 
 CURRENT:
-VIS5.3 Mixed-Strata Composition Lab
+VIS5.3 exact branch regression + formal closure
 
-NEXT:
+NEXT AFTER GREEN:
 VIS5.4 Composition LOD / Streaming Local Gate
 ~~~
 
