@@ -147,6 +147,13 @@ func _test_configuration_is_fail_closed() -> void:
 
 
 func _test_happy_path_and_zero_ownership() -> void:
+	var intent_fx := _fixture()
+	var intent: Dictionary = intent_fx.gate.authorize_product_intent(_request())
+	_assert_success(intent, "product intent happy path")
+	_assert_true(String(intent.details.get("logical_player_id", "")) == "b", "product intent retains logical player")
+	_assert_true(intent_fx.regional.calls == 0, "product intent does not claim MW8 regional authorization")
+	_assert_true(intent_fx.durable.calls == 0, "product intent does not claim MW9 durable authorization")
+
 	var fx := _fixture()
 	var result: Dictionary = fx.gate.authorize_mutation(_request())
 	_assert_success(result, "happy path")

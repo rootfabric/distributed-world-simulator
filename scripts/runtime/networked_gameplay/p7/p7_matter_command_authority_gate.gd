@@ -88,7 +88,7 @@ func configure(
 	})
 
 
-func authorize_mutation(request: Dictionary) -> Dictionary:
+func authorize_product_intent(request: Dictionary) -> Dictionary:
 	if not _configured:
 		return _failure("P7_MATTER_GATE_NOT_CONFIGURED")
 	if String(request.get("operation_type", "")) != OPERATION_EXCAVATE:
@@ -128,7 +128,9 @@ func authorize_mutation(request: Dictionary) -> Dictionary:
 	if typeof(equipped_value) != TYPE_DICTIONARY:
 		return _failure("P7_MATTER_ITEM_GRAPH_INVALID_RESULT")
 	var equipped: Dictionary = equipped_value
-	if equipped.is_empty() 			or String(equipped.get("definition_id", "")) != MINING_TOOL_DEFINITION_ID 			or int(equipped.get("quantity", 0)) != 1:
+	if equipped.is_empty() \
+			or String(equipped.get("definition_id", "")) != MINING_TOOL_DEFINITION_ID \
+			or int(equipped.get("quantity", 0)) != 1:
 		return _failure("P7_MINING_TOOL_REQUIRED", {"logical_player_id": logical_player_id})
 	var equipped_item_id := String(equipped.get("item_id", "")).strip_edges().to_lower()
 	var request_tool_id := String(request.get("tool_id", "")).strip_edges().to_lower()
@@ -155,6 +157,24 @@ func authorize_mutation(request: Dictionary) -> Dictionary:
 	if not bool(reach_result.get("success", false)):
 		return reach_result
 
+	return _success({
+		"result": "P7_MATTER_PRODUCT_INTENT_AUTHORIZED",
+		"logical_player_id": logical_player_id,
+		"player_entity_id": actor_id,
+		"tool_item_id": equipped_item_id,
+		"authority_id": _authority_id,
+		"authority_epoch": _authority_epoch,
+		"canonical_state_owned": false,
+		"durable_state_owned": false,
+	})
+
+
+func authorize_mutation(request: Dictionary) -> Dictionary:
+	var intent := authorize_product_intent(request)
+	if not bool(intent.get("success", false)):
+		return intent
+	var identity: Dictionary = intent["details"]
+
 	var regional_value = _matter_region_gate.authorize_mutation(request)
 	var regional_check := _owner_result(
 		"MW8",
@@ -175,20 +195,20 @@ func authorize_mutation(request: Dictionary) -> Dictionary:
 			return _failure("P7_DURABLE_CONTEXT_INVALID")
 		var context: Dictionary = context_value
 		if not bool(context.get("success", false)):
-			return _owner_result(
-				"MW9_CONTEXT",
-				context,
-				"P7_DURABLE_CONTEXT_INVALID"
-			)
+			return _owner_result("MW9_CONTEXT", context, "P7_DURABLE_CONTEXT_INVALID")
 		var owner_id := String(context.get("owner_id", "")).strip_edges().to_lower()
 		var durable_epoch := int(context.get("authority_epoch", 0))
 		var fencing_token_value = context.get("fencing_token")
 		var server_tick_value = context.get("server_tick")
-		if owner_id.is_empty() or durable_epoch < 1 				or typeof(fencing_token_value) != TYPE_DICTIONARY 				or typeof(server_tick_value) != TYPE_INT 				or int(server_tick_value) < 0:
+		if owner_id.is_empty() or durable_epoch < 1 \
+				or typeof(fencing_token_value) != TYPE_DICTIONARY \
+				or typeof(server_tick_value) != TYPE_INT or int(server_tick_value) < 0:
 			return _failure("P7_DURABLE_CONTEXT_INVALID")
-		if _matter_region_gate.has_method("owner_id") 				and String(_matter_region_gate.owner_id()).strip_edges().to_lower() != owner_id:
+		if _matter_region_gate.has_method("owner_id") \
+				and String(_matter_region_gate.owner_id()).strip_edges().to_lower() != owner_id:
 			return _failure("P7_DURABLE_CONTEXT_REGIONAL_MISMATCH")
-		if _matter_region_gate.has_method("authority_epoch") 				and int(_matter_region_gate.authority_epoch()) != durable_epoch:
+		if _matter_region_gate.has_method("authority_epoch") \
+				and int(_matter_region_gate.authority_epoch()) != durable_epoch:
 			return _failure("P7_DURABLE_CONTEXT_REGIONAL_MISMATCH")
 		var durable_value = _durable_authority_gate.authorize(
 			region_id,
@@ -209,9 +229,9 @@ func authorize_mutation(request: Dictionary) -> Dictionary:
 
 	return _success({
 		"result": "P7_MATTER_MUTATION_AUTHORIZED",
-		"logical_player_id": logical_player_id,
-		"player_entity_id": actor_id,
-		"tool_item_id": equipped_item_id,
+		"logical_player_id": String(identity["logical_player_id"]),
+		"player_entity_id": String(identity["player_entity_id"]),
+		"tool_item_id": String(identity["tool_item_id"]),
 		"region_id": region_id,
 		"authority_id": _authority_id,
 		"authority_epoch": _authority_epoch,
@@ -225,6 +245,7 @@ func contract_report() -> Dictionary:
 	return {
 		"configured": _configured,
 		"interface": "authorize_mutation(request)",
+		"product_intent_interface": "authorize_product_intent(request)",
 		"canonical_state_owned": false,
 		"durable_state_owned": false,
 		"replay_ledger_owned": false,
