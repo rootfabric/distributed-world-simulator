@@ -1,0 +1,124 @@
+name: V0 P7.7 Runtime Validation R3
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-p7-bounded-terrain-mutation
+    paths:
+      - ".github/workflows/v0-p7-7-runtime-validation-r3.yml"
+  workflow_dispatch:
+
+jobs:
+  p7-7-runtime:
+    name: P7.7 exact Linux runtime gate
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout exact P7.7 runtime subject
+        uses: actions/checkout@v4
+        with:
+          ref: 8455f27d19d5b36cdc7243eb077e69057d3638f6
+          fetch-depth: 0
+
+      - name: Verify exact runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "8455f27d19d5b36cdc7243eb077e69057d3638f6"
+          test "$tree" = "0e6e169a83e2317be0cc6bbb52934cc5bbadd859"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "P7_7_RUNTIME_HEAD=$head"
+          echo "P7_7_RUNTIME_TREE=$tree"
+
+      - name: Resolve canonical double Godot
+        id: godot
+        shell: bash
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT_BIN:-}"
+          if [[ -z "$godot" ]]; then
+            godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          fi
+          test -x "$godot"
+          version="$("$godot" --version | head -n1 | tr -d '\r')"
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          test "$sha" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "Godot=$version"
+          echo "Godot_SHA256=$sha"
+
+      - name: Import exact runtime subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --editor --path "$GITHUB_WORKSPACE" --quit
+
+      - name: P7.7 graphical digging focused gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_7_graphical_digging_slice.gd
+
+      - name: P7.7-A live Digging Playground acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 600s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_7_a_digging_playground.gd
+
+      - name: P5 canonical equipment regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p5_canonical_equipment_relation.gd
+
+      - name: P5 mining tool gate regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p5_mining_tool_gate.gd
+
+      - name: P7.1 authority regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd
+
+      - name: P7.3 material delivery regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd
+
+      - name: P7.6 seam and multi-region regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot="${{ steps.godot.outputs.path }}"
+          timeout --foreground 300s "$godot" --headless --path "$GITHUB_WORKSPACE"             --script res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd
+
+      - name: Verify tracked tree remains clean
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "8455f27d19d5b36cdc7243eb077e69057d3638f6"
+          test "$tree" = "0e6e169a83e2317be0cc6bbb52934cc5bbadd859"
+          if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+            git status --short
+            exit 1
+          fi
