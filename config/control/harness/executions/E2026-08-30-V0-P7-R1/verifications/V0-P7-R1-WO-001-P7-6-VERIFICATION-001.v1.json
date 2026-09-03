@@ -1,0 +1,157 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-6-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "program": "V0",
+  "checkpoint": "P7.6 seam handoff + true multi-region Matter routing + bounded terrain mutation",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_P7_6_R1",
+  "verifier_role_is_not_implementer_not_reviewer": true,
+  "verdict": "VERIFIED",
+  "verdict_reason": "All 8 committed verifier stages executed freshly on Linux/x86_64 with the exact canonical Godot double binary against frozen runtime HEAD c2e056980eed4ae20849154b1dacc71af0ce8bdf; all required PASS markers and assertion counts matched, fatal scan across all 8 logs was 0, and tracked-clean state held before and after execution.",
+  "verified_at_utc": "2026-09-03T02:44:13Z",
+  "execution_performed": true,
+  "inherited_execution_evidence": false,
+  "is_runtime_fail": false,
+  "dispatch": {
+    "branch": "control/v0-p7-6-fresh-verifier-dispatch-r1",
+    "head": "1f28d08a9119b71a4f452d180ff6a72e2932fb30",
+    "tree": "3a395a3207b16635780f0a82258dbbf526af23db",
+    "pr": 477,
+    "project_control": "33707544362 = SUCCESS",
+    "instruction_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-FRESH-VERIFIER-R1-INSTRUCTION-001.md"
+  },
+  "reviewer_gate": {
+    "reviewer": "FRESH_INDEPENDENT_REVIEWER_P7_6_R2",
+    "result_commit": "033866ea8e077727aeabc87ba6f40b7b9e983f0c",
+    "result_tree": "aeefbe89306719416c588e07bfbb16a59b52d18f",
+    "result_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+    "schema": "distributed_world_simulator.harness_review_result.v1",
+    "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "r1_findings_disposition": "FIX_VERIFIED",
+    "reviewer_dispatch_head": "9177602c543ffdb48f43f80ca92c37fbcc6fd3c8",
+    "reviewer_result_project_control": "33706513500 = SUCCESS",
+    "reviewer_dispatch_project_control": "33703587212 = SUCCESS"
+  },
+  "runtime_subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "pr": 466,
+    "head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+    "activation_base": "aca907022bf3a3239ae53ae0583c6aff8004da98",
+    "delta": "4 commits, 4 files, +847/-13",
+    "project_control": "33696913965 = SUCCESS"
+  },
+  "host": {
+    "os": "Ubuntu 26.04 LTS",
+    "kernel": "Linux 7.0.0-30-generic",
+    "arch": "x86_64",
+    "git": "git version 2.53.0"
+  },
+  "godot": {
+    "path": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "verifier_worktree": "/home/yurig/dws-p7-6-verifier-r1",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "import",
+      "exit": 0,
+      "result": "Godot headless editor import completed; exit 0"
+    },
+    {
+      "stage": 2,
+      "name": "P7.1 authority gate",
+      "exit": 0,
+      "result": "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)"
+    },
+    {
+      "stage": 3,
+      "name": "P7.6 seam + multi-region composition",
+      "exit": 0,
+      "result": "V0-P7.6 seam + multi-region composition: PASS (106 assertions, 0 failures); fresh run includes repaired R1 fail-closed negative coverage (_test_invalid_resolver_results_fail_closed, _test_malformed_downstream_results_fail_closed)"
+    },
+    {
+      "stage": 4,
+      "name": "SM1 world mutations around handoff",
+      "exit": 0,
+      "result": "SM1_7_11_WORLD_MUTATIONS_AROUND_HANDOFF_PASS; 145 assertions, 0 failures"
+    },
+    {
+      "stage": 5,
+      "name": "MW8 regional authority handoff",
+      "exit": 0,
+      "result": "contracts-freeze-abort DONE; successful-handoff-reconnect DONE; split-brain-cross-region DONE; MW8 regional authority handoff: PASS (98 assertions / 35.410 s)"
+    },
+    {
+      "stage": 6,
+      "name": "MW9 durable handoff recovery",
+      "exit": 0,
+      "result": "MW9 durable handoff recovery: PASS (203 assertions); MW9 lock release retry: PASS (12 assertions); MW9 durable handoff processes: PASS (225 assertions)"
+    },
+    {
+      "stage": 7,
+      "name": "MW9 race stress",
+      "exit": 0,
+      "result": "MW9 race stress runner: PASS (100 rounds in 13 batches); full 100 iterations, no reduction"
+    },
+    {
+      "stage": 8,
+      "name": "MW10 cross-region Matter transactions",
+      "exit": 0,
+      "result": "MW10 cross-region Matter transactions: PASS (184 assertions); MW10 cross-region Matter processes: PASS (51 assertions); MW10 runner: PASS (2/2 suites)"
+    }
+  ],
+  "logs": {
+    "directory": "/tmp/p76-verifier-r1",
+    "count": 8,
+    "fatal_scan_matches": 0,
+    "fatal_scan_pattern": "SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to instantiate an autoload|Failed to load",
+    "nonfatal_notes": [
+      "Benign breakpoint_mcp listen failure on 127.0.0.1:9081 observed in p7-6.log and other stage logs; outside fatal classes, stage exits 0, PASS markers present."
+    ],
+    "sha256_manifest": {
+      "import.log": "42bd47e2715a1aabe63e5e9525a7b5b78e7ca7281c5a58abf501b91193dd9d0e",
+      "p7-1.log": "089c1d40657ba505eaa0cdcce32bffff2a183ad57d768aeb2268f85f7dc2cf06",
+      "p7-6.log": "c2af3cfaabe8403011d7daf74030fb99b46cf9e38337df7fce663712af0924f3",
+      "sm1.log": "a5bfd8b1fc3340ae3ce1034dcf359183e157285338c8c551fd8c896de3fae99d",
+      "mw8.log": "76f02f902a06e8d78fbe81362fe7de5a4cc58ff1f5ff317c23f184474d8f66cc",
+      "mw9-durable.log": "bf58a38ba515e166c35d9db6f29be57ba1a8d095341ee36bcc0c264a76c66745",
+      "mw9-race.log": "bbeb9c353ac7e0c1fb5db3cc43fc1f372dab410a0062d77a13632694bd84829e",
+      "mw10.log": "a84560e3685da066310604110ebb46193acf211784047cdc6faa9090c5c49daf"
+    }
+  },
+  "cleanliness": {
+    "before": {
+      "head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+      "tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+      "tracked_status": "clean",
+      "diff": "clean",
+      "cached_diff": "clean"
+    },
+    "after": {
+      "head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+      "tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+      "tracked_status": "clean",
+      "diff": "clean",
+      "cached_diff": "clean",
+      "removed_generated": "untracked .uid sidecars only"
+    }
+  },
+  "independent_control_checks": {
+    "runtime_pr_466_state": "open, unmerged, head c2e056980eed4ae20849154b1dacc71af0ce8bdf",
+    "runtime_project_control": "33696913965 = SUCCESS at exact runtime HEAD",
+    "reviewer_result_project_control": "33706513500 = SUCCESS at exact result commit",
+    "reviewer_dispatch_project_control": "33703587212 = SUCCESS at reviewer dispatch HEAD",
+    "verifier_dispatch_project_control": "33707544362 = SUCCESS at verifier dispatch HEAD",
+    "p7_6_human_runtime_feature_merge_approval_exists": false,
+    "p7_6_declared_complete_merged": false
+  },
+  "merge_performed": false,
+  "human_approval_created": false,
+  "gate_opened": "Human RUNTIME_FEATURE_MERGE decision for exact runtime PR #466 only"
+}
