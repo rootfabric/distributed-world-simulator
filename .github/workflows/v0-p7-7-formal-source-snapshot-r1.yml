@@ -24,16 +24,16 @@ jobs:
           test "$(git rev-parse HEAD)" = "acbf4fd3c5b6205584d8c2d139011894034408ed"
           test "$(git rev-parse 'HEAD^{tree}')" = "311b7779f1a9eaa67c77406fe1604fdb0f9d5b00"
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Archive source
+      - name: Archive exact checkout with git metadata
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf .git
-          tar -czf /tmp/dws-p7-7-formal-acbf4fd3.tar.gz .
-          sha256sum /tmp/dws-p7-7-formal-acbf4fd3.tar.gz
+          tar -czf /tmp/dws-p7-7-formal-acbf4fd3-with-git.tar.gz .
+          sha256sum /tmp/dws-p7-7-formal-acbf4fd3-with-git.tar.gz
       - uses: actions/upload-artifact@v4
         with:
-          name: dws-p7-7-formal-acbf4fd3-source
-          path: /tmp/dws-p7-7-formal-acbf4fd3.tar.gz
+          name: dws-p7-7-formal-acbf4fd3-with-git
+          path: /tmp/dws-p7-7-formal-acbf4fd3-with-git.tar.gz
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 1
