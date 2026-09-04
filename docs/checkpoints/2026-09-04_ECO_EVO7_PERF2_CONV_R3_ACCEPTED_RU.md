@@ -27,6 +27,15 @@ a192950483267dd428baf2d1daa25de915df2370
 
 Acceptance metadata does not replace this tested runtime identity.
 
+Downstream integration provenance binds the formally merged acceptance/control tip:
+
+```text
+accepted control tip
+b4f73a4073ac16b2a1de535acd64ae16641d4588
+```
+
+This addendum records provenance only; it does not alter the accepted runtime subject, measurements, thresholds, or claims below.
+
 ## Immutable prerequisites
 
 ```text
