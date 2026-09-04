@@ -1,0 +1,237 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_ls4_scope_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-LS4-SCOPE-2026-09-05-R1",
+  "status": "SCOPE_FROZEN_LS4_1_AUTHORIZED",
+  "checkpoint": "ECO.EVO7/LS4",
+  "name": "Multi-Species Ecosystem + Shared Resources + WORLD<->ECO Feedback",
+  "accepted_predecessor": {
+    "perf2_conv_control_head": "b4f73a4073ac16b2a1de535acd64ae16641d4588",
+    "perf2_conv_control_tree": "81caf408e75059fde6b897e0f967e8b7d373ca1e",
+    "perf2_conv_tested_runtime_head": "81a0b3fa60664684b02d8387e4693c5f328dbe28",
+    "perf2_conv_tested_runtime_tree": "a192950483267dd428baf2d1daa25de915df2370",
+    "perf2_conv_report_hash": "1064567c83c1bd023589fdf9e36f8436b9624eeb928e8b7d413b92ce3254c3f6"
+  },
+  "north_star": {
+    "goal": "Evolve a deterministic multi-species ecosystem whose structure emerges from physical environment, shared resources, inter-species interactions, disturbance and bounded ecology-to-environment feedback rather than authored biome outcomes.",
+    "player_visible_goal": "A player can stand in or fly over one physical region, accelerate ecological time, observe species redistribution and morphology change, apply a disturbance, and watch recovery or succession without scripted target biomes.",
+    "non_goals": [
+      "individual animal AI or navigation",
+      "production ecology authority",
+      "direct ECO writes to canonical WORLD state",
+      "network or persistence authority",
+      "hardcoded desired biome outcomes",
+      "per-world retuning in the final challenge"
+    ]
+  },
+  "authority": {
+    "mode": "RESEARCH_SHADOW_ONLY",
+    "ecology_truth_owner": "EXISTING_LS3_WORKBENCH_CHAIN_EXTENDED_BY_LS4_ONLY",
+    "world_truth_owner": "EXTERNAL_WORLD_ENVIRONMENT_OWNER",
+    "renderer_truth_owner": false,
+    "production_promotion": false,
+    "world_write": false,
+    "persistence_authority": false,
+    "network_authority": false,
+    "accepted_perf2_evidence_immutable": true,
+    "accepted_vis4_evidence_immutable": true
+  },
+  "core_contracts": {
+    "species_catalog": {
+      "purpose": "Frozen research input defining multiple functional species without encoding target biome placement.",
+      "minimum_species": 3,
+      "required_functional_axes": [
+        "growth_strategy",
+        "water_demand",
+        "light_demand",
+        "nutrient_demand",
+        "stress_tolerance",
+        "reproduction_strategy"
+      ],
+      "identity": "species_catalog_hash",
+      "per_world_retuning_allowed": false
+    },
+    "interaction_graph": {
+      "purpose": "Deterministic typed inter-species causal edges.",
+      "allowed_kinds": [
+        "COMPETITION",
+        "HERBIVORY",
+        "PREDATION",
+        "POLLINATION",
+        "SYMBIOSIS",
+        "DECOMPOSITION"
+      ],
+      "identity": "interaction_graph_hash",
+      "unknown_kind_policy": "FAIL_CLOSED"
+    },
+    "shared_resource_field": {
+      "resources": [
+        "LIGHT",
+        "WATER",
+        "NUTRIENTS",
+        "SPACE"
+      ],
+      "requirements": [
+        "non_negative_supply",
+        "non_negative_demand",
+        "bounded_allocation",
+        "deterministic_tie_breaking",
+        "no_hidden_resource_creation"
+      ],
+      "identity": "resource_field_hash"
+    },
+    "disturbance_event": {
+      "allowed_kinds": [
+        "DROUGHT",
+        "FLOOD",
+        "FIRE",
+        "FROST",
+        "EXCAVATION",
+        "IMPACT"
+      ],
+      "required_identity_fields": [
+        "event_id",
+        "generation",
+        "source_snapshot_hash",
+        "kind",
+        "bounded_region_hash",
+        "parameters_hash"
+      ],
+      "duplicate_event_policy": "FAIL_CLOSED",
+      "stale_source_policy": "FAIL_CLOSED"
+    },
+    "environment_feedback_proposal": {
+      "purpose": "Permit WORLD<->ECO feedback without granting ECO world-write authority.",
+      "allowed_channels": [
+        "SHADE",
+        "WATER_RETENTION",
+        "ORGANIC_MATTER",
+        "SOIL_STABILITY",
+        "SURFACE_ROUGHNESS"
+      ],
+      "producer": "ECO_LS4_DERIVED_ONLY",
+      "consumer": "EXTERNAL_WORLD_ENVIRONMENT_OWNER",
+      "direct_world_mutation": false,
+      "application_rule": "WORLD owner may apply a validated bounded proposal and publish a new immutable environment snapshot; ECO only consumes that next snapshot.",
+      "required_identity_fields": [
+        "proposal_id",
+        "generation",
+        "source_ecology_state_hash",
+        "source_environment_hash",
+        "bounded_region_hash",
+        "channels_hash"
+      ],
+      "identity": "feedback_proposal_hash",
+      "stale_or_unbounded_policy": "FAIL_CLOSED"
+    }
+  },
+  "deterministic_identity": {
+    "required_hashes": [
+      "species_catalog_hash",
+      "interaction_graph_hash",
+      "resource_field_hash",
+      "ecology_state_hash",
+      "disturbance_event_hash",
+      "feedback_proposal_hash"
+    ],
+    "canonical_ordering_required": true,
+    "generation_bound_identity_required": true,
+    "replay_same_inputs_same_hashes_required": true
+  },
+  "roadmap": [
+    {
+      "id": "LS4.1",
+      "name": "Multi-Species Ecology",
+      "goal": "Run at least three functionally distinct species through the same LS3 spatial ecology without desired-biome placement.",
+      "visual_gate": "LS4-VIS1 species distribution and lineage/species overlay",
+      "status": "AUTHORIZED_NEXT"
+    },
+    {
+      "id": "LS4.2",
+      "name": "Interaction Graph",
+      "goal": "Add deterministic typed inter-species causal edges while preserving canonical identities and fail-closed unknown kinds.",
+      "visual_gate": "LS4-VIS2 interaction graph and per-cell interaction pressure overlay",
+      "status": "BLOCKED_BY_LS4_1"
+    },
+    {
+      "id": "LS4.3",
+      "name": "Shared Resource Competition",
+      "goal": "Make light, water, nutrients and space explicit bounded shared resources whose allocation changes survival and reproduction.",
+      "visual_gate": "LS4-VIS3 supply/demand/allocation overlays",
+      "status": "BLOCKED_BY_LS4_2"
+    },
+    {
+      "id": "LS4.4",
+      "name": "Trophic Network",
+      "goal": "Support population-level producer/herbivore/predator/decomposer energy-flow interactions without individual-agent AI.",
+      "visual_gate": "LS4-VIS4 trophic-flow overlay",
+      "status": "BLOCKED_BY_LS4_3"
+    },
+    {
+      "id": "LS4.5",
+      "name": "Disturbance Envelope",
+      "goal": "Apply bounded deterministic drought/flood/fire/frost/excavation/impact events and prove exactly-once causal effects.",
+      "visual_gate": "LS4-VIS5 disturbance footprint and before/after ecology",
+      "status": "BLOCKED_BY_LS4_4"
+    },
+    {
+      "id": "LS4.6",
+      "name": "Ecological Succession",
+      "goal": "Observe unscripted recovery trajectories and phase changes after disturbance.",
+      "visual_gate": "LS4-VIS6 succession timeline and phase overlay",
+      "status": "BLOCKED_BY_LS4_5"
+    },
+    {
+      "id": "LS4.7",
+      "name": "Ecosystem Engineering",
+      "goal": "Derive bounded ecological effects on shade, water retention, organic matter, soil stability and surface roughness as proposals only.",
+      "visual_gate": "LS4-VIS7 feedback-channel overlay",
+      "status": "BLOCKED_BY_LS4_6"
+    },
+    {
+      "id": "LS4.8",
+      "name": "WORLD<->ECO Feedback Loop",
+      "goal": "Round-trip validated feedback proposals through the external environment owner and re-ingest the resulting immutable environment snapshot without ECO gaining WORLD authority.",
+      "visual_gate": "LS4-VIS8 side-by-side environment/ecology causal loop",
+      "status": "BLOCKED_BY_LS4_7"
+    },
+    {
+      "id": "LS4.FINAL",
+      "name": "Emergent Ecosystem Challenge",
+      "goal": "One frozen catalog/ruleset and founder setup must produce distinct deterministic ecosystems on at least three physical worlds, survive a bounded disturbance challenge, and show unscripted recovery/succession without per-world tuning.",
+      "visual_gate": "PLAY1 Living Ecosystem Region",
+      "status": "BLOCKED_BY_LS4_8"
+    }
+  ],
+  "acceptance_policy": {
+    "visual_evidence_required_for_every_major_substage": true,
+    "exact_local_runtime_pass_required": true,
+    "canonical_double_godot_required": true,
+    "same_input_replay_required": true,
+    "tamper_tests_required": true,
+    "stale_source_tests_required": true,
+    "duplicate_event_tests_required_when_evented": true,
+    "performance_regression_rule": "Accepted PERF2.CONV workload remains an immutable regression baseline; each LS4 substage must freeze its own added-workload budget before runtime acceptance.",
+    "working_set_rule": "No unbounded per-generation or per-species history/cache may be introduced; any retained history or cache must declare an explicit bound and eviction semantics.",
+    "visual_rule": "Presentation is derived-only and must never become ecology, world, persistence or network authority."
+  },
+  "ls4_final_challenge": {
+    "minimum_worlds": 3,
+    "minimum_generations_per_world": 200,
+    "same_species_catalog": true,
+    "same_interaction_rules": true,
+    "same_founder_setup": true,
+    "per_world_retuning": false,
+    "distinct_ecosystem_outcomes_required": true,
+    "disturbance_recovery_required": true,
+    "deterministic_replay_required": true,
+    "visual_playground_required": true
+  },
+  "authorization": {
+    "scope_frozen": true,
+    "runtime_implementation_authorized": true,
+    "authorized_next_substage": "LS4.1",
+    "later_substages_require_predecessor_acceptance": true,
+    "substage_ids_frozen": true
+  }
+}
