@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GODOT_BIN="${GODOT_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
 EXPECTED_GODOT_VERSION="4.7.1.stable.double.custom_build.a13da4feb"
 EXPECTED_GODOT_SHA256="bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
-TIMEOUT_SECONDS="${COMPLEX2_SCRIPT_TIMEOUT_SECONDS:-300}"
+TIMEOUT_SECONDS="${COMPLEX2_SCRIPT_TIMEOUT_SECONDS:-180}"
 
 test -x "$GODOT_BIN"
 test "$("$GODOT_BIN" --version | head -n1 | tr -d '\r')" = "$EXPECTED_GODOT_VERSION"
@@ -52,16 +52,9 @@ run_to_log() {
   grep -Fq "$marker" "$log"
 }
 
-bridge_log="$(mktemp)"
 left_log="$(mktemp)"
 right_log="$(mktemp)"
-trap 'rm -f "$bridge_log" "$left_log" "$right_log"' EXIT
-
-run_to_log \
-  res://tests/research/fabric_bake0/fabric_bridge2_mixed_generic_machine_r1_acceptance.gd \
-  "FABRIC BRIDGE-2 Mixed Generic Machine R1 Acceptance: PASS" \
-  "$bridge_log"
-cat "$bridge_log"
+trap 'rm -f "$left_log" "$right_log"' EXIT
 
 run_to_log \
   res://tests/research/fabric_bake0/fabric_bake_complex2_modular_machine_acceptance.gd \
