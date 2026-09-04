@@ -1,13 +1,1 @@
-{
-  "schema": "planet_simulator.fabric_bake_bridge2_e_deterministic_mixed_replay_validation.v1",
-  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
-  "production_accepted": false,
-  "predecessor": {"checkpoint":"BRIDGE_2_D","evidence_head":"cd8915b8ce22faa729e34a827acf9f1d3e09b565"},
-  "replay": {"certificate_hash":"c96be0141b394aa34ea9a7bb56801ac97ca3a50427d7f8764113d94c0b4ef34c","final_mixed_state_hash":"ae4d1739e99f71929dcb5dd096eef4bce6de034e5a2846848a3ca38552d31d86"},
-  "acceptance": {"pass":46,"total":46,"playground":"PASS"},
-  "exact_implementation_subject": null,
-  "exact_source_carrier": null,
-  "exact_double_replay": null,
-  "control": null,
-  "next_checkpoint":"BRIDGE_2_F_COMPLEX1B_POWERED_FENCE_MIXED"
-}
+{"schema":"planet_simulator.fabric_bake_bridge2_e_deterministic_mixed_replay_validation.v1","qualification":"IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS","production_accepted":false,"predecessor":{"checkpoint":"BRIDGE_2_D","evidence_head":"cd8915b8ce22faa729e34a827acf9f1d3e09b565"},"acceptance":{"pass":46,"total":46,"playground":"PASS"},"exact_implementation_subject":null,"exact_source_carrier":null,"exact_double_replay":null,"control":null,"next_checkpoint":"BRIDGE_2_F_COMPLEX1B_POWERED_FENCE_MIXED"}
