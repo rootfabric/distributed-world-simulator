@@ -1,0 +1,37 @@
+{
+  "schema": "planet_simulator.mw10_canonical_physical_output_durability_config.v1",
+  "checkpoint": "P7.7-C1-MW10-PHYSICAL-OUTPUT-DURABLE-COORDINATOR-WIRING",
+  "owner": "MW10",
+  "accepted_contract": "planet_simulator.matter_cross_region_physical_output.v1",
+  "record_schema": "planet_simulator.matter_cross_region_transaction_record.v2",
+  "legacy_record_schema_readable": "planet_simulator.matter_cross_region_transaction_record.v1",
+  "durability": {
+    "participant_output_persisted_with_commit_record": true,
+    "terminal_envelope_persisted_with_committed_record": true,
+    "partial_commit_restart_preserves_prior_participant_output": true,
+    "recovery_does_not_repeat_already_journaled_participant_commit": true,
+    "exact_operation_replay_returns_same_envelope": true,
+    "external_output_requires_physical_output": true,
+    "missing_physical_output_fails_closed_before_commit_receipt_journal": true
+  },
+  "schema_boundaries": {
+    "checkpoint_schema_changed": false,
+    "receipt_schema_changed": false,
+    "operation_result_schema_changed": false,
+    "transaction_record_v2_introduced": true,
+    "transaction_record_v1_read_compatibility": true
+  },
+  "ownership": {
+    "new_canonical_truth_owner": false,
+    "mw10_remains_transaction_owner": true,
+    "participant_runtime_remains_physical_result_owner": true,
+    "mass_ledger_remains_conservation_validator": true,
+    "p7_private_material_truth": false
+  },
+  "delivery_boundary": {
+    "coordinator_durable_wiring_implemented": true,
+    "p7_3_delivery_wired": false,
+    "true_a_b_dig_implemented": false,
+    "next_step": "P7.7-C2-MW10-PHYSICAL-OUTPUT-TO-P7.3-DELIVERY"
+  }
+}

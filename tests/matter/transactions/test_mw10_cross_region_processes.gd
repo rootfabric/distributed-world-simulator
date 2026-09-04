@@ -66,6 +66,8 @@ func _test_commit_decision_recovery() -> void:
 	_assert(int(value.get("committed_file_count", 0)) == 2, "Commit recovery did not commit both participants")
 	_assert(int(value.get("published_file_count", 0)) == 1, "Commit recovery did not publish one invalidation batch")
 	_assert(String(value.get("outcome", "")) == "COMMITTED", "Commit recovery operation outcome changed")
+	_assert(not String(value.get("physical_output_checksum", "")).is_empty(), "Commit recovery lost durable physical output")
+	_assert(int(value.get("participant_physical_output_count", 0)) == 2, "Commit recovery did not retain both participant physical outputs")
 
 
 func _test_precommit_abort_recovery() -> void:

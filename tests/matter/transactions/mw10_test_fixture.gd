@@ -7,6 +7,11 @@ const SourceRevision = preload("res://scripts/simulation/representation/contract
 const Participant = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_participant.gd")
 const MassLedger = preload("res://scripts/simulation/matter/transactions/distributed/matter_distributed_mass_ledger.gd")
 const Plan = preload("res://scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_plan.gd")
+const BrickAddress = preload("res://scripts/simulation/matter/contracts/matter_brick_address.gd")
+const Composition = preload("res://scripts/simulation/matter/contracts/matter_composition.gd")
+const LocalLedger = preload("res://scripts/simulation/matter/contracts/matter_mass_ledger.gd")
+const MatterResult = preload("res://scripts/simulation/matter/contracts/matter_mutation_result.gd")
+const MaterialBatch = preload("res://scripts/simulation/matter/contracts/matter_material_batch.gd")
 
 const BODY_ID := "body/asteroid-mw10"
 const CHECKPOINT_ID := "matter-cross-region-checkpoint/mw10"
@@ -125,3 +130,95 @@ static func plan_bc(
 		"participants": [c, b],
 		"mass_ledger": ledger,
 	})
+
+
+static func physical_commit_details(
+	participant: Dictionary,
+	prepare_receipt: Dictionary,
+	context: Dictionary
+) -> Dictionary:
+	var plan_value = context.get("plan", null)
+	if typeof(plan_value) != TYPE_DICTIONARY:
+		return {}
+	var plan: Dictionary = plan_value
+	var region_id := String(participant.get("region_id", ""))
+	var removed: Array = []
+	for raw_entry in Array(Dictionary(plan.get("mass_ledger", {})).get("participant_entries", [])):
+		if typeof(raw_entry) == TYPE_DICTIONARY \
+				and String(raw_entry.get("region_id", "")) == region_id:
+			removed = Array(raw_entry.get("removed", [])).duplicate(true)
+			break
+	if removed.is_empty():
+		return {}
+	var weights: Dictionary = {}
+	var total_mass_kg := 0.0
+	for raw_quantity in removed:
+		if typeof(raw_quantity) != TYPE_DICTIONARY:
+			return {}
+		var material_id := String(raw_quantity.get("material_id", ""))
+		var mass_kg := float(raw_quantity.get("mass_kg", 0.0))
+		weights[material_id] = float(weights.get(material_id, 0.0)) + mass_kg
+		total_mass_kg += mass_kg
+	if total_mass_kg <= 0.0:
+		return {}
+	var composition: Dictionary = Composition.from_weights(weights)
+	if composition.is_empty():
+		return {}
+	var operation_id := String(plan.get("operation_id", ""))
+	var region_file := region_id.get_file()
+	var batch_id := "matter-batch/%s-%s" % [operation_id.get_file(), region_file]
+	var batch: Dictionary = MaterialBatch.create({
+		"batch_id": batch_id,
+		"container_id": "matter-container/%s" % region_file,
+		"source_body_id": plan.get("body_id", ""),
+		"source_operation_id": operation_id,
+		"total_mass_kg": total_mass_kg,
+		"bulk_volume_m3": total_mass_kg / 2.5,
+		"composition": composition,
+		"temperature_k": 240.0 + float(int(participant["region_root_address"]["path"][0]) * 10),
+	})
+	if not bool(MaterialBatch.validate(batch).get("success", false)):
+		return {}
+	var address: Dictionary = BrickAddress.create(
+		participant["region_root_address"], 1, 0, 0, 0
+	)
+	var local_inputs: Array = []
+	var local_outputs: Array = []
+	for raw_quantity in removed:
+		var quantity: Dictionary = raw_quantity
+		local_inputs.append({
+			"account_id": "matter-source/%s" % region_file,
+			"material_id": quantity["material_id"],
+			"mass_kg": quantity["mass_kg"],
+		})
+		local_outputs.append({
+			"account_id": "matter-extracted/%s" % region_file,
+			"material_id": quantity["material_id"],
+			"mass_kg": quantity["mass_kg"],
+		})
+	var local_ledger: Dictionary = LocalLedger.create(operation_id, local_inputs, local_outputs)
+	var result: Dictionary = MatterResult.create({
+		"operation_id": operation_id,
+		"status": "COMMITTED",
+		"changed_bricks": [{
+			"address": address,
+			"previous_revision": 20,
+			"new_revision": 21,
+			"snapshot_checksum": MatterUtils.payload_hash([region_id, "physical-output", 21]),
+		}],
+		"removed_mass_kg": total_mass_kg,
+		"deposited_mass_kg": 0.0,
+		"extracted_composition": composition,
+		"generated_heat_j": 0.0,
+		"consumed_energy_j": 1.0,
+		"created_aggregate_ids": [batch_id],
+		"mass_ledger": local_ledger,
+		"error_code": "",
+	})
+	if not bool(MatterResult.validate(result).get("success", false)):
+		return {}
+	return {
+		"source_revision": prepare_receipt.get("source_revision", {}),
+		"matter_result": result,
+		"material_batch": batch,
+	}
