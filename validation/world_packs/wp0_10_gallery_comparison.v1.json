@@ -86,9 +86,9 @@
 			"display_name": "Moon Industrial",
 			"draw_calls": "pending_graphical_run",
 			"mesh_instances": 50,
-			"multimesh_instances": 90,
-			"nodes": 75,
-			"object_budget": 140,
+			"multimesh_instances": 330,
+			"nodes": 76,
+			"object_budget": 380,
 			"pack_id": "WP-MOON-INDUSTRIAL",
 			"poi_catalog": [
 				"beacon",
