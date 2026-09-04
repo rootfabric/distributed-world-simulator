@@ -102,3 +102,4 @@ See:
 - `config/world_packs/pack_schema.v1.json`
 - `evidence/WP0_1_SCHEMA_VALIDATION_2026-09-03.md`
 - `licenses/LEDGER.md` — mandatory provenance for any third-party asset
+- `GALLERY_MCP_CAPTURE_RU.md` — Windows launch + MCP camera-pass capture guide

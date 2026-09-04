@@ -60,6 +60,23 @@ func focus_pack(pack_id: String) -> bool:
 	return true
 
 
+## MCP driver entry (WP0.10 camera pass): position the current camera on an
+## orbit around the shown content and aim at its center. angle in degrees.
+func orbit_step(angle_degrees: float, radius: float, height: float) -> bool:
+	var camera := get_node_or_null("Camera3D") as Camera3D
+	if camera == null:
+		camera = Camera3D.new()
+		camera.name = "Camera3D"
+		add_child(camera)
+	var target_y := 1.2 if not _focus_pack.is_empty() else 0.5
+	var angle := deg_to_rad(angle_degrees)
+	camera.position = Vector3(cos(angle) * radius, height, sin(angle) * radius)
+	camera.look_at_from_position(camera.position, Vector3(0.0, target_y, 0.0))
+	camera.current = true
+	print("WORLD_PACKS_GALLERY_ORBIT=%.1f" % angle_degrees)
+	return true
+
+
 func _build_focus(pack_id: String) -> void:
 	var profile: RefCounted = RegistryScript.make_profile(pack_id)
 	profile.apply_environment(self)
