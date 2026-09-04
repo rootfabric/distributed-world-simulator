@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.fabric_bake_bridge2_d_invalidation_refinement_ordering_validation.v1",
-  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
+  "qualification": "IMPLEMENTED_CANDIDATE_EXACT_GITHUB_DOUBLE_PASS",
   "production_accepted": false,
   "predecessor": {
     "checkpoint": "BRIDGE_2_C",
@@ -76,9 +76,42 @@
     "BRIDGE2_CLOSED",
     "PRODUCTION_ACCEPTANCE"
   ],
-  "exact_implementation_subject": null,
-  "exact_source_carrier": null,
-  "exact_double_replay": null,
-  "control": null,
+  "exact_implementation_subject": {
+    "head": "d8937a23a20de61229069890c68655d785e4fd1b",
+    "tree": "5fa92de63fc2f0d07b0a939264cbaba11892b14a",
+    "tracked_clean": true
+  },
+  "exact_source_carrier": {
+    "replayed_run_id": 33871819824,
+    "replayed_artifact_id": 9936199793,
+    "replayed_bundle_sha256": "b2e50b952468f552a9ccb4806625ff9da3df5b5d7ea9d2af16da2ac12e67442e",
+    "b0_5_a_carrier_run_id": 33871819894,
+    "b0_5_a_carrier_artifact_id": 9936221277,
+    "conclusion": "SUCCESS"
+  },
+  "exact_double_replay": {
+    "result": "PASS",
+    "invalidation": {
+      "pass": 85,
+      "total": 85,
+      "trace_hash": "726b2b2191f64a59620cee3af0cd348d6f9b81ab37026b917a6e9a50e884eb3b",
+      "log_sha256": "8e6f5aacc0096bf0d9985c43af6095dfe42702f30d68543a21d6657a7db3326c"
+    },
+    "recovery": {
+      "pass": 59,
+      "total": 59,
+      "trace_hash": "743fe190810cc1bb43f078cea7b182fac324cbd50240e11191441585f60b0403",
+      "log_sha256": "e3279853a1f181e7c6b95a8ec4a4751b893f0e8538c514f4a3c31b8ef6d3b41c"
+    },
+    "playground": {
+      "result": "PASS",
+      "log_sha256": "136e5836cb0f23606293afab5367c14edc1709371e33d47242523e6b9ced7781"
+    }
+  },
+  "control": {
+    "implementation_project_control": {"run_id": 33871819885, "conclusion": "SUCCESS"},
+    "implementation_portable_smoke": {"run_id": 33871819936, "conclusion": "SUCCESS"},
+    "implementation_linux_double_self_hosted": {"run_id": 33871819866, "status": "QUEUED_AT_EVIDENCE_RECORD"}
+  },
   "next_checkpoint": "BRIDGE_2_E_DETERMINISTIC_MIXED_REPLAY"
 }
