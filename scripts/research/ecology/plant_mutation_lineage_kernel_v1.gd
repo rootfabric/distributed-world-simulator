@@ -111,6 +111,46 @@ static func policy_hash(policy: Dictionary) -> String:
 	return "|".join(tokens).sha256_text()
 
 
+## PERF2.4 R8 preparation seam. This does not mutate anything and does not
+## create a second reproduction implementation. It prepares the exact frozen
+## default policy and its canonical hash once for optimized STREAM1 setup.
+static func prepare_default_policy_context() -> Dictionary:
+	var policy := default_policy()
+	if not bool(validate_policy(policy).get("success", false)):
+		return {}
+	var policy_id := policy_hash(policy)
+	if not _is_lower_hex_64(policy_id):
+		return {}
+	return {
+		"policy": policy,
+		"policy_hash": policy_id,
+	}
+
+
+## PERF2.4 R9 certification seam. Certification is intentionally separate from
+## reproduce() so optimized STREAM1 can prove the frozen context once at the
+## chunk boundary instead of rebuilding/validating it for every offspring.
+static func validate_prepared_policy_context(context: Dictionary) -> bool:
+	if context.keys().size() != 2:
+		return false
+	var policy_value = context.get("policy")
+	if not policy_value is Dictionary:
+		return false
+	var policy: Dictionary = policy_value
+	if policy != default_policy():
+		return false
+	if not bool(validate_policy(policy).get("success", false)):
+		return false
+	var expected_hash := policy_hash(policy)
+	var declared_hash := String(context.get("policy_hash", ""))
+	return (
+		_is_lower_hex_64(declared_hash)
+		and declared_hash == expected_hash
+	)
+
+
+
+
 static func create_ancestor(genome: Dictionary, lineage_seed: int) -> Dictionary:
 	if not bool(PlantGenome.validate(genome).get("success", false)):
 		return {}
@@ -122,9 +162,20 @@ static func reproduce(
 	parent_lineage: Dictionary,
 	mutation_seed: int,
 	offspring_index: int,
-	policy: Dictionary = {}
+	policy: Dictionary = {},
+	prepared_context: Dictionary = {},
+	prepared_context_validated: bool = false
 ) -> Dictionary:
-	var effective_policy := default_policy() if policy.is_empty() else policy.duplicate(true)
+	var using_prepared_context := not prepared_context.is_empty()
+	if using_prepared_context and not prepared_context_validated:
+		if not validate_prepared_policy_context(prepared_context):
+			return {}
+		prepared_context_validated = true
+	var effective_policy: Dictionary = (
+		Dictionary(prepared_context.get("policy", {}))
+		if using_prepared_context
+		else (default_policy() if policy.is_empty() else policy.duplicate(true))
+	)
 	if offspring_index < 0:
 		return {}
 	if not bool(PlantGenome.validate(parent_genome).get("success", false)):
@@ -133,10 +184,17 @@ static func reproduce(
 		return {}
 	if String(parent_lineage.get("genome_checksum", "")) != String(parent_genome.get("checksum", "")):
 		return {}
-	if not bool(validate_policy(effective_policy).get("success", false)):
-		return {}
+	if not using_prepared_context:
+		if not bool(validate_policy(effective_policy).get("success", false)):
+			return {}
 
-	var policy_id := policy_hash(effective_policy)
+	var policy_id := ""
+	if using_prepared_context:
+		if not prepared_context_validated:
+			return {}
+		policy_id = String(prepared_context.get("policy_hash", ""))
+	else:
+		policy_id = policy_hash(effective_policy)
 	var generation := int(parent_lineage.get("generation", 0)) + 1
 	var event_context := "%s|%s|%s|%d|%d|%d|%s" % [
 		EXPERIMENT_REVISION,

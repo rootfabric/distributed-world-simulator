@@ -4,7 +4,53 @@
 
 **Статус на 2026-08-22 (ECO-R78):** `EVO3 E3.0–E3.8 ACCEPTED / E3.FINAL BLOCKED_PENDING_AUTHORIZATION`.
 
-**Живой статус на 2026-08-29 (ECO EVO7 live continuation):** `LS3.0–LS3.FINAL CLOSED / ECO-VIS1 CLOSED / ECO-VIS2 CLOSED / ECO-VIS3 CLOSED_ACCEPTED_C3D72DA / PERF1 IMPLEMENTATION CANDIDATE`.
+**Живой статус на 2026-08-30 (ECO EVO7 performance + morphology split):** `LS3.0–LS3.FINAL CLOSED / VIS1–VIS3 ACCEPTED / PAR1–PAR3 COMPLETE LINEAGE / STREAM1 R1 ACCEPTED exact-Windows 4d0d95a / PERF2.SIM NEXT / VIS4 PLAY0.MORPH PARALLEL`.
+
+**PERF2.0 status on 2026-08-31:** `ACCEPTED / exact detached Windows + canonical CI closure 33317717717 / verified HEAD 5994598d / PERF2.1 AUTHORIZED`.
+
+Current performance route:
+
+```text
+STREAM1 ACCEPTED
+→ PERF2.0 Measurement Contract       ✅ ACCEPTED
+→ PERF2.1 STREAM1 Profiling R2       ✅ ACCEPTED Ubuntu fccf4f9
+→ PERF2.2 Working-set / Memory        ✅ ACCEPTED Ubuntu c6bef3d
+→ PERF2.3 Simulation Scaling          ✅ ACCEPTED Ubuntu 34715ac
+→ PERF2.4 Runtime Optimization        ← CURRENT / R1 IMPLEMENTATION CANDIDATE
+```
+
+PERF2.0 remains the frozen measurement contract. PERF2.1 R2 remains accepted on exact local Ubuntu verification of `fccf4f99fd3c257abf90c37e584b965e2cddfa6a`. PERF2.2 R1 is accepted on exact local Ubuntu verification of `c6bef3d6c20d7b468f88f9aaabade2fe809b63e6`; PERF2.3 R1 is accepted on exact Ubuntu verification of `34715ac5524d594003236ca6228c0b0ba5bb9e90`; PERF2.4 Runtime Optimization is now the active simulation-side performance checkpoint.
+
+**PERF2.1 R2 profiling matrix:** `SERIAL_REFERENCE + STREAM1 chunks 1/7/64`, each with `3 repetitions × (2 warmup + 12 measured generations)`. Required closure: `12 samples / 32 summaries / 3 diagnostic comparisons / 9 of 9 exact canonical pairs`. No optimization claim is allowed at PERF2.1.
+
+**Runtime verification policy R18:** для OS-neutral ECO GDScript достаточно одного fresh exact local PASS на **Ubuntu OR Windows**. Второй OS-run — optional/non-blocking cross-platform evidence. Windows CI не является обязательным blocker для PERF2.1. Policy: `config/ecology/eco-runtime-verification-policy.v1.json`.
+
+**PERF2.2 R1 semantics:** structural working-set is reported as a deterministic record-pressure upper-bound proxy `max_parent_chunk + max_candidate_chunk`, explicitly not bytes. `engine_static_bytes` is diagnostic process-local allocator evidence; `engine_static_peak_bytes` is a process-lifetime high-water mark and is not cross-config peak-memory proof. PERF2.2 allows a structural bound claim but forbids memory-reduction and optimization claims.
+
+**PERF2.2 accepted result:** exact Ubuntu PASS on `c6bef3d...`; deterministic record-proxy reduction is `108x` for chunk1, `15.43x` for chunk7 and `1.69x` for chunk64 with 9/9 canonical parity. Allocator terminal memory stayed effectively flat and engine peak was identical across rows, confirming that the process-lifetime high-water metric is diagnostic-only. PERF2.3 must therefore study scaling of the structural-memory/time tradeoff rather than assume a byte-memory win.
+
+**PERF2.3 R1 scaling matrix:** generation-age preconditions `2 / 12 / 22`, each followed by `12 measured generations × 3 repetitions`, across serial + STREAM1 chunks `1/7/64`. The +10 generation spacing aligns one interval audit in every measured window. Required evidence: `36 samples / 12 scaling points / 9 comparisons / 4 trends / 3 host-local crossover analyses / 27 of 27 exact canonical pairs`. Crossover evidence is diagnostic only; optimization remains forbidden until PERF2.4.
+
+STREAM1 acceptance does not wait for VIS4/PLAY0.MORPH before simulation-side performance work:
+
+```text
+STREAM1 ACCEPTED
+→ PERF2.SIM
+
+VIS4 / PLAY0.MORPH
+→ continues in parallel
+
+both accepted
+→ PERF2.CONV
+→ PLAY1 LIVING REGION
+```
+
+STREAM1 acceptance checkpoint: `docs/checkpoints/2026-08-30_ECO_EVO7_STREAM1_R1_ACCEPTED_RU.md`.
+PERF2.0 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_0_R1_ACCEPTED_RU.md`.
+PERF2.1 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_1_R2_ACCEPTED_RU.md`.
+PERF2.2 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_2_R1_ACCEPTED_RU.md`.
+PERF2.3 acceptance checkpoint: `docs/checkpoints/2026-08-31_ECO_EVO7_PERF2_3_R1_ACCEPTED_RU.md`.
+Live machine roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`.
 
 Текущий live machine-roadmap: `config/ecology/eco-evo7-live-simulation-roadmap.v1.json`. PERF1 измеряет стоимость generation pipeline без изменения ecology truth; следующий возможный optimization checkpoint — `PERF1-PAR0`, только после exact serial/parallel determinism gate.
 Единственный живой источник текущего состояния: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`. Разделы ниже сохраняются как история маршрута; статусы внутри них не обновляются задним числом.
@@ -155,3 +201,9 @@ E3.FINAL Planetary Ecology Compiler Challenge
 `XFER1` остаётся `BLOCKED_WAIT_CANONICAL_G_ENV_MAT_WQ_SD_TF`.
 
 ECO research не получает production persistence, world transaction, network, authority, canonical environment/time/spatial или canonical species-taxonomy ownership. Production integration остаётся отдельной main-owned governance линией.
+
+
+**PERF2.3 accepted result:** exact Ubuntu PASS on `34715ac...` with `36 samples / 12 scaling points / 9 comparisons / 4 trends / 3 crossover analyses / 27 of 27 exact pairs`. No crossover was observed: serial remained faster at all nine tested scale/chunk points. At the same time, serial structural record pressure grew ~8.68× from AGE_2 to AGE_22 while all STREAM1 bounded proxies remained flat at 1.0×. PERF2.4 is therefore authorized to optimize execution overhead while preserving exact parity and bounded working-set semantics.
+
+
+**PERF2.4 R1 optimization:** STREAM1 now has an optimized default pipeline that defers candidate/route/recruitment canonicalization to one full-generation boundary, reuses one immutable recruitment context per generation and evaluates aligned candidate/route chunk pairs without rebuilding a hash map. The legacy per-chunk canonicalization path is retained only for same-HEAD A/B evidence. Acceptance requires 54 samples / 27 exact A/B pairs, preserved bounded working-set semantics, deterministic elimination of chunk-local sorts, wall geomean speedup >= 1.02, STREAM1-total geomean speedup >= 1.03, at least 6/9 wall points improved and no point worse than a 3% regression budget. Serial crossover is not required.

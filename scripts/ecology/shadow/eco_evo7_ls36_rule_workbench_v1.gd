@@ -228,6 +228,20 @@ func clear_candidate_executor() -> void:
 func has_candidate_executor() -> bool:
     return ecology != null and ecology.has_candidate_executor()
 
+## STREAM1 public pass-through: the Workbench remains authority-neutral and
+## forwards only the runtime proposal seam exposed by LS3.3/LS3.4.
+func set_generation_stream_executor(executor) -> bool:
+    if not initialized or ecology == null:
+        return false
+    return ecology.set_generation_stream_executor(executor)
+
+func clear_generation_stream_executor() -> void:
+    if ecology != null:
+        ecology.clear_generation_stream_executor()
+
+func has_generation_stream_executor() -> bool:
+    return ecology != null and ecology.has_generation_stream_executor()
+
 func _elapsed_ms(start_usec: int) -> float:
     return float(Time.get_ticks_usec() - start_usec) / 1000.0
 

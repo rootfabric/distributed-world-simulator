@@ -73,10 +73,37 @@ static func evaluate_recruitment_event(
 	if destination_index < 0 or destination_index >= environment_cells.size():
 		return {}
 	var env_cell: Dictionary = environment_cells[destination_index]
-	var observation := build_observation(env_cell, context, next_generation, candidate_hash)
+	var observation: Dictionary = {}
+	var cache_value = context.get("environment_sample_cache")
+	if cache_value is Dictionary:
+		var cache: Dictionary = cache_value
+		var cell_hash := String(env_cell.get("cell_hash", ""))
+		if cell_hash.is_empty():
+			return {}
+		if cache.has(cell_hash):
+			var cached_value = cache[cell_hash]
+			if not cached_value is Dictionary:
+				return {}
+			observation = build_observation(
+				env_cell, context, next_generation, candidate_hash, Dictionary(cached_value))
+		else:
+			observation = build_observation(
+				env_cell, context, next_generation, candidate_hash)
+			if observation.is_empty():
+				return {}
+			var sample_value = observation.get("environment_sample")
+			if not sample_value is Dictionary:
+				return {}
+			if cache.size() >= environment_cells.size():
+				return {}
+			cache[cell_hash] = Dictionary(sample_value)
+	else:
+		observation = build_observation(
+			env_cell, context, next_generation, candidate_hash)
 	if observation.is_empty():
 		return {}
-	var evaluation_result := Shadow.evaluate_bundle_against_observation(candidate["child_bundle"], observation)
+	var evaluation_result := Shadow.evaluate_bundle_against_observation(
+		candidate["child_bundle"], observation)
 	if not bool(evaluation_result.get("success", false)):
 		return {}
 	var evaluation: Dictionary = evaluation_result["details"]
@@ -107,7 +134,8 @@ static func build_observation(
 	env_cell: Dictionary,
 	context: Dictionary,
 	next_generation: int,
-	candidate_hash: String
+	candidate_hash: String,
+	prepared_environment_sample: Dictionary = {}
 ) -> Dictionary:
 	var sand := float(env_cell["soil_texture_sand"])
 	var clay := float(env_cell["soil_texture_clay"])
@@ -115,16 +143,18 @@ static func build_observation(
 	var revision := String(context["revision"])
 	var environment_seed := int(context["environment_seed"])
 	var environment_field_hash := String(context["environment_field_hash"])
-	var env := EnvironmentSample.create(
-		float(env_cell["east_m"]), float(env_cell["north_m"]),
-		float(env_cell["temperature_c"]), float(env_cell["soil_moisture"]),
-		float(env_cell["incident_light"]), 0.50,
-		clampf(float(env_cell["surface_water_fraction"]), 0.0, 1.0),
-		environment_seed,
-		"%s|field=%s|cell=%s" % [revision, environment_field_hash, String(env_cell["cell_hash"])]
-	)
-	if not bool(EnvironmentSample.validate(env).get("success", false)):
-		return {}
+	var env: Dictionary = prepared_environment_sample
+	if env.is_empty():
+		env = EnvironmentSample.create(
+			float(env_cell["east_m"]), float(env_cell["north_m"]),
+			float(env_cell["temperature_c"]), float(env_cell["soil_moisture"]),
+			float(env_cell["incident_light"]), 0.50,
+			clampf(float(env_cell["surface_water_fraction"]), 0.0, 1.0),
+			environment_seed,
+			"%s|field=%s|cell=%s" % [revision, environment_field_hash, String(env_cell["cell_hash"])]
+		)
+		if not bool(EnvironmentSample.validate(env).get("success", false)):
+			return {}
 	var obs := {
 		"schema": Shadow.SCHEMA,
 		"version": Shadow.VERSION,
@@ -153,6 +183,18 @@ static func recruitment_event_hash(event: Dictionary, schema: String, version: S
 		"%.9f" % float(event.get("establishment_gate", 0.0)),
 		"1" if bool(event.get("eligible", false)) else "0", String(event.get("reason", "")),
 	])).sha256_text()
+
+## Canonical whole-generation recruitment evidence hash. STREAM1 and LS3.3
+## both call this function so chunking cannot introduce a second pool-hash
+## implementation.
+static func recruitment_pool_hash(source: Array, schema: String, version: String) -> String:
+	var hashes := PackedStringArray()
+	for value in source:
+		if not value is Dictionary:
+			return ""
+		hashes.append(String(Dictionary(value).get("recruitment_event_hash", "")))
+	hashes.sort()
+	return (schema + "|" + version + "|recruitment-pool|" + "|".join(hashes)).sha256_text()
 
 static func _shadow_observation_hash(observation: Dictionary) -> String:
 	return "|".join(PackedStringArray([

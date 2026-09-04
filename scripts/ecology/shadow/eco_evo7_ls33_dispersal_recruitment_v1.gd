@@ -17,6 +17,8 @@ const Par0Kernel = preload("res://scripts/ecology/perf/eco_evo7_par0_recruitment
 ## reproduce_bundle call, the candidate field layout and candidate_hash.
 ## Serial and parallel candidate generation share this ONE implementation.
 const Par3CandidateKernel = preload("res://scripts/ecology/perf/eco_evo7_par3_candidate_kernel_v1.gd")
+const Stream1RouteKernel = preload("res://scripts/ecology/perf/eco_evo7_stream1_route_kernel_v1.gd")
+const Stream1Executor = preload("res://scripts/ecology/perf/eco_evo7_stream1_generation_stream_executor_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo7_dispersal_recruitment.v1"
 const VERSION := "1.0.0"
@@ -77,6 +79,12 @@ var _last_dual_meta: Dictionary = {}
 var _candidate_executor = null
 var _candidate_executor_calls := 0
 var _last_candidate_meta: Dictionary = {}
+## STREAM1: optional bounded generation-stream proposal executor. It owns no
+## ecology state and is mutually exclusive with PAR2/PAR3 stage executors:
+## a generation is either legacy staged execution or one STREAM1 proposal.
+var _generation_stream_executor = null
+var _generation_stream_executor_calls := 0
+var _last_stream_meta: Dictionary = {}
 
 func setup(
     patch: Dictionary,
@@ -128,7 +136,7 @@ func set_evolution_enabled(value: bool) -> bool:
 ## -> Dictionary with "success" and "canonical_events". Domain code never
 ## creates a process pool itself and never selects the executor from env.
 func set_recruitment_executor(executor) -> bool:
-    if executor == null:
+    if executor == null or _generation_stream_executor != null:
         return false
     _recruitment_executor = executor
     return true
@@ -144,7 +152,7 @@ func has_recruitment_executor() -> bool:
 ## "candidates" (canonically sorted by candidate_hash). Domain code never
 ## spawns worker processes itself.
 func set_candidate_executor(executor) -> bool:
-    if executor == null:
+    if executor == null or _generation_stream_executor != null:
         return false
     _candidate_executor = executor
     return true
@@ -155,6 +163,23 @@ func clear_candidate_executor() -> void:
 func has_candidate_executor() -> bool:
     return _candidate_executor != null
 
+## STREAM1 authority seam. The executor may compute only a proposal; LS3.3
+## validates the base identity and complete proposal before materialization
+## and publication. Stage executors and STREAM1 are intentionally exclusive.
+func set_generation_stream_executor(executor) -> bool:
+    if executor == null or not executor.has_method("execute_generation"):
+        return false
+    if _candidate_executor != null or _recruitment_executor != null:
+        return false
+    _generation_stream_executor = executor
+    return true
+
+func clear_generation_stream_executor() -> void:
+    _generation_stream_executor = null
+
+func has_generation_stream_executor() -> bool:
+    return _generation_stream_executor != null
+
 func step_generation() -> Dictionary:
     if not initialized or not evolution_enabled or records.is_empty():
         return {}
@@ -162,46 +187,79 @@ func step_generation() -> Dictionary:
     var parent_count := records.size()
     var next_generation := generation + 1
 
-    var phase_started := Time.get_ticks_usec()
-    var candidates := _build_candidates(records, next_generation)
-    var candidate_build_ms := _elapsed_ms(phase_started)
-    if candidates.is_empty():
-        return {}
+    var candidates: Array[Dictionary] = []
+    var routes: Array[Dictionary] = []
+    var recruitment: Array[Dictionary] = []
+    var candidate_build_ms := 0.0
+    var route_build_ms := 0.0
+    var recruitment_eval_ms := 0.0
+    var phase_started := 0
 
-    phase_started = Time.get_ticks_usec()
-    var routes := _build_routes(candidates, next_generation)
-    var route_build_ms := _elapsed_ms(phase_started)
-    if routes.size() != candidates.size():
-        return {}
+    if _generation_stream_executor != null:
+        var streamed := _execute_generation_stream(next_generation)
+        if streamed.is_empty():
+            return {}
+        for value in Array(streamed["candidates"]):
+            candidates.append(value)
+        for value in Array(streamed["routes"]):
+            routes.append(value)
+        for value in Array(streamed["recruitment"]):
+            recruitment.append(value)
+        var stream_timings: Dictionary = Dictionary(_last_stream_meta.get("timings_ms", {}))
+        candidate_build_ms = float(stream_timings.get("candidate_build_ms", 0.0))
+        route_build_ms = float(stream_timings.get("route_build_ms", 0.0))
+        recruitment_eval_ms = float(stream_timings.get("recruitment_eval_ms", 0.0))
+    else:
+        phase_started = Time.get_ticks_usec()
+        candidates = _build_candidates(records, next_generation)
+        candidate_build_ms = _elapsed_ms(phase_started)
+        if candidates.is_empty():
+            return {}
 
-    phase_started = Time.get_ticks_usec()
-    var recruitment := _evaluate_recruitment(candidates, routes, next_generation)
-    var recruitment_eval_ms := _elapsed_ms(phase_started)
-    if recruitment.is_empty():
-        return {}
+        phase_started = Time.get_ticks_usec()
+        routes = _build_routes(candidates, next_generation)
+        route_build_ms = _elapsed_ms(phase_started)
+        if routes.size() != candidates.size():
+            return {}
+
+        phase_started = Time.get_ticks_usec()
+        recruitment = _evaluate_recruitment(candidates, routes, next_generation)
+        recruitment_eval_ms = _elapsed_ms(phase_started)
+        if recruitment.is_empty():
+            return {}
 
     phase_started = Time.get_ticks_usec()
     var next_records := _materialize_recruits(candidates, routes, recruitment, next_generation)
     var materialize_ms := _elapsed_ms(phase_started)
 
+    ## Validate the complete proposed generation BEFORE mutating authority
+    ## state. This closes the old validate-after-assignment window and makes
+    ## every validation failure genuinely fail-closed.
+    phase_started = Time.get_ticks_usec()
+    var next_candidate_pool_hash := _candidate_pool_hash(candidates)
+    var next_dispersal_pool_hash := _dispersal_pool_hash(routes)
+    var next_recruitment_hash := _recruitment_hash(recruitment)
+    if not _validate_generation_evidence_values(
+        candidates, routes, recruitment,
+        next_candidate_pool_hash, next_dispersal_pool_hash, next_recruitment_hash
+    ):
+        return {}
+    if not next_records.is_empty() and not _validate_current_records(next_records):
+        return {}
+    var validation_ms := _elapsed_ms(phase_started)
+
+    ## The only authoritative mutation point for a successful generation.
     phase_started = Time.get_ticks_usec()
     last_candidates = candidates.duplicate(true)
     last_routes = routes.duplicate(true)
     last_recruitment = recruitment.duplicate(true)
-    last_candidate_pool_hash = _candidate_pool_hash(last_candidates)
-    last_dispersal_pool_hash = _dispersal_pool_hash(last_routes)
-    last_recruitment_hash = _recruitment_hash(last_recruitment)
+    last_candidate_pool_hash = next_candidate_pool_hash
+    last_dispersal_pool_hash = next_dispersal_pool_hash
+    last_recruitment_hash = next_recruitment_hash
     generation = next_generation
     records = next_records
     _refresh_population_hashes()
     var commit_hash_ms := _elapsed_ms(phase_started)
-
-    phase_started = Time.get_ticks_usec()
-    if not _validate_generation_evidence():
-        return {}
-    if not records.is_empty() and not _validate_current_records(records):
-        return {}
-    var validation_ms := _elapsed_ms(phase_started)
 
     phase_started = Time.get_ticks_usec()
     var snapshot := get_snapshot()
@@ -233,6 +291,9 @@ func step_generation() -> Dictionary:
     ## PAR3: non-canonical candidate-build telemetry (never hashed).
     if not _last_candidate_meta.is_empty():
         last_profile.merge(_last_candidate_meta, true)
+    ## STREAM1: proposal/chunk telemetry is side-channel only.
+    if not _last_stream_meta.is_empty():
+        last_profile.merge(_last_stream_meta, true)
     return snapshot
 
 func get_last_profile() -> Dictionary:
@@ -350,60 +411,17 @@ func _build_candidates(parents: Array[Dictionary], next_generation: int) -> Arra
         parents, next_generation, SCHEMA, VERSION, evolution_seed, OFFSPRING_PER_PARENT)
 
 func _build_routes(candidates: Array[Dictionary], next_generation: int) -> Array[Dictionary]:
-    var out: Array[Dictionary] = []
-    for candidate_value in candidates:
-        var candidate: Dictionary = candidate_value
-        var bundle: Dictionary = candidate["child_bundle"]
-        var route_seed := _dispersal_seed(candidate, next_generation)
-        var route := _route_for_child(
-            String(candidate["candidate_hash"]), bundle,
-            int(candidate["parent_cell_index"]), route_seed, next_generation)
-        if route.is_empty():
-            return []
-        out.append(route)
-    out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        return String(a["candidate_hash"]) < String(b["candidate_hash"])
-    )
-    return out
+    return Stream1RouteKernel.build_all(
+        candidates, next_generation, SCHEMA, VERSION,
+        evolution_seed, cell_size_m, GRID_SIZE)
 
 func _dispersal_seed(candidate: Dictionary, next_generation: int) -> int:
-    var key := "%s|dispersal|%d|%s|%s|%d|%d" % [
-        SCHEMA, evolution_seed, String(candidate["child_individual_id"]),
-        String(candidate["child_bundle_checksum"]), next_generation,
-        int(candidate["offspring_ordinal"]),
-    ]
-    return _seed48(key)
+    return Stream1RouteKernel.dispersal_seed(candidate, next_generation, SCHEMA, evolution_seed)
 
 func _route_for_child(candidate_hash: String, bundle: Dictionary, parent_cell_index: int, route_seed: int, next_generation: int) -> Dictionary:
-    if parent_cell_index < 0 or parent_cell_index >= GRID_SIZE * GRID_SIZE:
-        return {}
-    var inherited_distance := maxf(0.0, float(Dictionary(bundle["genome"])["seed_dispersal_distance_m"]))
-    var angle_u := _unit01("%d|angle" % route_seed)
-    var distance_u := _unit01("%d|distance" % route_seed)
-    var angle := angle_u * TAU
-    var distance_m := inherited_distance * (0.20 + 1.80 * distance_u)
-    var dx_cells := int(round(cos(angle) * distance_m / cell_size_m))
-    var dy_cells := int(round(sin(angle) * distance_m / cell_size_m))
-    var parent_x := parent_cell_index % GRID_SIZE
-    var parent_y := parent_cell_index / GRID_SIZE
-    var destination_x := parent_x + dx_cells
-    var destination_y := parent_y + dy_cells
-    var in_patch := destination_x >= 0 and destination_x < GRID_SIZE and destination_y >= 0 and destination_y < GRID_SIZE
-    var destination_index := destination_y * GRID_SIZE + destination_x if in_patch else -1
-    var route := {
-        "candidate_hash": candidate_hash,
-        "generation": next_generation,
-        "dispersal_seed": route_seed,
-        "parent_cell_index": parent_cell_index,
-        "dx_cells": dx_cells,
-        "dy_cells": dy_cells,
-        "distance_m": snappedf(distance_m, 1e-9),
-        "destination_cell_index": destination_index,
-        "in_patch": in_patch,
-        "out_of_patch_rule": "REJECT",
-    }
-    route["route_hash"] = _route_hash(route)
-    return route
+    return Stream1RouteKernel.route_for_child(
+        candidate_hash, bundle, parent_cell_index, route_seed, next_generation,
+        SCHEMA, VERSION, cell_size_m, GRID_SIZE)
 
 func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictionary], next_generation: int) -> Array[Dictionary]:
 	## PERF1-PAR0: the per-candidate calculation lives in the shared pure
@@ -471,6 +489,171 @@ func _evaluate_recruitment(candidates: Array[Dictionary], routes: Array[Dictiona
         return String(a["candidate_hash"]) < String(b["candidate_hash"])
     )
     return out_serial
+
+func _execute_generation_stream(next_generation: int) -> Dictionary:
+    _generation_stream_executor_calls += 1
+    var context := {
+        "schema": SCHEMA,
+        "version": VERSION,
+        "revision": REVISION,
+        "evolution_seed": evolution_seed,
+        "offspring_per_parent": OFFSPRING_PER_PARENT,
+        "cell_size_m": cell_size_m,
+        "grid_size": GRID_SIZE,
+        "environment_seed": environment_seed,
+        "environment_field_hash": environment_field_hash,
+        "environment_cells": environment_cells.duplicate(true),
+        "base_generation": generation,
+        "base_population_hash": population_hash,
+    }
+    var result: Dictionary = _generation_stream_executor.execute_generation(
+        records.duplicate(true), next_generation, context)
+    var report: Dictionary = Dictionary(result.get("report", {}))
+    _last_stream_meta = {
+        "stream_mode": "STREAM1_BOUNDED_PROPOSAL",
+        "stream_executor_calls": _generation_stream_executor_calls,
+        "stream_source": String(result.get("source", "")),
+        "stream_chunk_count": int(report.get("chunk_count", 0)),
+        "stream_parents_per_chunk": int(report.get("parents_per_chunk", 0)),
+        "stream_max_parent_chunk": int(report.get("max_parent_chunk", 0)),
+        "stream_max_candidate_chunk": int(report.get("max_candidate_chunk", 0)),
+        "stream_audited": bool(report.get("audited", false)),
+        "stream_proposal_hash": String(report.get("proposal_hash", "")),
+        "timings_ms": Dictionary(report.get("timings_ms", {})).duplicate(true),
+    }
+    if not bool(result.get("success", false)):
+        _last_stream_meta["failure_code"] = String(result.get("failure_code", "STREAM1_EXECUTOR_FAILURE"))
+        _last_stream_meta["failure_detail"] = String(result.get("failure_detail", ""))
+        last_profile = _last_stream_meta.duplicate(true)
+        return {}
+    var proposal_value = result.get("proposal")
+    if not proposal_value is Dictionary:
+        _last_stream_meta["failure_code"] = "STREAM1_PROPOSAL_TYPE_INVALID"
+        last_profile = _last_stream_meta.duplicate(true)
+        return {}
+    var proposal: Dictionary = proposal_value
+    var accepted := _validate_stream_proposal(proposal, next_generation)
+    if accepted.is_empty():
+        last_profile = _last_stream_meta.duplicate(true)
+        return {}
+    return accepted
+
+func _validate_stream_proposal(proposal: Dictionary, next_generation: int) -> Dictionary:
+    if not Stream1Executor.validate_proposal_shape(proposal):
+        _last_stream_meta["failure_code"] = "STREAM1_PROPOSAL_INVALID"
+        return {}
+    if int(proposal.get("generation", -1)) != next_generation     or int(proposal.get("base_generation", -1)) != generation     or String(proposal.get("base_population_hash", "")) != population_hash:
+        _last_stream_meta["failure_code"] = "STREAM1_STALE_BASE"
+        return {}
+    if int(proposal.get("parent_count", -1)) != records.size()     or int(proposal.get("candidate_count", -1)) != records.size() * OFFSPRING_PER_PARENT:
+        _last_stream_meta["failure_code"] = "STREAM1_COUNT_MISMATCH"
+        return {}
+
+    var candidates: Array[Dictionary] = []
+    var routes: Array[Dictionary] = []
+    var recruitment: Array[Dictionary] = []
+    for value in Array(proposal["candidates"]):
+        if not value is Dictionary:
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_TYPE_INVALID"
+            return {}
+        candidates.append(value)
+    for value in Array(proposal["routes"]):
+        if not value is Dictionary:
+            _last_stream_meta["failure_code"] = "STREAM1_ROUTE_TYPE_INVALID"
+            return {}
+        routes.append(value)
+    for value in Array(proposal["recruitment"]):
+        if not value is Dictionary:
+            _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_TYPE_INVALID"
+            return {}
+        recruitment.append(value)
+    if candidates.size() != records.size() * OFFSPRING_PER_PARENT     or routes.size() != candidates.size() or recruitment.size() != candidates.size():
+        _last_stream_meta["failure_code"] = "STREAM1_COUNT_MISMATCH"
+        return {}
+    if not _candidate_order_canonical(candidates)     or not _candidate_order_canonical(routes)     or not _candidate_order_canonical(recruitment):
+        _last_stream_meta["failure_code"] = "STREAM1_NONCANONICAL_ORDER"
+        return {}
+
+    var parent_by_record_id := {}
+    for parent in records:
+        parent_by_record_id[String(parent.get("record_id", ""))] = parent
+    var bundle_validator = Lattice.new()
+    var seen_parent_ordinals := {}
+    var candidate_by_hash := {}
+    for candidate in candidates:
+        var candidate_hash := String(candidate.get("candidate_hash", ""))
+        if candidate_hash.is_empty() or candidate_by_hash.has(candidate_hash)         or candidate_hash != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_HASH_INVALID"
+            return {}
+        var parent_record_id := String(candidate.get("parent_record_id", ""))
+        if not parent_by_record_id.has(parent_record_id)         or not Par3CandidateKernel.validate_parent_binding(
+            parent_by_record_id[parent_record_id], candidate, next_generation,
+            SCHEMA, evolution_seed, OFFSPRING_PER_PARENT
+        ):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+            return {}
+        var child_bundle_value = candidate.get("child_bundle")
+        if not child_bundle_value is Dictionary         or not bool(bundle_validator.call("_valid_bundle_identity", child_bundle_value)):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_BUNDLE_INVALID"
+            return {}
+        var parent_ordinal_key := "%s:%d" % [
+            parent_record_id, int(candidate.get("offspring_ordinal", -1))
+        ]
+        if seen_parent_ordinals.has(parent_ordinal_key):
+            _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+            return {}
+        seen_parent_ordinals[parent_ordinal_key] = true
+        candidate_by_hash[candidate_hash] = candidate
+    if seen_parent_ordinals.size() != records.size() * OFFSPRING_PER_PARENT:
+        _last_stream_meta["failure_code"] = "STREAM1_CANDIDATE_PARENT_BINDING_INVALID"
+        return {}
+
+    var route_by_hash := {}
+    for route in routes:
+        var candidate_hash := String(route.get("candidate_hash", ""))
+        if not candidate_by_hash.has(candidate_hash) or route_by_hash.has(candidate_hash)         or int(route.get("generation", -1)) != next_generation:
+            _last_stream_meta["failure_code"] = "STREAM1_ROUTE_HASH_INVALID"
+            return {}
+        var expected_route := Stream1RouteKernel.build_route(
+            candidate_by_hash[candidate_hash], next_generation,
+            SCHEMA, VERSION, evolution_seed, cell_size_m, GRID_SIZE
+        )
+        if expected_route.is_empty() or route != expected_route:
+            _last_stream_meta["failure_code"] = "STREAM1_ROUTE_HASH_INVALID"
+            return {}
+        route_by_hash[candidate_hash] = route
+
+    for event in recruitment:
+        var candidate_hash := String(event.get("candidate_hash", ""))
+        if not candidate_by_hash.has(candidate_hash) or not route_by_hash.has(candidate_hash)         or int(event.get("generation", -1)) != next_generation         or String(event.get("route_hash", "")) != String(route_by_hash[candidate_hash].get("route_hash", ""))         or int(event.get("destination_cell_index", -2)) != int(route_by_hash[candidate_hash].get("destination_cell_index", -3))         or String(event.get("recruitment_event_hash", "")) != Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION):
+            _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_HASH_INVALID"
+            return {}
+        var destination := int(event.get("destination_cell_index", -1))
+        if bool(route_by_hash[candidate_hash].get("in_patch", false)):
+            if destination < 0 or destination >= environment_cells.size()             or String(event.get("environment_cell_hash", "")) != String(environment_cells[destination].get("cell_hash", "")):
+                _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_ENV_BINDING_INVALID"
+                return {}
+        elif destination != -1 or not String(event.get("environment_cell_hash", "")).is_empty():
+            _last_stream_meta["failure_code"] = "STREAM1_RECRUITMENT_ENV_BINDING_INVALID"
+            return {}
+
+    if String(proposal.get("candidate_pool_hash", "")) != _candidate_pool_hash(candidates)     or String(proposal.get("dispersal_pool_hash", "")) != _dispersal_pool_hash(routes)     or String(proposal.get("recruitment_hash", "")) != _recruitment_hash(recruitment)     or String(proposal.get("proposal_hash", "")) != Stream1Executor.proposal_hash(proposal):
+        _last_stream_meta["failure_code"] = "STREAM1_PROPOSAL_HASH_MISMATCH"
+        return {}
+    return {
+        "candidates": candidates,
+        "routes": routes,
+        "recruitment": recruitment,
+    }
+
+func _candidate_order_canonical(source: Array[Dictionary]) -> bool:
+    var previous := ""
+    for value in source:
+        var current := String(value.get("candidate_hash", ""))
+        if current.is_empty() or (not previous.is_empty() and (current == previous or current < previous)):
+            return false
+        previous = current
+    return true
 
 func _environment_observation(env_cell: Dictionary, next_generation: int, candidate_hash: String) -> Dictionary:
     ## PERF1-PAR0: observation construction moved to the shared kernel.
@@ -541,24 +724,39 @@ func _population_record(record_id: String, reproductive_identity: String, cell_i
     return record
 
 func _validate_generation_evidence() -> bool:
-    if last_candidates.size() != last_routes.size() or last_routes.size() != last_recruitment.size():
+    return _validate_generation_evidence_values(
+        last_candidates, last_routes, last_recruitment,
+        last_candidate_pool_hash, last_dispersal_pool_hash, last_recruitment_hash
+    )
+
+func _validate_generation_evidence_values(
+    candidate_values: Array[Dictionary],
+    route_values: Array[Dictionary],
+    recruitment_values: Array[Dictionary],
+    candidate_pool_hash_value: String,
+    dispersal_pool_hash_value: String,
+    recruitment_hash_value: String
+) -> bool:
+    if candidate_values.size() != route_values.size() or route_values.size() != recruitment_values.size():
         return false
-    if last_candidate_pool_hash != _candidate_pool_hash(last_candidates):
+    if candidate_pool_hash_value != _candidate_pool_hash(candidate_values):
         return false
-    if last_dispersal_pool_hash != _dispersal_pool_hash(last_routes):
+    if dispersal_pool_hash_value != _dispersal_pool_hash(route_values):
         return false
-    if last_recruitment_hash != _recruitment_hash(last_recruitment):
+    if recruitment_hash_value != _recruitment_hash(recruitment_values):
         return false
     var candidate_by_hash := {}
-    for candidate_value in last_candidates:
-        var candidate: Dictionary = candidate_value
-        if String(candidate.get("candidate_hash", "")) != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
+    for candidate in candidate_values:
+        var candidate_hash := String(candidate.get("candidate_hash", ""))
+        if candidate_hash.is_empty() or candidate_by_hash.has(candidate_hash):
             return false
-        candidate_by_hash[String(candidate["candidate_hash"])] = candidate
-    for route_value in last_routes:
-        var route: Dictionary = route_value
+        if candidate_hash != Par3CandidateKernel.candidate_hash(SCHEMA, VERSION, candidate):
+            return false
+        candidate_by_hash[candidate_hash] = candidate
+    var route_by_hash := {}
+    for route in route_values:
         var candidate_hash := String(route.get("candidate_hash", ""))
-        if not candidate_by_hash.has(candidate_hash):
+        if not candidate_by_hash.has(candidate_hash) or route_by_hash.has(candidate_hash):
             return false
         if String(route.get("route_hash", "")) != _route_hash(route):
             return false
@@ -568,6 +766,15 @@ func _validate_generation_evidence() -> bool:
         var expected_in_patch := expected_x >= 0 and expected_x < GRID_SIZE and expected_y >= 0 and expected_y < GRID_SIZE
         var expected_destination := expected_y * GRID_SIZE + expected_x if expected_in_patch else -1
         if bool(route["in_patch"]) != expected_in_patch or int(route["destination_cell_index"]) != expected_destination:
+            return false
+        route_by_hash[candidate_hash] = route
+    for event in recruitment_values:
+        var candidate_hash := String(event.get("candidate_hash", ""))
+        if not route_by_hash.has(candidate_hash):
+            return false
+        if String(event.get("route_hash", "")) != String(route_by_hash[candidate_hash].get("route_hash", "")):
+            return false
+        if String(event.get("recruitment_event_hash", "")) != Par0Kernel.recruitment_event_hash(event, SCHEMA, VERSION):
             return false
     return true
 
@@ -607,31 +814,7 @@ func _refresh_population_hashes() -> void:
     population_hash = _population_hash(records)
 
 func _route_hash(route: Dictionary) -> String:
-    return "|".join(PackedStringArray([
-        SCHEMA, VERSION, "route",
-        String(route.get("candidate_hash", "")),
-        str(int(route.get("generation", -1))),
-        str(int(route.get("dispersal_seed", 0))),
-        str(int(route.get("parent_cell_index", -1))),
-        str(int(route.get("dx_cells", 0))), str(int(route.get("dy_cells", 0))),
-        "%.9f" % float(route.get("distance_m", 0.0)),
-        str(int(route.get("destination_cell_index", -1))),
-        "1" if bool(route.get("in_patch", false)) else "0",
-        String(route.get("out_of_patch_rule", "")),
-    ])).sha256_text()
-
-func _recruitment_event_hash(event: Dictionary) -> String:
-    return "|".join(PackedStringArray([
-        SCHEMA, VERSION, "recruitment",
-        String(event.get("candidate_hash", "")), String(event.get("route_hash", "")),
-        str(int(event.get("generation", -1))), str(int(event.get("destination_cell_index", -1))),
-        String(event.get("environment_cell_hash", "")), String(event.get("evaluation_hash", "")),
-        "%.9f" % float(event.get("shadow_fitness", 0.0)),
-        "%.9f" % float(event.get("establishment_capacity", 0.0)),
-        "%.9f" % float(event.get("establishment_probability", 0.0)),
-        "%.9f" % float(event.get("establishment_gate", 0.0)),
-        "1" if bool(event.get("eligible", false)) else "0", String(event.get("reason", "")),
-    ])).sha256_text()
+    return Stream1RouteKernel.route_hash(route, SCHEMA, VERSION)
 
 func _record_hash(record: Dictionary) -> String:
     return "|".join(PackedStringArray([
@@ -651,18 +834,10 @@ func _candidate_pool_hash(source: Array[Dictionary]) -> String:
     return (SCHEMA + "|" + VERSION + "|candidate-pool|" + "|".join(hashes)).sha256_text()
 
 func _dispersal_pool_hash(source: Array[Dictionary]) -> String:
-    var hashes := PackedStringArray()
-    for value in source:
-        hashes.append(String(value.get("route_hash", "")))
-    hashes.sort()
-    return (SCHEMA + "|" + VERSION + "|route-pool|" + "|".join(hashes)).sha256_text()
+    return Stream1RouteKernel.route_pool_hash(source, SCHEMA, VERSION)
 
 func _recruitment_hash(source: Array[Dictionary]) -> String:
-    var hashes := PackedStringArray()
-    for value in source:
-        hashes.append(String(value.get("recruitment_event_hash", "")))
-    hashes.sort()
-    return (SCHEMA + "|" + VERSION + "|recruitment-pool|" + "|".join(hashes)).sha256_text()
+    return Par0Kernel.recruitment_pool_hash(source, SCHEMA, VERSION)
 
 func _occupied_map_hash(source: Array[Dictionary]) -> String:
     var addresses := PackedStringArray()
@@ -699,12 +874,6 @@ func _state_hash(snapshot: Dictionary) -> String:
         String(snapshot.get("hereditary_pool_hash", "")), String(snapshot.get("population_hash", "")),
     ])).sha256_text()
 
-func _seed48(key: String) -> int:
-    return key.sha256_text().substr(0, 12).hex_to_int()
-
-func _unit01(key: String) -> float:
-    return float(key.sha256_text().substr(0, 12).hex_to_int()) / 281474976710655.0
-
 func _reset() -> void:
     initialized = false
     evolution_enabled = true
@@ -718,6 +887,10 @@ func _reset() -> void:
     _candidate_executor = null
     _candidate_executor_calls = 0
     _last_candidate_meta = {}
+    ## STREAM1: no executor survives a simulation reset/rebuild.
+    _generation_stream_executor = null
+    _generation_stream_executor_calls = 0
+    _last_stream_meta = {}
     cell_size_m = 0.0
     evolution_seed = 0
     source_patch_hash = ""
