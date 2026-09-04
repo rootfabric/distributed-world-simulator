@@ -47,16 +47,23 @@ func _initialize() -> void:
 	var expected_affected := [Observation.REGION_IMPACT, Observation.REGION_STABLE]
 	expected_affected.sort()
 	_require(affected == expected_affected, "canonical break refreshes only impact + structural projection dependencies")
-	_require(String(result["stale_block_error_before_rebuild"]) == "BRIDGE2_MIXED_STEP_BLOCKED", "mixed execution blocks on stale projection")
-	_require(String(result["stale_block_error_after_full_refresh"]) == "BRIDGE2_MIXED_STEP_BLOCKED", "structural STALE still blocks after FULL refresh")
-	_require(float(result["impact_rebuild_handoff_error"]) == 0.0, "FULL projection refresh has exact state handoff")
-	_require(float(result["structural_rebuild_handoff_error"]) == 0.0, "STRUCTURAL_BAKE rebuild has exact state handoff")
+	_require(String(result["stale_block_error_before_rebuild"]) == "BRIDGE2_MIXED_STEP_BLOCKED", "mixed execution blocks while affected slices are stale")
+	_require(String(result["sequential_single_region_rebuild_error"]) == "BRIDGE2_REBUILD_REGISTRY_FAILED", "single-region rebuild fails closed for multi-region mutation")
+	var atomic_regions: Array = Array(result["atomic_rebuild_regions"]).duplicate()
+	atomic_regions.sort()
+	_require(atomic_regions == expected_affected, "atomic rebuild covers the full affected region set")
+	var handoff_errors: Dictionary = result["atomic_rebuild_handoff_errors"]
+	_require(handoff_errors.size() == 2, "atomic rebuild records both state handoffs")
+	_require(float(handoff_errors[Observation.REGION_IMPACT]) == 0.0, "FULL projection refresh has exact state handoff")
+	_require(float(handoff_errors[Observation.REGION_STABLE]) == 0.0, "STRUCTURAL_BAKE rebuild has exact state handoff")
+	_require(float(result["impact_rebuild_handoff_error"]) == 0.0, "impact compatibility handoff field exact")
+	_require(float(result["structural_rebuild_handoff_error"]) == 0.0, "structural compatibility handoff field exact")
 	_require(float(result["mixed_full_max_state_delta"]) <= 1.0e-12, "mixed executable flow equals FULL reference")
 
 	var final_states := {}
 	for region in result["region_states"]:
 		final_states[String(region["region_id"])] = String(region["artifact_state"])
-	_require(String(final_states[Observation.REGION_IMPACT]) == "FULL", "impact region remains FULL after refresh")
+	_require(String(final_states[Observation.REGION_IMPACT]) == "FULL", "impact region remains FULL after atomic refresh")
 	_require(String(final_states[Observation.REGION_STABLE]) == "READY", "structural region rebaked READY")
 	_require(String(final_states[Observation.REGION_DYNAMIC]) == "READY", "DYNAMIC_ROM remains READY")
 	_require(String(final_states[Observation.REGION_HYBRID]) == "READY", "HYBRID_BAKE remains READY")
@@ -102,5 +109,5 @@ func _finish() -> void:
 		printerr("FABRIC COMPLEX1B Mixed Powered E2E Acceptance: FAIL (%d successful assertions)" % _checks)
 		quit(1)
 		return
-	print("FABRIC COMPLEX1B Mixed Powered E2E Acceptance: PASS (%d assertions) FULL+STRUCTURAL_BAKE+DYNAMIC_ROM+HYBRID_BAKE causal=FULL_REFERENCE" % _checks)
+	print("FABRIC COMPLEX1B Mixed Powered E2E Acceptance: PASS (%d assertions) atomic_rebuild=impact+stable mixed=FULL_REFERENCE" % _checks)
 	quit(0)
