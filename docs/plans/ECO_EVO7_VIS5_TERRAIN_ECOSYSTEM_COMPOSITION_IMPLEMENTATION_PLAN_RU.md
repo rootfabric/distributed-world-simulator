@@ -1,6 +1,6 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 CLOSED / VIS5.4 CLOSED / VIS5.5 CURRENT  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 CLOSED / VIS5.4 CLOSED / VIS5.5 CLOSED — VIS5 LINE READY FOR PLAY1 HANDOFF  
 Обновлено: 2026-09-04  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
@@ -103,7 +103,7 @@ VIS5.3 Mixed-Strata Composition Lab                         ✅ CLOSED
 VIS5.4 Composition LOD / Streaming Local Gate               ✅ CLOSED
   |
   v
-★ VIS5.5 Visual Evidence / Integrated PLAY1 Handoff ★       🟡 CURRENT
+VIS5.5 Visual Evidence / Integrated PLAY1 Handoff           ✅ CLOSED
 ~~~
 
 ## VIS5.0 — CLOSED
@@ -464,7 +464,7 @@ docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_4_COMPOSITION_LOD_STREAMING_LOCAL_GATE
 
 Generic Project Control remains separately red on pre-existing global Matter/registry architecture-ownership dependency drift; VIS5.4 files are not in those findings. Это фиксируется как внешний control-plane debt и не объявляется GREEN.
 
-## VIS5.5 — CURRENT — Visual Evidence / Integrated PLAY1 Handoff
+## VIS5.5 — CLOSED — Visual Evidence / Integrated PLAY1 Handoff
 
 VIS5.5 должен превратить уже доказанный mixed composition runtime в законченный graphical evidence / integration handoff.
 
@@ -534,6 +534,69 @@ PERF2.CONV GREEN
 PLAY1 integrated acceptance
 ~~~
 
+### Exact closure evidence
+
+~~~text
+exact executable subject HEAD:
+fb1a7ac21037e02033eae6d7e778ed8757514e19
+
+exact executable subject TREE:
+89551693f0cbac555a5026424d36b50cd35b8804
+
+source-export run:
+33867446070 SUCCESS
+
+artifact:
+9934516417
+
+source tar SHA-256:
+59ec27aa62b159ebeffc3897230406faa62c5d6204019f783318d7d64c91b021
+
+canonical Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+RUN_ECO_EVO7_VIS5_5_TESTS.sh:
+RC = 0
+
+VIS5.0: 87 / 87 PASS
+VIS5.1: 70 / 70 PASS
+VIS5.2: 57 / 57 PASS
+VIS5.3: 101 / 101 PASS
+VIS5.4: 92 / 92 PASS
+VIS5.5: 114 / 114 PASS
+
+aggregate log SHA-256:
+59e35d98d04f53d81e2c37600a039cff74007f4d39c109aba84af64c65d643fe
+~~~
+
+Graphical evidence is real OpenGL Compatibility rendering under Xvfb/llvmpipe, not the dummy headless renderer:
+
+~~~text
+6 / 6 PNG @ 1280x720
+bundle hash:   cff5f4fadd14f056075f39697458ffcd4e427a7473db7f27c922db411218cd98
+manifest SHA:  31d533824b8cafbd182b970b13acc4876b8137e8f5540075be49253a221d988d
+handoff hash:  bc6cc2f5a2301e0832d8ddb53a8145ce83dc83fb0d2313fe1b3cc1e5d49a5df9
+~~~
+
+Final streaming-return evidence:
+
+~~~text
+view:                  RETURN_AFTER_STREAMING
+mode:                  NEAR
+macro records:         63
+macro visible:         62
+ground cover:          4500 / 4500
+terrain rocks:         146 / 146
+render-origin recenter: 2
+Earth rebuild:          2
+region roundtrip:       1
+same-seed restored:     true
+ecology identity drift: false
+procedural trees:       suppressed
+~~~
+
+VIS5.5 therefore closes the visual-composition line as `READY_FOR_PLAY1_HANDOFF`. It deliberately does **not** claim final PLAY1 performance acceptance; `PERF2.CONV` remains mandatory.
+
 ## Что специально не делаем
 
 ~~~text
@@ -555,12 +618,13 @@ VIS5.1 ✅ CLOSED
 VIS5.2 ✅ CLOSED
 VIS5.3 ✅ EXACT DOUBLE-GODOT GREEN / CLOSED
 VIS5.4 ✅ EXACT DOUBLE-GODOT GREEN / CLOSED
+VIS5.5 ✅ EXACT DOUBLE-GODOT + GRAPHICAL EVIDENCE GREEN / CLOSED
 
-CURRENT:
-★ VIS5.5 Visual Evidence / Integrated PLAY1 Handoff ★
+VIS5 LINE:
+READY_FOR_PLAY1_HANDOFF
 
-FINAL JOIN AFTER VIS5.5:
-PERF2.CONV + PLAY1 integrated acceptance
+CURRENT EXTERNAL JOIN:
+★ PERF2.CONV / PLAY1 Integrated Acceptance ★
 ~~~
 
 ## Durable closures
@@ -571,4 +635,5 @@ docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_1_TERRAIN_SURFACE_FRAME_ADAPTER_EXACT_
 docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_2_NONCANONICAL_GROUND_COVER_BRIDGE_EXACT_VERIFIED_CLOSED_R1_RU.md
 docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_3_MIXED_STRATA_COMPOSITION_LAB_EXACT_VERIFIED_CLOSED_R1_RU.md
 docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_4_COMPOSITION_LOD_STREAMING_LOCAL_GATE_EXACT_VERIFIED_CLOSED_R1_RU.md
+docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUAL_EVIDENCE_INTEGRATED_PLAY1_HANDOFF_EXACT_VERIFIED_CLOSED_R1_RU.md
 ~~~
