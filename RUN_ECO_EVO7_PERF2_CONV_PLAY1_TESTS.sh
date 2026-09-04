@@ -48,6 +48,7 @@ done
 [[ "$(git rev-parse "$VIS55_EXEC_HEAD^{tree}")" == "$VIS55_EXEC_TREE" ]] || { echo "PLAY1 BLOCKED: VIS5.5 executable tree mismatch" >&2; exit 4; }
 
 grep -Fq "$PERF2_RUNTIME_HEAD" docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_CONV_R3_ACCEPTED_RU.md
+grep -Fq "$PERF2_CONTROL_HEAD" docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_CONV_R3_ACCEPTED_RU.md
 grep -Fq "$PERF2_REPORT_HASH" docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_CONV_R3_ACCEPTED_RU.md
 grep -Fq "$VIS55_EXEC_HEAD" docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUAL_EVIDENCE_INTEGRATED_PLAY1_HANDOFF_EXACT_VERIFIED_CLOSED_R1_RU.md
 grep -Fq "$VIS55_HANDOFF_HASH" docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUAL_EVIDENCE_INTEGRATED_PLAY1_HANDOFF_EXACT_VERIFIED_CLOSED_R1_RU.md
@@ -55,8 +56,8 @@ grep -Fq "$VIS55_HANDOFF_HASH" docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUA
 echo "PLAY1 exact HEAD=$TARGET_HEAD"
 echo "PLAY1 exact TREE=$TARGET_TREE"
 echo "PLAY1 Godot=$ACTUAL_GODOT"
-echo "PLAY1 accepted PERF2.CONV=$PERF2_RUNTIME_HEAD report=$PERF2_REPORT_HASH"
-echo "PLAY1 exact-closed VIS5.5=$VIS55_EXEC_HEAD handoff=$VIS55_HANDOFF_HASH"
+echo "PLAY1 accepted PERF2.CONV=$PERF2_RUNTIME_HEAD control=$PERF2_CONTROL_HEAD report=$PERF2_REPORT_HASH"
+echo "PLAY1 exact-closed VIS5.5=$VIS55_EXEC_HEAD closure=$VIS55_CLOSURE_HEAD handoff=$VIS55_HANDOFF_HASH"
 echo "PLAY1 prerequisite policy=NO_RERUN_ACCEPTED_PERF2_TIMING_CAMPAIGN"
 
 if [[ ! -f "$ROOT/.godot/uid_cache.bin" ]]; then
@@ -65,8 +66,20 @@ fi
 
 export ECO_PLAY1_TARGET_HEAD="$TARGET_HEAD"
 export ECO_PLAY1_TARGET_TREE="$TARGET_TREE"
+SAMPLE_DIR="$ROOT/artifacts/perf2/play1-integrated-run"
+rm -rf "$SAMPLE_DIR"
+mkdir -p "$SAMPLE_DIR"
+export ECO_PLAY1_SAMPLE_DIR="$SAMPLE_DIR"
 
-"$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_perf2_conv_play1_integrated_acceptance.gd
+for repetition in 0 1 2; do
+  echo "PLAY1 fresh repetition $repetition/2"
+  ECO_PLAY1_REPETITION="$repetition" \
+  ECO_PLAY1_SAMPLE_PATH="$SAMPLE_DIR/sample-$repetition.json" \
+    "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_perf2_conv_play1_worker.gd
+  test -s "$SAMPLE_DIR/sample-$repetition.json"
+done
+
+"$GODOT_BIN" --headless --path "$ROOT" --script res://tests/ecology/eco_evo7_perf2_conv_play1_aggregate_acceptance.gd
 
 FINAL_HEAD="$(git rev-parse HEAD)"
 FINAL_TREE="$(git rev-parse 'HEAD^{tree}')"
