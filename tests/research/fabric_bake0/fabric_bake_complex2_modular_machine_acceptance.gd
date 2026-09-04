@@ -79,7 +79,10 @@ func _test_experiment() -> void:
 	_check(int(result["contact_zone_count"]) == 3, "experiment has 3 contact zones")
 	_check(int(result["functional_path_count"]) == 2, "experiment has 2 functional paths")
 	_check(int(result["module_revision"]) == 102, "two canonical module events advance revision exactly twice")
-	_check(Array(result["applied_event_ids"]) == [Fixture.EVENT_DETACH, Fixture.EVENT_SECOND], "two module events committed exactly once and sorted")
+	var machine_events: Array = Array(result["applied_event_ids"]).duplicate()
+	var expected_machine_events := [Fixture.EVENT_DETACH, Fixture.EVENT_SECOND]
+	expected_machine_events.sort()
+	_check(machine_events == expected_machine_events, "two module events committed exactly once as deterministic sorted set")
 
 	var detached: Array = result["detached_component"]
 	_check(detached == [Fixture.DETACH_MODULE_ID], "first event detaches exactly one end module")
