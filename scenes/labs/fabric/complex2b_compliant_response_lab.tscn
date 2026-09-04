@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/fabric/complex2b_compliant_response_lab.gd" id="1_complex2b"]
+
+[node name="COMPLEX2BCompliantResponseLab" type="Node3D"]
+script = ExtResource("1_complex2b")
+auto_play = true
+stage_interval_seconds = 2.5
