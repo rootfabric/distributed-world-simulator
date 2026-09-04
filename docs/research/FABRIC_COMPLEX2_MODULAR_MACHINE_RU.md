@@ -346,6 +346,17 @@ D/E global Project Control: RED — separate pre-existing control-plane drift
 
 No D/E evidence claims otherwise.
 
+# Exact-vs-current branch boundary
+
+The last exact-tested executable subject is:
+
+```text
+b618c449b6dae5a25a14d24bfed87dbc2832d125
+TREE ed5450dc71f4b0fb707b18af5c6b1584f73199ef
+```
+
+Commits after that subject are documentation/evidence-only. No executable D/E file is modified after exact verification.
+
 # Что осталось для COMPLEX2 CLOSED
 
 ```text
