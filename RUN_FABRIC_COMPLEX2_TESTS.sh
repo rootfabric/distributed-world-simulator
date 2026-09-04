@@ -11,11 +11,11 @@ test -x "$GODOT_BIN"
 test "$("$GODOT_BIN" --version | head -n1 | tr -d '\r')" = "$EXPECTED_GODOT_VERSION"
 test "$(sha256sum "$GODOT_BIN" | awk '{print $1}')" = "$EXPECTED_GODOT_SHA256"
 
-run_script() {
+run_to_log() {
   local script="$1"
   local marker="$2"
-  local log pid started
-  log="$(mktemp)"
+  local log="$3"
+  local pid started marker_seen=0
   started="$(date +%s)"
   env BREAKPOINT_RUNTIME_DISABLED=1 "$GODOT_BIN" --headless --path "$ROOT" --script "$script" >"$log" 2>&1 &
   pid=$!
@@ -23,42 +23,63 @@ run_script() {
     if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$log"; then
       kill -TERM "$pid" 2>/dev/null || true
       wait "$pid" 2>/dev/null || true
-      cat "$log"
-      rm -f "$log"
       return 4
     fi
     if grep -Fq "$marker" "$log"; then
+      marker_seen=1
       break
     fi
     if (( $(date +%s) - started >= TIMEOUT_SECONDS )); then
       kill -TERM "$pid" 2>/dev/null || true
       wait "$pid" 2>/dev/null || true
-      cat "$log"
-      rm -f "$log"
       return 124
     fi
     sleep 0.25
   done
-  wait "$pid" || status=$?
-  status="${status:-0}"
-  cat "$log"
-  if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$log"; then
-    rm -f "$log"
-    return 4
+  if (( marker_seen == 1 )); then
+    for _ in $(seq 1 20); do
+      if ! kill -0 "$pid" 2>/dev/null; then
+        break
+      fi
+      sleep 0.1
+    done
+    kill -TERM "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+  else
+    wait "$pid" 2>/dev/null || true
   fi
-  if [[ "$status" -ne 0 ]] || ! grep -Fq "$marker" "$log"; then
-    rm -f "$log"
-    return 5
-  fi
-  rm -f "$log"
+  grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$log" && return 4
+  grep -Fq "$marker" "$log"
 }
 
-run_script \
+bridge_log="$(mktemp)"
+left_log="$(mktemp)"
+right_log="$(mktemp)"
+trap 'rm -f "$bridge_log" "$left_log" "$right_log"' EXIT
+
+run_to_log \
   res://tests/research/fabric_bake0/fabric_bridge2_mixed_generic_machine_r1_acceptance.gd \
-  "FABRIC BRIDGE-2 Mixed Generic Machine R1 Acceptance: PASS"
+  "FABRIC BRIDGE-2 Mixed Generic Machine R1 Acceptance: PASS" \
+  "$bridge_log"
+cat "$bridge_log"
 
-run_script \
+run_to_log \
   res://tests/research/fabric_bake0/fabric_bake_complex2_modular_machine_acceptance.gd \
-  "FABRIC COMPLEX2 Modular Machine Acceptance: PASS"
+  "FABRIC COMPLEX2 Modular Machine Acceptance: PASS" \
+  "$left_log"
+run_to_log \
+  res://tests/research/fabric_bake0/fabric_bake_complex2_modular_machine_acceptance.gd \
+  "FABRIC COMPLEX2 Modular Machine Acceptance: PASS" \
+  "$right_log"
 
+cat "$left_log"
+cat "$right_log"
+
+left_hash="$(grep '^COMPLEX2_EXPERIMENT_HASH=' "$left_log" | tail -n1 | cut -d= -f2-)"
+right_hash="$(grep '^COMPLEX2_EXPERIMENT_HASH=' "$right_log" | tail -n1 | cut -d= -f2-)"
+test -n "$left_hash"
+test -n "$right_hash"
+test "$left_hash" = "$right_hash"
+
+echo "COMPLEX2 isolated replay hash=$left_hash"
 echo "FABRIC COMPLEX2 MODULAR MACHINE TESTS: PASS"
