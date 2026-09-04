@@ -10,9 +10,9 @@
   "expected_outcome": "P7.7 IN_PROGRESS on feature/v0-p7-bounded-terrain-mutation; Digging Playground becomes the mandatory acceptance stand with A-H test matrix.",
   "current_stage": "P7.7 Graphical Digging Slice",
   "stage_status": "P7_7_IN_PROGRESS",
-  "progress_note": "P7.6 is COMPLETE_MERGED with post-merge Project Control NON_RED. Explicit human directive activates P7.7 from canonical main ada3f79e02168046c6d1e1430fd25fc2224d7b7f and requires the Digging Playground A-H matrix.",
-  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.6 COMPLETE_MERGED",
-  "next_stage": "Implement bounded P7.7 product composition and Digging Playground, exact-test it, then Fresh Reviewer and Fresh Verifier.",
+  "progress_note": "P7.6 is COMPLETE_MERGED with post-merge Project Control NON_RED. Explicit human directive activates P7.7 from canonical main ada3f79e02168046c6d1e1430fd25fc2224d7b7f and requires the Digging Playground A-H matrix. Post-merge: authorized P7.7 runtime candidate 2009eb74af884a69fcf2274ccb45478e83340912 was merged to main via PR #487 (merge commit dc5d4a4de71598ff4e36f88489a066e57b574386, tree f43f584d71b80391dec025bcd1a48e326c2477d1); post-merge Project Control 33884922337 = FAILED with the expected V0 CRITICAL_DEPENDENCY_DRIFT (7 critical watched-path hits, exact list in rotation evidence); this activation passport is rotated onto the authorized merged frontier (V0-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-R1, reason AUTHORIZED_RUNTIME_FRONTIER_ADVANCE) with watched-path, criticality, frontier, dependency-detection and blocking semantics unchanged. This is a control-plane rotation, not a product regression.",
+  "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; P7.1-P7.6 COMPLETE_MERGED; P7.7 runtime MERGED via PR #487 (merge dc5d4a4de71598ff4e36f88489a066e57b574386); V0 activation passport rotated to authorized merged frontier",
+  "next_stage": "Post-merge full formal runtime train 2032/2032 on main containing merge dc5d4a4de71598ff4e36f88489a066e57b574386 with 0 failures and 0 fatal, then P7.7 closure. COMPLETE_MERGED is not declared before that gate.",
   "parent_branch_or_checkpoint": "main @ ada3f79e02168046c6d1e1430fd25fc2224d7b7f / P7.6 closure and exact post-merge audit canonical",
   "base_commit": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
   "dependencies": [
@@ -23,7 +23,9 @@
     "P7.4 COMPLETE_MERGED",
     "P7.5 COMPLETE_MERGED",
     "P7.6 COMPLETE_MERGED",
-    "P7.6 post-merge Project Control 33710956525 SUCCESS"
+    "P7.6 post-merge Project Control 33710956525 SUCCESS",
+    "P7.7 runtime MERGED via PR #487 (merge commit dc5d4a4de71598ff4e36f88489a066e57b574386, parent #2 authorized candidate 2009eb74af884a69fcf2274ccb45478e83340912)",
+    "V0 activation passport rotation V0-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-R1 (AUTHORIZED_RUNTIME_FRONTIER_ADVANCE; initial post-merge Project Control 33884922337 = FAILED, expected control-plane drift)"
   ],
   "owned_paths": [
     "config/control/branches/control__v0-p7-7-activation-r1.v1.json",
@@ -37,7 +39,8 @@
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-ACTIVATION-EVIDENCE-001.v1.json",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/events/V0-P7-R1-WO-001/0008-p7-7-activated.v1.json",
     "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
-    "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md"
+    "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
   ],
   "watched_paths": [
     "scripts/runtime/networked_gameplay/p7/**",
@@ -75,5 +78,110 @@
   ],
   "blockers": [],
   "health_declared": "YELLOW",
-  "cross_branch_overlap_enabled": true
+  "cross_branch_overlap_enabled": true,
+  "activation_passport_rotation": {
+    "schema": "distributed_world_simulator.activation_passport_rotation.v1",
+    "rotation_id": "V0-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-R1",
+    "rotation_reason": "AUTHORIZED_RUNTIME_FRONTIER_ADVANCE",
+    "failure_classification": "EXPECTED_V0_ACTIVATION_PASSPORT_DRIFT",
+    "product_regression": "NONE_FOUND",
+    "is_drift_absorption_not_waiver": true,
+    "previous_passport_state": {
+      "branch_head_pinned": "f69d0b9a8908b75f6653c4cd5735a0588a95ae84",
+      "passport_blob_sha": "2a54bbe54e41ef7a4996fd50204d6d31230d6fab",
+      "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+      "control_plane_revision": "PC0-2026-08-10-R1",
+      "passport_path": "config/control/branches/control__v0-p7-7-activation-r1.v1.json"
+    },
+    "previous_baseline": {
+      "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+      "base_commit_field": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+      "note": "base_commit control contract preserved unchanged by rotation"
+    },
+    "new_baseline": {
+      "main_head": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+      "main_tree": "f43f584d71b80391dec025bcd1a48e326c2477d1",
+      "pre_merge_main": "610c56122a774b2c55ab564cc2f79a3c861eb65e",
+      "authorized_runtime_candidate": "2009eb74af884a69fcf2274ccb45478e83340912",
+      "runtime_merge_pr": 487,
+      "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+      "baseline_semantics": "new accepted baseline == authorized merged runtime frontier; not a weakening of watched scope"
+    },
+    "trigger": {
+      "runtime_pr": 487,
+      "authorized_candidate": "2009eb74af884a69fcf2274ccb45478e83340912",
+      "merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+      "merged_tree": "f43f584d71b80391dec025bcd1a48e326c2477d1",
+      "merge_parents": [
+        "610c56122a774b2c55ab564cc2f79a3c861eb65e",
+        "2009eb74af884a69fcf2274ccb45478e83340912"
+      ],
+      "post_merge_project_control": {
+        "run": 33884922337,
+        "result": "FAILURE",
+        "head_sha": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+        "failure_reason": "V0 CRITICAL_DEPENDENCY_DRIFT",
+        "url": "https://github.com/rootfabric/distributed-world-simulator/actions/runs/33884922337"
+      }
+    },
+    "critical_dependency_snapshot": {
+      "intersection_method": "changed_files(610c56122a774b2c55ab564cc2f79a3c861eb65e..dc5d4a4de71598ff4e36f88489a066e57b574386) ∩ critical_watched_paths",
+      "merge_changed_files_total": 25,
+      "post_merge_critical_hits": [
+        "scripts/runtime/networked_gameplay/p7/p7_digging_playground.gd",
+        "scripts/runtime/networked_gameplay/p7/p7_graphical_digging_slice.gd",
+        "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_coordinator.gd",
+        "scripts/simulation/matter/mutation/matter_excavation_service.gd",
+        "scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd",
+        "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd",
+        "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_record.gd"
+      ],
+      "post_merge_watched_non_critical_hits": [
+        "scenes/labs/p7/p7_7_digging_playground.tscn"
+      ],
+      "critical_watched_paths_unchanged": [
+        "scripts/runtime/networked_gameplay/p7/**",
+        "scripts/simulation/matter/**",
+        "scripts/runtime/networked_gameplay/m4/**"
+      ],
+      "watched_paths_unchanged": [
+        "scripts/runtime/networked_gameplay/p7/**",
+        "scripts/runtime/networked_gameplay/sm1/**",
+        "scripts/simulation/matter/**",
+        "scripts/runtime/networked_gameplay/m4/**",
+        "scenes/labs/p7/**"
+      ]
+    },
+    "attribution": {
+      "pre_merge_main": {
+        "head": "610c56122a774b2c55ab564cc2f79a3c861eb65e",
+        "v0_state": "GREEN",
+        "project_control_run": 33864078733,
+        "project_control_result": "SUCCESS"
+      },
+      "candidate": {
+        "head": "2009eb74af884a69fcf2274ccb45478e83340912",
+        "project_control_run": 33864045086,
+        "project_control_result": "SUCCESS"
+      },
+      "post_merge_main": {
+        "head": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+        "v0_state": "RED CRITICAL_DEPENDENCY_DRIFT",
+        "project_control_run": 33884922337,
+        "project_control_result": "FAILURE"
+      },
+      "conclusion": "blocking V0 drift appeared exactly at the authorized runtime merge and is attributed to parent #2 of the merge commit"
+    },
+    "semantics_unchanged": {
+      "critical_watched_paths": true,
+      "watched_paths": true,
+      "blocking_status": true,
+      "frontier_semantics": true,
+      "dependency_detection": true,
+      "drift_predicates": true,
+      "base_commit": true
+    },
+    "g_eco_disposition": "G and ECO RED are pre-existing, non-blocking (G blocks_global_progress=false; ECO role RESEARCH_DESIGN_FRONTIER); untouched by this rotation",
+    "rotation_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
+  }
 }
