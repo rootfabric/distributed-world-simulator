@@ -1,0 +1,39 @@
+name: V0 P7.7 Formal Source Snapshot R3
+
+on:
+  pull_request:
+    branches:
+      - feature/v0-p7-bounded-terrain-mutation
+    paths:
+      - ".github/workflows/v0-p7-7-formal-source-snapshot-r3.yml"
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9440df5d2596bcbd39b071a2b2f27d4fc74ce42d
+          fetch-depth: 0
+      - name: Verify exact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d"
+          test "$(git rev-parse 'HEAD^{tree}')" = "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Archive exact checkout with git metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf /tmp/dws-p7-7-formal-9440df5d-with-git.tar.gz .
+          sha256sum /tmp/dws-p7-7-formal-9440df5d-with-git.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dws-p7-7-formal-9440df5d-with-git
+          path: /tmp/dws-p7-7-formal-9440df5d-with-git.tar.gz
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
