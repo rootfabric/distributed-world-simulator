@@ -1,0 +1,60 @@
+name: FABRIC COMPLEX2 Modular Machine Linux Double
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/fabric-complex2-modular-machine-r1
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    env:
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+    steps:
+      - name: Checkout exact COMPLEX2 subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      - name: Assert exact source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          bash -n RUN_FABRIC_COMPLEX2_TESTS.sh
+          git diff --check
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+      - name: Resolve canonical double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = "$EXPECTED_GODOT_VERSION"
+          test "$(sha256sum "$bin" | awk '{print $1}')" = "$EXPECTED_GODOT_SHA256"
+          echo "path=$bin" >> "$GITHUB_OUTPUT"
+      - name: Fresh import
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          BREAKPOINT_RUNTIME_DISABLED=1 "$GODOT_BIN" --headless --editor --path . --import
+      - name: Run BRIDGE-2 regression plus COMPLEX2
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: bash ./RUN_FABRIC_COMPLEX2_TESTS.sh
+      - name: Verify clean tree
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
