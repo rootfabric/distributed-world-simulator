@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/fabric/complex2_modular_machine_lab.gd" id="1_complex2"]
+
+[node name="COMPLEX2ModularMachineLab" type="Node3D"]
+script = ExtResource("1_complex2")
+auto_play = true
+stage_interval_seconds = 2.5

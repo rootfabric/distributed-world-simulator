@@ -1,0 +1,46 @@
+name: FABRIC COMPLEX2-D Independent Structural Failure Linux Double
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/fabric-complex2-modular-machine-r1
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      - name: Assert exact source
+        run: |
+          set -Eeuo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          bash -n RUN_FABRIC_COMPLEX2D_TESTS.sh
+          git diff --check
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+      - name: Resolve canonical double Godot
+        id: godot
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = "4.7.1.stable.double.custom_build.a13da4feb"
+          test "$(sha256sum "$bin" | awk '{print $1}')" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$bin" >> "$GITHUB_OUTPUT"
+      - name: Run exact COMPLEX2-D
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: bash ./RUN_FABRIC_COMPLEX2D_TESTS.sh
+      - name: Verify clean tree
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
