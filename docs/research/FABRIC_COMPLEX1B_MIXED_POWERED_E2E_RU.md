@@ -1,9 +1,10 @@
 # FABRIC COMPLEX1B — Visual Mixed-Representation Powered E2E
 
-**Статус:** IMPLEMENTED / LOCAL ATTACHED CANONICAL DOUBLE EXACT VERIFIED  
+**Статус:** ✅ CLOSED / LOCAL ATTACHED CANONICAL DOUBLE EXACT VERIFIED  
 **Ветка:** feature/fabric-complex1b-visual-mixed-e2e-r1  
 **Exact code subject:** 6eeba52b550f2d9e8fff8c4fd3c571fa88fbcfb8  
 **Exact TREE:** 92b4548f4cf70bd86087a47d949d2753a79ed08d  
+**Closure evidence:** validation/FABRIC_COMPLEX1B_CLOSURE.md  
 **Parents:** CX2-VIS + closed BRIDGE-2 @ c9dec386ea21....
 
 ## Цель
@@ -139,6 +140,24 @@ FABRIC BRIDGE-2 Mixed Generic Machine R1 Acceptance: PASS (125 assertions)
 initial mixed-flow max FULL delta=0
 
 Project Control на exact code subject: SUCCESS. Dedicated self-hosted Linux-double workflow может оставаться queued; он не подменяется этим локальным exact evidence.
+
+## Closure decision
+
+COMPLEX1B закрыт, потому что обязательные falsifiers и acceptance выполнены одновременно:
+
+- canonical object = 2000 parts;
+- FULL + STRUCTURAL_BAKE + CONTACT_BAKE + DYNAMIC_ROM + HYBRID_BAKE исполняются в одном mixed subject;
+- один active event owner;
+- derived canonical writes запрещены;
+- canonical BOND_BREAK exactly-once;
+- multi-region invalidation fail-closed;
+- atomic affected-set rebuild;
+- zero state handoff error;
+- MIXED == FULL reference <= 1e-12;
+- mechanical break → functional topology loss → lamp ON→OFF;
+- closed BRIDGE-2 regression PASS.
+
+Следующий authorized complex-system experiment: **COMPLEX2 — MODULAR MACHINE LAB**.
 
 ## Files
 
