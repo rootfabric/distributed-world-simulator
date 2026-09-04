@@ -123,24 +123,22 @@ static func build() -> Dictionary:
 	var impact_adapter := _replacement_adapter(session, registry, REGION_IMPACT, 2)
 	if impact_adapter.is_empty():
 		return _failure("COMPLEX1B_IMPACT_REPLACEMENT_FAILED")
-	var impact_rebuilt := Runtime.rebuild_region(session, registry, impact_adapter)
-	if not bool(impact_rebuilt.get("success", false)):
-		return _failure("COMPLEX1B_IMPACT_REBUILD_FAILED", impact_rebuilt)
-	session = impact_rebuilt["details"]["session"]
-	registry = impact_rebuilt["details"]["registry"]
+	var sequential_probe := Runtime.rebuild_region(session, registry, impact_adapter)
+	if bool(sequential_probe.get("success", false)):
+		return _failure("COMPLEX1B_SEQUENTIAL_REBUILD_UNEXPECTEDLY_SUCCEEDED", sequential_probe)
+	if String(sequential_probe.get("error_code", "")) != "BRIDGE2_REBUILD_REGISTRY_FAILED":
+		return _failure("COMPLEX1B_SEQUENTIAL_REBUILD_FAILURE_MISMATCH", sequential_probe)
 
-	var blocked_on_structural := Runtime.step(session, registry, {}, DT)
-	if bool(blocked_on_structural.get("success", false)):
-		return _failure("COMPLEX1B_STRUCTURAL_STALE_STEP_ACCEPTED", blocked_on_structural)
-
-	var structural_adapter := _replacement_adapter(session, registry, REGION_STABLE, 2)
-	if structural_adapter.is_empty():
-		return _failure("COMPLEX1B_STRUCTURAL_REPLACEMENT_FAILED")
-	var structural_rebuilt := Runtime.rebuild_region(session, registry, structural_adapter)
-	if not bool(structural_rebuilt.get("success", false)):
-		return _failure("COMPLEX1B_STRUCTURAL_REBUILD_FAILED", structural_rebuilt)
-	session = structural_rebuilt["details"]["session"]
-	registry = structural_rebuilt["details"]["registry"]
+	var atomic_rebuilt := _atomic_rebuild_regions(
+		session,
+		registry,
+		[REGION_IMPACT, REGION_STABLE],
+		2
+	)
+	if not bool(atomic_rebuilt.get("success", false)):
+		return atomic_rebuilt
+	session = atomic_rebuilt["session"]
+	registry = atomic_rebuilt["registry"]
 
 	for region_id in [REGION_IMPACT, REGION_STABLE, REGION_CONTACT, REGION_DYNAMIC, REGION_HYBRID]:
 		var gate := Runtime.can_execute_region(session, registry, region_id)
@@ -179,7 +177,14 @@ static func build() -> Dictionary:
 		counts[kind] = int(counts.get(kind, 0)) + 1
 
 	var power: Dictionary = full["power"]
-	var causal_equal := bool(power["before"]["on"]) and not bool(power["after"]["on"]) 		and Array(power["active_functional_bond_ids_after"]).is_empty() 		and String(power["event_id"]) == String(full["event"]["event_id"]) 		and String(resolution["event_id"]) == String(full["event"]["event_id"])
+	var causal_equal := (
+		bool(power["before"]["on"])
+		and not bool(power["after"]["on"])
+		and Array(power["active_functional_bond_ids_after"]).is_empty()
+		and String(power["event_id"]) == String(full["event"]["event_id"])
+		and String(resolution["event_id"]) == String(full["event"]["event_id"])
+	)
+	var handoff_errors: Dictionary = atomic_rebuilt["handoff_errors"]
 
 	var observation := {
 		"success": true,
@@ -198,6 +203,7 @@ static func build() -> Dictionary:
 		"projection_mutable_source_ids": Array(after_master["authority"]["mutable_source_ids"]).duplicate(),
 		"projection_readonly_source_ids": Array(after_master["authority"]["readonly_source_ids"]).duplicate(),
 		"affected_regions": affected,
+		"atomic_rebuild_regions": Array(atomic_rebuilt["rebuilt_regions"]).duplicate(),
 		"region_states": region_states,
 		"representation_kinds": kinds,
 		"representation_part_counts": counts,
@@ -215,11 +221,12 @@ static func build() -> Dictionary:
 		},
 		"power": Dictionary(power).duplicate(true),
 		"mixed_full_max_state_delta": max_mixed_full_delta,
-		"impact_rebuild_handoff_error": float(impact_rebuilt["details"]["state_handoff_error"]),
-		"structural_rebuild_handoff_error": float(structural_rebuilt["details"]["state_handoff_error"]),
+		"impact_rebuild_handoff_error": float(handoff_errors[REGION_IMPACT]),
+		"structural_rebuild_handoff_error": float(handoff_errors[REGION_STABLE]),
+		"atomic_rebuild_handoff_errors": handoff_errors.duplicate(true),
 		"causal_equal_to_full": causal_equal,
 		"stale_block_error_before_rebuild": String(blocked_before_rebuild.get("error_code", "")),
-		"stale_block_error_after_full_refresh": String(blocked_on_structural.get("error_code", "")),
+		"sequential_single_region_rebuild_error": String(sequential_probe.get("error_code", "")),
 		"stages": [
 			"MIXED_BASELINE",
 			"IMPACT_FULL_OWNS_EVENT",
@@ -238,6 +245,7 @@ static func build() -> Dictionary:
 		"lamp_before": observation["power"]["before"]["on"],
 		"lamp_after": observation["power"]["after"]["on"],
 		"causal_equal_to_full": observation["causal_equal_to_full"],
+		"atomic_rebuild_regions": observation["atomic_rebuild_regions"],
 	})
 	return observation
 
@@ -374,6 +382,68 @@ static func _replacement_adapter(session: Dictionary, registry: Dictionary, regi
 		float(old["adapter"]["damping"]),
 		generation
 	)
+
+static func _atomic_rebuild_regions(
+	session: Dictionary,
+	registry: Dictionary,
+	region_ids: Array,
+	generation: int
+) -> Dictionary:
+	var ordered_ids: Array = region_ids.duplicate()
+	ordered_ids.sort()
+	var replacements := {}
+	var handoff_errors := {}
+	for raw_region_id in ordered_ids:
+		var region_id := String(raw_region_id)
+		var adapter := _replacement_adapter(session, registry, region_id, generation)
+		if adapter.is_empty():
+			return _failure("COMPLEX1B_ATOMIC_REPLACEMENT_FAILED", {"region_id": region_id})
+		replacements[region_id] = adapter
+		handoff_errors[region_id] = 0.0
+
+	var regions: Array = []
+	for raw_region in registry["regions"]:
+		var region: Dictionary = raw_region
+		var region_id := String(region["region_id"])
+		if replacements.has(region_id):
+			var adapter: Dictionary = replacements[region_id]
+			regions.append({
+				"region_id": region_id,
+				"representation_kind": String(adapter["representation_kind"]),
+				"state_id": String(adapter["state_id"]),
+				"adapter": adapter,
+			})
+		else:
+			regions.append(region.duplicate(true))
+
+	var next_registry := Registry.create(
+		session["live_master_frontier"],
+		session["live_master_authority"],
+		regions,
+		registry["interfaces"]
+	)
+	if next_registry.is_empty():
+		return _failure("COMPLEX1B_ATOMIC_REGISTRY_REBUILD_FAILED")
+
+	var next := session.duplicate(true)
+	next["registry_hash"] = String(next_registry["registry_hash"])
+	for raw_region_id in ordered_ids:
+		var region_id := String(raw_region_id)
+		var adapter: Dictionary = replacements[region_id]
+		next["artifact_states"][region_id] = "FULL" if String(adapter["representation_kind"]) == "FULL" else "READY"
+		next["invalidations_by_region"][region_id] = []
+	next["checksum"] = Utils.compute_checksum(next)
+
+	var checked := Runtime.validate_session(next, next_registry)
+	if not bool(checked.get("success", false)):
+		return _failure("COMPLEX1B_ATOMIC_SESSION_INVALID", checked)
+	return {
+		"success": true,
+		"session": next,
+		"registry": next_registry,
+		"rebuilt_regions": ordered_ids,
+		"handoff_errors": handoff_errors,
+	}
 
 static func _run_mixed_and_reference(session: Dictionary, registry: Dictionary, reference: Dictionary, steps: int) -> Dictionary:
 	var live_session := session
