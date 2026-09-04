@@ -1,0 +1,116 @@
+name: ECO EVO7 VIS5.5 Visual Evidence PLAY1 Handoff
+
+on:
+  push:
+    branches:
+      - feature/eco-evo7-vis5-terrain-ecosystem-composition-r1
+    paths:
+      - "scripts/labs/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff.gd"
+      - "scenes/labs/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff.tscn"
+      - "tests/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff_acceptance.gd"
+      - "tests/ecology/eco_evo7_vis5_5_capture_evidence.gd"
+      - "config/ecology/eco-evo7-vis5-5-play1-handoff.v1.json"
+      - "RUN_ECO_EVO7_VIS5_5_TESTS.sh"
+      - "RUN_ECO_EVO7_VIS5_5_TESTS.ps1"
+      - "CAPTURE_ECO_EVO7_VIS5_5_EVIDENCE.sh"
+      - "CAPTURE_ECO_EVO7_VIS5_5_EVIDENCE.ps1"
+      - "OPEN_ECO_EVO7_VIS5_5_EVIDENCE_LAB.sh"
+      - "OPEN_ECO_EVO7_VIS5_5_EVIDENCE_LAB.ps1"
+      - "docs/checkpoints/*VIS5_5*"
+      - ".github/workflows/evo7-vis5-5-visual-evidence-play1-handoff.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-vis5-5-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-exact:
+    name: exact VIS5.5 runtime and graphical handoff evidence
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout exact workflow HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact HEAD and clean tracked tree
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          test "$head" = "${{ github.sha }}"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "exact_head=$head"
+          echo "exact_tree=$tree"
+
+      - name: Resolve canonical double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
+          FALLBACK_CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED_GODOT_BIN"
+          if [[ -z "$godot" ]]; then godot="$FALLBACK_CONFIGURED_GODOT_BIN"; fi
+          if [[ -z "$godot" ]]; then godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"; fi
+          test -x "$godot"
+          version="$("$godot" --version | head -n 1 | tr -d '\r')"
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "Godot identity: $version"
+          sha256sum "$godot"
+
+      - name: Run VIS5.5 exact regression
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -euo pipefail
+          bash ./RUN_ECO_EVO7_VIS5_5_TESTS.sh
+
+      - name: Capture real GL Compatibility evidence
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/eco_vis5_5_visual_evidence
+          if command -v xvfb-run >/dev/null 2>&1; then
+            DWS_VIS55_EVIDENCE_DIR="$PWD/artifacts/eco_vis5_5_visual_evidence" \
+              xvfb-run -a -s '-screen 0 1280x720x24' \
+              "$GODOT_BIN" --display-driver x11 --rendering-method gl_compatibility --audio-driver Dummy --resolution 1280x720 \
+              --path "$PWD" --script res://tests/ecology/eco_evo7_vis5_5_capture_evidence.gd
+          elif [[ -n "${DISPLAY:-}" ]]; then
+            DWS_VIS55_EVIDENCE_DIR="$PWD/artifacts/eco_vis5_5_visual_evidence" \
+              "$GODOT_BIN" --rendering-method gl_compatibility --audio-driver Dummy --resolution 1280x720 \
+              --path "$PWD" --script res://tests/ecology/eco_evo7_vis5_5_capture_evidence.gd
+          else
+            echo "VIS5.5 graphical evidence requires xvfb-run or DISPLAY" >&2
+            exit 1
+          fi
+          test -f artifacts/eco_vis5_5_visual_evidence/vis5_5_evidence_manifest.json
+          test "$(find artifacts/eco_vis5_5_visual_evidence -maxdepth 1 -name '*.png' | wc -l)" -eq 6
+          sha256sum artifacts/eco_vis5_5_visual_evidence/*
+
+      - name: Upload VIS5.5 graphical evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-vis5-5-visual-evidence-${{ github.sha }}
+          path: artifacts/eco_vis5_5_visual_evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assert tracked tree unchanged
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "tracked_tree_clean=true"
