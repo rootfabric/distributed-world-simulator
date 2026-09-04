@@ -1,0 +1,37 @@
+name: ECO PERF2.CONV PLAY1 Exact Source Export R1
+on:
+  push:
+    branches:
+      - validation/eco-perf2-conv-play1-source-export-r1
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact PLAY1 target
+        uses: actions/checkout@v4
+        with:
+          ref: fc042b32cf9c5b59cc6fc34d69d3de0739fdf3c8
+          fetch-depth: 0
+      - name: Assert exact target and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="fc042b32cf9c5b59cc6fc34d69d3de0739fdf3c8"
+          actual="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          test "$actual" = "$expected"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git archive --format=tar.gz --output=eco-perf2-conv-play1-exact-source-r1.tar.gz "$actual"
+          sha256sum eco-perf2-conv-play1-exact-source-r1.tar.gz | tee eco-perf2-conv-play1-exact-source-r1.sha256
+          echo "exact_head=$actual"
+          echo "exact_tree=$tree"
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-perf2-conv-play1-exact-source-r1
+          path: |
+            eco-perf2-conv-play1-exact-source-r1.tar.gz
+            eco-perf2-conv-play1-exact-source-r1.sha256
+          retention-days: 7
