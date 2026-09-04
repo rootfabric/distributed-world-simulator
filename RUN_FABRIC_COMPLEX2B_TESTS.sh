@@ -11,46 +11,74 @@ test -x "$GODOT_BIN"
 test "$("$GODOT_BIN" --version | head -n1 | tr -d '\r')" = "$EXPECTED_GODOT_VERSION"
 test "$(sha256sum "$GODOT_BIN" | awk '{print $1}')" = "$EXPECTED_GODOT_SHA256"
 
-run_exact() {
-  local script="$1"
-  local marker="$2"
-  local log="$3"
-  timeout "${TIMEOUT_SECONDS}s" env BREAKPOINT_RUNTIME_DISABLED=1 \
-    "$GODOT_BIN" --headless --path "$ROOT" --script "$script" >"$log" 2>&1
-  if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$log"; then
-    cat "$log"
-    return 4
-  fi
-  if ! grep -Fq "$marker" "$log"; then
-    cat "$log"
-    return 5
-  fi
+TMP_ROOT="$(mktemp -d)"
+trap 'rm -rf "$TMP_ROOT"' EXIT
+
+copy_project() {
+  local destination="$1"
+  mkdir -p "$destination"
+  tar \
+    --exclude='./.git' \
+    --exclude='./.godot' \
+    --exclude='./.import' \
+    -C "$ROOT" -cf - . | tar -C "$destination" -xf -
 }
 
-left_log="$(mktemp)"
-right_log="$(mktemp)"
-scene_log="$(mktemp)"
-trap 'rm -f "$left_log" "$right_log" "$scene_log"' EXIT
+run_isolated() {
+  local label="$1"
+  local script="$2"
+  local marker="$3"
+  local project="$TMP_ROOT/$label/project"
+  local home="$TMP_ROOT/$label/home"
+  local data="$TMP_ROOT/$label/data"
+  local config="$TMP_ROOT/$label/config"
+  local cache="$TMP_ROOT/$label/cache"
+  local log="$TMP_ROOT/$label/run.log"
+  local status=0
 
-run_exact \
+  mkdir -p "$home" "$data" "$config" "$cache"
+  copy_project "$project"
+
+  set +e
+  timeout "${TIMEOUT_SECONDS}s" env \
+    HOME="$home" \
+    XDG_DATA_HOME="$data" \
+    XDG_CONFIG_HOME="$config" \
+    XDG_CACHE_HOME="$cache" \
+    BREAKPOINT_RUNTIME_DISABLED=1 \
+    "$GODOT_BIN" --headless --path "$project" --script "$script" >"$log" 2>&1
+  status=$?
+  set -e
+
+  cat "$log"
+  if [[ "$status" -ne 0 ]]; then
+    echo "COMPLEX2-B isolated run failed label=$label status=$status" >&2
+    return "$status"
+  fi
+  if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' "$log"; then
+    return 4
+  fi
+  grep -Fq "$marker" "$log"
+}
+
+run_isolated \
+  replay-left \
   res://tests/research/fabric_bake0/fabric_bake_complex2b_compliant_response_acceptance.gd \
-  "FABRIC COMPLEX2-B Compliant Response Acceptance: PASS" \
-  "$left_log"
-run_exact \
+  "FABRIC COMPLEX2-B Compliant Response Acceptance: PASS"
+run_isolated \
+  replay-right \
   res://tests/research/fabric_bake0/fabric_bake_complex2b_compliant_response_acceptance.gd \
-  "FABRIC COMPLEX2-B Compliant Response Acceptance: PASS" \
-  "$right_log"
-run_exact \
+  "FABRIC COMPLEX2-B Compliant Response Acceptance: PASS"
+run_isolated \
+  scene-smoke \
   res://tests/research/fabric_bake0/fabric_bake_complex2b_scene_smoke.gd \
-  "FABRIC COMPLEX2-B Scene Smoke: PASS" \
-  "$scene_log"
+  "FABRIC COMPLEX2-B Scene Smoke: PASS"
 
-cat "$left_log"
-cat "$right_log"
-cat "$scene_log"
-
+left_log="$TMP_ROOT/replay-left/run.log"
+right_log="$TMP_ROOT/replay-right/run.log"
 left_hash="$(grep '^COMPLEX2B_EXPERIMENT_HASH=' "$left_log" | tail -n1 | cut -d= -f2-)"
 right_hash="$(grep '^COMPLEX2B_EXPERIMENT_HASH=' "$right_log" | tail -n1 | cut -d= -f2-)"
+
 test -n "$left_hash"
 test -n "$right_hash"
 test "$left_hash" = "$right_hash"
