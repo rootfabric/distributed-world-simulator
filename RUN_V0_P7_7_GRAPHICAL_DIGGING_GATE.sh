@@ -6,6 +6,7 @@ EXPECTED_HEAD="${2:-}"
 EXPECTED_GODOT="4.7.1.stable.double.custom_build.a13da4feb"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARTIFACT_ROOT="$ROOT/artifacts/runtime/v0-p7-7-graphical-digging"
+TEST_TIMEOUT_SECONDS="${P7_TEST_TIMEOUT_SECONDS:-300}"
 mkdir -p "$ARTIFACT_ROOT"
 
 if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
@@ -41,19 +42,51 @@ fatal_log_check() {
   fi
 }
 
+run_until_summary() {
+  local log="$1"
+  local summary="$2"
+  shift 2
+  rm -f "$log"
+  "$@" &
+  local pid=$!
+  local deadline=$((SECONDS + TEST_TIMEOUT_SECONDS))
+  local saw_summary=0
+
+  while kill -0 "$pid" >/dev/null 2>&1; do
+    if [[ -f "$log" ]] && grep -F "$summary" "$log" >/dev/null 2>&1; then
+      saw_summary=1
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 0.2
+      kill -KILL "$pid" >/dev/null 2>&1 || true
+      break
+    fi
+    if (( SECONDS >= deadline )); then
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 0.2
+      kill -KILL "$pid" >/dev/null 2>&1 || true
+      break
+    fi
+    sleep 0.2
+  done
+  wait "$pid" >/dev/null 2>&1 || true
+
+  fatal_log_check "$log"
+  if (( saw_summary == 0 )); then
+    grep -F "$summary" "$log" >/dev/null 2>&1 || {
+      tail -n 500 "$log" >&2
+      echo "Missing PASS summary before timeout/exit: $summary" >&2
+      return 1
+    }
+  fi
+}
+
 run_contract() {
   local name="$1"
   local script_path="$2"
   local summary="$3"
   local log="$ARTIFACT_ROOT/$name.log"
-
-  "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log" --script "$script_path"
-  fatal_log_check "$log"
-  grep -F "$summary" "$log" >/dev/null || {
-    tail -n 500 "$log" >&2
-    echo "Missing PASS summary: $summary" >&2
-    return 1
-  }
+  run_until_summary "$log" "$summary" \
+    "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log" --script "$script_path"
   echo "[V0-P7.7] PASS $name"
 }
 
@@ -64,51 +97,39 @@ fatal_log_check "$IMPORT_LOG"
 run_contract "p7-7-graphical-slice" \
   "res://tests/runtime/test_v0_p7_7_graphical_digging_slice.gd" \
   "V0-P7.7 graphical digging slice: PASS (52 assertions, 0 failures)"
-
 run_contract "p7-7-a-playground" \
   "res://tests/runtime/test_v0_p7_7_a_digging_playground.gd" \
   "V0-P7.7-A Digging Playground: PASS (20 assertions, 0 failures)"
-
 run_contract "p7-7-b-seam-near" \
   "res://tests/runtime/test_v0_p7_7_b_seam_near_single_region.gd" \
   "V0-P7.7-B seam-near single-region: PASS (20 assertions, 0 failures)"
-
 run_contract "mw10-c0-physical-output" \
   "res://tests/matter/transactions/test_mw10_canonical_physical_output.gd" \
   "MW10 canonical physical output: PASS (30 assertions, 0 failures)"
-
 run_contract "mw10-c1-durability" \
   "res://tests/matter/transactions/test_mw10_physical_output_durability.gd" \
   "MW10 physical output durability: PASS (60 assertions, 0 failures)"
-
 run_contract "p7-7-c2-delivery" \
   "res://tests/runtime/test_v0_p7_7_c2_mw10_physical_output_delivery.gd" \
   "V0-P7.7-C2 MW10 physical output to P7.3: PASS (42 assertions, 0 failures)"
-
 run_contract "p7-7-c3-true-ab" \
   "res://tests/runtime/test_v0_p7_7_c3_true_ab_end_to_end.gd" \
   "V0-P7.7-C3 true A+B end-to-end: PASS (61 assertions, 0 failures)"
-
 run_contract "p7-7-d-reservation-conflict" \
   "res://tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd" \
   "V0-P7.7-D MW10 reservation conflict: PASS (31 assertions, 0 failures)"
-
 run_contract "p7-7-e-actor-handoff" \
   "res://tests/runtime/test_v0_p7_7_e_actor_handoff_no_false_mw10.gd" \
   "V0-P7.7-E actor handoff no false MW10: PASS (24 assertions, 0 failures)"
-
 run_contract "p7-6-seam-composition" \
   "res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd" \
   "V0-P7.6 seam + multi-region composition: PASS (106 assertions, 0 failures)"
-
 run_contract "mw10-transactions" \
   "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd" \
   "MW10 cross-region Matter transactions: PASS"
-
 run_contract "mw10-process-recovery" \
   "res://tests/matter/transactions/test_mw10_cross_region_processes.gd" \
   "MW10 cross-region Matter processes: PASS"
-
 run_contract "mw4" \
   "res://tests/matter/mutation/test_mw4_matter_mutations.gd" \
   "MW4 matter mutations: PASS"
