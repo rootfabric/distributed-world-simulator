@@ -1,4 +1,4 @@
-name: PERF2.CONV R3 merge R12
+name: PERF2.CONV R3 provenance repair
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  merge:
+  patch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout automation trigger
@@ -17,129 +17,167 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Merge accepted R12 into convergence R3
+      - name: Patch convergence provenance to accepted R12
         shell: bash
         run: |
           set -euo pipefail
           TARGET='feature/eco-evo7-perf2-conv-stream1-vis4-r3'
-          CONV_BASE='639e7d011d8e4ab5832d81f6efab20b54da7ec8b'
-          ACCEPTED='ab115385e81375b224eb397cf6a9de071bd4e79e'
-          LS34='scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd'
+          EXPECTED='3d41fe4542782e24a33bbac388404679756b4d67'
 
           git config user.name 'rootfabric-perf2-conv-r3'
           git config user.email 'actions@users.noreply.github.com'
-          git fetch origin "$TARGET" 'control/eco-evo7-perf2-4-r12-closure'
+          git fetch origin "$TARGET"
           git checkout -B "$TARGET" "origin/$TARGET"
-          test "$(git rev-parse HEAD)" = "$CONV_BASE"
-
-          set +e
-          git merge --no-ff --no-commit "$ACCEPTED"
-          MERGE_RC=$?
-          set -e
-          if [[ "$MERGE_RC" -ne 0 && "$MERGE_RC" -ne 1 ]]; then
-            echo "unexpected merge rc=$MERGE_RC" >&2
-            exit 20
-          fi
-
-          mapfile -t UNMERGED < <(git diff --name-only --diff-filter=U)
-          printf 'unmerged=%s\n' "${UNMERGED[*]:-<none>}"
-          if [[ "${#UNMERGED[@]}" -ne 1 || "${UNMERGED[0]}" != "$LS34" ]]; then
-            echo 'R3 merge conflict set drifted; expected LS3.4 only' >&2
-            exit 21
-          fi
-
-          git checkout --ours -- "$LS34"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
 
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          p = Path('scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd')
-          s = p.read_text()
+          R12_HEAD = '840cfcea62ef7192b510235f915b849829654c6c'
+          R12_TREE = '967d674c0ba2349db949193969f16f91553761ea'
+          R12_CONTROL = 'ab115385e81375b224eb397cf6a9de071bd4e79e'
+          R12_REPORT = '16d3407abef3d3ff30cbe4293cb1278e1b18845b0b5332589587d543b134853b'
+          R12_CHECKPOINT = 'docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_4_R12_ACCEPTED_RU.md'
+          VIS49_HEAD = 'ab44617d8961add81a6c9f245c99d0b68eaeab52'
+          VIS49_TREE = '9d543a3db4f54a676e9f25152785c36a72c56a30'
+          MERGE_HEAD = '3d41fe4542782e24a33bbac388404679756b4d67'
+          MERGE_TREE = '415152ef85bd46b0c3f95bf3da826ec3f3dbb75f'
 
-          def one(old: str, new: str, label: str):
-              global s
-              n = s.count(old)
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          def one(text, old, new, label):
+              n = text.count(old)
               if n != 1:
-                  raise SystemExit(f'{label}: expected one anchor, found {n}')
-              s = s.replace(old, new, 1)
+                  raise SystemExit(f'{label}: expected exactly one anchor, found {n}')
+              return text.replace(old, new, 1)
 
-          one(
-              'var last_graph_reconstruction_evidence: Dictionary = {}\n\nfunc setup(',
-              '''var last_graph_reconstruction_evidence: Dictionary = {}\n\n## PERF2.4 R10/R12 ownership seams retained inside PERF2.CONV.\n## The optimized STREAM1 path may adopt already-fresh survivors and may\n## elide one redundant intermediate post-competition core snapshot.\n## Legacy keeps the historical copy/snapshot layers for deterministic A/B.\nvar _stream1_owned_survivor_adoption := false\nvar _stream1_post_snapshot_elision := false\n\nfunc setup(''',
-              'ownership vars',
-          )
+          # ------------------------------------------------------------------
+          # Linux runner: immutable prerequisite provenance, no perf reroll.
+          # ------------------------------------------------------------------
+          path = 'RUN_ECO_EVO7_PERF2_CONV_TESTS.sh'
+          s = read(path)
+          s = one(s,
+              'PERF24_HEAD="8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"\nPERF24_TREE="17635bb35101715205a960fdc41d16c179909101"\n',
+              f'PERF24_HEAD="{R12_HEAD}"\nPERF24_TREE="{R12_TREE}"\nPERF24_ACCEPTED_CONTROL_HEAD="{R12_CONTROL}"\nPERF24_REPORT_HASH="{R12_REPORT}"\nPERF24_ACCEPTANCE_CHECKPOINT="{R12_CHECKPOINT}"\n',
+              'shell R12 constants')
+          pattern = re.compile(r'TMP_ROOT="\$\(mktemp -d .*?echo "PERF2\.CONV VIS4\.9 exact prerequisite: PASS"\n\n', re.S)
+          replacement = f'''echo "=== immutable prerequisite provenance ==="\nif ! git merge-base --is-ancestor "$PERF24_HEAD" "$TARGET_HEAD"; then\n  echo "PERF2.CONV BLOCKED: accepted PERF2.4 runtime is not an ancestor" >&2\n  exit 4\nfi\nif ! git merge-base --is-ancestor "$PERF24_ACCEPTED_CONTROL_HEAD" "$TARGET_HEAD"; then\n  echo "PERF2.CONV BLOCKED: PERF2.4 acceptance control tip is not an ancestor" >&2\n  exit 4\nfi\nif ! git merge-base --is-ancestor "$VIS49_HEAD" "$TARGET_HEAD"; then\n  echo "PERF2.CONV BLOCKED: tested VIS4.9 prerequisite is not an ancestor" >&2\n  exit 4\nfi\nACCEPTANCE_PATH="$ROOT/$PERF24_ACCEPTANCE_CHECKPOINT"\nif [[ ! -f "$ACCEPTANCE_PATH" ]]; then\n  echo "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing" >&2\n  exit 4\nfi\ngrep -Fq "$PERF24_HEAD" "$ACCEPTANCE_PATH"\ngrep -Fq "$PERF24_TREE" "$ACCEPTANCE_PATH"\ngrep -Fq "$PERF24_REPORT_HASH" "$ACCEPTANCE_PATH"\necho "PERF2.CONV PERF2.4 immutable accepted prerequisite: PASS"\necho "PERF2.CONV VIS4.9 immutable tested prerequisite: PASS"\necho "PERF2.CONV prerequisite rerun policy=NO_RERUN_ACCEPTED_IMMUTABLE_EVIDENCE"\n\n'''
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f'shell prerequisite block: expected one block, found {n}')
+          if 'RUN_ECO_EVO7_PERF2_4_TESTS.sh' in s2 or 'RUN_ECO_EVO7_VIS4_9_TESTS.sh' in s2:
+              raise SystemExit('shell runner still reruns an immutable prerequisite')
+          write(path, s2)
 
-          one(
-              '''func set_generation_stream_executor(executor) -> bool:\n    if not initialized or core == null:\n        return false\n    return core.set_generation_stream_executor(executor)\n\nfunc clear_generation_stream_executor() -> void:\n    if core != null:\n        core.clear_generation_stream_executor()\n''',
-              '''func set_generation_stream_executor(executor) -> bool:\n    if not initialized or core == null:\n        return false\n    if not core.set_generation_stream_executor(executor):\n        return false\n    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n    if executor.has_method("get_telemetry"):\n        var telemetry: Dictionary = executor.get_telemetry()\n        var optimized_stream := (\n            String(telemetry.get("pipeline_mode", ""))\n            == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"\n        )\n        _stream1_owned_survivor_adoption = optimized_stream\n        _stream1_post_snapshot_elision = optimized_stream\n    return true\n\nfunc clear_generation_stream_executor() -> void:\n    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n    if core != null:\n        core.clear_generation_stream_executor()\n''',
-              'executor ownership setup',
-          )
+          # ------------------------------------------------------------------
+          # Windows runner: same immutable provenance contract as Linux.
+          # ------------------------------------------------------------------
+          path = 'RUN_ECO_EVO7_PERF2_CONV_TESTS.ps1'
+          s = read(path)
+          s = one(s,
+              '$Perf24Head = "8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"\n$Perf24Tree = "17635bb35101715205a960fdc41d16c179909101"\n',
+              f'$Perf24Head = "{R12_HEAD}"\n$Perf24Tree = "{R12_TREE}"\n$Perf24AcceptedControlHead = "{R12_CONTROL}"\n$Perf24ReportHash = "{R12_REPORT}"\n$Perf24AcceptanceCheckpoint = "{R12_CHECKPOINT}"\n',
+              'PowerShell R12 constants')
+          pattern = re.compile(r'\$TempRoot = Join-Path .*?New-Item -ItemType Directory -Path \$TempRoot -Force \| Out-Null\n\n', re.S)
+          s, n = pattern.subn('', s, count=1)
+          if n != 1:
+              raise SystemExit(f'PowerShell temp worktree setup: expected one, found {n}')
+          pattern = re.compile(r'    Write-Host "=== PERF2\.4 exact prerequisite transitive gate ===".*?    Write-Host "PERF2\.CONV VIS4\.9 exact prerequisite: PASS"\n\n', re.S)
+          replacement = '''    Write-Host "=== immutable prerequisite provenance ==="\n    & git -C $RootDir merge-base --is-ancestor $Perf24Head $TargetHead\n    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: accepted PERF2.4 runtime is not an ancestor" }\n    & git -C $RootDir merge-base --is-ancestor $Perf24AcceptedControlHead $TargetHead\n    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance control tip is not an ancestor" }\n    & git -C $RootDir merge-base --is-ancestor $Vis49Head $TargetHead\n    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: tested VIS4.9 prerequisite is not an ancestor" }\n\n    $AcceptancePath = Join-Path $RootDir $Perf24AcceptanceCheckpoint\n    if (-not (Test-Path -LiteralPath $AcceptancePath -PathType Leaf)) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing" }\n    $AcceptanceText = Get-Content -Raw -LiteralPath $AcceptancePath\n    foreach ($Token in @($Perf24Head, $Perf24Tree, $Perf24ReportHash)) {\n        if (-not $AcceptanceText.Contains($Token)) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing token $Token" }\n    }\n    Write-Host "PERF2.CONV PERF2.4 immutable accepted prerequisite: PASS"\n    Write-Host "PERF2.CONV VIS4.9 immutable tested prerequisite: PASS"\n    Write-Host "PERF2.CONV prerequisite rerun policy=NO_RERUN_ACCEPTED_IMMUTABLE_EVIDENCE"\n\n'''
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f'PowerShell prerequisite block: expected one, found {n}')
+          s = re.sub(r'    & git -C \$RootDir worktree remove --force \$Perf24Dir 2>\$null \| Out-Null\n', '', s)
+          s = re.sub(r'    & git -C \$RootDir worktree remove --force \$Vis49Dir 2>\$null \| Out-Null\n', '', s)
+          s = re.sub(r'    Remove-Item -LiteralPath \$TempRoot -Recurse -Force -ErrorAction SilentlyContinue\n\n', '', s)
+          if 'RUN_ECO_EVO7_PERF2_4_TESTS.ps1' in s or 'RUN_ECO_EVO7_VIS4_9_TESTS.ps1' in s:
+              raise SystemExit('PowerShell runner still reruns an immutable prerequisite')
+          if '$Perf24Dir' in s or '$Vis49Dir' in s or '$TempRoot' in s:
+              raise SystemExit('PowerShell stale temp-worktree variables remain')
+          write(path, s)
 
-          one(
-              '            core.records = survivors.duplicate(true)\n',
-              '''            core.records = (\n                survivors\n                if _stream1_owned_survivor_adoption\n                else survivors.duplicate(true)\n            )\n''',
-              'survivor adoption',
-          )
+          # ------------------------------------------------------------------
+          # Runtime composition provenance anchors.
+          # ------------------------------------------------------------------
+          path = 'scripts/ecology/perf/eco_evo7_perf2_conv_play0_stream1_vis4_composition_v1.gd'
+          s = read(path)
+          s = one(s,
+              'const PERF24_CANDIDATE_HEAD := "8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"',
+              f'const PERF24_CANDIDATE_HEAD := "{R12_HEAD}"',
+              'composition R12 head')
+          s = one(s,
+              'const ANCESTRY_MERGE_HEAD := "3ecfefa84381e25929991fe4d589a996ee2689c6"\nconst ANCESTRY_MERGE_TREE := "d6baa4342a4de7d7b8c7c19c62d5ce83d9320c13"',
+              f'const ANCESTRY_MERGE_HEAD := "{MERGE_HEAD}"\nconst ANCESTRY_MERGE_TREE := "{MERGE_TREE}"',
+              'composition R3 ancestry anchor')
+          write(path, s)
 
-          one(
-              '''    phase_started = Time.get_ticks_usec()\n    var post: Dictionary = core.get_snapshot()\n    last_postcompetition_population_hash = String(post["population_hash"])\n    var post_snapshot_ms := _elapsed_ms(phase_started)\n    if competition_enabled and int(pre.get("generation", 0)) > 0:\n        last_morphology_evidence = MorphologyEvidence.seal_snapshot(\n            last_morphology_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            int(post.get("record_count", -1))\n        )\n        last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(\n            last_graph_reconstruction_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            int(post.get("record_count", -1))\n        )\n\n    phase_started = Time.get_ticks_usec()\n    var snapshot := get_snapshot()\n    var snapshot_build_ms := _elapsed_ms(phase_started)\n    last_profile = {\n        "schema": PROFILE_SCHEMA,\n        "generation": int(pre.get("generation", -1)),\n        "record_count_precompetition": int(pre.get("record_count", 0)),\n        "record_count_postcompetition": int(post.get("record_count", 0)),\n''',
-              '''    phase_started = Time.get_ticks_usec()\n    var post_record_count := 0\n    if _stream1_post_snapshot_elision:\n        last_postcompetition_population_hash = String(core.population_hash)\n        post_record_count = core.records.size()\n    else:\n        var post: Dictionary = core.get_snapshot()\n        last_postcompetition_population_hash = String(post["population_hash"])\n        post_record_count = int(post.get("record_count", 0))\n    if last_postcompetition_population_hash.is_empty():\n        return {}\n    var post_snapshot_ms := _elapsed_ms(phase_started)\n    if competition_enabled and int(pre.get("generation", 0)) > 0:\n        last_morphology_evidence = MorphologyEvidence.seal_snapshot(\n            last_morphology_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            post_record_count\n        )\n        last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(\n            last_graph_reconstruction_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            post_record_count\n        )\n\n    phase_started = Time.get_ticks_usec()\n    var snapshot := get_snapshot()\n    var snapshot_build_ms := _elapsed_ms(phase_started)\n    last_profile = {\n        "schema": PROFILE_SCHEMA,\n        "generation": int(pre.get("generation", -1)),\n        "record_count_precompetition": int(pre.get("record_count", 0)),\n        "record_count_postcompetition": post_record_count,\n''',
-              'post snapshot + morphology seals',
-          )
+          # ------------------------------------------------------------------
+          # Acceptance: bind R12 prerequisite and merged LS3.4 semantics.
+          # Frozen integrated performance budgets remain untouched.
+          # ------------------------------------------------------------------
+          path = 'tests/ecology/eco_evo7_perf2_conv_stream1_vis4_acceptance.gd'
+          s = read(path)
+          s = one(s,
+              '\t\t_check(String(contract.get("accepted_stream1_head", "")) == Composition.ACCEPTED_STREAM1_HEAD, "PERF2.CONV accepted STREAM1 anchor exact")\n\t\t_check(String(contract.get("vis4_9_executable_head", "")) == Composition.VIS49_ACCEPTED_EXECUTABLE_HEAD, "PERF2.CONV VIS4.9 executable anchor exact")',
+              '\t\t_check(String(contract.get("accepted_stream1_head", "")) == Composition.ACCEPTED_STREAM1_HEAD, "PERF2.CONV accepted STREAM1 anchor exact")\n\t\t_check(String(contract.get("perf2_4_candidate_head", "")) == Composition.PERF24_CANDIDATE_HEAD, "PERF2.CONV accepted PERF2.4 R12 runtime anchor exact")\n\t\t_check(String(contract.get("vis4_9_executable_head", "")) == Composition.VIS49_ACCEPTED_EXECUTABLE_HEAD, "PERF2.CONV VIS4.9 executable anchor exact")',
+              'acceptance contract R12 check')
+          s = one(s,
+              '\t_check(Composition.DEFAULT_PARENTS_PER_CHUNK == 64, "PERF2.CONV STREAM1 chunk size frozen at 64")\n',
+              f'\t_check(Composition.DEFAULT_PARENTS_PER_CHUNK == 64, "PERF2.CONV STREAM1 chunk size frozen at 64")\n\t_check(Composition.PERF24_CANDIDATE_HEAD == "{R12_HEAD}", "PERF2.CONV PERF2.4 R12 prerequisite source-frozen")\n\t_check(Composition.ANCESTRY_MERGE_HEAD == "{MERGE_HEAD}", "PERF2.CONV R3 ancestry merge source-frozen")\n',
+              'controlled provenance checks')
+          s = one(s,
+              '\tvar renderer_source := FileAccess.get_file_as_string(\n\t\t"res://scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd"\n\t).to_lower()\n',
+              '\tvar renderer_source := FileAccess.get_file_as_string(\n\t\t"res://scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd"\n\t).to_lower()\n\tvar ls34_source := FileAccess.get_file_as_string(\n\t\t"res://scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd"\n\t)\n',
+              'LS3.4 source guard load')
+          s = one(s,
+              '\t_check(not composition_source.contains("multiplayer"), "PERF2.CONV has no network execution path")\n',
+              '\t_check(not composition_source.contains("multiplayer"), "PERF2.CONV has no network execution path")\n\t_check(ls34_source.contains("_stream1_owned_survivor_adoption"), "PERF2.CONV retains accepted R10 survivor ownership seam")\n\t_check(ls34_source.contains("_stream1_post_snapshot_elision"), "PERF2.CONV retains accepted R12 snapshot elision seam")\n\t_check(ls34_source.contains("last_postcompetition_population_hash = String(core.population_hash)"), "PERF2.CONV retains accepted R12 direct post-population hash")\n\t_check(ls34_source.contains("post_record_count = core.records.size()"), "PERF2.CONV retains accepted R12 direct post record count")\n\t_check(ls34_source.contains("MorphologyEvidence.seal_snapshot("), "PERF2.CONV retains tested VIS4 morphology evidence seal")\n\t_check(ls34_source.contains("GraphReconstructionEvidence.seal_snapshot("), "PERF2.CONV retains tested VIS4 reconstruction evidence seal")\n\t_check(not ls34_source.contains("_stream1_owned_field_adoption"), "PERF2.CONV excludes rejected R11 field adoption")\n',
+              'merged LS3.4 source guards')
+          write(path, s)
 
-          one(
-              '        "records": Array(base.get("records", [])).duplicate(true),\n',
-              '''        "records": (\n            Array(base.get("records", []))\n            if _stream1_post_snapshot_elision\n            else Array(base.get("records", [])).duplicate(true)\n        ),\n''',
-              'snapshot record adoption',
-          )
+          # Global stale-R2 assertion for the touched convergence control files.
+          stale = '8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3'
+          for path in [
+              'RUN_ECO_EVO7_PERF2_CONV_TESTS.sh',
+              'RUN_ECO_EVO7_PERF2_CONV_TESTS.ps1',
+              'scripts/ecology/perf/eco_evo7_perf2_conv_play0_stream1_vis4_composition_v1.gd',
+              'tests/ecology/eco_evo7_perf2_conv_stream1_vis4_acceptance.gd',
+          ]:
+              if stale in read(path):
+                  raise SystemExit(f'stale R2 prerequisite remains in {path}')
 
-          marker = '    last_competition_profile.clear()\n'
-          idx = s.rfind(marker)
-          if idx < 0:
-              raise SystemExit('reset marker missing')
-          insert_at = idx + len(marker)
-          s = s[:insert_at] + '    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n' + s[insert_at:]
-
-          forbidden = '_stream1_owned_field_adoption'
-          if forbidden in s:
-              raise SystemExit('R11 field adoption must not enter R3')
-
-          required = [
-              'survivors.append(record.duplicate(true))',
-              '_stream1_owned_survivor_adoption',
-              '== "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"',
-              'if _stream1_owned_survivor_adoption',
-              'else survivors.duplicate(true)',
-              '_stream1_post_snapshot_elision',
-              'last_postcompetition_population_hash = String(core.population_hash)',
-              'post_record_count = core.records.size()',
-              'var post: Dictionary = core.get_snapshot()',
-              'if _stream1_post_snapshot_elision',
-              'else Array(base.get("records", [])).duplicate(true)',
-              'MorphologyEvidence.seal_snapshot(',
-              'GraphReconstructionEvidence.seal_snapshot(',
+          # Frozen convergence performance budgets must remain byte-present.
+          report = read('scripts/ecology/perf/eco_evo7_perf2_conv_integrated_report_v1.gd')
+          frozen = [
+              'const MAX_P50_COMBINED_TO_SIM_RATIO := 2.50',
+              'const MAX_P95_COMBINED_TO_SIM_RATIO := 4.00',
+              'const MAX_SINGLE_COMBINED_GENERATION_MS := 5000.0',
+              'const MAX_CACHE_ENTRIES_PER_RECORD := 5',
+              'const MIN_FOREGROUND_FRAMES_PER_GENERATION := 1',
           ]
-          missing = [x for x in required if x not in s]
+          missing = [x for x in frozen if x not in report]
           if missing:
-              raise SystemExit(f'missing merged LS3.4 seams: {missing}')
-
-          p.write_text(s)
+              raise SystemExit(f'frozen PERF2.CONV budget drift: {missing}')
           PY
 
-          git add "$LS34"
-          test -z "$(git diff --name-only --diff-filter=U)"
+          git add RUN_ECO_EVO7_PERF2_CONV_TESTS.sh \
+                  RUN_ECO_EVO7_PERF2_CONV_TESTS.ps1 \
+                  scripts/ecology/perf/eco_evo7_perf2_conv_play0_stream1_vis4_composition_v1.gd \
+                  tests/ecology/eco_evo7_perf2_conv_stream1_vis4_acceptance.gd
 
-          # Merge must contain both exact prerequisites as parents/ancestors.
-          git merge-base --is-ancestor 'ab44617d8961add81a6c9f245c99d0b68eaeab52' HEAD
-          git merge-base --is-ancestor '840cfcea62ef7192b510235f915b849829654c6c' MERGE_HEAD
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 4
 
-          git commit -m 'merge(eco): converge accepted PERF2.4 R12 with tested VIS4.9'
-
-          MERGED_HEAD="$(git rev-parse HEAD)"
-          git merge-base --is-ancestor "$CONV_BASE" "$MERGED_HEAD"
-          git merge-base --is-ancestor "$ACCEPTED" "$MERGED_HEAD"
-          git merge-base --is-ancestor 'ab44617d8961add81a6c9f245c99d0b68eaeab52' "$MERGED_HEAD"
-
-          echo "PERF2.CONV R3 ancestry merge HEAD=$MERGED_HEAD"
+          git commit -m 'test(eco): bind PERF2.CONV R3 to accepted R12 provenance'
+          FINAL="$(git rev-parse HEAD)"
+          git merge-base --is-ancestor 'ab115385e81375b224eb397cf6a9de071bd4e79e' "$FINAL"
+          git merge-base --is-ancestor '840cfcea62ef7192b510235f915b849829654c6c' "$FINAL"
+          git merge-base --is-ancestor 'ab44617d8961add81a6c9f245c99d0b68eaeab52' "$FINAL"
+          echo "PERF2.CONV R3 provenance HEAD=$FINAL"
           echo "TREE=$(git rev-parse 'HEAD^{tree}')"
           git push origin "HEAD:$TARGET"
