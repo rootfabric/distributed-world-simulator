@@ -1,0 +1,352 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_vis5_terrain_ecosystem_composition_audit.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-VIS5.0.R1",
+  "status": "VIS5.5_CLOSED_READY_FOR_PLAY1_HANDOFF",
+  "base": {
+    "checkpoint": "VIS4.9 CLOSED",
+    "branch": "feature/eco-evo7-vis4-evolved-plant-morphology-r1",
+    "closure_head": "8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3",
+    "closure_tree": "8c423ea3579465cae398dd3297c97f0512acf825",
+    "exact_tested_vis4_9_head": "ab44617d8961add81a6c9f245c99d0b68eaeab52",
+    "exact_tested_vis4_9_tree": "9d543a3db4f54a676e9f25152785c36a72c56a30"
+  },
+  "authority": {
+    "presentation_only": true,
+    "ecology_write": false,
+    "genome_write": false,
+    "mutation_write": false,
+    "population_write": false,
+    "generation_write": false,
+    "terrain_write": false,
+    "persistence_write": false,
+    "network_write": false,
+    "perf2_4_write": false
+  },
+  "parallel_policy": {
+    "may_develop_while_perf2_4_verifies": true,
+    "perf2_sim_contract_unchanged": true,
+    "perf2_4_thresholds_unchanged": true,
+    "perf2_conv_final_join_required": true,
+    "play1_acceptance_before_perf2_conv": false
+  },
+  "accepted_truth_sources": [
+    {
+      "layer": "evolved_individual_plants",
+      "source": "VIS4.1 Descriptor V2 + VIS4.3 reconstruction + VIS4.4/4.9 PH5 renderer",
+      "canonical": true
+    },
+    {
+      "layer": "terrain_surface",
+      "source": "ProceduralEarthWorld.get_surface_point/get_surface_state",
+      "canonical": true
+    },
+    {
+      "layer": "visual_scatter",
+      "source": "VIS4.6 Grid Appearance Boundary",
+      "canonical": false
+    },
+    {
+      "layer": "dense_ground_cover",
+      "source": "VIS5.2 Noncanonical Ground-Cover Presentation Bridge",
+      "canonical": false,
+      "truth_status": "NONCANONICAL_SCENERY"
+    },
+    {
+      "layer": "terrain_rocks",
+      "source": "VIS5.3 Mixed-Strata Composition Lab",
+      "canonical": false,
+      "truth_status": "TERRAIN_SCENERY"
+    },
+    {
+      "layer": "composition_lod_streaming",
+      "source": "VIS5.4 Composition LOD / Streaming Local Gate",
+      "canonical": false,
+      "truth_status": "PRESENTATION_CONTROL_ONLY"
+    }
+  ],
+  "capability_donors": [
+    {
+      "id": "EARTH_PLACEMENT_GRASS",
+      "path": "scripts/world/vegetation/earth_placement_system.gd",
+      "reuse": [
+        "terrain-following transform generation",
+        "grass MultiMesh batching",
+        "grass asset/material path",
+        "local radius and LOD visibility mechanics"
+      ],
+      "truth_status": "PRESENTATION_DONOR_ONLY"
+    },
+    {
+      "id": "EVO4_B6_REGION",
+      "path": "scripts/labs/ecology/eco_evo4_b6_region_lab.gd",
+      "reuse": [
+        "dense MultiMesh region composition pattern",
+        "per-variant batching pattern"
+      ],
+      "truth_status": "LEGACY_PRESENTATION_DONOR_ONLY"
+    },
+    {
+      "id": "VIS4_PH5",
+      "path": "scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd",
+      "reuse": [
+        "source-bound evolved individual geometry",
+        "PH5 LOD and materialization cache",
+        "terrain surface placement",
+        "deterministic visual scatter"
+      ],
+      "truth_status": "ACCEPTED_EVOLVED_PLANT_PRESENTATION"
+    }
+  ],
+  "current_gaps": [
+    "procedural Earth grass_density is environment/scenery density, not an ECO.EVO7 evolved population count",
+    "procedural Earth tree placement remains forbidden beside source-bound VIS4 PH5 plants until explicit source binding exists",
+    "legacy EVO4 B6 region materialization is manifest-driven and flat-plane based, not current EVO7 truth",
+    "VIS5.5 graphical evidence and PLAY1 handoff are closed; final integrated PLAY1 performance acceptance remains external and requires PERF2.CONV",
+    "final PLAY1 performance acceptance remains owned by PERF2.CONV",
+    "generic Project Control currently has pre-existing global Matter/registry architecture-ownership dependency drift unrelated to VIS5.5 runtime files"
+  ],
+  "composition_policy": {
+    "canonical_macro_plants": "VIS4 PH5 only",
+    "procedural_trees_in_vis5": "FORBIDDEN_UNTIL_EXPLICIT_SOURCE_BINDING",
+    "ground_cover_before_ecological_binding": "ALLOWED_ONLY_AS_EXPLICIT_NONCANONICAL_SCENERY",
+    "rocks_before_ecological_binding": "ALLOWED_AS_TERRAIN_SCENERY",
+    "terrain_source": "ProceduralEarthWorld",
+    "surface_position": "get_surface_point(direction)",
+    "surface_state": "get_surface_state(direction, lod)",
+    "lod_streaming_control": "PRESENTATION_ONLY",
+    "workload_counters_are_proxies": true,
+    "frame_diagnostics_observational_only": true,
+    "no_tree_bush_grass_taxonomy": true,
+    "no_random_shape_used_as_ecology_diversity": true
+  },
+  "implementation_ladder": [
+    {
+      "checkpoint": "VIS5.0",
+      "name": "Terrain / Ecosystem Composition Contract Audit",
+      "status": "CLOSED"
+    },
+    {
+      "checkpoint": "VIS5.1",
+      "name": "Terrain Surface Frame Adapter",
+      "status": "CLOSED"
+    },
+    {
+      "checkpoint": "VIS5.2",
+      "name": "Noncanonical Ground-Cover Presentation Bridge",
+      "status": "CLOSED"
+    },
+    {
+      "checkpoint": "VIS5.3",
+      "name": "Mixed-Strata Composition Lab",
+      "status": "CLOSED"
+    },
+    {
+      "checkpoint": "VIS5.4",
+      "name": "Composition LOD / Streaming Local Gate",
+      "status": "CLOSED"
+    },
+    {
+      "checkpoint": "VIS5.5",
+      "name": "Visual Evidence / Handoff to Integrated PLAY1 Gate",
+      "status": "CLOSED"
+    }
+  ],
+  "forbidden": [
+    "modify PERF2.4 thresholds or benchmark subject",
+    "replace VIS4 Descriptor V2 with procedural vegetation density",
+    "render procedural Earth trees as if they were evolved VIS4 individuals",
+    "treat decorative grass instances as biological individuals",
+    "introduce TREE_BUSH_GRASS canonical ecology classes",
+    "feed presentation RNG, LOD, grass placement or visual scatter back into ecology state",
+    "claim PLAY1 performance acceptance before PERF2.CONV"
+  ],
+  "current_checkpoint": "VIS5.5",
+  "current_checkpoint_state": "CLOSED",
+  "next_checkpoint_after_green": "PERF2.CONV_INTEGRATED_PLAY1_GATE",
+  "vis5_2_closure": {
+    "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
+    "exact_subject_tree": "31d97747b097146b652a56ba6d5a36c73bdbe496",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "vis5_0_assertions": 87,
+    "vis5_1_assertions": 70,
+    "vis5_2_assertions": 57
+  },
+  "vis5_3_candidate": {
+    "world_seed": 360055,
+    "truth_layers": {
+      "terrain": "ProceduralEarthWorld",
+      "macro_plants": "CANONICAL_ECO_VIS4_PH5",
+      "ground_cover": "NONCANONICAL_SCENERY",
+      "rocks": "TERRAIN_SCENERY"
+    },
+    "built_in_earth_placement_suppressed": true,
+    "focused_assertions": 101,
+    "default_profile_observation": {
+      "macro_plants": 63,
+      "ground_cover": 4500,
+      "terrain_rocks": 146,
+      "terrain_relief_range_m": 57.2468787839384
+    }
+  },
+  "vis5_3_closure": {
+    "status": "CLOSED",
+    "exact_subject_head": "459e533018fa050674aafe91270763bab7e3ec7d",
+    "exact_subject_tree": "77c18ec7ed02de7da9b360be1c3bfb8e035a2306",
+    "source_export_run": 33757919547,
+    "source_archive_sha256": "9702c65c7c4d551d901c8619587364dc13a67263973b5c3ec1450e945c6847e6",
+    "full_regression_log_sha256": "7ca81c35f98d8c892c71543698c2f0a439f38e186c497c2a548208b521343d25",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "vis5_0_assertions": 87,
+    "vis5_1_assertions": 70,
+    "vis5_2_assertions": 57,
+    "vis5_3_assertions": 101,
+    "default_profile": {
+      "macro_plants": 63,
+      "ground_cover": 4500,
+      "terrain_rocks": 146,
+      "terrain_relief_range_m": 57.2468787839384,
+      "maximum_sampled_slope_deg": 12.629566,
+      "summary_valid": true
+    },
+    "closure_document": "docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_3_MIXED_STRATA_COMPOSITION_LAB_EXACT_VERIFIED_CLOSED_R1_RU.md",
+    "required_fixes": []
+  },
+  "vis5_4_closure": {
+    "status": "CLOSED",
+    "exact_subject_head": "4b75429ac57b5acd17359ab7f47015cb06e01784",
+    "exact_subject_tree": "3da523fea30f40727eff4d5223a0ac13cd37ada0",
+    "source_export_run": 33863307163,
+    "source_export_artifact_id": 9932951711,
+    "source_archive_sha256": "85111c8172a7843b800d160234865287c22c05561e02d81b553b4b15264346b5",
+    "controller_sha256": "f53b2d86b1e88cbf3ad1670cacea41f5b7c24dd3e81ffdc5baf112524562fca4",
+    "acceptance_sha256": "ffceba6cfe6348ef73f7494a6cf906d6d39df122d85ab76277937e2684abeac7",
+    "linux_runner_sha256": "5319e7bbbf56228f63a090cd65de1dc24dfa53cc4ef1083c7349be575a9b356d",
+    "full_regression_log_sha256": "5acb77f90bbf19f79486dbcb21702a4c8c0a14c73f68c370a5b112e5dc8aa65e",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "vis5_0_assertions": 87,
+    "vis5_1_assertions": 70,
+    "vis5_2_assertions": 57,
+    "vis5_3_assertions": 101,
+    "vis5_4_assertions": 92,
+    "lifecycle": {
+      "near_mid_far_culled_return": true,
+      "render_origin_shift_m": 1500.0,
+      "render_origin_restore_exact_composition_hash": true,
+      "local_recenter_distance_m": 6500.0,
+      "region_roundtrip_beyond_recenter_threshold": true,
+      "real_earth_rebuild_events_minimum": 2,
+      "remote_and_return_placement_suppressed": true,
+      "same_seed_region_composition_restored": true,
+      "ecology_identity_drift": false,
+      "descriptor_v2_identity_drift": false,
+      "ph5_bridge_identity_drift": false
+    },
+    "authority": {
+      "presentation_only": true,
+      "ecology_authority": false,
+      "terrain_authority": false,
+      "network_authority": false,
+      "persistence_authority": false,
+      "perf2_authority": false,
+      "perf2_convergence_required": true
+    },
+    "project_control_external_debt": {
+      "run": 33863271475,
+      "status": "GLOBAL_ARCHITECTURE_OWNERSHIP_COMPATIBILITY_FAILURE",
+      "finding": "PRE_EXISTING_MATTER_REGISTRY_CRITICAL_DEPENDENCY_DRIFT",
+      "vis5_4_files_in_findings": false,
+      "disposition": "EXTERNAL_CONTROL_PLANE_DEBT_NOT_VIS5_4_RUNTIME_FALSIFIER",
+      "generic_project_control_green_claimed": false
+    },
+    "closure_document": "docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_4_COMPOSITION_LOD_STREAMING_LOCAL_GATE_EXACT_VERIFIED_CLOSED_R1_RU.md",
+    "required_fixes": []
+  },
+  "vis5_line_state": "CLOSED_READY_FOR_PLAY1_HANDOFF",
+  "vis5_5_closure": {
+    "status": "CLOSED",
+    "exact_subject_head": "fb1a7ac21037e02033eae6d7e778ed8757514e19",
+    "exact_subject_tree": "89551693f0cbac555a5026424d36b50cd35b8804",
+    "source_export_run": 33867446070,
+    "source_export_artifact_id": 9934516417,
+    "source_archive_sha256": "59ec27aa62b159ebeffc3897230406faa62c5d6204019f783318d7d64c91b021",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "aggregate_log_sha256": "59e35d98d04f53d81e2c37600a039cff74007f4d39c109aba84af64c65d643fe",
+    "assertions": {
+      "vis5_0": 87,
+      "vis5_1": 70,
+      "vis5_2": 57,
+      "vis5_3": 101,
+      "vis5_4": 92,
+      "vis5_5": 114
+    },
+    "graphical_evidence": {
+      "real_renderer": true,
+      "renderer": "OpenGL Compatibility via Xvfb/llvmpipe",
+      "dummy_headless_renderer": false,
+      "image_count": 6,
+      "resolution": "1280x720",
+      "bundle_hash": "cff5f4fadd14f056075f39697458ffcd4e427a7473db7f27c922db411218cd98",
+      "manifest_sha256": "31d533824b8cafbd182b970b13acc4876b8137e8f5540075be49253a221d988d",
+      "handoff_hash": "bc6cc2f5a2301e0832d8ddb53a8145ce83dc83fb0d2313fe1b3cc1e5d49a5df9",
+      "views": [
+        "NEAR_OVERVIEW",
+        "NEAR_DETAIL",
+        "MID",
+        "FAR",
+        "CULLED",
+        "RETURN_AFTER_STREAMING"
+      ]
+    },
+    "final_runtime_observation": {
+      "view": "RETURN_AFTER_STREAMING",
+      "mode": "NEAR",
+      "macro_records": 63,
+      "macro_visible": 62,
+      "ground_cover_total": 4500,
+      "ground_cover_visible": 4500,
+      "terrain_rocks_total": 146,
+      "terrain_rocks_visible": 146,
+      "render_origin_recenter_count": 2,
+      "earth_rebuild_count": 2,
+      "region_roundtrip_count": 1,
+      "same_seed_restored": true,
+      "ecology_identity_drift": false,
+      "procedural_earth_trees_suppressed": true
+    },
+    "truth_layers": {
+      "terrain": "ProceduralEarthWorld",
+      "macro_plants": "CANONICAL_ECO_VIS4_PH5",
+      "ground_cover": "NONCANONICAL_SCENERY",
+      "rocks": "TERRAIN_SCENERY"
+    },
+    "authority": {
+      "presentation_only": true,
+      "ecology_authority": false,
+      "terrain_authority": false,
+      "network_authority": false,
+      "persistence_authority": false,
+      "perf2_authority": false,
+      "play1_performance_accepted": false,
+      "perf2_conv_required": true
+    },
+    "project_control_external_debt": {
+      "run": 33867420139,
+      "status": "GLOBAL_ARCHITECTURE_OWNERSHIP_COMPATIBILITY_FAILURE",
+      "finding": "PRE_EXISTING_G_ECO_MATTER_REGISTRY_CRITICAL_DEPENDENCY_DRIFT",
+      "vis5_5_files_in_findings": false,
+      "disposition": "EXTERNAL_CONTROL_PLANE_DEBT_NOT_VIS5_5_RUNTIME_FALSIFIER",
+      "generic_project_control_green_claimed": false
+    },
+    "closure_document": "docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUAL_EVIDENCE_INTEGRATED_PLAY1_HANDOFF_EXACT_VERIFIED_CLOSED_R1_RU.md",
+    "required_fixes": []
+  }
+}

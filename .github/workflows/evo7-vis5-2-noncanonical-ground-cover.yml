@@ -1,0 +1,104 @@
+name: ECO EVO7 VIS5.2 Noncanonical Ground Cover
+
+on:
+  push:
+    branches:
+      - feature/eco-evo7-vis5-terrain-ecosystem-composition-r1
+    paths:
+      - "scripts/labs/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge.gd"
+      - "tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd"
+      - "RUN_ECO_EVO7_VIS5_2_TESTS.sh"
+      - "RUN_ECO_EVO7_VIS5_2_TESTS.ps1"
+      - "docs/checkpoints/*VIS5_2*"
+      - ".github/workflows/evo7-vis5-2-noncanonical-ground-cover.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-evo7-vis5-2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-exact:
+    name: exact VIS5.2 Ubuntu ground-cover acceptance
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout exact workflow HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact HEAD and clean tracked tree
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          if [[ "$head" != "${{ github.sha }}" ]]; then
+            echo "EXACT_HEAD_MISMATCH actual=$head expected=${{ github.sha }}" >&2
+            exit 1
+          fi
+          if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+            echo "TRACKED_TREE_DIRTY_BEFORE_RUN" >&2
+            git status --short --untracked-files=no
+            exit 1
+          fi
+          echo "exact_head=$head"
+          echo "exact_tree=$tree"
+
+      - name: Resolve canonical double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
+          FALLBACK_CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED_GODOT_BIN"
+          if [[ -z "$godot" ]]; then
+            godot="$FALLBACK_CONFIGURED_GODOT_BIN"
+          fi
+          if [[ -z "$godot" ]]; then
+            godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          fi
+          if [[ ! -x "$godot" ]]; then
+            echo "Exact Godot binary not found: $godot" >&2
+            exit 1
+          fi
+          version="$("$godot" --version | head -n 1 | tr -d '\r')"
+          if [[ "$version" != "4.7.1.stable.double.custom_build.a13da4feb" ]]; then
+            echo "GODOT_IDENTITY_MISMATCH: $version" >&2
+            exit 1
+          fi
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "Godot identity: $version"
+          echo "Godot SHA256: $sha"
+
+      - name: Run VIS5.2 exact regression
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -euo pipefail
+          chmod +x ./RUN_ECO_EVO7_VIS5_0_TESTS.sh
+          chmod +x ./RUN_ECO_EVO7_VIS5_1_TESTS.sh
+          chmod +x ./RUN_ECO_EVO7_VIS5_2_TESTS.sh
+          ./RUN_ECO_EVO7_VIS5_2_TESTS.sh
+
+      - name: Assert tracked tree unchanged
+        run: |
+          set -euo pipefail
+          git checkout -- ./RUN_ECO_EVO7_VIS5_0_TESTS.sh ./RUN_ECO_EVO7_VIS5_1_TESTS.sh ./RUN_ECO_EVO7_VIS5_2_TESTS.sh || true
+          if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+            echo "TRACKED_TREE_DIRTY_AFTER_RUN" >&2
+            git status --short --untracked-files=no
+            exit 1
+          fi
+          echo "tracked_tree_clean=true"
