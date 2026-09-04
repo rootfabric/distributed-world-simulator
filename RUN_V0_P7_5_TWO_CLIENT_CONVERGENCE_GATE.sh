@@ -7,6 +7,7 @@ EXPECTED_GODOT="4.7.1.stable.double.custom_build.a13da4feb"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARTIFACT_ROOT="$ROOT/artifacts/runtime/v0-p7-5-two-client-convergence"
 TEST_HOME="$ARTIFACT_ROOT/user-home"
+TEST_TIMEOUT_SECONDS="${P7_TEST_TIMEOUT_SECONDS:-300}"
 mkdir -p "$ARTIFACT_ROOT"
 rm -rf "$TEST_HOME"
 mkdir -p "$TEST_HOME/data" "$TEST_HOME/config" "$TEST_HOME/cache"
@@ -33,9 +34,48 @@ HEAD="$(git -C "$ROOT" rev-parse HEAD)"
 
 fatal_log_check() {
   local log="$1"
-  if grep -F -e "SCRIPT ERROR:" -e "Parse Error:" -e "Compile Error:"     -e "Failed to instantiate an autoload" -e "Failed to load script" "$log" >/dev/null 2>&1; then
+  if grep -F -e "SCRIPT ERROR:" -e "Parse Error:" -e "Compile Error:" \
+      -e "Failed to instantiate an autoload" -e "Failed to load script" "$log" >/dev/null 2>&1; then
     tail -n 500 "$log" >&2
     return 1
+  fi
+}
+
+run_until_summary() {
+  local log="$1"
+  local summary="$2"
+  shift 2
+  rm -f "$log"
+  "$@" &
+  local pid=$!
+  local deadline=$((SECONDS + TEST_TIMEOUT_SECONDS))
+  local saw_summary=0
+
+  while kill -0 "$pid" >/dev/null 2>&1; do
+    if [[ -f "$log" ]] && grep -F "$summary" "$log" >/dev/null 2>&1; then
+      saw_summary=1
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 0.2
+      kill -KILL "$pid" >/dev/null 2>&1 || true
+      break
+    fi
+    if (( SECONDS >= deadline )); then
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 0.2
+      kill -KILL "$pid" >/dev/null 2>&1 || true
+      break
+    fi
+    sleep 0.2
+  done
+  wait "$pid" >/dev/null 2>&1 || true
+
+  fatal_log_check "$log"
+  if (( saw_summary == 0 )); then
+    grep -F "$summary" "$log" >/dev/null 2>&1 || {
+      tail -n 500 "$log" >&2
+      echo "Missing PASS summary before timeout/exit: $summary" >&2
+      return 1
+    }
   fi
 }
 
@@ -44,26 +84,24 @@ run_contract() {
   local script="$2"
   local summary="$3"
   local log="$ARTIFACT_ROOT/$name.log"
-  "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log" --script "$script"
-  fatal_log_check "$log"
-  grep -F "$summary" "$log" >/dev/null || {
-    tail -n 500 "$log" >&2
-    echo "Missing PASS summary: $summary" >&2
-    return 1
-  }
+  run_until_summary "$log" "$summary" \
+    "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log" --script "$script"
   echo "[V0-P7.5] PASS $name"
 }
 
 run_restart_phase() {
   local phase="$1"
   local log="$ARTIFACT_ROOT/p7-4-$phase.log"
-  HOME="$TEST_HOME"   XDG_DATA_HOME="$TEST_HOME/data"   XDG_CONFIG_HOME="$TEST_HOME/config"   XDG_CACHE_HOME="$TEST_HOME/cache"   APPDATA="$TEST_HOME/data"   LOCALAPPDATA="$TEST_HOME/data"     "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log"       --script res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd       -- "--phase=$phase"
-  fatal_log_check "$log"
-  grep -F "V0-P7.4 $phase: PASS" "$log" >/dev/null || {
-    tail -n 500 "$log" >&2
-    echo "Missing P7.4 phase PASS: $phase" >&2
-    return 1
-  }
+  run_until_summary "$log" "V0-P7.4 $phase: PASS" \
+    env HOME="$TEST_HOME" \
+      XDG_DATA_HOME="$TEST_HOME/data" \
+      XDG_CONFIG_HOME="$TEST_HOME/config" \
+      XDG_CACHE_HOME="$TEST_HOME/cache" \
+      APPDATA="$TEST_HOME/data" \
+      LOCALAPPDATA="$TEST_HOME/data" \
+      "$GODOT_BIN" --headless --path "$ROOT" --log-file "$log" \
+      --script res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd \
+      -- "--phase=$phase"
   echo "[V0-P7.5] PASS p7-4-$phase"
 }
 
@@ -71,24 +109,50 @@ IMPORT_LOG="$ARTIFACT_ROOT/import.log"
 "$GODOT_BIN" --headless --editor --path "$ROOT" --log-file "$IMPORT_LOG" --import
 fatal_log_check "$IMPORT_LOG"
 
-run_contract "p7-5-two-client"   "res://tests/runtime/test_v0_p7_5_two_client_convergence.gd"   "V0-P7.5 two-client convergence: PASS ("
-run_contract "m7-aggregate-replica"   "res://tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd"   "M7 aggregate replica compatibility: PASS ("
+run_contract "p7-5-two-client" \
+  "res://tests/runtime/test_v0_p7_5_two_client_convergence.gd" \
+  "V0-P7.5 two-client convergence: PASS ("
+run_contract "m7-aggregate-replica" \
+  "res://tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd" \
+  "M7 aggregate replica compatibility: PASS ("
 
 run_restart_phase "seed"
 run_restart_phase "recover-deliver"
 run_restart_phase "recover-replay"
 
-run_contract "p7-3-material-delivery"   "res://tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd"   "V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)"
-run_contract "p7-2-bubble"   "res://tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd"   "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)"
-run_contract "p7-2-seam"   "res://tests/runtime/test_v0_p7_2_lunar_surface_seam.gd"   "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)"
-run_contract "p7-1-authority"   "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd"   "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)"
-run_contract "p7-1-tool-to-mw4"   "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd"   "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)"
-run_contract "p5-two-client"   "res://tests/runtime/test_v0_p5_two_client_replication_reconnect.gd"   "V0-P5 two-client replication/reconnect:"
-run_contract "p5-mining-tool"   "res://tests/runtime/test_v0_p5_mining_tool_gate.gd"   "V0-P5 mining tool gate: 36 assertions, 0 failures"
-run_contract "mw6"   "res://tests/matter/network/test_mw6_matter_network_replication.gd"   "MW6 matter network authority: PASS"
-run_contract "mw7"   "res://tests/matter/interest/test_mw7_matter_interest_replication.gd"   "MW7 matter interest replication: PASS"
-run_contract "rl2"   "res://tests/representation/test_rl2_matter_multiresolution_meshing.gd"   "RL2 Matter multiresolution meshing: PASS"
-run_contract "rl3"   "res://tests/representation/test_rl3_representation_aware_network_streaming.gd"   "RL3 representation-aware network streaming: PASS"
+run_contract "p7-3-material-delivery" \
+  "res://tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd" \
+  "V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)"
+run_contract "p7-2-bubble" \
+  "res://tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd" \
+  "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)"
+run_contract "p7-2-seam" \
+  "res://tests/runtime/test_v0_p7_2_lunar_surface_seam.gd" \
+  "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)"
+run_contract "p7-1-authority" \
+  "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd" \
+  "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)"
+run_contract "p7-1-tool-to-mw4" \
+  "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd" \
+  "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)"
+run_contract "p5-two-client" \
+  "res://tests/runtime/test_v0_p5_two_client_replication_reconnect.gd" \
+  "V0-P5 two-client replication/reconnect:"
+run_contract "p5-mining-tool" \
+  "res://tests/runtime/test_v0_p5_mining_tool_gate.gd" \
+  "V0-P5 mining tool gate: 36 assertions, 0 failures"
+run_contract "mw6" \
+  "res://tests/matter/network/test_mw6_matter_network_replication.gd" \
+  "MW6 matter network authority: PASS"
+run_contract "mw7" \
+  "res://tests/matter/interest/test_mw7_matter_interest_replication.gd" \
+  "MW7 matter interest replication: PASS"
+run_contract "rl2" \
+  "res://tests/representation/test_rl2_matter_multiresolution_meshing.gd" \
+  "RL2 Matter multiresolution meshing: PASS"
+run_contract "rl3" \
+  "res://tests/representation/test_rl3_representation_aware_network_streaming.gd" \
+  "RL3 representation-aware network streaming: PASS"
 
 [[ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || {
   git -C "$ROOT" status --short
