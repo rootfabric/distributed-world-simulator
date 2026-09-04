@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_ls4_activation.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-LS4-ACTIVATION-2026-09-04-R1",
+  "status": "AUTHORIZED_CURRENT_SCOPE_FREEZE_REQUIRED",
+  "checkpoint": "ECO.EVO7/LS4",
+  "name": "Next ecology complexity stage",
+  "predecessor": {
+    "perf2_conv_status": "CLOSED_ACCEPTED",
+    "accepted_control_head": "b4f73a4073ac16b2a1de535acd64ae16641d4588",
+    "accepted_control_tree": "81caf408e75059fde6b897e0f967e8b7d373ca1e",
+    "tested_runtime_head": "81a0b3fa60664684b02d8387e4693c5f328dbe28",
+    "tested_runtime_tree": "a192950483267dd428baf2d1daa25de915df2370",
+    "report_hash": "1064567c83c1bd023589fdf9e36f8436b9624eeb928e8b7d413b92ce3254c3f6"
+  },
+  "authorization": {
+    "unlock_condition": "PERF2_CONVERGENCE_ACCEPTED",
+    "unlock_condition_satisfied": true,
+    "implementation_authorized": false,
+    "scope_contract_required_before_runtime_delta": true,
+    "substage_ids_frozen": false
+  },
+  "invariants": {
+    "research_shadow_only": true,
+    "production_promotion": false,
+    "new_ecology_truth_authority": false,
+    "world_write": false,
+    "persistence_authority": false,
+    "network_authority": false,
+    "accepted_perf2_evidence_immutable": true,
+    "accepted_vis4_evidence_immutable": true
+  },
+  "first_required_action": {
+    "kind": "LS4_SCOPE_CONTRACT",
+    "purpose": "Define the next ecology-complexity problem, ownership boundary, falsifiers, executable acceptance and interaction with existing LS3/PERF2/VIS4 evidence before any runtime implementation.",
+    "runtime_changes_before_scope_freeze": "FORBIDDEN"
+  }
+}
