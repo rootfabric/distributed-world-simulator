@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_vis5_5_play1_handoff_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-VIS5.5.R1",
+  "contract_state": "FROZEN",
+  "visual_line_status_on_green": "READY_FOR_PLAY1_HANDOFF",
+  "authority": {
+    "presentation_only": true,
+    "ecology_write": false,
+    "terrain_write": false,
+    "network_write": false,
+    "persistence_write": false,
+    "perf2_authority": false
+  },
+  "truth_labels": {
+    "terrain": "ProceduralEarthWorld",
+    "macro_plants": "CANONICAL_ECO_VIS4_PH5",
+    "ground_cover": "NONCANONICAL_SCENERY",
+    "rocks": "TERRAIN_SCENERY"
+  },
+  "capture_views": [
+    {"view_id": "NEAR_OVERVIEW", "mode": "NEAR", "filename": "01_near_overview.png"},
+    {"view_id": "NEAR_DETAIL", "mode": "NEAR", "filename": "02_near_detail.png"},
+    {"view_id": "MID_CONTEXT", "mode": "MID", "filename": "03_mid_context.png"},
+    {"view_id": "FAR_CONTEXT", "mode": "FAR", "filename": "04_far_context.png"},
+    {"view_id": "CULLED_CONTEXT", "mode": "CULLED", "filename": "05_culled_context.png"},
+    {"view_id": "RETURN_AFTER_STREAMING", "mode": "NEAR", "filename": "06_return_after_streaming.png"}
+  ],
+  "required_evidence": [
+    "real uneven ProceduralEarth terrain",
+    "canonical VIS4 PH5 macro plants",
+    "NONCANONICAL_SCENERY ground cover",
+    "TERRAIN_SCENERY rocks",
+    "NEAR MID FAR CULLED visual modes",
+    "render-origin recenter and exact restore",
+    "real local surface region roundtrip and exact restore",
+    "operator truth labels",
+    "workload counters labeled as proxies",
+    "repeatable PNG capture bundle with SHA-256 manifest"
+  ],
+  "final_join": {
+    "vis5_5_green_means": "VIS5 visual composition line ready for handoff",
+    "perf2_convergence_required": true,
+    "play1_performance_accepted_by_vis5_5": false,
+    "acceptance_expression": "VIS5.5 GREEN + PERF2.CONV GREEN -> PLAY1 integrated acceptance"
+  }
+}
