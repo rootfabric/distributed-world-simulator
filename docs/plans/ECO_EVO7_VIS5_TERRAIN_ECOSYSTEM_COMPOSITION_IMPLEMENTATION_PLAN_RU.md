@@ -1,14 +1,14 @@
 # ECO.EVO7 VIS5 — Terrain / Ecosystem Composition
 
-Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 IMPLEMENTED CANDIDATE  
-Дата: 2026-09-03  
+Статус: VIS5.0 CLOSED / VIS5.1 CLOSED / VIS5.2 CLOSED / VIS5.3 CLOSED / VIS5.4 CURRENT  
+Обновлено: 2026-09-04  
 Ветка: feature/eco-evo7-vis5-terrain-ecosystem-composition-r1  
 Base VIS4 closure: 8f0d6f464e098aa6b8f74ec7e86093cffb6bb1e3  
 Exact-tested VIS4.9 subject: ab44617d8961add81a6c9f245c99d0b68eaeab52
 
-## Зачем открывается VIS5
+## Зачем существует VIS5
 
-VIS4 завершил честную морфологию отдельных evolved plants:
+VIS4 закрыл честную морфологию отдельных evolved plants:
 
 ~~~text
 Descriptor V2
@@ -20,7 +20,7 @@ Descriptor V2
  -> PLAY0 pixels
 ~~~
 
-Следующая визуальная проблема уже не форма одного растения, а композиция сцены:
+VIS5 поднимает уровень задачи от одного растения до цельной локальной сцены:
 
 ~~~text
 неровный ProceduralEarth terrain
@@ -34,173 +34,106 @@ terrain scenery
 LOD / streaming
 ~~~
 
-VIS5 не является продолжением PERF2.4 и не меняет его benchmark subject или thresholds.
+VIS5 остаётся presentation-only линией. Он не меняет PERF2.4 benchmark subject или thresholds. Финальная integrated PLAY1 performance acceptance остаётся за PERF2.CONV.
 
-VIS5 может разрабатываться параллельно PERF2.4, пока остаётся отдельной presentation-only линией. Финальная PLAY1 performance acceptance всё равно остаётся за PERF2.CONV.
+## Truth / authority boundary
 
-## Что уже есть и что важно не перепутать
+### Canonical macro plants
 
-### 1. VIS4 уже стоит на реальном terrain
-
-Текущий PH5 renderer использует:
+Единственный macro-plant presentation source в VIS5:
 
 ~~~text
-earth_world.get_surface_point(up)
-earth_world.get_surface_point(visual_direction)
-~~~
-
-Поэтому evolved plants уже получают реальную terrain elevation, включая VIS4.6 visual scatter.
-
-VIS5 не должен изобретать второй planet surface.
-
-### 2. Старый dense grass donor существует
-
-~~~text
-scripts/world/vegetation/earth_placement_system.gd
-~~~
-
-Он уже умеет:
-
-~~~text
-grass density sampling
- -> local disk placement
- -> terrain surface point
- -> grass asset selection
- -> MultiMesh batching
- -> LOD visibility
-~~~
-
-Это полезный технический donor для VIS5.
-
-Но его grass source:
-
-~~~text
-ProceduralEarth pipeline grass_density
+VIS4.1 Descriptor V2
 +
-presentation RNG
+VIS4.3 exact reconstruction
++
+VIS4.4/4.9 PH5 renderer
 ~~~
 
-не является ECO.EVO7 evolved population truth.
+Legacy ProceduralEarth procedural trees не должны показываться рядом с ними как будто это одна biological population.
 
-Следовательно до отдельного ecology binding этот grass можно использовать только как:
+### Terrain
+
+Canonical surface source:
 
 ~~~text
-NONCANONICAL SURFACE SCENERY
+ProceduralEarthWorld.get_surface_point(direction)
+ProceduralEarthWorld.get_surface_state(direction, lod)
 ~~~
 
-а не как biological individuals.
+VIS5 не создаёт второй planet surface и не пишет в terrain truth.
 
-### 3. Procedural trees нельзя включать рядом с VIS4 PH5
+### Ground cover
 
-EarthPlacementSystem также создаёт procedural trees через tree_density.
-
-В VIS5 это запрещено до отдельного source-binding решения:
+До отдельного ecology binding dense grass имеет статус только:
 
 ~~~text
-VIS4 PH5 evolved plant
-!=
-procedural Earth tree decoration
+NONCANONICAL_SCENERY
 ~~~
 
-Одновременный показ обоих путей как одной живой популяции дал бы визуальное удвоение и ложную ecology truth.
+Он не имеет population/count/fitness/mutation semantics.
 
-Поэтому ближайшая смешанная сцена должна иметь:
+### Rocks
+
+Rocks разрешены как:
 
 ~~~text
-macro plants:
-VIS4 PH5 only
-
-ground cover:
-explicitly noncanonical scenery
-
-rocks:
-terrain scenery
-
-terrain:
-ProceduralEarthWorld
+TERRAIN_SCENERY
 ~~~
 
-### 4. Старый ECO.EVO4 B6 — только presentation donor
-
-~~~text
-scripts/labs/ecology/eco_evo4_b6_region_lab.gd
-~~~
-
-Он полезен как пример:
-
-~~~text
-dense per-variant batching
-MultiMesh composition
-rich visual region
-~~~
-
-Но он основан на старом manifest и PlaneMesh-ground, поэтому не может быть текущим ECO.EVO7 source.
+без biological semantics.
 
 ## VIS5 implementation ladder
 
 ~~~text
-VIS5.0 Terrain / Ecosystem Composition Contract Audit
+VIS5.0 Terrain / Ecosystem Composition Contract Audit       ✅ CLOSED
   |
   v
-VIS5.1 Terrain Surface Frame Adapter
+VIS5.1 Terrain Surface Frame Adapter                        ✅ CLOSED
   |
   v
-VIS5.2 Noncanonical Ground-Cover Presentation Bridge
+VIS5.2 Noncanonical Ground-Cover Presentation Bridge       ✅ CLOSED
   |
   v
-VIS5.3 Mixed-Strata Composition Lab
+VIS5.3 Mixed-Strata Composition Lab                         ✅ CLOSED
   |
   v
-VIS5.4 Composition LOD / Streaming Local Gate
+★ VIS5.4 Composition LOD / Streaming Local Gate ★          🟡 CURRENT
   |
   v
-VIS5.5 Visual Evidence / Integrated PLAY1 Handoff
+VIS5.5 Visual Evidence / Integrated PLAY1 Handoff           ⬜ BLOCKED
 ~~~
 
 ## VIS5.0 — CLOSED
 
-VIS5.0 фиксирует authority и donor boundaries до изменения rendering path.
+VIS5.0 зафиксировал authority и donor boundaries до изменения rendering path.
 
 Durable surfaces:
 
 ~~~text
-config/ecology/
-  eco-evo7-vis5-terrain-ecosystem-composition-audit.v1.json
+config/ecology/eco-evo7-vis5-terrain-ecosystem-composition-audit.v1.json
 
-tests/ecology/
-  eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd
+tests/ecology/eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd
 
 RUN_ECO_EVO7_VIS5_0_TESTS.sh
 RUN_ECO_EVO7_VIS5_0_TESTS.ps1
 ~~~
 
-Exit criteria:
+Ключевые принятые ограничения:
 
 ~~~text
-VIS4.9 predecessor regression GREEN
-
-VIS5.0 focused GREEN
-
 VIS4 PH5 remains canonical evolved macro-plant presentation
-
 ProceduralEarth remains terrain source
-
-EarthPlacement grass accepted only as presentation donor
-
-procedural trees explicitly forbidden in VIS5 composition
-
-EVO4 B6 accepted only as legacy presentation donor
-
+EarthPlacement grass is presentation donor only
+procedural trees forbidden beside VIS4 PH5
+EVO4 B6 is legacy presentation donor only
 PERF2.4 thresholds untouched
-
 PERF2.CONV remains final integrated performance gate
 ~~~
 
 ## VIS5.1 — CLOSED — Terrain Surface Frame Adapter
 
-После VIS5.0 GREEN следующий кодовый checkpoint должен добавить один read-only surface adapter.
-
-Он должен получать из ProceduralEarthWorld:
+VIS5.1 добавил read-only local surface adapter:
 
 ~~~text
 direction
@@ -211,58 +144,30 @@ derived geometric terrain normal
 derived slope
 ~~~
 
-и возвращать только presentation data.
-
-Зачем это нужно:
+Назначение:
 
 ~~~text
-tree-like macro plants:
-gravity/radial-up semantics remain explicit
+macro plants:
+retain explicit radial/gravity-up semantics
 
-grass / low ground cover:
-may use terrain-normal-aware presentation orientation
+ground cover:
+terrain-normal-aware orientation
 
 rocks:
-may use terrain-normal-aware orientation
+terrain-normal-aware orientation
 ~~~
 
-Surface normal не должен менять canonical ecology position или plant GrowthGraph.
+Surface frame не меняет canonical ecology position или plant GrowthGraph.
 
-## VIS5.2 — Noncanonical Ground-Cover Presentation Bridge
-
-Первый practical visual bridge должен переиспользовать grass MultiMesh/assets из EarthPlacementSystem, но вынести ground-cover path отдельно от procedural trees.
-
-Обязательные свойства:
+Closure:
 
 ~~~text
-grass only
-no procedural trees
-terrain-following
-deterministic/replayable presentation seed
-explicit NONCANONICAL_SCENERY marker
-no ecology count/fitness/mutation meaning
-no effect on Descriptor V2 or ecology_state_hash
+docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_1_TERRAIN_SURFACE_FRAME_ADAPTER_EXACT_VERIFIED_CLOSED_R1_RU.md
 ~~~
 
-### VIS5.2 implementation candidate — 2026-09-03
+## VIS5.2 — CLOSED — Noncanonical Ground-Cover Bridge
 
-В ветке материализован отдельный executable bridge:
-
-~~~text
-scripts/labs/ecology/
-  eco_evo7_vis5_2_noncanonical_ground_cover_bridge.gd
-
-tests/ecology/
-  eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
-
-RUN_ECO_EVO7_VIS5_2_TESTS.sh
-RUN_ECO_EVO7_VIS5_2_TESTS.ps1
-
-.github/workflows/
-  evo7-vis5-2-noncanonical-ground-cover.yml
-~~~
-
-Исполняемая граница:
+Executable bridge:
 
 ~~~text
 ProceduralEarthWorld
@@ -271,15 +176,14 @@ ProceduralEarthWorld
         |
         v
 VIS5.1 Terrain Surface Frame
-  terrain_basis / geometric slope
         |
         v
 VIS5.2 deterministic ground-cover sampler
         |
         +-- grass MultiMesh/assets only
         +-- local yaw around terrain-normal Y
-        +-- explicit NONCANONICAL_SCENERY
         +-- deterministic generation_hash
+        +-- explicit NONCANONICAL_SCENERY
         |
         X no procedural trees
         X no ecology individuals
@@ -287,32 +191,33 @@ VIS5.2 deterministic ground-cover sampler
         X no Descriptor V2 / ecology_state_hash writes
 ~~~
 
-Критическая orientation boundary зафиксирована явно: yaw применяется **в локальном terrain frame**, а не world-space вращением уже ориентированного Basis. Это сохраняет Y каждой planned transform вдоль derived terrain normal и готовит bridge к существенно более сложным WORLDGEN-поверхностям.
+Критическая orientation boundary: yaw применяется в локальном terrain frame, а не world-space вращением уже ориентированного Basis. Поэтому planned transform сохраняет Y вдоль derived terrain normal и остаётся пригодным для будущих сложных WORLDGEN-поверхностей.
 
-Exact branch regression на canonical double-Godot завершён GREEN; VIS5.2 формально CLOSED.
-
-## VIS5.3 — Mixed-Strata Composition Lab
-
-Цель:
+Exact closure:
 
 ~~~text
-real uneven Earth terrain
-+
-VIS4 evolved PH5 plants
-+
-dense grass ground cover
-+
-rocks / terrain scenery
+subject HEAD:
+e8ad5ad9f36eba45ff533918c2a97730d766aa17
+
+subject TREE:
+31d97747b097146b652a56ba6d5a36c73bdbe496
+
+VIS5.2:
+57 / 57 PASS
 ~~~
 
-В этой точке уже можно будет визуально оценивать развитую экосистему на неровном ландшафте без подмены biology декоративной растительностью.
-
-### VIS5.3 implementation candidate — 2026-09-03
-
-Реализована отдельная executable scene:
+Closure:
 
 ~~~text
-ProceduralEarthWorld
+docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_2_NONCANONICAL_GROUND_COVER_BRIDGE_EXACT_VERIFIED_CLOSED_R1_RU.md
+~~~
+
+## VIS5.3 — CLOSED — Mixed-Strata Composition Lab
+
+VIS5.3 впервые собрал в одной real-terrain сцене:
+
+~~~text
+ProceduralEarthWorld terrain
         +
 LS3.6 Rule Workbench
         |
@@ -327,69 +232,128 @@ VIS5.2 NONCANONICAL_SCENERY ground cover
 VIS5.3 TERRAIN_SCENERY rocks
         |
         v
-one mixed real-terrain scene
+one mixed real-terrain composition
 ~~~
 
-Для visual lab выбран deterministic world seed:
+### Deterministic visual fixture
+
+Default ecology seed 360036 оказался корректным, но визуально неподходящим rocky patch с `grass_density = 0`.
+
+Для mixed-strata lab используется deterministic:
 
 ~~~text
-360055
+world_seed = 360055
 ~~~
 
-Причина выбора не косметическая: прежний default patch 360036 детерминированно попадал в rocky terrain с grass_density = 0, поэтому mixed-strata сцена была бы фактически без ground cover. Seed 360055 проходит через тот же canonical RuleWorkbench/ProceduralEarth pipeline, но даёт land patch с плотной травой и ненулевой rock density.
+Он проходит через тот же canonical RuleWorkbench / ProceduralEarthWorld path и даёт land patch с dense grass и ненулевой rock density.
 
-Критическая boundary:
+### Procedural-tree exclusion
+
+До local-region rebuild legacy EarthPlacementSystem принудительно получает:
 
 ~~~text
-EarthPlacementSystem built-in strata:
-near trees = 0
-billboard trees = 0
-grass = 0
-rocks = 0
-subtree hidden
-
-canonical macro plants:
-VIS4 PH5 only
+max_near_trees = 0
+max_billboard_trees = 0
+max_grass_instances = 0
+max_rocks = 0
+placement subtree hidden
 ~~~
 
-Таким образом legacy procedural trees не могут визуально дублировать evolved PH5 population.
+Следовательно canonical VIS4 PH5 остаётся единственным macro-plant presentation stratum.
 
-Default visual profile уже локально materialized:
+### Default visual profile evidence
 
 ~~~text
-PH5 macro plants: 63
-ground cover: 4500
-terrain rocks: 146
-local 220m relief: 57.25 m
+PH5 macro plants:       63
+ground cover:         4500
+terrain rocks:         146
+local 220m relief:   57.246879 m
+max sampled slope:   12.629566 deg
+summary valid:        true
 ~~~
 
-Focused acceptance:
+### Exact closure
 
 ~~~text
-101 / 101 PASS
+exact executable subject HEAD:
+459e533018fa050674aafe91270763bab7e3ec7d
+
+exact executable subject TREE:
+77c18ec7ed02de7da9b360be1c3bfb8e035a2306
+
+source-export run:
+33757919547 SUCCESS
+
+canonical Godot:
+4.7.1.stable.double.custom_build.a13da4feb
+
+RUN_ECO_EVO7_VIS5_3_TESTS.sh:
+RC = 0
+
+VIS5.0: 87 / 87 PASS
+VIS5.1: 70 / 70 PASS
+VIS5.2: 57 / 57 PASS
+VIS5.3: 101 / 101 PASS
 ~~~
 
-До формального CLOSED требуется fresh exact branch regression на canonical double-Godot.
+Formal closure:
 
-## VIS5.4 — Local LOD / Streaming
+~~~text
+docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_3_MIXED_STRATA_COMPOSITION_LAB_EXACT_VERIFIED_CLOSED_R1_RU.md
+~~~
 
-VIS5-local gate может измерять:
+## VIS5.4 — CURRENT — Composition LOD / Streaming Local Gate
+
+Следующий checkpoint должен проверить уже не факт совместного существования strata, а их runtime lifecycle вокруг движущегося наблюдателя.
+
+Цель:
+
+~~~text
+mixed composition
+      |
+      +-- PH5 macro-plant LOD
+      +-- ground-cover visibility / budget
+      +-- terrain-scenery visibility / budget
+      +-- render-origin recenter
+      +-- local region rebuild
+      +-- deterministic scenery regeneration
+      |
+      v
+bounded local visual workload
+without ecology identity drift
+~~~
+
+VIS5.4 должен материализовать и измерить как минимум:
 
 ~~~text
 visible PH5 plants
-grass instance count
-terrain scenery count
-local draw workload
+ground-cover instance count
+terrain-scenery instance count
+local draw/workload proxies
 LOD transitions
-recenter/rebuild behavior
-visual frame diagnostics
+recenter behavior
+local surface rebuild behavior
+scenery rebuild counts / hashes
+frame diagnostics
 ~~~
 
-Но он не меняет и не заменяет PERF2.CONV.
+Обязательные invariants:
 
-## VIS5.5 — Visual Evidence / Handoff
+~~~text
+recenter must not change ecology_state_hash
+recenter must not change Descriptor V2 / PH5 source identity
+scenery regeneration must remain deterministic for same seed/region
+procedural Earth trees remain suppressed
+LOD decisions remain presentation-only
+no persistence/network authority
+no PERF2.4 threshold changes
+~~~
 
-VIS5.5 должен дать graphical evidence mixed ecosystem composition и передать готовую visual workload сторону в integrated PLAY1 gate.
+VIS5.4 является local visual gate и не заменяет PERF2.CONV.
+
+## VIS5.5 — BLOCKED — Visual Evidence / PLAY1 Handoff
+
+После VIS5.4 нужно получить graphical evidence mixed ecosystem composition и подготовить workload handoff в integrated PLAY1 gate.
 
 Финальная граница:
 
@@ -401,13 +365,13 @@ PERF2.CONV GREEN
 PLAY1 integrated acceptance
 ~~~
 
-До PERF2.CONV нельзя заявлять, что итоговый PLAY1 performance принят.
+До PERF2.CONV нельзя заявлять итоговую PLAY1 performance acceptance.
 
-## Что пока специально не делаем
+## Что специально не делаем
 
 ~~~text
 не вводим TREE/BUSH/GRASS canonical ecology classes
-не делаем декоративные grass instances biological individuals
+не делаем decorative grass biological individuals
 не заменяем VIS4 morphology старым EVO4 renderer
 не включаем procedural Earth trees рядом с VIS4 PH5
 не переносим presentation RNG в ecology
@@ -418,21 +382,14 @@ PLAY1 integrated acceptance
 ## Текущий следующий шаг
 
 ~~~text
-VIS5.0 ✅ ACCEPTED / UBUNTU EXACT GREEN / CLOSED
-VIS5.1 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
-VIS5.2 ✅ ACCEPTED / EXACT DOUBLE-GODOT GREEN / CLOSED
-VIS5.3 🟡 IMPLEMENTED / focused 101/101 GREEN / exact branch regression pending
+VIS5.0 ✅ CLOSED
+VIS5.1 ✅ CLOSED
+VIS5.2 ✅ CLOSED
+VIS5.3 ✅ EXACT DOUBLE-GODOT GREEN / CLOSED
 
 CURRENT:
-VIS5.3 exact branch regression + formal closure
+★ VIS5.4 Composition LOD / Streaming Local Gate ★
 
 NEXT AFTER GREEN:
-VIS5.4 Composition LOD / Streaming Local Gate
-~~~
-
-Durable closures:
-
-~~~text
-docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_0_TERRAIN_ECOSYSTEM_COMPOSITION_UBUNTU_VERIFIED_CLOSED_R1_RU.md
-docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_1_TERRAIN_SURFACE_FRAME_ADAPTER_EXACT_VERIFIED_CLOSED_R1_RU.md
+VIS5.5 Visual Evidence / Integrated PLAY1 Handoff
 ~~~
