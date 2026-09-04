@@ -7,6 +7,7 @@ const StateMapping = preload("res://scripts/research/fabric_bake0/bake_state_map
 const ReconstructionDescriptor = preload("res://scripts/research/fabric_bake0/reconstruction_descriptor_v1.gd")
 const Registry = preload("res://scripts/research/fabric_bake0/bridge2_mixed_registry_v1.gd")
 const Artifact = preload("res://scripts/research/fabric_bake0/physical_bake_artifact_v1.gd")
+const SCENE := "res://scenes/labs/fabric/complex2b_compliant_response_lab.tscn"
 
 var _checks := 0
 var _failures: Array[String] = []
@@ -20,6 +21,7 @@ func _initialize() -> void:
 		return
 	_test_contract(built)
 	_test_response(built)
+	_test_scene()
 	_finish()
 
 func _test_contract(built: Dictionary) -> void:
@@ -140,6 +142,17 @@ func _test_response(built: Dictionary) -> void:
 		String.num_scientific(float(result["max_energy_balance_residual_j"])),
 	])
 
+func _test_scene() -> void:
+	var packed := load(SCENE)
+	_check(packed is PackedScene, "COMPLEX2-B visual scene loads")
+	if packed is not PackedScene:
+		return
+	var scene := (packed as PackedScene).instantiate()
+	_check(scene != null, "COMPLEX2-B visual scene instantiates")
+	if scene != null:
+		_check(String(scene.name) == "COMPLEX2BCompliantResponseLab", "COMPLEX2-B visual scene identity exact")
+		scene.free()
+
 func _check(condition: bool, label: String) -> void:
 	_checks += 1
 	if not condition:
@@ -148,7 +161,7 @@ func _check(condition: bool, label: String) -> void:
 func _finish() -> void:
 	if _failures.is_empty():
 		print("COMPLEX2B_EXPERIMENT_HASH=%s" % _experiment_hash)
-		print("FABRIC COMPLEX2-B Compliant Response Acceptance: PASS (%d assertions) full=80 reduced=1 Kelvin-Voigt energy=PASS guards=PASS extended=FULL_REFERENCE" % _checks)
+		print("FABRIC COMPLEX2-B Compliant Response Acceptance: PASS (%d assertions) full=80 reduced=1 Kelvin-Voigt energy=PASS guards=PASS scene=PASS extended=FULL_REFERENCE" % _checks)
 		quit(0)
 		return
 	for failure in _failures:
