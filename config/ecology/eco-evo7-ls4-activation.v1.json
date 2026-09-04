@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology.evo7_ls4_activation.v1",
   "version": "1.0.0",
-  "revision": "ECO.EVO7-LS4-ACTIVATION-2026-09-04-R1",
-  "status": "AUTHORIZED_CURRENT_SCOPE_FREEZE_REQUIRED",
+  "revision": "ECO.EVO7-LS4-ACTIVATION-2026-09-05-R2",
+  "status": "SCOPE_FROZEN_LS4_1_AUTHORIZED",
   "checkpoint": "ECO.EVO7/LS4",
-  "name": "Next ecology complexity stage",
+  "name": "Multi-Species Ecosystem + Shared Resources + WORLD<->ECO Feedback",
   "predecessor": {
     "perf2_conv_status": "CLOSED_ACCEPTED",
     "accepted_control_head": "b4f73a4073ac16b2a1de535acd64ae16641d4588",
@@ -13,12 +13,21 @@
     "tested_runtime_tree": "a192950483267dd428baf2d1daa25de915df2370",
     "report_hash": "1064567c83c1bd023589fdf9e36f8436b9624eeb928e8b7d413b92ce3254c3f6"
   },
+  "scope_contract": {
+    "path": "config/ecology/eco-evo7-ls4-scope-contract.v1.json",
+    "revision": "ECO.EVO7-LS4-SCOPE-2026-09-05-R1",
+    "git_blob": "624076f10d85575315ef6b392be6345185a335f1",
+    "status": "FROZEN"
+  },
   "authorization": {
     "unlock_condition": "PERF2_CONVERGENCE_ACCEPTED",
     "unlock_condition_satisfied": true,
-    "implementation_authorized": false,
     "scope_contract_required_before_runtime_delta": true,
-    "substage_ids_frozen": false
+    "scope_contract_satisfied": true,
+    "runtime_implementation_authorized": true,
+    "authorized_next_substage": "LS4.1",
+    "substage_ids_frozen": true,
+    "later_substages_require_predecessor_acceptance": true
   },
   "invariants": {
     "research_shadow_only": true,
@@ -28,11 +37,13 @@
     "persistence_authority": false,
     "network_authority": false,
     "accepted_perf2_evidence_immutable": true,
-    "accepted_vis4_evidence_immutable": true
+    "accepted_vis4_evidence_immutable": true,
+    "presentation_derived_only": true
   },
-  "first_required_action": {
-    "kind": "LS4_SCOPE_CONTRACT",
-    "purpose": "Define the next ecology-complexity problem, ownership boundary, falsifiers, executable acceptance and interaction with existing LS3/PERF2/VIS4 evidence before any runtime implementation.",
-    "runtime_changes_before_scope_freeze": "FORBIDDEN"
+  "current_action": {
+    "kind": "LS4_1_MULTI_SPECIES_ECOLOGY",
+    "purpose": "Introduce at least three functionally distinct species through the existing LS3 spatial ecology chain with deterministic catalog identity, no desired-biome placement and LS4-VIS1 species-distribution evidence.",
+    "runtime_changes_allowed": true,
+    "runtime_changes_limited_to": "LS4.1 only until exact acceptance"
   }
 }
