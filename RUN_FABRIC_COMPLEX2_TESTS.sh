@@ -54,7 +54,8 @@ run_to_log() {
 
 left_log="$(mktemp)"
 right_log="$(mktemp)"
-trap 'rm -f "$left_log" "$right_log"' EXIT
+scene_log="$(mktemp)"
+trap 'rm -f "$left_log" "$right_log" "$scene_log"' EXIT
 
 run_to_log \
   res://tests/research/fabric_bake0/fabric_bake_complex2_modular_machine_acceptance.gd \
@@ -64,9 +65,14 @@ run_to_log \
   res://tests/research/fabric_bake0/fabric_bake_complex2_modular_machine_acceptance.gd \
   "FABRIC COMPLEX2 Modular Machine Acceptance: PASS" \
   "$right_log"
+run_to_log \
+  res://tests/research/fabric_bake0/fabric_bake_complex2_scene_smoke.gd \
+  "FABRIC COMPLEX2 Scene Smoke: PASS" \
+  "$scene_log"
 
 cat "$left_log"
 cat "$right_log"
+cat "$scene_log"
 
 left_hash="$(grep '^COMPLEX2_EXPERIMENT_HASH=' "$left_log" | tail -n1 | cut -d= -f2-)"
 right_hash="$(grep '^COMPLEX2_EXPERIMENT_HASH=' "$right_log" | tail -n1 | cut -d= -f2-)"
