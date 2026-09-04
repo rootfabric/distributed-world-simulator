@@ -1,15 +1,26 @@
 {
   "schema": "planet_simulator.fabric_bake_bridge2_c_cross_representation_event_routing_validation.v1",
-  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
+  "qualification": "IMPLEMENTED_CANDIDATE_EXACT_GITHUB_DOUBLE_PASS",
   "production_accepted": false,
   "predecessor": {
     "checkpoint": "BRIDGE_2_B",
     "evidence_head": "7f8486e700ef04cbac517b88c86406d6eb66e655",
     "subject_hash": "3687aced4eaaed0a42eaee2470348792242c138a5c6ba4880c4157d488751dd9"
   },
+  "exact_implementation_subject": {
+    "head": "bb10259495cffcf7f4e3c669d8acc5089ea89399",
+    "tree": "cf674475004554e34586ae1aa4cabcc16d56c036",
+    "tracked_clean": true
+  },
   "godot": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
     "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "exact_source_carrier": {
+    "run_id": 33853207557,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9929136021,
+    "artifact_digest": "sha256:ebd3d6d8ba852d8d2c0c9c2404864a1cba19b21b4eb4e4e0286d94c724d2d4d0"
   },
   "canonical_route": {
     "event_id": "topology-event/complex0-0500-break",
@@ -31,14 +42,42 @@
     "canonical_revision_policy": "NO_CANONICAL_REVISION",
     "observer": "representation/dynamic-rom"
   },
+  "exact_double_replay": {
+    "result": "PASS",
+    "bridge2_a_regression": {
+      "pass": 71,
+      "total": 71
+    },
+    "bridge2_c": {
+      "pass": 64,
+      "total": 64
+    },
+    "playground": "PASS",
+    "tracked_clean": true,
+    "log_sha256": {
+      "bridge2_a": "20631a6002cdaafcca664e5f2c6bec7b7d919b2ee207e700e01a83168a786427",
+      "bridge2_c": "0d7aa48ad4deca4db5894d7bf0c0a28aa23dad597a0df8ae30e71d92e956603b",
+      "playground": "9c70f203f52fa2fdcb05d7ac5dd57f824b70b327f61aebbab296253356bbb6c1"
+    }
+  },
+  "control": {
+    "implementation_project_control": {
+      "run_id": 33853207559,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_portable_smoke": {
+      "run_id": 33853207608,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_linux_double_self_hosted": {
+      "run_id": 33853207582,
+      "status": "QUEUED_AT_EVIDENCE_RECORD"
+    }
+  },
   "acceptance": {
     "pass": 64,
     "total": 64,
     "playground": "PASS"
-  },
-  "local_log_sha256": {
-    "acceptance": "0d7aa48ad4deca4db5894d7bf0c0a28aa23dad597a0df8ae30e71d92e956603b",
-    "playground": "9c70f203f52fa2fdcb05d7ac5dd57f824b70b327f61aebbab296253356bbb6c1"
   },
   "guarantees": {
     "active_emitter_must_equal_ownership_evaluator": true,
