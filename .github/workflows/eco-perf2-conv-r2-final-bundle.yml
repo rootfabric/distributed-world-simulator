@@ -1,0 +1,50 @@
+name: ECO PERF2.CONV R2 Final Git Bundle
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/eco-perf2-conv-r2-final-bundle.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout complete repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Fetch exact convergence candidate and prerequisites
+        shell: bash
+        run: |
+          git fetch origin d7d58d2459182e0854414c33d5b67038fe2f1ddf
+          git fetch origin 8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3
+          git fetch origin ab44617d8961add81a6c9f245c99d0b68eaeab52
+          test "$(git rev-parse d7d58d2459182e0854414c33d5b67038fe2f1ddf^{tree})" = "188eb46ef6613fd34c8ee7471c61df3058c74d3c"
+          test "$(git rev-parse 8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3^{tree})" = "17635bb35101715205a960fdc41d16c179909101"
+          test "$(git rev-parse ab44617d8961add81a6c9f245c99d0b68eaeab52^{tree})" = "9d543a3db4f54a676e9f25152785c36a72c56a30"
+          echo "HEAD=d7d58d2459182e0854414c33d5b67038fe2f1ddf"
+          echo "TREE=188eb46ef6613fd34c8ee7471c61df3058c74d3c"
+
+      - name: Create full Git bundle
+        shell: bash
+        run: |
+          git bundle create perf2-conv-r2-final.bundle --all
+          git bundle verify perf2-conv-r2-final.bundle
+          sha256sum perf2-conv-r2-final.bundle | tee perf2-conv-r2-final.bundle.sha256
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf2-conv-r2-final-d7d58d245918
+          path: |
+            perf2-conv-r2-final.bundle
+            perf2-conv-r2-final.bundle.sha256
+          if-no-files-found: error
+          retention-days: 1
