@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/fabric/complex1b_mixed_powered_e2e.gd" id="1_complex1b"]
+
+[node name="COMPLEX1BMixedPoweredE2E" type="Node3D"]
+script = ExtResource("1_complex1b")
+auto_play = true
+stage_interval_seconds = 2.25

@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.fabric_bridge2_closure.v1",
+  "qualification": "CLOSED",
+  "production_accepted": false,
+  "predecessor_sync4": "51403977606f6f88fa8d31b3505a6c83361a4a3f",
+  "exact_subject": {
+    "head": "05fc7b9de77a21239e953d2dfd1a0451f5820caf",
+    "tree": "d9c2070ef2ba49791eb5e890b58bc2acc0f80255",
+    "detached": true,
+    "tracked_clean": true,
+    "diff_check": "PASS"
+  },
+  "source_carrier": {
+    "run_id": 33725617411,
+    "artifact_id": 9881840731,
+    "bundle_sha256": "746c1609591b19f062cca638402702ac61de5c8c1db93031a1f490a92a6c504b",
+    "zip_digest_sha256": "fa24b308700cc1f63c1a25fe1ae7f360afcf256f5d1683808bf0603ccbb335fa"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "acceptance": {
+    "sync4": {
+      "pass": 122,
+      "total": 122
+    },
+    "bridge2": {
+      "pass": 125,
+      "total": 125
+    },
+    "closure_chain": "PASS",
+    "exit_code": 0,
+    "mixed_full_max_state_delta": 0
+  },
+  "guarantees": {
+    "master_physical_source_frontier": true,
+    "exact_regional_source_slices": true,
+    "five_simultaneous_representation_kinds": true,
+    "non_overlapping_state_ownership": true,
+    "non_overlapping_source_ownership": true,
+    "common_physical_bake_artifact_adapters": true,
+    "physical_boundary_contract_only_coupling": true,
+    "fabric_owned_representation_event": true,
+    "exactly_once_event_ledger": true,
+    "selective_invalidation_fanout": true,
+    "unaffected_regions_continue": true,
+    "stale_execution_forbidden": true,
+    "deterministic_local_rebuild": true,
+    "deterministic_replay": true,
+    "full_reference_equivalence": true
+  },
+  "project_control": {
+    "run_id": 33725617349,
+    "conclusion": "SUCCESS"
+  },
+  "fabric0_19_authorized": false,
+  "next": [
+    "COMPLEX1B_MIXED_CAUSAL_LAB",
+    "B0.6_ADAPTIVE_PHYSICAL_FIDELITY"
+  ]
+}
