@@ -137,6 +137,8 @@
   "evidence_gaps": [],
   "required_fixes": [],
 
+  "rank_up_moves": [],
+
   "product_semantic_delta_after_frozen_subject": "NO PRODUCT-SEMANTIC DELTA FOUND",
   "product_semantic_delta_analysis": {
     "range": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d..2009eb74af884a69fcf2274ccb45478e83340912",
