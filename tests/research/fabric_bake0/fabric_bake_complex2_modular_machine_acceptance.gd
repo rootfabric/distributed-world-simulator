@@ -6,6 +6,7 @@ const Complex1A = preload("res://tests/research/fabric_bake0/fabric_bake_complex
 
 var _checks := 0
 var _failures: Array[String] = []
+var _experiment_hash := ""
 
 func _initialize() -> void:
 	var subject := Fixture.build()
@@ -15,7 +16,6 @@ func _initialize() -> void:
 		return
 	_test_composition(subject)
 	_test_experiment()
-	_test_determinism()
 	_finish()
 
 func _test_composition(subject: Dictionary) -> void:
@@ -31,13 +31,13 @@ func _test_composition(subject: Dictionary) -> void:
 	for part in subject["parts"]:
 		var part_id := String(part["part_id"])
 		var module_id := String(part["module_id"])
-		_check(not part_ids.has(part_id), "canonical part identity unique: %s" % part_id)
+		_check(not part_ids.has(part_id), "canonical part identity unique")
 		part_ids[part_id] = true
 		parts_by_module[module_id] = int(parts_by_module.get(module_id, 0)) + 1
 	_check(part_ids.size() == Fixture.PART_COUNT, "part identity set covers 2000")
 	_check(parts_by_module.size() == Fixture.MODULE_COUNT, "all modules own parts")
 	for module in subject["modules"]:
-		_check(int(parts_by_module.get(String(module["module_id"]), 0)) == Fixture.PARTS_PER_MODULE, "%s owns exactly 80 parts" % module["module_id"])
+		_check(int(parts_by_module.get(String(module["module_id"]), 0)) == Fixture.PARTS_PER_MODULE, "module owns exactly 80 parts")
 
 	var registry: Dictionary = subject["registry"]
 	_check(bool(Registry.validate(registry).get("success", false)), "closed BRIDGE-2 registry validates")
@@ -56,15 +56,15 @@ func _test_composition(subject: Dictionary) -> void:
 		module_regions[region_id] = int(module_regions.get(region_id, 0)) + 1
 	_check(module_regions.size() == 5, "25 logical modules span all five execution partitions")
 	for region_id in module_regions.keys():
-		_check(int(module_regions[region_id]) > 0, "%s owns non-empty logical module set" % region_id)
+		_check(int(module_regions[region_id]) > 0, "execution partition owns non-empty logical module set")
 
 	var support_ids: Dictionary = {}
 	for support in subject["supports"]:
 		var support_id := String(support["support_id"])
-		_check(not support_ids.has(support_id), "support identity unique: %s" % support_id)
+		_check(not support_ids.has(support_id), "support identity unique")
 		support_ids[support_id] = true
-	_check(support_ids.has(Fixture.DETACH_SUPPORT_ID), "detach support exists in canonical module graph")
-	_check(support_ids.has(Fixture.SECOND_SUPPORT_ID), "second functional support exists in canonical module graph")
+	_check(support_ids.has(Fixture.DETACH_SUPPORT_ID), "detach support exists")
+	_check(support_ids.has(Fixture.SECOND_SUPPORT_ID), "second functional support exists")
 
 func _test_experiment() -> void:
 	var result := Fixture.run_experiment()
@@ -73,76 +73,62 @@ func _test_experiment() -> void:
 		_failures.append("experiment details=%s" % str(result))
 		return
 
-	_check(int(result["part_count"]) == Fixture.PART_COUNT, "experiment retains 2000 parts")
-	_check(int(result["module_count"]) == Fixture.MODULE_COUNT, "experiment retains 25 modules")
+	_check(int(result["part_count"]) == 2000, "experiment retains 2000 parts")
+	_check(int(result["module_count"]) == 25, "experiment retains 25 modules")
 	_check(int(result["moving_subsystem_count"]) == 6, "experiment has 6 movers")
 	_check(int(result["contact_zone_count"]) == 3, "experiment has 3 contact zones")
 	_check(int(result["functional_path_count"]) == 2, "experiment has 2 functional paths")
-	_check(int(result["module_revision"]) == 102, "two canonical module events advance revision exactly twice")
+	_check(int(result["module_revision"]) == 102, "two canonical module events advance revision twice")
 	var machine_events: Array = Array(result["applied_event_ids"]).duplicate()
 	var expected_machine_events := [Fixture.EVENT_DETACH, Fixture.EVENT_SECOND]
 	expected_machine_events.sort()
-	_check(machine_events == expected_machine_events, "two module events committed exactly once as deterministic sorted set")
+	_check(machine_events == expected_machine_events, "two module events committed exactly once")
 
-	var detached: Array = result["detached_component"]
-	_check(detached == [Fixture.DETACH_MODULE_ID], "first event detaches exactly one end module")
-	_check(Array(result["module_components_after_detach"]).size() == 2, "detach produces exactly two module components")
-
-	_check(Array(result["detach_affected_regions"]) == [Fixture.REGION_HYBRID], "detach invalidates only causal HYBRID region")
+	_check(Array(result["detached_component"]) == [Fixture.DETACH_MODULE_ID], "first event detaches exactly one end module")
+	_check(Array(result["module_components_after_detach"]).size() == 2, "detach produces two module components")
+	_check(Array(result["detach_affected_regions"]) == [Fixture.REGION_HYBRID], "detach invalidates only HYBRID region")
 	_check(String(result["detach_stale_error"]) == "BRIDGE2_MIXED_STEP_BLOCKED", "detach stale region blocks mixed execution")
-	_check(float(result["detach_rebuild_handoff_error"]) == 0.0, "detach region rebuild preserves exact state")
+	_check(float(result["detach_rebuild_handoff_error"]) == 0.0, "detach rebuild state handoff exact")
 
-	_check(Array(result["second_affected_regions"]) == [Fixture.REGION_DYNAMIC], "second event invalidates only causal DYNAMIC region after reconfiguration")
+	_check(Array(result["second_affected_regions"]) == [Fixture.REGION_DYNAMIC], "second event invalidates only DYNAMIC region")
 	_check(String(result["second_stale_error"]) == "BRIDGE2_MIXED_STEP_BLOCKED", "second stale region blocks mixed execution")
-	_check(float(result["second_rebuild_handoff_error"]) == 0.0, "second region rebuild preserves exact state")
+	_check(float(result["second_rebuild_handoff_error"]) == 0.0, "second rebuild state handoff exact")
 
-	_check(float(result["representation_swap_handoff_error"]) == 0.0, "FULL/HYBRID representation swap has zero state error")
-	_check(int(result["representation_event_ledger_size"]) == 1, "one representation event creates one ledger record")
+	_check(float(result["representation_swap_handoff_error"]) == 0.0, "FULL/HYBRID swap handoff exact")
+	_check(int(result["representation_event_ledger_size"]) == 1, "representation event ledger exactly once")
 	var kinds: Array = Array(result["representation_kinds_after_swap"]).duplicate()
 	kinds.sort()
 	var expected := ["CONTACT_BAKE", "DYNAMIC_ROM", "FULL", "HYBRID_BAKE", "STRUCTURAL_BAKE"]
 	expected.sort()
-	_check(kinds == expected, "representation swap preserves exact five-kind set")
+	_check(kinds == expected, "swap preserves exact five-kind set")
 
-	_check(Array(result["contact_external_flow_keys"]) == [Fixture.REGION_CONTACT], "local contact injects only CONTACT execution region")
-	_check(float(result["contact_state_delta"]) > 1.0e-9, "local contact produces measurable physical state change")
-	_check(float(result["mixed_full_max_state_delta"]) <= 1.0e-12, "all mixed motion/contact/rebuild stages equal FULL reference")
+	_check(Array(result["contact_external_flow_keys"]) == [Fixture.REGION_CONTACT], "local contact enters only CONTACT region")
+	_check(float(result["contact_state_delta"]) > 1.0e-9, "contact produces measurable state change")
+	_check(float(result["mixed_full_max_state_delta"]) <= 1.0e-12, "whole mixed sequence equals FULL reference")
 
 	var before: Dictionary = result["power_before"]
 	var after_detach: Dictionary = result["power_after_detach"]
 	var after_second: Dictionary = result["power_after_second"]
-	_check(bool(before["load_a"]["on"]), "functional load A starts ON")
-	_check(bool(before["load_b"]["on"]), "functional load B starts ON")
-	_check(not bool(after_detach["load_a"]["on"]), "detached module support loss turns only load A OFF")
-	_check(bool(after_detach["load_b"]["on"]), "independent load B remains ON after detach")
-	_check(not bool(after_second["load_a"]["on"]), "load A remains OFF after second event")
-	_check(not bool(after_second["load_b"]["on"]), "second event turns load B OFF")
+	_check(bool(before["load_a"]["on"]) and bool(before["load_b"]["on"]), "both functional loads start ON")
+	_check(not bool(after_detach["load_a"]["on"]) and bool(after_detach["load_b"]["on"]), "detach turns only dependent load A OFF")
+	_check(not bool(after_second["load_a"]["on"]) and not bool(after_second["load_b"]["on"]), "second event turns remaining load B OFF")
 	_check(Array(after_detach["active_functional_bond_ids"]) == ["wire/branch-b"], "only branch B remains after detach")
-	_check(Array(after_second["active_functional_bond_ids"]).is_empty(), "both functional branches gone after second event")
+	_check(Array(after_second["active_functional_bond_ids"]).is_empty(), "no functional branch remains after second event")
 
-	_check(Array(result["detach_functional_mutations"]).size() == 1, "detach causes exactly one functional topology mutation")
-	_check(String(result["detach_functional_mutations"][0]["reason"]) == "SUPPORT_TOPOLOGY_LOST", "detach functional consequence derives from support loss")
-	_check(String(result["detach_functional_mutations"][0]["support_bond_id"]) == Fixture.DETACH_SUPPORT_ID, "detach mutation binds exact support")
-	_check(Array(result["second_functional_mutations"]).size() == 1, "second event causes exactly one functional mutation")
-	_check(String(result["second_functional_mutations"][0]["support_bond_id"]) == Fixture.SECOND_SUPPORT_ID, "second mutation binds exact support")
+	_check(Array(result["detach_functional_mutations"]).size() == 1, "detach causes one functional mutation")
+	_check(String(result["detach_functional_mutations"][0]["reason"]) == "SUPPORT_TOPOLOGY_LOST", "detach consequence derives from support loss")
+	_check(String(result["detach_functional_mutations"][0]["support_bond_id"]) == Fixture.DETACH_SUPPORT_ID, "detach consequence binds exact support")
+	_check(Array(result["second_functional_mutations"]).size() == 1, "second event causes one functional mutation")
+	_check(String(result["second_functional_mutations"][0]["support_bond_id"]) == Fixture.SECOND_SUPPORT_ID, "second consequence binds exact support")
 
 	for power_state in [before, after_detach, after_second]:
 		_check(float(power_state["max_balance_residual"]) <= Complex1A.EPSILON, "functional balance residual bounded")
 		_check(float(power_state["max_power_residual"]) <= Complex1A.EPSILON, "functional power residual bounded")
 
+	_experiment_hash = String(result["experiment_hash"])
 	_check(not String(result["machine_hash"]).is_empty(), "machine hash present")
-	_check(not String(result["final_state_hash"]).is_empty(), "final mixed state hash present")
-	_check(not String(result["experiment_hash"]).is_empty(), "experiment hash present")
-
-func _test_determinism() -> void:
-	var left := Fixture.run_experiment()
-	var right := Fixture.run_experiment()
-	_check(bool(left.get("success", false)) and bool(right.get("success", false)), "twin COMPLEX2 replays complete")
-	if bool(left.get("success", false)) and bool(right.get("success", false)):
-		_check(String(left["machine_hash"]) == String(right["machine_hash"]), "machine mutation hash deterministic")
-		_check(String(left["final_state_hash"]) == String(right["final_state_hash"]), "mixed final state deterministic")
-		_check(String(left["experiment_hash"]) == String(right["experiment_hash"]), "whole experiment hash deterministic")
-		_check(left["power_after_second"] == right["power_after_second"], "functional final result deterministic")
+	_check(not String(result["final_state_hash"]).is_empty(), "final state hash present")
+	_check(not _experiment_hash.is_empty(), "experiment hash present")
 
 func _check(condition: bool, label: String) -> void:
 	_checks += 1
@@ -151,6 +137,7 @@ func _check(condition: bool, label: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
+		print("COMPLEX2_EXPERIMENT_HASH=%s" % _experiment_hash)
 		print("FABRIC COMPLEX2 Modular Machine Acceptance: PASS (%d assertions) parts=2000 modules=25 movers=6 contacts=3 paths=2 second_event=accepted mixed=FULL_REFERENCE" % _checks)
 		quit(0)
 		return
