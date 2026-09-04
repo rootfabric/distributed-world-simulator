@@ -1,7 +1,9 @@
 # FABRIC COMPLEX1B — Visual Mixed-Representation Powered E2E
 
-**Статус:** IMPLEMENTED / exact Linux-double verification pending  
+**Статус:** IMPLEMENTED / LOCAL ATTACHED CANONICAL DOUBLE EXACT VERIFIED  
 **Ветка:** feature/fabric-complex1b-visual-mixed-e2e-r1  
+**Exact code subject:** 6eeba52b550f2d9e8fff8c4fd3c571fa88fbcfb8  
+**Exact TREE:** 92b4548f4cf70bd86087a47d949d2753a79ed08d  
 **Parents:** CX2-VIS + closed BRIDGE-2 @ c9dec386ea21....
 
 ## Цель
@@ -47,26 +49,47 @@ Closed BRIDGE-2 использует per-region source slices. COMPLEX1B соз�
 
 После canonical mutation меняются только region/impact и region/stable-structure projection dependencies.
 
-## Invalidation / rebuild
+## Atomic multi-region invalidation / rebuild
+
+Exact integration falsifier показал, что последовательный single-region rebuild некорректен для одного canonical event, который одновременно меняет два projection slice.
+
+Fail-closed probe:
+
+canonical BOND_BREAK  
+→ impact + stable projection sources change  
+→ Runtime.apply_master_update()  
+→ both regions become affected  
+→ mixed step blocked  
+→ rebuild only FULL impact  
+→ BRIDGE2_REBUILD_REGISTRY_FAILED
+
+Это ожидаемый результат: Registry.create() не должен временно принимать registry, где один affected slice уже fresh, а другой всё ещё stale относительно нового master frontier.
+
+Correct COMPLEX1B ordering:
 
 canonical BOND_BREAK  
 → projection source update  
-→ FULL impact slice refresh required  
-→ STRUCTURAL_BAKE STALE  
+→ impact + stable affected together  
 → mixed step blocked fail-closed  
-→ FULL projection refresh  
-→ still blocked by structural STALE  
-→ STRUCTURAL_BAKE rebuild  
+→ build fresh FULL impact adapter  
+→ build fresh STRUCTURAL_BAKE stable adapter  
+→ one atomic Registry.create() over complete affected set  
+→ switch registry hash once  
+→ clear both invalidation buckets  
+→ FULL state handoff error = 0  
+→ STRUCTURAL_BAKE state handoff error = 0  
 → all five regions executable  
 → mixed flow resumes
 
-State handoff errors должны быть exactly zero.
+Closed BRIDGE-2 runtime не менялся; atomic multi-region orchestration находится только в COMPLEX1B integration layer.
 
 ## FULL reference equality
 
 BRIDGE-2 mixed runtime и FULL reference проходят одинаковые FLOW steps до и после event/rebuild.
 
 Required bound: max |mixed_state - full_reference_state| <= 1e-12.
+
+Exact acceptance подтвердил bound.
 
 ## Powered chain
 
@@ -92,6 +115,30 @@ Stages:
 MIXED_BASELINE → IMPACT_FULL_OWNS_EVENT → CANONICAL_BREAK → STRUCTURAL_STALE → MIXED_REBUILT → FULL_REFERENCE_EQUAL.
 
 Controls: Space next, R reset, 1 world, 2 physics, 3 causal.
+
+## Exact verification
+
+Canonical attached Godot:
+
+4.7.1.stable.double.custom_build.a13da4feb  
+SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+Exact source carrier:
+- run 33852110819
+- artifact 9928724471
+- artifact digest sha256:788abb3ca1b6c0ff9d7de1561a0547a5e2faf85a3abecd7040ee1829a7aefcc2
+- artifact head 6eeba52b550f2d9e8fff8c4fd3c571fa88fbcfb8
+
+Results:
+
+FABRIC COMPLEX1B Mixed Powered E2E Acceptance: PASS (57 assertions)  
+atomic_rebuild=impact+stable  
+mixed=FULL_REFERENCE
+
+FABRIC BRIDGE-2 Mixed Generic Machine R1 Acceptance: PASS (125 assertions)  
+initial mixed-flow max FULL delta=0
+
+Project Control на exact code subject: SUCCESS. Dedicated self-hosted Linux-double workflow может оставаться queued; он не подменяется этим локальным exact evidence.
 
 ## Files
 
