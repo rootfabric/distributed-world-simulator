@@ -160,7 +160,71 @@
         "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
         "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
         "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
-      ]
+      ],
+      "runtime_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+      "runtime_tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+      "runtime_pr": 487,
+      "substeps": {
+        "P7.7-A": {
+          "status": "EXACT_VALIDATED",
+          "proof": "CANONICAL_RAYCAST_TO_MW4_TO_P7_3_TO_ITEM_GRAPH_TO_VISIBLE_PRESENTER_REBUILD",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-B": {
+          "status": "EXACT_VALIDATED",
+          "proof": "SEAM_PROXIMITY_WITH_SINGLE_REGION_TARGET_STILL_USES_MW4_AND_MW10_ZERO",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-B-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-C0": {
+          "status": "EXACT_VALIDATED",
+          "proof": "MW10_CANONICAL_PHYSICAL_OUTPUT_ENVELOPE_BINDS_PLAN_COMMIT_RECEIPTS_MATTER_RESULTS_MATERIAL_BATCHES_AND_DISTRIBUTED_LEDGER_WITHOUT_SYNTHESIZED_PHYSICAL_PROPERTIES",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-VALIDATION-001.v1.json"
+        },
+        "P7.7-C1": {
+          "status": "EXACT_VALIDATED",
+          "proof": "MW10_V2_TRANSACTION_RECORD_DURABLY_JOURNALS_PARTICIPANT_PHYSICAL_OUTPUTS_AND_TERMINAL_ENVELOPE_THROUGH_RESTART_RECOVERY_AND_EXACT_REPLAY",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001.v1.json"
+        },
+        "P7.7-C2": {
+          "status": "EXACT_VALIDATED",
+          "proof": "DURABLE_MW10_PARTICIPANT_BATCHES_DELIVER_THROUGH_EXISTING_P7_3_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITH_NO_NEW_RECEIPT_STORE",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-C3": {
+          "status": "EXACT_VALIDATED",
+          "proof": "REAL_CANONICAL_MOON_QUERY_TO_P7_6_TO_MW10_TO_TWO_REAL_REGIONAL_MW4_COMMITS_ON_SHARED_MATTER_STORE_TO_DURABLE_PHYSICAL_OUTPUT_TO_P7_3_ITEM_GRAPH_AND_A_B_INVALIDATION_WITH_REPLAY_NO_RECOMMIT",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-D": {
+          "status": "EXACT_VALIDATED",
+          "proof": "ACTIVE_A_B_MW10_RESERVATION_BLOCKS_B_ONLY_MW4_AND_SECOND_A_B_MW10_BEFORE_ANY_PARTIAL_MATTER_MATERIAL_OR_VISUAL_SUCCESS",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-D-MW10-RESERVATION-CONFLICT-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-E": {
+          "status": "EXACT_VALIDATED",
+          "proof": "A_TO_B_ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_THEN_B_ONLY_DIG_USES_EXISTING_MW4_WITH_MW10_ZERO",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-E-ACTOR-HANDOFF-NO-FALSE-MW10-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-F": {
+          "status": "EXACT_VALIDATED",
+          "proof": "C2_DURABLE_MW10_PARTICIPANT_BATCHES_DELIVER_TO_CANONICAL_ITEM_GRAPH_EXACTLY_ONCE_WITH_SECOND_IDENTICAL_DELIVERY_AS_REPLAY",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json"
+        },
+        "P7.7-G": {
+          "status": "EXACT_VALIDATED",
+          "proof": "EXACT_C3_CANONICAL_A_B_OUTPUTS_FEED_BYTE_IDENTICAL_P7_5_MW6_MW7_M7_RL3_CONVERGENCE_OWNERS_ALREADY_FRESH_LINUX_VERIFIED_1140_ASSERTIONS",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-G-SECOND-CLIENT-CONVERGENCE-COMPOSITIONAL-VALIDATION-001.v1.json"
+        },
+        "P7.7-H": {
+          "status": "EXACT_VALIDATED",
+          "proof": "C3_C2_REPLAY_NO_RECOMMIT_NO_DUPLICATION_PLUS_C1_P7_4_RESTART_DURABILITY_PLUS_FRESH_LINUX_P7_5_MW7_RECONNECT_WITH_BYTE_IDENTICAL_OWNERS",
+          "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-H-REPLAY-RECONNECT-RESTART-COMPOSITIONAL-VALIDATION-001.v1.json"
+        },
+        "P7.7-FORMAL-CLOSURE": {
+          "status": "NEXT",
+          "proof": "FREEZE_ONE_EXACT_RUNTIME_HEAD_TREE_RUN_FULL_GATE_THEN_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE"
+        }
+      }
     }
   ],
   "multi_region_rule": "ACTOR_SEAM_CROSSING_DOES_NOT_IMPLY_MW10; MW10_ONLY_WHEN_ONE_CANONICAL_MATTER_MUTATION_SPANS_TWO_OR_MORE_AUTHORITY_REGIONS",

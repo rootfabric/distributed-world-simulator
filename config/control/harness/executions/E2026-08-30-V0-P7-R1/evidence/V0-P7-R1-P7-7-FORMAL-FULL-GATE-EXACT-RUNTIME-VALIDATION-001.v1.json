@@ -1,0 +1,148 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-FORMAL-FULL-GATE-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/FORMAL_CLOSURE_FULL_GATE",
+  "validated_at_utc": "2026-09-04T08:18:00Z",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch": "feature/v0-p7-bounded-terrain-mutation",
+    "runtime_pr": 487,
+    "head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "tree": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+    "runtime_project_control_run": 33852376026,
+    "runtime_project_control": "SUCCESS",
+    "branch_rechecked_after_gate": true,
+    "branch_still_exact_subject_after_gate": true
+  },
+  "delta_from_a_h_runtime_head": {
+    "base_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "commit_count": 3,
+    "product_runtime_files_changed": 0,
+    "files": [
+      {
+        "path": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh",
+        "classification": "REPOSITORY_OWNED_FORMAL_CLOSURE_RUNNER",
+        "status": "ADDED"
+      },
+      {
+        "path": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh",
+        "classification": "GATE_EXPECTED_SUMMARY_REPAIR_ONLY",
+        "status": "MODIFIED",
+        "change": "P7.1 authority expected assertion count 83 -> 88"
+      }
+    ]
+  },
+  "source_materialization": {
+    "control_branch": "control/v0-p7-7-formal-source-snapshot-r3",
+    "control_head": "8a82f4a4009c53cdd3d32c7beccb66aba1e186bd",
+    "control_pr": 531,
+    "control_project_control_run": 33852447087,
+    "control_project_control": "SUCCESS",
+    "workflow_run": 33852447179,
+    "artifact_id": 9928848799,
+    "artifact_name": "dws-p7-7-formal-9440df5d-with-git",
+    "artifact_digest": "sha256:4941039de1fcb24ecd944e8e0c8861086e6d1d6e41c187fbaa35a37c5b2b0894",
+    "source_tar_sha256": "70e12a88b95c4ef7a08b275257bc746c179d8896f71482e0a854401075cf021b",
+    "git_metadata_retained": true,
+    "exact_identity_verified_from_materialized_checkout": true
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_path": "/mnt/data/godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "build_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "gate": {
+    "runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh",
+    "command_subject_head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "exit_code": 0,
+    "final_banner": "V0-P7.7 GRAPHICAL DIGGING GATE GREEN",
+    "exact_head_banner": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "exact_tree_banner": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+    "godot_banner": "4.7.1.stable.double.custom_build.a13da4feb",
+    "outer_gate_log_sha256": "043766d6e1e27c5ed654602eb75b481b3de0cc4f37387e1948fe43b375eceed8",
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "fatal_matches_recursive": 0,
+    "log_count_recursive": 32,
+    "direct_stage_count": 13,
+    "nested_p7_5_stage_count": 16,
+    "total_assertions": 2032,
+    "total_failures": 0
+  },
+  "direct_stages": [
+    {"name":"P7.7 graphical digging slice","result":"PASS","assertions":52,"failures":0,"log_sha256":"cc720c23cc1b2e0e56638f120111adbe8674e2e86d5e9c83a40c205d355d26fb"},
+    {"name":"P7.7-A Digging Playground","result":"PASS","assertions":20,"failures":0,"log_sha256":"829eff9dddd4dcf3b156bc98ad16dd98b421bd227851ee3938adfbb3c08dc736"},
+    {"name":"P7.7-B seam-near single-region","result":"PASS","assertions":20,"failures":0,"log_sha256":"3a5b3d6c120b63ede19d89e250de60a52d93441fd2afa06053ad0b4e7c693ab9"},
+    {"name":"MW10 C0 canonical physical output","result":"PASS","assertions":30,"failures":0,"log_sha256":"6107a38befa2af11ce5bc940ac7224a570afd7819ec90f446d3782f2216f89ae"},
+    {"name":"MW10 C1 physical output durability","result":"PASS","assertions":60,"failures":0,"log_sha256":"7e45ed31c956e537859260a533a1b042b3da302351879b67733ad457ade015b4"},
+    {"name":"P7.7-C2 MW10 physical output to P7.3","result":"PASS","assertions":42,"failures":0,"log_sha256":"71d059ff1df5360fdea39b376557b99b6c9550eb023e3fc8bee501405cab02da"},
+    {"name":"P7.7-C3 true A+B end-to-end","result":"PASS","assertions":61,"failures":0,"log_sha256":"25f8bdc6240d132de87fb766a57942ca982f260def020b557c88cdea5d25ae1a"},
+    {"name":"P7.7-D MW10 reservation conflict","result":"PASS","assertions":31,"failures":0,"log_sha256":"9673c45b42e3ac67c32c2e71632dad22fd165330ef10da4b241a888bc817084c"},
+    {"name":"P7.7-E actor handoff no false MW10","result":"PASS","assertions":24,"failures":0,"log_sha256":"1b2bea96660b7a47ef0b1ee15962eb74530af7ae0b479d7277c13bb7b7e3e007"},
+    {"name":"P7.6 seam + multi-region composition","result":"PASS","assertions":106,"failures":0,"log_sha256":"6dea39ff704df6057acabe87050a15a748c986ddf94ac3cdc18754190e64c78f"},
+    {"name":"MW10 cross-region Matter transactions","result":"PASS","assertions":201,"failures":0,"log_sha256":"6ab27c651e54e4d58db750f50bded0dde3a6fbe5186b0bff506450611c6116b8"},
+    {"name":"MW10 cross-region Matter processes","result":"PASS","assertions":53,"failures":0,"log_sha256":"02fa24279261aaa216b8bd745c654a5e943616a7a0520b8817d9c846a3b58551"},
+    {"name":"MW4 matter mutations","result":"PASS","assertions":187,"failures":0,"log_sha256":"452bef83f99738d1c2aabcfbef206118f13a8480d7f5f5ffaf3da9498716bc3a"}
+  ],
+  "nested_p7_5_gate": {
+    "result": "GREEN",
+    "banner": "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN",
+    "head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "subgate_log_sha256": "27ed670b797960173df5c9bf9919f900865ce20b7f0069aabb54536338795d2d",
+    "assertions": 1145,
+    "failures": 0,
+    "stages": [
+      {"name":"P7.5 two-client convergence","assertions":85,"result":"PASS","log_sha256":"9ab2090fe1764970d961738c35179e5d66f24caa47cdce1ff62105afd5545dbb"},
+      {"name":"M7 aggregate replica compatibility","assertions":5,"result":"PASS","log_sha256":"0679be91a78947716ad577d3aab70083680134f1f84f726ab63ab2c5e1932843"},
+      {"name":"P7.4 seed","assertions":21,"result":"PASS","log_sha256":"11d6986504b79062422aab73d98d623d3db727fbf8618e733c9fe69de44dd4b2"},
+      {"name":"P7.4 recover-deliver","assertions":25,"result":"PASS","log_sha256":"b1a4915742bfadda900d36361507189632c3cf6f5743639874606a8fe804acca"},
+      {"name":"P7.4 recover-replay","assertions":17,"result":"PASS","log_sha256":"70dd6aa7b7e87b3ad91963122dad14b1fb6349f9ebc2552b97540e951573c2d3"},
+      {"name":"P7.3 material batch to Item Graph","assertions":116,"result":"PASS","log_sha256":"ad3a6ca7f3d10c3046f3f58017c31fd354f2e7e79958ab10bc60056361e39061"},
+      {"name":"P7.2 lunar Matter bubble","assertions":53,"result":"PASS","log_sha256":"14a7ed43150c67bea6399aca4cd5a3f752174cbaf96e356a4cc12ec9d4b9270c"},
+      {"name":"P7.2 lunar surface seam","assertions":50,"result":"PASS","log_sha256":"39f872e155c05da6196b6f43570d183b16beaacf1b540b32a56f0317a481a1af"},
+      {"name":"P7.1 authority gate","assertions":88,"result":"PASS","log_sha256":"d70268f29a7409323c410a1cc4656127722c5fdeffd1a93b4cb4906915f8e3e4"},
+      {"name":"P7.1 Tool->MW4 integration","assertions":30,"result":"PASS","log_sha256":"47b4eac5dabedb1b7a611bb8eb04a57424defc30f4250a77b2538f999a992276"},
+      {"name":"P5 two-client replication/reconnect","assertions":47,"result":"PASS","log_sha256":"2f4384cbe759e22a0baa95f7ef2e6f73a110dc024f208f8d06c204b11ba644d9"},
+      {"name":"P5 mining tool gate","assertions":36,"result":"PASS","log_sha256":"4bf5e9adce4bd76a7d24930d5747f367811acebcee7fa11929b0ed19487dcff4"},
+      {"name":"MW6 matter network authority","assertions":130,"result":"PASS","log_sha256":"1265617871a330f452627301526dc5c1460e29ef0cac675fb143e65bc9b21ec6"},
+      {"name":"MW7 matter interest replication","assertions":114,"result":"PASS","log_sha256":"d67b20e5f9793ff02c27c4556cd713ee92d65f5bc26d5cd697fa493746a05ce3"},
+      {"name":"RL2 Matter multiresolution meshing","assertions":153,"result":"PASS","log_sha256":"5cd7ddfb35a6efca59b68bdc91a9d8acb8314dc5d5c8f2f2d232763bef396b"},
+      {"name":"RL3 representation-aware network streaming","assertions":175,"result":"PASS","log_sha256":"7aa088aa1e22580af49e7e406fa0eb882aedd2871b6172cf2f71d20232e98d56"}
+    ]
+  },
+  "closure_gate_repair_history": {
+    "r1_subject": "acbf4fd3c5b6205584d8c2d139011894034408ed",
+    "r1_result": "GATE_METADATA_FAIL_AFTER_PRODUCT_TEST_PASS",
+    "r1_blocker": "nested P7.5 runner expected P7.1 authority 83 assertions while current exact test passed 88 assertions",
+    "runtime_defect_found": false,
+    "repair_head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "repair_scope": "ONE_EXPECTED_SUMMARY_LITERAL_IN_REPOSITORY_OWNED_GATE",
+    "r3_result": "GREEN"
+  },
+  "nonfatal_observations": [
+    "Some Godot stages emit ObjectDB/resource notices after PASS. They match none of the repository fatal patterns and do not affect stage or gate exit codes.",
+    "Godot emits the standard root/superuser warning in the local container."
+  ],
+  "formal_status": {
+    "a_through_h_functional_matrix": "EXACT_VALIDATED",
+    "single_frozen_full_gate": "GREEN",
+    "independent_reviewer": "NEXT",
+    "independent_verifier": "BLOCKED_UNTIL_REVIEWER_PASS",
+    "human_runtime_feature_merge": "BLOCKED_UNTIL_REVIEWER_AND_VERIFIER_PASS",
+    "runtime_pr_merged": false,
+    "p7_7_complete_merged": false
+  },
+  "next_boundary": {
+    "id": "P7.7-REVIEWER",
+    "scope": "FRESH_INDEPENDENT_EXACT_HEAD_REVIEW",
+    "required_result": "PASS_WITH_REQUIRED_FIXES_EMPTY_BEFORE_FRESH_LINUX_VERIFIER_DISPATCH"
+  },
+  "verdict": "GREEN",
+  "merge_authorized": false
+}

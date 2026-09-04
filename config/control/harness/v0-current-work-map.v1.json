@@ -291,6 +291,116 @@
       "F_MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
       "G_SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
       "H_REPLAY_RECONNECT_RESTART_NO_DUPLICATION"
-    ]
+    ],
+    "runtime_head": "5113f4922f61345fae222689b9e7cdaae3683e51",
+    "runtime_tree": "14395d3e5353d1e84375fe62decc70f2f72f133e",
+    "runtime_pr": 487,
+    "substeps": {
+      "P7.7-A": {
+        "status": "EXACT_VALIDATED",
+        "scope": "CANONICAL_AIM_SINGLE_REGION_DIG_MATERIAL_VISIBLE_HOLE",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+        "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+        "route": "MW4_SINGLE_REGION",
+        "mw10_invoked": false,
+        "next": "P7.7-B"
+      },
+      "P7.7-B": {
+        "status": "EXACT_VALIDATED",
+        "scope": "SEAM_NEAR_BUT_CANONIC_TARGET_REMAINS_SINGLE_REGION",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-B-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "route": "MW4_SINGLE_REGION",
+        "mw10_invoked": false
+      },
+      "P7.7-C0": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MW10_CANONICAL_PHYSICAL_OUTPUT_CONTRACT",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C0-MW10-CANONICAL-PHYSICAL-OUTPUT-VALIDATION-001.v1.json",
+        "owner": "MW10",
+        "durable_wiring": false,
+        "p7_3_delivery_wired": false
+      },
+      "P7.7-C1": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MW10_PHYSICAL_OUTPUT_DURABLE_COORDINATOR_WIRING",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C1-MW10-PHYSICAL-OUTPUT-DURABILITY-VALIDATION-001.v1.json",
+        "record_schema": "planet_simulator.matter_cross_region_transaction_record.v2",
+        "legacy_record_v1_readable": true,
+        "checkpoint_schema_changed": false,
+        "receipt_schema_changed": false,
+        "operation_result_schema_changed": false,
+        "p7_3_delivery_wired": false
+      },
+      "P7.7-C2": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MW10_PHYSICAL_OUTPUT_TO_P7_3_DELIVERY",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+        "aggregate_batch_synthesized": false
+      },
+      "P7.7-C3": {
+        "status": "EXACT_VALIDATED",
+        "scope": "TRUE_A_B_END_TO_END_DIG",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "real_moon_matter": true,
+        "real_p7_6": true,
+        "real_mw10": true,
+        "real_regional_mw4_commits": 2,
+        "shared_canonical_matter_store": true,
+        "p7_3_item_graph_delivery": true,
+        "replay_no_recommit": true
+      },
+      "P7.7-D": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-D-MW10-RESERVATION-CONFLICT-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "b_only_conflict_blocks_before_mw4": true,
+        "ab_conflict_blocks_before_prepare_commit": true,
+        "partial_matter_mutation": false,
+        "material_delivery": false,
+        "visual_success": false
+      },
+      "P7.7-E": {
+        "status": "EXACT_VALIDATED",
+        "scope": "ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-E-ACTOR-HANDOFF-NO-FALSE-MW10-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "handoff_route": "SM1_MW8_MW9_HANDOFF",
+        "handoff_mw10_invoked": false,
+        "post_handoff_route": "MW4_SINGLE_REGION",
+        "post_handoff_mw10_invoked": false
+      },
+      "P7.7-F": {
+        "status": "EXACT_VALIDATED",
+        "scope": "MATERIAL_TO_ITEM_GRAPH_EXACTLY_ONCE",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-C2-MW10-TO-P7-3-EXACT-RUNTIME-VALIDATION-001.v1.json",
+        "exactly_once_owner": "CANONICAL_ITEM_GRAPH_REPLAY_LEDGER",
+        "new_delivery_receipt_store": false
+      },
+      "P7.7-G": {
+        "status": "EXACT_VALIDATED",
+        "scope": "SECOND_CLIENT_HOLE_AND_INVENTORY_CONVERGENCE",
+        "proof_type": "COMPOSITIONAL_REUSE_OF_EXACT_P7_5_PLUS_EXACT_C3_C2",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-G-SECOND-CLIENT-CONVERGENCE-COMPOSITIONAL-VALIDATION-001.v1.json",
+        "client_private_terrain_truth": false,
+        "client_private_inventory_truth": false,
+        "new_network_owner": false
+      },
+      "P7.7-H": {
+        "status": "EXACT_VALIDATED",
+        "scope": "REPLAY_RECONNECT_RESTART_NO_DUPLICATION",
+        "proof_type": "COMPOSITIONAL_REUSE_OF_EXACT_C1_C2_C3_P7_4_AND_FRESH_LINUX_P7_5_MW7_RECONNECT",
+        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-H-REPLAY-RECONNECT-RESTART-COMPOSITIONAL-VALIDATION-001.v1.json",
+        "second_hole": false,
+        "second_matter_commit": false,
+        "second_item_graph_delivery": false,
+        "new_persistence_owner": false
+      },
+      "P7.7-FORMAL-CLOSURE": {
+        "status": "NEXT",
+        "scope": "FREEZE_FULL_REGRESSION_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE",
+        "required_result": "A_THROUGH_H_ACCEPTED_ON_ONE_FROZEN_RUNTIME_HEAD_TREE_THEN_INDEPENDENT_REVIEW_VERIFICATION_AND_HUMAN_RUNTIME_FEATURE_MERGE"
+      }
+    }
   }
 }

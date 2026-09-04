@@ -14,6 +14,8 @@ const MaterializerScript = preload("res://scripts/simulation/matter/storage/matt
 const SparseStoreScript = preload("res://scripts/simulation/matter/storage/matter_sparse_brick_store.gd")
 const GeneratorScript = preload("res://scripts/simulation/matter/generation/fixed_seed_asteroid_generator.gd")
 const SweptShapeScript = preload("res://scripts/simulation/matter/mutation/matter_swept_shape.gd")
+const CellGridScript = preload("res://scripts/simulation/matter/spatial/matter_cell_grid.gd")
+const CellAddressScript = preload("res://scripts/simulation/spatial/simulation_cell_address.gd")
 const KernelScript = preload("res://scripts/simulation/matter/mutation/matter_excavation_kernel.gd")
 const JournalScript = preload("res://scripts/simulation/matter/mutation/matter_mutation_journal.gd")
 const ReceiverScript = preload("res://scripts/simulation/matter/mutation/matter_material_receiver.gd")
@@ -32,6 +34,7 @@ var _store = null
 var _receiver = null
 var _journal = null
 var _procedural_sampler = GeneratorScript
+var _target_scope_root: Dictionary = {}
 
 
 func configure(
@@ -47,7 +50,8 @@ func configure(
 	snapshot_store = null,
 	material_receiver = null,
 	mutation_journal = null,
-	procedural_sampler = null
+	procedural_sampler = null,
+	target_scope_root: Dictionary = {}
 ) -> Dictionary:
 	var sampler = GeneratorScript if procedural_sampler == null else procedural_sampler
 	if not bool(BodyScript.validate(body).get("success", false)) \
@@ -68,6 +72,13 @@ func configure(
 	_grid_profile = grid_profile.duplicate(true)
 	_cell_level = cell_level
 	_procedural_sampler = sampler
+	_target_scope_root = {}
+	if not target_scope_root.is_empty():
+		var scope_check: Dictionary = CellGridScript.validate_address(grid_profile, target_scope_root)
+		if not bool(scope_check.get("success", false)) \
+				or int(target_scope_root.get("level", -1)) > cell_level:
+			return MatterUtilsScript.failure("INVALID_MATTER_EXCAVATION_TARGET_SCOPE_ROOT")
+		_target_scope_root = target_scope_root.duplicate(true)
 	if snapshot_store == null:
 		_store = SparseStoreScript.new()
 		var store_configuration: Dictionary = _store.configure(_body, _grid_profile)
@@ -128,8 +139,8 @@ func create_excavation_request(
 	)
 	if not bool(RequestScript.validate_shape(shape).get("success", false)):
 		return {}
-	var target_bricks: Array = SweptShapeScript.affected_brick_addresses(
-		_grid_profile, shape, _cell_level
+	var target_bricks: Array = _scoped_target_bricks(
+		SweptShapeScript.affected_brick_addresses(_grid_profile, shape, _cell_level)
 	)
 	if target_bricks.is_empty():
 		return {}
@@ -334,8 +345,10 @@ func _validate_request_against_configuration(request: Dictionary) -> String:
 		return "MW4_ONLY_SUPPORTS_SWEPT_CAPSULE"
 	if String(request["destination_container_id"]) != _receiver.container_id():
 		return "MATTER_MUTATION_DESTINATION_MISMATCH"
-	var planned: Array = SweptShapeScript.affected_brick_addresses(
-		_grid_profile, request["shape"], _cell_level
+	var planned: Array = _scoped_target_bricks(
+		SweptShapeScript.affected_brick_addresses(
+			_grid_profile, request["shape"], _cell_level
+		)
 	)
 	if planned.size() != request["target_bricks"].size():
 		return "MATTER_MUTATION_TARGET_SET_MISMATCH"
@@ -343,6 +356,24 @@ func _validate_request_against_configuration(request: Dictionary) -> String:
 		if planned[index] != request["target_bricks"][index]:
 			return "MATTER_MUTATION_TARGET_SET_MISMATCH"
 	return ""
+
+
+func _scoped_target_bricks(addresses: Array) -> Array:
+	if _target_scope_root.is_empty():
+		return addresses.duplicate(true)
+	var result: Array = []
+	for raw_address in addresses:
+		if typeof(raw_address) != TYPE_DICTIONARY:
+			continue
+		var address: Dictionary = raw_address
+		var cell: Dictionary = Dictionary(address.get("cell_address", {}))
+		if cell == _target_scope_root or CellAddressScript.is_ancestor(_target_scope_root, cell):
+			result.append(address.duplicate(true))
+	return result
+
+
+func target_scope_root() -> Dictionary:
+	return _target_scope_root.duplicate(true)
 
 
 func _rejected_result(request: Dictionary, error_code: String, record_result: bool) -> Dictionary:

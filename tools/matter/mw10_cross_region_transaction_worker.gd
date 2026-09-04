@@ -40,17 +40,28 @@ class FileRuntime extends RefCounted:
 	func commit_region(participant: Dictionary, prepare_receipt: Dictionary, context: Dictionary) -> Dictionary:
 		var key: String = _key(String(context["transaction_id"]), String(participant["region_id"]))
 		var committed_path: String = root_path.path_join("committed").path_join("%s.json" % key)
-		var source: Dictionary = _read_json(committed_path)
-		if source.is_empty():
+		var payload: Dictionary = _read_json(committed_path)
+		if payload.is_empty():
 			var staged_path: String = root_path.path_join("staged").path_join("%s.json" % key)
 			if _read_json(staged_path).is_empty():
 				return MatterUtils.failure("MW10_PROCESS_COMMIT_STAGE_MISSING")
-			source = prepare_receipt["source_revision"].duplicate(true)
-			if not _write_json_atomic(committed_path, source):
+			var physical: Dictionary = Fixture.physical_commit_details(
+				participant, prepare_receipt, context
+			)
+			if physical.is_empty():
+				return MatterUtils.failure("MW10_PROCESS_PHYSICAL_OUTPUT_CREATION_FAILED")
+			payload = {
+				"source_revision": prepare_receipt["source_revision"].duplicate(true),
+				"matter_result": physical["matter_result"].duplicate(true),
+				"material_batch": physical["material_batch"].duplicate(true),
+			}
+			if not _write_json_atomic(committed_path, payload):
 				return MatterUtils.failure("MW10_PROCESS_COMMIT_WRITE_FAILED")
 		return MatterUtils.success({
-			"source_revision": source,
+			"source_revision": payload["source_revision"],
 			"runtime_state_hash": MatterUtils.payload_hash([key, "committed-state", context["global_commit_hash"]]),
+			"matter_result": payload["matter_result"],
+			"material_batch": payload["material_batch"],
 		})
 
 	func rollback_region(participant: Dictionary, _prepare_receipt: Dictionary, context: Dictionary) -> Dictionary:
@@ -225,7 +236,8 @@ func _recover(repository_root: String, runtime_root: String, report_path: String
 	if expected_phase == "COMMITTED":
 		passed = passed and runtime.count_files("committed") == 2 \
 			and runtime.count_files("published") == 1 \
-			and String(coordinator.operation_result(String(record["operation_id"])).get("outcome", "")) == "COMMITTED"
+			and String(coordinator.operation_result(String(record["operation_id"])).get("outcome", "")) == "COMMITTED" \
+			and not coordinator.physical_output(String(record["operation_id"])).is_empty()
 	else:
 		passed = passed and runtime.count_files("committed") == 0 \
 			and runtime.count_files("published") == 0 \
@@ -244,6 +256,12 @@ func _recover(repository_root: String, runtime_root: String, report_path: String
 		"rolled_back_file_count": runtime.count_files("rolled-back"),
 		"published_file_count": runtime.count_files("published"),
 		"outcome": String(coordinator.operation_result(String(record.get("operation_id", ""))).get("outcome", "")),
+		"physical_output_checksum": String(
+			coordinator.physical_output(String(record.get("operation_id", ""))).get("checksum", "")
+		),
+		"participant_physical_output_count": Array(
+			record.get("participant_physical_outputs", [])
+		).size(),
 	}
 	if not _write_report(report_path, report):
 		return 14

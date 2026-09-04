@@ -1,0 +1,128 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-C3-TRUE-AB-END-TO-END-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-C3",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "3410d4819baba5f28d67c826d609a1aa5d8ebc1a",
+    "tree": "5e75bc1f254cc9910f71591972b94a8c2eb3243b",
+    "base_c2_head": "c9e758ecfe738f771fa261fa91df2627f91be686",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33747416939,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33747547641,
+    "source_export_artifact_id": 9890212933,
+    "source_export_artifact_digest": "sha256:e0b699da2536726d1ebb42749cc121258164dbeadc3422925df051e1a2929aac"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "implementation": {
+    "real_moon_matter_query": true,
+    "real_p7_6_region_classification": true,
+    "real_mw10_coordinator": true,
+    "shared_canonical_matter_store": true,
+    "regional_mw4_executors": 2,
+    "mw4_optional_target_scope_root": true,
+    "default_mw4_behavior_preserved": true,
+    "participant_local_canonical_matter_requests": true,
+    "durable_mw10_physical_output": true,
+    "p7_3_delivery_to_canonical_item_graph": true,
+    "a_b_visible_invalidation": true,
+    "exact_replay_without_recommit": true
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0,
+      "log_sha256": "ac2a70b640108ee6495f9b3a9a4a8b94089c5f71c971f8a495bd2ce385b05c73"
+    },
+    {
+      "name": "P7.7-C3 true A+B end-to-end",
+      "result": "PASS",
+      "assertions": 61,
+      "failures": 0,
+      "log_sha256": "54dd8cc7f10818650b7ac948d9d1033d2e6ca55ef51054a7e5cbe2737ab6aad4",
+      "proofs": [
+        "canonical query hits real Moon Matter",
+        "global request target set spans exactly region roots A and B",
+        "regional A and B Matter requests partition the global target set",
+        "P7.6 routes the mutation to MW10",
+        "MW10 invokes one real regional MW4 commit for A and one for B",
+        "both regional MW4 executors mutate one shared canonical sparse Matter store",
+        "MW10 stores a valid durable physical-output envelope with regional real MatterMaterialBatch provenance",
+        "P7.3 delivers both canonical regional batches to canonical Item Graph",
+        "derived visual invalidation covers A and B",
+        "exact replay does not recommit A or B, does not mutate Matter again and does not duplicate Item Graph material"
+      ]
+    },
+    {
+      "name": "MW4 canonical regression",
+      "result": "PASS",
+      "assertions": 187,
+      "log_sha256": "e861dcd58c596a475890273c9a519cb1d5f5e4e88460dac7797db2d5de8131c0"
+    },
+    {
+      "name": "P7.7-C2 MW10 to P7.3 regression",
+      "result": "PASS",
+      "assertions": 42,
+      "failures": 0,
+      "log_sha256": "21eae11a07ba958ec4a58dcd8782964c4657e660b9bdce55624ca8430f0067db"
+    },
+    {
+      "name": "MW10 C1 durability regression",
+      "result": "PASS",
+      "assertions": 60,
+      "failures": 0,
+      "log_sha256": "3eb0da2d80b67c6e286b33f0862613b94fa8cae108e898a9cd1803c530ee9bd8"
+    },
+    {
+      "name": "MW10 C0 physical output regression",
+      "result": "PASS",
+      "assertions": 30,
+      "failures": 0,
+      "log_sha256": "d484d307a017deaf9c54c4ecdd83c14cefa676b8a4338833da4e85a6e1b63a5d"
+    },
+    {
+      "name": "P7.6 seam multi-region regression",
+      "result": "PASS",
+      "assertions": 106,
+      "failures": 0,
+      "log_sha256": "b3d3da4055ad40c82bacdaebf095101798079a546371a9eaee34a6d402a41ec3"
+    }
+  ],
+  "fatal_scan": {
+    "patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "matches": 0
+  },
+  "execution_note": {
+    "functional_verdict": "PASS",
+    "process_lifecycle_observation": "The C3 test emitted its final PASS line before a surrounding batch runner waited on process shutdown. The exact functional verdict is taken from the final test output; separate regressions exited normally where applicable.",
+    "product_defect": false
+  },
+  "next_boundary": {
+    "id": "P7.7-D",
+    "scope": "MW10_RESERVATION_CONFLICT_FAIL_CLOSED",
+    "required_result": "CONFLICTING_DIG_DURING_ACTIVE_A_B_RESERVATION_FAILS_CLOSED_WITH_NO_PARTIAL_MATTER_MUTATION_NO_MATERIAL_DELIVERY_AND_NO_VISUAL_SUCCESS"
+  },
+  "final_head": "3410d4819baba5f28d67c826d609a1aa5d8ebc1a",
+  "final_tree": "5e75bc1f254cc9910f71591972b94a8c2eb3243b",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}

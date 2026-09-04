@@ -1,0 +1,128 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-A-ATTACHED-GODOT-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-A",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "host": {
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "kernel": "Linux 6.18.35",
+    "arch": "x86_64"
+  },
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "c3caea93fecd20fd41a0d3aa753e332d347aed2a",
+    "tree": "8e48024a80f70a0b15e693af027da075ea27179d",
+    "activation_base": "3853082f412d696fcb4790003a748983ebc56d42",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33718908010,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33718932585,
+    "source_export_artifact_id": 9879510649,
+    "source_export_artifact_sha256": "56a75809c67f608394dbb0806dbb353c77302dc1501d5b0c55d6b8d954cec38a"
+  },
+  "godot": {
+    "binary_path": "/mnt/data/godot-p7-test/tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double",
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE"
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "duration_seconds": 9.49,
+      "fatal_matches": 0
+    },
+    {
+      "name": "P7.7 graphical digging focused gate",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 52,
+      "failures": 0,
+      "duration_seconds": 22.98
+    },
+    {
+      "name": "P7.7-A live Digging Playground",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 20,
+      "failures": 0,
+      "duration_seconds": 5.23,
+      "proofs": {
+        "route": "MW4_SINGLE_REGION",
+        "mw10_invoked": false,
+        "changed_bricks": 8,
+        "removed_mass_kg": 18735.198,
+        "item_graph_output_quantity": 18735,
+        "material_replay": false,
+        "presenter_count": 4
+      }
+    },
+    {
+      "name": "P5 canonical equipment regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 31,
+      "failures": 0
+    },
+    {
+      "name": "P5 mining tool gate regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 36,
+      "failures": 0
+    },
+    {
+      "name": "P7.1 authority regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 88,
+      "failures": 0
+    },
+    {
+      "name": "P7.3 material delivery regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 116,
+      "failures": 0
+    },
+    {
+      "name": "P7.6 seam + multi-region regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 106,
+      "failures": 0
+    }
+  ],
+  "logs": {
+    "fatal_patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "fatal_matches": 0,
+    "sha256": {
+      "import": "5d63260c703eff78b1fd9b059d489362cbc09785dbf6196c74c24e7d6889c488",
+      "p7_7_focused": "3fdc820c3ae9af0b463395619e676d03c88096e5d3a88d690766af334f8d6ded",
+      "p7_7_a_live": "2141ef4b64e297c36181819f5ceae3ac5821830c7b8e28608d4625476328756a",
+      "p5_equipment": "3c52e620b130997327b9208cf3e13b1fc81e3c8d2fc81401c0374c072391a54a",
+      "p5_mining": "3da467cd9b267270fad6d35387cbbbf530304d0ac8135ec80e4d528fb691b511",
+      "p7_1": "a6557ba5ae0de2100c721dd88208decc7b88964e573befadb11d925959fb28f8",
+      "p7_3": "ecbbe14aecd801481de4f26bab2ed8b4b033a09c8177ca9086babeafd04a480e",
+      "p7_6": "024ebbfc262977d57918174539bf25af05dff7d773cb10c2d49544ef3c742239"
+    }
+  },
+  "tracked_clean_before_export": true,
+  "tracked_clean_after_export": true,
+  "final_head": "c3caea93fecd20fd41a0d3aa753e332d347aed2a",
+  "final_tree": "8e48024a80f70a0b15e693af027da075ea27179d",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}

@@ -1,0 +1,96 @@
+{
+  "schema": "distributed_world_simulator.runtime_validation_result.v1",
+  "validation_id": "V0-P7-R1-P7-7-D-MW10-RESERVATION-CONFLICT-EXACT-RUNTIME-VALIDATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE/P7.7-D",
+  "actor": "CHATGPT_LOCAL_CONTAINER_ATTACHED_GODOT_EXECUTION_R1",
+  "independence_class": "EXECUTION_EVIDENCE_NOT_REVIEWER_NOT_VERIFIER",
+  "subject": {
+    "branch_origin": "feature/v0-p7-bounded-terrain-mutation",
+    "head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
+    "tree": "aae7f3444e1958ea2899cc7007b1bb8d3faf7d38",
+    "base_c3_head": "3410d4819baba5f28d67c826d609a1aa5d8ebc1a",
+    "runtime_pr": 487,
+    "runtime_project_control_run": 33749812506,
+    "runtime_project_control": "SUCCESS",
+    "source_export_workflow_run": 33749863504,
+    "source_export_artifact_id": 9891077754,
+    "source_export_artifact_digest": "sha256:27ad128df7716f988a8fa05c729b3549df516d3da1ca3e62fae9dea9b6e535c3",
+    "source_tar_sha256": "e548ce903c623280018bcbce537e3824c0a2314f1a34a961f66d25d1286e296c"
+  },
+  "godot": {
+    "source": "USER_ATTACHED_PROJECT_ARCHIVE",
+    "archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd x86_64 double"
+  },
+  "delta_from_c3": {
+    "production_runtime_files_modified": 0,
+    "new_test_files": [
+      "tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd"
+    ]
+  },
+  "stages": [
+    {
+      "name": "Godot import",
+      "result": "PASS",
+      "exit_code": 0,
+      "fatal_matches": 0,
+      "log_sha256": "634bf68ddc32cf6d51c17ef00ecff55118c4b01a91b8945155894f4d2d5c36af"
+    },
+    {
+      "name": "P7.7-D MW10 reservation conflict",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 31,
+      "failures": 0,
+      "log_sha256": "9f6a4d102213dd44952633dacf5284273d4e9b9050bc6a46c0a6bd0f16d5cc0b",
+      "proofs": [
+        "active A+B MW10 transaction reserves both regions before prepare/commit",
+        "B-only dig fails with P7_6_SINGLE_REGION_RESERVED_BY_MW10 before MW4 execution",
+        "second A+B dig fails with MATTER_CROSS_REGION_REGION_ALREADY_RESERVED before MW10 prepare/commit",
+        "no regional Matter prepare/commit/rollback occurs for either conflicting dig",
+        "no P7.3 material delivery occurs",
+        "no derived visual invalidation success occurs",
+        "active reservation checkpoint remains byte-identical after both rejected conflicts",
+        "original transaction remains reservation owner for A and B"
+      ]
+    },
+    {
+      "name": "P7.6 seam multi-region regression",
+      "result": "PASS",
+      "exit_code": 0,
+      "assertions": 106,
+      "failures": 0,
+      "log_sha256": "b3d3da4055ad40c82bacdaebf095101798079a546371a9eaee34a6d402a41ec3"
+    }
+  ],
+  "c3_revalidation_note": {
+    "runtime_code_changed_since_c3": false,
+    "github_compare_files": [
+      "tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd"
+    ],
+    "c3_exact_validation_remains_applicable": true
+  },
+  "fatal_scan": {
+    "patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load",
+      "Failed to instantiate an autoload"
+    ],
+    "matches": 0
+  },
+  "next_boundary": {
+    "id": "P7.7-E",
+    "scope": "ACTOR_HANDOFF_NO_FALSE_MW10_THEN_B_ONLY_MW4",
+    "required_result": "A_TO_B_ACTOR_HANDOFF_USES_SM1_MW8_MW9_WITH_MW10_ZERO_AND_POST_HANDOFF_B_ONLY_DIG_USES_MW4"
+  },
+  "final_head": "c538c2abffc0b4d685a16ee8eb206d3856c37e18",
+  "final_tree": "aae7f3444e1958ea2899cc7007b1bb8d3faf7d38",
+  "verdict": "GREEN",
+  "merge_authorized": false
+}
