@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.fabric_bake_bridge2_e_deterministic_mixed_replay_validation.v1",
-  "qualification": "IMPLEMENTED_CANDIDATE_LOCAL_EXACT_DOUBLE_PASS",
+  "qualification": "CLOSED_EXACT_GITHUB_DOUBLE_REPLAY_PASS",
   "production_accepted": false,
   "predecessor": {
     "checkpoint": "BRIDGE_2_D",
@@ -30,10 +30,53 @@
     "final_mixed_state_hash": "ae4d1739e99f71929dcb5dd096eef4bce6de034e5a2846848a3ca38552d31d86",
     "certificate_hash": "c96be0141b394aa34ea9a7bb56801ac97ca3a50427d7f8764113d94c0b4ef34c"
   },
-  "acceptance": {"pass": 46, "total": 46, "playground": "PASS"},
-  "exact_implementation_subject": null,
-  "exact_source_carrier": null,
-  "exact_double_replay": null,
-  "control": null,
+  "acceptance": {
+    "pass": 46,
+    "total": 46,
+    "playground": "PASS"
+  },
+  "exact_implementation_subject": {
+    "head": "f6c3f37c5fadcc6fa30d0274efa4c53a5e1d561c",
+    "tree": "e01f2854137a1e3851558b0c19d95de0d2b3d3f8",
+    "tracked_clean": true
+  },
+  "exact_source_carrier": {
+    "run_id": 33875079369,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9937502293,
+    "artifact_name": "fabric-bake-b0-5-a-exact-source"
+  },
+  "exact_double_replay": {
+    "result": "PASS",
+    "independent_invalidation_capsules_equal": true,
+    "independent_recovery_capsules_equal": true,
+    "acceptance": {
+      "pass": 46,
+      "total": 46
+    },
+    "playground": "PASS",
+    "invalidation_capsule_file_sha256": "20492fcebac0ee48e3d09226ee99939e105ad77e5f214c15ee6412d210e18c97",
+    "recovery_capsule_file_sha256": "5156f298ae42e824eec6753e362c8906f79dbc61d889020f7af3135e5e7aec12",
+    "invalidation_log_sha256": "b05fc76eb3c8b6cc4d64c61e054af35e5cd760fa52d7ea9f86f197cf7254fe19",
+    "recovery_log_sha256": "b754f3957be7049ce3b3e12af5fecabe0323ecdf95727dbb4e9e9acdd8bfa450",
+    "compare_log_sha256": "8a19abc15b8668a8f58a25cfd71a2324223f3e661f3b4939be8ee0c888f25400",
+    "playground_log_sha256": "dcdd27659f512a41a59211a1f920fb41c64c99f076891567ec828787d314a3cd",
+    "certificate_hash": "c96be0141b394aa34ea9a7bb56801ac97ca3a50427d7f8764113d94c0b4ef34c",
+    "final_mixed_state_hash": "ae4d1739e99f71929dcb5dd096eef4bce6de034e5a2846848a3ca38552d31d86"
+  },
+  "control": {
+    "implementation_project_control": {
+      "run_id": 33875079372,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_portable_smoke": {
+      "run_id": 33875079349,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_linux_double_self_hosted": {
+      "run_id": 33875079217,
+      "status": "QUEUED_AT_EVIDENCE_RECORD"
+    }
+  },
   "next_checkpoint": "BRIDGE_2_F_COMPLEX1B_POWERED_FENCE_MIXED"
 }
