@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology.evo7_vis5_terrain_ecosystem_composition_audit.v1",
   "version": "1.0.0",
   "revision": "ECO.EVO7-VIS5.0.R1",
-  "status": "VIS5.5_CURRENT",
+  "status": "VIS5.5_CLOSED_READY_FOR_PLAY1_HANDOFF",
   "base": {
     "checkpoint": "VIS4.9 CLOSED",
     "branch": "feature/eco-evo7-vis4-evolved-plant-morphology-r1",
@@ -102,9 +102,9 @@
     "procedural Earth grass_density is environment/scenery density, not an ECO.EVO7 evolved population count",
     "procedural Earth tree placement remains forbidden beside source-bound VIS4 PH5 plants until explicit source binding exists",
     "legacy EVO4 B6 region materialization is manifest-driven and flat-plane based, not current EVO7 truth",
-    "mixed strata and local LOD/streaming lifecycle are certified through VIS5.4; graphical evidence and PLAY1 handoff remain for VIS5.5",
+    "VIS5.5 graphical evidence and PLAY1 handoff are closed; final integrated PLAY1 performance acceptance remains external and requires PERF2.CONV",
     "final PLAY1 performance acceptance remains owned by PERF2.CONV",
-    "generic Project Control currently has pre-existing global Matter/registry architecture-ownership dependency drift unrelated to VIS5.4 runtime files"
+    "generic Project Control currently has pre-existing global Matter/registry architecture-ownership dependency drift unrelated to VIS5.5 runtime files"
   ],
   "composition_policy": {
     "canonical_macro_plants": "VIS4 PH5 only",
@@ -149,7 +149,7 @@
     {
       "checkpoint": "VIS5.5",
       "name": "Visual Evidence / Handoff to Integrated PLAY1 Gate",
-      "status": "CURRENT"
+      "status": "CLOSED"
     }
   ],
   "forbidden": [
@@ -162,7 +162,7 @@
     "claim PLAY1 performance acceptance before PERF2.CONV"
   ],
   "current_checkpoint": "VIS5.5",
-  "current_checkpoint_state": "CURRENT",
+  "current_checkpoint_state": "CLOSED",
   "next_checkpoint_after_green": "PERF2.CONV_INTEGRATED_PLAY1_GATE",
   "vis5_2_closure": {
     "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
@@ -266,6 +266,87 @@
       "generic_project_control_green_claimed": false
     },
     "closure_document": "docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_4_COMPOSITION_LOD_STREAMING_LOCAL_GATE_EXACT_VERIFIED_CLOSED_R1_RU.md",
+    "required_fixes": []
+  },
+  "vis5_line_state": "CLOSED_READY_FOR_PLAY1_HANDOFF",
+  "vis5_5_closure": {
+    "status": "CLOSED",
+    "exact_subject_head": "fb1a7ac21037e02033eae6d7e778ed8757514e19",
+    "exact_subject_tree": "89551693f0cbac555a5026424d36b50cd35b8804",
+    "source_export_run": 33867446070,
+    "source_export_artifact_id": 9934516417,
+    "source_archive_sha256": "59ec27aa62b159ebeffc3897230406faa62c5d6204019f783318d7d64c91b021",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "aggregate_log_sha256": "59e35d98d04f53d81e2c37600a039cff74007f4d39c109aba84af64c65d643fe",
+    "assertions": {
+      "vis5_0": 87,
+      "vis5_1": 70,
+      "vis5_2": 57,
+      "vis5_3": 101,
+      "vis5_4": 92,
+      "vis5_5": 114
+    },
+    "graphical_evidence": {
+      "real_renderer": true,
+      "renderer": "OpenGL Compatibility via Xvfb/llvmpipe",
+      "dummy_headless_renderer": false,
+      "image_count": 6,
+      "resolution": "1280x720",
+      "bundle_hash": "cff5f4fadd14f056075f39697458ffcd4e427a7473db7f27c922db411218cd98",
+      "manifest_sha256": "31d533824b8cafbd182b970b13acc4876b8137e8f5540075be49253a221d988d",
+      "handoff_hash": "bc6cc2f5a2301e0832d8ddb53a8145ce83dc83fb0d2313fe1b3cc1e5d49a5df9",
+      "views": [
+        "NEAR_OVERVIEW",
+        "NEAR_DETAIL",
+        "MID",
+        "FAR",
+        "CULLED",
+        "RETURN_AFTER_STREAMING"
+      ]
+    },
+    "final_runtime_observation": {
+      "view": "RETURN_AFTER_STREAMING",
+      "mode": "NEAR",
+      "macro_records": 63,
+      "macro_visible": 62,
+      "ground_cover_total": 4500,
+      "ground_cover_visible": 4500,
+      "terrain_rocks_total": 146,
+      "terrain_rocks_visible": 146,
+      "render_origin_recenter_count": 2,
+      "earth_rebuild_count": 2,
+      "region_roundtrip_count": 1,
+      "same_seed_restored": true,
+      "ecology_identity_drift": false,
+      "procedural_earth_trees_suppressed": true
+    },
+    "truth_layers": {
+      "terrain": "ProceduralEarthWorld",
+      "macro_plants": "CANONICAL_ECO_VIS4_PH5",
+      "ground_cover": "NONCANONICAL_SCENERY",
+      "rocks": "TERRAIN_SCENERY"
+    },
+    "authority": {
+      "presentation_only": true,
+      "ecology_authority": false,
+      "terrain_authority": false,
+      "network_authority": false,
+      "persistence_authority": false,
+      "perf2_authority": false,
+      "play1_performance_accepted": false,
+      "perf2_conv_required": true
+    },
+    "project_control_external_debt": {
+      "run": 33867420139,
+      "status": "GLOBAL_ARCHITECTURE_OWNERSHIP_COMPATIBILITY_FAILURE",
+      "finding": "PRE_EXISTING_G_ECO_MATTER_REGISTRY_CRITICAL_DEPENDENCY_DRIFT",
+      "vis5_5_files_in_findings": false,
+      "disposition": "EXTERNAL_CONTROL_PLANE_DEBT_NOT_VIS5_5_RUNTIME_FALSIFIER",
+      "generic_project_control_green_claimed": false
+    },
+    "closure_document": "docs/checkpoints/2026-09-04_ECO_EVO7_VIS5_5_VISUAL_EVIDENCE_INTEGRATED_PLAY1_HANDOFF_EXACT_VERIFIED_CLOSED_R1_RU.md",
     "required_fixes": []
   }
 }
