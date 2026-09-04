@@ -1,86 +1,137 @@
-# ECO.EVO7 LS4 — ACTIVATED
+# ECO.EVO7 LS4 — Activated / Scope Frozen
 
-Дата: 2026-09-04
+Дата активации: 2026-09-04
+Дата scope freeze: 2026-09-05
 
-Статус:
+## Статус
 
 ```text
-ECO.EVO7/LS4
-Next ecology complexity stage
-AUTHORIZED CURRENT
-SCOPE FREEZE REQUIRED BEFORE RUNTIME IMPLEMENTATION
+PERF2.CONV                  CLOSED / ACCEPTED
+LS4                         ACTIVE
+LS4 SCOPE CONTRACT          FROZEN
+LS4.1 Multi-Species Ecology AUTHORIZED NEXT
+LS4.2+                      BLOCKED BY PREDECESSOR ACCEPTANCE
 ```
 
-## Exact predecessor
-
-LS4 открывается только после formal acceptance PERF2.CONV R3.
+## Exact accepted predecessor
 
 ```text
-PERF2.CONV accepted control HEAD
+PERF2.CONV accepted control HEAD:
 b4f73a4073ac16b2a1de535acd64ae16641d4588
 
-TREE
+TREE:
 81caf408e75059fde6b897e0f967e8b7d373ca1e
 
-exact tested convergence runtime HEAD
+Exact tested convergence runtime:
 81a0b3fa60664684b02d8387e4693c5f328dbe28
 
-TREE
+TREE:
 a192950483267dd428baf2d1daa25de915df2370
 
-accepted convergence report hash
+Accepted report hash:
 1064567c83c1bd023589fdf9e36f8436b9624eeb928e8b7d413b92ce3254c3f6
 ```
 
-The accepted PERF2.4/PERF2.CONV/VIS4 evidence is immutable input to LS4 and is not reopened by this activation.
+## Frozen scope
 
-## Why LS4 is now authorized
-
-The pre-convergence live ECO.EVO7 roadmap defined LS4 as:
+LS4 North Star:
 
 ```text
-LS4
-Next ecology complexity stage
-DEFERRED_BEHIND_PERF2_CONVERGENCE_OR_SEPARATE_OWNER_DECISION
+Multi-Species Ecosystem
+        +
+Shared Resources
+        +
+WORLD <-> ECO feedback
 ```
 
-PERF2.CONV is now CLOSED / ACCEPTED, therefore the explicit blocking condition is satisfied.
-
-## What this activation does
-
-It establishes LS4 as the current ecology frontier and fixes its predecessor identity.
-
-It does **not** yet invent a biological feature, substage numbering or new authority.
-
-Before any runtime delta, LS4 must first freeze a scope contract answering at minimum:
-
-1. What new ecology-complexity problem is being added beyond accepted LS3.
-2. Which existing canonical/shadow authorities own its inputs and outputs.
-3. What is observation/derivation versus ecology truth mutation.
-4. What deterministic identity/hash/provenance must be preserved.
-5. What executable falsifiers distinguish a real LS4 capability from scripted/demo behavior.
-6. What scale and bounded-working-set constraints remain inherited from PERF2.CONV.
-7. How the feature composes with accepted morphology/VIS4 without creating renderer-as-truth.
-8. What local exact acceptance is required before LS4 may close.
-
-## Frozen invariants during scope design
+Authoritative machine-readable scope:
 
 ```text
-mode                         RESEARCH_SHADOW_ONLY
-production promotion         FORBIDDEN
-new ecology truth authority  FORBIDDEN unless separately reviewed/frozen
-world write                   FORBIDDEN
-persistence authority        NONE
-network authority            NONE
-accepted PERF2 evidence      IMMUTABLE
-accepted VIS4 evidence       IMMUTABLE
-runtime changes              FORBIDDEN before LS4 scope freeze
+config/ecology/eco-evo7-ls4-scope-contract.v1.json
+revision ECO.EVO7-LS4-SCOPE-2026-09-05-R1
+blob 624076f10d85575315ef6b392be6345185a335f1
 ```
 
-## Next concrete task
+Detailed design:
 
 ```text
-LS4 SCOPE CONTRACT
+docs/plans/ECO_EVO7_LS4_SCOPE_CONTRACT_RU.md
 ```
 
-The scope contract must be the next change on this branch. Only after it is explicit and reviewable may executable LS4 implementation begin.
+## Ownership invariant
+
+LS4 does not gain WORLD authority.
+
+```text
+WORLD owner
+   -> immutable environment snapshot
+   -> LS3/LS4 ecology
+   -> bounded EnvironmentFeedbackProposal
+   -> WORLD owner validates/applies
+   -> new immutable environment snapshot
+   -> ecology consumes it
+```
+
+Forbidden:
+
+```text
+ECO -> direct canonical WORLD mutation
+```
+
+VIS/PLAY remain presentation-only.
+
+## Frozen stage order
+
+```text
+LS4.1 Multi-Species Ecology
+  ↓
+LS4.2 Interaction Graph
+  ↓
+LS4.3 Shared Resource Competition
+  ↓
+LS4.4 Trophic Network
+  ↓
+LS4.5 Disturbance Envelope
+  ↓
+LS4.6 Ecological Succession
+  ↓
+LS4.7 Ecosystem Engineering
+  ↓
+LS4.8 WORLD<->ECO Feedback Loop
+  ↓
+LS4.FINAL Emergent Ecosystem Challenge
+  ↓
+PLAY1 Living Ecosystem Region
+```
+
+Each major stage requires visual evidence.
+
+## Exact scope test
+
+```text
+tests/ecology/eco_evo7_ls4_scope_contract_acceptance.gd
+RUN_ECO_EVO7_LS4_SCOPE_TESTS.sh
+RUN_ECO_EVO7_LS4_SCOPE_TESTS.ps1
+```
+
+The scope acceptance checks predecessor provenance, authority fences, minimum 3-species catalog, interaction kinds, shared resources, disturbance identity, proposal-only WORLD feedback, deterministic hashes, exact roadmap order, final challenge and LS4.1-only authorization.
+
+## Current executable item
+
+```text
+LS4.1 — Multi-Species Ecology
+```
+
+Minimum executable falsifier:
+
+- at least three functionally distinct species;
+- same physical patch/environment chain;
+- stable species catalog identity;
+- no desired-biome placement;
+- same LS3 dispersal/recruitment/competition authority path;
+- deterministic same-input replay;
+- physical counterfactual changes species distribution;
+- LS4-VIS1 species distribution overlay is derived-only;
+- predecessor behavior remains regression-bound.
+
+No LS4.2 runtime is authorized before LS4.1 exact acceptance.
