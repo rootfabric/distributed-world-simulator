@@ -1,18 +1,35 @@
 # FABRIC COMPLEX2 — Modular Machine Lab
 
-**Статус:** 🟡 COMPLEX2 OPEN / ✅ COMPLEX2-A EXACT VERIFIED  
+**Статус:** 🟡 COMPLEX2 OPEN / ✅ COMPLEX2-A EXACT VERIFIED / ✅ COMPLEX2-B EXACT VERIFIED  
 **Ветка:** `feature/fabric-complex2-modular-machine-r1`  
 **PR:** #534  
-**Predecessor:** `COMPLEX1B` ✅ CLOSED @ `50574d70a9f7abd5d21e54ab09755a567656f554`  
-**Exact COMPLEX2-A code subject:** `8d10a4e00b616c28e62cd16b4645342dc8256632`  
-**Exact TREE:** `7ce37330e70f5082c7e5d1e6632e0b5982bbcaf4`  
-**Evidence:** `validation/FABRIC_COMPLEX2_A_EXACT_EVIDENCE.md`
+**Predecessor:** `COMPLEX1B` ✅ CLOSED @ `50574d70a9f7abd5d21e54ab09755a567656f554`
 
-## Цель
+## Текущая лестница
 
-COMPLEX2 повышает сложность одновременной композицией структурных, динамических, контактных и функциональных подсистем, а не простым увеличением visual node count.
+```text
+COMPLEX1B mixed powered E2E              ✅ CLOSED
+        ↓
+COMPLEX2-A Modular Composition           ✅ EXACT VERIFIED
+        ↓
+COMPLEX2-B Compliant / Spring Response   ✅ EXACT VERIFIED
+        ↓
+COMPLEX2-C Articulated + Rotating Motion ← NEXT
+        ↓
+COMPLEX2-D Structural Failure
+        ↓
+COMPLEX2-E Settle → Rebake → Re-impact
+        ↓
+COMPLEX2-PERF
+        ↓
+COMPLEX2-CLOSE
+```
 
-Первый executable envelope уже реализован и exact-проверен:
+## Цель COMPLEX2
+
+COMPLEX2 повышает сложность одновременной композицией структурных, динамических, контактных, compliant и functional подсистем, а не простым ростом visual node count.
+
+Базовая машина:
 
 ```text
 2000 canonical parts
@@ -23,9 +40,7 @@ COMPLEX2 повышает сложность одновременной комп
 5 BRIDGE-2 execution regions
 ```
 
-## BRIDGE-2 R1 boundary
-
-Closed BRIDGE-2 R1 требует ровно пять execution regions и ровно один owner каждого kind:
+Closed BRIDGE-2 R1 остаётся неизменным и содержит ровно по одному owner каждого representation kind:
 
 ```text
 FULL
@@ -35,7 +50,7 @@ DYNAMIC_ROM
 HYBRID_BAKE
 ```
 
-COMPLEX2 не ослабляет этот контракт. 25 logical modules размещаются поверх пяти execution partitions. Рост canonical machine complexity не создаёт 25 competing physical authority owners.
+25 logical modules размещаются поверх этих пяти execution partitions. Рост complexity не создаёт 25 competing physical authority owners.
 
 ## Logical machine
 
@@ -53,15 +68,32 @@ FULL articulated/impact modules 12..14
 CONTACT tooling modules 15..18
   ↓
 HYBRID compliant/detachable modules 19..24
-  ├─ compliant carriage
+  ├─ compliant module 20
   └─ detachable head module 24
 ```
 
-Каждый module владеет ровно 80 canonical parts: `25 × 80 = 2000`.
+Каждый module содержит ровно 80 canonical parts: `25 × 80 = 2000`.
+
+# COMPLEX2-A — Modular Composition
+
+**Статус:** ✅ EXACT VERIFIED
+
+Exact code subject:
+
+```text
+8d10a4e00b616c28e62cd16b4645342dc8256632
+TREE 7ce37330e70f5082c7e5d1e6632e0b5982bbcaf4
+```
+
+Evidence:
+
+```text
+validation/FABRIC_COMPLEX2_A_EXACT_EVIDENCE.md
+```
 
 ## Functional composition
 
-Используется generic conservation FABRIC из COMPLEX1A; machine-specific electrical solver не добавлялся.
+Generic conservation FABRIC из COMPLEX1A используется без machine-specific electrical solver:
 
 ```text
 source/battery
@@ -72,7 +104,7 @@ source/battery
           supported by support/complex2-10-11
 ```
 
-Causal result exact-tested:
+Exact causal result:
 
 ```text
 baseline             A ON   B ON
@@ -82,161 +114,192 @@ second support loss  A OFF  B OFF
 
 Обе functional mutations имеют reason `SUPPORT_TOPOLOGY_LOST`.
 
-## COMPLEX2-A executable sequence
-
-### Normal movement
-
-Mixed runtime получает drive flow в DYNAMIC_ROM + HYBRID_BAKE. Все steps сравниваются с FULL reference.
+## A executable sequence
 
 ```text
-max |MIXED - FULL| = 0
-required bound <= 1e-12
-```
-
-### Local contact
-
-Contact flow маршрутизируется только через:
-
-```text
-region/complex2-contact
-```
-
-Contact state меняется, mixed outcome остаётся равен FULL.
-
-### Detachable module
-
-```text
-event/complex2-detach-module-24
-support/complex2-23-24
-```
-
-Результат:
-
-```text
-module 24 -> singleton component
-module revision 100 -> 101
-only HYBRID region invalidated
-stale mixed execution forbidden
-HYBRID rebuild handoff error = 0
-wire/branch-a lost
-load A OFF
-load B stays ON
-```
-
-### Stabilization + representation swap
-
-После rebuild и стабилизации один representation event атомарно меняет:
-
-```text
-region/complex2-full    FULL        -> HYBRID_BAKE
-region/complex2-hybrid  HYBRID_BAKE -> FULL
-```
-
-```text
-state handoff error = 0
-representation ledger entries = 1
-five-kind set preserved
-```
-
-### Second event on reconfigured machine
-
-```text
-event/complex2-break-drive-support
-support/complex2-10-11
-```
-
-Результат:
-
-```text
-module revision 101 -> 102
-second distinct event accepted
-affected region = DYNAMIC only
-stale execution forbidden
-DYNAMIC rebuild handoff error = 0
-wire/branch-b lost
+normal mixed movement == FULL reference
+        ↓
+local CONTACT event
+        ↓
+detach module 24
+        ↓
+HYBRID only STALE → rebuild, handoff=0
+        ↓
+load A OFF / load B ON
+        ↓
+FULL ↔ HYBRID_BAKE representation swap, handoff=0
+        ↓
+second distinct support event on reconfigured machine
+        ↓
+DYNAMIC only STALE → rebuild, handoff=0
+        ↓
 load B OFF
-mixed execution resumes
+        ↓
+mixed execution resumes == FULL reference
 ```
 
-Это основной anti-single-shot falsifier первого COMPLEX2 checkpoint.
-
-## Determinism
-
-Determinism проверяется не повторным использованием stateful FABRIC runtime в одном SceneTree, а двумя независимыми Godot-процессами.
-
-Оба exact runs получили:
+Deterministic exact hash from independent processes:
 
 ```text
-COMPLEX2_EXPERIMENT_HASH=
 7017c4acf32ff0f8e75165e1bd8a9c9c45e111ba767776f9ab8b486a52cae541
 ```
 
-Каждый run:
+Acceptance:
 
 ```text
 FABRIC COMPLEX2 Modular Machine Acceptance: PASS (2115 assertions)
 ```
 
-## Visual Modular Machine Lab
-
-Сцена:
+Visual scene:
 
 ```text
 res://scenes/labs/fabric/complex2_modular_machine_lab.tscn
 ```
 
-Observer показывает:
+# COMPLEX2-B — Compliant / Spring Response Envelope
+
+**Статус:** ✅ EXACT VERIFIED
+
+Physical implementation subject:
 
 ```text
-MIXED_BASELINE
-LOCAL_CONTACT
-DETACH_MODULE
-REPRESENTATION_SWAP
-SECOND_EVENT
+b1f4338b273f0889486553b18bea93d39127bba6
+TREE 697a226e0eadc76803d5e70d10549931a5f8cfc6
 ```
 
-25 module blocks окрашиваются по representation kind; contact stage подсвечивает active tooling; module 24 визуально отделяется; FULL/HYBRID меняют representation colours после swap; functional branches исчезают только когда их generic support relation реально потеряна.
-
-Visual parser acceptance:
+Final verification subject:
 
 ```text
-FABRIC COMPLEX2 Scene Smoke: PASS (3 assertions)
+57204de250cd05af76dbff4a42827a983d056ebb
+TREE 475d8d66a89b677da4ec131cc9595844bab244b8
 ```
 
-Visual layer остаётся read-only и не участвует в canonical ownership.
-
-## Exact identity
+Evidence:
 
 ```text
-HEAD  8d10a4e00b616c28e62cd16b4645342dc8256632
-TREE  7ce37330e70f5082c7e5d1e6632e0b5982bbcaf4
-carrier run 33864290741
-artifact 9933326912
-artifact digest sha256:fd2901a506b285f0b7b9ff0569a30dd72afc976476f990b3690da8715c0dd028
+validation/FABRIC_COMPLEX2_B_COMPLIANT_RESPONSE_EXACT_EVIDENCE.md
 ```
 
-Godot:
+Detailed design:
 
 ```text
-4.7.1.stable.double.custom_build.a13da4feb
-SHA-256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+docs/research/FABRIC_COMPLEX2B_COMPLIANT_RESPONSE_RU.md
 ```
 
-Project Control на exact code subject: SUCCESS.
+## Compliance ownership
 
-Focused runner запускает два independent COMPLEX2 processes и scene smoke. Closed BRIDGE-2 core не меняется этой веткой; его dedicated workflows остаются отдельными regression gates.
+COMPLEX2-B не создаёт новый physical owner. Он расширяет backend существующего `region/complex2-hybrid` для `module/complex2-20`:
 
-## Что ещё нужно для COMPLEX2 CLOSED
+```text
+80 canonical compliant part states
+80 canonical spring/damper fibers
+        ↓ coherent projection
+1 reduced HYBRID compliance state q
+```
 
-COMPLEX2-A закрывает composition/contact/detach/swap/second-event baseline, но весь COMPLEX2 пока OPEN.
+BRIDGE-2 representation set остаётся ровно тем же five-kind set.
+
+## Constitutive response
+
+Kelvin-Voigt envelope:
+
+```text
+F = K q + C q_dot
+```
+
+Exact aggregate parameters:
+
+```text
+K = 720 N/m
+C = 116 N*s/m
+```
+
+FULL reference каждый step суммирует все 80 fibers; HYBRID reduced backend использует compiled aggregate parameters.
+
+Exact equality:
+
+```text
+max |q_FULL - q_HYBRID| = 4.996003610813204e-16
+required <= 1e-12
+```
+
+## Projection / reconstruction
+
+Проверяется:
+
+```text
+FULL(80) → reduced(1) → FULL(80)
+```
+
+через существующие:
+
+```text
+BakeStateMapping
+ReconstructionDescriptor
+PhysicalBakeArtifact
+```
+
+Projection, reconstruction и handoff bounds находятся внутри `1e-12`.
+
+## Energy / release
+
+Exact response:
+
+```text
+peak |q|  = 0.095426442 m
+final |q| = 0.004284087 m
+max energy balance residual = 0
+```
+
+После release stored energy монотонно уменьшается, damper dissipates positive energy и section возвращается близко к neutral state.
+
+## Fail-closed refinement
+
+Reduced coherent model запрещено применять вне certified envelope:
+
+```text
+COMPLEX2B_REFINEMENT_REQUIRED_FORCE
+COMPLEX2B_REFINEMENT_REQUIRED_DEFLECTION
+COMPLEX2B_COHERENT_MODE_VIOLATION
+```
+
+Это создаёт executable boundary для будущего adaptive fidelity без преждевременного изменения foundation semantics.
+
+## B exact result
+
+Acceptance на final exact source:
+
+```text
+FABRIC COMPLEX2-B Compliant Response Acceptance: PASS (65 assertions)
+full=80 reduced=1
+Kelvin-Voigt energy=PASS
+guards=PASS
+scene=PASS
+extended=FULL_REFERENCE
+```
+
+Integrated hash двух независимых exact invocations:
+
+```text
+af5779bddc65a504c9ec14612b3dc62341032e4ed770a885c2df679dcbcd6795
+```
+
+Visual scene:
+
+```text
+res://scenes/labs/fabric/complex2b_compliant_response_lab.tscn
+```
+
+Project Control на final B verification subject: SUCCESS.
+
+# Что ещё нужно для COMPLEX2 CLOSED
 
 Следующие checkpoints:
 
-1. **COMPLEX2-B — Compliant / Spring Response Envelope**;
-2. **COMPLEX2-C — Articulated + Rotating Coupled Motion**;
-3. **COMPLEX2-D — Independent Structural Support Failure**;
-4. **COMPLEX2-E — Settle → Rebake → Re-impact Lifecycle**;
-5. **COMPLEX2-PERF — 500 / 1000 / 2000 scaling matrix**;
-6. **COMPLEX2-CLOSE — final exact closure review**.
+1. **COMPLEX2-C — Articulated + Rotating Coupled Motion**;
+2. **COMPLEX2-D — Independent Structural Support Failure**;
+3. **COMPLEX2-E — Settle → Rebake → Re-impact Lifecycle**;
+4. **COMPLEX2-PERF — 500 / 1000 / 2000 scaling matrix**;
+5. **COMPLEX2-CLOSE — final exact closure review**.
 
-`FABRIC0.19` остаётся NOT AUTHORIZED, пока один из этих executable falsifiers не докажет отсутствие необходимого generic physical primitive.
+`FABRIC0.19` остаётся **NOT AUTHORIZED**: COMPLEX2-A и COMPLEX2-B пока выражаются существующими FLOW/JUMP/topology, reconstruction, artifact и mixed-representation contracts без нового generic foundation primitive.
