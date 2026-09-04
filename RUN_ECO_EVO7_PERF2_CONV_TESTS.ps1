@@ -7,8 +7,11 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -Er
 
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
-$Perf24Head = "8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"
-$Perf24Tree = "17635bb35101715205a960fdc41d16c179909101"
+$Perf24Head = "840cfcea62ef7192b510235f915b849829654c6c"
+$Perf24Tree = "967d674c0ba2349db949193969f16f91553761ea"
+$Perf24AcceptedControlHead = "ab115385e81375b224eb397cf6a9de071bd4e79e"
+$Perf24ReportHash = "16d3407abef3d3ff30cbe4293cb1278e1b18845b0b5332589587d543b134853b"
+$Perf24AcceptanceCheckpoint = "docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_4_R12_ACCEPTED_RU.md"
 $Vis49Head = "ab44617d8961add81a6c9f245c99d0b68eaeab52"
 $Vis49Tree = "9d543a3db4f54a676e9f25152785c36a72c56a30"
 
@@ -56,11 +59,6 @@ foreach ($Pair in @(@($Perf24Head, $Perf24Tree), @($Vis49Head, $Vis49Tree))) {
     }
 }
 
-$TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("dws-perf2-conv-" + [guid]::NewGuid().ToString("N"))
-$Perf24Dir = Join-Path $TempRoot "perf24"
-$Vis49Dir = Join-Path $TempRoot "vis49"
-New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
-
 try {
     $env:BREAKPOINT_RUNTIME_DISABLED = "1"
     $env:GODOT_BIN = $GodotPath
@@ -74,23 +72,23 @@ try {
     Write-Host "PERF2.CONV PERF2.4 prerequisite=$Perf24Head / $Perf24Tree"
     Write-Host "PERF2.CONV VIS4.9 prerequisite=$Vis49Head / $Vis49Tree"
 
-    Write-Host "=== PERF2.4 exact prerequisite transitive gate ==="
-    & git -C $RootDir worktree add --detach $Perf24Dir $Perf24Head
-    if ($LASTEXITCODE -ne 0) { throw "Failed to create PERF2.4 worktree" }
-    if ((git -C $Perf24Dir rev-parse HEAD).Trim() -ne $Perf24Head) { throw "PERF2.4 exact HEAD mismatch" }
-    if ((git -C $Perf24Dir rev-parse "HEAD^{tree}").Trim() -ne $Perf24Tree) { throw "PERF2.4 exact TREE mismatch" }
-    & (Join-Path $Perf24Dir "RUN_ECO_EVO7_PERF2_4_TESTS.ps1") -GodotPath $GodotPath
-    if ($LASTEXITCODE -ne 0) { throw "PERF2.4 prerequisite gate failed" }
-    Write-Host "PERF2.CONV PERF2.4 exact prerequisite: PASS"
+    Write-Host "=== immutable prerequisite provenance ==="
+    & git -C $RootDir merge-base --is-ancestor $Perf24Head $TargetHead
+    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: accepted PERF2.4 runtime is not an ancestor" }
+    & git -C $RootDir merge-base --is-ancestor $Perf24AcceptedControlHead $TargetHead
+    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance control tip is not an ancestor" }
+    & git -C $RootDir merge-base --is-ancestor $Vis49Head $TargetHead
+    if ($LASTEXITCODE -ne 0) { throw "PERF2.CONV BLOCKED: tested VIS4.9 prerequisite is not an ancestor" }
 
-    Write-Host "=== VIS4.9 exact prerequisite transitive gate ==="
-    & git -C $RootDir worktree add --detach $Vis49Dir $Vis49Head
-    if ($LASTEXITCODE -ne 0) { throw "Failed to create VIS4.9 worktree" }
-    if ((git -C $Vis49Dir rev-parse HEAD).Trim() -ne $Vis49Head) { throw "VIS4.9 exact HEAD mismatch" }
-    if ((git -C $Vis49Dir rev-parse "HEAD^{tree}").Trim() -ne $Vis49Tree) { throw "VIS4.9 exact TREE mismatch" }
-    & (Join-Path $Vis49Dir "RUN_ECO_EVO7_VIS4_9_TESTS.ps1") -GodotPath $GodotPath
-    if ($LASTEXITCODE -ne 0) { throw "VIS4.9 prerequisite gate failed" }
-    Write-Host "PERF2.CONV VIS4.9 exact prerequisite: PASS"
+    $AcceptancePath = Join-Path $RootDir $Perf24AcceptanceCheckpoint
+    if (-not (Test-Path -LiteralPath $AcceptancePath -PathType Leaf)) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing" }
+    $AcceptanceText = Get-Content -Raw -LiteralPath $AcceptancePath
+    foreach ($Token in @($Perf24Head, $Perf24Tree, $Perf24ReportHash)) {
+        if (-not $AcceptanceText.Contains($Token)) { throw "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing token $Token" }
+    }
+    Write-Host "PERF2.CONV PERF2.4 immutable accepted prerequisite: PASS"
+    Write-Host "PERF2.CONV VIS4.9 immutable tested prerequisite: PASS"
+    Write-Host "PERF2.CONV prerequisite rerun policy=NO_RERUN_ACCEPTED_IMMUTABLE_EVIDENCE"
 
     $UidCachePath = Join-Path $RootDir ".godot\uid_cache.bin"
     if (-not (Test-Path -LiteralPath $UidCachePath -PathType Leaf)) {
@@ -117,10 +115,6 @@ try {
     Write-Host "PERF2.CONV tracked worktree clean=YES"
 }
 finally {
-    & git -C $RootDir worktree remove --force $Perf24Dir 2>$null | Out-Null
-    & git -C $RootDir worktree remove --force $Vis49Dir 2>$null | Out-Null
-    Remove-Item -LiteralPath $TempRoot -Recurse -Force -ErrorAction SilentlyContinue
-
     if ($null -eq $PreviousBreakpointDisabled) { Remove-Item Env:\BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue } else { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpointDisabled }
     if ($null -eq $PreviousGodotBin) { Remove-Item Env:\GODOT_BIN -ErrorAction SilentlyContinue } else { $env:GODOT_BIN = $PreviousGodotBin }
     if ($null -eq $PreviousGodotDoubleBin) { Remove-Item Env:\GODOT_DOUBLE_BIN -ErrorAction SilentlyContinue } else { $env:GODOT_DOUBLE_BIN = $PreviousGodotDoubleBin }

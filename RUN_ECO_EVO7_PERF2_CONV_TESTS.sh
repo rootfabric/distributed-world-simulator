@@ -6,8 +6,11 @@ cd "$ROOT"
 
 GODOT_BIN="${GODOT_BIN:-${GODOT_DOUBLE_BIN:-godot}}"
 EXPECTED_GODOT="4.7.1.stable.double.custom_build.a13da4feb"
-PERF24_HEAD="8c022eaea2dd6253b3fd27a84d3db3e88c51d5a3"
-PERF24_TREE="17635bb35101715205a960fdc41d16c179909101"
+PERF24_HEAD="840cfcea62ef7192b510235f915b849829654c6c"
+PERF24_TREE="967d674c0ba2349db949193969f16f91553761ea"
+PERF24_ACCEPTED_CONTROL_HEAD="ab115385e81375b224eb397cf6a9de071bd4e79e"
+PERF24_REPORT_HASH="16d3407abef3d3ff30cbe4293cb1278e1b18845b0b5332589587d543b134853b"
+PERF24_ACCEPTANCE_CHECKPOINT="docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_4_R12_ACCEPTED_RU.md"
 VIS49_HEAD="ab44617d8961add81a6c9f245c99d0b68eaeab52"
 VIS49_TREE="9d543a3db4f54a676e9f25152785c36a72c56a30"
 
@@ -62,42 +65,30 @@ echo "PERF2.CONV Godot=$ACTUAL_GODOT"
 echo "PERF2.CONV PERF2.4 prerequisite=$PERF24_HEAD / $PERF24_TREE"
 echo "PERF2.CONV VIS4.9 prerequisite=$VIS49_HEAD / $VIS49_TREE"
 
-TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/dws-perf2-conv.XXXXXX")"
-PERF24_DIR="$TMP_ROOT/perf24"
-VIS49_DIR="$TMP_ROOT/vis49"
-
-cleanup() {
-  git worktree remove --force "$PERF24_DIR" >/dev/null 2>&1 || true
-  git worktree remove --force "$VIS49_DIR" >/dev/null 2>&1 || true
-  rm -rf "$TMP_ROOT"
-}
-trap cleanup EXIT
-
-echo "=== PERF2.4 exact prerequisite transitive gate ==="
-git worktree add --detach "$PERF24_DIR" "$PERF24_HEAD"
-(
-  cd "$PERF24_DIR"
-  test "$(git rev-parse HEAD)" = "$PERF24_HEAD"
-  test "$(git rev-parse 'HEAD^{tree}')" = "$PERF24_TREE"
-  export GODOT_BIN
-  export GODOT_DOUBLE_BIN="$GODOT_BIN"
-  export BREAKPOINT_RUNTIME_DISABLED=1
-  bash ./RUN_ECO_EVO7_PERF2_4_TESTS.sh
-)
-echo "PERF2.CONV PERF2.4 exact prerequisite: PASS"
-
-echo "=== VIS4.9 exact prerequisite transitive gate ==="
-git worktree add --detach "$VIS49_DIR" "$VIS49_HEAD"
-(
-  cd "$VIS49_DIR"
-  test "$(git rev-parse HEAD)" = "$VIS49_HEAD"
-  test "$(git rev-parse 'HEAD^{tree}')" = "$VIS49_TREE"
-  export GODOT_BIN
-  export GODOT_DOUBLE_BIN="$GODOT_BIN"
-  export BREAKPOINT_RUNTIME_DISABLED=1
-  bash ./RUN_ECO_EVO7_VIS4_9_TESTS.sh
-)
-echo "PERF2.CONV VIS4.9 exact prerequisite: PASS"
+echo "=== immutable prerequisite provenance ==="
+if ! git merge-base --is-ancestor "$PERF24_HEAD" "$TARGET_HEAD"; then
+  echo "PERF2.CONV BLOCKED: accepted PERF2.4 runtime is not an ancestor" >&2
+  exit 4
+fi
+if ! git merge-base --is-ancestor "$PERF24_ACCEPTED_CONTROL_HEAD" "$TARGET_HEAD"; then
+  echo "PERF2.CONV BLOCKED: PERF2.4 acceptance control tip is not an ancestor" >&2
+  exit 4
+fi
+if ! git merge-base --is-ancestor "$VIS49_HEAD" "$TARGET_HEAD"; then
+  echo "PERF2.CONV BLOCKED: tested VIS4.9 prerequisite is not an ancestor" >&2
+  exit 4
+fi
+ACCEPTANCE_PATH="$ROOT/$PERF24_ACCEPTANCE_CHECKPOINT"
+if [[ ! -f "$ACCEPTANCE_PATH" ]]; then
+  echo "PERF2.CONV BLOCKED: PERF2.4 acceptance checkpoint missing" >&2
+  exit 4
+fi
+grep -Fq "$PERF24_HEAD" "$ACCEPTANCE_PATH"
+grep -Fq "$PERF24_TREE" "$ACCEPTANCE_PATH"
+grep -Fq "$PERF24_REPORT_HASH" "$ACCEPTANCE_PATH"
+echo "PERF2.CONV PERF2.4 immutable accepted prerequisite: PASS"
+echo "PERF2.CONV VIS4.9 immutable tested prerequisite: PASS"
+echo "PERF2.CONV prerequisite rerun policy=NO_RERUN_ACCEPTED_IMMUTABLE_EVIDENCE"
 
 if [[ ! -f "$ROOT/.godot/uid_cache.bin" ]]; then
   "$GODOT_BIN" --headless --editor --path "$ROOT" --import

@@ -62,6 +62,7 @@ func _run() -> void:
 		_check(String(contract.get("mode", "")) == Composition.MODE, "PERF2.CONV composition mode exact")
 		_check(String(contract.get("pipeline_mode", "")) == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION", "PERF2.CONV optimized pipeline exact")
 		_check(String(contract.get("accepted_stream1_head", "")) == Composition.ACCEPTED_STREAM1_HEAD, "PERF2.CONV accepted STREAM1 anchor exact")
+		_check(String(contract.get("perf2_4_candidate_head", "")) == Composition.PERF24_CANDIDATE_HEAD, "PERF2.CONV accepted PERF2.4 R12 runtime anchor exact")
 		_check(String(contract.get("vis4_9_executable_head", "")) == Composition.VIS49_ACCEPTED_EXECUTABLE_HEAD, "PERF2.CONV VIS4.9 executable anchor exact")
 		_check(String(contract.get("ancestry_merge_head", "")) == Composition.ANCESTRY_MERGE_HEAD, "PERF2.CONV ancestry merge anchor exact")
 		var contract_authorities: Dictionary = Dictionary(contract.get("authorities", {}))
@@ -338,6 +339,8 @@ func _controlled_contract_checks() -> void:
 	_check(Report.MAX_P50_COMBINED_TO_SIM_RATIO == 2.50, "PERF2.CONV p50 budget frozen")
 	_check(Report.MAX_P95_COMBINED_TO_SIM_RATIO == 4.00, "PERF2.CONV p95 budget frozen")
 	_check(Composition.DEFAULT_PARENTS_PER_CHUNK == 64, "PERF2.CONV STREAM1 chunk size frozen at 64")
+	_check(Composition.PERF24_CANDIDATE_HEAD == "840cfcea62ef7192b510235f915b849829654c6c", "PERF2.CONV PERF2.4 R12 prerequisite source-frozen")
+	_check(Composition.ANCESTRY_MERGE_HEAD == "3d41fe4542782e24a33bbac388404679756b4d67", "PERF2.CONV R3 ancestry merge source-frozen")
 
 
 func _write_and_revalidate_artifact(report: Dictionary) -> bool:
@@ -390,6 +393,9 @@ func _source_guard() -> void:
 	var renderer_source := FileAccess.get_file_as_string(
 		"res://scripts/labs/ecology/eco_evo7_vis4_4_play0_ph5_renderer.gd"
 	).to_lower()
+	var ls34_source := FileAccess.get_file_as_string(
+		"res://scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd"
+	)
 
 	_check(composition_source.contains("set_generation_stream_executor"), "PERF2.CONV uses public STREAM1 Workbench seam")
 	_check(composition_source.contains("pipeline_optimized"), "PERF2.CONV composition selects optimized STREAM1 pipeline")
@@ -400,6 +406,13 @@ func _source_guard() -> void:
 	_check(renderer_source.contains("_prune_cache_to_current_generation"), "PERF2.CONV PH5 cache prunes stale generations")
 	_check(not composition_source.contains("fileaccess.open") and not composition_source.contains("diraccess"), "PERF2.CONV has no persistence execution path")
 	_check(not composition_source.contains("multiplayer"), "PERF2.CONV has no network execution path")
+	_check(ls34_source.contains("_stream1_owned_survivor_adoption"), "PERF2.CONV retains accepted R10 survivor ownership seam")
+	_check(ls34_source.contains("_stream1_post_snapshot_elision"), "PERF2.CONV retains accepted R12 snapshot elision seam")
+	_check(ls34_source.contains("last_postcompetition_population_hash = String(core.population_hash)"), "PERF2.CONV retains accepted R12 direct post-population hash")
+	_check(ls34_source.contains("post_record_count = core.records.size()"), "PERF2.CONV retains accepted R12 direct post record count")
+	_check(ls34_source.contains("MorphologyEvidence.seal_snapshot("), "PERF2.CONV retains tested VIS4 morphology evidence seal")
+	_check(ls34_source.contains("GraphReconstructionEvidence.seal_snapshot("), "PERF2.CONV retains tested VIS4 reconstruction evidence seal")
+	_check(not ls34_source.contains("_stream1_owned_field_adoption"), "PERF2.CONV excludes rejected R11 field adoption")
 
 
 func _watchdog() -> void:
