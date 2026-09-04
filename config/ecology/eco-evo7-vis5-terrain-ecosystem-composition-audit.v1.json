@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology.evo7_vis5_terrain_ecosystem_composition_audit.v1",
   "version": "1.0.0",
   "revision": "ECO.EVO7-VIS5.0.R1",
-  "status": "IMPLEMENTED_AUDIT_CANDIDATE",
+  "status": "VIS5.4_CURRENT",
   "base": {
     "checkpoint": "VIS4.9 CLOSED",
     "branch": "feature/eco-evo7-vis4-evolved-plant-morphology-r1",
@@ -45,6 +45,18 @@
       "layer": "visual_scatter",
       "source": "VIS4.6 Grid Appearance Boundary",
       "canonical": false
+    },
+    {
+      "layer": "dense_ground_cover",
+      "source": "VIS5.2 Noncanonical Ground-Cover Presentation Bridge",
+      "canonical": false,
+      "truth_status": "NONCANONICAL_SCENERY"
+    },
+    {
+      "layer": "terrain_rocks",
+      "source": "VIS5.3 Mixed-Strata Composition Lab",
+      "canonical": false,
+      "truth_status": "TERRAIN_SCENERY"
     }
   ],
   "capability_donors": [
@@ -82,9 +94,9 @@
   ],
   "current_gaps": [
     "procedural Earth grass_density is environment/scenery density, not an ECO.EVO7 evolved population count",
-    "procedural Earth tree placement would duplicate source-bound VIS4 PH5 plants if enabled in the same composition",
+    "procedural Earth tree placement remains forbidden beside source-bound VIS4 PH5 plants until explicit source binding exists",
     "legacy EVO4 B6 region materialization is manifest-driven and flat-plane based, not current EVO7 truth",
-    "VIS4 evolved plants follow terrain elevation but do not yet compose with dense ground-cover scenery in one controlled visual bridge",
+    "mixed strata now compose correctly, but local LOD/streaming/recenter/rebuild lifecycle is not yet certified by VIS5.4",
     "final PLAY1 performance acceptance remains owned by PERF2.CONV"
   ],
   "composition_policy": {
@@ -117,12 +129,12 @@
     {
       "checkpoint": "VIS5.3",
       "name": "Mixed-Strata Composition Lab",
-      "status": "IMPLEMENTED_CANDIDATE_EXACT_PENDING"
+      "status": "CLOSED"
     },
     {
       "checkpoint": "VIS5.4",
       "name": "Composition LOD / Streaming Local Gate",
-      "status": "BLOCKED_BY_VIS5_3_EXACT_CLOSURE"
+      "status": "CURRENT"
     },
     {
       "checkpoint": "VIS5.5",
@@ -139,9 +151,9 @@
     "feed presentation RNG, LOD, grass placement or visual scatter back into ecology state",
     "claim PLAY1 performance acceptance before PERF2.CONV"
   ],
-  "current_checkpoint": "VIS5.3",
-  "current_checkpoint_state": "IMPLEMENTED_CANDIDATE_EXACT_PENDING",
-  "next_checkpoint_after_green": "VIS5.4",
+  "current_checkpoint": "VIS5.4",
+  "current_checkpoint_state": "CURRENT",
+  "next_checkpoint_after_green": "VIS5.5",
   "vis5_2_closure": {
     "exact_subject_head": "e8ad5ad9f36eba45ff533918c2a97730d766aa17",
     "exact_subject_tree": "31d97747b097146b652a56ba6d5a36c73bdbe496",
@@ -168,5 +180,30 @@
       "terrain_rocks": 146,
       "terrain_relief_range_m": 57.2468787839384
     }
+  },
+  "vis5_3_closure": {
+    "status": "CLOSED",
+    "exact_subject_head": "459e533018fa050674aafe91270763bab7e3ec7d",
+    "exact_subject_tree": "77c18ec7ed02de7da9b360be1c3bfb8e035a2306",
+    "source_export_run": 33757919547,
+    "source_archive_sha256": "9702c65c7c4d551d901c8619587364dc13a67263973b5c3ec1450e945c6847e6",
+    "full_regression_log_sha256": "7ca81c35f98d8c892c71543698c2f0a439f38e186c497c2a548208b521343d25",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "exact_runner_exit_code": 0,
+    "vis5_0_assertions": 87,
+    "vis5_1_assertions": 70,
+    "vis5_2_assertions": 57,
+    "vis5_3_assertions": 101,
+    "default_profile": {
+      "macro_plants": 63,
+      "ground_cover": 4500,
+      "terrain_rocks": 146,
+      "terrain_relief_range_m": 57.2468787839384,
+      "maximum_sampled_slope_deg": 12.629566,
+      "summary_valid": true
+    },
+    "closure_document": "docs/checkpoints/2026-09-03_ECO_EVO7_VIS5_3_MIXED_STRATA_COMPOSITION_LAB_EXACT_VERIFIED_CLOSED_R1_RU.md",
+    "required_fixes": []
   }
 }
