@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.v0_p7_7_formal_closure_frontier.v1",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION/P7.7_GRAPHICAL_DIGGING_SLICE",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "status": "FULL_GATE_EXACT_VALIDATED_REVIEWER_NEXT",
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "runtime_pr": 487,
+  "frozen_head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+  "frozen_tree": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+  "a_through_h": "EXACT_VALIDATED",
+  "full_gate": {
+    "runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh",
+    "result": "GREEN",
+    "exit_code": 0,
+    "total_assertions": 2032,
+    "total_failures": 0,
+    "recursive_log_count": 32,
+    "fatal_matches": 0,
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-FORMAL-FULL-GATE-EXACT-RUNTIME-VALIDATION-001.v1.json"
+  },
+  "reviewer": {
+    "status": "NEXT",
+    "required_verdict": "PASS",
+    "required_fixes": "EMPTY",
+    "independent_from_implementer_execution": true
+  },
+  "verifier": {
+    "status": "BLOCKED_UNTIL_REVIEWER_PASS",
+    "required_platform": "FRESH_LINUX_X86_64",
+    "required_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "required_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "required_runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh"
+  },
+  "human_runtime_feature_merge": {
+    "status": "BLOCKED_UNTIL_REVIEWER_AND_VERIFIER_PASS",
+    "self_authorized": false
+  },
+  "p7_7_complete_merged": false
+}
