@@ -7,6 +7,51 @@
 **Parallel research line:** `FABRIC-BAKE B0.x`.  
 **Recommended implementation branch:** `research/fabric-bake0-reducible-world-fabric-r1`.
 
+## Current executable frontier — FABRIC.SYNC4
+
+```text
+B0.4 Dynamic ROM                         ✅ CLOSED
+B0.5-P0                                 ✅ CLOSED
+FABRIC.SYNC3                            ✅ CLOSED
+B0.5-A Executable Hybrid Bake           ✅ CLOSED
+COMPLEX0 Breakable Structure            ✅ CLOSED
+COMPLEX0-PERF1 B0.2-E Scaling           ✅ CLOSED
+COMPLEX0 @ 2000 exact double            ✅ CLOSED
+COMPLEX1A Powered Fence FULL baseline   ✅ CLOSED
+FABRIC.SYNC4 POST-B0.5-A                ✅ CLOSED
+
+FABRIC0.19                              ⛔ NOT AUTHORIZED
+BRIDGE-2 executable research            ✅ AUTHORIZED
+PRODUCTION                              ⛔ NOT ACCEPTED
+
+NEXT:
+BRIDGE-2 executable
+  ├─ BRIDGE-2-A Mixed Representation Ownership Contract ✅ IMPLEMENTED CANDIDATE
+  ├─ BRIDGE-2-B Executable Mixed Subject ✅ IMPLEMENTED CANDIDATE
+  ├─ BRIDGE-2-C Cross-Representation Event Routing ← NEXT
+  ├─ BRIDGE-2-D Invalidation / Refinement Ordering
+  ├─ BRIDGE-2-E Deterministic Mixed Replay
+  └─ BRIDGE-2-F / COMPLEX1B Powered Fence Mixed
+→ CX2 Redundant Power Fence
+```
+
+Exact SYNC4 implementation subject:
+
+```text
+HEAD:
+5f1d2dc997ecce5cf1f188a6f65d7b1c2ba0ecd9
+
+TREE:
+d094c969a4252eb77f697d142271b9f74c3f1589
+```
+
+The 2000-part COMPLEX0 exact closure proves canonical break → invalidation →
+stale rejection → topology split → two fresh bake artifacts → runtime →
+reconstruction with fragments 993 + 1007 and ~2e-14 maximum reconstructed
+state error. PERF1 measures B0.2-E topology transaction compilation at 8.647 s
+for 2000 parts and freezes a <60 s budget plus an <=8x growth bound for 4x part
+growth.
+
 ---
 
 ## 1. Зачем существует FABRIC-BAKE
@@ -2263,3 +2308,314 @@ base:
 ```
 
 PR #464 is closed as superseded by PR #473.
+
+---
+
+## FABRIC-BAKE B0.5-A exact closure — 2026-09-03
+
+```text
+predecessor:
+FABRIC.SYNC3
+28fdc16d12ddf1233a82103cb290c831342a3022
+
+exact implementation/test HEAD:
+d819fffa0dc86cc09cda0000f20c310aec23c799
+
+TREE:
+c92c1ff22c683ba348ac8596d2e6b3212a381b57
+
+B0.5-P0:
+63/63 PASS
+
+B0.5-A:
+67/67 PASS
+
+closure chain:
+PASS / exit 0
+
+Project Control:
+33708036538 SUCCESS
+```
+
+Current roadmap:
+
+```text
+B0.4 Dynamic ROM             ✅ CLOSED
+B0.5-P0 contracts/preflight  ✅ CLOSED
+FABRIC.SYNC3                 ✅ CLOSED
+B0.5-A executable hybrid     ✅ CLOSED
+        ↓
+POST-B0.5-A FABRIC SYNC ★ NEXT
+        ↓
+BRIDGE-2 executable authorization?
+FABRIC0.19 necessity?
+```
+
+The first executable hybrid falsifier now exists:
+two generic passive B0.4-backed modes, FABRIC-owned localized JUMP, exact B0.4
+ReconstructionDescriptor/StateMapping handoff, lazy mode-B hybrid wrapper/cache,
+exact cache replay, stale/unknown fail-closed behavior.
+
+This does not yet authorize BRIDGE-2 executable mixed-representation integration.
+
+
+---
+
+## COMPLEX SYSTEMS EXPERIMENTAL LADDER — post-B0.5-A insertion
+
+Detailed stand plan:
+
+docs/research/FABRIC_BAKE_COMPLEX_SYSTEMS_EXPERIMENTAL_LADDER_RU.md
+
+The roadmap now explicitly includes executable experimental stands. The purpose is to
+validate not only individual reduction primitives but progressively more complex systems
+with physical destruction, functional dependencies, mixed fidelity and local refinement.
+
+### Updated path
+
+~~~text
+B0.4 Dynamic ROM             ✅ CLOSED
+B0.5-P0 contracts/preflight  ✅ CLOSED
+FABRIC.SYNC3                 ✅ CLOSED
+B0.5-A executable hybrid     ✅ CLOSED
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX0 — BREAKABLE STRUCTURE LAB ★    │
+│ ★ COMPLEX1A — POWERED FENCE FULL ★        │
+└────────────────────────────────────────────┘
+        ↓
+══════════════════════════════════════════════
+★ POST-B0.5-A FABRIC SYNC — NEXT ★
+══════════════════════════════════════════════
+        │
+        ├── BRIDGE-2 executable authorization?
+        └── FABRIC0.19 necessity?
+        │
+        ▼
+BRIDGE-2 executable path
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX1B — POWERED FENCE MIXED ★       │
+│ ★ CX2 — REDUNDANT POWER FENCE ★           │
+└────────────────────────────────────────────┘
+        ↓
+BRIDGE-2 CLOSED
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX2 — MODULAR MACHINE LAB ★        │
+│ FULL + STRUCTURAL + CONTACT + ROM + HYBRID │
+└────────────────────────────────────────────┘
+        ↓
+B0.6 ADAPTIVE PHYSICAL FIDELITY
+        +
+BRIDGE-3 FULL → BAKE → GUARD → UNBAKE → FULL
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX3 — ADAPTIVE DAMAGE LAB ★        │
+│ ★ CX5 — LARGE POWERED STRUCTURE ★         │
+└────────────────────────────────────────────┘
+        ↓
+B0.7 UNSEEN MACHINE SCALE CHALLENGE
+        ↓
+┌────────────────────────────────────────────┐
+│ ★ COMPLEX4 — UNSEEN FUNCTIONAL MACHINE ★  │
+└────────────────────────────────────────────┘
+~~~
+
+### COMPLEX0 — first executable complexity stand
+
+Gate:
+
+~~~text
+B0.5-A CLOSED
+~~~
+
+Subject:
+
+~~~text
+50 → 100 → 500 → 2000 part fence / wall
+construct
+→ bake
+→ local impact
+→ topology failure
+→ invalidation
+→ split
+→ reconstruction
+→ rebake
+~~~
+
+This stand deliberately avoids requiring BRIDGE-2. It proves the structural lifecycle
+before mixed-domain execution is introduced.
+
+### COMPLEX1A — powered breakable structure FULL baseline
+
+Gate:
+
+~~~text
+B0.5-A CLOSED
+~~~
+
+Reference system:
+
+~~~text
+battery ─── wire attached to fence ─── lamp
+
+intact wire:
+lamp ON
+
+critical fence/wire topology break:
+circuit opens
+→ lamp OFF
+~~~
+
+The lamp outcome must emerge from generic physical connectivity. A direct rule such as
+"fence broken => lamp off" is forbidden.
+
+Mandatory anti-hardcode variants:
+
+~~~text
+break unrelated fence segment
+→ lamp remains ON
+
+two independent power paths
+→ break one path
+→ lamp remains ON if alternate path is valid
+
+two loads on separate branches
+→ only causally dependent load changes
+~~~
+
+This FULL baseline becomes the causal oracle for the later mixed/baked test.
+
+### COMPLEX1B — powered breakable structure mixed bake
+
+Gate:
+
+~~~text
+POST-B0.5-A SYNC
+→ BRIDGE-2 executable authorized
+→ working mixed FULL ↔ BAKED path
+~~~
+
+Target:
+
+~~~text
+structure         → STRUCTURAL_BAKE
+local impact      → FULL
+stable dynamics   → DYNAMIC_ROM
+functional path   → FULL or validated reduction
+~~~
+
+After a physical break, the same canonical wire connectivity mutation and lamp outcome
+must occur as in COMPLEX1A.
+
+Primary falsifier:
+
+~~~text
+FULL causal outcome
+==
+MIXED FULL/BAKED causal outcome
+~~~
+
+If the mechanics look correct but the lamp remains powered after the canonical wire path
+is broken, the mixed architecture fails.
+
+### COMPLEX2 — modular machine
+
+Gate:
+
+~~~text
+BRIDGE-2 CLOSED
+~~~
+
+Initial target:
+
+~~~text
+500–2000 canonical elements
+20–50 structural modules
+4–8 moving subsystems
+2–4 active contact zones
+1–3 functional paths
+~~~
+
+The object should simultaneously exercise:
+
+~~~text
+FULL
++
+STRUCTURAL_BAKE
++
+CONTACT_BAKE
++
+DYNAMIC_ROM
++
+HYBRID_BAKE
+~~~
+
+without duplicate state ownership.
+
+### COMPLEX3 — adaptive damage / local unbake
+
+Gate:
+
+~~~text
+B0.6
++
+BRIDGE-3
+~~~
+
+Scale target:
+
+~~~text
+5k → 20k → 100k canonical elements
+~~~
+
+Only the causally affected region should refine to FULL during damage. Functional
+consequences such as a broken electrical path must propagate while unaffected regions
+remain reduced. Stable fragments must be rebake-able.
+
+### COMPLEX4 — unseen functional systems
+
+Gate:
+
+~~~text
+B0.7
+~~~
+
+Build previously unseen machines only from frozen generic primitives. Required pattern:
+
+~~~text
+generic composition
+→ emergent function
+→ reduction
+→ topology/failure event
+→ correct downstream functional consequence
+~~~
+
+No stand-specific solver primitive or hand-written bake class may be introduced only to
+pass a fixture.
+
+### COMPLEX acceptance rule
+
+Every COMPLEX stand must compare a FULL reference with its reduced/mixed/adaptive subject
+and record at least:
+
+- canonical topology/damage outcome;
+- functional connectivity and downstream state;
+- effort/flow and power/energy envelope;
+- exactly-once events;
+- stale-artifact rejection;
+- deterministic reconstruction/rebuild/replay;
+- canonical element count vs active FULL count;
+- reduced state count;
+- CPU/memory/event work;
+- local refinement size where applicable.
+
+The strategic target is therefore no longer merely "can we bake a complex object?" but:
+
+~~~text
+can canonical complexity grow
+while runtime physical complexity stays sparse,
+and can local physical changes still produce
+the correct global functional consequences?
+~~~

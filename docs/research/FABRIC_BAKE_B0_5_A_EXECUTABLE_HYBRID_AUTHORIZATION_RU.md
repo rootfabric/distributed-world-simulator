@@ -163,3 +163,145 @@ base:
 ```
 
 PR #464 is closed as superseded by PR #473.
+
+---
+
+## Final exact closure — 2026-09-03
+
+```text
+exact implementation/test HEAD:
+d819fffa0dc86cc09cda0000f20c310aec23c799
+
+TREE:
+c92c1ff22c683ba348ac8596d2e6b3212a381b57
+
+B0.5-P0:
+63/63 PASS
+
+B0.5-A:
+67/67 PASS
+
+closure chain:
+PASS / exit 0
+
+Project Control:
+33708036538 SUCCESS
+
+exact source carrier:
+33708036610 SUCCESS
+artifact 9875925635
+
+bundle SHA-256:
+b8388880e4c2f2a2e1165bb4a9c8cc5532661c8aefb493de07fd3bf190d1bd22
+```
+
+The final implementation keeps all P0 contracts immutable and preflight-only.
+Executable semantics exist only in the new B0.5-A wrappers.
+
+Verified executable path:
+
+```text
+B0.4 PhysicalBakeArtifact mode A
+        ↓ FLOW through common B0.4 gate
+FABRIC-localized physical event
+        ↓ exactly once
+A ReconstructionDescriptor
+        ↓ FULL handoff
+B StateMapping
+        ↓
+B0.4 PhysicalBakeArtifact mode B
+```
+
+Mode B hybrid wrapper/cache behavior:
+
+```text
+first encounter:
+LAZY_COMPILED
+
+deterministic replay:
+EXACT_CACHE_HIT
+
+stale cache:
+FULL
+
+unknown mode:
+FULL / NO_SAFE_BAKE contract
+nearest-mode reuse:
+false
+```
+
+Final qualification:
+
+```text
+B0.5-A EXECUTABLE HYBRID BAKE
+CLOSED
+EXACT DOUBLE PASS
+PROJECT CONTROL PASS
+NOT PRODUCTION ACCEPTED
+```
+
+BRIDGE-2 executable remains blocked pending the next synchronization review.
+
+
+---
+
+## Post-closure complex-system handoff
+
+B0.5-A closure opens the first complexity laboratories without changing the research
+qualification of B0.5-A itself.
+
+Detailed plan:
+
+docs/research/FABRIC_BAKE_COMPLEX_SYSTEMS_EXPERIMENTAL_LADDER_RU.md
+
+Immediately available as post-closure labs:
+
+~~~text
+COMPLEX0
+BREAKABLE STRUCTURE LAB
+
+COMPLEX1A
+POWERED BREAKABLE STRUCTURE
+FULL CAUSAL BASELINE
+~~~
+
+COMPLEX0 verifies:
+
+~~~text
+complex structure
+→ bake
+→ local damage
+→ canonical topology mutation
+→ invalidation
+→ split/reconstruction
+→ rebake
+~~~
+
+COMPLEX1A adds a functional consequence:
+
+~~~text
+battery
+→ wire attached to breakable structure
+→ lamp
+
+critical mechanical/topology break
+→ wire connectivity break
+→ electrical path opens
+→ lamp OFF
+~~~
+
+This consequence must emerge from generic topology and effort/flow semantics; direct
+fixture logic such as "broken fence => lamp off" is forbidden.
+
+The mixed FULL/BAKED repeat of this experiment is intentionally gated later:
+
+~~~text
+POST-B0.5-A FABRIC SYNC
+→ BRIDGE-2 executable authorization
+→ mixed path available
+→ COMPLEX1B
+~~~
+
+Thus B0.5-A is the point where complex-system experiments begin, while BRIDGE-2 is the
+point where the same causal systems become a test of simultaneous mixed physical
+representations.

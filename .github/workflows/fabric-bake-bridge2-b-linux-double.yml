@@ -1,0 +1,85 @@
+name: FABRIC-BAKE BRIDGE-2-B Linux Double Verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/fabric-bake0-5-a-executable-hybrid-r2
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    env:
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Assert exact Git subject
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          bash -n RUN_FABRIC_BAKE_BRIDGE2_B_TESTS.sh
+          git diff --check
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          godot_bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot_bin"
+          version="$("$godot_bin" --version | head -n1 | tr -d '\r')"
+          test "$version" = "$EXPECTED_GODOT_VERSION"
+          sha="$(sha256sum "$godot_bin" | awk '{print $1}')"
+          test "$sha" = "$EXPECTED_GODOT_SHA256"
+          echo "path=$godot_bin" >> "$GITHUB_OUTPUT"
+          echo "GODOT=$version"
+          echo "GODOT_SHA256=$sha"
+
+      - name: Run BRIDGE-2-B exact double
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifacts/fabric-bake-bridge2-b-linux-double
+          bash ./RUN_FABRIC_BAKE_BRIDGE2_B_TESTS.sh 2>&1 | tee artifacts/fabric-bake-bridge2-b-linux-double/bridge2-b.log
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script' artifacts/fabric-bake-bridge2-b-linux-double/bridge2-b.log; then
+            exit 4
+          fi
+
+      - name: Verify exact clean state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo "FINAL_HEAD=$(git rev-parse HEAD)"
+          echo "FINAL_TREE=$(git rev-parse 'HEAD^{tree}')"
+          echo "FABRIC-BAKE BRIDGE-2-B LINUX DOUBLE VERIFICATION: PASS"
+
+      - name: Upload verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-bake-bridge2-b-linux-double-logs
+          path: artifacts/fabric-bake-bridge2-b-linux-double
+          if-no-files-found: warn
+          retention-days: 7

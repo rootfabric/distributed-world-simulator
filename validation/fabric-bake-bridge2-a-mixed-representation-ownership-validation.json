@@ -1,0 +1,95 @@
+{
+  "schema": "planet_simulator.fabric_bake_bridge2_a_mixed_representation_ownership_validation.v1",
+  "qualification": "IMPLEMENTED_CANDIDATE_EXACT_DOUBLE_PASS",
+  "production_accepted": false,
+  "predecessor": {
+    "checkpoint": "FABRIC_SYNC4",
+    "head": "32f15bf3174c02f079d867c7b978dcadcf659a39",
+    "tree": "c61883b6cd238de94256eb2af8efcc633e416750"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "contract": {
+    "schema": "planet_simulator.fabric_bake_mixed_representation_ownership.v1",
+    "contract_hash": "5b58cdb94b959be41d7b8450f423e540ca393ac8a7469ea1e81002c6a214ec42",
+    "canonical_truth_owner": "CONSTRUCTION_MATTER",
+    "source_revision_policy": "EXTERNAL_CANONICAL_AUTHORITY_ONLY",
+    "event_commit_policy": "EXACTLY_ONCE",
+    "representation_kinds": [
+      "CONTACT_BAKE",
+      "DYNAMIC_ROM",
+      "FULL",
+      "HYBRID_BAKE",
+      "STRUCTURAL_BAKE"
+    ]
+  },
+  "acceptance": {
+    "pass": 71,
+    "total": 71,
+    "playground": "PASS",
+    "bridge1_regression": {
+      "pass": 146,
+      "total": 146
+    }
+  },
+  "guarantees": {
+    "construction_matter_remain_canonical_truth": true,
+    "all_mixed_representations_are_derived_only": true,
+    "derived_canonical_write_authorized": false,
+    "exactly_one_active_representation_per_region": true,
+    "canonical_mutation_commit_owner_is_existing_authority": true,
+    "derived_hybrid_event_owner_is_fabric_physical_event": true,
+    "derived_event_creates_canonical_revision": false,
+    "duplicate_event_fails_closed": true,
+    "cross_authority_mutable_execution_fails_closed": true,
+    "deterministic_contract_hash": true,
+    "deterministic_resolution_hash": true
+  },
+  "non_claims": [
+    "MIXED_RUNTIME_EXECUTION",
+    "CROSS_REPRESENTATION_STATE_HANDOFF",
+    "CROSS_REPRESENTATION_EVENT_DELIVERY",
+    "INVALIDATION_REFINEMENT_ORDERING",
+    "MIXED_PHYSICAL_STATE_REPLAY",
+    "COMPLEX1B",
+    "BRIDGE2_CLOSED",
+    "PRODUCTION_ACCEPTANCE"
+  ],
+  "next_checkpoint": "BRIDGE_2_B_EXECUTABLE_MIXED_SUBJECT",
+  "exact_implementation_subject": {
+    "head": "67715c401480bc28c3d9bc90c0711b127956d95b",
+    "tree": "cb4c7ac311d080edbb13e9858b1271fde588cce5",
+    "tracked_clean": true
+  },
+  "exact_source_carrier": {
+    "run_id": 33760133442,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9895075448
+  },
+  "exact_double_replay": {
+    "result": "PASS",
+    "acceptance": {
+      "pass": 71,
+      "total": 71
+    },
+    "playground": "PASS",
+    "log_sha256": "7d0e4a719ce66c369b40f67b43ef173a744d429bd658f5064ad66cbbf9b1e108",
+    "contract_hash": "5b58cdb94b959be41d7b8450f423e540ca393ac8a7469ea1e81002c6a214ec42"
+  },
+  "control": {
+    "implementation_project_control": {
+      "run_id": 33760133558,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_portable_smoke": {
+      "run_id": 33760133653,
+      "conclusion": "SUCCESS"
+    },
+    "implementation_linux_double_self_hosted": {
+      "run_id": 33760133543,
+      "status": "QUEUED_AT_EVIDENCE_RECORD"
+    }
+  }
+}
