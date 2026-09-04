@@ -1,0 +1,145 @@
+name: PERF2.CONV R3 merge R12
+
+on:
+  push:
+    branches:
+      - automation/perf2-conv-r3-merge-r12
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout automation trigger
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge accepted R12 into convergence R3
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='feature/eco-evo7-perf2-conv-stream1-vis4-r3'
+          CONV_BASE='639e7d011d8e4ab5832d81f6efab20b54da7ec8b'
+          ACCEPTED='ab115385e81375b224eb397cf6a9de071bd4e79e'
+          LS34='scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd'
+
+          git config user.name 'rootfabric-perf2-conv-r3'
+          git config user.email 'actions@users.noreply.github.com'
+          git fetch origin "$TARGET" 'control/eco-evo7-perf2-4-r12-closure'
+          git checkout -B "$TARGET" "origin/$TARGET"
+          test "$(git rev-parse HEAD)" = "$CONV_BASE"
+
+          set +e
+          git merge --no-ff --no-commit "$ACCEPTED"
+          MERGE_RC=$?
+          set -e
+          if [[ "$MERGE_RC" -ne 0 && "$MERGE_RC" -ne 1 ]]; then
+            echo "unexpected merge rc=$MERGE_RC" >&2
+            exit 20
+          fi
+
+          mapfile -t UNMERGED < <(git diff --name-only --diff-filter=U)
+          printf 'unmerged=%s\n' "${UNMERGED[*]:-<none>}"
+          if [[ "${#UNMERGED[@]}" -ne 1 || "${UNMERGED[0]}" != "$LS34" ]]; then
+            echo 'R3 merge conflict set drifted; expected LS3.4 only' >&2
+            exit 21
+          fi
+
+          git checkout --ours -- "$LS34"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('scripts/ecology/shadow/eco_evo7_ls34_local_competition_v1.gd')
+          s = p.read_text()
+
+          def one(old: str, new: str, label: str):
+              global s
+              n = s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected one anchor, found {n}')
+              s = s.replace(old, new, 1)
+
+          one(
+              'var last_graph_reconstruction_evidence: Dictionary = {}\n\nfunc setup(',
+              '''var last_graph_reconstruction_evidence: Dictionary = {}\n\n## PERF2.4 R10/R12 ownership seams retained inside PERF2.CONV.\n## The optimized STREAM1 path may adopt already-fresh survivors and may\n## elide one redundant intermediate post-competition core snapshot.\n## Legacy keeps the historical copy/snapshot layers for deterministic A/B.\nvar _stream1_owned_survivor_adoption := false\nvar _stream1_post_snapshot_elision := false\n\nfunc setup(''',
+              'ownership vars',
+          )
+
+          one(
+              '''func set_generation_stream_executor(executor) -> bool:\n    if not initialized or core == null:\n        return false\n    return core.set_generation_stream_executor(executor)\n\nfunc clear_generation_stream_executor() -> void:\n    if core != null:\n        core.clear_generation_stream_executor()\n''',
+              '''func set_generation_stream_executor(executor) -> bool:\n    if not initialized or core == null:\n        return false\n    if not core.set_generation_stream_executor(executor):\n        return false\n    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n    if executor.has_method("get_telemetry"):\n        var telemetry: Dictionary = executor.get_telemetry()\n        var optimized_stream := (\n            String(telemetry.get("pipeline_mode", ""))\n            == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"\n        )\n        _stream1_owned_survivor_adoption = optimized_stream\n        _stream1_post_snapshot_elision = optimized_stream\n    return true\n\nfunc clear_generation_stream_executor() -> void:\n    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n    if core != null:\n        core.clear_generation_stream_executor()\n''',
+              'executor ownership setup',
+          )
+
+          one(
+              '            core.records = survivors.duplicate(true)\n',
+              '''            core.records = (\n                survivors\n                if _stream1_owned_survivor_adoption\n                else survivors.duplicate(true)\n            )\n''',
+              'survivor adoption',
+          )
+
+          one(
+              '''    phase_started = Time.get_ticks_usec()\n    var post: Dictionary = core.get_snapshot()\n    last_postcompetition_population_hash = String(post["population_hash"])\n    var post_snapshot_ms := _elapsed_ms(phase_started)\n    if competition_enabled and int(pre.get("generation", 0)) > 0:\n        last_morphology_evidence = MorphologyEvidence.seal_snapshot(\n            last_morphology_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            int(post.get("record_count", -1))\n        )\n        last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(\n            last_graph_reconstruction_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            int(post.get("record_count", -1))\n        )\n\n    phase_started = Time.get_ticks_usec()\n    var snapshot := get_snapshot()\n    var snapshot_build_ms := _elapsed_ms(phase_started)\n    last_profile = {\n        "schema": PROFILE_SCHEMA,\n        "generation": int(pre.get("generation", -1)),\n        "record_count_precompetition": int(pre.get("record_count", 0)),\n        "record_count_postcompetition": int(post.get("record_count", 0)),\n''',
+              '''    phase_started = Time.get_ticks_usec()\n    var post_record_count := 0\n    if _stream1_post_snapshot_elision:\n        last_postcompetition_population_hash = String(core.population_hash)\n        post_record_count = core.records.size()\n    else:\n        var post: Dictionary = core.get_snapshot()\n        last_postcompetition_population_hash = String(post["population_hash"])\n        post_record_count = int(post.get("record_count", 0))\n    if last_postcompetition_population_hash.is_empty():\n        return {}\n    var post_snapshot_ms := _elapsed_ms(phase_started)\n    if competition_enabled and int(pre.get("generation", 0)) > 0:\n        last_morphology_evidence = MorphologyEvidence.seal_snapshot(\n            last_morphology_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            post_record_count\n        )\n        last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(\n            last_graph_reconstruction_records,\n            int(pre["generation"]),\n            last_precompetition_population_hash,\n            last_competition_hash,\n            last_postcompetition_population_hash,\n            post_record_count\n        )\n\n    phase_started = Time.get_ticks_usec()\n    var snapshot := get_snapshot()\n    var snapshot_build_ms := _elapsed_ms(phase_started)\n    last_profile = {\n        "schema": PROFILE_SCHEMA,\n        "generation": int(pre.get("generation", -1)),\n        "record_count_precompetition": int(pre.get("record_count", 0)),\n        "record_count_postcompetition": post_record_count,\n''',
+              'post snapshot + morphology seals',
+          )
+
+          one(
+              '        "records": Array(base.get("records", [])).duplicate(true),\n',
+              '''        "records": (\n            Array(base.get("records", []))\n            if _stream1_post_snapshot_elision\n            else Array(base.get("records", [])).duplicate(true)\n        ),\n''',
+              'snapshot record adoption',
+          )
+
+          marker = '    last_competition_profile.clear()\n'
+          idx = s.rfind(marker)
+          if idx < 0:
+              raise SystemExit('reset marker missing')
+          insert_at = idx + len(marker)
+          s = s[:insert_at] + '    _stream1_owned_survivor_adoption = false\n    _stream1_post_snapshot_elision = false\n' + s[insert_at:]
+
+          forbidden = '_stream1_owned_field_adoption'
+          if forbidden in s:
+              raise SystemExit('R11 field adoption must not enter R3')
+
+          required = [
+              'survivors.append(record.duplicate(true))',
+              '_stream1_owned_survivor_adoption',
+              '== "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"',
+              'if _stream1_owned_survivor_adoption',
+              'else survivors.duplicate(true)',
+              '_stream1_post_snapshot_elision',
+              'last_postcompetition_population_hash = String(core.population_hash)',
+              'post_record_count = core.records.size()',
+              'var post: Dictionary = core.get_snapshot()',
+              'if _stream1_post_snapshot_elision',
+              'else Array(base.get("records", [])).duplicate(true)',
+              'MorphologyEvidence.seal_snapshot(',
+              'GraphReconstructionEvidence.seal_snapshot(',
+          ]
+          missing = [x for x in required if x not in s]
+          if missing:
+              raise SystemExit(f'missing merged LS3.4 seams: {missing}')
+
+          p.write_text(s)
+          PY
+
+          git add "$LS34"
+          test -z "$(git diff --name-only --diff-filter=U)"
+
+          # Merge must contain both exact prerequisites as parents/ancestors.
+          git merge-base --is-ancestor 'ab44617d8961add81a6c9f245c99d0b68eaeab52' HEAD
+          git merge-base --is-ancestor '840cfcea62ef7192b510235f915b849829654c6c' MERGE_HEAD
+
+          git commit -m 'merge(eco): converge accepted PERF2.4 R12 with tested VIS4.9'
+
+          MERGED_HEAD="$(git rev-parse HEAD)"
+          git merge-base --is-ancestor "$CONV_BASE" "$MERGED_HEAD"
+          git merge-base --is-ancestor "$ACCEPTED" "$MERGED_HEAD"
+          git merge-base --is-ancestor 'ab44617d8961add81a6c9f245c99d0b68eaeab52' "$MERGED_HEAD"
+
+          echo "PERF2.CONV R3 ancestry merge HEAD=$MERGED_HEAD"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+          git push origin "HEAD:$TARGET"
