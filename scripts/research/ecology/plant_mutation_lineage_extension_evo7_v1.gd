@@ -88,6 +88,56 @@ static func policy_hash(policy: Dictionary) -> String:
 		tokens.append("%s=%.9f" % [String(axis["step_key"]), float(policy[String(axis["step_key"])])])
 	return "|".join(tokens).sha256_text()
 
+
+## PERF2.4 R8 optimized preparation seam. The same canonical reproduce_bundle()
+## remains the only mutation implementation. This prepares the frozen default
+## policy and both canonical policy hashes once during executor setup.
+static func prepare_default_reproduction_context() -> Dictionary:
+	var policy := default_policy()
+	if not bool(validate_policy(policy).get("success", false)):
+		return {}
+	var kernel_context := Kernel.prepare_default_policy_context()
+	if kernel_context.is_empty():
+		return {}
+	var evo7_policy_id := policy_hash(policy)
+	if not _is_lower_hex_64(evo7_policy_id):
+		return {}
+	return {
+		"policy": policy,
+		"evo7_policy_hash": evo7_policy_id,
+		"kernel_context": kernel_context,
+	}
+
+
+## PERF2.4 R9 certification seam. This proves the exact frozen default context
+## once at a chunk boundary. The same reproduce_bundle() implementation then
+## consumes the certified context without repeating policy/hash validation for
+## every offspring.
+static func validate_prepared_reproduction_context(context: Dictionary) -> bool:
+	if context.keys().size() != 3:
+		return false
+	var policy_value = context.get("policy")
+	var kernel_value = context.get("kernel_context")
+	if not policy_value is Dictionary or not kernel_value is Dictionary:
+		return false
+	var policy: Dictionary = policy_value
+	var kernel_context: Dictionary = kernel_value
+	if policy != default_policy():
+		return false
+	if not bool(validate_policy(policy).get("success", false)):
+		return false
+	if not Kernel.validate_prepared_policy_context(kernel_context):
+		return false
+	if Dictionary(policy.get("genome_policy", {})) != Dictionary(kernel_context.get("policy", {})):
+		return false
+	var declared_hash := String(context.get("evo7_policy_hash", ""))
+	return (
+		_is_lower_hex_64(declared_hash)
+		and declared_hash == policy_hash(policy)
+	)
+
+
+
 ## Ancestor bundle: one deterministic individual carrying genome v1 + PH0 traits +
 ## EVO7 extension traits under a single v1 lineage record.
 static func create_ancestor_bundle(genome: Dictionary, dev_traits: Dictionary, ext_traits: Dictionary, lineage_seed: int) -> Dictionary:
@@ -107,24 +157,50 @@ static func create_ancestor_bundle(genome: Dictionary, dev_traits: Dictionary, e
 
 ## Single reproduction entry for EVO7 bundles. Genome heredity is delegated to the
 ## v1 kernel; morphology axes mutate inside the same lineage event via keyed rolls.
-static func reproduce_bundle(parent_bundle: Dictionary, mutation_seed: int, offspring_index: int, policy: Dictionary = {}) -> Dictionary:
+static func reproduce_bundle(
+	parent_bundle: Dictionary,
+	mutation_seed: int,
+	offspring_index: int,
+	policy: Dictionary = {},
+	prepared_context: Dictionary = {},
+	prepared_context_validated: bool = false
+) -> Dictionary:
 	if offspring_index < 0:
 		return {}
 	if not bool(_validate_bundle(parent_bundle).get("success", false)):
 		return {}
-	var effective_policy := default_policy() if policy.is_empty() else policy.duplicate(true)
-	if not bool(validate_policy(effective_policy).get("success", false)):
-		return {}
+	var using_prepared_context := not prepared_context.is_empty()
+	if using_prepared_context and not prepared_context_validated:
+		if not validate_prepared_reproduction_context(prepared_context):
+			return {}
+		prepared_context_validated = true
+	var effective_policy: Dictionary = (
+		Dictionary(prepared_context.get("policy", {}))
+		if using_prepared_context
+		else (default_policy() if policy.is_empty() else policy.duplicate(true))
+	)
+	if not using_prepared_context:
+		if not bool(validate_policy(effective_policy).get("success", false)):
+			return {}
+
+	var kernel_context: Dictionary = {}
+	var evo7_policy_id := ""
+	if using_prepared_context:
+		if not prepared_context_validated:
+			return {}
+		kernel_context = Dictionary(prepared_context.get("kernel_context", {}))
+		evo7_policy_id = String(prepared_context.get("evo7_policy_hash", ""))
 
 	var genome_result := Kernel.reproduce(
 		parent_bundle["genome"], parent_bundle["lineage"], mutation_seed, offspring_index,
-		effective_policy["genome_policy"])
+		effective_policy["genome_policy"], kernel_context, prepared_context_validated)
 	if genome_result.is_empty():
 		return {}
 	var child_genome: Dictionary = genome_result["genome"]
 	var child_lineage: Dictionary = genome_result["lineage"]
 
-	var evo7_policy_id := policy_hash(effective_policy)
+	if not using_prepared_context:
+		evo7_policy_id = policy_hash(effective_policy)
 	var event_context := "%s|%s|%d|%d|%s" % [
 		REVISION,
 		String(parent_bundle["lineage"]["lineage_id"]),
@@ -272,6 +348,18 @@ static func _compute_result_hash(result: Dictionary) -> String:
 static func _unit01(key: String) -> float:
 	var prefix := key.sha256_text().substr(0, 12)
 	return float(prefix.hex_to_int()) / 281474976710655.0
+
+static func _is_lower_hex_64(value: String) -> bool:
+	if value.length() != 64 or value != value.to_lower():
+		return false
+	for character in value:
+		if not String(character) in [
+			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+			"a", "b", "c", "d", "e", "f",
+		]:
+			return false
+	return true
+
 
 static func _success(details: Dictionary = {}) -> Dictionary:
 	return {"success": true, "error_code": "", "details": details.duplicate(true)}

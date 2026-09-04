@@ -95,6 +95,10 @@ var generation_boundary_sorts := 0
 var _optimized_environment_sample_cache: Dictionary = {}
 var _optimized_environment_cache_identity := ""
 
+## PERF2.4 R8: frozen default mutation-policy context prepared once per
+## optimized executor setup. Legacy never receives this context.
+var _optimized_reproduction_context: Dictionary = {}
+
 var _last_report: Dictionary = {}
 
 func setup(config: Dictionary) -> bool:
@@ -117,6 +121,7 @@ func setup(config: Dictionary) -> bool:
 	generation_boundary_sorts = 0
 	_optimized_environment_sample_cache = {}
 	_optimized_environment_cache_identity = ""
+	_optimized_reproduction_context = {}
 	_last_report = {}
 	_parents_per_chunk = int(config.get("parents_per_chunk", 64))
 	_audit_interval = int(config.get("audit_interval", 10))
@@ -126,6 +131,10 @@ func setup(config: Dictionary) -> bool:
 		return false
 	if _pipeline_mode not in PIPELINE_MODES:
 		return false
+	if _pipeline_mode == PIPELINE_OPTIMIZED:
+		_optimized_reproduction_context = CandidateKernel.prepare_default_reproduction_context()
+		if _optimized_reproduction_context.is_empty():
+			return false
 	_configured = true
 	return true
 
@@ -232,7 +241,8 @@ func execute_generation(parents: Array, generation: int, immutable_context: Dict
 			candidates = CandidateKernel.build_presorted_unsorted(
 				chunk, generation,
 				String(immutable_context["schema"]), String(immutable_context["version"]),
-				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]))
+				int(immutable_context["evolution_seed"]), int(immutable_context["offspring_per_parent"]),
+				_optimized_reproduction_context)
 		else:
 			candidates = CandidateKernel.build_all(
 				chunk, generation,

@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_perf2_sim_closure.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-PERF2.SIM-CLOSURE-2026-09-04-R1",
+  "status": "CLOSED",
+  "closed_by": "PERF2.4_R12_ACCEPTED",
+  "accepted_perf2_4": {
+    "revision": "ECO.EVO7-PERF2.4-R1",
+    "runtime_head": "840cfcea62ef7192b510235f915b849829654c6c",
+    "runtime_tree": "967d674c0ba2349db949193969f16f91553761ea",
+    "accepted_predecessor": "4997f7116d0e4ac40ed88fe8a41a7b5029621d71",
+    "measurement_contract_blob": "b076784f6b4016a0191e937c4e6ada1fe90c783b",
+    "verification_policy": "ECO-RUNTIME-VERIFY-2026-08-31-R1",
+    "verification_os": "WINDOWS",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "samples": 54,
+    "comparison_points": 9,
+    "exact_pairs": "27/27",
+    "wall_geomean_speedup": 1.027677,
+    "stream_geomean_speedup": 1.045910,
+    "improved_wall_points": 9,
+    "nonregressed_wall_points": 9,
+    "minimum_wall_ratio": 1.009786,
+    "bounded_working_set": "PRESERVED",
+    "operation_reduction": "PROVEN",
+    "optimization_claim": true,
+    "serial_crossover_claim": false,
+    "report_hash": "16d3407abef3d3ff30cbe4293cb1278e1b18845b0b5332589587d543b134853b",
+    "acceptance_checkpoint": "docs/checkpoints/2026-09-04_ECO_EVO7_PERF2_4_R12_ACCEPTED_RU.md"
+  },
+  "runtime_gate": {
+    "required_exact_local_passes": 1,
+    "accepted_operating_systems": [
+      "UBUNTU",
+      "WINDOWS"
+    ],
+    "either_os_satisfies_runtime_gate": true,
+    "dual_os_required": false,
+    "second_os_evidence": "OPTIONAL_NON_BLOCKING"
+  },
+  "project_control": {
+    "run": 33762025862,
+    "exact_checkout": "PASS",
+    "control_candidate_syntax_generation": "PASS",
+    "checkpoint_session_regression": "PASS",
+    "global_architecture_ownership": "RED_EXTERNAL_CONCURRENT_MATTER_PROJECT_REGISTRY_DRIFT",
+    "global_red_relabelled": false
+  },
+  "next_frontier": {
+    "checkpoint": "ECO.EVO7/PERF2.CONV",
+    "name": "Integrated Simulation + Morphology Performance Convergence",
+    "status": "AUTHORIZED_CURRENT",
+    "perf2_sim_prerequisite": "SATISFIED",
+    "vis4_9_exact_prerequisite": {
+      "head": "ab44617d8961add81a6c9f245c99d0b68eaeab52",
+      "tree": "9d543a3db4f54a676e9f25152785c36a72c56a30",
+      "status": "EXACT_TESTED_PREREQUISITE_ALREADY_PRESENT_IN_CONVERGENCE_LINEAGE"
+    },
+    "previous_convergence_lineage_tip": "639e7d011d8e4ab5832d81f6efab20b54da7ec8b",
+    "action": "REBUILD_CONVERGENCE_LINEAGE_WITH_ACCEPTED_PERF2_4_R12"
+  },
+  "production_promotion": false,
+  "canonical_metrics": false
+}

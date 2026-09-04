@@ -61,6 +61,13 @@ var last_morphology_evidence: Dictionary = {}
 var last_graph_reconstruction_records: Array[Dictionary] = []
 var last_graph_reconstruction_evidence: Dictionary = {}
 
+## PERF2.4 R10/R12 ownership seams retained inside PERF2.CONV.
+## The optimized STREAM1 path may adopt already-fresh survivors and may
+## elide one redundant intermediate post-competition core snapshot.
+## Legacy keeps the historical copy/snapshot layers for deterministic A/B.
+var _stream1_owned_survivor_adoption := false
+var _stream1_post_snapshot_elision := false
+
 func setup(
     patch: Dictionary,
     environment_field: Dictionary,
@@ -132,9 +139,23 @@ func has_candidate_executor() -> bool:
 func set_generation_stream_executor(executor) -> bool:
     if not initialized or core == null:
         return false
-    return core.set_generation_stream_executor(executor)
+    if not core.set_generation_stream_executor(executor):
+        return false
+    _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
+    if executor.has_method("get_telemetry"):
+        var telemetry: Dictionary = executor.get_telemetry()
+        var optimized_stream := (
+            String(telemetry.get("pipeline_mode", ""))
+            == "OPTIMIZED_GENERATION_BOUNDARY_CANONICALIZATION"
+        )
+        _stream1_owned_survivor_adoption = optimized_stream
+        _stream1_post_snapshot_elision = optimized_stream
+    return true
 
 func clear_generation_stream_executor() -> void:
+    _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
     if core != null:
         core.clear_generation_stream_executor()
 
@@ -179,7 +200,11 @@ func step_generation() -> Dictionary:
             last_graph_reconstruction_records = Array(competition_result.get("graph_reconstruction_records", [])).duplicate(true)
             last_survivor_count = survivors.size()
             last_culled_count = int(pre["record_count"]) - survivors.size()
-            core.records = survivors.duplicate(true)
+            core.records = (
+                survivors
+                if _stream1_owned_survivor_adoption
+                else survivors.duplicate(true)
+            )
             core.call("_refresh_population_hashes")
             if not survivors.is_empty() and not bool(core.call("_validate_current_records", survivors)):
                 return {}
@@ -193,8 +218,16 @@ func step_generation() -> Dictionary:
             last_competition_hash = String(last_competition_field["field_hash"])
 
     phase_started = Time.get_ticks_usec()
-    var post: Dictionary = core.get_snapshot()
-    last_postcompetition_population_hash = String(post["population_hash"])
+    var post_record_count := 0
+    if _stream1_post_snapshot_elision:
+        last_postcompetition_population_hash = String(core.population_hash)
+        post_record_count = core.records.size()
+    else:
+        var post: Dictionary = core.get_snapshot()
+        last_postcompetition_population_hash = String(post["population_hash"])
+        post_record_count = int(post.get("record_count", 0))
+    if last_postcompetition_population_hash.is_empty():
+        return {}
     var post_snapshot_ms := _elapsed_ms(phase_started)
     if competition_enabled and int(pre.get("generation", 0)) > 0:
         last_morphology_evidence = MorphologyEvidence.seal_snapshot(
@@ -203,7 +236,7 @@ func step_generation() -> Dictionary:
             last_precompetition_population_hash,
             last_competition_hash,
             last_postcompetition_population_hash,
-            int(post.get("record_count", -1))
+            post_record_count
         )
         last_graph_reconstruction_evidence = GraphReconstructionEvidence.seal_snapshot(
             last_graph_reconstruction_records,
@@ -211,7 +244,7 @@ func step_generation() -> Dictionary:
             last_precompetition_population_hash,
             last_competition_hash,
             last_postcompetition_population_hash,
-            int(post.get("record_count", -1))
+            post_record_count
         )
 
     phase_started = Time.get_ticks_usec()
@@ -221,7 +254,7 @@ func step_generation() -> Dictionary:
         "schema": PROFILE_SCHEMA,
         "generation": int(pre.get("generation", -1)),
         "record_count_precompetition": int(pre.get("record_count", 0)),
-        "record_count_postcompetition": int(post.get("record_count", 0)),
+        "record_count_postcompetition": post_record_count,
         "ls33_total_ms": ls33_total_ms,
         "competition_pass_ms": competition_pass_ms,
         "survivor_apply_ms": survivor_apply_ms,
@@ -375,7 +408,11 @@ func get_snapshot() -> Dictionary:
         "hereditary_pool_hash": String(base.get("hereditary_pool_hash", "")),
         "survivor_count": last_survivor_count,
         "culled_count": last_culled_count,
-        "records": Array(base.get("records", [])).duplicate(true),
+        "records": (
+            Array(base.get("records", []))
+            if _stream1_post_snapshot_elision
+            else Array(base.get("records", [])).duplicate(true)
+        ),
         "competition_field": last_competition_field.duplicate(true),
         "authorities": AUTHORITY.duplicate(true),
     }
@@ -918,6 +955,8 @@ func _reset() -> void:
     last_culled_count = 0
     last_profile.clear()
     last_competition_profile.clear()
+    _stream1_owned_survivor_adoption = false
+    _stream1_post_snapshot_elision = false
     last_morphology_records.clear()
     last_morphology_evidence.clear()
     last_graph_reconstruction_records.clear()

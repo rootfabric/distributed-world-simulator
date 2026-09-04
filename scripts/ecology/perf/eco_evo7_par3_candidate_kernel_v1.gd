@@ -30,6 +30,16 @@ const LineageExtension = preload("res://scripts/research/ecology/plant_mutation_
 const KERNEL_SCHEMA := "distributed_world_simulator.ecology.evo7_par3_candidate_kernel.v1"
 const KERNEL_VERSION := "1.0.0"
 
+## PERF2.4 R8: prepare the frozen default mutation policy once. The returned
+## context is consumed only by optimized STREAM1; all mutation math remains in
+## the canonical LineageExtension/Kernel implementation.
+static func prepare_default_reproduction_context() -> Dictionary:
+	return LineageExtension.prepare_default_reproduction_context()
+
+
+static func validate_prepared_reproduction_context(context: Dictionary) -> bool:
+	return LineageExtension.validate_prepared_reproduction_context(context)
+
 ## Canonical parent order for reproduction: sorted by record_id.
 static func ordered_parents(parents: Array) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -56,11 +66,19 @@ static func build_candidate(
 	offspring_ordinal: int,
 	schema: String,
 	version: String,
-	evolution_seed: int
+	evolution_seed: int,
+	reproduction_context: Dictionary = {},
+	reproduction_context_validated: bool = false
 ) -> Dictionary:
 	var parent_bundle: Dictionary = parent["hereditary_bundle"]
 	var mutation_seed := _mutation_seed(schema, evolution_seed, parent, generation, offspring_ordinal)
-	var reproduction := _canonical_reproduce(parent_bundle, mutation_seed, offspring_ordinal)
+	if not reproduction_context.is_empty() and not reproduction_context_validated:
+		if not validate_prepared_reproduction_context(reproduction_context):
+			return {}
+		reproduction_context_validated = true
+	var reproduction := _canonical_reproduce(
+		parent_bundle, mutation_seed, offspring_ordinal, reproduction_context,
+		reproduction_context_validated)
 	if reproduction.is_empty():
 		return {}
 	var child_bundle: Dictionary = Dictionary(reproduction["bundle"]).duplicate(true)
@@ -146,10 +164,16 @@ static func build_presorted_unsorted(
 	schema: String,
 	version: String,
 	evolution_seed: int,
-	offspring_per_parent: int
+	offspring_per_parent: int,
+	reproduction_context: Dictionary = {}
 ) -> Array[Dictionary]:
 	if generation < 1 or schema.is_empty() or version.is_empty() or offspring_per_parent < 1:
 		return []
+	var reproduction_context_validated := false
+	if not reproduction_context.is_empty():
+		if not validate_prepared_reproduction_context(reproduction_context):
+			return []
+		reproduction_context_validated = true
 	var out: Array[Dictionary] = []
 	var previous_record_id := ""
 	var has_previous := false
@@ -166,7 +190,8 @@ static func build_presorted_unsorted(
 		has_previous = true
 		for offspring_ordinal in offspring_per_parent:
 			var candidate: Dictionary = build_candidate(
-				parent, generation, offspring_ordinal, schema, version, evolution_seed)
+				parent, generation, offspring_ordinal, schema, version, evolution_seed,
+				reproduction_context, reproduction_context_validated)
 			if candidate.is_empty():
 				return []
 			out.append(candidate)
@@ -200,9 +225,19 @@ static func _mutation_seed(schema: String, evolution_seed: int, parent: Dictiona
 	]
 	return _seed48(key)
 
-static func _canonical_reproduce(parent_bundle: Dictionary, mutation_seed: int, offspring_ordinal: int) -> Dictionary:
-	## The only offspring creation call site: same extension, same call.
-	return LineageExtension.reproduce_bundle(parent_bundle, mutation_seed, offspring_ordinal)
+static func _canonical_reproduce(
+	parent_bundle: Dictionary,
+	mutation_seed: int,
+	offspring_ordinal: int,
+	reproduction_context: Dictionary = {},
+	reproduction_context_validated: bool = false
+) -> Dictionary:
+	## Still the only offspring creation call site. R9 certifies the exact
+	## prepared default context once at the chunk boundary and threads that
+	## certification into the SAME canonical reproduction function.
+	return LineageExtension.reproduce_bundle(
+		parent_bundle, mutation_seed, offspring_ordinal, {}, reproduction_context,
+		reproduction_context_validated)
 
 static func candidate_hash(schema: String, version: String, candidate: Dictionary) -> String:
 	return "|".join(PackedStringArray([
