@@ -1,0 +1,276 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-P7-R1-WO-001-P7-7-VERIFICATION-001",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "project_epoch": "E2026-08-30-V0-P7-R1",
+  "program": "V0",
+  "checkpoint": "P7.7 digging / canonical physical output / cross-region transaction closure",
+  "verifier": "FRESH_INDEPENDENT_LINUX_VERIFIER_P7_7_R1",
+  "verifier_role_is_not_implementer_not_reviewer": true,
+  "verdict": "VERIFIED",
+  "verdict_reason": "All mandatory verifier stages executed freshly on Linux/x86_64 (WSL2 Ubuntu 24.04) with a Godot 4.7.1 double binary built by this verifier from the exact canonical engine source commit a13da4feb8d8aefc283c3763d33a2f170a18d541 (runtime identity 4.7.1.stable.double.custom_build.a13da4feb, enforced by the gate at runtime). The formal full gate was reproduced independently on the exact frozen subject 9440df5d/bfee0c4b (2032 assertions, 0 failures, fatal scan 0, tracked checkout clean) AND on the current runtime candidate 2009eb74/69703801 (2032 assertions, 0 failures, fatal scan 0, tracked checkout clean). The exact delta 9440df5d..2009eb74 was independently reconstructed and fully classified: 12 commits, net 2 repository-owned gate runner files (+133/-48, shutdown-lifecycle harness + cosmetics), 0 product files, 0 predicate changes. Merge-boundary Variant B is explicitly resolved: PASS_VARIANT_B.",
+  "verified_at_utc": "2026-09-04T14:14:40Z",
+  "execution_performed": true,
+  "inherited_execution_evidence": false,
+  "is_runtime_fail": false,
+  "merge_boundary_variant": {
+    "variant": "B",
+    "statement": "PASS_VARIANT_B: the delta between reviewed frozen subject 9440df5d2596bcbd39b071a2b2f27d4fc74ce42d / bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d and runtime candidate 2009eb74af884a69fcf2274ccb45478e83340912 / 69703801a488876b2caf3135cb37f79d1f88d8f8 contains no product-semantic changes and was independently revalidated on Linux with a full formal-gate replay on the candidate head.",
+    "variant_a_checked": "n/a - candidate tree 69703801 differs from reviewed tree bfee0c4b, so Variant A (exact reviewed merge carrier) does not apply to PR #487 head 2009eb74.",
+    "merge_authorized": false,
+    "human_gate": "Human RUNTIME_FEATURE_MERGE decision for exact runtime PR #487 remains open and exclusive."
+  },
+  "reviewer_gate": {
+    "reviewer": "FRESH_INDEPENDENT_REVIEWER_P7_7_R1",
+    "result_commit": "4ca816744f63ff28f9036e1779779be43001d43b",
+    "result_branch": "control/v0-p7-7-fresh-reviewer-result-r1",
+    "result_pr": 539,
+    "result_pr_state": "open (control artifact, not merged, not used as runtime merge)",
+    "result_file": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-7-FRESH-REVIEWER-RESULT-001.v1.json",
+    "verdict": "PASS",
+    "mandatory_questions": "32 / 32 VERIFIED",
+    "blocking_findings": "NONE",
+    "section12_conclusion": "NO PRODUCT-SEMANTIC DELTA FOUND for 9440df5d..2009eb74",
+    "reviewer_pass_does_not_authorize_merge_note": "PASS DOES NOT AUTHORIZE MERGING PR #487 HEAD (reviewer-recorded boundary, respected by this verification)",
+    "reviewer_result_project_control": "33869455652 = SUCCESS at exact result commit 4ca816744f63ff28f9036e1779779be43001d43b"
+  },
+  "frozen_subject": {
+    "branch_lineage": "feature/v0-p7-bounded-terrain-mutation (runtime PR #487 lineage)",
+    "runtime_pr": 487,
+    "head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "tree": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+    "checkout_verification": {
+      "method": "fresh detached worktree from fresh GitHub clone in verifier Linux environment",
+      "head_match": true,
+      "tree_match": true,
+      "tracked_status_porcelain_lines": 0
+    },
+    "project_control": {
+      "run": 33852376026,
+      "result": "SUCCESS",
+      "head_sha_confirmed_via_api": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d"
+    },
+    "formal_gate": {
+      "runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh",
+      "exit_code": 0,
+      "duration_seconds": 280,
+      "assertions": 2032,
+      "failures": 0,
+      "direct_assertions": 887,
+      "nested_assertions": 1145,
+      "final_banner": "V0-P7.7 GRAPHICAL DIGGING GATE GREEN",
+      "exact_head_banner": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+      "exact_tree_banner": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+      "godot_identity_banner": "4.7.1.stable.double.custom_build.a13da4feb",
+      "log_count": 15,
+      "tracked_checkout_clean_after": true
+    }
+  },
+  "runtime_candidate": {
+    "runtime_pr": 487,
+    "pr_state": "open, unmerged",
+    "head": "2009eb74af884a69fcf2274ccb45478e83340912",
+    "tree": "69703801a488876b2caf3135cb37f79d1f88d8f8",
+    "checkout_verification": {
+      "method": "fresh detached worktree from fresh GitHub clone in verifier Linux environment",
+      "head_match": true,
+      "tree_match": true,
+      "tracked_status_porcelain_lines": 0
+    },
+    "formal_gate": {
+      "runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh (candidate version incl. run_until_summary)",
+      "exit_code": 0,
+      "duration_seconds": 283,
+      "assertions": 2032,
+      "failures": 0,
+      "direct_assertions": 887,
+      "nested_assertions": 1145,
+      "final_banner": "V0-P7.7 GRAPHICAL DIGGING GATE GREEN",
+      "exact_head_banner": "2009eb74af884a69fcf2274ccb45478e83340912",
+      "exact_tree_banner": "69703801a488876b2caf3135cb37f79d1f88d8f8",
+      "godot_identity_banner": "4.7.1.stable.double.custom_build.a13da4feb",
+      "log_count": 15,
+      "tracked_checkout_clean_after": true
+    },
+    "delta_classification": {
+      "range": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d..2009eb74af884a69fcf2274ccb45478e83340912",
+      "commit_count": 12,
+      "net_files_changed": 2,
+      "insertions": 133,
+      "deletions": 48,
+      "product_file_delta": 0,
+      "commits": [
+        "ee0a727d54a7d0e24aec8e5c365831468e832f24 test(p7.5): make exact gate robust to post-PASS Godot shutdown stalls",
+        "197bfee5702ce2a7a1f68530978ffcfcdb7dc7f5 test(p7.7): make formal gate robust to post-PASS Godot shutdown stalls",
+        "23c7cae4 + b0adee15 : add/remove temporary-file no-op pair 1",
+        "f7bea59d + 417fcef0 : add/remove temporary-file no-op pair 2",
+        "5b246a71 + 79f702d0 : add/remove temporary-file no-op pair 3",
+        "792bd4cd + a53a020b : add/remove temporary-file no-op pair 4",
+        "f74d211a + 2009eb74 : add/remove temporary-file no-op pair 5"
+      ],
+      "net_changed_files": [
+        {"path": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh", "class": "RUNNER", "detail": "run_until_summary shutdown-lifecycle wrapper + P7.4 phase runner wrapped identically + line-continuation cosmetics; all exact PASS summaries, fatal patterns, clean-checkout checks unchanged"},
+        {"path": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh", "class": "RUNNER", "detail": "same run_until_summary wrapper + blank-line cosmetics; all exact PASS summaries, fatal patterns, clean-checkout checks unchanged"}
+      ],
+      "noop_pairs_final_tree_effect": "zero - history contains 5 add/remove pairs but the final candidate tree contains none of the temporary files; final tree delta vs frozen subject is exactly the 2 runner files",
+      "history_vs_tree_note": "history != tree; intermediate commits were inspected and do not affect the final tree classification"
+    }
+  },
+  "host": {
+    "os": "Ubuntu 24.04.2 LTS (WSL2)",
+    "windows_host": "Microsoft Windows 10 Pro 10.0.19045, hostname DESKTOP-QNAGSTI",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "arch": "x86_64",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900H, 20 logical CPUs",
+    "git": "git version 2.43.0",
+    "python": "Python 3.12.3"
+  },
+  "godot": {
+    "path": "/home/yurig/verify/godot-src/bin/godot.linuxbsd.editor.double.x86_64",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "source_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "precision": "double",
+    "platform": "linuxbsd x86_64",
+    "sha256": "94a7df73807b2ceebb23758d3a1c85c09fdf71477503284f368cb7429a4a255b",
+    "size_bytes": 161930920,
+    "file_identity": "ELF 64-bit LSB pie executable, x86-64, dynamically linked, stripped",
+    "provenance_class": "VERIFIER_BUILT_FROM_EXACT_CANONICAL_SOURCE_COMMIT",
+    "build_command": "scons -j12 platform=linuxbsd precision=double target=editor (all other options default), built inside verifier Linux environment from a fresh clone of the engine source at the exact canonical commit",
+    "disclosed_deviation": {
+      "note": "The canonical author-built Linux archive (godot-4.7.1-linux-double-x86_64-a13da4f, archive sha256 d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92, binary sha256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7) is a user-attached artifact that is not present in this verifier environment; no download URL exists. The verifier therefore built the engine from the exact canonical source commit. All runtime-enforced identity anchors are exact: version string 4.7.1.stable.double.custom_build.a13da4feb (enforced by both gate runners at every run), source commit a13da4feb8d8aefc283c3763d33a2f170a18d541, double precision, linuxbsd x86_64. The binary sha256 necessarily differs from the author artifact because it is a distinct build; this difference is recorded rather than hidden. Additionally, deterministic per-stage log sha256s from this verifier's runs byte-match the author's prior evidence hashes recorded on main (e.g. graphical-slice 3fdc820c..., A live 2141ef4b..., P7.6 024ebbfc..., P7.1 a6557ba5..., P7.3 ecbbe14a..., P5 mining 3da467cd...), confirming the same engine behavior, not merely the same version string.",
+      "classification": "ACCEPTED_WITH_FULL_DISCLOSURE; human gate may require one re-run against the attached canonical artifact if it considers artifact-level identity blocking"
+    }
+  },
+  "verifier_worktree": {
+    "frozen": "/home/yurig/verify/wt-frozen",
+    "candidate": "/home/yurig/verify/wt-candidate",
+    "repository": "/home/yurig/verify/dws (fresh clone of https://github.com/rootfabric/distributed-world-simulator.git)"
+  },
+  "assertion_ledger": {
+    "method": "observed counts parsed from actual per-stage logs by verifier parser; expected counts from the verification instruction; every stage must match exactly",
+    "frozen_run": {
+      "P7.7 graphical": 52, "P7.7 A": 20, "P7.7 B": 20, "P7.7 C0": 30, "P7.7 C1": 60,
+      "P7.7 C2": 42, "P7.7 C3 real A+B": 61, "P7.7 D": 31, "P7.7 E": 24, "P7.6": 106,
+      "MW10 transactions": 201, "MW10 recovery": 53, "MW4": 187,
+      "P7.5": 85, "M7": 5, "P7.4 restart seed": 21, "P7.4 restart recover-deliver": 25, "P7.4 restart recover-replay": 17,
+      "P7.3": 116, "P7.2 bubble": 53, "P7.2 seam": 50, "P7.1 authority": 88, "P7.1 tool->MW4": 30,
+      "P5 two-client": 47, "P5 mining tool": 36, "MW6": 130, "MW7": 114, "RL2": 153, "RL3": 175,
+      "total": 2032, "failures": 0
+    },
+    "candidate_run": {
+      "P7.7 graphical": 52, "P7.7 A": 20, "P7.7 B": 20, "P7.7 C0": 30, "P7.7 C1": 60,
+      "P7.7 C2": 42, "P7.7 C3 real A+B": 61, "P7.7 D": 31, "P7.7 E": 24, "P7.6": 106,
+      "MW10 transactions": 201, "MW10 recovery": 53, "MW4": 187,
+      "P7.5": 85, "M7": 5, "P7.4 restart seed": 21, "P7.4 restart recover-deliver": 25, "P7.4 restart recover-replay": 17,
+      "P7.3": 116, "P7.2 bubble": 53, "P7.2 seam": 50, "P7.1 authority": 88, "P7.1 tool->MW4": 30,
+      "P5 two-client": 47, "P5 mining tool": 36, "MW6": 130, "MW7": 114, "RL2": 153, "RL3": 175,
+      "total": 2032, "failures": 0
+    },
+    "every_stage_matches_expected_exactly": true
+  },
+  "c3_execution_test": {
+    "frozen": "V0-P7.7-C3 true A+B end-to-end: PASS (61 assertions, 0 failures)",
+    "candidate": "V0-P7.7-C3 true A+B end-to-end: PASS (61 assertions, 0 failures)",
+    "mock_fallback": false,
+    "skip": false,
+    "expected_failure_treated_as_pass": false,
+    "test_disabled": false,
+    "test_filtered_out": false,
+    "note": "C3 executes inside the real gate with the real Godot runtime; the executed-test inventory shows the full 61-assertion acceptance in both runs; no mock/skip/filter markers are present in the C3 logs."
+  },
+  "p7_5_subgate": {
+    "frozen": "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN; nested stages 85 + 5 + 21 + 25 + 17 + 116 + 53 + 50 + 88 + 30 + 47 + 36 + 130 + 114 + 153 + 175 = 1145 assertions, 0 failures",
+    "candidate": "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN; identical nested ledger",
+    "included_in_full_gate": true
+  },
+  "logs": {
+    "frozen_directory": "/home/yurig/verify/wt-frozen/artifacts/runtime/v0-p7-7-graphical-digging (+ nested v0-p7-5-two-client-convergence)",
+    "candidate_directory": "/home/yurig/verify/wt-candidate/artifacts/runtime/v0-p7-7-graphical-digging (+ nested v0-p7-5-two-client-convergence)",
+    "fatal_scan_matches": 0,
+    "fatal_scan_pattern": "SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to instantiate an autoload|Failed to load script|Segmentation fault|core dumped|CRASH:|ASSERTION FAILED|FATAL:|panicked at|Aborted",
+    "broad_error_scan": {
+      "matches_per_run": 2,
+      "lines": [
+        "ERROR: 8 resources still in use at exit (run with --verbose for details).",
+        "ERROR: 7 resources still in use at exit (run with --verbose for details)."
+      ],
+      "classification": "BENIGN_ENGINE_EXIT_NOTICE - Godot resource-cleanup notice after the nested P7.5 subgate process shutdown, identical in frozen and candidate runs, not a product failure, not in a fatal class"
+    },
+    "deterministic_hash_note": "Per-stage log sha256s are identical between the frozen and candidate runs for all 29 assertion stages' underlying test logs and byte-match author-recorded evidence hashes on main for graphical-slice, A live, P7.6, P7.1, P7.3, P5-mining and others - independent confirmation of identical engine behavior",
+    "sha256_manifest": {
+      "note": "sha256 of every collected log for both runs; files identical across runs share the same hash",
+      "frozen_vs_candidate_identical": [
+        "import.log (P7.7): 0e6084bf5e0b845e4d7b28b008d82ad4953bb23fb75aeb26000166b0746d0e1a",
+        "p7-7-graphical-slice.log: 3fdc820c3ae9af0b463395619e676d03c88096e5d3a88d690766af334f8d6ded",
+        "p7-7-a-playground.log: 2141ef4b64e297c36181819f5ceae3ac5821830c7b8e28608d4625476328756a",
+        "p7-7-b-seam-near.log: 02172a491b17cf60275835d189d4d75da1e2ae6caca94d7bcb1fc72bf612d4ff",
+        "mw10-c0-physical-output.log: 7ac777219c4df6eda530029d1edcccec9087272af379aa3e30019a67074140d5",
+        "mw10-c1-durability.log: 954d976d5da6e14fec40e6682ec6fcd01ff0ace01963f1446246cb4096d1c6bd",
+        "p7-7-c2-delivery.log: 1ac7a26b461bccca74f7214f29506e8202ce78cd0e945b85bbfed72ac5e9660d",
+        "p7-7-c3-true-ab.log: c53086f02abc43ad4404498d514031a913568d0254a6e1e39e8219c5663a741f",
+        "p7-7-d-reservation-conflict.log: 860bf4ce92aeb3b761d808466d2a0a717c4d2ec5b08d056c9844e8ae3d56959c",
+        "p7-7-e-actor-handoff.log: e9f3bbea943dc7c5840c0ec457abb4ead777982c1ca6d44daa4dcb7f9b91469e",
+        "p7-6-seam-composition.log: 024ebbfc262977d57918174539bf25af05dff7d773cb10c2d49544ef3c742239",
+        "mw10-transactions.log: 6e706cccf5246ba8c11800b2533e9f60565044cb0aa4fba57b4bdd21ee3728cc",
+        "mw10-process-recovery.log: 2cb44b954fce8d68bd2c7b2a412a1ea949d21965fa5d6eda5c7111a1dd36e39d",
+        "nested p7-5 stages: all 16 nested logs byte-identical across the two runs (e.g. p7-1-authority a6557ba5..., p7-3 ecbbe14a..., rl2 7aa256ff..., rl3 5df3e777...)"
+      ],
+      "differ_across_runs_only_by_expected_runtime_values": [
+        "mw4.log (timing values differ): frozen 80adfa56..., candidate f93012be...",
+        "mw6.log / mw7.log (timing values differ): frozen d0855c95.../1400495c..., candidate ebe92107.../f4f7ec17...",
+        "p7-5-subgate.log (runner identity banner differs by design: frozen head vs candidate head)",
+        "gate-stdout.log (runner stdout, head/tree banners differ by design)"
+      ]
+    }
+  },
+  "runner_fix_verification": {
+    "known_issue": "Godot post-quit() shutdown hang",
+    "fix_under_verification": "run_until_summary() in both candidate gate runners",
+    "correct_model_confirmed": true,
+    "evidence": [
+      "Code reading of the exact candidate patch (full patch captured in verifier evidence): run_until_summary starts Godot in background, polls the stage log for the EXACT expected PASS summary, and only after the summary is observed terminates the hung process; a 300s deadline exists but a deadline kill WITHOUT an observed summary produces 'Missing PASS summary before timeout/exit' and runner failure - timeout is never converted into success",
+      "fatal_log_check is applied after every stage (including killed stages): SCRIPT ERROR/Parse Error/Compile Error/autoload/script-load failures still fail the runner even when a PASS summary is present",
+      "All exact per-stage assertion-count summaries are unchanged (52/20/20/30/60/42/61/31/24/106/...); no predicate weakened, no expected value changed, no test skipped, no mock substitution, no timeout==success, no crash==success path",
+      "The frozen-subject run used the OLD runner (direct exec, no kills) and completed GREEN in 280s - no hang occurred in this Linux environment; the candidate run used the NEW runner and completed GREEN in 283s with identical assertion results, demonstrating the wrapper is behavior-neutral when Godot exits normally and provides the stall-protection path otherwise"
+    ]
+  },
+  "cleanliness": {
+    "frozen": {
+      "before": {"head": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d", "tree": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d", "tracked_status": "clean", "diff_lines": 0, "cached_diff_lines": 0},
+      "after": {"tracked_status": "clean", "status_porcelain_lines": 0, "diff_check_rc": 0, "note": "untracked artifacts/ and .godot/ generated content only, outside tracked checkout"}
+    },
+    "candidate": {
+      "before": {"head": "2009eb74af884a69fcf2274ccb45478e83340912", "tree": "69703801a488876b2caf3135cb37f79d1f88d8f8", "tracked_status": "clean", "diff_lines": 0, "cached_diff_lines": 0},
+      "after": {"tracked_status": "clean", "status_porcelain_lines": 0, "diff_check_rc": 0, "note": "untracked artifacts/ and .godot/ generated content only, outside tracked checkout"}
+    },
+    "formal_result": "TRACKED CHECKOUT CLEAN (both runs, before and after)"
+  },
+  "independent_control_checks": {
+    "frozen_subject_project_control": "33852376026 = SUCCESS at exact head 9440df5d2596bcbd39b071a2b2f27d4fc74ce42d (confirmed via GitHub API head_sha)",
+    "reviewer_result_project_control": "33869455652 = SUCCESS at exact head 4ca816744f63ff28f9036e1779779be43001d43b (confirmed via GitHub API head_sha)",
+    "reviewer_result_pr_539_state": "open, unmerged, head 4ca816744f63ff28f9036e1779779be43001d43b",
+    "runtime_pr_487_state": "open, unmerged, head 2009eb74af884a69fcf2274ccb45478e83340912, base 3853082f412d696fcb4790003a748983ebc56d42",
+    "candidate_is_descendant_of_frozen_subject": true,
+    "main_boundary": {
+      "main_head_at_check": "610c56122a774b2c55ab564cc2f79a3c861eb65e",
+      "p7_7_runtime_product_files_in_main": false,
+      "frozen_head_ancestor_of_main": false,
+      "candidate_head_ancestor_of_main": false,
+      "conclusion": "main contains the P7.7 control/evidence layer only; the P7.7 runtime product tree is NOT merged; PR #487 remains the exclusive runtime merge carrier behind the human gate - 'P7.7 already merged' would be a false conclusion"
+    }
+  },
+  "merge_performed": false,
+  "human_approval_created": false,
+  "gate_opened": "Human RUNTIME_FEATURE_MERGE decision for exact runtime PR #487 (head 2009eb74af884a69fcf2274ccb45478e83340912 / tree 69703801a488876b2caf3135cb37f79d1f88d8f8) only",
+  "summary": "Fresh independent Linux verification of V0-P7.7. Frozen subject 9440df5d/bfee0c4b: exact worktree verified, formal full gate reproduced GREEN with 2032/2032 assertions, 0 failures, fatal scan 0, tracked checkout clean. Runtime candidate 2009eb74/69703801 (PR #487 head): independently reconstructed 12-commit delta fully classified as runner-only (2 repository-owned gate runner files, +133/-48, shutdown-lifecycle run_until_summary harness + cosmetics + 5 add/remove no-op pairs with zero final-tree effect; 0 product files, 0 predicate changes, no timeout==success path), and the full formal gate replayed GREEN on the candidate head with 2032/2032 assertions, 0 failures, fatal scan 0, tracked checkout clean. Engine: Godot 4.7.1 double built by this verifier from the exact canonical source commit a13da4feb8d8aefc283c3763d33a2f170a18d541 inside the verifier Linux environment (version identity exact and runtime-enforced; artifact-level sha deviation from the unavailable author archive disclosed). Verdict: PASS_VARIANT_B. This result does NOT perform or authorize the human RUNTIME_FEATURE_MERGE.",
+  "verdict_detail": {
+    "final_verdict": "PASS_VARIANT_B",
+    "fresh_linux_verification": "PASS",
+    "product_semantic_delta": "NONE",
+    "full_gate": "2032 / 2032",
+    "failures": 0,
+    "fatal": 0,
+    "merge_boundary": "VARIANT B VERIFIED",
+    "merge_authorized": false
+  }
+}
