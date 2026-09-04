@@ -1,0 +1,103 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo7_ls41_multi_species_contract.v1",
+  "version": "1.0.0",
+  "revision": "ECO.EVO7-LS4.1-CONTRACT-2026-09-05-R1",
+  "status": "IMPLEMENTED_EXACT_RUNTIME_PENDING",
+  "predecessor": {
+    "ls4_scope_status": "ACCEPTED",
+    "ls4_scope_verified_head": "26ff38e3385a794d7f519f2be9fa8bb9f4ce08de",
+    "ls4_scope_verified_tree": "06d4d7aaeafce3a66b04ff66dfb99f9c23ba6876",
+    "ls4_scope_assertions": 120,
+    "ls4_scope_control_tip": "0624b7146c86ca727666ecd05c41e81bbd3559a8"
+  },
+  "capability": {
+    "name": "Multi-Species Ecology",
+    "species_count": 3,
+    "same_physical_patch": true,
+    "same_environment_field": true,
+    "accepted_ls3_pipeline_per_species": true,
+    "cross_species_interaction": false,
+    "shared_resource_allocation": false,
+    "desired_biome_placement": false,
+    "per_world_species_retuning": false
+  },
+  "functional_identity": {
+    "catalog": "scripts/ecology/shadow/eco_evo7_ls41_species_catalog_v1.gd",
+    "required_axes": [
+      "growth_strategy",
+      "water_demand",
+      "light_demand",
+      "nutrient_demand",
+      "stress_tolerance",
+      "reproduction_strategy"
+    ],
+    "axis_semantics_at_ls4_1": "Frozen species identity deterministically seeds distinct founder, placement and evolution identities. Explicit shared-resource semantics are deferred to LS4.3.",
+    "catalog_hash_required": true,
+    "species_hash_required": true
+  },
+  "workload_budget": {
+    "grid_size": 32,
+    "projection_cells": 1024,
+    "initial_records_per_species": 24,
+    "species_cores": 3,
+    "max_records_per_species": 4096,
+    "max_total_records": 12288,
+    "retained_generation_history": 0,
+    "new_unbounded_cache": false,
+    "new_unbounded_history": false
+  },
+  "authority": {
+    "mode": "RESEARCH_SHADOW_ONLY",
+    "extends_existing_ls3_chain": true,
+    "direct_world_write": false,
+    "production_promotion": false,
+    "persistence_write": false,
+    "network_replication_write": false,
+    "renderer_write": false,
+    "interaction_graph_authority": false,
+    "shared_resource_authority": false
+  },
+  "fail_closed": {
+    "aggregate_publish_only_after_all_species_step": true,
+    "partial_species_step_failure_poison_wrapper": true,
+    "poisoned_wrapper_publishes_snapshot": false,
+    "recovery": "EXPLICIT_RESET_OR_REBUILD"
+  },
+  "falsifiers": [
+    "fewer_than_three_species",
+    "duplicate_species_functional_identity",
+    "different_patch_or_environment_identity_between_species",
+    "desired_biome_or_cell_placement_in_species_catalog",
+    "same_input_replay_changes_aggregate_hash",
+    "physical_environment_counterfactual_does_not_change_species_distribution",
+    "VIS1_observation_changes_ecology_state",
+    "LS4_1_gains_WORLD_or_LS4_2_or_LS4_3_authority",
+    "accepted_LS3_6_no_longer_executes_independently",
+    "unbounded_new_history_or_cache"
+  ],
+  "visual_gate": {
+    "id": "LS4-VIS1",
+    "scene": "res://scenes/labs/ecology/eco_evo7_ls41_multi_species_lab.tscn",
+    "derived_only": true,
+    "required": true,
+    "shows": [
+      "dominant_species_per_cell",
+      "species_richness",
+      "per_cell_species_counts",
+      "generation",
+      "environment_recipe",
+      "species_catalog_identity"
+    ]
+  },
+  "exact_acceptance": {
+    "canonical_double_godot_required": true,
+    "runner_windows": "RUN_ECO_EVO7_LS41_TESTS.ps1",
+    "runner_linux": "RUN_ECO_EVO7_LS41_TESTS.sh",
+    "scope_regression_required": true,
+    "multi_species_acceptance_required": true,
+    "visual_acceptance_required": true,
+    "same_input_replay_required": true,
+    "physical_counterfactual_required": true,
+    "LS4_2_authorized_on_pass": true
+  }
+}
