@@ -1,0 +1,30 @@
+PROJECT-FOCUS WINDOWS VERIFIER R1 — GIT PREFLIGHT
+Working directory: C:\Godot\dws-project-focus-verifier-cc89d805
+Clone: git clone https://github.com/rootfabric/distributed-world-simulator.git (fresh, exit 0)
+
+git fetch --all --prune -> exit 0
+  NOTE: fetch updated origin/control/project-focus-harness-reconciliation-r1
+        cc89d805..447b06e4 — LIVE CONTROL BRANCH HAS ADVANCED PAST THE FROZEN SUBJECT.
+        Verification stayed on the frozen subject per Work Order; main did not move.
+
+git status --short (after checkout --detach) -> empty (clean)
+
+git rev-parse origin/main
+  5b4152958624be4e9cc40f2369ce32c4964f65c3      (== expected canonical main; NO main drift)
+
+git rev-parse origin/control/project-focus-harness-reconciliation-r1
+  447b06e4e572eea4b9a03b2fa0a27427b6b4a868      (advanced past subject; drift recorded)
+
+git rev-parse cc89d80599eb24ab4efd55b38332ead4b16468bf
+  cc89d80599eb24ab4efd55b38332ead4b16468bf      (subject commit resolvable)
+
+git rev-parse "cc89d80599eb24ab4efd55b38332ead4b16468bf^{tree}"
+  1f51c4a7c0d2e4892d635d6ce830c053f0799ef4      (== expected subject TREE)
+
+git checkout --detach cc89d80599eb24ab4efd55b38332ead4b16468bf -> ok
+git rev-parse HEAD      -> cc89d80599eb24ab4efd55b38332ead4b16468bf
+git rev-parse "HEAD^{tree}" -> 1f51c4a7c0d2e4892d635d6ce830c053f0799ef4
+git status --short      -> empty (tracked checkout clean BEFORE checks)
+
+Reference evidence (read as reference material only, not trusted as own result):
+  branch control/project-focus-validation-evidence-r4 @ dc7e43802b0dc383d743d8257bda95595c866808
