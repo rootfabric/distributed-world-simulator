@@ -76,6 +76,19 @@ def build_parser() -> argparse.ArgumentParser:
                                help=f"{dest} JSON path (default: repo document)")
     p_inspect.set_defaults(handler=app.cmd_inspect)
 
+    from . import scale
+    p_scale = sub.add_parser(
+        "scale-fixture",
+        help="generate deterministic metadata-only synthetic descriptors and measure "
+             "validate/resolve scale behaviour (no payloads, no network)")
+    p_scale.add_argument("--count", type=int, required=True,
+                         help="exact total descriptor count (assets+surfaces+recipes+environments)")
+    p_scale.add_argument("--seed", type=int, required=True,
+                         help="deterministic seed; same seed -> byte-identical documents")
+    p_scale.add_argument("--out", type=str, required=True,
+                         help="output directory for the synthetic documents")
+    p_scale.set_defaults(handler=scale.cmd_scale_fixture)
+
     return parser
 
 
