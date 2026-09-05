@@ -37,6 +37,7 @@ HUMAN IS NOT A ROUTINE RESULT COURIER
 ACTIVE CHECKPOINT MISSION PRE-AUTHORIZES ROUTINE A0-A3 GIT OPERATIONS
 DO NOT ASK FOR BRANCH / COMMIT / NON-FORCE-PUSH / DRAFT-PR CONFIRMATION
 GIT AUTHORITY SURVIVES ROUTINE ROLE BOUNDARIES
+GIT CLI FAILURE IS NOT A WRITE BLOCKER WHEN GITHUB WRITE API IS AVAILABLE
 ```
 
 Scoped instructions may add local conventions, traps, launch commands and tests, but may not override architecture ownership, PC0 policy, main-owned registry, checkpoint catalog, risk minimums, review requirements, autonomy ceiling or human gates.
@@ -60,6 +61,7 @@ For every checkpoint mission:
 13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
 14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
 15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
+16. If shell Git transport (`git clone/fetch/push`) is unavailable but an authenticated GitHub connector/API exposes write operations, use the connector/API for branch, file, commit, ref and PR writes. Declare a Git write blocker only after all available write paths are unavailable or explicitly denied.
 
 ## Checkpoint-session control surface
 
