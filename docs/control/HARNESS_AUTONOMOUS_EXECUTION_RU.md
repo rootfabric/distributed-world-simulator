@@ -1,6 +1,6 @@
 # DWS Harness — автономное исполнение задач агентом
 
-**Revision:** `H0-AUTONOMY-2026-09-05-R1`  
+**Revision:** `H0-AUTONOMY-2026-09-05-R2`  
 **Scope:** execution/validation/evidence routing внутри уже разрешённой checkpoint mission.  
 **Не меняет:** архитектурное ownership, canonical main authority, human merge gates и запрет Implementer self-accept.
 
@@ -28,7 +28,7 @@ route only the independent verdict to a fresh role when required
 
 ## 2. Что агент делает сам без нового подтверждения человека
 
-В пределах активной mission, Work Order и autonomy ceiling агент обязан самостоятельно,
+В пределах active mission, Work Order и autonomy ceiling агент обязан самостоятельно,
 если средство технически доступно:
 
 ```text
@@ -88,7 +88,7 @@ Implementer может создать полное machine evidence, но не �
 в независимый `PASS`, checkpoint `ACCEPTED` или human approval.
 
 Fresh Verifier может принять exact-head durable evidence без полного повторного запуска каждой команды,
-если provenance доверенный и Work Order/risk contract явно не требует независимого re-execution.
+если provenance доверенный и Work Order/risk contract явно не требует independent re-execution.
 
 Отдельный machine rerun обязателен только если существует хотя бы одно из условий:
 
@@ -112,10 +112,16 @@ full or durable logs
 assertion/test summary
 fatal/error scan where applicable
 runner/workflow provenance
-artifact hashes when artifacts are used
+SHA-256 или более сильный digest каждого повторно используемого log/artifact
+manifest, связывающий digest с exact HEAD, TREE, runner/workflow run ID и artifact ID/path
 no undeclared skip
 no PASS rewrite
 ```
+
+**Reuse без digest запрещён.** Если хотя бы один повторно используемый log/artifact не имеет
+SHA-256-or-stronger digest либо manifest не связывает его с exact subject и provenance,
+независимая роль обязана вернуть `INSUFFICIENT_EVIDENCE` или выполнить fresh re-execution.
+Нельзя считать имя artifact, URL, run `success` или текстовый summary заменой content digest.
 
 Если candidate меняет сам verifier workflow или тестовую инфраструктуру, Reviewer/Verifier обязан
 оценить этот diff. Такой CI не становится доверенным только потому, что workflow завершился `success`.
@@ -144,7 +150,7 @@ route evidence to fresh independent role
 request separate machine only if explicitly required
 ```
 
-Нельзя дважды/многократно вызывать тот же недоступный executor вместо использования fallback ladder.
+Нельзя повторно вызывать тот же недоступный executor вместо использования fallback ladder.
 
 ## 7. HARD_BLOCKED
 
@@ -154,9 +160,14 @@ request separate machine only if explicitly required
 1. capability действительно обязательна для текущего Work Order;
 2. все разрешённые автоматические executor fallbacks исчерпаны;
 3. нет scope-preserving repair/replan;
-4. создан durable blocker proof;
-5. указан точный resume condition.
+4. создан durable blocker proof и указан его evidence path;
+5. указан точный непустой resume condition.
 ```
+
+Machine route обязан проверить все эти условия. Старый флаг
+`proven_non_automatable=true` без остальных полей **не является terminal proof** и должен
+маршрутизироваться обратно в диагностику/автоматическое восстановление. Неизвестное новое
+условие policy также fail-closed: пока его machine predicate не определён, `HARD_BLOCKED` запрещён.
 
 Отсутствие конкретной VM, CLI, внешнего агента или одного GitHub integration route не выполняет эти
 условия, если та же работа доступна через другой разрешённый автоматический канал.
