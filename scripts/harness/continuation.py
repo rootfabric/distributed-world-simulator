@@ -30,7 +30,11 @@ def _hard_block_proof_complete(proof: Any, policy: dict[str, Any]) -> bool:
         return False
     execution = policy.get("autonomous_execution")
     if not isinstance(execution, dict):
-        return False
+        # Historical pre-autonomy policy snapshots had only the legacy proof flag.
+        # Current production policy always declares autonomous_execution and uses
+        # the stricter requirement matrix below.
+        resume = proof.get("resume_condition")
+        return isinstance(resume, str) and bool(resume.strip())
     requirements = execution.get("hard_block_requires")
     specifications = execution.get("hard_block_proof_requirements")
     if not isinstance(requirements, list) or not requirements or not isinstance(specifications, dict):
