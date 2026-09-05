@@ -1,0 +1,18 @@
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-SURFACE1",
+  "branch": "work/world-packs-surface1-families-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "PLANNED",
+  "completed_milestones": [],
+  "blockers": [],
+  "next_action": "Implement FAMILY_TAXONOMY and MATTER_BINDING_RULES, then add sharded regolith/basalt/sand/ice surface descriptors using existing matter/... IDs only. Fail on ambiguous physical bindings.",
+  "last_checkpoint_head": null,
+  "tested_head": null,
+  "validation": [],
+  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "notes": [
+    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+  ]
+}
