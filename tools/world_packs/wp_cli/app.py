@@ -57,3 +57,23 @@ def cmd_validate(args) -> int:
     emit_json(summary)
     print("wp validate: PASS", file=sys.stderr)
     return 0
+
+
+def cmd_resolve(args) -> int:
+    """Print the WP1.0 presentation lock for a recipe (existing resolver)."""
+    from pathlib import Path
+
+    defaults_ = contract.defaults()
+    catalog_path = Path(args.catalog) if args.catalog else defaults_["catalog"]
+    locations_path = Path(args.locations) if args.locations else defaults_["locations"]
+    schema_path = Path(args.schema) if args.schema else defaults_["schema"]
+    try:
+        catalog, locations, schema = load_documents(catalog_path, locations_path, schema_path)
+        index = contract.wp.validate(catalog, locations, schema)
+        lock = contract.wp.resolve(index, args.recipe)
+    except (contract.wp.ContractError, OSError, ValueError, RecursionError) as exc:
+        return fail(f"resolve: {exc}")
+    emit_json(lock)
+    print(f"wp resolve: PASS ({args.recipe} -> lock {lock['presentation_lock_hash']})",
+          file=sys.stderr)
+    return 0

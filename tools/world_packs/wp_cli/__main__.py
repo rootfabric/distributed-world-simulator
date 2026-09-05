@@ -36,6 +36,16 @@ def build_parser() -> argparse.ArgumentParser:
                             help="library schema path (default: repo library_schema.v1.json)")
     p_validate.set_defaults(handler=app.cmd_validate)
 
+    from . import contract
+    p_resolve = sub.add_parser(
+        "resolve", help="compose and print the WP1.0 presentation lock for one recipe")
+    p_resolve.add_argument("--recipe", type=str, default=contract.DEFAULT_RECIPE,
+                           help=f"recipe id@version (default: {contract.DEFAULT_RECIPE})")
+    for dest in ("catalog", "locations", "schema"):
+        p_resolve.add_argument(f"--{dest}", type=str, default=None,
+                               help=f"{dest} JSON path (default: repo document)")
+    p_resolve.set_defaults(handler=app.cmd_resolve)
+
     return parser
 
 
