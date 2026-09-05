@@ -122,6 +122,8 @@ func _process(_delta: float) -> bool:
 			)
 		problems.append_array(_check_local_frame_mapping(lab, expected_id))
 
+	problems.append_array(_check_fidelity_switch(lab))
+
 	if problems.is_empty():
 		print(
 			"SURFACE_MATERIAL_LAB_SELF_CHECK=PASS surfaces=%d markers=%d"
@@ -176,4 +178,38 @@ func _check_local_frame_mapping(lab: Node, fixture_id: String) -> PackedStringAr
 			"surface %s triplanar weights changed under fixture rotation: (%s) -> (%s)"
 			% [fixture_id, weights, rotated_weights]
 		)
+	return issues
+
+
+## Fidelity switch proofs: preview drops the triplanar checker detail, full
+## restores it, unknown levels are rejected, and fixture transforms/registry
+## data stay identical across switches (orientation truth never depends on
+## presentation fidelity).
+func _check_fidelity_switch(lab: Node) -> PackedStringArray:
+	var issues := PackedStringArray()
+	var normals_before := {}
+	for expected_id in EXPECTED_SURFACES:
+		normals_before[expected_id] = lab.report_world_normal(expected_id)
+
+	if lab.report_fidelity() != "full":
+		issues.append("lab default fidelity is not full")
+	if not lab.apply_fidelity("preview"):
+		issues.append("apply_fidelity(preview) returned false")
+	if lab.report_fidelity() != "preview":
+		issues.append("fidelity did not switch to preview")
+	for expected_id in EXPECTED_SURFACES:
+		var mapping: Dictionary = lab.report_local_frame_mapping(expected_id)
+		if bool(mapping["triplanar_enabled"]):
+			issues.append("surface %s still triplanar in preview fidelity" % expected_id)
+	if lab.apply_fidelity("ultra"):
+		issues.append("apply_fidelity(ultra) accepted an unknown level")
+	if not lab.apply_fidelity("full"):
+		issues.append("apply_fidelity(full) returned false")
+	for expected_id in EXPECTED_SURFACES:
+		var mapping: Dictionary = lab.report_local_frame_mapping(expected_id)
+		if not bool(mapping["triplanar_enabled"]):
+			issues.append("surface %s lost triplanar mapping after full restore" % expected_id)
+		var normal_after: Vector3 = lab.report_world_normal(expected_id)
+		if not (normals_before[expected_id] as Vector3).is_equal_approx(normal_after):
+			issues.append("surface %s world normal changed across fidelity switches" % expected_id)
 	return issues

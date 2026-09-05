@@ -23,6 +23,14 @@ const NEUTRAL_SKY: Color = Color(0.05, 0.055, 0.065)
 const NEUTRAL_AMBIENT: Color = Color(0.35, 0.37, 0.4)
 const MARKER_ALPHA: float = 0.55
 
+## Presentation fidelity levels. PREVIEW is the cheap flat-color pass; FULL
+## adds the local-frame triplanar checker detail. Fidelity switching is
+## presentation-only and never changes fixture transforms or orientation
+## data, so Y-up assumptions cannot hide behind a fidelity switch.
+const FIDELITY_LEVELS: PackedStringArray = ["preview", "full"]
+
+var _fidelity: String = "full"
+
 ## Lab milestones whose real oriented surfaces are instantiated. Milestones
 ## not listed here still show scaffold markers. The list only ever grows
 ## within a workstream so an older head renders a strict subset.
@@ -37,6 +45,13 @@ var _checker_texture: ImageTexture
 
 
 func _ready() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--fidelity="):
+			var requested := arg.substr("--fidelity=".length())
+			if FIDELITY_LEVELS.has(requested):
+				_fidelity = requested
+			else:
+				push_error("SURFACE MATERIAL LAB: unknown fidelity level %s" % requested)
 	_checker_texture = _make_checker_texture()
 	_build_environment()
 	_build_reference_frame()
@@ -50,6 +65,7 @@ func _ready() -> void:
 	_build_camera()
 	print("SURFACE_MATERIAL_LAB_SCAFFOLD_READY")
 	print("SURFACE_MATERIAL_LAB_FIXTURES=%d" % built)
+	print("SURFACE_MATERIAL_LAB_FIDELITY=%s" % _fidelity)
 
 
 func _surface_enabled(fixture: Dictionary) -> bool:
@@ -128,7 +144,7 @@ func _build_surface(fixture: Dictionary) -> void:
 		var box := BoxMesh.new()
 		box.size = Vector3(fixture["size"])
 		body.mesh = box
-	_apply_diagnostic_material(body, fixture["diagnostic_color"], true)
+	_apply_diagnostic_material(body, fixture["diagnostic_color"], _fidelity == "full")
 	root.add_child(body)
 
 	# Local-frame normal indicator on the real surface: orientation must stay
@@ -280,6 +296,35 @@ func _build_camera() -> void:
 	camera.look_at_from_position(camera.position, Vector3(-1.0, 1.2, -1.0))
 	camera.current = true
 	add_child(camera)
+
+
+## MCP/automation entry: current presentation fidelity level.
+func report_fidelity() -> String:
+	return _fidelity
+
+
+## MCP/automation entry: switch presentation fidelity on all real surfaces.
+## Only material detail changes; transforms, orientation data and the
+## fixture registry are untouched. Returns false for unknown levels.
+func apply_fidelity(level: String) -> bool:
+	if not FIDELITY_LEVELS.has(level):
+		return false
+	_fidelity = level
+	for fixture in Fixtures.FIXTURES:
+		if not _surface_enabled(fixture):
+			continue
+		var fixture_root := get_node_or_null(
+			"Fixture_%s" % String(fixture["id"])
+		) as Node3D
+		if fixture_root == null:
+			continue
+		var body := fixture_root.get_node_or_null("Surface") as MeshInstance3D
+		if body != null:
+			_apply_diagnostic_material(
+				body, fixture["diagnostic_color"], _fidelity == "full"
+			)
+	print("SURFACE_MATERIAL_LAB_FIDELITY=%s" % _fidelity)
+	return true
 
 
 ## MCP/automation entry: report the world-space surface normal of a fixture

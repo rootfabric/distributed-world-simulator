@@ -185,7 +185,7 @@ def test_lab_surfaces_use_local_frame_triplanar_mapping() -> None:
     # Real surfaces pass triplanar=True into the material helper.
     surface_builder = lab[lab.index("func _build_surface") :]
     surface_builder = surface_builder[: surface_builder.index("func _make_irregular_rock")]
-    assert "true)" in surface_builder
+    assert '_fidelity == "full"' in surface_builder
     # The checker pattern is generated at runtime, not loaded from assets.
     checker_fn = lab[lab.index("func _make_checker_texture") :]
     checker_fn = checker_fn[: checker_fn.index("func ")]
@@ -196,6 +196,30 @@ def test_self_check_proves_triplanar_orientation_independence() -> None:
     check = SELF_CHECK_GD.read_text(encoding="utf-8")
     assert "_check_local_frame_mapping" in check
     assert "is_equal_approx(rotated_weights)" in check or "rotated_weights" in check
+
+
+def test_lab_exposes_fidelity_switch() -> None:
+    lab = LAB_GD.read_text(encoding="utf-8")
+    assert 'FIDELITY_LEVELS: PackedStringArray = ["preview", "full"]' in lab
+    assert "func apply_fidelity" in lab
+    assert "func report_fidelity" in lab
+    assert '--fidelity=' in lab
+    # Fidelity only alters material detail; it must not touch transforms.
+    fidelity_fn = lab[lab.index("func apply_fidelity") :]
+    fidelity_fn = fidelity_fn[: fidelity_fn.index("\n\n\n")]
+    for forbidden in ("position =", "rotation", "FIXTURES["):
+        assert forbidden not in fidelity_fn, (
+            f"apply_fidelity must not modify {forbidden}"
+        )
+
+
+def test_self_check_proves_fidelity_switch_safety() -> None:
+    check = SELF_CHECK_GD.read_text(encoding="utf-8")
+    assert "_check_fidelity_switch" in check
+    assert 'apply_fidelity("preview")' in check
+    assert 'apply_fidelity("ultra")' in check
+    # World normals must be proven identical across fidelity switches.
+    assert "world normal changed across fidelity switches" in check
 
 
 def fixtures_source_module() -> str:
