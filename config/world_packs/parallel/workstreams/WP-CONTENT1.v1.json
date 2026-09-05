@@ -7,55 +7,62 @@
   "status": "IN_PROGRESS",
   "completed_milestones": [
     "SOURCE_POLICY",
+    "ROCK_AND_CLIFF_CANDIDATES",
     "SAND_AND_SOIL_CANDIDATES",
-    "ICE_AND_SNOW_CANDIDATES"
+    "ICE_AND_SNOW_CANDIDATES",
+    "LICENSE_AND_PROVENANCE_AUDIT"
   ],
   "blockers": [],
-  "next_action": "Implement LICENSE_AND_PROVENANCE_AUDIT: cross-check every stored descriptor against the policy lanes (baseline redistributable vs reference_only vs rejected), verify license URLs/verification records and author-observed links; add audit test.",
-  "last_checkpoint_head": "717e5d91eb353d4d34274c153c470b1b7262c74c",
-  "tested_head": "717e5d91eb353d4d34274c153c470b1b7262c74c",
+  "next_action": "Implement NO_HEAVY_GIT_PAYLOAD_GATE: machine-check that no binary/large payloads can enter the candidates tree (extension allowlist, size cap, git-tracked file scan) and record the gate evidence.",
+  "last_checkpoint_head": "2ad3b948c159f33ad612c34cc35f48540e3a920d",
+  "tested_head": "2ad3b948c159f33ad612c34cc35f48540e3a920d",
   "validation": [
     {
-      "milestone": "SOURCE_POLICY",
+      "name": "SOURCE_POLICY focused content_catalog tests",
       "command": "python -m pytest tests/world_packs/content_catalog -q",
-      "result": "13 passed",
-      "tested_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
-      "run_at_utc": "2026-09-05"
+      "result": "PASS",
+      "head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4"
     },
     {
-      "milestone": "SOURCE_POLICY",
+      "name": "SOURCE_POLICY world_packs regression",
       "command": "python -m pytest tests/world_packs -q",
-      "result": "81 passed, 1 failed (pre-existing environmental failure: test_library_contract.py symlink test, OSError WinError 1314, outside WP-CONTENT1 allowed paths)",
-      "tested_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
-      "run_at_utc": "2026-09-05"
+      "result": "FAIL",
+      "head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4"
     },
     {
-      "milestone": "ROCK_AND_CLIFF_CANDIDATES",
+      "name": "ROCK_AND_CLIFF_CANDIDATES focused content_catalog tests",
       "command": "python -m pytest tests/world_packs/content_catalog -q",
-      "result": "14 passed",
-      "tested_head": "6ef34fb8c6ad4ff741b82191c5fe7650463dc044",
-      "run_at_utc": "2026-09-05"
+      "result": "PASS",
+      "head": "6ef34fb8c6ad4ff741b82191c5fe7650463dc044"
     },
     {
-      "milestone": "SAND_AND_SOIL_CANDIDATES",
+      "name": "SAND_AND_SOIL_CANDIDATES focused content_catalog tests",
       "command": "python -m pytest tests/world_packs/content_catalog -q",
-      "result": "15 passed",
-      "tested_head": "de1387fc99210e261aac985ece5b7fcc4f144c00",
-      "run_at_utc": "2026-09-05"
+      "result": "PASS",
+      "head": "de1387fc99210e261aac985ece5b7fcc4f144c00"
     },
     {
-      "milestone": "ICE_AND_SNOW_CANDIDATES",
+      "name": "ICE_AND_SNOW_CANDIDATES focused content_catalog tests",
       "command": "python -m pytest tests/world_packs/content_catalog -q",
-      "result": "17 passed",
-      "tested_head": "717e5d91eb353d4d34274c153c470b1b7262c74c",
-      "run_at_utc": "2026-09-05"
+      "result": "PASS",
+      "head": "717e5d91eb353d4d34274c153c470b1b7262c74c"
+    },
+    {
+      "name": "LICENSE_AND_PROVENANCE_AUDIT focused content_catalog tests",
+      "command": "python -m pytest tests/world_packs/content_catalog -q",
+      "result": "PASS",
+      "head": "2ad3b948c159f33ad612c34cc35f48540e3a920d"
     }
   ],
-  "updated_at_utc": "2026-09-05T16:05:00Z",
+  "updated_at_utc": "2026-09-05T17:10:00Z",
   "notes": [
-    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
-    "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.", "ROCK_AND_CLIFF_CANDIDATES done: 2 Poly Haven rock/cliff discovery descriptors, facts from in-repo verified research only, 14 passed at 6ef34fb8.",
+    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1.",
+    "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.",
+    "ROCK_AND_CLIFF_CANDIDATES done: 2 Poly Haven rock/cliff discovery descriptors, facts from in-repo verified research only, 14 passed at 6ef34fb8.",
     "SAND_AND_SOIL_CANDIDATES done: polyhaven gravelly sand + ambientCG Ground037 discovery descriptors, 15 passed at de1387fc.",
-    "ICE_AND_SNOW_CANDIDATES done: ambientCG Ice001 + Snow001 discovery descriptors, full minimal family set covered, 17 passed at 717e5d91."
+    "ICE_AND_SNOW_CANDIDATES done: ambientCG Ice001 + Snow001 discovery descriptors, full minimal family set covered, 17 passed at 717e5d91.",
+    "LICENSE_AND_PROVENANCE_AUDIT done: lane/license/measured audit doc + machine gate, 18 passed at 2ad3b948.",
+    "Regression FAIL detail: python -m pytest tests/world_packs -q at d1ea1bce gave 81 passed, 1 failed; the single failure is tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption (OSError WinError 1314, symlink privilege missing on this Windows runner). Pre-existing environmental failure, unrelated to WP-CONTENT1 changes and outside this track's allowed paths.",
+    "Earlier state commits (f9ce955c, 9dcc8360) used a non-schema validation entry shape; fixed in this commit without rewriting published history."
   ]
 }
