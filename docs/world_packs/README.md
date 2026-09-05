@@ -1,105 +1,76 @@
-# WORLD PACKS — Data-Driven World Identity Packs
+# WORLD PACKS — reusable world-generation content library
 
-Status: **parallel / noncritical / content-first**  
-Branch: `feature/world-packs0-content-packs-r1`
+**Назначение:** библиотека воспроизводимых, версионируемых assets, surface families,
+профилей представления среды и композируемых рецептов, из которых потребители DWS
+собирают отображение канонических миров без отдельного кода для каждой планеты.
 
-## Why this train exists
+WORLD PACKS не владеет геометрией, физическими материалами, экологией, погодой,
+Construction, gameplay, replication или persistence. Тяжёлые исходники хранятся
+вне Git. Runtime использует заранее подготовленные локальные ресурсы.
 
-The simulator's long-term goal includes many places: different planets, moons, climates, terrains, ecosystems and human/industrial environments. WORLD PACKS gives those places a coherent visual identity without forking the underlying simulation.
+## Два поколения, без разрушения совместимости
 
-A WORLD PACK is data + assets + presentation recipes.
+**WP0 — сохранённая gallery/content foundation.** Шесть работающих exemplars:
+Moon Industrial, Mars Dust, Frozen World, Volcanic World, Temperate, Alien Wetland.
+Их `dws.world_pack.v1`, GDScript profiles, registry, POI library и сцены остаются
+неизменными. Это полезные примеры и regression fixtures, не универсальная модель
+генерации планет. Alpine Settlement и другие предложенные названия не являются
+фактическими шестью пакетами в проверенном HEAD `8da220d5`.
 
-```text
-same canonical simulation
-          |
-          v
-     WORLD PACK
-   /      |       \
-Moon    Mars     Frozen
-Industrial Dust   World
+**WP1.0 — отдельный DRAFT_CONTRACT_FIXTURE.** Добавлен metadata-only прототип
+`dws.world_library.v1`: точные ссылки `id@version`, SHA-256, provenance, независимые
+source locations, surface bindings и композиция рецептов с отказом при конфликте.
+Он НЕ является уже подключённым WORLDGEN resolver, downloader, importer или renderer.
+Единственный payload — оригинальный диагностический текст, не PBR-материал.
+
+## Где читать
+
+- [Решение и границы систем](architecture/ADR-WP-001-SURFACE-LIBRARY-RU.md).
+- [Дорожная карта и измеримые конечные состояния](WORLD_PACKS_ROADMAP.md).
+- [Внешний research, лицензии и кандидаты ресурсов](RESEARCH_AND_SOURCES_RU.md).
+- [Evidence текущего аудита](evidence/WP1_0_ARCHITECTURE_AUDIT_2026-09-05.md).
+- [Историческое WP0.10 evidence](evidence/WP0_10_GALLERY_HARNESS_2026-09-04.md).
+
+WP0.10 evidence сообщает о MCP graphical captures 2026-09-04; реальные draw-call
+замеры всё ещё pending. Исторические PASS не являются новым runtime-прогоном аудита.
+
+## Проверка нового metadata-контракта
+
+Из корня репозитория, Python 3.11+:
+
+```bash
+python -m pip install -r tools/world_packs/requirements-library.txt
+python tools/world_packs/library_contract.py --verify-fixtures
+python -m pytest -q tests/world_packs/test_library_contract.py
 ```
 
-The pack does not own terrain truth, ECO truth, matter, networking, persistence or authority.
+Для тестов нужен pytest; аудит использовал pytest 9.0.2, Python 3.13.5,
+jsonschema 4.26.0. Установка зависимостей — подготовительный шаг, не runtime.
+Вывод `presentation_lock_hash` относится только к представлению. Это не checksum
+Matter, не world identity и не доказательство одинаковых пикселей на разных GPU.
 
-## Pack responsibilities
-
-A pack may define:
-- sky/environment profile;
-- lighting profile;
-- fog/atmosphere presentation;
-- ambient audio profile;
-- ground/surface material choices;
-- decorative prop catalog;
-- scatter/dressing recipes;
-- decal catalog;
-- landmark/POI catalog;
-- demo composition presets.
-
-A pack must not define:
-- its own terrain generator;
-- authoritative weather;
-- a new item database;
-- network protocol;
-- persistence format;
-- matter ownership;
-- ECO simulation;
-- gameplay crafting/economy.
-
-## Key design rule
-
-WORLD PACKS describes **how a world reads**, not **what the world canonically is**.
-
-WORLDGEN may later say "basalt plain, slope 0.12, temperature X". A pack can choose which rock materials, dust decals, sky and props visually represent that descriptor. It cannot rewrite the descriptor.
-
-## Initial pack family
-
-- WP-MOON-INDUSTRIAL
-- WP-MARS-DUST
-- WP-FROZEN
-- WP-VOLCANIC
-- WP-TEMPERATE
-- WP-ALIEN-WETLAND
-
-The gallery scene:
-`scenes/labs/world_packs/world_packs_gallery.tscn`
-
-## Gallery (WP0.10)
-
-Pads mode (all registered packs, neutral shared environment):
+## Сохранённые WP0 entry points
 
 ```powershell
-& "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe" --path <project_dir> res://scenes/labs/world_packs/world_packs_gallery.tscn
-```
-
-Focus mode (single pack with its full environment):
-
-```powershell
-& "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe" --path <project_dir> res://scenes/labs/world_packs/world_packs_gallery.tscn -- --pack=WP-MOON-INDUSTRIAL
-```
-
-The comparison harness (`RUN_WORLD_PACKS_WP0_10_HARNESS.ps1`) chains all
-promotion-gate checks and writes
-`validation/world_packs/wp0_10_gallery_comparison.v1.json`.
-
-## Pack manifest validation (WP0.1)
-
-Pack manifests under `config/world_packs/packs/` are JSON documents validated
-against `config/world_packs/pack_schema.v1.json` (draft-07 subset) by
-`tools/world_packs/validate_pack.gd`:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_WORLD_PACKS_WP0_1_TESTS.ps1
+.\RUN_WORLD_PACKS_WP0_2_TESTS.ps1
+.\RUN_WORLD_PACKS_PROFILE_TESTS.ps1
+.\RUN_WORLD_PACKS_WP0_9_TESTS.ps1
+.\RUN_WORLD_PACKS_WP0_10_HARNESS.ps1
 ```
 
-Exit codes: `0` valid, `1` invalid manifest, `2` usage/IO error.
-Unknown optional manifest fields are ignored by contract; a pack never carries
-canonical state. Promotion gate 1 ("schema validates") is checked with this tool.
+Gallery: `res://scenes/labs/world_packs/world_packs_gallery.tscn`.
+Использовать проектную double-сборку Godot и правила `AGENTS.md`, не произвольный
+редактор из системы. Последний прочитанный WP0.10 build:
+`4.7.1.stable.double.custom_build.a13da4feb`, GL Compatibility.
 
-See:
-- `WORLD_PACKS_ROADMAP.md`
-- `AGENT_CONTENT_SCOUT.md`
-- `config/world_packs/pack_schema.v1.json`
-- `evidence/WP0_1_SCHEMA_VALIDATION_2026-09-03.md`
-- `licenses/LEDGER.md` — mandatory provenance for any third-party asset
-- `GALLERY_MCP_CAPTURE_RU.md` — Windows launch + MCP camera-pass capture guide
+## Как добавить поверхность
+
+Подобрать источник и проверить права → зафиксировать реальные bytes/hash/version →
+зарегистрировать asset → определить visual family и ссылки на существующие Matter ID →
+составить presentation recipe → проверить данные → подготовить локальный cache →
+передать recipe через согласованный WORLDGEN/RL adapter.
+
+Сегодня исполняются только проверки metadata/fixture. Fetch/import и реальный
+WORLDGEN adapter имеют отдельные gates в roadmap. Не выдавать их за выполненные.
+Удаление WORLD PACKS не должно ломать canonical simulation или блокировать P7/V0.
