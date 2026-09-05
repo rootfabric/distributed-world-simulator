@@ -15,59 +15,60 @@
     "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Integrator: review exact head 1ff25c9a evidence, open/update child PR into control/world-packs-parallel-r1 and request independent review; note cross-track WP-SURFACE1 BOM state issue blocking controller verify globally (fix in WP-SURFACE1, not here).",
-  "last_checkpoint_head": "2428a9362386db44bb03783c37fa0193c1440c5c",
+  "next_action": "Integrator: review exact head 1ff25c9a evidence, open/update child PR into control/world-packs-parallel-r1 and request independent review.",
+  "last_checkpoint_head": "b97eb6a56fbf0a0814d9159b830a64f0590dfa1e",
   "tested_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
   "validation": [
     {
-      "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
+      "name": "focused_asset_fetch_fetch_contract",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "29 passed",
+      "result": "PASS",
       "head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
     },
     {
-      "name": "WP-ASSET1 BOUNDED_HTTPS focused tests",
+      "name": "focused_asset_fetch_bounded_https",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "38 passed",
+      "result": "PASS",
       "head": "f3b6e41bb8619ba76b82c2a2121d2ddb7490a574"
     },
     {
-      "name": "WP-ASSET1 RAW_CONTENT_ADDRESSABLE_CACHE focused tests",
+      "name": "focused_asset_fetch_raw_cache",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "46 passed",
+      "result": "PASS",
       "head": "cc2c08ebb57e46cc16152230de629d15f58ac059"
     },
     {
-      "name": "WP-ASSET1 SSRF_REDIRECT_AND_SIZE_GATES focused tests",
+      "name": "focused_asset_fetch_gates",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "75 passed",
+      "result": "PASS",
       "head": "ad7dc25f1319669342a2342eea8bdbf24286a19d"
     },
     {
-      "name": "WP-ASSET1 ARCHIVE_SAFETY_FIXTURES focused tests",
+      "name": "focused_asset_fetch_archive_safety",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "93 passed",
+      "result": "PASS",
       "head": "d6fc5350154c0e8e8222526e0416f531cd1198eb"
     },
     {
-      "name": "WP-ASSET1 OFFLINE_REUSE_AND_CORRUPTION_RECOVERY focused tests",
+      "name": "focused_asset_fetch_offline_recovery",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "99 passed",
+      "result": "PASS",
       "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
     },
     {
-      "name": "WP-ASSET1 EVIDENCE_READY final focused suite",
+      "name": "focused_asset_fetch_final",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
-      "result": "99 passed",
+      "result": "PASS",
       "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
     }
   ],
-  "updated_at_utc": "2026-09-05T17:55:00Z",
+  "updated_at_utc": "2026-09-05T18:40:00Z",
   "notes": [
     "All 7 declared milestones complete; stdlib-only package tools/world_packs/asset_fetch (contract/https/cache/gates/archive/pipeline).",
+    "Test counts per milestone head (same command as validation entries): FETCH_CONTRACT 29 passed, BOUNDED_HTTPS 38 passed, RAW_CACHE 46 passed, GATES 75 passed, ARCHIVE_SAFETY 93 passed, OFFLINE_RECOVERY and final 99 passed.",
     "No real network requests, no production asset downloads; all transports/openers/resolvers are injected fakes; negative fixtures were written before any real downloads.",
     "No heavy payloads in Git; raw cache lives outside the repository.",
-    "Cross-track note: controller verify/status currently fails globally because origin WP-SURFACE1 state JSON carries a UTF-8 BOM (invalid for json.load). Fix belongs to WP-SURFACE1/controller, outside WP-ASSET1 allowed paths; WP-ASSET1 state itself validates.",
+    "validation entries follow workstream_state.schema.v1.json: result enum PASS/FAIL/BLOCKED/NOT_RUN, additionalProperties false.",
     "Worker does not self-merge; integration gate belongs to the controller/integrator track."
   ]
 }
