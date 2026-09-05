@@ -1,0 +1,132 @@
+name: Project Focus Autonomy Review R3 Publisher R1
+
+on:
+  pull_request:
+    branches: [control/project-focus-harness-reconciliation-r1]
+    paths:
+      - .github/workflows/project-focus-autonomy-review-r3-publish-r1.yml
+      - .github/transport/project-focus-autonomy-r3.patch.part-*
+
+permissions:
+  contents: write
+
+jobs:
+  publish-bounded-repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout frozen target branch
+        uses: actions/checkout@v4
+        with:
+          ref: control/project-focus-harness-reconciliation-r1
+          fetch-depth: 0
+
+      - name: Guard exact live parent and canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin \
+            '+refs/heads/control/project-focus-harness-reconciliation-r1:refs/remotes/origin/control/project-focus-harness-reconciliation-r1' \
+            '+refs/heads/control/project-focus-autonomy-review-r3-publish-r1:refs/remotes/origin/control/project-focus-autonomy-review-r3-publish-r1' \
+            '+refs/heads/main:refs/remotes/origin/main' \
+            --prune
+          test "$(git rev-parse HEAD)" = '719a89611a5cb376ee6bf80476587399af7b9a4e'
+          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = '719a89611a5cb376ee6bf80476587399af7b9a4e'
+          test "$(git rev-parse origin/main)" = '5b4152958624be4e9cc40f2369ce32c4964f65c3'
+          test "$(git rev-parse 'HEAD^{tree}')" = '6b1438ce1536f210af69e6a7920a96116e4e9dcb'
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "PUBLISH_PARENT_HEAD=$(git rev-parse HEAD)"
+          echo "PUBLISH_PARENT_TREE=$(git rev-parse 'HEAD^{tree}')"
+          echo "CANONICAL_MAIN=$(git rev-parse origin/main)"
+
+      - name: Reconstruct and authenticate bounded patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > /tmp/repair-r3.b64
+          for n in 00 01 02 03 04 05; do
+            git show "origin/control/project-focus-autonomy-review-r3-publish-r1:.github/transport/project-focus-autonomy-r3.patch.part-${n}" >> /tmp/repair-r3.b64
+          done
+          echo 'b234797cdf53fd9b40594c21056d738bd9c74a570412ad6d15186aea2bf03f98  /tmp/repair-r3.b64' | sha256sum -c -
+          base64 -d /tmp/repair-r3.b64 | gzip -d > /tmp/repair-r3.patch
+          echo '97ca5df63c3d9a8c2d1012a6537e725ac58bfeecb56880f6e26fd6107c1aad4a  /tmp/repair-r3.patch' | sha256sum -c -
+          git apply --check /tmp/repair-r3.patch
+          git apply /tmp/repair-r3.patch
+          git diff --check
+
+      - name: Enforce bounded Harness-only scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only | sort > /tmp/changed.txt
+          cat > /tmp/expected.txt <<'EOF'
+          .github/workflows/project-control.yml
+          HARNESS_CONTROL.md
+          config/control/harness/continuation-policy.v1.json
+          config/control/harness/hard-block-proof.schema.v1.json
+          config/control/harness/harness-policy.v1.json
+          config/control/harness/review-policy.v1.json
+          docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md
+          docs/control/PROJECT_FOCUS_AUTONOMY_REVIEW_REPAIR_R3_RU.md
+          scripts/harness/continuation.py
+          scripts/harness/contracts.py
+          scripts/harness/state_builder.py
+          tests/harness/test_harness_autonomous_execution_policy.py
+          tests/harness/test_harness_autonomy_runtime.py
+          tests/harness/test_harness_hard_block_drive.py
+          tests/harness/test_harness_review_machine_evidence.py
+          EOF
+          sort -o /tmp/expected.txt /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/changed.txt
+          if grep -E '^(scripts/runtime/|scripts/simulation/|scenes/|config/control/project-program-registry\.v1\.json$|config/control/harness/scheduler-policy\.v1\.json$|config/control/harness/acceptance/|config/control/harness/executions/)' /tmp/changed.txt; then
+            echo 'FORBIDDEN_SCOPE_CHANGE'
+            exit 1
+          fi
+
+      - name: Install pinned Harness dependency
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Run focused autonomy repair regression
+        run: |
+          python3 -m unittest -v \
+            tests.harness.test_harness_autonomy_runtime \
+            tests.harness.test_harness_hard_block_drive \
+            tests.harness.test_harness_review_machine_evidence \
+            tests.harness.test_harness_autonomous_execution_policy
+
+      - name: Run complete Harness discovery
+        run: python3 -m unittest discover -s tests/harness -p 'test_*.py' -v
+
+      - name: Commit exact repair and prove expected tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(harness): enforce autonomy evidence provenance'
+          test "$(git rev-parse 'HEAD^{tree}')" = '014b60ec4ad1f8cb1589afdeb832c7e4b15e9499'
+          test "$(git rev-parse 'HEAD^')" = '719a89611a5cb376ee6bf80476587399af7b9a4e'
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "REPAIR_HEAD=$(git rev-parse HEAD)"
+          echo "REPAIR_TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Validate committed control candidate
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 -m harness.control_candidate_validation
+          python3 -m harness.cli check-consistency --candidate
+          python3 -m harness.cli overview --candidate
+
+      - name: Non-force publish to control branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse 'HEAD^{tree}')" = '014b60ec4ad1f8cb1589afdeb832c7e4b15e9499'
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git push origin HEAD:refs/heads/control/project-focus-harness-reconciliation-r1
+          git fetch origin '+refs/heads/control/project-focus-harness-reconciliation-r1:refs/remotes/origin/control/project-focus-harness-reconciliation-r1'
+          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = "$(git rev-parse HEAD)"
+          echo "PUBLISHED_HEAD=$(git rev-parse HEAD)"
+          echo "PUBLISHED_TREE=$(git rev-parse 'HEAD^{tree}')"
