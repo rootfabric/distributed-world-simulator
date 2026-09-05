@@ -11,6 +11,7 @@ func check(condition: bool, label: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(label)
+		print("CHECK_FAILED=" + label)
 
 func unpack(result: Dictionary, key: String) -> Dictionary:
 	check(result.get("success", false), key + " succeeds: " + str(result.get("error_code", "")))

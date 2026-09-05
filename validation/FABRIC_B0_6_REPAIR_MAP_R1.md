@@ -25,3 +25,23 @@ Regression: C plus D including writer/reader in separate Godot processes.
 BRIDGE-2 closure runner references missing RUN_FABRIC_SYNC4_TESTS.sh and acceptance.
 Restore exact historical blobs from commit 07b3bf9d, then rerun the closure. Preserve
 all historical reports; do not replace regression with an invented green stub.
+
+## E: correct predecessor boundary
+
+Initial adapter wiring used a nonexistent `Registry.compile` and assumed a one-region
+MixedRuntime. Inspection proves BRIDGE-2 R1 registry deliberately accepts exactly five
+representation kinds and four interfaces. Do not weaken that closed falsifier and do
+not add a solver to B0.6. The corrected lifecycle slot reuses the existing single-region
+RegionAdapter, certified identity reconstruction, BakeExecutionGate and mixed ownership
+contract. E measures actual adapter preparation/reconstruction/dispatch work, not numeric
+integration of 2000 COMPLEX2 machines. Numerical physics remains in predecessor runners.
+
+## E: recovery replay boundary and fixture identity
+
+Runtime recovery must not rewind a live authoritative evaluation tick or accept a
+foreign/regressing canonical source. The recovery operation is bound to canonical
+source, policy, tick and physical inputs, not to a disposable capsule. Exact repeats
+perform no reconstruction; changed canonical physical inputs require a changed source
+binding. Local smoke additionally proves descriptor copies cannot mutate the slot.
+The workload obtains source keys from the existing Utils.source_key function; an
+initial fixture guessed the delimiter and was corrected, not the canonical utility.
