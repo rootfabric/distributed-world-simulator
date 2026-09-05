@@ -4,35 +4,44 @@
   "track_id": "WP-SURFACE1",
   "branch": "work/world-packs-surface1-families-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "IN_PROGRESS",
+  "status": "READY_FOR_INTEGRATION",
   "completed_milestones": [
     "FAMILY_TAXONOMY",
     "MATTER_BINDING_RULES",
     "REGOLITH_BASALT_SAND_ICE_FAMILIES",
-    "FIDELITY_AND_EXPOSURE_STATES"
+    "FIDELITY_AND_EXPOSURE_STATES",
+    "RECIPE_FRAGMENT_COMPOSITION",
+    "CONFLICT_AND_ORDER_INDEPENDENCE_TESTS",
+    "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Execute RECIPE_FRAGMENT_COMPOSITION: composable recipe fragments binding family shards to canonical matter ids, then CONFLICT_AND_ORDER_INDEPENDENCE_TESTS.",
-  "last_checkpoint_head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66",
-  "tested_head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66",
+  "next_action": "Integrator/Reviewer: review child PR work/world-packs-surface1-families-r1 -> control/world-packs-parallel-r1 at exact head 0adbf2aa512cc30f81f2be9d98c898455726d1d8.",
+  "last_checkpoint_head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8",
+  "tested_head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8",
   "validation": [
     {
       "name": "surface_library_focused",
       "command": "python -m pytest tests/world_packs/surface_library -q",
       "result": "PASS",
-      "head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66"
+      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
     },
     {
       "name": "wp1_0_library_contract_regression",
       "command": "python -m pytest tests/world_packs/test_library_contract.py",
       "result": "FAIL",
-      "head": "282b0f734a7a5e79c122c5ac4799c8542c69f42c"
+      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
+    },
+    {
+      "name": "parallel_controller_regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py",
+      "result": "PASS",
+      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:40:00Z",
+  "updated_at_utc": "2026-09-05T15:10:00Z",
   "notes": [
-    "FAMILY_TAXONOMY + MATTER_BINDING_RULES + REGOLITH_BASALT_SAND_ICE_FAMILIES + FIDELITY_AND_EXPOSURE_STATES complete.",
-    "matter/sand does not exist in canonical matter catalog; surface-family/sand and surface/sand are PENDING_CANONICAL_MATTER with zero bindings by design.",
-    "wp1_0_library_contract_regression FAIL is a pre-existing Windows environment limitation: os.symlink requires SeCreateSymbolicLinkPrivilege (WinError 1314); unrelated to WP-SURFACE1 paths."
+    "All 7 declared milestones complete; evidence in docs/world_packs/evidence/WP-SURFACE1_EVIDENCE_READY_2026-09-05.md.",
+    "matter/sand does not exist in canonical matter catalog; surface/sand is PENDING_CANONICAL_MATTER with zero bindings; recipes reject pending surfaces by design.",
+    "wp1_0_library_contract_regression FAIL is a pre-existing Windows environment limitation: os.symlink requires SeCreateSymbolicLinkPrivilege (WinError 1314); 63/64 subtests pass and the failure is unrelated to WP-SURFACE1 paths."
   ]
 }
