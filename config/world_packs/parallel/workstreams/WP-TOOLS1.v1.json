@@ -7,36 +7,37 @@
   "status": "IN_PROGRESS",
   "completed_milestones": [
     "CLI_SCAFFOLD",
-    "VALIDATE_AND_RESOLVE"
+    "VALIDATE_AND_RESOLVE",
+    "DOCTOR_DIAGNOSTICS"
   ],
   "blockers": [],
-  "next_action": "Implement DOCTOR_DIAGNOSTICS: doctor subcommand with python/jsonschema/schema/document/contract/fixture/pack checks, human and --json output.",
-  "last_checkpoint_head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
-  "tested_head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
+  "next_action": "Implement INSPECT_AND_INDEX: inspect subcommand for descriptor digests and index subcommand emitting a deterministic full-library index.",
+  "last_checkpoint_head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
+  "tested_head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
   "validation": [
     {
       "kind": "focused",
-      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
+      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
       "command": "python -m pytest tests/world_packs/wp_cli -q",
       "result": "PASS",
-      "detail": "11 passed"
+      "detail": "16 passed"
     },
     {
       "kind": "focused-suite",
-      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
+      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
       "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
       "result": "PASS",
-      "detail": "74 passed, 1 deselected (symlink privilege env limitation, see notes)"
+      "detail": "79 passed, 1 deselected (symlink privilege env limitation, see notes)"
     },
     {
       "kind": "cli-smoke",
-      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
-      "command": "python tools/world_packs/wp_cli/__main__.py resolve --recipe recipe/lunar-swatch@1.0.0",
+      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
+      "command": "python tools/world_packs/wp_cli/__main__.py doctor",
       "result": "PASS",
-      "detail": "lock hash bfd0fbb15d8ef5292dd79aa002cb50f11fec9f916531234ee4842a02f52140a4 identical to direct library_contract.resolve output"
+      "detail": "9/9 checks OK incl. repo fixture byte verification and legacy pack manifests; --json and failure/skip paths covered by tests"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:31:00Z",
+  "updated_at_utc": "2026-09-05T14:52:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
     "CLI_SCAFFOLD: wp_cli package with argparse dispatch, exit-code contract (0/1/2), validate subcommand reusing the existing WP1.0 resolver via import; no second resolver introduced.",
