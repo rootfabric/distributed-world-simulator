@@ -32,6 +32,7 @@ const ENVELOPE_FIELDS: Array[String] = [
 	"admissible_fidelities",
 	"minimum_safe_fidelity",
 	"raw_admissibility",
+	"safety_inputs",
 	"estimated_cost",
 	"error_bound",
 	"validity_margin",
@@ -55,11 +56,15 @@ static func compile(current_fidelity: String, candidates: Array) -> Dictionary:
 	var guard_by_level: Dictionary = {}
 	var pending_by_level: Dictionary = {}
 	var causal_by_level: Dictionary = {}
+	var safety_inputs: Array = []
 	var unsafe_barrier := false
 
 	for index in range(LEVELS.size()):
 		var fidelity_id := LEVELS[index]
 		var candidate: Dictionary = candidates[index]
+		var witness := candidate.duplicate(true)
+		witness.erase("estimated_cost")
+		safety_inputs.append(witness)
 		var reasons := _raw_rejection_reasons(index, candidate)
 		var raw_safe := reasons.is_empty()
 		var effective_reasons: Array = reasons.duplicate()
@@ -97,6 +102,7 @@ static func compile(current_fidelity: String, candidates: Array) -> Dictionary:
 		"admissible_fidelities": admissible.duplicate(),
 		"minimum_safe_fidelity": minimum_safe_fidelity,
 		"raw_admissibility": raw_rows,
+		"safety_inputs": safety_inputs,
 		"error_bound": error_by_level,
 		"validity_margin": validity_by_level,
 		"guard_margin": guard_by_level,
@@ -113,49 +119,70 @@ static func compile(current_fidelity: String, candidates: Array) -> Dictionary:
 		return checked
 	return Utils.success({"envelope": envelope})
 
+# Reuse A's only safety algorithm. Witnesses make a rehashed contradictory report
+# invalid too; checksums are integrity checks, never proof of physical provenance.
 static func validate_envelope(envelope: Dictionary) -> Dictionary:
 	var checked := Utils.validate_exact_fields(envelope, ENVELOPE_FIELDS)
-	if not bool(checked.get("success", false)):
+	if not checked.get("success", false):
 		return checked
-	if envelope.get("schema") != SCHEMA:
+	if typeof(envelope.get("schema")) != TYPE_STRING or envelope["schema"] != SCHEMA:
 		return Utils.failure("UNSUPPORTED_ADAPTIVE_FIDELITY_ENVELOPE_SCHEMA")
-	if typeof(envelope.get("levels")) != TYPE_ARRAY or Array(envelope["levels"]) != LEVELS:
-		return Utils.failure("INVALID_ADAPTIVE_FIDELITY_LEVELS")
-	if typeof(envelope.get("current_fidelity")) != TYPE_STRING or not LEVELS.has(String(envelope["current_fidelity"])):
+	if typeof(envelope.get("current_fidelity")) != TYPE_STRING:
 		return Utils.failure("INVALID_CURRENT_PHYSICAL_FIDELITY")
-	if typeof(envelope.get("admissible_fidelities")) != TYPE_ARRAY or envelope["admissible_fidelities"].is_empty():
-		return Utils.failure("EMPTY_ADMISSIBLE_PHYSICAL_FIDELITY_SET")
-	var admissible: Array = envelope["admissible_fidelities"]
-	for index in range(admissible.size()):
-		if index >= LEVELS.size() or String(admissible[index]) != LEVELS[index]:
-			return Utils.failure("NONCONTIGUOUS_ADMISSIBLE_PHYSICAL_FIDELITY_SET")
-	if String(envelope.get("minimum_safe_fidelity", "")) != String(admissible[admissible.size() - 1]):
-		return Utils.failure("INVALID_MINIMUM_SAFE_PHYSICAL_FIDELITY")
-	if typeof(envelope.get("raw_admissibility")) != TYPE_ARRAY or envelope["raw_admissibility"].size() != LEVELS.size():
-		return Utils.failure("INVALID_ADAPTIVE_FIDELITY_ADMISSIBILITY_ROWS")
-	for index in range(LEVELS.size()):
-		var row = envelope["raw_admissibility"][index]
-		if typeof(row) != TYPE_DICTIONARY:
-			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_ADMISSIBILITY_ROW", {"index": index})
-		if row.keys().size() != 4 or not row.has_all(["fidelity_id", "raw_safe", "effective_safe", "rejection_reasons"]):
-			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_ADMISSIBILITY_ROW", {"index": index})
-		if String(row["fidelity_id"]) != LEVELS[index] or typeof(row["raw_safe"]) != TYPE_BOOL or typeof(row["effective_safe"]) != TYPE_BOOL:
-			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_ADMISSIBILITY_ROW", {"index": index})
-		if typeof(row["rejection_reasons"]) != TYPE_ARRAY:
-			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_ADMISSIBILITY_ROW", {"index": index})
+	if typeof(envelope.get("levels")) != TYPE_ARRAY or envelope["levels"] != LEVELS:
+		return Utils.failure("INVALID_ADAPTIVE_FIDELITY_LEVELS")
+	if typeof(envelope.get("safety_inputs")) != TYPE_ARRAY or envelope["safety_inputs"].size() != LEVELS.size():
+		return Utils.failure("INVALID_ADAPTIVE_FIDELITY_SAFETY_INPUTS")
 	for field in ["estimated_cost", "error_bound", "validity_margin", "guard_margin", "pending_refinement_guards", "causal_dependencies"]:
-		if typeof(envelope.get(field)) != TYPE_DICTIONARY or envelope[field].size() != LEVELS.size():
+		if typeof(envelope.get(field)) != TYPE_DICTIONARY:
 			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_REPORT_FIELD", {"field": field})
-		for fidelity_id in LEVELS:
-			if not envelope[field].has(fidelity_id):
-				return Utils.failure("INVALID_ADAPTIVE_FIDELITY_REPORT_FIELD", {"field": field, "fidelity_id": fidelity_id})
+		checked = Utils.validate_exact_fields(envelope[field], LEVELS)
+		if not checked.get("success", false):
+			return checked
+	var candidates: Array = []
+	for index in range(LEVELS.size()):
+		var witness = envelope["safety_inputs"][index]
+		if typeof(witness) != TYPE_DICTIONARY or witness.has("estimated_cost"):
+			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_SAFETY_INPUTS")
+		var candidate: Dictionary = witness.duplicate(true)
+		candidate["estimated_cost"] = envelope["estimated_cost"][LEVELS[index]]
+		candidates.append(candidate)
+	checked = _validate_candidates(envelope["current_fidelity"], candidates)
+	if not checked.get("success", false):
+		return checked
+	var expected_rows: Array = []
+	var expected_safe: Array = []
+	var barrier := false
+	for index in range(LEVELS.size()):
+		var level := LEVELS[index]
+		var candidate: Dictionary = candidates[index]
+		var reasons := _raw_rejection_reasons(index, candidate)
+		var raw_safe := reasons.is_empty()
+		var effective_safe := raw_safe and not barrier
+		if barrier and raw_safe:
+			reasons.append("CHEAPER_THAN_UNSAFE_BARRIER")
+		barrier = barrier or not raw_safe
+		if effective_safe:
+			expected_safe.append(level)
+		expected_rows.append({"fidelity_id": level, "raw_safe": raw_safe,
+			"effective_safe": effective_safe, "rejection_reasons": reasons})
+		for field in ["error_bound", "validity_margin", "guard_margin", "pending_refinement_guards", "causal_dependencies"]:
+			if not _same_report_value(envelope[field][level], candidate[field]):
+				return Utils.failure("ADAPTIVE_FIDELITY_REPORT_WITNESS_MISMATCH", {"field": field})
+	if expected_safe.is_empty():
+		return Utils.failure("NO_SAFE_PHYSICAL_FIDELITY")
+	if typeof(envelope.get("admissible_fidelities")) != TYPE_ARRAY or envelope["admissible_fidelities"] != expected_safe:
+		return Utils.failure("ADAPTIVE_FIDELITY_ADMISSIBLE_SET_MISMATCH")
+	if typeof(envelope.get("minimum_safe_fidelity")) != TYPE_STRING or envelope["minimum_safe_fidelity"] != expected_safe.back():
+		return Utils.failure("INVALID_MINIMUM_SAFE_PHYSICAL_FIDELITY")
+	if typeof(envelope.get("raw_admissibility")) != TYPE_ARRAY or envelope["raw_admissibility"] != expected_rows:
+		return Utils.failure("ADAPTIVE_FIDELITY_ADMISSIBILITY_ROWS_MISMATCH")
 	if not Utils.is_lower_hex_64(envelope.get("safety_hash")):
 		return Utils.failure("INVALID_ADAPTIVE_FIDELITY_SAFETY_HASH")
 	var safety_payload := envelope.duplicate(true)
-	safety_payload.erase("estimated_cost")
-	safety_payload.erase("safety_hash")
-	safety_payload.erase("checksum")
-	if String(envelope["safety_hash"]) != Utils.canonical_hash(safety_payload):
+	for field in ["estimated_cost", "safety_hash", "checksum"]:
+		safety_payload.erase(field)
+	if envelope["safety_hash"] != Utils.canonical_hash(safety_payload):
 		return Utils.failure("ADAPTIVE_FIDELITY_SAFETY_HASH_MISMATCH")
 	return Utils.validate_checksum(envelope)
 
@@ -171,7 +198,7 @@ static func _validate_candidates(current_fidelity: String, candidates: Array) ->
 		var checked := Utils.validate_exact_fields(candidate, CANDIDATE_FIELDS)
 		if not bool(checked.get("success", false)):
 			return Utils.failure("INVALID_ADAPTIVE_FIDELITY_CANDIDATE", {"index": index, "cause": checked})
-		if String(candidate.get("fidelity_id", "")) != LEVELS[index]:
+		if typeof(candidate.get("fidelity_id")) != TYPE_STRING or candidate["fidelity_id"] != LEVELS[index]:
 			return Utils.failure("ADAPTIVE_FIDELITY_LEVEL_ORDER_MISMATCH", {
 				"index": index,
 				"expected": LEVELS[index],
@@ -221,3 +248,8 @@ static func _raw_rejection_reasons(level_index: int, candidate: Dictionary) -> A
 		if not candidate["causal_dependencies"].is_empty():
 			reasons.append("CAUSAL_DEPENDENCY_ACTIVE")
 	return reasons
+
+static func _same_report_value(actual, expected) -> bool:
+	if typeof(expected) == TYPE_ARRAY:
+		return typeof(actual) == TYPE_ARRAY and actual == expected
+	return Utils.is_finite_number(actual) and float(actual) == float(expected)

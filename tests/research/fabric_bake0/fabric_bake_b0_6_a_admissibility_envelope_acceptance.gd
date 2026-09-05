@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Envelope = preload("res://scripts/research/fabric_bake0/adaptive_physical_fidelity_envelope_v1.gd")
+const Utils = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 
 var assertions := 0
 var failures: Array = []
@@ -119,6 +120,7 @@ func _initialize() -> void:
 
 	print("B06A_SAFETY_HASH=%s" % String(e["safety_hash"]))
 	print("B06A_ENVELOPE_CHECKSUM=%s" % String(e["checksum"]))
+	_test_edges()
 	_finish()
 
 func _base_candidates() -> Array:
@@ -170,3 +172,56 @@ func _finish() -> void:
 		push_error("B0.6-A ASSERTION FAILED: %s" % failure)
 	print("FABRIC B0.6-A Physical Fidelity Admissibility Envelope: FAIL (%d/%d failed)" % [failures.size(), assertions])
 	quit(1)
+
+func _test_edges() -> void:
+	for field in ["error_bound", "allowed_error_bound", "estimated_cost", "validity_margin", "guard_margin"]:
+		for invalid in [NAN, INF, -INF, "1", true, null]:
+			var rows := _base_candidates()
+			rows[2][field] = invalid
+			_check(not _compile(rows).get("success", false), "reject invalid numeric " + field)
+	for field in ["error_bound", "allowed_error_bound", "estimated_cost"]:
+		var rows := _base_candidates()
+		rows[1][field] = -1.0
+		_check(not _compile(rows).get("success", false), "reject negative " + field)
+	for field in ["validity_margin", "guard_margin"]:
+		for invalid in [0.0, -0.1]:
+			var rows := _base_candidates()
+			rows[2][field] = invalid
+			var result := _compile(rows)
+			_check(result.get("success", false), "invalid margin still permits FULL")
+			_check(_envelope(result).get("minimum_safe_fidelity") == "STRUCTURAL_BAKE", "margin barrier")
+	for field in ["pending_refinement_guards", "causal_dependencies"]:
+		for invalid in [["bad"], ["dep/z", "dep/a"], ["dep/a", "dep/a"], [5], [""], "dep/a"]:
+			var rows := _base_candidates()
+			rows[2][field] = invalid
+			_check(not _compile(rows).get("success", false), "reject malformed IDs " + field)
+	for invalid in ["UNKNOWN", 4, null, {}]:
+		var rows := _base_candidates()
+		rows[2]["fidelity_id"] = invalid
+		_check(not _compile(rows).get("success", false), "reject unknown/type fidelity")
+	var rows := _base_candidates()
+	rows[1]["extra"] = true
+	_check(not _compile(rows).get("success", false), "unexpected candidate field")
+	rows = _base_candidates()
+	rows[4]["dormancy_certified"] = false
+	_check(_envelope(_compile(rows)).get("minimum_safe_fidelity") == "HYBRID_BAKE", "uncertified dormancy")
+	var envelope := _envelope(_compile(_base_candidates()))
+	for field in ["safety_hash", "checksum"]:
+		var corrupt := envelope.duplicate(true)
+		corrupt[field] = "0".repeat(64)
+		_check(not Envelope.validate_envelope(corrupt).get("success", false), "reject tampered " + field)
+	for field in ["estimated_cost", "error_bound", "validity_margin", "guard_margin"]:
+		var corrupt := envelope.duplicate(true)
+		corrupt[field]["DYNAMIC_ROM"] = "invalid"
+		_check(not Envelope.validate_envelope(corrupt).get("success", false), "reject corrupt report " + field)
+	var corrupt := envelope.duplicate(true)
+	corrupt["extra"] = 1
+	_check(not Envelope.validate_envelope(corrupt).get("success", false), "unexpected envelope field")
+	corrupt = envelope.duplicate(true)
+	corrupt["raw_admissibility"][2]["effective_safe"] = false
+	var payload := corrupt.duplicate(true)
+	for field in ["estimated_cost", "safety_hash", "checksum"]:
+		payload.erase(field)
+	corrupt["safety_hash"] = Utils.canonical_hash(payload)
+	corrupt["checksum"] = Utils.compute_checksum(corrupt)
+	_check(not Envelope.validate_envelope(corrupt).get("success", false), "rehashing contradictory report cannot bypass safety")
