@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 44eacbc8ff573902b91d37222d41f368a8a46af2
+          ref: fb0d7f67991e3d840243a49da0dd36938a1e3dfd
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact subject and fetched main
@@ -34,9 +34,10 @@ jobs:
             git rev-parse 'HEAD^{tree}'
             git status --porcelain --untracked-files=no
           } 2>&1 | tee /tmp/project-focus-export/preflight.log
-          test "$(git rev-parse HEAD)" = 44eacbc8ff573902b91d37222d41f368a8a46af2
-          test "$(git rev-parse 'HEAD^{tree}')" = b8d3fbd638ee5de3ff148554f2d6c2a5f24313cc
+          test "$(git rev-parse HEAD)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
+          test "$(git rev-parse 'HEAD^{tree}')" = 963f47285fb62589d76657cb8b21ef32189bcb44
           test "$(git rev-parse origin/main)" = 5b4152958624be4e9cc40f2369ce32c4964f65c3
+          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
           test -z "$(git status --porcelain --untracked-files=no)"
           if git config --local --get-regexp 'http\..*\.extraheader'; then
             echo 'EXPORT_FORBIDDEN_CREDENTIAL_HEADER_PRESENT'
@@ -48,13 +49,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar -czf /tmp/project-focus-export/project-focus-44eacbc8-with-git.tar.gz .
+          tar -czf /tmp/project-focus-export/project-focus-fb0d7f67-with-git.tar.gz .
           cd /tmp/project-focus-export
-          sha256sum project-focus-44eacbc8-with-git.tar.gz preflight.log wheels/* > SHA256SUMS
+          sha256sum project-focus-fb0d7f67-with-git.tar.gz preflight.log wheels/* > SHA256SUMS
           cat SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: project-focus-44eacbc8-exact-source
+          name: project-focus-fb0d7f67-exact-source
           path: /tmp/project-focus-export/
           if-no-files-found: error
           include-hidden-files: true
