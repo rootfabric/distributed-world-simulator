@@ -96,9 +96,10 @@ def _deny_close(
 def _emit_control_route(command: str, route: dict[str, object]) -> int:
     """A control handoff is not a reduced execution or a mission acceptance."""
     code = None
-    if not route["mission_exit_allowed"]:
-        code = "MISSION_EXIT_FORBIDDEN" if command == "CLOSE_MISSION" else (
-            "ROLE_EXIT_FORBIDDEN" if command == "CLOSE_ROLE" else None)
+    if command == "CLOSE_MISSION" and not route["mission_exit_allowed"]:
+        code = "MISSION_EXIT_FORBIDDEN"
+    elif command == "CLOSE_ROLE" and not route.get("role_exit_allowed", False):
+        code = "ROLE_EXIT_FORBIDDEN"
     payload = {"schema": SCHEMA, "command": command, "ok": code is None,
                "output_kind": "PROJECT_CONTROL_ROUTING", "control_route": route,
                "runtime_authorized": False, "exit_codes": EXIT_CODES}
@@ -144,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
         # Default product routing must remain visible even when old epochs can no
         # longer be loaded. Explicit executions still resolve their true checkpoint.
         route = None if args.execution else canonical_reconciliation_route(root, args.checkpoint)
-        if route is not None:
+        if route is not None and args.mode != "close-role":
             return _emit_control_route(command, route)
         bundle = ContractBundle.load(root)
         execution, selected_checkpoint = resolve_execution(
@@ -154,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
             checkpoint=args.checkpoint,
         )
         route = canonical_reconciliation_route(root, selected_checkpoint)
-        if route is not None:
+        if route is not None and args.mode != "close-role":
             return _emit_control_route(command, route)
         state = build_state(root, execution)
         verification_commands = state.setdefault("verification_commands", [])
@@ -172,6 +173,18 @@ def main(argv: list[str] | None = None) -> int:
         state["selected_checkpoint"] = selected_checkpoint
 
         continuation = _attach_mission_state(root, state, bundle)
+
+        if route is not None and args.mode == "close-role":
+            # Reuse the existing ledger/continuation owner for role handoff.
+            # The canonical product hold still owns mission and runtime gates.
+            return _emit_control_route(command, {
+                **route,
+                "role_exit_allowed": continuation["role_exit_allowed"],
+                "role_execution": state["selected_execution"],
+                "role_handoff": {key: continuation[key] for key in (
+                    "handoff_class", "next_actor", "next_action", "evidence_sink",
+                )},
+            })
 
         if args.mode == "plan":
             state["plan"] = build_plan(

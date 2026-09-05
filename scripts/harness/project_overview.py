@@ -61,6 +61,10 @@ def project_overview(root: Path, *, candidate: bool = False) -> dict[str, Any]:
         return dict(provenance=provenance, lanes={}, consistency_findings=findings,
                     runtime_authorized=False, dispatch_authority="EXISTING_HARNESS_ONLY")
 
+    if candidate and coordination.get("observed_main") != canonical_head:
+        issue("CANDIDATE_MAIN_DRIFT", "product_blocking",
+              f"Observed main {coordination.get('observed_main')} != canonical main {canonical_head}; refresh and re-review the candidate.")
+
     train = read_control(root, TRAIN, ref)
     work_map = read_control(root, WORK_MAP, ref)
     catalog = read_control(root, CATALOG, ref)
@@ -208,6 +212,9 @@ def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[s
         "checkpoint_acceptance": acceptance,
         "mission_complete": selected == P7 and acceptance is not None,
         "mission_exit_allowed": selected == P7 and acceptance is not None,
+        # The routing snapshot contains no role result. CLI derives role exit
+        # separately from a validated execution ledger, never from acceptance.
+        "role_exit_allowed": False,
         "next_actor": "DIRECTOR",
         "next_action": "ACTIVATE_MVP_FROM_ACCEPTED_P7" if acceptance else "RECONCILE_P7_DURABLE_CLOSURE",
         "resume_condition": "Main-owned successor activation, fresh exact-base epoch and Work Order, reviewed lease rotation.",

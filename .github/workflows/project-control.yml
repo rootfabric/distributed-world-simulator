@@ -121,10 +121,15 @@ jobs:
           print(f"CANDIDATE REGISTRY GENERATION OK: {generation}")
           PY
 
-      - name: Check candidate product coordination
+      - name: Check product coordination at the applicable authority boundary
         env:
           PYTHONPATH: scripts
-        run: python3 -m harness.cli check-consistency --candidate
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then
+            python3 -m harness.cli check-consistency
+          else
+            python3 -m harness.cli check-consistency --candidate
+          fi
 
       - name: Run project overview authority regression
         run: python3 -m unittest tests.harness.test_project_overview
