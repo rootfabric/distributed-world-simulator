@@ -14,27 +14,28 @@
   "tested_head": "11887fab929e24310394d2a868f64d2084f9c568",
   "validation": [
     {
-      "kind": "pytest",
+      "name": "material_lab_scaffold_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
-      "result": "17 passed",
+      "result": "PASS",
       "head": "11887fab929e24310394d2a868f64d2084f9c568"
     },
     {
-      "kind": "godot-headless-self-check",
+      "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
-      "result": "SURFACE_MATERIAL_LAB_SELF_CHECK=PASS markers=6, exit 0",
+      "result": "PASS",
       "head": "11887fab929e24310394d2a868f64d2084f9c568"
     },
     {
-      "kind": "pytest-regression",
+      "name": "world_packs_predecessor_regression",
       "command": "python -m pytest tests/world_packs/test_parallel_controller.py tests/world_packs/test_library_contract.py -q",
-      "result": "68 passed, 1 failed: test_local_missing_symlink_and_corruption (Windows symlink privilege WinError 1314; environment limitation, unrelated to WP-VIS1)",
+      "result": "FAIL",
       "head": "11887fab929e24310394d2a868f64d2084f9c568"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:20:00Z",
+  "updated_at_utc": "2026-09-05T14:45:00Z",
   "notes": [
     "GENERIC_LAB_SCAFFOLD complete: asset-free presentation-only lab scene, six-fixture descriptor registry with explicit local-frame normals, anti-Y-up orientation coverage self-check, structural pytest suite.",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-GENERIC_LAB_SCAFFOLD.md."
+    "Evidence: docs/world_packs/evidence/WP-VIS1-GENERIC_LAB_SCAFFOLD.md.",
+    "world_packs_predecessor_regression recorded as FAIL for honesty: 68/69 passed; the single failure test_library_contract.py::test_local_missing_symlink_and_corruption requires OS symlink privilege (WinError 1314 on this Windows runner) and is unrelated to WP-VIS1 scope."
   ]
 }
