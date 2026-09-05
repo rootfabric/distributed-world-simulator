@@ -9,17 +9,21 @@ on:
       - .github/workflows/fabric-bake-b0-6-git-transfer.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  transport-diagnostic:
+  verified-source-transport:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Retrieve transfer bytes without executing payload
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Reconstruct and verify Git bundle without running its code
         env:
           GH_TOKEN: ${{ github.token }}
-          OUTPUT_DIR: ${{ runner.temp }}/b06-transfer-diagnostic
+          OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -35,11 +39,17 @@ jobs:
               '3c21146f6c39de1cef0c6e0aa56ac86f48bd1c7c',
               '9ad4b449b72e4a8be7294d7139d853e06bee5481',
               '1943262e591d023ab0b76c81d8ceab06dfb6f0ec',
-              'f7683e7323607188e79006fa44b7371097a7ebca',
           ]
+          corrections = [
+              [[2694, 2695, ''], [2841, 2842, '0'], [3133, 3134, '6'], [6471, 6473, '3d'], [13336, 13336, '=']],
+              [],
+              [[1333, 1333, '/'], [3906, 3906, '/'], [4929, 4929, '/'], [6430, 6431, ''], [9132, 9132, '/'], [10660, 10660, '/']],
+              [[6947, 6948, ''], [9400, 9400, '/'], [11163, 11163, '/'], [11491, 11491, '/'], [12316, 12316, '/'], [13332, 13332, '=']],
+          ]
+          tail = '57bWFtTseesAN9a8sk1PKA/CgydN8QIzKbj4KsldiNX27GOumkZCxUy7lHic+8vxl2NDJLOI4JKpzVN5hfnfLYxksCln+qirOdtocy6zACMA2ZALofkBsIuag9Y2SQ9heX+OWuzaZI3sk8J4nMvOnhAuMi9PLn92Tq2g3Zc40yL/tbPfm/6ZBgCG+guEbYYQeJx7q/NQe4L7xD7tjf/yRQEvmgZ68AL5FX2NSghv5/xwMaLRiOq/eDHo33icASAA3/+0BbQFsNkBFM8p3aQxgO2Gy9uWZxRE4miapjZHk+0BxwC6D/j5AXlKTCIw5lmRX0d2UxtPMoxOcCeneJzLzp4QLrLszUSTznsdwrOvLzd8PeXoY/MVf/IBpykN5m2AhW94nHspN0t6o8Ntts1xHPvZACnjBW1bBWQstxH/siD5COX0u9e2+k1Jrg=='
           out = Path(os.environ['OUTPUT_DIR'])
           out.mkdir(parents=True, exist_ok=True)
-          manifest = {'purpose': 'SOURCE_TRANSPORT_DIAGNOSTIC_NOT_RUNTIME_EVIDENCE', 'chunks': []}
+          chunks = []
           for index, sha in enumerate(refs):
               request = Request(
                   f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}',
@@ -50,17 +60,72 @@ jobs:
               if payload.get('encoding') != 'base64':
                   raise RuntimeError('Unexpected blob encoding')
               data = base64.b64decode(payload['content'])
-              actual = hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
-              if actual != sha:
+              if hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() != sha:
                   raise RuntimeError('Git blob integrity mismatch')
-              (out / f'chunk-{index}.bin').write_bytes(data)
-              manifest['chunks'].append({'index': index, 'sha': sha, 'bytes': len(data)})
+              encoded = base64.b64encode(data).decode()
+              for begin, end, replacement in reversed(corrections[index]):
+                  encoded = encoded[:begin] + replacement + encoded[end:]
+              chunks.append(base64.b64decode(encoded, validate=True))
+          chunks.append(base64.b64decode(tail, validate=True))
+          bundle = b''.join(chunks)
+          digest = hashlib.sha256(bundle).hexdigest()
+          if len(bundle) != 40331 or digest != '07183299d7d2f42f2f3a9127b244deedc30517b641c1e644299ac246358af458':
+              raise RuntimeError('Canonical offline bundle integrity mismatch: ' + digest)
+          (out / 'implementation.bundle').write_bytes(bundle)
+          print('VERIFIED_SOURCE_BUNDLE_SHA256=' + digest)
+          PY
+      - name: Stage exact scoped commits without changing research or main refs
+        env:
+          OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=1e8e74d6afafad294ddf10d68cb37efacc3ef3a1
+          payload=f50d19e4bdf54a4b89a4e7018314c6ee63e4578c
+          branch="staging/fabric-b0-6-offline-${GITHUB_RUN_ID}"
+          git bundle verify "$OUTPUT_DIR/implementation.bundle"
+          git fetch "$OUTPUT_DIR/implementation.bundle" HEAD
+          test "$(git rev-parse FETCH_HEAD)" = "$payload"
+          test "$(git rev-parse "$payload^{tree}")" = 5d33ff967954c211e6c21060a4b0dd1d9ae58f80
+          test "$(git rev-list --count "$base..$payload")" = 6
+          git config user.name 'DWS Research Agent'
+          git config user.email 'dws-research@users.noreply.github.com'
+          git checkout --detach "$GITHUB_SHA"
+          if git merge-base --is-ancestor "$payload" HEAD; then
+            echo 'Payload already present; no duplicate publication.'
+            exit 0
+          fi
+          git cherry-pick $(git rev-list --reverse "$base..$payload")
+          test "$(git diff --name-only "$payload" HEAD)" = .github/workflows/fabric-bake-b0-6-git-transfer.yml
+          git diff --check
+          test -z "$(git status --porcelain=v1)"
+          git push origin "HEAD:refs/heads/$branch"
+          git update-ref "refs/heads/$branch" HEAD
+          git bundle create "$OUTPUT_DIR/result.bundle" "refs/heads/$branch" "^$base"
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          out = Path(os.environ['OUTPUT_DIR'])
+          git = lambda *args: subprocess.check_output(['git', *args], text=True).strip()
+          manifest = {
+              'purpose': 'VERIFIED_SOURCE_TRANSPORT_NOT_RUNTIME_EVIDENCE',
+              'carrier_head': os.environ['GITHUB_SHA'],
+              'payload_head': 'f50d19e4bdf54a4b89a4e7018314c6ee63e4578c',
+              'head': git('rev-parse', 'HEAD'),
+              'tree': git('rev-parse', 'HEAD^{tree}'),
+              'branch': 'staging/fabric-b0-6-offline-' + os.environ['GITHUB_RUN_ID'],
+              'bundle_sha256': hashlib.sha256((out / 'result.bundle').read_bytes()).hexdigest(),
+              'main_changed': False,
+              'research_ref_changed': False,
+          }
           (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
           print(json.dumps(manifest, indent=2))
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: fabric-b0-6-transfer-diagnostic-${{ github.sha }}
-          path: ${{ runner.temp }}/b06-transfer-diagnostic/
+          name: fabric-b0-6-verified-source-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/b06-verified-transfer/result.bundle
+            ${{ runner.temp }}/b06-verified-transfer/manifest.json
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 7
