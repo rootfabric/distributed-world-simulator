@@ -40,6 +40,9 @@ def resolve_surface_ref(ref, descriptors):
         raise CompositionError(f"unknown surface {surface_id}")
     if descriptor["version"] != version:
         raise CompositionError(f"surface version mismatch for {ref}")
+    if descriptor["binding_status"] == "PENDING_CANONICAL_MATTER":
+        raise CompositionError(
+            f"pending canonical matter: {surface_id} has no canonical Matter binding")
     return descriptor
 
 
