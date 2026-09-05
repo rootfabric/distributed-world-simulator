@@ -119,6 +119,92 @@ class ContractBundle:
         ):
             raise ContractValidationError("CONTINUATION_LAYER_REVISION_MISMATCH")
 
+        if policy.get("git_transport_policy_revision") != "H0-GIT-TRANSPORT-2026-09-05-R1":
+            raise ContractValidationError("GIT_TRANSPORT_POLICY_REVISION_INVALID")
+
+        principles = policy.get("principles")
+        if not isinstance(principles, dict):
+            raise ContractValidationError("GIT_TRANSPORT_PRINCIPLES_MISSING")
+        required_principles = (
+            "github_actions_is_validation_and_evidence_plane_not_git_transport",
+            "github_actions_git_transport_workarounds_are_forbidden",
+            "normal_git_push_failure_must_be_diagnosed_before_external_automation",
+        )
+        if any(principles.get(name) is not True for name in required_principles):
+            raise ContractValidationError("GIT_TRANSPORT_PRINCIPLES_INVALID")
+
+        git_authority = policy.get("git_execution_authority")
+        if not isinstance(git_authority, dict):
+            raise ContractValidationError("GIT_EXECUTION_AUTHORITY_INVALID")
+        if git_authority.get("revision") != "H0-GIT-AUTHORITY-2026-09-05-R2":
+            raise ContractValidationError("GIT_EXECUTION_AUTHORITY_REVISION_INVALID")
+        transport = git_authority.get("github_actions_transport_policy")
+        if not isinstance(transport, dict):
+            raise ContractValidationError("GITHUB_ACTIONS_TRANSPORT_POLICY_MISSING")
+
+        required_transport_values = {
+            "mode": "VALIDATION_AND_EVIDENCE_ONLY",
+            "normal_git_transport_required": True,
+            "may_replace_normal_git_transport": False,
+            "may_reconstruct_or_publish_source_commits": False,
+            "may_push_source_refs_as_fallback": False,
+            "may_mutate_workflows_to_gain_git_write_capability": False,
+            "exception_policy": (
+                "EXPLICIT_HUMAN_APPROVED_REPOSITORY_AUTOMATION_DESIGN_ONLY_"
+                "AND_NEVER_AS_GIT_TRANSPORT_FALLBACK"
+            ),
+        }
+        for name, expected in required_transport_values.items():
+            if transport.get(name) != expected:
+                raise ContractValidationError(
+                    f"GITHUB_ACTIONS_TRANSPORT_POLICY_INVALID:{name}"
+                )
+
+        required_workarounds = {
+            "CREATE_OR_MODIFY_WORKFLOW_TO_BYPASS_NORMAL_GIT_PUSH",
+            "RECONSTRUCT_OR_REPLAY_COMMITS_IN_ACTIONS_FOR_SOURCE_PUBLICATION",
+            "PUSH_SOURCE_OR_STAGING_REFS_FROM_ACTIONS_AS_GIT_TRANSPORT_FALLBACK",
+            "USE_ACTIONS_ARTIFACTS_OR_BUNDLES_AS_SUBSTITUTE_FOR_NORMAL_GIT_TRANSPORT",
+            "ESCALATE_TO_ACTIONS_BEFORE_DIAGNOSING_EXACT_GIT_OR_AUTH_FAILURE",
+        }
+        forbidden_workarounds = transport.get("forbidden_workarounds")
+        if (
+            not isinstance(forbidden_workarounds, list)
+            or not required_workarounds.issubset(set(forbidden_workarounds))
+        ):
+            raise ContractValidationError(
+                "GITHUB_ACTIONS_TRANSPORT_FORBIDDEN_WORKAROUNDS_INVALID"
+            )
+
+        expected_failure_protocol = [
+            "CAPTURE_EXACT_GIT_PUSH_ERROR",
+            "VERIFY_REMOTE_URL_AND_TARGET_REF",
+            "VERIFY_ACTIVE_GIT_OR_CONNECTOR_WRITE_AUTHORITY",
+            "RETRY_NORMAL_NON_FORCE_PUSH_ONLY_IF_FAILURE_IS_TRANSIENT",
+            "REPORT_EXTERNAL_TOOL_AUTH_REQUIRED_IF_PLATFORM_BLOCKS_WRITE",
+            "DO_NOT_CREATE_OR_MUTATE_GITHUB_ACTIONS_AS_TRANSPORT_WORKAROUND",
+        ]
+        if transport.get("push_failure_protocol") != expected_failure_protocol:
+            raise ContractValidationError(
+                "GITHUB_ACTIONS_TRANSPORT_FAILURE_PROTOCOL_INVALID"
+            )
+
+        required_guards = {
+            "NO_GITHUB_ACTIONS_AS_GIT_TRANSPORT_WORKAROUND",
+            "NORMAL_GIT_FAILURE_MUST_BE_DIAGNOSED_BEFORE_ESCALATION",
+            "NO_WORKFLOW_CREATION_OR_MUTATION_TO_BYPASS_GIT_AUTH",
+        }
+        guards = git_authority.get("guards")
+        if not isinstance(guards, list) or not required_guards.issubset(set(guards)):
+            raise ContractValidationError("GIT_TRANSPORT_GUARDS_INVALID")
+
+        boundary = git_authority.get("external_tool_boundary")
+        if (
+            not isinstance(boundary, str)
+            or "GITHUB_ACTIONS_GIT_TRANSPORT_WORKAROUND_FORBIDDEN" not in boundary
+        ):
+            raise ContractValidationError("GIT_TRANSPORT_EXTERNAL_BOUNDARY_INVALID")
+
     def validate(self, schema_name: str, instance: dict[str, Any], label: str) -> None:
         schema = self.contracts[schema_name]
         errors = sorted(
