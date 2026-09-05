@@ -590,3 +590,68 @@ FULL and reduced execution agree on causally meaningful outcomes
 ~~~
 
 Именно это является мостом от отдельных FABRIC-BAKE checkpoints к сложным машинам, зданиям, инфраструктуре, разрушаемым системам и далее к большим живым/техническим системам мира.
+
+
+---
+
+## 8. Parallel visual observatory lane
+
+Эта линия является **noncanonical presentation / falsification companion** и не блокирует основной BRIDGE-2/B0.6 поезд.
+
+~~~text
+COMPLEX0 @ 2000 ✅
+        +
+COMPLEX1A causal FULL ✅
+        ↓
+┌───────────────────────────────────────────┐
+│ CX-VIS0 — Break / Local FULL / Split      │
+│ 2000 parts → guard → 20 FULL → break      │
+│ → STALE → 2 rebaked components            │
+└───────────────────────────────────────────┘
+        ↓
+┌───────────────────────────────────────────┐
+│ CX-VIS1 — Battery / Wire / Lamp           │
+│ same structural event                     │
+│ → support relation lost                   │
+│ → wire topology changes                   │
+│ → FABRIC re-solve                         │
+│ → lamp OFF                                │
+└───────────────────────────────────────────┘
+        ↓
+CX2-VIS redundant power path
+        ↓
+COMPLEX1B visual mixed-representation E2E
+~~~
+
+Permanent scenes:
+
+~~~text
+res://scenes/labs/fabric/cx_vis0_break_observatory.tscn
+res://scenes/labs/fabric/cx_vis1_powered_break_observatory.tscn
+~~~
+
+Shared exact observation adapter:
+
+~~~text
+res://scripts/research/fabric_bake0/cx_vis_observation_model_v1.gd
+~~~
+
+Правило ownership:
+
+~~~text
+canonical physics decides
+        ↓
+observation DTO
+        ↓
+Godot presentation only
+~~~
+
+Visual layer не имеет права:
+- самостоятельно ломать bond;
+- самостоятельно отключать lamp;
+- создавать post-split trajectory;
+- скрывать STALE artifact execution;
+- подменять exact event identity.
+
+Подробный contract:
+`docs/research/FABRIC_CX_VIS0_POWERED_OBSERVATORY_RU.md`.
