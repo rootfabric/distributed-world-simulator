@@ -1,0 +1,83 @@
+{
+  "schema": "dws.world_packs.surface_matter_binding_rules.v1",
+  "version": "1.0.0",
+  "status": "ACTIVE",
+  "presentation_only": true,
+  "matter_source_of_truth": "scripts/simulation/matter/catalog/matter_material_catalog.gd::_default_specs",
+  "matter_source_note": "The only admissible matter ids are ids actually defined by the canonical Matter catalog. This file records explicit bindings; it never adds, edits or overrides Matter truth.",
+  "rules": [
+    {
+      "id": "BIND_EXISTING_MATTER_ONLY",
+      "statement": "Every binding.matter_id MUST be an id defined in matter_source_of_truth at validation time."
+    },
+    {
+      "id": "FAIL_ON_UNKNOWN_MATTER_ID",
+      "statement": "A binding whose matter_id is absent from the canonical Matter catalog MUST fail validation."
+    },
+    {
+      "id": "FAIL_ON_AMBIGUOUS_BINDING",
+      "statement": "A matter_id bound to more than one surface family, or to more than one surface inside a family, MUST fail validation."
+    },
+    {
+      "id": "FAIL_ON_FAMILY_MISMATCH",
+      "statement": "For BOUND families, the canonical Matter 'family' of the bound material MUST be listed in the taxonomy family expected_matter_families; otherwise the physical binding is ambiguous and MUST fail."
+    },
+    {
+      "id": "PENDING_FAMILY_MUST_NOT_BIND",
+      "statement": "A family with binding_status PENDING_CANONICAL_MATTER MUST have zero bindings and MUST be listed in pending_families with a concrete reason and unblock condition."
+    },
+    {
+      "id": "NO_MATTER_MUTATION",
+      "statement": "Surface families and bindings are presentation-only metadata. They MUST NOT define physical material properties, strata depth or Matter lifecycle; WORLD PACKS never mutates Matter truth."
+    }
+  ],
+  "bindings": [
+    {
+      "matter_id": "matter/regolith-loose",
+      "surface_family": "surface-family/regolith",
+      "surface": "surface/regolith",
+      "rationale": "Loose granular regolith mantle is the canonical loose-phase member of the regolith surface family."
+    },
+    {
+      "matter_id": "matter/regolith-compacted",
+      "surface_family": "surface-family/regolith",
+      "surface": "surface/regolith",
+      "rationale": "Compacted regolith is the canonical consolidated member of the regolith surface family."
+    },
+    {
+      "matter_id": "matter/basalt",
+      "surface_family": "surface-family/basalt",
+      "surface": "surface/basalt",
+      "rationale": "Coherent basalt is the canonical member of the basaltic rock surface family."
+    },
+    {
+      "matter_id": "matter/fractured-basalt",
+      "surface_family": "surface-family/basalt",
+      "surface": "surface/basalt",
+      "rationale": "Fractured basalt is the fractured member of the basaltic rock surface family."
+    },
+    {
+      "matter_id": "matter/water-ice",
+      "surface_family": "surface-family/ice",
+      "surface": "surface/ice",
+      "rationale": "Water ice is the canonical member of the ice surface family."
+    }
+  ],
+  "pending_families": [
+    {
+      "surface_family": "surface-family/sand",
+      "reason": "No canonical matter/sand id exists in matter_material_catalog; binding matter/regolith-loose or matter/silicate-waste as sand would be an ambiguous physical binding.",
+      "unblock": "Canonical Matter ownership introduces a sand/granular matter id; then bind it explicitly here."
+    }
+  ],
+  "explicitly_unbound_matter": [
+    {
+      "matter_id": "matter/iron-nickel-ore",
+      "reason": "Metallic ore surface family is out of WP-SURFACE1 scope; no surface descriptor claims it."
+    },
+    {
+      "matter_id": "matter/silicate-waste",
+      "reason": "Processed waste is not a natural geological surface family; no surface descriptor claims it."
+    }
+  ]
+}
