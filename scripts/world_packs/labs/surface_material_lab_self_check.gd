@@ -1,0 +1,215 @@
+extends SceneTree
+
+## WP-VIS1 headless self-check (scaffold + enabled surface milestones).
+##
+## Validates the fixture registry (structure, uniqueness, required ids,
+## orientation coverage incl. down-facing fixtures), instantiates the lab
+## scene once, and verifies that every fixture whose milestone is enabled in
+## the lab script became a real oriented surface while the rest stayed
+## markers. Exit code 0 on success, 1 on any problem.
+
+const LabScene := preload("res://scenes/labs/world_packs/surface_material_lab.tscn")
+const Fixtures := preload("res://scripts/world_packs/labs/surface_material_lab_fixtures.gd")
+
+## Expected orientation class per fixture id, derived from the registry
+## rotation. Kept in sync with surface_material_lab_fixtures.gd; the check
+## compares the computed world normal against these classes so a silently
+## broken rotation fails the self-check.
+const EXPECTED_ORIENTATION := {
+	"horizontal_plane": "up",
+	"slope_45": "up",
+	"vertical_wall": "side",
+	"overhang": "down",
+	"inverted_ceiling": "down",
+	"sphere_fixture": "side",
+	# The irregular rock probes a genuinely arbitrary diagonal direction; no
+	# fixed orientation class is asserted for it.
+}
+
+## Fixtures that must exist as real surfaces (Fixture_*) at this milestone.
+const EXPECTED_SURFACES := [
+	"horizontal_plane",
+	"slope_45",
+	"vertical_wall",
+	"overhang",
+	"inverted_ceiling",
+	"sphere_fixture",
+	"irregular_rock",
+]
+
+
+func orientation_class(world_normal: Vector3) -> String:
+	if world_normal.y > 0.7:
+		return "up"
+	if world_normal.y < -0.7:
+		return "down"
+	return "side"
+
+
+var _lab: Node
+var _problems := PackedStringArray()
+
+
+func _initialize() -> void:
+	for fixture in Fixtures.FIXTURES:
+		var fixture_id := String(fixture["id"])
+		var world_normal := Fixtures.world_surface_normal(fixture)
+		print(
+			"SURFACE_MATERIAL_LAB_FIXTURE=%s world_normal=(%.3f, %.3f, %.3f)"
+			% [fixture_id, world_normal.x, world_normal.y, world_normal.z]
+		)
+		if world_normal == Vector3.ZERO:
+			_problems.append("fixture %s world normal is zero" % fixture_id)
+		var expected := String(EXPECTED_ORIENTATION.get(fixture_id, ""))
+		if not expected.is_empty() and orientation_class(world_normal) != expected:
+			_problems.append(
+				"fixture %s orientation class %s != expected %s"
+				% [fixture_id, orientation_class(world_normal), expected]
+			)
+
+	_lab = LabScene.instantiate()
+	root.add_child(_lab)
+
+
+# Node _ready is deferred until the first frame inside a SceneTree script, so
+# the scene build is inspected on the first _process tick.
+func _process(_delta: float) -> bool:
+	var problems := PackedStringArray(_problems)
+	problems.append_array(Fixtures.validate_registry())
+
+	var surfaces := 0
+	var markers := 0
+	var surface_ids := PackedStringArray()
+	for child in _lab.get_children():
+		if child is Node3D:
+			if String(child.name).begins_with("Marker_"):
+				markers += 1
+			elif String(child.name).begins_with("Fixture_"):
+				surfaces += 1
+				surface_ids.append(String(child.name).trim_prefix("Fixture_"))
+
+	if surfaces != EXPECTED_SURFACES.size():
+		problems.append(
+			"expected %d real surfaces, scene built %d"
+			% [EXPECTED_SURFACES.size(), surfaces]
+		)
+	for expected_id in EXPECTED_SURFACES:
+		if not surface_ids.has(expected_id):
+			problems.append("missing real surface for fixture %s" % expected_id)
+	if surfaces + markers != Fixtures.FIXTURES.size():
+		problems.append(
+			"expected %d total lab nodes, scene built %d"
+			% [Fixtures.FIXTURES.size(), surfaces + markers]
+		)
+
+	# Every real surface must carry the fixture-local normal indicator and
+	# report the descriptor world normal through the lab API.
+	var lab := _lab as Node
+	for expected_id in EXPECTED_SURFACES:
+		var fixture_root := lab.get_node_or_null("Fixture_%s" % expected_id) as Node3D
+		if fixture_root == null:
+			continue
+		if fixture_root.get_node_or_null("LocalNormal") == null:
+			problems.append("surface %s lacks local normal indicator" % expected_id)
+		var reported: Vector3 = lab.report_world_normal(expected_id)
+		var declared: Vector3 = Fixtures.world_surface_normal(
+			Fixtures.descriptor(expected_id)
+		)
+		if not reported.is_equal_approx(declared):
+			problems.append(
+				"surface %s API normal (%s) != registry normal (%s)"
+				% [expected_id, reported, declared]
+			)
+		problems.append_array(_check_local_frame_mapping(lab, expected_id))
+
+	problems.append_array(_check_fidelity_switch(lab))
+
+	if problems.is_empty():
+		print(
+			"SURFACE_MATERIAL_LAB_SELF_CHECK=PASS surfaces=%d markers=%d"
+			% [surfaces, markers]
+		)
+		quit(0)
+	else:
+		for problem in problems:
+			print("SURFACE_MATERIAL_LAB_PROBLEM=%s" % problem)
+		print("SURFACE_MATERIAL_LAB_SELF_CHECK=FAIL")
+		quit(1)
+	return true
+
+
+## Local-frame (triplanar) mapping proofs for one fixture:
+## - the surface material actually uses local-frame triplanar mapping;
+## - world -> local -> world roundtrip returns the descriptor local normal;
+## - triplanar weights computed in the local frame are invariant under an
+##   arbitrary extra world rotation of the probe normal.
+func _check_local_frame_mapping(lab: Node, fixture_id: String) -> PackedStringArray:
+	var issues := PackedStringArray()
+	var mapping: Dictionary = lab.report_local_frame_mapping(fixture_id)
+	if not bool(mapping["triplanar_enabled"]):
+		issues.append("surface %s material lacks local-frame triplanar mapping" % fixture_id)
+
+	var fixture := Fixtures.descriptor(fixture_id)
+	var declared_local: Vector3 = fixture["surface_normal_local"]
+	var roundtrip: Vector3 = mapping["local_roundtrip"]
+	if not roundtrip.is_equal_approx(declared_local):
+		issues.append(
+			"surface %s local roundtrip (%s) != declared local normal (%s)"
+			% [fixture_id, roundtrip, declared_local]
+		)
+
+	var world_normal := Fixtures.world_surface_normal(fixture)
+	var weights := mapping["triplanar_weights_local"] as Vector3
+	if weights == Vector3.ZERO:
+		issues.append("surface %s triplanar weights are zero" % fixture_id)
+
+	# Orientation-independence proof: rotate the WHOLE fixture by an extra
+	# 37 degrees around world Y (and 11 around X). The local frame travels
+	# with the fixture, so the local-frame triplanar weights of the surface's
+	# own normal must be unchanged.
+	var rotated := fixture.duplicate()
+	rotated["rotation_degrees"] = (
+		Vector3(fixture["rotation_degrees"]) + Vector3(11.0, 37.0, 0.0)
+	)
+	var rotated_normal := Fixtures.world_surface_normal(rotated)
+	var rotated_weights := Fixtures.triplanar_weights_local(rotated, rotated_normal)
+	if not (weights as Vector3).is_equal_approx(rotated_weights):
+		issues.append(
+			"surface %s triplanar weights changed under fixture rotation: (%s) -> (%s)"
+			% [fixture_id, weights, rotated_weights]
+		)
+	return issues
+
+
+## Fidelity switch proofs: preview drops the triplanar checker detail, full
+## restores it, unknown levels are rejected, and fixture transforms/registry
+## data stay identical across switches (orientation truth never depends on
+## presentation fidelity).
+func _check_fidelity_switch(lab: Node) -> PackedStringArray:
+	var issues := PackedStringArray()
+	var normals_before := {}
+	for expected_id in EXPECTED_SURFACES:
+		normals_before[expected_id] = lab.report_world_normal(expected_id)
+
+	if lab.report_fidelity() != "full":
+		issues.append("lab default fidelity is not full")
+	if not lab.apply_fidelity("preview"):
+		issues.append("apply_fidelity(preview) returned false")
+	if lab.report_fidelity() != "preview":
+		issues.append("fidelity did not switch to preview")
+	for expected_id in EXPECTED_SURFACES:
+		var mapping: Dictionary = lab.report_local_frame_mapping(expected_id)
+		if bool(mapping["triplanar_enabled"]):
+			issues.append("surface %s still triplanar in preview fidelity" % expected_id)
+	if lab.apply_fidelity("ultra"):
+		issues.append("apply_fidelity(ultra) accepted an unknown level")
+	if not lab.apply_fidelity("full"):
+		issues.append("apply_fidelity(full) returned false")
+	for expected_id in EXPECTED_SURFACES:
+		var mapping: Dictionary = lab.report_local_frame_mapping(expected_id)
+		if not bool(mapping["triplanar_enabled"]):
+			issues.append("surface %s lost triplanar mapping after full restore" % expected_id)
+		var normal_after: Vector3 = lab.report_world_normal(expected_id)
+		if not (normals_before[expected_id] as Vector3).is_equal_approx(normal_after):
+			issues.append("surface %s world normal changed across fidelity switches" % expected_id)
+	return issues
