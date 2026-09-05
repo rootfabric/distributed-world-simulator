@@ -11,12 +11,13 @@
     "SAND_AND_SOIL_CANDIDATES",
     "ICE_AND_SNOW_CANDIDATES",
     "LICENSE_AND_PROVENANCE_AUDIT",
-    "NO_HEAVY_GIT_PAYLOAD_GATE"
+    "NO_HEAVY_GIT_PAYLOAD_GATE",
+    "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Implement EVIDENCE_READY: finalize the candidate library summary (index of all descriptors + lanes) and the final track evidence, then set READY_FOR_INTEGRATION after verify is OK.",
-  "last_checkpoint_head": "ed8c888b1de296b2abb1e0b56bb1d7859f63a169",
-  "tested_head": "ed8c888b1de296b2abb1e0b56bb1d7859f63a169",
+  "next_action": "Integrator decision required to grant READY_FOR_INTEGRATION: the only red test in python -m pytest tests/world_packs -q is a pre-existing environmental failure (test_library_contract.py symlink test, OSError WinError 1314, outside WP-CONTENT1 allowed paths); re-run in a symlink-privileged environment or issue an explicit waiver. Track work itself is complete and focused-green at c18e5943.",
+  "last_checkpoint_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
+  "tested_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
   "validation": [
     {
       "name": "SOURCE_POLICY focused content_catalog tests",
@@ -59,9 +60,21 @@
       "command": "python -m pytest tests/world_packs/content_catalog -q",
       "result": "PASS",
       "head": "ed8c888b1de296b2abb1e0b56bb1d7859f63a169"
+    },
+    {
+      "name": "EVIDENCE_READY focused content_catalog tests",
+      "command": "python -m pytest tests/world_packs/content_catalog -q",
+      "result": "PASS",
+      "head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033"
+    },
+    {
+      "name": "EVIDENCE_READY world_packs regression",
+      "command": "python -m pytest tests/world_packs -q",
+      "result": "FAIL",
+      "head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033"
     }
   ],
-  "updated_at_utc": "2026-09-05T17:45:00Z",
+  "updated_at_utc": "2026-09-05T18:20:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1.",
     "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.",
@@ -70,6 +83,7 @@
     "ICE_AND_SNOW_CANDIDATES done: ambientCG Ice001 + Snow001 discovery descriptors, full minimal family set covered, 17 passed at 717e5d91.",
     "LICENSE_AND_PROVENANCE_AUDIT done: lane/license/measured audit doc + machine gate, 18 passed at 2ad3b948.",
     "NO_HEAVY_GIT_PAYLOAD_GATE done: git-tracked payload scan (text-only, <=256KiB, no NUL bytes), 19 passed at ed8c888b.",
+    "EVIDENCE_READY done: CANDIDATE_LIBRARY_INDEX_RU.md + final track evidence at c18e5943; regression 87 passed, 1 failed (same pre-existing environmental symlink failure at c18e5943).",
     "Regression FAIL detail: python -m pytest tests/world_packs -q at d1ea1bce gave 81 passed, 1 failed; the single failure is tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption (OSError WinError 1314, symlink privilege missing on this Windows runner). Pre-existing environmental failure, unrelated to WP-CONTENT1 changes and outside this track's allowed paths.",
     "Earlier state commits (f9ce955c, 9dcc8360) used a non-schema validation entry shape; fixed in this commit without rewriting published history."
   ]
