@@ -244,6 +244,16 @@ def test_rock_cliff_candidates_present():
     assert all(d["observed"]["sha256"] is None for d in descriptors), "discovery-stage rock candidates must not claim hashes"
 
 
+def test_sand_and_soil_candidates_present():
+    by_family: dict[str, int] = {}
+    for d in load_descriptors():
+        by_family[d.get("family", "?")] = by_family.get(d.get("family", "?"), 0) + 1
+    assert by_family.get("sand_gravel", 0) >= 1, "SAND_AND_SOIL_CANDIDATES expects a sand/gravel descriptor"
+    assert by_family.get("soil_ground", 0) >= 1, "SAND_AND_SOIL_CANDIDATES expects a soil/ground descriptor"
+    discovery = [d for d in load_descriptors()]
+    assert all(d["observed"]["sha256"] is None for d in discovery)
+
+
 def test_no_heavy_payloads_in_candidates_tree():
     allowed_suffixes = {".json", ".md"}
     for p in CANDIDATES_DIR.rglob("*"):

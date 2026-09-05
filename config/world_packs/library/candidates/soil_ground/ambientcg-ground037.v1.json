@@ -1,0 +1,50 @@
+{
+  "schema": "dws.world_packs.candidate_source.v1",
+  "candidate_id": "candidate/ambientcg/ground037",
+  "family": "soil_ground",
+  "review_status": "discovery",
+  "rejection_reason": null,
+  "upstream": {
+    "site": "ambientcg",
+    "page_url": "https://ambientcg.com/view?id=Ground037",
+    "asset_identity": "Ground037",
+    "author": null,
+    "author_observed_on": null
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "applies_to": "assets_and_previews",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://docs.ambientcg.com/license/",
+      "verified_at_utc": "2026-09-05"
+    },
+    "notes": "ambientCG license page states CC0 applies to downloadable assets and material preview renders. Author name not observed on the asset page, so author stays null."
+  },
+  "observed": {
+    "sha256": null,
+    "expected_bytes": null,
+    "resolution_variant": null,
+    "pbr_maps_observed": [],
+    "observation": "Asset page observed 2026-09-05 (see docs/world_packs/RESEARCH_AND_SOURCES_RU.md): 1K-8K JPG/PNG PBR archives, surface photogrammetry, approx 2.1x2.1 m; site reports reprocessed color map on 2021-01-24. Per-archive channel list and normal convention to be checked in the selected archive."
+  },
+  "provenance": {
+    "class": "photogrammetry",
+    "measured_reference": false,
+    "measured_evidence_url": null,
+    "claims": [
+      "1K-8K JPG/PNG PBR archives listed on asset page",
+      "photogrammetry-based surface",
+      "approx 2.1x2.1 m stated coverage",
+      "site-reported color map reprocessing on 2021-01-24"
+    ]
+  },
+  "intended_use": {
+    "surface_families": ["soil-ground"],
+    "fidelity_tier": "standard",
+    "notes": "Wet forest ground/moss terrestrial soil look; not an airless regolith claim."
+  },
+  "recorded_at_utc": "2026-09-05",
+  "recorded_by": "WP-CONTENT1"
+}
