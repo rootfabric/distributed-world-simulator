@@ -16,8 +16,8 @@
   ],
   "blockers": [],
   "next_action": "Integrator: review exact head 1ff25c9a evidence, open/update child PR into control/world-packs-parallel-r1 and request independent review.",
-  "last_checkpoint_head": "b97eb6a56fbf0a0814d9159b830a64f0590dfa1e",
-  "tested_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
+  "last_checkpoint_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
+  "tested_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
   "validation": [
     {
       "name": "focused_asset_fetch_fetch_contract",
@@ -60,15 +60,22 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "PASS",
       "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
+    },
+    {
+      "name": "focused_asset_fetch_head_revalidation",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "be00dd54bc1e21827975f83882c2fa38916805b5"
     }
   ],
-  "updated_at_utc": "2026-09-05T18:40:00Z",
+  "updated_at_utc": "2026-09-05T19:30:00Z",
   "notes": [
     "All 7 declared milestones complete; stdlib-only package tools/world_packs/asset_fetch (contract/https/cache/gates/archive/pipeline).",
     "Test counts per milestone head (same command as validation entries): FETCH_CONTRACT 29 passed, BOUNDED_HTTPS 38 passed, RAW_CACHE 46 passed, GATES 75 passed, ARCHIVE_SAFETY 93 passed, OFFLINE_RECOVERY and final 99 passed.",
     "No real network requests, no production asset downloads; all transports/openers/resolvers are injected fakes; negative fixtures were written before any real downloads.",
     "No heavy payloads in Git; raw cache lives outside the repository.",
     "validation entries follow workstream_state.schema.v1.json: result enum PASS/FAIL/BLOCKED/NOT_RUN, additionalProperties false.",
-    "Worker does not self-merge; integration gate belongs to the controller/integrator track."
+    "Worker does not self-merge; integration gate belongs to the controller/integrator track.",
+    "Re-ran focused suite (99 passed) on exact pushed head be00dd54 to refresh validation freshness; state written via python json.dump (UTF-8, no BOM)."
   ]
 }
