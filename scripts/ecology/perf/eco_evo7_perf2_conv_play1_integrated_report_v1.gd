@@ -202,7 +202,14 @@ static func validate(report: Dictionary) -> bool:
 static func compute_hash(report: Dictionary) -> String:
 	var copy := report.duplicate(true)
 	copy.erase("report_hash")
-	return JSON.stringify(copy).sha256_text()
+	# Canonicalize through Godot JSON once before hashing. JSON.parse_string()
+	# normalizes numeric values (for example int 3 -> float 3.0), so hashing the
+	# normalized representation keeps the report identity stable after artifact
+	# write/read round-trips without changing any acceptance semantics.
+	var normalized = JSON.parse_string(JSON.stringify(copy))
+	if not normalized is Dictionary:
+		return ""
+	return JSON.stringify(normalized).sha256_text()
 
 
 static func _validate_immutable_evidence(value: Dictionary) -> bool:
