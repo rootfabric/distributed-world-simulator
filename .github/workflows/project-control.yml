@@ -61,6 +61,7 @@ jobs:
             scripts/harness/git_authority.py \
             scripts/harness/contracts.py \
             scripts/harness/cli.py
+          python3 -m py_compile scripts/harness/project_overview.py
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -95,10 +96,22 @@ jobs:
               print(f"JSON OK: {path}")
 
           registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text(encoding="utf-8"))
-          if registry.get("registry_generation") != 80:
-              raise SystemExit(f"GENERATION80_CANDIDATE_REQUIRED:{registry.get('registry_generation')}")
-          print("CANDIDATE REGISTRY GENERATION OK: 80")
+          scheduler = json.loads(Path("config/control/harness/scheduler-policy.v1.json").read_text(encoding="utf-8"))
+          generation = registry.get("registry_generation")
+          if not isinstance(generation, int) or generation < 81:
+              raise SystemExit(f"PROJECT_FOCUS_GENERATION_REQUIRED:{generation}")
+          if scheduler["pre_h0_3_runtime_mutation_lease"]["effective_registry_generation"] != generation:
+              raise SystemExit("REGISTRY_LEASE_GENERATION_MISMATCH")
+          print(f"CANDIDATE REGISTRY GENERATION OK: {generation}")
           PY
+
+      - name: Check candidate product coordination
+        env:
+          PYTHONPATH: scripts
+        run: python3 -m harness.cli check-consistency --candidate
+
+      - name: Run project overview authority regression
+        run: python3 -m unittest tests.harness.test_project_overview
 
       - name: Run Harness checkpoint-session regression
         run: python3 -m unittest tests.harness.test_harness_checkpoint_session

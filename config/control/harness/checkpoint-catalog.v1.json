@@ -518,6 +518,44 @@
         "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
         "P7_CHECKPOINT_ACCEPTANCE_WITHOUT_EXACT_REVIEW_AND_VERIFICATION"
       ]
+    },
+    "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE": {
+      "kind": "PROJECT",
+      "program": "V0",
+      "default_risk_floor": "CRITICAL",
+      "description": "Общий изменяемый мир для нескольких клиентов с бесшовным переходом между authority.",
+      "preconditions": [
+        "V0_P7_CHECKPOINT_ACCEPTED",
+        "MAIN_DECLARED_EXACT_MVP_BASE",
+        "MVP_WORK_ORDER_AND_DIRECTOR_DISPATCH",
+        "PRE_H0_3_RUNTIME_IMPLEMENTATION_WORKERS_LE_1"
+      ],
+      "required_predicates": [
+        "MVP_SHARED_GRAPHICAL_SCENE",
+        "MVP_TWO_CLIENT_SHARED_WORLD",
+        "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+        "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+        "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+        "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+        "MVP_RECONNECT_AND_RESTART",
+        "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+        "INDEPENDENT_REVIEWER_PASS",
+        "INDEPENDENT_VERIFIER_PASS",
+        "STANDARD_PC0_NON_RED",
+        "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        "HUMAN_MVP_ACCEPTANCE"
+      ],
+      "success_state": "V0_PLAYABLE_SEAMLESS_PLANET_ACCEPTED",
+      "human_gate_after": "RUNTIME_FEATURE_MERGE",
+      "activation_state": "PLANNED_NOT_DISPATCHED",
+      "non_preconditions": [
+        "ECO_LS4_FINAL",
+        "FABRIC_B06",
+        "WORLDGEN1_FULL",
+        "RF1",
+        "P8",
+        "WORLD_PACKS"
+      ]
     }
   }
 }

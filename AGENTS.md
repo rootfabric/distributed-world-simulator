@@ -63,8 +63,17 @@ For every checkpoint mission:
 
 ## Checkpoint-session control surface
 
+Для понимания проекта сначала используйте `-Overview`: он читает один канонический
+срез целей и семейств работ без загрузки execution. `-CheckConsistency` проверяет
+продуктовую согласованность; family-local findings не являются неявным MVP gate.
+`-Candidate` допустим только с этими двумя режимами и никогда не разрешает dispatch.
+Цели и последовательность: `docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md`.
+Рекомендации research tracks не заменяют Work Order или main-owned activation.
+
 ```text
 .\CONTROL_DEVELOPMENT.ps1 -Status
+.\CONTROL_DEVELOPMENT.ps1 -Overview
+.\CONTROL_DEVELOPMENT.ps1 -CheckConsistency
 .\CONTROL_DEVELOPMENT.ps1 -Plan
 .\CONTROL_DEVELOPMENT.ps1 -Resume
 .\CONTROL_DEVELOPMENT.ps1 -Drive

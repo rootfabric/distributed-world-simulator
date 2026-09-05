@@ -24,11 +24,12 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
-CURRENT_V0_BRANCH = "control/v0-p7-7-activation-r1"
-CURRENT_V0_PASSPORT = "config/control/branches/control__v0-p7-7-activation-r1.v1.json"
+MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+CURRENT_V0_BRANCH = "control/project-focus-harness-reconciliation-r1"
+CURRENT_V0_PASSPORT = "config/control/branches/control__project-focus-harness-reconciliation-r1.v1.json"
 P4_PASSPORT = "config/control/branches/feature__v0-p4-construction-real-resources.v1.json"
 SM1_ACCEPTED_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
-P7_CONTROL_BASE = "ada3f79e02168046c6d1e1430fd25fc2224d7b7f"
+P7_CONTROL_BASE = "5b4152958624be4e9cc40f2369ce32c4964f65c3"
 
 
 def load_json(path: str) -> dict:
@@ -127,11 +128,12 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
                 "V0_POST_P6_SEAMLESS_INSERTION_GATE",
                 "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION_OR_EXPLICIT_DEFER",
                 "V0_P7_BOUNDED_TERRAIN_MUTATION",
+                MVP,
                 "V0_P8_FIRST_MOBILE_CONSTRUCT",
             ],
             sequence,
         )
-        core_p_sequence = [item for item in sequence if item.startswith("V0_P") and "POST_P6" not in item]
+        core_p_sequence = [item for item in sequence if item.startswith("V0_P") and "POST_P6" not in item and item != MVP]
         self.assertEqual(
             [
                 "V0_P0_PLAYABLE_FRONTIER",
@@ -149,13 +151,13 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertNotIn("V0_S2_NETWORKED_LANDED_SHIP_0", sequence)
         self.assertEqual([P7], self.scheduler["parallel_product_checkpoints"]["checkpoints"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
-        self.assertEqual(P7, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
-        self.assertTrue(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
-        self.assertTrue(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
+        self.assertEqual(MVP, self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint"])
+        self.assertFalse(self.scheduler["v0_product_train_routing"]["next_runtime_checkpoint_eligible"])
+        self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
         self.assertEqual([], self.scheduler["v0_product_train_routing"]["p7_remaining_activation_prerequisites"])
 
-    def test_registry_generation_80_points_to_current_p7_control_frontier(self):
-        self.assertEqual(80, self.registry["registry_generation"])
+    def test_registry_generation_points_to_current_p7_control_frontier(self):
+        self.assertGreaterEqual(self.registry["registry_generation"], 81)
         v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
         self.assertEqual(CURRENT_V0_BRANCH, v0["branch"])
@@ -173,6 +175,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(P7_BRANCH, prebuild["branch"])
         self.assertEqual("c2e056980eed4ae20849154b1dacc71af0ce8bdf", prebuild["head_at_refresh_input"])
         self.assertTrue(prebuild["runtime_mutation_present"])
+        self.assertTrue(prebuild["historical_only"])
 
     def test_current_registry_and_current_passport_are_consistent(self):
         v0 = self.registry["programs"]["V0"]
@@ -216,7 +219,7 @@ class V0ProductCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P7, lease["holder_checkpoint"])
         self.assertEqual(P7_BRANCH, lease["holder_branch"])
-        self.assertEqual("ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual("RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION", lease["state"])
         self.assertTrue(lease["non_holder_dispatch_forbidden"])
 
     def test_p4_planner_is_historical_and_cannot_reacquire_live_mutation_slot(self):

@@ -13,6 +13,7 @@ from .execution_selector import resolve_execution
 from .git_authority import build_git_authority
 from .mission import load_checkpoint_acceptance
 from .state_builder import build_state
+from .project_overview import canonical_reconciliation_route, project_overview
 
 SCHEMA = "distributed_world_simulator.control_development_output.v1"
 EXIT_CODES = {
@@ -92,19 +93,59 @@ def _deny_close(
     return EXIT_CODES[code]
 
 
+def _emit_control_route(command: str, route: dict[str, object]) -> int:
+    """A control handoff is not a reduced execution or a mission acceptance."""
+    code = None
+    if not route["mission_exit_allowed"]:
+        code = "MISSION_EXIT_FORBIDDEN" if command == "CLOSE_MISSION" else (
+            "ROLE_EXIT_FORBIDDEN" if command == "CLOSE_ROLE" else None)
+    payload = {"schema": SCHEMA, "command": command, "ok": code is None,
+               "output_kind": "PROJECT_CONTROL_ROUTING", "control_route": route,
+               "runtime_authorized": False, "exit_codes": EXIT_CODES}
+    if code:
+        payload["error"] = {"code": code, "detail": "CONTROL_RECONCILIATION_OR_ACTIVATION_REQUIRED"}
+    _emit(payload)
+    return EXIT_CODES[code] if code else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     command = "UNKNOWN"
     parser = SafeParser(add_help=True)
     parser.add_argument(
         "mode",
-        choices=("status", "plan", "resume", "drive", "close-role", "close-mission"),
+        choices=("status", "plan", "resume", "drive", "close-role", "close-mission", "overview", "check-consistency"),
     )
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--execution", type=Path)
     parser.add_argument("--checkpoint")
-    args = parser.parse_args(argv)
+    parser.add_argument("--candidate", action="store_true", help="Non-authorizing checkout preview for overview/consistency only")
     try:
+        args = parser.parse_args(argv)
         root = args.root.resolve()
+        command = args.mode.replace("-", "_").upper()
+        project_mode = args.mode in ("overview", "check-consistency")
+        if args.candidate and not project_mode:
+            raise ContractValidationError("INVALID_INVOCATION:CANDIDATE_REQUIRES_PROJECT_OVERVIEW_MODE")
+        if project_mode:
+            if args.execution or args.checkpoint:
+                raise ContractValidationError("INVALID_INVOCATION:PROJECT_OVERVIEW_HAS_NO_EXECUTION_SELECTOR")
+            overview = project_overview(root, candidate=args.candidate)
+            failed = args.mode == "check-consistency" and any(
+                item["severity"] == "ERROR" and item["scope"] in ("product_blocking", "observability")
+                for item in overview["consistency_findings"]
+            )
+            payload = {"schema": SCHEMA, "command": command, "ok": not failed,
+                       "output_kind": "PROJECT_OVERVIEW", "overview": overview, "exit_codes": EXIT_CODES}
+            if failed:
+                payload["error"] = {"code": "CONTRACT_OR_DEPENDENCY_INVALID", "detail": "PROJECT_CONSISTENCY_ERRORS"}
+            _emit(payload)
+            return 3 if failed else 0
+
+        # Default product routing must remain visible even when old epochs can no
+        # longer be loaded. Explicit executions still resolve their true checkpoint.
+        route = None if args.execution else canonical_reconciliation_route(root, args.checkpoint)
+        if route is not None:
+            return _emit_control_route(command, route)
         bundle = ContractBundle.load(root)
         execution, selected_checkpoint = resolve_execution(
             root,
@@ -112,6 +153,9 @@ def main(argv: list[str] | None = None) -> int:
             execution=args.execution,
             checkpoint=args.checkpoint,
         )
+        route = canonical_reconciliation_route(root, selected_checkpoint)
+        if route is not None:
+            return _emit_control_route(command, route)
         state = build_state(root, execution)
         verification_commands = state.setdefault("verification_commands", [])
         for required_command in (

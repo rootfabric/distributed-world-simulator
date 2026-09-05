@@ -202,9 +202,9 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         return work_order, [created, dispatched], transition, context
 
     def test_generation80_reserves_one_global_mutation_lease_for_current_p7(self):
-        self.assertEqual(80, self.registry["registry_generation"])
+        self.assertGreaterEqual(self.registry["registry_generation"], 81)
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
-        self.assertEqual(80, lease["effective_registry_generation"])
+        self.assertEqual(self.registry["registry_generation"], lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
         self.assertEqual(P7, lease["holder_checkpoint"])
