@@ -1,0 +1,82 @@
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-ASSET1",
+  "branch": "work/world-packs-asset1-safe-fetch-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "READY_FOR_INTEGRATION",
+  "completed_milestones": [
+    "FETCH_CONTRACT",
+    "BOUNDED_HTTPS",
+    "RAW_CONTENT_ADDRESSABLE_CACHE",
+    "SSRF_REDIRECT_AND_SIZE_GATES",
+    "ARCHIVE_SAFETY_FIXTURES",
+    "OFFLINE_REUSE_AND_CORRUPTION_RECOVERY",
+    "EVIDENCE_READY"
+  ],
+  "blockers": [],
+  "next_action": "Child PR #560 (work/world-packs-asset1-safe-fetch-r1 -> control/world-packs-parallel-r1) is OPEN; awaiting independent review of exact implementation head 1ff25c9a; worker does not self-merge.",
+  "last_checkpoint_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
+  "tested_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
+  "validation": [
+    {
+      "name": "focused_asset_fetch_fetch_contract",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
+    },
+    {
+      "name": "focused_asset_fetch_bounded_https",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "f3b6e41bb8619ba76b82c2a2121d2ddb7490a574"
+    },
+    {
+      "name": "focused_asset_fetch_raw_cache",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "cc2c08ebb57e46cc16152230de629d15f58ac059"
+    },
+    {
+      "name": "focused_asset_fetch_gates",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "ad7dc25f1319669342a2342eea8bdbf24286a19d"
+    },
+    {
+      "name": "focused_asset_fetch_archive_safety",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "d6fc5350154c0e8e8222526e0416f531cd1198eb"
+    },
+    {
+      "name": "focused_asset_fetch_offline_recovery",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
+    },
+    {
+      "name": "focused_asset_fetch_final",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
+    },
+    {
+      "name": "focused_asset_fetch_head_revalidation",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "be00dd54bc1e21827975f83882c2fa38916805b5"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T20:10:00Z",
+  "notes": [
+    "All 7 declared milestones complete; stdlib-only package tools/world_packs/asset_fetch (contract/https/cache/gates/archive/pipeline).",
+    "Test counts per milestone head (same command as validation entries): FETCH_CONTRACT 29 passed, BOUNDED_HTTPS 38 passed, RAW_CACHE 46 passed, GATES 75 passed, ARCHIVE_SAFETY 93 passed, OFFLINE_RECOVERY and final 99 passed.",
+    "No real network requests, no production asset downloads; all transports/openers/resolvers are injected fakes; negative fixtures were written before any real downloads.",
+    "No heavy payloads in Git; raw cache lives outside the repository.",
+    "validation entries follow workstream_state.schema.v1.json: result enum PASS/FAIL/BLOCKED/NOT_RUN, additionalProperties false.",
+    "Worker does not self-merge; integration gate belongs to the controller/integrator track.",
+    "Re-ran focused suite (99 passed) on exact pushed head be00dd54 to refresh validation freshness; state written via python json.dump (UTF-8, no BOM).",
+    "Opened child PR #560 (base control/world-packs-parallel-r1) per work order; worker does not self-merge."
+  ]
+}
