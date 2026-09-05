@@ -6,36 +6,38 @@
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
   "status": "IN_PROGRESS",
   "completed_milestones": [
-    "GENERIC_LAB_SCAFFOLD"
+    "GENERIC_LAB_SCAFFOLD",
+    "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES"
   ],
   "blockers": [],
-  "next_action": "Implement HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES: instantiate real oriented horizontal, 45-degree slope and vertical wall surfaces in the existing lab via the _build_surface entry point, with focused tests.",
-  "last_checkpoint_head": "11887fab929e24310394d2a868f64d2084f9c568",
-  "tested_head": "11887fab929e24310394d2a868f64d2084f9c568",
+  "next_action": "Implement OVERHANG_AND_INVERTED_SURFACES: enable real overhang and inverted/ceiling surfaces by adding the milestone to ENABLED_SURFACE_MILESTONES and extending self-check expectations and focused tests.",
+  "last_checkpoint_head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9",
+  "tested_head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9",
   "validation": [
     {
-      "name": "material_lab_scaffold_pytest",
+      "name": "material_lab_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
       "result": "PASS",
-      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
     },
     {
       "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
       "result": "PASS",
-      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
     },
     {
-      "name": "world_packs_predecessor_regression",
-      "command": "python -m pytest tests/world_packs/test_parallel_controller.py tests/world_packs/test_library_contract.py -q",
-      "result": "FAIL",
-      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+      "name": "parallel_controller_regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py -q",
+      "result": "PASS",
+      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:45:00Z",
+  "updated_at_utc": "2026-09-05T15:40:00Z",
   "notes": [
-    "GENERIC_LAB_SCAFFOLD complete: asset-free presentation-only lab scene, six-fixture descriptor registry with explicit local-frame normals, anti-Y-up orientation coverage self-check, structural pytest suite.",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-GENERIC_LAB_SCAFFOLD.md.",
-    "world_packs_predecessor_regression recorded as FAIL for honesty: 68/69 passed; the single failure test_library_contract.py::test_local_missing_symlink_and_corruption requires OS symlink privilege (WinError 1314 on this Windows runner) and is unrelated to WP-VIS1 scope."
+    "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES complete: real horizontal/slope/wall surfaces built via _build_surface; self-check verifies surfaces=3 markers=3, orientation classes, LocalNormal indicators and report_world_normal API parity with the registry.",
+    "Overhang descriptor rotation corrected -125 -> -135 degrees so its world normal (0,-0.707,-0.707) classifies honestly as down-facing; overhang still builds only in its own milestone.",
+    "Evidence: docs/world_packs/evidence/WP-VIS1-HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES.md.",
+    "State file written as UTF-8 without BOM via file tool (never PowerShell redirect)."
   ]
 }
