@@ -7,37 +7,30 @@
   "status": "IN_PROGRESS",
   "completed_milestones": [
     "GENERIC_LAB_SCAFFOLD",
-    "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES"
+    "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
+    "OVERHANG_AND_INVERTED_SURFACES"
   ],
   "blockers": [],
-  "next_action": "Implement OVERHANG_AND_INVERTED_SURFACES: enable real overhang and inverted/ceiling surfaces by adding the milestone to ENABLED_SURFACE_MILESTONES and extending self-check expectations and focused tests.",
-  "last_checkpoint_head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9",
-  "tested_head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9",
+  "next_action": "Implement SPHERE_OR_IRREGULAR_FIXTURE: enable the sphere fixture as a real surface, add an irregular rock-shaped fixture if needed, extend self-check expectations and focused tests.",
+  "last_checkpoint_head": "886922bcc34baacdf02cc138fe5192d8f362954f",
+  "tested_head": "886922bcc34baacdf02cc138fe5192d8f362954f",
   "validation": [
     {
       "name": "material_lab_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
       "result": "PASS",
-      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
+      "head": "886922bcc34baacdf02cc138fe5192d8f362954f"
     },
     {
       "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
       "result": "PASS",
-      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
-    },
-    {
-      "name": "parallel_controller_regression",
-      "command": "python -m pytest tests/world_packs/test_parallel_controller.py -q",
-      "result": "PASS",
-      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
+      "head": "886922bcc34baacdf02cc138fe5192d8f362954f"
     }
   ],
-  "updated_at_utc": "2026-09-05T15:40:00Z",
+  "updated_at_utc": "2026-09-05T16:10:00Z",
   "notes": [
-    "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES complete: real horizontal/slope/wall surfaces built via _build_surface; self-check verifies surfaces=3 markers=3, orientation classes, LocalNormal indicators and report_world_normal API parity with the registry.",
-    "Overhang descriptor rotation corrected -125 -> -135 degrees so its world normal (0,-0.707,-0.707) classifies honestly as down-facing; overhang still builds only in its own milestone.",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES.md.",
-    "State file written as UTF-8 without BOM via file tool (never PowerShell redirect)."
+    "OVERHANG_AND_INVERTED_SURFACES complete: self-check PASS surfaces=5 markers=1; down-facing world normals proven: overhang (0,-0.707,-0.707), ceiling (0,-1,0).",
+    "Evidence: docs/world_packs/evidence/WP-VIS1-OVERHANG_AND_INVERTED_SURFACES.md."
   ]
 }
