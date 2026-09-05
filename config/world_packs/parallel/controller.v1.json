@@ -1,0 +1,201 @@
+{
+  "schema": "dws.world_packs.parallel_controller.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "controller_branch": "control/world-packs-parallel-r1",
+  "execution_base_branch": "feature/world-packs1-surface-library-contract-r1",
+  "execution_base_sha": "2bb97961a21bd8e56b07430a48b51f20cebabb5a",
+  "main_baseline_sha": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "remote": "origin",
+  "policy": {
+    "max_parallel_implementation_tracks": 5,
+    "require_clean_start": true,
+    "require_durable_checkpoint_commit": true,
+    "require_non_force_push_after_checkpoint": true,
+    "require_state_update_after_checkpoint": true,
+    "require_validation_before_ready_for_integration": true,
+    "forbid_force_push": true,
+    "forbid_history_rewrite": true,
+    "forbid_direct_main_push": true,
+    "forbid_main_merge": true,
+    "integration_target": "control/world-packs-parallel-r1",
+    "state_path_template": "config/world_packs/parallel/workstreams/{track_id}.v1.json",
+    "evidence_path_prefix": "docs/world_packs/evidence/",
+    "generated_artifacts_dir": "artifacts/world_packs_parallel"
+  },
+  "controller_owned_paths": [
+    "config/world_packs/parallel/controller.v1.json",
+    "docs/world_packs/PARALLEL_AGENT_PROTOCOL_RU.md",
+    "docs/world_packs/PARALLEL_WORKSTREAMS_RU.md",
+    "tools/world_packs/parallel_controller.py",
+    "tests/world_packs/test_parallel_controller.py",
+    "RUN_WORLD_PACKS_PARALLEL_CONTROL.ps1",
+    "RUN_WORLD_PACKS_PARALLEL_CONTROL.sh"
+  ],
+  "hard_forbidden_paths": [
+    "AGENTS.md",
+    "PROJECT_CONTROL.md",
+    "HARNESS_CONTROL.md",
+    "config/control/**",
+    "docs/control/**",
+    "scripts/simulation/**",
+    "scripts/network/**",
+    "scripts/app/**",
+    "scripts/world/terrain/**"
+  ],
+  "critical_main_watched_paths": [
+    "scripts/simulation/matter/**",
+    "docs/plans/WORLDGEN1_PROCEDURAL_MATTER_TERRAIN_ROADMAP_RU.md",
+    "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+    "docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md"
+  ],
+  "validation_exempt_paths": [
+    "config/world_packs/parallel/workstreams/**",
+    "docs/world_packs/evidence/**"
+  ],
+  "external_gates": [
+    {
+      "id": "WP1_0_INDEPENDENT_REVIEW",
+      "source": "PR#553",
+      "status": "PENDING",
+      "blocks": [
+        "WP1_2_FOUNDATION_INTEGRATION"
+      ],
+      "note": "Parallel child work may proceed from the exact candidate base, but integration must revalidate against the reviewed WP1.0 contract."
+    }
+  ],
+  "tracks": [
+    {
+      "id": "WP-ASSET1",
+      "branch": "work/world-packs-asset1-safe-fetch-r1",
+      "purpose": "Implement bounded external-source acquisition, immutable raw cache and fail-closed security tests without gameplay/runtime network access.",
+      "risk": "MEDIUM",
+      "allowed_paths": [
+        "tools/world_packs/asset_fetch/**",
+        "tests/world_packs/asset_fetch/**",
+        "tools/world_packs/requirements-asset-fetch.txt",
+        "docs/world_packs/evidence/WP-ASSET1*",
+        "config/world_packs/parallel/workstreams/WP-ASSET1.v1.json"
+      ],
+      "milestones": [
+        "FETCH_CONTRACT",
+        "BOUNDED_HTTPS",
+        "RAW_CONTENT_ADDRESSABLE_CACHE",
+        "SSRF_REDIRECT_AND_SIZE_GATES",
+        "ARCHIVE_SAFETY_FIXTURES",
+        "OFFLINE_REUSE_AND_CORRUPTION_RECOVERY",
+        "EVIDENCE_READY"
+      ],
+      "first_action": "Implement the fetch/cache contract and negative network/path fixtures; do not download large production assets yet."
+    },
+    {
+      "id": "WP-CONTENT1",
+      "branch": "work/world-packs-content1-cc0-library-r1",
+      "purpose": "Build a reviewed source/provenance candidate catalog for small real CC0 rock, sand, soil, ice and snow material sets without committing heavy payloads.",
+      "risk": "LOW",
+      "allowed_paths": [
+        "config/world_packs/library/candidates/**",
+        "docs/world_packs/sources/**",
+        "tests/world_packs/content_catalog/**",
+        "docs/world_packs/evidence/WP-CONTENT1*",
+        "config/world_packs/parallel/workstreams/WP-CONTENT1.v1.json"
+      ],
+      "milestones": [
+        "SOURCE_POLICY",
+        "ROCK_AND_CLIFF_CANDIDATES",
+        "SAND_AND_SOIL_CANDIDATES",
+        "ICE_AND_SNOW_CANDIDATES",
+        "LICENSE_AND_PROVENANCE_AUDIT",
+        "NO_HEAVY_GIT_PAYLOAD_GATE",
+        "EVIDENCE_READY"
+      ],
+      "first_action": "Create source descriptors with exact upstream identity, author/license/provenance and intended use; no invented hashes before bytes are actually fetched."
+    },
+    {
+      "id": "WP-SURFACE1",
+      "branch": "work/world-packs-surface1-families-r1",
+      "purpose": "Expand reusable semantic surface families and composable recipe fragments while keeping canonical Matter bindings explicit and presentation-only.",
+      "risk": "MEDIUM",
+      "allowed_paths": [
+        "config/world_packs/library/surfaces/**",
+        "config/world_packs/library/recipes/**",
+        "config/world_packs/library/environments/**",
+        "tests/world_packs/surface_library/**",
+        "docs/world_packs/evidence/WP-SURFACE1*",
+        "config/world_packs/parallel/workstreams/WP-SURFACE1.v1.json"
+      ],
+      "milestones": [
+        "FAMILY_TAXONOMY",
+        "MATTER_BINDING_RULES",
+        "REGOLITH_BASALT_SAND_ICE_FAMILIES",
+        "FIDELITY_AND_EXPOSURE_STATES",
+        "RECIPE_FRAGMENT_COMPOSITION",
+        "CONFLICT_AND_ORDER_INDEPENDENCE_TESTS",
+        "EVIDENCE_READY"
+      ],
+      "first_action": "Define sharded surface/recipe descriptors for regolith, basalt, sand and ice using existing Matter IDs only; fail on ambiguous physical bindings."
+    },
+    {
+      "id": "WP-VIS1",
+      "branch": "work/world-packs-vis1-material-lab-r1",
+      "purpose": "Create a generic presentation-only Godot material lab proving arbitrary orientation, local frames, scale bands and fidelity switching without claiming canonical geology.",
+      "risk": "LOW",
+      "allowed_paths": [
+        "scenes/labs/world_packs/surface_material_lab*",
+        "scripts/world_packs/labs/**",
+        "tests/world_packs/material_lab/**",
+        "docs/world_packs/evidence/WP-VIS1*",
+        "config/world_packs/parallel/workstreams/WP-VIS1.v1.json"
+      ],
+      "milestones": [
+        "GENERIC_LAB_SCAFFOLD",
+        "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
+        "OVERHANG_AND_INVERTED_SURFACES",
+        "SPHERE_OR_IRREGULAR_FIXTURE",
+        "TRIPLANAR_OR_LOCAL_FRAME_MAPPING",
+        "FIDELITY_SWITCH_FIXTURE",
+        "HEADLESS_AND_GRAPHICAL_EVIDENCE_READY"
+      ],
+      "first_action": "Build an asset-free generic lab with horizontal, vertical, sloped, overhang and inverted fixtures; do not touch production terrain or Matter."
+    },
+    {
+      "id": "WP-TOOLS1",
+      "branch": "work/world-packs-tools1-authoring-cli-r1",
+      "purpose": "Provide a clean authoring CLI for validate/resolve/doctor/inspect/index operations and deterministic synthetic scale fixtures.",
+      "risk": "LOW",
+      "allowed_paths": [
+        "tools/world_packs/wp_cli/**",
+        "tests/world_packs/wp_cli/**",
+        "tests/world_packs/scale_fixtures/**",
+        "RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
+        "RUN_WORLD_PACKS_TOOLING_TESTS.sh",
+        "docs/world_packs/evidence/WP-TOOLS1*",
+        "config/world_packs/parallel/workstreams/WP-TOOLS1.v1.json"
+      ],
+      "milestones": [
+        "CLI_SCAFFOLD",
+        "VALIDATE_AND_RESOLVE",
+        "DOCTOR_DIAGNOSTICS",
+        "INSPECT_AND_INDEX",
+        "SYNTHETIC_1K_SCALE",
+        "SYNTHETIC_10K_SCALE",
+        "EVIDENCE_READY"
+      ],
+      "first_action": "Create a stdlib-first CLI around existing metadata contracts; start with validate/resolve/doctor and deterministic tests before scale benchmarking."
+    }
+  ],
+  "queued_integration": {
+    "id": "WP1_2_FOUNDATION_INTEGRATION",
+    "status": "WAITING_PARALLEL_HANDOFFS",
+    "requires_tracks": [
+      "WP-ASSET1",
+      "WP-CONTENT1",
+      "WP-SURFACE1",
+      "WP-VIS1",
+      "WP-TOOLS1"
+    ],
+    "requires_gates": [
+      "WP1_0_INDEPENDENT_REVIEW"
+    ],
+    "next_when_ready": "Create a fresh integration branch from the reviewed WORLD PACKS base; compose only verified child handoffs and run the full WP1.2 prepared/offline foundation gate."
+  }
+}
