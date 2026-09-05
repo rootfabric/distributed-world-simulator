@@ -4,18 +4,19 @@
   "track_id": "WP-ASSET1",
   "branch": "work/world-packs-asset1-safe-fetch-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "IN_PROGRESS",
+  "status": "READY_FOR_INTEGRATION",
   "completed_milestones": [
     "FETCH_CONTRACT",
     "BOUNDED_HTTPS",
     "RAW_CONTENT_ADDRESSABLE_CACHE",
     "SSRF_REDIRECT_AND_SIZE_GATES",
     "ARCHIVE_SAFETY_FIXTURES",
-    "OFFLINE_REUSE_AND_CORRUPTION_RECOVERY"
+    "OFFLINE_REUSE_AND_CORRUPTION_RECOVERY",
+    "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Finalize EVIDENCE_READY: publish the consolidated WP-ASSET1 evidence summary, re-run full focused suite on the final head, then request independent review for integration.",
-  "last_checkpoint_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
+  "next_action": "Integrator: review exact head 1ff25c9a evidence, open/update child PR into control/world-packs-parallel-r1 and request independent review; note cross-track WP-SURFACE1 BOM state issue blocking controller verify globally (fix in WP-SURFACE1, not here).",
+  "last_checkpoint_head": "2428a9362386db44bb03783c37fa0193c1440c5c",
   "tested_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
   "validation": [
     {
@@ -53,14 +54,20 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "99 passed",
       "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
+    },
+    {
+      "name": "WP-ASSET1 EVIDENCE_READY final focused suite",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "99 passed",
+      "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
     }
   ],
-  "updated_at_utc": "2026-09-05T17:20:00Z",
+  "updated_at_utc": "2026-09-05T17:55:00Z",
   "notes": [
-    "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
-    "BOUNDED_HTTPS complete: streaming bounded reads (SIZE_EXCEEDED/SIZE_SHORT typed failures), injected opener, no redirects by default.",
-    "Negative fixtures committed before any real asset download (see docs/world_packs/evidence/WP-ASSET1_FETCH_CONTRACT_R1.md).",
-    "Package is stdlib-only per tools/world_packs/requirements-asset-fetch.txt.",
-    "Cross-track note: controller 'verify/status' currently fails globally because origin WP-SURFACE1 state JSON carries a UTF-8 BOM (invalid for json.load). Fix belongs to WP-SURFACE1/controller, not WP-ASSET1 allowed paths."
+    "All 7 declared milestones complete; stdlib-only package tools/world_packs/asset_fetch (contract/https/cache/gates/archive/pipeline).",
+    "No real network requests, no production asset downloads; all transports/openers/resolvers are injected fakes; negative fixtures were written before any real downloads.",
+    "No heavy payloads in Git; raw cache lives outside the repository.",
+    "Cross-track note: controller verify/status currently fails globally because origin WP-SURFACE1 state JSON carries a UTF-8 BOM (invalid for json.load). Fix belongs to WP-SURFACE1/controller, outside WP-ASSET1 allowed paths; WP-ASSET1 state itself validates.",
+    "Worker does not self-merge; integration gate belongs to the controller/integrator track."
   ]
 }
