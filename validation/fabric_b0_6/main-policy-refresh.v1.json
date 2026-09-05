@@ -1,0 +1,37 @@
+{
+  "schema": "dws.fabric.b0_6.main_policy_refresh.v1",
+  "previous_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "current_main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+  "current_main_tree": "e3d5bbb869d1b6d31fee198e5df6a0a3c06854a1",
+  "changed_main_paths": [
+    "config/control/harness/harness-policy.v1.json",
+    "scripts/harness/contracts.py",
+    "tests/harness/test_git_transport_policy.py"
+  ],
+  "policy_revision": "H0-GIT-TRANSPORT-2026-09-05-R1",
+  "physical_runtime_changed": false,
+  "checkpoint_catalog_changed": false,
+  "review_policy_changed": false,
+  "source_recovery_completed_before_new_policy": true,
+  "historical_recovery_workflow_commit": "b024f9199a645f732bd45eb9a6bd5166198858ba",
+  "recovery_run": 33970134210,
+  "new_policy_merge_time_utc": "2026-09-05T14:10:58Z",
+  "source_recovery_run_time_utc": "2026-09-05T13:52:02Z",
+  "subsequent_publication": "DIRECT_AUTHENTICATED_GITHUB_API",
+  "retired_workflows": [
+    ".github/workflows/fabric-bake-b0-6-git-transfer.yml",
+    ".github/workflows/fabric-bake-b0-6-source-package.yml"
+  ],
+  "normal_runtime_ci_unchanged": true,
+  "main_policy_unit_tests": {
+    "count": 3,
+    "exit_code": 0
+  },
+  "exact_source_verification": "All three blobs, complete main tree, unsigned parent and signed merge match the GitHub-provided object hashes; local origin/main refreshed without remote writes.",
+  "pc0": "YELLOW_NON_RED",
+  "pc0_exit": 0,
+  "directional": "YELLOW_NON_RED",
+  "directional_exit": 0,
+  "old_runtime_evidence_invalidated": false,
+  "reason": "Main changes only transport governance/validation. Research runtime and predecessor dependencies unchanged; both exact runs remain bound to 2254b450b4d31832a6c143fc85096372679c6bc6."
+}

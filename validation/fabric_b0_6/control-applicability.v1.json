@@ -1,0 +1,18 @@
+{
+  "scope": "RESEARCH_EXACT_CLOSURE_NOT_MAIN_CHECKPOINT_ACCEPTANCE",
+  "main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+  "main_tree": "e3d5bbb869d1b6d31fee198e5df6a0a3c06854a1",
+  "registry_generation": 80,
+  "matching_product_checkpoints": [],
+  "main_acceptance_claimed": false,
+  "main_merge_performed": false,
+  "independent_agent_review_claimed": false,
+  "exact_verification_method": "two separate clean Git checkouts, fresh imports and independent canonical Godot processes",
+  "control_policy_blob": "4bc292260708aaede6a2534ad2725148a1dc6467",
+  "harness_policy_blob": "38f3d6529e820a597027c6d90c64b368cd6fe90c",
+  "checkpoint_catalog_blob": "d7ea6e0a4446a0ac3e003035364a7f1833943a34",
+  "production_promotion": "requires separately declared integration and normal review/verification/merge gates; not authorized or performed here",
+  "git_transport_policy_revision": "H0-GIT-TRANSPORT-2026-09-05-R1",
+  "publication_transport": "DIRECT_AUTHENTICATED_GITHUB_API_NO_ACTIONS_TRANSPORT",
+  "transport_policy_tests": 3
+}

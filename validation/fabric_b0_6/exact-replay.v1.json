@@ -1,0 +1,613 @@
+{
+  "schema": "dws.fabric.b0_6.research_exact_closure.v1",
+  "status": "CLOSED",
+  "scope": "RESEARCH_EXACT_NOT_PRODUCTION_ACCEPTANCE",
+  "branch": "research/fabric-bake0-6-adaptive-physical-fidelity-r1",
+  "tested_head": "2254b450b4d31832a6c143fc85096372679c6bc6",
+  "tested_tree": "82532abb755b6b652b84a96ff5d92a8225cd8dba",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "runs": [
+    {
+      "replay": "a",
+      "checkout": "/mnt/data/b06-final-a",
+      "exit_code": 0,
+      "import_exit_code": 0,
+      "import_fatal_count": 0,
+      "working_tree": "CLEAN",
+      "manifest_sha256": "07eb00fceded41fdaa42d5e49d62a450edae23e17d113c1114417b48bd0bb09c",
+      "closure_log_sha256": "83bf1be3c02c641f1389cd9e212b37594bb7eae6ccfcef10c028cd44b4d4b093",
+      "import_log_sha256": "24658e2fa625a8bd1112e10bd6952058b5ea260ad0205271f804cb0f79975ca1",
+      "suite_wall_seconds": 1216.312903561
+    },
+    {
+      "replay": "b",
+      "checkout": "/mnt/data/b06-final-b",
+      "exit_code": 0,
+      "import_exit_code": 0,
+      "import_fatal_count": 0,
+      "working_tree": "CLEAN",
+      "manifest_sha256": "0e70ffc51be31a3aea74c9b4ee9472ad9eab02818d04b4d1846c9c95649b6684",
+      "closure_log_sha256": "f6a6e42a3d9789e53857be6b7430c13ed53e9c79bca0e98cedeaaab2cabfac0e",
+      "import_log_sha256": "24658e2fa625a8bd1112e10bd6952058b5ea260ad0205271f804cb0f79975ca1",
+      "suite_wall_seconds": 1221.034497762
+    }
+  ],
+  "hashes": {
+    "B06A_ENVELOPE_CHECKSUM": "f1976723cf8afd0c2e831740373143ad3303c5ff48d18238c49039ed86304b30",
+    "B06A_SAFETY_HASH": "9a152000bf636f5977034947b73431cdf7393a5201c63b06c5ebb15e20e1f627",
+    "B06B_SELECTION_HASH": "d6c9c6aa07e0bd741a0fa50bb9d7ca9a10291043c680675f06fd58beb3818939",
+    "B06C_TRANSITION_HASH": "e93dadfc821fb8299fc6a75d140a493be790860dcd294cd687403717d237f0aa",
+    "B06D_DISK_RECOVERY_HASH": "ab2287a06a5427e5d73f15b5c7a6ad11267f5f3c9aad1e519a4cdc5cc13fc1f9",
+    "B06D_RECOVERY_HASH": "f9613fe30c97322cfd1f81d6f74608a0bc58e51f6dbb8be6af37dff177ba8bba",
+    "B06E_FINAL_STATE_HASH": "c751ffdbe8eff08629ec2b7a7a12eb1f388de158d721d8bdb4d60cafc6280889",
+    "B06E_TRANSITION_HASH": "9ebdbc3537fcd67175bb4d007da185f6a33745a9730b50dcf9144f83a0839622",
+    "B06E_WORK_HASH": "9b4865017e9e959fda0fb8472b6684fd0f18ea4bd71f508936dee873fdd75942"
+  },
+  "closure_hash": "892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584",
+  "replay_match": true,
+  "raw_log_digests_and_counts_verified": true,
+  "closure_hash_recomputed": true,
+  "scales": {
+    "1000": {
+      "ordinary_sweep_counters": {
+        "actual_transitions": 0,
+        "blocked_demotions": 0,
+        "demotions": 0,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 2000,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 1000,
+        "promotions": 0,
+        "reconstructions": 1000,
+        "selector_decisions": 2000,
+        "subjects_evaluated": 2000,
+        "transition_requests": 0,
+        "unsafe_selection_count": 0
+      },
+      "state_hash": "dab02e2a56753946aa060f7b6a659a88eb4f6c1fc9c94514b6f4896bf20aecb2",
+      "subjects": 1000,
+      "transition_hash": "34d3b3a8773bdd162ff840e25a96190625fa7a1d30a740e646ad6b26da83f947",
+      "work_counters": {
+        "actual_transitions": 50,
+        "blocked_demotions": 440,
+        "demotions": 20,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 2890,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 1050,
+        "promotions": 30,
+        "reconstructions": 1050,
+        "selector_decisions": 2890,
+        "subjects_evaluated": 2890,
+        "transition_requests": 490,
+        "unsafe_selection_count": 0
+      }
+    },
+    "2000": {
+      "ordinary_sweep_counters": {
+        "actual_transitions": 0,
+        "blocked_demotions": 0,
+        "demotions": 0,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 4000,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 2000,
+        "promotions": 0,
+        "reconstructions": 2000,
+        "selector_decisions": 4000,
+        "subjects_evaluated": 4000,
+        "transition_requests": 0,
+        "unsafe_selection_count": 0
+      },
+      "state_hash": "54bea1c5d7294bf2e696e7cae7e148e6c2c8beca5b60d24edc06794bee95cf32",
+      "subjects": 2000,
+      "transition_hash": "2359ee2ee2910434975258fb56942e698d0428fa06426935ed00c9f0de9838bc",
+      "work_counters": {
+        "actual_transitions": 100,
+        "blocked_demotions": 880,
+        "demotions": 40,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 5780,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 2100,
+        "promotions": 60,
+        "reconstructions": 2100,
+        "selector_decisions": 5780,
+        "subjects_evaluated": 5780,
+        "transition_requests": 980,
+        "unsafe_selection_count": 0
+      }
+    },
+    "500": {
+      "ordinary_sweep_counters": {
+        "actual_transitions": 0,
+        "blocked_demotions": 0,
+        "demotions": 0,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 1000,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 500,
+        "promotions": 0,
+        "reconstructions": 500,
+        "selector_decisions": 1000,
+        "subjects_evaluated": 1000,
+        "transition_requests": 0,
+        "unsafe_selection_count": 0
+      },
+      "state_hash": "ce1883297bbe10f8ca7fe5ce558332a942adfebf15fa66b64bf729d3b608ccbe",
+      "subjects": 500,
+      "transition_hash": "40cb551ad548ad3a9062a9c8fd4ab48c52fbeab48b984147d7b224122b8090ab",
+      "work_counters": {
+        "actual_transitions": 25,
+        "blocked_demotions": 220,
+        "demotions": 10,
+        "duplicate_ownership_count": 0,
+        "envelopes_compiled": 1445,
+        "failed_closed": 0,
+        "global_rebuilds": 0,
+        "local_rebuilds": 525,
+        "promotions": 15,
+        "reconstructions": 525,
+        "selector_decisions": 1445,
+        "subjects_evaluated": 1445,
+        "transition_requests": 245,
+        "unsafe_selection_count": 0
+      }
+    }
+  },
+  "suites": [
+    {
+      "runner": "RUN_FABRIC_B0_6_HARNESS_TESTS.sh",
+      "assertion_counts": [
+        7
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        4.484189203,
+        4.446939997
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_IMPORT_TESTS.sh",
+      "assertion_counts": [
+        6
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        1.046874871,
+        0.979355461
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_A_TESTS.sh",
+      "assertion_counts": [
+        114
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        1.017606931,
+        1.066712295
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_B_TESTS.sh",
+      "assertion_counts": [
+        44
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        1.04202574,
+        1.009334856
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_C_TESTS.sh",
+      "assertion_counts": [
+        679
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        2.066597271,
+        1.81195523
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_D_TESTS.sh",
+      "assertion_counts": [
+        69,
+        10,
+        5
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        2.21671208,
+        2.022461158
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_B0_6_E_TESTS.sh",
+      "assertion_counts": [
+        17397
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        146.613003067,
+        145.819009238
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_BRIDGE2_A_TESTS.sh",
+      "assertion_counts": [
+        71
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        1.914336893,
+        1.704194887
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BRIDGE2_CLOSURE_TESTS.sh",
+      "assertion_counts": [
+        122,
+        125
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        31.135194563,
+        29.986401763
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX1B_TESTS.sh",
+      "assertion_counts": [
+        125,
+        57
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        76.762619153,
+        74.185909159
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2_TESTS.sh",
+      "assertion_counts": [
+        2115,
+        2115,
+        3
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        21.04090211,
+        20.567113532
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2B_TESTS.sh",
+      "assertion_counts": [
+        65
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        14.279649929,
+        13.219663317
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2C_TESTS.sh",
+      "assertion_counts": [
+        66
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        8.496669994,
+        7.985007339
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2D_TESTS.sh",
+      "assertion_counts": [
+        50
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        5.927158301,
+        5.491885261
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2E_TESTS.sh",
+      "assertion_counts": [
+        47
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        15.449338716,
+        15.396945387
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2_PERF_TESTS.sh",
+      "assertion_counts": [
+        62
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        18.991001789,
+        19.596763165
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_COMPLEX2_CLOSE_TESTS.sh",
+      "assertion_counts": [
+        44
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        32.157004034,
+        32.463243944
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_5_A_CLOSURE_TESTS.sh",
+      "assertion_counts": [
+        63,
+        67
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        220.050092342,
+        222.764140937
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76,
+        118,
+        609,
+        2580,
+        146,
+        319,
+        33,
+        64,
+        76,
+        118,
+        609,
+        2580,
+        146,
+        319,
+        609,
+        33,
+        64,
+        76,
+        118,
+        609,
+        2580,
+        146,
+        319,
+        609,
+        83,
+        1533,
+        287
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        423.793480473,
+        432.612714023
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_2_E_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76,
+        118,
+        609,
+        2580
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        54.616184325,
+        55.887528458
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_2_D_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76,
+        118,
+        609
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        32.923679075,
+        32.44351513
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_2_C_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76,
+        118
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        18.955989946,
+        19.006808367
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_2_AB_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        10.064268559,
+        10.245894848
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_BRIDGE1_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64,
+        76,
+        118,
+        609,
+        2580,
+        146
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        63.74033516,
+        62.942793929
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_1_TESTS.sh",
+      "assertion_counts": [
+        33,
+        64
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        6.503315627,
+        6.449119308
+      ]
+    },
+    {
+      "runner": "RUN_FABRIC_BAKE_B0_0_TESTS.sh",
+      "assertion_counts": [
+        33
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "wall_seconds": [
+        1.024673409,
+        0.929086773
+      ]
+    }
+  ],
+  "assertion_executions_per_replay": 47084,
+  "assertion_count_semantics": "Published PASS assertion counts, including repeated predecessor executions, not unique tests",
+  "archive": {
+    "filename": "DWS_B0_6_EXACT_RUNTIME_EVIDENCE.zip",
+    "sha256": "f0fe97043abd8b1bc774a9e6c471b46c6f74b72d999bd836f1368b6fd3f2faaf"
+  },
+  "control": {
+    "main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+    "pc0": "YELLOW_NON_RED",
+    "pc0_exit": 0,
+    "directional": "YELLOW_NON_RED",
+    "directional_exit": 0,
+    "scoped_critical_intersections": 0,
+    "main_acceptance_claimed": false,
+    "independent_agent_review_claimed": false,
+    "git_transport_policy_revision": "H0-GIT-TRANSPORT-2026-09-05-R1",
+    "transport_policy_tests": 3,
+    "obsolete_transport_workflows": "RETIRED",
+    "publication": "DIRECT_AUTHENTICATED_GITHUB_API"
+  },
+  "ci_observation": {
+    "subject": "2254b450b4d31832a6c143fc85096372679c6bc6",
+    "queued_workflow_count": 6,
+    "historical_a_run": 33890908585,
+    "historical_a_status": "queued",
+    "ci_runtime_pass_claimed": false
+  }
+}
