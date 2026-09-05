@@ -4,36 +4,51 @@
   "track_id": "WP-VIS1",
   "branch": "work/world-packs-vis1-material-lab-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "IN_PROGRESS",
+  "status": "READY_FOR_INTEGRATION",
   "completed_milestones": [
     "GENERIC_LAB_SCAFFOLD",
     "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
     "OVERHANG_AND_INVERTED_SURFACES",
     "SPHERE_OR_IRREGULAR_FIXTURE",
     "TRIPLANAR_OR_LOCAL_FRAME_MAPPING",
-    "FIDELITY_SWITCH_FIXTURE"
+    "FIDELITY_SWITCH_FIXTURE",
+    "HEADLESS_AND_GRAPHICAL_EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Implement HEADLESS_AND_GRAPHICAL_EVIDENCE_READY: capture headless self-check evidence and a graphical screenshot of the lab (Godot/MCP canonical path if available), then move to READY_FOR_INTEGRATION per protocol.",
-  "last_checkpoint_head": "9a543e9b72bd89aaaa381da586fe53e64659d67e",
-  "tested_head": "9a543e9b72bd89aaaa381da586fe53e64659d67e",
+  "next_action": "Independent integration review of branch work/world-packs-vis1-material-lab-r1 at implementation head b13afce094fbbdcfd134ce094a50283cbedfce68; worker does not self-merge.",
+  "last_checkpoint_head": "b13afce094fbbdcfd134ce094a50283cbedfce68",
+  "tested_head": "b13afce094fbbdcfd134ce094a50283cbedfce68",
   "validation": [
     {
       "name": "material_lab_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
       "result": "PASS",
-      "head": "9a543e9b72bd89aaaa381da586fe53e64659d67e"
+      "head": "b13afce094fbbdcfd134ce094a50283cbedfce68"
     },
     {
       "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
       "result": "PASS",
-      "head": "9a543e9b72bd89aaaa381da586fe53e64659d67e"
+      "head": "b13afce094fbbdcfd134ce094a50283cbedfce68"
+    },
+    {
+      "name": "material_lab_graphical_capture",
+      "command": "godot --path . --script res://scripts/world_packs/labs/surface_material_lab_capture.gd -- --out-dir=res://docs/world_packs/evidence/",
+      "result": "PASS",
+      "head": "b13afce094fbbdcfd134ce094a50283cbedfce68"
+    },
+    {
+      "name": "parallel_controller_regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py -q",
+      "result": "PASS",
+      "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
     }
   ],
-  "updated_at_utc": "2026-09-05T18:00:00Z",
+  "updated_at_utc": "2026-09-05T18:45:00Z",
   "notes": [
-    "FIDELITY_SWITCH_FIXTURE complete: preview/full fidelity levels, --fidelity cmdline arg, apply_fidelity/report_fidelity API; self-check proves triplanar dropped in preview, unknown levels rejected, world normals unchanged across switches.",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-FIDELITY_SWITCH_FIXTURE.md."
+    "All seven declared WP-VIS1 milestones complete; presentation-only preserved (no production terrain/Matter/collision/ECO changes).",
+    "Headless evidence: docs/world_packs/evidence/WP-VIS1-headless-self-check.log; graphical evidence: WP-VIS1-lab-full-fidelity.png and WP-VIS1-lab-preview-fidelity.png; per-milestone evidence docs WP-VIS1-*.md.",
+    "parallel_controller_regression recorded at earlier branch head 6e5b93ca (same branch, before later lab-only changes); controller verify RESULT=OK at every checkpoint.",
+    "State file written as UTF-8 without BOM via file tool (never PowerShell redirect)."
   ]
 }
