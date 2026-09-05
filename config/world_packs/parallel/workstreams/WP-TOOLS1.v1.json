@@ -1,0 +1,18 @@
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-TOOLS1",
+  "branch": "work/world-packs-tools1-authoring-cli-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "PLANNED",
+  "completed_milestones": [],
+  "blockers": [],
+  "next_action": "Implement CLI_SCAFFOLD around the existing WORLD PACKS metadata contract. Start with validate/resolve/doctor, reuse current resolver semantics, and add deterministic tests before scale benchmarks.",
+  "last_checkpoint_head": null,
+  "tested_head": null,
+  "validation": [],
+  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "notes": [
+    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+  ]
+}
