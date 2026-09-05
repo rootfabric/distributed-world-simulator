@@ -1,30 +1,38 @@
-﻿{
-    "schema":  "dws.world_packs.parallel_workstream_state.v1",
-    "controller_id":  "WORLD_PACKS_PARALLEL_R1",
-    "track_id":  "WP-SURFACE1",
-    "branch":  "work/world-packs-surface1-families-r1",
-    "controller_base_sha":  "62602949e7912c9991a9220e0d560b511dc865ea",
-    "status":  "IN_PROGRESS",
-    "completed_milestones":  [
-                                 "FAMILY_TAXONOMY",
-                                 "MATTER_BINDING_RULES",
-                                 "REGOLITH_BASALT_SAND_ICE_FAMILIES"
-                             ],
-    "blockers":  [
-
-                 ],
-    "next_action":  "Execute FIDELITY_AND_EXPOSURE_STATES: define exposure and fidelity state axes per family, then RECIPE_FRAGMENT_COMPOSITION.",
-    "last_checkpoint_head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
-    "tested_head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
-    "validation":  [
-                       {
-                           "command":  "python -m pytest tests/world_packs/surface_library -q",
-                           "head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
-                           "result":  "PASS (18 passed)"
-                       }
-                   ],
-    "updated_at_utc":  "2026-09-05T14:28:36Z",
-    "notes":  [
-                  "FAMILY_TAXONOMY + MATTER_BINDING_RULES + REGOLITH_BASALT_SAND_ICE_FAMILIES complete; surface/sand is PENDING_CANONICAL_MATTER (no canonical matter/sand)"
-              ]
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-SURFACE1",
+  "branch": "work/world-packs-surface1-families-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    "FAMILY_TAXONOMY",
+    "MATTER_BINDING_RULES",
+    "REGOLITH_BASALT_SAND_ICE_FAMILIES",
+    "FIDELITY_AND_EXPOSURE_STATES"
+  ],
+  "blockers": [],
+  "next_action": "Execute RECIPE_FRAGMENT_COMPOSITION: composable recipe fragments binding family shards to canonical matter ids, then CONFLICT_AND_ORDER_INDEPENDENCE_TESTS.",
+  "last_checkpoint_head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66",
+  "tested_head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66",
+  "validation": [
+    {
+      "name": "surface_library_focused",
+      "command": "python -m pytest tests/world_packs/surface_library -q",
+      "result": "PASS",
+      "head": "43776f1ff22a118fa4bd3ea96b9830ccb7239e66"
+    },
+    {
+      "name": "wp1_0_library_contract_regression",
+      "command": "python -m pytest tests/world_packs/test_library_contract.py",
+      "result": "FAIL",
+      "head": "282b0f734a7a5e79c122c5ac4799c8542c69f42c"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T14:40:00Z",
+  "notes": [
+    "FAMILY_TAXONOMY + MATTER_BINDING_RULES + REGOLITH_BASALT_SAND_ICE_FAMILIES + FIDELITY_AND_EXPOSURE_STATES complete.",
+    "matter/sand does not exist in canonical matter catalog; surface-family/sand and surface/sand are PENDING_CANONICAL_MATTER with zero bindings by design.",
+    "wp1_0_library_contract_regression FAIL is a pre-existing Windows environment limitation: os.symlink requires SeCreateSymbolicLinkPrivilege (WinError 1314); unrelated to WP-SURFACE1 paths."
+  ]
 }
