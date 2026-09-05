@@ -254,6 +254,19 @@ def test_sand_and_soil_candidates_present():
     assert all(d["observed"]["sha256"] is None for d in discovery)
 
 
+def test_ice_and_snow_candidates_present():
+    by_family: dict[str, int] = {}
+    for d in load_descriptors():
+        by_family[d.get("family", "?")] = by_family.get(d.get("family", "?"), 0) + 1
+    assert by_family.get("ice", 0) >= 1, "ICE_AND_SNOW_CANDIDATES expects an ice descriptor"
+    assert by_family.get("snow", 0) >= 1, "ICE_AND_SNOW_CANDIDATES expects a snow descriptor"
+
+
+def test_discovery_families_cover_full_minimal_set():
+    by_family = {d.get("family") for d in load_descriptors()}
+    assert FAMILIES <= by_family, f"minimal discovery set missing: {sorted(FAMILIES - by_family)}"
+
+
 def test_no_heavy_payloads_in_candidates_tree():
     allowed_suffixes = {".json", ".md"}
     for p in CANDIDATES_DIR.rglob("*"):
