@@ -4,15 +4,37 @@
   "track_id": "WP-VIS1",
   "branch": "work/world-packs-vis1-material-lab-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "PLANNED",
-  "completed_milestones": [],
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    "GENERIC_LAB_SCAFFOLD"
+  ],
   "blockers": [],
-  "next_action": "Implement GENERIC_LAB_SCAFFOLD: an asset-free presentation-only lab with horizontal, sloped, vertical, overhang and inverted fixtures. Do not touch production terrain, Matter or ECO truth.",
-  "last_checkpoint_head": null,
-  "tested_head": null,
-  "validation": [],
-  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "next_action": "Implement HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES: instantiate real oriented horizontal, 45-degree slope and vertical wall surfaces in the existing lab via the _build_surface entry point, with focused tests.",
+  "last_checkpoint_head": "11887fab929e24310394d2a868f64d2084f9c568",
+  "tested_head": "11887fab929e24310394d2a868f64d2084f9c568",
+  "validation": [
+    {
+      "kind": "pytest",
+      "command": "python -m pytest tests/world_packs/material_lab -q",
+      "result": "17 passed",
+      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+    },
+    {
+      "kind": "godot-headless-self-check",
+      "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
+      "result": "SURFACE_MATERIAL_LAB_SELF_CHECK=PASS markers=6, exit 0",
+      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+    },
+    {
+      "kind": "pytest-regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py tests/world_packs/test_library_contract.py -q",
+      "result": "68 passed, 1 failed: test_local_missing_symlink_and_corruption (Windows symlink privilege WinError 1314; environment limitation, unrelated to WP-VIS1)",
+      "head": "11887fab929e24310394d2a868f64d2084f9c568"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T14:20:00Z",
   "notes": [
-    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+    "GENERIC_LAB_SCAFFOLD complete: asset-free presentation-only lab scene, six-fixture descriptor registry with explicit local-frame normals, anti-Y-up orientation coverage self-check, structural pytest suite.",
+    "Evidence: docs/world_packs/evidence/WP-VIS1-GENERIC_LAB_SCAFFOLD.md."
   ]
 }
