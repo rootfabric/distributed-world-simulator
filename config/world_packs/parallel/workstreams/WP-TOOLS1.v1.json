@@ -9,39 +9,49 @@
     "CLI_SCAFFOLD",
     "VALIDATE_AND_RESOLVE",
     "DOCTOR_DIAGNOSTICS",
-    "INSPECT_AND_INDEX"
+    "INSPECT_AND_INDEX",
+    "SYNTHETIC_1K_SCALE",
+    "SYNTHETIC_10K_SCALE"
   ],
   "blockers": [],
-  "next_action": "Implement SYNTHETIC_1K_SCALE and SYNTHETIC_10K_SCALE: deterministic synthetic descriptor generator (no payloads) plus validate/resolve scale measurements.",
-  "last_checkpoint_head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
-  "tested_head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
+  "next_action": "EVIDENCE_READY: publish evidence document, run final verify, set READY_FOR_INTEGRATION and open the child PR into control/world-packs-parallel-r1.",
+  "last_checkpoint_head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
+  "tested_head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
   "validation": [
     {
       "name": "focused",
-      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
-      "command": "python -m pytest tests/world_packs/wp_cli -q",
+      "head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
+      "command": "python -m pytest tests/world_packs/wp_cli tests/world_packs/scale_fixtures -q",
       "result": "PASS",
-      "detail": "22 passed"
+      "detail": "28 passed (16 wp_cli + 6 scale incl. determinism, 1k and 10k runs)"
     },
     {
       "name": "focused-suite",
-      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
+      "head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
       "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
       "result": "PASS",
-      "detail": "85 passed, 1 deselected (symlink privilege env limitation, see notes)"
+      "detail": "91 passed, 1 deselected (symlink privilege env limitation, see notes)"
     },
     {
-      "name": "cli-smoke",
-      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
-      "command": "python tools/world_packs/wp_cli/__main__.py index",
+      "name": "scale-1k",
+      "head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
+      "command": "python tools/world_packs/wp_cli/__main__.py scale-fixture --count 1000 --seed 7 --out artifacts/world_packs_parallel/wp-tools1-scale",
       "result": "PASS",
-      "detail": "deterministic full-library index, digests identical to library_contract.digest"
+      "detail": "1000 descriptors (596 assets/398 surfaces/5 recipes/1 env): read 0.0194s, validate 0.3288s, resolve 0.0454s"
+    },
+    {
+      "name": "scale-10k",
+      "head": "e169c5e713100a8a9072e192a6cfc7dccf2f7db5",
+      "command": "python tools/world_packs/wp_cli/__main__.py scale-fixture --count 10000 --seed 7 --out artifacts/world_packs_parallel/wp-tools1-scale",
+      "result": "PASS",
+      "detail": "10000 descriptors (5969 assets/3980 surfaces/50 recipes/1 env): read 0.0819s, validate 3.1159s, resolve 0.5155s; metadata-only, no payloads"
     }
   ],
-  "updated_at_utc": "2026-09-05T15:20:00Z",
+  "updated_at_utc": "2026-09-05T15:58:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
     "CLI_SCAFFOLD: wp_cli package with argparse dispatch, exit-code contract (0/1/2), validate subcommand reusing the existing WP1.0 resolver via import; no second resolver introduced.",
-    "Predecessor note: tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption fails on this Windows runner with WinError 1314 (symlink privilege); deselected in the Windows run script with the reason documented."
+    "Predecessor note: tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption fails on this Windows runner with WinError 1314 (symlink privilege); deselected in the Windows run script with the reason documented.",
+    "Scale fixtures are metadata-only descriptors (no payload bytes, no network); determinism proven by test_generated_documents_are_deterministic; evidence in docs/world_packs/evidence/WP-TOOLS1-authoring-cli-evidence.md."
   ]
 }
