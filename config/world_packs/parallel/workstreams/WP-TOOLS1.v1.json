@@ -16,25 +16,25 @@
   "tested_head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
   "validation": [
     {
-      "kind": "focused",
       "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
       "command": "python -m pytest tests/world_packs/wp_cli -q",
       "result": "PASS",
-      "detail": "16 passed"
+      "detail": "16 passed",
+      "name": "focused"
     },
     {
-      "kind": "focused-suite",
       "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
       "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
       "result": "PASS",
-      "detail": "79 passed, 1 deselected (symlink privilege env limitation, see notes)"
+      "detail": "79 passed, 1 deselected (symlink privilege env limitation, see notes)",
+      "name": "focused-suite"
     },
     {
-      "kind": "cli-smoke",
       "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
       "command": "python tools/world_packs/wp_cli/__main__.py doctor",
       "result": "PASS",
-      "detail": "9/9 checks OK incl. repo fixture byte verification and legacy pack manifests; --json and failure/skip paths covered by tests"
+      "detail": "9/9 checks OK incl. repo fixture byte verification and legacy pack manifests; --json and failure/skip paths covered by tests",
+      "name": "cli-smoke"
     }
   ],
   "updated_at_utc": "2026-09-05T14:52:00Z",
