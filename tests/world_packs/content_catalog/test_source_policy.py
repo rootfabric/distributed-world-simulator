@@ -238,6 +238,12 @@ def test_schema_validates_good_fixture():
     jsonschema.validate(VALID_DISCOVERY, schema)
 
 
+def test_rock_cliff_candidates_present():
+    descriptors = [d for d in load_descriptors() if d.get("family") == "rock_cliff"]
+    assert len(descriptors) >= 2, "ROCK_AND_CLIFF_CANDIDATES milestone expects at least two stored descriptors"
+    assert all(d["observed"]["sha256"] is None for d in descriptors), "discovery-stage rock candidates must not claim hashes"
+
+
 def test_no_heavy_payloads_in_candidates_tree():
     allowed_suffixes = {".json", ".md"}
     for p in CANDIDATES_DIR.rglob("*"):
