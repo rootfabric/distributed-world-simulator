@@ -4,15 +4,41 @@
   "track_id": "WP-TOOLS1",
   "branch": "work/world-packs-tools1-authoring-cli-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "PLANNED",
-  "completed_milestones": [],
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    "CLI_SCAFFOLD"
+  ],
   "blockers": [],
-  "next_action": "Implement CLI_SCAFFOLD around the existing WORLD PACKS metadata contract. Start with validate/resolve/doctor, reuse current resolver semantics, and add deterministic tests before scale benchmarks.",
-  "last_checkpoint_head": null,
-  "tested_head": null,
-  "validation": [],
-  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "next_action": "Implement VALIDATE_AND_RESOLVE: add the resolve subcommand printing the WP1.0 presentation lock by reusing library_contract.resolve; deterministic tests against the contract module.",
+  "last_checkpoint_head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+  "tested_head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+  "validation": [
+    {
+      "kind": "focused",
+      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+      "command": "python -m pytest tests/world_packs/wp_cli -q",
+      "result": "PASS",
+      "detail": "6 passed"
+    },
+    {
+      "kind": "focused-suite",
+      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+      "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
+      "result": "PASS",
+      "detail": "69 passed, 1 deselected (test_library_contract symlink test requires Windows developer mode; pre-existing environmental limitation, not modified by this track)"
+    },
+    {
+      "kind": "cli-smoke",
+      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+      "command": "python tools/world_packs/wp_cli/__main__.py validate",
+      "result": "PASS",
+      "detail": "repo defaults, exit 0, resolver=wp-set-json-v1 via tools/world_packs/library_contract.py"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T14:12:00Z",
   "notes": [
-    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
+    "CLI_SCAFFOLD: wp_cli package with argparse dispatch, exit-code contract (0/1/2), validate subcommand reusing the existing WP1.0 resolver via import; no second resolver introduced.",
+    "Predecessor note: tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption fails on this Windows runner with WinError 1314 (symlink privilege); deselected in the Windows run script with the reason documented."
   ]
 }
