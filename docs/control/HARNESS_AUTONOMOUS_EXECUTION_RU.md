@@ -123,6 +123,14 @@ SHA-256-or-stronger digest либо manifest не связывает его с e
 независимая роль обязана вернуть `INSUFFICIENT_EVIDENCE` или выполнить fresh re-execution.
 Нельзя считать имя artifact, URL, run `success` или текстовый summary заменой content digest.
 
+Для fresh post-build `PASS`, созданного после activation автономного контракта, источник machine evidence
+должен быть объявлен machine-readable. `FRESH_REEXECUTION` обязан связывать exact HEAD/TREE и
+runner/workflow run ID. `REUSED_TRUSTED` дополнительно обязан содержать digest manifest для каждого
+повторно используемого artifact/log. Loader и event-transition guards применяют этот контракт сами;
+декларативный `PASS` без требуемой provenance деградирует до `INSUFFICIENT_EVIDENCE` и не может
+авторизовать checkpoint transition. Исторические review records, добавленные до activation, остаются
+replay-compatible и не переписываются.
+
 Если candidate меняет сам verifier workflow или тестовую инфраструктуру, Reviewer/Verifier обязан
 оценить этот diff. Такой CI не становится доверенным только потому, что workflow завершился `success`.
 
@@ -164,7 +172,13 @@ request separate machine only if explicitly required
 5. указан точный непустой resume condition.
 ```
 
-Machine route обязан проверить все эти условия. Старый флаг
+Machine route обязан проверить все эти условия. Для current autonomy policy `proof_evidence_path`
+сам по себе не является доказательством: proof должен быть canonical typed JSON внутри execution
+`evidence/`, быть явно указан authoritative final `BLOCKED` event, совпадать с Work Order/checkpoint/event
+identity и уже существовать в Git не позднее commit-а, добавившего этот `BLOCKED` event. `build_state`
+выдаёт continuation только provenance-validated proof; поздняя подстановка или rewrite proof fail-closed.
+
+Старый флаг
 `proven_non_automatable=true` без остальных полей **не является terminal proof** и должен
 маршрутизироваться обратно в диагностику/автоматическое восстановление. Неизвестное новое
 условие policy также fail-closed: пока его machine predicate не определён, `HARD_BLOCKED` запрещён.

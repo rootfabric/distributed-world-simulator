@@ -118,7 +118,18 @@
         "RUNNER_OR_WORKFLOW_RUN_ID",
         "ARTIFACT_ID_OR_PATH"
       ],
-      "missing_or_unbound_digest_verdict": "INSUFFICIENT_EVIDENCE"
+      "missing_or_unbound_digest_verdict": "INSUFFICIENT_EVIDENCE",
+      "enforcement_activation_commit_sha": "447b06e4e572eea4b9a03b2fa0a27427b6b4a868",
+      "fresh_post_build_pass_requires_machine_evidence_mode": true,
+      "machine_evidence_modes": [
+        "FRESH_REEXECUTION",
+        "REUSED_TRUSTED"
+      ],
+      "fresh_reexecution_must_bind": [
+        "EXACT_HEAD",
+        "EXACT_TREE",
+        "RUNNER_OR_WORKFLOW_RUN_ID"
+      ]
     }
   }
 }

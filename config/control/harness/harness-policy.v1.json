@@ -18,6 +18,7 @@
   "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
   "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
   "human_attention_schema": "config/control/harness/human-attention.schema.v1.json",
+  "hard_block_proof_schema": "config/control/harness/hard-block-proof.schema.v1.json",
   "continuation_policy": "config/control/harness/continuation-policy.v1.json",
   "principles": {
     "git_is_durable_memory": true,

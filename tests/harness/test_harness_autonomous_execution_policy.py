@@ -41,6 +41,7 @@ class AutonomousExecutionPolicyTests(unittest.TestCase):
         requirements = execution["hard_block_proof_requirements"]
         self.assertEqual(set(execution["hard_block_requires"]), set(requirements))
         durable = requirements["DURABLE_BLOCK_PROOF_WITH_EXACT_RESUME_CONDITION"]
+        self.assertIn({"field": "_durable_provenance_validated", "predicate": "TRUE"}, durable)
         self.assertIn({"field": "proof_evidence_path", "predicate": "NON_EMPTY_STRING"}, durable)
         self.assertIn({"field": "resume_condition", "predicate": "NON_EMPTY_STRING"}, durable)
 
@@ -72,6 +73,9 @@ class AutonomousExecutionPolicyTests(unittest.TestCase):
             reuse["manifest_must_bind"],
         )
         self.assertEqual("INSUFFICIENT_EVIDENCE", reuse["missing_or_unbound_digest_verdict"])
+        self.assertEqual("447b06e4e572eea4b9a03b2fa0a27427b6b4a868", reuse["enforcement_activation_commit_sha"])
+        self.assertTrue(reuse["fresh_post_build_pass_requires_machine_evidence_mode"])
+        self.assertEqual(["FRESH_REEXECUTION", "REUSED_TRUSTED"], reuse["machine_evidence_modes"])
 
     def test_doctrine_preserves_human_and_acceptance_gates(self) -> None:
         text = (ROOT / "docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md").read_text(encoding="utf-8")
