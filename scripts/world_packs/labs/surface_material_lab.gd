@@ -29,6 +29,7 @@ const MARKER_ALPHA: float = 0.55
 const ENABLED_SURFACE_MILESTONES: Array[String] = [
 	"HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
 	"OVERHANG_AND_INVERTED_SURFACES",
+	"SPHERE_OR_IRREGULAR_FIXTURE",
 ]
 
 
@@ -116,6 +117,9 @@ func _build_surface(fixture: Dictionary) -> void:
 		sphere.radius = Vector3(fixture["size"]).x * 0.5
 		sphere.height = Vector3(fixture["size"]).x
 		body.mesh = sphere
+	elif String(fixture["shape"]) == "irregular_rock":
+		body.mesh = _make_irregular_rock()
+		body.scale = Vector3(fixture["size"]) * 0.5
 	else:
 		var box := BoxMesh.new()
 		box.size = Vector3(fixture["size"])
@@ -141,6 +145,31 @@ func _build_surface(fixture: Dictionary) -> void:
 	label.modulate = (fixture["diagnostic_color"] as Color).lightened(0.5)
 	label.position = Vector3(0.0, 0.7, 0.0)
 	root.add_child(label)
+
+
+## Deterministic asset-free irregular rock: a displaced sphere whose vertices
+## are pushed along their own normals by a smooth function of direction, so
+## no world axis is ever a privileged surface direction. Displacement depends
+## only on the vertex direction, keeping the mesh deterministic and seam-safe.
+func _make_irregular_rock() -> ArrayMesh:
+	var sphere := SphereMesh.new()
+	sphere.radial_segments = 24
+	sphere.rings = 16
+	sphere.radius = 1.0
+	sphere.height = 2.0
+	var arrays := sphere.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for index in vertices.size():
+		var vertex := vertices[index]
+		var direction := vertex.normalized()
+		var displacement := 1.0
+		displacement += 0.14 * sin(3.0 * direction.x + 1.7) * cos(2.0 * direction.y)
+		displacement += 0.1 * sin(5.0 * direction.z + 0.6)
+		vertices[index] = direction * displacement
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 func _apply_diagnostic_material(target: MeshInstance3D, color: Color) -> void:

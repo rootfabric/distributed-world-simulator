@@ -86,6 +86,20 @@ const FIXTURES: Array[Dictionary] = [
 		"diagnostic_color": Color(0.36, 0.56, 0.5),
 		"built_in_milestone": "SPHERE_OR_IRREGULAR_FIXTURE",
 	},
+	{
+		"id": "irregular_rock",
+		"label": "Irregular rock fixture",
+		"shape": "irregular_rock",
+		"size": Vector3(2.2, 1.4, 1.8),
+		"position": Vector3(7.5, 0.9, 1.5),
+		"rotation_degrees": Vector3(-20.0, 35.0, 10.0),
+		# Composite irregular surface: probe normal is a tilted diagonal so no
+		# single world axis ever matches it exactly. Literal pre-normalized
+		# (1,1,1)/sqrt(3) because const dictionaries need constant expressions.
+		"surface_normal_local": Vector3(0.57735026919, 0.57735026919, 0.57735026919),
+		"diagnostic_color": Color(0.45, 0.38, 0.3),
+		"built_in_milestone": "SPHERE_OR_IRREGULAR_FIXTURE",
+	},
 ]
 
 ## Fixture ids the lab declares as its minimal orientation coverage set.
@@ -96,6 +110,7 @@ const REQUIRED_IDS: PackedStringArray = [
 	"overhang",
 	"inverted_ceiling",
 	"sphere_fixture",
+	"irregular_rock",
 ]
 
 
@@ -165,7 +180,7 @@ static func validate_registry() -> PackedStringArray:
 		if position == Vector3.ZERO:
 			problems.append("fixture %s overlaps the world origin probe" % fixture_id)
 
-		if String(fixture.get("shape", "")) not in ["box", "sphere"]:
+		if String(fixture.get("shape", "")) not in ["box", "sphere", "irregular_rock"]:
 			problems.append("fixture %s has unsupported shape" % fixture_id)
 
 	for required_id in REQUIRED_IDS:

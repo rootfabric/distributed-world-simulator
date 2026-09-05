@@ -22,6 +22,8 @@ const EXPECTED_ORIENTATION := {
 	"overhang": "down",
 	"inverted_ceiling": "down",
 	"sphere_fixture": "side",
+	# The irregular rock probes a genuinely arbitrary diagonal direction; no
+	# fixed orientation class is asserted for it.
 }
 
 ## Fixtures that must exist as real surfaces (Fixture_*) at this milestone.
@@ -31,6 +33,8 @@ const EXPECTED_SURFACES := [
 	"vertical_wall",
 	"overhang",
 	"inverted_ceiling",
+	"sphere_fixture",
+	"irregular_rock",
 ]
 
 

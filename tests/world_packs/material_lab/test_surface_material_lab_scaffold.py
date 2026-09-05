@@ -26,6 +26,7 @@ REQUIRED_FIXTURE_IDS = [
     "overhang",
     "inverted_ceiling",
     "sphere_fixture",
+    "irregular_rock",
 ]
 
 FIXTURE_TO_MILESTONE = {
@@ -35,6 +36,7 @@ FIXTURE_TO_MILESTONE = {
     "overhang": "OVERHANG_AND_INVERTED_SURFACES",
     "inverted_ceiling": "OVERHANG_AND_INVERTED_SURFACES",
     "sphere_fixture": "SPHERE_OR_IRREGULAR_FIXTURE",
+    "irregular_rock": "SPHERE_OR_IRREGULAR_FIXTURE",
 }
 
 SELF_CHECK_GD = LAB_DIR / "surface_material_lab_self_check.gd"
@@ -89,7 +91,9 @@ def test_fixture_descriptor_structure(fixture_blocks: dict[str, str], fixture_id
         "built_in_milestone",
     ):
         assert f'"{key}"' in block, f"{fixture_id} lacks key {key}"
-    assert '"box"' in block or '"sphere"' in block, f"{fixture_id} shape unsupported"
+    assert '"box"' in block or '"sphere"' in block or '"irregular_rock"' in block, (
+        f"{fixture_id} shape unsupported"
+    )
 
 
 @pytest.mark.parametrize("fixture_id", list(FIXTURE_TO_MILESTONE))
@@ -132,24 +136,34 @@ def test_lab_enables_horizontal_slope_wall_surfaces() -> None:
 
 def test_self_check_expects_exactly_the_enabled_surfaces() -> None:
     check = SELF_CHECK_GD.read_text(encoding="utf-8")
-    for fixture_id in (
-        "horizontal_plane",
-        "slope_45",
-        "vertical_wall",
-        "overhang",
-        "inverted_ceiling",
-    ):
+    for fixture_id in REQUIRED_FIXTURE_IDS:
         assert f'"{fixture_id}"' in check
     assert "overhang" not in check.split("EXPECTED_ORIENTATION")[0]
-    # The sphere fixture must appear only as orientation expectation, never
-    # in EXPECTED_SURFACES, until its milestone lands.
     expected_surfaces_block = check.split("const EXPECTED_SURFACES")[1].split("]")[0]
-    assert "sphere_fixture" not in expected_surfaces_block
+    assert "irregular_rock" in expected_surfaces_block
+    assert "sphere_fixture" in expected_surfaces_block
 
 
 def test_lab_enables_overhang_and_inverted_surfaces() -> None:
     lab = LAB_GD.read_text(encoding="utf-8")
     assert f'"{ENABLED_MILESTONE_2}"' in lab
+
+
+def test_lab_enables_sphere_and_irregular_fixtures() -> None:
+    lab = LAB_GD.read_text(encoding="utf-8")
+    assert '"SPHERE_OR_IRREGULAR_FIXTURE"' in lab
+    # Irregular rock mesh must be deterministic and derive displacement from
+    # vertex direction only (no randomness, no global axis privilege).
+    assert "_make_irregular_rock" in lab
+    rock_builder = lab[lab.index("func _make_irregular_rock") :]
+    rock_builder = rock_builder[: rock_builder.index("func " + "_apply_diagnostic_material")]
+    assert "randf" not in rock_builder and "randi" not in rock_builder
+
+
+def test_irregular_rock_descriptor_probes_arbitrary_diagonal() -> None:
+    block = _fixture_blocks(FIXTURES_GD.read_text(encoding="utf-8"))["irregular_rock"]
+    assert "0.57735026919" in block
+    assert '"irregular_rock"' in block
 
 
 def test_overhang_rotation_keeps_declared_down_orientation() -> None:
