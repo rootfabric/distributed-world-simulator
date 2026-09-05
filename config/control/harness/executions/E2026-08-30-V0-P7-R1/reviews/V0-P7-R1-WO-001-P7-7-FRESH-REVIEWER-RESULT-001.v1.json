@@ -1,0 +1,169 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-P7-R1-WO-001-P7-7-FRESH-REVIEWER-RESULT-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-P7-R1-WO-001",
+  "risk_class": "CRITICAL",
+
+  "reviewed_head_sha": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+  "reviewed_tree_sha": "bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d",
+
+  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "runtime_pr": 487,
+  "runtime_pr_base_sha": "3853082f412d696fcb4790003a748983ebc56d42",
+
+  "reviewer_dispatch_head_sha": "27fa20e113b72e3cfdd794a2c12cbfa8aef381bc",
+  "reviewer_dispatch_pr": 533,
+  "reviewer_dispatch_project_control_run": 33853529556,
+  "reviewer_dispatch_project_control": "SUCCESS",
+
+  "reviewer": "FRESH_INDEPENDENT_REVIEWER_P7_7_R1",
+  "reviewer_role": "FRESH_INDEPENDENT_REVIEWER",
+  "reviewer_independence": "Reviewer checked out the frozen subject into a dedicated clean worktree (p77-fresh-reviewer-r1) directly from the recorded SHAs; reviewer is not the implementer, verifier, director, and did not modify any runtime file under review.",
+
+  "subject_project_control_run": 33852376026,
+  "subject_project_control": "SUCCESS",
+  "subject_project_control_head_sha": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+
+  "reviewed_at_utc": "2026-09-04T11:45:00Z",
+
+  "exact_runtime_delta": {
+    "range": "3853082f412d696fcb4790003a748983ebc56d42..9440df5d2596bcbd39b071a2b2f27d4fc74ce42d",
+    "commit_count": 40,
+    "file_count": 25,
+    "insertions": 5062,
+    "deletions": 30,
+    "file_classification": [
+      {"path": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh", "class": "REPOSITORY_OWNED_CLOSURE_RUNNER", "change": "expected P7.1 summary literal 83 -> 88 (single line)"},
+      {"path": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh", "class": "REPOSITORY_OWNED_CLOSURE_RUNNER", "change": "added strict formal full gate"},
+      {"path": "config/matter/mw10-canonical-physical-output.v1.json", "class": "MW10_CONTRACT_CONFIG", "change": "new C0 physical-output contract boundary"},
+      {"path": "config/matter/mw10-canonical-physical-output-durability.v1.json", "class": "MW10_CONTRACT_CONFIG", "change": "new C1 durability boundary"},
+      {"path": "scenes/labs/p7/p7_7_digging_playground.tscn", "class": "P7_7_LAB_SCENE", "change": "new noncanonical playground scene"},
+      {"path": "scripts/runtime/networked_gameplay/p7/p7_digging_playground.gd", "class": "P7_7_PRODUCT_COMPOSITION_NONCANONICAL_SURFACE", "change": "new lab composition over canonical owners"},
+      {"path": "scripts/runtime/networked_gameplay/p7/p7_graphical_digging_slice.gd", "class": "P7_7_PRODUCT_COMPOSITION_ADAPTER", "change": "new stateless graphical digging slice"},
+      {"path": "scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_coordinator.gd", "class": "P7_3_DELIVERY_EXTENSION", "change": "added deliver_cross_region_committed over canonical participant batches"},
+      {"path": "scripts/simulation/matter/mutation/matter_excavation_service.gd", "class": "MW4_OWNER_LEVEL_EXTENSION", "change": "optional validated target_scope_root + scoped canonical target computation"},
+      {"path": "scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd", "class": "MW10_CONTRACT", "change": "new canonical physical output contract"},
+      {"path": "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd", "class": "MW10_OWNER", "change": "durable participant physical outputs + terminal envelope + replay exposure + runtime context plan binding"},
+      {"path": "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_record.gd", "class": "MW10_OWNER", "change": "record schema v2 (participant_physical_outputs, physical_output), legacy v1 read compatibility, append-only progression"},
+      {"path": "tests/matter/transactions/mw10_test_fixture.gd", "class": "TEST_FIXTURE", "change": "physical_commit_details fixture for simulated participants"},
+      {"path": "tests/matter/transactions/test_mw10_canonical_physical_output.gd", "class": "TEST", "change": "new C0 contract acceptance"},
+      {"path": "tests/matter/transactions/test_mw10_cross_region_processes.gd", "class": "TEST", "change": "process recovery retains physical output assertions"},
+      {"path": "tests/matter/transactions/test_mw10_cross_region_transactions.gd", "class": "TEST", "change": "fail-closed physical output + frontier + replay envelope assertions"},
+      {"path": "tests/matter/transactions/test_mw10_physical_output_durability.gd", "class": "TEST", "change": "new C1 durability acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_a_digging_playground.gd", "class": "TEST", "change": "new A live playground acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_b_seam_near_single_region.gd", "class": "TEST", "change": "new B seam-near acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_c2_mw10_physical_output_delivery.gd", "class": "TEST", "change": "new C2 exactly-once delivery acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_c3_true_ab_end_to_end.gd", "class": "TEST", "change": "new C3 real A+B end-to-end acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd", "class": "TEST", "change": "new D reservation conflict acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_e_actor_handoff_no_false_mw10.gd", "class": "TEST", "change": "new E actor handoff acceptance"},
+      {"path": "tests/runtime/test_v0_p7_7_graphical_digging_slice.gd", "class": "TEST", "change": "new slice adapter contract acceptance"},
+      {"path": "tools/matter/mw10_cross_region_transaction_worker.gd", "class": "PROCESS_HARNESS_TOOL", "change": "commit stage persists physical payload; recovery reports physical output"}
+    ],
+    "unrelated_scope_creceep_found": false
+  },
+
+  "mandatory_evidence_inputs": [
+    {"input": "Work Order V0-P7-R1-WO-001", "disposition": "ACCEPTED_ON_MAIN"},
+    {"input": "config/control/harness/v0-p7-7-formal-closure-frontier.v1.json", "disposition": "PRESENT_ON_MAIN"},
+    {"input": "V0-P7-R1-P7-7-FORMAL-FULL-GATE-EXACT-RUNTIME-VALIDATION-001.v1.json", "disposition": "VERIFIED: subject pins exact HEAD/TREE, Project Control 33852376026 SUCCESS, gate exit 0, 2032/0, 32 logs, fatal 0, clean checkout before/after, per-stage log SHA256s, direct 887 + nested 1145 assertions"},
+    {"input": "P7.7 A/B/C0/C1/C2/C3/D/E/G/H evidence records", "disposition": "PRESENT_ON_MAIN under E2026-08-30-V0-P7-R1/evidence"},
+    {"input": "accepted P7.6 closure/reviewer/verifier evidence", "disposition": "PRESENT (V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002 PASS lineage)"},
+    {"input": "accepted P7.5 closure/reviewer/verifier evidence", "disposition": "PRESENT (P7.5 final review lineage + nested gate GREEN)"},
+    {"input": "accepted P7.4 restart evidence", "disposition": "COVERED by nested P7.5 gate stages seed 21 / recover-deliver 25 / recover-replay 17"},
+    {"input": "MW4-MW10/SM1/RL2/RL3/Item Graph canonical ownership contracts", "disposition": "CONSUMED_UNCHANGED; verified by static reading in this review"}
+  ],
+
+  "checked_items": [
+    {"item": "Q1 exact runtime HEAD 9440df5d / TREE bfee0c4b and exact 40-commit / 25-file / +5062/-30 delta from PR base 3853082f", "disposition": "VERIFIED"},
+    {"item": "Q2 every changed production file necessary to P7.7 acceptance boundary or owner-level MW10/MW4 extension; no unrelated scope creep", "disposition": "VERIFIED"},
+    {"item": "Q3 p7_graphical_digging_slice.gd stateless composition adapter owning no terrain/Matter/ItemGraph/authority/transaction/replay/persistence/aim/network truth (contract_report all-false ownership; unit test asserts no-ownership keys)", "disposition": "VERIFIED"},
+    {"item": "Q4 p7_digging_playground.gd and lab scene noncanonical observation/interaction surfaces; compose canonical owners only; MW10 structurally forbidden (MW10Forbidden + empty plan); no second world-state owner", "disposition": "VERIFIED"},
+    {"item": "Q5 A single-region excavation routes only through existing P7.1 -> MW4, mw10_invoked=false", "disposition": "VERIFIED"},
+    {"item": "Q6 B seam-near single-region classification never invokes MW10; crossing-classified request without plan fails P7_6_MW10_PLAN_REQUIRED with mw10.calls==0", "disposition": "VERIFIED"},
+    {"item": "Q7 true A+B classification derived from canonical target brick regions via region resolver over request.target_bricks; caller-supplied plan must exactly equal canonical region set (P7_6_MW10_PLAN_REGION_SET_MISMATCH) - no caller multi-region flag exists", "disposition": "VERIFIED"},
+    {"item": "Q8 C3 executes two real regional MW4 mutations against one shared canonical Matter store under MW10: real Moon world, real kernel previews derive the distributed ledger, real service.execute inside commit, commit counts asserted exactly 1/1, single-region and handoff executors wired to fail", "disposition": "VERIFIED"},
+    {"item": "Q9 target_scope_root: empty scope preserves legacy MW4 byte-for-byte behavior (identical duplicate path); scope validated via CellGrid.validate_address and level<=cell_level; scoping keeps only bricks equal-or-descendant of scope root; exact target-set match enforced against freshly computed scoped sweep; no second store or mutation contract", "disposition": "VERIFIED"},
+    {"item": "Q10 matter_cross_region_physical_output.gd binds physical output to canonical participant/plan identity; participant matter_request validated (MatterRequest.validate, body match, targets inside participant region root); real MatterMutationResult/MatterMaterialBatch provenance retained via binding checks (result operation, receipt transaction/region/checksum, batch operation/body, batch_id==created_aggregate_ids[0])", "disposition": "VERIFIED"},
+    {"item": "Q11 no physical batch fabricated from mass ledger totals in product path: fields must originate from regional runtime commit details and are cross-validated against result, ledger, composition and mass; ledger is validation only (config mass_ledger_is_validation_not_reconstruction; C0 negative tests reject synthesized temperature/density/kind)", "disposition": "VERIFIED"},
+    {"item": "Q12 record v2 durability: participant outputs and terminal envelope persisted per commit/terminal record and survive restore_latest + recover_incomplete; legacy v1 record validates and advance() upgrades to v2", "disposition": "VERIFIED"},
+    {"item": "Q13 checkpoint, receipt and operation-result schemas not widened: files absent from delta; C0/C1 configs declare checkpoint_schema_changed/receipt_schema_changed/operation_result_schema_changed = false", "disposition": "VERIFIED"},
+    {"item": "Q14 missing required physical output fails closed before durable frontier advance: MATTER_CROSS_REGION_COMMIT_PHYSICAL_OUTPUT_INVALID; phase remains COMMIT_DECIDED; no commit receipt and no participant output persisted", "disposition": "VERIFIED"},
+    {"item": "Q15 exact replay returns identical durable physical output and cannot recommit journaled participant: replay flag + identical envelope + runtime not invoked (C1), commit counts unchanged (C3), append-only frontier enforced", "disposition": "VERIFIED"},
+    {"item": "Q16 P7.3 cross-region delivery iterates immutable canonical participant batches in deterministic lexicographic region order; no aggregate thermodynamic batch synthesized", "disposition": "VERIFIED"},
+    {"item": "Q17 exactly-once ownership remains canonical Item Graph replay ledger; no private delivery receipt store (delivery contract_report; C2 assertion)", "disposition": "VERIFIED"},
+    {"item": "Q18 retry after partial delivery: adapter replay marks already delivered batches, failed response carries completed_deliveries; C2 replay shows 0 fresh / 2 replay with byte-identical Item Graph", "disposition": "VERIFIED"},
+    {"item": "Q19 same batch cannot be redirected to another logical player: canonical Item Graph rejects with P7_ITEM_GRAPH_OUTPUT_REJECTED, snapshot unchanged", "disposition": "VERIFIED"},
+    {"item": "Q20 visible A+B projection derived from canonical regional MatterMutationResult values inside MW10 physical-output envelope (visible_hole_source CANONICAL_MW10_PHYSICAL_OUTPUT; changed bricks from participant results; visual invalidation once)", "disposition": "VERIFIED"},
+    {"item": "Q21 D reservation conflicts fail closed: B-only blocked via P7_6_SINGLE_REGION_RESERVED_BY_MW10 before MW4 executor; second A+B blocked via MATTER_CROSS_REGION_REGION_ALREADY_RESERVED before prepare; checkpoint byte-identical; zero material/visual success", "disposition": "VERIFIED"},
+    {"item": "Q22 E actor A->B handoff uses real SM1 transfer over SM1/MW8/MW9 route with mw10_invoked=false and MW10 counter zero; subsequent B-only dig routes MW4 under post-handoff authority/epoch with interlock queried once and MW10 still zero", "disposition": "VERIFIED"},
+    {"item": "Q23 material accounting and exactly-once semantics owned by canonical P7.3/Item Graph: delivered quantities equal Item Graph snapshot deltas (C2 10 ore units; C3 player ore parity), not a test-only counter", "disposition": "VERIFIED"},
+    {"item": "Q24 G two-client convergence consumes unchanged existing MW6/MW7/M7/RL3 owners: nested P7.5 gate GREEN on unchanged owners; delta contains no client-side truth files", "disposition": "VERIFIED"},
+    {"item": "Q25 H replay/reconnect/restart composition consistent with existing C1/C2/C3/P7.4/MW7 owners: no second hole, second regional commit, second batch or second Item Graph delivery (C1 recovery + C3 replay + nested P7.4 stages)", "disposition": "VERIFIED"},
+    {"item": "Q26 no P7-private persistence, replay ledger, transaction owner, authority directory, network protocol, Item Graph or terrain store anywhere in the 25-file delta", "disposition": "VERIFIED"},
+    {"item": "Q27 MW10 never invoked by actor seam movement alone; true cross-region Matter request cannot bypass MW10 through the P7.6 composition (classification + plan region-set equality + reservation fences)", "disposition": "VERIFIED"},
+    {"item": "Q28 owner errors fail-closed and preserved: slice/router/coordinator propagate owner error codes; malformed downstream results (non-dictionary, missing success) rejected by P7.6 _executor_result/_require_success; P7.7 does not convert failures into success", "disposition": "VERIFIED"},
+    {"item": "Q29 tests do not weaken production validation: acceptance claims of real owner behavior are carried by live compositions (A, C2, C3, D, E, nested full gate); adapter-level doubles confined to the slice unit contract test and the MW10 process harness", "disposition": "VERIFIED"},
+    {"item": "Q30 final repository-owned P7.7 gate is strict: exact Godot identity 4.7.1.stable.double.custom_build.a13da4feb, exact HEAD argument match, exact TREE banner, clean tracked checkout before and after, per-stage exact PASS summary grep, recursive fatal scan, full nested P7.5 subgate, git diff --check", "disposition": "VERIFIED"},
+    {"item": "Q31 nested P7.5 repair 83 -> 88 only synchronizes the expected summary with the already-current P7.1 exact test: P7.1 test file untouched by the delta (0 commits touching it); formal gate stage log records the current test passing with exactly 88 assertions; no predicate weakened, no stage skipped", "disposition": "VERIFIED"},
+    {"item": "Q32 explicit falsifier search across all eight mandated directions (see falsifier_search)", "disposition": "VERIFIED"},
+
+    {"item": "EXTRA boundary: PR #532 merged the control/evidence layer only; main does not contain the P7.7 runtime product tree (physical output files absent from main; frozen head not an ancestor of main). Runtime product merge remains exclusively behind human RUNTIME_FEATURE_MERGE via PR #487", "disposition": "VERIFIED_NOTED"},
+    {"item": "EXTRA boundary: canonical Project Control runs re-checked live: 33852376026 SUCCESS on 9440df5d; 33853529556 SUCCESS on dispatch 27fa20e1; PR #532 control SUCCESS and merged (71d1213); PR #487 OPEN at 2009eb74", "disposition": "VERIFIED"},
+    {"item": "EXTRA: mass/material conservation chain proven per participant: real MW4 result <-> batch (mass/composition/id equality, tolerance 0.001 kg) <-> distributed ledger participant entry <-> external outputs aggregate <-> terminal envelope totals; deposited_mass must be 0 for extraction kind", "disposition": "VERIFIED"},
+    {"item": "EXTRA: identity chain: operation_id binds request/plan/result/batch/receipt; transaction_id binds receipts/envelope; participant checksum binds participant; append-only record chain with previous_record_checksum and progression validation prevents history mutation", "disposition": "VERIFIED"},
+    {"item": "EXTRA: terminal envelope exposure: physical_output lookup filters phase==COMMITTED; non-terminal v2 records must carry empty physical_output (MATTER_CROSS_REGION_PHYSICAL_OUTPUT_BEFORE_TERMINAL_COMMIT); consumers receive envelope only from committed records", "disposition": "VERIFIED"}
+  ],
+
+  "falsifier_search": {
+    "invoke_mw10_for_actor_only_handoff": "NOT FOUND: E proves handoff route SM1_MW8_MW9 with MW10 counter zero; router execute_actor_handoff never touches MW10 coordinator",
+    "execute_true_ab_outside_mw10": "NOT FOUND: classification forces region_ids>=2 into _execute_multi_region only; single-region executor unreachable for multi-region requests; C3 wires single executor to fail",
+    "mutate_canonical_matter_from_client_visual_adapter": "NOT FOUND: slice owns no Matter truth and only invalidates derived representation after canonical commit; presenter rebuild is derived-data only",
+    "synthesize_physical_material_fields_from_insufficient_data": "NOT FOUND in product path: contract requires full canonical fields with cross-binding; C0 negatives reject partial/synthetic; NOTE fixture-level synthesis exists only inside MW10 test harness (see nonblocking N2)",
+    "duplicate_material_on_replay_restart": "NOT FOUND: append-only participant outputs + commit-frontier equality + replay envelope identity + Item Graph replay ledger (C1/C2/C3/transactions/processes all assert)",
+    "expose_physical_output_before_terminal_commit": "NOT FOUND: record validation forbids non-empty physical_output before COMMITTED; lookup filters by committed phase",
+    "bypass_reservation_interlocks": "NOT FOUND within the P7.6/P7.7 product composition: reserved_transaction checked before MW4 executor, reservations appended before authority re-authorization and released only on terminal states; NOTE seam-level enforcement boundary documented as nonblocking N1",
+    "introduce_second_canonical_terrain_inventory_persistence_replay_owner": "NOT FOUND: 25-file inventory contains no new store/ledger/directory/protocol; delivery and exactly-once stay with canonical Item Graph"
+  },
+
+  "blocking_findings": [],
+  "nonblocking_findings": [
+    {"id": "N1", "severity": "LOW", "class": "ARCHITECTURAL_BOUNDARY_OBSERVATION", "finding": "MW10 reservation interlock is enforced at the P7.6 composition seam (reserved_transaction before single-region executor; validate_handoff before handoff), not inside MW4 itself. Pre-existing product paths that execute MW4 outside the P7.6 composition (MW6 matter_authoritative_server, P7.4 persistence restart composition replay path, world/matter/lab surface) do not consult MW10 reservations.", "evidence": "grep of product scripts: .execute(request) call sites at lunar_matter_bubble.gd:227 (router-bound in playground), matter_asteroid_excavation_lab.gd:216 (lab), p7_persistence_restart_composition.gd:89 (restart replay harness), matter_authoritative_server.gd:314 (MW6).", "why_nonblocking": "This boundary predates P7.7, was accepted in the P7.6 closure, is unchanged by the reviewed delta, and is backstopped by MW4 expected_revision fencing on the same bricks. P7.7 adds no new outside-the-seam caller. Recommendation to carry forward: keep the P7.6 composition as the single V0 mutation entry in future phases."},
+    {"id": "N2", "severity": "LOW", "class": "TEST_HARNESS_OBSERVATION", "finding": "The MW10 process harness and C2 use tests/matter/transactions/mw10_test_fixture.gd physical_commit_details() to synthesize canonical-shaped MatterResult/MaterialBatch from plan ledger weights for simulated participants.", "evidence": "mw10_test_fixture.gd:130-224; used by tools/matter/mw10_cross_region_transaction_worker.gd and tests C2/transactions/processes/C1.", "why_nonblocking": "Confined to test fixture + process-harness tool; it simulates regional participants, it is not product code; the product-path provenance claim is proven by C3 with real regional MW4 execution, and the coordinator/contract still fully validates every field. Config explicitly declares the ledger as validation, not reconstruction."},
+    {"id": "N3", "severity": "LOW", "class": "LAB_SURFACE_OBSERVATION", "finding": "The P7.7 playground binds a permissive stub ReservationInterlock (validate_handoff always success, reserved_transaction always empty) and a single-region resolver pinned to matter-region/p7-7-a.", "evidence": "p7_digging_playground.gd:76-88.", "why_nonblocking": "The lab composition structurally cannot reach MW10 (MW10Forbidden coordinator fails any attempt; mw10_plan always empty so router fails P7_6_MW10_PLAN_REQUIRED before MW10), and actor handoff executor is forbidden. The lab is a noncanonical observation surface, not an acceptance path; the acceptance paths (C2/C3/D/E) use the real interlock."},
+    {"id": "N4", "severity": "INFO", "class": "MAINTAINABILITY", "finding": "PhysicalOutput.validate duplicates the per-participant binding checks of validate_participant_output as a long inline block (~90 lines) instead of delegating.", "evidence": "matter_cross_region_physical_output.gd:192-281 vs 75-155.", "why_nonblocking": "Pure maintainability; both paths are covered by C0 negative tests; no behavioral divergence found in this review."}
+  ],
+
+  "evidence_gaps": [],
+  "required_fixes": [],
+
+  "rank_up_moves": [],
+
+  "product_semantic_delta_after_frozen_subject": "NO PRODUCT-SEMANTIC DELTA FOUND",
+  "product_semantic_delta_analysis": {
+    "range": "9440df5d2596bcbd39b071a2b2f27d4fc74ce42d..2009eb74af884a69fcf2274ccb45478e83340912",
+    "commit_count": 12,
+    "commits": [
+      "ee0a727d test(p7.5): make exact gate robust to post-PASS Godot shutdown stalls",
+      "197bfee5 test(p7.7): make formal gate robust to post-PASS Godot shutdown stalls",
+      "23c7cae4+b0adee15, f7bea59d+417fcef0, 5b246a71+79f702d0, 792bd4cd+a53a020b, f74d211a+2009eb74 : five add/remove temporary-file no-op pairs"
+    ],
+    "net_files_changed": [
+      {"path": "RUN_V0_P7_5_TWO_CLIENT_CONVERGENCE_GATE.sh", "classification": "RUNNER_ONLY / SHUTDOWN_LIFECYCLE_HARNESS", "detail": "adds run_until_summary(): starts Godot in background, kills it after the exact PASS summary appears (known post-quit() hang), 300s deadline; fatal_log_check still applied; missing summary still fails; exact-count summaries unchanged; P7.4 phase runner wrapped identically"},
+      {"path": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh", "classification": "RUNNER_ONLY / SHUTDOWN_LIFECYCLE_HARNESS", "detail": "same run_until_summary() wrapper; all exact PASS summaries, fatal scan, clean-checkout checks, nested P7.5 subgate and banners unchanged; blank-line cosmetics"}
+    ],
+    "product_runtime_files_changed": 0,
+    "predicate_weakening_found": false,
+    "note": "This classification is the reviewer's independent diff audit of the current PR #487 head. It supports merge-boundary Option B, but the reviewed subject remains 9440df5d/bfee0c4b; the merge carrier must still present its own exact-boundary proof (Variant A tree identity or separately validated Variant B runner-only delta)."
+  },
+
+  "merge_boundary_statement": "PASS of the frozen subject is NOT authorization to merge any newer head, including current PR #487 head 2009eb74/69703801. Before human RUNTIME_FEATURE_MERGE, one of the two variants must be proven with exact evidence: (A) EXACT REVIEWED CARRIER - merge candidate product tree equals bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d with closure infrastructure carried separately; or (B) VALIDATED RUNNER-ONLY DELTA - exact diff 9440df5d..merge-candidate fully classified as runner-only/evidence-only/shutdown-harness-only/non-product-semantic (reviewer's audit of 9440df5d..2009eb74 satisfies this classification: net 2 repository-owned gate runner files, shutdown-lifecycle wrapper + cosmetics, 0 product files, 0 predicate changes) and separately re-validated. The phrase 'code seems unchanged' is not acceptable evidence. Also noted: main currently contains the P7.7 control/evidence layer (via PR #532) but NOT the runtime product tree; the product merge is still fully behind the human gate.",
+
+  "risk_assessment": "Runtime risk for the reviewed boundary is LOW-to-MODERATE and contained. The delta is exactly 25 files with zero unrelated scope creep: a new MW10 canonical physical-output contract with fail-closed binding validation, a durable v2 transaction record with append-only physical outputs and committed-only terminal envelope, an owner-level optional MW4 region scope that is byte-for-byte inert when unset, a P7.3 cross-region delivery that forwards immutable canonical participant batches through the existing Item Graph replay ledger, a stateless graphical digging slice, a noncanonical lab playground, and strict closure runners plus tests. Conservation, identity, idempotency, reservation, failure and recovery invariants are each covered by both static binding checks and executed negative tests; the keystone C3 proves a real two-region physical crossing over one shared canonical Matter store with forbidden single-region/handoff fallbacks. Residual risk is owned by the mandatory next gates: fresh independent Linux Verifier must re-run the exact full gate, and human RUNTIME_FEATURE_MERGE remains closed. merge_authorized is false.",
+
+  "summary": "Fresh independent POST_BUILD_EXACT_HEAD_REVIEW of V0-P7.7 at exact HEAD 9440df5d2596bcbd39b071a2b2f27d4fc74ce42d / TREE bfee0c4bb5b0a5cff1d056dcf4005e3446c0366d (runtime PR #487 lineage, Project Control 33852376026 SUCCESS; formal full gate 2032 assertions / 0 failures / 32 logs / fatal scan 0 / clean tracked checkout). All 32 mandatory dispatch questions are answered VERIFIED; delta from PR base is exactly 40 commits / 25 files / +5062/-30 with no scope creep. Canonical boundaries hold: classification derives from canonical target bricks (no caller multi-region flag); actor handoff stays SM1/MW8/MW9 with MW10 zero; reservation conflicts fail closed before mutation; MW4 empty-scope behavior is unchanged and scoped requests must exactly match the freshly computed scoped target set; MW10 physical output requires full canonical provenance (MatterMutationResult + MatterMaterialBatch + commit receipt + participant checksum + mass-ledger agreement), is append-only across recovery, and its terminal envelope is visible only after COMMITTED; delivery reuses the canonical Item Graph replay ledger with deterministic region order and no private store; C3 proves a real A+B physical crossing end-to-end with exact-replay idempotency. No blocking findings. Four nonblocking observations recorded (N1 seam-level interlock boundary - pre-existing P7.6-accepted; N2 test-fixture synthesis confined to harness; N3 lab stub interlock with MW10 structurally forbidden; N4 code duplication in validate). Diff to current PR #487 head is NO PRODUCT-SEMANTIC DELTA FOUND (runner-only shutdown-lifecycle + no-op pairs), which does not extend the reviewed subject. Verdict: PASS with required_fixes empty; next gate is the Fresh Independent Linux Verifier; human RUNTIME_FEATURE_MERGE remains closed.",
+
+  "verdict": "PASS",
+  "next_gate": "FRESH_INDEPENDENT_LINUX_VERIFIER",
+  "merge_authorized": false
+}
