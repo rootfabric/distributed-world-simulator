@@ -23,19 +23,19 @@
       "name": "surface_library_focused",
       "command": "python -m pytest tests/world_packs/surface_library -q",
       "result": "PASS",
-      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
     },
     {
       "name": "wp1_0_library_contract_regression",
       "command": "python -m pytest tests/world_packs/test_library_contract.py",
       "result": "FAIL",
-      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
     },
     {
       "name": "parallel_controller_regression",
       "command": "python -m pytest tests/world_packs/test_parallel_controller.py",
       "result": "PASS",
-      "head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8"
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
     }
   ],
   "updated_at_utc": "2026-09-05T15:10:00Z",
