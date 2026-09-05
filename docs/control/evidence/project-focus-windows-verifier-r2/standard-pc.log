@@ -1,0 +1,20 @@
+﻿
+Distributed World Simulator — Project Control
+Architecture: GLOBAL-P0-2026-08-12-R3-REFRESH-R1
+Control:      PC0-2026-08-10-R1
+Registry:     80
+Overall:      YELLOW
+  HARNESS    GREEN  BLOCK    H0.2 NX.C1 Verification + V0 P7 Pre-Dispatch [tracked/stable]
+  G          RED    ADVISORY G8 Aggregate Full Acceptance [feature/g8-geomorphology]
+  ECO        RED    ADVISORY ECO.CONV0-A Global Alignment / World Integration Consumer Requirements [feature/eco-evolutionary-ecology]
+  T          YELLOW BLOCK    T1B Aggregate Handoff Complete [feature/t1b-composition-failure-recovery]
+  TS         GREEN  BLOCK    C22 Main Integration Complete [tracked/stable]
+  CH         YELLOW BLOCK    CH9.6 Playable Network Equipment Lab [feature/ch9-6-playable-network-equipment-lab]
+  DOCTRINE   YELLOW BLOCK    Active doctrine consolidation [feature/world-building-doctrine]
+  NX         YELLOW BLOCK    H0.2 / NX.C1 Source Implemented — Runtime Verification Pending [feature/h0-2-nx-c1-owner-authority-r3]
+  V0         YELLOW BLOCK    P7.7 Graphical Digging Slice [control/v0-p7-7-activation-r1]
+  MATTER     GREEN  BLOCK    MW10 accepted stable baseline [tracked/stable]
+  S1         GREEN  BLOCK    Stable proposal-only compute foundation [tracked/stable]
+
+Report: C:\Godot\dws-project-focus-verifier-719a896-r2\artifacts\control\PROJECT_STATUS_RU.md
+JSON:   C:\Godot\dws-project-focus-verifier-719a896-r2\artifacts\control\project-control-report.json
