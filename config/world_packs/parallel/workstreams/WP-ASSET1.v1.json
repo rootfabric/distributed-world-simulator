@@ -9,12 +9,13 @@
     "FETCH_CONTRACT",
     "BOUNDED_HTTPS",
     "RAW_CONTENT_ADDRESSABLE_CACHE",
-    "SSRF_REDIRECT_AND_SIZE_GATES"
+    "SSRF_REDIRECT_AND_SIZE_GATES",
+    "ARCHIVE_SAFETY_FIXTURES"
   ],
   "blockers": [],
-  "next_action": "Implement ARCHIVE_SAFETY_FIXTURES: path-traversal, absolute-path, symlink/absolute-link, zip-bomb ratio/count and entry-size limits with typed refusals; in-memory and tmp_path fixtures only.",
-  "last_checkpoint_head": "ad7dc25f1319669342a2342eea8bdbf24286a19d",
-  "tested_head": "ad7dc25f1319669342a2342eea8bdbf24286a19d",
+  "next_action": "Implement OFFLINE_REUSE_AND_CORRUPTION_RECOVERY: cache-first fetch pipeline that never touches network on cache hit, detects CACHE_CORRUPT, refetches once and repairs; offline tests with injected transports only.",
+  "last_checkpoint_head": "d6fc5350154c0e8e8222526e0416f531cd1198eb",
+  "tested_head": "d6fc5350154c0e8e8222526e0416f531cd1198eb",
   "validation": [
     {
       "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
@@ -39,9 +40,15 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "75 passed",
       "head": "ad7dc25f1319669342a2342eea8bdbf24286a19d"
+    },
+    {
+      "name": "WP-ASSET1 ARCHIVE_SAFETY_FIXTURES focused tests",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "93 passed",
+      "head": "d6fc5350154c0e8e8222526e0416f531cd1198eb"
     }
   ],
-  "updated_at_utc": "2026-09-05T16:00:00Z",
+  "updated_at_utc": "2026-09-05T16:45:00Z",
   "notes": [
     "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
     "BOUNDED_HTTPS complete: streaming bounded reads (SIZE_EXCEEDED/SIZE_SHORT typed failures), injected opener, no redirects by default.",
