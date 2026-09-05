@@ -4,6 +4,7 @@
   "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
   "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
   "continuation_layer_revision": "H0-CONTINUATION-2026-08-20-R5",
+  "git_transport_policy_revision": "H0-GIT-TRANSPORT-2026-09-05-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
   "project_goals": "config/control/harness/project-goals.v1.json",
@@ -57,7 +58,10 @@
     "active_checkpoint_mission_pre_authorizes_routine_a0_a3_git_operations": true,
     "routine_git_write_operations_are_not_human_gates": true,
     "routine_git_write_confirmation_must_not_be_reasked": true,
-    "git_authority_survives_role_boundaries": true
+    "git_authority_survives_role_boundaries": true,
+    "github_actions_is_validation_and_evidence_plane_not_git_transport": true,
+    "github_actions_git_transport_workarounds_are_forbidden": true,
+    "normal_git_push_failure_must_be_diagnosed_before_external_automation": true
   },
   "roles": {
     "IMPLEMENTER": "Changes code within bounded Work Order scope.",
@@ -161,7 +165,7 @@
     "Work-State"
   ],
   "git_execution_authority": {
-    "revision": "H0-GIT-AUTHORITY-2026-08-20-R1",
+    "revision": "H0-GIT-AUTHORITY-2026-09-05-R2",
     "default_mode": "PREAUTHORIZED_WITHIN_ACTIVE_CHECKPOINT_MISSION",
     "inherits_from": "default_autonomy_ceiling",
     "routine_confirmation_required": false,
@@ -188,7 +192,10 @@
       "NO_HISTORY_REWRITE",
       "NO_DIRECT_PUSH_TO_CANONICAL_MAIN",
       "NO_RUNTIME_MERGE_WITHOUT_DECLARED_HUMAN_GATE",
-      "NO_AUTHORITY_OR_SCOPE_EXPANSION_WITHOUT_DECLARED_GATE"
+      "NO_AUTHORITY_OR_SCOPE_EXPANSION_WITHOUT_DECLARED_GATE",
+      "NO_GITHUB_ACTIONS_AS_GIT_TRANSPORT_WORKAROUND",
+      "NORMAL_GIT_FAILURE_MUST_BE_DIAGNOSED_BEFORE_ESCALATION",
+      "NO_WORKFLOW_CREATION_OR_MUTATION_TO_BYPASS_GIT_AUTH"
     ],
     "human_confirmation_required_for": [
       "RUNTIME_FEATURE_MERGE",
@@ -201,6 +208,30 @@
       "NEW_GLOBAL_FOUNDATION",
       "V0_POST_P6_SEAMLESS_ACTIVATION_OR_DEFER"
     ],
-    "external_tool_boundary": "If an external platform itself blocks a write pending confirmation, report EXTERNAL_TOOL_AUTH_REQUIRED. Do not misclassify that platform requirement as a Harness human gate."
+    "external_tool_boundary": "If an external platform itself blocks a write pending confirmation, report EXTERNAL_TOOL_AUTH_REQUIRED. Do not misclassify that platform requirement as a Harness human gate. GITHUB_ACTIONS_GIT_TRANSPORT_WORKAROUND_FORBIDDEN: GitHub Actions is a validation/evidence plane, not a substitute for normal Git authoring or transport. On push failure, capture and diagnose the exact Git/auth/permission error first; do not create or modify workflows, reconstruct or replay commits in CI, push source or staging refs from Actions, or use bundles/artifacts as a Git transport fallback.",
+    "github_actions_transport_policy": {
+      "mode": "VALIDATION_AND_EVIDENCE_ONLY",
+      "normal_git_transport_required": true,
+      "may_replace_normal_git_transport": false,
+      "may_reconstruct_or_publish_source_commits": false,
+      "may_push_source_refs_as_fallback": false,
+      "may_mutate_workflows_to_gain_git_write_capability": false,
+      "forbidden_workarounds": [
+        "CREATE_OR_MODIFY_WORKFLOW_TO_BYPASS_NORMAL_GIT_PUSH",
+        "RECONSTRUCT_OR_REPLAY_COMMITS_IN_ACTIONS_FOR_SOURCE_PUBLICATION",
+        "PUSH_SOURCE_OR_STAGING_REFS_FROM_ACTIONS_AS_GIT_TRANSPORT_FALLBACK",
+        "USE_ACTIONS_ARTIFACTS_OR_BUNDLES_AS_SUBSTITUTE_FOR_NORMAL_GIT_TRANSPORT",
+        "ESCALATE_TO_ACTIONS_BEFORE_DIAGNOSING_EXACT_GIT_OR_AUTH_FAILURE"
+      ],
+      "push_failure_protocol": [
+        "CAPTURE_EXACT_GIT_PUSH_ERROR",
+        "VERIFY_REMOTE_URL_AND_TARGET_REF",
+        "VERIFY_ACTIVE_GIT_OR_CONNECTOR_WRITE_AUTHORITY",
+        "RETRY_NORMAL_NON_FORCE_PUSH_ONLY_IF_FAILURE_IS_TRANSIENT",
+        "REPORT_EXTERNAL_TOOL_AUTH_REQUIRED_IF_PLATFORM_BLOCKS_WRITE",
+        "DO_NOT_CREATE_OR_MUTATE_GITHUB_ACTIONS_AS_TRANSPORT_WORKAROUND"
+      ],
+      "exception_policy": "EXPLICIT_HUMAN_APPROVED_REPOSITORY_AUTOMATION_DESIGN_ONLY_AND_NEVER_AS_GIT_TRANSPORT_FALLBACK"
+    }
   }
 }
