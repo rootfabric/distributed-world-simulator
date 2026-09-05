@@ -7,28 +7,24 @@
     "status":  "IN_PROGRESS",
     "completed_milestones":  [
                                  "FAMILY_TAXONOMY",
-                                 "MATTER_BINDING_RULES"
+                                 "MATTER_BINDING_RULES",
+                                 "REGOLITH_BASALT_SAND_ICE_FAMILIES"
                              ],
     "blockers":  [
 
                  ],
-    "next_action":  "Execute REGOLITH_BASALT_SAND_ICE_FAMILIES: add sharded surface descriptors for regolith, basalt, sand, ice consistent with taxonomy and binding rules; sand stays PENDING (no canonical matter/sand).",
-    "last_checkpoint_head":  "282b0f734a7a5e79c122c5ac4799c8542c69f42c",
-    "tested_head":  "282b0f734a7a5e79c122c5ac4799c8542c69f42c",
+    "next_action":  "Execute FIDELITY_AND_EXPOSURE_STATES: define exposure and fidelity state axes per family, then RECIPE_FRAGMENT_COMPOSITION.",
+    "last_checkpoint_head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
+    "tested_head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
     "validation":  [
                        {
-                           "command":  "python -m pytest tests/world_packs/surface_library/test_surface_families.py -q",
-                           "head":  "282b0f734a7a5e79c122c5ac4799c8542c69f42c",
-                           "result":  "PASS (10 passed)"
-                       },
-                       {
-                           "command":  "python -m pytest tests/world_packs/test_library_contract.py",
-                           "head":  "282b0f734a7a5e79c122c5ac4799c8542c69f42c",
-                           "result":  "PASS 29 / FAIL 1 pre-existing env: os.symlink WinError 1314 (privilege), unrelated to WP-SURFACE1"
+                           "command":  "python -m pytest tests/world_packs/surface_library -q",
+                           "head":  "1b8946d0a9747258c3162047a98a97e12f6c1df0",
+                           "result":  "PASS (18 passed)"
                        }
                    ],
-    "updated_at_utc":  "2026-09-05T14:26:41Z",
+    "updated_at_utc":  "2026-09-05T14:28:36Z",
     "notes":  [
-                  "FAMILY_TAXONOMY + MATTER_BINDING_RULES complete; matter/sand does not exist in canonical catalog, surface-family/sand is PENDING_CANONICAL_MATTER"
+                  "FAMILY_TAXONOMY + MATTER_BINDING_RULES + REGOLITH_BASALT_SAND_ICE_FAMILIES complete; surface/sand is PENDING_CANONICAL_MATTER (no canonical matter/sand)"
               ]
 }
