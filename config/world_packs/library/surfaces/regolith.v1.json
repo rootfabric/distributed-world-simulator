@@ -1,0 +1,40 @@
+{
+  "schema": "dws.world_packs.surface_descriptor.v1",
+  "id": "surface/regolith",
+  "version": "1.0.0",
+  "family": "surface-family/regolith",
+  "presentation_only": true,
+  "binding_source": "config/world_packs/library/surfaces/matter_binding_rules.v1.json",
+  "binding_status": "BOUND",
+  "canonical_material_ids": [
+    "matter/regolith-loose",
+    "matter/regolith-compacted"
+  ],
+  "physical_anchor_summary": "Unconsolidated to compacted granular mantle over the parent rock body.",
+  "variants": [
+    {
+      "id": "diagnostic",
+      "tier": "casual",
+      "evidence_class": "diagnostic_fixture",
+      "assets": [
+        "asset/dws/diagnostic-swatch@1.0.0"
+      ],
+      "states": [
+        "default",
+        "fresh",
+        "weathered",
+        "fracture"
+      ],
+      "coordinate_space": "body_fixed",
+      "mapping": "triplanar",
+      "scale_bands": [
+        "local"
+      ],
+      "requires": []
+    }
+  ],
+  "tags": [
+    "family-shard",
+    "contract-fixture"
+  ]
+}
