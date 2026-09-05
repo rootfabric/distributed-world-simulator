@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1b87bb0908429f5bbae2eb5929a07649ed5507d4
+          ref: fb0d7f67991e3d840243a49da0dd36938a1e3dfd
           fetch-depth: 0
           persist-credentials: false
       - name: Verify live refs and exact clean subject
@@ -34,51 +34,63 @@ jobs:
             git status --porcelain --untracked-files=no
             pwsh --version
           } 2>&1 | tee /tmp/focus-launcher-evidence/preflight.log
-          test "$(git rev-parse HEAD)" = 1b87bb0908429f5bbae2eb5929a07649ed5507d4
-          test "$(git rev-parse 'HEAD^{tree}')" = 31fe1abd8fea945645877e5fb8bc6bf40469efcb
+          test "$(git rev-parse HEAD)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
+          test "$(git rev-parse 'HEAD^{tree}')" = 963f47285fb62589d76657cb8b21ef32189bcb44
           test "$(git rev-parse origin/main)" = 5b4152958624be4e9cc40f2369ce32c4964f65c3
-          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = 1b87bb0908429f5bbae2eb5929a07649ed5507d4
+          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Install repository pinned dependencies
         run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-      - name: Run actual PowerShell launcher without candidate authority
+      - name: Run all documented PowerShell launcher modes
         shell: bash
         run: |
-          set -euo pipefail
-          for mode in Overview CheckConsistency Drive CloseMission; do
-            set +e
-            pwsh -NoLogo -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -"$mode" -Json > "/tmp/focus-launcher-evidence/${mode}.stdout.json" 2> "/tmp/focus-launcher-evidence/${mode}.stderr.log"
-            result=$?
-            set -e
-            printf '%s\n' "$result" > "/tmp/focus-launcher-evidence/${mode}.exit"
-            echo "POWER_SHELL_LAUNCHER_MODE=$mode EXIT=$result"
-            cat "/tmp/focus-launcher-evidence/${mode}.stdout.json"
-            cat "/tmp/focus-launcher-evidence/${mode}.stderr.log"
-            if [ "$mode" = Overview ]; then test "$result" -eq 0; else test "$result" -eq 3; fi
-          done
-      - name: Validate exact output contracts and clean tracked state
-        shell: bash
-        run: |
-          set -euo pipefail
           python3 - <<'PY'
           import json
+          import subprocess
           from pathlib import Path
           from jsonschema import Draft202012Validator
+
           evidence = Path('/tmp/focus-launcher-evidence')
-          schema = json.loads(Path('validation/harness/control-development-output.schema.v1.json').read_text())
+          validator = Draft202012Validator(json.loads(Path('validation/harness/control-development-output.schema.v1.json').read_text()))
+          failures = []
           for mode in ('Overview', 'CheckConsistency', 'Drive', 'CloseMission'):
-              value = json.loads((evidence / f'{mode}.stdout.json').read_text())
-              Draft202012Validator(schema).validate(value)
-              if mode in ('Drive', 'CloseMission'):
-                  assert value['error']['detail'] == 'EPOCH_REGISTRY_GENERATION_MISMATCH', value
-              if mode == 'CheckConsistency':
-                  assert value['error']['detail'] == 'PROJECT_CONSISTENCY_ERRORS', value
-              if mode == 'Overview':
-                  provenance = value['overview']['provenance']
-                  assert provenance['canonical_head'] == '5b4152958624be4e9cc40f2369ce32c4964f65c3'
-                  assert provenance['candidate_preview'] is False
-              print(f'OUTPUT_SCHEMA_AND_EXPECTED_PREMERGE_GATE: {mode}')
+              command = ['pwsh', '-NoLogo', '-NoProfile', '-File', './CONTROL_DEVELOPMENT.ps1', f'-{mode}']
+              result = subprocess.run(command, capture_output=True, text=True, check=False, timeout=180)
+              (evidence / f'{mode}.stdout.log').write_text(result.stdout)
+              (evidence / f'{mode}.stderr.log').write_text(result.stderr)
+              (evidence / f'{mode}.exit').write_text(f'{result.returncode}\n')
+              print(f'POWERSHELL_LAUNCHER_MODE={mode} EXIT={result.returncode}', flush=True)
+              print(result.stdout, flush=True)
+              print(result.stderr, flush=True)
+              expected_exit = 0 if mode == 'Overview' else 3
+              try:
+                  envelopes = [json.loads(line) for line in result.stdout.splitlines() if line.lstrip().startswith('{')]
+                  assert len(envelopes) == 1, f'Expected one JSON envelope, got {len(envelopes)}'
+                  value = envelopes[0]
+                  validator.validate(value)
+                  (evidence / f'{mode}.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+                  assert result.returncode == expected_exit, result.returncode
+                  if mode in ('Drive', 'CloseMission'):
+                      assert value['error']['detail'] == 'EPOCH_REGISTRY_GENERATION_MISMATCH', value
+                  elif mode == 'CheckConsistency':
+                      assert value['error']['detail'] == 'PROJECT_CONSISTENCY_ERRORS', value
+                  else:
+                      provenance = value['overview']['provenance']
+                      assert provenance['canonical_head'] == '5b4152958624be4e9cc40f2369ce32c4964f65c3'
+                      assert provenance['candidate_preview'] is False
+                  print(f'OUTPUT_SCHEMA_AND_EXPECTED_PREMERGE_GATE: {mode}')
+              except (AssertionError, ValueError, KeyError) as error:
+                  failures.append(f'{mode}: {error}')
+          (evidence / 'launcher-summary.json').write_text(json.dumps({'subject_head': 'fb0d7f67991e3d840243a49da0dd36938a1e3dfd', 'subject_tree': '963f47285fb62589d76657cb8b21ef32189bcb44', 'unexpected_results': failures}, indent=2) + '\n')
+          if failures:
+              raise SystemExit('\n'.join(failures))
           PY
+      - name: Capture postflight tracked state
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/focus-launcher-evidence
           {
             git rev-parse HEAD
             git rev-parse 'HEAD^{tree}'
@@ -86,11 +98,11 @@ jobs:
           } | tee /tmp/focus-launcher-evidence/postflight.log
           test -z "$(git status --porcelain --untracked-files=no)"
           cd /tmp/focus-launcher-evidence
-          sha256sum *.log *.json *.exit > SHA256SUMS
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: project-focus-1b87bb09-powershell-launcher
+          name: project-focus-fb0d7f67-powershell-launcher
           path: /tmp/focus-launcher-evidence/
           if-no-files-found: error
           retention-days: 30
