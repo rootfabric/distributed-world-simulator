@@ -6,24 +6,33 @@
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
   "status": "IN_PROGRESS",
   "completed_milestones": [
-    "FETCH_CONTRACT"
+    "FETCH_CONTRACT",
+    "BOUNDED_HTTPS"
   ],
   "blockers": [],
-  "next_action": "Implement BOUNDED_HTTPS: bounded streaming https transport with timeout, hard byte ceiling and injectable opener; offline tests against fake responses only.",
-  "last_checkpoint_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30",
-  "tested_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30",
+  "next_action": "Implement RAW_CONTENT_ADDRESSABLE_CACHE: immutable sha256-addressed raw cache with write-once blobs, manifest sidecars and offline reuse tests.",
+  "last_checkpoint_head": "f3b6e41bb8619ba76b82c2a2121d2ddb7490a574",
+  "tested_head": "f3b6e41bb8619ba76b82c2a2121d2ddb7490a574",
   "validation": [
     {
       "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "29 passed",
       "head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
+    },
+    {
+      "name": "WP-ASSET1 BOUNDED_HTTPS focused tests",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "38 passed",
+      "head": "f3b6e41bb8619ba76b82c2a2121d2ddb7490a574"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:20:00Z",
+  "updated_at_utc": "2026-09-05T14:55:00Z",
   "notes": [
     "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
+    "BOUNDED_HTTPS complete: streaming bounded reads (SIZE_EXCEEDED/SIZE_SHORT typed failures), injected opener, no redirects by default.",
     "Negative fixtures committed before any real asset download (see docs/world_packs/evidence/WP-ASSET1_FETCH_CONTRACT_R1.md).",
-    "Package is stdlib-only per tools/world_packs/requirements-asset-fetch.txt."
+    "Package is stdlib-only per tools/world_packs/requirements-asset-fetch.txt.",
+    "Cross-track note: controller 'verify/status' currently fails globally because origin WP-SURFACE1 state JSON carries a UTF-8 BOM (invalid for json.load). Fix belongs to WP-SURFACE1/controller, not WP-ASSET1 allowed paths."
   ]
 }
