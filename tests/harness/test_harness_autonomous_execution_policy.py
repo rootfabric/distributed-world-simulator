@@ -14,7 +14,7 @@ def load(relative: str) -> dict:
 class AutonomousExecutionPolicyTests(unittest.TestCase):
     def test_self_execution_is_default_and_preferred_vm_is_optional(self) -> None:
         policy = load("config/control/harness/continuation-policy.v1.json")
-        self.assertEqual("H0-AUTONOMY-2026-09-05-R1", policy["autonomous_execution_revision"])
+        self.assertEqual("H0-AUTONOMY-2026-09-05-R2", policy["autonomous_execution_revision"])
         execution = policy["autonomous_execution"]
         self.assertEqual("SELF_EXECUTE_AUTOMATABLE_WORK", execution["default_mode"])
         self.assertFalse(execution["human_confirmation_for_routine_execution_required"])
@@ -38,6 +38,11 @@ class AutonomousExecutionPolicyTests(unittest.TestCase):
         )
         self.assertIn("ALL_ALLOWED_AUTOMATABLE_EXECUTOR_FALLBACKS_EXHAUSTED", execution["hard_block_requires"])
         self.assertIn("NO_SCOPE_PRESERVING_REPAIR_OR_REPLAN_EXISTS", execution["hard_block_requires"])
+        requirements = execution["hard_block_proof_requirements"]
+        self.assertEqual(set(execution["hard_block_requires"]), set(requirements))
+        durable = requirements["DURABLE_BLOCK_PROOF_WITH_EXACT_RESUME_CONDITION"]
+        self.assertIn({"field": "proof_evidence_path", "predicate": "NON_EMPTY_STRING"}, durable)
+        self.assertIn({"field": "resume_condition", "predicate": "NON_EMPTY_STRING"}, durable)
 
     def test_independent_verdict_does_not_require_separate_cloud_vm_by_default(self) -> None:
         continuation = load("config/control/harness/continuation-policy.v1.json")
@@ -53,12 +58,28 @@ class AutonomousExecutionPolicyTests(unittest.TestCase):
         self.assertTrue(risk["rules"]["required_role_is_a_responsibility_boundary_not_a_vm_vendor_requirement"])
         self.assertTrue(risk["rules"]["implementer_cannot_convert_its_own_machine_evidence_into_an_independent_verdict"])
 
+    def test_reused_machine_evidence_requires_hash_bound_manifest(self) -> None:
+        verifier = load("config/control/harness/review-policy.v1.json")["verifier_execution"]
+        required = verifier["trusted_machine_evidence_requires"]
+        self.assertIn("SHA256_OR_STRONGER_DIGEST_FOR_EVERY_REUSED_LOG_OR_ARTIFACT", required)
+        self.assertIn("DIGEST_MANIFEST_BINDS_EXACT_HEAD_TREE_RUNNER_AND_ARTIFACT_IDENTITY", required)
+        reuse = verifier["reused_machine_evidence"]
+        self.assertEqual("SHA256", reuse["minimum_digest_algorithm"])
+        self.assertTrue(reuse["digest_manifest_required"])
+        self.assertTrue(reuse["every_reused_log_or_artifact_requires_digest"])
+        self.assertEqual(
+            ["EXACT_HEAD", "EXACT_TREE", "RUNNER_OR_WORKFLOW_RUN_ID", "ARTIFACT_ID_OR_PATH"],
+            reuse["manifest_must_bind"],
+        )
+        self.assertEqual("INSUFFICIENT_EVIDENCE", reuse["missing_or_unbound_digest_verdict"])
+
     def test_doctrine_preserves_human_and_acceptance_gates(self) -> None:
         text = (ROOT / "docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md").read_text(encoding="utf-8")
         self.assertIn("SELF-EXECUTE AUTOMATABLE WORK FIRST", text)
         self.assertIn("NOT HARD BLOCKED", text)
         self.assertIn("Implementer может создать полное machine evidence", text)
         self.assertIn("не может превратить собственный результат", text)
+        self.assertIn("SHA-256", text)
         self.assertIn("merge в canonical main", text)
         self.assertIn("force-push / history rewrite", text)
 
