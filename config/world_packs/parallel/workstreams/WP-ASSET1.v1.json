@@ -10,12 +10,13 @@
     "BOUNDED_HTTPS",
     "RAW_CONTENT_ADDRESSABLE_CACHE",
     "SSRF_REDIRECT_AND_SIZE_GATES",
-    "ARCHIVE_SAFETY_FIXTURES"
+    "ARCHIVE_SAFETY_FIXTURES",
+    "OFFLINE_REUSE_AND_CORRUPTION_RECOVERY"
   ],
   "blockers": [],
-  "next_action": "Implement OFFLINE_REUSE_AND_CORRUPTION_RECOVERY: cache-first fetch pipeline that never touches network on cache hit, detects CACHE_CORRUPT, refetches once and repairs; offline tests with injected transports only.",
-  "last_checkpoint_head": "d6fc5350154c0e8e8222526e0416f531cd1198eb",
-  "tested_head": "d6fc5350154c0e8e8222526e0416f531cd1198eb",
+  "next_action": "Finalize EVIDENCE_READY: publish the consolidated WP-ASSET1 evidence summary, re-run full focused suite on the final head, then request independent review for integration.",
+  "last_checkpoint_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
+  "tested_head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b",
   "validation": [
     {
       "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
@@ -46,9 +47,15 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "93 passed",
       "head": "d6fc5350154c0e8e8222526e0416f531cd1198eb"
+    },
+    {
+      "name": "WP-ASSET1 OFFLINE_REUSE_AND_CORRUPTION_RECOVERY focused tests",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "99 passed",
+      "head": "1ff25c9a4d6851aac7a957b9feab01e550ebdf6b"
     }
   ],
-  "updated_at_utc": "2026-09-05T16:45:00Z",
+  "updated_at_utc": "2026-09-05T17:20:00Z",
   "notes": [
     "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
     "BOUNDED_HTTPS complete: streaming bounded reads (SIZE_EXCEEDED/SIZE_SHORT typed failures), injected opener, no redirects by default.",
