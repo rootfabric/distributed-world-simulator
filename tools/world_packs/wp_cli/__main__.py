@@ -46,6 +46,18 @@ def build_parser() -> argparse.ArgumentParser:
                                help=f"{dest} JSON path (default: repo document)")
     p_resolve.set_defaults(handler=app.cmd_resolve)
 
+    p_doctor = sub.add_parser(
+        "doctor", help="diagnose the authoring environment and WP1.0 contract state")
+    for dest in ("catalog", "locations", "schema"):
+        p_doctor.add_argument(f"--{dest}", type=str, default=None,
+                              help=f"{dest} JSON path (default: repo document)")
+    p_doctor.add_argument("--packs-dir", type=str, default=None,
+                          help="legacy pack manifest directory (default: repo config/world_packs/packs)")
+    p_doctor.add_argument("--skip-fixtures", action="store_true",
+                          help="skip local fixture payload byte verification")
+    p_doctor.add_argument("--json", action="store_true", help="machine-readable JSON report")
+    p_doctor.set_defaults(handler=app.cmd_doctor)
+
     return parser
 
 
