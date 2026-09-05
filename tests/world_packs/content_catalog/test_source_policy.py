@@ -267,6 +267,42 @@ def test_discovery_families_cover_full_minimal_set():
     assert FAMILIES <= by_family, f"minimal discovery set missing: {sorted(FAMILIES - by_family)}"
 
 
+BASELINE_REDISTRIBUTABLE = {"CC0-1.0", "PDDL-1.0"}
+
+
+def test_license_and_provenance_audit():
+    """LICENSE_AND_PROVENANCE_AUDIT: every stored descriptor must belong to a
+    well-defined lane; baseline lane requires redistributable verified license,
+    reference_only/rejected lanes must be explicit and never mixed silently."""
+    descriptors = load_descriptors()
+    assert descriptors, "audit expects stored descriptors"
+    for d in descriptors:
+        cid = d["candidate_id"]
+        tier = d["intended_use"]["fidelity_tier"]
+        status = d["review_status"]
+        if status == "rejected":
+            assert d.get("rejection_reason"), f"{cid}: rejected lane needs reason"
+            continue
+        lic = d["license"]
+        if tier == "reference_only":
+            # reference lane: license expression may be unknown, but then it
+            # must NOT claim baseline redistributability
+            assert lic["expression"] not in BASELINE_REDISTRIBUTABLE or lic["verified"]["method"] != "not_verified", (
+                f"{cid}: reference_only with unverified permissive expression"
+            )
+        else:
+            # baseline lane: redistributable license with real verification record
+            assert lic["expression"] in BASELINE_REDISTRIBUTABLE, (
+                f"{cid}: baseline lane requires CC0/PDDL, got {lic['expression']}"
+            )
+            assert lic["verified"]["method"] != "not_verified", f"{cid}: unverified license in baseline lane"
+            assert URL_RE.match(lic["verified"]["verified_url"]), f"{cid}: audit needs verified_url"
+        prov = d["provenance"]
+        assert prov["measured_reference"] is False or prov.get("measured_evidence_url"), (
+            f"{cid}: measured claim requires evidence URL"
+        )
+
+
 def test_no_heavy_payloads_in_candidates_tree():
     allowed_suffixes = {".json", ".md"}
     for p in CANDIDATES_DIR.rglob("*"):
