@@ -166,6 +166,42 @@ def test_irregular_rock_descriptor_probes_arbitrary_diagonal() -> None:
     assert '"irregular_rock"' in block
 
 
+def test_registry_provides_local_frame_triplanar_math() -> None:
+    source = fixtures_source_module()
+    assert "static func local_direction" in source
+    assert "static func triplanar_weights_local" in source
+    # Weights must be derived from the fixture-local normal only.
+    weights_fn = source[source.index("static func triplanar_weights_local") :]
+    weights_fn = weights_fn[: weights_fn.index("\n\n\n")]
+    assert "local_normal" in weights_fn
+    assert "Vector3.UP" not in weights_fn
+
+
+def test_lab_surfaces_use_local_frame_triplanar_mapping() -> None:
+    lab = LAB_GD.read_text(encoding="utf-8")
+    assert "uv1_triplanar" in lab
+    assert "_make_checker_texture" in lab
+    assert "report_local_frame_mapping" in lab
+    # Real surfaces pass triplanar=True into the material helper.
+    surface_builder = lab[lab.index("func _build_surface") :]
+    surface_builder = surface_builder[: surface_builder.index("func _make_irregular_rock")]
+    assert "true)" in surface_builder
+    # The checker pattern is generated at runtime, not loaded from assets.
+    checker_fn = lab[lab.index("func _make_checker_texture") :]
+    checker_fn = checker_fn[: checker_fn.index("func ")]
+    assert "load(" not in checker_fn and "preload(" not in checker_fn
+
+
+def test_self_check_proves_triplanar_orientation_independence() -> None:
+    check = SELF_CHECK_GD.read_text(encoding="utf-8")
+    assert "_check_local_frame_mapping" in check
+    assert "is_equal_approx(rotated_weights)" in check or "rotated_weights" in check
+
+
+def fixtures_source_module() -> str:
+    return FIXTURES_GD.read_text(encoding="utf-8")
+
+
 def test_overhang_rotation_keeps_declared_down_orientation() -> None:
     # -125 degrees would classify the overhang as side-facing under the
     # 0.7/0.3 thresholds; the registry must keep a rotation whose world

@@ -33,7 +33,11 @@ const ENABLED_SURFACE_MILESTONES: Array[String] = [
 ]
 
 
+var _checker_texture: ImageTexture
+
+
 func _ready() -> void:
+	_checker_texture = _make_checker_texture()
 	_build_environment()
 	_build_reference_frame()
 	var built: int = 0
@@ -124,7 +128,7 @@ func _build_surface(fixture: Dictionary) -> void:
 		var box := BoxMesh.new()
 		box.size = Vector3(fixture["size"])
 		body.mesh = box
-	_apply_diagnostic_material(body, fixture["diagnostic_color"])
+	_apply_diagnostic_material(body, fixture["diagnostic_color"], true)
 	root.add_child(body)
 
 	# Local-frame normal indicator on the real surface: orientation must stay
@@ -172,13 +176,38 @@ func _make_irregular_rock() -> ArrayMesh:
 	return mesh
 
 
-func _apply_diagnostic_material(target: MeshInstance3D, color: Color) -> void:
+func _apply_diagnostic_material(
+	target: MeshInstance3D,
+	color: Color,
+	triplanar: bool = false
+) -> void:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color(color.r, color.g, color.b, MARKER_ALPHA)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.roughness = 0.85
 	material.metallic = 0.0
+	if triplanar:
+		# Local-frame triplanar mapping: Godot derives the three projection
+		# planes from the node's LOCAL axes, not from a hardcoded world up, so
+		# the checker pattern follows the fixture wherever it is rotated.
+		material.albedo_texture = _checker_texture
+		material.uv1_triplanar = true
+		material.uv1_scale = Vector3(1.5, 1.5, 1.5)
+		material.texture_repeat = true
 	target.material_override = material
+
+
+## Asset-free 8x8 two-tone checker used as the triplanar diagnostic pattern.
+## Generated once at runtime; nothing is loaded from disk.
+func _make_checker_texture() -> ImageTexture:
+	var image := Image.create(64, 64, false, Image.FORMAT_RGB8)
+	var dark := Color(0.12, 0.12, 0.12)
+	var light := Color(0.9, 0.9, 0.9)
+	for y in 64:
+		for x in 64:
+			var cell := int(x / 8 + y / 8) % 2
+			image.set_pixel(x, y, light if cell == 0 else dark)
+	return ImageTexture.create_from_image(image)
 
 
 func _make_normal_arrow(local_normal: Vector3, color: Color) -> Node3D:
@@ -257,3 +286,28 @@ func _build_camera() -> void:
 ## without touching any global-up assumption.
 func report_world_normal(fixture_id: String) -> Vector3:
 	return Fixtures.world_surface_normal(Fixtures.descriptor(fixture_id))
+
+
+## MCP/automation entry: local-frame triplanar mapping report for a fixture.
+## Returns the descriptor local normal, the local triplanar blend weights for
+## the surface's own world normal, and whether the surface material uses
+## local-frame triplanar mapping. Orientation-independence is provable: the
+## weights depend only on the local frame, not on world rotation.
+func report_local_frame_mapping(fixture_id: String) -> Dictionary:
+	var fixture := Fixtures.descriptor(fixture_id)
+	var world_normal := Fixtures.world_surface_normal(fixture)
+	var fixture_root := get_node_or_null("Fixture_%s" % fixture_id) as Node3D
+	var triplanar_enabled := false
+	if fixture_root != null:
+		var body := fixture_root.get_node_or_null("Surface") as MeshInstance3D
+		if body != null and body.material_override is StandardMaterial3D:
+			triplanar_enabled = (
+				body.material_override as StandardMaterial3D
+			).uv1_triplanar
+	return {
+		"fixture_id": fixture_id,
+		"local_normal": Vector3(fixture["surface_normal_local"]),
+		"local_roundtrip": Fixtures.local_direction(fixture, world_normal),
+		"triplanar_weights_local": Fixtures.triplanar_weights_local(fixture, world_normal),
+		"triplanar_enabled": triplanar_enabled,
+	}

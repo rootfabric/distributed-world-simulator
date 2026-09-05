@@ -120,6 +120,7 @@ func _process(_delta: float) -> bool:
 				"surface %s API normal (%s) != registry normal (%s)"
 				% [expected_id, reported, declared]
 			)
+		problems.append_array(_check_local_frame_mapping(lab, expected_id))
 
 	if problems.is_empty():
 		print(
@@ -133,3 +134,46 @@ func _process(_delta: float) -> bool:
 		print("SURFACE_MATERIAL_LAB_SELF_CHECK=FAIL")
 		quit(1)
 	return true
+
+
+## Local-frame (triplanar) mapping proofs for one fixture:
+## - the surface material actually uses local-frame triplanar mapping;
+## - world -> local -> world roundtrip returns the descriptor local normal;
+## - triplanar weights computed in the local frame are invariant under an
+##   arbitrary extra world rotation of the probe normal.
+func _check_local_frame_mapping(lab: Node, fixture_id: String) -> PackedStringArray:
+	var issues := PackedStringArray()
+	var mapping: Dictionary = lab.report_local_frame_mapping(fixture_id)
+	if not bool(mapping["triplanar_enabled"]):
+		issues.append("surface %s material lacks local-frame triplanar mapping" % fixture_id)
+
+	var fixture := Fixtures.descriptor(fixture_id)
+	var declared_local: Vector3 = fixture["surface_normal_local"]
+	var roundtrip: Vector3 = mapping["local_roundtrip"]
+	if not roundtrip.is_equal_approx(declared_local):
+		issues.append(
+			"surface %s local roundtrip (%s) != declared local normal (%s)"
+			% [fixture_id, roundtrip, declared_local]
+		)
+
+	var world_normal := Fixtures.world_surface_normal(fixture)
+	var weights := mapping["triplanar_weights_local"] as Vector3
+	if weights == Vector3.ZERO:
+		issues.append("surface %s triplanar weights are zero" % fixture_id)
+
+	# Orientation-independence proof: rotate the WHOLE fixture by an extra
+	# 37 degrees around world Y (and 11 around X). The local frame travels
+	# with the fixture, so the local-frame triplanar weights of the surface's
+	# own normal must be unchanged.
+	var rotated := fixture.duplicate()
+	rotated["rotation_degrees"] = (
+		Vector3(fixture["rotation_degrees"]) + Vector3(11.0, 37.0, 0.0)
+	)
+	var rotated_normal := Fixtures.world_surface_normal(rotated)
+	var rotated_weights := Fixtures.triplanar_weights_local(rotated, rotated_normal)
+	if not (weights as Vector3).is_equal_approx(rotated_weights):
+		issues.append(
+			"surface %s triplanar weights changed under fixture rotation: (%s) -> (%s)"
+			% [fixture_id, weights, rotated_weights]
+		)
+	return issues

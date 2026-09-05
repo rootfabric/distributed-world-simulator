@@ -147,6 +147,28 @@ static func world_surface_normal(fixture: Dictionary) -> Vector3:
 	return (basis * Vector3(fixture["surface_normal_local"])).normalized()
 
 
+## Inverse mapping: express a WORLD-space direction back in the fixture-local
+## frame. This is the core of local-frame (triplanar) mapping: texture lookups
+## and blend weights are computed in this space, so they are invariant under
+## arbitrary world rotations of the fixture.
+static func local_direction(fixture: Dictionary, world_direction: Vector3) -> Vector3:
+	var euler_radians := deg_to_rad_euler(Vector3(fixture["rotation_degrees"]))
+	var basis := Basis.from_euler(euler_radians)
+	return (basis.inverse() * world_direction).normalized()
+
+
+## Triplanar blend weights in the FIXTURE-LOCAL frame: the three weights
+## (one per local axis) are derived from |local_normal| components only, so
+## the mapping is orientation-independent: rotating the whole fixture leaves
+## the weights untouched.
+static func triplanar_weights_local(fixture: Dictionary, world_normal: Vector3) -> Vector3:
+	var local_normal := local_direction(fixture, world_normal).abs()
+	var total := local_normal.x + local_normal.y + local_normal.z
+	if total <= 0.0:
+		return Vector3.ZERO
+	return local_normal / total
+
+
 static func deg_to_rad_euler(euler_degrees: Vector3) -> Vector3:
 	return Vector3(
 		deg_to_rad(euler_degrees.x),
