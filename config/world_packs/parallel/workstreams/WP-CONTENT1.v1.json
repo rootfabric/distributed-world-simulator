@@ -7,12 +7,12 @@
   "status": "IN_PROGRESS",
   "completed_milestones": [
     "SOURCE_POLICY",
-    "ROCK_AND_CLIFF_CANDIDATES"
+    "SAND_AND_SOIL_CANDIDATES"
   ],
   "blockers": [],
-  "next_action": "Implement SAND_AND_SOIL_CANDIDATES: add discovery descriptors for Poly Haven gravelly sand and ambientCG Ground037 with observed-only facts; keep hashes null.",
-  "last_checkpoint_head": "6ef34fb8c6ad4ff741b82191c5fe7650463dc044",
-  "tested_head": "6ef34fb8c6ad4ff741b82191c5fe7650463dc044",
+  "next_action": "Implement ICE_AND_SNOW_CANDIDATES: add discovery descriptors for ambientCG Ice001 and Snow001 with observed-only facts; keep hashes null.",
+  "last_checkpoint_head": "de1387fc99210e261aac985ece5b7fcc4f144c00",
+  "tested_head": "de1387fc99210e261aac985ece5b7fcc4f144c00",
   "validation": [
     {
       "milestone": "SOURCE_POLICY",
@@ -34,11 +34,19 @@
       "result": "14 passed",
       "tested_head": "6ef34fb8c6ad4ff741b82191c5fe7650463dc044",
       "run_at_utc": "2026-09-05"
+    },
+    {
+      "milestone": "SAND_AND_SOIL_CANDIDATES",
+      "command": "python -m pytest tests/world_packs/content_catalog -q",
+      "result": "15 passed",
+      "tested_head": "de1387fc99210e261aac985ece5b7fcc4f144c00",
+      "run_at_utc": "2026-09-05"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:55:00Z",
+  "updated_at_utc": "2026-09-05T15:30:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
-    "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.", "ROCK_AND_CLIFF_CANDIDATES done: 2 Poly Haven rock/cliff discovery descriptors, facts from in-repo verified research only, 14 passed at 6ef34fb8."
+    "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.", "ROCK_AND_CLIFF_CANDIDATES done: 2 Poly Haven rock/cliff discovery descriptors, facts from in-repo verified research only, 14 passed at 6ef34fb8.",
+    "SAND_AND_SOIL_CANDIDATES done: polyhaven gravelly sand + ambientCG Ground037 discovery descriptors, 15 passed at de1387fc."
   ]
 }
