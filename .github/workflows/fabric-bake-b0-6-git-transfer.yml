@@ -1,83 +1,65 @@
 name: FABRIC B0.6 Checksum-Bound Git Transport
-
 on:
   workflow_dispatch:
   push:
-    branches:
-      - research/fabric-bake0-6-adaptive-physical-fidelity-r1
-    paths:
-      - .github/workflows/fabric-bake-b0-6-git-transfer.yml
-
+    branches: [research/fabric-bake0-6-adaptive-physical-fidelity-r1]
+    paths: [.github/workflows/fabric-bake-b0-6-git-transfer.yml]
 permissions:
   contents: write
-
 jobs:
   verified-source-transport:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
-      - name: Reconstruct and verify Git bundle without running its code
+      - name: Reconstruct checksum-bound source bundle
         env:
           GH_TOKEN: ${{ github.token }}
-          OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
-        shell: bash
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import base64
-          import hashlib
-          import json
-          import os
+          import base64, hashlib, json, os
           from pathlib import Path
           from urllib.request import Request, urlopen
-          refs = [
-              '23dbda358a35ea8fdcd299dbdc6a5918c66ce96e',
-              '3c21146f6c39de1cef0c6e0aa56ac86f48bd1c7c',
-              '9ad4b449b72e4a8be7294d7139d853e06bee5481',
-              '1943262e591d023ab0b76c81d8ceab06dfb6f0ec',
-          ]
-          corrections = [
-              [[2694, 2695, ''], [2841, 2842, '0'], [3133, 3134, '6'], [6471, 6473, '3d'], [13336, 13336, '=']],
-              [],
-              [[1333, 1333, '/'], [3906, 3906, '/'], [4929, 4929, '/'], [6430, 6431, ''], [9132, 9132, '/'], [10660, 10660, '/']],
-              [[6947, 6948, ''], [9400, 9400, '/'], [11163, 11163, '/'], [11491, 11491, '/'], [12316, 12316, '/'], [13332, 13332, '=']],
-          ]
-          tail = '57bWFtTseesAN9a8sk1PKA/CgydN8QIzKbj4KsldiNX27GOumkZCxUy7lHic+8vxl2NDJLOI4JKpzVN5hfnfLYxksCln+qirOdtocy6zACMA2ZALofkBsIuag9Y2SQ9heX+OWuzaZI3sk8J4nMvOnhAuMi9PLn92Tq2g3Zc40yL/tbPfm/6ZBgCG+guEbYYQeJx7q/NQe4L7xD7tjf/yRQEvmgZ68AL5FX2NSghv5/xwMaLRiOq/eDHo33icASAA3/+0BbQFsNkBFM8p3aQxgO2Gy9uWZxRE4miapjZHk+0BxwC6D/j5AXlKTCIw5lmRX0d2UxtPMoxOcCeneJzLzp4QLrLszUSTznsdwrOvLzd8PeXoY/MVf/IBpykN5m2AhW94nHspN0t6o8Ntts1xHPvZACnjBW1bBWQstxH/siD5COX0u9e2+k1Jrg=='
+          refs = ['23dbda358a35ea8fdcd299dbdc6a5918c66ce96e', '3c21146f6c39de1cef0c6e0aa56ac86f48bd1c7c', '9ad4b449b72e4a8be7294d7139d853e06bee5481', '1943262e591d023ab0b76c81d8ceab06dfb6f0ec', 'f7683e7323607188e79006fa44b7371097a7ebca']
+          corrections = {
+              '0': [[2694,2695,''],[2841,2842,'0'],[3133,3134,'6'],[6471,6473,'3d'],[13336,13336,'=']],
+              '1': [],
+              '2': [[1333,1333,'/'],[3906,3906,'/'],[4929,4929,'/'],[6430,6431,''],[9132,9132,'/'],[10660,10660,'/']],
+              '3': [[6947,6948,''],[9400,9400,'/'],[11163,11163,'/'],[11491,11491,'/'],[12316,12316,'/'],[13332,13332,'=']],
+              '4': [[22,25,'/Cg'],[26,28,'dN'],[60,60,'+8vxl2NDJLOI4JKpzVN5hfnfLYxksCln+qirOdtocy6zACMA2ZALofkBsIuag9Y2SQ9heX+OWuzaZI3sk8J4nMvOnhAuMi9PLn92Tq2g3Zc40yL/tbPfm/6ZBgCG+guEbYYQeJx7q/NQe4L7xD7tjf/yRQEvmgZ68AL5FX2NSghv5/xwMaLRiOq/eDHo33ic'],[62,63,'A'],[65,65,'/+0BbQFsNkBFM8p3aQxgO2Gy9uWZxRE4miapjZHk+0BxwC6D/j5AXlKTCIw5lmRX0d2UxtPMoxOcCeneJzLzp4QLrLszUSTznsdwrO'],[66,66,'Lzd8PeXoY'],[67,69,''],[70,72,'Vf/'],[74,75,'pykN5m2Ah'],[76,78,'94nHspN0t6o8Ntts1xHPvZACn'],[79,89,'BW1'],[90,114,'BWQstx'],[116,121,'siD'],[122,125,'COX0u9e2+'],[126,169,'1'],[170,193,'r'],[194,235,''],[236,236,'=']],
+          }
           out = Path(os.environ['OUTPUT_DIR'])
           out.mkdir(parents=True, exist_ok=True)
           chunks = []
           for index, sha in enumerate(refs):
-              request = Request(
-                  f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}',
-                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'},
-              )
+              request = Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
               with urlopen(request, timeout=60) as response:
                   payload = json.load(response)
-              if payload.get('encoding') != 'base64':
-                  raise RuntimeError('Unexpected blob encoding')
               data = base64.b64decode(payload['content'])
-              if hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() != sha:
-                  raise RuntimeError('Git blob integrity mismatch')
+              assert hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() == sha
               encoded = base64.b64encode(data).decode()
-              for begin, end, replacement in reversed(corrections[index]):
+              (out / f'received-{index}.b64').write_text(encoded)
+              for begin, end, replacement in reversed(corrections[str(index)]):
                   encoded = encoded[:begin] + replacement + encoded[end:]
-              chunks.append(base64.b64decode(encoded, validate=True))
-          chunks.append(base64.b64decode(tail, validate=True))
+              data = base64.b64decode(encoded, validate=True)
+              (out / f'corrected-{index}.b64').write_text(encoded)
+              print(index, len(data), hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest())
+              chunks.append(data)
           bundle = b''.join(chunks)
-          digest = hashlib.sha256(bundle).hexdigest()
-          if len(bundle) != 40331 or digest != '07183299d7d2f42f2f3a9127b244deedc30517b641c1e644299ac246358af458':
-              raise RuntimeError('Canonical offline bundle integrity mismatch: ' + digest)
           (out / 'implementation.bundle').write_bytes(bundle)
-          print('VERIFIED_SOURCE_BUNDLE_SHA256=' + digest)
+          digest = hashlib.sha256(bundle).hexdigest()
+          print('SOURCE_BUNDLE_BYTES=' + str(len(bundle)))
+          print('SOURCE_BUNDLE_SHA256=' + digest)
+          assert len(bundle) == 40331
+          assert digest == '07183299d7d2f42f2f3a9127b244deedc30517b641c1e644299ac246358af458'
           PY
-      - name: Stage exact scoped commits without changing research or main refs
-        env:
-          OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
-        shell: bash
+      - name: Stage verified commits without moving research or main
         run: |
           set -Eeuo pipefail
           base=1e8e74d6afafad294ddf10d68cb37efacc3ef3a1
@@ -91,10 +73,6 @@ jobs:
           git config user.name 'DWS Research Agent'
           git config user.email 'dws-research@users.noreply.github.com'
           git checkout --detach "$GITHUB_SHA"
-          if git merge-base --is-ancestor "$payload" HEAD; then
-            echo 'Payload already present; no duplicate publication.'
-            exit 0
-          fi
           git cherry-pick $(git rev-list --reverse "$base..$payload")
           test "$(git diff --name-only "$payload" HEAD)" = .github/workflows/fabric-bake-b0-6-git-transfer.yml
           git diff --check
@@ -107,25 +85,14 @@ jobs:
           from pathlib import Path
           out = Path(os.environ['OUTPUT_DIR'])
           git = lambda *args: subprocess.check_output(['git', *args], text=True).strip()
-          manifest = {
-              'purpose': 'VERIFIED_SOURCE_TRANSPORT_NOT_RUNTIME_EVIDENCE',
-              'carrier_head': os.environ['GITHUB_SHA'],
-              'payload_head': 'f50d19e4bdf54a4b89a4e7018314c6ee63e4578c',
-              'head': git('rev-parse', 'HEAD'),
-              'tree': git('rev-parse', 'HEAD^{tree}'),
-              'branch': 'staging/fabric-b0-6-offline-' + os.environ['GITHUB_RUN_ID'],
-              'bundle_sha256': hashlib.sha256((out / 'result.bundle').read_bytes()).hexdigest(),
-              'main_changed': False,
-              'research_ref_changed': False,
-          }
+          manifest = {'purpose': 'VERIFIED_SOURCE_TRANSPORT_NOT_RUNTIME_EVIDENCE', 'carrier_head': os.environ['GITHUB_SHA'], 'payload_head': 'f50d19e4bdf54a4b89a4e7018314c6ee63e4578c', 'head': git('rev-parse', 'HEAD'), 'tree': git('rev-parse', 'HEAD^{tree}'), 'branch': 'staging/fabric-b0-6-offline-' + os.environ['GITHUB_RUN_ID'], 'bundle_sha256': hashlib.sha256((out / 'result.bundle').read_bytes()).hexdigest(), 'main_changed': False, 'research_ref_changed': False}
           (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
           print(json.dumps(manifest, indent=2))
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: fabric-b0-6-verified-source-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/b06-verified-transfer/result.bundle
-            ${{ runner.temp }}/b06-verified-transfer/manifest.json
+          path: ${{ runner.temp }}/b06-verified-transfer/
           if-no-files-found: error
           retention-days: 7
