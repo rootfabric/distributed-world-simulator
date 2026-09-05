@@ -1,0 +1,61 @@
+# Validation transport only. Do not merge this helper into the candidate or main.
+# Derived from v0-p7-7-formal-source-snapshot-r3.yml; no runtime execution or authority.
+name: Project Focus Exact Source Export R1
+
+on:
+  pull_request:
+    branches: [control/project-focus-harness-reconciliation-r1]
+    paths: [.github/workflows/project-focus-exact-source-export-r1.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 44eacbc8ff573902b91d37222d41f368a8a46af2
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact subject and fetched main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/project-focus-export
+          {
+            git fetch --all --prune
+            git rev-parse origin/main
+            git rev-parse origin/control/project-focus-harness-reconciliation-r1
+            git rev-parse HEAD
+            git rev-parse 'HEAD^{tree}'
+            git status --porcelain --untracked-files=no
+          } 2>&1 | tee /tmp/project-focus-export/preflight.log
+          test "$(git rev-parse HEAD)" = 44eacbc8ff573902b91d37222d41f368a8a46af2
+          test "$(git rev-parse 'HEAD^{tree}')" = b8d3fbd638ee5de3ff148554f2d6c2a5f24313cc
+          test "$(git rev-parse origin/main)" = 5b4152958624be4e9cc40f2369ce32c4964f65c3
+          test -z "$(git status --porcelain --untracked-files=no)"
+          if git config --local --get-regexp 'http\..*\.extraheader'; then
+            echo 'EXPORT_FORBIDDEN_CREDENTIAL_HEADER_PRESENT'
+            exit 1
+          fi
+      - name: Export pinned Python dependency
+        run: python3 -m pip download --disable-pip-version-check --no-deps -r scripts/harness/requirements.txt -d /tmp/project-focus-export/wheels
+      - name: Archive exact checkout and Git metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf /tmp/project-focus-export/project-focus-44eacbc8-with-git.tar.gz .
+          cd /tmp/project-focus-export
+          sha256sum project-focus-44eacbc8-with-git.tar.gz preflight.log wheels/* > SHA256SUMS
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-focus-44eacbc8-exact-source
+          path: /tmp/project-focus-export/
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 3
