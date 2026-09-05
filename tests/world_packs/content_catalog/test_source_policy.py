@@ -310,3 +310,23 @@ def test_no_heavy_payloads_in_candidates_tree():
             continue
         assert p.suffix.lower() in allowed_suffixes, f"non-catalog file: {p.name}"
         assert p.stat().st_size <= 256 * 1024, f"file too large for Git: {p.name}"
+
+
+def test_git_tracked_payloads_are_text_and_small():
+    """NO_HEAVY_GIT_PAYLOAD_GATE: every git-tracked file under the WP-CONTENT1
+    content paths must be small text (json/md), with no NUL bytes (binary
+    payload smell). Checks the index, not just the working tree."""
+    import subprocess
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "config/world_packs/library/candidates", "docs/world_packs/sources"],
+        cwd=ROOT, text=True, capture_output=True, check=True,
+    ).stdout.split()
+    assert tracked, "expected tracked content catalog files"
+    for rel in tracked:
+        p = ROOT / rel
+        assert p.suffix.lower() in {".json", ".md"}, f"tracked non-catalog file: {rel}"
+        size = p.stat().st_size
+        assert size <= 256 * 1024, f"tracked file too large: {rel} ({size} bytes)"
+        data = p.read_bytes()
+        assert b"\x00" not in data, f"binary payload detected: {rel}"
