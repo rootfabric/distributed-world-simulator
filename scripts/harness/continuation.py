@@ -24,6 +24,44 @@ def _threshold(policy: dict[str, Any]) -> int:
     return max(1, int(closing.get("max_same_defect_fix_required_events_before_takeover", 3)))
 
 
+def _hard_block_proof_complete(proof: Any, policy: dict[str, Any]) -> bool:
+    """Fail closed unless every policy-declared hard-block proof clause is present."""
+    if not isinstance(proof, dict) or proof.get("proven_non_automatable") is not True:
+        return False
+    execution = policy.get("autonomous_execution")
+    if not isinstance(execution, dict):
+        # Historical pre-autonomy policy snapshots had only the legacy proof flag.
+        # Current production policy always declares autonomous_execution and uses
+        # the stricter requirement matrix below.
+        resume = proof.get("resume_condition")
+        return isinstance(resume, str) and bool(resume.strip())
+    requirements = execution.get("hard_block_requires")
+    specifications = execution.get("hard_block_proof_requirements")
+    if not isinstance(requirements, list) or not requirements or not isinstance(specifications, dict):
+        return False
+    for requirement in requirements:
+        clauses = specifications.get(requirement)
+        if not isinstance(clauses, list) or not clauses:
+            return False
+        for clause in clauses:
+            if not isinstance(clause, dict):
+                return False
+            field = clause.get("field")
+            predicate = clause.get("predicate")
+            if not isinstance(field, str) or not field:
+                return False
+            value = proof.get(field)
+            if predicate == "TRUE":
+                if value is not True:
+                    return False
+            elif predicate == "NON_EMPTY_STRING":
+                if not isinstance(value, str) or not value.strip():
+                    return False
+            else:
+                return False
+    return True
+
+
 def _transition(
     *,
     mission: dict[str, Any],
@@ -107,14 +145,14 @@ def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[st
         )
 
     hard_proof = state.get("hard_block_proof")
-    if state_name == "BLOCKED" and isinstance(hard_proof, dict) and hard_proof.get("proven_non_automatable") is True:
+    if state_name == "BLOCKED" and _hard_block_proof_complete(hard_proof, policy):
         return _transition(
             mission=mission,
             handoff_class="SYSTEM_BLOCKED",
             next_actor="DIRECTOR",
             next_action="REPORT_PROVEN_NON_AUTOMATABLE_BLOCKER",
-            resume_condition=str(hard_proof.get("resume_condition") or "EXTERNAL_BLOCKER_RESOLVED"),
-            reason="A durable proof marks the blocker as non-automatable in current scope.",
+            resume_condition=hard_proof["resume_condition"].strip(),
+            reason="Durable proof establishes mandatory capability, fallback exhaustion, no scoped recovery and an exact resume condition.",
             role_exit_allowed=True,
             closure_loop_required=False,
             stop_obligation="PERSIST_HARD_BLOCK_PROOF_AND_RESUME_CONDITION",

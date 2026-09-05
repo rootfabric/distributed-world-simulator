@@ -14,7 +14,12 @@
     "blocked_state_alone_is_not_hard_block_proof": true,
     "routine_git_write_is_not_human_gate": true,
     "role_boundary_does_not_revoke_git_authority": true,
-    "do_not_reask_human_for_pre_authorized_git_operations": true
+    "do_not_reask_human_for_pre_authorized_git_operations": true,
+    "agent_self_executes_available_automatable_work_before_handoff": true,
+    "preferred_executor_unavailable_is_not_hard_block": true,
+    "mechanical_validation_is_not_the_same_as_independent_acceptance": true,
+    "verifier_independence_is_role_and_provenance_not_vm_vendor": true,
+    "automation_fallbacks_must_be_exhausted_before_hard_block": true
   },
   "mission_terminal_policy": {
     "allowed_terminals": [
@@ -48,11 +53,74 @@
       "MISSION_COMPLETE",
       "WAITING_HUMAN",
       "HARD_BLOCKED"
-    ]
+    ],
+    "fresh_verifier_machine_required_by_default": false
   },
   "self_closing_execution": {
     "max_same_defect_fix_required_events_before_takeover": 3,
     "takeover_actor": "DIRECTOR",
     "takeover_does_not_end_mission": true
-  }
+  },
+  "autonomous_execution": {
+    "contract": "docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md",
+    "default_mode": "SELF_EXECUTE_AUTOMATABLE_WORK",
+    "human_confirmation_for_routine_execution_required": false,
+    "agent_must_run_available_local_validation_before_role_handoff": true,
+    "agent_may_trigger_repository_owned_ci": true,
+    "agent_may_collect_and_publish_exact_head_evidence": true,
+    "agent_may_repair_in_scope_failures_and_retest": true,
+    "preferred_external_agent_environment_is_optional": true,
+    "preferred_executor_unavailable_is_not_hard_block": true,
+    "executor_fallback_order": [
+      "CURRENT_AGENT_VM_OR_CONTAINER",
+      "CLEAN_LOCAL_WORKTREE_OR_DETACHED_CHECKOUT",
+      "REPOSITORY_OWNED_CI",
+      "FRESH_ISOLATED_ROLE_CONTEXT_WITH_AVAILABLE_TOOLS",
+      "OPTIONAL_EXTERNAL_AGENT_ENVIRONMENT"
+    ],
+    "hard_block_requires": [
+      "REQUIRED_CAPABILITY_IS_MANDATORY_FOR_THE_WORK_ORDER",
+      "ALL_ALLOWED_AUTOMATABLE_EXECUTOR_FALLBACKS_EXHAUSTED",
+      "NO_SCOPE_PRESERVING_REPAIR_OR_REPLAN_EXISTS",
+      "DURABLE_BLOCK_PROOF_WITH_EXACT_RESUME_CONDITION"
+    ],
+    "hard_block_proof_requirements": {
+      "REQUIRED_CAPABILITY_IS_MANDATORY_FOR_THE_WORK_ORDER": [
+        {
+          "field": "required_capability_mandatory",
+          "predicate": "TRUE"
+        }
+      ],
+      "ALL_ALLOWED_AUTOMATABLE_EXECUTOR_FALLBACKS_EXHAUSTED": [
+        {
+          "field": "automation_fallbacks_exhausted",
+          "predicate": "TRUE"
+        }
+      ],
+      "NO_SCOPE_PRESERVING_REPAIR_OR_REPLAN_EXISTS": [
+        {
+          "field": "scope_preserving_recovery_exhausted",
+          "predicate": "TRUE"
+        }
+      ],
+      "DURABLE_BLOCK_PROOF_WITH_EXACT_RESUME_CONDITION": [
+        {
+          "field": "proof_evidence_path",
+          "predicate": "NON_EMPTY_STRING"
+        },
+        {
+          "field": "resume_condition",
+          "predicate": "NON_EMPTY_STRING"
+        }
+      ]
+    },
+    "external_environment_missing_route": "TRY_NEXT_ALLOWED_EXECUTOR_OR_PERSIST_MACHINE_EVIDENCE_FOR_INDEPENDENT_ROLE_REVIEW",
+    "independence_boundary": {
+      "implementer_may_execute_mechanical_checks": true,
+      "implementer_may_not_issue_its_own_independent_review_or_acceptance_verdict": true,
+      "independent_role_may_consume_trusted_exact_head_machine_evidence": true,
+      "separate_machine_rerun_is_required_only_when_explicitly_declared_by_work_order_or_risk_contract": true
+    }
+  },
+  "autonomous_execution_revision": "H0-AUTONOMY-2026-09-05-R2"
 }

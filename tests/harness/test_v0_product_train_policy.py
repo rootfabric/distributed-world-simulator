@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,6 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from harness.checkpoint_planner import build_plan
 
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
+MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
 P7_EXECUTION = HARNESS / "executions/E2026-08-30-V0-P7-R1"
 SM1_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
@@ -46,11 +49,12 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_is_current_but_runtime_is_fail_closed(self) -> None:
         self.assertEqual(P7, self.policy["current_checkpoint"])
-        self.assertEqual("P7_7_IN_PROGRESS", self.policy["current_phase"])
+        self.assertEqual("P7_MERGED_CLOSURE_RECONCILIATION", self.policy["current_phase"])
         routing = self.scheduler["v0_product_train_routing"]
         self.assertEqual(P7, routing["current_checkpoint"])
-        self.assertTrue(routing["runtime_mutation_allowed_now"])
-        self.assertTrue(routing["next_runtime_checkpoint_eligible"])
+        self.assertFalse(routing["runtime_mutation_allowed_now"])
+        self.assertFalse(routing["next_runtime_checkpoint_eligible"])
+        self.assertEqual(MVP, routing["next_runtime_checkpoint"])
         self.assertNotIn("P7_MATTER_OWNER_MAP_FRESH_REVIEW_PASS", routing["p7_remaining_activation_prerequisites"])
         self.assertNotIn("POST_MERGE_STANDARD_AND_DIRECTIONAL_PC0_NON_RED", routing["p7_remaining_activation_prerequisites"])
         self.assertEqual([], routing["p7_remaining_activation_prerequisites"])
@@ -59,7 +63,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual("COMPLETE_MERGED", routing["p7_5"]["state"])
         self.assertEqual("RESOLVED_BY_PR_432", routing["p7_5"]["control_precondition"])
         self.assertEqual("COMPLETE_MERGED", routing["p7_6"]["state"])
-        self.assertEqual("IN_PROGRESS", routing["p7_7"]["state"])
+        self.assertEqual("MERGED_PENDING_CANONICAL_CLOSURE", routing["p7_7"]["state"])
         self.assertTrue(routing["p7_7"]["runtime_started"])
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
@@ -102,7 +106,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertEqual(1, lease["capacity"])
         self.assertEqual(P7, lease["holder_checkpoint"])
         self.assertEqual(P7_BRANCH, lease["holder_branch"])
-        self.assertEqual("ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION", lease["state"])
+        self.assertEqual("RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION", lease["state"])
         self.assertEqual(1, self.scheduler["concurrency"]["pre_h0_3_total_autonomous_runtime_mutation_workers"])
 
     def test_planner_exposes_p7_but_blocks_dispatch_until_control_gates_close(self) -> None:
@@ -113,10 +117,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertIn("v0_p7_gate", plan)
         self.assertEqual("MW4_MW10_EXISTING_CANONICAL_FOUNDATION", plan["v0_p7_gate"]["matter_truth"])
         dispatched = dict(planned, state="DISPATCHED")
-        dispatched_plan = build_plan(contracts, self.work_order_p7, dispatched)
-        self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", dispatched_plan["mode"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", dispatched_plan["v0_p7_gate"]["runtime_mutation"])
-        self.assertEqual("BEGIN_V0_P7_MATTER_PRODUCTION_CONVERGENCE", dispatched_plan["next_action"])
+        with self.assertRaisesRegex(ValueError, "PRODUCT_RUNTIME_MUTATION_ON_HOLD"):
+            build_plan(contracts, self.work_order_p7, dispatched)
 
 
     def test_p7_0_exact_source_owner_map_is_bound_to_existing_owners(self) -> None:
@@ -203,36 +205,46 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
     def test_product_sequence_remains_unique(self) -> None:
         ids = [item["id"] for item in self.policy["checkpoint_sequence"]]
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(ids[-2:], [P7, "V0_P8_FIRST_MOBILE_CONSTRUCT"])
+        self.assertEqual(ids[-3:], [P7, MVP, "V0_P8_FIRST_MOBILE_CONSTRUCT"])
         train = next(item for item in self.goals["current_goal_graph"] if item["id"] == "V0_PRODUCT_TRAIN")
         self.assertIn(P7, train["sequence"])
 
 
-    def _run_p7_control_cli(self, mode: str):
+    def _run_p7_control_cli(self, mode: str, *, complete_control: bool = True):
         env = dict(os.environ)
         scripts = str(ROOT / "scripts")
         env["PYTHONPATH"] = scripts + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
 
-        original_head = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-        ).strip()
-        original_branch = subprocess.check_output(
-            ["git", "branch", "--show-current"], cwd=ROOT, text=True
-        ).strip()
-        rebound_detached_head = not original_branch
-        if rebound_detached_head:
-            # Project Control checks out the exact PR subject detached. The Harness
-            # intentionally requires an active Work Order branch, so bind the same
-            # exact commit to the P7 branch name for this CLI probe only.
-            subprocess.check_call(
-                ["git", "branch", "-f", P7_BRANCH, original_head],
-                cwd=ROOT,
-            )
-            subprocess.check_call(
-                ["git", "symbolic-ref", "HEAD", f"refs/heads/{P7_BRANCH}"],
-                cwd=ROOT,
-            )
-        try:
+        # Model the candidate after main adoption in an isolated repository.
+        # No execution is installed: the control hold must precede epoch loading.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scheduler_path = root / "config/control/harness/scheduler-policy.v1.json"
+            scheduler_path.parent.mkdir(parents=True)
+            scheduler_path.write_text(json.dumps(self.scheduler), encoding="utf-8")
+            if complete_control:
+                # A recovery route needs real canonical contracts, not just a
+                # scheduler-shaped object. Old execution epochs stay absent.
+                policy_path = "config/control/harness/harness-policy.v1.json"
+                registry_path = "config/control/project-program-registry.v1.json"
+                policy = _load(ROOT / policy_path)
+                registry = _load(ROOT / registry_path)
+                product = registry["coordination"]["lanes"][registry["coordination"]["primary_lane"]]
+                paths = {policy_path, registry_path,
+                         "config/control/harness/v0-current-work-map.v1.json"}
+                paths.update(value for value in policy.values()
+                             if isinstance(value, str) and value.endswith(".json"))
+                paths.update(product.get("evidence_paths", []))
+                for relative in paths:
+                    destination = root / relative
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(ROOT / relative, destination)
+            for command in (
+                ["git", "init", "-b", "main"],
+                ["git", "add", "."],
+                ["git", "-c", "user.name=Harness fixture", "-c", "user.email=harness@example.invalid", "commit", "-m", "fixture"],
+            ):
+                subprocess.check_call(command, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             completed = subprocess.run(
                 [
                     sys.executable,
@@ -240,48 +252,39 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
                     "harness.cli",
                     mode,
                     "--root",
-                    str(ROOT),
-                    "--execution",
-                    str(P7_EXECUTION),
+                    str(root),
                 ],
-                cwd=ROOT,
+                cwd=root,
                 env=env,
                 text=True,
                 capture_output=True,
                 check=False,
             )
-        finally:
-            if rebound_detached_head:
-                subprocess.check_call(
-                    ["git", "checkout", "--detach", original_head],
-                    cwd=ROOT,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
         payload = json.loads(completed.stdout.strip().splitlines()[-1])
         return completed, payload
 
-    def test_p7_transition_ledger_repair_restores_drive_without_contract_exit_3(self) -> None:
+    def test_scheduler_only_snapshot_cannot_authorize_control_route(self) -> None:
+        completed, payload = self._run_p7_control_cli("drive", complete_control=False)
+        self.assertEqual(3, completed.returncode, completed.stderr or completed.stdout)
+        self.assertFalse(payload["ok"])
+        self.assertIn("PROJECT_CONTROL_BLOB_UNAVAILABLE", payload["error"]["detail"])
+
+    def test_p7_canonical_hold_routes_before_obsolete_execution_loading(self) -> None:
         completed, payload = self._run_p7_control_cli("drive")
         self.assertEqual(0, completed.returncode, completed.stderr or completed.stdout)
         self.assertTrue(payload["ok"])
         self.assertEqual("DRIVE", payload["command"])
-        self.assertEqual("IN_PROGRESS", payload["reduced_work_order"]["state"])
-        reconciliation = payload["event_ledger_reconciliation"]
-        self.assertTrue(reconciliation["active"])
-        self.assertEqual(16, reconciliation["quarantined_event_count"])
-        self.assertEqual(8, reconciliation["authoritative_event_count"])
-        self.assertEqual(6, reconciliation["canonical_next_sequence"])
-        self.assertEqual("CONTINUE_REQUIRED", payload["drive"]["status"])
-        self.assertTrue(payload["drive"]["auto_continue_required"])
-        self.assertFalse(payload["next"]["mission_exit_allowed"])
+        self.assertEqual("PROJECT_CONTROL_ROUTING", payload["output_kind"])
+        self.assertEqual("RECONCILE_P7_DURABLE_CLOSURE", payload["control_route"]["next_action"])
+        self.assertFalse(payload["control_route"]["mission_exit_allowed"])
+        self.assertNotIn("reduced_work_order", payload)
 
     def test_p7_transition_ledger_repair_keeps_close_mission_fail_closed_until_p7_acceptance(self) -> None:
         completed, payload = self._run_p7_control_cli("close-mission")
         self.assertEqual(8, completed.returncode, completed.stderr or completed.stdout)
         self.assertFalse(payload["ok"])
         self.assertEqual("MISSION_EXIT_FORBIDDEN", payload["error"]["code"])
-        self.assertIn("CHECKPOINT_MISSION_STILL_OPEN", payload["error"]["detail"])
+        self.assertEqual("CONTROL_RECONCILIATION_OR_ACTIVATION_REQUIRED", payload["error"]["detail"])
 
     def test_p7_reconciliation_blob_pins_match_current_immutable_event_files(self) -> None:
         manifest = _load(P7_EXECUTION / "event-ledger-reconciliation.v1.json")

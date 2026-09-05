@@ -13,17 +13,56 @@
     "reviewer_may_not_guess_missing_evidence": true,
     "post_build_critique_is_bounded_to_one_required_pass": true,
     "review_freshness_is_bound_to_exact_head": true,
-    "required_fixes_and_rank_up_moves_are_distinct": true
+    "required_fixes_and_rank_up_moves_are_distinct": true,
+    "mechanical_test_execution_may_be_self_executed": true,
+    "independent_verdict_is_distinct_from_test_process_ownership": true,
+    "verifier_independence_does_not_require_a_specific_cloud_provider": true
   },
-  "review_verdicts": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+  "review_verdicts": [
+    "PASS",
+    "FAIL",
+    "INSUFFICIENT_EVIDENCE"
+  ],
   "pre_build": {
-    "required_for": ["MEDIUM", "HIGH", "CRITICAL"],
-    "design_brief_fields": ["problem_statement", "current_behavior", "desired_behavior", "alternatives_considered", "selected_design", "why_selected", "affected_owners", "dependencies", "non_goals", "expected_risks", "validation_plan"]
+    "required_for": [
+      "MEDIUM",
+      "HIGH",
+      "CRITICAL"
+    ],
+    "design_brief_fields": [
+      "problem_statement",
+      "current_behavior",
+      "desired_behavior",
+      "alternatives_considered",
+      "selected_design",
+      "why_selected",
+      "affected_owners",
+      "dependencies",
+      "non_goals",
+      "expected_risks",
+      "validation_plan"
+    ]
   },
   "post_build": {
-    "required_for": ["MEDIUM", "HIGH", "CRITICAL"],
-    "questions": ["unnecessary_complexity", "duplicate_truth", "implicit_owner", "coupling_reduction", "sibling_surface_fix", "removable_code", "design_regression", "refactor_if_redesigned"],
-    "outcomes": ["NO_MATERIAL_REFACTOR_REQUIRED", "REFACTOR_REQUIRED"]
+    "required_for": [
+      "MEDIUM",
+      "HIGH",
+      "CRITICAL"
+    ],
+    "questions": [
+      "unnecessary_complexity",
+      "duplicate_truth",
+      "implicit_owner",
+      "coupling_reduction",
+      "sibling_surface_fix",
+      "removable_code",
+      "design_regression",
+      "refactor_if_redesigned"
+    ],
+    "outcomes": [
+      "NO_MATERIAL_REFACTOR_REQUIRED",
+      "REFACTOR_REQUIRED"
+    ]
   },
   "exact_head_protocol": {
     "reviewed_head_must_equal_evidence_head": true,
@@ -31,11 +70,55 @@
     "stale_review_blocks_checkpoint_proposal": true
   },
   "review_output": {
-    "required_sections": ["verdict", "required_fixes", "rank_up_moves", "evidence_gaps", "risk_assessment"],
+    "required_sections": [
+      "verdict",
+      "required_fixes",
+      "rank_up_moves",
+      "evidence_gaps",
+      "risk_assessment"
+    ],
     "rank_up_moves_are_non_blocking_unless_director_promotes_them": true
   },
   "activation": {
     "h0_0": "Contracts must load and validate; no runtime review execution is required.",
     "h0_1_and_later": "Risk routing, design brief when applicable, evidence map, reviewer verdict, post-build critique and exact-head freshness are mandatory for runtime checkpoint proposals."
+  },
+  "autonomous_execution_contract": "docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md",
+  "verifier_execution": {
+    "implementer_may_run_and_publish_mechanical_validation": true,
+    "implementer_mechanical_validation_is_not_an_independent_verdict": true,
+    "repository_owned_ci_may_supply_verifier_machine_evidence": true,
+    "independent_verifier_may_validate_exact_head_durable_evidence_without_reexecuting_every_command": true,
+    "fresh_verifier_context_required_when_risk_policy_requires_verifier": true,
+    "fresh_verifier_machine_required_by_default": false,
+    "specific_external_agent_environment_required_by_default": false,
+    "separate_machine_rerun_required_when": [
+      "WORK_ORDER_EXPLICITLY_REQUIRES_INDEPENDENT_EXECUTION",
+      "RISK_CONTRACT_EXPLICITLY_REQUIRES_INDEPENDENT_EXECUTION",
+      "EVIDENCE_PROVENANCE_IS_NOT_TRUSTWORTHY",
+      "REVIEWER_OR_DIRECTOR_RECORDS_A_CONCRETE_REEXECUTION_NEED"
+    ],
+    "trusted_machine_evidence_requires": [
+      "EXACT_FROZEN_HEAD_AND_TREE",
+      "DOCUMENTED_COMMANDS_AND_EXIT_CODES",
+      "CLEAN_TRACKED_CHECKOUT_BEFORE_AND_AFTER",
+      "IMMUTABLE_OR_APPEND_ONLY_LOGS",
+      "SHA256_OR_STRONGER_DIGEST_FOR_EVERY_REUSED_LOG_OR_ARTIFACT",
+      "DIGEST_MANIFEST_BINDS_EXACT_HEAD_TREE_RUNNER_AND_ARTIFACT_IDENTITY",
+      "NO_UNDECLARED_SKIP_OR_PASS_REWRITE",
+      "WORKFLOW_OR_RUNNER_PROVENANCE_RECORDED"
+    ],
+    "reused_machine_evidence": {
+      "minimum_digest_algorithm": "SHA256",
+      "digest_manifest_required": true,
+      "every_reused_log_or_artifact_requires_digest": true,
+      "manifest_must_bind": [
+        "EXACT_HEAD",
+        "EXACT_TREE",
+        "RUNNER_OR_WORKFLOW_RUN_ID",
+        "ARTIFACT_ID_OR_PATH"
+      ],
+      "missing_or_unbound_digest_verdict": "INSUFFICIENT_EVIDENCE"
+    }
   }
 }

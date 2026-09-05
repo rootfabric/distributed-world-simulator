@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.project_focus_reconciliation.v1",
+  "revision": "PROJECT-FOCUS-2026-09-05-R1",
+  "observed_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "status": "CONTROL_CANDIDATE_NOT_ACCEPTANCE",
+  "user_intent": "MVP first; ECO experimental evolution polygon and FABRIC emergent-complexity research remain separate non-blocking families.",
+  "p7": {
+    "observed_state": "MERGED_PENDING_CANONICAL_CLOSURE",
+    "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386",
+    "durable_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json",
+    "historical_premerge_pointer": "config/control/harness/v0-p7-7-formal-closure-frontier.v1.json",
+    "chat_claim": "COMPLETE_MERGED reported; durable terminal acceptance not found at observed main",
+    "next_action": "Find existing exact post-merge review/verification/control evidence and reconcile it through existing acceptance procedure. Do not manufacture PASS or rerun by default."
+  },
+  "historical_epoch_policy": "Generation-80 executions retain original bytes; resumption requires explicit epoch review/refresh, never bulk rewriting old epochs.",
+  "runtime_mutation": false,
+  "new_runtime_acceptance": false,
+  "new_research_acceptance": false,
+  "ownership_change": false
+}

@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
-  "revision": "V0-CURRENT-WORK-MAP-2026-09-03-R16-P7_7_ACTIVE",
+  "revision": "PROJECT-FOCUS-2026-09-05-R1",
   "canonical_owner": "main",
-  "status": "PRIMARY_WORK_MAP_P7_7_IN_PROGRESS",
-  "authored_against_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+  "status": "P7_MERGED_CLOSURE_RECONCILIATION",
+  "authored_against_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
   "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
   "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "current_campaign": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_human_plan": "docs/plans/V0_P7_MATTER_PRODUCTION_CONVERGENCE_RU.md",
+  "current_human_plan": "docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md",
   "primary_machine_plan": "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
   "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
   "project_epoch": "E2026-08-30-V0-P7-R1",
@@ -53,14 +53,14 @@
   },
   "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
   "control_main_base": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
-  "runtime_mutation_authorized_by_this_pointer": true,
+  "runtime_mutation_authorized_by_this_pointer": false,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
   "post_v0_lanes": {
     "p8_and_rf1_architecture_dependency": false,
     "runtime_execution_pre_h0_3": "SERIALIZED"
   },
-  "sequencing_override": "POST_SM1_P7_R7_WINS_ON_CURRENT_CAMPAIGN_AND_EXECUTION_ORDER",
+  "sequencing_override": "PROJECT-FOCUS-2026-09-05-R1: coordination + scheduler determine current action; completed substeps are historical evidence.",
   "p7_0": {
     "status": "ACCEPTED",
     "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
@@ -273,7 +273,7 @@
     }
   },
   "p7_7": {
-    "state": "IN_PROGRESS",
+    "state": "MERGED_PENDING_CANONICAL_CLOSURE",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "GRAPHICAL_DIGGING_SLICE",
     "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
@@ -397,10 +397,12 @@
         "new_persistence_owner": false
       },
       "P7.7-FORMAL-CLOSURE": {
-        "status": "NEXT",
-        "scope": "FREEZE_FULL_REGRESSION_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE",
-        "required_result": "A_THROUGH_H_ACCEPTED_ON_ONE_FROZEN_RUNTIME_HEAD_TREE_THEN_INDEPENDENT_REVIEW_VERIFICATION_AND_HUMAN_RUNTIME_FEATURE_MERGE"
+        "status": "MERGED_PENDING_CANONICAL_CLOSURE",
+        "scope": "RECONCILE_EXISTING_POST_MERGE_EVIDENCE",
+        "required_result": "CANONICAL_P7_ACCEPTANCE_RECORD_AFTER_EXISTING_GATES"
       }
-    }
-  }
+    },
+    "runtime_mutation_authorized": false
+  },
+  "next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP"
 }

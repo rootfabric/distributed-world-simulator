@@ -11,6 +11,7 @@ PROJECT_CONTROL.md
 HARNESS_CONTROL.md
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md
 config/control/project-program-registry.v1.json
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
@@ -37,6 +38,9 @@ HUMAN IS NOT A ROUTINE RESULT COURIER
 ACTIVE CHECKPOINT MISSION PRE-AUTHORIZES ROUTINE A0-A3 GIT OPERATIONS
 DO NOT ASK FOR BRANCH / COMMIT / NON-FORCE-PUSH / DRAFT-PR CONFIRMATION
 GIT AUTHORITY SURVIVES ROUTINE ROLE BOUNDARIES
+SELF-EXECUTE AVAILABLE AUTOMATABLE WORK BEFORE HANDOFF
+PREFERRED EXECUTOR UNAVAILABLE IS NOT A HARD BLOCK
+VERIFIER INDEPENDENCE DOES NOT REQUIRE A SPECIFIC VM PROVIDER
 ```
 
 Scoped instructions may add local conventions, traps, launch commands and tests, but may not override architecture ownership, PC0 policy, main-owned registry, checkpoint catalog, risk minimums, review requirements, autonomy ceiling or human gates.
@@ -60,11 +64,23 @@ For every checkpoint mission:
 13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
 14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
 15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
+16. Execute all available mechanical work yourself before handoff: local/VM tests, clean exact checkout, repository-owned CI, artifact/log collection, scoped repair/retest and append-only evidence publication. These are routine A0-A3 operations.
+17. If a preferred executor (including a Codex Cloud environment) is unavailable, follow `HARNESS_AUTONOMOUS_EXECUTION_RU.md` and try the next allowed executor. Do not declare `HARD_BLOCKED` until all allowed automated fallbacks and scope-preserving recovery are exhausted and durably proven.
+18. Keep role independence separate from machine ownership: Implementer may produce exact machine evidence but cannot issue its own independent verdict. A fresh Reviewer/Verifier may consume trusted exact-head evidence without a separate VM rerun unless the Work Order/risk contract explicitly requires independent execution.
 
 ## Checkpoint-session control surface
 
+Для понимания проекта сначала используйте `-Overview`: он читает один канонический
+срез целей и семейств работ без загрузки execution. `-CheckConsistency` проверяет
+продуктовую согласованность; family-local findings не являются неявным MVP gate.
+`-Candidate` допустим только с этими двумя режимами и никогда не разрешает dispatch.
+Цели и последовательность: `docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md`.
+Рекомендации research tracks не заменяют Work Order или main-owned activation.
+
 ```text
 .\CONTROL_DEVELOPMENT.ps1 -Status
+.\CONTROL_DEVELOPMENT.ps1 -Overview
+.\CONTROL_DEVELOPMENT.ps1 -CheckConsistency
 .\CONTROL_DEVELOPMENT.ps1 -Plan
 .\CONTROL_DEVELOPMENT.ps1 -Resume
 .\CONTROL_DEVELOPMENT.ps1 -Drive

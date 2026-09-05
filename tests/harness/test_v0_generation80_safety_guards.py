@@ -202,9 +202,9 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         return work_order, [created, dispatched], transition, context
 
     def test_generation80_reserves_one_global_mutation_lease_for_current_p7(self):
-        self.assertEqual(80, self.registry["registry_generation"])
+        self.assertGreaterEqual(self.registry["registry_generation"], 81)
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
-        self.assertEqual(80, lease["effective_registry_generation"])
+        self.assertEqual(self.registry["registry_generation"], lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
         self.assertEqual(P7, lease["holder_checkpoint"])
@@ -302,7 +302,11 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         git("merge-base", "--is-ancestor", historical_base, remote_head)
 
         current_v0 = self.registry["programs"]["V0"]
-        self.assertTrue(current_v0["branch"].startswith("control/v0-p7-"), current_v0["branch"])
+        self.assertEqual("COMPOSITION_FRONTIER", current_v0["role"])
+        self.assertEqual("P7_MERGED_CLOSURE_RECONCILIATION", current_v0["stage_status"])
+        self.assertTrue(current_v0["prebuild_state"]["historical_only"])
+        self.assertFalse(current_v0["p7_7"]["runtime_mutation_authorized"])
+        self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
         self.assertEqual(P7_BRANCH, current_v0["prebuild_state"]["branch"])
         self.assertEqual("c2e056980eed4ae20849154b1dacc71af0ce8bdf", current_v0["prebuild_state"]["head_at_refresh_input"])
         self.assertTrue(current_v0["prebuild_state"]["runtime_mutation_present"])

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -53,10 +54,13 @@ class ContractBundle:
     contracts: dict[str, dict[str, Any]]
 
     @classmethod
-    def load(cls, root: Path) -> "ContractBundle":
+    def load(
+        cls, root: Path, *, reader: Callable[[Path], dict[str, Any]] = read_json
+    ) -> "ContractBundle":
+        """Load one source snapshot; callers may provide a pinned Git reader."""
         harness_root = root / "config" / "control" / "harness"
         policy_path = harness_root / "harness-policy.v1.json"
-        policy = read_json(policy_path)
+        policy = reader(policy_path)
         required = {
             "harness_policy": "config/control/harness/harness-policy.v1.json",
             "project_registry": "config/control/project-program-registry.v1.json",
@@ -74,7 +78,7 @@ class ContractBundle:
             "continuation_policy": policy["continuation_policy"],
         }
         contracts = {
-            name: read_json(root / relative) for name, relative in required.items()
+            name: reader(root / relative) for name, relative in required.items()
         }
         bundle = cls(root=root, contracts=contracts)
         bundle.validate_integrity()
@@ -118,6 +122,18 @@ class ContractBundle:
             "continuation_layer_revision"
         ):
             raise ContractValidationError("CONTINUATION_LAYER_REVISION_MISMATCH")
+
+    def validate_schema_definitions(self) -> None:
+        """Require the pinned validator and valid schemas without an execution."""
+        for name, schema in self.contracts.items():
+            if name.endswith("_schema"):
+                validator = _validator(schema)
+                from jsonschema.exceptions import SchemaError
+
+                try:
+                    validator.check_schema(schema)
+                except SchemaError as exc:
+                    raise ContractValidationError(f"JSON_SCHEMA_INVALID:{name}:{exc}") from exc
 
     def validate(self, schema_name: str, instance: dict[str, Any], label: str) -> None:
         schema = self.contracts[schema_name]

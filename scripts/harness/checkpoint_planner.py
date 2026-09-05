@@ -68,6 +68,9 @@ def _enforce_runtime_mutation_lease(
     work_order_branch = str(work_order.get("branch", ""))
     if holder_branch and work_order_branch and work_order_branch != holder_branch:
         raise ValueError(f"GLOBAL_MUTATION_SLOT_BRANCH_MISMATCH:{holder_branch}")
+    routing = scheduler.get("v0_product_train_routing", {})
+    if current == routing.get("current_checkpoint") and routing.get("runtime_mutation_allowed_now") is False:
+        raise ValueError(f"PRODUCT_RUNTIME_MUTATION_ON_HOLD:{current}")
 
 
 def _build_product_plan(
