@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 import sys
 
@@ -62,7 +63,9 @@ class V0P6AcceptanceEffectiveStateTests(unittest.TestCase):
         )
 
     def test_04_sm1_eligibility_is_fail_closed_before_activation(self) -> None:
-        eligibility = acceptance_state.sm1_eligibility(ROOT)
+        # Missing activation evidence is a fixture, not an assertion about current main.
+        with patch.object(acceptance_state, "_current_sm1_control", return_value=({}, {})):
+            eligibility = acceptance_state.sm1_eligibility(ROOT)
         self.assertFalse(eligibility["eligible_for_runtime_activation"])
         self.assertIn(
             "EVIDENCE_RECONCILIATION_MUST_BE_CONSUMED_BY_MAIN_OWNED_CONTROL_UPDATE",

@@ -63,8 +63,13 @@ jobs:
             scripts/harness/cli.py
           python3 -m py_compile scripts/harness/project_overview.py
           python3 - <<'PY'
-          import json
+          import subprocess
+          import sys
           from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          sys.path.insert(0, "scripts")
+          from harness.contracts import ContractBundle, read_json
 
           required_json = [
               Path("config/control/project-control-policy.v1.json"),
@@ -88,15 +93,26 @@ jobs:
               Path("config/control/harness/human-attention.schema.v1.json"),
               Path("validation/harness/control-development-output.schema.v1.json"),
           ]
-          for path in required_json:
-              with path.open("r", encoding="utf-8") as handle:
-                  value = json.load(handle)
+          changed_json = subprocess.check_output(
+              ["git", "diff", "--name-only", "--diff-filter=ACMR", "origin/main...HEAD", "--", "*.json"],
+              text=True,
+          ).splitlines()
+          required_json.extend(Path(path) for path in changed_json)
+          bundle = ContractBundle.load(Path.cwd())
+          for name, schema in bundle.contracts.items():
+              if name.endswith("_schema"):
+                  Draft202012Validator.check_schema(schema)
+                  print(f"JSON SCHEMA OK: {name}")
+          for path in sorted(set(required_json)):
+              value = read_json(path)
+              if "$schema" in value:
+                  Draft202012Validator.check_schema(value)
               if not isinstance(value, dict):
                   raise SystemExit(f"Expected JSON object: {path}")
-              print(f"JSON OK: {path}")
+              print(f"JSON DUPLICATE-KEY VALIDATION OK: {path}")
 
-          registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text(encoding="utf-8"))
-          scheduler = json.loads(Path("config/control/harness/scheduler-policy.v1.json").read_text(encoding="utf-8"))
+          registry = read_json(Path("config/control/project-program-registry.v1.json"))
+          scheduler = read_json(Path("config/control/harness/scheduler-policy.v1.json"))
           generation = registry.get("registry_generation")
           if not isinstance(generation, int) or generation < 81:
               raise SystemExit(f"PROJECT_FOCUS_GENERATION_REQUIRED:{generation}")
@@ -137,6 +153,9 @@ jobs:
           python3 -m unittest \
             tests.harness.test_v0_generation80_safety_guards \
             tests.harness.test_project_control_directional_clearance
+
+      - name: Run complete Harness regression discovery
+        run: python3 -m unittest discover -s tests/harness -p 'test_*.py' -v
 
       - name: Run canonical-main PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
