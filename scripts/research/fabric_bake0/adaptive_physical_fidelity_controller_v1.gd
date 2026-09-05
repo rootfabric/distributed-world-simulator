@@ -194,5 +194,18 @@ static func bind_ownership(state: Dictionary, authority: Dictionary) -> Dictiona
 
 static func seal(state: Dictionary) -> Dictionary:
 	var result := state.duplicate(true)
+	# JSON decoders produce integral floats. Keep the runtime DTO typed and
+	# hash-equivalent without altering canonical revision semantics.
+	for field in ["safe_streak", "transition_epoch", "cooldown_remaining", "last_evaluation_tick", "transition_count"]:
+		if Utils.is_json_integer(result.get(field)):
+			result[field] = int(result[field])
+	if typeof(result.get("configuration")) == TYPE_DICTIONARY:
+		for field in CONFIG_FIELDS:
+			if Utils.is_json_integer(result["configuration"].get(field)):
+				result["configuration"][field] = int(result["configuration"][field])
+	if typeof(result.get("source_revision")) == TYPE_DICTIONARY:
+		for field in ["authority_epoch", "source_revision"]:
+			if Utils.is_json_integer(result["source_revision"].get(field)):
+				result["source_revision"][field] = int(result["source_revision"][field])
 	result["checksum"] = Utils.compute_checksum(result)
 	return result
