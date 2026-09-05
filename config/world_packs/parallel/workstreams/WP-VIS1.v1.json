@@ -10,29 +10,30 @@
     "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
     "OVERHANG_AND_INVERTED_SURFACES",
     "SPHERE_OR_IRREGULAR_FIXTURE",
-    "TRIPLANAR_OR_LOCAL_FRAME_MAPPING"
+    "TRIPLANAR_OR_LOCAL_FRAME_MAPPING",
+    "FIDELITY_SWITCH_FIXTURE"
   ],
   "blockers": [],
-  "next_action": "Implement FIDELITY_SWITCH_FIXTURE: add presentation fidelity switching (e.g. preview/full diagnostic detail) on the lab fixtures with focused tests.",
-  "last_checkpoint_head": "890292539cd6d169e221bafd05296f99887b0b33",
-  "tested_head": "890292539cd6d169e221bafd05296f99887b0b33",
+  "next_action": "Implement HEADLESS_AND_GRAPHICAL_EVIDENCE_READY: capture headless self-check evidence and a graphical screenshot of the lab (Godot/MCP canonical path if available), then move to READY_FOR_INTEGRATION per protocol.",
+  "last_checkpoint_head": "9a543e9b72bd89aaaa381da586fe53e64659d67e",
+  "tested_head": "9a543e9b72bd89aaaa381da586fe53e64659d67e",
   "validation": [
     {
       "name": "material_lab_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
       "result": "PASS",
-      "head": "890292539cd6d169e221bafd05296f99887b0b33"
+      "head": "9a543e9b72bd89aaaa381da586fe53e64659d67e"
     },
     {
       "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
       "result": "PASS",
-      "head": "890292539cd6d169e221bafd05296f99887b0b33"
+      "head": "9a543e9b72bd89aaaa381da586fe53e64659d67e"
     }
   ],
-  "updated_at_utc": "2026-09-05T17:20:00Z",
+  "updated_at_utc": "2026-09-05T18:00:00Z",
   "notes": [
-    "TRIPLANAR_OR_LOCAL_FRAME_MAPPING complete: uv1_triplanar on all real surfaces with runtime-generated checker texture; local_direction/triplanar_weights_local registry math; self-check proves world->local roundtrip and weight invariance under whole-fixture rotation.",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-TRIPLANAR_OR_LOCAL_FRAME_MAPPING.md."
+    "FIDELITY_SWITCH_FIXTURE complete: preview/full fidelity levels, --fidelity cmdline arg, apply_fidelity/report_fidelity API; self-check proves triplanar dropped in preview, unknown levels rejected, world normals unchanged across switches.",
+    "Evidence: docs/world_packs/evidence/WP-VIS1-FIDELITY_SWITCH_FIXTURE.md."
   ]
 }
