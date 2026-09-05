@@ -1,0 +1,53 @@
+name: FABRIC B0.6 Exact Source Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/fabric-bake0-6-adaptive-physical-fidelity-r1
+    paths:
+      - .github/workflows/fabric-bake-b0-6-source-package.yml
+
+permissions:
+  contents: read
+
+jobs:
+  source-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Package exact Git source for offline attached-runtime validation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git status --short
+          git branch --show-current
+          git rev-parse HEAD
+          git log --oneline --decorate -20
+          git fetch --all --prune
+          git status --short
+          git diff --check
+          test -z "$(git status --porcelain=v1)"
+          out="$RUNNER_TEMP/fabric-b0-6-source"
+          mkdir -p "$out"
+          git bundle create "$out/dws.bundle" --all
+          git bundle verify "$out/dws.bundle"
+          {
+            printf 'HEAD=%s\n' "$(git rev-parse HEAD)"
+            printf 'TREE=%s\n' "$(git rev-parse 'HEAD^{tree}')"
+            printf 'MAIN=%s\n' "$(git rev-parse origin/main)"
+            printf 'BRANCH=research/fabric-bake0-6-adaptive-physical-fidelity-r1\n'
+            printf 'PURPOSE=SOURCE_TRANSPORT_ONLY_NOT_RUNTIME_EVIDENCE\n'
+            sha256sum "$out/dws.bundle"
+          } > "$out/source-manifest.txt"
+          cat "$out/source-manifest.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-b0-6-source-${{ github.sha }}
+          path: ${{ runner.temp }}/fabric-b0-6-source/
+          if-no-files-found: error
+          retention-days: 3
