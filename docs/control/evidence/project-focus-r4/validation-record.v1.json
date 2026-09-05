@@ -1,0 +1,193 @@
+{
+  "record_kind": "PROJECT_FOCUS_EXECUTABLE_VALIDATION_AND_EXTERNAL_BLOCKER",
+  "record_version": 1,
+  "recorded_at_utc": "2026-09-05T10:34:30Z",
+  "work_order": "PROJECT-FOCUS-CONTROL-VALIDATION-R1",
+  "risk_class": "HIGH",
+  "parent_pr": 547,
+  "status": "CONTROL_TESTED_INDEPENDENT_VERIFIER_ENVIRONMENT_BLOCKED",
+  "canonical_main": {
+    "head": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+    "tree": "af9abf6def54d231d055cfc1f6af14cbf10d787f",
+    "registry_generation": 80,
+    "project_focus_merged": false,
+    "p7_canonical_acceptance_declared_by_this_record": false
+  },
+  "subject": {
+    "branch": "control/project-focus-harness-reconciliation-r1",
+    "head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "tree": "1f51c4a7c0d2e4892d635d6ce830c053f0799ef4",
+    "parent_head": "fb0d7f67991e3d840243a49da0dd36938a1e3dfd",
+    "scope": "CONTROL_DOCS_TESTS_ONLY",
+    "runtime_changes": false,
+    "historical_events_reviews_evidence_changes": false,
+    "reviewed_subject_must_not_be_replaced_by_evidence_carrier_head": true
+  },
+  "evidence_authority": {
+    "canonical_acceptance": false,
+    "independent_verifier": false,
+    "runtime_authorization": false,
+    "human_merge_approval": false,
+    "description": "Implementer/parent mission records executable results and verbatim independent role responses; this record does not replace those roles or main-owned acceptance."
+  },
+  "required_git_preflight": {
+    "local_attempt": "FAILED_DNS_EXIT_128",
+    "remote_exact_launcher_run": 33960456571,
+    "remote_source_export_run": 33959514945,
+    "commands": [
+      "git fetch --all --prune",
+      "git rev-parse origin/main",
+      "git rev-parse origin/control/project-focus-harness-reconciliation-r1"
+    ],
+    "remote_launcher_observed_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+    "remote_launcher_observed_control": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "remote_launcher_exact_head_and_tree_checked": true,
+    "tracked_checkout_clean_before": true,
+    "tracked_checkout_clean_after": true
+  },
+  "project_control": {
+    "run": 33960324883,
+    "job": 101290982370,
+    "event_subject_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "checkout_subject_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "conclusion": "success",
+    "completed_steps": [
+      "EXACT_EVENT_HEAD_ASSERTION",
+      "PINNED_JSONSCHEMA_4_22_0",
+      "SCHEMA_AND_DUPLICATE_KEYS_AND_RELATIVE_GENERATION",
+      "PROJECT_OVERVIEW_AND_CONTROL_VALIDATION_REGRESSIONS",
+      "HARNESS_CHECKPOINT_SESSION_REGRESSIONS",
+      "ARCHITECTURE_OWNERSHIP_REGRESSIONS",
+      "H0_2_CHECKPOINT_REGRESSIONS",
+      "V0_PRODUCT_POLICY_REGRESSIONS",
+      "GENERATION_80_SAFETY_REGRESSIONS",
+      "COMPLETE_HARNESS_DISCOVERY",
+      "STANDARD_PC0",
+      "DIRECTIONAL_PC0"
+    ],
+    "remote_test_count_not_transcribed": true,
+    "standard_overall_health": "YELLOW",
+    "directional_overall_health": "YELLOW",
+    "auditor_canonical_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+    "research_local_red_preserved": ["G", "ECO"],
+    "research_local_red_blocks_global_progress": false,
+    "all_findings_are_green_claimed": false,
+    "artifact_id": 9967725574,
+    "artifact_zip_sha256": "1ea582655ae8c47a72a29c1b1daa5056143afb4eff98b701c00e9eb5aef2f4b4",
+    "raw_standard_report_sha256": "006a86e8ba20f9016390706c51471f7a6280e71258f6c311f9fe6b9175598efe",
+    "raw_directional_report_sha256": "ba5b7e56484f47b18b298dab70e29f808fd095acbbd709fc68935e6fc0d08446"
+  },
+  "powershell_launcher": {
+    "run": 33960456571,
+    "conclusion": "success",
+    "helper_pr": 549,
+    "helper_head_is_not_subject": "744eeca327ce82682f38bf293807cf9e4f66f3c0",
+    "exact_checkout_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "exact_checkout_tree": "1f51c4a7c0d2e4892d635d6ce830c053f0799ef4",
+    "powershell_version": "7.6.5",
+    "artifact_id": 9967760004,
+    "artifact_zip_sha256": "d1da38f3af5d1091b0b6ebfa4eb8e203e1595bb220c0a5438e5176d1973b3a72",
+    "internal_sha256_manifest_checked": true,
+    "preflight_sha256": "2183763cd36b7d617e31850176af66828d5add271bc5b45f200bed634c078ec6",
+    "postflight_sha256": "801735eff34ce43f9e2c304ac4baa4b30a592991d6bc6b17badc80cf13642d2a",
+    "summary_sha256": "160bda6237ee5690c20eb23d79e97f5beae8569d00e1b2929e8ba7d4d31c055a",
+    "unexpected_results": [],
+    "modes": [
+      {"mode": "Overview", "candidate": false, "exit_code": 0, "finding": "COORDINATION_NOT_DECLARED"},
+      {"mode": "CheckConsistency", "candidate": false, "exit_code": 3, "detail": "PROJECT_CONSISTENCY_ERRORS"},
+      {"mode": "Drive", "candidate": false, "exit_code": 3, "detail": "EPOCH_REGISTRY_GENERATION_MISMATCH"},
+      {"mode": "CloseMission", "candidate": false, "exit_code": 3, "detail": "EPOCH_REGISTRY_GENERATION_MISMATCH"},
+      {"mode": "Overview", "candidate": true, "exit_code": 0, "runtime_authorized": false},
+      {"mode": "CheckConsistency", "candidate": true, "exit_code": 0, "runtime_authorized": false}
+    ],
+    "outputs_schema_validated": true,
+    "mission_exit_authorized": false,
+    "independent_verifier": false
+  },
+  "local_post_role_recheck": {
+    "at_utc": "2026-09-05T10:34:30Z",
+    "entrypoint": "python -m harness.cli",
+    "head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "tree": "1f51c4a7c0d2e4892d635d6ce830c053f0799ef4",
+    "drive_exit": 3,
+    "close_mission_exit": 3,
+    "detail": "EPOCH_REGISTRY_GENERATION_MISMATCH",
+    "tracked_checkout_clean_after": true,
+    "mission_complete": false
+  },
+  "review": {
+    "fresh_request_comment": 5551129707,
+    "fresh_response_comment": 5551158623,
+    "actor": "chatgpt-codex-connector[bot]",
+    "subject_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "verbatim_result": "Codex Review: Didn't find any major issues. Good to go!",
+    "classification": "INDEPENDENT_CODE_REVIEW_COMPLETED_NO_MAJOR_FINDINGS",
+    "formal_harness_verdict_emitted": false,
+    "remediated_inline_comment_ids": [3940152337, 3940152340, 3940214686, 3940214688, 3940214692],
+    "remediation_mapping_comment": 5551196939,
+    "r4_prose_reference_correction": {
+      "canonical_route_finding": 3940214686,
+      "generation_finding": 3940214688,
+      "push_json_finding": 3940214692,
+      "note": "Earlier R4 prose/commit/request used incorrect first two comment IDs. This additive mapping corrects references without rewriting history or changing the code subject."
+    }
+  },
+  "independent_verifier": {
+    "status": "NOT_EXECUTED_EXTERNAL_ENVIRONMENT_REQUIRED",
+    "subject_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+    "actor": "chatgpt-codex-connector[bot]",
+    "blocker_comment": 5551132126,
+    "verbatim_response": "To use Codex here, create an environment for this repo.",
+    "classification": "EXTERNAL_VERIFIER_ENVIRONMENT_REQUIRED",
+    "not_a_human_merge_approval_gate": true,
+    "ci_does_not_substitute_for_independent_verifier": true,
+    "next_action": "ENABLE_REPOSITORY_CODEX_ENVIRONMENT_THEN_RUN_INDEPENDENT_VERIFIER_ON_FROZEN_SUBJECT"
+  },
+  "helper_provenance": {
+    "source_export_pr": 548,
+    "source_export_helper_head": "03c0e74466e257342509dfd47a7268761ff4b17c",
+    "source_export_subject": "fb0d7f67991e3d840243a49da0dd36938a1e3dfd",
+    "source_export_run": 33959514945,
+    "source_export_artifact": 9967470666,
+    "source_archive_sha256": "709cf80b1d73eadcf7a973610e8cc5a4da5e092b082e484592c012f55ebb96d48",
+    "launcher_helper_own_pc_run": 33960456590,
+    "launcher_helper_own_pc_conclusion": "failure",
+    "launcher_helper_failure_applies_to_head": "744eeca327ce82682f38bf293807cf9e4f66f3c0",
+    "launcher_helper_failure_not_the_frozen_candidate_result": true,
+    "launcher_helper_failure_root_cause_not_claimed": true,
+    "helper_merge_forbidden": true
+  },
+  "mutation_lease": {
+    "canonical_main_generation": 80,
+    "canonical_main_capacity": 1,
+    "canonical_main_declared_holder": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "canonical_main_declared_state": "ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION",
+    "candidate_generation": 81,
+    "candidate_capacity": 1,
+    "candidate_state": "RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION",
+    "candidate_runtime_mutation_allowed_now": false,
+    "candidate_next_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "candidate_next_checkpoint_eligible": false,
+    "runtime_dispatch_performed": false
+  },
+  "not_performed": [
+    "CONTROL_MERGE_OR_POST_MERGE_CANONICAL_ADOPTION",
+    "INDEPENDENT_EXECUTABLE_VERIFIER",
+    "FORMAL_HARNESS_REVIEW_VERDICT_PUBLICATION",
+    "P7_POST_MERGE_FULL_RUNTIME_GATE",
+    "GODOT_ARCHIVE_OR_BINARY_HASH_VERIFICATION",
+    "CANONICAL_P7_ACCEPTANCE_OR_ACCEPTANCE_MERGE",
+    "MVP_ACTIVATION_OR_NEW_EPOCH_WORK_ORDER_LEASE_DISPATCH",
+    "VISUAL_TWO_CLIENT_SEAM_RECONNECT_RESTART_MVP"
+  ],
+  "mission": {
+    "complete": false,
+    "canonical_acceptance_path_created": null,
+    "mvp_activation_commit": null,
+    "mvp_epoch": null,
+    "mvp_work_order": null,
+    "stop_reason": "MANDATORY_INDEPENDENT_EXECUTION_ENVIRONMENT_UNAVAILABLE_WITH_DURABLE_EXTERNAL_PROOF",
+    "human_merge_requested_now": false,
+    "resume": "Provision the existing Codex repository environment; independent Verifier and formal role evidence use cc89d805 exactly; only after all required gates may the parent mission request human CONTROL PROJECT-FOCUS MERGE."
+  }
+}
