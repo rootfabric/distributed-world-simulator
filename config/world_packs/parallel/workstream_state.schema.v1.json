@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dws:world-packs:parallel-workstream-state:1",
+  "title": "DWS WORLD PACKS parallel workstream state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "controller_id",
+    "track_id",
+    "branch",
+    "controller_base_sha",
+    "status",
+    "completed_milestones",
+    "blockers",
+    "next_action",
+    "last_checkpoint_head",
+    "tested_head",
+    "validation",
+    "updated_at_utc",
+    "notes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dws.world_packs.parallel_workstream_state.v1"
+    },
+    "controller_id": {
+      "const": "WORLD_PACKS_PARALLEL_R1"
+    },
+    "track_id": {
+      "type": "string",
+      "pattern": "^WP-[A-Z0-9.]+$"
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "controller_base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "status": {
+      "enum": [
+        "PLANNED",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "IMPLEMENTED",
+        "VERIFYING",
+        "VERIFIED",
+        "READY_FOR_INTEGRATION",
+        "INTEGRATED"
+      ]
+    },
+    "completed_milestones": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9_]+$"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_checkpoint_head": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "tested_head": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "command",
+          "result",
+          "head"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "result": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "BLOCKED",
+              "NOT_RUN"
+            ]
+          },
+          "head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        }
+      }
+    },
+    "updated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
