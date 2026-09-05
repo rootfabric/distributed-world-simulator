@@ -1,0 +1,95 @@
+{
+  "verification_id": "PROJECT-FOCUS-CONTROL-WINDOWS-VERIFY-R1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "platform": "Windows",
+  "subject_head": "cc89d80599eb24ab4efd55b38332ead4b16468bf",
+  "subject_tree": "1f51c4a7c0d2e4892d635d6ce830c053f0799ef4",
+  "expected_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "decision": "PASS",
+  "runtime_tested": false,
+  "godot_used": false,
+  "runtime_authorized": false,
+  "historical_evidence_modified": false,
+  "main_modified": false,
+  "subject_modified": false,
+  "live_refs": {
+    "origin_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+    "origin_main_matches_expected": true,
+    "origin_control_branch": "447b06e4e572eea4b9a03b2fa0a27427b6b4a868",
+    "control_branch_advanced_past_subject": true,
+    "drift_handling": "Verification stayed on frozen subject cc89d805 per Work Order; main did not move, so candidate validity baseline is unchanged. Branch-head drift recorded for reviewers of PR #547: later commits on the control branch are NOT covered by this PASS."
+  },
+  "harness_results": {
+    "py_compile": "15/15 exit 0",
+    "candidate_validation": "exit 0; duplicate-key OK x14; comparison base 5b415295; generation 81 OK",
+    "candidate_consistency": "exit 0; runtime_authorized=false; CANDIDATE_NON_AUTHORIZING",
+    "named_suites": [
+      {"suite": 1, "tests": 35, "failures": 0, "errors": 0, "skips": 0, "exit": 0},
+      {"suite": 2, "tests": 22, "failures": 0, "errors": 0, "skips": 0, "exit": 0},
+      {"suite": 3, "tests": 65, "failures": 0, "errors": 0, "skips": 2, "exit": 0},
+      {"suite": 4, "tests": 8, "failures": 0, "errors": 0, "skips": 0, "exit": 0},
+      {"suite": 5, "tests": 25, "failures": 0, "errors": 0, "skips": 0, "exit": 0},
+      {"suite": 6, "tests": 19, "failures": 0, "errors": 0, "skips": 0, "exit": 0}
+    ],
+    "full_discovery": {"tests": 196, "failures": 0, "errors": 0, "skips": 2, "exit": 0,
+      "skip_reason": "live proposed-R3 GitHub-metadata tests; documented offline skips"}
+  },
+  "pc0": {
+    "standard": {"overall": "YELLOW", "exit": 0,
+      "blocking_red": false,
+      "advisory_red": ["G (blocks_global_progress=false)", "ECO (blocks_global_progress=false)"],
+      "v0": "YELLOW, no blocking RED"},
+    "directional": {"overall": "YELLOW", "exit": 0,
+      "global_blocking_findings": ["CH->NX WATCH_HIT (baseline main state, pre-existing)",
+                                    "NX->T WATCH_HIT (baseline main state, pre-existing)"],
+      "v0_critical_watch_hits": "V0->G, V0->ECO advisory, global_blocking=false",
+      "note": "All directional findings computed against canonical main baseline registry generation 80 / main_head 5b415295; none caused by this candidate."}
+  },
+  "powershell_gates": {
+    "canonical_overview": {"exit": 0},
+    "canonical_check_consistency": {"exit": 3, "detail": "PROJECT_CONSISTENCY_ERRORS", "fail_closed_expected": true},
+    "canonical_drive": {"exit": 3, "detail": "EPOCH_REGISTRY_GENERATION_MISMATCH", "fail_closed_expected": true},
+    "canonical_close_mission": {"exit": 3, "detail": "EPOCH_REGISTRY_GENERATION_MISMATCH", "fail_closed_expected": true},
+    "candidate_overview": {"exit": 0, "runtime_authorized": false, "authority": "CANDIDATE_NON_AUTHORIZING"},
+    "candidate_check_consistency": {"exit": 0, "runtime_authorized": false, "authority": "CANDIDATE_NON_AUTHORIZING"}
+  },
+  "checkout_clean": {"before": true, "after": true},
+  "routing": {
+    "primary_lane": "MVP",
+    "p7_7": "MERGED_PENDING_CANONICAL_CLOSURE",
+    "runtime_mutation_allowed_now": false,
+    "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
+    "next_runtime_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "next_runtime_checkpoint_eligible": false,
+    "next_actor": "DIRECTOR",
+    "eco_blocks_mvp": false,
+    "fabric_blocks_mvp": false,
+    "presentation_blocks_mvp": false
+  },
+  "findings": [
+    {
+      "id": "PVW-R1-F1",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "Windows console codepage: harness python CLI raises UnicodeEncodeError (INTERNAL_ERROR, exit 6) when output contains Cyrillic unless PYTHONUTF8=1 is set; observed for check-consistency --candidate. Environment usability issue on Windows, not a control-logic defect; all verification runs used PYTHONUTF8=1. CI runs on Linux and is unaffected.",
+      "recommended_scope": "Optional future hardening of CLI stdout encoding for Windows hosts."
+    },
+    {
+      "id": "PVW-R1-F2",
+      "severity": "INFO",
+      "blocking": false,
+      "summary": "Live control branch origin/control/project-focus-harness-reconciliation-r1 advanced to 447b06e4 (beyond frozen subject cc89d805). Verification remained on the exact frozen subject as required. main unchanged (5b415295), so candidate validity baseline is unchanged; commits after cc89d805 are outside this verification."
+    },
+    {
+      "id": "PVW-R1-F3",
+      "severity": "INFO",
+      "blocking": false,
+      "summary": "Verifier-machine environment pollution: stray 'tests' directory in system site-packages (electrum leftovers) shadows repository tests namespace package; pwsh7 'python' PATH resolved to WindowsApps stub (9009). Both neutralized outside the repository (PYTHONPATH shim + PATH order). Recorded for reproducibility; no subject defect."
+    }
+  ],
+  "checks_not_run": [
+    "Godot / P7 graphical runtime gate (out of scope for control verification by Work Order)",
+    "live proposed-R3 GitHub-metadata tests (skipped by test suite offline; documented)",
+    "PR #547 merge, P7 acceptance, MVP activation (human gates; not verifier authority)"
+  ]
+}

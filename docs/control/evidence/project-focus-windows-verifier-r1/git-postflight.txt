@@ -1,0 +1,17 @@
+PROJECT-FOCUS WINDOWS VERIFIER R1 — GIT POSTFLIGHT
+Executed after ALL checks (tests, PC0, PowerShell gates, immutability diff).
+
+git rev-parse HEAD         -> cc89d80599eb24ab4efd55b38332ead4b16468bf  (== subject HEAD)
+git rev-parse "HEAD^{tree}" -> 1f51c4a7c0d2e4892d635d6ce830c053f0799ef4  (== subject TREE)
+git status --short         -> empty (0 entries, including artifacts; tracked source
+                              checkout unchanged by verification)
+
+Historical immutability (git diff --name-status 5b415295..cc89d805):
+  39 paths changed: 24 M, 15 A.
+  NO modifications under runtime/**, scenes/**,
+  config/control/harness/executions/**, config/control/harness/acceptance/**.
+  Full list preserved in commands-and-exit-codes.txt.
+  Scope = control/docs/tests/workflow only, consistent with PR #547 declared scope.
+
+Evidence branch created from exact subject BEFORE adding evidence files:
+  git switch -c verify/project-focus-control-cc89d805-windows-r1 cc89d80599eb24ab4efd55b38332ead4b16468bf

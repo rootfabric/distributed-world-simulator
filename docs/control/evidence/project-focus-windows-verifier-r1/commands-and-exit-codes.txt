@@ -1,0 +1,149 @@
+PROJECT-FOCUS WINDOWS VERIFIER R1 — COMMANDS AND EXIT CODES
+Subject: cc89d80599eb24ab4efd55b38332ead4b16468bf (tree 1f51c4a7c0d2e4892d635d6ce830c053f0799ef4)
+Environment: Windows 10 19045, Python 3.11.8, git 2.53.0, pwsh 7.6.5, jsonschema 4.22.0.
+All python invocations below used PYTHONUTF8=1 (see environment.txt note 2).
+Named suites and discovery used PYTHONPATH=C:\Godot\verifier-shim (see environment.txt note 3).
+
+--- Environment ---
+python --version                         -> Python 3.11.8
+py --version                             -> Python 3.11.8
+git --version                            -> git version 2.53.0.windows.1
+pwsh --version                           -> 7.6.5
+
+--- Pinned dependency ---
+python -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt -> exit 0
+python -c "import importlib.metadata; print(importlib.metadata.version('jsonschema'))" -> 4.22.0 (exact)
+
+--- py_compile (15 modules) ---
+python -m py_compile scripts/control/project_control.py                                        -> exit 0
+python -m py_compile scripts/control/project_control_architecture_compat.py                   -> exit 0
+python -m py_compile scripts/control/project_control_core.py                                  -> exit 0
+python -m py_compile scripts/control/directional_watch_clearance.py                           -> exit 0
+python -m py_compile scripts/control/project_control_directional_watch.py                     -> exit 0
+python -m py_compile scripts/harness/checkpoint_planner.py                                    -> exit 0
+python -m py_compile scripts/harness/event_reducer.py                                         -> exit 0
+python -m py_compile scripts/harness/execution_selector.py                                    -> exit 0
+python -m py_compile scripts/harness/mission.py                                               -> exit 0
+python -m py_compile scripts/harness/continuation.py                                          -> exit 0
+python -m py_compile scripts/harness/git_authority.py                                         -> exit 0
+python -m py_compile scripts/harness/contracts.py                                             -> exit 0
+python -m py_compile scripts/harness/cli.py                                                   -> exit 0
+python -m py_compile scripts/harness/project_overview.py                                      -> exit 0
+python -m py_compile scripts/harness/control_candidate_validation.py                          -> exit 0
+ANY_FAIL = 0
+
+--- Strict candidate validation (repository-owned validator) ---
+$env:PYTHONPATH="scripts"; python -m harness.control_candidate_validation       -> exit 0
+  stdout: 14x "JSON DUPLICATE-KEY VALIDATION OK: ..." (roadmap, ownership, branch passport,
+  clearances, catalog, reconciliation, goals, scheduler, work map, convergence plan,
+  train policy, control policy, registry, output schema)
+  "CONTROL COMPARISON BASE: 5b4152958624be4e9cc40f2369ce32c4964f65c3"
+  "CANDIDATE REGISTRY GENERATION OK: 81"
+  stderr: empty
+  (first run without PYTHONUTF8 hit UnicodeEncodeError INTERNAL_ERROR exit 6 — environment
+  codepage issue, rerun with PYTHONUTF8=1 passed; see findings)
+
+--- Candidate consistency ---
+$env:PYTHONPATH="scripts"; python -m harness.cli check-consistency --candidate  -> exit 0
+  ok=true; runtime_authorized=false; provenance.candidate_preview=true;
+  authority=CANDIDATE_NON_AUTHORIZING; observed_main=5b415295...==pinned canonical main;
+  findings: 3x WARNING BRANCH_ADVANCED_SINCE_SNAPSHOT (ECO/integration, ECO/visual_repair,
+  FABRIC/bake) — observability-scope only, not product-blocking.
+
+--- Named Harness regressions (python -m unittest <modules>) ---
+SUITE 1 tests.harness.test_project_overview tests.harness.test_project_control_validation
+  -> exit 0; Ran 35 tests; failures 0; errors 0; skips 0
+SUITE 2 tests.harness.test_harness_checkpoint_session
+  -> exit 0; Ran 22 tests; failures 0; errors 0; skips 0
+SUITE 3 tests.harness.test_project_control_architecture_compatibility tests.harness.test_project_control_historical_ownership_compatibility tests.harness.test_project_control_proposed_r3_ownership_projection
+  -> exit 0; Ran 65 tests; failures 0; errors 0; skips 2 (live-GitHub-only)
+SUITE 4 tests.harness.test_h0_2_machine_checkpoint_contract
+  -> exit 0; Ran 8 tests; failures 0; errors 0; skips 0
+SUITE 5 tests.harness.test_v0_s1_networked_checkpoint_contract tests.harness.test_v0_product_train_policy
+  -> exit 0; Ran 25 tests; failures 0; errors 0; skips 0
+SUITE 6 tests.harness.test_v0_generation80_safety_guards tests.harness.test_project_control_directional_clearance
+  -> exit 0; Ran 19 tests; failures 0; errors 0; skips 0
+
+--- Full Harness discovery ---
+python -m unittest discover -s tests/harness -p "test_*.py" -v
+  -> exit 0; Ran 196 tests; failures 0; errors 0; skipped 2
+  skips: test_live_proposed_r3_negative_ownership_mutations_fail_closed,
+         test_live_proposed_r3_standard_and_directional_are_non_red
+  (live proposed-R3 GitHub-metadata tests; same two skips previously documented for
+   offline environments in PROJECT_FOCUS_REVIEW_REPAIR_R4_RU.md)
+
+--- Project Control PC0 ---
+git fetch --all --prune                                                      -> exit 0
+python scripts/control/project_control.py --no-fetch --no-fail-on-red        -> exit 0
+  report read: overall YELLOW; main_head 5b415295...; registry_generation 80 (main baseline)
+  G RED (advisory, blocks_global_progress=false), ECO RED (advisory, blocks_global_progress=false),
+  T/CH/DOCTRINE/NX/V0 YELLOW, HARNESS/TS/MATTER/S1 GREEN. No V0 blocking RED.
+python scripts/control/project_control_directional_watch.py --no-fail-on-red -> exit 0
+  report read: overall YELLOW
+  YELLOW WATCH_HIT CH->NX global_blocking=true (4 paths, pre-existing baseline state)
+  YELLOW WATCH_HIT NX->ECO global_blocking=false (1 path)
+  YELLOW WATCH_HIT NX->T global_blocking=true (1 path, pre-existing baseline state)
+  RED CRITICAL_WATCH_HIT V0->G global_blocking=false/advisory
+  RED CRITICAL_WATCH_HIT V0->ECO global_blocking=false/advisory
+  All directional findings are computed against canonical main baseline (registry gen 80,
+  main_head 5b415295) and pre-date this control candidate; none is caused by the candidate.
+
+--- PowerShell wrapper (real CONTROL_DEVELOPMENT.ps1 via pwsh 7.6.5; no -Json) ---
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -Overview
+  -> exit 0
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -CheckConsistency
+  -> exit 3, CONTRACT_OR_DEPENDENCY_INVALID / PROJECT_CONSISTENCY_ERRORS   (fail-closed, expected pre-merge)
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -Drive
+  -> exit 3, CONTRACT_OR_DEPENDENCY_INVALID / EPOCH_REGISTRY_GENERATION_MISMATCH (fail-closed, expected pre-merge)
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -CloseMission
+  -> exit 3, CONTRACT_OR_DEPENDENCY_INVALID / EPOCH_REGISTRY_GENERATION_MISMATCH (fail-closed, expected pre-merge)
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -Overview -Candidate
+  -> exit 0; ok=true; runtime_authorized=false; candidate_preview=true;
+     authority=CANDIDATE_NON_AUTHORIZING; observed_main=5b415295...
+pwsh -NoLogo -NoProfile -File .\CONTROL_DEVELOPMENT.ps1 -CheckConsistency -Candidate
+  -> exit 0; ok=true; runtime_authorized=false; candidate_preview=true;
+     authority=CANDIDATE_NON_AUTHORIZING
+Forbidden candidate modes (-Drive/-CloseMission/-Plan/-Resume -Candidate) were NOT run.
+
+--- Historical immutability ---
+git diff --name-status 5b4152958624be4e9cc40f2369ce32c4964f65c3..cc89d80599eb24ab4efd55b38332ead4b16468bf
+  -> 39 paths (24 M, 15 A); no runtime/**, scenes/**, executions/**, acceptance/** changes.
+M   .github/workflows/project-control.yml
+M   AGENTS.md
+M   CONTROL_DEVELOPMENT.ps1
+M   HARNESS_CONTROL.md
+A   config/control/branches/control__project-focus-harness-reconciliation-r1.v1.json
+M   config/control/harness/checkpoint-catalog.v1.json
+A   config/control/harness/project-focus-reconciliation.v1.json
+M   config/control/harness/project-goals.v1.json
+M   config/control/harness/scheduler-policy.v1.json
+M   config/control/harness/v0-current-work-map.v1.json
+M   config/control/harness/v0-p7-matter-production-convergence-plan.v1.json
+M   config/control/harness/v0-product-train-policy.v1.json
+M   config/control/project-program-registry.v1.json
+M   docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
+M   docs/control/DEVELOPMENT_HARNESS_RU.md
+A   docs/control/PROJECT_FOCUS_CHANGE_RU.md
+A   docs/control/PROJECT_FOCUS_EXECUTABLE_VALIDATION_CONTINUATION_R1_RU.md
+A   docs/control/PROJECT_FOCUS_GENERATION_REGRESSION_REPAIR_R1_RU.md
+A   docs/control/PROJECT_FOCUS_HISTORICAL_REGRESSION_REPAIR_R2_RU.md
+A   docs/control/PROJECT_FOCUS_REVIEW_REPAIR_R3_RU.md
+A   docs/control/PROJECT_FOCUS_REVIEW_REPAIR_R4_RU.md
+A   docs/control/PROJECT_FOCUS_STATIC_REVIEW_RU.md
+A   docs/control/PROJECT_FOCUS_STATIC_VERIFICATION_RU.md
+A   docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md
+M   scripts/harness/checkpoint_planner.py
+M   scripts/harness/cli.py
+M   scripts/harness/contracts.py
+A   scripts/harness/control_candidate_validation.py
+M   scripts/harness/mission.py
+A   scripts/harness/project_overview.py
+M   tests/harness/test_h0_2_machine_checkpoint_contract.py
+M   tests/harness/test_h0_control_harness.py
+A   tests/harness/test_project_control_validation.py
+A   tests/harness/test_project_overview.py
+M   tests/harness/test_v0_generation80_safety_guards.py
+M   tests/harness/test_v0_p6_acceptance_effective_state.py
+M   tests/harness/test_v0_product_train_policy.py
+M   tests/harness/test_v0_s1_networked_checkpoint_contract.py
+M   validation/harness/control-development-output.schema.v1.json

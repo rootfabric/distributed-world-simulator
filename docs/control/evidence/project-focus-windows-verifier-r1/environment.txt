@@ -1,0 +1,35 @@
+PROJECT-FOCUS WINDOWS VERIFIER R1 — ENVIRONMENT
+Captured (UTC): 2026-09-05 (session)
+Machine: DESKTOP-QNAGSTI, Microsoft Windows NT 10.0.19045.0 (Windows 10 x64)
+
+Host session wrapper: Windows PowerShell 5.1.19041.6456 (Desktop)
+pwsh --version: 7.6.5 (C:\Users\root\AppData\Local\Microsoft\WindowsApps\pwsh.exe,
+installed user-scope via winget Microsoft.PowerShell 7.6.5.0 during this verification;
+pwsh was absent at session start — installed as verifier environment prerequisite,
+subject unaffected)
+
+python --version: Python 3.11.8 (C:\Python311\python.exe)
+py --version: Python 3.11.8
+git --version: git version 2.53.0.windows.1
+
+Pinned harness dependency:
+  python -m pip install -r scripts/harness/requirements.txt -> exit 0
+  jsonschema version reported: 4.22.0 (exact pinned match)
+
+Environment notes / deviations:
+1. pwsh 7 was not present at session start; installed user-scope via winget before
+   the wrapper gate. All CONTROL_DEVELOPMENT.ps1 runs used pwsh 7.6.5.
+2. Windows console codepage caused UnicodeEncodeError (INTERNAL_ERROR, exit 6) for
+   python harness CLI output containing Cyrillic unless PYTHONUTF8=1 was set.
+   All verification runs used PYTHONUTF8=1. See VERIFICATION.v1.json findings.
+3. A stray third-party 'tests' directory in C:\Python311\Lib\site-packages (electrum
+   leftovers, not a pip distribution) shadows the repository 'tests' namespace
+   package (PEP 420 regular-vs-namespace). Neutralized with a PYTHONPATH shim
+   directory OUTSIDE the repository (C:\Godot\verifier-shim\tests\__init__.py that
+   only appends the repository tests directory to __path__). No repository file
+   was modified for this.
+4. In pwsh 7 'python' resolved first to the WindowsApps execution-alias stub
+   (exit 9009). The wrapper uses Get-Command python; verification runs put
+   C:\Python311 first on PATH.
+5. Godot was NOT used; no runtime/graphical gate was run (out of scope for this
+   control verification).

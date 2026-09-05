@@ -1,0 +1,16 @@
+JSON DUPLICATE-KEY VALIDATION OK: config/architecture/global-program-roadmap.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/architecture-ownership.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/branches/control__project-focus-harness-reconciliation-r1.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/directional-watch-clearances.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/checkpoint-catalog.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/project-focus-reconciliation.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/project-goals.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/scheduler-policy.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/v0-current-work-map.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/v0-p7-matter-production-convergence-plan.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/harness/v0-product-train-policy.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/project-control-policy.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: config/control/project-program-registry.v1.json
+JSON DUPLICATE-KEY VALIDATION OK: validation/harness/control-development-output.schema.v1.json
+CONTROL COMPARISON BASE: 5b4152958624be4e9cc40f2369ce32c4964f65c3
+CANDIDATE REGISTRY GENERATION OK: 81
