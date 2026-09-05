@@ -14,9 +14,10 @@ trap 'rm -f "$log"' EXIT
 export BREAKPOINT_RUNTIME_DISABLED=1
 set +e
 "$GODOT_BIN" --headless --path "$ROOT" --script "$script" "$@" 2>&1 | tee "$log"
-status=${PIPESTATUS[0]}
+statuses=("${PIPESTATUS[@]}")
 set -e
-[[ "$status" == 0 ]] || exit "$status"
+[[ "${statuses[0]}" == 0 ]] || exit "${statuses[0]}"
+[[ "${statuses[1]}" == 0 ]] || { echo "B0.6 log sink failed" >&2; exit 7; }
 if grep -Eq 'SCRIPT ERROR|Parse Error|Invalid call|Assertion failed|ERROR:|Segmentation fault' "$log"; then
   echo 'B0.6 fatal runtime marker: FAIL' >&2
   exit 5

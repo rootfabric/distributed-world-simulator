@@ -9,6 +9,8 @@ mkdir -p "$out"
 export B06_LOG_DIR="$out"
 : > "$out/timings.tsv"
 suites=(
+  RUN_FABRIC_B0_6_HARNESS_TESTS.sh
+  RUN_FABRIC_B0_6_IMPORT_TESTS.sh
   RUN_FABRIC_B0_6_A_TESTS.sh
   RUN_FABRIC_B0_6_B_TESTS.sh
   RUN_FABRIC_B0_6_C_TESTS.sh

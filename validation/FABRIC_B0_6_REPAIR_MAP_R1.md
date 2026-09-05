@@ -45,3 +45,35 @@ perform no reconstruction; changed canonical physical inputs require a changed s
 binding. Local smoke additionally proves descriptor copies cannot mutate the slot.
 The workload obtains source keys from the existing Utils.source_key function; an
 initial fixture guessed the delimiter and was corrected, not the canonical utility.
+
+## R2 — inherited scene parser repair, exact recovery
+
+До исправления новый fresh import завершился exit 0, но вывел шесть Parse Error:
+старые ECO display-only .tscn содержали UTF-8 BOM перед `[gd_scene]`.
+Принадлежащие ECO скрипты, генерация и каноническая модель не изменяются.
+Root-cause repair уже существует в `repair/legacy-eco5-scene-bom-r1`:
+`8758f3ede130e953461b27fff1df1aee27cd7e06`.
+Для каждого из шести файлов доказано `repaired_bytes == original_bytes[3:]`.
+Переносятся только эти exact blobs, без merge ECO-ветки и без новых features.
+
+Repair scope: шесть display-only scene headers, strict import log validator и
+шестисценовый load/instantiate smoke. Риск LOW для syntax-only repair;
+исходный B0.6 lifecycle/recovery остаётся HIGH по design brief.
+Причина canonical fix location: повреждены bytes scene header, а не FABRIC solver.
+Удаляется прежнее исключение в import validator: любой Parse Error теперь FAIL.
+Проверки: byte identity against the existing repair; fresh import exit 0 and zero
+fatal markers; six PackedScene load/instantiate/free checks; full B0.6 and all
+predecessor regressions on the new exact candidate, twice. Это минимальное
+исправление prerequisite import, а не расширение экологической программы.
+
+## R3 — log sink failure is not a successful Godot validation
+
+Обнаружен соседний путь false-green: общий runner проверял только
+`PIPESTATUS[0]`, когда `errexit` временно отключён для Godot→tee pipeline.
+Ошибка `tee` могла потерять последнюю часть журнала. Canonical fix: сохранить
+оба pipeline statuses до следующей команды; ненулевой tee даёт exit 7.
+Это изменение не касается simulation decisions и не подменяет Godot.
+Новый executable regression использует только canonical double binary:
+positive run, missing sentinel, real runtime error despite exit 0, nonzero Godot
+exit despite sentinel, injected log-sink failure, rejected import error log,
+and accepted clean import log. Все семь веток входят в closure runner.
