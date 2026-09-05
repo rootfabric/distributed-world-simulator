@@ -23,7 +23,7 @@ DESCRIPTOR_FIELDS = {
 def load_descriptors():
     descriptors = {}
     for path in sorted(SURFACES_DIR.glob("*.v1.json")):
-        if path.name in ("taxonomy.v1.json", "matter_binding_rules.v1.json"):
+        if path.name in ("taxonomy.v1.json", "matter_binding_rules.v1.json", "state_axes.v1.json"):
             continue
         with path.open("r", encoding="utf-8") as handle:
             value = json.load(handle)

@@ -18,8 +18,12 @@
         "asset/dws/diagnostic-swatch@1.0.0"
       ],
       "states": [
-        "default"
+        "default",
+        "fresh",
+        "wind_worked"
       ],
+      "exposure": "exposed",
+      "fidelity": "casual",
       "coordinate_space": "body_fixed",
       "mapping": "triplanar",
       "scale_bands": [

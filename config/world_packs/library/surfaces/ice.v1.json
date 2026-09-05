@@ -23,6 +23,8 @@
         "fresh",
         "weathered"
       ],
+      "exposure": "exposed",
+      "fidelity": "casual",
       "coordinate_space": "body_fixed",
       "mapping": "triplanar",
       "scale_bands": [
