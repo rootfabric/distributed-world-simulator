@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fb0d7f67991e3d840243a49da0dd36938a1e3dfd
+          ref: cc89d80599eb24ab4efd55b38332ead4b16468bf
           fetch-depth: 0
           persist-credentials: false
       - name: Verify live refs and exact clean subject
@@ -34,10 +34,10 @@ jobs:
             git status --porcelain --untracked-files=no
             pwsh --version
           } 2>&1 | tee /tmp/focus-launcher-evidence/preflight.log
-          test "$(git rev-parse HEAD)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
-          test "$(git rev-parse 'HEAD^{tree}')" = 963f47285fb62589d76657cb8b21ef32189bcb44
+          test "$(git rev-parse HEAD)" = cc89d80599eb24ab4efd55b38332ead4b16468bf
+          test "$(git rev-parse 'HEAD^{tree}')" = 1f51c4a7c0d2e4892d635d6ce830c053f0799ef4
           test "$(git rev-parse origin/main)" = 5b4152958624be4e9cc40f2369ce32c4964f65c3
-          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = fb0d7f67991e3d840243a49da0dd36938a1e3dfd
+          test "$(git rev-parse origin/control/project-focus-harness-reconciliation-r1)" = cc89d80599eb24ab4efd55b38332ead4b16468bf
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Install repository pinned dependencies
         run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
@@ -53,24 +53,36 @@ jobs:
           evidence = Path('/tmp/focus-launcher-evidence')
           validator = Draft202012Validator(json.loads(Path('validation/harness/control-development-output.schema.v1.json').read_text()))
           failures = []
-          for mode in ('Overview', 'CheckConsistency', 'Drive', 'CloseMission'):
+          cases = [(mode, False) for mode in ('Overview', 'CheckConsistency', 'Drive', 'CloseMission')]
+          cases += [(mode, True) for mode in ('Overview', 'CheckConsistency')]
+          for mode, candidate in cases:
+              label = mode + ('Candidate' if candidate else '')
               command = ['pwsh', '-NoLogo', '-NoProfile', '-File', './CONTROL_DEVELOPMENT.ps1', f'-{mode}']
+              if candidate:
+                  command.append('-Candidate')
               result = subprocess.run(command, capture_output=True, text=True, check=False, timeout=180)
-              (evidence / f'{mode}.stdout.log').write_text(result.stdout)
-              (evidence / f'{mode}.stderr.log').write_text(result.stderr)
-              (evidence / f'{mode}.exit').write_text(f'{result.returncode}\n')
-              print(f'POWERSHELL_LAUNCHER_MODE={mode} EXIT={result.returncode}', flush=True)
+              (evidence / f'{label}.stdout.log').write_text(result.stdout)
+              (evidence / f'{label}.stderr.log').write_text(result.stderr)
+              (evidence / f'{label}.exit').write_text(f'{result.returncode}\n')
+              print(f'POWERSHELL_LAUNCHER_MODE={label} EXIT={result.returncode}', flush=True)
               print(result.stdout, flush=True)
               print(result.stderr, flush=True)
-              expected_exit = 0 if mode == 'Overview' else 3
+              expected_exit = 0 if candidate or mode == 'Overview' else 3
               try:
                   envelopes = [json.loads(line) for line in result.stdout.splitlines() if line.lstrip().startswith('{')]
                   assert len(envelopes) == 1, f'Expected one JSON envelope, got {len(envelopes)}'
                   value = envelopes[0]
                   validator.validate(value)
-                  (evidence / f'{mode}.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+                  (evidence / f'{label}.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
                   assert result.returncode == expected_exit, result.returncode
-                  if mode in ('Drive', 'CloseMission'):
+                  if candidate:
+                      report = value['overview']
+                      assert report['provenance']['candidate_preview'] is True
+                      assert report['runtime_authorized'] is False
+                      assert report['primary_lane'] == 'MVP'
+                      assert report['routing']['runtime_mutation_allowed_now'] is False
+                      assert report['routing']['next_runtime_checkpoint_eligible'] is False
+                  elif mode in ('Drive', 'CloseMission'):
                       assert value['error']['detail'] == 'EPOCH_REGISTRY_GENERATION_MISMATCH', value
                   elif mode == 'CheckConsistency':
                       assert value['error']['detail'] == 'PROJECT_CONSISTENCY_ERRORS', value
@@ -78,10 +90,10 @@ jobs:
                       provenance = value['overview']['provenance']
                       assert provenance['canonical_head'] == '5b4152958624be4e9cc40f2369ce32c4964f65c3'
                       assert provenance['candidate_preview'] is False
-                  print(f'OUTPUT_SCHEMA_AND_EXPECTED_PREMERGE_GATE: {mode}')
+                  print(f'OUTPUT_SCHEMA_AND_EXPECTED_PREMERGE_GATE: {label}')
               except (AssertionError, ValueError, KeyError) as error:
-                  failures.append(f'{mode}: {error}')
-          (evidence / 'launcher-summary.json').write_text(json.dumps({'subject_head': 'fb0d7f67991e3d840243a49da0dd36938a1e3dfd', 'subject_tree': '963f47285fb62589d76657cb8b21ef32189bcb44', 'unexpected_results': failures}, indent=2) + '\n')
+                  failures.append(f'{label}: {error}')
+          (evidence / 'launcher-summary.json').write_text(json.dumps({'subject_head': 'cc89d80599eb24ab4efd55b38332ead4b16468bf', 'subject_tree': '1f51c4a7c0d2e4892d635d6ce830c053f0799ef4', 'unexpected_results': failures, 'independent_verifier': False}, indent=2) + '\n')
           if failures:
               raise SystemExit('\n'.join(failures))
           PY
@@ -102,7 +114,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: project-focus-fb0d7f67-powershell-launcher
+          name: project-focus-cc89d805-powershell-launcher
           path: /tmp/focus-launcher-evidence/
           if-no-files-found: error
           retention-days: 30
