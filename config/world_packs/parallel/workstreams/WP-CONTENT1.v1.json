@@ -4,7 +4,7 @@
   "track_id": "WP-CONTENT1",
   "branch": "work/world-packs-content1-cc0-library-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "IN_PROGRESS",
+  "status": "READY_FOR_INTEGRATION",
   "completed_milestones": [
     "SOURCE_POLICY",
     "ROCK_AND_CLIFF_CANDIDATES",
@@ -15,7 +15,7 @@
     "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Integrator decision required to grant READY_FOR_INTEGRATION: the only red test in python -m pytest tests/world_packs -q is a pre-existing environmental failure (test_library_contract.py symlink test, OSError WinError 1314, outside WP-CONTENT1 allowed paths); re-run in a symlink-privileged environment or issue an explicit waiver. Track work itself is complete and focused-green at c18e5943.",
+  "next_action": "Independent integrator/reviewer review of exact HEAD 764af89d via child PR into control/world-packs-parallel-r1; note the documented pre-existing environmental symlink test failure (WinError 1314) when running the shared world_packs suite.",
   "last_checkpoint_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
   "tested_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
   "validation": [
