@@ -8,12 +8,13 @@
   "completed_milestones": [
     "FETCH_CONTRACT",
     "BOUNDED_HTTPS",
-    "RAW_CONTENT_ADDRESSABLE_CACHE"
+    "RAW_CONTENT_ADDRESSABLE_CACHE",
+    "SSRF_REDIRECT_AND_SIZE_GATES"
   ],
   "blockers": [],
-  "next_action": "Implement SSRF_REDIRECT_AND_SIZE_GATES: private-IP/link-local host resolution denial, credentials-in-URL denial, redirect target revalidation (https + approved host + IP check) with injectable resolver; offline tests only.",
-  "last_checkpoint_head": "cc2c08ebb57e46cc16152230de629d15f58ac059",
-  "tested_head": "cc2c08ebb57e46cc16152230de629d15f58ac059",
+  "next_action": "Implement ARCHIVE_SAFETY_FIXTURES: path-traversal, absolute-path, symlink/absolute-link, zip-bomb ratio/count and entry-size limits with typed refusals; in-memory and tmp_path fixtures only.",
+  "last_checkpoint_head": "ad7dc25f1319669342a2342eea8bdbf24286a19d",
+  "tested_head": "ad7dc25f1319669342a2342eea8bdbf24286a19d",
   "validation": [
     {
       "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
@@ -32,9 +33,15 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "46 passed",
       "head": "cc2c08ebb57e46cc16152230de629d15f58ac059"
+    },
+    {
+      "name": "WP-ASSET1 SSRF_REDIRECT_AND_SIZE_GATES focused tests",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "75 passed",
+      "head": "ad7dc25f1319669342a2342eea8bdbf24286a19d"
     }
   ],
-  "updated_at_utc": "2026-09-05T15:25:00Z",
+  "updated_at_utc": "2026-09-05T16:00:00Z",
   "notes": [
     "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
     "BOUNDED_HTTPS complete: streaming bounded reads (SIZE_EXCEEDED/SIZE_SHORT typed failures), injected opener, no redirects by default.",
