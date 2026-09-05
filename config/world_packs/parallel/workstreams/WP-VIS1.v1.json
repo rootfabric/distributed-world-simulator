@@ -15,7 +15,7 @@
     "HEADLESS_AND_GRAPHICAL_EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Independent integration review of branch work/world-packs-vis1-material-lab-r1 at implementation head b13afce094fbbdcfd134ce094a50283cbedfce68; worker does not self-merge.",
+  "next_action": "Child PR #561 (work/world-packs-vis1-material-lab-r1 -> control/world-packs-parallel-r1) is open for independent integration review; worker must not self-merge.",
   "last_checkpoint_head": "58e968620f579d52ad75f7fe0369fdbff548b317",
   "tested_head": "58e968620f579d52ad75f7fe0369fdbff548b317",
   "validation": [
@@ -44,12 +44,13 @@
       "head": "6e5b93ca61d7dc67324a95b27b64162a728eb9c9"
     }
   ],
-  "updated_at_utc": "2026-09-05T19:05:00Z",
+  "updated_at_utc": "2026-09-05T19:30:00Z",
   "notes": [
     "All seven declared WP-VIS1 milestones complete; presentation-only preserved (no production terrain/Matter/collision/ECO changes).",
     "Headless evidence: docs/world_packs/evidence/WP-VIS1-headless-self-check.log; graphical evidence: WP-VIS1-lab-full-fidelity.png and WP-VIS1-lab-preview-fidelity.png; per-milestone evidence docs WP-VIS1-*.md.",
     "parallel_controller_regression recorded at earlier branch head 6e5b93ca (same branch, before later lab-only changes); controller verify RESULT=OK at every checkpoint.",
     "State file written as UTF-8 without BOM via file tool (never PowerShell redirect).",
-    "tested_head advanced to 58e96862 (capture script .uid follow-up commit); focused validation re-run green on identical implementation content (no impl diff between 58e96862 and 1557ba7f)."
+    "tested_head advanced to 58e96862 (capture script .uid follow-up commit); focused validation re-run green on identical implementation content (no impl diff between 58e96862 and 1557ba7f).",
+    "Child PR #561 opened 2026-09-05 per work order; implementation head 58e96862, state head 3ec670f1 (this commit advances state only)."
   ]
 }
