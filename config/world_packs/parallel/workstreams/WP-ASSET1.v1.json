@@ -15,7 +15,7 @@
     "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Integrator: review exact head 1ff25c9a evidence, open/update child PR into control/world-packs-parallel-r1 and request independent review.",
+  "next_action": "Child PR #560 (work/world-packs-asset1-safe-fetch-r1 -> control/world-packs-parallel-r1) is OPEN; awaiting independent review of exact implementation head 1ff25c9a; worker does not self-merge.",
   "last_checkpoint_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
   "tested_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
   "validation": [
@@ -68,7 +68,7 @@
       "head": "be00dd54bc1e21827975f83882c2fa38916805b5"
     }
   ],
-  "updated_at_utc": "2026-09-05T19:30:00Z",
+  "updated_at_utc": "2026-09-05T20:10:00Z",
   "notes": [
     "All 7 declared milestones complete; stdlib-only package tools/world_packs/asset_fetch (contract/https/cache/gates/archive/pipeline).",
     "Test counts per milestone head (same command as validation entries): FETCH_CONTRACT 29 passed, BOUNDED_HTTPS 38 passed, RAW_CACHE 46 passed, GATES 75 passed, ARCHIVE_SAFETY 93 passed, OFFLINE_RECOVERY and final 99 passed.",
@@ -76,6 +76,7 @@
     "No heavy payloads in Git; raw cache lives outside the repository.",
     "validation entries follow workstream_state.schema.v1.json: result enum PASS/FAIL/BLOCKED/NOT_RUN, additionalProperties false.",
     "Worker does not self-merge; integration gate belongs to the controller/integrator track.",
-    "Re-ran focused suite (99 passed) on exact pushed head be00dd54 to refresh validation freshness; state written via python json.dump (UTF-8, no BOM)."
+    "Re-ran focused suite (99 passed) on exact pushed head be00dd54 to refresh validation freshness; state written via python json.dump (UTF-8, no BOM).",
+    "Opened child PR #560 (base control/world-packs-parallel-r1) per work order; worker does not self-merge."
   ]
 }
