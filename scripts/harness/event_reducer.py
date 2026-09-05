@@ -8,6 +8,7 @@ import subprocess
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, read_json
+from .review_evidence import apply_review_machine_evidence_policy
 
 
 _P4_CHECKPOINT = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
@@ -59,6 +60,34 @@ def _referenced_documents(event: dict[str, Any], context: dict[str, Any] | None)
         if document is not None:
             referenced.append(document)
     return referenced
+
+
+def _authoritative_review_pass_present(
+    bundle: ContractBundle,
+    event: dict[str, Any],
+    context: dict[str, Any] | None,
+) -> bool:
+    """Evaluate review PASS using the same machine-evidence policy as state loading."""
+    if context is None:
+        return False
+    root = context["root"]
+    documents = context["documents"]
+    for raw_path in event.get("evidence_paths", []):
+        normalized = raw_path.replace("\\", "/")
+        document = documents.get(normalized)
+        if document is None:
+            document = _safe_repository_json(context, normalized)
+            if document is not None:
+                documents[normalized] = document
+        if not isinstance(document, dict) or document.get("schema") != "distributed_world_simulator.harness_review_result.v1":
+            continue
+        path = (root / normalized).resolve()
+        effective = apply_review_machine_evidence_policy(
+            root, path, document, bundle.contracts["review_policy"]
+        )
+        if effective.get("verdict") == "PASS" and effective.get("reviewed_head_sha") == event.get("head_sha"):
+            return True
+    return False
 
 
 def _current_main_sha(context: dict[str, Any] | None) -> str:
@@ -388,13 +417,7 @@ def _enforce_guard(
             for repair in all_documents
         )
         repair_ready = direct_repair_ready or chained_repair_ready
-        review_pass = any(
-            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
-            and item.get("work_order_id") == work_order["work_order_id"]
-            and item.get("verdict") == "PASS"
-            and item.get("reviewed_head_sha") == event["head_sha"]
-            for item in documents
-        )
+        review_pass = _authoritative_review_pass_present(bundle, event, context)
         if not corrected_premature and not (event["actor"] == "DIRECTOR" and repair_ready and review_pass):
             raise ContractValidationError("GUARDED_FIX_REDISPATCH_EVIDENCE_MISSING")
     elif transition == ("AUDITED", "CHECKPOINT_PROPOSED"):
@@ -407,12 +430,7 @@ def _enforce_guard(
             and item.get("evidence_head_sha") == event["head_sha"]
             for item in documents
         )
-        review_pass = any(
-            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
-            and item.get("verdict") == "PASS"
-            and item.get("reviewed_head_sha") == event["head_sha"]
-            for item in documents
-        )
+        review_pass = _authoritative_review_pass_present(bundle, event, context)
         if event["actor"] != "DIRECTOR" or not evidence_pass or not review_pass:
             raise ContractValidationError("GUARDED_CHECKPOINT_PROPOSAL_EVIDENCE_MISSING")
 

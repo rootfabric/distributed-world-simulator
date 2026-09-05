@@ -105,6 +105,10 @@
       ],
       "DURABLE_BLOCK_PROOF_WITH_EXACT_RESUME_CONDITION": [
         {
+          "field": "_durable_provenance_validated",
+          "predicate": "TRUE"
+        },
+        {
           "field": "proof_evidence_path",
           "predicate": "NON_EMPTY_STRING"
         },
