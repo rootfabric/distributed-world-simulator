@@ -1,0 +1,48 @@
+# Transport/materialization helper only. Never merge into control or main.
+name: Project Focus Repair Large Materialize R3
+
+on:
+  push:
+    branches: [control/project-focus-exact-source-export-r3]
+    paths:
+      - .github/workflows/project-focus-repair-large-materialize-r3.yml
+      - .github/project-focus-r3-chunks/**
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reconstruct and verify bounded large-file patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/project-focus-r3-chunks/large-patch.part*.b64 > /tmp/repair-large.patch.b64
+          base64 -d /tmp/repair-large.patch.b64 > /tmp/repair-large.patch
+          echo '21cb45d5d5524168b49eb0f636e64db13704f3a48a444a45a3f0e90f0e01378c  /tmp/repair-large.patch' | sha256sum -c -
+          git checkout --detach 719a89611a5cb376ee6bf80476587399af7b9a4e
+          git apply --check /tmp/repair-large.patch
+          git apply /tmp/repair-large.patch
+          test "$(git hash-object scripts/harness/event_reducer.py)" = 4b48dee7b74f0c70b420cecd200489abe8d58f33
+          test "$(git hash-object scripts/harness/state_builder.py)" = 6ce3453a6f82d51819f704a886f165a8cb1e1cee
+          test "$(git hash-object tests/harness/test_harness_autonomy_provenance.py)" = 7cee58c12784aaa78c4644610f8df73efece7813
+          git diff --check
+          git status --short
+      - name: Publish temporary materialized large-file tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'rootfabric-control-helper'
+          git config user.email 'rootfabric-control-helper@users.noreply.github.com'
+          git switch -c control/project-focus-autonomy-review-r3-large-materialized
+          git add scripts/harness/event_reducer.py scripts/harness/state_builder.py tests/harness/test_harness_autonomy_provenance.py
+          git commit -m 'transport(control): materialize autonomy review R3 large files'
+          git push origin HEAD:refs/heads/control/project-focus-autonomy-review-r3-large-materialized
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
