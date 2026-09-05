@@ -10,6 +10,7 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
+from .review_evidence import apply_review_machine_evidence_policy
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -370,6 +371,79 @@ def _validate_repair_map(
     return latest
 
 
+def _load_hard_block_proof(
+    bundle: ContractBundle,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+    event: dict[str, Any],
+    event_path: Path,
+) -> dict[str, Any] | None:
+    """Load only a proof durably bound to the authoritative final BLOCKED event.
+
+    A path string is never proof. The referenced JSON must live in this
+    execution's evidence directory, satisfy the canonical schema and identity,
+    be present in Git at the commit that added the BLOCKED event, and remain
+    byte-identical at current HEAD. The derived validation marker is intentionally
+    not part of the JSON schema, so external records cannot self-assert it.
+    """
+    if event.get("event_type") != "BLOCKED" or event.get("work_state") != "BLOCKED":
+        return None
+
+    evidence_root = (execution_dir / "evidence").resolve()
+    candidates: list[tuple[str, Path, dict[str, Any]]] = []
+    for raw in event.get("evidence_paths", []):
+        if not isinstance(raw, str) or not raw.endswith(".json"):
+            continue
+        normalized = raw.replace("\\", "/")
+        candidate = (bundle.root / normalized).resolve()
+        try:
+            candidate.relative_to(evidence_root)
+        except ValueError:
+            continue
+        if not candidate.is_file():
+            continue
+        value = read_json(candidate)
+        if value.get("schema") == "distributed_world_simulator.harness_hard_block_proof.v1":
+            candidates.append((normalized, candidate, value))
+
+    if not candidates:
+        return None
+    if len(candidates) != 1:
+        raise ContractValidationError("HARD_BLOCK_PROOF_AMBIGUOUS")
+
+    relative, candidate, value = candidates[0]
+    bundle.validate("hard_block_proof_schema", value, f"hard_block_proof:{candidate.name}")
+    if (
+        value["project_epoch"] != work_order["project_epoch"]
+        or value["work_order_id"] != work_order["work_order_id"]
+        or value["checkpoint"] != work_order["goal_checkpoint"]
+    ):
+        raise ContractValidationError("HARD_BLOCK_PROOF_WORK_ORDER_IDENTITY_MISMATCH")
+    if value["blocked_event_id"] != event["event_id"] or value["blocked_head_sha"] != event["head_sha"]:
+        raise ContractValidationError("HARD_BLOCK_PROOF_EVENT_IDENTITY_MISMATCH")
+    if value["proof_evidence_path"].replace("\\", "/") != relative:
+        raise ContractValidationError("HARD_BLOCK_PROOF_SELF_PATH_MISMATCH")
+
+    code, dirty = _git(bundle.root, "status", "--porcelain", "--", relative)
+    if code != 0 or dirty:
+        raise ContractValidationError("HARD_BLOCK_PROOF_TRACKED_CLEAN_REQUIRED")
+    code, current_blob = _git(bundle.root, "rev-parse", f"HEAD:{relative}")
+    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", current_blob):
+        raise ContractValidationError("HARD_BLOCK_PROOF_COMMITTED_BLOB_REQUIRED")
+
+    event_relative = _repo_relative(bundle.root, event_path)
+    code, event_add_commit = _git(
+        bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", event_relative
+    )
+    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", event_add_commit):
+        raise ContractValidationError("HARD_BLOCK_EVENT_ADD_COMMIT_REQUIRED")
+    code, event_blob = _git(bundle.root, "rev-parse", f"{event_add_commit}:{relative}")
+    if code != 0 or event_blob != current_blob:
+        raise ContractValidationError("HARD_BLOCK_PROOF_NOT_DURABLE_AT_EVENT")
+
+    return {**value, "_durable_provenance_validated": True}
+
+
 def _select_authoritative_review_paths(
     root: Path,
     execution_dir: Path,
@@ -458,11 +532,12 @@ def _select_authoritative_review_paths(
 
 
 def _load_reviews(
-    root: Path,
+    bundle: ContractBundle,
     execution_dir: Path,
     work_order: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Validate every review claim, then return reviews for the active Work Order."""
+    root = bundle.root
     validated_reviews: list[dict[str, Any]] = []
     review_ids: set[str] = set()
     required = {
@@ -514,6 +589,9 @@ def _load_reviews(
         code, _ = _git(root, "cat-file", "-e", f"{value['reviewed_head_sha']}^{{commit}}")
         if code != 0:
             raise ContractValidationError("REVIEW_HEAD_UNREACHABLE")
+        value = apply_review_machine_evidence_policy(
+            root, path, value, bundle.contracts["review_policy"]
+        )
         validated_reviews.append(value)
 
     active_reviews = [
@@ -812,7 +890,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     active_id = active["definition"]["work_order_id"]
 
     evidence = _load_evidence_maps(bundle, execution_dir / "evidence", active_id)
-    reviews = _load_reviews(root, execution_dir, active["definition"])
+    reviews = _load_reviews(bundle, execution_dir, active["definition"])
 
     attention: list[dict[str, Any]] = []
     for path in _select_authoritative_human_attention_paths(
@@ -845,6 +923,13 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         active["event_paths"],
         active["events"],
         current_head,
+    )
+    hard_block_proof = _load_hard_block_proof(
+        bundle,
+        execution_dir,
+        active["definition"],
+        active["events"][-1],
+        active["event_paths"][-1],
     )
     exact_audit = _select_epoch_audit(guard_context, active["events"])
     epoch_validation = validate_epoch(
@@ -974,6 +1059,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "map": repair_map,
             "required": active["reduced"]["state"] == "FIX_REQUIRED",
         },
+        "hard_block_proof": hard_block_proof,
         "human_attention": {
             "open_items": [item for item in attention if item["status"] == "OPEN"],
             "all_items": attention,
