@@ -57,7 +57,7 @@ const FIXTURES: Array[Dictionary] = [
 		"shape": "box",
 		"size": Vector3(3.0, 0.2, 3.0),
 		"position": Vector3(-6.0, 2.6, 1.5),
-		"rotation_degrees": Vector3(-125.0, 0.0, 0.0),
+		"rotation_degrees": Vector3(-135.0, 0.0, 0.0),
 		"surface_normal_local": Vector3(0.0, 1.0, 0.0),
 		"diagnostic_color": Color(0.5, 0.4, 0.62),
 		"built_in_milestone": "OVERHANG_AND_INVERTED_SURFACES",

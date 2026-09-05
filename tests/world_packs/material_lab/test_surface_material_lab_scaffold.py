@@ -37,6 +37,9 @@ FIXTURE_TO_MILESTONE = {
     "sphere_fixture": "SPHERE_OR_IRREGULAR_FIXTURE",
 }
 
+SELF_CHECK_GD = LAB_DIR / "surface_material_lab_self_check.gd"
+ENABLED_MILESTONE = "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES"
+
 # Registry blocks appear as `{` ... `},` dictionaries inside FIXTURES.
 _BLOCK_RE = re.compile(r"\{\n(?:[^\n]|\n(?!\t\},?\n))+?\n\t\},?", re.S)
 
@@ -109,6 +112,41 @@ def test_lab_scene_wired_to_lab_script() -> None:
     scene = SCENE_TSCN.read_text(encoding="utf-8")
     assert 'path="res://scripts/world_packs/labs/surface_material_lab.gd"' in scene
     assert 'name="SurfaceMaterialLab"' in scene
+
+
+def test_lab_enables_horizontal_slope_wall_surfaces() -> None:
+    lab = LAB_GD.read_text(encoding="utf-8")
+    assert "const ENABLED_SURFACE_MILESTONES" in lab
+    assert f'"{ENABLED_MILESTONE}"' in lab
+    # Selection must go through the descriptor's built_in_milestone, not an
+    # ad-hoc id list.
+    assert "_surface_enabled" in lab
+    assert 'fixture.get("built_in_milestone"' in lab
+    # Real surfaces keep the local-frame normal indicator.
+    arrow_helper_index = lab.index("func _make_normal_arrow")
+    surface_builder = lab[: arrow_helper_index]
+    build_surface_start = surface_builder.index("func _build_surface")
+    assert "LocalNormal" in surface_builder[build_surface_start:]
+
+
+def test_self_check_expects_exactly_the_enabled_surfaces() -> None:
+    check = SELF_CHECK_GD.read_text(encoding="utf-8")
+    for fixture_id in ("horizontal_plane", "slope_45", "vertical_wall"):
+        assert f'"{fixture_id}"' in check
+    assert "overhang" not in check.split("EXPECTED_ORIENTATION")[0]
+    # Overhang/inverted/sphere must appear only as orientation expectations,
+    # never in EXPECTED_SURFACES, until their milestones land.
+    expected_surfaces_block = check.split("const EXPECTED_SURFACES")[1].split("]")[0]
+    for later_id in ("overhang", "inverted_ceiling", "sphere_fixture"):
+        assert later_id not in expected_surfaces_block
+
+
+def test_overhang_rotation_keeps_declared_down_orientation() -> None:
+    # -125 degrees would classify the overhang as side-facing under the
+    # 0.7/0.3 thresholds; the registry must keep a rotation whose world
+    # normal is honestly down-facing.
+    block = _fixture_blocks(FIXTURES_GD.read_text(encoding="utf-8"))["overhang"]
+    assert "Vector3(-135.0, 0.0, 0.0)" in block
 
 
 def test_lab_script_uses_fixture_registry_not_global_up_truth() -> None:

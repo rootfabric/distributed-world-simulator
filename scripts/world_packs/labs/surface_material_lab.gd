@@ -8,9 +8,10 @@ extends Node3D
 ## never touches canonical collision, Matter state or ECO placement truth.
 ##
 ## Milestone GENERIC_LAB_SCAFFOLD builds the lab frame (reference grid,
-## axis gizmo, neutral lighting, camera) plus one scaffold marker per
-## registered fixture descriptor. Real oriented surfaces are instantiated by
-## the later milestones declared in surface_material_lab_fixtures.gd.
+## axis gizmo, neutral lighting, camera) plus one marker per registered
+## fixture descriptor. HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES instantiates
+## the real horizontal / 45-degree slope / vertical wall surfaces through
+## _build_surface; later milestones enable the remaining descriptors.
 ##
 ## Headless self-check:
 ##   godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd
@@ -22,13 +23,20 @@ const NEUTRAL_SKY: Color = Color(0.05, 0.055, 0.065)
 const NEUTRAL_AMBIENT: Color = Color(0.35, 0.37, 0.4)
 const MARKER_ALPHA: float = 0.55
 
+## Lab milestones whose real oriented surfaces are instantiated. Milestones
+## not listed here still show scaffold markers. The list only ever grows
+## within a workstream so an older head renders a strict subset.
+const ENABLED_SURFACE_MILESTONES: Array[String] = [
+	"HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
+]
+
 
 func _ready() -> void:
 	_build_environment()
 	_build_reference_frame()
 	var built: int = 0
 	for fixture in Fixtures.FIXTURES:
-		if String(fixture.get("built_in_milestone", "")) == Fixtures.MILESTONE_SCAFFOLD:
+		if _surface_enabled(fixture):
 			_build_surface(fixture)
 		else:
 			_build_marker(fixture)
@@ -36,6 +44,10 @@ func _ready() -> void:
 	_build_camera()
 	print("SURFACE_MATERIAL_LAB_SCAFFOLD_READY")
 	print("SURFACE_MATERIAL_LAB_FIXTURES=%d" % built)
+
+
+func _surface_enabled(fixture: Dictionary) -> bool:
+	return ENABLED_SURFACE_MILESTONES.has(String(fixture.get("built_in_milestone", "")))
 
 
 ## Scaffold-stage marker: a small orientation gizmo placed at the declared
@@ -109,6 +121,25 @@ func _build_surface(fixture: Dictionary) -> void:
 		body.mesh = box
 	_apply_diagnostic_material(body, fixture["diagnostic_color"])
 	root.add_child(body)
+
+	# Local-frame normal indicator on the real surface: orientation must stay
+	# readable directly on the fixture, derived from the descriptor only.
+	var normal_arrow := _make_normal_arrow(
+		Vector3(fixture["surface_normal_local"]),
+		(fixture["diagnostic_color"] as Color).lightened(0.45)
+	)
+	normal_arrow.name = "LocalNormal"
+	root.add_child(normal_arrow)
+
+	var label := Label3D.new()
+	label.name = "Label"
+	label.text = "%s\n[%s]" % [String(fixture["label"]), fixture_id]
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.modulate = (fixture["diagnostic_color"] as Color).lightened(0.5)
+	label.position = Vector3(0.0, 0.7, 0.0)
+	root.add_child(label)
 
 
 func _apply_diagnostic_material(target: MeshInstance3D, color: Color) -> void:
