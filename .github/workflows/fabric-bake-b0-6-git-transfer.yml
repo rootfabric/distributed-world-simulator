@@ -1,0 +1,66 @@
+name: FABRIC B0.6 Checksum-Bound Git Transport
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/fabric-bake0-6-adaptive-physical-fidelity-r1
+    paths:
+      - .github/workflows/fabric-bake-b0-6-git-transfer.yml
+
+permissions:
+  contents: read
+
+jobs:
+  transport-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Retrieve transfer bytes without executing payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTPUT_DIR: ${{ runner.temp }}/b06-transfer-diagnostic
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          refs = [
+              '23dbda358a35ea8fdcd299dbdc6a5918c66ce96e',
+              '3c21146f6c39de1cef0c6e0aa56ac86f48bd1c7c',
+              '9ad4b449b72e4a8be7294d7139d853e06bee5481',
+              '1943262e591d023ab0b76c81d8ceab06dfb6f0ec',
+              'f7683e7323607188e79006fa44b7371097a7ebca',
+          ]
+          out = Path(os.environ['OUTPUT_DIR'])
+          out.mkdir(parents=True, exist_ok=True)
+          manifest = {'purpose': 'SOURCE_TRANSPORT_DIAGNOSTIC_NOT_RUNTIME_EVIDENCE', 'chunks': []}
+          for index, sha in enumerate(refs):
+              request = Request(
+                  f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}',
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'},
+              )
+              with urlopen(request, timeout=60) as response:
+                  payload = json.load(response)
+              if payload.get('encoding') != 'base64':
+                  raise RuntimeError('Unexpected blob encoding')
+              data = base64.b64decode(payload['content'])
+              actual = hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+              if actual != sha:
+                  raise RuntimeError('Git blob integrity mismatch')
+              (out / f'chunk-{index}.bin').write_bytes(data)
+              manifest['chunks'].append({'index': index, 'sha': sha, 'bytes': len(data)})
+          (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          print(json.dumps(manifest, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-b0-6-transfer-diagnostic-${{ github.sha }}
+          path: ${{ runner.temp }}/b06-transfer-diagnostic/
+          if-no-files-found: error
+          retention-days: 3
