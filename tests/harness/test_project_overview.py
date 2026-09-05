@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from harness import cli, project_overview as overview
 from harness.checkpoint_planner import _enforce_runtime_mutation_lease
 from harness.mission import load_checkpoint_acceptance
-from harness.contracts import ContractValidationError
+from harness.contracts import ContractBundle, ContractValidationError
 from tests.harness.test_harness_checkpoint_session import make_state
 
 
@@ -53,11 +53,15 @@ class ProjectOverviewTests(unittest.TestCase):
     def route(self, checkpoint, accepted):
         scheduler = {"v0_product_train_routing": {"current_phase": overview.HOLD,
             "current_checkpoint": overview.P7, "next_runtime_checkpoint": "MVP"}}
-        with patch.object(overview, "_canonical_ref", return_value="origin/main"):
-            with patch.object(overview, "_git", return_value=(0, "a" * 40)):
-                with patch.object(overview, "read_control", return_value=scheduler):
-                    with patch.object(overview, "load_checkpoint_acceptance", return_value=accepted) as lookup:
-                        result = overview.canonical_reconciliation_route(ROOT, checkpoint)
+        bundle = ContractBundle.load(ROOT)
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(overview, "_canonical_ref", return_value="origin/main"))
+            stack.enter_context(patch.object(overview, "_git", return_value=(0, "a" * 40)))
+            stack.enter_context(patch.object(overview, "read_control", return_value=scheduler))
+            stack.enter_context(patch.object(overview.ContractBundle, "load", return_value=bundle))
+            stack.enter_context(patch.object(overview, "project_overview", return_value={"consistency_findings": []}))
+            lookup = stack.enter_context(patch.object(overview, "load_checkpoint_acceptance", return_value=accepted))
+            result = overview.canonical_reconciliation_route(ROOT, checkpoint)
         if checkpoint in (overview.P7, "MVP", None):
             lookup.assert_called_once_with(ROOT, overview.P7, "main", canonical_head="a" * 40)
         return result

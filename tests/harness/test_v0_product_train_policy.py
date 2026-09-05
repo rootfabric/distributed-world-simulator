@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -209,7 +210,7 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
         self.assertIn(P7, train["sequence"])
 
 
-    def _run_p7_control_cli(self, mode: str):
+    def _run_p7_control_cli(self, mode: str, *, complete_control: bool = True):
         env = dict(os.environ)
         scripts = str(ROOT / "scripts")
         env["PYTHONPATH"] = scripts + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
@@ -221,6 +222,23 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
             scheduler_path = root / "config/control/harness/scheduler-policy.v1.json"
             scheduler_path.parent.mkdir(parents=True)
             scheduler_path.write_text(json.dumps(self.scheduler), encoding="utf-8")
+            if complete_control:
+                # A recovery route needs real canonical contracts, not just a
+                # scheduler-shaped object. Old execution epochs stay absent.
+                policy_path = "config/control/harness/harness-policy.v1.json"
+                registry_path = "config/control/project-program-registry.v1.json"
+                policy = _load(ROOT / policy_path)
+                registry = _load(ROOT / registry_path)
+                product = registry["coordination"]["lanes"][registry["coordination"]["primary_lane"]]
+                paths = {policy_path, registry_path,
+                         "config/control/harness/v0-current-work-map.v1.json"}
+                paths.update(value for value in policy.values()
+                             if isinstance(value, str) and value.endswith(".json"))
+                paths.update(product.get("evidence_paths", []))
+                for relative in paths:
+                    destination = root / relative
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(ROOT / relative, destination)
             for command in (
                 ["git", "init", "-b", "main"],
                 ["git", "add", "."],
@@ -244,6 +262,12 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
             )
         payload = json.loads(completed.stdout.strip().splitlines()[-1])
         return completed, payload
+
+    def test_scheduler_only_snapshot_cannot_authorize_control_route(self) -> None:
+        completed, payload = self._run_p7_control_cli("drive", complete_control=False)
+        self.assertEqual(3, completed.returncode, completed.stderr or completed.stdout)
+        self.assertFalse(payload["ok"])
+        self.assertIn("PROJECT_CONTROL_BLOB_UNAVAILABLE", payload["error"]["detail"])
 
     def test_p7_canonical_hold_routes_before_obsolete_execution_loading(self) -> None:
         completed, payload = self._run_p7_control_cli("drive")

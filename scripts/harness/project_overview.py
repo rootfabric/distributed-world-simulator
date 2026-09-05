@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from .contracts import ContractValidationError
+from .contracts import ContractBundle, ContractValidationError
 from .mission import _canonical_ref, _parse_json_object, load_checkpoint_acceptance
 
 REGISTRY = "config/control/project-program-registry.v1.json"
@@ -34,9 +34,15 @@ def read_control(root: Path, path: str, ref: str | None) -> dict[str, Any]:
     return _parse_json_object(raw, path)
 
 
-def project_overview(root: Path, *, candidate: bool = False) -> dict[str, Any]:
+def project_overview(
+    root: Path, *, candidate: bool = False, canonical_head: str | None = None,
+    include_acceptance: bool = True,
+) -> dict[str, Any]:
     canonical_ref = _canonical_ref(root, "main")
-    _, canonical_head = _git(root, "rev-parse", canonical_ref)
+    if canonical_head is None:
+        code, canonical_head = _git(root, "rev-parse", canonical_ref)
+        if code or not re.fullmatch(r"[0-9a-f]{40}", canonical_head):
+            raise ContractValidationError("CANONICAL_MAIN_REF_UNAVAILABLE")
     # Pin reads to the resolved commit so a concurrent fetch cannot mix documents.
     ref = None if candidate else canonical_head
     registry = read_control(root, REGISTRY, ref)
@@ -178,7 +184,7 @@ def project_overview(root: Path, *, candidate: bool = False) -> dict[str, Any]:
             issue("TRACK_DEPENDENCY_CYCLE", scope, lane_id)
         reports[lane_id] = {**lane, "goal": goal, "tracks": track_reports,
                             "next_action_is_advisory": True}
-    if product.get("current_checkpoint") == P7:
+    if include_acceptance and product.get("current_checkpoint") == P7:
         acceptance = load_checkpoint_acceptance(root, P7, "main", canonical_head=canonical_head)
         reports[primary]["canonical_checkpoint_acceptance"] = acceptance
         if acceptance is not None and product.get("phase") == HOLD:
@@ -205,6 +211,18 @@ def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[s
     selected = checkpoint or routing.get("current_checkpoint")
     if selected not in (P7, routing.get("next_runtime_checkpoint")):
         return None
+    # Keep the recovery route independent of obsolete execution epochs, not of
+    # canonical contracts. All reads (including acceptance) use this exact head.
+    bundle = ContractBundle.load(
+        root, reader=lambda path: read_control(root, path.relative_to(root).as_posix(), head)
+    )
+    bundle.validate_schema_definitions()
+    report = project_overview(root, canonical_head=head, include_acceptance=False)
+    blockers = [item["code"] for item in report["consistency_findings"]
+                if item["severity"] == "ERROR"
+                and item["scope"] in ("product_blocking", "observability")]
+    if blockers:
+        raise ContractValidationError("PROJECT_CONSISTENCY_ERRORS:" + ",".join(sorted(set(blockers))))
     acceptance = load_checkpoint_acceptance(root, P7, "main", canonical_head=head)
     return {
         "authority": "CANONICAL_MAIN_SNAPSHOT", "canonical_ref": ref, "canonical_head": head,

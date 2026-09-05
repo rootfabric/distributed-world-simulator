@@ -62,64 +62,8 @@ jobs:
             scripts/harness/contracts.py \
             scripts/harness/cli.py
           python3 -m py_compile scripts/harness/project_overview.py
-          python3 - <<'PY'
-          import subprocess
-          import sys
-          from pathlib import Path
-          from jsonschema import Draft202012Validator
-
-          sys.path.insert(0, "scripts")
-          from harness.contracts import ContractBundle, read_json
-
-          required_json = [
-              Path("config/control/project-control-policy.v1.json"),
-              Path("config/control/project-program-registry.v1.json"),
-              Path("config/control/architecture-ownership.v1.json"),
-              Path("config/control/directional-watch-clearances.v1.json"),
-              Path("config/architecture/global-program-roadmap.v1.json"),
-              Path("config/control/harness/project-goals.v1.json"),
-              Path("config/control/harness/checkpoint-catalog.v1.json"),
-              Path("config/control/harness/harness-policy.v1.json"),
-              Path("config/control/harness/scheduler-policy.v1.json"),
-              Path("config/control/harness/v0-product-train-policy.v1.json"),
-              Path("config/control/harness/continuation-policy.v1.json"),
-              Path("config/control/harness/work-order.schema.v1.json"),
-              Path("config/control/harness/event.schema.v1.json"),
-              Path("config/control/harness/project-epoch.schema.v1.json"),
-              Path("config/control/harness/risk-policy.v1.json"),
-              Path("config/control/harness/review-policy.v1.json"),
-              Path("config/control/harness/repair-doctrine.v1.json"),
-              Path("config/control/harness/evidence-map.schema.v1.json"),
-              Path("config/control/harness/human-attention.schema.v1.json"),
-              Path("validation/harness/control-development-output.schema.v1.json"),
-          ]
-          changed_json = subprocess.check_output(
-              ["git", "diff", "--name-only", "--diff-filter=ACMR", "origin/main...HEAD", "--", "*.json"],
-              text=True,
-          ).splitlines()
-          required_json.extend(Path(path) for path in changed_json)
-          bundle = ContractBundle.load(Path.cwd())
-          for name, schema in bundle.contracts.items():
-              if name.endswith("_schema"):
-                  Draft202012Validator.check_schema(schema)
-                  print(f"JSON SCHEMA OK: {name}")
-          for path in sorted(set(required_json)):
-              value = read_json(path)
-              if "$schema" in value:
-                  Draft202012Validator.check_schema(value)
-              if not isinstance(value, dict):
-                  raise SystemExit(f"Expected JSON object: {path}")
-              print(f"JSON DUPLICATE-KEY VALIDATION OK: {path}")
-
-          registry = read_json(Path("config/control/project-program-registry.v1.json"))
-          scheduler = read_json(Path("config/control/harness/scheduler-policy.v1.json"))
-          generation = registry.get("registry_generation")
-          if not isinstance(generation, int) or generation < 81:
-              raise SystemExit(f"PROJECT_FOCUS_GENERATION_REQUIRED:{generation}")
-          if scheduler["pre_h0_3_runtime_mutation_lease"]["effective_registry_generation"] != generation:
-              raise SystemExit("REGISTRY_LEASE_GENERATION_MISMATCH")
-          print(f"CANDIDATE REGISTRY GENERATION OK: {generation}")
-          PY
+          python3 -m py_compile scripts/harness/control_candidate_validation.py
+          PYTHONPATH=scripts python3 -m harness.control_candidate_validation
 
       - name: Check product coordination at the applicable authority boundary
         env:
@@ -132,7 +76,7 @@ jobs:
           fi
 
       - name: Run project overview authority regression
-        run: python3 -m unittest tests.harness.test_project_overview
+        run: python3 -m unittest tests.harness.test_project_overview tests.harness.test_project_control_validation
 
       - name: Run Harness checkpoint-session regression
         run: python3 -m unittest tests.harness.test_harness_checkpoint_session
