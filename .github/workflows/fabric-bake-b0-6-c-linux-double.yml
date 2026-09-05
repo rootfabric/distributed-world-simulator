@@ -1,4 +1,4 @@
-name: FABRIC B0.6-A Linux Double
+name: FABRIC B0.6-C Linux Double
 
 on:
   pull_request:
@@ -34,7 +34,7 @@ jobs:
           set -Eeuo pipefail
           test -z "$(git status --porcelain=v1 --untracked-files=no)"
           git diff --check
-          bash -n RUN_FABRIC_B0_6_A_TESTS.sh
+          bash -n RUN_FABRIC_B0_6_C_TESTS.sh
           bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$bin"
           test "$("$bin" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
@@ -55,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          B06_LOG_DIR="$PWD/artifacts/b0_6/closure-1" bash ./RUN_FABRIC_B0_6_A_TESTS.sh 2>&1 | tee artifacts/b0_6/a-1.log
+          B06_LOG_DIR="$PWD/artifacts/b0_6/closure-1" bash ./RUN_FABRIC_B0_6_C_TESTS.sh 2>&1 | tee artifacts/b0_6/c-1.log
       - name: Verify clean source
         shell: bash
         run: |
@@ -64,6 +64,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: fabric-b0-6-a-${{ github.sha }}
+          name: fabric-b0-6-c-${{ github.sha }}
           path: artifacts/b0_6/
           if-no-files-found: error
