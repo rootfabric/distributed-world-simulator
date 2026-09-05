@@ -1,0 +1,73 @@
+# Transport/materialization helper only. Never merge into control or main.
+name: Project Focus Repair Large Materialize R3
+
+on:
+  push:
+    branches: [control/project-focus-exact-source-export-r3]
+    paths:
+      - .github/workflows/project-focus-repair-large-materialize-r3.yml
+      - .github/project-focus-r3-chunks-v2/**
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reconstruct and verify bounded large-file patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >/tmp/chunk-sha256 <<'EOF'
+          1205f7642eaa8d66f8e8466e67d2b37b7dc26350e50b2c3691f3787e64afbf6  .github/project-focus-r3-chunks-v2/large-patch.part01.b64
+          9127e63753f2df4abfa87a1d9251c77748aa2d1eea9c8d04d2762a8764abd1f5  .github/project-focus-r3-chunks-v2/large-patch.part02.b64
+          13dc8b65dcadb9558c7c4fe8ab74324bc3973a8cb898b016162ff371e0b9b8a8  .github/project-focus-r3-chunks-v2/large-patch.part03.b64
+          7967448891da397ae733727e42aee85bf4c6355fc2398a54036fc2c5c0f2314a  .github/project-focus-r3-chunks-v2/large-patch.part04.b64
+          a7822443af7e331d22a9430b6ae36c84d137d583c8b3e61a940add04f86513df  .github/project-focus-r3-chunks-v2/large-patch.part05.b64
+          4b7a4b9c04400cd6bf6f8f4cbd2b9fe3b100b9391b4e719fde128555a179866a  .github/project-focus-r3-chunks-v2/large-patch.part06.b64
+          d8b0c31e2a15ef656d11028ffb500a6232f5d09f92c907ead8587c521113d20f  .github/project-focus-r3-chunks-v2/large-patch.part07.b64
+          c085f30835c03d1156ec9d720a4a3345dd8c16187278e3ac2a816460d41ccfc7  .github/project-focus-r3-chunks-v2/large-patch.part08.b64
+          a3d2403ad017b82d6dbeae9ffda7b860829318e3dd0ab01cd511b66fa3db0eef  .github/project-focus-r3-chunks-v2/large-patch.part09.b64
+          5c21e269a0f6212c55656b7ee577edce2056426d084e9ffa5523fd457fa08fbf  .github/project-focus-r3-chunks-v2/large-patch.part10.b64
+          3b74c08fa1de4ea85fca249422a9e480724f25724412873a7c794a261ae9dce5  .github/project-focus-r3-chunks-v2/large-patch.part11.b64
+          382797f765619cf40028cf9be24b14448b199644abc0ce1bbfbd1e8de5d012ee  .github/project-focus-r3-chunks-v2/large-patch.part12.b64
+          02cdb1fad174a5c0a83b47ad6a785f98c6323371fcfca55031504a9f62fe8b5b  .github/project-focus-r3-chunks-v2/large-patch.part13.b64
+          abeed77f1669d5d30f633a87c7c2a6dcd7bcd617e96c15941097648e6107a271  .github/project-focus-r3-chunks-v2/large-patch.part14.b64
+          95ac367445c6650b1776e15997bb65d96a7bd18c4ac3dc5f22ed336a14f0a7d6  .github/project-focus-r3-chunks-v2/large-patch.part15.b64
+          ddda8ea90a6ed0972f5eea94bc43913410225bba26c382e3402b287867b9229f  .github/project-focus-r3-chunks-v2/large-patch.part16.b64
+          87b0c7c09c5a387bc794beec2495addcc5477fbce96ea537c9300304158e1f6b  .github/project-focus-r3-chunks-v2/large-patch.part17.b64
+          d049e131af03406b24bd1af4350af9459665812a771252a034041c6a63d7df75  .github/project-focus-r3-chunks-v2/large-patch.part18.b64
+          6707cbb005b0f5488f40e84b94d6200e9798fac786d7232464c030d1c1019a4e  .github/project-focus-r3-chunks-v2/large-patch.part19.b64
+          8861db2293bd8363f03efa71ba048a68a9c46b5a0fd542054f997bda08a0603d  .github/project-focus-r3-chunks-v2/large-patch.part20.b64
+          a18bd2df990f0338ac6d7c03afec0a07b0c510ff1942ae4754e0a04ee8b704e9  .github/project-focus-r3-chunks-v2/large-patch.part21.b64
+          0a96dc1a0c0e0052f1a9ee14df52dda177531e48bf28784ec570ca8841fa72ef  .github/project-focus-r3-chunks-v2/large-patch.part22.b64
+          EOF
+          sha256sum -c /tmp/chunk-sha256
+          cat .github/project-focus-r3-chunks-v2/large-patch.part*.b64 > /tmp/repair-large.patch.b64
+          base64 -d /tmp/repair-large.patch.b64 > /tmp/repair-large.patch
+          echo '21cb45d5d5524168b49eb0f636e64db13704f3a48a444a45a3f0e90f0e01378c  /tmp/repair-large.patch' | sha256sum -c -
+          git checkout --detach 719a89611a5cb376ee6bf80476587399af7b9a4e
+          git apply --check /tmp/repair-large.patch
+          git apply /tmp/repair-large.patch
+          test "$(git hash-object scripts/harness/event_reducer.py)" = 4b48dee7b74f0c70b420cecd200489abe8d58f33
+          test "$(git hash-object scripts/harness/state_builder.py)" = 6ce3453a6f82d51819f704a886f165a8cb1e1cee
+          test "$(git hash-object tests/harness/test_harness_autonomy_provenance.py)" = 7cee58c12784aaa78c4644610f8df73efece7813
+          git diff --check
+          git status --short
+      - name: Publish temporary materialized large-file tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'rootfabric-control-helper'
+          git config user.email 'rootfabric-control-helper@users.noreply.github.com'
+          git switch -c control/project-focus-autonomy-review-r3-large-materialized
+          git add scripts/harness/event_reducer.py scripts/harness/state_builder.py tests/harness/test_harness_autonomy_provenance.py
+          git commit -m 'transport(control): materialize autonomy review R3 large files'
+          git push origin HEAD:refs/heads/control/project-focus-autonomy-review-r3-large-materialized
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
