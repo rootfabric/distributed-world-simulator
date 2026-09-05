@@ -4,15 +4,33 @@
   "track_id": "WP-CONTENT1",
   "branch": "work/world-packs-content1-cc0-library-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "PLANNED",
-  "completed_milestones": [],
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    "SOURCE_POLICY"
+  ],
   "blockers": [],
-  "next_action": "Implement SOURCE_POLICY and begin reviewed source descriptors for rock/cliff candidates. Record exact upstream identity, author, license, provenance and intended use; do not invent hashes before bytes are actually fetched.",
-  "last_checkpoint_head": null,
-  "tested_head": null,
-  "validation": [],
-  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "next_action": "Implement ROCK_AND_CLIFF_CANDIDATES: add discovery descriptors for real CC0 rock/cliff sources (ambientCG, Poly Haven) verified via web_search/page checks; sha256/expected_bytes stay null until bytes are actually fetched.",
+  "last_checkpoint_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
+  "tested_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
+  "validation": [
+    {
+      "milestone": "SOURCE_POLICY",
+      "command": "python -m pytest tests/world_packs/content_catalog -q",
+      "result": "13 passed",
+      "tested_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
+      "run_at_utc": "2026-09-05"
+    },
+    {
+      "milestone": "SOURCE_POLICY",
+      "command": "python -m pytest tests/world_packs -q",
+      "result": "81 passed, 1 failed (pre-existing environmental failure: test_library_contract.py symlink test, OSError WinError 1314, outside WP-CONTENT1 allowed paths)",
+      "tested_head": "d1ea1bce8a36ca7e79d2aae40369769dfed159a4",
+      "run_at_utc": "2026-09-05"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T14:55:00Z",
   "notes": [
-    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
+    "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce."
   ]
 }
