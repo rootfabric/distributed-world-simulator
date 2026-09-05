@@ -8,29 +8,30 @@
   "completed_milestones": [
     "GENERIC_LAB_SCAFFOLD",
     "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
-    "OVERHANG_AND_INVERTED_SURFACES"
+    "OVERHANG_AND_INVERTED_SURFACES",
+    "SPHERE_OR_IRREGULAR_FIXTURE"
   ],
   "blockers": [],
-  "next_action": "Implement SPHERE_OR_IRREGULAR_FIXTURE: enable the sphere fixture as a real surface, add an irregular rock-shaped fixture if needed, extend self-check expectations and focused tests.",
-  "last_checkpoint_head": "886922bcc34baacdf02cc138fe5192d8f362954f",
-  "tested_head": "886922bcc34baacdf02cc138fe5192d8f362954f",
+  "next_action": "Implement TRIPLANAR_OR_LOCAL_FRAME_MAPPING: add diagnostic mapping derived from fixture-local frames (or triplanar) instead of global world axes, with focused tests.",
+  "last_checkpoint_head": "2f6d4bae455e52c175375ef64e4801938e999353",
+  "tested_head": "2f6d4bae455e52c175375ef64e4801938e999353",
   "validation": [
     {
       "name": "material_lab_pytest",
       "command": "python -m pytest tests/world_packs/material_lab -q",
       "result": "PASS",
-      "head": "886922bcc34baacdf02cc138fe5192d8f362954f"
+      "head": "2f6d4bae455e52c175375ef64e4801938e999353"
     },
     {
       "name": "material_lab_godot_headless_self_check",
       "command": "godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd",
       "result": "PASS",
-      "head": "886922bcc34baacdf02cc138fe5192d8f362954f"
+      "head": "2f6d4bae455e52c175375ef64e4801938e999353"
     }
   ],
-  "updated_at_utc": "2026-09-05T16:10:00Z",
+  "updated_at_utc": "2026-09-05T16:45:00Z",
   "notes": [
-    "OVERHANG_AND_INVERTED_SURFACES complete: self-check PASS surfaces=5 markers=1; down-facing world normals proven: overhang (0,-0.707,-0.707), ceiling (0,-1,0).",
-    "Evidence: docs/world_packs/evidence/WP-VIS1-OVERHANG_AND_INVERTED_SURFACES.md."
+    "SPHERE_OR_IRREGULAR_FIXTURE complete: self-check PASS surfaces=7 markers=0; deterministic asset-free irregular rock mesh (displaced sphere, trigonometric displacement along vertex directions), diagonal probe normal (1,1,1)/sqrt(3).",
+    "Evidence: docs/world_packs/evidence/WP-VIS1-SPHERE_OR_IRREGULAR_FIXTURE.md."
   ]
 }
