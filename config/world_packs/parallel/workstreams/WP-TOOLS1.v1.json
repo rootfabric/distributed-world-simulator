@@ -8,36 +8,37 @@
   "completed_milestones": [
     "CLI_SCAFFOLD",
     "VALIDATE_AND_RESOLVE",
-    "DOCTOR_DIAGNOSTICS"
+    "DOCTOR_DIAGNOSTICS",
+    "INSPECT_AND_INDEX"
   ],
   "blockers": [],
-  "next_action": "Implement INSPECT_AND_INDEX: inspect subcommand for descriptor digests and index subcommand emitting a deterministic full-library index.",
-  "last_checkpoint_head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
-  "tested_head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
+  "next_action": "Implement SYNTHETIC_1K_SCALE and SYNTHETIC_10K_SCALE: deterministic synthetic descriptor generator (no payloads) plus validate/resolve scale measurements.",
+  "last_checkpoint_head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
+  "tested_head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
   "validation": [
     {
-      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
+      "name": "focused",
+      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
       "command": "python -m pytest tests/world_packs/wp_cli -q",
       "result": "PASS",
-      "detail": "16 passed",
-      "name": "focused"
+      "detail": "22 passed"
     },
     {
-      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
+      "name": "focused-suite",
+      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
       "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
       "result": "PASS",
-      "detail": "79 passed, 1 deselected (symlink privilege env limitation, see notes)",
-      "name": "focused-suite"
+      "detail": "85 passed, 1 deselected (symlink privilege env limitation, see notes)"
     },
     {
-      "head": "24e459c7a1c4b335185dba247e4992bb45eb463a",
-      "command": "python tools/world_packs/wp_cli/__main__.py doctor",
+      "name": "cli-smoke",
+      "head": "214fcd2dd226d396effd759500877a0bfc9c9ab4",
+      "command": "python tools/world_packs/wp_cli/__main__.py index",
       "result": "PASS",
-      "detail": "9/9 checks OK incl. repo fixture byte verification and legacy pack manifests; --json and failure/skip paths covered by tests",
-      "name": "cli-smoke"
+      "detail": "deterministic full-library index, digests identical to library_contract.digest"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:52:00Z",
+  "updated_at_utc": "2026-09-05T15:20:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
     "CLI_SCAFFOLD: wp_cli package with argparse dispatch, exit-code contract (0/1/2), validate subcommand reusing the existing WP1.0 resolver via import; no second resolver introduced.",
