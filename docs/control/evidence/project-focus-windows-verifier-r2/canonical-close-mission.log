@@ -1,0 +1,7 @@
+﻿[CONTROL][CONTRACT_LOAD] loading control contracts; overview defaults to canonical main
+[CONTROL][EXECUTION_SELECT] resolving current checkpoint execution from machine policy
+[CONTROL][STATE_BUILD] reducing append-only execution ledger
+[CONTROL][MISSION] binding the user session to one checkpoint mission
+[CONTROL][CLOSE_MISSION] authorizing user-session exit only at checkpoint acceptance, human decision, or proven hard block
+{"command":"CLOSE_MISSION","error":{"code":"CONTRACT_OR_DEPENDENCY_INVALID","detail":"EPOCH_REGISTRY_GENERATION_MISMATCH"},"exit_codes":{"CONTRACT_OR_DEPENDENCY_INVALID":3,"EXECUTION_STATE_INVALID":5,"GIT_STATE_INVALID":4,"INTERNAL_ERROR":6,"INVALID_INVOCATION":2,"MISSION_EXIT_FORBIDDEN":8,"ROLE_EXIT_FORBIDDEN":7},"ok":false,"schema":"distributed_world_simulator.control_development_output.v1"}
+

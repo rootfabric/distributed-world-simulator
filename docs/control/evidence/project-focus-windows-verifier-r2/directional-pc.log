@@ -1,0 +1,10 @@
+﻿
+PC0 Directional Watch
+Registry: 80
+Overall:  YELLOW
+  YELLOW CH -> NX WATCH_HIT BLOCK: 4 path(s)
+  YELLOW NX -> ECO WATCH_HIT ADVISORY: 1 path(s)
+  YELLOW NX -> T WATCH_HIT BLOCK: 1 path(s)
+  RED    V0 -> G CRITICAL_WATCH_HIT ADVISORY: 4 path(s)
+  RED    V0 -> ECO CRITICAL_WATCH_HIT ADVISORY: 4 path(s)
+Report: C:\Godot\dws-project-focus-verifier-719a896-r2\artifacts\control\DIRECTIONAL_WATCH_STATUS_RU.md
