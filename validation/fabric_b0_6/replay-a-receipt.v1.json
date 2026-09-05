@@ -1,0 +1,33 @@
+{
+  "schema": "dws.fabric.b0_6.exact_replay_receipt.v1",
+  "status": "PASS",
+  "closure_status": "REPLAY_A_PASS_REPLAY_B_REQUIRED",
+  "tested_head": "2254b450b4d31832a6c143fc85096372679c6bc6",
+  "tested_tree": "82532abb755b6b652b84a96ff5d92a8225cd8dba",
+  "branch": "research/fabric-bake0-6-adaptive-physical-fidelity-r1",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "fresh_import_exit": 0,
+  "fresh_import_fatal_count": 0,
+  "closure_exit": 0,
+  "suite_count": 26,
+  "assertion_executions": 47084,
+  "count_semantics": "published PASS counts including repeated predecessor executions",
+  "hashes": {
+    "B06A_ENVELOPE_CHECKSUM": "f1976723cf8afd0c2e831740373143ad3303c5ff48d18238c49039ed86304b30",
+    "B06A_SAFETY_HASH": "9a152000bf636f5977034947b73431cdf7393a5201c63b06c5ebb15e20e1f627",
+    "B06B_SELECTION_HASH": "d6c9c6aa07e0bd741a0fa50bb9d7ca9a10291043c680675f06fd58beb3818939",
+    "B06C_TRANSITION_HASH": "e93dadfc821fb8299fc6a75d140a493be790860dcd294cd687403717d237f0aa",
+    "B06D_DISK_RECOVERY_HASH": "ab2287a06a5427e5d73f15b5c7a6ad11267f5f3c9aad1e519a4cdc5cc13fc1f9",
+    "B06D_RECOVERY_HASH": "f9613fe30c97322cfd1f81d6f74608a0bc58e51f6dbb8be6af37dff177ba8bba",
+    "B06E_FINAL_STATE_HASH": "c751ffdbe8eff08629ec2b7a7a12eb1f388de158d721d8bdb4d60cafc6280889",
+    "B06E_TRANSITION_HASH": "9ebdbc3537fcd67175bb4d007da185f6a33745a9730b50dcf9144f83a0839622",
+    "B06E_WORK_HASH": "9b4865017e9e959fda0fb8472b6684fd0f18ea4bd71f508936dee873fdd75942"
+  },
+  "closure_hash": "892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584",
+  "manifest_sha256": "07eb00fceded41fdaa42d5e49d62a450edae23e17d113c1114417b48bd0bb09c",
+  "closure_log_sha256": "83bf1be3c02c641f1389cd9e212b37594bb7eae6ccfcef10c028cd44b4d4b093",
+  "working_tree": "CLEAN",
+  "main_acceptance_claimed": false,
+  "ci_runtime_pass_claimed": false
+}
