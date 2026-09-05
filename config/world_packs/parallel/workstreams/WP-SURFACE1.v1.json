@@ -1,0 +1,47 @@
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-SURFACE1",
+  "branch": "work/world-packs-surface1-families-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "READY_FOR_INTEGRATION",
+  "completed_milestones": [
+    "FAMILY_TAXONOMY",
+    "MATTER_BINDING_RULES",
+    "REGOLITH_BASALT_SAND_ICE_FAMILIES",
+    "FIDELITY_AND_EXPOSURE_STATES",
+    "RECIPE_FRAGMENT_COMPOSITION",
+    "CONFLICT_AND_ORDER_INDEPENDENCE_TESTS",
+    "EVIDENCE_READY"
+  ],
+  "blockers": [],
+  "next_action": "Integrator/Reviewer: review child PR work/world-packs-surface1-families-r1 -> control/world-packs-parallel-r1 at exact head 0adbf2aa512cc30f81f2be9d98c898455726d1d8.",
+  "last_checkpoint_head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8",
+  "tested_head": "0adbf2aa512cc30f81f2be9d98c898455726d1d8",
+  "validation": [
+    {
+      "name": "surface_library_focused",
+      "command": "python -m pytest tests/world_packs/surface_library -q",
+      "result": "PASS",
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
+    },
+    {
+      "name": "wp1_0_library_contract_regression",
+      "command": "python -m pytest tests/world_packs/test_library_contract.py",
+      "result": "FAIL",
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
+    },
+    {
+      "name": "parallel_controller_regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py",
+      "result": "PASS",
+      "head": "d3fa268ef8b9d8dd509f50493379250ab60e997a"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T15:10:00Z",
+  "notes": [
+    "All 7 declared milestones complete; evidence in docs/world_packs/evidence/WP-SURFACE1_EVIDENCE_READY_2026-09-05.md.",
+    "matter/sand does not exist in canonical matter catalog; surface/sand is PENDING_CANONICAL_MATTER with zero bindings; recipes reject pending surfaces by design.",
+    "wp1_0_library_contract_regression FAIL is a pre-existing Windows environment limitation: os.symlink requires SeCreateSymbolicLinkPrivilege (WinError 1314); 63/64 subtests pass and the failure is unrelated to WP-SURFACE1 paths."
+  ]
+}

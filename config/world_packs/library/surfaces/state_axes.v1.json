@@ -1,0 +1,49 @@
+{
+  "schema": "dws.world_packs.surface_state_axes.v1",
+  "version": "1.0.0",
+  "status": "ACTIVE",
+  "presentation_only": true,
+  "description": "Presentation-only state vocabulary for surface family shards. Exposure and fidelity axes classify presentation variants; they never encode physical simulation state, strata depth or Matter properties.",
+  "axes": {
+    "exposure": {
+      "values": [
+        "buried",
+        "sheltered",
+        "exposed",
+        "abraded"
+      ],
+      "default": "exposed"
+    },
+    "fidelity": {
+      "values": [
+        "casual",
+        "survey",
+        "engineering"
+      ],
+      "default": "casual"
+    }
+  },
+  "family_conditions": {
+    "surface-family/regolith": [
+      "default",
+      "fresh",
+      "weathered"
+    ],
+    "surface-family/basalt": [
+      "default",
+      "fresh",
+      "weathered",
+      "fracture"
+    ],
+    "surface-family/sand": [
+      "default",
+      "fresh",
+      "wind_worked"
+    ],
+    "surface-family/ice": [
+      "default",
+      "fresh",
+      "weathered"
+    ]
+  }
+}

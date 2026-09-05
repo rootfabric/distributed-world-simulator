@@ -1,0 +1,12 @@
+{
+  "schema": "dws.world_packs.environment_descriptor.v1",
+  "id": "environment/airless-shard",
+  "version": "1.0.0",
+  "presentation_only": true,
+  "description": "Presentation-only airless exposure context for recipe fragments; makes no physical atmosphere claim.",
+  "tags": [
+    "airless",
+    "presentation-only",
+    "no-physical-atmosphere-claim"
+  ]
+}

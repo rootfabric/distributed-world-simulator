@@ -1,0 +1,40 @@
+{
+  "schema": "dws.world_packs.surface_descriptor.v1",
+  "id": "surface/ice",
+  "version": "1.0.0",
+  "family": "surface-family/ice",
+  "presentation_only": true,
+  "binding_source": "config/world_packs/library/surfaces/matter_binding_rules.v1.json",
+  "binding_status": "BOUND",
+  "canonical_material_ids": [
+    "matter/water-ice"
+  ],
+  "physical_anchor_summary": "Bonded crystalline water-ice surfaces.",
+  "variants": [
+    {
+      "id": "diagnostic",
+      "tier": "casual",
+      "evidence_class": "diagnostic_fixture",
+      "assets": [
+        "asset/dws/diagnostic-swatch@1.0.0"
+      ],
+      "states": [
+        "default",
+        "fresh",
+        "weathered"
+      ],
+      "exposure": "exposed",
+      "fidelity": "casual",
+      "coordinate_space": "body_fixed",
+      "mapping": "triplanar",
+      "scale_bands": [
+        "local"
+      ],
+      "requires": []
+    }
+  ],
+  "tags": [
+    "family-shard",
+    "contract-fixture"
+  ]
+}
