@@ -1,0 +1,3 @@
+DWS WORLD PACKS diagnostic swatch v1
+Authored contract fixture; CC0-1.0.
+Not a texture, geological sample, measured material or runtime asset.

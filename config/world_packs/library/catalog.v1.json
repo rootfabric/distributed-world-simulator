@@ -1,0 +1,159 @@
+{
+  "schema": "dws.world_library.v1",
+  "status": "DRAFT_CONTRACT_FIXTURE",
+  "assets": [
+    {
+      "id": "asset/dws/diagnostic-swatch",
+      "version": "1.0.0",
+      "sha256": "529c893ea8cd6bac13de54f3e1dcc1ba487f98b12c0ee90321f417d8c5e0fb9c",
+      "expected_bytes": 143,
+      "media_type": "text/plain",
+      "archive_type": "none",
+      "import_recipe": {
+        "id": "import/identity-fixture",
+        "version": "1.0.0"
+      },
+      "license": {
+        "expression": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "author": "DWS WORLD PACKS contributors",
+        "attribution_required": false,
+        "attribution": "DWS diagnostic fixture; no scientific material claim.",
+        "redistribution": "allowed",
+        "commercial_use": "allowed",
+        "provenance": "Authored as an original text fixture for this WP1.0 contract audit; no external asset content."
+      },
+      "tags": [
+        "diagnostic",
+        "fixture",
+        "not-pbr"
+      ]
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "surface/basalt",
+      "version": "1.0.0",
+      "canonical_material_ids": [
+        "matter/basalt",
+        "matter/fractured-basalt"
+      ],
+      "variants": [
+        {
+          "id": "diagnostic",
+          "tier": "casual",
+          "evidence_class": "diagnostic_fixture",
+          "assets": [
+            "asset/dws/diagnostic-swatch@1.0.0"
+          ],
+          "states": [
+            "default",
+            "fresh",
+            "weathered",
+            "fracture"
+          ],
+          "coordinate_space": "body_fixed",
+          "mapping": "triplanar",
+          "scale_bands": [
+            "local"
+          ],
+          "requires": []
+        }
+      ],
+      "tags": [
+        "contract-fixture",
+        "not-production"
+      ]
+    },
+    {
+      "id": "surface/regolith",
+      "version": "1.0.0",
+      "canonical_material_ids": [
+        "matter/regolith-loose",
+        "matter/regolith-compacted"
+      ],
+      "variants": [
+        {
+          "id": "diagnostic",
+          "tier": "casual",
+          "evidence_class": "diagnostic_fixture",
+          "assets": [
+            "asset/dws/diagnostic-swatch@1.0.0"
+          ],
+          "states": [
+            "default",
+            "fresh",
+            "weathered",
+            "fracture"
+          ],
+          "coordinate_space": "body_fixed",
+          "mapping": "triplanar",
+          "scale_bands": [
+            "local"
+          ],
+          "requires": []
+        }
+      ],
+      "tags": [
+        "contract-fixture",
+        "not-production"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "id": "environment/airless",
+      "version": "1.0.0",
+      "presentation_only": true,
+      "tags": [
+        "airless",
+        "no-physical-atmosphere-claim"
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "id": "recipe/rocky-base",
+      "version": "1.0.0",
+      "includes": [],
+      "bindings": [
+        {
+          "material_id": "matter/basalt",
+          "surface": "surface/basalt@1.0.0"
+        },
+        {
+          "material_id": "matter/fractured-basalt",
+          "surface": "surface/basalt@1.0.0"
+        }
+      ],
+      "environments": [],
+      "tags": [
+        "contract-fixture"
+      ]
+    },
+    {
+      "id": "recipe/lunar-swatch",
+      "version": "1.0.0",
+      "includes": [
+        "recipe/rocky-base@1.0.0"
+      ],
+      "bindings": [
+        {
+          "material_id": "matter/regolith-loose",
+          "surface": "surface/regolith@1.0.0"
+        },
+        {
+          "material_id": "matter/regolith-compacted",
+          "surface": "surface/regolith@1.0.0"
+        }
+      ],
+      "environments": [
+        "environment/airless@1.0.0"
+      ],
+      "tags": [
+        "moon",
+        "contract-fixture"
+      ]
+    }
+  ]
+}
