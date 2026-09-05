@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      OUTPUT_DIR: ${{ runner.temp }}/b06-verified-transfer
+      OUTPUT_DIR: /tmp/b06-verified-transfer
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,41 +23,10 @@ jobs:
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import base64, hashlib, json, os
-          from pathlib import Path
-          from urllib.request import Request, urlopen
-          refs = ['23dbda358a35ea8fdcd299dbdc6a5918c66ce96e', '3c21146f6c39de1cef0c6e0aa56ac86f48bd1c7c', '9ad4b449b72e4a8be7294d7139d853e06bee5481', '1943262e591d023ab0b76c81d8ceab06dfb6f0ec', 'f7683e7323607188e79006fa44b7371097a7ebca']
-          corrections = {
-              '0': [[2694,2695,''],[2841,2842,'0'],[3133,3134,'6'],[6471,6473,'3d'],[13336,13336,'=']],
-              '1': [],
-              '2': [[1333,1333,'/'],[3906,3906,'/'],[4929,4929,'/'],[6430,6431,''],[9132,9132,'/'],[10660,10660,'/']],
-              '3': [[6947,6948,''],[9400,9400,'/'],[11163,11163,'/'],[11491,11491,'/'],[12316,12316,'/'],[13332,13332,'=']],
-              '4': [[22,25,'/Cg'],[26,28,'dN'],[60,60,'+8vxl2NDJLOI4JKpzVN5hfnfLYxksCln+qirOdtocy6zACMA2ZALofkBsIuag9Y2SQ9heX+OWuzaZI3sk8J4nMvOnhAuMi9PLn92Tq2g3Zc40yL/tbPfm/6ZBgCG+guEbYYQeJx7q/NQe4L7xD7tjf/yRQEvmgZ68AL5FX2NSghv5/xwMaLRiOq/eDHo33ic'],[62,63,'A'],[65,65,'/+0BbQFsNkBFM8p3aQxgO2Gy9uWZxRE4miapjZHk+0BxwC6D/j5AXlKTCIw5lmRX0d2UxtPMoxOcCeneJzLzp4QLrLszUSTznsdwrO'],[66,66,'Lzd8PeXoY'],[67,69,''],[70,72,'Vf/'],[74,75,'pykN5m2Ah'],[76,78,'94nHspN0t6o8Ntts1xHPvZACn'],[79,89,'BW1'],[90,114,'BWQstx'],[116,121,'siD'],[122,125,'COX0u9e2+'],[126,169,'1'],[170,193,'r'],[194,235,''],[236,236,'=']],
-          }
-          out = Path(os.environ['OUTPUT_DIR'])
-          out.mkdir(parents=True, exist_ok=True)
-          chunks = []
-          for index, sha in enumerate(refs):
-              request = Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
-              with urlopen(request, timeout=60) as response:
-                  payload = json.load(response)
-              data = base64.b64decode(payload['content'])
-              assert hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() == sha
-              encoded = base64.b64encode(data).decode()
-              (out / f'received-{index}.b64').write_text(encoded)
-              for begin, end, replacement in reversed(corrections[str(index)]):
-                  encoded = encoded[:begin] + replacement + encoded[end:]
-              data = base64.b64decode(encoded, validate=True)
-              (out / f'corrected-{index}.b64').write_text(encoded)
-              print(index, len(data), hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest())
-              chunks.append(data)
-          bundle = b''.join(chunks)
-          (out / 'implementation.bundle').write_bytes(bundle)
-          digest = hashlib.sha256(bundle).hexdigest()
-          print('SOURCE_BUNDLE_BYTES=' + str(len(bundle)))
-          print('SOURCE_BUNDLE_SHA256=' + digest)
-          assert len(bundle) == 40331
-          assert digest == '07183299d7d2f42f2f3a9127b244deedc30517b641c1e644299ac246358af458'
+          import subprocess, textwrap
+          text = subprocess.check_output(['git', 'show', '3999f724835da11685580ff81e3c20982f94d338:.github/workflows/fabric-bake-b0-6-git-transfer.yml'], text=True)
+          program = text.split("          python3 - <<'PY'\n", 1)[1].split('\n          PY', 1)[0]
+          exec(compile(textwrap.dedent(program), 'checksum_verified_transport', 'exec'))
           PY
       - name: Stage verified commits without moving research or main
         run: |
@@ -93,6 +62,6 @@ jobs:
         if: always()
         with:
           name: fabric-b0-6-verified-source-${{ github.sha }}
-          path: ${{ runner.temp }}/b06-verified-transfer/
+          path: /tmp/b06-verified-transfer/
           if-no-files-found: error
           retention-days: 7
