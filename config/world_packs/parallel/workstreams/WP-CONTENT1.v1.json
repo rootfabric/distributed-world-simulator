@@ -16,8 +16,8 @@
   ],
   "blockers": [],
   "next_action": "Independent integrator/reviewer review of exact HEAD 764af89d via child PR into control/world-packs-parallel-r1; note the documented pre-existing environmental symlink test failure (WinError 1314) when running the shared world_packs suite.",
-  "last_checkpoint_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
-  "tested_head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033",
+  "last_checkpoint_head": "6fb8215283d84d101ef0e289e472795ba8e72a4e",
+  "tested_head": "6fb8215283d84d101ef0e289e472795ba8e72a4e",
   "validation": [
     {
       "name": "SOURCE_POLICY focused content_catalog tests",
@@ -72,9 +72,15 @@
       "command": "python -m pytest tests/world_packs -q",
       "result": "FAIL",
       "head": "c18e5943d66f8013d0f33ce65b13a7f03f1ed033"
+    },
+    {
+      "name": "READY_FOR_INTEGRATION focused content_catalog re-run on current HEAD",
+      "command": "python -m pytest tests/world_packs/content_catalog -q",
+      "result": "PASS",
+      "head": "6fb8215283d84d101ef0e289e472795ba8e72a4e"
     }
   ],
-  "updated_at_utc": "2026-09-05T18:20:00Z",
+  "updated_at_utc": "2026-09-05T19:05:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1.",
     "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.",
@@ -85,6 +91,7 @@
     "NO_HEAVY_GIT_PAYLOAD_GATE done: git-tracked payload scan (text-only, <=256KiB, no NUL bytes), 19 passed at ed8c888b.",
     "EVIDENCE_READY done: CANDIDATE_LIBRARY_INDEX_RU.md + final track evidence at c18e5943; regression 87 passed, 1 failed (same pre-existing environmental symlink failure at c18e5943).",
     "Regression FAIL detail: python -m pytest tests/world_packs -q at d1ea1bce gave 81 passed, 1 failed; the single failure is tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption (OSError WinError 1314, symlink privilege missing on this Windows runner). Pre-existing environmental failure, unrelated to WP-CONTENT1 changes and outside this track's allowed paths.",
-    "Earlier state commits (f9ce955c, 9dcc8360) used a non-schema validation entry shape; fixed in this commit without rewriting published history."
+    "Earlier state commits (f9ce955c, 9dcc8360) used a non-schema validation entry shape; fixed without rewriting published history.",
+    "State normalization: file rewritten UTF-8 without BOM; focused tests re-run on current HEAD 6fb82152 (19 passed) and recorded to clear VALIDATION_STALE. No implementation files changed in this state-only commit."
   ]
 }
