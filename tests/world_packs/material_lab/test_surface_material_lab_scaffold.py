@@ -222,6 +222,17 @@ def test_self_check_proves_fidelity_switch_safety() -> None:
     assert "world normal changed across fidelity switches" in check
 
 
+def test_graphical_capture_script_writes_evidence_pngs() -> None:
+    capture = LAB_DIR / "surface_material_lab_capture.gd"
+    source = capture.read_text(encoding="utf-8")
+    assert "WP-VIS1-lab-full-fidelity.png" in source
+    assert "WP-VIS1-lab-preview-fidelity.png" in source
+    assert "apply_fidelity" in source
+    assert "save_png" in source
+    # The capture must quit with a success sentinel, not hang a GUI session.
+    assert "SURFACE_MATERIAL_LAB_CAPTURE=PASS" in source
+
+
 def fixtures_source_module() -> str:
     return FIXTURES_GD.read_text(encoding="utf-8")
 
