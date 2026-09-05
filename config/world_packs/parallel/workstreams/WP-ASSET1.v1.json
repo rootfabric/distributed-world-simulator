@@ -4,15 +4,26 @@
   "track_id": "WP-ASSET1",
   "branch": "work/world-packs-asset1-safe-fetch-r1",
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
-  "status": "PLANNED",
-  "completed_milestones": [],
+  "status": "IN_PROGRESS",
+  "completed_milestones": [
+    "FETCH_CONTRACT"
+  ],
   "blockers": [],
-  "next_action": "Implement FETCH_CONTRACT: exact asset/version/hash/expected-size plus approved source in; verified temporary payload or typed failure out. Add negative fixtures before real asset downloads.",
-  "last_checkpoint_head": null,
-  "tested_head": null,
-  "validation": [],
-  "updated_at_utc": "2026-09-05T13:49:00Z",
+  "next_action": "Implement BOUNDED_HTTPS: bounded streaming https transport with timeout, hard byte ceiling and injectable opener; offline tests against fake responses only.",
+  "last_checkpoint_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30",
+  "tested_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30",
+  "validation": [
+    {
+      "kind": "focused",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "29 passed",
+      "tested_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
+    }
+  ],
+  "updated_at_utc": "2026-09-05T14:20:00Z",
   "notes": [
-    "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet."
+    "FETCH_CONTRACT complete: typed contract validation + verified payload or typed failure; all transports injected, no network used.",
+    "Negative fixtures committed before any real asset download (see docs/world_packs/evidence/WP-ASSET1_FETCH_CONTRACT_R1.md).",
+    "Package is stdlib-only per tools/world_packs/requirements-asset-fetch.txt."
   ]
 }
