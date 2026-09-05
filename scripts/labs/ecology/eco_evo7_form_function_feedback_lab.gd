@@ -146,9 +146,16 @@ func _material(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	return material
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	if not event.pressed or event.echo: return
-	match event.keycode:
+func _unhandled_key_input(event: InputEvent) -> void:
+	## Godot 4.7's Node virtual signature is InputEvent. Narrowing the override
+	## to InputEventKey is a parse error, so keep the exact parent signature and
+	## fail closed for non-key events before accessing key-specific fields.
+	if not event is InputEventKey:
+		return
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	match key_event.keycode:
 		KEY_SPACE:
 			show_final = not show_final
 			_rebuild_plots(); _refresh_hud()
