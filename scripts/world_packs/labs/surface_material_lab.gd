@@ -28,6 +28,7 @@ const MARKER_ALPHA: float = 0.55
 ## within a workstream so an older head renders a strict subset.
 const ENABLED_SURFACE_MILESTONES: Array[String] = [
 	"HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES",
+	"OVERHANG_AND_INVERTED_SURFACES",
 ]
 
 

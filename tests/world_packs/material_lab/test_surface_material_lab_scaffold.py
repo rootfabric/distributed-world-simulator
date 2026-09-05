@@ -39,6 +39,7 @@ FIXTURE_TO_MILESTONE = {
 
 SELF_CHECK_GD = LAB_DIR / "surface_material_lab_self_check.gd"
 ENABLED_MILESTONE = "HORIZONTAL_VERTICAL_AND_SLOPED_SURFACES"
+ENABLED_MILESTONE_2 = "OVERHANG_AND_INVERTED_SURFACES"
 
 # Registry blocks appear as `{` ... `},` dictionaries inside FIXTURES.
 _BLOCK_RE = re.compile(r"\{\n(?:[^\n]|\n(?!\t\},?\n))+?\n\t\},?", re.S)
@@ -131,14 +132,24 @@ def test_lab_enables_horizontal_slope_wall_surfaces() -> None:
 
 def test_self_check_expects_exactly_the_enabled_surfaces() -> None:
     check = SELF_CHECK_GD.read_text(encoding="utf-8")
-    for fixture_id in ("horizontal_plane", "slope_45", "vertical_wall"):
+    for fixture_id in (
+        "horizontal_plane",
+        "slope_45",
+        "vertical_wall",
+        "overhang",
+        "inverted_ceiling",
+    ):
         assert f'"{fixture_id}"' in check
     assert "overhang" not in check.split("EXPECTED_ORIENTATION")[0]
-    # Overhang/inverted/sphere must appear only as orientation expectations,
-    # never in EXPECTED_SURFACES, until their milestones land.
+    # The sphere fixture must appear only as orientation expectation, never
+    # in EXPECTED_SURFACES, until its milestone lands.
     expected_surfaces_block = check.split("const EXPECTED_SURFACES")[1].split("]")[0]
-    for later_id in ("overhang", "inverted_ceiling", "sphere_fixture"):
-        assert later_id not in expected_surfaces_block
+    assert "sphere_fixture" not in expected_surfaces_block
+
+
+def test_lab_enables_overhang_and_inverted_surfaces() -> None:
+    lab = LAB_GD.read_text(encoding="utf-8")
+    assert f'"{ENABLED_MILESTONE_2}"' in lab
 
 
 def test_overhang_rotation_keeps_declared_down_orientation() -> None:

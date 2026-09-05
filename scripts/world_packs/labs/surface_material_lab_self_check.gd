@@ -29,6 +29,8 @@ const EXPECTED_SURFACES := [
 	"horizontal_plane",
 	"slope_45",
 	"vertical_wall",
+	"overhang",
+	"inverted_ceiling",
 ]
 
 
