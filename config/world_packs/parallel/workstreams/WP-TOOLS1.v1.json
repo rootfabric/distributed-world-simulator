@@ -6,36 +6,37 @@
   "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
   "status": "IN_PROGRESS",
   "completed_milestones": [
-    "CLI_SCAFFOLD"
+    "CLI_SCAFFOLD",
+    "VALIDATE_AND_RESOLVE"
   ],
   "blockers": [],
-  "next_action": "Implement VALIDATE_AND_RESOLVE: add the resolve subcommand printing the WP1.0 presentation lock by reusing library_contract.resolve; deterministic tests against the contract module.",
-  "last_checkpoint_head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
-  "tested_head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+  "next_action": "Implement DOCTOR_DIAGNOSTICS: doctor subcommand with python/jsonschema/schema/document/contract/fixture/pack checks, human and --json output.",
+  "last_checkpoint_head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
+  "tested_head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
   "validation": [
     {
       "kind": "focused",
-      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
       "command": "python -m pytest tests/world_packs/wp_cli -q",
       "result": "PASS",
-      "detail": "6 passed"
+      "detail": "11 passed"
     },
     {
       "kind": "focused-suite",
-      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
+      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
       "command": "./RUN_WORLD_PACKS_TOOLING_TESTS.ps1",
       "result": "PASS",
-      "detail": "69 passed, 1 deselected (test_library_contract symlink test requires Windows developer mode; pre-existing environmental limitation, not modified by this track)"
+      "detail": "74 passed, 1 deselected (symlink privilege env limitation, see notes)"
     },
     {
       "kind": "cli-smoke",
-      "head": "bc161e0a14c29e4c8304b984a6b07d098636b38d",
-      "command": "python tools/world_packs/wp_cli/__main__.py validate",
+      "head": "792ef7ede072d78dba5e71a4189747ec2e9f74d4",
+      "command": "python tools/world_packs/wp_cli/__main__.py resolve --recipe recipe/lunar-swatch@1.0.0",
       "result": "PASS",
-      "detail": "repo defaults, exit 0, resolver=wp-set-json-v1 via tools/world_packs/library_contract.py"
+      "detail": "lock hash bfd0fbb15d8ef5292dd79aa002cb50f11fec9f916531234ee4842a02f52140a4 identical to direct library_contract.resolve output"
     }
   ],
-  "updated_at_utc": "2026-09-05T14:12:00Z",
+  "updated_at_utc": "2026-09-05T14:31:00Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1; no implementation milestone completed yet.",
     "CLI_SCAFFOLD: wp_cli package with argparse dispatch, exit-code contract (0/1/2), validate subcommand reusing the existing WP1.0 resolver via import; no second resolver introduced.",
