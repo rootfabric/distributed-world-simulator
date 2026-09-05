@@ -221,3 +221,78 @@ def cmd_doctor(args) -> int:
         print(f"wp doctor: {'FAIL (' + ', '.join(failures) + ')' if failures else 'PASS'}",
               file=sys.stderr)
     return 1 if failures else 0
+
+
+def _load_index(catalog_path, locations_path, schema_path):
+    catalog, locations, schema = load_documents(catalog_path, locations_path, schema_path)
+    return catalog, locations, contract.wp.validate(catalog, locations, schema)
+
+
+def _index_document(catalog, index) -> dict:
+    """Deterministic full-library index built from contract digests only."""
+    return {
+        "schema": "dws.world_packs.library_index.v1",
+        "resolver": "wp-set-json-v1 (tools/world_packs/library_contract.py)",
+        "counts": {group: len(catalog[group]) for group in contract.wp.GROUPS},
+        "descriptors": {
+            group: {
+                contract.wp.reference(entry): contract.wp.digest(entry)
+                for entry in catalog[group]
+            }
+            for group in contract.wp.GROUPS
+        },
+    }
+
+
+def cmd_index(args) -> int:
+    """Emit a deterministic index of every descriptor (id@version -> digest)."""
+    defaults_ = contract.defaults()
+    catalog_path = Path(args.catalog) if args.catalog else defaults_["catalog"]
+    locations_path = Path(args.locations) if args.locations else defaults_["locations"]
+    schema_path = Path(args.schema) if args.schema else defaults_["schema"]
+    try:
+        catalog, _, index = _load_index(catalog_path, locations_path, schema_path)
+    except (contract.wp.ContractError, OSError, ValueError, RecursionError) as exc:
+        return fail(f"index: {exc}")
+    document = _index_document(catalog, index)
+    document["index_digest"] = contract.wp.digest(document)
+    text = json.dumps(document, sort_keys=True, indent=2) + "\n"
+    if args.out:
+        try:
+            Path(args.out).write_text(text, encoding="utf-8", newline="\n")
+        except OSError as exc:
+            return fail(f"index: {exc}")
+        print(f"wp index: PASS ({len(index)} descriptors -> {args.out})", file=sys.stderr)
+    else:
+        sys.stdout.write(text)
+        print(f"wp index: PASS ({len(index)} descriptors)", file=sys.stderr)
+    return 0
+
+
+def cmd_inspect(args) -> int:
+    """Show descriptor entries and digests for explicit id@version references."""
+    defaults_ = contract.defaults()
+    catalog_path = Path(args.catalog) if args.catalog else defaults_["catalog"]
+    locations_path = Path(args.locations) if args.locations else defaults_["locations"]
+    schema_path = Path(args.schema) if args.schema else defaults_["schema"]
+    try:
+        catalog, _, index = _load_index(catalog_path, locations_path, schema_path)
+    except (contract.wp.ContractError, OSError, ValueError, RecursionError) as exc:
+        return fail(f"inspect: {exc}")
+    report = {"schema": "dws.world_packs.descriptor_inspect.v1", "refs": {}, "missing": []}
+    for ref in args.refs:
+        entry = index.get(ref)
+        if entry is None:
+            report["missing"].append(ref)
+            continue
+        report["refs"][ref] = {
+            "group": next(g for g in contract.wp.GROUPS
+                          if any(contract.wp.reference(e) == ref for e in catalog[g])),
+            "digest": contract.wp.digest(entry),
+            "descriptor": entry,
+        }
+    if report["missing"]:
+        return fail(f"inspect: unknown reference(s): {', '.join(report['missing'])}")
+    emit_json(report)
+    print(f"wp inspect: PASS ({len(report['refs'])} reference(s))", file=sys.stderr)
+    return 0

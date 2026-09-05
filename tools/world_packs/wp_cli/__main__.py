@@ -58,6 +58,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor.add_argument("--json", action="store_true", help="machine-readable JSON report")
     p_doctor.set_defaults(handler=app.cmd_doctor)
 
+    p_index = sub.add_parser(
+        "index", help="emit a deterministic id@version -> digest index of the whole library")
+    for dest in ("catalog", "locations", "schema"):
+        p_index.add_argument(f"--{dest}", type=str, default=None,
+                             help=f"{dest} JSON path (default: repo document)")
+    p_index.add_argument("--out", type=str, default=None,
+                         help="write the index to a file instead of stdout")
+    p_index.set_defaults(handler=app.cmd_index)
+
+    p_inspect = sub.add_parser(
+        "inspect", help="show descriptor entries and digests for explicit references")
+    p_inspect.add_argument("refs", nargs="+", metavar="REF",
+                           help="descriptor reference like surface/basalt@1.0.0")
+    for dest in ("catalog", "locations", "schema"):
+        p_inspect.add_argument(f"--{dest}", type=str, default=None,
+                               help=f"{dest} JSON path (default: repo document)")
+    p_inspect.set_defaults(handler=app.cmd_inspect)
+
     return parser
 
 
