@@ -14,10 +14,10 @@
   "tested_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30",
   "validation": [
     {
-      "kind": "focused",
+      "name": "WP-ASSET1 FETCH_CONTRACT focused tests",
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "29 passed",
-      "tested_head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
+      "head": "e4baefba2acb26ea6434d6d9e7beed33745ecf30"
     }
   ],
   "updated_at_utc": "2026-09-05T14:20:00Z",
