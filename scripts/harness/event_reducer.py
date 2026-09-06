@@ -8,7 +8,7 @@ import subprocess
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, read_json
-from .evidence_provenance import REVIEW_SCHEMA, validate_review_record
+from .evidence_provenance import REVIEW_SCHEMA, committed_enforcement_generation, validate_review_record
 
 
 _P4_CHECKPOINT = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
@@ -25,6 +25,8 @@ def load_guard_context(root: Path, execution_dir: Path) -> dict[str, Any]:
             documents[path.resolve().relative_to(root.resolve()).as_posix()] = read_json(path)
     epoch_path = execution_dir / "project-epoch.v1.json"
     epoch = read_json(epoch_path) if epoch_path.exists() else None
+    if epoch is not None and (root / "config/control/project-program-registry.v1.json").is_file():
+        committed_enforcement_generation(root, epoch)
     return {"root": root, "execution_dir": execution_dir, "documents": documents, "epoch": epoch}
 
 
@@ -226,9 +228,9 @@ def _authoritative_p4_audit_present(
             continue
         if str(item.get("canonical_main_head", "")).lower() != current_main:
             continue
-        if int(item.get("registry_generation", -1)) < 80:
-            continue
         if item.get("production_runtime_mutation_present") is not False:
+            continue
+        if int(item.get("registry_generation", -1)) < 80:
             continue
         if item.get("director_dispatch_still_required") is not True:
             continue

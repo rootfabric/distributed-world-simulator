@@ -153,6 +153,30 @@ def hard_block_matches_state(root: Path | None, state: dict[str, Any]) -> bool:
     return proof is not None and proof == state.get("hard_block_proof")
 
 
+def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
+    """A dirty generation downgrade cannot opt current execution into legacy rules."""
+    registry_path = "config/control/project-program-registry.v1.json"
+    registry = _decode(_git(root, "show", f"HEAD:{registry_path}"))
+    pinned_generation = registry.get("registry_generation")
+    generation = epoch.get("registry_generation")
+    _require(type(pinned_generation) is int and type(generation) is int,
+             "REVIEW_EPOCH_GENERATION_REQUIRED")
+    if pinned_generation >= PROVENANCE_GENERATION:
+        # Epochs/policies may evolve through commits; unlike evidence, they need
+        # not have a single add commit. Their working bytes must still match Git.
+        committed_bytes(root, registry_path, immutable=False)
+        epoch_id = epoch.get("epoch_id")
+        _require(_text(epoch_id) and "/" not in epoch_id and "\\" not in epoch_id,
+                 "REVIEW_EPOCH_IDENTITY_REQUIRED")
+        relative = f"config/control/harness/executions/{epoch_id}/project-epoch.v1.json"
+        pinned_epoch = _decode(committed_bytes(root, relative, immutable=False))
+        _require(pinned_epoch == epoch,
+                 "REVIEW_COMMITTED_EPOCH_MISMATCH")
+        for name in ("harness-policy", "review-policy", "continuation-policy", "risk-policy"):
+            committed_bytes(root, f"config/control/harness/{name}.v1.json", immutable=False)
+    return generation
+
+
 def validate_review_machine_evidence(
     root: Path, policy: dict[str, Any], epoch: dict[str, Any],
     review: dict[str, Any],
@@ -163,8 +187,7 @@ def validate_review_machine_evidence(
     build_state's generation check prevents replay from becoming live authority.
     Both FRESH_EXECUTION and REUSED modes require evidence: a mode flag is no proof.
     """
-    generation = epoch.get("registry_generation")
-    _require(type(generation) is int, "REVIEW_EPOCH_GENERATION_REQUIRED")
+    generation = committed_enforcement_generation(root, epoch)
     if generation < PROVENANCE_GENERATION or review.get("verdict") != "PASS":
         return
     if review.get("review_type") == "PRE_BUILD_DESIGN_AUTHORIZATION":

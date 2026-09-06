@@ -330,7 +330,48 @@ class EvidenceProvenanceTests(unittest.TestCase):
             _enforce_guard(bundle, self.wo, "AUDITED", event, [event], 0, context)
 
     def test_historical_review_contract_is_preserved(self):
-        validate_review_machine_evidence(self.root, {}, {**self.epoch, "registry_generation": 80}, self.make_review())
+        # Legacy behavior requires an actual historical Git snapshot, not a flag.
+        registry = self.read("config/control/project-program-registry.v1.json")
+        registry["registry_generation"] = 80
+        self.write("config/control/project-program-registry.v1.json", registry)
+        epoch = {**self.epoch, "registry_generation": 80}
+        self.write(f"{self.execution}/project-epoch.v1.json", epoch)
+        self.commit("historical generation-80 fixture")
+        validate_review_machine_evidence(self.root, {}, epoch, self.make_review())
+
+    def test_dirty_epoch_registry_downgrade_cannot_enter_legacy_drive(self):
+        self.publish_proof()
+        registry = self.read("config/control/project-program-registry.v1.json")
+        registry["registry_generation"] = 80
+        self.write("config/control/project-program-registry.v1.json", registry)
+        self.write(f"{self.execution}/project-epoch.v1.json", {**self.epoch, "registry_generation": 80})
+        for mode in ("drive", "close-mission"):
+            with self.subTest(mode=mode):
+                code, result = self.cli(mode)
+                self.assertEqual(3, code, result)
+                self.assertIn("PROVENANCE_WORKTREE_MODIFIED", result["error"]["detail"])
+
+    def test_forged_guard_context_cannot_downgrade_committed_generation(self):
+        review = self.make_review()
+        path = f"{self.execution}/reviews/review.v1.json"
+        self.write(path, review)
+        self.commit("append digest-free review for guard test")
+        context = {"root": self.root, "execution_dir": self.root / self.execution,
+                   "epoch": {**self.epoch, "registry_generation": 80}, "documents": {path: review}}
+        event = {**self.events[-1], "work_state": "CHECKPOINT_PROPOSED", "head_sha": self.subject,
+                 "evidence_paths": [path]}
+        with self.assertRaisesRegex(ContractValidationError, "REVIEW_COMMITTED_EPOCH_MISMATCH"):
+            _enforce_guard(ContractBundle.load(self.root), self.wo, "AUDITED", event, [event], 0, context)
+
+    def test_dirty_current_policy_cannot_select_legacy_hard_block(self):
+        self.publish_proof()
+        path = "config/control/harness/continuation-policy.v1.json"
+        policy = self.read(path)
+        policy.pop("autonomous_execution")
+        self.write(path, policy)
+        code, result = self.cli("close-mission")
+        self.assertEqual(3, code, result)
+        self.assertIn("PROVENANCE_WORKTREE_MODIFIED", result["error"]["detail"])
 
     def test_checkpoint_event_guard_rejects_same_digest_free_pass(self):
         review = self.make_review()
