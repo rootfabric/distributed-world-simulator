@@ -1,9 +1,9 @@
 name: ECO EVO6 Rule Selection Continuation
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - "**"
     paths:
       - "RUN_ECO_EVO6_RULE_SELECTION_CONTINUATION.ps1"
       - "OPEN_ECO_EVO6_GENERATED_RULE_LAB.ps1"
@@ -16,17 +16,32 @@ on:
       - "tests/research/ecology/eco_evo6_rule_selection_bridge_acceptance.gd"
       - "docs/checkpoints/2026-08-23_ECO_EVO6_RULE_SELECTION_CONTINUATION_R1_RU.md"
       - ".github/workflows/evo6-rule-selection-continuation.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: eco-evo6-rule-selection-${{ github.event.pull_request.number }}
+  group: eco-evo6-rule-selection-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   closure:
     name: exact EVO6 rule-selection closure
+    # DWS self-hosted trust policy: trusted actor + trusted source repository +
+    # trusted event set only (no self-hosted execution for pull_request events).
+    if: >
+      github.actor == 'rootfabric' &&
+      github.triggering_actor == 'rootfabric' &&
+      (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'rootfabric' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        )
+      )
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 30
 
@@ -35,17 +50,18 @@ jobs:
         shell: powershell
 
     steps:
-      - name: Checkout exact PR HEAD
+      - name: Checkout exact HEAD
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Assert exact PR HEAD checkout
+      - name: Assert exact HEAD checkout
         run: |
           $head = (git rev-parse HEAD).Trim()
-          if ($head -ne "${{ github.event.pull_request.head.sha }}") {
-            throw "EXACT_HEAD_MISMATCH: actual=$head expected=${{ github.event.pull_request.head.sha }}"
+          $expected = "${{ github.event.pull_request.head.sha || github.sha }}"
+          if ($head -ne $expected) {
+            throw "EXACT_HEAD_MISMATCH: actual=$head expected=$expected"
           }
           Write-Host "exact_head=$head"
 

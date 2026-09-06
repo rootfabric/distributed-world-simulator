@@ -18,6 +18,9 @@ on:
           - p4.7
           - p4.8
 
+permissions:
+  contents: read
+
 concurrency:
   group: eco-production-tests-${{ github.ref }}
   cancel-in-progress: false
@@ -25,6 +28,19 @@ concurrency:
 jobs:
   eco-production-tests:
     name: ECO ${{ inputs.suite }}
+    # DWS self-hosted trust policy: trusted actor + trusted event set only.
+    if: >
+      github.actor == 'rootfabric' &&
+      github.triggering_actor == 'rootfabric' &&
+      (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'rootfabric' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        )
+      )
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 60
 
