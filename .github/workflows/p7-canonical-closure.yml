@@ -5,9 +5,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: p7-canonical-closure-${{ github.ref }}
-  cancel-in-progress: false
 jobs:
   packet-audit:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
@@ -53,9 +50,36 @@ jobs:
           path: artifacts/p7-closure/
           if-no-files-found: error
           retention-days: 90
-  canonical-world-core:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+  approved-engine:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[world-core]'))
     runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - name: Preserve approved prebuilt runtime dependency only
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          engine="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
+          mkdir -p "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID"
+          cp "$engine" "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/godot"
+          # This artifact is a prebuilt tool dependency, never repository source,
+          # a checkout, Git metadata, or a source-publication transport workaround.
+          printf '%s  godot\n' "$expected" > "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-approved-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-approved-engine-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 7
+  canonical-world-core:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[world-core]'))
+    needs: approved-engine
+    runs-on: ubuntu-latest
+    concurrency:
+      group: p7-world-core-c14
+      cancel-in-progress: false
     timeout-minutes: 150
     env:
       SUBJECT_HEAD: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
@@ -70,6 +94,10 @@ jobs:
           ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
           fetch-depth: 0
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-approved-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-approved-engine
       - name: Resolve exact identity and approved engine
         shell: bash
         run: |
@@ -79,11 +107,9 @@ jobs:
           test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
           { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; uname -a; } > artifacts/p7-world-core/preflight.txt
-          engine=''
-          for candidate in "${GODOT_BIN:-}" "$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64" /srv/dws-runner/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64; do
-            if [ -f "$candidate" ] && [ "$(sha256sum "$candidate" | cut -d' ' -f1)" = "$GODOT_SHA256" ]; then engine="$candidate"; break; fi
-          done
-          test -n "$engine"
+          engine="$RUNNER_TEMP/p7-approved-engine/godot"
+          chmod u+x "$engine"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$GODOT_SHA256"
           "$engine" --version | tee artifacts/p7-world-core/godot-version.txt
           sha256sum "$engine" > artifacts/p7-world-core/godot-sha256.txt
           echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
@@ -102,34 +128,11 @@ jobs:
           fi
           test -x /usr/bin/Xvfb
           { ls -l /usr/bin/Xvfb; dpkg-query -W xvfb libgl1-mesa-dri; } > artifacts/p7-world-core/graphical-environment.txt
-      - name: Resolve PowerShell 7 without modifying host installation
+      - name: Resolve available PowerShell 7
         shell: bash
         run: |
           set -euo pipefail
-          if command -v pwsh >/dev/null 2>&1; then
-            shell_bin="$(command -v pwsh)"
-          else
-            folder="$RUNNER_TEMP/p7-pwsh-$GITHUB_RUN_ID"
-            mkdir -p "$folder"
-            cd "$folder"
-            release='https://github.com/PowerShell/PowerShell/releases/download/v7.4.6'
-            curl --fail --location --connect-timeout 20 --max-time 300 "$release/hashes.sha256" -o hashes.sha256
-            curl --fail --location --connect-timeout 20 --max-time 600 "$release/powershell-7.4.6-linux-x64.tar.gz" -o powershell-7.4.6-linux-x64.tar.gz
-            python3 - <<'PY'
-          import hashlib, pathlib, re
-          name = 'powershell-7.4.6-linux-x64.tar.gz'
-          lines = pathlib.Path('hashes.sha256').read_text().splitlines()
-          matches = [line for line in lines if line.split()[-1].lstrip('*./') == name]
-          assert len(matches) == 1, 'POWERSHELL_DIGEST_IDENTITY_MISSING'
-          digest = matches[0].split()[0].lower()
-          assert re.fullmatch('[0-9a-f]{64}', digest), 'POWERSHELL_DIGEST_INVALID'
-          assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() == digest, 'POWERSHELL_DIGEST_MISMATCH'
-          PY
-            tar -xzf powershell-7.4.6-linux-x64.tar.gz
-            chmod u+x pwsh
-            shell_bin="$folder/pwsh"
-            cd "$GITHUB_WORKSPACE"
-          fi
+          shell_bin="$(command -v pwsh)"
           "$shell_bin" -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable' > artifacts/p7-world-core/powershell-version.txt
           echo "P7_PWSH=$shell_bin" >> "$GITHUB_ENV"
       - name: Run unchanged repository full world and core regression
