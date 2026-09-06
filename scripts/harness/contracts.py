@@ -75,6 +75,7 @@ class ContractBundle:
             "repair_doctrine": policy["repair_doctrine"],
             "evidence_map_schema": policy["evidence_map_schema"],
             "human_attention_schema": policy["human_attention_schema"],
+            "hard_block_proof_schema": policy["hard_block_proof_schema"],
             "continuation_policy": policy["continuation_policy"],
         }
         contracts = {
@@ -100,6 +101,7 @@ class ContractBundle:
             "project_epoch_schema",
             "evidence_map_schema",
             "human_attention_schema",
+            "hard_block_proof_schema",
         ):
             schema = self.contracts[name]
             if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":

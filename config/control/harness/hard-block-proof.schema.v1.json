@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.harness_hard_block_proof.schema.v1",
+  "title": "Distributed World Simulator Durable Hard Block Proof",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "proof_id",
+    "project_epoch",
+    "work_order_id",
+    "checkpoint",
+    "blocked_event_id",
+    "blocked_head_sha",
+    "recorded_at_utc",
+    "proven_non_automatable",
+    "required_capability_mandatory",
+    "automation_fallbacks_exhausted",
+    "scope_preserving_recovery_exhausted",
+    "proof_evidence_path",
+    "resume_condition"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.harness_hard_block_proof.v1"},
+    "proof_id": {"type": "string", "minLength": 1},
+    "project_epoch": {"type": "string", "minLength": 1},
+    "work_order_id": {"type": "string", "minLength": 1},
+    "checkpoint": {"type": "string", "minLength": 1},
+    "blocked_event_id": {"type": "string", "minLength": 1},
+    "blocked_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "recorded_at_utc": {"type": "string", "format": "date-time"},
+    "proven_non_automatable": {"const": true},
+    "required_capability_mandatory": {"const": true},
+    "automation_fallbacks_exhausted": {"const": true},
+    "scope_preserving_recovery_exhausted": {"const": true},
+    "proof_evidence_path": {"type": "string", "minLength": 1},
+    "resume_condition": {"type": "string", "minLength": 1}
+  }
+}

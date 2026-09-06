@@ -40,6 +40,7 @@ def blocked_state(proof: dict) -> dict:
 class AutonomousRuntimeRoutingTests(unittest.TestCase):
     def complete_proof(self) -> dict:
         return {
+            "_durable_provenance_validated": True,
             "proven_non_automatable": True,
             "required_capability_mandatory": True,
             "automation_fallbacks_exhausted": True,
@@ -60,6 +61,7 @@ class AutonomousRuntimeRoutingTests(unittest.TestCase):
     def test_current_policy_requires_every_declared_proof_clause(self) -> None:
         proof = self.complete_proof()
         for field in (
+            "_durable_provenance_validated",
             "required_capability_mandatory",
             "automation_fallbacks_exhausted",
             "scope_preserving_recovery_exhausted",
@@ -73,11 +75,20 @@ class AutonomousRuntimeRoutingTests(unittest.TestCase):
                 self.assertFalse(result["hard_blocked"], result)
                 self.assertFalse(result["mission_exit_allowed"], result)
 
-    def test_current_policy_accepts_only_exhaustive_durable_proof(self) -> None:
+    def test_current_policy_accepts_only_state_builder_validated_exhaustive_proof(self) -> None:
         result = build_continuation(blocked_state(self.complete_proof()), current_policy())
         self.assertTrue(result["hard_blocked"])
         self.assertTrue(result["mission_exit_allowed"])
         self.assertEqual("SYSTEM_BLOCKED", result["handoff_class"])
+
+
+    def test_nonempty_path_without_state_builder_provenance_is_not_terminal(self) -> None:
+        proof = self.complete_proof()
+        proof.pop("_durable_provenance_validated")
+        proof["proof_evidence_path"] = "docs/control/evidence/invented.json"
+        result = build_continuation(blocked_state(proof), current_policy())
+        self.assertFalse(result["hard_blocked"])
+        self.assertFalse(result["mission_exit_allowed"])
 
     def test_unknown_policy_requirement_fails_closed(self) -> None:
         policy = current_policy()
