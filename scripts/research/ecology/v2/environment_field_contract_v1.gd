@@ -13,6 +13,7 @@ const MAX_REQUEST := 1000000
 const MAX_REVISION := 1000000000
 const MAX_OWNER_EPOCH := 1000000000
 const MAX_TICK := 1000000000
+const MAX_PORT_COORD_MM := 10000000
 
 static func stock(amount: int = 0) -> Dictionary:
 	return {"water_mg": amount, "nutrient_mg": amount, "organic_mg": amount}
@@ -37,6 +38,13 @@ static func valid_hash(v: Variant) -> bool:
 	for c in v:
 		if not c in "0123456789abcdef": return false
 	return true
+
+static func valid_footprint(origin_mm: Variant, cell_size_mm: Variant, width: Variant, depth: Variant) -> bool:
+	if not C.vector(origin_mm, MAX_PORT_COORD_MM): return false
+	if not C.integer(cell_size_mm, 1, 1000000) or not C.integer(width, 1, 64) or not C.integer(depth, 1, 64): return false
+	var max_x: int = origin_mm[0] + cell_size_mm * width
+	var max_z: int = origin_mm[2] + cell_size_mm * depth
+	return origin_mm[0] >= -MAX_PORT_COORD_MM and origin_mm[2] >= -MAX_PORT_COORD_MM and max_x <= MAX_PORT_COORD_MM and max_z <= MAX_PORT_COORD_MM
 
 static func cell_integrity_hash(cell: Dictionary) -> String:
 	var p := cell.duplicate(true); p.erase("integrity_hash")
@@ -85,8 +93,9 @@ static func validate_read_header(v: Variant) -> String:
 	if not C.keys(v, keys): return "FIELD_SCHEMA"
 	if v.schema != FIELD_SCHEMA or not C.identifier(v.owner_token): return "FIELD_IDENTITY"
 	if not C.integer(v.owner_epoch, 0, MAX_OWNER_EPOCH) or not C.integer(v.revision, 0, MAX_REVISION) or not C.integer(v.tick, 0, MAX_TICK): return "FIELD_VERSION"
-	if not C.vector(v.origin_mm, 10000000) or not C.integer(v.cell_size_mm, 1, 1000000): return "FIELD_SPATIAL"
+	if not C.vector(v.origin_mm, MAX_PORT_COORD_MM) or not C.integer(v.cell_size_mm, 1, 1000000): return "FIELD_SPATIAL"
 	if not C.integer(v.width, 1, 64) or not C.integer(v.depth, 1, 64) or v.width * v.depth > MAX_CELLS: return "FIELD_DIMENSIONS"
+	if not valid_footprint(v.origin_mm, v.cell_size_mm, v.width, v.depth): return "FIELD_FOOTPRINT"
 	if not v.cells is Array or v.cells.size() != v.width * v.depth: return "FIELD_CELLS"
 	if not valid_ledger(v.ledger) or not C.integer(v.operation_count, 0, C.MAX_INT) or not valid_hash(v.integrity_hash): return "FIELD_READ_SEAL"
 	return ""
@@ -107,7 +116,7 @@ static func validate_supports(v: Variant) -> bool:
 	var seen := {}
 	for s in v:
 		if not C.keys(s, ["id", "kind", "position_mm"]) or not C.identifier(s.id) or seen.has(s.id): return false
-		if not s.kind in ["plane_y", "axis_y", "point"] or not C.vector(s.position_mm, 10000000): return false
+		if not s.kind in ["plane_y", "axis_y", "point"] or not C.vector(s.position_mm, MAX_PORT_COORD_MM): return false
 		seen[s.id] = true
 	return true
 

@@ -5,9 +5,11 @@ const F = preload("res://scripts/research/ecology/v2/environment_field_contract_
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 
 static func create(owner_token: String = "research.patch", owner_epoch: int = 0, origin_mm: Array = [0, 0, 0], cell_size_mm: int = 1000, width: int = 4, depth: int = 4, initial_stock: Dictionary = F.stock(500000), capacities: Dictionary = F.stock(1000000), signals: Dictionary = F.signals()) -> Dictionary:
-	if not C.identifier(owner_token) or not C.integer(owner_epoch, 0, F.MAX_OWNER_EPOCH) or not C.vector(origin_mm, 10000000):
+	if not C.identifier(owner_token) or not C.integer(owner_epoch, 0, F.MAX_OWNER_EPOCH) or not C.vector(origin_mm, F.MAX_PORT_COORD_MM):
 		return {}
 	if not C.integer(cell_size_mm, 1, 1000000) or not C.integer(width, 1, 64) or not C.integer(depth, 1, 64) or width * depth > F.MAX_CELLS:
+		return {}
+	if not F.valid_footprint(origin_mm, cell_size_mm, width, depth):
 		return {}
 	if not F.valid_stock(initial_stock) or not F.valid_stock(capacities, false) or not F.valid_signals(signals):
 		return {}
@@ -130,25 +132,8 @@ static func allocate_demands(source: Dictionary, demands: Array, owner_token: St
 			state.cells[index].stocks[resource] -= grant.amount
 			state.ledger.outputs[resource] += grant.amount
 			grants[grant.request_id].granted += grant.amount
-	# Residual sweep: the primary pass is per-cell pro-rata. If a demand still has unmet
-	# quantity while another reachable cell retains stock, consume that residual in stable
-	# request/cell order so a sparse cell does not strand accessible stock.
-	for item in normalized:
-		var d: Dictionary = item.demand
-		var remaining: int = grants[d.request_id].requested - grants[d.request_id].granted
-		if remaining <= 0:
-			continue
-		for index in item.indices:
-			var available: int = state.cells[index].stocks[d.resource]
-			var extra := mini(available, remaining)
-			if extra <= 0:
-				continue
-			state.cells[index].stocks[d.resource] -= extra
-			state.ledger.outputs[d.resource] += extra
-			grants[d.request_id].granted += extra
-			remaining -= extra
-			if remaining == 0:
-				break
+
+	_allocate_residual_pro_rata(state, normalized, grants)
 	for id in grants:
 		grants[id].unmet = grants[id].requested - grants[id].granted
 	state.revision += 1
@@ -160,6 +145,61 @@ static func allocate_demands(source: Dictionary, demands: Array, owner_token: St
 	var result_grants: Array = grants.values()
 	result_grants.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.request_id < b.request_id)
 	return {"success": true, "state": state, "grants": result_grants, "revision": state.revision, "state_hash": state_hash(state)}
+
+static func _allocate_residual_pro_rata(state: Dictionary, normalized: Array, grants: Dictionary) -> void:
+	var buckets := {}
+	for item in normalized:
+		var d: Dictionary = item.demand
+		for index in item.indices:
+			var key := "%04d|%s" % [index, d.resource]
+			if not buckets.has(key):
+				buckets[key] = []
+			buckets[key].append(d.request_id)
+	var keys: Array = buckets.keys()
+	keys.sort()
+	for key in keys:
+		var parts: PackedStringArray = String(key).split("|")
+		var index := int(parts[0])
+		var resource := String(parts[1])
+		var available: int = state.cells[index].stocks[resource]
+		if available <= 0:
+			continue
+		var ids: Array = buckets[key]
+		ids.sort()
+		var remaining_by_id := {}
+		var total_remaining := 0
+		for id in ids:
+			var remaining: int = grants[id].requested - grants[id].granted
+			if remaining <= 0:
+				continue
+			remaining_by_id[id] = remaining
+			total_remaining += remaining
+		if total_remaining <= 0:
+			continue
+		var target := mini(available, total_remaining)
+		var allocations: Array = []
+		var used := 0
+		for id in ids:
+			if not remaining_by_id.has(id):
+				continue
+			var remaining: int = remaining_by_id[id]
+			var amount := int(target * remaining / total_remaining)
+			allocations.append({"request_id": id, "amount": amount, "remaining": remaining})
+			used += amount
+		var leftover := target - used
+		for allocation in allocations:
+			if leftover <= 0:
+				break
+			if allocation.amount < allocation.remaining:
+				allocation.amount += 1
+				leftover -= 1
+		for allocation in allocations:
+			var amount: int = allocation.amount
+			if amount <= 0:
+				continue
+			state.cells[index].stocks[resource] -= amount
+			state.ledger.outputs[resource] += amount
+			grants[allocation.request_id].granted += amount
 
 static func apply_effects(source: Dictionary, effects: Array, owner_token: String, owner_epoch: int, revision: int) -> Dictionary:
 	var pre := _write_precondition(source, owner_token, owner_epoch, revision)
@@ -223,7 +263,6 @@ static func apply_effects(source: Dictionary, effects: Array, owner_token: Strin
 		return _fail(state_error)
 	return {"success": true, "state": state, "applied": applied, "revision": state.revision, "state_hash": state_hash(state)}
 
-
 static func set_cell_signals(source: Dictionary, x: int, z: int, signals: Dictionary, owner_token: String, owner_epoch: int, revision: int) -> Dictionary:
 	var pre := _write_precondition(source, owner_token, owner_epoch, revision)
 	if not pre.is_empty(): return _fail(pre)
@@ -276,7 +315,7 @@ static func _write_precondition(state: Dictionary, owner_token: String, owner_ep
 	return ""
 
 static func _indices(state: Dictionary, position_mm: Array, extent_mm: int) -> Array:
-	if not C.vector(position_mm, 10000000) or not C.integer(extent_mm, 0, 1000000): return []
+	if not C.vector(position_mm, F.MAX_PORT_COORD_MM) or not C.integer(extent_mm, 0, 1000000): return []
 	var min_x := _floor_div(position_mm[0] - extent_mm - state.origin_mm[0], state.cell_size_mm)
 	var max_x := _floor_div(position_mm[0] + extent_mm - state.origin_mm[0], state.cell_size_mm)
 	var min_z := _floor_div(position_mm[2] - extent_mm - state.origin_mm[2], state.cell_size_mm)
