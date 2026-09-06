@@ -1,0 +1,154 @@
+{
+  "schema": "dws.fabric.complexity_audit.observations.v1",
+  "status": "ISSUES_REPRODUCED_REPLAN_REQUIRED",
+  "collection_status": "COMPLETE",
+  "acceptance_or_closure_claimed": false,
+  "independent_agent_review_claimed": false,
+  "audited_subject": {
+    "head": "43f60d2cd8e295227af983ed2c0d82f558ba1ec0",
+    "tree": "ea50c65704f8ebdab5684375996f16bc7a24b35d",
+    "branch": "feature/fabric-complex4-vis1-playable-physical-lab-r1"
+  },
+  "main_control_read_at": "ce782cfff4293b4b6d88bdb237e7bdf99cf9688c",
+  "execution_scope": "EXACT_TRANSITIVE_SOURCE_SLICE_NOT_FULL_HEAD_CHECKOUT",
+  "runtime": {
+    "source": "PROJECT_ATTACHMENT_ONLY",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "execution": {
+    "command": [
+      "/tmp/dws-audit-godot/tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+      "--headless",
+      "--path",
+      "/mnt/data/fabric-audit/source",
+      "--script",
+      "res://tests/research/fabric1/fabric_complexity_audit_probe.gd"
+    ],
+    "environment": {
+      "BREAKPOINT_RUNTIME_DISABLED": "1"
+    },
+    "working_directory": "/mnt/data/fabric-audit/source",
+    "git_checkout_state": "ARCHIVED_BASE_WITH_EXACT_DEPENDENCY_OVERLAY; NOT_CLEAN_FULL_SUBJECT_CHECKOUT",
+    "production_dependencies_unchanged_during_runs": true,
+    "runs": [
+      {
+        "replay": "a",
+        "started_at_utc": "2026-09-06T12:59:06.349685+00:00",
+        "exit_code": 0,
+        "fatal_marker_count": 0,
+        "elapsed_seconds_observation": 2.05352857999992,
+        "log_path": "validation/fabric_complexity_audit/probe-a.log",
+        "log_sha256": "73cab29c6cf3e336de8b6228103f351718a541d6515f0df1cb416ea33e4bf201",
+        "observations_sha256": "74f460dc3b6ee939be8126c4b4665a4a7e3ffa48a8e32d21dd212f1b6310930e"
+      },
+      {
+        "replay": "b",
+        "started_at_utc": "2026-09-06T12:59:08.406571+00:00",
+        "exit_code": 0,
+        "fatal_marker_count": 0,
+        "elapsed_seconds_observation": 2.1245751840001503,
+        "log_path": "validation/fabric_complexity_audit/probe-b.log",
+        "log_sha256": "73cab29c6cf3e336de8b6228103f351718a541d6515f0df1cb416ea33e4bf201",
+        "observations_sha256": "74f460dc3b6ee939be8126c4b4665a4a7e3ffa48a8e32d21dd212f1b6310930e"
+      }
+    ]
+  },
+  "replay_equal": true,
+  "observations": {
+    "control_mutation_without_restart_success": true,
+    "diagnostic_only": true,
+    "dropped_old_event_and_inserted_forged_event_accepted": true,
+    "flow_multiplier": 2.0,
+    "full_capsule_restore_success": true,
+    "full_work_units": 21632,
+    "geometry_changed_canonical_checksum": true,
+    "geometry_changed_physical_graph": false,
+    "geometry_length_multiplier": 10,
+    "history_after_forgery": [
+      "event/audit-forged",
+      "event/audit-new"
+    ],
+    "history_before": [
+      "event/audit-old"
+    ],
+    "inner_epoch": 1,
+    "inner_mutable_sources": [
+      "construction/construct/b0-7-construct-audit",
+      "matter/matter/b0-7-construct-audit"
+    ],
+    "inner_owner": "server/b0-7-unseen",
+    "inner_readonly_sources": [],
+    "material_changed_outer_binding": true,
+    "material_changed_physical_graph": false,
+    "mutation_after_full_restore_error": "FABRIC1_OLD_BAKE_MISSING",
+    "mutation_after_full_restore_success": false,
+    "outer_epoch": 7,
+    "outer_frontier_matches_inner": false,
+    "outer_mutable_sources": [
+      "construction/construct/audit"
+    ],
+    "outer_owner": "server/audit-authority",
+    "outer_readonly_sources": [
+      "matter/batch/audit"
+    ],
+    "reduced_work_units": 8,
+    "small_canonical_snapshot_valid": true,
+    "small_graph_accepted": false,
+    "small_graph_rejection": "BRIDGE4_REDUCTION_BOUNDARY_OUT_OF_SCOPE",
+    "strength_multiplier": 2,
+    "valid_ledger_successor_accepted": true
+  },
+  "interpretation": "Exit 0 means diagnostic data collection succeeded. It does NOT mean the physical/authority/history invariants passed. The FULL restart and event-ledger findings require repair.",
+  "source_provenance": {
+    "archived_base_head": "949b089ed35750abf9e237f063af21490291d187",
+    "bundle_sha256": "8339ca836f0a099b44c385bc4aeb1dfe70bde7fb9fd700f52a65d025faf61dc6",
+    "identity_method": "Five new runtime blobs verified against live GitHub. All other transitive production dependencies match archived Git objects; live GitHub comparison from archived base to audited subject does not change these paths.",
+    "compare_url": "https://github.com/rootfabric/distributed-world-simulator/compare/949b089ed35750abf9e237f063af21490291d187...43f60d2cd8e295227af983ed2c0d82f558ba1ec0",
+    "full_project_fresh_import_claimed": false,
+    "full_project_regression_claimed": false,
+    "dependency_count_including_new_probe": 40,
+    "transitive_production_blobs": {
+      "scripts/construction/contracts/construct_snapshot.gd": "9bd0885d0d14f29a818462b4b82a9875011331de",
+      "scripts/construction/contracts/construction_bond_record.gd": "f306153fbc735cacc3d0e2e0d0657ebf82bcd996",
+      "scripts/construction/contracts/construction_part_record.gd": "917028bb2fd6aef707c1912a7de2a7301c87f6e2",
+      "scripts/network/contracts/network_contract_utils.gd": "58b97f82ab09c699ae3c48060c6e0747579aa676",
+      "scripts/research/fabric_bake0/authority_envelope_v1.gd": "bf02d72e8fc961cda69f7f5386adabdbcb479690",
+      "scripts/research/fabric_bake0/bake_compile_result_v1.gd": "ff3b8b20c69de21e7ab295d926a1da01143429a8",
+      "scripts/research/fabric_bake0/bake_dependency_set_v1.gd": "4f66c72a3dafda53f262567cd67e4d7d17e31a6d",
+      "scripts/research/fabric_bake0/bake_execution_gate_v1.gd": "1985a1a5b4d8e46a5d68cf0a42174b57a6c223c8",
+      "scripts/research/fabric_bake0/bake_invalidation_v1.gd": "6d2937a3782c384af93d13104ec68b24f07ce964",
+      "scripts/research/fabric_bake0/bake_source_binding_v1.gd": "02d35ab39ea2456d8624f1499394ae35bc788402",
+      "scripts/research/fabric_bake0/bake_state_mapping_v1.gd": "e1b130e356d45a09c1109a268b78c1aded694f00",
+      "scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd": "94fd8eb9f547668fbb159be1a685a8e139074e5c",
+      "scripts/research/fabric_bake0/canonical_source_frontier_v1.gd": "49ffd5d82a88f134faa3f2ea943864945fdfb58d",
+      "scripts/research/fabric_bake0/conservation_envelope_v1.gd": "0b034c35d4868db1197457e75bbe7b0302017240",
+      "scripts/research/fabric_bake0/dense_linear_algebra_v1.gd": "6a50fe73d20a97495edccecadbacb565041631d2",
+      "scripts/research/fabric_bake0/error_envelope_v1.gd": "3c524c0b3c44fa906c5aa484281dd2da4ad14dff",
+      "scripts/research/fabric_bake0/exact_boundary_bake_compiler_v1.gd": "091b501fd36a22b08182bf4d9637bfa0770b3f2f",
+      "scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd": "a8f6a5e5b41a12939f7546bdcd32fec035570688",
+      "scripts/research/fabric_bake0/exact_boundary_reduction_descriptor_v1.gd": "17cdccc525edacea0a160bf799350521f3c681bf",
+      "scripts/research/fabric_bake0/exact_boundary_runtime_v1.gd": "67dfac40bddeeed6299013206955ca5a8503b8ad",
+      "scripts/research/fabric_bake0/fabric1_generalized_runtime_v1.gd": "749e644abe767c804bd2d8df75fab1f522b9d56b",
+      "scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd": "bceabb21f17f00e0b9e3600191104bc959245ce5",
+      "scripts/research/fabric_bake0/fabric_bake_foundation_compiler_v1.gd": "9d2fdd14fe66cda1fe76e2e525fa4eeb9387f2a5",
+      "scripts/research/fabric_bake0/linear_boundary_system_v1.gd": "ee813e452ea2b1105a91c4854bc5dd9a96e1a57f",
+      "scripts/research/fabric_bake0/physical_bake_artifact_v1.gd": "3ff04886cb87fd21a22d6bad9d08cf3ffa624e51",
+      "scripts/research/fabric_bake0/physical_boundary_contract_v1.gd": "0c7cf347f191f5b5fe2e60a6f7fe587eba870057",
+      "scripts/research/fabric_bake0/reconstruction_descriptor_v1.gd": "76f4a578c95dca182624ca7d2f65b887c31c8861",
+      "scripts/research/fabric_bake0/refinement_guard_v1.gd": "800716df3db9bbd06dabf8f01c2747e3c3ea8cb1",
+      "scripts/research/fabric_bake0/runtime_error_estimator_v1.gd": "9dd957aca14716e73c54b700b1dfddef9aa5ed3d",
+      "scripts/research/fabric_bake0/unseen_machine_challenge_protocol_v1.gd": "1c12fd56afe485e36977854ccdbce3e6a3034bfd",
+      "scripts/research/fabric_bake0/unseen_machine_generic_compiler_v1.gd": "307eb564db9dd6208f3a4d972380a6d7bb35dff4",
+      "scripts/research/fabric_bake0/unseen_machine_generic_graph_v1.gd": "61f93a0e53584545e7532e389f591b05a1a09a98",
+      "scripts/research/fabric_bake0/validated_domain_v1.gd": "5e89f192e4d4ddb55384c669623b67012f703c1e",
+      "scripts/simulation/matter/contracts/matter_composition.gd": "bb97138c2d674ad2e83859576436ea658fe05f02",
+      "scripts/simulation/matter/contracts/matter_material_batch.gd": "595863ec2789022f99488798bfc39289c238d650",
+      "scripts/simulation/matter/matter_contract_utils.gd": "383b4d331e42bfe970ac614276ce32412754afb4",
+      "scripts/simulation/representation/contracts/representation_source_revision.gd": "7bdc2f2f49a781f9b9aebca3bb126f953e4c6b70",
+      "scripts/simulation/representation/representation_contract_utils.gd": "371e92f98671436e199b545ff1476510487b44e4",
+      "scripts/simulation/spatial/spatial_contract_utils.gd": "cdfea625bb05c7d6d274f8e5b69303fa68d01f0b"
+    }
+  },
+  "probe_sha256": "e3271f37c8f58b38b15498f672c68e115ca4754a270630926a0e2e67d12f17a0"
+}
