@@ -1,0 +1,68 @@
+{
+  "schema": "dws.ecology.research-work-order.v1",
+  "id": "EVO-ARCH2-A4-20260906-R1",
+  "mode": "ISOLATED_RESEARCH_CANDIDATE",
+  "branch": "feature/eco-evo-arch2-a4-environment-fields-r1",
+  "source_head": "6f7e267f287eae978d8dac8d54a1b730c4afbfd4",
+  "source_acceptance_ref": "acceptance/eco-evo-arch2-a0-a3-r1",
+  "main_observed": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+  "risk": "HIGH",
+  "authorization": "Explicit user request: implement A4 Environmental Field Interface / Local Conservative Fields on top of accepted A0-A3 research source; no production authority or main activation",
+  "allowed_paths": [
+    "docs/research/ecology/EVO_ARCH2_A4*",
+    "scripts/research/ecology/v2/environment_fixture_v1.gd",
+    "scripts/research/ecology/v2/environment_fixture_v1.gd.uid",
+    "scripts/research/ecology/v2/environment_field_contract_v1.gd",
+    "scripts/research/ecology/v2/environment_field_contract_v1.gd.uid",
+    "scripts/research/ecology/v2/local_environment_field_v1.gd",
+    "scripts/research/ecology/v2/local_environment_field_v1.gd.uid",
+    "scripts/research/ecology/v2/organism_environment_ports_v1.gd",
+    "scripts/research/ecology/v2/organism_environment_ports_v1.gd.uid",
+    "scripts/research/ecology/v2/field_environment_adapter_v1.gd",
+    "scripts/research/ecology/v2/field_environment_adapter_v1.gd.uid",
+    "tests/research/ecology/v2/arch2_a4_exact_acceptance.gd",
+    "tests/research/ecology/v2/arch2_a4_exact_acceptance.gd.uid",
+    "config/ecology/evo-arch2-a4*",
+    "validation/ecology/evo_arch2_a4/**"
+  ],
+  "forbidden_paths": [
+    "scripts/ecology/production/**",
+    "scripts/simulation/**",
+    "scripts/network/**",
+    ".github/workflows/**",
+    "config/control/**",
+    "config/architecture/**"
+  ],
+  "field_contract": {
+    "coordinate_unit": "millimetre",
+    "conservative_resources": ["water_mg", "nutrient_mg", "organic_mg"],
+    "derived_signals": ["light", "temperature", "competition", "mechanical"],
+    "max_cells": 4096,
+    "max_batch_operations": 4096,
+    "write_preconditions": ["owner_token", "owner_epoch", "revision"]
+  },
+  "required_predicates": [
+    "A0_A3_ACCEPTED_BASE_UNCHANGED",
+    "FIELD_SCHEMA_STRICT_VALIDATION",
+    "STABLE_SPATIAL_ADDRESSING",
+    "DETERMINISTIC_LOCAL_SAMPLING",
+    "INPUT_ORDER_INDEPENDENT_ALLOCATION",
+    "NO_RESOURCE_OVERDRAFT",
+    "CONSERVATION_LEDGER_EXACT",
+    "STALE_OWNER_EPOCH_REVISION_REJECTED",
+    "LOCALITY_NO_GLOBAL_ORGANISM_PAIRWISE_SCAN",
+    "FIELD_TO_DEVELOPMENT_SAMPLE_BRIDGE",
+    "ORGANISM_DEMAND_EFFECT_PORTS_TYPED",
+    "A0_A3_EXACT_REGRESSION"
+  ],
+  "acceptance_policy": {
+    "self_accept": false,
+    "production_promotion": false,
+    "merge_requires_human": true,
+    "independent_review_required": true,
+    "independent_verification_required": true,
+    "global_pc0_green_inferred": false
+  },
+  "state": "IN_PROGRESS",
+  "next": "Implement typed field contract, bounded local conservative store, organism ports and development sample adapter; exact regression; fresh review/verifier"
+}
