@@ -56,6 +56,7 @@ jobs:
             scripts/harness/checkpoint_planner.py \
             scripts/harness/event_reducer.py \
             scripts/harness/execution_selector.py \
+            scripts/harness/execution_resources.py \
             scripts/harness/mission.py \
             scripts/harness/continuation.py \
             scripts/harness/git_authority.py \
@@ -77,6 +78,7 @@ jobs:
               Path("config/control/harness/scheduler-policy.v1.json"),
               Path("config/control/harness/v0-product-train-policy.v1.json"),
               Path("config/control/harness/continuation-policy.v1.json"),
+              Path("config/control/harness/execution-resources.v1.json"),
               Path("config/control/harness/work-order.schema.v1.json"),
               Path("config/control/harness/event.schema.v1.json"),
               Path("config/control/harness/project-epoch.schema.v1.json"),
@@ -102,6 +104,9 @@ jobs:
 
       - name: Run Harness checkpoint-session regression
         run: python3 -m unittest tests.harness.test_harness_checkpoint_session
+
+      - name: Run Harness execution-resource regression
+        run: python3 -m unittest tests.harness.test_execution_resources
 
       - name: Run architecture and ownership passport compatibility regression
         run: |
