@@ -22,6 +22,11 @@ class ExplicitExecutionPathProvenanceTests(unittest.TestCase):
         self.epoch_id = "E2026-09-06-SELECTOR-PROVENANCE"
         self.checkpoint = "H0_1_CLOSED_LOOP_C22_PILOT"
         self.canonical = self.root / "config/control/harness/executions" / self.epoch_id
+        self.contracts = {
+            "scheduler_policy": {
+                "v0_product_train_routing": {"current_checkpoint": self.checkpoint}
+            }
+        }
         self._write_fixture(self.canonical)
 
     @staticmethod
@@ -70,6 +75,21 @@ class ExplicitExecutionPathProvenanceTests(unittest.TestCase):
         relative = attacker.relative_to(self.root)
         with self.assertRaisesRegex(ContractValidationError, "EXECUTION_PATH_NOT_CANONICAL"):
             resolve_execution(self.root, {}, execution=relative)
+
+    def test_automatic_canonical_execution_selection_is_allowed(self) -> None:
+        selected, checkpoint = resolve_execution(self.root, self.contracts)
+        self.assertEqual(self.canonical.resolve(), selected)
+        self.assertEqual(self.checkpoint, checkpoint)
+
+    def test_automatic_selection_rejects_future_dated_copied_execution(self) -> None:
+        attacker = self.root / "config/control/harness/executions/FORGED-COPY"
+        shutil.copytree(self.canonical, attacker)
+        work_order_path = attacker / "work-orders/WO-001.v1.json"
+        work_order = json.loads(work_order_path.read_text(encoding="utf-8"))
+        work_order["issued_at_utc"] = "2099-01-01T00:00:00Z"
+        self._write_json(work_order_path, work_order)
+        with self.assertRaisesRegex(ContractValidationError, "EXECUTION_PATH_NOT_CANONICAL"):
+            resolve_execution(self.root, self.contracts)
 
 
 if __name__ == "__main__":

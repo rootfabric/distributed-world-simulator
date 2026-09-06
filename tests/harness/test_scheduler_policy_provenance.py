@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from harness.contracts import ContractValidationError
-from harness.evidence_provenance import committed_enforcement_generation
+from harness.evidence_provenance import EVIDENCE_MAP_SCHEMA, committed_enforcement_generation
 from harness.event_reducer import load_guard_context
 
 
@@ -37,10 +37,12 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         shutil.copyfile(ROOT / "config/control/project-program-registry.v1.json", registry)
 
         self.external_authority = "docs/control/external-authority.v1.json"
-        self._write_json(
-            self.root / self.external_authority,
-            {"schema": "fixture.external_authority.v1", "status": "RESOLVED"},
-        )
+        self.external_authority_upper = "docs/control/external-authority.v1.JSON"
+        for relative in (self.external_authority, self.external_authority_upper):
+            self._write_json(
+                self.root / relative,
+                {"schema": "fixture.external_authority.v1", "status": "RESOLVED"},
+            )
 
         self.epoch_id = "E2026-09-06-BUNDLE-PROVENANCE"
         self.execution = harness_dir / "executions" / self.epoch_id
@@ -64,7 +66,9 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         for relative in self._fixture_execution_paths():
             value = {"schema": "fixture.authority.v1"}
             if relative == "events/WO-001/001.v1.json":
-                value["evidence_paths"] = [self.external_authority]
+                value["evidence_paths"] = [self.external_authority, self.external_authority_upper]
+            elif relative == "evidence/EVIDENCE-001.v1.json":
+                value = {"schema": EVIDENCE_MAP_SCHEMA, "review_verdict": "PASS"}
             self._write_json(self.execution / relative, value)
         self._git("add", ".")
         self._git("commit", "-qm", "fixture committed authority state")
@@ -237,10 +241,32 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractValidationError, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH"):
             committed_enforcement_generation(self.root, self.epoch)
 
-    def test_review_and_evidence_directories_keep_dedicated_provenance_semantics(self) -> None:
+    def test_review_and_non_map_evidence_keep_dedicated_provenance_semantics(self) -> None:
         self._write_json(self.execution / "reviews/untracked.v1.json", {"schema": "fixture.review.v1"})
         self._write_json(self.execution / "evidence/untracked.v1.json", {"schema": "fixture.evidence.v1"})
         self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+
+    def test_dirty_execution_evidence_map_is_exact_byte_fenced(self) -> None:
+        target = self.execution / "evidence/EVIDENCE-001.v1.json"
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            committed_enforcement_generation(self.root, self.epoch)
+
+    def test_untracked_execution_evidence_map_injection_is_rejected(self) -> None:
+        self._write_json(
+            self.execution / "evidence/UNTRACKED-MAP.v1.json",
+            {"schema": EVIDENCE_MAP_SCHEMA, "review_verdict": "PASS"},
+        )
+        with self.assertRaisesRegex(ContractValidationError, "EVIDENCE_MAP_JSON_SET_MISMATCH"):
+            committed_enforcement_generation(self.root, self.epoch)
+
+    def test_assume_unchanged_cannot_hide_dirty_execution_evidence_map(self) -> None:
+        relative = (self.execution / "evidence/EVIDENCE-001.v1.json").relative_to(self.root).as_posix()
+        self._git("update-index", "--assume-unchanged", relative)
+        target = self.root / relative
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            committed_enforcement_generation(self.root, self.epoch)
 
     def test_external_event_json_reference_is_exact_byte_fenced(self) -> None:
         target = self.root / self.external_authority
@@ -254,6 +280,12 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         target.write_bytes(target.read_bytes() + b"\n")
         with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
             committed_enforcement_generation(self.root, self.epoch)
+
+    def test_uppercase_external_json_reference_uses_same_fence_as_consumer(self) -> None:
+        target = self.root / self.external_authority_upper
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            load_guard_context(self.root, self.execution)
 
 
 if __name__ == "__main__":

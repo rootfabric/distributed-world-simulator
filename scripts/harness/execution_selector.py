@@ -29,10 +29,10 @@ def default_checkpoint(contracts: dict[str, dict[str, Any]]) -> str:
 
 
 def _require_canonical_execution_path(root: Path, candidate: Path) -> None:
-    """Bind explicit execution selection to the directory named by its committed identity.
+    """Bind selected execution to the directory named by its epoch identity.
 
     build_state() reads transition/work-order/event files from the selected directory.
-    An arbitrary in-repository clone/alias must therefore never be allowed to carry a
+    Neither an explicit alias nor an auto-discovered copied execution may carry a
     canonical epoch id while supplying different worktree-controlled authority inputs.
     """
     epoch = read_json(candidate / "project-epoch.v1.json")
@@ -85,6 +85,7 @@ def resolve_execution(
             if work_order.get("goal_checkpoint") != target:
                 continue
             execution_dir = work_order_path.parent.parent.resolve()
+            _require_canonical_execution_path(root, execution_dir)
             issued = _issued_at(work_order)
             previous = candidates.get(execution_dir)
             if previous is None or issued > previous[0]:

@@ -13,6 +13,7 @@ from .contracts import ContractValidationError
 HARD_BLOCK_SCHEMA = "distributed_world_simulator.harness_hard_block_proof.v1"
 MANIFEST_SCHEMA = "distributed_world_simulator.harness_machine_evidence_manifest.v1"
 REVIEW_SCHEMA = "distributed_world_simulator.harness_review_result.v1"
+EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
 PROVENANCE_GENERATION = 81
 
 _CURRENT_BUNDLE_POLICY_KEYS = (
@@ -140,7 +141,7 @@ def load_hard_block_proof(
     proofs: list[dict[str, Any]] = []
     for relative in event.get("evidence_paths", []):
         _path(relative)
-        if not relative.endswith(".json"):
+        if PurePosixPath(relative).suffix.lower() != ".json":
             continue
         try:
             proof = _decode(committed_bytes(root, relative))
@@ -194,13 +195,45 @@ def _current_bundle_contract_paths(root: Path) -> tuple[str, ...]:
 
 
 def _strict_execution_authority_member(prefix: str, relative: str) -> bool:
-    if not relative.startswith(prefix + "/") or not relative.endswith(".json"):
+    if not relative.startswith(prefix + "/") or PurePosixPath(relative).suffix.lower() != ".json":
         return False
     local = relative[len(prefix) + 1:]
     parts = PurePosixPath(local).parts
     if len(parts) == 1:
         return local in _STRICT_EXECUTION_AUTHORITY_FILES
     return parts[0] in _STRICT_EXECUTION_AUTHORITY_DIRS
+
+
+def _evidence_map_paths(root: Path, prefix: str, base: Path, all_committed: set[str]) -> tuple[set[str], set[str]]:
+    """Return committed/worktree Evidence Map identities without promoting other evidence JSON."""
+    committed: set[str] = set()
+    for relative in all_committed:
+        if not relative.startswith(prefix + "/evidence/") or PurePosixPath(relative).suffix.lower() != ".json":
+            continue
+        try:
+            value = _decode(_git(root, "show", f"HEAD:{relative}"))
+        except ContractValidationError:
+            continue
+        if value.get("schema") == EVIDENCE_MAP_SCHEMA:
+            committed.add(relative)
+
+    worktree: set[str] = set()
+    evidence_dir = base / "evidence"
+    if evidence_dir.is_dir():
+        for candidate in evidence_dir.rglob("*"):
+            if not candidate.is_file() or candidate.suffix.lower() != ".json":
+                continue
+            try:
+                relative = candidate.relative_to(root).as_posix()
+            except ValueError as exc:
+                raise ContractValidationError("EXECUTION_AUTHORITY_PATH_ESCAPES_REPOSITORY") from exc
+            try:
+                value = _decode(candidate.read_bytes())
+            except ContractValidationError:
+                continue
+            if value.get("schema") == EVIDENCE_MAP_SCHEMA:
+                worktree.add(_path(relative))
+    return committed, worktree
 
 
 def _external_event_json_references(root: Path, prefix: str, event_paths: set[str]) -> tuple[str, ...]:
@@ -212,22 +245,25 @@ def _external_event_json_references(root: Path, prefix: str, event_paths: set[st
         if not isinstance(evidence_paths, list):
             continue
         for raw in evidence_paths:
-            if not isinstance(raw, str) or not raw.endswith(".json"):
+            if not isinstance(raw, str):
                 continue
-            relative = _path(raw.replace("\\", "/"))
+            normalized = raw.replace("\\", "/")
+            if PurePosixPath(normalized).suffix.lower() != ".json":
+                continue
+            relative = _path(normalized)
             if not relative.startswith(prefix + "/"):
                 external.add(relative)
     return tuple(sorted(external))
 
 
 def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
-    """Fence execution-local reducer/authority JSON while preserving evidence semantics.
+    """Fence reducer/authority JSON while preserving dedicated review/proof semantics.
 
-    Reviews and evidence records have dedicated provenance behavior: an untracked review
-    becomes non-authoritative/insufficient evidence, while an untracked or dirty hard-block
-    proof simply cannot become terminal proof. Reducer/control inputs without such dedicated
-    semantics are exact-membership and exact-byte fenced before reduction. Any JSON authority
-    referenced by committed events outside the execution is also exact-byte fenced.
+    Reviews and non-map evidence keep their specialized provenance behavior. Evidence Maps
+    are authority-bearing in checkpoint reduction/state and therefore receive exact set and
+    byte validation. Reducer/control inputs are exact-membership fenced before reduction, and
+    any JSON authority referenced by committed events outside the execution is exact-byte
+    fenced with the same case-insensitive suffix semantics as the consumer.
     """
     _require(re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is not None,
              "REVIEW_EPOCH_IDENTITY_REQUIRED")
@@ -244,7 +280,9 @@ def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[
         if _strict_execution_authority_member(prefix, relative)
     }
     worktree: set[str] = set()
-    for candidate in base.rglob("*.json"):
+    for candidate in base.rglob("*"):
+        if not candidate.is_file() or candidate.suffix.lower() != ".json":
+            continue
         try:
             relative = candidate.relative_to(root).as_posix()
         except ValueError as exc:
@@ -255,9 +293,13 @@ def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[
     _require(bool(committed), "EXECUTION_AUTHORITY_JSON_REQUIRED")
     _require(committed == worktree, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH")
 
+    committed_maps, worktree_maps = _evidence_map_paths(root, prefix, base, all_committed)
+    _require(committed_maps == worktree_maps, "EVIDENCE_MAP_JSON_SET_MISMATCH")
+    committed |= committed_maps
+
     event_paths = {
         relative for relative in all_committed
-        if relative.startswith(prefix + "/events/") and relative.endswith(".json")
+        if relative.startswith(prefix + "/events/") and PurePosixPath(relative).suffix.lower() == ".json"
     }
     external = _external_event_json_references(root, prefix, event_paths)
     return tuple(sorted(committed | set(external)))
