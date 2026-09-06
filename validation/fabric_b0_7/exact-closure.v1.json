@@ -1,0 +1,87 @@
+{
+  "schema": "planet_simulator.fabric_b0_7_unseen_machine_exact_closure.v1",
+  "status": "RESEARCH_EXACT_CLOSED",
+  "branch": "research/fabric-bake0-7-unseen-machine-challenge-r1",
+  "predecessor_complex3_closure_head": "b39bc28499f47d34c5a0b7c02f223baf9f373a00",
+  "kernel_code_head": "286b1a0c538910e68a8b4424e5bf59a1c5d47630",
+  "kernel_freeze_head": "9dda6872081c19ce2add86bb590a9aa4925c6ac9",
+  "runtime_candidate_head": "33b2405bd9962e530216721717dae6541109b17c",
+  "runtime_candidate_tree": "a543c9c728f2fdf7fa9ad81ebba23a4c9a6ff005",
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "final_fresh_import_exit": 0,
+    "final_fresh_import_fatal_markers": 0
+  },
+  "freeze_proof": {
+    "challenge_fixture_absent_at_freeze": true,
+    "post_freeze_commits_before_evidence": 3,
+    "post_freeze_paths": [
+      "RUN_FABRIC_B0_7_TESTS.sh",
+      "tests/research/fabric_bake0/fabric_bake_b0_7_unseen_machine_acceptance.gd",
+      "tests/research/fabric_bake0/unseen_machine_challenge_fixture_v1.gd"
+    ],
+    "post_freeze_frozen_script_changes": 0,
+    "frozen_blobs": {
+      "scripts/research/fabric_bake0/unseen_machine_generic_graph_v1.gd": "61f93a0e53584545e7532e389f591b05a1a09a98",
+      "scripts/research/fabric_bake0/unseen_machine_generic_compiler_v1.gd": "307eb564db9dd6208f3a4d972380a6d7bb35dff4",
+      "scripts/research/fabric_bake0/unseen_machine_challenge_protocol_v1.gd": "1c12fd56afe485e36977854ccdbce3e6a3034bfd"
+    },
+    "challenge_blobs": {
+      "tests/research/fabric_bake0/unseen_machine_challenge_fixture_v1.gd": "a1df1fc2fb6fb3734cce7610f64f78a4607dedcd",
+      "tests/research/fabric_bake0/fabric_bake_b0_7_unseen_machine_acceptance.gd": "376a08442daa616daa63f1b1ce5ac08dd2ba5087",
+      "RUN_FABRIC_B0_7_TESTS.sh": "6b5839f8e93aee4480f255eb326e68154cf67522"
+    }
+  },
+  "kernel_replay": {
+    "assertions": 22,
+    "full_equations": 132,
+    "reduced_equations": 4,
+    "runtime_work_ratio": 1089.0,
+    "hash": "9d117d310cc81eb84b6763c9daf1f08bb7ecbf5e31443c7ff2c81acb85b21d7b"
+  },
+  "challenge": {
+    "fresh_process_replay_sets": 2,
+    "assertions_per_set": 71,
+    "replay_equal": true,
+    "replay_hash": "b48625f224522bfec3bac8234bc529fb7084b02d5474df92bcb0404407099cb7",
+    "cases": {
+      "alpha": {"machine_id":"machine/unseen-alpha-9dda6872","hidden_states":136,"full_equations":140,"reduced_equations":4,"runtime_work_ratio":1225.0,"max_flow_error":1e-14,"max_power_error":7e-14,"downstream_flow_delta":1.74827114768009,"base_compile_us_observed":578812,"successor_compile_us_observed":586062,"full_eval_us_observed":2033417,"reduced_eval_us_observed":2373,"godot_memory_static_before":30951206,"godot_memory_static_after":30956626,"case_hash":"749c3330d0f42aa04fb03d99528a4764a85b64607bf0280577f21a48487f2ea9"},
+      "beta": {"machine_id":"machine/unseen-beta-081c19ce","hidden_states":168,"full_equations":172,"reduced_equations":4,"runtime_work_ratio":1849.0,"max_flow_error":1e-14,"max_power_error":7e-14,"downstream_flow_delta":3.48570642155629,"base_compile_us_observed":883284,"successor_compile_us_observed":877964,"full_eval_us_observed":3416091,"reduced_eval_us_observed":2453,"godot_memory_static_before":30951170,"godot_memory_static_after":30956550,"case_hash":"d685797fd3b2d2cbb711d175fb5662fdea35e9053c71b2b19abbde38ed969963"},
+      "gamma": {"machine_id":"machine/unseen-gamma-2add86bb","hidden_states":192,"full_equations":196,"reduced_equations":4,"runtime_work_ratio":2401.0,"max_flow_error":0.0,"max_power_error":4e-14,"downstream_flow_delta":1.20416685096602,"base_compile_us_observed":1214521,"successor_compile_us_observed":1184793,"full_eval_us_observed":5228329,"reduced_eval_us_observed":4112,"godot_memory_static_before":30951206,"godot_memory_static_after":30956626,"case_hash":"bc9a7bc1b9cf4136f6cdcc30eda63a8886ca0264aaf342e1974eda4e9c19df22"},
+      "guard": {"unsafe_result":"NO_SAFE_BAKE","unsafe_reason":"RANK_DEFICIENCY","forged_successor_error":"B0_7_SUCCESSOR_EDGE_METADATA_CHANGED","case_hash":"511250652cf907507b79576dffad39ea7dbbf09b64e1cdca021fd4618d795abe"}
+    }
+  },
+  "predecessor_regression": {
+    "b0_0_assertions": 33,
+    "b0_1_assertions": 64,
+    "b0_1_full_equations": 132,
+    "b0_1_reduced_equations": 4,
+    "b0_1_internal_rank": 128,
+    "b0_1_reduced_rank": 3,
+    "b0_1_work_ratio": 1089.0,
+    "b0_1_max_flow_error": 9e-14,
+    "b0_1_max_power_error": 1.42e-12,
+    "b0_1_descriptor": "92c62af79e1c75889c846084711c6752e92489db1d1aa27a5f13aa832bbc00f6",
+    "b0_1_artifact": "a04a380833bf0f62ae0fc8f33da2cbc66d7520dd78fea193b34d9f21f6cd0300"
+  },
+  "metrics_scope": {
+    "effort_flow": "measured",
+    "power": "measured",
+    "energy": "not applicable to the steady memoryless generic-power fixture",
+    "momentum": "not applicable",
+    "events": "one declared canonical edge-loss event per machine; exactly-once ledger enforced",
+    "failure_point": "declared critical output edge",
+    "mode_transitions": "not applicable to the steady linear primitive family",
+    "validity_refinement": "source-revision invalidation, stale execution fencing, exact successor rebake",
+    "solver_iterations": "not applicable: direct dense exact solve; equation/work proxy recorded",
+    "cpu": "observed compile/evaluation microseconds only; never an acceptance authority",
+    "memory": "Godot Performance.MEMORY_STATIC observation only",
+    "event_work": "one edge deactivation + one revision advance + one ledger event",
+    "unbake": "not used by this steady boundary challenge; local-unbake semantics remain predecessor COMPLEX3 evidence"
+  },
+  "claim_boundary": "B0.7 proves frozen-kernel generalization for previously absent passive steady generic-power machine topologies. It does not claim arbitrary nonlinear, dynamic, or multi-domain machine synthesis.",
+  "product_acceptance": false,
+  "main_merge": false,
+  "closure_hash": "3ed9d015cf4943fcf21c6ced514387a0e1162b5456e45051945693057a3392bb"
+}
