@@ -1,0 +1,67 @@
+{
+  "schema": "dws.fabric.bridge3.exact_closure.v1",
+  "status": "CLOSED_RESEARCH_EXACT",
+  "scope": "RESEARCH_EXACT_NOT_PRODUCTION_ACCEPTANCE",
+  "branch": "research/fabric-bridge3-full-bake-unbake-full-r1",
+  "runtime_subject": {
+    "head": "cf6730c48f6147243a5c99ebb48c19e09fb3093f",
+    "tree": "13e38426a84d55ac7faac06c4eec05ae15a84139"
+  },
+  "base_b06": "b34f4cc24616f26dfcc6dcbdada2d664b478b64f",
+  "main_observed": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "fresh_import": {
+    "exit": 0,
+    "fatal_count": 0,
+    "log_sha256": "235bd553b5466194ea4ad04707a0052edd88af401e0e25319be8777e46da97a6"
+  },
+  "replays": 2,
+  "bridge3_assertions_per_replay": 1253,
+  "hashes": {
+    "BRIDGE3_A_HASH": "36d2da80dc6adda6f4ad998c2fd011add99dc8f718c9b1678f994d4f3cc72c30",
+    "BRIDGE3_B_HASH": "f65fcb1550c9853693776a2c700e0acc3bd4706555e4b679139b314ae0727daf",
+    "BRIDGE3_C_HASH": "813418ac63009b3e31bdc9a7e52b086557ddb96e962444c2e4e36bdf3c45a478",
+    "BRIDGE3_D_HASH": "f1ab405d6c4829633d7934e456b2ecc37b5a4cff48d7b0184b759e6f46371f87",
+    "BRIDGE3_E_HASH": "20acdd3b7789a21ab4699f9de1613b62aea0d06255bd498c5032e443ec7135c4",
+    "BRIDGE3_F_HASH": "7eda96e277ef650f1f773630439502f095e666521378c0e740b577687d67aadb",
+    "BRIDGE3_F_CAPSULE_HASH": "8f51c2eab36564a4f6060709fe582fc09ad7c1f09306063899454d9234e307fb",
+    "BRIDGE3_G_HASH": "66eebb542071bc5e3786c5029ba75d96e6492a117b89585ed8e8ae15b8136984",
+    "B06A_SAFETY_HASH": "9a152000bf636f5977034947b73431cdf7393a5201c63b06c5ebb15e20e1f627",
+    "B06A_ENVELOPE_CHECKSUM": "f1976723cf8afd0c2e831740373143ad3303c5ff48d18238c49039ed86304b30",
+    "B06B_SELECTION_HASH": "d6c9c6aa07e0bd741a0fa50bb9d7ca9a10291043c680675f06fd58beb3818939",
+    "B06C_TRANSITION_HASH": "e93dadfc821fb8299fc6a75d140a493be790860dcd294cd687403717d237f0aa",
+    "B06D_RECOVERY_HASH": "f9613fe30c97322cfd1f81d6f74608a0bc58e51f6dbb8be6af37dff177ba8bba",
+    "B06D_DISK_RECOVERY_HASH": "ab2287a06a5427e5d73f15b5c7a6ad11267f5f3c9aad1e519a4cdc5cc13fc1f9",
+    "B06E_FINAL_STATE_HASH": "c751ffdbe8eff08629ec2b7a7a12eb1f388de158d721d8bdb4d60cafc6280889",
+    "B06E_TRANSITION_HASH": "9ebdbc3537fcd67175bb4d007da185f6a33745a9730b50dcf9144f83a0839622",
+    "B06E_WORK_HASH": "9b4865017e9e959fda0fb8472b6684fd0f18ea4bd71f508936dee873fdd75942"
+  },
+  "closure_hash": "4f9ec661e99775d0afc85995d51a4d614158414fc760141daffe0dab1b25f4a4",
+  "scale": {
+    "500": {"full_at_event":20,"residual_bodies":2,"final_baked_bodies":2,"reconstructed_parts":20,"local_rebake_validations":20,"global_physical_rebuilds":0,"duplicate_ownership_count":0,"full_reference_checked":true,"max_full_parity_error":2.1316282072803e-14},
+    "1000": {"full_at_event":20,"residual_bodies":2,"final_baked_bodies":2,"reconstructed_parts":20,"local_rebake_validations":20,"global_physical_rebuilds":0,"duplicate_ownership_count":0,"full_reference_checked":false},
+    "2000": {"full_at_event":20,"residual_bodies":2,"final_baked_bodies":2,"reconstructed_parts":20,"local_rebake_validations":20,"global_physical_rebuilds":0,"duplicate_ownership_count":0,"full_reference_checked":false}
+  },
+  "predecessors": {
+    "b06_A_D_fresh_current": true,
+    "b06_E_current_smoke_and_scale500": true,
+    "b06_E_1000_2000": "CERTIFIED_UNCHANGED_FROM_B06_EXACT_CLOSURE",
+    "bridge2_closure": "PASS_122_PLUS_125",
+    "complex2_close": "PASS_44_WITH_PERF_HASH",
+    "complex2_perf_hash": "698486abd097e6ee12731b0afb1c6e28ed24bf72b52d8d940c9f5b7336498607",
+    "b05_p0": "PASS_63",
+    "b05_A": "CERTIFIED_UNCHANGED_FROM_B06_EXACT_CLOSURE"
+  },
+  "b06_blob_identity": {
+    "changed_paths_from_b06_to_bridge3_are_bridge3_only": true
+  },
+  "limits": {
+    "scale_semantics": "canonical parts with sparse local physical reveal, not independent full numerical machines",
+    "production_acceptance_claimed": false,
+    "main_merge_performed": false,
+    "independent_agent_review_claimed": false
+  }
+}
