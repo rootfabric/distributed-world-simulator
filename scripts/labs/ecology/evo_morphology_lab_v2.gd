@@ -31,5 +31,7 @@ func _action(kind: String) -> void:
 func _refresh() -> void:
 	var p := model.phenotype(); renderer.set_phenotype(p)
 	var h := model.hashes(); var dry := model.environment_preview(250, 800); var dark := model.environment_preview(650, 180)
-	status.text = "family=%s generation=%d modules=%d topology=%s dry=%s dark=%s gallery=%d" % [Fixtures.NAMES[model.family], model.generation, int(p.get("statistics", {}).get("module_count", 0)), String(h.topology).substr(0, 12), String(dry.get("phenotype_hash", "")).substr(0, 8), String(dark.get("phenotype_hash", "")).substr(0, 8), model.gallery.size()]
+	var family_label := "IMPORTED" if model.family == Model.IMPORTED_FAMILY else Fixtures.NAMES[model.family]
+	var block_label := "" if model.last_block_reason.is_empty() else " block=" + model.last_block_reason
+	status.text = "family=%s generation=%d status=%s%s modules=%d topology=%s dry=%s dark=%s gallery=%d" % [family_label, model.generation, model.last_status, block_label, int(p.get("statistics", {}).get("module_count", 0)), String(h.topology).substr(0, 12), String(dry.get("phenotype_hash", "")).substr(0, 8), String(dark.get("phenotype_hash", "")).substr(0, 8), model.gallery.size()]
 	editor.text = model.export_genome()
