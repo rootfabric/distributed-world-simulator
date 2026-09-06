@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   packet-audit:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
@@ -19,11 +20,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate preserved exact evidence and history
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           python -m pip install -r scripts/harness/requirements.txt
-          python scripts/harness/verify_p7_closure_packet.py --git --output artifacts/p7-closure/packet-audit.json
+          python scripts/harness/verify_p7_closure_packet.py --git --github --output artifacts/p7-closure/packet-audit.json
           python -m unittest discover -s tests/harness -p 'test_p7_closure_packet.py' -v
       - name: Observe canonical control routing without dispatch
         shell: bash
