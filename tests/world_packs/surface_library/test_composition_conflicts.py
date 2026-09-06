@@ -75,9 +75,11 @@ def test_same_surface_rebinding_is_not_a_conflict():
 
 
 def test_unknown_matter_in_binding_fails():
+    """An invented Matter id must be rejected fail-closed at composition time,
+    not merely documented by a post-hoc catalog assertion."""
     from test_surface_families import load_matter_catalog
     matter = load_matter_catalog()
-    descriptors = load_descriptors()
+    assert "matter/martian-sand" not in matter
 
     def inject_fake_matter(fragments):
         for fragment in fragments["fragments"]:
@@ -85,10 +87,8 @@ def test_unknown_matter_in_binding_fails():
                 fragment["bindings"].append(
                     {"matter_id": "matter/martian-sand", "surface": "surface/basalt@1.0.0"})
     fragments = _tamper(inject_fake_matter)
-    result = compose("recipe/airless-rocky-body", fragments=fragments)
-    assert "matter/martian-sand" in result["bindings"]
-    assert "matter/martian-sand" not in matter
-    assert "matter/martian-sand" not in descriptors["surface/basalt"]["canonical_material_ids"]
+    with pytest.raises(CompositionError, match="unknown matter id: matter/martian-sand"):
+        compose("recipe/airless-rocky-body", fragments=fragments)
 
 
 def test_binding_matter_not_in_descriptor_surface_fails():

@@ -46,11 +46,13 @@ def resolve_surface_ref(ref, descriptors):
     return descriptor
 
 
-def compose(recipe_id, fragments=None, descriptors=None, environments=None, _stack=None):
+def compose(recipe_id, fragments=None, descriptors=None, environments=None, matter=None, _stack=None):
     """Compose a recipe: union of fragment bindings and environments.
 
-    Conflicting bindings (same matter_id bound to two surfaces) and conflicting
-    environments (two different environment ids) raise CompositionError.
+    Conflicting bindings (same matter_id bound to two surfaces), unknown
+    Matter ids (fail-closed against the canonical Matter catalog) and
+    conflicting environments (two different environment ids) raise
+    CompositionError.
     """
     if fragments is None:
         fragments = load_fragments()
@@ -58,6 +60,8 @@ def compose(recipe_id, fragments=None, descriptors=None, environments=None, _sta
         descriptors = load_descriptors()
     if environments is None:
         environments = load_environments()
+    if matter is None:
+        matter = load_matter_catalog()
     fragment_index = {f"{f['id']}@{f['version']}": f for f in fragments["fragments"]}
     recipe_index = {f"{r['id']}@{r['version']}": r for r in fragments["recipes"]}
     key = recipe_id if "@" in recipe_id else None
@@ -74,6 +78,8 @@ def compose(recipe_id, fragments=None, descriptors=None, environments=None, _sta
     envs = set()
 
     def add_binding(matter_id, ref):
+        if matter_id not in matter:
+            raise CompositionError(f"unknown matter id: {matter_id}")
         resolve_surface_ref(ref, descriptors)
         if matter_id in bindings and bindings[matter_id] != ref:
             raise CompositionError(
