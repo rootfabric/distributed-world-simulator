@@ -1,0 +1,124 @@
+{
+  "activation": {
+    "blocked_until_complex4_closes": [
+      "VISUAL_PLAYABLE_PHYSICAL_LAB",
+      "FABRIC1_1_MULTI_DOMAIN_GENERALIZATION",
+      "FABRIC1_2_NONLINEAR_DYNAMIC_GENERALIZATION",
+      "FABRIC1_3_DISTRIBUTED_PHYSICAL_EXECUTION",
+      "FABRIC2_DEFINITION"
+    ],
+    "next": "COMPLEX4_REAL_WORLD_MACHINE_LAB"
+  },
+  "binding": {
+    "canonical_sources": [
+      "CONSTRUCTION",
+      "MATTER"
+    ],
+    "canonical_writes_by_bridge": 0,
+    "fabric1_boundary_nodes": 2,
+    "fabric1_internal_nodes": 102,
+    "mutable_sources": [
+      "CONSTRUCTION"
+    ],
+    "readonly_sources": [
+      "MATTER"
+    ]
+  },
+  "branch": "research/fabric-bridge4-canonical-world-fabric1-r1",
+  "canonical_godot": {
+    "fresh_import_exit": 0,
+    "fresh_import_fatal_markers": 0,
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "canonical_world": {
+    "bond_count": 104,
+    "construct_id": "construct/bridge4/canonical-truss",
+    "construction_contracts": [
+      "ConstructSnapshot",
+      "ConstructionPartRecord",
+      "ConstructionBondRecord",
+      "ConstructionConstructMutation",
+      "ConstructionConstructStore"
+    ],
+    "external_mutation_operation": "UPDATE",
+    "initial_build_state": "OPERATIONAL",
+    "initial_revision": 0,
+    "matter_contracts": [
+      "MatterMaterialBatch",
+      "MatterComposition"
+    ],
+    "matter_mass_kg": 104.0,
+    "part_count": 104,
+    "successor_build_state": "DAMAGED",
+    "successor_revision": 1,
+    "target_bond_id": "bond/bridge4/link-051-052"
+  },
+  "claim_boundary": {
+    "arbitrary_multidomain_machine_claimed": false,
+    "construction_is_real_canonical_contract": true,
+    "fabric1_frozen_runtime_modified": false,
+    "matter_constitutive_law_claimed": false,
+    "matter_is_real_readonly_canonical_dependency": true
+  },
+  "closure_hash": "2f4fe35ac7f2b92e6fa9cc256373521d298bcf0fac4802f18e1f75a489c438e9",
+  "control": {
+    "directional_watch": "GREEN",
+    "standard_pc0": "RED",
+    "standard_pc0_attribution": "unrelated active product lines: G8, ECO, T1B, CH9.6, doctrine, NX, V0"
+  },
+  "fresh_boundaries": {
+    "b0_7_guard": {
+      "assertions": 14,
+      "forged_successor_error": "B0_7_SUCCESSOR_EDGE_METADATA_CHANGED",
+      "hash": "511250652cf907507b79576dffad39ea7dbbf09b64e1cdca021fd4618d795abe",
+      "unsafe_reason": "RANK_DEFICIENCY"
+    },
+    "fabric1_core": {
+      "assertions": 50,
+      "hash": "0dd739404c2ed0b352abc08e7c93d9100213e7479dd2cd96da8a51f1f9509444"
+    },
+    "fabric1_sync1": {
+      "assertions": 30,
+      "hash": "9fa0138b88d63d8584afdc08972954a6aa86e3e8e32b8a413644c73112559d18"
+    }
+  },
+  "predecessor": {
+    "fabric1_sync1_closure_hash": "5eb2a8d356a03f785c25c550e9ad315d37408c6d41a274be55a012fd201e3e5c",
+    "fabric1_sync1_final_head": "336fa62d48f0c9659623b320948a2304989baf84"
+  },
+  "replay": {
+    "assertions_per_replay": 49,
+    "base_flow": 0.98159509202452,
+    "flow_delta": 0.02921413964359,
+    "fresh_replays": 2,
+    "hash": "c7daed6263058ce016a32b9813ee9a5d8da1798be96cb01e641818bd323458bf",
+    "successor_flow": 0.95238095238093
+  },
+  "runtime_candidate": {
+    "blob_identities": {
+      "RUN_FABRIC_BRIDGE4_TESTS.sh": "03d5f2ed379573060f68757afecb8db31593145e",
+      "scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd": "94fd8eb9f547668fbb159be1a685a8e139074e5c",
+      "scripts/research/fabric_bake0/bridge4_canonical_world_runtime_v1.gd": "b5d9c2c4b42a6759408c797dc50affd9a5ddff22",
+      "tests/research/fabric1/bridge4_canonical_world_fixture_v1.gd": "9437ec9fa9942ae50c91d0b2c9912408f04e7a42",
+      "tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd": "41e590e0b2c7b99f07ec2a2223452df348c4e7fe"
+    },
+    "head": "bb86d0b9f97b52727560bff88afc03df0a021668",
+    "new_paths": 5,
+    "tree": "95bb1a501f14e205d19336c36a374399cf1a63fb"
+  },
+  "schema": "planet_simulator.fabric_bridge4_exact_closure.v1",
+  "semantics": {
+    "duplicate_event_error": "BRIDGE4_CANONICAL_SUCCESSOR_ORDER_INVALID",
+    "failure_proposal_canonical": false,
+    "failure_proposal_write_authorized": false,
+    "old_canonical_binding_error": "BRIDGE4_CANONICAL_BINDING_STALE",
+    "overload_load_n": 90.0,
+    "stale_bake_error": "STALE_PHYSICAL_BAKE_EXECUTION_FORBIDDEN",
+    "stale_capsule_error": "BRIDGE4_CAPSULE_STALE",
+    "subcritical_load_n": 70.0,
+    "target_strength_n": 100.0,
+    "trigger_ratio": 0.8
+  },
+  "status": "RESEARCH_EXACT_CLOSED"
+}
