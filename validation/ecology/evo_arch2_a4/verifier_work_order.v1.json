@@ -1,0 +1,22 @@
+{
+  "schema": "dws.ecology.research-verifier-work-order.v1",
+  "id": "EVO-ARCH2-A4-VERIFIER-20260906-R1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "subject_head": "86aebc9bca53992a182246337de05374ae891dac",
+  "subject_tree": "06aeea53b1c392aff8e323fb433de8f7e2567315",
+  "source_branch": "feature/eco-evo-arch2-a4-environment-fields-r1",
+  "validation_branch": "validation/eco-arch2-a4-exact-r1",
+  "read_only_subject": true,
+  "actions_is_validation_only": true,
+  "source_authoring_forbidden": true,
+  "required": [
+    "EXACT_HEAD_TREE",
+    "EXACT_GODOT_DOUBLE_IDENTITY",
+    "COLD_IMPORT",
+    "A4_EXACT_TWICE_BYTE_IDENTICAL",
+    "A0_A3_EXACT_REGRESSION",
+    "VIS5_0_TO_VIS5_5_REGRESSION",
+    "TRACKED_SUBJECT_UNCHANGED"
+  ],
+  "verdicts": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"]
+}
