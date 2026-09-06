@@ -15,6 +15,21 @@ MANIFEST_SCHEMA = "distributed_world_simulator.harness_machine_evidence_manifest
 REVIEW_SCHEMA = "distributed_world_simulator.harness_review_result.v1"
 PROVENANCE_GENERATION = 81
 
+_CURRENT_BUNDLE_POLICY_KEYS = (
+    "project_goals",
+    "checkpoint_catalog",
+    "scheduler_policy",
+    "work_order_schema",
+    "event_schema",
+    "project_epoch_schema",
+    "risk_policy",
+    "review_policy",
+    "repair_doctrine",
+    "evidence_map_schema",
+    "human_attention_schema",
+    "continuation_policy",
+)
+
 
 def _require(condition: bool, code: str) -> None:
     if not condition:
@@ -152,8 +167,22 @@ def hard_block_matches_state(root: Path | None, state: dict[str, Any]) -> bool:
     return proof is not None and proof == state.get("hard_block_proof")
 
 
+def _current_bundle_contract_paths(root: Path) -> tuple[str, ...]:
+    """Resolve the exact current ContractBundle dependency set from committed policy."""
+    harness_path = "config/control/harness/harness-policy.v1.json"
+    policy = _decode(committed_bytes(root, harness_path, immutable=False))
+    paths = ["config/control/project-program-registry.v1.json", harness_path]
+    for key in _CURRENT_BUNDLE_POLICY_KEYS:
+        relative = policy.get(key)
+        _require(_text(relative), f"CURRENT_BUNDLE_PATH_REQUIRED:{key}")
+        paths.append(_path(relative))
+    # Preserve order while rejecting an accidental alias that would hide a contract.
+    _require(len(paths) == len(set(paths)), "CURRENT_BUNDLE_PATHS_NOT_UNIQUE")
+    return tuple(paths)
+
+
 def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
-    """A dirty generation downgrade or authority-policy edit cannot opt current execution into legacy rules."""
+    """A dirty generation downgrade or authority-contract edit cannot select legacy rules."""
     registry_path = "config/control/project-program-registry.v1.json"
     registry = _decode(_git(root, "show", f"HEAD:{registry_path}"))
     pinned_generation = registry.get("registry_generation")
@@ -161,21 +190,16 @@ def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
     _require(type(pinned_generation) is int and type(generation) is int,
              "REVIEW_EPOCH_GENERATION_REQUIRED")
     if pinned_generation >= PROVENANCE_GENERATION:
-        committed_bytes(root, registry_path, immutable=False)
+        # ContractBundle.load() reads these files from the worktree. Fence the full
+        # committed dependency set before any reducer/review result can become authority.
+        for relative in _current_bundle_contract_paths(root):
+            committed_bytes(root, relative, immutable=False)
         epoch_id = epoch.get("epoch_id")
         _require(_text(epoch_id) and "/" not in epoch_id and "\\" not in epoch_id,
                  "REVIEW_EPOCH_IDENTITY_REQUIRED")
         relative = f"config/control/harness/executions/{epoch_id}/project-epoch.v1.json"
         pinned_epoch = _decode(committed_bytes(root, relative, immutable=False))
         _require(pinned_epoch == epoch, "REVIEW_COMMITTED_EPOCH_MISMATCH")
-        for name in (
-            "harness-policy",
-            "review-policy",
-            "continuation-policy",
-            "risk-policy",
-            "scheduler-policy",
-        ):
-            committed_bytes(root, f"config/control/harness/{name}.v1.json", immutable=False)
     return generation
 
 
