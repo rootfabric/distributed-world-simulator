@@ -1,0 +1,131 @@
+{
+  "schema": "dws.fabric.complex3.exact_closure.v1",
+  "status": "CLOSED",
+  "scope": "RESEARCH_EXACT_NOT_PRODUCT_ACCEPTANCE",
+  "branch": "research/fabric-complex3-adaptive-damage-local-unbake-r1",
+  "runtime_head": "4089b26dd1d56f3ab7bdee394cd1d5a7fbf150fa",
+  "runtime_tree": "eb09719ad608aa9f3de5e9aeca39731450d1f4a1",
+  "predecessor_bridge3_closure_head": "d814a4135c5aea3d66148f037f89edf04444f063",
+  "canonical_main_observed": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "fresh_import": {
+    "exit_code": 0,
+    "fatal_count": 0,
+    "log_sha256": "392666f9aaef80a3a4e8fa9134a0e11929e1849785969cc10a94b34ff6e27501"
+  },
+  "a0": {
+    "assertions_per_replay": 26,
+    "replays": 2,
+    "hash": "73f632f3b8f10c412f1d769f695e854e707b78bf6bc8f0e0398f628a913764ef",
+    "final_log_sha256": "de23555ba44643904c3d0f741b27c14dab001d91f03f800342851abe9584cbf5"
+  },
+  "explicit_5k_predecessor_reference": {
+    "assertions": 8,
+    "status": "PASS",
+    "mass_error": 0.0,
+    "center_error": 0.0,
+    "max_inertia_error": 2.91038304567337e-11,
+    "hash": "34279a1ef04f4c4f4c6e1d8412c300793c050da277b626e0166d3c70a386acf4",
+    "log_sha256": "9d74c58b256c1e60a29d1fc0db233435972309648a9111eea57af26d5f9a6322"
+  },
+  "scale_replay": {
+    "fresh_replay_count": 2,
+    "aggregate_replay_hash": "d0a19061880c96ea262e75fa6e13b5debc8ca195510a3937c38b7650769d0c16",
+    "cases": {
+      "5000": {
+        "assertions_per_replay": 40,
+        "case_hash": "7d1ddf922cd3e3a7e61f83761be9f5a1a3ac0c35156c38825f5a11f8124982c1",
+        "base_source": "903af5b9747f17c58568061b597c870f7294ac4821b33a5363420a7513c23c0c",
+        "successor_source": "a1c02b1527545051680d929726a58275d35c93826224fa88c30b9baeb340074a",
+        "parent_aggregate": "84b4ba484a62e13f369c331c736042172b9c509887ea872e80f84a20fe048f77",
+        "component_counts": [2493, 2507],
+        "transition_hash": "c8b600aee9b2c7aa96c76507f9408c10666d8b969dc80aa233c2830ecf96b513",
+        "active_full_peak": 20,
+        "residual_bodies": 2,
+        "final_baked_bodies": 2,
+        "metadata_parts_scanned": 9980,
+        "rebake_local_validations": 20,
+        "global_physical_rebuilds": 0,
+        "duplicate_ownership_count": 0,
+        "observed_elapsed_seconds": 1.10,
+        "observed_peak_rss_mb": 129
+      },
+      "20000": {
+        "assertions_per_replay": 40,
+        "case_hash": "8762f4a2934d8d4ba31a46f697be895eb0b93d4e5c7ca639bc675ec488bbcea4",
+        "base_source": "a8d6920c074f4a075cabbd3acefffc6d110eb06dd9328758044699b802fa1fe1",
+        "successor_source": "e8f3678ba7e8a42e605cab82defd90d9eaf730ca031ed9dc124d7d648ebf7e81",
+        "parent_aggregate": "9aa540162382242a49f1c0deae540cb087fe51cf4c7ce3d51d19f851eb8c72ce",
+        "component_counts": [9993, 10007],
+        "transition_hash": "15949f4ad142d0733fd24b632f63607c39fd450035e7b52e07df2cd256a59da4",
+        "active_full_peak": 20,
+        "residual_bodies": 2,
+        "final_baked_bodies": 2,
+        "metadata_parts_scanned": 39980,
+        "rebake_local_validations": 20,
+        "global_physical_rebuilds": 0,
+        "duplicate_ownership_count": 0,
+        "observed_elapsed_seconds": 3.44,
+        "observed_peak_rss_mb": 129
+      },
+      "100000": {
+        "assertions_per_replay": 40,
+        "case_hash": "2f2f11ad1e1694b0781fc8668e17795cd81ddac12c1af839f53974e84a353daf",
+        "base_source": "24e41a345e7e3f3182d6274ef521325b9a7c74ec9e0b3593464976d45066543b",
+        "successor_source": "3ac65cfb633bb2d8ef57a3b7eae8eaa9dc89eb7c7552452505bf47097186216d",
+        "parent_aggregate": "8c59dfdd3731e6ea3c98010df46104404444c551e713ce289ef4f03e77c8eb91",
+        "component_counts": [49993, 50007],
+        "transition_hash": "dc38e14d24ec687b86fbd7195edff28dce9b1980fb7999e69e05f6d6849a9232",
+        "active_full_peak": 20,
+        "residual_bodies": 2,
+        "final_baked_bodies": 2,
+        "metadata_parts_scanned": 199980,
+        "rebake_local_validations": 20,
+        "global_physical_rebuilds": 0,
+        "duplicate_ownership_count": 0,
+        "observed_elapsed_seconds": 16.52,
+        "observed_peak_rss_mb": 129
+      }
+    }
+  },
+  "bridge3_boundary_regression": {
+    "a_assertions": 29,
+    "a_hash": "36d2da80dc6adda6f4ad998c2fd011add99dc8f718c9b1678f994d4f3cc72c30",
+    "f_assertions": 38,
+    "f_hash": "7eda96e277ef650f1f773630439502f095e666521378c0e740b577687d67aadb",
+    "f_capsule_hash": "8f51c2eab36564a4f6060709fe582fc09ad7c1f09306063899454d9234e307fb"
+  },
+  "blob_identity": {
+    "scripts/research/fabric_bake0/complex3_streaming_canonical_structure_v1.gd": "25764cc07c239013300f0c84da8b6d8bbc2f7e97",
+    "scripts/research/fabric_bake0/complex3_sparse_damage_lifecycle_v1.gd": "ad1dddaef7102058712862328a0ee3ae7dc982c5",
+    "tests/research/fabric_bake0/fabric_complex3_scale_acceptance.gd": "7c2528a0642724647961804854bd453ec8647475",
+    "tests/research/fabric_bake0/fabric_complex3_5k_reference_acceptance.gd": "0b8f6bcb2dd567644e3b629053861e582a779b35",
+    "tests/research/fabric_bake0/fabric_complex3_a0_contract_acceptance.gd": "f3ab0ed76e5dc7a53808e983353c6963d76d9041",
+    "RUN_FABRIC_COMPLEX3_SCALE_CASE.sh": "78798485f443525e8a007393300574fbcb9b8131",
+    "RUN_FABRIC_COMPLEX3_5K_REFERENCE_TESTS.sh": "fb03b2999d349cd29775ed72bb6ca0bc0ed45f53",
+    "RUN_FABRIC_COMPLEX3_A0_TESTS.sh": "4b6b69539111bee9679cfdd4cb67704127818451"
+  },
+  "project_control": {
+    "standard_pc0_exit": 0,
+    "standard_pc0_overall": "RED",
+    "standard_pc0_attribution": [
+      "unrelated active product checkpoint execution state",
+      "unrelated ROAD-EXT-WAVE3 external/missing NF3 proof"
+    ],
+    "directional_watch_exit": 0,
+    "directional_watch_overall": "GREEN",
+    "complex3_critical_intersections": 0,
+    "main_product_acceptance_claimed": false
+  },
+  "harness": {
+    "stall_guard": "H0-STALL-GUARD-2026-09-06-R1",
+    "scale_guard": "H0-SCALE-SHARD-2026-09-06-R1",
+    "scale_guard_pr": 570,
+    "scale_guard_main": "c9e3b9d311818c5c55f16861d6c298aba5458990"
+  },
+  "closure_hash": "e69c756494e0e10c7cf4ad9be7fdc9182a3f85ef6e6f8b43bcee344f29ddcc2f",
+  "b0_7_started": false
+}
