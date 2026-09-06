@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import errno
 import io
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -77,6 +79,9 @@ class TempHarnessRepo:
         ], check=True)
         run(self.root, "git", "config", "user.email", "harness-test@example.invalid")
         run(self.root, "git", "config", "user.name", "Harness Test")
+        # Prevent Git auto-maintenance from racing deterministic tempdir teardown.
+        run(self.root, "git", "config", "gc.auto", "0")
+        run(self.root, "git", "config", "maintenance.auto", "false")
         run(self.root, "git", "checkout", "-B", P7_BRANCH)
         for relative in SYNC_PATHS:
             source = ROOT / relative
@@ -92,7 +97,21 @@ class TempHarnessRepo:
         run(self.root, "git", "update-ref", "refs/remotes/origin/main", self.main_head)
 
     def close(self) -> None:
-        self.temp.cleanup()
+        # A background Git maintenance process may release the repository a few
+        # milliseconds after the foreground command. Retry only transient
+        # directory-busy/not-empty failures; persistent leaks remain test errors.
+        last_error: OSError | None = None
+        for attempt in range(5):
+            try:
+                self.temp.cleanup()
+                return
+            except OSError as exc:
+                if exc.errno not in {errno.ENOTEMPTY, errno.EBUSY}:
+                    raise
+                last_error = exc
+                time.sleep(0.05 * (attempt + 1))
+        if last_error is not None:
+            raise last_error
 
     def commit_all(self, message: str) -> str:
         run(self.root, "git", "add", "-A")
@@ -276,7 +295,6 @@ class HardBlockProductionRouteTests(unittest.TestCase):
                 build_state(repo.root, execution)
         finally:
             repo.close()
-
 
     def test_proof_added_only_after_block_event_is_rejected(self) -> None:
         repo = TempHarnessRepo()
