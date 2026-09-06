@@ -1,0 +1,93 @@
+{
+  "schema": "dws.ecology.arch2-a4-exact-acceptance.v1",
+  "id": "EVO-ARCH2-A4-EXACT-ACCEPTANCE-R1",
+  "date_utc": "2026-09-06",
+  "status": "RESEARCH_SOURCE_ACCEPTED",
+  "implementation_branch": "feature/eco-evo-arch2-a4-environment-fields-r1",
+  "accepted_head": "4b0f772ff39592262b853f7293bbd5403558b145",
+  "accepted_tree": "301f57e0f42011c5340ff5dc7bfac98059643831",
+  "immutable_acceptance_ref": "acceptance/eco-evo-arch2-a4-r1",
+  "base_a0_a3_head": "6f7e267f287eae978d8dac8d54a1b730c4afbfd4",
+  "work_order": "EVO-ARCH2-A4-20260906-R1",
+  "scope": "RESEARCH_ONLY_LOCAL_ENVIRONMENT_FIELDS",
+  "repairs": [
+    {
+      "id": "RM-A4-01",
+      "result": "PASS",
+      "summary": "Local sample reads validate fixed metadata and touched cell integrity seals only; cached field seal is returned as provenance while full conservation/integrity validation remains at create/write/serialization boundaries."
+    },
+    {
+      "id": "RM-A4-02",
+      "result": "PASS",
+      "summary": "Complete X/Z field footprint must remain inside the typed environment port coordinate envelope; unreachable conservative stock cannot be created."
+    },
+    {
+      "id": "RM-A4-03",
+      "result": "PASS",
+      "summary": "Residual conservative stock is redistributed pro-rata across current unmet demands per cell/resource bucket; request_id is only a deterministic integer remainder tie-break."
+    }
+  ],
+  "reviewer": {
+    "kind": "FRESH_INDEPENDENT_CODE_REVIEW",
+    "provider": "Codex GitHub reviewer",
+    "reviewed_head": "4b0f772ff39592262b853f7293bbd5403558b145",
+    "completed_at_utc": "2026-09-06T09:10:04Z",
+    "result": "PASS_NO_BLOCKING_FINDINGS",
+    "pr": 568,
+    "pr_reaction": "+1",
+    "reaction_at_utc": "2026-09-06T09:10:06Z",
+    "historical_threads_resolved": true
+  },
+  "verifier": {
+    "kind": "FRESH_EXACT_SELF_HOSTED_LINUX_VERIFIER",
+    "subject_head": "4b0f772ff39592262b853f7293bbd5403558b145",
+    "subject_tree": "301f57e0f42011c5340ff5dc7bfac98059643831",
+    "workflow_run": 34023700814,
+    "job": 101460820886,
+    "result": "PASS",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "cold_import": "PASS",
+    "cold_import_log_sha256": "ce4b689521630089a9d34e4e8d8a6b9baac2dee391d4e56bd3c94dabbfaefa11",
+    "a4_exact": "32/32 PASS x2",
+    "a4_log_sha256": "9219859164b961c5150a44738bd17fac591c548feb01ad237970eb9b07a39df1",
+    "a0_a3_regression": "86/86 PASS",
+    "vis5_regression": "521/521 PASS",
+    "tracked_tree_after_validation": "CLEAN"
+  },
+  "project_control": {
+    "run": 34023681529,
+    "subject_head": "4b0f772ff39592262b853f7293bbd5403558b145",
+    "result": "FAIL",
+    "truth_label": "EXISTING_GLOBAL_G_ECO_MATTER_REGISTRY_DEPENDENCY_DRIFT",
+    "a4_specific_owner_scope_red_observed": false,
+    "global_pc0_green_inferred": false
+  },
+  "authority": {
+    "production_promotion": false,
+    "main_integration": false,
+    "world_query_owner": false,
+    "matter_owner": false,
+    "network_owner": false,
+    "merge_requires_human": true
+  },
+  "accepted_capabilities": [
+    "LOCAL_ENVIRONMENT_FIELD_CONTRACT",
+    "LOCAL_CONSERVATIVE_RESOURCE_STOCKS",
+    "DETERMINISTIC_PRO_RATA_CONTENTION",
+    "NO_OVERDRAFT_CONSERVATION_LEDGER",
+    "OWNER_EPOCH_REVISION_FENCING",
+    "O_LOCAL_SAMPLING_WITH_CACHED_PROVENANCE_SEAL",
+    "TYPED_ORGANISM_SAMPLE_DEMAND_EFFECT_PORTS",
+    "FIELD_TO_A2_DEVELOPMENT_BRIDGE",
+    "BOUNDED_FIELD_FOOTPRINT"
+  ],
+  "not_accepted": [
+    "A5_LIFECYCLE_SURVIVAL_REPRODUCTION",
+    "PRODUCTION_ENVIRONMENT_ADAPTER",
+    "CANONICAL_WORLD_QUERY_BINDING",
+    "CANONICAL_MATTER_BINDING",
+    "SERVER_REGION_AUTHORITY",
+    "MAIN_MERGE"
+  ]
+}
