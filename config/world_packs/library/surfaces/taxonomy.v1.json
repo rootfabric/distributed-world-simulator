@@ -1,0 +1,69 @@
+{
+  "schema": "dws.world_packs.surface_taxonomy.v1",
+  "version": "1.0.0",
+  "status": "ACTIVE",
+  "presentation_only": true,
+  "description": "Reusable semantic surface families for WORLD PACKS. Families classify presentation surfaces by their canonical physical anchor; they never define, mutate or override Matter truth, strata depth or physical material properties.",
+  "state_axes": [
+    "exposure",
+    "fidelity"
+  ],
+  "families": [
+    {
+      "id": "surface-family/regolith",
+      "version": "1.0.0",
+      "display_name": "Regolith",
+      "physical_anchor": "Unconsolidated to compacted granular mantle derived from mechanical breakdown of the parent rock body.",
+      "expected_matter_families": [
+        "matter-family/regolith"
+      ],
+      "binding_mode": "canonical_matter_required",
+      "binding_status": "BOUND",
+      "surfaces": [
+        "surface/regolith"
+      ]
+    },
+    {
+      "id": "surface-family/basalt",
+      "version": "1.0.0",
+      "display_name": "Basaltic rock",
+      "physical_anchor": "Coherent to fractured fine-grained mafic silicate rock exposed as bedrock or boulder surfaces.",
+      "expected_matter_families": [
+        "matter-family/silicate-rock"
+      ],
+      "binding_mode": "canonical_matter_required",
+      "binding_status": "BOUND",
+      "surfaces": [
+        "surface/basalt"
+      ]
+    },
+    {
+      "id": "surface-family/sand",
+      "version": "1.0.0",
+      "display_name": "Granular sand",
+      "physical_anchor": "Loose well-sorted granular sand-sized particles transportable by wind or water.",
+      "expected_matter_families": [],
+      "binding_mode": "canonical_matter_required",
+      "binding_status": "PENDING_CANONICAL_MATTER",
+      "pending_reason": "No canonical matter/sand material exists in matter_material_catalog today; binding unrelated loose or silicate matter (e.g. matter/regolith-loose, matter/silicate-waste) as sand would be an ambiguous physical binding and MUST fail.",
+      "pending_unblock": "Canonical Matter ownership introduces a sand/granular matter id; then this family binds it explicitly in matter_binding_rules.",
+      "surfaces": [
+        "surface/sand"
+      ]
+    },
+    {
+      "id": "surface-family/ice",
+      "version": "1.0.0",
+      "display_name": "Water ice",
+      "physical_anchor": "Bonded crystalline water-ice surfaces from polar caps, icy regolith cement or exposed ice bodies.",
+      "expected_matter_families": [
+        "matter-family/volatile-ice"
+      ],
+      "binding_mode": "canonical_matter_required",
+      "binding_status": "BOUND",
+      "surfaces": [
+        "surface/ice"
+      ]
+    }
+  ]
+}
