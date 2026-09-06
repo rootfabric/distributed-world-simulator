@@ -98,6 +98,7 @@ static func validate_propagule(v: Variant, blueprint: Dictionary) -> String:
 	if not C.identifier(v.id) or not C.identifier(v.parent_id) or v.blueprint_hash != BP.biological_hash(blueprint): return "PROPAGULE_IDENTITY"
 	if not C.integer(v.birth_tick, 1, 1000000) or not C.vector(v.position_mm, F.MAX_PORT_COORD_MM): return "PROPAGULE_POSITION"
 	if not B.valid_stock(v.endowment) or not F.valid_hash(v.parent_state_hash): return "PROPAGULE_RESOURCE"
+	if v.endowment != blueprint.life_history.reproduction.endowment: return "PROPAGULE_ENDOWMENT"
 	return ""
 
 static func _advance_individual(source: Dictionary, blueprint: Dictionary, sample: Dictionary, field_intake: Dictionary) -> Dictionary:
@@ -143,13 +144,12 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 
 	var activation := _growth_activation(sample, policy)
 	var grant := B.stock()
-	if maintenance_paid:
-		if state.development.frame.is_empty() and activation > 0:
+	if maintenance_paid and activation > 0:
+		if state.development.frame.is_empty():
 			grant = _growth_grant(state.metabolic_reserves, policy, activation)
 			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "activation_permille=%d" % activation})
 		else:
-			state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "regulation or unfinished development frame suppressed new grant"})
-		if not state.development.frame.is_empty():
+			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "resume paid open frame; activation_permille=%d" % activation})
 			grant = B.stock()
 		var development_result := _advance_development(state.development, blueprint.genome, sample, grant)
 		if not development_result.success: return development_result
@@ -158,13 +158,15 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 			_pay(state.metabolic_reserves, grant)
 			_add_stock(state.resource_ledger.growth_transferred, grant)
 		state.development = development_result.state
+	elif maintenance_paid:
+		state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "regulatory gate freezes development and retained A2 reserves"})
 	else:
 		state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "maintenance starvation suppresses development"})
 
 	var propagules: Array = []
 	var phenotype_after := H.compile(state.development, blueprint.genome)
 	if phenotype_after.is_empty(): return _fail("A5_POST_GROWTH_PHENOTYPE")
-	if _reproduction_ready(state, phenotype_after, policy):
+	if maintenance_paid and _reproduction_ready(state, phenotype_after, policy):
 		var reproduction := _reproduce(state, blueprint, policy)
 		if reproduction.success:
 			state = reproduction.state
