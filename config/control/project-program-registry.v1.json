@@ -238,7 +238,7 @@
       "short_description": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence implementation under exact runtime verification.",
       "purpose": "Prove opt-in OWNER_AUTHORITATIVE_VALIDATED locomotion while preserving SERVER_PREDICTED as the canonical default and retaining canonical domain/server truth.",
       "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED only after exact Godot runtime evidence, full/two-client/impaired/reconnect validation, independent review/verifier and fresh CH->NX dependency revalidation.",
-      "current_stage": "H0.2 / NX.C1 Source Implemented — Runtime Verification Pending",
+      "current_stage": "H0.2 / NX.C1 Source Implemed — Runtime Verification Pending",
       "stage_status": "IMPLEMENTED_WAITING_EXACT_GODOT_RUNTIME_VERIFICATION",
       "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0/SM1 prerequisite; V0 continues on SERVER_PREDICTED unless a concrete foundation change is proven necessary.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; H0.2 pre-build authorization PASS; bounded NX.C1 source implementation present but not source-accepted",
@@ -333,22 +333,10 @@
         "runtime_subject_head": "28c47e26969608b126e6097bc8a26bd9c593be8c",
         "runtime_subject_tree": "99629227f66b15092df5d798f7706364bfaadf1d",
         "runtime_merge_pr": 341,
-        "runtime_merge_commit": "e86ec851b263ac6fca8177921b01cb7486fdff2f",
-        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-1-FINAL-REVIEW-001.v1.json",
-        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-1-VERIFICATION-001.v1.json",
-        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-1-EVIDENCE-001.v1.json"
-      },
-      "p7_2": {
-        "state": "COMPLETE_MERGED",
-        "scope": "BOUNDED_PLANETARY_MATTER_BUBBLE",
-        "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "runtime_subject_head": "0292e0a97d980d5c384b0118999429f1e6f13c3d",
-        "runtime_subject_tree": "dc39d42cf903b3dc7f56f6ba9cbb6fc82b258b36",
-        "runtime_merge_pr": 350,
         "runtime_merge_carrier_pr": 368,
         "runtime_merge_commit": "6e604a68c6883595a637a089bf3f709219a1197e",
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-2-FINAL-REVIEW-002.v1.json",
-        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-2-VERIFICATION-001.v1.json"
       },
       "p7_3": {
         "state": "COMPLETE_MERGED",
@@ -357,10 +345,9 @@
         "runtime_subject_head": "b4b11a69ef921c59b28208685cf26509c3b81907",
         "runtime_subject_tree": "99dea175fda7bacce936b15d30d9e25fa9e4af00",
         "runtime_merge_pr": 373,
-        "runtime_merge_carrier_pr": 387,
         "runtime_merge_commit": "502d05fe24256fecd52f3092b8e056e74a8b4450",
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-3-FINAL-REVIEW-001.v1.json",
-        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-3-VERIFICATION-001.v1.json",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-3-EVIDENCE-MAP-001.v1.json",
         "post_merge_pc0": {
           "status": "PASS_NON_RED",
@@ -381,7 +368,7 @@
         "runtime_merge_carrier_pr": 425,
         "runtime_merge_commit": "bfd2d8efec6f499311dea81d9b602f30b3ac6a73",
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-4-FINAL-REVIEW-001.v1.json",
-        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-4-VERIFICATION-003.v1.json",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-4-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_5": {
@@ -394,7 +381,7 @@
         "runtime_merge_carrier_pr": 461,
         "runtime_merge_commit": "f039acf94efd72bbdf34dd68a5801195ca282999",
         "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-5-FINAL-REVIEW-002.v1.json",
-        "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
+      "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-5-VERIFICATION-001.v1.json",
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-5-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_6": {
@@ -402,26 +389,26 @@
         "scope": "SEAM_AND_MULTI_REGION_COMPOSITION",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
         "runtime_subject_head": "c2e056980eed4ae20849154b1dacc71af0ce8bdf",
-        "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
+      "runtime_subject_tree": "2df40d13610b5a93cd1549d8c1bc89205026e1f5",
         "runtime_merge_pr": 466,
         "runtime_merge_commit": "8b866f32419eb5b9bedebd458ee2f9117a916020",
-        "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
+      "review": "config/control/harness/executions/E2026-08-30-V0-P7-R1/reviews/V0-P7-R1-WO-001-P7-6-FINAL-REVIEW-002.v1.json",
         "verification": "config/control/harness/executions/E2026-08-30-V0-P7-R1/verifications/V0-P7-R1-WO-001-P7-6-VERIFICATION-001.v1.json",
-        "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
+      "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_7": {
         "state": "MERGED_PENDING_CANONICAL_CLOSURE",
         "runtime_mutation_authorized": false,
         "scope": "GRAPHICAL_DIGGING_SLICE",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-        "runtime_started": true,
+      "runtime_started": true,
         "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
         "acceptance_stand": "DIGGING_PLAYGROUND",
         "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
-        "hard_rule": "NO_NEW_CANONICAL_TERRAIN_MATTER_ITEM_GRAPH_AUTHORITY_PERSISTENCE_OR_NETWORK_TRUTH",
+      "hard_rule": "NO_NEW_CANONICAL_TERRAIN_MATTER_ITEM_GRAPH_AUTHORITY_PERSISTENCE_OR_NETWORK_TRUTH",
         "runtime_merge_pr": 487,
         "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386",
-        "closure_reconciliation_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
+      "closure_reconciliation_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION.PASSPORT.ROTATION-EVIDENCE-001.v1.json"
       }
     },
     "MATTER": {
@@ -433,374 +420,14 @@
       "role": "STABLE_FOUNDATION",
       "short_description": "Authoritative mutable material/volume truth with durable multi-region transactions and recovery.",
       "purpose": "Provide persistent excavation/material mutation semantics.",
-      "expected_outcome": "MW10 remains the accepted baseline until a registered composition frontier needs more work.",
+      "expected_outcome": "MW10",
       "current_stage": "MW10 accepted stable baseline",
       "stage_status": "STABLE",
       "progress_note": "No active Matter frontier is declared.",
-      "last_accepted_checkpoint": "MW10 Durable Same-Body Multi-Region Transactions",
+      "last_accepted_checkpoint": "MW10",
       "next_stage": "GM Geo-Matter integration / future composition gate",
       "health_declared": "GREEN",
       "blockers": []
-    },
-    "S1": {
-      "program": "S1",
-      "program_name": "Distributed Compute",
-      "branch": "",
-      "passport_path": "",
-      "requires_passport": false,
-      "role": "STABLE_FOUNDATION",
-      "short_description": "Proposal-only distributed compute under authoritative commit boundaries.",
-      "purpose": "Scale simulation work without making workers authoritative world owners.",
-      "expected_outcome": "Reusable compute execution under explicit read/write contracts.",
-      "current_stage": "Stable proposal-only compute foundation",
-      "stage_status": "STABLE",
-      "progress_note": "No active S1 frontier is declared.",
-      "last_accepted_checkpoint": "S1 Compute Proposal Foundation",
-      "next_stage": "Register a frontier only when a concrete workload requires it",
-      "health_declared": "GREEN",
-      "blockers": []
     }
-  },
-  "convergence_order": {
-    "principle": "Branches report facts; main declares project state, exact product execution inputs and the single pre-H0.3 mutation lease; the auditor checks consistency; bounded runtime work moves only between declared checkpoints.",
-    "now_parallel": [
-      "V0 P7 durable closure reconciliation → visual MVP composition",
-      "ECO experiment workbench + LS4.1 + VIS5/PLAY1 research coordination",
-      "FABRIC frozen core + B0.6 bake research + shared observatories",
-      "Optional WORLD FILL/PACKS presentation donors"
-    ],
-    "harness_train": [
-      "H0_0_SCAFFOLD_READY canonical",
-      "H0.1 C22 closed-loop pilot PASS",
-      "C22 MAIN_INTEGRATED",
-      "GLOBAL-P0 R3 promotion + post-R3 PC0 NON_RED",
-      "H0.2 NX high-risk pilot verification",
-      "H0.3 development multi-worker scheduler after H0_2_PASS + NX SOURCE_ACCEPTED",
-      "H1 multi-program autonomous development"
-    ],
-    "construction_train": [
-      "C22 MAIN_INTEGRATED",
-      "V0 P4 ACCEPTED",
-      "V0 P5 ACCEPTED",
-      "V0 P6 persistent shared-outpost ACCEPTED",
-      "SM1 preserves canonical Construction truth through A<->B authority handoff",
-      "TS0.4 1M Research Ceiling remains separate",
-      "T2.0 remains separate"
-    ],
-    "network_train": [
-      "accepted Edge Gateway Foundation EG0-EG5",
-      "canonical SERVER_PREDICTED V0 baseline",
-      "separate bounded EG5 telemetry/hysteresis correctness repair before SM1 dispatch",
-      "V0-SM1 consumes Gateway/NX without becoming network foundation owner",
-      "H0.2/NX.C1 remains separate",
-      "post-SM1 EG6/EG6.5/EG7/EG8/EG9 follow independently"
-    ],
-    "v0_train": [
-      "P4/P5/P6 ACCEPTED",
-      "SM1 ACCEPTED",
-      "P7 runtime MERGED; canonical closure reconciliation",
-      "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
-      "P8 / WORLDGEN1 / RF1 only after MVP and explicit activation"
-    ],
-    "architecture_train": [
-      "GLOBAL-P0 R3 canonical promotion",
-      "mandatory post-R3 PC0 NON_RED",
-      "P6 accepted product baseline 9ade3233",
-      "post-P6 control reconciliation",
-      "single mutation lease remains free until SM1 activation gates close",
-      "SM1 production authority handoff from exact accepted P6 baseline"
-    ]
-  },
-  "global_blocked_transitions": [
-    {
-      "stage": "NX.C1 SOURCE ACCEPTANCE",
-      "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"
-    },
-    {
-      "stage": "H0.3 IMPLEMENTATION",
-      "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"
-    },
-    {
-      "stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS",
-      "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"
-    },
-    {
-      "stage": "V0 NETWORK FOUNDATION CHANGE",
-      "blocked_by": "V0_BLOCKED_REQUIRES_NX"
-    },
-    {
-      "stage": "G9 START",
-      "blocked_by": "MAT0_REQUIRED"
-    },
-    {
-      "stage": "TS0.4 START",
-      "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"
-    },
-    {
-      "stage": "T2.0 START",
-      "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
-    },
-    {
-      "stage": "CH NEXT RUNTIME STAGE",
-      "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"
-    },
-    {
-      "stage": "V0-P7 RUNTIME MUTATION START",
-      "blocked_by": "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PLUS_POST_MERGE_PC0_PLUS_DIRECTOR_DISPATCH_REQUIRED"
-    },
-    {
-      "stage": "V0-P7 CHECKPOINT ACCEPTANCE",
-      "blocked_by": "P7_FULL_RUNTIME_GRAPHICAL_PERSISTENCE_TWO_CLIENT_SEAM_MW10_PLUS_FRESH_REVIEW_VERIFIER_REQUIRED"
-    }
-  ],
-  "audit_triggers": [
-    "ANY_MAJOR_CHECKPOINT_ACCEPTED",
-    "BEFORE_NEXT_MAJOR_STAGE",
-    "GLOBAL_ARCHITECTURE_CHANGE",
-    "NEW_FOUNDATION_OR_REGISTRY_CONCEPT",
-    "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY",
-    "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE",
-    "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES",
-    "REVIEW_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES",
-    "RISK_RECLASSIFICATION",
-    "BLOCKING_HUMAN_ATTENTION_ITEM_BEFORE_CHECKPOINT"
-  ],
-  "coordination": {
-    "revision": "PROJECT-FOCUS-2026-09-05-R1",
-    "observed_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
-    "primary_lane": "MVP",
-    "goals_source": "config/control/harness/project-goals.v1.json",
-    "status_policy": "SOURCE_REPORT_IS_NOT_MAIN_ACCEPTANCE; MERGED_IS_NOT_COMPOSITION_ACCEPTED",
-    "refresh_rule": "Refresh refs, inspect changed evidence, update registry and affected operational mirrors in one reviewed control change; never infer acceptance from branch recency.",
-    "lanes": {
-      "MVP": {
-        "goal_id": "MVP",
-        "priority_class": "PRIMARY_PRODUCT",
-        "blocks_mvp": true,
-        "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-        "phase": "P7_MERGED_CLOSURE_RECONCILIATION",
-        "next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP",
-        "next_actor": "DIRECTOR",
-        "evidence_paths": [
-          "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
-        ],
-        "open_gaps": [
-          "P7 canonical acceptance record absent at observed main; locate existing post-merge evidence before requesting any new runtime run.",
-          "MVP composition checkpoint needs a fresh exact-base activation and bounded work order."
-        ],
-        "tracks": {}
-      },
-      "ECO": {
-        "goal_id": "ECO",
-        "priority_class": "PARALLEL_RESEARCH",
-        "blocks_mvp": false,
-        "current_checkpoint": "ECO_LS4_1_AND_EXPERIMENT_WORKBENCH_JOIN",
-        "phase": "IMPLEMENTED_COMPONENTS_INTEGRATED_EXPERIMENT_GOAL_NOT_ACCEPTED",
-        "next_action": "RECONCILE_LS41_VIS5_PLAY1_ON_ONE_EXPERIMENT_SNAPSHOT",
-        "next_actor": "ECO_DIRECTOR",
-        "evidence_paths": [],
-        "open_gaps": [
-          "LS4.1 and LS4-VIS1 report implementation with exact runtime pending.",
-          "PERF2.CONV + VIS5.5 PLAY1 composition is not the same goal as LS4 Living Ecosystem Region.",
-          "One experiment session must join heredity/rules, generations, environmental counterfactuals and causal plant morphology.",
-          "Transfer versioned research recipes/catalogs to WORLDGEN only through a later explicit consumer contract."
-        ],
-        "tracks": {
-          "workbench": {
-            "branch": "feature/eco-evo7-ls36-rule-workbench-r1",
-            "observed_head": "862934ca05aba2b35ba1cab92e11f37f59e271dc",
-            "role": "FROZEN_DONOR",
-            "reported_state": "RULE_WORKBENCH_DONOR",
-            "evidence_paths": [
-              "docs/checkpoints/2026-08-28_ECO_EVO7_LS3_6_RULE_WORKBENCH_R1_RU.md"
-            ],
-            "next_action": "CONSUME_EXPERIMENT_CONTROLS_AND_PROVENANCE",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "simulation": {
-            "branch": "feature/eco-evo7-ls4-1-multi-species-r1",
-            "observed_head": "2ca88853a9ef9eb832c12796d62c47e3da5086b5",
-            "role": "ACTIVE_RESEARCH",
-            "reported_state": "IMPLEMENTED_EXACT_RUNTIME_PENDING",
-            "evidence_paths": [
-              "docs/checkpoints/2026-09-05_ECO_EVO7_LS4_1_MULTI_SPECIES_IMPLEMENTED_RU.md",
-              "docs/plans/ECO_EVO7_LS4_SCOPE_CONTRACT_RU.md"
-            ],
-            "next_action": "CLOSE_LS41_BEFORE_LS42",
-            "consumes": [
-              "workbench"
-            ],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "visual": {
-            "branch": "feature/eco-evo7-vis5-terrain-ecosystem-composition-r1",
-            "observed_head": "a73cccb8064fdfb4df266338d3d20e24ac9f082b",
-            "role": "FROZEN_DONOR",
-            "reported_state": "VIS55_SOURCE_CLOSED",
-            "evidence_paths": [
-              "config/ecology/eco-evo7-vis5-5-play1-handoff.v1.json"
-            ],
-            "next_action": "CONSUME_RENDERING_WITHOUT_NEW_ECOLOGY_WRITER",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "integration": {
-            "branch": "feature/eco-evo7-perf2-conv-play1-integrated-r1",
-            "observed_head": "884b9619e1b5a588a33fd1c18c5f70cb36c8b7cd",
-            "role": "INTEGRATION_CANDIDATE",
-            "reported_state": "PLAY1_PRESENTATION_CANDIDATE_NOT_LS4_FINAL",
-            "evidence_paths": [
-              "scripts/ecology/perf/eco_evo7_perf2_conv_play1_integrated_report_v1.gd"
-            ],
-            "next_action": "RECONCILE_PRESENTATION_ACCEPTANCE_AND_LIVE_EXPERIMENT_GOAL",
-            "consumes": [
-              "visual",
-              "simulation"
-            ],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "visual_repair": {
-            "branch": "repair/eco-evo7-fff6-lab-first-frame-r1",
-            "observed_head": "0158281d43663a3bf3ea8cf533f617d802fc127b",
-            "role": "REPAIR_CANDIDATE",
-            "reported_state": "FIRST_FRAME_REPAIR_ACCEPTANCE_NOT_INFERRED",
-            "evidence_paths": [
-              "tests/ecology/eco_evo7_fff6_visual_first_frame_acceptance.gd"
-            ],
-            "next_action": "VERIFY_REPAIR_SUBJECT_THEN_TRANSFER_ONLY_REQUIRED_FIX",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          }
-        }
-      },
-      "FABRIC": {
-        "goal_id": "FABRIC",
-        "priority_class": "PARALLEL_RESEARCH",
-        "blocks_mvp": false,
-        "current_checkpoint": "B0_6_ADAPTIVE_PHYSICAL_FIDELITY",
-        "phase": "B06_A_IMPLEMENTED_RESEARCH_ONLY",
-        "next_action": "REVIEW_B06_A_ENVELOPE_AND_FIXTURE_GENERALITY_BEFORE_SCALE",
-        "next_actor": "FABRIC_DIRECTOR",
-        "evidence_paths": [],
-        "open_gaps": [
-          "COMPLEX2-C fixed 4-DOF / 8-state backend proves compiled evaluation, not state-count reduction.",
-          "500/1000/2000 part scaling retains 25 modules; physical complexity scaling is a separate claim.",
-          "B0.6 fallback must have explicit simultaneous-refinement and rebuild budgets.",
-          "COMPLEX2 research closure does not imply MVP physics integration."
-        ],
-        "tracks": {
-          "core": {
-            "branch": "research/fabric0-18-persistent-contact-wrench-r1",
-            "observed_head": "b9f4a11cb7c31e47884d12eaad2985811e0b6563",
-            "role": "FROZEN_DONOR",
-            "reported_state": "FABRIC018_FROZEN_BASELINE",
-            "evidence_paths": [
-              "docs/research/FABRIC0_18_PERSISTENT_CONTACT_WRENCH_DYNAMICS_RU.md"
-            ],
-            "next_action": "REOPEN_ONLY_FOR_CONCRETE_GENERIC_PRIMITIVE_FALSIFIER",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "bake": {
-            "branch": "research/fabric-bake0-6-adaptive-physical-fidelity-r1",
-            "observed_head": "457a79d1d9b915b2b665be39fd66030b92d0371a",
-            "role": "ACTIVE_RESEARCH",
-            "reported_state": "B06_A_IMPLEMENTED_EXACT_ACCEPTANCE_NOT_INFERRED",
-            "evidence_paths": [
-              "validation/FABRIC_COMPLEX2_CLOSURE.md",
-              "tests/research/fabric_bake0/fabric_bake_b0_6_a_admissibility_envelope_acceptance.gd"
-            ],
-            "next_action": "CLOSE_B06_THEN_BRIDGE3_BEFORE_COMPLEX3",
-            "consumes": [
-              "core",
-              "observatory"
-            ],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "observatory": {
-            "branch": "feature/fabric-complex2-modular-machine-r1",
-            "observed_head": "0964c58779156fcadb63e1a6a348a83036488b56",
-            "role": "FROZEN_DONOR",
-            "reported_state": "COMPLEX2_RESEARCH_CLOSED",
-            "evidence_paths": [
-              "validation/FABRIC_COMPLEX2_CLOSURE.md",
-              "docs/research/FABRIC_COMPLEX2C_COUPLED_MOTION_RU.md"
-            ],
-            "next_action": "REUSE_COMMON_PHYSICAL_SNAPSHOT_IN_VISUALS",
-            "consumes": [
-              "core"
-            ],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "bridge_history": {
-            "branch": "research/fabric-bake0-5-a-executable-hybrid-r2",
-            "observed_head": "46f17e3c7d2cac02cc81c7dd908f82a4ec4a2ebf",
-            "role": "HISTORICAL_EVIDENCE",
-            "reported_state": "BRIDGE2_E_REPLAY_EVIDENCE_CARRIER",
-            "evidence_paths": [
-              "docs/research/FABRIC_BAKE_COMPLEX_SYSTEMS_EXPERIMENTAL_LADDER_RU.md"
-            ],
-            "next_action": "DO_NOT_SELECT_AS_NEWEST_BAKE_FRONTIER_BY_NAME",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          }
-        }
-      },
-      "PRESENTATION": {
-        "goal_id": "PRESENTATION",
-        "priority_class": "OPTIONAL_CONTENT",
-        "blocks_mvp": false,
-        "current_checkpoint": "WORLD_FILL_PACKS_HANDOFF",
-        "phase": "PRESENTATION_DONORS",
-        "next_action": "TRANSFER_BOUNDED_PRESENTATION_TO_MVP_AFTER_PRODUCT_CONTRACT",
-        "next_actor": "INTEGRATOR",
-        "evidence_paths": [],
-        "open_gaps": [
-          "Decorative objects have no gameplay authority; interaction requires a canonical owner.",
-          "Optional atmosphere/content must not become an MVP prerequisite."
-        ],
-        "tracks": {
-          "mechanisms": {
-            "branch": "feature/world-fill0-noncanonical-world-enrichment-r1",
-            "observed_head": "002fde20b04e4f8379cdd053ba9b609dfe3b38ef",
-            "role": "OPTIONAL_DONOR",
-            "reported_state": "WF010_SOURCE_IMPLEMENTATION",
-            "evidence_paths": [
-              "docs/world_fill/WORLD_FILL_ROADMAP.md"
-            ],
-            "next_action": "READ_CANONICAL_EVENTS_AND_RENDER",
-            "consumes": [],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          },
-          "packs": {
-            "branch": "feature/world-packs0-content-packs-r1",
-            "observed_head": "8da220d50ec0b987c16bd5b5aa4d6d34073a24de",
-            "role": "OPTIONAL_DONOR",
-            "reported_state": "WP010_SOURCE_REPORT_GRAPHICAL_CAPTURE_PENDING",
-            "evidence_paths": [
-              "docs/world_packs/WORLD_PACKS_ROADMAP.md"
-            ],
-            "next_action": "SUPPLY_PROFILES_TO_FILL",
-            "consumes": [
-              "mechanisms"
-            ],
-            "acceptance_scope": "SOURCE_REPORT_ONLY",
-            "runtime_authorized_by_registry": false
-          }
-        }
-      }
-    },
-    "execution_policy": "Research current_checkpoint labels are advisory research milestones, not dispatchable Harness catalog IDs. This metadata grants no runtime workers."
   }
 }
