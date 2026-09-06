@@ -19,6 +19,7 @@ from project_control_architecture_compat import *  # noqa: F401,F403
 _core = _arch._core
 _ORIGINAL_AUDIT_PROGRAM = _arch._ORIGINAL_AUDIT_PROGRAM
 _ARCHITECTURE_AUDIT_PROGRAM = _arch.audit_program
+_ORIGINAL_APPLY_CROSS_BRANCH_OVERLAP = _core.apply_cross_branch_overlap
 
 _OWNERSHIP_COMPAT_MODE = "EXPLICIT_PER_PROGRAM_HISTORICAL_OWNERSHIP_TRANSITIONS"
 _OWNERSHIP_TRANSITION_REGISTRY_FIELD = "historical_passport_ownership_transitions"
@@ -312,7 +313,44 @@ def audit_program(
     return updated
 
 
+def _fully_merged_into_main(program: dict[str, Any]) -> bool:
+    """Return True only when the reported branch HEAD is already contained in main.
+
+    Cross-branch overlap is about concurrent outstanding work. A branch may remain
+    in the registry as durable source/passport provenance after its merge, but its
+    already-integrated diff must not be treated as a competing runtime/contract
+    mutation. If that branch advances again, its new HEAD is no longer an ancestor
+    of main and the normal RED/YELLOW overlap rules immediately apply again.
+    """
+    head = str(program.get("head", ""))
+    if not head:
+        return False
+    merge_base = _core.git("merge-base", head, "origin/main", allow_fail=True)
+    return merge_base == head
+
+
+def apply_cross_branch_overlap(
+    programs: list[dict[str, Any]], policy: dict[str, Any]
+) -> list[dict[str, Any]]:
+    restored_scopes: list[tuple[dict[str, Any], list[str]]] = []
+    for program in programs:
+        scope = program.get("scope_changed_files")
+        if not isinstance(scope, list) or not scope or not _fully_merged_into_main(program):
+            continue
+        restored_scopes.append((program, scope))
+        program["scope_changed_files"] = []
+        program["overlap_scope_state"] = "FULLY_MERGED_INTO_MAIN"
+    try:
+        return _ORIGINAL_APPLY_CROSS_BRANCH_OVERLAP(programs, policy)
+    finally:
+        # Keep the diagnostic source scope visible in PC0 output while ensuring
+        # the overlap decision itself is based only on outstanding branch deltas.
+        for program, scope in restored_scopes:
+            program["scope_changed_files"] = scope
+
+
 _core.audit_program = audit_program
+_core.apply_cross_branch_overlap = apply_cross_branch_overlap
 main = _core.main
 
 
