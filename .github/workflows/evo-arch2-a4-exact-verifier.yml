@@ -21,14 +21,14 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871
+          ref: 4b0f772ff39592262b853f7293bbd5403558b145
           fetch-depth: 0
           persist-credentials: false
       - name: Assert exact source identity
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871"
-          test "$(git rev-parse HEAD^{tree})" = "25a271b38110f8930b67c75be34f1577016bc2e2"
+          test "$(git rev-parse HEAD)" = "4b0f772ff39592262b853f7293bbd5403558b145"
+          test "$(git rev-parse HEAD^{tree})" = "301f57e0f42011c5340ff5dc7bfac98059643831"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Resolve exact double Godot
         id: godot
@@ -70,7 +70,7 @@ jobs:
           set -euo pipefail
           for n in 1 2; do
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a4_exact_acceptance.gd > "a4-exact-$n.log" 2>&1
-            grep -F "EVO_ARCH2_A4_EXACT assertions=28 failed=0" "a4-exact-$n.log"
+            grep -F "EVO_ARCH2_A4_EXACT assertions=32 failed=0" "a4-exact-$n.log"
             ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a4-exact-$n.log"
           done
           cmp a4-exact-1.log a4-exact-2.log
@@ -111,6 +111,6 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871"
+          test "$(git rev-parse HEAD)" = "4b0f772ff39592262b853f7293bbd5403558b145"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
