@@ -39,7 +39,7 @@ func observe_canonical_mutation(current_frontier: Dictionary, current_authority:
 		return U.failure("BRIDGE3_MUTATION_SOURCE_INVALID")
 	if _mr_applied_events.has(event_id):
 		return U.failure("BRIDGE3_MUTATION_EVENT_ALREADY_APPLIED")
-	var saved := _slot.checkpoint()
+	var saved: Dictionary = _slot.checkpoint()
 	if not saved.success:
 		return saved
 	_mr_mutation = {"previous_frontier": _frontier().duplicate(true), "current_frontier": current_frontier.duplicate(true),
@@ -156,7 +156,7 @@ func capture_capsule() -> Dictionary:
 		authority = _mr_mutation.current_authority
 		mutation_record = {"previous_frontier": _mr_mutation.previous_frontier.duplicate(true), "event_id": _mr_mutation.event_id, "tick": _mr_mutation.tick}
 	else:
-		var checkpoint_result := _slot.checkpoint()
+		var checkpoint_result: Dictionary = _slot.checkpoint()
 		if not checkpoint_result.success:
 			return checkpoint_result
 		saved = checkpoint_result.details.duplicate(true)
