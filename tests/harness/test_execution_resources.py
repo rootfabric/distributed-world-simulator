@@ -100,6 +100,34 @@ class ExecutionResourceContractTests(unittest.TestCase):
         self.assertTrue(queue["queued_job_is_not_pass"])
         self.assertTrue(queue["in_progress_job_is_not_pass"])
 
+    def test_lightweight_project_control_may_remain_github_hosted(self) -> None:
+        policy = self.resources["workflow_policy"]
+        self.assertTrue(policy["github_hosted_lightweight_control_allowed"])
+        project_control = (ROOT / ".github/workflows/project-control.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("runs-on: ubuntu-latest", project_control)
+        self.assertNotIn("runs-on: [self-hosted", project_control)
+
+    def test_legacy_self_hosted_pull_request_workflows_are_fail_closed(self) -> None:
+        policy = self.resources["workflow_policy"]
+        self.assertFalse(policy["declared_exact_self_hosted_pull_request_execution"])
+        self.assertTrue(
+            policy["legacy_self_hosted_pull_request_requires_trusted_internal_guard"]
+        )
+        required_terms = policy["required_legacy_pull_request_guard_terms"]
+        violations: list[str] = []
+        workflow_dir = ROOT / ".github/workflows"
+        paths = sorted(workflow_dir.glob("*.yml")) + sorted(workflow_dir.glob("*.yaml"))
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            if "self-hosted" not in text or "pull_request:" not in text:
+                continue
+            missing = [term for term in required_terms if term not in text]
+            if missing:
+                violations.append(f"{path.name}: missing {', '.join(missing)}")
+        self.assertEqual([], violations, "\n".join(violations))
+
     def test_agent_router_and_harness_control_expose_resource_contract(self) -> None:
         router = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         control = (ROOT / "HARNESS_CONTROL.md").read_text(encoding="utf-8")
@@ -108,6 +136,7 @@ class ExecutionResourceContractTests(unittest.TestCase):
             self.assertIn("DWS_LINUX_EXACT", text)
             self.assertIn("execution-resources.v1.json", text)
         self.assertIn("next.execution_resource", router)
+        self.assertIn("legacy self-hosted", router.lower())
         self.assertIn('"execution_resource": execution_resource', cli)
         self.assertIn("next.execution_resource.required", cli)
 
