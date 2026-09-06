@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+import re
 from typing import Any
 
 from .contracts import ContractValidationError, read_json
@@ -27,6 +28,24 @@ def default_checkpoint(contracts: dict[str, dict[str, Any]]) -> str:
     raise ContractValidationError("ACTIVE_CHECKPOINT_NOT_DECLARED")
 
 
+def _require_canonical_execution_path(root: Path, candidate: Path) -> None:
+    """Bind explicit execution selection to the directory named by its committed identity.
+
+    build_state() reads transition/work-order/event files from the selected directory.
+    An arbitrary in-repository clone/alias must therefore never be allowed to carry a
+    canonical epoch id while supplying different worktree-controlled authority inputs.
+    """
+    epoch = read_json(candidate / "project-epoch.v1.json")
+    epoch_id = epoch.get("epoch_id")
+    if not isinstance(epoch_id, str) or re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is None:
+        raise ContractValidationError("ACTIVE_EXECUTION_EPOCH_ID_INVALID")
+    expected = (root / "config/control/harness/executions" / epoch_id).resolve()
+    if candidate != expected:
+        raise ContractValidationError(
+            f"EXECUTION_PATH_NOT_CANONICAL:{candidate.relative_to(root).as_posix()}:{expected.relative_to(root).as_posix()}"
+        )
+
+
 def resolve_execution(
     root: Path,
     contracts: dict[str, dict[str, Any]],
@@ -43,6 +62,7 @@ def resolve_execution(
             raise ContractValidationError("EXECUTION_PATH_ESCAPES_REPOSITORY") from exc
         if not (candidate / "project-epoch.v1.json").is_file() or not (candidate / "work-orders").is_dir():
             raise ContractValidationError(f"EXECUTION_PATH_INVALID:{candidate}")
+        _require_canonical_execution_path(root, candidate)
         work_order_paths = sorted((candidate / "work-orders").rglob("*.json"))
         if not work_order_paths:
             raise ContractValidationError(f"ACTIVE_EXECUTION_WORK_ORDER_NOT_FOUND:{candidate}")

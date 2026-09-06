@@ -36,6 +36,12 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         registry.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / "config/control/project-program-registry.v1.json", registry)
 
+        self.external_authority = "docs/control/external-authority.v1.json"
+        self._write_json(
+            self.root / self.external_authority,
+            {"schema": "fixture.external_authority.v1", "status": "RESOLVED"},
+        )
+
         self.epoch_id = "E2026-09-06-BUNDLE-PROVENANCE"
         self.execution = harness_dir / "executions" / self.epoch_id
         self.execution.mkdir(parents=True, exist_ok=True)
@@ -56,7 +62,10 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
             {"schema": "distributed_world_simulator.harness_transition_table.v1"},
         )
         for relative in self._fixture_execution_paths():
-            self._write_json(self.execution / relative, {"schema": "fixture.authority.v1"})
+            value = {"schema": "fixture.authority.v1"}
+            if relative == "events/WO-001/001.v1.json":
+                value["evidence_paths"] = [self.external_authority]
+            self._write_json(self.execution / relative, value)
         self._git("add", ".")
         self._git("commit", "-qm", "fixture committed authority state")
 
@@ -231,9 +240,20 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
     def test_review_and_evidence_directories_keep_dedicated_provenance_semantics(self) -> None:
         self._write_json(self.execution / "reviews/untracked.v1.json", {"schema": "fixture.review.v1"})
         self._write_json(self.execution / "evidence/untracked.v1.json", {"schema": "fixture.evidence.v1"})
-        # The global reducer fence must not preempt specialized review/evidence
-        # validators. Neither file can become positive authority merely by existing.
         self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+
+    def test_external_event_json_reference_is_exact_byte_fenced(self) -> None:
+        target = self.root / self.external_authority
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            committed_enforcement_generation(self.root, self.epoch)
+
+    def test_assume_unchanged_cannot_hide_dirty_external_event_json(self) -> None:
+        self._git("update-index", "--assume-unchanged", self.external_authority)
+        target = self.root / self.external_authority
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            committed_enforcement_generation(self.root, self.epoch)
 
 
 if __name__ == "__main__":

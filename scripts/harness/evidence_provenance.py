@@ -203,14 +203,31 @@ def _strict_execution_authority_member(prefix: str, relative: str) -> bool:
     return parts[0] in _STRICT_EXECUTION_AUTHORITY_DIRS
 
 
+def _external_event_json_references(root: Path, prefix: str, event_paths: set[str]) -> tuple[str, ...]:
+    """Collect committed JSON authority references that escape the selected execution."""
+    external: set[str] = set()
+    for event_path in sorted(event_paths):
+        event = _decode(_git(root, "show", f"HEAD:{event_path}"))
+        evidence_paths = event.get("evidence_paths", [])
+        if not isinstance(evidence_paths, list):
+            continue
+        for raw in evidence_paths:
+            if not isinstance(raw, str) or not raw.endswith(".json"):
+                continue
+            relative = _path(raw.replace("\\", "/"))
+            if not relative.startswith(prefix + "/"):
+                external.add(relative)
+    return tuple(sorted(external))
+
+
 def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
     """Fence execution-local reducer/authority JSON while preserving evidence semantics.
 
     Reviews and evidence records have dedicated provenance behavior: an untracked review
     becomes non-authoritative/insufficient evidence, while an untracked or dirty hard-block
-    proof simply cannot become terminal proof. Those directories therefore are not promoted
-    to global contract errors here. Reducer/control inputs without such dedicated semantics
-    are exact-membership and exact-byte fenced before reduction.
+    proof simply cannot become terminal proof. Reducer/control inputs without such dedicated
+    semantics are exact-membership and exact-byte fenced before reduction. Any JSON authority
+    referenced by committed events outside the execution is also exact-byte fenced.
     """
     _require(re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is not None,
              "REVIEW_EPOCH_IDENTITY_REQUIRED")
@@ -219,9 +236,12 @@ def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[
     _require(base.is_dir() and not base.is_symlink(), "EXECUTION_AUTHORITY_DIRECTORY_REQUIRED")
 
     committed_raw = _git(root, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", prefix)
+    all_committed = {
+        item.decode("utf-8") for item in committed_raw.split(b"\0") if item
+    }
     committed = {
-        item.decode("utf-8") for item in committed_raw.split(b"\0")
-        if item and _strict_execution_authority_member(prefix, item.decode("utf-8"))
+        relative for relative in all_committed
+        if _strict_execution_authority_member(prefix, relative)
     }
     worktree: set[str] = set()
     for candidate in base.rglob("*.json"):
@@ -234,7 +254,13 @@ def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[
 
     _require(bool(committed), "EXECUTION_AUTHORITY_JSON_REQUIRED")
     _require(committed == worktree, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH")
-    return tuple(sorted(committed))
+
+    event_paths = {
+        relative for relative in all_committed
+        if relative.startswith(prefix + "/events/") and relative.endswith(".json")
+    }
+    external = _external_event_json_references(root, prefix, event_paths)
+    return tuple(sorted(committed | set(external)))
 
 
 def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
