@@ -85,10 +85,13 @@ class ExecutionResourceContractTests(unittest.TestCase):
     def test_agent_router_and_harness_control_expose_resource_contract(self) -> None:
         router = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         control = (ROOT / "HARNESS_CONTROL.md").read_text(encoding="utf-8")
+        cli = (ROOT / "scripts/harness/cli.py").read_text(encoding="utf-8")
         for text in (router, control):
             self.assertIn("DWS_LINUX_EXACT", text)
             self.assertIn("execution-resources.v1.json", text)
         self.assertIn("next.execution_resource", router)
+        self.assertIn('"execution_resource": execution_resource', cli)
+        self.assertIn("next.execution_resource.required", cli)
 
 
 if __name__ == "__main__":
