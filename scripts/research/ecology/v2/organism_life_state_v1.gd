@@ -61,6 +61,9 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if not v.development is Dictionary or v.development.individual_id != v.individual_id: return "LIFE_STATE_DEVELOPMENT_BINDING"
 	var development_error := S.validate(v.development, blueprint.genome)
 	if not development_error.is_empty(): return development_error
+	for name in B.RESOURCES:
+		if v.resource_ledger.growth_transferred[name] != v.development.received[name]:
+			return "LIFE_A2_TRANSFER_%s" % name
 	if not _source_valid(v.last_environment_source): return "LIFE_STATE_ENVIRONMENT_SOURCE"
 	if not _events_valid(v.last_events): return "LIFE_STATE_EVENTS"
 	var sources := B.stock()

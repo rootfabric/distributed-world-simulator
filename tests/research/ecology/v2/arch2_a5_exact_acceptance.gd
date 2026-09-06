@@ -89,6 +89,10 @@ func _contracts_and_accounting() -> void:
 	_check(next.resource_ledger.field_intake.water_mg == result.field.ledger.outputs.water_mg and next.resource_ledger.external_energy_mj == next.resource_ledger.assimilated.energy_mj, "field_and_external_energy_sources_explicit")
 	_check(LS.validate(next, blueprint).is_empty(), "organism_resource_conservation")
 	_check(next.resource_ledger.growth_transferred == next.development.received, "a2_growth_only_from_a5_transfer")
+	var cross_tamper := next.duplicate(true)
+	cross_tamper.resource_ledger.growth_transferred.material_mg += 1
+	cross_tamper.metabolic_reserves.material_mg -= 1
+	_check(LS.validate(cross_tamper, blueprint) == "LIFE_A2_TRANSFER_material_mg", "cross_ledger_a2_transfer_tamper_rejected")
 
 func _regulatory_growth() -> void:
 	var policy := _policy_fast()

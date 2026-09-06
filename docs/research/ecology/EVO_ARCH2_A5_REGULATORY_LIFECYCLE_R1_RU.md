@@ -175,7 +175,7 @@ Focused exact oracle проверяет:
 Focused pre-publication result:
 
 ```text
-EVO_ARCH2_A5_EXACT assertions=68 failed=0
+EVO_ARCH2_A5_EXACT assertions=69 failed=0
 ```
 
 ## Authority boundary
@@ -199,7 +199,12 @@ A5 может быть принят только как exact research source п
 ## Финальный focused evidence
 
 ```text
-EVO_ARCH2_A5_EXACT assertions=68 failed=0
+EVO_ARCH2_A5_EXACT assertions=69 failed=0
 fresh process x2: byte-identical
-log SHA-256: be28269f3e516cf9f47782f513e9736d2e1b3b36dd7b6265d8d6d43271ac98ec
+log SHA-256: 1e7cfe8c41052b71571a0b2df0761efcc417c8e170ffb930e9e9d192fd93a0d1
 ```
+
+
+## RM-A5-01 — cross-ledger A2 transfer seal
+
+Lifecycle validation теперь требует `resource_ledger.growth_transferred == development.received` по каждому internal resource. Это связывает metabolic ledger с accepted A2 resource ledger и fail-closed отклоняет snapshots с межконтурной рассинхронизацией.
