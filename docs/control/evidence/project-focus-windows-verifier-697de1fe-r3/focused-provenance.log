@@ -1,0 +1,29 @@
+test_artifact_from_other_run_is_rejected (test_harness_evidence_provenance.EvidenceProvenanceTests.test_artifact_from_other_run_is_rejected) ... ok
+test_artifact_wrong_digest_is_rejected (test_harness_evidence_provenance.EvidenceProvenanceTests.test_artifact_wrong_digest_is_rejected) ... ok
+test_checkpoint_event_guard_rejects_same_digest_free_pass (test_harness_evidence_provenance.EvidenceProvenanceTests.test_checkpoint_event_guard_rejects_same_digest_free_pass) ... ok
+test_dirty_current_policy_cannot_select_legacy_hard_block (test_harness_evidence_provenance.EvidenceProvenanceTests.test_dirty_current_policy_cannot_select_legacy_hard_block) ... ok
+test_dirty_epoch_registry_downgrade_cannot_enter_legacy_drive (test_harness_evidence_provenance.EvidenceProvenanceTests.test_dirty_epoch_registry_downgrade_cannot_enter_legacy_drive) ... ok
+test_forged_guard_context_cannot_downgrade_committed_generation (test_harness_evidence_provenance.EvidenceProvenanceTests.test_forged_guard_context_cannot_downgrade_committed_generation) ... ok
+test_fresh_execution_label_cannot_bypass_evidence (test_harness_evidence_provenance.EvidenceProvenanceTests.test_fresh_execution_label_cannot_bypass_evidence) ... ok
+test_historical_review_contract_is_preserved (test_harness_evidence_provenance.EvidenceProvenanceTests.test_historical_review_contract_is_preserved) ... ok
+test_main_move_routes_epoch_recovery_instead_of_old_hard_block (test_harness_evidence_provenance.EvidenceProvenanceTests.test_main_move_routes_epoch_recovery_instead_of_old_hard_block) ... ok
+test_manifest_wrong_tree_is_rejected (test_harness_evidence_provenance.EvidenceProvenanceTests.test_manifest_wrong_tree_is_rejected) ... ok
+test_missing_and_untracked_proof_cannot_close_mission (test_harness_evidence_provenance.EvidenceProvenanceTests.test_missing_and_untracked_proof_cannot_close_mission) ... ok
+test_missing_artifact_digest_is_rejected (test_harness_evidence_provenance.EvidenceProvenanceTests.test_missing_artifact_digest_is_rejected) ... ok
+test_missing_binding_digest_or_artifact_cannot_reuse (test_harness_evidence_provenance.EvidenceProvenanceTests.test_missing_binding_digest_or_artifact_cannot_reuse) ... ok
+test_modified_artifact_is_not_trusted (test_harness_evidence_provenance.EvidenceProvenanceTests.test_modified_artifact_is_not_trusted) ... ok
+test_modified_or_rewritten_proof_cannot_close_mission (test_harness_evidence_provenance.EvidenceProvenanceTests.test_modified_or_rewritten_proof_cannot_close_mission) ... ok
+test_path_traversal_and_symbolic_link_are_rejected (test_harness_evidence_provenance.EvidenceProvenanceTests.test_path_traversal_and_symbolic_link_are_rejected) ... skipped "OS does not permit fixture symlinks: [WinError 1314] Клиент не обладает требуемыми правами: 'C:\\\\Users\\\\root\\\\AppData\\\\Local\\\\Temp\\\\dws-provenance-aih53s3t\\\\fixture_impl.txt' -> 'C:\\\\Users\\\\root\\\\AppData\\\\Local\\\\Temp\\\\dws-provenance-aih53s3t\\\\linked.json'"
+test_prebuild_review_cannot_authorize_checkpoint_proposal (test_harness_evidence_provenance.EvidenceProvenanceTests.test_prebuild_review_cannot_authorize_checkpoint_proposal) ... ok
+test_real_drive_and_close_mission_accept_committed_proof (test_harness_evidence_provenance.EvidenceProvenanceTests.test_real_drive_and_close_mission_accept_committed_proof) ... ok
+test_real_loader_downgrades_digest_free_pass_without_rewriting_it (test_harness_evidence_provenance.EvidenceProvenanceTests.test_real_loader_downgrades_digest_free_pass_without_rewriting_it) ... ok
+test_untracked_review_is_not_authoritative (test_harness_evidence_provenance.EvidenceProvenanceTests.test_untracked_review_is_not_authoritative) ... ok
+test_valid_exact_manifest_satisfies_loader (test_harness_evidence_provenance.EvidenceProvenanceTests.test_valid_exact_manifest_satisfies_loader) ... ok
+test_wrong_event_binding_fails_closed (test_harness_evidence_provenance.EvidenceProvenanceTests.test_wrong_event_binding_fails_closed) ... ok
+test_wrong_head_tree_binding_fails_closed (test_harness_evidence_provenance.EvidenceProvenanceTests.test_wrong_head_tree_binding_fails_closed) ... ok
+test_wrong_work_order_binding_fails_closed (test_harness_evidence_provenance.EvidenceProvenanceTests.test_wrong_work_order_binding_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 52.048s
+
+OK (skipped=1)

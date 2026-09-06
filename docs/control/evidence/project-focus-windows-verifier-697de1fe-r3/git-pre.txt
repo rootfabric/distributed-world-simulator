@@ -1,0 +1,8 @@
+# recorded before test execution (fresh clone, detached)
+origin/main = c9e3b9d311818c5c55f16861d6c298aba5458990
+origin/control/project-focus-harness-reconciliation-r1 = 697de1fe6bb6bf934575f4280975d190b9fa948a
+HEAD = 697de1fe6bb6bf934575f4280975d190b9fa948a
+TREE = 5ffbf66eb5a42a8731f13880adc93fff3bf7be02
+git status --porcelain = (empty, clean)
+main drift = NO (origin/main equals expected canonical base c9e3b9d3)
+control drift after subject = NO (control tip equals frozen subject 697de1fe)

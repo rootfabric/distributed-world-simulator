@@ -1,0 +1,5 @@
+# recorded after all test/validation execution
+HEAD = 697de1fe6bb6bf934575f4280975d190b9fa948a
+TREE = 5ffbf66eb5a42a8731f13880adc93fff3bf7be02
+git status --porcelain = (empty, clean)
+no test shims or temporary files left behind

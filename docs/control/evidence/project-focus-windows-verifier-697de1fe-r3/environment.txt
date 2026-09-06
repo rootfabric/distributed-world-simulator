@@ -1,0 +1,9 @@
+platform = WINDOWS
+os = Windows (pwsh 7.6.5)
+python = 3.11.8
+git = 2.53.0.windows.1
+pwsh = 7.6.5
+jsonschema = 4.22.0 (pinned per scripts/harness/requirements.txt)
+full-harness environment = clean venv (site-packages of the system interpreter contains a stray third-party `tests` package that shadows the repository namespace package; full discovery was rerun in a clean venv)
+godot = NOT USED
+runtime tested = false

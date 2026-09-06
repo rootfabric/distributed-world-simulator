@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "PROJECT-FOCUS-WINDOWS-VERIFIER-697de1fe-R3",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "platform": "WINDOWS",
+  "subject_head": "697de1fe6bb6bf934575f4280975d190b9fa948a",
+  "subject_tree": "5ffbf66eb5a42a8731f13880adc93fff3bf7be02",
+  "canonical_main_observed": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+  "control_branch_observed": "697de1fe6bb6bf934575f4280975d190b9fa948a",
+  "decision": "PASS",
+  "decision_reason": "Exact HEAD/TREE independently reproduced in a fresh Windows checkout; canonical main matches the expected baseline with no drift; all required modules compile; focused provenance, autonomy runtime/policy and guard suites pass; full harness discovery in a clean environment yields 238 tests / 0 failures / 0 errors / 3 individually-evaluated skips; production consumers (state_builder review loader, event_reducer transition guards, continuation hard-block terminal) all enforce the committed provenance validator with fail-closed behavior independently reproduced for negative cases; committed generation downgrade cannot activate the legacy route while real committed generation-80 replay compatibility is preserved; candidate remains CANDIDATE_NON_AUTHORIZING with runtime_authorized=false; canonical pre-merge state remains fail-closed as documented; historical ledgers, executions, acceptance, runtime and scenes are unchanged versus both the control base and canonical main; CI machine evidence provenance (run 34011494430, artifact 9982599288, sha256 digest) independently verified against the exact subject HEAD.",
+  "tests_run": 238,
+  "failures": 0,
+  "errors": 0,
+  "skips": 3,
+  "skip_evaluation": [
+    "test_path_traversal_and_symbolic_link_are_rejected: skipped on this Windows host because creating the symlink fixture requires a privilege the non-admin session lacks (WinError 1314). Independently compensated: the path-traversal negative cases were re-executed directly against harness.evidence_provenance._path (all rejected: ../, a/../../, .git/config, absolute, backslash, drive-colon forms), and the committed-symlink rejection is statically enforced in committed_bytes via git ls-tree mode check (mode 120000 rejected by PROVENANCE_REGULAR_FILE_REQUIRED), Path.is_symlink and the resolve() containment check.",
+    "test_live_proposed_r3_negative_ownership_mutations_fail_closed: documented offline skip; requires the GitHub Actions runner environment with all remote refs fetched.",
+    "test_live_proposed_r3_standard_and_directional_are_non_red: documented offline skip; requires the GitHub Actions runner environment with all remote refs fetched."
+  ],
+  "candidate_runtime_authorized": false,
+  "hard_block_provenance_verified": true,
+  "production_drive_path_verified": true,
+  "review_digest_enforcement_verified": true,
+  "event_guard_enforcement_verified": true,
+  "committed_generation_guard_verified": true,
+  "historical_gen80_replay_checked": true,
+  "tracked_checkout_clean_before": true,
+  "tracked_checkout_clean_after": true,
+  "runtime_tested": false,
+  "godot_used": false,
+  "historical_evidence_modified": false,
+  "source_modified_by_verifier": false,
+  "ci_evidence_reused": true,
+  "ci_run_id": 34011494430,
+  "ci_artifact_id": 9982599288,
+  "ci_artifact_sha256": "sha256:9fe1ab0ad8986cbaebb818f1409ee064c3e586e27659e2d8198a21a210ae1927",
+  "pc0_standard": "YELLOW",
+  "pc0_directional": "YELLOW",
+  "pc0_notes": "CI run 34011494430 headSha equals the exact subject 697de1fe; artifact 9982599288 belongs to that run and its GitHub-reported plus locally-recomputed SHA-256 digest matches. Standard PC0 overall YELLOW with G and ECO program REDs; both are ADVISORY-gated frozen research branches off the V0 critical path and are not introduced by the candidate (no runtime/scenes/product changes in the diff). Directional PC0 overall YELLOW; its two RED critical-watch hits (V0->G, V0->ECO) both report global_blocking=false. No new product-blocking RED introduced by the candidate.",
+  "findings": [
+    {
+      "id": "ENV_SITE_PACKAGES_TESTS_SHADOW",
+      "severity": "INFO",
+      "summary": "First full-harness discovery in the system interpreter failed to import test_project_overview (ModuleNotFoundError: tests.harness) because the system site-packages contains a stray third-party `tests` package that shadows the repository namespace package. Rerunning the identical discovery command in a clean venv (only scripts/harness/requirements.txt installed, jsonschema 4.22.0) yields 238 tests / 0 failures / 0 errors. Environment artifact, not a subject defect."
+    },
+    {
+      "id": "INSTRUCTION_TEST_FILENAME_MISMATCH",
+      "severity": "INFO",
+      "summary": "The verification order names tests/harness/test_harness_autonomy_policy.py, which does not exist in the subject. The actual autonomy policy suite is tests/harness/test_harness_autonomous_execution_policy.py and was executed (5 tests, OK)."
+    },
+    {
+      "id": "SKIP_COUNT_REFERENCE_DELTA",
+      "severity": "INFO",
+      "summary": "Implementer reference was '238 tests, 2 documented offline skips'; on Windows the symlink-privilege fixture adds a third documented skip. The three skips were individually evaluated and none masks a defect (see skip_evaluation)."
+    }
+  ],
+  "checks_not_run": [
+    "-Drive -Candidate / -CloseMission -Candidate / -Plan -Candidate / -Resume -Candidate (explicitly forbidden for the verifier)",
+    "Godot/runtime execution (not needed for this subject; runtime_tested=false)"
+  ],
+  "windows_powershell_results": {
+    "canonical_overview_exit": 0,
+    "canonical_checkconsistency": "exit 3 / PROJECT_CONSISTENCY_ERRORS (expected pre-merge fail-closed)",
+    "canonical_drive": "exit 3 / EPOCH_REGISTRY_GENERATION_MISMATCH (expected pre-merge fail-closed)",
+    "canonical_closemission": "exit 3 / EPOCH_REGISTRY_GENERATION_MISMATCH (expected pre-merge fail-closed)",
+    "candidate_overview_exit": 0,
+    "candidate_checkconsistency_exit": 0,
+    "candidate_authority": "CANDIDATE_NON_AUTHORIZING",
+    "candidate_runtime_authorized": false
+  },
+  "verdict_scope_note": "This PASS is a Windows machine-evidence verdict for the frozen subject 697de1fe. It is not a merge, not P7 ACCEPTED, not MVP ACTIVATED and not MISSION COMPLETE. Next step: fresh exact-head Reviewer result, fresh main check, exact CI, then human MERGE/HOLD decision for PR #547."
+}
