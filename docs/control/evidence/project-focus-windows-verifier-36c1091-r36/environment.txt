@@ -1,0 +1,41 @@
+Verifier environment — PROJECT-FOCUS WINDOWS DELTA VERIFIER R3.6
+================================================================
+
+OS:              Windows (NTFS, case-insensitive filesystem by default)
+Python:          3.11.8 (isolated venv C:\distributed-world-simulator\p-focus-r36-venv)
+jsonschema:      4.22.0 (pinned)
+PYTHONUTF8:      1
+Checkout:        fresh detached worktree C:\distributed-world-simulator\p-focus-r36-verify
+                 HEAD=36c1091b2406717010e6e9b4585a230e45881545
+                 TREE=9f8eaee081b4373de0bca9377fc87191aad0cd4f
+Git:             system git, fetched from origin before checkout
+
+ENVIRONMENT NOTE 1 (case-sensitive fixture storage):
+  The new provenance fixtures commit both docs/control/external-authority.v1.json
+  and docs/control/external-authority.v1.JSON (case-colliding names). On default
+  NTFS these two files cannot coexist, causing 8 test failures/errors with
+  PROVENANCE_COMMITTED_FILE_REQUIRED (fail-closed, wrong error code). To verify
+  the real fence semantics, TMP/TEMP for test processes was redirected to the
+  case-sensitive WSL ext4 share \\wsl$\Ubuntu\tmp\r36-tmp (Windows Python 3.11.8,
+  Windows git). No repository code was modified. With case-sensitive temp storage
+  all 18 scheduler-provenance tests pass and the full harness passes 261/0/0.
+  One transient background rerun failed with the same collision signature before
+  any directory access had warmed the share; foreground reruns are reproducibly
+  green (18/18 OK twice).
+
+ENVIRONMENT NOTE 2 (git safe.directory):
+  For the \\wsl$ temp fixture repositories the verifier added
+  `git config --global --add safe.directory '*'` once (dubious-ownership guard
+  for UNC-path fixture repos). Repository source was not modified.
+
+Skips (evaluated):
+  1x test_harness_evidence_provenance.test_path_traversal_and_symbolic_link_are_rejected
+     — OS denies fixture symlink creation without admin privilege (documented
+       Windows symlink privilege skip; the symlink guard branch itself is
+       additionally exercised by the committed fence code).
+  2x test_project_control_proposed_r3_ownership_projection live tests
+     — require GitHub Actions environment with all remote refs fetched
+       (environment-requiring; executed in Linux CI run 34029090295).
+
+Godot:           NOT used
+Runtime tested:  NO

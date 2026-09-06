@@ -1,0 +1,10 @@
+test_current_policy_rejects_legacy_flag_only (test_harness_autonomy_runtime.AutonomousRuntimeRoutingTests.test_current_policy_rejects_legacy_flag_only) ... ok
+test_current_policy_rejects_synthetic_proof_without_committed_provenance (test_harness_autonomy_runtime.AutonomousRuntimeRoutingTests.test_current_policy_rejects_synthetic_proof_without_committed_provenance) ... ok
+test_current_policy_requires_every_declared_proof_clause (test_harness_autonomy_runtime.AutonomousRuntimeRoutingTests.test_current_policy_requires_every_declared_proof_clause) ... ok
+test_unknown_policy_requirement_fails_closed (test_harness_autonomy_runtime.AutonomousRuntimeRoutingTests.test_unknown_policy_requirement_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+

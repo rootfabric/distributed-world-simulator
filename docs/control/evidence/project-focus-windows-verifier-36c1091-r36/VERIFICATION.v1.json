@@ -1,0 +1,93 @@
+{
+  "schema": "distributed_world_simulator.verifier_report.v1",
+  "verifier": "PROJECT-FOCUS WINDOWS DELTA VERIFIER R3.6",
+  "decision": "PASS",
+  "subject": {
+    "head": "36c1091b2406717010e6e9b4585a230e45881545",
+    "tree": "9f8eaee081b4373de0bca9377fc87191aad0cd4f",
+    "expected_canonical_main": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+    "trusted_predecessor": "2d4187337b556807ca72feebd4bd03245de389b3",
+    "delta": {"commits": 5, "files": 5}
+  },
+  "live_refs": {
+    "origin_main": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+    "origin_control_project_focus_harness_reconciliation_r1": "36c1091b2406717010e6e9b4585a230e45881545",
+    "main_drift": false,
+    "control_drift": false
+  },
+  "checkout": {"clean_before": true, "clean_after": true, "source_modified_by_verifier": false},
+  "checks": {
+    "auto_canonical_execution_selection": "PASS",
+    "explicit_copied_execution_rejected": "PASS",
+    "relative_copied_execution_rejected": "PASS",
+    "future_dated_copied_execution_rejected": "PASS",
+    "execution_authority_fence_chain": "PASS",
+    "evidence_map_dirty_bytes_rejected": "PASS",
+    "evidence_map_untracked_injection_rejected": "PASS",
+    "evidence_map_assume_unchanged_rejected": "PASS",
+    "non_map_evidence_no_promotion_regression": "PASS",
+    "external_authority_json_fenced": "PASS",
+    "external_authority_json_assume_unchanged_rejected": "PASS",
+    "uppercase_json_bypass_closed": "PASS",
+    "transition_table_provenance_preserved": "PASS",
+    "contract_bundle_14_file_fence_preserved": "PASS",
+    "strict_execution_authority_matrix_preserved": "PASS",
+    "hard_block_and_review_specialized_provenance_preserved": "PASS",
+    "historical_gen80_fail_closed_preserved": "PASS",
+    "checkpoint_session_fixture_repair": "PASS",
+    "candidate_non_authorizing": "PASS",
+    "runtime_authorized": false,
+    "canonical_pre_merge_fail_closed": "PASS"
+  },
+  "tests": {
+    "focused_selector": {"tests": 5, "failures": 0, "errors": 0, "skips": 0},
+    "focused_scheduler_provenance": {"tests": 18, "failures": 0, "errors": 0, "skips": 0},
+    "evidence_provenance": {"tests": 24, "failures": 0, "errors": 0, "skips": 1},
+    "autonomy_runtime": {"tests": 4, "failures": 0, "errors": 0, "skips": 0},
+    "checkpoint_session": {"tests": 22, "failures": 0, "errors": 0, "skips": 0},
+    "full_harness": {"tests": 261, "failures": 0, "errors": 0, "skips": 3}
+  },
+  "skip_evaluations": [
+    "test_path_traversal_and_symbolic_link_are_rejected: Windows symlink privilege denied (documented platform skip; guard branch still present and exercised on Linux CI)",
+    "test_live_proposed_r3_negative_ownership_mutations_fail_closed: requires GitHub Actions environment",
+    "test_live_proposed_r3_standard_and_directional_are_non_red: requires GitHub Actions environment"
+  ],
+  "candidate_validation": {
+    "comparison_base": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+    "registry_generation": 81,
+    "authority": "CANDIDATE_NON_AUTHORIZING",
+    "runtime_authorized": false,
+    "primary_lane": "MVP"
+  },
+  "powershell_wrapper": {
+    "overview": {"exit": 0},
+    "check_consistency": {"exit": 3, "code": "PROJECT_CONSISTENCY_ERRORS"},
+    "drive": {"exit": 3, "code": "EPOCH_REGISTRY_GENERATION_MISMATCH"},
+    "close_mission": {"exit": 3, "code": "EPOCH_REGISTRY_GENERATION_MISMATCH"},
+    "candidate_overview": {"exit": 0},
+    "candidate_check_consistency": {"exit": 0},
+    "forbidden_modes_run": false
+  },
+  "ci": {
+    "run": 34029090295,
+    "head_sha": "36c1091b2406717010e6e9b4585a230e45881545",
+    "conclusion": "SUCCESS",
+    "harness": {"tests": 261, "failures": 0, "errors": 0, "skips": 0},
+    "artifact": 9988020059,
+    "artifact_sha256": "6aed64b884f97bac8ebb9b63b2a854f5ec7774df432893381d073b65f4d36df3",
+    "note": "GitHub Actions SUCCESS is evidence, not the Verifier verdict"
+  },
+  "pc0": {
+    "standard": "YELLOW",
+    "directional": "YELLOW",
+    "red_advisory_only_confirmed": true
+  },
+  "environment_notes": [
+    "New fixtures commit case-colliding .json/.JSON pair; default case-insensitive NTFS makes 8 tests fail closed (PROVENANCE_COMMITTED_FILE_REQUIRED). Verified with TMP/TEMP redirected to case-sensitive WSL ext4 share; no repo code modified.",
+    "git safe.directory '*' added globally for UNC-path fixture repositories."
+  ],
+  "runtime_tested": false,
+  "godot_used": false,
+  "findings": [],
+  "remaining_blockers": []
+}

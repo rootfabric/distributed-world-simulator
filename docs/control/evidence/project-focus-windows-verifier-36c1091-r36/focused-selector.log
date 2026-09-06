@@ -1,0 +1,11 @@
+test_automatic_canonical_execution_selection_is_allowed (test_execution_selector_provenance.ExplicitExecutionPathProvenanceTests.test_automatic_canonical_execution_selection_is_allowed) ... ok
+test_automatic_selection_rejects_future_dated_copied_execution (test_execution_selector_provenance.ExplicitExecutionPathProvenanceTests.test_automatic_selection_rejects_future_dated_copied_execution) ... ok
+test_copied_epoch_under_arbitrary_directory_is_rejected (test_execution_selector_provenance.ExplicitExecutionPathProvenanceTests.test_copied_epoch_under_arbitrary_directory_is_rejected) ... ok
+test_explicit_canonical_execution_path_is_allowed (test_execution_selector_provenance.ExplicitExecutionPathProvenanceTests.test_explicit_canonical_execution_path_is_allowed) ... ok
+test_relative_arbitrary_execution_path_is_rejected (test_execution_selector_provenance.ExplicitExecutionPathProvenanceTests.test_relative_arbitrary_execution_path_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.045s
+
+OK
+

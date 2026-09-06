@@ -1,0 +1,15 @@
+PC0 summary from exact artifact 9988020059
+=========================================
+
+project-control-report.json:
+  main_head:          c9e3b9d311818c5c55f16861d6c298aba5458990
+  registry_generation 80 (canonical baseline at main)
+  overall_health:     YELLOW  -> standard PC0 = YELLOW
+
+DIRECTIONAL_WATCH_STATUS_RU.md:
+  Overall health: YELLOW  -> directional PC0 = YELLOW
+  RED entries: V0->G and V0->ECO CRITICAL_WATCH_HIT, both flagged
+  ADVISORY_RESEARCH; report confirms G blocks_global_progress=false and
+  ECO blocks_global_progress=false (advisory only, as permitted).
+
+GREEN is NOT declared by the verifier.

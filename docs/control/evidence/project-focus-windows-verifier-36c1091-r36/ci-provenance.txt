@@ -1,0 +1,19 @@
+EXACT CI PROVENANCE — independent check (GitHub REST API)
+=========================================================
+
+Run:        34029090295 (Project Control)
+Branch:     control/project-focus-harness-reconciliation-r1
+head_sha:   36c1091b2406717010e6e9b4585a230e45881545  (exact subject HEAD — MATCH)
+status:     completed
+conclusion: success
+
+Job:        control / success
+Full Harness log line:
+  Ran 261 tests in 67.203s
+  OK
+  (0 failures, 0 errors, 0 skips on Linux; no FAILED/ERROR lines in job log)
+
+Artifact:   9988020059 (project-control-report, 28238 bytes)
+SHA-256:    6aed64b884f97bac8ebb9b63b2a854f5ec7774df432893381d073b65f4d36df3  (MATCH)
+
+Note: GitHub Actions SUCCESS is recorded as evidence, NOT as the Verifier verdict.

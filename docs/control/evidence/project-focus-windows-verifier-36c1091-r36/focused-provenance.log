@@ -1,0 +1,135 @@
+test_assume_unchanged_cannot_hide_dirty_execution_evidence_map (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_execution_evidence_map) ... ok
+test_assume_unchanged_cannot_hide_dirty_external_event_json (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_external_event_json) ... FAIL
+test_assume_unchanged_cannot_hide_dirty_repair_doctrine (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_repair_doctrine) ... ok
+test_assume_unchanged_cannot_hide_dirty_scheduler (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_scheduler) ... ok
+test_assume_unchanged_cannot_hide_dirty_transition_table (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_transition_table) ... ok
+test_dirty_execution_evidence_map_is_exact_byte_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_execution_evidence_map_is_exact_byte_fenced) ... ok
+test_dirty_repair_doctrine_is_rejected_before_reducer_can_weaken_repair_map (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_repair_doctrine_is_rejected_before_reducer_can_weaken_repair_map) ... ERROR
+test_dirty_scheduler_policy_is_rejected_by_generation_fence (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_scheduler_policy_is_rejected_by_generation_fence) ... ERROR
+test_dirty_transition_table_is_rejected_before_reducer (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_transition_table_is_rejected_before_reducer) ... ok
+test_every_current_contract_bundle_dependency_is_worktree_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_every_current_contract_bundle_dependency_is_worktree_fenced) ... ERROR
+test_every_strict_execution_authority_json_is_worktree_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_every_strict_execution_authority_json_is_worktree_fenced) ... ERROR
+test_external_event_json_reference_is_exact_byte_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_external_event_json_reference_is_exact_byte_fenced) ... FAIL
+test_guard_context_rejects_dirty_scheduler_before_event_reduction (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_guard_context_rejects_dirty_scheduler_before_event_reduction) ... ok
+test_review_and_non_map_evidence_keep_dedicated_provenance_semantics (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_review_and_non_map_evidence_keep_dedicated_provenance_semantics) ... ERROR
+test_strict_execution_membership_rejects_deleted_transition_table (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_strict_execution_membership_rejects_deleted_transition_table) ... ok
+test_strict_execution_membership_rejects_untracked_event_injection (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_strict_execution_membership_rejects_untracked_event_injection) ... ok
+test_untracked_execution_evidence_map_injection_is_rejected (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_untracked_execution_evidence_map_injection_is_rejected) ... ok
+test_uppercase_external_json_reference_uses_same_fence_as_consumer (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_uppercase_external_json_reference_uses_same_fence_as_consumer) ... FAIL
+
+======================================================================
+ERROR: test_dirty_repair_doctrine_is_rejected_before_reducer_can_weaken_repair_map (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_repair_doctrine_is_rejected_before_reducer_can_weaken_repair_map)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 176, in test_dirty_repair_doctrine_is_rejected_before_reducer_can_weaken_repair_map
+    self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 326, in committed_enforcement_generation
+    committed_bytes(root, relative, immutable=False)
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 107, in committed_bytes
+    _require(len(entries) == 1, "PROVENANCE_COMMITTED_FILE_REQUIRED")
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 52, in _require
+    raise ContractValidationError(code)
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+======================================================================
+ERROR: test_dirty_scheduler_policy_is_rejected_by_generation_fence (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_dirty_scheduler_policy_is_rejected_by_generation_fence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 158, in test_dirty_scheduler_policy_is_rejected_by_generation_fence
+    self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 326, in committed_enforcement_generation
+    committed_bytes(root, relative, immutable=False)
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 107, in committed_bytes
+    _require(len(entries) == 1, "PROVENANCE_COMMITTED_FILE_REQUIRED")
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 52, in _require
+    raise ContractValidationError(code)
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+======================================================================
+ERROR: test_every_current_contract_bundle_dependency_is_worktree_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_every_current_contract_bundle_dependency_is_worktree_fenced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 194, in test_every_current_contract_bundle_dependency_is_worktree_fenced
+    self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 326, in committed_enforcement_generation
+    committed_bytes(root, relative, immutable=False)
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 107, in committed_bytes
+    _require(len(entries) == 1, "PROVENANCE_COMMITTED_FILE_REQUIRED")
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 52, in _require
+    raise ContractValidationError(code)
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+======================================================================
+ERROR: test_every_strict_execution_authority_json_is_worktree_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_every_strict_execution_authority_json_is_worktree_fenced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 223, in test_every_strict_execution_authority_json_is_worktree_fenced
+    self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 326, in committed_enforcement_generation
+    committed_bytes(root, relative, immutable=False)
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 107, in committed_bytes
+    _require(len(entries) == 1, "PROVENANCE_COMMITTED_FILE_REQUIRED")
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 52, in _require
+    raise ContractValidationError(code)
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+======================================================================
+ERROR: test_review_and_non_map_evidence_keep_dedicated_provenance_semantics (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_review_and_non_map_evidence_keep_dedicated_provenance_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 247, in test_review_and_non_map_evidence_keep_dedicated_provenance_semantics
+    self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 326, in committed_enforcement_generation
+    committed_bytes(root, relative, immutable=False)
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 107, in committed_bytes
+    _require(len(entries) == 1, "PROVENANCE_COMMITTED_FILE_REQUIRED")
+  File "C:\distributed-world-simulator\p-focus-r36-verify\scripts\harness\evidence_provenance.py", line 52, in _require
+    raise ContractValidationError(code)
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+======================================================================
+FAIL: test_assume_unchanged_cannot_hide_dirty_external_event_json (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_assume_unchanged_cannot_hide_dirty_external_event_json)
+----------------------------------------------------------------------
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 281, in test_assume_unchanged_cannot_hide_dirty_external_event_json
+    with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+AssertionError: "PROVENANCE_WORKTREE_MODIFIED" does not match "PROVENANCE_COMMITTED_FILE_REQUIRED"
+
+======================================================================
+FAIL: test_external_event_json_reference_is_exact_byte_fenced (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_external_event_json_reference_is_exact_byte_fenced)
+----------------------------------------------------------------------
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 274, in test_external_event_json_reference_is_exact_byte_fenced
+    with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+AssertionError: "PROVENANCE_WORKTREE_MODIFIED" does not match "PROVENANCE_COMMITTED_FILE_REQUIRED"
+
+======================================================================
+FAIL: test_uppercase_external_json_reference_uses_same_fence_as_consumer (test_scheduler_policy_provenance.CurrentBundlePolicyProvenanceTests.test_uppercase_external_json_reference_uses_same_fence_as_consumer)
+----------------------------------------------------------------------
+harness.contracts.ContractValidationError: PROVENANCE_COMMITTED_FILE_REQUIRED
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\distributed-world-simulator\p-focus-r36-verify\tests\harness\test_scheduler_policy_provenance.py", line 287, in test_uppercase_external_json_reference_uses_same_fence_as_consumer
+    with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+AssertionError: "PROVENANCE_WORKTREE_MODIFIED" does not match "PROVENANCE_COMMITTED_FILE_REQUIRED"
+
+----------------------------------------------------------------------
+Ran 18 tests in 31.290s
+
+FAILED (failures=3, errors=5)
+

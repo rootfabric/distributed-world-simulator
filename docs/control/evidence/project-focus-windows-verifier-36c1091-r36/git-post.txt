@@ -1,0 +1,12 @@
+git post-verification state
+===========================
+
+$ git rev-parse HEAD
+36c1091b2406717010e6e9b4585a230e45881545
+
+$ git rev-parse HEAD^{tree}
+9f8eaee081b4373de0bca9377fc87191aad0cd4f
+
+$ git status --porcelain
+(only the new untracked evidence directory docs/control/evidence/project-focus-windows-verifier-36c1091-r36/
+ before the evidence commit; tracked source unchanged by the verifier)

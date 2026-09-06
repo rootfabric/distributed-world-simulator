@@ -1,0 +1,37 @@
+git pre-checkout state (fresh verifier session)
+===============================================
+
+$ git fetch --all --prune
+  (fetched; control/project-focus-harness-reconciliation-r1 updated 284a23d2..36c1091b)
+
+$ git rev-parse origin/main
+c9e3b9d311818c5c55f16861d6c298aba5458990
+
+$ git rev-parse origin/control/project-focus-harness-reconciliation-r1
+36c1091b2406717010e6e9b4585a230e45881545
+
+MAIN_DRIFT: NO (matches expected canonical main c9e3b9d3)
+LIVE_CONTROL_DRIFT: NO (frozen subject 36c1091 == live control tip)
+
+$ git checkout --detach 36c1091b2406717010e6e9b4585a230e45881545
+HEAD is now at 36c1091b test(harness): bind selector fixture to canonical epoch identity
+
+$ git rev-parse HEAD
+36c1091b2406717010e6e9b4585a230e45881545
+
+$ git rev-parse HEAD^{tree}
+9f8eaee081b4373de0bca9377fc87191aad0cd4f
+
+$ git status --porcelain
+(empty — tracked checkout clean before verification)
+
+DELTA 2d4187337b556807ca72feebd4bd03245de389b3..36c1091b2406717010e6e9b4585a230e45881545
+5 commits, 5 changed files:
+M  scripts/harness/evidence_provenance.py
+M  scripts/harness/execution_selector.py
+A  tests/harness/test_execution_selector_provenance.py
+M  tests/harness/test_harness_checkpoint_session.py
+M  tests/harness/test_scheduler_policy_provenance.py
+ stats: 5 files changed, 399 insertions(+), 14 deletions(-)
+No changes under runtime/, scenes/, config/control/harness/executions/,
+config/control/harness/acceptance/, historical reviews/verifications/evidence.
