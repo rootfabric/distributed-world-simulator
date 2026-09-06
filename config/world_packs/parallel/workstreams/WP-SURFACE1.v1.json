@@ -16,6 +16,12 @@
   ],
   "blockers": [],
   "next_action": "Independent reviewer re-review of PR #557 at the exact tested_head recorded in machine fields (see tested_head below); prose SHAs are never identity.",
+  "review_verdict": "PASS",
+  "reviewed_head": "b37ae1fbc6705a7a4461b0f925f2f1fa59859d16",
+  "reviewed_tested_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
+  "reviewer_evidence": [
+    "Initial R2 review @ 2ab92799: FAIL (D1/D3/D4). Repair: 953e439c (D3) + b37ae1fb (D1/D4 state/evidence). Independent re-review @ b37ae1fb: VERDICT PASS — all PASS validation entries at exactly tested_head 953e439c; only state/evidence after tested_head; compose() fail-closed verified (43 passed); evidence doc consistent; reviewer independently confirmed Linux full regression 112/112 at 953e439c. Windows library_contract single symlink failure remains recorded as environmental (WinError 1314)."
+  ],
   "last_checkpoint_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
   "tested_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
   "validation": [
@@ -59,3 +65,4 @@
     "Earlier revalidate commit 2ab92799 rewrote validation heads without recording real runs at that head; it is superseded by this state, which records runs executed at 953e439c on 2026-09-06."
   ]
 }
+
