@@ -17,6 +17,8 @@ Design constraints:
 from __future__ import annotations
 
 import hashlib
+import urllib.error
+import urllib.request
 from typing import Callable, Optional, Protocol
 
 from .contract import FetchContract, FetchVerificationError
@@ -126,6 +128,29 @@ def digest_of(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+class _UserAgent(urllib.request.BaseHandler):
+    """Identify ourselves; some CDNs 403 the default python-urllib agent."""
+
+
+    def _add(self, request):
+        if not request.has_header("User-agent"):
+            request.add_unredirected_header("User-agent", "DWS-WorldPacks/1.0")
+        return request
+
+    def http_request(self, request):
+        return self._add(request)
+
+    def https_request(self, request):
+        return self._add(request)
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(
+            newurl, code, "redirect refused by bounded transport", headers, fp
+        )
+
+
 def default_opener() -> Opener:
     """Build the production opener: https only, no redirects.
 
@@ -136,13 +161,7 @@ def default_opener() -> Opener:
     import urllib.error
     import urllib.request
 
-    class _NoRedirect(urllib.request.HTTPRedirectHandler):
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-            raise urllib.error.HTTPError(
-                newurl, code, "redirect refused by bounded transport", headers, fp
-            )
-
-    return urllib.request.build_opener(_NoRedirect)
+    return urllib.request.build_opener(_UserAgent, _NoRedirectHandler)
 
 
 # --------------------------------------------------------------------------
@@ -202,17 +221,11 @@ def pinned_opener(host: str, resolver, *, pinned_ip: str) -> Opener:
     import urllib.error
     import urllib.request
 
-    class _NoRedirect(urllib.request.HTTPRedirectHandler):
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-            raise urllib.error.HTTPError(
-                newurl, code, "redirect refused by bounded transport", headers, fp
-            )
-
     class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
         def https_open(self, req):
             return self.do_open(_make_pinned_https_connection(pinned_ip), req)
 
-    return urllib.request.build_opener(_NoRedirect, _PinnedHTTPSHandler)
+    return urllib.request.build_opener(_UserAgent, _NoRedirectHandler, _PinnedHTTPSHandler)
 
 
 def resolve_public_ip(host: str, resolver) -> str:

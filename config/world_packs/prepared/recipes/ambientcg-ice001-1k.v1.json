@@ -1,0 +1,69 @@
+{
+  "schema": "dws.world_packs.prepared_import_recipe.v1",
+  "recipe_id": "prepared/ambientcg/ice001-1k-jpg",
+  "recipe_version": 1,
+  "candidate_id": "candidate/ambientcg/ice001",
+  "intended_use": {
+    "surface_family": "ice",
+    "fidelity_tier": "standard",
+    "presentation_only": true
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://docs.ambientcg.com/license/",
+      "verified_at_utc": "2026-09-06"
+    }
+  },
+  "raw_content": {
+    "sha256": "721e7fc523524a7f09a90518be17205a2f4f8f99a48e481821e1b6c482ecdf25",
+    "expected_size_bytes": 5770801,
+    "format": "zip",
+    "measured_at_utc": "2026-09-06",
+    "measurement": "downloaded once and hashed; source listing shows Ice001 1K JPG archive"
+  },
+  "source_urls": [
+    "https://ambientcg.com/get?file=Ice001_1K-JPG.zip",
+    "https://acg-download.struffelproductions.com/file/ambientCG-Web/download/Ice001_1MwUzPcC/Ice001_1K-JPG.zip"
+  ],
+  "approved_hosts": [
+    "ambientcg.com",
+    "acg-download.struffelproductions.com"
+  ],
+  "extraction": {
+    "member_allow": [
+      "Ice001_1K-JPG_Color.jpg",
+      "Ice001_1K-JPG_NormalGL.jpg",
+      "Ice001_1K-JPG_Roughness.jpg",
+      "Ice001_1K-JPG_Displacement.jpg"
+    ],
+    "notes": "Godot uses OpenGL-style (Y+) normals: NormalGL kept, NormalDX rejected."
+  },
+  "import": {
+    "texture_format": "jpg",
+    "color_map_srgb": true,
+    "normal_map_srgb": false,
+    "roughness_map_srgb": false,
+    "displacement_map_srgb": false,
+    "normal_map_detect": "detect_3d",
+    "mipmaps": true,
+    "filter": "trilinear",
+    "compression": "lossless_source_jpg_passthrough",
+    "roughness_channel": "g",
+    "importer_version": 1
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_relative_path": "Godot/godot/bin/godot.windows.editor.double.x86_64.exe",
+    "renderer": "forward_plus",
+    "target_platform": "windows_x86_64_double"
+  },
+  "notes": [
+    "Identity is recipe_id@recipe_version + raw sha256; storage URLs are relocatable and never identity.",
+    "Acquisition must go through asset_fetch.obtain_safe (approved hosts, DNS pinning, redirect revalidation, size/hash gates)."
+  ],
+  "recorded_at_utc": "2026-09-06",
+  "recorded_by": "WP1_2_FOUNDATION_INTEGRATION"
+}
