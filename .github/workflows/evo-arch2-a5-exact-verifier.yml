@@ -21,15 +21,15 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 713f69f1bb0439f928a0e1f79c32e7c08b9997d1
+          ref: 864f10b6b6f4e4babb209b289c42267c61edcdd7
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact source identity and additive A5 fence
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "713f69f1bb0439f928a0e1f79c32e7c08b9997d1"
-          test "$(git rev-parse HEAD^{tree})" = "9e4ba8ea04aaee2177ef22a1989487a82392ad04"
+          test "$(git rev-parse HEAD)" = "864f10b6b6f4e4babb209b289c42267c61edcdd7"
+          test "$(git rev-parse HEAD^{tree})" = "c1892f46dea42c292486b639850bd0468b72bcee"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -87,7 +87,7 @@ jobs:
           set -euo pipefail
           for n in 1 2; do
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd > "a5-exact-$n.log" 2>&1
-            grep -F "EVO_ARCH2_A5_EXACT assertions=68 failed=0" "a5-exact-$n.log"
+            grep -F "EVO_ARCH2_A5_EXACT assertions=69 failed=0" "a5-exact-$n.log"
             ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"
           done
           cmp a5-exact-1.log a5-exact-2.log
@@ -141,6 +141,6 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "713f69f1bb0439f928a0e1f79c32e7c08b9997d1"
+          test "$(git rev-parse HEAD)" = "864f10b6b6f4e4babb209b289c42267c61edcdd7"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
