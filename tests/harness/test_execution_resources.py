@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from harness.contracts import ContractBundle
 from harness.execution_resources import (
     build_execution_resource_plan,
     load_execution_resources,
@@ -17,6 +18,23 @@ from harness.execution_resources import (
 class ExecutionResourceContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.resources = load_execution_resources(ROOT)
+
+    def test_execution_resource_contract_is_loaded_by_canonical_bundle(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        self.assertIn("execution_resources", bundle.contracts)
+        self.assertEqual(
+            "H0-EXECUTION-RESOURCES-2026-09-06-R1",
+            bundle.contracts["execution_resources"]["revision"],
+        )
+        self.assertEqual(
+            "config/control/harness/execution-resources.v1.json",
+            bundle.contracts["harness_policy"]["execution_resources"],
+        )
+        self.assertTrue(
+            bundle.contracts["harness_policy"]["principles"][
+                "drive_exposes_execution_resource_plan"
+            ]
+        )
 
     def test_dws_linux_exact_is_declared_without_pinning_physical_runner_identity(self) -> None:
         exact = self.resources["resources"]["DWS_LINUX_EXACT"]
