@@ -72,6 +72,7 @@ class ContractBundle:
             "evidence_map_schema": policy["evidence_map_schema"],
             "human_attention_schema": policy["human_attention_schema"],
             "continuation_policy": policy["continuation_policy"],
+            "execution_resources": policy["execution_resources"],
         }
         contracts = {
             name: read_json(root / relative) for name, relative in required.items()
@@ -119,6 +120,19 @@ class ContractBundle:
         ):
             raise ContractValidationError("CONTINUATION_LAYER_REVISION_MISMATCH")
 
+        execution_resources = self.contracts["execution_resources"]
+        if policy.get("execution_resources") != "config/control/harness/execution-resources.v1.json":
+            raise ContractValidationError("EXECUTION_RESOURCE_LINK_INVALID")
+        if policy.get("execution_resource_policy_revision") != execution_resources.get(
+            "revision"
+        ):
+            raise ContractValidationError("EXECUTION_RESOURCE_POLICY_REVISION_MISMATCH")
+        # Lazy import avoids a module import cycle while keeping resource validation
+        # part of the canonical ContractBundle fail-closed path.
+        from .execution_resources import validate_execution_resources
+
+        validate_execution_resources(execution_resources)
+
         if policy.get("git_transport_policy_revision") != "H0-GIT-TRANSPORT-2026-09-05-R1":
             raise ContractValidationError("GIT_TRANSPORT_POLICY_REVISION_INVALID")
 
@@ -132,6 +146,15 @@ class ContractBundle:
         )
         if any(principles.get(name) is not True for name in required_principles):
             raise ContractValidationError("GIT_TRANSPORT_PRINCIPLES_INVALID")
+
+        required_resource_principles = (
+            "execution_resources_are_machine_owned",
+            "execution_resource_is_not_role",
+            "drive_exposes_execution_resource_plan",
+            "self_hosted_validation_must_obey_resource_trust_policy",
+        )
+        if any(principles.get(name) is not True for name in required_resource_principles):
+            raise ContractValidationError("EXECUTION_RESOURCE_POLICY_PRINCIPLES_INVALID")
 
         git_authority = policy.get("git_execution_authority")
         if not isinstance(git_authority, dict):

@@ -9,6 +9,7 @@ from pathlib import Path
 from .checkpoint_planner import build_plan
 from .continuation import build_continuation
 from .contracts import ContractBundle, ContractValidationError
+from .execution_resources import build_execution_resource_plan, load_execution_resources
 from .execution_selector import resolve_execution
 from .git_authority import build_git_authority
 from .mission import load_checkpoint_acceptance
@@ -70,6 +71,12 @@ def _attach_mission_state(
     continuation = build_continuation(
         state, bundle.contracts["continuation_policy"]  # type: ignore[arg-type]
     )
+    execution_resource = build_execution_resource_plan(
+        continuation,
+        state,
+        load_execution_resources(root),
+    )
+    state["execution_resource"] = execution_resource
     state["next"] = {
         **continuation,
         "checkpoint": checkpoint,
@@ -77,6 +84,7 @@ def _attach_mission_state(
         "verification_commands": state["verification_commands"],
         "human_gate": state["active_work_order"].get("human_approval_required_for", []),  # type: ignore[union-attr]
         "git_authority": build_git_authority(bundle.contracts["harness_policy"]),
+        "execution_resource": execution_resource,
     }
     return continuation
 
@@ -173,6 +181,8 @@ def main(argv: list[str] | None = None) -> int:
                 "instruction": (
                     "Execute the returned next role/action inside the same parent checkpoint session, "
                     "using pre-authorized routine A0-A3 Git operations within Work Order scope; "
+                    "if next.execution_resource.required is true, use that declared resource and "
+                    "its trust/dispatch/queue policy without inventing or mutating a product workflow; "
                     "persist durable evidence, then rerun DRIVE."
                 ),
                 "git_authority": state["next"]["git_authority"],

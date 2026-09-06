@@ -11,9 +11,11 @@ PROJECT_CONTROL.md
 HARNESS_CONTROL.md
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+docs/control/HARNESS_EXECUTION_RESOURCE_PILOT_RU.md
 config/control/project-program-registry.v1.json
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
+config/control/harness/execution-resources.v1.json
 ```
 
 Then read the active program passport, nearest scoped `AGENTS.md` / local guidance, and relevant validation/checkpoint evidence. If historical/local prose conflicts with the main-owned registry, PC0, Harness policy or architecture ownership, the central main-owned control state wins.
@@ -30,6 +32,7 @@ CHECKPOINT IS THE UNIT OF CONTROL
 CHECKPOINT MISSION IS THE USER SESSION UNIT
 WORK ORDER IS THE EXECUTION UNIT
 ROLE IS THE ISOLATION UNIT
+EXECUTION RESOURCE IS NOT A ROLE
 ROLE BOUNDARY IS NOT A MISSION BOUNDARY
 EVIDENCE PACKAGE IS THE UNIT OF REVIEW
 EXCEPTION IS THE UNIT OF HUMAN ATTENTION
@@ -37,9 +40,12 @@ HUMAN IS NOT A ROUTINE RESULT COURIER
 ACTIVE CHECKPOINT MISSION PRE-AUTHORIZES ROUTINE A0-A3 GIT OPERATIONS
 DO NOT ASK FOR BRANCH / COMMIT / NON-FORCE-PUSH / DRAFT-PR CONFIRMATION
 GIT AUTHORITY SURVIVES ROUTINE ROLE BOUNDARIES
+DWS_LINUX_EXACT IS VALIDATION/EVIDENCE ONLY, NEVER GIT TRANSPORT
+EXTERNAL FORK CODE MUST NEVER EXECUTE ON DWS SELF-HOSTED RUNNERS
+LEGACY SELF-HOSTED PULL_REQUEST MUST FAIL CLOSED TO ROOTFABRIC + INTERNAL HEAD
 ```
 
-Scoped instructions may add local conventions, traps, launch commands and tests, but may not override architecture ownership, PC0 policy, main-owned registry, checkpoint catalog, risk minimums, review requirements, autonomy ceiling or human gates.
+Scoped instructions may add local conventions, traps, launch commands and tests, but may not override architecture ownership, PC0 policy, main-owned registry, checkpoint catalog, risk minimums, review requirements, autonomy ceiling, execution-resource trust rules or human gates.
 
 ## Agent work protocol
 
@@ -53,13 +59,19 @@ For every checkpoint mission:
 6. On `FIX_REQUIRED`, follow Repair Doctrine, run focused validation and required regressions, then route a fresh exact-head review/verification as required.
 7. Persist every role result to the declared durable evidence sink. A chat-only PASS/FAIL does not complete a handoff.
 8. Run `CONTROL_DEVELOPMENT.ps1 -Drive` after every durable role result. The returned `next_actor` / `next_action` is the next child role inside the same parent mission.
-9. Before ending an isolated role, `CONTROL_DEVELOPMENT.ps1 -CloseRole` must authorize it. Exit code `7` means continue the role.
-10. Before the final user response, `CONTROL_DEVELOPMENT.ps1 -Close` (alias of `-CloseMission`) must authorize mission exit. Exit code `8` means the checkpoint mission is still open and must continue.
-11. Run PC0 and directional audit before checkpoint proposal/acceptance as required by the Work Order.
-12. Routine Git operations inside the active checkpoint mission and bounded Work Order are already authorized through the default `A3_INTEGRATE_CANDIDATE` ceiling. Do not re-ask for permission to create a feature/control/repair branch, stage scoped paths, commit, non-force push, post durable evidence, open/update a draft PR, or request independent review.
-13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
-14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
-15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
+9. Read `next.execution_resource` from every `Drive` result. If `required=true`, use the declared resource and its trust/queue/dispatch policy. Do not invent another runner, do not mutate a product workflow to obtain runner access, and do not treat queued/in-progress work as PASS.
+10. `DWS_LINUX_EXACT` is the default independent exact-verification resource. It is a resource, not the Verifier role. Role independence is still governed by review/risk policy.
+11. Self-hosted execution is allowed only under the machine-owned resource trust contract: trusted actor `rootfabric`, trusted head repository `rootfabric/distributed-world-simulator`, events `push` or `workflow_dispatch`; `pull_request` and external-fork execution are denied for this resource.
+12. A legacy self-hosted workflow that still has a `pull_request` trigger before migration to a declared resource must have a job-level fail-closed guard requiring `github.actor == 'rootfabric'`, `github.triggering_actor == 'rootfabric'`, PR author `rootfabric`, and `github.event.pull_request.head.repo.full_name == github.repository`. Without all four predicates, the workflow is non-compliant and must not reach a self-hosted runner.
+13. At capacity `1`, do not intentionally dispatch multiple heavyweight exact jobs to `DWS_LINUX_EXACT`. When the exact subject HEAD changes, older queued exact jobs are superseded and must be cancelled rather than allowed to consume the runner later.
+14. Runner unavailability does not block implementation or local implementer-owned validation. It may block only a predicate that explicitly requires independent exact verification; do not create/modify Actions as a workaround.
+15. Before ending an isolated role, `CONTROL_DEVELOPMENT.ps1 -CloseRole` must authorize it. Exit code `7` means continue the role.
+16. Before the final user response, `CONTROL_DEVELOPMENT.ps1 -Close` (alias of `-CloseMission`) must authorize mission exit. Exit code `8` means the checkpoint mission is still open and must continue.
+17. Run PC0 and directional audit before checkpoint proposal/acceptance as required by the Work Order.
+18. Routine Git operations inside the active checkpoint mission and bounded Work Order are already authorized through the default `A3_INTEGRATE_CANDIDATE` ceiling. Do not re-ask for permission to create a feature/control/repair branch, stage scoped paths, commit, non-force push, post durable evidence, open/update a draft PR, or request independent review.
+19. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
+20. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
+21. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
 
 ## Checkpoint-session control surface
 
@@ -72,7 +84,7 @@ For every checkpoint mission:
 .\CONTROL_DEVELOPMENT.ps1 -Close
 ```
 
-`-Drive` resolves the current product checkpoint from scheduler policy unless `-Checkpoint` or exact diagnostic `-Execution` is supplied. `-Close` is intentionally the mission gate, not the current-role gate.
+`-Drive` resolves the current product checkpoint from scheduler policy unless `-Checkpoint` or exact diagnostic `-Execution` is supplied. `-Close` is intentionally the mission gate, not the current-role gate. `Drive` also returns the declared execution-resource plan under `next.execution_resource`.
 
 ## Default Git authority
 

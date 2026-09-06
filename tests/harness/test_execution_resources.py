@@ -1,0 +1,145 @@
+from __future__ import annotations
+
+import json
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from harness.contracts import ContractBundle
+from harness.execution_resources import (
+    build_execution_resource_plan,
+    load_execution_resources,
+)
+
+
+class ExecutionResourceContractTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.resources = load_execution_resources(ROOT)
+
+    def test_execution_resource_contract_is_loaded_by_canonical_bundle(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        self.assertIn("execution_resources", bundle.contracts)
+        self.assertEqual(
+            "H0-EXECUTION-RESOURCES-2026-09-06-R1",
+            bundle.contracts["execution_resources"]["revision"],
+        )
+        self.assertEqual(
+            "config/control/harness/execution-resources.v1.json",
+            bundle.contracts["harness_policy"]["execution_resources"],
+        )
+        self.assertTrue(
+            bundle.contracts["harness_policy"]["principles"][
+                "drive_exposes_execution_resource_plan"
+            ]
+        )
+
+    def test_dws_linux_exact_is_declared_without_pinning_physical_runner_identity(self) -> None:
+        exact = self.resources["resources"]["DWS_LINUX_EXACT"]
+        self.assertEqual("GITHUB_ACTIONS_SELF_HOSTED", exact["provider"])
+        self.assertEqual(1, exact["capacity"])
+        self.assertEqual(["self-hosted", "Linux", "X64"], exact["runner_selector"])
+        self.assertTrue(
+            {"self-hosted", "Linux", "X64", "dws-linux", "dws-godot-double"}.issubset(
+                set(exact["preferred_runner_selector_after_live_label_confirmation"])
+            )
+        )
+        self.assertEqual(
+            "LIVE_RUNNER_CUSTOM_LABELS_CONFIRMED",
+            exact["selector_upgrade_condition"],
+        )
+        text = json.dumps(self.resources, sort_keys=True)
+        self.assertNotIn("dws-linux-outenemy", text)
+        self.assertNotIn('"runner_id"', text)
+
+    def test_self_hosted_trust_is_rootfabric_internal_push_or_dispatch_only(self) -> None:
+        trust = self.resources["resources"]["DWS_LINUX_EXACT"]["trust"]
+        self.assertEqual(["rootfabric"], trust["trusted_actors"])
+        self.assertEqual(
+            ["rootfabric/distributed-world-simulator"],
+            trust["trusted_head_repositories"],
+        )
+        self.assertEqual(["push", "workflow_dispatch"], trust["allowed_events"])
+        self.assertFalse(trust["pull_request_execution"])
+        self.assertFalse(trust["external_fork_execution"])
+
+    def test_verifier_is_routed_to_linux_exact_but_resource_does_not_replace_role(self) -> None:
+        continuation = {"next_actor": "VERIFIER"}
+        state = {"repository": {"implementation_head_sha": "a" * 40}}
+        plan = build_execution_resource_plan(continuation, state, self.resources)
+        self.assertTrue(plan["required"])
+        self.assertEqual("DWS_LINUX_EXACT", plan["resource"])
+        self.assertTrue(plan["resource_is_not_role"])
+        self.assertTrue(plan["independent_verifier_environment"])
+        self.assertEqual("a" * 40, plan["subject_head"])
+        self.assertEqual(["self-hosted", "Linux", "X64"], plan["runner_selector"])
+        self.assertEqual({"contents": "read"}, plan["github_permissions"])
+
+    def test_implementer_stays_local_and_runner_unavailability_does_not_block_implementation(self) -> None:
+        continuation = {"next_actor": "IMPLEMENTER"}
+        state = {"repository": {"implementation_head_sha": "b" * 40}}
+        plan = build_execution_resource_plan(continuation, state, self.resources)
+        self.assertFalse(plan["required"])
+        self.assertEqual("LOCAL", plan["resource"])
+        self.assertFalse(plan["independent_verifier_environment"])
+        self.assertTrue(
+            self.resources["fallback_policy"][
+                "runner_unavailable_does_not_block_implementation"
+            ]
+        )
+
+    def test_exact_queue_policy_supersedes_stale_queued_subject(self) -> None:
+        queue = self.resources["queue_policy"]
+        self.assertEqual(1, queue["max_dispatched_heavyweight_jobs_per_resource"])
+        self.assertEqual(
+            "SUPERSEDE_AND_CANCEL_OLDER_QUEUED_EXACT_JOB",
+            queue["on_subject_head_change"],
+        )
+        self.assertTrue(queue["queued_job_is_not_pass"])
+        self.assertTrue(queue["in_progress_job_is_not_pass"])
+
+    def test_lightweight_project_control_may_remain_github_hosted(self) -> None:
+        policy = self.resources["workflow_policy"]
+        self.assertTrue(policy["github_hosted_lightweight_control_allowed"])
+        project_control = (ROOT / ".github/workflows/project-control.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("runs-on: ubuntu-latest", project_control)
+        self.assertNotIn("runs-on: [self-hosted", project_control)
+
+    def test_legacy_self_hosted_pull_request_workflows_are_fail_closed(self) -> None:
+        policy = self.resources["workflow_policy"]
+        self.assertFalse(policy["declared_exact_self_hosted_pull_request_execution"])
+        self.assertTrue(
+            policy["legacy_self_hosted_pull_request_requires_trusted_internal_guard"]
+        )
+        required_terms = policy["required_legacy_pull_request_guard_terms"]
+        violations: list[str] = []
+        workflow_dir = ROOT / ".github/workflows"
+        paths = sorted(workflow_dir.glob("*.yml")) + sorted(workflow_dir.glob("*.yaml"))
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            if "self-hosted" not in text or "pull_request:" not in text:
+                continue
+            missing = [term for term in required_terms if term not in text]
+            if missing:
+                violations.append(f"{path.name}: missing {', '.join(missing)}")
+        self.assertEqual([], violations, "\n".join(violations))
+
+    def test_agent_router_and_harness_control_expose_resource_contract(self) -> None:
+        router = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        control = (ROOT / "HARNESS_CONTROL.md").read_text(encoding="utf-8")
+        cli = (ROOT / "scripts/harness/cli.py").read_text(encoding="utf-8")
+        for text in (router, control):
+            self.assertIn("DWS_LINUX_EXACT", text)
+            self.assertIn("execution-resources.v1.json", text)
+        self.assertIn("next.execution_resource", router)
+        self.assertIn("legacy self-hosted", router.lower())
+        self.assertIn('"execution_resource": execution_resource', cli)
+        self.assertIn("next.execution_resource.required", cli)
+
+
+if __name__ == "__main__":
+    unittest.main()
