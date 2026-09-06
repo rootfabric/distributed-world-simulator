@@ -68,3 +68,7 @@ A4 не подменяет A5 lifecycle: conservative field grants пока не
 - no overdraft under contention;
 - field sample реально меняет development outcome одного genotype;
 - preserved A0–A3 exact acceptance.
+
+## Local read integrity / cached seal
+
+A4 field state is an opaque sealed value. Each cell has a content-addressed integrity seal and the field has a cached full-state seal. Full cell/conservation validation and resealing happen at create/write/persistence boundaries. `sample()` validates only the fixed-size header and the cells intersecting the query, then reports the already verified cached field seal as provenance. It does not recompute a full-field hash on every organism read. Arbitrary external mutation of the returned Dictionary is outside the field API contract and is rejected by the next full write/persistence validation; mutation through field methods always reseals before returning.

@@ -1,6 +1,5 @@
 extends RefCounted
-## A4 research-only environmental field contracts. Owner metadata is a future binding shape,
-## not production region/Matter authority.
+## A4 research-only field contract. Owner metadata is a future binding shape, not production authority.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const FIELD_SCHEMA := "dws.ecology.local-environment-field.v1"
 const SAMPLE_SCHEMA := "dws.ecology.environment-sample.v2"
@@ -21,115 +20,109 @@ static func stock(amount: int = 0) -> Dictionary:
 static func signals(light: int = 700, temperature: int = 500, competition: int = 0, mechanical: int = 0) -> Dictionary:
 	return {"light": light, "temperature": temperature, "competition": competition, "mechanical": mechanical}
 
-static func valid_stock(value: Variant, allow_zero_capacity: bool = true) -> bool:
-	if not C.keys(value, RESOURCES):
-		return false
-	for name in RESOURCES:
-		var low := 0 if allow_zero_capacity else 1
-		if not C.integer(value[name], low, MAX_CELL_STOCK):
-			return false
+static func valid_stock(v: Variant, allow_zero_capacity: bool = true) -> bool:
+	if not C.keys(v, RESOURCES): return false
+	for k in RESOURCES:
+		if not C.integer(v[k], 0 if allow_zero_capacity else 1, MAX_CELL_STOCK): return false
 	return true
 
-static func valid_signals(value: Variant) -> bool:
-	if not C.keys(value, SIGNALS):
-		return false
-	for name in SIGNALS:
-		if not C.integer(value[name], 0, 1000):
-			return false
+static func valid_signals(v: Variant) -> bool:
+	if not C.keys(v, SIGNALS): return false
+	for k in SIGNALS:
+		if not C.integer(v[k], 0, 1000): return false
 	return true
 
-static func valid_cell(value: Variant, index: int, width: int) -> bool:
-	if not C.keys(value, ["id", "x", "z", "stocks", "capacities", "signals"]):
-		return false
-	if value.id != "c%04d" % index or value.x != index % width or value.z != int(index / width):
-		return false
-	if not valid_stock(value.stocks) or not valid_stock(value.capacities, false) or not valid_signals(value.signals):
-		return false
-	for name in RESOURCES:
-		if value.stocks[name] > value.capacities[name]:
-			return false
+static func valid_hash(v: Variant) -> bool:
+	if not v is String or v.length() != 64: return false
+	for c in v:
+		if not c in "0123456789abcdef": return false
 	return true
 
-static func valid_ledger(value: Variant) -> bool:
-	if not C.keys(value, ["initial", "inputs", "outputs", "sinks"]):
-		return false
-	for name in ["initial", "inputs", "outputs", "sinks"]:
-		if not valid_total_stock(value[name]):
-			return false
+static func cell_integrity_hash(cell: Dictionary) -> String:
+	var p := cell.duplicate(true); p.erase("integrity_hash")
+	return C.digest(p)
+
+static func seal_cell(cell: Dictionary) -> Dictionary:
+	var out := cell.duplicate(true); out.integrity_hash = cell_integrity_hash(out)
+	return out
+
+static func valid_cell(v: Variant, index: int, width: int) -> bool:
+	if not C.keys(v, ["id", "x", "z", "stocks", "capacities", "signals", "integrity_hash"]): return false
+	if v.id != "c%04d" % index or v.x != index % width or v.z != int(index / width): return false
+	if not valid_stock(v.stocks) or not valid_stock(v.capacities, false) or not valid_signals(v.signals): return false
+	for k in RESOURCES:
+		if v.stocks[k] > v.capacities[k]: return false
+	return valid_hash(v.integrity_hash) and v.integrity_hash == cell_integrity_hash(v)
+
+static func valid_total_stock(v: Variant) -> bool:
+	if not C.keys(v, RESOURCES): return false
+	for k in RESOURCES:
+		if not C.integer(v[k], 0, C.MAX_INT): return false
 	return true
 
-static func valid_total_stock(value: Variant) -> bool:
-	if not C.keys(value, RESOURCES):
-		return false
-	for name in RESOURCES:
-		if not C.integer(value[name], 0, C.MAX_INT):
-			return false
+static func valid_ledger(v: Variant) -> bool:
+	if not C.keys(v, ["initial", "inputs", "outputs", "sinks"]): return false
+	for k in ["initial", "inputs", "outputs", "sinks"]:
+		if not valid_total_stock(v[k]): return false
 	return true
 
 static func totals(cells: Array) -> Dictionary:
 	var out := stock()
 	for cell in cells:
-		for name in RESOURCES:
-			out[name] += cell.stocks[name]
+		for k in RESOURCES: out[k] += cell.stocks[k]
 	return out
 
-static func validate_state(value: Variant) -> String:
-	if not C.keys(value, ["schema", "owner_token", "owner_epoch", "revision", "tick", "origin_mm", "cell_size_mm", "width", "depth", "cells", "ledger", "operation_count"]):
-		return "FIELD_SCHEMA"
-	if value.schema != FIELD_SCHEMA or not C.identifier(value.owner_token):
-		return "FIELD_IDENTITY"
-	if not C.integer(value.owner_epoch, 0, MAX_OWNER_EPOCH) or not C.integer(value.revision, 0, MAX_REVISION) or not C.integer(value.tick, 0, MAX_TICK):
-		return "FIELD_VERSION"
-	if not C.vector(value.origin_mm, 10000000) or not C.integer(value.cell_size_mm, 1, 1000000):
-		return "FIELD_SPATIAL"
-	if not C.integer(value.width, 1, 64) or not C.integer(value.depth, 1, 64) or value.width * value.depth > MAX_CELLS:
-		return "FIELD_DIMENSIONS"
-	if not value.cells is Array or value.cells.size() != value.width * value.depth:
-		return "FIELD_CELLS"
-	for i in value.cells.size():
-		if not valid_cell(value.cells[i], i, value.width):
-			return "FIELD_CELL_%d" % i
-	if not valid_ledger(value.ledger) or not C.integer(value.operation_count, 0, C.MAX_INT):
-		return "FIELD_LEDGER"
-	var current := totals(value.cells)
-	for name in RESOURCES:
-		var expected: int = value.ledger.initial[name] + value.ledger.inputs[name] - value.ledger.outputs[name] - value.ledger.sinks[name]
-		if expected < 0 or current[name] != expected:
-			return "FIELD_CONSERVATION_%s" % name
+static func state_integrity_hash(state: Dictionary) -> String:
+	var p := state.duplicate(true); p.erase("integrity_hash")
+	return C.digest(p)
+
+static func seal_state(state: Dictionary) -> Dictionary:
+	var out := state.duplicate(true); out.integrity_hash = state_integrity_hash(out)
+	return out
+
+static func validate_read_header(v: Variant) -> String:
+	var keys := ["schema", "owner_token", "owner_epoch", "revision", "tick", "origin_mm", "cell_size_mm", "width", "depth", "cells", "ledger", "operation_count", "integrity_hash"]
+	if not C.keys(v, keys): return "FIELD_SCHEMA"
+	if v.schema != FIELD_SCHEMA or not C.identifier(v.owner_token): return "FIELD_IDENTITY"
+	if not C.integer(v.owner_epoch, 0, MAX_OWNER_EPOCH) or not C.integer(v.revision, 0, MAX_REVISION) or not C.integer(v.tick, 0, MAX_TICK): return "FIELD_VERSION"
+	if not C.vector(v.origin_mm, 10000000) or not C.integer(v.cell_size_mm, 1, 1000000): return "FIELD_SPATIAL"
+	if not C.integer(v.width, 1, 64) or not C.integer(v.depth, 1, 64) or v.width * v.depth > MAX_CELLS: return "FIELD_DIMENSIONS"
+	if not v.cells is Array or v.cells.size() != v.width * v.depth: return "FIELD_CELLS"
+	if not valid_ledger(v.ledger) or not C.integer(v.operation_count, 0, C.MAX_INT) or not valid_hash(v.integrity_hash): return "FIELD_READ_SEAL"
 	return ""
 
-static func validate_supports(supports: Variant) -> bool:
-	if not supports is Array or supports.size() > 64:
-		return false
+static func validate_state(v: Variant) -> String:
+	var error := validate_read_header(v)
+	if not error.is_empty(): return error
+	for i in v.cells.size():
+		if not valid_cell(v.cells[i], i, v.width): return "FIELD_CELL_%d" % i
+	var current := totals(v.cells)
+	for k in RESOURCES:
+		var expected: int = v.ledger.initial[k] + v.ledger.inputs[k] - v.ledger.outputs[k] - v.ledger.sinks[k]
+		if expected < 0 or current[k] != expected: return "FIELD_CONSERVATION_%s" % k
+	return "" if v.integrity_hash == state_integrity_hash(v) else "FIELD_INTEGRITY_HASH"
+
+static func validate_supports(v: Variant) -> bool:
+	if not v is Array or v.size() > 64: return false
 	var seen := {}
-	for support in supports:
-		if not C.keys(support, ["id", "kind", "position_mm"]) or not C.identifier(support.id) or seen.has(support.id):
-			return false
-		if not support.kind in ["plane_y", "axis_y", "point"] or not C.vector(support.position_mm, 10000000):
-			return false
-		seen[support.id] = true
+	for s in v:
+		if not C.keys(s, ["id", "kind", "position_mm"]) or not C.identifier(s.id) or seen.has(s.id): return false
+		if not s.kind in ["plane_y", "axis_y", "point"] or not C.vector(s.position_mm, 10000000): return false
+		seen[s.id] = true
 	return true
 
-static func validate_sample(value: Variant) -> String:
-	if not C.keys(value, ["schema", "channels", "resources", "capacities", "supports", "source"]):
-		return "FIELD_SAMPLE_SCHEMA"
-	if value.schema != SAMPLE_SCHEMA or not C.keys(value.channels, DEVELOPMENT_CHANNELS):
-		return "FIELD_SAMPLE_CHANNELS"
-	for name in DEVELOPMENT_CHANNELS:
-		if not C.integer(value.channels[name], 0, 1000):
-			return "FIELD_SAMPLE_CHANNEL"
-	if not valid_total_stock(value.resources) or not valid_total_stock(value.capacities) or not validate_supports(value.supports):
-		return "FIELD_SAMPLE_PAYLOAD"
-	if not C.keys(value.source, ["owner_token", "owner_epoch", "revision", "tick", "field_hash", "cells"]):
-		return "FIELD_SAMPLE_SOURCE"
-	if not C.identifier(value.source.owner_token) or not C.integer(value.source.owner_epoch, 0, MAX_OWNER_EPOCH) or not C.integer(value.source.revision, 0, MAX_REVISION) or not C.integer(value.source.tick, 0, MAX_TICK):
-		return "FIELD_SAMPLE_VERSION"
-	if not value.source.field_hash is String or value.source.field_hash.length() != 64 or not value.source.cells is Array or value.source.cells.is_empty() or value.source.cells.size() > MAX_CELLS:
-		return "FIELD_SAMPLE_PROVENANCE"
+static func validate_sample(v: Variant) -> String:
+	if not C.keys(v, ["schema", "channels", "resources", "capacities", "supports", "source"]): return "FIELD_SAMPLE_SCHEMA"
+	if v.schema != SAMPLE_SCHEMA or not C.keys(v.channels, DEVELOPMENT_CHANNELS): return "FIELD_SAMPLE_CHANNELS"
+	for k in DEVELOPMENT_CHANNELS:
+		if not C.integer(v.channels[k], 0, 1000): return "FIELD_SAMPLE_CHANNEL"
+	if not valid_total_stock(v.resources) or not valid_total_stock(v.capacities) or not validate_supports(v.supports): return "FIELD_SAMPLE_PAYLOAD"
+	if not C.keys(v.source, ["owner_token", "owner_epoch", "revision", "tick", "field_hash", "cells"]): return "FIELD_SAMPLE_SOURCE"
+	if not C.identifier(v.source.owner_token) or not C.integer(v.source.owner_epoch, 0, MAX_OWNER_EPOCH) or not C.integer(v.source.revision, 0, MAX_REVISION) or not C.integer(v.source.tick, 0, MAX_TICK): return "FIELD_SAMPLE_VERSION"
+	if not valid_hash(v.source.field_hash) or not v.source.cells is Array or v.source.cells.is_empty() or v.source.cells.size() > MAX_CELLS: return "FIELD_SAMPLE_PROVENANCE"
 	var prior := ""
-	for id in value.source.cells:
-		if not C.identifier(id) or (not prior.is_empty() and id <= prior):
-			return "FIELD_SAMPLE_CELL_ORDER"
+	for id in v.source.cells:
+		if not C.identifier(id) or (not prior.is_empty() and id <= prior): return "FIELD_SAMPLE_CELL_ORDER"
 		prior = id
 	return ""
 
@@ -137,7 +130,6 @@ static func serialize(state: Dictionary) -> String:
 	return C.encode(state) if validate_state(state).is_empty() else ""
 
 static func deserialize(text: String) -> Dictionary:
-	var decoded := C.decode(text)
-	if not decoded.success or not decoded.value is Dictionary:
-		return {}
-	return decoded.value if validate_state(decoded.value).is_empty() else {}
+	var d := C.decode(text)
+	if not d.success or not d.value is Dictionary: return {}
+	return d.value if validate_state(d.value).is_empty() else {}

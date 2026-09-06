@@ -18,16 +18,17 @@ static func create(owner_token: String = "research.patch", owner_epoch: int = 0,
 	for z in depth:
 		for x in width:
 			var index := z * width + x
-			cells.append({"id": "c%04d" % index, "x": x, "z": z, "stocks": initial_stock.duplicate(true), "capacities": capacities.duplicate(true), "signals": signals.duplicate(true)})
+			cells.append(F.seal_cell({"id": "c%04d" % index, "x": x, "z": z, "stocks": initial_stock.duplicate(true), "capacities": capacities.duplicate(true), "signals": signals.duplicate(true), "integrity_hash": ""}))
 	var initial := F.totals(cells)
-	var state := {"schema": F.FIELD_SCHEMA, "owner_token": owner_token, "owner_epoch": owner_epoch, "revision": 0, "tick": 0, "origin_mm": origin_mm.duplicate(), "cell_size_mm": cell_size_mm, "width": width, "depth": depth, "cells": cells, "ledger": {"initial": initial, "inputs": F.stock(), "outputs": F.stock(), "sinks": F.stock()}, "operation_count": 0}
+	var state := {"schema": F.FIELD_SCHEMA, "owner_token": owner_token, "owner_epoch": owner_epoch, "revision": 0, "tick": 0, "origin_mm": origin_mm.duplicate(), "cell_size_mm": cell_size_mm, "width": width, "depth": depth, "cells": cells, "ledger": {"initial": initial, "inputs": F.stock(), "outputs": F.stock(), "sinks": F.stock()}, "operation_count": 0, "integrity_hash": ""}
+	state = F.seal_state(state)
 	return state if F.validate_state(state).is_empty() else {}
 
 static func state_hash(state: Dictionary) -> String:
-	return C.digest(state) if F.validate_state(state).is_empty() else ""
+	return state.integrity_hash if F.validate_read_header(state).is_empty() else ""
 
 static func sample(state: Dictionary, request: Dictionary, supports: Array = [{"id": "ground", "kind": "plane_y", "position_mm": [0, 0, 0]}]) -> Dictionary:
-	var error := F.validate_state(state)
+	var error := F.validate_read_header(state)
 	if not error.is_empty():
 		return _fail(error)
 	error = Ports.validate_sample_request(request)
@@ -42,6 +43,8 @@ static func sample(state: Dictionary, request: Dictionary, supports: Array = [{"
 	var ids: Array = []
 	for index in indices:
 		var cell: Dictionary = state.cells[index]
+		if not F.valid_cell(cell, index, state.width):
+			return _fail("SAMPLE_CELL_INTEGRITY")
 		ids.append(cell.id)
 		for name in F.RESOURCES:
 			resources[name] += cell.stocks[name]
@@ -150,6 +153,7 @@ static func allocate_demands(source: Dictionary, demands: Array, owner_token: St
 		grants[id].unmet = grants[id].requested - grants[id].granted
 	state.revision += 1
 	state.operation_count += normalized.size()
+	state = _seal_mutated_state(state)
 	var state_error := F.validate_state(state)
 	if not state_error.is_empty():
 		return _fail(state_error)
@@ -213,6 +217,7 @@ static func apply_effects(source: Dictionary, effects: Array, owner_token: Strin
 		applied.append({"effect_id": e.effect_id, "mode": e.mode, "resource": e.resource, "amount": e.amount, "source_kind": e.source_kind})
 	state.revision += 1
 	state.operation_count += normalized.size()
+	state = _seal_mutated_state(state)
 	var state_error := F.validate_state(state)
 	if not state_error.is_empty():
 		return _fail(state_error)
@@ -228,6 +233,7 @@ static func set_cell_signals(source: Dictionary, x: int, z: int, signals: Dictio
 	state.cells[z * state.width + x].signals = signals.duplicate(true)
 	state.revision += 1
 	state.operation_count += 1
+	state = _seal_mutated_state(state)
 	return {"success": true, "state": state, "revision": state.revision, "state_hash": state_hash(state)} if F.validate_state(state).is_empty() else _fail("CELL_SIGNAL_STATE")
 
 static func set_signals(source: Dictionary, signals: Dictionary, owner_token: String, owner_epoch: int, revision: int) -> Dictionary:
@@ -239,6 +245,7 @@ static func set_signals(source: Dictionary, signals: Dictionary, owner_token: St
 	for cell in state.cells: cell.signals = signals.duplicate(true)
 	state.revision += 1
 	state.operation_count += 1
+	state = _seal_mutated_state(state)
 	return {"success": true, "state": state, "revision": state.revision, "state_hash": state_hash(state)} if F.validate_state(state).is_empty() else _fail("SIGNAL_STATE")
 
 static func advance_tick(source: Dictionary, owner_token: String, owner_epoch: int, revision: int) -> Dictionary:
@@ -250,7 +257,14 @@ static func advance_tick(source: Dictionary, owner_token: String, owner_epoch: i
 	state.tick += 1
 	state.revision += 1
 	state.operation_count += 1
+	state = _seal_mutated_state(state)
 	return {"success": true, "state": state, "revision": state.revision, "state_hash": state_hash(state)} if F.validate_state(state).is_empty() else _fail("TICK_STATE")
+
+static func _seal_mutated_state(source: Dictionary) -> Dictionary:
+	var state := source.duplicate(true)
+	for i in state.cells.size():
+		state.cells[i] = F.seal_cell(state.cells[i])
+	return F.seal_state(state)
 
 static func _write_precondition(state: Dictionary, owner_token: String, owner_epoch: int, revision: int) -> String:
 	var error := F.validate_state(state)

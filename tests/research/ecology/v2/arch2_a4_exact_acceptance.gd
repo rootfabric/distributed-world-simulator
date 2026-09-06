@@ -51,7 +51,7 @@ func _contract_and_locality() -> void:
 	var text := F.serialize(field); var restored := F.deserialize(text)
 	_check(not restored.is_empty() and C.digest(restored) == C.digest(field), "canonical_roundtrip")
 	var tampered := field.duplicate(true); tampered.cells[0].stocks.water_mg += 1
-	_check(F.validate_state(tampered) == "FIELD_CONSERVATION_water_mg", "ledger_tamper_rejected")
+	_check(F.validate_state(tampered) == "FIELD_CELL_0", "ledger_tamper_rejected")
 	var one := L.sample(field, _req("org", [500,0,500]))
 	_check(one.success and one.visited_cells == 1 and one.sample.channels.water == 500, "point_sample_local")
 	_check(one.sample.source.field_hash == L.state_hash(field) and F.validate_sample(one.sample).is_empty(), "sample_provenance")
