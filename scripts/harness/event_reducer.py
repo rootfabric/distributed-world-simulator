@@ -8,6 +8,7 @@ import subprocess
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, read_json
+from .evidence_provenance import REVIEW_SCHEMA, validate_review_record
 
 
 _P4_CHECKPOINT = "V0_P4_REAL_RESOURCE_CONSTRUCTION"
@@ -347,6 +348,21 @@ def _enforce_guard(
 ) -> None:
     transition = (previous_state, event["work_state"])
     documents = _referenced_documents(event, context)
+    if context is not None:
+        for relative in event.get("evidence_paths", []):
+            normalized = relative.replace("\\", "/")
+            document = context["documents"].get(normalized, {})
+            if document.get("schema") == REVIEW_SCHEMA:
+                validate_review_record(
+                    context["root"], bundle.contracts["review_policy"],
+                    context.get("epoch") or {}, document, normalized,
+                )
+                if (context.get("epoch", {}).get("registry_generation", 0) >= 81
+                        and document.get("verdict") == "PASS"
+                        and transition in {("FIX_REQUIRED", "DISPATCHED"), ("AUDITED", "CHECKPOINT_PROPOSED")}):
+                    if (document.get("review_type") == "PRE_BUILD_DESIGN_AUTHORIZATION"
+                            or document.get("work_order_id") != work_order["work_order_id"]):
+                        raise ContractValidationError("GUARDED_POST_BUILD_REVIEW_REQUIRED")
     if transition == ("PLANNED", "DISPATCHED"):
         _enforce_initial_dispatch(bundle, work_order, event, documents, context)
     elif transition == ("BLOCKED", "DISPATCHED"):

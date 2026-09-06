@@ -1,6 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_continuation_policy.v1",
   "continuation_layer_revision": "H0-CONTINUATION-2026-08-20-R5",
+  "session_stall_guard_revision": "H0-STALL-GUARD-2026-09-06-R1",
   "principles": {
     "checkpoint_is_user_session_unit": true,
     "work_order_is_execution_unit": true,
@@ -19,7 +20,12 @@
     "preferred_executor_unavailable_is_not_hard_block": true,
     "mechanical_validation_is_not_the_same_as_independent_acceptance": true,
     "verifier_independence_is_role_and_provenance_not_vm_vendor": true,
-    "automation_fallbacks_must_be_exhausted_before_hard_block": true
+    "automation_fallbacks_must_be_exhausted_before_hard_block": true,
+    "execution_slice_is_bounded_and_resume_safe": true,
+    "completed_predicate_is_published_before_next_long_slice": true,
+    "identical_retry_loops_are_forbidden": true,
+    "long_validation_is_sharded_into_durable_slices": true,
+    "queued_ci_is_not_a_reason_to_wait_when_exact_local_validation_is_available": true
   },
   "mission_terminal_policy": {
     "allowed_terminals": [
@@ -55,6 +61,33 @@
       "HARD_BLOCKED"
     ],
     "fresh_verifier_machine_required_by_default": false
+  },
+  "session_stall_guard": {
+    "mode": "BOUNDED_DURABLE_SLICES",
+    "max_same_strategy_failures_before_strategy_switch": 2,
+    "max_completed_predicates_kept_only_in_ephemeral_workspace": 0,
+    "publish_after_each_completed_predicate": true,
+    "require_resume_record_before_long_followup": true,
+    "split_long_validation_by_runner_or_predicate": true,
+    "do_not_repeat_identical_observation_cycle": true,
+    "do_not_wait_for_queued_ci_when_exact_local_runtime_is_available": true,
+    "do_not_create_background_wait_loops": true,
+    "on_workspace_loss": [
+      "READ_LIVE_REMOTE_HEAD_ONCE",
+      "REHYDRATE_FROM_DURABLE_GIT_STATE",
+      "VERIFY_RUNTIME_IDENTITY",
+      "RESUME_FROM_LAST_PUBLISHED_PREDICATE"
+    ],
+    "on_repeated_failure": [
+      "PERSIST_FAILURE_SIGNATURE",
+      "CHANGE_STRATEGY_OR_REPAIR_ROOT_CAUSE",
+      "DO_NOT_REPEAT_THE_SAME_TOOL_OR_TRANSPORT_LOOP"
+    ],
+    "slice_exit_requires_one_of": [
+      "DURABLE_PROGRESS",
+      "STRATEGY_SWITCH_RECORDED",
+      "HARD_BLOCK_PROVEN"
+    ]
   },
   "self_closing_execution": {
     "max_same_defect_fix_required_events_before_takeover": 3,

@@ -567,7 +567,7 @@
   ],
   "coordination": {
     "revision": "PROJECT-FOCUS-2026-09-05-R1",
-    "observed_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+    "observed_main": "d768a7ee4d60eab25a125a10604ec068079478d5",
     "primary_lane": "MVP",
     "goals_source": "config/control/harness/project-goals.v1.json",
     "status_policy": "SOURCE_REPORT_IS_NOT_MAIN_ACCEPTANCE; MERGED_IS_NOT_COMPOSITION_ACCEPTED",

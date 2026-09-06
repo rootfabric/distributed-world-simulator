@@ -10,6 +10,7 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
+from .evidence_provenance import load_hard_block_proof, validate_review_record
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -463,6 +464,8 @@ def _load_reviews(
     work_order: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Validate every review claim, then return reviews for the active Work Order."""
+    review_policy = read_json(root / "config/control/harness/review-policy.v1.json")
+    review_epoch = read_json(execution_dir / "project-epoch.v1.json")
     validated_reviews: list[dict[str, Any]] = []
     review_ids: set[str] = set()
     required = {
@@ -514,6 +517,16 @@ def _load_reviews(
         code, _ = _git(root, "cat-file", "-e", f"{value['reviewed_head_sha']}^{{commit}}")
         if code != 0:
             raise ContractValidationError("REVIEW_HEAD_UNREACHABLE")
+        try:
+            validate_review_record(
+                root, review_policy, review_epoch, value, _repo_relative(root, path),
+            )
+        except ContractValidationError as exc:
+            # Preserve the immutable review file and its declared verdict; only
+            # its derived authority is downgraded when provenance is insufficient.
+            value = {**value, "declared_verdict": value["verdict"],
+                     "verdict": "INSUFFICIENT_EVIDENCE",
+                     "evidence_gaps": [*value["evidence_gaps"], str(exc)]}
         validated_reviews.append(value)
 
     active_reviews = [
@@ -846,6 +859,13 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         active["events"],
         current_head,
     )
+    hard_block_proof = None
+    hard_block_event_path = None
+    if active["reduced"]["state"] == "BLOCKED":
+        event_id = active["reduced"]["last_event_id"]
+        event_index = next(i for i, event in enumerate(active["events"]) if event["event_id"] == event_id)
+        hard_block_event_path = _repo_relative(root, active["event_paths"][event_index])
+        hard_block_proof = load_hard_block_proof(root, active["definition"], hard_block_event_path)
     exact_audit = _select_epoch_audit(guard_context, active["events"])
     epoch_validation = validate_epoch(
         root,
@@ -956,6 +976,8 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             ),
         },
         "contracts_loaded": sorted(bundle.contracts),
+        "hard_block_proof": hard_block_proof,
+        "hard_block_event_path": hard_block_event_path,
         "epoch": {**epoch, "validation": epoch_validation},
         "active_work_order": active["definition"],
         "reduced_work_order": active["reduced"],

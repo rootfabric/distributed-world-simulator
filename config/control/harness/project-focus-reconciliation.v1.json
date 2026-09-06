@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.project_focus_reconciliation.v1",
   "revision": "PROJECT-FOCUS-2026-09-05-R1",
-  "observed_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "observed_main": "d768a7ee4d60eab25a125a10604ec068079478d5",
   "status": "CONTROL_CANDIDATE_NOT_ACCEPTANCE",
   "user_intent": "MVP first; ECO experimental evolution polygon and FABRIC emergent-complexity research remain separate non-blocking families.",
   "p7": {

@@ -73,11 +73,10 @@ class AutonomousRuntimeRoutingTests(unittest.TestCase):
                 self.assertFalse(result["hard_blocked"], result)
                 self.assertFalse(result["mission_exit_allowed"], result)
 
-    def test_current_policy_accepts_only_exhaustive_durable_proof(self) -> None:
+    def test_current_policy_rejects_synthetic_proof_without_committed_provenance(self) -> None:
         result = build_continuation(blocked_state(self.complete_proof()), current_policy())
-        self.assertTrue(result["hard_blocked"])
-        self.assertTrue(result["mission_exit_allowed"])
-        self.assertEqual("SYSTEM_BLOCKED", result["handoff_class"])
+        self.assertFalse(result["hard_blocked"])
+        self.assertFalse(result["mission_exit_allowed"])
 
     def test_unknown_policy_requirement_fails_closed(self) -> None:
         policy = current_policy()

@@ -1,9 +1,12 @@
 """Derive role and mission continuation without treating role handoff as session end."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
+from .contracts import ContractValidationError
 from .mission import mission_from_state
+from .evidence_provenance import hard_block_matches_state
 
 _AUTO_ROLE_BY_WORK_TYPE = {
     "IMPLEMENTATION": "IMPLEMENTER",
@@ -106,7 +109,9 @@ def _active_role(work_order: dict[str, Any], state_name: str) -> str:
     return _AUTO_ROLE_BY_WORK_TYPE.get(str(work_order.get("work_order_type", "IMPLEMENTATION")), "DIRECTOR")
 
 
-def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
+def build_continuation(
+    state: dict[str, Any], policy: dict[str, Any], *, root: Path | None = None,
+) -> dict[str, Any]:
     work_order = state["active_work_order"]
     reduced = state["reduced_work_order"]
     mission = mission_from_state(state)
@@ -145,7 +150,11 @@ def build_continuation(state: dict[str, Any], policy: dict[str, Any]) -> dict[st
         )
 
     hard_proof = state.get("hard_block_proof")
-    if state_name == "BLOCKED" and _hard_block_proof_complete(hard_proof, policy):
+    if (state.get("epoch", {}).get("registry_generation", 0) >= 81
+            and "autonomous_execution" not in policy):
+        raise ContractValidationError("CURRENT_AUTONOMY_POLICY_REQUIRED")
+    if (state_name == "BLOCKED" and not findings and _hard_block_proof_complete(hard_proof, policy)
+            and ("autonomous_execution" not in policy or hard_block_matches_state(root, state))):
         return _transition(
             mission=mission,
             handoff_class="SYSTEM_BLOCKED",

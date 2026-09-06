@@ -119,6 +119,15 @@
         "ARTIFACT_ID_OR_PATH"
       ],
       "missing_or_unbound_digest_verdict": "INSUFFICIENT_EVIDENCE"
+    },
+    "machine_evidence_enforcement": {
+      "effective_registry_generation": 81,
+      "post_build_pass_requires_manifest": true,
+      "fresh_execution_label_is_not_evidence": true,
+      "review_loader_and_event_guards_share_validator": true,
+      "historical_generation_80_and_earlier_replay_unchanged": true,
+      "missing_evidence_derived_verdict": "INSUFFICIENT_EVIDENCE",
+      "manifest_schema": "distributed_world_simulator.harness_machine_evidence_manifest.v1"
     }
   }
 }

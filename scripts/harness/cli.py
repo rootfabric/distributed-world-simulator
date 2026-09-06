@@ -69,7 +69,7 @@ def _attach_mission_state(
         str(bundle.contracts["harness_policy"]["canonical_branch"]),
     )
     continuation = build_continuation(
-        state, bundle.contracts["continuation_policy"]  # type: ignore[arg-type]
+        state, bundle.contracts["continuation_policy"], root=root  # type: ignore[arg-type]
     )
     state["next"] = {
         **continuation,

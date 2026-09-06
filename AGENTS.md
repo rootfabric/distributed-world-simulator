@@ -61,7 +61,7 @@ For every checkpoint mission:
 10. Before the final user response, `CONTROL_DEVELOPMENT.ps1 -Close` (alias of `-CloseMission`) must authorize mission exit. Exit code `8` means the checkpoint mission is still open and must continue.
 11. Run PC0 and directional audit before checkpoint proposal/acceptance as required by the Work Order.
 12. Routine Git operations inside the active checkpoint mission and bounded Work Order are already authorized through the default `A3_INTEGRATE_CANDIDATE` ceiling. Do not re-ask for permission to create a feature/control/repair branch, stage scoped paths, commit, non-force push, post durable evidence, open/update a draft PR, or request independent review.
-13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
+13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new approval when scope/authority is not expanded.
 14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
 15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
 16. Execute all available mechanical work yourself before handoff: local/VM tests, clean exact checkout, repository-owned CI, artifact/log collection, scoped repair/retest and append-only evidence publication. These are routine A0-A3 operations.
@@ -127,3 +127,13 @@ explicit product decision gate
 Before giving a human local launch/test command on Windows or Ubuntu, read `docs/GODOT_LOCAL_TESTING_RU.md` and use its canonical workspace layout, double-Godot paths, fresh-worktree import rule and OS-specific command form.
 
 If work requires autonomous Godot launch, runtime input, screenshots or runtime logs, also read `docs/MCP_GODOT.md` before the first runtime action and follow that contract. Runtime evidence must use the project-approved Godot/MCP path rather than ad-hoc desktop observation when machine capture is available.
+
+## Bounded control-repair closure
+
+For PROJECT-FOCUS autonomy repair, read `docs/control/PROJECT_FOCUS_AUTONOMY_REPAIR_R3_RU.md`.
+Reproduce each required finding through the production entry point; a synthetic state
+or policy-only assertion is not sufficient coverage. Freeze a tested implementation
+HEAD before fresh review and publish later evidence separately. Do not expand that
+subject with unrelated Harness improvements. After two identical infrastructure
+failures change the permitted execution strategy, not the acceptance criterion.
+Never describe queued work or an external role request as continuing background work.
