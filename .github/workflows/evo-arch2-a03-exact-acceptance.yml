@@ -1,0 +1,145 @@
+name: ECO ARCH2 A0-A3 Exact Acceptance
+
+on:
+  push:
+    branches:
+      - feature/eco-evo-arch2-a0-a3-r1
+    paths:
+      - "scripts/research/ecology/v2/**"
+      - "scripts/labs/ecology/evo_morphology_lab_v2*"
+      - "scenes/labs/ecology/evo_morphology_lab_v2.tscn"
+      - "scenes/labs/ecology/eco_evo5_probe2_tree_lab.tscn"
+      - "scenes/labs/ecology/eco_evo5_t51_creature_lab.tscn"
+      - "scenes/labs/ecology/eco_evo5_terrain_fly_lab.tscn"
+      - "tests/research/ecology/v2/arch2_a03_exact_acceptance.gd"
+      - ".github/workflows/evo-arch2-a03-exact-acceptance.yml"
+  pull_request:
+    branches:
+      - feature/eco-evo7-vis5-terrain-ecosystem-composition-r1
+    paths:
+      - "scripts/research/ecology/v2/**"
+      - "scripts/labs/ecology/evo_morphology_lab_v2*"
+      - "scenes/labs/ecology/evo_morphology_lab_v2.tscn"
+      - "tests/research/ecology/v2/arch2_a03_exact_acceptance.gd"
+      - ".github/workflows/evo-arch2-a03-exact-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-arch2-a03-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-exact:
+    name: exact A0-A3 Linux verifier
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact HEAD and clean tracked tree
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          test "$head" = "${{ github.sha }}"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "exact_head=$head"
+          echo "exact_tree=$tree"
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
+          FALLBACK_CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED_GODOT_BIN"
+          if [[ -z "$godot" ]]; then godot="$FALLBACK_CONFIGURED_GODOT_BIN"; fi
+          if [[ -z "$godot" ]]; then godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"; fi
+          test -x "$godot"
+          version="$("$godot" --version | head -n 1 | tr -d '\r')"
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          test "$sha" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "Godot identity: $version"
+          echo "Godot SHA256: $sha"
+
+      - name: Cold import from empty cache
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --audio-driver Dummy --editor --path "$PWD" --import > arch2-cold-import.log 2>&1
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" arch2-cold-import.log; then
+            cat arch2-cold-import.log
+            exit 1
+          fi
+          sha256sum arch2-cold-import.log
+
+      - name: Run ARCH2 exact acceptance twice
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT_BIN" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd > "arch2-exact-$n.log" 2>&1
+            grep -F "EVO_ARCH2_A03_EXACT assertions=68 failed=0" "arch2-exact-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "arch2-exact-$n.log"; then
+              cat "arch2-exact-$n.log"
+              exit 1
+            fi
+          done
+          cmp arch2-exact-1.log arch2-exact-2.log
+          sha256sum arch2-exact-1.log arch2-exact-2.log
+
+      - name: Run preserved VIS5.0-VIS5.5 regression
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          scripts=(
+            res://tests/ecology/eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_1_terrain_surface_frame_adapter_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_3_mixed_strata_composition_lab_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_4_composition_lod_streaming_gate_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff_acceptance.gd
+          )
+          expected=(87 70 57 101 92 114)
+          total=0
+          for i in "${!scripts[@]}"; do
+            log="vis5-$i.log"
+            "$GODOT_BIN" --headless --audio-driver Dummy --path "$PWD" --script "${scripts[$i]}" > "$log" 2>&1
+            grep -E "PASS \(${expected[$i]} assertions\)" "$log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "$log"; then
+              cat "$log"
+              exit 1
+            fi
+            total=$((total + expected[$i]))
+          done
+          test "$total" -eq 521
+          echo "VIS5 regression assertions=$total failed=0"
+          sha256sum vis5-*.log
+
+      - name: Assert tracked tree unchanged
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "tracked_tree_clean=true"
