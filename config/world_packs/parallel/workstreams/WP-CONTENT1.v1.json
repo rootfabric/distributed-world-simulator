@@ -15,7 +15,7 @@
     "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Independent integrator/reviewer review of exact HEAD 764af89d via child PR into control/world-packs-parallel-r1; note the documented pre-existing environmental symlink test failure (WinError 1314) when running the shared world_packs suite.",
+  "next_action": "Independent reviewer re-review of current branch HEAD via child PR #558 into control/world-packs-parallel-r1. Machine authority: tested_head/last_checkpoint_head fields above; prose SHAs are never identity. Note the documented pre-existing environmental symlink test failure (WinError 1314) when running the shared world_packs suite on non-symlink-capable Windows; full-suite clean PASS must come from Linux or symlink-privileged Windows.",
   "last_checkpoint_head": "6fb8215283d84d101ef0e289e472795ba8e72a4e",
   "tested_head": "6fb8215283d84d101ef0e289e472795ba8e72a4e",
   "validation": [
@@ -80,7 +80,7 @@
       "head": "6fb8215283d84d101ef0e289e472795ba8e72a4e"
     }
   ],
-  "updated_at_utc": "2026-09-05T19:05:00Z",
+  "updated_at_utc": "2026-09-06T00:16:07Z",
   "notes": [
     "Dispatch initialized by WORLD_PACKS_PARALLEL_R1.",
     "SOURCE_POLICY done: candidate_source.v1 schema + SOURCE_POLICY_RU.md + focused tests (13 passed) at d1ea1bce.",
@@ -92,6 +92,13 @@
     "EVIDENCE_READY done: CANDIDATE_LIBRARY_INDEX_RU.md + final track evidence at c18e5943; regression 87 passed, 1 failed (same pre-existing environmental symlink failure at c18e5943).",
     "Regression FAIL detail: python -m pytest tests/world_packs -q at d1ea1bce gave 81 passed, 1 failed; the single failure is tests/world_packs/test_library_contract.py::test_local_missing_symlink_and_corruption (OSError WinError 1314, symlink privilege missing on this Windows runner). Pre-existing environmental failure, unrelated to WP-CONTENT1 changes and outside this track's allowed paths.",
     "Earlier state commits (f9ce955c, 9dcc8360) used a non-schema validation entry shape; fixed without rewriting published history.",
-    "State normalization: file rewritten UTF-8 without BOM; focused tests re-run on current HEAD 6fb82152 (19 passed) and recorded to clear VALIDATION_STALE. No implementation files changed in this state-only commit."
+    "State normalization: file rewritten UTF-8 without BOM; focused tests re-run on current HEAD 6fb82152 (19 passed) and recorded to clear VALIDATION_STALE. No implementation files changed in this state-only commit.",
+    "R2 review repair (Medium defect): removed stale prose SHA 764af89d from next_action; prose is not machine authority (controller A4). Machine fields unchanged: tested_head 6fb82152 with PASS entry at exactly that head. Focused content_catalog tests re-run at the new state commit's parent before this state-only commit."
+  ],
+  "review_verdict": "PASS",
+  "reviewed_head": "c26f5f78b5665a7e8fa8933992c1fecb59f8b1b0",
+  "reviewed_tested_head": "6fb8215283d84d101ef0e289e472795ba8e72a4e",
+  "reviewer_evidence": [
+    "Independent R2 review @ c26f5f78: VERDICT PASS; 19/19 content_catalog, 87 passed + 1 environmental symlink FAIL; 6 candidates, no invented hashes/sizes/authors; CC0 grantors spot-checked; no binary payloads. Medium defect (stale prose SHA) repaired in the following commit."
   ]
 }
