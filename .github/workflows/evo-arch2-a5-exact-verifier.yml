@@ -1,0 +1,146 @@
+name: ECO ARCH2 A5 Exact Verifier
+
+on:
+  push:
+    branches:
+      - validation/eco-arch2-a5-exact-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-exact:
+    name: fresh exact A5 Linux verifier
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact immutable source
+        uses: actions/checkout@v4
+        with:
+          ref: 713f69f1bb0439f928a0e1f79c32e7c08b9997d1
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert exact source identity and additive A5 fence
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "713f69f1bb0439f928a0e1f79c32e7c08b9997d1"
+          test "$(git rev-parse HEAD^{tree})" = "9e4ba8ea04aaee2177ef22a1989487a82392ad04"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
+            scripts/research/ecology/v2/canonical_value_v1.gd \
+            scripts/research/ecology/v2/body_graph_v1.gd \
+            scripts/research/ecology/v2/development_program_v1.gd \
+            scripts/research/ecology/v2/organism_genome_v2.gd \
+            scripts/research/ecology/v2/organism_state_v1.gd \
+            scripts/research/ecology/v2/development_interpreter_v1.gd \
+            scripts/research/ecology/v2/phenotype_snapshot_v1.gd \
+            scripts/research/ecology/v2/environment_field_contract_v1.gd \
+            scripts/research/ecology/v2/local_environment_field_v1.gd \
+            scripts/research/ecology/v2/organism_environment_ports_v1.gd
+          executable="scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd"
+          ! grep -Ev '^[[:space:]]*#' "$executable" | grep -Ei 'net_resource_proxy|shadow_fitness|top[_ -]?k'
+
+      - name: Resolve exact double Godot
+        id: godot
+        env:
+          CONFIGURED: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
+          FALLBACK: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED"
+          if [[ -z "$godot" ]]; then
+            case "$FALLBACK" in
+              *.exe|[A-Za-z]:\\*) godot="" ;;
+              *) godot="$FALLBACK" ;;
+            esac
+          fi
+          if [[ -z "$godot" ]]; then godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"; fi
+          test -x "$godot"
+          version="$("$godot" --version | head -n1 | tr -d '\r')"
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          test "$sha" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$godot" >> "$GITHUB_OUTPUT"
+          echo "godot=$version sha256=$sha"
+
+      - name: Cold empty-cache import
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          rm -rf .godot
+          "$GODOT" --headless --audio-driver Dummy --editor --path "$PWD" --import > a5-cold.log 2>&1
+          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-cold.log
+          sha256sum a5-cold.log
+
+      - name: Run A5 exact twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd > "a5-exact-$n.log" 2>&1
+            grep -F "EVO_ARCH2_A5_EXACT assertions=68 failed=0" "a5-exact-$n.log"
+            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"
+          done
+          cmp a5-exact-1.log a5-exact-2.log
+          sha256sum a5-exact-1.log a5-exact-2.log
+
+      - name: Run accepted A4 regression
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a4_exact_acceptance.gd > a4.log 2>&1
+          grep -F "EVO_ARCH2_A4_EXACT assertions=32 failed=0" a4.log
+          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a4.log
+
+      - name: Run accepted A0-A3 regression
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd > a03.log 2>&1
+          grep -F "EVO_ARCH2_A03_EXACT assertions=86 failed=0" a03.log
+          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a03.log
+
+      - name: Run preserved VIS5 regression
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          scripts=(
+            res://tests/ecology/eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_1_terrain_surface_frame_adapter_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_3_mixed_strata_composition_lab_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_4_composition_lod_streaming_gate_acceptance.gd
+            res://tests/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff_acceptance.gd
+          )
+          expected=(87 70 57 101 92 114)
+          total=0
+          for i in "${!scripts[@]}"; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script "${scripts[$i]}" > "vis5-$i.log" 2>&1
+            grep -E "PASS \(${expected[$i]} assertions\)" "vis5-$i.log"
+            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "vis5-$i.log"
+            total=$((total + expected[$i]))
+          done
+          test "$total" -eq 521
+          echo "VIS5 assertions=$total failed=0"
+
+      - name: Assert tracked subject unchanged
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "713f69f1bb0439f928a0e1f79c32e7c08b9997d1"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "VERDICT=PASS"
