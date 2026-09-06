@@ -230,7 +230,9 @@ class ExecutionSelectorTests(unittest.TestCase):
             for name, issued in (("E-old", "2026-08-18T10:00:00Z"), ("E-new", "2026-08-20T10:00:00Z")):
                 execution = root / "config/control/harness/executions" / name
                 (execution / "work-orders").mkdir(parents=True)
-                (execution / "project-epoch.v1.json").write_text("{}", encoding="utf-8")
+                (execution / "project-epoch.v1.json").write_text(
+                    json.dumps({"epoch_id": name}), encoding="utf-8"
+                )
                 (execution / "work-orders" / "wo.json").write_text(
                     json.dumps(
                         {
