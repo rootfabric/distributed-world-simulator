@@ -4,11 +4,20 @@
   "status": "BLOCKED",
   "verdict": "WP2_RUNTIME_ACTIVATION_BLOCKED_CONTRACT_ONLY_AUTHORIZED",
   "contract_review": {
-    "state": "FIXED_PENDING_REREVIEW",
-    "reviewed_head": "31177a5fcf01857823a3b22f77f63968f95fb3e9",
+    "state": "REVIEWED_PASS",
+    "reviewed_head": "597018d6f94e050e603161e0de3dd52a9242cb40",
+    "review_environment": "Linux",
     "verdict_before_repair": "WP2_CONTRACT_PREPARATION_FIX_REQUIRED",
     "repair_map": "docs/world_packs/evidence/WP2_CONTRACT_REPAIR_MAP_R1.md",
-    "scope": "R1 frame vector contract, R2 immutable resolver inputs, R3 fidelity semantics, R4 presentation selection lock, R5 Proof A real invariants, R6 variation token domain, R7 exact version validation, R8 strict numeric canonical input"
+    "repair_r1": "1cd63675b1dc0c41e4cc2dd66a06de27c564fa58",
+    "repair_r2": "597018d6f94e050e603161e0de3dd52a9242cb40",
+    "independent_review_r2": {
+      "verdict": "PASS",
+      "branch": "review/world-packs2-contract-r2",
+      "branch_head": "19ef82ed553c2c53d0525c672385ef5724891cf9",
+      "evidence": "docs/world_packs/evidence/WP2_CONTRACT_INDEPENDENT_REVIEW_R2.md"
+    },
+    "scope": "R2.1 surface_normal required without axis default, R2.2 recursive forbidden-field guard through sequences, R2.3 variation token >=128-bit width and identity semantics, R2.4 canonical composition key contract"
   },
   "checked_main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
   "checked_world_packs_foundation": "c99bbd7233633f49ebd9fa1e2a74fcdb551c7b05",
