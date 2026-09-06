@@ -92,13 +92,13 @@ static func run_case(
 	)
 	if invalidation.is_empty():
 		return Utils.failure("B0_7_INVALIDATION_BUILD_FAILED")
-	var stale_live := GenericCompiler.live_context(old_artifact, [invalidation])
+	var stale_live := GenericCompiler.live_context(successor["context"], [invalidation])
 	var stale_attempt := Runtime.execute(old_artifact, base_descriptor, stale_live, excitations[0])
 	if String(stale_attempt.get("error_code", "")) != "STALE_PHYSICAL_BAKE_EXECUTION_FORBIDDEN":
 		return Utils.failure("B0_7_STALE_ARTIFACT_NOT_FENCED", {"error": stale_attempt.get("error_code", "")})
 
 	var fresh_artifact: Dictionary = successor_result["artifact"]
-	var fresh_live := GenericCompiler.live_context(fresh_artifact)
+	var fresh_live := GenericCompiler.live_context(successor["context"])
 	var runtime_result := Runtime.execute(fresh_artifact, successor_descriptor, fresh_live, excitations[0])
 	if not bool(runtime_result.get("success", false)):
 		return Utils.failure("B0_7_FRESH_REBAKE_RUNTIME_FAILED", {"error": runtime_result.get("error_code", "")})
@@ -165,19 +165,28 @@ static func validate_successor(
 		return Utils.failure("B0_7_EVENT_LEDGER_MISMATCH")
 	if successor_spec["applied_event_ids"].size() != base_spec["applied_event_ids"].size() + 1:
 		return Utils.failure("B0_7_EVENT_NOT_EXACTLY_ONCE")
+	var expected_events: Array = base_spec["applied_event_ids"].duplicate()
+	expected_events.append(failure_event_id)
+	expected_events.sort()
+	if successor_spec["applied_event_ids"] != expected_events:
+		return Utils.failure("B0_7_EVENT_HISTORY_NOT_PRESERVED")
 	if base_spec["boundary_node_ids"] != successor_spec["boundary_node_ids"] or base_spec["internal_node_ids"] != successor_spec["internal_node_ids"]:
 		return Utils.failure("B0_7_SUCCESSOR_NODE_SET_CHANGED")
+	for raw_id in failed_edge_ids:
+		if not Utils.is_canonical_id(raw_id, 2):
+			return Utils.failure("B0_7_FAILURE_EDGE_ID_INVALID")
 	var expected_failed := Utils.sorted_strings(failed_edge_ids)
 	if expected_failed.is_empty():
 		return Utils.failure("B0_7_FAILURE_EDGE_SET_EMPTY")
-	if expected_failed.size() != failed_edge_ids.size():
+	if not Utils.validate_sorted_unique_strings(expected_failed, false).success:
 		return Utils.failure("B0_7_FAILURE_EDGE_SET_DUPLICATE")
 	if base_spec["edges"].size() != successor_spec["edges"].size():
 		return Utils.failure("B0_7_SUCCESSOR_EDGE_COUNT_CHANGED")
 	var actual_failed: Array = []
-	for edge in base_spec["edges"]:
+	for index in range(base_spec["edges"].size()):
+		var edge: Dictionary = base_spec["edges"][index]
 		var edge_id := String(edge["edge_id"])
-		var next := Graph.edge_by_id(successor_spec, edge_id)
+		var next: Dictionary = successor_spec["edges"][index]
 		if next.is_empty():
 			return Utils.failure("B0_7_SUCCESSOR_EDGE_MISSING", {"edge_id": edge_id})
 		for field in ["edge_id", "node_a", "node_b", "conductance"]:
