@@ -1,0 +1,21 @@
+{
+  "schema": "planet_simulator.fabric_b0_7_unseen_kernel_freeze.v1",
+  "status": "KERNEL_FROZEN_CHALLENGE_NOT_REVEALED",
+  "predecessor_complex3_closure_head": "b39bc28499f47d34c5a0b7c02f223baf9f373a00",
+  "kernel_code_head": "286b1a0c538910e68a8b4424e5bf59a1c5d47630",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "fresh_kernel_replays": 2,
+  "kernel_assertions_per_replay": 22,
+  "kernel_hash": "9d117d310cc81eb84b6763c9daf1f08bb7ecbf5e31443c7ff2c81acb85b21d7b",
+  "kernel_blobs": {
+    "scripts/research/fabric_bake0/unseen_machine_generic_graph_v1.gd": "61f93a0e53584545e7532e389f591b05a1a09a98",
+    "scripts/research/fabric_bake0/unseen_machine_generic_compiler_v1.gd": "307eb564db9dd6208f3a4d972380a6d7bb35dff4",
+    "scripts/research/fabric_bake0/unseen_machine_challenge_protocol_v1.gd": "1c12fd56afe485e36977854ccdbce3e6a3034bfd",
+    "tests/research/fabric_bake0/fabric_bake_b0_7_kernel_freeze_acceptance.gd": "cc6c32d451f5e34054d36a59d55b567637f1ab62",
+    "RUN_FABRIC_B0_7_KERNEL_TESTS.sh": "7b472cb4d69bdfce9449d4eb98fe7d658e85d066",
+    "scripts/research/fabric_bake0/validate_unseen_machine_freeze.py": "124c70dc0457a497611ebbfa2a560a5f936113bb"
+  },
+  "freeze_rule": "After this manifest commit, challenge fixtures/tests/docs/evidence may be added, but any change to frozen physical/runtime/compiler/protocol bytes invalidates the unseen claim and requires a new freeze generation.",
+  "challenge_fixture_present_at_kernel_code_head": false
+}
