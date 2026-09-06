@@ -13,6 +13,7 @@ const StateMapping = preload("res://scripts/research/fabric_bake0/bake_state_map
 const CompileResult = preload("res://scripts/research/fabric_bake0/bake_compile_result_v1.gd")
 const FoundationCompiler = preload("res://scripts/research/fabric_bake0/fabric_bake_foundation_compiler_v1.gd")
 const LinearSystem = preload("res://scripts/research/fabric_bake0/linear_boundary_system_v1.gd")
+const SourceBinding = preload("res://scripts/research/fabric_bake0/bake_source_binding_v1.gd")
 const Reducer = preload("res://scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd")
 
 const MIN_BOUNDARY_PORTS := 2
@@ -31,38 +32,9 @@ const REQUEST_FIELDS: Array[String] = [
 ]
 
 static func compile(request: Dictionary) -> Dictionary:
-	var checked := Utils.validate_exact_fields(request, REQUEST_FIELDS)
-	if not bool(checked.get("success", false)):
+	var checked := _validate_request(request)
+	if not checked.success:
 		return checked
-
-	for pair in [
-		[Frontier, "canonical_source_frontier"],
-		[AuthorityEnvelope, "authority_envelope"],
-		[DependencySet, "dependency_set"],
-		[BoundaryContract, "boundary_contract"],
-		[ValidatedDomain, "validated_domain"],
-		[ErrorEnvelope, "error_envelope"],
-		[ConservationEnvelope, "conservation_envelope"],
-		[LinearSystem, "linear_system"],
-	]:
-		if typeof(request.get(pair[1])) != TYPE_DICTIONARY:
-			return Utils.failure("INVALID_B0_1_COMPILE_REQUEST_CONTRACT", {"field": pair[1]})
-		checked = pair[0].validate(request[pair[1]])
-		if not bool(checked.get("success", false)):
-			return checked
-
-	for field in ["pivot_relative_tolerance", "symmetry_tolerance", "passivity_tolerance"]:
-		if not Utils.is_positive_number(request.get(field)):
-			return Utils.failure("INVALID_B0_1_COMPILE_POLICY_NUMBER", {"field": field})
-	for field in ["require_symmetric", "require_passive_laplacian"]:
-		if typeof(request.get(field)) != TYPE_BOOL:
-			return Utils.failure("INVALID_B0_1_COMPILE_POLICY_FLAG", {"field": field})
-	if not Utils.is_json_integer(request.get("build_generation")) or int(request["build_generation"]) < 1:
-		return Utils.failure("INVALID_B0_1_BUILD_GENERATION")
-	if not Utils.is_lower_hex_64(request.get("fabric_graph_hash")) or not Utils.is_lower_hex_64(request.get("bake_policy_hash")):
-		return Utils.failure("INVALID_B0_1_BINDING_HASH")
-	if typeof(request.get("fabric_compiler_version")) != TYPE_STRING or String(request["fabric_compiler_version"]).strip_edges().is_empty():
-		return Utils.failure("INVALID_B0_1_FABRIC_COMPILER_VERSION")
 
 	var system: Dictionary = request["linear_system"]
 	var boundary_count: int = int(system["boundary_port_ids"].size())
@@ -156,15 +128,7 @@ static func compile(request: Dictionary) -> Dictionary:
 	if state_mapping.is_empty():
 		return CompileResult.no_safe("RECONSTRUCTION_UNAVAILABLE")
 
-	var effective_policy_hash := Utils.canonical_hash({
-		"base_bake_policy_hash": request["bake_policy_hash"],
-		"algorithm": "EXACT_SCHUR_DETERMINISTIC_LU_V1",
-		"pivot_relative_tolerance": policy["pivot_relative_tolerance"],
-		"symmetry_tolerance": policy["symmetry_tolerance"],
-		"passivity_tolerance": policy["passivity_tolerance"],
-		"require_symmetric": policy["require_symmetric"],
-		"require_passive_laplacian": policy["require_passive_laplacian"],
-	})
+	var effective_policy_hash := effective_policy_hash(request)
 
 	var foundation_request := {
 		"artifact_id": request["artifact_id"],
@@ -237,3 +201,79 @@ static func _boundary_event_frontier(boundary_contract: Dictionary) -> Array:
 				events.append(key)
 	events.sort()
 	return events
+
+static func effective_policy_hash(request: Dictionary) -> String:
+	return Utils.canonical_hash({
+		"base_bake_policy_hash": request["bake_policy_hash"],
+		"algorithm": "EXACT_SCHUR_DETERMINISTIC_LU_V1",
+		"pivot_relative_tolerance": request["pivot_relative_tolerance"],
+		"symmetry_tolerance": request["symmetry_tolerance"],
+		"passivity_tolerance": request["passivity_tolerance"],
+		"require_symmetric": request["require_symmetric"],
+		"require_passive_laplacian": request["require_passive_laplacian"],
+	})
+
+static func live_context_from_request(request: Dictionary, invalidations: Array = []) -> Dictionary:
+	# The caller owns current canonical state. An artifact is never its own live witness.
+	if not _validate_request(request).success:
+		return {}
+	if not AuthorityEnvelope.validate_b0_safety(request["authority_envelope"]).success:
+		return {}
+	var dependencies := _with_reducer_dependency(request["dependency_set"])
+	var binding := SourceBinding.create(request["canonical_source_frontier"], request["authority_envelope"],
+		dependencies, request["fabric_graph_hash"], request["fabric_compiler_version"],
+		request["boundary_contract"].get("contract_hash", ""), effective_policy_hash(request))
+	if binding.is_empty():
+		return {}
+	return {
+		"artifact_state": "READY",
+		"canonical_source_frontier": binding["canonical_source_frontier"],
+		"authority_envelope": binding["authority_envelope"],
+		"dependency_set": binding["dependency_set"],
+		"fabric_graph_hash": binding["fabric_graph_hash"],
+		"fabric_compiler_version": binding["fabric_compiler_version"],
+		"boundary_contract_hash": binding["boundary_contract_hash"],
+		"bake_policy_hash": binding["bake_policy_hash"],
+		"runtime_domain": {"source_frontier_hash": binding["frontier_hash"],
+			"fabric_graph_hash": binding["fabric_graph_hash"], "elapsed_s": 0.0, "mode": "STEADY", "quantities": {}},
+		"runtime_error_estimator": {}, "guard_values": {}, "invalidations": invalidations.duplicate(true),
+	}
+
+static func _validate_request(request: Dictionary) -> Dictionary:
+	var checked := Utils.validate_exact_fields(request, REQUEST_FIELDS)
+	if not bool(checked.get("success", false)):
+		return checked
+
+	if not Utils.is_canonical_id(request.get("artifact_id"), 2):
+		return Utils.failure("INVALID_B0_1_ARTIFACT_ID")
+
+	for pair in [
+		[Frontier, "canonical_source_frontier"],
+		[AuthorityEnvelope, "authority_envelope"],
+		[DependencySet, "dependency_set"],
+		[BoundaryContract, "boundary_contract"],
+		[ValidatedDomain, "validated_domain"],
+		[ErrorEnvelope, "error_envelope"],
+		[ConservationEnvelope, "conservation_envelope"],
+		[LinearSystem, "linear_system"],
+	]:
+		if typeof(request.get(pair[1])) != TYPE_DICTIONARY:
+			return Utils.failure("INVALID_B0_1_COMPILE_REQUEST_CONTRACT", {"field": pair[1]})
+		checked = pair[0].validate(request[pair[1]])
+		if not bool(checked.get("success", false)):
+			return checked
+
+	for field in ["pivot_relative_tolerance", "symmetry_tolerance", "passivity_tolerance"]:
+		if not Utils.is_positive_number(request.get(field)):
+			return Utils.failure("INVALID_B0_1_COMPILE_POLICY_NUMBER", {"field": field})
+	for field in ["require_symmetric", "require_passive_laplacian"]:
+		if typeof(request.get(field)) != TYPE_BOOL:
+			return Utils.failure("INVALID_B0_1_COMPILE_POLICY_FLAG", {"field": field})
+	if not Utils.is_json_integer(request.get("build_generation")) or int(request["build_generation"]) < 1:
+		return Utils.failure("INVALID_B0_1_BUILD_GENERATION")
+	if not Utils.is_lower_hex_64(request.get("fabric_graph_hash")) or not Utils.is_lower_hex_64(request.get("bake_policy_hash")):
+		return Utils.failure("INVALID_B0_1_BINDING_HASH")
+	if typeof(request.get("fabric_compiler_version")) != TYPE_STRING or String(request["fabric_compiler_version"]).strip_edges().is_empty():
+		return Utils.failure("INVALID_B0_1_FABRIC_COMPILER_VERSION")
+
+	return Utils.success()

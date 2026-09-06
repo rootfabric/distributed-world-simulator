@@ -81,7 +81,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	checked = Utils.validate_sorted_unique_strings(value.get("boundary_port_ids"), false)
 	if not bool(checked.get("success", false)):
 		return Utils.failure("INVALID_LINEAR_BOUNDARY_PORT_IDS")
-	checked = Utils.validate_sorted_unique_strings(value.get("internal_variable_ids"), false)
+	checked = Utils.validate_sorted_unique_strings(value.get("internal_variable_ids"), true)
 	if not bool(checked.get("success", false)):
 		return Utils.failure("INVALID_LINEAR_INTERNAL_VARIABLE_IDS")
 	for port_id in value["boundary_port_ids"]:

@@ -28,6 +28,8 @@ static func reduce(system: Dictionary, policy: Dictionary) -> Dictionary:
 
 	var boundary_count: int = int(system["boundary_port_ids"].size())
 	var internal_count: int = int(system["internal_variable_ids"].size())
+	if internal_count == 0:
+		return _no_safe("INSUFFICIENT_COMPLEXITY_REDUCTION")
 	var matrix: Array = system["coefficient_matrix"]
 	var rhs: Array = system["rhs"]
 	var a_bb := _slice_matrix(matrix, 0, boundary_count, 0, boundary_count)
@@ -139,6 +141,18 @@ static func evaluate_full(system: Dictionary, boundary_effort: Array, pivot_rela
 	var internal_count: int = int(system["internal_variable_ids"].size())
 	if boundary_effort.size() != boundary_count:
 		return Utils.failure("INVALID_BOUNDARY_EFFORT_SIZE")
+	for effort in boundary_effort:
+		if not Utils.is_finite_number(effort):
+			return Utils.failure("INVALID_BOUNDARY_EFFORT_VALUE")
+	if not Utils.is_positive_number(pivot_relative_tolerance):
+		return Utils.failure("INVALID_PIVOT_TOLERANCE")
+	if internal_count == 0:
+		var direct_flow := LinearAlgebra.matvec(system["coefficient_matrix"], boundary_effort)
+		for index in range(direct_flow.size()):
+			direct_flow[index] = float(direct_flow[index]) - float(system["rhs"][index])
+		return Utils.success({"boundary_effort": boundary_effort.duplicate(),
+			"boundary_flow": direct_flow, "boundary_power": LinearAlgebra.dot(boundary_effort, direct_flow),
+			"internal_state": []})
 	var matrix: Array = system["coefficient_matrix"]
 	var rhs: Array = system["rhs"]
 	var a_bb := _slice_matrix(matrix, 0, boundary_count, 0, boundary_count)
@@ -179,6 +193,9 @@ static func evaluate_reduced(descriptor: Dictionary, boundary_effort: Array) -> 
 		return checked
 	if boundary_effort.size() != descriptor["boundary_port_ids"].size():
 		return Utils.failure("INVALID_BOUNDARY_EFFORT_SIZE")
+	for effort in boundary_effort:
+		if not Utils.is_finite_number(effort):
+			return Utils.failure("INVALID_BOUNDARY_EFFORT_VALUE")
 	var boundary_flow := LinearAlgebra.matvec(descriptor["schur_matrix"], boundary_effort)
 	for index in range(boundary_flow.size()):
 		boundary_flow[index] = float(boundary_flow[index]) - float(descriptor["reduced_rhs"][index])

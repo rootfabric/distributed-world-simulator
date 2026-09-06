@@ -50,13 +50,11 @@ static func validate(value: Dictionary) -> Dictionary:
 	checked = Utils.validate_sorted_unique_strings(value.get("boundary_node_ids"), false)
 	if not bool(checked.get("success", false)):
 		return Utils.failure("INVALID_B0_7_BOUNDARY_NODE_IDS")
-	checked = Utils.validate_sorted_unique_strings(value.get("internal_node_ids"), false)
+	checked = Utils.validate_sorted_unique_strings(value.get("internal_node_ids"), true)
 	if not bool(checked.get("success", false)):
 		return Utils.failure("INVALID_B0_7_INTERNAL_NODE_IDS")
-	if value["boundary_node_ids"].size() < 2 or value["boundary_node_ids"].size() > 8:
+	if value["boundary_node_ids"].size() < 2:
 		return Utils.failure("B0_7_BOUNDARY_COUNT_OUT_OF_SCOPE")
-	if value["internal_node_ids"].size() < 100:
-		return Utils.failure("B0_7_INTERNAL_COUNT_BELOW_REDUCTION_SCOPE")
 	var all_nodes := {}
 	for node_id in value["boundary_node_ids"]:
 		if not Utils.is_canonical_id(node_id, 2):
@@ -85,8 +83,10 @@ static func validate(value: Dictionary) -> Dictionary:
 		if index > 0 and edge_id <= previous:
 			return Utils.failure("B0_7_EDGES_NOT_SORTED_UNIQUE")
 		previous = edge_id
-		var a := String(edge.get("node_a", ""))
-		var b := String(edge.get("node_b", ""))
+		if typeof(edge.get("node_a")) != TYPE_STRING or typeof(edge.get("node_b")) != TYPE_STRING:
+			return Utils.failure("INVALID_B0_7_EDGE_ENDPOINT", {"edge_id": edge_id})
+		var a := String(edge["node_a"])
+		var b := String(edge["node_b"])
 		if a == b or not all_nodes.has(a) or not all_nodes.has(b):
 			return Utils.failure("INVALID_B0_7_EDGE_ENDPOINT", {"edge_id": edge_id})
 		if not Utils.is_positive_number(edge.get("conductance")):
