@@ -42,6 +42,7 @@ jobs:
             if [ "$mode" = CloseMission ]; then expected=8; else expected=0; fi
             if [ "$code" -ne "$expected" ]; then failed=1; fi
           done
+          set -e
           git diff --exit-code
           git diff --cached --exit-code
           exit "$failed"
@@ -61,6 +62,7 @@ jobs:
       SUBJECT_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
       GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
       PYTHONUTF8: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
       - name: Checkout frozen canonical product, not workflow source
         uses: actions/checkout@v4
@@ -85,6 +87,21 @@ jobs:
           "$engine" --version | tee artifacts/p7-world-core/godot-version.txt
           sha256sum "$engine" > artifacts/p7-world-core/godot-sha256.txt
           echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+      - name: Provide required graphical test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/bin/Xvfb ]; then
+            if [ "$(id -u)" = 0 ]; then
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+            else
+              sudo -n apt-get update
+              sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+            fi
+          fi
+          test -x /usr/bin/Xvfb
+          { ls -l /usr/bin/Xvfb; dpkg-query -W xvfb libgl1-mesa-dri; } > artifacts/p7-world-core/graphical-environment.txt
       - name: Resolve PowerShell 7 without modifying host installation
         shell: bash
         run: |
