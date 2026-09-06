@@ -34,6 +34,24 @@ def read_control(root: Path, path: str, ref: str | None) -> dict[str, Any]:
     return _parse_json_object(raw, path)
 
 
+def _candidate_contains_canonical_main(root: Path, canonical_head: str) -> bool:
+    """Prove freshness from Git topology, not from inherited snapshot prose.
+
+    `coordination.observed_main` records the main revision against which a control
+    snapshot was originally authored. After that snapshot is merged, a bounded
+    follow-up branch may legitimately inherit the old provenance field while being
+    based on the new canonical main. Such a branch is fresh only when the resolved
+    canonical HEAD is an ancestor of the candidate HEAD. If main advances after
+    the candidate was cut, this proof fails and CANDIDATE_MAIN_DRIFT remains a
+    product-blocking finding.
+    """
+    code, candidate_head = _git(root, "rev-parse", "HEAD")
+    if code or not re.fullmatch(r"[0-9a-f]{40}", candidate_head):
+        return False
+    code, merge_base = _git(root, "merge-base", canonical_head, candidate_head)
+    return code == 0 and merge_base == canonical_head
+
+
 def project_overview(
     root: Path, *, candidate: bool = False, canonical_head: str | None = None,
     include_acceptance: bool = True,
@@ -67,7 +85,11 @@ def project_overview(
         return dict(provenance=provenance, lanes={}, consistency_findings=findings,
                     runtime_authorized=False, dispatch_authority="EXISTING_HARNESS_ONLY")
 
-    if candidate and coordination.get("observed_main") != canonical_head:
+    if (
+        candidate
+        and coordination.get("observed_main") != canonical_head
+        and not _candidate_contains_canonical_main(root, canonical_head)
+    ):
         issue("CANDIDATE_MAIN_DRIFT", "product_blocking",
               f"Observed main {coordination.get('observed_main')} != canonical main {canonical_head}; refresh and re-review the candidate.")
 
