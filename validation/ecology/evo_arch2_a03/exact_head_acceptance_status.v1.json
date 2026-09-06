@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo_arch2_a03_exact_acceptance_status.v1",
+  "version": "1.0.0",
+  "revision": "EVO-ARCH2-A03-EXACT-ACCEPTANCE-STATUS-2026-09-06-R1",
+  "status": "EXTERNAL_INDEPENDENT_ACCEPTANCE_BLOCKED",
+  "acceptance_complete": false,
+  "merge_authorized": false,
+  "a4_authorized": false,
+  "publication": {
+    "complete": true,
+    "branch": "feature/eco-evo-arch2-a0-a3-r1",
+    "source_head": "096723ec6162892b49c11839e07f8824d0d2c45d",
+    "source_tree": "12ab345de2901690cc3a6350cefd94a14cd41984",
+    "research_base": "a73cccb8064fdfb4df266338d3d20e24ac9f082b",
+    "pr": 563,
+    "post_source_delta": {
+      "head_at_status_predecessor": "83da390463ff1c8dfcdcb4af62ee2bacc85ee4a8",
+      "commits": 2,
+      "source_runtime_files_changed": 0,
+      "only_files": [
+        ".github/workflows/evo-arch2-a03-exact-acceptance.yml",
+        ".github/workflows/evo-arch2-a03-exact-acceptance-windows.yml"
+      ]
+    }
+  },
+  "implementer_exact_evidence": {
+    "godot_linux": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_linux_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "arch2_assertions": 68,
+    "arch2_failures": 0,
+    "fresh_process_replays": 2,
+    "replay_logs_byte_identical": true,
+    "arch2_log_sha256": "ec069c892a57d5057d793af330a7b0a68838ea81e279a3699ec7331e5d0f95d1",
+    "cold_import_clean": true,
+    "cold_import_log_sha256": "520ead1e6c7c1907ba824c87e830d8d461516744fb0864d2bfc0c255fa70b539",
+    "graphical_lab_clean": true,
+    "graphical_lab_log_sha256": "63350791e84a33e9235129492bb460132a9b5d08e4baa2044f82beb20fd1c13a",
+    "vis5_regression_assertions": 521,
+    "vis5_regression_failures": 0,
+    "independent": false
+  },
+  "independent_verifier": {
+    "required": true,
+    "verdict": "PENDING",
+    "linux": {
+      "run_id": 34001793967,
+      "status": "QUEUED",
+      "permissions": "contents:read",
+      "target_branch_head": "83da390463ff1c8dfcdcb4af62ee2bacc85ee4a8",
+      "godot_required_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+    },
+    "windows": {
+      "run_id": 34001793982,
+      "status": "QUEUED",
+      "permissions": "contents:read",
+      "target_branch_head": "83da390463ff1c8dfcdcb4af62ee2bacc85ee4a8",
+      "godot_required_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
+    },
+    "blocker": "SELF_HOSTED_EXACT_RUNNERS_NOT_ASSIGNED"
+  },
+  "independent_reviewer": {
+    "required": true,
+    "verdict": "PENDING",
+    "pr_review_request_attempted": true,
+    "copilot_review_present": false,
+    "copilot_issue_assignment": "HTTP_422_CANNOT_BE_ASSIGNED",
+    "codex_pr_mention_attempted": true,
+    "codex_review_present": false,
+    "codex_issue_assignment": "HTTP_422_CANNOT_BE_ASSIGNED",
+    "blocker": "NO_INDEPENDENT_REVIEW_AGENT_ASSIGNABLE_IN_CURRENT_REPOSITORY_CONTEXT"
+  },
+  "project_control": {
+    "run_id": 34001793895,
+    "exact_checkout_head": "83da390463ff1c8dfcdcb4af62ee2bacc85ee4a8",
+    "overall": "RED",
+    "a2_a3_runtime_drift_attributed": false,
+    "known_external_findings": [
+      "G_MATTER_CRITICAL_DEPENDENCY_DRIFT",
+      "ECO_MATTER_AND_PROJECT_REGISTRY_CRITICAL_DEPENDENCY_DRIFT"
+    ],
+    "note": "Do not relabel global Project Control GREEN; the observed RED findings pre-date and do not point at the isolated EVO ARCH2 v2 source paths."
+  },
+  "truth_boundaries": [
+    "RESEARCH_ONLY_SUCCESSOR",
+    "SIX_BODY_PROGRAMS_ARE_AUTHORED_EXPRESSIVENESS_FIXTURES_NOT_EVOLVED_SPECIES",
+    "SYNTHETIC_ENVIRONMENT_AND_GRANTS_ARE_NOT_PRODUCTION_WORLD_AUTHORITY",
+    "A4_WORLD_FIELDS_NOT_IMPLEMENTED_OR_AUTHORIZED",
+    "NO_MAIN_MUTATION",
+    "NO_RUNTIME_MERGE"
+  ],
+  "resume_condition": "Obtain a fresh independent Reviewer verdict and at least one fresh exact-head independent Verifier PASS on the frozen A0-A3 source subject without any intervening A0-A3 runtime/source change; then publish official result evidence and rerun required control freshness checks."
+}
