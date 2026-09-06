@@ -15,6 +15,8 @@ from .contract import (
     MalformedVectorError,
     MalformedCanonicalNumberError,
     RecipeVersionError,
+    CompositionKeyError,
+    RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT,
     canonical_input_hash,
     validate_recipe_document,
 )
@@ -35,6 +37,8 @@ __all__ = [
     "MalformedVectorError",
     "MalformedCanonicalNumberError",
     "RecipeVersionError",
+    "CompositionKeyError",
+    "RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT",
     "canonical_input_hash",
     "validate_recipe_document",
     "SurfacePresentationResolver",

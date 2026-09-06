@@ -1,6 +1,6 @@
 {
   "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. Canonical input hashes are proven identical before/after each independent resolution and across both recipes. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
-  "contract_revision": "WP2_CONTRACT_REPAIR_R1",
+  "contract_revision": "WP2_CONTRACT_REPAIR_R2",
   "proof": "SAME_CANONICAL_WORLD_DIFFERENT_PRESENTATION",
   "recipe_a": "recipe/wp2-proof-a-dark-basaltic@1.0.0",
   "recipe_b": "recipe/wp2-proof-a-light-dusty@1.0.0",
@@ -53,7 +53,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "322d59c47782ef10"
+            "variation_seed": "322d59c47782ef10e3ad3098b449f22d25f75c4472bb3620e4447de4ed5b95cc"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -72,7 +72,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "322d59c47782ef10"
+            "variation_seed": "322d59c47782ef10e3ad3098b449f22d25f75c4472bb3620e4447de4ed5b95cc"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -91,7 +91,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "b653b1e3760fd061"
+            "variation_seed": "b653b1e3760fd0610383d62ad6ec962cf8b8728b8dd899abc21868fc123954d9"
           },
           "surface_id": "surface/seed11/0"
         },
@@ -121,7 +121,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "bef144987467b1a5"
+            "variation_seed": "bef144987467b1a5e040da2444a6f6e4130a13e21dc2406a5520d9d5b640869a"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -140,7 +140,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "bef144987467b1a5"
+            "variation_seed": "bef144987467b1a5e040da2444a6f6e4130a13e21dc2406a5520d9d5b640869a"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -159,7 +159,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "d3e429e5aac330be"
+            "variation_seed": "d3e429e5aac330be4903a2a4a11f6efae21574546248b4eccc6fafc5dfd987da"
           },
           "surface_id": "surface/seed11/1"
         },
@@ -189,7 +189,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "9f6e74cca4252d63"
+            "variation_seed": "9f6e74cca4252d63044b00f55058892036eb14a97ae2b4e3a4b2fa66a2792022"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -208,7 +208,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "9f6e74cca4252d63"
+            "variation_seed": "9f6e74cca4252d63044b00f55058892036eb14a97ae2b4e3a4b2fa66a2792022"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -227,7 +227,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "7ad2af0fff01d837"
+            "variation_seed": "7ad2af0fff01d837fc60c6559ab4c6e76dfd939a4e2812f509b3348a6da784ad"
           },
           "surface_id": "surface/seed11/2"
         },
@@ -257,7 +257,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "a5f1d6a3ac401275"
+            "variation_seed": "a5f1d6a3ac401275a5e3ce344413b1b556dcc7bf164cfd7d7642509b95fa10a9"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -276,7 +276,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "a5f1d6a3ac401275"
+            "variation_seed": "a5f1d6a3ac401275a5e3ce344413b1b556dcc7bf164cfd7d7642509b95fa10a9"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -295,7 +295,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "dde44fbe8a428002"
+            "variation_seed": "dde44fbe8a428002fb4fb4ed7fc96c24a167fc6dbab570c5ead0e04a8098d805"
           },
           "surface_id": "surface/seed11/3"
         },
@@ -325,7 +325,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "f078ab626289b986"
+            "variation_seed": "f078ab626289b986709b9db7e9c9ac34d54115d53d4090dfcc0a935b7980b24f"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -344,7 +344,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "f078ab626289b986"
+            "variation_seed": "f078ab626289b986709b9db7e9c9ac34d54115d53d4090dfcc0a935b7980b24f"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -363,7 +363,7 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "842cfc823447a9a7"
+            "variation_seed": "842cfc823447a9a79f181b1e883c29a8636f8cf87596e47d7aee5a4fad9c708e"
           },
           "surface_id": "surface/seed11/4"
         },
@@ -393,7 +393,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "e3b0de4c7de56cf0"
+            "variation_seed": "e3b0de4c7de56cf01f10f9657dcd7db6e4ff43398c75c20490fd6b5e79c8444e"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -412,7 +412,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "e3b0de4c7de56cf0"
+            "variation_seed": "e3b0de4c7de56cf01f10f9657dcd7db6e4ff43398c75c20490fd6b5e79c8444e"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -431,7 +431,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "d096251c4f70dbfb"
+            "variation_seed": "d096251c4f70dbfb20ec9bbae004ac883d7b5b26d63aef535ab88a0a833c6637"
           },
           "surface_id": "surface/seed11/5"
         }
@@ -483,7 +483,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "8e002e81cd7351df"
+            "variation_seed": "8e002e81cd7351dff5d43f85ec7c4d38d477da714fc2aea4b81bf7651a42ac22"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -502,7 +502,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "8e002e81cd7351df"
+            "variation_seed": "8e002e81cd7351dff5d43f85ec7c4d38d477da714fc2aea4b81bf7651a42ac22"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -521,7 +521,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "09b548790cf630d0"
+            "variation_seed": "09b548790cf630d0a71899b2878debb12c9379d6f598152c0dd0504b89ca273c"
           },
           "surface_id": "surface/seed29/0"
         },
@@ -551,7 +551,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "6b3e747930712e38"
+            "variation_seed": "6b3e747930712e38db549a6c380fa462e1893eb80a67adbbcecb056236680478"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -570,7 +570,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "6b3e747930712e38"
+            "variation_seed": "6b3e747930712e38db549a6c380fa462e1893eb80a67adbbcecb056236680478"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -589,7 +589,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "807dee6c41bf28f9"
+            "variation_seed": "807dee6c41bf28f90ea15993076800874f4aee9fe984cec75104b163a093b2c9"
           },
           "surface_id": "surface/seed29/1"
         },
@@ -619,7 +619,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "2cf8aa3f32242bb5"
+            "variation_seed": "2cf8aa3f32242bb5a700797abb76844da310e6b57a2d9f994cc797f0e7e14ca5"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -638,7 +638,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "2cf8aa3f32242bb5"
+            "variation_seed": "2cf8aa3f32242bb5a700797abb76844da310e6b57a2d9f994cc797f0e7e14ca5"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -657,7 +657,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "425bed645f6c2113"
+            "variation_seed": "425bed645f6c2113f728aaa822d96bcbf04b5098260ace70f282a3908ff93d5a"
           },
           "surface_id": "surface/seed29/2"
         },
@@ -687,7 +687,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "d18423a9b8413615"
+            "variation_seed": "d18423a9b8413615cf76684ef9f08d0b343f230ff25853413094fecfec66d30d"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -706,7 +706,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "d18423a9b8413615"
+            "variation_seed": "d18423a9b8413615cf76684ef9f08d0b343f230ff25853413094fecfec66d30d"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -725,7 +725,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "e8025e028ab21e16"
+            "variation_seed": "e8025e028ab21e16f6266033896b8033a6781e609527d2b716801570e854702e"
           },
           "surface_id": "surface/seed29/3"
         },
@@ -755,7 +755,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "5673a59eee2c1355"
+            "variation_seed": "5673a59eee2c1355a09582d283d5578d5a8e57d100878c7e6993e0c1a1cc19bc"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -774,7 +774,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "5673a59eee2c1355"
+            "variation_seed": "5673a59eee2c1355a09582d283d5578d5a8e57d100878c7e6993e0c1a1cc19bc"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -793,7 +793,7 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "3dacf081498fef41"
+            "variation_seed": "3dacf081498fef4182f8659bc0b13582d02e76336f574d68a606e58de6257178"
           },
           "surface_id": "surface/seed29/4"
         },
@@ -823,7 +823,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "fca30f17fcd22ce3"
+            "variation_seed": "fca30f17fcd22ce36f3d3e887e42bf3b2407e0a910c53e8f11218ce4c9a1a723"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -842,7 +842,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "fca30f17fcd22ce3"
+            "variation_seed": "fca30f17fcd22ce36f3d3e887e42bf3b2407e0a910c53e8f11218ce4c9a1a723"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -861,7 +861,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "4ba9b7f0eec95cae"
+            "variation_seed": "4ba9b7f0eec95cae547728580d4747d4a11d27bc71923d6a530c8d810bad4e4d"
           },
           "surface_id": "surface/seed29/5"
         }
@@ -913,7 +913,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "375ce697bd0f9d9f"
+            "variation_seed": "375ce697bd0f9d9fe6047c58ddfc890919e657e04c72314db0ad343d47c58633"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -932,7 +932,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "375ce697bd0f9d9f"
+            "variation_seed": "375ce697bd0f9d9fe6047c58ddfc890919e657e04c72314db0ad343d47c58633"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -951,7 +951,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "81b1f166a678522a"
+            "variation_seed": "81b1f166a678522af101848fd269b315719eaf9b24af2680f599f2de3a5ddd0d"
           },
           "surface_id": "surface/seed47/0"
         },
@@ -981,7 +981,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "5e9b217bd88c41d2"
+            "variation_seed": "5e9b217bd88c41d2d1ad5bf65c7fc57d79266745e57bb3f8d473492df9ecaa4d"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -1000,7 +1000,7 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "5e9b217bd88c41d2"
+            "variation_seed": "5e9b217bd88c41d2d1ad5bf65c7fc57d79266745e57bb3f8d473492df9ecaa4d"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -1019,7 +1019,7 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "031486724a5c285b"
+            "variation_seed": "031486724a5c285b3a8621f2f43c1e1868d3e3575a8cee7925eee89995f32924"
           },
           "surface_id": "surface/seed47/1"
         },
@@ -1049,7 +1049,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "c597627d5f6d45d4"
+            "variation_seed": "c597627d5f6d45d46ec462153b35184202fd9303450f34dd187b1a45c53c2c74"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -1068,7 +1068,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "c597627d5f6d45d4"
+            "variation_seed": "c597627d5f6d45d46ec462153b35184202fd9303450f34dd187b1a45c53c2c74"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -1087,7 +1087,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "3a9217959c9f9deb"
+            "variation_seed": "3a9217959c9f9deb63e628f699c454282620f18c312681f48b1e50fcf43cc02f"
           },
           "surface_id": "surface/seed47/2"
         },
@@ -1117,7 +1117,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "e219d38744e44b9b"
+            "variation_seed": "e219d38744e44b9b96a1a67750ce44870605460284cdb8ca8b471c243ab90f12"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -1136,7 +1136,7 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "e219d38744e44b9b"
+            "variation_seed": "e219d38744e44b9b96a1a67750ce44870605460284cdb8ca8b471c243ab90f12"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -1155,7 +1155,7 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "5d762cd5207ec7ce"
+            "variation_seed": "5d762cd5207ec7ce2389774ed77fc1ef6b0f23e087c4ff0f1348b9a9a148f8c2"
           },
           "surface_id": "surface/seed47/3"
         },
@@ -1185,7 +1185,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "c9702bf1f43909f8"
+            "variation_seed": "c9702bf1f43909f8d453b04d1ad510630dbc294cd658fd4169be090da74a5913"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -1204,7 +1204,7 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "c9702bf1f43909f8"
+            "variation_seed": "c9702bf1f43909f8d453b04d1ad510630dbc294cd658fd4169be090da74a5913"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -1223,7 +1223,7 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "98d9b54d7c1e5bfd"
+            "variation_seed": "98d9b54d7c1e5bfde101aa84d3751b41546a0931284bf93cb9b4d8ef46d21354"
           },
           "surface_id": "surface/seed47/4"
         },
@@ -1253,7 +1253,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "e780978d9eaca5fb"
+            "variation_seed": "e780978d9eaca5fb6402fc7494066d04ebebf24f0bd2356d4c74e50f2ce9dba9"
           },
           "selection_recipe_a": {
             "fallback_used": false,
@@ -1272,7 +1272,7 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "e780978d9eaca5fb"
+            "variation_seed": "e780978d9eaca5fb6402fc7494066d04ebebf24f0bd2356d4c74e50f2ce9dba9"
           },
           "selection_recipe_b": {
             "fallback_used": false,
@@ -1291,7 +1291,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "01226a4873321f09"
+            "variation_seed": "01226a4873321f09d9cf046de0a7c0d65ad105aaaf7f874340b573963834233a"
           },
           "surface_id": "surface/seed47/5"
         }

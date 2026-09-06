@@ -417,7 +417,153 @@ def test_variation_token_is_recipe_scoped():
 def test_variation_token_domain_separated_and_stable():
     token = wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A)
     assert token == wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A)
-    assert len(token) == 16  # documented token width
+    assert len(token) == 64  # full SHA-256; R2.3 >= 128-bit width contract
+
+
+# ---------- R2.1: surface_normal is REQUIRED, no hidden axis default ----------
+
+def test_missing_surface_normal_fails_at_construction():
+    # R2.1: a caller that forgets the normal must fail loudly; it must never
+    # silently receive +Z, +Y or any other implicit global axis.
+    base = dict(
+        body_id="body/mock-moon",
+        surface_id="surface/test/0",
+        position_body_fixed=(1.0, 2.0, 3.0),
+        material_id="matter/basalt",
+    )
+    with pytest.raises(TypeError):
+        wp.WorldSurfacePresentationInput(**base)
+
+
+def test_explicit_global_axis_normal_is_accepted_as_explicit():
+    # (0,0,1) is fine only when the caller SUPPLIES it explicitly.
+    s = sample(surface_normal=(0.0, 0.0, 1.0))
+    assert s.surface_normal == (0.0, 0.0, 1.0)
+
+
+def test_arbitrary_normal_accepted_without_axis_fallback():
+    s = sample(surface_normal=(0.26726124, 0.53452248, 0.80178373))
+    assert s.surface_normal == (0.26726124, 0.53452248, 0.80178373)
+    # gravity remains independently optional; no default is injected for it.
+    s2 = sample(surface_normal=(1.0, 0.0, 0.0), gravity_direction=None)
+    assert s2.gravity_direction is None
+
+
+def test_dto_has_no_surface_normal_default():
+    from dataclasses import MISSING, fields
+    normal_field = [f for f in fields(wp.WorldSurfacePresentationInput)
+                    if f.name == "surface_normal"][0]
+    assert normal_field.default is MISSING
+    assert normal_field.default_factory is MISSING
+
+
+# ---------- R2.2: recursive forbidden-field guard through sequences ----------
+
+def _recipe_doc_with(payload):
+    return {"recipes": {"recipe/walker@1.0.0": {"version": "1.0.0", **payload}}}
+
+
+def test_forbidden_field_in_nested_list_rejected():
+    with pytest.raises(wp.PhysicalFieldError):
+        wp.validate_recipe_document(_recipe_doc_with({"bindings": {"family": {
+            "layers": [{"density": 1000}]}}}))
+
+
+def test_forbidden_field_in_nested_list_of_dicts_rejected():
+    with pytest.raises(wp.PhysicalFieldError):
+        wp.validate_recipe_document({"states": [
+            {"nested": [{"layer_depths": [1, 2]}]}],
+            "recipes": {}})
+
+
+def test_forbidden_field_in_presentation_list_rejected():
+    with pytest.raises(wp.PhysicalFieldError):
+        wp.validate_recipe_document({"presentation": [
+            {"x": {"collision": True}}],
+            "recipes": {}})
+
+
+def test_forbidden_field_in_list_of_list_rejected():
+    with pytest.raises(wp.PhysicalFieldError):
+        wp.validate_recipe_document(_recipe_doc_with({"grid": [
+            [{"mass": 1.0}], [{"strength": 2.0}]]}))
+
+
+def test_forbidden_field_in_tuple_rejected():
+    with pytest.raises(wp.PhysicalFieldError):
+        wp.validate_recipe_document(_recipe_doc_with({"t": ({"yield": 1.0},)}))
+
+
+def test_plain_arrays_still_accepted():
+    # Ordinary presentation arrays (asset refs, tags, states) stay legal.
+    doc = _recipe_doc_with({"bindings": {"family": {
+        "asset_refs": ["asset/a@1.0.0", "asset/b@1.0.0"],
+        "tags": ["rough", "dark"],
+        "states": [{"name": "weathered"}, [{"name": "nested-ok"}]],
+    }}})
+    wp.validate_recipe_document(doc)  # must not raise
+
+
+# ---------- R2.3: variation token width / domain / channel / fidelity ----------
+
+def test_variation_token_is_128_bit_minimum_width():
+    token = wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A)
+    assert len(token) >= 32            # >= 128 bits of hex
+    int(token, 16)                     # parses as pure hex
+    assert wp.resolver.VARIATION_TOKEN_HEX_WIDTH == 64
+
+
+def test_variation_token_is_channel_scoped():
+    default = wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A)
+    scatter = wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A,
+                                 channel="scatter")
+    assert default != scatter
+
+
+def test_variation_token_is_surface_scoped():
+    a = wp.variation_token("body/mock-moon", "surface/test/0", RECIPE_A)
+    b = wp.variation_token("body/mock-moon", "surface/test/1", RECIPE_A)
+    assert a != b
+
+
+def test_variation_token_is_not_canonical_identity():
+    # The token is a presentation variation key, NOT canonical world identity:
+    # the two derivations must never be confused or equal.
+    s = sample()
+    assert wp.variation_token(s.body_id, s.surface_id, RECIPE_A) \
+        != wp.canonical_input_hash(s)
+
+
+# ---------- R2.4: canonical composition key contract ----------
+
+@pytest.mark.parametrize("bad_key", [1, True, None, "", 1.5])
+def test_composition_non_string_keys_rejected(bad_key):
+    with pytest.raises(wp.CompositionKeyError):
+        sample(composition={bad_key: 0.5})
+
+
+def test_composition_mixed_int_string_keys_rejected():
+    with pytest.raises(wp.CompositionKeyError):
+        sample(composition={"canonical": 1.0, 1: 2.0})
+
+
+def test_composition_empty_key_rejected():
+    with pytest.raises(wp.CompositionKeyError):
+        sample(composition={"": 1.0})
+
+
+def test_composition_non_empty_string_keys_accepted():
+    s = sample(composition={"matter/basalt": 0.7, "canonical": 0.3})
+    assert s.composition == {"matter/basalt": 0.7, "canonical": 0.3}
+    assert wp.canonical_input_hash(s) == wp.canonical_input_hash(
+        sample(composition={"matter/basalt": 0.7, "canonical": 0.3}))
+    assert wp.canonical_input_hash(s) != wp.canonical_input_hash(
+        sample(composition={"matter/basalt": 0.8, "canonical": 0.2}))
+
+
+def test_composition_key_semantics_pending_note_is_durable():
+    assert "PENDING_UPSTREAM_CONTRACT" in (
+        wp.RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT)
 
 
 # ---------- R7: exact version validation ----------
@@ -502,7 +648,7 @@ def test_canonical_truth_does_not_depend_on_world_packs():
 
 def test_proof_a_fixture_invariants():
     fixture = json.loads(proof_a.FIXTURE_PATH.read_text(encoding="utf-8"))
-    assert fixture["contract_revision"] == "WP2_CONTRACT_REPAIR_R1"
+    assert fixture["contract_revision"] == "WP2_CONTRACT_REPAIR_R2"
     assert len(fixture["seeds"]) == 3
     resolver = wp.SurfacePresentationResolver()
     matter_identity = None

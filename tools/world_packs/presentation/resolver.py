@@ -53,8 +53,22 @@ ALIGNMENT_TRIPLE_MIN = 0.35
 # upstream), client fidelity, camera position, region owner or filesystem
 # order. Two clients at different fidelities receive the SAME token for one
 # surface/recipe/channel.
+# R2.3: variation token width. The token is the FULL SHA-256 hexdigest
+# (256-bit, 64 hex chars), comfortably above the 128-bit minimum required
+# for a stable long-term surface variation identity. The previous 16-hex-char
+# (64-bit) truncation is retired: collision risk over a huge world was not
+# acceptable for a durable presentation identity.
+#
+# Semantics: the variation token is a DETERMINISTIC PRESENTATION VARIATION
+# KEY. It is NOT canonical world identity (use canonical_input_hash) and NOT
+# authority identity. Required properties:
+#   same body/surface/recipe/channel -> same token
+#   different body / surface / recipe / channel -> different token
+#   different client fidelity         -> SAME token
+# It never includes camera, filesystem state or region owner.
 VARIATION_TOKEN_DOMAIN = "DWS-WP2-VARIATION-V1"
 DEFAULT_VARIATION_CHANNEL = "surface-presentation"
+VARIATION_TOKEN_HEX_WIDTH = 64  # full SHA-256; >= 128-bit identity requirement
 
 
 def _read_json(path: Path) -> dict:
@@ -125,17 +139,25 @@ def _deep_thaw(node):
 
 def variation_token(body_id: str, surface_id: str, recipe_ref: str,
                     channel: str = DEFAULT_VARIATION_CHANNEL) -> str:
-    """Domain-separated variation token (R6).
+    """Domain-separated variation token (R6, R2.3).
+
+    Identity semantics: this token is a deterministic PRESENTATION variation
+    key — it is NOT canonical world identity and NOT authority identity.
 
     Key layout: ``DWS-WP2-VARIATION-V1|body_id|surface_id|recipe_ref|channel``.
     Same surface_id on different bodies yields different tokens; different
-    client fidelities never change the token. The world seed is not part of
-    the key because it is already embedded in the stable canonical spatial
-    identity (body_id/surface_id) produced upstream.
+    client fidelities never change the token; different channels yield
+    different tokens. The world seed is not part of the key because it is
+    already embedded in the stable canonical spatial identity
+    (body_id/surface_id) produced upstream.
+
+    Width (R2.3): full SHA-256 hexdigest (64 hex chars, 256 bits) — at
+    least the 128-bit minimum mandated for a durable stable variation
+    identity over a huge world.
     """
     return _sha256_hex(
         f"{VARIATION_TOKEN_DOMAIN}|{body_id}|{surface_id}|{recipe_ref}|{channel}"
-    )[:16]
+    )
 
 
 class SurfacePresentationResolver:

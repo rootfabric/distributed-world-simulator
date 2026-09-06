@@ -168,7 +168,7 @@ def build_fixture() -> dict:
         })
     return {
         "schema": "distributed_world_simulator.world_packs.proof_a_contract_fixture.v1",
-        "contract_revision": "WP2_CONTRACT_REPAIR_R1",
+        "contract_revision": "WP2_CONTRACT_REPAIR_R2",
         "proof": "SAME_CANONICAL_WORLD_DIFFERENT_PRESENTATION",
         "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. Canonical input hashes are proven identical before/after each independent resolution and across both recipes. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
         "runtime_status": "contract-level fixture; runtime activation is BLOCKED per config/world_packs/wp2_activation_state.v1.json",

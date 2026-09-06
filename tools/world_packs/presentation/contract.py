@@ -21,6 +21,19 @@ Strict numeric canonicalization (R8): every numeric field (position, normal,
 gravity, composition values) must be a finite real number. The canonical hash
 additionally serializes with ``allow_nan=False`` so non-finite state can never
 hash silently.
+
+R2.1 — ``surface_normal`` has NO default. A caller that forgets the normal
+must fail loudly at DTO construction; it must never silently receive a global
+axis (+Z, +Y or any other implicit up-vector).
+
+R2.4 — composition keys are part of the canonical hash, so they must be
+non-empty UTF-8 strings. Arbitrary JSON-serializable keys (ints, bools,
+None, empty or mixed-type keys) are rejected at construction because JSON
+serialization of mixed keys is ambiguous and would break hash determinism.
+The upstream derived-surface DTO does not yet define composition key
+semantics (e.g. ``matter/<canonical-id>``); until it does, the durable note
+``RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT`` applies and
+only the syntactic non-empty-string contract is enforced.
 """
 from __future__ import annotations
 
@@ -59,6 +72,17 @@ FORBIDDEN_RECIPE_FIELDS = frozenset(FORBIDDEN_OUTPUT_FIELDS | {
 _RECIPE_KEY_RE = re.compile(r"^recipe/(?P<name>[^@]+)@(?P<version>\d+\.\d+\.\d+)$")
 _SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
+# R2.4 durable note: the real upstream derived-surface DTO does not yet
+# define composition key semantics. Only the syntactic contract (non-empty
+# UTF-8 string) is enforced; richer semantics (matter/<canonical-id>) must
+# come from the upstream contract, not be invented here.
+RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT = (
+    "RUNTIME_COMPOSITION_KEY_SEMANTICS_PENDING_UPSTREAM_CONTRACT: "
+    "composition keys are validated as non-empty UTF-8 strings only; "
+    "semantic key identity (matter/<canonical-id>) awaits the upstream "
+    "derived-surface DTO contract"
+)
+
 
 class UnknownMaterialError(ValueError):
     """Raised when the canonical Matter snapshot does not contain the material id."""
@@ -83,6 +107,10 @@ class MalformedCanonicalNumberError(ValueError):
 
 class RecipeVersionError(ValueError):
     """Raised when a recipe document key/version pair is not exact (R7)."""
+
+
+class CompositionKeyError(ValueError):
+    """Raised when a canonical composition key is not a non-empty string (R2.4)."""
 
 
 def _is_real_number(value: object) -> bool:
@@ -142,10 +170,12 @@ class WorldSurfacePresentationInput:
     surface_id: str
     position_body_fixed: Vec3
     material_id: str
+    # R2.1: REQUIRED, no default. Placed before all defaulted fields so the
+    # dataclass enforces it positionally/keyword-ally with no implicit axis.
+    surface_normal: Vec3
     composition: Mapping[str, float] = field(default_factory=dict)
     surface_state: str = ""
     matter_revision: int = 0
-    surface_normal: Vec3 = (0.0, 0.0, 1.0)
     gravity_direction: Optional[Vec3] = None
     representation_revision: int = 0
     exposure_state: Optional[str] = None
@@ -155,6 +185,15 @@ class WorldSurfacePresentationInput:
         # Freeze mappings so no consumer can mutate the snapshot in place.
         frozen_composition = {}
         for key, raw in dict(self.composition).items():
+            # R2.4: composition keys are part of the canonical hash. Only
+            # non-empty strings keep the canonical JSON form deterministic;
+            # ints, bools, None and empty/mixed keys are rejected outright.
+            if not isinstance(key, str) or not key:
+                raise CompositionKeyError(
+                    f"composition key {key!r} must be a non-empty UTF-8 string; "
+                    "arbitrary JSON keys would make the canonical hash "
+                    "ambiguous (RUNTIME_COMPOSITION_KEY_SEMANTICS_"
+                    "PENDING_UPSTREAM_CONTRACT)")
             frozen_composition[key] = _require_finite(
                 f"composition[{key!r}]", raw)
         object.__setattr__(self, "composition",
@@ -298,7 +337,11 @@ def validate_recipe_document(doc: Mapping[str, object]) -> None:
     identity (the same ``recipe/<name>`` appearing more than once). No
     ``latest`` alias exists.
 
-    Rejects any recipe that tries to define physical truth.
+    Rejects any recipe that tries to define physical truth at ANY depth of the
+    JSON-like tree (R2.2): the forbidden-field walker recurses through
+    mappings AND sequence containers (list/tuple), so a physical field hidden
+    inside a nested list (or list-of-lists) is rejected exactly like a
+    top-level one.
     """
     seen_logical_names = set()
     recipes = doc.get("recipes", {}) if isinstance(doc, Mapping) else {}
@@ -321,4 +364,9 @@ def validate_recipe_document(doc: Mapping[str, object]) -> None:
                         f"recipe defines physical field {key!r} at {path}; "
                         "recipes cannot alter physical layer depths or simulation truth")
                 walk(value, f"{path}.{key}")
+        elif isinstance(node, (list, tuple)):
+            # R2.2: recurse into sequence containers. A forbidden field
+            # wrapped in a nested list must not escape the walker.
+            for index, value in enumerate(node):
+                walk(value, f"{path}[{index}]")
     walk(doc, "$")
