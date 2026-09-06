@@ -12,10 +12,18 @@ from .contract import (
     UnknownMaterialError,
     MissingBindingError,
     PhysicalFieldError,
+    MalformedVectorError,
+    MalformedCanonicalNumberError,
+    RecipeVersionError,
     canonical_input_hash,
     validate_recipe_document,
 )
-from .resolver import SurfacePresentationResolver
+from .resolver import (
+    SurfacePresentationResolver,
+    select_mapping_mode,
+    surface_alignment,
+    variation_token,
+)
 
 __all__ = [
     "WorldSurfacePresentationInput",
@@ -24,7 +32,13 @@ __all__ = [
     "UnknownMaterialError",
     "MissingBindingError",
     "PhysicalFieldError",
+    "MalformedVectorError",
+    "MalformedCanonicalNumberError",
+    "RecipeVersionError",
     "canonical_input_hash",
     "validate_recipe_document",
     "SurfacePresentationResolver",
+    "select_mapping_mode",
+    "surface_alignment",
+    "variation_token",
 ]

@@ -3,6 +3,13 @@
   "audited_at": "2026-09-06",
   "status": "BLOCKED",
   "verdict": "WP2_RUNTIME_ACTIVATION_BLOCKED_CONTRACT_ONLY_AUTHORIZED",
+  "contract_review": {
+    "state": "FIXED_PENDING_REREVIEW",
+    "reviewed_head": "31177a5fcf01857823a3b22f77f63968f95fb3e9",
+    "verdict_before_repair": "WP2_CONTRACT_PREPARATION_FIX_REQUIRED",
+    "repair_map": "docs/world_packs/evidence/WP2_CONTRACT_REPAIR_MAP_R1.md",
+    "scope": "R1 frame vector contract, R2 immutable resolver inputs, R3 fidelity semantics, R4 presentation selection lock, R5 Proof A real invariants, R6 variation token domain, R7 exact version validation, R8 strict numeric canonical input"
+  },
   "checked_main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
   "checked_world_packs_foundation": "c99bbd7233633f49ebd9fa1e2a74fcdb551c7b05",
   "checked_controller": "2120e51a355a9e5b18f71449de59ab13b9cbbde3",

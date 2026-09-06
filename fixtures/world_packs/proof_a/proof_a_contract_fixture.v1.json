@@ -1,5 +1,6 @@
 {
-  "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
+  "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. Canonical input hashes are proven identical before/after each independent resolution and across both recipes. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
+  "contract_revision": "WP2_CONTRACT_REPAIR_R1",
   "proof": "SAME_CANONICAL_WORLD_DIFFERENT_PRESENTATION",
   "recipe_a": "recipe/wp2-proof-a-dark-basaltic@1.0.0",
   "recipe_b": "recipe/wp2-proof-a-light-dusty@1.0.0",
@@ -21,22 +22,30 @@
         "geometry_source_identity": "be11e0208d34bacfe66e8eb916cd79706f620b84887086621d7b67d1fc8a1123",
         "matter_snapshot_identity": "0cf269f0225dc75ca9446ec14db744389fd4528b45bfc270c0c77dca606a0c6c",
         "mutation_log_identity": "NOT_EXERCISED_IN_CONTRACT_FIXTURE",
+        "recipes_document_identity": "baebd8e12c0f3c5eedb6b28d1f461270a2d5ef4ce66f83390bcbc238901bd368",
         "world_generation_identity_mock": "ac9539d0fb68b1ca6d0673d6e8f522cecb6dc636704adc16cb9cb9944c630a9c"
       },
       "seed": 11,
       "surfaces": [
         {
+          "canonical_after_recipe_a": "8da2eb5607727c340a16d9b71d3ca566c4c920d1772242104be593f91966ab82",
+          "canonical_after_recipe_b": "8da2eb5607727c340a16d9b71d3ca566c4c920d1772242104be593f91966ab82",
+          "canonical_before_recipe_a": "8da2eb5607727c340a16d9b71d3ca566c4c920d1772242104be593f91966ab82",
+          "canonical_before_recipe_b": "8da2eb5607727c340a16d9b71d3ca566c4c920d1772242104be593f91966ab82",
           "canonical_input_hash": "8da2eb5607727c340a16d9b71d3ca566c4c920d1772242104be593f91966ab82",
           "material_id": "matter/regolith-loose",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "5a5a677f7224d96402d524eadc22b3536df44cf6d5d7346098d7a4b596a394ad",
+            "presentation_selection_lock": "94bfec5e33e5168c80ed60e3b99fceb934232e5b9ca533246c4bffbfa955e4a2",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -44,17 +53,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "920f29b1c026d0cb"
+            "variation_seed": "322d59c47782ef10"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "eaa69fb5a20da7bc05b377ebe50c6ca50faf6e20c96e9ba3c4428d0384b8ad1a",
+            "presentation_selection_lock": "0b4fd2bb402d12a9e1a991c16c1891bcf70935318cd8a208cf9088c54efd03f9",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -62,17 +72,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "920f29b1c026d0cb"
+            "variation_seed": "322d59c47782ef10"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "6517342f79dcc43379f92af111c80f6878921b2e1cb19b7e097a1a31c8415b9c",
+            "presentation_selection_lock": "790bf1b2e5ffa2c74932b12b9a6edb1bd339ea5c41ecb60c0e5d6db9ab533e14",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -80,22 +91,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "77c7633e20efa7ec"
+            "variation_seed": "b653b1e3760fd061"
           },
           "surface_id": "surface/seed11/0"
         },
         {
+          "canonical_after_recipe_a": "4fe68d0209d66043918c71e235ad9f454723475043bae1eb8d976a6a87f5f8fc",
+          "canonical_after_recipe_b": "4fe68d0209d66043918c71e235ad9f454723475043bae1eb8d976a6a87f5f8fc",
+          "canonical_before_recipe_a": "4fe68d0209d66043918c71e235ad9f454723475043bae1eb8d976a6a87f5f8fc",
+          "canonical_before_recipe_b": "4fe68d0209d66043918c71e235ad9f454723475043bae1eb8d976a6a87f5f8fc",
           "canonical_input_hash": "4fe68d0209d66043918c71e235ad9f454723475043bae1eb8d976a6a87f5f8fc",
           "material_id": "matter/regolith-compacted",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "497d4f5808d368e2e00b91e7ddd51f4a195db6eaff7e1ab61851611b1917a36b",
+            "presentation_selection_lock": "d453596c0d6b4d3c2c86bdcb5665a3831631de6dc4c46bbf25e338c6f520e376",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -103,17 +121,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "b9e78cab53899370"
+            "variation_seed": "bef144987467b1a5"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "cecb7bfdecedd03db30681339b3919aa56797350bce5094115a2c40e76ceda98",
+            "presentation_selection_lock": "bd03433a0723d503643160c37aec59e71211fe15981eb9fc54610b477330fa72",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -121,17 +140,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "b9e78cab53899370"
+            "variation_seed": "bef144987467b1a5"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "b65283fd15a309b946d21701edd8d9e15dc4a56e844e9359749885956ce46bed",
+            "presentation_selection_lock": "df4eb908dbe4a42a1db3ec0ee4b01bb9bbe48c5970bd35eea765f1add198c6a3",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -139,22 +159,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "52ba21b6ab6b1088"
+            "variation_seed": "d3e429e5aac330be"
           },
           "surface_id": "surface/seed11/1"
         },
         {
+          "canonical_after_recipe_a": "2d1f31339ad89f4056c7d63723795e90a871e551203a545ae447736f476a3c64",
+          "canonical_after_recipe_b": "2d1f31339ad89f4056c7d63723795e90a871e551203a545ae447736f476a3c64",
+          "canonical_before_recipe_a": "2d1f31339ad89f4056c7d63723795e90a871e551203a545ae447736f476a3c64",
+          "canonical_before_recipe_b": "2d1f31339ad89f4056c7d63723795e90a871e551203a545ae447736f476a3c64",
           "canonical_input_hash": "2d1f31339ad89f4056c7d63723795e90a871e551203a545ae447736f476a3c64",
           "material_id": "matter/basalt",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e51b80a9642e746bb33d1cb3a1c66d50a99fd2a4b7911f7ff815a848d6b792e3",
+            "presentation_selection_lock": "ceda13bed482296182e631829d9e552f629ddc10dbc0f28b69c15d6db2bf943a",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -162,17 +189,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "e4f1f9e93f78b08d"
+            "variation_seed": "9f6e74cca4252d63"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "df42f9f0600cef0117a79db9953ad48d7ac6a0e5182744cf6251b176fc6dba39",
+            "presentation_selection_lock": "3ba39c2c9cd358dd41661278adf6232e4f86660cf4151f24d3dad3b635adb34d",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -180,17 +208,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "e4f1f9e93f78b08d"
+            "variation_seed": "9f6e74cca4252d63"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e6f6de14d7acae23f1211a3c801f7d72170234c26191c0b7027dad33c94659f6",
+            "presentation_selection_lock": "b47f9f3ebb9905961add90cac976727ff8c082c01e4007c548da62b25f9efa4a",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -198,22 +227,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "758241ec55b5218e"
+            "variation_seed": "7ad2af0fff01d837"
           },
           "surface_id": "surface/seed11/2"
         },
         {
+          "canonical_after_recipe_a": "d7275d70f0f89c53e66d50deb4c13d75ba8bfe6f909b73a8531c247a049dc2e2",
+          "canonical_after_recipe_b": "d7275d70f0f89c53e66d50deb4c13d75ba8bfe6f909b73a8531c247a049dc2e2",
+          "canonical_before_recipe_a": "d7275d70f0f89c53e66d50deb4c13d75ba8bfe6f909b73a8531c247a049dc2e2",
+          "canonical_before_recipe_b": "d7275d70f0f89c53e66d50deb4c13d75ba8bfe6f909b73a8531c247a049dc2e2",
           "canonical_input_hash": "d7275d70f0f89c53e66d50deb4c13d75ba8bfe6f909b73a8531c247a049dc2e2",
           "material_id": "matter/fractured-basalt",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "fbfdda19211e7f5d0a076eef6e3c5c71917ed621a9d32d55309345a07a9f2931",
+            "presentation_selection_lock": "9a34096ad554622950c42c4de42628d87c047ee1d44ad95b90350dd04ab7d629",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -221,17 +257,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "d19e2ec417335af6"
+            "variation_seed": "a5f1d6a3ac401275"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "3cb435469d2e6b89385b71951d8f4512ad3068deb63bd4f56109ac42e0a9289a",
+            "presentation_selection_lock": "62cc449cd410114f7d73953c4683b8c00f2ff9caa8733d01243cfa747b404d55",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -239,17 +276,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "d19e2ec417335af6"
+            "variation_seed": "a5f1d6a3ac401275"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "cc437baa5e1b4aab7c311016978ba97f5261f4a6fb02aebae1ec04fc2414a272",
+            "presentation_selection_lock": "c3dfb271b8a71699b6d6170130a1680455f02b3da5313a51cb3dd5dfd8e492c0",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -257,22 +295,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "db9c8e0cfa80a285"
+            "variation_seed": "dde44fbe8a428002"
           },
           "surface_id": "surface/seed11/3"
         },
         {
+          "canonical_after_recipe_a": "612a529698a18d39a830ed0e0daba74ca74d64e59c60a283f9f10821b3746eb8",
+          "canonical_after_recipe_b": "612a529698a18d39a830ed0e0daba74ca74d64e59c60a283f9f10821b3746eb8",
+          "canonical_before_recipe_a": "612a529698a18d39a830ed0e0daba74ca74d64e59c60a283f9f10821b3746eb8",
+          "canonical_before_recipe_b": "612a529698a18d39a830ed0e0daba74ca74d64e59c60a283f9f10821b3746eb8",
           "canonical_input_hash": "612a529698a18d39a830ed0e0daba74ca74d64e59c60a283f9f10821b3746eb8",
           "material_id": "matter/water-ice",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "e5f88dae7195d57aa71e4c822f36f94348bf32a10162f073e668356401082f3d",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -280,17 +325,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "75b018867dfab993"
+            "variation_seed": "f078ab626289b986"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "c4874ccf35f3312e7d10c7ef699a64c6f1509ec5468cc1cadfaf03cdd93380c6",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -298,17 +344,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "75b018867dfab993"
+            "variation_seed": "f078ab626289b986"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "f3ce840ca0f1188a1ef371848f9900c5465c132e32e4cf9b52612a5de43b45f2",
+            "presentation_selection_lock": "c053cb6d7c572d4f7d89a8ac2e1f723c6690542558969bf81e4da586d961af01",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/bright-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 5.5,
               "micro_scale": 0.7
@@ -316,22 +363,29 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "46cae1339f700c1a"
+            "variation_seed": "842cfc823447a9a7"
           },
           "surface_id": "surface/seed11/4"
         },
         {
+          "canonical_after_recipe_a": "9b222adb147503abb70ca9b81ca1428bcc742ee9a9908160ae05e60598b24ff4",
+          "canonical_after_recipe_b": "9b222adb147503abb70ca9b81ca1428bcc742ee9a9908160ae05e60598b24ff4",
+          "canonical_before_recipe_a": "9b222adb147503abb70ca9b81ca1428bcc742ee9a9908160ae05e60598b24ff4",
+          "canonical_before_recipe_b": "9b222adb147503abb70ca9b81ca1428bcc742ee9a9908160ae05e60598b24ff4",
           "canonical_input_hash": "9b222adb147503abb70ca9b81ca1428bcc742ee9a9908160ae05e60598b24ff4",
           "material_id": "matter/iron-nickel-ore",
+          "matter_revision": 11,
+          "representation_revision": 11,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "8f4ce664e260026f9514be994f899095a681937885bbea3fe3146c85d107c3cf",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -339,17 +393,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "be0b394271ad5981"
+            "variation_seed": "e3b0de4c7de56cf0"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "0047054caa58774837b301c0e84522cb2bef2810ebc123604a11b73de6dabc51",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -357,17 +412,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "be0b394271ad5981"
+            "variation_seed": "e3b0de4c7de56cf0"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "06d5e6a00e6dabaac16c30ecc9bf6d15b6752094bf6eaa928cd8d4dd476cc4a0",
+            "presentation_selection_lock": "8e7bc6e94097a2b688c6243b1c3ff770e3c867e05f5ca2afa94b35c72df6af3b",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.5,
               "micro_scale": 0.6
@@ -375,7 +431,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "06223faf26feac46"
+            "variation_seed": "d096251c4f70dbfb"
           },
           "surface_id": "surface/seed11/5"
         }
@@ -396,22 +452,30 @@
         "geometry_source_identity": "20f70910bfc2197a9ce0067b96a2652f8da30239e1ad7a7dfe9905f91455763a",
         "matter_snapshot_identity": "0cf269f0225dc75ca9446ec14db744389fd4528b45bfc270c0c77dca606a0c6c",
         "mutation_log_identity": "NOT_EXERCISED_IN_CONTRACT_FIXTURE",
+        "recipes_document_identity": "baebd8e12c0f3c5eedb6b28d1f461270a2d5ef4ce66f83390bcbc238901bd368",
         "world_generation_identity_mock": "15831d46989351091f85b624dfe23dc75851fa15af528b7adf1b39dfc424958f"
       },
       "seed": 29,
       "surfaces": [
         {
+          "canonical_after_recipe_a": "ef579566b05a3c2e324b9a0a6d77479283c3091c5ae1bf831acb1dc66bf29475",
+          "canonical_after_recipe_b": "ef579566b05a3c2e324b9a0a6d77479283c3091c5ae1bf831acb1dc66bf29475",
+          "canonical_before_recipe_a": "ef579566b05a3c2e324b9a0a6d77479283c3091c5ae1bf831acb1dc66bf29475",
+          "canonical_before_recipe_b": "ef579566b05a3c2e324b9a0a6d77479283c3091c5ae1bf831acb1dc66bf29475",
           "canonical_input_hash": "ef579566b05a3c2e324b9a0a6d77479283c3091c5ae1bf831acb1dc66bf29475",
           "material_id": "matter/regolith-loose",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "5a5a677f7224d96402d524eadc22b3536df44cf6d5d7346098d7a4b596a394ad",
+            "presentation_selection_lock": "94bfec5e33e5168c80ed60e3b99fceb934232e5b9ca533246c4bffbfa955e4a2",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -419,17 +483,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "6878a5c45f55b819"
+            "variation_seed": "8e002e81cd7351df"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "eaa69fb5a20da7bc05b377ebe50c6ca50faf6e20c96e9ba3c4428d0384b8ad1a",
+            "presentation_selection_lock": "0b4fd2bb402d12a9e1a991c16c1891bcf70935318cd8a208cf9088c54efd03f9",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -437,17 +502,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "6878a5c45f55b819"
+            "variation_seed": "8e002e81cd7351df"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "6517342f79dcc43379f92af111c80f6878921b2e1cb19b7e097a1a31c8415b9c",
+            "presentation_selection_lock": "790bf1b2e5ffa2c74932b12b9a6edb1bd339ea5c41ecb60c0e5d6db9ab533e14",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -455,22 +521,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "4acd772771ea9682"
+            "variation_seed": "09b548790cf630d0"
           },
           "surface_id": "surface/seed29/0"
         },
         {
+          "canonical_after_recipe_a": "a0781b9ef9292cf9de4056377f62644be7544421997ec6dcd4653e8af6c68a24",
+          "canonical_after_recipe_b": "a0781b9ef9292cf9de4056377f62644be7544421997ec6dcd4653e8af6c68a24",
+          "canonical_before_recipe_a": "a0781b9ef9292cf9de4056377f62644be7544421997ec6dcd4653e8af6c68a24",
+          "canonical_before_recipe_b": "a0781b9ef9292cf9de4056377f62644be7544421997ec6dcd4653e8af6c68a24",
           "canonical_input_hash": "a0781b9ef9292cf9de4056377f62644be7544421997ec6dcd4653e8af6c68a24",
           "material_id": "matter/regolith-compacted",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "497d4f5808d368e2e00b91e7ddd51f4a195db6eaff7e1ab61851611b1917a36b",
+            "presentation_selection_lock": "d453596c0d6b4d3c2c86bdcb5665a3831631de6dc4c46bbf25e338c6f520e376",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -478,17 +551,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "06e8ea7b170ccc22"
+            "variation_seed": "6b3e747930712e38"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "cecb7bfdecedd03db30681339b3919aa56797350bce5094115a2c40e76ceda98",
+            "presentation_selection_lock": "bd03433a0723d503643160c37aec59e71211fe15981eb9fc54610b477330fa72",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -496,17 +570,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "06e8ea7b170ccc22"
+            "variation_seed": "6b3e747930712e38"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "b65283fd15a309b946d21701edd8d9e15dc4a56e844e9359749885956ce46bed",
+            "presentation_selection_lock": "df4eb908dbe4a42a1db3ec0ee4b01bb9bbe48c5970bd35eea765f1add198c6a3",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -514,22 +589,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "ae7e5c014e4269b8"
+            "variation_seed": "807dee6c41bf28f9"
           },
           "surface_id": "surface/seed29/1"
         },
         {
+          "canonical_after_recipe_a": "f0a45c38fe85c4c3c3b5eb76c2e33f01b9bcc4f14266bbb5eb8bc6d60cf77a1e",
+          "canonical_after_recipe_b": "f0a45c38fe85c4c3c3b5eb76c2e33f01b9bcc4f14266bbb5eb8bc6d60cf77a1e",
+          "canonical_before_recipe_a": "f0a45c38fe85c4c3c3b5eb76c2e33f01b9bcc4f14266bbb5eb8bc6d60cf77a1e",
+          "canonical_before_recipe_b": "f0a45c38fe85c4c3c3b5eb76c2e33f01b9bcc4f14266bbb5eb8bc6d60cf77a1e",
           "canonical_input_hash": "f0a45c38fe85c4c3c3b5eb76c2e33f01b9bcc4f14266bbb5eb8bc6d60cf77a1e",
           "material_id": "matter/basalt",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e51b80a9642e746bb33d1cb3a1c66d50a99fd2a4b7911f7ff815a848d6b792e3",
+            "presentation_selection_lock": "ceda13bed482296182e631829d9e552f629ddc10dbc0f28b69c15d6db2bf943a",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -537,17 +619,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "e71465a82fbb9b3a"
+            "variation_seed": "2cf8aa3f32242bb5"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "df42f9f0600cef0117a79db9953ad48d7ac6a0e5182744cf6251b176fc6dba39",
+            "presentation_selection_lock": "3ba39c2c9cd358dd41661278adf6232e4f86660cf4151f24d3dad3b635adb34d",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -555,17 +638,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "e71465a82fbb9b3a"
+            "variation_seed": "2cf8aa3f32242bb5"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e6f6de14d7acae23f1211a3c801f7d72170234c26191c0b7027dad33c94659f6",
+            "presentation_selection_lock": "b47f9f3ebb9905961add90cac976727ff8c082c01e4007c548da62b25f9efa4a",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -573,22 +657,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "c5134b8018144251"
+            "variation_seed": "425bed645f6c2113"
           },
           "surface_id": "surface/seed29/2"
         },
         {
+          "canonical_after_recipe_a": "96fb8fab83c4d17f2946618a9629a155ebc125e2bfcb524e47c5a122ce167413",
+          "canonical_after_recipe_b": "96fb8fab83c4d17f2946618a9629a155ebc125e2bfcb524e47c5a122ce167413",
+          "canonical_before_recipe_a": "96fb8fab83c4d17f2946618a9629a155ebc125e2bfcb524e47c5a122ce167413",
+          "canonical_before_recipe_b": "96fb8fab83c4d17f2946618a9629a155ebc125e2bfcb524e47c5a122ce167413",
           "canonical_input_hash": "96fb8fab83c4d17f2946618a9629a155ebc125e2bfcb524e47c5a122ce167413",
           "material_id": "matter/fractured-basalt",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "fbfdda19211e7f5d0a076eef6e3c5c71917ed621a9d32d55309345a07a9f2931",
+            "presentation_selection_lock": "9a34096ad554622950c42c4de42628d87c047ee1d44ad95b90350dd04ab7d629",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -596,17 +687,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "9ad32248fec78a98"
+            "variation_seed": "d18423a9b8413615"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "3cb435469d2e6b89385b71951d8f4512ad3068deb63bd4f56109ac42e0a9289a",
+            "presentation_selection_lock": "62cc449cd410114f7d73953c4683b8c00f2ff9caa8733d01243cfa747b404d55",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -614,17 +706,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "9ad32248fec78a98"
+            "variation_seed": "d18423a9b8413615"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "cc437baa5e1b4aab7c311016978ba97f5261f4a6fb02aebae1ec04fc2414a272",
+            "presentation_selection_lock": "c3dfb271b8a71699b6d6170130a1680455f02b3da5313a51cb3dd5dfd8e492c0",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -632,22 +725,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "718547feb8e506a2"
+            "variation_seed": "e8025e028ab21e16"
           },
           "surface_id": "surface/seed29/3"
         },
         {
+          "canonical_after_recipe_a": "0f83c7f02ec61ccc4395b57a77fe372d91de29e8224e451212423ffb80ea470b",
+          "canonical_after_recipe_b": "0f83c7f02ec61ccc4395b57a77fe372d91de29e8224e451212423ffb80ea470b",
+          "canonical_before_recipe_a": "0f83c7f02ec61ccc4395b57a77fe372d91de29e8224e451212423ffb80ea470b",
+          "canonical_before_recipe_b": "0f83c7f02ec61ccc4395b57a77fe372d91de29e8224e451212423ffb80ea470b",
           "canonical_input_hash": "0f83c7f02ec61ccc4395b57a77fe372d91de29e8224e451212423ffb80ea470b",
           "material_id": "matter/water-ice",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "e5f88dae7195d57aa71e4c822f36f94348bf32a10162f073e668356401082f3d",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -655,17 +755,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "66fc8918c4b5a2fb"
+            "variation_seed": "5673a59eee2c1355"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "c4874ccf35f3312e7d10c7ef699a64c6f1509ec5468cc1cadfaf03cdd93380c6",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -673,17 +774,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "66fc8918c4b5a2fb"
+            "variation_seed": "5673a59eee2c1355"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "f3ce840ca0f1188a1ef371848f9900c5465c132e32e4cf9b52612a5de43b45f2",
+            "presentation_selection_lock": "c053cb6d7c572d4f7d89a8ac2e1f723c6690542558969bf81e4da586d961af01",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/bright-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 5.5,
               "micro_scale": 0.7
@@ -691,22 +793,29 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "ae40f4d9e1911789"
+            "variation_seed": "3dacf081498fef41"
           },
           "surface_id": "surface/seed29/4"
         },
         {
+          "canonical_after_recipe_a": "05e5486090816e6dcf64203b1bc8035fb618d8f25228f36a6ff5acc03fd5dfb3",
+          "canonical_after_recipe_b": "05e5486090816e6dcf64203b1bc8035fb618d8f25228f36a6ff5acc03fd5dfb3",
+          "canonical_before_recipe_a": "05e5486090816e6dcf64203b1bc8035fb618d8f25228f36a6ff5acc03fd5dfb3",
+          "canonical_before_recipe_b": "05e5486090816e6dcf64203b1bc8035fb618d8f25228f36a6ff5acc03fd5dfb3",
           "canonical_input_hash": "05e5486090816e6dcf64203b1bc8035fb618d8f25228f36a6ff5acc03fd5dfb3",
           "material_id": "matter/iron-nickel-ore",
+          "matter_revision": 29,
+          "representation_revision": 29,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "8f4ce664e260026f9514be994f899095a681937885bbea3fe3146c85d107c3cf",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -714,17 +823,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "6ff9cd7c84764c11"
+            "variation_seed": "fca30f17fcd22ce3"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "0047054caa58774837b301c0e84522cb2bef2810ebc123604a11b73de6dabc51",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -732,17 +842,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "6ff9cd7c84764c11"
+            "variation_seed": "fca30f17fcd22ce3"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "06d5e6a00e6dabaac16c30ecc9bf6d15b6752094bf6eaa928cd8d4dd476cc4a0",
+            "presentation_selection_lock": "8e7bc6e94097a2b688c6243b1c3ff770e3c867e05f5ca2afa94b35c72df6af3b",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.5,
               "micro_scale": 0.6
@@ -750,7 +861,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "f4082cca3120d5e5"
+            "variation_seed": "4ba9b7f0eec95cae"
           },
           "surface_id": "surface/seed29/5"
         }
@@ -771,22 +882,30 @@
         "geometry_source_identity": "b9e94277af9eaa1721961c486a5d384ac01d0f7abfbef3f126451109ab8e0278",
         "matter_snapshot_identity": "0cf269f0225dc75ca9446ec14db744389fd4528b45bfc270c0c77dca606a0c6c",
         "mutation_log_identity": "NOT_EXERCISED_IN_CONTRACT_FIXTURE",
+        "recipes_document_identity": "baebd8e12c0f3c5eedb6b28d1f461270a2d5ef4ce66f83390bcbc238901bd368",
         "world_generation_identity_mock": "8f21830e9e8ce15162a504acc3f145b78f7442b40ec617d5deb67f4b103a5332"
       },
       "seed": 47,
       "surfaces": [
         {
+          "canonical_after_recipe_a": "1f7d19e75a1e13617fbf21882ae81fe8f2cc6f2d748bf25f17c7d04db99b8501",
+          "canonical_after_recipe_b": "1f7d19e75a1e13617fbf21882ae81fe8f2cc6f2d748bf25f17c7d04db99b8501",
+          "canonical_before_recipe_a": "1f7d19e75a1e13617fbf21882ae81fe8f2cc6f2d748bf25f17c7d04db99b8501",
+          "canonical_before_recipe_b": "1f7d19e75a1e13617fbf21882ae81fe8f2cc6f2d748bf25f17c7d04db99b8501",
           "canonical_input_hash": "1f7d19e75a1e13617fbf21882ae81fe8f2cc6f2d748bf25f17c7d04db99b8501",
           "material_id": "matter/regolith-loose",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "5a5a677f7224d96402d524eadc22b3536df44cf6d5d7346098d7a4b596a394ad",
+            "presentation_selection_lock": "94bfec5e33e5168c80ed60e3b99fceb934232e5b9ca533246c4bffbfa955e4a2",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -794,17 +913,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "f754e076803773e6"
+            "variation_seed": "375ce697bd0f9d9f"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "eaa69fb5a20da7bc05b377ebe50c6ca50faf6e20c96e9ba3c4428d0384b8ad1a",
+            "presentation_selection_lock": "0b4fd2bb402d12a9e1a991c16c1891bcf70935318cd8a208cf9088c54efd03f9",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -812,17 +932,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "f754e076803773e6"
+            "variation_seed": "375ce697bd0f9d9f"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "6517342f79dcc43379f92af111c80f6878921b2e1cb19b7e097a1a31c8415b9c",
+            "presentation_selection_lock": "790bf1b2e5ffa2c74932b12b9a6edb1bd339ea5c41ecb60c0e5d6db9ab533e14",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -830,22 +951,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "1cfcec72c9290e99"
+            "variation_seed": "81b1f166a678522a"
           },
           "surface_id": "surface/seed47/0"
         },
         {
+          "canonical_after_recipe_a": "33463d85c79847fca804a25468ce619822a9bba749574dff48cd66e61b600724",
+          "canonical_after_recipe_b": "33463d85c79847fca804a25468ce619822a9bba749574dff48cd66e61b600724",
+          "canonical_before_recipe_a": "33463d85c79847fca804a25468ce619822a9bba749574dff48cd66e61b600724",
+          "canonical_before_recipe_b": "33463d85c79847fca804a25468ce619822a9bba749574dff48cd66e61b600724",
           "canonical_input_hash": "33463d85c79847fca804a25468ce619822a9bba749574dff48cd66e61b600724",
           "material_id": "matter/regolith-compacted",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "497d4f5808d368e2e00b91e7ddd51f4a195db6eaff7e1ab61851611b1917a36b",
+            "presentation_selection_lock": "d453596c0d6b4d3c2c86bdcb5665a3831631de6dc4c46bbf25e338c6f520e376",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-dusty-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -853,17 +981,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-low",
             "variant_version": "1.0.0",
-            "variation_seed": "ef874f429cf775cc"
+            "variation_seed": "5e9b217bd88c41d2"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "cecb7bfdecedd03db30681339b3919aa56797350bce5094115a2c40e76ceda98",
+            "presentation_selection_lock": "bd03433a0723d503643160c37aec59e71211fe15981eb9fc54610b477330fa72",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-dusty-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 5.0,
               "micro_scale": 0.5
@@ -871,17 +1000,18 @@
             "surface_family": "surface-family/dark-dusty",
             "variant": "dark-dusty-high",
             "variant_version": "1.0.0",
-            "variation_seed": "ef874f429cf775cc"
+            "variation_seed": "5e9b217bd88c41d2"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar_blend",
-            "presentation_lock": "b65283fd15a309b946d21701edd8d9e15dc4a56e844e9359749885956ce46bed",
+            "presentation_selection_lock": "df4eb908dbe4a42a1db3ec0ee4b01bb9bbe48c5970bd35eea765f1add198c6a3",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-regolith-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 8.0,
               "micro_scale": 1.2
@@ -889,22 +1019,29 @@
             "surface_family": "surface-family/light-regolith",
             "variant": "light-regolith-high",
             "variant_version": "1.0.0",
-            "variation_seed": "49130adbfe5700b0"
+            "variation_seed": "031486724a5c285b"
           },
           "surface_id": "surface/seed47/1"
         },
         {
+          "canonical_after_recipe_a": "5d13fa02235770656110d3e130d6d2e89c2083895fc6ec3c30e678861c08f578",
+          "canonical_after_recipe_b": "5d13fa02235770656110d3e130d6d2e89c2083895fc6ec3c30e678861c08f578",
+          "canonical_before_recipe_a": "5d13fa02235770656110d3e130d6d2e89c2083895fc6ec3c30e678861c08f578",
+          "canonical_before_recipe_b": "5d13fa02235770656110d3e130d6d2e89c2083895fc6ec3c30e678861c08f578",
           "canonical_input_hash": "5d13fa02235770656110d3e130d6d2e89c2083895fc6ec3c30e678861c08f578",
           "material_id": "matter/basalt",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e51b80a9642e746bb33d1cb3a1c66d50a99fd2a4b7911f7ff815a848d6b792e3",
+            "presentation_selection_lock": "ceda13bed482296182e631829d9e552f629ddc10dbc0f28b69c15d6db2bf943a",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -912,17 +1049,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "ae86b227d788b9c6"
+            "variation_seed": "c597627d5f6d45d4"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "df42f9f0600cef0117a79db9953ad48d7ac6a0e5182744cf6251b176fc6dba39",
+            "presentation_selection_lock": "3ba39c2c9cd358dd41661278adf6232e4f86660cf4151f24d3dad3b635adb34d",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -930,17 +1068,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "ae86b227d788b9c6"
+            "variation_seed": "c597627d5f6d45d4"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "e6f6de14d7acae23f1211a3c801f7d72170234c26191c0b7027dad33c94659f6",
+            "presentation_selection_lock": "b47f9f3ebb9905961add90cac976727ff8c082c01e4007c548da62b25f9efa4a",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -948,22 +1087,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "18452e1245689986"
+            "variation_seed": "3a9217959c9f9deb"
           },
           "surface_id": "surface/seed47/2"
         },
         {
+          "canonical_after_recipe_a": "937d354822ae2550b92f98788a7fd67e0151838b0d9588dde51ec298e0ca3d8e",
+          "canonical_after_recipe_b": "937d354822ae2550b92f98788a7fd67e0151838b0d9588dde51ec298e0ca3d8e",
+          "canonical_before_recipe_a": "937d354822ae2550b92f98788a7fd67e0151838b0d9588dde51ec298e0ca3d8e",
+          "canonical_before_recipe_b": "937d354822ae2550b92f98788a7fd67e0151838b0d9588dde51ec298e0ca3d8e",
           "canonical_input_hash": "937d354822ae2550b92f98788a7fd67e0151838b0d9588dde51ec298e0ca3d8e",
           "material_id": "matter/fractured-basalt",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "fbfdda19211e7f5d0a076eef6e3c5c71917ed621a9d32d55309345a07a9f2931",
+            "presentation_selection_lock": "9a34096ad554622950c42c4de42628d87c047ee1d44ad95b90350dd04ab7d629",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-basaltic-low@1.0.0"
             ],
+            "resolved_fidelity": "preview",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -971,17 +1117,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-low",
             "variant_version": "1.0.0",
-            "variation_seed": "dfef17731a95c5bf"
+            "variation_seed": "e219d38744e44b9b"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "3cb435469d2e6b89385b71951d8f4512ad3068deb63bd4f56109ac42e0a9289a",
+            "presentation_selection_lock": "62cc449cd410114f7d73953c4683b8c00f2ff9caa8733d01243cfa747b404d55",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-basaltic-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.35
@@ -989,17 +1136,18 @@
             "surface_family": "surface-family/dark-basaltic",
             "variant": "dark-basaltic-high",
             "variant_version": "1.0.0",
-            "variation_seed": "dfef17731a95c5bf"
+            "variation_seed": "e219d38744e44b9b"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "cc437baa5e1b4aab7c311016978ba97f5261f4a6fb02aebae1ec04fc2414a272",
+            "presentation_selection_lock": "c3dfb271b8a71699b6d6170130a1680455f02b3da5313a51cb3dd5dfd8e492c0",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-dusty-rock-high@1.0.0"
             ],
+            "resolved_fidelity": "high",
             "scale_parameters": {
               "macro_scale": 6.5,
               "micro_scale": 0.9
@@ -1007,22 +1155,29 @@
             "surface_family": "surface-family/light-dusty-rock",
             "variant": "light-dusty-rock-high",
             "variant_version": "1.0.0",
-            "variation_seed": "ced6c00bc0dbcf39"
+            "variation_seed": "5d762cd5207ec7ce"
           },
           "surface_id": "surface/seed47/3"
         },
         {
+          "canonical_after_recipe_a": "a199aa05d9f61a321fbf02d1d6c7e019d3a20e90e03ec4afdcb646a13f2c75cf",
+          "canonical_after_recipe_b": "a199aa05d9f61a321fbf02d1d6c7e019d3a20e90e03ec4afdcb646a13f2c75cf",
+          "canonical_before_recipe_a": "a199aa05d9f61a321fbf02d1d6c7e019d3a20e90e03ec4afdcb646a13f2c75cf",
+          "canonical_before_recipe_b": "a199aa05d9f61a321fbf02d1d6c7e019d3a20e90e03ec4afdcb646a13f2c75cf",
           "canonical_input_hash": "a199aa05d9f61a321fbf02d1d6c7e019d3a20e90e03ec4afdcb646a13f2c75cf",
           "material_id": "matter/water-ice",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "e5f88dae7195d57aa71e4c822f36f94348bf32a10162f073e668356401082f3d",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -1030,17 +1185,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "3f0dce56aa7b46ea"
+            "variation_seed": "c9702bf1f43909f8"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "c4874ccf35f3312e7d10c7ef699a64c6f1509ec5468cc1cadfaf03cdd93380c6",
+            "presentation_selection_lock": "31171260fdba586537d07e2e56f5b67a913893a670fbb8a3efb73293a867ed87",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.0,
               "micro_scale": 0.4
@@ -1048,17 +1204,18 @@
             "surface_family": "surface-family/dark-ice",
             "variant": "dark-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "3f0dce56aa7b46ea"
+            "variation_seed": "c9702bf1f43909f8"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "planar_projection",
-            "presentation_lock": "f3ce840ca0f1188a1ef371848f9900c5465c132e32e4cf9b52612a5de43b45f2",
+            "presentation_selection_lock": "c053cb6d7c572d4f7d89a8ac2e1f723c6690542558969bf81e4da586d961af01",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/bright-ice-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 5.5,
               "micro_scale": 0.7
@@ -1066,22 +1223,29 @@
             "surface_family": "surface-family/bright-ice",
             "variant": "bright-ice-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "d1ddc867a5d37eaf"
+            "variation_seed": "98d9b54d7c1e5bfd"
           },
           "surface_id": "surface/seed47/4"
         },
         {
+          "canonical_after_recipe_a": "a69dcace103cc7bbeb0ee50dd65350ca6d6c7813dd530c334df00515a6cbb015",
+          "canonical_after_recipe_b": "a69dcace103cc7bbeb0ee50dd65350ca6d6c7813dd530c334df00515a6cbb015",
+          "canonical_before_recipe_a": "a69dcace103cc7bbeb0ee50dd65350ca6d6c7813dd530c334df00515a6cbb015",
+          "canonical_before_recipe_b": "a69dcace103cc7bbeb0ee50dd65350ca6d6c7813dd530c334df00515a6cbb015",
           "canonical_input_hash": "a69dcace103cc7bbeb0ee50dd65350ca6d6c7813dd530c334df00515a6cbb015",
           "material_id": "matter/iron-nickel-ore",
+          "matter_revision": 47,
+          "representation_revision": 47,
           "selection_client_preview": {
             "fallback_used": false,
-            "fidelity": "preview",
             "mapping_mode": "triplanar",
-            "presentation_lock": "8f4ce664e260026f9514be994f899095a681937885bbea3fe3146c85d107c3cf",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "preview",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -1089,17 +1253,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "594a90ff787e1a1a"
+            "variation_seed": "e780978d9eaca5fb"
           },
           "selection_recipe_a": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "0047054caa58774837b301c0e84522cb2bef2810ebc123604a11b73de6dabc51",
+            "presentation_selection_lock": "7afe0d4d9047d242185b292c64d0e63e71a120c1ce591580076394b19e3af6b1",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/dark-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 3.0,
               "micro_scale": 0.3
@@ -1107,17 +1272,18 @@
             "surface_family": "surface-family/dark-ore",
             "variant": "dark-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "594a90ff787e1a1a"
+            "variation_seed": "e780978d9eaca5fb"
           },
           "selection_recipe_b": {
             "fallback_used": false,
-            "fidelity": "high",
             "mapping_mode": "triplanar",
-            "presentation_lock": "06d5e6a00e6dabaac16c30ecc9bf6d15b6752094bf6eaa928cd8d4dd476cc4a0",
+            "presentation_selection_lock": "8e7bc6e94097a2b688c6243b1c3ff770e3c867e05f5ca2afa94b35c72df6af3b",
             "presentation_state": "ready",
+            "requested_fidelity": "high",
             "resolved_asset_refs": [
               "asset/light-ore-mid@1.0.0"
             ],
+            "resolved_fidelity": "standard",
             "scale_parameters": {
               "macro_scale": 4.5,
               "micro_scale": 0.6
@@ -1125,7 +1291,7 @@
             "surface_family": "surface-family/light-ore",
             "variant": "light-ore-mid",
             "variant_version": "1.0.0",
-            "variation_seed": "478466c75d3799fc"
+            "variation_seed": "01226a4873321f09"
           },
           "surface_id": "surface/seed47/5"
         }

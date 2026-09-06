@@ -2,8 +2,22 @@
 
 This is a non-runtime preparation fixture. It proves, at the WP2.0 contract
 level, that switching an artistic presentation recipe changes ONLY the
-presentation selection (surface family, variant, scale, presentation lock)
-while every available canonical invariant stays byte-identical.
+presentation selection (surface family, variant, scale, presentation
+selection lock) while every available canonical invariant stays byte-identical.
+
+Real invariant protocol (R5), per seed (3 seeds x 6 surfaces), per recipe:
+
+    canonical hash BEFORE resolution
+      -> resolve recipe
+    canonical hash AFTER resolution
+    assert before == after
+
+plus, across the two INDEPENDENT resolutions (recipe A and recipe B):
+
+    assert canonical_hash_A == canonical_hash_B
+    assert material_id / matter_revision / representation_revision unchanged
+    assert matter snapshot identity unchanged
+    assert geometry source identity unchanged
 
 Honesty notes (no fabricated invariants):
 - world generation identity is a MOCK deterministic function of (seed,
@@ -86,43 +100,67 @@ def _geometry_source_identity(samples) -> str:
          "position_body_fixed": list(s.position_body_fixed),
          "surface_normal": list(s.surface_normal)}
         for s in samples
-    ], sort_keys=True, separators=(",", ":"))
+    ], sort_keys=True, separators=(",", ":"), allow_nan=False)
     return _sha256_hex(blob)
 
 
 def build_fixture() -> dict:
     resolver = SurfacePresentationResolver()
     matter_identity = _matter_snapshot_identity()
+    recipes_identity = hashlib.sha256(RECIPES_PATH.read_bytes()).hexdigest()
     seeds = []
     for seed in SEEDS:
         samples = _samples_for_seed(seed)
-        canonical_hashes = [canonical_input_hash(s) for s in samples]
         geometry_identity = _geometry_source_identity(samples)
         entries = []
         for index, sample in enumerate(samples):
+            # --- Real Proof A invariant protocol (R5): before/after per recipe.
+            canonical_before_a = canonical_input_hash(sample)
             selection_a = resolver.resolve(sample, ClientFidelity("high"), recipe_ref=RECIPE_A)
+            canonical_after_a = canonical_input_hash(sample)
+
+            canonical_before_b = canonical_input_hash(sample)
             selection_b = resolver.resolve(sample, ClientFidelity("high"), recipe_ref=RECIPE_B)
+            canonical_after_b = canonical_input_hash(sample)
+
             client_a = resolver.resolve(sample, ClientFidelity("preview"), recipe_ref=RECIPE_A)
+
+            # Resolution must not change canonical world identity...
+            assert canonical_before_a == canonical_after_a
+            assert canonical_before_b == canonical_after_b
+            # ...and the two INDEPENDENT resolutions must agree on it.
+            assert canonical_after_a == canonical_after_b
+            # Canonical state fields untouched by either resolution.
+            assert sample.material_id == samples[index].material_id
+            assert sample.matter_revision == seed
+            assert sample.representation_revision == seed
+            # Presentation actually changed between the recipes.
+            assert selection_a.presentation_selection_lock != selection_b.presentation_selection_lock
+            assert selection_a.surface_family != selection_b.surface_family
+
             entries.append({
                 "surface_id": sample.surface_id,
                 "material_id": sample.material_id,
-                "canonical_input_hash": canonical_hashes[index],
+                "matter_revision": sample.matter_revision,
+                "representation_revision": sample.representation_revision,
+                "canonical_input_hash": canonical_after_a,
+                "canonical_before_recipe_a": canonical_before_a,
+                "canonical_after_recipe_a": canonical_after_a,
+                "canonical_before_recipe_b": canonical_before_b,
+                "canonical_after_recipe_b": canonical_after_b,
                 "selection_recipe_a": selection_a.to_json(),
                 "selection_recipe_b": selection_b.to_json(),
                 "selection_client_preview": client_a.to_json(),
             })
-            # Core Proof A invariant, enforced at build time:
-            assert canonical_hashes[index] == canonical_input_hash(sample)
-            assert selection_a.presentation_lock != selection_b.presentation_lock
-            assert selection_a.surface_family != selection_b.surface_family
         seeds.append({
             "seed": seed,
             "generation_profile": PROFILE,
             "invariants": {
                 "world_generation_identity_mock": _seed_worldgen_identity(seed),
                 "matter_snapshot_identity": matter_identity,
+                "recipes_document_identity": recipes_identity,
                 "geometry_source_identity": geometry_identity,
-                "canonical_input_hashes": canonical_hashes,
+                "canonical_input_hashes": [e["canonical_input_hash"] for e in entries],
                 "collision_identity": "NOT_AVAILABLE_IN_CONTRACT_FIXTURE",
                 "mutation_log_identity": "NOT_EXERCISED_IN_CONTRACT_FIXTURE",
             },
@@ -130,8 +168,9 @@ def build_fixture() -> dict:
         })
     return {
         "schema": "distributed_world_simulator.world_packs.proof_a_contract_fixture.v1",
+        "contract_revision": "WP2_CONTRACT_REPAIR_R1",
         "proof": "SAME_CANONICAL_WORLD_DIFFERENT_PRESENTATION",
-        "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
+        "claim": "Recipe A (dark basaltic artistic) and Recipe B (light dusty artistic) over the same canonical inputs change presentation selection only. Canonical input hashes are proven identical before/after each independent resolution and across both recipes. No claim is made that matter/basalt physically became sandstone; this is presentation only.",
         "runtime_status": "contract-level fixture; runtime activation is BLOCKED per config/world_packs/wp2_activation_state.v1.json",
         "recipe_a": RECIPE_A,
         "recipe_b": RECIPE_B,
@@ -142,10 +181,11 @@ def build_fixture() -> dict:
 def write_fixture(path: Path = FIXTURE_PATH) -> str:
     fixture = build_fixture()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(fixture, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+    path.write_text(json.dumps(fixture, indent=2, sort_keys=True, ensure_ascii=False,
+                               allow_nan=False) + "\n",
                     encoding="utf-8")
-    return hashlib.sha256(json.dumps(fixture, sort_keys=True, ensure_ascii=False)
-                          .encode("utf-8")).hexdigest()
+    return hashlib.sha256(json.dumps(fixture, sort_keys=True, ensure_ascii=False,
+                                     allow_nan=False).encode("utf-8")).hexdigest()
 
 
 if __name__ == "__main__":
