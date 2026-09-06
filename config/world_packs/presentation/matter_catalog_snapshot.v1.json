@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.world_packs.matter_catalog_snapshot.v1",
+  "purpose": "Read-only snapshot of canonical Matter material ids/families used as presentation input validation. WORLD PACKS never writes this catalog; drift is detected by re-reading canonical main.",
+  "source": {
+    "repository_branch": "origin/main",
+    "commit": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+    "file": "scripts/simulation/matter/catalog/matter_material_catalog.gd",
+    "snapshot_date": "2026-09-06"
+  },
+  "materials": {
+    "matter/regolith-loose": { "matter_family": "matter-family/regolith" },
+    "matter/regolith-compacted": { "matter_family": "matter-family/regolith" },
+    "matter/basalt": { "matter_family": "matter-family/silicate-rock" },
+    "matter/fractured-basalt": { "matter_family": "matter-family/silicate-rock" },
+    "matter/water-ice": { "matter_family": "matter-family/volatile-ice" },
+    "matter/iron-nickel-ore": { "matter_family": "matter-family/metallic-ore" },
+    "matter/silicate-waste": { "matter_family": "matter-family/silicate-rock" }
+  }
+}

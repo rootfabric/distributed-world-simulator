@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.world_packs.wp2_activation_state.v1",
+  "audited_at": "2026-09-06",
+  "status": "BLOCKED",
+  "verdict": "WP2_RUNTIME_ACTIVATION_BLOCKED_CONTRACT_ONLY_AUTHORIZED",
+  "checked_main": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
+  "checked_world_packs_foundation": "c99bbd7233633f49ebd9fa1e2a74fcdb551c7b05",
+  "checked_controller": "2120e51a355a9e5b18f71449de59ab13b9cbbde3",
+  "audit_evidence": "docs/world_packs/evidence/WP2_ACTIVATION_AUDIT_2026-09-06.md",
+  "blocking_gates": [
+    {
+      "gate": "A_P7_FORMAL_ACCEPTANCE",
+      "reason": "P7.7 runtime merged via PR #487 but COMPLETE_MERGED not declared; reviewer/verifier/human merge gates still open; formal P7 acceptance absent on main."
+    },
+    {
+      "gate": "B_WORLDGEN_EXECUTABLE_ACTIVATION",
+      "reason": "WORLDGEN1 roadmap is DESIGN-ONLY until EXECUTABLE_WORLDGEN1 gate, which itself requires P7.7 COMPLETE_MERGED and formal P7 acceptance."
+    },
+    {
+      "gate": "F_RUNTIME_SLOT",
+      "reason": "Canonical main active frontier is the P7.7 closure train; no scheduler/runtime integration slot is declared for a WP2 runtime lane."
+    }
+  ],
+  "non_blocking_gates": [
+    {
+      "gate": "C_MATTER_CATALOG",
+      "reason": "Canonical Matter catalog is live and readable; 7 material IDs snapshotted read-only for the presentation contract."
+    },
+    {
+      "gate": "D_REPRESENTATION_LAYER",
+      "reason": "Representation ownership exists on main; WP2 attaches strictly after the derived representation surface sample boundary."
+    },
+    {
+      "gate": "E_COORDINATE_FRAME",
+      "reason": "Open at contract level (normal separate from optional gravity, no global-Y or radial-only assumptions); irregular-body runtime proof held for Proof B / WP3.0."
+    }
+  ],
+  "resume_condition": "Live recheck shows P7.7 COMPLETE_MERGED declared on main + formal P7 acceptance recorded + WORLDGEN1 EXECUTABLE activation gate open + main-owned scheduler slot for a WP2 runtime train.",
+  "next_safe_parallel_work": [
+    "adapter DTO/schema",
+    "contract fixtures",
+    "non-runtime resolver bridge",
+    "read-only mocks",
+    "tests",
+    "docs",
+    "Proof A contract-level fixture preparation"
+  ],
+  "forbidden_until_resume": [
+    "real WORLDGEN writes",
+    "Matter mutation",
+    "runtime persistence",
+    "network protocol extensions",
+    "Godot runtime integration of the WP2 adapter",
+    "main merge"
+  ]
+}

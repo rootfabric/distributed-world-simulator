@@ -1,0 +1,89 @@
+{
+  "schema": "distributed_world_simulator.world_packs.surface_recipes.v1",
+  "note": "Artistic presentation recipes. They change how a surface LOOKS only. They never define, override or carry physical truth (mass, density, strength, layer depths, collision, mutation). Physical meaning of matter/basalt stays matter/basalt under every recipe.",
+  "recipes": {
+    "recipe/wp2-proof-a-dark-basaltic@1.0.0": {
+      "version": "1.0.0",
+      "label": "dark basaltic artistic presentation",
+      "bindings": {
+        "matter-family/silicate-rock": {
+          "surface_family": "surface-family/dark-basaltic",
+          "variants": {
+            "preview": { "name": "dark-basaltic-low", "variant_version": "1.0.0", "asset_refs": ["asset/dark-basaltic-low@1.0.0"] },
+            "standard": { "name": "dark-basaltic-mid", "variant_version": "1.0.0", "asset_refs": ["asset/dark-basaltic-mid@1.0.0"] },
+            "high": { "name": "dark-basaltic-high", "variant_version": "1.0.0", "asset_refs": ["asset/dark-basaltic-high@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 4.0, "micro_scale": 0.35 }
+        },
+        "matter-family/regolith": {
+          "surface_family": "surface-family/dark-dusty",
+          "variants": {
+            "preview": { "name": "dark-dusty-low", "variant_version": "1.0.0", "asset_refs": ["asset/dark-dusty-low@1.0.0"] },
+            "standard": { "name": "dark-dusty-mid", "variant_version": "1.0.0", "asset_refs": ["asset/dark-dusty-mid@1.0.0"] },
+            "high": { "name": "dark-dusty-high", "variant_version": "1.0.0", "asset_refs": ["asset/dark-dusty-high@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 5.0, "micro_scale": 0.5 }
+        },
+        "matter-family/volatile-ice": {
+          "surface_family": "surface-family/dark-ice",
+          "variants": {
+            "standard": { "name": "dark-ice-mid", "variant_version": "1.0.0", "asset_refs": ["asset/dark-ice-mid@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 4.0, "micro_scale": 0.4 }
+        },
+        "matter-family/metallic-ore": {
+          "surface_family": "surface-family/dark-ore",
+          "variants": {
+            "standard": { "name": "dark-ore-mid", "variant_version": "1.0.0", "asset_refs": ["asset/dark-ore-mid@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 3.0, "micro_scale": 0.3 }
+        }
+      }
+    },
+    "recipe/wp2-proof-a-light-dusty@1.0.0": {
+      "version": "1.0.0",
+      "label": "light dusty artistic presentation",
+      "bindings": {
+        "matter-family/silicate-rock": {
+          "surface_family": "surface-family/light-dusty-rock",
+          "variants": {
+            "preview": { "name": "light-dusty-rock-low", "variant_version": "1.0.0", "asset_refs": ["asset/light-dusty-rock-low@1.0.0"] },
+            "standard": { "name": "light-dusty-rock-mid", "variant_version": "1.0.0", "asset_refs": ["asset/light-dusty-rock-mid@1.0.0"] },
+            "high": { "name": "light-dusty-rock-high", "variant_version": "1.0.0", "asset_refs": ["asset/light-dusty-rock-high@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 6.5, "micro_scale": 0.9 }
+        },
+        "matter-family/regolith": {
+          "surface_family": "surface-family/light-regolith",
+          "variants": {
+            "preview": { "name": "light-regolith-low", "variant_version": "1.0.0", "asset_refs": ["asset/light-regolith-low@1.0.0"] },
+            "standard": { "name": "light-regolith-mid", "variant_version": "1.0.0", "asset_refs": ["asset/light-regolith-mid@1.0.0"] },
+            "high": { "name": "light-regolith-high", "variant_version": "1.0.0", "asset_refs": ["asset/light-regolith-high@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 8.0, "micro_scale": 1.2 }
+        },
+        "matter-family/volatile-ice": {
+          "surface_family": "surface-family/bright-ice",
+          "variants": {
+            "standard": { "name": "bright-ice-mid", "variant_version": "1.0.0", "asset_refs": ["asset/bright-ice-mid@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 5.5, "micro_scale": 0.7 }
+        },
+        "matter-family/metallic-ore": {
+          "surface_family": "surface-family/light-ore",
+          "variants": {
+            "standard": { "name": "light-ore-mid", "variant_version": "1.0.0", "asset_refs": ["asset/light-ore-mid@1.0.0"] }
+          },
+          "scale_parameters": { "macro_scale": 4.5, "micro_scale": 0.6 }
+        }
+      }
+    }
+  },
+  "fallback_binding": {
+    "surface_family": "surface-family/debug-neutral",
+    "variants": {
+      "standard": { "name": "debug-neutral-mid", "variant_version": "1.0.0", "asset_refs": [] }
+    },
+    "scale_parameters": { "macro_scale": 1.0, "micro_scale": 1.0 }
+  }
+}
