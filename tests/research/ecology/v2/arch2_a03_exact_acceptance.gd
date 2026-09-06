@@ -18,6 +18,7 @@ func _init() -> void:
 	_slice_restart_and_budget_tests()
 	_mutation_tests()
 	_lab_tests()
+	_reviewer_repair_tests()
 	print("EVO_ARCH2_A03_EXACT assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -37,7 +38,9 @@ func _run(g: Dictionary, ticks: int = 8, slice_ops: int = 4096) -> Dictionary:
 			var r := K.advance(s, g, slice_ops)
 			if not r.success: return {}
 			s = r.state
-			if r.status != "RUNNING": done = true; break
+			if r.status == "BUDGET_BLOCKED": return {}
+			if r.status == "TICK_COMPLETE": done = true; break
+			if r.status != "RUNNING": return {}
 		if not done: return {}
 	return s
 
@@ -79,6 +82,7 @@ func _slice_restart_and_budget_tests() -> void:
 	var opened := K.begin_tick(tiny, budget_genome, E.create(), B.stock(), 1)
 	var block := K.advance(opened.state, budget_genome, 4096)
 	_check(block.success and block.status == "BUDGET_BLOCKED" and block.reason == "MODULE_CAPACITY", "explicit_budget_block")
+	_check(not block.state.frame.is_empty() and block.state.tick == tiny.tick, "blocked_tick_remains_open")
 	var resized := K.resize_capacity(block.state, budget_genome, 64, 32)
 	_check(resized.success, "capacity_resume_contract")
 
@@ -134,3 +138,35 @@ func _lab_tests() -> void:
 	_check(renderer.snapshot.phenotype_hash == p.phenotype_hash, "renderer_consumes_phenotype")
 	_check(not renderer.snapshot.has("genome"), "renderer_no_genome_truth")
 	renderer.free()
+
+func _reviewer_repair_tests() -> void:
+	# RM-02: BUDGET_BLOCKED is an open tick, never a successful completed tick.
+	var model := Model.new()
+	_check(model.reset(1), "repair_budget_fixture_reset")
+	model.state.limits.modules = 1
+	var before_tick: int = model.state.tick
+	_check(not model.step(1), "repair_budget_block_returns_false")
+	_check(model.last_status == "BUDGET_BLOCKED" and model.last_block_reason == "MODULE_CAPACITY", "repair_budget_status_surface")
+	_check(not model.state.frame.is_empty() and model.state.tick == before_tick, "repair_budget_frame_preserved")
+	_check(model.resize_capacity(64, 32), "repair_budget_resize")
+	_check(model.step(1), "repair_budget_resume_same_tick")
+	_check(model.last_status == "TICK_COMPLETE" and model.state.frame.is_empty() and model.state.tick == before_tick + 1, "repair_budget_resume_completed")
+	var blocked_preview := model.environment_preview(650, 700, 2, 1, 32)
+	_check(blocked_preview.is_empty(), "repair_preview_rejects_incomplete_tick")
+	var blocked_gallery := model.generate(10, 9123, 1, 32)
+	_check(blocked_gallery.accepted == 0 and blocked_gallery.blocked > 0 and blocked_gallery.accepted + blocked_gallery.rejected == 10, "repair_gallery_rejects_blocked_candidates")
+
+	# RM-03: import creates a new diagnostic ancestry root and clears derived data.
+	_check(model.reset(0), "repair_import_fixture_reset")
+	var prior_mutation := model.mutate("small", 41)
+	var prior_gallery := model.generate(10, 42)
+	_check(prior_mutation.success and model.generation == 1 and model.lineage.size() == 2, "repair_import_preexisting_lineage")
+	_check(prior_gallery.accepted > 0 and model.gallery.size() > 0, "repair_import_preexisting_gallery")
+	var imported := F.make(5)
+	var imported_hash := G.biological_hash(imported)
+	_check(model.import_genome(G.serialize(imported)), "repair_import_success")
+	_check(model.family == Model.IMPORTED_FAMILY and model.generation == 0, "repair_import_identity_reset")
+	_check(model.lineage.size() == 1 and model.lineage[0].hash == imported_hash and model.lineage[0].source == "IMPORT", "repair_import_new_root")
+	_check(model.gallery.is_empty() and model.hashes().genome == imported_hash, "repair_import_derived_data_cleared")
+	var child := model.mutate("small", 43)
+	_check(child.success and model.lineage.size() == 2 and child.event.parent_hash == imported_hash, "repair_import_next_child_descends_from_import")
