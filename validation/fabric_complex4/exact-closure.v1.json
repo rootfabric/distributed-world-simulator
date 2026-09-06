@@ -1,0 +1,92 @@
+{
+  "activation": {
+    "next_priority": "COMPLEX4_VIS1_PLAYABLE_PHYSICAL_LAB",
+    "now_authorized": [
+      "COMPLEX4_VIS1_PLAYABLE_PHYSICAL_LAB",
+      "FABRIC1_1_MULTI_DOMAIN_GENERALIZATION"
+    ],
+    "still_downstream": [
+      "FABRIC1_2_NONLINEAR_DYNAMIC_GENERALIZATION",
+      "FABRIC1_3_DISTRIBUTED_PHYSICAL_EXECUTION",
+      "FABRIC2_DEFINITION"
+    ]
+  },
+  "branch": "research/fabric-complex4-real-world-machine-lab-r1",
+  "canonical_godot": {
+    "fresh_import_exit": 0,
+    "fresh_import_fatal_markers": 0,
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "canonical_machine": {
+    "active_power_link_counts": [2, 1, 0],
+    "bonds": 167,
+    "canonical_power_bond_states_final": ["INTACT", "INTACT"],
+    "canonical_writes_by_complex4": 0,
+    "construct_id": "construct/complex4/physical-outpost",
+    "external_canonical_updates": 2,
+    "load_power_w": [36.0, 36.0, 0.0],
+    "machine_states": ["ON", "ON", "OFF"],
+    "matter_components": {
+      "material/complex4-ceramic": 0.1,
+      "material/complex4-copper": 0.18,
+      "material/complex4-steel": 0.72
+    },
+    "matter_mass_kg": 164.0,
+    "parts": 164,
+    "power_links": ["bond/complex4/power-path-a", "bond/complex4/power-path-b"],
+    "revisions": [0, 1, 2],
+    "support_bonds": ["bond/complex4/frame-054-055", "bond/complex4/frame-108-109"]
+  },
+  "closure_hash": "496327621c6080803f3e0e0ee19de2ee4e221311046533291bd2cdd60fc5cc7d",
+  "control": {
+    "directional_watch": "GREEN",
+    "standard_pc0": "RED",
+    "standard_pc0_attribution": "unrelated active product lines: G8, ECO, T1B, CH9.6, doctrine, NX, V0"
+  },
+  "exact_replay": {
+    "a": {
+      "assertions": 27,
+      "fresh_replays": 3,
+      "hash": "3c299a0bca586666779659d8616372025d62f98bae634d4b77ab9ff346125c4e"
+    },
+    "bcd": {
+      "assertions": 57,
+      "fresh_replays": 3,
+      "hash": "9dcd39048455f8cdb15ef4fb283fa91eb3fc0e7a6f56f24742a45348de88f300"
+    }
+  },
+  "fresh_boundaries": {
+    "bridge4": {
+      "assertions": 49,
+      "hash": "c7daed6263058ce016a32b9813ee9a5d8da1798be96cb01e641818bd323458bf"
+    },
+    "fabric1_core": {
+      "assertions": 50,
+      "hash": "0dd739404c2ed0b352abc08e7c93d9100213e7479dd2cd96da8a51f1f9509444"
+    },
+    "fabric1_sync1": {
+      "assertions": 30,
+      "hash": "9fa0138b88d63d8584afdc08972954a6aa86e3e8e32b8a413644c73112559d18"
+    }
+  },
+  "predecessor": {
+    "bridge4_closure_hash": "2f4fe35ac7f2b92e6fa9cc256373521d298bcf0fac4802f18e1f75a489c438e9",
+    "bridge4_final_head": "e5df247a79546400a98ffcd123d221b28d567908"
+  },
+  "runtime_blobs": {
+    "RUN_FABRIC_COMPLEX4_A_TESTS.sh": "45097639de7980d15ad2c672a0945f05abde61b2",
+    "RUN_FABRIC_COMPLEX4_BCD_TESTS.sh": "caff391f1b8eaaf933572b87c0fcde210b936e59",
+    "scripts/research/fabric_bake0/complex4_real_world_machine_projection_v1.gd": "f75376ef81d3a5b40059d5cd0cc4c1292ccbd19d",
+    "scripts/research/fabric_bake0/complex4_real_world_machine_runtime_v1.gd": "c3eb2e9bf3f4f0ad72e0e31d15354636ca05e4d5",
+    "tests/research/fabric1/complex4_real_world_machine_fixture_v1.gd": "9718b45d11707838f5a686ffd2851f00b8c1694b",
+    "tests/research/fabric1/fabric_complex4_a_canonical_machine_acceptance.gd": "3b5136ee54e7a9f08686370961635fdffebcb018",
+    "tests/research/fabric1/fabric_complex4_bcd_e2e_acceptance.gd": "a292388beff44d20e67271485e284e94fad3d844"
+  },
+  "runtime_candidate": {
+    "head": "2c45695a19f214ce0fde5d0606697492a13b5a8f",
+    "tree": "61fc0d18190fe799233c1c8d84ef793c863a2a27"
+  },
+  "schema": "planet_simulator.fabric_complex4_exact_closure.v1",
+  "status": "RESEARCH_EXACT_CLOSED"
+}
