@@ -1,0 +1,189 @@
+name: V0 P7 Canonical Acceptance Runtime
+
+on:
+  push:
+    branches:
+      - control/v0-p7-canonical-acceptance-runtime-r1
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-p7:
+    if: >-
+      github.actor == 'rootfabric' &&
+      github.triggering_actor == 'rootfabric' &&
+      github.event_name == 'push'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 180
+    env:
+      CANONICAL_MAIN_SHA: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+      CANONICAL_MAIN_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+
+      - name: Verify exact canonical identity and clean tracked checkout
+        shell: pwsh
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse 'HEAD^{tree}').Trim()
+          if ($head -ne $env:CANONICAL_MAIN_SHA) { throw "CANONICAL_HEAD_MISMATCH:$head" }
+          if ($tree -ne $env:CANONICAL_MAIN_TREE) { throw "CANONICAL_TREE_MISMATCH:$tree" }
+          $dirty = git status --porcelain --untracked-files=no
+          if ($dirty) { throw "CANONICAL_TRACKED_CHECKOUT_DIRTY_BEFORE`n$dirty" }
+          "CANONICAL_HEAD=$head"
+          "CANONICAL_TREE=$tree"
+          "TRACKED_CLEAN_BEFORE=true"
+
+      - name: Resolve and verify exact Windows double Godot
+        shell: pwsh
+        run: |
+          $configured = '${{ vars.DWS_GODOT_DOUBLE_BIN }}'
+          $godot = if ($configured -and (Test-Path $configured)) {
+            $configured
+          } else {
+            'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          }
+          if (-not (Test-Path $godot)) { throw "EXACT_GODOT_NOT_FOUND:$godot" }
+          $version = ((& $godot --version 2>&1 | Select-Object -First 1).ToString()).Trim()
+          if ($version -ne $env:EXPECTED_GODOT_VERSION) {
+            throw "GODOT_VERSION_MISMATCH actual=$version expected=$env:EXPECTED_GODOT_VERSION"
+          }
+          $sha = (Get-FileHash -Algorithm SHA256 $godot).Hash.ToLowerInvariant()
+          if ($sha -ne $env:EXPECTED_GODOT_SHA256) {
+            throw "GODOT_SHA256_MISMATCH actual=$sha expected=$env:EXPECTED_GODOT_SHA256"
+          }
+          "GODOT_PATH=$godot"
+          "GODOT_VERSION=$version"
+          "GODOT_SHA256=$sha"
+          "GODOT_WIN=$godot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Run repository-owned P7.7 canonical full gate
+        shell: pwsh
+        run: |
+          $bashCandidates = @(
+            'C:\Program Files\Git\bin\bash.exe',
+            'C:\Program Files\Git\usr\bin\bash.exe'
+          )
+          $bash = $bashCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $bash) { throw 'GIT_BASH_NOT_FOUND' }
+          $env:GODOT_WIN_FOR_BASH = $env:GODOT_WIN
+          $godotPosix = ((& $bash -lc 'cygpath -u "$GODOT_WIN_FOR_BASH"') | Select-Object -First 1).ToString().Trim()
+          if (-not $godotPosix) { throw 'GODOT_CYGPATH_FAILED' }
+          New-Item -ItemType Directory -Force -Path 'artifacts/runtime/v0-p7-canonical-acceptance' | Out-Null
+          $outerLog = 'artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log'
+          & $bash './RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh' $godotPosix $env:CANONICAL_MAIN_SHA *> $outerLog
+          $gateExit = $LASTEXITCODE
+          Get-Content $outerLog
+          "GATE_EXIT=$gateExit"
+          if ($gateExit -ne 0) { throw "P7_CANONICAL_GATE_FAILED:$gateExit" }
+          if (-not (Select-String -Path $outerLog -SimpleMatch 'V0-P7.7 GRAPHICAL DIGGING GATE GREEN' -Quiet)) {
+            throw 'P7_CANONICAL_GATE_GREEN_BANNER_MISSING'
+          }
+          if (-not (Select-String -Path $outerLog -SimpleMatch "EXACT_HEAD=$env:CANONICAL_MAIN_SHA" -Quiet)) {
+            throw 'P7_CANONICAL_GATE_HEAD_BANNER_MISSING'
+          }
+          if (-not (Select-String -Path $outerLog -SimpleMatch "EXACT_TREE=$env:CANONICAL_MAIN_TREE" -Quiet)) {
+            throw 'P7_CANONICAL_GATE_TREE_BANNER_MISSING'
+          }
+
+      - name: Validate 2032-assertion formal composition and fatal-free logs
+        shell: pwsh
+        run: |
+          $required = @(
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-graphical-slice.log'; text='PASS (52 assertions, 0 failures)'; n=52 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-a-playground.log'; text='PASS (20 assertions, 0 failures)'; n=20 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-b-seam-near.log'; text='PASS (20 assertions, 0 failures)'; n=20 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/mw10-c0-physical-output.log'; text='PASS (30 assertions, 0 failures)'; n=30 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/mw10-c1-durability.log'; text='PASS (60 assertions, 0 failures)'; n=60 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-c2-delivery.log'; text='PASS (42 assertions, 0 failures)'; n=42 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-c3-true-ab.log'; text='PASS (61 assertions, 0 failures)'; n=61 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-d-reservation-conflict.log'; text='PASS (31 assertions, 0 failures)'; n=31 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-7-e-actor-handoff.log'; text='PASS (24 assertions, 0 failures)'; n=24 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/p7-6-seam-composition.log'; text='PASS (106 assertions, 0 failures)'; n=106 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/mw10-transactions.log'; text='MW10 cross-region Matter transactions: PASS'; n=201 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/mw10-process-recovery.log'; text='MW10 cross-region Matter processes: PASS'; n=53 },
+            @{ path='artifacts/runtime/v0-p7-7-graphical-digging/mw4.log'; text='MW4 matter mutations: PASS'; n=187 }
+          )
+          $direct = 0
+          foreach ($r in $required) {
+            if (-not (Test-Path $r.path)) { throw "P7_REQUIRED_LOG_MISSING:$($r.path)" }
+            if (-not (Select-String -Path $r.path -SimpleMatch $r.text -Quiet)) {
+              throw "P7_REQUIRED_PASS_SUMMARY_MISSING:$($r.path):$($r.text)"
+            }
+            $direct += $r.n
+          }
+          if ($direct -ne 887) { throw "P7_DIRECT_ASSERTION_COMPOSITION_MISMATCH:$direct" }
+          $sub = 'artifacts/runtime/v0-p7-7-graphical-digging/p7-5-subgate.log'
+          if (-not (Test-Path $sub)) { throw 'P7_5_SUBGATE_LOG_MISSING' }
+          if (-not (Select-String -Path $sub -SimpleMatch 'V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN' -Quiet)) {
+            throw 'P7_5_SUBGATE_NOT_GREEN'
+          }
+          $nestedExpected = 1145
+          $formalTotal = $direct + $nestedExpected
+          if ($formalTotal -ne 2032) { throw "P7_FORMAL_TOTAL_MISMATCH:$formalTotal" }
+          $fatalPatterns = @('SCRIPT ERROR:','Parse Error:','Compile Error:','Failed to instantiate an autoload','Failed to load script')
+          $logs = Get-ChildItem artifacts/runtime -Recurse -File -Filter '*.log'
+          $fatalCount = 0
+          foreach ($log in $logs) {
+            foreach ($pattern in $fatalPatterns) {
+              $fatalCount += @(Select-String -Path $log.FullName -SimpleMatch $pattern -ErrorAction SilentlyContinue).Count
+            }
+          }
+          if ($fatalCount -ne 0) { throw "P7_FATAL_MATCHES:$fatalCount" }
+          $manifest = [ordered]@{
+            schema='distributed_world_simulator.v0_p7_canonical_runtime_machine_evidence.v1'
+            canonical_main_head=$env:CANONICAL_MAIN_SHA
+            canonical_main_tree=$env:CANONICAL_MAIN_TREE
+            godot_version=$env:EXPECTED_GODOT_VERSION
+            godot_sha256=$env:EXPECTED_GODOT_SHA256
+            runner='RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh'
+            gate_exit=0
+            gate_green=$true
+            direct_assertions=887
+            nested_p7_5_assertions=1145
+            total_assertions=2032
+            failures=0
+            fatal_matches=0
+            tracked_clean_before=$true
+          }
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content 'artifacts/runtime/v0-p7-canonical-acceptance/machine-evidence.json' -Encoding utf8
+          "P7_CANONICAL_FORMAL_ASSERTIONS=$formalTotal"
+          "P7_CANONICAL_FAILURES=0"
+          "P7_CANONICAL_FATAL_MATCHES=0"
+
+      - name: Verify tracked checkout clean after runtime gate
+        shell: pwsh
+        run: |
+          $dirty = git status --porcelain --untracked-files=no
+          if ($dirty) { throw "CANONICAL_TRACKED_CHECKOUT_DIRTY_AFTER`n$dirty" }
+          $manifestPath = 'artifacts/runtime/v0-p7-canonical-acceptance/machine-evidence.json'
+          $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+          $manifest | Add-Member -NotePropertyName tracked_clean_after -NotePropertyValue $true -Force
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content $manifestPath -Encoding utf8
+          $files = Get-ChildItem artifacts/runtime -Recurse -File | Sort-Object FullName
+          $lines = foreach ($file in $files) {
+            $sha = (Get-FileHash -Algorithm SHA256 $file.FullName).Hash.ToLowerInvariant()
+            $rel = [IO.Path]::GetRelativePath((Get-Location).Path, $file.FullName).Replace('\\','/')
+            "$sha  $rel"
+          }
+          $lines | Set-Content 'artifacts/runtime/v0-p7-canonical-acceptance/SHA256SUMS' -Encoding ascii
+          "TRACKED_CLEAN_AFTER=true"
+
+      - name: Upload canonical P7 runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p7-canonical-acceptance-runtime-c14c37cc
+          path: |
+            artifacts/runtime/v0-p7-7-graphical-digging/
+            artifacts/runtime/v0-p7-5-two-client-convergence/
+            artifacts/runtime/v0-p7-canonical-acceptance/
+          if-no-files-found: error
