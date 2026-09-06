@@ -21,14 +21,14 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 86aebc9bca53992a182246337de05374ae891dac
+          ref: e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871
           fetch-depth: 0
           persist-credentials: false
       - name: Assert exact source identity
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "86aebc9bca53992a182246337de05374ae891dac"
-          test "$(git rev-parse HEAD^{tree})" = "06aeea53b1c392aff8e323fb433de8f7e2567315"
+          test "$(git rev-parse HEAD)" = "e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871"
+          test "$(git rev-parse HEAD^{tree})" = "25a271b38110f8930b67c75be34f1577016bc2e2"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Resolve exact double Godot
         id: godot
@@ -111,6 +111,6 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "86aebc9bca53992a182246337de05374ae891dac"
+          test "$(git rev-parse HEAD)" = "e2a0cbb01b843e1e91ffb7329b5aaa8eb789b871"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
