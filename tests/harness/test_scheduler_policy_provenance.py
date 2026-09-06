@@ -111,12 +111,23 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
             *(policy[key] for key in keys),
         ]
 
-    def _execution_paths(self) -> list[str]:
-        prefix = self.execution.relative_to(self.root).as_posix()
-        return sorted(
-            path.relative_to(self.root).as_posix()
-            for path in self.execution.rglob("*.json")
-        )
+    def _strict_execution_paths(self) -> list[str]:
+        strict_dirs = {"work-orders", "events", "repairs", "audits", "human-attention"}
+        strict_files = {
+            "transition-table.v1.json",
+            "event-ledger-reconciliation.v1.json",
+            "review-ledger-reconciliation.v1.json",
+            "evidence-ledger-reconciliation.v1.json",
+            "human-attention-ledger-reconciliation.v1.json",
+        }
+        paths: list[str] = []
+        for path in self.execution.rglob("*.json"):
+            local = path.relative_to(self.execution)
+            if (len(local.parts) == 1 and local.as_posix() in strict_files) or (
+                len(local.parts) > 1 and local.parts[0] in strict_dirs
+            ):
+                paths.append(path.relative_to(self.root).as_posix())
+        return sorted(paths)
 
     def _dirty_scheduler(self) -> None:
         path = self.root / "config/control/harness/scheduler-policy.v1.json"
@@ -193,9 +204,9 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
             committed_enforcement_generation(self.root, self.epoch)
 
-    def test_every_execution_local_json_is_worktree_fenced(self) -> None:
-        paths = self._execution_paths()
-        self.assertGreaterEqual(len(paths), 13)
+    def test_every_strict_execution_authority_json_is_worktree_fenced(self) -> None:
+        paths = self._strict_execution_paths()
+        self.assertGreaterEqual(len(paths), 9)
         self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
         for relative in paths:
             with self.subTest(path=relative):
@@ -206,17 +217,23 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
                 self._git("checkout", "--", relative)
                 self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
 
-    def test_execution_json_membership_rejects_untracked_injection(self) -> None:
+    def test_strict_execution_membership_rejects_untracked_event_injection(self) -> None:
         injected = self.execution / "events/WO-001/999-untracked.v1.json"
         self._write_json(injected, {"schema": "fixture.injected.v1"})
         with self.assertRaisesRegex(ContractValidationError, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH"):
             committed_enforcement_generation(self.root, self.epoch)
 
-    def test_execution_json_membership_rejects_deleted_tracked_input(self) -> None:
-        relative = (self.execution / "transition-table.v1.json").relative_to(self.root).as_posix()
-        (self.root / relative).unlink()
+    def test_strict_execution_membership_rejects_deleted_transition_table(self) -> None:
+        (self.execution / "transition-table.v1.json").unlink()
         with self.assertRaisesRegex(ContractValidationError, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH"):
             committed_enforcement_generation(self.root, self.epoch)
+
+    def test_review_and_evidence_directories_keep_dedicated_provenance_semantics(self) -> None:
+        self._write_json(self.execution / "reviews/untracked.v1.json", {"schema": "fixture.review.v1"})
+        self._write_json(self.execution / "evidence/untracked.v1.json", {"schema": "fixture.evidence.v1"})
+        # The global reducer fence must not preempt specialized review/evidence
+        # validators. Neither file can become positive authority merely by existing.
+        self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
 
 
 if __name__ == "__main__":

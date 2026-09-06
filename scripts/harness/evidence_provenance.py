@@ -30,6 +30,21 @@ _CURRENT_BUNDLE_POLICY_KEYS = (
     "continuation_policy",
 )
 
+_STRICT_EXECUTION_AUTHORITY_DIRS = {
+    "work-orders",
+    "events",
+    "repairs",
+    "audits",
+    "human-attention",
+}
+_STRICT_EXECUTION_AUTHORITY_FILES = {
+    "transition-table.v1.json",
+    "event-ledger-reconciliation.v1.json",
+    "review-ledger-reconciliation.v1.json",
+    "evidence-ledger-reconciliation.v1.json",
+    "human-attention-ledger-reconciliation.v1.json",
+}
+
 
 def _require(condition: bool, code: str) -> None:
     if not condition:
@@ -96,8 +111,6 @@ def committed_bytes(root: Path, relative: str, *, immutable: bool = True) -> byt
     candidate = root / relative
     _require(candidate.is_file() and not candidate.is_symlink(), "PROVENANCE_FILE_MISSING")
     _require(candidate.resolve() == root.resolve().joinpath(relative), "PROVENANCE_SYMLINK_FORBIDDEN")
-    # --path applies Git's canonical EOL conversion on Windows. A clean index alone
-    # does not prove the working file is clean (assume-unchanged can conceal edits).
     actual = _git(root, "hash-object", f"--path={relative}", "--", relative).strip()
     _require(actual == blob, "PROVENANCE_WORKTREE_MODIFIED")
     if immutable:
@@ -180,13 +193,24 @@ def _current_bundle_contract_paths(root: Path) -> tuple[str, ...]:
     return tuple(paths)
 
 
-def _current_execution_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
-    """Return the exact JSON set under a current execution, committed and worktree-visible.
+def _strict_execution_authority_member(prefix: str, relative: str) -> bool:
+    if not relative.startswith(prefix + "/") or not relative.endswith(".json"):
+        return False
+    local = relative[len(prefix) + 1:]
+    parts = PurePosixPath(local).parts
+    if len(parts) == 1:
+        return local in _STRICT_EXECUTION_AUTHORITY_FILES
+    return parts[0] in _STRICT_EXECUTION_AUTHORITY_DIRS
 
-    build_state() and load_guard_context() consume several execution-local JSON surfaces
-    directly from the worktree (transition table, Work Orders, events, reviews, evidence,
-    repairs, audits and human-attention ledgers). For generation 81+ none of those bytes,
-    nor the membership of that JSON set, may differ from HEAD before reduction.
+
+def _current_execution_authority_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
+    """Fence execution-local reducer/authority JSON while preserving evidence semantics.
+
+    Reviews and evidence records have dedicated provenance behavior: an untracked review
+    becomes non-authoritative/insufficient evidence, while an untracked or dirty hard-block
+    proof simply cannot become terminal proof. Those directories therefore are not promoted
+    to global contract errors here. Reducer/control inputs without such dedicated semantics
+    are exact-membership and exact-byte fenced before reduction.
     """
     _require(re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is not None,
              "REVIEW_EPOCH_IDENTITY_REQUIRED")
@@ -197,7 +221,7 @@ def _current_execution_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
     committed_raw = _git(root, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", prefix)
     committed = {
         item.decode("utf-8") for item in committed_raw.split(b"\0")
-        if item and item.decode("utf-8").endswith(".json")
+        if item and _strict_execution_authority_member(prefix, item.decode("utf-8"))
     }
     worktree: set[str] = set()
     for candidate in base.rglob("*.json"):
@@ -205,7 +229,8 @@ def _current_execution_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
             relative = candidate.relative_to(root).as_posix()
         except ValueError as exc:
             raise ContractValidationError("EXECUTION_AUTHORITY_PATH_ESCAPES_REPOSITORY") from exc
-        worktree.add(_path(relative))
+        if _strict_execution_authority_member(prefix, relative):
+            worktree.add(_path(relative))
 
     _require(bool(committed), "EXECUTION_AUTHORITY_JSON_REQUIRED")
     _require(committed == worktree, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH")
@@ -221,8 +246,6 @@ def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
     _require(type(pinned_generation) is int and type(generation) is int,
              "REVIEW_EPOCH_GENERATION_REQUIRED")
     if pinned_generation >= PROVENANCE_GENERATION:
-        # ContractBundle.load() reads these files from the worktree. Fence the full
-        # committed dependency set before any reducer/review result can become authority.
         for relative in _current_bundle_contract_paths(root):
             committed_bytes(root, relative, immutable=False)
         epoch_id = epoch.get("epoch_id")
@@ -231,10 +254,7 @@ def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
         relative = f"config/control/harness/executions/{epoch_id}/project-epoch.v1.json"
         pinned_epoch = _decode(committed_bytes(root, relative, immutable=False))
         _require(pinned_epoch == epoch, "REVIEW_COMMITTED_EPOCH_MISMATCH")
-        # Fence every execution-local JSON byte and the exact JSON membership before
-        # reducer/continuation authority. This also closes assume-unchanged, deletion
-        # and untracked-injection bypasses for transition/work-order/event/evidence data.
-        for relative in _current_execution_json_paths(root, epoch_id):
+        for relative in _current_execution_authority_json_paths(root, epoch_id):
             committed_bytes(root, relative, immutable=False)
     return generation
 
