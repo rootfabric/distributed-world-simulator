@@ -1,0 +1,79 @@
+{
+  "schema": "planet_simulator.fabric1_sync1_architecture_freeze.v1",
+  "freeze_id": "FABRIC1-SYNC1-R1",
+  "status": "FROZEN",
+  "predecessor": {
+    "branch": "research/fabric1-generalized-world-fabric-r1",
+    "final_head": "1ccf3525ea8b9ffef28582b0232c28157d21a8b5",
+    "runtime_head": "63ca63b20e40a2065e742c62ff52acb7c95ade7e",
+    "runtime_tree": "93ac849faf31ee904ffa74f3ae73ed73d76b3d16",
+    "closure_hash": "a652cfc238f5abc2574d5e2f664e578ab92f1ff1413d8706a4067c0dae4969a6"
+  },
+  "lineage": {
+    "b0_6": {
+      "final_head": "b34f4cc24616f26dfcc6dcbdada2d664b478b64f",
+      "closure_hash": "892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584"
+    },
+    "bridge3": {
+      "final_head": "d814a4135c5aea3d66148f037f89edf04444f063",
+      "runtime_head": "cf6730c48f6147243a5c99ebb48c19e09fb3093f",
+      "closure_hash": "4f9ec661e99775d0afc85995d51a4d614158414fc760141daffe0dab1b25f4a4"
+    },
+    "complex3": {
+      "final_head": "b39bc28499f47d34c5a0b7c02f223baf9f373a00",
+      "runtime_head": "4089b26dd1d56f3ab7bdee394cd1d5a7fbf150fa",
+      "closure_hash": "e69c756494e0e10c7cf4ad9be7fdc9182a3f85ef6e6f8b43bcee344f29ddcc2f",
+      "replay_hash": "d0a19061880c96ea262e75fa6e13b5debc8ca195510a3937c38b7650769d0c16"
+    },
+    "b0_7": {
+      "freeze_head": "9dda6872081c19ce2add86bb590a9aa4925c6ac9",
+      "runtime_head": "33b2405bd9962e530216721717dae6541109b17c",
+      "final_head": "01f166ec276d24884a96af7b8244194d1ab8ed70",
+      "closure_hash": "3ed9d015cf4943fcf21c6ced514387a0e1162b5456e45051945693057a3392bb"
+    }
+  },
+  "architecture_invariants": [
+    "CANONICAL_WORLD_IS_EXTERNAL_TRUTH",
+    "FABRIC_AND_BAKE_ARE_DERIVED_DISCARDABLE_EXECUTION",
+    "REPRESENTATION_TRANSITION_IS_NOT_CANONICAL_MUTATION",
+    "PHYSICAL_STALE_NEVER_EXECUTES",
+    "ONE_ACTIVE_PHYSICAL_OWNER_PER_REGION",
+    "REDUCTION_MAY_FAIL_CLOSED_WITH_NO_SAFE_BAKE",
+    "SAFETY_IS_INDEPENDENT_OF_COST",
+    "HIDDEN_FAILURE_REQUIRES_CONSERVATIVE_REFINEMENT_GUARD",
+    "LOCAL_CAUSAL_REFINEMENT_MUST_NOT_FORCE_GLOBAL_FULL",
+    "RESTART_REBINDS_FROM_AUTHORITATIVE_CANONICAL_SOURCE",
+    "EVENT_APPLICATION_IS_EXACTLY_ONCE",
+    "GENERIC_COMPOSITION_MUST_NOT_REQUIRE_DEVICE_SPECIFIC_SOLVERS",
+    "FRESH_PROCESS_REPLAY_MUST_BE_DETERMINISTIC"
+  ],
+  "critical_git_blobs": {
+    "scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd": "bceabb21f17f00e0b9e3600191104bc959245ce5",
+    "scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd": "a8f6a5e5b41a12939f7546bdcd32fec035570688",
+    "scripts/research/fabric_bake0/exact_boundary_runtime_v1.gd": "67dfac40bddeeed6299013206955ca5a8503b8ad",
+    "scripts/research/fabric_bake0/bake_invalidation_v1.gd": "6d2937a3782c384af93d13104ec68b24f07ce964",
+    "scripts/research/fabric_bake0/unseen_machine_generic_graph_v1.gd": "61f93a0e53584545e7532e389f591b05a1a09a98",
+    "scripts/research/fabric_bake0/unseen_machine_generic_compiler_v1.gd": "307eb564db9dd6208f3a4d972380a6d7bb35dff4",
+    "scripts/research/fabric_bake0/unseen_machine_challenge_protocol_v1.gd": "1c12fd56afe485e36977854ccdbce3e6a3034bfd",
+    "scripts/research/fabric_bake0/fabric1_component_contract_v1.gd": "41bda8bc027fe9e98b68289e1ef73e899ea28615",
+    "scripts/research/fabric_bake0/fabric1_generalized_composer_v1.gd": "70119870d58acfac1f0b9fa82caaa9d310937521",
+    "scripts/research/fabric_bake0/fabric1_generalized_runtime_v1.gd": "749e644abe767c804bd2d8df75fab1f522b9d56b"
+  },
+  "closure_evidence_blobs": {
+    "validation/FABRIC_B0_6_CLOSURE.md": "0a23f81842e18df66aafff48e09ebdfe0aa091cb",
+    "validation/FABRIC_B0_7_UNSEEN_MACHINE_CLOSURE.md": "66d045cb7e338d72f3efbe04228c3ef9ab3791ec",
+    "validation/FABRIC1_GENERALIZATION_CLOSURE.md": "ac0670662873d013de047fd62cf8122b78b06448"
+  },
+  "remote_reviewed_evidence_blobs": {
+    "validation/FABRIC_BRIDGE3_CLOSURE.md": "68ff7f50501e2b48dc4e9d343f54f3048a61e0bf",
+    "validation/FABRIC_COMPLEX3_CLOSURE.md": "6de4160272ac6f3ac13798f0e809708b9ded677f"
+  },
+  "next_activation": "BRIDGE-4_CANONICAL_WORLD_TO_FABRIC1",
+  "blocked_until_bridge4_closes": [
+    "COMPLEX4_REAL_WORLD_MACHINE_LAB",
+    "FABRIC1_1_MULTI_DOMAIN_GENERALIZATION",
+    "FABRIC1_2_NONLINEAR_DYNAMIC_GENERALIZATION",
+    "FABRIC1_3_DISTRIBUTED_PHYSICAL_EXECUTION",
+    "FABRIC2_DEFINITION"
+  ]
+}
