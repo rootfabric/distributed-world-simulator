@@ -2,6 +2,7 @@
   "schema": "distributed_world_simulator.harness_continuation_policy.v1",
   "continuation_layer_revision": "H0-CONTINUATION-2026-08-20-R5",
   "session_stall_guard_revision": "H0-STALL-GUARD-2026-09-06-R1",
+  "scale_campaign_guard_revision": "H0-SCALE-SHARD-2026-09-06-R1",
   "principles": {
     "checkpoint_is_user_session_unit": true,
     "work_order_is_execution_unit": true,
@@ -20,7 +21,11 @@
     "completed_predicate_is_published_before_next_long_slice": true,
     "identical_retry_loops_are_forbidden": true,
     "long_validation_is_sharded_into_durable_slices": true,
-    "queued_ci_is_not_a_reason_to_wait_when_exact_local_validation_is_available": true
+    "queued_ci_is_not_a_reason_to_wait_when_exact_local_validation_is_available": true,
+    "scale_campaign_cases_are_independent_durable_predicates": true,
+    "required_scale_is_not_reduced_to_avoid_timeout": true,
+    "completed_scale_case_is_not_repeated_when_later_case_times_out": true,
+    "unchanged_exact_predecessor_evidence_may_be_reused_only_with_blob_identity_proof": true
   },
   "mission_terminal_policy": {
     "allowed_terminals": [
@@ -82,6 +87,32 @@
       "STRATEGY_SWITCH_RECORDED",
       "HARD_BLOCK_PROVEN"
     ]
+  },
+  "large_scale_campaign_guard": {
+    "mode": "SCALE_SHARDED_DURABLE_CASES",
+    "required_scale_cases_are_independent_predicates": true,
+    "publish_case_result_before_next_case": true,
+    "same_source_and_runtime_identity_required_across_cases": true,
+    "required_scale_must_not_be_reduced_after_timeout": true,
+    "do_not_restart_prior_green_cases_after_later_timeout": true,
+    "profile_only_the_timed_out_case": true,
+    "read_completed_log_before_retrying_timed_out_case": true,
+    "allow_bounded_reference_oracle_scope_only_when_contract_declares_it": true,
+    "wall_time_is_observation_not_correctness": true,
+    "on_case_timeout": [
+      "READ_CASE_LOG_AND_EXIT_MARKERS",
+      "PRESERVE_PREVIOUS_GREEN_CASES",
+      "PROFILE_TIMED_OUT_CASE_ONLY",
+      "KEEP_REQUIRED_SCALE_UNCHANGED",
+      "CHANGE_STRATEGY_BEFORE_SECOND_RETRY"
+    ],
+    "unchanged_predecessor_evidence_reuse": {
+      "allowed": true,
+      "requires_blob_identity_for_runtime_and_tests": true,
+      "requires_current_boundary_smoke_when_practical": true,
+      "must_cite_original_exact_evidence": true,
+      "must_not_claim_reused_evidence_as_current_execution": true
+    }
   },
   "self_closing_execution": {
     "max_same_defect_fix_required_events_before_takeover": 3,
