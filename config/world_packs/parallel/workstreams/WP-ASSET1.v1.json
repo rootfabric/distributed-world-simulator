@@ -15,9 +15,9 @@
     "EVIDENCE_READY"
   ],
   "blockers": [],
-  "next_action": "Child PR #560 (work/world-packs-asset1-safe-fetch-r1 -> control/world-packs-parallel-r1) is OPEN; awaiting independent review of exact implementation head 1ff25c9a; worker does not self-merge.",
-  "last_checkpoint_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
-  "tested_head": "be00dd54bc1e21827975f83882c2fa38916805b5",
+  "next_action": "Child PR #560 (work/world-packs-asset1-safe-fetch-r1 -> control/world-packs-parallel-r1) is OPEN; awaiting independent security re-review of exact tested_head recorded in machine fields; worker does not self-merge.",
+  "last_checkpoint_head": "2b531beb86fb999f5c4e2019a319b306ac796c66",
+  "tested_head": "2b531beb86fb999f5c4e2019a319b306ac796c66",
   "validation": [
     {
       "name": "focused_asset_fetch_fetch_contract",
@@ -66,6 +66,24 @@
       "command": "python -m pytest tests/world_packs/asset_fetch -q",
       "result": "PASS",
       "head": "be00dd54bc1e21827975f83882c2fa38916805b5"
+    },
+    {
+      "name": "r2_security_repair_focused",
+      "command": "python -m pytest tests/world_packs/asset_fetch -q",
+      "result": "PASS",
+      "head": "2b531beb86fb999f5c4e2019a319b306ac796c66"
+    },
+    {
+      "name": "r2_security_repair_windows_full",
+      "command": "python -m pytest tests/world_packs -q",
+      "result": "FAIL",
+      "head": "2b531beb86fb999f5c4e2019a319b306ac796c66"
+    },
+    {
+      "name": "r2_security_repair_linux_full_symlink_capable",
+      "command": "python3 -m pytest tests/world_packs -q (Ubuntu WSL, ext4 clone)",
+      "result": "PASS",
+      "head": "2b531beb86fb999f5c4e2019a319b306ac796c66"
     }
   ],
   "updated_at_utc": "2026-09-05T20:10:00Z",
@@ -77,6 +95,8 @@
     "validation entries follow workstream_state.schema.v1.json: result enum PASS/FAIL/BLOCKED/NOT_RUN, additionalProperties false.",
     "Worker does not self-merge; integration gate belongs to the controller/integrator track.",
     "Re-ran focused suite (99 passed) on exact pushed head be00dd54 to refresh validation freshness; state written via python json.dump (UTF-8, no BOM).",
-    "Opened child PR #560 (base control/world-packs-parallel-r1) per work order; worker does not self-merge."
+    "Opened child PR #560 (base control/world-packs-parallel-r1) per work order; worker does not self-merge.",
+    "R2 independent security review @ e7ac3e0a returned FAIL: none of the four required security fixes was implemented. Repair executed per docs/world_packs/evidence/WP-ASSET1_REPAIR_MAP_R2.md at implementation head 2b531beb: FIX1 DNS-pinned bounded transport (validated endpoint == connected endpoint, TLS hostname/SNI/Host preserved, adversarial first-public/second-private test included); FIX2 obtain_safe/prepare_raw_asset single production entrypoint, pipeline.obtain documented unsafe_low_level, spy-tests prove gates cannot be bypassed; FIX3 typed GateError/FetchContractError for :bad and :99999 ports in both layers; FIX4 case-insensitive collisions, duplicate normalized paths and non-regular modes (FIFO/socket/chr/blk, zip+tar) refused before extraction. Focused suite 127 passed (99 pre-existing + 28 new adversarial); full suite Windows 195 passed + 1 environmental symlink FAIL (WinError 1314, pre-existing, not deselected); full suite Linux (Ubuntu WSL ext4) 196/196 passed at the same head. Independent reviewer's adversarial fixture script re-run against the repaired branch reproduces typed refusals for every FIX3/FIX4 case.",
+    "Old review history preserved: FAIL verdict @ e7ac3e0a stands in the record; this state documents the repair and requests fresh exact-head re-review."
   ]
 }
