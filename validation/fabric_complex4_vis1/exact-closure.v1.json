@@ -1,0 +1,67 @@
+{
+  "branch": "feature/fabric-complex4-vis1-playable-physical-lab-r1",
+  "canonical_godot": {
+    "fresh_import_exit": 0,
+    "fresh_import_fatal_markers": 0,
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "closure_hash": "ba403c46263740af161bc69778b4abe58fa19fe6bb2983884e9f8dd19c325f16",
+  "control": {
+    "attribution": "unrelated product lines: G8, ECO, T1B, CH9.6, doctrine, NX, V0",
+    "directional_watch": "GREEN",
+    "standard_pc0": "RED"
+  },
+  "exact_replay": {
+    "assertions_per_replay": 46,
+    "fresh_replays": 2,
+    "hash": "65951261f4bceb5b9e580d4ae6f85fc26c6ecf1170db1b96c7b98e4236917aef",
+    "sequence": [
+      "REV0 BAKED ON 2 paths",
+      "proposal A FULL rev0",
+      "REV1 BAKED ON 1 path",
+      "proposal B FULL rev1",
+      "REV2 BAKED OFF 0 paths",
+      "restart REV2 OFF"
+    ]
+  },
+  "launch": {
+    "controls": {
+      "1": "break primary now",
+      "2": "break backup now",
+      "N": "restart from authoritative revision",
+      "R": "reset",
+      "SPACE": "next proof step"
+    },
+    "runner": "RUN_FABRIC_COMPLEX4_VIS1_LAB.sh",
+    "scene": "res://scenes/labs/fabric/complex4_playable_physical_lab.tscn"
+  },
+  "predecessor": {
+    "complex4_closure_hash": "496327621c6080803f3e0e0ee19de2ee4e221311046533291bd2cdd60fc5cc7d",
+    "complex4_final_head": "4ef1a6f6e2ffdf7a6790661e00cd2e0bd32b9993"
+  },
+  "predecessor_regression": {
+    "complex4_bcd_assertions": 57,
+    "complex4_bcd_hash": "9dcd39048455f8cdb15ef4fb283fa91eb3fc0e7a6f56f24742a45348de88f300"
+  },
+  "published_blobs": {
+    "acceptance": "8b84f8a5f796f340877b805c9082e1157af890fe",
+    "launch_runner": "392c193f77febd11a57b5a08dca9c7104d1ad146",
+    "scene": "0cfdb48e74c37970a3717a83615e609794004e3b",
+    "scene_controller": "05a3b4db082946a4fff81f63aec004e1e20dca2f",
+    "session": "adb0e64d5a1a643f9f30225f32bb7a1ccf3d6a45",
+    "test_runner": "24f5508972973be1f45f0513c2bf82bf76349d00"
+  },
+  "runtime_candidate": {
+    "head": "d4dff1cfff985b73a44d6d47335369e7c16cb3b2",
+    "new_paths": 6,
+    "tree": "03ece6879d976414eba2d9c0c175ef5ca495d512"
+  },
+  "scene_smoke": {
+    "exit": 0,
+    "fatal_markers": 0,
+    "scene": "res://scenes/labs/fabric/complex4_playable_physical_lab.tscn"
+  },
+  "schema": "planet_simulator.fabric_complex4_vis1_exact_closure.v1",
+  "status": "RESEARCH_EXACT_CLOSED"
+}
