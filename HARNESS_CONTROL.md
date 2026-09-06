@@ -12,6 +12,7 @@
 ```text
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+docs/control/HARNESS_EXECUTION_RESOURCE_PILOT_RU.md
 ```
 
 Machine contracts:
