@@ -58,6 +58,7 @@ jobs:
             scripts/harness/execution_selector.py \
             scripts/harness/mission.py \
             scripts/harness/continuation.py \
+            scripts/harness/agent_execution_policy.py \
             scripts/harness/git_authority.py \
             scripts/harness/contracts.py \
             scripts/harness/cli.py
@@ -77,6 +78,7 @@ jobs:
               Path("config/control/harness/scheduler-policy.v1.json"),
               Path("config/control/harness/v0-product-train-policy.v1.json"),
               Path("config/control/harness/continuation-policy.v1.json"),
+              Path("config/control/harness/agent-execution-profiles.v1.json"),
               Path("config/control/harness/work-order.schema.v1.json"),
               Path("config/control/harness/event.schema.v1.json"),
               Path("config/control/harness/project-epoch.schema.v1.json"),
@@ -100,8 +102,11 @@ jobs:
           print("CANDIDATE REGISTRY GENERATION OK: 80")
           PY
 
-      - name: Run Harness checkpoint-session regression
-        run: python3 -m unittest tests.harness.test_harness_checkpoint_session
+      - name: Run Harness checkpoint-session and agent-execution regression
+        run: |
+          python3 -m unittest \
+            tests.harness.test_harness_checkpoint_session \
+            tests.harness.test_agent_execution_policy
 
       - name: Run architecture and ownership passport compatibility regression
         run: |

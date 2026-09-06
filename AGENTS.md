@@ -28,6 +28,8 @@ GIT IS DURABLE MEMORY; CHAT IS NOT
 IMPLEMENTER CANNOT SELF-ACCEPT
 CHECKPOINT IS THE UNIT OF CONTROL
 CHECKPOINT MISSION IS THE USER SESSION UNIT
+CHECKPOINT MISSION SURVIVES EXECUTION-SLICE YIELDS
+EXECUTION-SLICE EXIT IS NOT MISSION EXIT
 WORK ORDER IS THE EXECUTION UNIT
 ROLE IS THE ISOLATION UNIT
 ROLE BOUNDARY IS NOT A MISSION BOUNDARY
@@ -46,20 +48,21 @@ Scoped instructions may add local conventions, traps, launch commands and tests,
 For every checkpoint mission:
 
 1. Resolve the active checkpoint and exact Project Epoch / base SHA from machine-owned state; do not use chat as authority.
-2. Keep one parent user-visible session bound to that checkpoint until canonical acceptance, a genuine `WAITING_HUMAN`, or a proven non-automatable hard block.
+2. Keep one durable parent checkpoint mission bound to that checkpoint until canonical acceptance, a genuine `WAITING_HUMAN`, or a proven non-automatable hard block. A model execution slice may end earlier only at a durable boundary authorized by the agent-execution profile pilot; that does not close or replace the parent mission.
 3. Use bounded Work Orders for execution and isolated role contexts for Implementer / Reviewer / Verifier / Integrator / Director responsibilities.
 4. Preserve separation of duties. A fresh Reviewer/Verifier role may end after its durable handoff, but the parent checkpoint mission remains open.
-5. Continue `PLANNED`, `DISPATCHED`, `IN_PROGRESS`, implementer-owned validation and automatable `FIX_REQUIRED` work instead of reporting an unfinished stop.
+5. Continue `PLANNED`, `DISPATCHED`, `IN_PROGRESS`, implementer-owned validation and automatable `FIX_REQUIRED` work instead of reporting an unfinished stop, unless the active execution profile explicitly recommends a restart-safe bounded yield after durable state has been persisted.
 6. On `FIX_REQUIRED`, follow Repair Doctrine, run focused validation and required regressions, then route a fresh exact-head review/verification as required.
 7. Persist every role result to the declared durable evidence sink. A chat-only PASS/FAIL does not complete a handoff.
-8. Run `CONTROL_DEVELOPMENT.ps1 -Drive` after every durable role result. The returned `next_actor` / `next_action` is the next child role inside the same parent mission.
-9. Before ending an isolated role, `CONTROL_DEVELOPMENT.ps1 -CloseRole` must authorize it. Exit code `7` means continue the role.
-10. Before the final user response, `CONTROL_DEVELOPMENT.ps1 -Close` (alias of `-CloseMission`) must authorize mission exit. Exit code `8` means the checkpoint mission is still open and must continue.
+8. Run `CONTROL_DEVELOPMENT.ps1 -Drive` after every durable role result. The returned `next_actor` / `next_action` remains canonical. When the agent-execution profile pilot is active, also use `CONTROL_DEVELOPMENT_AGENT.ps1 -Drive -Profile <profile>` to decide whether the current model execution slice should continue or yield; the profile layer may not alter the canonical next actor/action or mission truth.
+9. Before ending an isolated role, `CONTROL_DEVELOPMENT.ps1 -CloseRole` must authorize it. Exit code `7` means continue the role unless the profile layer authorizes a same-role restart-safe execution-slice yield from already durable state.
+10. Before declaring the checkpoint mission complete, `CONTROL_DEVELOPMENT.ps1 -Close` (alias of `-CloseMission`) must authorize mission exit. Exit code `8` means the checkpoint mission remains open. If the mission remains open but the profile layer recommends a bounded yield, use `CONTROL_DEVELOPMENT_AGENT.ps1 -Yield -Profile <profile>` and report `MISSION_OPEN / RESUME_REQUIRED`; never report checkpoint completion.
 11. Run PC0 and directional audit before checkpoint proposal/acceptance as required by the Work Order.
 12. Routine Git operations inside the active checkpoint mission and bounded Work Order are already authorized through the default `A3_INTEGRATE_CANDIDATE` ceiling. Do not re-ask for permission to create a feature/control/repair branch, stage scoped paths, commit, non-force push, post durable evidence, open/update a draft PR, or request independent review.
 13. A Director may create and durably publish a bounded repair continuation Work Order inside the same checkpoint mission without a new human approval when scope/authority is not expanded.
 14. Ask a human only for an actual declared decision/approval such as merge, force-push/history rewrite, direct push to canonical main, architecture/foundation authority change, or another explicit Human Attention gate; never use the human to copy results between routine roles.
 15. If an external platform/tool refuses a Git write until it receives its own confirmation, classify that as `EXTERNAL_TOOL_AUTH_REQUIRED`, not as a Harness human gate.
+16. Do not keep a model execution slice alive only to poll an external asynchronous dependency. After one real observation of a `queued` / `in_progress` verifier, self-hosted runner wait, or equivalent external dependency for the current exact HEAD, persist the exact dependency reference and use the agent profile controller with `-ExternalPending`. Do not treat that yield as PASS, verification completion, or mission completion.
 
 ## Checkpoint-session control surface
 
@@ -73,6 +76,60 @@ For every checkpoint mission:
 ```
 
 `-Drive` resolves the current product checkpoint from scheduler policy unless `-Checkpoint` or exact diagnostic `-Execution` is supplied. `-Close` is intentionally the mission gate, not the current-role gate.
+
+## Agent execution profile pilot
+
+The profile layer is deliberately separate from canonical Harness mission semantics. It controls execution-slice length only.
+
+```text
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Drive -Profile ADAPTIVE
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Resume -Profile ADAPTIVE
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Yield -Profile ADAPTIVE
+```
+
+Current operational mapping for the pilot:
+
+```text
+GPT-5.6 Sol / Very High -> BOUNDED_DEEP_REASONING
+Astra                   -> LONG_HORIZON_CONTINUOUS
+unknown / mixed         -> ADAPTIVE
+```
+
+This mapping is operational and reversible, not project truth. Change it when observed agent behavior changes.
+
+For Sol / Very High, prefer:
+
+```text
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Drive -Profile BOUNDED_DEEP_REASONING
+```
+
+For Astra, prefer:
+
+```text
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Drive -Profile LONG_HORIZON_CONTINUOUS
+```
+
+If an external verifier was actually observed as pending for the current exact subject, use:
+
+```text
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Yield -Profile BOUNDED_DEEP_REASONING -ExternalPending -ExternalRef "github-actions:<run-id>"
+```
+
+or the active profile name. `-ExternalPending` never proves a predicate; it only prevents useless polling from holding one reasoning session open.
+
+After a bounded yield, the next model execution must start with:
+
+```text
+.\CONTROL_DEVELOPMENT_AGENT.ps1 -Resume -Profile <same-profile>
+```
+
+A normal resume requires useful progress on the returned `next.actor` / `next.action` before another non-external yield is recommended. This prevents a resume/yield bounce loop.
+
+Detailed pilot contract and rollback procedure:
+
+```text
+docs/control/HARNESS_AGENT_EXECUTION_PROFILES_RU.md
+```
 
 ## Default Git authority
 
