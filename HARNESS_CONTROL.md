@@ -22,6 +22,7 @@ config/control/harness/checkpoint-catalog.v1.json
 config/control/harness/harness-policy.v1.json
 config/control/harness/scheduler-policy.v1.json
 config/control/harness/continuation-policy.v1.json
+config/control/harness/execution-resources.v1.json
 config/control/harness/work-order.schema.v1.json
 config/control/harness/event.schema.v1.json
 config/control/harness/project-epoch.schema.v1.json
@@ -38,6 +39,7 @@ config/control/harness/human-attention.schema.v1.json
 ROADMAP CHECKPOINT = user-visible mission/session unit
 WORK ORDER          = bounded execution unit
 ROLE                = isolated responsibility unit
+EXECUTION RESOURCE  = where bounded validation executes
 ATTEMPT             = repair/retry unit
 COMMIT               = recovery unit
 ```
@@ -81,6 +83,57 @@ EPOCH_INVALIDATED
 WORK_ORDER_CANCELLED
 ```
 
+## Execution resources
+
+Harness отделяет ответственность роли от среды исполнения:
+
+```text
+WHO validates?   -> VERIFIER role
+WHERE validates? -> execution resource
+WHAT validates?  -> exact Work Order subject HEAD
+```
+
+Текущий heavyweight exact resource:
+
+```text
+DWS_LINUX_EXACT
+provider: GITHUB_ACTIONS_SELF_HOSTED
+capacity: 1
+capabilities: Linux X64 + Godot 4.7.1 double + cold import + deterministic replay + exact-head evidence
+```
+
+Имя/ID конкретного физического runner не являются canonical Git truth. Они читаются из live GitHub operational state. Harness хранит только resource class и selector.
+
+Trust contract `DWS_LINUX_EXACT`:
+
+```text
+trusted actor: rootfabric
+trusted head repository: rootfabric/distributed-world-simulator
+allowed events: push, workflow_dispatch
+pull_request execution: forbidden
+external fork execution: forbidden
+GitHub contents permission: read
+```
+
+GitHub Actions остаётся только validation/evidence plane. Resource нельзя использовать для source commit/ref publication, Git transport fallback или обхода Git authorization.
+
+`CONTROL_DEVELOPMENT.ps1 -Drive` возвращает план ресурса в:
+
+```text
+next.execution_resource
+```
+
+Если `required=true`, агент обязан использовать объявленный resource и его trust/dispatch/queue policy. Если runner недоступен, implementation и local implementer validation продолжаются; блокироваться может только predicate, которому действительно нужен independent exact verifier.
+
+Для exact-head queue действует:
+
+```text
+capacity = 1
+queued/in-progress != PASS
+subject HEAD changed -> older queued exact job SUPERSEDED -> CANCEL
+```
+
+Это предотвращает накопление устаревшей очереди на единственном heavyweight runner.
 
 ## Default Git authority
 
@@ -121,6 +174,7 @@ handoff_class
 next_actor
 next_action
 resume_condition
+next.execution_resource
 role_exit_allowed
 mission_exit_allowed
 session_exit_allowed
@@ -138,6 +192,8 @@ Drive
   ↓
 execute next_actor / next_action in isolated child role
   ↓
+if required, use next.execution_resource
+  ↓
 persist durable result/evidence
   ↓
 Drive again
@@ -147,7 +203,7 @@ repeat across role boundaries
 MISSION_COMPLETE | HUMAN_DECISION_REQUIRED | HARD_BLOCKED
 ```
 
-Fresh Reviewer/Verifier всё ещё обязательны там, где это требует risk policy. Их независимость не отменяется; устраняется только необходимость человеку вручную переносить результат в новую пользовательскую сессию.
+Fresh Reviewer/Verifier всё ещё обязательны там, где это требует risk policy. Их независимость не отменяется; наличие отдельного runner само по себе не превращает Implementer в независимого Verifier.
 
 ## Close gates
 
