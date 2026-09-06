@@ -38,7 +38,12 @@ jobs:
         run: |
           set -euo pipefail
           godot="$CONFIGURED"
-          if [[ -z "$godot" ]]; then godot="$FALLBACK"; fi
+          if [[ -z "$godot" ]]; then
+            case "$FALLBACK" in
+              *.exe|[A-Za-z]:\\*) godot="" ;;
+              *) godot="$FALLBACK" ;;
+            esac
+          fi
           if [[ -z "$godot" ]]; then godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"; fi
           test -x "$godot"
           version="$("$godot" --version | head -n1 | tr -d '\r')"
