@@ -27,12 +27,55 @@ source locations, surface bindings и композиция рецептов с �
 
 - [Решение и границы систем](architecture/ADR-WP-001-SURFACE-LIBRARY-RU.md).
 - [Дорожная карта и измеримые конечные состояния](WORLD_PACKS_ROADMAP.md).
+- [Параллельный agent protocol](PARALLEL_AGENT_PROTOCOL_RU.md).
+- [Пять параллельных workstreams](PARALLEL_WORKSTREAMS_RU.md).
 - [Внешний research, лицензии и кандидаты ресурсов](RESEARCH_AND_SOURCES_RU.md).
 - [Evidence текущего аудита](evidence/WP1_0_ARCHITECTURE_AUDIT_2026-09-05.md).
 - [Историческое WP0.10 evidence](evidence/WP0_10_GALLERY_HARNESS_2026-09-04.md).
 
 WP0.10 evidence сообщает о MCP graphical captures 2026-09-04; реальные draw-call
 замеры всё ещё pending. Исторические PASS не являются новым runtime-прогоном аудита.
+
+## Parallel controller
+
+Для параллельной разработки используется branch-local helper, который не заменяет
+main-owned Project Control/Harness:
+
+```text
+control/world-packs-parallel-r1
+```
+
+Он отслеживает пять независимых child branches:
+
+```text
+WP-ASSET1
+WP-CONTENT1
+WP-SURFACE1
+WP-VIS1
+WP-TOOLS1
+```
+
+Быстрый dashboard:
+
+```powershell
+.\RUN_WORLD_PACKS_PARALLEL_CONTROL.ps1 -Action status
+.\RUN_WORLD_PACKS_PARALLEL_CONTROL.ps1 -Action next
+.\RUN_WORLD_PACKS_PARALLEL_CONTROL.ps1 -Action instructions -Track WP-ASSET1
+```
+
+Linux:
+
+```bash
+./RUN_WORLD_PACKS_PARALLEL_CONTROL.sh status
+./RUN_WORLD_PACKS_PARALLEL_CONTROL.sh next
+./RUN_WORLD_PACKS_PARALLEL_CONTROL.sh instructions WP-ASSET1
+```
+
+Source of truth для allocation/milestones/allowed paths:
+`config/world_packs/parallel/controller.v1.json`.
+Каждый worker фиксирует progress/blocker/tests в собственном
+`config/world_packs/parallel/workstreams/<TRACK>.v1.json` и публикует обычные
+non-force Git commits. Chat не считается durable progress.
 
 ## Проверка нового metadata-контракта
 
