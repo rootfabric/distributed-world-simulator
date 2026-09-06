@@ -27,6 +27,7 @@ def validate_execution_resources(resources: dict[str, Any]) -> None:
         "external_fork_execution_on_self_hosted_is_forbidden",
         "local_implementer_validation_remains_available",
         "exact_head_supersedes_queued_predecessor",
+        "github_hosted_lightweight_control_is_allowed",
     )
     if not isinstance(principles, dict) or any(
         principles.get(name) is not True for name in required_principles
@@ -93,6 +94,25 @@ def validate_execution_resources(resources: dict[str, Any]) -> None:
         if dispatch.get(name) is not False:
             raise ContractValidationError(f"EXECUTION_RESOURCE_DISPATCH_GUARD_INVALID:{name}")
 
+    workflow_policy = resources.get("workflow_policy")
+    if not isinstance(workflow_policy, dict):
+        raise ContractValidationError("EXECUTION_RESOURCE_WORKFLOW_POLICY_INVALID")
+    if workflow_policy.get("github_hosted_lightweight_control_allowed") is not True:
+        raise ContractValidationError("EXECUTION_RESOURCE_HOSTED_CONTROL_POLICY_INVALID")
+    if workflow_policy.get("declared_exact_self_hosted_pull_request_execution") is not False:
+        raise ContractValidationError("EXECUTION_RESOURCE_DECLARED_PR_POLICY_INVALID")
+    if workflow_policy.get("legacy_self_hosted_pull_request_requires_trusted_internal_guard") is not True:
+        raise ContractValidationError("EXECUTION_RESOURCE_LEGACY_PR_GUARD_POLICY_INVALID")
+    required_guard_terms = workflow_policy.get("required_legacy_pull_request_guard_terms")
+    expected_guard_terms = [
+        "github.actor == 'rootfabric'",
+        "github.triggering_actor == 'rootfabric'",
+        "github.event.pull_request.user.login == 'rootfabric'",
+        "github.event.pull_request.head.repo.full_name == github.repository",
+    ]
+    if required_guard_terms != expected_guard_terms:
+        raise ContractValidationError("EXECUTION_RESOURCE_LEGACY_PR_GUARD_TERMS_INVALID")
+
     queue = resources.get("queue_policy")
     if not isinstance(queue, dict) or queue.get("max_dispatched_heavyweight_jobs_per_resource") != 1:
         raise ContractValidationError("EXECUTION_RESOURCE_QUEUE_CAPACITY_INVALID")
@@ -158,6 +178,7 @@ def build_execution_resource_plan(
                 "trust": dict(resource.get("trust", {})),
                 "github_permissions": dict(resource.get("github_permissions", {})),
                 "dispatch_policy": dict(resource.get("dispatch_policy", {})),
+                "workflow_policy": dict(resources.get("workflow_policy", {})),
                 "queue_policy": dict(resources.get("queue_policy", {})),
                 "fallback_policy": dict(resources.get("fallback_policy", {})),
             }
