@@ -21,15 +21,15 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 864f10b6b6f4e4babb209b289c42267c61edcdd7
+          ref: a15558ad44de0a0333e18b9d3785fd9691bc13f4
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact source identity and additive A5 fence
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "864f10b6b6f4e4babb209b289c42267c61edcdd7"
-          test "$(git rev-parse HEAD^{tree})" = "c1892f46dea42c292486b639850bd0468b72bcee"
+          test "$(git rev-parse HEAD)" = "a15558ad44de0a0333e18b9d3785fd9691bc13f4"
+          test "$(git rev-parse HEAD^{tree})" = "c6de6bdb1b0da0fe42012d98ee6051dc0e93e13b"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -79,7 +79,7 @@ jobs:
           ! grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-cold.log
           sha256sum a5-cold.log
 
-      - name: Run A5 exact twice
+      - name: Run A5 core exact twice
         env:
           GODOT: ${{ steps.godot.outputs.path }}
           GODOT_SILENCE_ROOT_WARNING: "1"
@@ -92,6 +92,20 @@ jobs:
           done
           cmp a5-exact-1.log a5-exact-2.log
           sha256sum a5-exact-1.log a5-exact-2.log
+
+      - name: Run A5 reviewer repairs twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd > "a5-repairs-$n.log" 2>&1
+            grep -F "EVO_ARCH2_A5_REPAIRS assertions=8 failed=0" "a5-repairs-$n.log"
+            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"
+          done
+          cmp a5-repairs-1.log a5-repairs-2.log
+          sha256sum a5-repairs-1.log a5-repairs-2.log
 
       - name: Run accepted A4 regression
         env:
@@ -141,6 +155,6 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "864f10b6b6f4e4babb209b289c42267c61edcdd7"
+          test "$(git rev-parse HEAD)" = "a15558ad44de0a0333e18b9d3785fd9691bc13f4"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
