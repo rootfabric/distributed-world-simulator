@@ -22,10 +22,15 @@ class ExecutionResourceContractTests(unittest.TestCase):
         exact = self.resources["resources"]["DWS_LINUX_EXACT"]
         self.assertEqual("GITHUB_ACTIONS_SELF_HOSTED", exact["provider"])
         self.assertEqual(1, exact["capacity"])
+        self.assertEqual(["self-hosted", "Linux", "X64"], exact["runner_selector"])
         self.assertTrue(
             {"self-hosted", "Linux", "X64", "dws-linux", "dws-godot-double"}.issubset(
-                set(exact["runner_selector"])
+                set(exact["preferred_runner_selector_after_live_label_confirmation"])
             )
+        )
+        self.assertEqual(
+            "LIVE_RUNNER_CUSTOM_LABELS_CONFIRMED",
+            exact["selector_upgrade_condition"],
         )
         text = json.dumps(self.resources, sort_keys=True)
         self.assertNotIn("dws-linux-outenemy", text)
@@ -51,6 +56,7 @@ class ExecutionResourceContractTests(unittest.TestCase):
         self.assertTrue(plan["resource_is_not_role"])
         self.assertTrue(plan["independent_verifier_environment"])
         self.assertEqual("a" * 40, plan["subject_head"])
+        self.assertEqual(["self-hosted", "Linux", "X64"], plan["runner_selector"])
         self.assertEqual({"contents": "read"}, plan["github_permissions"])
 
     def test_implementer_stays_local_and_runner_unavailability_does_not_block_implementation(self) -> None:
