@@ -16,6 +16,12 @@
   ],
   "blockers": [],
   "next_action": "Child PR #560 (work/world-packs-asset1-safe-fetch-r1 -> control/world-packs-parallel-r1) is OPEN; awaiting independent security re-review of exact tested_head recorded in machine fields; worker does not self-merge.",
+  "review_verdict": "PASS",
+  "reviewed_head": "32dbd13ad299b0b5b2ede5e3622ef801eba6b368",
+  "reviewed_tested_head": "2b531beb86fb999f5c4e2019a319b306ac796c66",
+  "reviewer_evidence": [
+    "Initial R2 security review @ e7ac3e0a: FAIL (all four fixes missing). Repair: 2b531beb + state 32dbd13a per WP-ASSET1_REPAIR_MAP_R2.md. Independent security re-review @ 32dbd13a: VERDICT PASS — reviewer-authored adversarial fixtures 66/66 passed: FIX1 verified (rebind->127.0.0.1 rejected with zero connections; dial goes to pinned public IP literal; server_hostname/SNI/cert verification bound to original host; fail-closed double-resolution; no urllib re-resolution path), FIX2 verified (gates cannot be bypassed; zero transport invocations on every failing-gate case incl. raw FetchContract paths; offline cache hit), FIX3 verified (typed errors both layers for :bad and :99999), FIX4 verified (zip+tar case collisions, duplicate normalized paths, FIFO/socket/chr/blk/link refused before extraction with empty target dirs; pre-existing files untouched; clean archives still extract). Worker suite 127 passed; Linux full 196/196 independently reproduced. Residual R1-R5 LOW/INFO notes recorded, non-blocking."
+  ],
   "last_checkpoint_head": "2b531beb86fb999f5c4e2019a319b306ac796c66",
   "tested_head": "2b531beb86fb999f5c4e2019a319b306ac796c66",
   "validation": [
@@ -100,3 +106,4 @@
     "Old review history preserved: FAIL verdict @ e7ac3e0a stands in the record; this state documents the repair and requests fresh exact-head re-review."
   ]
 }
+
