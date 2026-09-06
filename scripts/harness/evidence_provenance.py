@@ -176,13 +176,44 @@ def _current_bundle_contract_paths(root: Path) -> tuple[str, ...]:
         relative = policy.get(key)
         _require(_text(relative), f"CURRENT_BUNDLE_PATH_REQUIRED:{key}")
         paths.append(_path(relative))
-    # Preserve order while rejecting an accidental alias that would hide a contract.
     _require(len(paths) == len(set(paths)), "CURRENT_BUNDLE_PATHS_NOT_UNIQUE")
     return tuple(paths)
 
 
+def _current_execution_json_paths(root: Path, epoch_id: str) -> tuple[str, ...]:
+    """Return the exact JSON set under a current execution, committed and worktree-visible.
+
+    build_state() and load_guard_context() consume several execution-local JSON surfaces
+    directly from the worktree (transition table, Work Orders, events, reviews, evidence,
+    repairs, audits and human-attention ledgers). For generation 81+ none of those bytes,
+    nor the membership of that JSON set, may differ from HEAD before reduction.
+    """
+    _require(re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is not None,
+             "REVIEW_EPOCH_IDENTITY_REQUIRED")
+    prefix = f"config/control/harness/executions/{epoch_id}"
+    base = root / prefix
+    _require(base.is_dir() and not base.is_symlink(), "EXECUTION_AUTHORITY_DIRECTORY_REQUIRED")
+
+    committed_raw = _git(root, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", prefix)
+    committed = {
+        item.decode("utf-8") for item in committed_raw.split(b"\0")
+        if item and item.decode("utf-8").endswith(".json")
+    }
+    worktree: set[str] = set()
+    for candidate in base.rglob("*.json"):
+        try:
+            relative = candidate.relative_to(root).as_posix()
+        except ValueError as exc:
+            raise ContractValidationError("EXECUTION_AUTHORITY_PATH_ESCAPES_REPOSITORY") from exc
+        worktree.add(_path(relative))
+
+    _require(bool(committed), "EXECUTION_AUTHORITY_JSON_REQUIRED")
+    _require(committed == worktree, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH")
+    return tuple(sorted(committed))
+
+
 def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
-    """A dirty generation downgrade or authority-contract edit cannot select legacy rules."""
+    """A dirty generation downgrade or authority input edit cannot select legacy rules."""
     registry_path = "config/control/project-program-registry.v1.json"
     registry = _decode(_git(root, "show", f"HEAD:{registry_path}"))
     pinned_generation = registry.get("registry_generation")
@@ -195,11 +226,16 @@ def committed_enforcement_generation(root: Path, epoch: dict[str, Any]) -> int:
         for relative in _current_bundle_contract_paths(root):
             committed_bytes(root, relative, immutable=False)
         epoch_id = epoch.get("epoch_id")
-        _require(_text(epoch_id) and "/" not in epoch_id and "\\" not in epoch_id,
+        _require(_text(epoch_id) and re.fullmatch(r"[A-Za-z0-9._-]+", epoch_id) is not None,
                  "REVIEW_EPOCH_IDENTITY_REQUIRED")
         relative = f"config/control/harness/executions/{epoch_id}/project-epoch.v1.json"
         pinned_epoch = _decode(committed_bytes(root, relative, immutable=False))
         _require(pinned_epoch == epoch, "REVIEW_COMMITTED_EPOCH_MISMATCH")
+        # Fence every execution-local JSON byte and the exact JSON membership before
+        # reducer/continuation authority. This also closes assume-unchanged, deletion
+        # and untracked-injection bypasses for transition/work-order/event/evidence data.
+        for relative in _current_execution_json_paths(root, epoch_id):
+            committed_bytes(root, relative, immutable=False)
     return generation
 
 

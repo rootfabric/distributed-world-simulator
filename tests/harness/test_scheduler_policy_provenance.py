@@ -50,9 +50,13 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
             "eligible_checkpoints": ["H0_1_CLOSED_LOOP_C22_PILOT"],
             "status": "ACTIVE",
         }
-        (self.execution / "project-epoch.v1.json").write_text(
-            json.dumps(self.epoch, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+        self._write_json(self.execution / "project-epoch.v1.json", self.epoch)
+        self._write_json(
+            self.execution / "transition-table.v1.json",
+            {"schema": "distributed_world_simulator.harness_transition_table.v1"},
         )
+        for relative in self._fixture_execution_paths():
+            self._write_json(self.execution / relative, {"schema": "fixture.authority.v1"})
         self._git("add", ".")
         self._git("commit", "-qm", "fixture committed authority state")
 
@@ -61,6 +65,27 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
             ["git", *args], cwd=self.root, text=True, encoding="utf-8",
             capture_output=True, check=True, timeout=30,
         ).stdout.strip()
+
+    @staticmethod
+    def _write_json(path: Path, value: dict) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+
+    @staticmethod
+    def _fixture_execution_paths() -> tuple[str, ...]:
+        return (
+            "work-orders/WO-001.v1.json",
+            "events/WO-001/001.v1.json",
+            "repairs/REPAIR-001.v1.json",
+            "reviews/REVIEW-001.v1.json",
+            "evidence/EVIDENCE-001.v1.json",
+            "human-attention/HUMAN-001.v1.json",
+            "audits/AUDIT-001.v1.json",
+            "event-ledger-reconciliation.v1.json",
+            "review-ledger-reconciliation.v1.json",
+            "evidence-ledger-reconciliation.v1.json",
+            "human-attention-ledger-reconciliation.v1.json",
+        )
 
     def _bundle_paths(self) -> list[str]:
         policy = json.loads(
@@ -86,17 +111,24 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
             *(policy[key] for key in keys),
         ]
 
+    def _execution_paths(self) -> list[str]:
+        prefix = self.execution.relative_to(self.root).as_posix()
+        return sorted(
+            path.relative_to(self.root).as_posix()
+            for path in self.execution.rglob("*.json")
+        )
+
     def _dirty_scheduler(self) -> None:
         path = self.root / "config/control/harness/scheduler-policy.v1.json"
         scheduler = json.loads(path.read_text(encoding="utf-8"))
         scheduler.pop("pre_h0_3_runtime_mutation_lease", None)
-        path.write_text(json.dumps(scheduler, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        self._write_json(path, scheduler)
 
     def _dirty_repair_doctrine(self) -> None:
         path = self.root / "config/control/harness/repair-doctrine.v1.json"
         doctrine = json.loads(path.read_text(encoding="utf-8"))
         doctrine["repair_map_fields"] = []
-        path.write_text(json.dumps(doctrine, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        self._write_json(path, doctrine)
 
     def test_dirty_scheduler_policy_is_rejected_by_generation_fence(self) -> None:
         self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
@@ -144,6 +176,47 @@ class CurrentBundlePolicyProvenanceTests(unittest.TestCase):
                     committed_enforcement_generation(self.root, self.epoch)
                 self._git("checkout", "--", relative)
                 self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+
+    def test_dirty_transition_table_is_rejected_before_reducer(self) -> None:
+        path = self.execution / "transition-table.v1.json"
+        value = json.loads(path.read_text(encoding="utf-8"))
+        value["allowed_state_transitions"] = {"VERIFIED": ["CHECKPOINT_PROPOSED"]}
+        self._write_json(path, value)
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            load_guard_context(self.root, self.execution)
+
+    def test_assume_unchanged_cannot_hide_dirty_transition_table(self) -> None:
+        relative = (self.execution / "transition-table.v1.json").relative_to(self.root).as_posix()
+        self._git("update-index", "--assume-unchanged", relative)
+        target = self.root / relative
+        target.write_bytes(target.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+            committed_enforcement_generation(self.root, self.epoch)
+
+    def test_every_execution_local_json_is_worktree_fenced(self) -> None:
+        paths = self._execution_paths()
+        self.assertGreaterEqual(len(paths), 13)
+        self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+        for relative in paths:
+            with self.subTest(path=relative):
+                target = self.root / relative
+                target.write_bytes(target.read_bytes() + b"\n")
+                with self.assertRaisesRegex(ContractValidationError, "PROVENANCE_WORKTREE_MODIFIED"):
+                    committed_enforcement_generation(self.root, self.epoch)
+                self._git("checkout", "--", relative)
+                self.assertEqual(81, committed_enforcement_generation(self.root, self.epoch))
+
+    def test_execution_json_membership_rejects_untracked_injection(self) -> None:
+        injected = self.execution / "events/WO-001/999-untracked.v1.json"
+        self._write_json(injected, {"schema": "fixture.injected.v1"})
+        with self.assertRaisesRegex(ContractValidationError, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH"):
+            committed_enforcement_generation(self.root, self.epoch)
+
+    def test_execution_json_membership_rejects_deleted_tracked_input(self) -> None:
+        relative = (self.execution / "transition-table.v1.json").relative_to(self.root).as_posix()
+        (self.root / relative).unlink()
+        with self.assertRaisesRegex(ContractValidationError, "EXECUTION_AUTHORITY_JSON_SET_MISMATCH"):
+            committed_enforcement_generation(self.root, self.epoch)
 
 
 if __name__ == "__main__":
