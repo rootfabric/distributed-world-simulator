@@ -11,6 +11,7 @@ PROJECT_CONTROL.md
 HARNESS_CONTROL.md
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+docs/control/HARNESS_EXECUTION_RESOURCE_PILOT_RU.md
 config/control/project-program-registry.v1.json
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
