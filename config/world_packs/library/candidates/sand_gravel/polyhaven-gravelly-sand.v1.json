@@ -1,0 +1,49 @@
+{
+  "schema": "dws.world_packs.candidate_source.v1",
+  "candidate_id": "candidate/polyhaven/gravelly-sand",
+  "family": "sand_gravel",
+  "review_status": "discovery",
+  "rejection_reason": null,
+  "upstream": {
+    "site": "polyhaven",
+    "page_url": "https://polyhaven.com/a/gravelly_sand",
+    "asset_identity": "gravelly_sand",
+    "author": "Dario Barresi",
+    "author_observed_on": "https://polyhaven.com/a/gravelly_sand"
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "applies_to": "downloadable_assets",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://polyhaven.com/license",
+      "verified_at_utc": "2026-09-05"
+    },
+    "notes": "CC0 covers downloadable assets; site previews are separate website content."
+  },
+  "observed": {
+    "sha256": null,
+    "expected_bytes": null,
+    "resolution_variant": null,
+    "pbr_maps_observed": ["diffuse_albedo", "ao", "normal_gl", "normal_dx", "roughness", "displacement", "arm"],
+    "observation": "Asset page observed 2026-09-05 (see docs/world_packs/RESEARCH_AND_SOURCES_RU.md): 1K-16K downloads; page lists diffuse, AO, normal GL/DX, roughness, displacement, ARM; stated width 2.5 m."
+  },
+  "provenance": {
+    "class": "photogrammetry",
+    "measured_reference": false,
+    "measured_evidence_url": null,
+    "claims": [
+      "1K-16K resolution downloads listed on asset page",
+      "page lists diffuse/AO/normal GL+DX/roughness/displacement/ARM maps",
+      "stated real-world width 2.5 m"
+    ]
+  },
+  "intended_use": {
+    "surface_families": ["sand"],
+    "fidelity_tier": "standard",
+    "notes": "Gravel/sand look; possible artistic regolith analogue only - explicitly NOT a lunar sample and NOT measured regolith."
+  },
+  "recorded_at_utc": "2026-09-05",
+  "recorded_by": "WP-CONTENT1"
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "dws.world_packs.candidate_source.v1",
+  "candidate_id": "candidate/polyhaven/rock-face-03",
+  "family": "rock_cliff",
+  "review_status": "discovery",
+  "rejection_reason": null,
+  "upstream": {
+    "site": "polyhaven",
+    "page_url": "https://polyhaven.com/a/rock_face_03",
+    "asset_identity": "rock_face_03",
+    "author": null,
+    "author_observed_on": null
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "applies_to": "downloadable_assets",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://polyhaven.com/license",
+      "verified_at_utc": "2026-09-05"
+    },
+    "notes": "CC0 covers downloadable assets; author name not observed on the asset page during discovery, so author stays null instead of being guessed."
+  },
+  "observed": {
+    "sha256": null,
+    "expected_bytes": null,
+    "resolution_variant": null,
+    "pbr_maps_observed": [],
+    "observation": "Asset page observed 2026-09-05 (see docs/world_packs/RESEARCH_AND_SOURCES_RU.md): rock/cliff PBR candidate with downloads up to 16K. Exact variant/channel list to be recorded at onboarding."
+  },
+  "provenance": {
+    "class": "photogrammetry",
+    "measured_reference": false,
+    "measured_evidence_url": null,
+    "claims": [
+      "rock/cliff PBR texture listed on asset page",
+      "downloads up to 16K listed on asset page"
+    ]
+  },
+  "intended_use": {
+    "surface_families": ["fractured-rock"],
+    "fidelity_tier": "standard",
+    "notes": "Additional rock variation candidate; no mineral composition claim."
+  },
+  "recorded_at_utc": "2026-09-05",
+  "recorded_by": "WP-CONTENT1"
+}
