@@ -4,7 +4,7 @@
   "controller_branch": "control/world-packs-parallel-r1",
   "execution_base_branch": "feature/world-packs1-surface-library-contract-r1",
   "execution_base_sha": "2bb97961a21bd8e56b07430a48b51f20cebabb5a",
-  "main_baseline_sha": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "main_baseline_sha": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
   "remote": "origin",
   "policy": {
     "max_parallel_implementation_tracks": 5,
@@ -56,11 +56,11 @@
     {
       "id": "WP1_0_INDEPENDENT_REVIEW",
       "source": "PR#553",
-      "status": "PENDING",
+      "status": "PASS",
       "blocks": [
         "WP1_2_FOUNDATION_INTEGRATION"
       ],
-      "note": "Parallel child work may proceed from the exact candidate base, but integration must revalidate against the reviewed WP1.0 contract."
+      "note": "Independent R2 review of 2bb97961: PASS on every dimension (identity id@version+SHA-256, deterministic lock, real Matter IDs, presentation-only, no physical catalog leakage, fail-closed conflicts, WP0 compat, no Y-up, no hidden network, license model, owner boundaries). Final symlink-dimension clean PASS obtained on Linux (Ubuntu WSL): 64/64 library_contract tests, --verify-fixtures PASS, compileall clean. Windows WinError 1314 symlink limitation recorded as environmental."
     }
   ],
   "tracks": [
