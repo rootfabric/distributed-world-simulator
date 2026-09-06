@@ -54,9 +54,15 @@ def validate_execution_resources(resources: dict[str, Any]) -> None:
         raise ContractValidationError("EXECUTION_RESOURCE_CAPACITY_INVALID")
 
     labels = exact.get("runner_selector")
-    required_labels = {"self-hosted", "Linux", "X64", "dws-linux", "dws-godot-double"}
+    required_labels = {"self-hosted", "Linux", "X64"}
     if not isinstance(labels, list) or not required_labels.issubset(set(labels)):
         raise ContractValidationError("EXECUTION_RESOURCE_LABELS_INVALID")
+    preferred = exact.get("preferred_runner_selector_after_live_label_confirmation")
+    preferred_labels = required_labels | {"dws-linux", "dws-godot-double"}
+    if not isinstance(preferred, list) or not preferred_labels.issubset(set(preferred)):
+        raise ContractValidationError("EXECUTION_RESOURCE_PREFERRED_LABELS_INVALID")
+    if exact.get("selector_upgrade_condition") != "LIVE_RUNNER_CUSTOM_LABELS_CONFIRMED":
+        raise ContractValidationError("EXECUTION_RESOURCE_SELECTOR_UPGRADE_INVALID")
 
     trust = exact.get("trust")
     if not isinstance(trust, dict):
@@ -145,6 +151,10 @@ def build_execution_resource_plan(
             {
                 "repository": resource.get("repository"),
                 "runner_selector": list(resource.get("runner_selector", [])),
+                "preferred_runner_selector_after_live_label_confirmation": list(
+                    resource.get("preferred_runner_selector_after_live_label_confirmation", [])
+                ),
+                "selector_upgrade_condition": resource.get("selector_upgrade_condition"),
                 "trust": dict(resource.get("trust", {})),
                 "github_permissions": dict(resource.get("github_permissions", {})),
                 "dispatch_policy": dict(resource.get("dispatch_policy", {})),
