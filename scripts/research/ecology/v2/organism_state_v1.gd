@@ -61,7 +61,7 @@ static func validate(s: Variant, g: Dictionary) -> String:
 	for a in s.attachments:
 		if not C.keys(a, ["module", "support_id", "environment_hash"]) or not ids.has(a.module) or ids[a.module].role != "attachment" or attached.has(a.module):
 			return "ATTACHMENT_REFERENCE"
-		if not C.identifier(a.support_id) or not a.environment_hash is String or a.environment_hash.length() != 64:
+		if not C.identifier(a.support_id) or not _hash_valid(a.environment_hash):
 			return "ATTACHMENT_SOURCE"
 		attached[a.module] = true
 	for m in s.modules:
@@ -115,4 +115,10 @@ static func _events_valid(events: Variant) -> bool:
 	for event in events:
 		if not C.keys(event, ["tip", "rule", "outcome"]) or not C.identifier(event.tip) or not C.identifier(event.rule) or not event.outcome in OUTCOMES:
 			return false
+	return true
+
+static func _hash_valid(value: Variant) -> bool:
+	if not value is String or value.length() != 64: return false
+	for c in value:
+		if not c in "0123456789abcdef": return false
 	return true
