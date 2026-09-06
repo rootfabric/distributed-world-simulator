@@ -4,7 +4,7 @@
   "controller_branch": "control/world-packs-parallel-r1",
   "execution_base_branch": "feature/world-packs1-surface-library-contract-r1",
   "execution_base_sha": "2bb97961a21bd8e56b07430a48b51f20cebabb5a",
-  "main_baseline_sha": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
+  "main_baseline_sha": "fa2b6024481ea5a796ec9c7b0e2f9885f1a82c91",
   "remote": "origin",
   "policy": {
     "max_parallel_implementation_tracks": 5,

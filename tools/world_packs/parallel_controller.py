@@ -32,6 +32,7 @@ VALID_STATUSES = {
     "INTEGRATED",
 }
 STATE_SCHEMA = "dws.world_packs.parallel_workstream_state.v1"
+REVIEW_VERDICTS = {"PASS", "FAIL", "INSUFFICIENT_EVIDENCE", "NOT_REVIEWED"}
 
 
 class ControlError(RuntimeError):
@@ -170,6 +171,14 @@ def validate_state(
             if not required.issubset(item) or any(not isinstance(item[key], str) for key in required):
                 errors.append("STATE_VALIDATION_INVALID")
                 break
+    verdict, reviewed_head, _reviewed_tested = review_fields(state)
+    if verdict is not None and verdict not in REVIEW_VERDICTS:
+        errors.append("STATE_REVIEW_VERDICT_INVALID")
+    if reviewed_head is not None:
+        if not isinstance(reviewed_head, str) or len(reviewed_head) != 40 or any(
+            char not in "0123456789abcdef" for char in reviewed_head
+        ):
+            errors.append("STATE_REVIEWED_HEAD_INVALID")
     return errors
 
 
@@ -186,6 +195,88 @@ def progress_percent(track: dict[str, Any], state: dict[str, Any] | None) -> int
         return 100
     completed = set(state.get("completed_milestones", [])) if state else set()
     return round(100 * len(completed.intersection(track["milestones"])) / len(track["milestones"]))
+
+
+def review_fields(state: dict[str, Any] | None) -> tuple[str | None, str | None, str | None]:
+    """Read machine-owned review identity fields.
+
+    The prose ``next_action`` field is never a source of durable identity:
+    SHAs mentioned inside free text do not count as machine authority.
+    Only explicit branch-local machine fields are trusted.
+    """
+    if not state:
+        return None, None, None
+    nested = state.get("review")
+    if isinstance(nested, dict):
+        return (
+            nested.get("review_verdict"),
+            nested.get("reviewed_head"),
+            nested.get("reviewed_tested_head"),
+        )
+    return (
+        state.get("review_verdict"),
+        state.get("reviewed_head"),
+        state.get("reviewed_tested_head"),
+    )
+
+
+def exact_tested_head_validation(state: dict[str, Any] | None) -> str | None:
+    """READY_FOR_INTEGRATION requires a PASS validation at the exact tested head."""
+    if not state or state.get("status") != "READY_FOR_INTEGRATION":
+        return None
+    tested = state.get("tested_head")
+    if not isinstance(tested, str) or not tested:
+        return "EXACT_TESTED_HEAD_VALIDATION_MISSING"
+    validations = state.get("validation")
+    if not isinstance(validations, list):
+        return "EXACT_TESTED_HEAD_VALIDATION_MISSING"
+    for item in validations:
+        if (
+            isinstance(item, dict)
+            and item.get("result") == "PASS"
+            and item.get("head") == tested
+        ):
+            return None
+    return "EXACT_TESTED_HEAD_VALIDATION_MISSING"
+
+
+def review_staleness(
+    config: dict[str, Any],
+    track_ref: str,
+    state: dict[str, Any] | None,
+) -> tuple[bool, list[str]]:
+    """A reviewed track becomes stale when non-exempt files change after reviewed_head."""
+    if not state:
+        return False, []
+    verdict, reviewed_head, reviewed_tested_head = review_fields(state)
+    if verdict is None or verdict == "NOT_REVIEWED":
+        return False, []
+    if verdict not in REVIEW_VERDICTS:
+        return True, ["REVIEW_VERDICT_INVALID"]
+    if not isinstance(reviewed_head, str) or not reviewed_head:
+        return True, ["REVIEWED_HEAD_MISSING"]
+    exists = run_git("cat-file", "-e", f"{reviewed_head}^{{commit}}", check=False)
+    if exists.code != 0:
+        return True, ["REVIEWED_HEAD_MISSING"]
+    head = head_sha(track_ref)
+    ancestor = run_git("merge-base", "--is-ancestor", reviewed_head, head, check=False)
+    if ancestor.code != 0:
+        return True, ["REVIEWED_HEAD_NOT_ANCESTOR"]
+    changed = changed_files_range(reviewed_head, head)
+    exempt = config["validation_exempt_paths"]
+    relevant = [path for path in changed if not path_matches(path, exempt)]
+    if relevant:
+        return True, ["REVIEW_STALE"]
+    if verdict == "PASS":
+        tested = state.get("tested_head")
+        if (
+            isinstance(tested, str)
+            and tested
+            and isinstance(reviewed_tested_head, str)
+            and reviewed_tested_head != tested
+        ):
+            return True, ["REVIEWED_TESTED_HEAD_MISMATCH"]
+    return False, []
 
 
 def validation_stale(
@@ -242,6 +333,12 @@ def collect(config: dict[str, Any]) -> dict[str, Any]:
                 path for path in main_drift_files
                 if path_matches(path, config["critical_main_watched_paths"])
             ]
+    if critical_main_drift:
+        main_movement = "CRITICAL_MAIN_DRIFT"
+    elif main_drift_files:
+        main_movement = "MAIN_MOVED_NONCRITICAL"
+    else:
+        main_movement = "NONE"
 
     records: list[dict[str, Any]] = []
     for track in config["tracks"]:
@@ -264,6 +361,7 @@ def collect(config: dict[str, Any]) -> dict[str, Any]:
                 "progress": 0,
                 "validation_stale": False,
                 "stale_paths": [],
+                "ready": False,
                 "next_milestone": track["milestones"][0] if track["milestones"] else "HANDOFF_READY",
             })
             continue
@@ -276,12 +374,24 @@ def collect(config: dict[str, Any]) -> dict[str, Any]:
         behind, ahead = divergence(controller_ref, ref)
         stale, stale_paths = validation_stale(config, ref, state)
         errors = validate_state(config, track, state)
+        exact_error = exact_tested_head_validation(state)
+        if exact_error:
+            errors.append(exact_error)
+        review_stale, review_reasons = review_staleness(config, ref, state)
+        errors.extend(review_reasons)
         if forbidden:
             errors.append("HARD_FORBIDDEN_PATH_CHANGED")
         if scope_violations:
             errors.append("WORKSTREAM_SCOPE_VIOLATION")
         if stale:
             errors.append("VALIDATION_STALE")
+        ready = bool(
+            state
+            and state.get("status") == "READY_FOR_INTEGRATION"
+            and exact_error is None
+            and not review_stale
+            and not stale
+        )
         records.append({
             "id": track["id"],
             "branch": track["branch"],
@@ -298,6 +408,7 @@ def collect(config: dict[str, Any]) -> dict[str, Any]:
             "progress": progress_percent(track, state),
             "validation_stale": stale,
             "stale_paths": stale_paths,
+            "ready": ready,
             "next_milestone": first_incomplete(track, state),
         })
 
@@ -338,6 +449,7 @@ def collect(config: dict[str, Any]) -> dict[str, Any]:
         "main_head": head_sha(main_ref) if main_ref else None,
         "main_drift_files": main_drift_files,
         "critical_main_drift": critical_main_drift,
+        "main_movement": main_movement,
         "tracks": records,
         "overlaps": overlaps,
     }
@@ -360,10 +472,27 @@ def recommended_action(config: dict[str, Any], snapshot: dict[str, Any], record:
         blockers = ", ".join(state.get("blockers", [])) or "unspecified blocker"
         return f"Resolve or durably escalate blocker: {blockers}. Do not hide the blocked state."
     if state.get("status") == "READY_FOR_INTEGRATION":
+        if not record["ready"]:
+            flags = ", ".join(
+                flag for flag in record["state_errors"]
+                if flag in {
+                    "EXACT_TESTED_HEAD_VALIDATION_MISSING",
+                    "REVIEW_STALE",
+                    "REVIEWED_HEAD_MISSING",
+                    "REVIEWED_HEAD_NOT_ANCESTOR",
+                    "REVIEWED_TESTED_HEAD_MISMATCH",
+                    "REVIEW_VERDICT_INVALID",
+                }
+            ) or "readiness conditions unmet"
+            return (
+                f"STOP: READY_FOR_INTEGRATION is not accepted ({flags}). Record a PASS validation "
+                "entry at the exact tested_head via machine fields, refresh the review record, and push; "
+                "do not use next_action prose as SHA authority."
+            )
+        if snapshot["main_movement"] == "CRITICAL_MAIN_DRIFT":
+            return "Hold integration and review critical main drift; do not rebase/force-push the worker branch."
         if snapshot["execution_base_changed_files"]:
             return "Hold integration: the reviewed/execution base moved since dispatch. Revalidate/compose on a fresh integration branch; do not rebase/force-push the worker."
-        if snapshot["critical_main_drift"]:
-            return "Hold integration and review critical main drift; do not rebase/force-push the worker branch."
         return f"Request independent review and integrate only through {config['policy']['integration_target']}; worker must not self-merge."
     if record["next_milestone"] == "HANDOFF_READY":
         return "Record exact validation/evidence, set READY_FOR_INTEGRATION, push, and open/update the child PR."
@@ -386,9 +515,14 @@ def print_status(config: dict[str, Any], snapshot: dict[str, Any]) -> None:
     else:
         print("EXECUTION_BASE_DRIFT=NONE")
     print(f"MAIN={snapshot['main_head'] or 'UNAVAILABLE'} baseline={snapshot['main_baseline_sha']}")
-    if snapshot["critical_main_drift"]:
+    if snapshot["main_movement"] == "CRITICAL_MAIN_DRIFT":
+        print("MAIN_MOVEMENT=CRITICAL_MAIN_DRIFT")
         print("CRITICAL_MAIN_DRIFT=" + ",".join(snapshot["critical_main_drift"]))
+    elif snapshot["main_movement"] == "MAIN_MOVED_NONCRITICAL":
+        print("MAIN_MOVEMENT=MAIN_MOVED_NONCRITICAL")
+        print("MAIN_MOVED_NONCRITICAL=" + ",".join(snapshot["main_drift_files"]))
     else:
+        print("MAIN_MOVEMENT=NONE")
         print("CRITICAL_MAIN_DRIFT=NONE")
     if snapshot["overlaps"]:
         for overlap in snapshot["overlaps"]:
@@ -401,7 +535,14 @@ def print_status(config: dict[str, Any], snapshot: dict[str, Any]) -> None:
         state = record["state"]["status"] if record["state"] else ("MISSING" if record["exists"] else "NO_BRANCH")
         divergence_label = "-" if not record["exists"] else f"{record['ahead']}/{record['behind']}"
         scope = "FAIL" if record["scope_violations"] or record["hard_forbidden"] else "OK"
-        valid = "STALE" if record["validation_stale"] else ("OK" if record["state"] else "NONE")
+        if record["validation_stale"]:
+            valid = "STALE"
+        elif record["state"] and record["state"].get("status") == "READY_FOR_INTEGRATION" and not record["ready"]:
+            valid = "NOEXACT"
+        elif record["state"]:
+            valid = "OK"
+        else:
+            valid = "NONE"
         print(
             f"{record['id']:12} {state:22} {record['progress']:>4}% "
             f"{divergence_label:>9} {scope:>7} {valid:>7} {record['next_milestone']}"
@@ -414,9 +555,14 @@ def print_next(config: dict[str, Any], snapshot: dict[str, Any]) -> None:
     for record in snapshot["tracks"]:
         print(f"[{record['id']}] {recommended_action(config, snapshot, record)}")
     queued = config["queued_integration"]
+    def track_ready(item):
+        return bool(item["state"]) and item["state"].get("status") == "READY_FOR_INTEGRATION" and item["ready"]
     ready = all(
-        any(r["id"] == track_id and r["state"] and r["state"].get("status") == "READY_FOR_INTEGRATION"
-            for r in snapshot["tracks"])
+        any(track_ready(r) for r in snapshot["tracks"] if r["id"] == track_id)
+        for track_id in queued["requires_tracks"]
+    )
+    reviews_pass = all(
+        any(r["id"] == track_id and review_fields(r["state"])[0] == "PASS" for r in snapshot["tracks"])
         for track_id in queued["requires_tracks"]
     )
     gates_ready = all(
@@ -424,13 +570,17 @@ def print_next(config: dict[str, Any], snapshot: dict[str, Any]) -> None:
         for gate_id in queued["requires_gates"]
     )
     print()
-    if ready and gates_ready and not snapshot["execution_base_changed_files"] and not snapshot["critical_main_drift"] and not snapshot["overlaps"]:
+    if ready and reviews_pass and gates_ready and snapshot["main_movement"] != "CRITICAL_MAIN_DRIFT" and not snapshot["execution_base_changed_files"] and not snapshot["overlaps"]:
         print(f"[{queued['id']}] READY: {queued['next_when_ready']}")
     else:
         missing_tracks = [
             track_id for track_id in queued["requires_tracks"]
-            if not any(r["id"] == track_id and r["state"] and r["state"].get("status") == "READY_FOR_INTEGRATION"
-                       for r in snapshot["tracks"])
+            if not any((r["id"] == track_id and r["state"] and r["state"].get("status") == "READY_FOR_INTEGRATION"
+                        and r["ready"]) for r in snapshot["tracks"])
+        ]
+        unreviewed_tracks = [
+            track_id for track_id in queued["requires_tracks"]
+            if not any((r["id"] == track_id and review_fields(r["state"])[0] == "PASS") for r in snapshot["tracks"])
         ]
         missing_gates = [
             gate_id for gate_id in queued["requires_gates"]
@@ -439,6 +589,8 @@ def print_next(config: dict[str, Any], snapshot: dict[str, Any]) -> None:
         print(f"[{queued['id']}] WAIT")
         if missing_tracks:
             print("  missing tracks: " + ", ".join(missing_tracks))
+        if unreviewed_tracks:
+            print("  tracks without review PASS: " + ", ".join(unreviewed_tracks))
         if missing_gates:
             print("  missing gates: " + ", ".join(missing_gates))
         if snapshot["execution_base_changed_files"]:
