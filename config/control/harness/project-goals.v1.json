@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_project_goals.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-08-30-R7-P7-PREDISPATCH",
+  "policy_amendment_revision": "PROJECT-FOCUS-2026-09-05-R1",
   "canonical_branch": "main",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "north_star": {
@@ -130,20 +130,20 @@
         "V0_SM1_CHECKPOINT_ACCEPTED"
       ],
       "target_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-      "current_phase": "OWNER_MAP_PRE_DISPATCH",
-      "eligibility": "CONTROL_READY_RUNTIME_BLOCKED",
-      "reason": "Integrate existing MW4-MW10/RL2-RL3 into the playable planetary product. Do not create new terrain mutation contracts or private Matter truth."
+      "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
+      "eligibility": "CONTROL_RECONCILIATION_ONLY",
+      "reason": "Runtime merged; recover and durably reconcile closure evidence before any successor."
     },
     {
       "id": "V0_PLAYABLE_SEAMLESS_PLANET",
       "program": "V0",
       "title": "V0 PLAYABLE SEAMLESS PLANET",
-      "priority": 122,
+      "priority": 130,
       "depends_on": [
         "V0_P7_CHECKPOINT_ACCEPTED"
       ],
       "planned_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
-      "eligibility": "FUTURE_AFTER_P7",
+      "eligibility": "PLANNED_PENDING_P7_ACCEPTANCE_AND_ACTIVATION",
       "reason": "Composition acceptance only: P4+P5+P6+Gateway+SM1+P7, no new foundation."
     },
     {
@@ -193,9 +193,10 @@
         "V0_POST_P6_SEAMLESS_INSERTION_GATE",
         "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION_OR_EXPLICIT_DEFER",
         "V0_P7_BOUNDED_TERRAIN_MUTATION",
+        "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
         "V0_P8_FIRST_MOBILE_CONSTRUCT"
       ],
-      "selection_rule": "P7 is the current main-owned pre-dispatch checkpoint. Runtime stays forbidden until owner-map review, post-merge PC0 and Director dispatch."
+      "selection_rule": "MVP is the primary goal; reconcile P7 closure, then explicitly activate the composition checkpoint. Research is not an implicit dependency."
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -229,5 +230,99 @@
       "work_order_type": "HUMAN_OBSERVATION"
     }
   ],
-  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy. For V0/P, eligibility is sequential: close and accept the current P checkpoint, then main declares the exact accepted predecessor lineage as the next execution base, creates a fresh epoch/work order, rotates the single mutation lease, and only then may Director dispatch runtime mutation. Research frontiers are non-blocking unless an explicit registered dependency or a proven ownership/directional-watch intersection says otherwise."
+  "selection_rule": "MVP first. Resolve current P7 closure debt, then activate the declared MVP composition. Select ECO/FABRIC only on an explicit lane request; research milestones do not automatically block MVP. Goals declare intent, registry declares current phase, scheduler mirrors the dispatch boundary.",
+  "lane_goals": {
+    "MVP": {
+      "title": "Работающее визуальное сетевое MVP",
+      "purpose": "Общий изменяемый мир для нескольких клиентов с бесшовным переходом между authority.",
+      "success_criteria": [
+        "Два клиента одновременно видят друг друга и один мир.",
+        "Переход A→B→A без штатного reconnect/respawn и потери предметов.",
+        "Копание меняет видимую геометрию и выдаёт канонический материал ровно один раз.",
+        "Оба клиента видят результат; reconnect и restart сохраняют изменения.",
+        "Единая запускаемая сцена и понятные команды управления, а не только отдельные лаборатории."
+      ],
+      "sequence": [
+        "P7_DURABLE_CLOSURE",
+        "MVP_EXACT_BASE_ACTIVATION",
+        "MVP_SHARED_VISUAL_SCENE",
+        "MVP_MULTI_CLIENT_SEAM_AND_MUTATION",
+        "MVP_RECOVERY_AND_ACCEPTANCE"
+      ],
+      "not_required": [
+        "ECO_LS4_FINAL",
+        "FABRIC_B06",
+        "WORLDGEN1_FULL",
+        "RF1",
+        "P8",
+        "WORLD_PACKS"
+      ]
+    },
+    "ECO": {
+      "title": "Полигон генетики и эволюции растений",
+      "purpose": "Наблюдать и воспроизводимо сравнивать развитие наследуемых признаков и разнообразие растений на участке среды, совместимом по смыслу с детальным уровнем планеты.",
+      "success_criteria": [
+        "Одна сессия связывает физическую среду, seed, правила наследования и поколения.",
+        "Пауза, шаг поколения, скорость, reset и одинаковые начальные условия для сравнений.",
+        "Видимая морфология следует реальному генотипу/фенотипу выбранной особи или когорты.",
+        "Эксперименты изменения среды и наследования показывают причинные различия; декоративный цвет не считается биологическим разнообразием.",
+        "Ограниченные по объёму результаты и provenance: environment/rules/catalog hashes, seed, generation.",
+        "Версионированные рецепты/каталоги для будущего WORLDGEN consumer, без ECO-владения terrain."
+      ],
+      "sequence": [
+        "RECONCILE_LS41_AND_PLAY1",
+        "ONE_LIVE_EXPERIMENT_WORKBENCH",
+        "GENETIC_COUNTERFACTUALS_AND_DIVERSITY",
+        "LS4_STAGES_WITH_VISUAL_OBSERVATION",
+        "RESEARCH_RESULT_EXPORT",
+        "FUTURE_MAIN_CONSUMER"
+      ],
+      "not_required": [
+        "MVP_ACCEPTANCE",
+        "PRODUCTION_ECO_AUTHORITY",
+        "INDIVIDUAL_ANIMAL_AI"
+      ]
+    },
+    "FABRIC": {
+      "title": "Сложность из простых физических деталей",
+      "purpose": "Исследовать возникновение функций из общих деталей и связей и сохранение причинности при запекании.",
+      "success_criteria": [
+        "Новая небольшая машина задаётся данными без нового решателя под стенд.",
+        "Физические события порождают функциональные последствия через связи.",
+        "Compiled/cache и настоящая редукция состояний различаются в отчётах.",
+        "FULL и reduced сравниваются в объявленной области допустимости; проверяется независимый физический ориентир.",
+        "B0.6/BRIDGE3 ограничивают стоимость fallback, локальной детализации и rebake.",
+        "VIS читает те же состояния и события; производство MVP не объявляется готовым по research PASS."
+      ],
+      "sequence": [
+        "FROZEN_CORE_018",
+        "COMPLEX2_SCOPE_AND_GENERALITY_REVIEW",
+        "B06_ADAPTIVE_FIDELITY",
+        "BRIDGE3_LIFECYCLE",
+        "COMPLEX3",
+        "B07_UNSEEN_MACHINE",
+        "OPTIONAL_PRODUCT_TRANSFER"
+      ],
+      "not_required": [
+        "MVP_ACCEPTANCE",
+        "NEW_FABRIC019_WITHOUT_FALSIFIER"
+      ]
+    },
+    "PRESENTATION": {
+      "title": "WORLD FILL + WORLD PACKS",
+      "purpose": "Дать общему миру атмосферу и читаемость через отключаемые механизмы и контент.",
+      "success_criteria": [
+        "PACKS поставляет данные, FILL их отображает.",
+        "Удаление оформления не меняет канонический результат.",
+        "Интерактивность передаётся существующим владельцам Item/Construction/Matter."
+      ],
+      "sequence": [
+        "DONOR_REVIEW",
+        "BOUNDED_MVP_PRESENTATION_HANDOFF"
+      ],
+      "not_required": [
+        "NEW_GAMEPLAY_AUTHORITY"
+      ]
+    }
+  }
 }

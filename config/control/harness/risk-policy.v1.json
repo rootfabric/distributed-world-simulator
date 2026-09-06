@@ -33,6 +33,10 @@
     "risk_may_be_raised_but_not_lowered_below_trigger_minimum": true,
     "unexpected_blast_radius_requires_reclassification": true,
     "risk_class_is_recorded_before_implementation_for_medium_or_higher": true,
-    "commits_per_day_is_not_a_risk_signal": true
+    "commits_per_day_is_not_a_risk_signal": true,
+    "required_role_is_a_responsibility_boundary_not_a_vm_vendor_requirement": true,
+    "mechanical_validation_may_be_produced_by_implementer_or_trusted_ci": true,
+    "implementer_cannot_convert_its_own_machine_evidence_into_an_independent_verdict": true,
+    "separate_machine_execution_is_required_only_when_explicitly_declared": true
   }
 }

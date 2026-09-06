@@ -47,16 +47,24 @@ def _parse_json_object(raw: str, label: str) -> dict[str, Any]:
 
 
 def load_checkpoint_acceptance(
-    root: Path, checkpoint: str, canonical_branch: str
+    root: Path, checkpoint: str, canonical_branch: str, *, canonical_head: str | None = None
 ) -> dict[str, Any] | None:
     """Read acceptance only from the canonical main ref, never from branch prose."""
     canonical_ref = _canonical_ref(root, canonical_branch)
+    if canonical_head is not None:
+        code, _ = _git(root, "merge-base", "--is-ancestor", canonical_head, canonical_ref)
+        if code != 0:
+            raise ContractValidationError("CANONICAL_MAIN_REF_SNAPSHOT_NOT_ANCESTOR")
+    else:
+        code, canonical_head = _git(root, "rev-parse", "--verify", canonical_ref)
+        if code != 0:
+            raise ContractValidationError("CANONICAL_MAIN_REF_UNAVAILABLE")
     code, listing = _git(
         root,
         "ls-tree",
         "-r",
         "--name-only",
-        canonical_ref,
+        canonical_head,
         "--",
         _ACCEPTANCE_PREFIX,
     )
@@ -65,7 +73,7 @@ def load_checkpoint_acceptance(
 
     matches: list[tuple[str, dict[str, Any]]] = []
     for path in sorted(line for line in listing.splitlines() if line.endswith(".json")):
-        code, raw = _git(root, "show", f"{canonical_ref}:{path}")
+        code, raw = _git(root, "show", f"{canonical_head}:{path}")
         if code != 0:
             raise ContractValidationError(f"CHECKPOINT_ACCEPTANCE_BLOB_UNAVAILABLE:{path}")
         record = _parse_json_object(raw, path)
@@ -82,6 +90,7 @@ def load_checkpoint_acceptance(
     return {
         "source": "CANONICAL_MAIN_ACCEPTANCE_RECORD",
         "canonical_ref": canonical_ref,
+        "canonical_head": canonical_head,
         "path": path,
         "checkpoint": checkpoint,
         "status": "ACCEPTED",

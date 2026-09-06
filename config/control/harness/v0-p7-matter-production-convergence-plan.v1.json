@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.v0_p7_matter_production_convergence_plan.v1",
-  "revision": "V0-P7-MATTER-CONVERGENCE-2026-08-30-R1",
+  "revision": "PROJECT-FOCUS-2026-09-05-R1",
   "canonical_owner": "main",
-  "status": "P7_7_IN_PROGRESS",
+  "status": "P7_MERGED_CLOSURE_RECONCILIATION",
   "authored_against_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
   "accepted_sm1_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
   "accepted_sm1_product_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
@@ -130,7 +130,7 @@
       "id": "P7.7",
       "name": "GRAPHICAL_DIGGING_SLICE",
       "exit": "GRAPHICAL_DIGGING_PASS",
-      "status": "IN_PROGRESS",
+      "status": "MERGED_PENDING_CANONICAL_CLOSURE",
       "runtime_started": true,
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
@@ -221,8 +221,10 @@
           "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-H-REPLAY-RECONNECT-RESTART-COMPOSITIONAL-VALIDATION-001.v1.json"
         },
         "P7.7-FORMAL-CLOSURE": {
-          "status": "NEXT",
-          "proof": "FREEZE_ONE_EXACT_RUNTIME_HEAD_TREE_RUN_FULL_GATE_THEN_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE"
+          "status": "MERGED_PENDING_CANONICAL_CLOSURE",
+          "proof": "FREEZE_ONE_EXACT_RUNTIME_HEAD_TREE_RUN_FULL_GATE_THEN_REVIEWER_FRESH_VERIFIER_HUMAN_MERGE",
+          "scope": "RECONCILE_EXISTING_POST_MERGE_EVIDENCE",
+          "required_result": "CANONICAL_P7_ACCEPTANCE_AFTER_EXISTING_GATES"
         }
       }
     }

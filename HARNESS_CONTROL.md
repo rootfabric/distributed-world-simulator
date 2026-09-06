@@ -1,5 +1,11 @@
 # Distributed World Simulator — Harness Control
 
+Проектный обзор: `CONTROL_DEVELOPMENT.ps1 -Overview`. Цели и порядок работ:
+`docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md`. Семейства MVP/ECO/FABRIC/PRESENTATION
+объявлены в существующем registry; их рекомендации не являются dispatch.
+`-CheckConsistency` проверяет product routing отдельно от локальных research findings.
+До merge control-кандидата используется явный `-Candidate`; его данные не дают полномочий.
+
 **Canonical owner:** `main`  
 **Harness foundation:** `H0-2026-08-11-R1`  
 **Continuation layer:** `H0-CONTINUATION-2026-08-20-R5`  

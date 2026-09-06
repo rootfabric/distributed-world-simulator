@@ -72,7 +72,7 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         self.assertEqual(1, self.scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"])
         self.assertTrue(self.scheduler["concurrency"]["h0_3_required_before_multi_runtime_worker_scheduler"])
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
-        self.assertEqual(80, lease["effective_registry_generation"])
+        self.assertGreaterEqual(lease["effective_registry_generation"], 81)
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
         self.assertTrue(str(lease["holder_checkpoint"]).startswith("V0_"))

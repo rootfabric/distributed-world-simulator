@@ -21,6 +21,8 @@
         "DRIVE",
         "CLOSE_ROLE",
         "CLOSE_MISSION",
+        "OVERVIEW",
+        "CHECK_CONSISTENCY",
         "UNKNOWN"
       ]
     },
@@ -80,6 +82,77 @@
     "checkpoint_proposal_blocked": {"type": "boolean"},
     "checkpoint_blockers": {"type": "array", "items": {"type": "string"}},
     "runtime_authorized": {"const": false},
+    "output_kind": {
+      "enum": [
+        "PROJECT_OVERVIEW",
+        "PROJECT_CONTROL_ROUTING"
+      ]
+    },
+    "overview": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "lanes",
+        "consistency_findings",
+        "runtime_authorized",
+        "dispatch_authority"
+      ],
+      "properties": {
+        "runtime_authorized": {
+          "const": false
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "authority",
+            "canonical_ref",
+            "canonical_head",
+            "candidate_preview"
+          ]
+        },
+        "lanes": {
+          "type": "object"
+        },
+        "consistency_findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "scope",
+              "detail",
+              "severity"
+            ]
+          }
+        }
+      }
+    },
+    "control_route": {
+      "type": "object",
+      "required": [
+        "authority",
+        "canonical_ref",
+        "canonical_head",
+        "checkpoint",
+        "runtime_authorized",
+        "checkpoint_acceptance",
+        "next_actor",
+        "next_action",
+        "resume_condition",
+        "instruction"
+      ],
+      "properties": {
+        "runtime_authorized": {
+          "const": false
+        },
+        "authority": {
+          "const": "CANONICAL_MAIN_SNAPSHOT"
+        },
+        "next_actor": {
+          "const": "DIRECTOR"
+        }
+      }
+    },
     "verification_commands": {"type": "array", "items": {"type": "string"}},
     "selected_execution": {"type": "string", "minLength": 1},
     "selected_checkpoint": {"type": "string", "minLength": 1},
@@ -336,7 +409,7 @@
       "then": {"required": ["error", "exit_codes"]}
     },
     {
-      "if": {"properties": {"ok": {"const": true}}},
+      "if": {"allOf": [{"properties": {"ok": {"const": true}}}, {"not": {"required": ["output_kind"]}}]},
       "then": {
         "required": [
           "exit_codes",
@@ -361,16 +434,104 @@
       }
     },
     {
-      "if": {"properties": {"ok": {"const": true}, "command": {"const": "PLAN"}}, "required": ["ok", "command"]},
+      "if": {"allOf": [{"properties": {"ok": {"const": true}, "command": {"const": "PLAN"}}, "required": ["ok", "command"]}, {"not": {"required": ["output_kind"]}}]},
       "then": {"required": ["plan"]}
     },
     {
-      "if": {"properties": {"ok": {"const": true}, "command": {"const": "RESUME"}}, "required": ["ok", "command"]},
+      "if": {"allOf": [{"properties": {"ok": {"const": true}, "command": {"const": "RESUME"}}, "required": ["ok", "command"]}, {"not": {"required": ["output_kind"]}}]},
       "then": {"required": ["resume"]}
     },
     {
-      "if": {"properties": {"ok": {"const": true}, "command": {"const": "DRIVE"}}, "required": ["ok", "command"]},
+      "if": {"allOf": [{"properties": {"ok": {"const": true}, "command": {"const": "DRIVE"}}, "required": ["ok", "command"]}, {"not": {"required": ["output_kind"]}}]},
       "then": {"required": ["drive"]}
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "OVERVIEW",
+              "CHECK_CONSISTENCY"
+            ]
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "command",
+          "ok"
+        ]
+      },
+      "then": {
+        "required": [
+          "output_kind",
+          "overview",
+          "exit_codes"
+        ],
+        "properties": {
+          "output_kind": {
+            "const": "PROJECT_OVERVIEW"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "output_kind": {
+            "const": "PROJECT_CONTROL_ROUTING"
+          }
+        },
+        "required": [
+          "output_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "control_route",
+          "exit_codes",
+          "runtime_authorized"
+        ],
+        "properties": {
+          "command": {
+            "enum": [
+              "STATUS",
+              "PLAN",
+              "RESUME",
+              "DRIVE",
+              "CLOSE_ROLE",
+              "CLOSE_MISSION"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "output_kind": {
+            "const": "PROJECT_OVERVIEW"
+          }
+        },
+        "required": [
+          "output_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "overview",
+          "exit_codes"
+        ],
+        "properties": {
+          "command": {
+            "enum": [
+              "OVERVIEW",
+              "CHECK_CONSISTENCY"
+            ]
+          }
+        }
+      }
     }
   ]
 }

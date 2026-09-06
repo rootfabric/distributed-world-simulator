@@ -1,5 +1,30 @@
 # Distributed World Simulator — Development Harness Protocol
 
+## Проектный обзор до выбора execution
+
+`CONTROL_DEVELOPMENT.ps1 -Overview` читает цели и семейства из одного закреплённого
+commit канонического main. Он работает без активного execution и устаревшего epoch.
+`-Overview -Candidate` показывает рабочий checkout с пометкой
+`CANDIDATE_NON_AUTHORIZING`. `-Candidate` запрещён для Drive/Plan/Close.
+
+`-CheckConsistency` выдаёт findings с scope и severity. Exit 3 означает ошибку
+продуктового контроля или отсутствие обязательного обзора; `family_local:*` остаются
+в отчёте и требуют исправления внутри семейства, но не блокируют MVP автоматически.
+Git refs читаются локально, fetch не выполняется. Продвижение ветки после сохранённого
+pin, недоступный ref, несовпадение ancestry и отсутствие evidence различаются.
+
+JSON-ответы обзора имеют `output_kind=PROJECT_OVERVIEW`. При каноническом
+`P7_MERGED_CLOSURE_RECONCILIATION` команды execution сначала возвращают
+`output_kind=PROJECT_CONTROL_ROUTING` и `control_route` с ответственным Director и
+следующим действием. Это отдельный envelope: он не имитирует восстановленный ledger.
+Потребитель обязан проверить `output_kind`, прежде чем читать execution-поля `next`.
+Найденная в main P7 acceptance разрешает закрыть P7 mission; открытие MVP всё ещё
+требует принятой активации и свежего Work Order. До merge новый route неканоничен.
+
+Планируемый MVP checkpoint в catalog не даёт права обойти ограничение одного runtime
+worker. Его отдельная активация должна добавить поддерживаемый planner и Work Order.
+Исторические generation-80 epochs не переписываются под новый generation.
+
 **Harness revision:** `H0-2026-08-11-R1`  
 **Canonical owner:** `main`  
 **Control dependency:** `PC0-2026-08-10-R1`  

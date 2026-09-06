@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
-  "policy_amendment_revision": "H0-PTRAIN-2026-09-03-R14-P7-P7_7_ACTIVE",
+  "policy_amendment_revision": "PROJECT-FOCUS-2026-09-05-R1",
   "v0_product_train_policy": "config/control/harness/v0-product-train-policy.v1.json",
   "selection_factors": {
     "critical_path_weight": 30,
@@ -29,6 +29,7 @@
       "V0_P7_BOUNDED_TERRAIN_MUTATION"
     ],
     "future_checkpoints_not_yet_eligible": [
+      "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
       "V0_P8_FIRST_MOBILE_CONSTRUCT"
     ],
     "rules": {
@@ -51,10 +52,10 @@
   },
   "v0_product_train_routing": {
     "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_7_IN_PROGRESS",
-    "runtime_mutation_allowed_now": true,
-    "next_runtime_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "next_runtime_checkpoint_eligible": true,
+    "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
+    "runtime_mutation_allowed_now": false,
+    "next_runtime_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "next_runtime_checkpoint_eligible": false,
     "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
     "accepted_predecessor_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
     "sm1_acceptance": {
@@ -181,16 +182,20 @@
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
     },
     "p7_7": {
-      "state": "IN_PROGRESS",
+      "state": "MERGED_PENDING_CANONICAL_CLOSURE",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "scope": "GRAPHICAL_DIGGING_SLICE",
-      "runtime_mutation_authorized": true,
+      "runtime_mutation_authorized": false,
       "runtime_started": true,
       "activation_base_main": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
       "acceptance_stand": "DIGGING_PLAYGROUND",
       "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
-      "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH"
-    }
+      "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
+      "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386"
+    },
+    "control_next_actor": "DIRECTOR",
+    "control_next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP",
+    "control_resume_condition": "Canonical P7 acceptance evidence reconciled; successor activation + exact epoch/work order + lease update reviewed on main."
   },
   "research_isolation": {
     "non_blocking_by_default": true,
@@ -201,15 +206,21 @@
       "PROVEN_DIRECTIONAL_WATCH_INTERSECTION",
       "PROVEN_OWNERSHIP_INTERSECTION",
       "EXPLICIT_PRODUCT_WORK_ORDER_CONSUMPTION"
+    ],
+    "explicit_non_blockers": [
+      "ECO",
+      "FABRIC",
+      "WORLD_FILL",
+      "WORLD_PACKS"
     ]
   },
   "pre_h0_3_runtime_mutation_lease": {
-    "effective_registry_generation": 80,
+    "effective_registry_generation": 81,
     "capacity": 1,
     "holder_program": "V0",
     "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
     "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "ACTIVE_V0_P7_IN_PROGRESS_RUNTIME_MUTATION",
+    "state": "RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -220,7 +231,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "P7.6 is COMPLETE_MERGED. P7.7 is explicitly activated under the same single P7 runtime mutation lease and feature/v0-p7-bounded-terrain-mutation branch; Digging Playground is the bounded acceptance stand and no second runtime worker or canonical owner is introduced."
+    "reason": "Keep the single slot reserved while P7 closure is reconciled. No successor or research runtime authority is granted by this control change."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
@@ -243,5 +254,6 @@
     "v0_requires_second_item_graph_or_persistence_owner": "STOP_AND_REPLAN",
     "v0_successor_requested_before_predecessor_acceptance": "STOP_AND_CLOSE_PREDECESSOR",
     "research_branch_red_without_registered_product_dependency": "DO_NOT_BLOCK_V0_PRODUCT_TRAIN"
-  }
+  },
+  "project_focus_revision": "PROJECT-FOCUS-2026-09-05-R1"
 }
