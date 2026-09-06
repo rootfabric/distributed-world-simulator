@@ -31,6 +31,7 @@ jobs:
       - name: Observe canonical control routing without dispatch
         shell: bash
         run: |
+          set +e
           set -u
           mkdir -p artifacts/p7-closure
           failed=0
@@ -117,11 +118,30 @@ jobs:
       - name: Run unchanged repository full world and core regression
         shell: bash
         run: |
+          set +e
           set -uo pipefail
-          timeout --signal=TERM --kill-after=60s 120m "$P7_PWSH" -NoProfile -File ./RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | tee artifacts/p7-world-core/full-world-core.log
+          # Unix dotfiles require Get-Item -Force in the existing Windows-oriented
+          # atomic summary writer. Set this read-only provider default in this
+          # PowerShell process, without editing the canonical runner or test list.
+          printf '%s\n' 'Get-Item:Force=true (Linux hidden atomic-summary temp files)' > artifacts/p7-world-core/environment-adapter.txt
+          timeout --signal=TERM --kill-after=60s 120m "$P7_PWSH" -NoProfile -Command '$PSDefaultParameterValues = @{"Get-Item:Force" = $true}; & ./RUN_WORLD_REGRESSION_TESTS.ps1; exit $LASTEXITCODE' 2>&1 | tee artifacts/p7-world-core/full-world-core.log
           code=${PIPESTATUS[0]}
           printf '%s\n' "$code" > artifacts/p7-world-core/exit-code.txt
           exit "$code"
+      - name: Require actual successful summary and exit code
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat artifacts/p7-world-core/exit-code.txt)" = 0
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path('artifacts/test-results/world-regression-summary.json').read_text())
+          assert summary['passed'] is True, 'WORLD_CORE_SUMMARY_NOT_PASS'
+          assert summary['declared_test_count'] == summary['discovered_test_count'], 'WORLD_CORE_COVERAGE_MISMATCH'
+          assert summary['steps'] and all(s['passed'] is True and s['exit_code'] == 0 for s in summary['steps']), 'WORLD_CORE_STAGE_NOT_PASS'
+          assert any(s['name'] == 'main_scene_cli_all' for s in summary['steps']), 'WORLD_CORE_AGGREGATE_MISSING'
+          PY
       - name: Verify frozen checkout and durable summary
         if: always()
         shell: bash
