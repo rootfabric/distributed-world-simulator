@@ -143,3 +143,137 @@ def default_opener() -> Opener:
             )
 
     return urllib.request.build_opener(_NoRedirect)
+
+
+# --------------------------------------------------------------------------
+# DNS-rebinding-safe (pinned) transport.
+#
+# The validated endpoint must equal the actual connected endpoint: the
+# hostname is resolved ONCE per fetch, every answer is checked to be a
+# public address, and the TCP connection is made directly to that IP
+# while TLS keeps verifying the ORIGINAL hostname (SNI, Host header and
+# certificate CN/SAN checks are unaffected). urllib never re-resolves
+# the hostname because it never sees it on the connect path.
+# --------------------------------------------------------------------------
+
+import socket  # noqa: E402
+
+
+def _make_pinned_https_connection(pinned_ip: str):
+    import http.client
+
+    class _Pinned(http.client.HTTPSConnection):
+        pinned = pinned_ip
+
+        def connect(self):  # noqa: D102
+            # Dial the validated IP literal, never the hostname: there is
+            # no second DNS lookup on the connect path.
+            self.sock = socket.create_connection(
+                (self.pinned, self.port),
+                timeout=self.timeout,
+                source_address=getattr(self, "source_address", None),
+            )
+            if hasattr(socket, "TCP_NODELAY"):
+                try:
+                    self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                except OSError:
+                    pass
+            if self._tunnel_host:
+                # Proxied CONNECT tunneling is out of contract for the
+                # pinned transport; refuse rather than guess the target.
+                raise BoundedFetchError(
+                    "TUNNEL_UNSUPPORTED",
+                    "pinned transport does not support proxy CONNECT tunneling",
+                )
+            # TLS verification (SNI + certificate hostname check) stays
+            # bound to the ORIGINAL hostname from the URL.
+            self.sock = self._context.wrap_socket(self.sock, server_hostname=self.host)
+
+    return _Pinned
+
+
+def pinned_opener(host: str, resolver, *, pinned_ip: str) -> Opener:
+    """Build an opener whose HTTPS connections dial ``pinned_ip`` only.
+
+    ``pinned_ip`` must already have passed ``check_resolved_addresses``
+    for ``host``; the TLS layer still verifies ``host`` (SNI, Host,
+    certificate). Redirects are refused as in :func:`default_opener`.
+    """
+    import urllib.error
+    import urllib.request
+
+    class _NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            raise urllib.error.HTTPError(
+                newurl, code, "redirect refused by bounded transport", headers, fp
+            )
+
+    class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
+        def https_open(self, req):
+            return self.do_open(_make_pinned_https_connection(pinned_ip), req)
+
+    return urllib.request.build_opener(_NoRedirect, _PinnedHTTPSHandler)
+
+
+def resolve_public_ip(host: str, resolver) -> str:
+    """Resolve ``host`` once and return a validated public answer.
+
+    Re-uses the gate's public-address checks: ANY non-public answer in
+    the resolution fails the whole fetch (fail-closed), so a rebinding
+    answer of 127.0.0.1/private space is rejected before any socket is
+    opened.
+    """
+    from .gates import check_resolved_addresses
+
+    check_resolved_addresses(host, resolver)
+    answers = list(resolver(host))
+    for answer in answers:
+        if _answer_is_public(answer):
+            return answer
+    raise BoundedFetchError(
+        "NO_PUBLIC_ADDRESS", f"no public address in resolution for {host!r}"
+    )
+
+
+def _answer_is_public(text: str) -> bool:
+    from .gates import _is_public_ip
+
+    return _is_public_ip(text)
+
+
+def make_pinned_bounded_transport(
+    resolver,
+    *,
+    chunk_bytes: int = DEFAULT_CHUNK_BYTES,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+    hard_max_bytes: Optional[int] = None,
+    opener_factory=pinned_opener,
+) -> Callable[[FetchContract], bytes]:
+    """Build a DNS-rebinding-safe bounded transport.
+
+    For every fetch the hostname in the contract URL is resolved ONCE
+    through ``resolver``; all answers must be public (gate re-check),
+    the first public answer is pinned for the TCP dial, and the bounded
+    read then runs against a freshly built pinned opener. A rebinding
+    resolver that returns a private address on this second resolution is
+    rejected before any connection is attempted.
+    """
+    from .contract import FetchContract as _Contract
+    from .gates import check_resolved_addresses
+
+    def transport(contract: _Contract) -> bytes:
+        from urllib.parse import urlsplit
+
+        host = urlsplit(contract.url).hostname or ""
+        check_resolved_addresses(host, resolver, source_url=contract.url)
+        pinned_ip = resolve_public_ip(host, resolver)
+        opener = opener_factory(host, resolver, pinned_ip=pinned_ip)
+        bounded = make_bounded_transport(
+            opener,
+            chunk_bytes=chunk_bytes,
+            timeout_seconds=timeout_seconds,
+            hard_max_bytes=hard_max_bytes,
+        )
+        return bounded(contract)
+
+    return transport

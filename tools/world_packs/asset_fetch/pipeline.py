@@ -15,6 +15,7 @@ Everything is offline-testable: transport is injected.
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import shutil
 from dataclasses import dataclass
@@ -22,7 +23,13 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from .cache import RawCacheError, RawContentAddressableCache
-from .contract import FetchContract, FetchVerificationError, verify_payload
+from .contract import (
+    DEFAULT_MAX_ASSET_BYTES,
+    FetchContract,
+    FetchVerificationError,
+    verify_payload,
+)
+from .https import DEFAULT_CHUNK_BYTES, DEFAULT_TIMEOUT_SECONDS
 
 
 class PipelineError(RuntimeError):
@@ -46,7 +53,15 @@ def obtain(
     cache: RawContentAddressableCache,
     transport: Callable[[FetchContract], bytes],
 ) -> PipelineResult:
-    """Cache-first obtain with offline reuse and corruption recovery."""
+    """UNSAFE LOW-LEVEL cache-first obtain (arbitrary injected transport).
+
+    This primitive exists for tests and for code that has ALREADY run
+    the full gate chain itself. It performs NO approved-source policy,
+    NO DNS/target validation, NO redirect policy and NO pinning.
+    Production code must use :func:`obtain_safe` (alias
+    :func:`prepare_raw_asset`), which cannot reach a transport unless
+    every gate passes.
+    """
 
     def fetch_and_store() -> PipelineResult:
         try:
@@ -95,6 +110,88 @@ def obtain(
 
     # 3. Cache miss: single bounded fetch.
     return fetch_and_store()
+
+
+def obtain_safe(
+    contract,
+    cache: RawContentAddressableCache,
+    *,
+    approved_hosts: set,
+    resolver,
+    redirector=None,
+    max_asset_bytes: int = DEFAULT_MAX_ASSET_BYTES,
+    chunk_bytes: int = DEFAULT_CHUNK_BYTES,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+    hard_max_bytes: Optional[int] = None,
+    transport_factory=None,
+) -> PipelineResult:
+    """Single SAFE production entrypoint for raw asset acquisition.
+
+    Always executes the full chain, fail-closed, in this order:
+
+        contract (validated construction or FetchContract instance)
+        -> approved-source policy + DNS/target validation + size gates
+        -> redirect policy (every hop fully revalidated; bounded hops)
+        -> DNS-pinned bounded transport (validated endpoint == connected
+           endpoint, TLS hostname verification preserved)
+        -> size/hash verification of the payload
+        -> immutable content-addressed raw cache
+
+    The transport is built internally via
+    ``https.make_pinned_bounded_transport`` (or ``transport_factory`` for
+    tests, which still receives the validated contract and cannot be
+    reached when a gate fails). Cache reuse (offline path) never invokes
+    the transport.
+    """
+    from .contract import contract_from_dict
+    from .gates import resolve_redirect_chain, validate_target
+
+    if not isinstance(contract, FetchContract):
+        contract = contract_from_dict(
+            contract, approved_hosts=approved_hosts, max_asset_bytes=max_asset_bytes
+        )
+
+    # Gate 1..2: approved-source policy + DNS/target validation + size.
+    validate_target(
+        contract.url,
+        approved_hosts=approved_hosts,
+        resolver=resolver,
+        max_asset_bytes=max_asset_bytes,
+        declared_size_bytes=contract.expected_size_bytes,
+    )
+
+    # Gate 3: redirect policy (each hop revalidated by resolve_redirect_chain).
+    final_url = contract.url
+    if redirector is not None:
+        chain = resolve_redirect_chain(
+            contract.url,
+            redirector,
+            approved_hosts=approved_hosts,
+            resolver=resolver,
+        )
+        final_url = chain.final_url
+        if final_url != contract.url:
+            contract = dataclasses.replace(contract, url=final_url)
+
+    # Gate 4: bounded, DNS-pinned transport.
+    if transport_factory is None:
+        from .https import make_pinned_bounded_transport
+
+        transport = make_pinned_bounded_transport(
+            resolver,
+            chunk_bytes=chunk_bytes,
+            timeout_seconds=timeout_seconds,
+            hard_max_bytes=hard_max_bytes,
+        )
+    else:
+        transport = transport_factory
+
+    # Gate 5..6 happen inside obtain/verify_payload/cache.
+    return obtain(contract, cache, transport)
+
+
+# Documented production alias for the same safe entrypoint.
+prepare_raw_asset = obtain_safe
 
 
 def _quarantine(cache: RawContentAddressableCache, sha256: str) -> Path:

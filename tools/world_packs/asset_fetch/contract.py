@@ -154,6 +154,23 @@ def contract_from_dict(
     host = parts.hostname
     if not host:
         raise FetchContractError("INVALID_SOURCE_URL", "source url has no host")
+    # Malformed / out-of-range ports must fail closed as typed errors
+    # (urlsplit(...).port raises raw ValueError otherwise).
+    try:
+        port = parts.port
+    except ValueError as exc:
+        message = str(exc)
+        if "out of range" in message:
+            raise FetchContractError(
+                "FORBIDDEN_PORT", f"source port out of range: {message}"
+            ) from exc
+        raise FetchContractError(
+            "INVALID_SOURCE_URL", f"malformed source URL authority: {message}"
+        ) from exc
+    if port is not None and port != 443:
+        raise FetchContractError(
+            "FORBIDDEN_PORT", f"source port {port} is not allowed (only 443)"
+        )
     if not approved:
         raise FetchContractError(
             "NO_APPROVED_HOSTS",

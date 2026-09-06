@@ -79,6 +79,23 @@ def check_resolved_addresses(
             )
 
 
+def safe_port(parts) -> Optional[int]:
+    """Read ``urlsplit(...).port`` without leaking raw ValueError.
+
+    Malformed (non-integer) and out-of-range ports must surface as typed
+    GateError/FetchContractError failures, never as unhandled exceptions.
+    """
+    try:
+        return parts.port
+    except ValueError as exc:
+        message = str(exc)
+        if "out of range" in message:
+            raise GateError(
+                "FORBIDDEN_PORT", f"port out of range in URL authority: {message}"
+            ) from exc
+        raise GateError("MALFORMED_URL", f"invalid port in URL authority: {message}") from exc
+
+
 def validate_target(
     url: str,
     *,
@@ -100,8 +117,9 @@ def validate_target(
         raise GateError("NO_HOST", "target has no host")
     if host not in approved_hosts:
         raise GateError("UNAPPROVED_HOST", f"host {host!r} is not approved")
-    if parts.port is not None and parts.port not in ALLOWED_PORTS:
-        raise GateError("FORBIDDEN_PORT", f"port {parts.port} is not allowed")
+    port = safe_port(parts)
+    if port is not None and port not in ALLOWED_PORTS:
+        raise GateError("FORBIDDEN_PORT", f"port {port} is not allowed")
     # Literal IP host: must be public (and normally also approved by name).
     try:
         ipaddress.ip_address(host)
