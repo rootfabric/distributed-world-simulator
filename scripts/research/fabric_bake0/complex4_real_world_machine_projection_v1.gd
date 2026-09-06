@@ -21,7 +21,10 @@ static func solve(snapshot: Dictionary) -> Dictionary:
 	for raw_part in snapshot["parts"]:
 		var part: Dictionary = raw_part
 		part_by_id[String(part["part_id"])] = part
-		var role := String(Dictionary(part["metadata"]).get(META_FUNCTIONAL_ROLE, ""))
+		var role_value = Dictionary(part["metadata"]).get(META_FUNCTIONAL_ROLE, "")
+		if typeof(role_value) != TYPE_STRING:
+			return Utils.failure("COMPLEX4_FUNCTIONAL_ROLE_INVALID")
+		var role: String = role_value
 		if role == ROLE_SOURCE:
 			source_parts.append(part)
 		elif role == ROLE_LOAD:
@@ -30,6 +33,9 @@ static func solve(snapshot: Dictionary) -> Dictionary:
 		return Utils.failure("COMPLEX4_FUNCTIONAL_CARDINALITY_INVALID", {"sources": source_parts.size(), "loads": load_parts.size()})
 	var source: Dictionary = source_parts[0]
 	var load: Dictionary = load_parts[0]
+	for pair in [[source, "source_common"], [load, "load_gain"], [load, "on_power_threshold_w"]]:
+		if not Utils.is_finite_number(pair[0]["metadata"].get(pair[1])):
+			return Utils.failure("COMPLEX4_FUNCTIONAL_PARAMETERS_INVALID")
 	var source_common := float(Dictionary(source["metadata"]).get("source_common", 0.0))
 	var load_gain := float(Dictionary(load["metadata"]).get("load_gain", 0.0))
 	var on_threshold := float(Dictionary(load["metadata"]).get("on_power_threshold_w", 0.0))
@@ -50,7 +56,7 @@ static func solve(snapshot: Dictionary) -> Dictionary:
 		if String(bond["part_a_id"]) != String(source["part_id"]) or String(bond["part_b_id"]) != String(load["part_id"]):
 			return Utils.failure("COMPLEX4_POWER_LINK_ENDPOINT_INVALID", {"bond_id": bond["bond_id"]})
 		var support_ids = Dictionary(bond["metadata"]).get("support_bond_ids", [])
-		if typeof(support_ids) != TYPE_ARRAY or support_ids.is_empty():
+		if not Utils.validate_sorted_unique_strings(support_ids, false).success:
 			return Utils.failure("COMPLEX4_FUNCTIONAL_SUPPORT_INVALID", {"bond_id": bond["bond_id"]})
 		var canonical_supports: Array = []
 		var supported := String(bond["state"]) != "BROKEN"
@@ -90,6 +96,9 @@ static func solve(snapshot: Dictionary) -> Dictionary:
 		return Utils.failure("COMPLEX4_FUNCTIONAL_SOLVE_FAILED", {"diagnostics": result.get("diagnostics", [])})
 	var load_state := Fabric.read_port_state(network, String(load["part_id"]), "p")
 	var absorbed_power := Fabric.read_element_absorbed_power(network, String(load["part_id"]))
+	for value in [absorbed_power, load_state.get("common"), load_state.get("balance")]:
+		if not Utils.is_finite_number(value):
+			return Utils.failure("COMPLEX4_NONFINITE_RESPONSE")
 	var machine_state := "ON" if absf(absorbed_power) >= on_threshold else "OFF"
 	var details := {
 		"construct_id": snapshot["construct_id"],
