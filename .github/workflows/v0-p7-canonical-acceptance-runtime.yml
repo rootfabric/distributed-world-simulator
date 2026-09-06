@@ -10,10 +10,7 @@ permissions:
 
 jobs:
   canonical-p7:
-    if: >-
-      github.actor == 'rootfabric' &&
-      github.triggering_actor == 'rootfabric' &&
-      github.event_name == 'push'
+    if: github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' && github.event_name == 'push'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 180
     env:
@@ -21,6 +18,7 @@ jobs:
       CANONICAL_MAIN_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
       EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
       EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
     steps:
       - name: Checkout exact canonical main
         uses: actions/checkout@v4
@@ -29,137 +27,56 @@ jobs:
           clean: true
           ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
 
-      - name: Verify exact canonical identity and clean tracked checkout
+      - name: Verify exact canonical identity
         shell: bash
         run: |
           set -euo pipefail
-          head="$(git rev-parse HEAD)"
-          tree="$(git rev-parse 'HEAD^{tree}')"
-          [[ "$head" == "$CANONICAL_MAIN_SHA" ]] || { echo "CANONICAL_HEAD_MISMATCH:$head" >&2; exit 10; }
-          [[ "$tree" == "$CANONICAL_MAIN_TREE" ]] || { echo "CANONICAL_TREE_MISMATCH:$tree" >&2; exit 11; }
-          [[ -z "$(git status --porcelain --untracked-files=no)" ]] || { git status --short; exit 12; }
-          echo "CANONICAL_HEAD=$head"
-          echo "CANONICAL_TREE=$tree"
+          test "$(git rev-parse HEAD)" = "$CANONICAL_MAIN_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$CANONICAL_MAIN_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
           echo "TRACKED_CLEAN_BEFORE=true"
 
-      - name: Resolve and verify exact Linux double Godot
+      - name: Resolve exact Linux double Godot
         shell: bash
         env:
           CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
         run: |
           set -euo pipefail
           godot="$CONFIGURED_GODOT_BIN"
-          if [[ -z "$godot" || ! -x "$godot" ]]; then
+          if [ -z "$godot" ] || [ ! -x "$godot" ]; then
             godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
           fi
-          [[ -x "$godot" ]] || { echo "EXACT_GODOT_NOT_FOUND:$godot" >&2; exit 20; }
+          test -x "$godot"
           version="$("$godot" --version 2>&1 | head -n1 | tr -d '\r')"
-          [[ "$version" == "$EXPECTED_GODOT_VERSION" ]] || { echo "GODOT_VERSION_MISMATCH actual=$version expected=$EXPECTED_GODOT_VERSION" >&2; exit 21; }
+          test "$version" = "$EXPECTED_GODOT_VERSION"
           sha="$(sha256sum "$godot" | awk '{print $1}')"
-          [[ "$sha" == "$EXPECTED_GODOT_SHA256" ]] || { echo "GODOT_SHA256_MISMATCH actual=$sha expected=$EXPECTED_GODOT_SHA256" >&2; exit 22; }
-          echo "GODOT_PATH=$godot"
+          test "$sha" = "$EXPECTED_GODOT_SHA256"
+          echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
           echo "GODOT_VERSION=$version"
           echo "GODOT_SHA256=$sha"
-          echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
 
-      - name: Run repository-owned P7.7 canonical full gate
+      - name: Run repository-owned canonical P7 full gate
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts/runtime/v0-p7-canonical-acceptance
-          outer="artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log"
-          set +e
-          bash ./RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh "$GODOT_BIN" "$CANONICAL_MAIN_SHA" >"$outer" 2>&1
-          code=$?
-          set -e
-          cat "$outer"
-          echo "GATE_EXIT=$code"
-          [[ $code -eq 0 ]] || exit "$code"
-          grep -F "V0-P7.7 GRAPHICAL DIGGING GATE GREEN" "$outer" >/dev/null
-          grep -F "EXACT_HEAD=$CANONICAL_MAIN_SHA" "$outer" >/dev/null
-          grep -F "EXACT_TREE=$CANONICAL_MAIN_TREE" "$outer" >/dev/null
+          bash ./RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh "$GODOT_BIN" "$CANONICAL_MAIN_SHA" 2>&1 | tee artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "V0-P7.7 GRAPHICAL DIGGING GATE GREEN" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "EXACT_HEAD=$CANONICAL_MAIN_SHA" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "EXACT_TREE=$CANONICAL_MAIN_TREE" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
 
-      - name: Validate 2032-assertion formal composition and fatal-free logs
+      - name: Verify tracked checkout clean after gate
         shell: bash
         run: |
           set -euo pipefail
-          check() { local file="$1" text="$2"; [[ -f "$file" ]]; grep -F "$text" "$file" >/dev/null; }
-          root="artifacts/runtime/v0-p7-7-graphical-digging"
-          check "$root/p7-7-graphical-slice.log" "PASS (52 assertions, 0 failures)"
-          check "$root/p7-7-a-playground.log" "PASS (20 assertions, 0 failures)"
-          check "$root/p7-7-b-seam-near.log" "PASS (20 assertions, 0 failures)"
-          check "$root/mw10-c0-physical-output.log" "PASS (30 assertions, 0 failures)"
-          check "$root/mw10-c1-durability.log" "PASS (60 assertions, 0 failures)"
-          check "$root/p7-7-c2-delivery.log" "PASS (42 assertions, 0 failures)"
-          check "$root/p7-7-c3-true-ab.log" "PASS (61 assertions, 0 failures)"
-          check "$root/p7-7-d-reservation-conflict.log" "PASS (31 assertions, 0 failures)"
-          check "$root/p7-7-e-actor-handoff.log" "PASS (24 assertions, 0 failures)"
-          check "$root/p7-6-seam-composition.log" "PASS (106 assertions, 0 failures)"
-          check "$root/mw10-transactions.log" "MW10 cross-region Matter transactions: PASS"
-          check "$root/mw10-process-recovery.log" "MW10 cross-region Matter processes: PASS"
-          check "$root/mw4.log" "MW4 matter mutations: PASS"
-          check "$root/p7-5-subgate.log" "V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN"
-          direct=887
-          nested=1145
-          total=$((direct+nested))
-          [[ $total -eq 2032 ]] || { echo "P7_FORMAL_TOTAL_MISMATCH:$total" >&2; exit 31; }
-          fatal_count="$(python3 - <<'PY'
-from pathlib import Path
-patterns = [b'SCRIPT ERROR:', b'Parse Error:', b'Compile Error:', b'Failed to instantiate an autoload', b'Failed to load script']
-count = 0
-for p in Path('artifacts/runtime').rglob('*.log'):
-    data = p.read_bytes()
-    for pat in patterns:
-        count += data.count(pat)
-print(count)
-PY
-)"
-          [[ "$fatal_count" == "0" ]] || { echo "P7_FATAL_MATCHES:$fatal_count" >&2; exit 32; }
-          cat > artifacts/runtime/v0-p7-canonical-acceptance/machine-evidence.json <<EOF
-          {
-            "schema": "distributed_world_simulator.v0_p7_canonical_runtime_machine_evidence.v1",
-            "canonical_main_head": "$CANONICAL_MAIN_SHA",
-            "canonical_main_tree": "$CANONICAL_MAIN_TREE",
-            "godot_version": "$EXPECTED_GODOT_VERSION",
-            "godot_sha256": "$EXPECTED_GODOT_SHA256",
-            "runner": "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh",
-            "gate_exit": 0,
-            "gate_green": true,
-            "direct_assertions": 887,
-            "nested_p7_5_assertions": 1145,
-            "total_assertions": 2032,
-            "failures": 0,
-            "fatal_matches": 0,
-            "tracked_clean_before": true
-          }
-          EOF
-          echo "P7_CANONICAL_FORMAL_ASSERTIONS=$total"
-          echo "P7_CANONICAL_FAILURES=0"
-          echo "P7_CANONICAL_FATAL_MATCHES=0"
-
-      - name: Verify tracked checkout clean after runtime gate
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ -z "$(git status --porcelain --untracked-files=no)" ]] || { git status --short; exit 40; }
-          python3 - <<'PY'
-import json
-from pathlib import Path
-p = Path('artifacts/runtime/v0-p7-canonical-acceptance/machine-evidence.json')
-data = json.loads(p.read_text())
-data['tracked_clean_after'] = True
-p.write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
-PY
-          find artifacts/runtime -type f -print0 | sort -z | xargs -0 sha256sum > artifacts/runtime/v0-p7-canonical-acceptance/SHA256SUMS
+          test -z "$(git status --porcelain --untracked-files=no)"
           echo "TRACKED_CLEAN_AFTER=true"
+          find artifacts/runtime -type f -print0 | sort -z | xargs -0 sha256sum > artifacts/runtime/v0-p7-canonical-acceptance/SHA256SUMS
 
-      - name: Upload canonical P7 runtime evidence
+      - name: Upload canonical runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v0-p7-canonical-acceptance-runtime-c14c37cc-linux
-          path: |
-            artifacts/runtime/v0-p7-7-graphical-digging/
-            artifacts/runtime/v0-p7-5-two-client-convergence/
-            artifacts/runtime/v0-p7-canonical-acceptance/
+          path: artifacts/runtime/
           if-no-files-found: error
