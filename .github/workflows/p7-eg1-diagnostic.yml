@@ -1,0 +1,71 @@
+name: P7 EG1 Exact Diagnostic
+on:
+  push:
+    branches: [control/v0-p7-eg1-process-diagnostic-r1]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  eg1:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-approved-engine-34038561062
+          run-id: 34038561062
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/approved-engine
+      - name: Verify exact subject and engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/eg1-diagnostic
+          test "$(git rev-parse HEAD)" = c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+          test "$(git rev-parse 'HEAD^{tree}')" = 04679a6e67fc86ec156d4341140fd5b0225d6085
+          test -z "$(git status --porcelain --untracked-files=no)"
+          engine="$RUNNER_TEMP/approved-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; "$engine" --version; sha256sum "$engine"; uname -a; } > artifacts/eg1-diagnostic/identity.txt
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+          BREAKPOINT_RUNTIME_DISABLED=1 "$engine" --headless --editor --path . --import > artifacts/eg1-diagnostic/import.log 2>&1
+      - name: Compare two isolated diagnostic environments without editing source
+        shell: bash
+        run: |
+          set +e
+          set -uo pipefail
+          failed=0
+          for mode in enabled disabled; do
+            profile="$RUNNER_TEMP/eg1-$mode-$GITHUB_RUN_ID"
+            mkdir -p "$profile/data" "$profile/config" "$profile/cache"
+            if [ "$mode" = disabled ]; then bridge=1; else bridge=0; fi
+            HOME="$profile" USERPROFILE="$profile" APPDATA="$profile/data" LOCALAPPDATA="$profile/data" XDG_DATA_HOME="$profile/data" XDG_CONFIG_HOME="$profile/config" XDG_CACHE_HOME="$profile/cache" PLANET_SIMULATOR_INVENTORY_PROFILE=planet_default BREAKPOINT_RUNTIME_DISABLED="$bridge" timeout --signal=TERM --kill-after=10s 100s "$GODOT_BIN" --headless --path . --script res://tests/network/test_eg1_gateway_processes.gd > "artifacts/eg1-diagnostic/$mode.log" 2>&1
+            code=$?
+            printf '%s %s\n' "$mode" "$code" >> artifacts/eg1-diagnostic/exits.txt
+            if [ "$code" -ne 0 ]; then failed=1; fi
+          done
+          exit "$failed"
+      - name: Preserve child process reports and exact checkout
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/eg1-diagnostic/child-reports
+          find artifacts/test-results -maxdepth 1 -type d -name 'eg1-gateway-*' -exec cp -r {} artifacts/eg1-diagnostic/child-reports/ \;
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; } > artifacts/eg1-diagnostic/postflight.txt
+          test -z "$(git status --porcelain --untracked-files=no)"
+          find artifacts/eg1-diagnostic -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/eg1-diagnostic/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-eg1-c14-diagnostic-${{ github.run_id }}
+          path: artifacts/eg1-diagnostic/
+          if-no-files-found: error
+          retention-days: 90
