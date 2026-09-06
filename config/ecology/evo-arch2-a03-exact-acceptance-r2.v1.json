@@ -1,0 +1,69 @@
+{
+  "schema": "dws.ecology.evo-arch2-a03-exact-acceptance.v1",
+  "revision": "EVO-ARCH2-A03-EXACT-ACCEPTANCE-2026-09-06-R2",
+  "status": "RESEARCH_SOURCE_ACCEPTED",
+  "work_order": "EVO-ARCH2-A03-20260906-R1",
+  "scope": ["A0", "A1", "A2", "A3"],
+  "subject": {
+    "branch": "feature/eco-evo-arch2-a0-a3-r1",
+    "head": "6f7e267f287eae978d8dac8d54a1b730c4afbfd4",
+    "tree": "d192f70952cbdeedb2ad58669542b5f8b5224067",
+    "acceptance_ref": "acceptance/eco-evo-arch2-a0-a3-r1"
+  },
+  "publication": {
+    "a2_a3_complete": true,
+    "first_full_source_commit": "096723ec6162892b49c11839e07f8824d0d2c45d",
+    "force_push_used": false,
+    "github_actions_used_as_git_transport": false
+  },
+  "review": {
+    "provider": "GitHub Codex",
+    "historical_reviewed_head": "83da390463ff1c8dfcdcb4af62ee2bacc85ee4a8",
+    "historical_findings": 3,
+    "historical_severity": "P1",
+    "repair_map": "docs/research/ecology/EVO_ARCH2_A03_REPAIR_MAP_R1_RU.md",
+    "fresh_request_exact_head": "6f7e267f287eae978d8dac8d54a1b730c4afbfd4",
+    "fresh_result": "PASS_NO_BLOCKING_FINDINGS",
+    "fresh_signal": "PR_PLUS_ONE_REACTION",
+    "fresh_signal_timestamp_utc": "2026-09-06T02:27:43Z",
+    "historical_threads_resolved": true
+  },
+  "verification": {
+    "mode": "FRESH_ISOLATED_EXACT_REMOTE_BLOB_RECONSTRUCTION",
+    "remote_blob_matches": 20,
+    "remote_blob_mismatches": 0,
+    "blob_manifest_sha256": "9b031bd5c336b797bb6775669d1fe6aecdea2796e99957636bb4685a614660b9",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "cold_import": "PASS",
+    "exact_assertions": 86,
+    "exact_failures": 0,
+    "fresh_process_runs": 2,
+    "fresh_process_logs_byte_identical": true,
+    "exact_log_sha256": "a03186ef32b7e3cf705ec70ddcdcab08388c8ed193acd9247ce88a7e3f2c363c",
+    "vis5_regression_assertions": 521,
+    "vis5_regression_failures": 0,
+    "graphical_lab": "PASS_OPENGL_XVFB_LLVMPIPE_RC0",
+    "graphical_log_sha256": "3dbf639373761c47019e3426406edcbaf6e25049fa6bf176e58e7de0cbff8ea2"
+  },
+  "project_control": {
+    "run": 34006294208,
+    "head": "6f7e267f287eae978d8dac8d54a1b730c4afbfd4",
+    "conclusion": "FAIL_EXTERNAL_GLOBAL_DRIFT",
+    "arch2_specific_owner_scope_red": false,
+    "global_red_relabelled": false,
+    "known_findings": [
+      "G critical Matter dependency drift",
+      "ECO critical registry/Matter dependency drift"
+    ]
+  },
+  "acceptance_policy": {
+    "self_accept": false,
+    "independent_review_required": true,
+    "independent_verification_required": true,
+    "global_pc0_green_inferred": false,
+    "production_promotion": false,
+    "merge_requires_human": true
+  },
+  "next": "A4 remains unstarted. Preserve accepted exact subject; start A4 only under a fresh bounded work order after current main/dependency reconciliation."
+}
