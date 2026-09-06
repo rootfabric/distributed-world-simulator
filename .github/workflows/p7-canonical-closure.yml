@@ -1,0 +1,145 @@
+name: P7 Canonical Closure Evidence
+on:
+  push:
+    branches: [control/v0-p7-canonical-closure-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: p7-canonical-closure-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  packet-audit:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate preserved exact evidence and history
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r scripts/harness/requirements.txt
+          python scripts/harness/verify_p7_closure_packet.py --git --output artifacts/p7-closure/packet-audit.json
+          python -m unittest discover -s tests/harness -p 'test_p7_closure_packet.py' -v
+      - name: Observe canonical control routing without dispatch
+        shell: bash
+        run: |
+          set -u
+          mkdir -p artifacts/p7-closure
+          failed=0
+          for mode in Overview CheckConsistency Drive CloseMission; do
+            pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 "-$mode" > "artifacts/p7-closure/$mode.log" 2>&1
+            code=$?
+            printf '%s %s\n' "$mode" "$code" >> artifacts/p7-closure/control-exits.txt
+            if [ "$mode" = CloseMission ]; then expected=8; else expected=0; fi
+            if [ "$code" -ne "$expected" ]; then failed=1; fi
+          done
+          git diff --exit-code
+          git diff --cached --exit-code
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-closure-packet-audit-${{ github.sha }}
+          path: artifacts/p7-closure/
+          if-no-files-found: error
+          retention-days: 90
+  canonical-world-core:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+    env:
+      SUBJECT_HEAD: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+      SUBJECT_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
+      GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+      PYTHONUTF8: '1'
+    steps:
+      - name: Checkout frozen canonical product, not workflow source
+        uses: actions/checkout@v4
+        with:
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve exact identity and approved engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-world-core
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; uname -a; } > artifacts/p7-world-core/preflight.txt
+          engine=''
+          for candidate in "${GODOT_BIN:-}" "$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64" /srv/dws-runner/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64; do
+            if [ -f "$candidate" ] && [ "$(sha256sum "$candidate" | cut -d' ' -f1)" = "$GODOT_SHA256" ]; then engine="$candidate"; break; fi
+          done
+          test -n "$engine"
+          "$engine" --version | tee artifacts/p7-world-core/godot-version.txt
+          sha256sum "$engine" > artifacts/p7-world-core/godot-sha256.txt
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+      - name: Resolve PowerShell 7 without modifying host installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v pwsh >/dev/null 2>&1; then
+            shell_bin="$(command -v pwsh)"
+          else
+            folder="$RUNNER_TEMP/p7-pwsh-$GITHUB_RUN_ID"
+            mkdir -p "$folder"
+            cd "$folder"
+            release='https://github.com/PowerShell/PowerShell/releases/download/v7.4.6'
+            curl --fail --location --connect-timeout 20 --max-time 300 "$release/hashes.sha256" -o hashes.sha256
+            curl --fail --location --connect-timeout 20 --max-time 600 "$release/powershell-7.4.6-linux-x64.tar.gz" -o powershell-7.4.6-linux-x64.tar.gz
+            python3 - <<'PY'
+          import hashlib, pathlib, re
+          name = 'powershell-7.4.6-linux-x64.tar.gz'
+          lines = pathlib.Path('hashes.sha256').read_text().splitlines()
+          matches = [line for line in lines if line.split()[-1].lstrip('*./') == name]
+          assert len(matches) == 1, 'POWERSHELL_DIGEST_IDENTITY_MISSING'
+          digest = matches[0].split()[0].lower()
+          assert re.fullmatch('[0-9a-f]{64}', digest), 'POWERSHELL_DIGEST_INVALID'
+          assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() == digest, 'POWERSHELL_DIGEST_MISMATCH'
+          PY
+            tar -xzf powershell-7.4.6-linux-x64.tar.gz
+            chmod u+x pwsh
+            shell_bin="$folder/pwsh"
+            cd "$GITHUB_WORKSPACE"
+          fi
+          "$shell_bin" -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable' > artifacts/p7-world-core/powershell-version.txt
+          echo "P7_PWSH=$shell_bin" >> "$GITHUB_ENV"
+      - name: Run unchanged repository full world and core regression
+        shell: bash
+        run: |
+          set -uo pipefail
+          timeout --signal=TERM --kill-after=60s 120m "$P7_PWSH" -NoProfile -File ./RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | tee artifacts/p7-world-core/full-world-core.log
+          code=${PIPESTATUS[0]}
+          printf '%s\n' "$code" > artifacts/p7-world-core/exit-code.txt
+          exit "$code"
+      - name: Verify frozen checkout and durable summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-world-core
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; } > artifacts/p7-world-core/postflight.txt
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          if [ -f artifacts/test-results/world-regression-summary.json ]; then
+            cp artifacts/test-results/world-regression-summary.json artifacts/p7-world-core/
+          fi
+          find artifacts/p7-world-core -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/p7-world-core/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-canonical-world-core-c14c37cc-${{ github.run_id }}
+          path: artifacts/p7-world-core/
+          if-no-files-found: error
+          retention-days: 90
