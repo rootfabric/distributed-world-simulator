@@ -1,7 +1,7 @@
 # WP-SURFACE1 — Evidence: EVIDENCE_READY / финальный handoff (2026-09-05)
 
 Track: WP-SURFACE1, branch `work/world-packs-surface1-families-r1`.
-Финальный implementation head: `0adbf2aa512cc30f81f2be9d98c898455726d1d8` (tested_head).
+Финальный tested head (после R2 review repair): `953e439c17d192b8e0800c1ab791cf31d9883008` (machine-поле `tested_head` в state; первоначальный implementation head `0adbf2aa` остаётся в истории).
 
 ## Выполненные milestones
 
@@ -19,12 +19,13 @@ Track: WP-SURFACE1, branch `work/world-packs-surface1-families-r1`.
 `matter/regolith-loose`, `matter/regolith-compacted`, `matter/basalt`, `matter/fractured-basalt`, `matter/water-ice`, `matter/iron-nickel-ore`, `matter/silicate-waste`.
 `matter/sand` НЕ существует → `surface/sand` не имеет привязок (PENDING), попытка привязать любой существующий matter как песок или включить surface/sand в рецепт даёт явный fail.
 
-## Validation (на head 0adbf2aa)
+## Validation (перепрогнано на head 953e439c в рамках R2 review repair, 2026-09-06)
 
-- `python -m pytest tests/world_packs/surface_library -q` → **43 passed**.
-- `python -m pytest tests/world_packs/test_library_contract.py` → 63 passed, 1 failed (`test_local_missing_symlink_and_corruption`, предсуществующий: `os.symlink` требует SeCreateSymbolicLinkPrivilege, WinError 1314; не связан с WP-SURFACE1).
+- `python -m pytest tests/world_packs/surface_library -q` → **43 passed** (Windows).
+- `python -m pytest tests/world_packs/test_library_contract.py` → Windows: 63 passed, 1 failed (`test_local_missing_symlink_and_corruption`, предсуществующий: `os.symlink` требует SeCreateSymbolicLinkPrivilege, WinError 1314; не связан с WP-SURFACE1). Linux (Ubuntu WSL, ext4): **64/64 passed** на том же head.
 - `python -m pytest tests/world_packs/test_parallel_controller.py` → 5 passed.
-- `python tools/world_packs/parallel_controller.py verify WP-SURFACE1` → RESULT=OK (после исправления state-схемы в `1e6e93c3`).
+- Full suite `python3 -m pytest tests/world_packs -q` на Linux (symlink-capable) → **112 passed, 0 failed** на том же head.
+- R2 review repair: D1 — все PASS-записи теперь на exact `tested_head` 953e439c; D3 — `compose()` fail-closed на неизвестные Matter ID (тест переписан на `pytest.raises`); D4 — этот раздел перегенерирован. D2 чинится controller repair-веткой, не здесь.
 
 ## Изменённые файлы (все в allowed paths WP-SURFACE1)
 
@@ -42,4 +43,4 @@ Track: WP-SURFACE1, branch `work/world-packs-surface1-families-r1`.
 
 ## Next
 
-Integrator/Reviewer: child PR `work/world-packs-surface1-families-r1` → `control/world-packs-parallel-r1`, review на exact head `0adbf2aa`.
+Integrator/Reviewer: child PR `work/world-packs-surface1-families-r1` → `control/world-packs-parallel-r1`, re-review на exact head из machine-поля `tested_head` (953e439c).
