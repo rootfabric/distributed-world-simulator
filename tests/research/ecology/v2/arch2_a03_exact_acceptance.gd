@@ -142,7 +142,7 @@ func _lab_tests() -> void:
 func _reviewer_repair_tests() -> void:
 	# RM-02: BUDGET_BLOCKED is an open tick, never a successful completed tick.
 	var model := Model.new()
-	_check(model.reset(1), "repair_budget_fixture_reset")
+	_check(model.reset(2), "repair_budget_fixture_reset")
 	model.state.limits.modules = 1
 	var before_tick: int = model.state.tick
 	_check(not model.step(1), "repair_budget_block_returns_false")
