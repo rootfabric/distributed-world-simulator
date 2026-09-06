@@ -57,10 +57,16 @@
       "runner_selector": [
         "self-hosted",
         "Linux",
+        "X64"
+      ],
+      "preferred_runner_selector_after_live_label_confirmation": [
+        "self-hosted",
+        "Linux",
         "X64",
         "dws-linux",
         "dws-godot-double"
       ],
+      "selector_upgrade_condition": "LIVE_RUNNER_CUSTOM_LABELS_CONFIRMED",
       "capacity": 1,
       "capabilities": [
         "LINUX_X64",
