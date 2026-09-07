@@ -5,6 +5,7 @@ const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const LH = preload("res://scripts/research/ecology/v2/life_history_program_v1.gd")
 const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const LS = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")
 const R = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
@@ -19,6 +20,7 @@ func _init() -> void:
 	_unpaid_maintenance_blocks_reproduction()
 	_propagule_endowment_bound()
 	_bounded_demand_ids()
+	_deferred_reproduction_schedule()
 	print("EVO_ARCH2_A5_REPAIRS assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -104,3 +106,17 @@ func _bounded_demand_ids() -> void:
 	_check(not overlap, "distinct_max_length_organisms_have_distinct_demand_ids")
 	var result := _step(_field("repair.longids", 900000, 900), [entry_b, entry_a])
 	_check(result.success and result.population.size() == 2, "max_length_ids_shared_population_step_success")
+
+func _deferred_reproduction_schedule() -> void:
+	var p := _policy()
+	p.reproduction.maturity_ticks = 1
+	p.reproduction.interval_ticks = 1000000
+	p.reproduction.endowment = B.stock()
+	p.reproduction.fee_energy_mj = 0
+	var blueprint := BP.create(_reproductive_genome(), p)
+	var entry := R.individual(blueprint, "repair.schedule", [500,0,500], B.stock())
+	_check(not entry.is_empty(), "max_interval_schedule_parent_valid")
+	entry.state.age_ticks = 1
+	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history)
+	_check(reproduced.success and reproduced.state.next_reproduction_tick == 1000001, "max_interval_absolute_schedule_preserved")
+	_check(LS.validate(reproduced.state, blueprint).is_empty(), "deferred_schedule_state_valid")
