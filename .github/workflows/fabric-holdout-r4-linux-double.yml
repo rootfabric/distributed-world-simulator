@@ -1,12 +1,11 @@
-name: HOLDOUT-R4 Scoped Source Publication Objects
+name: HOLDOUT-R4 Measurement Repair Blob Transfer
 on:
   push:
     branches: [verify/fabric-holdout-r4-author-capture-r1]
 permissions:
   contents: write
-  actions: read
 jobs:
-  source-objects-only:
+  transfer-only:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -14,60 +13,59 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - name: Validate transferred source and create Git objects without moving any ref
+      - name: Verify bounded measurement-only patch and publish blobs without moving refs
         env:
-          GH_TOKEN: ${{ github.token }}
+          OBJECT_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import base64,gzip,hashlib,io,json,os,pathlib,urllib.request,zipfile
-          repo='rootfabric/distributed-world-simulator'
-          class SafeRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self,req,fp,code,msg,headers,newurl):
-                  redirected=super().redirect_request(req,fp,code,msg,headers,newurl)
-                  if redirected is not None: redirected.remove_header('Authorization')
-                  return redirected
-          opener=urllib.request.build_opener(SafeRedirect())
-          def api(path,body=None,raw=False):
-              req=urllib.request.Request('https://api.github.com/repos/'+repo+'/'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'},method='GET' if body is None else 'POST')
-              with opener.open(req,timeout=40) as response: data=response.read()
-              return data if raw else json.loads(data)
-          encoded=''.join(pathlib.Path('scripts/research/fabric_holdout_r4/transport-'+part+'.b64').read_text() for part in ['a','b'])
-          raw=gzip.decompress(base64.b64decode(encoded,validate=True))
-          assert len(raw)==58848 and hashlib.sha256(raw).hexdigest()=='6a806e4d82ca965ad8e8113e395feae7d215123b875226e07f4591b32581bd0d'
+          import base64,gzip,hashlib,json,os,pathlib,subprocess,urllib.request
+          parent='715a97674cbe3ac29209a46b07151e2d4cb9ac9a'
+          allowed={'scripts/research/fabric_holdout_r4/holdout.py','tests/research/fabric1/fabric_holdout_r4_protocol_test.py','RUN_FABRIC_HOLDOUT_R4_TESTS.sh','config/research/fabric-holdout-r4-freeze.json'}
+          source=pathlib.Path.cwd()
+          raw=gzip.decompress(base64.b64decode((source/'scripts/research/fabric_holdout_r4/measurement-repair.b64').read_bytes(),validate=True))
+          assert len(raw)==13121 and hashlib.sha256(raw).hexdigest()=='237750ad381e5b174a8b99f6f98bc2b07fbfce6dbc0509a588cf25018ea47c38'
           payload=json.loads(raw)
-          parent='c73262adf568e2309fe5dd49a034812492566691'
-          assert payload['expected_parent']==parent
+          assert payload['base_head']==parent and len(payload['files'])==4 and {f['path'] for f in payload['files']}==allowed
+          def api(path,body=None):
+              req=urllib.request.Request('https://api.github.com/repos/rootfabric/distributed-world-simulator/'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+os.environ['OBJECT_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'},method='GET' if body is None else 'POST')
+              with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
           assert api('git/ref/heads/research/fabric-holdout-r4-frozen-generalization-r1')['object']['sha']==parent
-          assert api('git/ref/heads/research/fabric-composition-r3-coupled-mechanism-r1')['object']['sha']=='fd6e83b35301d7a15e92c55939654f1f95729730'
-          archive=api('actions/artifacts/10024337632/zip',raw=True)
-          assert hashlib.sha256(archive).hexdigest()==payload['capture_artifact_sha256']=='501a7f8a529b98ac9c01ac498a0885e7d1af24b1a7cb92e260cf813bae562974'
-          allowed={'config/research/fabric-holdout-r4-cases.json','config/research/fabric-holdout-r4-provenance.json','config/research/fabric-holdout-r4-freeze.json','docs/research/FABRIC_HOLDOUT_R4_AUTHOR_RAW_RU.md','validation/fabric-holdout-r4-author-response.json','scripts/research/fabric_holdout_r4/holdout.py','tests/research/fabric1/fabric_holdout_r4_probe.gd','tests/research/fabric1/fabric_holdout_r4_protocol_test.py','RUN_FABRIC_HOLDOUT_R4_TESTS.sh','.github/workflows/fabric-holdout-r4-linux-double.yml'}
-          assert len(payload['files'])==len(allowed) and {f['path'] for f in payload['files']}==allowed
+          target=pathlib.Path(os.environ['RUNNER_TEMP'])/'r4-measurement-transfer'
+          subprocess.run(['git','worktree','add','--detach',str(target),parent],check=True)
+          def git(*args,input=None):return subprocess.check_output(['git',*args],cwd=target,input=input)
+          for f in payload['files']:
+              assert hashlib.sha256((target/f['path']).read_bytes()).hexdigest()==f['before_sha256'],f['path']
+          patch=payload['patch'].encode()
+          git('apply','--check','-',input=patch)
+          git('apply','-',input=patch)
+          assert set(git('diff','--name-only').decode().splitlines())==allowed
+          git('diff','--check')
+          out=source/'publication';out.mkdir()
           entries=[]
-          with zipfile.ZipFile(io.BytesIO(archive)) as z:
-              assert z.testzip() is None
-              for f in payload['files']:
-                  data=z.read(f['artifact_entry']) if 'artifact_entry' in f else f['content'].encode('utf-8')
-                  assert hashlib.sha256(data).hexdigest()==f['sha256'],f['path']
-                  blob=api('git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha']
-                  assert blob==hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
-                  assert f['mode'] in ('100644','100755')
-                  entries.append({'path':f['path'],'mode':f['mode'],'type':'blob','sha':blob})
-          base_tree=api('git/commits/'+parent)['tree']['sha']
-          tree=api('git/trees',{'base_tree':base_tree,'tree':entries})['sha']
-          assert tree==payload['expected_tree']=='11db01b2e4b4bce5189162aa6471cc651779d8ca'
-          commit=api('git/commits',{'message':'test(fabric): implement frozen HOLDOUT-R4 G1 measurements and independent challenge\n\nWork-Order: FABRIC-HOLDOUT-R4-WO-001\nAcceptance: NOT_CLAIMED\nFrozen-Runtime: fd6e83b35301d7a15e92c55939654f1f95729730','tree':tree,'parents':[parent]})
-          out=pathlib.Path('publication');out.mkdir()
-          result={'commit':commit,'files':entries,'payload_sha256':hashlib.sha256(raw).hexdigest(),'branch_moved':False,'runtime_executed':False,'run':int(os.environ['GITHUB_RUN_ID'])}
+          for f in payload['files']:
+              data=(target/f['path']).read_bytes()
+              assert hashlib.sha256(data).hexdigest()==f['after_sha256'],f['path']
+              blob=api('git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha']
+              assert blob==hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              mode=git('ls-files','-s','--',f['path']).decode().split()[0]
+              entries.append({'path':f['path'],'mode':mode,'type':'blob','sha':blob,'sha256':f['after_sha256']})
+              dest=out/'files'/f['path'];dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+          git('add','--',*sorted(allowed))
+          tree=git('write-tree').decode().strip()
+          result={'base_head':parent,'base_tree':git('rev-parse',parent+'^{tree}').decode().strip(),'expected_tree':tree,'entries':entries,'payload_sha256':hashlib.sha256(raw).hexdigest(),'ref_updated':False,'runtime_executed':False,'run_id':int(os.environ['GITHUB_RUN_ID'])}
           (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
-          print('OBJECT_COMMIT='+commit['sha']);print('OBJECT_TREE='+tree);print('NO_REF_UPDATED')
+          (out/'base-commit.txt').write_bytes(git('cat-file','commit',parent))
+          (out/'repair-map.md').write_bytes((target/'docs/research/FABRIC_HOLDOUT_R4_MEASUREMENT_REPAIR_RU.md').read_bytes())
+          (out/'sha256.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(out).as_posix()+'\n' for p in sorted(out.rglob('*')) if p.is_file()))
+          print(json.dumps(result,sort_keys=True))
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: fabric-holdout-r4-source-objects-${{ github.run_id }}
+          name: fabric-holdout-r4-measurement-blobs-${{ github.run_id }}
           path: publication/
           if-no-files-found: error
           retention-days: 30
