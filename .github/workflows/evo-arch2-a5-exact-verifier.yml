@@ -21,15 +21,15 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: da9cfa43294267aab1ddba28bc0cac16b60dda98
+          ref: 7825822d34b154602040174cdd76d1e0409b3881
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact source identity and additive A5 fence
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "da9cfa43294267aab1ddba28bc0cac16b60dda98"
-          test "$(git rev-parse HEAD^{tree})" = "e3ee7634a0b5fd6197d3d354042472efaffc7a9b"
+          test "$(git rev-parse HEAD)" = "7825822d34b154602040174cdd76d1e0409b3881"
+          test "$(git rev-parse HEAD^{tree})" = "e3ffa300a2ce145beb39cc4ba7dc5ab16a8a1937"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -103,7 +103,7 @@ jobs:
           for n in 1 2; do
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd 2>&1 | tee "a5-repairs-$n.log"
             test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_REPAIRS assertions=22 failed=0" "a5-repairs-$n.log"
+            grep -F "EVO_ARCH2_A5_REPAIRS assertions=29 failed=0" "a5-repairs-$n.log"
             ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"
           done
           cmp a5-repairs-1.log a5-repairs-2.log
@@ -157,7 +157,7 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "da9cfa43294267aab1ddba28bc0cac16b60dda98"
-          test "$(git rev-parse HEAD^{tree})" = "e3ee7634a0b5fd6197d3d354042472efaffc7a9b"
+          test "$(git rev-parse HEAD)" = "7825822d34b154602040174cdd76d1e0409b3881"
+          test "$(git rev-parse HEAD^{tree})" = "e3ffa300a2ce145beb39cc4ba7dc5ab16a8a1937"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
