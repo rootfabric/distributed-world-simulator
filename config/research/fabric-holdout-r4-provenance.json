@@ -1,0 +1,18 @@
+{
+  "freeze_commit": "c73262adf568e2309fe5dd49a034812492566691",
+  "subject_head": "fd6e83b35301d7a15e92c55939654f1f95729730",
+  "cases_sha256": "7e2dd992e372129a7d006ca26fc2666473ca15f5aeeb45d769818cc0216a793f",
+  "author": "chatgpt-codex-connector[bot]",
+  "author_id": 199175422,
+  "source_comment_id": 3950896660,
+  "review_id": 5133411089,
+  "created_at": "2026-09-07T15:03:28Z",
+  "updated_at": "2026-09-07T15:03:28Z",
+  "original_commit_id": "c73262adf568e2309fe5dd49a034812492566691",
+  "raw_response_path": "docs/research/FABRIC_HOLDOUT_R4_AUTHOR_RAW_RU.md",
+  "raw_response_sha256": "34831992c492f17dc90708da0d55944fbc3b87a9a4f4f1fceb12c1ce36913776",
+  "github_response_sha256": "341d07812e1af3687039ccfa79b6aeb68b1038fef8160a244a7da90ef3060f57",
+  "source_url": "https://github.com/rootfabric/distributed-world-simulator/pull/583#discussion_r3950896660",
+  "capture_run": 34136924738,
+  "capture_purpose": "DATA_ONLY_NO_RUNTIME_EXECUTION_NO_ACCEPTANCE"
+}
