@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.diff_guard.v1",
+  "path": "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd",
+  "original_blob_sha": "ec596493c5b96a6140b17adbe18d6283c0615bf0",
+  "candidate_blob_sha": "be7c5ee411752a2623cbf89279b136892d1f0852",
+  "work_order": "V0-P7-MW10-CROSS-REGION-LOCK-R1",
+  "changed_functions": [
+    "_release_lock",
+    "_remove_stale_lock",
+    "_read_lock_owner"
+  ],
+  "added_functions": [
+    "_lock_is_stale",
+    "_process_liveness",
+    "_read_lock_owner_at",
+    "_rename_lock_for_release"
+  ],
+  "added_constants": [
+    "MAX_LOCK_RELEASE_ATTEMPTS",
+    "LOCK_UNKNOWN_LIVENESS_STALE_AFTER_MS",
+    "_lock_release_rename_override"
+  ],
+  "pattern_source": "scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd@d1b4993812fde8e8aeef86c508530df92ea41648",
+  "notes": "Blob-pinned guard: the candidate repository file must hash exactly to candidate_blob_sha and the base file to original_blob_sha. Any further touch invalidates the guard."
+}

@@ -23,6 +23,9 @@ RUNNER = "RUN_WORLD_REGRESSION_TESTS.ps1"
 P74_SCRIPT = "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd"
 P74_PHASES = ("seed", "recover-deliver", "recover-replay")
 P74_ASSERTIONS = {"seed": 21, "recover-deliver": 25, "recover-replay": 17}
+REPO = "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd"
+MW10_PROBE = "mw10-lock-lifecycle"
+MW10_TEST = "tests/matter/transactions/test_mw10_cross_region_processes.gd"
 FATAL = re.compile(r"SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to instantiate an autoload|Failed to load script")
 P7_LEAVES = {
     "v0-p7-5-two-client-convergence": {
@@ -129,7 +132,7 @@ def identity(root: Path) -> dict:
 
 def check_source(root: Path) -> None:
     changed = git("diff", "--name-only", BASE, "HEAD", cwd=root).splitlines()
-    allowed = {PORT, EG1, "tools/network/eg4_client_worker.gd", RUNNER,
+    allowed = {PORT, EG1, "tools/network/eg4_client_worker.gd", RUNNER, REPO,
                ".github/workflows/p7-eg1-world-core-repair.yml"}
     require(all(path in allowed or path.startswith(DOCS) for path in changed), "WORK_ORDER_SCOPE_DRIFT")
     original = subprocess.check_output(["git", "show", f"{BASE}:{PORT}"], cwd=root).decode()
@@ -168,6 +171,13 @@ def check_source(root: Path) -> None:
     require(runner.count(runner_spec["added_block"]) == 1, "P74_RUNNER_DIFF_MISSING")
     restored = runner.replace(runner_spec["added_block"], runner_spec["replaced_original_block"])
     require(restored == original_runner, "ORIGINAL_RUNNER_ORCHESTRATION_CHANGED")
+    # The MW10 lock-lifecycle Work Order permits only the ported hardened
+    # release/staleness pattern in the cross-region repository.
+    repo_spec = json.loads((root / DOCS / "mw10-lock-diff-guard.v1.json").read_text())
+    require(git("rev-parse", f"{BASE}:{REPO}", cwd=root) == repo_spec["original_blob_sha"],
+            "MW10_REPOSITORY_BASELINE_DRIFT")
+    require(git("hash-object", REPO, cwd=root) == repo_spec["candidate_blob_sha"],
+            "MW10_REPOSITORY_PATCH_DRIFT")
     git("diff", "--check", cwd=root)
 
 
@@ -180,6 +190,7 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
     runner = str(root / DOCS / "probes/run_bandwidth_probe.gd")
     run(root, out, "baseline-import", [engine, "--headless", "--editor", "--path", str(baseline), "--import"], 180)
     eg4_completion_check(root, out, engine, baseline, negative=True)
+    mw10_lock_check(root, out, engine, baseline, negative=True)
     run(root, out, "baseline-probe", [engine, "--headless", "--path", str(baseline), "--script", runner,
         "--", f"--output={out / 'baseline-probe.json'}"], 30, expected=1)
     report = json.loads((out / "baseline-probe.json").read_text())
@@ -200,6 +211,15 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
                 and case["statistics_before_input"]["deceleration"] == 2
                 and case["reliable_valid"] and case["input_received"], "CANDIDATE_BANDWIDTH_NOT_RESTORED")
     eg4_completion_check(root, out, engine, root, negative=False)
+    mw10_lock_check(root, out, engine, root, negative=False)
+    for attempt in range(1, 6):
+        name = f"mw10-{attempt}"
+        run(root, out, name, [engine, "--headless", "--path", str(root), "--script",
+                              f"res://{MW10_TEST}"], 600)
+        text = (out / f"{name}.log").read_text(encoding="utf-8", errors="replace")
+        matches = re.findall(r"^MW10 cross-region Matter processes: PASS \(53 assertions\)$", text, re.MULTILINE)
+        require(len(matches) == 1 and not re.search(r": FAIL\b|\b[1-9][0-9]* failures\b", text),
+                "MW10_PROCESS_PREDICATES_NOT_PROVEN")
     for attempt in range(1, 6):
         name = f"eg1-{attempt}"
         run(root, out, name, [engine, "--headless", "--path", str(root), "--script", f"res://{EG1}"], 90)
@@ -251,6 +271,26 @@ def eg4_completion_check(root: Path, out: Path, engine: str, project: Path, nega
         failures.append("late-receipt:wait")
     require(report["assertions"] == 23 and sorted(report["failures"]) == sorted(failures)
             and report["verdict"] == ("FAIL" if negative else "PASS"), "EG4_COMPLETION_CAUSE_NOT_PROVEN")
+    write_json(out / f"{name}.summary.json", report)
+
+
+def mw10_lock_check(root: Path, out: Path, engine: str, project: Path, negative: bool) -> None:
+    name = "baseline-mw10-lock-lifecycle" if negative else "candidate-mw10-lock-lifecycle"
+    script = str(root / DOCS / "probes/test_mw10_lock_lifecycle.gd")
+    run(root, out, name, [engine, "--headless", "--path", str(project), "--script", script],
+        60, expected=1 if negative else 0)
+    report = single_report(out / f"{name}.log", MW10_PROBE)
+    failures = []
+    if negative:
+        failures = [
+            "ownerless-grace-fence:stale-removal-must-refuse",
+            "ownerless-grace-fence:live-lock-must-survive",
+            "atomic-release-retry:attempts-bounded",
+            "atomic-release-retry:released-atomically",
+            "atomic-release-retry:injection-count",
+        ]
+    require(report["assertions"] == 16 and sorted(report["failures"]) == sorted(failures)
+            and report["verdict"] == ("FAIL" if negative else "PASS"), "MW10_LOCK_CAUSE_NOT_PROVEN")
     write_json(out / f"{name}.summary.json", report)
 
 
