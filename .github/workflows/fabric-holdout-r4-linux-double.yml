@@ -15,19 +15,19 @@ jobs:
           ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
           fetch-depth: 0
           persist-credentials: false
-      - name: Audit canonical control and immutable source scope without dispatch
+      - name: Audit exact final source against pinned canonical control
         shell: bash
         run: |
           set -Eeuo pipefail
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git rev-parse origin/main)" = c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
           test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = fd6e83b35301d7a15e92c55939654f1f95729730
-          test "$(git rev-parse origin/research/fabric-holdout-r4-frozen-generalization-r1)" = 9bb354c31d65600eccd6df713118e11a1f26f548
-          test "$(git rev-parse '9bb354c31d65600eccd6df713118e11a1f26f548^{tree}')" = 846af7694545a361f7b97e738687f244602cc752
+          test "$(git rev-parse origin/research/fabric-holdout-r4-frozen-generalization-r1)" = 9c5ee890d9f770756e37c1d3df84b4f3c1dbd477
+          test "$(git rev-parse '9c5ee890d9f770756e37c1d3df84b4f3c1dbd477^{tree}')" = 4bd6f2834f775cf4286c6de3ac9e28fb73e57c61
           python3 -m pip install -r scripts/harness/requirements.txt
           mkdir audit
           git show-ref > audit/refs.txt
-          printf 'CONTROL_MAIN=%s\nR4_HARNESS_HEAD=%s\nR4_HARNESS_TREE=%s\nFROZEN_RUNTIME=%s\nWORKFLOW_HEAD=%s\nRUN=%s\n' c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f 9bb354c31d65600eccd6df713118e11a1f26f548 846af7694545a361f7b97e738687f244602cc752 fd6e83b35301d7a15e92c55939654f1f95729730 "$GITHUB_SHA" "$GITHUB_RUN_ID" > audit/identity.txt
+          printf 'CONTROL_MAIN=%s\nR4_HARNESS_HEAD=%s\nR4_HARNESS_TREE=%s\nFROZEN_RUNTIME=%s\nWORKFLOW_HEAD=%s\nRUN=%s\n' c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f 9c5ee890d9f770756e37c1d3df84b4f3c1dbd477 4bd6f2834f775cf4286c6de3ac9e28fb73e57c61 fd6e83b35301d7a15e92c55939654f1f95729730 "$GITHUB_SHA" "$GITHUB_RUN_ID" > audit/identity.txt
           execute() {
             local label="$1"
             shift
@@ -52,11 +52,14 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,pathlib,subprocess
           base='fd6e83b35301d7a15e92c55939654f1f95729730'
-          head='9bb354c31d65600eccd6df713118e11a1f26f548'
+          head='9c5ee890d9f770756e37c1d3df84b4f3c1dbd477'
           rows=subprocess.check_output(['git','diff','--name-status',base,head],text=True).splitlines()
           allowed=('docs/research/FABRIC_HOLDOUT_R4_','config/research/fabric-holdout-r4-','scripts/research/fabric_holdout_r4/','tests/research/fabric1/fabric_holdout_r4_','validation/fabric-holdout-r4-','RUN_FABRIC_HOLDOUT_R4_TESTS.sh','.github/workflows/fabric-holdout-r4-linux-double.yml')
           violations=[r for r in rows if not r.startswith('A\t') or not r.split('\t',1)[1].startswith(allowed)]
-          report={'scope':'BOUNDED_RESEARCH_ONLY','source_head':head,'frozen_runtime':base,'changed_paths':rows,'outside_scope':violations,'frozen_predecessor_unchanged':not violations,'main_acceptance':False,'holdout_pass':False,'note':'Command exits are retained verbatim. Default Drive/Close concern main-owned production routing, not a fabricated R4 activation.'}
+          paths=[r.split('\t',1)[1] for r in rows]
+          watch_hits=[]
+          registry=json.loads(pathlib.Path('config/control/project-program-registry.v1.json').read_text())
+          report={'scope':'BOUNDED_RESEARCH_ONLY','source_head':head,'frozen_runtime':base,'changed_paths':rows,'outside_scope':violations,'frozen_predecessor_unchanged':not violations,'main_acceptance':False,'holdout_pass':False,'registry_generation':registry['registry_generation'],'note':'Command exits and complete PC0/directional reports are retained verbatim. Default Drive/Close concern main-owned production routing, not R4 activation.'}
           pathlib.Path('audit/scope.json').write_text(json.dumps(report,indent=2)+'\n')
           p=pathlib.Path('audit');(p/'sha256.txt').write_text(''.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name+'\n' for f in sorted(p.iterdir()) if f.is_file()))
           assert not violations, violations
