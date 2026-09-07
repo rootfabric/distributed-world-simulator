@@ -93,10 +93,11 @@ static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary) 
 
 static func validate_propagule(v: Variant, blueprint: Dictionary) -> String:
 	if not BP.validate(blueprint).is_empty(): return "PROPAGULE_BLUEPRINT"
-	var keys := ["schema", "id", "parent_id", "blueprint_hash", "birth_tick", "position_mm", "endowment", "parent_state_hash"]
+	var keys := ["schema", "id", "parent_id", "sequence", "blueprint_hash", "birth_tick", "position_mm", "endowment", "parent_state_hash"]
 	if not C.keys(v, keys) or v.schema != PROPAGULE_SCHEMA: return "PROPAGULE_SCHEMA"
-	if not C.identifier(v.id) or not C.identifier(v.parent_id) or v.blueprint_hash != BP.biological_hash(blueprint): return "PROPAGULE_IDENTITY"
-	if not C.integer(v.birth_tick, 1, 1000000) or not C.vector(v.position_mm, F.MAX_PORT_COORD_MM): return "PROPAGULE_POSITION"
+	if not C.identifier(v.parent_id) or not C.integer(v.sequence, 0, LS.MAX_OFFSPRING_COUNTER - 1): return "PROPAGULE_IDENTITY"
+	if not C.identifier(v.id) or v.id != _propagule_id(v.parent_id, v.sequence) or v.blueprint_hash != BP.biological_hash(blueprint): return "PROPAGULE_IDENTITY"
+	if not C.integer(v.birth_tick, 1, LS.MAX_AGE_TICK) or not C.vector(v.position_mm, F.MAX_PORT_COORD_MM): return "PROPAGULE_POSITION"
 	if not B.valid_stock(v.endowment) or not F.valid_hash(v.parent_state_hash): return "PROPAGULE_RESOURCE"
 	if v.endowment != blueprint.life_history.reproduction.endowment: return "PROPAGULE_ENDOWMENT"
 	return ""
@@ -121,16 +122,16 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 	assimilated.water_mg = field_intake.water_mg
 	assimilated.energy_mj = _photosynthesis_energy(phenotype_before, sample, field_intake.water_mg, policy)
 	if not _add_field_stock(state.resource_ledger.field_intake, field_intake): return _fail("A5_FIELD_INTAKE_OVERFLOW")
-	if state.resource_ledger.external_energy_mj > B.MAX_STOCK - assimilated.energy_mj: return _fail("A5_ENERGY_SOURCE_OVERFLOW")
+	if state.resource_ledger.external_energy_mj > C.MAX_INT - assimilated.energy_mj: return _fail("A5_ENERGY_SOURCE_OVERFLOW")
 	state.resource_ledger.external_energy_mj += assimilated.energy_mj
-	if not _add_stock(state.metabolic_reserves, assimilated) or not _add_stock(state.resource_ledger.assimilated, assimilated):
-		return _fail("A5_RESOURCE_OVERFLOW")
+	if not _add_reserve_stock(state.metabolic_reserves, assimilated): return _fail("A5_RESERVE_OVERFLOW")
+	if not _add_cumulative_stock(state.resource_ledger.assimilated, assimilated): return _fail("A5_ASSIMILATED_LEDGER_OVERFLOW")
 
 	var maintenance := _maintenance_cost(state, policy)
 	var maintenance_paid := _can_pay(state.metabolic_reserves, maintenance)
 	if maintenance_paid:
+		if not _add_cumulative_stock(state.resource_ledger.maintenance, maintenance): return _fail("A5_MAINTENANCE_LEDGER_OVERFLOW")
 		_pay(state.metabolic_reserves, maintenance)
-		_add_stock(state.resource_ledger.maintenance, maintenance)
 		state.starvation_ticks = 0
 		state.last_events.append({"outcome": "MAINTENANCE_PAID", "detail": "full deterministic maintenance debit"})
 	else:
@@ -155,8 +156,8 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 		if not development_result.success: return development_result
 		if not _stock_zero(grant):
 			if not _can_pay(state.metabolic_reserves, grant): return _fail("A5_GROWTH_DEBIT")
+			if not _add_cumulative_stock(state.resource_ledger.growth_transferred, grant): return _fail("A5_GROWTH_LEDGER_OVERFLOW")
 			_pay(state.metabolic_reserves, grant)
-			_add_stock(state.resource_ledger.growth_transferred, grant)
 		state.development = development_result.state
 	elif maintenance_paid:
 		state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "regulatory gate freezes development and retained A2 reserves"})
@@ -200,6 +201,9 @@ static func _demands(state: Dictionary, blueprint: Dictionary, phenotype: Dictio
 
 static func _demand_request_id(individual_id: String, age_tick: int, resource: String) -> String:
 	return "life/%s/%06d/%s" % [individual_id.sha256_text(), age_tick, resource]
+
+static func _propagule_id(parent_id: String, sequence: int) -> String:
+	return "seed/%s/%06d" % [parent_id.sha256_text(), sequence]
 
 static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, granted_water_mg: int, policy: Dictionary) -> int:
 	var area := int(phenotype.statistics.get("collector_area_mm2", 0))
@@ -270,28 +274,33 @@ static func _reproduce(source: Dictionary, blueprint: Dictionary, policy: Dictio
 	if source.reproduction_count > LS.MAX_OFFSPRING_COUNTER - count or source.propagule_seq > LS.MAX_OFFSPRING_COUNTER - count:
 		return _fail("A5_OFFSPRING_COUNTER_LIMIT")
 	var schedule_tick: int = source.age_ticks + policy.reproduction.interval_ticks
-	if schedule_tick > LS.MAX_REPRODUCTION_SCHEDULE_TICK:
-		return _fail("A5_REPRODUCTION_SCHEDULE_LIMIT")
+	if schedule_tick > LS.MAX_REPRODUCTION_SCHEDULE_TICK: return _fail("A5_REPRODUCTION_SCHEDULE_LIMIT")
 	var state := source.duplicate(true)
 	_pay(state.metabolic_reserves, needed)
-	_add_stock(state.resource_ledger.reproduction_transferred, transfer)
-	_add_stock(state.resource_ledger.reproduction_cost, fee)
+	if not _add_cumulative_stock(state.resource_ledger.reproduction_transferred, transfer): return _fail("A5_REPRODUCTION_TRANSFER_OVERFLOW")
+	if not _add_cumulative_stock(state.resource_ledger.reproduction_cost, fee): return _fail("A5_REPRODUCTION_COST_OVERFLOW")
+	var first_sequence: int = state.propagule_seq
+	state.propagule_seq += count
+	state.reproduction_count += count
+	state.next_reproduction_tick = schedule_tick
+	var validation := LS.validate(state, blueprint)
+	if not validation.is_empty(): return _fail("A5_REPRODUCTION_STATE:" + validation)
+	var paid_parent_state_hash := LS.state_hash(state, blueprint)
+	if paid_parent_state_hash.is_empty(): return _fail("A5_REPRODUCTION_STATE_HASH")
 	var propagules: Array = []
-	for _i in count:
-		var id := "seed/%s/%06d" % [state.individual_id.sha256_text(), state.propagule_seq]
-		state.propagule_seq += 1
+	for offset in count:
+		var sequence := first_sequence + offset
 		propagules.append({
 			"schema": PROPAGULE_SCHEMA,
-			"id": id,
+			"id": _propagule_id(state.individual_id, sequence),
 			"parent_id": state.individual_id,
+			"sequence": sequence,
 			"blueprint_hash": BP.biological_hash(blueprint),
 			"birth_tick": state.age_ticks,
 			"position_mm": state.position_mm.duplicate(),
 			"endowment": endowment.duplicate(true),
-			"parent_state_hash": LS.state_hash(source, blueprint),
+			"parent_state_hash": paid_parent_state_hash,
 		})
-	state.reproduction_count += count
-	state.next_reproduction_tick = schedule_tick
 	return {"success": true, "state": state, "propagules": propagules}
 
 static func _can_pay(reserves: Dictionary, cost: Dictionary) -> bool:
@@ -302,9 +311,15 @@ static func _can_pay(reserves: Dictionary, cost: Dictionary) -> bool:
 static func _pay(reserves: Dictionary, cost: Dictionary) -> void:
 	for name in B.RESOURCES: reserves[name] -= cost[name]
 
-static func _add_stock(target: Dictionary, delta: Dictionary) -> bool:
+static func _add_reserve_stock(target: Dictionary, delta: Dictionary) -> bool:
 	for name in B.RESOURCES:
 		if delta[name] < 0 or target[name] > B.MAX_STOCK - delta[name]: return false
+	for name in B.RESOURCES: target[name] += delta[name]
+	return true
+
+static func _add_cumulative_stock(target: Dictionary, delta: Dictionary) -> bool:
+	for name in B.RESOURCES:
+		if delta[name] < 0 or target[name] > C.MAX_INT - delta[name]: return false
 	for name in B.RESOURCES: target[name] += delta[name]
 	return true
 
