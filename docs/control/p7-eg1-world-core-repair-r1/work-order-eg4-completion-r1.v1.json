@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-EG4-RECEIPT-COMPLETION-R1",
+  "project_epoch": "E2026-09-06-V0-P7-CANONICAL-CLOSURE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "9fbd73e837a80b0b079eddb96a60c7f6f9ee3b9b",
+  "branch": "repair/v0-p7-eg1-world-core-r1",
+  "scope": "Director continuation within the existing P7 closure mission, with the same sole Implementer. Preserve the ENet owner fix. Repair only premature withdrawal/detach in the EG4 test client after the full regression exposed its missing acknowledgement-drain barrier. No second runtime worker or MVP dispatch.",
+  "allowed_paths": [
+    "tools/network/eg4_client_worker.gd",
+    "docs/control/p7-eg1-world-core-repair-r1/**",
+    ".github/workflows/p7-eg1-world-core-repair.yml"
+  ],
+  "forbidden_paths": [
+    "scripts/network/**",
+    "tests/network/test_eg4_gateway_processes.gd",
+    "tools/network/eg4_gateway_worker.gd",
+    "tools/network/eg4_sim_server_worker.gd",
+    "tools/network/eg4_process_support.gd",
+    "tools/network/eg1*.gd",
+    "tests/network/test_eg1_gateway_processes.gd",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "project.godot",
+    "config/**",
+    "scripts/harness/**",
+    "CONTROL_DEVELOPMENT.ps1",
+    "scenes/**"
+  ],
+  "design_brief": {
+    "problem_statement": "The EG4 test client withdraws demand and detaches immediately after enqueueing its second-wave movements, without waiting for all six expected receipts. The full suite returned five receipts although Sim A processed all four movements and both operations.",
+    "evidence": {
+      "run_id": 34117353691,
+      "artifact_id": 10017509282,
+      "artifact_sha256": "c6597bfdc6691f7def9e9df3866d72a74291e0ad99f8b1439f57c0bbf68f5a97",
+      "subject_head": "0d8f0f948055432a8f3c4d697e405ec2c1e135a9",
+      "subject_tree": "cad9853ad8d99f7e986824ed377933eceec160be",
+      "failed_client_report": "test-results/eg4-gateway-7665/client-alpha.json",
+      "server_report": "test-results/eg4-gateway-7665/sim-a.json",
+      "missing_receipt_sequence": 103,
+      "server_movement_count": 4,
+      "client_receipt_count": 5,
+      "original_assertion_requires": 6,
+      "earlier_focused_eg4_report": "test-results/eg4-gateway-3149/client-alpha.json",
+      "earlier_focused_receipt_count": 6,
+      "eg1_campaign_exit_codes": [0, 0, 0, 0, 0]
+    },
+    "selected_design": "Before withdrawal, wait within the unchanged existing deadline for exactly the expected operation IDs and movement-ack IDs. Duplicate, foreign, extra or malformed receipts cannot satisfy the barrier. Retain all original EG4 assertions and its real process scenario byte-for-byte.",
+    "alternatives_rejected": ["Change the expected count from six to five", "Increase deadlines", "Retry INPUT or operations", "Add sleeps or successful-path logging", "Change gateway authority or network ordering"],
+    "affected_owner": "EG4 test-client lifecycle only; authoritative transport and gameplay owners remain unchanged.",
+    "non_goals": ["Change the protocol", "Change test traffic", "Repair historical epochs", "Accept or merge P7", "Activate MVP"],
+    "validation_plan": ["Run a deterministic inherited-worker completion test against unchanged baseline and require the specific premature-withdrawal failures", "Run the identical test against the corrected worker and require zero failures", "Keep the original EG4 process test and workers other than the client unchanged", "Run all existing EG siblings and a fixed repeated EG4 campaign", "Run the full unchanged world/core suite and all 29 P7 leaves on the exact final candidate", "Retain digests, commands, exits, clean HEAD/TREE and every failed attempt", "Obtain fresh independent Reviewer and Verifier plus non-RED PC0 before any human integration decision"]
+  },
+  "validation_infrastructure": {
+    "engine_queue_fallback": "The current self-hosted engine-export job is queued. Reuse only the already published approved engine artifact 10016794725 from run 34117353691, with read-only Actions access and the same pinned binary SHA256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7. Do not export repository source or git objects via Actions.",
+    "controller_failure_preserved": "Run 34118823875 artifact 10017356128 SHA256 d1f1359e0288f0aad463da7941c6535d5adbfac49dd41940ca778ea9d0965ce9 reports CloseRole exit3 EPOCH_REGISTRY_GENERATION_MISMATCH. Do not whitelist it as acceptance or rewrite the historical epoch. Drive and CloseMission still identify unaccepted canonical P7 closure. This controller defect is outside the present code scope."
+  },
+  "required_predicates": ["EG4_PREMATURE_WITHDRAWAL_NEGATIVE_CONTROL", "EG4_EXACT_RECEIPT_DRAIN_POSITIVE_CONTROL", "ORIGINAL_EG4_SCENARIO_AND_ASSERTIONS_UNCHANGED", "EG1_AND_EG_SIBLINGS_PASS", "FULL_WORLD_CORE_REGRESSION_PASS", "P7_29_LEAF_EXACT_GATE_PASS", "STANDARD_PC0_NON_RED", "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS", "INDEPENDENT_REVIEWER_PASS", "INDEPENDENT_VERIFIER_PASS"],
+  "required_outputs": ["Minimal test-client patch", "Before/after completion regression", "Digest-bound original failure and final exact evidence", "Updated existing PR580"],
+  "risk_class": "CRITICAL",
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "stop_conditions": ["NEW_UNRELATED_FAILURE_REQUIRES_ANOTHER_BOUNDED_WORK_ORDER", "PROTOCOL_OR_AUTHORITY_CHANGE_FORBIDDEN", "HUMAN_CANONICAL_ACCEPTANCE_AND_MERGE_GATE"],
+  "human_approval_required_for": ["CANONICAL_CHECKPOINT_ACCEPTANCE", "MERGE"],
+  "notes": "Issued under the existing mission and Director bounded-repair authority after the prior Work Order reached its unrelated-defect stop. The prior ENet repair and its evidence are preserved. This is not an acceptance record or a main-owned runtime activation."
+}
