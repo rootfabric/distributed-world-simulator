@@ -1,40 +1,60 @@
-name: FABRIC COMPOSITION-R3 Linux Double
+name: COMPOSITION-R3 Frozen Exact Replay
 on:
   push:
-    branches: [research/fabric-composition-r3-coupled-mechanism-r1]
+    branches: [verify/fabric-composition-r3-exact-replay-r1]
+    paths: [.github/workflows/fabric-composition-r3-linux-double.yml]
 permissions:
   contents: read
+  actions: read
 concurrency:
-  group: fabric-composition-r3-${{ github.ref }}
+  group: fabric-composition-r3-frozen-exact-replay
   cancel-in-progress: false
 jobs:
-  exact-linux-double:
+  exact-replay:
+    # Execution-only fallback while the original self-hosted R3 run is pending.
+    # This does not change the frozen runtime workflow or global runner policy.
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: fd6e83b35301d7a15e92c55939654f1f95729730
           fetch-depth: 0
-          ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Bind exact subject and immutable R2 predecessor
+      - name: Bind subject and retrieve the already-approved non-secret engine
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = 'fd6e83b35301d7a15e92c55939654f1f95729730'
+          test "$(git rev-parse HEAD^{tree})" = '314330d717db059cd9b9db32c5d6150097e1f2c3'
+          test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = 'fd6e83b35301d7a15e92c55939654f1f95729730'
+          test "$(git rev-parse origin/research/fabric-physics-r2-material-geometry-laws-r1)" = '2c1802bf0b90c7ca11992cb1c166855f2d92c682'
+          command -v gh
+          gh run download 34114746722 --repo "$GITHUB_REPOSITORY" --name fabric-composition-r3-approved-engine-34114746722 --dir "$RUNNER_TEMP/r3-engine"
+          bin="$RUNNER_TEMP/r3-engine/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$bin" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          chmod u+x "$bin"
+          test "$("$bin" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          printf 'GODOT_BIN=%s\n' "$bin" >> "$GITHUB_ENV"
+          command -v xvfb-run
+      - name: Run unchanged exact subject entry point
         shell: bash
         run: |
           set -Eeuo pipefail
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git rev-parse origin/research/fabric-physics-r2-material-geometry-laws-r1)" = '2c1802bf0b90c7ca11992cb1c166855f2d92c682'
-          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          test -x "$bin"
-          printf 'GODOT_BIN=%s\n' "$bin" >> "$GITHUB_ENV"
-          bash -n RUN_FABRIC_COMPOSITION_R3_TESTS.sh scripts/research/fabric_bake0/run_composition_r3_exact.sh
-      - name: Exact fresh import, R3, R2 and R1 regression
-        shell: bash
-        run: bash scripts/research/fabric_bake0/run_composition_r3_exact.sh
+          bash scripts/research/fabric_bake0/run_composition_r3_exact.sh
+          out=artifacts/fabric-composition-r3
+          grep -Fq 'R3_ASSERTIONS=187 FAILURES=0' "$out/r3.log"
+          grep -Fq 'R3_TRANSIENT_ASSERTIONS=611 FAILURES=0' "$out/r3.log"
+          grep -Fq 'FABRIC-COMPOSITION-R3-RENDER: PASS' "$out/render.log"
+          printf 'WORKFLOW_HEAD=%s\nSUBJECT_HEAD=%s\nENGINE_PROVENANCE_RUN=34114746722\nEXECUTION=REPOSITORY_CI_FALLBACK\nINDEPENDENT_ROLE_VERDICT=NOT_INFERRED\n' "$GITHUB_SHA" "$(git rev-parse HEAD)" > "$out/executor-provenance.txt"
+          (cd "$out" && find . -type f ! -name evidence.sha256 -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > evidence.sha256)
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: fabric-composition-r3-${{ github.sha }}-${{ github.run_attempt }}
+          name: fabric-composition-r3-frozen-fd6e83b-${{ github.run_id }}
           path: artifacts/fabric-composition-r3/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
