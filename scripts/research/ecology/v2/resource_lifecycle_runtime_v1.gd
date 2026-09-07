@@ -194,9 +194,12 @@ static func _demands(state: Dictionary, blueprint: Dictionary, phenotype: Dictio
 	for resource in F.RESOURCES:
 		var amount := mini(int(amounts[resource]), F.MAX_REQUEST)
 		if amount <= 0: continue
-		var request_id := "%s.life.%06d.%s" % [state.individual_id, state.age_ticks + 1, resource]
+		var request_id := _demand_request_id(state.individual_id, state.age_ticks + 1, resource)
 		out.append(Ports.demand(request_id, state.individual_id, resource, amount, state.position_mm, Ports.sampling_extent_mm(phenotype)))
 	return out
+
+static func _demand_request_id(individual_id: String, age_tick: int, resource: String) -> String:
+	return "life/%s/%06d/%s" % [individual_id.sha256_text(), age_tick, resource]
 
 static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, granted_water_mg: int, policy: Dictionary) -> int:
 	var area := int(phenotype.statistics.get("collector_area_mm2", 0))
