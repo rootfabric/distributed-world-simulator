@@ -1,0 +1,47 @@
+{
+  "schema": "planet_simulator.fabric_composition_r3_local_evidence.v1",
+  "role": "IMPLEMENTER",
+  "base_head": "2c1802bf0b90c7ca11992cb1c166855f2d92c682",
+  "base_tree": "37494670a981cacb65761054e5d0953ffa0e719b",
+  "source_binding": "R2 exact base tree plus new-file SHA256; final exact HEAD/TREE must be checked by repository CI",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "results": {
+    "r3_acceptance_assertions": 187,
+    "r3_failures": 0,
+    "observer": "PASS",
+    "fresh_process_cold_replay": "PASS",
+    "crash_pending_replay": "PASS",
+    "crash_committed_replay": "PASS",
+    "r2_regression": "PASS",
+    "r1_integrity": "PASS (42 assertions)",
+    "local_software_render": "PASS",
+    "independent_reviewer": "PENDING",
+    "independent_verifier": "PENDING",
+    "main_acceptance": "NOT_CLAIMED"
+  },
+  "source_sha256": {
+    "RUN_FABRIC_COMPOSITION_R3_TESTS.sh": "1f91fb9fcad29c5089cda5a68348e68e83e9e034d6030f4084be49ce397bbfb7",
+    "scenes/research/fabric_composition_r3_observatory.tscn": "18f4be6d451080d07a76a04b21e136f81c5f6a3e4d0b4250331e643c72b91020",
+    "scripts/research/fabric_bake0/fabric_composition_r3_canonical_bridge_v1.gd": "95a05c541100819340f8b7b0b33a9e61283552f631b86e20511ac04ce615c710",
+    "scripts/research/fabric_bake0/fabric_composition_r3_compiler_v1.gd": "146e3657e97d7784885db8b693af0d99cce74f2520e55028d87d2657f3d83508",
+    "scripts/research/fabric_bake0/fabric_composition_r3_fixture_v1.gd": "3452919a60464b052a1aa49c496e2c5841d5ca35da3f24d2219b6b00f0648f25",
+    "scripts/research/fabric_bake0/fabric_composition_r3_observatory.gd": "56e0f3c1aab2eb352485239a401c3026e60fb7d2e783fccdb1fcf7f90cb6bcdc",
+    "scripts/research/fabric_bake0/fabric_composition_r3_runtime_v1.gd": "706596fd848967cbbdd70409e8ec6148ae921baa8431a29c5e93a812787c9ce0",
+    "tests/research/fabric1/fabric_composition_r3_acceptance.gd": "cea6024ce836832cbc1ad2e882cb436317b55789ba0e3af1189ead7a6b8ee88f",
+    "tests/research/fabric1/fabric_composition_r3_observatory_acceptance.gd": "43714492918bb62fa3cfcbc92b8e0f6fc38e82952569d1bc77f3a2f701143f40",
+    "tests/research/fabric1/fabric_composition_r3_process_replay.gd": "b7b5e75bbac58e3dc9ed07aa3596633263e049c4eb7f1c92c9c253d87d6f8c73",
+    "tests/research/fabric1/fabric_composition_r3_render_capture.gd": "ecd2961a9967d3b3168ab8ca579b53d9a997ec926ffd1a92b1480b2f6c8b27c1"
+  },
+  "local_log_sha256": {
+    "import.log": "32091c0fb76cac62e0b9c70969592256a10523f741220169e214cf4213525960",
+    "r3.log": "a3d35ffde789ad17ceeb31a5b9716cfe91dfbd359c662df3561be810770632c7",
+    "r2.log": "04b13f88de155a78d2c340d66c14919ac2d7a6de0ca6252ffbaa24dc6a9ee95d",
+    "r1.log": "bb89dc96dea5bd1c9d2e004d5486cd33552386596e075adb4780355422ea9122",
+    "render.log": "81dab5347b378df7d0329a09743ca111165b672a51f296f5312813cc22c33aeb"
+  },
+  "render_sha256": {
+    "before-fracture.png": "27c77fde66b0f142824e835d2b6f336e5e49fd035fa88119e928843e93636002",
+    "after-fracture.png": "7007ca7df47fcb34e5970c167bb1d1ef2667a7c8aed5a93a6e8f037955f5137b"
+  }
+}
