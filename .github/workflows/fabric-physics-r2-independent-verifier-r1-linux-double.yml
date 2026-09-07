@@ -1,0 +1,158 @@
+name: FABRIC PHYSICS-R2 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-physics-r2-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_BRANCH: research/fabric-physics-r2-material-geometry-laws-r1
+  SUBJECT_HEAD: 2c1802bf0b90c7ca11992cb1c166855f2d92c682
+  SUBJECT_TREE: 37494670a981cacb65761054e5d0953ffa0e719b
+
+jobs:
+  fresh-independent-verifier-r1:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Bind exact subject and verifier scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          expected_paths="$(printf '%s\n' \
+            '.github/workflows/fabric-physics-r2-independent-verifier-r1-linux-double.yml' \
+            'RUN_FABRIC_PHYSICS_R2_INDEPENDENT_VERIFIER_R1.sh' \
+            'docs/research/FABRIC_PHYSICS_R2_FRESH_INDEPENDENT_VERIFIER_R1_RU.md' \
+            'tests/research/fabric1/fabric_physics_r2_independent_verifier_r1.gd' | sort)"
+          actual_paths="$(git diff --name-only "$SUBJECT_HEAD"...HEAD | sort)"
+          test "$actual_paths" = "$expected_paths"
+          git diff --quiet "$SUBJECT_HEAD"...HEAD -- scripts/research/fabric_bake0 scripts/construction scripts/simulation/matter
+          git diff --check
+          bash -n RUN_FABRIC_PHYSICS_R2_INDEPENDENT_VERIFIER_R1.sh
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - name: Prepare exact Linux double evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          godot_version="$("$bin" --version | head -n1 | tr -d '\r')"
+          godot_sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$godot_version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$godot_sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          echo 'BREAKPOINT_RUNTIME_DISABLED=1' >> "$GITHUB_ENV"
+          echo '*.gd.uid' >> .git/info/exclude
+          mkdir -p artifacts/fabric_physics_r2_independent_verifier_r1
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\n' \
+            "$SUBJECT_HEAD" "$SUBJECT_TREE" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" \
+            | tee artifacts/fabric_physics_r2_independent_verifier_r1/subject.txt
+          printf 'VERSION=%s\nSHA256=%s\n' "$godot_version" "$godot_sha" \
+            | tee artifacts/fabric_physics_r2_independent_verifier_r1/godot.txt
+          git archive --format=tar "$SUBJECT_HEAD" | gzip -9 > artifacts/fabric_physics_r2_independent_verifier_r1/subject-source.tar.gz
+          git archive --format=tar HEAD | gzip -9 > artifacts/fabric_physics_r2_independent_verifier_r1/verifier-source.tar.gz
+          sha256sum \
+            artifacts/fabric_physics_r2_independent_verifier_r1/subject-source.tar.gz \
+            artifacts/fabric_physics_r2_independent_verifier_r1/verifier-source.tar.gz \
+            > artifacts/fabric_physics_r2_independent_verifier_r1/source.sha256
+
+      - name: Fresh import verifier checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . \
+            --log-file artifacts/fabric_physics_r2_independent_verifier_r1/verifier-import.log --import
+          cat artifacts/fabric_physics_r2_independent_verifier_r1/verifier-import.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            artifacts/fabric_physics_r2_independent_verifier_r1/verifier-import.log
+
+      - name: Run primary independent physical oracle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT="$GODOT_BIN"
+          bash RUN_FABRIC_PHYSICS_R2_INDEPENDENT_VERIFIER_R1.sh 2>&1 \
+            | tee artifacts/fabric_physics_r2_independent_verifier_r1/independent-verifier.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            artifacts/fabric_physics_r2_independent_verifier_r1/independent-verifier.log
+          grep -F 'FABRIC-PHYSICS-R2-INDEPENDENT-VERIFIER-R1: PASS' \
+            artifacts/fabric_physics_r2_independent_verifier_r1/independent-verifier.log
+
+      - name: Fresh exact-subject replay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          subject_dir="$RUNNER_TEMP/dws-fabric-physics-r2-subject-${GITHUB_RUN_ID}"
+          rm -rf "$subject_dir"
+          git worktree prune
+          git worktree add --detach "$subject_dir" "$SUBJECT_HEAD"
+          cleanup() {
+            git worktree remove --force "$subject_dir" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          rm -rf "$subject_dir/.godot"
+          "$GODOT_BIN" --headless --editor --path "$subject_dir" \
+            --log-file "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-import.log" --import
+          cat "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-import.log"
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-import.log"
+          (
+            set -Eeuo pipefail
+            cd "$subject_dir"
+            test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+            test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+            export GODOT="$GODOT_BIN"
+            bash RUN_FABRIC_PHYSICS_R2_TESTS.sh
+            bash RUN_FABRIC_REPAIR_R1_TESTS.sh
+            git diff --check
+            test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          ) 2>&1 | tee "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+          grep -F 'FABRIC-PHYSICS-R2: PASS' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+          grep -F 'FABRIC-PHYSICS-R2-CONTRACT: PASS' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+          grep -F 'FABRIC-PHYSICS-R2-METAMORPHIC: PASS' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+          grep -F 'FABRIC-REPAIR-R1 INTEGRITY: PASS' \
+            "$GITHUB_WORKSPACE/artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log"
+
+      - name: Capture verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          sha256sum \
+            artifacts/fabric_physics_r2_independent_verifier_r1/subject.txt \
+            artifacts/fabric_physics_r2_independent_verifier_r1/godot.txt \
+            artifacts/fabric_physics_r2_independent_verifier_r1/verifier-import.log \
+            artifacts/fabric_physics_r2_independent_verifier_r1/independent-verifier.log \
+            artifacts/fabric_physics_r2_independent_verifier_r1/subject-import.log \
+            artifacts/fabric_physics_r2_independent_verifier_r1/subject-replay.log \
+            > artifacts/fabric_physics_r2_independent_verifier_r1/evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC PHYSICS-R2 FRESH INDEPENDENT VERIFIER R1: VERIFIED'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-physics-r2-independent-verifier-r1-${{ github.sha }}
+          path: artifacts/fabric_physics_r2_independent_verifier_r1/
+          if-no-files-found: error
+          retention-days: 14
