@@ -96,14 +96,21 @@ static func deserialize(text: String) -> Dictionary:
 	if not validate(v.state, v.blueprint).is_empty() or C.digest(v.state) != v.state_hash: return {}
 	return {"blueprint": v.blueprint, "state": v.state}
 
+static func valid_cumulative_stock(v: Variant) -> bool:
+	if not C.keys(v, B.RESOURCES): return false
+	for name in B.RESOURCES:
+		if not C.integer(v[name], 0, C.MAX_INT): return false
+	return true
+
 static func _valid_ledger(v: Variant) -> bool:
-	var stock_keys := ["initial", "assimilated", "maintenance", "growth_transferred", "reproduction_transferred", "reproduction_cost"]
+	var cumulative_keys := ["assimilated", "maintenance", "growth_transferred", "reproduction_transferred", "reproduction_cost"]
 	var keys := ["initial", "field_intake", "external_energy_mj", "assimilated", "maintenance", "growth_transferred", "reproduction_transferred", "reproduction_cost"]
 	if not C.keys(v, keys): return false
-	for k in stock_keys:
-		if not B.valid_stock(v[k]): return false
+	if not B.valid_stock(v.initial): return false
+	for k in cumulative_keys:
+		if not valid_cumulative_stock(v[k]): return false
 	if not F.valid_total_stock(v.field_intake): return false
-	return C.integer(v.external_energy_mj, 0, B.MAX_STOCK)
+	return C.integer(v.external_energy_mj, 0, C.MAX_INT)
 
 static func _source_valid(v: Variant) -> bool:
 	if not v is Dictionary: return false
