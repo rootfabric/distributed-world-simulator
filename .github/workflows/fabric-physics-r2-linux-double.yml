@@ -64,6 +64,7 @@ jobs:
           ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_physics_r2/r2.log
           grep -F 'FABRIC-PHYSICS-R2: PASS' artifacts/fabric_physics_r2/r2.log
           grep -F 'FABRIC-PHYSICS-R2-CONTRACT: PASS' artifacts/fabric_physics_r2/r2.log
+          grep -F 'FABRIC-PHYSICS-R2-METAMORPHIC: PASS' artifacts/fabric_physics_r2/r2.log
 
       - name: Focused R1 regression
         shell: bash
