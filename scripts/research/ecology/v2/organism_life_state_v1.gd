@@ -8,6 +8,8 @@ const F = preload("res://scripts/research/ecology/v2/environment_field_contract_
 const SCHEMA := "dws.ecology.organism-life-state.v1"
 const ORIGINS := ["FOUNDER_ENDOWMENT", "PARENT_TRANSFER"]
 const OUTCOMES := ["MAINTENANCE_PAID", "MAINTENANCE_STARVED", "GROWTH_ACTIVE", "GROWTH_SUPPRESSED", "REPRODUCED", "REPRODUCTION_WAIT", "DIED_STARVATION", "DEAD_INERT"]
+const MAX_AGE_TICK := 1000000
+const MAX_REPRODUCTION_SCHEDULE_TICK := 2000000
 
 static func create(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
 	if not BP.validate(blueprint).is_empty() or not C.identifier(individual_id) or not C.vector(position_mm, F.MAX_PORT_COORD_MM) or not origin_kind in ORIGINS:
@@ -51,8 +53,8 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if not C.keys(v, keys) or v.schema != SCHEMA: return "LIFE_STATE_SCHEMA"
 	if v.blueprint_hash != BP.biological_hash(blueprint) or not C.identifier(v.individual_id): return "LIFE_STATE_BINDING"
 	if not C.vector(v.position_mm, F.MAX_PORT_COORD_MM) or not v.origin_kind in ORIGINS or not v.alive is bool: return "LIFE_STATE_IDENTITY"
-	if not C.integer(v.age_ticks, 0, 1000000) or not C.integer(v.starvation_ticks, 0, 1000000): return "LIFE_STATE_AGE"
-	if not C.integer(v.next_reproduction_tick, 0, 1000000) or not C.integer(v.reproduction_count, 0, 1000000) or not C.integer(v.propagule_seq, 0, 1000000): return "LIFE_STATE_COUNTER"
+	if not C.integer(v.age_ticks, 0, MAX_AGE_TICK) or not C.integer(v.starvation_ticks, 0, MAX_AGE_TICK): return "LIFE_STATE_AGE"
+	if not C.integer(v.next_reproduction_tick, 0, MAX_REPRODUCTION_SCHEDULE_TICK) or not C.integer(v.reproduction_count, 0, 1000000) or not C.integer(v.propagule_seq, 0, 1000000): return "LIFE_STATE_COUNTER"
 	if not B.valid_stock(v.metabolic_reserves): return "LIFE_STATE_RESERVES"
 	if not _valid_ledger(v.resource_ledger): return "LIFE_STATE_LEDGER"
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
