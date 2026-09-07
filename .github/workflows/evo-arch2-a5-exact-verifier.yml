@@ -21,14 +21,14 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 253294285c91140c8cdbe49b1438c586d743c8ad
+          ref: 8130d9b958c85a07655ba0663e36a9c2c62bbb32
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact source identity and additive A5 fence
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "253294285c91140c8cdbe49b1438c586d743c8ad"
+          test "$(git rev-parse HEAD)" = "8130d9b958c85a07655ba0663e36a9c2c62bbb32"
           test "$(git rev-parse HEAD^{tree})" = "200cc1bdc269d40687eca79228fead268d1b1225"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
@@ -155,6 +155,7 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "253294285c91140c8cdbe49b1438c586d743c8ad"
+          test "$(git rev-parse HEAD)" = "8130d9b958c85a07655ba0663e36a9c2c62bbb32"
+          test "$(git rev-parse HEAD^{tree})" = "200cc1bdc269d40687eca79228fead268d1b1225"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
