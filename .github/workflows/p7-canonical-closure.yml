@@ -67,8 +67,7 @@ jobs:
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
           mkdir -p "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID"
           cp "$engine" "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/godot"
-          # This artifact is a prebuilt tool dependency, never repository source,
-          # a checkout, Git metadata, or a source-publication transport workaround.
+          # Prebuilt tool only: no source checkout, Git metadata or source transport.
           printf '%s  godot\n' "$expected" > "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/SHA256SUMS"
       - uses: actions/upload-artifact@v4
         with:
@@ -90,6 +89,8 @@ jobs:
       GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
       PYTHONUTF8: '1'
       LIBGL_ALWAYS_SOFTWARE: '1'
+      # Repository-documented multi-process test mode; no shared MCP listener.
+      BREAKPOINT_RUNTIME_DISABLED: '1'
     steps:
       - name: Checkout frozen canonical product, not workflow source
         uses: actions/checkout@v4
@@ -116,6 +117,7 @@ jobs:
           "$engine" --version | tee artifacts/p7-world-core/godot-version.txt
           sha256sum "$engine" > artifacts/p7-world-core/godot-sha256.txt
           echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+          printf 'workflow_sha=%s\nsubject_sha=%s\nBREAKPOINT_RUNTIME_DISABLED=%s\n' "$GITHUB_SHA" "$SUBJECT_HEAD" "$BREAKPOINT_RUNTIME_DISABLED" > artifacts/p7-world-core/execution-environment.txt
       - name: Provide required graphical test dependency
         shell: bash
         run: |
@@ -138,14 +140,24 @@ jobs:
           shell_bin="$(command -v pwsh)"
           "$shell_bin" -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable' > artifacts/p7-world-core/powershell-version.txt
           echo "P7_PWSH=$shell_bin" >> "$GITHUB_ENV"
+      - name: Import and run the exact failed EG1 predicate before full regression
+        shell: bash
+        env:
+          PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=10s 120s "$GODOT_BIN" --headless --editor --path "$PWD" --import > artifacts/p7-world-core/focused-import.log 2>&1
+          set +e
+          timeout --signal=TERM --kill-after=10s 90s "$GODOT_BIN" --headless --path "$PWD" --script res://tests/network/test_eg1_gateway_processes.gd 2>&1 | tee artifacts/p7-world-core/focused-eg1.log
+          code=${PIPESTATUS[0]}
+          printf '%s\n' "$code" > artifacts/p7-world-core/focused-eg1-exit.txt
+          exit "$code"
       - name: Run unchanged repository full world and core regression
         shell: bash
         run: |
           set +e
           set -uo pipefail
-          # Unix dotfiles require Get-Item -Force in the existing Windows-oriented
-          # atomic summary writer. Set this read-only provider default in this
-          # PowerShell process, without editing the canonical runner or test list.
+          # Read-only provider adaptation for Linux dotfiles; no runner edits.
           printf '%s\n' 'Get-Item:Force=true (Linux hidden atomic-summary temp files)' > artifacts/p7-world-core/environment-adapter.txt
           timeout --signal=TERM --kill-after=60s 120m "$P7_PWSH" -NoProfile -Command '$PSDefaultParameterValues = @{"Get-Item:Force" = $true}; & ./RUN_WORLD_REGRESSION_TESTS.ps1; exit $LASTEXITCODE' 2>&1 | tee artifacts/p7-world-core/full-world-core.log
           code=${PIPESTATUS[0]}
@@ -155,6 +167,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(cat artifacts/p7-world-core/focused-eg1-exit.txt)" = 0
           test "$(cat artifacts/p7-world-core/exit-code.txt)" = 0
           python3 - <<'PY'
           import json
@@ -165,20 +178,31 @@ jobs:
           assert summary['steps'] and all(s['passed'] is True and s['exit_code'] == 0 for s in summary['steps']), 'WORLD_CORE_STAGE_NOT_PASS'
           assert any(s['name'] == 'main_scene_cli_all' for s in summary['steps']), 'WORLD_CORE_AGGREGATE_MISSING'
           PY
-      - name: Verify frozen checkout and durable summary
+      - name: Verify frozen checkout and preserve child diagnostics even on failure
         if: always()
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts/p7-world-core
           { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; } > artifacts/p7-world-core/postflight.txt
-          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
-          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
-          test -z "$(git status --porcelain --untracked-files=no)"
           if [ -f artifacts/test-results/world-regression-summary.json ]; then
             cp artifacts/test-results/world-regression-summary.json artifacts/p7-world-core/
           fi
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          source = Path('artifacts/test-results')
+          target = Path('artifacts/p7-world-core/eg1-child-reports')
+          for path in sorted(source.glob('eg1-gateway-*/*.json')):
+              relative = path.relative_to(source)
+              destination = target / relative
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(path, destination)
+          PY
           find artifacts/p7-world-core -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/p7-world-core/SHA256SUMS
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
