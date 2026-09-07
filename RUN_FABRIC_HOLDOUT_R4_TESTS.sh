@@ -58,6 +58,9 @@ run_gate protocol python3 tests/research/fabric1/fabric_holdout_r4_protocol_test
 holdout_exit=0
 run_gate holdout python3 scripts/research/fabric_holdout_r4/holdout.py --cases config/research/fabric-holdout-r4-cases.json --provenance config/research/fabric-holdout-r4-provenance.json --godot "$GODOT_BIN" --out "$OUT/measurement" || holdout_exit="$?"
 regression_exit=0
+if [[ -f "$OUT/measurement/measure-1-000-input.json" ]]; then
+  run_gate serialization_observation timeout --kill-after=10s 60s "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/research/fabric1/fabric_holdout_r4_serialization_probe.gd -- "$OUT/measurement/measure-1-000-input.json" "$OUT/serialization-observation.json" || regression_exit=2
+fi
 export R3_REPLAY_DIR="$OUT/r3-replay"
 run_gate r3 timeout --kill-after=10s 300s bash RUN_FABRIC_COMPOSITION_R3_TESTS.sh || regression_exit=2
 run_gate r2 timeout --kill-after=10s 300s bash RUN_FABRIC_PHYSICS_R2_TESTS.sh || regression_exit=2

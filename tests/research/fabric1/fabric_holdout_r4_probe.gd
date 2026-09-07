@@ -124,13 +124,23 @@ func _measure(input: Dictionary) -> Dictionary:
 			run["post_commit"] = bridge.inspect()
 			run["duplicate_rejected"] = not bridge.execute(cmd, authority).success
 		var document: Dictionary = bridge.export_replay()
-		run["replay_package"] = {"id": input.id + "/" + fidelity, "document": document, "store": bridge.canonical_state(), "matter": {"mechanical_matter": bridge.sources().mechanical_matter, "electrical_matter": bridge.sources().electrical_matter}, "authority": authority, "trusted_checksum": document.checksum, "snapshot_hash": U.canonical_hash(bridge.inspect())}
+		# Preserve the engine's actual persistence bytes. The host must not re-encode
+		# checksummed replay data or recompute its checksum to hide a roundtrip defect.
+		var wire := JSON.stringify(document, "", true, true)
+		run["journal_live_checksum"] = U.validate_checksum(document)
+		run["journal_godot_roundtrip_checksum"] = U.validate_checksum(JSON.parse_string(wire))
+		run["replay_package"] = {"id": input.id + "/" + fidelity, "document_json": wire, "document_json_sha256": wire.sha256_text(), "store": bridge.canonical_state(), "matter": {"mechanical_matter": bridge.sources().mechanical_matter, "electrical_matter": bridge.sources().electrical_matter}, "authority": authority, "trusted_checksum": document.checksum, "snapshot_hash": U.canonical_hash(bridge.inspect())}
 		result.runs[fidelity] = run
 	result["source_unchanged"] = source_hash == U.canonical_hash(sources)
 	return result
 
 func _replay(package: Dictionary) -> Dictionary:
 	var bridge = B.new()
-	var checked: Dictionary = bridge.replay(package.document, package.store, package.matter, package.authority, package.trusted_checksum)
+	if not package.get("document_json") is String or package.document_json.sha256_text() != package.get("document_json_sha256"):
+		return {"id": package.id, "result": U.failure("R4_JOURNAL_TRANSPORT_CORRUPTED"), "matches": false}
+	var document = JSON.parse_string(package.document_json)
+	if not document is Dictionary:
+		return {"id": package.id, "result": U.failure("R4_JOURNAL_JSON_INVALID"), "matches": false}
+	var checked: Dictionary = bridge.replay(document, package.store, package.matter, package.authority, package.trusted_checksum)
 	var observed := U.canonical_hash(bridge.inspect()) if checked.success else ""
-	return {"id": package.id, "result": checked, "snapshot_hash": observed, "matches": observed == package.snapshot_hash}
+	return {"id": package.id, "result": checked, "snapshot_hash": observed, "matches": observed == package.snapshot_hash, "wire_sha256_verified": true, "document_checksum": U.validate_checksum(document)}
