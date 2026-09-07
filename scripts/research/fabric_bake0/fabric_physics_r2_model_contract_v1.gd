@@ -56,10 +56,13 @@ static func bind(model: Dictionary) -> Dictionary:
 		"checksum": "",
 	}
 	contract["checksum"] = Utils.compute_checksum(contract)
+	var checked := validate(contract)
+	if not checked.success:
+		return checked
 	return Utils.success({"contract": contract})
 
 static func validate(contract: Dictionary) -> Dictionary:
-	var required := [
+	var required: Array[String] = [
 		"schema", "domain", "model_checksum", "dimension_basis", "dimensions",
 		"execution_mode", "bake_certified", "legacy_surrogate_compatible",
 		"execution_reason", "checksum",
@@ -69,12 +72,24 @@ static func validate(contract: Dictionary) -> Dictionary:
 		return checked
 	if contract.get("schema") != SCHEMA:
 		return Utils.failure("PHYSICS_R2_MODEL_CONTRACT_SCHEMA_UNSUPPORTED")
-	if not [MaterialLaw.DOMAIN_MECHANICAL_AXIAL, MaterialLaw.DOMAIN_ELECTRICAL_RESISTIVE].has(String(contract.get("domain", ""))):
+	var domain := String(contract.get("domain", ""))
+	if not [MaterialLaw.DOMAIN_MECHANICAL_AXIAL, MaterialLaw.DOMAIN_ELECTRICAL_RESISTIVE].has(domain):
 		return Utils.failure("PHYSICS_R2_MODEL_DOMAIN_UNSUPPORTED")
 	if contract.get("dimension_basis") != DIMENSION_BASIS:
 		return Utils.failure("PHYSICS_R2_DIMENSION_BASIS_INVALID")
-	if typeof(contract.get("dimensions")) != TYPE_DICTIONARY or Dictionary(contract["dimensions"]).is_empty():
+	if typeof(contract.get("dimensions")) != TYPE_DICTIONARY:
 		return Utils.failure("PHYSICS_R2_DIMENSIONS_INVALID")
+	var dimensions: Dictionary = contract["dimensions"]
+	var expected_dimensions: Dictionary = (
+		MECHANICAL_DIMENSIONS if domain == MaterialLaw.DOMAIN_MECHANICAL_AXIAL
+		else ELECTRICAL_DIMENSIONS
+	)
+	if dimensions != expected_dimensions:
+		return Utils.failure("PHYSICS_R2_DIMENSION_SIGNATURE_MISMATCH")
+	for quantity in dimensions.keys():
+		checked = Utils.validate_dimension(dimensions[quantity])
+		if not checked.success:
+			return Utils.failure("PHYSICS_R2_DIMENSION_INVALID", {"quantity": quantity})
 	if contract.get("execution_mode") != EXECUTION_MODE_FULL:
 		return Utils.failure("PHYSICS_R2_EXECUTION_MODE_INVALID")
 	if contract.get("bake_certified") != false:
