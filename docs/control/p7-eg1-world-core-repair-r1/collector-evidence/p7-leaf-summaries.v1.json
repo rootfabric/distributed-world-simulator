@@ -1,0 +1,153 @@
+{
+  "classification": "ACTUAL_0D8_CI_LEAF_TEXT_FOR_PARSER_REGRESSION_NOT_NEW_RUNTIME_RUN",
+  "run_id": 34117353691,
+  "artifact_id": 10017042227,
+  "artifact_sha256": "d9dbda084720a03f7669e9b373ca49c10601540a3230ade2bca65621ba5817ac",
+  "stages": [
+    {
+      "name": "m7-aggregate-replica",
+      "summary": "M7 aggregate replica compatibility: PASS (5 assertions, 0 failures)",
+      "assertions": 5
+    },
+    {
+      "name": "mw6",
+      "summary": "MW6 matter network authority: PASS (130 assertions / 21.051 s)",
+      "assertions": 130
+    },
+    {
+      "name": "mw7",
+      "summary": "MW7 matter interest replication: PASS (114 assertions / 59.224 s)",
+      "assertions": 114
+    },
+    {
+      "name": "p5-mining-tool",
+      "summary": "V0-P5 mining tool gate: 36 assertions, 0 failures",
+      "assertions": 36
+    },
+    {
+      "name": "p5-two-client",
+      "summary": "V0-P5 two-client replication/reconnect: 47 assertions, 0 failures",
+      "assertions": 47
+    },
+    {
+      "name": "p7-1-authority",
+      "summary": "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)",
+      "assertions": 88
+    },
+    {
+      "name": "p7-1-tool-to-mw4",
+      "summary": "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)",
+      "assertions": 30
+    },
+    {
+      "name": "p7-2-bubble",
+      "summary": "V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)",
+      "assertions": 53
+    },
+    {
+      "name": "p7-2-seam",
+      "summary": "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)",
+      "assertions": 50
+    },
+    {
+      "name": "p7-3-material-delivery",
+      "summary": "V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)",
+      "assertions": 116
+    },
+    {
+      "name": "p7-4-recover-deliver",
+      "summary": "V0-P7.4 recover-deliver: PASS (25 assertions, 0 failures)",
+      "assertions": 25
+    },
+    {
+      "name": "p7-4-recover-replay",
+      "summary": "V0-P7.4 recover-replay: PASS (17 assertions, 0 failures)",
+      "assertions": 17
+    },
+    {
+      "name": "p7-4-seed",
+      "summary": "V0-P7.4 seed: PASS (21 assertions, 0 failures)",
+      "assertions": 21
+    },
+    {
+      "name": "p7-5-two-client",
+      "summary": "V0-P7.5 two-client convergence: PASS (85 assertions, 0 failures)",
+      "assertions": 85
+    },
+    {
+      "name": "rl2",
+      "summary": "RL2 Matter multiresolution meshing: PASS (153 assertions)",
+      "assertions": 153
+    },
+    {
+      "name": "rl3",
+      "summary": "RL3 representation-aware network streaming: PASS (175 assertions)",
+      "assertions": 175
+    },
+    {
+      "name": "mw10-c0-physical-output",
+      "summary": "MW10 canonical physical output: PASS (30 assertions, 0 failures)",
+      "assertions": 30
+    },
+    {
+      "name": "mw10-c1-durability",
+      "summary": "MW10 physical output durability: PASS (60 assertions, 0 failures)",
+      "assertions": 60
+    },
+    {
+      "name": "mw10-process-recovery",
+      "summary": "MW10 cross-region Matter processes: PASS (53 assertions)",
+      "assertions": 53
+    },
+    {
+      "name": "mw10-transactions",
+      "summary": "MW10 cross-region Matter transactions: PASS (201 assertions)",
+      "assertions": 201
+    },
+    {
+      "name": "mw4",
+      "summary": "MW4 matter mutations: PASS (187 assertions / 12.485 s)",
+      "assertions": 187
+    },
+    {
+      "name": "p7-6-seam-composition",
+      "summary": "V0-P7.6 seam + multi-region composition: PASS (106 assertions, 0 failures)",
+      "assertions": 106
+    },
+    {
+      "name": "p7-7-a-playground",
+      "summary": "V0-P7.7-A Digging Playground: PASS (20 assertions, 0 failures)",
+      "assertions": 20
+    },
+    {
+      "name": "p7-7-b-seam-near",
+      "summary": "V0-P7.7-B seam-near single-region: PASS (20 assertions, 0 failures)",
+      "assertions": 20
+    },
+    {
+      "name": "p7-7-c2-delivery",
+      "summary": "V0-P7.7-C2 MW10 physical output to P7.3: PASS (42 assertions, 0 failures)",
+      "assertions": 42
+    },
+    {
+      "name": "p7-7-c3-true-ab",
+      "summary": "V0-P7.7-C3 true A+B end-to-end: PASS (61 assertions, 0 failures)",
+      "assertions": 61
+    },
+    {
+      "name": "p7-7-d-reservation-conflict",
+      "summary": "V0-P7.7-D MW10 reservation conflict: PASS (31 assertions, 0 failures)",
+      "assertions": 31
+    },
+    {
+      "name": "p7-7-e-actor-handoff",
+      "summary": "V0-P7.7-E actor handoff no false MW10: PASS (24 assertions, 0 failures)",
+      "assertions": 24
+    },
+    {
+      "name": "p7-7-graphical-slice",
+      "summary": "V0-P7.7 graphical digging slice: PASS (52 assertions, 0 failures)",
+      "assertions": 52
+    }
+  ]
+}

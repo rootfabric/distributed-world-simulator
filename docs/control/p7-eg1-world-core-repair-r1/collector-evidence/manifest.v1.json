@@ -1,0 +1,23 @@
+{
+  "classification": "IMPLEMENTER_COLLECTOR_UNIT_EVIDENCE_NOT_RUNTIME_ACCEPTANCE",
+  "source_head_before": "0d8f0f948055432a8f3c4d697e405ec2c1e135a9",
+  "defect": "Only the root manifest must be excluded from its self-hash; nested recovery manifest.json files must be indexed.",
+  "before": {
+    "tests": 7,
+    "failures": 1,
+    "exit_code": 1
+  },
+  "after": {
+    "tests": 7,
+    "failures": 0,
+    "exit_code": 0
+  },
+  "files": {
+    "final-11-tests.log": "8c60c65b474feae9cdaa09b18cd72c90e2032e53544f517aa1118b8bf08942aa",
+    "after.log": "1b1e430e8e1f615d96b909619fe1f52dd500129461e482518450278068df2ece",
+    "p7-leaf-summaries.v1.json": "0db3a06d03e2f0f1f232f2d27261734eeb076452108b87f06c200f461f87edc3",
+    "before.log": "ad7c1c033e63baae518824d61ef57a708587e68e42ea7cfb383ae1a4f05ef5a7"
+  },
+  "final_parser_regression_tests": 11,
+  "final_parser_regression_exit_code": 0
+}

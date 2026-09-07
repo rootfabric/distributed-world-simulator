@@ -38,6 +38,36 @@ P7_LEAVES = {
     },
 }
 
+P7_SUMMARY_PREFIXES = {'m7-aggregate-replica': 'M7 aggregate replica compatibility',
+ 'mw10-c0-physical-output': 'MW10 canonical physical output',
+ 'mw10-c1-durability': 'MW10 physical output durability',
+ 'mw10-process-recovery': 'MW10 cross-region Matter processes',
+ 'mw10-transactions': 'MW10 cross-region Matter transactions',
+ 'mw4': 'MW4 matter mutations',
+ 'mw6': 'MW6 matter network authority',
+ 'mw7': 'MW7 matter interest replication',
+ 'p5-mining-tool': 'V0-P5 mining tool gate',
+ 'p5-two-client': 'V0-P5 two-client replication/reconnect',
+ 'p7-1-authority': 'V0-P7.1 authority gate',
+ 'p7-1-tool-to-mw4': 'V0-P7.1 Tool->MW4 integration',
+ 'p7-2-bubble': 'V0-P7.2 lunar Matter bubble',
+ 'p7-2-seam': 'V0-P7.2 lunar surface seam',
+ 'p7-3-material-delivery': 'V0-P7.3 material batch to Item Graph',
+ 'p7-4-recover-deliver': 'V0-P7.4 recover-deliver',
+ 'p7-4-recover-replay': 'V0-P7.4 recover-replay',
+ 'p7-4-seed': 'V0-P7.4 seed',
+ 'p7-5-two-client': 'V0-P7.5 two-client convergence',
+ 'p7-6-seam-composition': 'V0-P7.6 seam + multi-region composition',
+ 'p7-7-a-playground': 'V0-P7.7-A Digging Playground',
+ 'p7-7-b-seam-near': 'V0-P7.7-B seam-near single-region',
+ 'p7-7-c2-delivery': 'V0-P7.7-C2 MW10 physical output to P7.3',
+ 'p7-7-c3-true-ab': 'V0-P7.7-C3 true A+B end-to-end',
+ 'p7-7-d-reservation-conflict': 'V0-P7.7-D MW10 reservation conflict',
+ 'p7-7-e-actor-handoff': 'V0-P7.7-E actor handoff no false MW10',
+ 'p7-7-graphical-slice': 'V0-P7.7 graphical digging slice',
+ 'rl2': 'RL2 Matter multiresolution meshing',
+ 'rl3': 'RL3 representation-aware network streaming'}
+
 
 def git(*args: str, cwd: Path | None = None) -> str:
     return subprocess.check_output(["git", *args], cwd=cwd, text=True).strip()
@@ -163,6 +193,21 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
             "--script", f"res://tests/network/{sibling}"], 300)
 
 
+def check_p7_leaf(text: str, name: str, count: int) -> None:
+    prefix = re.escape(P7_SUMMARY_PREFIXES[name])
+    # Existing canonical tests have three terminal formats. Bind the exact
+    # test prefix, count and success form, not a generic PASS substring.
+    if name in ("p5-mining-tool", "p5-two-client"):
+        terminal = rf"{count} assertions, 0 failures"
+    elif name in ("mw6", "mw7", "rl2", "rl3", "mw10-process-recovery", "mw10-transactions", "mw4"):
+        terminal = rf"PASS \({count} assertions(?: / [0-9]+(?:\.[0-9]+)? s)?\)"
+    else:
+        terminal = rf"PASS \({count} assertions, 0 failures\)"
+    matches = re.findall(rf"^{prefix}: {terminal}$", text, re.MULTILINE)
+    negative = re.search(r"\[FAIL\]|: FAIL\b|\b[1-9][0-9]* failures\b", text)
+    require(len(matches) == 1 and not negative and not FATAL.search(text), f"P7_LEAF_NOT_PROVEN:{name}")
+
+
 def p7_train(root: Path, out: Path, engine: str, head: str) -> None:
     run(root, out, "p7-train", ["bash", "RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh", engine, head], 1800)
     stages = []
@@ -170,9 +215,7 @@ def p7_train(root: Path, out: Path, engine: str, head: str) -> None:
         for name, count in expected.items():
             path = root / "artifacts/runtime" / group / f"{name}.log"
             text = path.read_text(encoding="utf-8", errors="replace")
-            matches = re.findall(r"(\d+)\s+assertions,\s*(\d+)\s+failures", text)
-            require(matches and tuple(map(int, matches[-1])) == (count, 0) and not FATAL.search(text),
-                    f"P7_LEAF_NOT_PROVEN:{group}/{name}")
+            check_p7_leaf(text, name, count)
             stages.append({"log": str(path.relative_to(root / "artifacts")), "assertions": count,
                            "failures": 0, "sha256": digest(path)})
     require(len(stages) == 29 and sum(s["assertions"] for s in stages) == 2032, "P7_LEAF_COVERAGE_MISMATCH")
@@ -186,7 +229,7 @@ def preserve(root: Path, out: Path) -> None:
         if source.exists():
             shutil.copytree(source, out / subdir, dirs_exist_ok=True)
     files = [{"path": str(p.relative_to(out)), "bytes": p.stat().st_size, "sha256": digest(p)}
-             for p in sorted(out.rglob("*")) if p.is_file() and p.name != "manifest.json"]
+             for p in sorted(out.rglob("*")) if p.is_file() and p != out / "manifest.json"]
     write_json(out / "manifest.json", {"kind": "IMPLEMENTER_CI_EVIDENCE_NOT_INDEPENDENT_ACCEPTANCE",
         "subject": identity(root), "workflow_sha": os.environ["GITHUB_SHA"],
         "run_id": os.environ["GITHUB_RUN_ID"], "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
