@@ -1,0 +1,142 @@
+name: ECO ARCH2 A5 Windows Exact Verifier
+
+on:
+  push:
+    branches:
+      - validation/eco-arch2-a5-windows-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-exact:
+    name: fresh exact A5 Windows verifier
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout exact immutable source
+        uses: actions/checkout@v4
+        with:
+          ref: 8130d9b958c85a07655ba0663e36a9c2c62bbb32
+          fetch-depth: 0
+          persist-credentials: false
+          clean: true
+
+      - name: Assert exact source identity and additive A5 fence
+        run: |
+          $ExpectedHead = "8130d9b958c85a07655ba0663e36a9c2c62bbb32"
+          $ExpectedTree = "200cc1bdc269d40687eca79228fead268d1b1225"
+          if ((git rev-parse HEAD).Trim() -ne $ExpectedHead) { throw "HEAD_MISMATCH" }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $ExpectedTree) { throw "TREE_MISMATCH" }
+          if (@(git status --porcelain --untracked-files=no).Count -ne 0) { throw "DIRTY_SUBJECT" }
+          $Protected = @(
+            "scripts/research/ecology/v2/canonical_value_v1.gd",
+            "scripts/research/ecology/v2/body_graph_v1.gd",
+            "scripts/research/ecology/v2/development_program_v1.gd",
+            "scripts/research/ecology/v2/organism_genome_v2.gd",
+            "scripts/research/ecology/v2/organism_state_v1.gd",
+            "scripts/research/ecology/v2/development_interpreter_v1.gd",
+            "scripts/research/ecology/v2/phenotype_snapshot_v1.gd",
+            "scripts/research/ecology/v2/environment_field_contract_v1.gd",
+            "scripts/research/ecology/v2/local_environment_field_v1.gd",
+            "scripts/research/ecology/v2/organism_environment_ports_v1.gd"
+          )
+          $Diff = @(git diff --name-only 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- $Protected)
+          if ($Diff.Count -ne 0) { throw "A0_A4_FENCE_CHANGED: $($Diff -join ',')" }
+          $Runtime = Get-Content -LiteralPath "scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd" | Where-Object { $_ -notmatch '^\s*#' }
+          if (($Runtime -join "`n") -match '(?i)net_resource_proxy|shadow_fitness|top[_ -]?k') { throw "FITNESS_TOPK_PATH_PRESENT" }
+
+      - name: Resolve exact double Godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $Godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($Godot) -or -not (Test-Path -LiteralPath $Godot -PathType Leaf)) {
+            $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $Godot -PathType Leaf)) { throw "GODOT_NOT_FOUND: $Godot" }
+          $Version = ((& $Godot --version 2>&1 | Select-Object -First 1).ToString().Trim())
+          if ($Version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_IDENTITY_MISMATCH: $Version" }
+          $Sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $Godot).Hash.ToLowerInvariant()
+          Write-Host "godot=$Version sha256=$Sha path=$Godot"
+          "GODOT_BIN=$Godot" >> $env:GITHUB_ENV
+
+      - name: Cold empty-cache import
+        run: |
+          Remove-Item -Recurse -Force .godot -ErrorAction SilentlyContinue
+          $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --editor --path $PWD --import 2>&1
+          $Exit = $LASTEXITCODE
+          $Output | Set-Content -LiteralPath a5-cold.log -Encoding UTF8
+          if ($Exit -ne 0 -or (($Output -join "`n") -match 'SCRIPT ERROR|Parse Error|ERROR:')) { throw "COLD_IMPORT_FAILED" }
+          Write-Host "cold_sha256=$((Get-FileHash -Algorithm SHA256 a5-cold.log).Hash.ToLowerInvariant())"
+
+      - name: Run A5 core exact twice
+        run: |
+          $Hashes = @()
+          foreach ($N in 1..2) {
+            $Log = "a5-exact-$N.log"
+            $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --path $PWD --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd 2>&1
+            $Exit = $LASTEXITCODE
+            $Output | Set-Content -LiteralPath $Log -Encoding UTF8
+            $Text = $Output -join "`n"
+            if ($Exit -ne 0 -or $Text -notmatch 'EVO_ARCH2_A5_EXACT assertions=69 failed=0' -or $Text -match 'SCRIPT ERROR|Parse Error|ERROR:|FAIL:') { throw "A5_CORE_FAILED run=$N" }
+            $Hashes += (Get-FileHash -Algorithm SHA256 $Log).Hash.ToLowerInvariant()
+          }
+          if ($Hashes[0] -ne $Hashes[1]) { throw "A5_CORE_NONDETERMINISTIC" }
+          Write-Host "a5_core_sha256=$($Hashes[0])"
+
+      - name: Run A5 reviewer repairs twice
+        run: |
+          $Hashes = @()
+          foreach ($N in 1..2) {
+            $Log = "a5-repairs-$N.log"
+            $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --path $PWD --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd 2>&1
+            $Exit = $LASTEXITCODE
+            $Output | Set-Content -LiteralPath $Log -Encoding UTF8
+            $Text = $Output -join "`n"
+            if ($Exit -ne 0 -or $Text -notmatch 'EVO_ARCH2_A5_REPAIRS assertions=22 failed=0' -or $Text -match 'SCRIPT ERROR|Parse Error|ERROR:|FAIL:') { throw "A5_REPAIRS_FAILED run=$N" }
+            $Hashes += (Get-FileHash -Algorithm SHA256 $Log).Hash.ToLowerInvariant()
+          }
+          if ($Hashes[0] -ne $Hashes[1]) { throw "A5_REPAIRS_NONDETERMINISTIC" }
+          Write-Host "a5_repairs_sha256=$($Hashes[0])"
+
+      - name: Run accepted A4 regression
+        run: |
+          $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --path $PWD --script res://tests/research/ecology/v2/arch2_a4_exact_acceptance.gd 2>&1
+          if ($LASTEXITCODE -ne 0 -or (($Output -join "`n") -notmatch 'EVO_ARCH2_A4_EXACT assertions=32 failed=0')) { throw "A4_REGRESSION_FAILED" }
+
+      - name: Run accepted A0-A3 regression
+        run: |
+          $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --path $PWD --script res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd 2>&1
+          if ($LASTEXITCODE -ne 0 -or (($Output -join "`n") -notmatch 'EVO_ARCH2_A03_EXACT assertions=86 failed=0')) { throw "A03_REGRESSION_FAILED" }
+
+      - name: Run preserved VIS5 regression
+        run: |
+          $Tests = @(
+            @{Path='res://tests/ecology/eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd'; Count=87},
+            @{Path='res://tests/ecology/eco_evo7_vis5_1_terrain_surface_frame_adapter_acceptance.gd'; Count=70},
+            @{Path='res://tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd'; Count=57},
+            @{Path='res://tests/ecology/eco_evo7_vis5_3_mixed_strata_composition_lab_acceptance.gd'; Count=101},
+            @{Path='res://tests/ecology/eco_evo7_vis5_4_composition_lod_streaming_gate_acceptance.gd'; Count=92},
+            @{Path='res://tests/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff_acceptance.gd'; Count=114}
+          )
+          $Total = 0
+          foreach ($T in $Tests) {
+            $Output = & $env:GODOT_BIN --headless --audio-driver Dummy --path $PWD --script $T.Path 2>&1
+            $Text = $Output -join "`n"
+            if ($LASTEXITCODE -ne 0 -or $Text -notmatch ("PASS \(" + $T.Count + " assertions\)") -or $Text -match 'SCRIPT ERROR|Parse Error|ERROR:|FAIL:') { throw "VIS5_FAILED: $($T.Path)" }
+            $Total += $T.Count
+          }
+          if ($Total -ne 521) { throw "VIS5_COUNT_MISMATCH" }
+          Write-Host "VIS5 assertions=521 failed=0"
+
+      - name: Assert tracked subject unchanged
+        run: |
+          if ((git rev-parse HEAD).Trim() -ne "8130d9b958c85a07655ba0663e36a9c2c62bbb32") { throw "FINAL_HEAD_CHANGED" }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne "200cc1bdc269d40687eca79228fead268d1b1225") { throw "FINAL_TREE_CHANGED" }
+          if (@(git status --porcelain --untracked-files=no).Count -ne 0) { throw "FINAL_TRACKED_DIRTY" }
+          Write-Host "VERDICT=PASS"
