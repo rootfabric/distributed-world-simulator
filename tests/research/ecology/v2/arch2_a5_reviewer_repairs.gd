@@ -144,10 +144,10 @@ func _propagule_sequence_continuity() -> void:
 	var blueprint := BP.create(_reproductive_genome(), _policy())
 	var entry := R.individual(blueprint, "repair.sequence", [500,0,500], B.stock())
 	_check(not entry.is_empty(), "sequence_base_state_valid")
-	var tampered := entry.state.duplicate(true)
+	var tampered: Dictionary = entry.state.duplicate(true)
 	tampered.propagule_seq = 1
 	_check(LS.validate(tampered, blueprint) == "LIFE_PROPAGULE_SEQUENCE", "sequence_divergence_rejected")
-	var causal := entry.state.duplicate(true)
+	var causal: Dictionary = entry.state.duplicate(true)
 	causal.age_ticks = 1; causal.reproduction_count = 5; causal.propagule_seq = 5
 	_check(LS.validate(causal, blueprint) == "LIFE_REPRODUCTION_CAUSALITY", "offspring_causality_bound")
 	var p := _policy()
