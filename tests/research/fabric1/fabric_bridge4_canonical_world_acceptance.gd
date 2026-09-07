@@ -88,12 +88,13 @@ func _run() -> void:
 	_assert_ok(capsule_result, "BRIDGE4 capsule unavailable")
 	var capsule: Dictionary = capsule_result.details.capsule
 	_assert(capsule.canonical == false and capsule.derived == true and capsule.discardable == true, "BRIDGE4 capsule truth boundary invalid")
+	var restart_authority := Adapter.authority_for(canonical_after, matter, Fixture.AUTHORITY_OWNER, Fixture.AUTHORITY_EPOCH)
 	var restarted := Runtime.new()
-	_assert_ok(restarted.restore(canonical_after, matter, capsule), "restart from authoritative successor failed")
+	_assert_ok(restarted.restore(canonical_after, matter, capsule, restart_authority, [event_id]), "restart from authoritative successor failed")
 	var restarted_exec := restarted.execute(canonical_after, matter, [1.0, 0.0])
 	_assert_ok(restarted_exec, "restarted execution failed")
 	_assert(_max_error(restarted_exec.details.boundary_flow, successor_baked.details.boundary_flow) <= 2.0e-8, "restart changed physical result")
-	var stale_restart := Runtime.new().restore(canonical_before, matter, capsule)
+	var stale_restart := Runtime.new().restore(canonical_before, matter, capsule, restart_authority, [event_id])
 	_assert_error(stale_restart, "BRIDGE4_CAPSULE_STALE", "old canonical snapshot accepted successor capsule")
 
 	var changed_matter := matter.duplicate(true)
@@ -102,7 +103,7 @@ func _run() -> void:
 	_assert_ok(MatterBatch.validate(changed_matter), "changed Matter batch is not canonical-valid")
 	var stale_matter_exec := restarted.execute(canonical_after, changed_matter, [1.0, 0.0])
 	_assert_error(stale_matter_exec, "BRIDGE4_CANONICAL_BINDING_STALE", "changed canonical Matter remained executable")
-	var stale_matter_restart := Runtime.new().restore(canonical_after, changed_matter, capsule)
+	var stale_matter_restart := Runtime.new().restore(canonical_after, changed_matter, capsule, restart_authority, [event_id])
 	_assert_error(stale_matter_restart, "BRIDGE4_CAPSULE_STALE", "changed Matter accepted old derived capsule")
 
 	var duplicate := restarted.observe_canonical_successor(canonical_after, matter, event_id, 20)
