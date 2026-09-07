@@ -61,6 +61,9 @@
     "BOUNDED_DETERMINISTIC_DEMAND_IDS",
     "REPRODUCTION_SCHEDULE_RANGE_COVERS_AGE_PLUS_INTERVAL",
     "OFFSPRING_COUNTER_RANGE_COVERS_LIFETIME_MULTIPLICITY",
+    "PROPAGULE_SEQUENCE_EQUALS_REPRODUCTION_COUNT",
+    "REPRODUCTION_COUNT_CAUSALLY_BOUNDED_BY_AGE",
+    "FULL_DIGEST_PROPAGULE_PARENT_IDENTITY",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -76,5 +79,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "IN_PROGRESS",
-  "next": "Close RM-A5-01..07; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
+  "next": "Close RM-A5-01..08; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
 }
