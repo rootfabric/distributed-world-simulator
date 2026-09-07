@@ -22,6 +22,7 @@ func _init() -> void:
 	_bounded_demand_ids()
 	_deferred_reproduction_schedule()
 	_offspring_counter_range()
+	_propagule_sequence_continuity()
 	print("EVO_ARCH2_A5_REPAIRS assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -131,10 +132,30 @@ func _offspring_counter_range() -> void:
 	p.reproduction.fee_energy_mj = 0
 	var blueprint := BP.create(_reproductive_genome(), p)
 	var entry := R.individual(blueprint, "repair.counter", [500,0,500], B.stock())
-	entry.state.age_ticks = 250000
+	entry.state.age_ticks = 250001
 	entry.state.reproduction_count = 1000000
 	entry.state.propagule_seq = 1000000
 	_check(LS.validate(entry.state, blueprint).is_empty(), "million_offspring_boundary_state_valid")
 	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history)
 	_check(reproduced.success and reproduced.state.reproduction_count == 1000004 and reproduced.state.propagule_seq == 1000004, "four_offspring_cross_million_counter")
 	_check(LS.validate(reproduced.state, blueprint).is_empty(), "expanded_offspring_counter_state_valid")
+
+func _propagule_sequence_continuity() -> void:
+	var blueprint := BP.create(_reproductive_genome(), _policy())
+	var entry := R.individual(blueprint, "repair.sequence", [500,0,500], B.stock())
+	_check(not entry.is_empty(), "sequence_base_state_valid")
+	var tampered := entry.state.duplicate(true)
+	tampered.propagule_seq = 1
+	_check(LS.validate(tampered, blueprint) == "LIFE_PROPAGULE_SEQUENCE", "sequence_divergence_rejected")
+	var causal := entry.state.duplicate(true)
+	causal.age_ticks = 1; causal.reproduction_count = 5; causal.propagule_seq = 5
+	_check(LS.validate(causal, blueprint) == "LIFE_REPRODUCTION_CAUSALITY", "offspring_causality_bound")
+	var p := _policy()
+	p.reproduction.maturity_ticks = 1; p.reproduction.interval_ticks = 1
+	p.reproduction.endowment = B.stock(); p.reproduction.fee_energy_mj = 0
+	var parent_blueprint := BP.create(_reproductive_genome(), p)
+	var parent := R.individual(parent_blueprint, "repair.sequence.parent", [500,0,500], B.stock())
+	parent.state.age_ticks = 1
+	var reproduced := R._reproduce(parent.state, parent_blueprint, parent_blueprint.life_history)
+	var expected_prefix := "seed/%s/" % parent.state.individual_id.sha256_text()
+	_check(reproduced.success and reproduced.propagules.size() == 1 and String(reproduced.propagules[0].id).begins_with(expected_prefix) and String(reproduced.propagules[0].id).length() <= 128, "full_digest_seed_identity_bounded")
