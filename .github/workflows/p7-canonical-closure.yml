@@ -178,6 +178,26 @@ jobs:
           assert summary['steps'] and all(s['passed'] is True and s['exit_code'] == 0 for s in summary['steps']), 'WORLD_CORE_STAGE_NOT_PASS'
           assert any(s['name'] == 'main_scene_cli_all' for s in summary['steps']), 'WORLD_CORE_AGGREGATE_MISSING'
           PY
+      - name: Observe failed client without changing canonical source or counting it as acceptance
+        if: failure()
+        shell: bash
+        env:
+          PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+        run: |
+          set -euo pipefail
+          probe="$RUNNER_TEMP/p7-eg1-read-only-probe"
+          mkdir -p "$probe"
+          for name in eg1_diagnostic_client.gd eg1_diagnostic_test.gd; do
+            git show "$GITHUB_SHA:docs/control/p7-canonical-closure-r1/probes/$name" > "$probe/$name"
+          done
+          sha256sum "$probe"/*.gd > artifacts/p7-world-core/diagnostic-source-sha256.txt
+          set +e
+          timeout --signal=TERM --kill-after=10s 90s "$GODOT_BIN" --headless --path "$PWD" --script "$probe/eg1_diagnostic_test.gd" > artifacts/p7-world-core/diagnostic-eg1.log 2>&1
+          code=$?
+          printf '%s\n' "$code" > artifacts/p7-world-core/diagnostic-eg1-exit.txt
+          # Read-only subclass observations are diagnostic, never a replacement
+          # for the already failed canonical test or full regression.
+          exit 0
       - name: Verify frozen checkout and preserve child diagnostics even on failure
         if: always()
         shell: bash
