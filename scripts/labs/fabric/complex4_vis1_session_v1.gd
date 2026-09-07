@@ -2,6 +2,8 @@ extends RefCounted
 
 const Fixture = preload("res://tests/research/fabric1/complex4_real_world_machine_fixture_v1.gd")
 const Runtime = preload("res://scripts/research/fabric_bake0/complex4_real_world_machine_runtime_v1.gd")
+const Utils = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
+const Adapter = preload("res://scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd")
 const FAILURE_LOAD_N := 90.0
 
 var runtime = null
@@ -12,6 +14,7 @@ var pending_support_id := ""
 var pending_event_id := ""
 var tick := 10
 var event_log: Array[String] = []
+var authoritative_events: Array = []
 
 func reset() -> Dictionary:
 	matter = Fixture.matter_batch()
@@ -26,6 +29,7 @@ func reset() -> Dictionary:
 		return {"success": false, "error": started}
 	pending_support_id = ""
 	pending_event_id = ""
+	authoritative_events = []
 	event_log = ["RESET: revision 0 / two power paths / machine ON"]
 	return {"success": true, "state": state()}
 
@@ -57,6 +61,9 @@ func apply_pending() -> Dictionary:
 	if not bool(applied.result.get("success", false)):
 		return {"success": false, "error": applied.result}
 	snapshot = store.get_snapshot(Fixture.CONSTRUCT_ID)
+	var next_events := authoritative_events.duplicate()
+	next_events.append(pending_event_id)
+	authoritative_events = Utils.sorted_strings(next_events)
 	var observed: Dictionary = runtime.observe_canonical_successor(snapshot, matter, pending_event_id, _next_tick())
 	if not bool(observed.get("success", false)):
 		return {"success": false, "error": observed}
@@ -84,8 +91,9 @@ func restart() -> Dictionary:
 	var captured: Dictionary = runtime.capture_capsule()
 	if not bool(captured.get("success", false)):
 		return {"success": false, "error": captured}
+	var restart_authority := Adapter.authority_for(snapshot, matter, Fixture.AUTHORITY_OWNER, Fixture.AUTHORITY_EPOCH)
 	var next_runtime := Runtime.new()
-	var restored: Dictionary = next_runtime.restore(snapshot, matter, captured.details.capsule)
+	var restored: Dictionary = next_runtime.restore(snapshot, matter, captured.details.capsule, restart_authority, authoritative_events)
 	if not bool(restored.get("success", false)):
 		return {"success": false, "error": restored}
 	runtime = next_runtime

@@ -97,7 +97,7 @@ func _run() -> void:
 	var capsule: Dictionary = cap_result.details.capsule
 	_assert(capsule.canonical == false and capsule.derived == true and capsule.discardable == true, "COMPLEX4 capsule truth boundary wrong")
 	var restart_authority := Runtime.Bridge.Adapter.authority_for(rev2, matter, Fixture.AUTHORITY_OWNER, Fixture.AUTHORITY_EPOCH)
-	var authoritative_events := [event1, event2]
+	var authoritative_events := Utils.sorted_strings([event1, event2])
 	var restarted := Runtime.new()
 	_assert_ok(restarted.restore(rev2, matter, capsule, restart_authority, authoritative_events), "COMPLEX4 restart failed")
 	var restarted_exec := restarted.execute(rev2, matter, [1.0, 0.0])

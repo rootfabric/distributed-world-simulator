@@ -59,7 +59,7 @@ func _init() -> void:
 	if file == null:
 		_fail("cannot write cold state")
 		return
-	file.store_string(JSON.stringify(payload))
+	file.store_string(JSON.stringify(payload, "", true, true))
 	file.close()
 	print("FABRIC_REPAIR_R1_COLD_WRITER_HASH=%s" % U.canonical_hash(payload))
 	print("FABRIC-REPAIR-R1 COLD WRITER: PASS")

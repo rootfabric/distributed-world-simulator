@@ -32,13 +32,16 @@ jobs:
           git diff --check
           bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$bin"
-          test "$("$bin" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
-          test "$(sha256sum "$bin" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          godot_version="$("$bin" --version)"
+          godot_sha="$(sha256sum "$bin" | cut -d' ' -f1)"
+          test "$godot_version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$godot_sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
           echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
           echo 'BREAKPOINT_RUNTIME_DISABLED=1' >> "$GITHUB_ENV"
           echo '*.gd.uid' >> .git/info/exclude
           mkdir -p artifacts/fabric_repair_r1
           printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" | tee artifacts/fabric_repair_r1/subject.txt
+          printf 'VERSION=%s\nSHA256=%s\n' "$godot_version" "$godot_sha" | tee artifacts/fabric_repair_r1/godot.txt
           git archive --format=tar HEAD | gzip -9 > artifacts/fabric_repair_r1/source.tar.gz
           sha256sum artifacts/fabric_repair_r1/source.tar.gz > artifacts/fabric_repair_r1/source.tar.gz.sha256
       - name: Fresh import
@@ -48,16 +51,19 @@ jobs:
           rm -rf .godot
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee artifacts/fabric_repair_r1/import.log
           ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_repair_r1/import.log
-      - name: Predecessor regression characterization
+      - name: Exact closure validation
         shell: bash
         run: |
           set -Eeuo pipefail
           for pair in \
+            'r1_integrity|./RUN_FABRIC_REPAIR_R1_TESTS.sh' \
+            'r1_cold|./RUN_FABRIC_REPAIR_R1_COLD_TESTS.sh' \
             'b07|./RUN_FABRIC_B0_7_KERNEL_TESTS.sh' \
             'fabric1|./RUN_FABRIC1_CORE_TESTS.sh' \
             'sync1|./RUN_FABRIC1_SYNC1_TESTS.sh' \
             'bridge4|./RUN_FABRIC_BRIDGE4_TESTS.sh' \
-            'complex4|./RUN_FABRIC_COMPLEX4_BCD_TESTS.sh'
+            'complex4|./RUN_FABRIC_COMPLEX4_BCD_TESTS.sh' \
+            'vis1|./RUN_FABRIC_COMPLEX4_VIS1_TESTS.sh'
           do
             name="${pair%%|*}"; cmd="${pair#*|}"
             set +e
@@ -68,11 +74,15 @@ jobs:
             cat "artifacts/fabric_repair_r1/${name}.log"
           done
           sha256sum artifacts/fabric_repair_r1/*.log > artifacts/fabric_repair_r1/logs.sha256
-          test "$(cat artifacts/fabric_repair_r1/b07.exit)" = 0
-          test "$(cat artifacts/fabric_repair_r1/fabric1.exit)" = 0
-          test "$(cat artifacts/fabric_repair_r1/sync1.exit)" = 0
-          test "$(cat artifacts/fabric_repair_r1/bridge4.exit)" = 0
-          test "$(cat artifacts/fabric_repair_r1/complex4.exit)" = 0
+          sha256sum artifacts/fabric_repair_r1/subject.txt artifacts/fabric_repair_r1/godot.txt artifacts/fabric_repair_r1/source.tar.gz artifacts/fabric_repair_r1/*.log > artifacts/fabric_repair_r1/evidence.sha256
+          failed=0
+          for name in r1_integrity r1_cold b07 fabric1 sync1 bridge4 complex4 vis1; do
+            if [[ "$(cat "artifacts/fabric_repair_r1/${name}.exit")" != 0 ]]; then
+              echo "FABRIC-REPAIR-R1 exact gate failed: $name" >&2
+              failed=1
+            fi
+          done
+          test "$failed" = 0
       - name: Verify clean tracked source
         shell: bash
         run: |
