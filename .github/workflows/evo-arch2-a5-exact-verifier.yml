@@ -86,7 +86,8 @@ jobs:
         run: |
           set -euo pipefail
           for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd > "a5-exact-$n.log" 2>&1
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd 2>&1 | tee "a5-exact-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_EXACT assertions=69 failed=0" "a5-exact-$n.log"
             ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"
           done
@@ -100,7 +101,8 @@ jobs:
         run: |
           set -euo pipefail
           for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd > "a5-repairs-$n.log" 2>&1
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd 2>&1 | tee "a5-repairs-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_REPAIRS assertions=22 failed=0" "a5-repairs-$n.log"
             ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"
           done
