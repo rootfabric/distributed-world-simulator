@@ -8,6 +8,7 @@ const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
 const R = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
+const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 var passed := 0
@@ -17,6 +18,7 @@ func _init() -> void:
 	_regulation_freezes_prepaid_a2()
 	_unpaid_maintenance_blocks_reproduction()
 	_propagule_endowment_bound()
+	_bounded_demand_ids()
 	print("EVO_ARCH2_A5_REPAIRS assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -74,3 +76,31 @@ func _propagule_endowment_bound() -> void:
 	_check(R.validate_propagule(correct, blueprint).is_empty(), "correct_endowment_valid")
 	var tampered := correct.duplicate(true); tampered.endowment.material_mg += 1
 	_check(R.validate_propagule(tampered, blueprint) == "PROPAGULE_ENDOWMENT" and R.materialize_propagule(tampered, blueprint).is_empty(), "tampered_endowment_rejected")
+
+func _bounded_demand_ids() -> void:
+	var blueprint := BP.create(Fixtures.make(5), _policy())
+	var id_a := "a".repeat(128)
+	var id_b := "a".repeat(127) + "b"
+	var entry_a := R.individual(blueprint, id_a, [500,0,500], B.stock(30000))
+	var entry_b := R.individual(blueprint, id_b, [500,0,500], B.stock(30000))
+	_check(not entry_a.is_empty() and not entry_b.is_empty(), "max_length_individual_ids_valid")
+	var phenotype_a := H.compile(entry_a.state.development, blueprint.genome)
+	var phenotype_b := H.compile(entry_b.state.development, blueprint.genome)
+	var demands_a := R._demands(entry_a.state, blueprint, phenotype_a)
+	var demands_b := R._demands(entry_b.state, blueprint, phenotype_b)
+	var valid := not demands_a.is_empty() and not demands_b.is_empty()
+	var ids_a := {}
+	var ids_b := {}
+	for demand in demands_a:
+		valid = valid and demand.request_id.length() <= 128 and Ports.validate_demand(demand).is_empty()
+		ids_a[demand.request_id] = true
+	for demand in demands_b:
+		valid = valid and demand.request_id.length() <= 128 and Ports.validate_demand(demand).is_empty()
+		ids_b[demand.request_id] = true
+	_check(valid, "max_length_generated_demand_ids_bounded_and_valid")
+	var overlap := false
+	for request_id in ids_a:
+		if ids_b.has(request_id): overlap = true
+	_check(not overlap, "distinct_max_length_organisms_have_distinct_demand_ids")
+	var result := _step(_field("repair.longids", 900000, 900), [entry_b, entry_a])
+	_check(result.success and result.population.size() == 2, "max_length_ids_shared_population_step_success")
