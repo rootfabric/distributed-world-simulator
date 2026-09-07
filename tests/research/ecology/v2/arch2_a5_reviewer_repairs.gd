@@ -23,6 +23,8 @@ func _init() -> void:
 	_deferred_reproduction_schedule()
 	_offspring_counter_range()
 	_propagule_sequence_continuity()
+	_propagule_parent_binding()
+	_cumulative_ledger_capacity()
 	print("EVO_ARCH2_A5_REPAIRS assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -42,6 +44,14 @@ func _policy() -> Dictionary:
 	p.growth.transfer_permille = 500; p.growth.max_transfer = B.stock(20000)
 	return p
 
+func _zero_cost_reproduction_policy() -> Dictionary:
+	var p := _policy()
+	p.reproduction.maturity_ticks = 1
+	p.reproduction.interval_ticks = 1
+	p.reproduction.endowment = B.stock()
+	p.reproduction.fee_energy_mj = 0
+	return p
+
 func _reproductive_genome() -> Dictionary:
 	var leaf := P.rule("leaf", [P.action("differentiate", "collector", [0,20,0], 1, 6000), P.action("retire")])
 	var start := P.rule("start", [P.action("differentiate", "reproductive", [0,10,0], 1), P.action("branch", "support", [0,0,0], 0,0,0, "leaf")], "start")
@@ -49,6 +59,15 @@ func _reproductive_genome() -> Dictionary:
 
 func _step(field: Dictionary, population: Array) -> Dictionary:
 	return R.step_population(field, population, field.owner_token, field.owner_epoch, field.revision)
+
+func _emitted_propagule(parent_id: String = "repair.propagule.parent") -> Dictionary:
+	var blueprint := BP.create(_reproductive_genome(), _zero_cost_reproduction_policy())
+	var parent := R.individual(blueprint, parent_id, [500,0,500], B.stock())
+	if parent.is_empty(): return {}
+	parent.state.age_ticks = 1
+	var reproduced := R._reproduce(parent.state, blueprint, blueprint.life_history)
+	if not reproduced.success or reproduced.propagules.is_empty(): return {}
+	return {"blueprint": blueprint, "parent": parent, "result": reproduced, "propagule": reproduced.propagules[0]}
 
 func _regulation_freezes_prepaid_a2() -> void:
 	var blueprint := BP.create(Fixtures.make(5), _policy())
@@ -75,11 +94,11 @@ func _unpaid_maintenance_blocks_reproduction() -> void:
 	_check(starved.propagules.is_empty() and starved.population[0].state.reproduction_count == 0, "unpaid_maintenance_no_reproduction")
 
 func _propagule_endowment_bound() -> void:
-	var blueprint := BP.create(_reproductive_genome(), _policy())
-	var correct := {"schema": R.PROPAGULE_SCHEMA, "id": "seed.test", "parent_id": "parent.test", "blueprint_hash": BP.biological_hash(blueprint), "birth_tick": 1, "position_mm": [500,0,500], "endowment": blueprint.life_history.reproduction.endowment.duplicate(true), "parent_state_hash": "a".repeat(64)}
-	_check(R.validate_propagule(correct, blueprint).is_empty(), "correct_endowment_valid")
-	var tampered := correct.duplicate(true); tampered.endowment.material_mg += 1
-	_check(R.validate_propagule(tampered, blueprint) == "PROPAGULE_ENDOWMENT" and R.materialize_propagule(tampered, blueprint).is_empty(), "tampered_endowment_rejected")
+	var emitted := _emitted_propagule()
+	_check(not emitted.is_empty() and R.validate_propagule(emitted.propagule, emitted.blueprint).is_empty(), "correct_endowment_valid")
+	var tampered: Dictionary = emitted.propagule.duplicate(true)
+	tampered.endowment.material_mg += 1
+	_check(R.validate_propagule(tampered, emitted.blueprint) == "PROPAGULE_ENDOWMENT" and R.materialize_propagule(tampered, emitted.blueprint).is_empty(), "tampered_endowment_rejected")
 
 func _bounded_demand_ids() -> void:
 	var blueprint := BP.create(Fixtures.make(5), _policy())
@@ -150,12 +169,38 @@ func _propagule_sequence_continuity() -> void:
 	var causal: Dictionary = entry.state.duplicate(true)
 	causal.age_ticks = 1; causal.reproduction_count = 5; causal.propagule_seq = 5
 	_check(LS.validate(causal, blueprint) == "LIFE_REPRODUCTION_CAUSALITY", "offspring_causality_bound")
-	var p := _policy()
-	p.reproduction.maturity_ticks = 1; p.reproduction.interval_ticks = 1
-	p.reproduction.endowment = B.stock(); p.reproduction.fee_energy_mj = 0
-	var parent_blueprint := BP.create(_reproductive_genome(), p)
-	var parent := R.individual(parent_blueprint, "repair.sequence.parent", [500,0,500], B.stock())
-	parent.state.age_ticks = 1
-	var reproduced := R._reproduce(parent.state, parent_blueprint, parent_blueprint.life_history)
-	var expected_prefix := "seed/%s/" % parent.state.individual_id.sha256_text()
-	_check(reproduced.success and reproduced.propagules.size() == 1 and String(reproduced.propagules[0].id).begins_with(expected_prefix) and String(reproduced.propagules[0].id).length() <= 128, "full_digest_seed_identity_bounded")
+	var emitted := _emitted_propagule("repair.sequence.parent")
+	var expected_prefix := "seed/%s/" % String(emitted.propagule.parent_id).sha256_text()
+	_check(not emitted.is_empty() and String(emitted.propagule.id).begins_with(expected_prefix) and String(emitted.propagule.id).length() <= 128, "full_digest_seed_identity_bounded")
+
+func _propagule_parent_binding() -> void:
+	var emitted := _emitted_propagule("repair.binding.parent")
+	var p: Dictionary = emitted.propagule
+	_check(not emitted.is_empty() and p.id == R._propagule_id(p.parent_id, p.sequence) and R.validate_propagule(p, emitted.blueprint).is_empty(), "propagule_parent_sequence_identity_valid")
+	var wrong_parent: Dictionary = p.duplicate(true)
+	wrong_parent.parent_id = "repair.binding.other"
+	_check(R.validate_propagule(wrong_parent, emitted.blueprint) == "PROPAGULE_IDENTITY", "propagule_parent_tamper_rejected")
+	var wrong_sequence: Dictionary = p.duplicate(true)
+	wrong_sequence.sequence += 1
+	_check(R.validate_propagule(wrong_sequence, emitted.blueprint) == "PROPAGULE_IDENTITY", "propagule_sequence_tamper_rejected")
+
+func _cumulative_ledger_capacity() -> void:
+	var cumulative := B.stock()
+	cumulative.material_mg = B.MAX_STOCK
+	var one := B.stock()
+	one.material_mg = 1
+	_check(R._add_cumulative_stock(cumulative, one) and cumulative.material_mg == B.MAX_STOCK + 1, "cumulative_stock_crosses_current_stock_bound")
+	var reserve := B.stock()
+	reserve.material_mg = B.MAX_STOCK
+	_check(not R._add_reserve_stock(reserve, one) and reserve.material_mg == B.MAX_STOCK, "instantaneous_reserve_bound_preserved")
+	var blueprint := BP.create(Fixtures.make(0), _policy())
+	var entry := R.individual(blueprint, "repair.cumulative", [500,0,500], B.stock())
+	var ledger: Dictionary = entry.state.resource_ledger.duplicate(true)
+	ledger.assimilated.material_mg = B.MAX_STOCK + 1
+	ledger.field_intake.nutrient_mg = B.MAX_STOCK + 1
+	ledger.assimilated.energy_mj = B.MAX_STOCK + 1
+	ledger.external_energy_mj = B.MAX_STOCK + 1
+	_check(LS._valid_ledger(ledger), "cumulative_ledger_accepts_lifecycle_totals_above_current_stock")
+	var too_high := B.stock()
+	too_high.material_mg = C.MAX_INT + 1
+	_check(not LS.valid_cumulative_stock(too_high), "cumulative_ledger_rejects_above_canonical_int")
