@@ -9,15 +9,23 @@ permissions:
 jobs:
   approved-engine:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[p7-validate]'))
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Reuse only the previously verified engine while the local runner is queued
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/p7-repair-approved-seed
       - name: Preserve only the approved prebuilt engine
         shell: bash
         run: |
           set -euo pipefail
           expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-          engine="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          engine="$RUNNER_TEMP/p7-repair-approved-seed/godot"
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
           mkdir -p "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID"
           cp "$engine" "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID/godot"

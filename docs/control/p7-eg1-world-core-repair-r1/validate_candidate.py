@@ -125,7 +125,8 @@ def identity(root: Path) -> dict:
 
 def check_source(root: Path) -> None:
     changed = git("diff", "--name-only", BASE, "HEAD", cwd=root).splitlines()
-    allowed = {PORT, EG1, ".github/workflows/p7-eg1-world-core-repair.yml"}
+    allowed = {PORT, EG1, "tools/network/eg4_client_worker.gd",
+               ".github/workflows/p7-eg1-world-core-repair.yml"}
     require(all(path in allowed or path.startswith(DOCS) for path in changed), "WORK_ORDER_SCOPE_DRIFT")
     original = subprocess.check_output(["git", "show", f"{BASE}:{PORT}"], cwd=root).decode()
     current = (root / PORT).read_text(encoding="utf-8")
@@ -143,6 +144,16 @@ def check_source(root: Path) -> None:
     original_test = subprocess.check_output(["git", "show", f"{BASE}:{EG1}"], cwd=root).decode()
     require(first.endswith("func _finish() -> void:\n\t_cleanup()\n") and first + last == original_test,
             "ORIGINAL_EG1_SCENARIO_CHANGED")
+    # The successor Work Order permits only an additive EG4 client barrier.
+    eg4 = "tools/network/eg4_client_worker.gd"
+    spec = json.loads((root / DOCS / "eg4-diff-guard.v1.json").read_text())
+    require(git("rev-parse", f"{BASE}:{eg4}", cwd=root) == spec["original_blob_sha"], "EG4_BASELINE_DRIFT")
+    original_worker = subprocess.check_output(["git", "show", f"{BASE}:{eg4}"], cwd=root).decode()
+    worker = (root / eg4).read_text(encoding="utf-8")
+    for addition in (spec["gate"], spec["helper"]):
+        require(bool(addition) and worker.count(addition) == 1, "EG4_BARRIER_DIFF_MISSING")
+        worker = worker.replace(addition, "")
+    require(worker == original_worker, "ORIGINAL_EG4_TRAFFIC_OR_TIMEOUT_CHANGED")
     git("diff", "--check", cwd=root)
 
 
@@ -154,6 +165,7 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
     write_json(out / "baseline-preflight.json", before)
     runner = str(root / DOCS / "probes/run_bandwidth_probe.gd")
     run(root, out, "baseline-import", [engine, "--headless", "--editor", "--path", str(baseline), "--import"], 180)
+    eg4_completion_check(root, out, engine, baseline, negative=True)
     run(root, out, "baseline-probe", [engine, "--headless", "--path", str(baseline), "--script", runner,
         "--", f"--output={out / 'baseline-probe.json'}"], 30, expected=1)
     report = json.loads((out / "baseline-probe.json").read_text())
@@ -173,6 +185,7 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
         require(case["passed"] is True and case["statistics_before_input"]["limit"] == 32
                 and case["statistics_before_input"]["deceleration"] == 2
                 and case["reliable_valid"] and case["input_received"], "CANDIDATE_BANDWIDTH_NOT_RESTORED")
+    eg4_completion_check(root, out, engine, root, negative=False)
     for attempt in range(1, 6):
         name = f"eg1-{attempt}"
         run(root, out, name, [engine, "--headless", "--path", str(root), "--script", f"res://{EG1}"], 90)
@@ -184,6 +197,13 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
                     reports.append(value)
         require(len(reports) == 1 and reports[0]["verdict"] == "PASS" and not reports[0]["failures"]
                 and reports[0]["assertions"] == 36, "EG1_ORIGINAL_PLUS_ADDITIVE_ASSERTIONS_NOT_PROVEN")
+    for attempt in range(1, 4):
+        name = f"eg4-{attempt}"
+        run(root, out, name, [engine, "--headless", "--path", str(root), "--script",
+                             "res://tests/network/test_eg4_gateway_processes.gd"], 300)
+        report = single_report(out / f"{name}.log", "eg4_gateway_processes_l2")
+        require(report["verdict"] == "PASS" and report["assertions"] == 46 and not report["failures"],
+                "EG4_ORIGINAL_PROCESS_PREDICATES_NOT_PROVEN")
     siblings = ["test_t1_multi_peer_transport_contracts.gd", "test_t1_multi_peer_transport_processes.gd",
                 "test_nx2_realtime_traffic_separation.gd"]
     siblings += [p.name for p in sorted((root / "tests/network").glob("test_eg[0-9]*.gd")) if p.name != Path(EG1).name]
@@ -191,6 +211,33 @@ def probe_campaign(root: Path, out: Path, engine: str) -> None:
     for sibling in siblings:
         run(root, out, sibling.removesuffix(".gd"), [engine, "--headless", "--path", str(root),
             "--script", f"res://tests/network/{sibling}"], 300)
+
+
+def single_report(path: Path, test: str) -> dict:
+    reports = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("{"):
+            value = json.loads(line)
+            if isinstance(value, dict) and value.get("test") == test:
+                reports.append(value)
+    require(len(reports) == 1, f"MISSING_OR_DUPLICATE_REPORT:{test}")
+    return reports[0]
+
+
+def eg4_completion_check(root: Path, out: Path, engine: str, project: Path, negative: bool) -> None:
+    name = "baseline-eg4-completion" if negative else "candidate-eg4-completion"
+    script = str(root / DOCS / "probes/test_eg4_receipt_completion.gd")
+    run(root, out, name, [engine, "--headless", "--path", str(project), "--script", script],
+        30, expected=1 if negative else 0)
+    report = single_report(out / f"{name}.log", "eg4_receipt_completion")
+    failures = []
+    if negative:
+        for case in ("empty", "missing-last", "duplicate", "injected", "foreign-session", "extra", "malformed"):
+            failures += [f"{case}:withdrawal-must-wait", f"{case}:no-outbound-withdrawal"]
+        failures.append("late-receipt:wait")
+    require(report["assertions"] == 23 and sorted(report["failures"]) == sorted(failures)
+            and report["verdict"] == ("FAIL" if negative else "PASS"), "EG4_COMPLETION_CAUSE_NOT_PROVEN")
+    write_json(out / f"{name}.summary.json", report)
 
 
 def check_p7_leaf(text: str, name: str, count: int) -> None:

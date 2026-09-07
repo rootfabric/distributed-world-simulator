@@ -234,6 +234,10 @@ func _drive() -> void:
 			_send_inner(Support.movement_inner(_gateway_session_id(), _movement_seq))
 			_movement_seq += 1
 			return
+		# Drain exact gameplay receipts before withdrawal can overtake their delivery.
+		# The existing timeout remains the failure bound; do not resend any traffic.
+		if not _receipts_complete():
+			return
 		_demand_withdrawn = true
 		_withdraw_sent_at_ms = now
 		_send_inner(Support.projection_demand_inner(
@@ -280,6 +284,24 @@ func _start_wave_ops() -> void:
 	for index in range(_ops_expected):
 		_op_queue.append("operation/eg4/l2/%s-w1-%04d" % [
 			String(_options["client-session-id"]).replace("client-session/eg4/", ""), index])
+
+
+func _receipts_complete() -> bool:
+	var expected: Dictionary = {}
+	var client_tag := String(_options["client-session-id"]).replace("client-session/eg4/", "")
+	for index in range(_ops_expected):
+		expected["operation/eg4/l2/%s-w1-%04d" % [client_tag, index]] = true
+	for index in range(2 * int(_options["movements-per-wave"])):
+		expected["operation/eg4/l2/move-ack/%s/%d" % [
+			_gateway_session_id().replace("/", "-"), int(_options["movement-seq-base"]) + index]] = true
+	if _receipts.size() != expected.size():
+		return false
+	for receipt in _receipts:
+		if not receipt is Dictionary:
+			return false
+		if not expected.erase(String(receipt.get("operation_id", ""))):
+			return false
+	return expected.is_empty()
 
 
 func _finish_success() -> void:
