@@ -5,8 +5,7 @@
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "a52faf8c44434818775225be3f71c30a0fd86ef3",
-  "evidence_head_tree": "4ff3adbaeecdd64a68bb3c1f11817aa72918231f",
-  "intent": "Close the exact P7 closure chain: restore the pinned-engine ENet listener bandwidth contract, drain exact EG4 gameplay receipts before withdrawal, invoke the P7.4 persistence-restart worker in its three canonical phases from the world runner, and port the proven atomic lock release and fail-closed staleness to the MW10 cross-region repository after the exact full regression exposed its ownerless-lock race.",
+  "intent": "Close the exact P7 closure chain (candidate tree 4ff3adbaeecdd64a68bb3c1f11817aa72918231f; post-build critique NO_MATERIAL_REFACTOR_REQUIRED in POST_BUILD_CRITIQUE_FINAL_RU.md): restore the pinned-engine ENet listener bandwidth contract, drain exact EG4 gameplay receipts before withdrawal, invoke the P7.4 persistence-restart worker in its three canonical phases from the world runner, and port the proven atomic lock release and fail-closed staleness to the MW10 cross-region repository after the exact full regression exposed its ownerless-lock race.",
   "root_cause_or_reason": "1) Godot a13da4feb passes p_max_channels+SYSCH_MAX as incoming bandwidth in create_server; 2) the EG4 test client withdrew before all six exact operation/movement receipts; 3) the canonical world runner invoked the phase-gated P7.4 worker generically; 4) the cross-region repository lock lifecycle was fail-open for ownerless locks and released in-place, letting a contender steal the lock so a durable begin winner reports failure.",
   "changed_surfaces": [
     "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
@@ -83,8 +82,10 @@
     "d28002ae CI world red is the superseded probe-identifier typo fixed in a52faf8c; final-head CI rerun expected green"
   ],
   "review_verdict": "PENDING_FRESH_INDEPENDENT_REVIEWER_AND_VERIFIER",
-  "post_build_critique": {
-    "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
-    "document": "docs/control/p7-eg1-world-core-repair-r1/POST_BUILD_CRITIQUE_FINAL_RU.md"
-  }
+  "rank_up_moves": [
+    "Approved-engine seed artifact expires 2026-09-14; future runs must supply the same pinned binary through a reviewed available channel",
+    "Unify probe report identifiers in one place to avoid hyphen/underscore drift"
+  ],
+  "evidence_gaps": [],
+  "required_fixes": []
 }
