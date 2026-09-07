@@ -7,7 +7,9 @@ export GODOT_BIN GODOT="$GODOT_BIN" BREAKPOINT_RUNTIME_DISABLED=1
 mkdir -p "$ROOT/artifacts"
 OUT="$(mktemp -d "$ROOT/artifacts/fabric-holdout-r4-exact-XXXXXX")"
 export OUT
-printf '\n*.gd.uid\n' >> .git/info/exclude
+EXCLUDE="$(git rev-parse --git-path info/exclude)"
+mkdir -p "$(dirname "$EXCLUDE")"
+grep -Fqx '*.gd.uid' "$EXCLUDE" 2>/dev/null || printf '\n*.gd.uid\n' >> "$EXCLUDE"
 finish() {
   local code="$?"
   printf 'RUN_EXIT=%s\n' "$code" > "$OUT/run-exit.txt"

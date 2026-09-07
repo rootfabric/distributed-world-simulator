@@ -12,9 +12,9 @@
   "protocol_calibration_is_not_independent_holdout": true,
   "source_sha256": {
     "tests/research/fabric1/fabric_holdout_r4_probe.gd": "b9f381235551d93820428f87ee2ee55f34f3ffc0c0033a846855f7265e67d3c7",
-    "scripts/research/fabric_holdout_r4/holdout.py": "4f4c320e46e09c24b85ed5bf9ac255ed1be913773cc816601ea07c189212f318",
-    "tests/research/fabric1/fabric_holdout_r4_protocol_test.py": "644f6f6239e7e3617e72982de6b2582b992cb49e52383bd5977024e84fd74d3b",
-    "RUN_FABRIC_HOLDOUT_R4_TESTS.sh": "0e0475ad4799b466b2ae7ad863f7b89803412ec24a44ffff42a541cc75ada18b",
+    "scripts/research/fabric_holdout_r4/holdout.py": "1cdf95267dac0ba22429291a418d007f825a8baa59c3248696ad2ba272dc2139",
+    "tests/research/fabric1/fabric_holdout_r4_protocol_test.py": "8b01e6e9241aa53022779a43843fc8f6a09c827512e77d3c91c879e0902dd8ac",
+    "RUN_FABRIC_HOLDOUT_R4_TESTS.sh": "ecc71e77c7c73865e89fd1f964c402eae4509bc7568826b00ba1493df4757fd5",
     ".github/workflows/fabric-holdout-r4-linux-double.yml": "ad8a4515fe2e48ed96413657cfb3bc17cf8abbbc4dffc57e83e0f810d7f8c736",
     "tests/research/fabric1/fabric_holdout_r4_serialization_probe.gd": "4f76760adb4c99469f504f54e311ee7910ce48b94019dceeafe49d354508bbb5"
   }

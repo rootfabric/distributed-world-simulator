@@ -1,6 +1,8 @@
 """Self-authored protocol calibration, explicitly NOT the independent holdout."""
 import copy
 import math
+import subprocess
+import tempfile
 from pathlib import Path
 import sys
 import unittest
@@ -110,6 +112,73 @@ class ProtocolTest(unittest.TestCase):
         result = h.evaluate(calibration(), {"id": "x", "compile": {"success": False, "error_code": "TEST_UNSUPPORTED"}, "r2_mechanical": {"success": True}, "r2_electrical": {"success": True}}, "original")
         self.assertEqual(result["verdict"], "FAIL")
         self.assertIn("VALID_PRIMITIVES_NOT_EXECUTABLE_IN_R3", result["issues"])
+
+    def field_fixture(self):
+        case = calibration()
+        case["electrical_nodes"].append(["other", 2])
+        case["resistors"] += [["branch_a", "p", "other", 4, "WIRE"],
+                              ["branch_b", "other", "g", 1, "WIRE"],
+                              ["cross", "mid", "other", 5, "WIRE"]]
+        reference = h.network(case)
+        sample = {"velocity_m_per_s": 0.0, "electrical_observables": {
+            field: {prefix + key: value for key, value in reference[field].items()}
+            for field, prefix in (("edge_currents_a", "bond/"), ("port_currents_a", "part/"), ("potentials_v", "part/"))}}
+        return case, sample
+
+    def test_complete_distributed_readback(self):
+        case, sample = self.field_fixture()
+        self.assertEqual(h.electrical_field_checks(case, sample), [])
+
+    def test_missing_readback_cannot_pass_bridge_as_scalar(self):
+        case, _ = self.field_fixture()
+        self.assertIn("MISSING_DISTRIBUTED_ELECTRICAL_READBACK", h.electrical_field_checks(case, {"current_a": 1.4}))
+        self.assertEqual(h.electrical_field_checks(calibration(), {"current_a": 1.4}), [])
+        path = calibration(); path["ports"] = {"p": 7, "mid": 1}
+        self.assertIn("MISSING_DISTRIBUTED_ELECTRICAL_READBACK", h.electrical_field_checks(path, {}))
+
+    def test_each_distributed_field_is_checked(self):
+        case, original = self.field_fixture()
+        for field in ("edge_currents_a", "port_currents_a", "potentials_v"):
+            with self.subTest(field=field):
+                sample = copy.deepcopy(original)
+                key = next(iter(sample["electrical_observables"][field]))
+                sample["electrical_observables"][field][key] += 0.1
+                self.assertIn("ELECTRICAL_FIELD_ORACLE_" + field, h.electrical_field_checks(case, sample))
+                del sample["electrical_observables"][field][key]
+                self.assertIn("ELECTRICAL_FIELD_COVERAGE_" + field, h.electrical_field_checks(case, sample))
+
+    def test_same_total_current_wrong_bridge_flow_is_not_pass(self):
+        case, sample = self.field_fixture()
+        sample["electrical_observables"]["edge_currents_a"]["bond/cross"] += 0.1
+        sample.update({"time_s": 0, "displacement_m": 0, "current_a": h.state(h.oscillator(case), 0)[2],
+                       "pending_proposal": {}, "energy_residual_j": 0})
+        run = {"samples": [sample], "final": sample, "rejection_atomic": True,
+               "wrong_owner_rejected": True, "denied_rejected": True}
+        observed = {"id": "calibration", "compile": {"success": True},
+                    "r2_mechanical": {"success": True}, "r2_electrical": {"success": True},
+                    "runs": {"FULL": run, "BAKE": copy.deepcopy(run)}}
+        result = h.evaluate(case, observed, "original")
+        self.assertEqual(result["verdict"], "FAIL")
+        self.assertIn("FULL_ELECTRICAL_FIELD_ORACLE_edge_currents_a", result["issues"])
+        self.assertIn("FULL_ELECTRICAL_KCL_RESIDUAL", result["issues"])
+
+    def test_linked_worktree_exclude_path(self):
+        # Reproduce the actual runner prefix in a linked worktree, without Godot.
+        prefix = (ROOT / "RUN_FABRIC_HOLDOUT_R4_TESTS.sh").read_text().split('finish() {', 1)[0]
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / "repo"; work = Path(directory) / "work"
+            repo.mkdir()
+            def git(*args):
+                subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+            git("init"); git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "test")
+            git("worktree", "add", "--detach", str(work), "HEAD")
+            self.assertTrue((work / ".git").is_file())
+            launcher = work / "RUN_FABRIC_HOLDOUT_R4_TESTS.sh"
+            launcher.write_text(prefix)
+            subprocess.run(["bash", str(launcher)], cwd=work, check=True, capture_output=True)
+            actual = subprocess.check_output(["git", "-C", str(work), "rev-parse", "--git-path", "info/exclude"], text=True).strip()
+            target = Path(actual) if Path(actual).is_absolute() else work / actual
+            self.assertIn("*.gd.uid", target.read_text())
 
     def test_schema_nan_cannot_serialize(self):
         with self.assertRaises(ValueError): h.dumps({"x": float("nan")})

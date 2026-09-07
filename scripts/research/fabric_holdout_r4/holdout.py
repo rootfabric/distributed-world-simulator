@@ -336,6 +336,68 @@ def near(a: float, b: float, tolerance: float = 1e-5) -> bool:
     return number(a) and number(b) and abs(a-b) <= tolerance*(1+abs(b))
 
 
+def electrical_field_checks(case: dict, sample: dict) -> list[str]:
+    """Require real distributed readback whenever a scalar current is insufficient.
+
+    The probe retains the entire runtime snapshot. Missing observables are never
+    reconstructed from the reference, and a collapsed bridge cannot pass as series.
+    """
+    features = graph_features(case)
+    degree = {node[0]: 0 for node in case["electrical_nodes"]}
+    for _, a, b, _, _ in case["resistors"]:
+        degree[a] += 1
+        degree[b] += 1
+    simple_series = (features["components"] == 1 and features["cycle_rank"] == 0
+                     and features["max_degree"] <= 2 and len(case["ports"]) == 2
+                     and all(degree[node] == 1 for node in case["ports"]))
+    observed = sample.get("electrical_observables")
+    if observed is None:
+        return [] if simple_series else ["MISSING_DISTRIBUTED_ELECTRICAL_READBACK"]
+    if not isinstance(observed, dict):
+        return ["INVALID_DISTRIBUTED_ELECTRICAL_READBACK"]
+    boundary = dict(case["ports"])
+    if len(boundary) == 2:
+        # R3's declared ideal coupler is in series with the network source port.
+        if not number(sample.get("velocity_m_per_s")):
+            return ["ELECTRICAL_READBACK_MISSING_VELOCITY"]
+        positive = sorted(boundary, key=lambda key: (-boundary[key], key))[0]
+        boundary[positive] -= case["coupling"] * sample["velocity_m_per_s"]
+    expected = network(case, boundary)
+    fields = {"edge_currents_a": "bond/", "port_currents_a": "part/", "potentials_v": "part/"}
+    issues = []
+    complete = True
+    for field, prefix in fields.items():
+        actual = observed.get(field)
+        reference = {prefix + key: value for key, value in expected[field].items()}
+        if (not isinstance(actual, dict) or set(actual) != set(reference)
+                or not all(number(value) for value in actual.values())):
+            issues.append("ELECTRICAL_FIELD_COVERAGE_" + field)
+            complete = False
+            continue
+        if any(not near(actual[key], reference[key]) for key in reference):
+            issues.append("ELECTRICAL_FIELD_ORACLE_" + field)
+    if not complete:
+        return issues
+    currents = observed["edge_currents_a"]
+    ports = observed["port_currents_a"]
+    potentials = observed["potentials_v"]
+    balance = {"part/" + node[0]: 0.0 for node in case["electrical_nodes"]}
+    heat = 0.0
+    for edge, a, b, resistance, _ in case["resistors"]:
+        current = currents["bond/" + edge]
+        balance["part/" + a] += current
+        balance["part/" + b] -= current
+        heat += current * current * resistance
+        if not near(current * resistance, potentials["part/" + a] - potentials["part/" + b]):
+            issues.append("ELECTRICAL_OHM_RESIDUAL")
+    if any(not near(value, ports.get(node, 0.0)) for node, value in balance.items()):
+        issues.append("ELECTRICAL_KCL_RESIDUAL")
+    work = sum(potentials[node] * current for node, current in ports.items())
+    if not near(work, heat):
+        issues.append("ELECTRICAL_POWER_RESIDUAL")
+    return sorted(set(issues))
+
+
 def evaluate(case: dict, observed: dict, variant: str) -> dict:
     issues, checks = [], []
     reference = {}
@@ -371,6 +433,9 @@ def evaluate(case: dict, observed: dict, variant: str) -> dict:
             if not run.get("rejection_atomic") or not run.get("wrong_owner_rejected") or not run.get("denied_rejected"):
                 issues.append(mode+"_CANONICAL_FENCE_FAILED")
             final = run["final"]
+            if not invalid:
+                for sample in samples:
+                    issues.extend(mode + "_" + issue for issue in electrical_field_checks(case, sample))
             if reference_model:
                 max_errors = [0.0, 0.0, 0.0]
                 for sample in samples:
