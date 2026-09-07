@@ -1,0 +1,87 @@
+name: FABRIC REPAIR-R1 Linux Double
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/fabric_bake0/**'
+      - 'scripts/labs/fabric/**'
+      - 'tests/research/fabric1/**'
+      - 'tests/research/fabric_bake0/**'
+      - 'RUN_FABRIC*.sh'
+      - '.github/workflows/fabric-repair-r1-linux-double.yml'
+  push:
+    branches: [repair/fabric-repair-r1-integrity-canonical-binding]
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      - name: Prepare exact subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git diff --check
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          echo 'BREAKPOINT_RUNTIME_DISABLED=1' >> "$GITHUB_ENV"
+          echo '*.gd.uid' >> .git/info/exclude
+          mkdir -p artifacts/fabric_repair_r1
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" | tee artifacts/fabric_repair_r1/subject.txt
+          git archive --format=tar HEAD | gzip -9 > artifacts/fabric_repair_r1/source.tar.gz
+          sha256sum artifacts/fabric_repair_r1/source.tar.gz > artifacts/fabric_repair_r1/source.tar.gz.sha256
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee artifacts/fabric_repair_r1/import.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_repair_r1/import.log
+      - name: Predecessor regression characterization
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          for pair in \
+            'b07|./RUN_FABRIC_B0_7_KERNEL_TESTS.sh' \
+            'fabric1|./RUN_FABRIC1_CORE_TESTS.sh' \
+            'sync1|./RUN_FABRIC1_SYNC1_TESTS.sh' \
+            'bridge4|./RUN_FABRIC_BRIDGE4_TESTS.sh' \
+            'complex4|./RUN_FABRIC_COMPLEX4_BCD_TESTS.sh'
+          do
+            name="${pair%%|*}"; cmd="${pair#*|}"
+            set +e
+            bash "$cmd" >"artifacts/fabric_repair_r1/${name}.log" 2>&1
+            rc=$?
+            set -e
+            echo "$rc" >"artifacts/fabric_repair_r1/${name}.exit"
+            cat "artifacts/fabric_repair_r1/${name}.log"
+          done
+          sha256sum artifacts/fabric_repair_r1/*.log > artifacts/fabric_repair_r1/logs.sha256
+          test "$(cat artifacts/fabric_repair_r1/b07.exit)" = 0
+          test "$(cat artifacts/fabric_repair_r1/fabric1.exit)" = 0
+          test "$(cat artifacts/fabric_repair_r1/sync1.exit)" = 0
+          test "$(cat artifacts/fabric_repair_r1/bridge4.exit)" = 0
+          test "$(cat artifacts/fabric_repair_r1/complex4.exit)" = 0
+      - name: Verify clean tracked source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-repair-r1-${{ github.sha }}
+          path: artifacts/fabric_repair_r1/
+          if-no-files-found: error
