@@ -54,6 +54,10 @@ func start_server(endpoint: Dictionary) -> Dictionary:
 	if error != OK:
 		_peer = null
 		return TransportUtilsScript.failure("ENET_SERVER_CREATE_FAILED", {"godot_error": int(error)})
+	# Godot a13da4feb passes the channel count as incoming bandwidth.
+	# Restore this endpoint's unlimited defaults before any client handshake;
+	# do not alter channel binding, delivery modes or adaptive RTT throttling.
+	_peer.host.bandwidth_limit(0, 0)
 	_mode = "SERVER"
 	_last_status = _peer.get_connection_status()
 	_append_event("LISTENER_STARTED", "", "", 0, {}, "", {"endpoint": endpoint.duplicate(true)})

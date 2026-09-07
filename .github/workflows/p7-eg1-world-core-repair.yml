@@ -1,0 +1,78 @@
+name: P7 ENet Repair Exact Validation
+on:
+  push:
+    branches: [repair/v0-p7-eg1-world-core-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  approved-engine:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[p7-validate]'))
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - name: Preserve only the approved prebuilt engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          engine="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
+          mkdir -p "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID"
+          cp "$engine" "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID/godot"
+          printf '%s  godot\n' "$expected" > "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-repair-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-repair-engine-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 7
+  exact-validation:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+    needs: approved-engine
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [world, p7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONUTF8: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-repair-engine
+      - name: Resolve exact runtime and full-suite graphical dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/p7-repair-engine/godot"
+          chmod u+x "$engine"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+          if [ ! -x /usr/bin/Xvfb ]; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          test -x /usr/bin/Xvfb
+          pwsh -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable'
+      - name: Validate exact candidate without altering canonical runners
+        shell: bash
+        run: python3 docs/control/p7-eg1-world-core-repair-r1/validate_candidate.py '${{ matrix.kind }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-repair-${{ matrix.kind }}-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/p7-eg1-repair-${{ matrix.kind }}/
+          if-no-files-found: error
+          retention-days: 90
