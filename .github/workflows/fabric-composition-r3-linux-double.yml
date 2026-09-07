@@ -1,0 +1,39 @@
+name: FABRIC COMPOSITION-R3 Linux Double
+on:
+  push:
+    branches: [research/fabric-composition-r3-coupled-mechanism-r1]
+permissions:
+  contents: read
+concurrency:
+  group: fabric-composition-r3-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  provision-exact-engine:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - name: Export only the approved non-secret test engine
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          digest="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$digest" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          output="$RUNNER_TEMP/fabric-composition-r3-engine-${GITHUB_RUN_ID}"
+          mkdir -p "$output"
+          cp -- "$bin" "$output/godot.linuxbsd.editor.double.x86_64"
+          printf 'VERSION=%s\nSHA256=%s\nPURPOSE=exact local development validation, not acceptance\n' "$version" "$digest" > "$output/identity.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-composition-r3-approved-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/fabric-composition-r3-engine-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 1
+      - name: Remove the temporary export
+        if: always()
+        shell: bash
+        run: rm -rf -- "$RUNNER_TEMP/fabric-composition-r3-engine-${GITHUB_RUN_ID}"
