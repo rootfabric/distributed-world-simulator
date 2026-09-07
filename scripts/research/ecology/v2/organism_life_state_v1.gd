@@ -57,6 +57,8 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if not C.vector(v.position_mm, F.MAX_PORT_COORD_MM) or not v.origin_kind in ORIGINS or not v.alive is bool: return "LIFE_STATE_IDENTITY"
 	if not C.integer(v.age_ticks, 0, MAX_AGE_TICK) or not C.integer(v.starvation_ticks, 0, MAX_AGE_TICK): return "LIFE_STATE_AGE"
 	if not C.integer(v.next_reproduction_tick, 0, MAX_REPRODUCTION_SCHEDULE_TICK) or not C.integer(v.reproduction_count, 0, MAX_OFFSPRING_COUNTER) or not C.integer(v.propagule_seq, 0, MAX_OFFSPRING_COUNTER): return "LIFE_STATE_COUNTER"
+	if v.propagule_seq != v.reproduction_count: return "LIFE_PROPAGULE_SEQUENCE"
+	if v.reproduction_count > v.age_ticks * MAX_OFFSPRING_PER_EVENT: return "LIFE_REPRODUCTION_CAUSALITY"
 	if not B.valid_stock(v.metabolic_reserves): return "LIFE_STATE_RESERVES"
 	if not _valid_ledger(v.resource_ledger): return "LIFE_STATE_LEDGER"
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
