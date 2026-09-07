@@ -73,8 +73,10 @@ func observe_load(snapshot: Dictionary, matter_batch: Dictionary, bond_id: Strin
 func observe_canonical_successor(successor_snapshot: Dictionary, matter_batch: Dictionary, event_id: String, tick: int, authority: Dictionary = {}) -> Dictionary:
 	if _pending_proposal.is_empty() or _event_ledger.has(event_id) or not Utils.is_canonical_id(event_id, 2) or not _next_tick(tick):
 		return Utils.failure("BRIDGE4_CANONICAL_SUCCESSOR_ORDER_INVALID")
-	# Authority continuity is checked independently of any capsule/old artifact.
-	if not Adapter.AuthorityEnvelope.validate_b0_safety(authority).success or authority.get("checksum") != _authority.get("checksum"):
+	# Live operations may omit authority only after an externally-authorized start/restore.
+	# The stored authority came from canonical context, never from the artifact/capsule.
+	var current_authority: Dictionary = _authority if authority.is_empty() else authority
+	if not Adapter.AuthorityEnvelope.validate_b0_safety(current_authority).success or current_authority.get("checksum") != _authority.get("checksum"):
 		return Utils.failure("BRIDGE4_AUTHORITY_CHANGED_RESTART_REQUIRED")
 	var failed_bond_id: String = _pending_proposal["bond_id"]
 	var checked := Adapter.validate_successor(_snapshot, successor_snapshot, _matter, matter_batch, failed_bond_id)
@@ -83,7 +85,7 @@ func observe_canonical_successor(successor_snapshot: Dictionary, matter_batch: D
 	var next_events := _event_ledger.duplicate()
 	next_events.append(event_id)
 	next_events.sort()
-	var context := Adapter.compile_authoritative(successor_snapshot, matter_batch, authority, next_events)
+	var context := Adapter.compile_authoritative(successor_snapshot, matter_batch, current_authority, next_events)
 	if not context.success:
 		return context
 	var observed := _fabric.apply_canonical_failure(context.details.spec, event_id, [failed_bond_id], tick, context.details.source_context)
@@ -188,7 +190,10 @@ func status() -> Dictionary:
 func _live_binding(snapshot: Dictionary, matter_batch: Dictionary, authority: Dictionary) -> Dictionary:
 	if _binding.is_empty():
 		return Utils.failure("BRIDGE4_NOT_STARTED")
-	var context := Adapter.compile_authoritative(snapshot, matter_batch, authority, _event_ledger)
+	var current_snapshot: Dictionary = _snapshot if snapshot.is_empty() else snapshot
+	var current_matter: Dictionary = _matter if matter_batch.is_empty() else matter_batch
+	var current_authority: Dictionary = _authority if authority.is_empty() else authority
+	var context := Adapter.compile_authoritative(current_snapshot, current_matter, current_authority, _event_ledger)
 	if not context.success:
 		return context
 	if context.details.binding.checksum != _binding.checksum:
