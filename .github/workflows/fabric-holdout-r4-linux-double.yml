@@ -13,45 +13,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 9bb354c31d65600eccd6df713118e11a1f26f548
+          ref: 9c5ee890d9f770756e37c1d3df84b4f3c1dbd477
           fetch-depth: 0
           persist-credentials: false
-      - name: Bind exact harness, frozen kernel and approved engine
+      - name: Bind exact harness and approved engine
         env:
-          READ_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
-          test "$(git rev-parse HEAD)" = 9bb354c31d65600eccd6df713118e11a1f26f548
-          test "$(git rev-parse 'HEAD^{tree}')" = 846af7694545a361f7b97e738687f244602cc752
+          mkdir -p artifacts/executor-provenance
+          printf 'HARNESS_HEAD=%s\nHARNESS_TREE=%s\nWORKFLOW_HEAD=%s\nRUN=%s\nENGINE_ARTIFACT_ID=10015796111\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$GITHUB_SHA" "$GITHUB_RUN_ID" > artifacts/executor-provenance/identity.txt
+          test "$(git rev-parse HEAD)" = 9c5ee890d9f770756e37c1d3df84b4f3c1dbd477
+          test "$(git rev-parse 'HEAD^{tree}')" = 4bd6f2834f775cf4286c6de3ac9e28fb73e57c61
           test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = fd6e83b35301d7a15e92c55939654f1f95729730
-          python3 - <<'PY'
-          import hashlib,io,os,pathlib,urllib.request,zipfile
-          class Redirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self,req,fp,code,msg,headers,newurl):
-                  result=super().redirect_request(req,fp,code,msg,headers,newurl)
-                  if result is not None: result.remove_header('Authorization')
-                  return result
-          request=urllib.request.Request('https://api.github.com/repos/rootfabric/distributed-world-simulator/actions/artifacts/10009150529/zip',headers={'Authorization':'Bearer '+os.environ['READ_TOKEN'],'Accept':'application/vnd.github+json'})
-          with urllib.request.build_opener(Redirect()).open(request,timeout=60) as response: raw=response.read()
-          assert hashlib.sha256(raw).hexdigest()=='31c0fdb95b91a15909b4b7803c1c83a0f3a72ebe2261bdf993543eb8f739da0f'
-          with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-              candidates=[n for n in archive.namelist() if n.endswith('godot.linuxbsd.editor.double.x86_64')]
-              assert len(candidates)==1 and archive.getinfo(candidates[0]).file_size<512*1024*1024
-              engine=archive.read(candidates[0])
-          assert hashlib.sha256(engine).hexdigest()=='bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
-          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'r4-approved-godot'
-          path.write_bytes(engine);path.chmod(0o700)
-          with open(os.environ['GITHUB_ENV'],'a') as env: env.write('GODOT_BIN='+str(path)+'\n')
-          print('APPROVED_ENGINE_BYTES_VERIFIED; NO_ENGINE_CHANGE')
-          PY
-      - name: Run unchanged R4 experiment and predecessor regressions
+          gh run download 34114746722 --repo "$GITHUB_REPOSITORY" --name fabric-composition-r3-approved-engine-34114746722 --dir "$RUNNER_TEMP/r4-engine"
+          bin="$RUNNER_TEMP/r4-engine/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$bin" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$bin"
+          test "$("$bin" --version)" = 4.7.1.stable.double.custom_build.a13da4feb
+          sha256sum "$bin" > artifacts/executor-provenance/engine.sha256
+          printf 'GODOT_BIN=%s\n' "$bin" >> "$GITHUB_ENV"
+      - name: Run exact R4 experiment and unchanged predecessor regressions
         shell: bash
         run: bash RUN_FABRIC_HOLDOUT_R4_TESTS.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: fabric-holdout-r4-g1-exact-${{ github.run_id }}
-          path: artifacts/fabric-holdout-r4-exact-*/
+          path: |
+            artifacts/fabric-holdout-r4-exact-*/
+            artifacts/executor-provenance/
           if-no-files-found: error
           retention-days: 30
