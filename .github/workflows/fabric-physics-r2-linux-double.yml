@@ -1,0 +1,92 @@
+name: FABRIC PHYSICS-R2 Linux Double
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/fabric_bake0/fabric_physics_r2_*.gd'
+      - 'tests/research/fabric1/fabric_physics_r2_acceptance.gd'
+      - 'RUN_FABRIC_PHYSICS_R2_TESTS.sh'
+      - 'docs/research/FABRIC_PHYSICS_R2_WORK_ORDER_RU.md'
+      - '.github/workflows/fabric-physics-r2-linux-double.yml'
+  push:
+    branches: [research/fabric-physics-r2-material-geometry-laws-r1]
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Prepare exact subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git diff --check
+          bash -n RUN_FABRIC_PHYSICS_R2_TESTS.sh
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          godot_version="$("$bin" --version | head -n1 | tr -d '\r')"
+          godot_sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$godot_version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$godot_sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          echo 'BREAKPOINT_RUNTIME_DISABLED=1' >> "$GITHUB_ENV"
+          echo '*.gd.uid' >> .git/info/exclude
+          mkdir -p artifacts/fabric_physics_r2
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" | tee artifacts/fabric_physics_r2/subject.txt
+          printf 'VERSION=%s\nSHA256=%s\n' "$godot_version" "$godot_sha" | tee artifacts/fabric_physics_r2/godot.txt
+          git archive --format=tar HEAD | gzip -9 > artifacts/fabric_physics_r2/source.tar.gz
+          sha256sum artifacts/fabric_physics_r2/source.tar.gz > artifacts/fabric_physics_r2/source.tar.gz.sha256
+
+      - name: Fresh exact import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file artifacts/fabric_physics_r2/import.log --import
+          cat artifacts/fabric_physics_r2/import.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_physics_r2/import.log
+
+      - name: PHYSICS-R2 analytical acceptance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT="$GODOT_BIN"
+          bash RUN_FABRIC_PHYSICS_R2_TESTS.sh 2>&1 | tee artifacts/fabric_physics_r2/r2.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_physics_r2/r2.log
+          grep -F 'FABRIC-PHYSICS-R2: PASS' artifacts/fabric_physics_r2/r2.log
+
+      - name: Focused R1 regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT="$GODOT_BIN"
+          bash RUN_FABRIC_REPAIR_R1_TESTS.sh 2>&1 | tee artifacts/fabric_physics_r2/r1.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_physics_r2/r1.log
+          grep -F 'FABRIC-REPAIR-R1 INTEGRITY: PASS' artifacts/fabric_physics_r2/r1.log
+
+      - name: Capture evidence and clean state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sha256sum artifacts/fabric_physics_r2/import.log artifacts/fabric_physics_r2/r2.log artifacts/fabric_physics_r2/r1.log > artifacts/fabric_physics_r2/logs.sha256
+          sha256sum artifacts/fabric_physics_r2/subject.txt artifacts/fabric_physics_r2/godot.txt artifacts/fabric_physics_r2/source.tar.gz artifacts/fabric_physics_r2/import.log artifacts/fabric_physics_r2/r2.log artifacts/fabric_physics_r2/r1.log > artifacts/fabric_physics_r2/evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC PHYSICS-R2 EXACT LINUX DOUBLE: PASS'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-physics-r2-${{ github.sha }}
+          path: artifacts/fabric_physics_r2/
+          if-no-files-found: error
+          retention-days: 7
