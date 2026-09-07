@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/research/fabric_bake0/fabric_physics_r2_*.gd'
-      - 'tests/research/fabric1/fabric_physics_r2_acceptance.gd'
+      - 'tests/research/fabric1/fabric_physics_r2_*.gd'
       - 'RUN_FABRIC_PHYSICS_R2_TESTS.sh'
       - 'docs/research/FABRIC_PHYSICS_R2_WORK_ORDER_RU.md'
       - '.github/workflows/fabric-physics-r2-linux-double.yml'
@@ -63,6 +63,7 @@ jobs:
           bash RUN_FABRIC_PHYSICS_R2_TESTS.sh 2>&1 | tee artifacts/fabric_physics_r2/r2.log
           ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' artifacts/fabric_physics_r2/r2.log
           grep -F 'FABRIC-PHYSICS-R2: PASS' artifacts/fabric_physics_r2/r2.log
+          grep -F 'FABRIC-PHYSICS-R2-CONTRACT: PASS' artifacts/fabric_physics_r2/r2.log
 
       - name: Focused R1 regression
         shell: bash
