@@ -1,72 +1,73 @@
-name: HOLDOUT-R4 Independent Challenge Capture
+name: HOLDOUT-R4 Scoped Source Publication Objects
 on:
   push:
     branches: [verify/fabric-holdout-r4-author-capture-r1]
 permissions:
-  contents: read
-  pull-requests: read
+  contents: write
+  actions: read
 jobs:
-  capture-only:
+  source-objects-only:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c73262adf568e2309fe5dd49a034812492566691
-          fetch-depth: 0
+          ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Capture immutable author response and challenge without execution
+      - name: Validate transferred source and create Git objects without moving any ref
         env:
-          GH_READ_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import datetime, hashlib, json, os, pathlib, re, subprocess, urllib.request
-          freeze = 'c73262adf568e2309fe5dd49a034812492566691'
-          url = 'https://api.github.com/repos/rootfabric/distributed-world-simulator/pulls/comments/3950896660'
-          request = urllib.request.Request(url, headers={'Authorization': 'Bearer '+os.environ['GH_READ_TOKEN'], 'Accept':'application/vnd.github+json'})
-          with urllib.request.urlopen(request, timeout=30) as response:
-              raw = response.read()
-          comment = json.loads(raw)
-          assert comment['id'] == 3950896660
-          assert comment['user']['id'] == 199175422 and comment['user']['login'] == 'chatgpt-codex-connector[bot]'
-          assert comment['original_commit_id'] == freeze
-          created = datetime.datetime.fromisoformat(comment['created_at'].replace('Z','+00:00'))
-          frozen = datetime.datetime.fromisoformat(subprocess.check_output(['git','show','-s','--format=%cI',freeze], text=True).strip())
-          assert created > frozen
-          body = comment['body'].encode('utf-8')
-          blocks = re.findall(rb'```json\s*\n(.*?)\n```', body, re.S)
-          assert len(blocks) == 1
-          cases = blocks[0]
-          parsed = json.loads(cases)
-          assert parsed['schema'] == 'fabric.holdout_r4.cases.v1' and len(parsed['cases']) >= 6
-          out = pathlib.Path('capture'); out.mkdir()
-          (out/'author-response.json').write_bytes(raw)
-          (out/'author-body.md').write_bytes(body)
-          (out/'cases.json').write_bytes(cases)
-          provenance = {
-              'freeze_commit':freeze, 'subject_head':'fd6e83b35301d7a15e92c55939654f1f95729730',
-              'cases_sha256':hashlib.sha256(cases).hexdigest(), 'author':comment['user']['login'],
-              'author_id':comment['user']['id'], 'source_comment_id':comment['id'],
-              'review_id':comment['pull_request_review_id'], 'created_at':comment['created_at'],
-              'updated_at':comment['updated_at'], 'original_commit_id':comment['original_commit_id'],
-              'raw_response_path':'docs/research/FABRIC_HOLDOUT_R4_AUTHOR_RAW_RU.md',
-              'raw_response_sha256':hashlib.sha256(body).hexdigest(),
-              'github_response_sha256':hashlib.sha256(raw).hexdigest(),
-              'source_url':comment['html_url'], 'capture_run':int(os.environ['GITHUB_RUN_ID']),
-              'capture_purpose':'DATA_ONLY_NO_RUNTIME_EXECUTION_NO_ACCEPTANCE'}
-          (out/'provenance.json').write_text(json.dumps(provenance,ensure_ascii=False,indent=2)+'\n')
-          (out/'work-order.md').write_bytes(pathlib.Path('docs/research/FABRIC_HOLDOUT_R4_WORK_ORDER_RU.md').read_bytes())
-          (out/'freeze-commit.txt').write_bytes(subprocess.check_output(['git','cat-file','commit',freeze]))
-          (out/'sha256.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(out.iterdir()) if p.is_file()))
-          print('AUTHOR_CASES_CAPTURED='+str(len(parsed['cases'])))
-          print('CASE_DIGEST='+provenance['cases_sha256'])
+          import base64,gzip,hashlib,io,json,os,pathlib,urllib.request,zipfile
+          repo='rootfabric/distributed-world-simulator'
+          class SafeRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  redirected=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if redirected is not None: redirected.remove_header('Authorization')
+                  return redirected
+          opener=urllib.request.build_opener(SafeRedirect())
+          def api(path,body=None,raw=False):
+              req=urllib.request.Request('https://api.github.com/repos/'+repo+'/'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'},method='GET' if body is None else 'POST')
+              with opener.open(req,timeout=40) as response: data=response.read()
+              return data if raw else json.loads(data)
+          encoded=''.join(pathlib.Path('scripts/research/fabric_holdout_r4/transport-'+part+'.b64').read_text() for part in ['a','b'])
+          raw=gzip.decompress(base64.b64decode(encoded,validate=True))
+          assert len(raw)==58848 and hashlib.sha256(raw).hexdigest()=='6a806e4d82ca965ad8e8113e395feae7d215123b875226e07f4591b32581bd0d'
+          payload=json.loads(raw)
+          parent='c73262adf568e2309fe5dd49a034812492566691'
+          assert payload['expected_parent']==parent
+          assert api('git/ref/heads/research/fabric-holdout-r4-frozen-generalization-r1')['object']['sha']==parent
+          assert api('git/ref/heads/research/fabric-composition-r3-coupled-mechanism-r1')['object']['sha']=='fd6e83b35301d7a15e92c55939654f1f95729730'
+          archive=api('actions/artifacts/10024337632/zip',raw=True)
+          assert hashlib.sha256(archive).hexdigest()==payload['capture_artifact_sha256']=='501a7f8a529b98ac9c01ac498a0885e7d1af24b1a7cb92e260cf813bae562974'
+          allowed={'config/research/fabric-holdout-r4-cases.json','config/research/fabric-holdout-r4-provenance.json','config/research/fabric-holdout-r4-freeze.json','docs/research/FABRIC_HOLDOUT_R4_AUTHOR_RAW_RU.md','validation/fabric-holdout-r4-author-response.json','scripts/research/fabric_holdout_r4/holdout.py','tests/research/fabric1/fabric_holdout_r4_probe.gd','tests/research/fabric1/fabric_holdout_r4_protocol_test.py','RUN_FABRIC_HOLDOUT_R4_TESTS.sh','.github/workflows/fabric-holdout-r4-linux-double.yml'}
+          assert len(payload['files'])==len(allowed) and {f['path'] for f in payload['files']}==allowed
+          entries=[]
+          with zipfile.ZipFile(io.BytesIO(archive)) as z:
+              assert z.testzip() is None
+              for f in payload['files']:
+                  data=z.read(f['artifact_entry']) if 'artifact_entry' in f else f['content'].encode('utf-8')
+                  assert hashlib.sha256(data).hexdigest()==f['sha256'],f['path']
+                  blob=api('git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha']
+                  assert blob==hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+                  assert f['mode'] in ('100644','100755')
+                  entries.append({'path':f['path'],'mode':f['mode'],'type':'blob','sha':blob})
+          base_tree=api('git/commits/'+parent)['tree']['sha']
+          tree=api('git/trees',{'base_tree':base_tree,'tree':entries})['sha']
+          assert tree==payload['expected_tree']=='11db01b2e4b4bce5189162aa6471cc651779d8ca'
+          commit=api('git/commits',{'message':'test(fabric): implement frozen HOLDOUT-R4 G1 measurements and independent challenge\n\nWork-Order: FABRIC-HOLDOUT-R4-WO-001\nAcceptance: NOT_CLAIMED\nFrozen-Runtime: fd6e83b35301d7a15e92c55939654f1f95729730','tree':tree,'parents':[parent]})
+          out=pathlib.Path('publication');out.mkdir()
+          result={'commit':commit,'files':entries,'payload_sha256':hashlib.sha256(raw).hexdigest(),'branch_moved':False,'runtime_executed':False,'run':int(os.environ['GITHUB_RUN_ID'])}
+          (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('OBJECT_COMMIT='+commit['sha']);print('OBJECT_TREE='+tree);print('NO_REF_UPDATED')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: fabric-holdout-r4-author-${{ github.run_id }}
-          path: capture/
+          name: fabric-holdout-r4-source-objects-${{ github.run_id }}
+          path: publication/
           if-no-files-found: error
           retention-days: 30
