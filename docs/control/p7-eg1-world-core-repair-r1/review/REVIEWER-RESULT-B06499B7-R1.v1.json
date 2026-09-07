@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.p7_reviewer_result.v1",
+  "role": "REVIEWER",
+  "verdict": "PASS",
+  "reviewed_head": "b06499b70e51e71cec60042cacfad01e75bf6e86",
+  "runtime_tested_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+  "reviewed_at_utc": "2026-09-07T17:20:14Z",
+  "checks": [
+    {
+      "name": "1. Root cause + ownership (ENet one-liner in production adapter; EG4 barrier in client worker only; P7.4 one foreach specialization; MW10 port in cross-region repository only)",
+      "result": "PASS",
+      "evidence": "git diff c14c37c..b06499b7: enet_multi_peer_transport_port.gd adds exactly one executable line `_peer.host.bandwidth_limit(0, 0)` + 3 comment lines inside start_server() (no fixture change); eg4_client_worker.gd adds only a `_receipts_complete()` gate before withdrawal plus its helper (no resend, no timeout change); RUN_WORLD_REGRESSION_TESTS.ps1 changes only the single foreach invocation for test_v0_p7_4_persistence_restart_composition.gd into seed/recover-deliver/recover-replay fresh processes, all other invocations byte-identical; matter_cross_region_transaction_repository.gd ports atomic token-bound rename release + fail-closed _lock_is_stale/_process_liveness/_read_lock_owner_at/_rename_lock_for_release into that one file; MW10 coordinator, EG workers/gateway/sim-server, fixtures untouched (git diff --name-only confirms only the four runtime files + docs + workflow)."
+    },
+    {
+      "name": "2. Diff guards recomputed independently (runner reverse-diff, MW10 blob pins, EG4 guard, additive EG1 hook in validate_candidate.py)",
+      "result": "PASS",
+      "evidence": "Recomputed with git show + python (git blob SHA-1): runner reverse-diff (replace added_block with replaced_original_block in HEAD blob) == 197490d8f66f53642ec1b85da374616667334c5b (True); MW10 base blob == ec596493... (True) and candidate blob == be7c5ee4... (True); EG4 removing gate+helper restores a084d570901fadd9b0d5fc1cf14920e19e751b2a (True); ENet adapter removing the 4 added lines restores base blob 55e547376b19e842df3c9d42c78e5c9dbe11e4ba byte-identically (True); EG1 test diff is purely additive 9 lines after _cleanup() (difflib unified diff shows insertions only), matching validate_candidate.py check_source lines 138-181 which enforces exactly these invariants (NON_MINIMAL_ADAPTER_DIFF, ORIGINAL_EG1_SCENARIO_CHANGED, EG4/runner/MW10 blob guards)."
+    },
+    {
+      "name": "3. Unchanged semantics (channels, delivery modes, authority, retries, timeouts, workers/gateway/sim-server, MW10 coordinator/authority gate, test assertions)",
+      "result": "PASS",
+      "evidence": "git diff c14c37c..HEAD -- scripts/ tools/ tests/ shows exactly the three reviewed files (adapter, eg4_client_worker, mw10 repository, test_eg1_gateway_processes). EG1 diff only appends a post-cleanup bandwidth probe invocation (original assertions preserved — the 5/5 eg1-N.log reports show verdict PASS, assertions==36, failures==[]). EG4 gate returns (waits) within the existing deadline; no traffic, count or timeout change. Runner else-branch invocation is byte-identical to the original block. MW10 acquire order, pending protocol, CAS progression and error codes preserved; only release/staleness lifecycle changed."
+    },
+    {
+      "name": "4. Negative controls present and preserved (ENet baseline limit=1/32, EG4 15 failures, MW10 exactly 5 predicted failures, preserved race evidence)",
+      "result": "PASS",
+      "evidence": "artifacts/p7-eg1-repair-world/baseline-probe.json: passed=false, 2 cases, both statistics_before_input limit==1, deceleration==2, input_received==false, run against clean c14c37c worktree (baseline-preflight/postflight identity equal, BASELINE_MUTATED guard passed). baseline-eg4-completion.summary.json: verdict FAIL, 23 assertions, exactly 15 failures across empty/missing-last/duplicate/injected/foreign-session/extra/malformed/late-receipt. baseline-mw10-lock-lifecycle.summary.json: verdict FAIL, 16 assertions, exactly the 5 predicted failures (ownerless-grace-fence x2, atomic-release-retry x3); exit code 1 as expected. docs/control/p7-eg1-world-core-repair-r1/evidence/world-83eb8e2a-mw10-race-failure.md exists with the preserved stage-198 failure pair."
+    },
+    {
+      "name": "5. World/core result (325/325, 330 steps exit 0, three P7.4 phases in order, main_scene_cli_all)",
+      "result": "PASS",
+      "evidence": "artifacts/test-results/world-regression-summary.json: passed=true, declared_test_count==discovered_test_count==325, 330 steps all passed with exit_code==0; step names contain test_v0_p7_4_persistence_restart_composition[seed],[recover-deliver],[recover-replay] in that exact consecutive order; main_scene_cli_all present. full-world-core.log contains each terminal exactly once: seed 21, recover-deliver 25, recover-replay 17 assertions, 0 failures. SHA256 of summary (05aee2fb...) and log (dd68ddf4...) match evidence-map-final-a52faf8c.v1.json."
+    },
+    {
+      "name": "6. P7 result (29 stages, 2032 assertions, 0 failures)",
+      "result": "PASS",
+      "evidence": "artifacts/p7-eg1-repair-p7/p7-stage-summary.json: passed=true, 29 stages, assertions 2032; result.json passed=true subject head a52faf8c tree 4ff3adba; sha256 5fe0f409... matches evidence map; manifest binds subject a52faf8c, godot_sha256 bfa7ce63...."
+    },
+    {
+      "name": "7. PC0 non-RED (YELLOW, no overlaps, directional YELLOW, 0 critical hits, G8/ECO pre-existing on unrelated branches)",
+      "result": "PASS",
+      "evidence": "artifacts/control/project-control-report.json: overall_health YELLOW, cross_branch_overlaps [], RED programs are G (feature/g8-geomorphology) and ECO (feature/eco-evolutionary-ecology), both blocks_global_progress=false on branches unrelated to this candidate. artifacts/control/directional-watch-report.json: overall_health YELLOW, findings = 3 YELLOW WATCH_HIT (CH->NX, NX->ECO, NX->T), zero RED/critical findings, none touching this branch's changed files."
+    },
+    {
+      "name": "8. Workflow/evidence trust (no skipped gates, artifact upload on failure, pinned engine SHA, manifests bind subject a52faf8c)",
+      "result": "PASS",
+      "evidence": ".github/workflows/p7-eg1-world-core-repair.yml: exact-validation matrix (world,p7) runs on every owner push with no commit-message condition; engine artifact digest-verified against bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7 twice (producer + consumer) plus UNAPPROVED_ENGINE check in validate_candidate.py; validate_candidate.py independently re-checks engine sha256 and exact version 4.7.1.stable.double.custom_build.a13da4feb; all artifact uploads use if: always() with if-no-files-found: error; checkout pinned to github.sha with persist-credentials: false; preflight requires HEAD==GITHUB_SHA and clean tracked tree; postflight re-verifies checkout unchanged. artifacts/p7-eg1-repair-{world,p7}/manifest.json bind subject head a52faf8c / tree 4ff3adba, engine digest, per-file digests."
+    },
+    {
+      "name": "9. Head hygiene (runtime files identical a52faf8c..HEAD, tracked checkout clean, engine version)",
+      "result": "PASS",
+      "evidence": "git diff --name-only a52faf8c HEAD == exactly docs/control/p7-eg1-world-core-repair-r1/POST_BUILD_CRITIQUE_FINAL_RU.md and evidence-map-final-a52faf8c.v1.json (docs-only delta above runtime-tested head). git status --porcelain --untracked-files=no is empty (0 lines); only untracked Godot *.uid sidecar byproducts exist (engine-generated, ignored by the validator's tracked-tree identity guard). version.log == 4.7.1.stable.double.custom_build.a13da4feb. HEAD == b06499b70e51e71cec60042cacfad01e75bf6e86."
+    }
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Delete or clearly relabel the stale artifacts/p7-eg1-repair-world/failure.json (MISSING_OR_DUPLICATE_REPORT:mw10-lock-lifecycle from the superseded d28002ae-typo attempt at 01:48) when publishing the final packet — the successful 03:00 a52faf8c run leaves it in place and a future reader may mistake it for the final verdict's error.",
+    "Evidence map remaining risk: final-head (b06499b7) CI rerun of the workflow has not been observed; a green exact-validation run at the frozen head would remove the 'expected green' inference.",
+    "Unify probe report identifiers (mw10_lock_lifecycle vs mw10-lock-lifecycle) to prevent the class of typo that caused the superseded red run."
+  ],
+  "notes": "Adversarial review of frozen head b06499b7 against base c14c37c. All four production fixes are minimal, located in the canonical owners named by their Work Orders, and reversible byte-for-byte (verified by independent recomputation of every diff guard with git blob SHA-1, not by trusting the guard JSONs). Negative controls are real executions against a clean c14 worktree with pre/post identity checks, not simulated. World/core (330/330, exit 0) and P7 (29 stages / 2032 assertions) results are digest-bound to runtime-tested head a52faf8c, whose runtime files are byte-identical to reviewed HEAD (docs-only delta). Evidence was produced on the local ubuntu-local-p7 runner with the same digest-pinned engine as CI; this is a disclosed allowed executor fallback, and manifests plus preflight/postflight identity bind it to the exact subject tree. Implementation remains NOT ACCEPTED: this PASS only clears the independent Reviewer predicate; Verifier, Director proposal and the human merge gate are still outstanding per the Work Orders."
+}

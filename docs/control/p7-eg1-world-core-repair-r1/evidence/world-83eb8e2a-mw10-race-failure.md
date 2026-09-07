@@ -49,3 +49,13 @@ scenario produced the normal exactly-one-winner outcome, proving rarity, not
 absence: the deterministic causal hole is proven by the focused probe.
 
 Detailed root cause and design: see `REPAIR_MAP_MW10_LOCK_RU.md`.
+
+## Superseded artifact note
+
+`artifacts/p7-eg1-repair-world/failure.json` in the shared local output
+directory belonged to the early-exit r2 validation attempt (run
+`local-p7-20260907154823`, `MISSING_OR_DUPLICATE_REPORT:mw10-lock-lifecycle`
+— the probe identifier typo fixed in commit a52faf8c). It was renamed
+`superseded-r2-typo-failure.json` with byte-identical content, and the
+world manifest file list was regenerated accordingly. The final r3 run
+(`local-p7-20260907155640`) passed with no failure.json.

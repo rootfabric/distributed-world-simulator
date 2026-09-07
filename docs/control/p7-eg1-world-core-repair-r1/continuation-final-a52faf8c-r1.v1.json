@@ -1,0 +1,103 @@
+{
+  "schema": "distributed_world_simulator.p7_continuation_evidence.v1",
+  "classification": "IMPLEMENTER_CHECKPOINT_NOT_ACCEPTANCE",
+  "final_candidate_head": "PENDING_THIS_COMMIT",
+  "runtime_tested_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+  "runtime_tested_tree": "4ff3adbaeecdd64a68bb3c1f11817aa72918231f",
+  "base_main_sha": "c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f",
+  "work_orders": [
+    "V0-P7-EG1-ENET-BANDWIDTH-R1",
+    "V0-P7-EG4-RECEIPT-COMPLETION-R1",
+    "V0-P7-P74-WORLD-RUNNER-PHASES-R1",
+    "V0-P7-MW10-CROSS-REGION-LOCK-R1"
+  ],
+  "runtime_commits": [
+    "0d8f0f948055432a8f3c4d697e405ec2c1e135a9",
+    "9fbd73e837a80b0b079eddb96a60c7f6f9ee3b9b",
+    "d24f38da6ab230fdd76cf622801e18280f05848a",
+    "03c0318d966f648f5f509704e5c8491173ec31ea",
+    "40b22324d0e14c13f8aade0641b4a4c4e9842379",
+    "a52faf8c44434818775225be3f71c30a0fd86ef3"
+  ],
+  "this_document_commit_does_not_retest_runtime": true,
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "execution_channel": "local Ubuntu closure machine in an isolated mount namespace providing /usr/bin/Xvfb (extracted distro xvfb package, user-local PowerShell 7.4.6); GitHub-hosted ubuntu CI runs corroborate"
+  },
+  "local_machine_evidence": {
+    "world": {
+      "run_id": "local-p7-20260907155640",
+      "job": "ubuntu-local-p7-world",
+      "subject_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+      "manifest_sha256_note": "see artifacts/p7-eg1-repair-world/manifest.json",
+      "world_log_sha256": "dd68ddf4154398c4d4cc8fe08151c55a022c12f2967dfa82d89919bf236abb87",
+      "world_summary_sha256": "05aee2fb27d4793f9fd9b371010c4ea2eb472d3c74c27f02c813d8fc9ce89bf3",
+      "declared_test_count": 325,
+      "discovered_test_count": 325,
+      "step_count": 330,
+      "all_steps_exit_zero": true,
+      "p74_phase_steps": [
+        "test_v0_p7_4_persistence_restart_composition[seed]",
+        "test_v0_p7_4_persistence_restart_composition[recover-deliver]",
+        "test_v0_p7_4_persistence_restart_composition[recover-replay]"
+      ],
+      "result": "FULL_WORLD_CORE_REGRESSION_PASS"
+    },
+    "p7": {
+      "run_id": "local-p7-20260907170344",
+      "job": "ubuntu-local-p7-p7",
+      "subject_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+      "p7_stage_summary_sha256": "5fe0f4094a9fae03682c4d71c094c0f49d79e62d66774b4360efcd7964100743",
+      "p7_train_log_sha256": "572c62081159b2b1adae161cf75fdc578fefd7f2fa5dfcb017896854a38a7af9",
+      "stages": 29,
+      "assertions": 2032,
+      "failures": 0,
+      "result": "P7_29_LEAF_EXACT_GATE_PASS"
+    },
+    "pc0": {
+      "standard": "YELLOW",
+      "directional": "YELLOW",
+      "cross_branch_overlaps": [],
+      "critical_directional_hits": 0,
+      "red_programs": "G8 geomorphology and ECO convergence, pre-existing advisory on unrelated branches",
+      "registry_generation": 81
+    }
+  },
+  "ci_corroboration": {
+    "head_83eb8e2a_p7": "success",
+    "head_83eb8e2a_world": "success (full 330-stage suite on GitHub-hosted ubuntu; pre-MW10-repair candidate)",
+    "head_d28002ae_p7": "success (includes MW10 repair)",
+    "head_d28002ae_world": "failure at superseded probe-identifier typo, fixed in a52faf8c; final-head CI rerun bound to this commit's [p7-validate] marker"
+  },
+  "role_results": {
+    "reviewer_r1": {
+      "verdict": "PASS",
+      "reviewed_head": "b06499b70e51e71cec60042cacfad01e75bf6e86",
+      "document": "docs/control/p7-eg1-world-core-repair-r1/review/REVIEWER-RESULT-B06499B7-R1.v1.json",
+      "checks_passed": 9,
+      "required_fixes": []
+    },
+    "verifier_r1": {
+      "verdict": "FAIL_PROVENANCE_ONLY",
+      "verified_head": "b06499b70e51e71cec60042cacfad01e75bf6e86",
+      "document": "docs/control/p7-eg1-world-core-repair-r1/review/VERIFIER-RESULT-B06499B7-R1.v1.json",
+      "substantive_items": "V2-V8 all PASS including fresh machine re-executions: EG1 twice (36 assertions each), EG4 (46), MW10 lock probe (16); P7 29/2032 independently re-summed with 10 leaf digests; world summary 330 steps verified",
+      "v1_failure": "one uncommitted documentation append (superseded artifact note) present in the checkout at verification time",
+      "resolution": "that note plus this record and both role verdicts are committed by this very commit; a fresh exact-head verification pass on the resulting frozen head closes the provenance criterion"
+    }
+  },
+  "artifact_note": "artifacts/p7-eg1-repair-world/superseded-r2-typo-failure.json preserves byte-identical the early-exit r2 failure (probe identifier typo) renamed from failure.json; the r2 manifest file list was regenerated for accurate paths; the final r3 run passed with no failure.json.",
+  "canonical_readiness": {
+    "canonical_acceptance": false,
+    "merge_performed": false,
+    "runtime_mvp_activated": false,
+    "remaining_required_steps": [
+      "Fresh exact-head Reviewer and Verifier PASS on this commit's frozen head",
+      "Green exact-validation world+p7 CI on this head",
+      "Human merge of PR 580 and tree-equivalence proof",
+      "Main-owned canonical P7 acceptance record referencing the merged tested runtime",
+      "Controller Drive/CloseMission showing mission_complete before any MVP activation"
+    ]
+  }
+}
