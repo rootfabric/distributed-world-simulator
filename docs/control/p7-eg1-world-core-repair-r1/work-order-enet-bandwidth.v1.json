@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-EG1-ENET-BANDWIDTH-R1",
+  "project_epoch": "E2026-09-06-V0-P7-CANONICAL-CLOSURE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f",
+  "branch": "repair/v0-p7-eg1-world-core-r1",
+  "scope": "Separate bounded adapter-compatibility repair for the proven pinned-Godot ENet listener bandwidth bug. Restore the existing unlimited-bandwidth contract before accepting clients. Preserve every channel, delivery mode, authority, original EG1 assertion and timeout; no new feature or network foundation. This supersedes only the fixture-repair hypothesis, not canonical control state.",
+  "allowed_paths": [
+    "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+    "tests/network/test_eg1_gateway_processes.gd",
+    "docs/control/p7-eg1-world-core-repair-r1/**",
+    ".github/workflows/p7-eg1-world-core-repair.yml"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "runtime/**",
+    "scenes/**",
+    "tools/network/eg1_client_worker.gd",
+    "tools/network/eg1_gateway_worker.gd",
+    "tools/network/eg1_sim_server_worker.gd",
+    "tools/network/eg1_process_support.gd",
+    "scripts/network/realtime/**",
+    "scripts/network/gateway/**",
+    "project.godot",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "config/**",
+    "docs/control/p7-canonical-closure-r1/**"
+  ],
+  "required_predicates": [
+    "PINNED_ENGINE_BANDWIDTH_ARGUMENT_BUG_PROVEN",
+    "PRODUCTION_PORT_BEFORE_AFTER_BANDWIDTH_REGRESSION",
+    "ORIGINAL_EG1_ASSERTIONS_AND_WORKERS_UNCHANGED",
+    "UNRELIABLE_MODES_AND_ADAPTIVE_RTT_THROTTLE_PRESERVED",
+    "EG1_FOCUSED_AND_SIBLING_REGRESSIONS_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "required_outputs": [
+    "Repair Map with exact engine source and causal A/B evidence",
+    "Minimal owning adapter patch and additive executable regression",
+    "Frozen HEAD/TREE, exact Godot digest and clean checkout evidence",
+    "Raw complete logs, child reports, exit codes, coverage and SHA256 manifests",
+    "Draft PR, fresh independent Reviewer/Verifier results and human merge gate"
+  ],
+  "stop_conditions": [
+    "NEW_NETWORK_CONTRACT_OR_FOUNDATION_CHANGE_REQUIRES_NEW_AUTHORIZATION",
+    "UNRELATED_DEFECT_REQUIRES_ANOTHER_BOUNDED_WORK_ORDER",
+    "HUMAN_CANONICAL_ACCEPTANCE_AND_MERGE_GATE"
+  ],
+  "risk_class": "CRITICAL",
+  "risk_reasons": ["Shared production transport adapter; P7 closure inherits critical risk."],
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "issued_at_utc": "2026-09-07T10:25:54Z",
+  "human_approval_required_for": ["CANONICAL_CHECKPOINT_ACCEPTANCE", "MERGE", "NEW_NETWORK_CONTRACT_OR_FOUNDATION"],
+  "notes": "Director bounded repair continuation under the user's explicit P7 closure request and HARNESS_CONTROL repair/replan authority. The previous fixture-only WO did not authorize this adapter edit: its product-owner stop was reached and its implementation route is rejected before any fixture change. This separately issued WO is the sole scope for the candidate repair. It does not register a P7/MVP feature dispatch, grant a second worker, rotate generation81, alter a historical epoch, imply independent acceptance, or permit canonical merge. No ownership/protocol expansion: the existing endpoint has no bandwidth option and create_server defaults already request unlimited bandwidth. Git writes remain A0-A3 candidate work; human integration remains mandatory. Timing erratum: the previous fixture WO's manually entered 10:30 issued_at is not authoritative; its actual publication time is the metadata of commit9d939b41b582e03f7cb42dabfbde9e5d54e6e690. No prior evidence is rewritten.",
+  "design_brief": {
+    "problem_statement": "Godot a13da4feb create_server passes p_max_channels + SYSCH_MAX as ENetConnection incoming bandwidth, ignoring the requested zero default. After bandwidth accounting starts, the client throttle limit becomes1/32 and its first unreliable INPUT can be discarded despite put_packet returning OK.",
+    "current_behavior": "Canonical EnetMultiPeerTransportPort requests six channels and inherits the wrong tiny incoming bandwidth. Archived EG1 failures show three reliable operations and no movement. Native exact-engine A/B reproduces successful enqueue with lost INPUT; disabling RTT deceleration does not fix it.",
+    "desired_behavior": "The production listener explicitly restores host.bandwidth_limit(0,0) after successful create_server and before publishing readiness. Keep default adaptive RTT throttling and raw unreliable/application-sequenced delivery.",
+    "alternatives_considered": ["Explicitly restore documented bandwidth defaults in the existing adapter", "Reject disabling adaptive throttling in fixtures: controlled A/B did not fix the bandwidth limit", "Reject retransmission/duplicate-ledger changes and increased timeouts", "Do not replace the pinned Godot binary or change channel count"],
+    "selected_design": "One owning listener-initialization correction plus an additive real-ENet bandwidth-lifetime regression invoked by the existing EG1 test. Unmodified EG1 three-process scenario remains the end-to-end acceptance.",
+    "why_selected": "Corrects the demonstrated producer of the wrong network precondition rather than masking its consumer timeout; all protocol and gameplay behavior stays unchanged.",
+    "affected_owners": ["EnetMultiPeerTransportPort listener configuration", "EG1 regression evidence"],
+    "dependencies": ["Godot commit a13da4feb8d8aefc283c3763d33a2f170a18d541", "Existing NetworkEndpoint bandwidth-free contract", "Canonical RealtimeChannelPolicy"],
+    "non_goals": ["Loss-free UDP guarantee", "Disable adaptive throttle", "New input reliability scheme", "Change EG1 fixture semantics", "MVP activation or P7 self-acceptance"],
+    "expected_risks": ["Shared adapter affects other network consumers", "A later full-regression defect may be independent", "Separate role verdicts must review the changed producer and strengthened test"],
+    "validation_plan": ["Exact native A/B and preserved rejected-throttle experiment", "New regression against original port must fail for limit1", "Same regression against candidate port must pass with limit32 and original transfer mode", "Original EG1 repeated bounded campaign, sibling network tests", "Complete unchanged full world/core runner without skips", "Frozen evidence, fresh independent review/verification, human integration gate"]
+  }
+}
