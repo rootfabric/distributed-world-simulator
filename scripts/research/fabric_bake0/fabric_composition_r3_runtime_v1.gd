@@ -3,6 +3,7 @@ extends RefCounted
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const C = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_compiler_v1.gd")
 const D = C.D
+const EventStep = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_event_step_v1.gd")
 const Adapter = preload("res://scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd")
 
 var _model: Dictionary = {}
@@ -64,7 +65,7 @@ func advance(dt: float, sources: Dictionary, authority: Dictionary) -> Dictionar
 		var instant := D._process_event_instant(candidate, condition, stats)
 		if not instant.get("ok", false): return U.failure("R3_INITIAL_EVENT_FAILED", instant)
 	if candidate.mode != "WAIT_CANONICAL":
-		var advanced := D.advance(candidate, dt)
+		var advanced := EventStep.advance(candidate, dt, _model)
 		if not advanced.get("ok", false): return U.failure("R3_DAE_FAILED", advanced)
 	# A guard retires BAKE at its exact event time, not at the end of the frame.
 	var events: Array = candidate.events.duplicate(true)
@@ -81,7 +82,7 @@ func advance(dt: float, sources: Dictionary, authority: Dictionary) -> Dictionar
 			var full: Dictionary = built.details.system
 			var remaining := float(_system.time) + dt - float(instant.time)
 			if remaining > D.EPSILON and full.mode != "WAIT_CANONICAL":
-				var continued := D.advance(full, remaining)
+				var continued := EventStep.advance(full, remaining, _model)
 				if not continued.get("ok", false): return U.failure("R3_REFINEMENT_FAILED", continued)
 			var prefix: Array = []
 			for prior in events:
