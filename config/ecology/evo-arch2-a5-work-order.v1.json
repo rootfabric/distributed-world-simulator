@@ -5,7 +5,7 @@
   "branch": "feature/eco-evo-arch2-a5-regulatory-lifecycle-r1",
   "source_head": "4b0f772ff39592262b853f7293bbd5403558b145",
   "source_acceptance_ref": "acceptance/eco-evo-arch2-a4-r1",
-  "main_observed": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+  "main_observed": "c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f",
   "risk": "HIGH",
   "authorization": "Explicit user request: implement A5 regulatory growth plus resource-funded survival/reproduction on top of accepted A4 research source; no production authority or main activation",
   "allowed_paths": [
@@ -59,6 +59,7 @@
     "NO_MANDATORY_FITNESS_OR_TOPK_SELECTION",
     "POPULATION_INPUT_ORDER_INDEPENDENT",
     "BOUNDED_DETERMINISTIC_DEMAND_IDS",
+    "REPRODUCTION_SCHEDULE_RANGE_COVERS_AGE_PLUS_INTERVAL",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -74,5 +75,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "IN_PROGRESS",
-  "next": "Close RM-A5-01..05; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
+  "next": "Close RM-A5-01..06; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
 }
