@@ -12,9 +12,10 @@ VERDICT = VERIFIED
 
 PRE_VERDICT_RUN = 34111032970
 PRE_VERDICT_RESULT = SUCCESS
-PRE_VERDICT_VERIFIER_HEAD = 1d2872e63f9cc66f611d8f57303e50595be28d6f
-PRE_VERDICT_VERIFIER_TREE = 2f68b7faf1cf6ada58db828befb463f9b1c51e61
-PRE_VERDICT_ARTIFACT_ID = 10014565912
+PRE_VERDICT_VERIFIER_HEAD = 1d2872dd11c7c031b7721e7fda086b488d970ebd
+PRE_VERDICT_VERIFIER_TREE = 2f68ebf3946dd614eb669ef4eb34a796fd0b1915
+PRE_VERDICT_ARTIFACT_ID = 10014390418
+PRE_VERDICT_ARTIFACT_DIGEST = sha256:3c118bfc76b9c9dbd10f3ebfbca183d1eff2f804c9a69b0598583f2ae7cd0a28
 ```
 
 ## Роль и изоляция
@@ -104,10 +105,11 @@ Pre-verdict evidence bundle:
 
 ```text
 RUN = 34111032970
-VERIFIER_HEAD = 1d2872e63f9cc66f611d8f57303e50595be28d6f
-VERIFIER_TREE = 2f68b7faf1cf6ada58db828befb463f9b1c51e61
-ARTIFACT_ID = 10014565912
-ARTIFACT_NAME = fabric-physics-r2-independent-verifier-r1-1d2872e63f9cc66f611d8f57303e50595be28d6f
+VERIFIER_HEAD = 1d2872dd11c7c031b7721e7fda086b488d970ebd
+VERIFIER_TREE = 2f68ebf3946dd614eb669ef4eb34a796fd0b1915
+ARTIFACT_ID = 10014390418
+ARTIFACT_NAME = fabric-physics-r2-independent-verifier-r1-1d2872dd11c7c031b7721e7fda086b488d970ebd
+ARTIFACT_DIGEST = sha256:3c118bfc76b9c9dbd10f3ebfbca183d1eff2f804c9a69b0598583f2ae7cd0a28
 ```
 
 Artifact содержит exact subject/verifier identity, Godot identity, subject/verifier source archives, fresh-import logs, independent-verifier log, exact-subject replay log и SHA256 evidence manifest.
