@@ -58,6 +58,7 @@
     "CHILD_ENDOWMENT_EQUALS_PARENT_TRANSFER",
     "NO_MANDATORY_FITNESS_OR_TOPK_SELECTION",
     "POPULATION_INPUT_ORDER_INDEPENDENT",
+    "BOUNDED_DETERMINISTIC_DEMAND_IDS",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -73,5 +74,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "IN_PROGRESS",
-  "next": "Close RM-A5-01..04; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
+  "next": "Close RM-A5-01..05; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
 }
