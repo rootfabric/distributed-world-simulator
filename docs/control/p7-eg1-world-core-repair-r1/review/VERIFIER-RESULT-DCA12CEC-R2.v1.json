@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.p7_verifier_result.v1",
+  "role": "VERIFIER_R2",
+  "verdict": "PASS",
+  "verified_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+  "runtime_tested_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+  "verified_at_utc": "2026-09-07T17:33:36Z",
+  "items": [
+    {
+      "name": "W1",
+      "result": "PASS",
+      "evidence": "git rev-parse HEAD == dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb; git status --porcelain --untracked-files=no empty (0 lines); engine sha256 bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7 matches."
+    },
+    {
+      "name": "W2",
+      "result": "PASS",
+      "evidence": "git diff --name-only b06499b7..dca12cec = 4 files, all under docs/control/p7-eg1-world-core-repair-r1/ (docs-only, including the previously-uncommitted evidence/world-83eb8e2a-mw10-race-failure.md append and both review results). VERIFIER-RESULT-B06499B7-R1.v1.json is committed with its honest verdict FAIL (V1 clean-checkout, docs-only uncommitted append; V2-V8 PASS). artifacts/p7-eg1-repair-world/superseded-r2-typo-failure.json present; failure.json absent from that directory. artifacts/p7-eg1-repair-world/result.json: passed==true, subject.head==a52faf8c44434818775225be3f71c30a0fd86ef3, tree 4ff3adbaeecdd64a68bb3c1f11817aa72918231f, tracked_status empty."
+    },
+    {
+      "name": "W3",
+      "result": "PASS",
+      "evidence": "Fresh EG1 machine re-execution with the exact pinned bwrap wrapper and engine: exit 0 (/tmp/verify-r2-eg1.log). Exactly one JSON report line: {\"assertions\":36,\"failures\":[],\"test\":\"eg1_gateway_processes_l2\",\"verdict\":\"PASS\"}."
+    },
+    {
+      "name": "W4",
+      "result": "PASS",
+      "evidence": "artifacts/p7-eg1-repair-world/test-results/world-regression-summary.json: passed=true, len(steps)==330, all steps exit_code 0, declared_test_count==discovered_test_count==325, steps[1]==editor_import_parse, steps[299..301]==test_v0_p7_4_persistence_restart_composition[seed|recover-deliver|recover-replay] consecutive in order, steps[329]==main_scene_cli_all. artifacts/p7-eg1-repair-p7/p7-stage-summary.json: passed=true, len(stages)==29, all failures==0, independently recomputed sum of assertions==2032 == reported. Recomputed sha256 of three stage logs against summary entries — all match: p7-4-seed.log 0f3a1dec90d6a4fe83a89a9e06e1263c74faa81d7e86f7357bbf04edde62423d, mw10-process-recovery.log 2cb44b954fce8d68bd2c7b2a412a1ea949d21965fa5d6eda5c7111a1dd36e39d, rl3.log 5df3e777bf19eabb4b04d9b069cbee4091e8ab6776ca3bf82856426abbeb9e56."
+    },
+    {
+      "name": "W5",
+      "result": "PASS",
+      "evidence": "git merge-base --is-ancestor a52faf8c..dca12cec exit 0 (runtime-tested head is ancestor of frozen head). git diff --name-only a52faf8c..dca12cec = 6 files, all under docs/control/p7-eg1-world-core-repair-r1/ — runtime files identical (docs-only)."
+    },
+    {
+      "name": "W6",
+      "result": "PASS",
+      "evidence": "GitHub check-runs for dca12cec observed 2026-09-07T17:33:16Z: exact-validation (world) = in_progress (conclusion null); exact-validation (p7) = in_progress (conclusion null); control = completed/success; approved-engine = completed/success. Also present: archive-d24-evidence = completed/skipped, control-observation = completed/failure (recorded honestly as observed; per criteria, in_progress exact-validation runs are not a failure criterion, and the final-green tracking is separate)."
+    }
+  ],
+  "notes": "Fresh independent R2 verification on frozen head dca12cec. R1's sole FAIL (uncommitted docs-only append) is resolved: the append is now committed in dca12cec, working tree clean, diff b06499b7..dca12cec is docs-only. Commit-graph binding holds (a52faf8c ancestor; runtime files identical). Fresh EG1 re-execution with the exact pinned bwrap+engine reproduced the exact report (36 assertions, 0 failures, PASS). Summaries re-checked on the HEAD checkout including an independent recompute of the 2032-assertion sum and three stage-log sha256 digests. CI checks queried live and recorded honestly as observed (exact-validation runs still in_progress at verification time). Verdict: PASS."
+}
