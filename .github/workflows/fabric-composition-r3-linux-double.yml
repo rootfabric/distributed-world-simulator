@@ -1,0 +1,117 @@
+name: COMPOSITION-R3 Canonical Control Audit
+on:
+  push:
+    branches: [verify/fabric-composition-r3-control-audit-r1]
+    paths: [.github/workflows/fabric-composition-r3-linux-double.yml]
+permissions:
+  contents: read
+concurrency:
+  group: fabric-composition-r3-control-audit
+  cancel-in-progress: false
+jobs:
+  canonical-control-audit:
+    # Same executor as canonical main's project-control.yml; no Godot runtime here.
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout immutable canonical control, not candidate policy
+        uses: actions/checkout@v4
+        with:
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind control and research subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = 'c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f'
+          test "$(git rev-parse origin/main)" = 'c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f'
+          test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = 'fd6e83b35301d7a15e92c55939654f1f95729730'
+          test "$(git rev-parse fd6e83b35301d7a15e92c55939654f1f95729730^{tree})" = '314330d717db059cd9b9db32c5d6150097e1f2c3'
+          test "$(git rev-parse origin/research/fabric-physics-r2-material-geometry-laws-r1)" = '2c1802bf0b90c7ca11992cb1c166855f2d92c682'
+          git merge-base --is-ancestor 2c1802bf0b90c7ca11992cb1c166855f2d92c682 fd6e83b35301d7a15e92c55939654f1f95729730
+          mkdir -p artifacts/r3-control-audit
+          printf 'CONTROL_HEAD=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nRUN=%s\nWORKFLOW_HEAD=%s\n' "$(git rev-parse HEAD)" fd6e83b35301d7a15e92c55939654f1f95729730 314330d717db059cd9b9db32c5d6150097e1f2c3 "$GITHUB_RUN_ID" "$GITHUB_SHA" > artifacts/r3-control-audit/identity.txt
+          git for-each-ref --format='%(refname) %(objectname)' refs/remotes/origin > artifacts/r3-control-audit/refs.txt
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: Execute main-owned auditors and actual mission diagnostics
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          capture() {
+            local name="$1"; shift
+            printf '%s\t' "$name" >> artifacts/r3-control-audit/commands.txt
+            printf '%q ' "$@" >> artifacts/r3-control-audit/commands.txt
+            printf '\n' >> artifacts/r3-control-audit/commands.txt
+            set +e
+            timeout --kill-after=10s 180s "$@" > "artifacts/r3-control-audit/$name.log" 2>&1
+            local code=$?
+            set -e
+            printf '%s\t%s\n' "$name" "$code" >> artifacts/r3-control-audit/exits.tsv
+          }
+          capture pc0 python3 scripts/control/project_control.py --no-fetch
+          capture directional python3 scripts/control/project_control_directional_watch.py
+          export PYTHONPATH=scripts
+          capture overview python3 -m harness.cli overview
+          capture consistency python3 -m harness.cli check-consistency
+          capture drive python3 -m harness.cli drive
+          capture close-role python3 -m harness.cli close-role
+          capture close-mission python3 -m harness.cli close-mission
+          # Exit codes and complete reports are evidence, not a rewritten PASS.
+          # R3 is research source work, not the unrelated production P7 mission.
+      - name: Check R3 scope and report directional-watch applicability
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import fnmatch, json, subprocess
+          from pathlib import Path
+          out = Path('artifacts/r3-control-audit')
+          head = 'fd6e83b35301d7a15e92c55939654f1f95729730'
+          base = '2c1802bf0b90c7ca11992cb1c166855f2d92c682'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          registry = json.loads(git('show', 'origin/main:config/control/project-program-registry.v1.json'))
+          paths = git('diff', '--name-only', base, head).splitlines()
+          allowed = ['scripts/research/fabric_bake0/fabric_composition_r3_*.gd', 'scripts/research/fabric_bake0/run_composition_r3_*.sh', 'tests/research/fabric1/fabric_composition_r3_*.gd', 'scenes/research/fabric_composition_r3_*.tscn', 'RUN_FABRIC_COMPOSITION_R3_TESTS.sh', '.github/workflows/fabric-composition-r3-linux-double.yml', 'docs/research/FABRIC_COMPOSITION_R3_*.md', 'validation/fabric-composition-r3-*.json']
+          forbidden = [p for p in paths if not any(fnmatch.fnmatchcase(p, a) for a in allowed)]
+          watchers = []
+          for program, entry in registry['programs'].items():
+              branch, passport_path = entry.get('branch'), entry.get('passport_path')
+              if not branch or not passport_path: continue
+              try:
+                  passport = json.loads(git('show', f'origin/{branch}:{passport_path}'))
+              except (subprocess.CalledProcessError, json.JSONDecodeError) as exc:
+                  watchers.append({'program': program, 'status': 'UNRESOLVED_PASSPORT', 'detail': str(exc)})
+                  continue
+              critical = [p for p in paths if any(fnmatch.fnmatchcase(p, w) for w in passport.get('critical_watched_paths', []))]
+              watched = [p for p in paths if any(fnmatch.fnmatchcase(p, w) for w in passport.get('watched_paths', []))]
+              if critical or watched:
+                  watchers.append({'program': program, 'branch': branch, 'role': entry.get('role'), 'critical_hits': critical, 'watched_hits': watched})
+          result = {'subject_head': head, 'subject_tree': git('rev-parse', head+'^{tree}'), 'control_main': git('rev-parse','origin/main'), 'registry_generation': registry['registry_generation'], 'changed_paths': paths, 'outside_work_order': forbidden, 'scoped_watch_results': watchers, 'main_or_ownership_modified': bool(forbidden), 'scope': 'RESEARCH_SOURCE_ONLY_NOT_PRODUCTION_ACTIVATION', 'canonical_acceptance': 'NOT_CLAIMED'}
+          (out/'r3-scope.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
+          assert not forbidden, forbidden
+          for file in ['project-control-report.json','directional-watch-report.json']:
+              path = Path('artifacts/control')/file
+              assert path.is_file(), file
+              report = json.loads(path.read_text())
+              (out/file).write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
+          assert not git('status','--porcelain','--untracked-files=no')
+          PY
+      - name: Hash exact audit outputs
+        if: always()
+        shell: bash
+        run: |
+          if [ -d artifacts/r3-control-audit ]; then
+            cd artifacts/r3-control-audit
+            find . -type f ! -name audit.sha256 -print0 | sort -z | xargs -0 sha256sum > audit.sha256
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-composition-r3-control-audit-${{ github.run_id }}
+          path: artifacts/r3-control-audit/
+          if-no-files-found: error
+          retention-days: 30
