@@ -103,7 +103,7 @@ static func validate_propagule(v: Variant, blueprint: Dictionary) -> String:
 
 static func _advance_individual(source: Dictionary, blueprint: Dictionary, sample: Dictionary, field_intake: Dictionary) -> Dictionary:
 	var state := source.duplicate(true)
-	if state.age_ticks >= 1000000: return _fail("A5_AGE_LIMIT")
+	if state.age_ticks >= LS.MAX_AGE_TICK: return _fail("A5_AGE_LIMIT")
 	var policy: Dictionary = blueprint.life_history
 	var phenotype_before := H.compile(state.development, blueprint.genome)
 	if phenotype_before.is_empty() or not F.valid_total_stock(field_intake): return _fail("A5_ADVANCE_INPUT")
@@ -267,13 +267,18 @@ static func _reproduce(source: Dictionary, blueprint: Dictionary, policy: Dictio
 	var needed := B.stock()
 	for name in B.RESOURCES: needed[name] = transfer[name] + fee[name]
 	if not _can_pay(source.metabolic_reserves, needed): return _fail("A5_REPRODUCTION_RESOURCES")
+	if source.reproduction_count > LS.MAX_OFFSPRING_COUNTER - count or source.propagule_seq > LS.MAX_OFFSPRING_COUNTER - count:
+		return _fail("A5_OFFSPRING_COUNTER_LIMIT")
+	var schedule_tick: int = source.age_ticks + policy.reproduction.interval_ticks
+	if schedule_tick > LS.MAX_REPRODUCTION_SCHEDULE_TICK:
+		return _fail("A5_REPRODUCTION_SCHEDULE_LIMIT")
 	var state := source.duplicate(true)
 	_pay(state.metabolic_reserves, needed)
 	_add_stock(state.resource_ledger.reproduction_transferred, transfer)
 	_add_stock(state.resource_ledger.reproduction_cost, fee)
 	var propagules: Array = []
 	for _i in count:
-		var id := "seed/%s/%06d" % [state.individual_id.sha256_text().substr(0, 16), state.propagule_seq]
+		var id := "seed/%s/%06d" % [state.individual_id.sha256_text(), state.propagule_seq]
 		state.propagule_seq += 1
 		propagules.append({
 			"schema": PROPAGULE_SCHEMA,
@@ -286,7 +291,7 @@ static func _reproduce(source: Dictionary, blueprint: Dictionary, policy: Dictio
 			"parent_state_hash": LS.state_hash(source, blueprint),
 		})
 	state.reproduction_count += count
-	state.next_reproduction_tick = state.age_ticks + policy.reproduction.interval_ticks
+	state.next_reproduction_tick = schedule_tick
 	return {"success": true, "state": state, "propagules": propagules}
 
 static func _can_pay(reserves: Dictionary, cost: Dictionary) -> bool:
