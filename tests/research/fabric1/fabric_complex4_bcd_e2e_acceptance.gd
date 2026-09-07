@@ -96,14 +96,16 @@ func _run() -> void:
 	_assert_ok(cap_result, "COMPLEX4 capsule capture failed")
 	var capsule: Dictionary = cap_result.details.capsule
 	_assert(capsule.canonical == false and capsule.derived == true and capsule.discardable == true, "COMPLEX4 capsule truth boundary wrong")
+	var restart_authority := Runtime.Bridge.Adapter.authority_for(rev2, matter, Fixture.AUTHORITY_OWNER, Fixture.AUTHORITY_EPOCH)
+	var authoritative_events := [event1, event2]
 	var restarted := Runtime.new()
-	_assert_ok(restarted.restore(rev2, matter, capsule), "COMPLEX4 restart failed")
+	_assert_ok(restarted.restore(rev2, matter, capsule, restart_authority, authoritative_events), "COMPLEX4 restart failed")
 	var restarted_exec := restarted.execute(rev2, matter, [1.0, 0.0])
 	_assert_ok(restarted_exec, "restarted machine execution failed")
 	_assert(restarted_exec.details.machine_state == "OFF", "restart resurrected powered machine")
 	_assert(absf(float(restarted_exec.details.functional.load_absorbed_power)) < 1.0, "restart restored nonzero load power")
 	_assert(restarted.status().functional_events == runtime.status().functional_events, "restart changed functional event history")
-	_assert_error(Runtime.new().restore(rev1, matter, capsule), "COMPLEX4_CAPSULE_STALE", "revision 1 accepted revision 2 capsule")
+	_assert_error(Runtime.new().restore(rev1, matter, capsule, restart_authority, authoritative_events), "COMPLEX4_CAPSULE_STALE", "revision 1 accepted revision 2 capsule")
 	_assert(restarted.status().canonical_writes == 0, "restarted COMPLEX4 gained canonical authority")
 
 	var hash := Utils.canonical_hash({
