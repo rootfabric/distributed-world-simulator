@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance.v1",
+  "acceptance_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "decision": "V0_P7_CHECKPOINT_ACCEPTED",
+  "status": "DRAFT_PENDING_HUMAN_MERGE_AND_ACCEPTANCE",
+  "accepted_runtime_head": "PENDING_MERGE_OF_PR_580",
+  "accepted_runtime_tree": "bdb1bc0398a2b76b7d34dc3b9d9bb892dd158366",
+  "accepted_product_lineage_head": "PENDING_MERGE_COMMIT",
+  "runtime_evidence": {
+    "runtime_tested_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+    "runtime_tested_tree": "4ff3adbaeecdd64a68bb3c1f11817aa72918231f",
+    "frozen_candidate_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+    "frozen_candidate_tree": "bdb1bc0398a2b76b7d34dc3b9d9bb892dd158366",
+    "docs_only_delta_runtime_tested_to_frozen": true,
+    "repair_work_orders": [
+      "V0-P7-EG1-ENET-BANDWIDTH-R1",
+      "V0-P7-EG4-RECEIPT-COMPLETION-R1",
+      "V0-P7-P74-WORLD-RUNNER-PHASES-R1",
+      "V0-P7-MW10-CROSS-REGION-LOCK-R1"
+    ],
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "checkpoint_proposal": {
+    "project_epoch": "E2026-09-06-V0-P7-CANONICAL-CLOSURE-R1",
+    "proposal_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+    "work_state": "CHECKPOINT_PROPOSED",
+    "evidence_map": "docs/control/p7-eg1-world-core-repair-r1/evidence-map-final-a52faf8c.v1.json",
+    "continuation_record": "docs/control/p7-eg1-world-core-repair-r1/continuation-final-a52faf8c-r1.v1.json",
+    "post_build_critique": "NO_MATERIAL_REFACTOR_REQUIRED"
+  },
+  "machine_evidence": {
+    "full_world_core_regression": {
+      "result": "FULL_WORLD_CORE_REGRESSION_PASS",
+      "local_run_id": "local-p7-20260907155640",
+      "local_subject_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+      "declared_test_count": 325,
+      "discovered_test_count": 325,
+      "step_count": 330,
+      "world_summary_sha256": "05aee2fb27d4793f9fd9b371010c4ea2eb472d3c74c27f02c813d8fc9ce89bf3",
+      "world_log_sha256": "dd68ddf4154398c4d4cc8fe08151c55a022c12f2967dfa82d89919bf236abb87",
+      "ci_check": "exact-validation (world) success on dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb"
+    },
+    "p7_train": {
+      "result": "P7_29_LEAF_EXACT_GATE_PASS",
+      "local_run_id": "local-p7-20260907170344",
+      "stages": 29,
+      "assertions": 2032,
+      "failures": 0,
+      "stage_summary_sha256": "5fe0f4094a9fae03682c4d71c094c0f49d79e62d66774b4360efcd7964100743",
+      "ci_check": "exact-validation (p7) success on dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb"
+    },
+    "independent_reviewer": [
+      "REVIEWER R1 = PASS (b06499b70e51e71cec60042cacfad01e75bf6e86)",
+      "REVIEWER R2 = PASS (dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb, exact-head freshness)"
+    ],
+    "independent_verifier": [
+      "VERIFIER R1 = substantive PASS V2-V8 with honest provenance FAIL (resolved)",
+      "VERIFIER R2 = PASS (dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb, fresh machine re-execution EG1, independent 2032 re-sum)"
+    ],
+    "verdict_documents": [
+      "docs/control/p7-eg1-world-core-repair-r1/review/REVIEWER-RESULT-B06499B7-R1.v1.json",
+      "docs/control/p7-eg1-world-core-repair-r1/review/VERIFIER-RESULT-B06499B7-R1.v1.json",
+      "docs/control/p7-eg1-world-core-repair-r1/review/REVIEWER-RESULT-DCA12CEC-R2.v1.json",
+      "docs/control/p7-eg1-world-core-repair-r1/review/VERIFIER-RESULT-DCA12CEC-R2.v1.json"
+    ],
+    "standard_pc0": "YELLOW_NON_RED",
+    "directional_pc0": "YELLOW_NON_RED_ZERO_CANDIDATE_CRITICAL_HITS",
+    "critical_cross_branch_overlaps": 0
+  },
+  "canonical_main_at_acceptance": "PENDING_MERGE_COMMIT",
+  "human_authorization": {
+    "decision": "PENDING_HUMAN_RUNTIME_MERGE_AND_P7_FORMAL_ACCEPTANCE",
+    "runtime_merge_source": "PENDING_OWNER_MERGED_PR_580",
+    "durable_runtime_pr": 580,
+    "durable_runtime_merge_commit": "PENDING",
+    "formal_acceptance_source": "PENDING_OWNER_DIRECTIVE",
+    "recorded_at_utc": "PENDING"
+  },
+  "successor": {
+    "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "activation_requires_main_owned_control_update": true,
+    "runtime_mutation_authorized_by_this_record": false
+  },
+  "accepted_at_utc": "PENDING"
+}
