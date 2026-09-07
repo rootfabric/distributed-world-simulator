@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.diff_guard.v1",
+  "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+  "original_blob_sha": "197490d8f66f53642ec1b85da374616667334c5b",
+  "work_order": "V0-P7-P74-WORLD-RUNNER-PHASES-R1",
+  "phases": [
+    "seed",
+    "recover-deliver",
+    "recover-replay"
+  ],
+  "phase_assertions": {
+    "seed": 21,
+    "recover-deliver": 25,
+    "recover-replay": 17
+  },
+  "expected_step_names": [
+    "test_v0_p7_4_persistence_restart_composition[seed]",
+    "test_v0_p7_4_persistence_restart_composition[recover-deliver]",
+    "test_v0_p7_4_persistence_restart_composition[recover-replay]"
+  ],
+  "added_block": "    foreach ($TestScript in $Tests) {\n        if ($TestScript -eq \"res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd\") {\n            # This worker requires an explicit restart phase. Invoke its three\n            # canonical phases in the fixed seed -> recover-deliver ->\n            # recover-replay order, each in a fresh native process under the\n            # already isolated suite profile. The seed phase owns the profile\n            # reset, so the phases must not run inside one shared process.\n            foreach ($Phase in @(\"seed\", \"recover-deliver\", \"recover-replay\")) {\n                Invoke-GodotStep `\n                    -Name (\"{0}[{1}]\" -f [IO.Path]::GetFileNameWithoutExtension($TestScript), $Phase) `\n                    -Kind \"headless_script\" `\n                    -Arguments @(\"--headless\", \"--path\", $ProjectRoot, \"--script\", $TestScript, \"--\", \"--phase=$Phase\") `\n                    -Target $TestScript\n            }\n        } else {\n            Invoke-GodotStep `\n                -Name ([IO.Path]::GetFileNameWithoutExtension($TestScript)) `\n                -Kind \"headless_script\" `\n                -Arguments @(\"--headless\", \"--path\", $ProjectRoot, \"--script\", $TestScript) `\n                -Target $TestScript\n        }\n    }\n",
+  "replaced_original_block": "    foreach ($TestScript in $Tests) {\n        Invoke-GodotStep `\n            -Name ([IO.Path]::GetFileNameWithoutExtension($TestScript)) `\n            -Kind \"headless_script\" `\n            -Arguments @(\"--headless\", \"--path\", $ProjectRoot, \"--script\", $TestScript) `\n            -Target $TestScript\n    }\n",
+  "notes": "Removing added_block and restoring replaced_original_block must return the exact original runner blob. No other runner byte may change."
+}

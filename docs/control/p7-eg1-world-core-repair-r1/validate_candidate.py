@@ -19,6 +19,10 @@ ENGINE_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 DOCS = "docs/control/p7-eg1-world-core-repair-r1/"
 PORT = "scripts/network/transports/v2/enet_multi_peer_transport_port.gd"
 EG1 = "tests/network/test_eg1_gateway_processes.gd"
+RUNNER = "RUN_WORLD_REGRESSION_TESTS.ps1"
+P74_SCRIPT = "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd"
+P74_PHASES = ("seed", "recover-deliver", "recover-replay")
+P74_ASSERTIONS = {"seed": 21, "recover-deliver": 25, "recover-replay": 17}
 FATAL = re.compile(r"SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to instantiate an autoload|Failed to load script")
 P7_LEAVES = {
     "v0-p7-5-two-client-convergence": {
@@ -125,7 +129,7 @@ def identity(root: Path) -> dict:
 
 def check_source(root: Path) -> None:
     changed = git("diff", "--name-only", BASE, "HEAD", cwd=root).splitlines()
-    allowed = {PORT, EG1, "tools/network/eg4_client_worker.gd",
+    allowed = {PORT, EG1, "tools/network/eg4_client_worker.gd", RUNNER,
                ".github/workflows/p7-eg1-world-core-repair.yml"}
     require(all(path in allowed or path.startswith(DOCS) for path in changed), "WORK_ORDER_SCOPE_DRIFT")
     original = subprocess.check_output(["git", "show", f"{BASE}:{PORT}"], cwd=root).decode()
@@ -154,6 +158,16 @@ def check_source(root: Path) -> None:
         require(bool(addition) and worker.count(addition) == 1, "EG4_BARRIER_DIFF_MISSING")
         worker = worker.replace(addition, "")
     require(worker == original_worker, "ORIGINAL_EG4_TRAFFIC_OR_TIMEOUT_CHANGED")
+    # The P7.4 runner-phases Work Order permits only the three-phase
+    # specialization of this one foreach invocation.
+    runner_spec = json.loads((root / DOCS / "runner-p74-diff-guard.v1.json").read_text())
+    require(git("rev-parse", f"{BASE}:{RUNNER}", cwd=root) == runner_spec["original_blob_sha"],
+            "P74_RUNNER_BASELINE_DRIFT")
+    original_runner = subprocess.check_output(["git", "show", f"{BASE}:{RUNNER}"], cwd=root).decode()
+    runner = (root / RUNNER).read_text(encoding="utf-8")
+    require(runner.count(runner_spec["added_block"]) == 1, "P74_RUNNER_DIFF_MISSING")
+    restored = runner.replace(runner_spec["added_block"], runner_spec["replaced_original_block"])
+    require(restored == original_runner, "ORIGINAL_RUNNER_ORCHESTRATION_CHANGED")
     git("diff", "--check", cwd=root)
 
 
@@ -310,6 +324,22 @@ def main() -> int:
             require(summary["passed"] is True and summary["declared_test_count"] == summary["discovered_test_count"], "WORLD_SUMMARY_NOT_PASS")
             require(bool(summary["steps"]) and all(s["passed"] is True and s["exit_code"] == 0 for s in summary["steps"]), "WORLD_STAGE_NOT_PASS")
             require(any(s["name"] == "main_scene_cli_all" for s in summary["steps"]), "WORLD_AGGREGATE_MISSING")
+            steps = summary["steps"]
+            require(len(steps) == 330, f"WORLD_STAGE_COUNT_NOT_330:{len(steps)}")
+            expected_names = [f"test_v0_p7_4_persistence_restart_composition[{p}]" for p in P74_PHASES]
+            indexes = []
+            for name in expected_names:
+                matches = [i for i, s in enumerate(steps) if s["name"] == name]
+                require(len(matches) == 1, f"P74_PHASE_STEP_MISSING:{name}")
+                indexes.append(matches[0])
+                require(steps[matches[0]]["target"] == P74_SCRIPT, "P74_PHASE_TARGET_CHANGED")
+            require(indexes == sorted(indexes) and indexes[1] == indexes[0] + 1 and indexes[2] == indexes[1] + 1,
+                    "P74_PHASE_ORDER_NOT_EXACT")
+            require(all(s["kind"] == "headless_script" for s in (steps[i] for i in indexes)), "P74_PHASE_KIND_CHANGED")
+            world_log = (out / "full-world-core.log").read_text(encoding="utf-8", errors="replace")
+            for phase in P74_PHASES:
+                terminal = f"V0-P7.4 {phase}: PASS ({P74_ASSERTIONS[phase]} assertions, 0 failures)"
+                require(world_log.count(terminal) == 1, f"P74_PHASE_TERMINAL_NOT_PROVEN:{phase}")
         else:
             p7_train(root, out, engine, initial["head"])
         code = 0
