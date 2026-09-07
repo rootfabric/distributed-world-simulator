@@ -1,42 +1,57 @@
-name: FABRIC HOLDOUT-R4 Frozen G1
+name: HOLDOUT-R4 Frozen G1 Exact Replay
 on:
   push:
-    branches: [research/fabric-holdout-r4-frozen-generalization-r1]
-    paths:
-      - scripts/research/fabric_holdout_r4/**
-      - tests/research/fabric1/fabric_holdout_r4_*
-      - config/research/fabric-holdout-r4-*
-      - RUN_FABRIC_HOLDOUT_R4_TESTS.sh
-      - .github/workflows/fabric-holdout-r4-linux-double.yml
+    branches: [verify/fabric-holdout-r4-exact-replay-r1]
 permissions:
   contents: read
-concurrency:
-  group: fabric-holdout-r4-${{ github.ref }}
-  cancel-in-progress: false
+  actions: read
 jobs:
-  holdout:
+  exact-measurement:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: 9bb354c31d65600eccd6df713118e11a1f26f548
           fetch-depth: 0
           persist-credentials: false
-      - name: Execute exact frozen holdout and unchanged regressions
+      - name: Bind exact harness, frozen kernel and approved engine
+        env:
+          READ_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = 9bb354c31d65600eccd6df713118e11a1f26f548
+          test "$(git rev-parse 'HEAD^{tree}')" = 846af7694545a361f7b97e738687f244602cc752
           test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = fd6e83b35301d7a15e92c55939654f1f95729730
-          mkdir -p artifacts
-          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          bash RUN_FABRIC_HOLDOUT_R4_TESTS.sh
+          python3 - <<'PY'
+          import hashlib,io,os,pathlib,urllib.request,zipfile
+          class Redirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  result=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if result is not None: result.remove_header('Authorization')
+                  return result
+          request=urllib.request.Request('https://api.github.com/repos/rootfabric/distributed-world-simulator/actions/artifacts/10009150529/zip',headers={'Authorization':'Bearer '+os.environ['READ_TOKEN'],'Accept':'application/vnd.github+json'})
+          with urllib.request.build_opener(Redirect()).open(request,timeout=60) as response: raw=response.read()
+          assert hashlib.sha256(raw).hexdigest()=='31c0fdb95b91a15909b4b7803c1c83a0f3a72ebe2261bdf993543eb8f739da0f'
+          with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+              candidates=[n for n in archive.namelist() if n.endswith('godot.linuxbsd.editor.double.x86_64')]
+              assert len(candidates)==1 and archive.getinfo(candidates[0]).file_size<512*1024*1024
+              engine=archive.read(candidates[0])
+          assert hashlib.sha256(engine).hexdigest()=='bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'r4-approved-godot'
+          path.write_bytes(engine);path.chmod(0o700)
+          with open(os.environ['GITHUB_ENV'],'a') as env: env.write('GODOT_BIN='+str(path)+'\n')
+          print('APPROVED_ENGINE_BYTES_VERIFIED; NO_ENGINE_CHANGE')
+          PY
+      - name: Run unchanged R4 experiment and predecessor regressions
+        shell: bash
+        run: bash RUN_FABRIC_HOLDOUT_R4_TESTS.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: fabric-holdout-r4-${{ github.sha }}-${{ github.run_attempt }}
+          name: fabric-holdout-r4-g1-exact-${{ github.run_id }}
           path: artifacts/fabric-holdout-r4-exact-*/
           if-no-files-found: error
           retention-days: 30
