@@ -154,6 +154,7 @@ func _offspring_counter_range() -> void:
 	entry.state.age_ticks = 250001
 	entry.state.reproduction_count = 1000000
 	entry.state.propagule_seq = 1000000
+	entry.state.next_reproduction_tick = 250001
 	_check(LS.validate(entry.state, blueprint).is_empty(), "million_offspring_boundary_state_valid")
 	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history)
 	_check(reproduced.success and reproduced.state.reproduction_count == 1000004 and reproduced.state.propagule_seq == 1000004, "four_offspring_cross_million_counter")
