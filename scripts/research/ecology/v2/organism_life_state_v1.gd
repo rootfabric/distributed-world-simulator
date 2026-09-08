@@ -15,6 +15,7 @@ const MAX_AGE_TICK := 1000000
 const MAX_REPRODUCTION_SCHEDULE_TICK := 2000000
 const MAX_OFFSPRING_PER_EVENT := 4
 const MAX_OFFSPRING_COUNTER := MAX_AGE_TICK * MAX_OFFSPRING_PER_EVENT
+const MAX_PARENT_PROOF_DEPTH := 32
 
 static func create(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
 	# Public generic construction is founder-only. Parent transfers require an exact paid-parent witness.
@@ -106,7 +107,8 @@ static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary,
 static func propagule_id(parent_id: String, sequence: int) -> String:
 	return "seed/%s/%06d" % [parent_id.sha256_text(), sequence]
 
-static func validate_parent_transfer_witness(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary) -> String:
+static func validate_parent_transfer_witness(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary, parent_proof_depth: int = 1) -> String:
+	if parent_proof_depth < 0 or parent_proof_depth > MAX_PARENT_PROOF_DEPTH: return "PROPAGULE_PARENT_PROOF_DEPTH"
 	if not BP.validate(blueprint).is_empty(): return "PROPAGULE_BLUEPRINT"
 	var keys := ["schema", "id", "parent_id", "sequence", "blueprint_hash", "birth_tick", "position_mm", "endowment", "parent_state_hash"]
 	if not C.keys(v, keys) or v.schema != PROPAGULE_SCHEMA: return "PROPAGULE_SCHEMA"
@@ -116,10 +118,10 @@ static func validate_parent_transfer_witness(v: Variant, blueprint: Dictionary, 
 	if not B.valid_stock(v.endowment) or not F.valid_hash(v.parent_state_hash): return "PROPAGULE_RESOURCE"
 	if v.endowment != blueprint.life_history.reproduction.endowment: return "PROPAGULE_ENDOWMENT"
 	if paid_parent_state.is_empty(): return "PROPAGULE_PARENT_STATE_REQUIRED"
-	var parent_validation := validate(paid_parent_state, blueprint)
+	var parent_validation := validate(paid_parent_state, blueprint, parent_proof_depth)
 	if not parent_validation.is_empty(): return "PROPAGULE_PARENT_STATE"
 	if paid_parent_state.individual_id != v.parent_id: return "PROPAGULE_PARENT_ID"
-	var paid_parent_hash := state_hash(paid_parent_state, blueprint)
+	var paid_parent_hash := C.digest(paid_parent_state)
 	if paid_parent_hash.is_empty() or paid_parent_hash != v.parent_state_hash: return "PROPAGULE_PARENT_HASH"
 	var reproduction: Dictionary = blueprint.life_history.reproduction
 	var event_size: int = reproduction.offspring_per_event
@@ -137,7 +139,8 @@ static func validate_parent_transfer_witness(v: Variant, blueprint: Dictionary, 
 	if not reproduced_event: return "PROPAGULE_PARENT_EVENT"
 	return ""
 
-static func validate(v: Variant, blueprint: Dictionary) -> String:
+static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int = 0) -> String:
+	if parent_proof_depth < 0 or parent_proof_depth > MAX_PARENT_PROOF_DEPTH: return "LIFE_PARENT_TRANSFER_DEPTH"
 	if not BP.validate(blueprint).is_empty(): return "LIFE_STATE_BLUEPRINT"
 	var keys := ["schema", "blueprint_hash", "individual_id", "position_mm", "origin_kind", "origin_receipt", "alive", "age_ticks", "starvation_ticks", "next_reproduction_tick", "reproduction_count", "propagule_seq", "metabolic_reserves", "resource_ledger", "development", "last_environment_source", "last_events"]
 	if not C.keys(v, keys) or v.schema != SCHEMA: return "LIFE_STATE_SCHEMA"
@@ -175,7 +178,7 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
 	if v.resource_ledger.assimilated.water_mg != v.resource_ledger.field_intake.water_mg: return "LIFE_FIELD_WATER_SOURCE"
 	if v.resource_ledger.assimilated.energy_mj != v.resource_ledger.external_energy_mj: return "LIFE_EXTERNAL_ENERGY_SOURCE"
-	var origin_error := _validate_origin_receipt(v, blueprint)
+	var origin_error := _validate_origin_receipt(v, blueprint, parent_proof_depth)
 	if not origin_error.is_empty(): return origin_error
 	for name in B.RESOURCES:
 		var expected_transfer: int = v.reproduction_count * reproduction.endowment[name]
@@ -241,10 +244,11 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 		if sources[name] != sinks[name]: return "LIFE_RESOURCE_CONSERVATION_%s" % name
 	return "NONCANONICAL_LIFE_STATE" if C.encode(v).is_empty() else ""
 
-static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary) -> String:
+static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary, parent_proof_depth: int) -> String:
 	var receipt: Dictionary = state.origin_receipt
 	if state.origin_kind == "FOUNDER_ENDOWMENT":
 		return "" if receipt.is_empty() else "LIFE_FOUNDER_ORIGIN_RECEIPT"
+	if parent_proof_depth >= MAX_PARENT_PROOF_DEPTH: return "LIFE_PARENT_TRANSFER_DEPTH"
 	var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state"]
 	if not C.keys(receipt, keys) or receipt.schema != PARENT_TRANSFER_RECEIPT_SCHEMA: return "LIFE_PARENT_TRANSFER_RECEIPT"
 	if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
@@ -263,7 +267,7 @@ static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary) -
 		"endowment": receipt.endowment,
 		"parent_state_hash": receipt.parent_state_hash,
 	}
-	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, blueprint, receipt.parent_state)
+	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, blueprint, receipt.parent_state, parent_proof_depth + 1)
 	if not witness_error.is_empty(): return "LIFE_PARENT_TRANSFER_PARENT_STATE"
 	return ""
 
