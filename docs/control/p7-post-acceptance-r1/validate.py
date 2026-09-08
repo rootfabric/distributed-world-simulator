@@ -91,11 +91,45 @@ def source_guard(root: Path) -> None:
 
 
 def validate_world_step_identities(steps: list[dict]) -> None:
+    require(all(isinstance(step, dict) for step in steps), "WORLD_STAGE_RECORD_INVALID")
     identities = [
         (str(step.get("kind", "")), str(step.get("target", "")), str(step.get("name", "")))
         for step in steps
     ]
     require(len(identities) == len(set(identities)), "WORLD_STEP_IDENTITY_COLLISION")
+
+
+def validate_world_step_contracts(steps: list[dict], discovered: set[str], p74: str,
+                                  phases: list[str]) -> None:
+    validate_world_step_identities(steps)
+    require(len(steps) >= 3, "WORLD_SPECIAL_STAGE_MISSING")
+    manifest = steps[0]
+    editor = steps[1]
+    aggregate = steps[-1]
+    require(str(manifest.get("name", "")) == "test_manifest_coverage"
+            and str(manifest.get("kind", "")) == "static"
+            and re.fullmatch(rf"{len(discovered)} tests; appended [0-9]+ discovered overlays",
+                             str(manifest.get("target", ""))) is not None,
+            "WORLD_MANIFEST_STAGE_CONTRACT_INVALID")
+    require(str(editor.get("name", "")) == "editor_import_parse"
+            and str(editor.get("kind", "")) == "editor"
+            and str(editor.get("target", "")) == "res://",
+            "WORLD_EDITOR_STAGE_CONTRACT_INVALID")
+    require(str(aggregate.get("name", "")) == "main_scene_cli_all"
+            and str(aggregate.get("kind", "")) == "main_scene_cli"
+            and str(aggregate.get("target", "")) == "playground:test.run all",
+            "WORLD_AGGREGATE_STAGE_CONTRACT_INVALID")
+    allowed_phases = set(phases)
+    for step in steps[2:-1]:
+        require(str(step.get("kind", "")) == "headless_script", "WORLD_STAGE_KIND_INVALID")
+        target = str(step.get("target", ""))
+        name = str(step.get("name", ""))
+        require(target in discovered, "WORLD_HEADLESS_TARGET_NOT_DISCOVERED")
+        if target == p74:
+            require(name in allowed_phases, "WORLD_HEADLESS_NAME_TARGET_MISMATCH")
+        else:
+            expected_name = Path(target.removeprefix("res://")).stem
+            require(name == expected_name, "WORLD_HEADLESS_NAME_TARGET_MISMATCH")
 
 
 def world_summary(root: Path) -> dict:
@@ -107,19 +141,17 @@ def world_summary(root: Path) -> dict:
     require(summary["passed"] is True and summary["declared_test_count"] == summary["discovered_test_count"]
             == len(discovered), "WORLD_DISCOVERY_NOT_COMPLETE")
     require(all(s["passed"] is True and s["exit_code"] == 0 for s in steps), "WORLD_STAGE_FAILED")
-    counts = Counter(s["target"] for s in steps if s["kind"] == "headless_script")
     p74 = "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd"
-    expected = Counter({path: 3 if path == p74 else 1 for path in discovered})
-    require(counts == expected and "res://" + NATIVE in counts, "WORLD_TARGET_COVERAGE_MISMATCH")
-    validate_world_step_identities(steps)
-    require(len(steps) == len(discovered) + 5, "WORLD_STEP_COUNT_MISMATCH")
-    names = [s["name"] for s in steps]
     phases = ["test_v0_p7_4_persistence_restart_composition[" + p + "]"
               for p in ("seed", "recover-deliver", "recover-replay")]
+    validate_world_step_contracts(steps, discovered, p74, phases)
+    counts = Counter(s["target"] for s in steps if s["kind"] == "headless_script")
+    expected = Counter({path: 3 if path == p74 else 1 for path in discovered})
+    require(counts == expected and "res://" + NATIVE in counts, "WORLD_TARGET_COVERAGE_MISMATCH")
+    require(len(steps) == len(discovered) + 5, "WORLD_STEP_COUNT_MISMATCH")
+    names = [s["name"] for s in steps]
     indexes = [names.index(p) for p in phases]
     require(indexes == list(range(indexes[0], indexes[0] + 3)), "P74_PHASE_ORDER_CHANGED")
-    require(names[0] == "test_manifest_coverage" and names[1] == "editor_import_parse"
-            and names[-1] == "main_scene_cli_all", "WORLD_AGGREGATE_MISSING")
     return summary
 
 
