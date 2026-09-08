@@ -1,0 +1,89 @@
+{
+  "schema": "distributed_world_simulator.p7_post_acceptance_reviewer_result.v1",
+  "role": "REVIEWER",
+  "independent_context": true,
+  "context_provenance": "Fresh read-only subject review performed in a dedicated detached worktree at the exact subject commit; verdict vocabulary taken from config/control/harness/review-policy.v1.json; no runtime, test, acceptance, or policy mutation performed by this role.",
+  "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+  "reviewed_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+  "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "implementation_pr": 585,
+  "verdict": "PASS",
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "review_environment": {
+    "review_worktree": "dws-p7-reviewer-5a1d (detached, tracked checkout clean, HEAD and tree recomputed)",
+    "verdict_vocabulary_source": "config/control/harness/review-policy.v1.json lines 22-24: PASS, FAIL, INSUFFICIENT_EVIDENCE",
+    "current_main_observed_for_context_only": "a7ef2465efc98a167a78946d9e8b42572ba5a097 (origin/main at review time)"
+  },
+  "checks": [
+    {
+      "name": "EXACT_HEAD_TREE",
+      "result": "PASS",
+      "evidence": "git cat-file -t 5a1d79c6 = commit; git rev-parse 5a1d79c6^{tree} = 00581408e4ba9033fde16b43915945e73e18fcb2; detached worktree git status --porcelain --untracked-files-no output empty; merge commit 87e74287b5682737a224515525f06a17af637098 tree = 00581408e4ba9033fde16b43915945e73e18fcb2 (tree-equivalent merge confirmed as additional fact)"
+    },
+    {
+      "name": "BOUNDED_SCOPE",
+      "result": "PASS",
+      "evidence": "git diff --name-status 438b21d0..5a1d79c6: runtime modifications limited to scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd and scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd; all remaining changes are tests, docs/control/p7-post-acceptance-r1/**, two restored historical R2 verdict carriers, and .github/workflows/p7-post-acceptance-repair.yml; no forbidden paths (config/**, scripts/harness/**, scripts/network/**, scripts/runtime/**, scenes/**, project.godot, RUN_WORLD_REGRESSION_TESTS.ps1, CONTROL_DEVELOPMENT.ps1) touched; work orders V0-P7-POST-ACCEPTANCE-REPAIR-R1 plus bounded continuations r2 (base dded2e48), r3 (base 62ae64d3), r4 (base c7110514) each declare narrow allowed_paths; prior FAIL verdicts preserved, no quiet scope expansion"
+    },
+    {
+      "name": "MW9_MW10_LOCK_LIFECYCLE",
+      "result": "PASS",
+      "evidence": "Line-by-line diff review of both repositories: token is 32-byte CSPRNG hex (Crypto.generate_random_bytes); ownership file owner-<token>.json validated by _lock_owner_file_name (64 hex chars); _release_lock re-validates pid+token+_owner_file_name and renames only its own marker file; _remove_stale_lock removes only the exact observed owner file name then empty-only rmdir; _lock_is_stale returns true only on _process_liveness(pid)==STOPPED (UNKNOWN never treated as STOPPED; LOCK_UNKNOWN_LIVENESS_STALE_AFTER_MS removed); malformed/ambiguous owner (files!=1 or unparsable) permits only empty-only rmdir, fail-closed; _remove_directory refuses the canonical lock path and non-candidate paths; the reusable canonical directory is never renamed as the ownership object. ABA walk (A owns, R1 observes stale A, R2 removes A, B acquires, R1 resumes, C attempts): R1 addresses A's unique file name, cannot touch B's differently named marker, final rmdir fails on B's nonempty directory, B survives, C's candidate rename onto the existing canonical directory fails with LOCK_TIMEOUT, B releases normally"
+    },
+    {
+      "name": "NEGATIVE_CONTROLS_PRESERVED",
+      "result": "PASS",
+      "evidence": "Independently recomputed from downloaded artifact 10052617538 raw logs: baseline-aba at 438b21d0 exit=1, 22 assertions, exactly 6 predicted failures (3 MW10 + 3 MW9: c-must-not-acquire-before-b-release, b-marker-must-survive, b-must-release-own-lock); empty-writer predecessor at 912742d1 exit=1, 14 assertions, 4 failures; MW9 old fixture at dded2e48 exit=1, 203 assertions, 2 failures (Fresh ownerless lock reclaimed without grace / disappeared during grace). Historical FAILs not deleted, renamed, or rewritten; each carried exact expected_exit=1 in the runner"
+    },
+    {
+      "name": "NATIVE_LOCK_POSITIVE",
+      "result": "PASS",
+      "evidence": "native-locks.result.json exit=0 at exact subject; native-locks.log: 'matter_repository_lock_reclaim: PASS (82 assertions, 0 failures)'; delayed-reclaimer observations for both MW10 and MW9: b_acquire success, c_acquire_before_b_release = *_LOCK_TIMEOUT, b_release success (attempts=1, released_atomically=true), quarantine_seen=false; MW9 recovery PASS (208 assertions), MW9 processes PASS (225), MW9 lock release retry PASS (12), MW10 processes PASS (53)"
+    },
+    {
+      "name": "NETWORK_REGRESSION",
+      "result": "PASS",
+      "evidence": "EG1 stages eg1-1..eg1-5 all exit_code=0 expected_exit=0 (5/5); EG4 stages eg4-1..eg4-3 all exit_code=0 (3/3); no retry-until-green aggregation"
+    },
+    {
+      "name": "WORLD_326_331",
+      "result": "PASS",
+      "evidence": "world-regression-summary.json: declared_test_count=326, discovered_test_count=326, steps=331, passed=true; world-coverage.json: distinct_scripts=326, stages=331; full-world-core.result.json exit_code=0, elapsed 3364.512s, no fatal matches; every stage exit_code 0; manifest 1946 indexed files, 0 mismatches"
+    },
+    {
+      "name": "WORLD_STAGE_ROLE_CONTRACT_R4",
+      "result": "PASS",
+      "evidence": "Special stages exact: test_manifest_coverage (kind=static), editor_import_parse (kind=editor, target=res://), main_scene_cli_all (kind=main_scene_cli, target=playground:test.run all); P7.4 phases present in order seed, recover-deliver, recover-replay as distinct full identities; 331 steps with 331 unique kind|name|target identities; same basename test_controller_profiles on two distinct targets allowed; subject harness contract suite tests/harness/test_p7_post_acceptance_packet.py independently rerun by this Reviewer in the detached worktree: 10/10 passed (covers step identity by target not basename, cross-kind alias rejection, special stage roles fail-closed, headless name==target basename, duplicate/reorder fail-closed, no silent skip of new discovered scripts)"
+    },
+    {
+      "name": "P7_29_2032",
+      "result": "PASS",
+      "evidence": "p7-stage-summary.json: passed=true, 29 stages, 2032 assertions, 0 failures; p7-train.log tail confirms all gates green and EXACT_HEAD/EXACT_TREE match subject; artifact 10050761377 manifest 50 files, 0 mismatches"
+    },
+    {
+      "name": "HARNESS_PC0",
+      "result": "PASS",
+      "evidence": "control artifact: harness.log 'Ran 278 tests ... OK'; pc0.result.json exit=0, combined health base=YELLOW directional=YELLOW; directional-classification.json blocking_findings=[] with 2 RED CRITICAL_WATCH_HIT findings preserved as global_blocking=false advisory (not relabeled); controller Overview/CheckConsistency/Drive/CloseMission all exit=0; manifest 28 files, 0 mismatches. Windows-local rerun of test_project_control_validation.py failures were environmental (cp1251 UnicodeDecodeError in subprocess pipes), not subject defects; the canonical Ubuntu run is authoritative"
+    },
+    {
+      "name": "INDEPENDENT_ARTIFACT_IDENTITY",
+      "result": "PASS",
+      "evidence": "gh run view 34212789413: headSha=5a1d79c6889136c40daf97f69feb90512c214009, conclusion=success, jobs 102017453195/102017453441/102017454020 all success; artifacts 10052617538 / 10050761377 / 10050536759 downloaded by this Reviewer and SHA-256 recomputed: a2ddbdf740e186918b83e87abacb4c55296422096d6f6e8601cba571d2a6a395, bee6343e229b4a6ed644116d79c32b51945eed70885e821c775f59eaa6141cda, ccb79a54beb5d3fdb4c0e6a5d4bae9fa261319293921a983488015702d69fcbf - all three match the declared digests exactly"
+    },
+    {
+      "name": "INDEPENDENT_VERIFIER_R5",
+      "result": "PASS",
+      "evidence": "docs/control/p7-post-acceptance-r1/review/VERIFIER-RESULT-5A1D-R5.v1.json (durable carrier origin/control/v0-p7-post-acceptance-verifier-r5): role=VERIFIER, independent_context=true, subject_head=5a1d79c..., subject_tree=00581408..., verdict=PASS with all predicates PASS; its claims were spot-checked against raw artifacts by this Reviewer rather than taken on faith; the Verifier is a separate role and does not substitute this Reviewer verdict; the prior GitHub reviewer verdict PASS_NO_MAJOR_ISSUES recorded there is non-canonical vocabulary and is superseded by this R6 verdict PASS"
+    }
+  ],
+  "review_boundary": {
+    "runtime_mutation_performed": false,
+    "acceptance_written_by_reviewer": false,
+    "merge_performed_by_reviewer": false,
+    "mvp_activation_authorized": false,
+    "control_branch": "control/v0-p7-post-acceptance-reviewer-r6 (control-only carrier from canonical main a7ef2465; reviewed subject remains 5a1d79c)"
+  },
+  "ready_for": "APPEND_ONLY_ACCEPTANCE_ADDENDUM_002",
+  "not_authorized": ["MVP_ACTIVATION"]
+}
