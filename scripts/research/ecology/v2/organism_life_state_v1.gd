@@ -95,9 +95,17 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 		var expected_cost: int = v.reproduction_count * reproduction.fee_energy_mj if name == "energy_mj" else 0
 		if v.resource_ledger.reproduction_cost[name] != expected_cost:
 			return "LIFE_REPRODUCTION_COST_%s" % name
+	if event_count > 0:
+		var metabolism: Dictionary = blueprint.life_history.metabolism
+		var minimum_maintenance_water: int = event_count * metabolism.maintenance_water_per_module_mg
+		var minimum_maintenance_energy: int = event_count * metabolism.maintenance_energy_per_module_mj
+		if v.resource_ledger.maintenance.water_mg < minimum_maintenance_water or v.resource_ledger.maintenance.energy_mj < minimum_maintenance_energy:
+			return "LIFE_REPRODUCTION_MAINTENANCE"
 	if not v.development is Dictionary or v.development.individual_id != v.individual_id: return "LIFE_STATE_DEVELOPMENT_BINDING"
 	var development_error := S.validate(v.development, blueprint.genome)
 	if not development_error.is_empty(): return development_error
+	if v.development.tick > v.age_ticks or v.development.grant_seq > v.age_ticks:
+		return "LIFE_DEVELOPMENT_CAUSALITY"
 	for name in B.RESOURCES:
 		if v.resource_ledger.growth_transferred[name] != v.development.received[name]:
 			return "LIFE_A2_TRANSFER_%s" % name
