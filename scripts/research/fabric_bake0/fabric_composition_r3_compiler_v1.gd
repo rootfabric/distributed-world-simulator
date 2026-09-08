@@ -1,6 +1,7 @@
 extends RefCounted
 
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const R2 = preload("res://scripts/research/fabric_bake0/fabric_physics_r2_compiler_v1.gd")
 const A = preload("res://scripts/research/fabric_bake0/authority_envelope_v1.gd")
 const D = preload("res://scripts/research/fabric0/fabric0_coupled_hybrid_dae_v1.gd")
@@ -15,6 +16,9 @@ const MIN_CAPACITY_N := 1.0e-6
 # This is an input grammar/compiler, not a new numerical solver or canonical owner.
 static func compile(sources: Dictionary, authority: Dictionary) -> Dictionary:
 	if not U.validate_exact_fields(sources, SOURCE_FIELDS).success: return U.failure("R3_SOURCE_FIELDS")
+	var normalized := NetworkUtils.canonicalize(sources)
+	if not bool(normalized.get("success", false)) or not normalized.get("value") is Dictionary: return U.failure("R3_SOURCE_NOT_JSON_SAFE")
+	sources = Dictionary(normalized.value)
 	for key in SOURCE_FIELDS:
 		if not sources[key] is Dictionary: return U.failure("R3_SOURCE_TYPE")
 	for key in ["mechanical", "electrical"]:
