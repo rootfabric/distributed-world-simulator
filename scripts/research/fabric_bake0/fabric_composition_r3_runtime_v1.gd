@@ -5,6 +5,7 @@ const C = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_com
 const D = C.D
 const G = C.G
 const EventStep = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_event_step_v1.gd")
+const GeneralEventStep = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_general_event_step_v1.gd")
 const Adapter = preload("res://scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd")
 
 var _model: Dictionary = {}
@@ -102,7 +103,7 @@ func advance(dt: float, sources: Dictionary, authority: Dictionary) -> Dictionar
 	return U.success({"snapshot": inspect()})
 
 func _advance_candidate(candidate: Dictionary, dt: float) -> Dictionary:
-	if _is_general(): return D.advance(candidate, dt)
+	if _is_general(): return GeneralEventStep.advance(candidate, dt, _model)
 	return EventStep.advance(candidate, dt, _model)
 
 func prepare_successor(previous: Dictionary, successor: Dictionary, authority: Dictionary, kind: String) -> Dictionary:
@@ -125,6 +126,7 @@ func prepare_successor(previous: Dictionary, successor: Dictionary, authority: D
 		if not _pending.is_empty(): return U.failure("R3_PENDING_FAILURE")
 		for key in ["electrical", "electrical_matter", "mechanical_matter"]:
 			if previous[key] != successor[key]: return U.failure("R3_UNRELATED_SUCCESSOR_CHANGE")
+		if _is_general() and float(previous.mechanical.compiled_facets.composition_r3.source_voltage_v) != float(successor.mechanical.compiled_facets.composition_r3.source_voltage_v): return U.failure("R3_GENERAL_SOURCE_VOLTAGE_REQUIRES_BOUNDARY_MUTATION")
 		var before: Dictionary = previous.mechanical.duplicate(true)
 		var after: Dictionary = successor.mechanical.duplicate(true)
 		for field in ["source_voltage_v", "external_force_n"]: after.compiled_facets.composition_r3[field] = before.compiled_facets.composition_r3[field]
@@ -206,11 +208,8 @@ func _values() -> Dictionary:
 	for name in _system.states: values[name] = _system.states[name].value
 	return values
 
-func _value(name: String) -> float:
-	return float(_system.states[name].value)
-
-func _is_general() -> bool:
-	return _model.get("solver_kind") == G.SOLVER_KIND
+func _value(name: String) -> float: return float(_system.states[name].value)
+func _is_general() -> bool: return _model.get("solver_kind") == G.SOLVER_KIND
 
 static func _only_revision_changed(before: Dictionary, after: Dictionary) -> Dictionary:
 	if int(after.state_revision) != int(before.state_revision) + 1: return U.failure("R3_SUCCESSOR_REVISION")

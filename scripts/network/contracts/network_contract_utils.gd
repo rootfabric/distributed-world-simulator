@@ -1,9 +1,10 @@
 extends RefCounted
 
 const MAX_SAFE_JSON_INTEGER: int = 9007199254740991
+const MAX_FLOAT_TRANSPORT_ROUNDS: int = 8
 
 
-static func canonicalize(value, path: String = "$") -> Dictionary:
+static func canonicalize(value, path: String = "$" ) -> Dictionary:
 	match typeof(value):
 		TYPE_NIL, TYPE_BOOL, TYPE_STRING:
 			return {"success": true, "value": value, "error": ""}
@@ -20,7 +21,7 @@ static func canonicalize(value, path: String = "$") -> Dictionary:
 				if absf(number) > float(MAX_SAFE_JSON_INTEGER):
 					return _failure(path, "Integer-valued number exceeds the safe JSON range")
 				return {"success": true, "value": int(number), "error": ""}
-			return {"success": true, "value": number, "error": ""}
+			return _transport_stable_float(number, path)
 		TYPE_ARRAY:
 			var output: Array = []
 			for index in range(value.size()):
@@ -42,6 +43,32 @@ static func canonicalize(value, path: String = "$") -> Dictionary:
 			return {"success": true, "value": output, "error": ""}
 		_:
 			return _failure(path, "Godot runtime value is forbidden in network DTO: %s" % type_string(typeof(value)))
+
+
+# Godot JSON transport is the persistence boundary. Some finite double values do
+# not preserve their exact binary value after stringify/parse even with full
+# precision enabled. Canonicalization therefore moves every fractional float to
+# the transport fixed point before hashing. This is value-agnostic, bounded and
+# fail-closed: no case-specific decimal rounding or checksum repair is allowed.
+static func _transport_stable_float(number: float, path: String) -> Dictionary:
+	var current: float = number
+	for _round in range(MAX_FLOAT_TRANSPORT_ROUNDS):
+		var encoded: String = JSON.stringify(current, "", true, true)
+		var decoded = JSON.parse_string(encoded)
+		if typeof(decoded) not in [TYPE_INT, TYPE_FLOAT]:
+			return _failure(path, "Finite floating-point value is not JSON transportable")
+		var next: float = float(decoded)
+		if is_nan(next) or is_inf(next):
+			return _failure(path, "JSON transport produced a non-finite floating-point value")
+		var reencoded: String = JSON.stringify(next, "", true, true)
+		if reencoded == encoded:
+			if next == floor(next):
+				if absf(next) > float(MAX_SAFE_JSON_INTEGER):
+					return _failure(path, "Transport-normalized integer exceeds the safe JSON range")
+				return {"success": true, "value": int(next), "error": ""}
+			return {"success": true, "value": next, "error": ""}
+		current = next
+	return _failure(path, "Floating-point JSON transport did not converge")
 
 
 static func canonical_json(value) -> String:
