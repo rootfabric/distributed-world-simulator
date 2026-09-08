@@ -194,12 +194,11 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if paid_prefix_ticks > 0:
 		survival_paid_ticks = int((paid_prefix_ticks + starvation_limit - 1) / starvation_limit)
 	var required_paid_ticks: int = maxi(event_count, maxi(survival_paid_ticks, int(v.development.grant_seq)))
+	var guaranteed_root_payment_ticks: int = required_paid_ticks
 	var guaranteed_module_payment_ticks: int = required_paid_ticks
-	if event_count > 0 and reproduction.required_reproductive_modules > 0:
-		# Reproduction proves the inherited reproductive module threshold existed by the first event.
-		# Because A2 does not remove modules, every provably paid tick after that event must pay those
-		# modules in addition to the always-present root. Use the latest possible first event so this
-		# remains a conservative lower bound even when reproduction was delayed.
+	if event_count > 0:
+		# Reproduction proves at least one paid event tick. Count additional paid ticks that are
+		# provably after the first event separately so max()-combination cannot erase their root cost.
 		var latest_first_reproduction_tick: int = last_reproduction_tick - (event_count - 1) * interval_ticks
 		var suffix_ticks: int = maxi(0, v.age_ticks - latest_first_reproduction_tick)
 		var suffix_nonstarved_ticks: int = maxi(0, suffix_ticks - v.starvation_ticks)
@@ -207,9 +206,18 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 		if suffix_nonstarved_ticks > 0:
 			suffix_survival_paid_ticks = int((suffix_nonstarved_ticks + starvation_limit - 1) / starvation_limit)
 		var suffix_development_paid_ticks: int = maxi(0, int(v.development.grant_seq) - latest_first_reproduction_tick)
-		var suffix_reproduction_paid_ticks: int = maxi(0, event_count - 1)
-		var post_reproduction_paid_ticks: int = maxi(suffix_reproduction_paid_ticks, maxi(suffix_survival_paid_ticks, suffix_development_paid_ticks))
-		guaranteed_module_payment_ticks += post_reproduction_paid_ticks * int(reproduction.required_reproductive_modules)
+		var suffix_reproduction_or_terminal_paid_ticks: int = maxi(0, event_count - 1)
+		if paid_prefix_ticks > last_reproduction_tick:
+			# The last paid tick implied by the current starvation suffix lies after every reproduction
+			# event and is therefore an additional distinct paid tick.
+			suffix_reproduction_or_terminal_paid_ticks += 1
+		var post_reproduction_paid_ticks: int = maxi(suffix_reproduction_or_terminal_paid_ticks, maxi(suffix_survival_paid_ticks, suffix_development_paid_ticks))
+		guaranteed_root_payment_ticks = maxi(required_paid_ticks, 1 + post_reproduction_paid_ticks)
+		guaranteed_module_payment_ticks = guaranteed_root_payment_ticks
+		if reproduction.required_reproductive_modules > 0:
+			# The first reproduction may create the qualifying module during same-tick growth, after
+			# maintenance. Every provably paid later tick must pay those persistent modules.
+			guaranteed_module_payment_ticks += post_reproduction_paid_ticks * int(reproduction.required_reproductive_modules)
 	var metabolism: Dictionary = blueprint.life_history.metabolism
 	var minimum_maintenance_water: int = guaranteed_module_payment_ticks * int(metabolism.maintenance_water_per_module_mg)
 	var minimum_maintenance_energy: int = guaranteed_module_payment_ticks * int(metabolism.maintenance_energy_per_module_mj)
