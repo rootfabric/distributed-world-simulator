@@ -13,7 +13,6 @@ const MAX_LOCK_ATTEMPTS := 1000
 const MAX_LOCK_RELEASE_ATTEMPTS := 200
 const RETRY_DELAY_MS := 5
 const LOCK_STALE_AFTER_MS := 30000
-const LOCK_UNKNOWN_LIVENESS_STALE_AFTER_MS := 120000
 const PENDING_STALE_AFTER_SECONDS := 30
 
 var _root_path := ""
@@ -275,9 +274,12 @@ func _repair_active_from_previous_locked() -> Dictionary:
 
 
 func _acquire_lock() -> Dictionary:
-	var token: String = "%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	# CSPRNG identity prevents ABA across PID reuse and process restarts.
+	var entropy: PackedByteArray = Crypto.new().generate_random_bytes(32)
+	if entropy.size() != 32:
+		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_CANDIDATE_CREATE_FAILED")
+	var token: String = entropy.hex_encode()
 	var candidate: String = _root_path.path_join(".matter-cross-region-transactions.lock.%s.candidate" % token)
-	_remove_directory(candidate)
 	if DirAccess.make_dir_absolute(candidate) != OK:
 		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_CANDIDATE_CREATE_FAILED")
 	var owner: Dictionary = {
@@ -285,7 +287,7 @@ func _acquire_lock() -> Dictionary:
 		"token": token,
 		"created_unix_ms": int(Time.get_unix_time_from_system() * 1000.0),
 	}
-	var owner_file := FileAccess.open(candidate.path_join(LOCK_OWNER_FILE_NAME), FileAccess.WRITE)
+	var owner_file := FileAccess.open(candidate.path_join(_lock_owner_file_name(token)), FileAccess.WRITE)
 	if owner_file == null:
 		_remove_directory(candidate)
 		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_OWNER_WRITE_FAILED")
@@ -307,56 +309,44 @@ func _acquire_lock() -> Dictionary:
 
 func _release_lock(token: String) -> Dictionary:
 	var owner: Dictionary = _read_lock_owner()
-	if int(owner.get("pid", -1)) != OS.get_process_id() or String(owner.get("token", "")) != token:
+	var file_name: String = _lock_owner_file_name(token)
+	if file_name.is_empty() or int(owner.get("pid", -1)) != OS.get_process_id() \
+		or String(owner.get("token", "")) != token \
+		or String(owner.get("_owner_file_name", "")) != file_name:
 		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_OWNERSHIP_MISMATCH", {
-			"expected_pid": OS.get_process_id(),
-			"expected_token": token,
+			"expected_pid": OS.get_process_id(), "expected_token": token,
 			"observed_owner": owner,
 		})
-	# Release remains a single namespace operation. A platform can transiently
-	# reject a directory rename right after owner.json is closed (for example
-	# while an indexer or scanner still observes the directory). Retry the same
-	# atomic rename without ever removing owner.json in place, so no ownerless
-	# canonical-lock window exists and a committed winner is never reported
-	# lost after its checkpoint became durable.
-	var released_path: String = _root_path.path_join(
-		".matter-cross-region-transactions.lock.%s.released" % token
-	)
-	_remove_directory(released_path)
+	# The token-addressed file, not the reusable directory name, is the lock.
+	# After its atomic removal the critical section is over. rmdir is only
+	# cleanup: it cannot remove a successor's populated lock directory.
+	var source_path: String = _lock_path.path_join(file_name)
+	var released_path: String = _root_path.path_join("%s.%s.released" % [LOCK_DIRECTORY_NAME, token])
 	var started_msec: int = Time.get_ticks_msec()
 	var last_error: int = OK
 	for attempt in range(MAX_LOCK_RELEASE_ATTEMPTS):
-		last_error = _rename_lock_for_release(_lock_path, released_path)
-		if last_error == OK:
-			var cleaned: bool = _remove_directory(released_path)
+		last_error = _rename_lock_for_release(source_path, released_path)
+		var moved: bool = last_error == OK
+		if not moved:
+			# An error reported after a successful move must not cause another
+			# attempt against a newer owner. Inspect only our unique receipt.
+			var released_owner: Dictionary = _read_lock_owner_file(released_path)
+			moved = not FileAccess.file_exists(source_path) \
+				and int(released_owner.get("pid", -1)) == OS.get_process_id() \
+				and String(released_owner.get("token", "")) == token
+		if moved:
+			DirAccess.remove_absolute(_lock_path)
+			var cleaned: bool = _remove_file(released_path)
 			return MatterUtils.success({
-				"released_atomically": true,
-				"attempts": attempt + 1,
+				"released_atomically": true, "attempts": attempt + 1,
+				"reported_rename_error": last_error,
 				"waited_ms": Time.get_ticks_msec() - started_msec,
 				"cleanup_deferred": not cleaned,
 				"cleanup_path": released_path if not cleaned else "",
 			})
-		# If the platform reported an error after moving the directory, accept
-		# only the token-bound released path. This preserves ownership and
-		# avoids touching any newer canonical lock.
-		if not DirAccess.dir_exists_absolute(_lock_path) \
-			and DirAccess.dir_exists_absolute(released_path):
-			var released_owner: Dictionary = _read_lock_owner_at(released_path)
-			if int(released_owner.get("pid", -1)) == OS.get_process_id() \
-				and String(released_owner.get("token", "")) == token:
-				var cleaned_after_reported_error: bool = _remove_directory(released_path)
-				return MatterUtils.success({
-					"released_atomically": true,
-					"reported_rename_error": last_error,
-					"attempts": attempt + 1,
-					"waited_ms": Time.get_ticks_msec() - started_msec,
-					"cleanup_deferred": not cleaned_after_reported_error,
-					"cleanup_path": released_path if not cleaned_after_reported_error else "",
-				})
 		OS.delay_msec(RETRY_DELAY_MS)
 	return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_RELEASE_FAILED", {
-		"godot_error": last_error,
-		"attempts": MAX_LOCK_RELEASE_ATTEMPTS,
+		"godot_error": last_error, "attempts": MAX_LOCK_RELEASE_ATTEMPTS,
 		"waited_ms": Time.get_ticks_msec() - started_msec,
 		"observed_owner": _read_lock_owner(),
 	})
@@ -365,6 +355,10 @@ func _release_lock(token: String) -> Dictionary:
 func _wait_for_unlock() -> Dictionary:
 	for _attempt in range(MAX_LOCK_ATTEMPTS):
 		if not DirAccess.dir_exists_absolute(_lock_path):
+			return MatterUtils.success()
+		# A process may stop after removing its marker but before rmdir.
+		# Empty-only cleanup is safe against a concurrent populated successor.
+		if DirAccess.remove_absolute(_lock_path) == OK:
 			return MatterUtils.success()
 		_remove_stale_lock()
 		if not DirAccess.dir_exists_absolute(_lock_path):
@@ -379,52 +373,37 @@ func _remove_stale_lock() -> bool:
 	var owner: Dictionary = _read_lock_owner()
 	if not _lock_is_stale(owner):
 		return false
-	var observed_token: String = String(owner.get("token", ""))
-	var observed_pid: int = int(owner.get("pid", -1))
-	var quarantine_path: String = _root_path.path_join(
-		".matter-cross-region-transactions.lock.%d-%d.stale" % [OS.get_process_id(), Time.get_ticks_usec()]
-	)
-	_remove_directory(quarantine_path)
-	if DirAccess.rename_absolute(_lock_path, quarantine_path) != OK:
+	if owner.is_empty():
+		# Empty/malformed reads never authorize removal of any file. Atomic
+		# rmdir refuses a nonempty directory, including a newly acquired one.
+		return DirAccess.remove_absolute(_lock_path) == OK
+	var file_name: String = String(owner.get("_owner_file_name", ""))
+	if file_name.is_empty():
 		return false
-	var quarantined_owner: Dictionary = _read_lock_owner_at(quarantine_path)
-	if not observed_token.is_empty() and (
-		String(quarantined_owner.get("token", "")) != observed_token
-		or int(quarantined_owner.get("pid", -1)) != observed_pid
-	):
-		# The lock changed between observation and quarantine. Restore it while
-		# the canonical path is still free instead of deleting a newer owner's
-		# lock.
-		if not DirAccess.dir_exists_absolute(_lock_path):
-			DirAccess.rename_absolute(quarantine_path, _lock_path)
+	# A delayed reclaimer of A can address only A's unique marker. Unlike
+	# quarantine-renaming the directory, this cannot move or delete B's lock.
+	# Legacy owner.json is read-only migration support; old and new writers
+	# must never share a repository during a rolling upgrade.
+	if DirAccess.remove_absolute(_lock_path.path_join(file_name)) != OK:
 		return false
-	_remove_directory(quarantine_path)
+	DirAccess.remove_absolute(_lock_path)
 	return true
 
 
 func _lock_is_stale(owner: Dictionary) -> bool:
+	if owner.is_empty():
+		var modified_ms: int = int(FileAccess.get_modified_time(_lock_path)) * 1000
+		return modified_ms > 0 \
+			and int(Time.get_unix_time_from_system() * 1000.0) - modified_ms >= LOCK_STALE_AFTER_MS
 	var pid: int = int(owner.get("pid", -1))
 	var token: String = String(owner.get("token", ""))
-	var created_unix_ms: int = int(owner.get("created_unix_ms", 0))
-	if pid == OS.get_process_id() and not token.is_empty():
+	var created_ms: int = int(owner.get("created_unix_ms", 0))
+	if pid <= 0 or token.is_empty() or created_ms <= 0 or pid == OS.get_process_id():
 		return false
-	var now_unix_ms: int = int(Time.get_unix_time_from_system() * 1000.0)
-	if pid <= 0 or token.is_empty() or created_unix_ms <= 0:
-		# A normal release no longer removes owner.json in place. If an older
-		# implementation or an interrupted write leaves an ownerless directory,
-		# use the directory mtime as a grace fence instead of deleting
-		# immediately.
-		var directory_modified_ms: int = int(FileAccess.get_modified_time(_lock_path)) * 1000
-		return directory_modified_ms > 0 \
-			and now_unix_ms - directory_modified_ms >= LOCK_STALE_AFTER_MS
-	if now_unix_ms - created_unix_ms < LOCK_STALE_AFTER_MS:
+	if int(Time.get_unix_time_from_system() * 1000.0) - created_ms < LOCK_STALE_AFTER_MS:
 		return false
-	var liveness: String = _process_liveness(pid)
-	if liveness == "RUNNING":
-		return false
-	if liveness == "STOPPED":
-		return true
-	return now_unix_ms - created_unix_ms >= LOCK_UNKNOWN_LIVENESS_STALE_AFTER_MS
+	# Elapsed time is not evidence that an unobservable owner has stopped.
+	return _process_liveness(pid) == "STOPPED"
 
 
 func _process_liveness(pid: int) -> String:
@@ -469,15 +448,35 @@ func _read_lock_owner() -> Dictionary:
 
 
 func _read_lock_owner_at(directory_path: String) -> Dictionary:
-	var path: String = directory_path.path_join(LOCK_OWNER_FILE_NAME)
-	if not FileAccess.file_exists(path):
+	var directory := DirAccess.open(directory_path)
+	if directory == null:
 		return {}
+	directory.include_hidden = true
+	var files: PackedStringArray = directory.get_files()
+	if files.size() != 1 or not directory.get_directories().is_empty():
+		return {}
+	var file_name: String = files[0]
+	var owner: Dictionary = _read_lock_owner_file(directory_path.path_join(file_name))
+	if owner.is_empty():
+		return {}
+	if file_name != LOCK_OWNER_FILE_NAME \
+		and file_name != _lock_owner_file_name(String(owner.get("token", ""))):
+		return {}
+	owner["_owner_file_name"] = file_name
+	return owner
+
+
+func _read_lock_owner_file(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {}
-	var parsed = JSON.parse_string(file.get_as_text())
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
-	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+	return parsed if parsed is Dictionary else {}
+
+
+func _lock_owner_file_name(token: String) -> String:
+	return "owner-%s.json" % token if token.length() == 64 and token.is_valid_hex_number(false) else ""
 
 
 func _rename_lock_for_release(source_path: String, destination_path: String) -> int:
@@ -518,10 +517,19 @@ func _remove_file(path: String) -> bool:
 
 
 func _remove_directory(path: String) -> bool:
-	if not DirAccess.dir_exists_absolute(path):
-		return true
-	var owner_path: String = path.path_join(LOCK_OWNER_FILE_NAME)
-	_remove_file(owner_path)
+	# Only private, unpublished candidates may use file-removing cleanup.
+	if path == _lock_path or not path.ends_with(".candidate"):
+		return false
+	var directory := DirAccess.open(path)
+	if directory == null:
+		return not DirAccess.dir_exists_absolute(path)
+	directory.include_hidden = true
+	for file_name in directory.get_files():
+		var token: String = file_name.trim_prefix("owner-").trim_suffix(".json")
+		if file_name != _lock_owner_file_name(token):
+			return false
+		if not _remove_file(path.path_join(file_name)):
+			return false
 	return DirAccess.remove_absolute(path) == OK
 
 

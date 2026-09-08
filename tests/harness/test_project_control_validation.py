@@ -71,15 +71,66 @@ class ProjectControlValidationTests(unittest.TestCase):
         self.assertEqual(3, code, result)
         self.assertIn(expected, result["error"]["detail"])
 
+    def p7_fixture(self, accepted):
+        """Declare acceptance inside the disposable clone, never inherit it from main."""
+        prefix = "config/control/harness/acceptance"
+        for path in sorted((self.root / prefix).glob("*.json")):
+            record = json.loads(path.read_text(encoding="utf-8"))
+            if record.get("checkpoint") == "V0_P7_BOUNDED_TERRAIN_MUTATION":
+                self.git("rm", "--", path.relative_to(self.root).as_posix())
+        fixture = {
+            "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance.v1",
+            "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+            "status": "ACCEPTED" if accepted else "PENDING",
+            "decision": "TEST_ONLY_NOT_PROJECT_AUTHORITY",
+            "accepted_runtime_head": self.base,
+            "accepted_runtime_tree": self.git("rev-parse", f"{self.base}^{{tree}}"),
+            "accepted_product_lineage_head": self.base,
+            "accepted_at_utc": "2000-01-01T00:00:00Z",
+        }
+        path = f"{prefix}/TEST-ONLY-P7-ACCEPTANCE.v1.json"
+        return self.commit({path: fixture}, canonical=True)
+
     def test_valid_hold_routes_without_loading_obsolete_execution(self):
+        head = self.p7_fixture(False)
         with patch.object(cli, "build_state", side_effect=AssertionError("Obsolete execution must not load")):
             code, result = self.invoke()
+            close_code, closed = self.invoke("close-mission")
         self.assertEqual(0, code, result)
-        self.assertEqual(self.base, result["control_route"]["canonical_head"])
+        self.assertEqual(head, result["control_route"]["canonical_head"])
         self.assertFalse(result["runtime_authorized"])
         self.assertEqual("DIRECTOR", result["control_route"]["next_actor"])
+        self.assertFalse(result["control_route"]["mission_complete"])
+        self.assertEqual("RECONCILE_P7_DURABLE_CLOSURE", result["control_route"]["next_action"])
+        self.assertEqual(8, close_code, closed)
+        self.assertFalse(closed["control_route"]["mission_exit_allowed"])
+
+    def test_accepted_hold_closes_without_authorizing_mvp(self):
+        head = self.p7_fixture(True)
+        with patch.object(cli, "build_state", side_effect=AssertionError("Obsolete execution must not load")):
+            for mode in ("drive", "close-mission"):
+                with self.subTest(mode=mode):
+                    code, result = self.invoke(mode)
+                    self.assertEqual(0, code, result)
+                    route = result["control_route"]
+                    self.assertEqual(head, route["canonical_head"])
+                    self.assertTrue(route["mission_complete"])
+                    self.assertTrue(route["mission_exit_allowed"])
+                    self.assertEqual("ACTIVATE_MVP_FROM_ACCEPTED_P7", route["next_action"])
+                    self.assertFalse(route["runtime_authorized"])
+                    self.assertFalse(result["runtime_authorized"])
+
+    def test_uncommitted_acceptance_cannot_close_mission(self):
+        head = self.p7_fixture(False)
+        path = self.root / "config/control/harness/acceptance/TEST-ONLY-P7-ACCEPTANCE.v1.json"
+        record = json.loads(path.read_text(encoding="utf-8"))
+        record["status"] = "ACCEPTED"
+        path.write_text(json.dumps(record) + "\n", encoding="utf-8")
         code, result = self.invoke("close-mission")
         self.assertEqual(8, code, result)
+        self.assertEqual(head, result["control_route"]["canonical_head"])
+        self.assertFalse(result["control_route"]["mission_complete"])
+        self.assertFalse(result["runtime_authorized"])
 
     def test_all_held_modes_require_pinned_dependency(self):
         for mode in ("status", "plan", "resume", "drive", "close-mission"):
