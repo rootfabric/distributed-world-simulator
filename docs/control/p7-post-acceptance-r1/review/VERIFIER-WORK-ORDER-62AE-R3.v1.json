@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.p7_independent_evidence_verifier_work_order.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-VERIFIER-R3",
+  "role": "VERIFIER",
+  "implementation_pr": 585,
+  "subject_head": "62ae64d3651af81d726134b1f2c5b8661000998c",
+  "subject_tree": "b3653e480d42b71a2a2d61fac44086b05a9d73d0",
+  "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "risk_class": "CRITICAL",
+  "scope": "A fresh read-only evidence-verification context, separate from the Implementer and from the completed code Reviewer. This carrier adds documents only; it is not a new runtime subject or acceptance. Review trusted repository-owned CI evidence and its producer/collector code. Do not modify runtime, tests, workflows, registry, lease or acceptance; do not merge.",
+  "role_independence": {
+    "separate_from_code_review_comment": 5579683403,
+    "code_reviewed_subject": "62ae64d3651af81d726134b1f2c5b8661000998c",
+    "new_execution_required": true,
+    "physical_machine_rerun_required": false,
+    "policy": "docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md sections 4-5; inspect trusted exact-head machine evidence independently. Do not claim to have rerun commands that you did not execute."
+  },
+  "evidence_run": 34189730552,
+  "known_completed_artifacts_at_dispatch": [
+    {"kind": "p7", "id": 10041866597, "archive_sha256": "3c21a17ef85821e89e11a2a2de5153a9020d7bed8826dfed28500635f76a3b5b", "manifest_sha256": "ce4f8d1f650a68936c6e4aef826e81fef57a83fe1b4b8b2f8cdb4c9a1c84fabe", "indexed_files": 51},
+    {"kind": "control", "id": 10041791587, "archive_sha256": "496676242011a3e704eac083dd1cfca54fdbe2c17bb62b0f1b9137f3f0aa672d", "manifest_sha256": "9644278885979b07986b3dfb6504f4984f4d975f5705cda4793c3b80bfcda8fb0", "indexed_files": 27}
+  ],
+  "world_job": {"id": 101945144873, "last_observed_state": "IN_PROGRESS", "success_not_inferred": true},
+  "required_predicates": [
+    "EXACT_CLEAN_HEAD_TREE_AND_PINNED_ENGINE",
+    "ALL_REUSED_EVIDENCE_DIGEST_BOUND",
+    "BASELINE_ABA_SIX_EXACT_FAILURES",
+    "BASELINE_EMPTY_WRITER_FOUR_EXACT_FAILURES",
+    "ORIGINAL_MW9_FIXTURE_TWO_EXACT_FAILURES_PRESERVED",
+    "CANDIDATE_NATIVE_82_AND_MW9_208_PASS",
+    "MW9_MW10_PROCESS_SIBLINGS_PASS",
+    "FIXED_FIVE_EG1_THREE_EG4_PASS",
+    "WORLD_ALL_326_DISCOVERED_SCRIPTS_331_STAGES_PASS",
+    "P74_THREE_ORDERED_PHASES_AND_MAIN_SCENE_AGGREGATE",
+    "P7_ALL_29_LEAF_LOGS_2032_ASSERTIONS_ZERO_FAILURES",
+    "ALL_274_HARNESS_TESTS_PASS",
+    "STANDARD_DIRECTIONAL_PC0_NON_RED_WITH_ADVISORY_FINDINGS_PRESERVED",
+    "HISTORICAL_VERDICTS_ARE_NOT_CURRENT_REPAIR_ACCEPTANCE"
+  ],
+  "verdict_contract": {
+    "allowed": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+    "required_fields": ["role_context", "subject_head", "subject_tree", "verdict", "predicates_checked", "artifact_ids_and_digests_actually_inspected", "required_fixes", "evidence_gaps", "risks", "execution_boundaries"],
+    "generic_code_review_acknowledgement_is_not_full_verifier_result": true,
+    "incomplete_or_unavailable_world_evidence": "INSUFFICIENT_EVIDENCE",
+    "no_independent_verdict_no_new_acceptance": true
+  },
+  "integration_boundary": "Post-merge tree binding and canonical-main PC0 are Integrator follow-up gates. Existing historical P7 ACCEPTED and controller mission_complete do not accept this correction. The owner's current request is to close remarks and perform acceptance; it does not authorize fabrication of role results or weakening any predicate. MVP remains outside this mission.",
+  "executor_fallback_observations": [
+    "The existing GitHub Codex code-review executor completed a fresh review of 62ae64d.",
+    "A separate Copilot issue-verifier assignment was attempted and rejected HTTP422 because the agent is not an eligible assignee; no issue or verification result was created. This is not evidence of a completed independent role.",
+    "Use a fresh verification-focused execution through the working review channel; do not repeat an unavailable general-task executor indefinitely."
+  ]
+}
