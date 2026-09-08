@@ -134,15 +134,19 @@ func _resource_funded_reproduction() -> void:
 	var parent := R.individual(blueprint, "org.parent", [500, 0, 500], B.stock(1000))
 	var field := _field("research.a5.repro", 900000, 900, 0)
 	var emitted: Array = []
+	var paid_parent_states: Array = []
 	for _tick in 5:
 		var r := _step(field, [parent]); _check(r.success, "reproduction_step_success"); field = r.field; parent = r.population[0]
-		for p in r.propagules: emitted.append(p)
+		for p in r.propagules:
+			emitted.append(p)
+			paid_parent_states.append(parent.state.duplicate(true))
 	_check(parent.state.reproduction_count >= 1 and not emitted.is_empty(), "mature_funded_parent_reproduces")
 	var first: Dictionary = emitted[0]
-	_check(R.validate_propagule(first, blueprint).is_empty(), "propagule_contract_valid")
+	var paid_parent_state: Dictionary = paid_parent_states[0]
+	_check(R.validate_propagule(first, blueprint, paid_parent_state).is_empty(), "propagule_contract_valid")
 	var expected: Dictionary = policy.reproduction.endowment
 	_check(parent.state.resource_ledger.reproduction_transferred.material_mg >= expected.material_mg and parent.state.resource_ledger.reproduction_cost.energy_mj >= policy.reproduction.fee_energy_mj, "parent_pays_reproduction_before_emit")
-	var child := R.materialize_propagule(first, blueprint)
+	var child := R.materialize_propagule(first, blueprint, paid_parent_state)
 	_check(not child.is_empty() and child.state.origin_kind == "PARENT_TRANSFER", "propagule_materializes_child")
 	_check(child.state.metabolic_reserves == expected and child.state.resource_ledger.initial == expected, "child_endowment_exactly_parent_funded")
 	_check(child.state.development.received == B.stock(), "child_body_has_no_free_resources")
