@@ -78,11 +78,17 @@ class P7PostAcceptancePacketTests(unittest.TestCase):
             target.write_text("extends SceneTree\n")
         def step(name, kind="headless_script", target=""):
             return dict(name=name, kind=kind, target=target, passed=True, exit_code=0)
-        steps = [step("test_manifest_coverage", "static"), step("editor_import_parse", "editor")]
+        steps = [
+            step("test_manifest_coverage", "static", "3 tests; appended 0 discovered overlays"),
+            step("editor_import_parse", "editor", "res://"),
+        ]
         steps.append(step("test_matter_repository_lock_reclaim", target="res://" + scripts[0]))
         for phase in ("seed", "recover-deliver", "recover-replay"):
             steps.append(step("test_v0_p7_4_persistence_restart_composition[" + phase + "]", target="res://" + scripts[1]))
-        steps += [step("test_example", target="res://" + scripts[2]), step("main_scene_cli_all", "main_scene_cli")]
+        steps += [
+            step("test_example", target="res://" + scripts[2]),
+            step("main_scene_cli_all", "main_scene_cli", "playground:test.run all"),
+        ]
         value = dict(passed=True, declared_test_count=3, discovered_test_count=3, steps=steps)
         self.save(root, value)
         return root, value
@@ -95,6 +101,48 @@ class P7PostAcceptancePacketTests(unittest.TestCase):
     def test_complete_dynamic_coverage(self):
         root, value = self.fixture()
         self.assertEqual(value, VALIDATOR.world_summary(root))
+
+    def test_cross_kind_alias_cannot_replace_aggregate(self):
+        root, value = self.fixture()
+        attack = copy.deepcopy(value)
+        # This exact mutation passed the R3 contract: move the real ordinary test
+        # out of the headless Counter, then reuse its target in a fake final
+        # headless stage while retaining the required aggregate short name.
+        attack["steps"][-2]["kind"] = "editor"
+        attack["steps"][-1]["kind"] = "headless_script"
+        attack["steps"][-1]["target"] = "res://tests/core/test_example.gd"
+        self.save(root, attack)
+        with self.assertRaisesRegex(RuntimeError, "WORLD_AGGREGATE_STAGE_CONTRACT_INVALID"):
+            VALIDATOR.world_summary(root)
+
+    def test_special_stage_roles_fail_closed(self):
+        root, value = self.fixture()
+        cases = []
+        manifest = copy.deepcopy(value)
+        manifest["steps"][0]["target"] = "3 tests"
+        cases.append(manifest)
+        editor = copy.deepcopy(value)
+        editor["steps"][1]["target"] = "res://wrong"
+        cases.append(editor)
+        aggregate = copy.deepcopy(value)
+        aggregate["steps"][-1]["kind"] = "headless_script"
+        cases.append(aggregate)
+        middle_kind = copy.deepcopy(value)
+        middle_kind["steps"][-2]["kind"] = "editor"
+        cases.append(middle_kind)
+        for index, case in enumerate(cases):
+            with self.subTest(case=index):
+                self.save(root, case)
+                with self.assertRaises(RuntimeError):
+                    VALIDATOR.world_summary(root)
+
+    def test_headless_name_must_match_target(self):
+        root, value = self.fixture()
+        mismatch = copy.deepcopy(value)
+        mismatch["steps"][-2]["name"] = "different_unique_name"
+        self.save(root, mismatch)
+        with self.assertRaisesRegex(RuntimeError, "WORLD_HEADLESS_NAME_TARGET_MISMATCH"):
+            VALIDATOR.world_summary(root)
 
     def test_missing_duplicate_and_reordered_stages_fail_closed(self):
         root, value = self.fixture()
