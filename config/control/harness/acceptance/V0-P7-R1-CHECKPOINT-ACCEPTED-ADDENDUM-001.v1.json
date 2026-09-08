@@ -4,7 +4,8 @@
   "references_acceptance_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-001",
   "program": "V0",
   "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "recorded_at_utc": "2026-09-08T12:11:08Z",
+  "recorded_at_utc": "2026-09-08T12:22:58Z",
+  "post_merge_evidence_completed_at_utc": "2026-09-08T12:11:08Z",
   "addendum_type": "POST_ACCEPTANCE_CORRECTION_CLOSURE_AND_HARDENING",
   "acceptance_stance": {
     "decision": "ACCEPTANCE_STANDS_WITH_POST_ACCEPTANCE_CORRECTION_INTEGRATED",
