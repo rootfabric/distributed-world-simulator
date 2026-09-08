@@ -21,15 +21,15 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 7825822d34b154602040174cdd76d1e0409b3881
+          ref: 3f390bdebbfae8a6f3e8397939badaf7ae59eb15
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact source identity and additive A5 fence
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7825822d34b154602040174cdd76d1e0409b3881"
-          test "$(git rev-parse HEAD^{tree})" = "e3ffa300a2ce145beb39cc4ba7dc5ab16a8a1937"
+          test "$(git rev-parse HEAD)" = "3f390bdebbfae8a6f3e8397939badaf7ae59eb15"
+          test "$(git rev-parse HEAD^{tree})" = "812c3af3b673859de2ac5acebf1f916b6078ab2f"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code 4b0f772ff39592262b853f7293bbd5403558b145..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -109,6 +109,21 @@ jobs:
           cmp a5-repairs-1.log a5-repairs-2.log
           sha256sum a5-repairs-1.log a5-repairs-2.log
 
+      - name: Run RM-A5-11 growth headroom boundary twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_11_growth_headroom.gd 2>&1 | tee "a5-rm11-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
+            grep -F "EVO_ARCH2_A5_RM11 assertions=9 failed=0" "a5-rm11-$n.log"
+            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm11-$n.log"
+          done
+          cmp a5-rm11-1.log a5-rm11-2.log
+          sha256sum a5-rm11-1.log a5-rm11-2.log
+
       - name: Run accepted A4 regression
         env:
           GODOT: ${{ steps.godot.outputs.path }}
@@ -157,7 +172,7 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7825822d34b154602040174cdd76d1e0409b3881"
-          test "$(git rev-parse HEAD^{tree})" = "e3ffa300a2ce145beb39cc4ba7dc5ab16a8a1937"
+          test "$(git rev-parse HEAD)" = "3f390bdebbfae8a6f3e8397939badaf7ae59eb15"
+          test "$(git rev-parse HEAD^{tree})" = "812c3af3b673859de2ac5acebf1f916b6078ab2f"
           test -z "$(git status --porcelain --untracked-files=no)"
           echo "VERDICT=PASS"
