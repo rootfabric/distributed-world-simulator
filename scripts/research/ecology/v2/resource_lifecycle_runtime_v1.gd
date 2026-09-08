@@ -89,40 +89,11 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
 
 static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> Dictionary:
-	if not validate_propagule(propagule, blueprint, paid_parent_state).is_empty(): return {}
-	var state := LS.create(blueprint, propagule.id, propagule.position_mm, propagule.endowment, "PARENT_TRANSFER")
+	var state := LS.create_parent_transfer(blueprint, propagule, paid_parent_state)
 	return {"blueprint": blueprint.duplicate(true), "state": state} if not state.is_empty() else {}
 
 static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> String:
-	if not BP.validate(blueprint).is_empty(): return "PROPAGULE_BLUEPRINT"
-	var keys := ["schema", "id", "parent_id", "sequence", "blueprint_hash", "birth_tick", "position_mm", "endowment", "parent_state_hash"]
-	if not C.keys(v, keys) or v.schema != PROPAGULE_SCHEMA: return "PROPAGULE_SCHEMA"
-	if not C.identifier(v.parent_id) or not C.integer(v.sequence, 0, LS.MAX_OFFSPRING_COUNTER - 1): return "PROPAGULE_IDENTITY"
-	if not C.identifier(v.id) or v.id != _propagule_id(v.parent_id, v.sequence) or v.blueprint_hash != BP.biological_hash(blueprint): return "PROPAGULE_IDENTITY"
-	if not C.integer(v.birth_tick, 1, LS.MAX_AGE_TICK) or not C.vector(v.position_mm, F.MAX_PORT_COORD_MM): return "PROPAGULE_POSITION"
-	if not B.valid_stock(v.endowment) or not F.valid_hash(v.parent_state_hash): return "PROPAGULE_RESOURCE"
-	if v.endowment != blueprint.life_history.reproduction.endowment: return "PROPAGULE_ENDOWMENT"
-	if paid_parent_state.is_empty(): return "PROPAGULE_PARENT_STATE_REQUIRED"
-	var parent_validation := LS.validate(paid_parent_state, blueprint)
-	if not parent_validation.is_empty(): return "PROPAGULE_PARENT_STATE"
-	if paid_parent_state.individual_id != v.parent_id: return "PROPAGULE_PARENT_ID"
-	var paid_parent_hash := LS.state_hash(paid_parent_state, blueprint)
-	if paid_parent_hash.is_empty() or paid_parent_hash != v.parent_state_hash: return "PROPAGULE_PARENT_HASH"
-	var reproduction: Dictionary = blueprint.life_history.reproduction
-	var event_size: int = reproduction.offspring_per_event
-	if paid_parent_state.reproduction_count < event_size: return "PROPAGULE_PARENT_SEQUENCE"
-	var first_sequence: int = paid_parent_state.reproduction_count - event_size
-	if v.sequence < first_sequence or v.sequence >= paid_parent_state.reproduction_count: return "PROPAGULE_PARENT_SEQUENCE"
-	var last_reproduction_tick: int = paid_parent_state.next_reproduction_tick - reproduction.interval_ticks
-	if v.birth_tick != paid_parent_state.age_ticks or v.birth_tick != last_reproduction_tick: return "PROPAGULE_PARENT_BIRTH"
-	if v.position_mm != paid_parent_state.position_mm: return "PROPAGULE_PARENT_POSITION"
-	var reproduced_event := false
-	for event in paid_parent_state.last_events:
-		if event.outcome == "REPRODUCED":
-			reproduced_event = true
-			break
-	if not reproduced_event: return "PROPAGULE_PARENT_EVENT"
-	return ""
+	return LS.validate_parent_transfer_witness(v, blueprint, paid_parent_state)
 
 static func _advance_individual(source: Dictionary, blueprint: Dictionary, sample: Dictionary, field_intake: Dictionary) -> Dictionary:
 	var state := source.duplicate(true)
@@ -248,7 +219,7 @@ static func _demand_request_id(individual_id: String, age_tick: int, resource: S
 	return "life/%s/%06d/%s" % [individual_id.sha256_text(), age_tick, resource]
 
 static func _propagule_id(parent_id: String, sequence: int) -> String:
-	return "seed/%s/%06d" % [parent_id.sha256_text(), sequence]
+	return LS.propagule_id(parent_id, sequence)
 
 static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, granted_water_mg: int, policy: Dictionary, energy_headroom: int = B.MAX_STOCK) -> int:
 	var area := int(phenotype.statistics.get("collector_area_mm2", 0))
