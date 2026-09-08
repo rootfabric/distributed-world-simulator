@@ -147,7 +147,7 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 	var grant := B.stock()
 	if maintenance_paid and activation > 0:
 		if state.development.frame.is_empty():
-			grant = _growth_grant(state.metabolic_reserves, policy, activation)
+			grant = _growth_grant(state.metabolic_reserves, policy, activation, state.development)
 			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "activation_permille=%d" % activation})
 		else:
 			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "resume paid open frame; activation_permille=%d" % activation})
@@ -237,11 +237,16 @@ static func _growth_activation(sample: Dictionary, policy: Dictionary) -> int:
 	var cf := 1000 if r.growth_competition_max <= 0 else int((r.growth_competition_max - competition) * 1000 / maxi(1, r.growth_competition_max))
 	return clampi(mini(lf, mini(wf, cf)), 0, 1000)
 
-static func _growth_grant(reserves: Dictionary, policy: Dictionary, activation: int) -> Dictionary:
+static func _growth_grant(reserves: Dictionary, policy: Dictionary, activation: int, development: Dictionary = {}) -> Dictionary:
 	var out := B.stock()
 	for resource in B.RESOURCES:
 		var fraction := int(reserves[resource] * policy.growth.transfer_permille * activation / 1000000)
-		out[resource] = mini(fraction, policy.growth.max_transfer[resource])
+		var requested := mini(fraction, policy.growth.max_transfer[resource])
+		if development.is_empty():
+			out[resource] = requested
+		else:
+			var headroom := maxi(0, B.MAX_STOCK - int(development.received[resource]))
+			out[resource] = mini(requested, headroom)
 	return out
 
 static func _advance_development(source: Dictionary, genome: Dictionary, sample: Dictionary, grant: Dictionary) -> Dictionary:
