@@ -117,3 +117,4 @@ func _development_history_strengthens_maintenance_bound() -> void:
 	tampered.metabolic_reserves.energy_mj += refund_energy
 	_check(LS.validate(tampered, blueprint) == "LIFE_REPRODUCTION_MAINTENANCE", "development_proven_maintenance_refund_rejected")
 	_check(LS.serialize(tampered, blueprint).is_empty(), "development_bound_tamper_not_serializable")
+	_check(LS.deserialize(_encoded_state_file(blueprint, tampered)).is_empty(), "development_bound_deserialize_rejected")
