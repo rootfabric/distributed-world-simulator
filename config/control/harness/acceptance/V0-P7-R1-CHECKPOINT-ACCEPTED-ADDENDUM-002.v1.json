@@ -1,0 +1,108 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance_addendum.v1",
+  "addendum_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002",
+  "references_acceptance_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-001",
+  "references_prior_addendum_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "recorded_at_utc": "2026-09-08T14:40:00Z",
+  "addendum_type": "FORMAL_REVIEWER_VERDICT_PROVENANCE_REPAIR",
+  "reason": "Late reviews of the post-acceptance closure found two formal Reviewer handoff defects without finding a new runtime defect: ADDENDUM-001 relied on non-canonical reviewer wording PASS_NO_MAJOR_ISSUES, and the first literal-PASS R6 handoff omitted mandatory rank_up_moves and risk_assessment sections. This append-only addendum binds a contract-complete R7 formalization of the fresh independent R6 subject review. The original acceptance and ADDENDUM-001 remain immutable.",
+  "late_findings": [
+    {
+      "source_pr": 590,
+      "review_id": 5141680809,
+      "review_comment_id": 3957900842,
+      "severity": "P1",
+      "code": "FORMAL_REVIEWER_VERDICT_VOCABULARY_MISMATCH",
+      "finding": "PASS_NO_MAJOR_ISSUES was outside the canonical Reviewer verdict vocabulary PASS|FAIL|INSUFFICIENT_EVIDENCE.",
+      "status": "CLOSED_BY_FORMAL_R6_R7_CHAIN"
+    },
+    {
+      "source_pr": 593,
+      "review_id": 5143158492,
+      "review_comment_id": 3959084625,
+      "severity": "P1",
+      "code": "FORMAL_REVIEWER_REQUIRED_SECTIONS_MISSING",
+      "finding": "R6 omitted mandatory rank_up_moves and risk_assessment review-output sections.",
+      "status": "CLOSED_BY_CONTRACT_COMPLETE_R7"
+    }
+  ],
+  "immutable_predecessors": {
+    "original_acceptance": {
+      "path": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "blob_sha": "1c48eee68719b24b493f261d247975f1a5fa9558",
+      "rewritten": false
+    },
+    "addendum_001": {
+      "path": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-001.v1.json",
+      "blob_sha": "39eb6673525d2b7a6d57a2bf64a9f810001dedc3",
+      "rewritten": false
+    }
+  },
+  "fresh_independent_reviewer_source_r6": {
+    "path": "docs/control/p7-post-acceptance-r1/review/REVIEWER-RESULT-5A1D-R6.v1.json",
+    "source_branch": "control/v0-p7-post-acceptance-reviewer-r6",
+    "source_commit": "17626dc5224432be4a7aeac045767c6e62ca5e2d",
+    "blob_sha": "b0229fe93dd99464bd926a220960cc88d767e1cb",
+    "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "reviewed_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "evidence_gaps": []
+  },
+  "formal_reviewer_r7": {
+    "canonical_document": "docs/control/p7-post-acceptance-r1/review/REVIEWER-RESULT-5A1D-R7.v1.json",
+    "blob_sha": "62c759e5fd43ebac9b5dedf286094d4cc0a06ba2",
+    "result_kind": "CONTRACT_COMPLETE_FORMALIZATION_OF_FRESH_INDEPENDENT_R6_REVIEW",
+    "role": "REVIEWER",
+    "independent_context": true,
+    "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "reviewed_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "implementation_pr": 585,
+    "verdict": "PASS",
+    "required_fixes": [],
+    "rank_up_moves_present": true,
+    "evidence_gaps": [],
+    "risk_assessment_present": true,
+    "substantive_checks_changed_from_r6": false
+  },
+  "verified_correction_chain": {
+    "implementation_subject": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "implementation_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "implementation_merge": "87e74287b5682737a224515525f06a17af637098",
+    "merged_tree_equals_tested_tree": true,
+    "verifier_r5_path": "docs/control/p7-post-acceptance-r1/review/VERIFIER-RESULT-5A1D-R5.v1.json",
+    "verifier_r5_verdict": "PASS",
+    "world": "PASS 326/326 scripts, 331/331 stages",
+    "p7": "PASS 29/29 leaves, 2032 assertions, 0 failures",
+    "harness": "PASS 278 tests",
+    "post_merge_pc0": "YELLOW_NON_RED_ZERO_BLOCKING_RED",
+    "cross_branch_overlaps": 0
+  },
+  "closure_predicates": {
+    "FORMAL_REVIEWER_VERDICT_VOCABULARY_VALID": true,
+    "FORMAL_REVIEWER_REQUIRED_SECTIONS_PRESENT": true,
+    "INDEPENDENT_REVIEWER_PASS": true,
+    "INDEPENDENT_VERIFIER_PASS": true,
+    "FULL_WORLD_CORE_REGRESSION_PASS": true,
+    "P7_29_LEAF_EXACT_GATE_PASS": true,
+    "POST_MERGE_HARNESS_PASS": true,
+    "POST_MERGE_PC0_NON_RED": true,
+    "ORIGINAL_ACCEPTANCE_PRESERVED": true,
+    "ADDENDUM_001_PRESERVED": true
+  },
+  "current_main_at_recording_context": "a7ef2465efc98a167a78946d9e8b42572ba5a097",
+  "successor_constraint_reaffirmed": {
+    "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "next_action": "ACTIVATE_MVP_FROM_ACCEPTED_P7",
+    "runtime_mutation_authorized_by_this_addendum": false,
+    "mvp_activation_authorized": false
+  },
+  "correction_closure": {
+    "status": "ACCEPTED_CLOSED_FORMAL_REVIEWER_PROVENANCE_REPAIRED",
+    "mission_scope": "P7_POST_ACCEPTANCE_CORRECTION",
+    "remaining_known_blocking_findings": 0
+  }
+}
