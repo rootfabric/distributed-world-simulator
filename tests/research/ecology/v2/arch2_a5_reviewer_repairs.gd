@@ -62,10 +62,9 @@ func _step(field: Dictionary, population: Array) -> Dictionary:
 
 func _emitted_propagule(parent_id: String = "repair.propagule.parent") -> Dictionary:
 	var blueprint := BP.create(_reproductive_genome(), _zero_cost_reproduction_policy())
-	var parent := R.individual(blueprint, parent_id, [500,0,500], B.stock())
+	var parent := R.individual(blueprint, parent_id, [500,0,500], B.stock(30000))
 	if parent.is_empty(): return {}
-	parent.state.age_ticks = 1
-	var reproduced := R._reproduce(parent.state, blueprint, blueprint.life_history)
+	var reproduced := _step(_field("repair.propagule.rich", 900000, 900), [parent])
 	if not reproduced.success or reproduced.propagules.is_empty(): return {}
 	return {"blueprint": blueprint, "parent": parent, "result": reproduced, "propagule": reproduced.propagules[0]}
 
@@ -135,12 +134,11 @@ func _deferred_reproduction_schedule() -> void:
 	p.reproduction.endowment = B.stock()
 	p.reproduction.fee_energy_mj = 0
 	var blueprint := BP.create(_reproductive_genome(), p)
-	var entry := R.individual(blueprint, "repair.schedule", [500,0,500], B.stock())
+	var entry := R.individual(blueprint, "repair.schedule", [500,0,500], B.stock(30000))
 	_check(not entry.is_empty(), "max_interval_schedule_parent_valid")
-	entry.state.age_ticks = 1
-	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history)
-	_check(reproduced.success and reproduced.state.next_reproduction_tick == 1000001, "max_interval_absolute_schedule_preserved")
-	_check(LS.validate(reproduced.state, blueprint).is_empty(), "deferred_schedule_state_valid")
+	var reproduced := _step(_field("repair.schedule.rich", 900000, 900), [entry])
+	_check(reproduced.success and reproduced.population[0].state.next_reproduction_tick == 1000001, "max_interval_absolute_schedule_preserved")
+	_check(reproduced.success and LS.validate(reproduced.population[0].state, blueprint).is_empty(), "deferred_schedule_state_valid")
 
 func _offspring_counter_range() -> void:
 	var p := _policy()
@@ -150,15 +148,18 @@ func _offspring_counter_range() -> void:
 	p.reproduction.endowment = B.stock()
 	p.reproduction.fee_energy_mj = 0
 	var blueprint := BP.create(_reproductive_genome(), p)
-	var entry := R.individual(blueprint, "repair.counter", [500,0,500], B.stock())
-	entry.state.age_ticks = 250001
-	entry.state.reproduction_count = 1000000
-	entry.state.propagule_seq = 1000000
-	entry.state.next_reproduction_tick = 250001
-	_check(LS.validate(entry.state, blueprint).is_empty(), "million_offspring_boundary_state_valid")
-	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history)
+	var initial := R.individual(blueprint, "repair.counter", [500,0,500], B.stock(30000))
+	var prepared := _step(_field("repair.counter.rich", 900000, 900), [initial])
+	var entry: Dictionary = prepared.population[0] if prepared.success else {}
+	if not entry.is_empty():
+		entry.state.age_ticks = 250001
+		entry.state.reproduction_count = 1000000
+		entry.state.propagule_seq = 1000000
+		entry.state.next_reproduction_tick = 250001
+	_check(not entry.is_empty() and LS.validate(entry.state, blueprint).is_empty(), "million_offspring_boundary_state_valid")
+	var reproduced := R._reproduce(entry.state, blueprint, blueprint.life_history) if not entry.is_empty() else {"success": false}
 	_check(reproduced.success and reproduced.state.reproduction_count == 1000004 and reproduced.state.propagule_seq == 1000004, "four_offspring_cross_million_counter")
-	_check(LS.validate(reproduced.state, blueprint).is_empty(), "expanded_offspring_counter_state_valid")
+	_check(reproduced.success and LS.validate(reproduced.state, blueprint).is_empty(), "expanded_offspring_counter_state_valid")
 
 func _propagule_sequence_continuity() -> void:
 	var blueprint := BP.create(_reproductive_genome(), _policy())
