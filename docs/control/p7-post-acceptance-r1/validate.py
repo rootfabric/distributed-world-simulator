@@ -90,6 +90,14 @@ def source_guard(root: Path) -> None:
     git(root, "diff", "--check", BASE, "HEAD")
 
 
+def validate_world_step_identities(steps: list[dict]) -> None:
+    identities = [
+        (str(step.get("kind", "")), str(step.get("target", "")), str(step.get("name", "")))
+        for step in steps
+    ]
+    require(len(identities) == len(set(identities)), "WORLD_STEP_IDENTITY_COLLISION")
+
+
 def world_summary(root: Path) -> dict:
     summary = json.loads((root / "artifacts/test-results/world-regression-summary.json").read_text())
     discovered = {"res://" + p.relative_to(root).as_posix()
@@ -103,8 +111,9 @@ def world_summary(root: Path) -> dict:
     p74 = "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd"
     expected = Counter({path: 3 if path == p74 else 1 for path in discovered})
     require(counts == expected and "res://" + NATIVE in counts, "WORLD_TARGET_COVERAGE_MISMATCH")
+    validate_world_step_identities(steps)
+    require(len(steps) == len(discovered) + 5, "WORLD_STEP_COUNT_MISMATCH")
     names = [s["name"] for s in steps]
-    require(len(names) == len(set(names)) and len(steps) == len(discovered) + 5, "WORLD_STEP_COUNT_MISMATCH")
     phases = ["test_v0_p7_4_persistence_restart_composition[" + p + "]"
               for p in ("seed", "recover-deliver", "recover-replay")]
     indexes = [names.index(p) for p in phases]
