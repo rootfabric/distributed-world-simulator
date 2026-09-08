@@ -21,15 +21,15 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: 7d41c86a7b21cceaf66f09d4babeb0b98f86d808
+          ref: 1ed090f4a1c172a203e3b2d91a5d276031f3fed0
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact subject
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7d41c86a7b21cceaf66f09d4babeb0b98f86d808"
-          test "$(git rev-parse HEAD^{tree})" = "2b4b4c4203a01427c36f0b41103728e77b0695d5"
+          test "$(git rev-parse HEAD)" = "1ed090f4a1c172a203e3b2d91a5d276031f3fed0"
+          test "$(git rev-parse HEAD^{tree})" = "982823ec47d5a8ebf037533f57db85ee24e78b40"
           test -z "$(git status --porcelain --untracked-files=no)"
 
       - name: Resolve canonical double Godot
@@ -138,9 +138,9 @@ jobs:
       - name: Assert candidate stayed exact
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7d41c86a7b21cceaf66f09d4babeb0b98f86d808"
-          test "$(git rev-parse HEAD^{tree})" = "2b4b4c4203a01427c36f0b41103728e77b0695d5"
+          test "$(git rev-parse HEAD)" = "1ed090f4a1c172a203e3b2d91a5d276031f3fed0"
+          test "$(git rev-parse HEAD^{tree})" = "982823ec47d5a8ebf037533f57db85ee24e78b40"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=7d41c86a7b21cceaf66f09d4babeb0b98f86d808"
-          echo "SUBJECT_TREE=2b4b4c4203a01427c36f0b41103728e77b0695d5"
+          echo "SUBJECT_HEAD=1ed090f4a1c172a203e3b2d91a5d276031f3fed0"
+          echo "SUBJECT_TREE=982823ec47d5a8ebf037533f57db85ee24e78b40"
           echo "VERDICT=PASS"
