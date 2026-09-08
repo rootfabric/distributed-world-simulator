@@ -5,6 +5,7 @@ on:
     paths:
       - scripts/network/contracts/network_contract_utils.gd
       - scripts/research/fabric_bake0/fabric_composition_r3_*general*.gd
+      - scripts/research/fabric_bake0/fabric_composition_r3_compiler_v1.gd
       - scripts/research/fabric_bake0/fabric_composition_r3_runtime_v1.gd
       - tests/research/fabric1/fabric_holdout_r4_g2_*.gd
       - RUN_FABRIC_HOLDOUT_R4_G2_TESTS.sh

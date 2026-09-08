@@ -5,6 +5,7 @@ const Graph = preload("res://scripts/research/fabric_bake0/fabric_composition_r3
 const MAX_NODES := 32
 const COLLINEAR_TOL := 1.0e-10
 const COUPLER_FIELD := "coupler_node_id"
+const MIN_DAE_DIVISOR := 1.0e-15
 
 static func solve_mechanical_static(model: Dictionary, coupler_node_id: String) -> Dictionary:
 	var anchored := {}
@@ -50,7 +51,7 @@ static func compile_mechanics(model: Dictionary, controls: Dictionary) -> Dictio
 	var masses: Dictionary = {}
 	for node in model.nodes:
 		var node_id := str(node.node_id)
-		if node_id.is_empty() or nodes.has(node_id) or not U.is_positive_number(node.mass_kg): return U.failure("R3_MASS_INVALID")
+		if node_id.is_empty() or nodes.has(node_id) or not U.is_positive_number(node.mass_kg) or float(node.mass_kg) <= MIN_DAE_DIVISOR: return U.failure("R3_MASS_INVALID")
 		nodes[node_id] = node
 		if not bool(node.anchored):
 			mobile_nodes.append(node_id)
@@ -60,7 +61,6 @@ static func compile_mechanics(model: Dictionary, controls: Dictionary) -> Dictio
 	var coupler := str(controls.get(COUPLER_FIELD, ""))
 	if coupler.is_empty() and mobile_nodes.size() == 1: coupler = mobile_nodes[0]
 	if not mobile_nodes.has(coupler): return U.failure("R3_GENERAL_COUPLER_NODE_REQUIRED")
-	var axis := Vector3.ZERO
 	var row_k := {}
 	var row_c := {}
 	for node_id in mobile_nodes:
@@ -68,22 +68,38 @@ static func compile_mechanics(model: Dictionary, controls: Dictionary) -> Dictio
 		row_c[node_id] = 0.0
 	var elements: Array = model.elements.duplicate()
 	elements.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.element_id) < str(b.element_id))
+	var have_geometry := false
+	var minimum_position := Vector3.ZERO
+	var maximum_position := Vector3.ZERO
 	for element in elements:
 		if not U.is_positive_number(element.capacity_n) or float(element.capacity_n) < 1.0e-6: return U.failure("R3_CAPACITY_BELOW_EVENT_RESOLUTION")
 		if not element.active: continue
 		var a: String = str(element.node_a)
 		var b: String = str(element.node_b)
 		if not nodes.has(a) or not nodes.has(b): return U.failure("R3_GENERAL_MECHANICAL_ENDPOINT")
-		var delta := _vector(nodes[b].local_position_m) - _vector(nodes[a].local_position_m)
+		var position_a := _vector(nodes[a].local_position_m)
+		var position_b := _vector(nodes[b].local_position_m)
+		var delta := position_b - position_a
 		if delta.length() <= 1.0e-12: return U.failure("R3_GENERAL_MECHANICAL_ZERO_LENGTH")
-		var direction := delta.normalized()
-		if axis == Vector3.ZERO: axis = direction
-		if absf(direction.dot(axis)) < 1.0 - COLLINEAR_TOL: return U.failure("R3_GENERAL_COLLINEAR_AXIAL_REQUIRED")
+		for position in [position_a, position_b]:
+			if not have_geometry:
+				minimum_position = position
+				maximum_position = position
+				have_geometry = true
+			elif _position_less(position, minimum_position): minimum_position = position
+			elif _position_less(maximum_position, position): maximum_position = position
 		for node_id in [a, b]:
 			if row_k.has(node_id):
 				row_k[node_id] = float(row_k[node_id]) + float(element.stiffness_n_per_m)
 				row_c[node_id] = float(row_c[node_id]) + float(element.damping_ns_per_m)
-	if axis == Vector3.ZERO: return U.failure("R3_GENERAL_MECHANICAL_ELEMENT_SET")
+	if not have_geometry: return U.failure("R3_GENERAL_MECHANICAL_ELEMENT_SET")
+	var span := maximum_position - minimum_position
+	if span.length() <= 1.0e-12: return U.failure("R3_GENERAL_MECHANICAL_ZERO_LENGTH")
+	var axis := span.normalized()
+	for element in elements:
+		if not element.active: continue
+		var delta := _vector(nodes[str(element.node_b)].local_position_m) - _vector(nodes[str(element.node_a)].local_position_m)
+		if absf(delta.normalized().dot(axis)) < 1.0 - COLLINEAR_TOL: return U.failure("R3_GENERAL_COLLINEAR_AXIAL_REQUIRED")
 	var static_check := solve_mechanical_static(model, coupler)
 	if not static_check.success: return static_check
 	var mobile_index := {}
@@ -97,6 +113,11 @@ static func compile_mechanics(model: Dictionary, controls: Dictionary) -> Dictio
 		rate = maxf(rate, sqrt(maxf(0.0, float(row_k[node_id])) / mass) + float(row_c[node_id]) / mass)
 	if not is_finite(rate): return U.failure("R3_NUMERIC_ENVELOPE")
 	return U.success({"axis": [axis.x, axis.y, axis.z], "mobile_nodes": mobile_nodes, "mobile_index": mobile_index, "mobile_masses_kg": mobile_masses, "coupler_node_id": coupler, "rate_bound": rate})
+
+static func _position_less(a: Vector3, b: Vector3) -> bool:
+	if a.x != b.x: return a.x < b.x
+	if a.y != b.y: return a.y < b.y
+	return a.z < b.z
 
 static func _vector(position: Array) -> Vector3:
 	return Vector3(float(position[0]), float(position[1]), float(position[2]))

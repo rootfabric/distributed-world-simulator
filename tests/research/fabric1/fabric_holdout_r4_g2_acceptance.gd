@@ -119,6 +119,20 @@ func _general_mechanics() -> void:
 	weak.elements[1].damping_ns_per_m = 0.0000001
 	var weak_result := Mechanics.solve_mechanical_static(weak, "m_2")
 	_check(weak_result.success and is_finite(float(weak_result.details.pivot_condition_estimate)), "G2-B weak but well-posed mode accepted", weak_result)
+	var tiny_mass := model.duplicate(true)
+	tiny_mass.nodes[2].mass_kg = 1.0e-15
+	var tiny_result := Mechanics.compile_mechanics(tiny_mass, {"coupler_node_id": "m_2"})
+	_check(not tiny_result.success and tiny_result.error_code == "R3_MASS_INVALID", "G2-B DAE divisor floor fails closed", tiny_result)
+	var renamed_orientation := model.duplicate(true)
+	for i in range(renamed_orientation.elements.size()):
+		var edge: Dictionary = renamed_orientation.elements[i]
+		edge.element_id = "renamed_%02d" % (renamed_orientation.elements.size() - i)
+		if i % 2 == 0:
+			var endpoint = edge.node_a
+			edge.node_a = edge.node_b
+			edge.node_b = endpoint
+	var renamed_compiled := Mechanics.compile_mechanics(renamed_orientation, {"coupler_node_id": "m_2"})
+	_check(renamed_compiled.success and U.canonical_hash(renamed_compiled.details.axis) == U.canonical_hash(compiled.details.axis), "G2-B axial basis independent of element IDs/orientation", renamed_compiled)
 
 func _revealed_g1_open_regression() -> void:
 	var corpus = JSON.parse_string(FileAccess.get_file_as_string("res://config/research/fabric-holdout-r4-cases.json"))
