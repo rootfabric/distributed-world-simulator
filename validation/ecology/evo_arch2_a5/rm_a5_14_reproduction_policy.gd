@@ -152,7 +152,7 @@ func _propagule_sequence_continuity() -> void:
 	for propagule in reproduced.propagules:
 		sequences.append(propagule.sequence)
 		identities_valid = identities_valid and propagule.id == R._propagule_id(ready.individual_id, propagule.sequence)
-		identities_valid = identities_valid and R.validate_propagule(propagule, blueprint).is_empty()
+		identities_valid = identities_valid and R.validate_propagule(propagule, blueprint, reproduced.state).is_empty()
 	_check(sequences == [4, 5, 6, 7], "propagule_sequence_continues_from_persisted_counter")
 	_check(identities_valid, "canonical_seed_ids_follow_continued_sequence")
 	_check(LS.validate(reproduced.state, blueprint).is_empty(), "post_reproduction_policy_state_valid")
