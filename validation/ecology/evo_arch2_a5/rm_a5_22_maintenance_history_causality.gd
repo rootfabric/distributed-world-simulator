@@ -81,13 +81,13 @@ func _survival_history_requires_repeated_maintenance() -> void:
 	_check(state.age_ticks == 8 and state.starvation_ticks == 0 and state.reproduction_count == 1, "survival_history_has_one_reproduction")
 	_check(LS.validate(state, blueprint).is_empty(), "survival_history_valid")
 	var metabolism: Dictionary = blueprint.life_history.metabolism
-	var required_paid_ticks := int((state.age_ticks + blueprint.life_history.survival.starvation_limit_ticks - 1) / blueprint.life_history.survival.starvation_limit_ticks)
+	var required_paid_ticks: int = int((state.age_ticks + blueprint.life_history.survival.starvation_limit_ticks - 1) / blueprint.life_history.survival.starvation_limit_ticks)
 	_check(required_paid_ticks > state.reproduction_count, "survival_bound_stronger_than_event_count")
 	var tampered: Dictionary = state.duplicate(true)
-	var keep_water := state.reproduction_count * metabolism.maintenance_water_per_module_mg
-	var keep_energy := state.reproduction_count * metabolism.maintenance_energy_per_module_mj
-	var refund_water := tampered.resource_ledger.maintenance.water_mg - keep_water
-	var refund_energy := tampered.resource_ledger.maintenance.energy_mj - keep_energy
+	var keep_water: int = int(state.reproduction_count) * int(metabolism.maintenance_water_per_module_mg)
+	var keep_energy: int = int(state.reproduction_count) * int(metabolism.maintenance_energy_per_module_mj)
+	var refund_water: int = int(tampered.resource_ledger.maintenance.water_mg) - keep_water
+	var refund_energy: int = int(tampered.resource_ledger.maintenance.energy_mj) - keep_energy
 	tampered.resource_ledger.maintenance.water_mg = keep_water
 	tampered.resource_ledger.maintenance.energy_mj = keep_energy
 	tampered.metabolic_reserves.water_mg += refund_water
@@ -107,10 +107,10 @@ func _development_history_strengthens_maintenance_bound() -> void:
 	_check(LS.validate(state, blueprint).is_empty(), "development_history_valid")
 	var metabolism: Dictionary = blueprint.life_history.metabolism
 	var tampered: Dictionary = state.duplicate(true)
-	var keep_water := metabolism.maintenance_water_per_module_mg
-	var keep_energy := metabolism.maintenance_energy_per_module_mj
-	var refund_water := tampered.resource_ledger.maintenance.water_mg - keep_water
-	var refund_energy := tampered.resource_ledger.maintenance.energy_mj - keep_energy
+	var keep_water: int = int(metabolism.maintenance_water_per_module_mg)
+	var keep_energy: int = int(metabolism.maintenance_energy_per_module_mj)
+	var refund_water: int = int(tampered.resource_ledger.maintenance.water_mg) - keep_water
+	var refund_energy: int = int(tampered.resource_ledger.maintenance.energy_mj) - keep_energy
 	tampered.resource_ledger.maintenance.water_mg = keep_water
 	tampered.resource_ledger.maintenance.energy_mj = keep_energy
 	tampered.metabolic_reserves.water_mg += refund_water
