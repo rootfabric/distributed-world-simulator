@@ -21,7 +21,7 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 23499c2fb81bc52932ccfcba5811f919ca6ddc94
+          ref: 5af7fc68d91b4eeac01873925da5ad1af69e176e
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,8 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           base="4b0f772ff39592262b853f7293bbd5403558b145"
-          test "$(git rev-parse HEAD)" = "23499c2fb81bc52932ccfcba5811f919ca6ddc94"
-          test "$(git rev-parse HEAD^{tree})" = "c120a22f13ebbdaad8bec401395d69baf8e7ff50"
+          test "$(git rev-parse HEAD)" = "5af7fc68d91b4eeac01873925da5ad1af69e176e"
+          test "$(git rev-parse HEAD^{tree})" = "9397ededeea4236c6d8be652622a8cc93e6d29ca"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code "$base"..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -50,7 +50,10 @@ jobs:
             exit 1
           fi
           executable="scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd"
-          ! grep -Ev '^[[:space:]]*#' "$executable" | grep -Ei 'net_resource_proxy|shadow_fitness|top[_ -]?k'
+          if grep -Ev '^[[:space:]]*#' "$executable" | grep -Eiq 'net_resource_proxy|shadow_fitness|top[_ -]?k'; then
+            echo "forbidden selection/proxy token found in executable A5 path" >&2
+            exit 1
+          fi
           echo "A0_A4_FORBIDDEN_DIFF=CLEAN"
 
       - name: Resolve exact double Godot
@@ -84,7 +87,10 @@ jobs:
           set -euo pipefail
           rm -rf .godot
           "$GODOT" --headless --audio-driver Dummy --editor --path "$PWD" --import > a5-cold.log 2>&1
-          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-cold.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-cold.log; then
+            echo "cold import emitted engine errors" >&2
+            exit 1
+          fi
           sha256sum a5-cold.log
 
       - name: Run A5 core exact twice
@@ -97,7 +103,7 @@ jobs:
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd 2>&1 | tee "a5-exact-$n.log"
             test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_EXACT assertions=69 failed=0" "a5-exact-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"; then exit 1; fi
           done
           cmp a5-exact-1.log a5-exact-2.log
           sha256sum a5-exact-1.log a5-exact-2.log
@@ -112,7 +118,7 @@ jobs:
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd 2>&1 | tee "a5-repairs-$n.log"
             test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_REPAIRS assertions=29 failed=0" "a5-repairs-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"; then exit 1; fi
           done
           cmp a5-repairs-1.log a5-repairs-2.log
           sha256sum a5-repairs-1.log a5-repairs-2.log
@@ -127,7 +133,7 @@ jobs:
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_11_growth_headroom.gd 2>&1 | tee "a5-rm11-$n.log"
             test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_RM11 assertions=9 failed=0" "a5-rm11-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm11-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm11-$n.log"; then exit 1; fi
           done
           cmp a5-rm11-1.log a5-rm11-2.log
           sha256sum a5-rm11-1.log a5-rm11-2.log
@@ -141,8 +147,8 @@ jobs:
           for n in 1 2; do
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_12_reserve_headroom.gd 2>&1 | tee "a5-rm12-$n.log"
             test ${PIPESTATUS[0]} -eq 0
-            grep -E "EVO_ARCH2_A5_RM12 assertions=[0-9]+ failed=0" "a5-rm12-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm12-$n.log"
+            grep -F "EVO_ARCH2_A5_RM12 assertions=29 failed=0" "a5-rm12-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm12-$n.log"; then exit 1; fi
           done
           cmp a5-rm12-1.log a5-rm12-2.log
           sha256sum a5-rm12-1.log a5-rm12-2.log
@@ -157,7 +163,7 @@ jobs:
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_13_starvation_policy.gd 2>&1 | tee "a5-rm13-$n.log"
             test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_RM13 assertions=13 failed=0" "a5-rm13-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm13-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm13-$n.log"; then exit 1; fi
           done
           cmp a5-rm13-1.log a5-rm13-2.log
           sha256sum a5-rm13-1.log a5-rm13-2.log
@@ -172,7 +178,7 @@ jobs:
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_14_reproduction_policy.gd 2>&1 | tee "a5-rm14-$n.log"
             test ${PIPESTATUS[0]} -eq 0
             grep -F "EVO_ARCH2_A5_RM14 assertions=21 failed=0" "a5-rm14-$n.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm14-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm14-$n.log"; then exit 1; fi
           done
           cmp a5-rm14-1.log a5-rm14-2.log
           sha256sum a5-rm14-1.log a5-rm14-2.log
@@ -185,7 +191,7 @@ jobs:
           set -euo pipefail
           "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a4_exact_acceptance.gd > a4.log 2>&1
           grep -F "EVO_ARCH2_A4_EXACT assertions=32 failed=0" a4.log
-          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a4.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a4.log; then exit 1; fi
 
       - name: Run accepted A0-A3 regression
         env:
@@ -195,7 +201,7 @@ jobs:
           set -euo pipefail
           "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd > a03.log 2>&1
           grep -F "EVO_ARCH2_A03_EXACT assertions=86 failed=0" a03.log
-          ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a03.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a03.log; then exit 1; fi
 
       - name: Run preserved VIS5 regression
         env:
@@ -216,7 +222,7 @@ jobs:
           for i in "${!scripts[@]}"; do
             "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script "${scripts[$i]}" > "vis5-$i.log" 2>&1
             grep -E "PASS \(${expected[$i]} assertions\)" "vis5-$i.log"
-            ! grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "vis5-$i.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "vis5-$i.log"; then exit 1; fi
             total=$((total + expected[$i]))
           done
           test "$total" -eq 521
@@ -225,9 +231,9 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "23499c2fb81bc52932ccfcba5811f919ca6ddc94"
-          test "$(git rev-parse HEAD^{tree})" = "c120a22f13ebbdaad8bec401395d69baf8e7ff50"
+          test "$(git rev-parse HEAD)" = "5af7fc68d91b4eeac01873925da5ad1af69e176e"
+          test "$(git rev-parse HEAD^{tree})" = "9397ededeea4236c6d8be652622a8cc93e6d29ca"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=23499c2fb81bc52932ccfcba5811f919ca6ddc94"
-          echo "SUBJECT_TREE=c120a22f13ebbdaad8bec401395d69baf8e7ff50"
+          echo "SUBJECT_HEAD=5af7fc68d91b4eeac01873925da5ad1af69e176e"
+          echo "SUBJECT_TREE=9397ededeea4236c6d8be652622a8cc93e6d29ca"
           echo "VERDICT=PASS"
