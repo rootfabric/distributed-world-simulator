@@ -21,7 +21,7 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 5af7fc68d91b4eeac01873925da5ad1af69e176e
+          ref: 4a4adb8f8e742e9ad7766bc306873df55574794c
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,8 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           base="4b0f772ff39592262b853f7293bbd5403558b145"
-          test "$(git rev-parse HEAD)" = "5af7fc68d91b4eeac01873925da5ad1af69e176e"
-          test "$(git rev-parse HEAD^{tree})" = "9397ededeea4236c6d8be652622a8cc93e6d29ca"
+          test "$(git rev-parse HEAD)" = "4a4adb8f8e742e9ad7766bc306873df55574794c"
+          test "$(git rev-parse HEAD^{tree})" = "ae57d7049761e61a7fc734179f40924a3cc16041"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code "$base"..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -183,6 +183,51 @@ jobs:
           cmp a5-rm14-1.log a5-rm14-2.log
           sha256sum a5-rm14-1.log a5-rm14-2.log
 
+      - name: Run RM-A5-15 reproduction ledger twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_15_reproduction_ledger.gd 2>&1 | tee "a5-rm15-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
+            grep -F "EVO_ARCH2_A5_RM15 assertions=12 failed=0" "a5-rm15-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm15-$n.log"; then exit 1; fi
+          done
+          cmp a5-rm15-1.log a5-rm15-2.log
+          sha256sum a5-rm15-1.log a5-rm15-2.log
+
+      - name: Run RM-A5-16 reproductive module history twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_16_reproductive_module_history.gd 2>&1 | tee "a5-rm16-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
+            grep -F "EVO_ARCH2_A5_RM16 assertions=10 failed=0" "a5-rm16-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm16-$n.log"; then exit 1; fi
+          done
+          cmp a5-rm16-1.log a5-rm16-2.log
+          sha256sum a5-rm16-1.log a5-rm16-2.log
+
+      - name: Run RM-A5-17 starvation reproduction window twice
+        env:
+          GODOT: ${{ steps.godot.outputs.path }}
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_17_starvation_reproduction_window.gd 2>&1 | tee "a5-rm17-$n.log"
+            test ${PIPESTATUS[0]} -eq 0
+            grep -F "EVO_ARCH2_A5_RM17 assertions=13 failed=0" "a5-rm17-$n.log"
+            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm17-$n.log"; then exit 1; fi
+          done
+          cmp a5-rm17-1.log a5-rm17-2.log
+          sha256sum a5-rm17-1.log a5-rm17-2.log
+
       - name: Run accepted A4 regression
         env:
           GODOT: ${{ steps.godot.outputs.path }}
@@ -231,9 +276,9 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "5af7fc68d91b4eeac01873925da5ad1af69e176e"
-          test "$(git rev-parse HEAD^{tree})" = "9397ededeea4236c6d8be652622a8cc93e6d29ca"
+          test "$(git rev-parse HEAD)" = "4a4adb8f8e742e9ad7766bc306873df55574794c"
+          test "$(git rev-parse HEAD^{tree})" = "ae57d7049761e61a7fc734179f40924a3cc16041"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=5af7fc68d91b4eeac01873925da5ad1af69e176e"
-          echo "SUBJECT_TREE=9397ededeea4236c6d8be652622a8cc93e6d29ca"
+          echo "SUBJECT_HEAD=4a4adb8f8e742e9ad7766bc306873df55574794c"
+          echo "SUBJECT_TREE=ae57d7049761e61a7fc734179f40924a3cc16041"
           echo "VERDICT=PASS"
