@@ -56,9 +56,30 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	if v.blueprint_hash != BP.biological_hash(blueprint) or not C.identifier(v.individual_id): return "LIFE_STATE_BINDING"
 	if not C.vector(v.position_mm, F.MAX_PORT_COORD_MM) or not v.origin_kind in ORIGINS or not v.alive is bool: return "LIFE_STATE_IDENTITY"
 	if not C.integer(v.age_ticks, 0, MAX_AGE_TICK) or not C.integer(v.starvation_ticks, 0, MAX_AGE_TICK): return "LIFE_STATE_AGE"
+	if v.starvation_ticks > v.age_ticks: return "LIFE_STARVATION_CAUSALITY"
+	var starvation_limit: int = blueprint.life_history.survival.starvation_limit_ticks
+	if v.alive:
+		if v.starvation_ticks >= starvation_limit: return "LIFE_STARVATION_POLICY"
+	elif v.starvation_ticks != starvation_limit:
+		return "LIFE_STARVATION_POLICY"
 	if not C.integer(v.next_reproduction_tick, 0, MAX_REPRODUCTION_SCHEDULE_TICK) or not C.integer(v.reproduction_count, 0, MAX_OFFSPRING_COUNTER) or not C.integer(v.propagule_seq, 0, MAX_OFFSPRING_COUNTER): return "LIFE_STATE_COUNTER"
 	if v.propagule_seq != v.reproduction_count: return "LIFE_PROPAGULE_SEQUENCE"
 	if v.reproduction_count > v.age_ticks * MAX_OFFSPRING_PER_EVENT: return "LIFE_REPRODUCTION_CAUSALITY"
+	var reproduction: Dictionary = blueprint.life_history.reproduction
+	var offspring_per_event: int = reproduction.offspring_per_event
+	if v.reproduction_count % offspring_per_event != 0: return "LIFE_REPRODUCTION_EVENT_ALIGNMENT"
+	var event_count: int = int(v.reproduction_count / offspring_per_event)
+	var maturity_tick: int = reproduction.maturity_ticks
+	var interval_ticks: int = reproduction.interval_ticks
+	if event_count == 0:
+		if v.next_reproduction_tick != maturity_tick: return "LIFE_REPRODUCTION_SCHEDULE"
+	else:
+		var last_reproduction_tick: int = v.next_reproduction_tick - interval_ticks
+		if last_reproduction_tick < maturity_tick or last_reproduction_tick > v.age_ticks: return "LIFE_REPRODUCTION_SCHEDULE"
+		var schedule_events: int = 1 + int((last_reproduction_tick - maturity_tick) / interval_ticks)
+		if event_count > schedule_events: return "LIFE_REPRODUCTION_FREQUENCY"
+		var max_events: int = 0 if v.age_ticks < maturity_tick else 1 + int((v.age_ticks - maturity_tick) / interval_ticks)
+		if event_count > max_events: return "LIFE_REPRODUCTION_CAUSALITY"
 	if not B.valid_stock(v.metabolic_reserves): return "LIFE_STATE_RESERVES"
 	if not _valid_ledger(v.resource_ledger): return "LIFE_STATE_LEDGER"
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
