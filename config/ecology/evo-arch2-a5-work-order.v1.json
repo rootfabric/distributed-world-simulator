@@ -98,6 +98,8 @@
     "DEVELOPMENT_HISTORY_STRENGTHENS_MAINTENANCE_LOWER_BOUND",
     "REPRODUCTIVE_MODULE_HISTORY_STRENGTHENS_MAINTENANCE_LOWER_BOUND",
     "POST_REPRODUCTION_PAID_TICKS_CHARGE_GUARANTEED_REPRODUCTIVE_MODULES",
+    "POST_REPRODUCTION_PAID_TICKS_RETAIN_ROOT_MAINTENANCE_COST",
+    "LAST_PAID_TICK_AFTER_LAST_REPRODUCTION_IS_DISTINCT_ROOT_PAYMENT",
     "DEVELOPMENT_HISTORY_EXCLUDES_CURRENT_STARVATION_WINDOW",
     "RM22_ORACLE_PARSES_ON_CANONICAL_GODOT_4_7_1_DOUBLE",
     "RM22_MARKER_MATCHES_THIRTEEN_EXECUTED_ASSERTIONS",
@@ -117,5 +119,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..27 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..28 subject; accept research source only if both pass with zero new blocking findings"
 }
