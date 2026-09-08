@@ -142,23 +142,31 @@ func _collector_policy() -> Dictionary:
 
 func _collector_genome() -> Dictionary:
 	var leaf := P.rule("leaf", [P.action("differentiate", "collector", [0, 20, 0], 1, 6000), P.action("retire")])
-	var start := P.rule("start", [P.action("differentiate", "support", [0, 10, 0], 1), P.action("branch", "support", [0, 0, 0], 0, 0, 0, "leaf")], "start")
+	var start := P.rule("start", [P.action("differentiate", "reproductive", [0, 10, 0], 1), P.action("branch", "support", [0, 0, 0], 0, 0, 0, "leaf")], "start")
 	return G.create({"schema": P.SCHEMA, "entry": "start", "max_age": 12, "max_depth": 2, "rules": [start, leaf]}, "RM-A5-12 collector headroom witness")
 
 func _full_energy_reserve_clips_photosynthesis() -> void:
 	var blueprint := BP.create(_collector_genome(), _collector_policy())
+	_check(not blueprint.is_empty(), "collector_blueprint_valid")
+	if blueprint.is_empty(): return
 	var entry := R.individual(blueprint, "rm12.energy.full", [500, 0, 500], B.stock(30000))
+	_check(not entry.is_empty(), "collector_entry_valid")
+	if entry.is_empty(): return
 	var field := _field("rm12.energy.full.field", 900000, 1000)
 	var phenotype := H.compile(entry.state.development, blueprint.genome)
+	var preparation_success := true
 	for _tick in 4:
 		if int(phenotype.module_roles.get("collector", 0)) > 0:
 			break
 		var prepared := _step(field, entry)
-		_check(prepared.success, "collector_preparation_step_success")
-		if not prepared.success: return
+		if not prepared.success:
+			preparation_success = false
+			break
 		field = prepared.field
 		entry = prepared.population[0]
 		phenotype = H.compile(entry.state.development, blueprint.genome)
+	_check(preparation_success, "collector_preparation_steps_success")
+	if not preparation_success: return
 	_check(int(phenotype.module_roles.get("collector", 0)) > 0 and int(phenotype.statistics.get("collector_area_mm2", 0)) > 0, "collector_present_before_full_energy_step")
 	var delta: int = B.MAX_STOCK - int(entry.state.metabolic_reserves.energy_mj)
 	entry.state.metabolic_reserves.energy_mj += delta
