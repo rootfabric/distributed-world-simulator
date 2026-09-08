@@ -69,6 +69,9 @@
     "PARENT_PROVENANCE_DEPTH_IS_EXPLICITLY_BOUNDED",
     "PARENT_PROVENANCE_VALIDATION_RECURSION_IS_BOUNDED",
     "PROVENANCE_DEPTH_OVERFLOW_FAILS_CLOSED",
+    "PARENT_PROVENANCE_DEPTH_FITS_CANONICAL_DEPTH_24",
+    "GENERATION_EIGHT_PARENT_PROOF_ROUNDTRIPS_CANONICALLY",
+    "GENERATION_NINE_PARENT_TRANSFER_FAILS_BEFORE_CANONICAL_OVERFLOW",
     "CHILD_ENDOWMENT_EQUALS_PARENT_TRANSFER",
     "NO_MANDATORY_FITNESS_OR_TOPK_SELECTION",
     "POPULATION_INPUT_ORDER_INDEPENDENT",
@@ -122,5 +125,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..29 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..30 subject; accept research source only if both pass with zero new blocking findings"
 }
