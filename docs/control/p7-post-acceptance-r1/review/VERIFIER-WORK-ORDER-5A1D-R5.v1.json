@@ -1,0 +1,106 @@
+{
+  "schema": "distributed_world_simulator.verifier_work_order.v1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-VERIFIER-5A1D-R5",
+  "subject_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+  "subject_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+  "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "implementation_pr": 585,
+  "independent_context_required": true,
+  "read_only": true,
+  "forbidden_actions": ["IMPLEMENT", "MODIFY_SUBJECT", "MERGE", "WRITE_ACCEPTANCE", "ACTIVATE_MVP"],
+  "predecessor_verifier": {
+    "subject": "62ae64d3651af81d726134b1f2c5b8661000998c",
+    "verdict": "FAIL",
+    "reason": "WORLD_STEP_COUNT_MISMATCH / unsatisfiable global short-name uniqueness",
+    "rule": "Preserve this FAIL; do not reinterpret it as PASS or as a verdict on 5a1d79c."
+  },
+  "intermediate_reviewer_failure": {
+    "subject": "c711051454ee55f0039f23850c1483bb3995f4af",
+    "finding": "P1_REJECT_KIND_ALIASED_DUPLICATE_STAGES",
+    "status": "SUPERSEDED_BY_R4",
+    "rule": "Preserve the P1 and verify the exact attack is rejected by 5a1d79c."
+  },
+  "r4_prototype": {
+    "head": "6b97e64d95929898c0702fc8b31fe8ae57ccd7b6",
+    "status": "NOT_ACCEPTANCE_SUBJECT",
+    "failed_control_run": 34212253996,
+    "failed_control_artifact": 10050306500,
+    "failed_control_artifact_sha256": "dac443ce7b508848935addd005dcb3355cffb321579b7d5d9a88d9c5b1f98046",
+    "failure": "Synthetic fixture did not yet satisfy stricter manifest role contract."
+  },
+  "final_r4_scope": {
+    "work_order": "docs/control/p7-post-acceptance-r1/work-order-world-stage-contract-r4.v1.json",
+    "runtime_delta_from_c711": "NONE",
+    "runner_delta_from_c711": "NONE",
+    "config_delta_from_c711": "NONE",
+    "candidate_changes_after_c711": [
+      "docs/control/p7-post-acceptance-r1/validate.py",
+      "docs/control/p7-post-acceptance-r1/work-order-world-stage-contract-r4.v1.json",
+      "tests/harness/test_p7_post_acceptance_packet.py"
+    ],
+    "required_world_contract": [
+      "exact full stage identity uniqueness",
+      "manifest: name test_manifest_coverage / kind static / target binds discovered count",
+      "editor: name editor_import_parse / kind editor / target res://",
+      "aggregate: name main_scene_cli_all / kind main_scene_cli / target playground:test.run all",
+      "all middle stages kind=headless_script",
+      "all middle targets are discovered tests",
+      "ordinary headless name equals target basename stem",
+      "P7.4 target has exactly seed, recover-deliver, recover-replay phase names and order",
+      "target Counter equals every discovered script once except P7.4 three times",
+      "all stages pass with exit 0 and total stage count is discovered+5"
+    ]
+  },
+  "machine_evidence": {
+    "exact_run": 34212789413,
+    "project_control_run": 34212794163,
+    "control": {
+      "status": "PASS",
+      "artifact_id": 10050536759,
+      "artifact_sha256": "ccb79a54beb5d3fdb4c0e6a5d4bae9fa261319293921a983488015702d69fcbf",
+      "manifest_files": 28,
+      "harness_tests": 278,
+      "pc0": "YELLOW_NON_RED",
+      "cross_branch_overlaps": 0,
+      "directional_blocking_findings": 0,
+      "controller_modes": "ALL_EXIT_0"
+    },
+    "p7": {
+      "status": "PASS_ARTIFACT_PUBLISHED",
+      "artifact_id": 10050761377,
+      "artifact_sha256": "bee6343e229b4a6ed644116d79c32b51945eed70885e821c775f59eaa6141cda",
+      "manifest_files": 50,
+      "leaf_stages": 29,
+      "assertions": 2032,
+      "failures": 0
+    },
+    "world": {
+      "status_at_dispatch": "IN_PROGRESS",
+      "rule": "Read the actual final job and immutable artifact. PASS is forbidden if world remains incomplete or if the artifact/result/manifest is not exact to subject 5a1d79c."
+    }
+  },
+  "reviewer": {
+    "status": "PASS_NO_MAJOR_ISSUES",
+    "reviewed_commit": "5a1d79c688",
+    "github_comment": 5583277208,
+    "rule": "Independently verify evidence; Reviewer is not a substitute for Verifier."
+  },
+  "required_verification": [
+    "Confirm exact HEAD/TREE and clean checkout.",
+    "Confirm pinned Godot version and SHA256 when re-executing runtime checks.",
+    "Independently inspect the R4 Work Order, validator and targeted Harness tests.",
+    "Reproduce or reason through the c711 cross-kind alias attack and prove 5a1d rejects it.",
+    "Check same-basename/different-target remains valid and exact duplicate identity remains invalid.",
+    "Verify world artifact manifest member hashes, result PASS, 326 discovered scripts / 331 stages or the actual unchanged complete discovery counts, exact special roles, exact target Counter, P7.4 order and main aggregate.",
+    "Verify P7 artifact manifest hashes, 29 leaves / 2032 assertions / zero failures.",
+    "Verify control artifact manifest hashes, all Harness tests, PC0 non-RED, no overlaps, no blocking directional RED and controller exits.",
+    "Confirm predecessor FAILs and prototype FAIL remain preserved rather than rewritten.",
+    "Confirm historical P7 ACCEPTED is unchanged and does not itself accept this correction.",
+    "Confirm MVP remains not activated."
+  ],
+  "verdict_enum": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+  "required_output_fields": ["role", "independent_context", "subject_head", "subject_tree", "verdict", "required_fixes", "evidence_gaps", "risk_assessment", "inspected_artifacts", "predicates"],
+  "pass_rule": "PASS only if all machine gates are complete on the exact subject, evidence digests and semantic predicates independently verify, and no P0/P1 remains.",
+  "mvp_runtime_authorized": false
+}
