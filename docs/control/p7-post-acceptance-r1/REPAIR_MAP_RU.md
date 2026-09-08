@@ -59,7 +59,7 @@ namespace, а не распределённая блокировка сетев�
 переопределены только точки планирования и controlled liveness.
 
 Baseline: 22 assertions, ровно шесть ожидаемых failures (три на MW10 и три
-на MW9). Candidate: 68 assertions, включая задержанного reclaimer,
+на MW9). Candidate: 82 assertions, включая задержанного reclaimer,
 неизвестного владельца, reported-error-after-move с уже вошедшим преемником,
 неверный token, неоднозначный owner и прерванный release. Baseline parse error
 или timeout не считается причинным negative control.
@@ -89,3 +89,19 @@ Baseline: 22 assertions, ровно шесть ожидаемых failures (тр
 интеграции, проверка merged tree, append-only запись результата исправления
 и post-merge полный Harness/PC0. Ни этот документ, ни восстановленные R2
 исторические verdicts не закрывают эти новые условия.
+
+## Коррекция после Reviewer R1
+
+Reviewer на `912742d1` указал P1: на платформе без rename-over-empty
+писатель не восстанавливался после переноса owner-маркера и сбоя до rmdir.
+`_remove_stale_lock()` теперь сначала пробует атомарное empty-only rmdir
+без age fence. Непустой живой каталог эта операция не удаляет. Новый случай
+`empty-writer` явно вызывает writer fallback на свежем пустом каталоге,
+чтобы Linux rename-over-empty не скрывал ошибку. На `912742d1` ожидаются
+ровно четыре ошибки в 14 проверках; в новом полном наборе — 82 проверки.
+
+Отдельно исправлен слишком строгий сборщик directional evidence: он
+считал блокирующими любые RED, включая явно `global_blocking=false` для
+исследовательских G/ECO. Каноническая политика не меняется. Все findings
+сохраняются, блокирующими остаются RED с отсутствующим либо любым значением,
+кроме логического false. Добавлен negative test для True/null/0/строки.

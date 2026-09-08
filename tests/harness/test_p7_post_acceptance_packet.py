@@ -33,6 +33,21 @@ class P7PostAcceptancePacketTests(unittest.TestCase):
                 self.assertTrue(path.is_file())
                 self.assertIn(json.loads(path.read_text())["verdict"], ("PASS", "FAIL", "INSUFFICIENT_EVIDENCE"))
 
+    def test_directional_advisory_is_explicit_and_preserved(self):
+        advisory = {"level": "RED", "global_blocking": False, "target_program": "G"}
+        report = {"findings": [advisory]}
+        before = copy.deepcopy(report)
+        self.assertEqual([], VALIDATOR.blocking_directional_findings(report))
+        self.assertEqual(before, report)
+        for value in (True, None, 0, "false", ""):
+            with self.subTest(global_blocking=value):
+                row = {"level": "RED", "global_blocking": value}
+                self.assertEqual([row], VALIDATOR.blocking_directional_findings({"findings": [row]}))
+        missing = {"level": "RED"}
+        self.assertEqual([missing], VALIDATOR.blocking_directional_findings({"findings": [missing]}))
+        with self.assertRaisesRegex(RuntimeError, "DIRECTIONAL_FINDINGS_INVALID"):
+            VALIDATOR.blocking_directional_findings({"findings": [None]})
+
     def fixture(self):
         temporary = tempfile.TemporaryDirectory(prefix="p7-coverage-")
         self.addCleanup(temporary.cleanup)

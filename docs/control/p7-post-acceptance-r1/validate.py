@@ -24,9 +24,9 @@ HISTORICAL = {
 }
 LOCKS = {
     "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd":
-        ("be7c5ee411752a2623cbf89279b136892d1f0852", "563ae2236420a59c3f50e462c411dc77b74ce298"),
+        ("be7c5ee411752a2623cbf89279b136892d1f0852", "b414fe83502dd95d58f87b4f1fdd79442484d240"),
     "scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd":
-        ("1a1900d18e823fccc1be99fd048343ec86610297", "f904e287acb5c39ecbb0ccf3ef17c776209cec8c"),
+        ("1a1900d18e823fccc1be99fd048343ec86610297", "4ed26431b940f1dd2e95351f69944b8946200e5c"),
 }
 
 
@@ -101,6 +101,15 @@ def world_summary(root: Path) -> dict:
     return summary
 
 
+def blocking_directional_findings(report: dict) -> list[dict]:
+    """Keep advisory RED visible; only an explicit Boolean false is nonblocking."""
+    findings = report["findings"]
+    require(isinstance(findings, list) and all(isinstance(row, dict) for row in findings),
+            "DIRECTIONAL_FINDINGS_INVALID")
+    return [row for row in findings if row.get("level") == "RED"
+            and row.get("global_blocking", True) is not False]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("kind", choices=("world", "p7", "control"))
@@ -137,7 +146,13 @@ def main() -> int:
                     require(value["main_head"] == git(root, "rev-parse", "origin/main")
                             and value["cross_branch_overlaps"] == [], "PC0_AUTHORITY_OR_OVERLAP_MISMATCH")
                 else:
-                    require(not any(f.get("level") == "RED" for f in value["findings"]), "DIRECTIONAL_CRITICAL_HIT")
+                    blocking = blocking_directional_findings(value)
+                    write(out / "directional-classification.json", {
+                        "overall_health": value["overall_health"],
+                        "blocking_findings": blocking, "all_findings": value["findings"],
+                        "policy": "Only explicit global_blocking=false is advisory; no source finding is removed.",
+                    })
+                    require(not blocking, "DIRECTIONAL_CRITICAL_HIT")
             for mode in ("Overview", "CheckConsistency", "Drive", "CloseMission"):
                 run("controller-" + mode, ["pwsh", "-NoProfile", "-File", "CONTROL_DEVELOPMENT.ps1", "-" + mode])
             write(out / "controller-boundary.json", {
@@ -173,9 +188,23 @@ def main() -> int:
                 require("8 != 0" in text and "FAILED (failures=1)" in text, "BASELINE_CONTROL_FAILURE_NOT_EXPECTED")
                 require(before == legacy.identity(baseline) and not before["tracked_status"], "BASELINE_MUTATED")
                 write(out / "baseline-identity.json", before)
+                previous = baseline.with_name(baseline.name + "-review-r1")
+                require(not previous.exists(), "REVIEW_BASELINE_EXISTS")
+                git(root, "worktree", "add", "--detach", str(previous), "912742d1bd7368138c5c057664dfe871b6cf8dbd")
+                previous_before = legacy.identity(previous)
+                run("review-baseline-import", [engine, "--headless", "--editor", "--path", str(previous), "--import"], 240)
+                run("review-baseline-empty-writer", [engine, "--headless", "--path", str(previous), "--script", str(root / NATIVE),
+                                                     "--", "--case=empty-writer"], 45, expected=1)
+                report = legacy.single_report(out / "review-baseline-empty-writer.log", "matter_repository_lock_reclaim")
+                failures = [repo + ":" + code for repo in ("mw10", "mw9") for code in (
+                    "fresh-empty-writer-lock-reclaimed", "fresh-empty-writer-directory-removed")]
+                require(report["verdict"] == "FAIL" and report["assertions"] == 14
+                        and report["failures"] == failures, "REVIEW_BASELINE_FAILURE_NOT_EMPTY_WRITER_RECOVERY")
+                require(previous_before == legacy.identity(previous) and not previous_before["tracked_status"], "REVIEW_BASELINE_MUTATED")
+                write(out / "review-baseline-identity.json", previous_before)
                 run("native-locks", [engine, "--headless", "--path", str(root), "--script", "res://" + NATIVE], 90)
                 report = legacy.single_report(out / "native-locks.log", "matter_repository_lock_reclaim")
-                require(report["verdict"] == "PASS" and report["assertions"] == 68 and not report["failures"], "NATIVE_LOCK_SUITE_INCOMPLETE")
+                require(report["verdict"] == "PASS" and report["assertions"] == 82 and not report["failures"], "NATIVE_LOCK_SUITE_INCOMPLETE")
                 for file in sorted((root / "tests/matter/handoff").glob("test_mw9*.gd")):
                     run(file.stem, [engine, "--headless", "--path", str(root), "--script", "res://" + file.relative_to(root).as_posix()], 300)
                 run("mw10-processes", [engine, "--headless", "--path", str(root), "--script",

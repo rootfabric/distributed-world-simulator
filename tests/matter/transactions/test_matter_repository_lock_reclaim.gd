@@ -48,18 +48,23 @@ func _init() -> void:
 	root_path = ProjectSettings.globalize_path("res://artifacts/test-results/lock-reclaim-%d-%d" % [
 		OS.get_process_id(), Time.get_ticks_usec()])
 	var aba_only: bool = "--case=aba" in OS.get_cmdline_user_args()
+	var writer_only: bool = "--case=empty-writer" in OS.get_cmdline_user_args()
 	for spec in [["mw10", MW10Reaper], ["mw9", MW9Reaper]]:
 		var label: String = spec[0]
+		if writer_only:
+			_test_interrupted_writer(spec[1], label)
+			continue
 		_test_delayed_reclaimer(spec[1], label)
 		if not aba_only:
 			_test_unknown_owner(spec[1], label)
 			_test_release_after_reported_error(spec[1], label)
 			_test_marker_validation(spec[1], label)
 			_test_interrupted_release(spec[1], label)
+			_test_interrupted_writer(spec[1], label)
 	var report: Dictionary = {
 		"test": "matter_repository_lock_reclaim", "assertions": assertions,
 		"verdict": "PASS" if failures.is_empty() else "FAIL", "failures": failures,
-		"case": "aba" if aba_only else "all", "observations": observations,
+		"case": "aba" if aba_only else ("empty-writer" if writer_only else "all"), "observations": observations,
 	}
 	DirAccess.make_dir_recursive_absolute(root_path)
 	_write_json(root_path.path_join("report.json"), report)
@@ -196,6 +201,24 @@ func _test_interrupted_release(script: Script, label: String) -> void:
 		repository.lock_path().get_base_dir().path_join("released-marker.json"))
 	_check(moved == OK, label + ":interrupted-marker-moved")
 	_check(bool(repository._wait_for_unlock().get("success", false)), label + ":empty-released-directory-does-not-block-reader")
+
+
+func _test_interrupted_writer(script: Script, label: String) -> void:
+	var repository = _repository(script, root_path.path_join(label + "-empty-writer"))
+	var acquired: Dictionary = repository._acquire_lock()
+	_check(bool(acquired.get("success", false)), label + ":empty-writer-acquired")
+	var owner: Dictionary = repository._read_lock_owner()
+	var marker: String = String(owner.get("_owner_file_name", "owner.json"))
+	var moved: int = DirAccess.rename_absolute(repository.lock_path().path_join(marker),
+		repository.lock_path().get_base_dir().path_join("released-marker.json"))
+	_check(moved == OK, label + ":empty-writer-marker-moved")
+	# Exercise the writer's fallback directly, so Linux rename-over-empty
+	# cannot mask a missing cleanup step on Windows. No sleep or old mtime.
+	_check(repository._remove_stale_lock(), label + ":fresh-empty-writer-lock-reclaimed")
+	_check(not DirAccess.dir_exists_absolute(repository.lock_path()), label + ":fresh-empty-writer-directory-removed")
+	var successor: Dictionary = repository._acquire_lock()
+	_check(bool(successor.get("success", false)), label + ":empty-writer-successor-acquired")
+	_check(bool(repository._release_lock(_token(successor)).get("success", false)), label + ":empty-writer-successor-released")
 
 
 func _write_json(path: String, value: Dictionary) -> void:

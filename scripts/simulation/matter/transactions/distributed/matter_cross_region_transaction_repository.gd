@@ -370,6 +370,11 @@ func _wait_for_unlock() -> Dictionary:
 func _remove_stale_lock() -> bool:
 	if not DirAccess.dir_exists_absolute(_lock_path):
 		return false
+	# A release may have removed its marker but crashed before rmdir.
+	# Empty-only removal is safe immediately, including on platforms whose
+	# rename cannot replace an empty directory; no age fence is needed.
+	if DirAccess.remove_absolute(_lock_path) == OK:
+		return true
 	var owner: Dictionary = _read_lock_owner()
 	if not _lock_is_stale(owner):
 		return false
