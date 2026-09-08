@@ -94,10 +94,11 @@ func _unpaid_maintenance_blocks_reproduction() -> void:
 
 func _propagule_endowment_bound() -> void:
 	var emitted := _emitted_propagule()
-	_check(not emitted.is_empty() and R.validate_propagule(emitted.propagule, emitted.blueprint).is_empty(), "correct_endowment_valid")
+	var paid_parent_state: Dictionary = emitted.result.population[0].state if not emitted.is_empty() else {}
+	_check(not emitted.is_empty() and R.validate_propagule(emitted.propagule, emitted.blueprint, paid_parent_state).is_empty(), "correct_endowment_valid")
 	var tampered: Dictionary = emitted.propagule.duplicate(true)
 	tampered.endowment.material_mg += 1
-	_check(R.validate_propagule(tampered, emitted.blueprint) == "PROPAGULE_ENDOWMENT" and R.materialize_propagule(tampered, emitted.blueprint).is_empty(), "tampered_endowment_rejected")
+	_check(R.validate_propagule(tampered, emitted.blueprint, paid_parent_state) == "PROPAGULE_ENDOWMENT" and R.materialize_propagule(tampered, emitted.blueprint, paid_parent_state).is_empty(), "tampered_endowment_rejected")
 
 func _bounded_demand_ids() -> void:
 	var blueprint := BP.create(Fixtures.make(5), _policy())
@@ -142,6 +143,8 @@ func _deferred_reproduction_schedule() -> void:
 
 func _offspring_counter_range() -> void:
 	var p := _policy()
+	p.metabolism.maintenance_energy_per_module_mj = 0
+	p.metabolism.maintenance_water_per_module_mg = 0
 	p.reproduction.maturity_ticks = 1
 	p.reproduction.interval_ticks = 1
 	p.reproduction.offspring_per_event = 4
@@ -178,13 +181,14 @@ func _propagule_sequence_continuity() -> void:
 func _propagule_parent_binding() -> void:
 	var emitted := _emitted_propagule("repair.binding.parent")
 	var p: Dictionary = emitted.propagule
-	_check(not emitted.is_empty() and p.id == R._propagule_id(p.parent_id, p.sequence) and R.validate_propagule(p, emitted.blueprint).is_empty(), "propagule_parent_sequence_identity_valid")
+	var paid_parent_state: Dictionary = emitted.result.population[0].state if not emitted.is_empty() else {}
+	_check(not emitted.is_empty() and p.id == R._propagule_id(p.parent_id, p.sequence) and R.validate_propagule(p, emitted.blueprint, paid_parent_state).is_empty(), "propagule_parent_sequence_identity_valid")
 	var wrong_parent: Dictionary = p.duplicate(true)
 	wrong_parent.parent_id = "repair.binding.other"
-	_check(R.validate_propagule(wrong_parent, emitted.blueprint) == "PROPAGULE_IDENTITY", "propagule_parent_tamper_rejected")
+	_check(R.validate_propagule(wrong_parent, emitted.blueprint, paid_parent_state) == "PROPAGULE_IDENTITY", "propagule_parent_tamper_rejected")
 	var wrong_sequence: Dictionary = p.duplicate(true)
 	wrong_sequence.sequence += 1
-	_check(R.validate_propagule(wrong_sequence, emitted.blueprint) == "PROPAGULE_IDENTITY", "propagule_sequence_tamper_rejected")
+	_check(R.validate_propagule(wrong_sequence, emitted.blueprint, paid_parent_state) == "PROPAGULE_IDENTITY", "propagule_sequence_tamper_rejected")
 
 func _cumulative_ledger_capacity() -> void:
 	var cumulative := B.stock()
