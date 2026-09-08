@@ -1,0 +1,195 @@
+{
+  "schema": "distributed_world_simulator.independent_verifier_result.v1",
+  "role": "VERIFIER",
+  "independent_context": true,
+  "context_provenance": "Fresh read-only verifier role reset after frozen implementation; no subject mutation, no merge, no acceptance write, and all semantic conclusions below were recomputed from immutable exact-head artifacts rather than inherited implementer summaries.",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-VERIFIER-5A1D-R5",
+  "subject_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+  "subject_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+  "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "implementation_pr": 585,
+  "verdict": "PASS",
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "risk_assessment": "CRITICAL_BUT_ACCEPTABLE_WITH_DECLARED_LOCAL_FILESYSTEM_SHARED_PID_NAMESPACE_AND_QUIESCENT_ALL_WRITER_UPGRADE_BOUNDARY",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "inspected_artifacts": [
+    {
+      "kind": "world",
+      "run_id": 34212789413,
+      "job_id": 102017454020,
+      "artifact_id": 10052617538,
+      "archive_sha256": "a2ddbdf740e186918b83e87abacb4c55296422096d6f6e8601cba571d2a6a395",
+      "manifest_indexed_files": 1946,
+      "manifest_mismatches": 0,
+      "result_passed": true,
+      "checkout_unchanged": true,
+      "declared_scripts": 326,
+      "discovered_scripts": 326,
+      "world_stages": 331,
+      "world_stage_failures": 0,
+      "unique_full_stage_identities": 331,
+      "short_name_collisions": ["test_controller_profiles"],
+      "short_name_collision_is_distinct_target_pair": true,
+      "full_world_core_exit": 0,
+      "full_world_core_elapsed_seconds": 3364.512,
+      "world_summary_sha256": "2e500f2882874021563242d7e336e029b3c1abc80c4c2bd05a44e89e182dbc5e"
+    },
+    {
+      "kind": "p7",
+      "run_id": 34212789413,
+      "job_id": 102017453441,
+      "artifact_id": 10050761377,
+      "archive_sha256": "bee6343e229b4a6ed644116d79c32b51945eed70885e821c775f59eaa6141cda",
+      "manifest_indexed_files": 50,
+      "manifest_mismatches": 0,
+      "leaf_stages": 29,
+      "assertions": 2032,
+      "failures": 0,
+      "leaf_log_digest_mismatches": 0,
+      "result_passed": true,
+      "checkout_unchanged": true
+    },
+    {
+      "kind": "control",
+      "run_id": 34212789413,
+      "job_id": 102017453195,
+      "artifact_id": 10050536759,
+      "archive_sha256": "ccb79a54beb5d3fdb4c0e6a5d4bae9fa261319293921a983488015702d69fcbf",
+      "manifest_indexed_files": 28,
+      "manifest_mismatches": 0,
+      "harness_tests": 278,
+      "harness_result": "OK",
+      "pc0_standard": "YELLOW_NON_RED",
+      "pc0_main_head": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+      "cross_branch_overlaps": 0,
+      "pc0_directional": "YELLOW_NON_RED",
+      "directional_red_findings": 2,
+      "directional_blocking_findings": 0,
+      "controller_overview_exit": 0,
+      "controller_check_consistency_exit": 0,
+      "controller_drive_exit": 0,
+      "controller_close_mission_exit": 0,
+      "result_passed": true,
+      "checkout_unchanged": true
+    },
+    {
+      "kind": "preserved_r4_prototype_failure",
+      "run_id": 34212253996,
+      "artifact_id": 10050306500,
+      "archive_sha256": "dac443ce7b508848935addd005dcb3355cffb321579b7d5d9a88d9c5b1f98046",
+      "status": "FAIL_PRESERVED_NOT_RELABELED"
+    }
+  ],
+  "negative_controls": {
+    "aba_baseline": {
+      "subject": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+      "exit_code": 1,
+      "assertions": 22,
+      "failures": 6,
+      "exact_failures": [
+        "mw10:c-must-not-acquire-before-b-release",
+        "mw10:b-marker-must-survive",
+        "mw10:b-must-release-own-lock",
+        "mw9:c-must-not-acquire-before-b-release",
+        "mw9:b-marker-must-survive",
+        "mw9:b-must-release-own-lock"
+      ]
+    },
+    "empty_writer_predecessor": {
+      "subject": "912742d1bd7368138c5c057664dfe871b6cf8dbd",
+      "exit_code": 1,
+      "assertions": 14,
+      "failures": 4,
+      "exact_failures": [
+        "mw10:fresh-empty-writer-lock-reclaimed",
+        "mw10:fresh-empty-writer-directory-removed",
+        "mw9:fresh-empty-writer-lock-reclaimed",
+        "mw9:fresh-empty-writer-directory-removed"
+      ]
+    },
+    "mw9_fixture_predecessor": {
+      "subject": "dded2e488b161276d7ba679af078c288bd53cf55",
+      "exit_code": 1,
+      "assertions": 203,
+      "failures": 2,
+      "exact_failures": [
+        "Fresh ownerless lock was reclaimed without grace",
+        "Fresh ownerless lock disappeared during grace"
+      ]
+    }
+  },
+  "predicates": {
+    "EXACT_HEAD_TREE_CLEAN": "PASS",
+    "PINNED_ENGINE": "PASS",
+    "PREDECESSOR_FAILS_PRESERVED": "PASS",
+    "NATIVE_LOCK_RECLAIM_82": "PASS",
+    "DELAYED_RECLAIMER_B_SURVIVES_C_TIMEOUT": "PASS",
+    "QUARANTINE_NOT_USED": "PASS",
+    "MW9_RECOVERY_208": "PASS",
+    "MW10_PROCESS_53": "PASS",
+    "EG1_5_OF_5": "PASS",
+    "EG4_3_OF_3": "PASS",
+    "FULL_WORLD_CORE": "PASS",
+    "WORLD_DISCOVERY_326_OF_326": "PASS",
+    "WORLD_STAGES_331_OF_331": "PASS",
+    "WORLD_SPECIAL_STAGE_CONTRACTS": "PASS",
+    "SAME_BASENAME_DIFFERENT_TARGET_ALLOWED": "PASS",
+    "EXACT_DUPLICATE_FULL_IDENTITY_REJECTED": "PASS",
+    "CROSS_KIND_ALIAS_ATTACK_REJECTED": "PASS",
+    "ORDINARY_NAME_TARGET_BINDING": "PASS",
+    "P74_SEED_DELIVER_REPLAY_ORDER": "PASS",
+    "P7_29_LEAVES_2032_ASSERTIONS": "PASS",
+    "HARNESS_278": "PASS",
+    "PC0_STANDARD_NON_RED": "PASS",
+    "PC0_DIRECTIONAL_NO_BLOCKING_RED": "PASS",
+    "CROSS_BRANCH_OVERLAPS_ZERO": "PASS",
+    "HISTORICAL_P7_ACCEPTANCE_UNCHANGED": "PASS",
+    "HISTORICAL_ACCEPTANCE_NOT_REUSED_FOR_NEW_REPAIR": "PASS",
+    "MVP_NOT_ACTIVATED": "PASS",
+    "FRESH_REVIEWER_NO_P0_P1": "PASS"
+  },
+  "semantic_observations": {
+    "native_delayed_reclaimer_mw10": {
+      "b_acquire": "SUCCESS",
+      "c_acquire_before_b_release": "MATTER_CROSS_REGION_TRANSACTION_LOCK_TIMEOUT",
+      "b_release": "SUCCESS",
+      "quarantine_seen": false
+    },
+    "native_delayed_reclaimer_mw9": {
+      "b_acquire": "SUCCESS",
+      "c_acquire_before_b_release": "MATTER_DURABLE_HANDOFF_LOCK_TIMEOUT",
+      "b_release": "SUCCESS",
+      "quarantine_seen": false
+    },
+    "world_special_stages": {
+      "manifest": ["test_manifest_coverage", "static", "326 tests; appended 124 discovered overlays"],
+      "editor": ["editor_import_parse", "editor", "res://"],
+      "aggregate": ["main_scene_cli_all", "main_scene_cli", "playground:test.run all"]
+    },
+    "p7_4_indexes": [300, 301, 302],
+    "p7_4_names": [
+      "test_v0_p7_4_persistence_restart_composition[seed]",
+      "test_v0_p7_4_persistence_restart_composition[recover-deliver]",
+      "test_v0_p7_4_persistence_restart_composition[recover-replay]"
+    ]
+  },
+  "reviewer": {
+    "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "github_comment_id": 5583277208,
+    "verdict": "PASS_NO_MAJOR_ISSUES"
+  },
+  "canonical_boundary": {
+    "historical_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "historical_status": "ACCEPTED",
+    "historical_accepted_runtime_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+    "next_action": "ACTIVATE_MVP_FROM_ACCEPTED_P7",
+    "runtime_authorized": false,
+    "new_repair_accepted_before_merge": false
+  },
+  "integration_readiness": "READY_FOR_AUTHORIZED_MERGE_PR_585_THEN_POST_MERGE_AUDIT_AND_APPEND_ONLY_ACCEPTANCE_ADDENDUM",
+  "mvp_runtime_authorized": false
+}
