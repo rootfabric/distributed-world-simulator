@@ -66,6 +66,9 @@
     "PARENT_TRANSFER_RECEIPT_EMBEDS_EXACT_PAID_PARENT_STATE",
     "PARENT_TRANSFER_RECEIPT_HASH_RECOMPUTED_FROM_PARENT_PREIMAGE",
     "PERSISTED_PARENT_PROOF_IS_NOT_SELF_ASSERTED_SUMMARY_ONLY",
+    "PARENT_PROVENANCE_DEPTH_IS_EXPLICITLY_BOUNDED",
+    "PARENT_PROVENANCE_VALIDATION_RECURSION_IS_BOUNDED",
+    "PROVENANCE_DEPTH_OVERFLOW_FAILS_CLOSED",
     "CHILD_ENDOWMENT_EQUALS_PARENT_TRANSFER",
     "NO_MANDATORY_FITNESS_OR_TOPK_SELECTION",
     "POPULATION_INPUT_ORDER_INDEPENDENT",
@@ -119,5 +122,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..28 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..29 subject; accept research source only if both pass with zero new blocking findings"
 }
