@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-POST-MERGE-PC0-R6",
+  "parent_work_order": "V0-P7-POST-ACCEPTANCE-REPAIR-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "87e74287b5682737a224515525f06a17af637098",
+  "branch": "control/v0-p7-post-merge-pc0-r1",
+  "scope": "Repair only post-merge control-plane dependency projection after verified PR #585 integration. The canonical merge tree is byte-identical to the tested 5a1d candidate. Project Control run 34224027155 failed because the V0 reporting branch remained at pre-merge main 438b21d, so its real merge-base made the two newly integrated, independently verified MW9/MW10 repository files appear as unconsumed critical dependency drift. Fast-forward only the V0 reporting ref to the already-integrated canonical main without force; do not change runtime, passport watched paths, RED policy, registry health semantics, G/ECO source branches, or historical acceptance.",
+  "allowed_actions": [
+    "FAST_FORWARD_REF:control/project-focus-harness-reconciliation-r1:438b21d0f5f348d838c2fae0bfae3547ba56a875->87e74287b5682737a224515525f06a17af637098",
+    "RERUN_PROJECT_CONTROL_JOB:102053654420",
+    "WRITE_POST_MERGE_CONTROL_EVIDENCE"
+  ],
+  "forbidden_paths": [
+    "scripts/**",
+    "tests/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/branches/**",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "project.godot",
+    "scenes/**"
+  ],
+  "failure_evidence": {
+    "canonical_main": "87e74287b5682737a224515525f06a17af637098",
+    "canonical_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "tested_candidate": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "tested_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "tree_equivalence": true,
+    "project_control_run": 34224027155,
+    "job": 102053654420,
+    "failure_step": "Run architecture and ownership passport compatibility regression",
+    "failures": 2,
+    "v0_finding": "CRITICAL_DEPENDENCY_DRIFT:scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd;scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd",
+    "reporting_ref_before": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "classification": "POST_MERGE_REPORTING_REF_ANCESTRY_DRIFT_NOT_RUNTIME_REGRESSION"
+  },
+  "design_brief": {
+    "root_cause": "PC0 computes main dependency drift from merge-base(origin/main, program reporting branch). The V0 reporting branch was intentionally synchronized to canonical main 438b21d before PR #585. After the authorized merge advanced main to 87e74287 while preserving the tested tree exactly, the stale reporting ref caused those two verified canonical Matter files to reappear as critical dependency drift.",
+    "selected_design": "Fast-forward the V0 reporting ref to the exact integrated canonical main. This records real ancestry consumption and makes merge-base equal the accepted integrated frontier. It does not edit or waive any watched path, health level, dependency detector, passport field, or test.",
+    "rejected": [
+      "Downgrade CRITICAL_DEPENDENCY_DRIFT",
+      "Remove MW9/MW10 paths from V0 critical_watched_paths",
+      "Mark RED advisory",
+      "Change G/ECO frozen source refs",
+      "Edit compatibility tests",
+      "Rewrite historical acceptance",
+      "Re-run until green without correcting ancestry"
+    ]
+  },
+  "preconditions": {
+    "main_exact": "87e74287b5682737a224515525f06a17af637098",
+    "merge_tree_equals_tested_tree": true,
+    "reporting_ref_exact_before": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "reporting_branch_open_prs": 0,
+    "force_push_forbidden": true
+  },
+  "required_predicates": [
+    "V0_REPORTING_REF_FAST_FORWARD_ONLY",
+    "POST_MERGE_ARCHITECTURE_COMPATIBILITY_PASS",
+    "POST_MERGE_FULL_HARNESS_PASS",
+    "POST_MERGE_STANDARD_PC0_NON_RED",
+    "POST_MERGE_DIRECTIONAL_PC0_NON_RED_FOR_BLOCKING_HITS",
+    "POST_MERGE_CROSS_BRANCH_OVERLAPS_ZERO",
+    "CANONICAL_MAIN_UNCHANGED_DURING_REF_SYNC"
+  ],
+  "owner_authorization": "User explicitly requested to continue, close all findings and perform acceptance. This continuation changes only a reporting ref and does not activate MVP.",
+  "mvp_runtime_authorized": false
+}
