@@ -48,6 +48,25 @@ class P7PostAcceptancePacketTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "DIRECTIONAL_FINDINGS_INVALID"):
             VALIDATOR.blocking_directional_findings({"findings": [None]})
 
+    def test_step_identity_uses_target_not_basename(self):
+        first = {
+            "name": "test_controller_profiles",
+            "kind": "headless_script",
+            "target": "res://tests/core/test_controller_profiles.gd",
+            "passed": True,
+            "exit_code": 0,
+        }
+        second = {
+            "name": "test_controller_profiles",
+            "kind": "headless_script",
+            "target": "res://tests/integration/test_controller_profiles.gd",
+            "passed": True,
+            "exit_code": 0,
+        }
+        VALIDATOR.validate_world_step_identities([first, second])
+        with self.assertRaisesRegex(RuntimeError, "WORLD_STEP_IDENTITY_COLLISION"):
+            VALIDATOR.validate_world_step_identities([first, second, copy.deepcopy(first)])
+
     def fixture(self):
         temporary = tempfile.TemporaryDirectory(prefix="p7-coverage-")
         self.addCleanup(temporary.cleanup)
